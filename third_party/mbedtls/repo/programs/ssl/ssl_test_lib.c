@@ -8,13 +8,16 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
+
 #include "ssl_test_lib.h"
 
 #if defined(MBEDTLS_TEST_HOOKS)
-#include "test/helpers.h"
+#include "test/threading_helpers.h"
 #endif
 
 #if !defined(MBEDTLS_SSL_TEST_IMPOSSIBLE)
+
+#define ARRAY_LENGTH(x)     (sizeof(x)/sizeof(x[0]))
 
 void my_debug(void *ctx, int level,
               const char *file, int line,
@@ -110,9 +113,9 @@ int rng_seed(rng_context_t *rng, int reproducible, const char *pers)
                                     (const unsigned char *) pers,
                                     strlen(pers));
 #elif defined(MBEDTLS_HMAC_DRBG_C)
-#if defined(MBEDTLS_SHA256_C)
+#if defined(MBEDTLS_MD_CAN_SHA256)
     const mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
-#elif defined(MBEDTLS_SHA512_C)
+#elif defined(MBEDTLS_MD_CAN_SHA512)
     const mbedtls_md_type_t md_type = MBEDTLS_MD_SHA512;
 #else
 #error "No message digest available for HMAC_DRBG"
@@ -177,6 +180,132 @@ int rng_get(void *p_rng, unsigned char *output, size_t output_len)
 
 #endif /* !MBEDTLS_TEST_USE_PSA_CRYPTO_RNG */
 }
+
+int key_opaque_alg_parse(const char *arg, const char **alg1, const char **alg2)
+{
+    char *separator;
+    if ((separator = strchr(arg, ',')) == NULL) {
+        return 1;
+    }
+    *separator = '\0';
+
+    *alg1 = arg;
+    *alg2 = separator + 1;
+
+    if (strcmp(*alg1, "rsa-sign-pkcs1") != 0 &&
+        strcmp(*alg1, "rsa-sign-pss") != 0 &&
+        strcmp(*alg1, "rsa-sign-pss-sha256") != 0 &&
+        strcmp(*alg1, "rsa-sign-pss-sha384") != 0 &&
+        strcmp(*alg1, "rsa-sign-pss-sha512") != 0 &&
+        strcmp(*alg1, "rsa-decrypt") != 0 &&
+        strcmp(*alg1, "ecdsa-sign") != 0 &&
+        strcmp(*alg1, "ecdh") != 0) {
+        return 1;
+    }
+
+    if (strcmp(*alg2, "rsa-sign-pkcs1") != 0 &&
+        strcmp(*alg2, "rsa-sign-pss") != 0 &&
+        strcmp(*alg1, "rsa-sign-pss-sha256") != 0 &&
+        strcmp(*alg1, "rsa-sign-pss-sha384") != 0 &&
+        strcmp(*alg1, "rsa-sign-pss-sha512") != 0 &&
+        strcmp(*alg2, "rsa-decrypt") != 0 &&
+        strcmp(*alg2, "ecdsa-sign") != 0 &&
+        strcmp(*alg2, "ecdh") != 0 &&
+        strcmp(*alg2, "none") != 0) {
+        return 1;
+    }
+
+    return 0;
+}
+
+#if defined(MBEDTLS_USE_PSA_CRYPTO)
+int key_opaque_set_alg_usage(const char *alg1, const char *alg2,
+                             psa_algorithm_t *psa_alg1,
+                             psa_algorithm_t *psa_alg2,
+                             psa_key_usage_t *usage,
+                             mbedtls_pk_type_t key_type)
+{
+    if (strcmp(alg1, "none") != 0) {
+        const char *algs[] = { alg1, alg2 };
+        psa_algorithm_t *psa_algs[] = { psa_alg1, psa_alg2 };
+
+        for (int i = 0; i < 2; i++) {
+            if (strcmp(algs[i], "rsa-sign-pkcs1") == 0) {
+                *psa_algs[i] = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH);
+                *usage |= PSA_KEY_USAGE_SIGN_HASH;
+            } else if (strcmp(algs[i], "rsa-sign-pss") == 0) {
+                *psa_algs[i] = PSA_ALG_RSA_PSS(PSA_ALG_ANY_HASH);
+                *usage |= PSA_KEY_USAGE_SIGN_HASH;
+            } else if (strcmp(algs[i], "rsa-sign-pss-sha256") == 0) {
+                *psa_algs[i] = PSA_ALG_RSA_PSS(PSA_ALG_SHA_256);
+                *usage |= PSA_KEY_USAGE_SIGN_HASH;
+            } else if (strcmp(algs[i], "rsa-sign-pss-sha384") == 0) {
+                *psa_algs[i] = PSA_ALG_RSA_PSS(PSA_ALG_SHA_384);
+                *usage |= PSA_KEY_USAGE_SIGN_HASH;
+            } else if (strcmp(algs[i], "rsa-sign-pss-sha512") == 0) {
+                *psa_algs[i] = PSA_ALG_RSA_PSS(PSA_ALG_SHA_512);
+                *usage |= PSA_KEY_USAGE_SIGN_HASH;
+            } else if (strcmp(algs[i], "rsa-decrypt") == 0) {
+                *psa_algs[i] = PSA_ALG_RSA_PKCS1V15_CRYPT;
+                *usage |= PSA_KEY_USAGE_DECRYPT;
+            } else if (strcmp(algs[i], "ecdsa-sign") == 0) {
+                *psa_algs[i] = PSA_ALG_ECDSA(PSA_ALG_ANY_HASH);
+                *usage |= PSA_KEY_USAGE_SIGN_HASH;
+            } else if (strcmp(algs[i], "ecdh") == 0) {
+                *psa_algs[i] = PSA_ALG_ECDH;
+                *usage |= PSA_KEY_USAGE_DERIVE;
+            } else if (strcmp(algs[i], "none") == 0) {
+                *psa_algs[i] = PSA_ALG_NONE;
+            }
+        }
+    } else {
+        if (key_type == MBEDTLS_PK_ECKEY) {
+            *psa_alg1 = PSA_ALG_ECDSA(PSA_ALG_ANY_HASH);
+            *psa_alg2 = PSA_ALG_ECDH;
+            *usage = PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_DERIVE;
+        } else if (key_type == MBEDTLS_PK_RSA) {
+            *psa_alg1 = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH);
+            *psa_alg2 = PSA_ALG_RSA_PSS(PSA_ALG_ANY_HASH);
+            *usage = PSA_KEY_USAGE_SIGN_HASH;
+        } else {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+#if defined(MBEDTLS_PK_C)
+int pk_wrap_as_opaque(mbedtls_pk_context *pk, psa_algorithm_t psa_alg, psa_algorithm_t psa_alg2,
+                      psa_key_usage_t psa_usage, mbedtls_svc_key_id_t *key_id)
+{
+    int ret;
+    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+
+    ret = mbedtls_pk_get_psa_attributes(pk, PSA_KEY_USAGE_SIGN_HASH, &key_attr);
+    if (ret != 0) {
+        return ret;
+    }
+    psa_set_key_usage_flags(&key_attr, psa_usage);
+    psa_set_key_algorithm(&key_attr, psa_alg);
+    if (psa_alg2 != PSA_ALG_NONE) {
+        psa_set_key_enrollment_algorithm(&key_attr, psa_alg2);
+    }
+    ret = mbedtls_pk_import_into_psa(pk, &key_attr, key_id);
+    if (ret != 0) {
+        return ret;
+    }
+    mbedtls_pk_free(pk);
+    mbedtls_pk_init(pk);
+    ret = mbedtls_pk_setup_opaque(pk, *key_id);
+    if (ret != 0) {
+        return ret;
+    }
+
+    return 0;
+}
+#endif /* MBEDTLS_PK_C */
+#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 #if defined(MBEDTLS_X509_TRUSTED_CERTIFICATE_CALLBACK)
 int ca_callback(void *data, mbedtls_x509_crt const *child,
@@ -328,7 +457,7 @@ int test_hooks_failure_detected(void)
     mbedtls_test_mutex_usage_check();
 #endif
 
-    if (mbedtls_test_info.result != MBEDTLS_TEST_RESULT_SUCCESS) {
+    if (mbedtls_test_get_result() != MBEDTLS_TEST_RESULT_SUCCESS) {
         return 1;
     }
     return 0;
@@ -336,8 +465,184 @@ int test_hooks_failure_detected(void)
 
 void test_hooks_free(void)
 {
+#if defined(MBEDTLS_TEST_MUTEX_USAGE)
+    mbedtls_test_mutex_usage_end();
+#endif
 }
 
 #endif /* MBEDTLS_TEST_HOOKS */
+
+static const struct {
+    uint16_t tls_id;
+    const char *name;
+    uint8_t is_supported;
+} tls_id_group_name_table[] =
+{
+#if defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED) || defined(PSA_WANT_ECC_SECP_R1_521)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_SECP521R1, "secp521r1", 1 },
+#else
+    { MBEDTLS_SSL_IANA_TLS_GROUP_SECP521R1, "secp521r1", 0 },
+#endif
+#if defined(MBEDTLS_ECP_DP_BP512R1_ENABLED) || defined(PSA_WANT_ECC_BRAINPOOL_P_R1_512)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_BP512R1, "brainpoolP512r1", 1 },
+#else
+    { MBEDTLS_SSL_IANA_TLS_GROUP_BP512R1, "brainpoolP512r1", 0 },
+#endif
+#if defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED) || defined(PSA_WANT_ECC_SECP_R1_384)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_SECP384R1, "secp384r1", 1 },
+#else
+    { MBEDTLS_SSL_IANA_TLS_GROUP_SECP384R1, "secp384r1", 0 },
+#endif
+#if defined(MBEDTLS_ECP_DP_BP384R1_ENABLED) || defined(PSA_WANT_ECC_BRAINPOOL_P_R1_384)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_BP384R1, "brainpoolP384r1", 1 },
+#else
+    { MBEDTLS_SSL_IANA_TLS_GROUP_BP384R1, "brainpoolP384r1", 0 },
+#endif
+#if defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) || defined(PSA_WANT_ECC_SECP_R1_256)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_SECP256R1, "secp256r1", 1 },
+#else
+    { MBEDTLS_SSL_IANA_TLS_GROUP_SECP256R1, "secp256r1", 0 },
+#endif
+#if defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED) || defined(PSA_WANT_ECC_SECP_K1_256)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_SECP256K1, "secp256k1", 1 },
+#else
+    { MBEDTLS_SSL_IANA_TLS_GROUP_SECP256K1, "secp256k1", 0 },
+#endif
+#if defined(MBEDTLS_ECP_DP_BP256R1_ENABLED) || defined(PSA_WANT_ECC_BRAINPOOL_P_R1_256)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_BP256R1, "brainpoolP256r1", 1 },
+#else
+    { MBEDTLS_SSL_IANA_TLS_GROUP_BP256R1, "brainpoolP256r1", 0 },
+#endif
+#if defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED) || defined(PSA_WANT_ECC_SECP_R1_224)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_SECP224R1, "secp224r1", 1 },
+#else
+    { MBEDTLS_SSL_IANA_TLS_GROUP_SECP224R1, "secp224r1", 0 },
+#endif
+#if defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED) || defined(PSA_WANT_ECC_SECP_K1_224)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_SECP224K1, "secp224k1", 1 },
+#else
+    { MBEDTLS_SSL_IANA_TLS_GROUP_SECP224K1, "secp224k1", 0 },
+#endif
+#if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED) || defined(PSA_WANT_ECC_SECP_R1_192)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_SECP192R1, "secp192r1", 1 },
+#else
+    { MBEDTLS_SSL_IANA_TLS_GROUP_SECP192R1, "secp192r1", 0 },
+#endif
+#if defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED) || defined(PSA_WANT_ECC_SECP_K1_192)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_SECP192K1, "secp192k1", 1 },
+#else
+    { MBEDTLS_SSL_IANA_TLS_GROUP_SECP192K1, "secp192k1", 0 },
+#endif
+#if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED) || defined(PSA_WANT_ECC_MONTGOMERY_255)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_X25519, "x25519", 1 },
+#else
+    { MBEDTLS_SSL_IANA_TLS_GROUP_X25519, "x25519", 0 },
+#endif
+#if defined(MBEDTLS_ECP_DP_CURVE448_ENABLED) || defined(PSA_WANT_ECC_MONTGOMERY_448)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_X448, "x448", 1 },
+#else
+    { MBEDTLS_SSL_IANA_TLS_GROUP_X448, "x448", 0 },
+#endif
+#if defined(MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_SOME_EPHEMERAL_ENABLED) && \
+    defined(PSA_WANT_ALG_FFDH)
+#if defined(PSA_WANT_DH_RFC7919_2048)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_FFDHE2048, "ffdhe2048", 1 },
+#else /* PSA_WANT_DH_RFC7919_2048 */
+    { MBEDTLS_SSL_IANA_TLS_GROUP_FFDHE2048, "ffdhe2048", 0 },
+#endif /* PSA_WANT_DH_RFC7919_2048 */
+#if defined(PSA_WANT_DH_RFC7919_3072)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_FFDHE3072, "ffdhe3072", 1 },
+#else /* PSA_WANT_DH_RFC7919_3072 */
+    { MBEDTLS_SSL_IANA_TLS_GROUP_FFDHE3072, "ffdhe3072", 0 },
+#endif /* PSA_WANT_DH_RFC7919_3072 */
+#if defined(PSA_WANT_DH_RFC7919_4096)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_FFDHE4096, "ffdhe4096", 1 },
+#else /* PSA_WANT_DH_RFC7919_4096 */
+    { MBEDTLS_SSL_IANA_TLS_GROUP_FFDHE4096, "ffdhe4096", 0 },
+#endif /* PSA_WANT_DH_RFC7919_4096 */
+#if defined(PSA_WANT_DH_RFC7919_6144)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_FFDHE6144, "ffdhe6144", 1 },
+#else /* PSA_WANT_DH_RFC7919_6144 */
+    { MBEDTLS_SSL_IANA_TLS_GROUP_FFDHE6144, "ffdhe6144", 0 },
+#endif /* PSA_WANT_DH_RFC7919_6144 */
+#if defined(PSA_WANT_DH_RFC7919_8192)
+    { MBEDTLS_SSL_IANA_TLS_GROUP_FFDHE8192, "ffdhe8192", 1 },
+#else /* PSA_WANT_DH_RFC7919_8192 */
+    { MBEDTLS_SSL_IANA_TLS_GROUP_FFDHE8192, "ffdhe8192", 0 },
+#endif /* PSA_WANT_DH_RFC7919_8192 */
+#endif /* MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_SOME_EPHEMERAL_ENABLED && PSA_WANT_ALG_FFDH */
+    { 0, NULL, 0 },
+};
+
+static uint16_t mbedtls_ssl_get_curve_tls_id_from_name(const char *name)
+{
+    if (name == NULL) {
+        return 0;
+    }
+
+    for (int i = 0; tls_id_group_name_table[i].tls_id != 0; i++) {
+        if (strcmp(tls_id_group_name_table[i].name, name) == 0) {
+            return tls_id_group_name_table[i].tls_id;
+        }
+    }
+
+    return 0;
+}
+
+static void mbedtls_ssl_print_supported_groups_list(void)
+{
+    for (int i = 0; tls_id_group_name_table[i].tls_id != 0; i++) {
+        if (tls_id_group_name_table[i].is_supported == 1) {
+            mbedtls_printf("%s ", tls_id_group_name_table[i].name);
+        }
+    }
+}
+
+int parse_groups(const char *groups, uint16_t *group_list, size_t group_list_len)
+{
+    char *p = (char *) groups;
+    char *q = NULL;
+    size_t i = 0;
+
+    if (strcmp(p, "none") == 0) {
+        group_list[0] = 0;
+    } else if (strcmp(p, "default") != 0) {
+        /* Leave room for a final NULL in group list */
+        while (i < group_list_len - 1 && *p != '\0') {
+            uint16_t curve_tls_id;
+            q = p;
+
+            /* Terminate the current string */
+            while (*p != ',' && *p != '\0') {
+                p++;
+            }
+            if (*p == ',') {
+                *p++ = '\0';
+            }
+
+            if ((curve_tls_id = mbedtls_ssl_get_curve_tls_id_from_name(q)) != 0) {
+                group_list[i++] = curve_tls_id;
+            } else {
+                mbedtls_printf("unknown group %s\n", q);
+                mbedtls_printf("supported groups: ");
+                mbedtls_ssl_print_supported_groups_list();
+                mbedtls_printf("\n");
+                return -1;
+            }
+        }
+
+        mbedtls_printf("Number of groups: %u\n", (unsigned int) i);
+
+        if (i == group_list_len - 1 && *p != '\0') {
+            mbedtls_printf("groups list too long, maximum %u",
+                           (unsigned int) (group_list_len - 1));
+            return -1;
+        }
+
+        group_list[i] = 0;
+    }
+
+    return 0;
+}
 
 #endif /* !defined(MBEDTLS_SSL_TEST_IMPOSSIBLE) */

@@ -1,11 +1,13 @@
 set(executables
     generic_sum
     hello
+    md_hmac_demo
 )
 
 foreach(exe IN LISTS executables)
     add_executable(${exe} ${exe}.c $<TARGET_OBJECTS:mbedtls_test>)
-    target_link_libraries(${exe} ${mbedcrypto_target})
+    target_link_libraries(${exe} ${mbedcrypto_target} ${CMAKE_THREAD_LIBS_INIT})
+    target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
 endforeach()
 
 install(TARGETS ${executables}

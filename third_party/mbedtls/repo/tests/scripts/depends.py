@@ -8,7 +8,7 @@ Test Mbed TLS with a subset of algorithms.
 
 This script can be divided into several steps:
 
-First, include/mbedtls/config.h or a different config file passed
+First, include/mbedtls/mbedtls_config.h or a different config file passed
 in the arguments is parsed to extract any configuration options (using config.py).
 
 Then, test domains (groups of jobs, tests) are built based on predefined data
@@ -29,6 +29,12 @@ The configuration building method can be one of the three following:
   any non-standard symbols to set/unset in EXCLUSIVE_GROUPS. These are usually not
   direct dependencies, but rather non-trivial results of other configs missing. Then
   look for any unset symbols and handle their reverse dependencies.
+  Examples of EXCLUSIVE_GROUPS usage:
+  - MBEDTLS_SHA512_C job turns off all hashes except SHA512. MBEDTLS_SSL_COOKIE_C
+    requires either SHA256 or SHA384 to work, so it also has to be disabled.
+    This is not a dependency on SHA512_C, but a result of an exclusive domain
+    config building method. Relevant field:
+    'MBEDTLS_SHA512_C': ['-MBEDTLS_SSL_COOKIE_C'],
 
 - DualDomain - combination of the two above - both complementary and exclusive domain
   job generation code will be run. Currently only used for hashes.
@@ -94,7 +100,7 @@ cmd is a list of strings: a command name and its arguments."""
     log_line(' '.join(cmd), prefix='+')
 
 def backup_config(options):
-    """Back up the library configuration file (config.h).
+    """Back up the library configuration file (mbedtls_config.h).
 If the backup file already exists, it is presumed to be the desired backup,
 so don't make another backup."""
     if os.path.exists(options.config_backup):
@@ -104,7 +110,7 @@ so don't make another backup."""
         shutil.copy(options.config, options.config_backup)
 
 def restore_config(options):
-    """Restore the library configuration file (config.h).
+    """Restore the library configuration file (mbedtls_config.h).
 Remove the backup file if it was saved earlier."""
     if options.own_backup:
         shutil.move(options.config_backup, options.config)
@@ -134,13 +140,14 @@ which will make a symbol defined with a certain value."""
     return True
 
 def set_reference_config(conf, options, colors):
-    """Change the library configuration file (config.h) to the reference state.
+    """Change the library configuration file (mbedtls_config.h) to the reference state.
 The reference state is the one from which the tested configurations are
 derived."""
     # Turn off options that are not relevant to the tests and slow them down.
     log_command(['config.py', 'full'])
     conf.adapt(config.full_adapter)
     set_config_option_value(conf, 'MBEDTLS_TEST_HOOKS', colors, False)
+    set_config_option_value(conf, 'MBEDTLS_PSA_CRYPTO_CONFIG', colors, False)
     if options.unset_use_psa:
         set_config_option_value(conf, 'MBEDTLS_USE_PSA_CRYPTO', colors, False)
 
@@ -192,7 +199,10 @@ and subsequent commands are tests that cannot run if the build failed).'''
         success = True
         for command in self.commands:
             log_command(command)
-            ret = subprocess.call(command)
+            env = os.environ.copy()
+            if 'MBEDTLS_TEST_CONFIGURATION' in env:
+                env['MBEDTLS_TEST_CONFIGURATION'] += '-' + self.name
+            ret = subprocess.call(command, env=env)
             if ret != 0:
                 if command[0] not in ['make', options.make_command]:
                     log_line('*** [{}] Error {}'.format(' '.join(command), ret))
@@ -201,13 +211,6 @@ and subsequent commands are tests that cannot run if the build failed).'''
                 success = False
             built = True
         return success
-
-# SSL/TLS versions up to 1.1 and corresponding options. These require
-# both MD5 and SHA-1.
-SSL_PRE_1_2_DEPENDENCIES = ['MBEDTLS_SSL_CBC_RECORD_SPLITTING',
-                            'MBEDTLS_SSL_PROTO_SSL3',
-                            'MBEDTLS_SSL_PROTO_TLS1',
-                            'MBEDTLS_SSL_PROTO_TLS1_1']
 
 # If the configuration option A requires B, make sure that
 # B in REVERSE_DEPENDENCIES[A].
@@ -224,14 +227,17 @@ REVERSE_DEPENDENCIES = {
                       'MBEDTLS_ECDH_C',
                       'MBEDTLS_ECJPAKE_C',
                       'MBEDTLS_ECP_RESTARTABLE',
+                      'MBEDTLS_PK_PARSE_EC_EXTENDED',
+                      'MBEDTLS_PK_PARSE_EC_COMPRESSED',
                       'MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED',
                       'MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED',
                       'MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED',
                       'MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED',
                       'MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED',
-                      'MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED'],
+                      'MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED',
+                      'MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED',
+                      'MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_PSK_EPHEMERAL_ENABLED'],
     'MBEDTLS_ECP_DP_SECP256R1_ENABLED': ['MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED'],
-    'MBEDTLS_MD5_C': SSL_PRE_1_2_DEPENDENCIES,
     'MBEDTLS_PKCS1_V21': ['MBEDTLS_X509_RSASSA_PSS_SUPPORT'],
     'MBEDTLS_PKCS1_V15': ['MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED',
                           'MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED',
@@ -243,9 +249,18 @@ REVERSE_DEPENDENCIES = {
                       'MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED',
                       'MBEDTLS_KEY_EXCHANGE_RSA_ENABLED',
                       'MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED'],
-    'MBEDTLS_SHA1_C': SSL_PRE_1_2_DEPENDENCIES,
     'MBEDTLS_SHA256_C': ['MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED',
-                         'MBEDTLS_ENTROPY_FORCE_SHA256'],
+                         'MBEDTLS_ENTROPY_FORCE_SHA256',
+                         'MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT',
+                         'MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY',
+                         'MBEDTLS_LMS_C',
+                         'MBEDTLS_LMS_PRIVATE'],
+    'MBEDTLS_SHA512_C': ['MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT',
+                         'MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY'],
+    'MBEDTLS_SHA224_C': ['MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED',
+                         'MBEDTLS_ENTROPY_FORCE_SHA256',
+                         'MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT',
+                         'MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY'],
     'MBEDTLS_X509_RSASSA_PSS_SUPPORT': []
 }
 
@@ -253,21 +268,8 @@ REVERSE_DEPENDENCIES = {
 # These are not necessarily dependencies, but just minimal required changes
 # if a given define is the only one enabled from an exclusive group.
 EXCLUSIVE_GROUPS = {
-    'MBEDTLS_SHA512_C': ['-MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL'],
-    'MBEDTLS_SHA512_NO_SHA384': ['+MBEDTLS_SHA512_C',
-                                 '-MBEDTLS_SSL_PROTO_TLS1_2',
-                                 '-MBEDTLS_SSL_PROTO_DTLS',
-                                 '-MBEDTLS_SSL_TLS_C',
-                                 '-MBEDTLS_SSL_CLI_C',
-                                 '-MBEDTLS_SSL_SRV_C',
-                                 '-MBEDTLS_SSL_DTLS_HELLO_VERIFY',
-                                 '-MBEDTLS_SSL_DTLS_ANTI_REPLAY',
-                                 '-MBEDTLS_SSL_DTLS_CONNECTION_ID',
-                                 '-MBEDTLS_SSL_DTLS_BADMAC_LIMIT',
-                                 '-MBEDTLS_SSL_ENCRYPT_THEN_MAC',
-                                 '-MBEDTLS_SSL_EXTENDED_MASTER_SECRET',
-                                 '-MBEDTLS_SSL_DTLS_SRTP',
-                                 '-MBEDTLS_SSL_DTLS_CLIENT_PORT_REUSE'],
+    'MBEDTLS_SHA512_C': ['-MBEDTLS_SSL_COOKIE_C',
+                         '-MBEDTLS_SSL_TLS_C'],
     'MBEDTLS_ECP_DP_CURVE448_ENABLED': ['-MBEDTLS_ECDSA_C',
                                         '-MBEDTLS_ECDSA_DETERMINISTIC',
                                         '-MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED',
@@ -281,16 +283,6 @@ EXCLUSIVE_GROUPS = {
                                           '-MBEDTLS_ECJPAKE_C',
                                           '-MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED'],
     'MBEDTLS_ARIA_C': ['-MBEDTLS_CMAC_C'],
-    'MBEDTLS_ARC4_C': ['-MBEDTLS_CMAC_C',
-                       '-MBEDTLS_CCM_C',
-                       '-MBEDTLS_SSL_TICKET_C',
-                       '-MBEDTLS_SSL_CONTEXT_SERIALIZATION',
-                       '-MBEDTLS_GCM_C'],
-    'MBEDTLS_BLOWFISH_C': ['-MBEDTLS_CMAC_C',
-                           '-MBEDTLS_CCM_C',
-                           '-MBEDTLS_SSL_TICKET_C',
-                           '-MBEDTLS_SSL_CONTEXT_SERIALIZATION',
-                           '-MBEDTLS_GCM_C'],
     'MBEDTLS_CAMELLIA_C': ['-MBEDTLS_CMAC_C'],
     'MBEDTLS_CHACHA20_C': ['-MBEDTLS_CMAC_C', '-MBEDTLS_CCM_C', '-MBEDTLS_GCM_C'],
     'MBEDTLS_DES_C': ['-MBEDTLS_CCM_C',
@@ -386,25 +378,24 @@ class CipherInfo: # pylint: disable=too-few-public-methods
 class DomainData:
     """A container for domains and jobs, used to structurize testing."""
     def config_symbols_matching(self, regexp):
-        """List the config.h settings matching regexp."""
+        """List the mbedtls_config.h settings matching regexp."""
         return [symbol for symbol in self.all_config_symbols
                 if re.match(regexp, symbol)]
 
     def __init__(self, options, conf):
         """Gather data about the library and establish a list of domains to test."""
-        build_command = [options.make_command, 'CFLAGS=-Werror']
+        build_command = [options.make_command, 'CFLAGS=-Werror -O2']
         build_and_test = [build_command, [options.make_command, 'test']]
         self.all_config_symbols = set(conf.settings.keys())
         # Find hash modules by name.
         hash_symbols = self.config_symbols_matching(r'MBEDTLS_(MD|RIPEMD|SHA)[0-9]+_C\Z')
-        hash_symbols.append("MBEDTLS_SHA512_NO_SHA384")
         # Find elliptic curve enabling macros by name.
         curve_symbols = self.config_symbols_matching(r'MBEDTLS_ECP_DP_\w+_ENABLED\Z')
         # Find key exchange enabling macros by name.
         key_exchange_symbols = self.config_symbols_matching(r'MBEDTLS_KEY_EXCHANGE_\w+_ENABLED\Z')
         # Find cipher IDs (block permutations and stream ciphers --- chaining
         # and padding modes are exercised separately) information by parsing
-        # cipher.h, as the information is not readily available in config.h.
+        # cipher.h, as the information is not readily available in mbedtls_config.h.
         cipher_info = CipherInfo()
         # Find block cipher chaining and padding mode enabling macros by name.
         cipher_chaining_symbols = self.config_symbols_matching(r'MBEDTLS_CIPHER_MODE_\w+\Z')
@@ -419,10 +410,16 @@ class DomainData:
                                               build_and_test),
             # Elliptic curves. Run the test suites.
             'curves': ExclusiveDomain(curve_symbols, build_and_test),
-            # Hash algorithms. Exclude exclusive domain of MD, RIPEMD, SHA1 (obsolete)
+            # Hash algorithms. Excluding exclusive domains of MD, RIPEMD, SHA1,
+            # SHA224 and SHA384 because MBEDTLS_ENTROPY_C is extensively used
+            # across various modules, but it depends on either SHA256 or SHA512.
+            # As a consequence an "exclusive" test of anything other than SHA256
+            # or SHA512 with MBEDTLS_ENTROPY_C enabled is not possible.
             'hashes': DualDomain(hash_symbols, build_and_test,
-                                 exclude=r'MBEDTLS_(MD|RIPEMD|SHA1_)'\
-                                          '|!MBEDTLS_*_NO_SHA'),
+                                 exclude=r'MBEDTLS_(MD|RIPEMD|SHA1_)' \
+                                          '|MBEDTLS_SHA224_' \
+                                          '|MBEDTLS_SHA384_' \
+                                          '|MBEDTLS_SHA3_'),
             # Key exchange types.
             'kex': ExclusiveDomain(key_exchange_symbols, build_and_test),
             'pkalgs': ComplementaryDomain(['MBEDTLS_ECDSA_C',
@@ -513,7 +510,7 @@ def main():
                             choices=['always', 'auto', 'never'], default='auto')
         parser.add_argument('-c', '--config', metavar='FILE',
                             help='Configuration file to modify',
-                            default='include/mbedtls/config.h')
+                            default='include/mbedtls/mbedtls_config.h')
         parser.add_argument('-C', '--directory', metavar='DIR',
                             help='Change to this directory before anything else',
                             default='.')

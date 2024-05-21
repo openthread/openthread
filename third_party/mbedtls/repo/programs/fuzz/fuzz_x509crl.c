@@ -16,9 +16,15 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
     }
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
     ret = mbedtls_x509_crl_parse(&crl, Data, Size);
+#if !defined(MBEDTLS_X509_REMOVE_INFO)
     if (ret == 0) {
         ret = mbedtls_x509_crl_info((char *) buf, sizeof(buf) - 1, " ", &crl);
     }
+#else
+    ((void) ret);
+    ((void) buf);
+#endif /* !MBEDTLS_X509_REMOVE_INFO */
+
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
 exit:
     mbedtls_psa_crypto_free();

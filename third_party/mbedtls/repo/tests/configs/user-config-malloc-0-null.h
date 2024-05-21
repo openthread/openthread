@@ -1,4 +1,4 @@
-/* config.h modifier that forces calloc(0) to return NULL.
+/* mbedtls_config.h modifier that forces calloc(0) to return NULL.
  * Used for testing.
  */
 /*

@@ -6,8 +6,10 @@
 *.vcxproj
 
 aes/crypt_and_hash
+cipher/cipher_aead_demo
 hash/generic_sum
 hash/hello
+hash/md_hmac_demo
 hash/md5sum
 hash/sha1sum
 hash/sha2sum
@@ -31,12 +33,14 @@ pkey/rsa_sign
 pkey/rsa_sign_pss
 pkey/rsa_verify
 pkey/rsa_verify_pss
+psa/aead_demo
 psa/crypto_examples
+psa/hmac_demo
 psa/key_ladder_demo
 psa/psa_constant_names
+psa/psa_hash
 random/gen_entropy
 random/gen_random_ctr_drbg
-random/gen_random_havege
 ssl/dtls_client
 ssl/dtls_server
 ssl/mini_client
@@ -53,7 +57,9 @@ test/cpp_dummy_build
 test/cpp_dummy_build.cpp
 test/dlopen
 test/ecp-bench
+test/metatest
 test/query_compile_time_config
+test/query_included_headers
 test/selftest
 test/ssl_cert_test
 test/udp_proxy
@@ -67,5 +73,11 @@ x509/crl_app
 x509/load_roots
 x509/req_app
 
-# generated files
-pkey/keyfile.key
+####START_COMMENTED_GENERATED_FILES###
+## Generated source files
+#/psa/psa_constant_names_generated.c
+#/test/query_config.c
+#
+## Generated data files
+#pkey/keyfile.key
+####END_COMMENTED_GENERATED_FILES###

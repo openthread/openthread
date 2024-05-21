@@ -115,7 +115,7 @@ def get_c_expression_values(
         caller=__name__, file_label='',
         header='', include_path=None,
         keep_c=False,
-): # pylint: disable=too-many-arguments
+): # pylint: disable=too-many-arguments, too-many-locals
     """Generate and run a program to print out numerical values for expressions.
 
     * ``cast_to``: a C type.
@@ -128,12 +128,17 @@ def get_c_expression_values(
     * ``keep_c``: if true, keep the temporary C file (presumably for debugging
       purposes).
 
+    Use the C compiler specified by the ``CC`` environment variable, defaulting
+    to ``cc``. If ``CC`` looks like MSVC, use its command line syntax,
+    otherwise assume the compiler supports Unix traditional ``-I`` and ``-o``.
+
     Return the list of values of the ``expressions``.
     """
     if include_path is None:
         include_path = []
     c_name = None
     exe_name = None
+    obj_name = None
     try:
         c_file, c_name, exe_name = create_c_file(file_label)
         generate_c_file(
@@ -154,3 +159,4 @@ def get_c_expression_values(
         return output.decode('ascii').strip().split('\n')
     finally:
         remove_file_if_exists(exe_name)
+        remove_file_if_exists(obj_name)

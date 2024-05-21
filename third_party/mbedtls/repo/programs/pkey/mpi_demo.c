@@ -5,11 +5,7 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+#include "mbedtls/build_info.h"
 
 #include "mbedtls/platform.h"
 
@@ -82,11 +78,6 @@ cleanup:
     if (exit_code != MBEDTLS_EXIT_SUCCESS) {
         mbedtls_printf("\nAn error occurred.\n");
     }
-
-#if defined(_WIN32)
-    mbedtls_printf("  Press Enter to exit this program.\n");
-    fflush(stdout); getchar();
-#endif
 
     mbedtls_exit(exit_code);
 }

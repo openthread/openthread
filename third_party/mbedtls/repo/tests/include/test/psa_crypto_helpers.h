@@ -12,14 +12,38 @@
 #include "test/helpers.h"
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-
 #include "test/psa_helpers.h"
-
 #include <psa/crypto.h>
-
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "mbedtls/psa_util.h"
 #endif
+
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+/** Initialize the PSA Crypto subsystem. */
+#define PSA_INIT() PSA_ASSERT(psa_crypto_init())
+
+/** Shut down the PSA Crypto subsystem and destroy persistent keys.
+ * Expect a clean shutdown, with no slots in use.
+ *
+ * If some key slots are still in use, record the test case as failed,
+ * but continue executing. This macro is suitable (and primarily intended)
+ * for use in the cleanup section of test functions.
+ *
+ * \note Persistent keys must be recorded with #TEST_USES_KEY_ID before
+ *       creating them.
+ */
+#define PSA_DONE()                                                      \
+    do                                                                  \
+    {                                                                   \
+        mbedtls_test_fail_if_psa_leaking(__LINE__, __FILE__);           \
+        mbedtls_test_psa_purge_key_storage();                           \
+        mbedtls_psa_crypto_free();                                      \
+    }                                                                   \
+    while (0)
+#else /*MBEDTLS_PSA_CRYPTO_C */
+#define PSA_INIT() ((void) 0)
+#define PSA_DONE() ((void) 0)
+#endif /* MBEDTLS_PSA_CRYPTO_C */
+
+#if defined(MBEDTLS_PSA_CRYPTO_C)
 
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
 
@@ -74,8 +98,6 @@ void mbedtls_test_psa_purge_key_cache(void);
 
 #endif /* MBEDTLS_PSA_CRYPTO_STORAGE_C */
 
-#define PSA_INIT() PSA_ASSERT(psa_crypto_init())
-
 /** Check for things that have not been cleaned up properly in the
  * PSA subsystem.
  *
@@ -97,25 +119,6 @@ const char *mbedtls_test_helper_is_psa_leaking(void);
     {                                                                   \
         if (mbedtls_test_fail_if_psa_leaking(__LINE__, __FILE__))       \
         goto exit;                                                      \
-    }                                                                   \
-    while (0)
-
-/** Shut down the PSA Crypto subsystem and destroy persistent keys.
- * Expect a clean shutdown, with no slots in use.
- *
- * If some key slots are still in use, record the test case as failed,
- * but continue executing. This macro is suitable (and primarily intended)
- * for use in the cleanup section of test functions.
- *
- * \note Persistent keys must be recorded with #TEST_USES_KEY_ID before
- *       creating them.
- */
-#define PSA_DONE()                                                      \
-    do                                                                  \
-    {                                                                   \
-        mbedtls_test_fail_if_psa_leaking(__LINE__, __FILE__);           \
-        mbedtls_test_psa_purge_key_storage();                           \
-        mbedtls_psa_crypto_free();                                      \
     }                                                                   \
     while (0)
 
@@ -222,7 +225,9 @@ int mbedtls_test_inject_entropy_seed_write(unsigned char *buf, size_t len);
 int mbedtls_test_inject_entropy_restore(void);
 #endif /* MBEDTLS_PSA_INJECT_ENTROPY */
 
-
+/** Parse binary string and convert it to a long integer
+ */
+uint64_t mbedtls_test_parse_binary_string(data_t *bin_string);
 
 /** Skip a test case if the given key is a 192 bits AES key and the AES
  *  implementation is at least partially provided by an accelerator or
@@ -313,24 +318,124 @@ int mbedtls_test_inject_entropy_restore(void);
 /** \def USE_PSA_INIT
  *
  * Call this macro to initialize the PSA subsystem if #MBEDTLS_USE_PSA_CRYPTO
- * is enabled and do nothing otherwise. If the initialization fails, mark
- * the test case as failed and jump to the \p exit label.
+ * or #MBEDTLS_SSL_PROTO_TLS1_3 (In contrast to TLS 1.2 implementation, the
+ * TLS 1.3 one uses PSA independently of the definition of
+ * #MBEDTLS_USE_PSA_CRYPTO) is enabled and do nothing otherwise.
+ *
+ * If the initialization fails, mark the test case as failed and jump to the
+ * \p exit label.
  */
 /** \def USE_PSA_DONE
  *
  * Call this macro at the end of a test case if you called #USE_PSA_INIT.
- * This is like #PSA_DONE, except that it does nothing if
- * #MBEDTLS_USE_PSA_CRYPTO is disabled.
+ *
+ * This is like #PSA_DONE except it does nothing under the same conditions as
+ * #USE_PSA_INIT.
  */
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
+#if defined(MBEDTLS_USE_PSA_CRYPTO) || defined(MBEDTLS_SSL_PROTO_TLS1_3)
 #define USE_PSA_INIT() PSA_INIT()
 #define USE_PSA_DONE() PSA_DONE()
-#else /* MBEDTLS_USE_PSA_CRYPTO */
+#else /* MBEDTLS_USE_PSA_CRYPTO || MBEDTLS_SSL_PROTO_TLS1_3 */
 /* Define empty macros so that we can use them in the preamble and teardown
  * of every test function that uses PSA conditionally based on
  * MBEDTLS_USE_PSA_CRYPTO. */
 #define USE_PSA_INIT() ((void) 0)
 #define USE_PSA_DONE() ((void) 0)
-#endif /* !MBEDTLS_USE_PSA_CRYPTO */
+#endif /* !MBEDTLS_USE_PSA_CRYPTO && !MBEDTLS_SSL_PROTO_TLS1_3 */
+
+/** \def MD_PSA_INIT
+ *
+ * Call this macro to initialize the PSA subsystem if MD uses a driver,
+ * and do nothing otherwise.
+ *
+ * If the initialization fails, mark the test case as failed and jump to the
+ * \p exit label.
+ */
+/** \def MD_PSA_DONE
+ *
+ * Call this macro at the end of a test case if you called #MD_PSA_INIT.
+ *
+ * This is like #PSA_DONE except it does nothing under the same conditions as
+ * #MD_PSA_INIT.
+ */
+#if defined(MBEDTLS_MD_SOME_PSA)
+#define MD_PSA_INIT()   PSA_INIT()
+#define MD_PSA_DONE()   PSA_DONE()
+#else /* MBEDTLS_MD_SOME_PSA */
+#define MD_PSA_INIT() ((void) 0)
+#define MD_PSA_DONE() ((void) 0)
+#endif /* MBEDTLS_MD_SOME_PSA */
+
+/** \def BLOCK_CIPHER_PSA_INIT
+ *
+ * Call this macro to initialize the PSA subsystem if BLOCK_CIPHER uses a driver,
+ * and do nothing otherwise.
+ *
+ * If the initialization fails, mark the test case as failed and jump to the
+ * \p exit label.
+ */
+/** \def BLOCK_CIPHER_PSA_DONE
+ *
+ * Call this macro at the end of a test case if you called #BLOCK_CIPHER_PSA_INIT.
+ *
+ * This is like #PSA_DONE except it does nothing under the same conditions as
+ * #BLOCK_CIPHER_PSA_INIT.
+ */
+#if defined(MBEDTLS_BLOCK_CIPHER_SOME_PSA)
+#define BLOCK_CIPHER_PSA_INIT()   PSA_INIT()
+#define BLOCK_CIPHER_PSA_DONE()   PSA_DONE()
+#else /* MBEDTLS_MD_SOME_PSA */
+#define BLOCK_CIPHER_PSA_INIT() ((void) 0)
+#define BLOCK_CIPHER_PSA_DONE() ((void) 0)
+#endif /* MBEDTLS_MD_SOME_PSA */
+
+
+/** \def MD_OR_USE_PSA_INIT
+ *
+ * Call this macro to initialize the PSA subsystem if MD uses a driver,
+ * or if #MBEDTLS_USE_PSA_CRYPTO or #MBEDTLS_SSL_PROTO_TLS1_3 is enabled,
+ * and do nothing otherwise.
+ *
+ * If the initialization fails, mark the test case as failed and jump to the
+ * \p exit label.
+ */
+/** \def MD_OR_USE_PSA_DONE
+ *
+ * Call this macro at the end of a test case if you called #MD_OR_USE_PSA_INIT.
+ *
+ * This is like #PSA_DONE except it does nothing under the same conditions as
+ * #MD_OR_USE_PSA_INIT.
+ */
+#if defined(MBEDTLS_MD_SOME_PSA) || \
+    defined(MBEDTLS_USE_PSA_CRYPTO) || defined(MBEDTLS_SSL_PROTO_TLS1_3)
+#define MD_OR_USE_PSA_INIT()   PSA_INIT()
+#define MD_OR_USE_PSA_DONE()   PSA_DONE()
+#else
+#define MD_OR_USE_PSA_INIT() ((void) 0)
+#define MD_OR_USE_PSA_DONE() ((void) 0)
+#endif
+
+/** \def AES_PSA_INIT
+ *
+ * Call this macro to initialize the PSA subsystem if AES_C is not defined,
+ * so that CTR_DRBG uses PSA implementation to get AES-ECB.
+ *
+ * If the initialization fails, mark the test case as failed and jump to the
+ * \p exit label.
+ */
+/** \def AES_PSA_DONE
+ *
+ * Call this macro at the end of a test case if you called #AES_PSA_INIT.
+ *
+ * This is like #PSA_DONE except it does nothing under the same conditions as
+ * #AES_PSA_INIT.
+ */
+#if defined(MBEDTLS_AES_C)
+#define AES_PSA_INIT() ((void) 0)
+#define AES_PSA_DONE() ((void) 0)
+#else /* MBEDTLS_AES_C */
+#define AES_PSA_INIT()   PSA_INIT()
+#define AES_PSA_DONE()   PSA_DONE()
+#endif /* MBEDTLS_AES_C */
 
 #endif /* PSA_CRYPTO_HELPERS_H */

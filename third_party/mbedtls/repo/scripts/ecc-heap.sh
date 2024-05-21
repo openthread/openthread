@@ -12,7 +12,7 @@
 
 set -eu
 
-CONFIG_H='include/mbedtls/config.h'
+CONFIG_H='include/mbedtls/mbedtls_config.h'
 
 if [ -r $CONFIG_H ]; then :; else
     echo "$CONFIG_H not found" >&2
@@ -25,7 +25,7 @@ if grep -i cmake Makefile >/dev/null; then :; else
 fi
 
 if git status | grep -F $CONFIG_H >/dev/null 2>&1; then
-    echo "config.h not clean" >&2
+    echo "mbedtls_config.h not clean" >&2
     exit 1
 fi
 
@@ -42,7 +42,6 @@ cat << EOF >$CONFIG_H
 
 #define MBEDTLS_BIGNUM_C
 #define MBEDTLS_ECP_C
-#define MBEDTLS_ECP_NO_INTERNAL_RNG
 #define MBEDTLS_ASN1_PARSE_C
 #define MBEDTLS_ASN1_WRITE_C
 #define MBEDTLS_ECDSA_C
@@ -63,8 +62,6 @@ cat << EOF >$CONFIG_H
 // Montgomery curves
 #define MBEDTLS_ECP_DP_CURVE25519_ENABLED
 #define MBEDTLS_ECP_DP_CURVE448_ENABLED
-
-#include "check_config.h"
 
 #define MBEDTLS_HAVE_ASM // just make things a bit faster
 #define MBEDTLS_ECP_NIST_OPTIM // faster and less allocations

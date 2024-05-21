@@ -24,7 +24,7 @@ Making a Contribution
 1. [Check for open issues](https://github.com/Mbed-TLS/mbedtls/issues) or [start a discussion](https://lists.trustedfirmware.org/mailman3/lists/mbed-tls.lists.trustedfirmware.org) around a feature idea or a bug.
 1. Fork the [Mbed TLS repository on GitHub](https://github.com/Mbed-TLS/mbedtls) to start making your changes. As a general rule, you should use the ["development" branch](https://github.com/Mbed-TLS/mbedtls/tree/development) as a basis.
 1. Write a test which shows that the bug was fixed or that the feature works as expected.
-1. Send a pull request (PR) and work with us until it gets merged and published. Contributions may need some modifications, so a few rounds of review and fixing may be necessary. We will include your name in the ChangeLog :)
+1. Send a pull request (PR) and work with us until it gets merged and published. Contributions may need some modifications, so a few rounds of review and fixing may be necessary. See our [review process guidelines](https://mbed-tls.readthedocs.io/en/latest/reviews/review-for-contributors/).
 1. For quick merging, the contribution should be short, and concentrated on a single feature or topic. The larger the contribution is, the longer it would take to review it and merge it.
 
 Backwards Compatibility
@@ -86,7 +86,7 @@ License and Copyright
 
 Unless specifically indicated otherwise in a file, Mbed TLS files are provided under a dual [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html) OR [GPL-2.0-or-later](https://spdx.org/licenses/GPL-2.0-or-later.html) license. See the [LICENSE](LICENSE) file for the full text of these licenses. This means that users may choose which of these licenses they take the code under.
 
-Contributors must accept that their contributions are made under both the Apache-2.0 AND [GPL-2.0-or-later](https://spdx.org/licenses/GPL-2.0-or-later.html) licenses. This enables LTS (Long Term Support) branches of the software to be provided under either the Apache-2.0 or GPL-2.0-or-later licenses.
+Contributors must accept that their contributions are made under both the Apache-2.0 AND [GPL-2.0-or-later](https://spdx.org/licenses/GPL-2.0-or-later.html) licenses.
 
 All new files should include the standard SPDX license identifier where possible, i.e. "SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later".
 

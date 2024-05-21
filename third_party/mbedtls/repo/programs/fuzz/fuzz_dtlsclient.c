@@ -6,9 +6,8 @@
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
-#include "mbedtls/certs.h"
 #include "mbedtls/timing.h"
-
+#include "test/certs.h"
 
 #if defined(MBEDTLS_SSL_CLI_C) && \
     defined(MBEDTLS_ENTROPY_C) && \
@@ -43,8 +42,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
     fuzzBufferOffset_t biomemfuzz;
 
     if (initialized == 0) {
-#if defined(MBEDTLS_X509_CRT_PARSE_C) && defined(MBEDTLS_PEM_PARSE_C) && \
-        defined(MBEDTLS_CERTS_C)
+#if defined(MBEDTLS_X509_CRT_PARSE_C) && defined(MBEDTLS_PEM_PARSE_C)
         mbedtls_x509_crt_init(&cacert);
         if (mbedtls_x509_crt_parse(&cacert, (const unsigned char *) mbedtls_test_cas_pem,
                                    mbedtls_test_cas_pem_len) != 0) {

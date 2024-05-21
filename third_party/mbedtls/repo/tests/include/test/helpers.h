@@ -13,15 +13,36 @@
 #ifndef TEST_HELPERS_H
 #define TEST_HELPERS_H
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
+/* Most fields of publicly available structs are private and are wrapped with
+ * MBEDTLS_PRIVATE macro. This define allows tests to access the private fields
+ * directly (without using the MBEDTLS_PRIVATE wrapper). */
+#define MBEDTLS_ALLOW_PRIVATE_ACCESS
+
+#include "mbedtls/build_info.h"
+
+#if defined(__SANITIZE_ADDRESS__) /* gcc -fsanitize=address */
+#  define MBEDTLS_TEST_HAVE_ASAN
+#endif
+#if defined(__SANITIZE_THREAD__) /* gcc -fsanitize-thread */
+#  define MBEDTLS_TEST_HAVE_TSAN
 #endif
 
-#if defined(MBEDTLS_THREADING_C) && defined(MBEDTLS_THREADING_PTHREAD) && \
-    defined(MBEDTLS_TEST_HOOKS)
-#define MBEDTLS_TEST_MUTEX_USAGE
+#if defined(__has_feature)
+#  if __has_feature(address_sanitizer) /* clang -fsanitize=address */
+#    define MBEDTLS_TEST_HAVE_ASAN
+#  endif
+#  if __has_feature(memory_sanitizer) /* clang -fsanitize=memory */
+#    define MBEDTLS_TEST_HAVE_MSAN
+#  endif
+#  if __has_feature(thread_sanitizer) /* clang -fsanitize=thread */
+#    define MBEDTLS_TEST_HAVE_TSAN
+#  endif
+#endif
+
+#include "test/threading_helpers.h"
+
+#if defined(MBEDTLS_TEST_MUTEX_USAGE)
+#include "mbedtls/threading.h"
 #endif
 
 #include "mbedtls/platform.h"
@@ -45,20 +66,128 @@ typedef enum {
     MBEDTLS_TEST_RESULT_SKIPPED
 } mbedtls_test_result_t;
 
+#define MBEDTLS_TEST_LINE_LENGTH 76
+
 typedef struct {
     mbedtls_test_result_t result;
     const char *test;
     const char *filename;
     int line_no;
     unsigned long step;
-    char line1[76];
-    char line2[76];
+    char line1[MBEDTLS_TEST_LINE_LENGTH];
+    char line2[MBEDTLS_TEST_LINE_LENGTH];
 #if defined(MBEDTLS_TEST_MUTEX_USAGE)
     const char *mutex_usage_error;
 #endif
+#if defined(MBEDTLS_BIGNUM_C)
+    unsigned case_uses_negative_0;
+#endif
 }
 mbedtls_test_info_t;
-extern mbedtls_test_info_t mbedtls_test_info;
+
+/**
+ * \brief           Get the current test result status
+ *
+ * \return          The current test result status
+ */
+mbedtls_test_result_t mbedtls_test_get_result(void);
+
+/**
+ * \brief           Get the current test name/description
+ *
+ * \return          The current test name/description
+ */
+const char *mbedtls_test_get_test(void);
+
+/**
+ * \brief           Get the current test filename
+ *
+ * \return          The current test filename
+ */
+const char *mbedtls_get_test_filename(void);
+
+/**
+ * \brief           Get the current test file line number (for failure / skip)
+ *
+ * \return          The current test file line number (for failure / skip)
+ */
+int mbedtls_test_get_line_no(void);
+
+/**
+ * \brief           Increment the current test step.
+ *
+ * \note            It is not recommended for multiple threads to call this
+ *                  function concurrently - whilst it is entirely thread safe,
+ *                  the order of calls to this function can obviously not be
+ *                  ensured, so unexpected results may occur.
+ */
+void mbedtls_test_increment_step(void);
+
+/**
+ * \brief           Get the current test step
+ *
+ * \return          The current test step
+ */
+unsigned long mbedtls_test_get_step(void);
+
+/**
+ * \brief           Get the current test line buffer 1
+ *
+ * \param line      Buffer of minimum size \c MBEDTLS_TEST_LINE_LENGTH,
+ *                  which will have line buffer 1 copied to it.
+ */
+void mbedtls_test_get_line1(char *line);
+
+/**
+ * \brief           Get the current test line buffer 2
+ *
+ * \param line      Buffer of minimum size \c MBEDTLS_TEST_LINE_LENGTH,
+ *                  which will have line buffer 1 copied to it.
+ */
+void mbedtls_test_get_line2(char *line);
+
+#if defined(MBEDTLS_TEST_MUTEX_USAGE)
+/**
+ * \brief           Get the current mutex usage error message
+ *
+ * \return          The current mutex error message (may be NULL if no error)
+ */
+const char *mbedtls_test_get_mutex_usage_error(void);
+
+/**
+ * \brief           Set the current mutex usage error message
+ *
+ * \note            This will only set the mutex error message if one has not
+ *                  already been set, or if we are clearing the message (msg is
+ *                  NULL)
+ *
+ * \param msg       Error message to set (can be NULL to clear)
+ */
+void mbedtls_test_set_mutex_usage_error(const char *msg);
+#endif
+
+#if defined(MBEDTLS_BIGNUM_C)
+
+/**
+ * \brief           Get whether the current test is a bignum test that uses
+ *                  negative zero.
+ *
+ * \return          non zero if the current test uses bignum negative zero.
+ */
+unsigned mbedtls_test_get_case_uses_negative_0(void);
+
+/**
+ * \brief           Indicate that the current test uses bignum negative zero.
+ *
+ * \note            This function is called if the current test case had an
+ *                  input parsed with mbedtls_test_read_mpi() that is a negative
+ *                  0 (`"-"`, `"-0"`, `"-00"`, etc., constructing a result with
+ *                  the sign bit set to -1 and the value being all-limbs-0,
+ *                  which is not a valid representation in #mbedtls_mpi but is
+ *                  tested for robustness). *
+ */
+void  mbedtls_test_increment_case_uses_negative_0(void);
+#endif
 
 int mbedtls_test_platform_setup(void);
 void mbedtls_test_platform_teardown(void);
@@ -95,24 +224,42 @@ void mbedtls_test_fail(const char *test, int line_no, const char *filename);
 void mbedtls_test_skip(const char *test, int line_no, const char *filename);
 
 /**
- * \brief       Set the test step number for failure reports.
+ * \brief           Set the test step number for failure reports.
  *
- *              Call this function to display "step NNN" in addition to the
- *              line number and file name if a test fails. Typically the "step
- *              number" is the index of a for loop but it can be whatever you
- *              want.
+ *                  Call this function to display "step NNN" in addition to the
+ *                  line number and file name if a test fails. Typically the
+ *                  "step number" is the index of a for loop but it can be
+ *                  whatever you want.
+ *
+ * \note            It is not recommended for multiple threads to call this
+ *                  function concurrently - whilst it is entirely thread safe,
+ *                  the order of calls to this function can obviously not be
+ *                  ensured, so unexpected results may occur.
  *
  * \param step  The step number to report.
  */
 void mbedtls_test_set_step(unsigned long step);
 
 /**
- * \brief       Reset mbedtls_test_info to a ready/starting state.
+ * \brief           Reset mbedtls_test_info to a ready/starting state.
  */
 void mbedtls_test_info_reset(void);
 
+#ifdef MBEDTLS_TEST_MUTEX_USAGE
 /**
- * \brief           Record the current test case as a failure if two integers
+ * \brief           Get the test info data mutex.
+ *
+ * \note            This is designed only to be used by threading_helpers to
+ *                  avoid a deadlock, not for general access to this mutex.
+ *
+ * \return          The test info data mutex.
+ */
+mbedtls_threading_mutex_t *mbedtls_test_get_info_mutex(void);
+
+#endif /* MBEDTLS_TEST_MUTEX_USAGE */
+
+/**
+ * \brief Record the current test case as a failure if two integers
  *                  have a different value.
  *
  *                  This function is usually called via the macro
@@ -200,6 +347,17 @@ void mbedtls_test_hexify(unsigned char *obuf,
                          int len);
 
 /**
+ * \brief Convert hexadecimal digit to an integer.
+ *
+ * \param c        The digit to convert (`'0'` to `'9'`, `'A'` to `'F'` or
+ *                 `'a'` to `'f'`).
+ * \param[out] uc  On success, the value of the digit (0 to 15).
+ *
+ * \return         0 on success, -1 if \p c is not a hexadecimal digit.
+ */
+int mbedtls_test_ascii2uc(const char c, unsigned char *uc);
+
+/**
  * Allocate and zeroize a buffer.
  *
  * If the size if zero, a pointer to a zeroized 1-byte buffer is returned.
@@ -223,107 +381,9 @@ unsigned char *mbedtls_test_unhexify_alloc(const char *ibuf, size_t *olen);
 int mbedtls_test_hexcmp(uint8_t *a, uint8_t *b,
                         uint32_t a_len, uint32_t b_len);
 
-#if defined(MBEDTLS_CHECK_PARAMS)
-
-typedef struct {
-    const char *failure_condition;
-    const char *file;
-    int line;
-}
-mbedtls_test_param_failed_location_record_t;
-
-/**
- * \brief   Get the location record of the last call to
- *          mbedtls_test_param_failed().
- *
- * \note    The call expectation is set up and active until the next call to
- *          mbedtls_test_param_failed_check_expected_call() or
- *          mbedtls_param_failed() that cancels it.
- */
-void mbedtls_test_param_failed_get_location_record(
-    mbedtls_test_param_failed_location_record_t *location_record);
-
-/**
- * \brief   State that a call to mbedtls_param_failed() is expected.
- *
- * \note    The call expectation is set up and active until the next call to
- *          mbedtls_test_param_failed_check_expected_call() or
- *          mbedtls_param_failed that cancel it.
- */
-void mbedtls_test_param_failed_expect_call(void);
-
-/**
- * \brief   Check whether mbedtls_param_failed() has been called as expected.
- *
- * \note    Check whether mbedtls_param_failed() has been called between the
- *          last call to mbedtls_test_param_failed_expect_call() and the call
- *          to this function.
- *
- * \return  \c 0 Since the last call to mbedtls_param_failed_expect_call(),
- *               mbedtls_param_failed() has been called.
- *          \c -1 Otherwise.
- */
-int mbedtls_test_param_failed_check_expected_call(void);
-
-/**
- * \brief   Get the address of the object of type jmp_buf holding the execution
- *          state information used by mbedtls_param_failed() to do a long jump.
- *
- * \note    If a call to mbedtls_param_failed() is not expected in the sense
- *          that there is no call to mbedtls_test_param_failed_expect_call()
- *          preceding it, then mbedtls_param_failed() will try to restore the
- *          execution to the state stored in the jmp_buf object whose address
- *          is returned by the present function.
- *
- * \note    This function is intended to provide the parameter of the
- *          setjmp() function to set-up where mbedtls_param_failed() should
- *          long-jump if it has to. It is foreseen to be used as:
- *
- *          setjmp( mbedtls_test_param_failed_get_state_buf() ).
- *
- * \note    The type of the returned value is not jmp_buf as jmp_buf is an
- *          an array type (C specification) and a function cannot return an
- *          array type.
- *
- * \note    The type of the returned value is not jmp_buf* as then the return
- *          value couldn't be used by setjmp(), as its parameter's type is
- *          jmp_buf.
- *
- * \return  Address of the object of type jmp_buf holding the execution state
- *          information used by mbedtls_param_failed() to do a long jump.
- */
-void *mbedtls_test_param_failed_get_state_buf(void);
-
-/**
- * \brief   Reset the execution state used by mbedtls_param_failed() to do a
- *          long jump.
- *
- * \note    If a call to mbedtls_param_failed() is not expected in the sense
- *          that there is no call to mbedtls_test_param_failed_expect_call()
- *          preceding it, then mbedtls_param_failed() will try to restore the
- *          execution state that this function reset.
- *
- * \note    It is recommended to reset the execution state when the state
- *          is not relevant anymore. That way an unexpected call to
- *          mbedtls_param_failed() will not trigger a long jump with
- *          undefined behavior but rather a long jump that will rather fault.
- */
-void mbedtls_test_param_failed_reset_state(void);
-#endif /* MBEDTLS_CHECK_PARAMS */
-
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
 #include "test/fake_external_rng_for_test.h"
 #endif
-
-#if defined(MBEDTLS_TEST_MUTEX_USAGE)
-/** Permanently activate the mutex usage verification framework. See
- * threading_helpers.c for information. */
-void mbedtls_test_mutex_usage_init(void);
-
-/** Call this function after executing a test case to check for mutex usage
- * errors. */
-void mbedtls_test_mutex_usage_check(void);
-#endif /* MBEDTLS_TEST_MUTEX_USAGE */
 
 #if defined(MBEDTLS_TEST_HOOKS)
 /**
@@ -340,38 +400,5 @@ void mbedtls_test_mutex_usage_check(void);
 void mbedtls_test_err_add_check(int high, int low,
                                 const char *file, int line);
 #endif
-
-#if defined(MBEDTLS_BIGNUM_C)
-/** Read an MPI from a hexadecimal string.
- *
- * Like mbedtls_mpi_read_string(), but with tighter guarantees around
- * edge cases.
- *
- * - This function guarantees that if \p s begins with '-' then the sign
- *   bit of the result will be negative, even if the value is 0.
- *   When this function encounters such a "negative 0", it
- *   increments #mbedtls_test_case_uses_negative_0.
- * - The size of the result is exactly the minimum number of limbs needed
- *   to fit the digits in the input. In particular, this function constructs
- *   a bignum with 0 limbs for an empty string, and a bignum with leading 0
- *   limbs if the string has sufficiently many leading 0 digits.
- *   This is important so that the "0 (null)" and "0 (1 limb)" and
- *   "leading zeros" test cases do what they claim.
- *
- * \param[out] X        The MPI object to populate. It must be initialized.
- * \param[in] s         The null-terminated hexadecimal string to read from.
- *
- * \return \c 0 on success, an \c MBEDTLS_ERR_MPI_xxx error code otherwise.
- */
-int mbedtls_test_read_mpi(mbedtls_mpi *X, const char *s);
-
-/** Nonzero if the current test case had an input parsed with
- * mbedtls_test_read_mpi() that is a negative 0 (`"-"`, `"-0"`, `"-00"`, etc.,
- * constructing a result with the sign bit set to -1 and the value being
- * all-limbs-0, which is not a valid representation in #mbedtls_mpi but is
- * tested for robustness).
- */
-extern unsigned mbedtls_test_case_uses_negative_0;
-#endif /* MBEDTLS_BIGNUM_C */
 
 #endif /* TEST_HELPERS_H */

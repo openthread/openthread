@@ -70,9 +70,20 @@ const char *mbedtls_test_helper_is_psa_leaking(void)
 
     mbedtls_psa_get_stats(&stats);
 
+#if defined(MBEDTLS_CTR_DRBG_C) && !defined(MBEDTLS_AES_C) && \
+    !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+    /* When AES_C is not defined and PSA does not have an external RNG,
+     * then CTR_DRBG uses PSA to perform AES-ECB. In this scenario 1 key
+     * slot is used internally from PSA to hold the AES key and it should
+     * not be taken into account when evaluating remaining open slots. */
+    if (stats.volatile_slots > 1) {
+        return "A volatile slot has not been closed properly.";
+    }
+#else
     if (stats.volatile_slots != 0) {
         return "A volatile slot has not been closed properly.";
     }
+#endif
     if (stats.persistent_slots != 0) {
         return "A persistent slot has not been closed properly.";
     }
@@ -135,6 +146,17 @@ int mbedtls_test_fail_if_psa_leaking(int line_no, const char *filename)
         mbedtls_test_fail(msg, line_no, filename);
         return 1;
     }
+}
+
+uint64_t mbedtls_test_parse_binary_string(data_t *bin_string)
+{
+    uint64_t result = 0;
+    TEST_LE_U(bin_string->len, 8);
+    for (size_t i = 0; i < bin_string->len; i++) {
+        result = result << 8 | bin_string->x[i];
+    }
+exit:
+    return result; /* returns 0 if len > 8 */
 }
 
 #if defined(MBEDTLS_PSA_INJECT_ENTROPY)

@@ -42,6 +42,7 @@ if(UNIFDEF_EXE)
 endif()
 find_program(SED_EXE sed)
 
+string(APPEND CMAKE_C_FLAGS " -Wno-unused-but-set-variable")
 string(REPLACE "-Wconversion" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 string(REPLACE "-Wconversion" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
@@ -74,7 +75,7 @@ else()
     configure_file(mbedtls-config.h openthread-mbedtls-config.h COPYONLY)
 endif()
 
-target_include_directories(ot-config
+target_include_directories(ot-config SYSTEM
     INTERFACE
         ${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/repo/include)

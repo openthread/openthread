@@ -1,11 +1,12 @@
 /* BEGIN_HEADER */
 #include <stdint.h>
 
+#include "psa_crypto_core.h"
 /* Some tests in this module configure entropy sources. */
 #include "psa_crypto_invasive.h"
 
 #include "mbedtls/entropy.h"
-#include "mbedtls/entropy_poll.h"
+#include "entropy_poll.h"
 
 #define ENTROPY_MIN_NV_SEED_SIZE                                        \
     MAX(MBEDTLS_ENTROPY_MIN_PLATFORM, MBEDTLS_ENTROPY_BLOCK_SIZE)
@@ -55,9 +56,8 @@ static int fake_entropy_source(void *state_arg,
 
 #define ENTROPY_SOURCE_PLATFORM                 0x00000001
 #define ENTROPY_SOURCE_TIMING                   0x00000002
-#define ENTROPY_SOURCE_HAVEGE                   0x00000004
-#define ENTROPY_SOURCE_HARDWARE                 0x00000008
-#define ENTROPY_SOURCE_NV_SEED                  0x00000010
+#define ENTROPY_SOURCE_HARDWARE                 0x00000004
+#define ENTROPY_SOURCE_NV_SEED                  0x00000008
 #define ENTROPY_SOURCE_FAKE                     0x40000000
 
 static uint32_t custom_entropy_sources_mask;
@@ -75,33 +75,12 @@ static void custom_entropy_init(mbedtls_entropy_context *ctx)
 #endif
 
     ctx->accumulator_started = 0;
-#if defined(MBEDTLS_ENTROPY_SHA512_ACCUMULATOR)
-    mbedtls_sha512_init(&ctx->accumulator);
-#else
-    mbedtls_sha256_init(&ctx->accumulator);
-#endif
-#if defined(MBEDTLS_HAVEGE_C)
-    mbedtls_havege_init(&ctx->havege_data);
-#endif
+    mbedtls_md_init(&ctx->accumulator);
 
 #if !defined(MBEDTLS_NO_PLATFORM_ENTROPY)
     if (custom_entropy_sources_mask & ENTROPY_SOURCE_PLATFORM) {
         mbedtls_entropy_add_source(ctx, mbedtls_platform_entropy_poll, NULL,
                                    MBEDTLS_ENTROPY_MIN_PLATFORM,
-                                   MBEDTLS_ENTROPY_SOURCE_STRONG);
-    }
-#endif
-#if defined(MBEDTLS_TIMING_C)
-    if (custom_entropy_sources_mask & ENTROPY_SOURCE_TIMING) {
-        mbedtls_entropy_add_source(ctx, mbedtls_hardclock_poll, NULL,
-                                   MBEDTLS_ENTROPY_MIN_HARDCLOCK,
-                                   MBEDTLS_ENTROPY_SOURCE_WEAK);
-    }
-#endif
-#if defined(MBEDTLS_HAVEGE_C)
-    if (custom_entropy_sources_mask & ENTROPY_SOURCE_HAVEGE) {
-        mbedtls_entropy_add_source(ctx, mbedtls_havege_poll, &ctx->havege_data,
-                                   MBEDTLS_ENTROPY_MIN_HAVEGE,
                                    MBEDTLS_ENTROPY_SOURCE_STRONG);
     }
 #endif
@@ -133,6 +112,59 @@ static void custom_entropy_init(mbedtls_entropy_context *ctx)
 }
 
 #endif /* !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) */
+
+#if defined MBEDTLS_THREADING_PTHREAD
+
+typedef struct {
+    int do_init;
+} thread_psa_init_ctx_t;
+
+static void *thread_psa_init_function(void *ctx)
+{
+    thread_psa_init_ctx_t *init_context = (thread_psa_init_ctx_t *) ctx;
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    uint8_t random[10] = { 0 };
+
+    if (init_context->do_init) {
+        PSA_ASSERT(psa_crypto_init());
+    }
+
+    /* If this is a test only thread, then we can assume PSA is being started
+     * up on another thread and thus we cannot know whether the following tests
+     * will be successful or not. These checks are still useful, however even
+     * without checking the return codes as they may show up race conditions on
+     * the flags they check under TSAN.*/
+
+    /* Test getting if drivers are initialised. */
+    int can_do = psa_can_do_hash(PSA_ALG_NONE);
+
+    if (init_context->do_init) {
+        TEST_ASSERT(can_do == 1);
+    }
+
+#if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+
+    /* Test getting global_data.rng_state. */
+    status = mbedtls_psa_crypto_configure_entropy_sources(NULL, NULL);
+
+    if (init_context->do_init) {
+        /* Bad state due to entropy sources already being setup in
+         * psa_crypto_init() */
+        TEST_EQUAL(status, PSA_ERROR_BAD_STATE);
+    }
+#endif /* !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) */
+
+    /* Test using the PSA RNG ony if we know PSA is up and running. */
+    if (init_context->do_init) {
+        status = psa_generate_random(random, sizeof(random));
+
+        TEST_EQUAL(status, PSA_SUCCESS);
+    }
+
+exit:
+    return NULL;
+}
+#endif /* defined MBEDTLS_THREADING_PTHREAD */
 
 /* END_HEADER */
 
@@ -173,6 +205,67 @@ void deinit_without_init(int count)
         PSA_DONE();
     }
     PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_THREADING_PTHREAD */
+void psa_threaded_init(int arg_thread_count)
+{
+    thread_psa_init_ctx_t init_context;
+    thread_psa_init_ctx_t init_context_2;
+
+    size_t thread_count = (size_t) arg_thread_count;
+    mbedtls_test_thread_t *threads = NULL;
+
+    TEST_CALLOC(threads, sizeof(mbedtls_test_thread_t) * thread_count);
+
+    init_context.do_init = 1;
+
+    /* Test initialising PSA and testing certain protected globals on multiple
+     * threads. */
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(
+            mbedtls_test_thread_create(&threads[i],
+                                       thread_psa_init_function,
+                                       (void *) &init_context),
+            0);
+    }
+
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(mbedtls_test_thread_join(&threads[i]), 0);
+    }
+
+    PSA_DONE();
+
+    init_context_2.do_init = 0;
+
+    /* Test initialising PSA whilst also testing flags on other threads. */
+    for (size_t i = 0; i < thread_count; i++) {
+
+        if (i & 1) {
+
+            TEST_EQUAL(
+                mbedtls_test_thread_create(&threads[i],
+                                           thread_psa_init_function,
+                                           (void *) &init_context),
+                0);
+        } else {
+            TEST_EQUAL(
+                mbedtls_test_thread_create(&threads[i],
+                                           thread_psa_init_function,
+                                           (void *) &init_context_2),
+                0);
+        }
+    }
+
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(mbedtls_test_thread_join(&threads[i]), 0);
+    }
+exit:
+
+    PSA_DONE();
+
+    mbedtls_free(threads);
 }
 /* END_CASE */
 

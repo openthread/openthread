@@ -32,8 +32,9 @@ class Requirements:
         """Adjust a requirement to the minimum specified version."""
         # allow inheritance #pylint: disable=no-self-use
         # If a requirement specifies a minimum version, impose that version.
-        req = re.sub(r'>=|~=', r'==', req)
-        return req
+        split_req = req.split(';', 1)
+        split_req[0] = re.sub(r'>=|~=', r'==', split_req[0])
+        return ';'.join(split_req)
 
     def add_file(self, filename: str) -> None:
         """Add requirements from the specified file.
@@ -44,19 +45,18 @@ class Requirements:
         * Comments (``#`` at the beginning of the line or after whitespace).
         * ``-r FILENAME`` to include another file.
         """
-        with open(filename) as fd:
-            for line in fd:
-                line = line.strip()
-                line = re.sub(r'(\A|\s+)#.*', r'', line)
-                if not line:
-                    continue
-                m = re.match(r'-r\s+', line)
-                if m:
-                    nested_file = os.path.join(os.path.dirname(filename),
-                                               line[m.end(0):])
-                    self.add_file(nested_file)
-                    continue
-                self.requirements.append(self.adjust_requirement(line))
+        for line in open(filename):
+            line = line.strip()
+            line = re.sub(r'(\A|\s+)#.*', r'', line)
+            if not line:
+                continue
+            m = re.match(r'-r\s+', line)
+            if m:
+                nested_file = os.path.join(os.path.dirname(filename),
+                                           line[m.end(0):])
+                self.add_file(nested_file)
+                continue
+            self.requirements.append(self.adjust_requirement(line))
 
     def write(self, out: typing_util.Writable) -> None:
         """List the gathered requirements."""

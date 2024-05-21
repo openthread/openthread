@@ -31,7 +31,7 @@ following:
         function.
   - arguments(): a method to generate the list of arguments required for the
         test_function.
-  - generate_function_test(): a method to generate TestCases for the function.
+  - generate_function_tests(): a method to generate TestCases for the function.
         This should create instances of the class with required input data, and
         call `.create_test_case()` to yield the TestCase.
 
@@ -44,68 +44,34 @@ of BaseTarget in test_data_generation.py.
 
 import sys
 
-from abc import ABCMeta, abstractmethod
-from typing import Iterator, List, Tuple, TypeVar
+from abc import ABCMeta
+from typing import List
 
 import scripts_path # pylint: disable=unused-import
-from mbedtls_dev import test_case
 from mbedtls_dev import test_data_generation
+from mbedtls_dev import bignum_common
+# Import modules containing additional test classes
+# Test function classes in these modules will be registered by
+# the framework
+from mbedtls_dev import bignum_core, bignum_mod_raw, bignum_mod # pylint: disable=unused-import
 
-T = TypeVar('T') #pylint: disable=invalid-name
-
-def hex_to_int(val: str) -> int:
-    """Implement the syntax accepted by mbedtls_test_read_mpi().
-
-    This is a superset of what is accepted by mbedtls_test_read_mpi_core().
-    """
-    if val in ['', '-']:
-        return 0
-    return int(val, 16)
-
-def quote_str(val) -> str:
-    return "\"{}\"".format(val)
-
-def combination_pairs(values: List[T]) -> List[Tuple[T, T]]:
-    """Return all pair combinations from input values."""
-    return [(x, y) for x in values for y in values]
-
-class BignumTarget(test_data_generation.BaseTarget, metaclass=ABCMeta):
-    #pylint: disable=abstract-method
+class BignumTarget(test_data_generation.BaseTarget):
+    #pylint: disable=too-few-public-methods
     """Target for bignum (legacy) test case generation."""
     target_basename = 'test_suite_bignum.generated'
 
 
-class BignumOperation(BignumTarget, metaclass=ABCMeta):
-    """Common features for bignum binary operations.
-
-    This adds functionality common in binary operation tests. This includes
-    generation of case descriptions, using descriptions of values and symbols
-    to represent the operation or result.
-
-    Attributes:
-        symbol: Symbol used for the operation in case description.
-        input_values: List of values to use as test case inputs. These are
-            combined to produce pairs of values.
-        input_cases: List of tuples containing pairs of test case inputs. This
-            can be used to implement specific pairs of inputs.
-    """
-    symbol = ""
+class BignumOperation(bignum_common.OperationCommon, BignumTarget,
+                      metaclass=ABCMeta):
+    #pylint: disable=abstract-method
+    """Common features for bignum operations in legacy tests."""
+    unique_combinations_only = True
     input_values = [
         "", "0", "-", "-0",
         "7b", "-7b",
         "0000000000000000123", "-0000000000000000123",
         "1230000000000000000", "-1230000000000000000"
-    ] # type: List[str]
-    input_cases = [] # type: List[Tuple[str, str]]
-
-    def __init__(self, val_a: str, val_b: str) -> None:
-        self.arg_a = val_a
-        self.arg_b = val_b
-        self.int_a = hex_to_int(val_a)
-        self.int_b = hex_to_int(val_b)
-
-    def arguments(self) -> List[str]:
-        return [quote_str(self.arg_a), quote_str(self.arg_b), self.result()]
+    ]
 
     def description_suffix(self) -> str:
         #pylint: disable=no-self-use # derived classes need self
@@ -129,15 +95,6 @@ class BignumOperation(BignumTarget, metaclass=ABCMeta):
             if description_suffix:
                 self.case_description += " " + description_suffix
         return super().description()
-
-    @abstractmethod
-    def result(self) -> str:
-        """Get the result of the operation.
-
-        This could be calculated during initialization and stored as `_result`
-        and then returned, or calculated when the method is called.
-        """
-        raise NotImplementedError
 
     @staticmethod
     def value_description(val) -> str:
@@ -164,22 +121,6 @@ class BignumOperation(BignumTarget, metaclass=ABCMeta):
             tmp = "large " + tmp
         return tmp
 
-    @classmethod
-    def get_value_pairs(cls) -> Iterator[Tuple[str, str]]:
-        """Generator to yield pairs of inputs.
-
-        Combinations are first generated from all input values, and then
-        specific cases provided.
-        """
-        yield from combination_pairs(cls.input_values)
-        yield from cls.input_cases
-
-    @classmethod
-    def generate_function_tests(cls) -> Iterator[test_case.TestCase]:
-        for a_value, b_value in cls.get_value_pairs():
-            cur_op = cls(a_value, b_value)
-            yield cur_op.create_test_case()
-
 
 class BignumCmp(BignumOperation):
     """Test cases for bignum value comparison."""
@@ -198,8 +139,8 @@ class BignumCmp(BignumOperation):
         self._result = int(self.int_a > self.int_b) - int(self.int_a < self.int_b)
         self.symbol = ["<", "==", ">"][self._result + 1]
 
-    def result(self) -> str:
-        return str(self._result)
+    def result(self) -> List[str]:
+        return [str(self._result)]
 
 
 class BignumCmpAbs(BignumCmp):
@@ -218,7 +159,7 @@ class BignumAdd(BignumOperation):
     symbol = "+"
     test_function = "mpi_add_mpi"
     test_name = "MPI add"
-    input_cases = combination_pairs(
+    input_cases = bignum_common.combination_pairs(
         [
             "1c67967269c6", "9cde3",
             "-1c67967269c6", "-9cde3",
@@ -238,8 +179,8 @@ class BignumAdd(BignumOperation):
         return ", result{}0".format('>' if self._result > 0 else
                                     '<' if self._result < 0 else '=')
 
-    def result(self) -> str:
-        return quote_str("{:x}".format(self._result))
+    def result(self) -> List[str]:
+        return [bignum_common.quote_str("{:x}".format(self._result))]
 
 if __name__ == '__main__':
     # Use the section of the docstring relevant to the CLI as description

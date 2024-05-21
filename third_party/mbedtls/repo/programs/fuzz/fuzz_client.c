@@ -1,7 +1,7 @@
 #include "mbedtls/ssl.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
-#include "mbedtls/certs.h"
+#include "test/certs.h"
 #include "common.h"
 #include <string.h>
 #include <stdlib.h>
@@ -46,8 +46,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
     uint16_t options;
 
     if (initialized == 0) {
-#if defined(MBEDTLS_X509_CRT_PARSE_C) && defined(MBEDTLS_PEM_PARSE_C) && \
-        defined(MBEDTLS_CERTS_C)
+#if defined(MBEDTLS_X509_CRT_PARSE_C) && defined(MBEDTLS_PEM_PARSE_C)
         mbedtls_x509_crt_init(&cacert);
         if (mbedtls_x509_crt_parse(&cacert, (const unsigned char *) mbedtls_test_cas_pem,
                                    mbedtls_test_cas_pem_len) != 0) {
@@ -112,11 +111,6 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
     {
         mbedtls_ssl_conf_authmode(&conf, MBEDTLS_SSL_VERIFY_NONE);
     }
-#if defined(MBEDTLS_SSL_TRUNCATED_HMAC)
-    mbedtls_ssl_conf_truncated_hmac(&conf,
-                                    (options &
-                                     8) ? MBEDTLS_SSL_TRUNC_HMAC_ENABLED : MBEDTLS_SSL_TRUNC_HMAC_DISABLED);
-#endif
 #if defined(MBEDTLS_SSL_EXTENDED_MASTER_SECRET)
     mbedtls_ssl_conf_extended_master_secret(&conf,
                                             (options &
@@ -126,11 +120,6 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
     mbedtls_ssl_conf_encrypt_then_mac(&conf,
                                       (options &
                                        0x20) ? MBEDTLS_SSL_ETM_DISABLED : MBEDTLS_SSL_ETM_ENABLED);
-#endif
-#if defined(MBEDTLS_SSL_CBC_RECORD_SPLITTING)
-    mbedtls_ssl_conf_cbc_record_splitting(&conf,
-                                          (options &
-                                           0x40) ? MBEDTLS_SSL_CBC_RECORD_SPLITTING_ENABLED : MBEDTLS_SSL_CBC_RECORD_SPLITTING_DISABLED);
 #endif
 #if defined(MBEDTLS_SSL_RENEGOTIATION)
     mbedtls_ssl_conf_renegotiation(&conf,
