@@ -428,7 +428,7 @@ template <> otError Br::Process<Cmd("prefixtable")>(Arg aArgs[])
         }
 
         OutputFormat("router:");
-        OutputRouterInfo(entry.mRouter);
+        OutputRouterInfo(entry.mRouter, kShortVersion);
     }
 
 exit:
@@ -518,7 +518,7 @@ exit:
  * @cli br routers
  * @code
  * br routers
- * ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1)
+ * ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1) ms-since-rx:1505
  * Done
  * @endcode
  * @par
@@ -529,6 +529,7 @@ exit:
  *   - M: Managed Address Config flag
  *   - O: Other Config flag
  *   - Stub: Stub Router flag (indicates whether the router is a stub router)
+ * - Milliseconds since last received message from this router
  * @sa otBorderRoutingGetNextRouterEntry
  */
 template <> otError Br::Process<Cmd("routers")>(Arg aArgs[])
@@ -543,18 +544,29 @@ template <> otError Br::Process<Cmd("routers")>(Arg aArgs[])
 
     while (otBorderRoutingGetNextRouterEntry(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
     {
-        OutputRouterInfo(entry);
+        OutputRouterInfo(entry, kLongVersion);
     }
 
 exit:
     return error;
 }
 
-void Br::OutputRouterInfo(const otBorderRoutingRouterEntry &aEntry)
+void Br::OutputRouterInfo(const otBorderRoutingRouterEntry &aEntry, RouterOutputMode aMode)
 {
     OutputIp6Address(aEntry.mAddress);
-    OutputLine(" (M:%u O:%u Stub:%u)", aEntry.mManagedAddressConfigFlag, aEntry.mOtherConfigFlag,
-               aEntry.mStubRouterFlag);
+    OutputFormat(" (M:%u O:%u Stub:%u)", aEntry.mManagedAddressConfigFlag, aEntry.mOtherConfigFlag,
+                 aEntry.mStubRouterFlag);
+
+    switch (aMode)
+    {
+    case kShortVersion:
+        OutputNewLine();
+        break;
+
+    case kLongVersion:
+        OutputLine(" ms-since-rx:%lu", ToUlong(aEntry.mMsecSinceLastUpdate));
+        break;
+    }
 }
 
 template <> otError Br::Process<Cmd("raoptions")>(Arg aArgs[])

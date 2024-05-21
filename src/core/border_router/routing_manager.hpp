@@ -817,7 +817,7 @@ private:
 
             bool Matches(const Ip6::Address &aAddress) const { return aAddress == mAddress; }
             bool Matches(EmptyChecker aChecker) const;
-            void CopyInfoTo(RouterEntry &aEntry) const;
+            void CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow) const;
 
             using OnLinkPrefixList = OwningList<Entry<OnLinkPrefix>>;
             using RoutePrefixList  = OwningList<Entry<RoutePrefix>>;
@@ -825,6 +825,7 @@ private:
             Ip6::Address     mAddress;
             OnLinkPrefixList mOnLinkPrefixes;
             RoutePrefixList  mRoutePrefixes;
+            TimeMilli        mLastUpdateTime;
             TimeMilli        mTimeout;
             uint8_t          mNsProbeCount;
             bool             mManagedAddressConfigFlag : 1;
