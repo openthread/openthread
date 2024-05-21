@@ -74,6 +74,12 @@ public:
     const Timestamp *GetTimestamp(void) const;
 
     /**
+     * Clears the Operational Dataset.
+     *
+     */
+    void Clear(void);
+
+    /**
      * Restores the Operational Dataset from non-volatile memory.
      *
      * @retval kErrorNone      Successfully restore the dataset.
@@ -299,7 +305,6 @@ private:
 
     bool  IsActiveDataset(void) const { return (mType == Dataset::kActive); }
     bool  IsPendingDataset(void) const { return (mType == Dataset::kPending); }
-    void  Clear(void);
     Error ApplyConfiguration(const Dataset &aDataset) const;
     void  HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
     void  HandleTimer(void);
@@ -391,12 +396,6 @@ public:
      */
     bool IsCommissioned(void) const;
 
-    /**
-     * Clears the Active Operational Dataset.
-     *
-     */
-    void Clear(void) { DatasetManager::Clear(); }
-
 #if OPENTHREAD_FTD
 
     /**
@@ -457,22 +456,6 @@ public:
      *
      */
     explicit PendingDatasetManager(Instance &aInstance);
-
-    /**
-     * Clears the Pending Operational Dataset.
-     *
-     * Also stops the Delay Timer if it was active.
-     *
-     */
-    void Clear(void);
-
-    /**
-     * Clears the network Pending Operational Dataset.
-     *
-     * Also stops the Delay Timer if it was active.
-     *
-     */
-    void ClearNetwork(void);
 
 #if OPENTHREAD_FTD
     /**

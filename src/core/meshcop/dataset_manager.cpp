@@ -257,6 +257,12 @@ void DatasetManager::Clear(void)
     Get<Settings>().DeleteOperationalDataset(mType);
 
     mTimer.Stop();
+
+    if (IsPendingDataset())
+    {
+        Get<PendingDatasetManager>().mDelayTimer.Stop();
+    }
+
     SignalDatasetChange();
 }
 
@@ -861,21 +867,6 @@ PendingDatasetManager::PendingDatasetManager(Instance &aInstance)
     : DatasetManager(aInstance, Dataset::kPending, PendingDatasetManager::HandleTimer)
     , mDelayTimer(aInstance)
 {
-}
-
-void PendingDatasetManager::Clear(void)
-{
-    DatasetManager::Clear();
-    mDelayTimer.Stop();
-}
-
-void PendingDatasetManager::ClearNetwork(void)
-{
-    Dataset dataset;
-
-    mNetworkTimestamp.Clear();
-    mNetworkTimestampValid = false;
-    IgnoreError(DatasetManager::Save(dataset));
 }
 
 void PendingDatasetManager::StartDelayTimer(void)
