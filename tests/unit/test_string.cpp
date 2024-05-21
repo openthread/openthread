@@ -337,6 +337,8 @@ void TestStringParseUint8(void)
         {"0256", kErrorParse}, // Larger than max `uint8_t`
     };
 
+    uint8_t digit;
+
     printf("\nTest 11: TestStringParseUint8() function\n");
 
     for (const TestCase &testCase : kTestCases)
@@ -362,6 +364,64 @@ void TestStringParseUint8(void)
             printf("\n%-10s -> kErrorParse", testCase.mString);
         }
     }
+
+    for (char c = '0'; c <= '9'; c++)
+    {
+        VerifyOrQuit(IsDigit(c));
+        VerifyOrQuit(!IsUppercase(c));
+        VerifyOrQuit(!IsLowercase(c));
+
+        SuccessOrQuit(ParseDigit(c, digit));
+        VerifyOrQuit(digit == (c - '0'));
+
+        SuccessOrQuit(ParseHexDigit(c, digit));
+        VerifyOrQuit(digit == (c - '0'));
+    }
+
+    for (char c = 'A'; c <= 'Z'; c++)
+    {
+        VerifyOrQuit(!IsDigit(c));
+        VerifyOrQuit(IsUppercase(c));
+        VerifyOrQuit(!IsLowercase(c));
+        VerifyOrQuit(ParseDigit(c, digit) != kErrorNone);
+
+        if (c <= 'F')
+        {
+            SuccessOrQuit(ParseHexDigit(c, digit));
+            VerifyOrQuit(digit == (c - 'A' + 10));
+        }
+        else
+        {
+            VerifyOrQuit(ParseHexDigit(c, digit) != kErrorNone);
+        }
+    }
+
+    for (char c = 'a'; c <= 'z'; c++)
+    {
+        VerifyOrQuit(!IsDigit(c));
+        VerifyOrQuit(!IsUppercase(c));
+        VerifyOrQuit(IsLowercase(c));
+        VerifyOrQuit(ParseDigit(c, digit) != kErrorNone);
+
+        if (c <= 'f')
+        {
+            SuccessOrQuit(ParseHexDigit(c, digit));
+            VerifyOrQuit(digit == (c - 'a' + 10));
+        }
+        else
+        {
+            VerifyOrQuit(ParseHexDigit(c, digit) != kErrorNone);
+        }
+    }
+
+    VerifyOrQuit(!IsDigit(static_cast<char>('0' - 1)));
+    VerifyOrQuit(!IsDigit(static_cast<char>('9' + 1)));
+
+    VerifyOrQuit(!IsUppercase(static_cast<char>('A' - 1)));
+    VerifyOrQuit(!IsUppercase(static_cast<char>('Z' + 1)));
+
+    VerifyOrQuit(!IsLowercase(static_cast<char>('a' - 1)));
+    VerifyOrQuit(!IsLowercase(static_cast<char>('z' + 1)));
 
     printf("\n\n -- PASS\n");
 }

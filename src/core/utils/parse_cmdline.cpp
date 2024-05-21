@@ -48,37 +48,6 @@ static bool IsSeparator(char aChar) { return (aChar == ' ') || (aChar == '\t') |
 
 static bool IsEscapable(char aChar) { return IsSeparator(aChar) || (aChar == '\\'); }
 
-static Error ParseDigit(char aDigitChar, uint8_t &aValue)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(('0' <= aDigitChar) && (aDigitChar <= '9'), error = kErrorInvalidArgs);
-    aValue = static_cast<uint8_t>(aDigitChar - '0');
-
-exit:
-    return error;
-}
-
-static Error ParseHexDigit(char aHexChar, uint8_t &aValue)
-{
-    Error error = kErrorNone;
-
-    if (('A' <= aHexChar) && (aHexChar <= 'F'))
-    {
-        ExitNow(aValue = static_cast<uint8_t>(aHexChar - 'A' + 10));
-    }
-
-    if (('a' <= aHexChar) && (aHexChar <= 'f'))
-    {
-        ExitNow(aValue = static_cast<uint8_t>(aHexChar - 'a' + 10));
-    }
-
-    error = ParseDigit(aHexChar, aValue);
-
-exit:
-    return error;
-}
-
 Error ParseCmd(char *aCommandString, Arg aArgs[], uint8_t aArgsMaxLength)
 {
     Error   error = kErrorNone;
