@@ -741,6 +741,7 @@ private:
     public:
         explicit RxRaTracker(Instance &aInstance);
 
+        void Start(void);
         void Stop(void);
 
         void ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaMessage,
@@ -754,8 +755,8 @@ private:
 
         void FindFavoredOnLinkPrefix(Ip6::Prefix &aPrefix) const;
 
+        void HandleNetDataChange(void);
         void RemoveOnLinkPrefix(const Ip6::Prefix &aPrefix);
-        void RemoveRoutePrefix(const Ip6::Prefix &aPrefix);
 
         void RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold);
 
@@ -896,7 +897,9 @@ private:
 
         void ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter, RouterAdvOrigin aRaOrigin);
         void ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
+        bool ShouldProcessPrefixInfoOption(const PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix) const;
         void ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
+        bool ShouldProcessRouteInfoOption(const RouteInfoOption &aRio, const Ip6::Prefix &aPrefix) const;
         void ProcessRaFlagsExtOption(const RaFlagsExtOption &aFlagsOption, Router &aRouter);
         bool ContainsOnLinkPrefix(OnLinkPrefix::UlaChecker aUlaChecker) const;
         void RemoveOrDeprecateEntriesFromInactiveRouters(void);
@@ -1386,9 +1389,6 @@ private:
     void HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     void HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     void HandleNeighborAdvertisement(const InfraIf::Icmp6Packet &aPacket);
-    bool ShouldProcessPrefixInfoOption(const PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix);
-    bool ShouldProcessRouteInfoOption(const RouteInfoOption &aRio, const Ip6::Prefix &aPrefix);
-    void UpdateRxRaTrackerOnNetDataChange(void);
     bool NetworkDataContainsUlaRoute(void) const;
 
     void HandleRaPrefixTableChanged(void);

@@ -313,7 +313,7 @@ void RoutingManager::Start(void)
         LogInfo("Starting");
 
         mIsRunning = true;
-        UpdateRxRaTrackerOnNetDataChange();
+        mRxRaTracker.Start();
         mOnLinkPrefixManager.Start();
         mOmrPrefixManager.Start();
         mRoutePublisher.Start();
@@ -447,7 +447,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
 
     if (mIsRunning && aEvents.Contains(kEventThreadNetdataChanged))
     {
-        UpdateRxRaTrackerOnNetDataChange();
+        mRxRaTracker.HandleNetDataChange();
         mOnLinkPrefixManager.HandleNetDataChange();
         ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
@@ -459,26 +459,6 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
 
 exit:
     return;
-}
-
-void RoutingManager::UpdateRxRaTrackerOnNetDataChange(void)
-{
-    NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
-    NetworkData::OnMeshPrefixConfig prefixConfig;
-
-    // Remove all OMR prefixes in Network Data from the
-    // discovered prefix table. Also check if we have
-    // an OMR prefix with default route flag.
-
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
-    {
-        if (!IsValidOmrPrefix(prefixConfig))
-        {
-            continue;
-        }
-
-        mRxRaTracker.RemoveRoutePrefix(prefixConfig.GetPrefix());
-    }
 }
 
 void RoutingManager::EvaluateRoutingPolicy(void)
@@ -756,75 +736,6 @@ exit:
     return;
 }
 
-bool RoutingManager::ShouldProcessPrefixInfoOption(const PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix)
-{
-    // Indicate whether to process or skip a given prefix
-    // from a PIO (from received RA message).
-
-    bool shouldProcess = false;
-
-    VerifyOrExit(mIsRunning);
-
-    if (!IsValidOnLinkPrefix(aPio))
-    {
-        LogInfo("- PIO %s - ignore since not a valid on-link prefix", aPrefix.ToString().AsCString());
-        ExitNow();
-    }
-
-    if (mOnLinkPrefixManager.IsPublishingOrAdvertising())
-    {
-        VerifyOrExit(aPrefix != mOnLinkPrefixManager.GetLocalPrefix());
-    }
-
-    shouldProcess = true;
-
-exit:
-    return shouldProcess;
-}
-
-bool RoutingManager::ShouldProcessRouteInfoOption(const RouteInfoOption &aRio, const Ip6::Prefix &aPrefix)
-{
-    // Indicate whether to process or skip a given prefix
-    // from a RIO (from received RA message).
-
-    OT_UNUSED_VARIABLE(aRio);
-
-    bool shouldProcess = false;
-
-    VerifyOrExit(mIsRunning);
-
-    if (aPrefix.GetLength() == 0)
-    {
-        // Always process default route ::/0 prefix.
-        ExitNow(shouldProcess = true);
-    }
-
-    if (!IsValidOmrPrefix(aPrefix))
-    {
-        LogInfo("- RIO %s - ignore since not a valid OMR prefix", aPrefix.ToString().AsCString());
-        ExitNow();
-    }
-
-    VerifyOrExit(mOmrPrefixManager.GetLocalPrefix().GetPrefix() != aPrefix);
-
-    // Disregard our own advertised OMR prefixes and those currently
-    // present in the Thread Network Data.
-    //
-    // There should be eventual parity between the `RioAdvertiser`
-    // prefixes and the OMR prefixes in Network Data, but temporary
-    // discrepancies can occur due to the tx timing of RAs and time
-    // required to update Network Data (registering with leader). So
-    // both checks are necessary.
-
-    VerifyOrExit(!mRioAdvertiser.HasAdvertised(aPrefix));
-    VerifyOrExit(!Get<NetworkData::Leader>().ContainsOmrPrefix(aPrefix));
-
-    shouldProcess = true;
-
-exit:
-    return shouldProcess;
-}
-
 void RoutingManager::HandleRaPrefixTableChanged(void)
 {
     // This is a callback from `mRxRaTracker` indicating that
@@ -1030,6 +941,20 @@ RoutingManager::RxRaTracker::RxRaTracker(Instance &aInstance)
     mLocalRaHeader.Clear();
 }
 
+void RoutingManager::RxRaTracker::Start(void) { HandleNetDataChange(); }
+
+void RoutingManager::RxRaTracker::Stop(void)
+{
+    mRouters.Free();
+    mLocalRaHeader.Clear();
+
+    mExpirationTimer.Stop();
+    mStaleTimer.Stop();
+    mRouterTimer.Stop();
+
+    SignalTableChanged();
+}
+
 void RoutingManager::RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaMessage,
                                                              const Ip6::Address            &aSrcAddress,
                                                              RouterAdvOrigin                aRaOrigin)
@@ -1190,7 +1115,7 @@ void RoutingManager::RxRaTracker::ProcessPrefixInfoOption(const PrefixInfoOption
     VerifyOrExit(aPio.IsValid());
     aPio.GetPrefix(prefix);
 
-    VerifyOrExit(Get<RoutingManager>().ShouldProcessPrefixInfoOption(aPio, prefix));
+    VerifyOrExit(ShouldProcessPrefixInfoOption(aPio, prefix));
 
     LogPrefixInfoOption(prefix, aPio.GetValidLifetime(), aPio.GetPreferredLifetime());
 
@@ -1227,6 +1152,33 @@ exit:
     return;
 }
 
+bool RoutingManager::RxRaTracker::ShouldProcessPrefixInfoOption(const PrefixInfoOption &aPio,
+                                                                const Ip6::Prefix      &aPrefix) const
+{
+    // Indicate whether to process or skip a given prefix
+    // from a PIO (from received RA message).
+
+    bool shouldProcess = false;
+
+    VerifyOrExit(Get<RoutingManager>().IsRunning());
+
+    if (!IsValidOnLinkPrefix(aPio))
+    {
+        LogInfo("- PIO %s - ignore since not a valid on-link prefix", aPrefix.ToString().AsCString());
+        ExitNow();
+    }
+
+    if (Get<RoutingManager>().mOnLinkPrefixManager.IsPublishingOrAdvertising())
+    {
+        VerifyOrExit(aPrefix != Get<RoutingManager>().mOnLinkPrefixManager.GetLocalPrefix());
+    }
+
+    shouldProcess = true;
+
+exit:
+    return shouldProcess;
+}
+
 void RoutingManager::RxRaTracker::ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter)
 {
     Ip6::Prefix         prefix;
@@ -1235,7 +1187,7 @@ void RoutingManager::RxRaTracker::ProcessRouteInfoOption(const RouteInfoOption &
     VerifyOrExit(aRio.IsValid());
     aRio.GetPrefix(prefix);
 
-    VerifyOrExit(Get<RoutingManager>().ShouldProcessRouteInfoOption(aRio, prefix));
+    VerifyOrExit(ShouldProcessRouteInfoOption(aRio, prefix));
 
     LogRouteInfoOption(prefix, aRio.GetRouteLifetime(), aRio.GetPreference());
 
@@ -1267,6 +1219,50 @@ void RoutingManager::RxRaTracker::ProcessRouteInfoOption(const RouteInfoOption &
 
 exit:
     return;
+}
+
+bool RoutingManager::RxRaTracker::ShouldProcessRouteInfoOption(const RouteInfoOption &aRio,
+                                                               const Ip6::Prefix     &aPrefix) const
+{
+    // Indicate whether to process or skip a given prefix
+    // from a RIO (from received RA message).
+
+    OT_UNUSED_VARIABLE(aRio);
+
+    bool shouldProcess = false;
+
+    VerifyOrExit(Get<RoutingManager>().IsRunning());
+
+    if (aPrefix.GetLength() == 0)
+    {
+        // Always process default route ::/0 prefix.
+        ExitNow(shouldProcess = true);
+    }
+
+    if (!IsValidOmrPrefix(aPrefix))
+    {
+        LogInfo("- RIO %s - ignore since not a valid OMR prefix", aPrefix.ToString().AsCString());
+        ExitNow();
+    }
+
+    VerifyOrExit(Get<RoutingManager>().mOmrPrefixManager.GetLocalPrefix().GetPrefix() != aPrefix);
+
+    // Disregard our own advertised OMR prefixes and those currently
+    // present in the Thread Network Data.
+    //
+    // There should be eventual parity between the `RioAdvertiser`
+    // prefixes and the OMR prefixes in Network Data, but temporary
+    // discrepancies can occur due to the tx timing of RAs and time
+    // required to update Network Data (registering with leader). So
+    // both checks are necessary.
+
+    VerifyOrExit(!Get<RoutingManager>().mRioAdvertiser.HasAdvertised(aPrefix));
+    VerifyOrExit(!Get<NetworkData::Leader>().ContainsOmrPrefix(aPrefix));
+
+    shouldProcess = true;
+
+exit:
+    return shouldProcess;
 }
 
 void RoutingManager::RxRaTracker::ProcessRaFlagsExtOption(const RaFlagsExtOption &aRaFlagsOption, Router &aRouter)
@@ -1417,35 +1413,30 @@ exit:
     return;
 }
 
-void RoutingManager::RxRaTracker::RemoveRoutePrefix(const Ip6::Prefix &aPrefix)
+void RoutingManager::RxRaTracker::HandleNetDataChange(void)
 {
-    bool didRemove = false;
+    NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
+    NetworkData::OnMeshPrefixConfig prefixConfig;
+    bool                            didRemove = false;
 
-    for (Router &router : mRouters)
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
     {
-        didRemove |= router.mRoutePrefixes.RemoveAndFreeAllMatching(aPrefix);
+        if (!IsValidOmrPrefix(prefixConfig))
+        {
+            continue;
+        }
+
+        for (Router &router : mRouters)
+        {
+            didRemove |= router.mRoutePrefixes.RemoveAndFreeAllMatching(prefixConfig.GetPrefix());
+        }
     }
 
-    VerifyOrExit(didRemove);
-
-    RemoveRoutersWithNoEntriesOrFlags();
-
-    SignalTableChanged();
-
-exit:
-    return;
-}
-
-void RoutingManager::RxRaTracker::Stop(void)
-{
-    mRouters.Free();
-    mLocalRaHeader.Clear();
-
-    mExpirationTimer.Stop();
-    mStaleTimer.Stop();
-    mRouterTimer.Stop();
-
-    SignalTableChanged();
+    if (didRemove)
+    {
+        RemoveRoutersWithNoEntriesOrFlags();
+        SignalTableChanged();
+    }
 }
 
 void RoutingManager::RxRaTracker::RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold)
