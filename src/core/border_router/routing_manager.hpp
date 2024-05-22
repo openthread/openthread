@@ -898,9 +898,7 @@ private:
 
         void ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter, RouterAdvOrigin aRaOrigin);
         void ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
-        bool ShouldProcessPrefixInfoOption(const PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix) const;
         void ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
-        bool ShouldProcessRouteInfoOption(const RouteInfoOption &aRio, const Ip6::Prefix &aPrefix) const;
         void ProcessRaFlagsExtOption(const RaFlagsExtOption &aFlagsOption, Router &aRouter);
         bool ContainsOnLinkPrefix(OnLinkPrefix::UlaChecker aUlaChecker) const;
         void RemoveOrDeprecateEntriesFromInactiveRouters(void);
