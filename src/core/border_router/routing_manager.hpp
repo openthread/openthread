@@ -831,6 +831,7 @@ private:
             bool             mManagedAddressConfigFlag : 1;
             bool             mOtherConfigFlag : 1;
             bool             mStubRouterFlag : 1;
+            bool             mIsLocalDevice : 1;
         };
 
         //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -

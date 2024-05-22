@@ -101,6 +101,7 @@ typedef struct otBorderRoutingRouterEntry
     bool         mManagedAddressConfigFlag : 1; ///< The router's Managed Address Config flag (`M` flag).
     bool         mOtherConfigFlag : 1;          ///< The router's Other Config flag (`O` flag).
     bool         mStubRouterFlag : 1;           ///< The router's Stub Router flag.
+    bool         mIsLocalDevice : 1;            ///< This router is the local device (this BR).
 } otBorderRoutingRouterEntry;
 
 /**

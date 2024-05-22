@@ -1013,6 +1013,8 @@ void RoutingManager::RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert:
         }
     }
 
+    router->mIsLocalDevice = (aRaOrigin == kThisBrOtherEntity);
+
     UpdateRouterOnRx(*router);
 
     RemoveRoutersWithNoEntriesOrFlags();
@@ -1614,14 +1616,11 @@ void RoutingManager::RxRaTracker::HandleRouterTimer(void)
             continue;
         }
 
-        // If the `router` emitting RA has an address belonging to
-        // infra interface, it indicates that the RAs are from
-        // same device. In this case we skip performing NS probes.
-        // This addresses situation where platform may not be
-        // be able to receive and pass the NA message response
-        // from device itself.
+        // Skip NS probes if the router is this device. This prevents
+        // issues where the platform might not be able to receive and
+        // process the NA messages from the local device itself.
 
-        if (Get<RoutingManager>().mInfraIf.HasAddress(router.mAddress))
+        if (router.mIsLocalDevice)
         {
             continue;
         }
@@ -1877,6 +1876,7 @@ void RoutingManager::RxRaTracker::Router::CopyInfoTo(RouterEntry &aEntry, TimeMi
     aEntry.mManagedAddressConfigFlag = mManagedAddressConfigFlag;
     aEntry.mOtherConfigFlag          = mOtherConfigFlag;
     aEntry.mStubRouterFlag           = mStubRouterFlag;
+    aEntry.mIsLocalDevice            = mIsLocalDevice;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
