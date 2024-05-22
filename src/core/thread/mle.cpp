@@ -3380,7 +3380,7 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
         break;
 
     case kErrorNotFound:
-        Get<MeshCoP::PendingDatasetManager>().ClearNetwork();
+        Get<MeshCoP::PendingDatasetManager>().Clear();
         break;
 
     default:
