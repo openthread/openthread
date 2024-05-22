@@ -202,13 +202,15 @@ Error StringParseUint8(const char *&aString, uint8_t &aUint8, uint8_t aMaxValue)
     Error       error = kErrorParse;
     const char *cur   = aString;
     uint16_t    value = 0;
+    uint8_t     digit;
 
-    for (; (*cur >= '0') && (*cur <= '9'); cur++)
+    while (ParseDigit(*cur, digit) == kErrorNone)
     {
         value *= 10;
-        value += static_cast<uint8_t>(*cur - '0');
+        value += digit;
         VerifyOrExit(value <= aMaxValue, error = kErrorParse);
         error = kErrorNone;
+        cur++;
     }
 
     aString = cur;
@@ -236,7 +238,7 @@ void StringConvertToUppercase(char *aString)
 
 char ToLowercase(char aChar)
 {
-    if ((aChar >= 'A') && (aChar <= 'Z'))
+    if (IsUppercase(aChar))
     {
         aChar += 'a' - 'A';
     }
@@ -246,12 +248,49 @@ char ToLowercase(char aChar)
 
 char ToUppercase(char aChar)
 {
-    if ((aChar >= 'a') && (aChar <= 'z'))
+    if (IsLowercase(aChar))
     {
         aChar -= 'a' - 'A';
     }
 
     return aChar;
+}
+
+bool IsDigit(char aChar) { return ('0' <= aChar && aChar <= '9'); }
+
+bool IsUppercase(char aChar) { return ('A' <= aChar && aChar <= 'Z'); }
+
+bool IsLowercase(char aChar) { return ('a' <= aChar && aChar <= 'z'); }
+
+Error ParseDigit(char aDigitChar, uint8_t &aValue)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsDigit(aDigitChar), error = kErrorInvalidArgs);
+    aValue = static_cast<uint8_t>(aDigitChar - '0');
+
+exit:
+    return error;
+}
+
+Error ParseHexDigit(char aHexChar, uint8_t &aValue)
+{
+    Error error = kErrorNone;
+
+    if (('A' <= aHexChar) && (aHexChar <= 'F'))
+    {
+        ExitNow(aValue = static_cast<uint8_t>(aHexChar - 'A' + 10));
+    }
+
+    if (('a' <= aHexChar) && (aHexChar <= 'f'))
+    {
+        ExitNow(aValue = static_cast<uint8_t>(aHexChar - 'a' + 10));
+    }
+
+    error = ParseDigit(aHexChar, aValue);
+
+exit:
+    return error;
 }
 
 const char *ToYesNo(bool aBool)

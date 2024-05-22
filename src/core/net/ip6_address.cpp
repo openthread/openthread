@@ -586,22 +586,9 @@ Error Address::ParseFrom(const char *aString, char aTerminatorChar)
 
         while (true)
         {
-            char    c = *aString;
             uint8_t digit;
 
-            if (('A' <= c) && (c <= 'F'))
-            {
-                digit = static_cast<uint8_t>(c - 'A' + 10);
-            }
-            else if (('a' <= c) && (c <= 'f'))
-            {
-                digit = static_cast<uint8_t>(c - 'a' + 10);
-            }
-            else if (('0' <= c) && (c <= '9'))
-            {
-                digit = static_cast<uint8_t>(c - '0');
-            }
-            else
+            if (ParseHexDigit(*aString, digit) != kErrorNone)
             {
                 break;
             }
