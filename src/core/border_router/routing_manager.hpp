@@ -755,8 +755,8 @@ private:
 
         void FindFavoredOnLinkPrefix(Ip6::Prefix &aPrefix) const;
 
+        void HandleLocalOnLinkPrefixChanged(void);
         void HandleNetDataChange(void);
-        void RemoveOnLinkPrefix(const Ip6::Prefix &aPrefix);
 
         void RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold);
 
@@ -1028,7 +1028,6 @@ private:
         void               HandleRaPrefixTableChanged(void);
         bool               ShouldPublishUlaRoute(void) const;
         Error              AppendAsPiosTo(RouterAdvert::TxMessage &aRaMessage);
-        bool               IsPublishingOrAdvertising(void) const;
         void               HandleNetDataChange(void);
         void               HandleExtPanIdChange(void);
         void               HandleTimer(void);
@@ -1052,6 +1051,7 @@ private:
 
         State GetState(void) const { return mState; }
         void  SetState(State aState);
+        bool  IsPublishingOrAdvertising(void) const;
         void  GenerateLocalPrefix(void);
         void  PublishAndAdvertise(void);
         void  Deprecate(void);
@@ -1392,6 +1392,7 @@ private:
     bool NetworkDataContainsUlaRoute(void) const;
 
     void HandleRaPrefixTableChanged(void);
+    void HandleLocalOnLinkPrefixChanged(void);
 
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
     static bool IsValidOnLinkPrefix(const PrefixInfoOption &aPio);
