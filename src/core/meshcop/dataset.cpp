@@ -103,57 +103,13 @@ exit:
 
 bool Dataset::Info::IsSubsetOf(const Info &aOther) const
 {
-    bool isSubset = false;
+    Dataset dataset;
+    Dataset other;
 
-    if (IsPresent<kNetworkKey>())
-    {
-        VerifyOrExit(aOther.IsPresent<kNetworkKey>() && Get<kNetworkKey>() == aOther.Get<kNetworkKey>());
-    }
+    dataset.SetFrom(*this);
+    other.SetFrom(aOther);
 
-    if (IsPresent<kNetworkName>())
-    {
-        VerifyOrExit(aOther.IsPresent<kNetworkName>() && Get<kNetworkName>() == aOther.Get<kNetworkName>());
-    }
-
-    if (IsPresent<kExtendedPanId>())
-    {
-        VerifyOrExit(aOther.IsPresent<kExtendedPanId>() && Get<kExtendedPanId>() == aOther.Get<kExtendedPanId>());
-    }
-
-    if (IsPresent<kMeshLocalPrefix>())
-    {
-        VerifyOrExit(aOther.IsPresent<kMeshLocalPrefix>() && Get<kMeshLocalPrefix>() == aOther.Get<kMeshLocalPrefix>());
-    }
-
-    if (IsPresent<kPanId>())
-    {
-        VerifyOrExit(aOther.IsPresent<kPanId>() && Get<kPanId>() == aOther.Get<kPanId>());
-    }
-
-    if (IsPresent<kChannel>())
-    {
-        VerifyOrExit(aOther.IsPresent<kChannel>() && Get<kChannel>() == aOther.Get<kChannel>());
-    }
-
-    if (IsPresent<kPskc>())
-    {
-        VerifyOrExit(aOther.IsPresent<kPskc>() && Get<kPskc>() == aOther.Get<kPskc>());
-    }
-
-    if (IsPresent<kSecurityPolicy>())
-    {
-        VerifyOrExit(aOther.IsPresent<kSecurityPolicy>() && Get<kSecurityPolicy>() == aOther.Get<kSecurityPolicy>());
-    }
-
-    if (IsPresent<kChannelMask>())
-    {
-        VerifyOrExit(aOther.IsPresent<kChannelMask>() && Get<kChannelMask>() == aOther.Get<kChannelMask>());
-    }
-
-    isSubset = true;
-
-exit:
-    return isSubset;
+    return dataset.IsSubsetOf(other);
 }
 
 Dataset::Dataset(void)
@@ -583,6 +539,31 @@ void Dataset::RemoveTlv(Tlv *aTlv)
         memmove(start, start + length, mLength - (static_cast<uint8_t>(start - mTlvs) + length));
         mLength -= length;
     }
+}
+
+bool Dataset::IsSubsetOf(const Dataset &aOther) const
+{
+    bool isSubset = false;
+
+    for (const Tlv *tlv = GetTlvsStart(); tlv < GetTlvsEnd(); tlv = tlv->GetNext())
+    {
+        const Tlv *otherTlv;
+
+        if ((tlv->GetType() == Tlv::kActiveTimestamp) || (tlv->GetType() == Tlv::kPendingTimestamp) ||
+            (tlv->GetType() == Tlv::kDelayTimer))
+        {
+            continue;
+        }
+
+        otherTlv = aOther.FindTlv(tlv->GetType());
+        VerifyOrExit(otherTlv != nullptr);
+        VerifyOrExit(memcmp(tlv, otherTlv, tlv->GetSize()) == 0);
+    }
+
+    isSubset = true;
+
+exit:
+    return isSubset;
 }
 
 const char *Dataset::TypeToString(Type aType) { return (aType == kActive) ? "Active" : "Pending"; }
