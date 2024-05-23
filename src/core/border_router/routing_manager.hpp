@@ -1027,7 +1027,8 @@ private:
         const FavoredOmrPrefix &GetFavoredPrefix(void) const { return mFavoredPrefix; }
 
     private:
-        static constexpr uint16_t kInfoStringSize = 85;
+        static constexpr uint16_t        kInfoStringSize    = 85;
+        static constexpr RoutePreference kPdRoutePreference = RoutePreference::kRoutePreferenceMedium;
 
         typedef String<kInfoStringSize> InfoString;
 

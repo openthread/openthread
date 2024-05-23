@@ -2098,7 +2098,7 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
         {
             RemoveLocalFromNetData();
             mLocalPrefix.mPrefix         = Get<RoutingManager>().mPdPrefixManager.GetPrefix();
-            mLocalPrefix.mPreference     = RoutePreference::kRoutePreferenceMedium;
+            mLocalPrefix.mPreference     = kPdRoutePreference;
             mLocalPrefix.mIsDomainPrefix = false;
             LogInfo("Setting local OMR prefix to PD prefix: %s", mLocalPrefix.GetPrefix().ToString().AsCString());
         }
@@ -2144,6 +2144,20 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
 
         RemoveLocalFromNetData();
     }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+    if (mFavoredPrefix.IsEmpty() || mFavoredPrefix.GetPreference() < kPdRoutePreference ||
+        mFavoredPrefix.GetPrefix() == mLocalPrefix.GetPrefix())
+    {
+        LogInfo("Trying to request prefix via DHCPv6 PD");
+        Get<RoutingManager>().mPdPrefixManager.Start();
+    }
+    else
+    {
+        LogInfo("Stop requesting prefix via DHCPv6 PD");
+        Get<RoutingManager>().mPdPrefixManager.Stop();
+    }
+#endif
 
 exit:
     return;
