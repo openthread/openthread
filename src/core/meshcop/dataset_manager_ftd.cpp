@@ -383,7 +383,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
     }
 
     LocalSave(dataset);
-    IgnoreError(Restore());
+    Restore(dataset);
 
     LogInfo("Generated local dataset");
 
