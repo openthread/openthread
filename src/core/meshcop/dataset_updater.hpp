@@ -62,6 +62,12 @@ class DatasetUpdater : public InstanceLocator, private NonCopyable
 
 public:
     /**
+     * Default delay (in ms).
+     *
+     */
+    static constexpr uint32_t kDefaultDelay = OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_DELAY;
+
+    /**
      * Initializes a `DatasetUpdater` object.
      *
      * @param[in]   aInstance  A reference to the OpenThread instance.
@@ -89,7 +95,8 @@ public:
      * @param[in]  aContext                An arbitrary context passed to callback.
      *
      * @retval kErrorNone           Dataset update started successfully (@p aCallback will be invoked on completion).
-     * @retval kErrorInvalidState   Device is disabled (MLE is disabled).
+     * @retval kErrorInvalidState   Device is disabled or not fully configured (missing or incomplete Active Dataset).
+     * @retval kErrorAlready        The @p aDataset fields already match the existing Active Dataset.
      * @retval kErrorInvalidArgs    The @p aDataset is not valid (contains Active or Pending Timestamp).
      * @retval kErrorBusy           Cannot start update, a previous one is ongoing.
      * @retval kErrorNoBufs         Could not allocated buffer to save Dataset.
@@ -110,25 +117,16 @@ public:
      * @retval FALSE   There is no ongoing update.
      *
      */
-    bool IsUpdateOngoing(void) const { return mDataset != nullptr; }
+    bool IsUpdateOngoing(void) const { return (mDataset != nullptr); }
 
 private:
-    // Default delay (in ms) in Pending Dataset.
-    static constexpr uint32_t kDefaultDelay = OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_DELAY;
+    Error RequestUpdate(Dataset &aDataset, UpdaterCallback aCallback, void *aContext);
+    void  Finish(Error aError);
+    void  HandleNotifierEvents(Events aEvents);
+    void  HandleDatasetChanged(Dataset::Type aType);
 
-    // Retry interval (in ms) when preparing and/or sending Pending Dataset fails.
-    static constexpr uint32_t kRetryInterval = 1000;
-
-    void HandleTimer(void);
-    void PreparePendingDataset(void);
-    void Finish(Error aError);
-    void HandleNotifierEvents(Events aEvents);
-
-    using UpdaterTimer = TimerMilliIn<DatasetUpdater, &DatasetUpdater::HandleTimer>;
-
-    Callback<UpdaterCallback> mCallback;
-    UpdaterTimer              mTimer;
     Message                  *mDataset;
+    Callback<UpdaterCallback> mCallback;
 };
 
 } // namespace MeshCoP

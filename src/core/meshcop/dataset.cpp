@@ -101,17 +101,6 @@ exit:
     return error;
 }
 
-bool Dataset::Info::IsSubsetOf(const Info &aOther) const
-{
-    Dataset dataset;
-    Dataset other;
-
-    dataset.SetFrom(*this);
-    other.SetFrom(aOther);
-
-    return dataset.IsSubsetOf(other);
-}
-
 Dataset::Dataset(void)
     : mLength(0)
     , mUpdateTime(0)

@@ -212,20 +212,6 @@ public:
          */
         Error GenerateRandom(Instance &aInstance);
 
-        /**
-         * Checks whether the Dataset is a subset of another one, i.e., all the components in the current
-         * Dataset are also present in the @p aOther and the component values fully match.
-         *
-         * The matching of components in the two Datasets excludes Active/Pending Timestamp and Delay components.
-         *
-         * @param[in] aOther   The other Dataset to check against.
-         *
-         * @retval TRUE   The current Dataset is a subset of @p aOther.
-         * @retval FALSE  The current Dataset is not a subset of @p aOther.
-         *
-         */
-        bool IsSubsetOf(const Info &aOther) const;
-
     private:
         Components       &GetComponents(void) { return static_cast<Components &>(mComponents); }
         const Components &GetComponents(void) const { return static_cast<const Components &>(mComponents); }
@@ -680,7 +666,7 @@ public:
      *
      * @param[in] aOther   The other Dataset to check against.
      *
-     * @retval TRUE   The current dataset is a subset of @p aOther.
+     * @retval TRUE   The current Dataset is a subset of @p aOther.
      * @retval FALSE  The current Dataset is not a subset of @p aOther.
      *
      */
