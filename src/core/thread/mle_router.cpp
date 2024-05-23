@@ -886,6 +886,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
     RouteTlv        routeTlv;
     LeaderData      leaderData;
     uint8_t         linkMargin;
+    bool            shouldUpdateRoutes = false;
 
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
@@ -972,6 +973,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
         mLinkRequestAttempts    = 0;
         mRetrieveNewNetworkData = true;
         IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr()));
+        shouldUpdateRoutes = true;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         Get<TimeSync>().HandleTimeSyncMessage(aRxInfo.mMessage);
@@ -1007,8 +1009,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
                 router = mRouterTable.FindRouterById(routerId);
                 OT_ASSERT(router != nullptr);
             }
-
-            mRouterTable.UpdateRoutes(routeTlv, routerId);
+            shouldUpdateRoutes = true;
             break;
 
         case kErrorNotFound:
@@ -1042,6 +1043,11 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
     router->SetKeySequence(aRxInfo.mKeySequence);
 
     mNeighborTable.Signal(NeighborTable::kRouterAdded, *router);
+
+    if (shouldUpdateRoutes)
+    {
+        mRouterTable.UpdateRoutes(routeTlv, routerId);
+    }
 
     aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
     ProcessKeySequence(aRxInfo);
