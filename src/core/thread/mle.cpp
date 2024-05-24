@@ -236,8 +236,8 @@ void Mle::Stop(StopMode aMode)
 {
     if (aMode == kUpdateNetworkDatasets)
     {
-        Get<MeshCoP::ActiveDatasetManager>().HandleDetach();
-        Get<MeshCoP::PendingDatasetManager>().HandleDetach();
+        IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Restore());
+        IgnoreError(Get<MeshCoP::PendingDatasetManager>().Restore());
     }
 
     VerifyOrExit(!IsDisabled());
@@ -530,7 +530,7 @@ Error Mle::BecomeDetached(void)
     // Not in reattach stage after reset
     if (mReattachState == kReattachStop)
     {
-        Get<MeshCoP::PendingDatasetManager>().HandleDetach();
+        IgnoreError(Get<MeshCoP::PendingDatasetManager>().Restore());
     }
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE

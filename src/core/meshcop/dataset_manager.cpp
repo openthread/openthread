@@ -80,16 +80,28 @@ Error DatasetManager::Restore(void)
     Error   error;
     Dataset dataset;
 
+    // If `Read()` fails, `dataset` will remain empty. We still call
+    // `Restore(dataset)` to stop timer and clear the timestamp
+    // flags.
+
+    error = Read(dataset);
+    Restore(dataset);
+
+    return error;
+}
+
+void DatasetManager::Restore(const Dataset &aDataset)
+{
     mTimer.Stop();
 
     mNetworkTimestampValid = false;
     mLocalTimestampValid   = false;
 
-    SuccessOrExit(error = Read(dataset));
+    VerifyOrExit(aDataset.GetLength() != 0);
 
     mLocalSaved = true;
 
-    if (dataset.ReadTimestamp(mType, mLocalTimestamp) == kErrorNone)
+    if (aDataset.ReadTimestamp(mType, mLocalTimestamp) == kErrorNone)
     {
         mLocalTimestampValid   = true;
         mNetworkTimestampValid = true;
@@ -98,13 +110,13 @@ Error DatasetManager::Restore(void)
 
     if (IsActiveDataset())
     {
-        IgnoreError(ApplyConfiguration(dataset));
+        IgnoreError(ApplyConfiguration(aDataset));
     }
 
     SignalDatasetChange();
 
 exit:
-    return error;
+    return;
 }
 
 Error DatasetManager::Read(Dataset &aDataset) const
@@ -266,8 +278,6 @@ void DatasetManager::Clear(void)
     SignalDatasetChange();
 }
 
-void DatasetManager::HandleDetach(void) { IgnoreError(Restore()); }
-
 Error DatasetManager::Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
     Error   error = kErrorNone;
@@ -366,7 +376,7 @@ void DatasetManager::SaveLocal(const Dataset &aDataset)
     switch (Get<Mle::MleRouter>().GetRole())
     {
     case Mle::kRoleDisabled:
-        IgnoreError(Restore());
+        Restore(aDataset);
         break;
 
     case Mle::kRoleChild:
@@ -378,7 +388,7 @@ void DatasetManager::SaveLocal(const Dataset &aDataset)
         break;
 
     case Mle::kRoleLeader:
-        IgnoreError(Restore());
+        Restore(aDataset);
         Get<NetworkData::Leader>().IncrementVersionAndStableVersion();
         break;
 #endif

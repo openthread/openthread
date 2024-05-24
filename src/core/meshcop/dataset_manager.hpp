@@ -200,14 +200,6 @@ public:
     Error ApplyConfiguration(void) const;
 
     /**
-     * Updates the Operational Dataset when detaching from the network.
-     *
-     * On detach, the Operational Dataset is restored from non-volatile memory.
-     *
-     */
-    void HandleDetach(void);
-
-    /**
      * Sends a MGMT_SET request to the Leader.
      *
      * @param[in]  aDatasetInfo  The Operational Dataset.
@@ -305,6 +297,7 @@ private:
 
     bool  IsActiveDataset(void) const { return (mType == Dataset::kActive); }
     bool  IsPendingDataset(void) const { return (mType == Dataset::kPending); }
+    void  Restore(const Dataset &aDataset);
     Error ApplyConfiguration(const Dataset &aDataset) const;
     void  HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
     void  HandleTimer(void);
