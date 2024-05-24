@@ -107,6 +107,12 @@ uint8_t otLinkMetricsEnhAckGenData(const otMacAddress *aMacAddress, uint8_t aLqi
  */
 uint8_t otLinkMetricsEnhAckGetDataLen(const otMacAddress *aMacAddress);
 
+/**
+ * This method resets Enhanced-ACK Based Probing data.
+ *
+ */
+void otLinkMetricsResetEnhAckProbing(void);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
