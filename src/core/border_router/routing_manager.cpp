@@ -750,6 +750,22 @@ exit:
     return;
 }
 
+void RoutingManager::HandleLocalOnLinkPrefixChanged(void)
+{
+    // This is a callback from `OnLinkPrefixManager` indicating
+    // that the local on-link prefix is changed. The local on-link
+    // prefix is derived from extended PAN ID.
+
+    VerifyOrExit(mIsRunning);
+
+    mRoutePublisher.Evaluate();
+    mRxRaTracker.HandleLocalOnLinkPrefixChanged();
+    ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
+
+exit:
+    return;
+}
+
 bool RoutingManager::NetworkDataContainsUlaRoute(void) const
 {
     // Determine whether leader Network Data contains a route
@@ -1123,10 +1139,7 @@ void RoutingManager::RxRaTracker::ProcessPrefixInfoOption(const PrefixInfoOption
         ExitNow();
     }
 
-    if (Get<RoutingManager>().mOnLinkPrefixManager.IsPublishingOrAdvertising())
-    {
-        VerifyOrExit(prefix != Get<RoutingManager>().mOnLinkPrefixManager.GetLocalPrefix());
-    }
+    VerifyOrExit(prefix != Get<RoutingManager>().mOnLinkPrefixManager.GetLocalPrefix());
 
     LogPrefixInfoOption(prefix, aPio.GetValidLifetime(), aPio.GetPreferredLifetime());
 
@@ -1348,13 +1361,14 @@ void RoutingManager::RxRaTracker::FindFavoredOnLinkPrefix(Ip6::Prefix &aPrefix) 
     }
 }
 
-void RoutingManager::RxRaTracker::RemoveOnLinkPrefix(const Ip6::Prefix &aPrefix)
+void RoutingManager::RxRaTracker::HandleLocalOnLinkPrefixChanged(void)
 {
-    bool didRemove = false;
+    const Ip6::Prefix &prefix    = Get<RoutingManager>().mOnLinkPrefixManager.GetLocalPrefix();
+    bool               didRemove = false;
 
     for (Router &router : mRouters)
     {
-        didRemove |= router.mOnLinkPrefixes.RemoveAndFreeAllMatching(aPrefix);
+        didRemove |= router.mOnLinkPrefixes.RemoveAndFreeAllMatching(prefix);
     }
 
     VerifyOrExit(didRemove);
@@ -2315,13 +2329,6 @@ void RoutingManager::OnLinkPrefixManager::Evaluate(void)
 
         PublishAndAdvertise();
 
-        // We remove the local on-link prefix from the discovered prefix
-        // table, in case it was previously discovered and is now
-        // deprecating. `ShouldProcessPrefixInfoOption()` also prevents
-        // adding the local prefix to the table while we're advertising it.
-
-        Get<RoutingManager>().mRxRaTracker.RemoveOnLinkPrefix(mLocalPrefix);
-
         mFavoredDiscoveredPrefix.Clear();
     }
     else if (IsPublishingOrAdvertising())
@@ -2566,11 +2573,7 @@ void RoutingManager::OnLinkPrefixManager::HandleExtPanIdChange(void)
         break;
     }
 
-    if (Get<RoutingManager>().mIsRunning)
-    {
-        Get<RoutingManager>().mRoutePublisher.Evaluate();
-        Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
-    }
+    Get<RoutingManager>().HandleLocalOnLinkPrefixChanged();
 
 exit:
     return;
