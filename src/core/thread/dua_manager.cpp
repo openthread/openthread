@@ -480,9 +480,8 @@ void DuaManager::PerformNextRegistration(void)
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
     {
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-        uint32_t            lastTransactionTime;
-        const Ip6::Address *duaPtr = nullptr;
-        Child              *child  = nullptr;
+        uint32_t lastTransactionTime;
+        Child   *child = nullptr;
 
         OT_ASSERT(mChildIndexDuaRegistering == Mle::kMaxChildren);
 
@@ -497,12 +496,9 @@ void DuaManager::PerformNextRegistration(void)
             }
         }
 
-        child  = Get<ChildTable>().GetChildAtIndex(mChildIndexDuaRegistering);
-        duaPtr = child->GetDomainUnicastAddress();
+        child = Get<ChildTable>().GetChildAtIndex(mChildIndexDuaRegistering);
+        SuccessOrAssert(child->GetDomainUnicastAddress(dua));
 
-        OT_ASSERT(duaPtr != nullptr);
-
-        dua = *duaPtr;
         SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, dua));
         SuccessOrExit(error = Tlv::Append<ThreadMeshLocalEidTlv>(*message, child->GetMeshLocalIid()));
 
