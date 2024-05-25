@@ -224,6 +224,41 @@ void TestDataset(void)
     VerifyOrQuit(memcmp(dataset.GetBytes() + sizeof(kTlvBytes), kTlvBytes, sizeof(kTlvBytes)) == 0);
 
     VerifyOrQuit(dataset.ValidateTlvs() == kErrorParse);
+
+    // Validate `IsSubsetOf()`
+
+    SuccessOrQuit(dataset.SetFrom(kTlvBytes, sizeof(kTlvBytes)));
+
+    datasetInfo.Clear();
+    datasetInfo.mComponents.mIsPanIdPresent      = true;
+    datasetInfo.mComponents.mIsNetworkKeyPresent = true;
+    datasetInfo.mPanId                           = 0xface;
+    datasetInfo.mNetworkKey                      = kNetworkKey;
+
+    dataset2.SetFrom(datasetInfo);
+
+    SuccessOrQuit(dataset2.ValidateTlvs());
+    SuccessOrQuit(dataset.ValidateTlvs());
+
+    VerifyOrQuit(dataset2.IsSubsetOf(dataset));
+    VerifyOrQuit(!dataset.IsSubsetOf(dataset2));
+
+    datasetInfo.mComponents.mIsActiveTimestampPresent  = true;
+    datasetInfo.mComponents.mIsPendingTimestampPresent = true;
+    datasetInfo.mComponents.mIsDelayPresent            = true;
+    datasetInfo.mActiveTimestamp.mSeconds              = 0xffff;
+    datasetInfo.mPendingTimestamp.mSeconds             = 0x1000;
+    datasetInfo.mDelay                                 = 5000;
+    dataset2.SetFrom(datasetInfo);
+
+    VerifyOrQuit(dataset2.IsSubsetOf(dataset));
+    VerifyOrQuit(!dataset.IsSubsetOf(dataset2));
+
+    datasetInfo.mPanId = 0xcafe;
+    dataset2.SetFrom(datasetInfo);
+
+    VerifyOrQuit(!dataset2.IsSubsetOf(dataset));
+    VerifyOrQuit(!dataset.IsSubsetOf(dataset2));
 }
 
 } // namespace MeshCoP

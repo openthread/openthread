@@ -220,7 +220,7 @@ public:
          *
          * @param[in] aOther   The other Dataset to check against.
          *
-         * @retval TRUE   The current dataset is a subset of @p aOther.
+         * @retval TRUE   The current Dataset is a subset of @p aOther.
          * @retval FALSE  The current Dataset is not a subset of @p aOther.
          *
          */
@@ -671,6 +671,20 @@ public:
      *
      */
     const Tlv *GetTlvsEnd(void) const { return reinterpret_cast<const Tlv *>(mTlvs + mLength); }
+
+    /**
+     * Determines whether this Dataset is a subset of another Dataset.
+     *
+     * The Dataset is considered a subset if all of its TLVs, excluding Active/Pending Timestamp and Delay Timer TLVs,
+     * are present in the @p aOther Dataset and the TLV values match exactly.
+     *
+     * @param[in] aOther   The other Dataset to check against.
+     *
+     * @retval TRUE   The current dataset is a subset of @p aOther.
+     * @retval FALSE  The current Dataset is not a subset of @p aOther.
+     *
+     */
+    bool IsSubsetOf(const Dataset &aOther) const;
 
     /**
      * Converts a Dataset Type to a string.
