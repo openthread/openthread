@@ -143,16 +143,12 @@ template <> otError TcpExample::Process<Cmd("init")>(Arg aArgs[])
             mUseCircularSendBuffer = true;
             mUseTls                = true;
 
-            // mbedtls_debug_set_threshold(0);
-
-            otPlatCryptoRandomInit();
             mbedtls_x509_crt_init(&mSrvCert);
             mbedtls_pk_init(&mPKey);
 
             mbedtls_ssl_init(&mSslContext);
             mbedtls_ssl_config_init(&mSslConfig);
             mbedtls_ssl_conf_rng(&mSslConfig, Crypto::MbedTls::CryptoSecurePrng, nullptr);
-            // mbedtls_ssl_conf_dbg(&mSslConfig, MbedTlsDebugOutput, this);
             mbedtls_ssl_conf_authmode(&mSslConfig, MBEDTLS_SSL_VERIFY_NONE);
             mbedtls_ssl_conf_ciphersuites(&mSslConfig, sCipherSuites);
 
@@ -261,6 +257,23 @@ template <> otError TcpExample::Process<Cmd("init")>(Arg aArgs[])
     mInitialized = true;
 
 exit:
+    if (error != OT_ERROR_NONE)
+    {
+#if OPENTHREAD_CONFIG_TLS_ENABLE
+        if (mUseTls)
+        {
+            mbedtls_ssl_config_free(&mSslConfig);
+            mbedtls_ssl_free(&mSslContext);
+
+            mbedtls_pk_free(&mPKey);
+            mbedtls_x509_crt_free(&mSrvCert);
+        }
+#endif // OPENTHREAD_CONFIG_TLS_ENABLE
+
+        otTcpCircularSendBufferForceDiscardAll(&mSendBuffer);
+        OT_UNUSED_VARIABLE(otTcpCircularSendBufferDeinitialize(&mSendBuffer));
+    }
+
     return error;
 }
 
@@ -286,7 +299,6 @@ template <> otError TcpExample::Process<Cmd("deinit")>(Arg aArgs[])
 #if OPENTHREAD_CONFIG_TLS_ENABLE
     if (mUseTls)
     {
-        otPlatCryptoRandomDeinit();
         mbedtls_ssl_config_free(&mSslConfig);
         mbedtls_ssl_free(&mSslContext);
 
