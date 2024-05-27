@@ -1782,6 +1782,8 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
     MlrManager::MlrAddressArray oldMlrRegisteredAddresses;
 #endif
 
+    OT_UNUSED_VARIABLE(storedCount);
+
     SuccessOrExit(error =
                       Tlv::FindTlvValueStartEndOffsets(aRxInfo.mMessage, Tlv::kAddressRegistration, offset, endOffset));
 
