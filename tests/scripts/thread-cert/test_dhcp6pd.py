@@ -62,6 +62,9 @@ class TestDhcp6Pd(thread_cert.TestCase):
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(router.get_state(), 'router')
 
+        leader.start_pd_radvd_service("2001:db8:abcd:1234::/64")
+        self.simulator.go(30)
+
 
 if __name__ == '__main__':
     unittest.main()

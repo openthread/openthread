@@ -2146,17 +2146,7 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
     }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-    if (mFavoredPrefix.IsEmpty() || mFavoredPrefix.GetPreference() < kPdRoutePreference ||
-        mFavoredPrefix.GetPrefix() == mLocalPrefix.GetPrefix())
-    {
-        LogInfo("Trying to request prefix via DHCPv6 PD");
-        Get<RoutingManager>().mPdPrefixManager.Start();
-    }
-    else
-    {
-        LogInfo("Stop requesting prefix via DHCPv6 PD");
-        Get<RoutingManager>().mPdPrefixManager.Stop();
-    }
+    Get<RoutingManager>().mPdPrefixManager.Evaluate();
 #endif
 
 exit:
@@ -3659,7 +3649,8 @@ exit:
 RoutingManager::PdPrefixManager::PdPrefixManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(false)
-    , mIsRunning(false)
+    , mIsStarted(false)
+    , mIsPaused(false)
     , mNumPlatformPioProcessed(0)
     , mNumPlatformRaReceived(0)
     , mLastPlatformRaTime(0)
@@ -3683,8 +3674,20 @@ void RoutingManager::PdPrefixManager::StartStop(bool aStart)
 {
     State oldState = GetState();
 
-    VerifyOrExit(aStart != mIsRunning);
-    mIsRunning = aStart;
+    VerifyOrExit(aStart != mIsStarted);
+    mIsStarted = aStart;
+    EvaluateStateChange(oldState);
+
+exit:
+    return;
+}
+
+void RoutingManager::PdPrefixManager::PauseResume(bool aPause)
+{
+    State oldState = GetState();
+
+    VerifyOrExit(aPause != mIsPaused);
+    mIsPaused = aPause;
     EvaluateStateChange(oldState);
 
 exit:
@@ -3697,10 +3700,27 @@ RoutingManager::PdPrefixManager::State RoutingManager::PdPrefixManager::GetState
 
     if (mEnabled)
     {
-        state = mIsRunning ? kDhcp6PdStateRunning : kDhcp6PdStateStopped;
+        state = mIsStarted ? (mIsPaused ? kDhcp6PdStateIdle : kDhcp6PdStateRunning) : kDhcp6PdStateStopped;
     }
 
     return state;
+}
+
+void RoutingManager::PdPrefixManager::Evaluate(void)
+{
+    const FavoredOmrPrefix &favoredPrefix = Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix();
+
+    if (favoredPrefix.IsEmpty() || favoredPrefix.GetPreference() < OmrPrefixManager::kPdRoutePreference ||
+        favoredPrefix.GetPrefix() == mPrefix.GetPrefix())
+    {
+        LogInfo("Trying to request prefix via DHCPv6 PD");
+        PauseResume(/* aPause= */ false);
+    }
+    else
+    {
+        LogInfo("Stop requesting prefix via DHCPv6 PD");
+        PauseResume(/* aPause= */ true);
+    }
 }
 
 void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState)
@@ -3714,6 +3734,7 @@ void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState
     {
     case kDhcp6PdStateDisabled:
     case kDhcp6PdStateStopped:
+    case kDhcp6PdStateIdle:
         WithdrawPrefix();
         break;
     case kDhcp6PdStateRunning:
@@ -3943,11 +3964,13 @@ const char *RoutingManager::PdPrefixManager::StateToString(State aState)
         "Disabled", // (0) kDisabled
         "Stopped",  // (1) kStopped
         "Running",  // (2) kRunning
+        "Idle",     // (3) kIdle
     };
 
     static_assert(0 == kDhcp6PdStateDisabled, "kDhcp6PdStateDisabled value is incorrect");
     static_assert(1 == kDhcp6PdStateStopped, "kDhcp6PdStateStopped value is incorrect");
     static_assert(2 == kDhcp6PdStateRunning, "kDhcp6PdStateRunning value is incorrect");
+    static_assert(3 == kDhcp6PdStateIdle, "kDhcp6PdStateIdle value is incorrect");
 
     return kStateStrings[aState];
 }
