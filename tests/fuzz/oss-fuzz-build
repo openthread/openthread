@@ -44,6 +44,7 @@ set -euxo pipefail
         -DOT_RCP=OFF \
         -DOT_BORDER_AGENT=ON \
         -DOT_BORDER_ROUTER=ON \
+        -DOT_BORDER_ROUTING=ON \
         -DOT_CHANNEL_MANAGER=ON \
         -DOT_CHANNEL_MONITOR=ON \
         -DOT_COAP=ON \
@@ -55,6 +56,7 @@ set -euxo pipefail
         -DOT_DHCP6_CLIENT=ON \
         -DOT_DHCP6_SERVER=ON \
         -DOT_DNS_CLIENT=ON \
+        -DOT_DNSSD_SERVER=ON \
         -DOT_ECDSA=ON \
         -DOT_HISTORY_TRACKER=ON \
         -DOT_IP6_FRAGM=ON \
@@ -63,13 +65,14 @@ set -euxo pipefail
         -DOT_LINK_RAW=ON \
         -DOT_LOG_OUTPUT=APP \
         -DOT_MAC_FILTER=ON \
+        -DOT_MDNS=ON \
         -DOT_NETDATA_PUBLISHER=ON \
         -DOT_NETDIAG_CLIENT=ON \
         -DOT_PING_SENDER=ON \
         -DOT_SERVICE=ON \
         -DOT_SLAAC=ON \
         -DOT_SNTP_CLIENT=ON \
-        -DOT_SRN_ADV_PROXY=ON \
+        -DOT_SRP_ADV_PROXY=ON \
         -DOT_SRP_CLIENT=ON \
         -DOT_SRP_SERVER=ON \
         -DOT_THREAD_VERSION=1.3 \
