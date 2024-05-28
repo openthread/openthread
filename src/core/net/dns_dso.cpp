@@ -304,15 +304,10 @@ void Dso::Connection::SetLongLivedOperation(bool aLongLivedOperation)
 
     if (!mLongLivedOperation)
     {
-        TimeMilli now = TimerMilli::GetNow();
-        TimeMilli nextTime;
+        NextFireTime nextTime;
 
-        nextTime = GetNextFireTime(now);
-
-        if (nextTime != now.GetDistantFuture())
-        {
-            Get<Dso>().mTimer.FireAtIfEarlier(nextTime);
-        }
+        UpdateNextFireTime(nextTime);
+        Get<Dso>().mTimer.FireAtIfEarlier(nextTime);
     }
 
 exit:
@@ -1150,8 +1145,7 @@ uint32_t Dso::Connection::CalculateServerInactivityWaitTime(void) const
 
 void Dso::Connection::ResetTimeouts(bool aIsKeepAliveMessage)
 {
-    TimeMilli now = TimerMilli::GetNow();
-    TimeMilli nextTime;
+    NextFireTime nextTime;
 
     // At both servers and clients, the generation or reception of any
     // complete DNS message resets both timers for that DSO
@@ -1171,7 +1165,7 @@ void Dso::Connection::ResetTimeouts(bool aIsKeepAliveMessage)
         // that the expiration time calculations below stay within the
         // `TimerMilli` range.
 
-        mKeepAlive.SetExpirationTime(now + mKeepAlive.GetInterval() * (IsServer() ? 2 : 1));
+        mKeepAlive.SetExpirationTime(nextTime.GetNow() + mKeepAlive.GetInterval() * (IsServer() ? 2 : 1));
     }
 
     if (!aIsKeepAliveMessage)
@@ -1179,7 +1173,7 @@ void Dso::Connection::ResetTimeouts(bool aIsKeepAliveMessage)
         if (mInactivity.IsUsed())
         {
             mInactivity.SetExpirationTime(
-                now + (IsServer() ? CalculateServerInactivityWaitTime() : mInactivity.GetInterval()));
+                nextTime.GetNow() + (IsServer() ? CalculateServerInactivityWaitTime() : mInactivity.GetInterval()));
         }
         else
         {
@@ -1190,22 +1184,17 @@ void Dso::Connection::ResetTimeouts(bool aIsKeepAliveMessage)
             // from `AdjustInactivityTimeout()`. In this case, we just
             // track the current time as "expiration time".
 
-            mInactivity.SetExpirationTime(now);
+            mInactivity.SetExpirationTime(nextTime.GetNow());
         }
     }
 
-    nextTime = GetNextFireTime(now);
+    UpdateNextFireTime(nextTime);
 
-    if (nextTime != now.GetDistantFuture())
-    {
-        Get<Dso>().mTimer.FireAtIfEarlier(nextTime);
-    }
+    Get<Dso>().mTimer.FireAtIfEarlier(nextTime);
 }
 
-TimeMilli Dso::Connection::GetNextFireTime(TimeMilli aNow) const
+void Dso::Connection::UpdateNextFireTime(NextFireTime &aNextTime) const
 {
-    TimeMilli nextTime = aNow.GetDistantFuture();
-
     switch (mState)
     {
     case kStateDisconnected:
@@ -1214,19 +1203,17 @@ TimeMilli Dso::Connection::GetNextFireTime(TimeMilli aNow) const
     case kStateConnecting:
         // While in `kStateConnecting`, Keep Alive timer is
         // used for `kConnectingTimeout`.
-        VerifyOrExit(mKeepAlive.GetExpirationTime() > aNow, nextTime = aNow);
-        nextTime = mKeepAlive.GetExpirationTime();
+        aNextTime.UpdateIfEarlier(mKeepAlive.GetExpirationTime());
         break;
 
     case kStateConnectedButSessionless:
     case kStateEstablishingSession:
     case kStateSessionEstablished:
-        nextTime = Min(nextTime, mPendingRequests.GetNextFireTime(aNow));
+        mPendingRequests.UpdateNextFireTime(aNextTime);
 
         if (mKeepAlive.IsUsed())
         {
-            VerifyOrExit(mKeepAlive.GetExpirationTime() > aNow, nextTime = aNow);
-            nextTime = Min(nextTime, mKeepAlive.GetExpirationTime());
+            aNextTime.UpdateIfEarlier(mKeepAlive.GetExpirationTime());
         }
 
         if (mInactivity.IsUsed() && mPendingRequests.IsEmpty() && !mLongLivedOperation)
@@ -1235,18 +1222,14 @@ TimeMilli Dso::Connection::GetNextFireTime(TimeMilli aNow) const
             // a request message waiting for a response, or an
             // active long-lived operation.
 
-            VerifyOrExit(mInactivity.GetExpirationTime() > aNow, nextTime = aNow);
-            nextTime = Min(nextTime, mInactivity.GetExpirationTime());
+            aNextTime.UpdateIfEarlier(mInactivity.GetExpirationTime());
         }
 
         break;
     }
-
-exit:
-    return nextTime;
 }
 
-void Dso::Connection::HandleTimer(TimeMilli aNow, TimeMilli &aNextTime)
+void Dso::Connection::HandleTimer(NextFireTime &aNextTime)
 {
     switch (mState)
     {
@@ -1254,7 +1237,7 @@ void Dso::Connection::HandleTimer(TimeMilli aNow, TimeMilli &aNextTime)
         break;
 
     case kStateConnecting:
-        if (mKeepAlive.IsExpired(aNow))
+        if (mKeepAlive.IsExpired(aNextTime.GetNow()))
         {
             Disconnect(kGracefullyClose, kReasonFailedToConnect);
         }
@@ -1263,7 +1246,7 @@ void Dso::Connection::HandleTimer(TimeMilli aNow, TimeMilli &aNextTime)
     case kStateConnectedButSessionless:
     case kStateEstablishingSession:
     case kStateSessionEstablished:
-        if (mPendingRequests.HasAnyTimedOut(aNow))
+        if (mPendingRequests.HasAnyTimedOut(aNextTime.GetNow()))
         {
             // If server sends no response to a request, client
             // waits for 30 seconds (`kResponseTimeout`) after which
@@ -1276,7 +1259,8 @@ void Dso::Connection::HandleTimer(TimeMilli aNow, TimeMilli &aNextTime)
         // active on the session (which includes a request waiting for
         // response or an active long-lived operation).
 
-        if (mInactivity.IsUsed() && mPendingRequests.IsEmpty() && !mLongLivedOperation && mInactivity.IsExpired(aNow))
+        if (mInactivity.IsUsed() && mPendingRequests.IsEmpty() && !mLongLivedOperation &&
+            mInactivity.IsExpired(aNextTime.GetNow()))
         {
             // On client, if the inactivity timeout is reached, the
             // connection is closed gracefully. On server, if too much
@@ -1289,7 +1273,7 @@ void Dso::Connection::HandleTimer(TimeMilli aNow, TimeMilli &aNextTime)
             ExitNow();
         }
 
-        if (mKeepAlive.IsUsed() && mKeepAlive.IsExpired(aNow))
+        if (mKeepAlive.IsUsed() && mKeepAlive.IsExpired(aNextTime.GetNow()))
         {
             // On client, if the Keep Alive interval elapses without any
             // DNS messages being sent or received, the client MUST take
@@ -1313,7 +1297,7 @@ void Dso::Connection::HandleTimer(TimeMilli aNow, TimeMilli &aNextTime)
     }
 
 exit:
-    aNextTime = Min(aNextTime, GetNextFireTime(aNow));
+    UpdateNextFireTime(aNextTime);
     SignalAnyStateChange();
 }
 
@@ -1427,18 +1411,12 @@ bool Dso::Connection::PendingRequests::HasAnyTimedOut(TimeMilli aNow) const
     return timedOut;
 }
 
-TimeMilli Dso::Connection::PendingRequests::GetNextFireTime(TimeMilli aNow) const
+void Dso::Connection::PendingRequests::UpdateNextFireTime(NextFireTime &aNextTime) const
 {
-    TimeMilli nextTime = aNow.GetDistantFuture();
-
     for (const Entry &entry : mRequests)
     {
-        VerifyOrExit(entry.mTimeout > aNow, nextTime = aNow);
-        nextTime = Min(entry.mTimeout, nextTime);
+        aNextTime.UpdateIfEarlier(entry.mTimeout);
     }
-
-exit:
-    return nextTime;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -1485,27 +1463,23 @@ exit:
 
 void Dso::HandleTimer(void)
 {
-    TimeMilli   now      = TimerMilli::GetNow();
-    TimeMilli   nextTime = now.GetDistantFuture();
-    Connection *conn;
-    Connection *next;
+    NextFireTime nextTime;
+    Connection  *conn;
+    Connection  *next;
 
     for (conn = mClientConnections.GetHead(); conn != nullptr; conn = next)
     {
         next = conn->GetNext();
-        conn->HandleTimer(now, nextTime);
+        conn->HandleTimer(nextTime);
     }
 
     for (conn = mServerConnections.GetHead(); conn != nullptr; conn = next)
     {
         next = conn->GetNext();
-        conn->HandleTimer(now, nextTime);
+        conn->HandleTimer(nextTime);
     }
 
-    if (nextTime != now.GetDistantFuture())
-    {
-        mTimer.FireAtIfEarlier(nextTime);
-    }
+    mTimer.FireAtIfEarlier(nextTime);
 }
 
 } // namespace Dns
