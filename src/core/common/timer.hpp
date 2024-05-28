@@ -62,6 +62,70 @@ namespace ot {
  */
 
 /**
+ * Represents an object tracking the next fire time along with the current time (now).
+ *
+ */
+class NextFireTime
+{
+public:
+    /**
+     * Initializes the `NextFireTime` with a given current time.
+     *
+     * @pram[in] aNow    The current time.
+     *
+     */
+    explicit NextFireTime(Time aNow);
+
+    /**
+     * Initializes the `NextFireTime` using `TimerMilli::GetNow()` for current time.
+     *
+     */
+    NextFireTime(void);
+
+    /**
+     * Gets the current time (now) tracked by the `NextFireTime` object.
+     *
+     * @returns The current time.
+     *
+     */
+    Time GetNow(void) const { return mNow; }
+
+    /**
+     * Updates the tracked next fire time with a new given time only if it is earlier.
+     *
+     * If the given @p aTime is in the past relative to the tracked `GetNow()`, the `GetNow()` time is used instead.
+     * This ensures that the next fire time is never scheduled before the current time.
+     *
+     * @param[in] aTime   The new time.
+     *
+     */
+    void UpdateIfEarlier(Time aTime);
+
+    /**
+     * Indicates whether or not next fire time is set.
+     *
+     * @retval TRUE   The next fire time is set.
+     * @retval FALSE  The next fire time is not set.
+     *
+     */
+    bool IsSet(void) const { return (mNextTime != mNow.GetDistantFuture()); }
+
+    /**
+     * Gets the next fire time.
+     *
+     * If the next fire time is not, `GetNow().GetDistantFuture()` will be returned.
+     *
+     * @returns The next fire time.
+     *
+     */
+    Time GetNextTime(void) const { return mNextTime; }
+
+private:
+    Time mNow;
+    Time mNextTime;
+};
+
+/**
  * Implements a timer.
  *
  */
@@ -220,13 +284,32 @@ public:
     void FireAt(TimeMilli aFireTime);
 
     /**
-     * This method (re-)schedules the timer with a given a fire time only if the timer is not running or the new given
+     * Schedules the timer to fire at a given fire time.
+     *
+     * Is @p aNextFireTime is not set, the timer is stopped.
+     *
+     * @param[in]  aNextFireTime  The fire time.
+     *
+     */
+    void FireAt(const NextFireTime &aNextFireTime);
+
+    /**
+     * Re-schedules the timer with a given a fire time only if the timer is not running or the new given
      * fire time is earlier than the current fire time.
      *
      * @param[in]  aFireTime  The fire time.
      *
      */
     void FireAtIfEarlier(TimeMilli aFireTime);
+
+    /**
+     * Re-schedules the timer with a given a fire time only if the timer is not running or the new given
+     * fire time is earlier than the current fire time.
+     *
+     * @param[in]  aNextFireTime  The fire time.
+     *
+     */
+    void FireAtIfEarlier(const NextFireTime &aNextFireTime);
 
     /**
      * Stops the timer.

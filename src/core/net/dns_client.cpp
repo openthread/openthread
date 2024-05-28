@@ -1496,9 +1496,8 @@ void Client::PrepareResponseAndFinalize(Query &aQuery, const Message &aResponseM
 
 void Client::HandleTimer(void)
 {
-    TimeMilli now      = TimerMilli::GetNow();
-    TimeMilli nextTime = now.GetDistantFuture();
-    QueryInfo info;
+    NextFireTime nextTime;
+    QueryInfo    info;
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
     bool hasTcpQuery = false;
 #endif
@@ -1514,7 +1513,7 @@ void Client::HandleTimer(void)
                 continue;
             }
 
-            if (now >= info.mRetransmissionTime)
+            if (nextTime.GetNow() >= info.mRetransmissionTime)
             {
                 if (info.mTransmissionCount >= info.mConfig.GetMaxTxAttempts())
                 {
@@ -1525,10 +1524,7 @@ void Client::HandleTimer(void)
                 IgnoreError(SendQuery(*query, info, /* aUpdateTimer */ false));
             }
 
-            if (nextTime > info.mRetransmissionTime)
-            {
-                nextTime = info.mRetransmissionTime;
-            }
+            nextTime.UpdateIfEarlier(info.mRetransmissionTime);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
             if (info.mConfig.GetTransportProto() == QueryConfig::kDnsTransportTcp)
@@ -1539,10 +1535,7 @@ void Client::HandleTimer(void)
         }
     }
 
-    if (nextTime < now.GetDistantFuture())
-    {
-        mTimer.FireAt(nextTime);
-    }
+    mTimer.FireAt(nextTime);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
     if (!hasTcpQuery && mTcpState != kTcpUninitialized)

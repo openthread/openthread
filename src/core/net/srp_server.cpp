@@ -1608,15 +1608,14 @@ exit:
 
 void Server::HandleLeaseTimer(void)
 {
-    TimeMilli now                = TimerMilli::GetNow();
-    TimeMilli earliestExpireTime = now.GetDistantFuture();
-    Host     *nextHost;
+    NextFireTime nextExpireTime;
+    Host        *nextHost;
 
     for (Host *host = mHosts.GetHead(); host != nullptr; host = nextHost)
     {
         nextHost = host->GetNext();
 
-        if (host->GetKeyExpireTime() <= now)
+        if (host->GetKeyExpireTime() <= nextExpireTime.GetNow())
         {
             LogInfo("KEY LEASE of host %s expired", host->GetFullName());
 
@@ -1629,7 +1628,7 @@ void Server::HandleLeaseTimer(void)
 
             Service *next;
 
-            earliestExpireTime = Min(earliestExpireTime, host->GetKeyExpireTime());
+            nextExpireTime.UpdateIfEarlier(host->GetKeyExpireTime());
 
             // Check if any service instance name expired.
             for (Service *service = host->mServices.GetHead(); service != nullptr; service = next)
@@ -1638,18 +1637,18 @@ void Server::HandleLeaseTimer(void)
 
                 OT_ASSERT(service->mIsDeleted);
 
-                if (service->GetKeyExpireTime() <= now)
+                if (service->GetKeyExpireTime() <= nextExpireTime.GetNow())
                 {
                     service->Log(Service::kKeyLeaseExpired);
                     host->RemoveService(service, kDeleteName, kNotifyServiceHandler);
                 }
                 else
                 {
-                    earliestExpireTime = Min(earliestExpireTime, service->GetKeyExpireTime());
+                    nextExpireTime.UpdateIfEarlier(service->GetKeyExpireTime());
                 }
             }
         }
-        else if (host->GetExpireTime() <= now)
+        else if (host->GetExpireTime() <= nextExpireTime.GetNow())
         {
             LogInfo("LEASE of host %s expired", host->GetFullName());
 
@@ -1662,7 +1661,7 @@ void Server::HandleLeaseTimer(void)
 
             RemoveHost(host, kRetainName);
 
-            earliestExpireTime = Min(earliestExpireTime, host->GetKeyExpireTime());
+            nextExpireTime.UpdateIfEarlier(host->GetKeyExpireTime());
         }
         else
         {
@@ -1672,13 +1671,13 @@ void Server::HandleLeaseTimer(void)
 
             OT_ASSERT(!host->IsDeleted());
 
-            earliestExpireTime = Min(earliestExpireTime, host->GetExpireTime());
+            nextExpireTime.UpdateIfEarlier(host->GetExpireTime());
 
             for (Service *service = host->mServices.GetHead(); service != nullptr; service = next)
             {
                 next = service->GetNext();
 
-                if (service->GetKeyExpireTime() <= now)
+                if (service->GetKeyExpireTime() <= nextExpireTime.GetNow())
                 {
                     service->Log(Service::kKeyLeaseExpired);
                     host->RemoveService(service, kDeleteName, kNotifyServiceHandler);
@@ -1686,38 +1685,25 @@ void Server::HandleLeaseTimer(void)
                 else if (service->mIsDeleted)
                 {
                     // The service has been deleted but the name retains.
-                    earliestExpireTime = Min(earliestExpireTime, service->GetKeyExpireTime());
+                    nextExpireTime.UpdateIfEarlier(service->GetKeyExpireTime());
                 }
-                else if (service->GetExpireTime() <= now)
+                else if (service->GetExpireTime() <= nextExpireTime.GetNow())
                 {
                     service->Log(Service::kLeaseExpired);
 
                     // The service is expired, delete it.
                     host->RemoveService(service, kRetainName, kNotifyServiceHandler);
-                    earliestExpireTime = Min(earliestExpireTime, service->GetKeyExpireTime());
+                    nextExpireTime.UpdateIfEarlier(service->GetKeyExpireTime());
                 }
                 else
                 {
-                    earliestExpireTime = Min(earliestExpireTime, service->GetExpireTime());
+                    nextExpireTime.UpdateIfEarlier(service->GetExpireTime());
                 }
             }
         }
     }
 
-    if (earliestExpireTime != now.GetDistantFuture())
-    {
-        OT_ASSERT(earliestExpireTime >= now);
-        if (!mLeaseTimer.IsRunning() || earliestExpireTime <= mLeaseTimer.GetFireTime())
-        {
-            LogInfo("Lease timer is scheduled for %lu seconds", ToUlong(Time::MsecToSec(earliestExpireTime - now)));
-            mLeaseTimer.StartAt(earliestExpireTime, 0);
-        }
-    }
-    else
-    {
-        LogInfo("Lease timer is stopped");
-        mLeaseTimer.Stop();
-    }
+    mLeaseTimer.FireAtIfEarlier(nextExpireTime);
 }
 
 void Server::HandleOutstandingUpdatesTimer(void)

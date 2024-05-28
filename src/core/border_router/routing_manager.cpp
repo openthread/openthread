@@ -1475,16 +1475,13 @@ void RoutingManager::RxRaTracker::RemoveOrDeprecateEntriesFromInactiveRouters(vo
 
 void RoutingManager::RxRaTracker::ScheduleStaleTimer(void)
 {
-    TimeMilli now             = TimerMilli::GetNow();
-    TimeMilli onLinkStaleTime = now;
-    TimeMilli staleTime       = now.GetDistantFuture();
-    bool      foundOnLink     = false;
+    NextFireTime staleTime;
+    TimeMilli    onLinkStaleTime = staleTime.GetNow();
+    bool         foundOnLink     = false;
 
     // For on-link prefixes, we consider stale time as when all on-link
     // prefixes become stale (the latest stale time) but for route
     // prefixes we consider the earliest stale time.
-
-    mStaleTimer.Stop();
 
     for (const Router &router : mRouters)
     {
@@ -1492,37 +1489,28 @@ void RoutingManager::RxRaTracker::ScheduleStaleTimer(void)
         {
             if (!entry.IsDeprecated())
             {
-                TimeMilli entryStaleTime = Max(now, entry.GetStaleTime());
-
-                onLinkStaleTime = Max(onLinkStaleTime, entryStaleTime);
+                onLinkStaleTime = Max(onLinkStaleTime, Max(staleTime.GetNow(), entry.GetStaleTime()));
                 foundOnLink     = true;
             }
         }
 
         for (const RoutePrefix &entry : router.mRoutePrefixes)
         {
-            TimeMilli entryStaleTime = Max(now, entry.GetStaleTime());
-
-            staleTime = Min(staleTime, entryStaleTime);
+            staleTime.UpdateIfEarlier(entry.GetStaleTime());
         }
     }
 
     if (foundOnLink)
     {
-        staleTime = Min(staleTime, onLinkStaleTime);
+        staleTime.UpdateIfEarlier(onLinkStaleTime);
     }
 
     if (mLocalRaHeader.IsValid())
     {
-        TimeMilli raHeaderStaleTime = Max(now, mLocalRaHeaderUpdateTime + Time::SecToMsec(kRtrAdvStaleTime));
-
-        staleTime = Min(staleTime, raHeaderStaleTime);
+        staleTime.UpdateIfEarlier(mLocalRaHeaderUpdateTime + Time::SecToMsec(kRtrAdvStaleTime));
     }
 
-    if (staleTime != now.GetDistantFuture())
-    {
-        mStaleTimer.FireAt(staleTime);
-    }
+    mStaleTimer.FireAt(staleTime);
 }
 
 void RoutingManager::RxRaTracker::HandleStaleTimer(void)
@@ -1545,13 +1533,13 @@ void RoutingManager::RxRaTracker::HandleExpirationTimer(void) { RemoveExpiredEnt
 
 void RoutingManager::RxRaTracker::RemoveExpiredEntries(void)
 {
-    TimeMilli                          now            = TimerMilli::GetNow();
-    TimeMilli                          nextExpireTime = now.GetDistantFuture();
-    LifetimedPrefix::ExpirationChecker expirationChecker(now);
-    bool                               didRemove = false;
+    NextFireTime nextExpireTime;
+    bool         didRemove = false;
 
     for (Router &router : mRouters)
     {
+        LifetimedPrefix::ExpirationChecker expirationChecker(nextExpireTime.GetNow());
+
         didRemove |= router.mOnLinkPrefixes.RemoveAndFreeAllMatching(expirationChecker);
         didRemove |= router.mRoutePrefixes.RemoveAndFreeAllMatching(expirationChecker);
     }
@@ -1569,19 +1557,16 @@ void RoutingManager::RxRaTracker::RemoveExpiredEntries(void)
     {
         for (const OnLinkPrefix &entry : router.mOnLinkPrefixes)
         {
-            nextExpireTime = Min(nextExpireTime, entry.GetExpireTime());
+            nextExpireTime.UpdateIfEarlier(entry.GetExpireTime());
         }
 
         for (const RoutePrefix &entry : router.mRoutePrefixes)
         {
-            nextExpireTime = Min(nextExpireTime, entry.GetExpireTime());
+            nextExpireTime.UpdateIfEarlier(entry.GetExpireTime());
         }
     }
 
-    if (nextExpireTime != now.GetDistantFuture())
-    {
-        mExpirationTimer.FireAt(nextExpireTime);
-    }
+    mExpirationTimer.FireAt(nextExpireTime);
 }
 
 void RoutingManager::RxRaTracker::SignalTableChanged(void) { mSignalTask.Post(); }
@@ -1620,8 +1605,7 @@ void RoutingManager::RxRaTracker::UpdateRouterOnRx(Router &aRouter)
 
 void RoutingManager::RxRaTracker::HandleRouterTimer(void)
 {
-    TimeMilli now      = TimerMilli::GetNow();
-    TimeMilli nextTime = now.GetDistantFuture();
+    NextFireTime nextTime;
 
     for (Router &router : mRouters)
     {
@@ -1639,7 +1623,7 @@ void RoutingManager::RxRaTracker::HandleRouterTimer(void)
             continue;
         }
 
-        if (router.mTimeout <= now)
+        if (router.mTimeout <= nextTime.GetNow())
         {
             router.mNsProbeCount++;
 
@@ -1650,21 +1634,19 @@ void RoutingManager::RxRaTracker::HandleRouterTimer(void)
                 continue;
             }
 
-            router.mTimeout = now + ((router.mNsProbeCount < Router::kMaxNsProbes) ? Router::kNsProbeRetryInterval
+            router.mTimeout =
+                nextTime.GetNow() + ((router.mNsProbeCount < Router::kMaxNsProbes) ? Router::kNsProbeRetryInterval
                                                                                    : Router::kNsProbeTimeout);
 
             SendNeighborSolicitToRouter(router);
         }
 
-        nextTime = Min(nextTime, router.mTimeout);
+        nextTime.UpdateIfEarlier(router.mTimeout);
     }
 
     RemoveOrDeprecateEntriesFromInactiveRouters();
 
-    if (nextTime != now.GetDistantFuture())
-    {
-        mRouterTimer.FireAtIfEarlier(nextTime);
-    }
+    mRouterTimer.FireAt(nextTime);
 }
 
 void RoutingManager::RxRaTracker::SendNeighborSolicitToRouter(const Router &aRouter)
@@ -2635,8 +2617,8 @@ void RoutingManager::OnLinkPrefixManager::SavePrefix(const Ip6::Prefix &aPrefix,
 
 void RoutingManager::OnLinkPrefixManager::HandleTimer(void)
 {
-    TimeMilli                           now            = TimerMilli::GetNow();
-    TimeMilli                           nextExpireTime = now.GetDistantFuture();
+    NextFireTime nextExpireTime;
+
     Array<Ip6::Prefix, kMaxOldPrefixes> expiredPrefixes;
 
     switch (GetState())
@@ -2646,27 +2628,27 @@ void RoutingManager::OnLinkPrefixManager::HandleTimer(void)
     case kPublishing:
     case kAdvertising:
     case kDeprecating:
-        if (now >= mExpireTime)
+        if (nextExpireTime.GetNow() >= mExpireTime)
         {
             IgnoreError(Get<Settings>().RemoveBrOnLinkPrefix(mLocalPrefix));
             SetState(kIdle);
         }
         else
         {
-            nextExpireTime = mExpireTime;
+            nextExpireTime.UpdateIfEarlier(mExpireTime);
         }
         break;
     }
 
     for (OldPrefix &entry : mOldLocalPrefixes)
     {
-        if (now >= entry.mExpireTime)
+        if (nextExpireTime.GetNow() >= entry.mExpireTime)
         {
             SuccessOrAssert(expiredPrefixes.PushBack(entry.mPrefix));
         }
         else
         {
-            nextExpireTime = Min(nextExpireTime, entry.mExpireTime);
+            nextExpireTime.UpdateIfEarlier(entry.mExpireTime);
         }
     }
 
@@ -2677,10 +2659,7 @@ void RoutingManager::OnLinkPrefixManager::HandleTimer(void)
         mOldLocalPrefixes.RemoveMatching(prefix);
     }
 
-    if (nextExpireTime != now.GetDistantFuture())
-    {
-        mTimer.FireAtIfEarlier(nextExpireTime);
-    }
+    mTimer.FireAtIfEarlier(nextExpireTime);
 
     Get<RoutingManager>().mRoutePublisher.Evaluate();
 }
@@ -2782,9 +2761,8 @@ exit:
 
 Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMessage)
 {
-    Error                           error    = kErrorNone;
-    TimeMilli                       now      = TimerMilli::GetNow();
-    TimeMilli                       nextTime = now.GetDistantFuture();
+    Error                           error = kErrorNone;
+    NextFireTime                    nextTime;
     RioPrefixArray                  oldPrefixes;
     NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
     NetworkData::OnMeshPrefixConfig prefixConfig;
@@ -2867,7 +2845,7 @@ Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMess
 
         if (prefix.mIsDeprecating)
         {
-            if (now >= prefix.mExpirationTime)
+            if (nextTime.GetNow() >= prefix.mExpirationTime)
             {
                 SuccessOrExit(error = AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0, aRaMessage));
                 continue;
@@ -2876,7 +2854,7 @@ Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMess
         else
         {
             prefix.mIsDeprecating  = true;
-            prefix.mExpirationTime = now + kDeprecationTime;
+            prefix.mExpirationTime = nextTime.GetNow() + kDeprecationTime;
         }
 
         if (mPrefixes.PushBack(prefix) != kErrorNone)
@@ -2885,7 +2863,7 @@ Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMess
             SuccessOrExit(error = AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0, aRaMessage));
         }
 
-        nextTime = Min(nextTime, prefix.mExpirationTime);
+        nextTime.UpdateIfEarlier(prefix.mExpirationTime);
     }
 
     // Advertise all prefixes in `mPrefixes`
@@ -2896,16 +2874,13 @@ Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMess
 
         if (prefix.mIsDeprecating)
         {
-            lifetime = TimeMilli::MsecToSec(prefix.mExpirationTime - now);
+            lifetime = TimeMilli::MsecToSec(prefix.mExpirationTime - nextTime.GetNow());
         }
 
         SuccessOrExit(error = AppendRio(prefix.mPrefix, lifetime, aRaMessage));
     }
 
-    if (nextTime != now.GetDistantFuture())
-    {
-        mTimer.FireAtIfEarlier(nextTime);
-    }
+    mTimer.FireAtIfEarlier(nextTime);
 
 exit:
     return error;

@@ -464,8 +464,7 @@ void CoapBase::HandleRetransmissionTimer(Timer &aTimer)
 
 void CoapBase::HandleRetransmissionTimer(void)
 {
-    TimeMilli        now      = TimerMilli::GetNow();
-    TimeMilli        nextTime = now.GetDistantFuture();
+    NextFireTime     nextTime;
     Metadata         metadata;
     Ip6::MessageInfo messageInfo;
 
@@ -473,7 +472,7 @@ void CoapBase::HandleRetransmissionTimer(void)
     {
         metadata.ReadFrom(message);
 
-        if (now >= metadata.mNextTimerShot)
+        if (nextTime.GetNow() >= metadata.mNextTimerShot)
         {
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
             if (message.IsRequest() && metadata.mObserve && metadata.mAcknowledged)
@@ -493,7 +492,7 @@ void CoapBase::HandleRetransmissionTimer(void)
             // Increment retransmission counter and timer.
             metadata.mRetransmissionsRemaining--;
             metadata.mRetransmissionTimeout *= 2;
-            metadata.mNextTimerShot = now + metadata.mRetransmissionTimeout;
+            metadata.mNextTimerShot = nextTime.GetNow() + metadata.mRetransmissionTimeout;
             metadata.UpdateIn(message);
 
             // Retransmit
@@ -512,13 +511,10 @@ void CoapBase::HandleRetransmissionTimer(void)
             }
         }
 
-        nextTime = Min(nextTime, metadata.mNextTimerShot);
+        nextTime.UpdateIfEarlier(metadata.mNextTimerShot);
     }
 
-    if (nextTime < now.GetDistantFuture())
-    {
-        mRetransmissionTimer.FireAt(nextTime);
-    }
+    mRetransmissionTimer.FireAt(nextTime);
 }
 
 void CoapBase::FinalizeCoapTransaction(Message                &aRequest,
@@ -1590,8 +1586,7 @@ void ResponsesQueue::HandleTimer(Timer &aTimer)
 
 void ResponsesQueue::HandleTimer(void)
 {
-    TimeMilli now             = TimerMilli::GetNow();
-    TimeMilli nextDequeueTime = now.GetDistantFuture();
+    NextFireTime nextDequeueTime;
 
     for (Message &message : mQueue)
     {
@@ -1599,19 +1594,16 @@ void ResponsesQueue::HandleTimer(void)
 
         metadata.ReadFrom(message);
 
-        if (now >= metadata.mDequeueTime)
+        if (nextDequeueTime.GetNow() >= metadata.mDequeueTime)
         {
             DequeueResponse(message);
             continue;
         }
 
-        nextDequeueTime = Min(nextDequeueTime, metadata.mDequeueTime);
+        nextDequeueTime.UpdateIfEarlier(metadata.mDequeueTime);
     }
 
-    if (nextDequeueTime < now.GetDistantFuture())
-    {
-        mTimer.FireAt(nextDequeueTime);
-    }
+    mTimer.FireAt(nextDequeueTime);
 }
 
 void ResponsesQueue::ResponseMetadata::ReadFrom(const Message &aMessage)

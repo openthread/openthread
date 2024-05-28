@@ -359,8 +359,7 @@ exit:
 
 void Slaac::HandleTimer(void)
 {
-    TimeMilli now      = TimerMilli::GetNow();
-    TimeMilli nextTime = now.GetDistantFuture();
+    NextFireTime nextTime;
 
     for (SlaacAddress &slaacAddr : mSlaacAddresses)
     {
@@ -369,20 +368,17 @@ void Slaac::HandleTimer(void)
             continue;
         }
 
-        if (slaacAddr.GetExpirationTime() <= now)
+        if (slaacAddr.GetExpirationTime() <= nextTime.GetNow())
         {
             RemoveAddress(slaacAddr);
         }
         else
         {
-            nextTime = Min(nextTime, slaacAddr.GetExpirationTime());
+            nextTime.UpdateIfEarlier(slaacAddr.GetExpirationTime());
         }
     }
 
-    if (nextTime != now.GetDistantFuture())
-    {
-        mTimer.FireAtIfEarlier(nextTime);
-    }
+    mTimer.FireAtIfEarlier(nextTime);
 }
 
 Error Slaac::GenerateIid(Ip6::Netif::UnicastAddress &aAddress, uint8_t &aDadCounter) const

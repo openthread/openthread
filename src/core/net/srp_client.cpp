@@ -1795,9 +1795,8 @@ exit:
 
 void Client::UpdateState(void)
 {
-    TimeMilli now               = TimerMilli::GetNow();
-    TimeMilli earliestRenewTime = now.GetDistantFuture();
-    bool      shouldUpdate      = false;
+    NextFireTime nextRenewTime;
+    bool         shouldUpdate = false;
 
     VerifyOrExit((GetState() != kStateStopped) && (GetState() != kStatePaused));
     VerifyOrExit(mHostInfo.GetName() != nullptr);
@@ -1817,7 +1816,7 @@ void Client::UpdateState(void)
         break;
 
     case kRegistered:
-        if (now < mLeaseRenewTime)
+        if (nextRenewTime.GetNow() < mLeaseRenewTime)
         {
             break;
         }
@@ -1864,14 +1863,14 @@ void Client::UpdateState(void)
                 break;
 
             case kRegistered:
-                if (service.GetLeaseRenewTime() <= now)
+                if (service.GetLeaseRenewTime() <= nextRenewTime.GetNow())
                 {
                     service.SetState(kToRefresh);
                     shouldUpdate = true;
                 }
                 else
                 {
-                    earliestRenewTime = Min(earliestRenewTime, service.GetLeaseRenewTime());
+                    nextRenewTime.UpdateIfEarlier(service.GetLeaseRenewTime());
                 }
 
                 break;
@@ -1891,9 +1890,9 @@ void Client::UpdateState(void)
         ExitNow();
     }
 
-    if ((GetState() == kStateUpdated) && (earliestRenewTime != now.GetDistantFuture()))
+    if (GetState() == kStateUpdated)
     {
-        mTimer.FireAt(earliestRenewTime);
+        mTimer.FireAt(nextRenewTime);
     }
 
 exit:

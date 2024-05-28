@@ -1600,8 +1600,7 @@ exit:
 
 void Mle::HandleDelayedResponseTimer(void)
 {
-    TimeMilli now          = TimerMilli::GetNow();
-    TimeMilli nextSendTime = now.GetDistantFuture();
+    NextFireTime nextSendTime;
 
     for (Message &message : mDelayedResponses)
     {
@@ -1609,9 +1608,9 @@ void Mle::HandleDelayedResponseTimer(void)
 
         metadata.ReadFrom(message);
 
-        if (now < metadata.mSendTime)
+        if (nextSendTime.GetNow() < metadata.mSendTime)
         {
-            nextSendTime = Min(nextSendTime, metadata.mSendTime);
+            nextSendTime.UpdateIfEarlier(metadata.mSendTime);
         }
         else
         {
@@ -1620,10 +1619,7 @@ void Mle::HandleDelayedResponseTimer(void)
         }
     }
 
-    if (nextSendTime < now.GetDistantFuture())
-    {
-        mDelayedResponseTimer.FireAt(nextSendTime);
-    }
+    mDelayedResponseTimer.FireAt(nextSendTime);
 }
 
 void Mle::SendDelayedResponse(TxMessage &aMessage, const DelayedResponseMetadata &aMetadata)
