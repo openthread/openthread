@@ -790,6 +790,7 @@ private:
 
     protected:
         void ScheduleFireTimeOn(TimerMilli &aTimer);
+        void UpdateNextFireTimeOn(NextFireTime &aNextFireTime) const;
 
     private:
         TimeMilli mFireTime;
@@ -1189,32 +1190,19 @@ private:
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    class TimerContext : public InstanceLocator
-    {
-    public:
-        TimerContext(Instance &aInstance);
-
-        TimeMilli GetNow(void) const { return mNow; }
-        TimeMilli GetNextTime(void) const { return mNextTime; }
-        void      UpdateNextTime(TimeMilli aTime);
-
-    private:
-        TimeMilli mNow;
-        TimeMilli mNextTime;
-    };
-
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    class EntryTimerContext : public TimerContext // Used by `HandleEntryTimer`.
+    class EntryTimerContext : public InstanceLocator // Used by `HandleEntryTimer`.
     {
     public:
         EntryTimerContext(Instance &aInstance);
-        TxMessage &GetProbeMessage(void) { return mProbeMessage; }
-        TxMessage &GetResponseMessage(void) { return mResponseMessage; }
+        TimeMilli     GetNow(void) const { return mNextFireTime.GetNow(); }
+        NextFireTime &GetNextFireTime(void) { return mNextFireTime; }
+        TxMessage    &GetProbeMessage(void) { return mProbeMessage; }
+        TxMessage    &GetResponseMessage(void) { return mResponseMessage; }
 
     private:
-        TxMessage mProbeMessage;
-        TxMessage mResponseMessage;
+        NextFireTime mNextFireTime;
+        TxMessage    mProbeMessage;
+        TxMessage    mResponseMessage;
     };
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1440,14 +1428,17 @@ private:
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    class CacheTimerContext : public TimerContext
+    class CacheTimerContext : public InstanceLocator
     {
     public:
         CacheTimerContext(Instance &aInstance);
-        TxMessage &GetQueryMessage(void) { return mQueryMessage; }
+        TimeMilli     GetNow(void) const { return mNextFireTime.GetNow(); }
+        NextFireTime &GetNextFireTime(void) { return mNextFireTime; }
+        TxMessage    &GetQueryMessage(void) { return mQueryMessage; }
 
     private:
-        TxMessage mQueryMessage;
+        NextFireTime mNextFireTime;
+        TxMessage    mQueryMessage;
     };
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
