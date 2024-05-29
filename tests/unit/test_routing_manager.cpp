@@ -1848,7 +1848,7 @@ void TestAdvNonUlaRoute(void)
 
 void TestLocalOnLinkPrefixDeprecation(void)
 {
-    static constexpr uint32_t kMaxRaTxInterval = 601; // In seconds
+    static constexpr uint32_t kMaxRaTxInterval = 196; // In seconds
 
     Ip6::Prefix  localOnLink;
     Ip6::Prefix  localOmr;
@@ -2142,7 +2142,7 @@ void TestDomainPrefixAsOmr(void)
 
 void TestExtPanIdChange(void)
 {
-    static constexpr uint32_t kMaxRaTxInterval = 601; // In seconds
+    static constexpr uint32_t kMaxRaTxInterval = 196; // In seconds
 
     static const otExtendedPanId kExtPanId1 = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x08}};
     static const otExtendedPanId kExtPanId2 = {{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x99, 0x88}};
@@ -2996,7 +2996,7 @@ void TestLearningAndCopyingOfFlags(void)
     sRaValidated           = false;
     sExpectedRaHeaderFlags = kRaHeaderFlagsOnlyM;
 
-    AdvanceTime(610 * 1000);
+    AdvanceTime(310 * 1000);
     VerifyOrQuit(sRaValidated);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3013,7 +3013,7 @@ void TestLearningAndCopyingOfFlags(void)
     AdvanceTime(1);
     VerifyDiscoveredRoutersIsEmpty();
 
-    AdvanceTime(610 * 1000);
+    AdvanceTime(310 * 1000);
     VerifyOrQuit(sRaValidated);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3033,7 +3033,7 @@ void TestLearningAndCopyingOfFlags(void)
     sRaValidated           = false;
     sExpectedRaHeaderFlags = kRaHeaderFlagsNone;
 
-    AdvanceTime(610 * 1000);
+    AdvanceTime(310 * 1000);
     VerifyOrQuit(sRaValidated);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3052,7 +3052,7 @@ void TestLearningAndCopyingOfFlags(void)
     sRaValidated           = false;
     sExpectedRaHeaderFlags = kRaHeaderFlagsOnlyO;
 
-    AdvanceTime(610 * 1000);
+    AdvanceTime(310 * 1000);
     VerifyOrQuit(sRaValidated);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3074,7 +3074,7 @@ void TestLearningAndCopyingOfFlags(void)
     sExpectedPio           = kPioDeprecatingLocalOnLink;
     sExpectedRaHeaderFlags = kRaHeaderFlagsBothMAndO;
 
-    AdvanceTime(610 * 1000);
+    AdvanceTime(310 * 1000);
     VerifyOrQuit(sRaValidated);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3257,7 +3257,7 @@ void TestConflictingPrefix(void)
     // Check that the local on-link prefix is still being advertised.
 
     sRaValidated = false;
-    AdvanceTime(610000);
+    AdvanceTime(310000);
     VerifyOrQuit(sRaValidated);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3282,7 +3282,7 @@ void TestConflictingPrefix(void)
     // Check that the local on-link prefix is still being advertised.
 
     sRaValidated = false;
-    AdvanceTime(610000);
+    AdvanceTime(310000);
     VerifyOrQuit(sRaValidated);
 
     VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
@@ -3321,7 +3321,7 @@ void TestConflictingPrefix(void)
     // Check that the local on-link prefix is still being deprecated.
 
     sRaValidated = false;
-    AdvanceTime(610000);
+    AdvanceTime(310000);
     VerifyOrQuit(sRaValidated);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
