@@ -567,27 +567,38 @@ private:
 
     static constexpr uint8_t kMaxOnMeshPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES;
 
-    static constexpr uint8_t kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE; // The length of an OMR prefix. In bits.
-    static constexpr uint8_t kOnLinkPrefixLength = OT_IP6_PREFIX_BITSIZE; // The length of an On-link prefix. In bits.
-    static constexpr uint8_t kBrUlaPrefixLength  = 48;                    // The length of a BR ULA prefix. In bits.
-    static constexpr uint8_t kNat64PrefixLength  = 96;                    // The length of a NAT64 prefix. In bits.
+    // Prefix length in bits.
+    static constexpr uint8_t kOmrPrefixLength    = 64;
+    static constexpr uint8_t kOnLinkPrefixLength = 64;
+    static constexpr uint8_t kBrUlaPrefixLength  = 48;
+    static constexpr uint8_t kNat64PrefixLength  = 96;
 
-    static constexpr uint16_t kOmrPrefixSubnetId   = 1; // The subnet ID of an OMR prefix within a BR ULA prefix.
-    static constexpr uint16_t kNat64PrefixSubnetId = 2; // The subnet ID of a NAT64 prefix within a BR ULA prefix.
+    // Subnet IDs for OMR and NAT64 prefixes.
+    static constexpr uint16_t kOmrPrefixSubnetId   = 1;
+    static constexpr uint16_t kNat64PrefixSubnetId = 2;
 
-    // The maximum number of initial Router Advertisements.
-    static constexpr uint32_t kMaxInitRtrAdvertisements = 3;
+    // Default valid lifetime. In seconds.
+    static constexpr uint32_t kDefaultOmrPrefixLifetime    = 1800;
+    static constexpr uint32_t kDefaultOnLinkPrefixLifetime = 1800;
+    static constexpr uint32_t kDefaultNat64PrefixLifetime  = 300;
 
-    static constexpr uint32_t kDefaultOmrPrefixLifetime    = 1800; // The default OMR prefix valid lifetime. In sec.
-    static constexpr uint32_t kDefaultOnLinkPrefixLifetime = 1800; // The default on-link prefix valid lifetime. In sec.
-    static constexpr uint32_t kDefaultNat64PrefixLifetime  = 300;  // The default NAT64 prefix valid lifetime. In sec.
-    static constexpr uint32_t kMaxRtrAdvInterval           = 600;  // Max Router Advertisement Interval. In sec.
-    static constexpr uint32_t kMinRtrAdvInterval           = kMaxRtrAdvInterval / 3; // Min RA Interval. In sec.
-    static constexpr uint32_t kMaxInitRtrAdvInterval       = 16;                     // Max Initial RA Interval. In sec.
-    static constexpr uint32_t kRaReplyJitter               = 500;  // Jitter for sending RA after rx RS. In msec.
-    static constexpr uint32_t kPolicyEvaluationMinDelay    = 2000; // Min delay for policy evaluation. In msec.
-    static constexpr uint32_t kPolicyEvaluationMaxDelay    = 4000; // Max delay for policy evaluation. In msec.
-    static constexpr uint32_t kMinDelayBetweenRtrAdvs      = 3000; // Min delay (msec) between consecutive RAs.
+    // RA transmission constants (in milliseconds). Initially, three
+    // RAs are sent with a short interval of 16 seconds (± 2 seconds
+    // jitter). Subsequently, a longer, regular RA beacon interval of
+    // 3 minutes (± 15 seconds jitter) is used. The actual interval is
+    // randomly selected within the range [interval - jitter,
+    // interval + jitter].
+
+    static constexpr uint32_t kInitalRaTxCount    = 3;
+    static constexpr uint32_t kInitalRaInterval   = Time::kOneSecondInMsec * 16;
+    static constexpr uint16_t kInitialRaJitter    = Time::kOneSecondInMsec * 2;
+    static constexpr uint32_t kRaBeaconInterval   = Time::kOneSecondInMsec * 180; // 3 minutes
+    static constexpr uint16_t kRaBeaconJitter     = Time::kOneSecondInMsec * 15;
+    static constexpr uint32_t kMinDelayBetweenRas = Time::kOneSecondInMsec * 3;
+    static constexpr uint32_t kRsReplyInterval    = 250;
+    static constexpr uint16_t kRsReplyJitter      = 250;
+    static constexpr uint32_t kEvaluationInterval = Time::kOneSecondInMsec * 3;
+    static constexpr uint16_t kEvaluationJitter   = Time::kOneSecondInMsec * 1;
 
     // The STALE_RA_TIME in seconds. The Routing Manager will consider the prefixes
     // and learned RA parameters STALE when they are not refreshed in STALE_RA_TIME
@@ -596,14 +607,6 @@ private:
     // prefix.
     // The value is chosen in range of [`kMaxRtrAdvInterval` upper bound (1800s), `kDefaultOnLinkPrefixLifetime`].
     static constexpr uint32_t kRtrAdvStaleTime = 1800;
-
-    static_assert(kMinRtrAdvInterval <= 3 * kMaxRtrAdvInterval / 4, "invalid RA intervals");
-    static_assert(kDefaultOmrPrefixLifetime >= kMaxRtrAdvInterval, "invalid default OMR prefix lifetime");
-    static_assert(kDefaultOnLinkPrefixLifetime >= kMaxRtrAdvInterval, "invalid default on-link prefix lifetime");
-    static_assert(kRtrAdvStaleTime >= 1800 && kRtrAdvStaleTime <= kDefaultOnLinkPrefixLifetime,
-                  "invalid RA STALE time");
-    static_assert(kPolicyEvaluationMaxDelay > kPolicyEvaluationMinDelay,
-                  "kPolicyEvaluationMaxDelay must be larger than kPolicyEvaluationMinDelay");
 
     //------------------------------------------------------------------------------------------------------------------
     // Typedefs
@@ -1251,7 +1254,7 @@ private:
 
         TxRaInfo(void)
             : mTxCount(0)
-            , mLastTxTime(TimerMilli::GetNow() - kMinDelayBetweenRtrAdvs)
+            , mLastTxTime(TimerMilli::GetNow() - kMinDelayBetweenRas)
             , mLastHashIndex(0)
         {
         }
