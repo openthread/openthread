@@ -692,8 +692,8 @@ private:
         uint32_t  GetPreferredLifetime(void) const { return mPreferredLifetime; }
         void      ClearPreferredLifetime(void) { mPreferredLifetime = 0; }
         bool      IsDeprecated(void) const;
+        TimeMilli GetDeprecationTime(void) const;
         TimeMilli GetStaleTime(void) const;
-        TimeMilli GetStaleTimeFromPreferredLifetime(void) const;
         void      AdoptValidAndPreferredLifetimesFrom(const OnLinkPrefix &aPrefix);
         void      CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli aNow) const;
 

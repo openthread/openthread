@@ -858,19 +858,16 @@ void RoutingManager::OnLinkPrefix::SetFrom(const PrefixTableEntry &aPrefixTableE
     mLastUpdateTime    = TimerMilli::GetNow();
 }
 
-bool RoutingManager::OnLinkPrefix::IsDeprecated(void) const
+bool RoutingManager::OnLinkPrefix::IsDeprecated(void) const { return GetDeprecationTime() <= TimerMilli::GetNow(); }
+
+TimeMilli RoutingManager::OnLinkPrefix::GetDeprecationTime(void) const
 {
-    return CalculateExpirationTime(mPreferredLifetime) <= TimerMilli::GetNow();
+    return CalculateExpirationTime(mPreferredLifetime);
 }
 
 TimeMilli RoutingManager::OnLinkPrefix::GetStaleTime(void) const
 {
     return CalculateExpirationTime(Min(kRtrAdvStaleTime, mPreferredLifetime));
-}
-
-TimeMilli RoutingManager::OnLinkPrefix::GetStaleTimeFromPreferredLifetime(void) const
-{
-    return CalculateExpirationTime(mPreferredLifetime);
 }
 
 void RoutingManager::OnLinkPrefix::AdoptValidAndPreferredLifetimesFrom(const OnLinkPrefix &aPrefix)
@@ -3728,13 +3725,7 @@ void RoutingManager::PdPrefixManager::Process(const RouterAdvert::Icmp6Packet *a
 
     if (HasPrefix() && currentPrefixUpdated)
     {
-        // If the prefix is obtained from an RA message, use
-        // `GetStaleTime()` to apply the minimum `RA_STABLE_TIME`.
-        // Otherwise, calculate it directly from the prefix's
-        // preferred lifetime.
-
-        mTimer.FireAt((aPrefixTableEntry != nullptr) ? mPrefix.GetStaleTimeFromPreferredLifetime()
-                                                     : mPrefix.GetStaleTime());
+        mTimer.FireAt(mPrefix.GetDeprecationTime());
     }
     else
     {
