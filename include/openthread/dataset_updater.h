@@ -82,7 +82,8 @@ typedef void (*otDatasetUpdaterCallback)(otError aError, void *aContext);
  * @param[in]  aContext                An arbitrary context passed to callback.
  *
  * @retval OT_ERROR_NONE           Dataset update started successfully (@p aCallback will be invoked on completion).
- * @retval OT_ERROR_INVALID_STATE  Device is disabled (MLE is disabled).
+ * @retval OT_ERROR_INVALID_STATE  Device is disabled or not fully configured (missing or incomplete Active Dataset).
+ * @retval OT_ERROR_ALREADY        The @p aDataset fields already match the existing Active Dataset.
  * @retval OT_ERROR_INVALID_ARGS   The @p aDataset is not valid (contains Active or Pending Timestamp).
  * @retval OT_ERROR_BUSY           Cannot start update, a previous one is ongoing.
  * @retval OT_ERROR_NO_BUFS        Could not allocated buffer to save Dataset.
