@@ -638,6 +638,18 @@ exit:
     }
 }
 
+TimeMilli RoutingManager::CalculateExpirationTime(TimeMilli aUpdateTime, uint32_t aLifetime)
+{
+    // `aLifetime` is in unit of seconds. We clamp the lifetime to max
+    // interval supported by `Timer` (`2^31` msec or ~24.8 days).
+    // This ensures that the time calculation fits within `TimeMilli`
+    // range.
+
+    static constexpr uint32_t kMaxLifetime = Time::MsecToSec(Timer::kMaxDelay);
+
+    return aUpdateTime + Time::SecToMsec(Min(aLifetime, kMaxLifetime));
+}
+
 bool RoutingManager::IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix)
 {
     return aBrUlaPrefix.mLength == kBrUlaPrefixLength && aBrUlaPrefix.mPrefix.mFields.m8[0] == 0xfd;
@@ -831,12 +843,10 @@ void RoutingManager::LogRouteInfoOption(const Ip6::Prefix &, uint32_t, RoutePref
 
 TimeMilli RoutingManager::LifetimedPrefix::CalculateExpirationTime(uint32_t aLifetime) const
 {
-    // `aLifetime` is in unit of seconds. We clamp the lifetime to max
-    // interval supported by `Timer` (`2^31` msec or ~24.8 days).
+    // `aLifetime` is in unit of seconds. This method ensures
+    // that the time calculation fits with `TimeMilli` range.
 
-    static constexpr uint32_t kMaxLifetime = Time::MsecToSec(Timer::kMaxDelay);
-
-    return mLastUpdateTime + Time::SecToMsec(Min(aLifetime, kMaxLifetime));
+    return RoutingManager::CalculateExpirationTime(mLastUpdateTime, aLifetime);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -1507,7 +1517,14 @@ void RoutingManager::RxRaTracker::ScheduleStaleTimer(void)
 
     if (mLocalRaHeader.IsValid())
     {
-        staleTime.UpdateIfEarlier(mLocalRaHeaderUpdateTime + Time::SecToMsec(kRtrAdvStaleTime));
+        uint16_t interval = kRtrAdvStaleTime;
+
+        if (mLocalRaHeader.GetRouterLifetime() > 0)
+        {
+            interval = Min(interval, mLocalRaHeader.GetRouterLifetime());
+        }
+
+        staleTime.UpdateIfEarlier(CalculateExpirationTime(mLocalRaHeaderUpdateTime, interval));
     }
 
     mStaleTimer.FireAt(staleTime);

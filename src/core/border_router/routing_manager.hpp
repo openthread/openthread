@@ -1394,6 +1394,8 @@ private:
     void HandleRaPrefixTableChanged(void);
     void HandleLocalOnLinkPrefixChanged(void);
 
+    static TimeMilli CalculateExpirationTime(TimeMilli aUpdateTime, uint32_t aLifetime);
+
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
     static bool IsValidOnLinkPrefix(const PrefixInfoOption &aPio);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
