@@ -3977,7 +3977,7 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
     }
 
     // 4. Short prefix will be extended to /64.
-    Log("Short prefix");
+    Log("4. Short prefix");
     {
         // The prefix will be padded to a /64 prefix.
         Ip6::Prefix raPrefix = PrefixFromString("2001:db8:cafe:0::", 64);
@@ -3999,6 +3999,31 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
         VerifyOmrPrefixInNetData(raPrefix, /* aDefaultRoute */ false);
 
         AdvanceTime(400000);
+        // Deprecated prefixes will be removed.
+        VerifyNoPdOmrPrefix();
+        VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+    }
+
+    // 5. Publish a prefix with long lifetime, and wait until it expired.
+    Log("5. RA message with long prefix lifetime");
+    {
+        Ip6::Prefix raPrefix = PrefixFromString("2001:db8:dead:beef::", 64);
+
+        SendRouterAdvertToBorderRoutingProcessIcmp6Ra({Pio(raPrefix, 5000, 5000)});
+
+        sExpectedRios.Add(raPrefix);
+        AdvanceTime(10 * 1000);
+
+        VerifyPdOmrPrefix(raPrefix);
+        VerifyOrQuit(sExpectedRios.SawAll());
+        VerifyOmrPrefixInNetData(raPrefix, /* aDefaultRoute */ false);
+
+        AdvanceTime(4900 * 1000);
+        sExpectedRios.Clear();
+        VerifyPdOmrPrefix(raPrefix);
+        VerifyOmrPrefixInNetData(raPrefix, /* aDefaultRoute */ false);
+
+        AdvanceTime(200 * 1000);
         // Deprecated prefixes will be removed.
         VerifyNoPdOmrPrefix();
         VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
