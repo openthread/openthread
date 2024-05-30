@@ -64,6 +64,9 @@ const char Radio::kLogModuleName[] = "Radio";
 Radio::Radio(void)
     : mRadioUrl(nullptr)
     , mRadioSpinel()
+#if OPENTHREAD_POSIX_CONFIG_RCP_CAPS_DIAG_ENABLE
+    , mRcpCapsDiag(mRadioSpinel)
+#endif
 {
 }
 
@@ -193,6 +196,10 @@ exit:
 } // namespace ot
 
 ot::Spinel::RadioSpinel &GetRadioSpinel(void) { return sRadio.GetRadioSpinel(); }
+
+#if OPENTHREAD_POSIX_CONFIG_RCP_CAPS_DIAG_ENABLE
+ot::Posix::RcpCapsDiag &GetRcpCapsDiag(void) { return sRadio.GetRcpCapsDiag(); }
+#endif
 
 void platformRadioDeinit(void) { GetRadioSpinel().Deinit(); }
 
@@ -502,6 +509,13 @@ otError otPlatDiagProcess(otInstance *aInstance,
     char  cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE] = {'\0'};
     char *cur                                              = cmd;
     char *end                                              = cmd + sizeof(cmd);
+
+#if OPENTHREAD_POSIX_CONFIG_RCP_CAPS_DIAG_ENABLE
+    if (strcmp(aArgs[0], "rcpcaps") == 0)
+    {
+        return GetRcpCapsDiag().DiagProcess(aArgs, aArgsLength, aOutput, aOutputMaxLen);
+    }
+#endif
 
     for (uint8_t index = 0; (index < aArgsLength) && (cur < end); index++)
     {
