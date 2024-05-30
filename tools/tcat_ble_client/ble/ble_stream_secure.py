@@ -28,7 +28,9 @@
 
 import asyncio
 import ssl
+import sys
 import logging
+import utils
 
 logger = logging.getLogger(__name__)
 
@@ -41,17 +43,21 @@ class BleStreamSecure:
         self.incoming = ssl.MemoryBIO()
         self.outgoing = ssl.MemoryBIO()
         self.ssl_object = None
+        self.cert = ''
 
     def load_cert(self, certfile='', keyfile='', cafile=''):
         if certfile and keyfile:
             self.ssl_context.load_cert_chain(certfile=certfile, keyfile=keyfile)
+            self.cert = utils.load_cert_pem(certfile)
         elif certfile:
             self.ssl_context.load_cert_chain(certfile=certfile)
+            self.cert = utils.load_cert_pem(certfile)
 
         if cafile:
             self.ssl_context.load_verify_locations(cafile=cafile)
 
     async def do_handshake(self):
+        is_debug = logger.getEffectiveLevel() <= logging.DEBUG
         self.ssl_object = self.ssl_context.wrap_bio(
             incoming=self.incoming,
             outgoing=self.outgoing,
@@ -60,8 +66,21 @@ class BleStreamSecure:
         )
         while True:
             try:
+                if not is_debug:
+                    print('.', end='')
+                sys.stdout.flush()
                 self.ssl_object.do_handshake()
+                print('\n')
+
+                # show peer cert and own cert, if --info argument given.
+                logger.info(f'TCAT Device cert:\n{self.ssl_object.getpeercert(binary_form=False)}')
+                peer_cert_der_hex = utils.base64_string(self.ssl_object.getpeercert(binary_form=True))
+                logger.info(f'TCAT Device certificate, base64: (paste in https://lapo.it/asn1js/ to decode)\n{peer_cert_der_hex}')
+                logger.info(f'TCAT Commissioner cert, PEM:\n{self.cert}')
+                ca_cert_der_hex = utils.base64_string(self.ssl_object.getpeercert(binary_form=True))
+                logger.info(f'TCAT Commissioner CA cert, base64:\n{ca_cert_der_hex}')
                 break
+
             # SSLWantWrite means ssl wants to send data over the link,
             # but might need a receive first
             except ssl.SSLWantWriteError:
@@ -71,7 +90,7 @@ class BleStreamSecure:
                 data = self.outgoing.read()
                 if data:
                     await self.stream.send(data)
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.02)
 
             # SSLWantRead means ssl wants to receive data from the link,
             # but might need to send first
@@ -82,7 +101,15 @@ class BleStreamSecure:
                 output = await self.stream.recv(4096)
                 if output:
                     self.incoming.write(output)
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.02)
+
+            except ssl.CertificateError as e:
+                logger.error(f'Certificate validation error: {e}')
+                break
+
+            except ssl.SSLError as e:
+                logger.error(f'Certificate validation error: {e}')
+                break
 
     async def send(self, bytes):
         self.ssl_object.write(bytes)
@@ -117,3 +144,4 @@ class BleStreamSecure:
         await self.send(bytes)
         res = await self.recv(buffersize=4096, timeout=5)
         return res
+

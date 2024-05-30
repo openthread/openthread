@@ -26,11 +26,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 """
 
-from itertools import count, takewhile
-from typing import Iterator
 import logging
-import time
-from asyncio import sleep
 import socket
 
 logger = logging.getLogger(__name__)
@@ -54,3 +50,6 @@ class UdpStream:
         message = self.socket.recv(bufsize)
         logger.debug(f'retrieved {message}')
         return message
+
+    def close(self):
+        self.socket.close()

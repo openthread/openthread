@@ -34,13 +34,15 @@ import logging
 from ble.ble_connection_constants import BBTC_SERVICE_UUID, BBTC_TX_CHAR_UUID, \
     BBTC_RX_CHAR_UUID
 from ble.ble_stream import BleStream
-from ble.udp_stream import UdpStream
 from ble.ble_stream_secure import BleStreamSecure
+from ble.udp_stream import UdpStream
 from ble import ble_scanner
 from cli.cli import CLI
 from dataset.dataset import ThreadDataset
 from cli.command import CommandResult
 from utils import select_device_by_user_input
+
+logger = logging.getLogger(__name__)
 
 
 async def main():
@@ -48,6 +50,7 @@ async def main():
 
     parser = argparse.ArgumentParser(description='Device parameters')
     parser.add_argument('--debug', help='Enable debug logs', action='store_true')
+    parser.add_argument('--info', help='Enable info logs', action='store_true')
     parser.add_argument('--cert_path', help='Path to certificate chain and key', action='store', default='auth')
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--mac', type=str, help='Device MAC address', action='store')
@@ -57,8 +60,13 @@ async def main():
     args = parser.parse_args()
 
     if args.debug:
-        logging.getLogger('ble_stream').setLevel(logging.DEBUG)
-        logging.getLogger('ble_stream_secure').setLevel(logging.DEBUG)
+        logging.getLogger('ble.ble_stream').setLevel(logging.DEBUG)
+        logging.getLogger('ble.ble_stream_secure').setLevel(logging.DEBUG)
+        logging.getLogger('ble.udp_stream').setLevel(logging.DEBUG)
+    elif args.info:
+        logging.getLogger('ble.ble_stream').setLevel(logging.INFO)
+        logging.getLogger('ble.ble_stream_secure').setLevel(logging.INFO)
+        logging.getLogger('ble.udp_stream').setLevel(logging.INFO)
 
     device = await get_device_by_args(args)
 
@@ -73,7 +81,7 @@ async def main():
             cafile=path.join(args.cert_path, 'ca_cert.pem'),
         )
 
-        print('Setting up secure channel...')
+        print('Setting up secure channel..', end='')
         await ble_sstream.do_handshake()
         print('Done')
 
@@ -85,13 +93,14 @@ async def main():
         user_input = await loop.run_in_executor(None, lambda: input('> '))
         if user_input.lower() == 'exit':
             print('Disconnecting...')
+            # FIXME must send Alert + close here. Otherwise in simulation mode, Device gets stuck later on.
             break
         try:
             result: CommandResult = await cli.evaluate_input(user_input)
             if result:
                 result.pretty_print()
         except Exception as e:
-            print(e)
+            logger.error(e)
 
 
 async def get_device_by_args(args):
