@@ -305,10 +305,7 @@ void Core::HandleEntryTimer(void)
 
     RemoveEmptyEntries();
 
-    if (context.GetNextTime() != context.GetNow().GetDistantFuture())
-    {
-        mEntryTimer.FireAtIfEarlier(context.GetNextTime());
-    }
+    mEntryTimer.FireAtIfEarlier(context.GetNextFireTime());
 }
 
 void Core::RemoveEmptyEntries(void)
@@ -823,6 +820,14 @@ void Core::FireTime::ScheduleFireTimeOn(TimerMilli &aTimer)
     }
 }
 
+void Core::FireTime::UpdateNextFireTimeOn(NextFireTime &aNextFireTime) const
+{
+    if (mHasFireTime)
+    {
+        aNextFireTime.UpdateIfEarlier(mFireTime);
+    }
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 // Core::Entry
 
@@ -1199,10 +1204,7 @@ template <typename EntryType> void Core::Entry::HandleTimer(EntryTimerContext &a
     thisAsEntryType->DetermineNextFireTime();
 
 exit:
-    if (HasFireTime())
-    {
-        aContext.UpdateNextTime(GetFireTime());
-    }
+    UpdateNextFireTimeOn(aContext.GetNextFireTime());
 }
 
 void Core::Entry::AppendQuestionTo(TxMessage &aTxMessage) const
@@ -2673,10 +2675,7 @@ void Core::ServiceType::HandleTimer(EntryTimerContext &aContext)
     mServicesPtr.UpdateFireTimeOn(*this);
 
 exit:
-    if (HasFireTime())
-    {
-        aContext.UpdateNextTime(GetFireTime());
-    }
+    UpdateNextFireTimeOn(aContext.GetNextFireTime());
 }
 
 void Core::ServiceType::PrepareResponse(TxMessage &aResponse, TimeMilli aNow)
@@ -3212,32 +3211,10 @@ bool Core::TxMessage::ShouldClearAppendStateOnReinit(const Entry &aEntry) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// Core::TimerContext
-
-Core::TimerContext::TimerContext(Instance &aInstance)
-    : InstanceLocator(aInstance)
-    , mNow(TimerMilli::GetNow())
-    , mNextTime(mNow.GetDistantFuture())
-{
-}
-
-void Core::TimerContext::UpdateNextTime(TimeMilli aTime)
-{
-    if (aTime <= mNow)
-    {
-        mNextTime = mNow;
-    }
-    else
-    {
-        mNextTime = Min(mNextTime, aTime);
-    }
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 // Core::EntryTimerContext
 
 Core::EntryTimerContext::EntryTimerContext(Instance &aInstance)
-    : TimerContext(aInstance)
+    : InstanceLocator(aInstance)
     , mProbeMessage(aInstance, TxMessage::kMulticastProbe)
     , mResponseMessage(aInstance, TxMessage::kMulticastResponse)
 {
@@ -4339,10 +4316,7 @@ void Core::HandleCacheTimer(void)
 
     context.GetQueryMessage().Send();
 
-    if (context.GetNextTime() != context.GetNow().GetDistantFuture())
-    {
-        mCacheTimer.FireAtIfEarlier(context.GetNextTime());
-    }
+    mCacheTimer.FireAtIfEarlier(context.GetNextFireTime());
 }
 
 void Core::HandleCacheTask(void)
@@ -4448,7 +4422,7 @@ void Core::ResultCallback::Invoke(Instance &aInstance, const AddressResult &aRes
 // Core::CacheTimerContext
 
 Core::CacheTimerContext::CacheTimerContext(Instance &aInstance)
-    : TimerContext(aInstance)
+    : InstanceLocator(aInstance)
     , mQueryMessage(aInstance, TxMessage::kMulticastQuery)
 {
 }
@@ -4811,10 +4785,7 @@ void Core::CacheEntry::HandleTimer(CacheTimerContext &aContext)
     DetermineNextFireTime();
 
 exit:
-    if (HasFireTime())
-    {
-        aContext.UpdateNextTime(GetFireTime());
-    }
+    UpdateNextFireTimeOn(aContext.GetNextFireTime());
 }
 
 Core::ResultCallback *Core::CacheEntry::FindCallbackMatching(const ResultCallback &aCallback)
