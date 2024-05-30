@@ -1472,34 +1472,48 @@ void RoutingManager::RxRaTracker::RemoveOrDeprecateEntriesFromInactiveRouters(vo
 
 void RoutingManager::RxRaTracker::ScheduleStaleTimer(void)
 {
-    NextFireTime staleTime;
-    TimeMilli    onLinkStaleTime = staleTime.GetNow();
-    bool         foundOnLink     = false;
+    // If multiple routers advertise the same on-link or route prefix,
+    // the stale time for the prefix is determined by the latest stale
+    // time among all corresponding entries.
+    //
+    // The "StaleTimeCalculated" flag is used to ensure stale time is
+    // calculated only once for each unique prefix. Initially, this
+    // flag is cleared on all entries. As we iterate over routers and
+    // their entries, `DetermineStaleTimeFor()` will consider all
+    // matching entries and mark "StaleTimeCalculated" flag on them.
 
-    // For on-link prefixes, we consider stale time as when all on-link
-    // prefixes become stale (the latest stale time) but for route
-    // prefixes we consider the earliest stale time.
+    NextFireTime staleTime;
+
+    for (Router &router : mRouters)
+    {
+        for (OnLinkPrefix &entry : router.mOnLinkPrefixes)
+        {
+            entry.SetStaleTimeCalculated(false);
+        }
+
+        for (RoutePrefix &entry : router.mRoutePrefixes)
+        {
+            entry.SetStaleTimeCalculated(false);
+        }
+    }
 
     for (const Router &router : mRouters)
     {
         for (const OnLinkPrefix &entry : router.mOnLinkPrefixes)
         {
-            if (!entry.IsDeprecated())
+            if (!entry.IsStaleTimeCalculated())
             {
-                onLinkStaleTime = Max(onLinkStaleTime, Max(staleTime.GetNow(), entry.GetStaleTime()));
-                foundOnLink     = true;
+                DetermineStaleTimeFor(entry, staleTime);
             }
         }
 
         for (const RoutePrefix &entry : router.mRoutePrefixes)
         {
-            staleTime.UpdateIfEarlier(entry.GetStaleTime());
+            if (!entry.IsStaleTimeCalculated())
+            {
+                DetermineStaleTimeFor(entry, staleTime);
+            }
         }
-    }
-
-    if (foundOnLink)
-    {
-        staleTime.UpdateIfEarlier(onLinkStaleTime);
     }
 
     if (mLocalRaHeader.IsValid())
@@ -1508,6 +1522,65 @@ void RoutingManager::RxRaTracker::ScheduleStaleTimer(void)
     }
 
     mStaleTimer.FireAt(staleTime);
+}
+
+void RoutingManager::RxRaTracker::DetermineStaleTimeFor(const OnLinkPrefix &aPrefix, NextFireTime &aStaleTime)
+{
+    TimeMilli prefixStaleTime = aStaleTime.GetNow();
+    bool      found           = false;
+
+    for (Router &router : mRouters)
+    {
+        for (OnLinkPrefix &entry : router.mOnLinkPrefixes)
+        {
+            if (!entry.Matches(aPrefix.GetPrefix()))
+            {
+                continue;
+            }
+
+            entry.SetStaleTimeCalculated(true);
+
+            if (entry.IsDeprecated())
+            {
+                continue;
+            }
+
+            prefixStaleTime = Max(prefixStaleTime, Max(aStaleTime.GetNow(), entry.GetStaleTime()));
+            found           = true;
+        }
+    }
+
+    if (found)
+    {
+        aStaleTime.UpdateIfEarlier(prefixStaleTime);
+    }
+}
+
+void RoutingManager::RxRaTracker::DetermineStaleTimeFor(const RoutePrefix &aPrefix, NextFireTime &aStaleTime)
+{
+    TimeMilli prefixStaleTime = aStaleTime.GetNow();
+    bool      found           = false;
+
+    for (Router &router : mRouters)
+    {
+        for (RoutePrefix &entry : router.mRoutePrefixes)
+        {
+            if (!entry.Matches(aPrefix.GetPrefix()))
+            {
+                continue;
+            }
+
+            entry.SetStaleTimeCalculated(true);
+
+            prefixStaleTime = Max(prefixStaleTime, Max(aStaleTime.GetNow(), entry.GetStaleTime()));
+            found           = true;
+        }
+    }
+
+    if (found)
+    {
+        aStaleTime.UpdateIfEarlier(prefixStaleTime);
+    }
 }
 
 void RoutingManager::RxRaTracker::HandleStaleTimer(void)

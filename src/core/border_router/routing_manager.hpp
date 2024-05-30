@@ -672,12 +672,16 @@ private:
         bool Matches(const UlaChecker &aIsUla) const { return (mPrefix.IsUniqueLocal() == aIsUla); }
         bool Matches(const ExpirationChecker &aChecker) const { return (GetExpireTime() <= aChecker.mNow); }
 
+        void SetStaleTimeCalculated(bool aFlag) { mStaleTimeCalculated = aFlag; }
+        bool IsStaleTimeCalculated(void) const { return mStaleTimeCalculated; }
+
     protected:
         LifetimedPrefix(void) = default;
 
         TimeMilli CalculateExpirationTime(uint32_t aLifetime) const;
 
         Ip6::Prefix mPrefix;
+        bool        mStaleTimeCalculated : 1;
         uint32_t    mValidLifetime;
         TimeMilli   mLastUpdateTime;
     };
@@ -907,6 +911,8 @@ private:
         void RemoveExpiredEntries(void);
         void SignalTableChanged(void);
         void ScheduleStaleTimer(void);
+        void DetermineStaleTimeFor(const OnLinkPrefix &aPrefix, NextFireTime &aStaleTime);
+        void DetermineStaleTimeFor(const RoutePrefix &aPrefix, NextFireTime &aStaleTime);
         void UpdateRouterOnRx(Router &aRouter);
         void SendNeighborSolicitToRouter(const Router &aRouter);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
