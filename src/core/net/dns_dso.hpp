@@ -715,13 +715,13 @@ public:
         public:
             static constexpr uint8_t kMaxPendingRequests = OPENTHREAD_CONFIG_DNS_DSO_MAX_PENDING_REQUESTS;
 
-            void      Clear(void) { mRequests.Clear(); }
-            bool      IsEmpty(void) const { return mRequests.IsEmpty(); }
-            bool      Contains(MessageId aMessageId, Tlv::Type &aPrimaryTlvType) const;
-            Error     Add(MessageId aMessageId, Tlv::Type aPrimaryTlvType, TimeMilli aResponseTimeout);
-            void      Remove(MessageId aMessageId);
-            bool      HasAnyTimedOut(TimeMilli aNow) const;
-            TimeMilli GetNextFireTime(TimeMilli aNow) const;
+            void  Clear(void) { mRequests.Clear(); }
+            bool  IsEmpty(void) const { return mRequests.IsEmpty(); }
+            bool  Contains(MessageId aMessageId, Tlv::Type &aPrimaryTlvType) const;
+            Error Add(MessageId aMessageId, Tlv::Type aPrimaryTlvType, TimeMilli aResponseTimeout);
+            void  Remove(MessageId aMessageId);
+            bool  HasAnyTimedOut(TimeMilli aNow) const;
+            void  UpdateNextFireTime(NextFireTime &aNextTime) const;
 
         private:
             struct Entry
@@ -805,11 +805,11 @@ public:
         void  SendErrorResponse(const Dns::Header &aHeader, Dns::Header::Response aResponseCode);
         Error AppendPadding(Message &aMessage);
 
-        void      AdjustInactivityTimeout(uint32_t aNewTimeout);
-        uint32_t  CalculateServerInactivityWaitTime(void) const;
-        void      ResetTimeouts(bool aIsKeepAliveMessage);
-        TimeMilli GetNextFireTime(TimeMilli aNow) const;
-        void      HandleTimer(TimeMilli aNow, TimeMilli &aNextTime);
+        void     AdjustInactivityTimeout(uint32_t aNewTimeout);
+        uint32_t CalculateServerInactivityWaitTime(void) const;
+        void     ResetTimeouts(bool aIsKeepAliveMessage);
+        void     UpdateNextFireTime(NextFireTime &aNextTime) const;
+        void     HandleTimer(NextFireTime &aNextTime);
 
         bool Matches(const Ip6::SockAddr &aPeerSockAddr) const { return mPeerSockAddr == aPeerSockAddr; }
 
