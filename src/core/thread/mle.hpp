@@ -1061,8 +1061,11 @@ private:
     {
     public:
         bool  ContainsTlv(Tlv::Type aTlvType) const;
+        Error ReadModeTlv(DeviceMode &aMode) const;
+        Error ReadVersionTlv(uint16_t &aVersion) const;
         Error ReadChallengeTlv(RxChallenge &aChallenge) const;
         Error ReadResponseTlv(RxChallenge &aResponse) const;
+        Error ReadAndMatchResponseTlvWith(const TxChallenge &aChallenge) const;
         Error ReadFrameCounterTlvs(uint32_t &aLinkFrameCounter, uint32_t &aMleFrameCounter) const;
         Error ReadTlvRequestTlv(TlvList &aTlvList) const;
         Error ReadLeaderDataTlv(LeaderData &aLeaderData) const;

@@ -3124,7 +3124,6 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 {
     Error            error = kErrorNone;
     int8_t           rss   = aRxInfo.mMessage.GetAverageRss();
-    RxChallenge      response;
     uint16_t         version;
     uint16_t         sourceAddress;
     LeaderData       leaderData;
@@ -3144,11 +3143,9 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeParentResponse, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
-    SuccessOrExit(error = Tlv::Find<VersionTlv>(aRxInfo.mMessage, version));
-    VerifyOrExit(version >= kThreadVersion1p1, error = kErrorParse);
+    SuccessOrExit(error = aRxInfo.mMessage.ReadVersionTlv(version));
 
-    SuccessOrExit(error = aRxInfo.mMessage.ReadResponseTlv(response));
-    VerifyOrExit(response == mParentRequestChallenge, error = kErrorParse);
+    SuccessOrExit(error = aRxInfo.mMessage.ReadAndMatchResponseTlvWith(mParentRequestChallenge));
 
     aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddress);
 
@@ -3532,7 +3529,7 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
 {
     Error       error = kErrorNone;
     uint8_t     status;
-    uint8_t     mode;
+    DeviceMode  mode;
     RxChallenge response;
     uint32_t    linkFrameCounter;
     uint32_t    mleFrameCounter;
@@ -3572,8 +3569,8 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
         ExitNow();
     }
 
-    SuccessOrExit(error = Tlv::Find<ModeTlv>(aRxInfo.mMessage, mode));
-    VerifyOrExit(DeviceMode(mode) == mDeviceMode, error = kErrorDrop);
+    SuccessOrExit(error = aRxInfo.mMessage.ReadModeTlv(mode));
+    VerifyOrExit(mode == mDeviceMode, error = kErrorDrop);
 
     switch (mRole)
     {
@@ -4951,6 +4948,29 @@ bool Mle::RxMessage::ContainsTlv(Tlv::Type aTlvType) const
     return Tlv::FindTlvValueOffset(*this, aTlvType, offset, length) == kErrorNone;
 }
 
+Error Mle::RxMessage::ReadModeTlv(DeviceMode &aMode) const
+{
+    Error   error;
+    uint8_t modeBitmask;
+
+    SuccessOrExit(error = Tlv::Find<ModeTlv>(*this, modeBitmask));
+    aMode.Set(modeBitmask);
+
+exit:
+    return error;
+}
+
+Error Mle::RxMessage::ReadVersionTlv(uint16_t &aVersion) const
+{
+    Error error;
+
+    SuccessOrExit(error = Tlv::Find<VersionTlv>(*this, aVersion));
+    VerifyOrExit(aVersion >= kThreadVersion1p1, error = kErrorParse);
+
+exit:
+    return error;
+}
+
 Error Mle::RxMessage::ReadChallengeOrResponse(uint8_t aTlvType, RxChallenge &aRxChallenge) const
 {
     Error    error;
@@ -4972,6 +4992,18 @@ Error Mle::RxMessage::ReadChallengeTlv(RxChallenge &aChallenge) const
 Error Mle::RxMessage::ReadResponseTlv(RxChallenge &aResponse) const
 {
     return ReadChallengeOrResponse(Tlv::kResponse, aResponse);
+}
+
+Error Mle::RxMessage::ReadAndMatchResponseTlvWith(const TxChallenge &aChallenge) const
+{
+    Error       error;
+    RxChallenge response;
+
+    SuccessOrExit(error = ReadResponseTlv(response));
+    VerifyOrExit(response == aChallenge, error = kErrorSecurity);
+
+exit:
+    return error;
 }
 
 Error Mle::RxMessage::ReadFrameCounterTlvs(uint32_t &aLinkFrameCounter, uint32_t &aMleFrameCounter) const
