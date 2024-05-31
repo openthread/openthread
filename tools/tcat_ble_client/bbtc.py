@@ -28,8 +28,8 @@
 
 import asyncio
 import argparse
-from os import path
 import logging
+import os
 
 from ble.ble_connection_constants import BBTC_SERVICE_UUID, BBTC_TX_CHAR_UUID, \
     BBTC_RX_CHAR_UUID
@@ -40,7 +40,7 @@ from ble import ble_scanner
 from cli.cli import CLI
 from dataset.dataset import ThreadDataset
 from cli.command import CommandResult
-from utils import select_device_by_user_input
+from utils import select_device_by_user_input, quit_with_reason
 
 logger = logging.getLogger(__name__)
 
@@ -60,10 +60,12 @@ async def main():
     args = parser.parse_args()
 
     if args.debug:
+        logger.setLevel(logging.DEBUG)
         logging.getLogger('ble.ble_stream').setLevel(logging.DEBUG)
         logging.getLogger('ble.ble_stream_secure').setLevel(logging.DEBUG)
         logging.getLogger('ble.udp_stream').setLevel(logging.DEBUG)
     elif args.info:
+        logger.setLevel(logging.INFO)
         logging.getLogger('ble.ble_stream').setLevel(logging.INFO)
         logging.getLogger('ble.ble_stream_secure').setLevel(logging.INFO)
         logging.getLogger('ble.udp_stream').setLevel(logging.INFO)
@@ -72,18 +74,26 @@ async def main():
 
     ble_sstream = None
 
-    if not (device is None):
+    if device is not None:
         print(f'Connecting to {device}')
         ble_sstream = BleStreamSecure(device)
         ble_sstream.load_cert(
-            certfile=path.join(args.cert_path, 'commissioner_cert.pem'),
-            keyfile=path.join(args.cert_path, 'commissioner_key.pem'),
-            cafile=path.join(args.cert_path, 'ca_cert.pem'),
+            certfile=os.path.join(args.cert_path, 'commissioner_cert.pem'),
+            keyfile=os.path.join(args.cert_path, 'commissioner_key.pem'),
+            cafile=os.path.join(args.cert_path, 'ca_cert.pem'),
         )
+        logger.info(f"Certificates and key loaded from '{args.cert_path}'")
 
-        print('Setting up secure channel..', end='')
-        await ble_sstream.do_handshake()
-        print('Done')
+        print('Setting up secure TLS channel..', end='')
+        try:
+            await ble_sstream.do_handshake()
+            print('\nDone')
+            ble_sstream.log_cert_identities()
+        except Exception as e:
+            print('\nFailed')
+            logger.error(e)
+            ble_sstream.log_cert_identities()
+            quit_with_reason('TLS handshake failure')
 
     ds = ThreadDataset()
     cli = CLI(ds, ble_sstream)
@@ -93,7 +103,8 @@ async def main():
         user_input = await loop.run_in_executor(None, lambda: input('> '))
         if user_input.lower() == 'exit':
             print('Disconnecting...')
-            # FIXME must send Alert + close here. Otherwise in simulation mode, Device gets stuck later on.
+            if ble_sstream is not None:
+                await ble_sstream.close()
             break
         try:
             result: CommandResult = await cli.evaluate_input(user_input)

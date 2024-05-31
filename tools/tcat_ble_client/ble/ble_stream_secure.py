@@ -26,11 +26,14 @@
   POSSIBILITY OF SUCH DAMAGE.
 """
 
+import _ssl
 import asyncio
 import ssl
 import sys
 import logging
 import utils
+from tlv.tlv import TLV
+from tlv.tcat_tlv import TcatTLVType
 
 logger = logging.getLogger(__name__)
 
@@ -68,17 +71,8 @@ class BleStreamSecure:
             try:
                 if not is_debug:
                     print('.', end='')
-                sys.stdout.flush()
+                    sys.stdout.flush()
                 self.ssl_object.do_handshake()
-                print('\n')
-
-                # show peer cert and own cert, if --info argument given.
-                logger.info(f'TCAT Device cert:\n{self.ssl_object.getpeercert(binary_form=False)}')
-                peer_cert_der_hex = utils.base64_string(self.ssl_object.getpeercert(binary_form=True))
-                logger.info(f'TCAT Device certificate, base64: (paste in https://lapo.it/asn1js/ to decode)\n{peer_cert_der_hex}')
-                logger.info(f'TCAT Commissioner cert, PEM:\n{self.cert}')
-                ca_cert_der_hex = utils.base64_string(self.ssl_object.getpeercert(binary_form=True))
-                logger.info(f'TCAT Commissioner CA cert, base64:\n{ca_cert_der_hex}')
                 break
 
             # SSLWantWrite means ssl wants to send data over the link,
@@ -102,14 +96,6 @@ class BleStreamSecure:
                 if output:
                     self.incoming.write(output)
                 await asyncio.sleep(0.02)
-
-            except ssl.CertificateError as e:
-                logger.error(f'Certificate validation error: {e}')
-                break
-
-            except ssl.SSLError as e:
-                logger.error(f'Certificate validation error: {e}')
-                break
 
     async def send(self, bytes):
         self.ssl_object.write(bytes)
@@ -145,3 +131,26 @@ class BleStreamSecure:
         res = await self.recv(buffersize=4096, timeout=5)
         return res
 
+    async def close(self):
+        if self.ssl_object.session is not None:
+            data = TLV(TcatTLVType.DISCONNECT.value, bytes()).to_bytes()
+            await self.send(data)
+
+    def log_cert_identities(self):
+        # using the internal object of the ssl library is necessary to see the cert data in
+        # case of handshake failure - see https://sethmlarson.dev/experimental-python-3.10-apis-and-trust-stores
+        # Should work for Python >= 3.10
+        try:
+            cc = self.ssl_object._sslobj.get_unverified_chain()
+            if cc is None:
+                logger.info('No TCAT Device cert chain was received (yet).')
+                return
+            logger.info(f'TCAT Device cert chain: {len(cc)} certificates received.')
+            for cert in cc:
+                logger.info(f'  cert info:\n{cert.get_info()}')
+                peer_cert_der_hex = utils.base64_string(cert.public_bytes(_ssl.ENCODING_DER))
+                logger.info(f'  base64: (paste in https://lapo.it/asn1js/ to decode)\n{peer_cert_der_hex}')
+            logger.info(f'TCAT Commissioner cert, PEM:\n{self.cert}')
+
+        except Exception as e:
+            logger.warning('Could not display TCAT client cert info (check Python version is >= 3.10?)')
