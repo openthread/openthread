@@ -50,6 +50,3 @@ class UdpStream:
         message = self.socket.recv(bufsize)
         logger.debug(f'retrieved {message}')
         return message
-
-    def close(self):
-        self.socket.close()

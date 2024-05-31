@@ -31,9 +31,10 @@ import asyncio
 import ssl
 import sys
 import logging
-import utils
+
 from tlv.tlv import TLV
 from tlv.tcat_tlv import TcatTLVType
+import utils
 
 logger = logging.getLogger(__name__)
 
