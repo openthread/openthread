@@ -325,10 +325,13 @@ public:
     /**
      * Retrieves the Domain Unicast Address registered by the child.
      *
-     * @returns A pointer to Domain Unicast Address registered by the child if there is.
+     * @param[out] aAddress    A reference to return the DUA address.
+     *
+     * @retval kErrorNone      Successfully retrieved the DUA address, @p aAddress is updated.
+     * @retval kErrorNotFound  Could not find any DUA address.
      *
      */
-    const Ip6::Address *GetDomainUnicastAddress(void) const;
+    Error GetDomainUnicastAddress(Ip6::Address &aAddress) const;
 #endif
 
     /**

@@ -251,9 +251,9 @@ exit:
 }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-const Ip6::Address *Child::GetDomainUnicastAddress(void) const
+Error Child::GetDomainUnicastAddress(Ip6::Address &aAddress) const
 {
-    const Ip6::Address *addr = nullptr;
+    Error error = kErrorNotFound;
 
     for (const Ip6::Address &ip6Address : mIp6Address)
     {
@@ -261,12 +261,14 @@ const Ip6::Address *Child::GetDomainUnicastAddress(void) const
 
         if (Get<BackboneRouter::Leader>().IsDomainUnicast(ip6Address))
         {
-            ExitNow(addr = &ip6Address);
+            aAddress = ip6Address;
+            error    = kErrorNone;
+            ExitNow();
         }
     }
 
 exit:
-    return addr;
+    return error;
 }
 #endif
 

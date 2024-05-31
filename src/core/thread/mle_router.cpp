@@ -1774,8 +1774,6 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
     uint8_t  count       = 0;
     uint8_t  storedCount = 0;
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    bool         hasOldDua = false;
-    bool         hasNewDua = false;
     Ip6::Address oldDua;
 #endif
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
@@ -1788,14 +1786,9 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
                       Tlv::FindTlvValueStartEndOffsets(aRxInfo.mMessage, Tlv::kAddressRegistration, offset, endOffset));
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+    if (aChild.GetDomainUnicastAddress(oldDua) != kErrorNone)
     {
-        const Ip6::Address *duaAddress = aChild.GetDomainUnicastAddress();
-
-        if (duaAddress != nullptr)
-        {
-            oldDua    = *duaAddress;
-            hasOldDua = true;
-        }
+        oldDua.Clear();
     }
 #endif
 
@@ -1888,34 +1881,6 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
                     address.ToString().AsCString(), aChild.GetRloc16());
         }
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-        if (Get<BackboneRouter::Leader>().IsDomainUnicast(address))
-        {
-            if (error == kErrorNone)
-            {
-                DuaManager::ChildDuaAddressEvent event;
-
-                hasNewDua = true;
-
-                if (hasOldDua)
-                {
-                    event = (oldDua != address) ? DuaManager::kAddressChanged : DuaManager::kAddressUnchanged;
-                }
-                else
-                {
-                    event = DuaManager::kAddressAdded;
-                }
-
-                Get<DuaManager>().HandleChildDuaAddressEvent(aChild, event);
-            }
-            else
-            {
-                // It cannot store DUA, then assume child does not have one.
-                hasNewDua = false;
-            }
-        }
-#endif
-
         if (address.IsMulticast())
         {
             continue;
@@ -1945,10 +1910,7 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
         Get<AddressResolver>().RemoveEntryForAddress(address);
     }
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    if (hasOldDua && !hasNewDua)
-    {
-        Get<DuaManager>().HandleChildDuaAddressEvent(aChild, DuaManager::kAddressRemoved);
-    }
+    SignalDuaAddressEvent(aChild, oldDua);
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
@@ -1970,6 +1932,40 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+void MleRouter::SignalDuaAddressEvent(const Child &aChild, const Ip6::Address &aOldDua) const
+{
+    DuaManager::ChildDuaAddressEvent event = DuaManager::kAddressUnchanged;
+    Ip6::Address                     newDua;
+
+    if (aChild.GetDomainUnicastAddress(newDua) == kErrorNone)
+    {
+        if (aOldDua.IsUnspecified())
+        {
+            event = DuaManager::kAddressAdded;
+        }
+        else if (aOldDua != newDua)
+        {
+            event = DuaManager::kAddressChanged;
+        }
+    }
+    else
+    {
+        // Child has no DUA address. If there was no old DUA, no need
+        // to signal.
+
+        VerifyOrExit(!aOldDua.IsUnspecified());
+
+        event = DuaManager::kAddressRemoved;
+    }
+
+    Get<DuaManager>().HandleChildDuaAddressEvent(aChild, event);
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 
 void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
 {
