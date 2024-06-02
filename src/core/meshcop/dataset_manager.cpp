@@ -60,19 +60,12 @@ DatasetManager::DatasetManager(Instance &aInstance, Type aType, Timer::Handler a
     : InstanceLocator(aInstance)
     , mType(aType)
     , mLocalSaved(false)
-    , mLocalTimestampValid(false)
-    , mNetworkTimestampValid(false)
     , mMgmtPending(false)
     , mLocalUpdateTime(0)
     , mTimer(aInstance, aTimerHandler)
 {
-    mLocalTimestamp.Clear();
-    mNetworkTimestamp.Clear();
-}
-
-const Timestamp *DatasetManager::GetTimestamp(void) const
-{
-    return mNetworkTimestampValid ? &mNetworkTimestamp : nullptr;
+    mLocalTimestamp.SetToInvalid();
+    mNetworkTimestamp.SetToInvalid();
 }
 
 Error DatasetManager::Restore(void)
@@ -94,8 +87,8 @@ void DatasetManager::Restore(const Dataset &aDataset)
 {
     mTimer.Stop();
 
-    mNetworkTimestampValid = false;
-    mLocalTimestampValid   = false;
+    mNetworkTimestamp.SetToInvalid();
+    mLocalTimestamp.SetToInvalid();
 
     VerifyOrExit(aDataset.GetLength() != 0);
 
@@ -103,9 +96,7 @@ void DatasetManager::Restore(const Dataset &aDataset)
 
     if (aDataset.ReadTimestamp(mType, mLocalTimestamp) == kErrorNone)
     {
-        mLocalTimestampValid   = true;
-        mNetworkTimestampValid = true;
-        mNetworkTimestamp      = mLocalTimestamp;
+        mNetworkTimestamp = mLocalTimestamp;
     }
 
     if (IsActiveDataset())
@@ -256,12 +247,10 @@ exit:
 
 void DatasetManager::Clear(void)
 {
-    mNetworkTimestamp.Clear();
-    mLocalTimestamp.Clear();
+    mNetworkTimestamp.SetToInvalid();
+    mLocalTimestamp.SetToInvalid();
 
-    mNetworkTimestampValid = false;
-    mLocalTimestampValid   = false;
-    mLocalSaved            = false;
+    mLocalSaved = false;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     DestroySecurelyStoredKeys();
@@ -306,17 +295,12 @@ Error DatasetManager::Save(const Dataset &aDataset, bool aAllowOlderTimestamp)
     Error error = kErrorNone;
     int   compare;
 
-    if (aDataset.ReadTimestamp(mType, mNetworkTimestamp) == kErrorNone)
+    if ((aDataset.ReadTimestamp(mType, mNetworkTimestamp) == kErrorNone) && IsActiveDataset())
     {
-        mNetworkTimestampValid = true;
-
-        if (IsActiveDataset())
-        {
-            SuccessOrExit(error = ApplyConfiguration(aDataset));
-        }
+        SuccessOrExit(error = ApplyConfiguration(aDataset));
     }
 
-    compare = Timestamp::Compare(GetTimestamp(), GetLocalTimestamp());
+    compare = Timestamp::Compare(mNetworkTimestamp, mLocalTimestamp);
 
     if ((compare > 0) || aAllowOlderTimestamp)
     {
@@ -419,8 +403,12 @@ void DatasetManager::LocalSave(const Dataset &aDataset)
         LogInfo("%s dataset set", Dataset::TypeToString(mType));
     }
 
-    mLocalTimestampValid = (aDataset.ReadTimestamp(mType, mLocalTimestamp) == kErrorNone);
-    mLocalUpdateTime     = TimerMilli::GetNow();
+    if (aDataset.ReadTimestamp(mType, mLocalTimestamp) != kErrorNone)
+    {
+        mLocalTimestamp.SetToInvalid();
+    }
+
+    mLocalUpdateTime = TimerMilli::GetNow();
 
     if (IsPendingDataset())
     {
@@ -476,7 +464,7 @@ void DatasetManager::SyncLocalWithLeader(const Dataset &aDataset)
     VerifyOrExit(!mMgmtPending, error = kErrorBusy);
     VerifyOrExit(Get<Mle::MleRouter>().IsChild() || Get<Mle::MleRouter>().IsRouter(), error = kErrorInvalidState);
 
-    VerifyOrExit(Timestamp::Compare(GetTimestamp(), GetLocalTimestamp()) < 0, error = kErrorAlready);
+    VerifyOrExit(mNetworkTimestamp < mLocalTimestamp, error = kErrorAlready);
 
     if (IsActiveDataset())
     {
@@ -485,8 +473,7 @@ void DatasetManager::SyncLocalWithLeader(const Dataset &aDataset)
 
         IgnoreError(Get<PendingDatasetManager>().Read(pendingDataset));
 
-        if ((pendingDataset.Read<ActiveTimestampTlv>(timestamp) == kErrorNone) &&
-            (Timestamp::Compare(&timestamp, GetLocalTimestamp()) == 0))
+        if ((pendingDataset.Read<ActiveTimestampTlv>(timestamp) == kErrorNone) && (timestamp == mLocalTimestamp))
         {
             // Stop registration attempts during dataset transition
             ExitNow(error = kErrorInvalidState);
@@ -837,9 +824,9 @@ ActiveDatasetManager::ActiveDatasetManager(Instance &aInstance)
 {
 }
 
-bool ActiveDatasetManager::IsPartiallyComplete(void) const { return mLocalSaved && !mNetworkTimestampValid; }
+bool ActiveDatasetManager::IsPartiallyComplete(void) const { return mLocalSaved && !mNetworkTimestamp.IsValid(); }
 
-bool ActiveDatasetManager::IsComplete(void) const { return mLocalSaved && mNetworkTimestampValid; }
+bool ActiveDatasetManager::IsComplete(void) const { return mLocalSaved && mNetworkTimestamp.IsValid(); }
 
 bool ActiveDatasetManager::IsCommissioned(void) const
 {
@@ -921,7 +908,7 @@ void PendingDatasetManager::HandleDelayTimer(void)
 
     SuccessOrExit(dataset.Read<ActiveTimestampTlv>(activeTimestamp));
 
-    if (Timestamp::Compare(&activeTimestamp, Get<ActiveDatasetManager>().GetTimestamp()) > 0)
+    if (activeTimestamp > Get<ActiveDatasetManager>().GetTimestamp())
     {
         shouldReplaceActive = true;
     }

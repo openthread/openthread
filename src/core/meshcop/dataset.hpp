@@ -812,12 +812,12 @@ template <> inline const uint32_t &Dataset::Info::Get<Dataset::kChannelMask>(voi
 
 template <> inline void Dataset::Info::Get<Dataset::kActiveTimestamp>(Timestamp &aTimestamp) const
 {
-    aTimestamp.SetFromTimestamp(mActiveTimestamp);
+    aTimestamp.SetFrom(mActiveTimestamp);
 }
 
 template <> inline void Dataset::Info::Get<Dataset::kPendingTimestamp>(Timestamp &aTimestamp) const
 {
-    aTimestamp.SetFromTimestamp(mPendingTimestamp);
+    aTimestamp.SetFrom(mPendingTimestamp);
 }
 
 template <> inline void Dataset::Info::Set<Dataset::kActiveTimestamp>(const Timestamp &aTimestamp)

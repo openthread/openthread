@@ -2227,8 +2227,7 @@ void Mle::SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, Annou
     switch (aMode)
     {
     case kOrphanAnnounce:
-        activeTimestamp.Clear();
-        activeTimestamp.SetAuthoritative(true);
+        activeTimestamp.SetToOrphanAnnounce();
         SuccessOrExit(error = Tlv::Append<ActiveTimestampTlv>(*message, activeTimestamp));
         break;
 
@@ -2938,7 +2937,7 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
             break;
         }
 #endif
-        if (MeshCoP::Timestamp::Compare(&activeTimestamp, Get<MeshCoP::ActiveDatasetManager>().GetTimestamp()) != 0)
+        if (activeTimestamp != Get<MeshCoP::ActiveDatasetManager>().GetTimestamp())
         {
             // Send an MLE Data Request if the received timestamp
             // mismatches the local value and the message does not
@@ -2966,7 +2965,7 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
             break;
         }
 #endif
-        if (MeshCoP::Timestamp::Compare(&pendingTimestamp, Get<MeshCoP::PendingDatasetManager>().GetTimestamp()) != 0)
+        if (pendingTimestamp != Get<MeshCoP::PendingDatasetManager>().GetTimestamp())
         {
             VerifyOrExit(aRxInfo.mMessage.ContainsTlv(Tlv::kPendingDataset), dataRequest = true);
             savePendingDataset = true;
@@ -3676,15 +3675,14 @@ exit:
 
 void Mle::HandleAnnounce(RxInfo &aRxInfo)
 {
-    Error                     error = kErrorNone;
-    ChannelTlvValue           channelTlvValue;
-    MeshCoP::Timestamp        timestamp;
-    const MeshCoP::Timestamp *localTimestamp;
-    uint8_t                   channel;
-    uint16_t                  panId;
-    bool                      isFromOrphan;
-    bool                      channelAndPanIdMatch;
-    int                       timestampCompare;
+    Error              error = kErrorNone;
+    ChannelTlvValue    channelTlvValue;
+    MeshCoP::Timestamp timestamp;
+    uint8_t            channel;
+    uint16_t           panId;
+    bool               isFromOrphan;
+    bool               channelAndPanIdMatch;
+    int                timestampCompare;
 
     Log(kMessageReceive, kTypeAnnounce, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -3696,10 +3694,8 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
 
-    localTimestamp = Get<MeshCoP::ActiveDatasetManager>().GetTimestamp();
-
-    isFromOrphan         = timestamp.IsOrphanTimestamp();
-    timestampCompare     = MeshCoP::Timestamp::Compare(&timestamp, localTimestamp);
+    isFromOrphan         = timestamp.IsOrphanAnnounce();
+    timestampCompare     = MeshCoP::Timestamp::Compare(timestamp, Get<MeshCoP::ActiveDatasetManager>().GetTimestamp());
     channelAndPanIdMatch = (channel == Get<Mac::Mac>().GetPanChannel()) && (panId == Get<Mac::Mac>().GetPanId());
 
     if (isFromOrphan || (timestampCompare < 0))
@@ -4736,10 +4732,10 @@ Error Mle::TxMessage::AppendXtalAccuracyTlv(void)
 Error Mle::TxMessage::AppendActiveTimestampTlv(void)
 {
     Error                     error     = kErrorNone;
-    const MeshCoP::Timestamp *timestamp = Get<MeshCoP::ActiveDatasetManager>().GetTimestamp();
+    const MeshCoP::Timestamp &timestamp = Get<MeshCoP::ActiveDatasetManager>().GetTimestamp();
 
-    VerifyOrExit(timestamp != nullptr);
-    error = Tlv::Append<ActiveTimestampTlv>(*this, *timestamp);
+    VerifyOrExit(timestamp.IsValid());
+    error = Tlv::Append<ActiveTimestampTlv>(*this, timestamp);
 
 exit:
     return error;
@@ -4748,10 +4744,10 @@ exit:
 Error Mle::TxMessage::AppendPendingTimestampTlv(void)
 {
     Error                     error     = kErrorNone;
-    const MeshCoP::Timestamp *timestamp = Get<MeshCoP::PendingDatasetManager>().GetTimestamp();
+    const MeshCoP::Timestamp &timestamp = Get<MeshCoP::PendingDatasetManager>().GetTimestamp();
 
-    VerifyOrExit(timestamp != nullptr && timestamp->GetSeconds() != 0);
-    error = Tlv::Append<PendingTimestampTlv>(*this, *timestamp);
+    VerifyOrExit(timestamp.IsValid() && timestamp.GetSeconds() != 0);
+    error = Tlv::Append<PendingTimestampTlv>(*this, timestamp);
 
 exit:
     return error;

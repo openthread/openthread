@@ -35,53 +35,77 @@
 
 #include "common/code_utils.hpp"
 #include "common/num_utils.hpp"
+#include "common/numeric_limits.hpp"
 
 namespace ot {
 namespace MeshCoP {
 
-void Timestamp::ConvertTo(otTimestamp &aTimestamp) const
+void Timestamp::ConvertTo(Info &aInfo) const
 {
-    aTimestamp.mSeconds       = GetSeconds();
-    aTimestamp.mTicks         = GetTicks();
-    aTimestamp.mAuthoritative = GetAuthoritative();
+    aInfo.mSeconds       = GetSeconds();
+    aInfo.mTicks         = GetTicks();
+    aInfo.mAuthoritative = GetAuthoritative();
 }
 
-void Timestamp::SetFromTimestamp(const otTimestamp &aTimestamp)
+void Timestamp::SetFrom(const Info &aInfo)
 {
-    SetSeconds(aTimestamp.mSeconds);
-    SetTicks(aTimestamp.mTicks);
-    SetAuthoritative(aTimestamp.mAuthoritative);
+    SetSeconds(aInfo.mSeconds);
+    SetTicks(aInfo.mTicks);
+    SetAuthoritative(aInfo.mAuthoritative);
 }
 
-int Timestamp::Compare(const Timestamp *aFirst, const Timestamp *aSecond)
+void Timestamp::SetToInvalid(void)
 {
-    int rval;
+    mSeconds16        = NumericLimits<uint16_t>::kMax;
+    mSeconds32        = NumericLimits<uint32_t>::kMax;
+    mTicksAndAuthFlag = NumericLimits<uint16_t>::kMax;
+}
 
-    if (aFirst == nullptr)
-    {
-        // When `aFirst` is null but `aSecond is not, we return -1,
-        // (indicate `aFirst (null) < aSecond (non-null)`).
-        ExitNow(rval = (aSecond == nullptr) ? 0 : -1);
-    }
+bool Timestamp::IsValid(void) const
+{
+    return (mSeconds16 != NumericLimits<uint16_t>::kMax) || (mSeconds32 != NumericLimits<uint32_t>::kMax) ||
+           (mTicksAndAuthFlag != NumericLimits<uint16_t>::kMax);
+}
 
-    if (aSecond == nullptr)
-    {
-        // When `aFirst` is not null, but `aSecond` is, we return +1,
-        // (indicate `aFirst (non-null) > aSecond (null)`).
-        ExitNow(rval = 1);
-    }
+void Timestamp::SetToOrphanAnnounce(void)
+{
+    mSeconds16 = 0;
+    mSeconds32 = 0;
+    SetTicksAndAuthFlag(kAuthoritativeFlag);
+}
 
-    // Both are non-null.
+bool Timestamp::IsOrphanAnnounce(void) const
+{
+    return (mSeconds16 == 0) && (mSeconds32 == 0) && (GetTicksAndAuthFlag() == kAuthoritativeFlag);
+}
 
-    rval = Compare(*aFirst, *aSecond);
+uint64_t Timestamp::GetSeconds(void) const
+{
+    return (static_cast<uint64_t>(BigEndian::HostSwap16(mSeconds16)) << 32) + BigEndian::HostSwap32(mSeconds32);
+}
 
-exit:
-    return rval;
+void Timestamp::SetSeconds(uint64_t aSeconds)
+{
+    mSeconds16 = BigEndian::HostSwap16(static_cast<uint16_t>(aSeconds >> 32));
+    mSeconds32 = BigEndian::HostSwap32(static_cast<uint32_t>(aSeconds & 0xffffffff));
+}
+
+void Timestamp::SetTicks(uint16_t aTicks)
+{
+    SetTicksAndAuthFlag((GetTicksAndAuthFlag() & ~kTicksMask) | ((aTicks << kTicksOffset) & kTicksMask));
+}
+
+void Timestamp::SetAuthoritative(bool aAuthoritative)
+{
+    SetTicksAndAuthFlag((GetTicksAndAuthFlag() & kTicksMask) | (aAuthoritative ? kAuthoritativeFlag : 0));
 }
 
 int Timestamp::Compare(const Timestamp &aFirst, const Timestamp &aSecond)
 {
     int rval;
+
+    rval = ThreeWayCompare(aFirst.IsValid(), aSecond.IsValid());
+    VerifyOrExit(rval == 0);
 
     rval = ThreeWayCompare(aFirst.GetSeconds(), aSecond.GetSeconds());
     VerifyOrExit(rval == 0);
