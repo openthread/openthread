@@ -65,6 +65,19 @@ extern "C" {
 bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress);
 
 /**
+ * Tells whether a given IPv6 address has on-link prefix for a given infrastructure interface index.
+ *
+ * @param[in]  aInfraIfIndex  The index of the infrastructure interface.
+ * @param[in]  aAddress       The IPv6 address.
+ *
+ * @note  @p aAddress may be an IPv4 address which is then represented as an IPv4-mapped IPv6 address.
+ *
+ * @returns  TRUE if the given IPv6 address prefix is found, FALSE otherwise.
+ *
+ */
+bool otPlatInfraIfHasOnLinkPrefix(uint32_t aInfraIfIndex, const otIp6Address *aAddress);
+
+/**
  * Sends an ICMPv6 Neighbor Discovery message on given infrastructure interface.
  *
  * See RFC 4861: https://tools.ietf.org/html/rfc4861.

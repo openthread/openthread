@@ -81,6 +81,13 @@ bool InfraIf::HasAddress(const Ip6::Address &aAddress) const
     return otPlatInfraIfHasAddress(mIfIndex, &aAddress);
 }
 
+bool InfraIf::HasAddressWithOnLinkPrefix(const Ip6::Address &aAddress) const
+{
+    OT_ASSERT(mInitialized);
+
+    return otPlatInfraIfHasOnLinkPrefix(mIfIndex, &aAddress);
+}
+
 Error InfraIf::Send(const Icmp6Packet &aPacket, const Ip6::Address &aDestination) const
 {
     OT_ASSERT(mInitialized);
@@ -208,6 +215,7 @@ extern "C" void otPlatInfraIfDiscoverNat64PrefixDone(otInstance        *aInstanc
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MOCK_PLAT_APIS_ENABLE
 OT_TOOL_WEAK bool otPlatInfraIfHasAddress(uint32_t, const otIp6Address *) { return false; }
+OT_TOOL_WEAK bool otPlatInfraIfHasOnLinkPrefix(uint32_t, const otIp6Address *) { return false; }
 
 OT_TOOL_WEAK otError otPlatInfraIfSendIcmp6Nd(uint32_t, const otIp6Address *, const uint8_t *, uint16_t)
 {

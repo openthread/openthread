@@ -91,6 +91,52 @@ exit:
     return ret;
 }
 
+bool otPlatInfraIfHasOnLinkPrefix(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
+{
+    bool                 ret     = false;
+    struct ifaddrs      *ifAddrs = nullptr;
+    otIp4Address         ip4Addr;
+    struct sockaddr_in6 *ip6Addr;
+    bool                 isMappedAddress = (otIp4FromIp4MappedIp6Address(aAddress, &ip4Addr) == OT_ERROR_NONE);
+    VerifyOrDie(getifaddrs(&ifAddrs) != -1, OT_EXIT_ERROR_ERRNO);
+    for (struct ifaddrs *addr = ifAddrs; addr != nullptr; addr = addr->ifa_next)
+    {
+        if (!isMappedAddress)
+        {
+            if (if_nametoindex(addr->ifa_name) == aInfraIfIndex && addr->ifa_addr != nullptr &&
+                addr->ifa_addr->sa_family == AF_INET6)
+            {
+                ip6Addr = reinterpret_cast<sockaddr_in6 *>(addr->ifa_addr);
+                if (memcmp(&ip6Addr->sin6_addr, aAddress, sizeof(otIp6NetworkPrefix)) == 0)
+                {
+                    ExitNow(ret = true);
+                }
+            }
+        }
+        else
+        {
+            struct sockaddr_in *ifIpAddr;
+            struct sockaddr_in *netmaskAddr;
+            if (if_nametoindex(addr->ifa_name) == aInfraIfIndex && addr->ifa_addr != nullptr &&
+                addr->ifa_addr->sa_family == AF_INET)
+            {
+                struct sockaddr_in tmpAddr;
+                ifIpAddr    = reinterpret_cast<sockaddr_in *>(addr->ifa_addr);
+                netmaskAddr = reinterpret_cast<sockaddr_in *>(addr->ifa_netmask);
+                memcpy(&tmpAddr.sin_addr, &ip4Addr, sizeof(otIp4Address));
+                if ((tmpAddr.sin_addr.s_addr & netmaskAddr->sin_addr.s_addr) ==
+                    (ifIpAddr->sin_addr.s_addr & netmaskAddr->sin_addr.s_addr))
+                {
+                    ExitNow(ret = true);
+                }
+            }
+        }
+    }
+exit:
+    freeifaddrs(ifAddrs);
+    return ret;
+}
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
