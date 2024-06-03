@@ -2648,6 +2648,142 @@ void TestExtPanIdChange(void)
     FinalizeTest();
 }
 
+void TestPrefixStaleTime(void)
+{
+    Ip6::Prefix  localOnLink;
+    Ip6::Prefix  localOmr;
+    Ip6::Prefix  onLinkPrefixA  = PrefixFromString("2000:abba:baba:aaaa::", 64);
+    Ip6::Prefix  onLinkPrefixB  = PrefixFromString("2000:abba:baba:bbbb::", 64);
+    Ip6::Prefix  routePrefix    = PrefixFromString("2000:1234:5678::", 64);
+    Ip6::Address routerAddressA = AddressFromString("fd00::aaaa");
+    Ip6::Address routerAddressB = AddressFromString("fd00::bbbb");
+    uint16_t     heapAllocations;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestPrefixStaleTime");
+
+    InitTest();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start Routing Manager. Check emitted RS and RA messages.
+
+    sRsEmitted   = false;
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+
+    Log("Local on-link prefix is %s", localOnLink.ToString().AsCString());
+    Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
+
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(30000);
+
+    VerifyOrQuit(sRsEmitted);
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    Log("Received RA was validated");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Advertise a route prefix with 200 seconds lifetime from router A.
+    // Advertise the same route prefix with 500 seconds lifetime from
+    // router B.
+
+    SendRouterAdvert(routerAddressA, {Rio(routePrefix, 200, NetworkData::kRoutePreferenceMedium)});
+    SendRouterAdvert(routerAddressB, {Rio(routePrefix, 500, NetworkData::kRoutePreferenceMedium)});
+
+    AdvanceTime(10);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check the discovered prefix table and ensure info from router A and B
+    // is present in the table.
+
+    VerifyPrefixTable({RoutePrefix(routePrefix, 200, NetworkData::kRoutePreferenceMedium, routerAddressA),
+                       RoutePrefix(routePrefix, 500, NetworkData::kRoutePreferenceMedium, routerAddressB)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Wait for a period exceeding the 200-second lifetime of the route
+    // advertised by router A. Confirm that the stale timer does not expire
+    // during this time, and no RS messages sent. This verifies that the
+    // presence of the matching entry from router B successfully extended
+    // the stale time for the route prefix.
+
+    sRsEmitted = false;
+
+    AdvanceTime(490 * 1000);
+
+    VerifyOrQuit(!sRsEmitted);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check the discovered prefix table and ensure router A entry is
+    // expired and removed.
+
+    VerifyPrefixTable({RoutePrefix(routePrefix, 500, NetworkData::kRoutePreferenceMedium, routerAddressB)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Wait longer than 500-second lifetime of prefix advertised by
+    // router B. Now we should see RS messages emitted.
+
+    AdvanceTime(20 * 1000);
+
+    VerifyOrQuit(sRsEmitted);
+
+    VerifyPrefixTableIsEmpty();
+
+    AdvanceTime(5 * 000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Advertise the same on-link prefix A with different lifetimes from routers A and B.
+    // Advertise a different on-link prefix from router A.
+
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefixA, 1800, 200), Pio(onLinkPrefixB, 2000, 2000)});
+    SendRouterAdvert(routerAddressB, {Pio(onLinkPrefixA, 1800, 500)});
+
+    AdvanceTime(10);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check the discovered prefix table and ensure info from router A and B
+    // is present in the table.
+
+    VerifyPrefixTable({OnLinkPrefix(onLinkPrefixA, 1800, 200, routerAddressA),
+                       OnLinkPrefix(onLinkPrefixB, 2000, 2000, routerAddressA),
+                       OnLinkPrefix(onLinkPrefixA, 1800, 500, routerAddressB)});
+
+    sRsEmitted = false;
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Wait for a period exceeding the 200-second lifetime of the on-link prefix.
+    // Confirm stale timer is not expired and no RS is emitted.
+
+    sRsEmitted = false;
+
+    AdvanceTime(490 * 1000);
+
+    VerifyOrQuit(!sRsEmitted);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Wait for a 500-second lifetime for prefix advertised by router B. Now
+    // we should see RS messages emitted.
+
+    AdvanceTime(20 * 1000);
+
+    VerifyOrQuit(sRsEmitted);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    Log("End of TestPrefixStaleTime");
+    FinalizeTest();
+}
+
 void TestRouterNsProbe(void)
 {
     Ip6::Prefix  localOnLink;
@@ -4055,6 +4191,7 @@ int main(void)
 #endif
     ot::TestExtPanIdChange();
     ot::TestConflictingPrefix();
+    ot::TestPrefixStaleTime();
     ot::TestRouterNsProbe();
     ot::TestLearningAndCopyingOfFlags();
     ot::TestLearnRaHeader();
