@@ -95,6 +95,7 @@ Error DatasetUpdater::RequestUpdate(Dataset &aDataset, UpdaterCallback aCallback
     else
     {
         pendingTimestamp.Clear();
+        pendingTimestamp.SetSeconds(1);
     }
 
     pendingTimestamp.AdvanceRandomTicks();

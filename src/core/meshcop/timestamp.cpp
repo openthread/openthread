@@ -99,10 +99,11 @@ void Timestamp::AdvanceRandomTicks(void)
 {
     uint16_t ticks = GetTicks();
 
-    ticks += Random::NonCrypto::GetUint32InRange(1, kMaxRandomTicks);
+    ticks += Random::NonCrypto::GetUint32InRange(1, kMaxTicks + 1);
 
-    if (ticks & (kTicksMask >> kTicksOffset))
+    if (ticks > kMaxTicks)
     {
+        ticks -= (kMaxTicks + 1);
         SetSeconds(GetSeconds() + 1);
     }
 

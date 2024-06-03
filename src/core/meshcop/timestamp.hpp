@@ -179,9 +179,9 @@ public:
 private:
     static constexpr uint8_t  kTicksOffset         = 1;
     static constexpr uint16_t kTicksMask           = 0x7fff << kTicksOffset;
-    static constexpr uint16_t kMaxRandomTicks      = 0x7fff;
     static constexpr uint8_t  kAuthoritativeOffset = 0;
     static constexpr uint16_t kAuthoritativeMask   = 1 << kAuthoritativeOffset;
+    static constexpr uint16_t kMaxTicks            = 0x7fff;
 
     uint16_t mSeconds16; // bits 32-47
     uint32_t mSeconds32; // bits 0-31
