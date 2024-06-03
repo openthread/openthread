@@ -286,14 +286,7 @@ Error DatasetManager::Save(const Timestamp &aTimestamp, const Message &aMessage,
     SuccessOrExit(error = dataset.SetFrom(aMessage, aOffset, aLength));
     SuccessOrExit(error = dataset.ValidateTlvs());
 
-    if (IsActiveDataset())
-    {
-        SuccessOrExit(error = dataset.Write<ActiveTimestampTlv>(aTimestamp));
-    }
-    else
-    {
-        SuccessOrExit(error = dataset.Write<PendingTimestampTlv>(aTimestamp));
-    }
+    SuccessOrExit(error = dataset.WriteTimestamp(mType, aTimestamp));
 
     SuccessOrExit(error = Save(dataset));
 

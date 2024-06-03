@@ -352,11 +352,6 @@ exit:
     return error;
 }
 
-Error Dataset::ReadTimestamp(Type aType, Timestamp &aTimestamp) const
-{
-    return (aType == kActive) ? Read<ActiveTimestampTlv>(aTimestamp) : Read<PendingTimestampTlv>(aTimestamp);
-}
-
 Error Dataset::WriteTlv(Tlv::Type aType, const void *aValue, uint8_t aLength)
 {
     Error    error          = kErrorNone;
@@ -529,6 +524,30 @@ void Dataset::RemoveTlv(Tlv *aTlv)
         mLength -= length;
     }
 }
+
+Error Dataset::ReadTimestamp(Type aType, Timestamp &aTimestamp) const
+{
+    Error      error = kErrorNone;
+    const Tlv *tlv   = FindTlv(TimestampTlvFor(aType));
+
+    VerifyOrExit(tlv != nullptr, error = kErrorNotFound);
+
+    // Since both `ActiveTimestampTlv` and `PendingTimestampTlv` use
+    // `Timestamp` as their TLV value format, we can safely use
+    // `ReadValueAs<ActiveTimestampTlv>()` for both.
+
+    aTimestamp = tlv->ReadValueAs<ActiveTimestampTlv>();
+
+exit:
+    return error;
+}
+
+Error Dataset::WriteTimestamp(Type aType, const Timestamp &aTimestamp)
+{
+    return WriteTlv(TimestampTlvFor(aType), &aTimestamp, sizeof(Timestamp));
+}
+
+void Dataset::RemoveTimestamp(Type aType) { RemoveTlv(TimestampTlvFor(aType)); }
 
 bool Dataset::IsSubsetOf(const Dataset &aOther) const
 {
