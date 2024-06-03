@@ -3224,7 +3224,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
         case kBetterPartition:
             VerifyOrExit(!isPartitionIdSame);
 
-            VerifyOrExit(MleRouter::ComparePartitions(connectivityTlv.GetActiveRouters() <= 1, leaderData,
+            VerifyOrExit(MleRouter::ComparePartitions(connectivityTlv.IsSingleton(), leaderData,
                                                       Get<MleRouter>().IsSingleton(), mLeaderData) > 0);
             break;
         }
@@ -3243,7 +3243,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 #if OPENTHREAD_FTD
         if (IsFullThreadDevice())
         {
-            compare = MleRouter::ComparePartitions(connectivityTlv.GetActiveRouters() <= 1, leaderData,
+            compare = MleRouter::ComparePartitions(connectivityTlv.IsSingleton(), leaderData,
                                                    mParentCandidate.mIsSingleton, mParentCandidate.mLeaderData);
         }
 
@@ -3305,7 +3305,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     mParentCandidate.mSedBufferSize    = connectivityTlv.GetSedBufferSize();
     mParentCandidate.mSedDatagramCount = connectivityTlv.GetSedDatagramCount();
     mParentCandidate.mLeaderData       = leaderData;
-    mParentCandidate.mIsSingleton      = connectivityTlv.GetActiveRouters() <= 1;
+    mParentCandidate.mIsSingleton      = connectivityTlv.IsSingleton();
     mParentCandidate.mLinkMargin       = linkMargin;
 
 exit:
