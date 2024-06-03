@@ -76,6 +76,12 @@ static int      sMdnsFd6 = -1;
 #endif
 #endif
 
+struct in6_pktinfo
+{
+    struct in6_addr ipi6_addr;    /* src/dst IPv6 address */
+    unsigned int    ipi6_ifindex; /* send/recv interface index */
+};
+
 #define VerifyOrDie(aCondition, aErrMsg)                                        \
     do                                                                          \
     {                                                                           \
@@ -138,6 +144,15 @@ static void OpenIp4Socket(uint32_t aInfraIfIndex)
     u8  = 1;
     ret = setsockopt(fd, IPPROTO_IP, IP_MULTICAST_LOOP, &u8, sizeof(u8));
     VerifyOrDie(ret >= 0, "setsocketopt(IP_MULTICAST_LOOP) failed");
+
+#if defined(IP_PKTINFO)
+    setsockopt(fd, IPPROTO_IP, IP_PKTINFO, &u8, sizeof(u8));
+    VerifyOrDie(ret >= 0, "setsocketopt(IP_PKTINFO) failed");
+#endif
+#if defined(IP_RECVDSTADDR)
+    setsockopt(fd, IPPROTO_IP, IP_RECVDSTADDR, &u8, sizeof(u8));
+    VerifyOrDie(ret >= 0, "setsocketopt(IP_RECVDSTADDR) failed");
+#endif
 
     SetReuseAddrPort(fd);
 
@@ -230,6 +245,11 @@ static void OpenIp6Socket(uint32_t aInfraIfIndex)
     value = 1;
     ret   = setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &value, sizeof(value));
     VerifyOrDie(ret >= 0, "setsocketopt(IPV6_MULTICAST_LOOP) failed");
+
+#if defined(IPV6_PKTINFO)
+    ret = setsockopt(fd, IPPROTO_IPV6, IPV6_RECVPKTINFO, &value, sizeof(value));
+    VerifyOrDie(ret >= 0, "setsocketopt(IP_PKTINFO) failed");
+#endif
 
     SetReuseAddrPort(fd);
 
@@ -360,7 +380,7 @@ void otPlatMdnsSendUnicast(otInstance *aInstance, otMessage *aMessage, const otP
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
         memcpy(&addr.sin_addr.s_addr, &ip4Addr, sizeof(otIp4Address));
-        addr.sin_port = htons(MDNS_PORT);
+        addr.sin_port = htons(aAddress->mPort);
 
         bytes = sendto(sMdnsFd4, buffer, length, 0, (struct sockaddr *)&addr, sizeof(addr));
 
@@ -372,7 +392,7 @@ void otPlatMdnsSendUnicast(otInstance *aInstance, otMessage *aMessage, const otP
 
         memset(&addr6, 0, sizeof(addr6));
         addr6.sin6_family = AF_INET6;
-        addr6.sin6_port   = htons(MDNS_PORT);
+        addr6.sin6_port   = htons(aAddress->mPort);
         memcpy(&addr6.sin6_addr, &aAddress->mAddress, sizeof(otIp6Address));
 
         bytes = sendto(sMdnsFd6, buffer, length, 0, (struct sockaddr *)&addr6, sizeof(addr6));
@@ -398,6 +418,7 @@ exit:
 void platformMdnsSocketProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 {
     otEXPECT(sEnabled);
+    bool isUnicast = false;
 
     if (FD_ISSET(sMdnsFd4, aReadFdSet))
     {
@@ -405,13 +426,37 @@ void platformMdnsSocketProcess(otInstance *aInstance, const fd_set *aReadFdSet)
         struct sockaddr_in    sockaddr;
         otPlatMdnsAddressInfo addrInfo;
         otMessage            *message;
-        socklen_t             len = sizeof(sockaddr);
         ssize_t               rval;
 
-        memset(&sockaddr, 0, sizeof(sockaddr));
-        rval = recvfrom(sMdnsFd4, (char *)&buffer, sizeof(buffer), 0, (struct sockaddr *)&sockaddr, &len);
+        struct msghdr   msg;
+        struct iovec    bufp;
+        char            cmsgbuf[1024];
+        struct cmsghdr *cmh;
+        bufp.iov_base      = buffer;
+        bufp.iov_len       = sizeof(buffer);
+        msg.msg_iov        = &bufp;
+        msg.msg_iovlen     = 1;
+        msg.msg_control    = cmsgbuf;
+        msg.msg_controllen = sizeof(cmsgbuf);
 
-        VerifyOrDie(rval >= 0, "recvfrom() failed");
+        memset(&sockaddr, 0, sizeof(sockaddr));
+        msg.msg_name    = &sockaddr;
+        msg.msg_namelen = sizeof(sockaddr);
+        rval            = recvmsg(sMdnsFd4, &msg, 0);
+
+        VerifyOrDie(rval >= 0, "recvmsg(sMdnsFd4) failed");
+
+        for (cmh = CMSG_FIRSTHDR(&msg); cmh; cmh = CMSG_NXTHDR(&msg, cmh))
+        {
+            if (cmh->cmsg_level == IPPROTO_IP && cmh->cmsg_type == IP_PKTINFO)
+            {
+                struct in_pktinfo  pktinfo;
+                struct sockaddr_in mdns_mcast = {0};
+                inet_pton(AF_INET, "224.0.0.251", &mdns_mcast.sin_addr);
+                memcpy(&pktinfo, CMSG_DATA(cmh), sizeof(pktinfo));
+                isUnicast = (memcmp(&pktinfo.ipi_addr, &mdns_mcast.sin_addr, sizeof(struct in_addr)) != 0);
+            }
+        }
 
         message = otIp6NewMessage(aInstance, NULL);
         VerifyOrDie(message != NULL, "otIp6NewMessage() failed");
@@ -420,10 +465,10 @@ void platformMdnsSocketProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 
         memset(&addrInfo, 0, sizeof(addrInfo));
         otIp4ToIp4MappedIp6Address((otIp4Address *)(&sockaddr.sin_addr.s_addr), &addrInfo.mAddress);
-        addrInfo.mPort         = MDNS_PORT;
+        addrInfo.mPort         = ntohs(sockaddr.sin_port);
         addrInfo.mInfraIfIndex = sInfraIfIndex;
 
-        otPlatMdnsHandleReceive(aInstance, message, /* aInUnicast */ false, &addrInfo);
+        otPlatMdnsHandleReceive(aInstance, message, isUnicast, &addrInfo);
     }
 
     if (FD_ISSET(sMdnsFd6, aReadFdSet))
@@ -432,12 +477,36 @@ void platformMdnsSocketProcess(otInstance *aInstance, const fd_set *aReadFdSet)
         struct sockaddr_in6   sockaddr6;
         otPlatMdnsAddressInfo addrInfo;
         otMessage            *message;
-        socklen_t             len = sizeof(sockaddr6);
         ssize_t               rval;
 
+        struct msghdr   msg;
+        struct iovec    bufp;
+        char            cmsgbuf[1024];
+        struct cmsghdr *cmh;
+        bufp.iov_base      = buffer;
+        bufp.iov_len       = sizeof(buffer);
+        msg.msg_iov        = &bufp;
+        msg.msg_iovlen     = 1;
+        msg.msg_control    = cmsgbuf;
+        msg.msg_controllen = sizeof(cmsgbuf);
+
         memset(&sockaddr6, 0, sizeof(sockaddr6));
-        rval = recvfrom(sMdnsFd6, (char *)&buffer, sizeof(buffer), 0, (struct sockaddr *)&sockaddr6, &len);
-        VerifyOrDie(rval >= 0, "recvfrom(sMdnsFd6) failed");
+        msg.msg_name    = &sockaddr6;
+        msg.msg_namelen = sizeof(sockaddr6);
+        rval            = recvmsg(sMdnsFd6, &msg, 0);
+        VerifyOrDie(rval >= 0, "recvmsg(sMdnsFd6) failed");
+
+        for (cmh = CMSG_FIRSTHDR(&msg); cmh; cmh = CMSG_NXTHDR(&msg, cmh))
+        {
+            if (cmh->cmsg_level == IPPROTO_IPV6 && cmh->cmsg_type == IPV6_PKTINFO)
+            {
+                struct in6_pktinfo pktinfo;
+                memcpy(&pktinfo, CMSG_DATA(cmh), sizeof(pktinfo));
+                otIp6Address destinationAddr;
+                memcpy(&destinationAddr, &pktinfo.ipi6_addr, sizeof(otIp6Address));
+                isUnicast = (destinationAddr.mFields.m8[0] != 0xff);
+            }
+        }
 
         message = otIp6NewMessage(aInstance, NULL);
         VerifyOrDie(message != NULL, "otIp6NewMessage() failed");
@@ -446,10 +515,10 @@ void platformMdnsSocketProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 
         memset(&addrInfo, 0, sizeof(addrInfo));
         memcpy(&addrInfo.mAddress, &sockaddr6.sin6_addr, sizeof(otIp6Address));
-        addrInfo.mPort         = MDNS_PORT;
+        addrInfo.mPort         = ntohs(sockaddr6.sin6_port);
         addrInfo.mInfraIfIndex = sInfraIfIndex;
 
-        otPlatMdnsHandleReceive(aInstance, message, /* aInUnicast */ false, &addrInfo);
+        otPlatMdnsHandleReceive(aInstance, message, isUnicast, &addrInfo);
     }
 
 exit:
