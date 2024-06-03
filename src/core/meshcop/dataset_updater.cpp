@@ -93,7 +93,6 @@ Error DatasetUpdater::RequestUpdate(Dataset &aDataset, UpdaterCallback aCallback
     if (!pendingTimestamp.IsValid())
     {
         pendingTimestamp.Clear();
-        pendingTimestamp.SetSeconds(1);
     }
 
     pendingTimestamp.AdvanceRandomTicks();

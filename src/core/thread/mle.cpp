@@ -4742,7 +4742,7 @@ Error Mle::TxMessage::AppendPendingTimestampTlv(void)
     Error                     error     = kErrorNone;
     const MeshCoP::Timestamp &timestamp = Get<MeshCoP::PendingDatasetManager>().GetTimestamp();
 
-    VerifyOrExit(timestamp.IsValid() && timestamp.GetSeconds() != 0);
+    VerifyOrExit(timestamp.IsValid());
     error = Tlv::Append<PendingTimestampTlv>(*this, timestamp);
 
 exit:
