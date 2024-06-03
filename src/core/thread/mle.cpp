@@ -4895,14 +4895,47 @@ Error Mle::TxMessage::AppendRouteTlv(Neighbor *aNeighbor)
     return tlv.AppendTo(*this);
 }
 
-Error Mle::TxMessage::AppendActiveDatasetTlv(void)
-{
-    return Get<MeshCoP::ActiveDatasetManager>().AppendMleDatasetTlv(*this);
-}
+Error Mle::TxMessage::AppendActiveDatasetTlv(void) { return AppendDatasetTlv(MeshCoP::Dataset::kActive); }
 
-Error Mle::TxMessage::AppendPendingDatasetTlv(void)
+Error Mle::TxMessage::AppendPendingDatasetTlv(void) { return AppendDatasetTlv(MeshCoP::Dataset::kPending); }
+
+Error Mle::TxMessage::AppendDatasetTlv(MeshCoP::Dataset::Type mDatasetType)
 {
-    return Get<MeshCoP::PendingDatasetManager>().AppendMleDatasetTlv(*this);
+    Error            error = kErrorNotFound;
+    Tlv::Type        tlvType;
+    MeshCoP::Dataset dataset;
+
+    switch (mDatasetType)
+    {
+    case MeshCoP::Dataset::kActive:
+        error   = Get<MeshCoP::ActiveDatasetManager>().Read(dataset);
+        tlvType = Tlv::kActiveDataset;
+        break;
+
+    case MeshCoP::Dataset::kPending:
+        error   = Get<MeshCoP::PendingDatasetManager>().Read(dataset);
+        tlvType = Tlv::kPendingDataset;
+        break;
+    }
+
+    if (error != kErrorNone)
+    {
+        // If there's no dataset, no need to append TLV. We'll treat it
+        // as success.
+
+        ExitNow(error = kErrorNone);
+    }
+
+    // Remove the Timestamp TLV from Dataset before appending to the
+    // message. The Timestamp is appended as its own MLE TLV to the
+    // message.
+
+    dataset.RemoveTimestamp(mDatasetType);
+
+    error = Tlv::AppendTlv(*this, tlvType, dataset.GetBytes(), dataset.GetLength());
+
+exit:
+    return error;
 }
 
 Error Mle::TxMessage::AppendSteeringDataTlv(void)

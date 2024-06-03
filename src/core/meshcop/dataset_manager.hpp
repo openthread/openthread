@@ -235,18 +235,6 @@ public:
                          const uint8_t             *aTlvTypes,
                          uint8_t                    aLength,
                          const otIp6Address        *aAddress) const;
-#if OPENTHREAD_FTD
-    /**
-     * Appends the MLE Dataset TLV but excluding MeshCoP Sub Timestamp TLV.
-     *
-     * @param[in] aMessage       The message to append the TLV to.
-     *
-     * @retval kErrorNone    Successfully append MLE Dataset TLV without MeshCoP Sub Timestamp TLV.
-     * @retval kErrorNoBufs  Insufficient available buffers to append the message with MLE Dataset TLV.
-     *
-     */
-    Error AppendMleDatasetTlv(Message &aMessage) const;
-#endif
 
 private:
     static constexpr uint8_t  kMaxGetTypes  = 64;   // Max number of types in MGMT_GET.req
