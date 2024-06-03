@@ -91,6 +91,30 @@ exit:
     return ret;
 }
 
+bool otPlatInfraIfHasOnLinkPrefix(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
+{
+    bool            ret     = false;
+    struct ifaddrs *ifAddrs = nullptr;
+    VerifyOrDie(getifaddrs(&ifAddrs) != -1, OT_EXIT_ERROR_ERRNO);
+    for (struct ifaddrs *addr = ifAddrs; addr != nullptr; addr = addr->ifa_next)
+    {
+        struct sockaddr_in6 *ip6Addr;
+        if (if_nametoindex(addr->ifa_name) != aInfraIfIndex || addr->ifa_addr == nullptr ||
+            addr->ifa_addr->sa_family != AF_INET6)
+        {
+            continue;
+        }
+        ip6Addr = reinterpret_cast<sockaddr_in6 *>(addr->ifa_addr);
+        if (memcmp(&ip6Addr->sin6_addr, aAddress, sizeof(otIp6NetworkPrefix) == 0))
+        {
+            ExitNow(ret = true);
+        }
+    }
+exit:
+    freeifaddrs(ifAddrs);
+    return ret;
+}
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,

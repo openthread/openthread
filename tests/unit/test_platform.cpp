@@ -454,6 +454,7 @@ OT_TOOL_WEAK otLinkMetrics otPlatRadioGetEnhAckProbingMetrics(otInstance *, cons
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 OT_TOOL_WEAK bool otPlatInfraIfHasAddress(uint32_t, const otIp6Address *) { return false; }
+OT_TOOL_WEAK bool otPlatInfraIfHasOnLinkPrefix(uint32_t, const otIp6Address *) { return false; }
 
 OT_TOOL_WEAK otError otPlatInfraIfSendIcmp6Nd(uint32_t, const otIp6Address *, const uint8_t *, uint16_t)
 {
@@ -581,6 +582,14 @@ OT_TOOL_WEAK void otPlatMdnsSendUnicast(otInstance                  *aInstance,
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aMessage);
     OT_UNUSED_VARIABLE(aAddress);
+}
+
+OT_TOOL_WEAK bool otPlatMdnsIsAddressLocal(otInstance *aInstance, const otIp6Address *aAddress, uint32_t aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aAddress);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+    return false;
 }
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE

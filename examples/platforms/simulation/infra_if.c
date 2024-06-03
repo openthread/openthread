@@ -79,6 +79,11 @@ static bool addressesMatch(const otIp6Address *aFirstAddr, const otIp6Address *a
     return memcmp(aFirstAddr, aSecondAddr, sizeof(otIp6Address)) == 0;
 }
 
+static bool addressesPrefixMatch(const otIp6Address *aFirstAddr, const otIp6Address *aSecondAddr)
+{
+    return memcmp(aFirstAddr, aSecondAddr, sizeof(otIp6NetworkPrefix)) == 0;
+}
+
 static uint16_t getMessageSize(const Message *aMessage)
 {
     return (uint16_t)(&aMessage->mData[aMessage->mDataLength] - (const uint8_t *)aMessage);
@@ -176,6 +181,13 @@ bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddres
     OT_UNUSED_VARIABLE(aInfraIfIndex);
 
     return addressesMatch(aAddress, &sIp6Address);
+}
+
+bool otPlatInfraIfHasOnLinkPrefix(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
+{
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+
+    return addressesPrefixMatch(aAddress, &sIp6Address);
 }
 
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
