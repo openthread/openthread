@@ -295,12 +295,7 @@ Error DatasetManager::Save(const Timestamp &aTimestamp, const Message &aMessage,
         SuccessOrExit(error = dataset.Write<PendingTimestampTlv>(aTimestamp));
     }
 
-    SuccessOrExit(error = Save(dataset));
-
-    if (IsPendingDataset())
-    {
-        Get<PendingDatasetManager>().StartDelayTimer(dataset);
-    }
+    error = Save(dataset);
 
 exit:
     return error;
@@ -368,11 +363,6 @@ void DatasetManager::SaveLocal(const Dataset &aDataset)
 {
     LocalSave(aDataset);
 
-    if (IsPendingDataset())
-    {
-        Get<PendingDatasetManager>().StartDelayTimer(aDataset);
-    }
-
     switch (Get<Mle::MleRouter>().GetRole())
     {
     case Mle::kRoleDisabled:
@@ -431,6 +421,11 @@ void DatasetManager::LocalSave(const Dataset &aDataset)
 
     mLocalTimestampValid = (aDataset.ReadTimestamp(mType, mLocalTimestamp) == kErrorNone);
     mLocalUpdateTime     = TimerMilli::GetNow();
+
+    if (IsPendingDataset())
+    {
+        Get<PendingDatasetManager>().StartDelayTimer(aDataset);
+    }
 }
 
 void DatasetManager::SignalDatasetChange(void) const
