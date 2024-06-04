@@ -918,7 +918,7 @@ private:
         void RemoveRoutersWithNoEntriesOrFlags(void);
         void RemoveExpiredEntries(void);
         void SignalTableChanged(void);
-        void ScheduleStaleTimer(void);
+        void ScheduleAllTimers(void);
         void DetermineStaleTimeFor(const OnLinkPrefix &aPrefix, NextFireTime &aStaleTime);
         void DetermineStaleTimeFor(const RoutePrefix &aPrefix, NextFireTime &aStaleTime);
         void UpdateRouterOnRx(Router &aRouter);
