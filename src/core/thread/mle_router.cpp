@@ -2775,8 +2775,7 @@ Error MleRouter::SendChildIdResponse(Child &aChild)
     VerifyOrExit((message = NewMleMessage(kCommandChildIdResponse)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendSourceAddressTlv());
     SuccessOrExit(error = message->AppendLeaderDataTlv());
-    SuccessOrExit(error = message->AppendActiveTimestampTlv());
-    SuccessOrExit(error = message->AppendPendingTimestampTlv());
+    SuccessOrExit(error = message->AppendActiveAndPendingTimestampTlvs());
 
     if ((aChild.GetRloc16() == 0) || !RouterIdMatch(aChild.GetRloc16(), GetRloc16()))
     {
@@ -2895,8 +2894,7 @@ Error MleRouter::SendChildUpdateRequest(Child &aChild)
     SuccessOrExit(error = message->AppendSourceAddressTlv());
     SuccessOrExit(error = message->AppendLeaderDataTlv());
     SuccessOrExit(error = message->AppendNetworkDataTlv(aChild.GetNetworkDataType()));
-    SuccessOrExit(error = message->AppendActiveTimestampTlv());
-    SuccessOrExit(error = message->AppendPendingTimestampTlv());
+    SuccessOrExit(error = message->AppendActiveAndPendingTimestampTlvs());
 
     if (!aChild.IsStateValid())
     {
@@ -2999,8 +2997,7 @@ void MleRouter::SendChildUpdateResponse(Child                  *aChild,
 
         case Tlv::kNetworkData:
             SuccessOrExit(error = message->AppendNetworkDataTlv(aChild->GetNetworkDataType()));
-            SuccessOrExit(error = message->AppendActiveTimestampTlv());
-            SuccessOrExit(error = message->AppendPendingTimestampTlv());
+            SuccessOrExit(error = message->AppendActiveAndPendingTimestampTlvs());
             break;
 
         case Tlv::kTimeout:
@@ -3057,8 +3054,7 @@ void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
     VerifyOrExit((message = NewMleMessage(kCommandDataResponse)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendSourceAddressTlv());
     SuccessOrExit(error = message->AppendLeaderDataTlv());
-    SuccessOrExit(error = message->AppendActiveTimestampTlv());
-    SuccessOrExit(error = message->AppendPendingTimestampTlv());
+    SuccessOrExit(error = message->AppendActiveAndPendingTimestampTlvs());
 
     for (uint8_t tlvType : aTlvList)
     {

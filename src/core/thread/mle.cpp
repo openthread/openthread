@@ -1630,8 +1630,7 @@ void Mle::SendDelayedResponse(TxMessage &aMessage, const DelayedResponseMetadata
 
     if (aMessage.GetSubType() == Message::kSubTypeMleDataRequest)
     {
-        SuccessOrExit(error = aMessage.AppendActiveTimestampTlv());
-        SuccessOrExit(error = aMessage.AppendPendingTimestampTlv());
+        SuccessOrExit(error = aMessage.AppendActiveAndPendingTimestampTlvs());
     }
 
     SuccessOrExit(error = aMessage.SendTo(aMetadata.mDestination));
@@ -1807,8 +1806,7 @@ Error Mle::SendChildIdRequest(void)
     }
 
     SuccessOrExit(error = message->AppendTlvRequestTlv(kTlvs, tlvsLen));
-    SuccessOrExit(error = message->AppendActiveTimestampTlv());
-    SuccessOrExit(error = message->AppendPendingTimestampTlv());
+    SuccessOrExit(error = message->AppendActiveAndPendingTimestampTlvs());
 
     mParentCandidate.SetState(Neighbor::kStateValid);
 
@@ -1878,8 +1876,7 @@ Error Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlv
     }
     else
     {
-        SuccessOrExit(error = message->AppendActiveTimestampTlv());
-        SuccessOrExit(error = message->AppendPendingTimestampTlv());
+        SuccessOrExit(error = message->AppendActiveAndPendingTimestampTlvs());
 
         SuccessOrExit(error = message->SendTo(aDestination));
         Log(kMessageSend, kTypeDataRequest, aDestination);
@@ -4752,6 +4749,17 @@ Error Mle::TxMessage::AppendPendingTimestampTlv(void)
 
     VerifyOrExit(timestamp != nullptr && timestamp->GetSeconds() != 0);
     error = Tlv::Append<PendingTimestampTlv>(*this, *timestamp);
+
+exit:
+    return error;
+}
+
+Error Mle::TxMessage::AppendActiveAndPendingTimestampTlvs(void)
+{
+    Error error;
+
+    SuccessOrExit(error = AppendActiveTimestampTlv());
+    error = AppendPendingTimestampTlv();
 
 exit:
     return error;
