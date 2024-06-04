@@ -615,6 +615,10 @@ protected:
 
 #endif // OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
 
+    static void ThreadDetachGracefullyHandler(void *aContext);
+
+    void ThreadDetachGracefullyHandler(void);
+
 protected:
     static NcpBase        *sNcpInstance;
     static spinel_status_t ThreadErrorToSpinelStatus(otError aError);

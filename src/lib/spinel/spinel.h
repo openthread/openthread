@@ -2370,6 +2370,12 @@ enum
      */
     SPINEL_PROP_NET_PSKC = SPINEL_PROP_NET__BEGIN + 11,
 
+    /// Instruct NCP to leave the current network gracefully
+    /** Format Empty - Write only
+     *
+     */
+    SPINEL_PROP_NET_LEAVE_GRACEFULLY = SPINEL_PROP_NET__BEGIN + 12,
+
     SPINEL_PROP_NET__END = 0x50,
 
     SPINEL_PROP_NET_EXT__BEGIN = 0x1400,
