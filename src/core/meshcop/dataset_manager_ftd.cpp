@@ -76,7 +76,7 @@ Error DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
     // appending to the message. The timestamp is appended as its own
     // MLE TLV to the message.
 
-    dataset.RemoveTlv(IsActiveDataset() ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp);
+    dataset.RemoveTimestamp(mType);
 
     return Tlv::AppendTlv(aMessage, mleTlvType, dataset.GetBytes(), dataset.GetLength());
 }

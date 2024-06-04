@@ -366,18 +366,6 @@ public:
     }
 
     /**
-     * Reads the Timestamp (Active or Pending).
-     *
-     * @param[in]  aType       The type: active or pending.
-     * @param[out] aTimestamp  A reference to a `Timestamp` to output the value.
-     *
-     * @retval kErrorNone      Timestamp was read successfully. @p aTimestamp is updated.
-     * @retval kErrorNotFound  Could not find the requested Timestamp TLV.
-     *
-     */
-    Error ReadTimestamp(Type aType, Timestamp &aTimestamp) const;
-
-    /**
      * Writes a TLV to the Dataset.
      *
      * If the specified TLV type already exists, it will be replaced. Otherwise, the TLV will be appended.
@@ -512,6 +500,40 @@ public:
      *
      */
     void RemoveTlv(Tlv::Type aType);
+
+    /**
+     * Reads the Timestamp TLV (Active or Pending).
+     *
+     * @param[in]  aType       The timestamp type, active or pending.
+     * @param[out] aTimestamp  A reference to a `Timestamp` to output the value.
+     *
+     * @retval kErrorNone      Timestamp was read successfully. @p aTimestamp is updated.
+     * @retval kErrorNotFound  Could not find the requested Timestamp TLV.
+     *
+     */
+    Error ReadTimestamp(Type aType, Timestamp &aTimestamp) const;
+
+    /**
+     * Writes the Timestamp TLV (Active or Pending).
+     *
+     * If the TLV already exists, it will be replaced. Otherwise, the TLV will be appended.
+     *
+     * @param[in] aType       The timestamp type, active or pending.
+     * @param[in] aTimestamp  The timestamp value.
+     *
+     * @retval kErrorNone    Successfully updated the Timestamp TLV.
+     * @retval kErrorNoBufs  Could not append the Timestamp TLV due to insufficient buffer space.
+     *
+     */
+    Error WriteTimestamp(Type aType, const Timestamp &aTimestamp);
+
+    /**
+     * Removes the Timestamp TLV (Active or Pending) from the Dataset.
+     *
+     * @param[in] aType       The timestamp type, active or pending.
+     *
+     */
+    void RemoveTimestamp(Type aType);
 
     /**
      * Returns a pointer to the byte representation of the Dataset.
@@ -711,6 +733,11 @@ public:
 
 private:
     void RemoveTlv(Tlv *aTlv);
+
+    static Tlv::Type TimestampTlvFor(Type aType)
+    {
+        return (aType == kActive) ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp;
+    }
 
     uint8_t   mTlvs[kMaxLength];
     uint8_t   mLength;
