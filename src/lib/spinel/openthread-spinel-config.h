@@ -34,8 +34,6 @@
 #ifndef OPENTHREAD_SPINEL_CONFIG_H_
 #define OPENTHREAD_SPINEL_CONFIG_H_
 
-#include "openthread-core-config.h"
-
 /**
  * @def OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
  *
