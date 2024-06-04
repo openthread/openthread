@@ -54,6 +54,7 @@
 #include "border_router/infra_if.hpp"
 #include "common/array.hpp"
 #include "common/callback.hpp"
+#include "common/equatable.hpp"
 #include "common/error.hpp"
 #include "common/heap_allocatable.hpp"
 #include "common/heap_array.hpp"
@@ -658,12 +659,6 @@ private:
         // base class for `OnLinkPrefix` or `RoutePrefix`.
 
     public:
-        enum UlaChecker : bool
-        {
-            kIsNotUla = false,
-            kIsUla    = true,
-        };
-
         struct ExpirationChecker
         {
             explicit ExpirationChecker(TimeMilli aNow) { mNow = aNow; }
@@ -677,7 +672,6 @@ private:
         TimeMilli          GetExpireTime(void) const { return CalculateExpirationTime(mValidLifetime); }
 
         bool Matches(const Ip6::Prefix &aPrefix) const { return (mPrefix == aPrefix); }
-        bool Matches(const UlaChecker &aIsUla) const { return (mPrefix.IsUniqueLocal() == aIsUla); }
         bool Matches(const ExpirationChecker &aChecker) const { return (GetExpireTime() <= aChecker.mNow); }
 
         void SetStaleTimeCalculated(bool aFlag) { mStaleTimeCalculated = aFlag; }
@@ -761,25 +755,27 @@ private:
                                         RouterAdvOrigin                aRaOrigin);
         void ProcessNeighborAdvertMessage(const NeighborAdvertMessage &aNaMessage);
 
-        bool ContainsDefaultOrNonUlaRoutePrefix(void) const;
-        bool ContainsNonUlaOnLinkPrefix(void) const;
-        bool ContainsUlaOnLinkPrefix(void) const;
+        // Decision factors
+        bool ContainsDefaultOrNonUlaRoutePrefix(void) const { return mDecisionFactors.mHasNonUlaRoute; }
+        bool ContainsNonUlaOnLinkPrefix(void) const { return mDecisionFactors.mHasNonUlaOnLink; }
+        bool ContainsUlaOnLinkPrefix(void) const { return mDecisionFactors.mHasUlaOnLink; }
 
-        void FindFavoredOnLinkPrefix(Ip6::Prefix &aPrefix) const;
-
-        void HandleLocalOnLinkPrefixChanged(void);
-        void HandleNetDataChange(void);
-
-        void RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold);
+        const Ip6::Prefix &GetFavoredOnLinkPrefix(void) const { return mDecisionFactors.mFavoredOnLinkPrefix; }
+        void               SetHeaderFlagsOn(RouterAdvert::Header &aHeader) const;
 
         const RouterAdvert::Header &GetLocalRaHeaderToMirror(void) const { return mLocalRaHeader; }
 
-        void DetermineAndSetFlags(RouterAdvert::Header &aHeader) const;
-
+        // Iterating over discovered items
         void  InitIterator(PrefixTableIterator &aIterator) const;
         Error GetNextEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const;
         Error GetNextRouter(PrefixTableIterator &aIterator, RouterEntry &aEntry) const;
 
+        // Callbacks notifying of changes
+        void RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold);
+        void HandleLocalOnLinkPrefixChanged(void);
+        void HandleNetDataChange(void);
+
+        // Tasklet or timer callbacks
         void HandleSignalTask(void);
         void HandleExpirationTimer(void);
         void HandleStaleTimer(void);
@@ -822,15 +818,13 @@ private:
 
             static_assert(kMaxNsProbes < 255, "kMaxNsProbes MUST not be 255");
 
-            enum EmptyChecker : uint8_t
-            {
-                kContainsNoEntriesOrFlags
-            };
+            typedef LifetimedPrefix::ExpirationChecker EmptyChecker;
 
             bool IsReachable(void) const { return mNsProbeCount <= kMaxNsProbes; }
             bool ShouldCheckReachability(void) const;
+            void ResetReachabilityState(void);
             bool Matches(const Ip6::Address &aAddress) const { return aAddress == mAddress; }
-            bool Matches(EmptyChecker aChecker) const;
+            bool Matches(const EmptyChecker &aChecker);
             void CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow) const;
 
             using OnLinkPrefixList = OwningList<Entry<OnLinkPrefix>>;
@@ -911,18 +905,32 @@ private:
 
         //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
+        struct DecisionFactors : public Clearable<DecisionFactors>, public Equatable<DecisionFactors>
+        {
+            DecisionFactors(void) { Clear(); }
+
+            bool HasFavoredOnLink(void) const { return (mFavoredOnLinkPrefix.GetLength() != 0); }
+            void UpdateFlagsFrom(const Router &aRouter);
+            void UpdateFrom(const OnLinkPrefix &aOnLinkPrefix);
+            void UpdateFrom(const RoutePrefix &aRoutePrefix);
+
+            Ip6::Prefix mFavoredOnLinkPrefix;
+            bool        mHasNonUlaRoute : 1;
+            bool        mHasNonUlaOnLink : 1;
+            bool        mHasUlaOnLink : 1;
+            bool        mHeaderManagedAddressConfigFlag : 1;
+            bool        mHeaderOtherConfigFlag : 1;
+        };
+
+        //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
         void ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter, RouterAdvOrigin aRaOrigin);
         void ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
         void ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
         void ProcessRaFlagsExtOption(const RaFlagsExtOption &aFlagsOption, Router &aRouter);
-        bool ContainsOnLinkPrefix(OnLinkPrefix::UlaChecker aUlaChecker) const;
-        void RemoveRoutersWithNoEntriesOrFlags(void);
-        void RemoveExpiredEntries(void);
-        void SignalTableChanged(void);
-        void ScheduleAllTimers(void);
+        void Evaluate(void);
         void DetermineStaleTimeFor(const OnLinkPrefix &aPrefix, NextFireTime &aStaleTime);
         void DetermineStaleTimeFor(const RoutePrefix &aPrefix, NextFireTime &aStaleTime);
-        void UpdateRouterOnRx(Router &aRouter);
         void SendNeighborSolicitToRouter(const Router &aRouter);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
         template <class Type> Entry<Type> *AllocateEntry(void) { return Entry<Type>::Allocate(); }
@@ -936,6 +944,7 @@ private:
         using RouterTimer     = TimerMilliIn<RoutingManager, &RoutingManager::HandleRxRaTrackerRouterTimer>;
         using RouterList      = OwningList<Entry<Router>>;
 
+        DecisionFactors      mDecisionFactors;
         RouterList           mRouters;
         ExpirationTimer      mExpirationTimer;
         StaleTimer           mStaleTimer;
@@ -943,6 +952,7 @@ private:
         SignalTask           mSignalTask;
         RouterAdvert::Header mLocalRaHeader;
         TimeMilli            mLocalRaHeaderUpdateTime;
+
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
         Pool<SharedEntry, kMaxEntries>   mEntryPool;
         Pool<Entry<Router>, kMaxRouters> mRouterPool;
