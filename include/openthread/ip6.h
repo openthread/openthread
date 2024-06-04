@@ -382,27 +382,6 @@ otError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Addre
 const otNetifMulticastAddress *otIp6GetMulticastAddresses(otInstance *aInstance);
 
 /**
- * Checks if multicast promiscuous mode is enabled on the Thread interface.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @sa otIp6SetMulticastPromiscuousEnabled
- *
- */
-bool otIp6IsMulticastPromiscuousEnabled(otInstance *aInstance);
-
-/**
- * Enables or disables multicast promiscuous mode on the Thread interface.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aEnabled   TRUE to enable Multicast Promiscuous mode, FALSE otherwise.
- *
- * @sa otIp6IsMulticastPromiscuousEnabled
- *
- */
-void otIp6SetMulticastPromiscuousEnabled(otInstance *aInstance, bool aEnabled);
-
-/**
  * Allocate a new message buffer for sending an IPv6 message.
  *
  * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to

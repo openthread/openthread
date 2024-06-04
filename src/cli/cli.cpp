@@ -3366,35 +3366,6 @@ template <> otError Interpreter::Process<Cmd("ipmaddr")>(Arg aArgs[])
         error = otIp6UnsubscribeMulticastAddress(GetInstancePtr(), &address);
     }
     /**
-     * @cli ipmaddr promiscuous
-     * @code
-     * ipmaddr promiscuous
-     * Disabled
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otIp6IsMulticastPromiscuousEnabled
-     */
-    else if (aArgs[0] == "promiscuous")
-    {
-        /**
-         * @cli ipmaddr promiscuous (enable,disable)
-         * @code
-         * ipmaddr promiscuous enable
-         * Done
-         * @endcode
-         * @code
-         * ipmaddr promiscuous disable
-         * Done
-         * @endcode
-         * @cparam ipmaddr promiscuous @ca{enable|disable}
-         * @par api_copy
-         * #otIp6SetMulticastPromiscuousEnabled
-         */
-        error =
-            ProcessEnableDisable(aArgs + 1, otIp6IsMulticastPromiscuousEnabled, otIp6SetMulticastPromiscuousEnabled);
-    }
-    /**
      * @cli ipmaddr llatn
      * @code
      * ipmaddr llatn

@@ -613,23 +613,6 @@ public:
     void UnsubscribeAllExternalMulticastAddresses(void);
 
     /**
-     * Checks if multicast promiscuous mode is enabled on the network interface.
-     *
-     * @retval TRUE   If the multicast promiscuous mode is enabled.
-     * @retval FALSE  If the multicast promiscuous mode is disabled.
-     *
-     */
-    bool IsMulticastPromiscuousEnabled(void) const { return mMulticastPromiscuous; }
-
-    /**
-     * Enables multicast promiscuous mode on the network interface.
-     *
-     * @param[in]  aEnabled  TRUE if Multicast Promiscuous mode is enabled, FALSE otherwise.
-     *
-     */
-    void SetMulticastPromiscuous(bool aEnabled) { mMulticastPromiscuous = aEnabled; }
-
-    /**
      * Enables range-based `for` loop iteration over external multicast addresses on the Netif that matches
      * a given IPv6 address type filter.
      *
@@ -702,7 +685,6 @@ private:
 
     LinkedList<UnicastAddress>   mUnicastAddresses;
     LinkedList<MulticastAddress> mMulticastAddresses;
-    bool                         mMulticastPromiscuous;
 
     Callback<otIp6AddressCallback> mAddressCallback;
 
