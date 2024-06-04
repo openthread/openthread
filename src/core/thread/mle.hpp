@@ -1291,8 +1291,7 @@ private:
     bool       HasAcceptableParentCandidate(void) const;
     Error      DetermineParentRequestType(ParentRequestType &aType) const;
     bool       IsBetterParent(uint16_t                aRloc16,
-                              LinkQuality             aLinkQuality,
-                              uint8_t                 aLinkMargin,
+                              uint8_t                 aTwoWayLinkMargin,
                               const ConnectivityTlv  &aConnectivityTlv,
                               uint16_t                aVersion,
                               const Mac::CslAccuracy &aCslAccuracy);

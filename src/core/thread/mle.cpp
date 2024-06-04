@@ -3058,17 +3058,15 @@ exit:
 }
 
 bool Mle::IsBetterParent(uint16_t                aRloc16,
-                         LinkQuality             aLinkQuality,
-                         uint8_t                 aLinkMargin,
+                         uint8_t                 aTwoWayLinkMargin,
                          const ConnectivityTlv  &aConnectivityTlv,
                          uint16_t                aVersion,
                          const Mac::CslAccuracy &aCslAccuracy)
 {
-    int         rval;
-    LinkQuality candidateTwoWayLinkQuality = mParentCandidate.GetTwoWayLinkQuality();
+    int rval;
 
     // Mesh Impacting Criteria
-    rval = ThreeWayCompare(aLinkQuality, candidateTwoWayLinkQuality);
+    rval = ThreeWayCompare(LinkQualityForLinkMargin(aTwoWayLinkMargin), mParentCandidate.GetTwoWayLinkQuality());
     VerifyOrExit(rval == 0);
 
     rval = ThreeWayCompare(IsActiveRouter(aRloc16), IsActiveRouter(mParentCandidate.GetRloc16()));
@@ -3114,7 +3112,7 @@ bool Mle::IsBetterParent(uint16_t                aRloc16,
     OT_UNUSED_VARIABLE(aCslAccuracy);
 #endif
 
-    rval = ThreeWayCompare(aLinkMargin, mParentCandidate.mLinkMargin);
+    rval = ThreeWayCompare(aTwoWayLinkMargin, mParentCandidate.mLinkMargin);
 
 exit:
     return (rval > 0);
@@ -3127,9 +3125,8 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     uint16_t         version;
     uint16_t         sourceAddress;
     LeaderData       leaderData;
-    uint8_t          linkMarginFromTlv;
-    uint8_t          linkMargin;
-    LinkQuality      linkQuality;
+    uint8_t          linkMarginOut;
+    uint8_t          twoWayLinkMargin;
     ConnectivityTlv  connectivityTlv;
     uint32_t         linkFrameCounter;
     uint32_t         mleFrameCounter;
@@ -3156,9 +3153,8 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
 
-    SuccessOrExit(error = Tlv::Find<LinkMarginTlv>(aRxInfo.mMessage, linkMarginFromTlv));
-    linkMargin  = Min(Get<Mac::Mac>().ComputeLinkMargin(rss), linkMarginFromTlv);
-    linkQuality = LinkQualityForLinkMargin(linkMargin);
+    SuccessOrExit(error = Tlv::Find<LinkMarginTlv>(aRxInfo.mMessage, linkMarginOut));
+    twoWayLinkMargin = Min(Get<Mac::Mac>().ComputeLinkMargin(rss), linkMarginOut);
 
     SuccessOrExit(error = Tlv::FindTlv(aRxInfo.mMessage, connectivityTlv));
     VerifyOrExit(connectivityTlv.IsValid(), error = kErrorParse);
@@ -3254,7 +3250,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
         // Only consider better parents if the partitions are the same
         if (compare == 0)
         {
-            VerifyOrExit(IsBetterParent(sourceAddress, linkQuality, linkMargin, connectivityTlv, version, cslAccuracy));
+            VerifyOrExit(IsBetterParent(sourceAddress, twoWayLinkMargin, connectivityTlv, version, cslAccuracy));
         }
     }
 
@@ -3290,7 +3286,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     mParentCandidate.SetVersion(version);
     mParentCandidate.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                               DeviceMode::kModeFullNetworkData));
-    mParentCandidate.SetLinkQualityOut(LinkQualityForLinkMargin(linkMarginFromTlv));
+    mParentCandidate.SetLinkQualityOut(LinkQualityForLinkMargin(linkMarginOut));
     mParentCandidate.SetState(Neighbor::kStateParentResponse);
     mParentCandidate.SetKeySequence(aRxInfo.mKeySequence);
     mParentCandidate.SetLeaderCost(connectivityTlv.GetLeaderCost());
@@ -3306,7 +3302,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     mParentCandidate.mSedDatagramCount = connectivityTlv.GetSedDatagramCount();
     mParentCandidate.mLeaderData       = leaderData;
     mParentCandidate.mIsSingleton      = connectivityTlv.IsSingleton();
-    mParentCandidate.mLinkMargin       = linkMargin;
+    mParentCandidate.mLinkMargin       = twoWayLinkMargin;
 
 exit:
     LogProcessError(kTypeParentResponse, error);
