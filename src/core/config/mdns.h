@@ -69,6 +69,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+ *
+ * Define to 1 for mDNS module to provide mechanisms and public APIs to iterate over registered host, service, and
+ * key entries, as well as browsers and resolvers.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+#define OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
  *
  * Define to 1 for mDNS module to be automatically enabled/disabled on the same infra-if used for border routing

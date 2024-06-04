@@ -122,6 +122,7 @@ public:
     typedef otMdnsAddressResult    AddressResult;    ///< Address result.
     typedef otMdnsAddressAndTtl    AddressAndTtl;    ///< Address and TTL.
     typedef otMdnsIterator         Iterator;         ///< An entry iterator.
+    typedef otMdnsCacheInfo        CacheInfo;        ///< Cache information.
 
     /**
      * Represents a socket address info.
@@ -577,6 +578,8 @@ public:
      */
     void SetMaxMessageSize(uint16_t aMaxSize) { mMaxMessageSize = aMaxSize; }
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
     /**
      * Allocates a new iterator.
      *
@@ -642,6 +645,95 @@ public:
      *
      */
     Error GetNextKey(Iterator &aIterator, Key &aKey, EntryState &aState) const;
+
+    /**
+     * Iterates over browsers.
+     *
+     * On success, @p aBrowser is populated with information about the next browser. Pointers within the `Browser`
+     * structure  remain valid until the next call to any OpenThread stack's public or platform API/callback.
+     *
+     * @param[in]  aIterator   The iterator to use.
+     * @param[out] aBrowser    A `Browser` to return the information about the next browser.
+     * @param[out] aInfo       A `CacheInfo` to return additional information.
+     *
+     * @retval kErrorNone         @p aBrowser, @p aInfo, & @p aIterator are updated successfully.
+     * @retval kErrorNotFound     Reached the end of the list.
+     * @retval kErrorInvalidArg   @p aIterator is not valid.
+     *
+     */
+    Error GetNextBrowser(Iterator &aIterator, Browser &aBrowser, CacheInfo &aInfo) const;
+
+    /**
+     * Iterates over SRV resolvers.
+     *
+     * On success, @p aResolver is populated with information about the next resolver. Pointers within the `SrvResolver`
+     * structure  remain valid until the next call to any OpenThread stack's public or platform API/callback.
+     *
+     * @param[in]  aIterator   The iterator to use.
+     * @param[out] aResolver   An `SrvResolver` to return the information about the next resolver.
+     * @param[out] aInfo       A `CacheInfo` to return additional information.
+     *
+     * @retval kErrorNone         @p aResolver, @p aInfo, & @p aIterator are updated successfully.
+     * @retval kErrorNotFound     Reached the end of the list.
+     * @retval kErrorInvalidArg   @p aIterator is not valid.
+     *
+     */
+    Error GetNextSrvResolver(Iterator &aIterator, SrvResolver &aResolver, CacheInfo &aInfo) const;
+
+    /**
+     * Iterates over TXT resolvers.
+     *
+     * On success, @p aResolver is populated with information about the next resolver. Pointers within the `TxtResolver`
+     * structure  remain valid until the next call to any OpenThread stack's public or platform API/callback.
+     *
+     * @param[in]  aIterator   The iterator to use.
+     * @param[out] aResolver   A `TxtResolver` to return the information about the next resolver.
+     * @param[out] aInfo       A `CacheInfo` to return additional information.
+     *
+     * @retval kErrorNone         @p aResolver, @p aInfo, & @p aIterator are updated successfully.
+     * @retval kErrorNotFound     Reached the end of the list.
+     * @retval kErrorInvalidArg   @p aIterator is not valid.
+     *
+     */
+    Error GetNextTxtResolver(Iterator &aIterator, TxtResolver &aResolver, CacheInfo &aInfo) const;
+
+    /**
+     * Iterates over IPv6 address resolvers.
+     *
+     * On success, @p aResolver is populated with information about the next resolver. Pointers within the
+     * `AddressResolver` structure  remain valid until the next call to any OpenThread stack's public or platform
+     * API/callback.
+     *
+     * @param[in]  aIterator   The iterator to use.
+     * @param[out] aResolver   An `AddressResolver to return the information about the next resolver.
+     * @param[out] aInfo       A `CacheInfo` to return additional information.
+     *
+     * @retval kErrorNone         @p aResolver, @p aInfo, & @p aIterator are updated successfully.
+     * @retval kErrorNotFound     Reached the end of the list.
+     * @retval kErrorInvalidArg   @p aIterator is not valid.
+     *
+     */
+    Error GetNextIp6AddressResolver(Iterator &aIterator, AddressResolver &aResolver, CacheInfo &aInfo) const;
+
+    /**
+     * Iterates over IPv4 address resolvers.
+     *
+     * On success, @p aResolver is populated with information about the next resolver. Pointers within the
+     * `AddressResolver` structure  remain valid until the next call to any OpenThread stack's public or platform
+     * API/callback.
+     *
+     * @param[in]  aIterator   The iterator to use.
+     * @param[out] aResolver   An `AddressResolver to return the information about the next resolver.
+     * @param[out] aInfo       A `CacheInfo` to return additional information.
+     *
+     * @retval kErrorNone         @p aResolver, @p aInfo, & @p aIterator are updated successfully.
+     * @retval kErrorNotFound     Reached the end of the list.
+     * @retval kErrorInvalidArg   @p aIterator is not valid.
+     *
+     */
+    Error GetNextIp4AddressResolver(Iterator &aIterator, AddressResolver &aResolver, CacheInfo &aInfo) const;
+
+#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
 private:
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -976,8 +1068,10 @@ private:
         void  ClearAppendState(void);
         void  PrepareResponse(TxMessage &aResponse, TimeMilli aNow);
         void  HandleConflict(void);
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
         Error CopyInfoTo(Host &aHost, EntryState &aState) const;
         Error CopyInfoTo(Key &aKey, EntryState &aState) const;
+#endif
 
     private:
         Error Init(Instance &aInstance, const char *aName);
@@ -1033,8 +1127,10 @@ private:
         void  ClearAppendState(void);
         void  PrepareResponse(TxMessage &aResponse, TimeMilli aNow);
         void  HandleConflict(void);
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
         Error CopyInfoTo(Service &aService, EntryState &aState, EntryIterator &aIterator) const;
         Error CopyInfoTo(Key &aKey, EntryState &aState) const;
+#endif
 
     private:
         class SubType : public LinkedListEntry<SubType>, public Heap::Allocatable<SubType>, private ot::NonCopyable
@@ -1554,6 +1650,9 @@ private:
         Error Add(const Browser &aBrowser);
         void  Remove(const Browser &aBrowser);
         void  ProcessResponseRecord(const Message &aMessage, uint16_t aRecordOffset);
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+        void CopyInfoTo(Browser &aBrowser, CacheInfo &aInfo) const;
+#endif
 
     private:
         struct PtrEntry : public LinkedListEntry<PtrEntry>, public Heap::Allocatable<PtrEntry>
@@ -1654,6 +1753,9 @@ private:
         Error Add(const SrvResolver &aResolver);
         void  Remove(const SrvResolver &aResolver);
         void  ProcessResponseRecord(const Message &aMessage, uint16_t aRecordOffset);
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+        void CopyInfoTo(SrvResolver &aResolver, CacheInfo &aInfo) const;
+#endif
 
     private:
         Error Init(Instance &aInstance, const char *aServiceInstance, const char *aServiceType);
@@ -1689,6 +1791,9 @@ private:
         Error Add(const TxtResolver &aResolver);
         void  Remove(const TxtResolver &aResolver);
         void  ProcessResponseRecord(const Message &aMessage, uint16_t aRecordOffset);
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+        void CopyInfoTo(TxtResolver &aResolver, CacheInfo &aInfo) const;
+#endif
 
     private:
         Error Init(Instance &aInstance, const char *aServiceInstance, const char *aServiceType);
@@ -1721,6 +1826,9 @@ private:
         Error Add(const AddressResolver &aResolver);
         void  Remove(const AddressResolver &aResolver);
         void  CommitNewResponseEntries(void);
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+        void CopyInfoTo(AddressResolver &aResolver, CacheInfo &aInfo) const;
+#endif
 
     protected:
         struct AddrEntry : public LinkedListEntry<AddrEntry>, public Heap::Allocatable<AddrEntry>
@@ -1793,6 +1901,8 @@ private:
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
     class EntryIterator : public Iterator, public InstanceLocator, public Heap::Allocatable<EntryIterator>
     {
         friend class Heap::Allocatable<EntryIterator>;
@@ -1802,6 +1912,11 @@ private:
         Error GetNextHost(Host &aHost, EntryState &aState);
         Error GetNextService(Service &aService, EntryState &aState);
         Error GetNextKey(Key &aKey, EntryState &aState);
+        Error GetNextBrowser(Browser &aBrowser, CacheInfo &aInfo);
+        Error GetNextSrvResolver(SrvResolver &aResolver, CacheInfo &aInfo);
+        Error GetNextTxtResolver(TxtResolver &aResolver, CacheInfo &aInfo);
+        Error GetNextIp6AddressResolver(AddressResolver &aResolver, CacheInfo &aInfo);
+        Error GetNextIp4AddressResolver(AddressResolver &aResolver, CacheInfo &aInfo);
 
     private:
         static constexpr uint16_t kArrayCapacityIncrement = 32;
@@ -1813,6 +1928,11 @@ private:
             kService,
             kHostKey,
             kServiceKey,
+            kBrowser,
+            kSrvResolver,
+            kTxtResolver,
+            kIp6AddrResolver,
+            kIp4AddrResolver,
         };
 
         explicit EntryIterator(Instance &aInstance);
@@ -1823,10 +1943,17 @@ private:
         {
             const HostEntry    *mHostEntry;
             const ServiceEntry *mServiceEntry;
+            const BrowseCache  *mBrowseCache;
+            const SrvCache     *mSrvCache;
+            const TxtCache     *mTxtCache;
+            const Ip6AddrCache *mIp6AddrCache;
+            const Ip4AddrCache *mIp4AddrCache;
         };
 
         Heap::Array<const char *, kArrayCapacityIncrement> mSubTypeArray;
     };
+
+#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
