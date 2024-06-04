@@ -43,7 +43,6 @@ config("mbedtls_config") {
   defines = [ "MBEDTLS_CONFIG_FILE=\"${mbedtls_config_file}\"" ]
   cflags = [
     "-Wno-conversion",
-    "-Wno-unused-but-set-variable"
   ]
 }
 
