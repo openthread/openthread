@@ -852,6 +852,15 @@ public:
     uint8_t GetActiveRouters(void) const { return mActiveRouters; }
 
     /**
+     * Indicates whether or not the partition is a singleton based on Active Routers value.
+     *
+     * @retval TRUE   The partition is a singleton.
+     * @retval FALSE  The partition is not a singleton.
+     *
+     */
+    bool IsSingleton(void) const { return (mActiveRouters <= 1); }
+
+    /**
      * Sets the Active Routers value.
      *
      * @param[in]  aActiveRouters  The Active Routers value.
