@@ -935,7 +935,7 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
     Error             error = kErrorNone;
     OwnedPtr<Message> messagePtr;
 
-    VerifyOrExit(aMessagePtr->IsLoopbackToHostAllowed(), error = kErrorNoRoute);
+    VerifyOrExit(aMessagePtr->IsLoopbackToHostAllowed());
 
     VerifyOrExit(mReceiveIp6DatagramCallback.IsSet(), error = kErrorNoRoute);
 
