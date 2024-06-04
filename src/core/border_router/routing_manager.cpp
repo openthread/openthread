@@ -887,7 +887,7 @@ TimeMilli RoutingManager::OnLinkPrefix::GetDeprecationTime(void) const
 
 TimeMilli RoutingManager::OnLinkPrefix::GetStaleTime(void) const
 {
-    return CalculateExpirationTime(Min(kRtrAdvStaleTime, mPreferredLifetime));
+    return CalculateExpirationTime(Min(kStaleTime, mPreferredLifetime));
 }
 
 void RoutingManager::OnLinkPrefix::AdoptValidAndPreferredLifetimesFrom(const OnLinkPrefix &aPrefix)
@@ -948,7 +948,7 @@ void RoutingManager::RoutePrefix::SetFrom(const RouterAdvert::Header &aRaHeader)
 
 TimeMilli RoutingManager::RoutePrefix::GetStaleTime(void) const
 {
-    return CalculateExpirationTime(Min(kRtrAdvStaleTime, mValidLifetime));
+    return CalculateExpirationTime(Min(kStaleTime, mValidLifetime));
 }
 
 void RoutingManager::RoutePrefix::CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli aNow) const
@@ -1538,7 +1538,7 @@ void RoutingManager::RxRaTracker::ScheduleStaleTimer(void)
 
     if (mLocalRaHeader.IsValid())
     {
-        uint16_t interval = kRtrAdvStaleTime;
+        uint16_t interval = kStaleTime;
 
         if (mLocalRaHeader.GetRouterLifetime() > 0)
         {

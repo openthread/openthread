@@ -582,6 +582,19 @@ private:
     static constexpr uint32_t kDefaultOnLinkPrefixLifetime = 1800;
     static constexpr uint32_t kDefaultNat64PrefixLifetime  = 300;
 
+    // The entry stale time in seconds.
+    //
+    // The amount of time that can pass after the last time an RA from
+    // a particular router has been received advertising an on-link
+    // or route prefix before we assume the prefix entry is stale.
+    //
+    // If multiple routers advertise the same on-link or route prefix,
+    // the stale time for the prefix is determined by the latest
+    // stale time among all corresponding entries. Stale time
+    // expiration triggers tx of Router Solicitation (RS) messages
+
+    static constexpr uint32_t kStaleTime = 600; // 10 minutes.
+
     // RA transmission constants (in milliseconds). Initially, three
     // RAs are sent with a short interval of 16 seconds (± 2 seconds
     // jitter). Subsequently, a longer, regular RA beacon interval of
@@ -599,14 +612,6 @@ private:
     static constexpr uint16_t kRsReplyJitter      = 250;
     static constexpr uint32_t kEvaluationInterval = Time::kOneSecondInMsec * 3;
     static constexpr uint16_t kEvaluationJitter   = Time::kOneSecondInMsec * 1;
-
-    // The STALE_RA_TIME in seconds. The Routing Manager will consider the prefixes
-    // and learned RA parameters STALE when they are not refreshed in STALE_RA_TIME
-    // seconds. The Routing Manager will then start Router Solicitation to verify
-    // that the STALE prefix is not being advertised anymore and remove the STALE
-    // prefix.
-    // The value is chosen in range of [`kMaxRtrAdvInterval` upper bound (1800s), `kDefaultOnLinkPrefixLifetime`].
-    static constexpr uint32_t kRtrAdvStaleTime = 1800;
 
     //------------------------------------------------------------------------------------------------------------------
     // Typedefs
