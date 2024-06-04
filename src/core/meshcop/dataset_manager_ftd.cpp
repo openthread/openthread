@@ -110,11 +110,11 @@ Error DatasetManager::ProcessSetOrReplaceRequest(MgmtCommand          aCommand,
         Timestamp pendingTimestamp;
 
         SuccessOrExit(dataset.Read<PendingTimestampTlv>(pendingTimestamp));
-        VerifyOrExit(Timestamp::Compare(&pendingTimestamp, GetLocalTimestamp()) > 0);
+        VerifyOrExit(pendingTimestamp > mLocalTimestamp);
     }
     else
     {
-        VerifyOrExit(Timestamp::Compare(&activeTimestamp, GetLocalTimestamp()) > 0);
+        VerifyOrExit(activeTimestamp > mLocalTimestamp);
     }
 
     // Determine whether the new Dataset affects connectivity
@@ -155,9 +155,7 @@ Error DatasetManager::ProcessSetOrReplaceRequest(MgmtCommand          aCommand,
 
     if (IsPendingDataset() && !aInfo.mAffectsNetworkKey)
     {
-        const Timestamp *localActiveTimestamp = Get<ActiveDatasetManager>().GetTimestamp();
-
-        VerifyOrExit(Timestamp::Compare(&activeTimestamp, localActiveTimestamp) > 0);
+        VerifyOrExit(activeTimestamp > Get<ActiveDatasetManager>().GetTimestamp());
     }
 
     // Determine whether the request is from commissioner.
@@ -299,7 +297,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
     Dataset dataset;
 
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = kErrorInvalidState);
-    VerifyOrExit(!mLocalTimestampValid, error = kErrorAlready);
+    VerifyOrExit(!mLocalTimestamp.IsValid(), error = kErrorAlready);
 
     IgnoreError(Read(dataset));
 

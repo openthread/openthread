@@ -115,40 +115,86 @@ void TestSteeringData(void)
 
 void TestTimestamp(void)
 {
-    MeshCoP::Timestamp t1;
-    MeshCoP::Timestamp t2;
+    MeshCoP::Timestamp       t1;
+    MeshCoP::Timestamp       t2;
+    MeshCoP::Timestamp::Info info;
 
     t1.Clear();
-    t2.Clear();
-
     VerifyOrQuit(t1.GetSeconds() == 0);
     VerifyOrQuit(t1.GetTicks() == 0);
     VerifyOrQuit(!t1.GetAuthoritative());
+    VerifyOrQuit(t1.IsValid());
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t1) == 0);
 
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) == 0);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, nullptr) > 0);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(nullptr, &t2) < 0);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(nullptr, nullptr) == 0);
+    t1.ConvertTo(info);
+    VerifyOrQuit(info.mSeconds == 0);
+    VerifyOrQuit(info.mTicks == 0);
+    VerifyOrQuit(!info.mAuthoritative);
 
-    t1.SetTicks(10);
-    VerifyOrQuit(t1.GetTicks() == 10);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) > 0);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t2, &t1) < 0);
+    t2.SetToInvalid();
+    VerifyOrQuit(!t2.IsValid());
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t2, t2) == 0);
 
-    t2.SetTicks(10);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) == 0);
+    t2.ConvertTo(info);
+    VerifyOrQuit(info.mSeconds == 0xffffffffffff);
+    VerifyOrQuit(info.mTicks == 0x7fff);
+    VerifyOrQuit(info.mAuthoritative);
+
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t2) > 0);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t2, t1) < 0);
+
+    t2 = t1;
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t2) == 0);
+    VerifyOrQuit(t2.IsValid());
+    VerifyOrQuit(t1.IsValid());
+
+    t1.SetSeconds(0x12345678abcd);
+    VerifyOrQuit(t1.GetSeconds() == 0x12345678abcd);
+    VerifyOrQuit(t1.IsValid());
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t2) > 0);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t2, t1) < 0);
+
+    t2.SetSeconds(0x12345678abcd);
+    VerifyOrQuit(t1.GetSeconds() == 0x12345678abcd);
+    VerifyOrQuit(t2.IsValid());
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t2) == 0);
 
     t1.SetAuthoritative(true);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) > 0);
+    VerifyOrQuit(t1.GetAuthoritative());
+    VerifyOrQuit(t1.IsValid());
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t2) > 0);
 
-    t1.SetSeconds(1);
-    VerifyOrQuit(t1.GetSeconds() == 1);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) > 0);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t2, &t1) < 0);
+    t1.SetAuthoritative(false);
+    VerifyOrQuit(!t1.GetAuthoritative());
+    VerifyOrQuit(t1.IsValid());
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t2) == 0);
 
-    t2.SetSeconds(1);
-    t2.SetAuthoritative(true);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) == 0);
+    t1.SetTicks(0x7fff);
+    VerifyOrQuit(t1.GetTicks() == 0x7fff);
+    VerifyOrQuit(!t1.GetAuthoritative());
+    VerifyOrQuit(t1.IsValid());
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t2) > 0);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t2, t1) < 0);
+
+    t2.SetTicks(0x7fff);
+    VerifyOrQuit(t2.GetTicks() == 0x7fff);
+    VerifyOrQuit(!t2.GetAuthoritative());
+    VerifyOrQuit(t2.IsValid());
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t2) == 0);
+
+    t2.ConvertTo(info);
+    VerifyOrQuit(info.mSeconds == 0x12345678abcd);
+    VerifyOrQuit(info.mTicks == 0x7fff);
+    VerifyOrQuit(!info.mAuthoritative);
+
+    t1.SetToOrphanAnnounce();
+    VerifyOrQuit(t1.IsValid());
+    VerifyOrQuit(t1.IsOrphanAnnounce());
+
+    t1.ConvertTo(info);
+    VerifyOrQuit(info.mSeconds == 0);
+    VerifyOrQuit(info.mTicks == 0);
+    VerifyOrQuit(info.mAuthoritative);
 
     printf("TestTimestamp() passed\n");
 }

@@ -66,12 +66,12 @@ public:
     typedef otDatasetMgmtSetCallback MgmtSetCallback;
 
     /**
-     * Returns a pointer to the Timestamp.
+     * Returns the network Timestamp.
      *
-     * @returns A pointer to the Timestamp.
+     * @returns The network Timestamp.
      *
      */
-    const Timestamp *GetTimestamp(void) const;
+    const Timestamp &GetTimestamp(void) const { return mNetworkTimestamp; }
 
     /**
      * Clears the Operational Dataset.
@@ -316,8 +316,6 @@ private:
                                       const otMessageInfo *aMessageInfo,
                                       Error                aError);
 
-    const Timestamp *GetLocalTimestamp(void) const { return mLocalTimestampValid ? &mLocalTimestamp : nullptr; }
-
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     void MoveKeysToSecureStorage(Dataset &aDataset) const;
     void DestroySecurelyStoredKeys(void) const;
@@ -334,8 +332,6 @@ private:
 
     Type                      mType;
     bool                      mLocalSaved : 1;
-    bool                      mLocalTimestampValid : 1;
-    bool                      mNetworkTimestampValid : 1;
     bool                      mMgmtPending : 1;
     TimeMilli                 mLocalUpdateTime;
     Timestamp                 mLocalTimestamp;
