@@ -93,6 +93,15 @@ public:
 
     typedef otPlatDnssdRequestId        RequestId;        ///< A request ID.
     typedef otPlatDnssdRegisterCallback RegisterCallback; ///< The registration request callback
+    typedef otPlatDnssdBrowseCallback   BrowseCallback;   ///< Browser callback.
+    typedef otPlatDnssdSrvCallback      SrvCallback;      ///< SRV callback.
+    typedef otPlatDnssdTxtCallback      TxtCallback;      ///< TXT callback.
+    typedef otPlatDnssdAddressCallback  AddressCallback;  ///< Address callback
+    typedef otPlatDnssdBrowseResult     BrowseResult;     ///< Browser result.
+    typedef otPlatDnssdSrvResult        SrvResult;        ///< SRV result.
+    typedef otPlatDnssdTxtResult        TxtResult;        ///< TXT result.
+    typedef otPlatDnssdAddressResult    AddressResult;    ///< Address result.
+    typedef otPlatDnssdAddressAndTtl    AddressAndTtl;    ///< Address and TTL.
 
     class Host : public otPlatDnssdHost, public Clearable<Host> ///< Host information.
     {
@@ -103,6 +112,22 @@ public:
     };
 
     class Key : public otPlatDnssdKey, public Clearable<Key> ///< Key information
+    {
+    };
+
+    class Browser : public otPlatDnssdBrowser, public Clearable<Browser> ///< Browser.
+    {
+    };
+
+    class SrvResolver : public otPlatDnssdSrvResolver, public Clearable<SrvResolver> ///< SRV resolver.
+    {
+    };
+
+    class TxtResolver : public otPlatDnssdTxtResolver, public Clearable<TxtResolver> ///< TXT resolver.
+    {
+    };
+
+    class AddressResolver : public otPlatDnssdAddressResolver, public Clearable<AddressResolver> ///< Address resolver.
     {
     };
 
@@ -273,6 +298,116 @@ public:
      *
      */
     void UnregisterKey(const Key &aKey, RequestId aRequestId, RegisterCallback aCallback);
+
+    /**
+     * Starts a service browser.
+     *
+     * Refer to the documentation for `otPlatDnssdStartBrowser()` for a more detailed description of the behavior
+     * of this method.
+     *
+     * @param[in] aBrowser    The browser to be started.
+     *
+     */
+    void StartBrowser(const Browser &aBrowser);
+
+    /**
+     * Stops a service browser.
+     *
+     * Refer to the documentation for `otPlatDnssdStopBrowser()` for a more detailed description of the behavior
+     * of this method.
+     *
+     * @param[in] aBrowser    The browser to stop.
+     *
+     */
+    void StopBrowser(const Browser &aBrowser);
+
+    /**
+     * Starts an SRV record resolver.
+     *
+     * Refer to the documentation for `otPlatDnssdStartSrvResolver()` for a more detailed description of the behavior
+     * of this method.
+     *
+     * @param[in] aResolver    The resolver to be started.
+     *
+     */
+    void StartSrvResolver(const SrvResolver &aResolver);
+
+    /**
+     * Stops an SRV record resolver.
+     *
+     * Refer to the documentation for `otPlatDnssdStopSrvResolver()` for a more detailed description of the behavior
+     * of this method.
+     *
+     * @param[in] aResolver    The resolver to stop.
+     *
+     */
+    void StopSrvResolver(const SrvResolver &aResolver);
+
+    /**
+     * Starts a TXT record resolver.
+     *
+     * Refer to the documentation for `otPlatDnssdStartTxtResolver()` for a more detailed description of the behavior
+     * of this method.
+     *
+     * @param[in] aResolver    The resolver to be started.
+     *
+     */
+    void StartTxtResolver(const TxtResolver &aResolver);
+
+    /**
+     * Stops a TXT record resolver.
+     *
+     * Refer to the documentation for `otPlatDnssdStopTxtResolver()` for a more detailed description of the behavior
+     * of this method.
+     *
+     * @param[in] aResolver    The resolver to stop.
+     *
+     */
+    void StopTxtResolver(const TxtResolver &aResolver);
+
+    /**
+     * Starts an IPv6 address resolver.
+     *
+     * Refer to the documentation for `otPlatDnssdStartIp6AddressResolver()` for a more detailed description of the
+     * behavior of this method.
+     *
+     * @param[in] aResolver    The resolver to be started.
+     *
+     */
+    void StartIp6AddressResolver(const AddressResolver &aResolver);
+
+    /**
+     * Stops an IPv6 address resolver.
+     *
+     * Refer to the documentation for `otPlatDnssdStopIp6AddressResolver()` for a more detailed description of the
+     * behavior of this method.
+     *
+     * @param[in] aResolver    The resolver to stop.
+     *
+     */
+    void StopIp6AddressResolver(const AddressResolver &aResolver);
+
+    /**
+     * Starts an IPv4 address resolver.
+     *
+     * Refer to the documentation for `otPlatDnssdStartIp4AddressResolver()` for a more detailed description of the
+     * behavior of this method.
+     *
+     * @param[in] aResolver    The resolver to be started.
+     *
+     */
+    void StartIp4AddressResolver(const AddressResolver &aResolver);
+
+    /**
+     * Stops an IPv4 address resolver.
+     *
+     * Refer to the documentation for `otPlatDnssdStopIp4AddressResolver()` for a more detailed description of the
+     * behavior of this method.
+     *
+     * @param[in] aResolver    The resolver to stop.
+     *
+     */
+    void StopIp4AddressResolver(const AddressResolver &aResolver);
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
     /**
