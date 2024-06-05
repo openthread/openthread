@@ -1055,7 +1055,7 @@ private:
     private:
         Error AppendCompressedAddressEntry(uint8_t aContextId, const Ip6::Address &aAddress);
         Error AppendAddressEntry(const Ip6::Address &aAddress);
-        Error AppendDatasetTlv(MeshCoP::Dataset::Type mDatasetType);
+        Error AppendDatasetTlv(MeshCoP::Dataset::Type aDatasetType);
     };
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1072,6 +1072,8 @@ private:
         Error ReadFrameCounterTlvs(uint32_t &aLinkFrameCounter, uint32_t &aMleFrameCounter) const;
         Error ReadTlvRequestTlv(TlvList &aTlvList) const;
         Error ReadLeaderDataTlv(LeaderData &aLeaderData) const;
+        Error ReadAndSaveActiveDataset(const MeshCoP::Timestamp &aActiveTimestamp) const;
+        Error ReadAndSavePendingDataset(const MeshCoP::Timestamp &aPendingTimestamp) const;
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         Error ReadCslClockAccuracyTlv(Mac::CslAccuracy &aCslAccuracy) const;
 #endif
@@ -1081,6 +1083,7 @@ private:
 
     private:
         Error ReadChallengeOrResponse(uint8_t aTlvType, RxChallenge &aRxChallenge) const;
+        Error ReadAndSaveDataset(MeshCoP::Dataset::Type aDatasetType, const MeshCoP::Timestamp &aTimestamp) const;
     };
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
