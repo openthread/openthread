@@ -65,22 +65,6 @@ RegisterLogModule("DatasetManager");
 //----------------------------------------------------------------------------------------------------------------------
 // DatasetManager
 
-Error DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
-{
-    Mle::Tlv::Type mleTlvType = IsActiveDataset() ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset;
-    Dataset        dataset;
-
-    IgnoreError(Read(dataset));
-
-    // Remove the Active or Pending Timestamp TLV from Dataset before
-    // appending to the message. The timestamp is appended as its own
-    // MLE TLV to the message.
-
-    dataset.RemoveTimestamp(mType);
-
-    return Tlv::AppendTlv(aMessage, mleTlvType, dataset.GetBytes(), dataset.GetLength());
-}
-
 Error DatasetManager::ProcessSetOrReplaceRequest(MgmtCommand          aCommand,
                                                  const Coap::Message &aMessage,
                                                  RequestInfo         &aInfo) const
