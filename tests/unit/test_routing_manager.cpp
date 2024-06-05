@@ -2692,11 +2692,11 @@ void TestPrefixStaleTime(void)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Advertise a route prefix with 200 seconds lifetime from router A.
-    // Advertise the same route prefix with 500 seconds lifetime from
+    // Advertise the same route prefix with 800 seconds lifetime from
     // router B.
 
     SendRouterAdvert(routerAddressA, {Rio(routePrefix, 200, NetworkData::kRoutePreferenceMedium)});
-    SendRouterAdvert(routerAddressB, {Rio(routePrefix, 500, NetworkData::kRoutePreferenceMedium)});
+    SendRouterAdvert(routerAddressB, {Rio(routePrefix, 800, NetworkData::kRoutePreferenceMedium)});
 
     AdvanceTime(10);
 
@@ -2705,7 +2705,7 @@ void TestPrefixStaleTime(void)
     // is present in the table.
 
     VerifyPrefixTable({RoutePrefix(routePrefix, 200, NetworkData::kRoutePreferenceMedium, routerAddressA),
-                       RoutePrefix(routePrefix, 500, NetworkData::kRoutePreferenceMedium, routerAddressB)});
+                       RoutePrefix(routePrefix, 800, NetworkData::kRoutePreferenceMedium, routerAddressB)});
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Wait for a period exceeding the 200-second lifetime of the route
@@ -2716,7 +2716,7 @@ void TestPrefixStaleTime(void)
 
     sRsEmitted = false;
 
-    AdvanceTime(490 * 1000);
+    AdvanceTime(590 * 1000);
 
     VerifyOrQuit(!sRsEmitted);
 
@@ -2724,11 +2724,13 @@ void TestPrefixStaleTime(void)
     // Check the discovered prefix table and ensure router A entry is
     // expired and removed.
 
-    VerifyPrefixTable({RoutePrefix(routePrefix, 500, NetworkData::kRoutePreferenceMedium, routerAddressB)});
+    VerifyPrefixTable({RoutePrefix(routePrefix, 800, NetworkData::kRoutePreferenceMedium, routerAddressB)});
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Wait longer than 500-second lifetime of prefix advertised by
-    // router B. Now we should see RS messages emitted.
+    // Wait for the 600-second stale time to expire. This is shorter
+    // than the 800-second lifetime of the prefix advertised by
+    // Router B, so the 600-second value will be used. We should now
+    // observe RS messages being transmitted.
 
     AdvanceTime(20 * 1000);
 
