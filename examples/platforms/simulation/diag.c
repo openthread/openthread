@@ -58,6 +58,13 @@ static bool       sGpioValue = false;
 static uint8_t    sRawPowerSetting[OPENTHREAD_CONFIG_POWER_CALIBRATION_RAW_POWER_SETTING_SIZE];
 static uint16_t   sRawPowerSettingLength = 0;
 
+void otPlatDiagSetOutputCallback(otInstance *aInstance, otPlatDiagOutputCallback aCallback, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aCallback);
+    OT_UNUSED_VARIABLE(aContext);
+}
+
 void otPlatDiagModeSet(bool aMode) { sDiagMode = aMode; }
 
 bool otPlatDiagModeGet(void) { return sDiagMode; }

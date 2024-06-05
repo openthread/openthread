@@ -34,6 +34,7 @@
 #ifndef RADIO_SPINEL_HPP_
 #define RADIO_SPINEL_HPP_
 
+#include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 
 #include "openthread-spinel-config.h"
@@ -678,15 +679,22 @@ public:
      * Processes platform diagnostics commands.
      *
      * @param[in]   aString         A null-terminated input string.
-     * @param[out]  aOutput         The diagnostics execution result.
-     * @param[in]   aOutputMaxLen   The output buffer size.
      *
      * @retval  OT_ERROR_NONE               Succeeded.
      * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
      * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
      *
      */
-    otError PlatDiagProcess(const char *aString, char *aOutput, size_t aOutputMaxLen);
+    otError PlatDiagProcess(const char *aString);
+
+    /**
+     * Sets the diag output callback.
+     *
+     * @param[in]  aCallback   A pointer to a function that is called on outputting diag messages.
+     * @param[in]  aContext    A pointer to the user context.
+     *
+     */
+    void SetDiagOutputCallback(otPlatDiagOutputCallback aCallback, void *aContext);
 #endif
 
     /**
@@ -1194,6 +1202,10 @@ private:
     static otError ReadMacKey(const otMacKeyMaterial &aKeyMaterial, otMacKey &aKey);
 #endif
 
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+    void PlatDiagOutput(const char *aFormat, ...);
+#endif
+
     otInstance *mInstance;
 
     RadioSpinelCallbacks mCallbacks; ///< Callbacks for notifications of higher layer.
@@ -1281,9 +1293,9 @@ private:
 #endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-    bool   mDiagMode;
-    char  *mDiagOutput;
-    size_t mDiagOutputMaxLen;
+    bool                     mDiagMode;
+    otPlatDiagOutputCallback mOutputCallback;
+    void                    *mOutputContext;
 #endif
 
     uint64_t mTxRadioEndUs;

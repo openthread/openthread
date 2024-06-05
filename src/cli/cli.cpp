@@ -169,6 +169,10 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
     otIp6SetReceiveCallback(GetInstancePtr(), &Interpreter::HandleIp6Receive, this);
 #endif
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+    otDiagSetOutputCallback(GetInstancePtr(), &Interpreter::HandleDiagOutput, this);
+#endif
+
     ClearAllBytes(mUserCommands);
 
     OutputPrompt();
@@ -210,19 +214,20 @@ exit:
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 template <> otError Interpreter::Process<Cmd("diag")>(Arg aArgs[])
 {
-    otError error;
-    char   *args[kMaxArgs];
-    char    output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
+    char *args[kMaxArgs];
 
     // all diagnostics related features are processed within diagnostics module
     Arg::CopyArgsToStringArray(aArgs, args);
 
-    error = otDiagProcessCmd(GetInstancePtr(), Arg::GetArgsLength(aArgs), args, output, sizeof(output));
-
-    OutputFormat("%s", output);
-
-    return error;
+    return otDiagProcessCmd(GetInstancePtr(), Arg::GetArgsLength(aArgs), args);
 }
+
+void Interpreter::HandleDiagOutput(const char *aFormat, va_list aArguments, void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleDiagOutput(aFormat, aArguments);
+}
+
+void Interpreter::HandleDiagOutput(const char *aFormat, va_list aArguments) { OutputFormatV(aFormat, aArguments); }
 #endif
 
 template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])

@@ -86,14 +86,11 @@ const struct RcpCapsDiag::SpinelEntry RcpCapsDiag::sSpinelEntries[] = {
     SPINEL_ENTRY(kCategoryOptional, SPINEL_CMD_PROP_VALUE_GET, SPINEL_PROP_PHY_CCA_THRESHOLD),
 };
 
-otError RcpCapsDiag::DiagProcess(char *aArgs[], uint8_t aArgsLength, char *aOutput, size_t aOutputMaxLen)
+otError RcpCapsDiag::DiagProcess(char *aArgs[], uint8_t aArgsLength)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
-
-    mOutputStart = aOutput;
-    mOutputEnd   = aOutput + aOutputMaxLen;
 
     if (strcmp(aArgs[1], "spinel") == 0)
     {
@@ -103,9 +100,6 @@ otError RcpCapsDiag::DiagProcess(char *aArgs[], uint8_t aArgsLength, char *aOutp
     {
         error = OT_ERROR_INVALID_COMMAND;
     }
-
-    mOutputStart = nullptr;
-    mOutputEnd   = nullptr;
 
 exit:
     return error;
@@ -137,6 +131,12 @@ void RcpCapsDiag::TestSpinelCommands(Category aCategory)
     }
 }
 
+void RcpCapsDiag::SetDiagOutputCallback(otPlatDiagOutputCallback aCallback, void *aContext)
+{
+    mOutputCallback = aCallback;
+    mOutputContext  = aContext;
+}
+
 void RcpCapsDiag::OutputResult(const SpinelEntry &aEntry, otError error)
 {
     static constexpr uint8_t  kSpaceLength            = 1;
@@ -161,9 +161,9 @@ void RcpCapsDiag::Output(const char *aFormat, ...)
 
     va_start(args, aFormat);
 
-    if ((mOutputStart != nullptr) && (mOutputEnd != nullptr) && (mOutputStart < mOutputEnd))
+    if (mOutputCallback != nullptr)
     {
-        mOutputStart += vsnprintf(mOutputStart, static_cast<size_t>(mOutputEnd - mOutputStart), aFormat, args);
+        mOutputCallback(aFormat, args, mOutputContext);
     }
 
     va_end(args);

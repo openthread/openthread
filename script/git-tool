@@ -80,10 +80,15 @@ try_clone()
 {
     local dest_dir
 
-    dest_dir="$(git clone "$@" 2>&1 | tee | cut -d\' -f2)"
+    if [[ $1 == no-depend ]]; then
+        shift
+        git clone "$@" 2>&1
+    else
+        dest_dir="$(git clone "$@" 2>&1 | tee | cut -d\' -f2)"
 
-    cd "${dest_dir}"
-    get_pr_body | apply_dependencies
+        cd "${dest_dir}"
+        get_pr_body | apply_dependencies
+    fi
 }
 
 print_help()

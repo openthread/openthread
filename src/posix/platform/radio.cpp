@@ -498,11 +498,55 @@ exit:
 #endif
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-otError otPlatDiagProcess(otInstance *aInstance,
-                          uint8_t     aArgsLength,
-                          char       *aArgs[],
-                          char       *aOutput,
-                          size_t      aOutputMaxLen)
+static otPlatDiagOutputCallback sDiagOutputCallback  = nullptr;
+static void                    *sDiagCallbackContext = nullptr;
+static char                    *sDiagOutput          = nullptr;
+static uint16_t                 sDiagOutputLen       = 0;
+
+static void handleDiagOutput(const char *aFormat, va_list aArguments, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aContext);
+    int charsWritten;
+
+    VerifyOrExit((sDiagOutput != nullptr) && (sDiagOutputLen > 0));
+    charsWritten = vsnprintf(sDiagOutput, sDiagOutputLen, aFormat, aArguments);
+    VerifyOrExit(charsWritten > 0);
+    charsWritten = (sDiagOutputLen <= charsWritten) ? sDiagOutputLen : charsWritten;
+    sDiagOutput += charsWritten;
+    sDiagOutputLen -= charsWritten;
+
+exit:
+    return;
+}
+
+static void setDiagOutput(char *aOutput, size_t aSize)
+{
+    sDiagOutput    = aOutput;
+    sDiagOutputLen = static_cast<uint16_t>(aSize);
+    GetRadioSpinel().SetDiagOutputCallback(handleDiagOutput, nullptr);
+}
+
+static void freeDiagOutput(void)
+{
+    sDiagOutput    = nullptr;
+    sDiagOutputLen = 0;
+    GetRadioSpinel().SetDiagOutputCallback(sDiagOutputCallback, sDiagCallbackContext);
+}
+
+void otPlatDiagSetOutputCallback(otInstance *aInstance, otPlatDiagOutputCallback aCallback, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sDiagOutputCallback  = aCallback;
+    sDiagCallbackContext = aContext;
+
+    GetRadioSpinel().SetDiagOutputCallback(aCallback, aContext);
+#if OPENTHREAD_POSIX_CONFIG_RCP_CAPS_DIAG_ENABLE
+    GetRcpCapsDiag().SetDiagOutputCallback(aCallback, aContext);
+#endif
+}
+
+otError otPlatDiagProcess(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[])
 {
     // deliver the platform specific diags commands to radio only ncp.
     OT_UNUSED_VARIABLE(aInstance);
@@ -513,7 +557,7 @@ otError otPlatDiagProcess(otInstance *aInstance,
 #if OPENTHREAD_POSIX_CONFIG_RCP_CAPS_DIAG_ENABLE
     if (strcmp(aArgs[0], "rcpcaps") == 0)
     {
-        return GetRcpCapsDiag().DiagProcess(aArgs, aArgsLength, aOutput, aOutputMaxLen);
+        return GetRcpCapsDiag().DiagProcess(aArgs, aArgsLength);
     }
 #endif
 
@@ -522,12 +566,12 @@ otError otPlatDiagProcess(otInstance *aInstance,
         cur += snprintf(cur, static_cast<size_t>(end - cur), "%s ", aArgs[index]);
     }
 
-    return GetRadioSpinel().PlatDiagProcess(cmd, aOutput, aOutputMaxLen);
+    return GetRadioSpinel().PlatDiagProcess(cmd);
 }
 
 void otPlatDiagModeSet(bool aMode)
 {
-    SuccessOrExit(GetRadioSpinel().PlatDiagProcess(aMode ? "start" : "stop", nullptr, 0));
+    SuccessOrExit(GetRadioSpinel().PlatDiagProcess(aMode ? "start" : "stop"));
     GetRadioSpinel().SetDiagEnabled(aMode);
 
 exit:
@@ -541,7 +585,7 @@ void otPlatDiagTxPowerSet(int8_t aTxPower)
     char cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
 
     snprintf(cmd, sizeof(cmd), "power %d", aTxPower);
-    SuccessOrExit(GetRadioSpinel().PlatDiagProcess(cmd, nullptr, 0));
+    SuccessOrExit(GetRadioSpinel().PlatDiagProcess(cmd));
 
 exit:
     return;
@@ -552,7 +596,7 @@ void otPlatDiagChannelSet(uint8_t aChannel)
     char cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
 
     snprintf(cmd, sizeof(cmd), "channel %d", aChannel);
-    SuccessOrExit(GetRadioSpinel().PlatDiagProcess(cmd, nullptr, 0));
+    SuccessOrExit(GetRadioSpinel().PlatDiagProcess(cmd));
 
 exit:
     return;
@@ -564,7 +608,7 @@ otError otPlatDiagGpioSet(uint32_t aGpio, bool aValue)
     char    cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
 
     snprintf(cmd, sizeof(cmd), "gpio set %d %d", aGpio, aValue);
-    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd, nullptr, 0));
+    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd));
 
 exit:
     return error;
@@ -577,12 +621,16 @@ otError otPlatDiagGpioGet(uint32_t aGpio, bool *aValue)
     char    output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
     char   *str;
 
+    setDiagOutput(output, sizeof(output));
+
     snprintf(cmd, sizeof(cmd), "gpio get %d", aGpio);
-    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd, output, sizeof(output)));
+    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd));
     VerifyOrExit((str = strtok(output, "\r")) != nullptr, error = OT_ERROR_FAILED);
     *aValue = static_cast<bool>(atoi(str));
 
 exit:
+    freeDiagOutput();
+
     return error;
 }
 
@@ -592,7 +640,7 @@ otError otPlatDiagGpioSetMode(uint32_t aGpio, otGpioMode aMode)
     char    cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
 
     snprintf(cmd, sizeof(cmd), "gpio mode %d %s", aGpio, aMode == OT_GPIO_MODE_INPUT ? "in" : "out");
-    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd, nullptr, 0));
+    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd));
 
 exit:
     return error;
@@ -605,8 +653,10 @@ otError otPlatDiagGpioGetMode(uint32_t aGpio, otGpioMode *aMode)
     char    output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
     char   *str;
 
+    setDiagOutput(output, sizeof(output));
+
     snprintf(cmd, sizeof(cmd), "gpio mode %d", aGpio);
-    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd, output, sizeof(output)));
+    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd));
     VerifyOrExit((str = strtok(output, "\r")) != nullptr, error = OT_ERROR_FAILED);
 
     if (strcmp(str, "in") == 0)
@@ -623,6 +673,8 @@ otError otPlatDiagGpioGetMode(uint32_t aGpio, otGpioMode *aMode)
     }
 
 exit:
+    freeDiagOutput();
+
     return error;
 }
 
@@ -648,8 +700,10 @@ otError otPlatDiagRadioGetPowerSettings(otInstance *aInstance,
     assert((aTargetPower != nullptr) && (aActualPower != nullptr) && (aRawPowerSetting != nullptr) &&
            (aRawPowerSettingLength != nullptr));
 
+    setDiagOutput(output, sizeof(output));
+
     snprintf(cmd, sizeof(cmd), "powersettings %d", aChannel);
-    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd, output, sizeof(output)));
+    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd));
     snprintf(fmt, sizeof(fmt), "TargetPower(0.01dBm): %%d\r\nActualPower(0.01dBm): %%d\r\nRawPowerSetting: %%%us\r\n",
              kRawPowerStringSize);
     VerifyOrExit(sscanf(output, fmt, &targetPower, &actualPower, rawPowerSetting) == 3, error = OT_ERROR_FAILED);
@@ -659,6 +713,8 @@ otError otPlatDiagRadioGetPowerSettings(otInstance *aInstance,
     *aActualPower = static_cast<int16_t>(actualPower);
 
 exit:
+    freeDiagOutput();
+
     return error;
 }
 
@@ -682,7 +738,7 @@ otError otPlatDiagRadioSetRawPowerSetting(otInstance    *aInstance,
         VerifyOrExit(nbytes < static_cast<int>(sizeof(cmd)), error = OT_ERROR_INVALID_ARGS);
     }
 
-    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd, nullptr, 0));
+    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd));
 
 exit:
     return error;
@@ -700,12 +756,16 @@ otError otPlatDiagRadioGetRawPowerSetting(otInstance *aInstance,
 
     assert((aRawPowerSetting != nullptr) && (aRawPowerSettingLength != nullptr));
 
+    setDiagOutput(output, sizeof(output));
+
     snprintf(cmd, sizeof(cmd), "rawpowersetting");
-    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd, output, sizeof(output)));
+    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd));
     VerifyOrExit((str = strtok(output, "\r")) != nullptr, error = OT_ERROR_FAILED);
     SuccessOrExit(error = ot::Utils::CmdLineParser::ParseAsHexString(str, *aRawPowerSettingLength, aRawPowerSetting));
 
 exit:
+    freeDiagOutput();
+
     return error;
 }
 
@@ -717,7 +777,7 @@ otError otPlatDiagRadioRawPowerSettingEnable(otInstance *aInstance, bool aEnable
     char    cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
 
     snprintf(cmd, sizeof(cmd), "rawpowersetting %s", aEnable ? "enable" : "disable");
-    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd, nullptr, 0));
+    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd));
 
 exit:
     return error;
@@ -731,7 +791,7 @@ otError otPlatDiagRadioTransmitCarrier(otInstance *aInstance, bool aEnable)
     char    cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
 
     snprintf(cmd, sizeof(cmd), "cw %s", aEnable ? "start" : "stop");
-    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd, nullptr, 0));
+    SuccessOrExit(error = GetRadioSpinel().PlatDiagProcess(cmd));
 
 exit:
     return error;
@@ -744,7 +804,7 @@ otError otPlatDiagRadioTransmitStream(otInstance *aInstance, bool aEnable)
     char cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
 
     snprintf(cmd, sizeof(cmd), "stream %s", aEnable ? "start" : "stop");
-    return GetRadioSpinel().PlatDiagProcess(cmd, nullptr, 0);
+    return GetRadioSpinel().PlatDiagProcess(cmd);
 }
 
 void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)

@@ -37,6 +37,8 @@
 #include "platform-posix.h"
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_CAPS_DIAG_ENABLE
+#include <openthread/platform/diag.h>
+
 #include "lib/spinel/radio_spinel.hpp"
 #include "lib/spinel/spinel.h"
 
@@ -58,8 +60,8 @@ public:
      */
     explicit RcpCapsDiag(Spinel::RadioSpinel &aRadioSpinel)
         : mRadioSpinel(aRadioSpinel)
-        , mOutputStart(nullptr)
-        , mOutputEnd(nullptr)
+        , mOutputCallback(nullptr)
+        , mOutputContext(nullptr)
     {
     }
 
@@ -68,15 +70,22 @@ public:
      *
      * @param[in]   aArgs           The arguments of diagnostics command line.
      * @param[in]   aArgsLength     The number of arguments in @p aArgs.
-     * @param[out]  aOutput         The diagnostics execution result.
-     * @param[in]   aOutputMaxLen   The output buffer size.
      *
      * @retval  OT_ERROR_INVALID_ARGS       The command is supported but invalid arguments provided.
      * @retval  OT_ERROR_NONE               The command is successfully processed.
      * @retval  OT_ERROR_INVALID_COMMAND    The command is not valid or not supported.
      *
      */
-    otError DiagProcess(char *aArgs[], uint8_t aArgsLength, char *aOutput, size_t aOutputMaxLen);
+    otError DiagProcess(char *aArgs[], uint8_t aArgsLength);
+
+    /**
+     * Sets the diag output callback.
+     *
+     * @param[in]  aCallback   A pointer to a function that is called on outputting diag messages.
+     * @param[in]  aContext    A user context pointer.
+     *
+     */
+    void SetDiagOutputCallback(otPlatDiagOutputCallback aCallback, void *aContext);
 
 private:
     template <uint32_t aCommand, spinel_prop_key_t aKey> otError HandleSpinelCommand(void);
@@ -108,9 +117,9 @@ private:
 
     static const struct SpinelEntry sSpinelEntries[];
 
-    Spinel::RadioSpinel &mRadioSpinel;
-    char                *mOutputStart;
-    char                *mOutputEnd;
+    Spinel::RadioSpinel     &mRadioSpinel;
+    otPlatDiagOutputCallback mOutputCallback;
+    void                    *mOutputContext;
 };
 
 } // namespace Posix

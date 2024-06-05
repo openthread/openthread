@@ -99,6 +99,9 @@ void testFreeInstance(otInstance *aInstance)
 
 bool sDiagMode = false;
 
+static otPlatDiagOutputCallback sOutputCallback        = nullptr;
+static void                    *sOutputCallbackContext = nullptr;
+
 extern "C" {
 
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
@@ -225,9 +228,30 @@ exit:
     return error;
 }
 
-OT_TOOL_WEAK void otPlatDiagProcess(otInstance *, uint8_t, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+static void DiagOutput(const char *aFormat, ...)
 {
-    snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", aArgs[0]);
+    va_list args;
+
+    va_start(args, aFormat);
+
+    if (sOutputCallback != nullptr)
+    {
+        sOutputCallback(aFormat, args, sOutputCallbackContext);
+    }
+
+    va_end(args);
+}
+
+OT_TOOL_WEAK void otPlatDiagSetOutputCallback(otInstance *aInstance, otPlatDiagOutputCallback aCallback, void *aContext)
+{
+    sOutputCallback        = aCallback;
+    sOutputCallbackContext = aContext;
+}
+
+OT_TOOL_WEAK otError otPlatDiagProcess(otInstance *, uint8_t, char *aArgs[])
+{
+    DiagOutput("diag feature '%s' is not supported\r\n", aArgs[0]);
+    return OT_ERROR_NONE;
 }
 
 OT_TOOL_WEAK void otPlatDiagModeSet(bool aMode) { sDiagMode = aMode; }

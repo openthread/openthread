@@ -40,6 +40,7 @@
 
 #include <string.h>
 
+#include <openthread/diag.h>
 #include <openthread/platform/radio.h>
 
 #include "common/clearable.hpp"
@@ -66,26 +67,22 @@ public:
      * Processes a factory diagnostics command line.
      *
      * @param[in]   aString        A null-terminated input string.
-     * @param[out]  aOutput        The diagnostics execution result.
-     * @param[in]   aOutputMaxLen  The output buffer size.
      *
      */
-    Error ProcessLine(const char *aString, char *aOutput, size_t aOutputMaxLen);
+    Error ProcessLine(const char *aString);
 
     /**
      * Processes a factory diagnostics command line.
      *
      * @param[in]   aArgsLength    The number of args in @p aArgs.
      * @param[in]   aArgs          The arguments of diagnostics command line.
-     * @param[out]  aOutput        The diagnostics execution result.
-     * @param[in]   aOutputMaxLen  The output buffer size.
      *
      * @retval  kErrorInvalidArgs       The command is supported but invalid arguments provided.
      * @retval  kErrorNone              The command is successfully process.
      * @retval  kErrorNotImplemented    The command is not supported.
      *
      */
-    Error ProcessCmd(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    Error ProcessCmd(uint8_t aArgsLength, char *aArgs[]);
 
     /**
      * Indicates whether or not the factory diagnostics mode is enabled.
@@ -123,13 +120,22 @@ public:
      */
     void TransmitDone(Error aError);
 
+    /**
+     * Sets the diag output callback.
+     *
+     * @param[in]  aCallback   A callback method called to output diag messages.
+     * @param[in]  aContext    A user context pointer.
+     *
+     */
+    void SetOutputCallback(otDiagOutputCallback aCallback, void *aContext);
+
 private:
     static constexpr uint8_t kMaxArgs = OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX;
 
     struct Command
     {
         const char *mName;
-        Error (Diags::*mCommand)(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+        Error (Diags::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
     };
 
     struct Stats : public Clearable<Stats>
@@ -180,30 +186,31 @@ private:
     };
 
     Error ParseCmd(char *aString, uint8_t &aArgsLength, char *aArgs[]);
-    Error ProcessChannel(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    Error ProcessFrame(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    Error ProcessContinuousWave(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    Error ProcessGpio(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    Error ProcessPower(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    Error ProcessRadio(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    Error ProcessRepeat(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    Error ProcessPowerSettings(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    Error ProcessRawPowerSetting(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    Error ProcessSend(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    Error ProcessStart(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    Error ProcessStats(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    Error ProcessStop(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    Error ProcessStream(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    Error ProcessChannel(uint8_t aArgsLength, char *aArgs[]);
+    Error ProcessFrame(uint8_t aArgsLength, char *aArgs[]);
+    Error ProcessContinuousWave(uint8_t aArgsLength, char *aArgs[]);
+    Error ProcessGpio(uint8_t aArgsLength, char *aArgs[]);
+    Error ProcessPower(uint8_t aArgsLength, char *aArgs[]);
+    Error ProcessRadio(uint8_t aArgsLength, char *aArgs[]);
+    Error ProcessRepeat(uint8_t aArgsLength, char *aArgs[]);
+    Error ProcessPowerSettings(uint8_t aArgsLength, char *aArgs[]);
+    Error ProcessRawPowerSetting(uint8_t aArgsLength, char *aArgs[]);
+    Error ProcessSend(uint8_t aArgsLength, char *aArgs[]);
+    Error ProcessStart(uint8_t aArgsLength, char *aArgs[]);
+    Error ProcessStats(uint8_t aArgsLength, char *aArgs[]);
+    Error ProcessStop(uint8_t aArgsLength, char *aArgs[]);
+    Error ProcessStream(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
-    Error ProcessEcho(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    Error ProcessEcho(uint8_t aArgsLength, char *aArgs[]);
 #endif
 
     Error GetRawPowerSetting(RawPowerSetting &aRawPowerSetting);
     Error GetPowerSettings(uint8_t aChannel, PowerSettings &aPowerSettings);
 
     void TransmitPacket(void);
+    void Output(const char *aFormat, ...);
+    void AppendErrorResult(Error aError);
 
-    static void  AppendErrorResult(Error aError, char *aOutput, size_t aOutputMaxLen);
     static Error ParseLong(char *aString, long &aLong);
     static Error ParseBool(char *aString, bool &aBool);
 
@@ -222,6 +229,9 @@ private:
     bool          mRepeatActive;
     bool          mDiagSendOn;
 #endif
+
+    otDiagOutputCallback mOutputCallback;
+    void                *mOutputContext;
 };
 
 } // namespace FactoryDiags

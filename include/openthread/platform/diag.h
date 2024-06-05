@@ -67,27 +67,38 @@ typedef enum
 } otGpioMode;
 
 /**
- * Processes a factory diagnostics command line.
+ * Pointer to callback to output platform diag messages.
  *
- * The output of this function (the content written to @p aOutput) MUST terminate with `\0` and the `\0` is within the
- * output buffer.
+ * @param[in]  aFormat     The format string.
+ * @param[in]  aArguments  The format string arguments.
+ * @param[out] aContext    A pointer to the user context.
+ *
+ */
+typedef void (*otPlatDiagOutputCallback)(const char *aFormat, va_list aArguments, void *aContext);
+
+/**
+ * Sets the platform diag output callback.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ * @param[in]  aCallback   A pointer to a function that is called on outputting diag messages.
+ * @param[in]  aContext    A pointer to the user context.
+ *
+ */
+void otPlatDiagSetOutputCallback(otInstance *aInstance, otPlatDiagOutputCallback aCallback, void *aContext);
+
+/**
+ * Processes a factory diagnostics command line.
  *
  * @param[in]   aInstance       The OpenThread instance for current request.
  * @param[in]   aArgsLength     The number of arguments in @p aArgs.
  * @param[in]   aArgs           The arguments of diagnostics command line.
- * @param[out]  aOutput         The diagnostics execution result.
- * @param[in]   aOutputMaxLen   The output buffer size.
  *
  * @retval  OT_ERROR_INVALID_ARGS       The command is supported but invalid arguments provided.
  * @retval  OT_ERROR_NONE               The command is successfully process.
  * @retval  OT_ERROR_INVALID_COMMAND    The command is not valid or not supported.
  *
  */
-otError otPlatDiagProcess(otInstance *aInstance,
-                          uint8_t     aArgsLength,
-                          char       *aArgs[],
-                          char       *aOutput,
-                          size_t      aOutputMaxLen);
+otError otPlatDiagProcess(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[]);
 
 /**
  * Enables/disables the factory diagnostics mode.
