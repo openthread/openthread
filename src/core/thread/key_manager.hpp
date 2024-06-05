@@ -221,16 +221,24 @@ class KeyManager : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * Determines whether to apply or ignore key switch guard when updating the key sequence.
+     * Defines bit-flag constants specifying how to handle key sequence update used in `KeySeqUpdateFlags`.
+     *
+     */
+    enum KeySeqUpdateFlag : uint8_t
+    {
+        kApplySwitchGuard    = (1 << 0), ///< Apply key switch guard check.
+        kForceUpdate         = (0 << 0), ///< Ignore key switch guard check and forcibly update.
+        kResetGuardTimer     = (1 << 1), ///< On key seq change, reset the guard timer.
+        kGuardTimerUnchanged = (0 << 1), ///< On key seq change, leave guard timer unchanged.
+    };
+
+    /**
+     * Represents a combination of `KeySeqUpdateFlag` bits.
      *
      * Used as input by `SetCurrentKeySequence()`.
      *
      */
-    enum KeySequenceUpdateMode : uint8_t
-    {
-        kApplyKeySwitchGuard, ///< Apply key switch guard check before setting the new key sequence.
-        kForceUpdate,         ///< Ignore key switch guard check and forcibly update the key sequence to new value.
-    };
+    typedef uint8_t KeySeqUpdateFlags;
 
     /**
      * Initializes the object.
@@ -342,14 +350,12 @@ public:
     /**
      * Sets the current key sequence value.
      *
-     * If @p aMode is `kApplyKeySwitchGuard`, the current key switch guard timer is checked and only if it is zero, key
-     * sequence will be updated.
-     *
      * @param[in]  aKeySequence    The key sequence value.
-     * @param[in]  aUpdateMode     Whether or not to apply the key switch guard.
+     * @param[in]  aFlags          Specify behavior when updating the key sequence, i.e., whether or not to apply the
+     *                             key switch guard or reset guard timer upon change.
      *
      */
-    void SetCurrentKeySequence(uint32_t aKeySequence, KeySequenceUpdateMode aUpdateMode);
+    void SetCurrentKeySequence(uint32_t aKeySequence, KeySeqUpdateFlags aFlags);
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**

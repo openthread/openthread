@@ -371,7 +371,8 @@ void Mle::Restore(void)
 
     SuccessOrExit(Get<Settings>().Read(networkInfo));
 
-    Get<KeyManager>().SetCurrentKeySequence(networkInfo.GetKeySequence(), KeyManager::kForceUpdate);
+    Get<KeyManager>().SetCurrentKeySequence(networkInfo.GetKeySequence(),
+                                            KeyManager::kForceUpdate | KeyManager::kGuardTimerUnchanged);
     Get<KeyManager>().SetMleFrameCounter(networkInfo.GetMleFrameCounter());
     Get<KeyManager>().SetAllMacFrameCounters(networkInfo.GetMacFrameCounter(), /* aSetIfLarger */ false);
 
@@ -2721,32 +2722,42 @@ void Mle::ProcessKeySequence(RxInfo &aRxInfo)
     //                    neighbor.
     //                 Otherwise larger key seq MUST NOT be adopted.
 
+    bool                          isNextKeySeq;
+    KeyManager::KeySeqUpdateFlags flags = 0;
+
     VerifyOrExit(aRxInfo.mKeySequence > Get<KeyManager>().GetCurrentKeySequence());
+
+    isNextKeySeq = (aRxInfo.mKeySequence - Get<KeyManager>().GetCurrentKeySequence() == 1);
 
     switch (aRxInfo.mClass)
     {
     case RxInfo::kAuthoritativeMessage:
-        Get<KeyManager>().SetCurrentKeySequence(aRxInfo.mKeySequence, KeyManager::kForceUpdate);
+        flags = KeyManager::kForceUpdate;
         break;
 
     case RxInfo::kPeerMessage:
-        if ((aRxInfo.mNeighbor != nullptr) && aRxInfo.mNeighbor->IsStateValid())
+        VerifyOrExit(aRxInfo.IsNeighborStateValid());
+
+        if (!isNextKeySeq)
         {
-            if (aRxInfo.mKeySequence - Get<KeyManager>().GetCurrentKeySequence() == 1)
-            {
-                Get<KeyManager>().SetCurrentKeySequence(aRxInfo.mKeySequence, KeyManager::kApplyKeySwitchGuard);
-            }
-            else
-            {
-                LogInfo("Large key seq jump in peer class msg from 0x%04x ", aRxInfo.mNeighbor->GetRloc16());
-                ReestablishLinkWithNeighbor(*aRxInfo.mNeighbor);
-            }
+            LogInfo("Large key seq jump in peer class msg from 0x%04x ", aRxInfo.mNeighbor->GetRloc16());
+            ReestablishLinkWithNeighbor(*aRxInfo.mNeighbor);
+            ExitNow();
         }
+
+        flags = KeyManager::kApplySwitchGuard;
         break;
 
     case RxInfo::kUnknown:
-        break;
+        ExitNow();
     }
+
+    if (isNextKeySeq)
+    {
+        flags |= KeyManager::kResetGuardTimer;
+    }
+
+    Get<KeyManager>().SetCurrentKeySequence(aRxInfo.mKeySequence, flags);
 
 exit:
     return;
