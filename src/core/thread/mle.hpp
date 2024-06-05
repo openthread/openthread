@@ -1024,6 +1024,7 @@ private:
         Error AppendXtalAccuracyTlv(void);
         Error AppendActiveTimestampTlv(void);
         Error AppendPendingTimestampTlv(void);
+        Error AppendActiveAndPendingTimestampTlvs(void);
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         Error AppendTimeRequestTlv(void);
         Error AppendTimeParameterTlv(void);
