@@ -40,6 +40,8 @@
 namespace ot {
 namespace Spinel {
 
+bool SpinelDriver::sIsCoprocessorReady = false;
+
 constexpr spinel_tid_t sTid = 1; ///< In Spinel Driver, only use Tid as 1.
 
 SpinelDriver::SpinelDriver(void)
@@ -50,7 +52,6 @@ SpinelDriver::SpinelDriver(void)
     , mIid(SPINEL_HEADER_INVALID_IID)
     , mSpinelVersionMajor(-1)
     , mSpinelVersionMinor(-1)
-    , mIsCoprocessorReady(false)
 {
     memset(mVersion, 0, sizeof(mVersion));
 
@@ -124,13 +125,13 @@ void SpinelDriver::ResetCoprocessor(bool aSoftwareReset)
     bool resetDone = false;
 
     // Avoid resetting the device twice in a row in Multipan RCP architecture
-    EXPECT(!mIsCoprocessorReady, resetDone = true);
+    EXPECT(!sIsCoprocessorReady, resetDone = true);
 
     mWaitingKey = SPINEL_PROP_LAST_STATUS;
 
     if (aSoftwareReset && (SendReset(SPINEL_RESET_STACK) == OT_ERROR_NONE) && (WaitResponse() == OT_ERROR_NONE))
     {
-        EXPECT(mIsCoprocessorReady, resetDone = false);
+        EXPECT(sIsCoprocessorReady, resetDone = false);
         LogCrit("Software reset co-processor successfully");
         EXIT_NOW(resetDone = true);
     }
@@ -256,7 +257,7 @@ otError SpinelDriver::WaitResponse(void)
             LogWarn("Wait for response timeout");
             EXIT_NOW(error = OT_ERROR_RESPONSE_TIMEOUT);
         }
-    } while (mIsWaitingForResponse || !mIsCoprocessorReady);
+    } while (mIsWaitingForResponse || !sIsCoprocessorReady);
 
     mWaitingKey = SPINEL_PROP_LAST_STATUS;
 
@@ -349,7 +350,7 @@ void SpinelDriver::HandleInitialFrame(const uint8_t *aFrame, uint16_t aLength, u
             mRxFrameBuffer.Clear();
 
             LogInfo("co-processor reset: %s", spinel_status_to_cstr(status));
-            mIsCoprocessorReady = true;
+            sIsCoprocessorReady = true;
         }
         else
         {

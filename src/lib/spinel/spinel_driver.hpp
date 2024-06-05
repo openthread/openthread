@@ -98,7 +98,7 @@ public:
      *
      * This method is used to skip a reset.
      */
-    void SetCoprocessorReady(void) { mIsCoprocessorReady = true; }
+    void SetCoprocessorReady(void) { sIsCoprocessorReady = true; }
 
     /**
      * Send a reset command to the co-processor.
@@ -300,8 +300,8 @@ private:
     int mSpinelVersionMajor;
     int mSpinelVersionMinor;
 
-    bool mIsCoprocessorReady;
-    char mVersion[kVersionStringSize];
+    static bool sIsCoprocessorReady;
+    char        mVersion[kVersionStringSize];
 
     Array<unsigned int, kCapsBufferSize> mCoprocessorCaps;
 };
