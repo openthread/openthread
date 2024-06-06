@@ -26,6 +26,8 @@
   POSSIBILITY OF SUCH DAMAGE.
 """
 
+import base64
+
 
 def get_int_in_range(min_value, max_value):
     while True:
@@ -61,3 +63,12 @@ def select_device_by_user_input(tcat_devices):
     print('Selected ', device)
 
     return device
+
+
+def base64_string(bindata):
+    return base64.b64encode(bindata).decode('ascii')
+
+
+def load_cert_pem(fn):
+    with open(fn, 'r') as file:
+        return file.read()

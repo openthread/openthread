@@ -231,7 +231,7 @@ void SecureTransport::HandleReceive(Message &aMessage, const Ip6::MessageInfo &a
     }
     else
     {
-        // Once DTLS session is started, communicate only with a peer.
+        // Once DTLS session is started, communicate only with a single peer.
         VerifyOrExit((mMessageInfo.GetPeerAddr() == aMessageInfo.GetPeerAddr()) &&
                      (mMessageInfo.GetPeerPort() == aMessageInfo.GetPeerPort()));
     }
@@ -725,28 +725,28 @@ Error SecureTransport::GetThreadAttributeFromCertificate(const mbedtls_x509_crt 
         ret = mbedtls_asn1_get_bool(&p, endExtData, &isCritical);
         VerifyOrExit(ret == 0 || ret == MBEDTLS_ERR_ASN1_UNEXPECTED_TAG, error = kErrorParse);
 
-        // Data should be octet string type
+        // Data must be octet string type, see https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
         VerifyOrExit(mbedtls_asn1_get_tag(&p, endExtData, &len, MBEDTLS_ASN1_OCTET_STRING) == 0, error = kErrorParse);
         VerifyOrExit(endExtData == p + len, error = kErrorParse);
 
-        if (isCritical || extnOid.len != sizeof(oid))
+        // TODO: extensions with isCritical == 1 that are unknown should lead to rejection of the entire cert.
+        if (extnOid.len == sizeof(oid) && memcmp(extnOid.p, oid, sizeof(oid)) == 0)
         {
-            continue;
-        }
-
-        if (memcmp(extnOid.p, oid, sizeof(oid)) == 0)
-        {
-            *aAttributeLength = len;
+            // per RFC 5280, octet string must contain ASN.1 Type Length Value octets
+            VerifyOrExit(len >= 2, error = kErrorParse);
+            VerifyOrExit(*(p + 1) == len - 2, error = kErrorParse); // check TLV Length, not Type.
+            *aAttributeLength = len - 2; // strip the ASN.1 Type Length bytes from embedded TLV
 
             if (aAttributeBuffer != nullptr)
             {
-                VerifyOrExit(len <= attributeBufferSize, error = kErrorNoBufs);
-                memcpy(aAttributeBuffer, p, len);
+                VerifyOrExit(*aAttributeLength <= attributeBufferSize, error = kErrorNoBufs);
+                memcpy(aAttributeBuffer, p + 2, *aAttributeLength);
             }
 
             error = kErrorNone;
             break;
         }
+        p += len;
     }
 
 exit:

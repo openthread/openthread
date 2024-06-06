@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a Python implementation of Bluetooth-Based Thread Commissioning client, based on Thread's TCAT (Thread Commissioning over Authenticated TLS) functionality.
+This is a Python implementation of Bluetooth-Based Thread Commissioning (BBTC) client, based on Thread's TCAT (Thread Commissioning over Authenticated TLS) functionality.
 
 ## Installation
 
@@ -12,8 +12,6 @@ If you don't have the poetry module installed (check with `poetry --version`), i
 python3 -m pip install poetry
 ```
 
-Thread uses Elliptic Curve Cryptography (ECC), so we use the `ecparam` `openssl` argument to generate the keys.
-
 ```
 poetry install
 ```
@@ -21,6 +19,12 @@ poetry install
 This will install all the required modules to a virtual environment, which can be used by calling `poetry run <COMMAND>` from the project directory.
 
 ## Usage
+
+To see the supported commandline arguments of BBTC client, use:
+
+```
+poetry run python3 bbtc.py --help
+```
 
 In order to connect to a TCAT device, enter the project directory and run:
 
@@ -43,7 +47,27 @@ poetry run python3 bbtc.py --name 'Thread BLE'
 
 The application will connect to the first matching device discovered and set up a secure TLS channel. The user is then presented with the CLI.
 
-## Commands
+## Usage with a specific TCAT Commissioner identity
+
+The TCAT Commissioner's certificate specifies what permissions it has obtained for specific features of managing a TCAT Device. By default, the identity in the `auth` directory is used. In order to use a different TCAT Commissioner certificate (identity), use the `--cert_path` argument, as follows:
+
+```bash
+poetry run python3 bbtc.py --cert_path <certs-path> {<device specifier> | --scan}
+```
+
+where `<certs-path>` is the directory where the private key, certificate, and CA certificate of the TCAT Commissioner are stored.
+
+For example to use a pre-configured identity `CommCert2` (related to Thread certification tests):
+
+```
+poetry run python3 bbtc.py --cert_path ./auth-cert/CommCert2 --name 'Thread BLE'
+```
+
+The `auth-cert` directory contains some other identities too, for testing purposes. Refer to Thread TCAT test plan documents for details.
+
+See [GENERATING_CERTIFICATES.md](GENERATING_CERTIFICATES.md) for details on generating own certificates.
+
+## TCAT Commissioner CLI Commands
 
 The application supports the following interactive CLI commands:
 
@@ -53,4 +77,4 @@ The application supports the following interactive CLI commands:
 - `thread stop` - Disable Thread interface.
 - `hello` - Send "hello world" application data and read the response.
 - `exit` - Close the connection and exit.
-- `dataset` - View and manipulate current dataset. See `dataset help` for more information.
+- `dataset` - View and manipulate current dataset. Use `dataset help` for more information.

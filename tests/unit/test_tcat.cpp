@@ -35,40 +35,43 @@
 
 #include <openthread/ble_secure.h>
 
-#define OT_TCAT_X509_CERT                                                  \
-    "-----BEGIN CERTIFICATE-----\r\n"                                      \
-    "MIIBmDCCAT+gAwIBAgIEAQIDBDAKBggqhkjOPQQDAjBvMQswCQYDVQQGEwJYWDEQ\r\n" \
-    "MA4GA1UECBMHTXlTdGF0ZTEPMA0GA1UEBxMGTXlDaXR5MQ8wDQYDVQQLEwZNeVVu\r\n" \
-    "aXQxETAPBgNVBAoTCE15VmVuZG9yMRkwFwYDVQQDExB3d3cubXl2ZW5kb3IuY29t\r\n" \
-    "MB4XDTIzMTAxNjEwMzk1NFoXDTI0MTAxNjEwMzk1NFowIjEgMB4GA1UEAxMXbXl2\r\n" \
-    "ZW5kb3IuY29tL3RjYXQvbXlkZXYwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAQB\r\n" \
-    "aWwFDNj1bpQIdN+Kp2cHWw55U/+fa+OmZnoy1B4BOT+822jdwPBuyXWAQoBdYdQJ\r\n" \
-    "ff4RgmhczyV4PhArPIuAoxYwFDASBgkrBgEEAYLfKgMEBQABAQEBMAoGCCqGSM49\r\n" \
-    "BAMCA0cAMEQCIBEHxiEDij26y6V77Q311Gj4CZAuZuPGXZpnzL2BLk7bAiAlFk6G\r\n" \
-    "mYGzkcrYyssFI9HlPgrisWoMmgummaTtCuvrEw==\r\n"                         \
-    "-----END CERTIFICATE-----\r\n"
+#define OT_TCAT_X509_CERT                                                \
+    "-----BEGIN CERTIFICATE-----\n"                                      \
+    "MIIB6TCCAZCgAwIBAgICNekwCgYIKoZIzj0EAwIwcTEmMCQGA1UEAwwdVGhyZWFk\n" \
+    "IENlcnRpZmljYXRpb24gRGV2aWNlQ0ExGTAXBgNVBAoMEFRocmVhZCBHcm91cCBJ\n" \
+    "bmMxEjAQBgNVBAcMCVNhbiBSYW1vbjELMAkGA1UECAwCQ0ExCzAJBgNVBAYTAlVT\n" \
+    "MCAXDTI0MDUwNzA5Mzk0NVoYDzI5OTkxMjMxMDkzOTQ1WjA8MSEwHwYDVQQDDBhU\n" \
+    "Q0FUIEV4YW1wbGUgRGV2aWNlQ2VydDExFzAVBgNVBAUTDjQ3MjMtOTgzMy0wMDAx\n" \
+    "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE11h/4vKZXVXv+1GDZo066spItloT\n" \
+    "dpCi0bux0jvpQSHLdQBIc+40zVCxMDRUvbX//vJKGsSJKOVUlCojQ2wIdqNLMEkw\n" \
+    "HwYDVR0jBBgwFoAUX6sbKWiIodS0MaiGYefnZlnt+BkwEAYJKwYBBAGC3yoCBAMC\n" \
+    "AQUwFAYJKwYBBAGC3yoDBAcEBSABAQEBMAoGCCqGSM49BAMCA0cAMEQCIHWu+Rd1\n" \
+    "VRlzrD8KbuyJcJFTXh2sQ9UIrFIA7+4e/GVcAiAVBdGqTxbt3TGkBBllpafAUB2/\n" \
+    "s0GJj7E33oblqy5eHQ==\n"                                             \
+    "-----END CERTIFICATE-----\n"
 
-#define OT_TCAT_PRIV_KEY                                                   \
-    "-----BEGIN EC PRIVATE KEY-----\r\n"                                   \
-    "MHcCAQEEIDeJ6lVQKiOIBxKwTZp6TkU5QVHt9pvXOR9CGpPBI3DhoAoGCCqGSM49\r\n" \
-    "AwEHoUQDQgAEAWlsBQzY9W6UCHTfiqdnB1sOeVP/n2vjpmZ6MtQeATk/vNto3cDw\r\n" \
-    "bsl1gEKAXWHUCX3+EYJoXM8leD4QKzyLgA==\r\n"                             \
-    "-----END EC PRIVATE KEY-----\r\n"
+#define OT_TCAT_PRIV_KEY                                                 \
+    "-----BEGIN EC PRIVATE KEY-----\n"                                   \
+    "MHcCAQEEIIqKM1QTlNaquV74W6Viz/ggXoLqlPOP6LagSyaFO3oUoAoGCCqGSM49\n" \
+    "AwEHoUQDQgAE11h/4vKZXVXv+1GDZo066spItloTdpCi0bux0jvpQSHLdQBIc+40\n" \
+    "zVCxMDRUvbX//vJKGsSJKOVUlCojQ2wIdg==\n"                             \
+    "-----END EC PRIVATE KEY-----\n"
 
-#define OT_TCAT_TRUSTED_ROOT_CERTIFICATE                                   \
-    "-----BEGIN CERTIFICATE-----\r\n"                                      \
-    "MIICCDCCAa2gAwIBAgIJAIKxygBXoH+5MAoGCCqGSM49BAMCMG8xCzAJBgNVBAYT\r\n" \
-    "AlhYMRAwDgYDVQQIEwdNeVN0YXRlMQ8wDQYDVQQHEwZNeUNpdHkxDzANBgNVBAsT\r\n" \
-    "Bk15VW5pdDERMA8GA1UEChMITXlWZW5kb3IxGTAXBgNVBAMTEHd3dy5teXZlbmRv\r\n" \
-    "ci5jb20wHhcNMjMxMDE2MTAzMzE1WhcNMjYxMDE2MTAzMzE1WjBvMQswCQYDVQQG\r\n" \
-    "EwJYWDEQMA4GA1UECBMHTXlTdGF0ZTEPMA0GA1UEBxMGTXlDaXR5MQ8wDQYDVQQL\r\n" \
-    "EwZNeVVuaXQxETAPBgNVBAoTCE15VmVuZG9yMRkwFwYDVQQDExB3d3cubXl2ZW5k\r\n" \
-    "b3IuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEWdyzPAXGKeZY94OhHAWX\r\n" \
-    "HzJfQIjGSyaOzlgL9OEFw2SoUDncLKPGwfPAUSfuMyEkzszNDM0HHkBsDLqu4n25\r\n" \
-    "/6MyMDAwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQU4EynoSw9eDKZEVPkums2\r\n" \
-    "IWLAJCowCgYIKoZIzj0EAwIDSQAwRgIhAMYGGL9xShyE6P9wEU+MAYF6W3CzdrwV\r\n" \
-    "kuerX1encIH2AiEA5rq490NUobM1Au43roxJq1T6Z43LscPVbGZfULD1Jq0=\r\n"     \
-    "-----END CERTIFICATE-----\r\n"
+#define OT_TCAT_TRUSTED_ROOT_CERTIFICATE                                 \
+    "-----BEGIN CERTIFICATE-----\n"                                      \
+    "MIICOzCCAeGgAwIBAgIJAKOc2hehOGoBMAoGCCqGSM49BAMCMHExJjAkBgNVBAMM\n" \
+    "HVRocmVhZCBDZXJ0aWZpY2F0aW9uIERldmljZUNBMRkwFwYDVQQKDBBUaHJlYWQg\n" \
+    "R3JvdXAgSW5jMRIwEAYDVQQHDAlTYW4gUmFtb24xCzAJBgNVBAgMAkNBMQswCQYD\n" \
+    "VQQGEwJVUzAeFw0yNDA1MDMyMDAyMThaFw00NDA0MjgyMDAyMThaMHExJjAkBgNV\n" \
+    "BAMMHVRocmVhZCBDZXJ0aWZpY2F0aW9uIERldmljZUNBMRkwFwYDVQQKDBBUaHJl\n" \
+    "YWQgR3JvdXAgSW5jMRIwEAYDVQQHDAlTYW4gUmFtb24xCzAJBgNVBAgMAkNBMQsw\n" \
+    "CQYDVQQGEwJVUzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABGy850VBIPTkN3oL\n" \
+    "x++zIUsZk2k26w4fuieFz9oNvjdb5W14+Yf3mvGWsl4NHyLxqhmamVAR4h7zWRlZ\n" \
+    "0XyMVpKjYjBgMB4GA1UdEQQXMBWBE3RvbUB0aHJlYWRncm91cC5vcmcwDgYDVR0P\n" \
+    "AQH/BAQDAgGGMA8GA1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYEFF+rGyloiKHUtDGo\n" \
+    "hmHn52ZZ7fgZMAoGCCqGSM49BAMCA0gAMEUCIQCTq1qjPZs9fAJB6ppTXs588Pnu\n" \
+    "eVFOwC8bd//D99KiHAIgU84kwFHIyDvFqu6y+u1hFqBGsiuTmKwZ2PHhVe/xK1k=\n" \
+    "-----END CERTIFICATE-----\n"
 
 namespace ot {
 
@@ -104,9 +107,14 @@ static void HandleBleSecureConnect(otInstance *aInstance, bool aConnected, bool 
 
 void TestTcat(void)
 {
-    const char         kPskdVendor[] = "J01NM3";
-    const char         kUrl[]        = "dummy_url";
-    constexpr uint16_t kConnectionId = 0;
+    const char         kPskdVendor[]                  = "J01NM3";
+    const char         kUrl[]                         = "dummy_url";
+    constexpr uint16_t kConnectionId                  = 0;
+    const int          kCertificateThreadVersion      = 2;
+    const int          kCertificateAuthorizationField = 3;
+    const uint8_t      expectedTcatAuthField[5]       = {0x20, 0x01, 0x01, 0x01, 0x01};
+    uint8_t            attributeBuffer[8];
+    size_t             attributeLen;
 
     TestBleSecure ble;
     Instance     *instance = testInitInstance();
@@ -129,10 +137,20 @@ void TestTcat(void)
     SuccessOrQuit(otBleSecureTcatStart(instance, nullptr));
 
     // Validate connection callbacks when platform informs that peer has connected/disconnected
+    VerifyOrQuit(!otBleSecureIsConnected(instance));
     otPlatBleGapOnConnected(instance, kConnectionId);
     VerifyOrQuit(!ble.IsConnected() && ble.IsBleConnectionOpen());
     otPlatBleGapOnDisconnected(instance, kConnectionId);
     VerifyOrQuit(!ble.IsConnected() && !ble.IsBleConnectionOpen());
+
+    // Verify that Thread-attribute parsing isn't available yet when not connected as client or server.
+    attributeLen = sizeof(attributeBuffer);
+    VerifyOrQuit(otBleSecureGetThreadAttributeFromPeerCertificate(instance, kCertificateAuthorizationField,
+                                                                  &attributeBuffer[0],
+                                                                  &attributeLen) == kErrorInvalidState);
+    attributeLen = sizeof(attributeBuffer);
+    VerifyOrQuit(otBleSecureGetThreadAttributeFromOwnCertificate(
+                     instance, kCertificateThreadVersion, &attributeBuffer[0], &attributeLen) == kErrorInvalidState);
 
     // Validate connection callbacks when calling `otBleSecureDisconnect()`
     otPlatBleGapOnConnected(instance, kConnectionId);
@@ -143,6 +161,22 @@ void TestTcat(void)
     // Validate TLS connection can be started only when peer is connected
     otPlatBleGapOnConnected(instance, kConnectionId);
     SuccessOrQuit(otBleSecureConnect(instance));
+    VerifyOrQuit(otBleSecureIsConnectionActive(instance));
+
+    // Once in TLS client connecting state, the below cert eval functions are available.
+    // Test that the Thread-specific attributes can be decoded properly.
+    attributeLen = 1;
+    SuccessOrQuit(otBleSecureGetThreadAttributeFromOwnCertificate(instance, kCertificateThreadVersion,
+                                                                  &attributeBuffer[0], &attributeLen));
+    VerifyOrQuit(attributeLen == 1 && attributeBuffer[0] >= kThreadVersion1p4);
+
+    static_assert(5 == sizeof(expectedTcatAuthField), "expectedTcatAuthField size incorrect for test");
+    attributeLen = 5;
+    SuccessOrQuit(otBleSecureGetThreadAttributeFromOwnCertificate(instance, kCertificateAuthorizationField,
+                                                                  &attributeBuffer[0], &attributeLen));
+    VerifyOrQuit(attributeLen == 5 && memcmp(&expectedTcatAuthField, &attributeBuffer, attributeLen) == 0);
+
+    // Validate TLS connection can be started only when peer is connected
     otBleSecureDisconnect(instance);
     VerifyOrQuit(otBleSecureConnect(instance) == kErrorInvalidState);
 

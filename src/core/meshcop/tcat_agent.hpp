@@ -240,6 +240,7 @@ public:
     enum TcatCertificateAttribute
     {
         kCertificateDomainName         = 1,
+        kCertificateThreadVersion      = 2,
         kCertificateAuthorizationField = 3,
         kCertificateNetworkName        = 4,
         kCertificateExtendedPanId      = 5,

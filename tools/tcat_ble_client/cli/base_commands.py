@@ -27,7 +27,7 @@
 """
 
 from ble.ble_connection_constants import BBTC_SERVICE_UUID, BBTC_TX_CHAR_UUID, \
-    BBTC_RX_CHAR_UUID, SERVER_COMMON_NAME
+    BBTC_RX_CHAR_UUID
 from ble.ble_stream import BleStream
 from ble.ble_stream_secure import BleStreamSecure
 from ble import ble_scanner
@@ -160,6 +160,6 @@ class ScanCommand(Command):
         )
 
         print('Setting up secure channel...')
-        await ble_sstream.do_handshake(hostname=SERVER_COMMON_NAME)
+        await ble_sstream.do_handshake()
         print('Done')
         context['ble_sstream'] = ble_sstream

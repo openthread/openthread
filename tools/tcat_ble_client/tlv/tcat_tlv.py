@@ -31,6 +31,7 @@ from enum import Enum
 class TcatTLVType(Enum):
     RESPONSE_W_STATUS = 0x01
     RESPONSE_W_PAYLOAD = 0x02
+    DISCONNECT = 0x09
     ACTIVE_DATASET = 0x20
     DECOMMISSION = 0x60
     APPLICATION = 0x82

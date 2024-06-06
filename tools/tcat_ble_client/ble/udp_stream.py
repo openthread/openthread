@@ -26,11 +26,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 """
 
-from itertools import count, takewhile
-from typing import Iterator
 import logging
-import time
-from asyncio import sleep
 import socket
 
 logger = logging.getLogger(__name__)
