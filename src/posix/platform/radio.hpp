@@ -32,6 +32,7 @@
 #include "hdlc_interface.hpp"
 #include "logger.hpp"
 #include "radio_url.hpp"
+#include "rcp_caps_diag.hpp"
 #include "spi_interface.hpp"
 #include "spinel_manager.hpp"
 #include "vendor_interface.hpp"
@@ -86,6 +87,16 @@ public:
      */
     Spinel::RadioSpinel &GetRadioSpinel(void) { return mRadioSpinel; }
 
+    /**
+     * Acts as an accessor to the RCP capability diagnostic instance used by the radio.
+     *
+     * @returns A reference to the RCP capability diagnostic instance.
+     *
+     */
+#if OPENTHREAD_POSIX_CONFIG_RCP_CAPS_DIAG_ENABLE
+    RcpCapsDiag &GetRcpCapsDiag(void) { return mRcpCapsDiag; }
+#endif
+
 private:
     void ProcessRadioUrl(const RadioUrl &aRadioUrl);
     void ProcessMaxPowerTable(const RadioUrl &aRadioUrl);
@@ -109,6 +120,10 @@ private:
     Spinel::VendorRadioSpinel mRadioSpinel;
 #else
     Spinel::RadioSpinel     mRadioSpinel;
+#endif
+
+#if OPENTHREAD_POSIX_CONFIG_RCP_CAPS_DIAG_ENABLE
+    RcpCapsDiag mRcpCapsDiag;
 #endif
 };
 
