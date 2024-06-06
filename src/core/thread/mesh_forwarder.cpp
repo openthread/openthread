@@ -1505,12 +1505,20 @@ void MeshForwarder::HandleFragment(FrameData            &aFrameData,
             // Security Check: only consider reassembly buffers that had the same Security Enabled setting.
             if (msg.GetLength() == fragmentHeader.GetDatagramSize() &&
                 msg.GetDatagramTag() == fragmentHeader.GetDatagramTag() &&
-                msg.GetOffset() == fragmentHeader.GetDatagramOffset() &&
+                msg.GetOffset() <= fragmentHeader.GetDatagramOffset() &&
                 msg.GetOffset() + aFrameData.GetLength() <= fragmentHeader.GetDatagramSize() &&
                 msg.IsLinkSecurityEnabled() == aLinkInfo.IsLinkSecurityEnabled())
             {
-                message = &msg;
-                break;
+                if(msg.GetOffset() < fragmentHeader.GetDatagramOffset())
+                {
+                    LogDebg("Received duplicate fragment with a matching fragmentation offset, tag and security");
+                    ExitNow(error = kErrorDrop);
+                }
+                else
+                {
+                    message = &msg;
+                    break;
+                }
             }
         }
 
