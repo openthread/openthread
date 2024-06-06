@@ -122,10 +122,11 @@ void TestTcat(void)
     otBleSecureSetSslAuthMode(instance, true);
 
     // Validate BLE secure and Tcat start APIs
-    VerifyOrQuit(otBleSecureTcatStart(instance, &vendorInfo, nullptr) == kErrorInvalidState);
+    SuccessOrQuit(otBleSecureSetTcatVendorInfo(instance, &vendorInfo));
+    VerifyOrQuit(otBleSecureTcatStart(instance, nullptr) == kErrorInvalidState);
     SuccessOrQuit(otBleSecureStart(instance, HandleBleSecureConnect, nullptr, true, &ble));
     VerifyOrQuit(otBleSecureStart(instance, HandleBleSecureConnect, nullptr, true, nullptr) == kErrorAlready);
-    SuccessOrQuit(otBleSecureTcatStart(instance, &vendorInfo, nullptr));
+    SuccessOrQuit(otBleSecureTcatStart(instance, nullptr));
 
     // Validate connection callbacks when platform informs that peer has connected/disconnected
     otPlatBleGapOnConnected(instance, kConnectionId);

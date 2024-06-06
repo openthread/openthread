@@ -35,6 +35,7 @@
 #include <openthread/platform/ble.h>
 
 #include "openthread/error.h"
+#include "openthread/tcat.h"
 #include "utils/code_utils.h"
 
 #define PLAT_BLE_MSG_DATA_MAX 2048
@@ -85,6 +86,16 @@ static void deinitFds(void)
         close(sFd);
         sFd = -1;
     }
+}
+
+otError otPlatBleGetAdvertisementBuffer(otInstance *aInstance, uint8_t **aAdvertisementBuffer)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    static uint8_t sAdvertisementBuffer[OT_TCAT_ADVERTISEMENT_MAX_LEN];
+
+    *aAdvertisementBuffer = sAdvertisementBuffer;
+
+    return OT_ERROR_NONE;
 }
 
 otError otPlatBleEnable(otInstance *aInstance)
@@ -213,4 +224,26 @@ OT_TOOL_WEAK void otPlatBleGattServerOnWriteRequest(otInstance             *aIns
     /* In case of rcp there is a problem with linking to otPlatBleGattServerOnWriteRequest
      * which is available in FTD/MTD library.
      */
+}
+
+void otPlatBleGetLinkCapabilities(otInstance *aInstance, otBleLinkCapabilities *aBleLinkCapabilities)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    aBleLinkCapabilities->mGattNotifications = 1;
+    aBleLinkCapabilities->mL2CapDirect       = 0;
+    aBleLinkCapabilities->mRsv               = 0;
+}
+
+otError otPlatBleGapAdvSetData(otInstance *aInstance, uint8_t *aAdvertisementData, uint16_t aAdvertisementLen)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aAdvertisementData);
+    OT_UNUSED_VARIABLE(aAdvertisementLen);
+    return OT_ERROR_NONE;
+}
+
+bool otPlatBleSupportsMultiRadio(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return false;
 }

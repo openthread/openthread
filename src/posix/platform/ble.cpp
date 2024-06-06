@@ -26,6 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <openthread/tcat.h>
 #include <openthread/platform/ble.h>
 
 otError otPlatBleEnable(otInstance *aInstance)
@@ -38,6 +39,16 @@ otError otPlatBleDisable(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatBleGetAdvertisementBuffer(otInstance *aInstance, uint8_t **aAdvertisementBuffer)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    static uint8_t sAdvertisementBuffer[OT_TCAT_ADVERTISEMENT_MAX_LEN];
+
+    *aAdvertisementBuffer = sAdvertisementBuffer;
+
+    return OT_ERROR_NONE;
 }
 
 otError otPlatBleGapAdvStart(otInstance *aInstance, uint16_t aInterval)
@@ -72,4 +83,27 @@ otError otPlatBleGattServerIndicate(otInstance *aInstance, uint16_t aHandle, con
     OT_UNUSED_VARIABLE(aHandle);
     OT_UNUSED_VARIABLE(aPacket);
     return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+void otPlatBleGetLinkCapabilities(otInstance *aInstance, otBleLinkCapabilities *aBleLinkCapabilities)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    aBleLinkCapabilities->mGattNotifications = 1;
+    aBleLinkCapabilities->mL2CapDirect       = 0;
+    aBleLinkCapabilities->mRsv               = 0;
+}
+
+otError otPlatBleGapAdvSetData(otInstance *aInstance, uint8_t *aAdvertisementData, uint16_t aAdvertisementLen)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aAdvertisementData);
+    OT_UNUSED_VARIABLE(aAdvertisementLen);
+    return OT_ERROR_NONE;
+}
+
+bool otPlatBleSupportsMultiRadio(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return false;
 }
