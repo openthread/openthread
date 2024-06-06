@@ -275,12 +275,14 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 
     for (; optind < aArgCount; optind++)
     {
-        VerifyOrDie(aConfig->mPlatformConfig.mRadioUrlNum < OT_ARRAY_LENGTH(aConfig->mPlatformConfig.mRadioUrls),
+        VerifyOrDie(aConfig->mPlatformConfig.mCoprocessorUrls.mNum <
+                        OT_ARRAY_LENGTH(aConfig->mPlatformConfig.mCoprocessorUrls.mUrls),
                     OT_EXIT_INVALID_ARGUMENTS);
-        aConfig->mPlatformConfig.mRadioUrls[aConfig->mPlatformConfig.mRadioUrlNum++] = aArgVector[optind];
+        aConfig->mPlatformConfig.mCoprocessorUrls.mUrls[aConfig->mPlatformConfig.mCoprocessorUrls.mNum++] =
+            aArgVector[optind];
     }
 
-    if (aConfig->mPlatformConfig.mRadioUrlNum == 0)
+    if (aConfig->mPlatformConfig.mCoprocessorUrls.mNum == 0)
     {
         PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
     }

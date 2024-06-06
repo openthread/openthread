@@ -82,20 +82,20 @@ static void processStateChange(otChangedFlags aFlags, void *aContext)
 }
 #endif
 
-static const char *get802154RadioUrl(otPlatformConfig *aPlatformConfig)
+static const char *get802154RadioUrl(const otPlatformCoprocessorUrls &aUrls)
 {
     const char *radioUrl = nullptr;
 
-    for (uint8_t i = 0; i < aPlatformConfig->mRadioUrlNum; i++)
+    for (uint8_t i = 0; i < aUrls.mNum; i++)
     {
-        ot::Posix::RadioUrl url(aPlatformConfig->mRadioUrls[i]);
+        ot::Posix::RadioUrl url(aUrls.mUrls[i]);
 
         if (strcmp(url.GetProtocol(), "trel") == 0)
         {
             continue;
         }
 
-        radioUrl = aPlatformConfig->mRadioUrls[i];
+        radioUrl = aUrls.mUrls[i];
         break;
     }
 
@@ -108,13 +108,13 @@ static const char *getTrelRadioUrl(otPlatformConfig *aPlatformConfig)
 {
     const char *radioUrl = nullptr;
 
-    for (uint8_t i = 0; i < aPlatformConfig->mRadioUrlNum; i++)
+    for (uint8_t i = 0; i < aPlatformConfig->mCoprocessorUrls.mNum; i++)
     {
-        ot::Posix::RadioUrl url(aPlatformConfig->mRadioUrls[i]);
+        ot::Posix::RadioUrl url(aPlatformConfig->mCoprocessorUrls.mUrls[i]);
 
         if (strcmp(url.GetProtocol(), "trel") == 0)
         {
-            radioUrl = aPlatformConfig->mRadioUrls[i];
+            radioUrl = aPlatformConfig->mCoprocessorUrls.mUrls[i];
             break;
         }
     }
@@ -132,7 +132,7 @@ void otSysSetInfraNetif(const char *aInfraNetifName, int aIcmp6Socket)
 
 void platformInitRcpMode(otPlatformConfig *aPlatformConfig)
 {
-    platformRadioInit(get802154RadioUrl(aPlatformConfig));
+    platformRadioInit(get802154RadioUrl(aPlatformConfig->mCoprocessorUrls));
 
     // For Dry-Run option, only init the co-processor.
     VerifyOrExit(!aPlatformConfig->mDryRun);
@@ -181,7 +181,10 @@ void platformInit(otPlatformConfig *aPlatformConfig)
 
     platformAlarmInit(aPlatformConfig->mSpeedUpFactor, aPlatformConfig->mRealTimeSignal);
 
-    sCoprocessorType = platformSpinelManagerInit(get802154RadioUrl(aPlatformConfig));
+    if (sCoprocessorType == OT_COPROCESSOR_UNKNOWN)
+    {
+        sCoprocessorType = platformSpinelManagerInit(get802154RadioUrl(aPlatformConfig->mCoprocessorUrls));
+    }
 
     switch (sCoprocessorType)
     {
@@ -247,6 +250,12 @@ void platformSetUp(otPlatformConfig *aPlatformConfig)
 
 exit:
     return;
+}
+
+CoprocessorType otSysInitCoprocessor(otPlatformCoprocessorUrls *aUrls)
+{
+    sCoprocessorType = platformSpinelManagerInit(get802154RadioUrl(*aUrls));
+    return sCoprocessorType;
 }
 
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
