@@ -163,23 +163,6 @@ public:
     Error Save(const Dataset &aDataset) { return Save(aDataset, /* aAllowOlderTimestamp */ false); }
 
     /**
-     * Sets the Operational Dataset for the partition read from a given message.
-     *
-     * Also updates the non-volatile local version if the partition's Operational Dataset is newer. If Active
-     * Operational Dataset is changed, applies the configuration to to Thread interface.
-     *
-     * @param[in]  aTimestamp  The timestamp for the Operational Dataset.
-     * @param[in]  aMessage    The message to read from.
-     * @param[in]  aOffset     The offset where the Operational Dataset begins.
-     * @param[in]  aLength     The length of the Operational Dataset.
-     *
-     * @retval kErrorNone     Successfully parsed the Dataset from the @p aMessage and saved it.
-     * @retval kErrorParse    Could not parse the Dataset from @p aMessage.
-     *
-     */
-    Error Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint16_t aLength);
-
-    /**
      * Retrieves the channel mask from local dataset.
      *
      * @param[out]  aChannelMask  A reference to the channel mask.

@@ -2999,19 +2999,16 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
     {
         // We previously confirmed the message contains an
         // Active or a Pending Dataset TLV before setting the
-        // corresponding `saveDataset` flag, so we can safely
-        // `IgnoreError()` on `FindTlvValueOffset()`.
+        // corresponding `saveDataset` flag.
 
         if (saveActiveDataset)
         {
-            IgnoreError(Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kActiveDataset, offset, length));
-            IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Save(activeTimestamp, aRxInfo.mMessage, offset, length));
+            IgnoreError(aRxInfo.mMessage.ReadAndSaveActiveDataset(activeTimestamp));
         }
 
         if (savePendingDataset)
         {
-            IgnoreError(Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kPendingDataset, offset, length));
-            IgnoreError(Get<MeshCoP::PendingDatasetManager>().Save(pendingTimestamp, aRxInfo.mMessage, offset, length));
+            IgnoreError(aRxInfo.mMessage.ReadAndSavePendingDataset(pendingTimestamp));
         }
     }
 
@@ -3313,8 +3310,6 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     MeshCoP::Timestamp timestamp;
     uint16_t           networkDataOffset;
     uint16_t           networkDataLength;
-    uint16_t           offset;
-    uint16_t           length;
 
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
@@ -3335,11 +3330,9 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     switch (Tlv::Find<ActiveTimestampTlv>(aRxInfo.mMessage, timestamp))
     {
     case kErrorNone:
-        if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kActiveDataset, offset, length) == kErrorNone)
-        {
-            SuccessOrExit(error =
-                              Get<MeshCoP::ActiveDatasetManager>().Save(timestamp, aRxInfo.mMessage, offset, length));
-        }
+        error = aRxInfo.mMessage.ReadAndSaveActiveDataset(timestamp);
+        error = (error == kErrorNotFound) ? kErrorNone : error;
+        SuccessOrExit(error);
         break;
 
     case kErrorNotFound:
@@ -3358,10 +3351,7 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     switch (Tlv::Find<PendingTimestampTlv>(aRxInfo.mMessage, timestamp))
     {
     case kErrorNone:
-        if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kPendingDataset, offset, length) == kErrorNone)
-        {
-            IgnoreError(Get<MeshCoP::PendingDatasetManager>().Save(timestamp, aRxInfo.mMessage, offset, length));
-        }
+        IgnoreError(aRxInfo.mMessage.ReadAndSavePendingDataset(timestamp));
         break;
 
     case kErrorNotFound:
@@ -4907,13 +4897,13 @@ Error Mle::TxMessage::AppendActiveDatasetTlv(void) { return AppendDatasetTlv(Mes
 
 Error Mle::TxMessage::AppendPendingDatasetTlv(void) { return AppendDatasetTlv(MeshCoP::Dataset::kPending); }
 
-Error Mle::TxMessage::AppendDatasetTlv(MeshCoP::Dataset::Type mDatasetType)
+Error Mle::TxMessage::AppendDatasetTlv(MeshCoP::Dataset::Type aDatasetType)
 {
     Error            error = kErrorNotFound;
     Tlv::Type        tlvType;
     MeshCoP::Dataset dataset;
 
-    switch (mDatasetType)
+    switch (aDatasetType)
     {
     case MeshCoP::Dataset::kActive:
         error   = Get<MeshCoP::ActiveDatasetManager>().Read(dataset);
@@ -4938,7 +4928,7 @@ Error Mle::TxMessage::AppendDatasetTlv(MeshCoP::Dataset::Type mDatasetType)
     // message. The Timestamp is appended as its own MLE TLV to the
     // message.
 
-    dataset.RemoveTimestamp(mDatasetType);
+    dataset.RemoveTimestamp(aDatasetType);
 
     error = Tlv::AppendTlv(*this, tlvType, dataset.GetBytes(), dataset.GetLength());
 
@@ -5069,6 +5059,45 @@ Error Mle::RxMessage::ReadLeaderDataTlv(LeaderData &aLeaderData) const
     SuccessOrExit(error = Tlv::FindTlv(*this, leaderDataTlv));
     VerifyOrExit(leaderDataTlv.IsValid(), error = kErrorParse);
     leaderDataTlv.Get(aLeaderData);
+
+exit:
+    return error;
+}
+
+Error Mle::RxMessage::ReadAndSaveActiveDataset(const MeshCoP::Timestamp &aActiveTimestamp) const
+{
+    return ReadAndSaveDataset(MeshCoP::Dataset::kActive, aActiveTimestamp);
+}
+
+Error Mle::RxMessage::ReadAndSavePendingDataset(const MeshCoP::Timestamp &aPendingTimestamp) const
+{
+    return ReadAndSaveDataset(MeshCoP::Dataset::kPending, aPendingTimestamp);
+}
+
+Error Mle::RxMessage::ReadAndSaveDataset(MeshCoP::Dataset::Type    aDatasetType,
+                                         const MeshCoP::Timestamp &aTimestamp) const
+{
+    Error            error   = kErrorNone;
+    Tlv::Type        tlvType = (aDatasetType == MeshCoP::Dataset::kActive) ? Tlv::kActiveDataset : Tlv::kPendingDataset;
+    MeshCoP::Dataset dataset;
+    uint16_t         offset;
+    uint16_t         length;
+
+    SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, tlvType, offset, length));
+
+    SuccessOrExit(error = dataset.SetFrom(*this, offset, length));
+    SuccessOrExit(error = dataset.ValidateTlvs());
+    SuccessOrExit(error = dataset.WriteTimestamp(aDatasetType, aTimestamp));
+
+    switch (aDatasetType)
+    {
+    case MeshCoP::Dataset::kActive:
+        error = Get<MeshCoP::ActiveDatasetManager>().Save(dataset);
+        break;
+    case MeshCoP::Dataset::kPending:
+        error = Get<MeshCoP::PendingDatasetManager>().Save(dataset);
+        break;
+    }
 
 exit:
     return error;

@@ -267,22 +267,6 @@ void DatasetManager::Clear(void)
     SignalDatasetChange();
 }
 
-Error DatasetManager::Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint16_t aLength)
-{
-    Error   error = kErrorNone;
-    Dataset dataset;
-
-    SuccessOrExit(error = dataset.SetFrom(aMessage, aOffset, aLength));
-    SuccessOrExit(error = dataset.ValidateTlvs());
-
-    SuccessOrExit(error = dataset.WriteTimestamp(mType, aTimestamp));
-
-    error = Save(dataset);
-
-exit:
-    return error;
-}
-
 Error DatasetManager::Save(const Dataset &aDataset, bool aAllowOlderTimestamp)
 {
     Error error = kErrorNone;
