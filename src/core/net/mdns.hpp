@@ -759,11 +759,12 @@ private:
     static constexpr uint32_t kMaxInitialQueryDelay     = 120; // msec
     static constexpr uint32_t kRandomDelayReuseInterval = 2;   // msec
 
-    static constexpr uint32_t kUnspecifiedTtl = 0;
-    static constexpr uint32_t kDefaultTtl     = 120;
-    static constexpr uint32_t kDefaultKeyTtl  = kDefaultTtl;
-    static constexpr uint32_t kNsecTtl        = 4500;
-    static constexpr uint32_t kServicesPtrTtl = 4500;
+    static constexpr uint32_t kUnspecifiedTtl       = 0;
+    static constexpr uint32_t kDefaultTtl           = 120;
+    static constexpr uint32_t kDefaultKeyTtl        = kDefaultTtl;
+    static constexpr uint32_t kLegacyUnicastNsecTtl = 10;
+    static constexpr uint32_t kNsecTtl              = 4500;
+    static constexpr uint32_t kServicesPtrTtl       = 4500;
 
     static constexpr uint16_t kClassQuestionUnicastFlag = (1U << 15);
     static constexpr uint16_t kClassCacheFlushFlag      = (1U << 15);
@@ -858,6 +859,7 @@ private:
         TimeMilli mAnswerTime;
         bool      mIsProbe;
         bool      mUnicastResponse;
+        bool      mLegacyUnicastResponse;
     };
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -896,16 +898,19 @@ private:
     public:
         // Keeps track of record state and timings.
 
+        static constexpr uint32_t kMaxLegacyUnicastTtl = 10; // seconds
+
         RecordInfo(void) { Clear(); }
 
-        bool     IsPresent(void) const { return mIsPresent; }
-        uint32_t GetTtl(void) const { return mTtl; }
+        bool IsPresent(void) const { return mIsPresent; }
 
         template <typename UintType> void UpdateProperty(UintType &aProperty, UintType aValue);
         void UpdateProperty(AddressArray &aAddrProperty, const Ip6::Address *aAddrs, uint16_t aNumAddrs);
         void UpdateProperty(Heap::String &aStringProperty, const char *aString);
         void UpdateProperty(Heap::Data &aDataProperty, const uint8_t *aData, uint16_t aLength);
-        void UpdateTtl(uint32_t aTtl);
+
+        uint32_t GetTtl(bool aIsLegacyUnicast = false) const;
+        void     UpdateTtl(uint32_t aTtl);
 
         void     StartAnnouncing(void);
         bool     ShouldAppendTo(TxMessage &aResponse, TimeMilli aNow) const;
@@ -1162,7 +1167,7 @@ private:
         void  AppendPtrRecordTo(TxMessage &aTxMessage, Section aSection, SubType *aSubType = nullptr);
         void  AppendKeyRecordTo(TxMessage &aTxMessage, Section aSection);
         void  AppendNsecRecordTo(TxMessage &aTxMessage, Section aSection);
-        void  AppendServiceNameTo(TxMessage &TxMessage, Section aSection);
+        void  AppendServiceNameTo(TxMessage &TxMessage, Section aSection, bool aPerformNameCompression = true);
         void  AppendServiceTypeTo(TxMessage &aTxMessage, Section aSection);
         void  AppendSubServiceTypeTo(TxMessage &aTxMessage, Section aSection);
         void  AppendSubServiceNameTo(TxMessage &aTxMessage, Section aSection, SubType &aSubType);
@@ -1239,10 +1244,11 @@ private:
             kMulticastQuery,
             kMulticastResponse,
             kUnicastResponse,
+            kLegacyUnicastResponse,
         };
 
-        TxMessage(Instance &aInstance, Type aType);
-        TxMessage(Instance &aInstance, Type aType, const AddressInfo &aUnicastDest);
+        TxMessage(Instance &aInstance, Type aType, uint16_t aQueryId = 0);
+        TxMessage(Instance &aInstance, Type aType, const AddressInfo &aUnicastDest, uint16_t aQueryId = 0);
         Type          GetType(void) const { return mType; }
         Message      &SelectMessageFor(Section aSection);
         AppendOutcome AppendLabel(Section aSection, const char *aLabel, uint16_t &aCompressOffset);
@@ -1250,6 +1256,7 @@ private:
         void          AppendServiceType(Section aSection, const char *aServiceType, uint16_t &aCompressOffset);
         void          AppendDomainName(Section aSection);
         void          AppendServicesDnssdName(Section aSection);
+        void          AddQuestionFrom(const Message &aMessage);
         void          IncrementRecordCount(Section aSection) { mRecordCounts.Increment(aSection); }
         void          CheckSizeLimitToPrepareAgain(bool &aPrepareAgain);
         void          SaveCurrentState(void);
@@ -1259,7 +1266,7 @@ private:
     private:
         static constexpr bool kIsSingleLabel = true;
 
-        void          Init(Type aType);
+        void          Init(Type aType, uint16_t aMessageId = 0);
         void          Reinit(void);
         bool          IsOverSizeLimit(void) const;
         AppendOutcome AppendLabels(Section     aSection,
@@ -1382,8 +1389,10 @@ private:
         AddressInfo           mSenderAddress;
         RecordCounts          mRecordCounts;
         uint16_t              mStartOffset[kNumSections];
+        uint16_t              mQueryId;
         bool                  mIsQuery : 1;
         bool                  mIsUnicast : 1;
+        bool                  mIsLegacyUnicast : 1;
         bool                  mTruncated : 1;
         bool                  mIsSelfOriginating : 1;
     };
@@ -1984,7 +1993,9 @@ private:
     static uint32_t DetermineTtl(uint32_t aTtl, uint32_t aDefaultTtl);
     static bool     NameMatch(const Heap::String &aHeapString, const char *aName);
     static bool     NameMatch(const Heap::String &aFirst, const Heap::String &aSecond);
-    static void     UpdateCacheFlushFlagIn(ResourceRecord &aResourceRecord, Section aSection);
+    static void     UpdateCacheFlushFlagIn(ResourceRecord &aResourceRecord,
+                                           Section         aSection,
+                                           bool            aIsLegacyUnicast = false);
     static void     UpdateRecordLengthInMessage(ResourceRecord &aRecord, Message &aMessage, uint16_t aOffset);
     static void     UpdateCompressOffset(uint16_t &aOffset, uint16_t aNewOffse);
     static bool     QuestionMatches(uint16_t aQuestionRrType, uint16_t aRrType);

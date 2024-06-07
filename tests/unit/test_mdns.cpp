@@ -62,17 +62,20 @@ namespace Multicast {
 //---------------------------------------------------------------------------------------------------------------------
 // Constants
 
-static constexpr uint16_t kClassQueryUnicastFlag = (1U << 15);
-static constexpr uint16_t kClassCacheFlushFlag   = (1U << 15);
-static constexpr uint16_t kClassMask             = 0x7fff;
-static constexpr uint16_t kStringSize            = 300;
-static constexpr uint16_t kMaxDataSize           = 400;
-static constexpr uint16_t kNumAnnounces          = 3;
-static constexpr uint16_t kNumInitalQueries      = 3;
-static constexpr uint16_t kNumRefreshQueries     = 4;
-static constexpr bool     kCacheFlush            = true;
-static constexpr uint16_t kMdnsPort              = 5353;
-static constexpr uint32_t kInfraIfIndex          = 1;
+static constexpr uint16_t kClassQueryUnicastFlag  = (1U << 15);
+static constexpr uint16_t kClassCacheFlushFlag    = (1U << 15);
+static constexpr uint16_t kClassMask              = 0x7fff;
+static constexpr uint16_t kStringSize             = 300;
+static constexpr uint16_t kMaxDataSize            = 400;
+static constexpr uint16_t kNumAnnounces           = 3;
+static constexpr uint16_t kNumInitalQueries       = 3;
+static constexpr uint16_t kNumRefreshQueries      = 4;
+static constexpr bool     kCacheFlush             = true;
+static constexpr uint16_t kMdnsPort               = 5353;
+static constexpr uint16_t kEphemeralPort          = 49152;
+static constexpr uint16_t kLegacyUnicastMessageId = 1;
+static constexpr uint16_t kMaxLegacyUnicastTtl    = 10;
+static constexpr uint32_t kInfraIfIndex           = 1;
 
 static const char kDeviceIp6Address[] = "fd01::1";
 
@@ -209,6 +212,7 @@ enum TtlCheckMode : uint8_t
 {
     kZeroTtl,
     kNonZeroTtl,
+    kLegacyUnicastTtl,
 };
 
 enum Section : uint8_t
@@ -371,6 +375,9 @@ struct DnsRecord : public Allocatable<DnsRecord>, public LinkedListEntry<DnsReco
             }
 
             VerifyOrExit(mTtl > 0);
+            break;
+        case kLegacyUnicastTtl:
+            VerifyOrQuit(mTtl <= kMaxLegacyUnicastTtl);
             break;
         }
 
@@ -571,6 +578,7 @@ enum DnsMessageType : uint8_t
     kMulticastQuery,
     kMulticastResponse,
     kUnicastResponse,
+    kLegacyUnicastResponse,
 };
 
 struct DnsMessage : public Allocatable<DnsMessage>, public LinkedListEntry<DnsMessage>
@@ -682,9 +690,15 @@ struct DnsMessage : public Allocatable<DnsMessage>, public LinkedListEntry<DnsMe
             VerifyOrQuit(mUnicastDest.mPort == kMdnsPort);
             VerifyOrQuit(mUnicastDest.GetAddress() == ip6Address);
         }
+
+        if (aType == kLegacyUnicastResponse)
+        {
+            VerifyOrQuit(mHeader.GetMessageId() == kLegacyUnicastMessageId);
+            VerifyOrQuit(mUnicastDest.mPort == kEphemeralPort);
+        }
     }
 
-    static void DetemineFullNameForKey(const Core::Key &aKey, DnsNameString &aFullName)
+    static void DetermineFullNameForKey(const Core::Key &aKey, DnsNameString &aFullName)
     {
         if (aKey.mServiceType != nullptr)
         {
@@ -694,6 +708,22 @@ struct DnsMessage : public Allocatable<DnsMessage>, public LinkedListEntry<DnsMe
         {
             aFullName.Append("%s.local.", aKey.mName);
         }
+    }
+
+    static TtlCheckMode DetermineTtlCheckMode(DnsMessageType aMessageType, bool aIsGoodBye)
+    {
+        TtlCheckMode ttlCheck;
+
+        if (aMessageType == kLegacyUnicastResponse)
+        {
+            ttlCheck = kLegacyUnicastTtl;
+        }
+        else
+        {
+            ttlCheck = aIsGoodBye ? kZeroTtl : kNonZeroTtl;
+        }
+
+        return ttlCheck;
     }
 
     void ValidateAsProbeFor(const Core::Host &aHost, bool aUnicastResponse) const
@@ -735,7 +765,7 @@ struct DnsMessage : public Allocatable<DnsMessage>, public LinkedListEntry<DnsMe
         VerifyOrQuit(mHeader.GetType() == Header::kTypeQuery);
         VerifyOrQuit(!mHeader.IsTruncationFlagSet());
 
-        DetemineFullNameForKey(aKey, fullName);
+        DetermineFullNameForKey(aKey, fullName);
 
         VerifyOrQuit(mQuestions.Contains(fullName, aUnicastResponse));
         VerifyOrQuit(mAuthRecords.ContainsKey(fullName, Data(aKey.mKeyData, aKey.mKeyDataLength), !kCacheFlush,
@@ -745,6 +775,11 @@ struct DnsMessage : public Allocatable<DnsMessage>, public LinkedListEntry<DnsMe
     void Validate(const Core::Host &aHost, Section aSection, GoodBye aIsGoodBye = kNotGoodBye) const
     {
         DnsNameString fullName;
+        TtlCheckMode  ttlCheck;
+
+        bool cacheFlushSet = (mType == kLegacyUnicastResponse) ? !kCacheFlush : kCacheFlush;
+
+        ttlCheck = DetermineTtlCheckMode(mType, aIsGoodBye);
 
         VerifyOrQuit(mHeader.GetType() == Header::kTypeResponse);
 
@@ -752,8 +787,8 @@ struct DnsMessage : public Allocatable<DnsMessage>, public LinkedListEntry<DnsMe
 
         for (uint16_t index = 0; index < aHost.mAddressesLength; index++)
         {
-            VerifyOrQuit(RecordsFor(aSection).ContainsAaaa(fullName, AsCoreType(&aHost.mAddresses[index]), kCacheFlush,
-                                                           aIsGoodBye ? kZeroTtl : kNonZeroTtl, aHost.mTtl));
+            VerifyOrQuit(RecordsFor(aSection).ContainsAaaa(fullName, AsCoreType(&aHost.mAddresses[index]),
+                                                           cacheFlushSet, ttlCheck, aHost.mTtl));
         }
 
         if (!aIsGoodBye && (aSection == kInAnswerSection))
@@ -769,7 +804,11 @@ struct DnsMessage : public Allocatable<DnsMessage>, public LinkedListEntry<DnsMe
     {
         DnsNameString serviceName;
         DnsNameString serviceType;
-        bool          checkNsec = false;
+        TtlCheckMode  ttlCheck;
+        bool          checkNsec     = false;
+        bool          cacheFlushSet = (mType == kLegacyUnicastResponse) ? !kCacheFlush : kCacheFlush;
+
+        ttlCheck = DetermineTtlCheckMode(mType, aIsGoodBye);
 
         VerifyOrQuit(mHeader.GetType() == Header::kTypeResponse);
 
@@ -778,22 +817,23 @@ struct DnsMessage : public Allocatable<DnsMessage>, public LinkedListEntry<DnsMe
 
         if (aCheckFlags & kCheckSrv)
         {
-            VerifyOrQuit(RecordsFor(aSection).ContainsSrv(serviceName, aService, kCacheFlush,
-                                                          aIsGoodBye ? kZeroTtl : kNonZeroTtl, aService.mTtl));
+            VerifyOrQuit(
+                RecordsFor(aSection).ContainsSrv(serviceName, aService, cacheFlushSet, ttlCheck, aService.mTtl));
+
             checkNsec = true;
         }
 
         if (aCheckFlags & kCheckTxt)
         {
-            VerifyOrQuit(RecordsFor(aSection).ContainsTxt(serviceName, aService, kCacheFlush,
-                                                          aIsGoodBye ? kZeroTtl : kNonZeroTtl, aService.mTtl));
+            VerifyOrQuit(
+                RecordsFor(aSection).ContainsTxt(serviceName, aService, cacheFlushSet, ttlCheck, aService.mTtl));
+
             checkNsec = true;
         }
 
         if (aCheckFlags & kCheckPtr)
         {
-            VerifyOrQuit(RecordsFor(aSection).ContainsPtr(serviceType, serviceName, aIsGoodBye ? kZeroTtl : kNonZeroTtl,
-                                                          aService.mTtl));
+            VerifyOrQuit(RecordsFor(aSection).ContainsPtr(serviceType, serviceName, ttlCheck, aService.mTtl));
         }
 
         if (aCheckFlags & kCheckServicesPtr)
@@ -811,12 +851,17 @@ struct DnsMessage : public Allocatable<DnsMessage>, public LinkedListEntry<DnsMe
     void Validate(const Core::Key &aKey, Section aSection, GoodBye aIsGoodBye = kNotGoodBye) const
     {
         DnsNameString fullName;
+        TtlCheckMode  ttlCheck;
+        bool          cacheFlushSet = (mType == kLegacyUnicastResponse) ? !kCacheFlush : kCacheFlush;
 
         VerifyOrQuit(mHeader.GetType() == Header::kTypeResponse);
 
-        DetemineFullNameForKey(aKey, fullName);
-        VerifyOrQuit(RecordsFor(aSection).ContainsKey(fullName, Data(aKey.mKeyData, aKey.mKeyDataLength), kCacheFlush,
-                                                      aIsGoodBye ? kZeroTtl : kNonZeroTtl, aKey.mTtl));
+        DetermineFullNameForKey(aKey, fullName);
+
+        ttlCheck = DetermineTtlCheckMode(mType, aIsGoodBye);
+
+        VerifyOrQuit(RecordsFor(aSection).ContainsKey(fullName, Data(aKey.mKeyData, aKey.mKeyDataLength), cacheFlushSet,
+                                                      ttlCheck, aKey.mTtl));
 
         if (!aIsGoodBye && (aSection == kInAnswerSection))
         {
@@ -1035,7 +1080,7 @@ static void ParseMessage(const Message &aMessage, const Core::AddressInfo *aUnic
         }
         else
         {
-            msg->mType        = kUnicastResponse;
+            msg->mType        = (aUnicastDest->mPort == kEphemeralPort) ? kLegacyUnicastResponse : kUnicastResponse;
             msg->mUnicastDest = *aUnicastDest;
         }
     }
@@ -1045,8 +1090,9 @@ static void ParseMessage(const Message &aMessage, const Core::AddressInfo *aUnic
 
 static void SendQuery(const char *aName,
                       uint16_t    aRecordType,
-                      uint16_t    aRecordClass = ResourceRecord::kClassInternet,
-                      bool        aTruncated   = false)
+                      uint16_t    aRecordClass        = ResourceRecord::kClassInternet,
+                      bool        aTruncated          = false,
+                      bool        aLegacyUnicastQuery = false)
 {
     Message          *message;
     Header            header;
@@ -1059,6 +1105,11 @@ static void SendQuery(const char *aName,
     header.SetType(Header::kTypeQuery);
     header.SetQuestionCount(1);
 
+    if (aLegacyUnicastQuery)
+    {
+        header.SetMessageId(kLegacyUnicastMessageId);
+    }
+
     if (aTruncated)
     {
         header.SetTruncationFlag();
@@ -1069,7 +1120,7 @@ static void SendQuery(const char *aName,
     SuccessOrQuit(message->Append(Question(aRecordType, aRecordClass)));
 
     SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
-    senderAddrInfo.mPort         = kMdnsPort;
+    senderAddrInfo.mPort         = aLegacyUnicastQuery ? kEphemeralPort : kMdnsPort;
     senderAddrInfo.mInfraIfIndex = 0;
 
     Log("Sending query for %s %s", aName, RecordTypeToString(aRecordType));
@@ -1077,7 +1128,11 @@ static void SendQuery(const char *aName,
     otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
 }
 
-static void SendQueryForTwo(const char *aName1, uint16_t aRecordType1, const char *aName2, uint16_t aRecordType2)
+static void SendQueryForTwo(const char *aName1,
+                            uint16_t    aRecordType1,
+                            const char *aName2,
+                            uint16_t    aRecordType2,
+                            bool        aIsLegacyUnicast = false)
 {
     // Send query with two questions.
 
@@ -1099,7 +1154,7 @@ static void SendQueryForTwo(const char *aName1, uint16_t aRecordType1, const cha
     SuccessOrQuit(message->Append(Question(aRecordType2, ResourceRecord::kClassInternet)));
 
     SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
-    senderAddrInfo.mPort         = kMdnsPort;
+    senderAddrInfo.mPort         = aIsLegacyUnicast ? kEphemeralPort : kMdnsPort;
     senderAddrInfo.mInfraIfIndex = 0;
 
     Log("Sending query for %s %s and %s %s", aName1, RecordTypeToString(aRecordType1), aName2,
@@ -6877,6 +6932,181 @@ void TestPassiveCache(void)
     testFreeInstance(sInstance);
 }
 
+void TestLegacyUnicastResponse(void)
+{
+    Core             *mdns = InitTest();
+    Core::Host        host;
+    Core::Service     service;
+    const DnsMessage *dnsMsg;
+    uint16_t          heapAllocations;
+    DnsNameString     fullServiceName;
+    DnsNameString     fullServiceType;
+    DnsNameString     hostFullName;
+    Ip6::Address      hostAddresses[2];
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("TestLegacyUnicastResponse");
+
+    AdvanceTime(1);
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    SuccessOrQuit(hostAddresses[0].FromString("fd00::1:aaaa"));
+    SuccessOrQuit(hostAddresses[1].FromString("fd00::1:bbbb"));
+    host.mHostName        = "host";
+    host.mAddresses       = hostAddresses;
+    host.mAddressesLength = 2;
+    host.mTtl             = 1500;
+    hostFullName.Append("%s.local.", host.mHostName);
+
+    service.mHostName            = host.mHostName;
+    service.mServiceInstance     = "myservice";
+    service.mServiceType         = "_srv._udp";
+    service.mSubTypeLabels       = nullptr;
+    service.mSubTypeLabelsLength = 0;
+    service.mTxtData             = kTxtData1;
+    service.mTxtDataLength       = sizeof(kTxtData1);
+    service.mPort                = 1234;
+    service.mPriority            = 1;
+    service.mWeight              = 2;
+    service.mTtl                 = 1000;
+
+    fullServiceName.Append("%s.%s.local.", service.mServiceInstance, service.mServiceType);
+    fullServiceType.Append("%s.local.", service.mServiceType);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+    sDnsMessages.Clear();
+
+    for (RegCallback &regCallbck : sRegCallbacks)
+    {
+        regCallbck.Reset();
+    }
+
+    SuccessOrQuit(mdns->RegisterHost(host, 0, HandleSuccessCallback));
+    SuccessOrQuit(mdns->RegisterService(service, 1, HandleSuccessCallback));
+
+    AdvanceTime(10 * 1000);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a query with two questions (SRV for service1 and AAAA for host). Validate that no response is sent");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQueryForTwo(fullServiceName.AsCString(), ResourceRecord::kTypeSrv, hostFullName.AsCString(),
+                    ResourceRecord::kTypeAaaa, /* aIsLegacyUnicast */ true);
+
+    AdvanceTime(200);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a query for SRV record and validate the response");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQuery(fullServiceName.AsCString(), ResourceRecord::kTypeSrv, ResourceRecord::kClassInternet,
+              /* aTruncated */ false,
+              /* aLegacyUnicastQuery */ true);
+
+    AdvanceTime(1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    dnsMsg->ValidateHeader(kLegacyUnicastResponse, /* Q */ 1, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 3);
+    dnsMsg->Validate(service, kInAnswerSection, kCheckSrv);
+    dnsMsg->Validate(host, kInAdditionalSection);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a query for TXT record and validate the response");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQuery(fullServiceName.AsCString(), ResourceRecord::kTypeTxt, ResourceRecord::kClassInternet,
+              /* aTruncated */ false,
+              /* aLegacyUnicastQuery */ true);
+
+    AdvanceTime(1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    dnsMsg->ValidateHeader(kLegacyUnicastResponse, /* Q */ 1, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 1);
+    dnsMsg->Validate(service, kInAnswerSection, kCheckTxt);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a query for ANY record and validate the response");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQuery(fullServiceName.AsCString(), ResourceRecord::kTypeAny, ResourceRecord::kClassInternet,
+              /* aTruncated */ false,
+              /* aLegacyUnicastQuery */ true);
+
+    AdvanceTime(1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    dnsMsg->ValidateHeader(kLegacyUnicastResponse, /* Q */ 1, /* Ans */ 2, /* Auth */ 0, /* Addnl */ 3);
+    dnsMsg->Validate(service, kInAnswerSection, kCheckSrv | kCheckTxt);
+    dnsMsg->Validate(host, kInAdditionalSection);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a query for PTR record for service type and validate the response");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQuery(fullServiceType.AsCString(), ResourceRecord::kTypePtr, ResourceRecord::kClassInternet,
+              /* aTruncated */ false,
+              /* aLegacyUnicastQuery */ true);
+
+    AdvanceTime(1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    dnsMsg->ValidateHeader(kLegacyUnicastResponse, /* Q */ 1, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 4);
+    dnsMsg->Validate(service, kInAnswerSection, kCheckPtr);
+    dnsMsg->Validate(service, kInAdditionalSection, kCheckSrv | kCheckTxt);
+    dnsMsg->Validate(host, kInAdditionalSection);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a query for non-existing record and validate the response with NSEC");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQuery(hostFullName.AsCString(), ResourceRecord::kTypeA, ResourceRecord::kClassInternet, /* aTruncated */ false,
+              /* aLegacyUnicastQuery */ true);
+
+    AdvanceTime(1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    dnsMsg->ValidateHeader(kLegacyUnicastResponse, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 1);
+    VerifyOrQuit(dnsMsg->mAdditionalRecords.ContainsNsec(hostFullName, ResourceRecord::kTypeAaaa));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+    sDnsMessages.Clear();
+
+    SuccessOrQuit(mdns->UnregisterHost(host));
+
+    AdvanceTime(15000);
+
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of test");
+
+    testFreeInstance(sInstance);
+}
+
 } // namespace Multicast
 } // namespace Dns
 } // namespace ot
@@ -6904,6 +7134,7 @@ int main(void)
     ot::Dns::Multicast::TestTxtResolver();
     ot::Dns::Multicast::TestIp6AddrResolver();
     ot::Dns::Multicast::TestPassiveCache();
+    ot::Dns::Multicast::TestLegacyUnicastResponse();
 
     printf("All tests passed\n");
 #else
