@@ -114,7 +114,7 @@ class SrpRegisterSingleService(thread_cert.TestCase):
 
         # Start the client again, the same service should be successfully registered.
         client.srp_client_enable_auto_start_mode()
-        self.simulator.go(2)
+        self.simulator.go(15)
 
         self.check_host_and_service(server, client)
 
@@ -132,7 +132,7 @@ class SrpRegisterSingleService(thread_cert.TestCase):
 
         # Start the client again, the same service should be successfully registered.
         client.srp_client_enable_auto_start_mode()
-        self.simulator.go(2)
+        self.simulator.go(15)
 
         self.check_host_and_service(server, client)
 

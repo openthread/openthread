@@ -147,7 +147,7 @@ class TestSrpServerAnycastMode(thread_cert.TestCase):
             # server and uses the proper address and port number.
 
             client.srp_client_enable_auto_start_mode()
-            self.simulator.go(5)
+            self.simulator.go(15)
 
             if addr_mode == 'anycast':
                 server_alocs = server.get_ip6_address(config.ADDRESS_TYPE.ALOC)

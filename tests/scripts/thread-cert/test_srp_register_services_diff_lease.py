@@ -84,7 +84,7 @@ class SrpRegisterServicesDiffLease(thread_cert.TestCase):
         server.srp_server_set_enabled(True)
         client.srp_client_enable_auto_start_mode()
 
-        self.simulator.go(5)
+        self.simulator.go(15)
 
         client.srp_client_set_host_name('host')
         client.srp_client_enable_auto_host_address()

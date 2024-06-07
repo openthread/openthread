@@ -940,7 +940,7 @@ void TestSrpAdvProxy(void)
 
     sProcessedClientCallback = false;
 
-    AdvanceTime(5 * 1000);
+    AdvanceTime(15 * 1000);
 
     // This time we should only see new host registration
     // since that's the only thing that changes
