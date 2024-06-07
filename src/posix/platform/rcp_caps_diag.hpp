@@ -87,7 +87,7 @@ private:
         kCategoryBasic,
         kCategoryThread1_1,
         kCategoryThread1_2,
-        kCategoryOptional,
+        kCategoryUtils,
         kNumCategories,
     };
 
