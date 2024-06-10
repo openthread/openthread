@@ -65,7 +65,7 @@ extern "C" {
  */
 typedef enum otPlatDnssdState
 {
-    OT_PLAT_DNSSD_STOPPED, ///< Stopped and unable to register any service or host.
+    OT_PLAT_DNSSD_STOPPED, ///< Stopped and unable to register any service or host, or start any browser/resolver.
     OT_PLAT_DNSSD_READY,   ///< Running and ready to register service or host.
 } otPlatDnssdState;
 
@@ -148,6 +148,9 @@ typedef struct otPlatDnssdKey
  *
  * The OpenThread stack will call `otPlatDnssdGetState()` (from this callback or later) to get the new state. The
  * platform MUST therefore ensure that the returned state from `otPlatDnssdGetState()` is updated before calling this.
+ *
+ * When the platform signals a state change to `OT_PLAT_DNSSD_STOPPED` using this callback, all active browsers and
+ * resolvers are considered to be stopped, and any previously registered host, service, key entries as removed.
  *
  * @param[in] aInstance The OpenThread instance structure.
  *
@@ -414,6 +417,345 @@ void otPlatDnssdUnregisterKey(otInstance                 *aInstance,
                               const otPlatDnssdKey       *aKey,
                               otPlatDnssdRequestId        aRequestId,
                               otPlatDnssdRegisterCallback aCallback);
+
+//======================================================================================================================
+
+/**
+ * Represents a browse result.
+ *
+ */
+typedef struct otPlatDnssdBrowseResult
+{
+    const char *mServiceType;     ///< The service type (e.g., "_mt._udp").
+    const char *mSubTypeLabel;    ///< The sub-type label if browsing for sub-type, NULL otherwise.
+    const char *mServiceInstance; ///< Service instance label.
+    uint32_t    mTtl;             ///< TTL in seconds. Zero TTL indicates that service is removed.
+    uint32_t    mInfraIfIndex;    ///< The infrastructure network interface index.
+} otPlatDnssdBrowseResult;
+
+/**
+ * Represents the callback function used to report a browse result.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aResult      The browse result.
+ *
+ */
+typedef void (*otPlatDnssdBrowseCallback)(otInstance *aInstance, const otPlatDnssdBrowseResult *aResult);
+
+/**
+ * Represents a service browser.
+ *
+ */
+typedef struct otPlatDnssdBrowser
+{
+    const char               *mServiceType;  ///< The service type (e.g., "_mt._udp"). MUST NOT include domain name.
+    const char               *mSubTypeLabel; ///< The sub-type label if browsing for sub-type, NULL otherwise.
+    uint32_t                  mInfraIfIndex; ///< The infrastructure network interface index.
+    otPlatDnssdBrowseCallback mCallback;     ///< The callback to report result.
+} otPlatDnssdBrowser;
+
+/**
+ * Represents an SRV resolver result.
+ *
+ */
+typedef struct otPlatDnssdSrvResult
+{
+    const char *mServiceInstance; ///< The service instance name label.
+    const char *mServiceType;     ///< The service type.
+    const char *mHostName;        ///< The host name (e.g., "myhost"). Can be NULL when `mTtl` is zero.
+    uint16_t    mPort;            ///< The service port number.
+    uint16_t    mPriority;        ///< The service priority.
+    uint16_t    mWeight;          ///< The service weight.
+    uint32_t    mTtl;             ///< The service TTL in seconds. Zero TTL indicates SRV record is removed.
+    uint32_t    mInfraIfIndex;    ///< The infrastructure network interface index.
+} otPlatDnssdSrvResult;
+
+/**
+ * Represents the callback function used to report an SRV resolve result.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aResult      The SRV resolve result.
+ *
+ */
+typedef void (*otPlatDnssdSrvCallback)(otInstance *aInstance, const otPlatDnssdSrvResult *aResult);
+
+/**
+ * Represents an SRV service resolver.
+ *
+ */
+typedef struct otPlatDnssdSrvResolver
+{
+    const char            *mServiceInstance; ///< The service instance label.
+    const char            *mServiceType;     ///< The service type.
+    uint32_t               mInfraIfIndex;    ///< The infrastructure network interface index.
+    otPlatDnssdSrvCallback mCallback;        ///< The callback to report result.
+} otPlatDnssdSrvResolver;
+
+/**
+ * Represents a TXT resolver result.
+ *
+ */
+typedef struct otPlatDnssdTxtResult
+{
+    const char    *mServiceInstance; ///< The service instance name label.
+    const char    *mServiceType;     ///< The service type.
+    const uint8_t *mTxtData;         ///< Encoded TXT data bytes. Can be NULL when `mTtl` is zero.
+    uint16_t       mTxtDataLength;   ///< Length of TXT data.
+    uint32_t       mTtl;             ///< The TXT data TTL in seconds. Zero TTL indicates record is removed.
+    uint32_t       mInfraIfIndex;    ///< The infrastructure network interface index.
+} otPlatDnssdTxtResult;
+
+/**
+ * Represents the callback function used to report a TXT resolve result.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aResult      The TXT resolve result.
+ *
+ */
+typedef void (*otPlatDnssdTxtCallback)(otInstance *aInstance, const otPlatDnssdTxtResult *aResult);
+
+/**
+ * Represents a TXT service resolver.
+ *
+ */
+typedef struct otPlatDnssdTxtResolver
+{
+    const char            *mServiceInstance; ///< Service instance label.
+    const char            *mServiceType;     ///< Service type.
+    uint32_t               mInfraIfIndex;    ///< The infrastructure network interface index.
+    otPlatDnssdTxtCallback mCallback;
+} otPlatDnssdTxtResolver;
+
+/**
+ * Represents a discovered host address and its TTL.
+ *
+ */
+typedef struct otPlatDnssdAddressAndTtl
+{
+    otIp6Address mAddress; ///< The IPv6 address. For IPv4 address the IPv4-mapped IPv6 address format is used.
+    uint32_t     mTtl;     ///< The TTL in seconds.
+} otPlatDnssdAddressAndTtl;
+
+/**
+ * Represents address resolver result.
+ *
+ */
+typedef struct otPlatDnssdAddressResult
+{
+    const char                     *mHostName;        ///< The host name.
+    const otPlatDnssdAddressAndTtl *mAddresses;       ///< Array of host addresses and their TTL. Can be NULL if empty.
+    uint16_t                        mAddressesLength; ///< Number of entries in `mAddresses` array.
+    uint32_t                        mInfraIfIndex;    ///< The infrastructure network interface index.
+} otPlatDnssdAddressResult;
+
+/**
+ * Represents the callback function use to report a IPv6/IPv4 address resolve result.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aResult      The address resolve result.
+ *
+ */
+typedef void (*otPlatDnssdAddressCallback)(otInstance *aInstance, const otPlatDnssdAddressResult *aResult);
+
+/**
+ * Represents an address resolver.
+ *
+ */
+typedef struct otPlatDnssdAddressResolver
+{
+    const char                *mHostName;     ///< The host name (e.g., "myhost"). MUST NOT contain domain name.
+    uint32_t                   mInfraIfIndex; ///< The infrastructure network interface index.
+    otPlatDnssdAddressCallback mCallback;     ///< The callback to report result.
+} otPlatDnssdAddressResolver;
+
+/**
+ * Starts a service browser.
+ *
+ * Initiates a continuous search for the specified `mServiceType` in @p aBrowser. For sub-type services,
+ * `mSubTypeLabel` specifies the sub-type, for base services,  `mSubTypeLabel` is set to NULL.
+ *
+ * Discovered services should be reported through the `mCallback` function in @p aBrowser. Services that have been
+ * removed are reported with a TTL value of zero. The callback may be invoked immediately with cached information
+ * (if available) and potentially before this function returns. When cached results are used, the reported TTL value
+ * should reflect the original TTL from the last received response.
+ *
+ * Multiple browsers can be started for the same service, provided they use different callback functions.
+ *
+ * The @p aBrowser and all its contained information (strings) are only valid during this call. The platform MUST save
+ * a copy of the information if it wants to retain the information after returning from this function.
+ *
+ * @param[in] aInstance   The OpenThread instance.
+ * @param[in] aBrowser    The browser to be started.
+ *
+ */
+void otPlatDnssdStartBrowser(otInstance *aInstance, const otPlatDnssdBrowser *aBrowser);
+
+/**
+ * Stops a service browser.
+ *
+ * No action is performed if no matching browser with the same service and callback is currently active.
+ *
+ * The @p aBrowser and all its contained information (strings) are only valid during this call. The platform MUST save
+ * a copy of the information if it wants to retain the information after returning from this function.
+ *
+ * @param[in] aInstance   The OpenThread instance.
+ * @param[in] aBrowser    The browser to stop.
+ *
+ */
+void otPlatDnssdStopBrowser(otInstance *aInstance, const otPlatDnssdBrowser *aBrowser);
+
+/**
+ * Starts an SRV record resolver.
+ *
+ * Initiates a continuous SRV record resolver for the specified service in @p aResolver.
+ *
+ * Discovered information should be reported through the `mCallback` function in @p aResolver. When the service is
+ * removed it is reported with a TTL value of zero. In this case, `mHostName` may be NULL and other result fields (such
+ * as `mPort`) will be ignored by the OpenThread stack.
+ *
+ * The callback may be invoked immediately with cached information (if available) and potentially before this function
+ * returns. When cached result is used, the reported TTL value should reflect the original TTL from the last received
+ * response.
+ *
+ * Multiple resolvers can be started for the same service, provided they use different callback functions.
+ *
+ * The @p aResolver and all its contained information (strings) are only valid during this call. The platform MUST save
+ * a copy of the information if it wants to retain the information after returning from this function.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aResolver    The resolver to be started.
+ *
+ */
+void otPlatDnssdStartSrvResolver(otInstance *aInstance, const otPlatDnssdSrvResolver *aResolver);
+
+/**
+ * Stops an SRV record resolver.
+ *
+ * No action is performed if no matching resolver with the same service and callback is currently active.
+ *
+ * The @p aResolver and all its contained information (strings) are only valid during this call. The platform MUST save
+ * a copy of the information if it wants to retain the information after returning from this function.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aResolver    The resolver to stop.
+ *
+ */
+void otPlatDnssdStopSrvResolver(otInstance *aInstance, const otPlatDnssdSrvResolver *aResolver);
+
+/**
+ * Starts a TXT record resolver.
+ *
+ * Initiates a continuous TXT record resolver for the specified service in @p aResolver.
+ *
+ * Discovered information should be reported through the `mCallback` function in @p aResolver. When the TXT record is
+ * removed it is reported with a TTL value of zero. In this case, `mTxtData` may be NULL, and other result fields
+ * (such as `mTxtDataLength`) will be ignored by the OpenThread stack.
+ *
+ * The callback may be invoked immediately with cached information (if available) and potentially before this function
+ * returns. When cached result is used, the reported TTL value should reflect the original TTL from the last received
+ * response.
+ *
+ * Multiple resolvers can be started for the same service, provided they use different callback functions.
+ *
+ * The @p aResolver and all its contained information (strings) are only valid during this call. The platform MUST save
+ * a copy of the information if it wants to retain the information after returning from this function.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aResolver    The resolver to be started.
+ *
+ */
+void otPlatDnssdStartTxtResolver(otInstance *aInstance, const otPlatDnssdTxtResolver *aResolver);
+
+/**
+ * Stops a TXT record resolver.
+ *
+ * No action is performed if no matching resolver with the same service and callback is currently active.
+ *
+ * The @p aResolver and all its contained information (strings) are only valid during this call. The platform MUST save
+ * a copy of the information if it wants to retain the information after returning from this function.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aResolver    The resolver to stop.
+ *
+ */
+void otPlatDnssdStopTxtResolver(otInstance *aInstance, const otPlatDnssdTxtResolver *aResolver);
+
+/**
+ * Starts an IPv6 address resolver.
+ *
+ * Initiates a continuous IPv6 address resolver for the specified host name in @p aResolver.
+ *
+ * Discovered addresses should be reported through the `mCallback` function in @p aResolver. The callback should be
+ * invoked whenever addresses are added or removed, providing an updated list. If all addresses are removed, the
+ * callback should be invoked with an empty list (`mAddressesLength` set to zero).
+ *
+ * The callback may be invoked immediately with cached information (if available) and potentially before this function
+ * returns. When cached result is used, the reported TTL values should reflect the original TTL from the last received
+ * response.
+ *
+ * Multiple resolvers can be started for the same host name, provided they use different callback functions.
+ *
+ * The @p aResolver and all its contained information (strings) are only valid during this call. The platform MUST save
+ * a copy of the information if it wants to retain the information after returning from this function.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aResolver    The resolver to be started.
+ *
+ */
+void otPlatDnssdStartIp6AddressResolver(otInstance *aInstance, const otPlatDnssdAddressResolver *aResolver);
+
+/**
+ * Stops an IPv6 address resolver.
+ *
+ * No action is performed if no matching resolver with the same host name and callback is currently active.
+ *
+ * The @p aResolver and all its contained information (strings) are only valid during this call. The platform MUST save
+ * a copy of the information if it wants to retain the information after returning from this function.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aResolver    The resolver to stop.
+ *
+ */
+void otPlatDnssdStopIp6AddressResolver(otInstance *aInstance, const otPlatDnssdAddressResolver *aResolver);
+
+/**
+ * Starts an IPv4 address resolver.
+ *
+ * Initiates a continuous IPv4 address resolver for the specified host name in @p aResolver.
+ *
+ * Discovered addresses should be reported through the `mCallback` function in @p aResolver. The IPv4 addresses are
+ * represented using the IPv4-mapped IPv6 address format in `mAddresses` array.  The callback should be invoked
+ * whenever addresses are added or removed, providing an updated list. If all addresses are removed, the callback
+ * should be invoked with an empty list (`mAddressesLength` set to zero).
+ *
+ * The callback may be invoked immediately with cached information (if available) and potentially before this function
+ * returns. When cached result is used, the reported TTL values will reflect the original TTL from the last received
+ * response.
+ *
+ * Multiple resolvers can be started for the same host name, provided they use different callback functions.
+ *
+ * The @p aResolver and all its contained information (strings) are only valid during this call. The platform MUST save
+ * a copy of the information if it wants to retain the information after returning from this function.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aResolver    The resolver to be started.
+ *
+ */
+void otPlatDnssdStartIp4AddressResolver(otInstance *aInstance, const otPlatDnssdAddressResolver *aResolver);
+
+/**
+ * Stops an IPv4 address resolver.
+ *
+ * No action is performed if no matching resolver with the same host name and callback is currently active.
+ *
+ * The @p aResolver and all its contained information (strings) are only valid during this call. The platform MUST save
+ * a copy of the information if it wants to retain the information after returning from this function.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aResolver    The resolver to stop.
+ *
+ */
+void otPlatDnssdStopIp4AddressResolver(otInstance *aInstance, const otPlatDnssdAddressResolver *aResolver);
 
 /**
  * @}
