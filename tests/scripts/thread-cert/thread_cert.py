@@ -207,8 +207,6 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                                                   channel=params['pending_dataset'].get('channel'),
                                                   delay=params['pending_dataset'].get('delay'))
 
-            if 'key_switch_guardtime' in params:
-                self.nodes[i].set_key_switch_guardtime(params['key_switch_guardtime'])
             if 'key_sequence_counter' in params:
                 self.nodes[i].set_key_sequence_counter(params['key_sequence_counter'])
 
