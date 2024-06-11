@@ -652,7 +652,8 @@ template <size_t N> otError AddRoute(const uint8_t (&aAddress)[N], uint8_t aPref
         char            buf[kBufSize];
     } req{};
     unsigned int netifIdx = otSysGetThreadNetifIndex();
-    otError      error    = OT_ERROR_NONE;
+    char         addrStrBuf[INET6_ADDRSTRLEN];
+    otError      error = OT_ERROR_NONE;
 
     static_assert(N == sizeof(in6_addr) || N == sizeof(in_addr), "aAddress should be 4 octets or 16 octets");
 
@@ -680,10 +681,17 @@ template <size_t N> otError AddRoute(const uint8_t (&aAddress)[N], uint8_t aPref
     AddRtAttrUint32(&req.header, sizeof(req), RTA_PRIORITY, aPriority);
     AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, netifIdx);
 
+    inet_ntop(req.msg.rtm_family, aAddress, addrStrBuf, sizeof(addrStrBuf));
+
     if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
     {
+        LogInfo("Failed to send request#%u to add route %s/%u", sNetlinkSequence, addrStrBuf, aPrefixLen);
         VerifyOrExit(errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK, error = OT_ERROR_BUSY);
         DieNow(OT_EXIT_ERROR_ERRNO);
+    }
+    else
+    {
+        LogInfo("Sent request#%u to add route %s/%u", sNetlinkSequence, addrStrBuf, aPrefixLen);
     }
 exit:
     return error;
@@ -699,7 +707,8 @@ template <size_t N> otError DeleteRoute(const uint8_t (&aAddress)[N], uint8_t aP
         char            buf[kBufSize];
     } req{};
     unsigned int netifIdx = otSysGetThreadNetifIndex();
-    otError      error    = OT_ERROR_NONE;
+    char         addrStrBuf[INET6_ADDRSTRLEN];
+    otError      error = OT_ERROR_NONE;
 
     static_assert(N == sizeof(in6_addr) || N == sizeof(in_addr), "aAddress should be 4 octets or 16 octets");
 
@@ -726,10 +735,17 @@ template <size_t N> otError DeleteRoute(const uint8_t (&aAddress)[N], uint8_t aP
     AddRtAttr(reinterpret_cast<nlmsghdr *>(&req), sizeof(req), RTA_DST, &aAddress, sizeof(aAddress));
     AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, netifIdx);
 
+    inet_ntop(req.msg.rtm_family, aAddress, addrStrBuf, sizeof(addrStrBuf));
+
     if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
     {
+        LogInfo("Failed to send request#%u to delete route %s/%u", sNetlinkSequence, addrStrBuf, aPrefixLen);
         VerifyOrExit(errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK, error = OT_ERROR_BUSY);
         DieNow(OT_EXIT_ERROR_ERRNO);
+    }
+    else
+    {
+        LogInfo("Sent request#%u to delete route %s/%u", sNetlinkSequence, addrStrBuf, aPrefixLen);
     }
 
 exit:
@@ -1340,6 +1356,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                     netAddr.mPrefixLength = ifaddr->ifa_prefixlen;
 
                     error = otIp6AddUnicastAddress(aInstance, &netAddr);
+                    error = (error == OT_ERROR_INVALID_ARGS) ? OT_ERROR_NONE : error;
                 }
                 else
                 {
