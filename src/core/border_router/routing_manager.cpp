@@ -1490,8 +1490,13 @@ void RoutingManager::RxRaTracker::RemoveOrDeprecateEntriesFromInactiveRouters(vo
     RemoveExpiredEntries();
 }
 
-void RoutingManager::RxRaTracker::ScheduleStaleTimer(void)
+void RoutingManager::RxRaTracker::ScheduleAllTimers(void)
 {
+    TimeMilli    now = TimerMilli::GetNow();
+    NextFireTime routerTimeout(now);
+    NextFireTime entryExpireTime(now);
+    NextFireTime staleTime(now);
+
     // If multiple routers advertise the same on-link or route prefix,
     // the stale time for the prefix is determined by the latest stale
     // time among all corresponding entries.
@@ -1501,8 +1506,6 @@ void RoutingManager::RxRaTracker::ScheduleStaleTimer(void)
     // flag is cleared on all entries. As we iterate over routers and
     // their entries, `DetermineStaleTimeFor()` will consider all
     // matching entries and mark "StaleTimeCalculated" flag on them.
-
-    NextFireTime staleTime;
 
     for (Router &router : mRouters)
     {
@@ -1519,8 +1522,17 @@ void RoutingManager::RxRaTracker::ScheduleStaleTimer(void)
 
     for (const Router &router : mRouters)
     {
+        if ((router.mNsProbeCount <= Router::kMaxNsProbes) && !router.mIsLocalDevice)
+        {
+            // Skip if router is this device or has failed all
+            // earlier NS probes.
+            routerTimeout.UpdateIfEarlier(router.mTimeout);
+        }
+
         for (const OnLinkPrefix &entry : router.mOnLinkPrefixes)
         {
+            entryExpireTime.UpdateIfEarlier(entry.GetExpireTime());
+
             if (!entry.IsStaleTimeCalculated())
             {
                 DetermineStaleTimeFor(entry, staleTime);
@@ -1529,6 +1541,8 @@ void RoutingManager::RxRaTracker::ScheduleStaleTimer(void)
 
         for (const RoutePrefix &entry : router.mRoutePrefixes)
         {
+            entryExpireTime.UpdateIfEarlier(entry.GetExpireTime());
+
             if (!entry.IsStaleTimeCalculated())
             {
                 DetermineStaleTimeFor(entry, staleTime);
@@ -1548,6 +1562,8 @@ void RoutingManager::RxRaTracker::ScheduleStaleTimer(void)
         staleTime.UpdateIfEarlier(CalculateExpirationTime(mLocalRaHeaderUpdateTime, interval));
     }
 
+    mRouterTimer.FireAt(routerTimeout);
+    mExpirationTimer.FireAt(entryExpireTime);
     mStaleTimer.FireAt(staleTime);
 }
 
@@ -1630,12 +1646,12 @@ void RoutingManager::RxRaTracker::HandleExpirationTimer(void) { RemoveExpiredEnt
 
 void RoutingManager::RxRaTracker::RemoveExpiredEntries(void)
 {
-    NextFireTime nextExpireTime;
-    bool         didRemove = false;
+    TimeMilli now       = TimerMilli::GetNow();
+    bool      didRemove = false;
 
     for (Router &router : mRouters)
     {
-        LifetimedPrefix::ExpirationChecker expirationChecker(nextExpireTime.GetNow());
+        LifetimedPrefix::ExpirationChecker expirationChecker(now);
 
         didRemove |= router.mOnLinkPrefixes.RemoveAndFreeAllMatching(expirationChecker);
         didRemove |= router.mRoutePrefixes.RemoveAndFreeAllMatching(expirationChecker);
@@ -1648,29 +1664,14 @@ void RoutingManager::RxRaTracker::RemoveExpiredEntries(void)
         SignalTableChanged();
     }
 
-    // Determine the next expire time and schedule timer.
-
-    for (const Router &router : mRouters)
-    {
-        for (const OnLinkPrefix &entry : router.mOnLinkPrefixes)
-        {
-            nextExpireTime.UpdateIfEarlier(entry.GetExpireTime());
-        }
-
-        for (const RoutePrefix &entry : router.mRoutePrefixes)
-        {
-            nextExpireTime.UpdateIfEarlier(entry.GetExpireTime());
-        }
-    }
-
-    mExpirationTimer.FireAt(nextExpireTime);
+    ScheduleAllTimers();
 }
 
 void RoutingManager::RxRaTracker::SignalTableChanged(void) { mSignalTask.Post(); }
 
 void RoutingManager::RxRaTracker::HandleSignalTask(void)
 {
-    ScheduleStaleTimer();
+    ScheduleAllTimers();
     Get<RoutingManager>().HandleRaPrefixTableChanged();
 }
 
@@ -1702,7 +1703,7 @@ void RoutingManager::RxRaTracker::UpdateRouterOnRx(Router &aRouter)
 
 void RoutingManager::RxRaTracker::HandleRouterTimer(void)
 {
-    NextFireTime nextTime;
+    TimeMilli now = TimerMilli::GetNow();
 
     for (Router &router : mRouters)
     {
@@ -1720,7 +1721,7 @@ void RoutingManager::RxRaTracker::HandleRouterTimer(void)
             continue;
         }
 
-        if (router.mTimeout <= nextTime.GetNow())
+        if (router.mTimeout <= now)
         {
             router.mNsProbeCount++;
 
@@ -1731,19 +1732,16 @@ void RoutingManager::RxRaTracker::HandleRouterTimer(void)
                 continue;
             }
 
-            router.mTimeout =
-                nextTime.GetNow() + ((router.mNsProbeCount < Router::kMaxNsProbes) ? Router::kNsProbeRetryInterval
+            router.mTimeout = now + ((router.mNsProbeCount < Router::kMaxNsProbes) ? Router::kNsProbeRetryInterval
                                                                                    : Router::kNsProbeTimeout);
 
             SendNeighborSolicitToRouter(router);
         }
-
-        nextTime.UpdateIfEarlier(router.mTimeout);
     }
 
     RemoveOrDeprecateEntriesFromInactiveRouters();
 
-    mRouterTimer.FireAt(nextTime);
+    ScheduleAllTimers();
 }
 
 void RoutingManager::RxRaTracker::SendNeighborSolicitToRouter(const Router &aRouter)
