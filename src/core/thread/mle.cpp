@@ -2902,8 +2902,6 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
     bool               saveActiveDataset  = false;
     bool               savePendingDataset = false;
     bool               dataRequest        = false;
-    uint16_t           offset;
-    uint16_t           length;
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
 
@@ -2977,16 +2975,15 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
         ExitNow(error = kErrorParse);
     }
 
-    if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kNetworkData, offset, length) == kErrorNone)
+    switch (error = aRxInfo.mMessage.ReadAndSetNetworkDataTlv(leaderData))
     {
-        error = Get<NetworkData::Leader>().SetNetworkData(leaderData.GetDataVersion(NetworkData::kFullSet),
-                                                          leaderData.GetDataVersion(NetworkData::kStableSubset),
-                                                          GetNetworkDataType(), aRxInfo.mMessage, offset, length);
-        SuccessOrExit(error);
-    }
-    else
-    {
-        ExitNow(dataRequest = true);
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        dataRequest = true;
+        OT_FALL_THROUGH;
+    default:
+        ExitNow();
     }
 
 #if OPENTHREAD_FTD
@@ -3308,8 +3305,6 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     uint16_t           sourceAddress;
     uint16_t           shortAddress;
     MeshCoP::Timestamp timestamp;
-    uint16_t           networkDataOffset;
-    uint16_t           networkDataLength;
 
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
@@ -3324,8 +3319,7 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
 
-    SuccessOrExit(
-        error = Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kNetworkData, networkDataOffset, networkDataLength));
+    VerifyOrExit(aRxInfo.mMessage.ContainsTlv(Tlv::kNetworkData));
 
     switch (Tlv::Find<ActiveTimestampTlv>(aRxInfo.mMessage, timestamp))
     {
@@ -3388,9 +3382,7 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
 
     mParent.SetRloc16(sourceAddress);
 
-    IgnoreError(Get<NetworkData::Leader>().SetNetworkData(
-        leaderData.GetDataVersion(NetworkData::kFullSet), leaderData.GetDataVersion(NetworkData::kStableSubset),
-        GetNetworkDataType(), aRxInfo.mMessage, networkDataOffset, networkDataLength));
+    IgnoreError(aRxInfo.mMessage.ReadAndSetNetworkDataTlv(leaderData));
 
     SetStateChild(shortAddress);
 
@@ -5060,6 +5052,21 @@ Error Mle::RxMessage::ReadLeaderDataTlv(LeaderData &aLeaderData) const
     VerifyOrExit(leaderDataTlv.IsValid(), error = kErrorParse);
     leaderDataTlv.Get(aLeaderData);
 
+exit:
+    return error;
+}
+
+Error Mle::RxMessage::ReadAndSetNetworkDataTlv(const LeaderData &aLeaderData) const
+{
+    Error    error;
+    uint16_t offset;
+    uint16_t length;
+
+    SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, Tlv::kNetworkData, offset, length));
+
+    error = Get<NetworkData::Leader>().SetNetworkData(aLeaderData.GetDataVersion(NetworkData::kFullSet),
+                                                      aLeaderData.GetDataVersion(NetworkData::kStableSubset),
+                                                      Get<Mle>().GetNetworkDataType(), *this, offset, length);
 exit:
     return error;
 }
