@@ -42,13 +42,11 @@ class Cert_5_8_2_KeyIncrement(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'name': 'LEADER',
-            'key_switch_guardtime': 0,
             'mode': 'rdn',
             'allowlist': [ROUTER]
         },
         ROUTER: {
             'name': 'ROUTER',
-            'key_switch_guardtime': 0,
             'mode': 'rdn',
             'allowlist': [LEADER]
         },

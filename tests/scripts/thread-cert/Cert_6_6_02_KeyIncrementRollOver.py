@@ -43,14 +43,12 @@ class Cert_6_6_2_KeyIncrement1(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'key_sequence_counter': 127,
-            'key_switch_guardtime': 0,
             'mode': 'rdn',
             'allowlist': [ED]
         },
         ED: {
             'name': 'ED',
             'is_mtd': True,
-            'key_switch_guardtime': 0,
             'mode': 'rn',
             'allowlist': [LEADER]
         },
