@@ -135,6 +135,31 @@ public:
          */
         const SockAddr &GetPeerName(void) const { return AsCoreType(&mPeerName); }
 
+        /**
+         * Gets the socket's network interface identifier.
+         *
+         * @returns The socket's network interface identifiers.
+         *
+         */
+        NetifIdentifier GetNetifId(void) const { return static_cast<NetifIdentifier>(mType); }
+
+        /**
+         * Sets the socket's network interface identifier.
+         *
+         * @param[in] aNetifId  The network interface identifier to use.
+         *
+         */
+        void SetNetifId(NetifIdentifier aNetifId) { mType = aNetifId; }
+
+        /**
+         * Indicates whether the socket is a backbone socket.
+         *
+         * @retval TRUE  This is a backbone socket.
+         * @retval FALSE This is not a backbone sockect.
+         *
+         */
+        bool IsBackboneSocket(void) const { return GetNetifId() == kNetifBackbone; }
+
     private:
         bool Matches(const MessageInfo &aMessageInfo) const;
 
@@ -671,18 +696,9 @@ private:
     bool ShouldUsePlatformUdp(const SocketHandle &aSocket) const;
 #endif
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    void                SetBackboneSocket(SocketHandle &aSocket);
-    const SocketHandle *GetBackboneSockets(void) const;
-    bool                IsBackboneSocket(const SocketHandle &aSocket) const;
-#endif
-
     uint16_t                 mEphemeralPort;
     LinkedList<Receiver>     mReceivers;
     LinkedList<SocketHandle> mSockets;
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    SocketHandle *mPrevBackboneSockets;
-#endif
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     Callback<otUdpForwarder> mUdpForwarder;
 #endif

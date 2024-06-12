@@ -129,6 +129,7 @@ typedef struct otUdpSocket
     void               *mContext;  ///< A pointer to application-specific context.
     void               *mHandle;   ///< A handle to platform's UDP.
     struct otUdpSocket *mNext;     ///< A pointer to the next UDP socket (internal use only).
+    uint8_t             mType;     ///< For OT internal use.
 } otUdpSocket;
 
 /**
