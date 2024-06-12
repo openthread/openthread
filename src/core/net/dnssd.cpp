@@ -255,6 +255,237 @@ exit:
     return;
 }
 
+void Dnssd::StartBrowser(const Browser &aBrowser)
+{
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    {
+        IgnoreError(Get<Dns::Multicast::Core>().StartBrowser(aBrowser));
+        ExitNow();
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdStartBrowser(&GetInstance(), &aBrowser);
+#endif
+
+exit:
+    return;
+}
+
+void Dnssd::StopBrowser(const Browser &aBrowser)
+{
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    {
+        IgnoreError(Get<Dns::Multicast::Core>().StopBrowser(aBrowser));
+        ExitNow();
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdStopBrowser(&GetInstance(), &aBrowser);
+#endif
+
+exit:
+    return;
+}
+
+void Dnssd::StartSrvResolver(const SrvResolver &aResolver)
+{
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    {
+        IgnoreError(Get<Dns::Multicast::Core>().StartSrvResolver(aResolver));
+        ExitNow();
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdStartSrvResolver(&GetInstance(), &aResolver);
+#endif
+
+exit:
+    return;
+}
+
+void Dnssd::StopSrvResolver(const SrvResolver &aResolver)
+{
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    {
+        IgnoreError(Get<Dns::Multicast::Core>().StopSrvResolver(aResolver));
+        ExitNow();
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdStopSrvResolver(&GetInstance(), &aResolver);
+#endif
+
+exit:
+    return;
+}
+
+void Dnssd::StartTxtResolver(const TxtResolver &aResolver)
+{
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    {
+        IgnoreError(Get<Dns::Multicast::Core>().StartTxtResolver(aResolver));
+        ExitNow();
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdStartTxtResolver(&GetInstance(), &aResolver);
+#endif
+
+exit:
+    return;
+}
+
+void Dnssd::StopTxtResolver(const TxtResolver &aResolver)
+{
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    {
+        IgnoreError(Get<Dns::Multicast::Core>().StopTxtResolver(aResolver));
+        ExitNow();
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdStopTxtResolver(&GetInstance(), &aResolver);
+#endif
+
+exit:
+    return;
+}
+
+void Dnssd::StartIp6AddressResolver(const AddressResolver &aResolver)
+{
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    {
+        IgnoreError(Get<Dns::Multicast::Core>().StartIp6AddressResolver(aResolver));
+        ExitNow();
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdStartIp6AddressResolver(&GetInstance(), &aResolver);
+#endif
+
+exit:
+    return;
+}
+
+void Dnssd::StopIp6AddressResolver(const AddressResolver &aResolver)
+{
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    {
+        IgnoreError(Get<Dns::Multicast::Core>().StopIp6AddressResolver(aResolver));
+        ExitNow();
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdStopIp6AddressResolver(&GetInstance(), &aResolver);
+#endif
+
+exit:
+    return;
+}
+
+void Dnssd::StartIp4AddressResolver(const AddressResolver &aResolver)
+{
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    {
+        IgnoreError(Get<Dns::Multicast::Core>().StartIp4AddressResolver(aResolver));
+        ExitNow();
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdStartIp4AddressResolver(&GetInstance(), &aResolver);
+#endif
+
+exit:
+    return;
+}
+
+void Dnssd::StopIp4AddressResolver(const AddressResolver &aResolver)
+{
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    {
+        IgnoreError(Get<Dns::Multicast::Core>().StopIp4AddressResolver(aResolver));
+        ExitNow();
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdStopIp4AddressResolver(&GetInstance(), &aResolver);
+#endif
+
+exit:
+    return;
+}
+
+void Dnssd::HandleStateChange(void)
+{
+#if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
+    Get<Srp::AdvertisingProxy>().HandleDnssdPlatformStateChange();
+#endif
+
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE && OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+    Get<Dns::ServiceDiscovery::Server>().HandleDnssdPlatformStateChange();
+#endif
+}
+
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 void Dnssd::HandleMdnsCoreStateChange(void)
 {
@@ -267,17 +498,12 @@ void Dnssd::HandleMdnsCoreStateChange(void)
 }
 #endif
 
-void Dnssd::HandleStateChange(void)
-{
-#if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
-    Get<Srp::AdvertisingProxy>().HandleDnssdPlatformStateChange();
-#endif
-}
-
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 extern "C" void otPlatDnssdStateHandleStateChange(otInstance *aInstance)
 {
     AsCoreType(aInstance).Get<Dnssd>().HandleStateChange();
 }
+#endif
 
 } // namespace ot
 

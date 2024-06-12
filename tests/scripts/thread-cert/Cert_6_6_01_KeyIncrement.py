@@ -42,14 +42,12 @@ class Cert_6_6_1_KeyIncrement(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'name': 'LEADER',
-            'key_switch_guardtime': 0,
             'mode': 'rdn',
             'allowlist': [ED]
         },
         ED: {
             'name': 'ED',
             'is_mtd': True,
-            'key_switch_guardtime': 0,
             'mode': 'rn',
             'allowlist': [LEADER]
         },

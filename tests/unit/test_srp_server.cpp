@@ -1024,6 +1024,187 @@ void TestUpdateLeaseShortVariant(void)
     Log("End of TestUpdateLeaseShortVariant");
 }
 
+static uint16_t         sServerRxCount;
+static Ip6::MessageInfo sServerMsgInfo;
+static uint16_t         sServerLastMsgId;
+
+void HandleServerUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+    Dns::Header header;
+
+    VerifyOrQuit(aContext == nullptr);
+    VerifyOrQuit(aMessage != nullptr);
+    VerifyOrQuit(aMessageInfo != nullptr);
+
+    SuccessOrQuit(AsCoreType(aMessage).Read(0, header));
+
+    sServerMsgInfo   = AsCoreType(aMessageInfo);
+    sServerLastMsgId = header.GetMessageId();
+    sServerRxCount++;
+
+    Log("HandleServerUdpReceive(), message-id: 0x%x", header.GetMessageId());
+}
+
+void TestSrpClientDelayedResponse(void)
+{
+    static constexpr uint16_t kServerPort = 53535;
+
+    Srp::Client         *srpClient;
+    Srp::Client::Service service1;
+    Srp::Client::Service service2;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestSrpClientDelayedResponse");
+
+    InitTest();
+
+    srpClient = &sInstance->Get<Srp::Client>();
+
+    for (uint8_t testIter = 0; testIter < 3; testIter++)
+    {
+        Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+        Log("testIter = %u", testIter);
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Prepare a socket to act as SRP server.
+
+        Ip6::Udp::Socket  udpSocket(*sInstance);
+        Ip6::SockAddr     serverSockAddr;
+        uint16_t          firstMsgId;
+        Message          *response;
+        Dns::UpdateHeader header;
+
+        sServerRxCount = 0;
+
+        SuccessOrQuit(udpSocket.Open(HandleServerUdpReceive, nullptr));
+        SuccessOrQuit(udpSocket.Bind(kServerPort, Ip6::kNetifThread));
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Manually start the client with a message ID based on `testIter`
+        // We use zero in the first iteration, `0xffff` in the second
+        // iteration to test wrapping of 16-bit message ID.
+
+        switch (testIter)
+        {
+        case 0:
+            srpClient->SetNextMessageId(0);
+            break;
+        case 1:
+            srpClient->SetNextMessageId(0xffff);
+            break;
+        case 2:
+            srpClient->SetNextMessageId(0xaaaa);
+            break;
+        }
+
+        serverSockAddr.SetAddress(sInstance->Get<Mle::Mle>().GetMeshLocal16());
+        serverSockAddr.SetPort(kServerPort);
+        SuccessOrQuit(srpClient->Start(serverSockAddr));
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Register a service
+
+        SuccessOrQuit(srpClient->SetHostName(kHostName));
+        SuccessOrQuit(srpClient->EnableAutoHostAddress());
+
+        PrepareService1(service1);
+        SuccessOrQuit(srpClient->AddService(service1));
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Wait for short time and make sure server receives an SRP
+        // update message from client.
+
+        AdvanceTime(1 * 1000);
+
+        VerifyOrQuit(sServerRxCount == 1);
+        firstMsgId = sServerLastMsgId;
+
+        switch (testIter)
+        {
+        case 0:
+            VerifyOrQuit(firstMsgId == 0);
+            break;
+        case 1:
+            VerifyOrQuit(firstMsgId == 0xffff);
+            break;
+        case 2:
+            VerifyOrQuit(firstMsgId == 0xaaaa);
+            break;
+        }
+
+        if (testIter == 2)
+        {
+            AdvanceTime(2 * 1000);
+
+            PrepareService2(service2);
+            SuccessOrQuit(srpClient->AddService(service2));
+        }
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Wait for longer to allow client to retry a bunch of times
+
+        AdvanceTime(20 * 1000);
+        VerifyOrQuit(sServerRxCount > 1);
+        VerifyOrQuit(sServerLastMsgId != firstMsgId);
+
+        VerifyOrQuit(srpClient->GetHostInfo().GetState() != Srp::Client::kRegistered);
+        VerifyOrQuit(service1.GetState() != Srp::Client::kRegistered);
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Now send a delayed response from server using the first
+        // message ID.
+
+        response = udpSocket.NewMessage();
+        VerifyOrQuit(response != nullptr);
+
+        Log("Sending response with msg-id: 0x%x", firstMsgId);
+
+        header.SetMessageId(firstMsgId);
+        header.SetType(Dns::UpdateHeader::kTypeResponse);
+        header.SetResponseCode(Dns::UpdateHeader::kResponseSuccess);
+        SuccessOrQuit(response->Append(header));
+        SuccessOrQuit(udpSocket.SendTo(*response, sServerMsgInfo));
+
+        AdvanceTime(10);
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // In the first two iterations, we ensure that client
+        // did successfully accept the response with older message ID.
+        // This should not be the case in the third iteration due to
+        // changes to client services after first UPdate message was
+        // sent by client.
+
+        switch (testIter)
+        {
+        case 0:
+        case 1:
+            VerifyOrQuit(srpClient->GetHostInfo().GetState() == Srp::Client::kRegistered);
+            VerifyOrQuit(service1.GetState() == Srp::Client::kRegistered);
+            break;
+        case 2:
+            VerifyOrQuit(srpClient->GetHostInfo().GetState() != Srp::Client::kRegistered);
+            VerifyOrQuit(service1.GetState() != Srp::Client::kRegistered);
+            break;
+        }
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Remove service and close socket.
+
+        srpClient->ClearHostAndServices();
+        srpClient->Stop();
+
+        SuccessOrQuit(udpSocket.Close());
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Finalize OT instance
+
+    Log("Finalizing OT instance");
+    FinalizeTest();
+
+    Log("End of TestSrpClientDelayedResponse");
+}
+
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
 #endif // ENABLE_SRP_TEST
@@ -1040,7 +1221,9 @@ int main(void)
     ot::TestSrpServerClientRemove(/* aShouldRemoveKeyLease */ false);
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     ot::TestUpdateLeaseShortVariant();
+    ot::TestSrpClientDelayedResponse();
 #endif
+
     printf("All tests passed\n");
 #else
     printf("SRP_SERVER or SRP_CLIENT feature is not enabled\n");

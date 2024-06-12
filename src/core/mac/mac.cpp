@@ -340,7 +340,7 @@ void Mac::PerformEnergyScan(void)
     }
     else
     {
-        if (!GetRxOnWhenIdle())
+        if (!mRxOnWhenIdle)
         {
             mLinks.Receive(mScanChannel);
         }
@@ -1316,7 +1316,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
                 ProcessCsl(*aAckFrame, dstAddr);
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-                if (!GetRxOnWhenIdle() && aFrame.GetHeaderIe(CslIe::kHeaderIeId) != nullptr)
+                if (!mRxOnWhenIdle && aFrame.GetHeaderIe(CslIe::kHeaderIeId) != nullptr)
                 {
                     Get<DataPollSender>().ResetKeepAliveTimer();
                 }
@@ -1641,7 +1641,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
 
         if (keySequence > keyManager.GetCurrentKeySequence())
         {
-            keyManager.SetCurrentKeySequence(keySequence, KeyManager::kApplyKeySwitchGuard);
+            keyManager.SetCurrentKeySequence(keySequence, KeyManager::kApplySwitchGuard | KeyManager::kResetGuardTimer);
         }
     }
 
