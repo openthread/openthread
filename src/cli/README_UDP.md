@@ -71,7 +71,7 @@ Assigns a name (i.e. IPv6 address and port) to the example socket.
   - not specified: Thread network interface.
   - `-u`: unspecified network interface.
   - `-b`: Backbone network interface.
-- ip: the IPv6 address or the unspecified IPv6 address (`::`).
+- ip: the unicast IPv6 address or the unspecified IPv6 address (`::`).
 - port: the UDP port
 
 ```bash
@@ -82,6 +82,8 @@ Done
 > udp bind -b :: 1234
 Done
 ```
+
+> Note: to receive datagrams sent to a multicast IPv6 address, the unspecified IPv6 address must be used. Using a multicast address for the \<ip\> argument is not supported. Also, the node must subscribe to the multicast group using `ipmaddr add` before it can receive UDP multicast.
 
 ### close
 
