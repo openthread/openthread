@@ -68,6 +68,7 @@
 #include <openthread/trel.h>
 #endif
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/string.hpp"
@@ -1925,8 +1926,11 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_ADDRESS_TABLE>(v
 
         SuccessOrExit(error = mEncoder.WriteIp6Address(address->mAddress));
         SuccessOrExit(error = mEncoder.WriteUint8(address->mPrefixLength));
-        SuccessOrExit(error = mEncoder.WriteUint32(address->mPreferred ? 0xffffffff : 0));
-        SuccessOrExit(error = mEncoder.WriteUint32(address->mValid ? 0xffffffff : 0));
+        SuccessOrExit(error = mEncoder.WriteUint8(address->mScopeOverrideValid
+                                                      ? address->mScopeOverride
+                                                      : AsCoreType(&address->mAddress).GetScope()));
+        SuccessOrExit(error = mEncoder.WriteBool(address->mPreferred));
+        SuccessOrExit(error = mEncoder.WriteBool(address->mMeshLocal));
 
         SuccessOrExit(error = mEncoder.CloseStruct());
     }

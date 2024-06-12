@@ -3416,7 +3416,7 @@ enum
     SPINEL_PROP_IPV6_ML_PREFIX = SPINEL_PROP_IPV6__BEGIN + 2,
 
     /// IPv6 (Unicast) Address Table
-    /** Format: `A(t(6CLLC))`
+    /** Format: `A(t(6CCbb))`
      *
      * This property provides all unicast addresses.
      *
@@ -3424,8 +3424,9 @@ enum
      *
      *  `6`: IPv6 Address
      *  `C`: Network Prefix Length (in bits)
-     *  `L`: Valid Lifetime
-     *  `L`: Preferred Lifetime
+     *  `C`: Scope
+     *  `b`: Is Preferred
+     *  `b`: Is Mesh Local
      *
      */
     SPINEL_PROP_IPV6_ADDRESS_TABLE = SPINEL_PROP_IPV6__BEGIN + 3,
