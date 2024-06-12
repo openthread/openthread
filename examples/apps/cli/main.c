@@ -142,7 +142,7 @@ pseudo_reset:
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_LOG_CRASH_DUMP_ENABLE
-    otPlatLogCrashDump();
+    IgnoreError(otPlatLogCrashDump());
 #endif
 
     while (!otSysPseudoResetWasRequested())
