@@ -70,8 +70,7 @@
 #endif
 #endif
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && \
-    (OPENTHREAD_FTD ||                          \
-     (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE))
+    (OPENTHREAD_FTD || OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
 #include <openthread/channel_manager.h>
 #endif
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
@@ -1343,8 +1342,7 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
     }
 #endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && \
-    (OPENTHREAD_FTD ||                          \
-     (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE))
+    (OPENTHREAD_FTD || OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
     else if (aArgs[0] == "manager")
     {
         /**
@@ -1371,17 +1369,16 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
 #if OPENTHREAD_FTD
             OutputLine("auto: %d", otChannelManagerGetAutoChannelSelectionEnabled(GetInstancePtr()));
 #endif
-#if (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
             OutputLine("autocsl: %u", otChannelManagerGetAutoCslChannelSelectionEnabled(GetInstancePtr()));
 #endif
 
-#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && \
-     OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
             if (otChannelManagerGetAutoChannelSelectionEnabled(GetInstancePtr()) ||
                 otChannelManagerGetAutoCslChannelSelectionEnabled(GetInstancePtr()))
 #elif OPENTHREAD_FTD
             if (otChannelManagerGetAutoChannelSelectionEnabled(GetInstancePtr()))
-#elif (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+#elif OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
             if (otChannelManagerGetAutoCslChannelSelectionEnabled(GetInstancePtr()))
 #endif
             {
@@ -1463,7 +1460,7 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
             otChannelManagerSetAutoChannelSelectionEnabled(GetInstancePtr(), enable);
         }
 #endif // OPENTHREAD_FTD
-#if (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
         /**
          * @cli channel manager autocsl
          * @code
@@ -1486,7 +1483,7 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
             SuccessOrExit(error = aArgs[2].ParseAsBool(enable));
             otChannelManagerSetAutoCslChannelSelectionEnabled(GetInstancePtr(), enable);
         }
-#endif // (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
 #if OPENTHREAD_FTD
         /**
          * @cli channel manager delay
