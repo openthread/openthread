@@ -654,8 +654,8 @@ Error Ip6::HandleFragment(Message &aMessage)
     offset          = FragmentHeader::FragmentOffsetToBytes(fragmentHeader.GetOffset());
     payloadFragment = aMessage.GetLength() - aMessage.GetOffset() - sizeof(fragmentHeader);
 
-    LogInfo("Fragment with id %lu received > %d bytes, offset %d", fragmentHeader.GetIdentification(), payloadFragment,
-            offset);
+    LogInfo("Fragment with id %u received > %u bytes, offset %u", (unsigned)fragmentHeader.GetIdentification(),
+            (unsigned)payloadFragment, (unsigned)offset);
 
     if (offset + payloadFragment + aMessage.GetOffset() > kMaxAssembledDatagramLength)
     {
