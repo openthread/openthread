@@ -1969,6 +1969,7 @@ void RoutingManager::RxRaTracker::Router::CopyInfoTo(RouterEntry &aEntry, TimeMi
     aEntry.mOtherConfigFlag          = mOtherConfigFlag;
     aEntry.mStubRouterFlag           = mStubRouterFlag;
     aEntry.mIsLocalDevice            = mIsLocalDevice;
+    aEntry.mIsReachable              = IsReachable();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
