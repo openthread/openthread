@@ -233,16 +233,18 @@ private:
     };
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    using KeyRef = Crypto::Storage::KeyRef;
+
     struct SecurelyStoredTlv
     {
-        Crypto::Storage::KeyRef GetKeyRef(Dataset::Type aType) const
+        KeyRef GetKeyRef(Dataset::Type aType) const
         {
             return (aType == Dataset::kActive) ? mActiveKeyRef : mPendingKeyRef;
         }
 
-        Tlv::Type               mTlvType;
-        Crypto::Storage::KeyRef mActiveKeyRef;
-        Crypto::Storage::KeyRef mPendingKeyRef;
+        Tlv::Type mTlvType;
+        KeyRef    mActiveKeyRef;
+        KeyRef    mPendingKeyRef;
     };
 
     static const SecurelyStoredTlv kSecurelyStoredTlvs[];
@@ -288,9 +290,11 @@ private:
                                       Error                aError);
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    void MoveKeysToSecureStorage(Dataset &aDataset) const;
-    void DestroySecurelyStoredKeys(void) const;
-    void EmplaceSecurelyStoredKeys(Dataset &aDataset) const;
+    void  MoveKeysToSecureStorage(Dataset &aDataset) const;
+    void  DestroySecurelyStoredKeys(void) const;
+    void  EmplaceSecurelyStoredKeys(Dataset &aDataset) const;
+    void  SaveTlvInSecureStorageAndClearValue(Dataset &aDataset, Tlv::Type aTlvType, KeyRef aKeyRef) const;
+    Error ReadTlvFromSecureStorage(Dataset &aDataset, Tlv::Type aTlvType, KeyRef aKeyRef) const;
 #endif
 
 #if OPENTHREAD_FTD
