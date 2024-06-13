@@ -181,6 +181,7 @@ private:
 
     Error ParseCmd(char *aString, uint8_t &aArgsLength, char *aArgs[]);
     Error ProcessChannel(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    Error ProcessFrame(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     Error ProcessContinuousWave(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     Error ProcessGpio(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     Error ProcessPower(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
@@ -217,6 +218,7 @@ private:
     uint8_t       mChannel;
     int8_t        mTxPower;
     uint8_t       mTxLen;
+    bool          mIsTxPacketSet;
     bool          mRepeatActive;
     bool          mDiagSendOn;
 #endif
