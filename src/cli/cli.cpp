@@ -4596,13 +4596,13 @@ template <> otError Interpreter::Process<Cmd("service")>(Arg aArgs[])
          * netdata register
          * Done
          * @endcode
-         * @cparam service add @ca{enterpriseNumber} @ca{serviceData} @ca{serverData}
+         * @cparam service add @ca{enterpriseNumber} @ca{serviceData} [@ca{serverData}]
          * @par
          * Adds service to the network data.
          * @par
          * - enterpriseNumber: IANA enterprise number
          * - serviceData: Hex-encoded binary service data
-         * - serverData: Hex-encoded binary server data
+         * - serverData: Hex-encoded binary server data (empty if not provided)
          * @par
          * Note: For each change in service registration to take effect, run
          * the `netdata register` command after running the `service add` command to notify the leader.
@@ -4611,10 +4611,17 @@ template <> otError Interpreter::Process<Cmd("service")>(Arg aArgs[])
          */
         if (aArgs[0] == "add")
         {
-            length = sizeof(cfg.mServerConfig.mServerData);
-            SuccessOrExit(error = aArgs[3].ParseAsHexString(length, cfg.mServerConfig.mServerData));
-            VerifyOrExit(length > 0, error = OT_ERROR_INVALID_ARGS);
-            cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(length);
+            if (!aArgs[3].IsEmpty())
+            {
+                length = sizeof(cfg.mServerConfig.mServerData);
+                SuccessOrExit(error = aArgs[3].ParseAsHexString(length, cfg.mServerConfig.mServerData));
+                VerifyOrExit(length > 0, error = OT_ERROR_INVALID_ARGS);
+                cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(length);
+            }
+            else
+            {
+                cfg.mServerConfig.mServerDataLength = 0;
+            }
 
             cfg.mServerConfig.mStable = true;
 
