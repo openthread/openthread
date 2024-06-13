@@ -32,6 +32,7 @@
  */
 
 #include "factory_diags.hpp"
+#include "common/error.hpp"
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
@@ -187,6 +188,7 @@ extern "C" void otPlatDiagAlarmFired(otInstance *aInstance) { otPlatDiagAlarmCal
 const struct Diags::Command Diags::sCommands[] = {
     {"channel", &Diags::ProcessChannel},
     {"cw", &Diags::ProcessContinuousWave},
+    {"frame", &Diags::ProcessFrame},
     {"gpio", &Diags::ProcessGpio},
     {"power", &Diags::ProcessPower},
     {"powersettings", &Diags::ProcessPowerSettings},
@@ -208,10 +210,29 @@ Diags::Diags(Instance &aInstance)
     , mChannel(20)
     , mTxPower(0)
     , mTxLen(0)
+    , mIsTxPacketSet(false)
     , mRepeatActive(false)
     , mDiagSendOn(false)
 {
     mStats.Clear();
+}
+
+Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+{
+    Error    error = kErrorNone;
+    uint16_t size  = OT_RADIO_FRAME_MAX_SIZE;
+
+    VerifyOrExit(aArgsLength == 1, error = kErrorInvalidArgs);
+
+    SuccessOrExit(error = Utils::CmdLineParser::ParseAsHexString(aArgs[0], size, mTxPacket->mPsdu));
+    VerifyOrExit(size <= OT_RADIO_FRAME_MAX_SIZE, error = kErrorInvalidArgs);
+    VerifyOrExit(size >= OT_RADIO_FRAME_MIN_SIZE, error = kErrorInvalidArgs);
+    mTxPacket->mLength = size;
+    mIsTxPacketSet     = true;
+
+exit:
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
 }
 
 Error Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
@@ -288,12 +309,25 @@ Error Diags::ProcessRepeat(uint8_t aArgsLength, char *aArgs[], char *aOutput, si
     {
         long value;
 
-        VerifyOrExit(aArgsLength == 2, error = kErrorInvalidArgs);
+        VerifyOrExit(aArgsLength >= 1, error = kErrorInvalidArgs);
 
         SuccessOrExit(error = ParseLong(aArgs[0], value));
         mTxPeriod = static_cast<uint32_t>(value);
 
-        SuccessOrExit(error = ParseLong(aArgs[1], value));
+        if (aArgsLength >= 2)
+        {
+            SuccessOrExit(error = ParseLong(aArgs[1], value));
+            mIsTxPacketSet = false;
+        }
+        else if (mIsTxPacketSet)
+        {
+            value = mTxPacket->mLength;
+        }
+        else
+        {
+            ExitNow(error = kErrorInvalidArgs);
+        }
+
         VerifyOrExit(value <= OT_RADIO_FRAME_MAX_SIZE, error = kErrorInvalidArgs);
         VerifyOrExit(value >= OT_RADIO_FRAME_MIN_SIZE, error = kErrorInvalidArgs);
         mTxLen = static_cast<uint8_t>(value);
@@ -316,12 +350,25 @@ Error Diags::ProcessSend(uint8_t aArgsLength, char *aArgs[], char *aOutput, size
     long  value;
 
     VerifyOrExit(otPlatDiagModeGet(), error = kErrorInvalidState);
-    VerifyOrExit(aArgsLength == 2, error = kErrorInvalidArgs);
+    VerifyOrExit(aArgsLength >= 1, error = kErrorInvalidArgs);
 
     SuccessOrExit(error = ParseLong(aArgs[0], value));
     mTxPackets = static_cast<uint32_t>(value);
 
-    SuccessOrExit(error = ParseLong(aArgs[1], value));
+    if (aArgsLength >= 2)
+    {
+        SuccessOrExit(ParseLong(aArgs[1], value));
+        mIsTxPacketSet = false;
+    }
+    else if (mIsTxPacketSet)
+    {
+        value = mTxPacket->mLength;
+    }
+    else
+    {
+        ExitNow(error = kErrorInvalidArgs);
+    }
+
     VerifyOrExit(value <= OT_RADIO_FRAME_MAX_SIZE, error = kErrorInvalidArgs);
     VerifyOrExit(value >= OT_RADIO_FRAME_MIN_SIZE, error = kErrorInvalidArgs);
     mTxLen = static_cast<uint8_t>(value);
@@ -420,12 +467,16 @@ exit:
 
 void Diags::TransmitPacket(void)
 {
-    mTxPacket->mLength  = mTxLen;
     mTxPacket->mChannel = mChannel;
 
-    for (uint8_t i = 0; i < mTxLen; i++)
+    if (!mIsTxPacketSet)
     {
-        mTxPacket->mPsdu[i] = i;
+        mTxPacket->mLength = mTxLen;
+
+        for (uint8_t i = 0; i < mTxLen; i++)
+        {
+            mTxPacket->mPsdu[i] = i;
+        }
     }
 
     mDiagSendOn = true;
@@ -986,4 +1037,5 @@ OT_TOOL_WEAK otError otPlatDiagRadioGetPowerSettings(otInstance *aInstance,
 
     return OT_ERROR_NOT_IMPLEMENTED;
 }
+
 #endif // OPENTHREAD_CONFIG_DIAG_ENABLE

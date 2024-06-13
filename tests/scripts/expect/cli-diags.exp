@@ -126,6 +126,35 @@ expect "start diagnostics mode"
 expect "status 0x00"
 expect_line "Done"
 
+send_user "input too short test\n"
+send "diag frame 11\n"
+expect "Error"
+
+send_user "input too long test\n"
+send "diag frame 11223344556677889900112233445566778899001122334455667788990011223344556677889900112233445566778899001122334455667788990011223344556677889900112233445566778899001122334455667788990011223344556677889900112233445566778899001122334455667788990011223344556677889900\n"
+expect "Error"
+
+send_user "input odd length test\n"
+send "diag frame 123\n"
+expect "Error"
+
+send_user "shortest frame test\n"
+send "diag frame 112233\n"
+expect "Done"
+send "diag send 1\n"
+expect "length 0x3"
+expect "Done"
+
+send_user "longest frame test\n"
+send "diag frame 11223344556677889900112233445566778899001122334455667788990011223344556677889900112233445566778899001122334455667788990011223344556677889900112233445566778899001122334455667788990011223344556677889900112233445566778899001122334455667788990011223344556677\n"
+expect "Done"
+send "diag repeat 1\n"
+expect "length 0x7f"
+expect "Done"
+
+send "diag repeat stop\n"
+expect "Done"
+
 send "diag channel 11\n"
 expect "set channel to 11"
 expect "status 0x00"
