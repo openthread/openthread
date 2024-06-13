@@ -1459,37 +1459,6 @@ void RoutingManager::RxRaTracker::RemoveOrDeprecateOldEntries(TimeMilli aTimeThr
     RemoveExpiredEntries();
 }
 
-void RoutingManager::RxRaTracker::RemoveOrDeprecateEntriesFromUnreachableRouters(void)
-{
-    // Remove route prefix entries and deprecate on-link prefix entries
-    // in the table for routers that have reached the max NS probe
-    // attempts and considered unreachable.
-
-    for (Router &router : mRouters)
-    {
-        if (router.IsReachable())
-        {
-            continue;
-        }
-
-        for (OnLinkPrefix &entry : router.mOnLinkPrefixes)
-        {
-            if (!entry.IsDeprecated())
-            {
-                entry.ClearPreferredLifetime();
-                SignalTableChanged();
-            }
-        }
-
-        for (RoutePrefix &entry : router.mRoutePrefixes)
-        {
-            entry.ClearValidLifetime();
-        }
-    }
-
-    RemoveExpiredEntries();
-}
-
 void RoutingManager::RxRaTracker::ScheduleAllTimers(void)
 {
     TimeMilli    now = TimerMilli::GetNow();
@@ -1522,10 +1491,8 @@ void RoutingManager::RxRaTracker::ScheduleAllTimers(void)
 
     for (const Router &router : mRouters)
     {
-        if (router.IsReachable() && !router.mIsLocalDevice)
+        if (router.ShouldCheckReachability())
         {
-            // Skip if router is this device or has failed all
-            // earlier NS probes.
             routerTimeout.UpdateIfEarlier(router.mTimeout);
         }
 
@@ -1708,39 +1675,45 @@ void RoutingManager::RxRaTracker::HandleRouterTimer(void)
 
     for (Router &router : mRouters)
     {
-        if (!router.IsReachable())
+        if (!router.ShouldCheckReachability() || (router.mTimeout > now))
         {
             continue;
         }
 
-        // Skip NS probes if the router is this device. This prevents
-        // issues where the platform might not be able to receive and
-        // process the NA messages from the local device itself.
+        router.mNsProbeCount++;
 
-        if (router.mIsLocalDevice)
+        if (router.IsReachable())
         {
-            continue;
-        }
-
-        if (router.mTimeout <= now)
-        {
-            router.mNsProbeCount++;
-
-            if (!router.IsReachable())
-            {
-                LogInfo("No response to all Neighbor Solicitations attempts from router %s",
-                        router.mAddress.ToString().AsCString());
-                continue;
-            }
-
             router.mTimeout = now + ((router.mNsProbeCount < Router::kMaxNsProbes) ? Router::kNsProbeRetryInterval
                                                                                    : Router::kNsProbeTimeout);
-
             SendNeighborSolicitToRouter(router);
+        }
+        else
+        {
+            LogInfo("No response to all Neighbor Solicitations attempts from router %s - marking it unreachable",
+                    router.mAddress.ToString().AsCString());
+
+            // Remove route prefix entries and deprecate on-link prefix entries
+            // of the unreachable router.
+
+            for (OnLinkPrefix &entry : router.mOnLinkPrefixes)
+            {
+                if (!entry.IsDeprecated())
+                {
+                    entry.ClearPreferredLifetime();
+                    SignalTableChanged();
+                }
+            }
+
+            for (RoutePrefix &entry : router.mRoutePrefixes)
+            {
+                entry.ClearValidLifetime();
+                SignalTableChanged();
+            }
         }
     }
 
-    RemoveOrDeprecateEntriesFromUnreachableRouters();
+    RemoveExpiredEntries();
 
     ScheduleAllTimers();
 }
@@ -1939,6 +1912,16 @@ exit:
 
 //---------------------------------------------------------------------------------------------------------------------
 // RxRaTracker::Router
+
+bool RoutingManager::RxRaTracker::Router::ShouldCheckReachability(void) const
+{
+    // Perform reachability check (send NS probes) only if the router:
+    // - Is not already marked as unreachable (due to failed NS probes)
+    // - Is not the local device itself (to avoid potential issues with
+    //   the platform receiving/processing NAs from itself).
+
+    return IsReachable() && !mIsLocalDevice;
+}
 
 bool RoutingManager::RxRaTracker::Router::Matches(EmptyChecker aChecker) const
 {
