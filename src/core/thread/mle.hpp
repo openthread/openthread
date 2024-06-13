@@ -548,6 +548,14 @@ public:
     uint8_t GetLeaderId(void) const { return mLeaderData.GetLeaderRouterId(); }
 
     /**
+     * Returns the RLOC16 of the Leader.
+     *
+     * @returns The RLOC16 of the Leader.
+     *
+     */
+    uint16_t GetLeaderRloc16(void) const { return Rloc16FromRouterId(GetLeaderId()); }
+
+    /**
      * Retrieves the Leader's RLOC.
      *
      * @param[out]  aAddress  A reference to the Leader's RLOC.
