@@ -1011,6 +1011,7 @@ private:
         Error AppendResponseTlv(const RxChallenge &aResponse);
         Error AppendLinkFrameCounterTlv(void);
         Error AppendMleFrameCounterTlv(void);
+        Error AppendLinkAndMleFrameCounterTlvs(void);
         Error AppendAddress16Tlv(uint16_t aRloc16);
         Error AppendNetworkDataTlv(NetworkData::Type aType);
         Error AppendTlvRequestTlv(const uint8_t *aTlvs, uint8_t aTlvsLength);

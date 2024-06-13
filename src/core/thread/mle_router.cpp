@@ -786,8 +786,7 @@ Error MleRouter::SendLinkAccept(const RxInfo      &aRxInfo,
     SuccessOrExit(error = message->AppendVersionTlv());
     SuccessOrExit(error = message->AppendSourceAddressTlv());
     SuccessOrExit(error = message->AppendResponseTlv(aChallenge));
-    SuccessOrExit(error = message->AppendLinkFrameCounterTlv());
-    SuccessOrExit(error = message->AppendMleFrameCounterTlv());
+    SuccessOrExit(error = message->AppendLinkAndMleFrameCounterTlvs());
 
     linkMargin = Get<Mac::Mac>().ComputeLinkMargin(aRxInfo.mMessage.GetAverageRss());
     SuccessOrExit(error = message->AppendLinkMarginTlv(linkMargin));
@@ -1698,8 +1697,7 @@ void MleRouter::SendParentResponse(Child *aChild, const RxChallenge &aChallenge,
 
     SuccessOrExit(error = message->AppendSourceAddressTlv());
     SuccessOrExit(error = message->AppendLeaderDataTlv());
-    SuccessOrExit(error = message->AppendLinkFrameCounterTlv());
-    SuccessOrExit(error = message->AppendMleFrameCounterTlv());
+    SuccessOrExit(error = message->AppendLinkAndMleFrameCounterTlvs());
     SuccessOrExit(error = message->AppendResponseTlv(aChallenge));
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (aChild->IsTimeSyncEnabled())

@@ -1791,8 +1791,7 @@ Error Mle::SendChildIdRequest(void)
 
     VerifyOrExit((message = NewMleMessage(kCommandChildIdRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendResponseTlv(mParentCandidate.mRxChallenge));
-    SuccessOrExit(error = message->AppendLinkFrameCounterTlv());
-    SuccessOrExit(error = message->AppendMleFrameCounterTlv());
+    SuccessOrExit(error = message->AppendLinkAndMleFrameCounterTlvs());
     SuccessOrExit(error = message->AppendModeTlv(mDeviceMode));
     SuccessOrExit(error = message->AppendTimeoutTlv(mTimeout));
     SuccessOrExit(error = message->AppendVersionTlv());
@@ -4511,6 +4510,17 @@ Error Mle::TxMessage::AppendLinkFrameCounterTlv(void)
 Error Mle::TxMessage::AppendMleFrameCounterTlv(void)
 {
     return Tlv::Append<MleFrameCounterTlv>(*this, Get<KeyManager>().GetMleFrameCounter());
+}
+
+Error Mle::TxMessage::AppendLinkAndMleFrameCounterTlvs(void)
+{
+    Error error;
+
+    SuccessOrExit(error = AppendLinkFrameCounterTlv());
+    error = AppendMleFrameCounterTlv();
+
+exit:
+    return error;
 }
 
 Error Mle::TxMessage::AppendAddress16Tlv(uint16_t aRloc16) { return Tlv::Append<Address16Tlv>(*this, aRloc16); }
