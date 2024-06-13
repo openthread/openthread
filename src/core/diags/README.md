@@ -79,7 +79,7 @@ Done
 
 ### diag frame \<frame\>
 
-Set the frame(hex encoded) to be used by `diag send` and `diag repeat`. The frame may be overwritten by `diag send` and `diag repeat`.
+Set the frame (hex encoded) to be used by `diag send` and `diag repeat`. The frame may be overwritten by `diag send` and `diag repeat`.
 
 ```bash
 > diag frame 11223344
