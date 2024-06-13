@@ -54,19 +54,19 @@ main()
         exit 0
     fi
 
-    git diff "${OT_SHA_OLD}" -- include/openthread | tee >(cat >&2) | grep -aP '[-+]#define OPENTHREAD_API_VERSION (.+)' >"${OT_VERSIONS_FILE}" || die 'Version number is not updated!'
+    git diff "${OT_SHA_OLD}" -- include/openthread | tee >(cat >&2) | grep '[-+]#define OPENTHREAD_API_VERSION' >"${OT_VERSIONS_FILE}" || die 'Version number is not updated!'
 
-    [[ $(wc -l <"${OT_VERSIONS_FILE}") == 2 ]] || die 'Multiple OPENTHREAD_API_VERSION definitions found!'
+    [ $(wc -l <"${OT_VERSIONS_FILE}") == 2 ] || die 'Multiple OPENTHREAD_API_VERSION definitions found!'
 
-    old_version=$(grep -aoP '(?<=-#define OPENTHREAD_API_VERSION ).+' "${OT_VERSIONS_FILE}") || die 'Failed to find old version!'
-    new_version=$(grep -aoP '(?<=\+#define OPENTHREAD_API_VERSION ).+' "${OT_VERSIONS_FILE}") || die 'Failed to find new version!'
+    old_version=$(grep '\-\#define OPENTHREAD_API_VERSION' "${OT_VERSIONS_FILE}" | grep -o '[0-9]..') || die 'Failed to find old version!'
+    new_version=$(grep '\+\#define OPENTHREAD_API_VERSION' "${OT_VERSIONS_FILE}" | grep -o '[0-9]..') || die 'Failed to find new version!'
 
     echo -e '\n--------------------------\n'
 
     echo "Old version: ${old_version}"
     echo "New version: ${new_version}"
 
-    [[ $((new_version - old_version)) -gt 0 ]] || die 'Version is not increased!'
+    [ $((new_version - old_version)) -gt 0 ] || die 'Version is not increased!'
 
     echo -e '\n--------------------------\n'
 
