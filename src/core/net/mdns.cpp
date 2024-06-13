@@ -4111,11 +4111,10 @@ void Core::MultiPacketRxMessages::AddNew(OwnedPtr<RxMessage> &aRxMessagePtr)
 
 void Core::MultiPacketRxMessages::HandleTimer(void)
 {
-    TimeMilli              now      = TimerMilli::GetNow();
-    TimeMilli              nextTime = now.GetDistantFuture();
+    NextFireTime           nextTime;
     OwningList<RxMsgEntry> expiredEntries;
 
-    mRxMsgEntries.RemoveAllMatching(ExpireChecker(now), expiredEntries);
+    mRxMsgEntries.RemoveAllMatching(ExpireChecker(nextTime.GetNow()), expiredEntries);
 
     for (RxMsgEntry &expiredEntry : expiredEntries)
     {
@@ -4124,13 +4123,10 @@ void Core::MultiPacketRxMessages::HandleTimer(void)
 
     for (const RxMsgEntry &msgEntry : mRxMsgEntries)
     {
-        nextTime = Min(nextTime, msgEntry.mProcessTime);
+        nextTime.UpdateIfEarlier(msgEntry.mProcessTime);
     }
 
-    if (nextTime != now.GetDistantFuture())
-    {
-        mTimer.FireAtIfEarlier(nextTime);
-    }
+    mTimer.FireAtIfEarlier(nextTime);
 }
 
 void Core::MultiPacketRxMessages::Clear(void)
@@ -4254,20 +4250,16 @@ void Core::TxMessageHistory::CalculateHash(const Message &aMessage, Hash &aHash)
 
 void Core::TxMessageHistory::HandleTimer(void)
 {
-    TimeMilli now      = TimerMilli::GetNow();
-    TimeMilli nextTime = now.GetDistantFuture();
+    NextFireTime nextTime;
 
-    mHashEntries.RemoveAndFreeAllMatching(ExpireChecker(now));
+    mHashEntries.RemoveAndFreeAllMatching(ExpireChecker(nextTime.GetNow()));
 
     for (const HashEntry &entry : mHashEntries)
     {
-        nextTime = Min(nextTime, entry.mExpireTime);
+        nextTime.UpdateIfEarlier(entry.mExpireTime);
     }
 
-    if (nextTime != now.GetDistantFuture())
-    {
-        mTimer.FireAtIfEarlier(nextTime);
-    }
+    mTimer.FireAtIfEarlier(nextTime);
 }
 
 template <typename CacheType, typename BrowserResolverType>
