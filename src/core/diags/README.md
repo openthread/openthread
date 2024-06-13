@@ -168,7 +168,7 @@ status 0x00
 
 Transmit packets repeatedly with a fixed interval.
 
-Send the frame set by `diag frame` if length is omitted. Otherwise overwrite the frame set by `diag frame` and send a frame of the given length(MUST be in range [3, 127]).
+Send the frame set by `diag frame` if length is omitted. Otherwise overwrite the frame set by `diag frame` and send a frame of the given length (MUST be in range [3, 127]).
 
 ```bash
 > diag repeat 100 100
