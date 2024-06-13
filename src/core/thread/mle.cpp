@@ -3583,7 +3583,7 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
     case kRoleChild:
         SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
-        if (RouterIdFromRloc16(sourceAddress) != RouterIdFromRloc16(GetRloc16()))
+        if (!RouterIdMatch(sourceAddress, GetRloc16()))
         {
             IgnoreError(BecomeDetached());
             ExitNow();
