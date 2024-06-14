@@ -3109,18 +3109,18 @@ exit:
 
 bool MleRouter::IsMinimalChild(uint16_t aRloc16)
 {
-    bool rval = false;
+    bool      isMinimalChild = false;
+    Neighbor *neighbor;
 
-    if (RouterIdFromRloc16(aRloc16) == RouterIdFromRloc16(Get<Mac::Mac>().GetShortAddress()))
-    {
-        Neighbor *neighbor;
+    VerifyOrExit(RouterIdMatch(aRloc16, GetRloc16()));
 
-        neighbor = mNeighborTable.FindNeighbor(aRloc16);
+    neighbor = mNeighborTable.FindNeighbor(aRloc16);
+    VerifyOrExit(neighbor != nullptr);
 
-        rval = (neighbor != nullptr) && (!neighbor->IsFullThreadDevice());
-    }
+    isMinimalChild = !neighbor->IsFullThreadDevice();
 
-    return rval;
+exit:
+    return isMinimalChild;
 }
 
 void MleRouter::RemoveRouterLink(Router &aRouter)
