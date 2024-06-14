@@ -175,8 +175,7 @@ Error Udp::Open(SocketHandle &aSocket, otUdpReceive aHandler, void *aContext)
 
     OT_ASSERT(!IsOpen(aSocket));
 
-    aSocket.GetSockName().Clear();
-    aSocket.GetPeerName().Clear();
+    aSocket.Clear();
     aSocket.mHandler = aHandler;
     aSocket.mContext = aContext;
 
