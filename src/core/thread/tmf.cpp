@@ -42,7 +42,7 @@ namespace Tmf {
 //----------------------------------------------------------------------------------------------------------------------
 // MessageInfo
 
-void MessageInfo::SetSockAddrToRloc(void) { SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16()); }
+void MessageInfo::SetSockAddrToRloc(void) { SetSockAddr(Get<Mle::MleRouter>().GetMeshLocalRloc()); }
 
 Error MessageInfo::SetSockAddrToRlocPeerAddrToLeaderAloc(void)
 {
@@ -65,7 +65,7 @@ void MessageInfo::SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast(void)
 void MessageInfo::SetSockAddrToRlocPeerAddrTo(uint16_t aRloc16)
 {
     SetSockAddrToRloc();
-    SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+    SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocalRloc());
     GetPeerAddr().GetIid().SetLocator(aRloc16);
 }
 

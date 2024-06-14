@@ -145,12 +145,12 @@ exit:
 
 const otIp6Address *otThreadGetRloc(otInstance *aInstance)
 {
-    return &AsCoreType(aInstance).Get<Mle::MleRouter>().GetMeshLocal16();
+    return &AsCoreType(aInstance).Get<Mle::MleRouter>().GetMeshLocalRloc();
 }
 
 const otIp6Address *otThreadGetMeshLocalEid(otInstance *aInstance)
 {
-    return &AsCoreType(aInstance).Get<Mle::MleRouter>().GetMeshLocal64();
+    return &AsCoreType(aInstance).Get<Mle::MleRouter>().GetMeshLocalEid();
 }
 
 const otMeshLocalPrefix *otThreadGetMeshLocalPrefix(otInstance *aInstance)

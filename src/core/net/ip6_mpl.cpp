@@ -76,7 +76,7 @@ void MplOption::Init(SeedIdLength aSeedIdLength)
 
 void Mpl::InitOption(MplOption &aOption, const Address &aAddress)
 {
-    if (aAddress == Get<Mle::Mle>().GetMeshLocal16())
+    if (aAddress == Get<Mle::Mle>().GetMeshLocalRloc())
     {
         // Seed ID can be elided when `aAddress` is RLOC.
         aOption.Init(MplOption::kSeedIdLength0);

@@ -98,7 +98,7 @@ Error MeshDiag::DiscoverTopology(const DiscoverConfig &aConfig, DiscoverCallback
             continue;
         }
 
-        destination = Get<Mle::MleRouter>().GetMeshLocal16();
+        destination = Get<Mle::MleRouter>().GetMeshLocalRloc();
         destination.GetIid().SetLocator(Mle::Rloc16FromRouterId(routerId));
 
         SuccessOrExit(error = Get<Client>().SendCommand(kUriDiagnosticGetRequest, Message::kPriorityLow, destination,
@@ -176,7 +176,7 @@ Error MeshDiag::SendQuery(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsL
     VerifyOrExit(Mle::IsActiveRouter(aRloc16), error = kErrorInvalidArgs);
     VerifyOrExit(Get<RouterTable>().IsAllocated(Mle::RouterIdFromRloc16(aRloc16)), error = kErrorNotFound);
 
-    destination = Get<Mle::MleRouter>().GetMeshLocal16();
+    destination = Get<Mle::MleRouter>().GetMeshLocalRloc();
     destination.GetIid().SetLocator(aRloc16);
 
     SuccessOrExit(error = Get<Client>().SendCommand(kUriDiagnosticGetQuery, Message::kPriorityNormal, destination,

@@ -124,7 +124,7 @@ void AnycastLocator::HandleTmf<kUriAnycastLocate>(Coap::Message &aMessage, const
     message = Get<Tmf::Agent>().NewResponseMessage(aMessage);
     VerifyOrExit(message != nullptr);
 
-    SuccessOrExit(Tlv::Append<ThreadMeshLocalEidTlv>(*message, Get<Mle::Mle>().GetMeshLocal64().GetIid()));
+    SuccessOrExit(Tlv::Append<ThreadMeshLocalEidTlv>(*message, Get<Mle::Mle>().GetMeshLocalEid().GetIid()));
     SuccessOrExit(Tlv::Append<ThreadRloc16Tlv>(*message, Get<Mle::Mle>().GetRloc16()));
 
     SuccessOrExit(Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));

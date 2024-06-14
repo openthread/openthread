@@ -390,7 +390,7 @@ public:
      * @returns A reference to the Thread link local address.
      *
      */
-    const Ip6::Address &GetLinkLocalAddress(void) const { return mLinkLocal64.GetAddress(); }
+    const Ip6::Address &GetLinkLocalAddress(void) const { return mLinkLocalAddress.GetAddress(); }
 
     /**
      * Updates the link local address.
@@ -516,20 +516,20 @@ public:
     uint16_t GetRloc16(void) const { return mRloc16; }
 
     /**
-     * Returns a reference to the RLOC assigned to the Thread interface.
+     * Returns the mesh local RLOC IPv6 address assigned to the Thread interface.
      *
-     * @returns A reference to the RLOC assigned to the Thread interface.
+     * @returns The mesh local RLOC IPv6 address.
      *
      */
-    const Ip6::Address &GetMeshLocal16(void) const { return mMeshLocal16.GetAddress(); }
+    const Ip6::Address &GetMeshLocalRloc(void) const { return mMeshLocalRloc.GetAddress(); }
 
     /**
-     * Returns a reference to the ML-EID assigned to the Thread interface.
+     * Returns the mesh local endpoint identifier (ML-EID) IPv6 address assigned to the Thread interface.
      *
-     * @returns A reference to the ML-EID assigned to the Thread interface.
+     * @returns The ML-EID address.
      *
      */
-    const Ip6::Address &GetMeshLocal64(void) const { return mMeshLocal64.GetAddress(); }
+    const Ip6::Address &GetMeshLocalEid(void) const { return mMeshLocalEid.GetAddress(); }
 
     /**
      * Returns a reference to the ML-EID as a `Netif::UnicastAddress`.
@@ -537,7 +537,7 @@ public:
      * @returns A reference to the ML-EID.
      *
      */
-    Ip6::Netif::UnicastAddress &GetMeshLocal64UnicastAddress(void) { return mMeshLocal64; }
+    Ip6::Netif::UnicastAddress &GetMeshLocalEidUnicastAddress(void) { return mMeshLocalEid; }
 
     /**
      * Returns the Router ID of the Leader.
@@ -1457,9 +1457,9 @@ private:
     MsgTxTimer                   mMessageTransmissionTimer;
     DetachGracefullyTimer        mDetachGracefullyTimer;
     Ip6::NetworkPrefix           mMeshLocalPrefix;
-    Ip6::Netif::UnicastAddress   mLinkLocal64;
-    Ip6::Netif::UnicastAddress   mMeshLocal64;
-    Ip6::Netif::UnicastAddress   mMeshLocal16;
+    Ip6::Netif::UnicastAddress   mLinkLocalAddress;
+    Ip6::Netif::UnicastAddress   mMeshLocalEid;
+    Ip6::Netif::UnicastAddress   mMeshLocalRloc;
     Ip6::Netif::MulticastAddress mLinkLocalAllThreadNodes;
     Ip6::Netif::MulticastAddress mRealmLocalAllThreadNodes;
 };
