@@ -1767,34 +1767,6 @@ ff32:40:fdde:ad00:beef:0:0:1
 Done
 ```
 
-### ipmaddr promiscuous
-
-Get multicast promiscuous mode.
-
-```bash
-> ipmaddr promiscuous
-Disabled
-Done
-```
-
-### ipmaddr promiscuous enable
-
-Enable multicast promiscuous mode.
-
-```bash
-> ipmaddr promiscuous enable
-Done
-```
-
-### ipmaddr promiscuous disable
-
-Disable multicast promiscuous mode.
-
-```bash
-> ipmaddr promiscuous disable
-Done
-```
-
 ### ipmaddr rlatn
 
 Get the Realm-Local All Thread Nodes multicast address.

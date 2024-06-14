@@ -1122,10 +1122,6 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
         {
             receive = true;
         }
-        else if (Get<ThreadNetif>().IsMulticastPromiscuousEnabled())
-        {
-            forwardHost = true;
-        }
     }
     else
     {

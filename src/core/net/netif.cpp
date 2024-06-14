@@ -85,7 +85,6 @@ const otNetifMulticastAddress Netif::kLinkLocalAllRoutersMulticastAddress = {
 
 Netif::Netif(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mMulticastPromiscuous(false)
 {
 }
 

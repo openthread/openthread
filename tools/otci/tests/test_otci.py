@@ -257,12 +257,6 @@ class TestOTCI(unittest.TestCase):
 
         logging.info("EID-to-RLOC cache: %r", leader.get_eidcache())
 
-        logging.info("ipmaddr promiscuous: %r", leader.get_ipmaddr_promiscuous())
-        leader.enable_ipmaddr_promiscuous()
-        self.assertTrue(leader.get_ipmaddr_promiscuous())
-        leader.disable_ipmaddr_promiscuous()
-        self.assertFalse(leader.get_ipmaddr_promiscuous())
-
         logging.info("leader data: %r", leader.get_leader_data())
         logging.info("leader neighbor list: %r", leader.get_neighbor_list())
         logging.info("leader neighbor table: %r", leader.get_neighbor_table())

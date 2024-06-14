@@ -1946,18 +1946,6 @@ class OTCI(object):
         """Check if a IPv6 multicast address was subscribed by the Thread interface."""
         return ip in self.get_ipmaddrs()
 
-    def get_ipmaddr_promiscuous(self) -> bool:
-        """Get multicast promiscuous mode."""
-        return self.__parse_Enabled_or_Disabled(self.execute_command("ipmaddr promiscuous"))
-
-    def enable_ipmaddr_promiscuous(self):
-        """Enable multicast promiscuous mode."""
-        self.execute_command('ipmaddr promiscuous enable')
-
-    def disable_ipmaddr_promiscuous(self):
-        """Disable multicast promiscuous mode."""
-        self.execute_command('ipmaddr promiscuous disable')
-
     def get_ipmaddr_llatn(self) -> Ip6Addr:
         """Get Link Local All Thread Nodes Multicast Address"""
         return self.__parse_ip6addr(self.execute_command('ipmaddr llatn'))

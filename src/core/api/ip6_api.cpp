@@ -105,16 +105,6 @@ otError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Addre
     return AsCoreType(aInstance).Get<ThreadNetif>().UnsubscribeExternalMulticast(AsCoreType(aAddress));
 }
 
-bool otIp6IsMulticastPromiscuousEnabled(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<ThreadNetif>().IsMulticastPromiscuousEnabled();
-}
-
-void otIp6SetMulticastPromiscuousEnabled(otInstance *aInstance, bool aEnabled)
-{
-    AsCoreType(aInstance).Get<ThreadNetif>().SetMulticastPromiscuous(aEnabled);
-}
-
 void otIp6SetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallback, void *aCallbackContext)
 {
     AsCoreType(aInstance).Get<Ip6::Ip6>().SetReceiveDatagramCallback(aCallback, aCallbackContext);
