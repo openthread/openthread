@@ -56,7 +56,7 @@ main()
 
     git diff "${OT_SHA_OLD}" -- include/openthread | tee >(cat >&2) | grep '[-+]#define OPENTHREAD_API_VERSION' >"${OT_VERSIONS_FILE}" || die 'Version number is not updated!'
 
-    line_count="$(wc -l < ${OT_VERSIONS_FILE})"
+    line_count="$(wc -l <${OT_VERSIONS_FILE})"
     line_count="${line_count// /}"
 
     [[ $line_count == 2 ]] || die 'Multiple OPENTHREAD_API_VERSION definitions found!'
