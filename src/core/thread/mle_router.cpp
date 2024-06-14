@@ -958,7 +958,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
         router = mRouterTable.FindRouterById(routerId);
         VerifyOrExit(router != nullptr);
 
-        if (mLeaderData.GetLeaderRouterId() == RouterIdFromRloc16(GetRloc16()))
+        if (GetLeaderRloc16() == GetRloc16())
         {
             SetStateLeader(GetRloc16(), kRestoringLeaderRoleAfterReset);
         }

@@ -1004,7 +1004,7 @@ Error Mle::GetLeaderAddress(Ip6::Address &aAddress) const
 
     VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = kErrorDetached);
 
-    aAddress.SetToRoutingLocator(mMeshLocalPrefix, Rloc16FromRouterId(mLeaderData.GetLeaderRouterId()));
+    aAddress.SetToRoutingLocator(mMeshLocalPrefix, GetLeaderRloc16());
 
 exit:
     return error;

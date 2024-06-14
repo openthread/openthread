@@ -522,7 +522,7 @@ Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &a
 
         if (aloc16 == Mle::kAloc16Leader)
         {
-            mMeshDest = Mle::Rloc16FromRouterId(mle.GetLeaderId());
+            mMeshDest = mle.GetLeaderRloc16();
         }
         else if (aloc16 <= Mle::kAloc16DhcpAgentEnd)
         {

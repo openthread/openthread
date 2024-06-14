@@ -152,7 +152,7 @@ bool Manager::IsBackboneRouterPreferredTo(const ServerTlv                  &aSer
                                           const BackboneRouter::ServerData &aOtherServerData) const
 {
     bool     isPreferred;
-    uint16_t leaderRloc16 = Mle::Rloc16FromRouterId(Get<Mle::MleRouter>().GetLeaderId());
+    uint16_t leaderRloc16 = Get<Mle::MleRouter>().GetLeaderRloc16();
 
     VerifyOrExit(aServerTlv.GetServer16() != leaderRloc16, isPreferred = true);
     VerifyOrExit(aOtherServerTlv.GetServer16() != leaderRloc16, isPreferred = false);
