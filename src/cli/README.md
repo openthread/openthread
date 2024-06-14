@@ -3533,13 +3533,13 @@ Done
 
 Module for controlling service registration in Network Data. Each change in service registration must be sent to leader by `netdata register` command before taking effect.
 
-### service add \<enterpriseNumber\> \<serviceData\> \<serverData\>
+### service add \<enterpriseNumber\> \<serviceData\> [\<serverData\>]
 
 Add service to the Network Data.
 
 - enterpriseNumber: IANA enterprise number
 - serviceData: hex-encoded binary service data
-- serverData: hex-encoded binary server data
+- serverData: hex-encoded binary server data (empty if not provided)
 
 ```bash
 > service add 44970 112233 aabbcc
