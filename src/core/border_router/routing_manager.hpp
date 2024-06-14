@@ -811,9 +811,9 @@ private:
 
         struct Router : public Clearable<Router>
         {
-            // The timeout (in msec) for router staying in active state
+            // The timeout (in msec) for router to be considered reachable
             // before starting the Neighbor Solicitation (NS) probes.
-            static constexpr uint32_t kActiveTimeout = OPENTHREAD_CONFIG_BORDER_ROUTING_ROUTER_ACTIVE_CHECK_TIMEOUT;
+            static constexpr uint32_t kReachableTimeout = OPENTHREAD_CONFIG_BORDER_ROUTING_ROUTER_ACTIVE_CHECK_TIMEOUT;
 
             static constexpr uint8_t  kMaxNsProbes          = 5;    // Max number of NS probe attempts.
             static constexpr uint32_t kNsProbeRetryInterval = 1000; // In msec. Time between NS probe attempts.
@@ -827,6 +827,7 @@ private:
                 kContainsNoEntriesOrFlags
             };
 
+            bool IsReachable(void) const { return mNsProbeCount <= kMaxNsProbes; }
             bool Matches(const Ip6::Address &aAddress) const { return aAddress == mAddress; }
             bool Matches(EmptyChecker aChecker) const;
             void CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow) const;
@@ -914,7 +915,7 @@ private:
         void ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
         void ProcessRaFlagsExtOption(const RaFlagsExtOption &aFlagsOption, Router &aRouter);
         bool ContainsOnLinkPrefix(OnLinkPrefix::UlaChecker aUlaChecker) const;
-        void RemoveOrDeprecateEntriesFromInactiveRouters(void);
+        void RemoveOrDeprecateEntriesFromUnreachableRouters(void);
         void RemoveRoutersWithNoEntriesOrFlags(void);
         void RemoveExpiredEntries(void);
         void SignalTableChanged(void);

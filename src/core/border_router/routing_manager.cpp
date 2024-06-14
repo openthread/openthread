@@ -1459,15 +1459,15 @@ void RoutingManager::RxRaTracker::RemoveOrDeprecateOldEntries(TimeMilli aTimeThr
     RemoveExpiredEntries();
 }
 
-void RoutingManager::RxRaTracker::RemoveOrDeprecateEntriesFromInactiveRouters(void)
+void RoutingManager::RxRaTracker::RemoveOrDeprecateEntriesFromUnreachableRouters(void)
 {
     // Remove route prefix entries and deprecate on-link prefix entries
     // in the table for routers that have reached the max NS probe
-    // attempts and considered as inactive.
+    // attempts and considered unreachable.
 
     for (Router &router : mRouters)
     {
-        if (router.mNsProbeCount <= Router::kMaxNsProbes)
+        if (router.IsReachable())
         {
             continue;
         }
@@ -1522,7 +1522,7 @@ void RoutingManager::RxRaTracker::ScheduleAllTimers(void)
 
     for (const Router &router : mRouters)
     {
-        if ((router.mNsProbeCount <= Router::kMaxNsProbes) && !router.mIsLocalDevice)
+        if (router.IsReachable() && !router.mIsLocalDevice)
         {
             // Skip if router is this device or has failed all
             // earlier NS probes.
@@ -1697,7 +1697,8 @@ void RoutingManager::RxRaTracker::UpdateRouterOnRx(Router &aRouter)
     aRouter.mNsProbeCount   = 0;
     aRouter.mLastUpdateTime = TimerMilli::GetNow();
 
-    aRouter.mTimeout = aRouter.mLastUpdateTime + Random::NonCrypto::AddJitter(Router::kActiveTimeout, Router::kJitter);
+    aRouter.mTimeout =
+        aRouter.mLastUpdateTime + Random::NonCrypto::AddJitter(Router::kReachableTimeout, Router::kJitter);
     mRouterTimer.FireAtIfEarlier(aRouter.mTimeout);
 }
 
@@ -1707,7 +1708,7 @@ void RoutingManager::RxRaTracker::HandleRouterTimer(void)
 
     for (Router &router : mRouters)
     {
-        if (router.mNsProbeCount > Router::kMaxNsProbes)
+        if (!router.IsReachable())
         {
             continue;
         }
@@ -1725,7 +1726,7 @@ void RoutingManager::RxRaTracker::HandleRouterTimer(void)
         {
             router.mNsProbeCount++;
 
-            if (router.mNsProbeCount > Router::kMaxNsProbes)
+            if (!router.IsReachable())
             {
                 LogInfo("No response to all Neighbor Solicitations attempts from router %s",
                         router.mAddress.ToString().AsCString());
@@ -1739,7 +1740,7 @@ void RoutingManager::RxRaTracker::HandleRouterTimer(void)
         }
     }
 
-    RemoveOrDeprecateEntriesFromInactiveRouters();
+    RemoveOrDeprecateEntriesFromUnreachableRouters();
 
     ScheduleAllTimers();
 }
@@ -1782,7 +1783,7 @@ void RoutingManager::RxRaTracker::DetermineAndSetFlags(RouterAdvert::Header &aHe
             continue;
         }
 
-        if (router.mNsProbeCount > Router::kMaxNsProbes)
+        if (!router.IsReachable())
         {
             continue;
         }
@@ -1952,7 +1953,7 @@ bool RoutingManager::RxRaTracker::Router::Matches(EmptyChecker aChecker) const
 
     bool hasFlags = false;
 
-    if (mNsProbeCount <= kMaxNsProbes)
+    if (IsReachable())
     {
         hasFlags = (mManagedAddressConfigFlag || mOtherConfigFlag);
     }
