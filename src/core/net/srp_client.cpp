@@ -528,15 +528,15 @@ bool Client::ShouldUpdateHostAutoAddresses(void) const
 {
     bool                        shouldUpdate    = false;
     uint16_t                    registeredCount = 0;
-    Ip6::Netif::UnicastAddress &ml64            = Get<Mle::Mle>().GetMeshLocal64UnicastAddress();
+    Ip6::Netif::UnicastAddress &mlEid           = Get<Mle::Mle>().GetMeshLocalEidUnicastAddress();
 
     VerifyOrExit(mHostInfo.IsAutoAddressEnabled());
 
     // Check all addresses on `ThreadNetif` excluding the mesh local
-    // EID (`ml64`). If any address should be registered but is not,
+    // EID (`mlEid`). If any address should be registered but is not,
     // or if any address was registered earlier but no longer should
     // be, the host information needs to be re-registered to update
-    // the addresses. If there is no eligible address, then `ml64`
+    // the addresses. If there is no eligible address, then `mlEid`
     // should be registered, so its status is checked. Finally, the
     // number of addresses that should be registered is verified
     // against the previous value `mAutoHostAddressCount` to handle
@@ -544,7 +544,7 @@ bool Client::ShouldUpdateHostAutoAddresses(void) const
 
     for (const Ip6::Netif::UnicastAddress &unicastAddress : Get<ThreadNetif>().GetUnicastAddresses())
     {
-        if (&unicastAddress == &ml64)
+        if (&unicastAddress == &mlEid)
         {
             continue;
         }
@@ -562,7 +562,7 @@ bool Client::ShouldUpdateHostAutoAddresses(void) const
 
     if (registeredCount == 0)
     {
-        ExitNow(shouldUpdate = !ml64.mSrpRegistered);
+        ExitNow(shouldUpdate = !mlEid.mSrpRegistered);
     }
 
     shouldUpdate = (registeredCount != mAutoHostAddressCount);
@@ -1350,10 +1350,10 @@ Error Client::AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo)
 
         if (mAutoHostAddressCount == 0)
         {
-            Ip6::Netif::UnicastAddress &ml64 = Get<Mle::Mle>().GetMeshLocal64UnicastAddress();
+            Ip6::Netif::UnicastAddress &mlEid = Get<Mle::Mle>().GetMeshLocalEidUnicastAddress();
 
-            SuccessOrExit(error = AppendAaaaRecord(ml64.GetAddress(), aMessage, aInfo));
-            ml64.mSrpRegistered = true;
+            SuccessOrExit(error = AppendAaaaRecord(mlEid.GetAddress(), aMessage, aInfo));
+            mlEid.mSrpRegistered = true;
             mAutoHostAddressCount++;
         }
     }

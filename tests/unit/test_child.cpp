@@ -214,7 +214,7 @@ void TestChildIp6Address(void)
     numAddresses = 0;
 
     // First addresses uses the mesh local prefix (mesh-local address).
-    addresses[numAddresses] = sInstance->Get<Mle::MleRouter>().GetMeshLocal64();
+    addresses[numAddresses] = sInstance->Get<Mle::MleRouter>().GetMeshLocalEid();
     addresses[numAddresses].SetIid(meshLocalIid);
 
     numAddresses++;

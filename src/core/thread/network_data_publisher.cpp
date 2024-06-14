@@ -510,7 +510,7 @@ void Publisher::DnsSrpServiceEntry::PublishUnicast(const Ip6::Address &aAddress,
 void Publisher::DnsSrpServiceEntry::PublishUnicast(uint16_t aPort)
 {
     LogInfo("Publishing DNS/SRP service unicast (ml-eid, port:%d)", aPort);
-    Publish(Info::InfoUnicast(kTypeUnicastMeshLocalEid, Get<Mle::Mle>().GetMeshLocal64(), aPort));
+    Publish(Info::InfoUnicast(kTypeUnicastMeshLocalEid, Get<Mle::Mle>().GetMeshLocalEid(), aPort));
 }
 
 void Publisher::DnsSrpServiceEntry::Publish(const Info &aInfo)
@@ -546,7 +546,7 @@ void Publisher::DnsSrpServiceEntry::HandleNotifierEvents(Events aEvents)
 {
     if ((GetType() == kTypeUnicastMeshLocalEid) && aEvents.Contains(kEventThreadMeshLocalAddrChanged))
     {
-        mInfo.SetAddress(Get<Mle::Mle>().GetMeshLocal64());
+        mInfo.SetAddress(Get<Mle::Mle>().GetMeshLocalEid());
 
         if (GetState() == kAdded)
         {

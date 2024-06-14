@@ -1097,7 +1097,7 @@ void TestSrpClientDelayedResponse(void)
             break;
         }
 
-        serverSockAddr.SetAddress(sInstance->Get<Mle::Mle>().GetMeshLocal16());
+        serverSockAddr.SetAddress(sInstance->Get<Mle::Mle>().GetMeshLocalRloc());
         serverSockAddr.SetPort(kServerPort);
         SuccessOrQuit(srpClient->Start(serverSockAddr));
 
