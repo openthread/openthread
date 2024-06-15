@@ -558,51 +558,72 @@ public:
     /**
      * Retrieves the Leader's RLOC.
      *
-     * @param[out]  aAddress  A reference to the Leader's RLOC.
+     * @param[out]  aAddress  A reference to an address to return the Leader's RLOC.
      *
-     * @retval kErrorNone      Successfully retrieved the Leader's RLOC.
+     * @retval kErrorNone      Successfully retrieved the Leader's RLOC. @p aAddress is updated.
      * @retval kErrorDetached  The Thread interface is not currently attached to a Thread Partition.
      *
      */
-    Error GetLeaderAddress(Ip6::Address &aAddress) const;
+    Error GetLeaderRloc(Ip6::Address &aAddress) const;
 
     /**
      * Retrieves the Leader's ALOC.
      *
-     * @param[out]  aAddress  A reference to the Leader's ALOC.
+     * @param[out]  aAddress  A reference to an address to return the Leader's ALOC.
      *
-     * @retval kErrorNone      Successfully retrieved the Leader's ALOC.
-     * @retval kErrorDetached  The Thread interface is not currently attached to a Thread Partition.
+     * @retval kErrorNone      Successfully retrieved the Leader's ALOC. @p aAddress is updated.
+     * @retval kErrorDetached  Device has not attached yet.
      *
      */
-    Error GetLeaderAloc(Ip6::Address &aAddress) const { return GetLocatorAddress(aAddress, kAloc16Leader); }
+    Error GetLeaderAloc(Ip6::Address &aAddress) const;
 
     /**
-     * Computes the Commissioner's ALOC.
+     * Constructs a Commissioner's ALOC IPv6 address for a given commissioner session ID.
      *
-     * @param[out]  aAddress        A reference to the Commissioner's ALOC.
-     * @param[in]   aSessionId      Commissioner session id.
+     * @param[in]  aSessionId  Commissioner session ID to construct ALOC for.
+     * @param[out] aAddress    A reference to an address to return the Commissioner ALOC.
      *
-     * @retval kErrorNone      Successfully retrieved the Commissioner's ALOC.
-     * @retval kErrorDetached  The Thread interface is not currently attached to a Thread Partition.
+     * @retval kErrorNone      Successfully constructed the Commissioner's ALOC. @p aAddress is updated.
+     * @retval kErrorDetached  Device has not attached yet.
      *
      */
-    Error GetCommissionerAloc(Ip6::Address &aAddress, uint16_t aSessionId) const
-    {
-        return GetLocatorAddress(aAddress, CommissionerAloc16FromId(aSessionId));
-    }
+    Error ConstructCommissionerAloc(uint16_t aSessionId, Ip6::Address &aAddress) const;
 
     /**
-     * Retrieves the Service ALOC for given Service ID.
+     * Constructs a Service ALOC IPv6 address for given Service ID.
      *
-     * @param[in]   aServiceId Service ID to get ALOC for.
-     * @param[out]  aAddress   A reference to the Service ALOC.
+     * @param[in]  aServiceId   Service ID to construct ALOC for.
+     * @param[out] aAddress     A reference to an address to return the Service ALOC.
      *
-     * @retval kErrorNone      Successfully retrieved the Service ALOC.
-     * @retval kErrorDetached  The Thread interface is not currently attached to a Thread Partition.
+     * @retval kErrorNone      Successfully constructed the Service ALOC. @p aAddress is updated.
+     * @retval kErrorDetached  Device has not attached yet.
      *
      */
-    Error GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const;
+    Error ConstructServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const;
+
+    /**
+     * Constructs an RLOC IPv6 address for a given RLOC16.
+     *
+     * @param[in]  aRloc16   An RLOC16 value.
+     * @param[out] aAddress  A reference to an address to return the RLOC.
+     *
+     * @retval kErrorNone      Successfully constructed RLOC. @p aAddress is updated
+     * @retval kErrorDetached  Device has not attached yet.
+     *
+     */
+    Error ConstructRloc(uint16_t aRloc16, Ip6::Address &aAddress) const;
+
+    /**
+     * Constructs an ALOC IPv6 address for a given ALOC16
+     *
+     * @param[in]  aAloc16   An ALOC16 value.
+     * @param[out] aAddress  A reference to an address to return the ALOC.
+     *
+     * @retval kErrorNone      Successfully constructed ALOC. @p aAddress is updated
+     * @retval kErrorDetached  Device has not attached yet.
+     *
+     */
+    Error ConstructAloc(uint16_t aAloc16, Ip6::Address &aAddress) const { return ConstructRloc(aAloc16, aAddress); }
 
     /**
      * Returns the most recently received Leader Data.
@@ -676,18 +697,6 @@ public:
      *
      */
     void RequestShorterChildIdRequest(void);
-
-    /**
-     * Gets the RLOC or ALOC of a given RLOC16 or ALOC16.
-     *
-     * @param[out]  aAddress  A reference to the RLOC or ALOC.
-     * @param[in]   aLocator  RLOC16 or ALOC16.
-     *
-     * @retval kErrorNone      If got the RLOC or ALOC successfully.
-     * @retval kErrorDetached  If device is detached.
-     *
-     */
-    Error GetLocatorAddress(Ip6::Address &aAddress, uint16_t aLocator) const;
 
     /**
      * Schedules a Child Update Request.

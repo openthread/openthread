@@ -79,7 +79,7 @@ exit:
 
 otError otThreadGetLeaderRloc(otInstance *aInstance, otIp6Address *aLeaderRloc)
 {
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderAddress(AsCoreType(aLeaderRloc));
+    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderRloc(AsCoreType(aLeaderRloc));
 }
 
 otLinkModeConfig otThreadGetLinkMode(otInstance *aInstance)
@@ -189,7 +189,7 @@ const otIp6Address *otThreadGetRealmLocalAllThreadNodesMulticastAddress(otInstan
 
 otError otThreadGetServiceAloc(otInstance *aInstance, uint8_t aServiceId, otIp6Address *aServiceAloc)
 {
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetServiceAloc(aServiceId, AsCoreType(aServiceAloc));
+    return AsCoreType(aInstance).Get<Mle::MleRouter>().ConstructServiceAloc(aServiceId, AsCoreType(aServiceAloc));
 }
 
 const char *otThreadGetNetworkName(otInstance *aInstance)

@@ -166,7 +166,7 @@ private:
             mPrefix = aPrefix;
 
             mAloc.InitAsThreadOrigin();
-            mAloc.GetAddress().SetToAnycastLocator(aMeshLocalPrefix, (Ip6::Address::kAloc16Mask << 8) + aContextId);
+            mAloc.GetAddress().SetToLocator(aMeshLocalPrefix, (Ip6::Address::kAloc16Mask << 8) + aContextId);
             mAloc.mMeshLocal = true;
         }
 

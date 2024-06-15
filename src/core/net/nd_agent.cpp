@@ -101,10 +101,10 @@ void Agent::UpdateService(void)
 
         if (error == kErrorNone)
         {
-            uint16_t rloc = Mle::kAloc16NeighborDiscoveryAgentStart + lowpanContext.mContextId - 1;
+            uint16_t aloc = Mle::kAloc16NeighborDiscoveryAgentStart + lowpanContext.mContextId - 1;
 
             mAloc.InitAsThreadOrigin();
-            mAloc.GetAddress().SetToAnycastLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), rloc);
+            IgnoreError(Get<Mle::Mle>().ConstructAloc(aloc, mAloc.GetAddress()));
             mAloc.mMeshLocal = true;
             Get<ThreadNetif>().AddUnicastAddress(mAloc);
             ExitNow();

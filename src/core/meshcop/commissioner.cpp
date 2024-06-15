@@ -811,7 +811,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message          *aMessage
         ExitNow();
     }
 
-    IgnoreError(Get<Mle::MleRouter>().GetCommissionerAloc(mCommissionerAloc.GetAddress(), mSessionId));
+    IgnoreError(Get<Mle::MleRouter>().ConstructCommissionerAloc(mSessionId, mCommissionerAloc.GetAddress()));
     Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
 
     SetState(kStateActive);

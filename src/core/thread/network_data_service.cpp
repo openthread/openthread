@@ -182,8 +182,9 @@ Error Manager::GetNextDnsSrpAnycastInfo(Iterator &aIterator, DnsSrpAnycast::Info
     } while (tlv->GetServiceDataLength() < sizeof(DnsSrpAnycast::ServiceData));
 
     tlv->GetServiceData(serviceData);
-    aInfo.mAnycastAddress.SetToAnycastLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
-                                              Mle::ServiceAlocFromId(tlv->GetServiceId()));
+
+    IgnoreError(Get<Mle::Mle>().ConstructServiceAloc(tlv->GetServiceId(), aInfo.mAnycastAddress));
+
     aInfo.mSequenceNumber =
         reinterpret_cast<const DnsSrpAnycast::ServiceData *>(serviceData.GetBytes())->GetSequenceNumber();
 
@@ -297,8 +298,10 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
                 // Handle the case where the server TLV data only
                 // contains a port number and use the RLOC as the
                 // IPv6 address.
-                aInfo.mSockAddr.GetAddress().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
-                                                                 aIterator.mServerSubTlv->GetServer16());
+
+                uint16_t rloc16 = aIterator.mServerSubTlv->GetServer16();
+
+                IgnoreError(Get<Mle::Mle>().ConstructRloc(rloc16, aInfo.mSockAddr.GetAddress()));
                 aInfo.mSockAddr.SetPort(BigEndian::ReadUint16(data.GetBytes()));
                 aInfo.mOrigin = DnsSrpUnicast::kFromServerData;
                 aInfo.mRloc16 = aIterator.mServerSubTlv->GetServer16();

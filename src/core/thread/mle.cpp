@@ -998,40 +998,34 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
     mLeaderData.SetLeaderRouterId(aLeaderRouterId);
 }
 
-Error Mle::GetLeaderAddress(Ip6::Address &aAddress) const
+Error Mle::GetLeaderRloc(Ip6::Address &aAddress) const { return ConstructRloc(GetLeaderRloc16(), aAddress); }
+
+Error Mle::GetLeaderAloc(Ip6::Address &aAddress) const { return ConstructAloc(kAloc16Leader, aAddress); }
+
+Error Mle::ConstructRloc(uint16_t aRloc16, Ip6::Address &aAddress) const
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = kErrorDetached);
+    if (GetRloc16() == Mac::kShortAddrInvalid)
+    {
+        aAddress.Clear();
+        ExitNow(error = kErrorDetached);
+    }
 
-    aAddress.SetToRoutingLocator(mMeshLocalPrefix, GetLeaderRloc16());
+    aAddress.SetToLocator(mMeshLocalPrefix, aRloc16);
 
 exit:
     return error;
 }
 
-Error Mle::GetLocatorAddress(Ip6::Address &aAddress, uint16_t aLocator) const
+Error Mle::ConstructCommissionerAloc(uint16_t aSessionId, Ip6::Address &aAddress) const
 {
-    Error error = kErrorNone;
-
-    VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = kErrorDetached);
-
-    memcpy(&aAddress, &mMeshLocalRloc.GetAddress(), 14);
-    aAddress.GetIid().SetLocator(aLocator);
-
-exit:
-    return error;
+    return ConstructAloc(CommissionerAloc16FromId(aSessionId), aAddress);
 }
 
-Error Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
+Error Mle::ConstructServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
 {
-    Error error = kErrorNone;
-
-    VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = kErrorDetached);
-    aAddress.SetToAnycastLocator(mMeshLocalPrefix, ServiceAlocFromId(aServiceId));
-
-exit:
-    return error;
+    return ConstructAloc(ServiceAlocFromId(aServiceId), aAddress);
 }
 
 const LeaderData &Mle::GetLeaderData(void)
@@ -3884,8 +3878,7 @@ void Mle::InformPreviousParent(void)
     SuccessOrExit(error = message->SetLength(0));
 
     messageInfo.SetSockAddr(GetMeshLocalEid());
-    messageInfo.SetPeerAddr(GetMeshLocalRloc());
-    messageInfo.GetPeerAddr().GetIid().SetLocator(mPreviousParentRloc);
+    IgnoreError(ConstructRloc(mPreviousParentRloc, messageInfo.GetPeerAddr()));
 
     SuccessOrExit(error = Get<Ip6::Ip6>().SendDatagram(*message, messageInfo, Ip6::kProtoNone));
 

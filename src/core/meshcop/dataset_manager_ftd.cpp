@@ -241,7 +241,7 @@ Error DatasetManager::HandleSetOrReplace(MgmtCommand             aCommand,
         Ip6::Address destination;
 
         SuccessOrExit(Get<NetworkData::Leader>().FindCommissioningSessionId(localSessionId));
-        SuccessOrExit(Get<Mle::MleRouter>().GetCommissionerAloc(destination, localSessionId));
+        SuccessOrExit(Get<Mle::MleRouter>().ConstructCommissionerAloc(localSessionId, destination));
         Get<Leader>().SendDatasetChanged(destination);
     }
 

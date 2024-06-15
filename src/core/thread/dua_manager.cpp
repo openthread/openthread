@@ -511,16 +511,15 @@ void DuaManager::PerformNextRegistration(void)
     {
         uint8_t pbbrServiceId;
 
+        messageInfo.SetSockAddrToRloc();
+
         SuccessOrExit(error = Get<BackboneRouter::Leader>().GetServiceId(pbbrServiceId));
-        SuccessOrExit(error = mle.GetServiceAloc(pbbrServiceId, messageInfo.GetPeerAddr()));
+        SuccessOrExit(error = mle.ConstructServiceAloc(pbbrServiceId, messageInfo.GetPeerAddr()));
     }
     else
     {
-        messageInfo.GetPeerAddr().SetToRoutingLocator(mle.GetMeshLocalPrefix(),
-                                                      Get<BackboneRouter::Leader>().GetServer16());
+        messageInfo.SetSockAddrToRlocPeerAddrTo(Get<BackboneRouter::Leader>().GetServer16());
     }
-
-    messageInfo.SetSockAddrToRloc();
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, &DuaManager::HandleDuaResponse, this));
 

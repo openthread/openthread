@@ -701,7 +701,7 @@ void Manager::HandleDadBackboneAnswer(const Ip6::Address &aDua, const Ip6::Inter
     {
         Ip6::Address dest;
 
-        dest.SetToRoutingLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), ndProxy->GetRloc16());
+        IgnoreError(Get<Mle::Mle>().ConstructRloc(ndProxy->GetRloc16(), dest));
         Get<AddressResolver>().SendAddressError(aDua, aMeshLocalIid, &dest);
     }
 
@@ -719,7 +719,8 @@ void Manager::HandleExtendedBackboneAnswer(const Ip6::Address             &aDua,
 {
     Ip6::Address dest;
 
-    dest.SetToRoutingLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), aSrcRloc16);
+    IgnoreError(Get<Mle::Mle>().ConstructRloc(aSrcRloc16, dest));
+
     Get<AddressResolver>().SendAddressQueryResponse(aDua, aMeshLocalIid, &aTimeSinceLastTransaction, dest);
 
     LogInfo("HandleExtendedBackboneAnswer: target=%s, mliid=%s, LTT=%lus, rloc16=%04x", aDua.ToString().AsCString(),
