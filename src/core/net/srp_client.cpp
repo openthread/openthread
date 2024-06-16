@@ -267,7 +267,7 @@ Client::Client(Instance &aInstance)
     , mKeyLease(0)
     , mDefaultLease(kDefaultLease)
     , mDefaultKeyLease(kDefaultKeyLease)
-    , mSocket(aInstance)
+    , mSocket(aInstance, *this)
     , mDomainName(kDefaultDomainName)
     , mTimer(aInstance)
 {
@@ -296,7 +296,7 @@ Error Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
     VerifyOrExit(GetState() == kStateStopped,
                  error = (aServerSockAddr == GetServerAddress()) ? kErrorNone : kErrorBusy);
 
-    SuccessOrExit(error = mSocket.Open(Client::HandleUdpReceive, this));
+    SuccessOrExit(error = mSocket.Open());
     SuccessOrExit(error = mSocket.Connect(aServerSockAddr));
 
     LogInfo("%starting, server %s", (aRequester == kRequesterUser) ? "S" : "Auto-s",
@@ -1583,11 +1583,11 @@ void Client::UpdateRecordLengthInMessage(Dns::ResourceRecord &aRecord, uint16_t 
     aMessage.Write(aOffset, aRecord);
 }
 
-void Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    static_cast<Client *>(aContext)->ProcessResponse(AsCoreType(aMessage));
+    ProcessResponse(aMessage);
 }
 
 void Client::ProcessResponse(Message &aMessage)

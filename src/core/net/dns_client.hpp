@@ -839,7 +839,7 @@ private:
     static void GetQueryTypeAndCallback(const Query &aQuery, QueryType &aType, Callback &aCallback, void *&aContext);
     Error       AppendNameFromQuery(const Query &aQuery, Message &aMessage);
     Query      *FindQueryById(uint16_t aMessageId);
-    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMsgInfo);
+    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMsgInfo);
     void        ProcessResponse(const Message &aResponseMessage);
     Error       ParseResponse(const Message &aResponseMessage, Query *&aQuery, Error &aResponseError);
     bool        CanFinalizeQuery(Query &aQuery);
@@ -904,9 +904,10 @@ private:
 
     static constexpr uint16_t kUdpQueryMaxSize = 512;
 
-    using RetryTimer = TimerMilliIn<Client, &Client::HandleTimer>;
+    using RetryTimer   = TimerMilliIn<Client, &Client::HandleTimer>;
+    using ClientSocket = Ip6::Udp::SocketIn<Client, &Client::HandleUdpReceive>;
 
-    Ip6::Udp::Socket mSocket;
+    ClientSocket mSocket;
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
     Ip6::Tcp::Endpoint mEndpoint;

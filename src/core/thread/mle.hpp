@@ -1249,9 +1249,6 @@ private:
     //------------------------------------------------------------------------------------------------------------------
     // Methods
 
-    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    static void HandleDetachGracefullyTimer(Timer &aTimer);
-
     Error      Start(StartMode aMode);
     void       Stop(StopMode aMode);
     TxMessage *NewMleMessage(Command aCommand);
@@ -1391,6 +1388,7 @@ private:
     using AttachTimer           = TimerMilliIn<Mle, &Mle::HandleAttachTimer>;
     using DelayTimer            = TimerMilliIn<Mle, &Mle::HandleDelayedResponseTimer>;
     using MsgTxTimer            = TimerMilliIn<Mle, &Mle::HandleMessageTransmissionTimer>;
+    using MleSocket             = Ip6::Udp::SocketIn<Mle, &Mle::HandleUdpReceive>;
 
     static const otMeshLocalPrefix kMeshLocalPrefixInit;
 
@@ -1434,14 +1432,14 @@ private:
     uint64_t mLastUpdatedTimestamp;
 #endif
 
-    LeaderData       mLeaderData;
-    Parent           mParent;
-    NeighborTable    mNeighborTable;
-    MessageQueue     mDelayedResponses;
-    TxChallenge      mParentRequestChallenge;
-    ParentCandidate  mParentCandidate;
-    Ip6::Udp::Socket mSocket;
-    Counters         mCounters;
+    LeaderData      mLeaderData;
+    Parent          mParent;
+    NeighborTable   mNeighborTable;
+    MessageQueue    mDelayedResponses;
+    TxChallenge     mParentRequestChallenge;
+    ParentCandidate mParentCandidate;
+    MleSocket       mSocket;
+    Counters        mCounters;
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     ParentSearch mParentSearch;
 #endif

@@ -192,11 +192,8 @@ private:
     Error AppendVendorSpecificInformation(Message &aMessage);
 
     Error AddIaAddress(Message &aMessage, const Ip6::Address &aPrefix, ClientIdentifier &aClientId);
-
-    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    void ProcessSolicit(Message &aMessage, const Ip6::Address &aDst, const TransactionId &aTransactionId);
+    void  HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void  ProcessSolicit(Message &aMessage, const Ip6::Address &aDst, const TransactionId &aTransactionId);
 
     uint16_t FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Code aCode);
     Error    ProcessClientIdentifier(Message &aMessage, uint16_t aOffset, ClientIdentifier &aClientId);
@@ -209,7 +206,9 @@ private:
                     ClientIdentifier    &aClientId,
                     IaNa                &aIaNa);
 
-    Ip6::Udp::Socket mSocket;
+    using ServerSocket = Ip6::Udp::SocketIn<Server, &Server::HandleUdpReceive>;
+
+    ServerSocket mSocket;
 
     PrefixAgent mPrefixAgents[kNumPrefixes];
     uint8_t     mPrefixAgentsCount;

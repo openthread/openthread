@@ -1693,7 +1693,7 @@ Resource::Resource(Uri aUri, RequestHandler aHandler, void *aContext)
 
 Coap::Coap(Instance &aInstance)
     : CoapBase(aInstance, &Coap::Send)
-    , mSocket(aInstance)
+    , mSocket(aInstance, *this)
 {
 }
 
@@ -1704,7 +1704,7 @@ Error Coap::Start(uint16_t aPort, Ip6::NetifIdentifier aNetifIdentifier)
 
     VerifyOrExit(!mSocket.IsBound());
 
-    SuccessOrExit(error = mSocket.Open(&Coap::HandleUdpReceive, this));
+    SuccessOrExit(error = mSocket.Open());
     socketOpened = true;
 
     SuccessOrExit(error = mSocket.Bind(aPort, aNetifIdentifier));
@@ -1731,9 +1731,9 @@ exit:
     return error;
 }
 
-void Coap::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void Coap::HandleUdpReceive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    static_cast<Coap *>(aContext)->Receive(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
+    Receive(AsCoapMessage(&aMessage), aMessageInfo);
 }
 
 Error Coap::Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

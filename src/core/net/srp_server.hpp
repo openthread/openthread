@@ -1034,7 +1034,6 @@ private:
                              uint32_t                 aKeyLease,
                              bool                     mUseShortLeaseOption,
                              const Ip6::MessageInfo  &aMessageInfo);
-    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void        HandleLeaseTimer(void);
     static void HandleOutstandingUpdatesTimer(Timer &aTimer);
@@ -1050,8 +1049,9 @@ private:
     using LeaseTimer           = TimerMilliIn<Server, &Server::HandleLeaseTimer>;
     using UpdateTimer          = TimerMilliIn<Server, &Server::HandleOutstandingUpdatesTimer>;
     using CompletedUpdatesTask = TaskletIn<Server, &Server::ProcessCompletedUpdates>;
+    using ServerSocket         = Ip6::Udp::SocketIn<Server, &Server::HandleUdpReceive>;
 
-    Ip6::Udp::Socket mSocket;
+    ServerSocket mSocket;
 
     Callback<otSrpServerServiceUpdateHandler> mServiceUpdateHandler;
 

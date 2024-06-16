@@ -100,8 +100,7 @@ private:
 
     void HandleNotifierEvents(Events aEvents);
 
-    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -120,8 +119,9 @@ private:
     Coap::Message *PrepareJoinerEntrustMessage(void);
 
     using JoinerRouterTimer = TimerMilliIn<JoinerRouter, &JoinerRouter::HandleTimer>;
+    using JoinerSocket      = Ip6::Udp::SocketIn<JoinerRouter, &JoinerRouter::HandleUdpReceive>;
 
-    Ip6::Udp::Socket mSocket;
+    JoinerSocket mSocket;
 
     JoinerRouterTimer mTimer;
     MessageQueue      mDelayedJoinEnts;

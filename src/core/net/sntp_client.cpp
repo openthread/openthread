@@ -51,7 +51,7 @@ namespace Sntp {
 RegisterLogModule("SntpClnt");
 
 Client::Client(Instance &aInstance)
-    : mSocket(aInstance)
+    : mSocket(aInstance, *this)
     , mRetransmissionTimer(aInstance)
     , mUnixEra(0)
 {
@@ -61,7 +61,7 @@ Error Client::Start(void)
 {
     Error error;
 
-    SuccessOrExit(error = mSocket.Open(&Client::HandleUdpReceive, this));
+    SuccessOrExit(error = mSocket.Open());
     SuccessOrExit(error = mSocket.Bind(0, Ip6::kNetifUnspecified));
 
 exit:
@@ -261,11 +261,6 @@ void Client::HandleRetransmissionTimer(void)
     }
 
     mRetransmissionTimer.FireAt(nextTime);
-}
-
-void Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Client *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
 }
 
 void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

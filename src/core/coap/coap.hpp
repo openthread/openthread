@@ -997,11 +997,14 @@ public:
     Error Stop(void);
 
 protected:
-    Ip6::Udp::Socket mSocket;
+    void HandleUdpReceive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    using CoapSocket = Ip6::Udp::SocketIn<Coap, &Coap::HandleUdpReceive>;
+
+    CoapSocket mSocket;
 
 private:
     static Error Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void  HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     Error        Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 };
 

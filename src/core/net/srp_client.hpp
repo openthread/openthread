@@ -1040,7 +1040,7 @@ private:
     Error        AppendUpdateLeaseOptRecord(Message &aMessage);
     Error        AppendSignature(Message &aMessage, Info &aInfo);
     void         UpdateRecordLengthInMessage(Dns::ResourceRecord &aRecord, uint16_t aOffset, Message &aMessage) const;
-    static void  HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void         HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void         ProcessResponse(Message &aMessage);
     bool         IsResponseMessageIdValid(uint16_t aId) const;
     void         HandleUpdateDone(void);
@@ -1074,7 +1074,8 @@ private:
 
     static_assert(kMaxTxFailureRetries < 16, "kMaxTxFailureRetries exceed the range of mTxFailureRetryCount (4-bit)");
 
-    using DelayTimer = TimerMilliIn<Client, &Client::HandleTimer>;
+    using DelayTimer   = TimerMilliIn<Client, &Client::HandleTimer>;
+    using ClientSocket = Ip6::Udp::SocketIn<Client, &Client::HandleUdpReceive>;
 
     State   mState;
     uint8_t mTxFailureRetryCount : 4;
@@ -1097,7 +1098,7 @@ private:
     uint32_t  mDefaultLease;
     uint32_t  mDefaultKeyLease;
 
-    Ip6::Udp::Socket mSocket;
+    ClientSocket mSocket;
 
     Callback<ClientCallback> mCallback;
     const char              *mDomainName;

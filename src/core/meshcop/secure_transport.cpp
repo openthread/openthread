@@ -87,7 +87,7 @@ SecureTransport::SecureTransport(Instance &aInstance, bool aLayerTwoSecurity, bo
     , mMaxConnectionAttempts(0)
     , mRemainingConnectionAttempts(0)
     , mReceiveMessage(nullptr)
-    , mSocket(aInstance)
+    , mSocket(aInstance, *this)
     , mMessageSubType(Message::kSubTypeNone)
     , mMessageDefaultSubType(Message::kSubTypeNone)
 {
@@ -158,7 +158,7 @@ Error SecureTransport::Open(ReceiveHandler aReceiveHandler, ConnectedHandler aCo
 
     VerifyOrExit(IsStateClosed(), error = kErrorAlready);
 
-    SuccessOrExit(error = mSocket.Open(&SecureTransport::HandleReceive, this));
+    SuccessOrExit(error = mSocket.Open());
 
     mConnectedCallback.Set(aConnectedHandler, aContext);
     mReceiveCallback.Set(aReceiveHandler, aContext);
@@ -202,11 +202,6 @@ Error SecureTransport::Connect(const Ip6::SockAddr &aSockAddr)
 
 exit:
     return error;
-}
-
-void SecureTransport::HandleReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<SecureTransport *>(aContext)->HandleReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
 }
 
 void SecureTransport::HandleReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

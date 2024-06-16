@@ -84,6 +84,8 @@ enum NetifIdentifier : uint8_t
 class Udp : public InstanceLocator, private NonCopyable
 {
 public:
+    typedef otUdpReceive ReceiveHandler; ///< Receive handler callback.
+
     /**
      * Implements a UDP/IPv6 socket.
      *
@@ -157,9 +159,11 @@ public:
          * Initializes the object.
          *
          * @param[in]  aInstance  A reference to OpenThread instance.
+         * @param[in]  aHandler  A pointer to a function that is called when receiving UDP messages.
+         * @param[in]  aContext  A pointer to arbitrary context information.
          *
          */
-        explicit Socket(Instance &aInstance);
+        Socket(Instance &aInstance, ReceiveHandler aHandler, void *aContext);
 
         /**
          * Returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
@@ -193,14 +197,11 @@ public:
         /**
          * Opens the UDP socket.
          *
-         * @param[in]  aHandler  A pointer to a function that is called when receiving UDP messages.
-         * @param[in]  aContext  A pointer to arbitrary context information.
-         *
          * @retval kErrorNone     Successfully opened the socket.
          * @retval kErrorFailed   Failed to open the socket.
          *
          */
-        Error Open(otUdpReceive aHandler, void *aContext);
+        Error Open(void);
 
         /**
          * Returns if the UDP socket is open.
@@ -322,6 +323,36 @@ public:
          */
         Error LeaveNetifMulticastGroup(NetifIdentifier aNetifIdentifier, const Address &aAddress);
 #endif
+    };
+
+    /**
+     * A socket owned by a specific type with a given  owner type as the callback.
+     *
+     * @tparam Owner                The type of the owner of this socket.
+     * @tparam HandleUdpReceivePtr  A pointer to a non-static member method of `Owner` to handle received messages.
+     *
+     */
+    template <typename Owner, void (Owner::*HandleUdpReceivePtr)(Message &aMessage, const MessageInfo &aMessageInfo)>
+    class SocketIn : public Socket
+    {
+    public:
+        /**
+         * Initializes the socket.
+         *
+         * @param[in]  aInstance   The OpenThread instance.
+         * @param[in]  aOnwer      The owner of the socket, providing the `HandleUdpReceivePtr` callback.
+         *
+         */
+        explicit SocketIn(Instance &aInstance, Owner &aOwner)
+            : Socket(aInstance, HandleUdpReceive, &aOwner)
+        {
+        }
+
+    private:
+        static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+        {
+            (reinterpret_cast<Owner *>(aContext)->*HandleUdpReceivePtr)(AsCoreType(aMessage), AsCoreType(aMessageInfo));
+        }
     };
 
     /**
@@ -480,7 +511,7 @@ public:
      * @retval kErrorFailed   Failed to open the socket.
      *
      */
-    Error Open(SocketHandle &aSocket, otUdpReceive aHandler, void *aContext);
+    Error Open(SocketHandle &aSocket, ReceiveHandler aHandler, void *aContext);
 
     /**
      * Returns if a UDP socket is open.
