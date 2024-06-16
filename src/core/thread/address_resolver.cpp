@@ -822,7 +822,7 @@ void AddressResolver::HandleTmf<kUriAddressError>(Coap::Message &aMessage, const
 
             if (child.RemoveIp6Address(target) == kErrorNone)
             {
-                SuccessOrExit(error = Get<Mle::Mle>().GetLocatorAddress(destination, child.GetRloc16()));
+                destination.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), child.GetRloc16());
 
                 SendAddressError(target, meshLocalIid, &destination);
                 ExitNow();

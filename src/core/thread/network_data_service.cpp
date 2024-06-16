@@ -182,8 +182,9 @@ Error Manager::GetNextDnsSrpAnycastInfo(Iterator &aIterator, DnsSrpAnycast::Info
     } while (tlv->GetServiceDataLength() < sizeof(DnsSrpAnycast::ServiceData));
 
     tlv->GetServiceData(serviceData);
-    aInfo.mAnycastAddress.SetToAnycastLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
-                                              Mle::ServiceAlocFromId(tlv->GetServiceId()));
+
+    Get<Mle::Mle>().GetServiceAloc(tlv->GetServiceId(), aInfo.mAnycastAddress);
+
     aInfo.mSequenceNumber =
         reinterpret_cast<const DnsSrpAnycast::ServiceData *>(serviceData.GetBytes())->GetSequenceNumber();
 

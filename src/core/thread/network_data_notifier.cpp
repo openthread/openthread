@@ -216,7 +216,7 @@ Error Notifier::SendServerDataNotification(uint16_t aOldRloc16, const NetworkDat
         SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, aOldRloc16));
     }
 
-    IgnoreError(messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
+    messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleCoapResponse, this));
 
     LogInfo("Sent %s", UriToString<kUriServerData>());

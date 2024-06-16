@@ -998,40 +998,21 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
     mLeaderData.SetLeaderRouterId(aLeaderRouterId);
 }
 
-Error Mle::GetLeaderAddress(Ip6::Address &aAddress) const
+void Mle::GetLeaderRloc(Ip6::Address &aAddress) const
 {
-    Error error = kErrorNone;
-
-    VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = kErrorDetached);
-
     aAddress.SetToRoutingLocator(mMeshLocalPrefix, GetLeaderRloc16());
-
-exit:
-    return error;
 }
 
-Error Mle::GetLocatorAddress(Ip6::Address &aAddress, uint16_t aLocator) const
+void Mle::GetLeaderAloc(Ip6::Address &aAddress) const { aAddress.SetToAnycastLocator(mMeshLocalPrefix, kAloc16Leader); }
+
+void Mle::GetCommissionerAloc(uint16_t aSessionId, Ip6::Address &aAddress) const
 {
-    Error error = kErrorNone;
-
-    VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = kErrorDetached);
-
-    memcpy(&aAddress, &mMeshLocalRloc.GetAddress(), 14);
-    aAddress.GetIid().SetLocator(aLocator);
-
-exit:
-    return error;
+    aAddress.SetToAnycastLocator(mMeshLocalPrefix, CommissionerAloc16FromId(aSessionId));
 }
 
-Error Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
+void Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
 {
-    Error error = kErrorNone;
-
-    VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = kErrorDetached);
     aAddress.SetToAnycastLocator(mMeshLocalPrefix, ServiceAlocFromId(aServiceId));
-
-exit:
-    return error;
 }
 
 const LeaderData &Mle::GetLeaderData(void)
@@ -3884,8 +3865,7 @@ void Mle::InformPreviousParent(void)
     SuccessOrExit(error = message->SetLength(0));
 
     messageInfo.SetSockAddr(GetMeshLocalEid());
-    messageInfo.SetPeerAddr(GetMeshLocalRloc());
-    messageInfo.GetPeerAddr().GetIid().SetLocator(mPreviousParentRloc);
+    messageInfo.GetPeerAddr().SetToRoutingLocator(mMeshLocalPrefix, mPreviousParentRloc);
 
     SuccessOrExit(error = Get<Ip6::Ip6>().SendDatagram(*message, messageInfo, Ip6::kProtoNone));
 

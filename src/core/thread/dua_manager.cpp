@@ -512,7 +512,7 @@ void DuaManager::PerformNextRegistration(void)
         uint8_t pbbrServiceId;
 
         SuccessOrExit(error = Get<BackboneRouter::Leader>().GetServiceId(pbbrServiceId));
-        SuccessOrExit(error = mle.GetServiceAloc(pbbrServiceId, messageInfo.GetPeerAddr()));
+        mle.GetServiceAloc(pbbrServiceId, messageInfo.GetPeerAddr());
     }
     else
     {

@@ -483,7 +483,7 @@ Error DatasetManager::SendSetRequest(const Dataset &aDataset)
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->AppendBytes(aDataset.GetBytes(), aDataset.GetLength()));
-    IgnoreError(messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
+    messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleMgmtSetResponse, this));
     mMgmtPending = true;
@@ -708,7 +708,7 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
         SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kGet, tlvList.GetArrayBuffer(), tlvList.GetLength()));
     }
 
-    IgnoreError(messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
+    messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
 
     if (aAddress != nullptr)
     {

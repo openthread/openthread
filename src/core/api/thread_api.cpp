@@ -79,7 +79,13 @@ exit:
 
 otError otThreadGetLeaderRloc(otInstance *aInstance, otIp6Address *aLeaderRloc)
 {
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderAddress(AsCoreType(aLeaderRloc));
+    Error error = kErrorNone;
+
+    VerifyOrExit(AsCoreType(aInstance).Get<Mle::Mle>().GetRloc16() != Mac::kShortAddrInvalid, error = kErrorDetached);
+    AsCoreType(aInstance).Get<Mle::Mle>().GetLeaderRloc(AsCoreType(aLeaderRloc));
+
+exit:
+    return error;
 }
 
 otLinkModeConfig otThreadGetLinkMode(otInstance *aInstance)
@@ -189,7 +195,13 @@ const otIp6Address *otThreadGetRealmLocalAllThreadNodesMulticastAddress(otInstan
 
 otError otThreadGetServiceAloc(otInstance *aInstance, uint8_t aServiceId, otIp6Address *aServiceAloc)
 {
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetServiceAloc(aServiceId, AsCoreType(aServiceAloc));
+    Error error = kErrorNone;
+
+    VerifyOrExit(AsCoreType(aInstance).Get<Mle::Mle>().GetRloc16() != Mac::kShortAddrInvalid, error = kErrorDetached);
+    AsCoreType(aInstance).Get<Mle::Mle>().GetServiceAloc(aServiceId, AsCoreType(aServiceAloc));
+
+exit:
+    return error;
 }
 
 const char *otThreadGetNetworkName(otInstance *aInstance)
