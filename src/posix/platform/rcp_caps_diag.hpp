@@ -109,11 +109,24 @@ private:
     };
 
     void ProcessSpinel(void);
+    void ProcessCapabilityFlags(void);
     void TestSpinelCommands(Category aCategory);
+    void TestRadioCapbilityFlags(void);
+    void OutputRadioCapFlags(Category aCategory, uint32_t aRadioCaps, const uint32_t *aFlags, uint16_t aNumbFlags);
+    void TestSpinelCapbilityFlags(void);
+    void OutputSpinelCapFlags(Category        aCategory,
+                              const uint8_t  *aCapsData,
+                              spinel_size_t   aCapsLength,
+                              const uint32_t *aFlags,
+                              uint16_t        aNumbFlags);
+    bool IsSpinelCapabilitySupported(const uint8_t *aCapsData, spinel_size_t aCapsLength, uint32_t aCapability);
+    void OutputFormat(const char *aName, const char *aValue);
     void OutputResult(const SpinelEntry &aEntry, otError error);
     void Output(const char *aFormat, ...);
 
-    const char *CategoryToString(Category aCategory);
+    static const char *SupportToString(bool aSupport);
+    static const char *RadioCapbilityToString(uint32_t aCapability);
+    static const char *CategoryToString(Category aCategory);
 
     static const struct SpinelEntry sSpinelEntries[];
 
