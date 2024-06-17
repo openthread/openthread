@@ -424,7 +424,6 @@ Error MeshForwarder::AnycastRouteLookup(uint8_t aServiceId, AnycastType aType, u
     NetworkData::Iterator iterator = NetworkData::kIteratorInit;
     uint8_t               bestCost = Mle::kMaxRouteCost;
     uint16_t              bestDest = Mac::kShortAddrInvalid;
-    uint8_t               routerId;
 
     switch (aType)
     {
@@ -483,15 +482,6 @@ Error MeshForwarder::AnycastRouteLookup(uint8_t aServiceId, AnycastType aType, u
 
         break;
     }
-    }
-
-    routerId = Mle::RouterIdFromRloc16(bestDest);
-
-    if (!(Mle::IsActiveRouter(bestDest) || Mle::Rloc16FromRouterId(routerId) == Get<Mle::MleRouter>().GetRloc16()))
-    {
-        // if agent is neither active router nor child of this device
-        // use the parent of the ED Agent as Dest
-        bestDest = Mle::Rloc16FromRouterId(routerId);
     }
 
     aMeshDest = bestDest;
