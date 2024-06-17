@@ -99,20 +99,14 @@ public:
     /**
      * Sets the local socket address to RLOC address and the peer socket address to leader ALOC.
      *
-     * @retval kErrorNone      Successfully set the addresses.
-     * @retval kErrorDetached  Cannot set leader ALOC since device is currently detached.
-     *
      */
-    Error SetSockAddrToRlocPeerAddrToLeaderAloc(void);
+    void SetSockAddrToRlocPeerAddrToLeaderAloc(void);
 
     /**
      * Sets the local socket address to RLOC address and the peer socket address to leader RLOC.
-     *
-     * @retval kErrorNone      Successfully set the addresses.
-     * @retval kErrorDetached  Cannot set leader RLOC since device is currently detached.
-     *
+q     *
      */
-    Error SetSockAddrToRlocPeerAddrToLeaderRloc(void);
+    void SetSockAddrToRlocPeerAddrToLeaderRloc(void);
 
     /**
      * Sets the local socket address to RLOC address and the peer socket address to realm-local all
