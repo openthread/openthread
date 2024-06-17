@@ -95,7 +95,11 @@ otError RcpCapsDiag::DiagProcess(char *aArgs[], uint8_t aArgsLength, char *aOutp
     mOutputStart = aOutput;
     mOutputEnd   = aOutput + aOutputMaxLen;
 
-    if (strcmp(aArgs[1], "spinel") == 0)
+    if (strcmp(aArgs[1], "diagcmd") == 0)
+    {
+        ProcessDiagCommands();
+    }
+    else if (strcmp(aArgs[1], "spinel") == 0)
     {
         ProcessSpinel();
     }
@@ -137,22 +141,79 @@ void RcpCapsDiag::TestSpinelCommands(Category aCategory)
     }
 }
 
+void RcpCapsDiag::ProcessDiagCommands(void)
+{
+    static const char *kDiagCommands[] = {"channel 20",
+                                          "cw start",
+                                          "cw stop",
+                                          "power 10",
+                                          "echo 112233",
+                                          "echo -n 100",
+                                          "stream start",
+                                          "stream stop",
+                                          "rawpowersetting enable",
+                                          "rawpowersetting 112233",
+                                          "rawpowersetting",
+                                          "powersettings 20",
+                                          "rawpowersetting disable"};
+
+    Output("\r\nDiag Commands :\r\n");
+
+    for (uint16_t i = 0; i < OT_ARRAY_LENGTH(kDiagCommands); i++)
+    {
+        TestDiagCommand(kDiagCommands[i]);
+    }
+}
+
+void RcpCapsDiag::TestDiagCommand(const char *aCommand)
+{
+    char    cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
+    char    output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE] = {0};
+    otError error;
+
+    snprintf(cmd, sizeof(cmd), "diag %s", aCommand);
+    SuccessOrExit(error = mRadioSpinel.PlatDiagProcess(aCommand, output, sizeof(output)));
+
+    if (strstr(output, "not supported") != nullptr)
+    {
+        error = kErrorInvalidCommand;
+    }
+    else if ((strstr(output, "failed") != nullptr) && (strstr(output, "status") != nullptr))
+    {
+        char *str = strstr(output, "status");
+        VerifyOrExit(sscanf(str, "status %x", reinterpret_cast<uint32_t *>(&error)) == 1, error = OT_ERROR_FAILED);
+    }
+
+exit:
+    OutputFormat(cmd, otThreadErrorToString(error));
+}
+
+void RcpCapsDiag::OutputFormat(const char *aName, const char *aValue)
+{
+    static constexpr uint8_t kMaxLength    = 56;
+    static const char        kPadding[]    = "----------------------------------------------------------";
+    uint16_t                 actualLength  = static_cast<uint16_t>(strlen(aName));
+    uint16_t                 paddingOffset = (actualLength > kMaxLength) ? kMaxLength : actualLength;
+
+    static_assert(kMaxLength < sizeof(kPadding), "Padding bytes are too short");
+
+    Output("%.*s %s %s\r\n", kMaxLength, aName, &kPadding[paddingOffset], aValue);
+}
+
 void RcpCapsDiag::OutputResult(const SpinelEntry &aEntry, otError error)
 {
     static constexpr uint8_t  kSpaceLength            = 1;
     static constexpr uint8_t  kMaxCommandStringLength = 20;
     static constexpr uint8_t  kMaxKeyStringLength     = 35;
-    static constexpr uint16_t kMaxLength              = kMaxCommandStringLength + kMaxKeyStringLength + kSpaceLength;
-    static const char         kPadding[]              = "----------------------------------------------------------";
-    const char               *commandString           = spinel_command_to_cstr(aEntry.mCommand);
-    const char               *keyString               = spinel_prop_key_to_cstr(aEntry.mKey);
-    uint16_t actualLength  = static_cast<uint16_t>(strlen(commandString) + strlen(keyString) + kSpaceLength);
-    uint16_t paddingOffset = (actualLength > kMaxLength) ? kMaxLength : actualLength;
+    static constexpr uint16_t kMaxLength =
+        kMaxCommandStringLength + kMaxKeyStringLength + kSpaceLength + 1 /* size of '\0' */;
+    char        buffer[kMaxLength] = {0};
+    const char *commandString      = spinel_command_to_cstr(aEntry.mCommand);
+    const char *keyString          = spinel_prop_key_to_cstr(aEntry.mKey);
 
-    static_assert(kMaxLength < sizeof(kPadding), "Padding bytes are too short");
-
-    Output("%.*s %.*s %s %s\r\n", kMaxCommandStringLength, commandString, kMaxKeyStringLength, keyString,
-           &kPadding[paddingOffset], otThreadErrorToString(error));
+    snprintf(buffer, sizeof(buffer), "%.*s %.*s", kMaxCommandStringLength, commandString, kMaxKeyStringLength,
+             keyString);
+    OutputFormat(buffer, otThreadErrorToString(error));
 }
 
 void RcpCapsDiag::Output(const char *aFormat, ...)

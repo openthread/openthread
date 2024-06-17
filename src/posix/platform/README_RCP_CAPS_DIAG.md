@@ -6,9 +6,34 @@ This module provides diag commands for checking RCP capabilities.
 
 ## Command List
 
+- [diagcmd](#diagcmd)
 - [spinel](#spinel)
 
 ## Command Details
+
+### diagcmd
+
+Check which diag commands RCP supports.
+
+```bash
+> diag rcpcaps diagcmd
+
+Diag Commands :
+diag channel 20 ------------------------------------------- OK
+diag cw start --------------------------------------------- OK
+diag cw stop ---------------------------------------------- OK
+diag power 10 --------------------------------------------- OK
+diag echo 112233 ------------------------------------------ OK
+diag echo -n 200 ------------------------------------------ OK
+diag stream start ----------------------------------------- OK
+diag stream stop ------------------------------------------ OK
+diag rawpowersetting enable ------------------------------- OK
+diag rawpowersetting 112233 ------------------------------- OK
+diag rawpowersetting -------------------------------------- OK
+diag powersettings 20 ------------------------------------- NotFound
+diag rawpowersetting disable ------------------------------ OK
+Done
+```
 
 ### spinel
 

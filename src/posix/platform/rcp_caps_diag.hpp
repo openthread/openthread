@@ -100,7 +100,10 @@ private:
     };
 
     void ProcessSpinel(void);
+    void ProcessDiagCommands(void);
     void TestSpinelCommands(Category aCategory);
+    void TestDiagCommand(const char *aCommand);
+    void OutputFormat(const char *aName, const char *aValue);
     void OutputResult(const SpinelEntry &aEntry, otError error);
     void Output(const char *aFormat, ...);
 
