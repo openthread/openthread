@@ -485,6 +485,9 @@ exit:
 
 void TestDnsClient(void)
 {
+    static constexpr Dns::Client::QueryConfig::ServiceMode kDefaultServiceMode =
+        static_cast<Dns::Client::QueryConfig::ServiceMode>(OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVICE_MODE);
+
     static constexpr uint8_t kNumAddresses = 2;
 
     static const char *const kAddresses[kNumAddresses] = {"2001::beef:cafe", "fd00:1234:5678:9abc::1"};
@@ -578,8 +581,7 @@ void TestDnsClient(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check DNS Client's default config
 
-    VerifyOrQuit(dnsClient->GetDefaultConfig().GetServiceMode() ==
-                 Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize);
+    VerifyOrQuit(dnsClient->GetDefaultConfig().GetServiceMode() == kDefaultServiceMode);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Validate DNS Client `Browse()`
