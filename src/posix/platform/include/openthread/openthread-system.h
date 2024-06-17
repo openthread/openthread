@@ -98,6 +98,23 @@ typedef struct otPlatformConfig
 } otPlatformConfig;
 
 /**
+ * Represents the platform spinel driver structure.
+ *
+ */
+typedef struct otSpinelDriver otSpinelDriver;
+
+/**
+ * Gets the instance of the spinel driver;
+ *
+ * @note This API is used for external projects to get the instance of `SpinelDriver` to customize
+ *       different spinel handlings.
+ *
+ * @returns A pointer to the spinel driver instance.
+ *
+ */
+otSpinelDriver *otSysGetSpinelDriver(void);
+
+/**
  * Initializes the co-processor and the spinel driver.
  *
  * @note This API will initialize the co-processor by resetting it and return the co-processor type.
