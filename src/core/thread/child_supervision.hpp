@@ -103,18 +103,6 @@ public:
     explicit ChildSupervisor(Instance &aInstance);
 
     /**
-     * Starts the child supervision process on parent.
-     *
-     */
-    void Start(void);
-
-    /**
-     * Stops the child supervision process on parent.
-     *
-     */
-    void Stop(void);
-
-    /**
      * Returns the destination for a supervision message.
      *
      * @param[in] aMessage The message for which to get the destination.
