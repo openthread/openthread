@@ -70,7 +70,7 @@ UdpExample::UdpExample(otInstance *aInstance, OutputImplementer &aOutputImplemen
  *   - `-u`: Unspecified network interface, which means that the UDP/IPv6 stack determines which
  *   network interface to bind the socket to.
  *   - `-b`: Backbone network interface is used.
- * - `ip`: unicast IPv6 address to bind to. If you wish to have the UDP/IPv6 stack assign the binding
+ * - `ip`: Unicast IPv6 address to bind to. If you wish to have the UDP/IPv6 stack assign the binding
  *   IPv6 address, or if you wish to bind to multicast IPv6 addresses, then you can use the following
  *   value to use the unspecified IPv6 address: `::`. Each example uses the unspecified IPv6 address.
  * - `port`: UDP port number to bind to. Each of the examples is using port number 1234.
