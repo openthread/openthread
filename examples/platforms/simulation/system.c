@@ -215,7 +215,7 @@ void otSysDeinit(void)
     platformTrelDeinit();
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    //    platformInfrIfDeinit();
+    platformInfraIfDeinit();
 #endif
     platformLoggingDeinit();
 }
