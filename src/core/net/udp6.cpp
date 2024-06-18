@@ -47,6 +47,9 @@
 namespace ot {
 namespace Ip6 {
 
+//---------------------------------------------------------------------------------------------------------------------
+// Udp::SocketHandle
+
 bool Udp::SocketHandle::Matches(const MessageInfo &aMessageInfo) const
 {
     bool matches = false;
@@ -71,10 +74,15 @@ exit:
     return matches;
 }
 
-Udp::Socket::Socket(Instance &aInstance)
+//---------------------------------------------------------------------------------------------------------------------
+// Udp::Socket
+
+Udp::Socket::Socket(Instance &aInstance, ReceiveHandler aHandler, void *aContext)
     : InstanceLocator(aInstance)
 {
     Clear();
+    mHandler = aHandler;
+    mContext = aContext;
 }
 
 Message *Udp::Socket::NewMessage(void) { return NewMessage(0); }
@@ -86,7 +94,7 @@ Message *Udp::Socket::NewMessage(uint16_t aReserved, const Message::Settings &aS
     return Get<Udp>().NewMessage(aReserved, aSettings);
 }
 
-Error Udp::Socket::Open(otUdpReceive aHandler, void *aContext) { return Get<Udp>().Open(*this, aHandler, aContext); }
+Error Udp::Socket::Open(void) { return Get<Udp>().Open(*this, mHandler, mContext); }
 
 bool Udp::Socket::IsOpen(void) const { return Get<Udp>().IsOpen(*this); }
 
@@ -147,6 +155,9 @@ exit:
 }
 #endif
 
+//---------------------------------------------------------------------------------------------------------------------
+// Udp
+
 Udp::Udp(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEphemeralPort(kDynamicPortMin)
@@ -169,7 +180,7 @@ exit:
     return error;
 }
 
-Error Udp::Open(SocketHandle &aSocket, otUdpReceive aHandler, void *aContext)
+Error Udp::Open(SocketHandle &aSocket, ReceiveHandler aHandler, void *aContext)
 {
     Error error = kErrorNone;
 

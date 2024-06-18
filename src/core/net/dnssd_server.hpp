@@ -513,11 +513,9 @@ private:
     };
 #endif
 
-    bool        IsRunning(void) const { return mSocket.IsBound(); }
-    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void        ProcessQuery(Request &aRequest);
-
+    bool IsRunning(void) const { return mSocket.IsBound(); }
+    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void ProcessQuery(Request &aRequest);
     void ResolveByProxy(Response &aResponse, const Ip6::MessageInfo &aMessageInfo);
     void RemoveQueryAndPrepareResponse(ProxyQuery &aQuery, ProxyQueryInfo &aInfo, Response &aResponse);
     void Finalize(ProxyQuery &aQuery, ResponseCode aResponseCode);
@@ -560,7 +558,8 @@ private:
 
     void UpdateResponseCounters(ResponseCode aResponseCode);
 
-    using ServerTimer = TimerMilliIn<Server, &Server::HandleTimer>;
+    using ServerTimer  = TimerMilliIn<Server, &Server::HandleTimer>;
+    using ServerSocket = Ip6::Udp::SocketIn<Server, &Server::HandleUdpReceive>;
 
     static const char kDefaultDomainName[];
     static const char kSubLabel[];
@@ -568,7 +567,7 @@ private:
     static const char *kBlockedDomains[];
 #endif
 
-    Ip6::Udp::Socket mSocket;
+    ServerSocket mSocket;
 
     ProxyQueryList                mProxyQueries;
     Callback<SubscribeCallback>   mQuerySubscribe;

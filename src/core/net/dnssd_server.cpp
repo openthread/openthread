@@ -63,7 +63,7 @@ const char *Server::kBlockedDomains[] = {"ipv4only.arpa."};
 
 Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mSocket(aInstance)
+    , mSocket(aInstance, *this)
 #if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
     , mDiscoveryProxy(aInstance)
 #endif
@@ -82,7 +82,7 @@ Error Server::Start(void)
 
     VerifyOrExit(!IsRunning());
 
-    SuccessOrExit(error = mSocket.Open(&Server::HandleUdpReceive, this));
+    SuccessOrExit(error = mSocket.Open());
     SuccessOrExit(error = mSocket.Bind(kPort, kBindUnspecifiedNetif ? Ip6::kNetifUnspecified : Ip6::kNetifThread));
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
@@ -133,11 +133,6 @@ void Server::Stop(void)
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     Get<Srp::Server>().HandleDnssdServerStateChange();
 #endif
-}
-
-void Server::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Server *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
 }
 
 void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

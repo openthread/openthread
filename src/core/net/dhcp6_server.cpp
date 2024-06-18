@@ -52,7 +52,7 @@ RegisterLogModule("Dhcp6Server");
 
 Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mSocket(aInstance)
+    , mSocket(aInstance, *this)
     , mPrefixAgentsCount(0)
     , mPrefixAgentsMask(0)
 {
@@ -138,7 +138,7 @@ void Server::Start(void)
 {
     VerifyOrExit(!mSocket.IsOpen());
 
-    IgnoreError(mSocket.Open(&Server::HandleUdpReceive, this));
+    IgnoreError(mSocket.Open());
     IgnoreError(mSocket.Bind(kDhcpServerPort));
 
 exit:
@@ -174,11 +174,6 @@ void Server::AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context
 exit:
     LogWarnOnError(error, "add DHCPv6 prefix agent");
     OT_UNUSED_VARIABLE(error);
-}
-
-void Server::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Server *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
 }
 
 void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

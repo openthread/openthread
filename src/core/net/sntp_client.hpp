@@ -272,14 +272,12 @@ private:
     void FinalizeSntpTransaction(Message &aQuery, const QueryMetadata &aQueryMetadata, uint64_t aTime, Error aResult);
 
     void HandleRetransmissionTimer(void);
+    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    using RetxTimer    = TimerMilliIn<Client, &Client::HandleRetransmissionTimer>;
+    using ClientSocket = Ip6::Udp::SocketIn<Client, &Client::HandleUdpReceive>;
 
-    using RetxTimer = TimerMilliIn<Client, &Client::HandleRetransmissionTimer>;
-
-    Ip6::Udp::Socket mSocket;
-
+    ClientSocket mSocket;
     MessageQueue mPendingQueries;
     RetxTimer    mRetransmissionTimer;
 

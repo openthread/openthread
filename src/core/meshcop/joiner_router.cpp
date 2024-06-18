@@ -56,7 +56,7 @@ RegisterLogModule("JoinerRouter");
 
 JoinerRouter::JoinerRouter(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mSocket(aInstance)
+    , mSocket(aInstance, *this)
     , mTimer(aInstance)
     , mJoinerUdpPort(0)
     , mIsJoinerPortConfigured(false)
@@ -81,7 +81,7 @@ void JoinerRouter::Start(void)
 
         VerifyOrExit(!mSocket.IsBound());
 
-        IgnoreError(mSocket.Open(&JoinerRouter::HandleUdpReceive, this));
+        IgnoreError(mSocket.Open());
         IgnoreError(mSocket.Bind(port));
         IgnoreError(Get<Ip6::Filter>().AddUnsecurePort(port));
         LogInfo("Joiner Router: start");
@@ -124,11 +124,6 @@ void JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
     mJoinerUdpPort          = aJoinerUdpPort;
     mIsJoinerPortConfigured = true;
     Start();
-}
-
-void JoinerRouter::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<JoinerRouter *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
 }
 
 void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

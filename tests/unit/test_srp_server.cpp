@@ -1068,7 +1068,7 @@ void TestSrpClientDelayedResponse(void)
         //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // Prepare a socket to act as SRP server.
 
-        Ip6::Udp::Socket  udpSocket(*sInstance);
+        Ip6::Udp::Socket  udpSocket(*sInstance, HandleServerUdpReceive, nullptr);
         Ip6::SockAddr     serverSockAddr;
         uint16_t          firstMsgId;
         Message          *response;
@@ -1076,7 +1076,7 @@ void TestSrpClientDelayedResponse(void)
 
         sServerRxCount = 0;
 
-        SuccessOrQuit(udpSocket.Open(HandleServerUdpReceive, nullptr));
+        SuccessOrQuit(udpSocket.Open());
         SuccessOrQuit(udpSocket.Bind(kServerPort, Ip6::kNetifThread));
 
         //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

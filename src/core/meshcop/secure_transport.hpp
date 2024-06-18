@@ -584,8 +584,6 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    static void HandleReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-
     void  HandleReceive(const uint8_t *aBuf, uint16_t aLength);
     Error HandleSecureTransportSend(const uint8_t *aBuf, uint16_t aLength, Message::SubType aMessageSubType);
 
@@ -594,6 +592,8 @@ private:
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *StateToString(State aState);
 #endif
+
+    using TransportSocket = Ip6::Udp::SocketIn<SecureTransport, &SecureTransport::HandleReceive>;
 
     State mState;
 
@@ -663,7 +663,7 @@ private:
     void                      *mContext;
 
     Ip6::MessageInfo mMessageInfo;
-    Ip6::Udp::Socket mSocket;
+    TransportSocket  mSocket;
 
     Callback<TransportCallback> mTransportCallback;
     void                       *mTransportContext;
