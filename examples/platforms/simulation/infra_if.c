@@ -335,4 +335,4 @@ OT_TOOL_WEAK void otPlatInfraIfRecvIcmp6Nd(otInstance         *aInstance,
     exit(1);
 }
 
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && !OPENTHREAD_RADIO
