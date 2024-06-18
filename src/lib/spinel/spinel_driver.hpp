@@ -36,6 +36,14 @@
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_interface.hpp"
 
+/**
+ * Represents an opaque (and empty) type corresponding to a SpinelDriver object.
+ *
+ */
+struct otSpinelDriver
+{
+};
+
 namespace ot {
 namespace Spinel {
 
@@ -49,7 +57,7 @@ static constexpr uint8_t kSpinelHeaderMaxNumIid = 4;
 static constexpr uint8_t kSpinelHeaderMaxNumIid = 1;
 #endif
 
-class SpinelDriver : public Logger
+class SpinelDriver : public otSpinelDriver, public Logger
 {
 public:
     typedef void (

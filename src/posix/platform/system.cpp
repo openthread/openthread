@@ -57,6 +57,7 @@
 #include "posix/platform/mainloop.hpp"
 #include "posix/platform/mdns_socket.hpp"
 #include "posix/platform/radio_url.hpp"
+#include "posix/platform/spinel_driver_getter.hpp"
 #include "posix/platform/udp.hpp"
 
 otInstance *gInstance = nullptr;
@@ -257,6 +258,8 @@ CoprocessorType otSysInitCoprocessor(otPlatformCoprocessorUrls *aUrls)
     sCoprocessorType = platformSpinelManagerInit(get802154RadioUrl(*aUrls));
     return sCoprocessorType;
 }
+
+otSpinelDriver *otSysGetSpinelDriver(void) { return &ot::Posix::GetSpinelDriver(); }
 
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 {
