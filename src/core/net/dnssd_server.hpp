@@ -49,6 +49,7 @@
 #include "border_router/infra_if.hpp"
 #include "common/as_core_type.hpp"
 #include "common/callback.hpp"
+#include "common/equatable.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/owned_ptr.hpp"
@@ -96,6 +97,26 @@ public:
      */
     class Counters : public otDnssdCounters, public Clearable<Counters>
     {
+    public:
+        /**
+         * Returns the total number of processed queries (successful or failed responses).
+         *
+         * @return The total number of queries.
+         *
+         */
+        uint32_t GetTotalQueries(void) const { return mSuccessResponse + GetTotalFailedQueries(); }
+
+        /**
+         * Returns the total number of failed queries (any error response code).
+         *
+         * @return The total number of failed queries.
+         *
+         */
+        uint32_t GetTotalFailedQueries(void) const
+        {
+            return mServerFailureResponse + mFormatErrorResponse + mNameErrorResponse + mNotImplementedResponse +
+                   mOtherResponse;
+        }
     };
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
