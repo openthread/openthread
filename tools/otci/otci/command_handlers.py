@@ -105,8 +105,7 @@ class OtCliCommandRunner(OTCommandHandler):
 
         self.__pending_lines = queue.Queue()
         self.__should_close = threading.Event()
-        self.__otcli_reader = threading.Thread(target=self.__otcli_read_routine)
-        self.__otcli_reader.setDaemon(True)
+        self.__otcli_reader = threading.Thread(target=self.__otcli_read_routine, daemon=True)
         self.__otcli_reader.start()
 
     def __repr__(self):
