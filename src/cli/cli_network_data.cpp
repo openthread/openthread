@@ -170,7 +170,7 @@ void NetworkData::OutputService(const otServiceConfig &aConfig)
         OutputFormat(" s");
     }
 
-    OutputLine(" %04x", aConfig.mServerConfig.mRloc16);
+    OutputLine(" %04x %u", aConfig.mServerConfig.mRloc16, aConfig.mServiceId);
 }
 
 /**
@@ -713,8 +713,8 @@ exit:
  * Routes:
  * fd49:7770:7fc5:0::/64 s med 4000
  * Services:
- * 44970 5d c000 s 4000
- * 44970 01 9a04b000000e10 s 4000
+ * 44970 5d c000 s 4000 0
+ * 44970 01 9a04b000000e10 s 4000 1
  * Contexts:
  * fd00:dead:beef:cafe::/64 1 c
  * Commissioning:
@@ -771,6 +771,7 @@ exit:
  * * Flags
  *   * s: Stable flag
  * * RLOC16 of devices which added the service entry
+ * * Service ID
  * @par
  * 6LoWPAN Context IDs are listed under `Contexts` header:
  * * The prefix

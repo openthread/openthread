@@ -374,6 +374,7 @@ Service entries are listed under `Services` header:
 - Flags
   - s: Stable flag
 - RLOC16 of devices which added the service entry
+- Service ID
 
 6LoWPAN Context IDs are listed under `Contexts` header:
 
@@ -400,7 +401,7 @@ Routes:
 fd00:1234:0:0::/64 s med a000
 fd00:4567:0:0::/64 s med 8000
 Services:
-44970 5d fddead00beef00007bad0069ce45948504d2 s a000
+44970 5d fddead00beef00007bad0069ce45948504d2 s a000 0
 Contexts:
 fd00:dead:beef:cafe::/64 1 c
 Commissioning:
@@ -417,7 +418,7 @@ fd00:dead:beef:cafe::/64 paros med a000
 Routes:
 fd00:1234:0:0::/64 s med a000
 Services:
-44970 5d fddead00beef00007bad0069ce45948504d2 s a000
+44970 5d fddead00beef00007bad0069ce45948504d2 s a000 0
 Done
 ```
 
