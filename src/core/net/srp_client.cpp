@@ -577,7 +577,7 @@ bool Client::ShouldHostAutoAddressRegister(const Ip6::Netif::UnicastAddress &aUn
 
     VerifyOrExit(aUnicastAddress.mValid);
     VerifyOrExit(aUnicastAddress.mPreferred);
-    VerifyOrExit(!aUnicastAddress.GetAddress().IsLinkLocal());
+    VerifyOrExit(!aUnicastAddress.GetAddress().IsLinkLocalUnicast());
     VerifyOrExit(!Get<Mle::Mle>().IsMeshLocalAddress(aUnicastAddress.GetAddress()));
 
     shouldRegister = true;

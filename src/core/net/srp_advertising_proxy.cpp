@@ -944,7 +944,7 @@ void AdvertisingProxy::RegisterHost(Host &aHost)
 
     for (const Ip6::Address &address : aHost.mAddresses)
     {
-        if (!address.IsLinkLocal() && !Get<Mle::Mle>().IsMeshLocalAddress(address))
+        if (!address.IsLinkLocalUnicast() && !Get<Mle::Mle>().IsMeshLocalAddress(address))
         {
             IgnoreError(hostAddresses.PushBack(address));
         }

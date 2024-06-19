@@ -453,7 +453,7 @@ Error Netif::AddExternalUnicastAddress(const UnicastAddress &aAddress)
         ExitNow();
     }
 
-    VerifyOrExit(!aAddress.GetAddress().IsLinkLocal(), error = kErrorInvalidArgs);
+    VerifyOrExit(!aAddress.GetAddress().IsLinkLocalUnicast(), error = kErrorInvalidArgs);
 
     entry = mExtUnicastAddressPool.Allocate();
     VerifyOrExit(entry != nullptr, error = kErrorNoBufs);

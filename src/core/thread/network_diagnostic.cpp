@@ -113,7 +113,7 @@ void Server::PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::Me
         aMessageInfo.SetMulticastLoop(true);
     }
 
-    if (aDestination.IsLinkLocal() || aDestination.IsLinkLocalMulticast())
+    if (aDestination.IsLinkLocalUnicastOrMulticast())
     {
         aMessageInfo.SetSockAddr(Get<Mle::MleRouter>().GetLinkLocalAddress());
     }

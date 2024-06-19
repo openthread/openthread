@@ -64,9 +64,7 @@ bool Filter::Accept(Message &aMessage) const
 
     SuccessOrExit(headers.ParseFrom(aMessage));
 
-    // Allow only link-local unicast or multicast
-    VerifyOrExit(headers.GetDestinationAddress().IsLinkLocal() ||
-                 headers.GetDestinationAddress().IsLinkLocalMulticast());
+    VerifyOrExit(headers.GetDestinationAddress().IsLinkLocalUnicastOrMulticast());
 
     // Allow all link-local IPv6 datagrams when Thread is not enabled
     if (Get<Mle::MleRouter>().GetRole() == Mle::kRoleDisabled)

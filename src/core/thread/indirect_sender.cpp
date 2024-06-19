@@ -370,7 +370,7 @@ uint16_t IndirectSender::PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, M
 
     Get<MeshForwarder>().GetMacSourceAddress(ip6Header.GetSource(), macAddrs.mSource);
 
-    if (ip6Header.GetDestination().IsLinkLocal())
+    if (ip6Header.GetDestination().IsLinkLocalUnicast())
     {
         Get<MeshForwarder>().GetMacDestinationAddress(ip6Header.GetDestination(), macAddrs.mDestination);
     }

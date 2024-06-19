@@ -345,7 +345,7 @@ Error Lowpan::Compress(Message              &aMessage,
     {
         hcCtl |= kHcSrcAddrContext;
     }
-    else if (ip6Header.GetSource().IsLinkLocal())
+    else if (ip6Header.GetSource().IsLinkLocalUnicast())
     {
         SuccessOrExit(
             error = CompressSourceIid(aMacAddrs.mSource, ip6Header.GetSource(), srcContext, hcCtl, aFrameBuilder));
@@ -366,7 +366,7 @@ Error Lowpan::Compress(Message              &aMessage,
     {
         SuccessOrExit(error = CompressMulticast(ip6Header.GetDestination(), hcCtl, aFrameBuilder));
     }
-    else if (ip6Header.GetDestination().IsLinkLocal())
+    else if (ip6Header.GetDestination().IsLinkLocalUnicast())
     {
         SuccessOrExit(error = CompressDestinationIid(aMacAddrs.mDestination, ip6Header.GetDestination(), dstContext,
                                                      hcCtl, aFrameBuilder));
