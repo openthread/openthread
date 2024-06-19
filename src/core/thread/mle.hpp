@@ -420,6 +420,14 @@ public:
     }
 
     /**
+     * Gets the parent's RLOC16.
+     *
+     * @returns  The parent's RLOC16, or `kInvalidRloc16` if parent's state is not valid.
+     *
+     */
+    uint16_t GetParentRloc16(void) const;
+
+    /**
      * Gets the parent when operating in End Device mode.
      *
      * @returns A reference to the parent.
@@ -692,16 +700,6 @@ public:
     {
         return (&aAddress == &mLinkLocalAllThreadNodes) || (&aAddress == &mRealmLocalAllThreadNodes);
     }
-
-    /**
-     * Determines the next hop towards an RLOC16 destination.
-     *
-     * @param[in]  aDestination  The RLOC16 of the destination.
-     *
-     * @returns A RLOC16 of the next hop if a route is known, kInvalidRloc16 otherwise.
-     *
-     */
-    uint16_t GetNextHop(uint16_t aDestination) const;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
