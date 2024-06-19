@@ -33,7 +33,7 @@ from collections import Counter
 from typing import Callable, List, Collection, Union, Tuple, Optional, Dict, Pattern, Any
 
 from . import connectors
-from .command_handlers import OTCommandHandler, OtCliCommandRunner, OtbrSshCommandRunner, OtbrAdbCommandRunner
+from .command_handlers import OTCommandHandler, OtCliCommandRunner, OtbrSshCommandRunner, OtbrAdbTcpCommandRunner, OtbrAdbUsbCommandRunner
 from .connectors import Simulator
 from .errors import UnexpectedCommandOutput, ExpectLineTimeoutError, CommandError, InvalidArgumentsError
 from .types import ChildId, Rloc16, Ip6Addr, ThreadState, PartitionId, DeviceMode, RouterId, SecurityPolicy, Ip6Prefix, \
@@ -2503,8 +2503,13 @@ def connect_otbr_ssh(host: str, port: int = 22, username='pi', password='raspber
     return OTCI(cmd_handler)
 
 
-def connect_otbr_adb(host: str, port: int = 5555):
-    cmd_handler = OtbrAdbCommandRunner(host, port)
+def connect_otbr_adb_tcp(host: str, port: int = 5555):
+    cmd_handler = OtbrAdbTcpCommandRunner(host, port)
+    return OTCI(cmd_handler)
+
+
+def connect_otbr_adb_usb(serial: str):
+    cmd_handler = OtbrAdbUsbCommandRunner(serial)
     return OTCI(cmd_handler)
 
 
