@@ -2103,7 +2103,8 @@ exit:
 
 bool Server::IsProxyAddressValid(const Ip6::Address &aAddress)
 {
-    return !aAddress.IsLinkLocal() && !aAddress.IsMulticast() && !aAddress.IsUnspecified() && !aAddress.IsLoopback();
+    return !aAddress.IsLinkLocalUnicast() && !aAddress.IsMulticast() && !aAddress.IsUnspecified() &&
+           !aAddress.IsLoopback();
 }
 
 #endif // OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE

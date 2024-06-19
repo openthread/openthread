@@ -646,13 +646,13 @@ public:
     bool IsLoopback(void) const;
 
     /**
-     * Indicates whether or not the IPv6 address scope is Link-Local.
+     * Indicates whether or not the IPv6 address is a Link-Local unicast address.
      *
-     * @retval TRUE   If the IPv6 address scope is Link-Local.
-     * @retval FALSE  If the IPv6 address scope is not Link-Local.
+     * @retval TRUE   If the IPv6 address is a Link-Local unicast address.
+     * @retval FALSE  If the IPv6 address is not a Link-Local unicast address.
      *
      */
-    bool IsLinkLocal(void) const;
+    bool IsLinkLocalUnicast(void) const;
 
     /**
      * Sets the IPv6 address to a Link-Local address with Interface Identifier generated from a given
@@ -688,6 +688,15 @@ public:
      *
      */
     bool IsLinkLocalMulticast(void) const;
+
+    /**
+     * Indicates whether or not the IPv6 address is a link-local unicast or a link-local multicast address.
+     *
+     * @retval TRUE   If the IPv6 address is a link-local unicast or multicast address.
+     * @retval FALSE  If the IPv6 address is not a link-local unicast and not a link-local multicast address.
+     *
+     */
+    bool IsLinkLocalUnicastOrMulticast(void) const;
 
     /**
      * Indicates whether or not the IPv6 address is a link-local all nodes multicast address (ff02::01).
