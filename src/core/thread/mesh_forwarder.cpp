@@ -690,7 +690,7 @@ Error MeshForwarder::UpdateIp6Route(Message &aMessage)
 
         if (mle.IsChild() && aMessage.IsLinkSecurityEnabled() && !aMessage.IsSubTypeMle())
         {
-            mMacAddrs.mDestination.SetShort(mle.GetNextHop(Mac::kShortAddrBroadcast));
+            mMacAddrs.mDestination.SetShort(mle.GetParentRloc16());
         }
         else
         {
@@ -703,7 +703,7 @@ Error MeshForwarder::UpdateIp6Route(Message &aMessage)
     }
     else if (mle.IsMinimalEndDevice())
     {
-        mMacAddrs.mDestination.SetShort(mle.GetNextHop(Mac::kShortAddrBroadcast));
+        mMacAddrs.mDestination.SetShort(mle.GetParentRloc16());
     }
     else
     {
