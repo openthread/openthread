@@ -587,8 +587,8 @@ otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
     char         *uriQueryStartPtr = nullptr;
 
     // Default parameters
-    char         coapUri[kMaxUriLength]      = "test";
-    otCoapType   coapType                    = OT_COAP_TYPE_NON_CONFIRMABLE;
+    char         coapUri[kMaxUriLength] = "test";
+    otCoapType   coapType               = OT_COAP_TYPE_NON_CONFIRMABLE;
     otIp6Address coapDestinationIp;
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     bool           coapBlock     = false;
