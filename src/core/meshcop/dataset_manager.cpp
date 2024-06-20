@@ -400,16 +400,12 @@ void DatasetManager::SignalDatasetChange(void) const
 
 Error DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
 {
-    Error                 error;
-    const ChannelMaskTlv *channelMaskTlv;
-    uint32_t              mask;
-    Dataset               dataset;
+    Error    error;
+    uint32_t mask;
+    Dataset  dataset;
 
     SuccessOrExit(error = Read(dataset));
-
-    channelMaskTlv = As<ChannelMaskTlv>(dataset.FindTlv(Tlv::kChannelMask));
-    VerifyOrExit(channelMaskTlv != nullptr, error = kErrorNotFound);
-    SuccessOrExit(channelMaskTlv->ReadChannelMask(mask));
+    SuccessOrExit(error = dataset.ReadChannelMaskTlv(mask));
 
     aChannelMask.SetMask(mask & Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
 

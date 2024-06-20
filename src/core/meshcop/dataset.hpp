@@ -366,6 +366,28 @@ public:
     }
 
     /**
+     * Finds and reads the Channel TLV.
+     *
+     * @param[out] aChannel    A reference to return the read channel (for channel page 0) from TLV.
+     *
+     * @retval kErrorNone      Successfully found and read the TLV value. @p aChannel is updated.
+     * @retval kErrorNotFound  Could not find the TLV in the Dataset.
+     *
+     */
+    Error ReadChannelTlv(uint16_t &aChannel) const;
+
+    /**
+     * Finds and read the Channel Mask TLV.
+     *
+     * @param[out] aChannelMask  A reference to return the read channel mask (for channel page 0) from TLV.
+     *
+     * @retval kErrorNone      Successfully found and read the TLV value. @p aChannelMask is updated.
+     * @retval kErrorNotFound  Could not find the TLV in the Dataset.
+     *
+     */
+    Error ReadChannelMaskTlv(uint32_t &aChannelMask) const;
+
+    /**
      * Writes a TLV to the Dataset.
      *
      * If the specified TLV type already exists, it will be replaced. Otherwise, the TLV will be appended.
@@ -430,6 +452,32 @@ public:
 
         return WriteTlv(static_cast<Tlv::Type>(UintTlvType::kType), &value, sizeof(value));
     }
+
+    /**
+     * Writes Channel TLV in the Dataset.
+     *
+     * If the Channel TLV type already exists, it will be replaced. Otherwise, the TLV will be appended.
+     *
+     * @param[in] aChannel   The channel value.
+     *
+     * @retval kErrorNone    Successfully updated the TLV.
+     * @retval kErrorNoBufs  Could not add the TLV due to insufficient buffer space.
+     *
+     */
+    Error WriteChannelTlv(uint16_t aChannel);
+
+    /**
+     * Writes Channel Mask TLV in the Dataset.
+     *
+     * If the Channel Mask TLV type already exists, it will be replaced. Otherwise, the TLV will be appended.
+     *
+     * @param[in] aChannelMask   The channel mask value.
+     *
+     * @retval kErrorNone    Successfully updated the TLV.
+     * @retval kErrorNoBufs  Could not add the TLV due to insufficient buffer space.
+     *
+     */
+    Error WriteChannelMaskTlv(uint32_t aChannelMask);
 
     /**
      * Writes TLVs parsed from a given Dataset into this Dataset.

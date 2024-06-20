@@ -437,18 +437,12 @@ Error Dataset::WriteTlvsFrom(const Dataset::Info &aDatasetInfo)
 
     if (aDatasetInfo.IsPresent<kChannel>())
     {
-        ChannelTlvValue channelValue;
-
-        channelValue.SetChannelAndPage(aDatasetInfo.Get<kChannel>());
-        SuccessOrExit(error = Write<ChannelTlv>(channelValue));
+        SuccessOrExit(error = WriteChannelTlv(aDatasetInfo.Get<kChannel>()));
     }
 
     if (aDatasetInfo.IsPresent<kChannelMask>())
     {
-        ChannelMaskTlv::Value value;
-
-        ChannelMaskTlv::PrepareValue(value, aDatasetInfo.Get<kChannelMask>());
-        SuccessOrExit(error = WriteTlv(Tlv::kChannelMask, value.mData, value.mLength));
+        SuccessOrExit(error = WriteChannelMaskTlv(aDatasetInfo.Get<kChannelMask>()));
     }
 
     if (aDatasetInfo.IsPresent<kExtendedPanId>())
@@ -523,6 +517,51 @@ void Dataset::RemoveTlv(Tlv *aTlv)
         memmove(start, start + length, mLength - (static_cast<uint8_t>(start - mTlvs) + length));
         mLength -= length;
     }
+}
+
+Error Dataset::ReadChannelTlv(uint16_t &aChannel) const
+{
+    Error      error = kErrorNone;
+    const Tlv *tlv;
+
+    tlv = FindTlv(Tlv::kChannel);
+    VerifyOrExit(tlv != nullptr, error = kErrorNotFound);
+    VerifyOrExit(IsTlvValid(*tlv), error = kErrorNotFound);
+
+    aChannel = tlv->ReadValueAs<ChannelTlv>().GetChannel();
+
+exit:
+    return error;
+}
+
+Error Dataset::WriteChannelTlv(uint16_t aChannel)
+{
+    ChannelTlvValue channelValue;
+
+    channelValue.SetChannelAndPage(aChannel);
+    return Write<ChannelTlv>(channelValue);
+}
+
+Error Dataset::ReadChannelMaskTlv(uint32_t &aChannelMask) const
+{
+    Error                 error = kErrorNotFound;
+    const ChannelMaskTlv *channelMaskTlv;
+
+    channelMaskTlv = As<ChannelMaskTlv>(FindTlv(Tlv::kChannelMask));
+    VerifyOrExit(channelMaskTlv != nullptr);
+    SuccessOrExit(channelMaskTlv->ReadChannelMask(aChannelMask));
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+Error Dataset::WriteChannelMaskTlv(uint32_t aChannelMask)
+{
+    ChannelMaskTlv::Value value;
+
+    ChannelMaskTlv::PrepareValue(value, aChannelMask);
+    return WriteTlv(Tlv::kChannelMask, value.mData, value.mLength);
 }
 
 Error Dataset::ReadTimestamp(Type aType, Timestamp &aTimestamp) const
