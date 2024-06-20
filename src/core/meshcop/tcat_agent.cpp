@@ -410,7 +410,9 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncommingMessage, Message &aOut
             response = true;
             error    = kErrorNone;
             break;
-
+        case kTlvDecommission:
+            error = HandleDecomission();
+            break;
         default:
             error = kErrorInvalidCommand;
         }
@@ -478,6 +480,27 @@ Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncommingMess
     error = Get<ActiveDatasetManager>().SaveLocal(datasetTlvs);
 
 exit:
+    return error;
+}
+
+Error TcatAgent::HandleDecomission(void)
+{
+    Error error = kErrorNone;
+
+    IgnoreReturnValue(otThreadSetEnabled(&GetInstance(), false));
+    Get<ActiveDatasetManager>().Clear();
+    Get<PendingDatasetManager>().Clear();
+
+    error = Get<Instance>().ErasePersistentInfo();
+
+#if !OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    {
+        NetworkKey networkKey;
+        networkKey.Clear();
+        Get<KeyManager>().SetNetworkKey(networkKey);
+    }
+#endif
+
     return error;
 }
 

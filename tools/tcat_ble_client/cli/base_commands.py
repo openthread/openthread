@@ -87,6 +87,22 @@ class CommissionCommand(Command):
         return CommandResultTLV(tlv_response)
 
 
+class DecommissionCommand(Command):
+
+    def get_help_string(self) -> str:
+        return 'Stop Thread interface and decommission device from current network.'
+
+    async def execute_default(self, args, context):
+        bless: BleStreamSecure = context['ble_sstream']
+        print('Disabling Thread and decommissioning device...')
+        data = (TLV(TcatTLVType.DECOMMISSION.value, bytes()).to_bytes())
+        response = await bless.send_with_resp(data)
+        if not response:
+            return
+        tlv_response = TLV.from_bytes(response)
+        return CommandResultTLV(tlv_response)
+
+
 class ThreadStartCommand(Command):
 
     def get_help_string(self) -> str:
