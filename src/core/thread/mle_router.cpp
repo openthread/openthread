@@ -702,7 +702,7 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
     switch (Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress))
     {
     case kErrorNone:
-        if (IsActiveRouter(sourceAddress))
+        if (IsRouterRloc16(sourceAddress))
         {
             neighbor = mRouterTable.FindRouterByRloc16(sourceAddress);
             VerifyOrExit(neighbor != nullptr, error = kErrorParse);
@@ -727,7 +727,7 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
     case kErrorNotFound:
         // A missing source address indicates that the router was
         // recently reset.
-        VerifyOrExit(aRxInfo.IsNeighborStateValid() && IsActiveRouter(aRxInfo.mNeighbor->GetRloc16()),
+        VerifyOrExit(aRxInfo.IsNeighborStateValid() && IsRouterRloc16(aRxInfo.mNeighbor->GetRloc16()),
                      error = kErrorDrop);
         neighbor = aRxInfo.mNeighbor;
         break;
@@ -791,7 +791,7 @@ Error MleRouter::SendLinkAccept(const RxInfo      &aRxInfo,
     linkMargin = Get<Mac::Mac>().ComputeLinkMargin(aRxInfo.mMessage.GetAverageRss());
     SuccessOrExit(error = message->AppendLinkMarginTlv(linkMargin));
 
-    if (aNeighbor != nullptr && IsActiveRouter(aNeighbor->GetRloc16()))
+    if (aNeighbor != nullptr && IsRouterRloc16(aNeighbor->GetRloc16()))
     {
         SuccessOrExit(error = message->AppendLeaderDataTlv());
     }
@@ -891,7 +891,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
     Log(kMessageReceive, aRequest ? kTypeLinkAcceptAndRequest : kTypeLinkAccept, aRxInfo.mMessageInfo.GetPeerAddr(),
         sourceAddress);
 
-    VerifyOrExit(IsActiveRouter(sourceAddress), error = kErrorParse);
+    VerifyOrExit(IsRouterRloc16(sourceAddress), error = kErrorParse);
 
     routerId      = RouterIdFromRloc16(sourceAddress);
     router        = mRouterTable.FindRouterById(routerId);
@@ -1249,7 +1249,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
         ExitNow();
     }
 
-    VerifyOrExit(IsActiveRouter(aSourceAddress) && routeTlv.IsValid());
+    VerifyOrExit(IsRouterRloc16(aSourceAddress) && routeTlv.IsValid());
     routerId = RouterIdFromRloc16(aSourceAddress);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -2353,7 +2353,7 @@ void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
     LeaderData  leaderData;
     Child      *child;
 
-    if ((aRxInfo.mNeighbor == nullptr) || IsActiveRouter(aRxInfo.mNeighbor->GetRloc16()) ||
+    if ((aRxInfo.mNeighbor == nullptr) || IsRouterRloc16(aRxInfo.mNeighbor->GetRloc16()) ||
         !Get<ChildTable>().Contains(*aRxInfo.mNeighbor))
     {
         Log(kMessageReceive, kTypeChildUpdateResponseOfUnknownChild, aRxInfo.mMessageInfo.GetPeerAddr());
@@ -3159,7 +3159,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     {
         ClearParentCandidate();
     }
-    else if (!IsActiveRouter(aNeighbor.GetRloc16()))
+    else if (IsChildRloc16(aNeighbor.GetRloc16()))
     {
         OT_ASSERT(mChildTable.Contains(aNeighbor));
 

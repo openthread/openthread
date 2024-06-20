@@ -322,7 +322,7 @@ Error RouterTable::GetRouterInfo(uint16_t aRouterId, Router::Info &aRouterInfo)
     }
     else
     {
-        VerifyOrExit(Mle::IsActiveRouter(aRouterId), error = kErrorInvalidArgs);
+        VerifyOrExit(Mle::IsRouterRloc16(aRouterId), error = kErrorInvalidArgs);
         routerId = Mle::RouterIdFromRloc16(aRouterId);
         VerifyOrExit(routerId <= Mle::kMaxRouterId, error = kErrorInvalidArgs);
     }
@@ -486,7 +486,7 @@ void RouterTable::GetNextHopAndPathCost(uint16_t aDestRloc16, uint16_t &aNextHop
         }
     }
 
-    if (!Mle::IsActiveRouter(aDestRloc16))
+    if (Mle::IsChildRloc16(aDestRloc16))
     {
         // Destination is a child. we assume best link quality
         // between destination and its parent router.
@@ -721,7 +721,7 @@ void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighb
 
     mRouterIdMap.GetAsRouterIdSet(routerIdSet);
 
-    if ((aNeighbor != nullptr) && Mle::IsActiveRouter(aNeighbor->GetRloc16()))
+    if ((aNeighbor != nullptr) && Mle::IsRouterRloc16(aNeighbor->GetRloc16()))
     {
         // Sending a Link Accept message that may require truncation
         // of Route64 TLV.

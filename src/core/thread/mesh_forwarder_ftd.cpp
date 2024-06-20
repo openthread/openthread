@@ -487,7 +487,7 @@ Error MeshForwarder::AnycastRouteLookup(uint8_t aServiceId, AnycastType aType, u
 
     routerId = Mle::RouterIdFromRloc16(bestDest);
 
-    if (!(Mle::IsActiveRouter(bestDest) || Mle::Rloc16FromRouterId(routerId) == Get<Mle::MleRouter>().GetRloc16()))
+    if (!(Mle::IsRouterRloc16(bestDest) || Mle::Rloc16FromRouterId(routerId) == Get<Mle::MleRouter>().GetRloc16()))
     {
         // if agent is neither active router nor child of this device
         // use the parent of the ED Agent as Dest

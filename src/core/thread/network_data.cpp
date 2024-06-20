@@ -579,11 +579,11 @@ void NetworkData::AddRloc16ToRlocs(uint16_t aRloc16, Rlocs &aRlocs, RoleFilter a
         break;
 
     case kRouterRoleOnly:
-        VerifyOrExit(Mle::IsActiveRouter(aRloc16));
+        VerifyOrExit(Mle::IsRouterRloc16(aRloc16));
         break;
 
     case kChildRoleOnly:
-        VerifyOrExit(!Mle::IsActiveRouter(aRloc16));
+        VerifyOrExit(Mle::IsChildRloc16(aRloc16));
         break;
     }
 
