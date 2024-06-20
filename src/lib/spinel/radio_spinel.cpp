@@ -99,8 +99,8 @@ RadioSpinel::RadioSpinel(void)
 #endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     , mDiagMode(false)
-    , mDiagOutput(nullptr)
-    , mDiagOutputMaxLen(0)
+    , mOutputCallback(nullptr)
+    , mOutputContext(nullptr)
 #endif
     , mTxRadioEndUs(UINT64_MAX)
     , mRadioTimeRecalcStart(UINT64_MAX)
@@ -431,12 +431,13 @@ void RadioSpinel::HandleWaitingResponse(uint32_t          aCommand,
     else if (aKey == SPINEL_PROP_NEST_STREAM_MFG)
     {
         spinel_ssize_t unpacked;
+        const char    *diagOutput;
 
         mError = OT_ERROR_NONE;
-        EXPECT(mDiagOutput != nullptr, NO_ACTION);
-        unpacked =
-            spinel_datatype_unpack_in_place(aBuffer, aLength, SPINEL_DATATYPE_UTF8_S, mDiagOutput, &mDiagOutputMaxLen);
+        EXPECT(mOutputCallback != nullptr, NO_ACTION);
+        unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UTF8_S, &diagOutput);
         EXPECT(unpacked > 0, mError = OT_ERROR_PARSE);
+        PlatDiagOutput("%s", diagOutput);
     }
 #endif
     else if (aKey == mWaitingKey)
@@ -591,6 +592,17 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
             break;
         }
     }
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+    else if (aKey == SPINEL_PROP_NEST_STREAM_MFG)
+    {
+        const char *diagOutput;
+
+        EXPECT(mOutputCallback != nullptr, NO_ACTION);
+        unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UTF8_S, &diagOutput);
+        EXPECT(unpacked > 0, error = OT_ERROR_PARSE);
+        PlatDiagOutput("%s", diagOutput);
+    }
+#endif
 #if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
     else if (aKey >= SPINEL_PROP_VENDOR__BEGIN && aKey < SPINEL_PROP_VENDOR__END)
     {
@@ -1753,20 +1765,31 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-otError RadioSpinel::PlatDiagProcess(const char *aString, char *aOutput, size_t aOutputMaxLen)
+void RadioSpinel::SetDiagOutputCallback(otPlatDiagOutputCallback aCallback, void *aContext)
 {
-    otError error;
-
-    mDiagOutput       = aOutput;
-    mDiagOutputMaxLen = aOutputMaxLen;
-
-    error = Set(SPINEL_PROP_NEST_STREAM_MFG, SPINEL_DATATYPE_UTF8_S, aString);
-
-    mDiagOutput       = nullptr;
-    mDiagOutputMaxLen = 0;
-
-    return error;
+    mOutputCallback = aCallback;
+    mOutputContext  = aContext;
 }
+
+otError RadioSpinel::PlatDiagProcess(const char *aString)
+{
+    return Set(SPINEL_PROP_NEST_STREAM_MFG, SPINEL_DATATYPE_UTF8_S, aString);
+}
+
+void RadioSpinel::PlatDiagOutput(const char *aFormat, ...)
+{
+    va_list args;
+
+    va_start(args, aFormat);
+
+    if (mOutputCallback != nullptr)
+    {
+        mOutputCallback(aFormat, args, mOutputContext);
+    }
+
+    va_end(args);
+}
+
 #endif
 
 uint32_t RadioSpinel::GetRadioChannelMask(bool aPreferred)

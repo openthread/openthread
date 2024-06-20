@@ -105,9 +105,11 @@ build_nrf52840()
     case "$2" in
         new)
             local sha=${OT_SHA_NEW}
+            local clone_options=("clone")
             ;;
         old)
             local sha=${OT_SHA_OLD}
+            local clone_options=("clone" "no-depend")
             ;;
         *)
             exit 128
@@ -119,7 +121,7 @@ build_nrf52840()
     local config_file="../examples/config/${config_name}"
 
     mkdir -p "${OT_TMP_DIR}/${folder}"
-    script/git-tool clone https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}/${folder}"
+    script/git-tool "${clone_options[@]}" https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}/${folder}"
     rm -rf "${OT_TMP_DIR}/${folder}/openthread/*" # replace openthread submodule with latest commit
     git archive "${sha}" | tar x -C "${OT_TMP_DIR}/${folder}/openthread"
 
