@@ -4844,19 +4844,18 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(Child &aChild)
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = Append(tlv));
 
-    for (const Ip6::Address &address : aChild.IterateIp6Addresses())
+    // The parent must echo back all registered IPv6 addresses except
+    // for the ML-EID, which is excluded by `Child::GetIp6Addresses()`.
+
+    for (const Ip6::Address &address : aChild.GetIp6Addresses())
     {
         if (address.IsMulticast() || Get<NetworkData::Leader>().GetContext(address, context) != kErrorNone)
         {
             SuccessOrExit(error = AppendAddressEntry(address));
         }
-        else if (context.mContextId != kMeshLocalPrefixContextId)
-        {
-            SuccessOrExit(error = AppendCompressedAddressEntry(context.mContextId, address));
-        }
         else
         {
-            continue;
+            SuccessOrExit(error = AppendCompressedAddressEntry(context.mContextId, address));
         }
     }
 

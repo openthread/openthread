@@ -250,15 +250,7 @@ otError otThreadGetChildNextIp6Address(otInstance                *aInstance,
     VerifyOrExit(child != nullptr, error = kErrorInvalidArgs);
     VerifyOrExit(child->IsStateValidOrRestoring(), error = kErrorInvalidArgs);
 
-    {
-        Child::AddressIterator iter(*child, *aIterator);
-
-        VerifyOrExit(!iter.IsDone(), error = kErrorNotFound);
-        *aAddress = *iter.GetAddress();
-
-        iter++;
-        *aIterator = iter.GetAsIndex();
-    }
+    error = child->GetNextIp6Address(*aIterator, AsCoreType(aAddress));
 
 exit:
     return error;

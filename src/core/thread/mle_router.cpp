@@ -1790,12 +1790,16 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
     {
         OT_ASSERT(aChild.IsStateValid());
 
-        for (const Ip6::Address &childAddress :
-             aChild.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
+        for (const Child::Ip6AddrEntry &addrEntry : aChild.GetIp6Addresses())
         {
-            if (aChild.GetAddressMlrState(childAddress) == kMlrStateRegistered)
+            if (!addrEntry.IsMulticastLargerThanRealmLocal())
             {
-                IgnoreError(oldMlrRegisteredAddresses.PushBack(childAddress));
+                continue;
+            }
+
+            if (addrEntry.GetMlrState(aChild) == kMlrStateRegistered)
+            {
+                IgnoreError(oldMlrRegisteredAddresses.PushBack(addrEntry));
             }
         }
     }

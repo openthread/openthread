@@ -750,13 +750,17 @@ exit:
 Error Server::AppendChildIp6AddressListTlv(Coap::Message &aAnswer, const Child &aChild)
 {
     Error                       error      = kErrorNone;
-    uint16_t                    numIp6Addr = 0;
+    uint16_t                    numIp6Addr = aChild.GetIp6Addresses().GetLength();
     ChildIp6AddressListTlvValue tlvValue;
+    Ip6::Address                mlEid;
 
-    for (const Ip6::Address &address : aChild.IterateIp6Addresses())
+    if (aChild.GetMeshLocalIp6Address(mlEid) == kErrorNone)
     {
-        OT_UNUSED_VARIABLE(address);
         numIp6Addr++;
+    }
+    else
+    {
+        mlEid.Clear();
     }
 
     VerifyOrExit(numIp6Addr > 0);
@@ -782,7 +786,12 @@ Error Server::AppendChildIp6AddressListTlv(Coap::Message &aAnswer, const Child &
 
     SuccessOrExit(error = aAnswer.Append(tlvValue));
 
-    for (const Ip6::Address &address : aChild.IterateIp6Addresses())
+    if (!mlEid.IsUnspecified())
+    {
+        SuccessOrExit(error = aAnswer.Append(mlEid));
+    }
+
+    for (const Ip6::Address &address : aChild.GetIp6Addresses())
     {
         SuccessOrExit(error = aAnswer.Append(address));
     }
