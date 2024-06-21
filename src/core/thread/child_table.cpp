@@ -315,6 +315,22 @@ exit:
     return;
 }
 
+bool ChildTable::HasMinimalChild(uint16_t aRloc16) const
+{
+    bool         hasMinimalChild = false;
+    const Child *child;
+
+    VerifyOrExit(Mle::RouterIdMatch(aRloc16, Get<Mle::Mle>().GetRloc16()));
+
+    child = FindChild(Child::AddressMatcher(aRloc16, Child::kInStateValidOrRestoring));
+    VerifyOrExit(child != nullptr);
+
+    hasMinimalChild = !child->IsFullThreadDevice();
+
+exit:
+    return hasMinimalChild;
+}
+
 bool ChildTable::HasSleepyChildWithAddress(const Ip6::Address &aIp6Address) const
 {
     bool         hasChild = false;

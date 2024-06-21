@@ -397,12 +397,12 @@ void AddressResolver::UpdateSnoopedCacheEntry(const Ip6::Address &aEid,
     // is this device or an MTD (minimal) child of the device itself.
 
     macAddress = Get<Mac::Mac>().GetShortAddress();
-    VerifyOrExit((aRloc16 != macAddress) && !Get<Mle::MleRouter>().IsMinimalChild(aRloc16));
+    VerifyOrExit((aRloc16 != macAddress) && !Get<ChildTable>().HasMinimalChild(aRloc16));
 
     // Ensure that the destination of the snooped message is this device
     // or a minimal child of this device.
 
-    VerifyOrExit((aDest == macAddress) || Get<Mle::MleRouter>().IsMinimalChild(aDest));
+    VerifyOrExit((aDest == macAddress) || Get<ChildTable>().HasMinimalChild(aDest));
 
     entry = NewCacheEntry(/* aSnoopedEntry */ true);
     VerifyOrExit(entry != nullptr);

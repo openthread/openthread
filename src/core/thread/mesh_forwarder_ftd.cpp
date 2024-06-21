@@ -677,7 +677,7 @@ void MeshForwarder::HandleMesh(FrameData &aFrameData, const Mac::Address &aMacSo
     UpdateRoutes(aFrameData, meshAddrs);
 
     if (meshAddrs.mDestination.GetShort() == Get<Mac::Mac>().GetShortAddress() ||
-        Get<Mle::MleRouter>().IsMinimalChild(meshAddrs.mDestination.GetShort()))
+        Get<ChildTable>().HasMinimalChild(meshAddrs.mDestination.GetShort()))
     {
         if (Lowpan::FragmentHeader::IsFragmentHeader(aFrameData))
         {

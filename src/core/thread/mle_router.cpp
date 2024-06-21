@@ -3107,22 +3107,6 @@ exit:
     LogSendError(kTypeDataResponse, error);
 }
 
-bool MleRouter::IsMinimalChild(uint16_t aRloc16)
-{
-    bool      isMinimalChild = false;
-    Neighbor *neighbor;
-
-    VerifyOrExit(RouterIdMatch(aRloc16, GetRloc16()));
-
-    neighbor = mNeighborTable.FindNeighbor(aRloc16);
-    VerifyOrExit(neighbor != nullptr);
-
-    isMinimalChild = !neighbor->IsFullThreadDevice();
-
-exit:
-    return isMinimalChild;
-}
-
 void MleRouter::RemoveRouterLink(Router &aRouter)
 {
     switch (mRole)
