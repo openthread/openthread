@@ -502,7 +502,8 @@ private:
 
     static constexpr uint16_t kNumIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1;
 
-    typedef BitVector<kNumIp6Addresses> ChildIp6AddressMask;
+    typedef BitVector<kNumIp6Addresses>           ChildIp6AddressMask;
+    typedef Array<Ip6::Address, kNumIp6Addresses> Ip6AddressArray;
 
     class AddressIteratorBuilder
     {
@@ -521,25 +522,25 @@ private:
         Ip6::Address::TypeFilter mFilter;
     };
 
-    Ip6::InterfaceIdentifier mMeshLocalIid;                 ///< IPv6 address IID for mesh-local address
-    Ip6::Address             mIp6Address[kNumIp6Addresses]; ///< Registered IPv6 addresses
-    uint32_t                 mTimeout;                      ///< Child timeout
+    uint32_t mTimeout;
 
+    Ip6::InterfaceIdentifier mMeshLocalIid;
+    Ip6AddressArray          mIp6Addresses;
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     ChildIp6AddressMask mMlrToRegisterMask;
     ChildIp6AddressMask mMlrRegisteredMask;
 #endif
 
-    uint8_t mNetworkDataVersion; ///< Current Network Data version
+    uint8_t mNetworkDataVersion;
 
     union
     {
-        uint8_t          mRequestTlvs[kMaxRequestTlvs]; ///< Requested MLE TLVs
-        Mle::TxChallenge mAttachChallenge;              ///< The challenge value
+        uint8_t          mRequestTlvs[kMaxRequestTlvs];
+        Mle::TxChallenge mAttachChallenge;
     };
 
-    uint16_t mSupervisionInterval;     // Supervision interval for the child (in sec).
-    uint16_t mSecondsSinceSupervision; // Number of seconds since last supervision of the child.
+    uint16_t mSupervisionInterval;
+    uint16_t mSecondsSinceSupervision;
 
     static_assert(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < 8192, "mQueuedMessageCount cannot fit max required!");
 };

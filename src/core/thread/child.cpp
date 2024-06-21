@@ -82,7 +82,19 @@ const Ip6::Address *Child::AddressIterator::GetAddress(void) const
     // from one for first element (i.e, `mIndex - 1` gives the array
     // index).
 
-    return (mIndex == 0) ? &mMeshLocalAddress : ((mIndex < kMaxIndex) ? &mChild.mIp6Address[mIndex - 1] : nullptr);
+    const Ip6::Address *address = nullptr;
+
+    if (mIndex == 0)
+    {
+        address = &mMeshLocalAddress;
+        ExitNow();
+    }
+
+    VerifyOrExit(mIndex - 1 < mChild.mIp6Addresses.GetLength());
+    address = &mChild.mIp6Addresses[static_cast<Ip6AddressArray::IndexType>(mIndex - 1)];
+
+exit:
+    return address;
 }
 
 void Child::AddressIterator::Update(void)
@@ -119,7 +131,7 @@ void Child::Clear(void)
 void Child::ClearIp6Addresses(void)
 {
     mMeshLocalIid.Clear();
-    ClearAllBytes(mIp6Address);
+    mIp6Addresses.Clear();
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     mMlrToRegisterMask.Clear();
     mMlrRegisteredMask.Clear();
@@ -165,18 +177,8 @@ Error Child::AddIp6Address(const Ip6::Address &aAddress)
         ExitNow();
     }
 
-    for (Ip6::Address &ip6Address : mIp6Address)
-    {
-        if (ip6Address.IsUnspecified())
-        {
-            ip6Address = aAddress;
-            ExitNow();
-        }
-
-        VerifyOrExit(ip6Address != aAddress, error = kErrorAlready);
-    }
-
-    error = kErrorNoBufs;
+    VerifyOrExit(!mIp6Addresses.Contains(aAddress), error = kErrorAlready);
+    error = mIp6Addresses.PushBack(aAddress);
 
 exit:
     return error;
@@ -184,10 +186,8 @@ exit:
 
 Error Child::RemoveIp6Address(const Ip6::Address &aAddress)
 {
-    Error    error = kErrorNotFound;
-    uint16_t index;
-
-    VerifyOrExit(!aAddress.IsUnspecified(), error = kErrorInvalidArgs);
+    Error         error = kErrorNotFound;
+    Ip6::Address *entry;
 
     if (Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
     {
@@ -200,25 +200,11 @@ Error Child::RemoveIp6Address(const Ip6::Address &aAddress)
         ExitNow();
     }
 
-    for (index = 0; index < kNumIp6Addresses; index++)
-    {
-        VerifyOrExit(!mIp6Address[index].IsUnspecified());
+    entry = mIp6Addresses.Find(aAddress);
+    VerifyOrExit(entry != nullptr);
 
-        if (mIp6Address[index] == aAddress)
-        {
-            error = kErrorNone;
-            break;
-        }
-    }
-
-    SuccessOrExit(error);
-
-    for (; index < kNumIp6Addresses - 1; index++)
-    {
-        mIp6Address[index] = mIp6Address[index + 1];
-    }
-
-    mIp6Address[kNumIp6Addresses - 1].Clear();
+    mIp6Addresses.Remove(*entry);
+    error = kErrorNone;
 
 exit:
     return error;
@@ -226,28 +212,20 @@ exit:
 
 bool Child::HasIp6Address(const Ip6::Address &aAddress) const
 {
-    bool retval = false;
+    bool hasAddress = false;
 
     VerifyOrExit(!aAddress.IsUnspecified());
 
     if (Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
     {
-        retval = (aAddress.GetIid() == mMeshLocalIid);
+        hasAddress = (aAddress.GetIid() == mMeshLocalIid);
         ExitNow();
     }
 
-    for (const Ip6::Address &ip6Address : mIp6Address)
-    {
-        VerifyOrExit(!ip6Address.IsUnspecified());
-
-        if (ip6Address == aAddress)
-        {
-            ExitNow(retval = true);
-        }
-    }
+    hasAddress = mIp6Addresses.Contains(aAddress);
 
 exit:
-    return retval;
+    return hasAddress;
 }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
@@ -255,10 +233,8 @@ Error Child::GetDomainUnicastAddress(Ip6::Address &aAddress) const
 {
     Error error = kErrorNotFound;
 
-    for (const Ip6::Address &ip6Address : mIp6Address)
+    for (const Ip6::Address &ip6Address : mIp6Addresses)
     {
-        VerifyOrExit(!ip6Address.IsUnspecified());
-
         if (Get<BackboneRouter::Leader>().IsDomainUnicast(ip6Address))
         {
             aAddress = ip6Address;
@@ -295,9 +271,9 @@ MlrState Child::GetAddressMlrState(const Ip6::Address &aAddress) const
 {
     uint16_t addressIndex;
 
-    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < GetArrayEnd(mIp6Address));
+    OT_ASSERT(mIp6Addresses.IsInArrayBuffer(&aAddress));
 
-    addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
+    addressIndex = mIp6Addresses.IndexOf(aAddress);
 
     return mMlrToRegisterMask.Get(addressIndex)
                ? kMlrStateToRegister
@@ -308,9 +284,9 @@ void Child::SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState)
 {
     uint16_t addressIndex;
 
-    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < GetArrayEnd(mIp6Address));
+    OT_ASSERT(mIp6Addresses.IsInArrayBuffer(&aAddress));
 
-    addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
+    addressIndex = mIp6Addresses.IndexOf(aAddress);
 
     mMlrToRegisterMask.Set(addressIndex, aState == kMlrStateToRegister);
     mMlrRegisteredMask.Set(addressIndex, aState == kMlrStateRegistered);
