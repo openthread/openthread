@@ -391,27 +391,6 @@ public:
                                  const LeaderData &aLeaderDataB);
 
     /**
-     * Checks if the destination is reachable.
-     *
-     * @param[in]  aMeshDest   The RLOC16 of the destination.
-     * @param[in]  aIp6Header  A reference to the IPv6 header of the message.
-     *
-     * @retval kErrorNone      The destination is reachable.
-     * @retval kErrorNoRoute   The destination is not reachable and the message should be dropped.
-     *
-     */
-    Error CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header);
-
-    /**
-     * Resolves 2-hop routing loops.
-     *
-     * @param[in]  aSourceMac   The RLOC16 of the previous hop.
-     * @param[in]  aDestRloc16  The RLOC16 of the final destination.
-     *
-     */
-    void ResolveRoutingLoops(uint16_t aSourceMac, uint16_t aDestRloc16);
-
-    /**
      * Fills an ConnectivityTlv.
      *
      * @param[out]  aTlv  A reference to the tlv to be filled.
