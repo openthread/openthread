@@ -828,6 +828,7 @@ private:
             };
 
             bool IsReachable(void) const { return mNsProbeCount <= kMaxNsProbes; }
+            bool ShouldCheckReachability(void) const;
             bool Matches(const Ip6::Address &aAddress) const { return aAddress == mAddress; }
             bool Matches(EmptyChecker aChecker) const;
             void CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow) const;
@@ -915,7 +916,6 @@ private:
         void ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
         void ProcessRaFlagsExtOption(const RaFlagsExtOption &aFlagsOption, Router &aRouter);
         bool ContainsOnLinkPrefix(OnLinkPrefix::UlaChecker aUlaChecker) const;
-        void RemoveOrDeprecateEntriesFromUnreachableRouters(void);
         void RemoveRoutersWithNoEntriesOrFlags(void);
         void RemoveExpiredEntries(void);
         void SignalTableChanged(void);
