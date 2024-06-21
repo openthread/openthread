@@ -3217,7 +3217,7 @@ void MleRouter::ResolveRoutingLoops(uint16_t aSourceMac, uint16_t aDestRloc16)
 {
     Router *router;
 
-    if (aSourceMac != GetNextHop(aDestRloc16))
+    if (aSourceMac != mRouterTable.GetNextHop(aDestRloc16))
     {
         ExitNow();
     }
@@ -3263,7 +3263,7 @@ Error MleRouter::CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6He
         ExitNow();
     }
 
-    isReachable = (GetNextHop(aMeshDest) != Mac::kShortAddrInvalid);
+    isReachable = (mRouterTable.GetNextHop(aMeshDest) != Mac::kShortAddrInvalid);
 
 exit:
     return isReachable ? kErrorNone : kErrorNoRoute;

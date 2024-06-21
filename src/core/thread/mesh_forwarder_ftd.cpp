@@ -374,7 +374,7 @@ Error MeshForwarder::UpdateMeshRoute(Message &aMessage)
 
     IgnoreError(meshHeader.ParseFrom(aMessage));
 
-    nextHop = Get<Mle::MleRouter>().GetNextHop(meshHeader.GetDestination());
+    nextHop = Get<RouterTable>().GetNextHop(meshHeader.GetDestination());
 
     if (nextHop != Mac::kShortAddrInvalid)
     {
@@ -577,7 +577,7 @@ Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &a
 
     SuccessOrExit(error = mle.CheckReachability(mMeshDest, aIp6Header));
     aMessage.SetMeshDest(mMeshDest);
-    mMacAddrs.mDestination.SetShort(mle.GetNextHop(mMeshDest));
+    mMacAddrs.mDestination.SetShort(Get<RouterTable>().GetNextHop(mMeshDest));
 
     if (mMacAddrs.mDestination.GetShort() != mMeshDest)
     {

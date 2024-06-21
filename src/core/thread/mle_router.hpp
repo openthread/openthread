@@ -237,16 +237,6 @@ public:
     void SetRouterId(uint8_t aRouterId);
 
     /**
-     * Returns the next hop towards an RLOC16 destination.
-     *
-     * @param[in]  aDestination  The RLOC16 of the destination.
-     *
-     * @returns A RLOC16 of the next hop if a route is known, kInvalidRloc16 otherwise.
-     *
-     */
-    uint16_t GetNextHop(uint16_t aDestination) { return mRouterTable.GetNextHop(aDestination); }
-
-    /**
      * Returns the NETWORK_ID_TIMEOUT value.
      *
      * @returns The NETWORK_ID_TIMEOUT value.
