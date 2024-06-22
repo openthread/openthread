@@ -62,6 +62,11 @@ Link::Link(Instance &aInstance)
     mTxFrame.mPsdu = &mTxPacketBuffer[kMaxHeaderSize];
     mTxFrame.SetLength(0);
 
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    memset(&mTxIeInfo, 0, sizeof(otRadioIeInfo));
+    mTxFrame.mInfo.mTxInfo.mIeInfo = &mTxIeInfo;
+#endif
+
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     mTxFrame.SetRadioType(Mac::kRadioTypeTrel);
     mRxFrame.SetRadioType(Mac::kRadioTypeTrel);
