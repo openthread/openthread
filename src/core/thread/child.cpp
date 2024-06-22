@@ -203,6 +203,23 @@ Error Child::RemoveIp6Address(const Ip6::Address &aAddress)
     entry = mIp6Addresses.Find(aAddress);
     VerifyOrExit(entry != nullptr);
 
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    {
+        // `Array::Remove()` will replace the removed entry with the
+        // last one in the array. We also update the MLR bit vectors
+        // to reflect this change.
+
+        uint16_t entryIndex = mIp6Addresses.IndexOf(*entry);
+        uint16_t lastIndex  = mIp6Addresses.GetLength() - 1;
+
+        mMlrToRegisterMask.Set(entryIndex, mMlrToRegisterMask.Get(lastIndex));
+        mMlrToRegisterMask.Set(lastIndex, false);
+
+        mMlrRegisteredMask.Set(entryIndex, mMlrRegisteredMask.Get(lastIndex));
+        mMlrRegisteredMask.Set(lastIndex, false);
+    }
+#endif
+
     mIp6Addresses.Remove(*entry);
     error = kErrorNone;
 
