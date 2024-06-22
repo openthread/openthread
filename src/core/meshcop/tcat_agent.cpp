@@ -460,10 +460,12 @@ exit:
 
 Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncommingMessage, uint16_t aOffset, uint16_t aLength)
 {
-    Dataset dataset;
-    Error   error;
+    Dataset     dataset;
+    OffsetRange offsetRange;
+    Error       error;
 
-    SuccessOrExit(error = dataset.SetFrom(aIncommingMessage, aOffset, aLength));
+    offsetRange.Init(aOffset, aLength);
+    SuccessOrExit(error = dataset.SetFrom(aIncommingMessage, offsetRange));
     SuccessOrExit(error = dataset.ValidateTlvs());
 
     if (!CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mApplicationFlags,

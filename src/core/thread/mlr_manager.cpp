@@ -482,8 +482,8 @@ Error MlrManager::ParseMlrResponse(Error          aResult,
                                    uint8_t       &aStatus,
                                    AddressArray  &aFailedAddresses)
 {
-    Error    error;
-    uint16_t addressesOffset, addressesLength;
+    Error       error;
+    OffsetRange offsetRange;
 
     aStatus = ThreadStatusTlv::kMlrGeneralFailure;
 
@@ -492,15 +492,16 @@ Error MlrManager::ParseMlrResponse(Error          aResult,
 
     SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(*aMessage, aStatus));
 
-    if (ThreadTlv::FindTlvValueOffset(*aMessage, Ip6AddressesTlv::kIp6Addresses, addressesOffset, addressesLength) ==
-        kErrorNone)
+    if (ThreadTlv::FindTlvValueOffsetRange(*aMessage, Ip6AddressesTlv::kIp6Addresses, offsetRange) == kErrorNone)
     {
-        VerifyOrExit(addressesLength % sizeof(Ip6::Address) == 0, error = kErrorParse);
-        VerifyOrExit(addressesLength / sizeof(Ip6::Address) <= Ip6AddressesTlv::kMaxAddresses, error = kErrorParse);
+        VerifyOrExit(offsetRange.GetLength() % sizeof(Ip6::Address) == 0, error = kErrorParse);
+        VerifyOrExit(offsetRange.GetLength() / sizeof(Ip6::Address) <= Ip6AddressesTlv::kMaxAddresses,
+                     error = kErrorParse);
 
-        for (uint16_t offset = 0; offset < addressesLength; offset += sizeof(Ip6::Address))
+        while (!offsetRange.IsEmpty())
         {
-            IgnoreError(aMessage->Read(addressesOffset + offset, *aFailedAddresses.PushBack()));
+            IgnoreError(aMessage->Read(offsetRange, *aFailedAddresses.PushBack()));
+            offsetRange.AdvanceOffset(sizeof(Ip6::Address));
         }
     }
 

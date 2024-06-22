@@ -2842,12 +2842,11 @@ void Mle::HandleDataResponse(RxInfo &aRxInfo)
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     {
-        uint16_t offset;
-        uint16_t length;
+        OffsetRange offsetRange;
 
-        if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kLinkMetricsReport, offset, length) == kErrorNone)
+        if (Tlv::FindTlvValueOffsetRange(aRxInfo.mMessage, Tlv::kLinkMetricsReport, offsetRange) == kErrorNone)
         {
-            Get<LinkMetrics::Initiator>().HandleReport(aRxInfo.mMessage, offset, length,
+            Get<LinkMetrics::Initiator>().HandleReport(aRxInfo.mMessage, offsetRange,
                                                        aRxInfo.mMessageInfo.GetPeerAddr());
         }
     }
@@ -4948,10 +4947,9 @@ exit:
 
 bool Mle::RxMessage::ContainsTlv(Tlv::Type aTlvType) const
 {
-    uint16_t offset;
-    uint16_t length;
+    OffsetRange offsetRange;
 
-    return Tlv::FindTlvValueOffset(*this, aTlvType, offset, length) == kErrorNone;
+    return Tlv::FindTlvValueOffsetRange(*this, aTlvType, offsetRange) == kErrorNone;
 }
 
 Error Mle::RxMessage::ReadModeTlv(DeviceMode &aMode) const
@@ -4979,12 +4977,11 @@ exit:
 
 Error Mle::RxMessage::ReadChallengeOrResponse(uint8_t aTlvType, RxChallenge &aRxChallenge) const
 {
-    Error    error;
-    uint16_t offset;
-    uint16_t length;
+    Error       error;
+    OffsetRange offsetRange;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, aTlvType, offset, length));
-    error = aRxChallenge.ReadFrom(*this, offset, length);
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(*this, aTlvType, offsetRange));
+    error = aRxChallenge.ReadFrom(*this, offsetRange);
 
 exit:
     return error;
@@ -5049,15 +5046,14 @@ exit:
 
 Error Mle::RxMessage::ReadAndSetNetworkDataTlv(const LeaderData &aLeaderData) const
 {
-    Error    error;
-    uint16_t offset;
-    uint16_t length;
+    Error       error;
+    OffsetRange offsetRange;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, Tlv::kNetworkData, offset, length));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(*this, Tlv::kNetworkData, offsetRange));
 
     error = Get<NetworkData::Leader>().SetNetworkData(aLeaderData.GetDataVersion(NetworkData::kFullSet),
                                                       aLeaderData.GetDataVersion(NetworkData::kStableSubset),
-                                                      Get<Mle>().GetNetworkDataType(), *this, offset, length);
+                                                      Get<Mle>().GetNetworkDataType(), *this, offsetRange);
 exit:
     return error;
 }
@@ -5078,12 +5074,11 @@ Error Mle::RxMessage::ReadAndSaveDataset(MeshCoP::Dataset::Type    aDatasetType,
     Error            error   = kErrorNone;
     Tlv::Type        tlvType = (aDatasetType == MeshCoP::Dataset::kActive) ? Tlv::kActiveDataset : Tlv::kPendingDataset;
     MeshCoP::Dataset dataset;
-    uint16_t         offset;
-    uint16_t         length;
+    OffsetRange      offsetRange;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, tlvType, offset, length));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(*this, tlvType, offsetRange));
 
-    SuccessOrExit(error = dataset.SetFrom(*this, offset, length));
+    SuccessOrExit(error = dataset.SetFrom(*this, offsetRange));
     SuccessOrExit(error = dataset.ValidateTlvs());
     SuccessOrExit(error = dataset.WriteTimestamp(aDatasetType, aTimestamp));
 
@@ -5103,19 +5098,15 @@ exit:
 
 Error Mle::RxMessage::ReadTlvRequestTlv(TlvList &aTlvList) const
 {
-    Error    error;
-    uint16_t offset;
-    uint16_t length;
+    Error       error;
+    OffsetRange offsetRange;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, Tlv::kTlvRequest, offset, length));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(*this, Tlv::kTlvRequest, offsetRange));
 
-    if (length > aTlvList.GetMaxSize())
-    {
-        length = aTlvList.GetMaxSize();
-    }
+    offsetRange.ShrinkLength(aTlvList.GetMaxSize());
 
-    ReadBytes(offset, aTlvList.GetArrayBuffer(), length);
-    aTlvList.SetLength(static_cast<uint8_t>(length));
+    ReadBytes(offsetRange, aTlvList.GetArrayBuffer());
+    aTlvList.SetLength(static_cast<uint8_t>(offsetRange.GetLength()));
 
 exit:
     return error;

@@ -379,8 +379,7 @@ exit:
 bool MeshDiag::ProcessChildrenIp6AddrsAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     bool                        didPorcess = false;
-    uint16_t                    offset;
-    uint16_t                    endOffset;
+    OffsetRange                 offsetRange;
     ChildIp6AddressListTlvValue tlvValue;
     Ip6AddrIterator             ip6AddrIterator;
 
@@ -388,11 +387,11 @@ bool MeshDiag::ProcessChildrenIp6AddrsAnswer(Coap::Message &aMessage, const Ip6:
 
     while (true)
     {
-        SuccessOrExit(Tlv::FindTlvValueStartEndOffsets(aMessage, ChildIp6AddressListTlv::kType, offset, endOffset));
+        SuccessOrExit(Tlv::FindTlvValueOffsetRange(aMessage, ChildIp6AddressListTlv::kType, offsetRange));
 
         didPorcess = true;
 
-        if (offset == endOffset)
+        if (offsetRange.IsEmpty())
         {
             // We reached end of the list
             mState = kStateIdle;
@@ -404,13 +403,11 @@ bool MeshDiag::ProcessChildrenIp6AddrsAnswer(Coap::Message &aMessage, const Ip6:
         // Read the `ChildIp6AddressListTlvValue` (which contains the
         // child RLOC16) and then prepare the `Ip6AddrIterator`.
 
-        VerifyOrExit(offset + sizeof(tlvValue) <= endOffset);
-        IgnoreError(aMessage.Read(offset, tlvValue));
-        offset += sizeof(tlvValue);
+        SuccessOrExit(aMessage.Read(offsetRange, tlvValue));
+        offsetRange.AdvanceOffset(sizeof(tlvValue));
 
-        ip6AddrIterator.mMessage   = &aMessage;
-        ip6AddrIterator.mCurOffset = offset;
-        ip6AddrIterator.mEndOffset = endOffset;
+        ip6AddrIterator.mMessage     = &aMessage;
+        ip6AddrIterator.mOffsetRange = offsetRange;
 
         mQueryChildrenIp6Addrs.mCallback.InvokeIfSet(kErrorPending, tlvValue.GetRloc16(), &ip6AddrIterator);
 
@@ -418,7 +415,7 @@ bool MeshDiag::ProcessChildrenIp6AddrsAnswer(Coap::Message &aMessage, const Ip6:
         // callback.
         VerifyOrExit(mState == kStateQueryChildrenIp6Addrs);
 
-        aMessage.SetOffset(endOffset);
+        aMessage.SetOffset(offsetRange.GetEndOffset());
     }
 
 exit:
@@ -531,7 +528,7 @@ Error MeshDiag::Ip6AddrIterator::InitFrom(const Message &aMessage)
 {
     Error error;
 
-    SuccessOrExit(error = Tlv::FindTlvValueStartEndOffsets(aMessage, Ip6AddressListTlv::kType, mCurOffset, mEndOffset));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, Ip6AddressListTlv::kType, mOffsetRange));
     mMessage = &aMessage;
 
 exit:
@@ -543,10 +540,9 @@ Error MeshDiag::Ip6AddrIterator::GetNextAddress(Ip6::Address &aAddress)
     Error error = kErrorNone;
 
     VerifyOrExit(mMessage != nullptr, error = kErrorNotFound);
-    VerifyOrExit(mCurOffset + sizeof(Ip6::Address) <= mEndOffset, error = kErrorNotFound);
 
-    IgnoreError(mMessage->Read(mCurOffset, aAddress));
-    mCurOffset += sizeof(Ip6::Address);
+    VerifyOrExit(mMessage->Read(mOffsetRange, aAddress) == kErrorNone, error = kErrorNotFound);
+    mOffsetRange.AdvanceOffset(sizeof(Ip6::Address));
 
 exit:
     return error;
@@ -559,7 +555,8 @@ Error MeshDiag::ChildIterator::InitFrom(const Message &aMessage, uint16_t aParen
 {
     Error error;
 
-    SuccessOrExit(error = Tlv::FindTlvValueStartEndOffsets(aMessage, ChildTableTlv::kType, mCurOffset, mEndOffset));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, ChildTableTlv::kType, mOffsetRange));
+
     mMessage      = &aMessage;
     mParentRloc16 = aParentRloc16;
 
@@ -573,10 +570,9 @@ Error MeshDiag::ChildIterator::GetNextChildInfo(ChildInfo &aChildInfo)
     ChildTableEntry entry;
 
     VerifyOrExit(mMessage != nullptr, error = kErrorNotFound);
-    VerifyOrExit(mCurOffset + sizeof(ChildTableEntry) <= mEndOffset, error = kErrorNotFound);
 
-    IgnoreError(mMessage->Read(mCurOffset, entry));
-    mCurOffset += sizeof(ChildTableEntry);
+    VerifyOrExit(mMessage->Read(mOffsetRange, entry) == kErrorNone, error = kErrorNotFound);
+    mOffsetRange.AdvanceOffset(sizeof(ChildTableEntry));
 
     aChildInfo.mRloc16 = mParentRloc16 + entry.GetChildId();
     entry.GetMode().Get(aChildInfo.mMode);

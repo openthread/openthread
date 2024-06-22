@@ -71,6 +71,7 @@ Error DatasetManager::ProcessSetOrReplaceRequest(MgmtCommand          aCommand,
 {
     Error              error = kErrorParse;
     Dataset            dataset;
+    OffsetRange        offsetRange;
     Timestamp          activeTimestamp;
     ChannelTlvValue    channelValue;
     uint16_t           sessionId;
@@ -81,7 +82,8 @@ Error DatasetManager::ProcessSetOrReplaceRequest(MgmtCommand          aCommand,
 
     aInfo.Clear();
 
-    SuccessOrExit(dataset.SetFrom(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset()));
+    offsetRange.InitFromMessageOffsetToEnd(aMessage);
+    SuccessOrExit(dataset.SetFrom(aMessage, offsetRange));
     SuccessOrExit(dataset.ValidateTlvs());
 
     // Verify that the request includes timestamps that are

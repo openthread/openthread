@@ -532,17 +532,17 @@ exit:
 
 void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
-    TlvList  tlvList;
-    uint8_t  tlvType;
-    uint16_t offset;
-    uint16_t length;
+    TlvList     tlvList;
+    uint8_t     tlvType;
+    OffsetRange offsetRange;
 
-    SuccessOrExit(Tlv::FindTlvValueOffset(aMessage, Tlv::kGet, offset, length));
+    SuccessOrExit(Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kGet, offsetRange));
 
-    for (; length > 0; length--, offset++)
+    while (!offsetRange.IsEmpty())
     {
-        IgnoreError(aMessage.Read(offset, tlvType));
+        IgnoreError(aMessage.Read(offsetRange, tlvType));
         tlvList.Add(tlvType);
+        offsetRange.AdvanceOffset(sizeof(uint8_t));
     }
 
     // MGMT_PENDING_GET.rsp must include Delay Timer TLV (Thread 1.1.1

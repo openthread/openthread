@@ -42,6 +42,7 @@
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "common/error.hpp"
+#include "common/offset_range.hpp"
 #include "common/type_traits.hpp"
 
 namespace ot {
@@ -245,19 +246,19 @@ public:
     // Static methods for reading/finding/appending TLVs in a `Message`.
 
     /**
-     * Parses a TLV in a message at a given offset, validating that it is fully contained within the message and then
-     * updating the offset to skip over the entire parsed TLV.
+     * Parses a TLV in a message from a given offset range, validating that it is fully contained within the offset
+     * range and the message, and then updating the offset range to skip over the entire parsed TLV.
      *
      * Can be used independent of whether the read TLV (from the message) is an Extended TLV or not.
      *
-     * @param[in]       aMessage    The message to read from.
-     * @param[in,out]   aOffset     The offset to read from. On success, it is updated to point after the parsed TLV.
+     * @param[in]       aMessage      The message to read from.
+     * @param[in,out]   aOffsetRange  The offset range to read from. On success, it is updated to skip the TLV.
      *
-     * @retval kErrorNone    Successfully parsed a TLV from @p aMessage. @p aOffset is updated.
+     * @retval kErrorNone    Successfully parsed a TLV from @p aMessage. @p aOffsetRange is updated.
      * @retval kErrorParse   The TLV was not well-formed or was not fully contained in @p aMessage.
      *
      */
-    static Error ParseAndSkipTlv(const Message &aMessage, uint16_t &aOffset);
+    static Error ParseAndSkipTlv(const Message &aMessage, OffsetRange &aOffsetRange);
 
     /**
      * Reads a TLV's value in a message at a given offset expecting a minimum length for the value.
@@ -405,39 +406,19 @@ public:
     }
 
     /**
-     * Finds the offset and length of TLV value for a given TLV type within @p aMessage.
+     * Finds the offset range of the TLV value for a given TLV type within @p aMessage.
      *
      * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
      * @param[in]   aMessage      A reference to the message.
      * @param[in]   aType         The Type value to search for.
-     * @param[out]  aValueOffset  The offset where the value starts.
-     * @param[out]  aLength       The length of the value.
+     * @param[out]  aOffsetRange  A reference to return the offset range of the TLV value when found.
      *
      * @retval kErrorNone       Successfully found the TLV.
      * @retval kErrorNotFound   Could not find the TLV with Type @p aType.
      *
      */
-    static Error FindTlvValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aValueOffset, uint16_t &aLength);
-
-    /**
-     * Finds the start and end offset of TLV value for a given TLV type with @p aMessage.
-     *
-     * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
-     *
-     * @param[in]   aMessage           A reference to the message.
-     * @param[in]   aType              The Type value to search for.
-     * @param[out]  aValueStartOffset  The offset where the value starts.
-     * @param[out]  aValueEndOffset    The offset immediately after the last byte of value.
-     *
-     * @retval kErrorNone       Successfully found the TLV.
-     * @retval kErrorNotFound   Could not find the TLV with Type @p aType.
-     *
-     */
-    static Error FindTlvValueStartEndOffsets(const Message &aMessage,
-                                             uint8_t        aType,
-                                             uint16_t      &aValueStartOffset,
-                                             uint16_t      &aValueEndOffset);
+    static Error FindTlvValueOffsetRange(const Message &aMessage, uint8_t aType, OffsetRange &aOffsetRange);
 
     /**
      * Searches for a TLV with a given type in a message, ensures its length is same or larger than

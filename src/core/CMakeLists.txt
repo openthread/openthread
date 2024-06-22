@@ -112,6 +112,7 @@ set(COMMON_SOURCES
     common/log.cpp
     common/message.cpp
     common/notifier.cpp
+    common/offset_range.cpp
     common/preference.cpp
     common/random.cpp
     common/settings.cpp

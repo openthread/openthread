@@ -1761,11 +1761,10 @@ exit:
 
 Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
 {
-    Error    error;
-    uint16_t offset;
-    uint16_t endOffset;
-    uint8_t  count       = 0;
-    uint8_t  storedCount = 0;
+    Error       error;
+    OffsetRange offsetRange;
+    uint8_t     count       = 0;
+    uint8_t     storedCount = 0;
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     Ip6::Address oldDua;
 #endif
@@ -1775,8 +1774,7 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
 
     OT_UNUSED_VARIABLE(storedCount);
 
-    SuccessOrExit(error =
-                      Tlv::FindTlvValueStartEndOffsets(aRxInfo.mMessage, Tlv::kAddressRegistration, offset, endOffset));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRxInfo.mMessage, Tlv::kAddressRegistration, offsetRange));
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     if (aChild.GetDomainUnicastAddress(oldDua) != kErrorNone)
@@ -1807,14 +1805,14 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
 
     aChild.ClearIp6Addresses();
 
-    while (offset < endOffset)
+    while (!offsetRange.IsEmpty())
     {
         uint8_t      controlByte;
         Ip6::Address address;
 
         // Read out the control byte (first byte in entry)
-        SuccessOrExit(error = aRxInfo.mMessage.Read(offset, controlByte));
-        offset++;
+        SuccessOrExit(error = aRxInfo.mMessage.Read(offsetRange, controlByte));
+        offsetRange.AdvanceOffset(sizeof(uint8_t));
         count++;
 
         address.Clear();
@@ -1828,9 +1826,8 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
             uint8_t         contextId = AddressRegistrationTlv::GetContextId(controlByte);
             Lowpan::Context context;
 
-            VerifyOrExit(offset + sizeof(Ip6::InterfaceIdentifier) <= endOffset, error = kErrorParse);
-            IgnoreError(aRxInfo.mMessage.Read(offset, address.GetIid()));
-            offset += sizeof(Ip6::InterfaceIdentifier);
+            IgnoreError(aRxInfo.mMessage.Read(offsetRange, address.GetIid()));
+            offsetRange.AdvanceOffset(sizeof(Ip6::InterfaceIdentifier));
 
             if (Get<NetworkData::Leader>().GetContext(contextId, context) != kErrorNone)
             {
@@ -1845,9 +1842,8 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
         {
             // Uncompressed entry contains the full IPv6 address.
 
-            VerifyOrExit(offset + sizeof(Ip6::Address) <= endOffset, error = kErrorParse);
-            IgnoreError(aRxInfo.mMessage.Read(offset, address));
-            offset += sizeof(Ip6::Address);
+            IgnoreError(aRxInfo.mMessage.Read(offsetRange, address));
+            offsetRange.AdvanceOffset(sizeof(Ip6::Address));
         }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -2624,8 +2620,7 @@ void MleRouter::HandleDiscoveryRequest(RxInfo &aRxInfo)
     MeshCoP::Tlv                 meshcopTlv;
     MeshCoP::DiscoveryRequestTlv discoveryRequestTlv;
     MeshCoP::ExtendedPanId       extPanId;
-    uint16_t                     offset;
-    uint16_t                     end;
+    OffsetRange                  offsetRange;
 
     Log(kMessageReceive, kTypeDiscoveryRequest, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -2633,31 +2628,31 @@ void MleRouter::HandleDiscoveryRequest(RxInfo &aRxInfo)
 
     VerifyOrExit(IsRouterEligible(), error = kErrorInvalidState);
 
-    SuccessOrExit(error = Tlv::FindTlvValueStartEndOffsets(aRxInfo.mMessage, Tlv::kDiscovery, offset, end));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRxInfo.mMessage, Tlv::kDiscovery, offsetRange));
 
-    while (offset < end)
+    while (!offsetRange.IsEmpty())
     {
-        SuccessOrExit(error = aRxInfo.mMessage.Read(offset, meshcopTlv));
+        SuccessOrExit(error = aRxInfo.mMessage.Read(offsetRange, meshcopTlv));
 
         if (meshcopTlv.IsExtended())
         {
-            SuccessOrExit(error = Tlv::ParseAndSkipTlv(aRxInfo.mMessage, offset));
-            VerifyOrExit(offset <= end, error = kErrorParse);
+            SuccessOrExit(error = Tlv::ParseAndSkipTlv(aRxInfo.mMessage, offsetRange));
             continue;
         }
 
-        VerifyOrExit(meshcopTlv.GetSize() + offset <= aRxInfo.mMessage.GetLength(), error = kErrorParse);
+        VerifyOrExit(offsetRange.Contains(meshcopTlv.GetSize()));
 
         switch (meshcopTlv.GetType())
         {
         case MeshCoP::Tlv::kDiscoveryRequest:
-            SuccessOrExit(error = aRxInfo.mMessage.Read(offset, discoveryRequestTlv));
+            SuccessOrExit(error = aRxInfo.mMessage.Read(offsetRange, discoveryRequestTlv));
             VerifyOrExit(discoveryRequestTlv.IsValid(), error = kErrorParse);
 
             break;
 
         case MeshCoP::Tlv::kExtendedPanId:
-            SuccessOrExit(error = Tlv::Read<MeshCoP::ExtendedPanIdTlv>(aRxInfo.mMessage, offset, extPanId));
+            SuccessOrExit(
+                error = Tlv::Read<MeshCoP::ExtendedPanIdTlv>(aRxInfo.mMessage, offsetRange.GetOffset(), extPanId));
             VerifyOrExit(Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId() != extPanId, error = kErrorDrop);
 
             break;
@@ -2666,7 +2661,7 @@ void MleRouter::HandleDiscoveryRequest(RxInfo &aRxInfo)
             break;
         }
 
-        offset += sizeof(meshcopTlv) + meshcopTlv.GetLength();
+        offsetRange.AdvanceOffset(meshcopTlv.GetSize());
     }
 
     if (discoveryRequestTlv.IsValid())
