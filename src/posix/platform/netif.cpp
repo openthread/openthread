@@ -483,7 +483,7 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
 #endif
     {
 #if OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC > 0
-        static constexpr kLinkLocalScope = 2;
+        static constexpr uint8_t kLinkLocalScope = 2;
 
         if (aAddressInfo.mScope > kLinkLocalScope)
         {
