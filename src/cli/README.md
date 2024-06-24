@@ -72,7 +72,7 @@ Done
 - [log](#log-filename-filename)
 - [mac](#mac-retries-direct)
 - [macfilter](#macfilter)
-- [meshdiag](#meshdiag-topology)
+- [meshdiag](#meshdiag-topology-ip6-addrs-children)
 - [mliid](#mliid-iid)
 - [mlr](#mlr-reg-ipaddr--timeout)
 - [mode](#mode)
@@ -2089,7 +2089,7 @@ Set the log level.
 Done
 ```
 
-### meshdiag topology [ip6-addrs][children]
+### meshdiag topology \[ip6-addrs\] \[children\]
 
 Discover network topology (list of routers and their connections).
 
