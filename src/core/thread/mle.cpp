@@ -95,8 +95,8 @@ Mle::Mle(Instance &aInstance)
 #if OPENTHREAD_FTD
     , mLinkRequestAttempts(0)
 #endif
-    , mRloc16(Mac::kShortAddrInvalid)
-    , mPreviousParentRloc(Mac::kShortAddrInvalid)
+    , mRloc16(kInvalidRloc16)
+    , mPreviousParentRloc(kInvalidRloc16)
     , mAttachCounter(0)
     , mAnnounceDelay(kAnnounceTimeout)
     , mAlternatePanId(Mac::kPanIdBroadcast)
@@ -209,7 +209,7 @@ Error Mle::Start(StartMode aMode)
         mReattachState = kReattachStart;
     }
 
-    if ((aMode == kAnnounceAttach) || (GetRloc16() == Mac::kShortAddrInvalid))
+    if ((aMode == kAnnounceAttach) || (GetRloc16() == kInvalidRloc16))
     {
         Attach(kAnyPartition);
     }
@@ -407,7 +407,7 @@ void Mle::Restore(void)
 
     mMeshLocalEid.GetAddress().SetIid(networkInfo.GetMeshLocalIid());
 
-    if (networkInfo.GetRloc16() == Mac::kShortAddrInvalid)
+    if (networkInfo.GetRloc16() == kInvalidRloc16)
     {
         ExitNow();
     }
@@ -540,7 +540,7 @@ Error Mle::BecomeDetached(void)
 
     SetStateDetached();
     mParent.SetState(Neighbor::kStateInvalid);
-    SetRloc16(Mac::kShortAddrInvalid);
+    SetRloc16(kInvalidRloc16);
     Attach(kAnyPartition);
 
 exit:
@@ -749,7 +749,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
     mParentSearch.UpdateState();
 #endif
 
-    if ((mPreviousParentRloc != Mac::kShortAddrInvalid) && (mPreviousParentRloc != mParent.GetRloc16()))
+    if ((mPreviousParentRloc != kInvalidRloc16) && (mPreviousParentRloc != mParent.GetRloc16()))
     {
         mCounters.mParentChanges++;
 
@@ -960,7 +960,7 @@ void Mle::SetRloc16(uint16_t aRloc16)
     Get<Mac::Mac>().SetShortAddress(aRloc16);
     mRloc16 = aRloc16;
 
-    if (aRloc16 != Mac::kShortAddrInvalid)
+    if (aRloc16 != kInvalidRloc16)
     {
         // We can always call `AddUnicastAddress(mMeshLocat16)` and if
         // the address is already added, it will perform no action.
@@ -3948,7 +3948,7 @@ void Mle::ParentSearch::UpdateState(void)
 
     if (mIsInBackoff && !mBackoffWasCanceled && mRecentlyDetached)
     {
-        if ((Get<Mle>().mPreviousParentRloc != Mac::kShortAddrInvalid) &&
+        if ((Get<Mle>().mPreviousParentRloc != kInvalidRloc16) &&
             (Get<Mle>().mPreviousParentRloc != Get<Mle>().mParent.GetRloc16()))
         {
             mIsInBackoff        = false;
@@ -3972,7 +3972,7 @@ void Mle::ParentSearch::UpdateState(void)
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 void Mle::Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAddress)
 {
-    Log(aAction, aType, aAddress, Mac::kShortAddrInvalid);
+    Log(aAction, aType, aAddress, kInvalidRloc16);
 }
 
 void Mle::Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAddress, uint16_t aRloc)
@@ -3984,7 +3984,7 @@ void Mle::Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAdd
 
     String<kRlocStringSize> rlocString;
 
-    if (aRloc != Mac::kShortAddrInvalid)
+    if (aRloc != kInvalidRloc16)
     {
         rlocString.Append(",0x%04x", aRloc);
     }

@@ -192,7 +192,7 @@ Error ChildTable::GetChildInfoById(uint16_t aChildId, Child::Info &aChildInfo)
         aChildId = Mle::ChildIdFromRloc16(aChildId);
     }
 
-    rloc16 = Get<Mac::Mac>().GetShortAddress() | aChildId;
+    rloc16 = Get<Mle::Mle>().GetRloc16() | aChildId;
     child  = FindChild(rloc16, Child::kInStateValidOrRestoring);
     VerifyOrExit(child != nullptr, error = kErrorNotFound);
 

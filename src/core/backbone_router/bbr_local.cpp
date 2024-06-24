@@ -254,7 +254,7 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config
     VerifyOrExit(IsEnabled() && Get<Mle::MleRouter>().IsAttached());
 
     // Wait some jitter before trying to Register.
-    if (aConfig.mServer16 == Mac::kShortAddrInvalid)
+    if (aConfig.mServer16 == Mle::kInvalidRloc16)
     {
         mRegistrationTimeout = 1;
 

@@ -176,7 +176,7 @@ AddressResolver::CacheEntry *AddressResolver::GetEntryAfter(CacheEntry *aPrev, C
     return (aPrev == nullptr) ? aList.GetHead() : aPrev->GetNext();
 }
 
-void AddressResolver::Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId)
+void AddressResolver::Remove(uint16_t aRloc16, bool aMatchRouterId)
 {
     CacheEntryList *lists[] = {&mCachedList, &mSnoopedList};
 
@@ -337,7 +337,7 @@ void AddressResolver::RemoveCacheEntry(CacheEntry     &aEntry,
     LogCacheEntryChange(kEntryRemoved, aReason, aEntry, &aList);
 }
 
-Error AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
+Error AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, uint16_t aRloc16)
 {
     // This method updates an existing cache entry for the EID (if any).
     // Returns `kErrorNone` if entry is found and successfully updated,
@@ -377,18 +377,16 @@ exit:
     return error;
 }
 
-void AddressResolver::UpdateSnoopedCacheEntry(const Ip6::Address &aEid,
-                                              Mac::ShortAddress   aRloc16,
-                                              Mac::ShortAddress   aDest)
+void AddressResolver::UpdateSnoopedCacheEntry(const Ip6::Address &aEid, uint16_t aRloc16, uint16_t aDest)
 {
-    uint16_t          numNonEvictable = 0;
-    CacheEntry       *entry;
-    Mac::ShortAddress macAddress;
+    uint16_t    numNonEvictable = 0;
+    CacheEntry *entry;
+    uint16_t    deviceRloc16;
 
     VerifyOrExit(Get<Mle::MleRouter>().IsFullThreadDevice());
 
 #if OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
-    VerifyOrExit(ResolveUsingNetDataServices(aEid, macAddress) != kErrorNone);
+    VerifyOrExit(ResolveUsingNetDataServices(aEid, deviceRloc16) != kErrorNone);
 #endif
 
     VerifyOrExit(UpdateCacheEntry(aEid, aRloc16) != kErrorNone);
@@ -396,13 +394,13 @@ void AddressResolver::UpdateSnoopedCacheEntry(const Ip6::Address &aEid,
     // Skip if the `aRloc16` (i.e., the source of the snooped message)
     // is this device or an MTD (minimal) child of the device itself.
 
-    macAddress = Get<Mac::Mac>().GetShortAddress();
-    VerifyOrExit((aRloc16 != macAddress) && !Get<ChildTable>().HasMinimalChild(aRloc16));
+    deviceRloc16 = Get<Mle::Mle>().GetRloc16();
+    VerifyOrExit((aRloc16 != deviceRloc16) && !Get<ChildTable>().HasMinimalChild(aRloc16));
 
     // Ensure that the destination of the snooped message is this device
     // or a minimal child of this device.
 
-    VerifyOrExit((aDest == macAddress) || Get<ChildTable>().HasMinimalChild(aDest));
+    VerifyOrExit((aDest == deviceRloc16) || Get<ChildTable>().HasMinimalChild(aDest));
 
     entry = NewCacheEntry(/* aSnoopedEntry */ true);
     VerifyOrExit(entry != nullptr);
@@ -470,15 +468,15 @@ void AddressResolver::RestartAddressQueries(void)
     }
 }
 
-Mac::ShortAddress AddressResolver::LookUp(const Ip6::Address &aEid)
+uint16_t AddressResolver::LookUp(const Ip6::Address &aEid)
 {
-    Mac::ShortAddress rloc16 = Mac::kShortAddrInvalid;
+    uint16_t rloc16 = Mle::kInvalidRloc16;
 
     IgnoreError(Resolve(aEid, rloc16, /* aAllowAddressQuery */ false));
     return rloc16;
 }
 
-Error AddressResolver::Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16, bool aAllowAddressQuery)
+Error AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16, bool aAllowAddressQuery)
 {
     Error           error = kErrorNone;
     CacheEntry     *entry;
@@ -532,7 +530,7 @@ Error AddressResolver::Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRlo
         VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
 
         entry->SetTarget(aEid);
-        entry->SetRloc16(Mac::kShortAddrInvalid);
+        entry->SetRloc16(Mle::kInvalidRloc16);
         entry->SetRetryDelay(kAddressQueryInitialRetryDelay);
         entry->SetCanEvict(false);
         list = nullptr;
@@ -580,7 +578,7 @@ exit:
 
 #if OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
 
-Error AddressResolver::ResolveUsingNetDataServices(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16)
+Error AddressResolver::ResolveUsingNetDataServices(const Ip6::Address &aEid, uint16_t &aRloc16)
 {
     // Tries to resolve `aEid` Network Data DNS/SRP Unicast address
     // service entries.  Returns `kErrorNone` and updates `aRloc16`

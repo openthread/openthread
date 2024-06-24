@@ -57,7 +57,7 @@ Notifier::Notifier(Instance &aInstance)
     , mNetDataFullTask(aInstance)
 #endif
     , mNextDelay(0)
-    , mOldRloc(Mac::kShortAddrInvalid)
+    , mOldRloc(Mle::kInvalidRloc16)
     , mWaitingForResponse(false)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
     , mDidRequestRouterRoleUpgrade(false)
@@ -177,7 +177,7 @@ Error Notifier::UpdateInconsistentData(void)
 
     if (mOldRloc == deviceRloc)
     {
-        mOldRloc = Mac::kShortAddrInvalid;
+        mOldRloc = Mle::kInvalidRloc16;
     }
 
     SuccessOrExit(error = SendServerDataNotification(mOldRloc, &Get<Local>()));
@@ -211,7 +211,7 @@ Error Notifier::SendServerDataNotification(uint16_t aOldRloc16, const NetworkDat
 #endif
     }
 
-    if (aOldRloc16 != Mac::kShortAddrInvalid)
+    if (aOldRloc16 != Mle::kInvalidRloc16)
     {
         SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, aOldRloc16));
     }

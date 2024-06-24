@@ -616,7 +616,7 @@ void Leader::CheckForNetDataGettingFull(const NetworkData &aNetworkData, uint16_
         leaderClone.MarkAsClone();
         SuccessOrAssert(CopyNetworkData(kFullSet, leaderClone));
 
-        if (aOldRloc16 != Mac::kShortAddrInvalid)
+        if (aOldRloc16 != Mle::kInvalidRloc16)
         {
             leaderClone.RemoveBorderRouter(aOldRloc16, kMatchModeRloc16);
         }

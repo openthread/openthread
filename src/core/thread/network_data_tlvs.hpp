@@ -43,6 +43,7 @@
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/mle_types.hpp"
 #include "thread/network_data_types.hpp"
 
 namespace ot {
@@ -412,7 +413,7 @@ public:
      */
     void Init(void)
     {
-        SetRloc(Mac::kShortAddrInvalid);
+        SetRloc(Mle::kInvalidRloc16);
         mFlags = 0;
     }
 
@@ -923,7 +924,7 @@ public:
      */
     void Init(void)
     {
-        SetRloc(Mac::kShortAddrInvalid);
+        SetRloc(Mle::kInvalidRloc16);
         mFlags = 0;
     }
 

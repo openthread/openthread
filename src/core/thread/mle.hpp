@@ -1166,7 +1166,7 @@ private:
     class ServiceAloc : public Ip6::Netif::UnicastAddress
     {
     public:
-        static constexpr uint16_t kNotInUse = Mac::kShortAddrInvalid;
+        static constexpr uint16_t kNotInUse = kInvalidRloc16;
 
         ServiceAloc(void);
 
