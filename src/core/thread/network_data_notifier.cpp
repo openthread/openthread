@@ -138,7 +138,7 @@ Error Notifier::RemoveStaleChildEntries(void)
 
     for (uint16_t rloc16 : rlocs)
     {
-        if (!Mle::IsActiveRouter(rloc16) && Mle::RouterIdMatch(Get<Mle::MleRouter>().GetRloc16(), rloc16) &&
+        if (Mle::IsChildRloc16(rloc16) && Mle::RouterIdMatch(Get<Mle::MleRouter>().GetRloc16(), rloc16) &&
             Get<ChildTable>().FindChild(rloc16, Child::kInStateValid) == nullptr)
         {
             error = SendServerDataNotification(rloc16);

@@ -1157,7 +1157,7 @@ void MeshForwarder::UpdateNeighborLinkFailures(Neighbor &aNeighbor,
     {
         aNeighbor.IncrementLinkFailures();
 
-        if (aAllowNeighborRemove && (Mle::IsActiveRouter(aNeighbor.GetRloc16())) &&
+        if (aAllowNeighborRemove && (Mle::IsRouterRloc16(aNeighbor.GetRloc16())) &&
             (aNeighbor.GetLinkFailures() >= aFailLimit))
         {
 #if OPENTHREAD_FTD

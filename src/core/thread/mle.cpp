@@ -214,7 +214,7 @@ Error Mle::Start(StartMode aMode)
         Attach(kAnyPartition);
     }
 #if OPENTHREAD_FTD
-    else if (IsActiveRouter(GetRloc16()))
+    else if (IsRouterRloc16(GetRloc16()))
     {
         if (Get<MleRouter>().BecomeRouter(ThreadStatusTlv::kTooFewRouters) != kErrorNone)
         {
@@ -397,7 +397,7 @@ void Mle::Restore(void)
     }
 
 #if OPENTHREAD_MTD
-    if (!IsActiveRouter(networkInfo.GetRloc16()))
+    if (IsChildRloc16(networkInfo.GetRloc16()))
 #endif
     {
         Get<Mac::Mac>().SetShortAddress(networkInfo.GetRloc16());
@@ -412,7 +412,7 @@ void Mle::Restore(void)
         ExitNow();
     }
 
-    if (!IsActiveRouter(networkInfo.GetRloc16()))
+    if (IsChildRloc16(networkInfo.GetRloc16()))
     {
         if (Get<Settings>().Read(parentInfo) != kErrorNone)
         {
@@ -2751,7 +2751,7 @@ void Mle::ReestablishLinkWithNeighbor(Neighbor &aNeighbor)
 #if OPENTHREAD_FTD
     VerifyOrExit(IsFullThreadDevice());
 
-    if (IsActiveRouter(aNeighbor.GetRloc16()))
+    if (IsRouterRloc16(aNeighbor.GetRloc16()))
     {
         IgnoreError(Get<MleRouter>().SendLinkRequest(&aNeighbor));
     }
@@ -3045,7 +3045,7 @@ bool Mle::IsBetterParent(uint16_t                aRloc16,
     rval = ThreeWayCompare(LinkQualityForLinkMargin(aTwoWayLinkMargin), mParentCandidate.GetTwoWayLinkQuality());
     VerifyOrExit(rval == 0);
 
-    rval = ThreeWayCompare(IsActiveRouter(aRloc16), IsActiveRouter(mParentCandidate.GetRloc16()));
+    rval = ThreeWayCompare(IsRouterRloc16(aRloc16), IsRouterRloc16(mParentCandidate.GetRloc16()));
     VerifyOrExit(rval == 0);
 
     rval = ThreeWayCompare(aConnectivityTlv.GetParentPriority(), mParentCandidate.mPriority);

@@ -339,7 +339,7 @@ int Leader::CompareRouteEntries(int8_t   aFirstPreference,
 
     // If all the same, prefer the BR acting as a router over an
     // end device.
-    result = ThreeWayCompare(Mle::IsActiveRouter(aFirstRloc), Mle::IsActiveRouter(aSecondRloc));
+    result = ThreeWayCompare(Mle::IsRouterRloc16(aFirstRloc), Mle::IsRouterRloc16(aSecondRloc));
 #endif
 
 exit:

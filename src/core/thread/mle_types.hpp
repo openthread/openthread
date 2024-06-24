@@ -682,15 +682,26 @@ inline uint16_t CommissionerAloc16FromId(uint16_t aSessionId)
 inline uint16_t Rloc16FromRouterId(uint8_t aRouterId) { return static_cast<uint16_t>(aRouterId << kRouterIdOffset); }
 
 /**
- * Indicates whether or not @p aRloc16 refers to an active router.
+ * Indicates whether or not @p aRloc16 refers to a router.
  *
  * @param[in]  aRloc16  The RLOC16 value.
  *
- * @retval TRUE   If @p aRloc16 refers to an active router.
- * @retval FALSE  If @p aRloc16 does not refer to an active router.
+ * @retval TRUE   If @p aRloc16 refers to a router.
+ * @retval FALSE  If @p aRloc16 does not refer to a router.
  *
  */
-inline bool IsActiveRouter(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) == 0; }
+inline bool IsRouterRloc16(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) == 0; }
+
+/**
+ * Indicates whether or not @p aRloc16 refers to a child.
+ *
+ * @param[in]  aRloc16  The RLOC16 value.
+ *
+ * @retval TRUE   If @p aRloc16 refers to a child.
+ * @retval FALSE  If @p aRloc16 does not refer to a child.
+ *
+ */
+inline bool IsChildRloc16(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) != 0; }
 
 /**
  * Converts a device role into a human-readable string.

@@ -172,7 +172,7 @@ Error MeshDiag::SendQuery(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsL
 
     VerifyOrExit(Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
     VerifyOrExit(mState == kStateIdle, error = kErrorBusy);
-    VerifyOrExit(Mle::IsActiveRouter(aRloc16), error = kErrorInvalidArgs);
+    VerifyOrExit(Mle::IsRouterRloc16(aRloc16), error = kErrorInvalidArgs);
     VerifyOrExit(Get<RouterTable>().IsAllocated(Mle::RouterIdFromRloc16(aRloc16)), error = kErrorNotFound);
 
     destination.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aRloc16);
