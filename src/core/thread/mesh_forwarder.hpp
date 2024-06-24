@@ -492,6 +492,7 @@ private:
 
     void     SendIcmpErrorIfDstUnreach(const Message &aMessage, const Mac::Addresses &aMacAddrs);
     Error    CheckReachability(const FrameData &aFrameData, const Mac::Addresses &aMeshAddrs);
+    Error    CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header);
     void     UpdateRoutes(const FrameData &aFrameData, const Mac::Addresses &aMeshAddrs);
     Error    FrameToMessage(const FrameData      &aFrameData,
                             uint16_t              aDatagramSize,
@@ -501,6 +502,7 @@ private:
     void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *PrepareNextDirectTransmission(void);
     void     HandleMesh(FrameData &aFrameData, const Mac::Address &aMacSource, const ThreadLinkInfo &aLinkInfo);
+    void     ResolveRoutingLoops(uint16_t aSourceRloc16, uint16_t aDestRloc16);
     void     HandleFragment(FrameData &aFrameData, const Mac::Addresses &aMacAddrs, const ThreadLinkInfo &aLinkInfo);
     void HandleLowpanHC(const FrameData &aFrameData, const Mac::Addresses &aMacAddrs, const ThreadLinkInfo &aLinkInfo);
 

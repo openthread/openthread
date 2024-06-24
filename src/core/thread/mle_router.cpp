@@ -3197,62 +3197,6 @@ void MleRouter::SetRouterId(uint8_t aRouterId)
     mPreviousRouterId = mRouterId;
 }
 
-void MleRouter::ResolveRoutingLoops(uint16_t aSourceMac, uint16_t aDestRloc16)
-{
-    Router *router;
-
-    if (aSourceMac != mRouterTable.GetNextHop(aDestRloc16))
-    {
-        ExitNow();
-    }
-
-    router = mRouterTable.FindRouterByRloc16(aDestRloc16);
-    VerifyOrExit(router != nullptr);
-
-    router->SetNextHopToInvalid();
-    ResetAdvertiseInterval();
-
-exit:
-    return;
-}
-
-Error MleRouter::CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header)
-{
-    bool isReachable = false;
-
-    if (IsChild())
-    {
-        if (aMeshDest == GetRloc16())
-        {
-            isReachable = Get<ThreadNetif>().HasUnicastAddress(aIp6Header.GetDestination());
-        }
-        else
-        {
-            isReachable = true;
-        }
-
-        ExitNow();
-    }
-
-    if (aMeshDest == GetRloc16())
-    {
-        isReachable = Get<ThreadNetif>().HasUnicastAddress(aIp6Header.GetDestination()) ||
-                      (mNeighborTable.FindNeighbor(aIp6Header.GetDestination()) != nullptr);
-        ExitNow();
-    }
-
-    if (RouterIdFromRloc16(aMeshDest) == mRouterId)
-    {
-        isReachable = (mChildTable.FindChild(aMeshDest, Child::kInStateValidOrRestoring) != nullptr);
-        ExitNow();
-    }
-
-    isReachable = (mRouterTable.GetNextHop(aMeshDest) != Mac::kShortAddrInvalid);
-
-exit:
-    return isReachable ? kErrorNone : kErrorNoRoute;
-}
-
 Error MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
 {
     Error            error = kErrorNone;

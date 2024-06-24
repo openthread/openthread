@@ -575,7 +575,7 @@ Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &a
 
     mMeshSource = Get<Mac::Mac>().GetShortAddress();
 
-    SuccessOrExit(error = mle.CheckReachability(mMeshDest, aIp6Header));
+    SuccessOrExit(error = CheckReachability(mMeshDest, aIp6Header));
     aMessage.SetMeshDest(mMeshDest);
     mMacAddrs.mDestination.SetShort(Get<RouterTable>().GetNextHop(mMeshDest));
 
@@ -609,7 +609,7 @@ void MeshForwarder::SendIcmpErrorIfDstUnreach(const Message &aMessage, const Mac
     VerifyOrExit(!ip6Headers.GetDestinationAddress().IsMulticast() &&
                  Get<NetworkData::Leader>().IsOnMesh(ip6Headers.GetDestinationAddress()));
 
-    error = Get<Mle::MleRouter>().CheckReachability(aMacAddrs.mDestination.GetShort(), ip6Headers.GetIp6Header());
+    error = CheckReachability(aMacAddrs.mDestination.GetShort(), ip6Headers.GetIp6Header());
 
     if (error == kErrorNoRoute)
     {
@@ -639,7 +639,7 @@ Error MeshForwarder::CheckReachability(const FrameData &aFrameData, const Mac::A
         ExitNow();
     }
 
-    error = Get<Mle::MleRouter>().CheckReachability(aMeshAddrs.mDestination.GetShort(), ip6Headers.GetIp6Header());
+    error = CheckReachability(aMeshAddrs.mDestination.GetShort(), ip6Headers.GetIp6Header());
 
     if (error == kErrorNoRoute)
     {
@@ -648,6 +648,44 @@ Error MeshForwarder::CheckReachability(const FrameData &aFrameData, const Mac::A
 
 exit:
     return error;
+}
+
+Error MeshForwarder::CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header)
+{
+    bool     isReachable  = false;
+    uint16_t deviceRloc16 = Get<Mle::Mle>().GetRloc16();
+
+    if (Get<Mle::Mle>().IsChild())
+    {
+        if (aMeshDest == deviceRloc16)
+        {
+            isReachable = Get<ThreadNetif>().HasUnicastAddress(aIp6Header.GetDestination());
+        }
+        else
+        {
+            isReachable = true;
+        }
+
+        ExitNow();
+    }
+
+    if (aMeshDest == deviceRloc16)
+    {
+        isReachable = Get<ThreadNetif>().HasUnicastAddress(aIp6Header.GetDestination()) ||
+                      (Get<NeighborTable>().FindNeighbor(aIp6Header.GetDestination()) != nullptr);
+        ExitNow();
+    }
+
+    if (Mle::RouterIdMatch(aMeshDest, deviceRloc16))
+    {
+        isReachable = (Get<ChildTable>().FindChild(aMeshDest, Child::kInStateValidOrRestoring) != nullptr);
+        ExitNow();
+    }
+
+    isReachable = (Get<RouterTable>().GetNextHop(aMeshDest) != Mac::kShortAddrInvalid);
+
+exit:
+    return isReachable ? kErrorNone : kErrorNoRoute;
 }
 
 void MeshForwarder::SendDestinationUnreachable(uint16_t aMeshSource, const Ip6::Headers &aIp6Headers)
@@ -697,7 +735,7 @@ void MeshForwarder::HandleMesh(FrameData &aFrameData, const Mac::Address &aMacSo
         OwnedPtr<Message> messagePtr;
         Message::Priority priority = Message::kPriorityNormal;
 
-        Get<Mle::MleRouter>().ResolveRoutingLoops(aMacSource.GetShort(), meshAddrs.mDestination.GetShort());
+        ResolveRoutingLoops(aMacSource.GetShort(), meshAddrs.mDestination.GetShort());
 
         SuccessOrExit(error = CheckReachability(aFrameData, meshAddrs));
 
@@ -733,6 +771,27 @@ exit:
         LogInfo("Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s", ErrorToString(error),
                 aFrameData.GetLength(), aMacSource.ToString().AsCString(), ToYesNo(aLinkInfo.IsLinkSecurityEnabled()));
     }
+}
+
+void MeshForwarder::ResolveRoutingLoops(uint16_t aSourceRloc16, uint16_t aDestRloc16)
+{
+    // Resolves 2-hop routing loops.
+
+    Router *router;
+
+    if (aSourceRloc16 != Get<RouterTable>().GetNextHop(aDestRloc16))
+    {
+        ExitNow();
+    }
+
+    router = Get<RouterTable>().FindRouterByRloc16(aDestRloc16);
+    VerifyOrExit(router != nullptr);
+
+    router->SetNextHopToInvalid();
+    Get<Mle::MleRouter>().ResetAdvertiseInterval();
+
+exit:
+    return;
 }
 
 void MeshForwarder::UpdateRoutes(const FrameData &aFrameData, const Mac::Addresses &aMeshAddrs)
