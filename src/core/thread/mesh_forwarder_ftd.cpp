@@ -424,7 +424,6 @@ Error MeshForwarder::AnycastRouteLookup(uint8_t aServiceId, AnycastType aType, u
     NetworkData::Iterator iterator = NetworkData::kIteratorInit;
     uint8_t               bestCost = Mle::kMaxRouteCost;
     uint16_t              bestDest = Mac::kShortAddrInvalid;
-    uint8_t               routerId;
 
     switch (aType)
     {
@@ -485,13 +484,18 @@ Error MeshForwarder::AnycastRouteLookup(uint8_t aServiceId, AnycastType aType, u
     }
     }
 
-    routerId = Mle::RouterIdFromRloc16(bestDest);
-
-    if (!(Mle::IsRouterRloc16(bestDest) || Mle::Rloc16FromRouterId(routerId) == Get<Mle::MleRouter>().GetRloc16()))
+    if (Mle::IsChildRloc16(bestDest))
     {
-        // if agent is neither active router nor child of this device
-        // use the parent of the ED Agent as Dest
-        bestDest = Mle::Rloc16FromRouterId(routerId);
+        // If the selected destination is a child, we use its parent
+        // as the destination unless the device itself is the
+        // parent of the `bestDest`.
+
+        uint16_t bestDestParent = Mle::Rloc16FromRouterId(Mle::RouterIdFromRloc16(bestDest));
+
+        if (Get<Mle::Mle>().GetRloc16() != bestDestParent)
+        {
+            bestDest = bestDestParent;
+        }
     }
 
     aMeshDest = bestDest;
@@ -555,6 +559,23 @@ Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &a
         else
         {
             ExitNow(error = kErrorDrop);
+        }
+
+        // If the selected ALOC destination, `mMeshDest`, is a sleepy
+        // child of this device, prepare the message for indirect tx
+        // to the sleepy child and un-mark message for direct tx.
+
+        if (mle.IsRouterOrLeader() && Mle::IsChildRloc16(mMeshDest) && Mle::RouterIdMatch(mMeshDest, mle.GetRloc16()))
+        {
+            Child *child = Get<ChildTable>().FindChild(mMeshDest, Child::kInStateValid);
+
+            VerifyOrExit(child != nullptr, error = kErrorDrop);
+
+            if (!child->IsRxOnWhenIdle())
+            {
+                mIndirectSender.AddMessageForSleepyChild(aMessage, *child);
+                aMessage.ClearDirectTransmission();
+            }
         }
     }
     else if ((neighbor = Get<NeighborTable>().FindNeighbor(aIp6Header.GetDestination())) != nullptr)
