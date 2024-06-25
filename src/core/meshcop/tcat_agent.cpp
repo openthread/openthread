@@ -460,9 +460,8 @@ exit:
 
 Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncommingMessage, uint16_t aOffset, uint16_t aLength)
 {
-    Dataset       dataset;
-    Dataset::Tlvs datasetTlvs;
-    Error         error;
+    Dataset dataset;
+    Error   error;
 
     SuccessOrExit(error = dataset.SetFrom(aIncommingMessage, aOffset, aLength));
     SuccessOrExit(error = dataset.ValidateTlvs());
@@ -474,8 +473,7 @@ Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncommingMess
         ExitNow();
     }
 
-    dataset.ConvertTo(datasetTlvs);
-    error = Get<ActiveDatasetManager>().SaveLocal(datasetTlvs);
+    Get<ActiveDatasetManager>().SaveLocal(dataset);
 
 exit:
     return error;
