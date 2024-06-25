@@ -62,22 +62,26 @@ namespace Multicast {
 //---------------------------------------------------------------------------------------------------------------------
 // Constants
 
-static constexpr uint16_t kClassQueryUnicastFlag  = (1U << 15);
-static constexpr uint16_t kClassCacheFlushFlag    = (1U << 15);
-static constexpr uint16_t kClassMask              = 0x7fff;
-static constexpr uint16_t kStringSize             = 300;
-static constexpr uint16_t kMaxDataSize            = 400;
-static constexpr uint16_t kNumAnnounces           = 3;
-static constexpr uint16_t kNumInitalQueries       = 3;
-static constexpr uint16_t kNumRefreshQueries      = 4;
-static constexpr bool     kCacheFlush             = true;
-static constexpr uint16_t kMdnsPort               = 5353;
-static constexpr uint16_t kEphemeralPort          = 49152;
-static constexpr uint16_t kLegacyUnicastMessageId = 1;
-static constexpr uint16_t kMaxLegacyUnicastTtl    = 10;
-static constexpr uint32_t kInfraIfIndex           = 1;
+static constexpr uint8_t  kIpv6AddressPrefixLength = 64;
+static constexpr bool     kCacheFlush              = true;
+static constexpr uint16_t kClassQueryUnicastFlag   = (1U << 15);
+static constexpr uint16_t kClassCacheFlushFlag     = (1U << 15);
+static constexpr uint16_t kClassMask               = 0x7fff;
+static constexpr uint16_t kStringSize              = 300;
+static constexpr uint16_t kMaxDataSize             = 400;
+static constexpr uint16_t kNumAnnounces            = 3;
+static constexpr uint16_t kNumInitalQueries        = 3;
+static constexpr uint16_t kNumRefreshQueries       = 4;
+static constexpr uint16_t kMdnsPort                = 5353;
+static constexpr uint16_t kEphemeralPort           = 49152;
+static constexpr uint16_t kLegacyUnicastMessageId  = 1;
+static constexpr uint16_t kMaxLegacyUnicastTtl     = 10;
+static constexpr uint32_t kInfraIfIndex            = 1;
 
-static const char kDeviceIp6Address[] = "fd01::1";
+static const char kDeviceIp6AddressOutsideSubnet[] = "fd01::1";
+static const char kDeviceIp6AddressInsideSubnet[]  = "fd00::1";
+static const char kDeviceIp6AddressLinkLocal[]     = "fe80::1";
+static const char kInfraIfIpv6Prefix[]             = "fd00::0";
 
 class DnsMessage;
 
@@ -92,6 +96,7 @@ static bool     sAlarmOn = false;
 
 OwningList<DnsMessage> sDnsMessages;
 uint32_t               sInfraIfIndex;
+const char            *sSenderIpv6Address;
 
 //---------------------------------------------------------------------------------------------------------------------
 // Prototypes
@@ -685,7 +690,8 @@ struct DnsMessage : public Allocatable<DnsMessage>, public LinkedListEntry<DnsMe
         {
             Ip6::Address ip6Address;
 
-            SuccessOrQuit(ip6Address.FromString(kDeviceIp6Address));
+            VerifyOrQuit(sSenderIpv6Address != nullptr);
+            SuccessOrQuit(ip6Address.FromString(sSenderIpv6Address));
 
             VerifyOrQuit(mUnicastDest.mPort == kMdnsPort);
             VerifyOrQuit(mUnicastDest.GetAddress() == ip6Address);
@@ -1092,12 +1098,12 @@ static void SendQuery(const char *aName,
                       uint16_t    aRecordType,
                       uint16_t    aRecordClass        = ResourceRecord::kClassInternet,
                       bool        aTruncated          = false,
-                      bool        aLegacyUnicastQuery = false)
+                      bool        aLegacyUnicastQuery = false,
+                      const char *aSenderAddress      = nullptr)
 {
     Message          *message;
     Header            header;
     Core::AddressInfo senderAddrInfo;
-
     message = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
     VerifyOrQuit(message != nullptr);
 
@@ -1119,13 +1125,17 @@ static void SendQuery(const char *aName,
     SuccessOrQuit(Name::AppendName(aName, *message));
     SuccessOrQuit(message->Append(Question(aRecordType, aRecordClass)));
 
-    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    (aSenderAddress == nullptr) ? AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6AddressInsideSubnet)
+                                : AsCoreType(&senderAddrInfo.mAddress).FromString(aSenderAddress);
+    (aSenderAddress == nullptr) ? sSenderIpv6Address = kDeviceIp6AddressInsideSubnet
+                                : sSenderIpv6Address = aSenderAddress;
+
     senderAddrInfo.mPort         = aLegacyUnicastQuery ? kEphemeralPort : kMdnsPort;
-    senderAddrInfo.mInfraIfIndex = 0;
+    senderAddrInfo.mInfraIfIndex = kInfraIfIndex;
 
     Log("Sending query for %s %s", aName, RecordTypeToString(aRecordType));
 
-    otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
+    otPlatMdnsHandleReceive(sInstance, message, (aRecordClass & kClassQueryUnicastFlag), &senderAddrInfo);
 }
 
 static void SendQueryForTwo(const char *aName1,
@@ -1153,9 +1163,10 @@ static void SendQueryForTwo(const char *aName1,
     SuccessOrQuit(Name::AppendName(aName2, *message));
     SuccessOrQuit(message->Append(Question(aRecordType2, ResourceRecord::kClassInternet)));
 
-    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6AddressInsideSubnet));
+    sSenderIpv6Address           = kDeviceIp6AddressInsideSubnet;
     senderAddrInfo.mPort         = aIsLegacyUnicast ? kEphemeralPort : kMdnsPort;
-    senderAddrInfo.mInfraIfIndex = 0;
+    senderAddrInfo.mInfraIfIndex = kInfraIfIndex;
 
     Log("Sending query for %s %s and %s %s", aName1, RecordTypeToString(aRecordType1), aName2,
         RecordTypeToString(aRecordType2));
@@ -1163,7 +1174,12 @@ static void SendQueryForTwo(const char *aName1,
     otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
 }
 
-static void SendPtrResponse(const char *aName, const char *aPtrName, uint32_t aTtl, Section aSection)
+static void SendPtrResponse(const char *aName,
+                            const char *aPtrName,
+                            uint32_t    aTtl,
+                            Section     aSection,
+                            bool        aSendUnicast   = false,
+                            const char *aSenderAddress = nullptr)
 {
     Message          *message;
     Header            header;
@@ -1195,13 +1211,14 @@ static void SendPtrResponse(const char *aName, const char *aPtrName, uint32_t aT
     SuccessOrQuit(message->Append(ptr));
     SuccessOrQuit(Name::AppendName(aPtrName, *message));
 
-    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    (aSenderAddress == nullptr) ? AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6AddressInsideSubnet)
+                                : AsCoreType(&senderAddrInfo.mAddress).FromString(aSenderAddress);
     senderAddrInfo.mPort         = kMdnsPort;
-    senderAddrInfo.mInfraIfIndex = 0;
+    senderAddrInfo.mInfraIfIndex = kInfraIfIndex;
 
     Log("Sending PTR response for %s with %s, ttl:%lu", aName, aPtrName, ToUlong(aTtl));
 
-    otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
+    otPlatMdnsHandleReceive(sInstance, message, aSendUnicast, &senderAddrInfo);
 }
 
 static void SendSrvResponse(const char *aServiceName,
@@ -1245,9 +1262,9 @@ static void SendSrvResponse(const char *aServiceName,
     SuccessOrQuit(message->Append(srv));
     SuccessOrQuit(Name::AppendName(aHostName, *message));
 
-    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6AddressInsideSubnet));
     senderAddrInfo.mPort         = kMdnsPort;
-    senderAddrInfo.mInfraIfIndex = 0;
+    senderAddrInfo.mInfraIfIndex = kInfraIfIndex;
 
     Log("Sending SRV response for %s, host:%s, port:%u, ttl:%lu", aServiceName, aHostName, aPort, ToUlong(aTtl));
 
@@ -1290,9 +1307,9 @@ static void SendTxtResponse(const char    *aServiceName,
     SuccessOrQuit(message->Append(txt));
     SuccessOrQuit(message->AppendBytes(aTxtData, aTxtDataLength));
 
-    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6AddressInsideSubnet));
     senderAddrInfo.mPort         = kMdnsPort;
-    senderAddrInfo.mInfraIfIndex = 0;
+    senderAddrInfo.mInfraIfIndex = kInfraIfIndex;
 
     Log("Sending TXT response for %s, len:%u, ttl:%lu", aServiceName, aTxtDataLength, ToUlong(aTtl));
 
@@ -1348,9 +1365,9 @@ static void SendHostAddrResponse(const char *aHostName,
         Log(" - %s, ttl:%lu", aAddrAndTtls[index].mAddress.ToString().AsCString(), ToUlong(aAddrAndTtls[index].mTtl));
     }
 
-    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6AddressInsideSubnet));
     senderAddrInfo.mPort         = kMdnsPort;
-    senderAddrInfo.mInfraIfIndex = 0;
+    senderAddrInfo.mInfraIfIndex = kInfraIfIndex;
 
     otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
 }
@@ -1386,9 +1403,9 @@ static void SendResponseWithEmptyKey(const char *aName, Section aSection)
     record.SetLength(0);
     SuccessOrQuit(message->Append(record));
 
-    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6AddressInsideSubnet));
     senderAddrInfo.mPort         = kMdnsPort;
-    senderAddrInfo.mInfraIfIndex = 0;
+    senderAddrInfo.mInfraIfIndex = kInfraIfIndex;
 
     Log("Sending response with empty key for %s", aName);
 
@@ -1434,16 +1451,17 @@ static void SendPtrQueryWithKnownAnswers(const char *aName, const KnownAnswer *a
         SuccessOrQuit(Name::AppendName(aKnownAnswers[index].mPtrAnswer, *message));
     }
 
-    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6AddressInsideSubnet));
+    sSenderIpv6Address           = kDeviceIp6AddressInsideSubnet;
     senderAddrInfo.mPort         = kMdnsPort;
-    senderAddrInfo.mInfraIfIndex = 0;
+    senderAddrInfo.mInfraIfIndex = kInfraIfIndex;
 
     Log("Sending query for %s PTR with %u known-answers", aName, aNumAnswers);
 
     otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
 }
 
-static void SendEmtryPtrQueryWithKnownAnswers(const char *aName, const KnownAnswer *aKnownAnswers, uint16_t aNumAnswers)
+static void SendEmptyPtrQueryWithKnownAnswers(const char *aName, const KnownAnswer *aKnownAnswers, uint16_t aNumAnswers)
 {
     Message          *message;
     Header            header;
@@ -1481,9 +1499,10 @@ static void SendEmtryPtrQueryWithKnownAnswers(const char *aName, const KnownAnsw
         SuccessOrQuit(Name::AppendName(aKnownAnswers[index].mPtrAnswer, *message));
     }
 
-    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6AddressInsideSubnet));
+    sSenderIpv6Address           = kDeviceIp6AddressInsideSubnet;
     senderAddrInfo.mPort         = kMdnsPort;
-    senderAddrInfo.mInfraIfIndex = 0;
+    senderAddrInfo.mInfraIfIndex = kInfraIfIndex;
 
     Log("Sending empty query with %u known-answers for %s", aNumAnswers, aName);
 
@@ -1528,6 +1547,19 @@ void otPlatAlarmMilliStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
 }
 
 uint32_t otPlatAlarmMilliGetNow(void) { return sNow; }
+
+//---------------------------------------------------------------------------------------------------------------------
+// otPlatInfraIf
+
+bool otPlatInfraIfHasOnLinkPrefix(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
+{
+    otIp6Address infraIfIpv6Prefix;
+
+    VerifyOrQuit(aInfraIfIndex == kInfraIfIndex);
+
+    SuccessOrQuit(otIp6AddressFromString(kInfraIfIpv6Prefix, &infraIfIpv6Prefix));
+    return otIp6PrefixMatch(aAddress, &infraIfIpv6Prefix) >= kIpv6AddressPrefixLength;
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 // Heap allocation
@@ -1585,9 +1617,9 @@ void otPlatMdnsSendMulticast(otInstance *aInstance, otMessage *aMessage, uint32_
 
     // Pass the multicast message back.
 
-    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6AddressInsideSubnet));
     senderAddrInfo.mPort         = kMdnsPort;
-    senderAddrInfo.mInfraIfIndex = 0;
+    senderAddrInfo.mInfraIfIndex = kInfraIfIndex;
 
     otPlatMdnsHandleReceive(sInstance, aMessage, /* aIsUnicast */ false, &senderAddrInfo);
 }
@@ -1601,15 +1633,15 @@ void otPlatMdnsSendUnicast(otInstance *aInstance, otMessage *aMessage, const otP
     Log("otPlatMdnsSendUnicast() - [%s]:%u", address.GetAddress().ToString().AsCString(), address.mPort);
     ParseMessage(message, AsCoreTypePtr(aAddress));
 
-    SuccessOrQuit(deviceAddress.FromString(kDeviceIp6Address));
+    SuccessOrQuit(deviceAddress.FromString(kDeviceIp6AddressInsideSubnet));
 
     if ((address.GetAddress() == deviceAddress) && (address.mPort == kMdnsPort))
     {
         Core::AddressInfo senderAddrInfo;
 
-        SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+        SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6AddressInsideSubnet));
         senderAddrInfo.mPort         = kMdnsPort;
-        senderAddrInfo.mInfraIfIndex = 0;
+        senderAddrInfo.mInfraIfIndex = kInfraIfIndex;
 
         Log("otPlatMdnsSendUnicast() - unicast msg matches this device address, passing it back");
         otPlatMdnsHandleReceive(sInstance, &message, /* aIsUnicast */ true, &senderAddrInfo);
@@ -1651,8 +1683,9 @@ void AdvanceTime(uint32_t aDuration)
 
 Core *InitTest(void)
 {
-    sNow     = 0;
-    sAlarmOn = false;
+    sNow               = 0;
+    sAlarmOn           = false;
+    sSenderIpv6Address = nullptr;
 
     sDnsMessages.Clear();
 
@@ -3953,7 +3986,7 @@ void TestMultiPacket(void)
     knownAnswers[0].mPtrAnswer = "other._tst._udp.local.";
     knownAnswers[0].mTtl       = 1500;
 
-    SendEmtryPtrQueryWithKnownAnswers(fullServiceType.AsCString(), knownAnswers, 1);
+    SendEmptyPtrQueryWithKnownAnswers(fullServiceType.AsCString(), knownAnswers, 1);
 
     AdvanceTime(1000);
     dnsMsg = sDnsMessages.GetHead();
@@ -3975,7 +4008,7 @@ void TestMultiPacket(void)
     knownAnswers[1].mPtrAnswer = "mysrv._tst._udp.local.";
     knownAnswers[1].mTtl       = 1500;
 
-    SendEmtryPtrQueryWithKnownAnswers(fullServiceType.AsCString(), knownAnswers, 2);
+    SendEmptyPtrQueryWithKnownAnswers(fullServiceType.AsCString(), knownAnswers, 2);
 
     Log("We expect no response since the followed-up message contains a matching known-answer");
     AdvanceTime(5000);
@@ -3999,7 +4032,7 @@ void TestMultiPacket(void)
     dnsMsg->Validate(service, kInAnswerSection, kCheckServicesPtr);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    Log("Send a truncated query for PTR record for `services._dns-sd` folloed by known-aswer");
+    Log("Send a truncated query for PTR record for `services._dns-sd` followed by known-aswer");
 
     AdvanceTime(2000);
 
@@ -4011,7 +4044,7 @@ void TestMultiPacket(void)
     knownAnswers[0].mPtrAnswer = "_other._udp.local.";
     knownAnswers[0].mTtl       = 4500;
 
-    SendEmtryPtrQueryWithKnownAnswers("_services._dns-sd._udp.local.", knownAnswers, 1);
+    SendEmptyPtrQueryWithKnownAnswers("_services._dns-sd._udp.local.", knownAnswers, 1);
 
     Log("Response should be sent again due to answer not matching");
     AdvanceTime(1000);
@@ -4034,7 +4067,7 @@ void TestMultiPacket(void)
     knownAnswers[1].mPtrAnswer = "_tst._udp.local.";
     knownAnswers[1].mTtl       = 4500;
 
-    SendEmtryPtrQueryWithKnownAnswers("_services._dns-sd._udp.local.", knownAnswers, 2);
+    SendEmptyPtrQueryWithKnownAnswers("_services._dns-sd._udp.local.", knownAnswers, 2);
 
     Log("We expect no response since the followed-up message contains a matching known-answer");
     AdvanceTime(5000);
@@ -5202,7 +5235,21 @@ void TestBrowser(void)
     sBrowseCallbacks.Clear();
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    Log("Validate initial esquires are still sent and include known-answer");
+    Log("Send a response from a device with a non link-local address");
+
+    sDnsMessages.Clear();
+
+    SendPtrResponse("_srv._udp.local.", "mysrv1._srv._udp.local.", 120, kInAnswerSection, /* aSendUnicast*/ true,
+                    kDeviceIp6AddressOutsideSubnet);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(sBrowseCallbacks.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Validate initial queries are still sent and include known-answer");
+    Log("Known Answer Section should contain only one entry, as the second previously received response is silently "
+        "discarded");
 
     for (uint8_t queryCount = 1; queryCount < kNumInitalQueries; queryCount++)
     {
@@ -7107,6 +7154,134 @@ void TestLegacyUnicastResponse(void)
     testFreeInstance(sInstance);
 }
 
+void TestDirectUnicastQuery(void)
+{
+    Core             *mdns = InitTest();
+    Core::Host        host;
+    Core::Service     service;
+    const DnsMessage *dnsMsg;
+    uint16_t          heapAllocations;
+    DnsNameString     fullServiceName;
+    DnsNameString     fullServiceType;
+    DnsNameString     hostFullName;
+    Ip6::Address      hostAddresses[2];
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("TestDirectUnicastQuery");
+
+    AdvanceTime(1);
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    SuccessOrQuit(hostAddresses[0].FromString("fd00::1:aaaa"));
+    SuccessOrQuit(hostAddresses[1].FromString("fd00::1:bbbb"));
+
+    host.mHostName        = "host";
+    host.mAddresses       = hostAddresses;
+    host.mAddressesLength = 2;
+    host.mTtl             = 1500;
+    hostFullName.Append("%s.local.", host.mHostName);
+
+    service.mHostName            = host.mHostName;
+    service.mServiceInstance     = "myservice";
+    service.mServiceType         = "_srv._udp";
+    service.mSubTypeLabels       = nullptr;
+    service.mSubTypeLabelsLength = 0;
+    service.mTxtData             = kTxtData1;
+    service.mTxtDataLength       = sizeof(kTxtData1);
+    service.mPort                = 1234;
+    service.mPriority            = 1;
+    service.mWeight              = 2;
+    service.mTtl                 = 1000;
+
+    fullServiceName.Append("%s.%s.local.", service.mServiceInstance, service.mServiceType);
+    fullServiceType.Append("%s.local.", service.mServiceType);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+    sDnsMessages.Clear();
+
+    for (RegCallback &regCallbck : sRegCallbacks)
+    {
+        regCallbck.Reset();
+    }
+
+    SuccessOrQuit(mdns->RegisterHost(host, 0, HandleSuccessCallback));
+    SuccessOrQuit(mdns->RegisterService(service, 1, HandleSuccessCallback));
+
+    AdvanceTime(10 * 1000);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a query for SRV record from an on-link address and validate the response");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQuery(fullServiceName.AsCString(), ResourceRecord::kTypeSrv,
+              ResourceRecord::kClassInternet | kClassQueryUnicastFlag,
+              /* aTruncated */ false,
+              /* aLegacyUnicastQuery*/ false);
+
+    AdvanceTime(1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    dnsMsg->ValidateHeader(kUnicastResponse, /* Q */
+                           0, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 3);
+    dnsMsg->Validate(service, kInAnswerSection, kCheckSrv);
+    dnsMsg->Validate(host, kInAdditionalSection);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a query for SRV record from a link-local address and validate the response");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQuery(fullServiceName.AsCString(), ResourceRecord::kTypeSrv,
+              ResourceRecord::kClassInternet | kClassQueryUnicastFlag,
+              /* aTruncated */ false, /* aLegacyUnicastQuery*/ false, kDeviceIp6AddressLinkLocal);
+
+    AdvanceTime(1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    dnsMsg->ValidateHeader(kUnicastResponse, /* Q */
+                           0, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 3);
+    dnsMsg->Validate(service, kInAnswerSection, kCheckSrv);
+    dnsMsg->Validate(host, kInAdditionalSection);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a query for SRV record from a non link-local address and validate that there is no response received");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQuery(fullServiceName.AsCString(), ResourceRecord::kTypeSrv,
+              ResourceRecord::kClassInternet | kClassQueryUnicastFlag,
+              /* aTruncated */ false, /* aLegacyUnicastQuery*/ false, kDeviceIp6AddressOutsideSubnet);
+
+    AdvanceTime(1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+    sDnsMessages.Clear();
+
+    SuccessOrQuit(mdns->UnregisterHost(host));
+
+    AdvanceTime(15000);
+
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of test");
+
+    testFreeInstance(sInstance);
+}
+
 } // namespace Multicast
 } // namespace Dns
 } // namespace ot
@@ -7135,6 +7310,7 @@ int main(void)
     ot::Dns::Multicast::TestIp6AddrResolver();
     ot::Dns::Multicast::TestPassiveCache();
     ot::Dns::Multicast::TestLegacyUnicastResponse();
+    ot::Dns::Multicast::TestDirectUnicastQuery();
 
     printf("All tests passed\n");
 #else
