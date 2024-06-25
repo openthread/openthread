@@ -154,8 +154,7 @@ public:
          */
         AddressMatcher(const Mac::Address &aMacAddress, StateFilter aStateFilter)
             : AddressMatcher(aStateFilter,
-                             aMacAddress.IsShort() ? aMacAddress.GetShort()
-                                                   : static_cast<Mac::ShortAddress>(Mac::kShortAddrInvalid),
+                             aMacAddress.IsShort() ? aMacAddress.GetShort() : Mac::kShortAddrInvalid,
                              aMacAddress.IsExtended() ? &aMacAddress.GetExtended() : nullptr)
         {
         }

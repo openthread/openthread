@@ -103,7 +103,7 @@ void Manager::GetBackboneRouterPrimary(ot::BackboneRouter::Config &aConfig) cons
 
     serviceData.Init(&BackboneRouter::kServiceData, BackboneRouter::kServiceDataMinSize);
 
-    aConfig.mServer16 = Mac::kShortAddrInvalid;
+    aConfig.mServer16 = Mle::kInvalidRloc16;
 
     while ((serviceTlv = Get<Leader>().FindNextThreadService(serviceTlv, serviceData,
                                                              NetworkData::kServicePrefixMatch)) != nullptr)

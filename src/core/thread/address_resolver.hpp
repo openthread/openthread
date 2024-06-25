@@ -139,7 +139,7 @@ public:
      * @param[in]  aRloc16  The RLOC16 address.
      *
      */
-    void RemoveEntriesForRloc16(Mac::ShortAddress aRloc16);
+    void RemoveEntriesForRloc16(uint16_t aRloc16);
 
     /**
      * Removes all EID-to-RLOC cache entries associated with a Router ID.
@@ -177,7 +177,7 @@ public:
      * @param[in] aDest            The short MAC address destination of the received snooped message.
      *
      */
-    void UpdateSnoopedCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16, Mac::ShortAddress aDest);
+    void UpdateSnoopedCacheEntry(const Ip6::Address &aEid, uint16_t aRloc16, uint16_t aDest);
 
     /**
      * Returns the RLOC16 for a given EID, initiates an Address Query if the mapping is not known.
@@ -191,7 +191,7 @@ public:
      * @retval kErrorNoBufs         Insufficient buffer space available to send Address Query.
      *
      */
-    Error Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16)
+    Error Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
     {
         return Resolve(aEid, aRloc16, /* aAllowAddressQuery */ true);
     }
@@ -204,10 +204,10 @@ public:
      *
      * @param[in]   aEid   A reference to the EID to lookup.
      *
-     * @returns The RLOC16 mapping to @p aEid or `Mac::kShortAddrInvalid` if it is not found in the address cache.
+     * @returns The RLOC16 mapping to @p aEid or `Mle::kInvalidRloc16` if it is not found in the address cache.
      *
      */
-    Mac::ShortAddress LookUp(const Ip6::Address &aEid);
+    uint16_t LookUp(const Ip6::Address &aEid);
 
     /**
      * Restarts any ongoing address queries.
@@ -267,8 +267,8 @@ private:
         const Ip6::Address &GetTarget(void) const { return mTarget; }
         void                SetTarget(const Ip6::Address &aTarget) { mTarget = aTarget; }
 
-        Mac::ShortAddress GetRloc16(void) const { return mRloc16; }
-        void              SetRloc16(Mac::ShortAddress aRloc16) { mRloc16 = aRloc16; }
+        uint16_t GetRloc16(void) const { return mRloc16; }
+        void     SetRloc16(uint16_t aRloc16) { mRloc16 = aRloc16; }
 
         const Ip6::InterfaceIdentifier &GetMeshLocalIid(void) const { return mInfo.mCached.mMeshLocalIid; }
         void SetMeshLocalIid(const Ip6::InterfaceIdentifier &aIid) { mInfo.mCached.mMeshLocalIid = aIid; }
@@ -298,9 +298,9 @@ private:
         static constexpr uint16_t kNoNextIndex          = 0xffff;     // `mNextIndex` value when at end of list.
         static constexpr uint32_t kInvalidLastTransTime = 0xffffffff; // Value when `mLastTransactionTime` is invalid.
 
-        Ip6::Address      mTarget;
-        Mac::ShortAddress mRloc16;
-        uint16_t          mNextIndex;
+        Ip6::Address mTarget;
+        uint16_t     mRloc16;
+        uint16_t     mNextIndex;
 
         union
         {
@@ -348,16 +348,16 @@ private:
 
     CacheEntryPool &GetCacheEntryPool(void) { return mCacheEntryPool; }
 
-    Error       Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16, bool aAllowAddressQuery);
-    void        Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId);
+    Error       Resolve(const Ip6::Address &aEid, uint16_t &aRloc16, bool aAllowAddressQuery);
+    void        Remove(uint16_t aRloc16, bool aMatchRouterId);
     void        Remove(const Ip6::Address &aEid, Reason aReason);
     CacheEntry *FindCacheEntry(const Ip6::Address &aEid, CacheEntryList *&aList, CacheEntry *&aPrevEntry);
     CacheEntry *NewCacheEntry(bool aSnoopedEntry);
     void        RemoveCacheEntry(CacheEntry &aEntry, CacheEntryList &aList, CacheEntry *aPrevEntry, Reason aReason);
-    Error       UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
+    Error       UpdateCacheEntry(const Ip6::Address &aEid, uint16_t aRloc16);
     Error       SendAddressQuery(const Ip6::Address &aEid);
 #if OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
-    Error ResolveUsingNetDataServices(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16);
+    Error ResolveUsingNetDataServices(const Ip6::Address &aEid, uint16_t &aRloc16);
 #endif
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);

@@ -292,7 +292,7 @@ private:
     static constexpr AddressEvent kAddressAdded   = OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED;
     static constexpr AddressEvent kAddressRemoved = OT_HISTORY_TRACKER_ADDRESS_EVENT_REMOVED;
 
-    static constexpr uint16_t kInvalidRloc16 = Mac::kShortAddrInvalid;
+    static constexpr uint16_t kInvalidRloc16 = Mle::kInvalidRloc16;
 
     typedef otHistoryTrackerNeighborEvent NeighborEvent;
 

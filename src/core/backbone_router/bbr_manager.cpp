@@ -527,7 +527,7 @@ Error Manager::SendBackboneQuery(const Ip6::Address &aDua, uint16_t aRloc16)
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aDua));
 
-    if (aRloc16 != Mac::kShortAddrInvalid)
+    if (aRloc16 != Mle::kInvalidRloc16)
     {
         SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, aRloc16));
     }
@@ -550,7 +550,7 @@ template <> void Manager::HandleTmf<kUriBackboneQuery>(Coap::Message &aMessage, 
 {
     Error                  error = kErrorNone;
     Ip6::Address           dua;
-    uint16_t               rloc16 = Mac::kShortAddrInvalid;
+    uint16_t               rloc16 = Mle::kInvalidRloc16;
     NdProxyTable::NdProxy *ndProxy;
 
     VerifyOrExit(aMessageInfo.IsHostInterface(), error = kErrorDrop);
@@ -583,7 +583,7 @@ template <> void Manager::HandleTmf<kUriBackboneAnswer>(Coap::Message &aMessage,
     Ip6::InterfaceIdentifier meshLocalIid;
     uint16_t                 networkNameOffset, networkNameLength;
     uint32_t                 timeSinceLastTransaction;
-    uint16_t                 srcRloc16 = Mac::kShortAddrInvalid;
+    uint16_t                 srcRloc16 = Mle::kInvalidRloc16;
 
     VerifyOrExit(aMessageInfo.IsHostInterface(), error = kErrorDrop);
 
@@ -606,7 +606,7 @@ template <> void Manager::HandleTmf<kUriBackboneAnswer>(Coap::Message &aMessage,
     {
         HandleProactiveBackboneNotification(dua, meshLocalIid, timeSinceLastTransaction);
     }
-    else if (srcRloc16 == Mac::kShortAddrInvalid)
+    else if (srcRloc16 == Mle::kInvalidRloc16)
     {
         HandleDadBackboneAnswer(dua, meshLocalIid);
     }
@@ -626,7 +626,7 @@ Error Manager::SendProactiveBackboneNotification(const Ip6::Address             
                                                  uint32_t                        aTimeSinceLastTransaction)
 {
     return SendBackboneAnswer(Get<Local>().GetAllDomainBackboneRoutersAddress(), aDua, aMeshLocalIid,
-                              aTimeSinceLastTransaction, Mac::kShortAddrInvalid);
+                              aTimeSinceLastTransaction, Mle::kInvalidRloc16);
 }
 
 Error Manager::SendBackboneAnswer(const Ip6::MessageInfo      &aQueryMessageInfo,
@@ -664,7 +664,7 @@ Error Manager::SendBackboneAnswer(const Ip6::Address             &aDstAddr,
     SuccessOrExit(error = Tlv::Append<ThreadNetworkNameTlv>(
                       *message, Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsCString()));
 
-    if (aSrcRloc16 != Mac::kShortAddrInvalid)
+    if (aSrcRloc16 != Mle::kInvalidRloc16)
     {
         SuccessOrExit(Tlv::Append<ThreadRloc16Tlv>(*message, aSrcRloc16));
     }

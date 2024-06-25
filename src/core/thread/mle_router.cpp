@@ -1084,7 +1084,7 @@ Error MleRouter::ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo)
     // `RouterTable`).
 
     Error    error          = kErrorNone;
-    uint16_t neighborRloc16 = Mac::kShortAddrInvalid;
+    uint16_t neighborRloc16 = kInvalidRloc16;
 
     if ((aRxInfo.mNeighbor != nullptr) && Get<RouterTable>().Contains(*aRxInfo.mNeighbor))
     {
@@ -1099,7 +1099,7 @@ Error MleRouter::ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo)
         error = kErrorNoRoute;
     }
 
-    if (neighborRloc16 != Mac::kShortAddrInvalid)
+    if (neighborRloc16 != kInvalidRloc16)
     {
         aRxInfo.mNeighbor = Get<NeighborTable>().FindNeighbor(neighborRloc16);
     }
@@ -3415,7 +3415,7 @@ template <> void MleRouter::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessag
     case kErrorNone:
         break;
     case kErrorNotFound:
-        rloc16 = Mac::kShortAddrInvalid;
+        rloc16 = kInvalidRloc16;
         break;
     default:
         ExitNow(error = kErrorParse);
@@ -3464,7 +3464,7 @@ template <> void MleRouter::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessag
         ExitNow();
     }
 
-    if (rloc16 != Mac::kShortAddrInvalid)
+    if (rloc16 != kInvalidRloc16)
     {
         router = mRouterTable.Allocate(RouterIdFromRloc16(rloc16));
 

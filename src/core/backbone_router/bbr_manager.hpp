@@ -146,7 +146,7 @@ public:
      * Sends BB.qry on the Backbone link.
      *
      * @param[in]  aDua     The Domain Unicast Address to query.
-     * @param[in]  aRloc16  The short address of the address resolution initiator or `Mac::kShortAddrInvalid` for
+     * @param[in]  aRloc16  The short address of the address resolution initiator or `Mle::kInvalidRloc16` for
      *                      DUA DAD.
      *
      * @retval kErrorNone          Successfully sent BB.qry on backbone link.
@@ -154,7 +154,7 @@ public:
      * @retval kErrorNoBufs        If insufficient message buffers available.
      *
      */
-    Error SendBackboneQuery(const Ip6::Address &aDua, uint16_t aRloc16 = Mac::kShortAddrInvalid);
+    Error SendBackboneQuery(const Ip6::Address &aDua, uint16_t aRloc16 = Mle::kInvalidRloc16);
 
     /**
      * Send a Proactive Backbone Notification (PRO_BB.ntf) on the Backbone link.

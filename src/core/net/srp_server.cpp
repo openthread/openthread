@@ -1783,7 +1783,7 @@ void Server::UpdateAddrResolverCacheTable(const Ip6::MessageInfo &aMessageInfo, 
 
     rloc16 = Get<AddressResolver>().LookUp(aMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(rloc16 != Mac::kShortAddrInvalid);
+    VerifyOrExit(rloc16 != Mle::kInvalidRloc16);
 
     for (const Ip6::Address &address : aHost.mAddresses)
     {
