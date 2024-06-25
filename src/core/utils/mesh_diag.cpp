@@ -506,7 +506,7 @@ Error MeshDiag::RouterInfo::ParseFrom(const Message &aMessage)
     }
 
     mRouterId           = Mle::RouterIdFromRloc16(mRloc16);
-    mIsThisDevice       = (mRloc16 == mle.GetRloc16());
+    mIsThisDevice       = mle.HasRloc16(mRloc16);
     mIsThisDeviceParent = mle.IsChild() && (mRloc16 == mle.GetParent().GetRloc16());
     mIsLeader           = (mRouterId == mle.GetLeaderId());
     mIsBorderRouter     = aMessage.Get<NetworkData::Leader>().ContainsBorderRouterWithRloc(mRloc16);
@@ -582,7 +582,7 @@ Error MeshDiag::ChildIterator::GetNextChildInfo(ChildInfo &aChildInfo)
     entry.GetMode().Get(aChildInfo.mMode);
     aChildInfo.mLinkQuality = entry.GetLinkQuality();
 
-    aChildInfo.mIsThisDevice   = (aChildInfo.mRloc16 == mMessage->Get<Mle::Mle>().GetRloc16());
+    aChildInfo.mIsThisDevice   = mMessage->Get<Mle::Mle>().HasRloc16(aChildInfo.mRloc16);
     aChildInfo.mIsBorderRouter = mMessage->Get<NetworkData::Leader>().ContainsBorderRouterWithRloc(aChildInfo.mRloc16);
 
 exit:

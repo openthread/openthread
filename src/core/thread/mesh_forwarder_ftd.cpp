@@ -174,7 +174,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
         // Pass back to IPv6 layer for DUA destination resolved
         // by Backbone Query
         if (Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(ip6Dst) &&
-            Get<AddressResolver>().LookUp(ip6Dst) == Get<Mle::MleRouter>().GetRloc16())
+            Get<Mle::Mle>().HasRloc16(Get<AddressResolver>().LookUp(ip6Dst)))
         {
             uint8_t hopLimit;
 
@@ -490,9 +490,9 @@ Error MeshForwarder::AnycastRouteLookup(uint8_t aServiceId, AnycastType aType, u
         // as the destination unless the device itself is the
         // parent of the `bestDest`.
 
-        uint16_t bestDestParent = Mle::Rloc16FromRouterId(Mle::RouterIdFromRloc16(bestDest));
+        uint16_t bestDestParent = Mle::ParentRloc16ForRloc16(bestDest);
 
-        if (Get<Mle::Mle>().GetRloc16() != bestDestParent)
+        if (!Get<Mle::Mle>().HasRloc16(bestDestParent))
         {
             bestDest = bestDestParent;
         }
@@ -565,7 +565,7 @@ Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &a
         // child of this device, prepare the message for indirect tx
         // to the sleepy child and un-mark message for direct tx.
 
-        if (mle.IsRouterOrLeader() && Mle::IsChildRloc16(mMeshDest) && Mle::RouterIdMatch(mMeshDest, mle.GetRloc16()))
+        if (mle.IsRouterOrLeader() && Mle::IsChildRloc16(mMeshDest) && mle.HasMatchingRouterIdWith(mMeshDest))
         {
             Child *child = Get<ChildTable>().FindChild(mMeshDest, Child::kInStateValid);
 
@@ -673,12 +673,11 @@ exit:
 
 Error MeshForwarder::CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header)
 {
-    bool     isReachable  = false;
-    uint16_t deviceRloc16 = Get<Mle::Mle>().GetRloc16();
+    bool isReachable = false;
 
     if (Get<Mle::Mle>().IsChild())
     {
-        if (aMeshDest == deviceRloc16)
+        if (Get<Mle::Mle>().HasRloc16(aMeshDest))
         {
             isReachable = Get<ThreadNetif>().HasUnicastAddress(aIp6Header.GetDestination());
         }
@@ -690,14 +689,14 @@ Error MeshForwarder::CheckReachability(uint16_t aMeshDest, const Ip6::Header &aI
         ExitNow();
     }
 
-    if (aMeshDest == deviceRloc16)
+    if (Get<Mle::Mle>().HasRloc16(aMeshDest))
     {
         isReachable = Get<ThreadNetif>().HasUnicastAddress(aIp6Header.GetDestination()) ||
                       (Get<NeighborTable>().FindNeighbor(aIp6Header.GetDestination()) != nullptr);
         ExitNow();
     }
 
-    if (Mle::RouterIdMatch(aMeshDest, deviceRloc16))
+    if (Get<Mle::Mle>().HasMatchingRouterIdWith(aMeshDest))
     {
         isReachable = (Get<ChildTable>().FindChild(aMeshDest, Child::kInStateValidOrRestoring) != nullptr);
         ExitNow();
@@ -735,7 +734,7 @@ void MeshForwarder::HandleMesh(FrameData &aFrameData, const Mac::Address &aMacSo
 
     UpdateRoutes(aFrameData, meshAddrs);
 
-    if (meshAddrs.mDestination.GetShort() == Get<Mle::Mle>().GetRloc16() ||
+    if (Get<Mle::Mle>().HasRloc16(meshAddrs.mDestination.GetShort()) ||
         Get<ChildTable>().HasMinimalChild(meshAddrs.mDestination.GetShort()))
     {
         if (Lowpan::FragmentHeader::IsFragmentHeader(aFrameData))
@@ -838,7 +837,7 @@ void MeshForwarder::UpdateRoutes(const FrameData &aFrameData, const Mac::Address
     neighbor = Get<NeighborTable>().FindNeighbor(ip6Headers.GetSourceAddress());
     VerifyOrExit(neighbor != nullptr && !neighbor->IsFullThreadDevice());
 
-    if (!Mle::RouterIdMatch(aMeshAddrs.mSource.GetShort(), Get<Mle::Mle>().GetRloc16()))
+    if (!Get<Mle::Mle>().HasMatchingRouterIdWith(aMeshAddrs.mSource.GetShort()))
     {
         Get<Mle::MleRouter>().RemoveNeighbor(*neighbor);
     }

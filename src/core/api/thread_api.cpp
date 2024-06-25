@@ -81,7 +81,7 @@ otError otThreadGetLeaderRloc(otInstance *aInstance, otIp6Address *aLeaderRloc)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(AsCoreType(aInstance).Get<Mle::Mle>().GetRloc16() != Mle::kInvalidRloc16, error = kErrorDetached);
+    VerifyOrExit(!AsCoreType(aInstance).Get<Mle::Mle>().HasRloc16(Mle::kInvalidRloc16), error = kErrorDetached);
     AsCoreType(aInstance).Get<Mle::Mle>().GetLeaderRloc(AsCoreType(aLeaderRloc));
 
 exit:
@@ -197,7 +197,7 @@ otError otThreadGetServiceAloc(otInstance *aInstance, uint8_t aServiceId, otIp6A
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(AsCoreType(aInstance).Get<Mle::Mle>().GetRloc16() != Mle::kInvalidRloc16, error = kErrorDetached);
+    VerifyOrExit(!AsCoreType(aInstance).Get<Mle::Mle>().HasRloc16(Mle::kInvalidRloc16), error = kErrorDetached);
     AsCoreType(aInstance).Get<Mle::Mle>().GetServiceAloc(aServiceId, AsCoreType(aServiceAloc));
 
 exit:
