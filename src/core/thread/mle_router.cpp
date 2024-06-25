@@ -2637,12 +2637,21 @@ void MleRouter::HandleDiscoveryRequest(RxInfo &aRxInfo)
 
     while (offset < end)
     {
-        IgnoreError(aRxInfo.mMessage.Read(offset, meshcopTlv));
+        SuccessOrExit(error = aRxInfo.mMessage.Read(offset, meshcopTlv));
+
+        if (meshcopTlv.IsExtended())
+        {
+            SuccessOrExit(error = Tlv::ParseAndSkipTlv(aRxInfo.mMessage, offset));
+            VerifyOrExit(offset <= end, error = kErrorParse);
+            continue;
+        }
+
+        VerifyOrExit(meshcopTlv.GetSize() + offset <= aRxInfo.mMessage.GetLength(), error = kErrorParse);
 
         switch (meshcopTlv.GetType())
         {
         case MeshCoP::Tlv::kDiscoveryRequest:
-            IgnoreError(aRxInfo.mMessage.Read(offset, discoveryRequestTlv));
+            SuccessOrExit(error = aRxInfo.mMessage.Read(offset, discoveryRequestTlv));
             VerifyOrExit(discoveryRequestTlv.IsValid(), error = kErrorParse);
 
             break;

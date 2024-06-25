@@ -335,12 +335,21 @@ void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
     // Process MeshCoP TLVs
     while (offset < end)
     {
-        IgnoreError(aRxInfo.mMessage.Read(offset, meshcopTlv));
+        SuccessOrExit(error = aRxInfo.mMessage.Read(offset, meshcopTlv));
+
+        if (meshcopTlv.IsExtended())
+        {
+            SuccessOrExit(error = Tlv::ParseAndSkipTlv(aRxInfo.mMessage, offset));
+            VerifyOrExit(offset <= end, error = kErrorParse);
+            continue;
+        }
+
+        VerifyOrExit(meshcopTlv.GetSize() + offset <= aRxInfo.mMessage.GetLength(), error = kErrorParse);
 
         switch (meshcopTlv.GetType())
         {
         case MeshCoP::Tlv::kDiscoveryResponse:
-            IgnoreError(aRxInfo.mMessage.Read(offset, discoveryResponse));
+            SuccessOrExit(error = aRxInfo.mMessage.Read(offset, discoveryResponse));
             VerifyOrExit(discoveryResponse.IsValid(), error = kErrorParse);
             result.mVersion  = discoveryResponse.GetVersion();
             result.mIsNative = discoveryResponse.IsNativeCommissioner();

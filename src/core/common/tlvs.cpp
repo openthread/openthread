@@ -56,6 +56,24 @@ const uint8_t *Tlv::GetValue(void) const
 
 Error Tlv::AppendTo(Message &aMessage) const { return aMessage.AppendBytes(this, static_cast<uint16_t>(GetSize())); }
 
+Error Tlv::ParseAndSkipTlv(const Message &aMessage, uint16_t &aOffset)
+{
+    Error      error;
+    ParsedInfo info;
+
+    SuccessOrExit(error = info.ParseFrom(aMessage, aOffset));
+
+    // `ParseFrom()` has already validated that the entire TLV is
+    // present within `aMessage`. This ensures that `aOffset + mSize`
+    // is less than `aMessage.GetLength()`, and therefore we cannot
+    // have an overflow here.
+
+    aOffset += info.mSize;
+
+exit:
+    return error;
+}
+
 Error Tlv::FindTlv(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv)
 {
     uint16_t offset;
