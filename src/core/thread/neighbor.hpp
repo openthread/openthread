@@ -590,6 +590,15 @@ public:
         return (mState != kStateInvalid) && (mVersion >= kThreadVersion1p2);
     }
 
+#if OPENTHREAD_CONFIG_ENH_DATA_POLL_ENABLE
+    bool IsEnhancedDataPollSupported(void) const
+    {
+        // For feature testing we simply assume that it is supported.
+        // This should be made conditional depending on how thread standardization works out
+        return true;
+    }
+#endif
+
     /**
      * Gets the device MLE version.
      *
