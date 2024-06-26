@@ -270,7 +270,7 @@ typedef SimpleTlvInfo<Tlv::kExtendedPanId, ExtendedPanId> ExtendedPanIdTlv;
  *
  */
 OT_TOOL_PACKED_BEGIN
-class NetworkNameTlv : public Tlv, public TlvInfo<Tlv::kNetworkName>
+class NetworkNameTlv : public Tlv, public StringTlvInfo<Tlv::kNetworkName, NetworkName::kMaxSize>
 {
 public:
     /**
