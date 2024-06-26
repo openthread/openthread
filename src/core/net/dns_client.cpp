@@ -1520,7 +1520,17 @@ void Client::HandleTimer(void)
                     break;
                 }
 
-                IgnoreError(SendQuery(*query, info, /* aUpdateTimer */ false));
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+                if (ReplaceWithSeparateSrvTxtQueries(*query) == kErrorNone)
+                {
+                    LogInfo("Switching to separate SRV/TXT on response timeout");
+                    info.ReadFrom(*query);
+                }
+                else
+#endif
+                {
+                    IgnoreError(SendQuery(*query, info, /* aUpdateTimer */ false));
+                }
             }
 
             nextTime.UpdateIfEarlier(info.mRetransmissionTime);
@@ -1534,7 +1544,7 @@ void Client::HandleTimer(void)
         }
     }
 
-    mTimer.FireAt(nextTime);
+    mTimer.FireAtIfEarlier(nextTime);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
     if (!hasTcpQuery && mTcpState != kTcpUninitialized)
