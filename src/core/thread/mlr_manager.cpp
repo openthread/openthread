@@ -151,18 +151,25 @@ void MlrManager::UpdateProxiedSubscriptions(Child &aChild, const MlrAddressArray
     VerifyOrExit(aChild.IsStateValid());
 
     // Search the new multicast addresses and set its flag accordingly
-    for (const Ip6::Address &address : aChild.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
+    for (Child::Ip6AddrEntry &addrEntry : aChild.GetIp6Addresses())
     {
-        bool isMlrRegistered = aOldMlrRegisteredAddresses.Contains(address);
+        bool isMlrRegistered;
+
+        if (!addrEntry.IsMulticastLargerThanRealmLocal())
+        {
+            continue;
+        }
+
+        isMlrRegistered = aOldMlrRegisteredAddresses.Contains(addrEntry);
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
         // Check if it's a new multicast address against parent Netif
-        isMlrRegistered = isMlrRegistered || IsAddressMlrRegisteredByNetif(address);
+        isMlrRegistered = isMlrRegistered || IsAddressMlrRegisteredByNetif(addrEntry);
 #endif
         // Check if it's a new multicast address against other Children
-        isMlrRegistered = isMlrRegistered || IsAddressMlrRegisteredByAnyChildExcept(address, &aChild);
+        isMlrRegistered = isMlrRegistered || IsAddressMlrRegisteredByAnyChildExcept(addrEntry, &aChild);
 
-        aChild.SetAddressMlrState(address, isMlrRegistered ? kMlrStateRegistered : kMlrStateToRegister);
+        addrEntry.SetMlrState(isMlrRegistered ? kMlrStateRegistered : kMlrStateToRegister, aChild);
     }
 
 exit:
@@ -253,17 +260,22 @@ void MlrManager::SendMlr(void)
             continue;
         }
 
-        for (const Ip6::Address &address : child.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
+        for (Child::Ip6AddrEntry &addrEntry : child.GetIp6Addresses())
         {
+            if (!addrEntry.IsMulticastLargerThanRealmLocal())
+            {
+                continue;
+            }
+
             if (addresses.IsFull())
             {
                 break;
             }
 
-            if (child.GetAddressMlrState(address) == kMlrStateToRegister)
+            if (addrEntry.GetMlrState(child) == kMlrStateToRegister)
             {
-                addresses.AddUnique(address);
-                child.SetAddressMlrState(address, kMlrStateRegistering);
+                addresses.AddUnique(addrEntry);
+                addrEntry.SetMlrState(kMlrStateRegistering, child);
             }
         }
     }
@@ -514,11 +526,16 @@ void MlrManager::SetMulticastAddressMlrState(MlrState aFromState, MlrState aToSt
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        for (const Ip6::Address &address : child.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
+        for (Child::Ip6AddrEntry &addrEntry : child.GetIp6Addresses())
         {
-            if (child.GetAddressMlrState(address) == aFromState)
+            if (!addrEntry.IsMulticastLargerThanRealmLocal())
             {
-                child.SetAddressMlrState(address, aToState);
+                continue;
+            }
+
+            if (addrEntry.GetMlrState(child) == aFromState)
+            {
+                addrEntry.SetMlrState(aToState, child);
             }
         }
     }
@@ -546,13 +563,18 @@ void MlrManager::FinishMlr(bool aSuccess, const AddressArray &aFailedAddresses)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        for (const Ip6::Address &address : child.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
+        for (Child::Ip6AddrEntry &addrEntry : child.GetIp6Addresses())
         {
-            if (child.GetAddressMlrState(address) == kMlrStateRegistering)
+            if (!addrEntry.IsMulticastLargerThanRealmLocal())
             {
-                bool success = aSuccess || !aFailedAddresses.IsEmptyOrContains(address);
+                continue;
+            }
 
-                child.SetAddressMlrState(address, success ? kMlrStateRegistered : kMlrStateToRegister);
+            if (addrEntry.GetMlrState(child) == kMlrStateRegistering)
+            {
+                bool success = aSuccess || !aFailedAddresses.IsEmptyOrContains(addrEntry);
+
+                addrEntry.SetMlrState(success ? kMlrStateRegistered : kMlrStateToRegister, child);
             }
         }
     }
@@ -648,11 +670,16 @@ void MlrManager::LogMulticastAddresses(void)
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
+    for (const Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        for (const Ip6::Address &address : child.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
+        for (const Child::Ip6AddrEntry &addrEntry : child.GetIp6Addresses())
         {
-            LogDebg("%-32s%c %04x", address.ToString().AsCString(), "-rR"[child.GetAddressMlrState(address)],
+            if (!addrEntry.IsMulticastLargerThanRealmLocal())
+            {
+                continue;
+            }
+
+            LogDebg("%-32s%c %04x", addrEntry.ToString().AsCString(), "-rR"[addrEntry.GetMlrState(child)],
                     child.GetRloc16());
         }
     }
@@ -709,11 +736,16 @@ void MlrManager::CheckInvariants(void) const
     }
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
+    for (const Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        for (const Ip6::Address &address : child.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
+        for (const Child::Ip6AddrEntry &addrEntry : child.GetIp6Addresses())
         {
-            registeringNum += (child.GetAddressMlrState(address) == kMlrStateRegistering);
+            if (!addrEntry.IsMulticastLargerThanRealmLocal())
+            {
+                continue;
+            }
+
+            registeringNum += (addrEntry.GetMlrState(child) == kMlrStateRegistering);
         }
     }
 #endif
