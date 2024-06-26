@@ -28,6 +28,8 @@
 
 #include "rcp_caps_diag.hpp"
 
+#include "lib/utils/math.hpp"
+
 #if OPENTHREAD_POSIX_CONFIG_RCP_CAPS_DIAG_ENABLE
 namespace ot {
 namespace Posix {
@@ -465,6 +467,10 @@ otError RcpCapsDiag::DiagProcess(char *aArgs[], uint8_t aArgsLength)
     {
         ProcessSpinel();
     }
+    else if (strcmp(aArgs[1], "spinelspeed") == 0)
+    {
+        ProcessSpinelSpeed();
+    }
     else
     {
         error = OT_ERROR_INVALID_COMMAND;
@@ -678,6 +684,87 @@ exit:
     }
 
     OutputFormat("ExtendedSrcMatchTableSize", num);
+}
+
+void RcpCapsDiag::HandleDiagOutput(const char *aFormat, va_list aArguments, void *aContext)
+{
+    static_cast<RcpCapsDiag *>(aContext)->HandleDiagOutput(aFormat, aArguments);
+}
+
+void RcpCapsDiag::HandleDiagOutput(const char *aFormat, va_list aArguments)
+{
+    int rval;
+
+    VerifyOrExit(mDiagOutput != nullptr && mDiagOutputLength != 0);
+    rval = vsnprintf(mDiagOutput, mDiagOutputLength, aFormat, aArguments);
+    VerifyOrExit(rval >= 0);
+
+    rval = (rval > mDiagOutputLength) ? mDiagOutputLength : rval;
+    mDiagOutput += rval;
+    mDiagOutputLength -= rval;
+
+exit:
+    return;
+}
+
+void RcpCapsDiag::ProcessSpinelSpeed(void)
+{
+    static constexpr uint32_t kUsPerSec           = 1000000;
+    static constexpr uint8_t  kBitsPerByte        = 8;
+    static constexpr uint8_t  kSpinelHeaderSize   = 4;
+    static constexpr uint8_t  kZeroTerminatorSize = 1;
+    static constexpr char     kEchoCmd[]          = "echo ";
+    static constexpr uint8_t  kEchoPayloadLength  = 200;
+    static constexpr uint8_t  kNumTests           = 100;
+
+    otError                  error                                            = OT_ERROR_NONE;
+    char                     cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE] = {0};
+    char                     output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
+    uint16_t                 echoPayloadLength;
+    uint64_t                 startTimestamp;
+    uint64_t                 endTimestamp;
+    uint64_t                 sumTime   = 0;
+    uint64_t                 sumLength = 0;
+    uint32_t                 speed;
+    otPlatDiagOutputCallback callback;
+    void                    *context;
+
+    mRadioSpinel.GetDiagOutputCallback(callback, context);
+    mRadioSpinel.SetDiagOutputCallback(HandleDiagOutput, this);
+
+    strncpy(cmd, kEchoCmd, sizeof(cmd) - 1);
+    echoPayloadLength = static_cast<uint16_t>(sizeof(cmd) - strlen(cmd) - 1);
+    echoPayloadLength = Lib::Utils::Min<uint16_t>(kEchoPayloadLength, echoPayloadLength);
+    memset(cmd + strlen(cmd), '1', echoPayloadLength);
+
+    for (uint16_t i = 0; i < kNumTests; i++)
+    {
+        output[0]         = '\0';
+        mDiagOutput       = output;
+        mDiagOutputLength = sizeof(output);
+        startTimestamp    = otPlatTimeGet();
+
+        SuccessOrExit(error = mRadioSpinel.PlatDiagProcess(cmd));
+
+        endTimestamp = otPlatTimeGet();
+        sumTime += endTimestamp - startTimestamp;
+        sumLength += kSpinelHeaderSize + strlen(cmd) + kZeroTerminatorSize + kSpinelHeaderSize + strlen(output) +
+                     kZeroTerminatorSize;
+    }
+
+    mRadioSpinel.SetDiagOutputCallback(callback, context);
+
+exit:
+    if (error == OT_ERROR_NONE)
+    {
+        speed = static_cast<uint32_t>((sumLength * kBitsPerByte * kUsPerSec) / sumTime);
+        snprintf(output, sizeof(output), "%lu bps", ToUlong(speed));
+        OutputFormat("SpinelSpeed", output);
+    }
+    else
+    {
+        Output("Failed to test the Spinel speed: %s", otThreadErrorToString(error));
+    }
 }
 
 void RcpCapsDiag::OutputFormat(const char *aName, const char *aValue)

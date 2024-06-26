@@ -62,6 +62,8 @@ public:
         : mRadioSpinel(aRadioSpinel)
         , mOutputCallback(nullptr)
         , mOutputContext(nullptr)
+        , mDiagOutput(nullptr)
+        , mDiagOutputLength(0)
     {
     }
 
@@ -111,6 +113,7 @@ private:
     static constexpr uint16_t kMaxNumChildren = 512;
 
     void ProcessSpinel(void);
+    void ProcessSpinelSpeed(void);
     void ProcessCapabilityFlags(void);
     void ProcessSrcMatchTable(void);
     void TestSpinelCommands(Category aCategory);
@@ -125,6 +128,10 @@ private:
     bool IsSpinelCapabilitySupported(const uint8_t *aCapsData, spinel_size_t aCapsLength, uint32_t aCapability);
     void OutputExtendedSrcMatchTableSize(void);
     void OutputShortSrcMatchTableSize(void);
+
+    static void HandleDiagOutput(const char *aFormat, va_list aArguments, void *aContext);
+    void        HandleDiagOutput(const char *aFormat, va_list aArguments);
+
     void OutputFormat(const char *aName, const char *aValue);
     void OutputFormat(const char *aName, uint32_t aValue);
     void OutputResult(const SpinelEntry &aEntry, otError error);
@@ -139,6 +146,8 @@ private:
     Spinel::RadioSpinel     &mRadioSpinel;
     otPlatDiagOutputCallback mOutputCallback;
     void                    *mOutputContext;
+    char                    *mDiagOutput;
+    uint16_t                 mDiagOutputLength;
 };
 
 } // namespace Posix
