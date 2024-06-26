@@ -108,8 +108,11 @@ private:
         RcpCapsDiag::SpinelCommandHandler mHandler;
     };
 
+    static constexpr uint16_t kMaxNumChildren = 512;
+
     void ProcessSpinel(void);
     void ProcessCapabilityFlags(void);
+    void ProcessSrcMatchTable(void);
     void TestSpinelCommands(Category aCategory);
     void TestRadioCapbilityFlags(void);
     void OutputRadioCapFlags(Category aCategory, uint32_t aRadioCaps, const uint32_t *aFlags, uint16_t aNumbFlags);
@@ -120,7 +123,10 @@ private:
                               const uint32_t *aFlags,
                               uint16_t        aNumbFlags);
     bool IsSpinelCapabilitySupported(const uint8_t *aCapsData, spinel_size_t aCapsLength, uint32_t aCapability);
+    void OutputExtendedSrcMatchTableSize(void);
+    void OutputShortSrcMatchTableSize(void);
     void OutputFormat(const char *aName, const char *aValue);
+    void OutputFormat(const char *aName, uint32_t aValue);
     void OutputResult(const SpinelEntry &aEntry, otError error);
     void Output(const char *aFormat, ...);
 

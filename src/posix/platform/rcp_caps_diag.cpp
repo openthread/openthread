@@ -457,6 +457,10 @@ otError RcpCapsDiag::DiagProcess(char *aArgs[], uint8_t aArgsLength)
     {
         ProcessCapabilityFlags();
     }
+    else if (strcmp(aArgs[1], "srcmatchtable") == 0)
+    {
+        ProcessSrcMatchTable();
+    }
     else if (strcmp(aArgs[1], "spinel") == 0)
     {
         ProcessSpinel();
@@ -616,6 +620,66 @@ exit:
     return ret;
 }
 
+void RcpCapsDiag::ProcessSrcMatchTable(void)
+{
+    OutputShortSrcMatchTableSize();
+    OutputExtendedSrcMatchTableSize();
+}
+
+void RcpCapsDiag::OutputShortSrcMatchTableSize(void)
+{
+    constexpr uint8_t kRouterIdOffset = 10;
+    constexpr uint8_t kRouterId       = 5;
+    uint16_t          num             = 0;
+    uint16_t          shortAddress;
+
+    SuccessOrExit(mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_ENABLED, SPINEL_DATATYPE_BOOL_S, true /* aEnable */));
+    SuccessOrExit(mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, nullptr));
+
+    for (num = 0; num < kMaxNumChildren; num++)
+    {
+        shortAddress = num | (kRouterId << kRouterIdOffset);
+        SuccessOrExit(
+            mRadioSpinel.Insert(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, SPINEL_DATATYPE_UINT16_S, shortAddress));
+    }
+
+exit:
+    if (num != 0)
+    {
+        IgnoreReturnValue(mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, nullptr));
+        IgnoreReturnValue(
+            mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_ENABLED, SPINEL_DATATYPE_BOOL_S, false /* aEnable */));
+    }
+
+    OutputFormat("ShortSrcMatchTableSize", num);
+}
+
+void RcpCapsDiag::OutputExtendedSrcMatchTableSize(void)
+{
+    otExtAddress extAddress = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+    uint16_t     num        = 0;
+
+    SuccessOrExit(mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_ENABLED, SPINEL_DATATYPE_BOOL_S, true /* aEnable */));
+    SuccessOrExit(mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, nullptr));
+
+    for (num = 0; num < kMaxNumChildren; num++)
+    {
+        *reinterpret_cast<uint16_t *>(extAddress.m8) = num;
+        SuccessOrExit(
+            mRadioSpinel.Insert(SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, SPINEL_DATATYPE_EUI64_S, extAddress.m8));
+    }
+
+exit:
+    if (num != 0)
+    {
+        IgnoreReturnValue(mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, nullptr));
+        IgnoreReturnValue(
+            mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_ENABLED, SPINEL_DATATYPE_BOOL_S, false /* aEnable */));
+    }
+
+    OutputFormat("ExtendedSrcMatchTableSize", num);
+}
+
 void RcpCapsDiag::OutputFormat(const char *aName, const char *aValue)
 {
     static constexpr uint8_t kMaxNameLength = 56;
@@ -626,6 +690,15 @@ void RcpCapsDiag::OutputFormat(const char *aName, const char *aValue)
     static_assert(kMaxNameLength < sizeof(kPadding), "Padding bytes are too short");
 
     Output("%.*s %s %s\r\n", kMaxNameLength, aName, &kPadding[paddingOffset], aValue);
+}
+
+void RcpCapsDiag::OutputFormat(const char *aName, uint32_t aValue)
+{
+    static constexpr uint16_t kValueLength = 11;
+    char                      value[kValueLength];
+
+    snprintf(value, sizeof(value), "%u", aValue);
+    OutputFormat(aName, value);
 }
 
 void RcpCapsDiag::OutputResult(const SpinelEntry &aEntry, otError error)
