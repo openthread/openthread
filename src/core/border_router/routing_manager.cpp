@@ -1138,6 +1138,7 @@ void RoutingManager::RxRaTracker::ProcessPrefixInfoOption(const PrefixInfoOption
 {
     Ip6::Prefix          prefix;
     Entry<OnLinkPrefix> *entry;
+    bool                 disregard;
 
     VerifyOrExit(aPio.IsValid());
     aPio.GetPrefix(prefix);
@@ -1148,7 +1149,15 @@ void RoutingManager::RxRaTracker::ProcessPrefixInfoOption(const PrefixInfoOption
         ExitNow();
     }
 
-    VerifyOrExit(prefix != Get<RoutingManager>().mOnLinkPrefixManager.GetLocalPrefix());
+    // Disregard the PIO prefix if it matches our local on-link prefix,
+    // as this indicates it's likely from a peer Border Router connected
+    // to the same Thread mesh.
+
+    disregard = (prefix == Get<RoutingManager>().mOnLinkPrefixManager.GetLocalPrefix());
+
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+    VerifyOrExit(!disregard);
+#endif
 
     LogPrefixInfoOption(prefix, aPio.GetValidLifetime(), aPio.GetPreferredLifetime());
 
@@ -1177,6 +1186,8 @@ void RoutingManager::RxRaTracker::ProcessPrefixInfoOption(const PrefixInfoOption
         entry->AdoptValidAndPreferredLifetimesFrom(newPrefix);
     }
 
+    entry->SetDisregardFlag(disregard);
+
 exit:
     return;
 }
@@ -1185,16 +1196,16 @@ void RoutingManager::RxRaTracker::ProcessRouteInfoOption(const RouteInfoOption &
 {
     Ip6::Prefix         prefix;
     Entry<RoutePrefix> *entry;
+    bool                disregard;
 
     VerifyOrExit(aRio.IsValid());
     aRio.GetPrefix(prefix);
 
     VerifyOrExit(!prefix.IsLinkLocal() && !prefix.IsMulticast());
 
-    VerifyOrExit(Get<RoutingManager>().mOmrPrefixManager.GetLocalPrefix().GetPrefix() != prefix);
-
     // Disregard our own advertised OMR prefixes and those currently
-    // present in the Thread Network Data.
+    // present in the Thread Network Data. This implies it is likely
+    // from a peer Thread BR connected to the same Thread mesh.
     //
     // There should be eventual parity between the `RioAdvertiser`
     // prefixes and the OMR prefixes in Network Data, but temporary
@@ -1202,8 +1213,13 @@ void RoutingManager::RxRaTracker::ProcessRouteInfoOption(const RouteInfoOption &
     // required to update Network Data (registering with leader). So
     // both checks are necessary.
 
-    VerifyOrExit(!Get<RoutingManager>().mRioAdvertiser.HasAdvertised(prefix));
-    VerifyOrExit(!Get<NetworkData::Leader>().ContainsOmrPrefix(prefix));
+    disregard = (Get<RoutingManager>().mOmrPrefixManager.GetLocalPrefix().GetPrefix() == prefix) ||
+                Get<RoutingManager>().mRioAdvertiser.HasAdvertised(prefix) ||
+                Get<NetworkData::Leader>().ContainsOmrPrefix(prefix);
+
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+    VerifyOrExit(!disregard);
+#endif
 
     LogRouteInfoOption(prefix, aRio.GetRouteLifetime(), aRio.GetPreference());
 
@@ -1228,6 +1244,8 @@ void RoutingManager::RxRaTracker::ProcessRouteInfoOption(const RouteInfoOption &
     {
         entry->SetFrom(aRio);
     }
+
+    entry->SetDisregardFlag(disregard);
 
 exit:
     return;
@@ -1298,14 +1316,29 @@ template <class PrefixType> void RoutingManager::RxRaTracker::Entry<PrefixType>:
 void RoutingManager::RxRaTracker::HandleLocalOnLinkPrefixChanged(void)
 {
     const Ip6::Prefix &prefix    = Get<RoutingManager>().mOnLinkPrefixManager.GetLocalPrefix();
-    bool               didRemove = false;
+    bool               didChange = false;
+
+    // When `TRACK_PEER_BR_INFO_ENABLE` is enabled, we mark
+    // to disregard any on-link prefix entries matching the new
+    // local on-link prefix. Otherwise, we can remove and free
+    // them.
 
     for (Router &router : mRouters)
     {
-        didRemove |= router.mOnLinkPrefixes.RemoveAndFreeAllMatching(prefix);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+        OnLinkPrefix *entry = router.mOnLinkPrefixes.FindMatching(prefix);
+
+        if ((entry != nullptr) && !entry->ShouldDisregard())
+        {
+            entry->SetDisregardFlag(true);
+            didChange = true;
+        }
+#else
+        didChange |= router.mOnLinkPrefixes.RemoveAndFreeAllMatching(prefix);
+#endif
     }
 
-    VerifyOrExit(didRemove);
+    VerifyOrExit(didChange);
 
     Evaluate();
 
@@ -1317,7 +1350,7 @@ void RoutingManager::RxRaTracker::HandleNetDataChange(void)
 {
     NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
     NetworkData::OnMeshPrefixConfig prefixConfig;
-    bool                            didRemove = false;
+    bool                            didChange = false;
 
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
     {
@@ -1328,11 +1361,21 @@ void RoutingManager::RxRaTracker::HandleNetDataChange(void)
 
         for (Router &router : mRouters)
         {
-            didRemove |= router.mRoutePrefixes.RemoveAndFreeAllMatching(prefixConfig.GetPrefix());
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+            RoutePrefix *entry = router.mRoutePrefixes.FindMatching(prefixConfig.GetPrefix());
+
+            if ((entry != nullptr) && !entry->ShouldDisregard())
+            {
+                entry->SetDisregardFlag(true);
+                didChange = true;
+            }
+#else
+            didChange |= router.mRoutePrefixes.RemoveAndFreeAllMatching(prefixConfig.GetPrefix());
+#endif
         }
     }
 
-    if (didRemove)
+    if (didChange)
     {
         Evaluate();
     }
@@ -1374,13 +1417,13 @@ void RoutingManager::RxRaTracker::Evaluate(void)
 {
     DecisionFactors oldFactors = mDecisionFactors;
     TimeMilli       now        = TimerMilli::GetNow();
-    NextFireTime    routerTimeout(now);
+    NextFireTime    routerTimeoutTime(now);
     NextFireTime    entryExpireTime(now);
     NextFireTime    staleTime(now);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Remove expired prefix entries in routers and then remove any
-    // router that has with no prefix entries or flags.
+    // router that has no prefix entries or flags.
 
     mRouters.RemoveAndFreeAllMatching(Router::EmptyChecker(now));
 
@@ -1392,18 +1435,24 @@ void RoutingManager::RxRaTracker::Evaluate(void)
 
     for (Router &router : mRouters)
     {
+        router.mAllEntriesDisregarded = true;
+
         mDecisionFactors.UpdateFlagsFrom(router);
 
         for (OnLinkPrefix &entry : router.mOnLinkPrefixes)
         {
             mDecisionFactors.UpdateFrom(entry);
             entry.SetStaleTimeCalculated(false);
+
+            router.mAllEntriesDisregarded &= entry.ShouldDisregard();
         }
 
         for (RoutePrefix &entry : router.mRoutePrefixes)
         {
             mDecisionFactors.UpdateFrom(entry);
             entry.SetStaleTimeCalculated(false);
+
+            router.mAllEntriesDisregarded &= entry.ShouldDisregard();
         }
     }
 
@@ -1425,11 +1474,12 @@ void RoutingManager::RxRaTracker::Evaluate(void)
     // their entries, `DetermineStaleTimeFor()` will consider all
     // matching entries and mark "StaleTimeCalculated" flag on them.
 
-    for (const Router &router : mRouters)
+    for (Router &router : mRouters)
     {
         if (router.ShouldCheckReachability())
         {
-            routerTimeout.UpdateIfEarlier(router.mTimeout);
+            router.DetermineReachabilityTimeout();
+            routerTimeoutTime.UpdateIfEarlier(router.mTimeoutTime);
         }
 
         for (const OnLinkPrefix &entry : router.mOnLinkPrefixes)
@@ -1465,7 +1515,7 @@ void RoutingManager::RxRaTracker::Evaluate(void)
         staleTime.UpdateIfEarlier(CalculateExpirationTime(mLocalRaHeaderUpdateTime, interval));
     }
 
-    mRouterTimer.FireAt(routerTimeout);
+    mRouterTimer.FireAt(routerTimeoutTime);
     mExpirationTimer.FireAt(entryExpireTime);
     mStaleTimer.FireAt(staleTime);
 }
@@ -1569,7 +1619,7 @@ void RoutingManager::RxRaTracker::HandleRouterTimer(void)
 
     for (Router &router : mRouters)
     {
-        if (!router.ShouldCheckReachability() || (router.mTimeout > now))
+        if (!router.ShouldCheckReachability() || (router.mTimeoutTime > now))
         {
             continue;
         }
@@ -1578,8 +1628,8 @@ void RoutingManager::RxRaTracker::HandleRouterTimer(void)
 
         if (router.IsReachable())
         {
-            router.mTimeout = now + ((router.mNsProbeCount < Router::kMaxNsProbes) ? Router::kNsProbeRetryInterval
-                                                                                   : Router::kNsProbeTimeout);
+            router.mTimeoutTime = now + ((router.mNsProbeCount < Router::kMaxNsProbes) ? Router::kNsProbeRetryInterval
+                                                                                       : Router::kNsProbeTimeout);
             SendNeighborSolicitToRouter(router);
         }
         else
@@ -1796,7 +1846,27 @@ void RoutingManager::RxRaTracker::Router::ResetReachabilityState(void)
 
     mNsProbeCount   = 0;
     mLastUpdateTime = TimerMilli::GetNow();
-    mTimeout        = mLastUpdateTime + Random::NonCrypto::AddJitter(kReachableTimeout, kJitter);
+    mTimeoutTime    = mLastUpdateTime + Random::NonCrypto::AddJitter(kReachableInterval, kJitter);
+}
+
+void RoutingManager::RxRaTracker::Router::DetermineReachabilityTimeout(void)
+{
+    uint32_t interval;
+
+    VerifyOrExit(ShouldCheckReachability());
+    VerifyOrExit(mNsProbeCount == 0);
+
+    // If all of the router's prefix entries are marked as
+    // disregarded (excluded from any decisions), it indicates that
+    // this router is likely a peer BR connected to the same Thread
+    // mesh. We use a longer reachability check interval for such
+    // peer BRs.
+
+    interval     = mAllEntriesDisregarded ? kPeerBrReachableInterval : kReachableInterval;
+    mTimeoutTime = mLastUpdateTime + Random::NonCrypto::AddJitter(interval, kJitter);
+
+exit:
+    return;
 }
 
 bool RoutingManager::RxRaTracker::Router::Matches(const EmptyChecker &aChecker)
@@ -1865,6 +1935,8 @@ exit:
 
 void RoutingManager::RxRaTracker::DecisionFactors::UpdateFrom(const OnLinkPrefix &aOnLinkPrefix)
 {
+    VerifyOrExit(!aOnLinkPrefix.ShouldDisregard());
+
     if (aOnLinkPrefix.GetPrefix().IsUniqueLocal())
     {
         mHasUlaOnLink = true;
@@ -1890,10 +1962,15 @@ exit:
 
 void RoutingManager::RxRaTracker::DecisionFactors::UpdateFrom(const RoutePrefix &aRoutePrefix)
 {
+    VerifyOrExit(!aRoutePrefix.ShouldDisregard());
+
     if (!mHasNonUlaRoute)
     {
         mHasNonUlaRoute = !aRoutePrefix.GetPrefix().IsUniqueLocal();
     }
+
+exit:
+    return;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
