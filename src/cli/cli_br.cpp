@@ -533,6 +533,7 @@ exit:
  * - Reachability flag: A router is marked as unreachable if it fails to respond to multiple Neighbor Solicitation
  *   probes.
  * - `(this BR)` is appended when the router is the local device itself.
+ * - '(peer BR)` is appended when the router is likely a peer BR connected to same Thread mesh.
  * @sa otBorderRoutingGetNextRouterEntry
  */
 template <> otError Br::Process<Cmd("routers")>(Arg aArgs[])
@@ -568,6 +569,11 @@ void Br::OutputRouterInfo(const otBorderRoutingRouterEntry &aEntry, RouterOutput
         if (aEntry.mIsLocalDevice)
         {
             OutputFormat(" (this BR)");
+        }
+
+        if (aEntry.mIsPeerBr)
+        {
+            OutputFormat(" (peer BR)");
         }
     }
 

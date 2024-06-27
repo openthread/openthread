@@ -1893,6 +1893,17 @@ bool RoutingManager::RxRaTracker::Router::Matches(const EmptyChecker &aChecker)
     return !hasFlags && mOnLinkPrefixes.IsEmpty() && mRoutePrefixes.IsEmpty();
 }
 
+bool RoutingManager::RxRaTracker::Router::IsPeerBr(void) const
+{
+    // Determines whether the router is a peer BR (connected to the
+    // same Thread mesh network). It must have at least one entry
+    // (on-link or route) and all entries should be marked to be
+    // disregarded. While this model is generally effective to detect
+    // peer BRs, it may not be 100% accurate in all scenarios.
+
+    return mAllEntriesDisregarded && !(mOnLinkPrefixes.IsEmpty() && mRoutePrefixes.IsEmpty());
+}
+
 void RoutingManager::RxRaTracker::Router::CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow) const
 {
     aEntry.mAddress                  = mAddress;
@@ -1902,6 +1913,7 @@ void RoutingManager::RxRaTracker::Router::CopyInfoTo(RouterEntry &aEntry, TimeMi
     aEntry.mStubRouterFlag           = mStubRouterFlag;
     aEntry.mIsLocalDevice            = mIsLocalDevice;
     aEntry.mIsReachable              = IsReachable();
+    aEntry.mIsPeerBr                 = IsPeerBr();
 }
 
 //---------------------------------------------------------------------------------------------------------------------

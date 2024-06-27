@@ -354,6 +354,7 @@ Info per router:
 - Milliseconds since last received message from this router
 - Reachability flag: A router is marked as unreachable if it fails to respond to multiple Neighbor Solicitation probes.
 - `(this BR)` is appended when the router is the local device itself.
+- `(peer BR)`` is appended when the router is likely a peer BR connected to same Thread mesh
 
 ```bash
 > br routers
