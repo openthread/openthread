@@ -163,7 +163,8 @@ exit:
 
 void Server::ProcessQuery(Request &aRequest)
 {
-    ResponseCode rcode = Header::kResponseSuccess;
+    ResponseCode rcode         = Header::kResponseSuccess;
+    bool         shouldRespond = true;
     Response     response(GetInstance());
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
@@ -193,7 +194,7 @@ void Server::ProcessQuery(Request &aRequest)
     SuccessOrExit(rcode);
 #endif
 
-    SuccessOrExit(rcode = aRequest.ParseQuestions(mTestMode));
+    SuccessOrExit(rcode = aRequest.ParseQuestions(mTestMode, shouldRespond));
     SuccessOrExit(rcode = response.AddQuestionsFrom(aRequest));
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -225,7 +226,10 @@ exit:
         response.SetResponseCode(rcode);
     }
 
-    response.Send(*aRequest.mMessageInfo);
+    if (shouldRespond)
+    {
+        response.Send(*aRequest.mMessageInfo);
+    }
 }
 
 Server::Response::Response(Instance &aInstance)
@@ -296,7 +300,7 @@ exit:
     return;
 }
 
-Server::ResponseCode Server::Request::ParseQuestions(uint8_t aTestMode)
+Server::ResponseCode Server::Request::ParseQuestions(uint8_t aTestMode, bool &aShouldRespond)
 {
     // Parse header and questions from a `Request` query message and
     // determine the `QueryType`.
@@ -305,6 +309,8 @@ Server::ResponseCode Server::Request::ParseQuestions(uint8_t aTestMode)
     uint16_t     offset        = sizeof(Header);
     uint16_t     questionCount = mHeader.GetQuestionCount();
     Question     question;
+
+    aShouldRespond = true;
 
     VerifyOrExit(mHeader.GetQueryType() == Header::kQueryTypeStandard, rcode = Header::kResponseNotImplemented);
     VerifyOrExit(!mHeader.IsTruncationFlagSet());
@@ -335,7 +341,8 @@ Server::ResponseCode Server::Request::ParseQuestions(uint8_t aTestMode)
 
     if (questionCount > 1)
     {
-        VerifyOrExit(!(aTestMode & kTestModeSingleQuestionOnly));
+        VerifyOrExit(!(aTestMode & kTestModeRejectMultiQuestionQuery));
+        VerifyOrExit(!(aTestMode & kTestModeIgnoreMultiQuestionQuery), aShouldRespond = false);
 
         VerifyOrExit(questionCount == 2);
 

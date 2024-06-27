@@ -671,8 +671,8 @@ void TestDnsClient(void)
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
 
-    Log("Set TestMode on server to only accept single question");
-    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeSingleQuestionOnly);
+    Log("Set TestMode on server to reject multi-question queries and send error");
+    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeRejectMultiQuestionQuery);
 
     Log("ResolveService(%s,%s) with ServiceMode %s", kInstance1Label, kService1FullName,
         ServiceModeToString(Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize));
@@ -703,6 +703,48 @@ void TestDnsClient(void)
 
     VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 1);
     VerifyOrQuit(sResolveServiceInfo.mError != kErrorNone);
+
+    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeDisabled);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    Log("Set TestMode on server to ignore multi-question queries (send no response)");
+    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeIgnoreMultiQuestionQuery);
+
+    Log("ResolveService(%s,%s) with ServiceMode %s", kInstance1Label, kService1FullName,
+        ServiceModeToString(Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize));
+
+    queryConfig.Clear();
+    queryConfig.mServiceMode = static_cast<otDnsServiceMode>(Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize);
+
+    sResolveServiceInfo.Reset();
+    SuccessOrQuit(
+        dnsClient->ResolveService(kInstance1Label, kService1FullName, ServiceCallback, sInstance, &queryConfig));
+
+    AdvanceTime(10 * 1000); // Wait longer than client response timeout.
+
+    VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 1);
+    SuccessOrQuit(sResolveServiceInfo.mError);
+
+    // Use `kServiceModeSrvTxt` and check that server does ignore two questions.
+
+    Log("ResolveService(%s,%s) with ServiceMode %s", kInstance1Label, kService1FullName,
+        ServiceModeToString(Dns::Client::QueryConfig::kServiceModeSrvTxt));
+
+    queryConfig.Clear();
+    queryConfig.mServiceMode = static_cast<otDnsServiceMode>(Dns::Client::QueryConfig::kServiceModeSrvTxt);
+
+    sResolveServiceInfo.Reset();
+    SuccessOrQuit(
+        dnsClient->ResolveService(kInstance1Label, kService1FullName, ServiceCallback, sInstance, &queryConfig));
+
+    // Wait for the client to time out after exhausting all retry attempts, and
+    // ensure that a `kErrorResponseTimeout` error is reported.
+
+    AdvanceTime(45 * 1000);
+
+    VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 1);
+    VerifyOrQuit(sResolveServiceInfo.mError == kErrorResponseTimeout);
 
     dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeDisabled);
 
@@ -832,7 +874,7 @@ void TestDnsClient(void)
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Set TestMode on server to not include any RR in additional section AND to only accept single question");
     dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeEmptyAdditionalSection +
-                           Dns::ServiceDiscovery::Server::kTestModeSingleQuestionOnly);
+                           Dns::ServiceDiscovery::Server::kTestModeRejectMultiQuestionQuery);
 
     Log("ResolveServiceAndHostAddress(%s,%s) with ServiceMode: %s", kInstance1Label, kService1FullName,
         ServiceModeToString(Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize));

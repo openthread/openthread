@@ -291,8 +291,9 @@ public:
      */
     enum TestModeFlags : uint8_t
     {
-        kTestModeSingleQuestionOnly     = 1 << 0, ///< Allow single question in query, send `FormatError` otherwise.
-        kTestModeEmptyAdditionalSection = 1 << 1, ///< Do not include any RR in additional section.
+        kTestModeRejectMultiQuestionQuery = 1 << 0, ///< Send `FormatError` for a query with multiple questions.
+        kTestModeIgnoreMultiQuestionQuery = 1 << 1, ///< Ignore a query with multiple questions (send no response).
+        kTestModeEmptyAdditionalSection   = 1 << 2, ///< Do not include any RR in additional section.
     };
 
     static constexpr uint8_t kTestModeDisabled = 0; ///< Test mode is disabled (no flags).
@@ -346,7 +347,7 @@ private:
 
     struct Request
     {
-        ResponseCode ParseQuestions(uint8_t aTestMode);
+        ResponseCode ParseQuestions(uint8_t aTestMode, bool &aShouldRespond);
 
         const Message          *mMessage;
         const Ip6::MessageInfo *mMessageInfo;
