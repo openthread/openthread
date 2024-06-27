@@ -497,15 +497,17 @@ void TestDnsClient(void)
         Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize,
     };
 
-    Array<Ip6::Address, kNumAddresses> addresses;
-    Srp::Server                       *srpServer;
-    Srp::Client                       *srpClient;
-    Srp::Client::Service               service1;
-    Srp::Client::Service               service2;
-    Dns::Client                       *dnsClient;
-    Dns::Client::QueryConfig           queryConfig;
-    Dns::ServiceDiscovery::Server     *dnsServer;
-    uint16_t                           heapAllocations;
+    Array<Ip6::Address, kNumAddresses>      addresses;
+    Srp::Server                            *srpServer;
+    Srp::Client                            *srpClient;
+    Srp::Client::Service                    service1;
+    Srp::Client::Service                    service2;
+    Dns::Client                            *dnsClient;
+    Dns::Client::QueryConfig                queryConfig;
+    Dns::ServiceDiscovery::Server          *dnsServer;
+    Dns::ServiceDiscovery::Server::Counters oldServerCounters;
+    Dns::ServiceDiscovery::Server::Counters newServerCounters;
+    uint16_t                                heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestDnsClient");
@@ -882,6 +884,8 @@ void TestDnsClient(void)
     queryConfig.Clear();
     queryConfig.mServiceMode = static_cast<otDnsServiceMode>(Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize);
 
+    oldServerCounters = dnsServer->GetCounters();
+
     sResolveServiceInfo.Reset();
     SuccessOrQuit(dnsClient->ResolveServiceAndHostAddress(kInstance1Label, kService1FullName, ServiceCallback,
                                                           sInstance, &queryConfig));
@@ -906,6 +910,55 @@ void TestDnsClient(void)
     {
         VerifyOrQuit(addresses.Contains(sResolveServiceInfo.mHostAddresses[index]));
     }
+
+    newServerCounters = dnsServer->GetCounters();
+
+    Log("Validate (using server counter) that client first tried to query SRV/TXT together and failed");
+    Log("and then send separate queries (for SRV, TXT and AAAA)");
+    Log("  Total : %2u -> %2u", oldServerCounters.GetTotalQueries(), newServerCounters.GetTotalQueries());
+    Log("  Failed: %2u -> %2u", oldServerCounters.GetTotalFailedQueries(), newServerCounters.GetTotalFailedQueries());
+
+    VerifyOrQuit(newServerCounters.GetTotalFailedQueries() == 1 + oldServerCounters.GetTotalFailedQueries());
+    VerifyOrQuit(newServerCounters.GetTotalQueries() == 4 + oldServerCounters.GetTotalQueries());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Resolve service again now using `kServiceModeSrvTxtOptimize` as default config");
+    Log("Client should already know that server is not capable of handling multi-question query");
+
+    queryConfig.Clear();
+    queryConfig.mServiceMode = static_cast<otDnsServiceMode>(Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize);
+
+    dnsClient->SetDefaultConfig(queryConfig);
+
+    Log("ResolveService(%s,%s)", kInstance1Label, kService1FullName);
+
+    oldServerCounters = dnsServer->GetCounters();
+
+    sResolveServiceInfo.Reset();
+    SuccessOrQuit(dnsClient->ResolveService(kInstance1Label, kService1FullName, ServiceCallback, sInstance, nullptr));
+
+    AdvanceTime(100);
+
+    VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 1);
+    SuccessOrQuit(sResolveServiceInfo.mError);
+
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTtl != 0);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mPort == service1.mPort);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mWeight == service1.mWeight);
+    VerifyOrQuit(strcmp(sResolveServiceInfo.mInfo.mHostNameBuffer, kHostFullName) == 0);
+
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataTtl != 0);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataSize != 0);
+
+    newServerCounters = dnsServer->GetCounters();
+
+    Log("Client should already know that server is not capable of handling multi-question query");
+    Log("Check server counters to validate that client did send separate queries for TXT and SRV");
+    Log("  Total : %2u -> %2u", oldServerCounters.GetTotalQueries(), newServerCounters.GetTotalQueries());
+    Log("  Failed: %2u -> %2u", oldServerCounters.GetTotalFailedQueries(), newServerCounters.GetTotalFailedQueries());
+
+    VerifyOrQuit(newServerCounters.GetTotalFailedQueries() == oldServerCounters.GetTotalFailedQueries());
+    VerifyOrQuit(newServerCounters.GetTotalQueries() == 2 + oldServerCounters.GetTotalQueries());
 
     dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeDisabled);
 
