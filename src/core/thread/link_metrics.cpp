@@ -146,7 +146,14 @@ void Initiator::HandleReport(const Message &aMessage, uint16_t aOffset, uint16_t
     {
         SuccessOrExit(error = aMessage.Read(offset, tlv));
 
-        VerifyOrExit(offset + sizeof(Tlv) + tlv.GetLength() <= endOffset, error = kErrorParse);
+        if (tlv.IsExtended())
+        {
+            SuccessOrExit(error = Tlv::ParseAndSkipTlv(aMessage, offset));
+            VerifyOrExit(offset <= endOffset, error = kErrorParse);
+            continue;
+        }
+
+        VerifyOrExit(tlv.GetSize() + offset <= endOffset, error = kErrorParse);
 
         // The report must contain either:
         // - One or more Report Sub-TLVs (in case of success), or
@@ -320,6 +327,15 @@ Error Initiator::HandleManagementResponse(const Message &aMessage, const Ip6::Ad
 
         SuccessOrExit(error = aMessage.Read(offset, tlv));
 
+        if (tlv.IsExtended())
+        {
+            SuccessOrExit(error = Tlv::ParseAndSkipTlv(aMessage, offset));
+            VerifyOrExit(offset <= endOffset, error = kErrorParse);
+            continue;
+        }
+
+        VerifyOrExit(tlv.GetSize() + offset <= endOffset, error = kErrorParse);
+
         switch (tlv.GetType())
         {
         case StatusSubTlv::kType:
@@ -439,6 +455,15 @@ Error Subject::AppendReport(Message &aMessage, const Message &aRequestMessage, N
     while (offset < endOffset)
     {
         SuccessOrExit(error = aRequestMessage.Read(offset, tlv));
+
+        if (tlv.IsExtended())
+        {
+            SuccessOrExit(error = Tlv::ParseAndSkipTlv(aMessage, offset));
+            VerifyOrExit(offset <= endOffset, error = kErrorParse);
+            continue;
+        }
+
+        VerifyOrExit(tlv.GetSize() + offset <= endOffset, error = kErrorParse);
 
         switch (tlv.GetType())
         {

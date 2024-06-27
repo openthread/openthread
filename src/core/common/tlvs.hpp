@@ -245,6 +245,21 @@ public:
     // Static methods for reading/finding/appending TLVs in a `Message`.
 
     /**
+     * Parses a TLV in a message at a given offset, validating that it is fully contained within the message and then
+     * updating the offset to skip over the entire parsed TLV.
+     *
+     * Can be used independent of whether the read TLV (from the message) is an Extended TLV or not.
+     *
+     * @param[in]       aMessage    The message to read from.
+     * @param[in,out]   aOffset     The offset to read from. On success, it is updated to point after the parsed TLV.
+     *
+     * @retval kErrorNone    Successfully parsed a TLV from @p aMessage. @p aOffset is updated.
+     * @retval kErrorParse   The TLV was not well-formed or was not fully contained in @p aMessage.
+     *
+     */
+    static Error ParseAndSkipTlv(const Message &aMessage, uint16_t &aOffset);
+
+    /**
      * Reads a TLV's value in a message at a given offset expecting a minimum length for the value.
      *
      * Can be used independent of whether the read TLV (from the message) is an Extended TLV or not.
