@@ -320,7 +320,7 @@ bool ChildTable::HasMinimalChild(uint16_t aRloc16) const
     bool         hasMinimalChild = false;
     const Child *child;
 
-    VerifyOrExit(Mle::RouterIdMatch(aRloc16, Get<Mle::Mle>().GetRloc16()));
+    VerifyOrExit(Get<Mle::Mle>().HasMatchingRouterIdWith(aRloc16));
 
     child = FindChild(Child::AddressMatcher(aRloc16, Child::kInStateValidOrRestoring));
     VerifyOrExit(child != nullptr);

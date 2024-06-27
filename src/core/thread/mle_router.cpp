@@ -2786,7 +2786,7 @@ Error MleRouter::SendChildIdResponse(Child &aChild)
     SuccessOrExit(error = message->AppendLeaderDataTlv());
     SuccessOrExit(error = message->AppendActiveAndPendingTimestampTlvs());
 
-    if ((aChild.GetRloc16() == 0) || !RouterIdMatch(aChild.GetRloc16(), GetRloc16()))
+    if ((aChild.GetRloc16() == 0) || !HasMatchingRouterIdWith(aChild.GetRloc16()))
     {
         uint16_t rloc16;
 

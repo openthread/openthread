@@ -432,7 +432,7 @@ void Mle::Restore(void)
         mParent.SetVersion(parentInfo.GetVersion());
         mParent.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                          DeviceMode::kModeFullNetworkData));
-        mParent.SetRloc16(Rloc16FromRouterId(RouterIdFromRloc16(networkInfo.GetRloc16())));
+        mParent.SetRloc16(ParentRloc16ForRloc16(networkInfo.GetRloc16()));
         mParent.SetState(Neighbor::kStateRestored);
 
         mPreviousParentRloc = mParent.GetRloc16();
@@ -3558,7 +3558,7 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
     case kRoleChild:
         SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
-        if (!RouterIdMatch(sourceAddress, GetRloc16()))
+        if (!HasMatchingRouterIdWith(sourceAddress))
         {
             IgnoreError(BecomeDetached());
             ExitNow();

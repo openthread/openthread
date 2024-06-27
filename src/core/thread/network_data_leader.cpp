@@ -324,7 +324,7 @@ int Leader::CompareRouteEntries(int8_t   aFirstPreference,
     // On MTD, prefer the BR that is this device itself. This handles
     // the uncommon case where an MTD itself may be acting as BR.
 
-    result = ThreeWayCompare((aFirstRloc == Get<Mle::Mle>().GetRloc16()), (aSecondRloc == Get<Mle::Mle>().GetRloc16()));
+    result = ThreeWayCompare((Get<Mle::Mle>().HasRloc16(aFirstRloc)), Get<Mle::Mle>().HasRloc16(aSecondRloc));
 #endif
 
 #if OPENTHREAD_FTD

@@ -682,6 +682,18 @@ inline uint16_t CommissionerAloc16FromId(uint16_t aSessionId)
 inline uint16_t Rloc16FromRouterId(uint8_t aRouterId) { return static_cast<uint16_t>(aRouterId << kRouterIdOffset); }
 
 /**
+ * Derives the router RLOC16 corresponding to the parent of a given (child) RLOC16.
+ *
+ * If @p aRloc16 itself refers to a router, then the same RLOC16 value is returned.
+ *
+ * @param[in] aRloc16   An RLOC16.
+ *
+ * @returns The router RLOC16 corresponding to the parent associated with @p aRloc16.
+ *
+ */
+inline uint16_t ParentRloc16ForRloc16(uint16_t aRloc16) { return Rloc16FromRouterId(RouterIdFromRloc16(aRloc16)); }
+
+/**
  * Indicates whether or not @p aRloc16 refers to a router.
  *
  * @param[in]  aRloc16  The RLOC16 value.

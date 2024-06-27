@@ -381,12 +381,15 @@ void AddressResolver::UpdateSnoopedCacheEntry(const Ip6::Address &aEid, uint16_t
 {
     uint16_t    numNonEvictable = 0;
     CacheEntry *entry;
-    uint16_t    deviceRloc16;
 
     VerifyOrExit(Get<Mle::MleRouter>().IsFullThreadDevice());
 
 #if OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
-    VerifyOrExit(ResolveUsingNetDataServices(aEid, deviceRloc16) != kErrorNone);
+    {
+        uint16_t rloc16;
+
+        VerifyOrExit(ResolveUsingNetDataServices(aEid, rloc16) != kErrorNone);
+    }
 #endif
 
     VerifyOrExit(UpdateCacheEntry(aEid, aRloc16) != kErrorNone);
@@ -394,13 +397,12 @@ void AddressResolver::UpdateSnoopedCacheEntry(const Ip6::Address &aEid, uint16_t
     // Skip if the `aRloc16` (i.e., the source of the snooped message)
     // is this device or an MTD (minimal) child of the device itself.
 
-    deviceRloc16 = Get<Mle::Mle>().GetRloc16();
-    VerifyOrExit((aRloc16 != deviceRloc16) && !Get<ChildTable>().HasMinimalChild(aRloc16));
+    VerifyOrExit(!Get<Mle::Mle>().HasRloc16(aRloc16) && !Get<ChildTable>().HasMinimalChild(aRloc16));
 
     // Ensure that the destination of the snooped message is this device
     // or a minimal child of this device.
 
-    VerifyOrExit((aDest == deviceRloc16) || Get<ChildTable>().HasMinimalChild(aDest));
+    VerifyOrExit(Get<Mle::Mle>().HasRloc16(aDest) || Get<ChildTable>().HasMinimalChild(aDest));
 
     entry = NewCacheEntry(/* aSnoopedEntry */ true);
     VerifyOrExit(entry != nullptr);
