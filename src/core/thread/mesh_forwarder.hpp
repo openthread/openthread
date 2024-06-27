@@ -411,6 +411,17 @@ private:
         kAnycastService,
     };
 
+    struct RxInfo
+    {
+        const Mac::Address &GetSrcAddr(void) const { return mMacAddrs.mSource; }
+        const Mac::Address &GetDstAddr(void) const { return mMacAddrs.mDestination; }
+        bool                IsLinkSecurityEnabled(void) const { return mLinkInfo.IsLinkSecurityEnabled(); }
+
+        FrameData      mFrameData;
+        ThreadLinkInfo mLinkInfo;
+        Mac::Addresses mMacAddrs;
+    };
+
 #if OPENTHREAD_FTD
     class FragmentPriorityList : public Clearable<FragmentPriorityList>
     {
@@ -491,20 +502,17 @@ private:
 #endif
 
     void     SendIcmpErrorIfDstUnreach(const Message &aMessage, const Mac::Addresses &aMacAddrs);
-    Error    CheckReachability(const FrameData &aFrameData, const Mac::Addresses &aMeshAddrs);
+    Error    CheckReachability(const RxInfo &aRxInfo);
     Error    CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header);
-    void     UpdateRoutes(const FrameData &aFrameData, const Mac::Addresses &aMeshAddrs);
-    Error    FrameToMessage(const FrameData      &aFrameData,
-                            uint16_t              aDatagramSize,
-                            const Mac::Addresses &aMacAddrs,
-                            Message             *&aMessage);
+    void     UpdateRoutes(const RxInfo &aRxInfo);
+    Error    FrameToMessage(const RxInfo &aRxInfo, uint16_t aDatagramSize, Message *&aMessage);
     void     GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *PrepareNextDirectTransmission(void);
-    void     HandleMesh(FrameData &aFrameData, const Mac::Address &aMacSource, const ThreadLinkInfo &aLinkInfo);
+    void     HandleMesh(RxInfo &aRxInfo);
     void     ResolveRoutingLoops(uint16_t aSourceRloc16, uint16_t aDestRloc16);
-    void     HandleFragment(FrameData &aFrameData, const Mac::Addresses &aMacAddrs, const ThreadLinkInfo &aLinkInfo);
-    void HandleLowpanHC(const FrameData &aFrameData, const Mac::Addresses &aMacAddrs, const ThreadLinkInfo &aLinkInfo);
+    void     HandleFragment(RxInfo &aRxInfo);
+    void     HandleLowpanHc(const RxInfo &aRxInfo);
 
     void     PrepareMacHeaders(Mac::TxFrame             &aFrame,
                                Mac::Frame::Type          aFrameType,
@@ -563,13 +571,11 @@ private:
     void HandleTimeTick(void);
     void ScheduleTransmissionTask(void);
 
-    Error GetFramePriority(const FrameData &aFrameData, const Mac::Addresses &aMacAddrs, Message::Priority &aPriority);
+    Error GetFramePriority(const RxInfo &aRxInfo, Message::Priority &aPriority);
     Error GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                               uint16_t                aSrcRloc16,
                               Message::Priority      &aPriority);
-    void  GetForwardFramePriority(const FrameData      &aFrameData,
-                                  const Mac::Addresses &aMeshAddrs,
-                                  Message::Priority    &aPriority);
+    void  GetForwardFramePriority(const RxInfo &aRxInfo, Message::Priority &aPriority);
 
     bool                CalcIePresent(const Message *aMessage);
     Mac::Frame::Version CalcFrameVersion(const Neighbor *aNeighbor, bool aIePresent) const;
@@ -588,12 +594,8 @@ private:
     void LogMessage(MessageAction aAction, const Message &aMessage, Error aError);
     void LogMessage(MessageAction aAction, const Message &aMessage, Error aError, const Mac::Address *aAddress);
     void LogFrame(const char *aActionText, const Mac::Frame &aFrame, Error aError);
-    void LogFragmentFrameDrop(Error                         aError,
-                              uint16_t                      aFrameLength,
-                              const Mac::Addresses         &aMacAddrs,
-                              const Lowpan::FragmentHeader &aFragmentHeader,
-                              bool                          aIsSecure);
-    void LogLowpanHcFrameDrop(Error aError, uint16_t aFrameLength, const Mac::Addresses &aMacAddrs, bool aIsSecure);
+    void LogFragmentFrameDrop(Error aError, const RxInfo &aRxInfo, const Lowpan::FragmentHeader &aFragmentHeader);
+    void LogLowpanHcFrameDrop(Error aError, const RxInfo &aRxInfo);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
     const char *MessageActionToString(MessageAction aAction, Error aError);
