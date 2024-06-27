@@ -201,7 +201,7 @@ typedef void (*otSrpClientAutoStartCallback)(const otSockAddr *aServerSockAddr, 
  *
  *  - The SRP client is started - `otSrpClientStart()` is called.
  *  - Host name is set - `otSrpClientSetHostName()` is called.
- *  - At least one host IPv6 address is set - `otSrpClientSetHostName()` is called.
+ *  - At least one host IPv6 address is set - `otSrpClientSetHostAddresses()` is called.
  *  - At least one service is added - `otSrpClientAddService()` is called.
  *
  * It does not matter in which order these functions are called. When all conditions are met, the SRP client will
