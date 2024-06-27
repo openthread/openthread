@@ -94,6 +94,11 @@ typedef struct otBorderRoutingPrefixTableIterator
 /**
  * Represents a discovered router on the infrastructure link.
  *
+ * The `mIsPeerBr` field requires `OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE`. Routing Manager
+ * determines whether the router is a peer BR (connected to the same Thread mesh network) by comparing its advertised
+ * PIO/RIO prefixes with the entries in the Thread Network Data. While this method is generally effective, it may not
+ * be 100% accurate in all scenarios, so the `mIsPeerBr` flag should be used with caution.
+ *
  */
 typedef struct otBorderRoutingRouterEntry
 {
@@ -105,6 +110,7 @@ typedef struct otBorderRoutingRouterEntry
     bool         mStubRouterFlag : 1;           ///< The router's Stub Router flag.
     bool         mIsLocalDevice : 1;            ///< This router is the local device (this BR).
     bool         mIsReachable : 1;              ///< This router is reachable.
+    bool         mIsPeerBr : 1;                 ///< This router is (likely) a peer BR.
 } otBorderRoutingRouterEntry;
 
 /**
