@@ -35,6 +35,14 @@
 #define OPENTHREAD_SPINEL_CONFIG_H_
 
 /**
+ * Include project specific lib config file if defined.
+ *
+ */
+#ifdef OPENTHREAD_PROJECT_LIB_CONFIG_FILE
+#include OPENTHREAD_PROJECT_LIB_CONFIG_FILE
+#endif
+
+/**
  * @def OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
  *
  * Define 1 to enable feeding an OpenThread message to encoder/decoder.
