@@ -927,6 +927,27 @@ void RoutingManager::OnLinkPrefix::CopyInfoTo(PrefixTableEntry &aEntry, TimeMill
     aEntry.mPreferredLifetime   = GetPreferredLifetime();
 }
 
+bool RoutingManager::OnLinkPrefix::IsFavoredOver(const Ip6::Prefix &aPrefix) const
+{
+    bool isFavored = false;
+
+    // Validate that the `OnLinkPrefix` is eligible to be considered a
+    // favored on-link prefix. It must not be deprecated and have a
+    // preferred lifetime exceeding a minimum (1800 seconds).
+
+    VerifyOrExit(!IsDeprecated());
+    VerifyOrExit(GetPreferredLifetime() >= kFavoredMinPreferredLifetime);
+
+    // Numerically smaller prefix is favored (unless `aPrefix` is empty).
+
+    VerifyOrExit(aPrefix.GetLength() != 0, isFavored = true);
+
+    isFavored = GetPrefix() < aPrefix;
+
+exit:
+    return isFavored;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // RoutePrefix
 
@@ -1874,18 +1895,10 @@ void RoutingManager::RxRaTracker::DecisionFactors::UpdateFrom(const OnLinkPrefix
         mHasNonUlaOnLink = true;
     }
 
-    // Determine favored on-link prefix
-
-    VerifyOrExit(!aOnLinkPrefix.IsDeprecated());
-    VerifyOrExit(aOnLinkPrefix.GetPreferredLifetime() >= kFavoredOnLinkPrefixMinPreferredLifetime);
-
-    if ((mFavoredOnLinkPrefix.GetLength() == 0) || (aOnLinkPrefix.GetPrefix() < mFavoredOnLinkPrefix))
+    if (aOnLinkPrefix.IsFavoredOver(mFavoredOnLinkPrefix))
     {
         mFavoredOnLinkPrefix = aOnLinkPrefix.GetPrefix();
     }
-
-exit:
-    return;
 }
 
 void RoutingManager::RxRaTracker::DecisionFactors::UpdateFrom(const RoutePrefix &aRoutePrefix)
