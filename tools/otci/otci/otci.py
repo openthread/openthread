@@ -2345,6 +2345,197 @@ class OTCI(object):
     # TODO: CoAP Secure utilities
 
     #
+    # Diag Utilities
+    #
+    def diag_start(self):
+        """Start diagnostics mode."""
+        self.execute_command('diag start')
+
+    def diag_stop(self):
+        """Stop diagnostics mode."""
+        self.execute_command('diag stop')
+
+    def diag_set_channel(self, channel: int):
+        """Set the IEEE 802.15.4 Channel value for diagnostics module."""
+        self.execute_command(f'diag channel {channel}')
+
+    def diag_get_channel(self) -> int:
+        """Get the IEEE 802.15.4 Channel value for diagnostics module."""
+        line = self.__parse_str(self.execute_command('diag channel'))
+        return int(line.split()[1])
+
+    def diag_set_power(self, power: int):
+        """Set the tx power value(dBm) for diagnostics module."""
+        self.execute_command(f'diag power {power}')
+
+    def diag_get_power(self) -> int:
+        """Get the tx power value(dBm) for diagnostics module."""
+        line = self.__parse_str(self.execute_command('diag power'))
+        if not line.endswith(' dBm'):
+            raise UnexpectedCommandOutput([line])
+
+        return int(line.split()[2])
+
+    def diag_cw_start(self):
+        """Start transmitting continuous carrier wave."""
+        self.execute_command('diag cw start')
+
+    def diag_cw_stop(self):
+        """Stop transmitting continuous carrier wave."""
+        self.execute_command('diag cw stop')
+
+    def diag_frame(self, frame: str):
+        """Set the frame (hex encoded) to be used by `diag send` and `diag repeat`."""
+        self.execute_command(f'diag frame {frame}')
+
+    def diag_stream_start(self):
+        """Start transmitting a stream of characters."""
+        self.execute_command('diag stream start')
+
+    def diag_stream_stop(self):
+        """Stop transmitting a stream of characters."""
+        self.execute_command('diag stream stop')
+
+    def diag_send(self, packets: int, length: int):
+        """Transmit a fixed number of packets."""
+        self.execute_command(f'diag send {packets} {length}')
+
+    def diag_repeat(self, delay: int, length: int):
+        """Transmit packets repeatedly with a fixed interval."""
+        self.execute_command(f'diag repeat {delay} {length}')
+
+    def diag_repeat_stop(self):
+        """Stop repeated packet transmission."""
+        self.execute_command('diag repeat stop')
+
+    def diag_radio_sleep(self):
+        """Enter radio sleep mode."""
+        self.execute_command('diag radio sleep')
+
+    def diag_radio_receive(self):
+        """Set radio to receive mode."""
+        self.execute_command('diag radio receive')
+
+    def diag_get_radio_state(self) -> str:
+        """Get the state of the radio."""
+        return self.__parse_str(self.execute_command('diag radio state'))
+
+    def diag_get_stats(self) -> Dict[str, int]:
+        """Get statistics during diagnostics mode."""
+        output = self.execute_command('diag stats')
+        if len(output) < 4:
+            raise UnexpectedCommandOutput(output)
+
+        result = {}
+
+        result['received_packets'] = int(output[0].split(":")[1])
+        result['sent_packets'] = int(output[1].split(":")[1])
+
+        values = re.findall("\-?\d+", output[2])
+        result['first_received_packet_rssi'] = int(values[0])
+        result['first_received_packet_lqi'] = int(values[1])
+
+        values = re.findall("\-?\d+", output[3])
+        result['last_received_packet_rssi'] = int(values[0])
+        result['last_received_packet_lqi'] = int(values[1])
+
+        return result
+
+    def diag_stats_clear(self):
+        """Clear statistics during diagnostics mode."""
+        self.execute_command('diag stats clear')
+
+    def diag_set_gpio_value(self, gpio: int, value: int):
+        """Set the gpio value."""
+        self.execute_command(f'diag gpio set {gpio} {value}')
+
+    def diag_get_gpio_value(self, gpio: int) -> int:
+        """Get the gpio value."""
+        return int(self.__parse_str(self.execute_command(f'diag gpio get {gpio}')))
+
+    def diag_set_gpio_mode(self, gpio: int, mode: str):
+        """Set the gpio mode."""
+        self.execute_command(f'diag gpio mode {gpio} {mode}')
+
+    def diag_get_gpio_mode(self, gpio: int) -> str:
+        """Get the gpio mode."""
+        return self.__parse_str(self.execute_command(f'diag gpio mode {gpio}'))
+
+    def diag_echo(self, message: str) -> str:
+        """RCP echoes the given message."""
+        return self.__parse_str(self.execute_command(f'diag echo {message}'))
+
+    def diag_echo_number(self, number: int) -> str:
+        """RCP echoes the given message."""
+        return self.__parse_str(self.execute_command(f'diag echo -n {number}'))
+
+    def diag_get_powersettings(self) -> List[Dict[str, Any]]:
+        """Get the currently used power settings table."""
+        result = []
+        output = self.execute_command(f'diag powersettings')
+
+        if len(output) < 3:
+            raise UnexpectedCommandOutput(output)
+
+        if not output[-1].startswith('Done'):
+            raise UnexpectedCommandOutput(output)
+
+        for line in output[2:-1]:
+            data = line.split('|')
+
+            result.append({
+                'channel_start': int(data[1]),
+                'channel_end': int(data[2]),
+                'target_power': int(data[3]),
+                'actual_power': int(data[4]),
+                'raw_power_setting': self.__hex_to_bytes(data[5].lstrip().rstrip()),
+            })
+
+        return result
+
+    def diag_get_channel_powersettings(self, channel: int) -> Dict[str, Any]:
+        """Gets the currently used power settings for the given channel."""
+        result = {}
+        output = self.execute_command(f'diag powersettings {channel}')
+
+        if len(output) != 4:
+            raise UnexpectedCommandOutput(output)
+
+        if not output[-1].startswith('Done'):
+            raise UnexpectedCommandOutput(output)
+
+        result['target_power'] = int(output[0].split(':')[1])
+        result['actual_power'] = int(output[1].split(':')[1])
+        result['raw_power_setting'] = self.__hex_to_bytes(output[2].split(':')[1].lstrip().rstrip())
+
+        return result
+
+    def diag_get_rawpowersetting(self) -> str:
+        """Get the raw power setting."""
+        return self.__parse_str(self.execute_command('diag rawpowersetting'))
+
+    def diag_set_rawpowersetting(self, rawpowersetting: str):
+        """Set the raw power setting."""
+        self.execute_command(f'diag rawpowersetting {rawpowersetting}')
+
+    def diag_enable_rawpowersetting(self):
+        """Enable the raw power setting."""
+        self.execute_command('diag rawpowersetting enable')
+
+    def diag_disable_rawpowersetting(self):
+        """Disable the raw power setting."""
+        self.execute_command('diag rawpowersetting disable')
+
+    def is_command_supported(self, command: str) -> bool:
+        """Check whether the the given command is supported by the device."""
+        output = self.__otcmd.execute_command(command, timeout=10)
+
+        if re.match("Error \d+: \w*", output[-1]):
+            return False
+
+        return True
+
+    #
     # Other TODOs
     #
     # TODO: netstat
