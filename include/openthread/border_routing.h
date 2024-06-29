@@ -85,6 +85,7 @@ typedef struct otBorderRoutingPrefixTableIterator
 {
     const void *mPtr1;
     const void *mPtr2;
+    uint32_t    mData0;
     uint32_t    mData1;
     uint8_t     mData2;
     uint8_t     mData3;
@@ -98,6 +99,7 @@ typedef struct otBorderRoutingRouterEntry
 {
     otIp6Address mAddress;                      ///< IPv6 address of the router.
     uint32_t     mMsecSinceLastUpdate;          ///< Milliseconds since last update (any message rx) from this router.
+    uint32_t     mAge;                          ///< The router's age in seconds (duration since its first discovery).
     bool         mManagedAddressConfigFlag : 1; ///< The router's Managed Address Config flag (`M` flag).
     bool         mOtherConfigFlag : 1;          ///< The router's Other Config flag (`O` flag).
     bool         mStubRouterFlag : 1;           ///< The router's Stub Router flag.

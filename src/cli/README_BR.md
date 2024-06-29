@@ -353,10 +353,11 @@ Info per router:
   - Stub: Stub Router flag (indicates whether the router is a stub router)
 - Milliseconds since last received message from this router
 - Reachability flag: A router is marked as unreachable if it fails to respond to multiple Neighbor Solicitation probes.
+- Age: Duration interval since this router was first discovered. It is formatted as `{hh}:{mm}:{ss}` for hours, minutes, seconds, if the duration is less than 24 hours. If the duration is 24 hours or more, the format is `{dd}d.{hh}:{mm}:{ss}` for days, hours, minutes, seconds.
 - `(this BR)` is appended when the router is the local device itself.
 
 ```bash
 > br routers
-ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1) ms-since-rx:1505 reachable:yes
+ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1) ms-since-rx:1505 reachable:yes age:00:18:13
 Done
 ```

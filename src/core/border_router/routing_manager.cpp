@@ -1032,7 +1032,8 @@ void RoutingManager::RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert:
 
         router = newEntry;
         router->Clear();
-        router->mAddress = aSrcAddress;
+        router->mDiscoverTime = Uptime::MsecToSec(Get<Uptime>().GetUptime());
+        router->mAddress      = aSrcAddress;
 
         mRouters.Push(*newEntry);
     }
@@ -1713,7 +1714,7 @@ void RoutingManager::RxRaTracker::SetHeaderFlagsOn(RouterAdvert::Header &aHeader
 
 void RoutingManager::RxRaTracker::InitIterator(PrefixTableIterator &aIterator) const
 {
-    static_cast<Iterator &>(aIterator).Init(mRouters.GetHead());
+    static_cast<Iterator &>(aIterator).Init(mRouters.GetHead(), Uptime::MsecToSec(Get<Uptime>().GetUptime()));
 }
 
 Error RoutingManager::RxRaTracker::GetNextEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const
@@ -1725,7 +1726,7 @@ Error RoutingManager::RxRaTracker::GetNextEntry(PrefixTableIterator &aIterator, 
 
     SuccessOrExit(error = iterator.AdvanceToNextEntry());
 
-    iterator.GetRouter()->CopyInfoTo(aEntry.mRouter, iterator.GetInitTime());
+    iterator.GetRouter()->CopyInfoTo(aEntry.mRouter, iterator.GetInitTime(), iterator.GetInitUptime());
 
     switch (iterator.GetEntryType())
     {
@@ -1749,7 +1750,7 @@ Error RoutingManager::RxRaTracker::GetNextRouter(PrefixTableIterator &aIterator,
     ClearAllBytes(aEntry);
 
     SuccessOrExit(error = iterator.AdvanceToNextRouter(Iterator::kRouterIterator));
-    iterator.GetRouter()->CopyInfoTo(aEntry, iterator.GetInitTime());
+    iterator.GetRouter()->CopyInfoTo(aEntry, iterator.GetInitTime(), iterator.GetInitUptime());
 
 exit:
     return error;
@@ -1758,8 +1759,9 @@ exit:
 //---------------------------------------------------------------------------------------------------------------------
 // RxRaTracker::Iterator
 
-void RoutingManager::RxRaTracker::Iterator::Init(const Entry<Router> *aRoutersHead)
+void RoutingManager::RxRaTracker::Iterator::Init(const Entry<Router> *aRoutersHead, uint32_t aUptime)
 {
+    SetInitUptime(aUptime);
     SetInitTime();
     SetType(kUnspecified);
     SetRouter(aRoutersHead);
@@ -1914,10 +1916,11 @@ bool RoutingManager::RxRaTracker::Router::Matches(const EmptyChecker &aChecker)
     return !hasFlags && mOnLinkPrefixes.IsEmpty() && mRoutePrefixes.IsEmpty();
 }
 
-void RoutingManager::RxRaTracker::Router::CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow) const
+void RoutingManager::RxRaTracker::Router::CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow, uint32_t aUptime) const
 {
     aEntry.mAddress                  = mAddress;
     aEntry.mMsecSinceLastUpdate      = aNow - mLastUpdateTime;
+    aEntry.mAge                      = aUptime - mDiscoverTime;
     aEntry.mManagedAddressConfigFlag = mManagedAddressConfigFlag;
     aEntry.mOtherConfigFlag          = mOtherConfigFlag;
     aEntry.mStubRouterFlag           = mStubRouterFlag;
