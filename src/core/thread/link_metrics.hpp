@@ -341,7 +341,7 @@ private:
     static constexpr uint16_t kMaxSeriesSupported = OPENTHREAD_CONFIG_MLE_LINK_METRICS_SERIES_MTD;
 #endif
 
-    static Error ReadTypeIdsFromMessage(const Message &aMessage, OffsetRange &aOffsetRange, Metrics &aMetrics);
+    static Error ReadTypeIdsFromMessage(const Message &aMessage, const OffsetRange &aOffsetRange, Metrics &aMetrics);
     static Error AppendReportSubTlvToMessage(Message &aMessage, const MetricsValues &aValues);
 
     Status ConfigureForwardTrackingSeries(uint8_t        aSeriesId,
