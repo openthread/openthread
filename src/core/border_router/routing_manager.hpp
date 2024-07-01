@@ -702,8 +702,11 @@ private:
         TimeMilli GetStaleTime(void) const;
         void      AdoptValidAndPreferredLifetimesFrom(const OnLinkPrefix &aPrefix);
         void      CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli aNow) const;
+        bool      IsFavoredOver(const Ip6::Prefix &aPrefix) const;
 
     private:
+        static constexpr uint32_t kFavoredMinPreferredLifetime = 1800; // In sec.
+
         uint32_t mPreferredLifetime;
     };
 
@@ -782,8 +785,6 @@ private:
         void HandleRouterTimer(void);
 
     private:
-        static constexpr uint32_t kFavoredOnLinkPrefixMinPreferredLifetime = 1800; // In sec.
-
         //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
         template <class Type>
