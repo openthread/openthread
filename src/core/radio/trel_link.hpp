@@ -191,6 +191,11 @@ private:
     Interface    mInterface;
     Mac::RxFrame mRxFrame;
     Mac::TxFrame mTxFrame;
+
+    #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    otRadioIeInfo mTxIeInfo;
+    #endif
+
     uint8_t      mTxPacketBuffer[kMaxHeaderSize + kMtuSize];
     uint8_t      mAckPacketBuffer[kMaxHeaderSize];
     uint8_t      mAckFrameBuffer[k154AckFrameSize];
