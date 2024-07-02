@@ -352,6 +352,7 @@ private:
 
     Error HandleSingleTlv(const Message &aIncommingMessage, Message &aOutgoingMessage);
     Error HandleSetActiveOperationalDataset(const Message &aIncommingMessage, uint16_t aOffset, uint16_t aLength);
+    Error HandleDecomission(void);
     Error HandleStartThreadInterface(void);
 
     bool         CheckCommandClassAuthorizationFlags(CommandClassFlags aCommissionerCommandClassFlags,

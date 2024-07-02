@@ -125,7 +125,8 @@ async def get_device_by_args(args):
     elif args.scan:
         tcat_devices = await ble_scanner.scan_tcat_devices()
         device = select_device_by_user_input(tcat_devices)
-        device = await BleStream.create(device.address, BBTC_SERVICE_UUID, BBTC_TX_CHAR_UUID, BBTC_RX_CHAR_UUID)
+        if device:
+            device = await BleStream.create(device.address, BBTC_SERVICE_UUID, BBTC_TX_CHAR_UUID, BBTC_RX_CHAR_UUID)
     elif args.simulation:
         device = UdpStream("127.0.0.1", int(args.simulation))
 
