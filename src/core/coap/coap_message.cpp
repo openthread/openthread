@@ -275,6 +275,24 @@ exit:
     return error;
 }
 
+Error Message::AppendUriQueryOptions(const char *aUriQuery)
+{
+    Error       error = kErrorNone;
+    const char *cur   = aUriQuery;
+    const char *end;
+
+    while ((end = StringFind(cur, '&')) != nullptr)
+    {
+        SuccessOrExit(error = AppendOption(kOptionUriQuery, static_cast<uint16_t>(end - cur), cur));
+        cur = end + 1;
+    }
+
+    SuccessOrExit(error = AppendStringOption(kOptionUriQuery, cur));
+
+exit:
+    return error;
+}
+
 Error Message::AppendBlockOption(Message::BlockType aType, uint32_t aNum, bool aMore, otCoapBlockSzx aSize)
 {
     Error    error   = kErrorNone;

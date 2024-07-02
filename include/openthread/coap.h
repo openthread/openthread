@@ -609,6 +609,19 @@ otError otCoapMessageAppendObserveOption(otMessage *aMessage, uint32_t aObserve)
 otError otCoapMessageAppendUriPathOptions(otMessage *aMessage, const char *aUriPath);
 
 /**
+ * Appends a Uri-Query option.
+ *
+ * @param[in,out]  aMessage   A pointer to the CoAP message.
+ * @param[in]      aUriQuery  A pointer to a NULL-terminated string.
+ *
+ * @retval OT_ERROR_NONE          Successfully appended the option.
+ * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+ * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+ *
+ */
+otError otCoapMessageAppendUriQueryOptions(otMessage *aMessage, const char *aUriQuery);
+
+/**
  * Converts a CoAP Block option SZX field to the actual block size
  *
  * @param[in]     aSize     Block size exponent.
