@@ -641,12 +641,11 @@ exit:
     return;
 }
 
-Error MeshForwarder::CheckReachability(const RxInfo &aRxInfo)
+Error MeshForwarder::CheckReachability(RxInfo &aRxInfo)
 {
-    Error        error;
-    Ip6::Headers ip6Headers;
+    Error error;
 
-    error = ip6Headers.DecompressFrom(aRxInfo.mFrameData, aRxInfo.mMacAddrs, GetInstance());
+    error = aRxInfo.ParseIp6Headers();
 
     switch (error)
     {
@@ -660,11 +659,11 @@ Error MeshForwarder::CheckReachability(const RxInfo &aRxInfo)
         ExitNow();
     }
 
-    error = CheckReachability(aRxInfo.GetDstAddr().GetShort(), ip6Headers.GetIp6Header());
+    error = CheckReachability(aRxInfo.GetDstAddr().GetShort(), aRxInfo.mIp6Headers.GetIp6Header());
 
     if (error == kErrorNoRoute)
     {
-        SendDestinationUnreachable(aRxInfo.GetSrcAddr().GetShort(), ip6Headers);
+        SendDestinationUnreachable(aRxInfo.GetSrcAddr().GetShort(), aRxInfo.mIp6Headers);
     }
 
 exit:
@@ -819,27 +818,26 @@ exit:
     return;
 }
 
-void MeshForwarder::UpdateRoutes(const RxInfo &aRxInfo)
+void MeshForwarder::UpdateRoutes(RxInfo &aRxInfo)
 {
-    Ip6::Headers ip6Headers;
-    Neighbor    *neighbor;
+    Neighbor *neighbor;
 
     VerifyOrExit(!aRxInfo.GetDstAddr().IsBroadcast() && aRxInfo.GetSrcAddr().IsShort());
 
-    SuccessOrExit(ip6Headers.DecompressFrom(aRxInfo.mFrameData, aRxInfo.mMacAddrs, GetInstance()));
+    SuccessOrExit(aRxInfo.ParseIp6Headers());
 
-    if (!ip6Headers.GetSourceAddress().GetIid().IsLocator() &&
-        Get<NetworkData::Leader>().IsOnMesh(ip6Headers.GetSourceAddress()))
+    if (!aRxInfo.mIp6Headers.GetSourceAddress().GetIid().IsLocator() &&
+        Get<NetworkData::Leader>().IsOnMesh(aRxInfo.mIp6Headers.GetSourceAddress()))
     {
         // FTDs MAY add/update EID-to-RLOC Map Cache entries by
         // inspecting packets being received only for on mesh
         // addresses.
 
-        Get<AddressResolver>().UpdateSnoopedCacheEntry(ip6Headers.GetSourceAddress(), aRxInfo.GetSrcAddr().GetShort(),
-                                                       aRxInfo.GetDstAddr().GetShort());
+        Get<AddressResolver>().UpdateSnoopedCacheEntry(
+            aRxInfo.mIp6Headers.GetSourceAddress(), aRxInfo.GetSrcAddr().GetShort(), aRxInfo.GetDstAddr().GetShort());
     }
 
-    neighbor = Get<NeighborTable>().FindNeighbor(ip6Headers.GetSourceAddress());
+    neighbor = Get<NeighborTable>().FindNeighbor(aRxInfo.mIp6Headers.GetSourceAddress());
     VerifyOrExit(neighbor != nullptr && !neighbor->IsFullThreadDevice());
 
     if (!Get<Mle::Mle>().HasMatchingRouterIdWith(aRxInfo.GetSrcAddr().GetShort()))
