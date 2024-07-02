@@ -413,9 +413,14 @@ private:
 
     struct RxInfo
     {
+        static constexpr uint16_t kInfoStringSize = 70;
+
+        typedef String<kInfoStringSize> InfoString;
+
         const Mac::Address &GetSrcAddr(void) const { return mMacAddrs.mSource; }
         const Mac::Address &GetDstAddr(void) const { return mMacAddrs.mDestination; }
         bool                IsLinkSecurityEnabled(void) const { return mLinkInfo.IsLinkSecurityEnabled(); }
+        InfoString          ToString(void) const;
 
         FrameData      mFrameData;
         ThreadLinkInfo mLinkInfo;
