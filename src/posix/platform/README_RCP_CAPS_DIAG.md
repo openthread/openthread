@@ -8,6 +8,7 @@ This module provides diag commands for checking RCP capabilities.
 
 - [capflags](#capflags)
 - [spinel](#spinel)
+- [spinelspeed](#spinelspeed)
 - [srcmatchtable](#srcmatchtable)
 
 ## Command Details
@@ -111,6 +112,16 @@ PROP_VALUE_SET PHY_FEM_LNA_GAIN --------------------------- OK
 PROP_VALUE_SET PHY_REGION_CODE ---------------------------- OK
 PROP_VALUE_SET PHY_TX_POWER ------------------------------- OK
 PROP_VALUE_SET RADIO_COEX_ENABLE -------------------------- OK
+Done
+```
+
+### spinelspeed
+
+Check the speed of Spinel interface.
+
+```bash
+> diag rcpcaps spinelspeed
+SpinelSpeed ----------------------------------------------- 34414843 bps
 Done
 ```
 

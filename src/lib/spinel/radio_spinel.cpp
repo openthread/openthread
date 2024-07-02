@@ -1771,6 +1771,12 @@ void RadioSpinel::SetDiagOutputCallback(otPlatDiagOutputCallback aCallback, void
     mOutputContext  = aContext;
 }
 
+void RadioSpinel::GetDiagOutputCallback(otPlatDiagOutputCallback &aCallback, void *&aContext)
+{
+    aCallback = mOutputCallback;
+    aContext  = mOutputContext;
+}
+
 otError RadioSpinel::PlatDiagProcess(const char *aString)
 {
     return Set(SPINEL_PROP_NEST_STREAM_MFG, SPINEL_DATATYPE_UTF8_S, aString);
