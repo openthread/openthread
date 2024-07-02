@@ -72,6 +72,23 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+ *
+ * Define to 1 to allow the Routing Manager to track information (e.g., advertised prefixes) about peer Thread
+ * Border Routers that are connected to the same Thread network.
+ *
+ * When enabled, the Routing Manager will maintain a record of advertised RIO/PIO prefixes discovered from received
+ * Router Advertisements of peer BRs. These entries are disregarded in decision-making (e.g., selecting favored
+ * on-link prefix or determining which route to publish in the Thread Network Data).
+ *
+ * It is recommended to enable this feature alongside `OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE`.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS
  *
  * Specifies maximum number of routers (on infra link) to track by routing manager.
