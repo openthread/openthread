@@ -2396,13 +2396,21 @@ class OTCI(object):
         """Stop transmitting a stream of characters."""
         self.execute_command('diag stream stop')
 
-    def diag_send(self, packets: int, length: int):
+    def diag_send(self, packets: int, length: Optional[int] = None):
         """Transmit a fixed number of packets."""
-        self.execute_command(f'diag send {packets} {length}')
+        if length is None:
+            command = f'diag send {packets}'
+        else:
+            command = f'diag send {packets} {length}'
+        self.execute_command(command)
 
-    def diag_repeat(self, delay: int, length: int):
+    def diag_repeat(self, delay: int, length: Optional[int] = None):
         """Transmit packets repeatedly with a fixed interval."""
-        self.execute_command(f'diag repeat {delay} {length}')
+        if length is None:
+            command = f'diag repeat {delay}'
+        else:
+            command = f'diag repeat {delay} {length}'
+        self.execute_command(command)
 
     def diag_repeat_stop(self):
         """Stop repeated packet transmission."""
