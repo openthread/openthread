@@ -103,6 +103,7 @@ void TestIphcVector::GetUncompressedStream(Message &aMessage)
 static void Init(void)
 {
     otMeshLocalPrefix meshLocalPrefix = {{0xfd, 0x00, 0xca, 0xfe, 0xfa, 0xce, 0x12, 0x34}};
+    OffsetRange       offsetRange;
 
     sInstance->Get<Mle::MleRouter>().SetMeshLocalPrefix(static_cast<Ip6::NetworkPrefix &>(meshLocalPrefix));
 
@@ -127,8 +128,10 @@ static void Init(void)
 
     SuccessOrQuit(message->AppendBytes(mockNetworkData, sizeof(mockNetworkData)));
 
+    offsetRange.Init(2, 0x20);
+
     IgnoreError(
-        sInstance->Get<NetworkData::Leader>().SetNetworkData(0, 0, NetworkData::kStableSubset, *message, 2, 0x20));
+        sInstance->Get<NetworkData::Leader>().SetNetworkData(0, 0, NetworkData::kStableSubset, *message, offsetRange));
 }
 
 /**

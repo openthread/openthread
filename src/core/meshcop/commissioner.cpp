@@ -902,8 +902,7 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
     Ip6::InterfaceIdentifier joinerIid;
     uint16_t                 joinerRloc;
     Ip6::MessageInfo         joinerMessageInfo;
-    uint16_t                 startOffset;
-    uint16_t                 endOffset;
+    OffsetRange              offsetRange;
 
     VerifyOrExit(mState == kStateActive, error = kErrorInvalidState);
 
@@ -913,8 +912,7 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
     SuccessOrExit(error = Tlv::Find<JoinerIidTlv>(aMessage, joinerIid));
     SuccessOrExit(error = Tlv::Find<JoinerRouterLocatorTlv>(aMessage, joinerRloc));
 
-    SuccessOrExit(
-        error = Tlv::FindTlvValueStartEndOffsets(aMessage, Tlv::kJoinerDtlsEncapsulation, startOffset, endOffset));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kJoinerDtlsEncapsulation, offsetRange));
 
     if (!Get<Tmf::SecureAgent>().IsConnectionActive())
     {
@@ -951,8 +949,8 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
 
     LogInfo("Received %s (%s, 0x%04x)", UriToString<kUriRelayRx>(), mJoinerIid.ToString().AsCString(), mJoinerRloc);
 
-    aMessage.SetOffset(startOffset);
-    SuccessOrExit(error = aMessage.SetLength(endOffset));
+    aMessage.SetOffset(offsetRange.GetOffset());
+    SuccessOrExit(error = aMessage.SetLength(offsetRange.GetEndOffset()));
 
     joinerMessageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocalEid());
     joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);

@@ -412,6 +412,11 @@ exit:
     return error;
 }
 
+Error Message::AppendBytesFromMessage(const Message &aMessage, const OffsetRange &aOffsetRange)
+{
+    return AppendBytesFromMessage(aMessage, aOffsetRange.GetOffset(), aOffsetRange.GetLength());
+}
+
 Error Message::AppendBytesFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
     Error    error       = kErrorNone;
@@ -649,9 +654,25 @@ uint16_t Message::ReadBytes(uint16_t aOffset, void *aBuf, uint16_t aLength) cons
     return static_cast<uint16_t>(bufPtr - reinterpret_cast<uint8_t *>(aBuf));
 }
 
+uint16_t Message::ReadBytes(const OffsetRange &aOffsetRange, void *aBuf) const
+{
+    return ReadBytes(aOffsetRange.GetOffset(), aBuf, aOffsetRange.GetLength());
+}
+
 Error Message::Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const
 {
     return (ReadBytes(aOffset, aBuf, aLength) == aLength) ? kErrorNone : kErrorParse;
+}
+
+Error Message::Read(const OffsetRange &aOffsetRange, void *aBuf, uint16_t aLength) const
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aOffsetRange.Contains(aLength), error = kErrorParse);
+    VerifyOrExit(ReadBytes(aOffsetRange.GetOffset(), aBuf, aLength) == aLength, error = kErrorParse);
+
+exit:
+    return error;
 }
 
 bool Message::CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength, ByteMatcher aMatcher) const

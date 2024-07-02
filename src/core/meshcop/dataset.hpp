@@ -633,16 +633,15 @@ public:
     /**
      * Sets the Dataset by reading the TLVs bytes from given message.
      *
-     * @param[in]  aMessage  The message to read from.
-     * @param[in]  aOffset   The offset in @p aMessage to start reading the Dataset TLVs.
-     * @param[in]  aLength   The dataset length in bytes.
+     * @param[in] aMessage       The message to read from.
+     * @param[in] aOffsetRange   The offset range in @p aMessage to read the Dataset TLVs.
      *
      * @retval kErrorNone    Successfully set the Dataset.
-     * @retval kInvalidArgs  The @p aLength is longer than `kMaxLength`.
+     * @retval kInvalidArgs  The given offset range length is longer than `kMaxLength`.
      * @retval kErrorParse   Could not read or parse the dataset from @p aMessage.
      *
      */
-    Error SetFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
+    Error SetFrom(const Message &aMessage, const OffsetRange &aOffsetRange);
 
     /**
      * Returns a pointer to the start of Dataset TLVs sequence.

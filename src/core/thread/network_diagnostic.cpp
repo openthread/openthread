@@ -239,17 +239,17 @@ Error Server::AppendMacCounters(Message &aMessage)
 
 Error Server::AppendRequestedTlvs(const Message &aRequest, Message &aResponse)
 {
-    Error    error;
-    uint16_t offset;
-    uint16_t endOffset;
+    Error       error;
+    OffsetRange offsetRange;
 
-    SuccessOrExit(error = Tlv::FindTlvValueStartEndOffsets(aRequest, Tlv::kTypeList, offset, endOffset));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRequest, Tlv::kTypeList, offsetRange));
 
-    for (; offset < endOffset; offset++)
+    while (!offsetRange.IsEmpty())
     {
         uint8_t tlvType;
 
-        SuccessOrExit(error = aRequest.Read(offset, tlvType));
+        SuccessOrExit(error = aRequest.Read(offsetRange, tlvType));
+        offsetRange.AdvanceOffset(sizeof(tlvType));
         SuccessOrExit(error = AppendDiagTlv(tlvType, aResponse));
     }
 
@@ -536,9 +536,7 @@ void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Messa
     Coap::Message *answer;
     Error          error;
     AnswerInfo     info;
-    uint16_t       offset;
-    uint16_t       length;
-    uint16_t       endOffset;
+    OffsetRange    offsetRange;
     AnswerTlv      answerTlv;
 
     if (Tlv::Find<QueryIdTlv>(aRequest, info.mQueryId) == kErrorNone)
@@ -550,14 +548,14 @@ void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Messa
 
     SuccessOrExit(error = AllocateAnswer(answer, info));
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(aRequest, Tlv::kTypeList, offset, length));
-    endOffset = offset + length;
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRequest, Tlv::kTypeList, offsetRange));
 
-    for (; offset < endOffset; offset++)
+    while (!offsetRange.IsEmpty())
     {
         uint8_t tlvType;
 
-        SuccessOrExit(error = aRequest.Read(offset, tlvType));
+        SuccessOrExit(error = aRequest.Read(offsetRange, tlvType));
+        offsetRange.AdvanceOffset(sizeof(tlvType));
 
         switch (tlvType)
         {

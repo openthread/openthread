@@ -146,12 +146,15 @@ Error ChannelMaskTlv::FindIn(const Message &aMessage, uint32_t &aChannelMask)
 {
     Error       error;
     EntriesData entriesData;
+    OffsetRange offsetRange;
 
     entriesData.Clear();
     entriesData.mMessage = &aMessage;
 
-    SuccessOrExit(error = FindTlvValueOffset(aMessage, Tlv::kChannelMask, entriesData.mOffset, entriesData.mLength));
-    error = entriesData.Parse(aChannelMask);
+    SuccessOrExit(error = FindTlvValueOffsetRange(aMessage, Tlv::kChannelMask, offsetRange));
+    entriesData.mOffset = offsetRange.GetOffset();
+    entriesData.mLength = offsetRange.GetLength();
+    error               = entriesData.Parse(aChannelMask);
 
 exit:
     return error;

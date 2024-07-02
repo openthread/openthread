@@ -105,8 +105,7 @@ public:
         Error InitFrom(const Message &aMessage);
 
         const Message *mMessage;
-        uint16_t       mCurOffset;
-        uint16_t       mEndOffset;
+        OffsetRange    mOffsetRange;
     };
 
     /**
@@ -153,8 +152,7 @@ public:
         Error InitFrom(const Message &aMessage, uint16_t aParentRloc16);
 
         const Message *mMessage;
-        uint16_t       mCurOffset;
-        uint16_t       mEndOffset;
+        OffsetRange    mOffsetRange;
         uint16_t       mParentRloc16;
     };
 

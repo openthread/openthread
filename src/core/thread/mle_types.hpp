@@ -51,6 +51,7 @@
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
 #include "common/numeric_limits.hpp"
+#include "common/offset_range.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/extended_panid.hpp"
@@ -526,15 +527,14 @@ public:
      *
      * If the given @p aLength is longer than `kMaxSize`, only `kMaxSize` bytes will be read.
      *
-     * @param[in] aMessage   The message to read the challenge from.
-     * @param[in] aOffset    The offset in @p aMessage to read from.
-     * @param[in] aLength    Number of bytes to read.
+     * @param[in] aMessage     The message to read the challenge from.
+     * @param[in] aOffsetRange The offset range in @p aMessage to read from.
      *
      * @retval kErrorNone     Successfully read the challenge data from @p aMessage.
-     * @retval kErrorParse    Not enough bytes to read, or invalid @p aLength (smaller than `kMinSize`).
+     * @retval kErrorParse    Not enough bytes to read, or invalid length (smaller than `kMinSize`).
      *
      */
-    Error ReadFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
+    Error ReadFrom(const Message &aMessage, const OffsetRange &aOffsetRange);
 
     /**
      * Compares the `RxChallenge` with a given `TxChallenge`.

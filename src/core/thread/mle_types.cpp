@@ -160,17 +160,19 @@ void TxChallenge::GenerateRandom(void) { IgnoreError(Random::Crypto::Fill(*this)
 //---------------------------------------------------------------------------------------------------------------------
 // RxChallenge
 
-Error RxChallenge::ReadFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
+Error RxChallenge::ReadFrom(const Message &aMessage, const OffsetRange &aOffsetRange)
 {
-    Error error = kErrorNone;
+    Error       error       = kErrorNone;
+    OffsetRange offsetRange = aOffsetRange;
 
     Clear();
 
-    aLength = Min<uint16_t>(aLength, kMaxSize);
-    VerifyOrExit(kMinSize <= aLength, error = kErrorParse);
+    offsetRange.ShrinkLength(kMaxSize);
 
-    SuccessOrExit(error = aMessage.Read(aOffset, mArray.GetArrayBuffer(), aLength));
-    mArray.SetLength(static_cast<uint8_t>(aLength));
+    VerifyOrExit(offsetRange.Contains(kMinSize), error = kErrorParse);
+
+    SuccessOrExit(error = aMessage.Read(offsetRange, mArray.GetArrayBuffer(), offsetRange.GetLength()));
+    mArray.SetLength(static_cast<uint8_t>(offsetRange.GetLength()));
 
 exit:
     return error;

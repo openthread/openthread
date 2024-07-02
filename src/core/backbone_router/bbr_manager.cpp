@@ -149,7 +149,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
     ThreadStatusTlv::MlrStatus status    = ThreadStatusTlv::kMlrSuccess;
     Config                     config;
 
-    uint16_t     addressesOffset, addressesLength;
+    OffsetRange  offsetRange;
     Ip6::Address address;
     Ip6::Address addresses[Ip6AddressesTlv::kMaxAddresses];
     uint8_t      failedAddressNum  = 0;
@@ -188,11 +188,10 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 
     processTimeoutTlv = hasCommissionerSessionIdTlv && (Tlv::Find<ThreadTimeoutTlv>(aMessage, timeout) == kErrorNone);
 
-    VerifyOrExit(Tlv::FindTlvValueOffset(aMessage, Ip6AddressesTlv::kIp6Addresses, addressesOffset, addressesLength) ==
-                     kErrorNone,
+    VerifyOrExit(Tlv::FindTlvValueOffsetRange(aMessage, Ip6AddressesTlv::kIp6Addresses, offsetRange) == kErrorNone,
                  error = kErrorParse);
-    VerifyOrExit(addressesLength % sizeof(Ip6::Address) == 0, status = ThreadStatusTlv::kMlrGeneralFailure);
-    VerifyOrExit(addressesLength / sizeof(Ip6::Address) <= Ip6AddressesTlv::kMaxAddresses,
+    VerifyOrExit(offsetRange.GetLength() % sizeof(Ip6::Address) == 0, status = ThreadStatusTlv::kMlrGeneralFailure);
+    VerifyOrExit(offsetRange.GetLength() / sizeof(Ip6::Address) <= Ip6AddressesTlv::kMaxAddresses,
                  status = ThreadStatusTlv::kMlrGeneralFailure);
 
     if (!processTimeoutTlv)
@@ -220,9 +219,10 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 
     expireTime = TimerMilli::GetNow() + TimeMilli::SecToMsec(timeout);
 
-    for (uint16_t offset = 0; offset < addressesLength; offset += sizeof(Ip6::Address))
+    while (!offsetRange.IsEmpty())
     {
-        IgnoreError(aMessage.Read(addressesOffset + offset, address));
+        IgnoreError(aMessage.Read(offsetRange, address));
+        offsetRange.AdvanceOffset(sizeof(Ip6::Address));
 
         if (timeout == 0)
         {
@@ -581,7 +581,7 @@ template <> void Manager::HandleTmf<kUriBackboneAnswer>(Coap::Message &aMessage,
     bool                     proactive;
     Ip6::Address             dua;
     Ip6::InterfaceIdentifier meshLocalIid;
-    uint16_t                 networkNameOffset, networkNameLength;
+    OffsetRange              offsetRange;
     uint32_t                 timeSinceLastTransaction;
     uint16_t                 srcRloc16 = Mle::kInvalidRloc16;
 
@@ -595,9 +595,7 @@ template <> void Manager::HandleTmf<kUriBackboneAnswer>(Coap::Message &aMessage,
     SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMessage, dua));
     SuccessOrExit(error = Tlv::Find<ThreadMeshLocalEidTlv>(aMessage, meshLocalIid));
     SuccessOrExit(error = Tlv::Find<ThreadLastTransactionTimeTlv>(aMessage, timeSinceLastTransaction));
-
-    SuccessOrExit(error =
-                      Tlv::FindTlvValueOffset(aMessage, ThreadTlv::kNetworkName, networkNameOffset, networkNameLength));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, ThreadTlv::kNetworkName, offsetRange));
 
     error = Tlv::Find<ThreadRloc16Tlv>(aMessage, srcRloc16);
     VerifyOrExit(error == kErrorNone || error == kErrorNotFound);

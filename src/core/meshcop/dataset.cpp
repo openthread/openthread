@@ -337,14 +337,14 @@ void Dataset::SetFrom(const Info &aDatasetInfo)
     // `mUpdateTime` is already set by `WriteTlvsFrom()`.
 }
 
-Error Dataset::SetFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
+Error Dataset::SetFrom(const Message &aMessage, const OffsetRange &aOffsetRange)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(aLength <= kMaxLength, error = kErrorInvalidArgs);
+    VerifyOrExit(aOffsetRange.GetLength() <= kMaxLength, error = kErrorInvalidArgs);
 
-    SuccessOrExit(error = aMessage.Read(aOffset, mTlvs, aLength));
-    mLength = static_cast<uint8_t>(aLength);
+    SuccessOrExit(error = aMessage.Read(aOffsetRange, mTlvs, aOffsetRange.GetLength()));
+    mLength = static_cast<uint8_t>(aOffsetRange.GetLength());
 
     mUpdateTime = TimerMilli::GetNow();
 
