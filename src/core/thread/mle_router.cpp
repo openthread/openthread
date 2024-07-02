@@ -2617,7 +2617,7 @@ void MleRouter::SetSteeringData(const Mac::ExtAddress *aExtAddress)
 void MleRouter::HandleDiscoveryRequest(RxInfo &aRxInfo)
 {
     Error                        error = kErrorNone;
-    MeshCoP::Tlv                 meshcopTlv;
+    Tlv::ParsedInfo              tlvInfo;
     MeshCoP::DiscoveryRequestTlv discoveryRequestTlv;
     MeshCoP::ExtendedPanId       extPanId;
     OffsetRange                  offsetRange;
@@ -2630,19 +2630,16 @@ void MleRouter::HandleDiscoveryRequest(RxInfo &aRxInfo)
 
     SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRxInfo.mMessage, Tlv::kDiscovery, offsetRange));
 
-    while (!offsetRange.IsEmpty())
+    for (; !offsetRange.IsEmpty(); offsetRange.AdvanceOffset(tlvInfo.GetSize()))
     {
-        SuccessOrExit(error = aRxInfo.mMessage.Read(offsetRange, meshcopTlv));
+        SuccessOrExit(error = tlvInfo.ParseFrom(aRxInfo.mMessage, offsetRange));
 
-        if (meshcopTlv.IsExtended())
+        if (tlvInfo.mIsExtended)
         {
-            SuccessOrExit(error = Tlv::ParseAndSkipTlv(aRxInfo.mMessage, offsetRange));
             continue;
         }
 
-        VerifyOrExit(offsetRange.Contains(meshcopTlv.GetSize()));
-
-        switch (meshcopTlv.GetType())
+        switch (tlvInfo.mType)
         {
         case MeshCoP::Tlv::kDiscoveryRequest:
             SuccessOrExit(error = aRxInfo.mMessage.Read(offsetRange, discoveryRequestTlv));
@@ -2660,8 +2657,6 @@ void MleRouter::HandleDiscoveryRequest(RxInfo &aRxInfo)
         default:
             break;
         }
-
-        offsetRange.AdvanceOffset(meshcopTlv.GetSize());
     }
 
     if (discoveryRequestTlv.IsValid())

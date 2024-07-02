@@ -309,10 +309,10 @@ exit:
 void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
 {
     Error                         error = kErrorNone;
-    MeshCoP::Tlv                  meshcopTlv;
     MeshCoP::DiscoveryResponseTlv discoveryResponse;
     ScanResult                    result;
     OffsetRange                   offsetRange;
+    Tlv::ParsedInfo               tlvInfo;
     bool                          didCheckSteeringData = false;
 
     Mle::Log(Mle::kMessageReceive, Mle::kTypeDiscoveryResponse, aRxInfo.mMessageInfo.GetPeerAddr());
@@ -331,20 +331,16 @@ void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
 
     aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(AsCoreType(&result.mExtAddress));
 
-    // Process MeshCoP TLVs
-    while (!offsetRange.IsEmpty())
+    for (; !offsetRange.IsEmpty(); offsetRange.AdvanceOffset(tlvInfo.GetSize()))
     {
-        SuccessOrExit(error = aRxInfo.mMessage.Read(offsetRange, meshcopTlv));
+        SuccessOrExit(error = tlvInfo.ParseFrom(aRxInfo.mMessage, offsetRange));
 
-        if (meshcopTlv.IsExtended())
+        if (tlvInfo.mIsExtended)
         {
-            SuccessOrExit(error = Tlv::ParseAndSkipTlv(aRxInfo.mMessage, offsetRange));
             continue;
         }
 
-        VerifyOrExit(offsetRange.Contains(meshcopTlv.GetSize()), error = kErrorParse);
-
-        switch (meshcopTlv.GetType())
+        switch (tlvInfo.mType)
         {
         case MeshCoP::Tlv::kDiscoveryResponse:
             SuccessOrExit(error = aRxInfo.mMessage.Read(offsetRange, discoveryResponse));
@@ -364,20 +360,14 @@ void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
             break;
 
         case MeshCoP::Tlv::kSteeringData:
-            if (meshcopTlv.GetLength() > 0)
+            if (!tlvInfo.mValueOffsetRange.IsEmpty())
             {
-                MeshCoP::SteeringData &steeringData = AsCoreType(&result.mSteeringData);
-                uint8_t                dataLength   = MeshCoP::SteeringData::kMaxLength;
+                MeshCoP::SteeringData &steeringData     = AsCoreType(&result.mSteeringData);
+                OffsetRange            valueOffsetRange = tlvInfo.mValueOffsetRange;
 
-                if (meshcopTlv.GetLength() < dataLength)
-                {
-                    dataLength = meshcopTlv.GetLength();
-                }
-
-                steeringData.Init(dataLength);
-
-                SuccessOrExit(error = Tlv::ReadTlvValue(aRxInfo.mMessage, offsetRange.GetOffset(),
-                                                        steeringData.GetData(), dataLength));
+                valueOffsetRange.ShrinkLength(MeshCoP::SteeringData::kMaxLength);
+                steeringData.Init(static_cast<uint8_t>(valueOffsetRange.GetLength()));
+                aRxInfo.mMessage.ReadBytes(valueOffsetRange, steeringData.GetData());
 
                 if (mEnableFiltering)
                 {
@@ -396,8 +386,6 @@ void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
         default:
             break;
         }
-
-        offsetRange.AdvanceOffset(meshcopTlv.GetSize());
     }
 
     VerifyOrExit(!mEnableFiltering || didCheckSteeringData);
