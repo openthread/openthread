@@ -46,6 +46,7 @@ add_library(ot-config-mtd INTERFACE)
 add_library(ot-config-radio INTERFACE)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD 99)
 
 message(STATUS "OpenThread Source Directory: ${PROJECT_SOURCE_DIR}")
@@ -92,6 +93,7 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     set(OT_CFLAGS
         $<$<COMPILE_LANGUAGE:C>:${OT_CFLAGS} -Wall -Wextra -Wshadow>
         $<$<COMPILE_LANGUAGE:CXX>:${OT_CFLAGS} -Wall -Wextra -Wshadow -Wno-c++14-compat -fno-exceptions>
+        $<$<CXX_COMPILER_ID:Clang>:-Wc99-extensions>
     )
 endif()
 
