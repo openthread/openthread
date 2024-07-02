@@ -168,11 +168,35 @@ class PublishMeshCopService(thread_cert.TestCase):
         logging.info(bin(state_bitmap))
         self.assertEqual((state_bitmap & 7), 1)  # connection mode = PskC
         if br.get_state() == 'disabled':
-            self.assertEqual((state_bitmap >> 3 & 3), 0)  # Thread is disabled
+            self.assertEqual(
+                (state_bitmap >> 3 & 3), 0
+            )  # Thread interface is not active and is not initialized with a set of valid operation network parameters
+            self.assertEqual((state_bitmap >> 9 & 3), 0)  # Thread role is disabled
+
         elif br.get_state() == 'detached':
-            self.assertEqual((state_bitmap >> 3 & 3), 1)  # Thread is detached
-        else:
-            self.assertEqual((state_bitmap >> 3 & 3), 2)  # Thread is attached
+            self.assertEqual(
+                (state_bitmap >> 3 & 3), 1
+            )  # Thread interface is initialized with a set of valid operation network parameters, but is not actively participating in a network
+            self.assertEqual((state_bitmap >> 9 & 3), 0)  # Thread role is detached
+
+        elif br.get_state() == 'child':
+            self.assertEqual(
+                (state_bitmap >> 3 & 3), 2
+            )  # Thread interface is initialized with a set of valid operation network parameters, and is actively part of a Network
+            self.assertEqual((state_bitmap >> 9 & 3), 1)  # Thread role is child
+
+        elif br.get_state() == 'router':
+            self.assertEqual(
+                (state_bitmap >> 3 & 3), 2
+            )  # Thread interface is initialized with a set of valid operation network parameters, and is actively part of a Network
+            self.assertEqual((state_bitmap >> 9 & 3), 2)  # Thread role is router
+
+        elif br.get_state() == 'leader':
+            self.assertEqual(
+                (state_bitmap >> 3 & 3), 2
+            )  # Thread interface is initialized with a set of valid operation network parameters, and is actively part of a Network
+            self.assertEqual((state_bitmap >> 9 & 3), 3)  # Thread role is leader
+
         self.assertEqual((state_bitmap >> 5 & 3), 1)  # high availability
         self.assertEqual((state_bitmap >> 7 & 1),
                          br.get_state() not in ['disabled', 'detached'] and
