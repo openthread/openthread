@@ -575,7 +575,7 @@ private:
     Error GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                               uint16_t                aSrcRloc16,
                               Message::Priority      &aPriority);
-    void  GetForwardFramePriority(const RxInfo &aRxInfo, Message::Priority &aPriority);
+    void  GetForwardFramePriority(RxInfo &aRxInfo, Message::Priority &aPriority);
 
     bool                CalcIePresent(const Message *aMessage);
     Mac::Frame::Version CalcFrameVersion(const Neighbor *aNeighbor, bool aIePresent) const;

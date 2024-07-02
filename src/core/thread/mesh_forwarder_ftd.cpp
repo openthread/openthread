@@ -965,39 +965,52 @@ exit:
     return error;
 }
 
-void MeshForwarder::GetForwardFramePriority(const RxInfo &aRxInfo, Message::Priority &aPriority)
+void MeshForwarder::GetForwardFramePriority(RxInfo &aRxInfo, Message::Priority &aPriority)
 {
+    // Determines the message priority to use for forwarding a
+    // received mesh-header LowPAN frame towards its final
+    // destination.
+
     Error                  error      = kErrorNone;
-    RxInfo                 rxInfo     = aRxInfo;
     bool                   isFragment = false;
     Lowpan::FragmentHeader fragmentHeader;
+    FrameData              savedFrameData;
 
-    if (fragmentHeader.ParseFrom(rxInfo.mFrameData) == kErrorNone)
+    // We save the `aRxInfo.mFrameData` before parsing the fragment
+    // header which may update it to skip over the parsed header. We
+    // restore the original frame data on `aRxInfo` before
+    // returning.
+
+    savedFrameData = aRxInfo.mFrameData;
+
+    if (fragmentHeader.ParseFrom(aRxInfo.mFrameData) == kErrorNone)
     {
         isFragment = true;
 
         if (fragmentHeader.GetDatagramOffset() > 0)
         {
             // Get priority from the pre-buffered info
-            ExitNow(error = GetFragmentPriority(fragmentHeader, rxInfo.GetSrcAddr().GetShort(), aPriority));
+            ExitNow(error = GetFragmentPriority(fragmentHeader, aRxInfo.GetSrcAddr().GetShort(), aPriority));
         }
     }
 
     // Get priority from IPv6 header or UDP destination port directly
-    error = GetFramePriority(rxInfo, aPriority);
+    error = GetFramePriority(aRxInfo, aPriority);
 
 exit:
     if (error != kErrorNone)
     {
         LogNote("Failed to get forwarded frame priority, error:%s, len:%d, src:%s, dst:%s", ErrorToString(error),
-                rxInfo.mFrameData.GetLength(), rxInfo.GetSrcAddr().ToString().AsCString(),
-                rxInfo.GetDstAddr().ToString().AsCString());
+                aRxInfo.mFrameData.GetLength(), aRxInfo.GetSrcAddr().ToString().AsCString(),
+                aRxInfo.GetDstAddr().ToString().AsCString());
     }
     else if (isFragment)
     {
-        UpdateFragmentPriority(fragmentHeader, rxInfo.mFrameData.GetLength(), rxInfo.GetSrcAddr().GetShort(),
+        UpdateFragmentPriority(fragmentHeader, aRxInfo.mFrameData.GetLength(), aRxInfo.GetSrcAddr().GetShort(),
                                aPriority);
     }
+
+    aRxInfo.mFrameData = savedFrameData;
 }
 
 // LCOV_EXCL_START
