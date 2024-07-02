@@ -69,14 +69,14 @@ bool Header::IsValid(void) const
 //---------------------------------------------------------------------------------------------------------------------
 // Option
 
-Error Option::ParseFrom(const Message &aMessage, uint16_t aOffset, uint16_t aEndOffset)
+Error Option::ParseFrom(const Message &aMessage, const OffsetRange &aOffsetRange)
 {
     Error error;
 
     // Read the Type first to check for the Pad1 Option.
     // If it is not, then we read the full `Option` header.
 
-    SuccessOrExit(error = aMessage.Read(aOffset, this, sizeof(mType)));
+    SuccessOrExit(error = aMessage.Read(aOffsetRange, this, sizeof(mType)));
 
     if (mType == kTypePad1)
     {
@@ -84,9 +84,8 @@ Error Option::ParseFrom(const Message &aMessage, uint16_t aOffset, uint16_t aEnd
         ExitNow();
     }
 
-    SuccessOrExit(error = aMessage.Read(aOffset, *this));
-
-    VerifyOrExit(aOffset + GetSize() <= aEndOffset, error = kErrorParse);
+    SuccessOrExit(error = aMessage.Read(aOffsetRange, *this));
+    VerifyOrExit(aOffsetRange.Contains(GetSize()), error = kErrorParse);
 
 exit:
     return error;
