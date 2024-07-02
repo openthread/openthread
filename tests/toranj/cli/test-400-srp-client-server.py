@@ -61,11 +61,12 @@ verify(client.get_state() == 'router')
 verify(server.srp_server_get_state() == 'disabled')
 verify(server.srp_server_get_addr_mode() == 'unicast')
 verify(client.srp_client_get_state() == 'Disabled')
-verify(client.srp_client_get_auto_start_mode() == 'Enabled')
 
 # Start server and client and register single service
 server.srp_server_enable()
 
+client.srp_client_enable_auto_start_mode()
+verify(client.srp_client_get_auto_start_mode() == 'Enabled')
 client.srp_client_set_host_name('host')
 client.srp_client_set_host_address('fd00::cafe')
 client.srp_client_add_service('ins', '_test._udp', 777, 2, 1)

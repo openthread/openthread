@@ -176,6 +176,96 @@ bool Client::Service::Matches(const Service &aOther) const
 }
 
 //---------------------------------------------------------------------
+// Client::TxJitter
+
+const uint32_t Client::TxJitter::kMaxJitters[] = {
+    Client::kMaxTxJitterOnDeviceReboot,    // (0) kOnDeviceReboot
+    Client::kMaxTxJitterOnServerStart,     // (1) kOnServerStart
+    Client::kMaxTxJitterOnServerRestart,   // (2) kOnServerRestart
+    Client::kMaxTxJitterOnServerSwitch,    // (3) kOnServerSwitch
+    Client::kMaxTxJitterOnSlaacAddrAdd,    // (4) kOnSlaacAddrAdd
+    Client::kMaxTxJitterOnSlaacAddrRemove, // (5) kOnSlaacAddrRemove
+};
+
+void Client::TxJitter::Request(Reason aReason)
+{
+    static_assert(0 == kOnDeviceReboot, "kOnDeviceReboot value is incorrect");
+    static_assert(1 == kOnServerStart, "kOnServerStart value is incorrect");
+    static_assert(2 == kOnServerRestart, "kOnServerRestart value is incorrect");
+    static_assert(3 == kOnServerSwitch, "kOnServerSwitch value is incorrect");
+    static_assert(4 == kOnSlaacAddrAdd, "kOnSlaacAddrAdd value is incorrect");
+    static_assert(5 == kOnSlaacAddrRemove, "kOnSlaacAddrRemove value is incorrect");
+
+    uint32_t maxJitter = kMaxJitters[aReason];
+
+    LogInfo("Requesting max tx jitter %lu (%s)", ToUlong(maxJitter), ReasonToString(aReason));
+
+    if (mRequestedMax != 0)
+    {
+        // If we have a previous request, adjust the `mRequestedMax`
+        // based on the time elapsed since that request was made.
+
+        uint32_t duration = TimerMilli::GetNow() - mRequestTime;
+
+        mRequestedMax = (mRequestedMax > duration) ? mRequestedMax - duration : 0;
+    }
+
+    mRequestedMax = Max(mRequestedMax, maxJitter);
+    mRequestTime  = TimerMilli::GetNow();
+}
+
+uint32_t Client::TxJitter::DetermineDelay(void)
+{
+    uint32_t delay;
+    uint32_t maxJitter = kMaxTxJitterDefault;
+
+    if (mRequestedMax != 0)
+    {
+        uint32_t duration = TimerMilli::GetNow() - mRequestTime;
+
+        if (duration >= mRequestedMax)
+        {
+            LogInfo("Requested max tx jitter %lu already expired", ToUlong(mRequestedMax));
+        }
+        else
+        {
+            maxJitter = Max(mRequestedMax - duration, kMaxTxJitterDefault);
+            LogInfo("Applying remaining max jitter %lu", ToUlong(maxJitter));
+        }
+
+        mRequestedMax = 0;
+    }
+
+    delay = Random::NonCrypto::GetUint32InRange(kMinTxJitter, maxJitter);
+    LogInfo("Use random tx jitter %lu from [%lu, %lu]", ToUlong(delay), ToUlong(kMinTxJitter), ToUlong(maxJitter));
+
+    return delay;
+}
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+const char *Client::TxJitter::ReasonToString(Reason aReason)
+{
+    static const char *const kReasonStrings[] = {
+        "OnDeviceReboot",    // (0) kOnDeviceReboot
+        "OnServerStart",     // (1) kOnServerStart
+        "OnServerRestart",   // (2) kOnServerRestart
+        "OnServerSwitch",    // (3) kOnServerSwitch
+        "OnSlaacAddrAdd",    // (4) kOnSlaacAddrAdd
+        "OnSlaacAddrRemove", // (5) kOnSlaacAddrRemove
+    };
+
+    static_assert(0 == kOnDeviceReboot, "kOnDeviceReboot value is incorrect");
+    static_assert(1 == kOnServerStart, "kOnServerStart value is incorrect");
+    static_assert(2 == kOnServerRestart, "kOnServerRestart value is incorrect");
+    static_assert(3 == kOnServerSwitch, "kOnServerSwitch value is incorrect");
+    static_assert(4 == kOnSlaacAddrAdd, "kOnSlaacAddrAdd value is incorrect");
+    static_assert(5 == kOnSlaacAddrRemove, "kOnSlaacAddrRemove value is incorrect");
+
+    return kReasonStrings[aReason];
+}
+#endif
+
+//---------------------------------------------------------------------
 // Client::AutoStart
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
@@ -183,7 +273,7 @@ bool Client::Service::Matches(const Service &aOther) const
 Client::AutoStart::AutoStart(void)
 {
     Clear();
-    mState = kDefaultMode ? kSelectedNone : kDisabled;
+    mState = kDefaultMode ? kFirstTimeSelecting : kDisabled;
 }
 
 bool Client::AutoStart::HasSelectedServer(void) const
@@ -193,7 +283,8 @@ bool Client::AutoStart::HasSelectedServer(void) const
     switch (mState)
     {
     case kDisabled:
-    case kSelectedNone:
+    case kFirstTimeSelecting:
+    case kReselecting:
         break;
 
     case kSelectedUnicastPreferred:
@@ -224,18 +315,20 @@ void Client::AutoStart::InvokeCallback(const Ip6::SockAddr *aServerSockAddr) con
 const char *Client::AutoStart::StateToString(State aState)
 {
     static const char *const kStateStrings[] = {
-        "Disabled",    // (0) kDisabled
-        "Idle",        // (1) kSelectedNone
-        "Unicast-prf", // (2) kSelectedUnicastPreferred
-        "Anycast",     // (3) kSelectedAnycast
-        "Unicast",     // (4) kSelectedUnicast
+        "Disabled",      // (0) kDisabled
+        "1stTimeSelect", // (1) kFirstTimeSelecting
+        "Reselect",      // (2) kReselecting
+        "Unicast-prf",   // (3) kSelectedUnicastPreferred
+        "Anycast",       // (4) kSelectedAnycast
+        "Unicast",       // (5) kSelectedUnicast
     };
 
     static_assert(0 == kDisabled, "kDisabled value is incorrect");
-    static_assert(1 == kSelectedNone, "kSelectedNone value is incorrect");
-    static_assert(2 == kSelectedUnicastPreferred, "kSelectedUnicastPreferred value is incorrect");
-    static_assert(3 == kSelectedAnycast, "kSelectedAnycast value is incorrect");
-    static_assert(4 == kSelectedUnicast, "kSelectedUnicast value is incorrect");
+    static_assert(1 == kFirstTimeSelecting, "kFirstTimeSelecting value is incorrect");
+    static_assert(2 == kReselecting, "kReselecting value is incorrect");
+    static_assert(3 == kSelectedUnicastPreferred, "kSelectedUnicastPreferred value is incorrect");
+    static_assert(4 == kSelectedAnycast, "kSelectedAnycast value is incorrect");
+    static_assert(5 == kSelectedUnicast, "kSelectedUnicast value is incorrect");
 
     return kStateStrings[aState];
 }
@@ -270,6 +363,9 @@ Client::Client(Instance &aInstance)
     , mSocket(aInstance, *this)
     , mDomainName(kDefaultDomainName)
     , mTimer(aInstance)
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+    , mGuardTimer(aInstance)
+#endif
 {
     mHostInfo.Init();
 
@@ -444,6 +540,10 @@ void Client::HandleRoleChanged(void)
 {
     if (Get<Mle::Mle>().IsAttached())
     {
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+        ApplyAutoStartGuardOnAttach();
+#endif
+
         VerifyOrExit(GetState() == kStatePaused);
         Resume();
     }
@@ -522,6 +622,36 @@ Error Client::SetHostAddresses(const Ip6::Address *aAddresses, uint8_t aNumAddre
 
 exit:
     return error;
+}
+
+void Client::HandleUnicastAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::UnicastAddress &aAddress)
+{
+    // This callback from `Netif` signals an impending addition or
+    // removal of a unicast address, occurring before `Notifier`
+    // events. If `AutoAddress` is enabled, we check whether the
+    // address origin is SLAAC (e.g., an OMR address) and request a
+    // longer `TxJitter`. This helps randomize the next SRP
+    // update transmission time when triggered by an OMR prefix
+    // change.
+
+    VerifyOrExit(IsRunning());
+    VerifyOrExit(mHostInfo.IsAutoAddressEnabled());
+
+    VerifyOrExit(aAddress.GetOrigin() == Ip6::Netif::kOriginSlaac);
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+    // The `mGuardTimer`, started by `ApplyAutoStartGuardOnAttach()`,
+    // tracks a guard interval after the attach event. If an
+    // address change occurs within this short window, we do not
+    // apply a longer TX jitter, as this likely indicates a device
+    // reboot.
+    VerifyOrExit(!mGuardTimer.IsRunning());
+#endif
+
+    mTxJitter.Request((aEvent == Ip6::Netif::kAddressAdded) ? TxJitter::kOnSlaacAddrAdd : TxJitter::kOnSlaacAddrRemove);
+
+exit:
+    return;
 }
 
 bool Client::ShouldUpdateHostAutoAddresses(void) const
@@ -736,7 +866,7 @@ void Client::SetState(State aState)
         break;
 
     case kStateToUpdate:
-        mTimer.Start(Random::NonCrypto::GetUint32InRange(kUpdateTxMinDelay, kUpdateTxMaxDelay));
+        mTimer.Start(mTxJitter.DetermineDelay());
         break;
 
     case kStateUpdating:
@@ -778,7 +908,8 @@ bool Client::ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStat
         switch (mAutoStart.GetState())
         {
         case AutoStart::kDisabled:
-        case AutoStart::kSelectedNone:
+        case AutoStart::kFirstTimeSelecting:
+        case AutoStart::kReselecting:
             break;
 
         case AutoStart::kSelectedUnicastPreferred:
@@ -2056,8 +2187,34 @@ void Client::EnableAutoStartMode(AutoStartCallback aCallback, void *aContext)
 
     VerifyOrExit(mAutoStart.GetState() == AutoStart::kDisabled);
 
-    mAutoStart.SetState(AutoStart::kSelectedNone);
+    mAutoStart.SetState(AutoStart::kFirstTimeSelecting);
+    ApplyAutoStartGuardOnAttach();
+
     ProcessAutoStart();
+
+exit:
+    return;
+}
+
+void Client::ApplyAutoStartGuardOnAttach(void)
+{
+    VerifyOrExit(Get<Mle::Mle>().IsAttached());
+    VerifyOrExit(!IsRunning());
+    VerifyOrExit(mAutoStart.GetState() == AutoStart::kFirstTimeSelecting);
+
+    // The `mGuardTimer` tracks a guard interval after the attach
+    // event while `AutoStart` has yet to select a server for the
+    // first time.
+    //
+    // This is used by `ProcessAutoStart()` to apply different TX
+    // jitter values. If server selection occurs within this short
+    // window, a shorter TX jitter is used. This typically represents
+    // the device rebooting or being paired.
+    //
+    // The guard time is also checked when handling SLAAC address change
+    // events, to decide whether or not to request longer TX jitter.
+
+    mGuardTimer.Start(kGuardTimeAfterAttachToUseShorterTxJitter);
 
 exit:
     return;
@@ -2068,7 +2225,8 @@ void Client::ProcessAutoStart(void)
     Ip6::SockAddr       serverSockAddr;
     DnsSrpAnycast::Info anycastInfo;
     DnsSrpUnicast::Info unicastInfo;
-    bool                shouldRestart = false;
+    AutoStart::State    oldAutoStartState = mAutoStart.GetState();
+    bool                shouldRestart     = false;
 
     // If auto start mode is enabled, we check the Network Data entries
     // to discover and select the preferred SRP server to register with.
@@ -2083,7 +2241,7 @@ void Client::ProcessAutoStart(void)
 
     if (IsRunning())
     {
-        VerifyOrExit(mAutoStart.GetState() != AutoStart::kSelectedNone);
+        VerifyOrExit(mAutoStart.HasSelectedServer());
     }
 
     // There are three types of entries in Network Data:
@@ -2131,14 +2289,68 @@ void Client::ProcessAutoStart(void)
         Stop(kRequesterAuto, kResetRetryInterval);
     }
 
-    if (!serverSockAddr.GetAddress().IsUnspecified())
+    if (serverSockAddr.GetAddress().IsUnspecified())
     {
-        IgnoreError(Start(serverSockAddr, kRequesterAuto));
+        if (mAutoStart.HasSelectedServer())
+        {
+            mAutoStart.SetState(AutoStart::kReselecting);
+        }
+
+        ExitNow();
     }
-    else
+
+    // Before calling `Start()`, determine the trigger reason for
+    // starting the client with the newly discovered server based on
+    // `AutoStart` state transitions. This reason is then used to
+    // select the appropriate TX jitter interval (randomizing the
+    // initial SRP update transmission to the new server).
+
+    switch (oldAutoStartState)
     {
-        mAutoStart.SetState(AutoStart::kSelectedNone);
+    case AutoStart::kDisabled:
+        break;
+
+    case AutoStart::kFirstTimeSelecting:
+
+        // If the device is attaching to an established Thread mesh
+        // (e.g., after a reboot or pairing), the Network Data it
+        // receives should already include a server entry, leading to
+        // a quick server selection after attachment. The `mGuardTimer`,
+        // started by `ApplyAutoStartGuardOnAttach()`, tracks a guard
+        // interval after the attach event. If server selection
+        // occurs within this short window, a shorter TX jitter is
+        // used (`TxJitter::kOnDeviceReboot`), allowing the device to
+        // register quickly and become discoverable.
+        //
+        // If server discovery takes longer, a longer TX jitter
+        // is used (`TxJitter::kOnServerStart`). This situation
+        // can indicate a server/BR starting up or a network-wide
+        // restart of many nodes (e.g., due to a power outage).
+
+        if (mGuardTimer.IsRunning())
+        {
+            mTxJitter.Request(TxJitter::kOnDeviceReboot);
+        }
+        else
+        {
+            mTxJitter.Request(TxJitter::kOnServerStart);
+        }
+
+        break;
+
+    case AutoStart::kReselecting:
+        // Server is restarted (or possibly a new server started).
+        mTxJitter.Request(TxJitter::kOnServerRestart);
+        break;
+
+    case AutoStart::kSelectedUnicastPreferred:
+    case AutoStart::kSelectedAnycast:
+    case AutoStart::kSelectedUnicast:
+        mTxJitter.Request(TxJitter::kOnServerSwitch);
+        break;
     }
+
+    IgnoreError(Start(serverSockAddr, kRequesterAuto));
 
 exit:
     return;
@@ -2230,7 +2442,8 @@ void Client::SelectNextServer(bool aDisallowSwitchOnRegisteredHost)
 
     case AutoStart::kSelectedAnycast:
     case AutoStart::kDisabled:
-    case AutoStart::kSelectedNone:
+    case AutoStart::kFirstTimeSelecting:
+    case AutoStart::kReselecting:
         ExitNow();
     }
 

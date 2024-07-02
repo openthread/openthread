@@ -109,7 +109,7 @@ class SrpServerRebootPort(thread_cert.TestCase):
         client.srp_client_set_host_name('my-host')
         client.srp_client_set_host_address('2001::1')
         client.srp_client_add_service('my-service', '_ipps._tcp', 12345, 0, 0, ['abc', 'def=', 'xyz=XYZ'])
-        self.simulator.go(5)
+        self.simulator.go(16)
         self.check_host_and_service(server, client, '2001::1')
 
         ports = [server.get_srp_server_port()]
@@ -129,7 +129,7 @@ class SrpServerRebootPort(thread_cert.TestCase):
             # re-registered.
             #
             server.srp_server_set_enabled(True)
-            self.simulator.go(5)
+            self.simulator.go(16)
             self.assertEqual(client.srp_client_get_state(), 'Enabled')
             self.assertEqual(client.srp_client_get_server_address(), server.get_mleid())
             self.assertNotEqual(old_port, server.get_srp_server_port())

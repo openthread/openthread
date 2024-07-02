@@ -226,38 +226,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MIN_DELAY
- *
- * Specifies the minimum value (in msec) for the short random delay wait time before sending an update message.
- *
- * The random delay is chosen uniformly from the min up to max value `OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MAX_DELAY`.
- *
- * When there is a change (e.g., a new service is added/removed) that requires an update, the SRP client will wait for
- * a short delay before preparing and sending an SRP update message to server. This allows user to provide more change
- * that are then all sent in same update message. The delay is only applied on the first change that triggers an
- * update message transmission. Subsequent changes (API calls) while waiting for the tx to start will not reset the
- * delay timer.
- *
- */
-#ifndef OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MIN_DELAY
-#define OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MIN_DELAY 10
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MIN_DELAY
- *
- * Specifies the maximum value (in msec) for the short random delay wait time before sending an update message.
- *
- * The random delay is chosen uniformly from the min `OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MIN_DELAY` up to max value.
- *
- * See `OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MIN_DELAY` for more details.
- *
- */
-#ifndef OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MAX_DELAY
-#define OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MAX_DELAY 700
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_SRP_CLIENT_MIN_RETRY_WAIT_INTERVAL
  *
  * Specifies the minimum wait interval (in msec) between SRP update message retries.

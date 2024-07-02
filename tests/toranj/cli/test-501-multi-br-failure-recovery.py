@@ -147,6 +147,7 @@ verify(br2.srp_server_get_state() == 'disabled')
 # Register SRP services on all nodes
 
 for node in nodes_non_br:
+    node.srp_client_enable_auto_start_mode()
     verify(node.srp_client_get_auto_start_mode() == 'Enabled')
     node.srp_client_set_host_name('host' + str(node.index))
     node.srp_client_enable_auto_host_address()

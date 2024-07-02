@@ -85,6 +85,7 @@ class SrpTtl(thread_cert.TestCase):
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(client.get_state(), 'router')
 
+        self.simulator.go(15)
         self.assertEqual(client.srp_client_get_auto_start_mode(), 'Enabled')
 
         client.srp_client_set_host_name('my-host')
