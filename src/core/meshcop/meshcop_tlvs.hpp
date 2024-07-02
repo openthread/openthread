@@ -753,8 +753,7 @@ private:
 
         const uint8_t *mData;
         const Message *mMessage;
-        uint16_t       mOffset;
-        uint16_t       mLength;
+        OffsetRange    mOffsetRange;
     };
 
     uint8_t mEntriesStart;
