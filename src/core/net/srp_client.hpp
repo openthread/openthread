@@ -829,6 +829,9 @@ private:
     // to renew the lease. Value is in seconds.
     static constexpr uint32_t kLeaseRenewGuardInterval = OPENTHREAD_CONFIG_SRP_CLIENT_LEASE_RENEW_GUARD_INTERVAL;
 
+    // Lease renew time jitter (in msec).
+    static constexpr uint16_t kLeaseRenewJitter = 15 * 1000; // 15 second
+
     // Max allowed lease time to avoid timer roll-over (~24.8 days).
     static constexpr uint32_t kMaxLease = (Timer::kMaxDelay / 1000) - 1;
 
