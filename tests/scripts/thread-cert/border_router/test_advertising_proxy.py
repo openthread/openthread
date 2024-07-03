@@ -174,7 +174,7 @@ class SingleHostAndService(thread_cert.TestCase):
         self.assertIsNone(host.discover_mdns_service('my-service-1', '_ipps._tcp', 'my-host'))
 
         server.srp_server_set_enabled(True)
-        self.simulator.go(LEASE)
+        self.simulator.go(20)
 
         self.check_host_and_service(server, client, '2001::2', 'my-service')
         self.check_host_and_service(server, client, '2001::2', 'my-service-1')
@@ -188,11 +188,7 @@ class SingleHostAndService(thread_cert.TestCase):
 
         client.srp_client_remove_service('my-service-1', '_ipps._tcp')
 
-        # We previously had self.simulator.go(5) but got the issue that the client is scheduling
-        # the refresh timer with half of the lease time (10 seconds) and there will be chances
-        # that the client will be just in status "kToRefresh" after self.simulator.go(5). This will
-        # fail the checks in self.check_host_and_service() so updated to wait for 2 seconds.
-        self.simulator.go(2)
+        self.simulator.go(5)
 
         self.check_host_and_service(server, client, '2001::2', 'my-service')
         self.host_check_mdns_service(host, '2001::2', 'my-service')
@@ -297,8 +293,14 @@ class SingleHostAndService(thread_cert.TestCase):
         self.assertEqual(int(client_service['priority']), 0)
         self.assertEqual(int(client_service['weight']), 0)
 
-        # Verify that the client received a SUCCESS response for the server.
-        self.assertEqual(client_service['state'], 'Registered')
+        # Verify the client successfully registered its service with
+        # the server. Due to the short lease times (10 seconds) used
+        # in this test, the client will refresh the registered
+        # service quickly. During the test, we accept any of the
+        # following states as indicating successful registration:
+        # `Registered`, `ToRefresh`, or `Refreshing`.
+
+        self.assertIn(client_service['state'], ['Registered', 'ToRefresh', 'Refreshing'])
 
         server_services = server.srp_server_get_services()
         print(server_services)
