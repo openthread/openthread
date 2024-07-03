@@ -677,12 +677,16 @@ private:
         void SetStaleTimeCalculated(bool aFlag) { mStaleTimeCalculated = aFlag; }
         bool IsStaleTimeCalculated(void) const { return mStaleTimeCalculated; }
 
+        void SetDisregardFlag(bool aFlag) { mDisregard = aFlag; }
+        bool ShouldDisregard(void) const { return mDisregard; }
+
     protected:
         LifetimedPrefix(void) = default;
 
         TimeMilli CalculateExpirationTime(uint32_t aLifetime) const;
 
         Ip6::Prefix mPrefix;
+        bool        mDisregard : 1;
         bool        mStaleTimeCalculated : 1;
         uint32_t    mValidLifetime;
         TimeMilli   mLastUpdateTime;
@@ -808,9 +812,15 @@ private:
 
         struct Router : public Clearable<Router>
         {
-            // The timeout (in msec) for router to be considered reachable
-            // before starting the Neighbor Solicitation (NS) probes.
-            static constexpr uint32_t kReachableTimeout = OPENTHREAD_CONFIG_BORDER_ROUTING_ROUTER_ACTIVE_CHECK_TIMEOUT;
+            // Reachability timeout intervals before starting Neighbor
+            // Solicitation (NS) probes. Generally 60 seconds (± 2
+            // seconds jitter) is used. For peer BRs a longer timeout
+            // of 200 seconds (3 min and 20 seconds) is used. This is
+            // selected to be longer than regular RA beacon interval
+            // of 3 minutes (± 15 seconds jitter).
+
+            static constexpr uint32_t kReachableInterval = OPENTHREAD_CONFIG_BORDER_ROUTING_ROUTER_ACTIVE_CHECK_TIMEOUT;
+            static constexpr uint32_t kPeerBrReachableInterval = Time::kOneSecondInMsec * 200;
 
             static constexpr uint8_t  kMaxNsProbes          = 5;    // Max number of NS probe attempts.
             static constexpr uint32_t kNsProbeRetryInterval = 1000; // In msec. Time between NS probe attempts.
@@ -824,6 +834,7 @@ private:
             bool IsReachable(void) const { return mNsProbeCount <= kMaxNsProbes; }
             bool ShouldCheckReachability(void) const;
             void ResetReachabilityState(void);
+            void DetermineReachabilityTimeout(void);
             bool Matches(const Ip6::Address &aAddress) const { return aAddress == mAddress; }
             bool Matches(const EmptyChecker &aChecker);
             void CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow) const;
@@ -835,12 +846,13 @@ private:
             OnLinkPrefixList mOnLinkPrefixes;
             RoutePrefixList  mRoutePrefixes;
             TimeMilli        mLastUpdateTime;
-            TimeMilli        mTimeout;
+            TimeMilli        mTimeoutTime;
             uint8_t          mNsProbeCount;
             bool             mManagedAddressConfigFlag : 1;
             bool             mOtherConfigFlag : 1;
             bool             mStubRouterFlag : 1;
             bool             mIsLocalDevice : 1;
+            bool             mAllEntriesDisregarded : 1;
         };
 
         //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
