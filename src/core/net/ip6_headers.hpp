@@ -517,17 +517,16 @@ public:
      * Parses and validates the IPv6 Option from a given message.
      *
      * The Option is read from @p aOffset in @p aMessage. This method then checks that the entire Option is present
-     * in @p aMessage before the @p aEndOffset.
+     * within @p aOffsetRange.
      *
-     * @param[in]  aMessage    The IPv6 message.
-     * @param[in]  aOffset     The offset in @p aMessage to read the IPv6 Option.
-     * @param[in]  aEndOffset  The end offset in @p aMessage.
+     * @param[in]  aMessage      The IPv6 message.
+     * @param[in]  aOffsetRange  The offset range in @p aMessage to read the IPv6 Option.
      *
      * @retval kErrorNone   Successfully parsed the IPv6 option from @p aMessage.
-     * @retval kErrorParse  Malformed IPv6 Option or Option is not contained within @p aMessage by @p aEndOffset.
+     * @retval kErrorParse  Malformed IPv6 Option or Option is not contained within @p aMessage and @p aOffsetRange.
      *
      */
-    Error ParseFrom(const Message &aMessage, uint16_t aOffset, uint16_t aEndOffset);
+    Error ParseFrom(const Message &aMessage, const OffsetRange &aOffsetRange);
 
 protected:
     static constexpr uint8_t kTypePad1 = 0x00; ///< Pad1 Option Type.
