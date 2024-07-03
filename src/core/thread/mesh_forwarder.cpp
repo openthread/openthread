@@ -654,7 +654,7 @@ Message *MeshForwarder::PrepareNextDirectTransmission(void)
 #endif
             LogMessage(kMessageDrop, *curMessage, error);
             FinalizeMessageDirectTx(*curMessage, error);
-            mSendQueue.DequeueAndFree(*curMessage);
+            RemoveMessageIfNoPendingTx(*curMessage);
             continue;
         }
     }
