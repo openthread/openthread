@@ -1971,6 +1971,9 @@ void RoutingManager::RxRaTracker::DecisionFactors::UpdateFrom(const OnLinkPrefix
     {
         mFavoredOnLinkPrefix = aOnLinkPrefix.GetPrefix();
     }
+
+exit:
+    return;
 }
 
 void RoutingManager::RxRaTracker::DecisionFactors::UpdateFrom(const RoutePrefix &aRoutePrefix)
