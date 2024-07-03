@@ -28,6 +28,8 @@
 
 #include "logger.hpp"
 
+#include "openthread-spinel-config.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,7 +38,6 @@
 #include <openthread/logging.h>
 #include <openthread/platform/radio.h>
 
-#include "lib/spinel/spinel-config.h"
 #include "lib/spinel/spinel.h"
 #include "lib/utils/math.hpp"
 #include "lib/utils/utils.hpp"
