@@ -35,7 +35,7 @@
 #ifndef SPINEL_SPINEL_INTERFACE_HPP_
 #define SPINEL_SPINEL_INTERFACE_HPP_
 
-#include "spinel-config.h"
+#include "openthread-spinel-config.h"
 
 #include "lib/spinel/multi_frame_buffer.hpp"
 #include "lib/spinel/radio_spinel_metrics.h"
