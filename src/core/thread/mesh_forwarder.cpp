@@ -2017,18 +2017,24 @@ void MeshForwarder::LogFragmentFrameDrop(Error                         aError,
                                          const RxInfo                 &aRxInfo,
                                          const Lowpan::FragmentHeader &aFragmentHeader)
 {
-    LogNote("Dropping rx frag frame, error:%s, len:%d, src:%s, dst:%s, tag:%d, offset:%d, dglen:%d, sec:%s",
-            ErrorToString(aError), aRxInfo.mFrameData.GetLength(), aRxInfo.GetSrcAddr().ToString().AsCString(),
-            aRxInfo.GetDstAddr().ToString().AsCString(), aFragmentHeader.GetDatagramTag(),
-            aFragmentHeader.GetDatagramOffset(), aFragmentHeader.GetDatagramSize(),
-            ToYesNo(aRxInfo.IsLinkSecurityEnabled()));
+    LogNote("Dropping rx frag frame, error:%s, %s, tag:%d, offset:%d, dglen:%d", ErrorToString(aError),
+            aRxInfo.ToString().AsCString(), aFragmentHeader.GetDatagramTag(), aFragmentHeader.GetDatagramOffset(),
+            aFragmentHeader.GetDatagramSize());
 }
 
 void MeshForwarder::LogLowpanHcFrameDrop(Error aError, const RxInfo &aRxInfo)
 {
-    LogNote("Dropping rx lowpan HC frame, error:%s, len:%d, src:%s, dst:%s, sec:%s", ErrorToString(aError),
-            aRxInfo.mFrameData.GetLength(), aRxInfo.GetSrcAddr().ToString().AsCString(),
-            aRxInfo.GetDstAddr().ToString().AsCString(), ToYesNo(aRxInfo.IsLinkSecurityEnabled()));
+    LogNote("Dropping rx lowpan HC frame, error:%s, %s", ErrorToString(aError), aRxInfo.ToString().AsCString());
+}
+
+MeshForwarder::RxInfo::InfoString MeshForwarder::RxInfo::ToString(void) const
+{
+    InfoString string;
+
+    string.Append("len:%d, src:%s, dst:%s, sec:%s", mFrameData.GetLength(), GetSrcAddr().ToString().AsCString(),
+                  GetDstAddr().ToString().AsCString(), ToYesNo(IsLinkSecurityEnabled()));
+
+    return string;
 }
 
 #else // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_NOTE)
