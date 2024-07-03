@@ -643,7 +643,6 @@ private:
     void  StopLeader(void);
     void  SynchronizeChildNetworkData(void);
     Error ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild);
-    Error UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, uint16_t aLength, Child &aChild);
     bool  HasNeighborWithGoodLinkQuality(void) const;
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     void SignalDuaAddressEvent(const Child &aChild, const Ip6::Address &aOldDua) const;
