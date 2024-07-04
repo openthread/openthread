@@ -488,6 +488,16 @@ class OtbrDocker:
             raise ValueError("dns_upstream_query_state must be a bool")
         return self.set_dbus_property('DnsUpstreamQueryState', value)
 
+    @property
+    def ephemeral_key_enabled(self):
+        return bool(self.get_dbus_property('EphemeralKeyEnabled'))
+
+    @ephemeral_key_enabled.setter
+    def ephemeral_key_enabled(self, value):
+        if type(value) is not bool:
+            raise ValueError("ephemeral_key_enabled must be a bool")
+        return self.set_dbus_property('EphemeralKeyEnabled', value)
+
     def read_border_routing_counters_delta(self):
         old_counters = self._border_routing_counters
         new_counters = self.get_border_routing_counters()
