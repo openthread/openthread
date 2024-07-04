@@ -194,6 +194,28 @@ otError otBorderRoutingGetNextRouterEntry(otInstance                         *aI
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextRouterEntry(*aIterator, *aEntry);
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+
+otError otBorderRoutingGetNextPeerBrEntry(otInstance                           *aInstance,
+                                          otBorderRoutingPrefixTableIterator   *aIterator,
+                                          otBorderRoutingPeerBorderRouterEntry *aEntry)
+{
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aEntry);
+
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextPeerBrEntry(*aIterator, *aEntry);
+}
+
+uint16_t otBorderRoutingCountPeerBrs(otInstance *aInstance, uint32_t *aMinAge)
+{
+    uint32_t minAge;
+
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().CountPeerBrs((aMinAge != nullptr) ? *aMinAge
+                                                                                                       : minAge);
+}
+
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 void otBorderRoutingDhcp6PdSetEnabled(otInstance *aInstance, bool aEnabled)
 {

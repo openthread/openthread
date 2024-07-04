@@ -805,6 +805,12 @@ class Node(object):
     def br_get_routers(self):
         return self.cli('br routers')
 
+    def br_get_peer_brs(self):
+        return self.cli('br peers')
+
+    def br_count_peers(self):
+        return self._cli_single_output('br peers count')
+
     # ------------------------------------------------------------------------------------------------------------------
     # Helper methods
 

@@ -104,11 +104,33 @@ verify(br3.br_get_state() == 'running')
 
 # Validate that all BRs discovered the other ones as peer BR
 
-for br in [br1, br2, br3]:
+all_brs = [br1, br2, br3]
+
+for br in all_brs:
     routers = br.br_get_routers()
     verify(len(routers) == 2)
     for router in routers:
         verify(router.endswith('(peer BR)'))
+    verify(int(br.br_count_peers().split()[0]) == 2)
+    peers = br.br_get_peer_brs()
+    verify(len(peers) == 2)
+    other_brs = all_brs
+    other_brs.remove(br)
+    for other_br in other_brs:
+        rloc16 = other_br.get_rloc16()
+        verify(any([rloc16 in peer for peer in peers]))
+
+# Disable BR3 and validate that BR1 and BR2 detect this.
+# BR3 itself should continue to detect BR1 and BR2
+
+br3.br_disable()
+
+time.sleep(0.5)
+
+for br in [br1, br2]:
+    verify(len(br.br_get_peer_brs()) == 1)
+
+verify(len(br3.br_get_peer_brs()) == 2)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
