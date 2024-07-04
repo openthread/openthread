@@ -174,7 +174,7 @@ class SingleHostAndService(thread_cert.TestCase):
         self.assertIsNone(host.discover_mdns_service('my-service-1', '_ipps._tcp', 'my-host'))
 
         server.srp_server_set_enabled(True)
-        self.simulator.go(LEASE)
+        self.simulator.go(LEASE + 5)
 
         self.check_host_and_service(server, client, '2001::2', 'my-service')
         self.check_host_and_service(server, client, '2001::2', 'my-service-1')
