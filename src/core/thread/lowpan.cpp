@@ -470,14 +470,15 @@ Error Lowpan::CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBui
     // Pad1 or PadN option MAY be elided by the compressor."
     if (aNextHeader == Ip6::kProtoHopOpts || aNextHeader == Ip6::kProtoDstOpts)
     {
-        uint16_t    offset    = aMessage.GetOffset();
-        uint16_t    endOffset = offset + len;
+        OffsetRange offsetRange;
         bool        hasOption = false;
         Ip6::Option option;
 
-        for (; offset < endOffset; offset += option.GetSize())
+        offsetRange.Init(aMessage.GetOffset(), len);
+
+        for (; !offsetRange.IsEmpty(); offsetRange.AdvanceOffset(option.GetSize()))
         {
-            SuccessOrExit(error = option.ParseFrom(aMessage, offset, endOffset));
+            SuccessOrExit(error = option.ParseFrom(aMessage, offsetRange));
             hasOption = true;
         }
 

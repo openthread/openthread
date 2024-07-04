@@ -191,17 +191,17 @@ public:
      * MPL Seed it allows to send the first MPL Data Message directly, then sets up Trickle
      * timer expirations for subsequent retransmissions.
      *
-     * @param[in]  aMessage    A reference to the message.
-     * @param[in]  aOffset     The offset in @p aMessage to read the MPL option.
-     * @param[in]  aAddress    A reference to the IPv6 Source Address.
-     * @param[out] aReceive    Set to FALSE if the MPL message is a duplicate and must not
-     *                         go through the receiving process again, untouched otherwise.
+     * @param[in]  aMessage      A reference to the message.
+     * @param[in]  aOffsetRange  The offset range in @p aMessage to read the MPL option.
+     * @param[in]  aAddress      A reference to the IPv6 Source Address.
+     * @param[out] aReceive      Set to FALSE if the MPL message is a duplicate and must not
+     *                           go through the receiving process again, untouched otherwise.
      *
      * @retval kErrorNone  Successfully processed the MPL option.
      * @retval kErrorDrop  The MPL message is a duplicate and should be dropped.
      *
      */
-    Error ProcessOption(Message &aMessage, uint16_t aOffset, const Address &aAddress, bool &aReceive);
+    Error ProcessOption(Message &aMessage, const OffsetRange &aOffsetRange, const Address &aAddress, bool &aReceive);
 
 #if OPENTHREAD_FTD
     /**

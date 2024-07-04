@@ -432,6 +432,8 @@ openthread_core_files = [
   "common/notifier.hpp",
   "common/num_utils.hpp",
   "common/numeric_limits.hpp",
+  "common/offset_range.cpp",
+  "common/offset_range.hpp",
   "common/owned_ptr.hpp",
   "common/owning_list.hpp",
   "common/pool.hpp",

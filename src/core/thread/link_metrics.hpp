@@ -148,12 +148,11 @@ public:
      * Handles the received Link Metrics report contained in @p aMessage.
      *
      * @param[in]  aMessage      A reference to the message.
-     * @param[in]  aOffset       The offset in bytes where the metrics report sub-TLVs start.
-     * @param[in]  aLength       The length of the metrics report sub-TLVs in bytes.
+     * @param[in]  aOffsetRange  The offset range in @p aMessage where the metrics report sub-TLVs are present.
      * @param[in]  aAddress      A reference to the source address of the message.
      *
      */
-    void HandleReport(const Message &aMessage, uint16_t aOffset, uint16_t aLength, const Ip6::Address &aAddress);
+    void HandleReport(const Message &aMessage, OffsetRange &aOffsetRange, const Ip6::Address &aAddress);
 
     /**
      * Sends an MLE Link Metrics Management Request to configure/clear a Forward Tracking Series.
@@ -342,10 +341,7 @@ private:
     static constexpr uint16_t kMaxSeriesSupported = OPENTHREAD_CONFIG_MLE_LINK_METRICS_SERIES_MTD;
 #endif
 
-    static Error ReadTypeIdsFromMessage(const Message &aMessage,
-                                        uint16_t       aStartOffset,
-                                        uint16_t       aEndOffset,
-                                        Metrics       &aMetrics);
+    static Error ReadTypeIdsFromMessage(const Message &aMessage, const OffsetRange &aOffsetRange, Metrics &aMetrics);
     static Error AppendReportSubTlvToMessage(Message &aMessage, const MetricsValues &aValues);
 
     Status ConfigureForwardTrackingSeries(uint8_t        aSeriesId,

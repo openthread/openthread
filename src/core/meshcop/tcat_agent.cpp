@@ -410,7 +410,9 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncommingMessage, Message &aOut
             response = true;
             error    = kErrorNone;
             break;
-
+        case kTlvDecommission:
+            error = HandleDecomission();
+            break;
         default:
             error = kErrorInvalidCommand;
         }
@@ -460,11 +462,12 @@ exit:
 
 Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncommingMessage, uint16_t aOffset, uint16_t aLength)
 {
-    Dataset       dataset;
-    Dataset::Tlvs datasetTlvs;
-    Error         error;
+    Dataset     dataset;
+    OffsetRange offsetRange;
+    Error       error;
 
-    SuccessOrExit(error = dataset.SetFrom(aIncommingMessage, aOffset, aLength));
+    offsetRange.Init(aOffset, aLength);
+    SuccessOrExit(error = dataset.SetFrom(aIncommingMessage, offsetRange));
     SuccessOrExit(error = dataset.ValidateTlvs());
 
     if (!CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mApplicationFlags,
@@ -474,10 +477,30 @@ Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncommingMess
         ExitNow();
     }
 
-    dataset.ConvertTo(datasetTlvs);
-    error = Get<ActiveDatasetManager>().SaveLocal(datasetTlvs);
+    Get<ActiveDatasetManager>().SaveLocal(dataset);
 
 exit:
+    return error;
+}
+
+Error TcatAgent::HandleDecomission(void)
+{
+    Error error = kErrorNone;
+
+    IgnoreReturnValue(otThreadSetEnabled(&GetInstance(), false));
+    Get<ActiveDatasetManager>().Clear();
+    Get<PendingDatasetManager>().Clear();
+
+    error = Get<Instance>().ErasePersistentInfo();
+
+#if !OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    {
+        NetworkKey networkKey;
+        networkKey.Clear();
+        Get<KeyManager>().SetNetworkKey(networkKey);
+    }
+#endif
+
     return error;
 }
 

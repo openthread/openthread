@@ -99,17 +99,23 @@ target_sources(openthread-spinel-ncp PRIVATE ${COMMON_SOURCES})
 target_sources(openthread-spinel-rcp PRIVATE ${COMMON_SOURCES})
 
 target_link_libraries(openthread-radio-spinel
+    INTERFACE
+        ot-lib-config
     PRIVATE
         ot-config
 )
 
 target_link_libraries(openthread-spinel-ncp
+    INTERFACE
+        ot-lib-config
     PRIVATE
         ot-config-ftd
         ot-config
 )
 
 target_link_libraries(openthread-spinel-rcp
+    INTERFACE
+        ot-lib-config
     PRIVATE
         ot-config-radio
         ot-config

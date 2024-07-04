@@ -57,7 +57,7 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
 
     memset(addressObserved, 0, sizeof(addressObserved));
 
-    for (const Ip6::Address &address : aChild.IterateIp6Addresses())
+    for (const Ip6::Address &address : aChild.GetIp6Addresses())
     {
         bool addressIsInList = false;
 
@@ -78,13 +78,15 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
     {
         Ip6::Address address;
 
-        VerifyOrQuit(addressObserved[index], "Child::IterateIp6Addresses() missed an entry from the expected list");
-
         if (sInstance->Get<Mle::MleRouter>().IsMeshLocalAddress(aAddressList[index]))
         {
             SuccessOrQuit(aChild.GetMeshLocalIp6Address(address));
             VerifyOrQuit(address == aAddressList[index], "GetMeshLocalIp6Address() did not return expected address");
             hasMeshLocal = true;
+        }
+        else
+        {
+            VerifyOrQuit(addressObserved[index], "Child::IterateIp6Addresses() missed an entry from the expected list");
         }
     }
 
@@ -94,95 +96,6 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
 
         VerifyOrQuit(aChild.GetMeshLocalIp6Address(address) == kErrorNotFound,
                      "Child::GetMeshLocalIp6Address() returned an address not in the expected list");
-    }
-
-    // Iterate over unicast and multicast addresses separately.
-
-    memset(addressObserved, 0, sizeof(addressObserved));
-
-    for (Ip6::Address::TypeFilter filter : filters)
-    {
-        for (const Ip6::Address &address : aChild.IterateIp6Addresses(filter))
-        {
-            bool addressIsInList = false;
-
-            switch (filter)
-            {
-            case Ip6::Address::kTypeMulticast:
-                VerifyOrQuit(address.IsMulticast(), "Address::TypeFilter failed");
-                break;
-
-            case Ip6::Address::kTypeUnicast:
-                VerifyOrQuit(!address.IsMulticast(), "Address::TypeFilter failed");
-                break;
-
-            default:
-                break;
-            }
-
-            VerifyOrQuit(address.MatchesFilter(filter));
-
-            for (uint8_t index = 0; index < aAddressListLength; index++)
-            {
-                if (address == aAddressList[index])
-                {
-                    VerifyOrQuit(addressObserved[index] == false,
-                                 "Child::IterateIp6Addresses() returned duplicate addr");
-                    addressObserved[index] = true;
-                    addressIsInList        = true;
-                    break;
-                }
-            }
-
-            VerifyOrQuit(addressIsInList, "Child::IterateIp6Addresses() returned an address not in the expected list");
-        }
-    }
-
-    for (uint8_t index = 0; index < aAddressListLength; index++)
-    {
-        VerifyOrQuit(addressObserved[index], "Child::IterateIp6Addresses() missed an entry from the expected list");
-    }
-
-    // Verify behavior of `Child::AddressIterator
-    {
-        Child::AddressIterator        iter1(aChild);
-        Child::AddressIterator        iter2(aChild);
-        Child::AddressIterator::Index iterIndex;
-
-        for (const Ip6::Address &address : aChild.IterateIp6Addresses())
-        {
-            VerifyOrQuit(iter1 == iter2);
-            VerifyOrQuit(!iter1.IsDone());
-            VerifyOrQuit(*iter1.GetAddress() == address);
-            VerifyOrQuit(*iter1.GetAddress() == *iter2.GetAddress());
-
-            iterIndex = iter1.GetAsIndex();
-            VerifyOrQuit(iter2.GetAsIndex() == iterIndex);
-
-            {
-                Child::AddressIterator iter3(aChild, iterIndex);
-                VerifyOrQuit(iter3 == iter1, "AddressIterator(iterIndex) failed");
-
-                iter3++;
-                VerifyOrQuit(iter3 != iter1, "AddressIterator(iterIndex) failed");
-            }
-
-            iter1++;
-            VerifyOrQuit(iter1 != iter2);
-            iter2++;
-        }
-
-        VerifyOrQuit(iter1.IsDone());
-        VerifyOrQuit(iter2.IsDone());
-        VerifyOrQuit(iter1 == iter2);
-
-        iterIndex = iter1.GetAsIndex();
-        VerifyOrQuit(iter2.GetAsIndex() == iterIndex);
-
-        {
-            Child::AddressIterator iter3(aChild, iterIndex);
-            VerifyOrQuit(iter3 == iter1, "AddressIterator(iterIndex) failed");
-        }
     }
 }
 

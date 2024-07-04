@@ -52,7 +52,7 @@ Leader::Leader(Instance &aInstance)
 void Leader::Reset(void)
 {
     // Invalid server short address indicates no available Backbone Router service in the Thread Network.
-    mConfig.mServer16 = Mac::kShortAddrInvalid;
+    mConfig.mServer16 = Mle::kInvalidRloc16;
 
     // Domain Prefix Length 0 indicates no available Domain Prefix in the Thread network.
     mDomainPrefix.SetLength(0);
@@ -152,11 +152,11 @@ void Leader::UpdateBackboneRouterPrimary(void)
 
     if (config.mServer16 != mConfig.mServer16)
     {
-        if (config.mServer16 == Mac::kShortAddrInvalid)
+        if (config.mServer16 == Mle::kInvalidRloc16)
         {
             state = kStateRemoved;
         }
-        else if (mConfig.mServer16 == Mac::kShortAddrInvalid)
+        else if (mConfig.mServer16 == Mle::kInvalidRloc16)
         {
             state = kStateAdded;
         }
@@ -166,7 +166,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
             state = kStateToTriggerRereg;
         }
     }
-    else if (config.mServer16 == Mac::kShortAddrInvalid)
+    else if (config.mServer16 == Mle::kInvalidRloc16)
     {
         // If no Primary all the time.
         state = kStateNone;
@@ -185,7 +185,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
     }
 
     // Restrain the range of MLR timeout to be always valid
-    if (config.mServer16 != Mac::kShortAddrInvalid)
+    if (config.mServer16 != Mle::kInvalidRloc16)
     {
         uint32_t origTimeout = config.mMlrTimeout;
 

@@ -51,6 +51,7 @@
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
 #include "common/numeric_limits.hpp"
+#include "common/offset_range.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/extended_panid.hpp"
@@ -526,15 +527,14 @@ public:
      *
      * If the given @p aLength is longer than `kMaxSize`, only `kMaxSize` bytes will be read.
      *
-     * @param[in] aMessage   The message to read the challenge from.
-     * @param[in] aOffset    The offset in @p aMessage to read from.
-     * @param[in] aLength    Number of bytes to read.
+     * @param[in] aMessage     The message to read the challenge from.
+     * @param[in] aOffsetRange The offset range in @p aMessage to read from.
      *
      * @retval kErrorNone     Successfully read the challenge data from @p aMessage.
-     * @retval kErrorParse    Not enough bytes to read, or invalid @p aLength (smaller than `kMinSize`).
+     * @retval kErrorParse    Not enough bytes to read, or invalid length (smaller than `kMinSize`).
      *
      */
-    Error ReadFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
+    Error ReadFrom(const Message &aMessage, const OffsetRange &aOffsetRange);
 
     /**
      * Compares the `RxChallenge` with a given `TxChallenge`.
@@ -682,15 +682,38 @@ inline uint16_t CommissionerAloc16FromId(uint16_t aSessionId)
 inline uint16_t Rloc16FromRouterId(uint8_t aRouterId) { return static_cast<uint16_t>(aRouterId << kRouterIdOffset); }
 
 /**
- * Indicates whether or not @p aRloc16 refers to an active router.
+ * Derives the router RLOC16 corresponding to the parent of a given (child) RLOC16.
+ *
+ * If @p aRloc16 itself refers to a router, then the same RLOC16 value is returned.
+ *
+ * @param[in] aRloc16   An RLOC16.
+ *
+ * @returns The router RLOC16 corresponding to the parent associated with @p aRloc16.
+ *
+ */
+inline uint16_t ParentRloc16ForRloc16(uint16_t aRloc16) { return Rloc16FromRouterId(RouterIdFromRloc16(aRloc16)); }
+
+/**
+ * Indicates whether or not @p aRloc16 refers to a router.
  *
  * @param[in]  aRloc16  The RLOC16 value.
  *
- * @retval TRUE   If @p aRloc16 refers to an active router.
- * @retval FALSE  If @p aRloc16 does not refer to an active router.
+ * @retval TRUE   If @p aRloc16 refers to a router.
+ * @retval FALSE  If @p aRloc16 does not refer to a router.
  *
  */
-inline bool IsActiveRouter(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) == 0; }
+inline bool IsRouterRloc16(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) == 0; }
+
+/**
+ * Indicates whether or not @p aRloc16 refers to a child.
+ *
+ * @param[in]  aRloc16  The RLOC16 value.
+ *
+ * @retval TRUE   If @p aRloc16 refers to a child.
+ * @retval FALSE  If @p aRloc16 does not refer to a child.
+ *
+ */
+inline bool IsChildRloc16(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) != 0; }
 
 /**
  * Converts a device role into a human-readable string.

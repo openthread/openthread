@@ -695,6 +695,15 @@ public:
      *
      */
     void SetDiagOutputCallback(otPlatDiagOutputCallback aCallback, void *aContext);
+
+    /**
+     * Gets the diag output callback.
+     *
+     * @param[out]  aCallback   A reference to a function that is called on outputting diag messages.
+     * @param[out]  aContext    A reference to the user context.
+     *
+     */
+    void GetDiagOutputCallback(otPlatDiagOutputCallback &aCallback, void *&aContext);
 #endif
 
     /**

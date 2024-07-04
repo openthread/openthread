@@ -293,6 +293,19 @@ public:
     Error StoreChild(const Child &aChild);
 
     /**
+     * Indicates whether or not the child table contains an MTD child with a given @p aRloc16.
+     *
+     * Only children in `kInStateValidOrRestoring` are considered.
+     *
+     * @param[in]  aRloc16  The RLOC16 to check.
+     *
+     * @retval TRUE  If the child table contains an MTD child with @p aRloc16.
+     * @retval FALSE If the child table does not contain an MTD child with @p aRloc16.
+     *
+     */
+    bool HasMinimalChild(uint16_t aRloc16) const;
+
+    /**
      * Indicates whether the child table contains any sleepy child (in states valid or restoring) with a
      * given IPv6 address.
      *

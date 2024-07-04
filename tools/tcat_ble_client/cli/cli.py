@@ -29,7 +29,8 @@
 import readline
 import shlex
 from ble.ble_stream_secure import BleStreamSecure
-from cli.base_commands import (HelpCommand, HelloCommand, CommissionCommand, ThreadStateCommand, ScanCommand)
+from cli.base_commands import (HelpCommand, HelloCommand, CommissionCommand, DecommissionCommand, ThreadStateCommand,
+                               ScanCommand)
 from cli.dataset_commands import (DatasetCommand)
 from dataset.dataset import ThreadDataset
 from typing import Optional
@@ -42,6 +43,7 @@ class CLI:
             'help': HelpCommand(),
             'hello': HelloCommand(),
             'commission': CommissionCommand(),
+            'decommission': DecommissionCommand(),
             'dataset': DatasetCommand(),
             'thread': ThreadStateCommand(),
             'scan': ScanCommand(),

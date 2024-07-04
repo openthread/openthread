@@ -28,6 +28,8 @@
 
 #include "rcp_caps_diag.hpp"
 
+#include "lib/utils/math.hpp"
+
 #if OPENTHREAD_POSIX_CONFIG_RCP_CAPS_DIAG_ENABLE
 namespace ot {
 namespace Posix {
@@ -453,9 +455,21 @@ otError RcpCapsDiag::DiagProcess(char *aArgs[], uint8_t aArgsLength)
 
     VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
 
-    if (strcmp(aArgs[1], "spinel") == 0)
+    if (strcmp(aArgs[1], "capflags") == 0)
+    {
+        ProcessCapabilityFlags();
+    }
+    else if (strcmp(aArgs[1], "srcmatchtable") == 0)
+    {
+        ProcessSrcMatchTable();
+    }
+    else if (strcmp(aArgs[1], "spinel") == 0)
     {
         ProcessSpinel();
+    }
+    else if (strcmp(aArgs[1], "spinelspeed") == 0)
+    {
+        ProcessSpinelSpeed();
     }
     else
     {
@@ -498,22 +512,296 @@ void RcpCapsDiag::SetDiagOutputCallback(otPlatDiagOutputCallback aCallback, void
     mOutputContext  = aContext;
 }
 
+void RcpCapsDiag::ProcessCapabilityFlags(void)
+{
+    TestRadioCapbilityFlags();
+    TestSpinelCapbilityFlags();
+}
+
+void RcpCapsDiag::TestRadioCapbilityFlags(void)
+{
+    static constexpr uint32_t kRadioThread11Flags[] = {OT_RADIO_CAPS_ACK_TIMEOUT, OT_RADIO_CAPS_TRANSMIT_RETRIES,
+                                                       OT_RADIO_CAPS_CSMA_BACKOFF};
+    static constexpr uint32_t kRadioThread12Flags[] = {OT_RADIO_CAPS_TRANSMIT_SEC, OT_RADIO_CAPS_TRANSMIT_TIMING};
+    static constexpr uint32_t kRadioUtilsFlags[]    = {OT_RADIO_CAPS_ENERGY_SCAN, OT_RADIO_CAPS_SLEEP_TO_TX,
+                                                       OT_RADIO_CAPS_RECEIVE_TIMING, OT_RADIO_CAPS_RX_ON_WHEN_IDLE};
+    otError                   error;
+    unsigned int              radioCaps;
+
+    SuccessOrExit(error = mRadioSpinel.Get(SPINEL_PROP_RADIO_CAPS, SPINEL_DATATYPE_UINT_PACKED_S, &radioCaps));
+
+    Output("\r\nRadio Capbility Flags :\r\n");
+
+    OutputRadioCapFlags(kCategoryThread1_1, static_cast<uint32_t>(radioCaps), kRadioThread11Flags,
+                        OT_ARRAY_LENGTH(kRadioThread11Flags));
+    OutputRadioCapFlags(kCategoryThread1_2, static_cast<uint32_t>(radioCaps), kRadioThread12Flags,
+                        OT_ARRAY_LENGTH(kRadioThread12Flags));
+    OutputRadioCapFlags(kCategoryUtils, static_cast<uint32_t>(radioCaps), kRadioUtilsFlags,
+                        OT_ARRAY_LENGTH(kRadioUtilsFlags));
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        Output("Failed to get radio capability flags: %s", otThreadErrorToString(error));
+    }
+
+    return;
+}
+
+void RcpCapsDiag::OutputRadioCapFlags(Category        aCategory,
+                                      uint32_t        aRadioCaps,
+                                      const uint32_t *aFlags,
+                                      uint16_t        aNumbFlags)
+{
+    Output("\r\n%s :\r\n", CategoryToString(aCategory));
+    for (uint16_t i = 0; i < aNumbFlags; i++)
+    {
+        OutputFormat(RadioCapbilityToString(aFlags[i]), SupportToString((aRadioCaps & aFlags[i]) > 0));
+    }
+}
+
+void RcpCapsDiag::TestSpinelCapbilityFlags(void)
+{
+    static constexpr uint8_t  kCapsBufferSize     = 100;
+    static constexpr uint32_t kSpinelBasicFlags[] = {SPINEL_CAP_CONFIG_RADIO, SPINEL_CAP_MAC_RAW,
+                                                     SPINEL_CAP_RCP_API_VERSION};
+    static constexpr uint32_t kSpinelUtilsFlags[] = {
+        SPINEL_CAP_OPENTHREAD_LOG_METADATA, SPINEL_CAP_RCP_MIN_HOST_API_VERSION, SPINEL_CAP_RCP_RESET_TO_BOOTLOADER};
+    otError       error;
+    uint8_t       capsBuffer[kCapsBufferSize];
+    spinel_size_t capsLength = sizeof(capsBuffer);
+
+    SuccessOrExit(error = mRadioSpinel.Get(SPINEL_PROP_CAPS, SPINEL_DATATYPE_DATA_S, capsBuffer, &capsLength));
+
+    Output("\r\nSpinel Capbility Flags :\r\n");
+
+    OutputSpinelCapFlags(kCategoryBasic, capsBuffer, capsLength, kSpinelBasicFlags, OT_ARRAY_LENGTH(kSpinelBasicFlags));
+    OutputSpinelCapFlags(kCategoryUtils, capsBuffer, capsLength, kSpinelUtilsFlags, OT_ARRAY_LENGTH(kSpinelUtilsFlags));
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        Output("Failed to get Spinel capbility flags: %s", otThreadErrorToString(error));
+    }
+
+    return;
+}
+
+void RcpCapsDiag::OutputSpinelCapFlags(Category        aCategory,
+                                       const uint8_t  *aCapsData,
+                                       spinel_size_t   aCapsLength,
+                                       const uint32_t *aFlags,
+                                       uint16_t        aNumbFlags)
+{
+    static constexpr uint8_t kCapsNameSize = 40;
+    char                     capName[kCapsNameSize];
+
+    Output("\r\n%s :\r\n", CategoryToString(aCategory));
+
+    for (uint16_t i = 0; i < aNumbFlags; i++)
+    {
+        snprintf(capName, sizeof(capName), "SPINEL_CAPS_%s", spinel_capability_to_cstr(aFlags[i]));
+        OutputFormat(capName, SupportToString(IsSpinelCapabilitySupported(aCapsData, aCapsLength, aFlags[i])));
+    }
+}
+
+bool RcpCapsDiag::IsSpinelCapabilitySupported(const uint8_t *aCapsData, spinel_size_t aCapsLength, uint32_t aCapability)
+{
+    bool ret = false;
+
+    while (aCapsLength > 0)
+    {
+        unsigned int   capability;
+        spinel_ssize_t unpacked;
+
+        unpacked = spinel_datatype_unpack(aCapsData, aCapsLength, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
+        VerifyOrExit(unpacked > 0);
+        VerifyOrExit(capability != aCapability, ret = true);
+
+        aCapsData += unpacked;
+        aCapsLength -= static_cast<spinel_size_t>(unpacked);
+    }
+
+exit:
+    return ret;
+}
+
+void RcpCapsDiag::ProcessSrcMatchTable(void)
+{
+    OutputShortSrcMatchTableSize();
+    OutputExtendedSrcMatchTableSize();
+}
+
+void RcpCapsDiag::OutputShortSrcMatchTableSize(void)
+{
+    constexpr uint8_t kRouterIdOffset = 10;
+    constexpr uint8_t kRouterId       = 5;
+    uint16_t          num             = 0;
+    uint16_t          shortAddress;
+
+    SuccessOrExit(mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_ENABLED, SPINEL_DATATYPE_BOOL_S, true /* aEnable */));
+    SuccessOrExit(mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, nullptr));
+
+    for (num = 0; num < kMaxNumChildren; num++)
+    {
+        shortAddress = num | (kRouterId << kRouterIdOffset);
+        SuccessOrExit(
+            mRadioSpinel.Insert(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, SPINEL_DATATYPE_UINT16_S, shortAddress));
+    }
+
+exit:
+    if (num != 0)
+    {
+        IgnoreReturnValue(mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, nullptr));
+        IgnoreReturnValue(
+            mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_ENABLED, SPINEL_DATATYPE_BOOL_S, false /* aEnable */));
+    }
+
+    OutputFormat("ShortSrcMatchTableSize", num);
+}
+
+void RcpCapsDiag::OutputExtendedSrcMatchTableSize(void)
+{
+    otExtAddress extAddress = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+    uint16_t     num        = 0;
+
+    SuccessOrExit(mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_ENABLED, SPINEL_DATATYPE_BOOL_S, true /* aEnable */));
+    SuccessOrExit(mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, nullptr));
+
+    for (num = 0; num < kMaxNumChildren; num++)
+    {
+        *reinterpret_cast<uint16_t *>(extAddress.m8) = num;
+        SuccessOrExit(
+            mRadioSpinel.Insert(SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, SPINEL_DATATYPE_EUI64_S, extAddress.m8));
+    }
+
+exit:
+    if (num != 0)
+    {
+        IgnoreReturnValue(mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, nullptr));
+        IgnoreReturnValue(
+            mRadioSpinel.Set(SPINEL_PROP_MAC_SRC_MATCH_ENABLED, SPINEL_DATATYPE_BOOL_S, false /* aEnable */));
+    }
+
+    OutputFormat("ExtendedSrcMatchTableSize", num);
+}
+
+void RcpCapsDiag::HandleDiagOutput(const char *aFormat, va_list aArguments, void *aContext)
+{
+    static_cast<RcpCapsDiag *>(aContext)->HandleDiagOutput(aFormat, aArguments);
+}
+
+void RcpCapsDiag::HandleDiagOutput(const char *aFormat, va_list aArguments)
+{
+    int rval;
+
+    VerifyOrExit(mDiagOutput != nullptr && mDiagOutputLength != 0);
+    rval = vsnprintf(mDiagOutput, mDiagOutputLength, aFormat, aArguments);
+    VerifyOrExit(rval >= 0);
+
+    rval = (rval > mDiagOutputLength) ? mDiagOutputLength : rval;
+    mDiagOutput += rval;
+    mDiagOutputLength -= rval;
+
+exit:
+    return;
+}
+
+void RcpCapsDiag::ProcessSpinelSpeed(void)
+{
+    static constexpr uint32_t kUsPerSec           = 1000000;
+    static constexpr uint8_t  kBitsPerByte        = 8;
+    static constexpr uint8_t  kSpinelHeaderSize   = 4;
+    static constexpr uint8_t  kZeroTerminatorSize = 1;
+    static constexpr char     kEchoCmd[]          = "echo ";
+    static constexpr uint8_t  kEchoPayloadLength  = 200;
+    static constexpr uint8_t  kNumTests           = 100;
+
+    otError                  error                                            = OT_ERROR_NONE;
+    char                     cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE] = {0};
+    char                     output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
+    uint16_t                 echoPayloadLength;
+    uint64_t                 startTimestamp;
+    uint64_t                 endTimestamp;
+    uint64_t                 sumTime   = 0;
+    uint64_t                 sumLength = 0;
+    uint32_t                 speed;
+    otPlatDiagOutputCallback callback;
+    void                    *context;
+
+    mRadioSpinel.GetDiagOutputCallback(callback, context);
+    mRadioSpinel.SetDiagOutputCallback(HandleDiagOutput, this);
+
+    strncpy(cmd, kEchoCmd, sizeof(cmd) - 1);
+    echoPayloadLength = static_cast<uint16_t>(sizeof(cmd) - strlen(cmd) - 1);
+    echoPayloadLength = Lib::Utils::Min<uint16_t>(kEchoPayloadLength, echoPayloadLength);
+    memset(cmd + strlen(cmd), '1', echoPayloadLength);
+
+    for (uint16_t i = 0; i < kNumTests; i++)
+    {
+        output[0]         = '\0';
+        mDiagOutput       = output;
+        mDiagOutputLength = sizeof(output);
+        startTimestamp    = otPlatTimeGet();
+
+        SuccessOrExit(error = mRadioSpinel.PlatDiagProcess(cmd));
+
+        endTimestamp = otPlatTimeGet();
+        sumTime += endTimestamp - startTimestamp;
+        sumLength += kSpinelHeaderSize + strlen(cmd) + kZeroTerminatorSize + kSpinelHeaderSize + strlen(output) +
+                     kZeroTerminatorSize;
+    }
+
+    mRadioSpinel.SetDiagOutputCallback(callback, context);
+
+exit:
+    if (error == OT_ERROR_NONE)
+    {
+        speed = static_cast<uint32_t>((sumLength * kBitsPerByte * kUsPerSec) / sumTime);
+        snprintf(output, sizeof(output), "%lu bps", ToUlong(speed));
+        OutputFormat("SpinelSpeed", output);
+    }
+    else
+    {
+        Output("Failed to test the Spinel speed: %s", otThreadErrorToString(error));
+    }
+}
+
+void RcpCapsDiag::OutputFormat(const char *aName, const char *aValue)
+{
+    static constexpr uint8_t kMaxNameLength = 56;
+    static const char        kPadding[]     = "----------------------------------------------------------";
+    uint16_t                 actualLength   = static_cast<uint16_t>(strlen(aName));
+    uint16_t                 paddingOffset  = (actualLength > kMaxNameLength) ? kMaxNameLength : actualLength;
+
+    static_assert(kMaxNameLength < sizeof(kPadding), "Padding bytes are too short");
+
+    Output("%.*s %s %s\r\n", kMaxNameLength, aName, &kPadding[paddingOffset], aValue);
+}
+
+void RcpCapsDiag::OutputFormat(const char *aName, uint32_t aValue)
+{
+    static constexpr uint16_t kValueLength = 11;
+    char                      value[kValueLength];
+
+    snprintf(value, sizeof(value), "%u", aValue);
+    OutputFormat(aName, value);
+}
+
 void RcpCapsDiag::OutputResult(const SpinelEntry &aEntry, otError error)
 {
     static constexpr uint8_t  kSpaceLength            = 1;
     static constexpr uint8_t  kMaxCommandStringLength = 20;
     static constexpr uint8_t  kMaxKeyStringLength     = 35;
-    static constexpr uint16_t kMaxLength              = kMaxCommandStringLength + kMaxKeyStringLength + kSpaceLength;
-    static const char         kPadding[]              = "----------------------------------------------------------";
-    const char               *commandString           = spinel_command_to_cstr(aEntry.mCommand);
-    const char               *keyString               = spinel_prop_key_to_cstr(aEntry.mKey);
-    uint16_t actualLength  = static_cast<uint16_t>(strlen(commandString) + strlen(keyString) + kSpaceLength);
-    uint16_t paddingOffset = (actualLength > kMaxLength) ? kMaxLength : actualLength;
+    static constexpr uint16_t kMaxBufferLength =
+        kMaxCommandStringLength + kMaxKeyStringLength + kSpaceLength + 1 /* size of '\0' */;
+    char        buffer[kMaxBufferLength] = {0};
+    const char *commandString            = spinel_command_to_cstr(aEntry.mCommand);
+    const char *keyString                = spinel_prop_key_to_cstr(aEntry.mKey);
 
-    static_assert(kMaxLength < sizeof(kPadding), "Padding bytes are too short");
-
-    Output("%.*s %.*s %s %s\r\n", kMaxCommandStringLength, commandString, kMaxKeyStringLength, keyString,
-           &kPadding[paddingOffset], otThreadErrorToString(error));
+    snprintf(buffer, sizeof(buffer), "%.*s %.*s", kMaxCommandStringLength, commandString, kMaxKeyStringLength,
+             keyString);
+    OutputFormat(buffer, otThreadErrorToString(error));
 }
 
 void RcpCapsDiag::Output(const char *aFormat, ...)
@@ -545,6 +833,45 @@ const char *RcpCapsDiag::CategoryToString(Category aCategory)
     static_assert(kCategoryUtils == 3, "kCategoryUtils value is incorrect");
 
     return (aCategory < OT_ARRAY_LENGTH(kCategoryStrings)) ? kCategoryStrings[aCategory] : "invalid";
+}
+
+const char *RcpCapsDiag::SupportToString(bool aSupport) { return aSupport ? "OK" : "NotSupported"; }
+
+const char *RcpCapsDiag::RadioCapbilityToString(uint32_t aCapability)
+{
+    static const char *const kCapbilityStrings[] = {
+        "RADIO_CAPS_ACK_TIMEOUT",      // (1 << 0) OT_RADIO_CAPS_ACK_TIMEOUT
+        "RADIO_CAPS_ENERGY_SCAN",      // (1 << 1) OT_RADIO_CAPS_ENERGY_SCAN
+        "RADIO_CAPS_TRANSMIT_RETRIES", // (1 << 2) OT_RADIO_CAPS_TRANSMIT_RETRIES
+        "RADIO_CAPS_CSMA_BACKOFF",     // (1 << 3) OT_RADIO_CAPS_CSMA_BACKOFF
+        "RADIO_CAPS_SLEEP_TO_TX",      // (1 << 4) OT_RADIO_CAPS_SLEEP_TO_TX
+        "RADIO_CAPS_TRANSMIT_SEC",     // (1 << 5) OT_RADIO_CAPS_TRANSMIT_SEC
+        "RADIO_CAPS_TRANSMIT_TIMING",  // (1 << 6) OT_RADIO_CAPS_TRANSMIT_TIMING
+        "RADIO_CAPS_RECEIVE_TIMING",   // (1 << 7) OT_RADIO_CAPS_RECEIVE_TIMING
+        "RADIO_CAPS_RX_ON_WHEN_IDLE",  // (1 << 8) OT_RADIO_CAPS_RX_ON_WHEN_IDLE
+    };
+    const char *string = "invalid";
+    uint16_t    index  = 0;
+
+    static_assert(OT_RADIO_CAPS_ACK_TIMEOUT == 1 << 0, "OT_RADIO_CAPS_ACK_TIMEOUT value is incorrect");
+    static_assert(OT_RADIO_CAPS_ENERGY_SCAN == 1 << 1, "OT_RADIO_CAPS_ENERGY_SCAN value is incorrect");
+    static_assert(OT_RADIO_CAPS_TRANSMIT_RETRIES == 1 << 2, "OT_RADIO_CAPS_TRANSMIT_RETRIES value is incorrect");
+    static_assert(OT_RADIO_CAPS_CSMA_BACKOFF == 1 << 3, "OT_RADIO_CAPS_CSMA_BACKOFF value is incorrect");
+    static_assert(OT_RADIO_CAPS_SLEEP_TO_TX == 1 << 4, "OT_RADIO_CAPS_SLEEP_TO_TX value is incorrect");
+    static_assert(OT_RADIO_CAPS_TRANSMIT_SEC == 1 << 5, "OT_RADIO_CAPS_TRANSMIT_SEC value is incorrect");
+    static_assert(OT_RADIO_CAPS_TRANSMIT_TIMING == 1 << 6, "OT_RADIO_CAPS_TRANSMIT_TIMING value is incorrect");
+    static_assert(OT_RADIO_CAPS_RECEIVE_TIMING == 1 << 7, "OT_RADIO_CAPS_RECEIVE_TIMING value is incorrect");
+    static_assert(OT_RADIO_CAPS_RX_ON_WHEN_IDLE == 1 << 8, "OT_RADIO_CAPS_RX_ON_WHEN_IDLE value is incorrect");
+
+    for (; !(aCapability & 0x1); (aCapability >>= 1), index++)
+    {
+        VerifyOrExit(index < OT_ARRAY_LENGTH(kCapbilityStrings));
+    }
+
+    string = kCapbilityStrings[index];
+
+exit:
+    return string;
 }
 
 } // namespace Posix

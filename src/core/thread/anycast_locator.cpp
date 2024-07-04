@@ -91,7 +91,7 @@ void AnycastLocator::HandleResponse(Coap::Message *aMessage, const Ip6::MessageI
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    uint16_t            rloc16  = Mac::kShortAddrInvalid;
+    uint16_t            rloc16  = Mle::kInvalidRloc16;
     const Ip6::Address *address = nullptr;
     Ip6::Address        meshLocalAddress;
 

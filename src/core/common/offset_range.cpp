@@ -28,41 +28,46 @@
 
 /**
  * @file
- *   This file includes compile-time configuration constants for lib spinel.
+ *   This file implements helper method for an offset range.
  */
 
-#ifndef SPINEL_CONFIG_H_
-#define SPINEL_CONFIG_H_
+#include "offset_range.hpp"
 
-/**
- * @def OPENTHREAD_LIB_SPINEL_RX_FRAME_BUFFER_SIZE
- *
- * Specifies the rx frame buffer size used by `SpinelInterface` in RCP host (posix) code. This is applicable/used when
- * `RadioSpinel` platform is used.
- *
- */
-#ifndef OPENTHREAD_LIB_SPINEL_RX_FRAME_BUFFER_SIZE
-#define OPENTHREAD_LIB_SPINEL_RX_FRAME_BUFFER_SIZE 8192
-#endif
+#include "common/code_utils.hpp"
+#include "common/message.hpp"
+#include "common/num_utils.hpp"
+#include "common/numeric_limits.hpp"
 
-/**
- * @def OPENTHREAD_LIB_SPINEL_LOG_MAX_SIZE
- *
- * The maximum log string size (number of chars).
- *
- */
-#ifndef OPENTHREAD_LIB_SPINEL_LOG_MAX_SIZE
-#define OPENTHREAD_LIB_SPINEL_LOG_MAX_SIZE 1024
-#endif
+namespace ot {
 
-/**
- * @def OPENTHREAD_LIB_SPINEL_NCP_LOG_MAX_SIZE
- *
- * The maximum OpenThread log string size (number of chars) supported by NCP using Spinel `StreamWrite`.
- *
- */
-#ifndef OPENTHREAD_LIB_SPINEL_NCP_LOG_MAX_SIZE
-#define OPENTHREAD_LIB_SPINEL_NCP_LOG_MAX_SIZE 150
-#endif
+void OffsetRange::Init(uint16_t aOffset, uint16_t aLength)
+{
+    uint16_t maxLength = NumericLimits<uint16_t>::kMax - aOffset;
 
-#endif // SPINEL_CONFIG_H_
+    mOffset = aOffset;
+    mLength = Min(aLength, maxLength);
+}
+
+void OffsetRange::InitFromRange(uint16_t aStartOffset, uint16_t aEndOffset)
+{
+    Init(aStartOffset, Max(aStartOffset, aEndOffset) - aStartOffset);
+}
+
+void OffsetRange::InitFromMessageOffsetToEnd(const Message &aMessage)
+{
+    InitFromRange(aMessage.GetOffset(), aMessage.GetLength());
+}
+
+void OffsetRange::InitFromMessageFullLength(const Message &aMessage) { Init(0, aMessage.GetLength()); }
+
+void OffsetRange::AdvanceOffset(uint32_t aLength)
+{
+    uint16_t length = static_cast<uint16_t>(Min<uint32_t>(aLength, mLength));
+
+    mOffset += length;
+    mLength -= length;
+}
+
+void OffsetRange::ShrinkLength(uint16_t aLength) { mLength = Min(mLength, aLength); }
+
+} // namespace ot

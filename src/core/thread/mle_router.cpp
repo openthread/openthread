@@ -702,7 +702,7 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
     switch (Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress))
     {
     case kErrorNone:
-        if (IsActiveRouter(sourceAddress))
+        if (IsRouterRloc16(sourceAddress))
         {
             neighbor = mRouterTable.FindRouterByRloc16(sourceAddress);
             VerifyOrExit(neighbor != nullptr, error = kErrorParse);
@@ -727,7 +727,7 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
     case kErrorNotFound:
         // A missing source address indicates that the router was
         // recently reset.
-        VerifyOrExit(aRxInfo.IsNeighborStateValid() && IsActiveRouter(aRxInfo.mNeighbor->GetRloc16()),
+        VerifyOrExit(aRxInfo.IsNeighborStateValid() && IsRouterRloc16(aRxInfo.mNeighbor->GetRloc16()),
                      error = kErrorDrop);
         neighbor = aRxInfo.mNeighbor;
         break;
@@ -791,7 +791,7 @@ Error MleRouter::SendLinkAccept(const RxInfo      &aRxInfo,
     linkMargin = Get<Mac::Mac>().ComputeLinkMargin(aRxInfo.mMessage.GetAverageRss());
     SuccessOrExit(error = message->AppendLinkMarginTlv(linkMargin));
 
-    if (aNeighbor != nullptr && IsActiveRouter(aNeighbor->GetRloc16()))
+    if (aNeighbor != nullptr && IsRouterRloc16(aNeighbor->GetRloc16()))
     {
         SuccessOrExit(error = message->AppendLeaderDataTlv());
     }
@@ -891,7 +891,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
     Log(kMessageReceive, aRequest ? kTypeLinkAcceptAndRequest : kTypeLinkAccept, aRxInfo.mMessageInfo.GetPeerAddr(),
         sourceAddress);
 
-    VerifyOrExit(IsActiveRouter(sourceAddress), error = kErrorParse);
+    VerifyOrExit(IsRouterRloc16(sourceAddress), error = kErrorParse);
 
     routerId      = RouterIdFromRloc16(sourceAddress);
     router        = mRouterTable.FindRouterById(routerId);
@@ -1084,7 +1084,7 @@ Error MleRouter::ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo)
     // `RouterTable`).
 
     Error    error          = kErrorNone;
-    uint16_t neighborRloc16 = Mac::kShortAddrInvalid;
+    uint16_t neighborRloc16 = kInvalidRloc16;
 
     if ((aRxInfo.mNeighbor != nullptr) && Get<RouterTable>().Contains(*aRxInfo.mNeighbor))
     {
@@ -1099,7 +1099,7 @@ Error MleRouter::ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo)
         error = kErrorNoRoute;
     }
 
-    if (neighborRloc16 != Mac::kShortAddrInvalid)
+    if (neighborRloc16 != kInvalidRloc16)
     {
         aRxInfo.mNeighbor = Get<NeighborTable>().FindNeighbor(neighborRloc16);
     }
@@ -1249,7 +1249,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
         ExitNow();
     }
 
-    VerifyOrExit(IsActiveRouter(aSourceAddress) && routeTlv.IsValid());
+    VerifyOrExit(IsRouterRloc16(aSourceAddress) && routeTlv.IsValid());
     routerId = RouterIdFromRloc16(aSourceAddress);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -1761,11 +1761,10 @@ exit:
 
 Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
 {
-    Error    error;
-    uint16_t offset;
-    uint16_t endOffset;
-    uint8_t  count       = 0;
-    uint8_t  storedCount = 0;
+    Error       error;
+    OffsetRange offsetRange;
+    uint8_t     count       = 0;
+    uint8_t     storedCount = 0;
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     Ip6::Address oldDua;
 #endif
@@ -1775,8 +1774,7 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
 
     OT_UNUSED_VARIABLE(storedCount);
 
-    SuccessOrExit(error =
-                      Tlv::FindTlvValueStartEndOffsets(aRxInfo.mMessage, Tlv::kAddressRegistration, offset, endOffset));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRxInfo.mMessage, Tlv::kAddressRegistration, offsetRange));
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     if (aChild.GetDomainUnicastAddress(oldDua) != kErrorNone)
@@ -1790,12 +1788,16 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
     {
         OT_ASSERT(aChild.IsStateValid());
 
-        for (const Ip6::Address &childAddress :
-             aChild.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
+        for (const Child::Ip6AddrEntry &addrEntry : aChild.GetIp6Addresses())
         {
-            if (aChild.GetAddressMlrState(childAddress) == kMlrStateRegistered)
+            if (!addrEntry.IsMulticastLargerThanRealmLocal())
             {
-                IgnoreError(oldMlrRegisteredAddresses.PushBack(childAddress));
+                continue;
+            }
+
+            if (addrEntry.GetMlrState(aChild) == kMlrStateRegistered)
+            {
+                IgnoreError(oldMlrRegisteredAddresses.PushBack(addrEntry));
             }
         }
     }
@@ -1803,14 +1805,14 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
 
     aChild.ClearIp6Addresses();
 
-    while (offset < endOffset)
+    while (!offsetRange.IsEmpty())
     {
         uint8_t      controlByte;
         Ip6::Address address;
 
         // Read out the control byte (first byte in entry)
-        SuccessOrExit(error = aRxInfo.mMessage.Read(offset, controlByte));
-        offset++;
+        SuccessOrExit(error = aRxInfo.mMessage.Read(offsetRange, controlByte));
+        offsetRange.AdvanceOffset(sizeof(uint8_t));
         count++;
 
         address.Clear();
@@ -1824,9 +1826,8 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
             uint8_t         contextId = AddressRegistrationTlv::GetContextId(controlByte);
             Lowpan::Context context;
 
-            VerifyOrExit(offset + sizeof(Ip6::InterfaceIdentifier) <= endOffset, error = kErrorParse);
-            IgnoreError(aRxInfo.mMessage.Read(offset, address.GetIid()));
-            offset += sizeof(Ip6::InterfaceIdentifier);
+            IgnoreError(aRxInfo.mMessage.Read(offsetRange, address.GetIid()));
+            offsetRange.AdvanceOffset(sizeof(Ip6::InterfaceIdentifier));
 
             if (Get<NetworkData::Leader>().GetContext(contextId, context) != kErrorNone)
             {
@@ -1841,9 +1842,8 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
         {
             // Uncompressed entry contains the full IPv6 address.
 
-            VerifyOrExit(offset + sizeof(Ip6::Address) <= endOffset, error = kErrorParse);
-            IgnoreError(aRxInfo.mMessage.Read(offset, address));
-            offset += sizeof(Ip6::Address);
+            IgnoreError(aRxInfo.mMessage.Read(offsetRange, address));
+            offsetRange.AdvanceOffset(sizeof(Ip6::Address));
         }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -2353,7 +2353,7 @@ void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
     LeaderData  leaderData;
     Child      *child;
 
-    if ((aRxInfo.mNeighbor == nullptr) || IsActiveRouter(aRxInfo.mNeighbor->GetRloc16()) ||
+    if ((aRxInfo.mNeighbor == nullptr) || IsRouterRloc16(aRxInfo.mNeighbor->GetRloc16()) ||
         !Get<ChildTable>().Contains(*aRxInfo.mNeighbor))
     {
         Log(kMessageReceive, kTypeChildUpdateResponseOfUnknownChild, aRxInfo.mMessageInfo.GetPeerAddr());
@@ -2617,11 +2617,10 @@ void MleRouter::SetSteeringData(const Mac::ExtAddress *aExtAddress)
 void MleRouter::HandleDiscoveryRequest(RxInfo &aRxInfo)
 {
     Error                        error = kErrorNone;
-    MeshCoP::Tlv                 meshcopTlv;
+    Tlv::ParsedInfo              tlvInfo;
     MeshCoP::DiscoveryRequestTlv discoveryRequestTlv;
     MeshCoP::ExtendedPanId       extPanId;
-    uint16_t                     offset;
-    uint16_t                     end;
+    OffsetRange                  offsetRange;
 
     Log(kMessageReceive, kTypeDiscoveryRequest, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -2629,22 +2628,28 @@ void MleRouter::HandleDiscoveryRequest(RxInfo &aRxInfo)
 
     VerifyOrExit(IsRouterEligible(), error = kErrorInvalidState);
 
-    SuccessOrExit(error = Tlv::FindTlvValueStartEndOffsets(aRxInfo.mMessage, Tlv::kDiscovery, offset, end));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRxInfo.mMessage, Tlv::kDiscovery, offsetRange));
 
-    while (offset < end)
+    for (; !offsetRange.IsEmpty(); offsetRange.AdvanceOffset(tlvInfo.GetSize()))
     {
-        IgnoreError(aRxInfo.mMessage.Read(offset, meshcopTlv));
+        SuccessOrExit(error = tlvInfo.ParseFrom(aRxInfo.mMessage, offsetRange));
 
-        switch (meshcopTlv.GetType())
+        if (tlvInfo.mIsExtended)
+        {
+            continue;
+        }
+
+        switch (tlvInfo.mType)
         {
         case MeshCoP::Tlv::kDiscoveryRequest:
-            IgnoreError(aRxInfo.mMessage.Read(offset, discoveryRequestTlv));
+            SuccessOrExit(error = aRxInfo.mMessage.Read(offsetRange, discoveryRequestTlv));
             VerifyOrExit(discoveryRequestTlv.IsValid(), error = kErrorParse);
 
             break;
 
         case MeshCoP::Tlv::kExtendedPanId:
-            SuccessOrExit(error = Tlv::Read<MeshCoP::ExtendedPanIdTlv>(aRxInfo.mMessage, offset, extPanId));
+            SuccessOrExit(
+                error = Tlv::Read<MeshCoP::ExtendedPanIdTlv>(aRxInfo.mMessage, offsetRange.GetOffset(), extPanId));
             VerifyOrExit(Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId() != extPanId, error = kErrorDrop);
 
             break;
@@ -2652,8 +2657,6 @@ void MleRouter::HandleDiscoveryRequest(RxInfo &aRxInfo)
         default:
             break;
         }
-
-        offset += sizeof(meshcopTlv) + meshcopTlv.GetLength();
     }
 
     if (discoveryRequestTlv.IsValid())
@@ -2696,7 +2699,6 @@ Error MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, const M
     uint16_t                      startOffset;
     Tlv                           tlv;
     MeshCoP::DiscoveryResponseTlv discoveryResponseTlv;
-    MeshCoP::NetworkNameTlv       networkNameTlv;
     uint16_t                      delay;
 
     VerifyOrExit((message = NewMleMessage(kCommandDiscoveryResponse)) != nullptr, error = kErrorNoBufs);
@@ -2740,9 +2742,8 @@ Error MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, const M
     SuccessOrExit(
         error = Tlv::Append<MeshCoP::ExtendedPanIdTlv>(*message, Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
 
-    networkNameTlv.Init();
-    networkNameTlv.SetNetworkName(Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsData());
-    SuccessOrExit(error = networkNameTlv.AppendTo(*message));
+    SuccessOrExit(error = Tlv::Append<MeshCoP::NetworkNameTlv>(
+                      *message, Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsCString()));
 
     SuccessOrExit(error = message->AppendSteeringDataTlv());
 
@@ -2775,7 +2776,7 @@ Error MleRouter::SendChildIdResponse(Child &aChild)
     SuccessOrExit(error = message->AppendLeaderDataTlv());
     SuccessOrExit(error = message->AppendActiveAndPendingTimestampTlvs());
 
-    if ((aChild.GetRloc16() == 0) || !RouterIdMatch(aChild.GetRloc16(), GetRloc16()))
+    if ((aChild.GetRloc16() == 0) || !HasMatchingRouterIdWith(aChild.GetRloc16()))
     {
         uint16_t rloc16;
 
@@ -3107,22 +3108,6 @@ exit:
     LogSendError(kTypeDataResponse, error);
 }
 
-bool MleRouter::IsMinimalChild(uint16_t aRloc16)
-{
-    bool      isMinimalChild = false;
-    Neighbor *neighbor;
-
-    VerifyOrExit(RouterIdMatch(aRloc16, GetRloc16()));
-
-    neighbor = mNeighborTable.FindNeighbor(aRloc16);
-    VerifyOrExit(neighbor != nullptr);
-
-    isMinimalChild = !neighbor->IsFullThreadDevice();
-
-exit:
-    return isMinimalChild;
-}
-
 void MleRouter::RemoveRouterLink(Router &aRouter)
 {
     switch (mRole)
@@ -3159,7 +3144,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     {
         ClearParentCandidate();
     }
-    else if (!IsActiveRouter(aNeighbor.GetRloc16()))
+    else if (IsChildRloc16(aNeighbor.GetRloc16()))
     {
         OT_ASSERT(mChildTable.Contains(aNeighbor));
 
@@ -3211,62 +3196,6 @@ void MleRouter::SetRouterId(uint8_t aRouterId)
 {
     mRouterId         = aRouterId;
     mPreviousRouterId = mRouterId;
-}
-
-void MleRouter::ResolveRoutingLoops(uint16_t aSourceMac, uint16_t aDestRloc16)
-{
-    Router *router;
-
-    if (aSourceMac != mRouterTable.GetNextHop(aDestRloc16))
-    {
-        ExitNow();
-    }
-
-    router = mRouterTable.FindRouterByRloc16(aDestRloc16);
-    VerifyOrExit(router != nullptr);
-
-    router->SetNextHopToInvalid();
-    ResetAdvertiseInterval();
-
-exit:
-    return;
-}
-
-Error MleRouter::CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header)
-{
-    bool isReachable = false;
-
-    if (IsChild())
-    {
-        if (aMeshDest == GetRloc16())
-        {
-            isReachable = Get<ThreadNetif>().HasUnicastAddress(aIp6Header.GetDestination());
-        }
-        else
-        {
-            isReachable = true;
-        }
-
-        ExitNow();
-    }
-
-    if (aMeshDest == GetRloc16())
-    {
-        isReachable = Get<ThreadNetif>().HasUnicastAddress(aIp6Header.GetDestination()) ||
-                      (mNeighborTable.FindNeighbor(aIp6Header.GetDestination()) != nullptr);
-        ExitNow();
-    }
-
-    if (RouterIdFromRloc16(aMeshDest) == mRouterId)
-    {
-        isReachable = (mChildTable.FindChild(aMeshDest, Child::kInStateValidOrRestoring) != nullptr);
-        ExitNow();
-    }
-
-    isReachable = (mRouterTable.GetNextHop(aMeshDest) != Mac::kShortAddrInvalid);
-
-exit:
-    return isReachable ? kErrorNone : kErrorNoRoute;
 }
 
 Error MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
@@ -3487,7 +3416,7 @@ template <> void MleRouter::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessag
     case kErrorNone:
         break;
     case kErrorNotFound:
-        rloc16 = Mac::kShortAddrInvalid;
+        rloc16 = kInvalidRloc16;
         break;
     default:
         ExitNow(error = kErrorParse);
@@ -3536,7 +3465,7 @@ template <> void MleRouter::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessag
         ExitNow();
     }
 
-    if (rloc16 != Mac::kShortAddrInvalid)
+    if (rloc16 != kInvalidRloc16)
     {
         router = mRouterTable.Allocate(RouterIdFromRloc16(rloc16));
 

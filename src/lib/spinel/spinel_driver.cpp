@@ -192,6 +192,7 @@ otError SpinelDriver::SendCommand(uint32_t aCommand, spinel_prop_key_t aKey, spi
     offset = static_cast<uint16_t>(packed);
 
     EXPECT_NO_ERROR(error = mSpinelInterface->SendFrame(buffer, offset));
+    LogSpinelFrame(buffer, offset, true /* aTx */);
 
 exit:
     return error;
@@ -226,6 +227,7 @@ otError SpinelDriver::SendCommand(uint32_t          aCommand,
     }
 
     EXPECT_NO_ERROR(error = mSpinelInterface->SendFrame(buffer, offset));
+    LogSpinelFrame(buffer, offset, true /* aTx */);
 
 exit:
     return error;

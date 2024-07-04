@@ -524,6 +524,42 @@ public:
     uint16_t GetRloc16(void) const { return mRloc16; }
 
     /**
+     * Indicates whether or not this device is using a given RLOC16.
+     *
+     * @param[in] aRloc16   The RLOC16 to check.
+     *
+     * @retval TRUE   This device is using @p aRloc16.
+     * @retval FALSE  This device is not using @p aRloc16.
+     *
+     */
+    bool HasRloc16(uint16_t aRloc16) const { return mRloc16 == aRloc16; }
+
+    /**
+     * Indicates whether or not this device RLOC16 matches a given Router ID.
+     *
+     * @param[in] aRouterId   The Router ID to check.
+     *
+     * @retval TRUE   This device's RLOC16 matches the @p aRouterId.
+     * @retval FALSE  This device's RLOC16 does not match the @p aRouterId.
+     *
+     */
+    bool MatchesRouterId(uint8_t aRouterId) const { return RouterIdFromRloc16(mRloc16) == aRouterId; }
+
+    /**
+     * Indicates whether or not this device's RLOC16 shares the same Router ID with a given RLOC16.
+     *
+     * A shared Router ID implies that this device and the @ aRloc16 are either directly related as parent and child,
+     * or are children of the same parent within the Thread network.
+     *
+     * @param[in] aRloc16   The RLOC16 to check.
+     *
+     * @retval TRUE   This device and @p aRloc16 have a matching router ID.
+     * @retval FALSE  This device and @p aRloc16 do not have a matching router ID.
+     *
+     */
+    bool HasMatchingRouterIdWith(uint16_t aRloc16) const { return RouterIdMatch(mRloc16, aRloc16); }
+
+    /**
      * Returns the mesh local RLOC IPv6 address assigned to the Thread interface.
      *
      * @returns The mesh local RLOC IPv6 address.
@@ -1166,7 +1202,7 @@ private:
     class ServiceAloc : public Ip6::Netif::UnicastAddress
     {
     public:
-        static constexpr uint16_t kNotInUse = Mac::kShortAddrInvalid;
+        static constexpr uint16_t kNotInUse = kInvalidRloc16;
 
         ServiceAloc(void);
 

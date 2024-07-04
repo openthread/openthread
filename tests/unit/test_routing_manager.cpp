@@ -1168,6 +1168,16 @@ void VerifyDiscoveredRouters(const InfraRouter *aRouters, uint16_t aNumRouters)
 
 void VerifyDiscoveredRoutersIsEmpty(void) { VerifyDiscoveredRouters(nullptr, 0); }
 
+void VerifyFavoredOnLinkPrefix(const Ip6::Prefix &aPrefix)
+{
+    Ip6::Prefix favoredPrefix;
+
+    Log("VerifyFavoredOnLinkPrefix(%s)", aPrefix.ToString().AsCString());
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetFavoredOnLinkPrefix(favoredPrefix));
+    VerifyOrQuit(favoredPrefix == aPrefix);
+}
+
 void InitTest(bool aEnablBorderRouting = false, bool aAfterReset = false)
 {
     uint32_t delay = 10000;
@@ -1843,6 +1853,124 @@ void TestAdvNonUlaRoute(void)
 
     Log("End of TestAdvNonUlaRoute");
 
+    FinalizeTest();
+}
+
+void TestFavoredOnLinkPrefix(void)
+{
+    Ip6::Prefix  localOnLink;
+    Ip6::Prefix  localOmr;
+    Ip6::Prefix  onLinkPrefixA  = PrefixFromString("2000:abba:baba:aaaa::", 64);
+    Ip6::Prefix  onLinkPrefixB  = PrefixFromString("2000:abba:baba:bbbb::", 64);
+    Ip6::Address routerAddressA = AddressFromString("fd00::aaaa");
+    Ip6::Address routerAddressB = AddressFromString("fd00::bbbb");
+    uint16_t     heapAllocations;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestFavoredOnLinkPrefix");
+
+    InitTest();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start Routing Manager. Check emitted RS and RA messages.
+
+    sRsEmitted   = false;
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+
+    Log("Local on-link prefix is %s", localOnLink.ToString().AsCString());
+    Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
+
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(30000);
+
+    VerifyOrQuit(sRsEmitted);
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    Log("Received RA was validated");
+
+    VerifyFavoredOnLinkPrefix(localOnLink);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Advertise on-link prefix B from router B
+
+    SendRouterAdvert(routerAddressB, {Pio(onLinkPrefixB, kValidLitime, kPreferredLifetime)});
+
+    AdvanceTime(10 * 1000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check the discovered prefix table and ensure on-link prefix B is
+    // now the favored on-link prefix
+
+    VerifyPrefixTable({OnLinkPrefix(onLinkPrefixB, kValidLitime, kPreferredLifetime, routerAddressB)});
+    VerifyFavoredOnLinkPrefix(onLinkPrefixB);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Advertise on-link prefix A from router A with a short
+    // preferred lifetime (less than 1800 which is the threshold for it
+    // to be considered a valid favored on-link prefix).
+
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefixA, kValidLitime, 1799)});
+
+    AdvanceTime(10 * 1000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check the discovered prefix table and ensure on-link prefix B is
+    // still the favored on-link prefix.
+
+    VerifyPrefixTable({OnLinkPrefix(onLinkPrefixB, kValidLitime, kPreferredLifetime, routerAddressB),
+                       OnLinkPrefix(onLinkPrefixA, kValidLitime, 1799, routerAddressA)});
+
+    VerifyFavoredOnLinkPrefix(onLinkPrefixB);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Advertise on-link prefix A from router A with a long
+    // preferred lifetime now.
+
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefixA, kValidLitime, kPreferredLifetime)});
+
+    AdvanceTime(10 * 1000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check the discovered prefix table and ensure that now on-link
+    // prefix A (which is numerically smaller) is considered as
+    // favored on-link prefix.
+
+    VerifyPrefixTable({OnLinkPrefix(onLinkPrefixB, kValidLitime, kPreferredLifetime, routerAddressB),
+                       OnLinkPrefix(onLinkPrefixA, kValidLitime, kPreferredLifetime, routerAddressA)});
+
+    VerifyFavoredOnLinkPrefix(onLinkPrefixA);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Deprecate on-link prefix A from router A
+
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefixA, kValidLitime, 0)});
+
+    AdvanceTime(10 * 1000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check the discovered prefix table and ensure that now on-link
+    // prefix B is again the  favored on-link prefix.
+
+    VerifyPrefixTable({OnLinkPrefix(onLinkPrefixB, kValidLitime, kPreferredLifetime, routerAddressB),
+                       OnLinkPrefix(onLinkPrefixA, kValidLitime, 0, routerAddressA)});
+
+    VerifyFavoredOnLinkPrefix(onLinkPrefixB);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    Log("End of TestFavoredOnLinkPrefix");
     FinalizeTest();
 }
 
@@ -4187,6 +4315,7 @@ int main(void)
     ot::TestOmrSelection();
     ot::TestDefaultRoute();
     ot::TestAdvNonUlaRoute();
+    ot::TestFavoredOnLinkPrefix();
     ot::TestLocalOnLinkPrefixDeprecation();
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     ot::TestDomainPrefixAsOmr();

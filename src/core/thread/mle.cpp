@@ -95,8 +95,8 @@ Mle::Mle(Instance &aInstance)
 #if OPENTHREAD_FTD
     , mLinkRequestAttempts(0)
 #endif
-    , mRloc16(Mac::kShortAddrInvalid)
-    , mPreviousParentRloc(Mac::kShortAddrInvalid)
+    , mRloc16(kInvalidRloc16)
+    , mPreviousParentRloc(kInvalidRloc16)
     , mAttachCounter(0)
     , mAnnounceDelay(kAnnounceTimeout)
     , mAlternatePanId(Mac::kPanIdBroadcast)
@@ -209,12 +209,12 @@ Error Mle::Start(StartMode aMode)
         mReattachState = kReattachStart;
     }
 
-    if ((aMode == kAnnounceAttach) || (GetRloc16() == Mac::kShortAddrInvalid))
+    if ((aMode == kAnnounceAttach) || (GetRloc16() == kInvalidRloc16))
     {
         Attach(kAnyPartition);
     }
 #if OPENTHREAD_FTD
-    else if (IsActiveRouter(GetRloc16()))
+    else if (IsRouterRloc16(GetRloc16()))
     {
         if (Get<MleRouter>().BecomeRouter(ThreadStatusTlv::kTooFewRouters) != kErrorNone)
         {
@@ -397,7 +397,7 @@ void Mle::Restore(void)
     }
 
 #if OPENTHREAD_MTD
-    if (!IsActiveRouter(networkInfo.GetRloc16()))
+    if (IsChildRloc16(networkInfo.GetRloc16()))
 #endif
     {
         Get<Mac::Mac>().SetShortAddress(networkInfo.GetRloc16());
@@ -407,12 +407,12 @@ void Mle::Restore(void)
 
     mMeshLocalEid.GetAddress().SetIid(networkInfo.GetMeshLocalIid());
 
-    if (networkInfo.GetRloc16() == Mac::kShortAddrInvalid)
+    if (networkInfo.GetRloc16() == kInvalidRloc16)
     {
         ExitNow();
     }
 
-    if (!IsActiveRouter(networkInfo.GetRloc16()))
+    if (IsChildRloc16(networkInfo.GetRloc16()))
     {
         if (Get<Settings>().Read(parentInfo) != kErrorNone)
         {
@@ -432,7 +432,7 @@ void Mle::Restore(void)
         mParent.SetVersion(parentInfo.GetVersion());
         mParent.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                          DeviceMode::kModeFullNetworkData));
-        mParent.SetRloc16(Rloc16FromRouterId(RouterIdFromRloc16(networkInfo.GetRloc16())));
+        mParent.SetRloc16(ParentRloc16ForRloc16(networkInfo.GetRloc16()));
         mParent.SetState(Neighbor::kStateRestored);
 
         mPreviousParentRloc = mParent.GetRloc16();
@@ -540,7 +540,7 @@ Error Mle::BecomeDetached(void)
 
     SetStateDetached();
     mParent.SetState(Neighbor::kStateInvalid);
-    SetRloc16(Mac::kShortAddrInvalid);
+    SetRloc16(kInvalidRloc16);
     Attach(kAnyPartition);
 
 exit:
@@ -749,7 +749,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
     mParentSearch.UpdateState();
 #endif
 
-    if ((mPreviousParentRloc != Mac::kShortAddrInvalid) && (mPreviousParentRloc != mParent.GetRloc16()))
+    if ((mPreviousParentRloc != kInvalidRloc16) && (mPreviousParentRloc != mParent.GetRloc16()))
     {
         mCounters.mParentChanges++;
 
@@ -960,7 +960,7 @@ void Mle::SetRloc16(uint16_t aRloc16)
     Get<Mac::Mac>().SetShortAddress(aRloc16);
     mRloc16 = aRloc16;
 
-    if (aRloc16 != Mac::kShortAddrInvalid)
+    if (aRloc16 != kInvalidRloc16)
     {
         // We can always call `AddUnicastAddress(mMeshLocat16)` and if
         // the address is already added, it will perform no action.
@@ -2751,7 +2751,7 @@ void Mle::ReestablishLinkWithNeighbor(Neighbor &aNeighbor)
 #if OPENTHREAD_FTD
     VerifyOrExit(IsFullThreadDevice());
 
-    if (IsActiveRouter(aNeighbor.GetRloc16()))
+    if (IsRouterRloc16(aNeighbor.GetRloc16()))
     {
         IgnoreError(Get<MleRouter>().SendLinkRequest(&aNeighbor));
     }
@@ -2842,12 +2842,11 @@ void Mle::HandleDataResponse(RxInfo &aRxInfo)
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     {
-        uint16_t offset;
-        uint16_t length;
+        OffsetRange offsetRange;
 
-        if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kLinkMetricsReport, offset, length) == kErrorNone)
+        if (Tlv::FindTlvValueOffsetRange(aRxInfo.mMessage, Tlv::kLinkMetricsReport, offsetRange) == kErrorNone)
         {
-            Get<LinkMetrics::Initiator>().HandleReport(aRxInfo.mMessage, offset, length,
+            Get<LinkMetrics::Initiator>().HandleReport(aRxInfo.mMessage, offsetRange,
                                                        aRxInfo.mMessageInfo.GetPeerAddr());
         }
     }
@@ -3045,7 +3044,7 @@ bool Mle::IsBetterParent(uint16_t                aRloc16,
     rval = ThreeWayCompare(LinkQualityForLinkMargin(aTwoWayLinkMargin), mParentCandidate.GetTwoWayLinkQuality());
     VerifyOrExit(rval == 0);
 
-    rval = ThreeWayCompare(IsActiveRouter(aRloc16), IsActiveRouter(mParentCandidate.GetRloc16()));
+    rval = ThreeWayCompare(IsRouterRloc16(aRloc16), IsRouterRloc16(mParentCandidate.GetRloc16()));
     VerifyOrExit(rval == 0);
 
     rval = ThreeWayCompare(aConnectivityTlv.GetParentPriority(), mParentCandidate.mPriority);
@@ -3558,7 +3557,7 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
     case kRoleChild:
         SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
-        if (!RouterIdMatch(sourceAddress, GetRloc16()))
+        if (!HasMatchingRouterIdWith(sourceAddress))
         {
             IgnoreError(BecomeDetached());
             ExitNow();
@@ -3948,7 +3947,7 @@ void Mle::ParentSearch::UpdateState(void)
 
     if (mIsInBackoff && !mBackoffWasCanceled && mRecentlyDetached)
     {
-        if ((Get<Mle>().mPreviousParentRloc != Mac::kShortAddrInvalid) &&
+        if ((Get<Mle>().mPreviousParentRloc != kInvalidRloc16) &&
             (Get<Mle>().mPreviousParentRloc != Get<Mle>().mParent.GetRloc16()))
         {
             mIsInBackoff        = false;
@@ -3972,7 +3971,7 @@ void Mle::ParentSearch::UpdateState(void)
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 void Mle::Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAddress)
 {
-    Log(aAction, aType, aAddress, Mac::kShortAddrInvalid);
+    Log(aAction, aType, aAddress, kInvalidRloc16);
 }
 
 void Mle::Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAddress, uint16_t aRloc)
@@ -3984,7 +3983,7 @@ void Mle::Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAdd
 
     String<kRlocStringSize> rlocString;
 
-    if (aRloc != Mac::kShortAddrInvalid)
+    if (aRloc != kInvalidRloc16)
     {
         rlocString.Append(",0x%04x", aRloc);
     }
@@ -4844,19 +4843,18 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(Child &aChild)
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = Append(tlv));
 
-    for (const Ip6::Address &address : aChild.IterateIp6Addresses())
+    // The parent must echo back all registered IPv6 addresses except
+    // for the ML-EID, which is excluded by `Child::GetIp6Addresses()`.
+
+    for (const Ip6::Address &address : aChild.GetIp6Addresses())
     {
         if (address.IsMulticast() || Get<NetworkData::Leader>().GetContext(address, context) != kErrorNone)
         {
             SuccessOrExit(error = AppendAddressEntry(address));
         }
-        else if (context.mContextId != kMeshLocalPrefixContextId)
-        {
-            SuccessOrExit(error = AppendCompressedAddressEntry(context.mContextId, address));
-        }
         else
         {
-            continue;
+            SuccessOrExit(error = AppendCompressedAddressEntry(context.mContextId, address));
         }
     }
 
@@ -4949,10 +4947,9 @@ exit:
 
 bool Mle::RxMessage::ContainsTlv(Tlv::Type aTlvType) const
 {
-    uint16_t offset;
-    uint16_t length;
+    OffsetRange offsetRange;
 
-    return Tlv::FindTlvValueOffset(*this, aTlvType, offset, length) == kErrorNone;
+    return Tlv::FindTlvValueOffsetRange(*this, aTlvType, offsetRange) == kErrorNone;
 }
 
 Error Mle::RxMessage::ReadModeTlv(DeviceMode &aMode) const
@@ -4980,12 +4977,11 @@ exit:
 
 Error Mle::RxMessage::ReadChallengeOrResponse(uint8_t aTlvType, RxChallenge &aRxChallenge) const
 {
-    Error    error;
-    uint16_t offset;
-    uint16_t length;
+    Error       error;
+    OffsetRange offsetRange;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, aTlvType, offset, length));
-    error = aRxChallenge.ReadFrom(*this, offset, length);
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(*this, aTlvType, offsetRange));
+    error = aRxChallenge.ReadFrom(*this, offsetRange);
 
 exit:
     return error;
@@ -5050,15 +5046,14 @@ exit:
 
 Error Mle::RxMessage::ReadAndSetNetworkDataTlv(const LeaderData &aLeaderData) const
 {
-    Error    error;
-    uint16_t offset;
-    uint16_t length;
+    Error       error;
+    OffsetRange offsetRange;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, Tlv::kNetworkData, offset, length));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(*this, Tlv::kNetworkData, offsetRange));
 
     error = Get<NetworkData::Leader>().SetNetworkData(aLeaderData.GetDataVersion(NetworkData::kFullSet),
                                                       aLeaderData.GetDataVersion(NetworkData::kStableSubset),
-                                                      Get<Mle>().GetNetworkDataType(), *this, offset, length);
+                                                      Get<Mle>().GetNetworkDataType(), *this, offsetRange);
 exit:
     return error;
 }
@@ -5079,12 +5074,11 @@ Error Mle::RxMessage::ReadAndSaveDataset(MeshCoP::Dataset::Type    aDatasetType,
     Error            error   = kErrorNone;
     Tlv::Type        tlvType = (aDatasetType == MeshCoP::Dataset::kActive) ? Tlv::kActiveDataset : Tlv::kPendingDataset;
     MeshCoP::Dataset dataset;
-    uint16_t         offset;
-    uint16_t         length;
+    OffsetRange      offsetRange;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, tlvType, offset, length));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(*this, tlvType, offsetRange));
 
-    SuccessOrExit(error = dataset.SetFrom(*this, offset, length));
+    SuccessOrExit(error = dataset.SetFrom(*this, offsetRange));
     SuccessOrExit(error = dataset.ValidateTlvs());
     SuccessOrExit(error = dataset.WriteTimestamp(aDatasetType, aTimestamp));
 
@@ -5104,19 +5098,15 @@ exit:
 
 Error Mle::RxMessage::ReadTlvRequestTlv(TlvList &aTlvList) const
 {
-    Error    error;
-    uint16_t offset;
-    uint16_t length;
+    Error       error;
+    OffsetRange offsetRange;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, Tlv::kTlvRequest, offset, length));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(*this, Tlv::kTlvRequest, offsetRange));
 
-    if (length > aTlvList.GetMaxSize())
-    {
-        length = aTlvList.GetMaxSize();
-    }
+    offsetRange.ShrinkLength(aTlvList.GetMaxSize());
 
-    ReadBytes(offset, aTlvList.GetArrayBuffer(), length);
-    aTlvList.SetLength(static_cast<uint8_t>(length));
+    ReadBytes(offsetRange, aTlvList.GetArrayBuffer());
+    aTlvList.SetLength(static_cast<uint8_t>(offsetRange.GetLength()));
 
 exit:
     return error;

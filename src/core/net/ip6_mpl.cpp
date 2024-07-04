@@ -90,14 +90,14 @@ void Mpl::InitOption(MplOption &aOption, const Address &aAddress)
     aOption.SetSequence(mSequence++);
 }
 
-Error Mpl::ProcessOption(Message &aMessage, uint16_t aOffset, const Address &aAddress, bool &aReceive)
+Error Mpl::ProcessOption(Message &aMessage, const OffsetRange &aOffsetRange, const Address &aAddress, bool &aReceive)
 {
     Error     error;
     MplOption option;
 
     // Read the min size bytes first, then check the expected
     // `SeedIdLength` and read the full `MplOption` if needed.
-    SuccessOrExit(error = aMessage.Read(aOffset, &option, MplOption::kMinSize));
+    SuccessOrExit(error = aMessage.Read(aOffsetRange, &option, MplOption::kMinSize));
 
     switch (option.GetSeedIdLength())
     {
@@ -108,7 +108,7 @@ Error Mpl::ProcessOption(Message &aMessage, uint16_t aOffset, const Address &aAd
         break;
 
     case MplOption::kSeedIdLength2:
-        SuccessOrExit(error = aMessage.Read(aOffset, option));
+        SuccessOrExit(error = aMessage.Read(aOffsetRange, option));
         break;
 
     case MplOption::kSeedIdLength8:

@@ -324,7 +324,7 @@ int Leader::CompareRouteEntries(int8_t   aFirstPreference,
     // On MTD, prefer the BR that is this device itself. This handles
     // the uncommon case where an MTD itself may be acting as BR.
 
-    result = ThreeWayCompare((aFirstRloc == Get<Mle::Mle>().GetRloc16()), (aSecondRloc == Get<Mle::Mle>().GetRloc16()));
+    result = ThreeWayCompare((Get<Mle::Mle>().HasRloc16(aFirstRloc)), Get<Mle::Mle>().HasRloc16(aSecondRloc));
 #endif
 
 #if OPENTHREAD_FTD
@@ -339,7 +339,7 @@ int Leader::CompareRouteEntries(int8_t   aFirstPreference,
 
     // If all the same, prefer the BR acting as a router over an
     // end device.
-    result = ThreeWayCompare(Mle::IsActiveRouter(aFirstRloc), Mle::IsActiveRouter(aSecondRloc));
+    result = ThreeWayCompare(Mle::IsRouterRloc16(aFirstRloc), Mle::IsRouterRloc16(aSecondRloc));
 #endif
 
 exit:
@@ -426,19 +426,19 @@ Error Leader::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t &aRloc16) co
     return error;
 }
 
-Error Leader::SetNetworkData(uint8_t        aVersion,
-                             uint8_t        aStableVersion,
-                             Type           aType,
-                             const Message &aMessage,
-                             uint16_t       aOffset,
-                             uint16_t       aLength)
+Error Leader::SetNetworkData(uint8_t            aVersion,
+                             uint8_t            aStableVersion,
+                             Type               aType,
+                             const Message     &aMessage,
+                             const OffsetRange &aOffsetRange)
 {
-    Error error = kErrorNone;
+    Error    error  = kErrorNone;
+    uint16_t length = aOffsetRange.GetLength();
 
-    VerifyOrExit(aLength <= kMaxSize, error = kErrorParse);
-    SuccessOrExit(error = aMessage.Read(aOffset, GetBytes(), aLength));
+    VerifyOrExit(length <= kMaxSize, error = kErrorParse);
+    SuccessOrExit(error = aMessage.Read(aOffsetRange.GetOffset(), GetBytes(), length));
 
-    SetLength(static_cast<uint8_t>(aLength));
+    SetLength(static_cast<uint8_t>(length));
     mVersion       = aVersion;
     mStableVersion = aStableVersion;
 

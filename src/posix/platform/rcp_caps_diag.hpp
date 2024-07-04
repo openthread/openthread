@@ -62,6 +62,8 @@ public:
         : mRadioSpinel(aRadioSpinel)
         , mOutputCallback(nullptr)
         , mOutputContext(nullptr)
+        , mDiagOutput(nullptr)
+        , mDiagOutputLength(0)
     {
     }
 
@@ -108,18 +110,44 @@ private:
         RcpCapsDiag::SpinelCommandHandler mHandler;
     };
 
+    static constexpr uint16_t kMaxNumChildren = 512;
+
     void ProcessSpinel(void);
+    void ProcessSpinelSpeed(void);
+    void ProcessCapabilityFlags(void);
+    void ProcessSrcMatchTable(void);
     void TestSpinelCommands(Category aCategory);
+    void TestRadioCapbilityFlags(void);
+    void OutputRadioCapFlags(Category aCategory, uint32_t aRadioCaps, const uint32_t *aFlags, uint16_t aNumbFlags);
+    void TestSpinelCapbilityFlags(void);
+    void OutputSpinelCapFlags(Category        aCategory,
+                              const uint8_t  *aCapsData,
+                              spinel_size_t   aCapsLength,
+                              const uint32_t *aFlags,
+                              uint16_t        aNumbFlags);
+    bool IsSpinelCapabilitySupported(const uint8_t *aCapsData, spinel_size_t aCapsLength, uint32_t aCapability);
+    void OutputExtendedSrcMatchTableSize(void);
+    void OutputShortSrcMatchTableSize(void);
+
+    static void HandleDiagOutput(const char *aFormat, va_list aArguments, void *aContext);
+    void        HandleDiagOutput(const char *aFormat, va_list aArguments);
+
+    void OutputFormat(const char *aName, const char *aValue);
+    void OutputFormat(const char *aName, uint32_t aValue);
     void OutputResult(const SpinelEntry &aEntry, otError error);
     void Output(const char *aFormat, ...);
 
-    const char *CategoryToString(Category aCategory);
+    static const char *SupportToString(bool aSupport);
+    static const char *RadioCapbilityToString(uint32_t aCapability);
+    static const char *CategoryToString(Category aCategory);
 
     static const struct SpinelEntry sSpinelEntries[];
 
     Spinel::RadioSpinel     &mRadioSpinel;
     otPlatDiagOutputCallback mOutputCallback;
     void                    *mOutputContext;
+    char                    *mDiagOutput;
+    uint16_t                 mDiagOutputLength;
 };
 
 } // namespace Posix

@@ -206,25 +206,25 @@ exit:
 
 template <> void Leader::HandleTmf<kUriCommissionerGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    uint16_t       length;
-    uint16_t       offset;
     Coap::Message *response = nullptr;
+    OffsetRange    offsetRange;
 
     VerifyOrExit(Get<Mle::Mle>().IsLeader() && !mWaitingForNetDataSync);
 
     response = Get<Tmf::Agent>().NewPriorityResponseMessage(aMessage);
     VerifyOrExit(response != nullptr);
 
-    if (Tlv::FindTlvValueOffset(aMessage, MeshCoP::Tlv::kGet, offset, length) == kErrorNone)
+    if (Tlv::FindTlvValueOffsetRange(aMessage, MeshCoP::Tlv::kGet, offsetRange) == kErrorNone)
     {
         // Append the requested sub-TLV types given in Get TLV.
 
-        for (; length > 0; offset++, length--)
+        while (!offsetRange.IsEmpty())
         {
             uint8_t             type;
             const MeshCoP::Tlv *subTlv;
 
-            IgnoreError(aMessage.Read(offset, type));
+            IgnoreError(aMessage.Read(offsetRange, type));
+            offsetRange.AdvanceOffset(sizeof(type));
 
             subTlv = FindCommissioningDataSubTlv(type);
 
@@ -616,7 +616,7 @@ void Leader::CheckForNetDataGettingFull(const NetworkData &aNetworkData, uint16_
         leaderClone.MarkAsClone();
         SuccessOrAssert(CopyNetworkData(kFullSet, leaderClone));
 
-        if (aOldRloc16 != Mac::kShortAddrInvalid)
+        if (aOldRloc16 != Mle::kInvalidRloc16)
         {
             leaderClone.RemoveBorderRouter(aOldRloc16, kMatchModeRloc16);
         }
@@ -1334,12 +1334,14 @@ exit:
 
 Error Leader::SetCommissioningData(const Message &aMessage)
 {
-    Error                 error      = kErrorNone;
-    uint16_t              dataLength = aMessage.GetLength() - aMessage.GetOffset();
+    Error                 error = kErrorNone;
+    OffsetRange           offsetRange;
     CommissioningDataTlv *dataTlv;
 
-    SuccessOrExit(error = UpdateCommissioningData(dataLength, dataTlv));
-    aMessage.ReadBytes(aMessage.GetOffset(), dataTlv->GetValue(), dataLength);
+    offsetRange.InitFromMessageOffsetToEnd(aMessage);
+
+    SuccessOrExit(error = UpdateCommissioningData(offsetRange.GetLength(), dataTlv));
+    aMessage.ReadBytes(offsetRange, dataTlv->GetValue());
 
 exit:
     return error;

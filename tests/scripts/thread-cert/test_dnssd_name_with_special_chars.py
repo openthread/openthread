@@ -84,7 +84,7 @@ class TestDnssdNameWithSpecialChars(thread_cert.TestCase):
 
         server.srp_server_set_enabled(True)
         client.srp_client_enable_auto_start_mode()
-        self.simulator.go(5)
+        self.simulator.go(15)
 
         # Register a single service with the instance name containing special chars
         client.srp_client_set_host_name('host1')

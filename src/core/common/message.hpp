@@ -52,6 +52,7 @@
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/offset_range.hpp"
 #include "common/pool.hpp"
 #include "common/timer.hpp"
 #include "common/type_traits.hpp"
@@ -708,6 +709,19 @@ public:
     Error AppendBytesFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
     /**
+     * Appends bytes read from another or potentially the same message to the end of the current message.
+     *
+     * @param[in] aMessage     The message to read the bytes from (it can be the same as the current message).
+     * @param[in] aOffsetRange The offset range in @p aMessage to read bytes from.
+     *
+     * @retval kErrorNone    Successfully appended the bytes.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
+     * @retval kErrorParse   Not enough bytes in @p aMessage to read @p aOffsetRange.
+     *
+     */
+    Error AppendBytesFromMessage(const Message &aMessage, const OffsetRange &aOffsetRange);
+
+    /**
      * Appends an object to the end of the message.
      *
      * On success, this method grows the message by the size of the appended object
@@ -758,6 +772,17 @@ public:
     uint16_t ReadBytes(uint16_t aOffset, void *aBuf, uint16_t aLength) const;
 
     /**
+     * Reads bytes from the message.
+     *
+     * @param[in]  aOffsetRange  The offset range in the message to read bytes from.
+     * @param[out] aBuf          A pointer to a data buffer to copy the read bytes into.
+     *
+     * @returns The number of bytes read.
+     *
+     */
+    uint16_t ReadBytes(const OffsetRange &aOffsetRange, void *aBuf) const;
+
+    /**
      * Reads a given number of bytes from the message.
      *
      * If there are fewer bytes available in the message than the requested read length, the available bytes will be
@@ -772,6 +797,22 @@ public:
      *
      */
     Error Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const;
+
+    /**
+     * Reads a given number of bytes from the message.
+     *
+     * If there are fewer bytes available in the message or @p aOffsetRange than the requested @p aLength, the
+     * available bytes are read and copied into @p aBuf. In this case `kErrorParse` will be returned.
+     *
+     * @param[in]  aOffsetRange  The offset range in the message to read from.
+     * @param[out] aBuf          A pointer to a data buffer to copy the read bytes into.
+     * @param[in]  aLength       Number of bytes to read.
+     *
+     * @retval kErrorNone     Requested bytes were successfully read from message.
+     * @retval kErrorParse    Not enough bytes remaining to read the requested @p aLength.
+     *
+     */
+    Error Read(const OffsetRange &aOffsetRange, void *aBuf, uint16_t aLength) const;
 
     /**
      * Reads an object from the message.
@@ -794,6 +835,29 @@ public:
         static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
 
         return Read(aOffset, &aObject, sizeof(ObjectType));
+    }
+
+    /**
+     * Reads an object from the message.
+     *
+     * If there are fewer bytes available in the message or @p aOffsetRange than the requested object size, the
+     * available bytes will be read and copied into @p aObject (@p aObject will be read partially). In this case
+     * `kErrorParse` will be returned.
+     *
+     * @tparam     ObjectType   The object type to read from the message.
+     *
+     * @param[in]  aOffsetRange  The offset range in the message to read from.
+     * @param[out] aObject       A reference to the object to read into.
+     *
+     * @retval kErrorNone     Object @p aObject was successfully read from message.
+     * @retval kErrorParse    Not enough bytes remaining in message to read the entire object.
+     *
+     */
+    template <typename ObjectType> Error Read(const OffsetRange &aOffsetRange, ObjectType &aObject) const
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        return Read(aOffsetRange, &aObject, sizeof(ObjectType));
     }
 
     /**

@@ -168,19 +168,17 @@ public:
      * @param[in]  aStableVersion  The Stable Version value.
      * @param[in]  aType           The Network Data type to set, the full set or stable subset.
      * @param[in]  aMessage        A reference to the message.
-     * @param[in]  aOffset         The offset in @p aMessage pointing to start of Network Data.
-     * @param[in]  aLength         The length of Network Data.
+     * @param[in]  aOffsetRange    The offset range in @p aMessage to read from.
      *
      * @retval kErrorNone   Successfully set the network data.
      * @retval kErrorParse  Network Data in @p aMessage is not valid.
      *
      */
-    Error SetNetworkData(uint8_t        aVersion,
-                         uint8_t        aStableVersion,
-                         Type           aType,
-                         const Message &aMessage,
-                         uint16_t       aOffset,
-                         uint16_t       aLength);
+    Error SetNetworkData(uint8_t            aVersion,
+                         uint8_t            aStableVersion,
+                         Type               aType,
+                         const Message     &aMessage,
+                         const OffsetRange &aOffsetRange);
 
     /**
      * Gets the Commissioning Dataset from Network Data.
