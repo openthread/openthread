@@ -46,6 +46,18 @@ send "thread start\n"
 expect_line "\tTYPE:\tRESPONSE_W_STATUS"
 expect_line "\tVALUE:\t0x00"
 
+send "ping\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t10"
+
+send "ping 255\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t255"
+
+send "ping 512\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t512"
+
 send "exit\n"
 expect eof
 

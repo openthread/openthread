@@ -350,9 +350,10 @@ private:
     Error Connected(MeshCoP::SecureTransport &aTlsContext);
     void  Disconnected(void);
 
-    Error HandleSingleTlv(const Message &aIncommingMessage, Message &aOutgoingMessage);
-    Error HandleSetActiveOperationalDataset(const Message &aIncommingMessage, uint16_t aOffset, uint16_t aLength);
+    Error HandleSingleTlv(const Message &aIncomingMessage, Message &aOutgoingMessage);
+    Error HandleSetActiveOperationalDataset(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength);
     Error HandleDecomission(void);
+    Error HandlePing(const Message &aIncomingMessage, Message &aOutgoingMessage, uint16_t aOffset, uint16_t aLength);
     Error HandleStartThreadInterface(void);
 
     bool         CheckCommandClassAuthorizationFlags(CommandClassFlags aCommissionerCommandClassFlags,
@@ -361,7 +362,8 @@ private:
     bool         CanProcessTlv(uint8_t aTlvType) const;
     CommandClass GetCommandClass(uint8_t aTlvType) const;
 
-    static constexpr uint16_t kJoinerUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
+    static constexpr uint16_t kJoinerUdpPort        = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
+    static constexpr uint16_t kPingPayloadMaxLength = 512;
 
     JoinerPskd                       mJoinerPskd;
     const VendorInfo                *mVendorInfo;
