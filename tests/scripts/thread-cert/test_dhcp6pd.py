@@ -46,6 +46,21 @@ class TestDhcp6Pd(thread_cert.TestCase):
     SUPPORT_NCP = False
     USE_MESSAGE_FACTORY = False
 
+    TOPOLOGY = {
+        LEADER: {
+            'name': 'Leader',
+            'allowlist': [ROUTER],
+            'is_otbr': True,
+            'mode': 'rdn',
+        },
+        ROUTER: {
+            'name': 'Router',
+            'allowlist': [LEADER],
+            'is_otbr': True,
+            'mode': 'rdn',
+        },
+    }
+
     def test(self):
         leader = self.nodes[LEADER]
         router = self.nodes[ROUTER]
@@ -53,18 +68,51 @@ class TestDhcp6Pd(thread_cert.TestCase):
         #---------------------------------------------------------------
         # Start the server & client devices.
 
+        # Case 1: Only 1 BR receives PD prefix
+
         leader.start()
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(leader.get_state(), 'leader')
-        server.srp_server_set_enabled(True)
+        leader.pd_set_enabled(True)
 
         router.start()
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(router.get_state(), 'router')
+        router.pd_set_enabled(True)
 
         leader.start_pd_radvd_service("2001:db8:abcd:1234::/64")
         self.simulator.go(30)
 
+        self.assertEqual(leader.pd_state, "running")
+        self.assertEqual(router.pd_state, "idle")
+
+        self.assertEqual(leader.pd_get_prefix(), "2001:db8:abcd:1234::/64")
+
+        # Case 2: More than one BR receives PD prefix
+        # The BR with "smaller" PD prefix wins
+
+        leader.pd_set_enabled(False)
+        router.pd_set_enabled(False)
+        self.simulator.go(30)
+
+        leader.start_pd_radvd_service("2001:db8:abcd:1234::/64")
+        router.start_pd_radvd_service("2001:db8:1234:abcd::/64")
+        leader.pd_set_enabled(True)
+        router.pd_set_enabled(True)
+        self.simulator.go(30)
+
+        self.assertEqual(leader.pd_state, "idle")
+        self.assertEqual(router.pd_state, "running")
+
+        self.assertEqual(router.pd_get_prefix(), "2001:db8:1234:abcd::/64")
+
+        # Case 3: When the other BR lost PD prefix, the remaining BR should try to request one.
+
+        router.pd_set_enabled(False)
+        self.simulator.go(30)
+
+        self.assertEqual(leader.pd_state, "running")
+        self.assertEqual(leader.pd_get_prefix(), "2001:db8:abcd:1234::/64")
 
 if __name__ == '__main__':
     unittest.main()
