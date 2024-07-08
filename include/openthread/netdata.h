@@ -253,6 +253,16 @@ otError otNetDataGetNextLowpanContextInfo(otInstance            *aInstance,
 void otNetDataGetCommissioningDataset(otInstance *aInstance, otCommissioningDataset *aDataset);
 
 /**
+ * Get the total number of Border Routers added in network data (including both router and child roles)
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The number of BRs added in network data.
+ *
+ */
+uint8_t otNetDataGetBorderRouterCount(otInstance *aInstance);
+
+/**
  * Get the Network Data Version.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.

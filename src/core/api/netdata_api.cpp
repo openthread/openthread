@@ -109,6 +109,11 @@ void otNetDataGetCommissioningDataset(otInstance *aInstance, otCommissioningData
     return AsCoreType(aInstance).Get<NetworkData::Leader>().GetCommissioningDataset(AsCoreType(aDataset));
 }
 
+uint8_t otNetDataGetBorderRouterCount(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().CountBorderRouters(NetworkData::RoleFilter::kAnyRole);
+}
+
 uint8_t otNetDataGetVersion(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderData().GetDataVersion(NetworkData::kFullSet);
