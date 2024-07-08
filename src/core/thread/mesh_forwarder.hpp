@@ -411,20 +411,29 @@ private:
         kAnycastService,
     };
 
-    struct RxInfo
+    struct RxInfo : public InstanceLocator
     {
         static constexpr uint16_t kInfoStringSize = 70;
 
         typedef String<kInfoStringSize> InfoString;
 
+        explicit RxInfo(Instance &aInstance)
+            : InstanceLocator(aInstance)
+            , mParsedIp6Headers(false)
+        {
+        }
+
         const Mac::Address &GetSrcAddr(void) const { return mMacAddrs.mSource; }
         const Mac::Address &GetDstAddr(void) const { return mMacAddrs.mDestination; }
         bool                IsLinkSecurityEnabled(void) const { return mLinkInfo.IsLinkSecurityEnabled(); }
+        Error               ParseIp6Headers(void);
         InfoString          ToString(void) const;
 
         FrameData      mFrameData;
         ThreadLinkInfo mLinkInfo;
         Mac::Addresses mMacAddrs;
+        Ip6::Headers   mIp6Headers;
+        bool           mParsedIp6Headers;
     };
 
 #if OPENTHREAD_FTD
@@ -507,17 +516,17 @@ private:
 #endif
 
     void     SendIcmpErrorIfDstUnreach(const Message &aMessage, const Mac::Addresses &aMacAddrs);
-    Error    CheckReachability(const RxInfo &aRxInfo);
+    Error    CheckReachability(RxInfo &aRxInfo);
     Error    CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header);
-    void     UpdateRoutes(const RxInfo &aRxInfo);
-    Error    FrameToMessage(const RxInfo &aRxInfo, uint16_t aDatagramSize, Message *&aMessage);
+    void     UpdateRoutes(RxInfo &aRxInfo);
+    Error    FrameToMessage(RxInfo &aRxInfo, uint16_t aDatagramSize, Message *&aMessage);
     void     GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *PrepareNextDirectTransmission(void);
     void     HandleMesh(RxInfo &aRxInfo);
     void     ResolveRoutingLoops(uint16_t aSourceRloc16, uint16_t aDestRloc16);
     void     HandleFragment(RxInfo &aRxInfo);
-    void     HandleLowpanHc(const RxInfo &aRxInfo);
+    void     HandleLowpanHc(RxInfo &aRxInfo);
 
     void     PrepareMacHeaders(Mac::TxFrame             &aFrame,
                                Mac::Frame::Type          aFrameType,
@@ -576,7 +585,7 @@ private:
     void HandleTimeTick(void);
     void ScheduleTransmissionTask(void);
 
-    Error GetFramePriority(const RxInfo &aRxInfo, Message::Priority &aPriority);
+    Error GetFramePriority(RxInfo &aRxInfo, Message::Priority &aPriority);
     Error GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                               uint16_t                aSrcRloc16,
                               Message::Priority      &aPriority);
