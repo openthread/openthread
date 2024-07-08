@@ -179,7 +179,7 @@ void TestDnsName(void)
 
     subDomain = "my-service._ipps._tcp.local.";
     domain    = "local.";
-    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+    VerifyOrQuit(!Dns::Name::IsSubDomainOf(subDomain, domain));
 
     subDomain = "my-service._ipps._tcp.local";
     domain    = "local.";

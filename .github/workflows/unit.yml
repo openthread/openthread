@@ -129,3 +129,13 @@ jobs:
       with:
         files: final.info
         fail_ci_if_error: true
+
+  rerun-failed-jobs:
+    runs-on: ubuntu-20.04
+    needs: [ tcplp-buffering, upload-coverage ]
+    if: failure()
+    steps:
+      - name: Rerun failed jobs in the current workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run retry-workflow.yml -F run_id=${{ github.run_id }}

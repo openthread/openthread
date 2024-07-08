@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2024, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,32 +26,21 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-name: API Version
+name: Retry workflow
 
 on:
-  pull_request:
-    branches:
-      - 'main'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.repository == 'openthread/openthread' && github.run_id) || github.ref }}
-  cancel-in-progress: true
-
-permissions:  # added using https://github.com/step-security/secure-workflows
-  contents: read
-
+    workflow_dispatch:
+        inputs:
+            run_id:
+                required: true
 jobs:
-  api-version:
-    runs-on: ubuntu-20.04
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-      with:
-        submodules: true
-    - name: Check
-      run: |
-        script/check-api-version
+    rerun:
+        runs-on: ubuntu-latest
+        steps:
+            - name: rerun ${{ inputs.run_id }}
+              env:
+                  GH_REPO: ${{ github.repository }}
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  gh run watch ${{ inputs.run_id }} > /dev/null 2>&1
+                  gh run rerun ${{ inputs.run_id }} --failed
