@@ -37,59 +37,31 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <openthread/platform/debug_uart.h>
+
+#include <openthread/backbone_router.h>
+#include <openthread/backbone_router_ftd.h>
+#include <openthread/border_router.h>
+#include <openthread/channel_manager.h>
+#include <openthread/channel_monitor.h>
 #include <openthread/child_supervision.h>
+#include <openthread/dataset_ftd.h>
 #include <openthread/diag.h>
 #include <openthread/dns.h>
 #include <openthread/icmp6.h>
-#include <openthread/link.h>
-#include <openthread/logging.h>
-#include <openthread/ncp.h>
-#include <openthread/thread.h>
-#include <openthread/verhoeff_checksum.h>
-#include "common/num_utils.hpp"
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-#include <openthread/network_time.h>
-#endif
-#if OPENTHREAD_FTD
-#include <openthread/dataset_ftd.h>
-#include <openthread/thread_ftd.h>
-#endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-#include <openthread/border_router.h>
-#endif
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-#include <openthread/server.h>
-#endif
-#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-#include <openthread/platform/misc.h>
-#endif
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-#include <openthread/backbone_router.h>
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-#include <openthread/backbone_router_ftd.h>
-#endif
-#endif
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && \
-    (OPENTHREAD_FTD ||                          \
-     (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE))
-#include <openthread/channel_manager.h>
-#endif
-#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
-#include <openthread/channel_monitor.h>
-#endif
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
-#include <openthread/platform/debug_uart.h>
-#endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-#include <openthread/trel.h>
-#endif
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 #include <openthread/nat64.h>
-#endif
-#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+#include <openthread/ncp.h>
+#include <openthread/network_time.h>
 #include <openthread/radio_stats.h>
-#endif
+#include <openthread/server.h>
+#include <openthread/thread.h>
+#include <openthread/thread_ftd.h>
+#include <openthread/trel.h>
+#include <openthread/verhoeff_checksum.h>
+#include <openthread/platform/misc.h>
+
 #include "common/new.hpp"
+#include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/string.hpp"
 #include "mac/channel_mask.hpp"
