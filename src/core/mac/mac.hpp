@@ -85,6 +85,14 @@ constexpr uint8_t kDefaultMaxFrameRetriesDirect   = OPENTHREAD_CONFIG_MAC_DEFAUL
 constexpr uint8_t kDefaultMaxFrameRetriesIndirect = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT;
 constexpr uint8_t kMaxFrameRetriesCsl             = 0;
 
+/**
+ * The time window (in msec) within which frame TX is retried on CSMA failure error even if already reached the
+ * maximum retry count.
+ */
+static constexpr uint16_t kDefaultCsmaRetryWindowDirect   = 475;
+static constexpr uint16_t kDefaultCsmaRetryWindowIndirect = 75;
+static constexpr uint16_t kDefaultCsmaRetryWindowCsl      = 0;
+
 constexpr uint8_t kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST; ///< Num of times broadcast frame is tx.
 
 constexpr uint16_t kMinCslIePeriod = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD;

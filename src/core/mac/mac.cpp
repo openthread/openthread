@@ -1017,6 +1017,7 @@ void Mac::BeginTransmit(void)
         txFrames.SetChannel(mRadioChannel);
         txFrames.SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
         txFrames.SetMaxFrameRetries(mMaxFrameRetriesDirect);
+        txFrames.SetCsmaRetryWindow(kDefaultCsmaRetryWindowDirect);
         frame = Get<MeshForwarder>().HandleFrameRequest(txFrames);
         VerifyOrExit(frame != nullptr);
         frame->SetSequence(mDataSequence++);
@@ -1027,6 +1028,7 @@ void Mac::BeginTransmit(void)
         txFrames.SetChannel(mRadioChannel);
         txFrames.SetMaxCsmaBackoffs(kMaxCsmaBackoffsIndirect);
         txFrames.SetMaxFrameRetries(mMaxFrameRetriesIndirect);
+        txFrames.SetCsmaRetryWindow(kDefaultCsmaRetryWindowIndirect);
         frame = Get<DataPollHandler>().HandleFrameRequest(txFrames);
         VerifyOrExit(frame != nullptr);
 
@@ -1041,6 +1043,7 @@ void Mac::BeginTransmit(void)
     case kOperationTransmitDataCsl:
         txFrames.SetMaxCsmaBackoffs(kMaxCsmaBackoffsCsl);
         txFrames.SetMaxFrameRetries(kMaxFrameRetriesCsl);
+        txFrames.SetCsmaRetryWindow(kDefaultCsmaRetryWindowCsl);
         frame = Get<CslTxScheduler>().HandleFrameRequest(txFrames);
         VerifyOrExit(frame != nullptr);
 
