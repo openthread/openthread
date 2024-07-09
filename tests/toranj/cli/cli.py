@@ -469,6 +469,9 @@ class Node(object):
     def get_mle_counter(self):
         return self.cli('counters mle')
 
+    def get_ip_counters(self):
+        return Node.parse_list(self.cli('counters ip'))
+
     def get_br_counter_unicast_outbound_packets(self):
         outputs = self.cli('counters br')
         for line in outputs:
