@@ -33,11 +33,7 @@
 
 #include "time_ticker.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/random.hpp"
 #include "instance/instance.hpp"
-#include "thread/mle_router.hpp"
 
 namespace ot {
 

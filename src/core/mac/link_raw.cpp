@@ -35,15 +35,10 @@
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
-#include <string.h>
 #include <openthread/diag.h>
 #include <openthread/platform/diag.h>
 
-#include "common/debug.hpp"
-#include "common/log.hpp"
-#include "common/random.hpp"
 #include "instance/instance.hpp"
-#include "mac/mac_frame.hpp"
 
 namespace ot {
 namespace Mac {

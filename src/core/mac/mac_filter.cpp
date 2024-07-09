@@ -35,10 +35,7 @@
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "thread/neighbor.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Mac {

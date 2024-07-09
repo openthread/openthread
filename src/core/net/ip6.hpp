@@ -52,6 +52,7 @@
 #include "common/owned_ptr.hpp"
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
+#include "net/checksum.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_headers.hpp"

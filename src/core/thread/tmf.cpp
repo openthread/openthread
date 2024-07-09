@@ -34,7 +34,6 @@
 #include "thread/tmf.hpp"
 
 #include "instance/instance.hpp"
-#include "net/ip6_types.hpp"
 
 namespace ot {
 namespace Tmf {

@@ -31,10 +31,8 @@
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
 #include <openthread/platform/ble.h>
-#include "common/log.hpp"
-#include "common/tlvs.hpp"
+
 #include "instance/instance.hpp"
-#include "meshcop/secure_transport.hpp"
 
 using namespace ot;
 

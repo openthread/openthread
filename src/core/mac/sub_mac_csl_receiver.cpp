@@ -35,8 +35,6 @@
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-#include "common/code_utils.hpp"
-#include "common/log.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {

@@ -33,11 +33,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/instance.h>
-#include <openthread/platform/dns.h>
-
-#include "common/code_utils.hpp"
-#include "common/message.hpp"
 #include "instance/instance.hpp"
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE

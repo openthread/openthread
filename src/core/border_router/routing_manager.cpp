@@ -42,23 +42,7 @@
 #include <openthread/platform/border_routing.h>
 #include <openthread/platform/infra_if.h>
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/log.hpp"
-#include "common/num_utils.hpp"
-#include "common/numeric_limits.hpp"
-#include "common/random.hpp"
-#include "common/settings.hpp"
-#include "common/type_traits.hpp"
 #include "instance/instance.hpp"
-#include "meshcop/extended_panid.hpp"
-#include "net/ip6.hpp"
-#include "net/nat64_translator.hpp"
-#include "net/nd6.hpp"
-#include "thread/mle_router.hpp"
-#include "thread/network_data_leader.hpp"
-#include "thread/network_data_local.hpp"
-#include "thread/network_data_notifier.hpp"
 
 namespace ot {
 

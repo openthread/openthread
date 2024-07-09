@@ -32,21 +32,10 @@
  */
 
 #include "tcat_agent.hpp"
-#include <openthread/tcat.h>
-#include "meshcop/network_name.hpp"
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
-#include "common/array.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/string.hpp"
 #include "instance/instance.hpp"
-#include "radio/radio.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/uri_paths.hpp"
-#include "utils/otns.hpp"
 
 namespace ot {
 namespace MeshCoP {

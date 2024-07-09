@@ -35,10 +35,6 @@
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 
-#include "common/as_core_type.hpp"
-#include "common/encoding.hpp"
-#include "common/num_utils.hpp"
-#include "common/random.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {

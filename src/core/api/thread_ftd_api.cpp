@@ -35,9 +35,6 @@
 
 #if OPENTHREAD_FTD
 
-#include <openthread/thread_ftd.h>
-
-#include "common/as_core_type.hpp"
 #include "instance/instance.hpp"
 
 using namespace ot;

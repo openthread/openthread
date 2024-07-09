@@ -35,9 +35,6 @@
 
 #if OPENTHREAD_CONFIG_TCP_ENABLE
 
-#include <openthread/tcp.h>
-
-#include "common/as_core_type.hpp"
 #include "instance/instance.hpp"
 
 using namespace ot;

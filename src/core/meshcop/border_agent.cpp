@@ -35,18 +35,7 @@
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
-#include "coap/coap_message.hpp"
-#include "common/as_core_type.hpp"
-#include "common/heap.hpp"
-#include "common/log.hpp"
-#include "common/owned_ptr.hpp"
-#include "common/settings.hpp"
 #include "instance/instance.hpp"
-#include "meshcop/meshcop.hpp"
-#include "meshcop/meshcop_tlvs.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/thread_tlvs.hpp"
-#include "thread/uri_paths.hpp"
 
 namespace ot {
 namespace MeshCoP {

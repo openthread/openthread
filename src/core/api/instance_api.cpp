@@ -36,10 +36,8 @@
 #include <openthread/instance.h>
 #include <openthread/platform/misc.h>
 
-#include "common/as_core_type.hpp"
 #include "common/new.hpp"
 #include "instance/instance.hpp"
-#include "radio/radio.hpp"
 
 #if !defined(OPENTHREAD_BUILD_DATETIME)
 #ifdef __ANDROID__

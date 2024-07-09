@@ -33,12 +33,6 @@
 
 #include "dns_types.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/num_utils.hpp"
-#include "common/numeric_limits.hpp"
-#include "common/random.hpp"
-#include "common/string.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {

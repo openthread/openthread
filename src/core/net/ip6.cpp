@@ -33,23 +33,7 @@
 
 #include "ip6.hpp"
 
-#include "backbone_router/bbr_leader.hpp"
-#include "backbone_router/bbr_local.hpp"
-#include "backbone_router/ndproxy_table.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/log.hpp"
-#include "common/message.hpp"
-#include "common/random.hpp"
 #include "instance/instance.hpp"
-#include "net/checksum.hpp"
-#include "net/icmp6.hpp"
-#include "net/ip6_address.hpp"
-#include "net/ip6_filter.hpp"
-#include "net/nat64_translator.hpp"
-#include "net/netif.hpp"
-#include "net/udp6.hpp"
-#include "thread/mle.hpp"
 
 using IcmpType = ot::Ip6::Icmp::Header::Type;
 

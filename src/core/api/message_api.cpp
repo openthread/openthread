@@ -33,9 +33,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/message.h>
-
-#include "common/as_core_type.hpp"
 #include "instance/instance.hpp"
 
 using namespace ot;

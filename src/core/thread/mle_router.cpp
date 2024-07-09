@@ -34,25 +34,7 @@
 
 #if OPENTHREAD_FTD
 
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/num_utils.hpp"
-#include "common/random.hpp"
-#include "common/serial_number.hpp"
-#include "common/settings.hpp"
 #include "instance/instance.hpp"
-#include "mac/mac_types.hpp"
-#include "meshcop/meshcop.hpp"
-#include "net/icmp6.hpp"
-#include "thread/key_manager.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/thread_tlvs.hpp"
-#include "thread/time_sync_service.hpp"
-#include "thread/uri_paths.hpp"
-#include "thread/version.hpp"
-#include "utils/otns.hpp"
 
 namespace ot {
 namespace Mle {

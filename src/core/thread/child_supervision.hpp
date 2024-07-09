@@ -39,6 +39,8 @@
 
 #include <stdint.h>
 
+#include <openthread/child_supervision.h>
+
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"

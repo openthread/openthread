@@ -42,12 +42,7 @@
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/error.hpp"
-#include "common/string.hpp"
 #include "instance/instance.hpp"
-#include "radio/radio.hpp"
 #include "utils/parse_cmdline.hpp"
 
 OT_TOOL_WEAK

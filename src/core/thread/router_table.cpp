@@ -30,14 +30,7 @@
 
 #if OPENTHREAD_FTD
 
-#include "common/code_utils.hpp"
-#include "common/log.hpp"
-#include "common/timer.hpp"
 #include "instance/instance.hpp"
-#include "thread/mle.hpp"
-#include "thread/mle_router.hpp"
-#include "thread/network_data_leader.hpp"
-#include "thread/thread_netif.hpp"
 
 namespace ot {
 
