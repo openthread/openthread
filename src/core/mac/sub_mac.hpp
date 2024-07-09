@@ -653,6 +653,7 @@ private:
 #endif
     int8_t                       mEnergyScanMaxRssi;
     TimeMilli                    mEnergyScanEndTime;
+    TimeMilli                    mTxStartTime;
     TxFrame                     &mTransmitFrame;
     Callbacks                    mCallbacks;
     Callback<otLinkPcapCallback> mPcapCallback;
