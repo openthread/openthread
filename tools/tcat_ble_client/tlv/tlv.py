@@ -58,14 +58,19 @@ class TLV():
     def set_from_bytes(self, data: bytes):
         self.type = data[0]
         header_len = 2
+        size_offset = 1
         if data[1] == 0xFF:
             header_len = 4
-        length = int.from_bytes(data[1:header_len], byteorder='big')
+            size_offset = 2
+        length = int.from_bytes(data[size_offset:header_len], byteorder='big')
         self.value = data[header_len:header_len + length]
 
     def to_bytes(self) -> bytes:
-        has_long_header = len(self.value) >= 255
+        has_long_header = len(self.value) >= 254
         header_len = 4 if has_long_header else 2
-        len_bytes = len(self.value).to_bytes(header_len - 1, byteorder='big')
-        header = bytes([self.type]) + len_bytes
+        len_bytes = len(self.value).to_bytes(header_len // 2, byteorder='big')
+        type = self.type
+        if has_long_header:
+            type = type << 8 | 255
+        header = type.to_bytes(header_len // 2, byteorder='big') + len_bytes
         return header + self.value

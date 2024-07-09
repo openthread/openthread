@@ -37,6 +37,8 @@ from cli.command import Command, CommandResultNone, CommandResultTLV
 from dataset.dataset import ThreadDataset
 from utils import select_device_by_user_input
 from os import path
+from time import time
+from secrets import token_bytes
 
 
 class HelpCommand(Command):
@@ -100,6 +102,37 @@ class DecommissionCommand(Command):
         if not response:
             return
         tlv_response = TLV.from_bytes(response)
+        return CommandResultTLV(tlv_response)
+
+
+class PingCommand(Command):
+
+    def get_help_string(self) -> str:
+        return 'Send echo request to TCAT device.'
+
+    async def execute_default(self, args, context):
+        bless: BleStreamSecure = context['ble_sstream']
+        payload_size = 10
+        max_payload = 512
+        if len(args) > 0:
+            payload_size = int(args[0])
+            if payload_size > max_payload:
+                print(f'Payload size too large. Maximum supported value is {max_payload}')
+                return
+        to_send = token_bytes(payload_size)
+        data = TLV(TcatTLVType.PING.value, to_send).to_bytes()
+        elapsed_time = time()
+        response = await bless.send_with_resp(data)
+        elapsed_time = time() - elapsed_time
+        if not response:
+            return
+
+        tlv_response = TLV.from_bytes(response)
+        if tlv_response.value != to_send:
+            print("Received malformed response.")
+
+        print(f"Roundtrip time {elapsed_time} s.")
+
         return CommandResultTLV(tlv_response)
 
 
