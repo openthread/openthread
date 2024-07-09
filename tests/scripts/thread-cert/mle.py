@@ -36,6 +36,7 @@ from binascii import hexlify
 import common
 
 from enum import IntEnum
+from test_crypto import convert_aux_sec_hdr_to_bytearray
 from tlvs_parsing import UnknownTlvFactory
 
 
@@ -127,7 +128,12 @@ class SourceAddress(object):
 
     def __repr__(self):
         return "SourceAddress(address={})".format(hex(self._address))
+    
+    def to_bytes(self):
+    # Type = 0, Length = 2 (16-bit address)
+        return struct.pack(">BB", TlvType.SOURCE_ADDRESS, 2) + struct.pack(">H", self._address)
 
+    
 
 class SourceAddressFactory:
 
@@ -170,6 +176,11 @@ class Mode(object):
         return "Mode(receiver={}, secure={}, device_type={}, network_data={})".format(
             self.receiver, self.secure, self.device_type, self.network_data)
 
+    def to_bytes(self):
+        # Mode Byte: R(Receiver), S(Secure), D(Device Type), N(Network Data)
+        mode_byte = ((self._receiver << 3) | (self._secure << 2) | (self._device_type << 1) | self._network_data)
+        return struct.pack(">BBB", TlvType.MODE, 1, mode_byte)
+
 
 class ModeFactory:
 
@@ -198,6 +209,10 @@ class Timeout(object):
 
     def __repr__(self):
         return "Timeout(timeout={})".format(self.timeout)
+    
+    def to_bytes(self):
+        # Type = 2, Length = 4 (32-bit unsigned integer)
+        return struct.pack(">BBI", TlvType.TIMEOUT, 4, self._timeout)
 
 
 class TimeoutFactory:
@@ -223,8 +238,12 @@ class Challenge(object):
 
     def __repr__(self):
         return "Challenge(challenge={})".format(hexlify(self.challenge))
+    
+    def to_bytes(self):
+        # Type = 3, Length = dynamic based on challenge length
+        return struct.pack(">BB", TlvType.CHALLENGE, len(self._challenge)) + self._challenge
 
-
+    
 class ChallengeFactory:
 
     def parse(self, data, message_info):
@@ -248,6 +267,11 @@ class Response(object):
 
     def __repr__(self):
         return "Response(response={})".format(hexlify(self.response))
+    
+    def to_bytes(self):
+        # Type = 4, Length = dynamic based on response length
+        return struct.pack(">BB", TlvType.RESPONSE, len(self._response)) + self._response
+
 
 
 class ResponseFactory:
@@ -273,7 +297,10 @@ class LinkLayerFrameCounter(object):
 
     def __repr__(self):
         return "LinkLayerFrameCounter(frame_counter={})".format(self.frame_counter)
-
+    
+    def to_bytes(self):
+        # Type = 5, Length = 4 (32-bit counter)
+        return struct.pack(">BBI", TlvType.LINK_LAYER_FRAME_COUNTER, 4, self._frame_counter)
 
 class LinkLayerFrameCounterFactory:
 
@@ -298,6 +325,10 @@ class MleFrameCounter(object):
 
     def __repr__(self):
         return "MleFrameCounter(frame_counter={})".format(self.frame_counter)
+    
+    def to_bytes(self):
+        # Type = 8, Length = 4 (32-bit counter)
+        return struct.pack(">BBI", TlvType.MLE_FRAME_COUNTER, 4, self._frame_counter)
 
 
 class MleFrameCounterFactory:
@@ -333,6 +364,10 @@ class LinkQualityAndRouteData(object):
 
     def __repr__(self):
         return "LinkQualityAndRouteData(output={}, input={}, route={})".format(self.output, self.input, self.route)
+    
+    def to_bytes(self):
+        lqrd_value = (self._output << 6) | (self._input << 4) | self._route
+        return struct.pack(">B", lqrd_value)
 
 
 class LinkQualityAndRouteDataFactory:
@@ -374,7 +409,14 @@ class Route64(object):
         lqrd_str = ", ".join(["{}".format(lqrd) for lqrd in self.link_quality_and_route_data])
         return "Route64(id_sequence={}, router_id_mask={}, link_quality_and_route_data=[{}])".format(
             self.id_sequence, hex(self.router_id_mask), lqrd_str)
-
+    
+    def to_bytes(self):
+        # Type = 9, Length is dynamic based on the route data
+        data = struct.pack(">BQ", self._id_sequence, self._router_id_mask)
+        for lqrd in self._link_quality_and_route_data:
+            data += lqrd.to_bytes()
+        return struct.pack(">BB", TlvType.ROUTE64, len(data)) + data
+   
 
 class Route64Factory:
 
@@ -384,12 +426,9 @@ class Route64Factory:
     def parse(self, data, message_info):
         id_sequence = ord(data.read(1))
         router_id_mask = struct.unpack(">Q", data.read(8))[0]
-
         link_quality_and_route_data = []
-
         while data.tell() < len(data.getvalue()):
             link_quality_and_route_data.append(self._lqrd_factory.parse(data, message_info))
-
         return Route64(id_sequence, router_id_mask, link_quality_and_route_data)
 
 
@@ -409,6 +448,10 @@ class Address16(object):
 
     def __repr__(self):
         return "Address16(address={})".format(hex(self.address))
+    
+    def to_bytes(self):
+        # Type = 10, Length = 2 (16-bit address)
+        return struct.pack(">BBH", TlvType.ADDRESS16, 2, self._address)
 
 
 class Address16Factory:
@@ -470,6 +513,10 @@ class LeaderData(object):
             self.leader_router_id,
         )
 
+    def to_bytes(self):
+        # Type = 11, Length = dynamic based on data fields
+        data = struct.pack(">IBBBB", self._partition_id, self._weighting, self._data_version, self._stable_data_version, self._leader_router_id)
+        return struct.pack(">BB", TlvType.LEADER_DATA, len(data)) + data
 
 class LeaderDataFactory:
 
@@ -486,7 +533,6 @@ class LeaderDataFactory:
             stable_data_version,
             leader_router_id,
         )
-
 
 class NetworkData(object):
 
@@ -505,6 +551,13 @@ class NetworkData(object):
     def __repr__(self):
         tlvs_str = ", ".join(["{}".format(tlv) for tlv in self.tlvs])
         return "NetworkData(tlvs=[{}])".format(tlvs_str)
+    
+    def to_bytes(self):
+        # Type = 12, Length is dynamic based on the included TLVs
+        data = bytearray()
+        for tlv in self._tlvs:
+            data += tlv.to_bytes()
+        return struct.pack(">BB", TlvType.NETWORK_DATA, len(data)) + data # a verifier
 
 
 class NetworkDataFactory:
@@ -534,6 +587,11 @@ class TlvRequest(object):
     def __repr__(self):
         tlvs_str = ", ".join(["{}".format(tlv) for tlv in self.tlvs])
         return "TlvRequest(tlvs=[{}])".format(tlvs_str)
+    
+    def to_bytes(self):
+        # Type = 13, Length = dynamic based on requested TLVs
+        data = bytearray(self._tlvs)        # a verif
+        return struct.pack(">BB", TlvType.TLV_REQUEST, len(data)) + data
 
 
 class TlvRequestFactory:
@@ -565,6 +623,10 @@ class ScanMask(object):
     def __repr__(self):
         return "ScanMask(router={}, end_device={})".format(self.router, self.end_device)
 
+    def to_bytes(self):
+        # Type = 14, Length = 1
+        mask = (self._router << 7) | (self._end_device << 6 ) #bit shift because mask = RE00 0000
+        return struct.pack(">BBB", TlvType.SCAN_MASK, 1, mask)
 
 class ScanMaskFactory:
 
@@ -668,7 +730,11 @@ class Connectivity(object):
             self.sed_buffer_size,
             self.sed_datagram_count,
         )
-
+    
+    def to_bytes(self):
+        # Type = 15, Length is dynamic, data are 1 bytes each a part from SED buffer Size which is 2 bytes
+        data = struct.pack(">BBBBBBBHB", self._pp_byte, self._link_quality_3, self._link_quality_2, self._link_quality_1, self._leader_cost, self._id_sequence, self._active_routers, self._sed_buffer_size or 0, self._sed_datagram_count or 0)
+        return struct.pack(">BB", TlvType.CONNECTIVITY, len(data)) + data
 
 class ConnectivityFactory:
 
@@ -720,6 +786,9 @@ class LinkMargin(object):
     def __repr__(self):
         return "LinkMargin(link_margin={})".format(self.link_margin)
 
+    def to_bytes(self):
+        # Type = 16, Length = 1
+        return struct.pack(">BBB", TlvType.LINK_MARGIN, 1, self._link_margin)
 
 class LinkMarginFactory:
 
@@ -745,6 +814,9 @@ class Status(object):
     def __repr__(self):
         return "Status(status={})".format(self.status)
 
+    def to_bytes(self):
+        # Type = 17, Length = 1, 8 bits
+        return struct.pack(">BBB", TlvType.STATUS, 1, self._status)
 
 class StatusFactory:
 
@@ -770,6 +842,10 @@ class Version(object):
     def __repr__(self):
         return "Version(version={})".format(self.version)
 
+    def to_bytes(self):
+        # Type = 18, Length = 2
+        return struct.pack(">BBH", TlvType.VERSION, 2, self._version)
+    
 
 class VersionFactory:
 
@@ -794,12 +870,17 @@ class AddressFull(object):
 
     def __repr__(self):
         return "AddressFull(ipv6_address={}')".format(hexlify(self.ipv6_address))
+    
+    def to_bytes(self):
+        # Assuming _ipv6_address is stored as a bytes object of length 16
+        return self._ipv6_address
 
+    
 
 class AddressFullFactory:
 
     def parse(self, data, message_info):
-        data.read(1)  # first byte is ignored
+        data.read(1)
         ipv6_address = data.read(16)
         return AddressFull(ipv6_address)
 
@@ -825,12 +906,16 @@ class AddressCompressed(object):
 
     def __repr__(self):
         return "AddressCompressed(cid={}, iid={}')".format(self.cid, hexlify(self.iid))
-
-
+    
+    def to_bytes(self):
+        # Pack CID and IID into bytes; CID as 1 byte, IID as 8 bytes
+        return struct.pack(">B", self._cid) + self._iid
+    
+  
 class AddressCompressedFactory:
 
     def parse(self, data, message_info):
-        cid = ord(data.read(1)) & 0x0F
+        cid = ord(data.read(1)) & 0x8F
         iid = bytearray(data.read(8))
         return AddressCompressed(cid, iid)
 
@@ -852,6 +937,13 @@ class AddressRegistration(object):
     def __repr__(self):
         addresses_str = ", ".join(["{}".format(address) for address in self.addresses])
         return "AddressRegistration(addresses=[{}])".format(addresses_str)
+    
+    def to_bytes(self):
+        # Type = 19, Length is dynamic based on the address content
+        data = bytearray()
+        for address in self._addresses:
+            data += address.to_bytes()
+        return struct.pack(">BB", TlvType.ADDRESS_REGISTRATION, len(data)) + data
 
 
 class AddressRegistrationFactory:
@@ -862,16 +954,13 @@ class AddressRegistrationFactory:
 
     def parse(self, data, message_info):
         addresses = []
-
         while data.tell() < len(data.getvalue()):
             compressed = (ord(data.read(1)) >> 7) & 0x01
             data.seek(-1, io.SEEK_CUR)
-
             if compressed:
                 addresses.append(self._addr_compressed_factory.parse(data, message_info))
             else:
                 addresses.append(self._addr_full_factory.parse(data, message_info))
-
         return AddressRegistration(addresses)
 
 
@@ -896,7 +985,10 @@ class Channel(object):
 
     def __repr__(self):
         return "Channel(channel_page={}, channel={})".format(self.channel_page, self.channel)
-
+    
+    def to_bytes(self):
+        # Type = 20, Length = 3
+        return struct.pack(">BBBH", TlvType.CHANNEL, 3, self._channel_page, self._channel)
 
 class ChannelFactory:
 
@@ -923,6 +1015,9 @@ class PanId:
     def __repr__(self):
         return "PanId(pan_id={})".format(self.pan_id)
 
+    def to_bytes(self):
+        # Type = 21, Length = 2
+        return struct.pack(">BBH", TlvType.PANID, 2, self._pan_id)
 
 class PanIdFactory:
 
@@ -959,6 +1054,12 @@ class ActiveTimestamp(object):
     def __repr__(self):
         return "ActiveTimestamp(timestamp_seconds={}, timestamp_ticks={}, u={})".format(
             self.timestamp_seconds, self.timestamp_ticks, self.u)
+    
+    def to_bytes(self):
+        timestamp_seconds_packed = struct.pack(">Q", self._timestamp_seconds)[-6:]
+        ticks_and_u_packed = struct.pack(">H", (self._timestamp_ticks << 1) | self._u)
+        timestamp_bytes = timestamp_seconds_packed + ticks_and_u_packed
+        return struct.pack(">BB", TlvType.ACTIVE_TIMESTAMP, len(timestamp_bytes)) + timestamp_bytes
 
 
 class ActiveTimestampFactory:
@@ -1001,10 +1102,16 @@ class PendingTimestamp(object):
     def __repr__(self):
         return "PendingTimestamp(timestamp_seconds={}, timestamp_ticks={}, u={})".format(
             self.timestamp_seconds, self.timestamp_ticks, self.u)
+    
+    def to_bytes(self):
+        timestamp_seconds_packed = struct.pack(">Q", self._timestamp_seconds)[-6:]
+        ticks_and_u_packed = struct.pack(">H", (self._timestamp_ticks << 1) | self._u)
+        timestamp_bytes = timestamp_seconds_packed + ticks_and_u_packed
+        return struct.pack(">BB", TlvType.ACTIVE_TIMESTAMP, len(timestamp_bytes)) + timestamp_bytes
+
 
 
 class PendingTimestampFactory:
-
     def parse(self, data, message_info):
         seconds = bytearray([0x00, 0x00]) + bytearray(data.read(6))
         ticks = struct.unpack(">H", data.read(2))[0]
@@ -1015,30 +1122,63 @@ class PendingTimestampFactory:
         return PendingTimestamp(timestamp_seconds, timestamp_ticks, u)
 
 
-class ActiveOperationalDataset:
-    # TODO: Not implemented yet
+class ActiveOperationalDataset(object):
+    def __init__(self, data=b''):
+        self._data = data
 
-    def __init__(self):
-        print("ActiveOperationalDataset is not implemented yet.")
+    @property
+    def data(self):
+        return self._data
 
+    def __repr__(self):
+        return f"ActiveOperationalDataset(data={hexlify(self._data)})"
+
+    def to_bytes(self):
+        # Type = 24, Length = 0 when data is empty
+        return struct.pack(">BB", TlvType.ACTIVE_OPERATIONAL_DATASET, len(self._data)) + self._data
 
 class ActiveOperationalDatasetFactory:
-
     def parse(self, data, message_info):
-        return ActiveOperationalDataset()
+        length_byte = data.read(1)
+        if len(length_byte) == 0:
+            #print("Length byte missing, setting length to 0 and data to empty.")
+            return ActiveOperationalDataset(b'')
+        tlv_length = struct.unpack(">B", length_byte)[0]
+        tlv_data = data.read(tlv_length)
+        if len(tlv_data) != tlv_length:
+            print(f"Incomplete data, setting length to 0 and data to empty.")
+            return ActiveOperationalDataset(b'')
+        return ActiveOperationalDataset(tlv_data)
 
 
-class PendingOperationalDataset:
-    # TODO: Not implemented yet
 
-    def __init__(self):
-        print("PendingOperationalDataset is not implemented yet.")
+class PendingOperationalDataset(object):
+    def __init__(self, data=b''):
+        self._data = data
 
+    @property
+    def data(self):
+        return self._data
+
+    def __repr__(self):
+        return f"PendingOperationalDataset(data={hexlify(self._data)})"
+
+    def to_bytes(self):
+        # Type = 25, Length = 0 when data is empty
+        return struct.pack(">BB", TlvType.PENDING_OPERATIONAL_DATASET, len(self._data)) + self._data
 
 class PendingOperationalDatasetFactory:
-
     def parse(self, data, message_info):
-        return PendingOperationalDataset()
+        length_byte = data.read(1)
+        if len(length_byte) == 0:
+            print("Length byte missing, setting length to 0 and data to empty.")
+            return PendingOperationalDataset(b'')
+        tlv_length = struct.unpack(">B", length_byte)[0]
+        tlv_data = data.read(tlv_length)
+        if len(tlv_data) != tlv_length:
+            print(f"Incomplete data, setting length to 0 and data to empty.")
+            return PendingOperationalDataset(b'')
+        return PendingOperationalDataset(tlv_data)
 
 
 class ThreadDiscovery(object):
@@ -1055,6 +1195,15 @@ class ThreadDiscovery(object):
 
     def __repr__(self):
         return "ThreadDiscovery(tlvs={})".format(self.tlvs)
+    
+    def to_bytes(self):
+        # Type = 26, Length is dynamic, calculated from the content of TLVs
+        data = bytearray()
+        for tlv in self._tlvs:
+            tlv_bytes = tlv.to_bytes()
+            data += tlv_bytes
+        # Pack the TLV type and the dynamic length followed by the data
+        return struct.pack(">BB", TlvType.THREAD_DISCOVERY, len(data)) + data
 
 
 class ThreadDiscoveryFactory:
@@ -1094,17 +1243,25 @@ class CslSynchronizedTimeoutFactory:
         return CslSynchronizedTimeout()
 
 
-class CslClockAccuracy:
-    # TODO: Not implemented yet
+class CslClockAccuracy(object):
+    def __init__(self, accuracy, uncertainty):
+        self.accuracy = accuracy
+        self.uncertainty = uncertainty
 
-    def __init__(self):
-        print("CslClockAccuracy is not implemented yet.")
+    def __repr__(self):
+        return f"CslClockAccuracyTlv(accuracy={self.accuracy}, uncertainty={self.uncertainty})"
+
+    def to_bytes(self):
+        # Type = 86, Length = 2 (one byte each for accuracy and uncertainty)
+        return struct.pack(">BBBB", TlvType.CSL_CLOCK_ACCURACY, 2, self.accuracy, self.uncertainty)  # Big endian: Type, Length, Accuracy, Uncertainty
+    
 
 
 class CslClockAccuracyFactory:
-
     def parse(self, data, message_info):
-        return CslClockAccuracy()
+        """ Parses the data into a CslClockAccuracyTlv object. """
+        accuracy, uncertainty = struct.unpack(">BB", data.read(2))
+        return CslClockAccuracy(accuracy, uncertainty)
 
 
 class TimeRequest:
@@ -1184,6 +1341,21 @@ class LinkProbeFactory:
     def parse(self, data, message_info):
         return LinkProbe()
 
+# Additional class
+class SupervisionInterval(object):
+    def __init__(self, interval):
+        self.interval = interval
+
+    def to_bytes(self):
+        return struct.pack(">BBH", TlvType.SUPERVISION_INTERVAL, 2, self.interval)  # Big endian: Type, Length, Value
+    
+
+class SupervisionIntervalFactory:
+    def parse(self, data, message_info):
+        """ Parses the data into a SupervisionIntervalTlv object. Assumes the first two bytes for type and length are already consumed. """
+        interval = struct.unpack(">H", data.read(2))[0]
+        return SupervisionInterval(interval)
+
 
 class MleCommand(object):
 
@@ -1202,6 +1374,16 @@ class MleCommand(object):
     def __repr__(self):
         tlvs_str = ", ".join(["{}".format(tlv) for tlv in self.tlvs])
         return "MleCommand(type={}, tlvs=[{}])".format(self.type.name, tlvs_str)
+    
+    def to_bytes(self):
+        command_bytes = bytearray([self._type.value])
+        for tlv in self._tlvs:
+            command_bytes += tlv.to_bytes()
+        return command_bytes
+    
+    def commande_to_bytes(self):
+        command_bytes = bytearray([self._type.value])
+        return command_bytes
 
 
 class MleCommandFactory:
@@ -1223,7 +1405,7 @@ class MleCommandFactory:
         try:
             return self._tlvs_factories[_type]
         except KeyError:
-            logging.error('Could not find TLV factory. Unsupported TLV type: {}'.format(_type))
+            #logging.error('Could not find TLV factory. Unsupported TLV type: {}'.format(_type))
             return UnknownTlvFactory(_type)
 
     def _parse_tlv(self, data, message_info):
@@ -1241,8 +1423,7 @@ class MleCommandFactory:
 
         while data.tell() < len(data.getvalue()):
             tlv = self._parse_tlv(data, message_info)
-            tlvs.append(tlv)
-
+            tlvs.append(tlv)    
         return MleCommand(cmd_type, tlvs)
 
 
@@ -1261,8 +1442,9 @@ class MleMessage(object):
 
 class MleMessageSecured(MleMessage):
 
-    def __init__(self, aux_sec_hdr, command, mic):
+    def __init__(self, aux_sec_hdr, command, mic, security_indicator):
         super(MleMessageSecured, self).__init__(command)
+        self._security_indicator = security_indicator
         self._aux_sec_hdr = aux_sec_hdr
         self._mic = mic
 
@@ -1273,11 +1455,22 @@ class MleMessageSecured(MleMessage):
     @property
     def mic(self):
         return self._mic
+    
+    @property
+    def security_indicator(self):
+        return self._security_indicator
 
     def __repr__(self):
         return "MleMessageSecured(aux_sec_hdr={}, command={}, mic=\"{}\")".format(self.aux_sec_hdr, self.command,
                                                                                   hexlify(self.mic))
 
+    def to_bytes(self):
+        security_indicator = self._security_indicator.to_bytes(1, 'big')
+        aux_sec_hdr_bytes = convert_aux_sec_hdr_to_bytearray(self.aux_sec_hdr)
+        command_bytes = self._command.to_bytes()
+        mic_bytes = self._mic
+        secured_message_bytes = security_indicator + aux_sec_hdr_bytes + command_bytes + mic_bytes
+        return secured_message_bytes
 
 class MleMessageFactory:
 
@@ -1286,7 +1479,7 @@ class MleMessageFactory:
         self._mle_command_factory = mle_command_factory
         self._crypto_engine = crypto_engine
 
-    def _create_mle_secured_message(self, data, message_info):
+    def _create_mle_secured_message(self, data, message_info, security_indicator):
         aux_sec_hdr = self._aux_sec_hdr_factory.parse(data, message_info)
 
         enc_data_length = len(data.getvalue())
@@ -1298,7 +1491,7 @@ class MleMessageFactory:
 
         command = self._mle_command_factory.parse(io.BytesIO(dec_data), message_info)
 
-        return MleMessageSecured(aux_sec_hdr, command, mic)
+        return MleMessageSecured(aux_sec_hdr, command, mic, security_indicator)
 
     def _create_mle_message(self, data, message_info):
         command = self._mle_command_factory.parse(data, message_info)
@@ -1309,7 +1502,7 @@ class MleMessageFactory:
         security_indicator = ord(data.read(1))
 
         if security_indicator == 0:
-            return self._create_mle_secured_message(data, message_info)
+            return self._create_mle_secured_message(data, message_info, security_indicator)
 
         elif security_indicator == 255:
             return self._create_mle_message(data, message_info)

@@ -67,7 +67,7 @@ class NetworkDataSubTlvsFactory(SubTlvsFactory):
             data_byte = ord(data.read(1))
 
             stable = data_byte & 0x01
-            _type = (data_byte >> 1) & 0x7F
+            _type =  data_byte  & 0xFE
 
             length = ord(data.read(1))
             value = data.read(length)
@@ -384,6 +384,16 @@ class CommissioningData(NetworkData):
     def __repr__(self):
         sub_tlvs_str = ", ".join(["{}".format(tlv) for tlv in self._sub_tlvs])
         return "CommissioningData(stable={}, sub_tlvs=[{}])".format(self._stable, sub_tlvs_str)
+    
+    def to_bytes(self):
+        tlv_type = TlvType.COMMISSIONING
+        content = bytearray()
+        for sub_tlv in self._sub_tlvs:
+            content += sub_tlv.to_bytes()
+        length = len(content)
+        return struct.pack('>B', tlv_type) + struct.pack('>B', length) + content
+    
+
 
 
 class CommissioningDataSubTlvsFactory(SubTlvsFactory):
@@ -467,6 +477,19 @@ class Service(NetworkData):
             self.service_data,
             sub_tlvs_str,
         )
+    
+    def to_bytes(self):
+        tlv_type = TlvType.SERVICE
+        header = struct.pack('>B', self._t << 7 | self._id)
+        enterprise_number = struct.pack('>L', self._enterprise_number)
+        service_data_length = struct.pack('>B', len(self._service_data))
+        service_data = self._service_data
+        sub_tlvs_content = bytearray()
+        for sub_tlv in self._sub_tlvs:
+            sub_tlvs_content += sub_tlv.to_bytes()
+        content = header + enterprise_number + service_data_length + service_data + sub_tlvs_content
+        length = len(content)
+        return struct.pack('>B', tlv_type) + struct.pack('>B', length) + content
 
 
 class ServiceSubTlvsFactory(NetworkDataSubTlvsFactory):
@@ -525,6 +548,13 @@ class Server(NetworkData):
     def __repr__(self):
         return "LowpanId(stable={}, server_16={}, server_data=b'{}')".format(self.stable, self.server_16,
                                                                              hexlify(self.server_data))
+    
+    def to_bytes(self):
+        tlv_type = TlvType.SERVER
+        server_16 = struct.pack('>H', self._server_16)
+        server_data = self._server_data
+        length = 2 + len(server_data)
+        return struct.pack('>B', tlv_type) + struct.pack('>B', length) + server_16 + server_data
 
 
 class ServerFactory(object):
