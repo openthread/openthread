@@ -404,13 +404,6 @@ private:
 #endif
     };
 
-    enum AnycastType : uint8_t
-    {
-        kAnycastDhcp6Agent,
-        kAnycastNeighborDiscoveryAgent,
-        kAnycastService,
-    };
-
     struct RxInfo : public InstanceLocator
     {
         static constexpr uint16_t kInfoStringSize = 70;
@@ -557,8 +550,6 @@ private:
     void  SendDestinationUnreachable(uint16_t aMeshSource, const Ip6::Headers &aIp6Headers);
     Error UpdateIp6Route(Message &aMessage);
     Error UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &aMessage);
-    void  EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint16_t &aBestDest) const;
-    Error AnycastRouteLookup(uint8_t aServiceId, AnycastType aType, uint16_t &aMeshDest) const;
     Error UpdateMeshRoute(Message &aMessage);
     bool  UpdateReassemblyList(void);
     void  UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,

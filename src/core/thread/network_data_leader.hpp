@@ -364,6 +364,19 @@ public:
     void IncrementVersionAndStableVersion(void);
 
     /**
+     * Performs anycast ALOC route lookup using the Network Data.
+     *
+     * @param[in]   aAloc16     The ALOC16 destination to lookup.
+     * @param[out]  aRloc16     A reference to return the RLOC16 for the selected route.
+     *
+     * @retval kErrorNone      Successfully lookup best option for @p aAloc16. @p aRloc16 is updated.
+     * @retval kErrorNoRoute   No valid route was found.
+     * @retval kErrorDrop      The @p aAloc16 is not valid.
+     *
+     */
+    Error AnycastLookup(uint16_t aAloc16, uint16_t &aRloc16) const;
+
+    /**
      * Returns CONTEXT_ID_RESUSE_DELAY value.
      *
      * @returns The CONTEXT_ID_REUSE_DELAY value (in seconds).
@@ -467,6 +480,13 @@ private:
     static constexpr uint8_t  kMinServiceId       = 0x00;
     static constexpr uint8_t  kMaxServiceId       = 0x0f;
 
+    enum AnycastType : uint8_t
+    {
+        kAnycastDhcp6Agent,
+        kAnycastNdAgent,
+        kAnycastService,
+    };
+
     class ChangedFlags
     {
     public:
@@ -550,6 +570,9 @@ private:
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void HandleTimer(void);
+
+    Error AnycastLookup(uint8_t aServiceId, AnycastType aType, uint16_t &aRloc16) const;
+    void  EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint16_t &aBestDest) const;
 
     void RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkData);
 
