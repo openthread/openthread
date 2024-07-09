@@ -47,6 +47,10 @@
 #error "OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE is required for OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE."
 #endif
 
+#if !OPENTHREAD_CONFIG_UPTIME_ENABLE
+#error "OPENTHREAD_CONFIG_UPTIME_ENABLE is required for OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE"
+#endif
+
 #include <openthread/border_routing.h>
 #include <openthread/nat64.h>
 #include <openthread/netdata.h>
@@ -837,14 +841,25 @@ private:
             void DetermineReachabilityTimeout(void);
             bool Matches(const Ip6::Address &aAddress) const { return aAddress == mAddress; }
             bool Matches(const EmptyChecker &aChecker);
-            void CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow) const;
+            void CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow, uint32_t aUptime) const;
 
             using OnLinkPrefixList = OwningList<Entry<OnLinkPrefix>>;
             using RoutePrefixList  = OwningList<Entry<RoutePrefix>>;
 
+            // `mDiscoverTime` tracks the initial discovery time of
+            // this router. To accommodate longer durations, the
+            // `Uptime` is used, as `TimeMilli` (which uses `uint32_t`
+            // intervals) would be limited to tracking ~ 49 days.
+            //
+            // `mLastUpdateTime` tracks the most recent time an RA or
+            // NA was received from this router. It is bounded due to
+            // the frequency of reachability checks, so we can safely
+            // use `TimeMilli` for it.
+
             Ip6::Address     mAddress;
             OnLinkPrefixList mOnLinkPrefixes;
             RoutePrefixList  mRoutePrefixes;
+            uint32_t         mDiscoverTime;
             TimeMilli        mLastUpdateTime;
             TimeMilli        mTimeoutTime;
             uint8_t          mNsProbeCount;
@@ -873,9 +888,10 @@ private:
                 kRoutePrefix,
             };
 
-            void                 Init(const Entry<Router> *aRoutersHead);
+            void                 Init(const Entry<Router> *aRoutersHead, uint32_t aUptime);
             Error                AdvanceToNextRouter(Type aType);
             Error                AdvanceToNextEntry(void);
+            uint32_t             GetInitUptime(void) const { return mData0; }
             TimeMilli            GetInitTime(void) const { return TimeMilli(mData1); }
             Type                 GetType(void) const { return static_cast<Type>(mData2); }
             const Entry<Router> *GetRouter(void) const { return static_cast<const Entry<Router> *>(mPtr1); }
@@ -888,6 +904,7 @@ private:
 
         private:
             void SetRouter(const Entry<Router> *aRouter) { mPtr1 = aRouter; }
+            void SetInitUptime(uint32_t aUptime) { mData0 = aUptime; }
             void SetInitTime(void) { mData1 = TimerMilli::GetNow().GetValue(); }
             void SetEntry(const void *aEntry) { mPtr2 = aEntry; }
             bool HasEntry(void) const { return mPtr2 != nullptr; }
