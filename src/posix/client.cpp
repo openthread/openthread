@@ -68,12 +68,12 @@ namespace {
 struct Config
 {
     const char *mNetifName;
+    uint64_t    mTime;
 };
 
-enum
-{
-    kLineBufferSize = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
-};
+static constexpr uint32_t kLineBufferSize = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH;
+static constexpr uint32_t kUsPerSec       = 1000000;
+static constexpr uint32_t kNsPerUs        = 1000;
 
 static_assert(kLineBufferSize >= sizeof("> "), "kLineBufferSize is too small");
 static_assert(kLineBufferSize >= sizeof("Done\r\n"), "kLineBufferSize is too small");
@@ -211,11 +211,13 @@ exit:
 enum
 {
     kOptInterfaceName = 'I',
+    kOptTime          = 't',
     kOptHelp          = 'h',
 };
 
 const struct option kOptions[] = {
     {"interface-name", required_argument, NULL, kOptInterfaceName},
+    {"time", required_argument, NULL, kOptTime},
     {"help", required_argument, NULL, kOptHelp},
 };
 
@@ -226,7 +228,9 @@ void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    %s [Options] [--] ...\n"
             "Options:\n"
             "    -h  --help                    Display this usage information.\n"
-            "    -I  --interface-name name     Thread network interface name.\n",
+            "    -I  --interface-name name     Thread network interface name.\n"
+            "    -t  --time <time>             Time in seconds to actively exit the program. The value may have "
+            "fractional form, for example `1.5`.\n",
             aProgramName);
     exit(aExitCode);
 }
@@ -238,17 +242,31 @@ static bool ShouldEscape(char aChar)
 
 Config ParseArg(int &aArgCount, char **&aArgVector)
 {
-    Config config = {OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME};
+    Config config = {OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME, 0};
 
     optind = 1;
 
-    for (int index, option; (option = getopt_long(aArgCount, aArgVector, "+I:h", kOptions, &index)) != -1;)
+    for (int index, option; (option = getopt_long(aArgCount, aArgVector, "+I:t:h", kOptions, &index)) != -1;)
     {
         switch (option)
         {
         case kOptInterfaceName:
             config.mNetifName = optarg;
             break;
+        case kOptTime:
+        {
+            float value;
+            char *endptr;
+
+            value = strtof(optarg, &endptr);
+            if ((errno == ERANGE) || (endptr == optarg))
+            {
+                PrintUsage(aArgVector[0], stderr, OT_EXIT_FAILURE);
+            }
+
+            config.mTime = static_cast<uint64_t>(value * kUsPerSec);
+            break;
+        }
         case kOptHelp:
             PrintUsage(aArgVector[0], stdout, OT_EXIT_SUCCESS);
             break;
@@ -264,17 +282,30 @@ Config ParseArg(int &aArgCount, char **&aArgVector)
     return config;
 }
 
+uint64_t GetNow(void)
+{
+    struct timespec now;
+
+    if (clock_gettime(CLOCK_MONOTONIC, &now) != 0)
+    {
+        exit(OT_EXIT_FAILURE);
+    }
+
+    return static_cast<uint64_t>(now.tv_sec) * kUsPerSec + static_cast<uint64_t>(now.tv_nsec) / kNsPerUs;
+}
+
 } // namespace
 
 int main(int argc, char *argv[])
 {
-    bool   isInteractive = true;
-    bool   isFinished    = false;
-    bool   isBeginOfLine = true;
-    char   lineBuffer[kLineBufferSize];
-    size_t lineBufferWritePos = 0;
-    int    ret;
-    Config config;
+    bool     isInteractive = true;
+    bool     isFinished    = false;
+    bool     isBeginOfLine = true;
+    char     lineBuffer[kLineBufferSize];
+    size_t   lineBufferWritePos = 0;
+    uint64_t end                = 0;
+    int      ret;
+    Config   config;
 
     config = ParseArg(argc, argv);
 
@@ -322,11 +353,33 @@ int main(int argc, char *argv[])
     }
 #endif
 
+    if (config.mTime != 0)
+    {
+        end = GetNow() + config.mTime;
+    }
+
     while (!isFinished)
     {
-        char   buffer[kLineBufferSize];
-        fd_set readFdSet;
-        int    maxFd = sSessionFd;
+        struct timeval  timeout;
+        struct timeval *timeoutPtr = nullptr;
+        char            buffer[kLineBufferSize];
+        fd_set          readFdSet;
+        int             maxFd = sSessionFd;
+
+        if (config.mTime != 0)
+        {
+            uint64_t now = GetNow();
+
+            if (now >= end)
+            {
+                ret = OT_EXIT_SUCCESS;
+                break;
+            }
+
+            timeout.tv_sec  = static_cast<time_t>((end - now) / kUsPerSec);
+            timeout.tv_usec = static_cast<suseconds_t>((end - now) % kUsPerSec);
+            timeoutPtr      = &timeout;
+        }
 
         FD_ZERO(&readFdSet);
 
@@ -341,7 +394,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        ret = select(maxFd + 1, &readFdSet, nullptr, nullptr, nullptr);
+        ret = select(maxFd + 1, &readFdSet, nullptr, nullptr, timeoutPtr);
 
         VerifyOrExit(ret != -1, perror("select"); ret = OT_EXIT_FAILURE);
 
@@ -405,8 +458,9 @@ int main(int argc, char *argv[])
 
                         VerifyOrExit(DoWrite(STDOUT_FILENO, line, len), ret = OT_EXIT_FAILURE);
 
-                        if (isBeginOfLine && (strncmp("Done\n", line, 5) == 0 || strncmp("Done\r\n", line, 6) == 0 ||
-                                              strncmp("Error ", line, 6) == 0))
+                        if ((config.mTime == 0) && isBeginOfLine &&
+                            (strncmp("Done\n", line, 5) == 0 || strncmp("Done\r\n", line, 6) == 0 ||
+                             strncmp("Error ", line, 6) == 0))
                         {
                             isFinished = true;
                             ret        = OT_EXIT_SUCCESS;
