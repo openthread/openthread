@@ -37,6 +37,7 @@
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 
+#include "openthread-core-config.h"
 #include "openthread-spinel-config.h"
 #include "core/radio/max_power_table.hpp"
 #include "lib/spinel/logger.hpp"
