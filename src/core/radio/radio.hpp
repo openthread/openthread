@@ -52,6 +52,8 @@ static constexpr uint32_t kUsPerTenSymbols = OT_US_PER_TEN_SYMBOLS; ///< Time fo
 static constexpr uint32_t kRadioHeaderShrDuration = 160;            ///< Duration of SHR in us
 static constexpr uint32_t kRadioHeaderPhrDuration = 32;             ///< Duration of PHR in us
 
+static constexpr int8_t kRadioPowerInvalid = OT_RADIO_POWER_INVALID; ///< Invalid TX power value
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 /**
  * Minimum CSL period supported in units of 10 symbols.
