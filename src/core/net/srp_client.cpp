@@ -656,21 +656,28 @@ exit:
 
 bool Client::ShouldUpdateHostAutoAddresses(void) const
 {
+    // Determine if any changes to the addresses on `ThreadNetif`
+    // require registration with the server when `AutoHostAddress` is
+    // enabled. This includes registering all preferred addresses,
+    // excluding link-local and mesh-local addresses. If no eligible
+    // address is available, the ML-EID will be registered.
+
     bool                        shouldUpdate    = false;
     uint16_t                    registeredCount = 0;
     Ip6::Netif::UnicastAddress &mlEid           = Get<Mle::Mle>().GetMeshLocalEidUnicastAddress();
 
     VerifyOrExit(mHostInfo.IsAutoAddressEnabled());
 
-    // Check all addresses on `ThreadNetif` excluding the mesh local
-    // EID (`mlEid`). If any address should be registered but is not,
-    // or if any address was registered earlier but no longer should
-    // be, the host information needs to be re-registered to update
-    // the addresses. If there is no eligible address, then `mlEid`
-    // should be registered, so its status is checked. Finally, the
-    // number of addresses that should be registered is verified
-    // against the previous value `mAutoHostAddressCount` to handle
-    // the case where an earlier registered address is now removed.
+    // We iterate through all eligible addresses on the `ThreadNetif`.
+    // If we encounter a new address that should be registered but
+    // isn't, or a previously registered address has been removed, we
+    // trigger an SRP update to reflect these changes. However, if a
+    // previously registered address is being deprecated (e.g., due
+    // to an OMR prefix removal from Network Data), we defer the SRP
+    // update. The client will re-register after the deprecation
+    // time has elapsed and the address is removed. In the meantime,
+    // if any other event triggers the client to send an SRP update,
+    // the updated address list will be included in that update.
 
     for (const Ip6::Netif::UnicastAddress &unicastAddress : Get<ThreadNetif>().GetUnicastAddresses())
     {
@@ -681,7 +688,17 @@ bool Client::ShouldUpdateHostAutoAddresses(void) const
 
         if (ShouldHostAutoAddressRegister(unicastAddress) != unicastAddress.mSrpRegistered)
         {
-            ExitNow(shouldUpdate = true);
+            // If this address was previously registered but is no
+            // longer eligible, we skip sending an immediate update
+            // only if the address is currently being deprecated
+            // (it's still valid but no longer preferred).
+
+            bool skip = unicastAddress.mSrpRegistered && unicastAddress.mValid && !unicastAddress.mPreferred;
+
+            if (!skip)
+            {
+                ExitNow(shouldUpdate = true);
+            }
         }
 
         if (unicastAddress.mSrpRegistered)
@@ -694,6 +711,11 @@ bool Client::ShouldUpdateHostAutoAddresses(void) const
     {
         ExitNow(shouldUpdate = !mlEid.mSrpRegistered);
     }
+
+    // Compare the current number of addresses that are marked as
+    // registered with the previous value `mAutoHostAddressCount`.
+    // This check handles the case where a previously registered address
+    // has been removed.
 
     shouldUpdate = (registeredCount != mAutoHostAddressCount);
 
