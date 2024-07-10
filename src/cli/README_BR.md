@@ -355,6 +355,7 @@ Info per router:
 - Reachability flag: A router is marked as unreachable if it fails to respond to multiple Neighbor Solicitation probes.
 - Age: Duration interval since this router was first discovered. It is formatted as `{hh}:{mm}:{ss}` for hours, minutes, seconds, if the duration is less than 24 hours. If the duration is 24 hours or more, the format is `{dd}d.{hh}:{mm}:{ss}` for days, hours, minutes, seconds.
 - `(this BR)` is appended when the router is the local device itself.
+- `(peer BR)` is appended when the router is likely a peer BR connected to the same Thread mesh. This requires `OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE`.
 
 ```bash
 > br routers

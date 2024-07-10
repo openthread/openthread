@@ -536,6 +536,8 @@ exit:
  *   minutes, seconds, if the duration is less than 24 hours. If the duration is 24 hours or more, the format is
  *   `{dd}d.{hh}:{mm}:{ss}` for days, hours, minutes, seconds.
  * - `(this BR)` is appended when the router is the local device itself.
+ * - `(peer BR)` is appended when the router is likely a peer BR connected to the same Thread mesh. This requires
+ *   `OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE`.
  * @sa otBorderRoutingGetNextRouterEntry
  */
 template <> otError Br::Process<Cmd("routers")>(Arg aArgs[])
@@ -576,6 +578,13 @@ void Br::OutputRouterInfo(const otBorderRoutingRouterEntry &aEntry, RouterOutput
         {
             OutputFormat(" (this BR)");
         }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+        if (aEntry.mIsPeerBr)
+        {
+            OutputFormat(" (peer BR)");
+        }
+#endif
     }
 
     OutputNewLine();
