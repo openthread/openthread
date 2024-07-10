@@ -72,8 +72,13 @@ Radio::Radio(void)
 
 void Radio::Init(const char *aUrl)
 {
-    bool                                    resetRadio;
-    bool                                    skipCompatibilityCheck;
+    bool resetRadio;
+    bool skipCompatibilityCheck;
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2 && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    bool aEnableRcpTimeSync = true;
+#else
+    bool aEnableRcpTimeSync = false;
+#endif
     struct ot::Spinel::RadioSpinelCallbacks callbacks;
 
     mRadioUrl.Init(aUrl);
@@ -93,7 +98,7 @@ void Radio::Init(const char *aUrl)
     skipCompatibilityCheck = mRadioUrl.HasParam("skip-rcp-compatibility-check");
 
     mRadioSpinel.SetCallbacks(callbacks);
-    mRadioSpinel.Init(skipCompatibilityCheck, resetRadio, &GetSpinelDriver(), kRequiredRadioCaps);
+    mRadioSpinel.Init(skipCompatibilityCheck, resetRadio, &GetSpinelDriver(), kRequiredRadioCaps, aEnableRcpTimeSync);
 
     ProcessRadioUrl(mRadioUrl);
 }

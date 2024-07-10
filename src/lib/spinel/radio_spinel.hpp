@@ -165,12 +165,14 @@ public:
      * @param[in]  aSpinelDriver               A pointer to the spinel driver instance that this object depends on.
      * @param[in]  aRequiredRadioCaps          The required radio capabilities. RadioSpinel will check if RCP has
      *                                         the required capabilities during initiailization.
+     * @param[in]  aEnableRcpTimeSync          TRUE to enable RCP time sync, FALSE to not enable.
      *
      */
     void Init(bool          aSkipRcpCompatibilityCheck,
               bool          aSoftwareReset,
               SpinelDriver *aSpinelDriver,
-              otRadioCaps   aRequiredRadioCaps);
+              otRadioCaps   aRequiredRadioCaps,
+              bool          aEnableRcpTimeSync);
 
     /**
      * This method sets the notification callbacks.
@@ -1302,6 +1304,8 @@ private:
     otRadioSpinelVendorRestorePropertiesCallback mVendorRestorePropertiesCallback;
     void                                        *mVendorRestorePropertiesContext;
 #endif
+
+    bool mEnableRcpTimeSync;
 
     SpinelDriver *mSpinelDriver;
 };
