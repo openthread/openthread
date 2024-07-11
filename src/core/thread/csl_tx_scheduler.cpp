@@ -32,6 +32,7 @@
 
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/num_utils.hpp"
 #include "common/time.hpp"
 #include "mac/mac.hpp"
 
@@ -68,16 +69,20 @@ CslTxScheduler::CslTxScheduler(Instance &aInstance)
     , mFrameContext()
     , mCallbacks(aInstance)
 {
-    InitFrameRequestAhead();
+    UpdateFrameRequestAhead();
 }
 
-void CslTxScheduler::InitFrameRequestAhead(void)
+void CslTxScheduler::UpdateFrameRequestAhead(void)
 {
     uint32_t busSpeedHz = otPlatRadioGetBusSpeed(&GetInstance());
+    uint32_t busLatency = otPlatRadioGetBusLatency(&GetInstance());
+
     // longest frame on bus is 127 bytes with some metadata, use 150 bytes for bus Tx time estimation
     uint32_t busTxTimeUs = ((busSpeedHz == 0) ? 0 : (150 * 8 * 1000000 + busSpeedHz - 1) / busSpeedHz);
 
-    mCslFrameRequestAheadUs = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US + busTxTimeUs;
+    mCslFrameRequestAheadUs = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US + busTxTimeUs + busLatency;
+    LogInfo("Bus TX Time: %lu usec, Latency: %lu usec. Calculated CSL Frame Request Ahead: %lu usec",
+            ToUlong(busTxTimeUs), ToUlong(busLatency), ToUlong(mCslFrameRequestAheadUs));
 }
 
 void CslTxScheduler::Update(void)
