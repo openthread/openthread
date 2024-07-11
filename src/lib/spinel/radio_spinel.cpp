@@ -115,7 +115,10 @@ RadioSpinel::RadioSpinel(void)
     memset(&mCallbacks, 0, sizeof(mCallbacks));
 }
 
-void RadioSpinel::Init(bool aSkipRcpCompatibilityCheck, bool aSoftwareReset, SpinelDriver *aSpinelDriver)
+void RadioSpinel::Init(bool          aSkipRcpCompatibilityCheck,
+                       bool          aSoftwareReset,
+                       SpinelDriver *aSpinelDriver,
+                       otRadioCaps   aRequiredRadioCaps)
 {
     otError error = OT_ERROR_NONE;
     bool    supportsRcpApiVersion;
@@ -147,7 +150,7 @@ void RadioSpinel::Init(bool aSkipRcpCompatibilityCheck, bool aSoftwareReset, Spi
     if (!aSkipRcpCompatibilityCheck)
     {
         SuccessOrDie(CheckRcpApiVersion(supportsRcpApiVersion, supportsRcpMinHostApiVersion));
-        SuccessOrDie(CheckRadioCapabilities());
+        SuccessOrDie(CheckRadioCapabilities(aRequiredRadioCaps));
     }
 
     mRxRadioFrame.mPsdu  = mRxPsdu;
@@ -215,23 +218,17 @@ void RadioSpinel::InitializeCaps(bool &aSupportsRcpApiVersion, bool &aSupportsRc
     sSupportsLogCrashDump         = GetSpinelDriver().CoprocessorHasCap(SPINEL_CAP_RCP_LOG_CRASH_DUMP);
 }
 
-otError RadioSpinel::CheckRadioCapabilities(void)
+otError RadioSpinel::CheckRadioCapabilities(otRadioCaps aRequiredRadioCaps)
 {
-    const otRadioCaps kRequiredRadioCaps =
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-        OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING |
-#endif
-        OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES | OT_RADIO_CAPS_CSMA_BACKOFF;
-
     otError      error = OT_ERROR_NONE;
     unsigned int radioCaps;
 
     EXPECT_NO_ERROR(error = Get(SPINEL_PROP_RADIO_CAPS, SPINEL_DATATYPE_UINT_PACKED_S, &radioCaps));
     sRadioCaps = static_cast<otRadioCaps>(radioCaps);
 
-    if ((sRadioCaps & kRequiredRadioCaps) != kRequiredRadioCaps)
+    if ((sRadioCaps & aRequiredRadioCaps) != aRequiredRadioCaps)
     {
-        otRadioCaps missingCaps = (sRadioCaps & kRequiredRadioCaps) ^ kRequiredRadioCaps;
+        otRadioCaps missingCaps = (sRadioCaps & aRequiredRadioCaps) ^ aRequiredRadioCaps;
 
         // missingCaps may be an unused variable when LogCrit is blank
         // avoid compiler warning in that case
@@ -1796,7 +1793,7 @@ void RadioSpinel::PlatDiagOutput(const char *aFormat, ...)
     va_end(args);
 }
 
-#endif
+#endif // OPENTHREAD_CONFIG_DIAG_ENABLE
 
 uint32_t RadioSpinel::GetRadioChannelMask(bool aPreferred)
 {

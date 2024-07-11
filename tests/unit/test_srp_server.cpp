@@ -533,7 +533,7 @@ void TestSrpServerReject(void)
     srpClient->EnableAutoStartMode(nullptr, nullptr);
     VerifyOrQuit(srpClient->IsAutoStartModeEnabled());
 
-    AdvanceTime(2000);
+    AdvanceTime(15 * 1000);
     VerifyOrQuit(srpClient->IsRunning());
 
     SuccessOrQuit(srpClient->SetHostName(kHostName));
@@ -645,7 +645,7 @@ void TestSrpServerIgnore(void)
     srpClient->EnableAutoStartMode(nullptr, nullptr);
     VerifyOrQuit(srpClient->IsAutoStartModeEnabled());
 
-    AdvanceTime(2000);
+    AdvanceTime(15 * 1000);
     VerifyOrQuit(srpClient->IsRunning());
 
     SuccessOrQuit(srpClient->SetHostName(kHostName));
@@ -759,7 +759,7 @@ void TestSrpServerClientRemove(bool aShouldRemoveKeyLease)
     srpClient->EnableAutoStartMode(nullptr, nullptr);
     VerifyOrQuit(srpClient->IsAutoStartModeEnabled());
 
-    AdvanceTime(2000);
+    AdvanceTime(15 * 1000);
     VerifyOrQuit(srpClient->IsRunning());
 
     SuccessOrQuit(srpClient->SetHostName(kHostName));

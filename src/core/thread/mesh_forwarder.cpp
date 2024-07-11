@@ -1371,10 +1371,22 @@ exit:
     return didRemove;
 }
 
+Error MeshForwarder::RxInfo::ParseIp6Headers(void)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!mParsedIp6Headers);
+    SuccessOrExit(error = mIp6Headers.DecompressFrom(mFrameData, mMacAddrs, GetInstance()));
+    mParsedIp6Headers = true;
+
+exit:
+    return error;
+}
+
 void MeshForwarder::HandleReceivedFrame(Mac::RxFrame &aFrame)
 {
     Error  error = kErrorNone;
-    RxInfo rxInfo;
+    RxInfo rxInfo(GetInstance());
 
     VerifyOrExit(mEnabled, error = kErrorInvalidState);
 
@@ -1610,7 +1622,7 @@ bool MeshForwarder::UpdateReassemblyList(void)
     return mReassemblyList.GetHead() != nullptr;
 }
 
-Error MeshForwarder::FrameToMessage(const RxInfo &aRxInfo, uint16_t aDatagramSize, Message *&aMessage)
+Error MeshForwarder::FrameToMessage(RxInfo &aRxInfo, uint16_t aDatagramSize, Message *&aMessage)
 {
     Error             error     = kErrorNone;
     FrameData         frameData = aRxInfo.mFrameData;
@@ -1630,7 +1642,7 @@ exit:
     return error;
 }
 
-void MeshForwarder::HandleLowpanHc(const RxInfo &aRxInfo)
+void MeshForwarder::HandleLowpanHc(RxInfo &aRxInfo)
 {
     Error    error   = kErrorNone;
     Message *message = nullptr;
@@ -1681,32 +1693,32 @@ Error MeshForwarder::HandleDatagram(Message &aMessage, const Mac::Address &aMacS
     return Get<Ip6::Ip6>().HandleDatagram(OwnedPtr<Message>(&aMessage));
 }
 
-Error MeshForwarder::GetFramePriority(const RxInfo &aRxInfo, Message::Priority &aPriority)
+Error MeshForwarder::GetFramePriority(RxInfo &aRxInfo, Message::Priority &aPriority)
 {
-    Error        error = kErrorNone;
-    Ip6::Headers headers;
+    Error error = kErrorNone;
 
-    SuccessOrExit(error = headers.DecompressFrom(aRxInfo.mFrameData, aRxInfo.mMacAddrs, GetInstance()));
+    SuccessOrExit(error = aRxInfo.ParseIp6Headers());
 
-    aPriority = Ip6::Ip6::DscpToPriority(headers.GetIp6Header().GetDscp());
+    aPriority = Ip6::Ip6::DscpToPriority(aRxInfo.mIp6Headers.GetIp6Header().GetDscp());
 
     // Only ICMPv6 error messages are prioritized.
-    if (headers.IsIcmp6() && headers.GetIcmpHeader().IsError())
+    if (aRxInfo.mIp6Headers.IsIcmp6() && aRxInfo.mIp6Headers.GetIcmpHeader().IsError())
     {
         aPriority = Message::kPriorityNet;
     }
 
-    if (headers.IsUdp())
+    if (aRxInfo.mIp6Headers.IsUdp())
     {
-        uint16_t destPort = headers.GetUdpHeader().GetDestinationPort();
+        uint16_t destPort = aRxInfo.mIp6Headers.GetUdpHeader().GetDestinationPort();
 
         if (destPort == Mle::kUdpPort)
         {
             aPriority = Message::kPriorityNet;
         }
-        else if (Get<Tmf::Agent>().IsTmfMessage(headers.GetSourceAddress(), headers.GetDestinationAddress(), destPort))
+        else if (Get<Tmf::Agent>().IsTmfMessage(aRxInfo.mIp6Headers.GetSourceAddress(),
+                                                aRxInfo.mIp6Headers.GetDestinationAddress(), destPort))
         {
-            aPriority = Tmf::Agent::DscpToPriority(headers.GetIp6Header().GetDscp());
+            aPriority = Tmf::Agent::DscpToPriority(aRxInfo.mIp6Headers.GetIp6Header().GetDscp());
         }
     }
 

@@ -518,7 +518,7 @@ exit:
  * @cli br routers
  * @code
  * br routers
- * ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1) ms-since-rx:1505 reachable:yes
+ * ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1) ms-since-rx:1505 reachable:yes age:00:18:13
  * Done
  * @endcode
  * @par
@@ -532,7 +532,12 @@ exit:
  * - Milliseconds since last received message from this router
  * - Reachability flag: A router is marked as unreachable if it fails to respond to multiple Neighbor Solicitation
  *   probes.
+ * - Age: Duration interval since this router was first discovered. It is formatted as `{hh}:{mm}:{ss}` for  hours,
+ *   minutes, seconds, if the duration is less than 24 hours. If the duration is 24 hours or more, the format is
+ *   `{dd}d.{hh}:{mm}:{ss}` for days, hours, minutes, seconds.
  * - `(this BR)` is appended when the router is the local device itself.
+ * - `(peer BR)` is appended when the router is likely a peer BR connected to the same Thread mesh. This requires
+ *   `OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE`.
  * @sa otBorderRoutingGetNextRouterEntry
  */
 template <> otError Br::Process<Cmd("routers")>(Arg aArgs[])
@@ -562,13 +567,24 @@ void Br::OutputRouterInfo(const otBorderRoutingRouterEntry &aEntry, RouterOutput
 
     if (aMode == kLongVersion)
     {
-        OutputFormat(" ms-since-rx:%lu reachable:%s", ToUlong(aEntry.mMsecSinceLastUpdate),
-                     aEntry.mIsReachable ? "yes" : "no");
+        char ageString[OT_DURATION_STRING_SIZE];
+
+        otConvertDurationInSecondsToString(aEntry.mAge, ageString, sizeof(ageString));
+
+        OutputFormat(" ms-since-rx:%lu reachable:%s age:%s", ToUlong(aEntry.mMsecSinceLastUpdate),
+                     aEntry.mIsReachable ? "yes" : "no", ageString);
 
         if (aEntry.mIsLocalDevice)
         {
             OutputFormat(" (this BR)");
         }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+        if (aEntry.mIsPeerBr)
+        {
+            OutputFormat(" (peer BR)");
+        }
+#endif
     }
 
     OutputNewLine();

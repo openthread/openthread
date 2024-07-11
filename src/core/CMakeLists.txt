@@ -144,6 +144,7 @@ set(COMMON_SOURCES
     mac/mac_types.cpp
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
+    mac/sub_mac_csl_receiver.cpp
     meshcop/announce_begin_client.cpp
     meshcop/border_agent.cpp
     meshcop/commissioner.cpp
@@ -291,6 +292,7 @@ set(RADIO_COMMON_SOURCES
     mac/mac_types.cpp
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
+    mac/sub_mac_csl_receiver.cpp
     radio/radio.cpp
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp

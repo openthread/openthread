@@ -186,6 +186,7 @@ public:
         mTxFrame802154.SetTxDelay(0);
         mTxFrame802154.SetTxDelayBaseTime(0);
 #endif
+        mTxFrame802154.SetTxPower(kRadioPowerInvalid);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         mTxFrame802154.SetCslIePresent(false);
 #endif

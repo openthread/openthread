@@ -34,7 +34,12 @@ import time
 # -----------------------------------------------------------------------------------------------------------------------
 # Test description:
 #
-# Two BRs on two different Thread networks.
+# Check tracking of peer BR (connected to same Thread mesh).
+#
+#      ______________
+#     /              \
+#   br1 --- br2 --- br3
+#
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
 print('-' * 120)
@@ -48,17 +53,28 @@ cli.Node.set_time_speedup_factor(speedup)
 
 br1 = cli.Node()
 br2 = cli.Node()
+br3 = cli.Node()
 
-WAIT_TIME = 5
 IF_INDEX = 1
+
+# -----------------------------------------------------------------------------------------------------------------------
+# Form topology
+
+br1.form("peer-brs")
+br2.join(br1)
+br3.join(br2)
+
+verify(br1.get_state() == 'leader')
+verify(br2.get_state() == 'router')
+verify(br3.get_state() == 'router')
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
-# Start first BR with its own Thread network
+# Start first border router `br1`
 
-br1.form('net1')
-verify(br1.get_state() == 'leader')
+br1.srp_server_set_addr_mode('unicast')
+br1.srp_server_auto_enable()
 
 br1.br_init(IF_INDEX, 1)
 br1.br_enable()
@@ -74,39 +90,25 @@ br1_local_onlink = br1.br_get_local_onlinkprefix()
 br1_favored_onlink = br1.br_get_favored_onlinkprefix().split()[0]
 verify(br1_local_onlink == br1_favored_onlink)
 
-# Start second BR with its own Thread network.
-
-br2.form('net2')
-verify(br2.get_state() == 'leader')
+# Start `br2` and `br3` together
 
 br2.br_init(IF_INDEX, 1)
 br2.br_enable()
 
+br3.br_init(IF_INDEX, 1)
+br3.br_enable()
+
 time.sleep(1)
 verify(br2.br_get_state() == 'running')
+verify(br3.br_get_state() == 'running')
 
-br2_local_omr = br2.br_get_local_omrprefix()
-br2_favored_omr = br2.br_get_favored_omrprefix().split()[0]
-verify(br2_local_omr == br2_favored_omr)
+# Validate that all BRs discovered the other ones as peer BR
 
-br2_local_onlink = br2.br_get_local_onlinkprefix()
-br2_favored_onlink = br2.br_get_favored_onlinkprefix().split()[0]
-verify(br2_local_onlink != br2_favored_onlink)
-
-# BR2 should see and favor the on-link prefix already advertised by BR1.
-
-verify(br1_favored_onlink == br2_favored_onlink)
-
-# Check that the two BRs discover and track each other (not as peer BR since
-# connected to different networks).
-
-for br in [br1, br1]:
+for br in [br1, br2, br3]:
     routers = br.br_get_routers()
-    verify(len(routers) > 0)
+    verify(len(routers) == 2)
     for router in routers:
-        verify('reachable:yes' in router)
-        verify('Stub:1' in router)
-        verify(not router.endswith('(peer BR)'))
+        verify(router.endswith('(peer BR)'))
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

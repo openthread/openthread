@@ -355,21 +355,21 @@ bool TcatAgent::CanProcessTlv(uint8_t aTlvType) const
     return IsCommandClassAuthorized(tlvCommandClass);
 }
 
-Error TcatAgent::HandleSingleTlv(const Message &aIncommingMessage, Message &aOutgoingMessage)
+Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutgoingMessage)
 {
     Error    error = kErrorParse;
     ot::Tlv  tlv;
-    uint16_t offset = aIncommingMessage.GetOffset();
+    uint16_t offset = aIncomingMessage.GetOffset();
     uint16_t length;
     bool     response = false;
 
     VerifyOrExit(IsConnected(), error = kErrorInvalidState);
-    SuccessOrExit(error = aIncommingMessage.Read(offset, tlv));
+    SuccessOrExit(error = aIncomingMessage.Read(offset, tlv));
 
     if (tlv.IsExtended())
     {
         ot::ExtendedTlv extTlv;
-        SuccessOrExit(error = aIncommingMessage.Read(offset, extTlv));
+        SuccessOrExit(error = aIncomingMessage.Read(offset, extTlv));
         length = extTlv.GetLength();
         offset += sizeof(ot::ExtendedTlv);
     }
@@ -392,7 +392,7 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncommingMessage, Message &aOut
             break;
 
         case kTlvSetActiveOperationalDataset:
-            error = HandleSetActiveOperationalDataset(aIncommingMessage, offset, length);
+            error = HandleSetActiveOperationalDataset(aIncomingMessage, offset, length);
             break;
 
         case kTlvStartThreadInterface:
@@ -405,13 +405,20 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncommingMessage, Message &aOut
 
         case kTlvSendApplicationData:
             LogInfo("Application data len:%d, offset:%d", length, offset);
-            mAppDataReceiveCallback.InvokeIfSet(&GetInstance(), &aIncommingMessage, offset,
+            mAppDataReceiveCallback.InvokeIfSet(&GetInstance(), &aIncomingMessage, offset,
                                                 MapEnum(mCurrentApplicationProtocol), mCurrentServiceName);
             response = true;
             error    = kErrorNone;
             break;
         case kTlvDecommission:
             error = HandleDecomission();
+            break;
+        case kTlvPing:
+            error = HandlePing(aIncomingMessage, aOutgoingMessage, offset, length);
+            if (error == kErrorNone)
+            {
+                response = true;
+            }
             break;
         default:
             error = kErrorInvalidCommand;
@@ -460,14 +467,14 @@ exit:
     return error;
 }
 
-Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncommingMessage, uint16_t aOffset, uint16_t aLength)
+Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength)
 {
     Dataset     dataset;
     OffsetRange offsetRange;
     Error       error;
 
     offsetRange.Init(aOffset, aLength);
-    SuccessOrExit(error = dataset.SetFrom(aIncommingMessage, offsetRange));
+    SuccessOrExit(error = dataset.SetFrom(aIncomingMessage, offsetRange));
     SuccessOrExit(error = dataset.ValidateTlvs());
 
     if (!CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mApplicationFlags,
@@ -501,6 +508,35 @@ Error TcatAgent::HandleDecomission(void)
     }
 #endif
 
+    return error;
+}
+
+Error TcatAgent::HandlePing(const Message &aIncomingMessage,
+                            Message       &aOutgoingMessage,
+                            uint16_t       aOffset,
+                            uint16_t       aLength)
+{
+    Error           error = kErrorNone;
+    ot::ExtendedTlv extTlv;
+    ot::Tlv         tlv;
+
+    VerifyOrExit(aLength <= kPingPayloadMaxLength, error = kErrorParse);
+    if (aLength > ot::Tlv::kBaseTlvMaxLength)
+    {
+        extTlv.SetType(kTlvResponseWithPayload);
+        extTlv.SetLength(aLength);
+        SuccessOrExit(error = aOutgoingMessage.Append(extTlv));
+    }
+    else
+    {
+        tlv.SetType(kTlvResponseWithPayload);
+        tlv.SetLength(static_cast<uint8_t>(aLength));
+        SuccessOrExit(error = aOutgoingMessage.Append(tlv));
+    }
+
+    SuccessOrExit(error = aOutgoingMessage.AppendBytesFromMessage(aIncomingMessage, aOffset, aLength));
+
+exit:
     return error;
 }
 

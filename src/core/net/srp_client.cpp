@@ -1857,12 +1857,14 @@ void Client::ProcessResponse(Message &aMessage)
     // and the lease time. `kLeaseRenewGuardInterval` is used to
     // ensure that we renew the lease before server expires it. In the
     // unlikely (but maybe useful for testing) case where the accepted
-    // lease interval is too short (shorter than the guard time) we
-    // just use half of the accepted lease interval.
+    // lease interval is too short (shorter than twice the guard time)
+    // we just use half of the accepted lease interval.
 
-    if (mLease > kLeaseRenewGuardInterval)
+    if (mLease > 2 * kLeaseRenewGuardInterval)
     {
-        mLeaseRenewTime += Time::SecToMsec(mLease - kLeaseRenewGuardInterval);
+        uint32_t interval = Time::SecToMsec(mLease - kLeaseRenewGuardInterval);
+
+        mLeaseRenewTime += Random::NonCrypto::AddJitter(interval, kLeaseRenewJitter);
     }
     else
     {

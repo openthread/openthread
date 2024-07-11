@@ -115,6 +115,148 @@ exit:
     return;
 }
 
+Error Leader::AnycastLookup(uint16_t aAloc16, uint16_t &aRloc16) const
+{
+    Error error = kErrorNone;
+
+    if (aAloc16 == Mle::kAloc16Leader)
+    {
+        aRloc16 = Get<Mle::Mle>().GetLeaderRloc16();
+    }
+    else if (aAloc16 <= Mle::kAloc16DhcpAgentEnd)
+    {
+        uint8_t contextId = static_cast<uint8_t>(aAloc16 - Mle::kAloc16DhcpAgentStart + 1);
+
+        error = AnycastLookup(contextId, kAnycastDhcp6Agent, aRloc16);
+    }
+    else if (aAloc16 <= Mle::kAloc16ServiceEnd)
+    {
+        uint8_t serviceId = static_cast<uint8_t>(aAloc16 - Mle::kAloc16ServiceStart);
+
+        error = AnycastLookup(serviceId, kAnycastService, aRloc16);
+    }
+    else if (aAloc16 <= Mle::kAloc16CommissionerEnd)
+    {
+        error = FindBorderAgentRloc(aRloc16);
+    }
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    else if (aAloc16 == Mle::kAloc16BackboneRouterPrimary)
+    {
+        VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = kErrorDrop);
+        aRloc16 = Get<BackboneRouter::Leader>().GetServer16();
+    }
+#endif
+    else if ((aAloc16 >= Mle::kAloc16NeighborDiscoveryAgentStart) && (aAloc16 <= Mle::kAloc16NeighborDiscoveryAgentEnd))
+    {
+        uint8_t contextId = static_cast<uint8_t>(aAloc16 - Mle::kAloc16NeighborDiscoveryAgentStart + 1);
+
+        error = AnycastLookup(contextId, kAnycastNdAgent, aRloc16);
+    }
+    else
+    {
+        ExitNow(error = kErrorDrop);
+    }
+
+exit:
+    return error;
+}
+
+Error Leader::AnycastLookup(uint8_t aServiceId, AnycastType aType, uint16_t &aRloc16) const
+{
+    Iterator iterator = kIteratorInit;
+    uint8_t  bestCost = Mle::kMaxRouteCost;
+    uint16_t bestDest = Mle::kInvalidRloc16;
+
+    switch (aType)
+    {
+    case kAnycastDhcp6Agent:
+    case kAnycastNdAgent:
+    {
+        OnMeshPrefixConfig config;
+        Lowpan::Context    context;
+
+        SuccessOrExit(GetContext(aServiceId, context));
+
+        while (GetNextOnMeshPrefix(iterator, config) == kErrorNone)
+        {
+            if (config.GetPrefix() != context.mPrefix)
+            {
+                continue;
+            }
+
+            switch (aType)
+            {
+            case kAnycastDhcp6Agent:
+                if (!(config.mDhcp || config.mConfigure))
+                {
+                    continue;
+                }
+                break;
+            case kAnycastNdAgent:
+                if (!config.mNdDns)
+                {
+                    continue;
+                }
+                break;
+            default:
+                OT_ASSERT(false);
+                break;
+            }
+
+            EvaluateRoutingCost(config.mRloc16, bestCost, bestDest);
+        }
+
+        break;
+    }
+    case kAnycastService:
+    {
+        ServiceConfig config;
+
+        while (GetNextService(iterator, config) == kErrorNone)
+        {
+            if (config.mServiceId != aServiceId)
+            {
+                continue;
+            }
+
+            EvaluateRoutingCost(config.mServerConfig.mRloc16, bestCost, bestDest);
+        }
+
+        break;
+    }
+    }
+
+    if (Mle::IsChildRloc16(bestDest))
+    {
+        // If the selected destination is a child, we use its parent
+        // as the destination unless the device itself is the
+        // parent of the `bestDest`.
+
+        uint16_t bestDestParent = Mle::ParentRloc16ForRloc16(bestDest);
+
+        if (!Get<Mle::Mle>().HasRloc16(bestDestParent))
+        {
+            bestDest = bestDestParent;
+        }
+    }
+
+    aRloc16 = bestDest;
+
+exit:
+    return (bestDest != Mle::kInvalidRloc16) ? kErrorNone : kErrorNoRoute;
+}
+
+void Leader::EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint16_t &aBestDest) const
+{
+    uint8_t cost = Get<RouterTable>().GetPathCost(aDest);
+
+    if ((aBestDest == Mle::kInvalidRloc16) || (cost < aBestCost))
+    {
+        aBestDest = aDest;
+        aBestCost = cost;
+    }
+}
+
 void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)
 {
     ChangedFlags flags;

@@ -115,6 +115,12 @@ private:
 #error "No Spinel interface is specified!"
 #endif
 
+    static constexpr otRadioCaps kRequiredRadioCaps =
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+        OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING |
+#endif
+        OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES | OT_RADIO_CAPS_CSMA_BACKOFF;
+
     RadioUrl mRadioUrl;
 #if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
     Spinel::VendorRadioSpinel mRadioSpinel;

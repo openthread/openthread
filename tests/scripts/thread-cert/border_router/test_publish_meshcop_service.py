@@ -167,18 +167,39 @@ class PublishMeshCopService(thread_cert.TestCase):
         state_bitmap = int.from_bytes(sb_data, byteorder='big')
         logging.info(bin(state_bitmap))
         self.assertEqual((state_bitmap & 7), 1)  # connection mode = PskC
-        if br.get_state() == 'disabled':
-            self.assertEqual((state_bitmap >> 3 & 3), 0)  # Thread is disabled
-        elif br.get_state() == 'detached':
-            self.assertEqual((state_bitmap >> 3 & 3), 1)  # Thread is detached
-        else:
-            self.assertEqual((state_bitmap >> 3 & 3), 2)  # Thread is attached
+        sb_thread_interface_status = state_bitmap >> 3 & 3
+        sb_thread_role = state_bitmap >> 9 & 3
+        device_role = br.get_state()
+
+        if device_role == 'disabled':
+            # Thread interface is not active and is not initialized with a set of valid operation network parameters
+            self.assertEqual(sb_thread_interface_status, 0)
+            self.assertEqual(sb_thread_role, 0)  # Thread role is disabled
+
+        elif device_role == 'detached':
+            # Thread interface is initialized with a set of valid operation network parameters, but is not actively participating in a network
+            self.assertEqual(sb_thread_interface_status, 1)
+            self.assertEqual(sb_thread_role, 0)  # Thread role is detached
+
+        elif device_role == 'child':
+            # Thread interface is initialized with a set of valid operation network parameters, and is actively part of a Network
+            self.assertEqual(sb_thread_interface_status, 2)
+            self.assertEqual(sb_thread_role, 1)  # Thread role is child
+
+        elif device_role == 'router':
+            # Thread interface is initialized with a set of valid operation network parameters, and is actively part of a Network
+            self.assertEqual(sb_thread_interface_status, 2)
+            self.assertEqual(sb_thread_role, 2)  # Thread role is router
+
+        elif device_role == 'leader':
+            # Thread interface is initialized with a set of valid operation network parameters, and is actively part of a Network
+            self.assertEqual(sb_thread_interface_status, 2)
+            self.assertEqual(sb_thread_role, 3)  # Thread role is leader
+
         self.assertEqual((state_bitmap >> 5 & 3), 1)  # high availability
-        self.assertEqual((state_bitmap >> 7 & 1),
-                         br.get_state() not in ['disabled', 'detached'] and
+        self.assertEqual((state_bitmap >> 7 & 1), device_role not in ['disabled', 'detached'] and
                          br.get_backbone_router_state() != 'Disabled')  # BBR is enabled or not
-        self.assertEqual((state_bitmap >> 8 & 1),
-                         br.get_state() not in ['disabled', 'detached'] and
+        self.assertEqual((state_bitmap >> 8 & 1), device_role not in ['disabled', 'detached'] and
                          br.get_backbone_router_state() == 'Primary')  # BBR is primary or not
         self.assertEqual(service_data['txt']['nn'], br.get_network_name())
         self.assertEqual(service_data['txt']['rv'], '1')
