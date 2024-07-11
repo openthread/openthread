@@ -163,9 +163,14 @@ public:
      * @param[in]  aSoftwareReset              When doing RCP recovery, TRUE to try software reset first, FALSE to
      *                                         directly do a hardware reset.
      * @param[in]  aSpinelDriver               A pointer to the spinel driver instance that this object depends on.
+     * @param[in]  aRequiredRadioCaps          The required radio capabilities. RadioSpinel will check if RCP has
+     *                                         the required capabilities during initiailization.
      *
      */
-    void Init(bool aSkipRcpCompatibilityCheck, bool aSoftwareReset, SpinelDriver *aSpinelDriver);
+    void Init(bool          aSkipRcpCompatibilityCheck,
+              bool          aSoftwareReset,
+              SpinelDriver *aSpinelDriver,
+              otRadioCaps   aRequiredRadioCaps);
 
     /**
      * This method sets the notification callbacks.
@@ -1115,7 +1120,7 @@ private:
     SpinelDriver &GetSpinelDriver(void) const;
 
     otError CheckSpinelVersion(void);
-    otError CheckRadioCapabilities(void);
+    otError CheckRadioCapabilities(otRadioCaps aRequiredRadioCaps);
     otError CheckRcpApiVersion(bool aSupportsRcpApiVersion, bool aSupportsRcpMinHostApiVersion);
     void    InitializeCaps(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostApiVersion);
 
