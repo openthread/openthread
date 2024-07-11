@@ -221,6 +221,10 @@ void RadioSpinel::InitializeCaps(bool &aSupportsRcpApiVersion, bool &aSupportsRc
 
 otError RadioSpinel::CheckRadioCapabilities(otRadioCaps aRequiredRadioCaps)
 {
+    static const char *const kAllRadioCapsStr[] = {"ack-timeout",     "energy-scan",   "tx-retries", "CSMA-backoff",
+                                                   "sleep-to-tx",     "tx-security",   "tx-timing",  "rx-timing",
+                                                   "rx-on-when-idle", "tx-frame-power"};
+
     otError      error = OT_ERROR_NONE;
     unsigned int radioCaps;
 
@@ -230,17 +234,15 @@ otError RadioSpinel::CheckRadioCapabilities(otRadioCaps aRequiredRadioCaps)
     if ((sRadioCaps & aRequiredRadioCaps) != aRequiredRadioCaps)
     {
         otRadioCaps missingCaps = (sRadioCaps & aRequiredRadioCaps) ^ aRequiredRadioCaps;
+        LogCrit("RCP is missing required capabilities: ");
 
-        // missingCaps may be an unused variable when LogCrit is blank
-        // avoid compiler warning in that case
-        OT_UNUSED_VARIABLE(missingCaps);
-
-        LogCrit("RCP is missing required capabilities: %s%s%s%s%s",
-                (missingCaps & OT_RADIO_CAPS_ACK_TIMEOUT) ? "ack-timeout " : "",
-                (missingCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) ? "tx-retries " : "",
-                (missingCaps & OT_RADIO_CAPS_CSMA_BACKOFF) ? "CSMA-backoff " : "",
-                (missingCaps & OT_RADIO_CAPS_TRANSMIT_SEC) ? "tx-security " : "",
-                (missingCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) ? "tx-timing " : "");
+        for (unsigned long i = 0; i < sizeof(kAllRadioCapsStr) / sizeof(kAllRadioCapsStr[0]); i++)
+        {
+            if (missingCaps & (1 << i))
+            {
+                LogCrit("    %s", kAllRadioCapsStr[i]);
+            }
+        }
 
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
