@@ -52,7 +52,7 @@ jobs:
       REFERENCE_DEVICE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
-      MULTIPLY: 3
+      MULTIPLY: 1
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
