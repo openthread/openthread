@@ -72,6 +72,7 @@ set(COMMON_SOURCES
     spinel_buffer.cpp
     spinel_decoder.cpp
     spinel_encoder.cpp
+    spinel_helper.cpp
 )
 
 set(OT_SPINEL_VENDOR_HOOK_SOURCE "" CACHE STRING "set vendor hook source file for Spinel")
