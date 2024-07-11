@@ -746,7 +746,16 @@ class OTCI(object):
 
             id = int(col("ID"))
             r, d, n = int(col("R")), int(col("D")), int(col("N"))
-            mode = DeviceMode(f'{"r" if r else ""}{"d" if d else ""}{"n" if n else ""}')
+
+            #
+            # Device mode flags:
+            #
+            # r: rx-on-when-idle
+            # d: Full Thread Device
+            # n: Full Network Data
+            # -: no flags set (rx-off-when-idle, minimal Thread device, stable network data)
+            mode = DeviceMode(
+                f'{"r" if r else ""}{"d" if d else ""}{"n" if n else ""}{"-" if r == d == n == 0 else ""}')
 
             child = {
                 'id': ChildId(id),
@@ -767,6 +776,9 @@ class OTCI(object):
 
             if 'QMsgCnt' in headers:
                 child['qmsgcnt'] = int(col('QMsgCnt'))
+
+            if 'Suprvsn' in headers:
+                child['suprvsn'] = int(col('Suprvsn'))
 
             table[ChildId(id)] = child
 
