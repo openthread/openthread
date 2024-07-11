@@ -46,6 +46,7 @@
 #include "lib/spinel/logger.hpp"
 #include "lib/spinel/spinel_decoder.hpp"
 #include "lib/spinel/spinel_driver.hpp"
+#include "lib/spinel/spinel_helper.hpp"
 #include "lib/utils/utils.hpp"
 
 namespace ot {
@@ -2334,83 +2335,6 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-
-otError RadioSpinel::SpinelStatusToOtError(spinel_status_t aStatus)
-{
-    otError ret;
-
-    switch (aStatus)
-    {
-    case SPINEL_STATUS_OK:
-        ret = OT_ERROR_NONE;
-        break;
-
-    case SPINEL_STATUS_FAILURE:
-        ret = OT_ERROR_FAILED;
-        break;
-
-    case SPINEL_STATUS_DROPPED:
-        ret = OT_ERROR_DROP;
-        break;
-
-    case SPINEL_STATUS_NOMEM:
-        ret = OT_ERROR_NO_BUFS;
-        break;
-
-    case SPINEL_STATUS_BUSY:
-        ret = OT_ERROR_BUSY;
-        break;
-
-    case SPINEL_STATUS_PARSE_ERROR:
-        ret = OT_ERROR_PARSE;
-        break;
-
-    case SPINEL_STATUS_INVALID_ARGUMENT:
-        ret = OT_ERROR_INVALID_ARGS;
-        break;
-
-    case SPINEL_STATUS_UNIMPLEMENTED:
-        ret = OT_ERROR_NOT_IMPLEMENTED;
-        break;
-
-    case SPINEL_STATUS_INVALID_STATE:
-        ret = OT_ERROR_INVALID_STATE;
-        break;
-
-    case SPINEL_STATUS_NO_ACK:
-        ret = OT_ERROR_NO_ACK;
-        break;
-
-    case SPINEL_STATUS_CCA_FAILURE:
-        ret = OT_ERROR_CHANNEL_ACCESS_FAILURE;
-        break;
-
-    case SPINEL_STATUS_ALREADY:
-        ret = OT_ERROR_ALREADY;
-        break;
-
-    case SPINEL_STATUS_PROP_NOT_FOUND:
-        ret = OT_ERROR_NOT_IMPLEMENTED;
-        break;
-
-    case SPINEL_STATUS_ITEM_NOT_FOUND:
-        ret = OT_ERROR_NOT_FOUND;
-        break;
-
-    default:
-        if (aStatus >= SPINEL_STATUS_STACK_NATIVE__BEGIN && aStatus <= SPINEL_STATUS_STACK_NATIVE__END)
-        {
-            ret = static_cast<otError>(aStatus - SPINEL_STATUS_STACK_NATIVE__BEGIN);
-        }
-        else
-        {
-            ret = OT_ERROR_FAILED;
-        }
-        break;
-    }
-
-    return ret;
-}
 
 } // namespace Spinel
 } // namespace ot

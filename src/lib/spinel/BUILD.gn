@@ -49,6 +49,8 @@ spinel_sources = [
   "spinel_driver.hpp",
   "spinel_encoder.cpp",
   "spinel_encoder.hpp",
+  "spinel_helper.cpp",
+  "spinel_helper.hpp",
   "spinel_platform.h",
 ]
 
