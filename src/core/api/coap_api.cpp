@@ -99,6 +99,11 @@ otError otCoapMessageAppendUriPathOptions(otMessage *aMessage, const char *aUriP
     return AsCoapMessage(aMessage).AppendUriPathOptions(aUriPath);
 }
 
+otError otCoapMessageAppendUriQueryOptions(otMessage *aMessage, const char *aUriQuery)
+{
+    return AsCoapMessage(aMessage).AppendUriQueryOptions(aUriQuery);
+}
+
 uint16_t otCoapBlockSizeFromExponent(otCoapBlockSzx aSize)
 {
     return static_cast<uint16_t>(1 << (static_cast<uint8_t>(aSize) + Coap::Message::kBlockSzxBase));
