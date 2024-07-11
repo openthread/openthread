@@ -62,7 +62,7 @@ try {
 
     switch_node 1
     send "ping $addr\n"
-    expect "16 bytes from $addr: icmp_seq=1"
+    expect "16 bytes from $addr, icmp_seq=1"
     expect_line "Done"
     send "reset\n"
     wait_for "state" "disabled"
@@ -72,7 +72,7 @@ try {
     send "thread start\n"
     expect_line "Done"
     wait_for "state" "leader"
-    wait_for "ping $addr" "16 bytes from $addr: icmp_seq=\\d+"
+    wait_for "ping $addr" "16 bytes from $addr, icmp_seq=\\d+"
     expect_line "Done"
 } finally {
     exec kill $rcp_pid

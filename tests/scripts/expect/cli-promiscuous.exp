@@ -72,7 +72,7 @@ expect_line "Done"
 
 switch_node 1
 send "ping $addr\n"
-expect "16 bytes from $addr: icmp_seq=1"
+expect "16 bytes from $addr, icmp_seq=1"
 expect_line "Done"
 
 switch_node 3

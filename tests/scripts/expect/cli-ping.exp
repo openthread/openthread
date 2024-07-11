@@ -54,10 +54,10 @@ set addr [get_ipaddr mleid]
 
 switch_node 1
 send "ping $addr\n"
-expect "16 bytes from $addr: icmp_seq=1"
+expect "16 bytes from $addr, icmp_seq=1"
 send "ping $addr 20 10 0.00123456 255\n"
 for {set i 2} {$i <= 11} {incr i} {
-    expect "28 bytes from $addr: icmp_seq=$i"
+    expect "28 bytes from $addr, icmp_seq=$i"
 }
 
 dispose_all

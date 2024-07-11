@@ -46,7 +46,7 @@ set addr [get_ipaddr mleid]
 
 switch_node 1
 send "ping $addr\n"
-expect "16 bytes from $addr: icmp_seq=1"
+expect "16 bytes from $addr, icmp_seq=1"
 send "linkmetricsmgr show\n"
 expect -re {ExtAddr:([0-9a-f]){16}, LinkMargin:\d+, Rssi:\-?\d+}
 expect "Done"
@@ -75,12 +75,12 @@ expect_line "Enabled"
 expect_line "Done"
 
 send "ping $addr\n"
-expect "16 bytes from $addr: icmp_seq="
+expect "16 bytes from $addr, icmp_seq="
 
 sleep 10
 
 send "ping $addr\n"
-expect "16 bytes from $addr: icmp_seq="
+expect "16 bytes from $addr, icmp_seq="
 
 send "linkmetricsmgr show\n"
 expect -re {ExtAddr:([0-9a-f]){16}, LinkMargin:\d+, Rssi:\-?\d+}
@@ -98,12 +98,12 @@ expect_line "Disabled"
 expect_line "Done"
 
 send "ping $addr\n"
-expect "16 bytes from $addr: icmp_seq="
+expect "16 bytes from $addr, icmp_seq="
 
 sleep 10
 
 send "ping $addr\n"
-expect "16 bytes from $addr: icmp_seq="
+expect "16 bytes from $addr, icmp_seq="
 
 send "linkmetricsmgr show\n"
 expect_line "Done"
@@ -120,12 +120,12 @@ expect_line "Enabled"
 expect_line "Done"
 
 send "ping $addr\n"
-expect "16 bytes from $addr: icmp_seq="
+expect "16 bytes from $addr, icmp_seq="
 
 sleep 10
 
 send "ping $addr\n"
-expect "16 bytes from $addr: icmp_seq="
+expect "16 bytes from $addr, icmp_seq="
 
 send "linkmetricsmgr show\n"
 expect -re {ExtAddr:([0-9a-f]){16}, LinkMargin:\d+, Rssi:\-?\d+}
@@ -142,12 +142,12 @@ expect_line "Disabled"
 expect_line "Done"
 
 send "ping $addr\n"
-expect "16 bytes from $addr: icmp_seq="
+expect "16 bytes from $addr, icmp_seq="
 
 sleep 10
 
 send "ping $addr\n"
-expect "16 bytes from $addr: icmp_seq="
+expect "16 bytes from $addr, icmp_seq="
 
 send "linkmetricsmgr show\n"
 expect_line "Done"

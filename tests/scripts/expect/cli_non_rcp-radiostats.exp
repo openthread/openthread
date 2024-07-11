@@ -43,7 +43,7 @@ switch_node 1
 for {set i 1} {$i <= 10} {incr i} {
     send "ping $addr\n"
     sleep 3
-    expect "16 bytes from $addr: icmp_seq="
+    expect "16 bytes from $addr, icmp_seq="
 }
 
 switch_node 2

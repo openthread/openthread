@@ -2547,7 +2547,7 @@ class NodeImpl:
         while len(responders) < num_responses or not done:
             self.simulator.go(1)
             try:
-                i = self._expect([r'from (\S+):', r'Done'], timeout=0.1)
+                i = self._expect([r'from (\S+),', r'Done'], timeout=0.1)
             except (pexpect.TIMEOUT, socket.timeout):
                 if self.simulator.now() < end:
                     continue

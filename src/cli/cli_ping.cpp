@@ -209,7 +209,7 @@ void PingSender::HandlePingReply(const otPingSenderReply *aReply)
 {
     OutputFormat("%u bytes from ", static_cast<uint16_t>(aReply->mSize + sizeof(otIcmp6Header)));
     OutputIp6Address(aReply->mSenderAddress);
-    OutputLine(": icmp_seq=%u hlim=%u time=%ums", aReply->mSequenceNumber, aReply->mHopLimit, aReply->mRoundTripTime);
+    OutputLine(", icmp_seq=%u hlim=%u time=%ums", aReply->mSequenceNumber, aReply->mHopLimit, aReply->mRoundTripTime);
 }
 
 void PingSender::HandlePingStatistics(const otPingSenderStatistics *aStatistics, void *aContext)

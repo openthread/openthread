@@ -116,7 +116,7 @@ Done
 
 ```bash
 > ping fd3d:b50b:f96d:722d:7a73:bff6:9093:9117
-16 bytes from fd3d:b50b:f96d:722d:558:f56b:d688:799: icmp_seq=1 hlim=64 time=24ms
+16 bytes from fd3d:b50b:f96d:722d:558:f56b:d688:799, icmp_seq=1 hlim=64 time=24ms
 ```
 
 ## 4. Explore More
