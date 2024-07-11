@@ -34,8 +34,7 @@
 #include "openthread-core-config.h"
 
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && \
-    (OPENTHREAD_FTD ||                          \
-     (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE))
+    (OPENTHREAD_FTD || OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
 
 #include <openthread/channel_manager.h>
 
@@ -86,7 +85,7 @@ bool otChannelManagerGetAutoChannelSelectionEnabled(otInstance *aInstance)
 }
 #endif // OPENTHREAD_FTD
 
-#if (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 otError otChannelManagerRequestCslChannelSelect(otInstance *aInstance, bool aSkipQualityCheck)
 {
