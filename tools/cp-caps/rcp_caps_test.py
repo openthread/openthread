@@ -83,6 +83,11 @@ class RcpCaps(object):
         self.__dataset = self.__get_default_dataset()
         self.__test_csl_transmitter()
 
+    def test_data_poll(self):
+        self.__dataset = self.__get_default_dataset()
+        self.__test_data_poll_parent()
+        self.__test_data_poll_child()
+
     #
     # Private methods
     #
@@ -116,6 +121,54 @@ class RcpCaps(object):
         self.__ref.leave()
 
         self.__output_format_bool('CSL Transmitter', ret)
+
+    def __test_data_poll_parent(self):
+        packets = 10
+
+        self.__dut.factory_reset()
+        self.__ref.factory_reset()
+
+        self.__dut.join(self.__dataset)
+        self.__dut.wait_for('state', 'leader')
+
+        # Set the reference device as an SED
+        self.__ref.set_mode('-')
+        self.__ref.set_poll_period(500)
+        self.__ref.join(self.__dataset)
+        self.__ref.wait_for('state', 'child')
+
+        dut_mleid = self.__dut.get_ipaddr_mleid()
+        result = self.__ref.ping(dut_mleid, count=packets, interval=1)
+
+        self.__dut.leave()
+        self.__ref.leave()
+
+        ret = result['transmitted_packets'] == result['received_packets'] == packets
+        self.__output_format_bool('Data Poll Parent', ret)
+
+    def __test_data_poll_child(self):
+        packets = 10
+
+        self.__dut.factory_reset()
+        self.__ref.factory_reset()
+
+        self.__ref.join(self.__dataset)
+        self.__ref.wait_for('state', 'leader')
+
+        # Set the DUT as an SED
+        self.__dut.set_mode('-')
+        self.__dut.set_poll_period(500)
+        self.__dut.join(self.__dataset)
+        self.__dut.wait_for('state', 'child')
+
+        dut_mleid = self.__dut.get_ipaddr_mleid()
+        result = self.__ref.ping(dut_mleid, count=packets, interval=1)
+
+        self.__dut.leave()
+        self.__ref.leave()
+
+        ret = result['transmitted_packets'] == result['received_packets'] == packets
+        self.__output_format_bool('Data Poll Child', ret)
 
     def __test_diag_channel(self):
         channel = 20
@@ -430,6 +483,14 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        '-p',
+        '--data-poll',
+        action='store_true',
+        default=False,
+        help='test whether the RCP supports data poll',
+    )
+
+    parser.add_argument(
         '-v',
         '--verbose',
         action='store_true',
@@ -454,6 +515,9 @@ def main():
 
     if arguments.csl is True:
         rcp_caps.test_csl()
+
+    if arguments.data_poll is True:
+        rcp_caps.test_data_poll()
 
 
 if __name__ == '__main__':
