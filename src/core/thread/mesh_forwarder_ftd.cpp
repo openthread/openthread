@@ -266,49 +266,37 @@ exit:
     return error;
 }
 
-void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
+void MeshForwarder::RemoveMessagesForChild(Child &aChild, MessageChecker &aMessageChecker)
 {
     for (Message &message : mSendQueue)
     {
-        if ((aSubType != Message::kSubTypeNone) && (aSubType != message.GetSubType()))
+        if (!aMessageChecker(message))
         {
             continue;
         }
 
         if (mIndirectSender.RemoveMessageFromSleepyChild(message, aChild) != kErrorNone)
         {
-            switch (message.GetType())
-            {
-            case Message::kTypeIp6:
+            const Neighbor *neighbor = nullptr;
+
+            if (message.GetType() == Message::kTypeIp6)
             {
                 Ip6::Header ip6header;
 
                 IgnoreError(message.Read(0, ip6header));
-
-                if (&aChild == Get<NeighborTable>().FindNeighbor(ip6header.GetDestination()))
-                {
-                    message.ClearDirectTransmission();
-                }
-
-                break;
+                neighbor = Get<NeighborTable>().FindNeighbor(ip6header.GetDestination());
             }
-
-            case Message::kType6lowpan:
+            else if (message.GetType() == Message::kType6lowpan)
             {
                 Lowpan::MeshHeader meshHeader;
 
                 IgnoreError(meshHeader.ParseFrom(message));
-
-                if (&aChild == Get<NeighborTable>().FindNeighbor(meshHeader.GetDestination()))
-                {
-                    message.ClearDirectTransmission();
-                }
-
-                break;
+                neighbor = Get<NeighborTable>().FindNeighbor(meshHeader.GetDestination());
             }
 
-            default:
-                break;
+            if (&aChild == neighbor)
+            {
+                message.ClearDirectTransmission();
             }
         }
 
