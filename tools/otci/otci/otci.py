@@ -136,6 +136,25 @@ class OTCI(object):
         else:
             raise CommandError(cmd, output)
 
+    def execute_platform_command(self, cmd: str, timeout: float = 10, silent: bool = False) -> List[str]:
+        """Execute the platform command.
+
+        :param cmd: The command to execute.
+        :param timeout: The command timeout.
+        :param silent: Whether to run the command silent without logging.
+        :returns: The command output as a list of lines.
+        """
+        if not silent:
+            self.log('info', '> %s', cmd)
+
+        output = self.__otcmd.execute_platform_command(cmd, timeout)
+
+        if not silent:
+            for line in output:
+                self.log('info', '%s', line)
+
+        return output
+
     def set_execute_command_retry(self, n: int):
         assert n >= 0
         self.__exec_command_retry = n
@@ -2618,6 +2637,145 @@ class OTCI(object):
     # TODO: parent
     # TODO: pskc [-p] <key>|<passphrase>
     #
+
+    #
+    # Platform Commands Utilities
+    #
+    def support_iperf3(self) -> bool:
+        """Check whether the platform supports iperf3."""
+        #
+        # Command example:
+        #
+        # $ command -v iperf3
+        # /usr/bin/iperf3
+        #
+        ret = False
+        output = self.execute_platform_command('command -v iperf3')
+        if len(output) > 0 and 'iperf3' in output[0]:
+            ret = True
+
+        return ret
+
+    def iperf3_client(self,
+                      host: Union[str, Ip6Addr],
+                      ipv6: bool = True,
+                      udp: bool = True,
+                      bind_address: Optional[Union[str, Ip6Addr]] = None,
+                      bitrate: int = 10000,
+                      interval: int = 10,
+                      transmit_time: int = 10,
+                      length: Optional[int] = None) -> Dict[str, Dict[str, Any]]:
+        """Run iperf3 in client mode.
+
+        :param host: The host IPv6 address to send iperf3 traffic.
+        :param ipv6: True to use IPv6, False to use IPv4 (default IPv6).
+        :param udp: True to use UDP, False to use TCP (default UDP).
+        :param bind_address: The local address to be bound.
+        :param bitrate: The target bitrate in bits/sec (default 10000 bit/sec).
+        :param interval: Seconds between periodic throughput reports (default 10 sec).
+        :param transmit_time: Time in seconds to transmit for (default 10 secs)
+        :param length: Length of buffer to read or write (default None).
+        """
+        #
+        # Iperf3 client example:
+        #
+        # $ iperf3 -6 -c fdd6:f5cf:d32d:8d88:a98b:cf7c:2ed2:691a -u -b 90000 -i 20 -t 10 -l 1232 -f k
+        # Connecting to host fdd6:f5cf:d32d:8d88:a98b:cf7c:2ed2:691a, port 5201
+        # [  5] local fdd6:f5cf:d32d:8d88:0:ff:fe00:fc00 port 59495 connected to fdd6:f5cf:d32d:8d88:a98b:cf7c:2ed2:691a port 5201
+        # [ ID] Interval           Transfer     Bitrate         Total Datagrams
+        # [  5]   0.00-10.00  sec   111 KBytes  90.7 Kbits/sec  92
+        # - - - - - - - - - - - - - - - - - - - - - - - - -
+        # [ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+        # [  5]   0.00-10.00  sec   111 KBytes  90.7 Kbits/sec  0.000 ms  0/92 (0%)  sender
+        # [  5]   0.00-10.96  sec  99.9 KBytes  74.7 Kbits/sec  30.157 ms  9/92 (9.8%)  receiver
+        #
+        # iperf Done.
+        #
+
+        wait_time = 10
+        client_option = f'-c {host}'
+        version_option = "-6" if ipv6 else "-4"
+        udp_option = '-u' if udp else ''
+        bind_option = f'-B {bind_address}' if bind_address else ''
+        bitrate_option = f'-b {bitrate}'
+        interval_option = f'-i {interval}'
+        time_option = f'-t {transmit_time}'
+        length_option = f'-l {length}' if length else ''
+        format_option = '-f k'
+
+        cmd = f'iperf3 {version_option} {client_option} {udp_option} {bitrate_option} {interval_option} {time_option} {length_option} {format_option}'
+        output = self.execute_platform_command(cmd, timeout=transmit_time + wait_time)
+
+        results = {}
+        for line in output:
+            fields = line.split()
+            if len(fields) != 13:
+                continue
+
+            if fields[-1] == 'sender':
+                results['sender'] = self.__parse_iperf3_report(line)
+            elif fields[-1] == 'receiver':
+                results['receiver'] = self.__parse_iperf3_report(line)
+
+        return results
+
+    def iperf3_server(self,
+                      bind_address: Optional[Union[str, Ip6Addr]] = None,
+                      interval: int = 10,
+                      timeout: int = 60) -> Dict[str, Any]:
+        """Run iperf3 in server mode.
+
+        :param bind_address: The local address to be bound.
+        :param interval: Seconds between periodic throughput reports (default 10 sec).
+        :param timeout: Timeout in seconds to abort the program (default 60 secs)
+        """
+        #
+        # Iperf3 server example:
+        #
+        # $ iperf3 -s -1 -B fdd6:f5cf:d32d:8d88:a98b:cf7c:2ed2:691a -i 50 -f k
+        # -----------------------------------------------------------
+        # Server listening on 5201
+        # -----------------------------------------------------------
+        # Accepted connection from fdd6:f5cf:d32d:8d88:0:ff:fe00:fc00, port 44080
+        # [  5] local fdd6:f5cf:d32d:8d88:a98b:cf7c:2ed2:691a port 5201 connected to fdd6:f5cf:d32d:8d88:0:ff:fe00:fc00 port 59495
+        # [ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+        # [  5]   0.00-10.96  sec  99.9 KBytes  74.7 Kbits/sec  30.157 ms  9/92 (9.8%)
+        # - - - - - - - - - - - - - - - - - - - - - - - - -
+        # [ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+        # [  5]   0.00-10.96  sec  99.9 KBytes  74.7 Kbits/sec  30.157 ms  9/92 (9.8%)  receiver
+        #
+
+        bind_option = f'-B {bind_address}' if bind_address else ''
+        interval_option = f'-i {interval}'
+        format_option = '-f k'
+
+        cmd = f'iperf3 -s -1 {bind_option} {interval_option} {format_option}'
+        output = self.execute_platform_command(cmd, timeout)
+
+        results = {}
+        for line in output:
+            fields = line.split()
+            if len(fields) == 13 and fields[-1] == 'receiver':
+                results = self.__parse_iperf3_report(line)
+
+        return results
+
+    def __parse_iperf3_report(self, line: str) -> Dict[str, Any]:
+        results = {}
+        fields = line.split()
+        format_unit = 1000
+
+        if len(fields) == 13 and (fields[-1] == 'sender' or fields[-1] == 'receiver'):
+            results['id'] = int(fields[1].replace(']', ''))
+            results['interval_start'] = float(fields[2].split('-')[0])
+            results['interval_end'] = float(fields[2].split('-')[1])
+            results['transfer'] = int(float(fields[4]) * format_unit)
+            results['bitrate'] = int(float(fields[6]) * format_unit)
+            results['jitter'] = float(fields[8])
+            results['lossrate'] = float(fields[11].replace('(', '').replace(')', '').replace('%', '')) / 100
+            results['datagrams'] = fields[12]
+
+        return results
 
     #
     # Private methods
