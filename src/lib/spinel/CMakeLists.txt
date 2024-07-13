@@ -95,6 +95,7 @@ target_sources(openthread-radio-spinel
         logger.cpp
         radio_spinel.cpp
         spinel_driver.cpp
+        spinel_helper.cpp
 )
 target_sources(openthread-spinel-ncp PRIVATE ${COMMON_SOURCES})
 target_sources(openthread-spinel-rcp PRIVATE ${COMMON_SOURCES})
