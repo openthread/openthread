@@ -210,6 +210,14 @@ public:
      */
     bool CoprocessorHasCap(unsigned int aCapability) { return mCoprocessorCaps.Contains(aCapability); }
 
+    /**
+     * Returns the spinel interface id.
+     *
+     * @returns the spinel interface id.
+     *
+     */
+    spinel_iid_t GetIid(void) { return mIid; }
+
 private:
     static constexpr uint16_t kMaxSpinelFrame    = SPINEL_FRAME_MAX_SIZE;
     static constexpr uint16_t kVersionStringSize = 128;
