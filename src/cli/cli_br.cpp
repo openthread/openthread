@@ -374,6 +374,84 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+
+template <> otError Br::Process<Cmd("peers")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli br peers
+     * @code
+     * br peers
+     * rloc16:0x5c00 age:00:00:49
+     * rloc16:0xf800 age:00:01:51
+     * Done
+     * @endcode
+     * @par
+     * Get the list of peer BRs found in Network Data entries.
+     * `OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE` is required.
+     * Peer BRs are other devices within the Thread mesh that provide external IP connectivity. A device is considered
+     * to provide external IP connectivity if at least one of the following conditions is met regarding its Network
+     * Data entries:
+     * - It has added at least one external route entry.
+     * - It has added at least one prefix entry with both the default-route and on-mesh flags set.
+     * - It has added at least one domain prefix (with both the domain and on-mesh flags set).
+     * The list of peer BRs specifically excludes the current device, even if its is itself acting as a BR.
+     * Info per BR entry:
+     * - RLOC16 of the BR
+     * - Age as the duration interval since this BR appeared in Network Data. It is formatted as `{hh}:{mm}:{ss}` for
+     *   hours, minutes, seconds, if the duration is less than 24 hours. If the duration is 24 hours or more, the
+     *   format is `{dd}d.{hh}:{mm}:{ss}` for days, hours, minutes, seconds.
+     * @sa otBorderRoutingGetNextPrefixTableEntry
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        otBorderRoutingPrefixTableIterator   iterator;
+        otBorderRoutingPeerBorderRouterEntry peerBrEntry;
+        char                                 ageString[OT_DURATION_STRING_SIZE];
+
+        otBorderRoutingPrefixTableInitIterator(GetInstancePtr(), &iterator);
+
+        while (otBorderRoutingGetNextPeerBrEntry(GetInstancePtr(), &iterator, &peerBrEntry) == OT_ERROR_NONE)
+        {
+            otConvertDurationInSecondsToString(peerBrEntry.mAge, ageString, sizeof(ageString));
+            OutputLine("rloc16:0x%04x age:%s", peerBrEntry.mRloc16, ageString);
+        }
+    }
+    /**
+     * @cli br peers count
+     * @code
+     * br peers count
+     * 2 min-age:00:00:47
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderRoutingCountPeerBrs
+     */
+    else if (aArgs[0] == "count")
+    {
+        uint32_t minAge;
+        uint16_t count;
+        char     ageString[OT_DURATION_STRING_SIZE];
+
+        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+        count = otBorderRoutingCountPeerBrs(GetInstancePtr(), &minAge);
+        otConvertDurationInSecondsToString(minAge, ageString, sizeof(ageString));
+        OutputLine("%u min-age:%s", count, ageString);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+
 /**
  * @cli br prefixtable
  * @code
@@ -791,6 +869,9 @@ otError Br::Process(Arg aArgs[])
         CmdEntry("onlinkprefix"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
         CmdEntry("pd"),
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+        CmdEntry("peers"),
 #endif
         CmdEntry("prefixtable"),
         CmdEntry("raoptions"),

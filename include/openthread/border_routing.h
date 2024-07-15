@@ -132,6 +132,16 @@ typedef struct otBorderRoutingPrefixTableEntry
 } otBorderRoutingPrefixTableEntry;
 
 /**
+ * Represents information about a peer Border Router found in the Network Data.
+ *
+ */
+typedef struct otBorderRoutingPeerBorderRouterEntry
+{
+    uint16_t mRloc16; ///< The RLOC16 of BR.
+    uint32_t mAge;    ///< Seconds since the BR appeared in the Network Data.
+} otBorderRoutingPeerBorderRouterEntry;
+
+/**
  * Represents a group of data of platform-generated RA messages processed.
  *
  */
@@ -487,6 +497,58 @@ otError otBorderRoutingGetNextPrefixTableEntry(otInstance                       
 otError otBorderRoutingGetNextRouterEntry(otInstance                         *aInstance,
                                           otBorderRoutingPrefixTableIterator *aIterator,
                                           otBorderRoutingRouterEntry         *aEntry);
+
+/**
+ * Iterates over the peer BRs found in the Network Data.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE`.
+ *
+ * Peer BRs are other devices within the Thread mesh that provide external IP connectivity. A device is considered
+ * to provide external IP connectivity if at least one of the following conditions is met regarding its Network Data
+ * entries:
+ *
+ * - It has added at least one external route entry.
+ * - It has added at least one prefix entry with both the default-route and on-mesh flags set.
+ * - It has added at least one domain prefix (with both the domain and on-mesh flags set).
+ *
+ * The list of peer BRs specifically excludes the current device, even if it is itself acting as a BR.
+ *
+ * @param[in]     aInstance    The OpenThread instance.
+ * @param[in,out] aIterator    A pointer to the iterator.
+ * @param[out]    aEntry       A pointer to the entry to populate.
+ *
+ * @retval OT_ERROR_NONE        Iterated to the next entry, @p aEntry and @p aIterator are updated.
+ * @retval OT_ERROR_NOT_FOUND   No more entries.
+ *
+ */
+otError otBorderRoutingGetNextPeerBrEntry(otInstance                           *aInstance,
+                                          otBorderRoutingPrefixTableIterator   *aIterator,
+                                          otBorderRoutingPeerBorderRouterEntry *aEntry);
+
+/**
+ * Returns the number of peer BRs found in the Network Data.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE`.
+ *
+ * Peer BRs are other devices within the Thread mesh that provide external IP connectivity. A device is considered
+ * to provide external IP connectivity if at least one of the following conditions is met regarding its Network Data
+ * entries:
+ *
+ * - It has added at least one external route entry.
+ * - It has added at least one prefix entry with both the default-route and on-mesh flags set.
+ * - It has added at least one domain prefix (with both the domain and on-mesh flags set).
+ *
+ * The list of peer BRs specifically excludes the current device, even if it is itself acting as a BR.
+ *
+ * @param[in]  aInstance    The OpenThread instance.
+ * @param[out] aMinAge      Pointer to an `uint32_t` to return the minimum age among all peer BRs.
+ *                          Can be NULL if the caller does not need this information.
+ *                          Age is represented as seconds since appearance of the BR entry in the Network Data.
+ *
+ * @returns The number of peer BRs.
+ *
+ */
+uint16_t otBorderRoutingCountPeerBrs(otInstance *aInstance, uint32_t *aMinAge);
 
 /**
  * Enables / Disables DHCPv6 Prefix Delegation.

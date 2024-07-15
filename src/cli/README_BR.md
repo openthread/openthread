@@ -13,6 +13,7 @@ Usage : `br [command] ...`
 - [omrprefix](#omrprefix)
 - [onlinkprefix](#onlinkprefix)
 - [pd](#pd)
+- [peers](#peers)
 - [prefixtable](#prefixtable)
 - [rioprf](#rioprf)
 - [routeprf](#routeprf)
@@ -35,6 +36,7 @@ enable
 omrprefix
 onlinkprefix
 pd
+peers
 prefixtable
 raoptions
 rioprf
@@ -218,6 +220,48 @@ Get the DHCPv6 Prefix Delegation (PD) provided off-mesh-routable (OMR) prefix.
 ```bash
 > br pd omrprefix
 2001:db8:cafe:0:0/64 lifetime:1800 preferred:1800
+Done
+```
+
+### peers
+
+Usage: `br peers`
+
+Get the list of peer BRs found in the Network Data.
+
+`OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE` is required.
+
+Peer BRs are other devices within the Thread mesh that provide external IP connectivity. A device is considered to provide external IP connectivity if at least one of the following conditions is met regarding its Network Data entries:
+
+- It has added at least one external route entry.
+- It has added at least one prefix entry with both the default-route and on-mesh flags set.
+- It has added at least one domain prefix (with both the domain and on-mesh flags set).
+
+The list of peer BRs specifically excludes the current device, even if it is itself acting as a BR.
+
+Info per BR entry:
+
+- RLOC16 of the BR
+- Age as the duration interval since this BR appeared in Network Data. It is formatted as `{hh}:{mm}:{ss}` for hours, minutes, seconds, if the duration is less than 24 hours. If the duration is 24 hours or more, the format is `{dd}d.{hh}:{mm}:{ss}` for days, hours, minutes, seconds.
+
+```bash
+> br peers
+rloc16:0x5c00 age:00:00:49
+rloc16:0xf800 age:00:01:51
+Done
+```
+
+Usage: `br peers count`
+
+Gets the number of peer BRs found in the Network Data.
+
+The count does not include the current device, even if it is itself acting as a BR.
+
+The output indicates the minimum age among all peer BRs. Age is formatted as `{hh}:{mm}:{ss}` for hours, minutes, seconds, if the duration is less than 24 hours. If the duration is 24 hours or more, the format is `{dd}d.{hh}:{mm}:{ss}` for days, hours, minutes, seconds.
+
+```bash
+> br peer count
+2 min-age:00:00:49
 Done
 ```
 
