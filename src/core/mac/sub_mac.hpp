@@ -532,16 +532,17 @@ private:
     static void HandleCslTimer(Timer &aTimer);
     void        HandleCslTimer(void);
     void        GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
+    uint32_t    GetLocalTime(void);
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
     void LogReceived(RxFrame *aFrame);
 #endif
 #endif
 
-    static constexpr uint8_t  kCsmaMinBe         = 3;   // macMinBE (IEEE 802.15.4-2006).
-    static constexpr uint8_t  kCsmaMaxBe         = 5;   // macMaxBE (IEEE 802.15.4-2006).
-    static constexpr uint32_t kUnitBackoffPeriod = 20;  // Number of symbols (IEEE 802.15.4-2006).
-    static constexpr uint32_t kAckTimeout        = 16;  // Timeout for waiting on an ACK (in msec).
-    static constexpr uint32_t kCcaSampleInterval = 128; // CCA sample interval, 128 usec.
+    static constexpr uint8_t  kCsmaMinBe         = 3;                  // macMinBE (IEEE 802.15.4-2006).
+    static constexpr uint8_t  kCsmaMaxBe         = 5;                  // macMaxBE (IEEE 802.15.4-2006).
+    static constexpr uint32_t kUnitBackoffPeriod = 20;                 // Number of symbols (IEEE 802.15.4-2006).
+    static constexpr uint32_t kAckTimeout = 16 * Time::kOneMsecInUsec; // Timeout for waiting on an ACK (in usec).
+    static constexpr uint32_t kCcaSampleInterval = 128;                // CCA sample interval, 128 usec.
 
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     static constexpr uint8_t kRetxDelayMinBackoffExponent = OPENTHREAD_CONFIG_MAC_RETX_DELAY_MIN_BACKOFF_EXPONENT;
@@ -549,9 +550,9 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-    static constexpr uint32_t kEnergyScanRssiSampleInterval = 128; // RSSI sample interval for energy scan, 128 usec
+    static constexpr uint32_t kEnergyScanRssiSampleInterval = 128; // RSSI sample interval for energy scan, in usec
 #else
-    static constexpr uint32_t kEnergyScanRssiSampleInterval = 1; // RSSI sample interval during energy scan, 1 msec
+    static constexpr uint32_t kEnergyScanRssiSampleInterval = 1000; // RSSI sample interval for energy scan, in usec
 #endif
 
     enum State : uint8_t
@@ -623,6 +624,8 @@ private:
     void StartTimerForBackoff(uint8_t aBackoffExponent);
     void BeginTransmit(void);
     void SampleRssi(void);
+    void StartTimer(uint32_t aDelayUs);
+    void StartTimerAt(Time aStartTime, uint32_t aDelayUs);
 
     void HandleReceiveDone(RxFrame *aFrame, Error aError);
     void HandleTransmitStarted(TxFrame &aFrame);
@@ -667,10 +670,10 @@ private:
     SubMacTimer mTimer;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint16_t mCslPeriod;      // The CSL sample period, in units of 10 symbols (160 microseconds).
-    uint8_t  mCslChannel : 7; // The CSL sample channel.
-    bool mIsCslSampling : 1;  // Indicates that the radio is receiving in CSL state for platforms not supporting delayed
-                              // reception.
+    uint16_t mCslPeriod;            // The CSL sample period, in units of 10 symbols (160 microseconds).
+    uint8_t  mCslChannel : 7;       // The CSL sample channel.
+    bool     mIsCslSampling : 1;    // Indicates that the radio is receiving in CSL state for platforms not supporting
+                                    // delayed reception.
     uint16_t    mCslPeerShort;      // The CSL peer short address.
     TimeMicro   mCslSampleTime;     // The CSL sample time of the current period relative to the local radio clock.
     TimeMicro   mCslLastSync;       // The timestamp of the last successful CSL synchronization.
