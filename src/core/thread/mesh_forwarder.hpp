@@ -241,16 +241,30 @@ public:
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
 #if OPENTHREAD_FTD
+
     /**
-     * Frees any messages queued for an existing child.
+     * Represents a predicate function for checking if a given `Message` meets specific criteria.
      *
-     * @param[in]  aChild    A reference to the child.
-     * @param[in]  aSubType  The message sub-type to remove.
-     *                       Use Message::kSubTypeNone remove all messages for @p aChild.
+     * @param[in] aMessage The message to evaluate.
+     *
+     * @return TRUE   If the @p aMessage satisfies the predicate condition.
+     * @return FALSE  If the @p aMessage does not satisfy the predicate condition.
      *
      */
-    void RemoveMessages(Child &aChild, Message::SubType aSubType);
-#endif
+    typedef bool (&MessageChecker)(const Message &aMessage);
+
+    /**
+     * Removes and frees messages queued for a child, based on a given predicate.
+     *
+     * The `aChild` can be either sleepy or non-sleepy.
+     *
+     * @param[in] aChild            The child whose messages are to be evaluated.
+     * @param[in] aMessageChecker   The predicate function to filter messages.
+     *
+     */
+    void RemoveMessagesForChild(Child &aChild, MessageChecker aMessageChecker);
+
+#endif // OPENTHREAD_FTD
 
     /**
      * Frees unicast/multicast MLE Data Responses from Send Message Queue if any.
