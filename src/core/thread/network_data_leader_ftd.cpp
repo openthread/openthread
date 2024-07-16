@@ -119,6 +119,8 @@ Error Leader::AnycastLookup(uint16_t aAloc16, uint16_t &aRloc16) const
 {
     Error error = kErrorNone;
 
+    aRloc16 = Mle::kInvalidRloc16;
+
     if (aAloc16 == Mle::kAloc16Leader)
     {
         aRloc16 = Get<Mle::Mle>().GetLeaderRloc16();
@@ -127,13 +129,11 @@ Error Leader::AnycastLookup(uint16_t aAloc16, uint16_t &aRloc16) const
     {
         uint8_t contextId = static_cast<uint8_t>(aAloc16 - Mle::kAloc16DhcpAgentStart + 1);
 
-        error = AnycastLookup(contextId, kAnycastDhcp6Agent, aRloc16);
+        error = LookupRouteForAgentAloc(contextId, IsEntryForDhcp6Agent, aRloc16);
     }
     else if (aAloc16 <= Mle::kAloc16ServiceEnd)
     {
-        uint8_t serviceId = static_cast<uint8_t>(aAloc16 - Mle::kAloc16ServiceStart);
-
-        error = AnycastLookup(serviceId, kAnycastService, aRloc16);
+        error = LookupRouteForServiceAloc(aAloc16, aRloc16);
     }
     else if (aAloc16 <= Mle::kAloc16CommissionerEnd)
     {
@@ -150,111 +150,80 @@ Error Leader::AnycastLookup(uint16_t aAloc16, uint16_t &aRloc16) const
     {
         uint8_t contextId = static_cast<uint8_t>(aAloc16 - Mle::kAloc16NeighborDiscoveryAgentStart + 1);
 
-        error = AnycastLookup(contextId, kAnycastNdAgent, aRloc16);
+        error = LookupRouteForAgentAloc(contextId, IsEntryForNdAgent, aRloc16);
     }
     else
     {
-        ExitNow(error = kErrorDrop);
+        error = kErrorDrop;
+    }
+
+    SuccessOrExit(error);
+    VerifyOrExit(aRloc16 != Mle::kInvalidRloc16, error = kErrorNoRoute);
+
+    if (Mle::IsChildRloc16(aRloc16))
+    {
+        // If the selected destination is a child, we use its parent
+        // as the destination unless the device itself is the
+        // parent of the `aRloc16`.
+
+        uint16_t parentRloc16 = Mle::ParentRloc16ForRloc16(aRloc16);
+
+        if (!Get<Mle::Mle>().HasRloc16(parentRloc16))
+        {
+            aRloc16 = parentRloc16;
+        }
     }
 
 exit:
     return error;
 }
 
-Error Leader::AnycastLookup(uint8_t aServiceId, AnycastType aType, uint16_t &aRloc16) const
+Error Leader::LookupRouteForServiceAloc(uint16_t aAloc16, uint16_t &aRloc16) const
 {
-    Iterator iterator = kIteratorInit;
-    uint8_t  bestCost = Mle::kMaxRouteCost;
-    uint16_t bestDest = Mle::kInvalidRloc16;
+    Error             error      = kErrorNoRoute;
+    const ServiceTlv *serviceTlv = FindServiceById(Mle::ServiceIdFromAloc(aAloc16));
 
-    switch (aType)
+    if (serviceTlv != nullptr)
     {
-    case kAnycastDhcp6Agent:
-    case kAnycastNdAgent:
-    {
-        OnMeshPrefixConfig config;
-        Lowpan::Context    context;
+        TlvIterator      subTlvIterator(*serviceTlv);
+        const ServerTlv *bestServerTlv = nullptr;
+        const ServerTlv *serverTlv;
 
-        SuccessOrExit(GetContext(aServiceId, context));
-
-        while (GetNextOnMeshPrefix(iterator, config) == kErrorNone)
+        while ((serverTlv = subTlvIterator.Iterate<ServerTlv>()) != nullptr)
         {
-            if (config.GetPrefix() != context.mPrefix)
+            if ((bestServerTlv == nullptr) || CompareRouteEntries(*serverTlv, *bestServerTlv) > 0)
             {
-                continue;
+                bestServerTlv = serverTlv;
             }
-
-            switch (aType)
-            {
-            case kAnycastDhcp6Agent:
-                if (!(config.mDhcp || config.mConfigure))
-                {
-                    continue;
-                }
-                break;
-            case kAnycastNdAgent:
-                if (!config.mNdDns)
-                {
-                    continue;
-                }
-                break;
-            default:
-                OT_ASSERT(false);
-                break;
-            }
-
-            EvaluateRoutingCost(config.mRloc16, bestCost, bestDest);
         }
 
-        break;
-    }
-    case kAnycastService:
-    {
-        ServiceConfig config;
-
-        while (GetNextService(iterator, config) == kErrorNone)
+        if (bestServerTlv != nullptr)
         {
-            if (config.mServiceId != aServiceId)
-            {
-                continue;
-            }
-
-            EvaluateRoutingCost(config.mServerConfig.mRloc16, bestCost, bestDest);
-        }
-
-        break;
-    }
-    }
-
-    if (Mle::IsChildRloc16(bestDest))
-    {
-        // If the selected destination is a child, we use its parent
-        // as the destination unless the device itself is the
-        // parent of the `bestDest`.
-
-        uint16_t bestDestParent = Mle::ParentRloc16ForRloc16(bestDest);
-
-        if (!Get<Mle::Mle>().HasRloc16(bestDestParent))
-        {
-            bestDest = bestDestParent;
+            aRloc16 = bestServerTlv->GetServer16();
+            error   = kErrorNone;
         }
     }
 
-    aRloc16 = bestDest;
-
-exit:
-    return (bestDest != Mle::kInvalidRloc16) ? kErrorNone : kErrorNoRoute;
+    return error;
 }
 
-void Leader::EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint16_t &aBestDest) const
-{
-    uint8_t cost = Get<RouterTable>().GetPathCost(aDest);
+bool Leader::IsEntryForDhcp6Agent(const BorderRouterEntry &aEntry) { return aEntry.IsDhcp() || aEntry.IsConfigure(); }
 
-    if ((aBestDest == Mle::kInvalidRloc16) || (cost < aBestCost))
-    {
-        aBestDest = aDest;
-        aBestCost = cost;
-    }
+bool Leader::IsEntryForNdAgent(const BorderRouterEntry &aEntry) { return aEntry.IsNdDns(); }
+
+Error Leader::LookupRouteForAgentAloc(uint8_t aContextId, EntryChecker aEntryChecker, uint16_t &aRloc16) const
+{
+    Error             error = kErrorNoRoute;
+    const PrefixTlv  *prefixTlv;
+    const ContextTlv *contextTlv;
+
+    prefixTlv = FindPrefixTlvForContextId(aContextId, contextTlv);
+    VerifyOrExit(prefixTlv != nullptr);
+
+    error = LookupRouteIn(*prefixTlv, aEntryChecker, aRloc16);
+
+exit:
+    return error;
 }
 
 void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)

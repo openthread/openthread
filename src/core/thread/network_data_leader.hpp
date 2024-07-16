@@ -423,15 +423,6 @@ public:
      */
     void HandleNetworkDataRestoredAfterReset(void);
 
-    /**
-     * Scans network data for given Service ID and returns pointer to the respective TLV, if present.
-     *
-     * @param aServiceId Service ID to look for.
-     * @return Pointer to the Service TLV for given Service ID, or nullptr if not present.
-     *
-     */
-    const ServiceTlv *FindServiceById(uint8_t aServiceId) const;
-
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -453,16 +444,24 @@ public:
 private:
     using FilterIndexes = MeshCoP::SteeringData::HashBitIndexes;
 
-    const PrefixTlv *FindNextMatchingPrefixTlv(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const;
+    typedef bool (&EntryChecker)(const BorderRouterEntry &aEntry);
 
-    template <typename EntryType> int CompareRouteEntries(const EntryType &aFirst, const EntryType &aSecond) const;
-    int                               CompareRouteEntries(int8_t   aFirstPreference,
-                                                          uint16_t aFirstRloc,
-                                                          int8_t   aSecondPreference,
-                                                          uint16_t aSecondRloc) const;
+    const PrefixTlv *FindNextMatchingPrefixTlv(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const;
+    const PrefixTlv *FindPrefixTlvForContextId(uint8_t aContextId, const ContextTlv *&aContextTlv) const;
+
+    int CompareRouteEntries(const BorderRouterEntry &aFirst, const BorderRouterEntry &aSecond) const;
+    int CompareRouteEntries(const HasRouteEntry &aFirst, const HasRouteEntry &aSecond) const;
+    int CompareRouteEntries(const ServerTlv &aFirst, const ServerTlv &aSecond) const;
+    int CompareRouteEntries(int8_t   aFirstPreference,
+                            uint16_t aFirstRloc,
+                            int8_t   aSecondPreference,
+                            uint16_t aSecondRloc) const;
+
+    static bool IsEntryDefaultRoute(const BorderRouterEntry &aEntry);
 
     Error ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDestination, uint16_t &aRloc16) const;
     Error DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t &aRloc16) const;
+    Error LookupRouteIn(const PrefixTlv &aPrefixTlv, EntryChecker aEntryChecker, uint16_t &aRloc16) const;
     Error SteeringDataCheck(const FilterIndexes &aFilterIndexes) const;
     void  GetContextForMeshLocalPrefix(Lowpan::Context &aContext) const;
     Error ReadCommissioningDataUint16SubTlv(MeshCoP::Tlv::Type aType, uint16_t &aValue) const;
@@ -479,13 +478,6 @@ private:
     static constexpr uint32_t kMaxNetDataSyncWait = 60 * 1000; // Maximum time to wait for netdata sync in msec.
     static constexpr uint8_t  kMinServiceId       = 0x00;
     static constexpr uint8_t  kMaxServiceId       = 0x0f;
-
-    enum AnycastType : uint8_t
-    {
-        kAnycastDhcp6Agent,
-        kAnycastNdAgent,
-        kAnycastService,
-    };
 
     class ChangedFlags
     {
@@ -571,8 +563,11 @@ private:
 
     void HandleTimer(void);
 
-    Error AnycastLookup(uint8_t aServiceId, AnycastType aType, uint16_t &aRloc16) const;
-    void  EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint16_t &aBestDest) const;
+    static bool IsEntryForDhcp6Agent(const BorderRouterEntry &aEntry);
+    static bool IsEntryForNdAgent(const BorderRouterEntry &aEntry);
+
+    Error LookupRouteForServiceAloc(uint16_t aAloc16, uint16_t &aRloc16) const;
+    Error LookupRouteForAgentAloc(uint8_t aContextId, EntryChecker aEntryChecker, uint16_t &aRloc16) const;
 
     void RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkData);
 
@@ -582,7 +577,8 @@ private:
     Error AddService(const ServiceTlv &aService, ChangedFlags &aChangedFlags);
     Error AddServer(const ServerTlv &aServer, ServiceTlv &aDstService, ChangedFlags &aChangedFlags);
 
-    Error AllocateServiceId(uint8_t &aServiceId) const;
+    Error             AllocateServiceId(uint8_t &aServiceId) const;
+    const ServiceTlv *FindServiceById(uint8_t aServiceId) const;
 
     void RemoveContext(uint8_t aContextId);
     void RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId);
