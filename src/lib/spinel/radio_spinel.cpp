@@ -110,6 +110,7 @@ RadioSpinel::RadioSpinel(void)
     , mVendorRestorePropertiesCallback(nullptr)
     , mVendorRestorePropertiesContext(nullptr)
 #endif
+    , mEnableRcpTimeSync(false)
     , mSpinelDriver(nullptr)
 {
     memset(&mRadioSpinelMetrics, 0, sizeof(mRadioSpinelMetrics));
@@ -119,7 +120,8 @@ RadioSpinel::RadioSpinel(void)
 void RadioSpinel::Init(bool          aSkipRcpCompatibilityCheck,
                        bool          aSoftwareReset,
                        SpinelDriver *aSpinelDriver,
-                       otRadioCaps   aRequiredRadioCaps)
+                       otRadioCaps   aRequiredRadioCaps,
+                       bool          aEnableRcpTimeSync)
 {
     otError error = OT_ERROR_NONE;
     bool    supportsRcpApiVersion;
@@ -130,6 +132,8 @@ void RadioSpinel::Init(bool          aSkipRcpCompatibilityCheck,
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mResetRadioOnStartup = aSoftwareReset;
 #endif
+
+    mEnableRcpTimeSync = aEnableRcpTimeSync;
 
     mSpinelDriver = aSpinelDriver;
     mSpinelDriver->SetFrameHandler(&HandleReceivedFrame, &HandleSavedFrame, this);
@@ -792,7 +796,11 @@ void RadioSpinel::Process(const void *aContext)
 
     ProcessRadioStateMachine();
     RecoverFromRcpFailure();
-    CalcRcpTimeOffset();
+
+    if (mEnableRcpTimeSync)
+    {
+        CalcRcpTimeOffset();
+    }
 }
 
 otError RadioSpinel::SetPromiscuous(bool aEnable)
@@ -1843,7 +1851,6 @@ otRadioState RadioSpinel::GetState(void) const
 
 void RadioSpinel::CalcRcpTimeOffset(void)
 {
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     otError        error = OT_ERROR_NONE;
     uint64_t       localTxTimestamp;
     uint64_t       localRxTimestamp;
@@ -1899,7 +1906,6 @@ void RadioSpinel::CalcRcpTimeOffset(void)
 
 exit:
     LogIfFail("Error calculating RCP time offset: %s", error);
-#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 }
 
 uint64_t RadioSpinel::GetNow(void) { return (mIsTimeSynced) ? (otPlatTimeGet() + mRadioTimeOffset) : UINT64_MAX; }
@@ -2177,7 +2183,10 @@ void RadioSpinel::RestoreProperties(void)
     }
 #endif
 
-    CalcRcpTimeOffset();
+    if (mEnableRcpTimeSync)
+    {
+        CalcRcpTimeOffset();
+    }
 }
 #endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 
