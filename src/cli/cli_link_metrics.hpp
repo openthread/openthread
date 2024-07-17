@@ -96,10 +96,15 @@ private:
                                  const otLinkMetricsValues *aMetricsValues,
                                  otLinkMetricsStatus        aStatus);
 
-    static void HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress,
-                                              otLinkMetricsStatus aStatus,
-                                              void               *aContext);
-
+    static void HandleLinkMetricsConfigForwardTrackingSeriesMgmtResponse(const otIp6Address *aAddress,
+                                                                         otLinkMetricsStatus aStatus,
+                                                                         void               *aContext);
+    void        HandleLinkMetricsConfigForwardTrackingSeriesMgmtResponse(const otIp6Address *aAddress,
+                                                                         otLinkMetricsStatus aStatus);
+    static void HandleLinkMetricsConfigEnhAckProbingMgmtResponse(const otIp6Address *aAddress,
+                                                                 otLinkMetricsStatus aStatus,
+                                                                 void               *aContext);
+    void HandleLinkMetricsConfigEnhAckProbingMgmtResponse(const otIp6Address *aAddress, otLinkMetricsStatus aStatus);
     void HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, otLinkMetricsStatus aStatus);
 
     static void HandleLinkMetricsEnhAckProbingIe(otShortAddress             aShortAddress,
@@ -115,7 +120,9 @@ private:
 
     void OutputResult(otError aError);
 
-    bool mLinkMetricsQueryInProgress;
+    bool mQuerySync : 1;
+    bool mConfigForwardTrackingSeriesSync : 1;
+    bool mConfigEnhAckProbingSync : 1;
 };
 
 } // namespace Cli

@@ -76,38 +76,39 @@ class LowPower_test_ForwardTrackingSeries(thread_cert.TestCase):
         # 1. Child configures a Forward Tracking Series successfully.
         # The Series tracks the count of MAC Data Request.
         # Child should get a response with status 0 (SUCCESS).
-        self.nodes[CHILD].link_metrics_mgmt_req_forward_tracking_series(leader_addr, SERIES_ID_1, 'r', 'p')
+        self.nodes[CHILD].link_metrics_config_req_forward_tracking_series(leader_addr, SERIES_ID_1, 'r', 'p', 'async')
         self.simulator.go(1)
 
         # 2. Child configures the same Forward Tracking Series again.
         # Child should get a response with status 2 (SERIES_ID_ALREADY_REGISTERED).
-        self.nodes[CHILD].link_metrics_mgmt_req_forward_tracking_series(leader_addr, SERIES_ID_1, 'r', 'p')
+        self.nodes[CHILD].link_metrics_config_req_forward_tracking_series(leader_addr, SERIES_ID_1, 'r', 'p', 'async')
         self.simulator.go(1)
 
         # 3. Child queries a Series that doesn't exist (using a wrong Series ID).
         # Child should get a report with status 3 (SERIES_ID_NOT_RECOGNIZED).
-        self.nodes[CHILD].link_metrics_query_forward_tracking_series(leader_addr, SERIES_ID_2)
+        self.nodes[CHILD].link_metrics_request_forward_tracking_series(leader_addr, SERIES_ID_2, 'async')
         self.simulator.go(1)
 
         # 4. Child queries a Series that don't have matched frames yet.
         # Child should get a report with status 4 (NO_MATCHING_FRAMES_RECEIVED).
-        self.nodes[CHILD].link_metrics_query_forward_tracking_series(leader_addr, SERIES_ID_1)
+        self.nodes[CHILD].link_metrics_request_forward_tracking_series(leader_addr, SERIES_ID_1, 'async')
         self.simulator.go(1)
 
         # 5. Child clears a Forward Tracking Series that doesn't exist.
         # Child should get a response with status 3 (SERIES_ID_NOT_RECOGNIZED).
-        self.nodes[CHILD].link_metrics_mgmt_req_forward_tracking_series(leader_addr, SERIES_ID_2, 'X', '')
+        self.nodes[CHILD].link_metrics_config_req_forward_tracking_series(leader_addr, SERIES_ID_2, 'X', '', 'async')
         self.simulator.go(1)
 
         # 6. Child clears a Forward Tracking Series successfully.
         # Child should get a response with status 0 (SUCCESS).
-        self.nodes[CHILD].link_metrics_mgmt_req_forward_tracking_series(leader_addr, SERIES_ID_1, 'X', '')
+        self.nodes[CHILD].link_metrics_config_req_forward_tracking_series(leader_addr, SERIES_ID_1, 'X', '', 'async')
         self.simulator.go(1)
 
         # 7. Child configures a new Forward Tracking Series successfully.
         # The Series tracks the count of all MAC Data frames.
         # Child should get a response with status 0 (SUCCESS).
-        self.nodes[CHILD].link_metrics_mgmt_req_forward_tracking_series(leader_addr, SERIES_ID_2, 'd', 'pqmr')
+        self.nodes[CHILD].link_metrics_config_req_forward_tracking_series(leader_addr, SERIES_ID_2, 'd', 'pqmr',
+                                                                          'async')
         self.simulator.go(1)
 
         # 8. Child sends an MLE Link Probe message to the Subject for the newly configured Series.
@@ -115,7 +116,7 @@ class LowPower_test_ForwardTrackingSeries(thread_cert.TestCase):
 
         # 9. Child queries the newly configured Series successfully.
         # Child should get a report with valid values.
-        self.nodes[CHILD].link_metrics_query_forward_tracking_series(leader_addr, SERIES_ID_2)
+        self.nodes[CHILD].link_metrics_request_forward_tracking_series(leader_addr, SERIES_ID_2, 'async')
         self.simulator.go(1)
 
     def verify(self, pv):

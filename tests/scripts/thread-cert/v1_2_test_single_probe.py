@@ -70,7 +70,7 @@ class SSED_SingleProbe(thread_cert.TestCase):
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
 
         # SSED_1 sends a Single Probe Link Metrics for L2 PDU count using MLE Data Request
-        result = self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, 'p', 'block')
+        result = self.nodes[SSED_1].link_metrics_request_single_probe(leader_addr, 'p')
         self.assertIn('PDU Counter', result)
         self.assertEqual(len(result), 1)
 
@@ -79,7 +79,7 @@ class SSED_SingleProbe(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.LinkMetricsReport)
 
         # SSED_1 sends a Single Probe Link Metrics for L2 LQI using MLE Data Request
-        result = self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, 'q', 'block')
+        result = self.nodes[SSED_1].link_metrics_request_single_probe(leader_addr, 'q')
         self.assertIn('LQI', result)
         self.assertEqual(len(result), 1)
 
@@ -88,7 +88,7 @@ class SSED_SingleProbe(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.LinkMetricsReport)
 
         # SSED_1 sends a Single Probe Link Metrics for Link Margin using MLE Data Request
-        result = self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, 'm', 'block')
+        result = self.nodes[SSED_1].link_metrics_request_single_probe(leader_addr, 'm')
         self.assertIn('Margin', result)
         self.assertEqual(len(result), 1)
 
@@ -97,7 +97,7 @@ class SSED_SingleProbe(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.LinkMetricsReport)
 
         # SSED_1 sends a Single Probe Link Metrics for Link Margin using MLE Data Request
-        result = self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, 'r', 'block')
+        result = self.nodes[SSED_1].link_metrics_request_single_probe(leader_addr, 'r')
         self.assertIn('RSSI', result)
         self.assertEqual(len(result), 1)
 
@@ -106,7 +106,7 @@ class SSED_SingleProbe(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.LinkMetricsReport)
 
         # SSED_1 sends a Single Probe Link Metrics for all metrics using MLE Data Request
-        result = self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, 'pqmr', 'block')
+        result = self.nodes[SSED_1].link_metrics_request_single_probe(leader_addr, 'pqmr')
         self.assertIn('PDU Counter', result)
         self.assertIn('LQI', result)
         self.assertIn('Margin', result)

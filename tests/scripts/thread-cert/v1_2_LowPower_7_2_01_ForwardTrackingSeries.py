@@ -103,7 +103,7 @@ class LowPower_7_2_01_ForwardTrackingSeries(thread_cert.TestCase):
         # -- L = 1
         # -- Type/Average Enum = 0 (count)
         # -- Metrics Enum = 0 (count)
-        self.nodes[SED_1].link_metrics_mgmt_req_forward_tracking_series(leader_addr, SERIES_ID, 'r', 'p')
+        self.nodes[SED_1].link_metrics_config_req_forward_tracking_series(leader_addr, SERIES_ID, 'r', 'p', 'async')
 
         self.simulator.go(5)
 
@@ -111,7 +111,7 @@ class LowPower_7_2_01_ForwardTrackingSeries(thread_cert.TestCase):
         self.simulator.go(30)
 
         # Step 7 - SED_1 sends an MLE Data Request to retrieve aggregated Forward Series Results
-        result = self.nodes[SED_1].link_metrics_query_forward_tracking_series(leader_addr, SERIES_ID, 'block')
+        result = self.nodes[SED_1].link_metrics_request_forward_tracking_series(leader_addr, SERIES_ID)
         self.assertIn("PDU Counter", result)
 
         #self.simulator.go(5)
@@ -120,7 +120,7 @@ class LowPower_7_2_01_ForwardTrackingSeries(thread_cert.TestCase):
         # Forward Series Flags = 0x00:
         # - Bits 0-7 = 0
         # Concatenation of Link Metric Type ID Flags = NULL:
-        self.nodes[SED_1].link_metrics_mgmt_req_forward_tracking_series(leader_addr, SERIES_ID, 'X', '')
+        self.nodes[SED_1].link_metrics_config_req_forward_tracking_series(leader_addr, SERIES_ID, 'X', '', 'async')
 
         self.simulator.go(5)
 
@@ -134,7 +134,7 @@ class LowPower_7_2_01_ForwardTrackingSeries(thread_cert.TestCase):
         # -- L = 0
         # -- Type/Average Enum = 1 (Exponential Moving Average)
         # -- Metrics Enum = 2 (Link Margin)
-        self.nodes[SSED_1].link_metrics_mgmt_req_forward_tracking_series(leader_addr, SERIES_ID_2, 'd', 'm')
+        self.nodes[SSED_1].link_metrics_config_req_forward_tracking_series(leader_addr, SERIES_ID_2, 'd', 'm', 'async')
 
         self.simulator.go(5)
 
@@ -145,19 +145,19 @@ class LowPower_7_2_01_ForwardTrackingSeries(thread_cert.TestCase):
             self.simulator.go(1)
 
         # Step 19 - SSED_1 sends an MLE Data Request to retrieve aggregated Forward Series Results
-        result = self.nodes[SSED_1].link_metrics_query_forward_tracking_series(leader_addr, SERIES_ID_2, 'block')
+        result = self.nodes[SSED_1].link_metrics_request_forward_tracking_series(leader_addr, SERIES_ID_2)
         self.assertIn("Margin", result)
 
         # Step 21 - SSED_1 clears the Forward Series Link Metrics
         # Forward Series Flags = 0x00:
         # - Bits 0-7 = 0
         # Concatenation of Link Metric Type ID Flags = NULL
-        self.nodes[SSED_1].link_metrics_mgmt_req_forward_tracking_series(leader_addr, SERIES_ID_2, 'X', '')
+        self.nodes[SSED_1].link_metrics_config_req_forward_tracking_series(leader_addr, SERIES_ID_2, 'X', '', 'async')
 
         self.simulator.go(5)
 
         # Step 23 - SSED_1 sends an MLE Data Request to retrieve aggregated Forward Series Results
-        result = self.nodes[SSED_1].link_metrics_query_forward_tracking_series(leader_addr, SERIES_ID_2, 'block')
+        result = self.nodes[SSED_1].link_metrics_request_forward_tracking_series(leader_addr, SERIES_ID_2)
         self.assertIn('Status', result)
         self.assertEqual(result['Status'], 'Series ID not recognized')
 
