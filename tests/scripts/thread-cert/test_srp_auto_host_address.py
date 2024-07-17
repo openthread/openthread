@@ -67,6 +67,9 @@ class SrpAutoHostAddress(thread_cert.TestCase):
         client = self.nodes[CLIENT]
         server = self.nodes[SERVER]
 
+        # Deprecation interval of an SLAAC address before removal.
+        deprecate_time = 300
+
         #-------------------------------------------------------------------
         # Form the network.
 
@@ -158,7 +161,7 @@ class SrpAutoHostAddress(thread_cert.TestCase):
         #-------------------------------------------------------------------
         # Add a non-preferred SLAAC on-mesh prefix and check that the
         # set of registered addresses remains unchanged and that the
-        # non-preferred  address is not registered by SRP client.
+        # non-preferred address is not registered by SRP client.
 
         client.add_prefix('fd00:a:b:c::/64', 'aos')
         client.register_netdata()
@@ -169,26 +172,92 @@ class SrpAutoHostAddress(thread_cert.TestCase):
         self.check_registered_addresses(client, server)
 
         #-------------------------------------------------------------------
-        # Remove the on-mesh prefix and check that the SRP client
-        # re-registered and updated server with the remaining address.
+        # Remove the on-mesh prefix. This should trigger the
+        # associated SLAAC address to be deprecated, but it should
+        # not yet cause the client to re-register. Verify that the
+        # registered addresses on server remain unchanged.
+
+        old_registered_addresses = self.get_registered_host_addresses_from_server(server)
 
         client.remove_prefix('fd00:abba:cafe:bee::/64')
         client.register_netdata()
 
         self.simulator.go(15)
+        self.assertEqual(old_registered_addresses, self.get_registered_host_addresses_from_server(server))
+
+        # Wait until the SLAAC address deprecation time has elapsed
+        # and the address is removed. Verify that the SRP client
+        # re-registers and updates the server with the remaining
+        # address.
+
+        self.simulator.go(deprecate_time)
 
         self.check_registered_addresses(client, server)
 
         #-------------------------------------------------------------------
-        # Remove the next on-mesh prefix. Check that SRP client re-registered
-        # now with only ML-EID.
+        # Remove the next on-mesh prefix. Verify that the client does
+        # not re-register while the address is deprecating. After the
+        # address is removed, confirm that the SRP client
+        # re-registers using only the ML-EID.
+
+        old_registered_addresses = self.get_registered_host_addresses_from_server(server)
 
         client.remove_prefix('fd00:9:8:7::/64')
         client.register_netdata()
 
         self.simulator.go(15)
+        self.assertEqual(old_registered_addresses, self.get_registered_host_addresses_from_server(server))
+
+        self.simulator.go(deprecate_time)
 
         self.check_registered_addresses(client, server)
+
+        #-------------------------------------------------------------------
+        # Add and remove the on-mesh prefix again. However, before the
+        # address deprecation time elapses and the address is removed,
+        # restart the server. This should trigger the client to
+        # re-register. Verify that the client re-registers with the
+        # most up-to-date addresses and does not register the deprecating
+        # address.
+
+        client.add_prefix('fd00:9:8:7::/64', 'paos')
+        client.register_netdata()
+        self.simulator.go(15)
+
+        slaac_addr = [addr.strip() for addr in client.get_addrs() if addr.strip().startswith('fd00:9:8:7:')]
+        self.assertEqual(len(slaac_addr), 1)
+        self.check_registered_addresses(client, server)
+
+        # Remove the prefix and verify that client does not
+        # register while the SLAAC address is deprecating.
+
+        old_registered_addresses = self.get_registered_host_addresses_from_server(server)
+
+        client.remove_prefix('fd00:9:8:7::/64')
+        client.register_netdata()
+
+        self.simulator.go(15)
+        self.assertEqual(old_registered_addresses, self.get_registered_host_addresses_from_server(server))
+
+        # Disable and re-enable the server. This should trigger the
+        # client to re-register. Verify that the ML-EID address is
+        # now registered.
+
+        server.srp_server_set_enabled(False)
+        server.srp_server_set_enabled(True)
+
+        self.simulator.go(20)
+
+        self.check_registered_addresses(client, server)
+
+        registered_addresses = self.get_registered_host_addresses_from_server(server)
+        self.assertEqual(len(registered_addresses), 1)
+        self.assertEqual(registered_addresses[0], client.get_mleid())
+
+        # Check that SLAAC address is still deprecating.
+
+        slaac_addr = [addr.strip() for addr in client.get_addrs() if addr.strip().startswith('fd00:9:8:7:')]
+        self.assertEqual(len(slaac_addr), 1)
 
         #-------------------------------------------------------------------
         # Explicitly set the host addresses (which disables the auto host
@@ -215,20 +284,22 @@ class SrpAutoHostAddress(thread_cert.TestCase):
         self.simulator.go(5)
         self.check_registered_addresses(client, server)
 
-    def check_registered_addresses(self, client, server):
-        # Ensure client has registered successfully.
-        self.assertEqual(client.srp_client_get_host_state(), 'Registered')
-
+    def get_registered_host_addresses_from_server(self, server):
         # Check the host info on server.
         server_hosts = server.srp_server_get_hosts()
         self.assertEqual(len(server_hosts), 1)
         server_host = server_hosts[0]
         self.assertEqual(server_host['deleted'], 'false')
         self.assertEqual(server_host['fullname'], 'host.default.service.arpa.')
+        return [addr.strip() for addr in server_host['addresses']]
+
+    def check_registered_addresses(self, client, server):
+        # Ensure client has registered successfully.
+        self.assertEqual(client.srp_client_get_host_state(), 'Registered')
 
         # Check the host addresses on server to match client.
 
-        host_addresses = [addr.strip() for addr in server_host['addresses']]
+        host_addresses = self.get_registered_host_addresses_from_server(server)
 
         client_mleid = client.get_mleid()
         client_addresses = [addr.split(' ')[0] for addr in client.get_addrs(verbose=True) if 'preferred:1' in addr]
