@@ -393,6 +393,7 @@ jobs:
         retention-days: 1
 
   upload-coverage:
+    if: github.repository == 'openthread/openthread'
     needs:
     - packet-verification
     - cli-ftd

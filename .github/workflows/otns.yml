@@ -201,6 +201,7 @@ jobs:
           retention-days: 1
 
   upload-coverage:
+    if: github.repository == 'openthread/openthread'
     needs:
       - unittests
       - examples

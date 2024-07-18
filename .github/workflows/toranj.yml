@@ -182,6 +182,7 @@ jobs:
         ./tests/toranj/build.sh posix-15.4
 
   upload-coverage:
+    if: github.repository == 'openthread/openthread'
     needs:
     - toranj-cli
     runs-on: ubuntu-20.04
