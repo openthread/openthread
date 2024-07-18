@@ -142,7 +142,7 @@ public:
         kDhcp6PdStateDisabled = OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED, ///< Disabled.
         kDhcp6PdStateStopped  = OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED,  ///< Enabled, but currently stopped.
         kDhcp6PdStateRunning  = OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING,  ///< Enabled, and running.
-        kDhcp6PdStateIdle     = OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE,     ///< Enabled, and running.
+        kDhcp6PdStateIdle     = OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE,     ///< Enabled, but is not requesting prefix.
     };
 
     /**
@@ -1376,7 +1376,7 @@ private:
         Error GetProcessedRaInfo(PdProcessedRaInfo &aPdProcessedRaInfo) const;
         void  HandleTimer(void) { WithdrawPrefix(); }
         void  SetStateCallback(PdCallback aCallback, void *aContext) { mStateCallback.Set(aCallback, aContext); }
-        void  Evaluate();
+        void  Evaluate(void);
 
     private:
         class PrefixEntry : public OnLinkPrefix

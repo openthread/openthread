@@ -473,6 +473,9 @@ void RoutingManager::EvaluateRoutingPolicy(void)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     mNat64PrefixManager.Evaluate();
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+    mPdPrefixManager.Evaluate();
+#endif
 
     if (IsInitalPolicyEvaluationDone())
     {
@@ -2145,10 +2148,6 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
         RemoveLocalFromNetData();
     }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-    Get<RoutingManager>().mPdPrefixManager.Evaluate();
-#endif
-
 exit:
     return;
 }
@@ -3713,12 +3712,10 @@ void RoutingManager::PdPrefixManager::Evaluate(void)
     if (favoredPrefix.IsEmpty() || favoredPrefix.GetPreference() < OmrPrefixManager::kPdRoutePreference ||
         favoredPrefix.GetPrefix() == mPrefix.GetPrefix())
     {
-        LogInfo("Trying to request prefix via DHCPv6 PD");
         PauseResume(/* aPause= */ false);
     }
     else
     {
-        LogInfo("Stop requesting prefix via DHCPv6 PD");
         PauseResume(/* aPause= */ true);
     }
 }
