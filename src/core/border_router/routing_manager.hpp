@@ -47,6 +47,14 @@
 #error "OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE is required for OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE."
 #endif
 
+#if !OPENTHREAD_CONFIG_UPTIME_ENABLE
+#error "OPENTHREAD_CONFIG_UPTIME_ENABLE is required for OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE"
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE && !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+#error "TRACK_PEER_BR_INFO_ENABLE feature requires OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE"
+#endif
+
 #include <openthread/border_routing.h>
 #include <openthread/nat64.h>
 #include <openthread/netdata.h>
@@ -74,7 +82,6 @@
 #include "thread/network_data.hpp"
 
 namespace ot {
-
 namespace BorderRouter {
 
 extern "C" void otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength);
@@ -104,6 +111,7 @@ public:
     typedef otBorderRoutingPrefixTableIterator    PrefixTableIterator; ///< Prefix Table Iterator.
     typedef otBorderRoutingPrefixTableEntry       PrefixTableEntry;    ///< Prefix Table Entry.
     typedef otBorderRoutingRouterEntry            RouterEntry;         ///< Router Entry.
+    typedef otBorderRoutingPeerBorderRouterEntry  PeerBrEntry;         ///< Peer Border Router Entry.
     typedef otPdProcessedRaInfo                   PdProcessedRaInfo;   ///< Data of PdProcessedRaInfo.
     typedef otBorderRoutingRequestDhcp6PdCallback PdCallback;          ///< DHCPv6 PD callback.
 
@@ -498,6 +506,38 @@ public:
         return mRxRaTracker.GetNextRouter(aIterator, aEntry);
     }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+
+    /**
+     * Iterates over the peer BRs found in the Network Data.
+     *
+     * @param[in,out] aIterator  An iterator.
+     * @param[out]    aEntry     A reference to the entry to populate.
+     *
+     * @retval kErrorNone        Got the next peer BR info, @p aEntry is updated and @p aIterator is advanced.
+     * @retval kErrorNotFound    No more PR beers in the list.
+     *
+     */
+    Error GetNextPeerBrEntry(PrefixTableIterator &aIterator, PeerBrEntry &aEntry) const
+    {
+        return mNetDataPeerBrTracker.GetNext(aIterator, aEntry);
+    }
+
+    /**
+     * Returns the number of peer BRs found in the Network Data.
+     *
+     * The count does not include this device itself (when it itself is acting as a BR).
+     *
+     * @param[out] aMinAge   Reference to an `uint32_t` to return the minimum age among all peer BRs.
+     *                       Age is represented as seconds since appearance of the BR entry in the Network Data.
+     *
+     * @returns The number of peer BRs.
+     *
+     */
+    uint16_t CountPeerBrs(uint32_t &aMinAge) const { return mNetDataPeerBrTracker.CountPeerBrs(aMinAge); }
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     /**
      * Determines whether to enable/disable SRP server when the auto-enable mode is changed on SRP server.
@@ -733,6 +773,51 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+
+    class RxRaTracker;
+
+    class NetDataPeerBrTracker : public InstanceLocator
+    {
+        friend class RxRaTracker;
+
+    public:
+        explicit NetDataPeerBrTracker(Instance &aInstance);
+
+        uint16_t CountPeerBrs(uint32_t &aMinAge) const;
+        Error    GetNext(PrefixTableIterator &aIterator, PeerBrEntry &aEntry) const;
+
+        void HandleNotifierEvents(Events aEvents);
+
+    private:
+        struct PeerBr : LinkedListEntry<PeerBr>, Heap::Allocatable<PeerBr>
+        {
+            struct Filter
+            {
+                Filter(const NetworkData::Rlocs &aRlocs)
+                    : mExcludeRlocs(aRlocs)
+                {
+                }
+
+                const NetworkData::Rlocs &mExcludeRlocs;
+            };
+
+            uint32_t GetAge(uint32_t aUptime) const { return aUptime - mDiscoverTime; }
+            bool     Matches(uint16_t aRloc16) const { return mRloc16 == aRloc16; }
+            bool     Matches(const Filter &aFilter) const { return !aFilter.mExcludeRlocs.Contains(mRloc16); }
+
+            PeerBr  *mNext;
+            uint16_t mRloc16;
+            uint32_t mDiscoverTime;
+        };
+
+        OwningList<PeerBr> mPeerBrs;
+    };
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     void HandleRxRaTrackerSignalTask(void) { mRxRaTracker.HandleSignalTask(); }
     void HandleRxRaTrackerExpirationTimer(void) { mRxRaTracker.HandleExpirationTimer(); }
     void HandleRxRaTrackerStaleTimer(void) { mRxRaTracker.HandleStaleTimer(); }
@@ -751,6 +836,8 @@ private:
         // signalling which ensures that if there are multiple changes within
         // the same flow of execution, the callback is invoked after all the
         // changes are processed.
+
+        friend class NetDataPeerBrTracker;
 
     public:
         explicit RxRaTracker(Instance &aInstance);
@@ -838,14 +925,26 @@ private:
             void DetermineReachabilityTimeout(void);
             bool Matches(const Ip6::Address &aAddress) const { return aAddress == mAddress; }
             bool Matches(const EmptyChecker &aChecker);
-            void CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow) const;
+            bool IsPeerBr(void) const;
+            void CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow, uint32_t aUptime) const;
 
             using OnLinkPrefixList = OwningList<Entry<OnLinkPrefix>>;
             using RoutePrefixList  = OwningList<Entry<RoutePrefix>>;
 
+            // `mDiscoverTime` tracks the initial discovery time of
+            // this router. To accommodate longer durations, the
+            // `Uptime` is used, as `TimeMilli` (which uses `uint32_t`
+            // intervals) would be limited to tracking ~ 49 days.
+            //
+            // `mLastUpdateTime` tracks the most recent time an RA or
+            // NA was received from this router. It is bounded due to
+            // the frequency of reachability checks, so we can safely
+            // use `TimeMilli` for it.
+
             Ip6::Address     mAddress;
             OnLinkPrefixList mOnLinkPrefixes;
             RoutePrefixList  mRoutePrefixes;
+            uint32_t         mDiscoverTime;
             TimeMilli        mLastUpdateTime;
             TimeMilli        mTimeoutTime;
             uint8_t          mNsProbeCount;
@@ -866,6 +965,7 @@ private:
                 kUnspecified,
                 kRouterIterator,
                 kPrefixIterator,
+                kPeerBrIterator,
             };
 
             enum EntryType : uint8_t
@@ -874,9 +974,10 @@ private:
                 kRoutePrefix,
             };
 
-            void                 Init(const Entry<Router> *aRoutersHead);
+            void                 Init(const Entry<Router> *aRoutersHead, uint32_t aUptime);
             Error                AdvanceToNextRouter(Type aType);
             Error                AdvanceToNextEntry(void);
+            uint32_t             GetInitUptime(void) const { return mData0; }
             TimeMilli            GetInitTime(void) const { return TimeMilli(mData1); }
             Type                 GetType(void) const { return static_cast<Type>(mData2); }
             const Entry<Router> *GetRouter(void) const { return static_cast<const Entry<Router> *>(mPtr1); }
@@ -887,8 +988,16 @@ private:
                 return static_cast<const Entry<PrefixType> *>(mPtr2);
             }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+            using PeerBr = NetDataPeerBrTracker::PeerBr;
+
+            Error         AdvanceToNextPeerBr(const PeerBr *aPeerBrsHead);
+            const PeerBr *GetPeerBrEntry(void) const { return static_cast<const PeerBr *>(mPtr2); }
+#endif
+
         private:
             void SetRouter(const Entry<Router> *aRouter) { mPtr1 = aRouter; }
+            void SetInitUptime(uint32_t aUptime) { mData0 = aUptime; }
             void SetInitTime(void) { mData1 = TimerMilli::GetNow().GetValue(); }
             void SetEntry(const void *aEntry) { mPtr2 = aEntry; }
             bool HasEntry(void) const { return mPtr2 != nullptr; }
@@ -1474,6 +1583,10 @@ private:
     bool            mUserSetRioPreference;
 
     OnLinkPrefixManager mOnLinkPrefixManager;
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+    NetDataPeerBrTracker mNetDataPeerBrTracker;
+#endif
 
     RxRaTracker mRxRaTracker;
 

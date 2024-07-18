@@ -746,7 +746,16 @@ class OTCI(object):
 
             id = int(col("ID"))
             r, d, n = int(col("R")), int(col("D")), int(col("N"))
-            mode = DeviceMode(f'{"r" if r else ""}{"d" if d else ""}{"n" if n else ""}')
+
+            #
+            # Device mode flags:
+            #
+            # r: rx-on-when-idle
+            # d: Full Thread Device
+            # n: Full Network Data
+            # -: no flags set (rx-off-when-idle, minimal Thread device, stable network data)
+            mode = DeviceMode(
+                f'{"r" if r else ""}{"d" if d else ""}{"n" if n else ""}{"-" if r == d == n == 0 else ""}')
 
             child = {
                 'id': ChildId(id),
@@ -767,6 +776,9 @@ class OTCI(object):
 
             if 'QMsgCnt' in headers:
                 child['qmsgcnt'] = int(col('QMsgCnt'))
+
+            if 'Suprvsn' in headers:
+                child['suprvsn'] = int(col('Suprvsn'))
 
             table[ChildId(id)] = child
 
@@ -1790,6 +1802,11 @@ class OTCI(object):
 
         self.execute_command(cmd)
 
+    def get_dataset_tlvs_bytes(self) -> bytes:
+        """Gets bytes of the Operational Dataset TLVs"""
+        hexstr = self.__parse_str(self.execute_command('dataset tlvs'))
+        return self.__hex_to_bytes(hexstr)
+
     def dataset_set_buffer(self,
                            active_timestamp: Optional[int] = None,
                            channel: Optional[int] = None,
@@ -2542,6 +2559,55 @@ class OTCI(object):
             return False
 
         return True
+
+    #
+    # Network management utilities
+    #
+    def create_dataset(self,
+                       active_timestamp: Optional[int] = None,
+                       channel: Optional[int] = None,
+                       channel_mask: Optional[int] = None,
+                       extpanid: Optional[str] = None,
+                       mesh_local_prefix: Optional[str] = None,
+                       network_key: Optional[str] = None,
+                       network_name: Optional[str] = None,
+                       panid: Optional[int] = None,
+                       pskc: Optional[str] = None,
+                       security_policy: Optional[tuple] = None,
+                       pending_timestamp: Optional[int] = None) -> bytes:
+        """Creates a new Operational Dataset with given parameters."""
+        self.dataset_clear_buffer()
+        self.dataset_init_buffer()
+        self.dataset_set_buffer(active_timestamp, channel, channel_mask, extpanid, mesh_local_prefix, network_key,
+                                network_name, panid, pskc, security_policy, pending_timestamp)
+        return self.get_dataset_tlvs_bytes()
+
+    def join(self, dataset: bytes) -> None:
+        """Joins to a Thread network with given Active Operational Dataset."""
+        self.set_dataset_bytes('active', dataset)
+        self.ifconfig_up()
+        self.thread_start()
+
+    def leave(self) -> None:
+        """Leaves from the Thread network."""
+        self.thread_stop()
+        self.ifconfig_down()
+
+    def wait_for(self, command: str, expect_line: Optional[Union[str, Pattern, Collection[Any]]], timeout: float = 60):
+        """Wait for the expected output by periodically executing the given command."""
+        success = False
+
+        while timeout > 0:
+            output = self.execute_command(command)
+            if any(match_line(line, expect_line) for line in output):
+                success = True
+                break
+
+            self.__otcmd.wait(1)
+            timeout -= 1
+
+        if not success:
+            raise ExpectLineTimeoutError(expect_line)
 
     #
     # Other TODOs

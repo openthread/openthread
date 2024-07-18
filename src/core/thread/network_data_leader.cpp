@@ -187,33 +187,45 @@ Error Leader::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext
     return (aContext.mPrefix.GetLength() > 0) ? kErrorNone : kErrorNotFound;
 }
 
-Error Leader::GetContext(uint8_t aContextId, Lowpan::Context &aContext) const
+const PrefixTlv *Leader::FindPrefixTlvForContextId(uint8_t aContextId, const ContextTlv *&aContextTlv) const
 {
-    Error            error = kErrorNotFound;
     TlvIterator      tlvIterator(GetTlvsStart(), GetTlvsEnd());
     const PrefixTlv *prefixTlv;
-
-    if (aContextId == Mle::kMeshLocalPrefixContextId)
-    {
-        GetContextForMeshLocalPrefix(aContext);
-        ExitNow(error = kErrorNone);
-    }
 
     while ((prefixTlv = tlvIterator.Iterate<PrefixTlv>()) != nullptr)
     {
         const ContextTlv *contextTlv = prefixTlv->FindSubTlv<ContextTlv>();
 
-        if ((contextTlv == nullptr) || (contextTlv->GetContextId() != aContextId))
+        if ((contextTlv != nullptr) && (contextTlv->GetContextId() == aContextId))
         {
-            continue;
+            aContextTlv = contextTlv;
+            break;
         }
-
-        prefixTlv->CopyPrefixTo(aContext.mPrefix);
-        aContext.mContextId    = contextTlv->GetContextId();
-        aContext.mCompressFlag = contextTlv->IsCompress();
-        aContext.mIsValid      = true;
-        ExitNow(error = kErrorNone);
     }
+
+    return prefixTlv;
+}
+
+Error Leader::GetContext(uint8_t aContextId, Lowpan::Context &aContext) const
+{
+    Error             error = kErrorNone;
+    TlvIterator       tlvIterator(GetTlvsStart(), GetTlvsEnd());
+    const PrefixTlv  *prefixTlv;
+    const ContextTlv *contextTlv;
+
+    if (aContextId == Mle::kMeshLocalPrefixContextId)
+    {
+        GetContextForMeshLocalPrefix(aContext);
+        ExitNow();
+    }
+
+    prefixTlv = FindPrefixTlvForContextId(aContextId, contextTlv);
+    VerifyOrExit(prefixTlv != nullptr, error = kErrorNotFound);
+
+    prefixTlv->CopyPrefixTo(aContext.mPrefix);
+    aContext.mContextId    = contextTlv->GetContextId();
+    aContext.mCompressFlag = contextTlv->IsCompress();
+    aContext.mIsValid      = true;
 
 exit:
     return error;
@@ -299,11 +311,20 @@ exit:
     return error;
 }
 
-template <typename EntryType> int Leader::CompareRouteEntries(const EntryType &aFirst, const EntryType &aSecond) const
+int Leader::CompareRouteEntries(const BorderRouterEntry &aFirst, const BorderRouterEntry &aSecond) const
 {
-    // `EntryType` can be `HasRouteEntry` or `BorderRouterEntry`.
-
     return CompareRouteEntries(aFirst.GetPreference(), aFirst.GetRloc(), aSecond.GetPreference(), aSecond.GetRloc());
+}
+
+int Leader::CompareRouteEntries(const HasRouteEntry &aFirst, const HasRouteEntry &aSecond) const
+{
+    return CompareRouteEntries(aFirst.GetPreference(), aFirst.GetRloc(), aSecond.GetPreference(), aSecond.GetRloc());
+}
+
+int Leader::CompareRouteEntries(const ServerTlv &aFirst, const ServerTlv &aSecond) const
+{
+    return CompareRouteEntries(/* aFirstPreference */ 0, aFirst.GetServer16(), /* aSecondPreference */ 0,
+                               aSecond.GetServer16());
 }
 
 int Leader::CompareRouteEntries(int8_t   aFirstPreference,
@@ -393,37 +414,49 @@ Error Leader::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDestin
     return error;
 }
 
-Error Leader::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t &aRloc16) const
+Error Leader::LookupRouteIn(const PrefixTlv &aPrefixTlv, EntryChecker aEntryChecker, uint16_t &aRloc16) const
 {
+    // Iterates over all `BorderRouterEntry` associated with
+    // `aPrefixTlv` which also match `aEntryChecker` and determine the
+    // best route. For example, this is used from `DefaultRouteLookup()`
+    // to look up best default route.
+
     Error                    error = kErrorNoRoute;
-    TlvIterator              subTlvIterator(aPrefix);
+    TlvIterator              subTlvIterator(aPrefixTlv);
     const BorderRouterTlv   *brTlv;
-    const BorderRouterEntry *route = nullptr;
+    const BorderRouterEntry *bestEntry = nullptr;
 
     while ((brTlv = subTlvIterator.Iterate<BorderRouterTlv>()) != nullptr)
     {
         for (const BorderRouterEntry *entry = brTlv->GetFirstEntry(); entry <= brTlv->GetLastEntry();
              entry                          = entry->GetNext())
         {
-            if (!entry->IsDefaultRoute())
+            if (!aEntryChecker(*entry))
             {
                 continue;
             }
 
-            if (route == nullptr || CompareRouteEntries(*entry, *route) > 0)
+            if ((bestEntry == nullptr) || CompareRouteEntries(*entry, *bestEntry) > 0)
             {
-                route = entry;
+                bestEntry = entry;
             }
         }
     }
 
-    if (route != nullptr)
+    if (bestEntry != nullptr)
     {
-        aRloc16 = route->GetRloc();
+        aRloc16 = bestEntry->GetRloc();
         error   = kErrorNone;
     }
 
     return error;
+}
+
+bool Leader::IsEntryDefaultRoute(const BorderRouterEntry &aEntry) { return aEntry.IsDefaultRoute(); }
+
+Error Leader::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t &aRloc16) const
+{
+    return LookupRouteIn(aPrefix, IsEntryDefaultRoute, aRloc16);
 }
 
 Error Leader::SetNetworkData(uint8_t            aVersion,

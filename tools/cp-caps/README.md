@@ -41,7 +41,7 @@ $ git clone git@github.com:openthread/ot-nrf528xx.git
 $ cd ot-nrf528xx/
 $ git submodule update --init
 $ ./script/bootstrap
-$ ./script/build nrf52840 UART_trans -DOT_DIAGNOSTIC=ON
+$ ./script/build nrf52840 UART_trans -DOT_DIAGNOSTIC=ON -DOT_CSL_RECEIVER=ON
 $ arm-none-eabi-objcopy -O ihex build/bin/ot-cli-ftd ot-cli-ftd.hex
 $ nrfjprog -f nrf52 --chiperase --program ot-cli-ftd.hex --reset
 ```
@@ -54,13 +54,15 @@ Show help info.
 
 ```bash
 $ python3 ./tools/cp-caps/rcp_caps_test.py -h
-usage: rcp_caps_test.py [-h] [-d] [-v]
+usage: rcp_caps_test.py [-h] [-c] [-d] [-p] [-v]
 
 This script is used for testing RCP capabilities.
 
 options:
   -h, --help           show this help message and exit
+  -c, --csl            test whether the RCP supports CSL transmitter
   -d, --diag-commands  test whether the RCP supports all diag commands
+  -p, --data-poll      test whether the RCP supports data poll
   -v, --verbose        output verbose information
 
 Device Interfaces:
@@ -122,4 +124,23 @@ diag gpio mode 2 out ------------------------------------- NotSupported
 diag gpio get 2 ------------------------------------------ NotSupported
 diag gpio set 2 0 ---------------------------------------- NotSupported
 diag gpio set 2 1 ---------------------------------------- NotSupported
+```
+
+### Test CSL Transmitter
+
+The parameter `-c` or `--csl` starts to test whether the RCP supports the CSL transmitter.
+
+```bash
+$ DUT_ADB_USB=TW69UCKFZTGM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 ./tools/cp-caps/rcp_caps_test.py -c
+CSL Transmitter ------------------------------------------ OK
+```
+
+### Test Data Poll
+
+The parameter `-p` or `--data-poll` starts to test whether the RCP supports data poll.
+
+```bash
+$ DUT_ADB_USB=1269UCKFZTAM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 ./tools/cp-caps/rcp_caps_test.py -p
+Data Poll Parent ----------------------------------------- OK
+Data Poll Child ------------------------------------------ OK
 ```

@@ -118,6 +118,8 @@ private:
     otError ParsePskc(Arg *&aArgs, otOperationalDataset &aDataset);
     otError ParseSecurityPolicy(Arg *&aArgs, otOperationalDataset &aDataset);
 
+    otError ParseTlvs(Arg &aArg, otOperationalDatasetTlvs &aDatasetTlvs);
+
     otError ProcessCommand(const ComponentMapper &aMapper, Arg aArgs[]);
 
     template <CommandId kCommandId> otError Process(Arg aArgs[]);

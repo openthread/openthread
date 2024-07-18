@@ -484,13 +484,24 @@ otError otThreadBecomeRouter(otInstance *aInstance);
 /**
  * Become a leader and start a new partition.
  *
- * @note This API is reserved for testing and demo purposes only. Changing settings with
- * this API will render a production application non-compliant with the Thread Specification.
+ * If the device is not attached, this API will force the device to start as the leader of the network. This use case
+ * is only intended for testing and demo purposes, and using the API while the device is detached can make a production
+ * application non-compliant with the Thread Specification.
+ *
+ * If the device is already attached, this API can be used to try to take over as the leader, creating a new partition.
+ * For this to work, the local leader weight (`otThreadGetLocalLeaderWeight()`) must be larger than the weight of the
+ * current leader (`otThreadGetLeaderWeight()`). If it is not, `OT_ERROR_NOT_CAPABLE` is returned to indicate to the
+ * caller that they need to adjust the weight.
+ *
+ * Taking over the leader role in this way is only allowed when triggered by an explicit user action. Using this API
+ * without such user action can make a production application non-compliant with the Thread Specification.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval OT_ERROR_NONE           Successfully became a leader and started a new partition.
+ * @retval OT_ERROR_NONE           Successfully became a leader and started a new partition, or was leader already.
  * @retval OT_ERROR_INVALID_STATE  Thread is disabled.
+ * @retval OT_ERROR_NOT_CAPABLE    Device cannot override the current leader due to its local leader weight being same
+ *                                 or smaller than current leader's weight, or device is not router eligible.
  */
 otError otThreadBecomeLeader(otInstance *aInstance);
 

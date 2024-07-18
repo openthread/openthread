@@ -374,6 +374,84 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+
+template <> otError Br::Process<Cmd("peers")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli br peers
+     * @code
+     * br peers
+     * rloc16:0x5c00 age:00:00:49
+     * rloc16:0xf800 age:00:01:51
+     * Done
+     * @endcode
+     * @par
+     * Get the list of peer BRs found in Network Data entries.
+     * `OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE` is required.
+     * Peer BRs are other devices within the Thread mesh that provide external IP connectivity. A device is considered
+     * to provide external IP connectivity if at least one of the following conditions is met regarding its Network
+     * Data entries:
+     * - It has added at least one external route entry.
+     * - It has added at least one prefix entry with both the default-route and on-mesh flags set.
+     * - It has added at least one domain prefix (with both the domain and on-mesh flags set).
+     * The list of peer BRs specifically excludes the current device, even if its is itself acting as a BR.
+     * Info per BR entry:
+     * - RLOC16 of the BR
+     * - Age as the duration interval since this BR appeared in Network Data. It is formatted as `{hh}:{mm}:{ss}` for
+     *   hours, minutes, seconds, if the duration is less than 24 hours. If the duration is 24 hours or more, the
+     *   format is `{dd}d.{hh}:{mm}:{ss}` for days, hours, minutes, seconds.
+     * @sa otBorderRoutingGetNextPrefixTableEntry
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        otBorderRoutingPrefixTableIterator   iterator;
+        otBorderRoutingPeerBorderRouterEntry peerBrEntry;
+        char                                 ageString[OT_DURATION_STRING_SIZE];
+
+        otBorderRoutingPrefixTableInitIterator(GetInstancePtr(), &iterator);
+
+        while (otBorderRoutingGetNextPeerBrEntry(GetInstancePtr(), &iterator, &peerBrEntry) == OT_ERROR_NONE)
+        {
+            otConvertDurationInSecondsToString(peerBrEntry.mAge, ageString, sizeof(ageString));
+            OutputLine("rloc16:0x%04x age:%s", peerBrEntry.mRloc16, ageString);
+        }
+    }
+    /**
+     * @cli br peers count
+     * @code
+     * br peers count
+     * 2 min-age:00:00:47
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderRoutingCountPeerBrs
+     */
+    else if (aArgs[0] == "count")
+    {
+        uint32_t minAge;
+        uint16_t count;
+        char     ageString[OT_DURATION_STRING_SIZE];
+
+        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+        count = otBorderRoutingCountPeerBrs(GetInstancePtr(), &minAge);
+        otConvertDurationInSecondsToString(minAge, ageString, sizeof(ageString));
+        OutputLine("%u min-age:%s", count, ageString);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+
 /**
  * @cli br prefixtable
  * @code
@@ -521,7 +599,7 @@ exit:
  * @cli br routers
  * @code
  * br routers
- * ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1) ms-since-rx:1505 reachable:yes
+ * ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1) ms-since-rx:1505 reachable:yes age:00:18:13
  * Done
  * @endcode
  * @par
@@ -535,7 +613,12 @@ exit:
  * - Milliseconds since last received message from this router
  * - Reachability flag: A router is marked as unreachable if it fails to respond to multiple Neighbor Solicitation
  *   probes.
+ * - Age: Duration interval since this router was first discovered. It is formatted as `{hh}:{mm}:{ss}` for  hours,
+ *   minutes, seconds, if the duration is less than 24 hours. If the duration is 24 hours or more, the format is
+ *   `{dd}d.{hh}:{mm}:{ss}` for days, hours, minutes, seconds.
  * - `(this BR)` is appended when the router is the local device itself.
+ * - `(peer BR)` is appended when the router is likely a peer BR connected to the same Thread mesh. This requires
+ *   `OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE`.
  * @sa otBorderRoutingGetNextRouterEntry
  */
 template <> otError Br::Process<Cmd("routers")>(Arg aArgs[])
@@ -565,13 +648,24 @@ void Br::OutputRouterInfo(const otBorderRoutingRouterEntry &aEntry, RouterOutput
 
     if (aMode == kLongVersion)
     {
-        OutputFormat(" ms-since-rx:%lu reachable:%s", ToUlong(aEntry.mMsecSinceLastUpdate),
-                     aEntry.mIsReachable ? "yes" : "no");
+        char ageString[OT_DURATION_STRING_SIZE];
+
+        otConvertDurationInSecondsToString(aEntry.mAge, ageString, sizeof(ageString));
+
+        OutputFormat(" ms-since-rx:%lu reachable:%s age:%s", ToUlong(aEntry.mMsecSinceLastUpdate),
+                     aEntry.mIsReachable ? "yes" : "no", ageString);
 
         if (aEntry.mIsLocalDevice)
         {
             OutputFormat(" (this BR)");
         }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+        if (aEntry.mIsPeerBr)
+        {
+            OutputFormat(" (peer BR)");
+        }
+#endif
     }
 
     OutputNewLine();
@@ -778,6 +872,9 @@ otError Br::Process(Arg aArgs[])
         CmdEntry("onlinkprefix"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
         CmdEntry("pd"),
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+        CmdEntry("peers"),
 #endif
         CmdEntry("prefixtable"),
         CmdEntry("raoptions"),

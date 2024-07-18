@@ -46,6 +46,7 @@
 #include "lib/spinel/logger.hpp"
 #include "lib/spinel/spinel_decoder.hpp"
 #include "lib/spinel/spinel_driver.hpp"
+#include "lib/spinel/spinel_helper.hpp"
 #include "lib/utils/utils.hpp"
 
 namespace ot {
@@ -109,13 +110,18 @@ RadioSpinel::RadioSpinel(void)
     , mVendorRestorePropertiesCallback(nullptr)
     , mVendorRestorePropertiesContext(nullptr)
 #endif
+    , mEnableRcpTimeSync(false)
     , mSpinelDriver(nullptr)
 {
     memset(&mRadioSpinelMetrics, 0, sizeof(mRadioSpinelMetrics));
     memset(&mCallbacks, 0, sizeof(mCallbacks));
 }
 
-void RadioSpinel::Init(bool aSkipRcpCompatibilityCheck, bool aSoftwareReset, SpinelDriver *aSpinelDriver)
+void RadioSpinel::Init(bool          aSkipRcpCompatibilityCheck,
+                       bool          aSoftwareReset,
+                       SpinelDriver *aSpinelDriver,
+                       otRadioCaps   aRequiredRadioCaps,
+                       bool          aEnableRcpTimeSync)
 {
     otError error = OT_ERROR_NONE;
     bool    supportsRcpApiVersion;
@@ -126,6 +132,8 @@ void RadioSpinel::Init(bool aSkipRcpCompatibilityCheck, bool aSoftwareReset, Spi
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mResetRadioOnStartup = aSoftwareReset;
 #endif
+
+    mEnableRcpTimeSync = aEnableRcpTimeSync;
 
     mSpinelDriver = aSpinelDriver;
     mSpinelDriver->SetFrameHandler(&HandleReceivedFrame, &HandleSavedFrame, this);
@@ -147,7 +155,7 @@ void RadioSpinel::Init(bool aSkipRcpCompatibilityCheck, bool aSoftwareReset, Spi
     if (!aSkipRcpCompatibilityCheck)
     {
         SuccessOrDie(CheckRcpApiVersion(supportsRcpApiVersion, supportsRcpMinHostApiVersion));
-        SuccessOrDie(CheckRadioCapabilities());
+        SuccessOrDie(CheckRadioCapabilities(aRequiredRadioCaps));
     }
 
     mRxRadioFrame.mPsdu  = mRxPsdu;
@@ -215,13 +223,11 @@ void RadioSpinel::InitializeCaps(bool &aSupportsRcpApiVersion, bool &aSupportsRc
     sSupportsLogCrashDump         = GetSpinelDriver().CoprocessorHasCap(SPINEL_CAP_RCP_LOG_CRASH_DUMP);
 }
 
-otError RadioSpinel::CheckRadioCapabilities(void)
+otError RadioSpinel::CheckRadioCapabilities(otRadioCaps aRequiredRadioCaps)
 {
-    const otRadioCaps kRequiredRadioCaps =
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-        OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING |
-#endif
-        OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES | OT_RADIO_CAPS_CSMA_BACKOFF;
+    static const char *const kAllRadioCapsStr[] = {"ack-timeout",     "energy-scan",   "tx-retries", "CSMA-backoff",
+                                                   "sleep-to-tx",     "tx-security",   "tx-timing",  "rx-timing",
+                                                   "rx-on-when-idle", "tx-frame-power"};
 
     otError      error = OT_ERROR_NONE;
     unsigned int radioCaps;
@@ -229,20 +235,18 @@ otError RadioSpinel::CheckRadioCapabilities(void)
     EXPECT_NO_ERROR(error = Get(SPINEL_PROP_RADIO_CAPS, SPINEL_DATATYPE_UINT_PACKED_S, &radioCaps));
     sRadioCaps = static_cast<otRadioCaps>(radioCaps);
 
-    if ((sRadioCaps & kRequiredRadioCaps) != kRequiredRadioCaps)
+    if ((sRadioCaps & aRequiredRadioCaps) != aRequiredRadioCaps)
     {
-        otRadioCaps missingCaps = (sRadioCaps & kRequiredRadioCaps) ^ kRequiredRadioCaps;
+        otRadioCaps missingCaps = (sRadioCaps & aRequiredRadioCaps) ^ aRequiredRadioCaps;
+        LogCrit("RCP is missing required capabilities: ");
 
-        // missingCaps may be an unused variable when LogCrit is blank
-        // avoid compiler warning in that case
-        OT_UNUSED_VARIABLE(missingCaps);
-
-        LogCrit("RCP is missing required capabilities: %s%s%s%s%s",
-                (missingCaps & OT_RADIO_CAPS_ACK_TIMEOUT) ? "ack-timeout " : "",
-                (missingCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) ? "tx-retries " : "",
-                (missingCaps & OT_RADIO_CAPS_CSMA_BACKOFF) ? "CSMA-backoff " : "",
-                (missingCaps & OT_RADIO_CAPS_TRANSMIT_SEC) ? "tx-security " : "",
-                (missingCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) ? "tx-timing " : "");
+        for (unsigned long i = 0; i < sizeof(kAllRadioCapsStr) / sizeof(kAllRadioCapsStr[0]); i++)
+        {
+            if (missingCaps & (1 << i))
+            {
+                LogCrit("    %s", kAllRadioCapsStr[i]);
+            }
+        }
 
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
@@ -792,7 +796,11 @@ void RadioSpinel::Process(const void *aContext)
 
     ProcessRadioStateMachine();
     RecoverFromRcpFailure();
-    CalcRcpTimeOffset();
+
+    if (mEnableRcpTimeSync)
+    {
+        CalcRcpTimeOffset();
+    }
 }
 
 otError RadioSpinel::SetPromiscuous(bool aEnable)
@@ -1796,7 +1804,7 @@ void RadioSpinel::PlatDiagOutput(const char *aFormat, ...)
     va_end(args);
 }
 
-#endif
+#endif // OPENTHREAD_CONFIG_DIAG_ENABLE
 
 uint32_t RadioSpinel::GetRadioChannelMask(bool aPreferred)
 {
@@ -1843,7 +1851,6 @@ otRadioState RadioSpinel::GetState(void) const
 
 void RadioSpinel::CalcRcpTimeOffset(void)
 {
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     otError        error = OT_ERROR_NONE;
     uint64_t       localTxTimestamp;
     uint64_t       localRxTimestamp;
@@ -1899,7 +1906,6 @@ void RadioSpinel::CalcRcpTimeOffset(void)
 
 exit:
     LogIfFail("Error calculating RCP time offset: %s", error);
-#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 }
 
 uint64_t RadioSpinel::GetNow(void) { return (mIsTimeSynced) ? (otPlatTimeGet() + mRadioTimeOffset) : UINT64_MAX; }
@@ -2177,7 +2183,10 @@ void RadioSpinel::RestoreProperties(void)
     }
 #endif
 
-    CalcRcpTimeOffset();
+    if (mEnableRcpTimeSync)
+    {
+        CalcRcpTimeOffset();
+    }
 }
 #endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 
@@ -2337,83 +2346,6 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-
-otError RadioSpinel::SpinelStatusToOtError(spinel_status_t aStatus)
-{
-    otError ret;
-
-    switch (aStatus)
-    {
-    case SPINEL_STATUS_OK:
-        ret = OT_ERROR_NONE;
-        break;
-
-    case SPINEL_STATUS_FAILURE:
-        ret = OT_ERROR_FAILED;
-        break;
-
-    case SPINEL_STATUS_DROPPED:
-        ret = OT_ERROR_DROP;
-        break;
-
-    case SPINEL_STATUS_NOMEM:
-        ret = OT_ERROR_NO_BUFS;
-        break;
-
-    case SPINEL_STATUS_BUSY:
-        ret = OT_ERROR_BUSY;
-        break;
-
-    case SPINEL_STATUS_PARSE_ERROR:
-        ret = OT_ERROR_PARSE;
-        break;
-
-    case SPINEL_STATUS_INVALID_ARGUMENT:
-        ret = OT_ERROR_INVALID_ARGS;
-        break;
-
-    case SPINEL_STATUS_UNIMPLEMENTED:
-        ret = OT_ERROR_NOT_IMPLEMENTED;
-        break;
-
-    case SPINEL_STATUS_INVALID_STATE:
-        ret = OT_ERROR_INVALID_STATE;
-        break;
-
-    case SPINEL_STATUS_NO_ACK:
-        ret = OT_ERROR_NO_ACK;
-        break;
-
-    case SPINEL_STATUS_CCA_FAILURE:
-        ret = OT_ERROR_CHANNEL_ACCESS_FAILURE;
-        break;
-
-    case SPINEL_STATUS_ALREADY:
-        ret = OT_ERROR_ALREADY;
-        break;
-
-    case SPINEL_STATUS_PROP_NOT_FOUND:
-        ret = OT_ERROR_NOT_IMPLEMENTED;
-        break;
-
-    case SPINEL_STATUS_ITEM_NOT_FOUND:
-        ret = OT_ERROR_NOT_FOUND;
-        break;
-
-    default:
-        if (aStatus >= SPINEL_STATUS_STACK_NATIVE__BEGIN && aStatus <= SPINEL_STATUS_STACK_NATIVE__END)
-        {
-            ret = static_cast<otError>(aStatus - SPINEL_STATUS_STACK_NATIVE__BEGIN);
-        }
-        else
-        {
-            ret = OT_ERROR_FAILED;
-        }
-        break;
-    }
-
-    return ret;
-}
 
 } // namespace Spinel
 } // namespace ot

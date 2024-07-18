@@ -51,15 +51,15 @@
 #include <openthread/netdata.h>
 #include <openthread/ping_sender.h>
 #include <openthread/sntp.h>
-#if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
 #include <openthread/tcp.h>
-#endif
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
 #include <openthread/udp.h>
 
 #include "cli/cli_bbr.hpp"
 #include "cli/cli_br.hpp"
+#include "cli/cli_coap.hpp"
+#include "cli/cli_coap_secure.hpp"
 #include "cli/cli_commissioner.hpp"
 #include "cli/cli_config.h"
 #include "cli/cli_dataset.hpp"
@@ -77,12 +77,6 @@
 #include "cli/cli_tcp.hpp"
 #include "cli/cli_udp.hpp"
 #include "cli/cli_utils.hpp"
-#if OPENTHREAD_CONFIG_COAP_API_ENABLE
-#include "cli/cli_coap.hpp"
-#endif
-#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-#include "cli/cli_coap_secure.hpp"
-#endif
 
 #include "common/array.hpp"
 #include "common/code_utils.hpp"

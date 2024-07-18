@@ -72,6 +72,7 @@ set(COMMON_SOURCES
     spinel_buffer.cpp
     spinel_decoder.cpp
     spinel_encoder.cpp
+    spinel_helper.cpp
 )
 
 set(OT_SPINEL_VENDOR_HOOK_SOURCE "" CACHE STRING "set vendor hook source file for Spinel")
@@ -94,6 +95,7 @@ target_sources(openthread-radio-spinel
         logger.cpp
         radio_spinel.cpp
         spinel_driver.cpp
+        spinel_helper.cpp
 )
 target_sources(openthread-spinel-ncp PRIVATE ${COMMON_SOURCES})
 target_sources(openthread-spinel-rcp PRIVATE ${COMMON_SOURCES})

@@ -199,8 +199,7 @@ Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
 
             if (error != kErrorNone)
             {
-                LogWarn("ApplyConfiguration() Failed to set channel to %d (%s)", channel, ErrorToString(error));
-                ExitNow();
+                LogCrit("Failed to set channel to %u when applying dataset: %s", channel, ErrorToString(error));
             }
 
             break;

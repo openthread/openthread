@@ -79,9 +79,97 @@ class RcpCaps(object):
         self.__ref.diag_stop()
         self.__dut.diag_stop()
 
+    def test_csl(self):
+        self.__dataset = self.__get_default_dataset()
+        self.__test_csl_transmitter()
+
+    def test_data_poll(self):
+        self.__dataset = self.__get_default_dataset()
+        self.__test_data_poll_parent()
+        self.__test_data_poll_child()
+
     #
     # Private methods
     #
+    def __get_default_dataset(self):
+        return self.__dut.create_dataset(channel=20, network_key='00112233445566778899aabbccddcafe')
+
+    def __test_csl_transmitter(self):
+        packets = 10
+
+        self.__dut.factory_reset()
+        self.__ref.factory_reset()
+
+        self.__dut.join(self.__dataset)
+        self.__dut.wait_for('state', 'leader')
+
+        # Set the reference device as an SSED
+        self.__ref.set_mode('-')
+        self.__ref.config_csl(channel=15, period=320000, timeout=100)
+        self.__ref.join(self.__dataset)
+        self.__ref.wait_for('state', 'child')
+
+        child_table = self.__dut.get_child_table()
+        ret = len(child_table) == 1 and child_table[1]['csl']
+
+        if ret:
+            ref_mleid = self.__ref.get_ipaddr_mleid()
+            result = self.__dut.ping(ref_mleid, count=packets, interval=1)
+            ret = result['transmitted_packets'] == result['received_packets'] == packets
+
+        self.__dut.leave()
+        self.__ref.leave()
+
+        self.__output_format_bool('CSL Transmitter', ret)
+
+    def __test_data_poll_parent(self):
+        packets = 10
+
+        self.__dut.factory_reset()
+        self.__ref.factory_reset()
+
+        self.__dut.join(self.__dataset)
+        self.__dut.wait_for('state', 'leader')
+
+        # Set the reference device as an SED
+        self.__ref.set_mode('-')
+        self.__ref.set_poll_period(500)
+        self.__ref.join(self.__dataset)
+        self.__ref.wait_for('state', 'child')
+
+        dut_mleid = self.__dut.get_ipaddr_mleid()
+        result = self.__ref.ping(dut_mleid, count=packets, interval=1)
+
+        self.__dut.leave()
+        self.__ref.leave()
+
+        ret = result['transmitted_packets'] == result['received_packets'] == packets
+        self.__output_format_bool('Data Poll Parent', ret)
+
+    def __test_data_poll_child(self):
+        packets = 10
+
+        self.__dut.factory_reset()
+        self.__ref.factory_reset()
+
+        self.__ref.join(self.__dataset)
+        self.__ref.wait_for('state', 'leader')
+
+        # Set the DUT as an SED
+        self.__dut.set_mode('-')
+        self.__dut.set_poll_period(500)
+        self.__dut.join(self.__dataset)
+        self.__dut.wait_for('state', 'child')
+
+        dut_mleid = self.__dut.get_ipaddr_mleid()
+        result = self.__ref.ping(dut_mleid, count=packets, interval=1)
+
+        self.__dut.leave()
+        self.__ref.leave()
+
+        ret = result['transmitted_packets'] == result['received_packets'] == packets
+        self.__output_format_bool('Data Poll Child', ret)
+
     def __test_diag_channel(self):
         channel = 20
         commands = ['diag channel', f'diag channel {channel}']
@@ -379,11 +467,27 @@ def parse_arguments():
                                      epilog=epilog_msg)
 
     parser.add_argument(
+        '-c',
+        '--csl',
+        action='store_true',
+        default=False,
+        help='test whether the RCP supports CSL transmitter',
+    )
+
+    parser.add_argument(
         '-d',
         '--diag-commands',
         action='store_true',
         default=False,
         help='test whether the RCP supports all diag commands',
+    )
+
+    parser.add_argument(
+        '-p',
+        '--data-poll',
+        action='store_true',
+        default=False,
+        help='test whether the RCP supports data poll',
     )
 
     parser.add_argument(
@@ -408,6 +512,12 @@ def main():
 
     if arguments.diag_commands is True:
         rcp_caps.test_diag_commands()
+
+    if arguments.csl is True:
+        rcp_caps.test_csl()
+
+    if arguments.data_poll is True:
+        rcp_caps.test_data_poll()
 
 
 if __name__ == '__main__':

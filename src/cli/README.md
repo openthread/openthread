@@ -3573,12 +3573,45 @@ offline, disabled, detached, child, router or leader
 Done
 ```
 
-### state <state>
+### state leader
 
-Try to switch to state `detached`, `child`, `router` or `leader`.
+Become a leader and start a new partition
+
+If the device is not attached, this command will force the device to start as the leader of the network. This use case is only intended for testing and demo purposes, and using the API while the device is detached can make a production application non-compliant with the Thread Specification.
+
+If the device is already attached, this API can be used to try to take over as the leader, creating a new partition. For this to work, the local leader weight (`leaderweight`) must be larger than the weight of the current leader (from `leaderdata`). If it is not, error `NotCapable` is outputted to indicate to the caller that they need to adjust the weight.
+
+Taking over the leader role in this way is only allowed when triggered by an explicit user action. Using this API without such user action can make a production application non-compliant with the Thread Specification.
 
 ```bash
+> leaderdata
+Partition ID: 1886755069
+Weighting: 65
+Data Version: 178
+Stable Data Version: 48
+Leader Router ID: 59
+Done
+
+> leaderweight
+64
+Done
+
 > state leader
+Error 27: NotCapable
+
+> leaderweight 66
+Done
+
+> state leader
+Done
+```
+
+### state <state>
+
+Try to switch to state `detached`, `child`, `router`.
+
+```bash
+> state detached
 Done
 ```
 

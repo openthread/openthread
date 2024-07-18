@@ -1277,6 +1277,14 @@ public:
     }
 
     /**
+     * Sets TX power to send the frame.
+     *
+     * @param[in]  aTxPower  The tx power used for transmission.
+     *
+     */
+    void SetTxPower(int8_t aTxPower) { mInfo.mTxInfo.mTxPower = aTxPower; }
+
+    /**
      * Gets the RX channel after frame TX is done.
      *
      * @returns The RX channel after frame TX is done.

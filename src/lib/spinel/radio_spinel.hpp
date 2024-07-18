@@ -163,9 +163,16 @@ public:
      * @param[in]  aSoftwareReset              When doing RCP recovery, TRUE to try software reset first, FALSE to
      *                                         directly do a hardware reset.
      * @param[in]  aSpinelDriver               A pointer to the spinel driver instance that this object depends on.
+     * @param[in]  aRequiredRadioCaps          The required radio capabilities. RadioSpinel will check if RCP has
+     *                                         the required capabilities during initiailization.
+     * @param[in]  aEnableRcpTimeSync          TRUE to enable RCP time sync, FALSE to not enable.
      *
      */
-    void Init(bool aSkipRcpCompatibilityCheck, bool aSoftwareReset, SpinelDriver *aSpinelDriver);
+    void Init(bool          aSkipRcpCompatibilityCheck,
+              bool          aSoftwareReset,
+              SpinelDriver *aSpinelDriver,
+              otRadioCaps   aRequiredRadioCaps,
+              bool          aEnableRcpTimeSync);
 
     /**
      * This method sets the notification callbacks.
@@ -1017,28 +1024,6 @@ public:
     otError SetChannelTargetPower(uint8_t aChannel, int16_t aTargetPower);
 #endif
 
-    /**
-     * Convert the Spinel status code to OpenThread error code.
-     *
-     * @param[in]  aStatus  The Spinel status code.
-     *
-     * @retval  OT_ERROR_NONE                    The operation has completed successfully.
-     * @retval  OT_ERROR_DROP                    The packet was dropped.
-     * @retval  OT_ERROR_NO_BUFS                 The operation has been prevented due to memory pressure.
-     * @retval  OT_ERROR_BUSY                    The device is currently performing a mutuallyexclusive operation.
-     * @retval  OT_ERROR_PARSE                   An error has occurred while parsing the command.
-     * @retval  OT_ERROR_INVALID_ARGS            An argument to the given operation is invalid.
-     * @retval  OT_ERROR_NOT_IMPLEMENTED         The given operation has not been implemented.
-     * @retval  OT_ERROR_INVALID_STATE           The given operation is invalid for the current state of the device.
-     * @retval  OT_ERROR_NO_ACK                  The packet was not acknowledged.
-     * @retval  OT_ERROR_NOT_FOUND               The given property is not recognized.
-     * @retval  OT_ERROR_FAILED                  The given operation has failed for some undefined reason.
-     * @retval  OT_ERROR_CHANNEL_ACCESS_FAILURE  The packet was not sent due to a CCA failure.
-     * @retval  OT_ERROR_ALREADY                 The operation is already in progress or the property was already set
-     *                                           to the given value.
-     */
-    static otError SpinelStatusToOtError(spinel_status_t aStatus);
-
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     /**
      * Restore the properties of Radio Co-processor (RCP).
@@ -1115,7 +1100,7 @@ private:
     SpinelDriver &GetSpinelDriver(void) const;
 
     otError CheckSpinelVersion(void);
-    otError CheckRadioCapabilities(void);
+    otError CheckRadioCapabilities(otRadioCaps aRequiredRadioCaps);
     otError CheckRcpApiVersion(bool aSupportsRcpApiVersion, bool aSupportsRcpMinHostApiVersion);
     void    InitializeCaps(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostApiVersion);
 
@@ -1319,6 +1304,8 @@ private:
     otRadioSpinelVendorRestorePropertiesCallback mVendorRestorePropertiesCallback;
     void                                        *mVendorRestorePropertiesContext;
 #endif
+
+    bool mEnableRcpTimeSync;
 
     SpinelDriver *mSpinelDriver;
 };

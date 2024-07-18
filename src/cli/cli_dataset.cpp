@@ -508,6 +508,19 @@ otError Dataset::ParseSecurityPolicy(Arg *&aArgs, otOperationalDataset &aDataset
     return ParseSecurityPolicy(aDataset.mSecurityPolicy, aArgs);
 }
 
+otError Dataset::ParseTlvs(Arg &aArg, otOperationalDatasetTlvs &aDatasetTlvs)
+{
+    otError  error;
+    uint16_t length;
+
+    length = sizeof(aDatasetTlvs.mTlvs);
+    SuccessOrExit(error = aArg.ParseAsHexString(length, aDatasetTlvs.mTlvs));
+    aDatasetTlvs.mLength = static_cast<uint8_t>(length);
+
+exit:
+    return error;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 
 otError Dataset::ProcessCommand(const ComponentMapper &aMapper, Arg aArgs[])
@@ -617,10 +630,7 @@ template <> otError Dataset::Process<Cmd("init")>(Arg aArgs[])
 #endif
     else if (aArgs[0] == "tlvs")
     {
-        uint16_t size = sizeof(sDatasetTlvs.mTlvs);
-
-        SuccessOrExit(error = aArgs[1].ParseAsHexString(size, sDatasetTlvs.mTlvs));
-        sDatasetTlvs.mLength = static_cast<uint8_t>(size);
+        ExitNow(error = ParseTlvs(aArgs[1], sDatasetTlvs));
     }
 
 exit:
@@ -760,12 +770,12 @@ template <> otError Dataset::Process<Cmd("commit")>(Arg aArgs[])
 
 template <> otError Dataset::Process<Cmd("mgmtsetcommand")>(Arg aArgs[])
 {
-    otError              error = OT_ERROR_NONE;
-    otOperationalDataset dataset;
-    uint8_t              tlvs[128];
-    uint8_t              tlvsLength = 0;
+    otError                  error = OT_ERROR_NONE;
+    otOperationalDataset     dataset;
+    otOperationalDatasetTlvs tlvs;
 
     ClearAllBytes(dataset);
+    ClearAllBytes(tlvs);
 
     for (Arg *arg = &aArgs[1]; !arg->IsEmpty();)
     {
@@ -779,12 +789,8 @@ template <> otError Dataset::Process<Cmd("mgmtsetcommand")>(Arg aArgs[])
         }
         else if (*arg == "-x")
         {
-            uint16_t length;
-
             arg++;
-            length = sizeof(tlvs);
-            SuccessOrExit(error = arg->ParseAsHexString(length, tlvs));
-            tlvsLength = static_cast<uint8_t>(length);
+            SuccessOrExit(error = ParseTlvs(*arg, tlvs));
             arg++;
         }
         else
@@ -811,8 +817,9 @@ template <> otError Dataset::Process<Cmd("mgmtsetcommand")>(Arg aArgs[])
      */
     if (aArgs[0] == "active")
     {
-        error = otDatasetSendMgmtActiveSet(GetInstancePtr(), &dataset, tlvs, tlvsLength, /* aCallback */ nullptr,
-                                           /* aContext */ nullptr);
+        error =
+            otDatasetSendMgmtActiveSet(GetInstancePtr(), &dataset, tlvs.mTlvs, tlvs.mLength, /* aCallback */ nullptr,
+                                       /* aContext */ nullptr);
     }
     /**
      * @cli dataset mgmtsetcommand pending
@@ -832,8 +839,9 @@ template <> otError Dataset::Process<Cmd("mgmtsetcommand")>(Arg aArgs[])
      */
     else if (aArgs[0] == "pending")
     {
-        error = otDatasetSendMgmtPendingSet(GetInstancePtr(), &dataset, tlvs, tlvsLength, /* aCallback */ nullptr,
-                                            /* aContext */ nullptr);
+        error =
+            otDatasetSendMgmtPendingSet(GetInstancePtr(), &dataset, tlvs.mTlvs, tlvs.mLength, /* aCallback */ nullptr,
+                                        /* aContext */ nullptr);
     }
     else
     {
@@ -848,12 +856,12 @@ template <> otError Dataset::Process<Cmd("mgmtgetcommand")>(Arg aArgs[])
 {
     otError                        error = OT_ERROR_NONE;
     otOperationalDatasetComponents datasetComponents;
-    uint8_t                        tlvs[32];
-    uint8_t                        tlvsLength        = 0;
+    otOperationalDatasetTlvs       tlvs;
     bool                           destAddrSpecified = false;
     otIp6Address                   address;
 
     ClearAllBytes(datasetComponents);
+    ClearAllBytes(tlvs);
 
     for (Arg *arg = &aArgs[1]; !arg->IsEmpty(); arg++)
     {
@@ -865,12 +873,8 @@ template <> otError Dataset::Process<Cmd("mgmtgetcommand")>(Arg aArgs[])
         }
         else if (*arg == "-x")
         {
-            uint16_t length;
-
             arg++;
-            length = sizeof(tlvs);
-            SuccessOrExit(error = arg->ParseAsHexString(length, tlvs));
-            tlvsLength = static_cast<uint8_t>(length);
+            SuccessOrExit(error = ParseTlvs(*arg, tlvs));
         }
         else if (*arg == "address")
         {
@@ -911,7 +915,7 @@ template <> otError Dataset::Process<Cmd("mgmtgetcommand")>(Arg aArgs[])
      */
     if (aArgs[0] == "active")
     {
-        error = otDatasetSendMgmtActiveGet(GetInstancePtr(), &datasetComponents, tlvs, tlvsLength,
+        error = otDatasetSendMgmtActiveGet(GetInstancePtr(), &datasetComponents, tlvs.mTlvs, tlvs.mLength,
                                            destAddrSpecified ? &address : nullptr);
     }
     /**
@@ -936,7 +940,7 @@ template <> otError Dataset::Process<Cmd("mgmtgetcommand")>(Arg aArgs[])
      */
     else if (aArgs[0] == "pending")
     {
-        error = otDatasetSendMgmtPendingGet(GetInstancePtr(), &datasetComponents, tlvs, tlvsLength,
+        error = otDatasetSendMgmtPendingGet(GetInstancePtr(), &datasetComponents, tlvs.mTlvs, tlvs.mLength,
                                             destAddrSpecified ? &address : nullptr);
     }
     else
@@ -1086,41 +1090,22 @@ exit:
  */
 template <> otError Dataset::Process<Cmd("set")>(Arg aArgs[])
 {
-    otError                error = OT_ERROR_NONE;
-    MeshCoP::Dataset::Type datasetType;
+    otError                  error = OT_ERROR_NONE;
+    otOperationalDatasetTlvs datasetTlvs;
+
+    SuccessOrExit(error = ParseTlvs(aArgs[1], datasetTlvs));
 
     if (aArgs[0] == "active")
     {
-        datasetType = MeshCoP::Dataset::Type::kActive;
+        error = otDatasetSetActiveTlvs(GetInstancePtr(), &datasetTlvs);
     }
     else if (aArgs[0] == "pending")
     {
-        datasetType = MeshCoP::Dataset::Type::kPending;
+        error = otDatasetSetPendingTlvs(GetInstancePtr(), &datasetTlvs);
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
-    }
-
-    {
-        otOperationalDataset     dataset;
-        otOperationalDatasetTlvs datasetTlvs;
-        uint16_t                 tlvsLength = OT_OPERATIONAL_DATASET_MAX_LENGTH;
-
-        SuccessOrExit(error = aArgs[1].ParseAsHexString(tlvsLength, datasetTlvs.mTlvs));
-        datasetTlvs.mLength = static_cast<uint8_t>(tlvsLength);
-
-        SuccessOrExit(error = otDatasetParseTlvs(&datasetTlvs, &dataset));
-
-        switch (datasetType)
-        {
-        case MeshCoP::Dataset::Type::kActive:
-            SuccessOrExit(error = otDatasetSetActiveTlvs(GetInstancePtr(), &datasetTlvs));
-            break;
-        case MeshCoP::Dataset::Type::kPending:
-            SuccessOrExit(error = otDatasetSetPendingTlvs(GetInstancePtr(), &datasetTlvs));
-            break;
-        }
+        error = OT_ERROR_INVALID_ARGS;
     }
 
 exit:

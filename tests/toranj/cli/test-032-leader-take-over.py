@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#  Copyright (c) 2024, The OpenThread Authors.
+#  Copyright (c) 2023, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,10 @@ import time
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test description:
+
+# This test covers behavior of leader take over (an already attached device
+# trying to form their own partition and taking over the leader role).
 #
-# Two BRs on two different Thread networks.
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
 print('-' * 120)
@@ -43,70 +45,72 @@ print('Starting \'{}\''.format(test_name))
 # -----------------------------------------------------------------------------------------------------------------------
 # Creating `cli.Nodes` instances
 
-speedup = 60
+speedup = 25
 cli.Node.set_time_speedup_factor(speedup)
 
-br1 = cli.Node()
-br2 = cli.Node()
-
-WAIT_TIME = 5
-IF_INDEX = 1
+node1 = cli.Node()
+node2 = cli.Node()
+node3 = cli.Node()
+child2 = cli.Node()
 
 # -----------------------------------------------------------------------------------------------------------------------
-# Test implementation
+# Form topology
 
-# Start first BR with its own Thread network
+node1.form('lto')
+node2.join(node1)
+node3.join(node1)
 
-br1.form('net1')
-verify(br1.get_state() == 'leader')
+child2.allowlist_node(node2)
+child2.join(node2, cli.JOIN_TYPE_REED)
 
-br1.br_init(IF_INDEX, 1)
-br1.br_enable()
+verify(node1.get_state() == 'leader')
+verify(node2.get_state() == 'router')
+verify(node3.get_state() == 'router')
+verify(child2.get_state() == 'child')
 
-time.sleep(1)
-verify(br1.br_get_state() == 'running')
+# -----------------------------------------------------------------------------------------------------------------------
+# Test Implementation
 
-br1_local_omr = br1.br_get_local_omrprefix()
-br1_favored_omr = br1.br_get_favored_omrprefix().split()[0]
-verify(br1_local_omr == br1_favored_omr)
+node1.set_router_selection_jitter(1)
 
-br1_local_onlink = br1.br_get_local_onlinkprefix()
-br1_favored_onlink = br1.br_get_favored_onlinkprefix().split()[0]
-verify(br1_local_onlink == br1_favored_onlink)
+n1_weight = int(node1.get_leader_weight())
 
-# Start second BR with its own Thread network.
+node2.set_leader_weight(n1_weight)
 
-br2.form('net2')
-verify(br2.get_state() == 'leader')
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Make sure we get `NonCapable` if local leader weight same as current leader's weight
 
-br2.br_init(IF_INDEX, 1)
-br2.br_enable()
+error = None
+try:
+    node2.cli('state leader')
+except cli.CliError as e:
+    error = e
 
-time.sleep(1)
-verify(br2.br_get_state() == 'running')
+verify(error.message == 'NotCapable')
 
-br2_local_omr = br2.br_get_local_omrprefix()
-br2_favored_omr = br2.br_get_favored_omrprefix().split()[0]
-verify(br2_local_omr == br2_favored_omr)
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Update local leader weight and try to take over the leader role on `node2`.
 
-br2_local_onlink = br2.br_get_local_onlinkprefix()
-br2_favored_onlink = br2.br_get_favored_onlinkprefix().split()[0]
-verify(br2_local_onlink != br2_favored_onlink)
+node2.set_leader_weight(n1_weight + 1)
 
-# BR2 should see and favor the on-link prefix already advertised by BR1.
+old_partition_id = int(node2.get_partition_id())
 
-verify(br1_favored_onlink == br2_favored_onlink)
+node2.cli('state leader')
 
-# Check that the two BRs discover and track each other (not as peer BR since
-# connected to different networks).
+new_partition_id = int(node2.get_partition_id())
+verify(new_partition_id != old_partition_id)
 
-for br in [br1, br1]:
-    routers = br.br_get_routers()
-    verify(len(routers) > 0)
-    for router in routers:
-        verify('reachable:yes' in router)
-        verify('Stub:1' in router)
-        verify(not router.endswith('(peer BR)'))
+
+def check_leader_switch():
+    for node in [node1, node2, node3, child2]:
+        verify(int(node.get_partition_id()) == new_partition_id)
+    verify(node1.get_state() == 'router')
+    verify(node2.get_state() == 'leader')
+    verify(node3.get_state() == 'router')
+    verify(child2.get_state() == 'child')
+
+
+verify_within(check_leader_switch, 30)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

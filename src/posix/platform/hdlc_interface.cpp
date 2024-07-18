@@ -600,6 +600,20 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
         {
             tios.c_cflag |= CRTSCTS;
         }
+        else
+        {
+#ifndef __APPLE__
+            int flags;
+#endif
+
+            tios.c_cflag &= ~(CRTSCTS);
+
+#ifndef __APPLE__
+            // Deassert DTR and RTS
+            flags = TIOCM_DTR | TIOCM_RTS;
+            VerifyOrExit(ioctl(fd, TIOCMBIC, &flags) != -1, perror("tiocmbic"));
+#endif
+        }
 
         VerifyOrExit((rval = cfsetspeed(&tios, static_cast<speed_t>(speed))) == 0, perror("cfsetspeed"));
         rval = tcsetattr(fd, TCSANOW, &tios);

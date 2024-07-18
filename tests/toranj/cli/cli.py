@@ -339,6 +339,12 @@ class Node(object):
     def add_ip_maddr(self, maddr):
         return self._cli_no_output('ipmaddr add', maddr)
 
+    def get_leader_weight(self):
+        return self._cli_single_output('leaderweight')
+
+    def set_leader_weight(self, weight):
+        self._cli_no_output('leaderweight', weight)
+
     def get_pollperiod(self):
         return self._cli_single_output('pollperiod')
 
@@ -468,6 +474,9 @@ class Node(object):
 
     def get_mle_counter(self):
         return self.cli('counters mle')
+
+    def get_ip_counters(self):
+        return Node.parse_list(self.cli('counters ip'))
 
     def get_br_counter_unicast_outbound_packets(self):
         outputs = self.cli('counters br')
@@ -804,6 +813,12 @@ class Node(object):
 
     def br_get_routers(self):
         return self.cli('br routers')
+
+    def br_get_peer_brs(self):
+        return self.cli('br peers')
+
+    def br_count_peers(self):
+        return self._cli_single_output('br peers count')
 
     # ------------------------------------------------------------------------------------------------------------------
     # Helper methods
