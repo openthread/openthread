@@ -339,6 +339,12 @@ class Node(object):
     def add_ip_maddr(self, maddr):
         return self._cli_no_output('ipmaddr add', maddr)
 
+    def get_leader_weight(self):
+        return self._cli_single_output('leaderweight')
+
+    def set_leader_weight(self, weight):
+        self._cli_no_output('leaderweight', weight)
+
     def get_pollperiod(self):
         return self._cli_single_output('pollperiod')
 

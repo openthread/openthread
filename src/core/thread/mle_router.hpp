@@ -135,14 +135,22 @@ public:
     Error BecomeRouter(ThreadStatusTlv::Status aStatus);
 
     /**
-     * Causes the Thread interface to become a Leader and start a new partition.
+     * Becomes a leader and starts a new partition.
+     *
+     * If the device is already attached, this method can be used to attempt to take over as the leader, creating a new
+     * partition. For this to work, the local leader weight must be greater than the weight of the current leader. The
+     * @p aCheckWeight can be used to ensure that this check is performed.
+     *
+     * @param[in] aCheckWeight      Check that the local leader weight is larger than the weight of the current leader.
      *
      * @retval kErrorNone           Successfully become a Leader and started a new partition.
-     * @retval kErrorNotCapable     Device is not capable of becoming a leader
-     * @retval kErrorInvalidState   Thread is not enabled
+     * @retval kErrorInvalidState   Thread is not enabled.
+     * @retval kErrorNotCapable     Device is not capable of becoming a leader (not router eligible), or
+     *                              @p aCheckWeight is true and cannot override the current leader due to its local
+     *                              leader weight being same or smaller than current leader's weight.
      *
      */
-    Error BecomeLeader(void);
+    Error BecomeLeader(bool aCheckWeight);
 
 #if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
     /**
