@@ -2054,6 +2054,75 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_UNICAST_ADDRESS_TABLE>(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    for (const otNetifAddress *address = otIp6GetUnicastAddresses(mInstance); address; address = address->mNext)
+    {
+        SuccessOrExit(error = mEncoder.OpenStruct());
+
+        SuccessOrExit(error = mEncoder.WriteIp6Address(address->mAddress));
+        SuccessOrExit(error = mEncoder.WriteUint8(address->mPrefixLength));
+        SuccessOrExit(error = mEncoder.WriteUint8(address->mScopeOverrideValid
+                                                      ? address->mScopeOverride
+                                                      : AsCoreType(&address->mAddress).GetScope()));
+        SuccessOrExit(error = mEncoder.WriteBool(address->mPreferred));
+        SuccessOrExit(error = mEncoder.WriteBool(address->mMeshLocal));
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_IPV6_UNICAST_ADDRESS_TABLE>(void)
+{
+    otError        error = OT_ERROR_NONE;
+    otNetifAddress netifAddr;
+    bool           preferred;
+    bool           meshLocal;
+    uint8_t        scope;
+
+    SuccessOrExit(error = mDecoder.ReadIp6Address(netifAddr.mAddress));
+    SuccessOrExit(error = mDecoder.ReadUint8(netifAddr.mPrefixLength));
+    SuccessOrExit(error = mDecoder.ReadUint8(scope));
+    SuccessOrExit(error = mDecoder.ReadBool(preferred));
+    SuccessOrExit(error = mDecoder.ReadBool(meshLocal));
+
+    netifAddr.mScopeOverride      = scope;
+    netifAddr.mScopeOverrideValid = true;
+    netifAddr.mAddressOrigin      = OT_ADDRESS_ORIGIN_MANUAL;
+    netifAddr.mPreferred          = preferred;
+    netifAddr.mMeshLocal          = meshLocal;
+    netifAddr.mValid              = true;
+
+    error = otIp6AddUnicastAddress(mInstance, &netifAddr);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_IPV6_UNICAST_ADDRESS_TABLE>(void)
+{
+    otError             error = OT_ERROR_NONE;
+    const otIp6Address *addrPtr;
+
+    SuccessOrExit(error = mDecoder.ReadIp6Address(addrPtr));
+
+    error = otIp6RemoveUnicastAddress(mInstance, addrPtr);
+
+    // If address was not on the list, "remove" command is successful.
+    if (error == OT_ERROR_NOT_FOUND)
+    {
+        error = OT_ERROR_NONE;
+    }
+
+exit:
+    return error;
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD_MODE>(void)
 {
     spinel_ipv6_icmp_ping_offload_mode_t mode = SPINEL_IPV6_ICMP_PING_OFFLOAD_DISABLED;
@@ -4591,6 +4660,8 @@ void NcpBase::ProcessThreadChangedFlags(void)
     } kFlags[] = {
         {OT_CHANGED_IP6_ADDRESS_ADDED, SPINEL_PROP_IPV6_ADDRESS_TABLE},
         {OT_CHANGED_IP6_ADDRESS_REMOVED, SPINEL_PROP_IPV6_ADDRESS_TABLE},
+        {OT_CHANGED_IP6_ADDRESS_ADDED, SPINEL_PROP_IPV6_UNICAST_ADDRESS_TABLE},
+        {OT_CHANGED_IP6_ADDRESS_REMOVED, SPINEL_PROP_IPV6_UNICAST_ADDRESS_TABLE},
         {OT_CHANGED_THREAD_ROLE, SPINEL_PROP_NET_ROLE},
         {OT_CHANGED_THREAD_LL_ADDR, SPINEL_PROP_IPV6_LL_ADDR},
         {OT_CHANGED_THREAD_ML_ADDR, SPINEL_PROP_IPV6_ML_ADDR},
@@ -4607,6 +4678,8 @@ void NcpBase::ProcessThreadChangedFlags(void)
         {OT_CHANGED_THREAD_EXT_PANID, SPINEL_PROP_NET_XPANID},
         {OT_CHANGED_THREAD_RLOC_ADDED, SPINEL_PROP_IPV6_ADDRESS_TABLE},
         {OT_CHANGED_THREAD_RLOC_REMOVED, SPINEL_PROP_IPV6_ADDRESS_TABLE},
+        {OT_CHANGED_THREAD_RLOC_ADDED, SPINEL_PROP_IPV6_UNICAST_ADDRESS_TABLE},
+        {OT_CHANGED_THREAD_RLOC_REMOVED, SPINEL_PROP_IPV6_UNICAST_ADDRESS_TABLE},
         {OT_CHANGED_NETWORK_KEY, SPINEL_PROP_NET_NETWORK_KEY},
         {OT_CHANGED_PSKC, SPINEL_PROP_NET_PSKC},
         {OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL, SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL},

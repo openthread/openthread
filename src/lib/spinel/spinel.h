@@ -3415,10 +3415,12 @@ enum
      */
     SPINEL_PROP_IPV6_ML_PREFIX = SPINEL_PROP_IPV6__BEGIN + 2,
 
-    /// IPv6 (Unicast) Address Table
+    /// IPv6 (Unicast) Address Table - Deprecated.
     /** Format: `A(t(6CLLC))`
      *
      * This property provides all unicast addresses.
+     *
+     * This property is replaced by SPINEL_PROP_IPV6_UNICAST_ADDRESS_TABLE.
      *
      * Array of structures containing:
      *
@@ -3471,6 +3473,22 @@ enum
      *
      */
     SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD_MODE = SPINEL_PROP_IPV6__BEGIN + 7, ///< [b]
+
+    /// IPv6 (Unicast) Address Table
+    /** Format: `A(t(6CCbb))`
+     *
+     * This property provides all unicast addresses and their information.
+     *
+     * Array of structures containing:
+     *
+     *  `6`: IPv6 Address
+     *  `C`: Network Prefix Length (in bits)
+     *  `C`: Scope
+     *  `b`: Is Preferred
+     *  `b`: Is Mesh Local
+     *
+     */
+    SPINEL_PROP_IPV6_UNICAST_ADDRESS_TABLE = SPINEL_PROP_IPV6__BEGIN + 8,
 
     SPINEL_PROP_IPV6__END = 0x70,
 
