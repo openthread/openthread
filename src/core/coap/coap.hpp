@@ -791,6 +791,14 @@ public:
      *
      */
     const MessageQueue &GetCachedResponses(void) const { return mResponsesQueue.GetResponses(); }
+    
+    /**
+     * Evicts a message from the pending requests queue.
+     *
+     * @retval kErrorNone       Successfully evicted a message.
+     * @retval kErrorNotFound   No message in the queue to evict.
+     */
+    otError EvictMessage(void);
 
 protected:
     /**
