@@ -810,8 +810,7 @@ Mac::TxFrame *MeshForwarder::HandleFrameRequest(Mac::TxFrames &aTxFrames)
             mSendMessage->SetLinkSecurityEnabled(true);
         }
 #endif
-        mMessageNextOffset =
-            PrepareDataFrame(*frame, *mSendMessage, mMacAddrs, mAddMeshHeader, mMeshSource, mMeshDest, addFragHeader);
+        mMessageNextOffset = PrepareDataFrame(*frame, *mSendMessage, mMacAddrs, mAddMeshHeader, addFragHeader);
 
         if ((mSendMessage->GetSubType() == Message::kSubTypeMleChildIdRequest) && mSendMessage->IsLinkSecurityEnabled())
         {
@@ -898,8 +897,6 @@ uint16_t MeshForwarder::PrepareDataFrame(Mac::TxFrame         &aFrame,
                                          Message              &aMessage,
                                          const Mac::Addresses &aMacAddrs,
                                          bool                  aAddMeshHeader,
-                                         uint16_t              aMeshSource,
-                                         uint16_t              aMeshDest,
                                          bool                  aAddFragHeader)
 {
     Mac::Frame::SecurityLevel securityLevel;
@@ -986,7 +983,7 @@ start:
 
         frameBuilder.Init(aFrame.GetPayload(), maxPayloadLength);
 
-        meshHeader.Init(aMeshSource, aMeshDest, kMeshHeaderHopsLeft);
+        meshHeader.Init(mMeshSource, mMeshDest, kMeshHeaderHopsLeft);
 
         IgnoreError(meshHeader.AppendTo(frameBuilder));
     }
@@ -1020,8 +1017,8 @@ start:
 
         if (aAddMeshHeader)
         {
-            macAddrs.mSource.SetShort(aMeshSource);
-            macAddrs.mDestination.SetShort(aMeshDest);
+            macAddrs.mSource.SetShort(mMeshSource);
+            macAddrs.mDestination.SetShort(mMeshDest);
         }
         else
         {
@@ -1104,8 +1101,7 @@ uint16_t MeshForwarder::PrepareDataFrameWithNoMeshHeader(Mac::TxFrame         &a
                                                          Message              &aMessage,
                                                          const Mac::Addresses &aMacAddrs)
 {
-    return PrepareDataFrame(aFrame, aMessage, aMacAddrs, /* aAddMeshHeader */ false, /* aMeshSource */ 0xffff,
-                            /* aMeshDest */ 0xffff, /* aAddFragHeader */ false);
+    return PrepareDataFrame(aFrame, aMessage, aMacAddrs, /* aAddMeshHeader */ false, /* aAddFragHeader */ false);
 }
 
 Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame       &aFrame,

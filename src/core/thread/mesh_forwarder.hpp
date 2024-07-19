@@ -546,8 +546,6 @@ private:
                               Message              &aMessage,
                               const Mac::Addresses &aMacAddrs,
                               bool                  aAddMeshHeader,
-                              uint16_t              aMeshSource,
-                              uint16_t              aMeshDest,
                               bool                  aAddFragHeader);
     uint16_t PrepareDataFrameWithNoMeshHeader(Mac::TxFrame &aFrame, Message &aMessage, const Mac::Addresses &aMacAddrs);
     void     PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &aMacDest, bool aAckRequest);
