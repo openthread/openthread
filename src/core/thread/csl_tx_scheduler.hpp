@@ -231,11 +231,17 @@ public:
      */
     void Clear(void);
 
+    /**
+     * Updates the value of `mCslFrameRequestAheadUs`, based on bus speed, bus latency
+     * and `OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US`.
+     *
+     */
+    void UpdateFrameRequestAhead(void);
+
 private:
     // Guard time in usec to add when checking delay while preparing the CSL frame for tx.
     static constexpr uint32_t kFramePreparationGuardInterval = 1500;
 
-    void InitFrameRequestAhead(void);
     void RescheduleCslTx(void);
 
     uint32_t GetNextCslTransmissionDelay(const Child &aChild, uint32_t &aDelayFromLastRx, uint32_t aAheadUs) const;

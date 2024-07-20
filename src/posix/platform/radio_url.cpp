@@ -121,6 +121,7 @@ const char *otSysGetRadioUrlHelpString(void)
            "    fem-lnagain[=dbm]             Set the Rx LNA gain in dBm of the external FEM.\n"
            "    no-reset                      Do not send Spinel reset command to RCP on initialization.\n"
            "    skip-rcp-compatibility-check  Skip checking RCP API version and capabilities during initialization.\n"
+           "    bus-latency[=usec]            Communication latency in usec, default is 0.\n"
 #if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
            "    iid                           Set the Spinel Interface ID for this process. Valid values are 0-3.\n"
            "    iid-list                      List of IIDs a host can subscribe to receive spinel frames other than \n"

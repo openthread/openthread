@@ -89,10 +89,11 @@ void Radio::Init(const char *aUrl)
     callbacks.mDiagReceiveDone  = otPlatDiagRadioReceiveDone;
     callbacks.mDiagTransmitDone = otPlatDiagRadioTransmitDone;
 #endif // OPENTHREAD_CONFIG_DIAG_ENABLE
-    callbacks.mEnergyScanDone = otPlatRadioEnergyScanDone;
-    callbacks.mReceiveDone    = otPlatRadioReceiveDone;
-    callbacks.mTransmitDone   = otPlatRadioTxDone;
-    callbacks.mTxStarted      = otPlatRadioTxStarted;
+    callbacks.mEnergyScanDone    = otPlatRadioEnergyScanDone;
+    callbacks.mBusLatencyChanged = otPlatRadioBusLatencyChanged;
+    callbacks.mReceiveDone       = otPlatRadioReceiveDone;
+    callbacks.mTransmitDone      = otPlatRadioTxDone;
+    callbacks.mTxStarted         = otPlatRadioTxStarted;
 
     resetRadio             = !mRadioUrl.HasParam("no-reset");
     skipCompatibilityCheck = mRadioUrl.HasParam("skip-rcp-compatibility-check");
@@ -133,6 +134,13 @@ void Radio::ProcessRadioUrl(const RadioUrl &aRadioUrl)
         VerifyOrDie(strnlen(region, 3) == 2, OT_EXIT_INVALID_ARGUMENTS);
         regionCode = static_cast<uint16_t>(static_cast<uint16_t>(region[0]) << 8) + static_cast<uint16_t>(region[1]);
         SuccessOrDie(otPlatRadioSetRegion(gInstance, regionCode));
+    }
+
+    if (aRadioUrl.HasParam("bus-latency"))
+    {
+        uint32_t busLatency;
+        SuccessOrDie(aRadioUrl.ParseUint32("bus-latency", busLatency));
+        mRadioSpinel.SetBusLatency(busLatency);
     }
 
     ProcessMaxPowerTable(aRadioUrl);
@@ -553,25 +561,36 @@ void otPlatDiagSetOutputCallback(otInstance *aInstance, otPlatDiagOutputCallback
 
 otError otPlatDiagProcess(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[])
 {
-    // deliver the platform specific diags commands to radio only ncp.
     OT_UNUSED_VARIABLE(aInstance);
-    char  cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE] = {'\0'};
-    char *cur                                              = cmd;
-    char *end                                              = cmd + sizeof(cmd);
+    otError error                                            = OT_ERROR_NONE;
+    char    cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE] = {'\0'};
+    char   *cur                                              = cmd;
+    char   *end                                              = cmd + sizeof(cmd);
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_CAPS_DIAG_ENABLE
     if (strcmp(aArgs[0], "rcpcaps") == 0)
     {
-        return GetRcpCapsDiag().DiagProcess(aArgs, aArgsLength);
+        error = GetRcpCapsDiag().DiagProcess(aArgs, aArgsLength);
+        ExitNow();
     }
 #endif
+
+    if (strcmp(aArgs[0], "radiospinel") == 0)
+    {
+        error = GetRadioSpinel().RadioSpinelDiagProcess(aArgs, aArgsLength);
+        ExitNow();
+    }
 
     for (uint8_t index = 0; (index < aArgsLength) && (cur < end); index++)
     {
         cur += snprintf(cur, static_cast<size_t>(end - cur), "%s ", aArgs[index]);
     }
 
-    return GetRadioSpinel().PlatDiagProcess(cmd);
+    // deliver the platform specific diags commands to radio only ncp.
+    error = GetRadioSpinel().PlatDiagProcess(cmd);
+
+exit:
+    return error;
 }
 
 void otPlatDiagModeSet(bool aMode)
@@ -903,6 +922,12 @@ uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return GetRadioSpinel().GetBusSpeed();
+}
+
+uint32_t otPlatRadioGetBusLatency(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return GetRadioSpinel().GetBusLatency();
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
