@@ -278,7 +278,7 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
         self._verify_discovery_proxy_meshcop(br2_addr, br2.get_network_name(), host)
 
         # 4. Check some invalid queries
-        for qtype in ['A', 'CNAME']:
+        for qtype in ['CNAME']:
             dig_result = host.dns_dig(br2_addr, host1_full_name, qtype)
             self._assert_dig_result_matches(dig_result, {
                 'status': 'NOTIMP',
