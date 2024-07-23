@@ -606,7 +606,11 @@ static void radioReceive(otInstance *aInstance)
     {
         if (otMacFrameIsAckRequested(&sTransmitFrame))
         {
-            isTxDone = isAck && otMacFrameGetSequence(&sReceiveFrame) == otMacFrameGetSequence(&sTransmitFrame);
+            uint8_t rxSeq;
+            uint8_t txSeq;
+
+            isTxDone = isAck && otMacFrameGetSequence(&sReceiveFrame, &rxSeq) == OT_ERROR_NONE &&
+                       otMacFrameGetSequence(&sTransmitFrame, &txSeq) == OT_ERROR_NONE && rxSeq == txSeq;
         }
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
         // Simulate tx done when receiving the echo frame.
