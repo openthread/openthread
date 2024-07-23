@@ -177,6 +177,35 @@ Error Tcp::Endpoint::Connect(const SockAddr &aSockName, uint32_t aFlags)
         tp.fport = BigEndian::HostSwap16(aSockName.mPort);
     }
 
+    if (aFlags & OT_TCP_NODELAY)
+    {
+        tp.t_flags |= TF_NODELAY;
+    }
+    else
+    {
+        tp.t_flags &= ~TF_NODELAY;
+    }
+
+exit:
+    return error;
+}
+
+Error Tcp::Endpoint::SetSockOpt(uint32_t aFlags)
+{
+    Error         error = kErrorNone;
+    struct tcpcb &tp    = GetTcb();
+
+    VerifyOrExit((tp.t_state == TCP6S_CLOSED) || (tp.t_state == TCP6S_LISTEN), error = kErrorInvalidState);
+
+    if (aFlags & OT_TCP_NODELAY)
+    {
+        tp.t_flags |= TF_NODELAY;
+    }
+    else
+    {
+        tp.t_flags &= ~TF_NODELAY;
+    }
+
 exit:
     return error;
 }

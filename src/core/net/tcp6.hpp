@@ -190,6 +190,19 @@ public:
         Error Connect(const SockAddr &aSockName, uint32_t aFlags);
 
         /**
+         * Sets the TCP endpoint's options.
+         *
+         * @sa otTcpSetSockOpt
+         *
+         * @param[in]  aFlags     Flags specifying options for this operation (see enumeration above).
+         *
+         * @retval kErrorNone    Successfully completed the operation.
+         * @retval kErrorFailed  Failed to complete the operation.
+         *
+         */
+        Error SetSockOpt(uint32_t aFlags);
+
+        /**
          * Adds data referenced by the linked buffer pointed to by @p aBuffer to the
          * send buffer.
          *
