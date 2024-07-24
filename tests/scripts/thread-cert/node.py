@@ -422,6 +422,12 @@ class OtbrDocker:
     def nat64_set_enabled(self, enable):
         return self.call_dbus_method('io.openthread.BorderRouter', 'SetNat64Enabled', enable)
 
+    def activate_ephemeral_key_mode(self, lifetime):
+        return self.call_dbus_method('io.openthread.BorderRouter', 'ActivateEphemeralKeyMode', lifetime)
+
+    def deactivate_ephemeral_key_mode(self):
+        return self.call_dbus_method('io.openthread.BorderRouter', 'DeactivateEphemeralKeyMode')
+
     @property
     def nat64_cidr(self):
         self.send_command('nat64 cidr')
@@ -1895,6 +1901,12 @@ class NodeImpl:
         cmd = 'state %s' % state
         self.send_command(cmd)
         self._expect_done()
+
+    def get_ephemeral_key_state(self):
+        cmd = 'ba ephemeralkey'
+        states = [r'inactive', r'active']
+        self.send_command(cmd)
+        return self._expect_result(states)
 
     def get_timeout(self):
         self.send_command('childtimeout')
