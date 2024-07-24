@@ -843,8 +843,7 @@ Error Ip6::HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
             break;
 
         case kProtoFragment:
-            IgnoreError(PassToHost(aMessagePtr, aHeader, aNextHeader,
-                                   /* aApplyFilter */ false, aReceive, Message::kCopyToUse));
+            IgnoreError(PassToHost(aMessagePtr, aHeader, aNextHeader, aReceive, Message::kCopyToUse));
             SuccessOrExit(error = HandleFragment(*aMessagePtr));
             break;
 
@@ -945,7 +944,6 @@ exit:
 Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
                       const Header      &aHeader,
                       uint8_t            aIpProto,
-                      bool               aApplyFilter,
                       bool               aReceive,
                       Message::Ownership aMessageOwnership)
 {
@@ -971,7 +969,7 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
         VerifyOrExit(aReceive, error = kErrorDrop);
     }
 
-    if (mIsReceiveIp6FilterEnabled && aApplyFilter)
+    if (mIsReceiveIp6FilterEnabled && aReceive)
     {
         switch (aIpProto)
         {
@@ -1202,8 +1200,7 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
 
     if ((forwardHost || receive) && !aIsReassembled)
     {
-        error = PassToHost(aMessagePtr, header, nextHeader,
-                           /* aApplyFilter */ !forwardHost, receive,
+        error = PassToHost(aMessagePtr, header, nextHeader, receive,
                            (receive || forwardThread) ? Message::kCopyToUse : Message::kTakeCustody);
     }
 

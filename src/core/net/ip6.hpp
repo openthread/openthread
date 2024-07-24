@@ -386,7 +386,6 @@ private:
     Error PassToHost(OwnedPtr<Message> &aMessagePtr,
                      const Header      &aHeader,
                      uint8_t            aIpProto,
-                     bool               aApplyFilter,
                      bool               aReceive,
                      Message::Ownership aMessageOwnership);
     Error HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
