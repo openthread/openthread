@@ -69,11 +69,27 @@ proc spawn_node {id {type ""} {radio_url ""}} {
     global argv0
 
     if {${type} == ""} {
-        set type $::env(OT_NODE_TYPE)
+        if {[info exists ::env(OT_NODE_TYPE)]} {
+            set type $::env(OT_NODE_TYPE)
+        } else {
+            set type "cli"
+        }
+    }
+
+    if {[info exists ::env(OT_POSIX_APPS)]} {
+        set ot_posix_apps $::env(OT_POSIX_APPS)
+    } else {
+        set ot_posix_apps "build/posix/src/posix"
+    }
+
+    if {[info exists ::env(OT_SIMULATION_APPS)]} {
+        set ot_simulation_apps $::env(OT_SIMULATION_APPS)
+    } else {
+        set ot_simulation_apps "build/simulation/examples/apps"
     }
 
     if {${radio_url} == ""} {
-        set radio_url "spinel+hdlc+uart://$::env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=$id"
+        set radio_url "spinel+hdlc+uart://$ot_simulation_apps/ncp/ot-rcp?forkpty-arg=$id"
     }
 
     send_user "\n# ${id} ${type}\n"
@@ -96,7 +112,7 @@ proc spawn_node {id {type ""} {radio_url ""}} {
             # Sleep 0.2 seconds to ensure that the ot-rcp in the previous test has exited to
             # avoid the error: "bind(sTxFd): Address already in use"
             sleep 0.2
-            spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $::env(OT_POSIX_APPS)/ot-cli $radio_url
+            spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $ot_posix_apps/ot-cli $radio_url
             send "factoryreset\n"
             wait_for "state" "disabled"
             expect_line "Done"
@@ -104,7 +120,7 @@ proc spawn_node {id {type ""} {radio_url ""}} {
             expect_line "Done"
         }
         cli {
-            spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $::env(OT_SIMULATION_APPS)/cli/ot-cli-ftd \
+            spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $ot_simulation_apps/cli/ot-cli-ftd \
                 -L$ot_simulation_local_host $id
             send "factoryreset\n"
             wait_for "state" "disabled"
@@ -113,7 +129,7 @@ proc spawn_node {id {type ""} {radio_url ""}} {
             expect_line "Done"
         }
         mtd {
-            spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $::env(OT_SIMULATION_APPS)/cli/ot-cli-mtd \
+            spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $ot_simulation_apps/cli/ot-cli-mtd \
                 -L$ot_simulation_local_host $id
             send "factoryreset\n"
             wait_for "state" "disabled"
