@@ -153,7 +153,7 @@ exit:
     return error;
 }
 
-bool Icmp::ShouldHandleEchoRequest(const MessageInfo &aMessageInfo)
+bool Icmp::ShouldHandleEchoRequest(const Address &aAddress)
 {
     bool rval = false;
 
@@ -163,16 +163,16 @@ bool Icmp::ShouldHandleEchoRequest(const MessageInfo &aMessageInfo)
         rval = false;
         break;
     case OT_ICMP6_ECHO_HANDLER_UNICAST_ONLY:
-        rval = !aMessageInfo.GetSockAddr().IsMulticast();
+        rval = !aAddress.IsMulticast();
         break;
     case OT_ICMP6_ECHO_HANDLER_MULTICAST_ONLY:
-        rval = aMessageInfo.GetSockAddr().IsMulticast();
+        rval = aAddress.IsMulticast();
         break;
     case OT_ICMP6_ECHO_HANDLER_ALL:
         rval = true;
         break;
     case OT_ICMP6_ECHO_HANDLER_RLOC_ALOC_ONLY:
-        rval = aMessageInfo.GetSockAddr().GetIid().IsLocator();
+        rval = aAddress.GetIid().IsLocator();
         break;
     }
 
@@ -187,7 +187,7 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
     MessageInfo replyMessageInfo;
     uint16_t    dataOffset;
 
-    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo));
+    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo.GetSockAddr()));
 
     LogInfo("Received Echo Request");
 

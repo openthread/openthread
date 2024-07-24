@@ -526,7 +526,7 @@ exit:
     return error;
 }
 
-Error Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool &aReceive)
+Error Ip6::HandleOptions(Message &aMessage, const Header &aHeader, bool &aReceive)
 {
     Error          error = kErrorNone;
     HopByHopHeader hbhHeader;
@@ -824,8 +824,7 @@ exit:
 #endif // OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
 
 Error Ip6::HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
-                                  MessageInfo       &aMessageInfo,
-                                  Header            &aHeader,
+                                  const Header      &aHeader,
                                   uint8_t           &aNextHeader,
                                   bool              &aReceive)
 {
@@ -844,7 +843,7 @@ Error Ip6::HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
             break;
 
         case kProtoFragment:
-            IgnoreError(PassToHost(aMessagePtr, aMessageInfo, aNextHeader,
+            IgnoreError(PassToHost(aMessagePtr, aHeader, aNextHeader,
                                    /* aApplyFilter */ false, aReceive, Message::kCopyToUse));
             SuccessOrExit(error = HandleFragment(*aMessagePtr));
             break;
@@ -889,18 +888,20 @@ Error Ip6::TakeOrCopyMessagePtr(OwnedPtr<Message> &aTargetPtr,
     return (aTargetPtr != nullptr) ? kErrorNone : kErrorNoBufs;
 }
 
-Error Ip6::HandlePayload(Header            &aIp6Header,
-                         OwnedPtr<Message> &aMessagePtr,
-                         MessageInfo       &aMessageInfo,
-                         uint8_t            aIpProto,
-                         Message::Ownership aMessageOwnership)
+Error Ip6::Receive(Header            &aIp6Header,
+                   OwnedPtr<Message> &aMessagePtr,
+                   uint8_t            aIpProto,
+                   Message::Ownership aMessageOwnership)
 {
-#if !OPENTHREAD_CONFIG_TCP_ENABLE
-    OT_UNUSED_VARIABLE(aIp6Header);
-#endif
-
     Error             error = kErrorNone;
     OwnedPtr<Message> messagePtr;
+    MessageInfo       messageInfo;
+
+    messageInfo.Clear();
+    messageInfo.SetPeerAddr(aIp6Header.GetSource());
+    messageInfo.SetSockAddr(aIp6Header.GetDestination());
+    messageInfo.SetHopLimit(aIp6Header.GetHopLimit());
+    messageInfo.SetEcn(aIp6Header.GetEcn());
 
     switch (aIpProto)
     {
@@ -921,15 +922,15 @@ Error Ip6::HandlePayload(Header            &aIp6Header,
     {
 #if OPENTHREAD_CONFIG_TCP_ENABLE
     case kProtoTcp:
-        error = mTcp.HandleMessage(aIp6Header, *messagePtr, aMessageInfo);
+        error = mTcp.HandleMessage(aIp6Header, *messagePtr, messageInfo);
         break;
 #endif
     case kProtoUdp:
-        error = mUdp.HandleMessage(*messagePtr, aMessageInfo);
+        error = mUdp.HandleMessage(*messagePtr, messageInfo);
         break;
 
     case kProtoIcmp6:
-        error = mIcmp.HandleMessage(*messagePtr, aMessageInfo);
+        error = mIcmp.HandleMessage(*messagePtr, messageInfo);
         break;
 
     default:
@@ -942,7 +943,7 @@ exit:
 }
 
 Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
-                      const MessageInfo &aMessageInfo,
+                      const Header      &aHeader,
                       uint8_t            aIpProto,
                       bool               aApplyFilter,
                       bool               aReceive,
@@ -965,7 +966,7 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
 
     // If the sender used mesh-local address as source, do not pass to
     // host unless this message is intended for this device itself.
-    if (Get<Mle::Mle>().IsMeshLocalAddress(aMessageInfo.GetPeerAddr()))
+    if (Get<Mle::Mle>().IsMeshLocalAddress(aHeader.GetSource()))
     {
         VerifyOrExit(aReceive, error = kErrorDrop);
     }
@@ -975,7 +976,7 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
         switch (aIpProto)
         {
         case kProtoIcmp6:
-            if (mIcmp.ShouldHandleEchoRequest(aMessageInfo))
+            if (mIcmp.ShouldHandleEchoRequest(aHeader.GetDestination()))
             {
                 Icmp::Header icmp;
 
@@ -1045,9 +1046,8 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
     // For a multicast packet sent from link-local/mesh-local address to scope larger
     // than realm-local, set the hop limit to 1 before sending to host, so this packet
     // will not be forwarded by host.
-    if (aMessageInfo.GetSockAddr().IsMulticastLargerThanRealmLocal() &&
-        (aMessageInfo.GetPeerAddr().IsLinkLocalUnicast() ||
-         (Get<Mle::Mle>().IsMeshLocalAddress(aMessageInfo.GetPeerAddr()))))
+    if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal() &&
+        (aHeader.GetSource().IsLinkLocalUnicast() || (Get<Mle::Mle>().IsMeshLocalAddress(aHeader.GetSource()))))
     {
         messagePtr->Write<uint8_t>(Header::kHopLimitFieldOffset, 1);
     }
@@ -1099,25 +1099,18 @@ exit:
 
 Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
 {
-    Error       error;
-    MessageInfo messageInfo;
-    Header      header;
-    bool        receive;
-    bool        forwardThread;
-    bool        forwardHost;
-    uint8_t     nextHeader;
+    Error   error;
+    Header  header;
+    bool    receive;
+    bool    forwardThread;
+    bool    forwardHost;
+    uint8_t nextHeader;
 
     receive       = false;
     forwardThread = false;
     forwardHost   = false;
 
     SuccessOrExit(error = header.ParseFrom(*aMessagePtr));
-
-    messageInfo.Clear();
-    messageInfo.SetPeerAddr(header.GetSource());
-    messageInfo.SetSockAddr(header.GetDestination());
-    messageInfo.SetHopLimit(header.GetHopLimit());
-    messageInfo.SetEcn(header.GetEcn());
 
     // Determine `forwardThread`, `forwardHost` and `receive`
     // based on the destination address.
@@ -1181,7 +1174,7 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
 
     // Process IPv6 Extension Headers
     nextHeader = static_cast<uint8_t>(header.GetNextHeader());
-    SuccessOrExit(error = HandleExtensionHeaders(aMessagePtr, messageInfo, header, nextHeader, receive));
+    SuccessOrExit(error = HandleExtensionHeaders(aMessagePtr, header, nextHeader, receive));
 
     if (receive && (nextHeader == kProtoIp6))
     {
@@ -1209,15 +1202,14 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
 
     if ((forwardHost || receive) && !aIsReassembled)
     {
-        error = PassToHost(aMessagePtr, messageInfo, nextHeader,
+        error = PassToHost(aMessagePtr, header, nextHeader,
                            /* aApplyFilter */ !forwardHost, receive,
                            (receive || forwardThread) ? Message::kCopyToUse : Message::kTakeCustody);
     }
 
     if (receive)
     {
-        error = HandlePayload(header, aMessagePtr, messageInfo, nextHeader,
-                              forwardThread ? Message::kCopyToUse : Message::kTakeCustody);
+        error = Receive(header, aMessagePtr, nextHeader, forwardThread ? Message::kCopyToUse : Message::kTakeCustody);
     }
 
     if (forwardThread)

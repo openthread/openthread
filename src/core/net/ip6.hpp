@@ -384,14 +384,13 @@ private:
     void  EnqueueDatagram(Message &aMessage);
     void  HandleSendQueue(void);
     Error PassToHost(OwnedPtr<Message> &aMessagePtr,
-                     const MessageInfo &aMessageInfo,
+                     const Header      &aHeader,
                      uint8_t            aIpProto,
                      bool               aApplyFilter,
                      bool               aReceive,
                      Message::Ownership aMessageOwnership);
     Error HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
-                                 MessageInfo       &aMessageInfo,
-                                 Header            &aHeader,
+                                 const Header      &aHeader,
                                  uint8_t           &aNextHeader,
                                  bool              &aReceive);
     Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
@@ -407,12 +406,11 @@ private:
     Error PrepareMulticastToLargerThanRealmLocal(Message &aMessage, const Header &aHeader);
     Error InsertMplOption(Message &aMessage, Header &aHeader);
     Error RemoveMplOption(Message &aMessage);
-    Error HandleOptions(Message &aMessage, Header &aHeader, bool &aReceive);
-    Error HandlePayload(Header            &aIp6Header,
-                        OwnedPtr<Message> &aMessagePtr,
-                        MessageInfo       &aMessageInfo,
-                        uint8_t            aIpProto,
-                        Message::Ownership aMessageOwnership);
+    Error HandleOptions(Message &aMessage, const Header &aHeader, bool &aReceive);
+    Error Receive(Header            &aIp6Header,
+                  OwnedPtr<Message> &aMessagePtr,
+                  uint8_t            aIpProto,
+                  Message::Ownership aMessageOwnership);
     bool  IsOnLink(const Address &aAddress) const;
     Error RouteLookup(const Address &aSource, const Address &aDestination) const;
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
