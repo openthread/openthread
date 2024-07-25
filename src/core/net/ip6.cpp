@@ -1271,22 +1271,6 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
             }
         }
 
-#if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        if (aMessagePtr->IsOriginHostTrusted() && !aMessagePtr->IsLoopbackToHostAllowed() && (nextHeader == kProtoUdp))
-        {
-            uint16_t destPort;
-
-            SuccessOrExit(
-                error = aMessagePtr->Read(aMessagePtr->GetOffset() + Udp::Header::kDestPortFieldOffset, destPort));
-            destPort = BigEndian::HostSwap16(destPort);
-
-            if (nextHeader == kProtoUdp)
-            {
-                VerifyOrExit(Get<Udp>().ShouldUsePlatformUdp(destPort), error = kErrorDrop);
-            }
-        }
-#endif
-
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         // Since the message will be forwarded, we clear the radio
         // type on the message to allow the radio type for tx to be
