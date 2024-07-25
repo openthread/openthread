@@ -66,6 +66,18 @@ public:
     typedef otDatasetMgmtSetCallback MgmtSetCallback;
 
     /**
+     * Indicates whether to check or ignore Security Policy flag when processing an MGMT_GET request message.
+     *
+     * This is used as input in `ProcessGetRequest().
+     *
+     */
+    enum SecurityPolicyCheckMode : uint8_t
+    {
+        kCheckSecurityPolicyFlags,  ///< Check Security Policy flags.
+        kIgnoreSecurityPolicyFlags, ///< Ignore Security Policy flags.
+    };
+
+    /**
      * Returns the network Timestamp.
      *
      * @returns The network Timestamp.
@@ -219,6 +231,17 @@ public:
                          uint8_t                    aLength,
                          const otIp6Address        *aAddress) const;
 
+    /**
+     * Processes a MGMT_GET request message and prepares the response.
+     *
+     * @param[in] aRequest   The MGMT_GET request message.
+     * @param[in] aCheckMode Indicates whether to check or ignore the Security Policy flags.
+     *
+     * @returns The prepared response, or `nullptr` if fails to parse the request or cannot allocate message.
+     *
+     */
+    Coap::Message *ProcessGetRequest(const Coap::Message &aRequest, SecurityPolicyCheckMode aCheckMode) const;
+
 private:
     static constexpr uint8_t  kMaxGetTypes  = 64;   // Max number of types in MGMT_GET.req
     static constexpr uint32_t kSendSetDelay = 5000; // in msec.
@@ -279,9 +302,6 @@ private:
     void  SignalDatasetChange(void) const;
     void  SyncLocalWithLeader(const Dataset &aDataset);
     Error SendSetRequest(const Dataset &aDataset);
-    void  SendGetResponse(const Coap::Message    &aRequest,
-                          const Ip6::MessageInfo &aMessageInfo,
-                          const TlvList          &aTlvList) const;
     void  HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError);
 
     static void HandleMgmtSetResponse(void                *aContext,
