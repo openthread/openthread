@@ -128,6 +128,8 @@ class Channel(object):
 
     def to_hex(self):
         return struct.pack('>BBBH', TlvType.CHANNEL, 3, self.channel_page, self.channel)
+    def to_bytes(self):
+        return struct.pack('>BBBH', TlvType.CHANNEL, 3, self.channel_page, self.channel)
 
 
 class ChannelFactory(object):
@@ -274,6 +276,9 @@ class SteeringData(object):
     def to_hex(self):
         bloom_filter_len = len(self.bloom_filter)
         return (struct.pack('>BB', TlvType.STEERING_DATA, bloom_filter_len) + self.bloom_filter)
+    def to_bytes(self):
+        bloom_filter_len = len(self.bloom_filter)
+        return (struct.pack('>BB', TlvType.STEERING_DATA, bloom_filter_len) + self.bloom_filter)
 
 
 class SteeringDataFactory:
@@ -302,6 +307,9 @@ class BorderAgentLocator(object):
         return "BorderAgentLocator(rloc16={})".format(hex(self._border_agent_locator))
 
     def to_hex(self):
+        return struct.pack('>BBH', TlvType.BORDER_AGENT_LOCATOR, 2, self.border_agent_locator)
+
+    def to_bytes(self):
         return struct.pack('>BBH', TlvType.BORDER_AGENT_LOCATOR, 2, self.border_agent_locator)
 
 
@@ -355,6 +363,13 @@ class CommissionerSessionId(object):
         return "CommissionerSessionId(commissioner_session_id={})".format(self._commissioner_session_id)
 
     def to_hex(self):
+        return struct.pack(
+            '>BBH',
+            TlvType.COMMISSIONER_SESSION_ID,
+            2,
+            self.commissioner_session_id,
+        )
+    def to_bytes(self):
         return struct.pack(
             '>BBH',
             TlvType.COMMISSIONER_SESSION_ID,

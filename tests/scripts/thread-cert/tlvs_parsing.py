@@ -28,6 +28,7 @@
 
 import io
 import logging
+import struct
 
 
 class UnknownTlv(object):
@@ -38,7 +39,10 @@ class UnknownTlv(object):
 
     def __repr__(self):
         return 'UnknownTlv(%d, %s)' % (self.type, self.data)
-
+    
+    def to_bytes(self):
+        length = len(self.data.getvalue())
+        return struct.pack('>BB', self.type, length) + self.data.getvalue()
 
 class UnknownTlvFactory(object):
 
@@ -58,7 +62,7 @@ class SubTlvsFactory(object):
         try:
             return self._sub_tlvs_factories[_type]
         except KeyError:
-            logging.error('Could not find TLV factory. Unsupported TLV type: {}'.format(_type))
+            #logging.error('Could not find TLV factory. Unsupported TLV type: {}'.format(_type))
             return UnknownTlvFactory(_type)
 
     def parse(self, data, message_info):

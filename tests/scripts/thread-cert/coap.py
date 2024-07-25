@@ -119,6 +119,40 @@ class CoapOption(object):
 
     def __repr__(self):
         return "CoapOption(type={}, value={})".format(self.type, hexlify(self.value))
+    
+    def to_bytes(self, last_option_number=0):
+        """ Serialize the CoAP option to bytes. """
+        delta = self._type - last_option_number
+        length = len(self._value)
+        bytes_array = bytearray()
+
+        # Calculate the initial byte
+        delta_encoded, delta_ext = self.encode_value(delta)
+        length_encoded, length_ext = self.encode_value(length)
+        
+        initial_byte = (delta_encoded << 4) | length_encoded
+        bytes_array.append(initial_byte)
+
+        # Append extended delta and length if necessary
+        if delta_ext:
+            bytes_array.extend(delta_ext)
+        if length_ext:
+            bytes_array.extend(length_ext)
+
+        # Append the actual value
+        bytes_array.extend(self._value)
+
+        return bytes(bytes_array)
+
+    @staticmethod
+    def encode_value(value):
+        """ Encode delta or length following the CoAP specification. """
+        if value < 13:
+            return value, None
+        elif value < 269:
+            return 13, [value - 13]
+        else:
+            return 14, [(value - 269) >> 8, (value - 269) & 0xFF]
 
 
 class CoapOptionsFactory(object):
@@ -176,6 +210,11 @@ class CoapCode(object):
     @property
     def dotted(self):
         return ".".join(["{:01d}".format(self._class), "{:02d}".format(self.detail)])
+    
+    def to_bytes(self):
+        """Serialize the CoAP code to bytes."""
+        return struct.pack('B', self.code)
+
 
     def __eq__(self, other):
         if isinstance(other, int):
@@ -255,8 +294,7 @@ class CoapMessage(object):
 
     def __repr__(self):
         options_str = ", ".join([repr(opt) for opt in self.options])
-        return ("CoapMessage(version={}, type={}, code={}, message_id={}, token={}, options=[{}], payload={},",
-                "uri-path='{}')").format(
+        return "CoapMessage(version={}, type={}, code={}, message_id={}, token={}, options=[{}], payload={}, uri-path='{}')".format(
                     self.version,
                     CoapMessageType.name[self.type],
                     self.code,
@@ -334,8 +372,7 @@ class CoapMessageProxy(object):
 
     def __repr__(self):
         options_str = ", ".join([repr(opt) for opt in self.options])
-        return ("CoapMessageProxy(version={}, type={}, code={}, message_id={}, token={}, options=[{}], payload={},",
-                "uri-path='{}')").format(
+        return "CoapMessageProxy(version={}, type={}, code={}, message_id={}, token={}, options=[{}], payload={},uri-path='{}')".format(
                     self.version,
                     self.type,
                     self.code,
