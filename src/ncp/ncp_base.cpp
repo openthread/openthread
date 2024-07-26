@@ -258,6 +258,9 @@ NcpBase::NcpBase(Instance **aInstances, uint8_t aCount)
 
         OT_ASSERT(i + skipped <= SPINEL_HEADER_IID_MAX);
         mInstances[i + skipped] = aInstances[i];
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+        otDiagSetOutputCallback(mInstances[i + skipped], &NcpBase::HandleDiagOutput_Jump, this);
+#endif
     }
 }
 #endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE  && OPENTHREAD_RADIO
