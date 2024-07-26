@@ -349,6 +349,11 @@ public:
      */
     void ResetBorderRoutingCounters(void) { ClearAllBytes(mBorderRoutingCounters); }
 #endif
+    /**
+     * Removes matching MPL entry.
+     *
+     */
+    void RemoveMplEntry(Message &aMessage) { mMpl.RemoveMatchedMessage(aMessage); }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
