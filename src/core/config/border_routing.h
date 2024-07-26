@@ -89,6 +89,28 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABLITY_CHECK_ICMP6_ERROR_ENABLE
+ *
+ * Define to 1 to allow Routing Manager to check for reachability of messages being forwarded by the BR and determine
+ * whether to send an ICMPv6 Destination Unreachable error to the sender
+ *
+ * If the Border Router (BR) decides to forward an IPv6 message to a destination outside the Adjacent Infrastructure
+ * Link (AIL),  and the message's source address matches a BR-generated ULA OMR prefix (with low preference) an ICMPv6
+ * Destination Unreachable message is sent to the sender.
+ *
+ * This check is performed only when a local, non-infrastructure-derived ULA OMR prefix is published and the BR also
+ * publishes a `::/0` route (due to discovered PIO/RIO prefixes). Under these conditions, a Thread mesh device might
+ * attempt to reach addresses beyond the local AIL (e.g., the global internet), which would be unreachable.
+ *
+ * Alternatively, this functionality may be implemented within the platform layer, in which case this configuration
+ * should be disabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABLITY_CHECK_ICMP6_ERROR_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABLITY_CHECK_ICMP6_ERROR_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS
  *
  * Specifies maximum number of routers (on infra link) to track by routing manager.
@@ -175,6 +197,16 @@
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_TESTING_API_ENABLE
+ *
+ * Define to 1 to enable testing related APIs to be provided by the `RoutingManager`.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_TESTING_API_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_TESTING_API_ENABLE 0
 #endif
 
 /**

@@ -602,6 +602,39 @@ public:
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABLITY_CHECK_ICMP6_ERROR_ENABLE
+    /**
+     * Determines whether to send an ICMPv6 Destination Unreachable error to the sender based on reachability and
+     * source address.
+     *
+     * If the Border Router (BR) decides to forward an IPv6 message to a destination outside the Adjacent Infrastructure
+     * Link (AIL),  and the message's source address matches a BR-generated ULA OMR prefix (with low preference) an
+     * ICMPv6 Destination Unreachable message is sent to the sender.
+     *
+     * This check is performed only when a local, non-infrastructure-derived ULA OMR prefix is published and the BR
+     * also  publishes a `::/0` route (due to discovered PIO/RIO prefixes). Under these conditions, a Thread mesh
+     * device might attempt to reach addresses beyond the local AIL (e.g., the global internet), which would be
+     * unreachable.
+     *
+     * @param[in] aMessage    The message.
+     * @param[in] aIp6Header  The IPv6 header of @p aMessage.
+     *
+     */
+    void CheckReachbilityToSendIcmpError(const Message &aMessage, const Ip6::Header &aIp6Header);
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TESTING_API_ENABLE
+    /**
+     * Sets the local on-link prefix.
+     *
+     * This is intended for testing only and using it will make a device non-compliant with the Thread Specification.
+     *
+     * @param[in]  aPrefix      The on-link prefix to use.
+     *
+     */
+    void SetOnLinkPrefix(const Ip6::Prefix &aPrefix) { mOnLinkPrefixManager.SetLocalPrefix(aPrefix); }
+#endif
+
 private:
     //------------------------------------------------------------------------------------------------------------------
     // Constants
@@ -858,6 +891,9 @@ private:
         void               SetHeaderFlagsOn(RouterAdvert::Header &aHeader) const;
 
         const RouterAdvert::Header &GetLocalRaHeaderToMirror(void) const { return mLocalRaHeader; }
+
+        bool IsAddressOnLink(const Ip6::Address &aAddress) const;
+        bool IsAddressReachableThroughExplicitRoute(const Ip6::Address &aAddress) const;
 
         // Iterating over discovered items
         void  InitIterator(PrefixTableIterator &aIterator) const;
@@ -1178,6 +1214,9 @@ private:
         void               HandleNetDataChange(void);
         void               HandleExtPanIdChange(void);
         void               HandleTimer(void);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TESTING_API_ENABLE
+        void SetLocalPrefix(const Ip6::Prefix &aPrefix) { mLocalPrefix = aPrefix; }
+#endif
 
     private:
         enum State : uint8_t // State of `mLocalPrefix`
@@ -1340,6 +1379,7 @@ private:
         void Start(void) { Evaluate(); }
         void Stop(void) { Unpublish(); }
         void Evaluate(void);
+        bool IsPublishingDefaultRoute(void) const { return (mState == kPublishDefault); }
 
         void UpdateAdvPioFlags(bool aAdvPioFlag);
 
