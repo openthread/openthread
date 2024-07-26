@@ -52,6 +52,14 @@ class OTCommandHandler(ABC):
         """
 
     @abstractmethod
+    def execute_platform_command(self, cmd: str, timeout: float) -> List[str]:
+        """Method execute_platform_command should execute the platform command within a timeout (in seconds) and
+        return the command output as a list of lines.
+
+        Note: each line of the command output MUST NOT contain '\r\n' at the end.
+        """
+
+    @abstractmethod
     def close(self):
         """Method close should close the OT Command Handler."""
 
@@ -128,6 +136,9 @@ class OtCliCommandRunner(OTCommandHandler):
                                     OtCliCommandRunner.__PATTERN_COMMAND_DONE_OR_ERROR,
                                     asynchronous=cmd.split()[0] in OtCliCommandRunner.__ASYNC_COMMANDS)
         return output
+
+    def execute_platform_command(self, cmd, timeout=10) -> List[str]:
+        raise NotImplementedError(f'Platform command is not supported on {self.__class__.__name__}')
 
     def wait(self, duration: float) -> List[str]:
         self.__otcli.wait(duration)
@@ -261,6 +272,12 @@ class OtbrSshCommandRunner(OTCommandHandler):
 
         return output
 
+    def execute_platform_command(self, cmd, timeout=10) -> List[str]:
+        if self.__sudo:
+            cmd = 'sudo ' + cmd
+
+        return self.shell(cmd, timeout=timeout)
+
     def shell(self, cmd: str, timeout: float) -> List[str]:
         cmd_in, cmd_out, cmd_err = self.__ssh.exec_command(cmd, timeout=int(timeout), bufsize=1024)
         errput = [l.rstrip('\r\n') for l in cmd_err.readlines()]
@@ -305,8 +322,12 @@ class OtbrAdbCommandRunner(OTCommandHandler):
 
         return output
 
+    def execute_platform_command(self, cmd: str, timeout: float = 10) -> List[str]:
+        return self.shell(cmd, timeout=timeout)
+
     def shell(self, cmd: str, timeout: float) -> List[str]:
-        return self.__adb.shell(cmd, timeout_s=timeout).splitlines()
+        return self.__adb.shell(cmd, transport_timeout_s=timeout, read_timeout_s=timeout,
+                                timeout_s=timeout).splitlines()
 
     def close(self):
         self.__adb.close()
