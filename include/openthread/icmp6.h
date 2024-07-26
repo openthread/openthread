@@ -76,8 +76,9 @@ typedef enum otIcmp6Type
  */
 typedef enum otIcmp6Code
 {
-    OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE = 0, ///< Destination Unreachable No Route
-    OT_ICMP6_CODE_FRAGM_REAS_TIME_EX   = 1, ///< Fragment Reassembly Time Exceeded
+    OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE   = 0, ///< Destination Unreachable (Type 1) - No Route
+    OT_ICMP6_CODE_DST_UNREACH_PROHIBITED = 1, ///< Destination Unreachable (Type 1) - Administratively Prohibited
+    OT_ICMP6_CODE_FRAGM_REAS_TIME_EX     = 1, ///< Time Exceeded (Type 3) - Fragment Reassembly
 } otIcmp6Code;
 
 #define OT_ICMP6_HEADER_DATA_SIZE 4        ///< Size of ICMPv6 Header.

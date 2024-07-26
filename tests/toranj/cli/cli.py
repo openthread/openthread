@@ -802,6 +802,9 @@ class Node(object):
     def br_get_local_onlinkprefix(self):
         return self._cli_single_output('br onlinkprefix local')
 
+    def br_set_test_local_onlinkprefix(self, prefix):
+        self._cli_no_output('br onlinkprefix test', prefix)
+
     def br_get_routeprf(self):
         return self._cli_single_output('br routeprf')
 

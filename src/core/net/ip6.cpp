@@ -958,6 +958,13 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
     // Do not pass IPv6 packets that exceed kMinimalMtu.
     VerifyOrExit(aMessagePtr->GetLength() <= kMinimalMtu, error = kErrorDrop);
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABILITY_CHECK_ICMP6_ERROR_ENABLE
+    if (!aReceive)
+    {
+        Get<BorderRouter::RoutingManager>().CheckReachabilityToSendIcmpError(*aMessagePtr, aHeader);
+    }
+#endif
+
     // If the sender used mesh-local address as source, do not pass to
     // host unless this message is intended for this device itself.
     if (Get<Mle::Mle>().IsMeshLocalAddress(aHeader.GetSource()))
