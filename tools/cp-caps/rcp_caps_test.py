@@ -32,6 +32,7 @@ import logging
 import os
 import sys
 import textwrap
+import threading
 
 from typing import List
 
@@ -80,17 +81,77 @@ class RcpCaps(object):
         self.__dut.diag_stop()
 
     def test_csl(self):
+        """Test whether the DUT supports CSL transmitter."""
         self.__dataset = self.__get_default_dataset()
         self.__test_csl_transmitter()
 
     def test_data_poll(self):
+        """Test whether the DUT supports data poll parent and child."""
         self.__dataset = self.__get_default_dataset()
         self.__test_data_poll_parent()
         self.__test_data_poll_child()
 
+    def test_throughput(self):
+        """Test Thread network 1 hop throughput."""
+        if not self.__dut.support_iperf3():
+            print("The DUT doesn't support the tool iperf3")
+            return
+
+        if not self.__ref.support_iperf3():
+            print("The reference device doesn't support the tool iperf3")
+            return
+
+        bitrate = 90000
+        length = 1232
+        transmit_time = 30
+        max_wait_time = 30
+        timeout = transmit_time + max_wait_time
+
+        self.__dut.factory_reset()
+        self.__ref.factory_reset()
+
+        dataset = self.__get_default_dataset()
+
+        self.__dut.join(dataset)
+        self.__dut.wait_for('state', 'leader')
+
+        self.__ref.set_router_selection_jitter(1)
+        self.__ref.join(dataset)
+        self.__ref.wait_for('state', ['child', 'router'])
+
+        ref_mleid = self.__ref.get_ipaddr_mleid()
+
+        ref_iperf3_server = threading.Thread(target=self.__ref_iperf3_server_task,
+                                             args=(ref_mleid, timeout),
+                                             daemon=True)
+        ref_iperf3_server.start()
+        self.__dut.wait(1)
+
+        results = self.__dut.iperf3_client(host=ref_mleid, bitrate=bitrate, transmit_time=transmit_time, length=length)
+        ref_iperf3_server.join()
+
+        if not results:
+            print('Failed to run the iperf3')
+            return
+
+        self.__output_format_string('Throughput', self.__bitrate_to_string(results['receiver']['bitrate']))
+
     #
     # Private methods
     #
+    def __ref_iperf3_server_task(self, bind_address: str, timeout: int):
+        self.__ref.iperf3_server(bind_address, timeout=timeout)
+
+    def __bitrate_to_string(self, bitrate: float):
+        units = ['bits/sec', 'Kbits/sec', 'Mbits/sec', 'Gbits/sec', 'Tbits/sec']
+        unit_index = 0
+
+        while bitrate >= 1000 and unit_index < len(units) - 1:
+            bitrate /= 1000
+            unit_index += 1
+
+        return f'{bitrate:.2f} {units[unit_index]}'
+
     def __get_default_dataset(self):
         return self.__dut.create_dataset(channel=20, network_key='00112233445566778899aabbccddcafe')
 
@@ -491,6 +552,14 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        '-t',
+        '--throughput',
+        action='store_true',
+        default=False,
+        help='test Thread network 1-hop throughput',
+    )
+
+    parser.add_argument(
         '-v',
         '--verbose',
         action='store_true',
@@ -518,6 +587,9 @@ def main():
 
     if arguments.data_poll is True:
         rcp_caps.test_data_poll()
+
+    if arguments.throughput:
+        rcp_caps.test_throughput()
 
 
 if __name__ == '__main__':
