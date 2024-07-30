@@ -331,11 +331,13 @@ public:
     /**
      * Indicates whether or not the ICMPv6 Echo Request should be handled.
      *
+     * @param[in] aAddress    The ICMPv6 destination IPv6 address.
+     *
      * @retval TRUE if OpenThread should respond with an ICMPv6 Echo Reply.
      * @retval FALSE if OpenThread should not respond with an ICMPv6 Echo Reply.
      *
      */
-    bool ShouldHandleEchoRequest(const MessageInfo &aMessageInfo);
+    bool ShouldHandleEchoRequest(const Address &aAddress);
 
     /**
      * Returns the ICMPv6 Echo sequence number.
