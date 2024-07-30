@@ -97,9 +97,11 @@
  * config can be used to add API to change Vendor Name, Model, and SW Version at run-time. In this case, the strings in
  * `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_*` are treated as the default values (used when OT stack is initialized).
  *
+ * Enabled by default for reference devices, when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is defined.
+ *
  */
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
-#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE 0
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 #endif
 
 /**
