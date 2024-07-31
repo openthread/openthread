@@ -1032,12 +1032,7 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
 #endif
 
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
-    {
-        Header header;
-
-        IgnoreError(header.ParseFrom(*messagePtr));
-        UpdateBorderRoutingCounters(header, messagePtr->GetLength(), /* aIsInbound */ false);
-    }
+    UpdateBorderRoutingCounters(aHeader, messagePtr->GetLength(), /* aIsInbound */ false);
 #endif
 
 #if OPENTHREAD_CONFIG_IP6_RESTRICT_FORWARDING_LARGER_SCOPE_MCAST_WITH_LOCAL_SRC
