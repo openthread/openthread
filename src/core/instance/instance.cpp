@@ -122,6 +122,9 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
     , mSrpClientBuffers(*this)
 #endif
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    , mSrpCoder(*this)
+#endif
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
     , mDnssdServer(*this)
 #endif

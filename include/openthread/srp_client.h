@@ -671,6 +671,45 @@ void otSrpClientSetServiceKeyRecordEnabled(otInstance *aInstance, bool aEnabled)
 bool otSrpClientIsServiceKeyRecordEnabled(otInstance *aInstance);
 
 /**
+ * Enables or disables the use of the SRP coder for sending coded SRP update messages.
+ *
+ * Requires the `OPENTHREAD_CONFIG_SRP_CODER_ENABLE` feature to be enabled.
+ *
+ * The SRP client will utilize the message coder if all of the following conditions are met:
+ *
+ * - SRP coder usage is enabled. This can be configured using this API or by setting the configuration option
+ *   `OPENTHREAD_CONFIG_SRP_CODER_USE_BY_CLIENT_ENABLE` (which specifies the default value).
+ * - Auto-start mode is enabled (see `otSrpClientEnableAutoStartMode()`, thus allowing the SRP client to parse the
+ *   Thread Network Data to discover SRP servers on the Thread mesh and automatically select the (preferred) server.
+ * - The Network Data entry corresponding to the selected SRP server must indicate that the server also supports the
+ *   SRP coder and can decode encoded SRP messages (this is indicated by the published version number in the Network
+ *   Data service entry).
+ *
+ * To protect against potential issues with an SRP server's decoding implementation, the SRP client implements a
+ * safeguard fallback mechanism. Even if the selected server indicates support for encoded messages, after a series of
+ * consecutive registration failures with that server, the client will stop sending coded messages to the selected
+ * server. This fallback to uncoded messages will persist until the client is stopped and restarted (e.g., by
+ * switching to a new server).
+ *
+ * @param[in] aInstance   A pointer to the OpenThread instance.
+ * @param[in] aEnable     TRUE to enable, FALSE to disable use of the SRP coder.
+ */
+void otSrpClientSetMessageCoderEnabled(otInstance *aInstance, bool aEnable);
+
+/**
+ * Indicates whether the use of SRP coder to send coded SRP update message is enabled or disabled.
+ *
+ * Requires `OPENTHREAD_CONFIG_SRP_CODER_ENABLE` feature.
+ *
+ * @param[in] aInstance    A pointer to the OpenThread instance.
+ *
+ * @retval   TRUE   If the use of SRP coder is enabled.
+ * @retval   FALSE  If the use of SRP coder is disabled
+ *
+ */
+bool otSrpClientIsMessageCoderEnabled(otInstance *aInstance);
+
+/**
  * @}
  */
 
