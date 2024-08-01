@@ -54,7 +54,7 @@ Show help info.
 
 ```bash
 $ python3 ./tools/cp-caps/rcp_caps_test.py -h
-usage: rcp_caps_test.py [-h] [-c] [-d] [-p] [-v]
+usage: rcp_caps_test.py [-h] [-c] [-d] [-p] [-t] [-v]
 
 This script is used for testing RCP capabilities.
 
@@ -63,6 +63,7 @@ options:
   -c, --csl            test whether the RCP supports CSL transmitter
   -d, --diag-commands  test whether the RCP supports all diag commands
   -p, --data-poll      test whether the RCP supports data poll
+  -t, --throughput     test the Thread network 1-hop throughput
   -v, --verbose        output verbose information
 
 Device Interfaces:
@@ -143,4 +144,13 @@ The parameter `-p` or `--data-poll` starts to test whether the RCP supports data
 $ DUT_ADB_USB=1269UCKFZTAM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 ./tools/cp-caps/rcp_caps_test.py -p
 Data Poll Parent ----------------------------------------- OK
 Data Poll Child ------------------------------------------ OK
+```
+
+### Test Throughput
+
+The parameter `-t` or `--throughput` starts to test the Thread network 1-hop throughput of the DUT.
+
+```bash
+$ DUT_ADB_USB=1269UCKFZTAM95OR REF_ADB_USB=44061HFAG01AQK python3 ./tools/cp-caps/rcp_caps_test.py -t
+Throughput ----------------------------------------------- 75.6 Kbits/sec
 ```
