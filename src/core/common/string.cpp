@@ -357,6 +357,16 @@ StringWriter &StringWriter::AppendHexBytes(const uint8_t *aBytes, uint16_t aLeng
     return *this;
 }
 
+StringWriter &StringWriter::AppendHexBytesUppercase(const uint8_t *aBytes, uint16_t aLength)
+{
+    while (aLength--)
+    {
+        Append("%02X", *aBytes++);
+    }
+
+    return *this;
+}
+
 StringWriter &StringWriter::AppendCharMultipleTimes(char aChar, uint16_t aCount)
 {
     while (aCount--)

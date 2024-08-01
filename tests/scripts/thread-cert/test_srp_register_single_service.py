@@ -74,7 +74,6 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         # 0. Start the server & client devices.
         #
 
-        server.srp_server_set_enabled(True)
         server.start()
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(server.get_state(), 'leader')
@@ -85,89 +84,108 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(client.get_state(), 'router')
 
-        #
-        # 1. Register a single service and verify that it works.
-        #
+        # Perform test steps twice, with and without SRP coder
+        # use enabled on client.
 
-        self.assertEqual(client.srp_client_get_auto_start_mode(), 'Enabled')
+        for client_coder_enable in [False, True]:
+            print('-' * 80)
+            client.srp_client_set_coder_enable(client_coder_enable)
 
-        client.srp_client_set_host_name('my-host')
-        client.srp_client_set_host_address('2001::1')
-        client.srp_client_add_service('my-service', '_ipps._tcp', 12345, 0, 0, ['abc', 'def=', 'xyz=XYZ'])
-        self.simulator.go(2)
+            server.srp_server_set_enabled(True)
 
-        self.check_host_and_service(server, client, '2001::1')
+            #
+            # 1. Register a single service and verify that it works.
+            #
 
-        #
-        # 2. Unregister a service but retain the name. The service name should be
-        #    retained on the server.
-        #
+            client.srp_client_enable_auto_start_mode()
+            self.assertEqual(client.srp_client_get_auto_start_mode(), 'Enabled')
+            self.simulator.go(15)
 
-        client.srp_client_remove_service('my-service', '_ipps._tcp')
-        self.simulator.go(2)
+            client.srp_client_set_host_name('my-host')
+            client.srp_client_set_host_address('2001::1')
+            client.srp_client_add_service('my-service', '_ipps._tcp', 12345, 0, 0, ['abc', 'def=', 'xyz=XYZ'])
+            self.simulator.go(2)
 
-        client_services = client.srp_client_get_services()
-        print(client_services)
-        self.assertEqual(len(client_services), 0)
+            self.check_host_and_service(server, client, '2001::1')
 
-        server_services = server.srp_server_get_services()
-        print(server_services)
-        self.assertEqual(len(server_services), 1)
-        server_service = server_services[0]
+            #
+            # 2. Unregister a service but retain the name. The service name should be
+            #    retained on the server.
+            #
 
-        # Verify that the service has been successfully removed on the server side.
-        self.assertEqual(server_service['deleted'], 'true')
+            client.srp_client_remove_service('my-service', '_ipps._tcp')
+            self.simulator.go(2)
 
-        server_hosts = server.srp_server_get_hosts()
-        print(server_hosts)
-        self.assertEqual(len(server_hosts), 1)
-        server_host = server_hosts[0]
+            client_services = client.srp_client_get_services()
+            print(client_services)
+            self.assertEqual(len(client_services), 0)
 
-        # The registered host should not be touched.
-        self.assertEqual(server_host['deleted'], 'false')
-        self.assertEqual(server_host['name'], 'my-host')
-        self.assertEqual(len(server_host['addresses']), 1)
-        self.assertEqual(ipaddress.ip_address(server_host['addresses'][0]), ipaddress.ip_address('2001::1'))
+            server_services = server.srp_server_get_services()
+            print(server_services)
+            self.assertEqual(len(server_services), 1)
+            server_service = server_services[0]
 
-        #
-        # 3. Register the same service again. It should succeed and the name should be
-        #    reused.
-        #
+            # Verify that the service has been successfully removed on the server side.
+            self.assertEqual(server_service['deleted'], 'true')
 
-        client.srp_client_add_service('my-service', '_ipps._tcp', 12345, 0, 0, ['abc', 'def=', 'xyz=XYZ'])
-        self.simulator.go(2)
+            server_hosts = server.srp_server_get_hosts()
+            print(server_hosts)
+            self.assertEqual(len(server_hosts), 1)
+            server_host = server_hosts[0]
 
-        self.check_host_and_service(server, client, '2001::1')
+            # The registered host should not be touched.
+            self.assertEqual(server_host['deleted'], 'false')
+            self.assertEqual(server_host['name'], 'my-host')
+            self.assertEqual(len(server_host['addresses']), 1)
+            self.assertEqual(ipaddress.ip_address(server_host['addresses'][0]), ipaddress.ip_address('2001::1'))
 
-        #
-        # 4. Update the SRP host address and make sure it will succeed.
-        #
+            #
+            # 3. Register the same service again. It should succeed and the name should be
+            #    reused.
+            #
 
-        client.srp_client_set_host_address('2001::2')
-        self.simulator.go(2)
+            client.srp_client_add_service('my-service', '_ipps._tcp', 12345, 0, 0, ['abc', 'def=', 'xyz=XYZ'])
+            self.simulator.go(2)
 
-        self.check_host_and_service(server, client, '2001::2')
+            self.check_host_and_service(server, client, '2001::1')
 
-        #
-        # 5. Fully remove the host and all its service instances.
-        #
+            #
+            # 4. Update the SRP host address and make sure it will succeed.
+            #
 
-        client.srp_client_remove_host(remove_key=True)
-        self.simulator.go(2)
+            client.srp_client_set_host_address('2001::2')
+            self.simulator.go(2)
 
-        client_services = client.srp_client_get_services()
-        print(client_services)
-        self.assertEqual(len(client_services), 0)
+            self.check_host_and_service(server, client, '2001::2')
 
-        print(client.srp_client_get_host_state())
+            #
+            # 5. Fully remove the host and all its service instances.
+            #
 
-        server_services = server.srp_server_get_services()
-        print(server_services)
-        self.assertEqual(len(server_services), 0)
+            client.srp_client_remove_host(remove_key=True)
+            self.simulator.go(2)
 
-        server_hosts = server.srp_server_get_hosts()
-        print(server_hosts)
-        self.assertEqual(len(server_hosts), 0)
+            client_services = client.srp_client_get_services()
+            print(client_services)
+            self.assertEqual(len(client_services), 0)
+
+            print(client.srp_client_get_host_state())
+
+            server_services = server.srp_server_get_services()
+            print(server_services)
+            self.assertEqual(len(server_services), 0)
+
+            server_hosts = server.srp_server_get_hosts()
+            print(server_hosts)
+            self.assertEqual(len(server_hosts), 0)
+
+            #
+            # 6. Stop client and server and clear config.
+            #
+
+            client.srp_client_clear_host()
+            client.srp_client_stop()
+            server.srp_server_set_enabled(False)
 
     def check_host_and_service(self, server, client, host_addr):
         """Check that we have properly registered host and service instance.
