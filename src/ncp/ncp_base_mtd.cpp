@@ -1370,6 +1370,30 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PENDING_DATASE
     return EncodeOperationalDataset(dataset);
 }
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ACTIVE_DATASET_TLVS>(void)
+{
+    otError                  error = OT_ERROR_NONE;
+    otOperationalDatasetTlvs dataset;
+
+    SuccessOrExit(error = otDatasetGetActiveTlvs(mInstance, &dataset));
+    SuccessOrExit(error = mEncoder.WriteData(dataset.mTlvs, dataset.mLength));
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PENDING_DATASET_TLVS>(void)
+{
+    otError                  error = OT_ERROR_NONE;
+    otOperationalDatasetTlvs dataset;
+
+    SuccessOrExit(error = otDatasetGetPendingTlvs(mInstance, &dataset));
+    SuccessOrExit(error = mEncoder.WriteData(dataset.mTlvs, dataset.mLength));
+
+exit:
+    return error;
+}
+
 otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
                                           const uint8_t       **aTlvs,
                                           uint8_t              *aTlvsLength,
@@ -1646,6 +1670,40 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_PENDING_DATASE
 
     SuccessOrExit(error = DecodeOperationalDataset(dataset));
     error = otDatasetSetPending(mInstance, &dataset);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ACTIVE_DATASET_TLVS>(void)
+{
+    otError                  error = OT_ERROR_NONE;
+    const uint8_t           *tlvs  = nullptr;
+    uint16_t                 len   = 0;
+    otOperationalDatasetTlvs dataset;
+
+    SuccessOrExit(error = mDecoder.ReadData(tlvs, len));
+    VerifyOrExit(len <= OT_OPERATIONAL_DATASET_MAX_LENGTH, error = OT_ERROR_PARSE);
+    memcpy(&dataset.mTlvs, tlvs, len);
+    dataset.mLength = static_cast<uint8_t>(len);
+    SuccessOrExit(error = otDatasetSetActiveTlvs(mInstance, &dataset));
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_PENDING_DATASET_TLVS>(void)
+{
+    otError                  error = OT_ERROR_NONE;
+    const uint8_t           *tlvs  = nullptr;
+    uint16_t                 len   = 0;
+    otOperationalDatasetTlvs dataset;
+
+    SuccessOrExit(error = mDecoder.ReadData(tlvs, len));
+    VerifyOrExit(len <= OT_OPERATIONAL_DATASET_MAX_LENGTH, error = OT_ERROR_PARSE);
+    memcpy(&dataset.mTlvs, tlvs, len);
+    dataset.mLength = static_cast<uint8_t>(len);
+    SuccessOrExit(error = otDatasetSetPendingTlvs(mInstance, &dataset));
 
 exit:
     return error;
