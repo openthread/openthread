@@ -1280,6 +1280,11 @@ class NodeImpl:
         self.send_command(cmd)
         return self._expect_command_output()[0]
 
+    def srp_client_set_coder_enable(self, enable):
+        cmd = f'srp client coder {"enable" if enable else "disable"}'
+        self.send_command(cmd)
+        self._expect_done()
+
     def srp_client_get_auto_start_mode(self):
         cmd = 'srp client autostart'
         self.send_command(cmd)

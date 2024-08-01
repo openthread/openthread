@@ -107,6 +107,7 @@
 #include "net/sntp_client.hpp"
 #include "net/srp_advertising_proxy.hpp"
 #include "net/srp_client.hpp"
+#include "net/srp_coder.hpp"
 #include "net/srp_server.hpp"
 #include "radio/ble_secure.hpp"
 #include "thread/address_resolver.hpp"
@@ -522,6 +523,10 @@ private:
     Utils::SrpClientBuffers mSrpClientBuffers;
 #endif
 
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    Srp::Coder mSrpCoder;
+#endif
+
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
     Dns::ServiceDiscovery::Server mDnssdServer;
 #endif
@@ -924,6 +929,10 @@ template <> inline Srp::Client &Instance::Get(void) { return mSrpClient; }
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
 template <> inline Utils::SrpClientBuffers &Instance::Get(void) { return mSrpClientBuffers; }
+#endif
+
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+template <> inline Srp::Coder &Instance::Get(void) { return mSrpCoder; }
 #endif
 
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE

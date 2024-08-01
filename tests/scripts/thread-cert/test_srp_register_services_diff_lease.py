@@ -70,405 +70,421 @@ class SrpRegisterServicesDiffLease(thread_cert.TestCase):
         server = self.nodes[SERVER]
         client = self.nodes[CLIENT]
 
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Start the server and client.
+        # Perform test steps twice, with and without SRP coder
+        # use enabled on client.
 
-        server.start()
-        self.simulator.go(config.LEADER_STARTUP_DELAY)
-        self.assertEqual(server.get_state(), 'leader')
+        for client_coder_enable in [False, True]:
+            print('-' * 80)
+            client.srp_client_set_coder_enable(client_coder_enable)
 
-        client.start()
-        self.simulator.go(config.ROUTER_STARTUP_DELAY)
-        self.assertEqual(client.get_state(), 'router')
+            #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # Start the server and client.
 
-        server.srp_server_set_enabled(True)
-        client.srp_client_enable_auto_start_mode()
+            server.start()
+            self.simulator.go(config.LEADER_STARTUP_DELAY)
+            self.assertEqual(server.get_state(), 'leader')
 
-        self.simulator.go(15)
+            client.start()
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
+            self.assertEqual(client.get_state(), 'router')
 
-        client.srp_client_set_host_name('host')
-        client.srp_client_enable_auto_host_address()
+            server.srp_server_set_enabled(True)
+            client.srp_client_enable_auto_start_mode()
 
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Add a service with specific lease and key lease and verify that
-        # it is successfully registered and seen with same lease/key-lease
-        # on server.
+            self.simulator.go(15)
 
-        client.srp_client_add_service('ins1', '_test._udp', 1111, lease=60, key_lease=800)
+            client.srp_client_set_host_name('host')
+            client.srp_client_enable_auto_host_address()
 
-        self.simulator.go(5)
+            #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # Add a service with specific lease and key lease and verify that
+            # it is successfully registered and seen with same lease/key-lease
+            # on server.
 
-        self.check_services_on_client(client, 1)
-        services = server.srp_server_get_services()
-        self.assertEqual(len(services), 1)
-        service = services[0]
-        self.assertEqual(service['fullname'], 'ins1._test._udp.default.service.arpa.')
-        self.assertEqual(service['deleted'], 'false')
-        self.assertEqual(int(service['ttl']), 60)
-        self.assertEqual(int(service['lease']), 60)
-        self.assertEqual(int(service['key-lease']), 800)
+            client.srp_client_add_service('ins1', '_test._udp', 1111, lease=60, key_lease=800)
 
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Register two more services with different lease intervals.
+            self.simulator.go(5)
 
-        client.srp_client_add_service('ins2', '_test._udp', 2222, lease=30, key_lease=200)
-        client.srp_client_add_service('ins3', '_test._udp', 3333, lease=100, key_lease=1000)
-
-        self.simulator.go(10)
-
-        self.check_services_on_client(client, 3)
-        server_services = server.srp_server_get_services()
-        self.assertEqual(len(server_services), 3)
-        for service in server_services:
-            if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 60)
-                self.assertEqual(int(service['lease']), 60)
-                self.assertEqual(int(service['key-lease']), 800)
-            elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 30)
-                self.assertEqual(int(service['lease']), 30)
-                self.assertEqual(int(service['key-lease']), 200)
-            elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 100)
-                self.assertEqual(int(service['lease']), 100)
-                self.assertEqual(int(service['key-lease']), 1000)
-            else:
-                self.assertTrue(False)
-
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Wait for longest lease time to validate that all services renew their
-        # lease successfully.
-
-        self.simulator.go(105)
-
-        self.check_services_on_client(client, 3)
-        server_services = server.srp_server_get_services()
-        self.assertEqual(len(server_services), 3)
-        for service in server_services:
+            self.check_services_on_client(client, 1)
+            services = server.srp_server_get_services()
+            self.assertEqual(len(services), 1)
+            service = services[0]
+            self.assertEqual(service['fullname'], 'ins1._test._udp.default.service.arpa.')
             self.assertEqual(service['deleted'], 'false')
+            self.assertEqual(int(service['ttl']), 60)
+            self.assertEqual(int(service['lease']), 60)
+            self.assertEqual(int(service['key-lease']), 800)
 
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Remove two services.
+            #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # Register two more services with different lease intervals.
 
-        client.srp_client_remove_service('ins2', '_test._udp')
-        client.srp_client_remove_service('ins3', '_test._udp')
+            client.srp_client_add_service('ins2', '_test._udp', 2222, lease=30, key_lease=200)
+            client.srp_client_add_service('ins3', '_test._udp', 3333, lease=100, key_lease=1000)
 
-        self.simulator.go(10)
+            self.simulator.go(10)
 
-        self.check_services_on_client(client, 1)
-        server_services = server.srp_server_get_services()
-        self.assertEqual(len(server_services), 3)
-        for service in server_services:
-            if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
+            self.check_services_on_client(client, 3)
+            server_services = server.srp_server_get_services()
+            self.assertEqual(len(server_services), 3)
+            for service in server_services:
+                if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 60)
+                    self.assertEqual(int(service['lease']), 60)
+                    self.assertEqual(int(service['key-lease']), 800)
+                elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 30)
+                    self.assertEqual(int(service['lease']), 30)
+                    self.assertEqual(int(service['key-lease']), 200)
+                elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 100)
+                    self.assertEqual(int(service['lease']), 100)
+                    self.assertEqual(int(service['key-lease']), 1000)
+                else:
+                    self.assertTrue(False)
+
+            #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # Wait for longest lease time to validate that all services renew their
+            # lease successfully.
+
+            self.simulator.go(105)
+
+            self.check_services_on_client(client, 3)
+            server_services = server.srp_server_get_services()
+            self.assertEqual(len(server_services), 3)
+            for service in server_services:
                 self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 60)
-                self.assertEqual(int(service['lease']), 60)
-                self.assertEqual(int(service['key-lease']), 800)
-            elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'true')
-            elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'true')
-            else:
-                self.assertTrue(False)
 
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Wait for longer than key-lease of `ins2` service and check that it is
-        # removed on server.
+            #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # Remove two services.
 
-        self.simulator.go(201)
+            client.srp_client_remove_service('ins2', '_test._udp')
+            client.srp_client_remove_service('ins3', '_test._udp')
 
-        self.check_services_on_client(client, 1)
-        server_services = server.srp_server_get_services()
-        self.assertEqual(len(server_services), 2)
-        for service in server_services:
-            if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 60)
-                self.assertEqual(int(service['lease']), 60)
-                self.assertEqual(int(service['key-lease']), 800)
-            elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'true')
-            else:
-                self.assertTrue(False)
+            self.simulator.go(10)
 
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Add both services again now with same lease intervals.
+            self.check_services_on_client(client, 1)
+            server_services = server.srp_server_get_services()
+            self.assertEqual(len(server_services), 3)
+            for service in server_services:
+                if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 60)
+                    self.assertEqual(int(service['lease']), 60)
+                    self.assertEqual(int(service['key-lease']), 800)
+                elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'true')
+                elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'true')
+                else:
+                    self.assertTrue(False)
 
-        client.srp_client_add_service('ins2', '_test._udp', 2222, lease=30, key_lease=100)
-        client.srp_client_add_service('ins3', '_test._udp', 3333, lease=30, key_lease=100)
+            #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # Wait for longer than key-lease of `ins2` service and check that it is
+            # removed on server.
 
-        self.simulator.go(10)
+            self.simulator.go(201)
 
-        self.check_services_on_client(client, 3)
-        server_services = server.srp_server_get_services()
-        self.assertEqual(len(server_services), 3)
-        for service in server_services:
-            if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 60)
-                self.assertEqual(int(service['lease']), 60)
-                self.assertEqual(int(service['key-lease']), 800)
-            elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 30)
-                self.assertEqual(int(service['lease']), 30)
-                self.assertEqual(int(service['key-lease']), 100)
-            elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 30)
-                self.assertEqual(int(service['lease']), 30)
-                self.assertEqual(int(service['key-lease']), 100)
-            else:
-                self.assertTrue(False)
+            self.check_services_on_client(client, 1)
+            server_services = server.srp_server_get_services()
+            self.assertEqual(len(server_services), 2)
+            for service in server_services:
+                if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 60)
+                    self.assertEqual(int(service['lease']), 60)
+                    self.assertEqual(int(service['key-lease']), 800)
+                elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'true')
+                else:
+                    self.assertTrue(False)
 
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Remove `ins1` while adding a new service with same key-lease as
-        # `ins1` but different lease interval.
+            #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # Add both services again now with same lease intervals.
 
-        client.srp_client_remove_service('ins1', '_test._udp')
-        client.srp_client_add_service('ins4', '_test._udp', 4444, lease=90, key_lease=800)
+            client.srp_client_add_service('ins2', '_test._udp', 2222, lease=30, key_lease=100)
+            client.srp_client_add_service('ins3', '_test._udp', 3333, lease=30, key_lease=100)
 
-        self.simulator.go(5)
+            self.simulator.go(10)
 
-        self.check_services_on_client(client, 3)
-        server_services = server.srp_server_get_services()
-        self.assertEqual(len(server_services), 4)
-        for service in server_services:
-            if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'true')
-            elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 30)
-                self.assertEqual(int(service['lease']), 30)
-                self.assertEqual(int(service['key-lease']), 100)
-            elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 30)
-                self.assertEqual(int(service['lease']), 30)
-                self.assertEqual(int(service['key-lease']), 100)
-            elif service['fullname'] == 'ins4._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 90)
-                self.assertEqual(int(service['lease']), 90)
-                self.assertEqual(int(service['key-lease']), 800)
-            else:
-                self.assertTrue(False)
+            self.check_services_on_client(client, 3)
+            server_services = server.srp_server_get_services()
+            self.assertEqual(len(server_services), 3)
+            for service in server_services:
+                if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 60)
+                    self.assertEqual(int(service['lease']), 60)
+                    self.assertEqual(int(service['key-lease']), 800)
+                elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 30)
+                    self.assertEqual(int(service['lease']), 30)
+                    self.assertEqual(int(service['key-lease']), 100)
+                elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 30)
+                    self.assertEqual(int(service['lease']), 30)
+                    self.assertEqual(int(service['key-lease']), 100)
+                else:
+                    self.assertTrue(False)
 
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Remove two services `ins2` and `ins3` (they now have same key lease).
+            #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # Remove `ins1` while adding a new service with same key-lease as
+            # `ins1` but different lease interval.
 
-        client.srp_client_remove_service('ins2', '_test._udp')
-        client.srp_client_remove_service('ins3', '_test._udp')
+            client.srp_client_remove_service('ins1', '_test._udp')
+            client.srp_client_add_service('ins4', '_test._udp', 4444, lease=90, key_lease=800)
 
-        self.simulator.go(10)
+            self.simulator.go(5)
 
-        self.check_services_on_client(client, 1)
-        server_services = server.srp_server_get_services()
-        self.assertEqual(len(server_services), 4)
-        for service in server_services:
-            if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'true')
-            elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'true')
-            elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'true')
-            elif service['fullname'] == 'ins4._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 90)
-                self.assertEqual(int(service['lease']), 90)
-                self.assertEqual(int(service['key-lease']), 800)
-            else:
-                self.assertTrue(False)
+            self.check_services_on_client(client, 3)
+            server_services = server.srp_server_get_services()
+            self.assertEqual(len(server_services), 4)
+            for service in server_services:
+                if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'true')
+                elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 30)
+                    self.assertEqual(int(service['lease']), 30)
+                    self.assertEqual(int(service['key-lease']), 100)
+                elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 30)
+                    self.assertEqual(int(service['lease']), 30)
+                    self.assertEqual(int(service['key-lease']), 100)
+                elif service['fullname'] == 'ins4._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 90)
+                    self.assertEqual(int(service['lease']), 90)
+                    self.assertEqual(int(service['key-lease']), 800)
+                else:
+                    self.assertTrue(False)
 
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Add `ins1` with key-lease smaller than lease and check that
-        # client handles this properly (uses the lease value for
-        # key-lease).
+            #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # Remove two services `ins2` and `ins3` (they now have same key lease).
 
-        client.srp_client_add_service('ins1', '_test._udp', 1111, lease=100, key_lease=90)
+            client.srp_client_remove_service('ins2', '_test._udp')
+            client.srp_client_remove_service('ins3', '_test._udp')
 
-        self.simulator.go(10)
+            self.simulator.go(10)
 
-        self.check_services_on_client(client, 2)
-        server_services = server.srp_server_get_services()
-        self.assertEqual(len(server_services), 4)
-        for service in server_services:
-            if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 100)
-                self.assertEqual(int(service['lease']), 100)
-                self.assertEqual(int(service['key-lease']), 100)
-            elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'true')
-            elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'true')
-            elif service['fullname'] == 'ins4._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 90)
-                self.assertEqual(int(service['lease']), 90)
-                self.assertEqual(int(service['key-lease']), 800)
-            else:
-                self.assertTrue(False)
+            self.check_services_on_client(client, 1)
+            server_services = server.srp_server_get_services()
+            self.assertEqual(len(server_services), 4)
+            for service in server_services:
+                if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'true')
+                elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'true')
+                elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'true')
+                elif service['fullname'] == 'ins4._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 90)
+                    self.assertEqual(int(service['lease']), 90)
+                    self.assertEqual(int(service['key-lease']), 800)
+                else:
+                    self.assertTrue(False)
 
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Change default lease and key-lease intervals on client.
+            #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # Add `ins1` with key-lease smaller than lease and check that
+            # client handles this properly (uses the lease value for
+            # key-lease).
 
-        client.srp_client_set_lease_interval(40)
-        self.assertEqual(client.srp_client_get_lease_interval(), 40)
+            client.srp_client_add_service('ins1', '_test._udp', 1111, lease=100, key_lease=90)
 
-        client.srp_client_set_key_lease_interval(330)
-        self.assertEqual(client.srp_client_get_key_lease_interval(), 330)
+            self.simulator.go(10)
 
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Add `ins2` and `ins3`. `ins2` specifies the key-lease explicitly but
-        # leaves lease as default. `ins3` does the opposite.
+            self.check_services_on_client(client, 2)
+            server_services = server.srp_server_get_services()
+            self.assertEqual(len(server_services), 4)
+            for service in server_services:
+                if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 100)
+                    self.assertEqual(int(service['lease']), 100)
+                    self.assertEqual(int(service['key-lease']), 100)
+                elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'true')
+                elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'true')
+                elif service['fullname'] == 'ins4._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 90)
+                    self.assertEqual(int(service['lease']), 90)
+                    self.assertEqual(int(service['key-lease']), 800)
+                else:
+                    self.assertTrue(False)
 
-        client.srp_client_add_service('ins2', '_test._udp', 2222, key_lease=330)
-        client.srp_client_add_service('ins3', '_test._udp', 3333, lease=40)
+            #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # Change default lease and key-lease intervals on client.
 
-        self.simulator.go(10)
+            client.srp_client_set_lease_interval(40)
+            self.assertEqual(client.srp_client_get_lease_interval(), 40)
 
-        self.check_services_on_client(client, 4)
-        server_services = server.srp_server_get_services()
-        self.assertEqual(len(server_services), 4)
-        for service in server_services:
-            if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 100)
-                self.assertEqual(int(service['lease']), 100)
-                self.assertEqual(int(service['key-lease']), 100)
-            elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 40)
-                self.assertEqual(int(service['lease']), 40)
-                self.assertEqual(int(service['key-lease']), 330)
-            elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 40)
-                self.assertEqual(int(service['lease']), 40)
-                self.assertEqual(int(service['key-lease']), 330)
-            elif service['fullname'] == 'ins4._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 90)
-                self.assertEqual(int(service['lease']), 90)
-                self.assertEqual(int(service['key-lease']), 800)
-            else:
-                self.assertTrue(False)
+            client.srp_client_set_key_lease_interval(330)
+            self.assertEqual(client.srp_client_get_key_lease_interval(), 330)
 
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Change the default lease to 50 and wait for long enough for `ins2`
-        # and `ins3` to do lease refresh. Validate that `ins2` now requests
-        # new default lease of 50 while `ins3` should stay as before.
+            #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # Add `ins2` and `ins3`. `ins2` specifies the key-lease explicitly but
+            # leaves lease as default. `ins3` does the opposite.
 
-        client.srp_client_set_lease_interval(50)
-        self.assertEqual(client.srp_client_get_lease_interval(), 50)
+            client.srp_client_add_service('ins2', '_test._udp', 2222, key_lease=330)
+            client.srp_client_add_service('ins3', '_test._udp', 3333, lease=40)
 
-        self.simulator.go(45)
+            self.simulator.go(10)
 
-        self.check_services_on_client(client, 4)
-        server_services = server.srp_server_get_services()
-        self.assertEqual(len(server_services), 4)
-        for service in server_services:
-            if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 100)
-                self.assertEqual(int(service['lease']), 100)
-                self.assertEqual(int(service['key-lease']), 100)
-            elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 50)
-                self.assertEqual(int(service['lease']), 50)
-                self.assertEqual(int(service['key-lease']), 330)
-            elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 40)
-                self.assertEqual(int(service['lease']), 40)
-                self.assertEqual(int(service['key-lease']), 330)
-            elif service['fullname'] == 'ins4._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 90)
-                self.assertEqual(int(service['lease']), 90)
-                self.assertEqual(int(service['key-lease']), 800)
-            else:
-                self.assertTrue(False)
+            self.check_services_on_client(client, 4)
+            server_services = server.srp_server_get_services()
+            self.assertEqual(len(server_services), 4)
+            for service in server_services:
+                if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 100)
+                    self.assertEqual(int(service['lease']), 100)
+                    self.assertEqual(int(service['key-lease']), 100)
+                elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 40)
+                    self.assertEqual(int(service['lease']), 40)
+                    self.assertEqual(int(service['key-lease']), 330)
+                elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 40)
+                    self.assertEqual(int(service['lease']), 40)
+                    self.assertEqual(int(service['key-lease']), 330)
+                elif service['fullname'] == 'ins4._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 90)
+                    self.assertEqual(int(service['lease']), 90)
+                    self.assertEqual(int(service['key-lease']), 800)
+                else:
+                    self.assertTrue(False)
 
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Change the default key lease to 30. `ins3` should adopt this but
-        # since it is shorter than its explicitly specified lease the
-        # client should use same value for both lease and key-lease.
+            #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # Change the default lease to 50 and wait for long enough for `ins2`
+            # and `ins3` to do lease refresh. Validate that `ins2` now requests
+            # new default lease of 50 while `ins3` should stay as before.
 
-        client.srp_client_set_key_lease_interval(35)
-        self.assertEqual(client.srp_client_get_key_lease_interval(), 35)
+            client.srp_client_set_lease_interval(50)
+            self.assertEqual(client.srp_client_get_lease_interval(), 50)
 
-        self.simulator.go(45)
+            self.simulator.go(45)
 
-        self.check_services_on_client(client, 4)
-        server_services = server.srp_server_get_services()
-        self.assertEqual(len(server_services), 4)
-        for service in server_services:
-            if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 100)
-                self.assertEqual(int(service['lease']), 100)
-                self.assertEqual(int(service['key-lease']), 100)
-            elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 50)
-                self.assertEqual(int(service['lease']), 50)
-                self.assertEqual(int(service['key-lease']), 330)
-            elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 40)
-                self.assertEqual(int(service['lease']), 40)
-                self.assertEqual(int(service['key-lease']), 40)
-            elif service['fullname'] == 'ins4._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 90)
-                self.assertEqual(int(service['lease']), 90)
-                self.assertEqual(int(service['key-lease']), 800)
-            else:
-                self.assertTrue(False)
+            self.check_services_on_client(client, 4)
+            server_services = server.srp_server_get_services()
+            self.assertEqual(len(server_services), 4)
+            for service in server_services:
+                if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 100)
+                    self.assertEqual(int(service['lease']), 100)
+                    self.assertEqual(int(service['key-lease']), 100)
+                elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 50)
+                    self.assertEqual(int(service['lease']), 50)
+                    self.assertEqual(int(service['key-lease']), 330)
+                elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 40)
+                    self.assertEqual(int(service['lease']), 40)
+                    self.assertEqual(int(service['key-lease']), 330)
+                elif service['fullname'] == 'ins4._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 90)
+                    self.assertEqual(int(service['lease']), 90)
+                    self.assertEqual(int(service['key-lease']), 800)
+                else:
+                    self.assertTrue(False)
 
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Change the requested TTL. Wait for long enough for all
-        # services to refresh and check that the new TTL is correctly
-        # requested by the client (when it is not larger than
-        # service lease).
+            #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # Change the default key lease to 30. `ins3` should adopt this but
+            # since it is shorter than its explicitly specified lease the
+            # client should use same value for both lease and key-lease.
 
-        client.srp_client_set_ttl(65)
-        self.assertEqual(client.srp_client_get_ttl(), 65)
+            client.srp_client_set_key_lease_interval(35)
+            self.assertEqual(client.srp_client_get_key_lease_interval(), 35)
 
-        self.simulator.go(110)
+            self.simulator.go(45)
 
-        self.check_services_on_client(client, 4)
-        server_services = server.srp_server_get_services()
-        self.assertEqual(len(server_services), 4)
-        for service in server_services:
-            if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 65)
-                self.assertEqual(int(service['lease']), 100)
-                self.assertEqual(int(service['key-lease']), 100)
-            elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 50)
-                self.assertEqual(int(service['lease']), 50)
-                self.assertEqual(int(service['key-lease']), 330)
-            elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 40)
-                self.assertEqual(int(service['lease']), 40)
-                self.assertEqual(int(service['key-lease']), 40)
-            elif service['fullname'] == 'ins4._test._udp.default.service.arpa.':
-                self.assertEqual(service['deleted'], 'false')
-                self.assertEqual(int(service['ttl']), 65)
-                self.assertEqual(int(service['lease']), 90)
-                self.assertEqual(int(service['key-lease']), 800)
-            else:
-                self.assertTrue(False)
+            self.check_services_on_client(client, 4)
+            server_services = server.srp_server_get_services()
+            self.assertEqual(len(server_services), 4)
+            for service in server_services:
+                if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 100)
+                    self.assertEqual(int(service['lease']), 100)
+                    self.assertEqual(int(service['key-lease']), 100)
+                elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 50)
+                    self.assertEqual(int(service['lease']), 50)
+                    self.assertEqual(int(service['key-lease']), 330)
+                elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 40)
+                    self.assertEqual(int(service['lease']), 40)
+                    self.assertEqual(int(service['key-lease']), 40)
+                elif service['fullname'] == 'ins4._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 90)
+                    self.assertEqual(int(service['lease']), 90)
+                    self.assertEqual(int(service['key-lease']), 800)
+                else:
+                    self.assertTrue(False)
+
+            #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # Change the requested TTL. Wait for long enough for all
+            # services to refresh and check that the new TTL is correctly
+            # requested by the client (when it is not larger than
+            # service lease).
+
+            client.srp_client_set_ttl(65)
+            self.assertEqual(client.srp_client_get_ttl(), 65)
+
+            self.simulator.go(110)
+
+            self.check_services_on_client(client, 4)
+            server_services = server.srp_server_get_services()
+            self.assertEqual(len(server_services), 4)
+            for service in server_services:
+                if service['fullname'] == 'ins1._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 65)
+                    self.assertEqual(int(service['lease']), 100)
+                    self.assertEqual(int(service['key-lease']), 100)
+                elif service['fullname'] == 'ins2._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 50)
+                    self.assertEqual(int(service['lease']), 50)
+                    self.assertEqual(int(service['key-lease']), 330)
+                elif service['fullname'] == 'ins3._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 40)
+                    self.assertEqual(int(service['lease']), 40)
+                    self.assertEqual(int(service['key-lease']), 40)
+                elif service['fullname'] == 'ins4._test._udp.default.service.arpa.':
+                    self.assertEqual(service['deleted'], 'false')
+                    self.assertEqual(int(service['ttl']), 65)
+                    self.assertEqual(int(service['lease']), 90)
+                    self.assertEqual(int(service['key-lease']), 800)
+                else:
+                    self.assertTrue(False)
+
+            #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            # Stop client and server and clear all previous
+            # configs.
+
+            client.srp_client_clear_host()
+            client.srp_client_stop()
+            client.srp_client_set_ttl(0)
+            server.srp_server_set_enabled(False)
 
     def check_services_on_client(self, client, expected_num_services):
         services = client.srp_client_get_services()

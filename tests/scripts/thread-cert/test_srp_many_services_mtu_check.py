@@ -83,6 +83,7 @@ class SrpManyServicesMtuCheck(thread_cert.TestCase):
         self.assertEqual(client.get_state(), 'router')
 
         server.srp_server_set_enabled(True)
+        client.srp_client_set_coder_enable(False)
         client.srp_client_enable_auto_start_mode()
         self.simulator.go(15)
 

@@ -92,6 +92,9 @@ Server::Server(Instance &aInstance)
 #if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
     , mFastStartMode(false)
 #endif
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE && OPENTHREAD_CONFIG_SRP_CODER_TEST_API_ENABLE
+    , mTestMode(kTestModeDisabled)
+#endif
 {
     IgnoreError(SetDomain(kDefaultDomain));
 }
@@ -1611,6 +1614,19 @@ exit:
     return;
 }
 
+void Server::SendResponse(const Message              &aRequest,
+                          Dns::UpdateHeader::Response aResponseCode,
+                          const Ip6::MessageInfo     &aMessageInfo)
+{
+    Dns::UpdateHeader header;
+
+    SuccessOrExit(aRequest.Read(aRequest.GetOffset(), header));
+    SendResponse(header, aResponseCode, aMessageInfo);
+
+exit:
+    return;
+}
+
 void Server::SendResponse(const Dns::UpdateHeader    &aHeader,
                           Dns::UpdateHeader::Response aResponseCode,
                           const Ip6::MessageInfo     &aMessageInfo)
@@ -1714,7 +1730,43 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
 Error Server::ProcessMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    return ProcessMessage(aMessage, TimerMilli::GetNow(), mTtlConfig, mLeaseConfig, &aMessageInfo);
+    Message *message = &aMessage;
+    Error    error;
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    OwnedPtr<Message> decodedMsg;
+
+    if (Get<Coder>().IsEncoded(aMessage))
+    {
+        LogInfo("Received an encoded SRP message from %s", aMessageInfo.GetPeerAddr().ToString().AsCString());
+
+        decodedMsg.Reset(Get<MessagePool>().Allocate(Message::kTypeIp6));
+        VerifyOrExit(decodedMsg != nullptr, error = kErrorNoBufs);
+
+        SuccessOrExit(error = Get<Coder>().Decode(aMessage, *decodedMsg));
+        message = decodedMsg.Get();
+
+        LogInfo("Successfully decoded the SRP message");
+
+#if OPENTHREAD_CONFIG_SRP_CODER_TEST_API_ENABLE
+        if (mTestMode == kTestModeRejectCodedMessage)
+        {
+            LogInfo("TestMode - Rejecting decoded SRP message - sending `ResponseFormatError`");
+            SendResponse(*message, Dns::UpdateHeader::kResponseFormatError, aMessageInfo);
+            ExitNow();
+        }
+        else if (mTestMode == kTestModeIgnoreCodedMessage)
+        {
+            LogInfo("TestMode - Ignoring decoded SRP message - allow timeout on client");
+            ExitNow();
+        }
+#endif
+    }
+#endif // OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+
+    ExitNow(error = ProcessMessage(*message, TimerMilli::GetNow(), mTtlConfig, mLeaseConfig, &aMessageInfo));
+
+exit:
+    return error;
 }
 
 Error Server::ProcessMessage(Message                &aMessage,

@@ -183,4 +183,16 @@ bool otSrpClientIsServiceKeyRecordEnabled(otInstance *aInstance)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+void otSrpClientSetMessageCoderEnabled(otInstance *aInstance, bool aEnable)
+{
+    AsCoreType(aInstance).Get<Srp::Client>().SetMessageCoderEnabled(aEnable);
+}
+
+bool otSrpClientIsMessageCoderEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Srp::Client>().IsMessageCoderEnabled();
+}
+#endif
+
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE

@@ -105,6 +105,7 @@
 #include "config/secure_transport.h"
 #include "config/sntp_client.h"
 #include "config/srp_client.h"
+#include "config/srp_coder.h"
 #include "config/srp_server.h"
 #include "config/time_sync.h"
 #include "config/tmf.h"

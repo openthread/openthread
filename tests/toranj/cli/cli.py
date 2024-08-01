@@ -576,6 +576,9 @@ class Node(object):
     def srp_client_get_state(self):
         return self._cli_single_output('srp client state', expected_outputs=['Enabled', 'Disabled'])
 
+    def srp_client_set_coder_enable(self, enable):
+        self._cli_no_output('srp client coder', 'enable' if enable else 'disable')
+
     def srp_client_get_auto_start_mode(self):
         return self._cli_single_output('srp client autostart', expected_outputs=['Enabled', 'Disabled'])
 

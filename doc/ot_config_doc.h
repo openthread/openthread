@@ -81,7 +81,8 @@
  * @defgroup config-secure-transport         Secure Transport
  * @defgroup config-sntp-client              SNTP Client
  * @defgroup config-srp-client               SRP Client
- * @defgroup config-srp-server               SRP Server
+ * @defgroup config-srp-coder                SRP Coder
+   @defgroup config-srp-server               SRP Server
  * @defgroup config-time-sync                Time Sync Service
  * @defgroup config-tmf                      Thread Management Framework Service
  * @defgroup config-trel                     TREL
