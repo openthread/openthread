@@ -168,7 +168,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                              name=params.get('name'),
                              version=params['version'],
                              is_bbr=params['is_bbr'],
-                             backbone=params['backbone'])
+                             backbone_network=params['backbone_network'])
             if 'boot_delay' in params:
                 self.simulator.go(params['boot_delay'])
 
@@ -499,7 +499,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             params['version'] = ''
 
         # set default backbone network for bbr/otbr/host if not specified
-        params.setdefault('backbone', config.BACKBONE_DOCKER_NETWORK_NAME)
+        params.setdefault('backbone_network', config.BACKBONE_DOCKER_NETWORK_NAME)
 
         # use 1.3 node for 1.2 tests
         if params.get('version') == '1.2':
@@ -534,7 +534,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         # Use backbone_set to store all the backbone values in TOPOLOGY
         backbone_set = set()
         for node in self.TOPOLOGY:
-            backbone = self.TOPOLOGY[node].get('backbone')
+            backbone = self.TOPOLOGY[node].get('backbone_network')
             if backbone:
                 backbone_set.add(backbone)
 

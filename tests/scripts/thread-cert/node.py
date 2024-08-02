@@ -64,9 +64,9 @@ class OtbrDocker:
     _docker_proc = None
     _border_routing_counters = None
 
-    def __init__(self, nodeid: int, backbone: str, **kwargs):
+    def __init__(self, nodeid: int, backbone_network: str, **kwargs):
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
-        self.backbone = backbone
+        self.backbone_network = backbone_network
         try:
             self._docker_name = config.OTBR_DOCKER_NAME_PREFIX + str(nodeid)
             self._prepare_ot_rcp_sim(nodeid)
@@ -122,7 +122,7 @@ class OtbrDocker:
             '--name',
             self._docker_name,
             '--network',
-            self.backbone,
+            self.backbone_network,
         ] + dns + [
             '-i',
             '--sysctl',
@@ -149,7 +149,7 @@ class OtbrDocker:
             try:
                 subprocess.check_call(f'docker exec -i {self._docker_name} ot-ctl state', shell=True)
                 launch_ok = True
-                logging.info("OTBR Docker %s on %s Is Ready!", self._docker_name, self.backbone)
+                logging.info("OTBR Docker %s on %s Is Ready!", self._docker_name, self.backbone_network)
                 break
             except subprocess.CalledProcessError:
                 time.sleep(5)

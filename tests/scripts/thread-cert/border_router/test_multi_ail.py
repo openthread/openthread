@@ -55,14 +55,14 @@ class TwoBorderRoutersOnTwoInfrastructures(thread_cert.TestCase):
     TOPOLOGY = {
         BR1: {
             'name': 'BR_1',
-            'backbone': 'backbone0',
+            'backbone_network': 'backbone0',
             'allowlist': [BR2],
             'is_otbr': True,
             'version': '1.3',
         },
         BR2: {
             'name': 'BR_2',
-            'backbone': 'backbone1',
+            'backbone_network': 'backbone1',
             'allowlist': [BR1],
             'is_otbr': True,
             'version': '1.3',
