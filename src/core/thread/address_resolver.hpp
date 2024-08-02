@@ -283,6 +283,10 @@ private:
         uint16_t GetTimeout(void) const { return mInfo.mOther.mTimeout; }
         void     SetTimeout(uint16_t aTimeout) { mInfo.mOther.mTimeout = aTimeout; }
 
+        void DecrementFreshnessTimeout(void) { mFreshnessTimeout--; }
+        bool IsFreshnessTimeoutZero(void) const { return mFreshnessTimeout == 0; }
+        void ResetFreshnessTimeout(void) { mFreshnessTimeout = kFreshnessTimeout; }
+
         uint16_t GetRetryDelay(void) const { return mInfo.mOther.mRetryDelay; }
         void     SetRetryDelay(uint16_t aDelay) { mInfo.mOther.mRetryDelay = aDelay; }
 
@@ -295,12 +299,16 @@ private:
         bool Matches(const Ip6::Address &aEid) const { return GetTarget() == aEid; }
 
     private:
-        static constexpr uint16_t kNoNextIndex          = 0xffff;     // `mNextIndex` value when at end of list.
+        static constexpr uint16_t kNoNextIndex          = 0x3fff;     // `mNextIndex` value when at end of list.
         static constexpr uint32_t kInvalidLastTransTime = 0xffffffff; // Value when `mLastTransactionTime` is invalid.
+        static constexpr uint8_t  kFreshnessTimeout     = 3;
+
+        static_assert(kCacheEntries < kNoNextIndex, "kCacheEntries is too large and does not fit in 14 bit index");
 
         Ip6::Address mTarget;
         uint16_t     mRloc16;
-        uint16_t     mNextIndex;
+        uint16_t     mNextIndex : 14;
+        uint8_t      mFreshnessTimeout : 2;
 
         union
         {
