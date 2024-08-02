@@ -139,9 +139,21 @@ exit:
     return error;
 }
 
-uint8_t otMacFrameGetSequence(const otRadioFrame *aFrame)
+otError otMacFrameGetSequence(const otRadioFrame *aFrame, uint8_t *aSequence)
 {
-    return static_cast<const Mac::Frame *>(aFrame)->GetSequence();
+    otError error;
+
+    if (static_cast<const Mac::Frame *>(aFrame)->IsSequencePresent())
+    {
+        *aSequence = static_cast<const Mac::Frame *>(aFrame)->GetSequence();
+        error      = kErrorNone;
+    }
+    else
+    {
+        error = kErrorParse;
+    }
+
+    return error;
 }
 
 void otMacFrameProcessTransmitAesCcm(otRadioFrame *aFrame, const otExtAddress *aExtAddress)

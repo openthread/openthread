@@ -169,11 +169,13 @@ otError otMacFrameGetDstAddr(const otRadioFrame *aFrame, otMacAddress *aMacAddre
  * Get the sequence of @p aFrame.
  *
  * @param[in]   aFrame          A pointer to the frame.
+ * @param[out]  aSequence       A pointer to the sequence.
  *
- * @returns The sequence of the frame.
+ * @retval  OT_ERROR_NONE   Successfully got the sequence.
+ * @retval  OT_ERROR_PARSE  Failed to parse the sequence.
  *
  */
-uint8_t otMacFrameGetSequence(const otRadioFrame *aFrame);
+otError otMacFrameGetSequence(const otRadioFrame *aFrame, uint8_t *aSequence);
 
 /**
  * Performs AES CCM on the frame which is going to be sent.

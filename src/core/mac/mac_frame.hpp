@@ -386,6 +386,7 @@ public:
      * @param[in] aPanIds        Source and destination PAN IDs.
      * @param[in] aSecurityLevel Frame security level.
      * @param[in] aKeyIdMode     Frame security key ID mode.
+     * @param[in] aSuppressSequence     Whether to suppress sequence number.
      *
      */
     void InitMacHeader(Type             aType,
@@ -393,7 +394,8 @@ public:
                        const Addresses &aAddrs,
                        const PanIds    &aPanIds,
                        SecurityLevel    aSecurityLevel,
-                       KeyIdMode        aKeyIdMode = kKeyIdMode0);
+                       KeyIdMode        aKeyIdMode        = kKeyIdMode0,
+                       bool             aSuppressSequence = false);
 
     /**
      * Validates the frame.
@@ -512,7 +514,7 @@ public:
      * @returns The Sequence Number value.
      *
      */
-    uint8_t GetSequence(void) const { return GetPsdu()[kSequenceIndex]; }
+    uint8_t GetSequence(void) const;
 
     /**
      * Sets the Sequence Number value.
@@ -520,7 +522,24 @@ public:
      * @param[in]  aSequence  The Sequence Number value.
      *
      */
-    void SetSequence(uint8_t aSequence) { GetPsdu()[kSequenceIndex] = aSequence; }
+    void SetSequence(uint8_t aSequence);
+
+    /**
+     * Indicates whether or not the Sequence Number is present.
+     *
+     * @returns TRUE if the Sequence Number is present, FALSE otherwise.
+     *
+     */
+    uint8_t IsSequencePresent(void) const { return !IsSequenceSuppressed(GetFrameControlField()); }
+
+    /**
+     * Get the size of the sequence number.
+     *
+     * @retval      0       The size of sequence number is 0, indicating it's not present.
+     * @retval      1       The size of sequence number is 1, indicating it's present.
+     *
+     */
+    uint8_t GetSeqNumSize(void) const { return GetSeqNumSize(GetFrameControlField()); }
 
     /**
      * Indicates whether or not the Destination PAN ID is present.
@@ -1089,21 +1108,22 @@ protected:
     static constexpr uint8_t kCommandIdSize       = sizeof(uint8_t);
     static constexpr uint8_t kKeyIndexSize        = sizeof(uint8_t);
 
-    static constexpr uint16_t kFcfFrameTypeMask    = 7 << 0;
-    static constexpr uint16_t kFcfSecurityEnabled  = 1 << 3;
-    static constexpr uint16_t kFcfFramePending     = 1 << 4;
-    static constexpr uint16_t kFcfAckRequest       = 1 << 5;
-    static constexpr uint16_t kFcfPanidCompression = 1 << 6;
-    static constexpr uint16_t kFcfIePresent        = 1 << 9;
-    static constexpr uint16_t kFcfDstAddrNone      = 0 << 10;
-    static constexpr uint16_t kFcfDstAddrShort     = 2 << 10;
-    static constexpr uint16_t kFcfDstAddrExt       = 3 << 10;
-    static constexpr uint16_t kFcfDstAddrMask      = 3 << 10;
-    static constexpr uint16_t kFcfFrameVersionMask = 3 << 12;
-    static constexpr uint16_t kFcfSrcAddrNone      = 0 << 14;
-    static constexpr uint16_t kFcfSrcAddrShort     = 2 << 14;
-    static constexpr uint16_t kFcfSrcAddrExt       = 3 << 14;
-    static constexpr uint16_t kFcfSrcAddrMask      = 3 << 14;
+    static constexpr uint16_t kFcfFrameTypeMask      = 7 << 0;
+    static constexpr uint16_t kFcfSecurityEnabled    = 1 << 3;
+    static constexpr uint16_t kFcfFramePending       = 1 << 4;
+    static constexpr uint16_t kFcfAckRequest         = 1 << 5;
+    static constexpr uint16_t kFcfPanidCompression   = 1 << 6;
+    static constexpr uint16_t kFcfSequenceSupression = 1 << 8;
+    static constexpr uint16_t kFcfIePresent          = 1 << 9;
+    static constexpr uint16_t kFcfDstAddrNone        = 0 << 10;
+    static constexpr uint16_t kFcfDstAddrShort       = 2 << 10;
+    static constexpr uint16_t kFcfDstAddrExt         = 3 << 10;
+    static constexpr uint16_t kFcfDstAddrMask        = 3 << 10;
+    static constexpr uint16_t kFcfFrameVersionMask   = 3 << 12;
+    static constexpr uint16_t kFcfSrcAddrNone        = 0 << 14;
+    static constexpr uint16_t kFcfSrcAddrShort       = 2 << 14;
+    static constexpr uint16_t kFcfSrcAddrExt         = 3 << 14;
+    static constexpr uint16_t kFcfSrcAddrMask        = 3 << 14;
 
     static constexpr uint8_t kSecLevelMask  = 7 << 0;
     static constexpr uint8_t kKeyIdModeMask = 3 << 3;
@@ -1144,6 +1164,12 @@ protected:
 
     static bool IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != kFcfDstAddrNone; }
     static bool IsDstPanIdPresent(uint16_t aFcf);
+    static bool IsSequenceSuppressed(uint16_t aFcf)
+    {
+        return (aFcf & (kFcfSequenceSupression | kFcfFrameVersionMask)) == (kFcfSequenceSupression | kVersion2015);
+    }
+    static uint8_t GetSeqNumSize(uint16_t aFcf) { return !IsSequenceSuppressed(aFcf) ? kDsnSize : 0; }
+
     static bool IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone; }
     static bool IsSrcPanIdPresent(uint16_t aFcf);
     static bool IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kVersion2015; }
