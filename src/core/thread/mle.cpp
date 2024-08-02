@@ -100,6 +100,7 @@ Mle::Mle(Instance &aInstance)
     , mAttachCounter(0)
     , mAnnounceDelay(kAnnounceTimeout)
     , mAlternatePanId(Mac::kPanIdBroadcast)
+    , mStoreFrameCounterAhead(kDefaultStoreFrameCounterAhead)
     , mTimeout(kDefaultChildTimeout)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mCslTimeout(kDefaultCslTimeout)
@@ -501,8 +502,8 @@ Error Mle::Store(void)
     }
 
     networkInfo.SetKeySequence(Get<KeyManager>().GetCurrentKeySequence());
-    networkInfo.SetMleFrameCounter(Get<KeyManager>().GetMleFrameCounter() + kStoreFrameCounterAhead);
-    networkInfo.SetMacFrameCounter(Get<KeyManager>().GetMaximumMacFrameCounter() + kStoreFrameCounterAhead);
+    networkInfo.SetMleFrameCounter(Get<KeyManager>().GetMleFrameCounter() + mStoreFrameCounterAhead);
+    networkInfo.SetMacFrameCounter(Get<KeyManager>().GetMaximumMacFrameCounter() + mStoreFrameCounterAhead);
     networkInfo.SetDeviceMode(mDeviceMode.Get());
 
     SuccessOrExit(error = Get<Settings>().Save(networkInfo));

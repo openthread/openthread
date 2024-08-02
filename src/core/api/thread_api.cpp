@@ -510,6 +510,16 @@ otError otThreadDetachGracefully(otInstance *aInstance, otDetachGracefullyCallba
     return AsCoreType(aInstance).Get<Mle::MleRouter>().DetachGracefully(aCallback, aContext);
 }
 
+void otThreadSetStoreFrameCounterAhead(otInstance *aInstance, uint32_t aStoreFrameCounterAhead)
+{
+    return AsCoreType(aInstance).Get<Mle::Mle>().SetStoreFrameCounterAhead(aStoreFrameCounterAhead);
+}
+
+uint32_t otThreadGetStoreFrameCounterAhead(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mle::Mle>().GetStoreFrameCounterAhead();
+}
+
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
