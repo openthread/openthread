@@ -46,32 +46,48 @@ namespace Cli {
 
 LinkMetrics::LinkMetrics(otInstance *aInstance, OutputImplementer &aOutputImplementer)
     : Utils(aInstance, aOutputImplementer)
-    , mLinkMetricsQueryInProgress(false)
+    , mQuerySync(false)
+    , mConfigForwardTrackingSeriesSync(false)
+    , mConfigEnhAckProbingSync(false)
 {
 }
 
 template <> otError LinkMetrics::Process<Cmd("query")>(Arg aArgs[])
 {
+    OT_UNUSED_VARIABLE(aArgs);
+    OutputLine("The command \"linkmetrics query\" has been replaced by the command \"linkmetrics request\".");
+    return OT_ERROR_INVALID_COMMAND;
+}
+
+template <> otError LinkMetrics::Process<Cmd("request")>(Arg aArgs[])
+{
     otError       error = OT_ERROR_NONE;
     otIp6Address  address;
+    bool          sync = true;
     bool          isSingle;
-    bool          blocking;
     uint8_t       seriesId;
     otLinkMetrics linkMetrics;
+
+    if (aArgs[0] == "async")
+    {
+        sync = false;
+        aArgs++;
+    }
 
     SuccessOrExit(error = aArgs[0].ParseAsIp6Address(address));
 
     /**
-     * @cli linkmetrics query single
+     * @cli linkmetrics request single
      * @code
-     * linkmetrics query fe80:0:0:0:3092:f334:1455:1ad2 single qmr
-     * Done
-     * > Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
+     * linkmetrics request fe80:0:0:0:3092:f334:1455:1ad2 single qmr
+     * Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
      * - LQI: 76 (Exponential Moving Average)
      * - Margin: 82 (dB) (Exponential Moving Average)
      * - RSSI: -18 (dBm) (Exponential Moving Average)
+     * Done
      * @endcode
-     * @cparam linkmetrics query @ca{peer-ipaddr} single [@ca{pqmr}]
+     * @cparam linkmetrics request [@ca{async}] @ca{peer-ipaddr} single [@ca{pqmr}]
+     * - `async`: Use the non-blocking mode.
      * - `peer-ipaddr`: Peer address.
      * - [`p`, `q`, `m`, and `r`] map to #otLinkMetrics.
      *   - `p`: Layer 2 Number of PDUs received.
@@ -88,17 +104,18 @@ template <> otError LinkMetrics::Process<Cmd("query")>(Arg aArgs[])
         SuccessOrExit(error = ParseLinkMetricsFlags(linkMetrics, aArgs[2]));
     }
     /**
-     * @cli linkmetrics query forward
+     * @cli linkmetrics request forward
      * @code
-     * linkmetrics query fe80:0:0:0:3092:f334:1455:1ad2 forward 1
-     * Done
-     * > Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
+     * linkmetrics request fe80:0:0:0:3092:f334:1455:1ad2 forward 1
+     * Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
      * - PDU Counter: 2 (Count/Summation)
      * - LQI: 76 (Exponential Moving Average)
      * - Margin: 82 (dB) (Exponential Moving Average)
      * - RSSI: -18 (dBm) (Exponential Moving Average)
+     * Done
      * @endcode
-     * @cparam linkmetrics query @ca{peer-ipaddr} forward @ca{series-id}
+     * @cparam linkmetrics query [@ca{async}] @ca{peer-ipaddr} forward @ca{series-id}
+     * - `async`: Use the non-blocking mode.
      * - `peer-ipaddr`: Peer address.
      * - `series-id`: The Series ID.
      * @par
@@ -115,40 +132,54 @@ template <> otError LinkMetrics::Process<Cmd("query")>(Arg aArgs[])
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
-    blocking = (aArgs[3] == "block");
-
     SuccessOrExit(error = otLinkMetricsQuery(GetInstancePtr(), &address, isSingle ? 0 : seriesId,
                                              isSingle ? &linkMetrics : nullptr, HandleLinkMetricsReport, this));
 
-    if (blocking)
+    if (sync)
     {
-        mLinkMetricsQueryInProgress = true;
-        error                       = OT_ERROR_PENDING;
+        mQuerySync = true;
+        error      = OT_ERROR_PENDING;
     }
+
 exit:
     return error;
 }
 
 template <> otError LinkMetrics::Process<Cmd("mgmt")>(Arg aArgs[])
 {
+    OT_UNUSED_VARIABLE(aArgs);
+    OutputLine("The command \"linkmetrics mgmt\" has been replaced by the command \"linkmetrics config\".");
+    return OT_ERROR_INVALID_COMMAND;
+}
+
+template <> otError LinkMetrics::Process<Cmd("config")>(Arg aArgs[])
+{
     otError                  error;
     otIp6Address             address;
     otLinkMetricsSeriesFlags seriesFlags;
+    bool                     sync  = true;
     bool                     clear = false;
+
+    if (aArgs[0] == "async")
+    {
+        sync = false;
+        aArgs++;
+    }
 
     SuccessOrExit(error = aArgs[0].ParseAsIp6Address(address));
 
     ClearAllBytes(seriesFlags);
 
     /**
-     * @cli linkmetrics mgmt forward
+     * @cli linkmetrics config forward
      * @code
-     * linkmetrics mgmt fe80:0:0:0:3092:f334:1455:1ad2 forward 1 dra pqmr
-     * Done
-     * > Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
+     * linkmetrics config fe80:0:0:0:3092:f334:1455:1ad2 forward 1 dra pqmr
+     * Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
      * Status: SUCCESS
+     * Done
      * @endcode
-     * @cparam linkmetrics mgmt @ca{peer-ipaddr} forward @ca{series-id} [@ca{ldraX}][@ca{pqmr}]
+     * @cparam linkmetrics config [@ca{async}] @ca{peer-ipaddr} forward @ca{series-id} [@ca{ldraX}][@ca{pqmr}]
+     * - `async`: Use the non-blocking mode.
      * - `peer-ipaddr`: Peer address.
      * - `series-id`: The Series ID.
      * - [`l`, `d`, `r`, and `a`] map to #otLinkMetricsSeriesFlags. `X` represents none of the
@@ -212,9 +243,15 @@ template <> otError LinkMetrics::Process<Cmd("mgmt")>(Arg aArgs[])
             VerifyOrExit(aArgs[5].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
         }
 
-        error = otLinkMetricsConfigForwardTrackingSeries(GetInstancePtr(), &address, seriesId, seriesFlags,
-                                                         clear ? nullptr : &linkMetrics,
-                                                         &LinkMetrics::HandleLinkMetricsMgmtResponse, this);
+        SuccessOrExit(error = otLinkMetricsConfigForwardTrackingSeries(
+                          GetInstancePtr(), &address, seriesId, seriesFlags, clear ? nullptr : &linkMetrics,
+                          &LinkMetrics::HandleLinkMetricsConfigForwardTrackingSeriesMgmtResponse, this));
+
+        if (sync)
+        {
+            mConfigForwardTrackingSeriesSync = true;
+            error                            = OT_ERROR_PENDING;
+        }
     }
     else if (aArgs[1] == "enhanced-ack")
     {
@@ -223,15 +260,16 @@ template <> otError LinkMetrics::Process<Cmd("mgmt")>(Arg aArgs[])
         otLinkMetrics           *pLinkMetrics = &linkMetrics;
 
         /**
-         * @cli linkmetrics mgmt enhanced-ack clear
+         * @cli linkmetrics config enhanced-ack clear
          * @code
-         * linkmetrics mgmt fe80:0:0:0:3092:f334:1455:1ad2 enhanced-ack clear
-         * Done
-         * > Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
+         * linkmetrics config fe80:0:0:0:3092:f334:1455:1ad2 enhanced-ack clear
+         * Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
          * Status: Success
+         * Done
          * @endcode
-         * @cparam linkmetrics mgmt @ca{peer-ipaddr} enhanced-ack clear
-         * `peer-ipaddr` should be the Link Local address of the neighboring device.
+         * @cparam linkmetrics config [@ca{async}] @ca{peer-ipaddr} enhanced-ack clear
+         * - `async`: Use the non-blocking mode.
+         * - `peer-ipaddr` should be the Link Local address of the neighboring device.
          * @par
          * Sends a Link Metrics Management Request to clear an Enhanced-ACK Based Probing.
          * @sa otLinkMetricsConfigEnhAckProbing
@@ -242,26 +280,27 @@ template <> otError LinkMetrics::Process<Cmd("mgmt")>(Arg aArgs[])
             pLinkMetrics = nullptr;
         }
         /**
-         * @cli linkmetrics mgmt enhanced-ack register
+         * @cli linkmetrics config enhanced-ack register
          * @code
-         * linkmetrics mgmt fe80:0:0:0:3092:f334:1455:1ad2 enhanced-ack register qm
-         * Done
-         * > Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
+         * linkmetrics config fe80:0:0:0:3092:f334:1455:1ad2 enhanced-ack register qm
+         * Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
          * Status: Success
+         * Done
          * @endcode
          * @code
-         * > linkmetrics mgmt fe80:0:0:0:3092:f334:1455:1ad2 enhanced-ack register qm r
-         * Done
-         * > Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
+         * > linkmetrics config fe80:0:0:0:3092:f334:1455:1ad2 enhanced-ack register qm r
+         * Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
          * Status: Cannot support new series
+         * Done
          * @endcode
-         * @cparam linkmetrics mgmt @ca{peer-ipaddr} enhanced-ack register [@ca{qmr}][@ca{r}]
-         * [`q`, `m`, and `r`] map to #otLinkMetricsValues. Per spec 4.11.3.4.4.6, you can
-         * only use a maximum of two options at once, for example `q`, or `qm`.
-         * - `q`: Layer 2 LQI.
-         * - `m`: Link Margin.
-         * - `r`: RSSI.
-         * .
+         * @cparam linkmetrics config [@ca{async}] @ca{peer-ipaddr} enhanced-ack register [@ca{qmr}][@ca{r}]
+         * - `async`: Use the non-blocking mode.
+         * - [`q`, `m`, and `r`] map to #otLinkMetricsValues. Per spec 4.11.3.4.4.6, you can
+         *   only use a maximum of two options at once, for example `q`, or `qm`.
+         *   - `q`: Layer 2 LQI.
+         *   - `m`: Link Margin.
+         *   - `r`: RSSI.
+         * @par
          * The additional `r` is optional and only used for reference devices. When this option
          * is specified, Type/Average Enum of each Type Id Flags is set to reserved. This is
          * used to verify that the Probing Subject correctly handles invalid Type Id Flags, and
@@ -286,9 +325,16 @@ template <> otError LinkMetrics::Process<Cmd("mgmt")>(Arg aArgs[])
             ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
 
-        error = otLinkMetricsConfigEnhAckProbing(GetInstancePtr(), &address, enhAckFlags, pLinkMetrics,
-                                                 &LinkMetrics::HandleLinkMetricsMgmtResponse, this,
-                                                 &LinkMetrics::HandleLinkMetricsEnhAckProbingIe, this);
+        SuccessOrExit(
+            error = otLinkMetricsConfigEnhAckProbing(GetInstancePtr(), &address, enhAckFlags, pLinkMetrics,
+                                                     &LinkMetrics::HandleLinkMetricsConfigEnhAckProbingMgmtResponse,
+                                                     this, &LinkMetrics::HandleLinkMetricsEnhAckProbingIe, this));
+
+        if (sync)
+        {
+            mConfigEnhAckProbingSync = true;
+            error                    = OT_ERROR_PENDING;
+        }
     }
     else
     {
@@ -337,9 +383,7 @@ otError LinkMetrics::Process(Arg aArgs[])
     }
 
     static constexpr Command kCommands[] = {
-        CmdEntry("mgmt"),
-        CmdEntry("probe"),
-        CmdEntry("query"),
+        CmdEntry("config"), CmdEntry("mgmt"), CmdEntry("probe"), CmdEntry("query"), CmdEntry("request"),
     };
 
     static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");
@@ -448,18 +492,49 @@ void LinkMetrics::HandleLinkMetricsReport(const otIp6Address        *aAddress,
         OutputLine("Link Metrics Report, status: %s", LinkMetricsStatusToStr(aStatus));
     }
 
-    if (mLinkMetricsQueryInProgress)
+    if (mQuerySync)
     {
-        mLinkMetricsQueryInProgress = false;
+        mQuerySync = false;
         OutputResult(OT_ERROR_NONE);
     }
 }
 
-void LinkMetrics::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress,
-                                                otLinkMetricsStatus aStatus,
-                                                void               *aContext)
+void LinkMetrics::HandleLinkMetricsConfigForwardTrackingSeriesMgmtResponse(const otIp6Address *aAddress,
+                                                                           otLinkMetricsStatus aStatus,
+                                                                           void               *aContext)
 {
-    static_cast<LinkMetrics *>(aContext)->HandleLinkMetricsMgmtResponse(aAddress, aStatus);
+    static_cast<LinkMetrics *>(aContext)->HandleLinkMetricsConfigForwardTrackingSeriesMgmtResponse(aAddress, aStatus);
+}
+
+void LinkMetrics::HandleLinkMetricsConfigForwardTrackingSeriesMgmtResponse(const otIp6Address *aAddress,
+                                                                           otLinkMetricsStatus aStatus)
+{
+    HandleLinkMetricsMgmtResponse(aAddress, aStatus);
+
+    if (mConfigForwardTrackingSeriesSync)
+    {
+        mConfigForwardTrackingSeriesSync = false;
+        OutputResult(OT_ERROR_NONE);
+    }
+}
+
+void LinkMetrics::HandleLinkMetricsConfigEnhAckProbingMgmtResponse(const otIp6Address *aAddress,
+                                                                   otLinkMetricsStatus aStatus,
+                                                                   void               *aContext)
+{
+    static_cast<LinkMetrics *>(aContext)->HandleLinkMetricsConfigEnhAckProbingMgmtResponse(aAddress, aStatus);
+}
+
+void LinkMetrics::HandleLinkMetricsConfigEnhAckProbingMgmtResponse(const otIp6Address *aAddress,
+                                                                   otLinkMetricsStatus aStatus)
+{
+    HandleLinkMetricsMgmtResponse(aAddress, aStatus);
+
+    if (mConfigEnhAckProbingSync)
+    {
+        mConfigEnhAckProbingSync = false;
+        OutputResult(OT_ERROR_NONE);
+    }
 }
 
 void LinkMetrics::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, otLinkMetricsStatus aStatus)

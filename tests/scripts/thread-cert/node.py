@@ -3255,14 +3255,14 @@ class NodeImpl:
 
         return router_table
 
-    def link_metrics_query_single_probe(self, dst_addr: str, linkmetrics_flags: str, block: str = ""):
-        cmd = 'linkmetrics query %s single %s %s' % (dst_addr, linkmetrics_flags, block)
+    def link_metrics_request_single_probe(self, dst_addr: str, linkmetrics_flags: str, mode: str = ''):
+        cmd = 'linkmetrics request %s %s single %s' % (mode, dst_addr, linkmetrics_flags)
         self.send_command(cmd)
         self.simulator.go(5)
         return self._parse_linkmetrics_query_result(self._expect_command_output())
 
-    def link_metrics_query_forward_tracking_series(self, dst_addr: str, series_id: int, block: str = ""):
-        cmd = 'linkmetrics query %s forward %d %s' % (dst_addr, series_id, block)
+    def link_metrics_request_forward_tracking_series(self, dst_addr: str, series_id: int, mode: str = ''):
+        cmd = 'linkmetrics request %s %s forward %d' % (mode, dst_addr, series_id)
         self.send_command(cmd)
         self.simulator.go(5)
         return self._parse_linkmetrics_query_result(self._expect_command_output())
@@ -3288,12 +3288,13 @@ class NodeImpl:
                 result['Status'] = line[29:]
         return result
 
-    def link_metrics_mgmt_req_enhanced_ack_based_probing(self,
-                                                         dst_addr: str,
-                                                         enable: bool,
-                                                         metrics_flags: str,
-                                                         ext_flags=''):
-        cmd = "linkmetrics mgmt %s enhanced-ack" % (dst_addr)
+    def link_metrics_config_req_enhanced_ack_based_probing(self,
+                                                           dst_addr: str,
+                                                           enable: bool,
+                                                           metrics_flags: str,
+                                                           ext_flags='',
+                                                           mode: str = ''):
+        cmd = "linkmetrics config %s %s enhanced-ack" % (mode, dst_addr)
         if enable:
             cmd = cmd + (" register %s %s" % (metrics_flags, ext_flags))
         else:
@@ -3301,9 +3302,13 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
-    def link_metrics_mgmt_req_forward_tracking_series(self, dst_addr: str, series_id: int, series_flags: str,
-                                                      metrics_flags: str):
-        cmd = "linkmetrics mgmt %s forward %d %s %s" % (dst_addr, series_id, series_flags, metrics_flags)
+    def link_metrics_config_req_forward_tracking_series(self,
+                                                        dst_addr: str,
+                                                        series_id: int,
+                                                        series_flags: str,
+                                                        metrics_flags: str,
+                                                        mode: str = ''):
+        cmd = "linkmetrics config %s %s forward %d %s %s" % (mode, dst_addr, series_id, series_flags, metrics_flags)
         self.send_command(cmd)
         self._expect_done()
 
