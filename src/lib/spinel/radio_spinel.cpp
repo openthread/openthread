@@ -1645,7 +1645,10 @@ otError RadioSpinel::Transmit(otRadioFrame &aFrame)
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     // `otPlatRadioTxStarted()` is triggered immediately for now, which may be earlier than real started time.
-    mCallbacks.mTxStarted(mInstance, mTransmitFrame);
+    if (mCallbacks.mTxStarted != nullptr)
+    {
+        mCallbacks.mTxStarted(mInstance, mTransmitFrame);
+    }
 
     error = Request(SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
                     SPINEL_DATATYPE_DATA_WLEN_S                                      // Frame data
