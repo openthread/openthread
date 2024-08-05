@@ -208,6 +208,10 @@ void BorderAgent::HandleCoapResponse(const ForwardContext &aForwardContext,
             LogInfo("Commissioner accepted - SessionId:%u ALOC:%s", sessionId,
                     mCommissionerAloc.GetAddress().ToString().AsCString());
         }
+        else
+        {
+            LogInfo("Commissioner rejected");
+        }
     }
 
     SuccessOrExit(error = aForwardContext.ToHeader(*message, aResponse->GetCode()));
@@ -640,13 +644,13 @@ void BorderAgent::HandleConnected(bool aConnected)
 {
     if (aConnected)
     {
-        LogInfo("Commissioner connected");
+        LogInfo("SecureSession connected");
         mState = kStateConnected;
         mTimer.Start(kKeepAliveTimeout);
     }
     else
     {
-        LogInfo("Commissioner disconnected");
+        LogInfo("SecureSession disconnected");
         IgnoreError(Get<Ip6::Udp>().RemoveReceiver(mUdpReceiver));
         Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
 
