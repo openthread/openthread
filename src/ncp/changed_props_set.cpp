@@ -92,6 +92,7 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
     {SPINEL_PROP_THREAD_NETWORK_TIME, SPINEL_STATUS_OK, false},
 #endif
     {SPINEL_PROP_PARENT_RESPONSE_INFO, SPINEL_STATUS_OK, true},
+    {SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET_TLVS, SPINEL_STATUS_OK, false},
 };
 
 uint8_t ChangedPropsSet::GetNumEntries(void) const

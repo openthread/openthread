@@ -3412,6 +3412,25 @@ enum
      */
     SPINEL_PROP_THREAD_PENDING_DATASET_TLVS = SPINEL_PROP_THREAD_EXT__BEGIN + 61,
 
+    /// Send MGMT_SET Thread Pending Operational Dataset (in TLV format).
+    /** Format: `D` - Write only
+     *
+     * This is write-only property. When written, it triggers a MGMT_PENDING_SET meshcop command to be sent to leader
+     * with the given Dataset.
+     *
+     * When setting this property, the spinel frame response will be:
+     * 1. A `LAST_STATUS` with the status of the transmission of MGMT_PENDING_SET command if it fails.
+     * 2. A `SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET_TLVS` with no content.
+     *
+     * On response reception or timeout, another notification will be sent to the host:
+     * A `SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET_TLVS` with a spinel_status_t indicating
+     * the result of MGMT_SET_PENDING.
+     *
+     * On write, any unknown/unsupported TLVs must be ignored.
+     *
+     */
+    SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET_TLVS = SPINEL_PROP_THREAD_EXT__BEGIN + 62,
+
     SPINEL_PROP_THREAD_EXT__END = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN = 0x60,

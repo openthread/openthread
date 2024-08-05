@@ -1739,6 +1739,42 @@ exit:
     return error;
 }
 
+void NcpBase::DatasetSendMgmtPendingSetHandler(otError aResult, void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->DatasetSendMgmtPendingSetHandler(aResult);
+}
+
+void NcpBase::DatasetSendMgmtPendingSetHandler(otError aResult)
+{
+    mDatasetSendMgmtPendingSetResult = ThreadErrorToSpinelStatus(aResult);
+    mChangedPropsSet.AddProperty(SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET_TLVS);
+    mUpdateChangedPropsTask.Post();
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET_TLVS>(void)
+{
+    return mEncoder.WriteUint32(mDatasetSendMgmtPendingSetResult);
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET_TLVS>(void)
+{
+    otError              error = OT_ERROR_NONE;
+    otOperationalDataset emptyDataset;
+    const uint8_t       *data;
+    uint16_t             len;
+
+    memset(&emptyDataset, 0, sizeof(emptyDataset));
+
+    SuccessOrExit(error = mDecoder.ReadData(data, len));
+    VerifyOrExit(len < OT_OPERATIONAL_DATASET_MAX_LENGTH, error = OT_ERROR_PARSE);
+
+    error = otDatasetSendMgmtPendingSet(mInstance, &emptyDataset, data, static_cast<uint8_t>(len),
+                                        DatasetSendMgmtPendingSetHandler, this);
+
+exit:
+    return error;
+}
+
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET>(void)
 {
     otError              error = OT_ERROR_NONE;

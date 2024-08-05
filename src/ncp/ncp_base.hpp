@@ -624,6 +624,10 @@ protected:
 
     void ThreadDetachGracefullyHandler(void);
 
+    static void DatasetSendMgmtPendingSetHandler(otError aResult, void *aContext);
+
+    void DatasetSendMgmtPendingSetHandler(otError aResult);
+
 protected:
     static NcpBase        *sNcpInstance;
     static spinel_status_t ThreadErrorToSpinelStatus(otError aError);
@@ -737,6 +741,8 @@ protected:
     uint32_t mTxSpinelFrameCounter;         // Number of sent (outbound) spinel frames.
 
     bool mDidInitialUpdates;
+
+    spinel_status_t mDatasetSendMgmtPendingSetResult;
 
     uint64_t mLogTimestampBase; // Timestamp base used for logging
 
