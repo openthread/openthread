@@ -111,7 +111,8 @@ RadioSpinel::RadioSpinel(void)
     , mVendorRestorePropertiesCallback(nullptr)
     , mVendorRestorePropertiesContext(nullptr)
 #endif
-    , mEnableRcpTimeSync(false)
+    , mTimeSyncEnabled(false)
+    , mTimeSyncOn(false)
     , mSpinelDriver(nullptr)
 {
     memset(&mRadioSpinelMetrics, 0, sizeof(mRadioSpinelMetrics));
@@ -134,7 +135,7 @@ void RadioSpinel::Init(bool          aSkipRcpCompatibilityCheck,
     mResetRadioOnStartup = aSoftwareReset;
 #endif
 
-    mEnableRcpTimeSync = aEnableRcpTimeSync;
+    mTimeSyncEnabled = aEnableRcpTimeSync;
 
     mSpinelDriver = aSpinelDriver;
     mSpinelDriver->SetFrameHandler(&HandleReceivedFrame, &HandleSavedFrame, this);
@@ -798,7 +799,7 @@ void RadioSpinel::Process(const void *aContext)
     ProcessRadioStateMachine();
     RecoverFromRcpFailure();
 
-    if (mEnableRcpTimeSync)
+    if (mTimeSyncEnabled)
     {
         CalcRcpTimeOffset();
     }
@@ -1919,6 +1920,7 @@ void RadioSpinel::CalcRcpTimeOffset(void)
      *         D = T1' - ((T0 + T2)/ 2)
      */
 
+    EXPECT(mTimeSyncOn, NO_ACTION);
     EXPECT(!mIsTimeSynced || (otPlatTimeGet() >= GetNextRadioTimeRecalcStart()), NO_ACTION);
 
     LogDebg("Trying to get RCP time offset");
@@ -2231,7 +2233,7 @@ void RadioSpinel::RestoreProperties(void)
     }
 #endif
 
-    if (mEnableRcpTimeSync)
+    if (mTimeSyncEnabled)
     {
         CalcRcpTimeOffset();
     }

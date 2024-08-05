@@ -1106,6 +1106,14 @@ public:
     void SetVendorRestorePropertiesCallback(otRadioSpinelVendorRestorePropertiesCallback aCallback, void *aContext);
 #endif // OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
 
+    /**
+     * Enables or disables the time synchronization between the host and RCP.
+     *
+     * @param[in]  aOn  TRUE to turn on the time synchronization, FALSE otherwise.
+     *
+     */
+    void SetTimeSyncState(bool aOn) { mTimeSyncOn = aOn; }
+
 private:
     enum
     {
@@ -1342,7 +1350,8 @@ private:
     void                                        *mVendorRestorePropertiesContext;
 #endif
 
-    bool mEnableRcpTimeSync;
+    bool mTimeSyncEnabled : 1;
+    bool mTimeSyncOn : 1;
 
     SpinelDriver *mSpinelDriver;
 };

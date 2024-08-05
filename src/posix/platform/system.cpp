@@ -65,7 +65,6 @@ bool        gDryRun   = false;
 
 CoprocessorType sCoprocessorType = OT_COPROCESSOR_UNKNOWN;
 
-#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 static void processStateChange(otChangedFlags aFlags, void *aContext)
 {
     otInstance *instance = static_cast<otInstance *>(aContext);
@@ -80,8 +79,9 @@ static void processStateChange(otChangedFlags aFlags, void *aContext)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     ot::Posix::InfraNetif::Get().HandleBackboneStateChange(instance, aFlags);
 #endif
+
+    platformRadioHandleStateChange(instance, aFlags);
 }
-#endif
 
 static const char *get802154RadioUrl(const otPlatformCoprocessorUrls &aUrls)
 {
@@ -245,9 +245,7 @@ void platformSetUp(otPlatformConfig *aPlatformConfig)
     ot::Posix::Daemon::Get().SetUp();
 #endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     SuccessOrDie(otSetStateChangedCallback(gInstance, processStateChange, gInstance));
-#endif
 
 exit:
     return;

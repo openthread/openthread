@@ -156,4 +156,11 @@
 #define OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE 1
 #endif
 
+#ifndef OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS
+/**
+ * The `system.cpp` has registered a state-changed callback handler. Another state-changed callback handler
+ * is reserved for application use.
+ */
+#define OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS 2
+#endif
 #endif // OPENTHREAD_CORE_POSIX_CONFIG_H_

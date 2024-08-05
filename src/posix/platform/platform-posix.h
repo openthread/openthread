@@ -166,6 +166,15 @@ void platformRadioInit(const char *aUrl);
 void platformRadioDeinit(void);
 
 /**
+ * Handles the state change events for the radio driver.
+ *
+ * @param[in] aInstance  A pointer to the OpenThread instance.
+ * @param[in] aFlags     Flags that denote the state change events.
+ *
+ */
+void platformRadioHandleStateChange(otInstance *aInstance, otChangedFlags aFlags);
+
+/**
  * Inputs a received radio frame.
  *
  * @param[in]  aInstance   A pointer to the OpenThread instance.
