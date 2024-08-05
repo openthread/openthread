@@ -45,6 +45,7 @@
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/numeric_limits.hpp"
+#include "common/owned_ptr.hpp"
 #include "common/timer.hpp"
 #include "crypto/ecdsa.hpp"
 #include "net/dns_types.hpp"
@@ -1043,17 +1044,18 @@ private:
     };
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
-    struct Info : public Clearable<Info>
+    struct MsgInfo
     {
-        static constexpr uint16_t kUnknownOffset = 0; // Unknown offset value (used when offset is not yet set).
+        static constexpr uint16_t kUnknownOffset = 0;
 
-        uint16_t mDomainNameOffset; // Offset of domain name serialization
-        uint16_t mHostNameOffset;   // Offset of host name serialization.
-        uint16_t mRecordCount;      // Number of resource records in Update section.
+        OwnedPtr<Message> mMessage;
+        uint16_t          mDomainNameOffset;
+        uint16_t          mHostNameOffset;
+        uint16_t          mRecordCount;
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-        Crypto::Ecdsa::P256::KeyPairAsRef mKeyRef; // The ECDSA key ref for key-pair.
+        Crypto::Ecdsa::P256::KeyPairAsRef mKeyRef;
 #else
-        Crypto::Ecdsa::P256::KeyPair mKeyPair; // The ECDSA key pair.
+        Crypto::Ecdsa::P256::KeyPair mKeyPair;
 #endif
     };
 
@@ -1075,22 +1077,22 @@ private:
     void  InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const;
     void  HandleHostInfoOrServiceChange(void);
     void  SendUpdate(void);
-    Error PrepareUpdateMessage(Message &aMessage);
+    Error PrepareUpdateMessage(MsgInfo &aInfo);
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     Error ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPairAsRef &aKeyRef);
 #else
     Error ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair);
 #endif
-    Error        AppendServiceInstructions(Message &aMessage, Info &aInfo);
+    Error        AppendServiceInstructions(MsgInfo &aInfo);
     bool         CanAppendService(const Service &aService);
-    Error        AppendServiceInstruction(Service &aService, Message &aMessage, Info &aInfo);
-    Error        AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo);
-    Error        AppendKeyRecord(Message &aMessage, Info &aInfo) const;
-    Error        AppendDeleteAllRrsets(Message &aMessage) const;
-    Error        AppendHostName(Message &aMessage, Info &aInfo, bool aDoNotCompress = false) const;
-    Error        AppendAaaaRecord(const Ip6::Address &aAddress, Message &aMessage, Info &aInfo) const;
-    Error        AppendUpdateLeaseOptRecord(Message &aMessage);
-    Error        AppendSignature(Message &aMessage, Info &aInfo);
+    Error        AppendServiceInstruction(Service &aService, MsgInfo &aInfo);
+    Error        AppendHostDescriptionInstruction(MsgInfo &aInfo);
+    Error        AppendKeyRecord(MsgInfo &aInfo) const;
+    Error        AppendDeleteAllRrsets(MsgInfo &aInfo) const;
+    Error        AppendHostName(MsgInfo &aInfo, bool aDoNotCompress = false) const;
+    Error        AppendAaaaRecord(const Ip6::Address &aAddress, MsgInfo &aInfo) const;
+    Error        AppendUpdateLeaseOptRecord(MsgInfo &aInfo);
+    Error        AppendSignature(MsgInfo &aInfo);
     void         UpdateRecordLengthInMessage(Dns::ResourceRecord &aRecord, uint16_t aOffset, Message &aMessage) const;
     void         HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void         ProcessResponse(Message &aMessage);
