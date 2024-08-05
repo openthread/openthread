@@ -3388,6 +3388,30 @@ enum
      */
     SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_REGISTRATION_JITTER = SPINEL_PROP_THREAD_EXT__BEGIN + 59,
 
+    /// Thread Active Operational Dataset in raw TLVs format.
+    /** Format: `D` - Read-Write
+     *
+     * This property provides access to the current Thread Active Operational Dataset. A Thread device maintains the
+     * Operational Dataset that it has stored locally and the one currently in use by the partition to which it is
+     * attached. This property corresponds to the locally stored Dataset on the device.
+     *
+     * On write, any unknown/unsupported TLVs must be ignored.
+     *
+     */
+    SPINEL_PROP_THREAD_ACTIVE_DATASET_TLVS = SPINEL_PROP_THREAD_EXT__BEGIN + 60,
+
+    /// Thread Pending Operational Dataset in raw TLVs format.
+    /** Format: `D` - Read-Write
+     *
+     * This property provides access to the current locally stored Pending Operational Dataset.
+     *
+     * The formatting of this property follows the same rules as in SPINEL_PROP_THREAD_ACTIVE_DATASET_TLVS.
+     *
+     * On write, any unknown/unsupported TLVs must be ignored.
+     *
+     */
+    SPINEL_PROP_THREAD_PENDING_DATASET_TLVS = SPINEL_PROP_THREAD_EXT__BEGIN + 61,
+
     SPINEL_PROP_THREAD_EXT__END = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN = 0x60,
