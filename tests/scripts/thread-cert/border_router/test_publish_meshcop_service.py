@@ -95,7 +95,19 @@ class PublishMeshCopService(thread_cert.TestCase):
         br1.start()
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
+
+        # start to test ephemeral key mode (ePSKc)
+        br1.ephemeral_key_enabled = True
+        self.assertTrue(br1.ephemeral_key_enabled)
+        self.simulator.go(10)
         self.check_meshcop_service(br1, host)
+
+        # change ephemeral key mode (ePSKc) and check Meshcop
+        br1.ephemeral_key_enabled = False
+        self.assertFalse(br1.ephemeral_key_enabled)
+        self.simulator.go(10)
+        self.check_meshcop_service(br1, host)
+        # end of ephemeral key mode (ePSKc) test
 
         br1.disable_backbone_router()
         self.simulator.go(10)
@@ -201,6 +213,7 @@ class PublishMeshCopService(thread_cert.TestCase):
                          br.get_backbone_router_state() != 'Disabled')  # BBR is enabled or not
         self.assertEqual((state_bitmap >> 8 & 1), device_role not in ['disabled', 'detached'] and
                          br.get_backbone_router_state() == 'Primary')  # BBR is primary or not
+        self.assertEqual(bool(state_bitmap >> 11 & 1), br.ephemeral_key_enabled)  # ePSKc is supported or not
         self.assertEqual(service_data['txt']['nn'], br.get_network_name())
         self.assertEqual(service_data['txt']['rv'], '1')
         self.assertIn(service_data['txt']['tv'], ['1.1.0', '1.1.1', '1.2.0', '1.3.0'])
