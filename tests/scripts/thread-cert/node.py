@@ -139,7 +139,10 @@ class OtbrDocker:
             f'trel://{config.BACKBONE_IFNAME}',
         ] + nat64_prefix
         logging.info(' '.join(cmd))
-        self._docker_proc = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=sys.stdout, stderr=sys.stderr)
+        self._docker_proc = subprocess.Popen(cmd,
+                                             stdin=subprocess.DEVNULL,
+                                             stdout=sys.stdout if self.verbose else subprocess.DEVNULL,
+                                             stderr=sys.stderr if self.verbose else subprocess.DEVNULL)
 
         launch_docker_deadline = time.time() + 300
         launch_ok = False
