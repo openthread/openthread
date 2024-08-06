@@ -1093,11 +1093,10 @@ Error Client::PrepareUpdateMessage(MsgInfo &aInfo)
     aInfo.mRecordCount      = 0;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    aInfo.mKeyRef.SetKeyRef(kSrpEcdsaKeyRef);
-    SuccessOrExit(error = ReadOrGenerateKey(aInfo.mKeyRef));
-#else
-    SuccessOrExit(error = ReadOrGenerateKey(aInfo.mKeyPair));
+    aInfo.mKeyInfo.SetKeyRef(kSrpEcdsaKeyRef);
 #endif
+
+    SuccessOrExit(error = ReadOrGenerateKey(aInfo.mKeyInfo));
 
     header.SetMessageId(mNextMessageId);
 
@@ -1142,48 +1141,48 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-Error Client::ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPairAsRef &aKeyRef)
+Error Client::ReadOrGenerateKey(KeyInfo &aKeyInfo)
 {
     Error                        error = kErrorNone;
     Crypto::Ecdsa::P256::KeyPair keyPair;
 
-    VerifyOrExit(!Crypto::Storage::HasKey(aKeyRef.GetKeyRef()));
+    VerifyOrExit(!Crypto::Storage::HasKey(aKeyInfo.GetKeyRef()));
     error = Get<Settings>().Read<Settings::SrpEcdsaKey>(keyPair);
 
     if (error == kErrorNone)
     {
-        if (aKeyRef.ImportKeyPair(keyPair) != kErrorNone)
+        if (aKeyInfo.ImportKeyPair(keyPair) != kErrorNone)
         {
-            SuccessOrExit(error = aKeyRef.Generate());
+            SuccessOrExit(error = aKeyInfo.Generate());
         }
         IgnoreError(Get<Settings>().Delete<Settings::SrpEcdsaKey>());
     }
     else
     {
-        SuccessOrExit(error = aKeyRef.Generate());
+        SuccessOrExit(error = aKeyInfo.Generate());
     }
 exit:
     return error;
 }
 #else
-Error Client::ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair)
+Error Client::ReadOrGenerateKey(KeyInfo &aKeyInfo)
 {
     Error error;
 
-    error = Get<Settings>().Read<Settings::SrpEcdsaKey>(aKeyPair);
+    error = Get<Settings>().Read<Settings::SrpEcdsaKey>(aKeyInfo);
 
     if (error == kErrorNone)
     {
         Crypto::Ecdsa::P256::PublicKey publicKey;
 
-        if (aKeyPair.GetPublicKey(publicKey) == kErrorNone)
+        if (aKeyInfo.GetPublicKey(publicKey) == kErrorNone)
         {
             ExitNow();
         }
     }
 
-    SuccessOrExit(error = aKeyPair.Generate());
-    IgnoreError(Get<Settings>().Save<Settings::SrpEcdsaKey>(aKeyPair));
+    SuccessOrExit(error = aKeyInfo.Generate());
+    IgnoreError(Get<Settings>().Save<Settings::SrpEcdsaKey>(aKeyInfo));
 
 exit:
     return error;
@@ -1566,11 +1565,7 @@ Error Client::AppendKeyRecord(MsgInfo &aInfo) const
     key.SetAlgorithm(Dns::KeyRecord::kAlgorithmEcdsaP256Sha256);
     key.SetLength(sizeof(Dns::KeyRecord) - sizeof(Dns::ResourceRecord) + sizeof(Crypto::Ecdsa::P256::PublicKey));
     SuccessOrExit(error = aInfo.mMessage->Append(key));
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    SuccessOrExit(error = aInfo.mKeyRef.GetPublicKey(publicKey));
-#else
-    SuccessOrExit(error = aInfo.mKeyPair.GetPublicKey(publicKey));
-#endif
+    SuccessOrExit(error = aInfo.mKeyInfo.GetPublicKey(publicKey));
     SuccessOrExit(error = aInfo.mMessage->Append(publicKey));
     aInfo.mRecordCount++;
 
@@ -1707,11 +1702,7 @@ Error Client::AppendSignature(MsgInfo &aInfo)
     sha256.Update(*aInfo.mMessage, 0, offset);
 
     sha256.Finish(hash);
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    SuccessOrExit(error = aInfo.mKeyRef.Sign(hash, signature));
-#else
-    SuccessOrExit(error = aInfo.mKeyPair.Sign(hash, signature));
-#endif
+    SuccessOrExit(error = aInfo.mKeyInfo.Sign(hash, signature));
 
     // Move back in message and append SIG RR now with compressed host
     // name (as signer's name) along with the calculated signature.

@@ -966,6 +966,12 @@ private:
         kForServicesAppendedInMessage,
     };
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    typedef Crypto::Ecdsa::P256::KeyPairAsRef KeyInfo;
+#else
+    typedef Crypto::Ecdsa::P256::KeyPair KeyInfo;
+#endif
+
     class TxJitter : public Clearable<TxJitter>
     {
         // Manages the random TX jitter to use when sending SRP update
@@ -1052,37 +1058,29 @@ private:
         uint16_t          mDomainNameOffset;
         uint16_t          mHostNameOffset;
         uint16_t          mRecordCount;
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-        Crypto::Ecdsa::P256::KeyPairAsRef mKeyRef;
-#else
-        Crypto::Ecdsa::P256::KeyPair mKeyPair;
-#endif
+        KeyInfo           mKeyInfo;
     };
 
-    Error Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester);
-    void  Stop(Requester aRequester, StopMode aMode);
-    void  Resume(void);
-    void  Pause(void);
-    void  HandleNotifierEvents(Events aEvents);
-    void  HandleRoleChanged(void);
-    void  HandleUnicastAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::UnicastAddress &aAddress);
-    bool  ShouldUpdateHostAutoAddresses(void) const;
-    bool  ShouldHostAutoAddressRegister(const Ip6::Netif::UnicastAddress &aUnicastAddress) const;
-    Error UpdateHostInfoStateOnAddressChange(void);
-    void  UpdateServiceStateToRemove(Service &aService);
-    State GetState(void) const { return mState; }
-    void  SetState(State aState);
-    bool  ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStateChangeMode aMode);
-    void  InvokeCallback(Error aError) const;
-    void  InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const;
-    void  HandleHostInfoOrServiceChange(void);
-    void  SendUpdate(void);
-    Error PrepareUpdateMessage(MsgInfo &aInfo);
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    Error ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPairAsRef &aKeyRef);
-#else
-    Error ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair);
-#endif
+    Error        Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester);
+    void         Stop(Requester aRequester, StopMode aMode);
+    void         Resume(void);
+    void         Pause(void);
+    void         HandleNotifierEvents(Events aEvents);
+    void         HandleRoleChanged(void);
+    void         HandleUnicastAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::UnicastAddress &aAddress);
+    bool         ShouldUpdateHostAutoAddresses(void) const;
+    bool         ShouldHostAutoAddressRegister(const Ip6::Netif::UnicastAddress &aUnicastAddress) const;
+    Error        UpdateHostInfoStateOnAddressChange(void);
+    void         UpdateServiceStateToRemove(Service &aService);
+    State        GetState(void) const { return mState; }
+    void         SetState(State aState);
+    bool         ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStateChangeMode aMode);
+    void         InvokeCallback(Error aError) const;
+    void         InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const;
+    void         HandleHostInfoOrServiceChange(void);
+    void         SendUpdate(void);
+    Error        PrepareUpdateMessage(MsgInfo &aInfo);
+    Error        ReadOrGenerateKey(KeyInfo &aKeyInfo);
     Error        AppendServiceInstructions(MsgInfo &aInfo);
     bool         CanAppendService(const Service &aService);
     Error        AppendServiceInstruction(Service &aService, MsgInfo &aInfo);
@@ -1123,7 +1121,7 @@ private:
     static const char *StateToString(State aState);
     void               LogRetryWaitInterval(void) const;
 #else
-    void LogRetryWaitInterval(void) const {}
+    void                                 LogRetryWaitInterval(void) const {}
 #endif
 
     static const char kDefaultDomainName[];
