@@ -4787,7 +4787,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
 
     for (auto &flag : kFlags)
     {
-        uint32_t threadFlag = flag.mThreadFlag;
+        otChangedFlags threadFlag = flag.mThreadFlag;
 
         if (mThreadChangedFlags & threadFlag)
         {

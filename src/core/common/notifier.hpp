@@ -63,7 +63,7 @@ namespace ot {
 /**
  * Type represents events emitted from OpenThread Notifier.
  */
-enum Event : uint32_t
+enum Event : uint64_t
 {
     kEventIp6AddressAdded                  = OT_CHANGED_IP6_ADDRESS_ADDED,            ///< IPv6 address was added
     kEventIp6AddressRemoved                = OT_CHANGED_IP6_ADDRESS_REMOVED,          ///< IPv6 address was removed
@@ -97,6 +97,7 @@ enum Event : uint32_t
     kEventPendingDatasetChanged            = OT_CHANGED_PENDING_DATASET,              ///< Pending Dataset changed
     kEventNat64TranslatorStateChanged      = OT_CHANGED_NAT64_TRANSLATOR_STATE,       ///< Nat64Translator state changed
     kEventParentLinkQualityChanged         = OT_CHANGED_PARENT_LINK_QUALITY,          ///< Parent link quality changed
+    kEventSrpServerStateChanged            = OT_CHANGED_SRP_SERVER_STATE,             ///< SRP Server state changed
 };
 
 /**

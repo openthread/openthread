@@ -1010,6 +1010,7 @@ private:
     static void HandleOutstandingUpdatesTimer(Timer &aTimer);
     void        HandleOutstandingUpdatesTimer(void);
     void        ProcessCompletedUpdates(void);
+    void        SetState(State aState);
 
     const UpdateMetadata *FindOutstandingUpdate(const MessageMetadata &aMessageMetadata) const;
     static const char    *AddressModeToString(AddressMode aMode);

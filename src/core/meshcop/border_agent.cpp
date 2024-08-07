@@ -795,14 +795,15 @@ void BorderAgent::EphemeralKeyManager::UpdateCountersAndRecordEvent(Deactivation
     };
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-#define ReasonEntry(kReason, kCounter, kEvent) \
-    {                                          \
-        kReason,                               \
-        HistoryTracker::Local::kEvent,         \
-        &Counters::kCounter,                   \
+#define ReasonEntry(kReason, kCounter, kEvent)                       \
+    {                                                                \
+        kReason, HistoryTracker::Local::kEvent, &Counters::kCounter, \
     }
 #else
-#define ReasonEntry(kReason, kCounter, kEvent) {kReason, 0, &Counters::kCounter}
+#define ReasonEntry(kReason, kCounter, kEvent) \
+    {                                          \
+        kReason, 0, &Counters::kCounter        \
+    }
 #endif
 
     static const ReasonToCounterEventEntry kReasonToCounterEventEntries[] = {

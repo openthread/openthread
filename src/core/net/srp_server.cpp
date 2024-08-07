@@ -32,6 +32,7 @@
  */
 
 #include "srp_server.hpp"
+#include "common/notifier.hpp"
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
@@ -122,6 +123,12 @@ exit:
     return error;
 }
 
+void Server::SetState(State aState)
+{
+    mState = aState;
+    Get<Notifier>().Signal(kEventSrpServerStateChanged);
+}
+
 void Server::SetEnabled(bool aEnabled)
 {
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -153,7 +160,7 @@ void Server::Enable(void)
     }
 #endif
 
-    mState = kStateStopped;
+    SetState(kStateStopped);
 
     // Request publishing of "DNS/SRP Address Service" entry in the
     // Thread Network Data based of `mAddressMode`. Then wait for
@@ -206,7 +213,7 @@ void Server::Disable(void)
     }
 
     Stop();
-    mState = kStateDisabled;
+    SetState(kStateDisabled);
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
     if (mFastStartMode)
@@ -776,7 +783,7 @@ void Server::Start(void)
 
     VerifyOrExit(mState == kStateStopped);
 
-    mState = kStateRunning;
+    SetState(kStateRunning);
     SuccessOrExit(error = PrepareSocket());
     LogInfo("Start listening on port %u", mPort);
 
@@ -880,7 +887,7 @@ void Server::Stop(void)
 {
     VerifyOrExit(mState == kStateRunning);
 
-    mState = kStateStopped;
+    SetState(kStateStopped);
 
     while (!mHosts.IsEmpty())
     {

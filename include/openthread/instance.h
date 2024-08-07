@@ -222,12 +222,13 @@ void otInstanceGetUptimeAsString(otInstance *aInstance, char *aBuffer, uint16_t 
 #define OT_CHANGED_PENDING_DATASET (1U << 29)              ///< Pending Operational Dataset changed
 #define OT_CHANGED_NAT64_TRANSLATOR_STATE (1U << 30)       ///< The state of NAT64 translator changed
 #define OT_CHANGED_PARENT_LINK_QUALITY (1U << 31)          ///< Parent link quality changed
+#define OT_CHANGED_SRP_SERVER_STATE (1ULL << 32)           ///< SRP server state changed
 
 /**
  * Represents a bit-field indicating specific state/configuration that has changed. See `OT_CHANGED_*`
  * definitions.
  */
-typedef uint32_t otChangedFlags;
+typedef uint64_t otChangedFlags;
 
 /**
  * Pointer is called to notify certain configuration or state changes within OpenThread.
