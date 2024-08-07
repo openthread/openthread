@@ -457,6 +457,7 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     aFrame.mInfo.mTxInfo.mIsSecurityProcessed  = false;
     aFrame.mInfo.mTxInfo.mTxDelay              = 0;
     aFrame.mInfo.mTxInfo.mTxDelayBaseTime      = 0;
+    aFrame.mInfo.mTxInfo.mTxPower              = OT_RADIO_POWER_INVALID;
 
     // All the next parameters are optional. Note that even if the
     // decoder fails to parse any of optional parameters we still want to
@@ -481,6 +482,7 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(mDecoder.ReadUint32(aFrame.mInfo.mTxInfo.mTxDelay));
     SuccessOrExit(mDecoder.ReadUint32(aFrame.mInfo.mTxInfo.mTxDelayBaseTime));
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mRxChannelAfterTxDone));
+    SuccessOrExit(mDecoder.ReadInt8(aFrame.mInfo.mTxInfo.mTxPower));
 
 exit:
     return error;
