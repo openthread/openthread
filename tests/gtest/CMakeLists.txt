@@ -50,3 +50,18 @@ add_library(ot-fake-platform
 target_link_libraries(ot-fake-platform
     ot-config
 )
+
+add_library(ot-fake-ftd INTERFACE)
+target_link_libraries(ot-fake-ftd INTERFACE
+    openthread-ftd
+    ot-fake-platform
+)
+
+add_executable(ot-ftd-gtest
+    dataset_test.cpp
+)
+target_link_libraries(ot-ftd-gtest
+    ot-fake-ftd
+    GTest::gmock_main
+)
+gtest_discover_tests(ot-ftd-gtest)
