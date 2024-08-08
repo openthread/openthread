@@ -161,6 +161,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             backbone_network_name = self._determine_backbone_network_name(params.get('backbone_network'))
 
             logging.info("Creating node %d: %r", i, params)
+            logging.info("Backbone network: %s", backbone_network_name)
 
             if params['is_otbr']:
                 nodeclass = OtbrNode
