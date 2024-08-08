@@ -162,14 +162,13 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             else:
                 nodeclass = Node
 
-            node = nodeclass(
-                i,
-                is_mtd=params['is_mtd'],
-                simulator=self.simulator,
-                name=params.get('name'),
-                version=params['version'],
-                is_bbr=params['is_bbr'],
-            )
+            node = nodeclass(i,
+                             is_mtd=params['is_mtd'],
+                             simulator=self.simulator,
+                             name=params.get('name'),
+                             version=params['version'],
+                             is_bbr=params['is_bbr'],
+                             backbone_network=params['backbone_network'])
             if 'boot_delay' in params:
                 self.simulator.go(params['boot_delay'])
 
@@ -501,6 +500,9 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             assert params.get('version', '') == '', params
             params['version'] = ''
 
+        # set default backbone network for bbr/otbr/host if not specified
+        params.setdefault('backbone_network', config.BACKBONE_DOCKER_NETWORK_NAME)
+
         # use 1.3 node for 1.2 tests
         if params.get('version') == '1.2':
             params['version'] = '1.3'
@@ -524,10 +526,30 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         return False
 
     def _prepare_backbone_network(self):
-        network_name = config.BACKBONE_DOCKER_NETWORK_NAME
-        self.assure_run_ok(
-            f'docker network create --driver bridge --ipv6 --subnet {config.BACKBONE_PREFIX} -o "com.docker.network.bridge.name"="{network_name}" {network_name} || true',
-            shell=True)
+        """
+        Prepares one or multiple backbone network(s).
+
+        This method creates the backbone network based on the `backbone` values defined in the TOPOLOGY in each test.
+        If no backbone values are defined, it sets the default backbone network as BACKBONE_DOCKER_NETWORK_NAME
+        from the config module.
+        """
+        # Use backbone_set to store all the backbone values in TOPOLOGY
+        backbone_set = set()
+        for node in self.TOPOLOGY:
+            backbone = self.TOPOLOGY[node].get('backbone_network')
+            if backbone:
+                backbone_set.add(backbone)
+
+        # Set default backbone network if backbone_set is empty
+        if not backbone_set:
+            backbone_set.add(config.BACKBONE_DOCKER_NETWORK_NAME)
+
+        # Iterate over the backbone_set and create backbone network(s)
+        for offset, backbone in enumerate(backbone_set, start=PORT_OFFSET):
+            backbone_prefix = f'{config.BACKBONE_IPV6_ADDR_START_BASE + offset:04x}::/64'
+            self.assure_run_ok(
+                f'docker network create --driver bridge --ipv6 --subnet {backbone_prefix} -o "com.docker.network.bridge.name"="{backbone}" {backbone} || true',
+                shell=True)
 
     def _remove_backbone_network(self):
         network_name = config.BACKBONE_DOCKER_NETWORK_NAME
