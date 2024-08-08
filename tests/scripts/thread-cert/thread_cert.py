@@ -604,6 +604,10 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
     def _start_backbone_sniffer(self):
         # don't know why but I have to create the empty bbr.pcap first, otherwise tshark won't work
         # self.assure_run_ok("truncate --size 0 bbr.pcap && chmod 664 bbr.pcap", shell=True)
+        assert self._backbone_network_names, 'Internal Error: self._backbone_network_names is empty'
+        # TODO: support sniffer on multiple backbone networks
+        sniffer_interface = self._backbone_network_names[0]
+
         pcap_file = self._get_backbone_pcap_filename()
         try:
             os.remove(pcap_file)
@@ -611,12 +615,13 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             pass
 
         dumpcap = pvutils.which_dumpcap()
-        self._dumpcap_proc = subprocess.Popen([dumpcap, '-i', config.BACKBONE_DOCKER_NETWORK_NAME, '-w', pcap_file],
+        self._dumpcap_proc = subprocess.Popen([dumpcap, '-i', sniffer_interface, '-w', pcap_file],
                                               stdout=sys.stdout,
                                               stderr=sys.stderr)
         time.sleep(0.2)
         assert self._dumpcap_proc.poll() is None, 'tshark terminated unexpectedly'
-        logging.info('Backbone sniffer launched successfully: pid=%s', self._dumpcap_proc.pid)
+        logging.info('Backbone sniffer launched successfully on interface %s, pid=%s', sniffer_interface,
+                     self._dumpcap_proc.pid)
         os.chmod(pcap_file, stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
 
     def _get_backbone_pcap_filename(self):
