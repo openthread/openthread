@@ -65,7 +65,21 @@ class OtbrDocker:
     _border_routing_counters = None
 
     def __init__(self, nodeid: int, backbone_network: str, **kwargs):
+        """
+        Initializes a OtbrDocker node.
+
+        Args:
+            nodeid (int): The ID of the node.
+            backbone_network (str): The backbone network name, e.g. 'backbone0', 'backbone1.0', 'backbone1.1' etc
+            **kwargs: Additional keyword arguments.
+
+        Raises:
+            AssertionError: If backbone_network is None (internal error)
+            Exception: If an error occurs during initialization
+        """
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
+
+        assert backbone_network is not None
         self.backbone_network = backbone_network
         try:
             self._docker_name = config.OTBR_DOCKER_NAME_PREFIX + str(nodeid)
