@@ -111,6 +111,10 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         self._do_packet_verification = PACKET_VERIFICATION and hasattr(self, 'verify') \
                                        and self.PACKET_VERIFICATION == PACKET_VERIFICATION
 
+        # store all the backbone network names that are used in the test case,
+        # it keeps empty when there's no backbone traffic in the test (no otbr or host nodes)
+        self._backbone_network_names = []
+
     def skipTest(self, reason: Any) -> None:
         self._testSkipped = True
         super(TestCase, self).skipTest(reason)
@@ -482,8 +486,24 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             The name of the backbone network, return value is None if no backbone networks defined.
 
         """
-        # TODO: add implementation
-        pass
+        # If there is no backbone network defined
+        if not self._backbone_network_names:
+            assert backbone_network_num is None, \
+                "Internal Error: 'backbone_network_num' or 'self._backbone_network_names' is not correctly set"
+            return None
+
+        # If there is only one backbone network name defined
+        if len(self._backbone_network_names) == 1:
+            return self._backbone_network_names[0]
+
+        # If there are multiple backbone network names defined
+        assert backbone_network_num is not None, \
+            "Internal Error: 'backbone_network_num' must be set if multiple backbone networks are defined"
+
+        backbone = f'{config.BACKBONE_DOCKER_NETWORK_NAME}.{backbone_network_num}'
+        assert backbone in self._backbone_network_names
+
+        return backbone
 
     def _output_test_info(self):
         """
@@ -569,6 +589,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
         # Iterate over the backbone_set and create backbone network(s)
         for backbone, backbone_prefix in backbone_set:
+            self._backbone_network_names.append(backbone)
             self.assure_run_ok(
                 f'docker network create --driver bridge --ipv6 --subnet {backbone_prefix} -o "com.docker.network.bridge.name"="{backbone}" {backbone} || true',
                 shell=True)
