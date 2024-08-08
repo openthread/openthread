@@ -327,6 +327,17 @@ public:
      */
     Error GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const;
 
+    /**
+     * Indicates whether or not the given IPv6 address matches any NAT64 prefixes.
+     *
+     * @param[in]  aAddress  An IPv6 address to check.
+     *
+     * @retval TRUE   If @p aAddress matches a NAT64 prefix.
+     * @retval FALSE  If @p aAddress does not match a NAT64 prefix.
+     *
+     */
+    bool IsNat64(const Ip6::Address &aAddress) const;
+
 #if OPENTHREAD_FTD
     /**
      * Defines the match mode constants to compare two RLOC16 values.

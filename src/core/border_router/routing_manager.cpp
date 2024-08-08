@@ -817,6 +817,45 @@ bool RoutingManager::NetworkDataContainsUlaRoute(void) const
     return contains;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABLITY_CHECK_ICMP6_ERROR_ENABLE
+
+void RoutingManager::CheckReachbilityToSendIcmpError(const Message &aMessage, const Ip6::Header &aIp6Header)
+{
+    Ip6::MessageInfo messageInfo;
+
+    VerifyOrExit(IsRunning() && IsInitalPolicyEvaluationDone());
+
+    VerifyOrExit(!aIp6Header.GetDestination().IsMulticast());
+
+    // Validate that source matches the ULA OMR prefix (which is not
+    // infrastructure-derived).
+
+    VerifyOrExit(!mOmrPrefixManager.GetFavoredPrefix().IsEmpty());
+    VerifyOrExit(!mOmrPrefixManager.GetFavoredPrefix().IsInfrastructureDerived());
+    VerifyOrExit(aIp6Header.GetSource().MatchesPrefix(mOmrPrefixManager.GetFavoredPrefix().GetPrefix()));
+
+    VerifyOrExit(mRoutePublisher.IsPublishingDefaultRoute());
+
+    VerifyOrExit(!mRxRaTracker.IsAddressOnLink(aIp6Header.GetDestination()));
+    VerifyOrExit(!mRxRaTracker.IsAddressReachableThroughExplicitRoute(aIp6Header.GetDestination()));
+    VerifyOrExit(!Get<NetworkData::Leader>().IsNat64(aIp6Header.GetDestination()));
+
+    LogInfo("Send ICMP unreachable for fwd msg with local ULA src and outside-AIL dst");
+    LogInfo("   src: %s", aIp6Header.GetSource().ToString().AsCString());
+    LogInfo("   dst: %s", aIp6Header.GetDestination().ToString().AsCString());
+
+    messageInfo.Clear();
+    messageInfo.SetPeerAddr(aIp6Header.GetSource());
+
+    IgnoreError(Get<Ip6::Icmp>().SendError(Ip6::Icmp::Header::kTypeDstUnreach,
+                                           Ip6::Icmp::Header::kCodeDstUnreachProhibited, messageInfo, aMessage));
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABLITY_CHECK_ICMP6_ERROR_ENABLE
+
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix &aPrefix,
@@ -1802,6 +1841,48 @@ void RoutingManager::RxRaTracker::SetHeaderFlagsOn(RouterAdvert::Header &aHeader
     {
         aHeader.SetOtherConfigFlag();
     }
+}
+
+bool RoutingManager::RxRaTracker::IsAddressOnLink(const Ip6::Address &aAddress) const
+{
+    bool isOnLink = false;
+
+    for (const Router &router : mRouters)
+    {
+        for (const OnLinkPrefix &onLinkPrefix : router.mOnLinkPrefixes)
+        {
+            isOnLink = aAddress.MatchesPrefix(onLinkPrefix.GetPrefix());
+            VerifyOrExit(!isOnLink);
+        }
+    }
+
+exit:
+    return isOnLink;
+}
+
+bool RoutingManager::RxRaTracker::IsAddressReachableThroughExplicitRoute(const Ip6::Address &aAddress) const
+{
+    // Checks whether the `aAddress` matches any discovered route
+    // prefix excluding `::/0`.
+
+    bool IsReachable = false;
+
+    for (const Router &router : mRouters)
+    {
+        for (const RoutePrefix &routePrefix : router.mRoutePrefixes)
+        {
+            if (routePrefix.GetPrefix().GetLength() == 0)
+            {
+                continue;
+            }
+
+            IsReachable = aAddress.MatchesPrefix(routePrefix.GetPrefix());
+            VerifyOrExit(!IsReachable);
+        }
+    }
+
+exit:
+    return IsReachable;
 }
 
 void RoutingManager::RxRaTracker::InitIterator(PrefixTableIterator &aIterator) const
