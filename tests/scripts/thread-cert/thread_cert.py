@@ -595,8 +595,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 shell=True)
 
     def _remove_backbone_network(self):
-        network_name = config.BACKBONE_DOCKER_NETWORK_NAME
-        self.assure_run_ok(f'docker network rm {network_name}', shell=True)
+        for network_name in self._backbone_network_names:
+            self.assure_run_ok(f'docker network rm {network_name}', shell=True)
 
     def _start_backbone_sniffer(self):
         assert self._backbone_network_names, 'Internal Error: self._backbone_network_names is empty'
