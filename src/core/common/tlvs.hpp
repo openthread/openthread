@@ -574,6 +574,9 @@ public:
     /**
      * Appends a TLV with a given type and value to a message.
      *
+     * If the TLV length is longer than maximum base TLV size defined by `kBaseTlvMaxLength` then
+     * appends extended TLV.
+     *
      * On success this method grows the message by the size of the TLV.
      *
      * @param[in]  aMessage      The message to append to.
@@ -585,7 +588,7 @@ public:
      * @retval kErrorNoBufs   Insufficient available buffers to grow the message.
      *
      */
-    static Error AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint8_t aLength);
+    static Error AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint16_t aLength);
 
     /**
      * Appends a TLV with a given type and value to a message.

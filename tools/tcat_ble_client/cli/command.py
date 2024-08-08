@@ -28,6 +28,7 @@
 
 from tlv.tlv import TLV
 from tlv.tcat_tlv import TcatTLVType
+from ble.ble_stream_secure import BleStreamSecure
 
 from abc import ABC, abstractmethod
 
@@ -57,7 +58,7 @@ class Command(ABC):
         return await self._subcommands[args[0]].execute(args[1:], context)
 
     @abstractmethod
-    async def execute_default(self, args, context) -> CommandResult:
+    async def execute_default(self, args, context):
         pass
 
     @abstractmethod
