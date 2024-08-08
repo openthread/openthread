@@ -645,6 +645,17 @@ void SpiInterface::UpdateFdSet(void *aMainloopContext)
             // The interrupt pin was not asserted, so we wait for the interrupt pin to be asserted by adding it to the
             // read set.
             FD_SET(mIntGpioValueFd, &context->mReadFdSet);
+
+            if (CheckInterrupt())
+            {
+                // Interrupt pin was not asserted before FD_SET
+                // but it is after.
+                // set the timeout to zero else the select will not detect the falling edge
+                // and will wait until the end of the timeout
+                timeout.tv_sec  = 0;
+                timeout.tv_usec = 0;
+                otLogDebgPlat("UpdateFdSet(): Interrupt after FD_SET.");
+            }
         }
     }
     else if (timercmp(&pollingTimeout, &timeout, <))
