@@ -153,6 +153,9 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             params = self._parse_params(params)
             initial_topology[i] = params
 
+            # backbone_network_name is None if no backbone network is defined
+            backbone_network_name = self._determine_backbone_network_name(params.get('backbone_network'))
+
             logging.info("Creating node %d: %r", i, params)
 
             if params['is_otbr']:
@@ -168,7 +171,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                              name=params.get('name'),
                              version=params['version'],
                              is_bbr=params['is_bbr'],
-                             backbone_network=params['backbone_network'])
+                             backbone_network=backbone_network_name)
             if 'boot_delay' in params:
                 self.simulator.go(params['boot_delay'])
 
@@ -465,6 +468,23 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 ethaddr = node.get_ether_mac()
                 test_info['ethaddrs'][i] = EthAddr(ethaddr).format_octets()
 
+    def _determine_backbone_network_name(self, backbone_network_num):
+        """
+        Determines the name of the backbone network based on the given backbone network number, which is defined in the TOPOLOGY.
+
+        For example, if `self._backbone_network_names` is ['backbone0.0', 'backbone0.1'], and backbone_network_num is 1,
+        then the return value is 'backbone0.1'.
+
+        Args:
+            backbone_network_num: The backbone network number. This should be None if no backbone networks (no OTBR or host).
+
+        Returns:
+            The name of the backbone network, return value is None if no backbone networks defined.
+
+        """
+        # TODO: add implementation
+        pass
+
     def _output_test_info(self):
         """
         Output test info to json file after tearDown
@@ -500,9 +520,6 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             assert params.get('version', '') == '', params
             params['version'] = ''
 
-        # set default backbone network for bbr/otbr/host if not specified
-        params.setdefault('backbone_network', config.BACKBONE_DOCKER_NETWORK_NAME)
-
         # use 1.3 node for 1.2 tests
         if params.get('version') == '1.2':
             params['version'] = '1.3'
@@ -529,27 +546,17 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         """
         Prepares one or multiple backbone network(s).
 
-        This method creates the backbone network based on the `backbone` values defined in the TOPOLOGY in each test.
-        If no backbone values are defined, it sets the default backbone network as BACKBONE_DOCKER_NETWORK_NAME
-        from the config module.
+        1. If there's `backbone_network` defined in the TOPOLOGY, it creates the backbone network based on the value.
+           The format of the
+             * backbone name is `backbone{PORT_OFFSET}.{backbone_network}`, for example, "backbone0.0", "backbone0.1";
+             * backbone prefix is `backbone{PORT_OFFSET}:{backbone_network}`, for example, "9100:0::/64", "9100:1::/64".
+
+        2. If no `backbone_network` is defined, it creates the default backbone network, the format of the
+             * backbone name is `backbone{PORT_OFFSET}`, for example, "backbone0";
+             * backbone prefix is `backbone{PORT_OFFSET}::/64`, for example, "9100::/64".
         """
-        # Use backbone_set to store all the backbone values in TOPOLOGY
-        backbone_set = set()
-        for node in self.TOPOLOGY:
-            backbone = self.TOPOLOGY[node].get('backbone_network')
-            if backbone:
-                backbone_set.add(backbone)
-
-        # Set default backbone network if backbone_set is empty
-        if not backbone_set:
-            backbone_set.add(config.BACKBONE_DOCKER_NETWORK_NAME)
-
-        # Iterate over the backbone_set and create backbone network(s)
-        for offset, backbone in enumerate(backbone_set, start=PORT_OFFSET):
-            backbone_prefix = f'{config.BACKBONE_IPV6_ADDR_START_BASE + offset:04x}::/64'
-            self.assure_run_ok(
-                f'docker network create --driver bridge --ipv6 --subnet {backbone_prefix} -o "com.docker.network.bridge.name"="{backbone}" {backbone} || true',
-                shell=True)
+        # TODO: add implementation
+        pass
 
     def _remove_backbone_network(self):
         network_name = config.BACKBONE_DOCKER_NETWORK_NAME
