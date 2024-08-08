@@ -48,6 +48,7 @@ __pycache__
 # Unit test files
 CTestTestfile.cmake
 ot-test-*
+ot_testing/
 Testing/
 
 # Misc
