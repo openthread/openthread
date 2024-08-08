@@ -1159,6 +1159,25 @@ otError otThreadDetachGracefully(otInstance *aInstance, otDetachGracefullyCallba
 void otConvertDurationInSecondsToString(uint32_t aDuration, char *aBuffer, uint16_t aSize);
 
 /**
+ * Sets the store frame counter ahead.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ * @param[in] aStoreFrameCounterAhead The store frame counter ahead to set.
+ *
+ */
+void otThreadSetStoreFrameCounterAhead(otInstance *aInstance, uint32_t aStoreFrameCounterAhead);
+
+/**
+ * Gets the store frame counter ahead.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The current store frame counter ahead.
+ *
+ */
+uint32_t otThreadGetStoreFrameCounterAhead(otInstance *aInstance);
+
+/**
  * @}
  *
  */
