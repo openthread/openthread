@@ -555,8 +555,23 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
              * backbone name is `backbone{PORT_OFFSET}`, for example, "backbone0";
              * backbone prefix is `backbone{PORT_OFFSET}::/64`, for example, "9100::/64".
         """
-        # TODO: add implementation
-        pass
+        # Create backbone_set to store all the (backbone_name, backbone_prefix) pairs by parsing TOPOLOGY.
+        backbone_set = set()
+        for node in self.TOPOLOGY:
+            backbone_num = self.TOPOLOGY[node].get('backbone_network')
+            if backbone_num is not None:
+                backbone_set.add((f'{config.BACKBONE_DOCKER_NETWORK_NAME}.{backbone_num}',
+                                  f'{config.BACKBONE_IPV6_ADDR_START}:{backbone_num}::/64'))
+
+        # Set default backbone network name and prefix if backbone_set is empty
+        if not backbone_set:
+            backbone_set.add((config.BACKBONE_DOCKER_NETWORK_NAME, f'{config.BACKBONE_IPV6_ADDR_START}::/64'))
+
+        # Iterate over the backbone_set and create backbone network(s)
+        for backbone, backbone_prefix in backbone_set:
+            self.assure_run_ok(
+                f'docker network create --driver bridge --ipv6 --subnet {backbone_prefix} -o "com.docker.network.bridge.name"="{backbone}" {backbone} || true',
+                shell=True)
 
     def _remove_backbone_network(self):
         network_name = config.BACKBONE_DOCKER_NETWORK_NAME
