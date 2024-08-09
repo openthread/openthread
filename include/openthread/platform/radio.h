@@ -1380,16 +1380,19 @@ otError otPlatRadioClearCalibratedPowers(otInstance *aInstance);
  * @note This API is an optional radio platform API. It's up to the platform layer to implement it.
  *       If this API is implemented, the function `otPlatRadioSetTransmitPower()` should be disabled.
  *
- * The radio driver should set the actual output power to be less than or equal to the target power and as close
- * as possible to the target power.
+ * The radio driver should set the actual output power to be less than or equal to the @p aTargetPower and as close
+ * as possible to the @p aTargetPower. If the @p aTargetPower is lower than the minimum output power supported
+ * by the platform, the output power should be set to the minimum output power supported by the platform.  If the
+ * @p aTargetPower is higher than the maximum output power supported by the platform, the output power should be
+ * set to the maximum output power supported by the platform. If the @p aTargetPower is set to `INT16_MAX`, the
+ * corresponding channel is disabled.
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aChannel      The radio channel.
- * @param[in]  aTargetPower  The target power in 0.01dBm. Passing `INT16_MAX` will disable this channel to use the
- *                           target power.
+ * @param[in]  aTargetPower  The target power in 0.01dBm.
  *
  * @retval  OT_ERROR_NONE             Successfully set the target power.
- * @retval  OT_ERROR_INVALID_ARGS     The @p aChannel or @p aTargetPower is invalid.
+ * @retval  OT_ERROR_INVALID_ARGS     The @p aChannel is invalid.
  * @retval  OT_ERROR_NOT_IMPLEMENTED  The feature is not implemented.
  *
  */
