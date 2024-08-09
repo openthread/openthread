@@ -70,7 +70,7 @@ def run_cert(job_id: int, port_offset: int, script: str, run_directory: str):
         env['PYTHONPATH'] = os.path.dirname(os.path.abspath(__file__))
 
         try:
-            print(f'Running {test_name}')
+            print(f'Running PORT_OFFSET={port_offset} {test_name}')
             with open(logfile, 'wt') as output:
                 abs_script = os.path.abspath(script)
                 subprocess.check_call(abs_script,
