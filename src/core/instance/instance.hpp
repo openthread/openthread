@@ -258,6 +258,16 @@ public:
      */
     uint32_t GetId(void) const { return mId; }
 
+#if OPENTHREAD_PLATFORM_NEXUS
+    /**
+     * Sets the instance identifier.
+     *
+     * @param[in] aId  The identifier to assign to the `Instance`.
+     *
+     */
+    void SetId(uint32_t aId) { mId = aId; }
+#endif
+
     /**
      * Indicates whether or not the instance is valid/initialized and not yet finalized.
      *
@@ -435,9 +445,25 @@ public:
      */
     template <typename Type> inline Type &Get(void);
 
+#if OPENTHREAD_PLATFORM_NEXUS
+    /**
+     * Constructor to initialize an `Instance`
+     *
+     */
+    Instance(void);
+
+    /**
+     * Called after constructor initialization.
+     *
+     */
+    void AfterInit(void);
+#endif
+
 private:
+#if !OPENTHREAD_PLATFORM_NEXUS
     Instance(void);
     void AfterInit(void);
+#endif
 
     // Order of variables (their initialization in `Instance`)
     // is important.
