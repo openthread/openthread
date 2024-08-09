@@ -41,7 +41,7 @@ $ git clone git@github.com:openthread/ot-nrf528xx.git
 $ cd ot-nrf528xx/
 $ git submodule update --init
 $ ./script/bootstrap
-$ ./script/build nrf52840 UART_trans -DOT_DIAGNOSTIC=ON -DOT_CSL_RECEIVER=ON
+$ ./script/build nrf52840 UART_trans -DOT_DIAGNOSTIC=ON -DOT_CSL_RECEIVER=ON -DOT_LINK_METRICS_INITIATOR=ON -DOT_LINK_METRICS_SUBJECT=ON
 $ arm-none-eabi-objcopy -O ihex build/bin/ot-cli-ftd ot-cli-ftd.hex
 $ nrfjprog -f nrf52 --chiperase --program ot-cli-ftd.hex --reset
 ```
@@ -62,6 +62,7 @@ options:
   -h, --help           show this help message and exit
   -c, --csl            test whether the RCP supports CSL transmitter
   -d, --diag-commands  test whether the RCP supports all diag commands
+  -l, --link-metrics   test whether the RCP supports link metrics
   -p, --data-poll      test whether the RCP supports data poll
   -t, --throughput     test the Thread network 1-hop throughput
   -v, --verbose        output verbose information
@@ -144,6 +145,16 @@ The parameter `-p` or `--data-poll` starts to test whether the RCP supports data
 $ DUT_ADB_USB=1269UCKFZTAM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 ./tools/cp-caps/rcp_caps_test.py -p
 Data Poll Parent ----------------------------------------- OK
 Data Poll Child ------------------------------------------ OK
+```
+
+### Test Link Metrics
+
+The parameter `-l` or `--link-metrics` starts to test whether the RCP supports link metrics.
+
+```bash
+$ DUT_ADB_USB=1269UCKFZTAM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 ./tools/cp-caps/rcp_caps_test.py -l
+Link Metrics Initiator ----------------------------------- OK
+Link Metrics Subject ------------------------------------- OK
 ```
 
 ### Test Throughput
