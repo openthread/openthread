@@ -257,8 +257,10 @@ class ScanCommand(Command):
             keyfile=path.join(cert_path, 'commissioner_key.pem'),
             cafile=path.join(cert_path, 'ca_cert.pem'),
         )
-
         print('Setting up secure channel...')
-        await ble_sstream.do_handshake()
-        print('Done')
-        context['ble_sstream'] = ble_sstream
+        if await ble_sstream.do_handshake():
+            print('Done')
+            context['ble_sstream'] = ble_sstream
+        else:
+            print('Secure channel not established.')
+            await ble_stream.disconnect()
