@@ -53,6 +53,13 @@ extern "C" {
  *
  */
 
+#define OT_THREAD_VERSION_INVALID 0 ///< Invalid Thread version
+#define OT_THREAD_VERSION_1_1 2     ///< Thread Version 1.1
+#define OT_THREAD_VERSION_1_2 3     ///< Thread Version 1.2
+#define OT_THREAD_VERSION_1_3 4     ///< Thread Version 1.3
+#define OT_THREAD_VERSION_1_3_1 5   ///< Thread Version 1.3.1 (alias for 1.4)
+#define OT_THREAD_VERSION_1_4 5     ///< Thread Version 1.4
+
 /**
  * Maximum value length of Thread Base TLV.
  */
@@ -245,6 +252,8 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * Gets the Thread protocol version.
+ *
+ * The constants `OT_THREAD_VERSION_*` define the numerical version values.
  *
  * @returns the Thread protocol version.
  *

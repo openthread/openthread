@@ -35,15 +35,7 @@
 #define OPENTHREAD_CORE_CONFIG_H_
 
 #include <openthread/config.h>
-
-#define OT_THREAD_VERSION_INVALID 0
-
-#define OT_THREAD_VERSION_1_1 2
-#define OT_THREAD_VERSION_1_2 3
-#define OT_THREAD_VERSION_1_3 4
-// Support projects on legacy "1.3.1" version, which is now "1.4"
-#define OT_THREAD_VERSION_1_3_1 5
-#define OT_THREAD_VERSION_1_4 5
+#include <openthread/thread.h>
 
 #define OPENTHREAD_CORE_CONFIG_H_IN
 
