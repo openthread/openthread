@@ -157,7 +157,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             params = self._parse_params(params)
             initial_topology[i] = params
 
-            backbone_network_name = self._construct_backbone_network_name(params.get('backbone_network')) \
+            backbone_network_name = self._construct_backbone_network_name(params.get('backbone_network_id')) \
                                     if self._has_backbone_traffic() else None
 
             logging.info("Creating node %d: %r", i, params)
@@ -553,21 +553,20 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
     def _prepare_backbone_network(self):
         """
-        Create one or multiple backbone networks(docker bridge networks) based on the TOPOLOGY definition.
+        Creates one or more backbone networks (Docker bridge networks) based on the TOPOLOGY definition.
 
-        1. If there's `backbone_network` defined in the TOPOLOGY, it creates the backbone network based on the value.
-           The format of the
-             * backbone name   is `backbone{PORT_OFFSET}.{backbone_network}`,      for example, "backbone0.0", "backbone0.1";
-             * backbone prefix is `backbone{PORT_OFFSET}:{backbone_network}::/64`, for example, "9100:0::/64", "9100:1::/64".
+        * If `backbone_network_id` is defined in the TOPOLOGY:
+            * Network name:   `backbone{PORT_OFFSET}.{backbone_network_id}`      (e.g., "backbone0.0", "backbone0.1")
+            * Network prefix: `backbone{PORT_OFFSET}:{backbone_network_id}::/64` (e.g., "9100:0::/64", "9100:1::/64")
 
-        2. If no `backbone_network` is defined, it creates the default backbone network, the format of the
-             * backbone name   is `backbone{PORT_OFFSET}.0`,    for example, "backbone0.0";
-             * backbone prefix is `backbone{PORT_OFFSET}::/64`, for example, "9100::/64".
+        * If `backbone_network_id` is undefined:
+            * Network name:   `backbone{PORT_OFFSET}.0`    (e.g., "backbone0.0")
+            * Network prefix: `backbone{PORT_OFFSET}::/64` (e.g., "9100::/64")
         """
         # Create backbone_set to store all the (backbone_name, backbone_prefix) pairs by parsing TOPOLOGY.
         backbone_set = set()
         for node in self.TOPOLOGY:
-            backbone_id = self.TOPOLOGY[node].get('backbone_network')
+            backbone_id = self.TOPOLOGY[node].get('backbone_network_id')
             if backbone_id is not None:
                 backbone_set.add((f'{config.BACKBONE_DOCKER_NETWORK_NAME}.{backbone_id}',
                                   f'{config.BACKBONE_IPV6_ADDR_START}:{backbone_id}::/64'))
