@@ -157,8 +157,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             params = self._parse_params(params)
             initial_topology[i] = params
 
-            # backbone_network_name is None if no backbone network is defined
-            backbone_network_name = self._determine_backbone_network_name(params.get('backbone_network'))
+            backbone_network_name = self._construct_backbone_network_name(params.get('backbone_network')) \
+                                    if self._has_backbone_traffic() else None
 
             logging.info("Creating node %d: %r", i, params)
             logging.info("Backbone network: %s", backbone_network_name)
@@ -473,38 +473,26 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 ethaddr = node.get_ether_mac()
                 test_info['ethaddrs'][i] = EthAddr(ethaddr).format_octets()
 
-    def _determine_backbone_network_name(self, backbone_network_num):
+    def _construct_backbone_network_name(self, backbone_network_id) -> str:
         """
-        Determines the name of the backbone network based on the given backbone network number, which is defined in the TOPOLOGY.
-
-        For example, if `self._backbone_network_names` is ['backbone0.0', 'backbone0.1'], and backbone_network_num is 1,
-        then the return value is 'backbone0.1'.
+        Construct the name of the backbone network based on the given backbone network id from TOPOLOGY. The format
+        is `backbone{PORT_OFFSET}.{backbone_network_id}`.
 
         Args:
-            backbone_network_num: The backbone network number. This should be None if no backbone networks (no OTBR or host).
+            backbone_network_id: The backbone network id or None.
 
         Returns:
-            The name of the backbone network, return value is None if no backbone networks defined.
+            backbone_name (str): The name of the backbone network.
 
+        Raises:
+            AssertionError: If the constructed backbone network name is not in the list of self._backbone_network_names.
         """
-        # If there is no backbone network defined
-        if not self._backbone_network_names:
-            assert backbone_network_num is None, \
-                "Internal Error: 'backbone_network_num' or 'self._backbone_network_names' is not correctly set"
-            return None
+        id = backbone_network_id if backbone_network_id is not None else config.BACKBONE_DOCKER_NETWORK_DEFAULT_ID
+        backbone_name = f'{config.BACKBONE_DOCKER_NETWORK_NAME}.{id}'
 
-        # If there is only one backbone network name defined
-        if len(self._backbone_network_names) == 1:
-            return self._backbone_network_names[0]
+        assert backbone_name in self._backbone_network_names
 
-        # If there are multiple backbone network names defined
-        assert backbone_network_num is not None, \
-            "Internal Error: 'backbone_network_num' must be set if multiple backbone networks are defined"
-
-        backbone = f'{config.BACKBONE_DOCKER_NETWORK_NAME}.{backbone_network_num}'
-        assert backbone in self._backbone_network_names
-
-        return backbone
+        return backbone_name
 
     def _output_test_info(self):
         """
@@ -565,28 +553,29 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
     def _prepare_backbone_network(self):
         """
-        Prepares one or multiple backbone network(s).
+        Create one or multiple backbone networks(docker bridge networks) based on the TOPOLOGY definition.
 
         1. If there's `backbone_network` defined in the TOPOLOGY, it creates the backbone network based on the value.
            The format of the
-             * backbone name is `backbone{PORT_OFFSET}.{backbone_network}`, for example, "backbone0.0", "backbone0.1";
-             * backbone prefix is `backbone{PORT_OFFSET}:{backbone_network}`, for example, "9100:0::/64", "9100:1::/64".
+             * backbone name   is `backbone{PORT_OFFSET}.{backbone_network}`,      for example, "backbone0.0", "backbone0.1";
+             * backbone prefix is `backbone{PORT_OFFSET}:{backbone_network}::/64`, for example, "9100:0::/64", "9100:1::/64".
 
         2. If no `backbone_network` is defined, it creates the default backbone network, the format of the
-             * backbone name is `backbone{PORT_OFFSET}`, for example, "backbone0";
+             * backbone name   is `backbone{PORT_OFFSET}.0`,    for example, "backbone0.0";
              * backbone prefix is `backbone{PORT_OFFSET}::/64`, for example, "9100::/64".
         """
         # Create backbone_set to store all the (backbone_name, backbone_prefix) pairs by parsing TOPOLOGY.
         backbone_set = set()
         for node in self.TOPOLOGY:
-            backbone_num = self.TOPOLOGY[node].get('backbone_network')
-            if backbone_num is not None:
-                backbone_set.add((f'{config.BACKBONE_DOCKER_NETWORK_NAME}.{backbone_num}',
-                                  f'{config.BACKBONE_IPV6_ADDR_START}:{backbone_num}::/64'))
+            backbone_id = self.TOPOLOGY[node].get('backbone_network')
+            if backbone_id is not None:
+                backbone_set.add((f'{config.BACKBONE_DOCKER_NETWORK_NAME}.{backbone_id}',
+                                  f'{config.BACKBONE_IPV6_ADDR_START}:{backbone_id}::/64'))
 
         # Set default backbone network name and prefix if backbone_set is empty
         if not backbone_set:
-            backbone_set.add((config.BACKBONE_DOCKER_NETWORK_NAME, f'{config.BACKBONE_IPV6_ADDR_START}::/64'))
+            backbone_set.add((f'{config.BACKBONE_DOCKER_NETWORK_NAME}.{config.BACKBONE_DOCKER_NETWORK_DEFAULT_ID}',
+                              f'{config.BACKBONE_IPV6_ADDR_START}::/64'))
 
         # Iterate over the backbone_set and create backbone network(s)
         for backbone, backbone_prefix in backbone_set:
