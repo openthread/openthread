@@ -251,10 +251,11 @@ class ScanCommand(Command):
         print(f'Connecting to {device}')
         ble_stream = await BleStream.create(device.address, BBTC_SERVICE_UUID, BBTC_TX_CHAR_UUID, BBTC_RX_CHAR_UUID)
         ble_sstream = BleStreamSecure(ble_stream)
+        cert_path = context['cmd_args'].cert_path if context['cmd_args'] else 'auth'
         ble_sstream.load_cert(
-            certfile=path.join('auth', 'commissioner_cert.pem'),
-            keyfile=path.join('auth', 'commissioner_key.pem'),
-            cafile=path.join('auth', 'ca_cert.pem'),
+            certfile=path.join(cert_path, 'commissioner_cert.pem'),
+            keyfile=path.join(cert_path, 'commissioner_key.pem'),
+            cafile=path.join(cert_path, 'ca_cert.pem'),
         )
 
         print('Setting up secure channel...')
