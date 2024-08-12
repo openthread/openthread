@@ -96,7 +96,7 @@ async def main():
             quit_with_reason('TLS handshake failure')
 
     ds = ThreadDataset()
-    cli = CLI(ds, ble_sstream)
+    cli = CLI(ds, args, ble_sstream)
     loop = asyncio.get_running_loop()
     print('Enter \'help\' to see available commands' ' or \'exit\' to exit the application.')
     while True:
