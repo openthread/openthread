@@ -67,8 +67,9 @@ void TestPowerCalibration(void)
 
     SuccessOrQuit(otPlatRadioSetChannelTargetPower(instance, 11, 4999));
     rawPowerSettingLength = sizeof(rawPowerSetting);
-    VerifyOrQuit(otPlatRadioGetRawPowerSetting(instance, 11, rawPowerSetting, &rawPowerSettingLength) ==
-                 OT_ERROR_NOT_FOUND);
+    SuccessOrQuit(otPlatRadioGetRawPowerSetting(instance, 11, rawPowerSetting, &rawPowerSettingLength));
+    VerifyOrQuit(rawPowerSettingLength == 1);
+    VerifyOrQuit(rawPowerSetting[0] == 0x00);
 
     SuccessOrQuit(otPlatRadioSetChannelTargetPower(instance, 11, 5000));
     rawPowerSettingLength = sizeof(rawPowerSetting);

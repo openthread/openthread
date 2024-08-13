@@ -144,6 +144,8 @@ Error PowerCalibration::GetPowerSettings(uint8_t   aChannel,
     int16_t foundPower = kInvalidPower;
     int16_t targetPower;
     int16_t actualPower;
+    int16_t minPower      = NumericLimits<int16_t>::kMax;
+    uint8_t minPowerIndex = kInvalidIndex;
 
     VerifyOrExit(IsChannelValid(aChannel), error = kErrorInvalidArgs);
     VerifyOrExit((mLastChannel != aChannel) || IsPowerUpdated());
@@ -151,6 +153,7 @@ Error PowerCalibration::GetPowerSettings(uint8_t   aChannel,
     chIndex     = aChannel - Radio::kChannelMin;
     targetPower = mTargetPowerTable[chIndex];
     VerifyOrExit(targetPower != kInvalidPower, error = kErrorNotFound);
+    VerifyOrExit(mCalibratedPowerTables[chIndex].GetLength() > 0, error = kErrorNotFound);
 
     for (uint8_t i = 0; i < mCalibratedPowerTables[chIndex].GetLength(); i++)
     {
@@ -161,11 +164,14 @@ Error PowerCalibration::GetPowerSettings(uint8_t   aChannel,
             foundPower = actualPower;
             powerIndex = i;
         }
+        else if (actualPower < minPower)
+        {
+            minPower      = actualPower;
+            minPowerIndex = i;
+        }
     }
 
-    VerifyOrExit(powerIndex != kInvalidIndex, error = kErrorNotFound);
-
-    mCalibratedPowerIndex = powerIndex;
+    mCalibratedPowerIndex = (powerIndex != kInvalidIndex) ? powerIndex : minPowerIndex;
     mLastChannel          = aChannel;
 
 exit:
