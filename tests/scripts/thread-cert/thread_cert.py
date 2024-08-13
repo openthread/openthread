@@ -563,21 +563,21 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             * Network name:   `backbone{PORT_OFFSET}.0`    (e.g., "backbone0.0")
             * Network prefix: `backbone{PORT_OFFSET}::/64` (e.g., "9100::/64")
         """
-        # Create backbone_set to store all the (backbone_name, backbone_prefix) pairs by parsing TOPOLOGY.
-        backbone_set = set()
+        # Create backbone_set to store all the backbone_ids by parsing TOPOLOGY.
+        backbone_id_set = set()
         for node in self.TOPOLOGY:
-            backbone_id = self.TOPOLOGY[node].get('backbone_network_id')
-            if backbone_id is not None:
-                backbone_set.add((f'{config.BACKBONE_DOCKER_NETWORK_NAME}.{backbone_id}',
-                                  f'{config.BACKBONE_IPV6_ADDR_START}:{backbone_id}::/64'))
+            id = self.TOPOLOGY[node].get('backbone_network_id')
+            if id is not None:
+                backbone_id_set.add(id)
 
-        # Set default backbone network name and prefix if backbone_set is empty
-        if not backbone_set:
-            backbone_set.add((f'{config.BACKBONE_DOCKER_NETWORK_NAME}.{config.BACKBONE_DOCKER_NETWORK_DEFAULT_ID}',
-                              f'{config.BACKBONE_IPV6_ADDR_START}::/64'))
+        # Add default backbone network id if backbone_set is empty
+        if not backbone_id_set:
+            backbone_id_set.add(config.BACKBONE_DOCKER_NETWORK_DEFAULT_ID)
 
         # Iterate over the backbone_set and create backbone network(s)
-        for backbone, backbone_prefix in backbone_set:
+        for id in backbone_id_set:
+            backbone = f'{config.BACKBONE_DOCKER_NETWORK_NAME}.{id}'
+            backbone_prefix = f'{config.BACKBONE_IPV6_ADDR_START}:{id}::/64'
             self._backbone_network_names.append(backbone)
             self.assure_run_ok(
                 f'docker network create --driver bridge --ipv6 --subnet {backbone_prefix} -o "com.docker.network.bridge.name"="{backbone}" {backbone} || true',
