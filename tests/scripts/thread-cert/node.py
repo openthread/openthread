@@ -66,6 +66,8 @@ class OtbrDocker:
 
     def __init__(self, nodeid: int, backbone_network: str, **kwargs):
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
+
+        assert backbone_network is not None
         self.backbone_network = backbone_network
         try:
             self._docker_name = config.OTBR_DOCKER_NAME_PREFIX + str(nodeid)
