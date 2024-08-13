@@ -40,6 +40,7 @@
 
 #include <stdarg.h>
 
+#include <openthread/border_agent.h>
 #include <openthread/cli.h>
 #include <openthread/dataset.h>
 #include <openthread/dns_client.h>
@@ -317,6 +318,7 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     static void HandleBorderAgentEphemeralKeyStateChange(void *aContext);
     void        HandleBorderAgentEphemeralKeyStateChange(void);
+    void        OutputBorderAgentCounters(const otBorderAgentCounters &aCounters);
 #endif
 
     static void HandleDetachGracefullyResult(void *aContext);

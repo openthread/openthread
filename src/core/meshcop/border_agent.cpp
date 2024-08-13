@@ -205,6 +205,17 @@ void BorderAgent::HandleCoapResponse(const ForwardContext &aForwardContext,
             IgnoreError(Get<Ip6::Udp>().AddReceiver(mUdpReceiver));
             mState = kStateAccepted;
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+            if (mUsingEphemeralKey)
+            {
+                mCounters.mEpskcCommissionerPetitions++;
+            }
+            else
+#endif
+            {
+                mCounters.mPskcCommissionerPetitions++;
+            }
+
             LogInfo("Commissioner accepted - SessionId:%u ALOC:%s", sessionId,
                     mCommissionerAloc.GetAddress().ToString().AsCString());
         }
@@ -468,6 +479,7 @@ void BorderAgent::HandleTmf<kUriCommissionerSet>(Coap::Message &aMessage, const 
 template <> void BorderAgent::HandleTmf<kUriActiveGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     HandleTmfDatasetGet(aMessage, aMessageInfo, Dataset::kActive);
+    mCounters.mMgmtActiveGets++;
 }
 
 template <> void BorderAgent::HandleTmf<kUriActiveSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -478,6 +490,7 @@ template <> void BorderAgent::HandleTmf<kUriActiveSet>(Coap::Message &aMessage, 
 template <> void BorderAgent::HandleTmf<kUriPendingGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     HandleTmfDatasetGet(aMessage, aMessageInfo, Dataset::kPending);
+    mCounters.mMgmtPendingGets++;
 }
 
 template <> void BorderAgent::HandleTmf<kUriPendingSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -647,6 +660,16 @@ void BorderAgent::HandleConnected(bool aConnected)
         LogInfo("SecureSession connected");
         mState = kStateConnected;
         mTimer.Start(kKeepAliveTimeout);
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+        if (mUsingEphemeralKey)
+        {
+            mCounters.mEpskcSecureSessionSuccesses++;
+        }
+        else
+#endif
+        {
+            mCounters.mPskcSecureSessionSuccesses++;
+        }
     }
     else
     {
@@ -658,6 +681,7 @@ void BorderAgent::HandleConnected(bool aConnected)
         if (mUsingEphemeralKey)
         {
             RestartAfterRemovingEphemeralKey();
+            mCounters.mEpskcDeactivationDisconnects++;
         }
         else
 #endif
@@ -754,8 +778,14 @@ Error BorderAgent::SetEphemeralKey(const char *aKeyString, uint32_t aTimeout, ui
     Error    error  = kErrorNone;
     uint16_t length = StringLength(aKeyString, kMaxEphemeralKeyLength + 1);
 
-    VerifyOrExit(mState == kStateStarted, error = kErrorInvalidState);
-    VerifyOrExit((length >= kMinEphemeralKeyLength) && (length <= kMaxEphemeralKeyLength), error = kErrorInvalidArgs);
+    VerifyOrExit(mState == kStateStarted, {
+        error = kErrorInvalidState;
+        mCounters.mEpskcInvalidBaStateErrors++;
+    });
+    VerifyOrExit((length >= kMinEphemeralKeyLength) && (length <= kMaxEphemeralKeyLength), {
+        error = kErrorInvalidArgs;
+        mCounters.mEpskcInvalidArgsErrors++;
+    });
 
     if (!mUsingEphemeralKey)
     {
@@ -776,6 +806,7 @@ Error BorderAgent::SetEphemeralKey(const char *aKeyString, uint32_t aTimeout, ui
     {
         mUsingEphemeralKey = false;
         IgnoreError(Start(mOldUdpPort));
+        mCounters.mEpskcStartSecureSessionErrors++;
         ExitNow();
     }
 
@@ -789,6 +820,7 @@ Error BorderAgent::SetEphemeralKey(const char *aKeyString, uint32_t aTimeout, ui
     aTimeout = Min(aTimeout, kMaxEphemeralKeyTimeout);
 
     mEphemeralKeyTimer.Start(aTimeout);
+    mCounters.mEpskcActivations++;
 
     LogInfo("Allow ephemeral key for %lu msec on port %u", ToUlong(aTimeout), GetUdpPort());
 
@@ -801,6 +833,16 @@ void BorderAgent::ClearEphemeralKey(void)
     VerifyOrExit(mUsingEphemeralKey);
 
     LogInfo("Clearing ephemeral key");
+
+    if (mEphemeralKeyTimer.IsRunning())
+    {
+        mCounters.mEpskcDeactivationClears++;
+    }
+    else
+    {
+        mCounters.mEpskcDeactivationTimeouts++;
+    }
+
     mEphemeralKeyTimer.Stop();
 
     switch (mState)
@@ -847,6 +889,7 @@ void BorderAgent::HandleSecureAgentStopped(void)
 {
     LogInfo("Reached max allowed connection attempts with ephemeral key");
     RestartAfterRemovingEphemeralKey();
+    mCounters.mEpskcDeactivationMaxAttempts++;
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE

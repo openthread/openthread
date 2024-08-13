@@ -238,6 +238,8 @@ public:
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
+    const otBorderAgentCounters *GetCounters() { return &mCounters; }
+
     /**
      * Returns the UDP Proxy port to which the commissioner is currently
      * bound.
@@ -253,6 +255,7 @@ private:
 
     static constexpr uint16_t kUdpPort          = OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT;
     static constexpr uint32_t kKeepAliveTimeout = 50 * 1000; // Timeout to reject a commissioner (in msec)
+    otBorderAgentCounters     mCounters;
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     static constexpr uint16_t kMaxEphemeralKeyConnectionAttempts = 10;

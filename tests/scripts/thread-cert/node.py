@@ -1451,6 +1451,34 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def set_epskc(self, passcode: str, lifetime: int):
+        cmd = 'ba ephemeralkey set ' + passcode + ' ' + str(lifetime)
+        self.send_command(cmd)
+        self._expect(r"(Done|Error .*)")
+
+    def clear_epskc(self):
+        cmd = 'ba ephemeralkey clear'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def get_border_agent_counters(self):
+        cmd = 'ba counters'
+        self.send_command(cmd)
+        result = self._expect_command_output()
+
+        counters = {}
+        for line in result:
+            m = re.match(r'(\w+)\:', line)
+            if m:
+                group_name = m.group(1)
+                if group_name not in counters:
+                    counters[group_name] = {}
+
+                counter_matches = re.findall(r"(\w+) (\d+)", line)
+                for counter_name, counter_value in counter_matches:
+                    counters[group_name][counter_name] = int(counter_value)
+        return counters
+
     def _encode_txt_entry(self, entry):
         """Encodes the TXT entry to the DNS-SD TXT record format as a HEX string.
 

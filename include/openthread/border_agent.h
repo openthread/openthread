@@ -110,6 +110,30 @@ typedef enum otBorderAgentState
     OT_BORDER_AGENT_STATE_ACTIVE  = 2, ///< Border agent is connected with external commissioner.
 } otBorderAgentState;
 
+typedef struct otBorderAgentCounters
+{
+    uint64_t mEpskcActivations;
+    uint64_t mEpskcDeactivationClears;
+    uint64_t mEpskcDeactivationTimeouts;
+    uint64_t mEpskcDeactivationMaxAttempts;
+    uint64_t mEpskcDeactivationDisconnects;
+    uint64_t mEpskcInvalidBaStateErrors;
+    uint64_t mEpskcInvalidArgsErrors;
+    uint64_t mEpskcStartSecureSessionErrors;
+    uint64_t mEpskcSecureSessionSuccesses;
+    uint64_t mEpskcSecureSessionFailures;
+    uint64_t mEpskcCommissionerPetitions;
+
+    uint64_t mPskcSecureSessionSuccesses;
+    uint64_t mPskcSecureSessionFailures;
+    uint64_t mPskcCommissionerPetitions;
+
+    uint64_t mMgmtActiveGets;
+    uint64_t mMgmtPendingGets;
+} otBorderAgentCounters;
+
+const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance);
+
 /**
  * Gets the #otBorderAgentState of the Thread Border Agent role.
  *
