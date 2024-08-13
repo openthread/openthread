@@ -475,17 +475,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
     def _construct_backbone_network_name(self, backbone_network_id) -> str:
         """
-        Construct the name of the backbone network based on the given backbone network id from TOPOLOGY. The format
-        is `backbone{PORT_OFFSET}.{backbone_network_id}`.
-
-        Args:
-            backbone_network_id: The backbone network id or None.
-
-        Returns:
-            backbone_name (str): The name of the backbone network.
-
-        Raises:
-            AssertionError: If the constructed backbone network name is not in the list of self._backbone_network_names.
+        Construct the name of the backbone network based on the given backbone network id from TOPOLOGY. If the
+        backbone_network_id is not defined in TOPOLOGY, use the default backbone network id.
         """
         id = backbone_network_id if backbone_network_id is not None else config.BACKBONE_DOCKER_NETWORK_DEFAULT_ID
         backbone_name = f'{config.BACKBONE_DOCKER_NETWORK_NAME}.{id}'
