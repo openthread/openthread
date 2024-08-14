@@ -326,12 +326,19 @@ private:
         kTxtQuery,
         kSrvTxtQuery,
         kAaaaQuery,
+        kAQuery,
     };
 
     enum Section : uint8_t
     {
         kAnswerSection,
         kAdditionalDataSection,
+    };
+
+    enum AddrType : uint8_t
+    {
+        kIp6AddrType,
+        kIp4AddrType,
     };
 
 #if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
@@ -342,6 +349,7 @@ private:
         kResolvingSrv,
         kResolvingTxt,
         kResolvingIp6Address,
+        kResolvingIp4Address
     };
 #endif
 
@@ -384,33 +392,35 @@ private:
     {
     public:
         explicit Response(Instance &aInstance);
-        Error        AllocateAndInitFrom(const Request &aRequest);
-        void         InitFrom(ProxyQuery &aQuery, const ProxyQueryInfo &aInfo);
-        void         SetResponseCode(ResponseCode aResponseCode) { mHeader.SetResponseCode(aResponseCode); }
         ResponseCode AddQuestionsFrom(const Request &aRequest);
-        Error        ParseQueryName(void);
-        void         ReadQueryName(Name::Buffer &aName) const;
-        bool         QueryNameMatches(const char *aName) const;
-        Error        AppendQueryName(void);
-        Error        AppendPtrRecord(const char *aInstanceLabel, uint32_t aTtl);
-        Error        AppendSrvRecord(const ServiceInstanceInfo &aInstanceInfo);
-        Error        AppendSrvRecord(const char *aHostName,
-                                     uint32_t    aTtl,
-                                     uint16_t    aPriority,
-                                     uint16_t    aWeight,
-                                     uint16_t    aPort);
-        Error        AppendTxtRecord(const ServiceInstanceInfo &aInstanceInfo);
-        Error        AppendTxtRecord(const void *aTxtData, uint16_t aTxtLength, uint32_t aTtl);
-        Error        AppendHostAddresses(const HostInfo &aHostInfo);
-        Error        AppendHostAddresses(const ServiceInstanceInfo &aInstanceInfo);
-        Error        AppendHostAddresses(const Ip6::Address *aAddrs, uint16_t aAddrsLength, uint32_t aTtl);
-        Error        AppendAaaaRecord(const Ip6::Address &aAddress, uint32_t aTtl);
-        void         UpdateRecordLength(ResourceRecord &aRecord, uint16_t aOffset);
-        void         IncResourceRecordCount(void);
-        void         Send(const Ip6::MessageInfo &aMessageInfo);
-        void         Answer(const HostInfo &aHostInfo, const Ip6::MessageInfo &aMessageInfo);
-        void         Answer(const ServiceInstanceInfo &aInstanceInfo, const Ip6::MessageInfo &aMessageInfo);
-        Error        ExtractServiceInstanceLabel(const char *aInstanceName, Name::LabelBuffer &aLabel);
+
+        Error AllocateAndInitFrom(const Request &aRequest);
+        void  InitFrom(ProxyQuery &aQuery, const ProxyQueryInfo &aInfo);
+        void  SetResponseCode(ResponseCode aResponseCode) { mHeader.SetResponseCode(aResponseCode); }
+        Error ParseQueryName(void);
+        void  ReadQueryName(Name::Buffer &aName) const;
+        bool  QueryNameMatches(const char *aName) const;
+        Error AppendQueryName(void);
+        Error AppendPtrRecord(const char *aInstanceLabel, uint32_t aTtl);
+        Error AppendSrvRecord(const ServiceInstanceInfo &aInstanceInfo);
+        Error AppendSrvRecord(const char *aHostName,
+                              uint32_t    aTtl,
+                              uint16_t    aPriority,
+                              uint16_t    aWeight,
+                              uint16_t    aPort);
+        Error AppendTxtRecord(const ServiceInstanceInfo &aInstanceInfo);
+        Error AppendTxtRecord(const void *aTxtData, uint16_t aTxtLength, uint32_t aTtl);
+        Error AppendHostAddresses(AddrType aAddrType, const HostInfo &aHostInfo);
+        Error AppendHostAddresses(const ServiceInstanceInfo &aInstanceInfo);
+        Error AppendHostAddresses(AddrType aAddrType, const Ip6::Address *aAddrs, uint16_t aAddrsLength, uint32_t aTtl);
+        Error AppendAaaaRecord(const Ip6::Address &aAddress, uint32_t aTtl);
+        Error AppendARecord(const Ip6::Address &aAddress, uint32_t aTtl);
+        void  UpdateRecordLength(ResourceRecord &aRecord, uint16_t aOffset);
+        void  IncResourceRecordCount(void);
+        void  Send(const Ip6::MessageInfo &aMessageInfo);
+        void  Answer(const HostInfo &aHostInfo, const Ip6::MessageInfo &aMessageInfo);
+        void  Answer(const ServiceInstanceInfo &aInstanceInfo, const Ip6::MessageInfo &aMessageInfo);
+        Error ExtractServiceInstanceLabel(const char *aInstanceName, Name::LabelBuffer &aLabel);
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
         Error ResolveBySrp(void);
         bool  QueryNameMatchesService(const Srp::Server::Service &aService) const;
@@ -422,8 +432,8 @@ private:
         Error AppendPtrRecord(const ProxyResult &aResult);
         Error AppendSrvRecord(const ProxyResult &aResult);
         Error AppendTxtRecord(const ProxyResult &aResult);
-
-        Error AppendHostAddresses(const ProxyResult &aResult);
+        Error AppendHostIp6Addresses(const ProxyResult &aResult);
+        Error AppendHostIp4Addresses(const ProxyResult &aResult);
 #endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -493,16 +503,19 @@ private:
         void StartOrStopSrvResolver(Command aCommand, const ProxyQuery &aQuery, const ProxyQueryInfo &aInfo);
         void StartOrStopTxtResolver(Command aCommand, const ProxyQuery &aQuery, const ProxyQueryInfo &aInfo);
         void StartOrStopIp6Resolver(Command aCommand, Name::Buffer &aHostName);
+        void StartOrStopIp4Resolver(Command aCommand, Name::Buffer &aHostName);
 
         static void HandleBrowseResult(otInstance *aInstance, const otPlatDnssdBrowseResult *aResult);
         static void HandleSrvResult(otInstance *aInstance, const otPlatDnssdSrvResult *aResult);
         static void HandleTxtResult(otInstance *aInstance, const otPlatDnssdTxtResult *aResult);
         static void HandleIp6AddressResult(otInstance *aInstance, const otPlatDnssdAddressResult *aResult);
+        static void HandleIp4AddressResult(otInstance *aInstance, const otPlatDnssdAddressResult *aResult);
 
         void HandleBrowseResult(const Dnssd::BrowseResult &aResult);
         void HandleSrvResult(const Dnssd::SrvResult &aResult);
         void HandleTxtResult(const Dnssd::TxtResult &aResult);
         void HandleIp6AddressResult(const Dnssd::AddressResult &aResult);
+        void HandleIp4AddressResult(const Dnssd::AddressResult &aResult);
         void HandleResult(ProxyAction         aAction,
                           const Name::Buffer &aName,
                           ResponseAppender    aAppender,
