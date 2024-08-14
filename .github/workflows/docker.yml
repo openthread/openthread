@@ -68,7 +68,7 @@ jobs:
       run: |
         DOCKER_IMAGE=openthread/${{ matrix.docker_name }}
         DOCKER_FILE=etc/docker/${{ matrix.docker_name }}/Dockerfile
-        DOCKER_PLATFORMS=linux/amd64
+        DOCKER_PLATFORMS=linux/amd64,linux/arm64
         VERSION=latest
 
         TAGS="--tag ${DOCKER_IMAGE}:${VERSION}"
