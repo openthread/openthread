@@ -61,8 +61,8 @@ main()
 
     [[ $line_count == 2 ]] || die 'Multiple OPENTHREAD_API_VERSION definitions found!'
 
-    old_version=$(grep '\-\#define OPENTHREAD_API_VERSION' "${OT_VERSIONS_FILE}" | grep -o '[0-9]..') || die 'Failed to find old version!'
-    new_version=$(grep '\+\#define OPENTHREAD_API_VERSION' "${OT_VERSIONS_FILE}" | grep -o '[0-9]..') || die 'Failed to find new version!'
+    old_version=$(grep '\-\#define OPENTHREAD_API_VERSION' "${OT_VERSIONS_FILE}" | grep -o '[1-9][0-9]*') || die 'Failed to find old version!'
+    new_version=$(grep '\+\#define OPENTHREAD_API_VERSION' "${OT_VERSIONS_FILE}" | grep -o '[1-9][0-9]*') || die 'Failed to find new version!'
 
     echo -e '\n--------------------------\n'
 
