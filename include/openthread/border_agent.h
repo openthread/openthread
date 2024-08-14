@@ -195,9 +195,10 @@ otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId);
  * Setting the ephemeral key again before a previously set key has timed out will replace the previously set key and
  * reset the timeout.
  *
- * While the timeout interval is in effect, the ephemeral key can be used only once by an external commissioner to
- * connect. Once the commissioner disconnects, the ephemeral key is cleared, and the Border Agent reverts to using
- * PSKc.
+ * During the timeout interval, the ephemeral key can be used only once by an external commissioner to establish a
+ * connection. After the commissioner disconnects, the ephemeral key is cleared, and the Border Agent reverts to
+ * using PSKc. If the timeout expires while a commissioner is still connected, the session will be terminated, and the
+ * Border Agent will cease using the ephemeral key and revert to PSKc.
  *
  * @param[in] aInstance    The OpenThread instance.
  * @param[in] aKeyString   The ephemeral key string (used as PSK excluding the trailing null `\0` character).
@@ -229,7 +230,7 @@ otError otBorderAgentSetEphemeralKey(otInstance *aInstance,
  *
  * If a commissioner is connected using the ephemeral key and is currently active, calling this function does not
  * change its state. In this case the `otBorderAgentIsEphemeralKeyActive()` will continue to return `TRUE` until the
- * commissioner disconnects.
+ * commissioner disconnects, or the ephemeral key timeout expires.
  *
  * @param[in] aInstance    The OpenThread instance.
  */
