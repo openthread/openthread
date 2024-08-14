@@ -288,8 +288,11 @@ private:
     void                SendErrorMessage(const ForwardContext &aForwardContext, Error aError);
     void                SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, Error aError);
 
-    static void HandleConnected(bool aConnected, void *aContext);
-    void        HandleConnected(bool aConnected);
+    static void HandleConnected(bool aConnected, bool aWithError, void *aContext);
+    void        HandleConnected(bool aConnected, bool aWithError);
+
+    static void HandleDisconnected(bool aWithError, void *aContext);
+    void        HandleDisconnected(bool aWithError);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

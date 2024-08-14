@@ -62,6 +62,16 @@ public:
     typedef void (*ConnectedCallback)(bool aConnected, void *aContext);
 
     /**
+     * Pointer is called once DTLS connection is established or closed.
+     *
+     * @param[in]  aConnected  TRUE if a connection was established, FALSE otherwise.
+     * @param[in]  aWithError  TRUE if the connection was closed due to an error.
+     * @param[in]  aContext    A pointer to arbitrary context information.
+     *
+     */
+    typedef void (*ExtendedConnectedCallback)(bool aConnected, bool aWithError, void *aContext);
+
+    /**
      * Callback to notify when the agent is automatically stopped due to reaching the maximum number of connection
      * attempts.
      *
@@ -125,6 +135,18 @@ public:
     void SetConnectedCallback(ConnectedCallback aCallback, void *aContext)
     {
         mConnectedCallback.Set(aCallback, aContext);
+    }
+
+    /**
+     * Sets extended connected callback of this secure CoAP agent.
+     *
+     * @param[in]  aCallback  A pointer to a function to get called when connection state changes.
+     * @param[in]  aContext   A pointer to arbitrary context information.
+     *
+     */
+    void SetExtendedConnectedCallback(ExtendedConnectedCallback aCallback, void *aContext)
+    {
+        mExtendedConnectedCallback.Set(aCallback, aContext);
     }
 
     /**
@@ -421,8 +443,8 @@ private:
     }
     Error Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDtlsConnected(void *aContext, bool aConnected);
-    void        HandleDtlsConnected(bool aConnected);
+    static void HandleDtlsConnected(void *aContext, bool aConnected, bool aWithError);
+    void        HandleDtlsConnected(bool aConnected, bool aWithError);
 
     static void HandleDtlsAutoClose(void *aContext);
     void        HandleDtlsAutoClose(void);
@@ -433,11 +455,12 @@ private:
     static void HandleTransmit(Tasklet &aTasklet);
     void        HandleTransmit(void);
 
-    MeshCoP::SecureTransport    mDtls;
-    Callback<ConnectedCallback> mConnectedCallback;
-    Callback<AutoStopCallback>  mAutoStopCallback;
-    ot::MessageQueue            mTransmitQueue;
-    TaskletContext              mTransmitTask;
+    MeshCoP::SecureTransport            mDtls;
+    Callback<ConnectedCallback>         mConnectedCallback;
+    Callback<ExtendedConnectedCallback> mExtendedConnectedCallback;
+    Callback<AutoStopCallback>          mAutoStopCallback;
+    ot::MessageQueue                    mTransmitQueue;
+    TaskletContext                      mTransmitTask;
 };
 
 } // namespace Coap

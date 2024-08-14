@@ -1043,15 +1043,16 @@ void SecureTransport::HandleTimer(void)
         if ((mMaxConnectionAttempts > 0) && (mRemainingConnectionAttempts == 0))
         {
             Close();
-            mConnectedCallback.InvokeIfSet(false);
+            mConnectedCallback.InvokeIfSet(false, mDisconnectedWithError);
             mAutoCloseCallback.InvokeIfSet();
         }
         else
         {
             SetState(kStateOpen);
             mTimer.Stop();
-            mConnectedCallback.InvokeIfSet(false);
+            mConnectedCallback.InvokeIfSet(false, mDisconnectedWithError);
         }
+        mDisconnectedWithError = false;
     }
 }
 
@@ -1070,7 +1071,7 @@ void SecureTransport::Process(void)
             if (mSsl.MBEDTLS_PRIVATE(state) == MBEDTLS_SSL_HANDSHAKE_OVER)
             {
                 SetState(kStateConnected);
-                mConnectedCallback.InvokeIfSet(true);
+                mConnectedCallback.InvokeIfSet(true, false);
             }
         }
         else
@@ -1137,6 +1138,10 @@ exit:
 
     if (shouldDisconnect)
     {
+        if (rval != MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY)
+        {
+            mDisconnectedWithError = true;
+        }
         Disconnect();
     }
 }

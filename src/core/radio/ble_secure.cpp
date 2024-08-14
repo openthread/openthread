@@ -321,8 +321,9 @@ Error BleSecure::HandleBleMtuUpdate(uint16_t aMtu)
     return error;
 }
 
-void BleSecure::HandleTlsConnected(void *aContext, bool aConnected)
+void BleSecure::HandleTlsConnected(void *aContext, bool aConnected, bool aWithError)
 {
+    OT_UNUSED_VARIABLE(aWithError);
     return static_cast<BleSecure *>(aContext)->HandleTlsConnected(aConnected);
 }
 

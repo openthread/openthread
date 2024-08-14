@@ -86,6 +86,7 @@ Error CoapSecure::Open(uint16_t aMaxAttempts, AutoStopCallback aCallback, void *
     SuccessOrExit(mDtls.SetMaxConnectionAttempts(aMaxAttempts, HandleDtlsAutoClose, this));
     mAutoStopCallback.Set(aCallback, aContext);
     mConnectedCallback.Clear();
+    mExtendedConnectedCallback.Clear();
     SuccessOrExit(mDtls.Open(HandleDtlsReceive, HandleDtlsConnected, this));
 
     error = kErrorNone;
@@ -178,12 +179,16 @@ Error CoapSecure::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageIn
     return kErrorNone;
 }
 
-void CoapSecure::HandleDtlsConnected(void *aContext, bool aConnected)
+void CoapSecure::HandleDtlsConnected(void *aContext, bool aConnected, bool aWithError)
 {
-    return static_cast<CoapSecure *>(aContext)->HandleDtlsConnected(aConnected);
+    return static_cast<CoapSecure *>(aContext)->HandleDtlsConnected(aConnected, aWithError);
 }
 
-void CoapSecure::HandleDtlsConnected(bool aConnected) { mConnectedCallback.InvokeIfSet(aConnected); }
+void CoapSecure::HandleDtlsConnected(bool aConnected, bool aWithError)
+{
+    mConnectedCallback.InvokeIfSet(aConnected);
+    mExtendedConnectedCallback.InvokeIfSet(aConnected, aWithError);
+}
 
 void CoapSecure::HandleDtlsAutoClose(void *aContext)
 {

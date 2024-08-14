@@ -104,9 +104,10 @@ public:
      *
      * @param[in]  aContext    A pointer to application-specific context.
      * @param[in]  aConnected  TRUE if a connection was established, FALSE otherwise.
+     * @param[in]  aWithError  TRUE if a connection was torn down due to an error.
      *
      */
-    typedef void (*ConnectedHandler)(void *aContext, bool aConnected);
+    typedef void (*ConnectedHandler)(void *aContext, bool aConnected, bool aWithError);
 
     /**
      * Pointer is called when data is received from the session.
@@ -670,6 +671,8 @@ private:
 
     Message::SubType mMessageSubType;
     Message::SubType mMessageDefaultSubType;
+
+    bool mDisconnectedWithError;
 };
 
 } // namespace MeshCoP
