@@ -228,7 +228,7 @@ Error Ip6::PrepareMulticastToLargerThanRealmLocal(Message &aMessage, const Heade
 
     // Use IP-in-IP encapsulation (RFC2473) and ALL_MPL_FORWARDERS address.
     tunnelHeader.InitVersionTrafficClassFlow();
-    tunnelHeader.SetHopLimit(static_cast<uint8_t>(kDefaultHopLimit));
+    tunnelHeader.SetHopLimit(kDefaultHopLimit);
     tunnelHeader.SetPayloadLength(aHeader.GetPayloadLength() + sizeof(tunnelHeader));
     tunnelHeader.GetDestination().SetToRealmLocalAllMplForwarders();
     tunnelHeader.SetNextHeader(kProtoIp6);
@@ -451,7 +451,7 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
     }
     else
     {
-        header.SetHopLimit(static_cast<uint8_t>(kDefaultHopLimit));
+        header.SetHopLimit(kDefaultHopLimit);
     }
 
     if (aMessageInfo.GetSockAddr().IsUnspecified() || aMessageInfo.GetSockAddr().IsMulticast())
@@ -828,8 +828,7 @@ Error Ip6::HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
                                   uint8_t           &aNextHeader,
                                   bool              &aReceive)
 {
-    Error error = kErrorNone;
-
+    Error           error = kErrorNone;
     ExtensionHeader extHeader;
 
     while (aReceive || aNextHeader == kProtoHopOpts)
@@ -839,16 +838,13 @@ Error Ip6::HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
         switch (aNextHeader)
         {
         case kProtoHopOpts:
+        case kProtoDstOpts:
             SuccessOrExit(error = HandleOptions(*aMessagePtr, aHeader, aReceive));
             break;
 
         case kProtoFragment:
             IgnoreError(PassToHost(aMessagePtr, aHeader, aNextHeader, aReceive, Message::kCopyToUse));
             SuccessOrExit(error = HandleFragment(*aMessagePtr));
-            break;
-
-        case kProtoDstOpts:
-            SuccessOrExit(error = HandleOptions(*aMessagePtr, aHeader, aReceive));
             break;
 
         case kProtoIp6:
@@ -862,7 +858,7 @@ Error Ip6::HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
             ExitNow();
         }
 
-        aNextHeader = static_cast<uint8_t>(extHeader.GetNextHeader());
+        aNextHeader = extHeader.GetNextHeader();
     }
 
 exit:
@@ -1166,7 +1162,7 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
     aMessagePtr->SetOffset(sizeof(header));
 
     // Process IPv6 Extension Headers
-    nextHeader = static_cast<uint8_t>(header.GetNextHeader());
+    nextHeader = header.GetNextHeader();
     SuccessOrExit(error = HandleExtensionHeaders(aMessagePtr, header, nextHeader, receive));
 
     if (receive && (nextHeader == kProtoIp6))
@@ -1414,49 +1410,55 @@ Error Ip6::RouteLookup(const Address &aSource, const Address &aDestination) cons
 }
 
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+
 void Ip6::UpdateBorderRoutingCounters(const Header &aHeader, uint16_t aMessageLength, bool aIsInbound)
 {
-    static constexpr uint8_t kPrefixLength   = 48;
-    otPacketsAndBytes       *counter         = nullptr;
-    otPacketsAndBytes       *internetCounter = nullptr;
+    static constexpr uint8_t kPrefixLength = 48;
+
+    otPacketsAndBytes *counter         = nullptr;
+    otPacketsAndBytes *internetCounter = nullptr;
 
     VerifyOrExit(!aHeader.GetSource().IsLinkLocalUnicast());
     VerifyOrExit(!aHeader.GetDestination().IsLinkLocalUnicast());
-    VerifyOrExit(aHeader.GetSource().GetPrefix() != Get<Mle::Mle>().GetMeshLocalPrefix());
-    VerifyOrExit(aHeader.GetDestination().GetPrefix() != Get<Mle::Mle>().GetMeshLocalPrefix());
+    VerifyOrExit(!Get<Mle::Mle>().IsMeshLocalAddress(aHeader.GetSource()));
+    VerifyOrExit(!Get<Mle::Mle>().IsMeshLocalAddress(aHeader.GetDestination()));
 
     if (aIsInbound)
     {
         VerifyOrExit(!Get<Netif>().HasUnicastAddress(aHeader.GetSource()));
+
         if (!aHeader.GetSource().MatchesPrefix(aHeader.GetDestination().GetPrefix().m8, kPrefixLength))
         {
-            internetCounter = &mBorderRoutingCounters.mInboundInternet;
+            internetCounter = &mBrCounters.mInboundInternet;
         }
+
         if (aHeader.GetDestination().IsMulticast())
         {
             VerifyOrExit(aHeader.GetDestination().IsMulticastLargerThanRealmLocal());
-            counter = &mBorderRoutingCounters.mInboundMulticast;
+            counter = &mBrCounters.mInboundMulticast;
         }
         else
         {
-            counter = &mBorderRoutingCounters.mInboundUnicast;
+            counter = &mBrCounters.mInboundUnicast;
         }
     }
     else
     {
         VerifyOrExit(!Get<Netif>().HasUnicastAddress(aHeader.GetDestination()));
+
         if (!aHeader.GetSource().MatchesPrefix(aHeader.GetDestination().GetPrefix().m8, kPrefixLength))
         {
-            internetCounter = &mBorderRoutingCounters.mOutboundInternet;
+            internetCounter = &mBrCounters.mOutboundInternet;
         }
+
         if (aHeader.GetDestination().IsMulticast())
         {
             VerifyOrExit(aHeader.GetDestination().IsMulticastLargerThanRealmLocal());
-            counter = &mBorderRoutingCounters.mOutboundMulticast;
+            counter = &mBrCounters.mOutboundMulticast;
         }
         else
         {
-            counter = &mBorderRoutingCounters.mOutboundUnicast;
+            counter = &mBrCounters.mOutboundUnicast;
         }
     }
 
@@ -1473,7 +1475,8 @@ exit:
         internetCounter->mBytes += aMessageLength;
     }
 }
-#endif
+
+#endif // OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
 
 // LCOV_EXCL_START
 

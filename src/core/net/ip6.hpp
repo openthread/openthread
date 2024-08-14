@@ -327,13 +327,8 @@ public:
     static const char *EcnToString(Ecn aEcn);
 
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
-    /**
-     * Returns a reference to the Border Routing counters.
-     *
-     * @returns A reference to the Border Routing counters.
-     *
-     */
-    const otBorderRoutingCounters &GetBorderRoutingCounters(void) const { return mBorderRoutingCounters; }
+
+    typedef otBorderRoutingCounters BrCounters; ///< Border Routing counters.
 
     /**
      * Returns a reference to the Border Routing counters.
@@ -341,14 +336,23 @@ public:
      * @returns A reference to the Border Routing counters.
      *
      */
-    otBorderRoutingCounters &GetBorderRoutingCounters(void) { return mBorderRoutingCounters; }
+    const BrCounters &GetBorderRoutingCounters(void) const { return mBrCounters; }
+
+    /**
+     * Returns a reference to the Border Routing counters.
+     *
+     * @returns A reference to the Border Routing counters.
+     *
+     */
+    BrCounters &GetBorderRoutingCounters(void) { return mBrCounters; }
 
     /**
      * Resets the Border Routing counters.
      *
      */
-    void ResetBorderRoutingCounters(void) { ClearAllBytes(mBorderRoutingCounters); }
-#endif
+    void ResetBorderRoutingCounters(void) { ClearAllBytes(mBrCounters); }
+
+#endif // OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
@@ -446,7 +450,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
-    otBorderRoutingCounters mBorderRoutingCounters;
+    BrCounters mBrCounters;
 #endif
 };
 
