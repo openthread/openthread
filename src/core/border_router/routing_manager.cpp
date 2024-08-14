@@ -391,7 +391,7 @@ void RoutingManager::HandleSrpServerAutoEnableMode(void)
 {
     VerifyOrExit(Get<Srp::Server>().IsAutoEnableMode());
 
-    if (IsInitalPolicyEvaluationDone())
+    if (IsInitialPolicyEvaluationDone())
     {
         Get<Srp::Server>().Enable();
     }
@@ -481,13 +481,13 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     mNat64PrefixManager.Evaluate();
 #endif
 
-    if (IsInitalPolicyEvaluationDone())
+    if (IsInitialPolicyEvaluationDone())
     {
         SendRouterAdvertisement(kAdvPrefixesFromNetData);
     }
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-    if (Get<Srp::Server>().IsAutoEnableMode() && IsInitalPolicyEvaluationDone())
+    if (Get<Srp::Server>().IsAutoEnableMode() && IsInitialPolicyEvaluationDone())
     {
         // If SRP server uses the auto-enable mode, we enable the SRP
         // server on the first RA transmission after we are done with
@@ -501,7 +501,7 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     ScheduleRoutingPolicyEvaluation(kForNextRa);
 }
 
-bool RoutingManager::IsInitalPolicyEvaluationDone(void) const
+bool RoutingManager::IsInitialPolicyEvaluationDone(void) const
 {
     // This method indicates whether or not we are done with the
     // initial policy evaluation and prefix and route setup, i.e.,
