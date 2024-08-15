@@ -160,13 +160,13 @@ exit:
     return aMessage;
 }
 
-Message *CoapBase::InitResponse(Message *aMessage, const Message &aResponse)
+Message *CoapBase::InitResponse(Message *aMessage, const Message &aRequest)
 {
     Error error = kErrorNone;
 
     VerifyOrExit(aMessage != nullptr);
 
-    SuccessOrExit(error = aMessage->SetDefaultResponseHeader(aResponse));
+    SuccessOrExit(error = aMessage->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = aMessage->SetPayloadMarker());
 
 exit:
