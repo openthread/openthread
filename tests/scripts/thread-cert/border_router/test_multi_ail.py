@@ -108,6 +108,14 @@ class TwoBorderRoutersOnTwoInfrastructures(thread_cert.TestCase):
         self.assertFalse(br1.ping(br2_infra_link_local, interface=br1_infra_link_local))
         self.assertFalse(br2.ping(br1_infra_link_local, interface=br2_infra_link_local))
 
+        # br peers
+        self.assertEqual(br1.get_br_peers_rloc16s(), [br2.get_addr16()])
+        self.assertEqual(br2.get_br_peers_rloc16s(), [br1.get_addr16()])
+
+        # br routers
+        self.assertEqual(br1.get_br_routers_ip_addresses(), [])
+        self.assertEqual(br2.get_br_routers_ip_addresses(), [])
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
