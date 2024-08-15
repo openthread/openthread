@@ -3792,6 +3792,8 @@ class LinuxHost():
         """
         if address_type == config.ADDRESS_TYPE.BACKBONE_GUA:
             return self._getBackboneGua()
+        elif address_type == config.ADDRESS_TYPE.BACKBONE_LINK_LOCAL:
+            return self._getInfraLinkLocalAddress()
         elif address_type == config.ADDRESS_TYPE.ONLINK_ULA:
             return self._getInfraUla()
         elif address_type == config.ADDRESS_TYPE.ONLINK_GUA:
@@ -3822,6 +3824,15 @@ class LinuxHost():
 
         gua_prefix = config.ONLINK_GUA_PREFIX.split('::/')[0]
         return [addr for addr in self.get_ether_addrs() if addr.startswith(gua_prefix)]
+
+    def _getInfraLinkLocalAddress(self) -> Optional[str]:
+        """ Returns the link-local address autoconfigured on the infra link, which is started with "fe80".
+        """
+        for addr in self.get_ether_addrs():
+            if re.match(config.LINK_LOCAL_REGEX_PATTERN, addr, re.I):
+                return addr
+
+        return None
 
     def ping(self, *args, **kwargs):
         backbone = kwargs.pop('backbone', False)

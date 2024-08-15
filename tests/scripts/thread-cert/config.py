@@ -106,13 +106,14 @@ DEFAULT_NETWORK_KEY = bytearray([
 
 
 class ADDRESS_TYPE(Enum):
-    LINK_LOCAL = 'LINK_LOCAL'
+    LINK_LOCAL = 'LINK_LOCAL'  # For Thread interface link-local only
     GLOBAL = 'GLOBAL'
     RLOC = 'RLOC'
     ALOC = 'ALOC'
     ML_EID = 'ML_EID'
     DUA = 'DUA'
     BACKBONE_GUA = 'BACKBONE_GUA'
+    BACKBONE_LINK_LOCAL = 'BACKBONE_LINK_LOCAL'
     OMR = 'OMR'
     ONLINK_ULA = 'ONLINK_ULA'
     ONLINK_GUA = 'ONLINK_GUA'
