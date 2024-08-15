@@ -33,6 +33,8 @@ import ipaddress
 import config
 import thread_cert
 
+from node import OtbrNode
+
 IPV4_CIDR_ADDR_CMD = f'ip addr show {config.BACKBONE_IFNAME} | grep -w inet | grep -Eo "[0-9.]+/[0-9]+"'
 
 
@@ -70,8 +72,8 @@ class TwoBorderRoutersOnTwoInfrastructures(thread_cert.TestCase):
     }
 
     def test(self):
-        br1 = self.nodes[self.BR1]
-        br2 = self.nodes[self.BR2]
+        br1: OtbrNode = self.nodes[self.BR1]
+        br2: OtbrNode = self.nodes[self.BR2]
 
         # start nodes
         br1.start()
@@ -92,9 +94,19 @@ class TwoBorderRoutersOnTwoInfrastructures(thread_cert.TestCase):
         self.assertNotEqual(ipaddress.ip_network(br1_infra_ip_addr[0].strip(), strict=False),
                             ipaddress.ip_network(br2_infra_ip_addr[0].strip(), strict=False))
 
-        # ping each other
-        self.assertTrue(br1.ping(br2.get_ip6_address(config.ADDRESS_TYPE.ML_EID)))
-        self.assertTrue(br2.ping(br1.get_ip6_address(config.ADDRESS_TYPE.ML_EID)))
+        # Ping test
+        br1_thread_link_local = br1.get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
+        br2_thread_link_local = br2.get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
+        br1_infra_link_local = br1.get_ip6_address(config.ADDRESS_TYPE.BACKBONE_LINK_LOCAL)
+        br2_infra_link_local = br2.get_ip6_address(config.ADDRESS_TYPE.BACKBONE_LINK_LOCAL)
+
+        # ping each other using Thread link-local address
+        self.assertTrue(br1.ping(br2_thread_link_local))
+        self.assertTrue(br2.ping(br1_thread_link_local))
+
+        # ping each other using Infra link-local address
+        self.assertFalse(br1.ping(br2_infra_link_local, interface=br1_infra_link_local))
+        self.assertFalse(br2.ping(br1_infra_link_local, interface=br2_infra_link_local))
 
 
 if __name__ == '__main__':
