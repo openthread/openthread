@@ -315,10 +315,12 @@ private:
     void HandleSntpResponse(uint64_t aTime, otError aResult);
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    void OutputBorderAgentCounters(const otBorderAgentCounters &aCounters);
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     static void HandleBorderAgentEphemeralKeyStateChange(void *aContext);
     void        HandleBorderAgentEphemeralKeyStateChange(void);
-    void        OutputBorderAgentCounters(const otBorderAgentCounters &aCounters);
+#endif
 #endif
 
     static void HandleDetachGracefullyResult(void *aContext);

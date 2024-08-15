@@ -178,11 +178,11 @@ void otCoapSecureRemoveResource(otInstance *aInstance, otCoapResource *aResource
     AsCoreType(aInstance).GetApplicationCoapSecure().RemoveResource(AsCoreType(aResource));
 }
 
-void otCoapSecureSetClientConnectedCallback(otInstance                     *aInstance,
-                                            otHandleCoapSecureClientConnect aHandler,
-                                            void                           *aContext)
+void otCoapSecureSetClientConnectEventCallback(otInstance                     *aInstance,
+                                               otHandleCoapSecureClientConnect aHandler,
+                                               void                           *aContext)
 {
-    AsCoreType(aInstance).GetApplicationCoapSecure().SetConnectedCallback(aHandler, aContext);
+    AsCoreType(aInstance).GetApplicationCoapSecure().SetConnectEventCallback(aHandler, aContext);
 }
 
 void otCoapSecureSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext)

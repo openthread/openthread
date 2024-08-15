@@ -1451,8 +1451,8 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
-    def set_epskc(self, passcode: str, lifetime: int):
-        cmd = 'ba ephemeralkey set ' + passcode + ' ' + str(lifetime)
+    def set_epskc(self, keystring: str, timeout=120000, port=0):
+        cmd = 'ba ephemeralkey set ' + keystring + ' ' + str(timeout) + ' ' + str(port)
         self.send_command(cmd)
         self._expect(r"(Done|Error .*)")
 
@@ -1468,15 +1468,12 @@ class NodeImpl:
 
         counters = {}
         for line in result:
-            m = re.match(r'(\w+)\:', line)
+            m = re.match(r'(\w+)\: (\d+)', line)
             if m:
-                group_name = m.group(1)
-                if group_name not in counters:
-                    counters[group_name] = {}
+                counter_name = m.group(1)
+                counter_value = m.group(2)
 
-                counter_matches = re.findall(r"(\w+) (\d+)", line)
-                for counter_name, counter_value in counter_matches:
-                    counters[group_name][counter_name] = int(counter_value)
+                counters[counter_name] = int(counter_value)
         return counters
 
     def _encode_txt_entry(self, entry):

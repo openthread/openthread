@@ -238,7 +238,13 @@ public:
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
-    const otBorderAgentCounters *GetCounters() { return &mCounters; }
+    /**
+     * Gets the set of border agent counters.
+     *
+     * @returns The border agent counters.
+     *
+     */
+    const otBorderAgentCounters *GetCounters(void) { return &mCounters; }
 
     /**
      * Returns the UDP Proxy port to which the commissioner is currently
@@ -255,7 +261,6 @@ private:
 
     static constexpr uint16_t kUdpPort          = OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT;
     static constexpr uint32_t kKeepAliveTimeout = 50 * 1000; // Timeout to reject a commissioner (in msec)
-    otBorderAgentCounters     mCounters;
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     static constexpr uint16_t kMaxEphemeralKeyConnectionAttempts = 10;
@@ -288,11 +293,8 @@ private:
     void                SendErrorMessage(const ForwardContext &aForwardContext, Error aError);
     void                SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, Error aError);
 
-    static void HandleConnected(bool aConnected, bool aWithError, void *aContext);
-    void        HandleConnected(bool aConnected, bool aWithError);
-
-    static void HandleDisconnected(bool aWithError, void *aContext);
-    void        HandleDisconnected(bool aWithError);
+    static void HandleConnected(SecureTransport::ConnectEvent aEvent, void *aContext);
+    void        HandleConnected(SecureTransport::ConnectEvent aEvent);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -339,6 +341,7 @@ private:
     EphemeralKeyTask               mEphemeralKeyTask;
     Callback<EphemeralKeyCallback> mEphemeralKeyCallback;
 #endif
+    otBorderAgentCounters mCounters;
 };
 
 DeclareTmfHandler(BorderAgent, kUriRelayRx);

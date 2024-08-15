@@ -540,16 +540,27 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
             error = OT_ERROR_INVALID_ARGS;
         }
     }
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     /**
      * @cli ba counters
      * @code
-     * border agent counters
-     * ePSKc: activations 2 api_deactivations 1 timeout_deactivations 1 max_attempt_deactivations 0
-     *        disconnect_deactivations 0
-     * ePSKc: invalid_ba_state_errors 0 invalid_args_errors 1 start_secure_session_errors 0
-     * ePSKc: secure_session_successes 0 secure_session_failures 0 commissioner_petitions 0
-     * PSKc: secure_session_successes 0 secure_session_failures 0 commissioner_petitions 0
-     * coap: MGMT_ACTIVE_GET 0 MGMT_PENDING_GET 0
+     * ba counters
+     * epskcActivation: 0
+     * epskcApiDeactivation: 0
+     * epskcTimeoutDeactivation: 0
+     * epskcMaxAttemptDeactivation: 0
+     * epskcDisconnectDeactivation: 0
+     * epskcInvalidBaStateError: 0
+     * epskcInvalidArgsError: 0
+     * epskcStartSecureSessionError: 0
+     * epskcSecureSessionSuccess: 0
+     * epskcSecureSessionFailure: 0
+     * epskcCommissionerPetition: 0
+     * pskcSecureSessionSuccess: 0
+     * pskcSecureSessionFailure: 0
+     * pskcCommissionerPetition: 0
+     * mgmtActiveGet: 0
+     * mgmtPendingGet: 0
      * Done
      * @endcode
      * @par
@@ -560,7 +571,6 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
     {
         OutputBorderAgentCounters(*otBorderAgentGetCounters(GetInstancePtr()));
     }
-#endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     else
     {
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
@@ -570,37 +580,29 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 void Interpreter::OutputBorderAgentCounters(const otBorderAgentCounters &aCounters)
 {
-    Uint64StringBuffer u64StringBuffer;
-
-    OutputFormat("ePSKc: activations %s ", Uint64ToString(aCounters.mEpskcActivations, u64StringBuffer));
-    OutputFormat("api_deactivations %s ", Uint64ToString(aCounters.mEpskcDeactivationClears, u64StringBuffer));
-    OutputFormat("timeout_deactivations %s ", Uint64ToString(aCounters.mEpskcDeactivationTimeouts, u64StringBuffer));
-    OutputFormat("max_attempt_deactivations %s ",
-                 Uint64ToString(aCounters.mEpskcDeactivationMaxAttempts, u64StringBuffer));
-    OutputLine("disconnect_deactivations %s ",
-               Uint64ToString(aCounters.mEpskcDeactivationDisconnects, u64StringBuffer));
-    OutputFormat("ePSKc: invalid_ba_state_errors %s ",
-                 Uint64ToString(aCounters.mEpskcInvalidBaStateErrors, u64StringBuffer));
-    OutputFormat("invalid_args_errors %s ", Uint64ToString(aCounters.mEpskcInvalidArgsErrors, u64StringBuffer));
-    OutputLine("start_secure_session_errors %s ",
-               Uint64ToString(aCounters.mEpskcStartSecureSessionErrors, u64StringBuffer));
-    OutputFormat("ePSKc: secure_session_successes %s ",
-                 Uint64ToString(aCounters.mEpskcSecureSessionSuccesses, u64StringBuffer));
-    OutputFormat("secure_session_failures %s ", Uint64ToString(aCounters.mEpskcSecureSessionFailures, u64StringBuffer));
-    OutputLine("commissioner_petitions %s ", Uint64ToString(aCounters.mEpskcCommissionerPetitions, u64StringBuffer));
-
-    OutputFormat("PSKc: secure_session_successes %s ",
-                 Uint64ToString(aCounters.mPskcSecureSessionSuccesses, u64StringBuffer));
-    OutputFormat("secure_session_failures %s ", Uint64ToString(aCounters.mPskcSecureSessionFailures, u64StringBuffer));
-    OutputLine("commissioner_petitions %s ", Uint64ToString(aCounters.mPskcCommissionerPetitions, u64StringBuffer));
-
-    OutputFormat("coap: MGMT_ACTIVE_GET %s ", Uint64ToString(aCounters.mMgmtActiveGets, u64StringBuffer));
-    OutputLine("MGMT_PENDING_GET %s", Uint64ToString(aCounters.mMgmtPendingGets, u64StringBuffer));
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    OutputLine("epskcActivation: %lu ", ToUlong(aCounters.mEpskcActivations));
+    OutputLine("epskcApiDeactivation: %lu ", ToUlong(aCounters.mEpskcDeactivationClears));
+    OutputLine("epskcTimeoutDeactivation: %lu ", ToUlong(aCounters.mEpskcDeactivationTimeouts));
+    OutputLine("epskcMaxAttemptDeactivation: %lu ", ToUlong(aCounters.mEpskcDeactivationMaxAttempts));
+    OutputLine("epskcDisconnectDeactivation: %lu ", ToUlong(aCounters.mEpskcDeactivationDisconnects));
+    OutputLine("epskcInvalidBaStateError: %lu ", ToUlong(aCounters.mEpskcInvalidBaStateErrors));
+    OutputLine("epskcInvalidArgsError: %lu ", ToUlong(aCounters.mEpskcInvalidArgsErrors));
+    OutputLine("epskcStartSecureSessionError: %lu ", ToUlong(aCounters.mEpskcStartSecureSessionErrors));
+    OutputLine("epskcSecureSessionSuccess: %lu ", ToUlong(aCounters.mEpskcSecureSessionSuccesses));
+    OutputLine("epskcSecureSessionFailure: %lu ", ToUlong(aCounters.mEpskcSecureSessionFailures));
+    OutputLine("epskcCommissionerPetition: %lu ", ToUlong(aCounters.mEpskcCommissionerPetitions));
+#endif
+    OutputLine("pskcSecureSessionSuccess: %lu ", ToUlong(aCounters.mPskcSecureSessionSuccesses));
+    OutputLine("pskcSecureSessionFailure: %lu ", ToUlong(aCounters.mPskcSecureSessionFailures));
+    OutputLine("pskcCommissionerPetition: %lu ", ToUlong(aCounters.mPskcCommissionerPetitions));
+    OutputLine("mgmtActiveGet: %lu ", ToUlong(aCounters.mMgmtActiveGets));
+    OutputLine("mgmtPendingGet: %lu", ToUlong(aCounters.mMgmtPendingGets));
 }
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 void Interpreter::HandleBorderAgentEphemeralKeyStateChange(void *aContext)
 {
     reinterpret_cast<Interpreter *>(aContext)->HandleBorderAgentEphemeralKeyStateChange();

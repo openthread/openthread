@@ -263,6 +263,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
 #endif
 {
     mCommissionerAloc.InitAsThreadOriginMeshLocal();
+    ClearAllBytes(mCounters);
 }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
@@ -648,14 +649,14 @@ exit:
     FreeMessageOnError(response, error);
 }
 
-void BorderAgent::HandleConnected(bool aConnected, bool aWithError, void *aContext)
+void BorderAgent::HandleConnected(SecureTransport::ConnectEvent aEvent, void *aContext)
 {
-    static_cast<BorderAgent *>(aContext)->HandleConnected(aConnected, aWithError);
+    static_cast<BorderAgent *>(aContext)->HandleConnected(aEvent);
 }
 
-void BorderAgent::HandleConnected(bool aConnected, bool aWithError)
+void BorderAgent::HandleConnected(SecureTransport::ConnectEvent aEvent)
 {
-    if (aConnected)
+    if (aEvent == SecureTransport::kConnected)
     {
         LogInfo("SecureSession connected");
         mState = kStateConnected;
@@ -681,11 +682,11 @@ void BorderAgent::HandleConnected(bool aConnected, bool aWithError)
         if (mUsingEphemeralKey)
         {
             RestartAfterRemovingEphemeralKey();
-            if (aWithError)
+            if (aEvent == SecureTransport::kDisconnectedError)
             {
                 mCounters.mEpskcSecureSessionFailures++;
             }
-            else
+            if (aEvent == SecureTransport::kDisconnectedPeerClosed)
             {
                 mCounters.mEpskcDeactivationDisconnects++;
             }
@@ -695,7 +696,7 @@ void BorderAgent::HandleConnected(bool aConnected, bool aWithError)
         {
             mState        = kStateStarted;
             mUdpProxyPort = 0;
-            if (aWithError)
+            if (aEvent == SecureTransport::kDisconnectedError)
             {
                 mCounters.mPskcSecureSessionFailures++;
             }
@@ -737,7 +738,7 @@ Error BorderAgent::Start(uint16_t aUdpPort, const uint8_t *aPsk, uint8_t aPskLen
 
     SuccessOrExit(error = Get<Tmf::SecureAgent>().SetPsk(aPsk, aPskLength));
 
-    Get<Tmf::SecureAgent>().SetExtendedConnectedCallback(HandleConnected, this);
+    Get<Tmf::SecureAgent>().SetConnectEventCallback(HandleConnected, this);
 
     mState        = kStateStarted;
     mUdpProxyPort = 0;
@@ -789,14 +790,8 @@ Error BorderAgent::SetEphemeralKey(const char *aKeyString, uint32_t aTimeout, ui
     Error    error  = kErrorNone;
     uint16_t length = StringLength(aKeyString, kMaxEphemeralKeyLength + 1);
 
-    VerifyOrExit(mState == kStateStarted, {
-        error = kErrorInvalidState;
-        mCounters.mEpskcInvalidBaStateErrors++;
-    });
-    VerifyOrExit((length >= kMinEphemeralKeyLength) && (length <= kMaxEphemeralKeyLength), {
-        error = kErrorInvalidArgs;
-        mCounters.mEpskcInvalidArgsErrors++;
-    });
+    VerifyOrExit(mState == kStateStarted, error = kErrorInvalidState);
+    VerifyOrExit((length >= kMinEphemeralKeyLength) && (length <= kMaxEphemeralKeyLength), error = kErrorInvalidArgs);
 
     if (!mUsingEphemeralKey)
     {
@@ -836,6 +831,18 @@ Error BorderAgent::SetEphemeralKey(const char *aKeyString, uint32_t aTimeout, ui
     LogInfo("Allow ephemeral key for %lu msec on port %u", ToUlong(aTimeout), GetUdpPort());
 
 exit:
+    switch (error)
+    {
+    case kErrorInvalidState:
+        mCounters.mEpskcInvalidBaStateErrors++;
+        break;
+    case kErrorInvalidArgs:
+        mCounters.mEpskcInvalidArgsErrors++;
+        break;
+    default:
+        break;
+    }
+
     return error;
 }
 

@@ -33,7 +33,7 @@ import config
 import thread_cert
 
 # Test description:
-#   This test verifies that ephemeral key can be activated and deactivated.
+#   This test verifies the counters of ephemeral key activations/deactivations.
 #
 # Topology:
 #    --------------
@@ -44,17 +44,15 @@ import thread_cert
 BR1 = 1
 
 
-class EphemeralKeyTest(thread_cert.TestCase):
+class EphemeralKeyCountersTest(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
         BR1: {
             'name': 'BR_1',
-            'allowlist': [],
             'is_otbr': True,
-            'version': '1.2',
+            'version': '1.4',
             'network_name': 'ot-br1',
-            'boot_delay': 5,
         },
     }
 
@@ -62,31 +60,29 @@ class EphemeralKeyTest(thread_cert.TestCase):
         br1 = self.nodes[BR1]
 
         counters = br1.get_border_agent_counters()
-        print('br1 ba counters', counters)
-        self.assertTrue(counters['ePSKc']['activations'] == 0)
-        self.assertTrue(counters['ePSKc']['api_deactivations'] == 0)
-        self.assertTrue(counters['ePSKc']['timeout_deactivations'] == 0)
-        self.assertTrue(counters['ePSKc']['max_attempt_deactivations'] == 0)
-        self.assertTrue(counters['ePSKc']['disconnect_deactivations'] == 0)
-        self.assertTrue(counters['ePSKc']['invalid_ba_state_errors'] == 0)
-        self.assertTrue(counters['ePSKc']['invalid_args_errors'] == 0)
-        self.assertTrue(counters['ePSKc']['start_secure_session_errors'] == 0)
-        self.assertTrue(counters['ePSKc']['secure_session_successes'] == 0)
-        self.assertTrue(counters['ePSKc']['secure_session_failures'] == 0)
-        self.assertTrue(counters['ePSKc']['commissioner_petitions'] == 0)
-        self.assertTrue(counters['PSKc']['secure_session_successes'] == 0)
-        self.assertTrue(counters['PSKc']['secure_session_failures'] == 0)
-        self.assertTrue(counters['PSKc']['commissioner_petitions'] == 0)
-        self.assertTrue(counters['coap']['MGMT_ACTIVE_GET'] == 0)
-        self.assertTrue(counters['coap']['MGMT_PENDING_GET'] == 0)
+        self.assertEqual(counters['epskcActivation'], 0)
+        self.assertEqual(counters['epskcApiDeactivation'], 0)
+        self.assertEqual(counters['epskcTimeoutDeactivation'], 0)
+        self.assertEqual(counters['epskcMaxAttemptDeactivation'], 0)
+        self.assertEqual(counters['epskcDisconnectDeactivation'], 0)
+        self.assertEqual(counters['epskcInvalidBaStateError'], 0)
+        self.assertEqual(counters['epskcInvalidArgsError'], 0)
+        self.assertEqual(counters['epskcStartSecureSessionError'], 0)
+        self.assertEqual(counters['epskcSecureSessionSuccess'], 0)
+        self.assertEqual(counters['epskcSecureSessionFailure'], 0)
+        self.assertEqual(counters['epskcCommissionerPetition'], 0)
+        self.assertEqual(counters['pskcSecureSessionSuccess'], 0)
+        self.assertEqual(counters['pskcSecureSessionFailure'], 0)
+        self.assertEqual(counters['pskcCommissionerPetition'], 0)
+        self.assertEqual(counters['mgmtActiveGet'], 0)
+        self.assertEqual(counters['mgmtPendingGet'], 0)
 
-        # activate epskc before border agent is up
-        br1.set_epskc('123456789', 10)
+        # activate epskc before border agent is up returns an error
+        br1.set_epskc('123456789')
 
         counters = br1.get_border_agent_counters()
-        print('br1 ba counters', counters)
-        self.assertTrue(counters['ePSKc']['activations'] == 0)
-        self.assertTrue(counters['ePSKc']['invalid_ba_state_errors'] == 1)
+        self.assertEqual(counters['epskcActivation'], 0)
+        self.assertEqual(counters['epskcInvalidBaStateError'], 1)
 
         br1.set_active_dataset(updateExisting=True, network_name='ot-br1')
         br1.start()
@@ -98,10 +94,9 @@ class EphemeralKeyTest(thread_cert.TestCase):
         self.simulator.go(1)
 
         counters = br1.get_border_agent_counters()
-        print('br1 ba counters', counters)
-        self.assertTrue(counters['ePSKc']['activations'] == 1)
-        self.assertTrue(counters['ePSKc']['api_deactivations'] == 0)
-        self.assertTrue(counters['ePSKc']['timeout_deactivations'] == 1)
+        self.assertEqual(counters['epskcActivation'], 1)
+        self.assertEqual(counters['epskcApiDeactivation'], 0)
+        self.assertEqual(counters['epskcTimeoutDeactivation'], 1)
 
         # activate epskc and clear it
         br1.set_epskc('123456789', 10000)
@@ -109,21 +104,19 @@ class EphemeralKeyTest(thread_cert.TestCase):
         br1.clear_epskc()
 
         counters = br1.get_border_agent_counters()
-        print('br1 ba counters', counters)
-        self.assertTrue(counters['ePSKc']['activations'] == 2)
-        self.assertTrue(counters['ePSKc']['api_deactivations'] == 1)
-        self.assertTrue(counters['ePSKc']['timeout_deactivations'] == 1)
+        self.assertEqual(counters['epskcActivation'], 2)
+        self.assertEqual(counters['epskcApiDeactivation'], 1)
+        self.assertEqual(counters['epskcTimeoutDeactivation'], 1)
 
         # set epskc with invalid passcode
-        br1.set_epskc('123', 1000)
+        br1.set_epskc('123')
         self.simulator.go(1)
 
         counters = br1.get_border_agent_counters()
-        print('br1 ba counters', counters)
-        self.assertTrue(counters['ePSKc']['activations'] == 2)
-        self.assertTrue(counters['ePSKc']['api_deactivations'] == 1)
-        self.assertTrue(counters['ePSKc']['timeout_deactivations'] == 1)
-        self.assertTrue(counters['ePSKc']['invalid_args_errors'] == 1)
+        self.assertEqual(counters['epskcActivation'], 2)
+        self.assertEqual(counters['epskcApiDeactivation'], 1)
+        self.assertEqual(counters['epskcTimeoutDeactivation'], 1)
+        self.assertEqual(counters['epskcInvalidArgsError'], 1)
 
 
 if __name__ == '__main__':

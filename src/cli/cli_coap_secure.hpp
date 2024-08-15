@@ -137,8 +137,8 @@ private:
     void        DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 #endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 
-    static void HandleConnected(bool aConnected, void *aContext);
-    void        HandleConnected(bool aConnected);
+    static void HandleConnectEvent(otCoapSecureConnectEvent aEvent, void *aContext);
+    void        HandleConnectEvent(otCoapSecureConnectEvent aEvent);
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     otCoapBlockwiseResource mResource;

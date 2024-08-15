@@ -68,13 +68,26 @@ extern "C" {
 #define OT_DEFAULT_COAP_SECURE_PORT 5684 ///< Default CoAP Secure port, as specified in RFC 7252
 
 /**
+ * CoAP secure connection event types.
+ *
+ */
+typedef enum otCoapSecureConnectEvent
+{
+    OT_COAP_SECURE_CONNECTED = 0,             ///< Connection established
+    OT_COAP_SECURE_DISCONNECTED_PEER_CLOSED,  ///< Disconnected by peer
+    OT_COAP_SECURE_DISCONNECTED_LOCAL_CLOSED, ///< Disconnected locally
+    OT_COAP_SECURE_DISCONNECTED_MAX_ATTEMPTS, ///< Disconnected due to reaching the max connection attempts
+    OT_COAP_SECURE_DISCONNECTED_ERROR,        ///< Disconnected due to an error
+} otCoapSecureConnectEvent;
+
+/**
  * Pointer is called when the DTLS connection state changes.
  *
- * @param[in]  aConnected  true, if a connection was established, false otherwise.
+ * @param[in]  aEvent      The connection event.
  * @param[in]  aContext    A pointer to arbitrary context information.
  *
  */
-typedef void (*otHandleCoapSecureClientConnect)(bool aConnected, void *aContext);
+typedef void (*otHandleCoapSecureClientConnect)(otCoapSecureConnectEvent aEvent, void *aContext);
 
 /**
  * Callback function pointer to notify when the CoAP secure agent is automatically stopped due to reaching the maximum
@@ -368,17 +381,17 @@ void otCoapSecureRemoveBlockWiseResource(otInstance *aInstance, otCoapBlockwiseR
 void otCoapSecureSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext);
 
 /**
- * Sets the connected callback to indicate, when
- * a Client connect to the CoAP Secure server.
+ * Sets the connect event callback to indicate when
+ * a Client connection to the CoAP Secure server has changed.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
- * @param[in]  aHandler      A pointer to a function that will be called once DTLS connection is established.
+ * @param[in]  aHandler      A pointer to a function that will be called once DTLS connection has changed.
  * @param[in]  aContext      A pointer to arbitrary context information. May be NULL if not used.
  *
  */
-void otCoapSecureSetClientConnectedCallback(otInstance                     *aInstance,
-                                            otHandleCoapSecureClientConnect aHandler,
-                                            void                           *aContext);
+void otCoapSecureSetClientConnectEventCallback(otInstance                     *aInstance,
+                                               otHandleCoapSecureClientConnect aHandler,
+                                               void                           *aContext);
 
 /**
  * Sends a CoAP response block-wise from the CoAP Secure server.

@@ -199,8 +199,8 @@ private:
     static void HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult, void *aContext);
     void        HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult);
 
-    static void HandleSecureCoapClientConnect(bool aConnected, void *aContext);
-    void        HandleSecureCoapClientConnect(bool aConnected);
+    static void HandleSecureCoapClientConnect(SecureTransport::ConnectEvent aEvent, void *aContext);
+    void        HandleSecureCoapClientConnect(SecureTransport::ConnectEvent aEvent);
 
     static void HandleJoinerFinalizeResponse(void                *aContext,
                                              otMessage           *aMessage,

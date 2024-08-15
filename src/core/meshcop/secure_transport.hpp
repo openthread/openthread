@@ -69,6 +69,8 @@
 #endif
 #endif
 
+#include <openthread/coap_secure.h>
+
 #include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
@@ -87,7 +89,21 @@ namespace MeshCoP {
 class SecureTransport : public InstanceLocator
 {
 public:
+    typedef otCoapSecureConnectEvent ConnectEvent; ///< A connect event.
+
+    static constexpr ConnectEvent kConnected               = OT_COAP_SECURE_CONNECTED;
+    static constexpr ConnectEvent kDisconnectedPeerClosed  = OT_COAP_SECURE_DISCONNECTED_PEER_CLOSED;
+    static constexpr ConnectEvent kDisconnectedLocalClosed = OT_COAP_SECURE_DISCONNECTED_LOCAL_CLOSED;
+    static constexpr ConnectEvent kDisconnectedMaxAttempts = OT_COAP_SECURE_DISCONNECTED_MAX_ATTEMPTS;
+    static constexpr ConnectEvent kDisconnectedError       = OT_COAP_SECURE_DISCONNECTED_ERROR;
+
     static constexpr uint8_t kPskMaxLength = 32; ///< Maximum PSK length.
+
+    /**
+     * Function pointer which is called reporting a connection event (when connection established or disconnected)
+     *
+     */
+    typedef otHandleCoapSecureClientConnect ConnectedHandler;
 
     /**
      * Initializes the SecureTransport object.
@@ -98,16 +114,6 @@ public:
      *
      */
     explicit SecureTransport(Instance &aInstance, bool aLayerTwoSecurity, bool aDatagramTransport = true);
-
-    /**
-     * Pointer is called when a connection is established or torn down.
-     *
-     * @param[in]  aContext    A pointer to application-specific context.
-     * @param[in]  aConnected  TRUE if a connection was established, FALSE otherwise.
-     * @param[in]  aWithError  TRUE if a connection was torn down due to an error.
-     *
-     */
-    typedef void (*ConnectedHandler)(void *aContext, bool aConnected, bool aWithError);
 
     /**
      * Pointer is called when data is received from the session.
@@ -672,7 +678,7 @@ private:
     Message::SubType mMessageSubType;
     Message::SubType mMessageDefaultSubType;
 
-    bool mDisconnectedWithError;
+    ConnectEvent mConnectEvent;
 };
 
 } // namespace MeshCoP

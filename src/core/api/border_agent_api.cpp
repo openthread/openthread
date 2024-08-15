@@ -108,11 +108,11 @@ void otBorderAgentSetEphemeralKeyCallback(otInstance                       *aIns
     AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().SetEphemeralKeyCallback(aCallback, aContext);
 }
 
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+
 const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetCounters();
 }
-
-#endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE

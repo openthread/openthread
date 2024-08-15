@@ -112,26 +112,34 @@ typedef enum otBorderAgentState
 
 typedef struct otBorderAgentCounters
 {
-    uint64_t mEpskcActivations;
-    uint64_t mEpskcDeactivationClears;
-    uint64_t mEpskcDeactivationTimeouts;
-    uint64_t mEpskcDeactivationMaxAttempts;
-    uint64_t mEpskcDeactivationDisconnects;
-    uint64_t mEpskcInvalidBaStateErrors;
-    uint64_t mEpskcInvalidArgsErrors;
-    uint64_t mEpskcStartSecureSessionErrors;
-    uint64_t mEpskcSecureSessionSuccesses;
-    uint64_t mEpskcSecureSessionFailures;
-    uint64_t mEpskcCommissionerPetitions;
+    uint32_t mEpskcActivations;              ///< The number of ePSKc activations
+    uint32_t mEpskcDeactivationClears;       ///< The number of ePSKc deactivations via API
+    uint32_t mEpskcDeactivationTimeouts;     ///< The number of ePSKc deactivations due to timeout
+    uint32_t mEpskcDeactivationMaxAttempts;  ///< The number of ePSKc deactivations due to reached max attempts
+    uint32_t mEpskcDeactivationDisconnects;  ///< The number of ePSKc deactivations due to commissioner disconnected
+    uint32_t mEpskcInvalidBaStateErrors;     ///< The number of invalid border agent state errors at ePSKc activation
+    uint32_t mEpskcInvalidArgsErrors;        ///< The number of invalid args errors at ePSKc activation
+    uint32_t mEpskcStartSecureSessionErrors; ///< The number of start secure session errors at ePSKc activation
+    uint32_t mEpskcSecureSessionSuccesses;   ///< The number of established secure sessions with ePSKc
+    uint32_t mEpskcSecureSessionFailures;    ///< The number of failed secure sessions with ePSKc
+    uint32_t mEpskcCommissionerPetitions;    ///< The number of successful commissioner petitions with ePSKc
 
-    uint64_t mPskcSecureSessionSuccesses;
-    uint64_t mPskcSecureSessionFailures;
-    uint64_t mPskcCommissionerPetitions;
+    uint32_t mPskcSecureSessionSuccesses; ///< The number of established secure sessions with PSKc
+    uint32_t mPskcSecureSessionFailures;  ///< The number of failed secure sessions with PSKc
+    uint32_t mPskcCommissionerPetitions;  ///< The number of successful commissioner petitions with PSKc
 
-    uint64_t mMgmtActiveGets;
-    uint64_t mMgmtPendingGets;
+    uint32_t mMgmtActiveGets;  ///< The number of MGMT_ACTIVE_GET.req sent over secure sessions
+    uint32_t mMgmtPendingGets; ///< The number of MGMT_PENDING_GET.req sent over secure sessions
 } otBorderAgentCounters;
 
+/**
+ * Gets the counters of the Thread Border Agent.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the Border Agent counters.
+ *
+ */
 const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance);
 
 /**
