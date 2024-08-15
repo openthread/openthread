@@ -602,16 +602,12 @@ Error AddressResolver::ResolveUsingNetDataServices(const Ip6::Address &aEid, uin
     Error                                     error = kErrorNotFound;
     NetworkData::Service::Manager::Iterator   iterator;
     NetworkData::Service::DnsSrpUnicast::Info unicastInfo;
+    NetworkData::Service::DnsSrpUnicast::Type type = NetworkData::Service::DnsSrpUnicast::kFromServerData;
 
     VerifyOrExit(Get<Mle::Mle>().GetDeviceMode().GetNetworkDataType() == NetworkData::kFullSet);
 
-    while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, unicastInfo) == kErrorNone)
+    while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo) == kErrorNone)
     {
-        if (unicastInfo.mOrigin != NetworkData::Service::DnsSrpUnicast::kFromServerData)
-        {
-            continue;
-        }
-
         if (aEid == unicastInfo.mSockAddr.GetAddress())
         {
             aRloc16 = unicastInfo.mRloc16;
