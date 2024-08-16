@@ -330,21 +330,19 @@ void BleSecure::HandleTlsConnectEvent(MeshCoP::SecureTransport::ConnectEvent aEv
 {
     if (aEvent == MeshCoP::SecureTransport::kConnected)
     {
+        Error err;
+
         if (mReceivedMessage == nullptr)
         {
             mReceivedMessage = Get<MessagePool>().Allocate(Message::kTypeBle);
         }
+        err = mTcatAgent.Connected(mTls);
 
-        if (mTcatAgent.IsEnabled())
+        if (err != kErrorNone)
         {
-            Error err = mTcatAgent.Connected(mTls);
-
-            if (err != kErrorNone)
-            {
-                mTls.Close();
-                LogWarn("Rejected TCAT Commissioner, error: %s", ErrorToString(err));
-                ExitNow();
-            }
+            mTls.Disconnect(); // must not use Close(), so that next Commissioner can connect
+            LogWarn("Rejected TCAT Commissioner, error: %s", ErrorToString(err));
+            ExitNow();
         }
     }
     else
@@ -449,8 +447,10 @@ void BleSecure::HandleTlsReceive(uint8_t *aBuf, uint16_t aLength)
 
                 if (error == kErrorAbort)
                 {
+                    // kErrorAbort indicates that a Disconnect command TLV has been received.
                     Disconnect();
-                    Stop();
+                    // BleSecure is not stopped here, it must remain active in advertising state and
+                    // must be ready to receive a next TCAT commissioner.
                     ExitNow();
                 }
             }

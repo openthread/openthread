@@ -140,6 +140,7 @@ class BleStreamSecure:
 
     async def close(self):
         if self.ssl_object.session is not None:
+            logger.debug('sending Disconnect command TLV')
             data = TLV(TcatTLVType.DISCONNECT.value, bytes()).to_bytes()
             await self.send(data)
 
