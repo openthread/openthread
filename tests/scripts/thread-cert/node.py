@@ -2221,6 +2221,9 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    #
+    # BR commands
+    #
     def enable_br(self):
         self.send_command('br enable')
         self._expect_done()
@@ -2233,6 +2236,35 @@ class NodeImpl:
         cmd = 'br omrprefix local'
         self.send_command(cmd)
         return self._expect_command_output()[0]
+
+    def get_br_peers(self) -> List[str]:
+        # Example output of `br peers` command:
+        #   rloc16:0xa800 age:00:00:50
+        #   rloc16:0x6800 age:00:00:51
+        #   Done
+        self.send_command('br peers')
+        return self._expect_command_output()
+
+    def get_br_peers_rloc16s(self) -> List[int]:
+        """parse `br peers` output and return the list of RLOC16s"""
+        return [
+            int(pair.split(':')[1], 16)
+            for line in self.get_br_peers()
+            for pair in line.split()
+            if pair.split(':')[0] == 'rloc16'
+        ]
+
+    def get_br_routers(self) -> List[str]:
+        # Example output of `br routers` command:
+        #   fe80:0:0:0:42:acff:fe14:3 (M:0 O:0 Stub:1) ms-since-rx:144160 reachable:yes age:00:17:36 (peer BR)
+        #   fe80:0:0:0:42:acff:fe14:2 (M:0 O:0 Stub:1) ms-since-rx:45179 reachable:yes age:00:17:36
+        #   Done
+        self.send_command('br routers')
+        return self._expect_command_output()
+
+    def get_br_routers_ip_addresses(self) -> List[IPv6Address]:
+        """parse `br routers` output and return the list of IPv6 addresses"""
+        return [IPv6Address(line.split()[0]) for line in self.get_br_routers()]
 
     def get_netdata_omr_prefixes(self):
         omr_prefixes = []
