@@ -1110,7 +1110,7 @@ private:
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     void  ApplyAutoStartGuardOnAttach(void);
     void  ProcessAutoStart(void);
-    Error SelectUnicastEntry(DnsSrpUnicast::Origin aOrigin, DnsSrpUnicast::Info &aInfo) const;
+    Error SelectUnicastEntry(DnsSrpUnicast::Type aType, DnsSrpUnicast::Info &aInfo) const;
     void  HandleGuardTimer(void) {}
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
     void SelectNextServer(bool aDisallowSwitchOnRegisteredHost);

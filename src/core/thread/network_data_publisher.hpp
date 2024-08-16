@@ -56,6 +56,7 @@
 #include "common/string.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/network_data_service.hpp"
 #include "thread/network_data_types.hpp"
 
 namespace ot {
@@ -437,10 +438,10 @@ private:
         void Notify(Event aEvent) const;
         void Process(void);
         void CountAnycastEntries(uint8_t &aNumEntries, uint8_t &aNumPreferredEntries) const;
-        void CountServiceDataUnicastEntries(uint8_t &aNumEntries, uint8_t &aNumPreferredEntries) const;
-        void CountServerDataUnicastEntries(uint8_t &aNumEntries,
-                                           uint8_t &aNumPreferredEntries,
-                                           bool    &aHasServiceDataEntry) const;
+        void CountUnicastEntries(Service::DnsSrpUnicast::Type aType,
+                                 uint8_t                     &aNumEntries,
+                                 uint8_t                     &aNumPreferredEntries) const;
+        bool HasAnyServiceDataUnicastEntry(void) const;
 
         Info                            mInfo;
         Callback<DnsSrpServiceCallback> mCallback;

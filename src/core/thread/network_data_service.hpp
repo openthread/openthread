@@ -238,10 +238,10 @@ public:
     static const uint8_t kServiceData = kServiceNumber;
 
     /**
-     * Represents the origin a `DnsSrpUnicast` entry.
+     * Represents the `DnsSrpUnicast` entry type.
      *
      */
-    enum Origin : uint8_t
+    enum Type : uint8_t
     {
         kFromServiceData, ///< Socket address is from service data.
         kFromServerData,  ///< Socket address is from server data.
@@ -254,8 +254,7 @@ public:
     struct Info
     {
         Ip6::SockAddr mSockAddr; ///< The socket address (IPv6 address and port) of the DNS/SRP server.
-        Origin        mOrigin;   ///< The origin of the socket address (whether from service or server data).
-        uint16_t      mRloc16;   ///< The BR RLOC16 adding the entry (only used when `mOrigin == kFromServerData`).
+        uint16_t      mRloc16;   ///< The BR RLOC16 adding the entry.
     };
 
     /**
@@ -581,13 +580,14 @@ public:
      * method).
      *
      * @param[in,out] aIterator    A reference to an iterator.
+     * @param[in]     aType        The entry type, `kFromServiceData` (preferred) or `kFromServerData` (non-preferred).
      * @param[out]    aInfo        A reference to `DnsSrpUnicast::Info` to return the info.
      *
      * @retval kErrorNone       Successfully got the next info. @p aInfo and @p aIterator are updated.
      * @retval kErrorNotFound   No more matching entries in the Network Data.
      *
      */
-    Error GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info &aInfo) const;
+    Error GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Type aType, DnsSrpUnicast::Info &aInfo) const;
 
 private:
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

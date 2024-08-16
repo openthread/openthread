@@ -260,20 +260,43 @@ exit:
     return error;
 }
 
-Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info &aInfo) const
+Error Manager::GetNextDnsSrpUnicastInfo(Iterator            &aIterator,
+                                        DnsSrpUnicast::Type  aType,
+                                        DnsSrpUnicast::Info &aInfo) const
 {
-    Error       error = kErrorNone;
-    ServiceData serviceData;
+    Error error = kErrorNone;
 
-    serviceData.InitFrom(DnsSrpUnicast::kServiceData);
-
-    while (true)
+    do
     {
+        ServiceData serviceData;
+
         // Process Server sub-TLVs in the current Service TLV.
 
         while (IterateToNextServer(aIterator) == kErrorNone)
         {
             ServerData data;
+
+            if (aType == DnsSrpUnicast::kFromServiceData)
+            {
+                const DnsSrpUnicast::ServiceData *dnsServiceData;
+
+                if (aIterator.mServiceTlv->GetServiceDataLength() < sizeof(DnsSrpUnicast::ServiceData))
+                {
+                    // Break from `while(IterateToNextServer())` loop
+                    // to skip over the Service TLV and all its
+                    // sub-TLVs and go to the next one.
+                    break;
+                }
+
+                aIterator.mServiceTlv->GetServiceData(serviceData);
+                dnsServiceData = reinterpret_cast<const DnsSrpUnicast::ServiceData *>(serviceData.GetBytes());
+                aInfo.mSockAddr.SetAddress(dnsServiceData->GetAddress());
+                aInfo.mSockAddr.SetPort(dnsServiceData->GetPort());
+                aInfo.mRloc16 = aIterator.mServerSubTlv->GetServer16();
+                ExitNow();
+            }
+
+            // `aType` is `kFromServerData`.
 
             // Server sub-TLV can contain address and port info
             // (then we parse and return the info), or it can be
@@ -288,7 +311,6 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
 
                 aInfo.mSockAddr.SetAddress(serverData->GetAddress());
                 aInfo.mSockAddr.SetPort(serverData->GetPort());
-                aInfo.mOrigin = DnsSrpUnicast::kFromServerData;
                 aInfo.mRloc16 = aIterator.mServerSubTlv->GetServer16();
                 ExitNow();
             }
@@ -301,7 +323,6 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
                 aInfo.mSockAddr.GetAddress().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
                                                                  aIterator.mServerSubTlv->GetServer16());
                 aInfo.mSockAddr.SetPort(BigEndian::ReadUint16(data.GetBytes()));
-                aInfo.mOrigin = DnsSrpUnicast::kFromServerData;
                 aInfo.mRloc16 = aIterator.mServerSubTlv->GetServer16();
                 ExitNow();
             }
@@ -309,29 +330,17 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
 
         // Find the next matching Service TLV.
 
+        serviceData.InitFrom(DnsSrpUnicast::kServiceData);
         aIterator.mServiceTlv =
             Get<Leader>().FindNextThreadService(aIterator.mServiceTlv, serviceData, NetworkData::kServicePrefixMatch);
+        aIterator.mServerSubTlv = nullptr;
 
-        VerifyOrExit(aIterator.mServiceTlv != nullptr, error = kErrorNotFound);
+        // If we have a valid Service TLV, restart the loop
+        // to process its Server sub-TLVs.
 
-        if (aIterator.mServiceTlv->GetServiceDataLength() >= sizeof(DnsSrpUnicast::ServiceData))
-        {
-            // The Service TLV data contains the address and port info.
+    } while (aIterator.mServiceTlv != nullptr);
 
-            const DnsSrpUnicast::ServiceData *dnsServiceData;
-
-            aIterator.mServiceTlv->GetServiceData(serviceData);
-            dnsServiceData = reinterpret_cast<const DnsSrpUnicast::ServiceData *>(serviceData.GetBytes());
-            aInfo.mSockAddr.SetAddress(dnsServiceData->GetAddress());
-            aInfo.mSockAddr.SetPort(dnsServiceData->GetPort());
-            aInfo.mOrigin = DnsSrpUnicast::kFromServiceData;
-            aInfo.mRloc16 = Mle::kInvalidRloc16;
-            ExitNow();
-        }
-
-        // Go back to the start of `while (true)` loop to
-        // process the Server sub-TLVs in the new Service TLV.
-    }
+    error = kErrorNotFound;
 
 exit:
     return error;

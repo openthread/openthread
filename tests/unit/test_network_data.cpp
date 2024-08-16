@@ -612,11 +612,6 @@ void TestNetworkDataFindNextService(void)
 
 void TestNetworkDataDsnSrpServices(void)
 {
-    static const char *kOriginStrings[] = {
-        "service-data", // (0) Service::DnsSrpUnicast::kFromServiceData
-        "server-data",  // (1) Service::DnsSrpUnicast::kFromServerData
-    };
-
     class TestLeader : public Leader
     {
     public:
@@ -652,19 +647,18 @@ void TestNetworkDataDsnSrpServices(void)
 
         struct UnicastEntry
         {
-            const char                    *mAddress;
-            uint16_t                       mPort;
-            Service::DnsSrpUnicast::Origin mOrigin;
-            uint16_t                       mRloc16;
+            const char *mAddress;
+            uint16_t    mPort;
+            uint16_t    mRloc16;
 
-            bool Matches(Service::DnsSrpUnicast::Info aInfo) const
+            bool Matches(const Service::DnsSrpUnicast::Info &aInfo) const
             {
                 Ip6::SockAddr sockAddr;
 
                 SuccessOrQuit(sockAddr.GetAddress().FromString(mAddress));
                 sockAddr.SetPort(mPort);
 
-                return (aInfo.mSockAddr == sockAddr) && (aInfo.mOrigin == mOrigin) && (aInfo.mRloc16 == mRloc16);
+                return (aInfo.mSockAddr == sockAddr) && (aInfo.mRloc16 == mRloc16);
             }
         };
 
@@ -684,12 +678,17 @@ void TestNetworkDataDsnSrpServices(void)
             {0xfc12, 0x03},
         };
 
-        const UnicastEntry kUnicastEntries[] = {
-            {"fdde:ad00:beef:0:2d0e:c627:5556:18d9", 0x1234, Service::DnsSrpUnicast::kFromServiceData, 0xfffe},
-            {"fd00:aabb:ccdd:eeff:11:2233:4455:6677", 0xabcd, Service::DnsSrpUnicast::kFromServerData, 0x6c00},
-            {"fdde:ad00:beef:0:0:ff:fe00:2800", 0x5678, Service::DnsSrpUnicast::kFromServerData, 0x2800},
-            {"fd00:1234:5678:9abc:def0:123:4567:89ab", 0x0e, Service::DnsSrpUnicast::kFromServerData, 0x4c00},
-            {"fdde:ad00:beef:0:0:ff:fe00:6c00", 0xcd12, Service::DnsSrpUnicast::kFromServerData, 0x6c00},
+        const UnicastEntry kUnicastEntriesFromServerData[] = {
+            {"fd00:aabb:ccdd:eeff:11:2233:4455:6677", 0xabcd, 0x6c00},
+            {"fdde:ad00:beef:0:0:ff:fe00:2800", 0x5678, 0x2800},
+            {"fd00:1234:5678:9abc:def0:123:4567:89ab", 0x0e, 0x4c00},
+            {"fdde:ad00:beef:0:0:ff:fe00:6c00", 0xcd12, 0x6c00},
+        };
+
+        const UnicastEntry kUnicastEntriesFromServiceData[] = {
+            {"fdde:ad00:beef:0:2d0e:c627:5556:18d9", 0x1234, 0x0000},
+            {"fdde:ad00:beef:0:2d0e:c627:5556:18d9", 0x1234, 0x6c00},
+            {"fdde:ad00:beef:0:2d0e:c627:5556:18d9", 0x1234, 0x2800},
         };
 
         const uint16_t kExpectedRlocs[] = {0x6c00, 0x2800, 0x4c00, 0x0000};
@@ -700,6 +699,7 @@ void TestNetworkDataDsnSrpServices(void)
         Service::Manager::Iterator   iterator;
         Service::DnsSrpAnycast::Info anycastInfo;
         Service::DnsSrpUnicast::Info unicastInfo;
+        Service::DnsSrpUnicast::Type type;
         Rlocs                        rlocs;
 
         reinterpret_cast<TestLeader &>(instance->Get<Leader>()).Populate(kNetworkData, sizeof(kNetworkData));
@@ -749,20 +749,39 @@ void TestNetworkDataDsnSrpServices(void)
                      "FindPreferredDnsSrpAnycastInfo() returned invalid info");
 
         printf("\n\n- - - - - - - - - - - - - - - - - - - -");
-        printf("\nDNS/SRP Unicast Service entries\n");
+        printf("\nDNS/SRP Unicast Service entries (server data)\n");
 
         iterator.Clear();
+        type = Service::DnsSrpUnicast::kFromServerData;
 
-        for (const UnicastEntry &entry : kUnicastEntries)
+        for (const UnicastEntry &entry : kUnicastEntriesFromServerData)
         {
-            SuccessOrQuit(manager.GetNextDnsSrpUnicastInfo(iterator, unicastInfo));
-            printf("\nunicastInfo { %s, origin:%s, rloc16:%04x }", unicastInfo.mSockAddr.ToString().AsCString(),
-                   kOriginStrings[unicastInfo.mOrigin], unicastInfo.mRloc16);
+            SuccessOrQuit(manager.GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo));
+            printf("\nunicastInfo { %s, rloc16:%04x }", unicastInfo.mSockAddr.ToString().AsCString(),
+                   unicastInfo.mRloc16);
 
             VerifyOrQuit(entry.Matches(unicastInfo), "GetNextDnsSrpUnicastInfo() returned incorrect info");
         }
 
-        VerifyOrQuit(manager.GetNextDnsSrpUnicastInfo(iterator, unicastInfo) == kErrorNotFound,
+        VerifyOrQuit(manager.GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo) == kErrorNotFound,
+                     "GetNextDnsSrpUnicastInfo() returned unexpected extra entry");
+
+        printf("\n\n- - - - - - - - - - - - - - - - - - - -");
+        printf("\nDNS/SRP Unicast Service entries (service data)\n");
+
+        iterator.Clear();
+        type = Service::DnsSrpUnicast::kFromServiceData;
+
+        for (const UnicastEntry &entry : kUnicastEntriesFromServiceData)
+        {
+            SuccessOrQuit(manager.GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo));
+            printf("\nunicastInfo { %s, rloc16:%04x }", unicastInfo.mSockAddr.ToString().AsCString(),
+                   unicastInfo.mRloc16);
+
+            VerifyOrQuit(entry.Matches(unicastInfo), "GetNextDnsSrpUnicastInfo() returned incorrect info");
+        }
+
+        VerifyOrQuit(manager.GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo) == kErrorNotFound,
                      "GetNextDnsSrpUnicastInfo() returned unexpected extra entry");
 
         printf("\n");
