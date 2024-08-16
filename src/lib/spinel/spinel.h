@@ -3467,8 +3467,8 @@ enum
      *
      *  `6`: IPv6 Address
      *  `C`: Network Prefix Length (in bits)
-     *  `L`: Valid Lifetime
      *  `L`: Preferred Lifetime
+     *  `L`: Valid Lifetime
      *
      */
     SPINEL_PROP_IPV6_ADDRESS_TABLE = SPINEL_PROP_IPV6__BEGIN + 3,
