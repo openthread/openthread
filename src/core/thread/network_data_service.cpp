@@ -168,27 +168,43 @@ exit:
 
 Error Manager::GetNextDnsSrpAnycastInfo(Iterator &aIterator, DnsSrpAnycast::Info &aInfo) const
 {
-    Error             error = kErrorNone;
-    ServiceData       serviceData;
-    const ServiceTlv *tlv = aIterator.mServiceTlv;
-
-    serviceData.InitFrom(DnsSrpAnycast::kServiceData);
+    Error error = kErrorNone;
 
     do
     {
-        tlv = Get<Leader>().FindNextThreadService(tlv, serviceData, NetworkData::kServicePrefixMatch);
-        VerifyOrExit(tlv != nullptr, error = kErrorNotFound);
+        ServiceData serviceData;
 
-    } while (tlv->GetServiceDataLength() < sizeof(DnsSrpAnycast::ServiceData));
+        // Process the next Server sub-TLV in the current Service TLV.
 
-    tlv->GetServiceData(serviceData);
+        if (IterateToNextServer(aIterator) == kErrorNone)
+        {
+            aIterator.mServiceTlv->GetServiceData(serviceData);
 
-    Get<Mle::Mle>().GetServiceAloc(tlv->GetServiceId(), aInfo.mAnycastAddress);
+            if (serviceData.GetLength() >= sizeof(DnsSrpAnycast::ServiceData))
+            {
+                const DnsSrpAnycast::ServiceData *dnsServiceData =
+                    reinterpret_cast<const DnsSrpAnycast::ServiceData *>(serviceData.GetBytes());
 
-    aInfo.mSequenceNumber =
-        reinterpret_cast<const DnsSrpAnycast::ServiceData *>(serviceData.GetBytes())->GetSequenceNumber();
+                Get<Mle::Mle>().GetServiceAloc(aIterator.mServiceTlv->GetServiceId(), aInfo.mAnycastAddress);
+                aInfo.mSequenceNumber = dnsServiceData->GetSequenceNumber();
+                aInfo.mRloc16         = aIterator.mServerSubTlv->GetServer16();
+                ExitNow();
+            }
+        }
 
-    aIterator.mServiceTlv = tlv;
+        // Find the next matching Service TLV.
+
+        serviceData.InitFrom(DnsSrpAnycast::kServiceData);
+        aIterator.mServiceTlv =
+            Get<Leader>().FindNextThreadService(aIterator.mServiceTlv, serviceData, NetworkData::kServicePrefixMatch);
+        aIterator.mServerSubTlv = nullptr;
+
+        // If we have a valid Service TLV, restart the loop
+        // to process its Server sub-TLVs.
+
+    } while (aIterator.mServiceTlv != nullptr);
+
+    error = kErrorNotFound;
 
 exit:
     return error;

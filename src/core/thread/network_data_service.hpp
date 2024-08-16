@@ -173,6 +173,7 @@ public:
     {
         Ip6::Address mAnycastAddress; ///< The anycast address associated with the DNS/SRP servers.
         uint8_t      mSequenceNumber; ///< Sequence number used to notify SRP client if they need to re-register.
+        uint16_t     mRloc16;         ///< The RLOC16 of the entry.
     };
 
     /**
