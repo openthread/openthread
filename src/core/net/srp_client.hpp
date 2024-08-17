@@ -75,8 +75,9 @@ class Client : public InstanceLocator, private NonCopyable
     friend class ot::Notifier;
     friend class ot::Ip6::Netif;
 
-    using DnsSrpUnicast = NetworkData::Service::DnsSrpUnicast;
-    using DnsSrpAnycast = NetworkData::Service::DnsSrpAnycast;
+    using DnsSrpUnicastInfo = NetworkData::Service::DnsSrpUnicastInfo;
+    using DnsSrpUnicastType = NetworkData::Service::DnsSrpUnicastType;
+    using DnsSrpAnycastInfo = NetworkData::Service::DnsSrpAnycastInfo;
 
 public:
     /**
@@ -1110,7 +1111,7 @@ private:
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     void  ApplyAutoStartGuardOnAttach(void);
     void  ProcessAutoStart(void);
-    Error SelectUnicastEntry(DnsSrpUnicast::Type aType, DnsSrpUnicast::Info &aInfo) const;
+    Error SelectUnicastEntry(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo) const;
     void  HandleGuardTimer(void) {}
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
     void SelectNextServer(bool aDisallowSwitchOnRegisteredHost);

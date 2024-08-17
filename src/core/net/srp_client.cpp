@@ -2244,11 +2244,11 @@ exit:
 
 void Client::ProcessAutoStart(void)
 {
-    Ip6::SockAddr       serverSockAddr;
-    DnsSrpAnycast::Info anycastInfo;
-    DnsSrpUnicast::Info unicastInfo;
-    AutoStart::State    oldAutoStartState = mAutoStart.GetState();
-    bool                shouldRestart     = false;
+    Ip6::SockAddr     serverSockAddr;
+    DnsSrpAnycastInfo anycastInfo;
+    DnsSrpUnicastInfo unicastInfo;
+    AutoStart::State  oldAutoStartState = mAutoStart.GetState();
+    bool              shouldRestart     = false;
 
     // If auto start mode is enabled, we check the Network Data entries
     // to discover and select the preferred SRP server to register with.
@@ -2274,7 +2274,7 @@ void Client::ProcessAutoStart(void)
 
     serverSockAddr.Clear();
 
-    if (SelectUnicastEntry(DnsSrpUnicast::kFromServiceData, unicastInfo) == kErrorNone)
+    if (SelectUnicastEntry(NetworkData::Service::kAddrInServiceData, unicastInfo) == kErrorNone)
     {
         mAutoStart.SetState(AutoStart::kSelectedUnicastPreferred);
         serverSockAddr = unicastInfo.mSockAddr;
@@ -2299,7 +2299,7 @@ void Client::ProcessAutoStart(void)
 
         mAutoStart.SetState(AutoStart::kSelectedAnycast);
     }
-    else if (SelectUnicastEntry(DnsSrpUnicast::kFromServerData, unicastInfo) == kErrorNone)
+    else if (SelectUnicastEntry(NetworkData::Service::kAddrInServerData, unicastInfo) == kErrorNone)
     {
         mAutoStart.SetState(AutoStart::kSelectedUnicast);
         serverSockAddr = unicastInfo.mSockAddr;
@@ -2378,10 +2378,10 @@ exit:
     return;
 }
 
-Error Client::SelectUnicastEntry(DnsSrpUnicast::Type aType, DnsSrpUnicast::Info &aInfo) const
+Error Client::SelectUnicastEntry(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo) const
 {
     Error                                   error = kErrorNotFound;
-    DnsSrpUnicast::Info                     unicastInfo;
+    DnsSrpUnicastInfo                       unicastInfo;
     NetworkData::Service::Manager::Iterator iterator;
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
     Settings::SrpClientInfo savedInfo;
@@ -2436,9 +2436,9 @@ void Client::SelectNextServer(bool aDisallowSwitchOnRegisteredHost)
     // restarts the client with the new server (keeping the retry wait
     // interval as before).
 
-    Ip6::SockAddr       serverSockAddr;
-    bool                selectNext = false;
-    DnsSrpUnicast::Type type       = DnsSrpUnicast::kFromServiceData;
+    Ip6::SockAddr     serverSockAddr;
+    bool              selectNext = false;
+    DnsSrpUnicastType type       = NetworkData::Service::kAddrInServiceData;
 
     serverSockAddr.Clear();
 
@@ -2450,11 +2450,11 @@ void Client::SelectNextServer(bool aDisallowSwitchOnRegisteredHost)
     switch (mAutoStart.GetState())
     {
     case AutoStart::kSelectedUnicastPreferred:
-        type = DnsSrpUnicast::kFromServiceData;
+        type = NetworkData::Service::kAddrInServiceData;
         break;
 
     case AutoStart::kSelectedUnicast:
-        type = DnsSrpUnicast::kFromServerData;
+        type = NetworkData::Service::kAddrInServerData;
         break;
 
     case AutoStart::kSelectedAnycast:
@@ -2477,7 +2477,7 @@ void Client::SelectNextServer(bool aDisallowSwitchOnRegisteredHost)
 
     do
     {
-        DnsSrpUnicast::Info                     unicastInfo;
+        DnsSrpUnicastInfo                       unicastInfo;
         NetworkData::Service::Manager::Iterator iterator;
 
         while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo) == kErrorNone)
