@@ -47,7 +47,7 @@ ConfigFile::ConfigFile(const char *aFilePath)
     : mFilePath(aFilePath)
 {
     assert(mFilePath != nullptr);
-    VerifyOrDie(strlen(mFilePath) + strlen(kSwapSuffix) < kFileNameMaxSize, OT_EXIT_FAILURE);
+    VerifyOrDie(strlen(mFilePath) + strlen(kSwapSuffix) < kFilePathMaxSize, OT_EXIT_FAILURE);
 }
 
 bool ConfigFile::HasKey(const char *aKey) const
@@ -163,7 +163,7 @@ exit:
 otError ConfigFile::Clear(const char *aKey)
 {
     otError error = OT_ERROR_NONE;
-    char    swapFile[kFileNameMaxSize];
+    char    swapFile[kFilePathMaxSize];
     char    line[kLineMaxSize];
     FILE   *fp     = nullptr;
     FILE   *fpSwap = nullptr;
