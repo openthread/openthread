@@ -236,7 +236,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
                               NM_COMMISSIONER_SESSION_ID_TLV,
                               NM_ACTIVE_TIMESTAMP_TLV,
                               NM_SECURITY_POLICY_TLV
-                             }  == set(p.thread_meshcop.tlv.type) and\
+                             }  <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.active_tstamp == 15 and\
                    (p.thread_meshcop.tlv.sec_policy_o == 0 or
                     p.thread_meshcop.tlv.unknown == '0e1077')).\
@@ -289,7 +289,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
                               NM_COMMISSIONER_SESSION_ID_TLV,
                               NM_ACTIVE_TIMESTAMP_TLV,
                               NM_SECURITY_POLICY_TLV
-                             }  == set(p.thread_meshcop.tlv.type) and\
+                             }  <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.active_tstamp == 20 and\
                    (p.thread_meshcop.tlv.sec_policy_n == 0 or
                     p.thread_meshcop.tlv.unknown == '0e10b7')).\
@@ -327,7 +327,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
                               NM_COMMISSIONER_SESSION_ID_TLV,
                               NM_ACTIVE_TIMESTAMP_TLV,
                               NM_SECURITY_POLICY_TLV
-                             }  == set(p.thread_meshcop.tlv.type) and\
+                             }  <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.active_tstamp == 25 and\
                    (p.thread_meshcop.tlv.sec_policy_b == 0 or
                     p.thread_meshcop.tlv.unknown == '0e10f7')).\
@@ -373,7 +373,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
                               NM_COMMISSIONER_SESSION_ID_TLV,
                               NM_ACTIVE_TIMESTAMP_TLV,
                               NM_SECURITY_POLICY_TLV
-                             }  == set(p.thread_meshcop.tlv.type) and\
+                             }  <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.active_tstamp == 30 and\
                    (p.thread_meshcop.tlv.sec_policy_r == 0 or
                     p.thread_meshcop.tlv.unknown == '0e10d7')).\

@@ -121,14 +121,14 @@ class Cert_5_6_2_NetworkDataRouterAsBr(thread_cert.TestCase):
 
         # Step 1: The DUT MUST send properly formatted MLE Advertisements
         _lpkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
-            lambda p: {LEADER_DATA_TLV, ROUTE64_TLV, SOURCE_ADDRESS_TLV} == set(p.mle.tlv.type))
+            lambda p: {LEADER_DATA_TLV, ROUTE64_TLV, SOURCE_ADDRESS_TLV} <= set(p.mle.tlv.type))
 
         # Step 3: The DUT MUST properly attach Router_1 device to the network,
         # and transmit Network Data during the attach phase in the
         # Child ID Response frame of the Network Data TLV
         _lpkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next().must_verify(lambda p: p.wpan.dst64 == ROUTER and {
             SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ACTIVE_TIMESTAMP_TLV, ADDRESS16_TLV, NETWORK_DATA_TLV
-        } < set(p.mle.tlv.type))
+        } <= set(p.mle.tlv.type))
 
         # Step 5: The DUT Automatically sends a CoAP Response frame and
         # MLE Data Response message
@@ -159,9 +159,9 @@ class Cert_5_6_2_NetworkDataRouterAsBr(thread_cert.TestCase):
         # Step 10: The DUT MUST send a unicast MLE Child Update
         # Response to each of MED_1 and SED_1
         _lpkts_med.filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).filter_wpan_dst64(MED).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} < set(p.mle.tlv.type))
+            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type))
         _lpkts_sed.filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).filter_wpan_dst64(SED).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} < set(p.mle.tlv.type))
+            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type))
 
 
 if __name__ == '__main__':

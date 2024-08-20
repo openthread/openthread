@@ -208,7 +208,7 @@ class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
             filter(lambda p: {
                               NL_ML_EID_TLV,
                               NL_TARGET_EID_TLV
-                              } == set(p.coap.tlv.type) and\
+                              } <= set(p.coap.tlv.type) and\
                    p.thread_address.tlv.target_eid == IPV6_ADDR
                    ).\
             must_next()

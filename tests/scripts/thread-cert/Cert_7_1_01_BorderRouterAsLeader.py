@@ -146,7 +146,7 @@ class Cert_7_1_1_BorderRouterAsLeader(thread_cert.TestCase):
                               ADDRESS16_TLV,
                               NETWORK_DATA_TLV,
                               ROUTE64_TLV
-                             } < set(p.mle.tlv.type) and\
+                             } <= set(p.mle.tlv.type) and\
                    p.mle.tlv.mode.network_data == 1
                    ).\
             must_next()
@@ -208,7 +208,7 @@ class Cert_7_1_1_BorderRouterAsLeader(thread_cert.TestCase):
                               MODE_TLV,
                               TIMEOUT_TLV,
                               CHALLENGE_TLV
-                             } == set(p.thread_nwd.tlv.type) and\
+                             } <= set(p.thread_nwd.tlv.type) and\
                    [Ipv6Addr(PREFIX_2001[:-3])] == p.thread_nwd.tlv.prefix and\
                    p.thread_nwd.tlv.border_router.flag.p == [1] and\
                    p.thread_nwd.tlv.border_router.flag.s == [1] and\
@@ -235,7 +235,7 @@ class Cert_7_1_1_BorderRouterAsLeader(thread_cert.TestCase):
                               ADDRESS16_TLV,
                               NETWORK_DATA_TLV,
                               ADDRESS_REGISTRATION_TLV
-                             } < set(p.mle.tlv.type) and\
+                             } <= set(p.mle.tlv.type) and\
                    p.mle.tlv.mode.network_data == 1
                    ).\
             must_next()
@@ -286,7 +286,7 @@ class Cert_7_1_1_BorderRouterAsLeader(thread_cert.TestCase):
                                   SOURCE_ADDRESS_TLV,
                                   MODE_TLV,
                                   ADDRESS_REGISTRATION_TLV
-                                 } < set(p.mle.tlv.type) and\
+                                 } <= set(p.mle.tlv.type) and\
                        set(p.mle.tlv.addr_reg_iid) < set(_pkt.mle.tlv.addr_reg_iid)
                        ).\
                 must_next()

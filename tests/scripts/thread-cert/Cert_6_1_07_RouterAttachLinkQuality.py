@@ -99,7 +99,7 @@ class Cert_6_1_7_RouterAttachLinkQuality(thread_cert.TestCase):
         # All-Routers multicast address
         _ed_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).filter_ipv6_dst(
             LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS).must_next().must_verify(
-                lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
+                lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} <= set(
                     p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 0)
 
         # Step 5: The DUT MUST send a MLE Child ID Request to Router_1

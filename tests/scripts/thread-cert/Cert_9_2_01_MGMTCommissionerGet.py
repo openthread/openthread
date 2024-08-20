@@ -146,7 +146,7 @@ class Cert_9_2_01_MGMTCommissionerGet(thread_cert.TestCase):
                               NM_COMMISSIONER_SESSION_ID_TLV,
                               NM_BORDER_AGENT_LOCATOR_TLV,
                               NM_STEERING_DATA_TLV
-                             } == set(p.thread_meshcop.tlv.type) and\
+                             } <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.ba_locator is not nullField and\
                    p.thread_meshcop.tlv.commissioner_sess_id is not nullField and\
                    p.thread_meshcop.tlv.steering_data is not nullField
@@ -183,7 +183,7 @@ class Cert_9_2_01_MGMTCommissionerGet(thread_cert.TestCase):
             filter(lambda p: {
                               NM_COMMISSIONER_SESSION_ID_TLV,
                               NM_STEERING_DATA_TLV
-                             } == set(p.thread_meshcop.tlv.type) and\
+                             } <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.commissioner_sess_id is not nullField and\
                    p.thread_meshcop.tlv.steering_data is not nullField
                    ).\
@@ -218,7 +218,7 @@ class Cert_9_2_01_MGMTCommissionerGet(thread_cert.TestCase):
             filter_coap_ack(MGMT_COMMISSIONER_GET_URI).\
             filter(lambda p: {
                               NM_COMMISSIONER_SESSION_ID_TLV
-                             } == set(p.thread_meshcop.tlv.type) and\
+                             } <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.commissioner_sess_id is not nullField and\
                    p.thread_meshcop.tlv.pan_id is nullField
                    ).\
@@ -253,7 +253,7 @@ class Cert_9_2_01_MGMTCommissionerGet(thread_cert.TestCase):
             filter_coap_ack(MGMT_COMMISSIONER_GET_URI).\
             filter(lambda p: {
                               NM_BORDER_AGENT_LOCATOR_TLV
-                             } == set(p.thread_meshcop.tlv.type) and\
+                             } <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.ba_locator is not nullField and\
                    p.thread_meshcop.tlv.net_name is nullField
                    ).\

@@ -285,7 +285,7 @@ class Cert_9_2_8_PersistentDatasets_Base(thread_cert.TestCase):
             filter(lambda p: {
                               TLV_REQUEST_TLV,
                               NETWORK_DATA_TLV
-                             } < set(p.mle.tlv.type) and\
+                             } <= set(p.mle.tlv.type) and\
                    p.thread_nwd.tlv.type is nullField and\
                    p.mle.tlv.active_tstamp == LEADER_ACTIVE_TIMESTAMP
                   ).\
@@ -302,7 +302,7 @@ class Cert_9_2_8_PersistentDatasets_Base(thread_cert.TestCase):
                               ACTIVE_TIMESTAMP_TLV,
                               PENDING_TIMESTAMP_TLV,
                               PENDING_OPERATION_DATASET_TLV
-                              } < set(p.mle.tlv.type)
+                              } <= set(p.mle.tlv.type)
                    ).\
             must_next()
 

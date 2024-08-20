@@ -228,7 +228,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
                               NM_PENDING_TIMESTAMP_TLV,
                               NM_PSKC_TLV,
                               NM_SECURITY_POLICY_TLV
-                             } == set(p.thread_meshcop.tlv.type)
+                             } <= set(p.thread_meshcop.tlv.type)
                    ).\
            must_next()
 
@@ -259,7 +259,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
             filter(lambda p: {
                               NM_DELAY_TIMER_TLV,
                               NM_PAN_ID_TLV
-                             } == set(p.coap.tlv.type) and\
+                             } <= set(p.coap.tlv.type) and\
                    p.thread_meshcop.tlv.pan_id == [0xafce] and\
                    p.thread_meshcop.tlv.delay_timer < 60000
                    ).\

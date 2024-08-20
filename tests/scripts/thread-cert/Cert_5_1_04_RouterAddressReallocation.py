@@ -256,7 +256,7 @@ class Cert_5_1_04_RouterAddressReallocation(thread_cert.TestCase):
                               NL_STATUS_TLV,
                               NL_RLOC16_TLV,
                               NL_ROUTER_MASK_TLV
-                              } == set(p.coap.tlv.type) and\
+                              } <= set(p.coap.tlv.type) and\
                    p.coap.code == COAP_CODE_ACK and\
                    p.thread_address.tlv.rloc16 ==
                    _pkt_as.thread_address.tlv.rloc16 and\

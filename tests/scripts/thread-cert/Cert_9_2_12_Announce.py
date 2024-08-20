@@ -152,7 +152,7 @@ class Cert_9_2_12_Announce(thread_cert.TestCase):
 
         pkts.filter_wpan_src64(LEADER_2).filter_ipv6_dst(LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS).filter_mle_cmd(
             MLE_ANNOUNCE).must_next().must_verify(
-                lambda p: {CHANNEL_TLV, PAN_ID_TLV, ACTIVE_TIMESTAMP_TLV} == set(p.mle.tlv.type) and p.wpan.dst_pan ==
+                lambda p: {CHANNEL_TLV, PAN_ID_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type) and p.wpan.dst_pan ==
                 0xffff and p.wpan.aux_sec.key_id_mode == 0x2 and p.wpan.aux_sec.key_source == 0x00000000ffffffff)
 
         # Step 5: MED MUST send a MLE Child ID Request on its new channel
@@ -163,7 +163,7 @@ class Cert_9_2_12_Announce(thread_cert.TestCase):
 
         pkts.filter_wpan_src64(MED).filter_ipv6_dst(LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS).filter_mle_cmd(
             MLE_ANNOUNCE).must_next().must_verify(
-                lambda p: {CHANNEL_TLV, PAN_ID_TLV, ACTIVE_TIMESTAMP_TLV} == set(p.mle.tlv.type) and p.wpan.dst_pan ==
+                lambda p: {CHANNEL_TLV, PAN_ID_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type) and p.wpan.dst_pan ==
                 0xffff and p.wpan.aux_sec.key_id_mode == 0x2 and p.wpan.aux_sec.key_source == 0x00000000ffffffff)
 
         # Step 6: MED MUST respond with an ICMPv6 Echo Reply

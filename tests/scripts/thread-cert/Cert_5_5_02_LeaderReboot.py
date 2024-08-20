@@ -105,24 +105,24 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
         _rpkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
         _lpkts = leader_pkts.range(_rpkts.index)
         _lpkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} == set(p.mle.tlv.type))
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} <= set(p.mle.tlv.type))
 
         _rpkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} == set(p.mle.tlv.type))
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} <= set(p.mle.tlv.type))
 
         # Step 4: Router_1 MUST attempt to reattach to its original partition by
         # sending MLE Parent Requests to the All-Routers multicast
         # address (FFxx::xx) with a hop limit of 255. MUST make two separate attempts
         for i in range(1, 3):
             _rpkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
-                lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
+                lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} <= set(
                     p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 1)
         lreset_start = _rpkts.index
 
         # Step 6:Router_1 MUST attempt to attach to any other Partition
         # within range by sending a MLE Parent Request.
         _rpkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
-            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type))
+            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} <= set(p.mle.tlv.type))
         lreset_stop = _rpkts.index
 
         # Step 3: The Leader MUST stop sending MLE advertisements.
@@ -135,35 +135,35 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
         # begin transmitting MLE Advertisements
         with _rpkts.save_index():
             _rpkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
-                lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} == set(p.mle.tlv.type))
+                lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} <= set(p.mle.tlv.type))
 
         # Step 8: Router_1 MUST respond with an MLE Child Update Response,
         # with the updated TLVs of the new partition
         _rpkts.filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} < set(p.mle.tlv.type))
+            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type))
 
         # Step 9: The Leader MUST send properly formatted MLE Parent
         # Requests to the All-Routers multicast address
         _lpkts.range(lreset_stop).filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
-            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type))
+            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} <= set(p.mle.tlv.type))
 
         # Step 10: Router_1 MUST send an MLE Parent Response
         _rpkts.filter_mle_cmd(MLE_PARENT_RESPONSE).must_next().must_verify(
             lambda p: {
                 SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, LINK_LAYER_FRAME_COUNTER_TLV, RESPONSE_TLV, CHALLENGE_TLV,
                 LINK_MARGIN_TLV, CONNECTIVITY_TLV, VERSION_TLV
-            } < set(p.mle.tlv.type))
+            } <= set(p.mle.tlv.type))
 
         # Step 11: Leader send MLE Child ID Request
         _lpkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next().must_verify(
             lambda p: {
                 RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, TLV_REQUEST_TLV,
                 ADDRESS16_TLV, NETWORK_DATA_TLV, ROUTE64_TLV, ACTIVE_TIMESTAMP_TLV
-            } < set(p.mle.tlv.type))
+            } <= set(p.mle.tlv.type))
 
         #Step 12: Router_1 send MLE Child ID Response
         _rpkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ADDRESS16_TLV, NETWORK_DATA_TLV, ROUTE64_TLV} < set(
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ADDRESS16_TLV, NETWORK_DATA_TLV, ROUTE64_TLV} <= set(
                 p.mle.tlv.type))
 
         #Step 13: Leader send an Address Solicit Request

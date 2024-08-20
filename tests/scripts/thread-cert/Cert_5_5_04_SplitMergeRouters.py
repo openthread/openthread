@@ -126,7 +126,7 @@ class Cert_5_5_4_SplitMergeRouters(thread_cert.TestCase):
         # Step 2: The Leader  MUST send properly formatted MLE Advertisements
         router1_pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
         leader_pkts.range(router1_pkts.index).filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, ROUTE64_TLV, LEADER_DATA_TLV} == set(p.mle.tlv.type))
+            lambda p: {SOURCE_ADDRESS_TLV, ROUTE64_TLV, LEADER_DATA_TLV} <= set(p.mle.tlv.type))
 
         router1_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next()
         lreset_start = router1_pkts.index

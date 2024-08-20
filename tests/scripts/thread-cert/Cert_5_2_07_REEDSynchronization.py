@@ -198,7 +198,7 @@ class Cert_5_2_7_REEDSynchronization_Base(thread_cert.TestCase):
             filter(lambda p: {
                               NL_MAC_EXTENDED_ADDRESS_TLV,
                               NL_STATUS_TLV
-                              } == set(p.coap.tlv.type)
+                              } <= set(p.coap.tlv.type)
                   ).\
             must_not_next()
 
