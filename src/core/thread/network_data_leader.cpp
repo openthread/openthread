@@ -132,6 +132,24 @@ Error Leader::GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const
     return error;
 }
 
+bool Leader::IsNat64(const Ip6::Address &aAddress) const
+{
+    bool                isNat64  = false;
+    Iterator            iterator = kIteratorInit;
+    ExternalRouteConfig config;
+
+    while (GetNextExternalRoute(iterator, config) == kErrorNone)
+    {
+        if (config.mNat64 && config.GetPrefix().IsValidNat64() && aAddress.MatchesPrefix(config.GetPrefix()))
+        {
+            isNat64 = true;
+            break;
+        }
+    }
+
+    return isNat64;
+}
+
 const PrefixTlv *Leader::FindNextMatchingPrefixTlv(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const
 {
     // This method iterates over Prefix TLVs which match a given IPv6

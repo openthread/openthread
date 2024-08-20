@@ -817,6 +817,62 @@ bool RoutingManager::NetworkDataContainsUlaRoute(void) const
     return contains;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABILITY_CHECK_ICMP6_ERROR_ENABLE
+
+void RoutingManager::CheckReachabilityToSendIcmpError(const Message &aMessage, const Ip6::Header &aIp6Header)
+{
+    bool                            matchesUlaOmrLowPrf = false;
+    NetworkData::Iterator           iterator            = NetworkData::kIteratorInit;
+    NetworkData::OnMeshPrefixConfig prefixConfig;
+    Ip6::MessageInfo                messageInfo;
+
+    VerifyOrExit(IsRunning() && IsInitialPolicyEvaluationDone());
+
+    VerifyOrExit(!aIp6Header.GetDestination().IsMulticast());
+
+    // Validate that source matches a ULA OMR prefix with low preference
+    // (indicating it is not infrastructure-derived).
+
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
+    {
+        if (IsValidOmrPrefix(prefixConfig) && prefixConfig.GetPrefix().IsUniqueLocal() &&
+            aIp6Header.GetSource().MatchesPrefix(prefixConfig.GetPrefix()))
+        {
+            if (prefixConfig.GetPreference() >= NetworkData::kRoutePreferenceMedium)
+            {
+                matchesUlaOmrLowPrf = false;
+                break;
+            }
+
+            matchesUlaOmrLowPrf = true;
+
+            // Keep checking other prefixes, as the same prefix might
+            // be added with a higher preference by another BR.
+        }
+    }
+
+    VerifyOrExit(matchesUlaOmrLowPrf);
+
+    VerifyOrExit(!mRxRaTracker.IsAddressOnLink(aIp6Header.GetDestination()));
+    VerifyOrExit(!mRxRaTracker.IsAddressReachableThroughExplicitRoute(aIp6Header.GetDestination()));
+    VerifyOrExit(!Get<NetworkData::Leader>().IsNat64(aIp6Header.GetDestination()));
+
+    LogInfo("Send ICMP unreachable for fwd msg with local ULA src and non-local dst");
+    LogInfo("   src: %s", aIp6Header.GetSource().ToString().AsCString());
+    LogInfo("   dst: %s", aIp6Header.GetDestination().ToString().AsCString());
+
+    messageInfo.Clear();
+    messageInfo.SetPeerAddr(aIp6Header.GetSource());
+
+    IgnoreError(Get<Ip6::Icmp>().SendError(Ip6::Icmp::Header::kTypeDstUnreach,
+                                           Ip6::Icmp::Header::kCodeDstUnreachProhibited, messageInfo, aMessage));
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABILITY_CHECK_ICMP6_ERROR_ENABLE
+
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix &aPrefix,
@@ -1802,6 +1858,48 @@ void RoutingManager::RxRaTracker::SetHeaderFlagsOn(RouterAdvert::Header &aHeader
     {
         aHeader.SetOtherConfigFlag();
     }
+}
+
+bool RoutingManager::RxRaTracker::IsAddressOnLink(const Ip6::Address &aAddress) const
+{
+    bool isOnLink = false;
+
+    for (const Router &router : mRouters)
+    {
+        for (const OnLinkPrefix &onLinkPrefix : router.mOnLinkPrefixes)
+        {
+            isOnLink = aAddress.MatchesPrefix(onLinkPrefix.GetPrefix());
+            VerifyOrExit(!isOnLink);
+        }
+    }
+
+exit:
+    return isOnLink;
+}
+
+bool RoutingManager::RxRaTracker::IsAddressReachableThroughExplicitRoute(const Ip6::Address &aAddress) const
+{
+    // Checks whether the `aAddress` matches any discovered route
+    // prefix excluding `::/0`.
+
+    bool isReachable = false;
+
+    for (const Router &router : mRouters)
+    {
+        for (const RoutePrefix &routePrefix : router.mRoutePrefixes)
+        {
+            if (routePrefix.GetPrefix().GetLength() == 0)
+            {
+                continue;
+            }
+
+            isReachable = aAddress.MatchesPrefix(routePrefix.GetPrefix());
+            VerifyOrExit(!isReachable);
+        }
+    }
+
+exit:
+    return isReachable;
 }
 
 void RoutingManager::RxRaTracker::InitIterator(PrefixTableIterator &aIterator) const
