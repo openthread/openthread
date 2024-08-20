@@ -3086,7 +3086,9 @@ Error RoutingManager::RioAdvertiser::InvalidatPrevRios(RouterAdvert::TxMessage &
 
     for (const RioPrefix &prefix : mPrefixes)
     {
-        SuccessOrExit(error = AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0, aRaMessage));
+        RoutePreference preference = prefix.mIsDeprecating ? NetworkData::kRoutePreferenceLow : mPreference;
+
+        SuccessOrExit(error = AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0, preference, aRaMessage));
     }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
@@ -3188,7 +3190,8 @@ Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMess
         {
             if (nextTime.GetNow() >= prefix.mExpirationTime)
             {
-                SuccessOrExit(error = AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0, aRaMessage));
+                SuccessOrExit(error = AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0,
+                                                NetworkData::kRoutePreferenceLow, aRaMessage));
                 continue;
             }
         }
@@ -3201,7 +3204,8 @@ Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMess
         if (mPrefixes.PushBack(prefix) != kErrorNone)
         {
             LogWarn("Too many deprecating on-mesh prefixes, removing %s", prefix.mPrefix.ToString().AsCString());
-            SuccessOrExit(error = AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0, aRaMessage));
+            SuccessOrExit(error = AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0, NetworkData::kRoutePreferenceLow,
+                                            aRaMessage));
         }
 
         nextTime.UpdateIfEarlier(prefix.mExpirationTime);
@@ -3211,14 +3215,16 @@ Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMess
 
     for (const RioPrefix &prefix : mPrefixes)
     {
-        uint32_t lifetime = kDefaultOmrPrefixLifetime;
+        uint32_t        lifetime   = kDefaultOmrPrefixLifetime;
+        RoutePreference preference = mPreference;
 
         if (prefix.mIsDeprecating)
         {
-            lifetime = TimeMilli::MsecToSec(prefix.mExpirationTime - nextTime.GetNow());
+            lifetime   = TimeMilli::MsecToSec(prefix.mExpirationTime - nextTime.GetNow());
+            preference = NetworkData::kRoutePreferenceLow;
         }
 
-        SuccessOrExit(error = AppendRio(prefix.mPrefix, lifetime, aRaMessage));
+        SuccessOrExit(error = AppendRio(prefix.mPrefix, lifetime, preference, aRaMessage));
     }
 
     mTimer.FireAtIfEarlier(nextTime);
@@ -3229,12 +3235,13 @@ exit:
 
 Error RoutingManager::RioAdvertiser::AppendRio(const Ip6::Prefix       &aPrefix,
                                                uint32_t                 aRouteLifetime,
+                                               RoutePreference          aPreference,
                                                RouterAdvert::TxMessage &aRaMessage)
 {
     Error error;
 
-    SuccessOrExit(error = aRaMessage.AppendRouteInfoOption(aPrefix, aRouteLifetime, mPreference));
-    LogRouteInfoOption(aPrefix, aRouteLifetime, mPreference);
+    SuccessOrExit(error = aRaMessage.AppendRouteInfoOption(aPrefix, aRouteLifetime, aPreference));
+    LogRouteInfoOption(aPrefix, aRouteLifetime, aPreference);
 
 exit:
     return error;
