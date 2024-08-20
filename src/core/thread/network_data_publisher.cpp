@@ -658,14 +658,10 @@ void Publisher::DnsSrpServiceEntry::Process(void)
         break;
 
     case kTypeUnicastMeshLocalEid:
-    {
-        Service::DnsSrpAnycast::Info anycastInfo;
-
         CountUnicastEntries(Service::DnsSrpUnicast::kFromServerData, numEntries, numPreferredEntries);
         desiredNumEntries = kDesiredNumUnicast;
 
-        if (HasAnyServiceDataUnicastEntry() ||
-            (Get<Service::Manager>().FindPreferredDnsSrpAnycastInfo(anycastInfo) == kErrorNone))
+        if (HasAnyServiceDataUnicastEntry() || HasAnyAnycastEntry())
         {
             // If there is any service data unicast entry or anycast
             // entry, we set the desired number of server data
@@ -676,7 +672,6 @@ void Publisher::DnsSrpServiceEntry::Process(void)
         }
 
         break;
-    }
 
     case kTypeUnicast:
         desiredNumEntries = kDesiredNumUnicast;
@@ -697,28 +692,29 @@ void Publisher::DnsSrpServiceEntry::CountAnycastEntries(uint8_t &aNumEntries, ui
     // "sequence number" value). We prefer the entries associated with
     // smaller RLCO16.
 
-    Service::DnsSrpAnycast::ServiceData serviceData(mInfo.GetSequenceNumber());
-    const ServiceTlv                   *serviceTlv = nullptr;
-    ServiceData                         data;
+    Service::Manager::Iterator   iterator;
+    Service::DnsSrpAnycast::Info anycastInfo;
 
-    data.Init(&serviceData, serviceData.GetLength());
-
-    while ((serviceTlv = Get<Leader>().FindNextThreadService(serviceTlv, data, NetworkData::kServicePrefixMatch)) !=
-           nullptr)
+    while (Get<Service::Manager>().GetNextDnsSrpAnycastInfo(iterator, anycastInfo) == kErrorNone)
     {
-        TlvIterator      subTlvIterator(*serviceTlv);
-        const ServerTlv *serverSubTlv;
-
-        while ((serverSubTlv = subTlvIterator.Iterate<ServerTlv>()) != nullptr)
+        if (anycastInfo.mSequenceNumber == mInfo.GetSequenceNumber())
         {
             aNumEntries++;
 
-            if (IsPreferred(serverSubTlv->GetServer16()))
+            if (IsPreferred(anycastInfo.mRloc16))
             {
                 aNumPreferredEntries++;
             }
         }
     }
+}
+
+bool Publisher::DnsSrpServiceEntry::HasAnyAnycastEntry(void) const
+{
+    Service::Manager::Iterator   iterator;
+    Service::DnsSrpAnycast::Info anycastInfo;
+
+    return (Get<Service::Manager>().GetNextDnsSrpAnycastInfo(iterator, anycastInfo) == kErrorNone);
 }
 
 void Publisher::DnsSrpServiceEntry::CountUnicastEntries(Service::DnsSrpUnicast::Type aType,

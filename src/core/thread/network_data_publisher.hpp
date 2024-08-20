@@ -438,6 +438,7 @@ private:
         void Notify(Event aEvent) const;
         void Process(void);
         void CountAnycastEntries(uint8_t &aNumEntries, uint8_t &aNumPreferredEntries) const;
+        bool HasAnyAnycastEntry(void) const;
         void CountUnicastEntries(Service::DnsSrpUnicast::Type aType,
                                  uint8_t                     &aNumEntries,
                                  uint8_t                     &aNumPreferredEntries) const;
