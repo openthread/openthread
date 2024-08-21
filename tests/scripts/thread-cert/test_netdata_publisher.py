@@ -221,7 +221,7 @@ class NetDataPublisher(thread_cert.TestCase):
             self.assertEqual(end_dev.get_state(), 'child')
 
         #---------------------------------------------------------------------------------
-        # DNS/SRP anycast entries
+        # DNS/SRP anycast entries - equal version number
 
         # Publish DNS/SRP anycast on leader and all routers (6 nodes).
 
@@ -263,7 +263,51 @@ class NetDataPublisher(thread_cert.TestCase):
             self.verify_anycast_services(services)
 
         #---------------------------------------------------------------------------------
-        # DNS/SRP service data unicast entries
+        # DNS/SRP anycast entries - different version numbers
+
+        # Publish DNS/SRP anycast on leader and all routers (6 nodes).
+
+        version = 0
+        leader.netdata_publish_dnssrp_anycast(ANYCAST_SEQ_NUM, version)
+        for node in routers:
+            version += 1
+            node.netdata_publish_dnssrp_anycast(ANYCAST_SEQ_NUM, version)
+        self.simulator.go(WAIT_TIME)
+
+        # Check all entries are present in the network data
+
+        services = leader.get_services()
+        self.assertEqual(len(services), min(1 + len(routers), DESIRED_NUM_DNSSRP_ANYCAST))
+        self.verify_anycast_services(services)
+
+        # Publish same entry on all end-devices (5 nodes).
+
+        for node in end_devs:
+            node.netdata_publish_dnssrp_anycast(ANYCAST_SEQ_NUM, version)
+            print(node.name)
+        self.simulator.go(WAIT_TIME)
+
+        # Check number of entries in the network data is limited to
+        # the desired number (8 entries).
+
+        services = leader.get_services()
+        self.assertEqual(len(leader.get_services()), min(len(nodes), DESIRED_NUM_DNSSRP_ANYCAST))
+        self.verify_anycast_services(services)
+
+        # Unpublish the entry from nodes one by one starting from leader
+        # and check that number of entries is correct in each step.
+
+        num = len(nodes)
+        for node in nodes:
+            node.netdata_unpublish_dnssrp()
+            self.simulator.go(WAIT_TIME)
+            num -= 1
+            services = leader.get_services()
+            self.assertEqual(len(services), min(num, DESIRED_NUM_DNSSRP_ANYCAST))
+            self.verify_anycast_services(services)
+
+        #---------------------------------------------------------------------------------
+        # DNS/SRP service data unicast entries - equal version number
 
         num = 0
         for node in routers:
@@ -295,7 +339,33 @@ class NetDataPublisher(thread_cert.TestCase):
             self.assertEqual(node.srp_server_get_state(), 'disabled')
 
         #---------------------------------------------------------------------------------
-        # DNS/SRP server data unicast entries
+        # DNS/SRP service data unicast entries - different version numbers
+
+        num = 0
+        for node in routers:
+            # Use `num` as version.
+            node.netdata_publish_dnssrp_unicast(DNSSRP_ADDRESS, DNSSRP_PORT, num)
+            self.simulator.go(WAIT_TIME)
+            num += 1
+            services = leader.get_services()
+            self.assertEqual(len(services), min(num, DESIRED_NUM_DNSSRP_UNICAST))
+            self.verify_unicast_services(services)
+            # The most recent service should win as it uses a higher version
+            # number. Validate that the 'services' list contains the service
+            # from this node by checking the service RLOC16.
+            node_rloc16 = node.get_addr16()
+            self.assertTrue(any(int(service[4], 16) == node_rloc16 for service in services))
+
+        for node in reversed(routers):
+            node.netdata_unpublish_dnssrp()
+            self.simulator.go(WAIT_TIME)
+            num -= 1
+            services = leader.get_services()
+            self.assertEqual(len(services), min(num, DESIRED_NUM_DNSSRP_UNICAST))
+            self.verify_unicast_services(services)
+
+        #---------------------------------------------------------------------------------
+        # DNS/SRP server data unicast entries - equal version number
 
         num = 0
         for node in routers:
@@ -324,6 +394,55 @@ class NetDataPublisher(thread_cert.TestCase):
         for node in routers:
             node.srp_server_set_enabled(False)
             self.assertEqual(node.srp_server_get_state(), 'disabled')
+
+        #---------------------------------------------------------------------------------
+        # DNS/SRP server data unicast entries - different version numbers
+
+        num = 0
+        for node in routers:
+            node.netdata_publish_dnssrp_unicast_mleid(DNSSRP_PORT, num)
+            self.simulator.go(WAIT_TIME)
+            num += 1
+            services = leader.get_services()
+            self.assertEqual(len(services), min(num, DESIRED_NUM_DNSSRP_UNICAST))
+            self.verify_unicast_services(services)
+            # The most recent service should win as it uses a higher version
+            # number. Validate that the 'services' list contains the service
+            # from this node by checking the service RLOC16.
+            node_rloc16 = node.get_addr16()
+            self.assertTrue(any(int(service[4], 16) == node_rloc16 for service in services))
+
+        for node in reversed(routers):
+            node.netdata_unpublish_dnssrp()
+            self.simulator.go(WAIT_TIME)
+            num -= 1
+            services = leader.get_services()
+            self.assertEqual(len(services), min(num, DESIRED_NUM_DNSSRP_UNICAST))
+            self.verify_unicast_services(services)
+
+        # Repeat the same test steps, but start with larger version
+        # numbers first.
+
+        num = 0
+        for node in routers:
+            node.netdata_publish_dnssrp_unicast_mleid(DNSSRP_PORT, 20 - num)
+            self.simulator.go(WAIT_TIME)
+            num += 1
+            services = leader.get_services()
+            self.assertEqual(len(services), min(num, DESIRED_NUM_DNSSRP_UNICAST))
+            self.verify_unicast_services(services)
+            # The service from first router should win as it uses the highest
+            # version number.
+            first_router_rloc16 = routers[0].get_addr16()
+            self.assertTrue(any(int(service[4], 16) == first_router_rloc16 for service in services))
+
+        for node in routers:
+            node.netdata_unpublish_dnssrp()
+            self.simulator.go(WAIT_TIME)
+            num -= 1
+            services = leader.get_services()
+            self.assertEqual(len(services), min(num, DESIRED_NUM_DNSSRP_UNICAST))
+            self.verify_unicast_services(services)
 
         #---------------------------------------------------------------------------------
         # DNS/SRP server data unicast vs anycast

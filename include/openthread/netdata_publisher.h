@@ -104,9 +104,10 @@ typedef void (*otNetDataPrefixPublisherCallback)(otNetDataPublisherEvent aEvent,
  *
  * @param[in] aInstance        A pointer to an OpenThread instance.
  * @param[in] aSequenceNUmber  The sequence number of DNS/SRP Anycast Service.
+ * @param[in] aVersion         The version number to publish.
  *
  */
-void otNetDataPublishDnsSrpServiceAnycast(otInstance *aInstance, uint8_t aSequenceNUmber);
+void otNetDataPublishDnsSrpServiceAnycast(otInstance *aInstance, uint8_t aSequenceNUmber, uint8_t aVersion);
 
 /**
  * Requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
@@ -122,9 +123,13 @@ void otNetDataPublishDnsSrpServiceAnycast(otInstance *aInstance, uint8_t aSequen
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aAddress   The DNS/SRP server address to publish (MUST NOT be NULL).
  * @param[in] aPort      The SRP server port number to publish.
+ * @param[in] aVersion   The version number to publish.
  *
  */
-void otNetDataPublishDnsSrpServiceUnicast(otInstance *aInstance, const otIp6Address *aAddress, uint16_t aPort);
+void otNetDataPublishDnsSrpServiceUnicast(otInstance         *aInstance,
+                                          const otIp6Address *aAddress,
+                                          uint16_t            aPort,
+                                          uint8_t             aVersion);
 
 /**
  * Requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
@@ -140,9 +145,10 @@ void otNetDataPublishDnsSrpServiceUnicast(otInstance *aInstance, const otIp6Addr
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aPort      The SRP server port number to publish.
+ * @param[in] aVersion   The version number to publish.
  *
  */
-void otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(otInstance *aInstance, uint16_t aPort);
+void otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(otInstance *aInstance, uint16_t aPort, uint8_t aVersion);
 
 /**
  * Indicates whether or not currently the "DNS/SRP Service" entry is added to the Thread Network Data.

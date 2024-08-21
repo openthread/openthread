@@ -2413,10 +2413,11 @@ Error Client::SelectUnicastEntry(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aIn
             ExitNow();
         }
 #endif
+        // Prefer the server with higher version number, if equal
+        // then pick the one with numerically smaller IPV6 address.
 
-        // Prefer the numerically lowest server address
-
-        if ((error == kErrorNotFound) || (unicastInfo.mSockAddr.GetAddress() < aInfo.mSockAddr.GetAddress()))
+        if ((error == kErrorNotFound) || (unicastInfo.mVersion > aInfo.mVersion) ||
+            (unicastInfo.mSockAddr.GetAddress() < aInfo.mSockAddr.GetAddress()))
         {
             aInfo = unicastInfo;
             error = kErrorNone;

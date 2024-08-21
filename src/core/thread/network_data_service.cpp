@@ -166,16 +166,17 @@ Error Manager::GetNextDnsSrpAnycastInfo(Iterator &aIterator, DnsSrpAnycastInfo &
 
         if (IterateToNextServer(aIterator) == kErrorNone)
         {
-            aIterator.mServiceTlv->GetServiceData(serviceData);
+            uint8_t dataLength = aIterator.mServiceTlv->GetServiceDataLength();
 
-            if (serviceData.GetLength() >= sizeof(DnsSrpAnycastServiceData))
+            if (dataLength >= DnsSrpAnycastServiceData::kMinLength)
             {
-                const DnsSrpAnycastServiceData *dnsServiceData =
-                    reinterpret_cast<const DnsSrpAnycastServiceData *>(serviceData.GetBytes());
+                const DnsSrpAnycastServiceData *anycastData =
+                    reinterpret_cast<const DnsSrpAnycastServiceData *>(aIterator.mServiceTlv->GetServiceData());
 
                 Get<Mle::Mle>().GetServiceAloc(aIterator.mServiceTlv->GetServiceId(), aInfo.mAnycastAddress);
-                aInfo.mSequenceNumber = dnsServiceData->GetSequenceNumber();
+                aInfo.mSequenceNumber = anycastData->GetSequenceNumber();
                 aInfo.mRloc16         = aIterator.mServerSubTlv->GetServer16();
+                aInfo.mVersion = (dataLength >= sizeof(DnsSrpAnycastServiceData)) ? anycastData->GetVersion() : 0;
                 ExitNow();
             }
         }
@@ -209,9 +210,15 @@ Error Manager::FindPreferredDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo) const
     // `aInfo` will track the largest using serial number arithmetic
     // comparison, while `maxNumericalSeqNumInfo` tracks the largest
     // using normal numerical comparison.
+    //
+    // If we see multiple `AnycastInfo` entries with the same sequence
+    // number by different version numbers, prefer the one with higher
+    // version number.
 
     while (GetNextDnsSrpAnycastInfo(iterator, info) == kErrorNone)
     {
+        int compare;
+
         if (error == kErrorNotFound)
         {
             aInfo                  = info;
@@ -220,12 +227,18 @@ Error Manager::FindPreferredDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo) const
             continue;
         }
 
-        if (SerialNumber::IsGreater(info.mSequenceNumber, aInfo.mSequenceNumber))
+        compare = SerialNumber::IsGreater(info.mSequenceNumber, aInfo.mSequenceNumber)
+                      ? 1
+                      : ((info.mSequenceNumber == aInfo.mSequenceNumber) ? 0 : -1);
+
+        if ((compare > 0) || ((compare == 0) && (info.mVersion > aInfo.mVersion)))
         {
             aInfo = info;
         }
 
-        if (info.mSequenceNumber > maxNumericalSeqNumInfo.mSequenceNumber)
+        compare = ThreeWayCompare(info.mSequenceNumber, maxNumericalSeqNumInfo.mSequenceNumber);
+
+        if ((compare > 0) || ((compare == 0) && (info.mVersion > maxNumericalSeqNumInfo.mVersion)))
         {
             maxNumericalSeqNumInfo = info;
         }
@@ -264,6 +277,21 @@ exit:
     return error;
 }
 
+Error Manager::DnsSrpUnicast::AddrData::ParseFrom(const uint8_t *aData, uint8_t aLength, DnsSrpUnicastInfo &aInfo)
+{
+    Error           error    = kErrorNone;
+    const AddrData *addrData = reinterpret_cast<const AddrData *>(aData);
+
+    VerifyOrExit(aLength >= kMinLength, error = kErrorParse);
+
+    aInfo.mSockAddr.SetAddress(addrData->GetAddress());
+    aInfo.mSockAddr.SetPort(addrData->GetPort());
+    aInfo.mVersion = (aLength >= sizeof(AddrData)) ? addrData->GetVersion() : 0;
+
+exit:
+    return error;
+}
+
 Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo) const
 {
     Error   error         = kErrorNone;
@@ -277,26 +305,21 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicastType a
 
         while (IterateToNextServer(aIterator) == kErrorNone)
         {
-            ServerData data;
+            aInfo.mRloc16 = aIterator.mServerSubTlv->GetServer16();
 
             if (aType == kAddrInServiceData)
             {
-                const DnsSrpUnicast::ServiceData *dnsServiceData;
-
-                if (aIterator.mServiceTlv->GetServiceDataLength() < sizeof(DnsSrpUnicast::ServiceData))
+                if (DnsSrpUnicast::ServiceData::ParseFrom(*aIterator.mServiceTlv, aInfo) == kErrorNone)
                 {
-                    // Break from `while(IterateToNextServer())` loop
-                    // to skip over the Service TLV and all its
-                    // sub-TLVs and go to the next one.
-                    break;
+                    ExitNow();
                 }
 
-                aIterator.mServiceTlv->GetServiceData(serviceData);
-                dnsServiceData = reinterpret_cast<const DnsSrpUnicast::ServiceData *>(serviceData.GetBytes());
-                aInfo.mSockAddr.SetAddress(dnsServiceData->GetAddress());
-                aInfo.mSockAddr.SetPort(dnsServiceData->GetPort());
-                aInfo.mRloc16 = aIterator.mServerSubTlv->GetServer16();
-                ExitNow();
+                // If Service Data does not contain address info, we
+                // break from `while (IterateToNextServer())` loop
+                // to skip over the entire Service TLV and all its
+                // sub-TLVs and go to the next one.
+
+                break;
             }
 
             // `aType` is `kAddrInServerData`.
@@ -305,28 +328,21 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicastType a
             // (then we parse and return the info), or it can be
             // empty (then we skip over it).
 
-            aIterator.mServerSubTlv->GetServerData(data);
-
-            if (data.GetLength() >= sizeof(DnsSrpUnicast::ServerData))
+            if (DnsSrpUnicast::ServerData::ParseFrom(*aIterator.mServerSubTlv, aInfo) == kErrorNone)
             {
-                const DnsSrpUnicast::ServerData *serverData =
-                    reinterpret_cast<const DnsSrpUnicast::ServerData *>(data.GetBytes());
-
-                aInfo.mSockAddr.SetAddress(serverData->GetAddress());
-                aInfo.mSockAddr.SetPort(serverData->GetPort());
-                aInfo.mRloc16 = aIterator.mServerSubTlv->GetServer16();
                 ExitNow();
             }
 
-            if (data.GetLength() == sizeof(uint16_t))
+            if (aIterator.mServerSubTlv->GetServerDataLength() == sizeof(uint16_t))
             {
                 // Handle the case where the server TLV data only
                 // contains a port number and use the RLOC as the
                 // IPv6 address.
+
                 aInfo.mSockAddr.GetAddress().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
                                                                  aIterator.mServerSubTlv->GetServer16());
-                aInfo.mSockAddr.SetPort(BigEndian::ReadUint16(data.GetBytes()));
-                aInfo.mRloc16 = aIterator.mServerSubTlv->GetServer16();
+                aInfo.mSockAddr.SetPort(BigEndian::ReadUint16(aIterator.mServerSubTlv->GetServerData()));
+                aInfo.mVersion = 0;
                 ExitNow();
             }
         }
