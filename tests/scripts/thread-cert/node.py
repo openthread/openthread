@@ -2501,16 +2501,16 @@ class NodeImpl:
         self.send_command('netdata register')
         self._expect_done()
 
-    def netdata_publish_dnssrp_anycast(self, seqnum):
-        self.send_command(f'netdata publish dnssrp anycast {seqnum}')
+    def netdata_publish_dnssrp_anycast(self, seqnum, version=0):
+        self.send_command(f'netdata publish dnssrp anycast {seqnum} {version}')
         self._expect_done()
 
-    def netdata_publish_dnssrp_unicast(self, address, port):
-        self.send_command(f'netdata publish dnssrp unicast {address} {port}')
+    def netdata_publish_dnssrp_unicast(self, address, port, version=0):
+        self.send_command(f'netdata publish dnssrp unicast {address} {port} {version}')
         self._expect_done()
 
-    def netdata_publish_dnssrp_unicast_mleid(self, port):
-        self.send_command(f'netdata publish dnssrp unicast {port}')
+    def netdata_publish_dnssrp_unicast_mleid(self, port, version=0):
+        self.send_command(f'netdata publish dnssrp unicast {port} {version}')
         self._expect_done()
 
     def netdata_unpublish_dnssrp(self):
