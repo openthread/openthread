@@ -35,6 +35,7 @@
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/random.hpp"
+#include "common/string.hpp"
 #include "instance/instance.hpp"
 #include "net/ip6.hpp"
 #include "net/udp6.hpp"
@@ -1360,7 +1361,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
 
     for (const ResourceBlockWise &resource : mBlockWiseResources)
     {
-        if (strcmp(resource.GetUriPath(), uriPath) != 0)
+        if (!StringMatch(resource.GetUriPath(), uriPath))
         {
             continue;
         }
@@ -1427,7 +1428,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
 
     for (const Resource &resource : mResources)
     {
-        if (strcmp(resource.mUriPath, uriPath) == 0)
+        if (StringMatch(resource.mUriPath, uriPath))
         {
             resource.HandleRequest(aMessage, aMessageInfo);
             error = kErrorNone;

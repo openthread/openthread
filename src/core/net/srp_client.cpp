@@ -172,7 +172,7 @@ bool Client::Service::Matches(const Service &aOther) const
     // for use by `LinkedList::FindMatching()` to search within the
     // `mServices` list.
 
-    return (strcmp(GetName(), aOther.GetName()) == 0) && (strcmp(GetInstanceName(), aOther.GetInstanceName()) == 0);
+    return StringMatch(GetName(), aOther.GetName()) && StringMatch(GetInstanceName(), aOther.GetInstanceName());
 }
 
 //---------------------------------------------------------------------

@@ -317,7 +317,7 @@ Error ParseAsHexStringSegment(const char *&aString, uint16_t &aSize, uint8_t *aB
 
 uint16_t Arg::GetLength(void) const { return IsEmpty() ? 0 : static_cast<uint16_t>(strlen(mString)); }
 
-bool Arg::operator==(const char *aString) const { return !IsEmpty() && (strcmp(mString, aString) == 0); }
+bool Arg::operator==(const char *aString) const { return !IsEmpty() && StringMatch(mString, aString); }
 
 void Arg::CopyArgsToStringArray(Arg aArgs[], char *aStrings[])
 {
