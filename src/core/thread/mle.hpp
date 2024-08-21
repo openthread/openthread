@@ -1036,6 +1036,7 @@ private:
         Error AppendLinkMarginTlv(uint8_t aLinkMargin);
         Error AppendVersionTlv(void);
         Error AppendAddressRegistrationTlv(AddressRegistrationMode aMode = kAppendAllAddresses);
+        Error AppendSupervisionIntervalTlvIfSleepyChild(void);
         Error AppendSupervisionIntervalTlv(uint16_t aInterval);
         Error AppendXtalAccuracyTlv(void);
         Error AppendActiveTimestampTlv(void);
