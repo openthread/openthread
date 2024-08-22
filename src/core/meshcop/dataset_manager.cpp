@@ -885,7 +885,6 @@ PendingDatasetManager::PendingDatasetManager(Instance &aInstance)
 {
 }
 
-
 Error PendingDatasetManager::GetActiveTimestamp(Timestamp &aTimestamp)
 {
     Error   error = kErrorInvalidState;

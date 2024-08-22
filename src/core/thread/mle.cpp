@@ -3660,7 +3660,9 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
     isFromOrphan         = timestamp.IsOrphanAnnounce();
     timestampCompare     = MeshCoP::Timestamp::Compare(timestamp, Get<MeshCoP::ActiveDatasetManager>().GetTimestamp());
     channelAndPanIdMatch = (channel == Get<Mac::Mac>().GetPanChannel()) && (panId == Get<Mac::Mac>().GetPanId());
-    pendingDatasetValid  = (kErrorNone == Get<MeshCoP::PendingDatasetManager>().GetActiveTimestamp(pendingActiveTimestamp));
+
+    pendingDatasetValid  =
+        (kErrorNone == Get<MeshCoP::PendingDatasetManager>().GetActiveTimestamp(pendingActiveTimestamp));
     pendingTimestampCompare = MeshCoP::Timestamp::Compare(timestamp, pendingActiveTimestamp);
 
     if (isFromOrphan || (timestampCompare < 0))
