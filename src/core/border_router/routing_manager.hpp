@@ -1302,7 +1302,10 @@ private:
 
         void  SetPreferenceBasedOnRole(void);
         void  UpdatePreference(RoutePreference aPreference);
-        Error AppendRio(const Ip6::Prefix &aPrefix, uint32_t aRouteLifetime, RouterAdvert::TxMessage &aRaMessage);
+        Error AppendRio(const Ip6::Prefix       &aPrefix,
+                        uint32_t                 aRouteLifetime,
+                        RoutePreference          aPreference,
+                        RouterAdvert::TxMessage &aRaMessage);
 
         using RioTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleRioAdvertiserimer>;
 
