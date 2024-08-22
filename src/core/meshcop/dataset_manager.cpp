@@ -885,6 +885,28 @@ PendingDatasetManager::PendingDatasetManager(Instance &aInstance)
 {
 }
 
+
+Error PendingDatasetManager::GetActiveTimestamp(Timestamp &aTimestamp)
+{
+    Error   error = kErrorInvalidState;
+    Dataset dataset;
+
+    // If the delay timer is not running, then the pending dataset is not valid, avoid
+    // reading from nonvolatile memory if there's no point.
+    VerifyOrExit(mDelayTimer.IsRunning());
+
+    SuccessOrExit(Read(dataset));
+
+    if (dataset.Read<ActiveTimestampTlv>()->IsValid())
+    {
+        error = kErrorNone;
+        aTimestamp = dataset.Read<ActiveTimestampTlv>()->GetTimestamp();
+    }
+
+exit:
+    return error;
+}
+
 void PendingDatasetManager::StartDelayTimer(void)
 {
     Dataset dataset;
