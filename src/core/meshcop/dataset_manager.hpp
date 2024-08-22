@@ -447,7 +447,7 @@ public:
      *
      * @param[out] aTimestamp The active timestamp contained in the pending dataset. Only valid if kErrorNone is
      * returned.
-     * 
+     *
      * @retval kErrorNone         The active timestamp was successfully fetched.
      * @retval kErrorInvalidState The pending dataset is not currently valid.
      *
