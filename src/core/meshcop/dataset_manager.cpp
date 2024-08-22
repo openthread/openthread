@@ -897,11 +897,8 @@ Error PendingDatasetManager::GetActiveTimestamp(Timestamp &aTimestamp)
 
     SuccessOrExit(Read(dataset));
 
-    if (dataset.Read<ActiveTimestampTlv>()->IsValid())
-    {
-        error = kErrorNone;
-        aTimestamp = dataset.Read<ActiveTimestampTlv>()->GetTimestamp();
-    }
+    SuccessOrExit(dataset.Read<ActiveTimestampTlv>(aTimestamp));
+    error = kErrorNone;
 
 exit:
     return error;
