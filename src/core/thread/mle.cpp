@@ -3661,7 +3661,7 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
     timestampCompare     = MeshCoP::Timestamp::Compare(timestamp, Get<MeshCoP::ActiveDatasetManager>().GetTimestamp());
     channelAndPanIdMatch = (channel == Get<Mac::Mac>().GetPanChannel()) && (panId == Get<Mac::Mac>().GetPanId());
 
-    pendingDatasetValid  =
+    pendingDatasetValid =
         (kErrorNone == Get<MeshCoP::PendingDatasetManager>().GetActiveTimestamp(pendingActiveTimestamp));
     pendingTimestampCompare = MeshCoP::Timestamp::Compare(timestamp, pendingActiveTimestamp);
 
