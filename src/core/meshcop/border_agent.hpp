@@ -239,6 +239,14 @@ public:
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
     /**
+     * Gets the set of border agent counters.
+     *
+     * @returns The border agent counters.
+     *
+     */
+    const otBorderAgentCounters *GetCounters(void) { return &mCounters; }
+
+    /**
      * Returns the UDP Proxy port to which the commissioner is currently
      * bound.
      *
@@ -285,8 +293,8 @@ private:
     void                SendErrorMessage(const ForwardContext &aForwardContext, Error aError);
     void                SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, Error aError);
 
-    static void HandleConnected(bool aConnected, void *aContext);
-    void        HandleConnected(bool aConnected);
+    static void HandleConnected(SecureTransport::ConnectEvent aEvent, void *aContext);
+    void        HandleConnected(SecureTransport::ConnectEvent aEvent);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -333,6 +341,7 @@ private:
     EphemeralKeyTask               mEphemeralKeyTask;
     Callback<EphemeralKeyCallback> mEphemeralKeyCallback;
 #endif
+    otBorderAgentCounters mCounters;
 };
 
 DeclareTmfHandler(BorderAgent, kUriRelayRx);

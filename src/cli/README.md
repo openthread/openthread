@@ -453,6 +453,33 @@ Disables callback from Border Agent for ephemeral key state changes.
 Done
 ```
 
+### ba counters
+
+Get the border agent counter values.
+
+Note that it requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE` to output the ePSKc counters.
+
+```bash
+> ba counters
+epskcActivation: 2
+epskcApiDeactivation: 1
+epskcTimeoutDeactivation: 1
+epskcMaxAttemptDeactivation: 0
+epskcDisconnectDeactivation: 0
+epskcInvalidBaStateError: 1
+epskcInvalidArgsError: 1
+epskcStartSecureSessionError: 0
+epskcSecureSessionSuccess: 0
+epskcSecureSessionFailure: 0
+epskcCommissionerPetition: 0
+pskcSecureSessionSuccess: 0
+pskcSecureSessionFailure: 0
+pskcCommissionerPetition: 0
+mgmtActiveGet: 0
+mgmtPendingGet: 0
+Done
+```
+
 ### bufferinfo
 
 Show the current message buffer information.
