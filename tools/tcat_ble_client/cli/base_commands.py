@@ -26,6 +26,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 """
 
+from abc import abstractmethod
 from ble.ble_connection_constants import BBTC_SERVICE_UUID, BBTC_TX_CHAR_UUID, \
     BBTC_RX_CHAR_UUID
 from ble.ble_stream import BleStream
@@ -54,55 +55,112 @@ class HelpCommand(Command):
         return CommandResultNone()
 
 
-class HelloCommand(Command):
+class BleCommand(Command):
+
+    @abstractmethod
+    def get_log_string(self) -> str:
+        pass
+
+    @abstractmethod
+    def prepare_data(self, context):
+        pass
+
+    async def execute_default(self, args, context):
+        bless: BleStreamSecure = context['ble_sstream']
+
+        print(self.get_log_string())
+        data = self.prepare_data(context)
+        response = await bless.send_with_resp(data)
+        if not response:
+            return
+        tlv_response = TLV.from_bytes(response)
+        return CommandResultTLV(tlv_response)
+
+
+class HelloCommand(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Sending hello world...'
 
     def get_help_string(self) -> str:
         return 'Send round trip "Hello world!" message.'
 
-    async def execute_default(self, args, context):
-        bless: BleStreamSecure = context['ble_sstream']
-        print('Sending hello world...')
-        data = TLV(TcatTLVType.APPLICATION.value, bytes('Hello world!', 'ascii')).to_bytes()
-        response = await bless.send_with_resp(data)
-        if not response:
-            return
-        tlv_response = TLV.from_bytes(response)
-        return CommandResultTLV(tlv_response)
+    def prepare_data(self, context):
+        return TLV(TcatTLVType.APPLICATION.value, bytes('Hello world!', 'ascii')).to_bytes()
 
 
-class CommissionCommand(Command):
+class CommissionCommand(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Commissioning...'
 
     def get_help_string(self) -> str:
         return 'Update the connected device with current dataset.'
 
-    async def execute_default(self, args, context):
-        bless: BleStreamSecure = context['ble_sstream']
+    def prepare_data(self, context):
         dataset: ThreadDataset = context['dataset']
-
-        print('Commissioning...')
         dataset_bytes = dataset.to_bytes()
-        data = TLV(TcatTLVType.ACTIVE_DATASET.value, dataset_bytes).to_bytes()
-        response = await bless.send_with_resp(data)
-        if not response:
-            return
-        tlv_response = TLV.from_bytes(response)
-        return CommandResultTLV(tlv_response)
+        return TLV(TcatTLVType.ACTIVE_DATASET.value, dataset_bytes).to_bytes()
 
 
-class DecommissionCommand(Command):
+class DecommissionCommand(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Disabling Thread and decommissioning device...'
 
     def get_help_string(self) -> str:
         return 'Stop Thread interface and decommission device from current network.'
 
-    async def execute_default(self, args, context):
-        bless: BleStreamSecure = context['ble_sstream']
-        print('Disabling Thread and decommissioning device...')
-        data = (TLV(TcatTLVType.DECOMMISSION.value, bytes()).to_bytes())
-        response = await bless.send_with_resp(data)
-        if not response:
-            return
-        tlv_response = TLV.from_bytes(response)
-        return CommandResultTLV(tlv_response)
+    def prepare_data(self, context):
+        return TLV(TcatTLVType.DECOMMISSION.value, bytes()).to_bytes()
+
+
+class GetDeviceIdCommand(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Retrieving device id.'
+
+    def get_help_string(self) -> str:
+        return 'Get unique identifier for the TCAT device.'
+
+    def prepare_data(self, context):
+        return TLV(TcatTLVType.GET_DEVICE_ID.value, bytes()).to_bytes()
+
+
+class GetExtPanIDCommand(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Retrieving extended PAN ID.'
+
+    def get_help_string(self) -> str:
+        return 'Get extended PAN ID that is commissioned in the active dataset.'
+
+    def prepare_data(self, context):
+        return TLV(TcatTLVType.GET_EXT_PAN_ID.value, bytes()).to_bytes()
+
+
+class GetProvisioningUrlCommand(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Retrieving provisioning url.'
+
+    def get_help_string(self) -> str:
+        return 'Get a URL for an application suited to commission the TCAT device.'
+
+    def prepare_data(self, context):
+        return TLV(TcatTLVType.GET_PROVISIONING_URL.value, bytes()).to_bytes()
+
+
+class GetNetworkNameCommand(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Retrieving network name.'
+
+    def get_help_string(self) -> str:
+        return 'Get the Thread network name that is commissioned in the active dataset.'
+
+    def prepare_data(self, context):
+        return TLV(TcatTLVType.GET_NETWORK_NAME.value, bytes()).to_bytes()
 
 
 class PingCommand(Command):
@@ -136,37 +194,28 @@ class PingCommand(Command):
         return CommandResultTLV(tlv_response)
 
 
-class ThreadStartCommand(Command):
+class ThreadStartCommand(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Enabling Thread...'
 
     def get_help_string(self) -> str:
         return 'Enable thread interface.'
 
-    async def execute_default(self, args, context):
-        bless: BleStreamSecure = context['ble_sstream']
-
-        print('Enabling Thread...')
-        data = TLV(TcatTLVType.THREAD_START.value, bytes()).to_bytes()
-        response = await bless.send_with_resp(data)
-        if not response:
-            return
-        tlv_response = TLV.from_bytes(response)
-        return CommandResultTLV(tlv_response)
+    def prepare_data(self, context):
+        return TLV(TcatTLVType.THREAD_START.value, bytes()).to_bytes()
 
 
-class ThreadStopCommand(Command):
+class ThreadStopCommand(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Disabling Thread...'
 
     def get_help_string(self) -> str:
         return 'Disable thread interface.'
 
-    async def execute_default(self, args, context):
-        bless: BleStreamSecure = context['ble_sstream']
-        print('Disabling Thread...')
-        data = TLV(TcatTLVType.THREAD_STOP.value, bytes()).to_bytes()
-        response = await bless.send_with_resp(data)
-        if not response:
-            return
-        tlv_response = TLV.from_bytes(response)
-        return CommandResultTLV(tlv_response)
+    def prepare_data(self, context):
+        return TLV(TcatTLVType.THREAD_STOP.value, bytes()).to_bytes()
 
 
 class ThreadStateCommand(Command):

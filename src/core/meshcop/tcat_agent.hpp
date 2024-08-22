@@ -168,6 +168,7 @@ public:
         kTlvPing                      = 10, ///< TCAT ping request TLV
         kTlvGetDeviceId               = 11, ///< TCAT device ID query TLV
         kTlvGetExtendedPanID          = 12, ///< TCAT extended PAN ID query TLV
+        kTlvGetProvisioningURL        = 13, ///< TCAT provisioning URL query TLV
         kTlvPresentPskdHash           = 16, ///< TCAT commissioner rights elevation request TLV using PSKd hash
         kTlvPresentPskcHash           = 17, ///< TCAT commissioner rights elevation request TLV using PSKc hash
         kTlvPresentInstallCodeHash    = 18, ///< TCAT commissioner rights elevation request TLV using install code
@@ -353,7 +354,15 @@ private:
     Error HandleSingleTlv(const Message &aIncomingMessage, Message &aOutgoingMessage);
     Error HandleSetActiveOperationalDataset(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength);
     Error HandleDecomission(void);
-    Error HandlePing(const Message &aIncomingMessage, Message &aOutgoingMessage, uint16_t aOffset, uint16_t aLength);
+    Error HandlePing(const Message &aIncomingMessage,
+                     Message       &aOutgoingMessage,
+                     uint16_t       aOffset,
+                     uint16_t       aLength,
+                     bool          &response);
+    Error HandleGetNetworkName(Message &aOutgoingMessage, bool &response);
+    Error HandleGetDeviceId(Message &aOutgoingMessage, bool &response);
+    Error HandleGetExtPanId(Message &aOutgoingMessage, bool &response);
+    Error HandleGetProvisioningUrl(Message &aOutgoingMessage, bool &response);
     Error HandleStartThreadInterface(void);
 
     bool         CheckCommandClassAuthorizationFlags(CommandClassFlags aCommissionerCommandClassFlags,
@@ -362,8 +371,10 @@ private:
     bool         CanProcessTlv(uint8_t aTlvType) const;
     CommandClass GetCommandClass(uint8_t aTlvType) const;
 
-    static constexpr uint16_t kJoinerUdpPort        = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
-    static constexpr uint16_t kPingPayloadMaxLength = 512;
+    static constexpr uint16_t kJoinerUdpPort            = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
+    static constexpr uint16_t kPingPayloadMaxLength     = 512;
+    static constexpr uint16_t kProvisioningUrlMaxLength = 64;
+    static constexpr uint16_t kTcatMaxDeviceIdSize      = OT_TCAT_MAX_DEVICEID_SIZE;
 
     JoinerPskd                       mJoinerPskd;
     const VendorInfo                *mVendorInfo;
@@ -389,7 +400,7 @@ private:
 DefineCoreType(otTcatVendorInfo, MeshCoP::TcatAgent::VendorInfo);
 
 DefineMapEnum(otTcatApplicationProtocol, MeshCoP::TcatAgent::TcatApplicationProtocol);
-DefineMapEnum(otTcatDeviceIdType, MeshCoP::TcatAgent::TcatDeviceIdType);
+DefineMapEnum(otTcatAdvertisedDeviceIdType, MeshCoP::TcatAgent::TcatDeviceIdType);
 
 // Command class TLVs
 typedef UintTlvInfo<MeshCoP::TcatAgent::kTlvResponseWithStatus, uint8_t> ResponseWithStatusTlv;

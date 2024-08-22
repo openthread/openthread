@@ -38,6 +38,11 @@ expect_line "Done"
 spawn python "tools/tcat_ble_client/bbtc.py" --simulation 1 --cert_path "tools/tcat_ble_client/auth"
 set py_client "$spawn_id"
 expect_line "Done"
+
+send "network_name\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x06"
+
 send "commission\n"
 expect_line "\tTYPE:\tRESPONSE_W_STATUS"
 expect_line "\tVALUE:\t0x00"
@@ -57,6 +62,26 @@ expect_line "\tLEN:\t255"
 send "ping 512\n"
 expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
 expect_line "\tLEN:\t512"
+
+send "network_name\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t15"
+expect_line "\tVALUE:\t0x4f70656e5468726561642d63363465"
+
+send "device_id\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t8"
+expect_line "\tVALUE:\t0x18b4300000000001"
+
+send "ext_panid\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t8"
+expect_line "\tVALUE:\t0xef1398c2fd504b67"
+
+send "provisioning_url\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t9"
+expect_line "\tVALUE:\t0x64756d6d795f75726c"
 
 send "exit\n"
 expect eof
