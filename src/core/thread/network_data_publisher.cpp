@@ -572,18 +572,17 @@ void Publisher::DnsSrpServiceEntry::Add(void)
     switch (GetType())
     {
     case kTypeAnycast:
-        SuccessOrExit(Get<Service::Manager>().Add<Service::DnsSrpAnycast>(
-            Service::DnsSrpAnycast::ServiceData(mInfo.GetSequenceNumber())));
+        SuccessOrExit(Get<Service::Manager>().AddDnsSrpAnycastService(mInfo.GetSequenceNumber()));
         break;
 
     case kTypeUnicast:
-        SuccessOrExit(Get<Service::Manager>().Add<Service::DnsSrpUnicast>(
-            Service::DnsSrpUnicast::ServiceData(mInfo.GetAddress(), mInfo.GetPort())));
+        SuccessOrExit(
+            Get<Service::Manager>().AddDnsSrpUnicastServiceWithAddrInServiceData(mInfo.GetAddress(), mInfo.GetPort()));
         break;
 
     case kTypeUnicastMeshLocalEid:
-        SuccessOrExit(Get<Service::Manager>().Add<Service::DnsSrpUnicast>(
-            Service::DnsSrpUnicast::ServerData(mInfo.GetAddress(), mInfo.GetPort())));
+        SuccessOrExit(
+            Get<Service::Manager>().AddDnsSrpUnicastServiceWithAddrInServerData(mInfo.GetAddress(), mInfo.GetPort()));
         break;
     }
 
@@ -604,17 +603,16 @@ void Publisher::DnsSrpServiceEntry::Remove(State aNextState)
     switch (GetType())
     {
     case kTypeAnycast:
-        SuccessOrExit(Get<Service::Manager>().Remove<Service::DnsSrpAnycast>(
-            Service::DnsSrpAnycast::ServiceData(mInfo.GetSequenceNumber())));
+        SuccessOrExit(Get<Service::Manager>().RemoveDnsSrpAnycastService(mInfo.GetSequenceNumber()));
         break;
 
     case kTypeUnicast:
-        SuccessOrExit(Get<Service::Manager>().Remove<Service::DnsSrpUnicast>(
-            Service::DnsSrpUnicast::ServiceData(mInfo.GetAddress(), mInfo.GetPort())));
+        SuccessOrExit(Get<Service::Manager>().RemoveDnsSrpUnicastServiceWithAddrInServiceData(mInfo.GetAddress(),
+                                                                                              mInfo.GetPort()));
         break;
 
     case kTypeUnicastMeshLocalEid:
-        SuccessOrExit(Get<Service::Manager>().Remove<Service::DnsSrpUnicast>());
+        SuccessOrExit(Get<Service::Manager>().RemoveDnsSrpUnicastServiceWithAddrInServerData());
         break;
     }
 
@@ -658,7 +656,7 @@ void Publisher::DnsSrpServiceEntry::Process(void)
         break;
 
     case kTypeUnicastMeshLocalEid:
-        CountUnicastEntries(Service::DnsSrpUnicast::kFromServerData, numEntries, numPreferredEntries);
+        CountUnicastEntries(Service::kAddrInServerData, numEntries, numPreferredEntries);
         desiredNumEntries = kDesiredNumUnicast;
 
         if (HasAnyServiceDataUnicastEntry() || HasAnyAnycastEntry())
@@ -675,7 +673,7 @@ void Publisher::DnsSrpServiceEntry::Process(void)
 
     case kTypeUnicast:
         desiredNumEntries = kDesiredNumUnicast;
-        CountUnicastEntries(Service::DnsSrpUnicast::kFromServiceData, numEntries, numPreferredEntries);
+        CountUnicastEntries(Service::kAddrInServiceData, numEntries, numPreferredEntries);
         break;
     }
 
@@ -692,8 +690,8 @@ void Publisher::DnsSrpServiceEntry::CountAnycastEntries(uint8_t &aNumEntries, ui
     // "sequence number" value). We prefer the entries associated with
     // smaller RLCO16.
 
-    Service::Manager::Iterator   iterator;
-    Service::DnsSrpAnycast::Info anycastInfo;
+    Service::Manager::Iterator iterator;
+    Service::DnsSrpAnycastInfo anycastInfo;
 
     while (Get<Service::Manager>().GetNextDnsSrpAnycastInfo(iterator, anycastInfo) == kErrorNone)
     {
@@ -711,20 +709,20 @@ void Publisher::DnsSrpServiceEntry::CountAnycastEntries(uint8_t &aNumEntries, ui
 
 bool Publisher::DnsSrpServiceEntry::HasAnyAnycastEntry(void) const
 {
-    Service::Manager::Iterator   iterator;
-    Service::DnsSrpAnycast::Info anycastInfo;
+    Service::Manager::Iterator iterator;
+    Service::DnsSrpAnycastInfo anycastInfo;
 
     return (Get<Service::Manager>().GetNextDnsSrpAnycastInfo(iterator, anycastInfo) == kErrorNone);
 }
 
-void Publisher::DnsSrpServiceEntry::CountUnicastEntries(Service::DnsSrpUnicast::Type aType,
-                                                        uint8_t                     &aNumEntries,
-                                                        uint8_t                     &aNumPreferredEntries) const
+void Publisher::DnsSrpServiceEntry::CountUnicastEntries(Service::DnsSrpUnicastType aType,
+                                                        uint8_t                   &aNumEntries,
+                                                        uint8_t                   &aNumPreferredEntries) const
 {
     // Count the number of DNS/SRP unicast entries in the Network Data.
 
-    Service::Manager::Iterator   iterator;
-    Service::DnsSrpUnicast::Info unicastInfo;
+    Service::Manager::Iterator iterator;
+    Service::DnsSrpUnicastInfo unicastInfo;
 
     while (Get<Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, aType, unicastInfo) == kErrorNone)
     {
@@ -739,9 +737,9 @@ void Publisher::DnsSrpServiceEntry::CountUnicastEntries(Service::DnsSrpUnicast::
 
 bool Publisher::DnsSrpServiceEntry::HasAnyServiceDataUnicastEntry(void) const
 {
-    Service::Manager::Iterator   iterator;
-    Service::DnsSrpUnicast::Info unicastInfo;
-    Service::DnsSrpUnicast::Type type = Service::DnsSrpUnicast::kFromServiceData;
+    Service::Manager::Iterator iterator;
+    Service::DnsSrpUnicastInfo unicastInfo;
+    Service::DnsSrpUnicastType type = Service::kAddrInServiceData;
 
     return (Get<Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo) == kErrorNone);
 }

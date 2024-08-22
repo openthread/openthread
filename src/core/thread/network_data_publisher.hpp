@@ -439,9 +439,9 @@ private:
         void Process(void);
         void CountAnycastEntries(uint8_t &aNumEntries, uint8_t &aNumPreferredEntries) const;
         bool HasAnyAnycastEntry(void) const;
-        void CountUnicastEntries(Service::DnsSrpUnicast::Type aType,
-                                 uint8_t                     &aNumEntries,
-                                 uint8_t                     &aNumPreferredEntries) const;
+        void CountUnicastEntries(Service::DnsSrpUnicastType aType,
+                                 uint8_t                   &aNumEntries,
+                                 uint8_t                   &aNumPreferredEntries) const;
         bool HasAnyServiceDataUnicastEntry(void) const;
 
         Info                            mInfo;

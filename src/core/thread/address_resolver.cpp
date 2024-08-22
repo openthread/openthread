@@ -599,10 +599,10 @@ Error AddressResolver::ResolveUsingNetDataServices(const Ip6::Address &aEid, uin
     // service entries.  Returns `kErrorNone` and updates `aRloc16`
     // if successful, otherwise returns `kErrorNotFound`.
 
-    Error                                     error = kErrorNotFound;
-    NetworkData::Service::Manager::Iterator   iterator;
-    NetworkData::Service::DnsSrpUnicast::Info unicastInfo;
-    NetworkData::Service::DnsSrpUnicast::Type type = NetworkData::Service::DnsSrpUnicast::kFromServerData;
+    Error                                   error = kErrorNotFound;
+    NetworkData::Service::Manager::Iterator iterator;
+    NetworkData::Service::DnsSrpUnicastInfo unicastInfo;
+    NetworkData::Service::DnsSrpUnicastType type = NetworkData::Service::kAddrInServerData;
 
     VerifyOrExit(Get<Mle::Mle>().GetDeviceMode().GetNetworkDataType() == NetworkData::kFullSet);
 

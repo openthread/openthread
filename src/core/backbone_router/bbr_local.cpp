@@ -174,8 +174,7 @@ exit:
 
 Error Local::AddService(RegisterMode aMode)
 {
-    Error                                            error = kErrorInvalidState;
-    NetworkData::Service::BackboneRouter::ServerData serverData;
+    Error error = kErrorInvalidState;
 
     VerifyOrExit(mState != kStateDisabled && Get<Mle::Mle>().IsAttached());
 
@@ -189,11 +188,8 @@ Error Local::AddService(RegisterMode aMode)
         break;
     }
 
-    serverData.SetSequenceNumber(mSequenceNumber);
-    serverData.SetReregistrationDelay(mReregistrationDelay);
-    serverData.SetMlrTimeout(mMlrTimeout);
-
-    SuccessOrExit(error = Get<NetworkData::Service::Manager>().Add<NetworkData::Service::BackboneRouter>(serverData));
+    SuccessOrExit(error = Get<NetworkData::Service::Manager>().AddBackboneRouterService(
+                      mSequenceNumber, mReregistrationDelay, mMlrTimeout));
     Get<NetworkData::Notifier>().HandleServerDataUpdated();
 
     mIsServiceAdded = true;
@@ -207,7 +203,7 @@ void Local::RemoveService(void)
 {
     Error error;
 
-    SuccessOrExit(error = Get<NetworkData::Service::Manager>().Remove<NetworkData::Service::BackboneRouter>());
+    SuccessOrExit(error = Get<NetworkData::Service::Manager>().RemoveBackboneRouterService());
     Get<NetworkData::Notifier>().HandleServerDataUpdated();
     mIsServiceAdded = false;
 

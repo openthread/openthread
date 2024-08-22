@@ -637,7 +637,7 @@ void TestNetworkDataDsnSrpServices(void)
             uint8_t  mSequenceNumber;
             uint16_t mRloc16;
 
-            bool Matches(Service::DnsSrpAnycast::Info aInfo) const
+            bool Matches(Service::DnsSrpAnycastInfo aInfo) const
             {
                 VerifyOrQuit(aInfo.mAnycastAddress.GetIid().IsAnycastServiceLocator());
 
@@ -652,7 +652,7 @@ void TestNetworkDataDsnSrpServices(void)
             uint16_t    mPort;
             uint16_t    mRloc16;
 
-            bool Matches(const Service::DnsSrpUnicast::Info &aInfo) const
+            bool Matches(const Service::DnsSrpUnicastInfo &aInfo) const
             {
                 Ip6::SockAddr sockAddr;
 
@@ -699,12 +699,12 @@ void TestNetworkDataDsnSrpServices(void)
 
         const uint8_t kPreferredAnycastEntryIndex = 2;
 
-        Service::Manager            &manager = instance->Get<Service::Manager>();
-        Service::Manager::Iterator   iterator;
-        Service::DnsSrpAnycast::Info anycastInfo;
-        Service::DnsSrpUnicast::Info unicastInfo;
-        Service::DnsSrpUnicast::Type type;
-        Rlocs                        rlocs;
+        Service::Manager          &manager = instance->Get<Service::Manager>();
+        Service::Manager::Iterator iterator;
+        Service::DnsSrpAnycastInfo anycastInfo;
+        Service::DnsSrpUnicastInfo unicastInfo;
+        Service::DnsSrpUnicastType type;
+        Rlocs                      rlocs;
 
         reinterpret_cast<TestLeader &>(instance->Get<Leader>()).Populate(kNetworkData, sizeof(kNetworkData));
 
@@ -756,7 +756,7 @@ void TestNetworkDataDsnSrpServices(void)
         printf("\nDNS/SRP Unicast Service entries (server data)\n");
 
         iterator.Clear();
-        type = Service::DnsSrpUnicast::kFromServerData;
+        type = Service::kAddrInServerData;
 
         for (const UnicastEntry &entry : kUnicastEntriesFromServerData)
         {
@@ -774,7 +774,7 @@ void TestNetworkDataDsnSrpServices(void)
         printf("\nDNS/SRP Unicast Service entries (service data)\n");
 
         iterator.Clear();
-        type = Service::DnsSrpUnicast::kFromServiceData;
+        type = Service::kAddrInServiceData;
 
         for (const UnicastEntry &entry : kUnicastEntriesFromServiceData)
         {
@@ -947,8 +947,8 @@ void TestNetworkDataDsnSrpAnycastSeqNumSelection(void)
 
     for (const TestInfo &test : kTests)
     {
-        Service::Manager::Iterator   iterator;
-        Service::DnsSrpAnycast::Info anycastInfo;
+        Service::Manager::Iterator iterator;
+        Service::DnsSrpAnycastInfo anycastInfo;
 
         reinterpret_cast<TestLeader &>(instance->Get<Leader>()).Populate(test.mNetworkData, test.mNetworkDataLength);
 
