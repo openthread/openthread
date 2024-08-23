@@ -700,8 +700,11 @@ otError RadioSpinel::ParseRadioFrame(otRadioFrame   &aFrame,
         aUnpacked += unpacked;
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-        if (flags & SPINEL_MD_FLAG_ACKED_SEC)
+        if ((flags & SPINEL_MD_FLAG_ACKED_SEC) &&
+            (aFrame.mInfo.mRxInfo.mAckKeyId != 0xFF))
         {
+            LogDebg("ParseRadioFrame: frameCounter=%d",
+                    aFrame.mInfo.mRxInfo.mAckFrameCounter);
             mMacFrameCounterSet = true;
             mMacFrameCounter    = aFrame.mInfo.mRxInfo.mAckFrameCounter;
         }
@@ -926,6 +929,7 @@ otError RadioSpinel::SetMacFrameCounter(uint32_t aMacFrameCounter, bool aSetIfLa
                                 aMacFrameCounter, aSetIfLarger));
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mMacFrameCounterSet = true;
+    LogDebg("SetMacFrameCounter: frameCounter=%d", aMacFrameCounter);
     mMacFrameCounter    = aMacFrameCounter;
 #endif
 
@@ -1577,8 +1581,12 @@ void RadioSpinel::HandleTransmitDone(uint32_t          aCommand,
         static_cast<Mac::TxFrame *>(mTransmitFrame)->SetFrameCounter(frameCounter);
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-        mMacFrameCounterSet = true;
-        mMacFrameCounter    = frameCounter;
+        LogDebg("HandleTransmitDone: keyId=%02X, frameCounter=%d", keyId, frameCounter);
+        if (keyId != 0xFF)
+        {
+            mMacFrameCounterSet = true;
+            mMacFrameCounter    = frameCounter;
+        }
 #endif
     }
 
