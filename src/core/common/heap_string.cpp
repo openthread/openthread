@@ -89,7 +89,7 @@ bool String::operator==(const char *aCString) const
     bool isEqual;
 
     VerifyOrExit((aCString != nullptr) && (mStringBuffer != nullptr), isEqual = (mStringBuffer == aCString));
-    isEqual = (strcmp(mStringBuffer, aCString) == 0);
+    isEqual = StringMatch(mStringBuffer, aCString);
 
 exit:
     return isEqual;

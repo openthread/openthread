@@ -158,6 +158,11 @@ bool StringEndsWith(const char *aString, const char *aSubString, StringMatchMode
     return (subLen > 0) && (len >= subLen) && (Match(&aString[len - subLen], aSubString, aMode) != kNoMatch);
 }
 
+bool StringMatch(const char *aFirstString, const char *aSecondString)
+{
+    return Match(aFirstString, aSecondString, kStringExactMatch) == kFullMatch;
+}
+
 bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatchMode aMode)
 {
     return Match(aFirstString, aSecondString, aMode) == kFullMatch;

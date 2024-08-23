@@ -271,14 +271,14 @@ Error Interface::ParsePeerInfoTxtData(const Peer::Info       &aInfo,
             continue;
         }
 
-        if (strcmp(entry.mKey, kTxtRecordExtAddressKey) == 0)
+        if (StringMatch(entry.mKey, kTxtRecordExtAddressKey))
         {
             VerifyOrExit(!parsedExtAddress, error = kErrorParse);
             VerifyOrExit(entry.mValueLength == sizeof(Mac::ExtAddress), error = kErrorParse);
             aExtAddress.Set(entry.mValue);
             parsedExtAddress = true;
         }
-        else if (strcmp(entry.mKey, kTxtRecordExtPanIdKey) == 0)
+        else if (StringMatch(entry.mKey, kTxtRecordExtPanIdKey))
         {
             VerifyOrExit(!parsedExtPanId, error = kErrorParse);
             VerifyOrExit(entry.mValueLength == sizeof(MeshCoP::ExtendedPanId), error = kErrorParse);

@@ -154,6 +154,18 @@ bool StringEndsWith(const char *aString, char aChar);
 bool StringEndsWith(const char *aString, const char *aSubString, StringMatchMode aMode = kStringExactMatch);
 
 /**
+ * Checks whether or not two null-terminated strings match exactly.
+ *
+ * @param[in] aFirstString   A pointer to the first string.
+ * @param[in] aSecondString  A pointer to the second string.
+ *
+ * @retval TRUE   If @p aFirstString matches @p aSecondString.
+ * @retval FALSE  If @p aFirstString does not match @p aSecondString.
+ *
+ */
+bool StringMatch(const char *aFirstString, const char *aSecondString);
+
+/**
  * Checks whether or not two null-terminated strings match.
  *
  * @param[in] aFirstString   A pointer to the first string.
@@ -164,7 +176,7 @@ bool StringEndsWith(const char *aString, const char *aSubString, StringMatchMode
  * @retval FALSE  If @p aFirstString does not match @p aSecondString using match mode @p aMode.
  *
  */
-bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatchMode aMode = kStringExactMatch);
+bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatchMode aMode);
 
 /**
  * Copies a string into a given target buffer with a given size if it fits.
