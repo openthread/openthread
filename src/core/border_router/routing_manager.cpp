@@ -3947,15 +3947,10 @@ void RoutingManager::PdPrefixManager::Evaluate(void)
 {
     const FavoredOmrPrefix &favoredPrefix = Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix();
 
-    if (favoredPrefix.IsEmpty() || favoredPrefix.GetPreference() < OmrPrefixManager::kPdRoutePreference ||
-        favoredPrefix.GetPrefix() == mPrefix.GetPrefix())
-    {
-        PauseResume(/* aPause= */ false);
-    }
-    else
-    {
-        PauseResume(/* aPause= */ true);
-    }
+    bool shouldPause = !(favoredPrefix.IsEmpty() || favoredPrefix.GetPreference() < OmrPrefixManager::kPdRoutePreference ||
+        favoredPrefix.GetPrefix() == mPrefix.GetPrefix());
+
+    PauseResume(/* aPause= */ shouldPause);
 }
 
 void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState)
