@@ -885,9 +885,9 @@ PendingDatasetManager::PendingDatasetManager(Instance &aInstance)
 {
 }
 
-Error PendingDatasetManager::GetActiveTimestamp(Timestamp &aTimestamp)
+Error PendingDatasetManager::ReadActiveTimestamp(Timestamp &aTimestamp) const
 {
-    Error   error = kErrorInvalidState;
+    Error   error = kErrorNotFound;
     Dataset dataset;
 
     // If the delay timer is not running, then the pending dataset is not valid, avoid

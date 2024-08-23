@@ -442,17 +442,15 @@ public:
     explicit PendingDatasetManager(Instance &aInstance);
 
     /**
-     * This method fetches the Active Timestamp contained in the Pending Operational Dataset, or an error
-     * if it does not exist.
+     * Reads the Active Timestamp in the Pending Operational Dataset.
      *
-     * @param[out] aTimestamp The active timestamp contained in the pending dataset. Only valid if kErrorNone is
-     * returned.
+     * @param[out] aTimestamp A reference to return the read timestamp.
      *
-     * @retval kErrorNone         The active timestamp was successfully fetched.
-     * @retval kErrorInvalidState The pending dataset is not currently valid.
+     * @retval kErrorNone     The active timestamp was successfully fetched.
+     * @retval kErrorNotFound The pending dataset is not currently valid.
      *
      */
-    Error GetActiveTimestamp(Timestamp &aTimestamp);
+    Error ReadActiveTimestamp(Timestamp &aTimestamp) const;
 
 #if OPENTHREAD_FTD
     /**

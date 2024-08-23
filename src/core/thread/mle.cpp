@@ -3644,8 +3644,6 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
     bool               isFromOrphan;
     bool               channelAndPanIdMatch;
     int                timestampCompare;
-    bool               pendingDatasetValid;
-    int                pendingTimestampCompare;
 
     Log(kMessageReceive, kTypeAnnounce, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -3660,10 +3658,6 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
     isFromOrphan         = timestamp.IsOrphanAnnounce();
     timestampCompare     = MeshCoP::Timestamp::Compare(timestamp, Get<MeshCoP::ActiveDatasetManager>().GetTimestamp());
     channelAndPanIdMatch = (channel == Get<Mac::Mac>().GetPanChannel()) && (panId == Get<Mac::Mac>().GetPanId());
-
-    pendingDatasetValid =
-        (kErrorNone == Get<MeshCoP::PendingDatasetManager>().GetActiveTimestamp(pendingActiveTimestamp));
-    pendingTimestampCompare = MeshCoP::Timestamp::Compare(timestamp, pendingActiveTimestamp);
 
     if (isFromOrphan || (timestampCompare < 0))
     {
@@ -3689,11 +3683,9 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
             VerifyOrExit(!channelAndPanIdMatch);
         }
 
-        if (pendingDatasetValid)
+        if (Get<MeshCoP::PendingDatasetManager>().ReadActiveTimestamp(pendingActiveTimestamp) == kErrorNone)
         {
-            // Drop announce messages that have a timestamp that is less than or equal to the
-            // Active Timestamp in the Pending Operational Dataset
-            VerifyOrExit(pendingTimestampCompare > 0, error = kErrorBusy);
+            VerifyOrExit(timestamp > pendingActiveTimestamp);
         }
 
         if (mAttachState == kAttachStateProcessAnnounce)
