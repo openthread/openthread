@@ -445,7 +445,11 @@ void DuaManager::PerformNextRegistration(void)
     // Only send DUA.req when necessary
 #if OPENTHREAD_CONFIG_DUA_ENABLE
 #if OPENTHREAD_FTD
-    VerifyOrExit(mle.IsRouterOrLeader() || !mle.IsExpectedToBecomeRouterSoon(), error = kErrorInvalidState);
+    if (!mle.IsRouterOrLeader() && mle.IsExpectedToBecomeRouterSoon())
+    {
+        UpdateRegistrationDelay(mle.GetRouterRoleTransitionTimeout() + kNewRouterRegistrationDelay + 1);
+        ExitNow(error = kErrorInvalidState);
+    }
 #endif
     VerifyOrExit(mle.IsFullThreadDevice() || mle.GetParent().IsThreadVersion1p1(), error = kErrorInvalidState);
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE

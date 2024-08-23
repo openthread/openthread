@@ -62,11 +62,7 @@ void SubMac::UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame)
     // Assuming the error here since it is bounded and has very small effect on the final window duration.
     if (aAckFrame != nullptr && aFrame.GetHeaderIe(CslIe::kHeaderIeId) != nullptr)
     {
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
-        mCslLastSync = TimerMicro::GetNow();
-#else
-        mCslLastSync = TimeMicro(static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance())));
-#endif
+        mCslLastSync = TimeMicro(GetLocalTime());
     }
 }
 
@@ -237,12 +233,7 @@ void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
     uint32_t semiPeriod = mCslPeriod * kUsPerTenSymbols / 2;
     uint32_t curTime, elapsed, semiWindow;
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
-    curTime = TimerMicro::GetNow().GetValue();
-#else
-    curTime = static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance()));
-#endif
-
+    curTime = GetLocalTime();
     elapsed = curTime - mCslLastSync.GetValue();
 
     semiWindow =
@@ -252,6 +243,19 @@ void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
 
     aAhead = Min(semiPeriod, semiWindow + kMinReceiveOnAhead + kCslReceiveTimeAhead);
     aAfter = Min(semiPeriod, semiWindow + kMinReceiveOnAfter);
+}
+
+uint32_t SubMac::GetLocalTime(void)
+{
+    uint32_t now;
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
+    now = TimerMicro::GetNow().GetValue();
+#else
+    now = static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance()));
+#endif
+
+    return now;
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE

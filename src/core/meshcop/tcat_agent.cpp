@@ -33,6 +33,7 @@
 
 #include "tcat_agent.hpp"
 #include <openthread/tcat.h>
+#include "meshcop/network_name.hpp"
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
@@ -55,7 +56,11 @@ RegisterLogModule("TcatAgent");
 
 bool TcatAgent::VendorInfo::IsValid(void) const
 {
-    return mProvisioningUrl == nullptr || IsValidUtf8String(mProvisioningUrl) || mPskdString != nullptr;
+    return (mProvisioningUrl == nullptr ||
+            (IsValidUtf8String(mProvisioningUrl) &&
+             (static_cast<uint8_t>(StringLength(mProvisioningUrl, kProvisioningUrlMaxLength)) <
+              kProvisioningUrlMaxLength))) &&
+           mPskdString != nullptr;
 }
 
 TcatAgent::TcatAgent(Instance &aInstance)
@@ -414,17 +419,24 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
             error = HandleDecomission();
             break;
         case kTlvPing:
-            error = HandlePing(aIncomingMessage, aOutgoingMessage, offset, length);
-            if (error == kErrorNone)
-            {
-                response = true;
-            }
+            error = HandlePing(aIncomingMessage, aOutgoingMessage, offset, length, response);
+            break;
+        case kTlvGetNetworkName:
+            error = HandleGetNetworkName(aOutgoingMessage, response);
+            break;
+        case kTlvGetDeviceId:
+            error = HandleGetDeviceId(aOutgoingMessage, response);
+            break;
+        case kTlvGetExtendedPanID:
+            error = HandleGetExtPanId(aOutgoingMessage, response);
+            break;
+        case kTlvGetProvisioningURL:
+            error = HandleGetProvisioningUrl(aOutgoingMessage, response);
             break;
         default:
             error = kErrorInvalidCommand;
         }
     }
-
     if (!response)
     {
         StatusCode statusCode;
@@ -514,7 +526,8 @@ Error TcatAgent::HandleDecomission(void)
 Error TcatAgent::HandlePing(const Message &aIncomingMessage,
                             Message       &aOutgoingMessage,
                             uint16_t       aOffset,
-                            uint16_t       aLength)
+                            uint16_t       aLength,
+                            bool          &response)
 {
     Error           error = kErrorNone;
     ot::ExtendedTlv extTlv;
@@ -535,6 +548,85 @@ Error TcatAgent::HandlePing(const Message &aIncomingMessage,
     }
 
     SuccessOrExit(error = aOutgoingMessage.AppendBytesFromMessage(aIncomingMessage, aOffset, aLength));
+    response = true;
+
+exit:
+    return error;
+}
+
+Error TcatAgent::HandleGetNetworkName(Message &aOutgoingMessage, bool &response)
+{
+    Error             error    = kErrorNone;
+    MeshCoP::NameData nameData = Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsData();
+
+    VerifyOrExit(Get<ActiveDatasetManager>().IsCommissioned(), error = kErrorInvalidState);
+#if !OPENTHREAD_CONFIG_ALLOW_EMPTY_NETWORK_NAME
+    VerifyOrExit(nameData.GetLength() > 0, error = kErrorInvalidState);
+#endif
+
+    SuccessOrExit(
+        error = Tlv::AppendTlv(aOutgoingMessage, kTlvResponseWithPayload, nameData.GetBuffer(), nameData.GetLength()));
+    response = true;
+
+exit:
+    return error;
+}
+
+Error TcatAgent::HandleGetDeviceId(Message &aOutgoingMessage, bool &response)
+{
+    const uint8_t  *deviceId;
+    uint16_t        length = 0;
+    Mac::ExtAddress eui64;
+    Error           error = kErrorNone;
+
+    if (mVendorInfo->mGeneralDeviceId != nullptr)
+    {
+        length   = mVendorInfo->mGeneralDeviceId->mDeviceIdLen;
+        deviceId = mVendorInfo->mGeneralDeviceId->mDeviceId;
+    }
+
+    if (length == 0)
+    {
+        Get<Radio>().GetIeeeEui64(eui64);
+
+        length   = sizeof(Mac::ExtAddress);
+        deviceId = eui64.m8;
+    }
+
+    SuccessOrExit(error = Tlv::AppendTlv(aOutgoingMessage, kTlvResponseWithPayload, deviceId, length));
+
+    response = true;
+
+exit:
+    return error;
+}
+
+Error TcatAgent::HandleGetExtPanId(Message &aOutgoingMessage, bool &response)
+{
+    Error error;
+
+    VerifyOrExit(Get<ActiveDatasetManager>().IsCommissioned(), error = kErrorInvalidState);
+
+    SuccessOrExit(error = Tlv::AppendTlv(aOutgoingMessage, kTlvResponseWithPayload,
+                                         &Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId(), sizeof(ExtendedPanId)));
+    response = true;
+
+exit:
+    return error;
+}
+
+Error TcatAgent::HandleGetProvisioningUrl(Message &aOutgoingMessage, bool &response)
+{
+    Error    error = kErrorNone;
+    uint16_t length;
+
+    VerifyOrExit(mVendorInfo->mProvisioningUrl != nullptr, error = kErrorInvalidState);
+
+    length = StringLength(mVendorInfo->mProvisioningUrl, kProvisioningUrlMaxLength);
+    VerifyOrExit(length > 0 && length <= Tlv::kBaseTlvMaxLength, error = kErrorInvalidState);
+
+    error    = Tlv::AppendTlv(aOutgoingMessage, kTlvResponseWithPayload, mVendorInfo->mProvisioningUrl, length);
+    response = true;
 
 exit:
     return error;
@@ -585,31 +677,31 @@ Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementDat
     aAdvertisementData[2] = OPENTHREAD_CONFIG_THREAD_VERSION << 4 | OT_TCAT_OPCODE;
     aLen++;
 
-    if (mVendorInfo->mDeviceIds != nullptr)
+    if (mVendorInfo->mAdvertisedDeviceIds != nullptr)
     {
-        for (uint8_t i = 0; mVendorInfo->mDeviceIds[i].mDeviceIdType != OT_TCAT_DEVICE_ID_EMPTY; i++)
+        for (uint8_t i = 0; mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdType != OT_TCAT_DEVICE_ID_EMPTY; i++)
         {
-            switch (MapEnum(mVendorInfo->mDeviceIds[i].mDeviceIdType))
+            switch (MapEnum(mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdType))
             {
             case kTcatDeviceIdOui24:
                 SeralizeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorOui24,
-                                             mVendorInfo->mDeviceIds[i].mDeviceIdLen,
-                                             mVendorInfo->mDeviceIds[i].mDeviceId);
+                                             mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
+                                             mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
                 break;
             case kTcatDeviceIdOui36:
                 SeralizeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorOui36,
-                                             mVendorInfo->mDeviceIds[i].mDeviceIdLen,
-                                             mVendorInfo->mDeviceIds[i].mDeviceId);
+                                             mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
+                                             mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
                 break;
             case kTcatDeviceIdDiscriminator:
                 SeralizeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvDeviceDiscriminator,
-                                             mVendorInfo->mDeviceIds[i].mDeviceIdLen,
-                                             mVendorInfo->mDeviceIds[i].mDeviceId);
+                                             mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
+                                             mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
                 break;
             case kTcatDeviceIdIanaPen:
                 SeralizeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorIanaPen,
-                                             mVendorInfo->mDeviceIds[i].mDeviceIdLen,
-                                             mVendorInfo->mDeviceIds[i].mDeviceId);
+                                             mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
+                                             mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
                 break;
             default:
                 break;

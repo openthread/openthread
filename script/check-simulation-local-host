@@ -30,7 +30,7 @@
 set -euxo pipefail
 
 IFACE_NAME="dummy116"
-EXPECT_TEST=tests/scripts/expect/cli-ping.exp
+EXPECT_TEST=./tests/scripts/expect/cli-ping.exp
 
 cleanup()
 {
@@ -59,24 +59,27 @@ setup_dummy116()
 test_ipv6()
 {
     setup_dummy116
-    OT_SIMULATION_LOCAL_HOST=$IFACE_NAME ./script/test build expect $EXPECT_TEST
-    OT_SIMULATION_LOCAL_HOST=$IP6ADDR ./script/test build expect $EXPECT_TEST
+    OT_SIMULATION_LOCAL_HOST=$IFACE_NAME $EXPECT_TEST
+    OT_SIMULATION_LOCAL_HOST=$IP6ADDR $EXPECT_TEST
 
-    OT_NODE_TYPE=rcp OT_SIMULATION_LOCAL_HOST=$IFACE_NAME ./script/test build expect $EXPECT_TEST
-    OT_NODE_TYPE=rcp OT_SIMULATION_LOCAL_HOST=$IP6ADDR ./script/test build expect $EXPECT_TEST
+    OT_NODE_TYPE=rcp OT_SIMULATION_LOCAL_HOST=$IFACE_NAME $EXPECT_TEST
+    OT_NODE_TYPE=rcp OT_SIMULATION_LOCAL_HOST=$IP6ADDR $EXPECT_TEST
 }
 
 test_ipv4()
 {
-    OT_SIMULATION_LOCAL_HOST=lo ./script/test build expect $EXPECT_TEST
-    OT_SIMULATION_LOCAL_HOST=127.0.0.1 ./script/test build expect $EXPECT_TEST
+    OT_SIMULATION_LOCAL_HOST=lo $EXPECT_TEST
+    OT_SIMULATION_LOCAL_HOST=127.0.0.1 $EXPECT_TEST
 
-    OT_NODE_TYPE=rcp OT_SIMULATION_LOCAL_HOST=lo ./script/test build expect $EXPECT_TEST
-    OT_NODE_TYPE=rcp OT_SIMULATION_LOCAL_HOST=127.0.0.1 ./script/test build expect $EXPECT_TEST
+    OT_NODE_TYPE=rcp OT_SIMULATION_LOCAL_HOST=lo $EXPECT_TEST
+    OT_NODE_TYPE=rcp OT_SIMULATION_LOCAL_HOST=127.0.0.1 $EXPECT_TEST
 }
 
 main()
 {
+    ./script/cmake-build posix
+    ./script/cmake-build simulation
+
     test_ipv4
     test_ipv6
 }

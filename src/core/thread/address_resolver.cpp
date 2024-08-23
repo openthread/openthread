@@ -493,18 +493,31 @@ Error AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16, bool
 
     if ((entry != nullptr) && ((list == &mCachedList) || (list == &mSnoopedList)))
     {
+        bool isFresh;
+
         list->PopAfter(prev);
 
-        if (Get<RouterTable>().GetNextHop(entry->GetRloc16()) == Mle::kInvalidRloc16)
-        {
-            // If the `entry->GetRloc16()` is unreachable (there is no valid
-            // next hop towards it), we clear the entry so to start a new
-            // address query.
+        // If the `entry->GetRloc16()` is unreachable (there is no
+        // valid next hop towards it), it may be a stale entry. We
+        // clear the entry to allow new address query to be sent for
+        // it, unless the entry has been recently updated, i.e., we
+        // have recently received an `AddressNotify` for it and its
+        // `FreshnessTimeout` has not expired yet.
+        //
+        // The `FreshnessTimeout` check prevents repeated address
+        // query transmissions when mesh routes are not yet
+        // discovered (e.g., after initial attach) or if there is a
+        // temporary link issue.
 
+        isFresh = (list == &mCachedList) && !entry->IsFreshnessTimeoutZero();
+
+        if (!isFresh && (Get<RouterTable>().GetNextHop(entry->GetRloc16()) == Mle::kInvalidRloc16))
+        {
             mCacheEntryPool.Free(*entry);
             entry = nullptr;
         }
-        else
+
+        if (entry != nullptr)
         {
             // Push the entry at the head of cached list.
 
@@ -586,19 +599,15 @@ Error AddressResolver::ResolveUsingNetDataServices(const Ip6::Address &aEid, uin
     // service entries.  Returns `kErrorNone` and updates `aRloc16`
     // if successful, otherwise returns `kErrorNotFound`.
 
-    Error                                     error = kErrorNotFound;
-    NetworkData::Service::Manager::Iterator   iterator;
-    NetworkData::Service::DnsSrpUnicast::Info unicastInfo;
+    Error                                   error = kErrorNotFound;
+    NetworkData::Service::Manager::Iterator iterator;
+    NetworkData::Service::DnsSrpUnicastInfo unicastInfo;
+    NetworkData::Service::DnsSrpUnicastType type = NetworkData::Service::kAddrInServerData;
 
     VerifyOrExit(Get<Mle::Mle>().GetDeviceMode().GetNetworkDataType() == NetworkData::kFullSet);
 
-    while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, unicastInfo) == kErrorNone)
+    while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo) == kErrorNone)
     {
-        if (unicastInfo.mOrigin != NetworkData::Service::DnsSrpUnicast::kFromServerData)
-        {
-            continue;
-        }
-
         if (aEid == unicastInfo.mSockAddr.GetAddress())
         {
             aRloc16 = unicastInfo.mRloc16;
@@ -701,6 +710,8 @@ void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Message &aMessage, cons
     entry->SetRloc16(rloc16);
     entry->SetMeshLocalIid(meshLocalIid);
     entry->SetLastTransactionTime(lastTransactionTime);
+    entry->ResetFreshnessTimeout();
+    Get<TimeTicker>().RegisterReceiver(TimeTicker::kAddressResolver);
 
     list->PopAfter(prev);
     mCachedList.Push(*entry);
@@ -926,6 +937,15 @@ void AddressResolver::HandleTimeTick(void)
 {
     bool continueRxingTicks = false;
 
+    for (CacheEntry &entry : mCachedList)
+    {
+        if (!entry.IsFreshnessTimeoutZero())
+        {
+            entry.DecrementFreshnessTimeout();
+            continueRxingTicks = true;
+        }
+    }
+
     for (CacheEntry &entry : mSnoopedList)
     {
         if (entry.IsTimeoutZero())
@@ -1128,7 +1148,8 @@ void AddressResolver::LogCacheEntryChange(EntryChange, Reason, const CacheEntry 
 void AddressResolver::CacheEntry::Init(Instance &aInstance)
 {
     InstanceLocatorInit::Init(aInstance);
-    mNextIndex = kNoNextIndex;
+    mNextIndex        = kNoNextIndex;
+    mFreshnessTimeout = 0;
 }
 
 AddressResolver::CacheEntry *AddressResolver::CacheEntry::GetNext(void)

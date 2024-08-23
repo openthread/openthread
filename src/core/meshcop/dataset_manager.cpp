@@ -531,71 +531,83 @@ exit:
 
 void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
-    TlvList     tlvList;
-    uint8_t     tlvType;
-    OffsetRange offsetRange;
+    Error          error    = kErrorNone;
+    Coap::Message *response = ProcessGetRequest(aMessage, kCheckSecurityPolicyFlags);
 
-    SuccessOrExit(Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kGet, offsetRange));
+    VerifyOrExit(response != nullptr);
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, aMessageInfo));
 
-    while (!offsetRange.IsEmpty())
-    {
-        IgnoreError(aMessage.Read(offsetRange, tlvType));
-        tlvList.Add(tlvType);
-        offsetRange.AdvanceOffset(sizeof(uint8_t));
-    }
-
-    // MGMT_PENDING_GET.rsp must include Delay Timer TLV (Thread 1.1.1
-    // Section 8.7.5.4).
-
-    if (!tlvList.IsEmpty() && IsPendingDataset())
-    {
-        tlvList.Add(Tlv::kDelayTimer);
-    }
+    LogInfo("sent %s dataset get response to %s", IsActiveDataset() ? "active" : "pending",
+            aMessageInfo.GetPeerAddr().ToString().AsCString());
 
 exit:
-    SendGetResponse(aMessage, aMessageInfo, tlvList);
+    FreeMessageOnError(response, error);
 }
 
-void DatasetManager::SendGetResponse(const Coap::Message    &aRequest,
-                                     const Ip6::MessageInfo &aMessageInfo,
-                                     const TlvList          &aTlvList) const
+Coap::Message *DatasetManager::ProcessGetRequest(const Coap::Message    &aRequest,
+                                                 SecurityPolicyCheckMode aCheckMode) const
 {
-    Error          error = kErrorNone;
-    Coap::Message *message;
+    // Processes a MGMT_ACTIVE_GET or MGMT_PENDING_GET request
+    // and prepares the response.
+
+    Error          error    = kErrorNone;
+    Coap::Message *response = nullptr;
     Dataset        dataset;
+    TlvList        tlvList;
+    OffsetRange    offsetRange;
+
+    if (Tlv::FindTlvValueOffsetRange(aRequest, Tlv::kGet, offsetRange) == kErrorNone)
+    {
+        while (!offsetRange.IsEmpty())
+        {
+            uint8_t tlvType;
+
+            IgnoreError(aRequest.Read(offsetRange, tlvType));
+            tlvList.Add(tlvType);
+            offsetRange.AdvanceOffset(sizeof(uint8_t));
+        }
+
+        // MGMT_PENDING_GET.rsp must include Delay Timer TLV (Thread 1.1.1
+        // Section 8.7.5.4).
+
+        if (!tlvList.IsEmpty() && IsPendingDataset())
+        {
+            tlvList.Add(Tlv::kDelayTimer);
+        }
+    }
+
+    // Ignore `Read()` error, since even if no Dataset is saved, we should
+    // respond with an empty one.
 
     IgnoreError(Read(dataset));
 
-    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+    response = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     for (const Tlv *tlv = dataset.GetTlvsStart(); tlv < dataset.GetTlvsEnd(); tlv = tlv->GetNext())
     {
         bool shouldAppend = true;
 
-        if (!aTlvList.IsEmpty())
+        if (!tlvList.IsEmpty())
         {
-            shouldAppend = aTlvList.Contains(tlv->GetType());
+            shouldAppend = tlvList.Contains(tlv->GetType());
         }
 
-        if ((tlv->GetType() == Tlv::kNetworkKey) && !Get<KeyManager>().GetSecurityPolicy().mObtainNetworkKeyEnabled)
+        if ((aCheckMode == kCheckSecurityPolicyFlags) && (tlv->GetType() == Tlv::kNetworkKey) &&
+            !Get<KeyManager>().GetSecurityPolicy().mObtainNetworkKeyEnabled)
         {
             shouldAppend = false;
         }
 
         if (shouldAppend)
         {
-            SuccessOrExit(error = tlv->AppendTo(*message));
+            SuccessOrExit(error = tlv->AppendTo(*response));
         }
     }
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
-
-    LogInfo("sent %s dataset get response to %s", IsActiveDataset() ? "active" : "pending",
-            aMessageInfo.GetPeerAddr().ToString().AsCString());
-
 exit:
-    FreeMessageOnError(message, error);
+    FreeAndNullMessageOnError(response, error);
+    return response;
 }
 
 Error DatasetManager::SendSetRequest(const Dataset::Info &aDatasetInfo,

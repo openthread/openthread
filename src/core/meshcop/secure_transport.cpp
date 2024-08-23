@@ -1043,15 +1043,15 @@ void SecureTransport::HandleTimer(void)
         if ((mMaxConnectionAttempts > 0) && (mRemainingConnectionAttempts == 0))
         {
             Close();
-            mConnectedCallback.InvokeIfSet(false);
+            mConnectEvent = kDisconnectedMaxAttempts;
             mAutoCloseCallback.InvokeIfSet();
         }
         else
         {
             SetState(kStateOpen);
             mTimer.Stop();
-            mConnectedCallback.InvokeIfSet(false);
         }
+        mConnectedCallback.InvokeIfSet(mConnectEvent);
     }
 }
 
@@ -1070,7 +1070,8 @@ void SecureTransport::Process(void)
             if (mSsl.MBEDTLS_PRIVATE(state) == MBEDTLS_SSL_HANDSHAKE_OVER)
             {
                 SetState(kStateConnected);
-                mConnectedCallback.InvokeIfSet(true);
+                mConnectEvent = kConnected;
+                mConnectedCallback.InvokeIfSet(mConnectEvent);
             }
         }
         else
@@ -1092,6 +1093,7 @@ void SecureTransport::Process(void)
             {
             case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
                 mbedtls_ssl_close_notify(&mSsl);
+                mConnectEvent = kDisconnectedPeerClosed;
                 ExitNow(shouldDisconnect = true);
                 OT_UNREACHABLE_CODE(break);
 
@@ -1100,6 +1102,7 @@ void SecureTransport::Process(void)
 
             case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
                 mbedtls_ssl_close_notify(&mSsl);
+                mConnectEvent = kDisconnectedError;
                 ExitNow(shouldDisconnect = true);
                 OT_UNREACHABLE_CODE(break);
 
@@ -1108,6 +1111,7 @@ void SecureTransport::Process(void)
                 {
                     mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
                                                    MBEDTLS_SSL_ALERT_MSG_BAD_RECORD_MAC);
+                    mConnectEvent = kDisconnectedError;
                     ExitNow(shouldDisconnect = true);
                 }
 
@@ -1118,6 +1122,7 @@ void SecureTransport::Process(void)
                 {
                     mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
                                                    MBEDTLS_SSL_ALERT_MSG_HANDSHAKE_FAILURE);
+                    mConnectEvent = kDisconnectedError;
                     ExitNow(shouldDisconnect = true);
                 }
 

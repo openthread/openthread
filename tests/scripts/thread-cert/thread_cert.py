@@ -111,6 +111,10 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         self._do_packet_verification = PACKET_VERIFICATION and hasattr(self, 'verify') \
                                        and self.PACKET_VERIFICATION == PACKET_VERIFICATION
 
+        # store all the backbone network names that are used in the test case,
+        # it keeps empty when there's no backbone traffic in the test (no otbr or host nodes)
+        self._backbone_network_names = []
+
     def skipTest(self, reason: Any) -> None:
         self._testSkipped = True
         super(TestCase, self).skipTest(reason)
@@ -153,7 +157,11 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             params = self._parse_params(params)
             initial_topology[i] = params
 
+            backbone_network_name = self._construct_backbone_network_name(params.get('backbone_network_id')) \
+                                    if self._has_backbone_traffic() else None
+
             logging.info("Creating node %d: %r", i, params)
+            logging.info("Backbone network: %s", backbone_network_name)
 
             if params['is_otbr']:
                 nodeclass = OtbrNode
@@ -162,14 +170,13 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             else:
                 nodeclass = Node
 
-            node = nodeclass(
-                i,
-                is_mtd=params['is_mtd'],
-                simulator=self.simulator,
-                name=params.get('name'),
-                version=params['version'],
-                is_bbr=params['is_bbr'],
-            )
+            node = nodeclass(i,
+                             is_mtd=params['is_mtd'],
+                             simulator=self.simulator,
+                             name=params.get('name'),
+                             version=params['version'],
+                             is_bbr=params['is_bbr'],
+                             backbone_network=backbone_network_name)
             if 'boot_delay' in params:
                 self.simulator.go(params['boot_delay'])
 
@@ -296,10 +303,12 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
         self.simulator.stop()
 
+        if self._has_backbone_traffic():
+            self._remove_backbone_network()
+
         if self._do_packet_verification:
 
             if self._has_backbone_traffic():
-                self._remove_backbone_network()
                 pcap_filename = self._merge_thread_backbone_pcaps()
             else:
                 pcap_filename = self._get_thread_pcap_filename()
@@ -464,6 +473,18 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 ethaddr = node.get_ether_mac()
                 test_info['ethaddrs'][i] = EthAddr(ethaddr).format_octets()
 
+    def _construct_backbone_network_name(self, backbone_network_id) -> str:
+        """
+        Construct the name of the backbone network based on the given backbone network id from TOPOLOGY. If the
+        backbone_network_id is not defined in TOPOLOGY, use the default backbone network id.
+        """
+        id = backbone_network_id if backbone_network_id is not None else config.BACKBONE_DOCKER_NETWORK_DEFAULT_ID
+        backbone_name = f'{config.BACKBONE_DOCKER_NETWORK_NAME}.{id}'
+
+        assert backbone_name in self._backbone_network_names
+
+        return backbone_name
+
     def _output_test_info(self):
         """
         Output test info to json file after tearDown
@@ -522,16 +543,46 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         return False
 
     def _prepare_backbone_network(self):
-        network_name = config.BACKBONE_DOCKER_NETWORK_NAME
-        self.assure_run_ok(
-            f'docker network create --driver bridge --ipv6 --subnet {config.BACKBONE_PREFIX} -o "com.docker.network.bridge.name"="{network_name}" {network_name} || true',
-            shell=True)
+        """
+        Creates one or more backbone networks (Docker bridge networks) based on the TOPOLOGY definition.
+
+        * If `backbone_network_id` is defined in the TOPOLOGY:
+            * Network name:   `backbone{PORT_OFFSET}.{backbone_network_id}`      (e.g., "backbone0.0", "backbone0.1")
+            * Network prefix: `backbone{PORT_OFFSET}:{backbone_network_id}::/64` (e.g., "9100:0::/64", "9100:1::/64")
+
+        * If `backbone_network_id` is undefined:
+            * Network name:   `backbone{PORT_OFFSET}.0`    (e.g., "backbone0.0")
+            * Network prefix: `backbone{PORT_OFFSET}::/64` (e.g., "9100::/64")
+        """
+        # Create backbone_set to store all the backbone_ids by parsing TOPOLOGY.
+        backbone_id_set = set()
+        for node in self.TOPOLOGY:
+            id = self.TOPOLOGY[node].get('backbone_network_id')
+            if id is not None:
+                backbone_id_set.add(id)
+
+        # Add default backbone network id if backbone_set is empty
+        if not backbone_id_set:
+            backbone_id_set.add(config.BACKBONE_DOCKER_NETWORK_DEFAULT_ID)
+
+        # Iterate over the backbone_set and create backbone network(s)
+        for id in backbone_id_set:
+            backbone = f'{config.BACKBONE_DOCKER_NETWORK_NAME}.{id}'
+            backbone_prefix = f'{config.BACKBONE_IPV6_ADDR_START}:{id}::/64'
+            self._backbone_network_names.append(backbone)
+            self.assure_run_ok(
+                f'docker network create --driver bridge --ipv6 --subnet {backbone_prefix} -o "com.docker.network.bridge.name"="{backbone}" {backbone} || true',
+                shell=True)
 
     def _remove_backbone_network(self):
-        network_name = config.BACKBONE_DOCKER_NETWORK_NAME
-        self.assure_run_ok(f'docker network rm {network_name}', shell=True)
+        for network_name in self._backbone_network_names:
+            self.assure_run_ok(f'docker network rm {network_name}', shell=True)
 
     def _start_backbone_sniffer(self):
+        assert self._backbone_network_names, 'Internal Error: self._backbone_network_names is empty'
+        # TODO: support sniffer on multiple backbone networks
+        sniffer_interface = self._backbone_network_names[0]
+
         # don't know why but I have to create the empty bbr.pcap first, otherwise tshark won't work
         # self.assure_run_ok("truncate --size 0 bbr.pcap && chmod 664 bbr.pcap", shell=True)
         pcap_file = self._get_backbone_pcap_filename()
@@ -541,12 +592,13 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             pass
 
         dumpcap = pvutils.which_dumpcap()
-        self._dumpcap_proc = subprocess.Popen([dumpcap, '-i', config.BACKBONE_DOCKER_NETWORK_NAME, '-w', pcap_file],
+        self._dumpcap_proc = subprocess.Popen([dumpcap, '-i', sniffer_interface, '-w', pcap_file],
                                               stdout=sys.stdout,
                                               stderr=sys.stderr)
         time.sleep(0.2)
         assert self._dumpcap_proc.poll() is None, 'tshark terminated unexpectedly'
-        logging.info('Backbone sniffer launched successfully: pid=%s', self._dumpcap_proc.pid)
+        logging.info('Backbone sniffer launched successfully on interface %s, pid=%s', sniffer_interface,
+                     self._dumpcap_proc.pid)
         os.chmod(pcap_file, stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
 
     def _get_backbone_pcap_filename(self):

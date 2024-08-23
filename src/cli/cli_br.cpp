@@ -258,7 +258,20 @@ template <> otError Br::Process<Cmd("onlinkprefix")>(Arg aArgs[])
     otError    error = OT_ERROR_NONE;
     PrefixType outputPrefixTypes;
 
-    SuccessOrExit(error = ParsePrefixTypeArgs(aArgs, outputPrefixTypes));
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TESTING_API_ENABLE
+    if (aArgs[0] == "test")
+    {
+        otIp6Prefix prefix;
+
+        SuccessOrExit(error = aArgs[1].ParseAsIp6Prefix(prefix));
+        otBorderRoutingSetOnLinkPrefix(GetInstancePtr(), &prefix);
+        ExitNow();
+    }
+#endif
+
+    error = ParsePrefixTypeArgs(aArgs, outputPrefixTypes);
+
+    SuccessOrExit(error);
 
     /**
      * @cli br onlinkprefix local

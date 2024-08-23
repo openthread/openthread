@@ -372,7 +372,7 @@ void otPlatDnssdUnregisterHost(otInstance                 *aInstance,
  * a result, these changes always need to be synced on the infrastructure DNS-SD module.
  *
  * @param[in] aInstance     The OpenThread instance.
- * @param[in] aHost         Information about the key record to register.
+ * @param[in] aKey          Information about the key record to register.
  * @param[in] aRequestId    The ID associated with this request.
  * @param[in] aCallback     The callback function pointer to report the outcome (may be NULL if no callback needed).
  *

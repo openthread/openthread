@@ -101,16 +101,12 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
 }
 #endif
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
 otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex)
 {
-    OT_UNUSED_VARIABLE(aInfraIfIndex);
-
-#if OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
     return ot::Posix::InfraNetif::Get().DiscoverNat64Prefix(aInfraIfIndex);
-#else
-    return OT_ERROR_DROP;
-#endif
 }
+#endif
 
 bool otSysInfraIfIsRunning(void) { return ot::Posix::InfraNetif::Get().IsRunning(); }
 
@@ -667,12 +663,13 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#if OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
 const char         InfraNetif::kWellKnownIpv4OnlyName[]   = "ipv4only.arpa";
 const otIp4Address InfraNetif::kWellKnownIpv4OnlyAddress1 = {{{192, 0, 0, 170}}};
 const otIp4Address InfraNetif::kWellKnownIpv4OnlyAddress2 = {{{192, 0, 0, 171}}};
 const uint8_t      InfraNetif::kValidNat64PrefixLength[]  = {96, 64, 56, 48, 40, 32};
 
+#ifdef __linux__
 void InfraNetif::DiscoverNat64PrefixDone(union sigval sv)
 {
     struct gaicb    *req = (struct gaicb *)sv.sival_ptr;
@@ -750,9 +747,11 @@ exit:
     freeaddrinfo((struct addrinfo *)req->ar_request);
     free(req);
 }
+#endif // #ifdef __linux__
 
 otError InfraNetif::DiscoverNat64Prefix(uint32_t aInfraIfIndex)
 {
+#ifdef __linux__
     otError          error   = OT_ERROR_NONE;
     struct addrinfo *hints   = nullptr;
     struct gaicb    *reqs[1] = {nullptr};
@@ -795,8 +794,13 @@ exit:
         free(reqs[0]);
     }
     return error;
+#else
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+#endif // #ifdef __linux__
 }
-#endif // OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
+#endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 void InfraNetif::SetInfraNetifIcmp6SocketForBorderRouting(int aIcmp6Socket)

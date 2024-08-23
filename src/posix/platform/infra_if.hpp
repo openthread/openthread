@@ -174,6 +174,7 @@ public:
                         const uint8_t      *aBuffer,
                         uint16_t            aBufferLength);
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
     /**
      * Sends an asynchronous address lookup for the well-known host name "ipv4only.arpa"
      * to discover the NAT64 prefix.
@@ -185,6 +186,7 @@ public:
      *
      */
     otError DiscoverNat64Prefix(uint32_t aInfraIfIndex);
+#endif
 
     /**
      * Gets the infrastructure network interface name.
@@ -240,12 +242,18 @@ private:
     MulticastRoutingManager mMulticastRoutingManager;
 #endif
 
+    bool HasLinkLocalAddress(void) const;
+
 #ifdef __linux__
     void ReceiveNetLinkMessage(void);
 #endif
 
-    bool        HasLinkLocalAddress(void) const;
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
+#ifdef __linux__
     static void DiscoverNat64PrefixDone(union sigval sv);
+#endif // #ifdef __linux__
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     void SetInfraNetifIcmp6SocketForBorderRouting(int aIcmp6Socket);
     void ReceiveIcmp6Message(void);

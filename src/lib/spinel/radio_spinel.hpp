@@ -88,6 +88,14 @@ struct RadioSpinelCallbacks
     void (*mEnergyScanDone)(otInstance *aInstance, int8_t aMaxRssi);
 
     /**
+     * This callback notifies user of `RadioSpinel` that the bus latency has been changed.
+     *
+     * @param[in]  aInstance  The OpenThread instance structure.
+     *
+     */
+    void (*mBusLatencyChanged)(otInstance *aInstance);
+
+    /**
      * This callback notifies user of `RadioSpinel` that the transmission has started.
      *
      * @param[in]  aInstance  A pointer to the OpenThread instance structure.
@@ -683,6 +691,18 @@ public:
     bool IsDiagEnabled(void) const { return mDiagMode; }
 
     /**
+     * Processes RadioSpinel - specific diagnostics commands.
+     *
+     * @param[in]   aArgsLength     The number of arguments in @p aArgs.
+     * @param[in]   aArgs           The arguments of diagnostics command line.
+     *
+     * @retval  OT_ERROR_NONE               Succeeded.
+     * @retval  OT_ERROR_INVALID_ARGS       Failed due to invalid arguments provided.
+     *
+     */
+    otError RadioSpinelDiagProcess(char *aArgs[], uint8_t aArgsLength);
+
+    /**
      * Processes platform diagnostics commands.
      *
      * @param[in]   aString         A null-terminated input string.
@@ -858,6 +878,22 @@ public:
      *
      */
     uint32_t GetBusSpeed(void) const;
+
+    /**
+     * Returns the bus latency between the host and the radio.
+     *
+     * @returns   Bus latency in microseconds.
+     *
+     */
+    uint32_t GetBusLatency(void) const;
+
+    /**
+     * Sets the bus latency between the host and the radio.
+     *
+     * @param[in]   aBusLatency  Bus latency in microseconds.
+     *
+     */
+    void SetBusLatency(uint32_t aBusLatency);
 
     /**
      * Returns the co-processor sw version string.
@@ -1070,6 +1106,14 @@ public:
     void SetVendorRestorePropertiesCallback(otRadioSpinelVendorRestorePropertiesCallback aCallback, void *aContext);
 #endif // OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
 
+    /**
+     * Enables or disables the time synchronization between the host and RCP.
+     *
+     * @param[in]  aOn  TRUE to turn on the time synchronization, FALSE otherwise.
+     *
+     */
+    void SetTimeSyncState(bool aOn) { mTimeSyncOn = aOn; }
+
 private:
     enum
     {
@@ -1233,6 +1277,7 @@ private:
     otError             mTxError;
     static otExtAddress sIeeeEui64;
     static otRadioCaps  sRadioCaps;
+    uint32_t            mBusLatency;
 
     State mState;
     bool  mIsPromiscuous : 1; ///< Promiscuous mode.
@@ -1305,7 +1350,8 @@ private:
     void                                        *mVendorRestorePropertiesContext;
 #endif
 
-    bool mEnableRcpTimeSync;
+    bool mTimeSyncEnabled : 1;
+    bool mTimeSyncOn : 1;
 
     SpinelDriver *mSpinelDriver;
 };

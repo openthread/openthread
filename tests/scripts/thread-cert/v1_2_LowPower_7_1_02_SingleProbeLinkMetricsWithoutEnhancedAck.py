@@ -108,7 +108,7 @@ class LowPower_7_1_02_SingleProbeLinkMetricsWithoutEnhancedAck(thread_cert.TestC
         # In this step, SED_1 should set its TxPower to 'High'. In simulation, this will be implemented by
         # setting Macfilter on the Rx side (Leader).
         self.nodes[LEADER].add_allowlist(sed_extaddr, -30)
-        res = self.nodes[SED_1].link_metrics_query_single_probe(leader_addr, 'r', 'block')
+        res = self.nodes[SED_1].link_metrics_request_single_probe(leader_addr, 'r')
         rss_1 = int(res['RSSI'])
         self.simulator.go(5)
 
@@ -125,7 +125,7 @@ class LowPower_7_1_02_SingleProbeLinkMetricsWithoutEnhancedAck(thread_cert.TestC
         #
         # In this step, SED_1 should set its TxPower to 'Low'.
         self.nodes[LEADER].add_allowlist(sed_extaddr, -95)
-        res = self.nodes[SED_1].link_metrics_query_single_probe(leader_addr, 'r', 'block')
+        res = self.nodes[SED_1].link_metrics_request_single_probe(leader_addr, 'r')
         rss_2 = int(res['RSSI'])
         self.simulator.go(5)
 
@@ -142,7 +142,7 @@ class LowPower_7_1_02_SingleProbeLinkMetricsWithoutEnhancedAck(thread_cert.TestC
         # --- Metric Type ID Flags
         # ---- Type / Average Enum = 1  (Exponential Moving Avg)
         # ---- Metric Enum = 1  (Layer 2 LQI)
-        self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, 'q', 'block')
+        self.nodes[SSED_1].link_metrics_request_single_probe(leader_addr, 'q')
         self.simulator.go(5)
 
         # Step 11 - SSED_1 sends a Single Probe Link Metric for Link Margin using MLE Data Request
@@ -155,7 +155,7 @@ class LowPower_7_1_02_SingleProbeLinkMetricsWithoutEnhancedAck(thread_cert.TestC
         # --- Metric Type ID Flags
         # ---- Type / Average Enum = 1  (Exponential Moving Avg)
         # ---- Metric Enum = 2  (Link Margin)
-        self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, 'm', 'block')
+        self.nodes[SSED_1].link_metrics_request_single_probe(leader_addr, 'm')
         self.simulator.go(5)
 
         # Step 13 - SSED_1 sends a Single Probe Link Metric using MLE Data Request
@@ -170,7 +170,7 @@ class LowPower_7_1_02_SingleProbeLinkMetricsWithoutEnhancedAck(thread_cert.TestC
         # ---- Metric Enum = 1  (Layer 2 LQI)
         # ---- Metric Enum = 2  (Link Margin)
         # ---- Metric Enum = 3  (RSSI)
-        self.nodes[SSED_1].link_metrics_query_single_probe(leader_addr, 'qmr', 'block')
+        self.nodes[SSED_1].link_metrics_request_single_probe(leader_addr, 'qmr')
         self.simulator.go(5)
 
     def verify(self, pv):

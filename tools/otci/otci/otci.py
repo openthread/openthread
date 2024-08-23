@@ -136,6 +136,25 @@ class OTCI(object):
         else:
             raise CommandError(cmd, output)
 
+    def execute_platform_command(self, cmd: str, timeout: float = 10, silent: bool = False) -> List[str]:
+        """Execute the platform command.
+
+        :param cmd: The command to execute.
+        :param timeout: The command timeout.
+        :param silent: Whether to run the command silent without logging.
+        :returns: The command output as a list of lines.
+        """
+        if not silent:
+            self.log('info', '> %s', cmd)
+
+        output = self.__otcmd.execute_platform_command(cmd, timeout)
+
+        if not silent:
+            for line in output:
+                self.log('info', '%s', line)
+
+        return output
+
     def set_execute_command_retry(self, n: int):
         assert n >= 0
         self.__exec_command_retry = n
@@ -2129,13 +2148,136 @@ class OTCI(object):
     #
     # Link metrics management
     #
-    # TODO: linkmetrics mgmt <ipaddr> forward <seriesid> [ldraX][pqmr]
-    # TODO: linkmetrics probe <ipaddr> <seriesid> <length>
-    # TODO: linkmetrics query <ipaddr> single [pqmr]
-    # TODO: linkmetrics query <ipaddr> forward <seriesid>
-    # TODO: linkquality <extaddr>
-    # TODO: linkquality <extaddr> <linkquality>
-    #
+
+    def linkmetrics_config_enhanced_ack_clear(self, peer_addr: Union[str, Ip6Addr]) -> bool:
+        output = self.execute_command(f'linkmetrics config {peer_addr} enhanced-ack clear')
+        return self.__parse_linkmetrics_mgmt_response(peer_addr, output)
+
+    def linkmetrics_config_enhanced_ack_register(self,
+                                                 peer_addr: Union[str, Ip6Addr],
+                                                 link_metrics_flags: str,
+                                                 reference: bool = False) -> bool:
+        if self.__valid_flags(link_metrics_flags, 'qmr') is False:
+            raise ValueError(link_metrics_flags)
+
+        output = self.execute_command(
+            f'linkmetrics config {peer_addr} enhanced-ack register {link_metrics_flags} {"r" if reference else ""}')
+        return self.__parse_linkmetrics_mgmt_response(peer_addr, output)
+
+    def linkmetrics_config_forward(self, peer_addr: Union[str, Ip6Addr], seriesid: int, series_flags: str,
+                                   link_metrics_flags: str) -> bool:
+        if self.__valid_flags(series_flags, 'ldraX') is False:
+            raise ValueError(series_flags)
+
+        if self.__valid_flags(link_metrics_flags, 'pqmr') is False:
+            raise ValueError(link_metrics_flags)
+
+        output = self.execute_command(
+            f'linkmetrics config {peer_addr} forward {seriesid} {series_flags} {link_metrics_flags}')
+        return self.__parse_linkmetrics_mgmt_response(peer_addr, output)
+
+    def linkmetrics_probe(self, peer_addr: Union[str, Ip6Addr], seriesid: int, length: int):
+        if length < 0 or length > 64:
+            raise ValueError(length)
+
+        self.execute_command(f'linkmetrics probe {peer_addr} {seriesid} {length}')
+
+    def linkmetrics_request_single(self, peer_addr: Union[str, Ip6Addr], link_metrics_flags: str) -> Dict[str, int]:
+        if self.__valid_flags(link_metrics_flags, 'pqmr') is False:
+            raise ValueError(link_metrics_flags)
+
+        output = self.execute_command(f'linkmetrics request {peer_addr} single {link_metrics_flags}')
+        return self.__parse_linkmetrics_report(peer_addr, output)
+
+    def linkmetrics_request_forward(self, peer_addr: Union[str, Ip6Addr], seriesid: int) -> Dict[str, int]:
+        output = self.execute_command(f'linkmetrics request {peer_addr} forward {seriesid}')
+        return self.__parse_linkmetrics_report(peer_addr, output)
+
+    def __parse_linkmetrics_mgmt_response(self, peer_addr: Union[str, Ip6Addr], output: List[str]) -> bool:
+        #
+        # Example output:
+        #
+        # Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
+        # Status: Success
+        # Done
+        #
+
+        status = ''
+        report_received = False
+        ret = False
+
+        for line in output:
+            if 'Received Link Metrics Management Response from' in line:
+                address = line.split(': ')[1].strip()
+                report_received = address == peer_addr
+            elif 'Status' in line:
+                status = line.split(':')[1].strip()
+
+        return report_received and status == 'Success'
+
+    def __parse_linkmetrics_report(self, peer_addr: Union[str, Ip6Addr], output: List[str]) -> Dict[str, int]:
+        #
+        # Example output:
+        #
+        # Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
+        #
+        # - PDU Counter: 2 (Count/Summation)
+        # - LQI: 76 (Exponential Moving Average)
+        # - Margin: 82 (dB) (Exponential Moving Average)
+        # - RSSI: -18 (dBm) (Exponential Moving Average)
+        # Done
+        #
+
+        results = {}
+        report_received = False
+
+        for line in output:
+            if 'Received Link Metrics Report' in line:
+                address = line.split(': ')[1].strip()
+                report_received = address == peer_addr
+            elif 'Received Link Metrics data in Enh Ack from neighbor' in line:
+                # If the Enhanced-ACK Based Probing is enabled, the CLI will output the following
+                # link metrics info after executing the `linkmetrics request` command. This case is
+                # used to skip these Enhanced-ACK related link metrics info.
+                #
+                # Received Link Metrics data in Enh Ack from neighbor, short address:0x3400 , extended address:c6a24d6514cf9178
+                # - LQI: 224 (Exponential Moving Average)
+                # - Margin: 0 (dB) (Exponential Moving Average)
+                #
+                # Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
+                #
+                # - PDU Counter: 2 (Count/Summation)
+                # - LQI: 76 (Exponential Moving Average)
+                # - Margin: 82 (dB) (Exponential Moving Average)
+                # - RSSI: -18 (dBm) (Exponential Moving Average)
+                # Done
+                #
+                report_received = False
+
+            if not report_received:
+                continue
+
+            if '- LQI' in line:
+                results['lqi'] = self.__parse_numbers(line)[0]
+            elif '- Margin' in line:
+                results['margin'] = self.__parse_numbers(line)[0]
+            elif '- RSSI' in line:
+                results['rssi'] = self.__parse_numbers(line)[0]
+            elif '- PDU Counter' in line:
+                results['pdu_counter'] = self.__parse_numbers(line)[0]
+
+        return results
+
+    def __parse_numbers(self, line: str) -> List[int]:
+        values = re.findall("\-?\d+", line)
+        return list(map(int, values))
+
+    def __valid_flags(self, flags: str, flags_set: str):
+        # check for duplicate chars
+        if len(flags) != len(set(flags)):
+            return False
+
+        return set(flags).issubset(set(flags_set))
 
     #
     # Logging
@@ -2618,6 +2760,145 @@ class OTCI(object):
     # TODO: parent
     # TODO: pskc [-p] <key>|<passphrase>
     #
+
+    #
+    # Platform Commands Utilities
+    #
+    def support_iperf3(self) -> bool:
+        """Check whether the platform supports iperf3."""
+        #
+        # Command example:
+        #
+        # $ command -v iperf3
+        # /usr/bin/iperf3
+        #
+        ret = False
+        output = self.execute_platform_command('command -v iperf3')
+        if len(output) > 0 and 'iperf3' in output[0]:
+            ret = True
+
+        return ret
+
+    def iperf3_client(self,
+                      host: Union[str, Ip6Addr],
+                      ipv6: bool = True,
+                      udp: bool = True,
+                      bind_address: Optional[Union[str, Ip6Addr]] = None,
+                      bitrate: int = 10000,
+                      interval: int = 10,
+                      transmit_time: int = 10,
+                      length: Optional[int] = None) -> Dict[str, Dict[str, Any]]:
+        """Run iperf3 in client mode.
+
+        :param host: The host IPv6 address to send iperf3 traffic.
+        :param ipv6: True to use IPv6, False to use IPv4 (default IPv6).
+        :param udp: True to use UDP, False to use TCP (default UDP).
+        :param bind_address: The local address to be bound.
+        :param bitrate: The target bitrate in bits/sec (default 10000 bit/sec).
+        :param interval: Seconds between periodic throughput reports (default 10 sec).
+        :param transmit_time: Time in seconds to transmit for (default 10 secs)
+        :param length: Length of buffer to read or write (default None).
+        """
+        #
+        # Iperf3 client example:
+        #
+        # $ iperf3 -6 -c fdd6:f5cf:d32d:8d88:a98b:cf7c:2ed2:691a -u -b 90000 -i 20 -t 10 -l 1232 -f k
+        # Connecting to host fdd6:f5cf:d32d:8d88:a98b:cf7c:2ed2:691a, port 5201
+        # [  5] local fdd6:f5cf:d32d:8d88:0:ff:fe00:fc00 port 59495 connected to fdd6:f5cf:d32d:8d88:a98b:cf7c:2ed2:691a port 5201
+        # [ ID] Interval           Transfer     Bitrate         Total Datagrams
+        # [  5]   0.00-10.00  sec   111 KBytes  90.7 Kbits/sec  92
+        # - - - - - - - - - - - - - - - - - - - - - - - - -
+        # [ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+        # [  5]   0.00-10.00  sec   111 KBytes  90.7 Kbits/sec  0.000 ms  0/92 (0%)  sender
+        # [  5]   0.00-10.96  sec  99.9 KBytes  74.7 Kbits/sec  30.157 ms  9/92 (9.8%)  receiver
+        #
+        # iperf Done.
+        #
+
+        wait_time = 10
+        client_option = f'-c {host}'
+        version_option = "-6" if ipv6 else "-4"
+        udp_option = '-u' if udp else ''
+        bind_option = f'-B {bind_address}' if bind_address else ''
+        bitrate_option = f'-b {bitrate}'
+        interval_option = f'-i {interval}'
+        time_option = f'-t {transmit_time}'
+        length_option = f'-l {length}' if length else ''
+        format_option = '-f k'
+
+        cmd = f'iperf3 {version_option} {client_option} {udp_option} {bitrate_option} {interval_option} {time_option} {length_option} {format_option}'
+        output = self.execute_platform_command(cmd, timeout=transmit_time + wait_time)
+
+        results = {}
+        for line in output:
+            fields = line.split()
+            if len(fields) != 13:
+                continue
+
+            if fields[-1] == 'sender':
+                results['sender'] = self.__parse_iperf3_report(line)
+            elif fields[-1] == 'receiver':
+                results['receiver'] = self.__parse_iperf3_report(line)
+
+        return results
+
+    def iperf3_server(self,
+                      bind_address: Optional[Union[str, Ip6Addr]] = None,
+                      interval: int = 10,
+                      timeout: int = 60) -> Dict[str, Any]:
+        """Run iperf3 in server mode.
+
+        :param bind_address: The local address to be bound.
+        :param interval: Seconds between periodic throughput reports (default 10 sec).
+        :param timeout: Timeout in seconds to abort the program (default 60 secs)
+        """
+        #
+        # Iperf3 server example:
+        #
+        # $ iperf3 -s -1 -B fdd6:f5cf:d32d:8d88:a98b:cf7c:2ed2:691a -i 50 -f k
+        # -----------------------------------------------------------
+        # Server listening on 5201
+        # -----------------------------------------------------------
+        # Accepted connection from fdd6:f5cf:d32d:8d88:0:ff:fe00:fc00, port 44080
+        # [  5] local fdd6:f5cf:d32d:8d88:a98b:cf7c:2ed2:691a port 5201 connected to fdd6:f5cf:d32d:8d88:0:ff:fe00:fc00 port 59495
+        # [ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+        # [  5]   0.00-10.96  sec  99.9 KBytes  74.7 Kbits/sec  30.157 ms  9/92 (9.8%)
+        # - - - - - - - - - - - - - - - - - - - - - - - - -
+        # [ ID] Interval           Transfer     Bitrate         Jitter    Lost/Total Datagrams
+        # [  5]   0.00-10.96  sec  99.9 KBytes  74.7 Kbits/sec  30.157 ms  9/92 (9.8%)  receiver
+        #
+
+        bind_option = f'-B {bind_address}' if bind_address else ''
+        interval_option = f'-i {interval}'
+        format_option = '-f k'
+
+        cmd = f'iperf3 -s -1 {bind_option} {interval_option} {format_option}'
+        output = self.execute_platform_command(cmd, timeout)
+
+        results = {}
+        for line in output:
+            fields = line.split()
+            if len(fields) == 13 and fields[-1] == 'receiver':
+                results = self.__parse_iperf3_report(line)
+
+        return results
+
+    def __parse_iperf3_report(self, line: str) -> Dict[str, Any]:
+        results = {}
+        fields = line.split()
+        format_unit = 1000
+
+        if len(fields) == 13 and (fields[-1] == 'sender' or fields[-1] == 'receiver'):
+            results['id'] = int(fields[1].replace(']', ''))
+            results['interval_start'] = float(fields[2].split('-')[0])
+            results['interval_end'] = float(fields[2].split('-')[1])
+            results['transfer'] = int(float(fields[4]) * format_unit)
+            results['bitrate'] = int(float(fields[6]) * format_unit)
+            results['jitter'] = float(fields[8])
+            results['lossrate'] = float(fields[11].replace('(', '').replace(')', '').replace('%', '')) / 100
+            results['datagrams'] = fields[12]
+
+        return results
 
     #
     # Private methods

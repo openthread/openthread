@@ -44,7 +44,6 @@
 #include "common/random.hpp"
 #include "instance/instance.hpp"
 #include "thread/network_data_local.hpp"
-#include "thread/network_data_service.hpp"
 
 namespace ot {
 namespace NetworkData {
@@ -573,18 +572,17 @@ void Publisher::DnsSrpServiceEntry::Add(void)
     switch (GetType())
     {
     case kTypeAnycast:
-        SuccessOrExit(Get<Service::Manager>().Add<Service::DnsSrpAnycast>(
-            Service::DnsSrpAnycast::ServiceData(mInfo.GetSequenceNumber())));
+        SuccessOrExit(Get<Service::Manager>().AddDnsSrpAnycastService(mInfo.GetSequenceNumber()));
         break;
 
     case kTypeUnicast:
-        SuccessOrExit(Get<Service::Manager>().Add<Service::DnsSrpUnicast>(
-            Service::DnsSrpUnicast::ServiceData(mInfo.GetAddress(), mInfo.GetPort())));
+        SuccessOrExit(
+            Get<Service::Manager>().AddDnsSrpUnicastServiceWithAddrInServiceData(mInfo.GetAddress(), mInfo.GetPort()));
         break;
 
     case kTypeUnicastMeshLocalEid:
-        SuccessOrExit(Get<Service::Manager>().Add<Service::DnsSrpUnicast>(
-            Service::DnsSrpUnicast::ServerData(mInfo.GetAddress(), mInfo.GetPort())));
+        SuccessOrExit(
+            Get<Service::Manager>().AddDnsSrpUnicastServiceWithAddrInServerData(mInfo.GetAddress(), mInfo.GetPort()));
         break;
     }
 
@@ -605,17 +603,16 @@ void Publisher::DnsSrpServiceEntry::Remove(State aNextState)
     switch (GetType())
     {
     case kTypeAnycast:
-        SuccessOrExit(Get<Service::Manager>().Remove<Service::DnsSrpAnycast>(
-            Service::DnsSrpAnycast::ServiceData(mInfo.GetSequenceNumber())));
+        SuccessOrExit(Get<Service::Manager>().RemoveDnsSrpAnycastService(mInfo.GetSequenceNumber()));
         break;
 
     case kTypeUnicast:
-        SuccessOrExit(Get<Service::Manager>().Remove<Service::DnsSrpUnicast>(
-            Service::DnsSrpUnicast::ServiceData(mInfo.GetAddress(), mInfo.GetPort())));
+        SuccessOrExit(Get<Service::Manager>().RemoveDnsSrpUnicastServiceWithAddrInServiceData(mInfo.GetAddress(),
+                                                                                              mInfo.GetPort()));
         break;
 
     case kTypeUnicastMeshLocalEid:
-        SuccessOrExit(Get<Service::Manager>().Remove<Service::DnsSrpUnicast>());
+        SuccessOrExit(Get<Service::Manager>().RemoveDnsSrpUnicastServiceWithAddrInServerData());
         break;
     }
 
@@ -659,14 +656,10 @@ void Publisher::DnsSrpServiceEntry::Process(void)
         break;
 
     case kTypeUnicastMeshLocalEid:
-    {
-        Service::DnsSrpAnycast::Info anycastInfo;
-        bool                         hasServiceDataEntry;
-
-        CountServerDataUnicastEntries(numEntries, numPreferredEntries, hasServiceDataEntry);
+        CountUnicastEntries(Service::kAddrInServerData, numEntries, numPreferredEntries);
         desiredNumEntries = kDesiredNumUnicast;
 
-        if (hasServiceDataEntry || (Get<Service::Manager>().FindPreferredDnsSrpAnycastInfo(anycastInfo) == kErrorNone))
+        if (HasAnyServiceDataUnicastEntry() || HasAnyAnycastEntry())
         {
             // If there is any service data unicast entry or anycast
             // entry, we set the desired number of server data
@@ -677,11 +670,10 @@ void Publisher::DnsSrpServiceEntry::Process(void)
         }
 
         break;
-    }
 
     case kTypeUnicast:
         desiredNumEntries = kDesiredNumUnicast;
-        CountServiceDataUnicastEntries(numEntries, numPreferredEntries);
+        CountUnicastEntries(Service::kAddrInServiceData, numEntries, numPreferredEntries);
         break;
     }
 
@@ -698,23 +690,16 @@ void Publisher::DnsSrpServiceEntry::CountAnycastEntries(uint8_t &aNumEntries, ui
     // "sequence number" value). We prefer the entries associated with
     // smaller RLCO16.
 
-    Service::DnsSrpAnycast::ServiceData serviceData(mInfo.GetSequenceNumber());
-    const ServiceTlv                   *serviceTlv = nullptr;
-    ServiceData                         data;
+    Service::Manager::Iterator iterator;
+    Service::DnsSrpAnycastInfo anycastInfo;
 
-    data.Init(&serviceData, serviceData.GetLength());
-
-    while ((serviceTlv = Get<Leader>().FindNextThreadService(serviceTlv, data, NetworkData::kServicePrefixMatch)) !=
-           nullptr)
+    while (Get<Service::Manager>().GetNextDnsSrpAnycastInfo(iterator, anycastInfo) == kErrorNone)
     {
-        TlvIterator      subTlvIterator(*serviceTlv);
-        const ServerTlv *serverSubTlv;
-
-        while ((serverSubTlv = subTlvIterator.Iterate<ServerTlv>()) != nullptr)
+        if (anycastInfo.mSequenceNumber == mInfo.GetSequenceNumber())
         {
             aNumEntries++;
 
-            if (IsPreferred(serverSubTlv->GetServer16()))
+            if (IsPreferred(anycastInfo.mRloc16))
             {
                 aNumPreferredEntries++;
             }
@@ -722,81 +707,41 @@ void Publisher::DnsSrpServiceEntry::CountAnycastEntries(uint8_t &aNumEntries, ui
     }
 }
 
-void Publisher::DnsSrpServiceEntry::CountServerDataUnicastEntries(uint8_t &aNumEntries,
-                                                                  uint8_t &aNumPreferredEntries,
-                                                                  bool    &aHasServiceDataEntry) const
+bool Publisher::DnsSrpServiceEntry::HasAnyAnycastEntry(void) const
 {
-    // Count the number of server data DNS/SRP unicast entries in the
-    // Network Data. Also determine whether there is any service data
-    // DNS/SRP unicast entry (update `aHasServiceDataEntry`).
+    Service::Manager::Iterator iterator;
+    Service::DnsSrpAnycastInfo anycastInfo;
 
-    const ServiceTlv *serviceTlv = nullptr;
-    ServiceData       data;
+    return (Get<Service::Manager>().GetNextDnsSrpAnycastInfo(iterator, anycastInfo) == kErrorNone);
+}
 
-    aHasServiceDataEntry = false;
+void Publisher::DnsSrpServiceEntry::CountUnicastEntries(Service::DnsSrpUnicastType aType,
+                                                        uint8_t                   &aNumEntries,
+                                                        uint8_t                   &aNumPreferredEntries) const
+{
+    // Count the number of DNS/SRP unicast entries in the Network Data.
 
-    data.InitFrom(Service::DnsSrpUnicast::kServiceData);
+    Service::Manager::Iterator iterator;
+    Service::DnsSrpUnicastInfo unicastInfo;
 
-    while ((serviceTlv = Get<Leader>().FindNextThreadService(serviceTlv, data, NetworkData::kServicePrefixMatch)) !=
-           nullptr)
+    while (Get<Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, aType, unicastInfo) == kErrorNone)
     {
-        TlvIterator      subTlvIterator(*serviceTlv);
-        const ServerTlv *serverSubTlv;
+        aNumEntries++;
 
-        if (serviceTlv->GetServiceDataLength() >= sizeof(Service::DnsSrpUnicast::ServiceData))
+        if (IsPreferred(unicastInfo.mRloc16))
         {
-            aHasServiceDataEntry = true;
-        }
-
-        while (((serverSubTlv = subTlvIterator.Iterate<ServerTlv>())) != nullptr)
-        {
-            if (serverSubTlv->GetServerDataLength() < sizeof(Service::DnsSrpUnicast::ServerData))
-            {
-                continue;
-            }
-
-            aNumEntries++;
-
-            if (IsPreferred(serverSubTlv->GetServer16()))
-            {
-                aNumPreferredEntries++;
-            }
+            aNumPreferredEntries++;
         }
     }
 }
 
-void Publisher::DnsSrpServiceEntry::CountServiceDataUnicastEntries(uint8_t &aNumEntries,
-                                                                   uint8_t &aNumPreferredEntries) const
+bool Publisher::DnsSrpServiceEntry::HasAnyServiceDataUnicastEntry(void) const
 {
-    // Count the number of service data DNS/SRP unicast entries in
-    // the Network Data.
+    Service::Manager::Iterator iterator;
+    Service::DnsSrpUnicastInfo unicastInfo;
+    Service::DnsSrpUnicastType type = Service::kAddrInServiceData;
 
-    const ServiceTlv *serviceTlv = nullptr;
-    ServiceData       data;
-
-    data.InitFrom(Service::DnsSrpUnicast::kServiceData);
-
-    while ((serviceTlv = Get<Leader>().FindNextThreadService(serviceTlv, data, NetworkData::kServicePrefixMatch)) !=
-           nullptr)
-    {
-        TlvIterator      subTlvIterator(*serviceTlv);
-        const ServerTlv *serverSubTlv;
-
-        if (serviceTlv->GetServiceDataLength() < sizeof(Service::DnsSrpUnicast::ServiceData))
-        {
-            continue;
-        }
-
-        while (((serverSubTlv = subTlvIterator.Iterate<ServerTlv>())) != nullptr)
-        {
-            aNumEntries++;
-
-            if (IsPreferred(serverSubTlv->GetServer16()))
-            {
-                aNumPreferredEntries++;
-            }
-        }
-    }
+    return (Get<Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo) == kErrorNone);
 }
 
 //---------------------------------------------------------------------------------------------------------------------

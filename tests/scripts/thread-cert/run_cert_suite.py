@@ -31,6 +31,7 @@ import multiprocessing
 import os
 import queue
 import subprocess
+import time
 import traceback
 from collections import Counter
 from typing import List
@@ -70,7 +71,7 @@ def run_cert(job_id: int, port_offset: int, script: str, run_directory: str):
         env['PYTHONPATH'] = os.path.dirname(os.path.abspath(__file__))
 
         try:
-            print(f'Running {test_name}')
+            print(f'Running PORT_OFFSET={port_offset} {test_name}')
             with open(logfile, 'wt') as output:
                 abs_script = os.path.abspath(script)
                 subprocess.check_call(abs_script,
@@ -158,29 +159,36 @@ def run_tests(scripts: List[str], multiply: int = 1, run_directory: str = None):
     script_ids = [(script, i) for script in scripts for i in range(multiply)]
     port_offset_pool = PortOffsetPool(MAX_JOBS)
 
-    def error_callback(port_offset, script, err):
+    def error_callback(port_offset, script, err, start_time):
         port_offset_pool.release(port_offset)
 
+        elapsed_time = round(time.time() - start_time)
         script_fail_count[script] += 1
         if script_succ_count[script] + script_fail_count[script] == multiply:
             color = _COLOR_PASS if script_fail_count[script] == 0 else _COLOR_FAIL
-            print(f'{color}PASS {script_succ_count[script]} FAIL {script_fail_count[script]}{_COLOR_NONE} {script}')
+            print(
+                f'{color}PASS {script_succ_count[script]} FAIL {script_fail_count[script]}{_COLOR_NONE} {script} in {elapsed_time}s'
+            )
 
-    def pass_callback(port_offset, script):
+    def pass_callback(port_offset, script, start_time):
         port_offset_pool.release(port_offset)
 
+        elapsed_time = round(time.time() - start_time)
         script_succ_count[script] += 1
         if script_succ_count[script] + script_fail_count[script] == multiply:
             color = _COLOR_PASS if script_fail_count[script] == 0 else _COLOR_FAIL
-            print(f'{color}PASS {script_succ_count[script]} FAIL {script_fail_count[script]}{_COLOR_NONE} {script}')
+            print(
+                f'{color}PASS {script_succ_count[script]} FAIL {script_fail_count[script]}{_COLOR_NONE} {script} in {elapsed_time}s'
+            )
 
     for script, i in script_ids:
         port_offset = port_offset_pool.allocate()
-        pool.apply_async(
-            run_cert, [i, port_offset, script, run_directory],
-            callback=lambda ret, port_offset=port_offset, script=script: pass_callback(port_offset, script),
-            error_callback=lambda err, port_offset=port_offset, script=script: error_callback(
-                port_offset, script, err))
+        start_time = time.time()
+        pool.apply_async(run_cert, [i, port_offset, script, run_directory],
+                         callback=lambda ret, port_offset=port_offset, script=script, start_time=start_time:
+                         pass_callback(port_offset, script, start_time),
+                         error_callback=lambda err, port_offset=port_offset, script=script, start_time=start_time:
+                         error_callback(port_offset, script, err, start_time))
 
     pool.close()
     pool.join()

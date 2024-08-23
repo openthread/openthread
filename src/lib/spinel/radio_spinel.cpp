@@ -79,6 +79,7 @@ RadioSpinel::RadioSpinel(void)
     , mPanId(0xffff)
     , mChannel(0)
     , mRxSensitivity(0)
+    , mBusLatency(0)
     , mState(kStateDisabled)
     , mIsPromiscuous(false)
     , mRxOnWhenIdle(true)
@@ -110,7 +111,8 @@ RadioSpinel::RadioSpinel(void)
     , mVendorRestorePropertiesCallback(nullptr)
     , mVendorRestorePropertiesContext(nullptr)
 #endif
-    , mEnableRcpTimeSync(false)
+    , mTimeSyncEnabled(false)
+    , mTimeSyncOn(false)
     , mSpinelDriver(nullptr)
 {
     memset(&mRadioSpinelMetrics, 0, sizeof(mRadioSpinelMetrics));
@@ -133,7 +135,7 @@ void RadioSpinel::Init(bool          aSkipRcpCompatibilityCheck,
     mResetRadioOnStartup = aSoftwareReset;
 #endif
 
-    mEnableRcpTimeSync = aEnableRcpTimeSync;
+    mTimeSyncEnabled = aEnableRcpTimeSync;
 
     mSpinelDriver = aSpinelDriver;
     mSpinelDriver->SetFrameHandler(&HandleReceivedFrame, &HandleSavedFrame, this);
@@ -797,7 +799,7 @@ void RadioSpinel::Process(const void *aContext)
     ProcessRadioStateMachine();
     RecoverFromRcpFailure();
 
-    if (mEnableRcpTimeSync)
+    if (mTimeSyncEnabled)
     {
         CalcRcpTimeOffset();
     }
@@ -1785,6 +1787,41 @@ void RadioSpinel::GetDiagOutputCallback(otPlatDiagOutputCallback &aCallback, voi
     aContext  = mOutputContext;
 }
 
+otError RadioSpinel::RadioSpinelDiagProcess(char *aArgs[], uint8_t aArgsLength)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgsLength > 1, error = OT_ERROR_INVALID_ARGS);
+
+    aArgs++;
+    aArgsLength--;
+
+    if (strcmp(aArgs[0], "buslatency") == 0)
+    {
+        if (aArgsLength == 1)
+        {
+            PlatDiagOutput("%lu\n", ToUlong(GetBusLatency()));
+        }
+        else if (aArgsLength == 2)
+        {
+            uint32_t busLatency;
+            char    *endptr;
+
+            busLatency = static_cast<uint32_t>(strtoul(aArgs[1], &endptr, 0));
+            VerifyOrExit(*endptr == '\0', error = OT_ERROR_INVALID_ARGS);
+
+            SetBusLatency(busLatency);
+        }
+        else
+        {
+            error = OT_ERROR_INVALID_ARGS;
+        }
+    }
+
+exit:
+    return error;
+}
+
 otError RadioSpinel::PlatDiagProcess(const char *aString)
 {
     return Set(SPINEL_PROP_NEST_STREAM_MFG, SPINEL_DATATYPE_UTF8_S, aString);
@@ -1883,6 +1920,7 @@ void RadioSpinel::CalcRcpTimeOffset(void)
      *         D = T1' - ((T0 + T2)/ 2)
      */
 
+    EXPECT(mTimeSyncOn, NO_ACTION);
     EXPECT(!mIsTimeSynced || (otPlatTimeGet() >= GetNextRadioTimeRecalcStart()), NO_ACTION);
 
     LogDebg("Trying to get RCP time offset");
@@ -1911,6 +1949,18 @@ exit:
 uint64_t RadioSpinel::GetNow(void) { return (mIsTimeSynced) ? (otPlatTimeGet() + mRadioTimeOffset) : UINT64_MAX; }
 
 uint32_t RadioSpinel::GetBusSpeed(void) const { return GetSpinelDriver().GetSpinelInterface()->GetBusSpeed(); }
+
+uint32_t RadioSpinel::GetBusLatency(void) const { return mBusLatency; }
+
+void RadioSpinel::SetBusLatency(uint32_t aBusLatency)
+{
+    mBusLatency = aBusLatency;
+
+    if (IsEnabled() && mCallbacks.mBusLatencyChanged != nullptr)
+    {
+        mCallbacks.mBusLatencyChanged(mInstance);
+    }
+}
 
 void RadioSpinel::HandleRcpUnexpectedReset(spinel_status_t aStatus)
 {
@@ -2183,7 +2233,7 @@ void RadioSpinel::RestoreProperties(void)
     }
 #endif
 
-    if (mEnableRcpTimeSync)
+    if (mTimeSyncEnabled)
     {
         CalcRcpTimeOffset();
     }

@@ -32,11 +32,13 @@ import logging
 import os
 import sys
 import textwrap
+import threading
 
 from typing import List
 
 import otci
 from otci import OTCI
+from otci.types import Ip6Addr
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -80,17 +82,130 @@ class RcpCaps(object):
         self.__dut.diag_stop()
 
     def test_csl(self):
+        """Test whether the DUT supports CSL transmitter."""
         self.__dataset = self.__get_default_dataset()
         self.__test_csl_transmitter()
 
     def test_data_poll(self):
+        """Test whether the DUT supports data poll parent and child."""
         self.__dataset = self.__get_default_dataset()
         self.__test_data_poll_parent()
         self.__test_data_poll_child()
 
+    def test_throughput(self):
+        """Test Thread network 1 hop throughput."""
+        if not self.__dut.support_iperf3():
+            print("The DUT doesn't support the tool iperf3")
+            return
+
+        if not self.__ref.support_iperf3():
+            print("The reference device doesn't support the tool iperf3")
+            return
+
+        bitrate = 90000
+        length = 1232
+        transmit_time = 30
+        max_wait_time = 30
+        timeout = transmit_time + max_wait_time
+
+        self.__dut.factory_reset()
+        self.__ref.factory_reset()
+
+        dataset = self.__get_default_dataset()
+
+        self.__dut.join(dataset)
+        self.__dut.wait_for('state', 'leader')
+
+        self.__ref.set_router_selection_jitter(1)
+        self.__ref.join(dataset)
+        self.__ref.wait_for('state', ['child', 'router'])
+
+        ref_mleid = self.__ref.get_ipaddr_mleid()
+
+        ref_iperf3_server = threading.Thread(target=self.__ref_iperf3_server_task,
+                                             args=(ref_mleid, timeout),
+                                             daemon=True)
+        ref_iperf3_server.start()
+        self.__dut.wait(1)
+
+        results = self.__dut.iperf3_client(host=ref_mleid, bitrate=bitrate, transmit_time=transmit_time, length=length)
+        ref_iperf3_server.join()
+
+        if not results:
+            print('Failed to run the iperf3')
+            return
+
+        self.__output_format_string('Throughput', self.__bitrate_to_string(results['receiver']['bitrate']))
+
+    def test_link_metrics(self):
+        """Test whether the DUT supports Link Metrics Initiator and Subject."""
+        self.__dataset = self.__get_default_dataset()
+
+        self.__dut.factory_reset()
+        self.__ref.factory_reset()
+
+        self.__dut.join(self.__dataset)
+        self.__dut.wait_for('state', 'leader')
+
+        self.__ref.join(self.__dataset)
+        self.__ref.wait_for('state', ['child', 'router'])
+
+        test_case = 'Link Metrics Initiator'
+        ref_linklocal_address = self.__ref.get_ipaddr_linklocal()
+        ret = self.__run_link_metrics_test_commands(initiator=self.__dut, subject_address=ref_linklocal_address)
+        self.__output_format_bool(test_case, ret)
+
+        test_case = 'Link Metrics Subject'
+        dut_linklocal_address = self.__dut.get_ipaddr_linklocal()
+        ret = self.__run_link_metrics_test_commands(initiator=self.__ref, subject_address=dut_linklocal_address)
+        self.__output_format_bool(test_case, ret)
+
+        self.__ref.leave()
+        self.__dut.leave()
+
     #
     # Private methods
     #
+    def __run_link_metrics_test_commands(self, initiator: OTCI, subject_address: Ip6Addr) -> bool:
+        seriesid = 1
+        series_flags = 'ldra'
+        link_metrics_flags = 'qr'
+        probe_length = 10
+
+        if not initiator.linkmetrics_config_enhanced_ack_register(subject_address, link_metrics_flags):
+            return False
+
+        if not initiator.linkmetrics_config_forward(subject_address, seriesid, series_flags, link_metrics_flags):
+            return False
+
+        initiator.linkmetrics_probe(subject_address, seriesid, probe_length)
+
+        results = initiator.linkmetrics_request_single(subject_address, link_metrics_flags)
+        if not ('lqi' in results.keys() and 'rssi' in results.keys()):
+            return False
+
+        results = initiator.linkmetrics_request_forward(subject_address, seriesid)
+        if not ('lqi' in results.keys() and 'rssi' in results.keys()):
+            return False
+
+        if not initiator.linkmetrics_config_enhanced_ack_clear(subject_address):
+            return False
+
+        return True
+
+    def __ref_iperf3_server_task(self, bind_address: str, timeout: int):
+        self.__ref.iperf3_server(bind_address, timeout=timeout)
+
+    def __bitrate_to_string(self, bitrate: float):
+        units = ['bits/sec', 'Kbits/sec', 'Mbits/sec', 'Gbits/sec', 'Tbits/sec']
+        unit_index = 0
+
+        while bitrate >= 1000 and unit_index < len(units) - 1:
+            bitrate /= 1000
+            unit_index += 1
+
+        return f'{bitrate:.2f} {units[unit_index]}'
+
     def __get_default_dataset(self):
         return self.__dut.create_dataset(channel=20, network_key='00112233445566778899aabbccddcafe')
 
@@ -475,6 +590,14 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        '-l',
+        '--link-metrics',
+        action='store_true',
+        default=False,
+        help='test whether the RCP supports link metrics',
+    )
+
+    parser.add_argument(
         '-d',
         '--diag-commands',
         action='store_true',
@@ -488,6 +611,14 @@ def parse_arguments():
         action='store_true',
         default=False,
         help='test whether the RCP supports data poll',
+    )
+
+    parser.add_argument(
+        '-t',
+        '--throughput',
+        action='store_true',
+        default=False,
+        help='test Thread network 1-hop throughput',
     )
 
     parser.add_argument(
@@ -518,6 +649,12 @@ def main():
 
     if arguments.data_poll is True:
         rcp_caps.test_data_poll()
+
+    if arguments.link_metrics is True:
+        rcp_caps.test_link_metrics()
+
+    if arguments.throughput:
+        rcp_caps.test_throughput()
 
 
 if __name__ == '__main__':

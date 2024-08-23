@@ -83,7 +83,7 @@ Error BleSecure::Start(ConnectCallback aConnectHandler, ReceiveCallback aReceive
     SuccessOrExit(error = otPlatBleGapAdvSetData(&GetInstance(), advertisementData, advertisementLen));
     SuccessOrExit(error = otPlatBleGapAdvStart(&GetInstance(), OT_BLE_ADV_INTERVAL_DEFAULT));
 
-    SuccessOrExit(error = mTls.Open(&BleSecure::HandleTlsReceive, &BleSecure::HandleTlsConnected, this));
+    SuccessOrExit(error = mTls.Open(&BleSecure::HandleTlsReceive, &BleSecure::HandleTlsConnectEvent, this));
     SuccessOrExit(error = mTls.Bind(HandleTransport, this));
 
 exit:
@@ -321,14 +321,14 @@ Error BleSecure::HandleBleMtuUpdate(uint16_t aMtu)
     return error;
 }
 
-void BleSecure::HandleTlsConnected(void *aContext, bool aConnected)
+void BleSecure::HandleTlsConnectEvent(MeshCoP::SecureTransport::ConnectEvent aEvent, void *aContext)
 {
-    return static_cast<BleSecure *>(aContext)->HandleTlsConnected(aConnected);
+    return static_cast<BleSecure *>(aContext)->HandleTlsConnectEvent(aEvent);
 }
 
-void BleSecure::HandleTlsConnected(bool aConnected)
+void BleSecure::HandleTlsConnectEvent(MeshCoP::SecureTransport::ConnectEvent aEvent)
 {
-    if (aConnected)
+    if (aEvent == MeshCoP::SecureTransport::kConnected)
     {
         if (mReceivedMessage == nullptr)
         {
@@ -358,7 +358,7 @@ void BleSecure::HandleTlsConnected(bool aConnected)
         }
     }
 
-    mConnectCallback.InvokeIfSet(&GetInstance(), aConnected, true);
+    mConnectCallback.InvokeIfSet(&GetInstance(), aEvent == MeshCoP::SecureTransport::kConnected, true);
 
 exit:
     return;

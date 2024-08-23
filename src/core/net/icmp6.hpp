@@ -100,8 +100,9 @@ public:
          */
         enum Code : uint8_t
         {
-            kCodeDstUnreachNoRoute = OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE, ///< Destination Unreachable No Route
-            kCodeFragmReasTimeEx   = OT_ICMP6_CODE_FRAGM_REAS_TIME_EX,   ///< Fragment Reassembly Time Exceeded
+            kCodeDstUnreachNoRoute    = OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE,   ///< Dest Unreachable - No Route
+            kCodeDstUnreachProhibited = OT_ICMP6_CODE_DST_UNREACH_PROHIBITED, ///< Dest Unreachable - Admin Prohibited
+            kCodeFragmReasTimeEx      = OT_ICMP6_CODE_FRAGM_REAS_TIME_EX,     ///< Time Exceeded - Frag Reassembly
         };
 
         static constexpr uint8_t kTypeFieldOffset     = 0; ///< The byte offset of Type field in ICMP6 header.
@@ -331,11 +332,13 @@ public:
     /**
      * Indicates whether or not the ICMPv6 Echo Request should be handled.
      *
+     * @param[in] aAddress    The ICMPv6 destination IPv6 address.
+     *
      * @retval TRUE if OpenThread should respond with an ICMPv6 Echo Reply.
      * @retval FALSE if OpenThread should not respond with an ICMPv6 Echo Reply.
      *
      */
-    bool ShouldHandleEchoRequest(const MessageInfo &aMessageInfo);
+    bool ShouldHandleEchoRequest(const Address &aAddress);
 
     /**
      * Returns the ICMPv6 Echo sequence number.

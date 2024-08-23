@@ -85,8 +85,8 @@ Error CoapSecure::Open(uint16_t aMaxAttempts, AutoStopCallback aCallback, void *
 
     SuccessOrExit(mDtls.SetMaxConnectionAttempts(aMaxAttempts, HandleDtlsAutoClose, this));
     mAutoStopCallback.Set(aCallback, aContext);
-    mConnectedCallback.Clear();
-    SuccessOrExit(mDtls.Open(HandleDtlsReceive, HandleDtlsConnected, this));
+    mConnectEventCallback.Clear();
+    SuccessOrExit(mDtls.Open(HandleDtlsReceive, HandleDtlsConnectEvent, this));
 
     error = kErrorNone;
 
@@ -102,9 +102,9 @@ void CoapSecure::Stop(void)
     ClearRequestsAndResponses();
 }
 
-Error CoapSecure::Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aCallback, void *aContext)
+Error CoapSecure::Connect(const Ip6::SockAddr &aSockAddr, ConnectEventCallback aCallback, void *aContext)
 {
-    mConnectedCallback.Set(aCallback, aContext);
+    mConnectEventCallback.Set(aCallback, aContext);
 
     return mDtls.Connect(aSockAddr);
 }
@@ -178,12 +178,15 @@ Error CoapSecure::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageIn
     return kErrorNone;
 }
 
-void CoapSecure::HandleDtlsConnected(void *aContext, bool aConnected)
+void CoapSecure::HandleDtlsConnectEvent(MeshCoP::SecureTransport::ConnectEvent aEvent, void *aContext)
 {
-    return static_cast<CoapSecure *>(aContext)->HandleDtlsConnected(aConnected);
+    return static_cast<CoapSecure *>(aContext)->HandleDtlsConnectEvent(aEvent);
 }
 
-void CoapSecure::HandleDtlsConnected(bool aConnected) { mConnectedCallback.InvokeIfSet(aConnected); }
+void CoapSecure::HandleDtlsConnectEvent(MeshCoP::SecureTransport::ConnectEvent aEvent)
+{
+    mConnectEventCallback.InvokeIfSet(aEvent);
+}
 
 void CoapSecure::HandleDtlsAutoClose(void *aContext)
 {

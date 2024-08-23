@@ -541,6 +541,36 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
         }
     }
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    /**
+     * @cli ba counters
+     * @code
+     * ba counters
+     * epskcActivation: 0
+     * epskcApiDeactivation: 0
+     * epskcTimeoutDeactivation: 0
+     * epskcMaxAttemptDeactivation: 0
+     * epskcDisconnectDeactivation: 0
+     * epskcInvalidBaStateError: 0
+     * epskcInvalidArgsError: 0
+     * epskcStartSecureSessionError: 0
+     * epskcSecureSessionSuccess: 0
+     * epskcSecureSessionFailure: 0
+     * epskcCommissionerPetition: 0
+     * pskcSecureSessionSuccess: 0
+     * pskcSecureSessionFailure: 0
+     * pskcCommissionerPetition: 0
+     * mgmtActiveGet: 0
+     * mgmtPendingGet: 0
+     * Done
+     * @endcode
+     * @par
+     * Gets the border agent counters.
+     * @sa otBorderAgentGetCounters
+     */
+    else if (aArgs[0] == "counters")
+    {
+        OutputBorderAgentCounters(*otBorderAgentGetCounters(GetInstancePtr()));
+    }
     else
     {
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
@@ -548,6 +578,28 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
 
 exit:
     return error;
+}
+
+void Interpreter::OutputBorderAgentCounters(const otBorderAgentCounters &aCounters)
+{
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    OutputLine("epskcActivation: %lu ", ToUlong(aCounters.mEpskcActivations));
+    OutputLine("epskcApiDeactivation: %lu ", ToUlong(aCounters.mEpskcDeactivationClears));
+    OutputLine("epskcTimeoutDeactivation: %lu ", ToUlong(aCounters.mEpskcDeactivationTimeouts));
+    OutputLine("epskcMaxAttemptDeactivation: %lu ", ToUlong(aCounters.mEpskcDeactivationMaxAttempts));
+    OutputLine("epskcDisconnectDeactivation: %lu ", ToUlong(aCounters.mEpskcDeactivationDisconnects));
+    OutputLine("epskcInvalidBaStateError: %lu ", ToUlong(aCounters.mEpskcInvalidBaStateErrors));
+    OutputLine("epskcInvalidArgsError: %lu ", ToUlong(aCounters.mEpskcInvalidArgsErrors));
+    OutputLine("epskcStartSecureSessionError: %lu ", ToUlong(aCounters.mEpskcStartSecureSessionErrors));
+    OutputLine("epskcSecureSessionSuccess: %lu ", ToUlong(aCounters.mEpskcSecureSessionSuccesses));
+    OutputLine("epskcSecureSessionFailure: %lu ", ToUlong(aCounters.mEpskcSecureSessionFailures));
+    OutputLine("epskcCommissionerPetition: %lu ", ToUlong(aCounters.mEpskcCommissionerPetitions));
+#endif
+    OutputLine("pskcSecureSessionSuccess: %lu ", ToUlong(aCounters.mPskcSecureSessionSuccesses));
+    OutputLine("pskcSecureSessionFailure: %lu ", ToUlong(aCounters.mPskcSecureSessionFailures));
+    OutputLine("pskcCommissionerPetition: %lu ", ToUlong(aCounters.mPskcCommissionerPetitions));
+    OutputLine("mgmtActiveGet: %lu ", ToUlong(aCounters.mMgmtActiveGets));
+    OutputLine("mgmtPendingGet: %lu", ToUlong(aCounters.mMgmtPendingGets));
 }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE

@@ -95,7 +95,36 @@ class PublishMeshCopService(thread_cert.TestCase):
         br1.start()
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
+
+        # start to test ephemeral key mode (ePSKc)
+        br1.ephemeral_key_enabled = True
+        self.assertTrue(br1.ephemeral_key_enabled)
+        self.simulator.go(10)
         self.check_meshcop_service(br1, host)
+
+        # activate ePSKc mode
+        lifetime = 500_000
+        ephemeral_key = br1.activate_ephemeral_key_mode(lifetime)
+        self.assertEqual(len(ephemeral_key), 9)
+        self.assertEqual(br1.get_ephemeral_key_state(), 'active')
+        # check Meshcop-e service
+        self.check_meshcop_e_service(host, True)
+
+        # deactivate ePSKc mode
+        br1.deactivate_ephemeral_key_mode()
+        self.assertEqual(br1.get_ephemeral_key_state(), 'inactive')
+        self.simulator.go(10)
+        # check Meshcop-e service
+        self.check_meshcop_e_service(host, False)
+
+        # change ephemeral key mode (ePSKc) and check Meshcop
+        br1.ephemeral_key_enabled = False
+        self.assertFalse(br1.ephemeral_key_enabled)
+        self.simulator.go(10)
+        self.check_meshcop_service(br1, host)
+        # check Meshcop-e format
+        self.check_meshcop_e_service(host, False)
+        # end of ephemeral key mode (ePSKc) test
 
         br1.disable_backbone_router()
         self.simulator.go(10)
@@ -201,16 +230,28 @@ class PublishMeshCopService(thread_cert.TestCase):
                          br.get_backbone_router_state() != 'Disabled')  # BBR is enabled or not
         self.assertEqual((state_bitmap >> 8 & 1), device_role not in ['disabled', 'detached'] and
                          br.get_backbone_router_state() == 'Primary')  # BBR is primary or not
+        self.assertEqual(bool(state_bitmap >> 11 & 1), br.ephemeral_key_enabled)  # ePSKc is supported or not
         self.assertEqual(service_data['txt']['nn'], br.get_network_name())
         self.assertEqual(service_data['txt']['rv'], '1')
         self.assertIn(service_data['txt']['tv'], ['1.1.0', '1.1.1', '1.2.0', '1.3.0'])
 
-    def discover_all_meshcop_services(self, host):
-        instance_names = host.browse_mdns_services('_meshcop._udp')
+    def discover_services(self, host, type):
+        instance_names = host.browse_mdns_services(type)
         services = []
         for instance_name in instance_names:
-            services.append(host.discover_mdns_service(instance_name, '_meshcop._udp', None))
+            services.append(host.discover_mdns_service(instance_name, type, None))
         return services
+
+    def discover_all_meshcop_services(self, host):
+        return self.discover_services(host, '_meshcop._udp')
+
+    def check_meshcop_e_service(self, host, isactive):
+        services = self.discover_services(host, '_meshcop-e._udp')
+        # TODO: Meshcop-e port check etc.
+        if isactive:
+            self.assertTrue(len(services) > 0, msg='Meshcop-e service not found')
+        else:
+            self.assertEqual(len(services), 0, msg='Meshcop-e service still found after disabled')
 
 
 if __name__ == '__main__':

@@ -382,16 +382,16 @@ exit:
     return error;
 }
 
-void Joiner::HandleSecureCoapClientConnect(bool aConnected, void *aContext)
+void Joiner::HandleSecureCoapClientConnect(SecureTransport::ConnectEvent aEvent, void *aContext)
 {
-    static_cast<Joiner *>(aContext)->HandleSecureCoapClientConnect(aConnected);
+    static_cast<Joiner *>(aContext)->HandleSecureCoapClientConnect(aEvent);
 }
 
-void Joiner::HandleSecureCoapClientConnect(bool aConnected)
+void Joiner::HandleSecureCoapClientConnect(SecureTransport::ConnectEvent aEvent)
 {
     VerifyOrExit(mState == kStateConnect);
 
-    if (aConnected)
+    if (aEvent == SecureTransport::kConnected)
     {
         SetState(kStateConnected);
         SendJoinerFinalize();

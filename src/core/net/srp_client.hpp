@@ -45,6 +45,7 @@
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/numeric_limits.hpp"
+#include "common/owned_ptr.hpp"
 #include "common/timer.hpp"
 #include "crypto/ecdsa.hpp"
 #include "net/dns_types.hpp"
@@ -74,8 +75,9 @@ class Client : public InstanceLocator, private NonCopyable
     friend class ot::Notifier;
     friend class ot::Ip6::Netif;
 
-    using DnsSrpUnicast = NetworkData::Service::DnsSrpUnicast;
-    using DnsSrpAnycast = NetworkData::Service::DnsSrpAnycast;
+    using DnsSrpUnicastInfo = NetworkData::Service::DnsSrpUnicastInfo;
+    using DnsSrpUnicastType = NetworkData::Service::DnsSrpUnicastType;
+    using DnsSrpAnycastInfo = NetworkData::Service::DnsSrpAnycastInfo;
 
 public:
     /**
@@ -965,6 +967,12 @@ private:
         kForServicesAppendedInMessage,
     };
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    typedef Crypto::Ecdsa::P256::KeyPairAsRef KeyInfo;
+#else
+    typedef Crypto::Ecdsa::P256::KeyPair KeyInfo;
+#endif
+
     class TxJitter : public Clearable<TxJitter>
     {
         // Manages the random TX jitter to use when sending SRP update
@@ -1043,54 +1051,47 @@ private:
     };
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
-    struct Info : public Clearable<Info>
+    struct MsgInfo
     {
-        static constexpr uint16_t kUnknownOffset = 0; // Unknown offset value (used when offset is not yet set).
+        static constexpr uint16_t kUnknownOffset = 0;
 
-        uint16_t mDomainNameOffset; // Offset of domain name serialization
-        uint16_t mHostNameOffset;   // Offset of host name serialization.
-        uint16_t mRecordCount;      // Number of resource records in Update section.
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-        Crypto::Ecdsa::P256::KeyPairAsRef mKeyRef; // The ECDSA key ref for key-pair.
-#else
-        Crypto::Ecdsa::P256::KeyPair mKeyPair; // The ECDSA key pair.
-#endif
+        OwnedPtr<Message> mMessage;
+        uint16_t          mDomainNameOffset;
+        uint16_t          mHostNameOffset;
+        uint16_t          mRecordCount;
+        KeyInfo           mKeyInfo;
     };
 
-    Error Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester);
-    void  Stop(Requester aRequester, StopMode aMode);
-    void  Resume(void);
-    void  Pause(void);
-    void  HandleNotifierEvents(Events aEvents);
-    void  HandleRoleChanged(void);
-    void  HandleUnicastAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::UnicastAddress &aAddress);
-    bool  ShouldUpdateHostAutoAddresses(void) const;
-    bool  ShouldHostAutoAddressRegister(const Ip6::Netif::UnicastAddress &aUnicastAddress) const;
-    Error UpdateHostInfoStateOnAddressChange(void);
-    void  UpdateServiceStateToRemove(Service &aService);
-    State GetState(void) const { return mState; }
-    void  SetState(State aState);
-    bool  ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStateChangeMode aMode);
-    void  InvokeCallback(Error aError) const;
-    void  InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const;
-    void  HandleHostInfoOrServiceChange(void);
-    void  SendUpdate(void);
-    Error PrepareUpdateMessage(Message &aMessage);
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    Error ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPairAsRef &aKeyRef);
-#else
-    Error ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair);
-#endif
-    Error        AppendServiceInstructions(Message &aMessage, Info &aInfo);
+    Error        Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester);
+    void         Stop(Requester aRequester, StopMode aMode);
+    void         Resume(void);
+    void         Pause(void);
+    void         HandleNotifierEvents(Events aEvents);
+    void         HandleRoleChanged(void);
+    void         HandleUnicastAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::UnicastAddress &aAddress);
+    bool         ShouldUpdateHostAutoAddresses(void) const;
+    bool         ShouldHostAutoAddressRegister(const Ip6::Netif::UnicastAddress &aUnicastAddress) const;
+    Error        UpdateHostInfoStateOnAddressChange(void);
+    void         UpdateServiceStateToRemove(Service &aService);
+    State        GetState(void) const { return mState; }
+    void         SetState(State aState);
+    bool         ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStateChangeMode aMode);
+    void         InvokeCallback(Error aError) const;
+    void         InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const;
+    void         HandleHostInfoOrServiceChange(void);
+    void         SendUpdate(void);
+    Error        PrepareUpdateMessage(MsgInfo &aInfo);
+    Error        ReadOrGenerateKey(KeyInfo &aKeyInfo);
+    Error        AppendServiceInstructions(MsgInfo &aInfo);
     bool         CanAppendService(const Service &aService);
-    Error        AppendServiceInstruction(Service &aService, Message &aMessage, Info &aInfo);
-    Error        AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo);
-    Error        AppendKeyRecord(Message &aMessage, Info &aInfo) const;
-    Error        AppendDeleteAllRrsets(Message &aMessage) const;
-    Error        AppendHostName(Message &aMessage, Info &aInfo, bool aDoNotCompress = false) const;
-    Error        AppendAaaaRecord(const Ip6::Address &aAddress, Message &aMessage, Info &aInfo) const;
-    Error        AppendUpdateLeaseOptRecord(Message &aMessage);
-    Error        AppendSignature(Message &aMessage, Info &aInfo);
+    Error        AppendServiceInstruction(Service &aService, MsgInfo &aInfo);
+    Error        AppendHostDescriptionInstruction(MsgInfo &aInfo);
+    Error        AppendKeyRecord(MsgInfo &aInfo) const;
+    Error        AppendDeleteAllRrsets(MsgInfo &aInfo) const;
+    Error        AppendHostName(MsgInfo &aInfo, bool aDoNotCompress = false) const;
+    Error        AppendAaaaRecord(const Ip6::Address &aAddress, MsgInfo &aInfo) const;
+    Error        AppendUpdateLeaseOptRecord(MsgInfo &aInfo);
+    Error        AppendSignature(MsgInfo &aInfo);
     void         UpdateRecordLengthInMessage(Dns::ResourceRecord &aRecord, uint16_t aOffset, Message &aMessage) const;
     void         HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void         ProcessResponse(Message &aMessage);
@@ -1110,7 +1111,7 @@ private:
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     void  ApplyAutoStartGuardOnAttach(void);
     void  ProcessAutoStart(void);
-    Error SelectUnicastEntry(DnsSrpUnicast::Origin aOrigin, DnsSrpUnicast::Info &aInfo) const;
+    Error SelectUnicastEntry(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo) const;
     void  HandleGuardTimer(void) {}
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
     void SelectNextServer(bool aDisallowSwitchOnRegisteredHost);
@@ -1121,7 +1122,7 @@ private:
     static const char *StateToString(State aState);
     void               LogRetryWaitInterval(void) const;
 #else
-    void LogRetryWaitInterval(void) const {}
+    void                                 LogRetryWaitInterval(void) const {}
 #endif
 
     static const char kDefaultDomainName[];

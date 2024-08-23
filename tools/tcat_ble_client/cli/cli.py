@@ -29,7 +29,8 @@
 import readline
 import shlex
 from ble.ble_stream_secure import BleStreamSecure
-from cli.base_commands import (HelpCommand, HelloCommand, CommissionCommand, DecommissionCommand, PingCommand,
+from cli.base_commands import (HelpCommand, HelloCommand, CommissionCommand, DecommissionCommand, GetDeviceIdCommand,
+                               GetExtPanIDCommand, GetNetworkNameCommand, GetProvisioningUrlCommand, PingCommand,
                                ThreadStateCommand, ScanCommand)
 from cli.dataset_commands import (DatasetCommand)
 from dataset.dataset import ThreadDataset
@@ -44,6 +45,10 @@ class CLI:
             'hello': HelloCommand(),
             'commission': CommissionCommand(),
             'decommission': DecommissionCommand(),
+            'device_id': GetDeviceIdCommand(),
+            'ext_panid': GetExtPanIDCommand(),
+            'provisioning_url': GetProvisioningUrlCommand(),
+            'network_name': GetNetworkNameCommand(),
             'ping': PingCommand(),
             'dataset': DatasetCommand(),
             'thread': ThreadStateCommand(),

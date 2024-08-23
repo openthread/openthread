@@ -777,7 +777,7 @@ public:
     bool IsReset(void) const { return (GetType() == kTypeReset); }
 
     /**
-     * Indicates whether or not the header is a confirmable Put request (i.e, `kTypeConfirmable` with
+     * Indicates whether or not the header is a confirmable Post request (i.e, `kTypeConfirmable` with
      *  `kCodePost`).
      *
      * @retval TRUE   Message is a confirmable Post request.
@@ -787,7 +787,7 @@ public:
     bool IsConfirmablePostRequest(void) const;
 
     /**
-     * Indicates whether or not the header is a non-confirmable Put request (i.e, `kTypeNonConfirmable` with
+     * Indicates whether or not the header is a non-confirmable Post request (i.e, `kTypeNonConfirmable` with
      *  `kCodePost`).
      *
      * @retval TRUE   Message is a non-confirmable Post request.

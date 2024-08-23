@@ -58,6 +58,13 @@ void Radio::Callbacks::HandleTransmitDone(Mac::TxFrame &aFrame, Mac::RxFrame *aA
 
 void Radio::Callbacks::HandleEnergyScanDone(int8_t aMaxRssi) { Get<Mac::SubMac>().HandleEnergyScanDone(aMaxRssi); }
 
+void Radio::Callbacks::HandleBusLatencyChanged(void)
+{
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    Get<CslTxScheduler>().UpdateFrameRequestAhead();
+#endif
+}
+
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 void Radio::Callbacks::HandleDiagsReceiveDone(Mac::RxFrame *aFrame, Error aError)
 {

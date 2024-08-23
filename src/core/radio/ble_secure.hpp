@@ -464,8 +464,8 @@ private:
     static constexpr uint8_t  kPacketBufferSize = OT_BLE_ATT_MTU_MAX - kGattOverhead;
     static constexpr uint16_t kTxBleHandle      = 0; // Characteristics Handle for TX (not used)
 
-    static void HandleTlsConnected(void *aContext, bool aConnected);
-    void        HandleTlsConnected(bool aConnected);
+    static void HandleTlsConnectEvent(MeshCoP::SecureTransport::ConnectEvent aEvent, void *aContext);
+    void        HandleTlsConnectEvent(MeshCoP::SecureTransport::ConnectEvent aEvent);
 
     static void HandleTlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength);
     void        HandleTlsReceive(uint8_t *aBuf, uint16_t aLength);

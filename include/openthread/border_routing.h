@@ -601,6 +601,18 @@ void otBorderRoutingDhcp6PdSetRequestCallback(otInstance                        
                                               void                                 *aContext);
 
 /**
+ * Sets the local on-link prefix.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_TESTING_API_ENABLE`.
+ *
+ * This is intended for testing only and using it will make the BR non-compliant with the Thread Specification.
+ *
+ * @param[in]  aPrefix      The on-link prefix to use.
+ *
+ */
+void otBorderRoutingSetOnLinkPrefix(otInstance *aInstance, const otIp6Prefix *aPrefix);
+
+/**
  * @}
  *
  */
