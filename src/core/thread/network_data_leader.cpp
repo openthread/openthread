@@ -581,6 +581,49 @@ exit:
     return;
 }
 
+Coap::Message *Leader::ProcessCommissionerGetRequest(const Coap::Message &aMessage) const
+{
+    Coap::Message *response = nullptr;
+    OffsetRange    offsetRange;
+
+    response = Get<Tmf::Agent>().NewPriorityResponseMessage(aMessage);
+    VerifyOrExit(response != nullptr);
+
+    if (Tlv::FindTlvValueOffsetRange(aMessage, MeshCoP::Tlv::kGet, offsetRange) == kErrorNone)
+    {
+        // Append the requested sub-TLV types given in Get TLV.
+
+        while (!offsetRange.IsEmpty())
+        {
+            uint8_t             type;
+            const MeshCoP::Tlv *subTlv;
+
+            IgnoreError(aMessage.Read(offsetRange, type));
+            offsetRange.AdvanceOffset(sizeof(type));
+
+            subTlv = FindCommissioningDataSubTlv(type);
+
+            if (subTlv != nullptr)
+            {
+                SuccessOrExit(subTlv->AppendTo(*response));
+            }
+        }
+    }
+    else
+    {
+        // Append all sub-TLVs in the Commissioning Data.
+
+        const CommissioningDataTlv *dataTlv = FindCommissioningData();
+
+        if (dataTlv != nullptr)
+        {
+            SuccessOrExit(response->AppendBytes(dataTlv->GetValue(), dataTlv->GetLength()));
+        }
+    }
+exit:
+    return response;
+}
+
 Error Leader::FindBorderAgentRloc(uint16_t &aRloc16) const
 {
     return ReadCommissioningDataUint16SubTlv(MeshCoP::Tlv::kBorderAgentLocator, aRloc16);
