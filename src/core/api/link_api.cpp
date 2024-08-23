@@ -188,6 +188,11 @@ void otLinkSetMaxFrameRetriesIndirect(otInstance *aInstance, uint8_t aMaxFrameRe
 
 #endif // OPENTHREAD_FTD
 
+uint32_t otLinkGetFrameCounter(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::SubMac>().GetFrameCounter();
+}
+
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
 otMacFilterAddressMode otLinkFilterGetAddressMode(otInstance *aInstance)
