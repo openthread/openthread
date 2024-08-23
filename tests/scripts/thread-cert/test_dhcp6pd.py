@@ -114,5 +114,6 @@ class TestDhcp6Pd(thread_cert.TestCase):
         self.assertEqual(leader.pd_state, "running")
         self.assertEqual(leader.pd_get_prefix(), "2001:db8:abcd:1234::/64")
 
+
 if __name__ == '__main__':
     unittest.main()

@@ -4105,7 +4105,7 @@ EOF
 """ % (prefix, 'on' if slaac else 'off'))
         self.bash('service radvd start')
         self.bash('service radvd status')  # Make sure radvd service is running
-    
+
     def start_pd_radvd_service(self, prefix):
         self.bash("""cat >/etc/radvd.conf <<EOF
 interface wpan0

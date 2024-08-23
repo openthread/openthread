@@ -3947,8 +3947,9 @@ void RoutingManager::PdPrefixManager::Evaluate(void)
 {
     const FavoredOmrPrefix &favoredPrefix = Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix();
 
-    bool shouldPause = !(favoredPrefix.IsEmpty() || favoredPrefix.GetPreference() < OmrPrefixManager::kPdRoutePreference ||
-        favoredPrefix.GetPrefix() == mPrefix.GetPrefix());
+    bool shouldPause =
+        !(favoredPrefix.IsEmpty() || favoredPrefix.GetPreference() < OmrPrefixManager::kPdRoutePreference ||
+          favoredPrefix.GetPrefix() == mPrefix.GetPrefix());
 
     PauseResume(/* aPause= */ shouldPause);
 }
