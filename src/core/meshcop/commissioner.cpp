@@ -56,6 +56,7 @@ Commissioner::Commissioner(Instance &aInstance)
     , mEnergyScan(aInstance)
     , mPanIdQuery(aInstance)
     , mState(kStateDisabled)
+    , mRelaySocket()
 {
     ClearAllBytes(mJoiners);
 
@@ -65,6 +66,13 @@ Commissioner::Commissioner(Instance &aInstance)
     IgnoreError(SetId("OpenThread Commissioner"));
 
     mProvisioningUrl[0] = '\0';
+
+    // FIXME only open if needed?
+    Error err = Get<Ip6::Udp>().Open(this->mRelaySocket, HandleRelayRegistrarCallback, this);
+    LogWarnOnError(err, "Commissioner relay socket opening");
+    Ip6::SockAddr sockAddr = Ip6::SockAddr(49123);
+    err = Get<Ip6::Udp>().Bind(this->mRelaySocket, sockAddr, Ip6::NetifIdentifier::kNetifBackbone);
+    LogWarnOnError(err, "Commissioner relay socket binding");
 }
 
 void Commissioner::SetState(State aState)
@@ -81,6 +89,12 @@ void Commissioner::SetState(State aState)
 
 exit:
     return;
+}
+
+void Commissioner::UpdateCommissioningExtMode()
+{
+    const SecurityPolicy &secPolicy = Get<KeyManager>().GetSecurityPolicy();
+    this->mCommissioningExtensionsMode = secPolicy.mCommercialCommissioningEnabled;
 }
 
 void Commissioner::SignalJoinerEvent(JoinerEvent aEvent, const Joiner *aJoiner) const
@@ -278,6 +292,7 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
     mStateCallback.Set(aStateCallback, aCallbackContext);
     mJoinerCallback.Set(aJoinerCallback, aCallbackContext);
     mTransmitAttempts = 0;
+    this->UpdateCommissioningExtMode();
 
     SuccessOrExit(error = SendPetition());
     SetState(kStatePetition);
@@ -316,6 +331,7 @@ Error Commissioner::Stop(ResignMode aResignMode)
     }
 
     mTimer.Stop();
+    mCommissioningExtensionsMode = false;
 
     SetState(kStateDisabled);
 
@@ -898,7 +914,23 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
     SuccessOrExit(error = Tlv::Find<JoinerIidTlv>(aMessage, joinerIid));
     SuccessOrExit(error = Tlv::Find<JoinerRouterLocatorTlv>(aMessage, joinerRloc));
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kJoinerDtlsEncapsulation, offsetRange));
+    SuccessOrExit(
+        error = Tlv::FindTlvValueStartEndOffsets(aMessage, Tlv::kJoinerDtlsEncapsulation, startOffset, endOffset));
+
+    // determine type of relaying, based on Relay Type ID (in Joiner's UDP source port)
+    // TODO get stored context based on Joiner IID / port etc -> allow pure DTLS to go outside BA.
+    if (mCommissioningExtensionsMode)
+    {
+        uint16_t proto = joinerPort & 0x000f;
+        switch (proto)
+        {
+        case 1: // CCM-BRSKI
+            this->SendBrskiRelayTransmit(aMessage, aMessageInfo, startOffset, endOffset - startOffset, joinerPort, joinerIid, joinerRloc);
+            ExitNow(); // no handling by local Commissioner.
+        default: // in case unrecognized or MeshCop
+            break;
+        }
+    }
 
     if (!Get<Tmf::SecureAgent>().IsConnectionActive())
     {
@@ -965,6 +997,7 @@ void Commissioner::HandleTmf<kUriDatasetChanged>(Coap::Message &aMessage, const 
     VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
     LogInfo("Received %s", UriToString<kUriDatasetChanged>());
+    this->UpdateCommissioningExtMode();
 
     SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
 
@@ -1101,6 +1134,7 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
     aMessage.Free();
 
 exit:
+    LogWarnOnError(error, "Comm::SendRelayTransmit()");
     FreeMessageOnError(message, error);
     return error;
 }

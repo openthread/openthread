@@ -132,12 +132,15 @@ Error Joiner::Start(const char      *aPskd,
 
     SuccessOrExit(error = joinerPskd.SetFrom(aPskd));
 
+    mJoinerType = kTypeMeshcop;
+    mJoinerSourcePort = kMeshcopJoinerUdpSourcePort;
+
     // Use random-generated extended address.
     randomAddress.GenerateRandom();
     Get<Mac::Mac>().SetExtAddress(randomAddress);
     Get<Mle::MleRouter>().UpdateLinkLocalAddress();
 
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(kJoinerUdpPort));
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(mJoinerSourcePort));
     Get<Tmf::SecureAgent>().SetPsk(joinerPskd);
 
     for (JoinerRouter &router : mJoinerRouters)
@@ -195,7 +198,7 @@ void Joiner::Finish(Error aError)
     case kStateEntrust:
     case kStateJoined:
         Get<Tmf::SecureAgent>().Disconnect();
-        IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort));
+        IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(mJoinerSourcePort));
         mTimer.Stop();
 
         OT_FALL_THROUGH;
@@ -354,7 +357,7 @@ Error Joiner::Connect(JoinerRouter &aRouter)
 
     Get<Mac::Mac>().SetPanId(aRouter.mPanId);
     SuccessOrExit(error = Get<Mac::Mac>().SetPanChannel(aRouter.mChannel));
-    SuccessOrExit(error = Get<Ip6::Filter>().AddUnsecurePort(kJoinerUdpPort));
+    SuccessOrExit(error = Get<Ip6::Filter>().AddUnsecurePort(mJoinerSourcePort));
 
     sockAddr.GetAddress().SetToLinkLocalAddress(aRouter.mExtAddr);
 
@@ -379,8 +382,28 @@ void Joiner::HandleSecureCoapClientConnect(SecureTransport::ConnectEvent aEvent)
     if (aEvent == SecureTransport::kConnected)
     {
         SetState(kStateConnected);
-        SendJoinerFinalize();
+        switch(this->mJoinerType) {
+        case kTypeCcmAe:
+            mAeClient = new AeClient(GetInstance());
+            mAeClient->StartEnroll(Get<Tmf::SecureAgent>(), nullptr, this); // TODO use callback with error value?
+            break;
+        case kTypeCcmNkp:
+            LogWarn("NKP not implemented");
+            break;
+        default: // includes kTypeMeshcop
+            SendJoinerFinalize();
+            break;
+        }
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+        if (mJoinerType == kTypeCcmAe)
+        {
+            mTimer.Start(kCcmAeResponseTimeout);
+        } else {
+            mTimer.Start(kResponseTimeout);
+        }
+#else
         mTimer.Start(kResponseTimeout);
+#endif
     }
     else
     {
@@ -498,7 +521,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::Me
 
 exit:
     Get<Tmf::SecureAgent>().Disconnect();
-    IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort));
+    IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(mJoinerSourcePort));
 }
 
 template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

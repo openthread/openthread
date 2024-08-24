@@ -31,3 +31,9 @@ if(NOT OT_EXTERNAL_MBEDTLS)
 endif()
 
 add_subdirectory(tcplp)
+
+f(OT_CCM)
+    add_subdirectory(cn-cbor)
+    add_subdirectory(COSE-C)
+endif()
+

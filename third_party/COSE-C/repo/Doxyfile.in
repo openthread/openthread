@@ -1,0 +1,10 @@
+PROJECT_NAME           = "@CMAKE_PROJECT_NAME@"
+PROJECT_NUMBER         = @CN_VERSION@
+STRIP_FROM_PATH        = @PROJECT_SOURCE_DIR@ \
+                         @PROJECT_BINARY_DIR@
+INPUT                  = @PROJECT_SOURCE_DIR@/README.md \
+                         @PROJECT_SOURCE_DIR@/include \
+                         src
+FILE_PATTERNS          = *.c
+RECURSIVE              = YES
+USE_MDFILE_AS_MAINPAGE = README.md

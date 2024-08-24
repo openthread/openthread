@@ -298,6 +298,16 @@ typedef enum otCoapOptionContentFormat
     OT_COAP_OPTION_CONTENT_FORMAT_COAP_GROUP_JSON = 256,
 
     /**
+     * application/pkcs10: [RFC5967]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_PKCS10 = 286,
+
+    /**
+	 * application/pkix-cert: [RFC2585]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_PKIX_CERT = 287,
+
+    /**
      * application/senml+xml: [RFC8428]
      */
     OT_COAP_OPTION_CONTENT_FORMAT_SENML_XML = 310,

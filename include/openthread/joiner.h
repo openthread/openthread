@@ -90,7 +90,7 @@ typedef struct otJoinerDiscerner
 typedef void (*otJoinerCallback)(otError aError, void *aContext);
 
 /**
- * Enables the Thread Joiner role.
+ * Enables the Thread Joiner role for MeshCoP commissioning.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aPskd             A pointer to the PSKd.
@@ -116,6 +116,55 @@ otError otJoinerStart(otInstance      *aInstance,
                       const char      *aVendorData,
                       otJoinerCallback aCallback,
                       void            *aContext);
+
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+/**
+ * Enables the Thread CCM Joiner role for Autonomous Enrollment (AE) using cBRSKI. This lets the Joiner
+ * retrieve a domain-specific identity (LDevID X.509 certificate) which can be used to later get access to the
+ * Network Credentials of all Thread Networks that are part of the domain.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
+ * @param[in]  aContext          A pointer to application-specific context.
+ *
+ * @retval OT_ERROR_NONE              Successfully started the CCM Joiner role.
+ * @retval OT_ERROR_BUSY              The previous attempt is still on-going.
+ * @retval OT_ERROR_INVALID_STATE     The IPv6 stack is not enabled or Thread stack is fully enabled.
+ *
+ */
+otError otJoinerCcmStartAe(otInstance    *aInstance,
+                         otJoinerCallback aCallback,
+                         void            *aContext);
+
+/**
+ * Enables the Thread CCM Joiner role for Network Key Provisioning (NKP). The Joiner will attempt to
+ * retrieve Network Credentials for a discovered ('best') Thread network that is part of the domain as
+ * defined by its LDevID X.509 certificate. It is then ready to join this network.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
+ * @param[in]  aContext          A pointer to application-specific context.
+ *
+ * @retval OT_ERROR_NONE              Successfully started the CCM Joiner role.
+ * @retval OT_ERROR_BUSY              The previous attempt is still on-going.
+ * @retval OT_ERROR_INVALID_STATE     The IPv6 stack is not enabled or Thread stack is fully enabled.
+ *
+ */
+otError otJoinerCcmStartNkp(otInstance    *aInstance,
+                           otJoinerCallback aCallback,
+                           void            *aContext);
+
+/**
+ * FIXME documentation
+ */
+void otJoinerSetCcmIdentity(otInstance    *aInstance,
+                            const uint8_t *aX509Cert,
+                            uint32_t       aX509Length,
+                            const uint8_t *aPrivateKey,
+                            uint32_t       aPrivateKeyLength,
+                            const uint8_t *aX509CaCertificateChain,
+                            uint32_t       aX509CaCertChainLength);
+#endif
 
 /**
  * Disables the Thread Joiner role.
