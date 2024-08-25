@@ -303,7 +303,7 @@ typedef enum otCoapOptionContentFormat
     OT_COAP_OPTION_CONTENT_FORMAT_PKCS10 = 286,
 
     /**
-	 * application/pkix-cert: [RFC2585]
+     * application/pkix-cert: [RFC2585]
      */
     OT_COAP_OPTION_CONTENT_FORMAT_PKIX_CERT = 287,
 

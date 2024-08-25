@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for COSE.
+ *   This file defines COSE signing and validation functions.
  *   Ref: https://tools.ietf.org/html/rfc8152
  */
 
@@ -55,14 +55,15 @@ class CoseObject
 {
 };
 
+// TODO: document class and public interface
 class CoseSignObject : public CoseObject
 {
 public:
     CoseSignObject(void);
 
-    otError Init(int aCoseInitFlags);
+    otError Init(int aCoseInitFlags, int (*mbedTlsSecurePrng)(void *, unsigned char *aBuffer, size_t aSize));
 
-    otError Serialize(uint8_t *aBuf,  size_t &aLength, size_t aBufLength);
+    otError        Serialize(uint8_t *aBuf, size_t &aLength, size_t aBufLength);
     static otError Deserialize(CoseSignObject &aCose, const uint8_t *aBuf, size_t aLength);
     void           Free();
 

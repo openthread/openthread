@@ -51,6 +51,7 @@
 #include "mac/mac_types.hpp"
 #include "meshcop/announce_begin_client.hpp"
 #include "meshcop/energy_scan_client.hpp"
+#include "meshcop/joiner.hpp"
 #include "meshcop/panid_query_client.hpp"
 #include "meshcop/secure_transport.hpp"
 #include "net/ip6_address.hpp"
@@ -372,15 +373,6 @@ private:
         void CopyToJoinerInfo(otJoinerInfo &aJoiner) const;
     };
 
-    // FIXME OT_TOOL_PACKED_BEGIN
-    struct JpyHeader
-    {
-        uint16_t mPort;
-        uint16_t mRloc;
-        Ip6::InterfaceIdentifier mIid;
-    };
-    // FIXME OT_TOOL_PACKED_END
-
     Error   Stop(ResignMode aResignMode);
     Joiner *GetUnusedJoinerEntry(void);
     Joiner *FindJoinerEntry(const Mac::ExtAddress *aEui64);
@@ -394,6 +386,7 @@ private:
                     uint32_t               aTimeout);
     Error RemoveJoiner(const Mac::ExtAddress *aEui64, const JoinerDiscerner *aDiscerner, uint32_t aDelay);
     void  RemoveJoiner(Joiner &aJoiner, uint32_t aDelay);
+    int   CountJoiners();
 
     void HandleTimer(void);
     void HandleJoinerExpirationTimer(void);
@@ -428,22 +421,15 @@ private:
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void HandleRelayReceive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
     void HandleJoinerSessionTimer(void);
 
     void SendJoinFinalizeResponse(const Coap::Message &aRequest, StateTlv::State aState);
 
     static Error SendRelayTransmit(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     Error        SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void         SendBrskiRelayTransmit(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                                        uint16_t dtlsPayloadOffset, uint16_t dtlsLen,
-                                        uint16_t joinerPort, const Ip6::InterfaceIdentifier &joinerIid, uint16_t joinerRloc);
-    Error        ForwardToRegistrar(Message &aJpyMessage);
-    Message*     NewJpyMessage(const uint8_t *aDtlsData, uint16_t aDtlsLen, uint16_t joinerPort,
-                               const Ip6::InterfaceIdentifier &joinerIid, uint16_t joinerRloc);
-    void HandleRelayRegistrar(Message *aMessage, const Ip6::MessageInfo *aMessageInfo);
-    static void HandleRelayRegistrarCallback(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void         SendToExtCommissioner(MeshCoP::Joiner::Operation aOperation, const Message &aMessage);
+    void         HandleExtCommissionerCallback(const Message *aMessage, const Ip6::MessageInfo *aMessageInfo);
+    static void  HandleExtCommissionerCallback(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     void  ComputeBloomFilter(SteeringData &aSteeringData) const;
     void  SendCommissionerSet(void);
@@ -452,7 +438,7 @@ private:
     void  SendKeepAlive(uint16_t aSessionId);
 
     void SetState(State aState);
-    void UpdateCommissioningExtMode();
+    void UpdateMeshcopExtMode();
     void SignalJoinerEvent(JoinerEvent aEvent, const Joiner *aJoiner) const;
     void LogJoinerEntry(const char *aAction, const Joiner &aJoiner) const;
 
@@ -483,9 +469,9 @@ private:
     ProvisioningUrlTlv::StringType mProvisioningUrl;
     CommissionerIdTlv::StringType  mCommissionerId;
 
-    State mState;
-    bool  mCommissioningExtensionsMode;
-    Ip6::Udp::SocketHandle mRelaySocket;
+    State                  mState;
+    bool                   mMeshcopExtMode;
+    Ip6::Udp::SocketHandle mExtCommSocket; // FIXME allow multiple joiners
 
     Callback<StateCallback>  mStateCallback;
     Callback<JoinerCallback> mJoinerCallback;

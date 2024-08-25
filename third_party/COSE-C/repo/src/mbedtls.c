@@ -21,6 +21,13 @@ bool FUseCompressed = true;
 
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 
+int (*secureMbedtlsPrngFunc) (void *, unsigned char *aBuffer, size_t aSize);
+
+void COSE_Init_SecurePrng(int (*securePrngFunc) (void *, unsigned char *aBuffer, size_t aSize))
+{
+    secureMbedtlsPrngFunc = securePrngFunc;
+}
+
 bool AES_CCM_Decrypt(COSE_Enveloped * pcose, int TSize, int LSize, const byte * pbKey, size_t cbKey, const byte * pbCrypto, size_t cbCrypto, const byte * pbAuthData, size_t cbAuthData, cose_errback * perr)
 {
 
@@ -891,7 +898,9 @@ bool ECDSA_Sign(COSE * pSigner, int index, const eckey_t * eckey, int cbitDigest
 	CHECK_CONDITION(pmdInfo != NULL, COSE_ERR_INVALID_PARAMETER);
 	CHECK_CONDITION(mbedtls_md(pmdInfo, rgbToSign, cbToSign, rgbDigest) == 0, COSE_ERR_INVALID_PARAMETER);
 
-	CHECK_CONDITION(mbedtls_ecdsa_sign_det((mbedtls_ecp_group*)&eckey->grp, &r, &s, &eckey->d, rgbDigest, mbedtls_md_get_size(pmdInfo), mdType) == 0, COSE_ERR_CRYPTO_FAIL);
+	CHECK_CONDITION(mbedtls_ecdsa_sign_det_ext((mbedtls_ecp_group*)&eckey->grp, &r, &s, &eckey->d, rgbDigest,
+                    mbedtls_md_get_size(pmdInfo), mdType, secureMbedtlsPrngFunc, NULL) == 0,
+                    COSE_ERR_CRYPTO_FAIL);
 
 	cbR = (eckey->grp.nbits + 7) / 8;
 
@@ -1149,4 +1158,5 @@ errorReturn:
 	return fRet;
 }
 */
+
 #endif // USE_MBED_TLS

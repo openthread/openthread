@@ -605,6 +605,23 @@ exit:
 #endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 
 #if defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
+Error SecureTransport::GetPeerCertificateDer(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
+{
+    Error  error = kErrorNone;
+    size_t peerCertLen;
+
+    VerifyOrExit(IsStateConnected(), error = kErrorInvalidState);
+
+    peerCertLen = mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.len;
+    VerifyOrExit(aCertBufferSize >= peerCertLen);
+
+    memcpy(aPeerCert, mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.p, peerCertLen);
+    *aCertLength = peerCertLen;
+
+exit:
+    return error;
+}
+
 Error SecureTransport::GetPeerSubjectAttributeByOid(const char *aOid,
                                                     size_t      aOidLength,
                                                     uint8_t    *aAttributeBuffer,

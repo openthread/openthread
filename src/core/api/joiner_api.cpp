@@ -39,19 +39,6 @@
 
 using namespace ot;
 
-void otJoinerSetCcmIdentity(otInstance    *aInstance,
-                            const uint8_t *aX509Cert,
-                            uint32_t       aX509Length,
-                            const uint8_t *aPrivateKey,
-                            uint32_t       aPrivateKeyLength,
-                            const uint8_t *aX509CaCertificateChain,
-                            uint32_t       aX509CaCertChainLength)
-{
-    AsCoreType(aInstance).Get<MeshCoP::Joiner>().SetCcmIdentity(aX509Cert, aX509Length, aPrivateKey,
-                                                               aPrivateKeyLength, aX509CaCertificateChain,
-                                                               aX509CaCertChainLength);
-}
-
 otError otJoinerStart(otInstance      *aInstance,
                       const char      *aPskd,
                       const char      *aProvisioningUrl,
@@ -66,19 +53,13 @@ otError otJoinerStart(otInstance      *aInstance,
                                                               aVendorSwVersion, aVendorData, aCallback, aContext);
 }
 
-otError otJoinerCcmStartAe(otInstance      *aInstance,
-                      otJoinerCallback aCallback,
-                      void            *aContext)
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+otError otJoinerStartCcm(otInstance *aInstance, otJoinOperation aOperation, otJoinerCallback aCallback, void *aContext)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::Joiner>().StartCcmAe(aCallback, aContext);
+    return AsCoreType(aInstance).Get<MeshCoP::Joiner>().StartCcm(static_cast<MeshCoP::Joiner::Operation>(aOperation),
+                                                                 aCallback, aContext);
 }
-
-otError otJoinerCcmStartNkp(otInstance      *aInstance,
-                           otJoinerCallback aCallback,
-                           void            *aContext)
-{
-    return AsCoreType(aInstance).Get<MeshCoP::Joiner>().StartCcmNkp(aCallback, aContext);
-}
+#endif
 
 void otJoinerStop(otInstance *aInstance) { AsCoreType(aInstance).Get<MeshCoP::Joiner>().Stop(); }
 

@@ -33,18 +33,11 @@
 
 #include "../joiner.hpp"
 
-#if OPENTHREAD_CONFIG_JOINER_ENABLE
+#if OPENTHREAD_CONFIG_JOINER_ENABLE && OPENTHREAD_CONFIG_CCM_ENABLE
 
-#include <stdio.h>
-
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
-#include "common/debug.hpp"
 #include "common/encoding.hpp"
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
-#include "common/string.hpp"
 #include "instance/instance.hpp"
 #include "meshcop/meshcop.hpp"
 #include "radio/radio.hpp"
@@ -57,117 +50,132 @@ namespace MeshCoP {
 
 RegisterLogModule("JoinerCcm");
 
-void Joiner::SetCcmIdentity(const uint8_t *aX509Cert,
-                            uint32_t       aX509Length,
-                            const uint8_t *aPrivateKey,
-                            uint32_t       aPrivateKeyLength,
-                            const uint8_t *aX509CaCertificateChain,
-                            uint32_t aX509CaCertChainLength)
-{
-    Get<Tmf::SecureAgent>().SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
-    Get<Tmf::SecureAgent>().SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
-    Get<Tmf::SecureAgent>().SetSslAuthMode(false); // MUST provisionally trust any Registrar
-}
-
-Error Joiner::StartCcmAe(otJoinerCallback aCallback,
-                    void            *aContext)
+Error Joiner::StartCcm(Operation aOperation, otJoinerCallback aCallback, void *aContext)
 {
     Error                        error;
     Mac::ExtAddress              randomAddress;
     SteeringData::HashBitIndexes filterIndexes;
-
-    LogInfo("JoinerCcm starting AE");
+    Ip6::SockAddr                sockAddr;
 
     VerifyOrExit(mState == kStateIdle, error = kErrorBusy);
-    VerifyOrExit(Get<ThreadNetif>().IsUp() && Get<Mle::Mle>().GetRole() == Mle::kRoleDisabled,
+    VerifyOrExit((Get<ThreadNetif>().IsUp() || aOperation == kOperationCcmBrCbrski) &&
+                     Get<Mle::Mle>().GetRole() == Mle::kRoleDisabled,
                  error = kErrorInvalidState);
 
-    mJoinerType = kTypeCcmAe;
-    mJoinerSourcePort = kCcmAeJoinerUdpSourcePort;
-
-    // Use random-generated extended address.
-    randomAddress.GenerateRandom();
-    Get<Mac::Mac>().SetExtAddress(randomAddress);
-    Get<Mle::MleRouter>().UpdateLinkLocalAddress();
-
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(mJoinerSourcePort));
-
-    for (JoinerRouter &router : mJoinerRouters)
+    switch (aOperation)
     {
-        router.mPriority = 0; // Priority zero means entry is not in-use.
+    case kOperationCcmAeCbrski:
+        VerifyOrExit(!Get<Credentials>().HasOperationalCert(), error = kErrorInvalidState);
+        SuccessOrExit(error = Get<Credentials>().ConfigureIdevid(&Get<Tmf::SecureAgent>().GetDtls()));
+        mJoinerSourcePort = kCcmCbrskiJoinerUdpSourcePort;
+        break;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    case kOperationCcmBrCbrski:
+        VerifyOrExit(!Get<Credentials>().HasOperationalCert(), error = kErrorInvalidState);
+        mJoinerSourcePort = 0; // ephemeral source port, also not a mesh 'unsecure' port.
+        break;
+#endif
+    case kOperationCcmNkp:
+        VerifyOrExit(Get<Credentials>().HasOperationalCert(), error = kErrorInvalidState);
+        SuccessOrExit(error = PrepareCcmNkpJoinerFinalizeMessage());
+        SuccessOrExit(error = Get<Credentials>().ConfigureLdevid(&Get<Tmf::SecureAgent>().GetDtls()));
+        mJoinerSourcePort = kCcmNkpJoinerUdpSourcePort;
+        break;
+    default:
+        ExitNow(error = kErrorInvalidArgs);
     }
 
-    if (!mDiscerner.IsEmpty())
+    mJoinerOperation = aOperation;
+    LogInfo("Start operation %s (%d)", OperationToString(mJoinerOperation), mJoinerOperation);
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    if (aOperation == kOperationCcmBrCbrski)
     {
-        SteeringData::CalculateHashBitIndexes(mDiscerner, filterIndexes);
+        SuccessOrExit(error = Get<Credentials>().ConfigureIdevid(&Get<Tmf::SecureAgent>().GetDtls()));
+        SuccessOrExit(error = Get<BorderRouter::InfraIf>().GetDiscoveredCcmRegistrarAddress(sockAddr.GetAddress()));
+        sockAddr.SetPort(OT_DEFAULT_COAP_SECURE_PORT);
+        SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(mJoinerSourcePort));
+        SuccessOrExit(error = Get<Tmf::SecureAgent>().Connect(sockAddr, Joiner::HandleSecureCoapClientConnect, this));
+        SetState(kStateConnect);
     }
     else
+#endif
     {
-        SteeringData::CalculateHashBitIndexes(mId, filterIndexes);
+        // Use random-generated extended address.
+        randomAddress.GenerateRandom();
+        Get<Mac::Mac>().SetExtAddress(randomAddress);
+        Get<Mle::MleRouter>().UpdateLinkLocalAddress();
+
+        SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(mJoinerSourcePort));
+
+        for (JoinerRouter &router : mJoinerRouters)
+        {
+            router.mPriority = 0; // Priority zero means entry is not in-use.
+        }
+
+        if (!mDiscerner.IsEmpty())
+        {
+            SteeringData::CalculateHashBitIndexes(mDiscerner, filterIndexes);
+        }
+        else
+        {
+            SteeringData::CalculateHashBitIndexes(mId, filterIndexes);
+        }
+
+        SuccessOrExit(error = Get<Mle::DiscoverScanner>().Discover(Mac::ChannelMask(0), Get<Mac::Mac>().GetPanId(),
+                                                                   /* aJoiner */ true, /* aEnableFiltering */ true,
+                                                                   &filterIndexes, HandleDiscoverResult, this));
+        SetState(kStateDiscover);
     }
 
-    SuccessOrExit(error = Get<Mle::DiscoverScanner>().Discover(Mac::ChannelMask(0), Get<Mac::Mac>().GetPanId(),
-                                                               /* aJoiner */ true, /* aEnableFiltering */ true,
-                                                               &filterIndexes, HandleDiscoverResult, this));
-
     mCallback.Set(aCallback, aContext);
-    SetState(kStateDiscover);
 
 exit:
-    LogWarnOnError(error, "start JoinerCcm AE");
+    LogWarnOnError(error, "start JoinerCcm");
+    if (error != kErrorNone)
+    {
+        FreeJoinerFinalizeMessage(); // applies in certain NKP cases.
+    }
     return error;
 }
 
-Error Joiner::StartCcmNkp(otJoinerCallback aCallback,
-                         void            *aContext)
+Error Joiner::PrepareCcmNkpJoinerFinalizeMessage(void)
 {
-    Error                        error;
-    Mac::ExtAddress              randomAddress;
-    SteeringData::HashBitIndexes filterIndexes;
+    Error                 error = kErrorNone;
+    VendorStackVersionTlv vendorStackVersionTlv;
 
-    LogInfo("JoinerCcm starting NKP");
+    // TODO consider if different URI is better (see spec)
+    mFinalizeMessage = Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriJoinerFinalize);
+    VerifyOrExit(mFinalizeMessage != nullptr, error = kErrorNoBufs);
 
-    VerifyOrExit(mState == kStateIdle, error = kErrorBusy);
-    VerifyOrExit(Get<ThreadNetif>().IsUp() && Get<Mle::Mle>().GetRole() == Mle::kRoleDisabled,
-                 error = kErrorInvalidState);
+    mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength());
 
-    mJoinerType = kTypeCcmNkp;
-    mJoinerSourcePort = kCcmAeJoinerUdpSourcePort;
+    SuccessOrExit(error = Tlv::Append<StateTlv>(*mFinalizeMessage, StateTlv::kAccept));
 
-    // Use random-generated extended address.
-    randomAddress.GenerateRandom();
-    Get<Mac::Mac>().SetExtAddress(randomAddress);
-    Get<Mle::MleRouter>().UpdateLinkLocalAddress();
-
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(mJoinerSourcePort));
-
-    for (JoinerRouter &router : mJoinerRouters)
-    {
-        router.mPriority = 0; // Priority zero means entry is not in-use.
-    }
-
-    if (!mDiscerner.IsEmpty())
-    {
-        SteeringData::CalculateHashBitIndexes(mDiscerner, filterIndexes);
-    }
-    else
-    {
-        SteeringData::CalculateHashBitIndexes(mId, filterIndexes);
-    }
-
-    SuccessOrExit(error = Get<Mle::DiscoverScanner>().Discover(Mac::ChannelMask(0), Get<Mac::Mac>().GetPanId(),
-                                                               /* aJoiner */ true, /* aEnableFiltering */ true,
-                                                               &filterIndexes, HandleDiscoverResult, this));
-
-    mCallback.Set(aCallback, aContext);
-    SetState(kStateDiscover);
+    vendorStackVersionTlv.Init();
+    vendorStackVersionTlv.SetOui(OPENTHREAD_CONFIG_STACK_VENDOR_OUI);
+    vendorStackVersionTlv.SetMajor(OPENTHREAD_CONFIG_STACK_VERSION_MAJOR);
+    vendorStackVersionTlv.SetMinor(OPENTHREAD_CONFIG_STACK_VERSION_MINOR);
+    vendorStackVersionTlv.SetRevision(OPENTHREAD_CONFIG_STACK_VERSION_REV);
+    SuccessOrExit(error = vendorStackVersionTlv.AppendTo(*mFinalizeMessage));
 
 exit:
-    LogWarnOnError(error, "start JoinerCcm NKP");
+    if (error != kErrorNone)
+    {
+        FreeJoinerFinalizeMessage();
+    }
+
     return error;
 }
+
+void Joiner::HandleCbrskiClientDone(Error aErr, void *aContext)
+{
+    static_cast<Joiner *>(aContext)->HandleCbrskiClientDone(aErr);
+}
+
+void Joiner::HandleCbrskiClientDone(Error aErr) { Finish(aErr, true); }
 
 } // namespace MeshCoP
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_JOINER_ENABLE
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE && && OPENTHREAD_CONFIG_CCM_ENABLE

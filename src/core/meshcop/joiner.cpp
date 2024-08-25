@@ -132,7 +132,7 @@ Error Joiner::Start(const char      *aPskd,
 
     SuccessOrExit(error = joinerPskd.SetFrom(aPskd));
 
-    mJoinerType = kTypeMeshcop;
+    mJoinerOperation  = kOperationMeshcop;
     mJoinerSourcePort = kMeshcopJoinerUdpSourcePort;
 
     // Use random-generated extended address.
@@ -181,12 +181,16 @@ void Joiner::Stop(void)
 {
     LogInfo("Joiner stopped");
 
-    // Callback is set to `nullptr` to skip calling it from `Finish()`
-    mCallback.Clear();
-    Finish(kErrorAbort);
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+    if (mCbrskiClient != nullptr)
+    {
+        mCbrskiClient->Finish(kErrorAbort, /* aInvokeCallback */ false);
+    }
+#endif
+    Finish(kErrorAbort, /* aInvokeCallback */ false);
 }
 
-void Joiner::Finish(Error aError)
+void Joiner::Finish(Error aError, bool aInvokeCallback)
 {
     switch (mState)
     {
@@ -211,7 +215,10 @@ void Joiner::Finish(Error aError)
     SetState(kStateIdle);
     FreeJoinerFinalizeMessage();
 
-    mCallback.InvokeIfSet(aError);
+    if (aInvokeCallback)
+    {
+        mCallback.InvokeIfSet(aError);
+    }
 
 exit:
     return;
@@ -341,7 +348,7 @@ void Joiner::TryNextJoinerRouter(Error aPrevError)
         aPrevError = kErrorNotFound;
     }
 
-    Finish(aPrevError);
+    Finish(aPrevError, true);
 
 exit:
     return;
@@ -382,25 +389,29 @@ void Joiner::HandleSecureCoapClientConnect(SecureTransport::ConnectEvent aEvent)
     if (aEvent == SecureTransport::kConnected)
     {
         SetState(kStateConnected);
-        switch(this->mJoinerType) {
-        case kTypeCcmAe:
-            mAeClient = new AeClient(GetInstance());
-            mAeClient->StartEnroll(Get<Tmf::SecureAgent>(), nullptr, this); // TODO use callback with error value?
+        switch (mJoinerOperation)
+        {
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+        case kOperationCcmAeCbrski:
+        case kOperationCcmBrCbrski:
+            if (mCbrskiClient == nullptr)
+            {
+                mCbrskiClient = new CbrskiClient(GetInstance()); // FIXME what if new alloc fails?
+            }
+            mCbrskiClient->StartEnroll(Get<Tmf::SecureAgent>(), HandleCbrskiClientDone, this);
             break;
-        case kTypeCcmNkp:
-            LogWarn("NKP not implemented");
+        case kOperationCcmNkp:
+            SendJoinerFinalize();
             break;
+#endif
         default: // includes kTypeMeshcop
             SendJoinerFinalize();
             break;
         }
 #if OPENTHREAD_CONFIG_CCM_ENABLE
-        if (mJoinerType == kTypeCcmAe)
-        {
-            mTimer.Start(kCcmAeResponseTimeout);
-        } else {
-            mTimer.Start(kResponseTimeout);
-        }
+        mTimer.Start((mJoinerOperation == kOperationCcmAeCbrski || mJoinerOperation == kOperationCcmBrCbrski)
+                         ? kCcmCbrskiVoucherResponseTimeout
+                         : kResponseTimeout);
 #else
         mTimer.Start(kResponseTimeout);
 #endif
@@ -506,7 +517,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::Me
     VerifyOrExit(mState == kStateConnected && aResult == kErrorNone);
     OT_ASSERT(aMessage != nullptr);
 
-    VerifyOrExit(aMessage->IsAck() && aMessage->GetCode() == Coap::kCodeChanged);
+    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged);
 
     SuccessOrExit(Tlv::Find<StateTlv>(*aMessage, state));
 
@@ -604,7 +615,7 @@ void Joiner::HandleTimer(void)
         OT_ASSERT(false);
     }
 
-    Finish(error);
+    Finish(error, true);
 }
 
 // LCOV_EXCL_START
@@ -628,6 +639,27 @@ const char *Joiner::StateToString(State aState)
     static_assert(kStateJoined == 5, "kStateJoined value is incorrect");
 
     return kStateStrings[aState];
+}
+
+const char *Joiner::OperationToString(Joiner::Operation aOperation)
+{
+    switch (aOperation)
+    {
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+    case kOperationCcmAeCbrski:
+        return "AE/cBRSKI";
+    case kOperationCcmBrCbrski:
+        return "BR/cBRSKI";
+    case kOperationCcmNkp:
+        return "NKP";
+    case kOperationCcmEstCoaps:
+        return "EST-CoAPS/JR";
+#endif
+    case kOperationMeshcop:
+        return "MeshCoP";
+    default:
+        return "UnknownOp";
+    }
 }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE

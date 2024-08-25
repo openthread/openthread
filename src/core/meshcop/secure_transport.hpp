@@ -332,6 +332,22 @@ public:
 
 #if defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
     /**
+     * Returns the peer x509 certificate DER encoded (native MbedTls format).
+     *
+     * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
+     *
+     * @param[out]  aPeerCert        A pointer to the DER encoded certificate buffer.
+     * @param[out]  aCertLength      The length of the DER encoded peer certificate.
+     * @param[in]   aCertBufferSize  The buffer size of aPeerCert.
+     *
+     * @retval kErrorInvalidState   Not connected yet.
+     * @retval kErrorNone           Successfully get the peer certificate.
+     * @retval kErrorNoBufs         Can't allocate memory for certificate.
+     *
+     */
+    Error GetPeerCertificateDer(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
+
+    /**
      * Returns an attribute value identified by its OID from the subject
      * of the peer x509 certificate. The peer OID is provided in binary format.
      * The attribute length is set if the attribute was successfully read or zero
@@ -402,6 +418,30 @@ public:
     Error GetThreadAttributeFromOwnCertificate(int      aThreadOidDescriptor,
                                                uint8_t *aAttributeBuffer,
                                                size_t  *aAttributeLength);
+
+    /**
+     * Returns an attribute value for the OID 1.3.6.1.4.1.44970.x from the v3 extensions of
+     * the x509 certificate @p aCert, where the last digit x is set to aThreadOidDescriptor.
+     * The attribute length is set if the attribute was successfully read or zero if unsuccessful.
+     *
+     * @param[in]      aCert                 The X509v3 certificate to get the attribute from.
+     * @param[in]      aThreadOidDescriptor  The last digit of the Thread attribute OID.
+     * @param[out]     aAttributeBuffer      A pointer to the attribute buffer.
+     * @param[in,out]  aAttributeLength      On input, the size the max size of @p aAttributeBuffer.
+     *                                       On output, the length of the attribute written to the buffer.
+     *
+     * @retval kErrorNone             Successfully read attribute.
+     * @retval kErrorInvalidArgs      Invalid attribute length.
+     * @retval kErrorNotFound         The requested attribute was not found.
+     * @retval kErrorNoBufs           Insufficient memory for storing the attribute value.
+     * @retval kErrorInvalidState     Certificate @p aCert is not correct, or null.
+     * @retval kErrorNotImplemented   The value of aThreadOidDescriptor is >127.
+     * @retval kErrorParse            The certificate extensions could not be parsed.
+     */
+    Error GetThreadAttributeFromCertificate(const mbedtls_x509_crt *aCert,
+                                            int                     aThreadOidDescriptor,
+                                            uint8_t                *aAttributeBuffer,
+                                            size_t                 *aAttributeLength);
 
     /**
      * Set the authentication mode for a connection.
@@ -510,10 +550,6 @@ private:
      */
     int SetApplicationSecureKeys(void);
 
-    Error GetThreadAttributeFromCertificate(const mbedtls_x509_crt *aCert,
-                                            int                     aThreadOidDescriptor,
-                                            uint8_t                *aAttributeBuffer,
-                                            size_t                 *aAttributeLength);
 #endif
 
     static void HandleMbedtlsDebug(void *aContext, int aLevel, const char *aFile, int aLine, const char *aStr);

@@ -42,6 +42,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "core/common/error.hpp"
 #include "openthread/error.h"
 
 struct cn_cbor;
@@ -53,52 +54,54 @@ namespace MeshCoP {
 class CborValue
 {
 public:
-    virtual otError Init() { return OT_ERROR_FAILED; }
-    void            Free();
+    virtual Error Init() { return kErrorFailed; }
+    void          Free();
 
-    cn_cbor *      GetImpl() { return mCbor; }
+    cn_cbor       *GetImpl() { return mCbor; }
     const cn_cbor *GetImpl() const { return mCbor; }
 
-    bool IsValid() const { return mCbor != NULL; }
+    bool IsValid() const { return mCbor != nullptr; }
 
     // This move the resource from src to dst
     static void Move(CborValue &dst, CborValue &src);
 
-    otError        Serialize(uint8_t *aBuf, size_t &aLength, size_t aMaxLength) const;
-    static otError Deserialize(CborValue &aValue, const uint8_t *aBuf, size_t aLength);
+    Error        Serialize(uint8_t *aBuf, size_t &aLength, size_t aMaxLength) const;
+    static Error Deserialize(CborValue &aValue, const uint8_t *aBuf, size_t aLength);
 
 protected:
     CborValue();
 
     mutable bool mIsRoot;
-    cn_cbor *    mCbor;
+    cn_cbor     *mCbor;
 };
 
 class CborMap : public CborValue
 {
 public:
     CborMap() {}
-    virtual otError Init();
+    virtual Error Init();
 
-    otError Put(const char *aKey, int aValue);
+    Error Put(const char *aKey, int aValue);
 
-    otError Put(const char *aKey, const char *aValue);
+    Error Put(const char *aKey, bool aValue);
 
-    otError Put(int aKey, const CborMap &aMap);
+    Error Put(const char *aKey, const char *aValue);
 
-    otError Put(int aKey, int aValue);
+    Error Put(int aKey, const CborMap &aMap);
 
-    otError Put(int aKey, const uint8_t *aBytes, size_t aLength);
+    Error Put(int aKey, int aValue);
 
-    otError Put(int aKey, const char *aStr);
+    Error Put(int aKey, const uint8_t *aBytes, size_t aLength);
 
-    otError Get(int aKey, CborMap &aMap) const;
+    Error Put(int aKey, const char *aStr);
 
-    otError Get(int aKey, int &aInt) const;
+    Error Get(int aKey, CborMap &aMap) const;
 
-    otError Get(int aKey, const uint8_t *&aBytes, size_t &aLength) const;
+    Error Get(int aKey, int &aInt) const;
 
-    otError Get(int aKey, const char *&aStr, size_t &aLength) const;
+    Error Get(int aKey, const uint8_t *&aBytes, size_t &aLength) const;
+
+    Error Get(int aKey, const char *&aStr, size_t &aLength) const;
 };
 
 } // namespace MeshCoP

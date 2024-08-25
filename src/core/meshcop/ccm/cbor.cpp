@@ -46,16 +46,16 @@ namespace MeshCoP {
 
 CborValue::CborValue()
     : mIsRoot(true)
-    , mCbor(NULL)
+    , mCbor(nullptr)
 {
 }
 
 void CborValue::Free(void)
 {
-    if (mIsRoot && mCbor != NULL)
+    if (mIsRoot && mCbor != nullptr)
     {
         cn_cbor_free(mCbor);
-        mCbor = NULL;
+        mCbor = nullptr;
     }
 }
 
@@ -66,112 +66,125 @@ void CborValue::Move(CborValue &dst, CborValue &src)
     src = CborValue();
 }
 
-otError CborValue::Serialize(uint8_t *aBuf, size_t &aLength, size_t aMaxLength) const
+Error CborValue::Serialize(uint8_t *aBuf, size_t &aLength, size_t aMaxLength) const
 {
-    OT_ASSERT(mIsRoot && mCbor != NULL);
+    OT_ASSERT(mIsRoot && mCbor != nullptr);
     ssize_t written = cn_cbor_encoder_write(aBuf, 0, aMaxLength, mCbor);
     if (written == -1)
-        return OT_ERROR_NO_BUFS;
+        return kErrorNoBufs;
     aLength = written;
-    return OT_ERROR_NONE;
+    return kErrorNone;
 }
 
-otError CborValue::Deserialize(CborValue &aValue, const uint8_t *aBuf, size_t aLength)
+Error CborValue::Deserialize(CborValue &aValue, const uint8_t *aBuf, size_t aLength)
 {
-    cn_cbor *cbor = cn_cbor_decode(aBuf, aLength, NULL);
-    if (cbor == NULL)
-        return OT_ERROR_PARSE;
+    cn_cbor *cbor = cn_cbor_decode(aBuf, aLength, nullptr);
+    if (cbor == nullptr)
+        return kErrorParse;
     aValue.mIsRoot = true;
     aValue.mCbor   = cbor;
-    return OT_ERROR_NONE;
+    return kErrorNone;
 }
 
-otError CborMap::Init(void)
+Error CborMap::Init(void)
 {
-    OT_ASSERT(mCbor == NULL);
+    OT_ASSERT(mCbor == nullptr);
     mIsRoot = true;
-    mCbor   = cn_cbor_map_create(NULL);
-    return mCbor ? OT_ERROR_NONE : OT_ERROR_NO_BUFS;
+    mCbor   = cn_cbor_map_create(nullptr);
+    return mCbor ? kErrorNone : kErrorNoBufs;
 }
 
-otError CborMap::Put(const char *aKey, int aValue)
+Error CborMap::Put(const char *aKey, int aValue)
 {
-    cn_cbor *cborInt = cn_cbor_int_create(aValue, NULL);
-    bool     succeed = cborInt && cn_cbor_mapput_string(mCbor, aKey, cborInt, NULL);
-    return succeed ? OT_ERROR_NONE : OT_ERROR_NO_BUFS;
+    cn_cbor *cborInt = cn_cbor_int_create(aValue, nullptr);
+    bool     succeed = cborInt && cn_cbor_mapput_string(mCbor, aKey, cborInt, nullptr);
+    return succeed ? kErrorNone : kErrorNoBufs;
 }
 
-otError CborMap::Put(const char *aKey, const char *aValue)
+Error CborMap::Put(const char *aKey, bool aValue)
 {
-    cn_cbor *cborStr = cn_cbor_string_create(aValue, NULL);
-    bool     succeed = cborStr && cn_cbor_mapput_string(mCbor, aKey, cborStr, NULL);
-    return succeed ? OT_ERROR_NONE : OT_ERROR_NO_BUFS;
+    cn_cbor *cborBool = cn_cbor_int_create(0, nullptr);
+    if (cborBool == nullptr)
+        return kErrorNoBufs;
+    if (aValue)
+        cborBool->type = CN_CBOR_TRUE;
+    else
+        cborBool->type = CN_CBOR_FALSE;
+    bool succeed = cn_cbor_mapput_string(mCbor, aKey, cborBool, nullptr);
+    return succeed ? kErrorNone : kErrorNoBufs;
 }
 
-otError CborMap::Put(int aKey, const CborMap &aMap)
+Error CborMap::Put(const char *aKey, const char *aValue)
+{
+    cn_cbor *cborStr = cn_cbor_string_create(aValue, nullptr);
+    bool     succeed = cborStr && cn_cbor_mapput_string(mCbor, aKey, cborStr, nullptr);
+    return succeed ? kErrorNone : kErrorNoBufs;
+}
+
+Error CborMap::Put(int aKey, const CborMap &aMap)
 {
     aMap.mIsRoot = false;
-    return cn_cbor_mapput_int(mCbor, aKey, aMap.mCbor, NULL) ? OT_ERROR_NONE : OT_ERROR_NO_BUFS;
+    return cn_cbor_mapput_int(mCbor, aKey, aMap.mCbor, nullptr) ? kErrorNone : kErrorNoBufs;
 }
 
-otError CborMap::Put(int aKey, int aValue)
+Error CborMap::Put(int aKey, int aValue)
 {
-    cn_cbor *cborInt = cn_cbor_int_create(aValue, NULL);
-    bool     succeed = cborInt && cn_cbor_mapput_int(mCbor, aKey, cborInt, NULL);
-    return succeed ? OT_ERROR_NONE : OT_ERROR_NO_BUFS;
+    cn_cbor *cborInt = cn_cbor_int_create(aValue, nullptr);
+    bool     succeed = cborInt && cn_cbor_mapput_int(mCbor, aKey, cborInt, nullptr);
+    return succeed ? kErrorNone : kErrorNoBufs;
 }
 
-otError CborMap::Put(int aKey, const uint8_t *aBytes, size_t aLength)
+Error CborMap::Put(int aKey, const uint8_t *aBytes, size_t aLength)
 {
-    cn_cbor *cborBytes = cn_cbor_data_create(aBytes, aLength, NULL);
-    bool     succeed   = cborBytes && cn_cbor_mapput_int(mCbor, aKey, cborBytes, NULL);
-    return succeed ? OT_ERROR_NONE : OT_ERROR_NO_BUFS;
+    cn_cbor *cborBytes = cn_cbor_data_create(aBytes, aLength, nullptr);
+    bool     succeed   = cborBytes && cn_cbor_mapput_int(mCbor, aKey, cborBytes, nullptr);
+    return succeed ? kErrorNone : kErrorNoBufs;
 }
 
-otError CborMap::Put(int aKey, const char *aStr)
+Error CborMap::Put(int aKey, const char *aStr)
 {
-    cn_cbor *cborStr = cn_cbor_string_create(aStr, NULL);
-    bool     succeed = cborStr && cn_cbor_mapput_int(mCbor, aKey, cborStr, NULL);
-    return succeed ? OT_ERROR_NONE : OT_ERROR_NO_BUFS;
+    cn_cbor *cborStr = cn_cbor_string_create(aStr, nullptr);
+    bool     succeed = cborStr && cn_cbor_mapput_int(mCbor, aKey, cborStr, nullptr);
+    return succeed ? kErrorNone : kErrorNoBufs;
 }
 
-otError CborMap::Get(int aKey, CborMap &aMap) const
+Error CborMap::Get(int aKey, CborMap &aMap) const
 {
     cn_cbor *cbor = cn_cbor_mapget_int(mCbor, aKey);
-    if (cbor == NULL)
-        return OT_ERROR_NOT_FOUND;
+    if (cbor == nullptr)
+        return kErrorNotFound;
     aMap.mIsRoot = false;
     aMap.mCbor   = cbor;
-    return OT_ERROR_NONE;
+    return kErrorNone;
 }
 
-otError CborMap::Get(int aKey, int &aInt) const
+Error CborMap::Get(int aKey, int &aInt) const
 {
     cn_cbor *cborInt = cn_cbor_mapget_int(mCbor, aKey);
-    if (cborInt == NULL)
-        return OT_ERROR_NOT_FOUND;
+    if (cborInt == nullptr)
+        return kErrorNotFound;
     aInt = cborInt->v.sint;
-    return OT_ERROR_NONE;
+    return kErrorNone;
 }
 
-otError CborMap::Get(int aKey, const uint8_t *&aBytes, size_t &aLength) const
+Error CborMap::Get(int aKey, const uint8_t *&aBytes, size_t &aLength) const
 {
     cn_cbor *cborBytes = cn_cbor_mapget_int(mCbor, aKey);
-    if (cborBytes == NULL)
-        return OT_ERROR_NOT_FOUND;
+    if (cborBytes == nullptr)
+        return kErrorNotFound;
     aBytes  = cborBytes->v.bytes;
     aLength = cborBytes->length;
-    return OT_ERROR_NONE;
+    return kErrorNone;
 }
 
-otError CborMap::Get(int aKey, const char *&aStr, size_t &aLength) const
+Error CborMap::Get(int aKey, const char *&aStr, size_t &aLength) const
 {
     cn_cbor *cborStr = cn_cbor_mapget_int(mCbor, aKey);
-    if (cborStr == NULL)
-        return OT_ERROR_NOT_FOUND;
+    if (cborStr == nullptr)
+        return kErrorNotFound;
     aStr    = cborStr->v.str;
     aLength = cborStr->length;
-    return OT_ERROR_NONE;
+    return kErrorNone;
 }
 
 } // namespace MeshCoP

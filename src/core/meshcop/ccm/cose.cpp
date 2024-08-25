@@ -47,36 +47,37 @@ namespace ot {
 namespace MeshCoP {
 
 CoseSignObject::CoseSignObject(void)
-    : mSign(NULL)
-    , mExternalData(NULL)
+    : mSign(nullptr)
+    , mExternalData(nullptr)
     , mExternalDataLength(0)
 {
 }
 
-otError CoseSignObject::Init(int aCoseInitFlags)
+otError CoseSignObject::Init(int aCoseInitFlags, int (*mbedTlsSecurePrng)(void *, unsigned char *aBuffer, size_t aSize))
 {
-    mSign = COSE_Sign0_Init(static_cast<COSE_INIT_FLAGS>(aCoseInitFlags), NULL);
-    return mSign ? OT_ERROR_NONE : OT_ERROR_NO_BUFS;
+    COSE_Init_SecurePrng(mbedTlsSecurePrng);
+    mSign = COSE_Sign0_Init(static_cast<COSE_INIT_FLAGS>(aCoseInitFlags), nullptr);
+    return mSign ? kErrorNone : kErrorNoBufs;
 }
 
 void CoseSignObject::Free(void)
 {
-    if (mSign != NULL)
+    if (mSign != nullptr)
     {
         COSE_Sign0_Free(mSign);
-        mSign = NULL;
+        mSign = nullptr;
     }
-    mExternalData       = NULL;
+    mExternalData       = nullptr;
     mExternalDataLength = 0;
 }
 
-otError CoseSignObject::Serialize(uint8_t *aBuf,  size_t &aLength, size_t aBufLength)
+otError CoseSignObject::Serialize(uint8_t *aBuf, size_t &aLength, size_t aBufLength)
 {
-    otError error = OT_ERROR_NONE;
-    size_t length;
+    otError error = kErrorNone;
+    size_t  length;
 
-    length = COSE_Encode((HCOSE)mSign, NULL, 0, 0) + 1;
-    VerifyOrExit(length <= aBufLength, error = OT_ERROR_NO_BUFS);
+    length = COSE_Encode((HCOSE)mSign, nullptr, 0, 0) + 1;
+    VerifyOrExit(length <= aBufLength, error = kErrorNoBufs);
 
     aLength = COSE_Encode((HCOSE)mSign, aBuf, 0, aBufLength);
 
@@ -86,17 +87,17 @@ exit:
 
 otError CoseSignObject::Deserialize(CoseSignObject &aCose, const uint8_t *aBuf, size_t aLength)
 {
-    otError     error = OT_ERROR_NONE;
+    otError     error = kErrorNone;
     int         type;
     HCOSE_SIGN0 sign;
 
-    sign = reinterpret_cast<HCOSE_SIGN0>(COSE_Decode(aBuf, aLength, &type, COSE_sign0_object, NULL));
-    VerifyOrExit(sign != NULL && type == COSE_sign0_object, error = OT_ERROR_PARSE);
+    sign = reinterpret_cast<HCOSE_SIGN0>(COSE_Decode(aBuf, aLength, &type, COSE_sign0_object, nullptr));
+    VerifyOrExit(sign != nullptr && type == COSE_sign0_object, error = kErrorParse);
 
     aCose.mSign = sign;
 
 exit:
-    if (error != OT_ERROR_NONE && sign != NULL)
+    if (error != kErrorNone && sign != nullptr)
     {
         COSE_Sign0_Free(sign);
     }
@@ -105,16 +106,16 @@ exit:
 
 otError CoseSignObject::Validate(const CborMap &aCborKey)
 {
-    otError error = OT_ERROR_NONE;
+    otError error = kErrorNone;
 
-    VerifyOrExit(aCborKey.IsValid(), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aCborKey.IsValid(), error = kErrorInvalidArgs);
 
-    if (mExternalData != NULL)
+    if (mExternalData != nullptr)
     {
-        VerifyOrExit(COSE_Sign0_SetExternal(mSign, mExternalData, mExternalDataLength, NULL), error = OT_ERROR_FAILED);
+        VerifyOrExit(COSE_Sign0_SetExternal(mSign, mExternalData, mExternalDataLength, nullptr), error = kErrorFailed);
     }
 
-    VerifyOrExit(COSE_Sign0_validate(mSign, aCborKey.GetImpl(), NULL), error = OT_ERROR_SECURITY);
+    VerifyOrExit(COSE_Sign0_validate(mSign, aCborKey.GetImpl(), nullptr), error = kErrorSecurity);
 
 exit:
     return error;
@@ -122,20 +123,20 @@ exit:
 
 otError CoseSignObject::Validate(const mbedtls_pk_context &aPubKey)
 {
-    otError                    error = OT_ERROR_NONE;
+    otError                    error = kErrorNone;
     const mbedtls_ecp_keypair *eckey;
 
     // Accepts only EC keys
     // FIXME(wgtdkp): accepts only ECDSA?
-    VerifyOrExit(mbedtls_pk_can_do(&aPubKey, MBEDTLS_PK_ECDSA), error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit((eckey = mbedtls_pk_ec(aPubKey)) != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(mbedtls_pk_can_do(&aPubKey, MBEDTLS_PK_ECDSA), error = kErrorInvalidArgs);
+    VerifyOrExit((eckey = mbedtls_pk_ec(aPubKey)) != nullptr, error = kErrorInvalidArgs);
 
-    if (mExternalData != NULL)
+    if (mExternalData != nullptr)
     {
-        VerifyOrExit(COSE_Sign0_SetExternal(mSign, mExternalData, mExternalDataLength, NULL), error = OT_ERROR_FAILED);
+        VerifyOrExit(COSE_Sign0_SetExternal(mSign, mExternalData, mExternalDataLength, nullptr), error = kErrorFailed);
     }
 
-    VerifyOrExit(COSE_Sign0_validate_eckey(mSign, eckey, NULL), error = OT_ERROR_SECURITY);
+    VerifyOrExit(COSE_Sign0_validate_eckey(mSign, eckey, nullptr), error = kErrorSecurity);
 
 exit:
     return error;
@@ -143,13 +144,13 @@ exit:
 
 otError CoseSignObject::Sign(const mbedtls_pk_context &aPrivateKey)
 {
-    otError                    error = OT_ERROR_NONE;
-    const mbedtls_ecp_keypair *eckey = NULL;
+    otError                    error = kErrorNone;
+    const mbedtls_ecp_keypair *eckey = nullptr;
 
-    VerifyOrExit(mbedtls_pk_can_do(&aPrivateKey, MBEDTLS_PK_ECDSA), error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit((eckey = mbedtls_pk_ec(aPrivateKey)) != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(mbedtls_pk_can_do(&aPrivateKey, MBEDTLS_PK_ECDSA), error = kErrorInvalidArgs);
+    VerifyOrExit((eckey = mbedtls_pk_ec(aPrivateKey)) != nullptr, error = kErrorInvalidArgs);
 
-    VerifyOrExit(COSE_Sign0_Sign_eckey(mSign, eckey, NULL), error = OT_ERROR_SECURITY);
+    VerifyOrExit(COSE_Sign0_Sign_eckey(mSign, eckey, nullptr), error = kErrorSecurity);
 
 exit:
     return error;
@@ -157,16 +158,16 @@ exit:
 
 otError CoseSignObject::SetContent(const uint8_t *aContent, size_t aLength)
 {
-    otError error = OT_ERROR_NONE;
+    otError error        = kErrorNone;
     uint8_t emptyContent = 0;
 
     if (aLength > 0)
     {
-        VerifyOrExit(COSE_Sign0_SetContent(mSign, aContent, aLength, NULL), error = OT_ERROR_FAILED);
+        VerifyOrExit(COSE_Sign0_SetContent(mSign, aContent, aLength, nullptr), error = kErrorFailed);
     }
     else
     {
-        VerifyOrExit(COSE_Sign0_SetContent(mSign, &emptyContent, 0, NULL), error = OT_ERROR_FAILED);
+        VerifyOrExit(COSE_Sign0_SetContent(mSign, &emptyContent, 0, nullptr), error = kErrorFailed);
     }
 
 exit:
@@ -175,15 +176,15 @@ exit:
 
 otError CoseSignObject::AddAttribute(int aKey, int aValue, int aFlags)
 {
-    otError error = OT_ERROR_NONE;
+    otError error = kErrorNone;
 
-    cn_cbor *cbor = cn_cbor_int_create(aValue, NULL);
-    VerifyOrExit(cbor != NULL, error = OT_ERROR_NO_BUFS);
+    cn_cbor *cbor = cn_cbor_int_create(aValue, nullptr);
+    VerifyOrExit(cbor != nullptr, error = kErrorNoBufs);
 
-    VerifyOrExit(COSE_Sign0_map_put_int(mSign, aKey, cbor, aFlags, NULL), error = OT_ERROR_FAILED);
+    VerifyOrExit(COSE_Sign0_map_put_int(mSign, aKey, cbor, aFlags, nullptr), error = kErrorFailed);
 
 exit:
-    if (cbor != NULL && cbor->parent == NULL)
+    if (cbor != nullptr && cbor->parent == nullptr)
     {
         cn_cbor_free(cbor);
     }
@@ -192,7 +193,7 @@ exit:
 
 static cn_cbor *CborArrayAt(cn_cbor *arr, size_t index)
 {
-    cn_cbor *ele = NULL;
+    cn_cbor *ele = nullptr;
 
     VerifyOrExit(index <= static_cast<size_t>(arr->length));
 
@@ -207,14 +208,14 @@ exit:
 
 const uint8_t *CoseSignObject::GetPayload(size_t &aLength)
 {
-    const uint8_t *ret = NULL;
-    cn_cbor *      cbor;
-    cn_cbor *      payload;
+    const uint8_t *ret = nullptr;
+    cn_cbor       *cbor;
+    cn_cbor       *payload;
 
-    OT_ASSERT(mSign != NULL);
-    VerifyOrExit((cbor = COSE_get_cbor(reinterpret_cast<HCOSE>(mSign))) != NULL);
+    OT_ASSERT(mSign != nullptr);
+    VerifyOrExit((cbor = COSE_get_cbor(reinterpret_cast<HCOSE>(mSign))) != nullptr);
 
-    VerifyOrExit(cbor->type == CN_CBOR_ARRAY && (payload = CborArrayAt(cbor, 2)) != NULL);
+    VerifyOrExit(cbor->type == CN_CBOR_ARRAY && (payload = CborArrayAt(cbor, 2)) != nullptr);
 
     VerifyOrExit(payload->type == CN_CBOR_BYTES);
 

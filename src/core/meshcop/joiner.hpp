@@ -49,16 +49,12 @@
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_types.hpp"
-#include "meshcop/ccm/ae_client.hpp"
+#include "meshcop/ccm/cbrski_client.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "meshcop/secure_transport.hpp"
 #include "thread/discover_scanner.hpp"
 #include "thread/tmf.hpp"
-
-// the configuration now denotes a base/start for a range of port numbers. The joiner protocol identifier is
-// multiplexed into the 4 lower bits of the Joiner (source) port number.
-static_assert(OPENTHREAD_CONFIG_JOINER_UDP_PORT % 16 == 0, "OPENTHREAD_CONFIG_JOINER_UDP_PORT modulo 16 must be 0 due to CCM commissioning extension");
 
 namespace ot {
 
@@ -83,14 +79,15 @@ public:
     };
 
     /**
-     * Defines Joiner types. Each type has a bit pattern that is used in the UDP source port
-     * to identify the Joiner type.
+     * Type defines Join operation types.
      */
-     enum Type : uint8_t
+    enum Operation : uint8_t
     {
-        kTypeCcmAe   = 1,
-        kTypeCcmNkp  = 2,
-        kTypeMeshcop = 8,
+        kOperationCcmAeCbrski = OT_JOIN_OPERATION_AE_CBRSKI,
+        kOperationCcmNkp      = OT_JOIN_OPERATION_NKP,
+        kOperationCcmEstCoaps = OT_JOIN_OPERATION_EST_COAPS,
+        kOperationCcmBrCbrski = OT_JOIN_OPERATION_BR_CBRSKI,
+        kOperationMeshcop     = OT_JOIN_OPERATION_MESHCOP,
     };
 
     /**
@@ -125,34 +122,29 @@ public:
                 otJoinerCallback aCallback,
                 void            *aContext);
 
+#if OPENTHREAD_CONFIG_CCM_ENABLE
     /**
-     * Starts the Joiner service in CCM mode to perform Autonomous Enrollment (AE), using the IETF cBRSKI
-     * protocol.
+     * Starts the Joiner service in Commercial Commissioning Mode (CCM) for the selected
+     * commissioning operation.
      *
-     * @param[in]  aCallback       A pointer to a function that is called when the join operation completes.
-     * @param[in]  aContext        A pointer to application-specific context.
+     * Only selected CCM operations are supported; and any operations may have prerequisite operation(s).
+     * See `otJoinerStartCcm` or the Operation enum for details.
      *
-     * @retval kErrorNone          Successfully started the CCM Joiner service.
-     * @retval kErrorBusy          The previous attempt is still on-going.
-     * @retval kErrorInvalidState  The IPv6 stack is not enabled or Thread stack is not fully enabled.
+     * Requires `OPENTHREAD_CONFIG_CCM_ENABLE` to be enabled.
+     *
+     * @param[in]  aOperation      CCM commissioning operation to perform/attempt.
+     * @param[in]  aCallback       A pointer to a function that is called when the selected join operation completes.
+     * @param[in]  aContext        A pointer to application-specific context, used in callback.
+     *
+     * @retval kErrorNone          Successfully started the CCM Joiner service and requested operation.
+     * @retval kErrorBusy          A previous join attempt/operation is still on-going.
+     * @retval kErrorInvalidState  The IPv6 stack is not enabled or Thread stack is not fully enabled; or the
+     *                             requested operation is missing a prerequisite operation.
+     * @retval kErrorInvalidArgs   Selected aOperation is not supported by this device.
      *
      */
-    Error StartCcmAe(otJoinerCallback aCallback, void *aContext);
-
-    /**
-     * Starts the Joiner service in CCM mode to perform Network Key Provisioning (NKP) to join a new
-     * CCM network and obtain the key for it. This requires a successfully completed CCM AE procedure.
-     *
-     * @param[in]  aCallback       A pointer to a function that is called when the join operation completes.
-     * @param[in]  aContext        A pointer to application-specific context.
-     *
-     * @retval kErrorNone          Successfully started the CCM Joiner service.
-     * @retval kErrorBusy          The previous attempt is still on-going.
-     * @retval kErrorInvalidState  The IPv6 stack is not enabled, or Thread stack is not fully enabled, or
-     *                             CCM AE was not completed prior to this call.
-     *
-     */
-    Error StartCcmNkp(otJoinerCallback aCallback, void *aContext);
+    Error StartCcm(Operation aOperation, otJoinerCallback aCallback, void *aContext);
+#endif
 
     /**
      * Stops the Joiner service.
@@ -208,16 +200,6 @@ public:
     Error ClearDiscerner(void);
 
     /**
-     * FIXME comments insert here from coap_secure.hpp
-     */
-    void SetCcmIdentity(const uint8_t *aX509Cert,
-                        uint32_t       aX509Length,
-                        const uint8_t *aPrivateKey,
-                        uint32_t       aPrivateKeyLength,
-                        const uint8_t *aX509CaCertificateChain,
-                        uint32_t aX509CaCertChainLength);
-
-    /**
      * Converts a given Joiner state to its human-readable string representation.
      *
      * @param[in] aState  The Joiner state to convert.
@@ -226,15 +208,29 @@ public:
      */
     static const char *StateToString(State aState);
 
+    /**
+     * Converts a given Joiner Operation to its human-readable string representation.
+     *
+     * @param[in] aOperation  The Joiner operation to convert.
+     *
+     * @returns A human-readable string representation of @p aOperation.
+     */
+    static const char *OperationToString(Operation aOperation);
+
 private:
-    static constexpr uint16_t kJoinerUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
-    static constexpr uint16_t kMeshcopJoinerUdpSourcePort = OPENTHREAD_CONFIG_JOINER_UDP_PORT + kTypeMeshcop;
-    static constexpr uint16_t kCcmAeJoinerUdpSourcePort = OPENTHREAD_CONFIG_JOINER_UDP_PORT + kTypeCcmAe;
-    static constexpr uint16_t kCcmNkpJoinerUdpSourcePort = OPENTHREAD_CONFIG_JOINER_UDP_PORT + kTypeCcmNkp;
+    static constexpr uint16_t kJoinerUdpPortBase            = (OPENTHREAD_CONFIG_JOINER_UDP_PORT - kOperationMeshcop);
+    static constexpr uint16_t kMeshcopJoinerUdpSourcePort   = kJoinerUdpPortBase + kOperationMeshcop;
+    static constexpr uint16_t kCcmCbrskiJoinerUdpSourcePort = kJoinerUdpPortBase + kOperationCcmAeCbrski;
+    static constexpr uint16_t kCcmNkpJoinerUdpSourcePort    = kJoinerUdpPortBase + kOperationCcmNkp;
+    // configured Joiner port denotes the MeshCoP protocol port. Other ports derived from this single config.
+    // Protocol info is multiplexed into the 4 lower bits of the Joiner (source) port number.
+    static_assert(kMeshcopJoinerUdpSourcePort % 16 == kOperationMeshcop,
+                  "OPENTHREAD_CONFIG_JOINER_UDP_PORT modulo 16 must be 0 for MeshCoP-Ext");
 
     static constexpr uint32_t kConfigExtAddressDelay = 100;  // in msec.
     static constexpr uint32_t kResponseTimeout       = 4000; ///< Max wait time to receive response (in msec).
-    static constexpr uint32_t kCcmAeResponseTimeout  = 12000; ///< Max wait time for CCM AE to receive response (in msec), TODO.
+    static constexpr uint32_t kCcmCbrskiVoucherResponseTimeout =
+        12000; ///< Max wait time for cBRSKI to receive voucher response (in msec), TODO adapt value.
 
     struct JoinerRouter
     {
@@ -257,6 +253,11 @@ private:
                                              Error                aResult);
     void HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+    static void HandleCbrskiClientDone(Error aErr, void *aContext);
+    void        HandleCbrskiClientDone(Error aErr);
+#endif
+
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void HandleTimer(void);
@@ -266,7 +267,7 @@ private:
     void    SaveDiscoveredJoinerRouter(const Mle::DiscoverScanner::ScanResult &aResult);
     void    TryNextJoinerRouter(Error aPrevError);
     Error   Connect(JoinerRouter &aRouter);
-    void    Finish(Error aError);
+    void    Finish(Error aError, bool aInvokeCallback);
     uint8_t CalculatePriority(int8_t aRssi, bool aSteeringDataAllowsAny);
 
     Error PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
@@ -274,6 +275,9 @@ private:
                                        const char *aVendorModel,
                                        const char *aVendorSwVersion,
                                        const char *aVendorData);
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+    Error PrepareCcmNkpJoinerFinalizeMessage(void);
+#endif
     void  FreeJoinerFinalizeMessage(void);
     void  SendJoinerFinalize(void);
     void  SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo);
@@ -284,12 +288,15 @@ private:
 
     using JoinerTimer = TimerMilliIn<Joiner, &Joiner::HandleTimer>;
 
-    Type            mJoinerType;
-    AeClient       *mAeClient;
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+    CbrskiClient *mCbrskiClient;
+#endif
+
+    Operation       mJoinerOperation;
     Mac::ExtAddress mId;
     JoinerDiscerner mDiscerner;
 
-    State mState;
+    State    mState;
     uint16_t mJoinerSourcePort;
 
     Callback<otJoinerCallback> mCallback;

@@ -1,6 +1,11 @@
 // FIXME(wgtdkp): we should remove this and define it in Makefile.am
 #define USE_MBED_TLS 1
 
+// FIXME fix for use with mbedTLS 3.x https://lists.trustedfirmware.org/archives/list/mbed-tls@lists.trustedfirmware.org/thread/SBOCVW3YCVU4RZQYNCBDIIPSNJZEDCHG/
+#if !defined(MBEDTLS_ALLOW_PRIVATE_ACCESS)
+#define MBEDTLS_ALLOW_PRIVATE_ACCESS
+#endif
+
 #include <cn-cbor/cn-cbor.h>
 
 #ifdef __cplusplus
@@ -78,6 +83,8 @@ HCOSE COSE_Decode(const byte * rgbData, size_t cbData, int * type, COSE_object_t
 size_t COSE_Encode(HCOSE msg, byte * rgb, size_t ib, size_t cb);
 
 cn_cbor * COSE_get_cbor(HCOSE hmsg);
+
+void COSE_Init_SecurePrng(int (*securePrngFunc) (void *, unsigned char *aBuffer, size_t aSize));
 
 //  Functions for the signing object
 

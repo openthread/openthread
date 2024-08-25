@@ -28,7 +28,8 @@
 
 /**
  * @file
- *   This file includes definitions for credentials.
+ *   This file includes definitions for credentials storage and parsing
+ *   (X.509 certificates, keys).
  */
 
 #ifndef CREDENTIALS_HPP_
@@ -40,30 +41,35 @@
 
 #include "coap/coap_secure.hpp"
 #include "common/locator.hpp"
-#include "mbedtls/pk.h"
+#include "crypto/ecdsa.hpp"
 
 namespace ot {
-
 namespace MeshCoP {
 
+typedef Crypto::Ecdsa::P256::KeyPair KeyInfo;
+
+// TODO: documentation in header. Sizes for DER unless PEM is explicitly specified.
 class Credentials : public InstanceLocator
 {
 public:
-    static const size_t kMaxCertLength         = 1024;	// see Thread Conformance specification v1.2.1 or later.
-    static const size_t kMaxKeyLength          = 256;
-    static const size_t kMaxSerialNumberLength = 64;
-    static const size_t kMaxSubjectNameLength  = 256;
+    static const size_t kMaxCertLength         = 1024; // see Thread Conformance specification v1.2.1 or later.
+    static const size_t kMaxKeyLength          = ot::Crypto::Ecdsa::P256::KeyPair::kMaxDerSize;
+    static const size_t kMaxSerialNumberLength = 64;  // TODO adapt
+    static const size_t kMaxSubjectNameLength  = 256; // TODO adapt
 
     // According to section 4.2.1.2 of RFC 5280
     static const size_t kMaxKeyIdentifierLength = 20;
 
     explicit Credentials(Instance &aInstance);
 
-    otError Restore(void);
+    Error Restore(void);
 
-    otError Store(void);
+    Error Store(void);
 
     void Clear(void);
+
+    Error ConfigureIdevid(SecureTransport *client);
+    Error ConfigureLdevid(SecureTransport *client);
 
     const uint8_t *GetManufacturerCert(size_t &aLength);
 
@@ -72,13 +78,14 @@ public:
     const uint8_t *GetManufacturerCACert(size_t &aLength);
 
     const uint8_t *GetOperationalCert(size_t &aLength);
-    otError        SetOperationalCert(const uint8_t *aCert, size_t aLength);
+    Error          SetOperationalCert(const uint8_t *aCert, size_t aLength);
+    bool           HasOperationalCert() const;
 
-    const uint8_t *GetOperationalPrivateKey(size_t &aLength);
-    otError        SetOperationalPrivateKey(const uint8_t *aKey, size_t aLength);
+    const KeyInfo *GetOperationalPrivateKey();
+    Error          SetOperationalPrivateKey(const KeyInfo &privKey);
 
     const uint8_t *GetDomainCACert(size_t &aLength);
-    otError        SetDomainCACert(const uint8_t *aCert, size_t aLength);
+    Error          SetDomainCACert(const uint8_t *aCert, size_t aLength);
 
     /**
      * Get an additional, top-level Domain CA cert that is stored in this device, other than the
@@ -92,38 +99,29 @@ public:
      * Voucher. Once this is set during AE enrollment, it stays as immutable Trust Anchor until
      * the device is factory-reset and cannot be replaced by any EST operations.
      */
-    otError SetToplevelDomainCACert(const uint8_t *aCert, size_t aLength);
+    Error SetToplevelDomainCACert(const uint8_t *aCert, size_t aLength);
 
-    otError GetAuthorityKeyId(uint8_t *aBuf, size_t &aLength, size_t aMaxLength);
+    Error GetAuthorityKeyId(uint8_t *aBuf, size_t &aLength, size_t aMaxLength);
 
-    otError GetManufacturerSerialNumber(char *aBuf, size_t aMaxLength);
+    Error GetManufacturerSerialNumber(char *aBuf, size_t aMaxLength);
 
-    otError GetManufacturerSubjectName(char *aBuf, size_t aMaxLength);
+    Error GetManufacturerSubjectName(char *aBuf, size_t aMaxLength);
 
-    // nullable
-    const char *GetDomainName() const;
+    DomainName *GetDomainName();
 
 private:
-    static otError ParseSerialNumberFromSubjectName(char *aBuf, size_t aMaxLength, const mbedtls_x509_crt &cert);
+    Error ParseSerialNumberFromSubjectName(char *aBuf, size_t aMaxLength, const mbedtls_x509_crt &cert);
+    Error ParseDomainName(DomainName &aDomainName, const uint8_t *aCert, size_t aCertLength);
 
-    static otError ParseDomainName(DomainName &aDomainName, const uint8_t *aCert, size_t aCertLength);
-
-    // TODO(EskoDijk): can be shortened if this IDevID is known to be smaller - chosen at design time.
-    uint8_t mManufacturerCert[kMaxCertLength];
-    size_t  mManufacturerCertLength;
-    uint8_t mManufacturerPrivateKey[kMaxKeyLength];
-    size_t  mManufacturerPrivateKeyLength;
-    // TODO(EskoDijk): can be shortened if this IDevID is known to be smaller - chosen at design time.
-    uint8_t mManufacturerCACert[kMaxCertLength];
-    size_t  mManufacturerCACertLength;
-    uint8_t mOperationalCert[kMaxCertLength];
-    size_t  mOperationalCertLength;
-    uint8_t mOperationalPrivateKey[kMaxKeyLength];
-    size_t  mOperationalPrivateKeyLength;
-    uint8_t mDomainCACert[kMaxCertLength];
-    size_t  mDomainCACertLength;
-    uint8_t mToplevelDomainCACert[kMaxCertLength];
-    size_t  mToplevelDomainCACertLength;
+    const uint8_t *mManufacturerCert;
+    size_t         mManufacturerCertLength;
+    uint8_t        mOperationalCert[kMaxCertLength];
+    size_t         mOperationalCertLength;
+    KeyInfo        mOperationalPrivateKey;
+    uint8_t        mDomainCACert[kMaxCertLength];
+    size_t         mDomainCACertLength;
+    uint8_t        mToplevelDomainCACert[kMaxCertLength];
+    size_t         mToplevelDomainCACertLength;
 
     DomainName mDomainName; ///< Thread Domain Name, taken from a subfield of SubjectAltName of operational cert
 };
