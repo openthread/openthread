@@ -485,7 +485,7 @@ void Diags::TransmitPacket(void)
 
     if (!mIsTxPacketSet)
     {
-        memset(&mTxPacket->mInfo, 0, sizeof(mTxPacket->mInfo));
+        ClearAllBytes(mTxPacket->mInfo);
         mTxPacket->mLength = mTxLen;
 
         for (uint8_t i = 0; i < mTxLen; i++)
