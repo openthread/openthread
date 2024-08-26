@@ -10,6 +10,7 @@ The diagnostics module supports common diagnostics features that are listed belo
 - [diag start](#diag-start)
 - [diag channel](#diag-channel)
 - [diag cw](#diag-cw-start)
+- [diag frame] (#diag-frame)
 - [diag stream](#diag-stream-start)
 - [diag power](#diag-power)
 - [diag powersettings](#diag-powersettings)
@@ -77,9 +78,13 @@ Stop transmitting continuous carrier wave.
 Done
 ```
 
-### diag frame \<frame\>
+### diag frame
+
+Usage: `diag [-s] frame <frame>`
 
 Set the frame (hex encoded) to be used by `diag send` and `diag repeat`. The frame may be overwritten by `diag send` and `diag repeat`.
+
+Specify `-s` to skip security process in radio layer.
 
 ```bash
 > diag frame 11223344

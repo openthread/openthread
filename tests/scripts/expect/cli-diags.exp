@@ -152,6 +152,13 @@ send "diag repeat 1\n"
 expect "length 0x7f"
 expect "Done"
 
+send_user "send frame with security processed\n"
+send "diag frame -s 112233\n"
+expect "Done"
+send "diag send 1\n"
+expect "length 0x3"
+expect "Done"
+
 send "diag repeat stop\n"
 expect "Done"
 

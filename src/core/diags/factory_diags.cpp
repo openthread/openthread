@@ -221,7 +221,24 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
     Error    error = kErrorNone;
     uint16_t size  = OT_RADIO_FRAME_MAX_SIZE;
 
-    VerifyOrExit(aArgsLength == 1, error = kErrorInvalidArgs);
+    memset(&mTxPacket->mInfo, 0, sizeof(mTxPacket->mInfo));
+
+    while (aArgsLength > 1)
+    {
+        if (!strcmp(aArgs[0], "-s"))
+        {
+            mTxPacket->mInfo.mTxInfo.mIsSecurityProcessed = true;
+        }
+        else
+        {
+            break;
+        }
+
+        aArgs++;
+        aArgsLength--;
+    }
+
+    VerifyOrExit(aArgsLength >= 1, error = kErrorInvalidArgs);
 
     SuccessOrExit(error = Utils::CmdLineParser::ParseAsHexString(aArgs[0], size, mTxPacket->mPsdu));
     VerifyOrExit(size <= OT_RADIO_FRAME_MAX_SIZE, error = kErrorInvalidArgs);
@@ -468,6 +485,7 @@ void Diags::TransmitPacket(void)
 
     if (!mIsTxPacketSet)
     {
+        memset(&mTxPacket->mInfo, 0, sizeof(mTxPacket->mInfo));
         mTxPacket->mLength = mTxLen;
 
         for (uint8_t i = 0; i < mTxLen; i++)
