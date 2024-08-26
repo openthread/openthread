@@ -223,19 +223,14 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
 
     ClearAllBytes(mTxPacket->mInfo);
 
-    while (aArgsLength > 1)
+    if (aArgsLength > 1)
     {
         if (StringMatch(aArgs[0], "-s"))
         {
             mTxPacket->mInfo.mTxInfo.mIsSecurityProcessed = true;
+            aArgs++;
+            aArgsLength--;
         }
-        else
-        {
-            break;
-        }
-
-        aArgs++;
-        aArgsLength--;
     }
 
     VerifyOrExit(aArgsLength == 1, error = kErrorInvalidArgs);

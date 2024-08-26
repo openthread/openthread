@@ -10,7 +10,7 @@ The diagnostics module supports common diagnostics features that are listed belo
 - [diag start](#diag-start)
 - [diag channel](#diag-channel)
 - [diag cw](#diag-cw-start)
-- [diag frame] (#diag-frame)
+- [diag frame](#diag-frame)
 - [diag stream](#diag-stream-start)
 - [diag power](#diag-power)
 - [diag powersettings](#diag-powersettings)
