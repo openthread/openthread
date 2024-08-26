@@ -482,7 +482,7 @@ public:
     StringWriter &AppendVarArgs(const char *aFormat, va_list aArgs);
 
     /**
-     * Appends an array of bytes in hex representation (using "%02x" style) to the buffer.
+     * Appends an array of bytes in hex representation using lowercase letters ("%02x" style) to the buffer.
      *
      * @param[in] aBytes    A pointer to buffer containing the bytes to append.
      * @param[in] aLength   The length of @p aBytes buffer (in bytes).
@@ -491,6 +491,17 @@ public:
      *
      */
     StringWriter &AppendHexBytes(const uint8_t *aBytes, uint16_t aLength);
+
+    /**
+     * Appends an array of bytes in hex representation using uppercase letters ("%02X" style) to the buffer.
+     *
+     * @param[in] aBytes    A pointer to buffer containing the bytes to append.
+     * @param[in] aLength   The length of @p aBytes buffer (in bytes).
+     *
+     * @returns The string writer.
+     *
+     */
+    StringWriter &AppendHexBytesUppercase(const uint8_t *aBytes, uint16_t aLength);
 
     /**
      * Appends a given character a given number of times.

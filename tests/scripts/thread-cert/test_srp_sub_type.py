@@ -78,38 +78,51 @@ class SrpSubType(thread_cert.TestCase):
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(client.get_state(), 'router')
 
-        server.srp_server_set_enabled(True)
-        client.srp_client_enable_auto_start_mode()
-        self.simulator.go(15)
+        # Perform test steps twice, with and without SRP coder
+        # use enabled on client.
 
-        # Register a single service with 3 subtypes and verify that it worked.
+        for client_coder_enable in [False, True]:
+            print('-' * 80)
+            client.srp_client_set_coder_enable(client_coder_enable)
 
-        client.srp_client_set_host_name('host1')
-        client.srp_client_set_host_address('2001::1')
-        client.srp_client_add_service('ins1', '_srv._udp,_s1,_s2,_s3', 1977)
-        self.simulator.go(2)
-        self.check_service_on_client_and_server(server, client)
+            server.srp_server_set_enabled(True)
+            client.srp_client_enable_auto_start_mode()
+            self.simulator.go(15)
 
-        # Remove the service on client
+            # Register a single service with 3 subtypes and verify that it worked.
 
-        client.srp_client_remove_service('ins1', '_srv._udp')
-        self.simulator.go(2)
+            client.srp_client_set_host_name('host1')
+            client.srp_client_set_host_address('2001::1')
+            client.srp_client_add_service('ins1', '_srv._udp,_s1,_s2,_s3', 1977)
+            self.simulator.go(2)
+            self.check_service_on_client_and_server(server, client)
 
-        client_services = client.srp_client_get_services()
-        self.assertEqual(len(client_services), 0)
-        server_services = server.srp_server_get_services()
-        self.assertEqual(len(server_services), 1)
-        server_service = server_services[0]
-        self.assertEqual(server_service['fullname'], 'ins1._srv._udp.default.service.arpa.')
-        self.assertEqual(server_service['instance'], 'ins1')
-        self.assertEqual(server_service['name'], '_srv._udp')
-        self.assertEqual(server_service['deleted'], 'true')
+            # Remove the service on client
 
-        # Register the same service again.
+            client.srp_client_remove_service('ins1', '_srv._udp')
+            self.simulator.go(2)
 
-        client.srp_client_add_service('ins1', '_srv._udp,_s1,_s2,_s3', 1977)
-        self.simulator.go(2)
-        self.check_service_on_client_and_server(server, client)
+            client_services = client.srp_client_get_services()
+            self.assertEqual(len(client_services), 0)
+            server_services = server.srp_server_get_services()
+            self.assertEqual(len(server_services), 1)
+            server_service = server_services[0]
+            self.assertEqual(server_service['fullname'], 'ins1._srv._udp.default.service.arpa.')
+            self.assertEqual(server_service['instance'], 'ins1')
+            self.assertEqual(server_service['name'], '_srv._udp')
+            self.assertEqual(server_service['deleted'], 'true')
+
+            # Register the same service again.
+
+            client.srp_client_add_service('ins1', '_srv._udp,_s1,_s2,_s3', 1977)
+            self.simulator.go(2)
+            self.check_service_on_client_and_server(server, client)
+
+            # Stop server and client and clear configs.
+
+            client.srp_client_clear_host()
+            client.srp_client_stop()
+            server.srp_server_set_enabled(False)
 
     def check_service_on_client_and_server(self, server, client):
         # Check the service on client
