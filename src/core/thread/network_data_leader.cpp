@@ -583,11 +583,12 @@ exit:
 
 Coap::Message *Leader::ProcessCommissionerGetRequest(const Coap::Message &aMessage) const
 {
+    Error          error    = kErrorNone;
     Coap::Message *response = nullptr;
     OffsetRange    offsetRange;
 
     response = Get<Tmf::Agent>().NewPriorityResponseMessage(aMessage);
-    VerifyOrExit(response != nullptr);
+    VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     if (Tlv::FindTlvValueOffsetRange(aMessage, MeshCoP::Tlv::kGet, offsetRange) == kErrorNone)
     {
@@ -605,7 +606,7 @@ Coap::Message *Leader::ProcessCommissionerGetRequest(const Coap::Message &aMessa
 
             if (subTlv != nullptr)
             {
-                SuccessOrExit(subTlv->AppendTo(*response));
+                SuccessOrExit(error = subTlv->AppendTo(*response));
             }
         }
     }
@@ -617,10 +618,12 @@ Coap::Message *Leader::ProcessCommissionerGetRequest(const Coap::Message &aMessa
 
         if (dataTlv != nullptr)
         {
-            SuccessOrExit(response->AppendBytes(dataTlv->GetValue(), dataTlv->GetLength()));
+            SuccessOrExit(error = response->AppendBytes(dataTlv->GetValue(), dataTlv->GetLength()));
         }
     }
+
 exit:
+    FreeAndNullMessageOnError(response, error);
     return response;
 }
 

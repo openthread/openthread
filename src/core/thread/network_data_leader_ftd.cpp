@@ -320,10 +320,10 @@ template <> void Leader::HandleTmf<kUriCommissionerGet>(Coap::Message &aMessage,
     Error          error    = kErrorNone;
     Coap::Message *response = nullptr;
 
-    VerifyOrExit(Get<Mle::Mle>().IsLeader() && !mWaitingForNetDataSync);
-    response = ProcessCommissionerGetRequest(aMessage);
+    VerifyOrExit(Get<Mle::Mle>().IsLeader() && !mWaitingForNetDataSync, error = kErrorInvalidState);
 
-    VerifyOrExit(response != nullptr);
+    response = ProcessCommissionerGetRequest(aMessage);
+    VerifyOrExit(response != nullptr, error = kErrorParse);
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, aMessageInfo));
 
     LogInfo("Sent %s response to %s", UriToString<kUriCommissionerGet>(),
