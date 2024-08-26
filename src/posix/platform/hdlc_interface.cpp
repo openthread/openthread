@@ -283,8 +283,8 @@ otError HdlcInterface::WaitForFrame(uint64_t aTimeoutUs)
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     struct VirtualTimeEvent event;
 
-    timeout.tv_sec  = static_cast<time_t>(aTimeoutUs / US_PER_S);
-    timeout.tv_usec = static_cast<suseconds_t>(aTimeoutUs % US_PER_S);
+    timeout.tv_sec  = static_cast<time_t>(aTimeoutUs / OT_US_PER_S);
+    timeout.tv_usec = static_cast<suseconds_t>(aTimeoutUs % OT_US_PER_S);
 
     virtualTimeSendSleepEvent(&timeout);
     virtualTimeReceiveEvent(&event);
@@ -304,8 +304,8 @@ otError HdlcInterface::WaitForFrame(uint64_t aTimeoutUs)
         break;
     }
 #else  // OPENTHREAD_POSIX_VIRTUAL_TIME
-    timeout.tv_sec = static_cast<time_t>(aTimeoutUs / US_PER_S);
-    timeout.tv_usec = static_cast<suseconds_t>(aTimeoutUs % US_PER_S);
+    timeout.tv_sec = static_cast<time_t>(aTimeoutUs / OT_US_PER_S);
+    timeout.tv_usec = static_cast<suseconds_t>(aTimeoutUs % OT_US_PER_S);
 
     fd_set read_fds;
     fd_set error_fds;
@@ -392,7 +392,7 @@ otError HdlcInterface::WaitForWritable(void)
     otError        error   = OT_ERROR_NONE;
     struct timeval timeout = {kMaxWaitTime / 1000, (kMaxWaitTime % 1000) * 1000};
     uint64_t       now     = otPlatTimeGet();
-    uint64_t       end     = now + kMaxWaitTime * US_PER_MS;
+    uint64_t       end     = now + kMaxWaitTime * OT_US_PER_MS;
     fd_set         writeFds;
     fd_set         errorFds;
     int            rval;
@@ -432,8 +432,8 @@ otError HdlcInterface::WaitForWritable(void)
         {
             uint64_t remain = end - now;
 
-            timeout.tv_sec  = static_cast<time_t>(remain / US_PER_S);
-            timeout.tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
+            timeout.tv_sec  = static_cast<time_t>(remain / OT_US_PER_S);
+            timeout.tv_usec = static_cast<suseconds_t>(remain % OT_US_PER_S);
         }
         else
         {
@@ -744,10 +744,10 @@ otError HdlcInterface::ResetConnection(void)
 
     if (mRadioUrl.HasParam("uart-reset"))
     {
-        usleep(static_cast<useconds_t>(kRemoveRcpDelay) * US_PER_MS);
+        usleep(static_cast<useconds_t>(kRemoveRcpDelay) * OT_US_PER_MS);
         CloseFile();
 
-        end = otPlatTimeGet() + kResetTimeout * US_PER_MS;
+        end = otPlatTimeGet() + kResetTimeout * OT_US_PER_MS;
         do
         {
             mSockFd = OpenFile(mRadioUrl);
@@ -755,7 +755,7 @@ otError HdlcInterface::ResetConnection(void)
             {
                 ExitNow();
             }
-            usleep(static_cast<useconds_t>(kOpenFileDelay) * US_PER_MS);
+            usleep(static_cast<useconds_t>(kOpenFileDelay) * OT_US_PER_MS);
         } while (end > otPlatTimeGet());
 
         LogCrit("Failed to reopen UART connection after resetting the RCP device.");

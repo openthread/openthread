@@ -748,8 +748,8 @@ otError SpiInterface::WaitForFrame(uint64_t aTimeoutUs)
         int                  ret;
 
         context.mMaxFd           = -1;
-        context.mTimeout.tv_sec  = static_cast<time_t>((end - now) / US_PER_S);
-        context.mTimeout.tv_usec = static_cast<suseconds_t>((end - now) % US_PER_S);
+        context.mTimeout.tv_sec  = static_cast<time_t>((end - now) / OT_US_PER_S);
+        context.mTimeout.tv_usec = static_cast<suseconds_t>((end - now) % OT_US_PER_S);
 
         FD_ZERO(&context.mReadFdSet);
         FD_ZERO(&context.mWriteFdSet);

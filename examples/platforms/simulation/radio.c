@@ -47,9 +47,6 @@
 #include "utils/mac_frame.h"
 #include "utils/soft_source_match_table.h"
 
-#define MS_PER_S 1000
-#define US_PER_MS 1000
-
 enum
 {
     IEEE802154_ACK_LENGTH = 5,
@@ -814,8 +811,8 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct ti
         {
             uint32_t remaining = sEnergyScanEndTime - now;
 
-            tv.tv_sec  = remaining / MS_PER_S;
-            tv.tv_usec = (remaining % MS_PER_S) * US_PER_MS;
+            tv.tv_sec  = remaining / OT_MS_PER_S;
+            tv.tv_usec = (remaining % OT_MS_PER_S) * OT_US_PER_MS;
         }
 
         if (timercmp(&tv, aTimeout, <))

@@ -37,8 +37,7 @@
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
-
-#define US_PER_MS 1000
+#include <openthread/platform/time.h>
 
 extern uint64_t sNow; // microseconds
 
@@ -59,7 +58,7 @@ uint64_t platformAlarmGetNow(void) { return sNow; }
 
 void platformAlarmAdvanceNow(uint64_t aDelta) { sNow += aDelta; }
 
-uint32_t otPlatAlarmMilliGetNow(void) { return (uint32_t)(sNow / US_PER_MS); }
+uint32_t otPlatAlarmMilliGetNow(void) { return (uint32_t)(sNow / OT_US_PER_MS); }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
@@ -108,7 +107,7 @@ uint64_t platformAlarmGetNext(void)
         else
         {
             remaining = (uint64_t)milli;
-            remaining *= US_PER_MS;
+            remaining *= OT_US_PER_MS;
         }
     }
 

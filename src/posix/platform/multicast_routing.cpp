@@ -400,7 +400,7 @@ void MulticastRoutingManager::ExpireMulticastForwardingCache(void)
     uint64_t            now = otPlatTimeGet();
     struct mf6cctl      mf6cctl;
 
-    VerifyOrExit(now >= mLastExpireTime + kMulticastForwardingCacheExpiringInterval * US_PER_S);
+    VerifyOrExit(now >= mLastExpireTime + kMulticastForwardingCacheExpiringInterval * OT_US_PER_S);
 
     mLastExpireTime = now;
 
@@ -409,7 +409,7 @@ void MulticastRoutingManager::ExpireMulticastForwardingCache(void)
 
     for (MulticastForwardingCache &mfc : mMulticastForwardingCacheTable)
     {
-        if (mfc.IsValid() && mfc.mLastUseTime + kMulticastForwardingCacheExpireTimeout * US_PER_S < now)
+        if (mfc.IsValid() && mfc.mLastUseTime + kMulticastForwardingCacheExpireTimeout * OT_US_PER_S < now)
         {
             if (!UpdateMulticastRouteInfo(mfc))
             {
