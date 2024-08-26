@@ -238,7 +238,7 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
         aArgsLength--;
     }
 
-    VerifyOrExit(aArgsLength >= 1, error = kErrorInvalidArgs);
+    VerifyOrExit(aArgsLength == 1, error = kErrorInvalidArgs);
 
     SuccessOrExit(error = Utils::CmdLineParser::ParseAsHexString(aArgs[0], size, mTxPacket->mPsdu));
     VerifyOrExit(size <= OT_RADIO_FRAME_MAX_SIZE, error = kErrorInvalidArgs);
