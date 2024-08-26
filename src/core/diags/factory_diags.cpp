@@ -221,7 +221,7 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
     Error    error = kErrorNone;
     uint16_t size  = OT_RADIO_FRAME_MAX_SIZE;
 
-    memset(&mTxPacket->mInfo, 0, sizeof(mTxPacket->mInfo));
+    ClearAllBytes(mTxPacket->mInfo);
 
     while (aArgsLength > 1)
     {
