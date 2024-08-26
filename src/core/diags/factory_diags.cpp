@@ -225,7 +225,7 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
 
     while (aArgsLength > 1)
     {
-        if (!strcmp(aArgs[0], "-s"))
+        if (StringMatch(aArgs[0], "-s"))
         {
             mTxPacket->mInfo.mTxInfo.mIsSecurityProcessed = true;
         }
