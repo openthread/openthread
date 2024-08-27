@@ -223,6 +223,8 @@ Could not fild the Android NDK CMake toolchain file
                 "-DOT_DNS_DSO=ON"
                 "-DOT_DNS_CLIENT_OVER_TCP=ON"
                 "-DOT_UDP_FORWARD=ON"
+                "-DOT_WC=ON"
+                "-DOT_WED=ON"
             )
             options+=("${OT_POSIX_SIM_COMMON_OPTIONS[@]}" "${local_options[@]}")
             ;;

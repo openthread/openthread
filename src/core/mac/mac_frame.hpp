@@ -277,10 +277,11 @@ public:
      */
     enum Type : uint16_t
     {
-        kTypeBeacon = 0, ///< Beacon Frame Type.
-        kTypeData   = 1, ///< Data Frame Type.
-        kTypeAck    = 2, ///< Ack Frame Type.
-        kTypeMacCmd = 3, ///< MAC Command Frame Type.
+        kTypeBeacon       = 0, ///< Beacon Frame Type.
+        kTypeData         = 1, ///< Data Frame Type.
+        kTypeAck          = 2, ///< Ack Frame Type.
+        kTypeMacCmd       = 3, ///< MAC Command Frame Type.
+        kTypeMultipurpose = 5, ///< Multipurpose Frame Type.
     };
 
     /**
@@ -424,6 +425,15 @@ public:
     bool IsAck(void) const { return GetType() == kTypeAck; }
 
     /**
+     * Returns whether the frame is a Multipurpose frame.
+     *
+     * @retval TRUE   If this is a Multipurpose frame.
+     * @retval FALSE  If this is not a Multipurpose frame.
+     *
+     */
+    bool IsMultipurpose(void) const { return GetType() == kTypeMultipurpose; }
+
+    /**
      * Returns the IEEE 802.15.4 Frame Version.
      *
      * @returns The IEEE 802.15.4 Frame Version.
@@ -446,7 +456,7 @@ public:
      * @retval FALSE  If security is not enabled.
      *
      */
-    bool GetSecurityEnabled(void) const { return (GetPsdu()[0] & kFcfSecurityEnabled) != 0; }
+    bool GetSecurityEnabled(void) const { return (GetFrameControlField() & FcfSecurityEnabledMask()) != 0; }
 
     /**
      * Indicates whether or not the Frame Pending bit is set.
@@ -455,7 +465,7 @@ public:
      * @retval FALSE  If the Frame Pending bit is not set.
      *
      */
-    bool GetFramePending(void) const { return (GetPsdu()[0] & kFcfFramePending) != 0; }
+    bool GetFramePending(void) const { return (GetFrameControlField() & FcfFramePendingMask()) != 0; }
 
     /**
      * Sets the Frame Pending bit.
@@ -472,7 +482,7 @@ public:
      * @retval FALSE  If the Ack Request bit is not set.
      *
      */
-    bool GetAckRequest(void) const { return (GetPsdu()[0] & kFcfAckRequest) != 0; }
+    bool GetAckRequest(void) const { return (GetFrameControlField() & FcfAckRequestMask()) != 0; }
 
     /**
      * Sets the Ack Request bit.
@@ -489,7 +499,14 @@ public:
      * @retval FALSE  If the PanId Compression bit is not set.
      *
      */
-    bool IsPanIdCompressed(void) const { return (GetFrameControlField() & kFcfPanidCompression) != 0; }
+    bool IsPanIdCompressed(void) const
+    {
+        return
+#if OPENTHREAD_CONFIG_WAKE_UP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKE_UP_END_DEVICE_ENABLE
+            IsMultipurpose() ? false :
+#endif
+                             ((GetFrameControlField() & kFcfPanidCompression) != 0);
+    }
 
     /**
      * Indicates whether or not IEs present.
@@ -498,7 +515,7 @@ public:
      * @retval FALSE  If no IE present.
      *
      */
-    bool IsIePresent(void) const { return (GetFrameControlField() & kFcfIePresent) != 0; }
+    bool IsIePresent(void) const { return (GetFrameControlField() & FcfIePresentMask()) != 0; }
 
     /**
      * Sets the IE Present bit.
@@ -1125,6 +1142,21 @@ protected:
     static constexpr uint16_t kFcfSrcAddrExt         = 3 << 14;
     static constexpr uint16_t kFcfSrcAddrMask        = 3 << 14;
 
+    // The multipurpose frame format refers to the Section 7.3.5 of the IEEE 802.15.4-2015.
+    static constexpr uint16_t kFcfMpLongFrameControl   = 1 << 3;
+    static constexpr uint16_t kFcfMpDstAddrShort       = 2 << 4;
+    static constexpr uint16_t kFcfMpDstAddrExt         = 3 << 4;
+    static constexpr uint16_t kFcfMpDstAddrMask        = 3 << 4;
+    static constexpr uint16_t kFcfMpSrcAddrShort       = 2 << 6;
+    static constexpr uint16_t kFcfMpSrcAddrExt         = 3 << 6;
+    static constexpr uint16_t kFcfMpSrcAddrMask        = 3 << 6;
+    static constexpr uint16_t kFcfMpPanIdPresent       = 1 << 8;
+    static constexpr uint16_t kFcfMpSecurityEnabled    = 1 << 9;
+    static constexpr uint16_t kFcfMpSequenceSupression = 1 << 10;
+    static constexpr uint16_t kFcfMpFramePending       = 1 << 11;
+    static constexpr uint16_t kFcfMpAckRequest         = 1 << 14;
+    static constexpr uint16_t kFcfMpIePresent          = 1 << 15;
+
     static constexpr uint8_t kSecLevelMask  = 7 << 0;
     static constexpr uint8_t kKeyIdModeMask = 3 << 3;
 
@@ -1144,6 +1176,29 @@ protected:
     static constexpr uint8_t kMaxPsduSize   = kInvalidSize - 1;
     static constexpr uint8_t kSequenceIndex = kFcfSize;
 
+#if OPENTHREAD_CONFIG_WAKE_UP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKE_UP_END_DEVICE_ENABLE
+    uint16_t FcfDstAddrMask(void) const { return FcfDstAddrMask(GetFrameControlField()); }
+    uint16_t FcfSrcAddrMask(void) const { return FcfSrcAddrMask(GetFrameControlField()); }
+    uint16_t FcfSecurityEnabledMask(void) const
+    {
+        return IsMultipurpose() ? kFcfMpSecurityEnabled : kFcfSecurityEnabled;
+    }
+
+    uint16_t FcfFramePendingMask(void) const { return IsMultipurpose() ? kFcfMpFramePending : kFcfFramePending; }
+    uint16_t FcfAckRequestMask(void) const { return IsMultipurpose() ? kFcfMpAckRequest : kFcfAckRequest; }
+    uint16_t FcfIePresentMask(void) const { return IsMultipurpose() ? kFcfMpIePresent : kFcfIePresent; }
+#else
+    uint16_t        FcfDstAddrMask(void) const { return kFcfDstAddrMask; }
+    uint16_t        FcfSrcAddrMask(void) const { return kFcfSrcAddrMask; }
+    uint16_t        FcfSecurityEnabledMask(void) const { return kFcfSecurityEnabled; }
+    uint16_t        FcfFramePendingMask(void) const { return kFcfFramePending; }
+    uint16_t        FcfAckRequestMask(void) const { return kFcfAckRequest; }
+    uint16_t        FcfIePresentMask(void) const { return kFcfIePresent; }
+#endif
+
+    Error GetSrcAddrSize(uint8_t &aSize) const { return GetSrcAddrSize(GetFrameControlField(), aSize); };
+    Error GetDstAddrSize(uint8_t &aSize) const { return GetDstAddrSize(GetFrameControlField(), aSize); }
+
     void    SetFrameControlField(uint16_t aFcf);
     uint8_t FindDstPanIdIndex(void) const;
     uint8_t FindDstAddrIndex(void) const;
@@ -1162,21 +1217,72 @@ protected:
 
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
 
-    static bool IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != kFcfDstAddrNone; }
-    static bool IsDstPanIdPresent(uint16_t aFcf);
-    static bool IsSequenceSuppressed(uint16_t aFcf)
-    {
-        return (aFcf & (kFcfSequenceSupression | kFcfFrameVersionMask)) == (kFcfSequenceSupression | kVersion2015);
-    }
+    static bool    IsDstAddrPresent(uint16_t aFcf) { return (aFcf & FcfDstAddrMask(aFcf)) != kFcfDstAddrNone; }
+    static bool    IsDstPanIdPresent(uint16_t aFcf);
+    static bool    IsSequenceSuppressed(uint16_t aFcf) { return (aFcf & FcfSequenceSupressionMask(aFcf)) != 0; }
     static uint8_t GetSeqNumSize(uint16_t aFcf) { return !IsSequenceSuppressed(aFcf) ? kDsnSize : 0; }
 
-    static bool IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone; }
+    static bool IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & FcfSrcAddrMask(aFcf)) != kFcfSrcAddrNone; }
     static bool IsSrcPanIdPresent(uint16_t aFcf);
     static bool IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kVersion2015; }
 
     static uint8_t CalculateAddrFieldSize(uint16_t aFcf);
     static uint8_t CalculateSecurityHeaderSize(uint8_t aSecurityControl);
     static uint8_t CalculateMicSize(uint8_t aSecurityControl);
+
+    static bool IsMultipurpose(uint16_t aFcf) { return (aFcf & kFcfFrameTypeMask) == kTypeMultipurpose; }
+
+#if OPENTHREAD_CONFIG_WAKE_UP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKE_UP_END_DEVICE_ENABLE
+    static uint16_t FcfDstAddrMask(uint16_t aFcf) { return IsMultipurpose(aFcf) ? kFcfMpDstAddrMask : kFcfDstAddrMask; }
+    static uint16_t FcfSrcAddrMask(uint16_t aFcf) { return IsMultipurpose(aFcf) ? kFcfMpSrcAddrMask : kFcfSrcAddrMask; }
+    static uint16_t FcfDstAddrShort(uint16_t aFcf)
+    {
+        return IsMultipurpose(aFcf) ? kFcfMpDstAddrShort : kFcfDstAddrShort;
+    }
+    static uint16_t FcfDstAddrExt(uint16_t aFcf) { return IsMultipurpose(aFcf) ? kFcfMpDstAddrExt : kFcfDstAddrExt; }
+    static uint16_t FcfSrcAddrShort(uint16_t aFcf)
+    {
+        return IsMultipurpose(aFcf) ? kFcfMpSrcAddrShort : kFcfSrcAddrShort;
+    }
+    static uint16_t FcfSrcAddrExt(uint16_t aFcf) { return IsMultipurpose(aFcf) ? kFcfMpSrcAddrExt : kFcfSrcAddrExt; }
+    static uint16_t FcfSequenceSupressionMask(uint16_t aFcf)
+    {
+        return IsMultipurpose(aFcf) ? kFcfMpSequenceSupression : kFcfSequenceSupression;
+    }
+#else
+    static uint16_t FcfDstAddrMask(uint16_t) { return kFcfDstAddrMask; }
+    static uint16_t FcfSrcAddrMask(uint16_t) { return kFcfSrcAddrMask; }
+    static uint16_t FcfDstAddrShort(uint16_t) { return kFcfDstAddrShort; }
+    static uint16_t FcfDstAddrExt(uint16_t) { return kFcfDstAddrExt; }
+    static uint16_t FcfSrcAddrShort(uint16_t) { return kFcfSrcAddrShort; }
+    static uint16_t FcfSrcAddrExt(uint16_t) { return kFcfSrcAddrExt; }
+    static uint16_t FcfSequenceSupressionMask(uint16_t) { return kFcfSequenceSupression; }
+#endif
+
+    static bool IsDstAddrShortPresent(uint16_t aFcf) { return (aFcf & FcfDstAddrMask(aFcf)) == FcfDstAddrShort(aFcf); }
+    static bool IsDstAddrExtPresent(uint16_t aFcf) { return (aFcf & FcfDstAddrMask(aFcf)) == FcfDstAddrExt(aFcf); }
+    static bool IsSrcAddrShortPresent(uint16_t aFcf) { return (aFcf & FcfSrcAddrMask(aFcf)) == FcfSrcAddrShort(aFcf); }
+    static bool IsSrcAddrExtPresent(uint16_t aFcf) { return (aFcf & FcfSrcAddrMask(aFcf)) == FcfSrcAddrExt(aFcf); }
+
+    static Error GetSrcAddrSize(uint16_t aFcf, uint8_t &aSize);
+    static Error GetDstAddrSize(uint16_t aFcf, uint8_t &aSize);
+
+private:
+    static uint16_t DetermineFcf(Type             aType,
+                                 Version          aVersion,
+                                 const Addresses &aAddrs,
+                                 const PanIds    &aPanIds,
+                                 SecurityLevel    aSecurityLevel,
+                                 bool             aSuppressSequence);
+
+#if OPENTHREAD_CONFIG_WAKE_UP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKE_UP_END_DEVICE_ENABLE
+    static uint16_t DetermineFcfMultipurpose(Type             aType,
+                                             Version          aVersion,
+                                             const Addresses &aAddrs,
+                                             const PanIds    &aPanIds,
+                                             SecurityLevel    aSecurityLevel,
+                                             bool             aSuppressSequence);
+#endif
 };
 
 /**

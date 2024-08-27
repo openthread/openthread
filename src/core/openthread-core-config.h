@@ -110,6 +110,7 @@
 #include "config/time_sync.h"
 #include "config/tmf.h"
 #include "config/trel.h"
+#include "config/wake_up.h"
 
 #undef OPENTHREAD_CORE_CONFIG_H_IN
 

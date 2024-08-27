@@ -840,6 +840,7 @@ source_set("libopenthread_core_config") {
     "config/time_sync.h",
     "config/tmf.h",
     "config/trel.h",
+    "config/wake_up.h",
     "openthread-core-config.h",
   ]
   public_configs = [

@@ -196,6 +196,7 @@ void TestMacHeader(void)
 
     struct TestCase
     {
+        Mac::Frame::Type          mType;
         Mac::Frame::Version       mVersion;
         AddrType                  mSrcAddrType;
         PanIdMode                 mSrcPanIdMode;
@@ -208,6 +209,10 @@ void TestMacHeader(void)
         bool                      mSuppressSequence;
     };
 
+    static constexpr Mac::Frame::Type kTypeData         = Mac::Frame::kTypeData;
+    static constexpr Mac::Frame::Type kTypeMultipurpose = Mac::Frame::kTypeMultipurpose;
+
+    static constexpr Mac::Frame::Version kVer2003 = Mac::Frame::kVersion2003;
     static constexpr Mac::Frame::Version kVer2006 = Mac::Frame::kVersion2006;
     static constexpr Mac::Frame::Version kVer2015 = Mac::Frame::kVersion2015;
 
@@ -221,52 +226,71 @@ void TestMacHeader(void)
     static const char *kPanIdModeStrings[] = {"No", "Id1", "Id2"};
 
     static constexpr TestCase kTestCases[] = {
-        {kVer2006, kNoneAddr, kNoPanId, kNoneAddr, kNoPanId, kNoSec, kModeId1, 3, 2},
-        {kVer2006, kShrtAddr, kUsePanId1, kNoneAddr, kNoPanId, kNoSec, kModeId1, 7, 2},
-        {kVer2006, kExtdAddr, kUsePanId1, kNoneAddr, kNoPanId, kNoSec, kModeId1, 13, 2},
-        {kVer2006, kNoneAddr, kNoPanId, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 7, 2},
-        {kVer2006, kNoneAddr, kNoPanId, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 13, 2},
-        {kVer2006, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId2, kNoSec, kModeId1, 11, 2},
-        {kVer2006, kShrtAddr, kUsePanId1, kExtdAddr, kUsePanId2, kNoSec, kModeId1, 17, 2},
-        {kVer2006, kExtdAddr, kUsePanId1, kShrtAddr, kUsePanId2, kNoSec, kModeId1, 17, 2},
-        {kVer2006, kExtdAddr, kUsePanId1, kExtdAddr, kUsePanId2, kNoSec, kModeId1, 23, 2},
-        {kVer2006, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 9, 2},
-        {kVer2006, kShrtAddr, kUsePanId1, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 15, 2},
-        {kVer2006, kExtdAddr, kUsePanId1, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 15, 2},
-        {kVer2006, kExtdAddr, kUsePanId1, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 21, 2},
-        {kVer2006, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kMic32, kModeId1, 15, 6},
-        {kVer2006, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kMic32, kModeId2, 19, 6},
+#if OPENTHREAD_CONFIG_WAKE_UP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKE_UP_END_DEVICE_ENABLE
+        {kTypeMultipurpose, kVer2003, kNoneAddr, kNoPanId, kNoneAddr, kNoPanId, kNoSec, kModeId1, 3, 2},
+        {kTypeMultipurpose, kVer2003, kShrtAddr, kUsePanId1, kNoneAddr, kNoPanId, kNoSec, kModeId1, 5, 2},
+        {kTypeMultipurpose, kVer2003, kExtdAddr, kUsePanId1, kNoneAddr, kNoPanId, kNoSec, kModeId1, 11, 2},
+        {kTypeMultipurpose, kVer2003, kNoneAddr, kNoPanId, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 7, 2},
+        {kTypeMultipurpose, kVer2003, kNoneAddr, kNoPanId, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 13, 2},
+        {kTypeMultipurpose, kVer2003, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId2, kNoSec, kModeId1, 9, 2},
+        {kTypeMultipurpose, kVer2003, kShrtAddr, kUsePanId1, kExtdAddr, kUsePanId2, kNoSec, kModeId1, 15, 2},
+        {kTypeMultipurpose, kVer2003, kExtdAddr, kUsePanId1, kShrtAddr, kUsePanId2, kNoSec, kModeId1, 15, 2},
+        {kTypeMultipurpose, kVer2003, kExtdAddr, kUsePanId1, kExtdAddr, kUsePanId2, kNoSec, kModeId1, 21, 2},
+        {kTypeMultipurpose, kVer2003, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 9, 2},
+        {kTypeMultipurpose, kVer2003, kShrtAddr, kUsePanId1, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 15, 2},
+        {kTypeMultipurpose, kVer2003, kExtdAddr, kUsePanId1, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 15, 2},
+        {kTypeMultipurpose, kVer2003, kExtdAddr, kUsePanId1, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 21, 2},
+        {kTypeMultipurpose, kVer2003, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kMic32, kModeId1, 15, 6},
+        {kTypeMultipurpose, kVer2003, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kMic32, kModeId2, 19, 6},
+        {kTypeMultipurpose, kVer2003, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kMic32, kModeId2, 18, 6, true},
+#endif // OPENTHREAD_CONFIG_WAKE_UP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKE_UP_END_DEVICE_ENABLE
 
-        {kVer2015, kNoneAddr, kNoPanId, kNoneAddr, kNoPanId, kNoSec, kModeId1, 3, 2},
-        {kVer2015, kShrtAddr, kUsePanId1, kNoneAddr, kNoPanId, kNoSec, kModeId1, 7, 2},
-        {kVer2015, kExtdAddr, kUsePanId1, kNoneAddr, kNoPanId, kNoSec, kModeId1, 13, 2},
-        {kVer2015, kNoneAddr, kNoPanId, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 7, 2},
-        {kVer2015, kNoneAddr, kNoPanId, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 13, 2},
-        {kVer2015, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId2, kNoSec, kModeId1, 11, 2},
-        {kVer2015, kShrtAddr, kUsePanId1, kExtdAddr, kUsePanId2, kNoSec, kModeId1, 17, 2},
-        {kVer2015, kExtdAddr, kUsePanId1, kShrtAddr, kUsePanId2, kNoSec, kModeId1, 17, 2},
-        {kVer2015, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 9, 2},
-        {kVer2015, kShrtAddr, kUsePanId1, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 15, 2},
-        {kVer2015, kExtdAddr, kUsePanId1, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 15, 2},
-        {kVer2015, kExtdAddr, kUsePanId1, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 21, 2},
-        {kVer2015, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kMic32, kModeId1, 15, 6},
-        {kVer2015, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kMic32, kModeId2, 19, 6},
+        {kTypeData, kVer2006, kNoneAddr, kNoPanId, kNoneAddr, kNoPanId, kNoSec, kModeId1, 3, 2},
+        {kTypeData, kVer2006, kShrtAddr, kUsePanId1, kNoneAddr, kNoPanId, kNoSec, kModeId1, 7, 2},
+        {kTypeData, kVer2006, kExtdAddr, kUsePanId1, kNoneAddr, kNoPanId, kNoSec, kModeId1, 13, 2},
+        {kTypeData, kVer2006, kNoneAddr, kNoPanId, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 7, 2},
+        {kTypeData, kVer2006, kNoneAddr, kNoPanId, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 13, 2},
+        {kTypeData, kVer2006, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId2, kNoSec, kModeId1, 11, 2},
+        {kTypeData, kVer2006, kShrtAddr, kUsePanId1, kExtdAddr, kUsePanId2, kNoSec, kModeId1, 17, 2},
+        {kTypeData, kVer2006, kExtdAddr, kUsePanId1, kShrtAddr, kUsePanId2, kNoSec, kModeId1, 17, 2},
+        {kTypeData, kVer2006, kExtdAddr, kUsePanId1, kExtdAddr, kUsePanId2, kNoSec, kModeId1, 23, 2},
+        {kTypeData, kVer2006, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 9, 2},
+        {kTypeData, kVer2006, kShrtAddr, kUsePanId1, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 15, 2},
+        {kTypeData, kVer2006, kExtdAddr, kUsePanId1, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 15, 2},
+        {kTypeData, kVer2006, kExtdAddr, kUsePanId1, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 21, 2},
+        {kTypeData, kVer2006, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kMic32, kModeId1, 15, 6},
+        {kTypeData, kVer2006, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kMic32, kModeId2, 19, 6},
 
-        {kVer2015, kNoneAddr, kNoPanId, kShrtAddr, kNoPanId, kNoSec, kModeId1, 5, 2},
-        {kVer2015, kNoneAddr, kNoPanId, kShrtAddr, kNoPanId, kMic32, kModeId1, 11, 6},
-        {kVer2015, kNoneAddr, kNoPanId, kNoneAddr, kUsePanId1, kNoSec, kModeId1, 5, 2},
-        {kVer2015, kNoneAddr, kNoPanId, kNoneAddr, kUsePanId1, kMic32, kModeId1, 11, 6},
-        {kVer2015, kNoneAddr, kNoPanId, kShrtAddr, kNoPanId, kNoSec, kModeId1, 5, 2},
-        {kVer2015, kNoneAddr, kNoPanId, kExtdAddr, kNoPanId, kNoSec, kModeId1, 11, 2},
-        {kVer2015, kNoneAddr, kNoPanId, kShrtAddr, kNoPanId, kMic32, kModeId1, 11, 6},
-        {kVer2015, kNoneAddr, kNoPanId, kExtdAddr, kNoPanId, kMic32, kModeId1, 17, 6},
-        {kVer2015, kShrtAddr, kNoPanId, kNoneAddr, kNoPanId, kNoSec, kModeId1, 5, 2},
-        {kVer2015, kShrtAddr, kNoPanId, kNoneAddr, kNoPanId, kMic32, kModeId1, 11, 6},
-        {kVer2015, kExtdAddr, kNoPanId, kNoneAddr, kNoPanId, kNoSec, kModeId1, 11, 2},
-        {kVer2015, kExtdAddr, kNoPanId, kNoneAddr, kNoPanId, kMic32, kModeId1, 17, 6},
-        {kVer2015, kExtdAddr, kNoPanId, kExtdAddr, kNoPanId, kNoSec, kModeId1, 19, 2},
-        {kVer2015, kExtdAddr, kNoPanId, kExtdAddr, kNoPanId, kMic32, kModeId1, 25, 6},
-        {kVer2015, kExtdAddr, kNoPanId, kExtdAddr, kNoPanId, kMic32, kModeId1, 24, 6, true},
+        {kTypeData, kVer2015, kNoneAddr, kNoPanId, kNoneAddr, kNoPanId, kNoSec, kModeId1, 3, 2},
+        {kTypeData, kVer2015, kShrtAddr, kUsePanId1, kNoneAddr, kNoPanId, kNoSec, kModeId1, 7, 2},
+        {kTypeData, kVer2015, kExtdAddr, kUsePanId1, kNoneAddr, kNoPanId, kNoSec, kModeId1, 13, 2},
+        {kTypeData, kVer2015, kNoneAddr, kNoPanId, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 7, 2},
+        {kTypeData, kVer2015, kNoneAddr, kNoPanId, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 13, 2},
+        {kTypeData, kVer2015, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId2, kNoSec, kModeId1, 11, 2},
+        {kTypeData, kVer2015, kShrtAddr, kUsePanId1, kExtdAddr, kUsePanId2, kNoSec, kModeId1, 17, 2},
+        {kTypeData, kVer2015, kExtdAddr, kUsePanId1, kShrtAddr, kUsePanId2, kNoSec, kModeId1, 17, 2},
+        {kTypeData, kVer2015, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 9, 2},
+        {kTypeData, kVer2015, kShrtAddr, kUsePanId1, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 15, 2},
+        {kTypeData, kVer2015, kExtdAddr, kUsePanId1, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 15, 2},
+        {kTypeData, kVer2015, kExtdAddr, kUsePanId1, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 21, 2},
+        {kTypeData, kVer2015, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kMic32, kModeId1, 15, 6},
+        {kTypeData, kVer2015, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kMic32, kModeId2, 19, 6},
+
+        {kTypeData, kVer2015, kNoneAddr, kNoPanId, kShrtAddr, kNoPanId, kNoSec, kModeId1, 5, 2},
+        {kTypeData, kVer2015, kNoneAddr, kNoPanId, kShrtAddr, kNoPanId, kMic32, kModeId1, 11, 6},
+        {kTypeData, kVer2015, kNoneAddr, kNoPanId, kNoneAddr, kUsePanId1, kNoSec, kModeId1, 5, 2},
+        {kTypeData, kVer2015, kNoneAddr, kNoPanId, kNoneAddr, kUsePanId1, kMic32, kModeId1, 11, 6},
+        {kTypeData, kVer2015, kNoneAddr, kNoPanId, kShrtAddr, kNoPanId, kNoSec, kModeId1, 5, 2},
+        {kTypeData, kVer2015, kNoneAddr, kNoPanId, kExtdAddr, kNoPanId, kNoSec, kModeId1, 11, 2},
+        {kTypeData, kVer2015, kNoneAddr, kNoPanId, kShrtAddr, kNoPanId, kMic32, kModeId1, 11, 6},
+        {kTypeData, kVer2015, kNoneAddr, kNoPanId, kExtdAddr, kNoPanId, kMic32, kModeId1, 17, 6},
+        {kTypeData, kVer2015, kShrtAddr, kNoPanId, kNoneAddr, kNoPanId, kNoSec, kModeId1, 5, 2},
+        {kTypeData, kVer2015, kShrtAddr, kNoPanId, kNoneAddr, kNoPanId, kMic32, kModeId1, 11, 6},
+        {kTypeData, kVer2015, kExtdAddr, kNoPanId, kNoneAddr, kNoPanId, kNoSec, kModeId1, 11, 2},
+        {kTypeData, kVer2015, kExtdAddr, kNoPanId, kNoneAddr, kNoPanId, kMic32, kModeId1, 17, 6},
+        {kTypeData, kVer2015, kExtdAddr, kNoPanId, kExtdAddr, kNoPanId, kNoSec, kModeId1, 19, 2},
+        {kTypeData, kVer2015, kExtdAddr, kNoPanId, kExtdAddr, kNoPanId, kMic32, kModeId1, 25, 6},
+        {kTypeData, kVer2015, kExtdAddr, kNoPanId, kExtdAddr, kNoPanId, kMic32, kModeId1, 24, 6, true},
     };
 
     const uint16_t kPanId1     = 0xbaba;
@@ -355,20 +379,28 @@ void TestMacHeader(void)
             break;
         }
 
-        frame.InitMacHeader(Mac::Frame::kTypeData, testCase.mVersion, addresses, panIds, testCase.mSecurity,
+        frame.InitMacHeader(testCase.mType, testCase.mVersion, addresses, panIds, testCase.mSecurity,
                             testCase.mKeyIdMode, testCase.mSuppressSequence);
 
         VerifyOrQuit(frame.GetHeaderLength() == testCase.mHeaderLength);
         VerifyOrQuit(frame.GetFooterLength() == testCase.mFooterLength);
         VerifyOrQuit(frame.GetLength() == testCase.mHeaderLength + testCase.mFooterLength);
 
-        VerifyOrQuit(frame.GetType() == Mac::Frame::kTypeData);
+        VerifyOrQuit(frame.GetType() == testCase.mType);
         VerifyOrQuit(!frame.IsAck());
         VerifyOrQuit(frame.GetVersion() == testCase.mVersion);
         VerifyOrQuit(frame.GetSecurityEnabled() == (testCase.mSecurity != kNoSec));
         VerifyOrQuit(!frame.GetFramePending());
         VerifyOrQuit(!frame.IsIePresent());
-        VerifyOrQuit(frame.GetAckRequest() == (testCase.mDstAddrType != kNoneAddr));
+
+        if (testCase.mType == kTypeMultipurpose)
+        {
+            VerifyOrQuit(!frame.GetAckRequest());
+        }
+        else
+        {
+            VerifyOrQuit(frame.GetAckRequest() == (testCase.mDstAddrType != kNoneAddr));
+        }
 
         VerifyOrQuit(frame.IsSrcAddrPresent() == (testCase.mSrcAddrType != kNoneAddr));
         SuccessOrQuit(frame.GetSrcAddr(address));

@@ -54,16 +54,14 @@ void HeaderIe::Init(uint16_t aId, uint8_t aLen)
     SetLength(aLen);
 }
 
-void Frame::InitMacHeader(Type             aType,
-                          Version          aVersion,
-                          const Addresses &aAddrs,
-                          const PanIds    &aPanIds,
-                          SecurityLevel    aSecurityLevel,
-                          KeyIdMode        aKeyIdMode,
-                          bool             aSuppressSequence)
+uint16_t Frame::DetermineFcf(Type             aType,
+                             Version          aVersion,
+                             const Addresses &aAddrs,
+                             const PanIds    &aPanIds,
+                             SecurityLevel    aSecurityLevel,
+                             bool             aSuppressSequence)
 {
-    uint16_t     fcf;
-    FrameBuilder builder;
+    uint16_t fcf;
 
     fcf = static_cast<uint16_t>(aType) | static_cast<uint16_t>(aVersion);
 
@@ -203,6 +201,97 @@ void Frame::InitMacHeader(Type             aType,
         fcf |= kFcfSequenceSupression;
     }
 
+    return fcf;
+}
+
+#if OPENTHREAD_CONFIG_WAKE_UP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKE_UP_END_DEVICE_ENABLE
+uint16_t Frame::DetermineFcfMultipurpose(Type             aType,
+                                         Version          aVersion,
+                                         const Addresses &aAddrs,
+                                         const PanIds    &aPanIds,
+                                         SecurityLevel    aSecurityLevel,
+                                         bool             aSuppressSequence)
+{
+    uint16_t fcf;
+
+    // The version of multipurpose frame must be set to 0x00.
+    // Refer to the section `7.3.5.9 Frame Version field` of the IEEE 802.15.4-2015.
+    OT_ASSERT(aVersion == kVersion2003);
+    OT_ASSERT(aType == kTypeMultipurpose);
+
+    fcf = static_cast<uint16_t>(aType) | static_cast<uint16_t>(aVersion);
+
+    switch (aAddrs.mSource.GetType())
+    {
+    case Address::kTypeNone:
+        fcf |= kFcfSrcAddrNone;
+        break;
+    case Address::kTypeShort:
+        fcf |= kFcfMpSrcAddrShort;
+        break;
+    case Address::kTypeExtended:
+        fcf |= kFcfMpSrcAddrExt;
+        break;
+    }
+
+    switch (aAddrs.mDestination.GetType())
+    {
+    case Address::kTypeNone:
+        fcf |= kFcfDstAddrNone;
+        break;
+    case Address::kTypeShort:
+        fcf |= kFcfMpDstAddrShort;
+        break;
+    case Address::kTypeExtended:
+        fcf |= kFcfMpDstAddrExt;
+        break;
+    }
+
+    fcf |= (aSecurityLevel != kSecurityNone) ? kFcfMpSecurityEnabled : 0;
+
+    // PAN ID present
+    if (aPanIds.IsDestinationPresent())
+    {
+        fcf |= kFcfMpPanIdPresent;
+    }
+
+    // Support two-bytes FCF
+    fcf |= kFcfMpLongFrameControl;
+
+    // No ACK is required
+    fcf &= ~kFcfMpAckRequest;
+
+    if (aSuppressSequence)
+    {
+        fcf |= kFcfMpSequenceSupression;
+    }
+
+    return fcf;
+}
+#endif // OPENTHREAD_CONFIG_WAKE_UP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKE_UP_END_DEVICE_ENABLE
+
+void Frame::InitMacHeader(Type             aType,
+                          Version          aVersion,
+                          const Addresses &aAddrs,
+                          const PanIds    &aPanIds,
+                          SecurityLevel    aSecurityLevel,
+                          KeyIdMode        aKeyIdMode,
+                          bool             aSuppressSequence)
+{
+    uint16_t     fcf;
+    FrameBuilder builder;
+
+#if OPENTHREAD_CONFIG_WAKE_UP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKE_UP_END_DEVICE_ENABLE
+    if (aType == kTypeMultipurpose)
+    {
+        fcf = DetermineFcfMultipurpose(aType, aVersion, aAddrs, aPanIds, aSecurityLevel, aSuppressSequence);
+    }
+    else
+#endif
+    {
+        fcf = DetermineFcf(aType, aVersion, aAddrs, aPanIds, aSecurityLevel, aSuppressSequence);
+    }
+
     builder.Init(mPsdu, GetMtu());
     IgnoreError(builder.AppendLittleEndianUint16(fcf));
 
@@ -263,39 +352,50 @@ exit:
 
 void Frame::SetAckRequest(bool aAckRequest)
 {
+    uint16_t fcf            = GetFrameControlField();
+    uint16_t ackRequestMask = FcfAckRequestMask();
+
     if (aAckRequest)
     {
-        mPsdu[0] |= kFcfAckRequest;
+        fcf |= ackRequestMask;
     }
     else
     {
-        mPsdu[0] &= ~kFcfAckRequest;
+        fcf &= ~ackRequestMask;
     }
+
+    SetFrameControlField(fcf);
 }
 
 void Frame::SetFramePending(bool aFramePending)
 {
+    uint16_t fcf              = GetFrameControlField();
+    uint16_t framePendingMask = FcfFramePendingMask();
+
     if (aFramePending)
     {
-        mPsdu[0] |= kFcfFramePending;
+        fcf |= framePendingMask;
     }
     else
     {
-        mPsdu[0] &= ~kFcfFramePending;
+        fcf &= ~framePendingMask;
     }
+
+    SetFrameControlField(fcf);
 }
 
 void Frame::SetIePresent(bool aIePresent)
 {
-    uint16_t fcf = GetFrameControlField();
+    uint16_t fcf           = GetFrameControlField();
+    uint16_t iePresentMask = FcfIePresentMask();
 
     if (aIePresent)
     {
-        fcf |= kFcfIePresent;
+        fcf |= iePresentMask;
     }
     else
     {
-        fcf &= ~kFcfIePresent;
+        fcf &= ~iePresentMask;
     }
 
     SetFrameControlField(fcf);
@@ -316,6 +416,14 @@ exit:
 bool Frame::IsDstPanIdPresent(uint16_t aFcf)
 {
     bool present = true;
+
+#if OPENTHREAD_CONFIG_WAKE_UP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKE_UP_END_DEVICE_ENABLE
+    if (IsMultipurpose(aFcf))
+    {
+        present = ((aFcf & kFcfMpPanIdPresent) != 0);
+        ExitNow();
+    }
+#endif
 
     if (IsVersion2015(aFcf))
     {
@@ -363,6 +471,9 @@ bool Frame::IsDstPanIdPresent(uint16_t aFcf)
         present = IsDstAddrPresent(aFcf);
     }
 
+    ExitNow(); // Avoid the compilation error when the multipurpose frame is not supported.
+
+exit:
     return present;
 }
 
@@ -407,20 +518,22 @@ Error Frame::GetDstAddr(Address &aAddress) const
 {
     Error   error = kErrorNone;
     uint8_t index = FindDstAddrIndex();
+    uint8_t size;
 
     VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
+    SuccessOrExit(error = GetDstAddrSize(size));
 
-    switch (GetFrameControlField() & kFcfDstAddrMask)
+    switch (size)
     {
-    case kFcfDstAddrShort:
+    case sizeof(ShortAddress):
         aAddress.SetShort(LittleEndian::ReadUint16(&mPsdu[index]));
         break;
 
-    case kFcfDstAddrExt:
+    case sizeof(ExtAddress):
         aAddress.SetExtended(&mPsdu[index], ExtAddress::kReverseByteOrder);
         break;
 
-    default:
+    case 0:
         aAddress.SetNone();
         break;
     }
@@ -431,7 +544,7 @@ exit:
 
 void Frame::SetDstAddr(ShortAddress aShortAddress)
 {
-    OT_ASSERT((GetFrameControlField() & kFcfDstAddrMask) == kFcfDstAddrShort);
+    OT_ASSERT(IsDstAddrShortPresent(GetFrameControlField()));
     LittleEndian::WriteUint16(aShortAddress, &mPsdu[FindDstAddrIndex()]);
 }
 
@@ -439,7 +552,7 @@ void Frame::SetDstAddr(const ExtAddress &aExtAddress)
 {
     uint8_t index = FindDstAddrIndex();
 
-    OT_ASSERT((GetFrameControlField() & kFcfDstAddrMask) == kFcfDstAddrExt);
+    OT_ASSERT(IsDstAddrExtPresent(GetFrameControlField()));
     OT_ASSERT(index != kInvalidIndex);
 
     aExtAddress.CopyTo(&mPsdu[index], ExtAddress::kReverseByteOrder);
@@ -466,6 +579,7 @@ void Frame::SetDstAddr(const Address &aAddress)
 uint8_t Frame::FindSrcPanIdIndex(void) const
 {
     uint8_t  index = 0;
+    uint8_t  size  = 0;
     uint16_t fcf   = GetFrameControlField();
 
     VerifyOrExit(IsSrcPanIdPresent(), index = kInvalidIndex);
@@ -477,16 +591,8 @@ uint8_t Frame::FindSrcPanIdIndex(void) const
         index += sizeof(PanId);
     }
 
-    switch (fcf & kFcfDstAddrMask)
-    {
-    case kFcfDstAddrShort:
-        index += sizeof(ShortAddress);
-        break;
-
-    case kFcfDstAddrExt:
-        index += sizeof(ExtAddress);
-        break;
-    }
+    IgnoreError(GetDstAddrSize(size));
+    index += size;
 
 exit:
     return index;
@@ -494,7 +600,13 @@ exit:
 
 bool Frame::IsSrcPanIdPresent(uint16_t aFcf)
 {
-    bool present = IsSrcAddrPresent(aFcf) && ((aFcf & kFcfPanidCompression) == 0);
+    bool present;
+
+#if OPENTHREAD_CONFIG_WAKE_UP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKE_UP_END_DEVICE_ENABLE
+    VerifyOrExit(!IsMultipurpose(aFcf), present = false);
+#endif
+
+    present = IsSrcAddrPresent(aFcf) && ((aFcf & kFcfPanidCompression) == 0);
 
     // Special case for a IEEE 802.15.4-2015 frame: When both
     // addresses are extended, then the source PAN iD is not present
@@ -529,6 +641,9 @@ bool Frame::IsSrcPanIdPresent(uint16_t aFcf)
         present = false;
     }
 
+    ExitNow(); // Avoid the compilation error when the multipurpose frame is not supported.
+
+exit:
     return present;
 }
 
@@ -559,6 +674,7 @@ exit:
 uint8_t Frame::FindSrcAddrIndex(void) const
 {
     uint8_t  index = 0;
+    uint8_t  size  = 0;
     uint16_t fcf   = GetFrameControlField();
 
     index += kFcfSize + GetSeqNumSize();
@@ -568,16 +684,8 @@ uint8_t Frame::FindSrcAddrIndex(void) const
         index += sizeof(PanId);
     }
 
-    switch (fcf & kFcfDstAddrMask)
-    {
-    case kFcfDstAddrShort:
-        index += sizeof(ShortAddress);
-        break;
-
-    case kFcfDstAddrExt:
-        index += sizeof(ExtAddress);
-        break;
-    }
+    IgnoreError(GetDstAddrSize(size));
+    index += size;
 
     if (IsSrcPanIdPresent(fcf))
     {
@@ -587,31 +695,75 @@ uint8_t Frame::FindSrcAddrIndex(void) const
     return index;
 }
 
+Error Frame::GetDstAddrSize(uint16_t aFcf, uint8_t &aSize)
+{
+    Error    error   = kErrorNone;
+    uint16_t dstAddr = aFcf & FcfDstAddrMask(aFcf);
+
+    if (dstAddr == FcfDstAddrShort(aFcf))
+    {
+        aSize = sizeof(ShortAddress);
+    }
+    else if (dstAddr == FcfDstAddrExt(aFcf))
+    {
+        aSize = sizeof(ExtAddress);
+    }
+    else if (dstAddr == kFcfDstAddrNone)
+    {
+        aSize = 0;
+    }
+    else
+    {
+        error = kErrorParse;
+    }
+
+    return error;
+}
+
+Error Frame::GetSrcAddrSize(uint16_t aFcf, uint8_t &aSize)
+{
+    Error    error   = kErrorNone;
+    uint16_t srcAddr = aFcf & FcfSrcAddrMask(aFcf);
+
+    if (srcAddr == FcfSrcAddrShort(aFcf))
+    {
+        aSize = sizeof(ShortAddress);
+    }
+    else if (srcAddr == FcfSrcAddrExt(aFcf))
+    {
+        aSize = sizeof(ExtAddress);
+    }
+    else if (srcAddr == kFcfSrcAddrNone)
+    {
+        aSize = 0;
+    }
+    else
+    {
+        error = kErrorParse;
+    }
+
+    return error;
+}
+
 Error Frame::GetSrcAddr(Address &aAddress) const
 {
-    Error    error = kErrorNone;
-    uint8_t  index = FindSrcAddrIndex();
-    uint16_t fcf   = GetFrameControlField();
+    Error   error = kErrorNone;
+    uint8_t index = FindSrcAddrIndex();
+    uint8_t size;
 
     VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
+    SuccessOrExit(error = GetSrcAddrSize(size));
 
-    switch (fcf & kFcfSrcAddrMask)
+    switch (size)
     {
-    case kFcfSrcAddrShort:
+    case sizeof(ShortAddress):
         aAddress.SetShort(LittleEndian::ReadUint16(&mPsdu[index]));
         break;
-
-    case kFcfSrcAddrExt:
+    case sizeof(ExtAddress):
         aAddress.SetExtended(&mPsdu[index], ExtAddress::kReverseByteOrder);
         break;
-
-    case kFcfSrcAddrNone:
+    case 0:
         aAddress.SetNone();
-        break;
-
-    default:
-        // reserved value
-        error = kErrorParse;
         break;
     }
 
@@ -623,7 +775,7 @@ void Frame::SetSrcAddr(ShortAddress aShortAddress)
 {
     uint8_t index = FindSrcAddrIndex();
 
-    OT_ASSERT((GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrShort);
+    OT_ASSERT(IsSrcAddrShortPresent(GetFrameControlField()));
     OT_ASSERT(index != kInvalidIndex);
 
     LittleEndian::WriteUint16(aShortAddress, &mPsdu[index]);
@@ -633,7 +785,7 @@ void Frame::SetSrcAddr(const ExtAddress &aExtAddress)
 {
     uint8_t index = FindSrcAddrIndex();
 
-    OT_ASSERT((GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrExt);
+    OT_ASSERT(IsSrcAddrExtPresent(GetFrameControlField()));
     OT_ASSERT(index != kInvalidIndex);
 
     aExtAddress.CopyTo(&mPsdu[index], ExtAddress::kReverseByteOrder);
@@ -970,8 +1122,7 @@ uint8_t Frame::SkipAddrFieldIndex(void) const
     uint8_t index;
 
     VerifyOrExit(kFcfSize + GetFcsSize() <= mLength, index = kInvalidIndex);
-
-    VerifyOrExit(!IsSequencePresent() || kFcfSize + kDsnSize + GetFcsSize() <= mLength, index = kInvalidIndex);
+    VerifyOrExit(!IsSequencePresent() || kFcfSize + GetSeqNumSize() + GetFcsSize() <= mLength, index = kInvalidIndex);
 
     index = CalculateAddrFieldSize(GetFrameControlField());
 
@@ -982,6 +1133,7 @@ exit:
 uint8_t Frame::CalculateAddrFieldSize(uint16_t aFcf)
 {
     uint8_t size = kFcfSize + GetSeqNumSize(aFcf);
+    uint8_t addrSize;
 
     // This static method calculates the size (number of bytes) of
     // Address header field for a given Frame Control `aFcf` value.
@@ -995,44 +1147,16 @@ uint8_t Frame::CalculateAddrFieldSize(uint16_t aFcf)
         size += sizeof(PanId);
     }
 
-    switch (aFcf & kFcfDstAddrMask)
-    {
-    case kFcfDstAddrNone:
-        break;
-
-    case kFcfDstAddrShort:
-        size += sizeof(ShortAddress);
-        break;
-
-    case kFcfDstAddrExt:
-        size += sizeof(ExtAddress);
-        break;
-
-    default:
-        ExitNow(size = kInvalidSize);
-    }
+    VerifyOrExit(GetDstAddrSize(aFcf, addrSize) == kErrorNone, size = kInvalidSize);
+    size += addrSize;
 
     if (IsSrcPanIdPresent(aFcf))
     {
         size += sizeof(PanId);
     }
 
-    switch (aFcf & kFcfSrcAddrMask)
-    {
-    case kFcfSrcAddrNone:
-        break;
-
-    case kFcfSrcAddrShort:
-        size += sizeof(ShortAddress);
-        break;
-
-    case kFcfSrcAddrExt:
-        size += sizeof(ExtAddress);
-        break;
-
-    default:
-        ExitNow(size = kInvalidSize);
-    }
+    VerifyOrExit(GetSrcAddrSize(aFcf, addrSize) == kErrorNone, size = kInvalidSize);
+    size += addrSize;
 
 exit:
     return size;
