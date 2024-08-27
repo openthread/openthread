@@ -33,6 +33,7 @@
 
 #include "factory_diags.hpp"
 #include "common/error.hpp"
+#include "openthread/platform/radio.h"
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
@@ -216,14 +217,29 @@ Diags::Diags(Instance &aInstance)
     mStats.Clear();
 }
 
+void Diags::ResetTxPacket(void)
+{
+    mTxPacket->mInfo.mTxInfo.mTxDelayBaseTime      = 0;
+    mTxPacket->mInfo.mTxInfo.mTxDelay              = 0;
+    mTxPacket->mInfo.mTxInfo.mMaxCsmaBackoffs      = 0;
+    mTxPacket->mInfo.mTxInfo.mMaxFrameRetries      = 0;
+    mTxPacket->mInfo.mTxInfo.mRxChannelAfterTxDone = mChannel;
+    mTxPacket->mInfo.mTxInfo.mTxPower              = OT_RADIO_POWER_INVALID;
+    mTxPacket->mInfo.mTxInfo.mIsHeaderUpdated      = false;
+    mTxPacket->mInfo.mTxInfo.mIsARetx              = false;
+    mTxPacket->mInfo.mTxInfo.mCsmaCaEnabled        = false;
+    mTxPacket->mInfo.mTxInfo.mCslPresent           = false;
+    mTxPacket->mInfo.mTxInfo.mIsSecurityProcessed  = false;
+}
+
 Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
 {
     Error    error = kErrorNone;
     uint16_t size  = OT_RADIO_FRAME_MAX_SIZE;
 
-    ClearAllBytes(mTxPacket->mInfo);
+    ResetTxPacket();
 
-    if (aArgsLength > 1)
+    if (aArgsLength >= 1)
     {
         if (StringMatch(aArgs[0], "-s"))
         {
@@ -480,7 +496,7 @@ void Diags::TransmitPacket(void)
 
     if (!mIsTxPacketSet)
     {
-        ClearAllBytes(mTxPacket->mInfo);
+        ResetTxPacket();
         mTxPacket->mLength = mTxLen;
 
         for (uint8_t i = 0; i < mTxLen; i++)
