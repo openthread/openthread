@@ -348,11 +348,11 @@ void platformRadioUpdateFdSet(otSysMainloopContext *aContext)
     {
         uint64_t remain = deadline - now;
 
-        if (remain < (static_cast<uint64_t>(aContext->mTimeout.tv_sec) * US_PER_S +
+        if (remain < (static_cast<uint64_t>(aContext->mTimeout.tv_sec) * OT_US_PER_S +
                       static_cast<uint64_t>(aContext->mTimeout.tv_usec)))
         {
-            aContext->mTimeout.tv_sec  = static_cast<time_t>(remain / US_PER_S);
-            aContext->mTimeout.tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
+            aContext->mTimeout.tv_sec  = static_cast<time_t>(remain / OT_US_PER_S);
+            aContext->mTimeout.tv_usec = static_cast<suseconds_t>(remain % OT_US_PER_S);
         }
     }
     else

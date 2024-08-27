@@ -83,7 +83,7 @@ uint64_t otPlatTimeGet(void)
 
     VerifyOrDie(clock_gettime(OT_POSIX_CLOCK_ID, &now) == 0, OT_EXIT_FAILURE);
 
-    return static_cast<uint64_t>(now.tv_sec) * US_PER_S + static_cast<uint64_t>(now.tv_nsec) / NS_PER_US;
+    return static_cast<uint64_t>(now.tv_sec) * OT_US_PER_S + static_cast<uint64_t>(now.tv_nsec) / OT_NS_PER_US;
 }
 #endif // !OPENTHREAD_POSIX_VIRTUAL_TIME
 
@@ -128,7 +128,7 @@ void platformAlarmInit(uint32_t aSpeedUpFactor, int aRealTimeSignal)
     }
 }
 
-uint32_t otPlatAlarmMilliGetNow(void) { return (uint32_t)(platformAlarmGetNow() / US_PER_MS); }
+uint32_t otPlatAlarmMilliGetNow(void) { return (uint32_t)(platformAlarmGetNow() / OT_US_PER_MS); }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
@@ -161,8 +161,8 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
         struct itimerspec its;
         uint32_t          diff = sUsAlarm - otPlatAlarmMicroGetNow();
 
-        its.it_value.tv_sec  = diff / US_PER_S;
-        its.it_value.tv_nsec = (diff % US_PER_S) * NS_PER_US;
+        its.it_value.tv_sec  = diff / OT_US_PER_S;
+        its.it_value.tv_nsec = (diff % OT_US_PER_S) * OT_NS_PER_US;
 
         its.it_interval.tv_sec  = 0;
         its.it_interval.tv_nsec = 0;
@@ -204,10 +204,10 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 
     if (sIsMsRunning)
     {
-        remaining = (int32_t)(sMsAlarm - (uint32_t)(now / US_PER_MS));
+        remaining = (int32_t)(sMsAlarm - (uint32_t)(now / OT_US_PER_MS));
         VerifyOrExit(remaining > 0);
-        remaining *= US_PER_MS;
-        remaining -= (now % US_PER_MS);
+        remaining *= OT_US_PER_MS;
+        remaining -= (now % OT_US_PER_MS);
     }
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
@@ -237,10 +237,10 @@ exit:
             remaining = 1;
         }
 
-        if (remaining < static_cast<int64_t>(aTimeout->tv_sec) * US_PER_S + static_cast<int64_t>(aTimeout->tv_usec))
+        if (remaining < static_cast<int64_t>(aTimeout->tv_sec) * OT_US_PER_S + static_cast<int64_t>(aTimeout->tv_usec))
         {
-            aTimeout->tv_sec  = static_cast<time_t>(remaining / US_PER_S);
-            aTimeout->tv_usec = static_cast<suseconds_t>(remaining % US_PER_S);
+            aTimeout->tv_sec  = static_cast<time_t>(remaining / OT_US_PER_S);
+            aTimeout->tv_usec = static_cast<suseconds_t>(remaining % OT_US_PER_S);
         }
     }
 }

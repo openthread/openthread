@@ -127,19 +127,6 @@ void platformAlarmProcess(otInstance *aInstance);
  */
 int32_t platformAlarmGetNext(void);
 
-#ifndef MS_PER_S
-#define MS_PER_S 1000
-#endif
-#ifndef US_PER_MS
-#define US_PER_MS 1000
-#endif
-#ifndef US_PER_S
-#define US_PER_S (MS_PER_S * US_PER_MS)
-#endif
-#ifndef NS_PER_US
-#define NS_PER_US 1000
-#endif
-
 /**
  * Advances the alarm time by @p aDelta.
  *
