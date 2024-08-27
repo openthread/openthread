@@ -80,7 +80,7 @@ Done
 
 ### diag frame
 
-Usage: `diag [-s] frame <frame>`
+Usage: `diag frame [-s] <frame>`
 
 Set the frame (hex encoded) to be used by `diag send` and `diag repeat`. The frame may be overwritten by `diag send` and `diag repeat`.
 
