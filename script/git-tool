@@ -46,7 +46,7 @@ apply_dependencies()
         echo "${dependency}"
         depends_on_pr="$(echo "${dependency}" | tr -d '\r\n' | cut -d# -f2)"
         echo "pr: #${depends_on_pr}"
-        git pull --no-edit origin "pull/${depends_on_pr}/merge"
+        git pull --no-edit --no-rebase origin "pull/${depends_on_pr}/merge"
     done < <(grep -E "^Depends-On: *${project_name}" || true)
 }
 
