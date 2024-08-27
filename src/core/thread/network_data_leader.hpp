@@ -189,6 +189,16 @@ public:
     void GetCommissioningDataset(MeshCoP::CommissioningDataset &aDataset) const;
 
     /**
+     * Processes a MGMT_COMMISSIONER_GET request message and prepares the response.
+     *
+     * @param[in] aRequest   The MGMT_COMMISSIONER_GET request message.
+     *
+     * @returns The prepared response, or `nullptr` if fails to parse the request or cannot allocate message.
+     *
+     */
+    Coap::Message *ProcessCommissionerGetRequest(const Coap::Message &aMessage) const;
+
+    /**
      * Searches for given sub-TLV in Commissioning Data TLV.
      *
      * @tparam SubTlvType    The sub-TLV type to search for.

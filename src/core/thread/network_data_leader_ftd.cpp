@@ -317,53 +317,21 @@ exit:
 
 template <> void Leader::HandleTmf<kUriCommissionerGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    Error          error    = kErrorNone;
     Coap::Message *response = nullptr;
-    OffsetRange    offsetRange;
 
-    VerifyOrExit(Get<Mle::Mle>().IsLeader() && !mWaitingForNetDataSync);
+    VerifyOrExit(Get<Mle::Mle>().IsLeader() && !mWaitingForNetDataSync, error = kErrorInvalidState);
 
-    response = Get<Tmf::Agent>().NewPriorityResponseMessage(aMessage);
-    VerifyOrExit(response != nullptr);
+    response = ProcessCommissionerGetRequest(aMessage);
+    VerifyOrExit(response != nullptr, error = kErrorParse);
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, aMessageInfo));
 
-    if (Tlv::FindTlvValueOffsetRange(aMessage, MeshCoP::Tlv::kGet, offsetRange) == kErrorNone)
-    {
-        // Append the requested sub-TLV types given in Get TLV.
-
-        while (!offsetRange.IsEmpty())
-        {
-            uint8_t             type;
-            const MeshCoP::Tlv *subTlv;
-
-            IgnoreError(aMessage.Read(offsetRange, type));
-            offsetRange.AdvanceOffset(sizeof(type));
-
-            subTlv = FindCommissioningDataSubTlv(type);
-
-            if (subTlv != nullptr)
-            {
-                SuccessOrExit(subTlv->AppendTo(*response));
-            }
-        }
-    }
-    else
-    {
-        // Append all sub-TLVs in the Commissioning Data.
-
-        CommissioningDataTlv *dataTlv = FindCommissioningData();
-
-        if (dataTlv != nullptr)
-        {
-            SuccessOrExit(response->AppendBytes(dataTlv->GetValue(), dataTlv->GetLength()));
-        }
-    }
-
-    SuccessOrExit(Get<Tmf::Agent>().SendMessage(*response, aMessageInfo));
-    response = nullptr; // `SendMessage` takes ownership on success
-
-    LogInfo("Sent %s response", UriToString<kUriCommissionerGet>());
+    LogInfo("Sent %s response to %s", UriToString<kUriCommissionerGet>(),
+            aMessageInfo.GetPeerAddr().ToString().AsCString());
 
 exit:
-    FreeMessage(response);
+    LogWarnOnError(error, "send CommissionerGet response");
+    FreeMessageOnError(response, error);
 }
 
 void Leader::SendCommissioningSetResponse(const Coap::Message     &aRequest,

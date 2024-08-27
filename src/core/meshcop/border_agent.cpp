@@ -468,7 +468,7 @@ void BorderAgent::HandleTmf<kUriCommissionerPetition>(Coap::Message &aMessage, c
 template <>
 void BorderAgent::HandleTmf<kUriCommissionerGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriCommissionerGet));
+    HandleTmfDatasetGet(aMessage, aMessageInfo, kUriCommissionerGet);
 }
 
 template <>
@@ -479,7 +479,7 @@ void BorderAgent::HandleTmf<kUriCommissionerSet>(Coap::Message &aMessage, const 
 
 template <> void BorderAgent::HandleTmf<kUriActiveGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    HandleTmfDatasetGet(aMessage, aMessageInfo, Dataset::kActive);
+    HandleTmfDatasetGet(aMessage, aMessageInfo, kUriActiveGet);
     mCounters.mMgmtActiveGets++;
 }
 
@@ -490,7 +490,7 @@ template <> void BorderAgent::HandleTmf<kUriActiveSet>(Coap::Message &aMessage, 
 
 template <> void BorderAgent::HandleTmf<kUriPendingGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    HandleTmfDatasetGet(aMessage, aMessageInfo, Dataset::kPending);
+    HandleTmfDatasetGet(aMessage, aMessageInfo, kUriPendingGet);
     mCounters.mMgmtPendingGets++;
 }
 
@@ -610,18 +610,14 @@ exit:
     return error;
 }
 
-void BorderAgent::HandleTmfDatasetGet(Coap::Message          &aMessage,
-                                      const Ip6::MessageInfo &aMessageInfo,
-                                      Dataset::Type           aType)
+void BorderAgent::HandleTmfDatasetGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri)
 {
     Error          error    = kErrorNone;
     Coap::Message *response = nullptr;
 
     if (mState == kStateAccepted)
     {
-        Uri uri = (aType == Dataset::kActive) ? kUriActiveGet : kUriPendingGet;
-
-        IgnoreError(ForwardToLeader(aMessage, aMessageInfo, uri));
+        IgnoreError(ForwardToLeader(aMessage, aMessageInfo, aUri));
         ExitNow();
     }
 
@@ -629,23 +625,32 @@ void BorderAgent::HandleTmfDatasetGet(Coap::Message          &aMessage,
     // the Security Policy flags (O-bit) should be ignore to allow
     // the commissioner candidate to get the full Operational Dataset.
 
-    if (aType == Dataset::kActive)
+    switch (aUri)
     {
+    case kUriActiveGet:
         response = Get<ActiveDatasetManager>().ProcessGetRequest(aMessage, DatasetManager::kIgnoreSecurityPolicyFlags);
-    }
-    else
-    {
+        break;
+
+    case kUriPendingGet:
         response = Get<PendingDatasetManager>().ProcessGetRequest(aMessage, DatasetManager::kIgnoreSecurityPolicyFlags);
+        break;
+
+    case kUriCommissionerGet:
+        response = Get<NetworkData::Leader>().ProcessCommissionerGetRequest(aMessage);
+        break;
+
+    default:
+        break;
     }
 
     VerifyOrExit(response != nullptr, error = kErrorParse);
 
     SuccessOrExit(error = Get<Tmf::SecureAgent>().SendMessage(*response, aMessageInfo));
 
-    LogInfo("Sent %sGet response to non-active commissioner", Dataset::TypeToString(aType));
+    LogInfo("Sent %s response to non-active commissioner", PathForUri(aUri));
 
 exit:
-    LogWarnOnError(error, "send Active/PendingGet response");
+    LogWarnOnError(error, "send Active/Pending/CommissionerGet response");
     FreeMessageOnError(response, error);
 }
 
