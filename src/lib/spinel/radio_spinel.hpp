@@ -1316,7 +1316,6 @@ private:
     int8_t       mCcaEnergyDetectThreshold;
     int8_t       mTransmitPower;
     int8_t       mFemLnaGain;
-    uint32_t     mMacFrameCounter;
     bool         mCoexEnabled : 1;
     bool         mSrcMatchEnabled : 1;
 

@@ -691,6 +691,16 @@ uint8_t otLinkGetMaxFrameRetriesIndirect(otInstance *aInstance);
 void otLinkSetMaxFrameRetriesIndirect(otInstance *aInstance, uint8_t aMaxFrameRetriesIndirect);
 
 /**
+ * Gets the current MAC frame counter value.
+ *
+ * @param[in] aInstance    A pointer to the OpenThread instance.
+ *
+ * @returns The current MAC frame counter value.
+ *
+ */
+uint32_t otLinkGetFrameCounter(otInstance *aInstance);
+
+/**
  * Gets the address mode of MAC filter.
  *
  * Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
