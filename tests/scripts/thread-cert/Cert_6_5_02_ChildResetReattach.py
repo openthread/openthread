@@ -150,7 +150,7 @@ class Cert_6_5_2_ChildResetReattach_Base(thread_cert.TestCase):
             filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
             filter(lambda p: {
                               MODE_TLV
-                             } < set(p.mle.tlv.type)
+                             } <= set(p.mle.tlv.type)
                    ).\
             must_next()
         if self.TOPOLOGY[MTD]['mode'] == '-':

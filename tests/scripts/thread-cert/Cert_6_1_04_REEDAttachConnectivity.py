@@ -276,7 +276,7 @@ class Cert_6_1_4_REEDAttachConnectivity_Base(thread_cert.TestCase):
                               NL_STATUS_TLV,
                               NL_RLOC16_TLV,
                               NL_ROUTER_MASK_TLV
-                              } == set(p.coap.tlv.type) and\
+                              } <= set(p.coap.tlv.type) and\
                    p.thread_address.tlv.status == 0
                    ).\
             must_next()

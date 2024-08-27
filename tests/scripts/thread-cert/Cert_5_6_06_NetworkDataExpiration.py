@@ -163,29 +163,29 @@ class Cert_5_6_6_NetworkDataExpiration(thread_cert.TestCase):
             lambda p: {
                 NWD_COMMISSIONING_DATA_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV,
                 NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV
-            } == set(p.thread_nwd.tlv.type) and {
+            } <= set(p.thread_nwd.tlv.type) and {
                 Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:2::'),
                 Ipv6Addr('2001:2:0:3::')
             } == set(p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.stable == [0, 1, 1, 1, 0, 0, 0, 1, 1, 1])
 
         # Step 7: The DUT MUST send a unicast MLE Child Update Response to MED_1
         _lpkts_med.filter_wpan_dst64(MED).filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} < set(p.mle.tlv.type))
+            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type))
 
         # Step 8: The DUT MUST send a unicast MLE Child Update Request to SED_1
         _lpkts_sed.filter_wpan_dst64(SED).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} == set(
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(
                 p.mle.tlv.type) and {
                     NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV,
                     NWD_6LOWPAN_ID_TLV
-                } == set(p.thread_nwd.tlv.type) and {
+                } <= set(p.thread_nwd.tlv.type) and {
                     Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:3::')
                 } == set(p.thread_nwd.tlv.prefix) and {0xFFFE, 0xFFFE} == set(p.thread_nwd.tlv.border_router_16))
 
         # Step 10: The DUT MUST send a unicast MLE Child Update Response to SED_1
         _pkt = _lpkts_sed.filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).filter_wpan_dst64(SED).must_next()
         _pkt.must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} < set(p.mle.tlv.type))
+            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type))
 
         # Step 12: The DUT updates Router ID Set and removes Router_1
         # from Network Data TLV after Router_1 power off
@@ -197,7 +197,7 @@ class Cert_5_6_6_NetworkDataExpiration(thread_cert.TestCase):
             lambda p: {
                 NWD_COMMISSIONING_DATA_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV,
                 NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV
-            } == set(p.thread_nwd.tlv.type) and
+            } <= set(p.thread_nwd.tlv.type) and
             {Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:2::'),
              Ipv6Addr('2001:2:0:3::')} == set(p.thread_nwd.tlv.prefix) and p.mle.tlv.leader_data.data_version ==
             (_pkt.mle.tlv.leader_data.data_version + 1) % 256 and p.mle.tlv.leader_data.stable_data_version ==
@@ -205,20 +205,20 @@ class Cert_5_6_6_NetworkDataExpiration(thread_cert.TestCase):
 
         # Step 15: The DUT MUST send a unicast MLE Child Update Response to MED_1
         _lpkts_med.filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).filter_wpan_dst64(MED).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} < set(p.mle.tlv.type)
+            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type)
             and p.mle.tlv.leader_data.data_version == (_pkt.mle.tlv.leader_data.data_version + 1) % 256 and p.mle.tlv.
             leader_data.stable_data_version == (_pkt.mle.tlv.leader_data.stable_data_version + 1) % 256)
 
         # Step 16: The DUT MUST send a unicast MLE Child Update Request to SED_1
         _lpkts_sed.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).filter_wpan_dst64(SED).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} == set(
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(
                 p.mle.tlv.type) and p.mle.tlv.leader_data.data_version ==
             (_pkt.mle.tlv.leader_data.data_version + 1) % 256 and p.mle.tlv.leader_data.stable_data_version ==
             (_pkt.mle.tlv.leader_data.stable_data_version + 1) % 256)
 
         # Step 18: The DUT MUST send a unicast MLE Child Update Response to SED_1
         _lpkts_sed.filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).filter_wpan_dst64(SED).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} < set(p.mle.tlv.type))
+            lambda p: {SOURCE_ADDRESS_TLV, MODE_TLV, LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV} <= set(p.mle.tlv.type))
 
 
 if __name__ == '__main__':

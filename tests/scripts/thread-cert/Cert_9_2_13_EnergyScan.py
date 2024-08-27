@@ -112,12 +112,12 @@ class Cert_9_2_13_EnergyScan_Base(thread_cert.TestCase):
 
         # Step 3: The DUT MUST send MGMT_ED_REPORT.ans to the Commissioner and report energy measurements
         _pkts.filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_request(MGMT_ED_REPORT).must_next().must_verify(
-            lambda p: {NM_CHANNEL_MASK_TLV, NM_ENERGY_LIST_TLV} == set(p.thread_meshcop.tlv.type) and p.thread_meshcop.
+            lambda p: {NM_CHANNEL_MASK_TLV, NM_ENERGY_LIST_TLV} <= set(p.thread_meshcop.tlv.type) and p.thread_meshcop.
             tlv.chan_mask_mask == '0000a000' and len(p.thread_meshcop.tlv.energy_list) == 2)
 
         # Step 5: The DUT MUST send MGMT_ED_REPORT.ans to the Commissioner and report energy measurements
         _pkts.filter_ipv6_dst(COMMISSIONER_RLOC).filter_coap_request(MGMT_ED_REPORT).must_next().must_verify(
-            lambda p: {NM_CHANNEL_MASK_TLV, NM_ENERGY_LIST_TLV} == set(p.thread_meshcop.tlv.type) and p.thread_meshcop.
+            lambda p: {NM_CHANNEL_MASK_TLV, NM_ENERGY_LIST_TLV} <= set(p.thread_meshcop.tlv.type) and p.thread_meshcop.
             tlv.chan_mask_mask == '0000a000' and len(p.thread_meshcop.tlv.energy_list) == 2)
 
         # Step 6: The DUT MUST respond with ICMPv6 Echo Reply

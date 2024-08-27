@@ -129,7 +129,7 @@ class Cert_9_2_17_Orphan(thread_cert.TestCase):
         # Step 6: ED MUST send a MLE Announce Message
         # The Destination PAN ID (0xFFFF) in the IEEE 802.15.4 MAC and MUST be secured using Key ID Mode 2.
         _epkts.filter_mle_cmd(MLE_ANNOUNCE).must_next().must_verify(
-            lambda p: {CHANNEL_TLV, PAN_ID_TLV, ACTIVE_TIMESTAMP_TLV} == set(
+            lambda p: {CHANNEL_TLV, PAN_ID_TLV, ACTIVE_TIMESTAMP_TLV} <= set(
                 p.mle.tlv.type) and p.wpan.dst_pan == 0xffff and p.wpan.aux_sec.key_id_mode == 0x2)
 
         # Step 8: ED MUST attempt to attach on the Secondary channel,

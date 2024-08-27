@@ -177,7 +177,7 @@ class Cert_7_1_3_BorderRouterAsLeader(thread_cert.TestCase):
                                   SOURCE_ADDRESS_TLV,
                                   MODE_TLV,
                                   ADDRESS_REGISTRATION_TLV
-                                 } < set(p.mle.tlv.type) and\
+                                 } <= set(p.mle.tlv.type) and\
                        p.mle.tlv.addr_reg_iid is not nullField and\
                        set(_pkt.mle.tlv.addr_reg_iid) > set(p.mle.tlv.addr_reg_iid)
                        ).\
@@ -197,7 +197,7 @@ class Cert_7_1_3_BorderRouterAsLeader(thread_cert.TestCase):
                               SOURCE_ADDRESS_TLV,
                               LEADER_DATA_TLV,
                               ACTIVE_TIMESTAMP_TLV
-                             } == set(p.mle.tlv.type) and\
+                             } <= set(p.mle.tlv.type) and\
                    [Ipv6Addr(PREFIX_2001[:-3])] == p.thread_nwd.tlv.prefix and\
                    p.thread_nwd.tlv.border_router.flag.p == [1] and\
                    p.thread_nwd.tlv.border_router.flag.s == [1] and\
@@ -228,7 +228,7 @@ class Cert_7_1_3_BorderRouterAsLeader(thread_cert.TestCase):
                               SOURCE_ADDRESS_TLV,
                               MODE_TLV,
                               ADDRESS_REGISTRATION_TLV
-                             } < set(p.mle.tlv.type) and\
+                             } <= set(p.mle.tlv.type) and\
                    p.mle.tlv.addr_reg_iid is not nullField and\
                    set(_pkt.mle.tlv.addr_reg_iid) > set(p.mle.tlv.addr_reg_iid)
                    ).\

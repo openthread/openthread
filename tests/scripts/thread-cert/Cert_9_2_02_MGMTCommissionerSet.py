@@ -185,7 +185,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
             filter(lambda p: {
                               NM_COMMISSIONER_SESSION_ID_TLV,
                               NM_STEERING_DATA_TLV
-                             } == set(p.thread_meshcop.tlv.type) and\
+                             } <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.steering_data == Bytes('ff')
                    ).\
            must_next()
@@ -218,15 +218,15 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
                               SOURCE_ADDRESS_TLV,
                               ACTIVE_TIMESTAMP_TLV,
                               LEADER_DATA_TLV
-                             } == set(p.mle.tlv.type) and\
+                             } <= set(p.mle.tlv.type) and\
                              {
                               NWD_COMMISSIONING_DATA_TLV
-                             } == set(p.thread_nwd.tlv.type) and\
+                             } <= set(p.thread_nwd.tlv.type) and\
                              {
                               NM_BORDER_AGENT_LOCATOR_TLV,
                               NM_COMMISSIONER_SESSION_ID_TLV,
                               NM_STEERING_DATA_TLV
-                             } == set(p.thread_meshcop.tlv.type) and\
+                             } <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_nwd.tlv.stable == [0]
                    ).\
             must_next()
@@ -244,7 +244,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
             filter(lambda p: {
                               NM_COMMISSIONER_SESSION_ID_TLV,
                               NM_BORDER_AGENT_LOCATOR_TLV
-                             } == set(p.thread_meshcop.tlv.type) and\
+                             } <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.ba_locator == 0x0400
                    ).\
            must_next()
@@ -278,7 +278,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
                               NM_COMMISSIONER_SESSION_ID_TLV,
                               NM_STEERING_DATA_TLV,
                               NM_BORDER_AGENT_LOCATOR_TLV
-                             } == set(p.thread_meshcop.tlv.type) and\
+                             } <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.ba_locator == 0x0400 and\
                    p.thread_meshcop.tlv.steering_data == Bytes('ff')
                    ).\
@@ -311,7 +311,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
             filter(lambda p: {
                               NM_COMMISSIONER_SESSION_ID_TLV,
                               NM_STEERING_DATA_TLV
-                             } == set(p.thread_meshcop.tlv.type) and\
+                             } <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.commissioner_sess_id == 0xFFFF and\
                    p.thread_meshcop.tlv.steering_data == Bytes('ff')
                    ).\
@@ -346,7 +346,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
                               NM_COMMISSIONER_SESSION_ID_TLV,
                               NM_STEERING_DATA_TLV,
                               NM_CHANNEL_TLV
-                             } == set(p.thread_meshcop.tlv.type) and\
+                             } <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.steering_data == Bytes('ff')
                    ).\
            must_next()

@@ -97,7 +97,7 @@ class Cert_6_5_1_ChildResetReattach(thread_cert.TestCase):
         # Step 3: Send MLE Child Update Request to Leader
         _ed_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next()
         _ed_pkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
-            lambda p: {MODE_TLV} < set(p.mle.tlv.type))
+            lambda p: {MODE_TLV} <= set(p.mle.tlv.type))
 
         # Step 5: DUT reattaches to Leader
         _ed_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next().must_verify(

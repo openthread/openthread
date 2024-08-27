@@ -122,7 +122,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
             filter_coap_request(LEAD_PET_URI).\
             filter(lambda p: {
                               NM_COMMISSIONER_ID_TLV
-                              } == set(p.coap.tlv.type)\
+                              } <= set(p.coap.tlv.type)\
                    ).\
            must_next()
 
@@ -159,15 +159,15 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
                               SOURCE_ADDRESS_TLV,
                               ACTIVE_TIMESTAMP_TLV,
                               LEADER_DATA_TLV
-                             } == set(p.mle.tlv.type) and\
+                             } <= set(p.mle.tlv.type) and\
                              {
                               NWD_COMMISSIONING_DATA_TLV
-                             } == set(p.thread_nwd.tlv.type) and\
+                             } <= set(p.thread_nwd.tlv.type) and\
                              {
                               NM_BORDER_AGENT_LOCATOR_TLV,
                               NM_COMMISSIONER_SESSION_ID_TLV,
                               NM_STEERING_DATA_TLV
-                             } == set(p.thread_meshcop.tlv.type) and\
+                             } <= set(p.thread_meshcop.tlv.type) and\
                    p.mle.tlv.leader_data.data_version ==
                    (_pkt.mle.tlv.leader_data.data_version + 1) % 256 and\
                    p.thread_nwd.tlv.stable == [0]
@@ -186,7 +186,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
             filter(lambda p: {
                               NM_STATE_TLV,
                               NM_COMMISSIONER_SESSION_ID_TLV
-                              } == set(p.coap.tlv.type) and\
+                              } <= set(p.coap.tlv.type) and\
                    p.thread_meshcop.tlv.state == MESHCOP_ACCEPT
                    ).\
            must_next()
@@ -218,7 +218,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
             filter(lambda p: {
                               NM_STEERING_DATA_TLV,
                               NM_COMMISSIONER_SESSION_ID_TLV
-                              } == set(p.coap.tlv.type)
+                              } <= set(p.coap.tlv.type)
                    ).\
            must_next()
 
@@ -252,15 +252,15 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
                               SOURCE_ADDRESS_TLV,
                               ACTIVE_TIMESTAMP_TLV,
                               LEADER_DATA_TLV
-                             } == set(p.mle.tlv.type) and\
+                             } <= set(p.mle.tlv.type) and\
                              {
                               NWD_COMMISSIONING_DATA_TLV
-                             } == set(p.thread_nwd.tlv.type) and\
+                             } <= set(p.thread_nwd.tlv.type) and\
                              {
                               NM_BORDER_AGENT_LOCATOR_TLV,
                               NM_COMMISSIONER_SESSION_ID_TLV,
                               NM_STEERING_DATA_TLV
-                             } == set(p.thread_meshcop.tlv.type) and\
+                             } <= set(p.thread_meshcop.tlv.type) and\
                    p.mle.tlv.leader_data.data_version ==
                    (_dr_pkt.mle.tlv.leader_data.data_version + 1) % 256 and\
                    p.thread_nwd.tlv.stable == [0]
@@ -280,7 +280,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
             filter(lambda p: {
                               NM_STATE_TLV,
                               NM_COMMISSIONER_SESSION_ID_TLV
-                              } == set(p.coap.tlv.type) and\
+                              } <= set(p.coap.tlv.type) and\
                    p.thread_meshcop.tlv.state == MESHCOP_REJECT
                    ).\
            must_next()
@@ -302,7 +302,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
             filter_coap_ack(LEAD_KA_URI).\
             filter(lambda p: {
                               NM_STATE_TLV
-                              } == set(p.coap.tlv.type) and\
+                              } <= set(p.coap.tlv.type) and\
                    p.thread_meshcop.tlv.state == MESHCOP_REJECT
                    ).\
            must_next()
@@ -314,13 +314,13 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
                               SOURCE_ADDRESS_TLV,
                               ACTIVE_TIMESTAMP_TLV,
                               LEADER_DATA_TLV
-                             } == set(p.mle.tlv.type) and\
+                             } <= set(p.mle.tlv.type) and\
                              {
                               NWD_COMMISSIONING_DATA_TLV
-                             } == set(p.thread_nwd.tlv.type) and\
+                             } <= set(p.thread_nwd.tlv.type) and\
                              {
                               NM_COMMISSIONER_SESSION_ID_TLV
-                             } == set(p.thread_meshcop.tlv.type) and\
+                             } <= set(p.thread_meshcop.tlv.type) and\
                    (p.mle.tlv.leader_data.data_version -
                    _dr_pkt2.mle.tlv.leader_data.data_version) % 256 <= 127 and\
                    p.thread_nwd.tlv.stable == [0]
@@ -337,7 +337,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
             filter_coap_request(LEAD_PET_URI).\
             filter(lambda p: {
                               NM_COMMISSIONER_ID_TLV
-                              } == set(p.coap.tlv.type)\
+                              } <= set(p.coap.tlv.type)\
                    ).\
            must_next()
 

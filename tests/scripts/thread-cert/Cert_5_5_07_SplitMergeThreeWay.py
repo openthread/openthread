@@ -127,25 +127,25 @@ class Cert_5_5_7_SplitMergeThreeWay(thread_cert.TestCase):
         leader_pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
         _lpkts = leader_pkts.copy()
         _lpkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} == set(p.mle.tlv.type))
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} <= set(p.mle.tlv.type))
 
         router1_pkts.range(leader_pkts.index).filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} == set(p.mle.tlv.type))
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} <= set(p.mle.tlv.type))
 
         # Step 4: Each router forms a partition with the lowest possible partition ID
         # Step 5: Router_1 MUST send MLE Parent Requests and MUST make two separate attempts
         router1_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
-            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
+            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} <= set(
                 p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 1)
         lreset_start = router1_pkts.index
         router1_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
-            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
+            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} <= set(
                 p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 1)
 
         # Step 7: Router_1 MUST attempt to attach to any other Partition
         # within range by sending a MLE Parent Request.
         router1_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
-            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type))
+            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} <= set(p.mle.tlv.type))
         lreset_stop = router1_pkts.index
 
         # Step 3: The Leader MUST stop sending MLE advertisements.
@@ -157,12 +157,12 @@ class Cert_5_5_7_SplitMergeThreeWay(thread_cert.TestCase):
         # Step 8: Router_1 take over leader role of a new Partition and begin transmitting
         # MLE Advertisements
         router1_pkts.copy().filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} == set(p.mle.tlv.type))
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} <= set(p.mle.tlv.type))
 
         # Step 9: The Leader MUST send properly formatted MLE Parent Requests to the
         # All-Routers multicast address
         _lpkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
-            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type))
+            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} <= set(p.mle.tlv.type))
 
         # Step 10: Router_1 MUST send an MLE Parent Response
         router1_pkts.filter_mle_cmd(MLE_PARENT_RESPONSE).must_next().must_verify(

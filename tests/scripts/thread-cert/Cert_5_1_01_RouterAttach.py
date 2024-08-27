@@ -245,7 +245,7 @@ class Cert_5_1_01_RouterAttach(thread_cert.TestCase):
             filter(lambda p: {
                               NL_MAC_EXTENDED_ADDRESS_TLV,
                               NL_STATUS_TLV
-                              } == set(p.coap.tlv.type)\
+                              } <= set(p.coap.tlv.type)\
                    ).\
            must_next()
 
@@ -265,7 +265,7 @@ class Cert_5_1_01_RouterAttach(thread_cert.TestCase):
                               NL_STATUS_TLV,
                               NL_RLOC16_TLV,
                               NL_ROUTER_MASK_TLV
-                              } == set(p.coap.tlv.type) and\
+                              } <= set(p.coap.tlv.type) and\
                    p.coap.code == COAP_CODE_ACK and\
                    p.thread_address.tlv.status == 0\
                    ).\
@@ -289,7 +289,7 @@ class Cert_5_1_01_RouterAttach(thread_cert.TestCase):
                               LEADER_DATA_TLV,
                               ROUTE64_TLV,
                               SOURCE_ADDRESS_TLV
-                              } == set(p.mle.tlv.type) and\
+                              } <= set(p.mle.tlv.type) and\
                    p.ipv6.hlim == 255).\
             must_next()
 

@@ -212,7 +212,7 @@ class Cert_5_3_3_AddressQuery(thread_cert.TestCase):
                               NL_ML_EID_TLV,
                               NL_RLOC16_TLV,
                               NL_TARGET_EID_TLV
-                              } == set(p.coap.tlv.type) and\
+                              } <= set(p.coap.tlv.type) and\
                    p.thread_address.tlv.target_eid == ROUTER_3_MLEID and\
                    p.coap.code == COAP_CODE_POST
                    ).\

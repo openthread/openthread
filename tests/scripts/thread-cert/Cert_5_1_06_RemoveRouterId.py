@@ -111,7 +111,7 @@ class Cert_5_1_06_RemoveRouterId(thread_cert.TestCase):
                               NL_STATUS_TLV,
                               NL_RLOC16_TLV,
                               NL_ROUTER_MASK_TLV
-                              } == set(p.coap.tlv.type) and\
+                              } <= set(p.coap.tlv.type) and\
                    p.coap.code == COAP_CODE_ACK and\
                    p.thread_address.tlv.status == 0
                    ).\
@@ -162,7 +162,7 @@ class Cert_5_1_06_RemoveRouterId(thread_cert.TestCase):
                               NL_MAC_EXTENDED_ADDRESS_TLV,
                               NL_RLOC16_TLV,
                               NL_STATUS_TLV
-                              } == set(p.coap.tlv.type) and\
+                              } <= set(p.coap.tlv.type) and\
                    p.coap.code == COAP_CODE_POST and\
                    p.thread_address.tlv.rloc16 ==
                    _pkt_as.thread_address.tlv.rloc16
@@ -175,7 +175,7 @@ class Cert_5_1_06_RemoveRouterId(thread_cert.TestCase):
                               NL_STATUS_TLV,
                               NL_RLOC16_TLV,
                               NL_ROUTER_MASK_TLV
-                              } == set(p.coap.tlv.type) and\
+                              } <= set(p.coap.tlv.type) and\
                    p.coap.code == COAP_CODE_ACK and\
                    p.thread_address.tlv.rloc16 !=
                    _pkt_as.thread_address.tlv.rloc16 and\

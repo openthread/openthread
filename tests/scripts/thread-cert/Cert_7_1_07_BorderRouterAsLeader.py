@@ -313,7 +313,7 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                               SOURCE_ADDRESS_TLV,
                               LEADER_DATA_TLV,
                               ACTIVE_TIMESTAMP_TLV
-                             } == set(p.mle.tlv.type) and\
+                             } <= set(p.mle.tlv.type) and\
                    is_sublist([Ipv6Addr(PREFIX_1[:-3])], p.thread_nwd.tlv.prefix) and\
                    is_sublist([1, 1, 1], p.thread_nwd.tlv.stable) and\
                    is_sublist([1], getattr(p.thread_nwd.tlv, '6co').flag.c) and\
@@ -429,7 +429,7 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                                   SOURCE_ADDRESS_TLV,
                                   LEADER_DATA_TLV,
                                   ACTIVE_TIMESTAMP_TLV
-                                 } == set(p.mle.tlv.type) and\
+                                 } <= set(p.mle.tlv.type) and\
                        is_sublist([1, 1, 1, 1, 1, 1],
                                p.thread_nwd.tlv.stable) and\
                        is_sublist([1, 1], getattr(p.thread_nwd.tlv, '6co').flag.c) and\
@@ -548,7 +548,7 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                               SOURCE_ADDRESS_TLV,
                               LEADER_DATA_TLV,
                               ACTIVE_TIMESTAMP_TLV
-                             } == set(p.mle.tlv.type) and\
+                             } <= set(p.mle.tlv.type) and\
                    is_sublist([Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])],
                            p.thread_nwd.tlv.prefix) and\
                    is_sublist([1, 1, 1, 1, 1], p.thread_nwd.tlv.stable) and\

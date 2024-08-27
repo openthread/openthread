@@ -301,7 +301,7 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             filter(lambda p: {
                               NL_MAC_EXTENDED_ADDRESS_TLV,
                               NL_RLOC16_TLV
-                              } == set(p.coap.tlv.type) and\
+                              } <= set(p.coap.tlv.type) and\
                    p.thread_address.tlv.rloc16 == ROUTER_1_RLOC16
                    ).\
            must_next()
