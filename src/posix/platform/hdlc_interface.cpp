@@ -600,8 +600,9 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
         {
             tios.c_cflag |= CRTSCTS;
         }
-        else
+        else if (aRadioUrl.HasParam("uart-init-deassert"))
         {
+            // When flow control is disabled, deassert DTR and RTS on init
 #ifndef __APPLE__
             int flags;
 #endif
