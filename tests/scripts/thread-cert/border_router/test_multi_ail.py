@@ -38,21 +38,19 @@ from node import OtbrNode
 IPV4_CIDR_ADDR_CMD = f'ip addr show {config.BACKBONE_IFNAME} | grep -w inet | grep -Eo "[0-9.]+/[0-9]+"'
 
 
-class TwoBorderRoutersOnTwoInfrastructures(thread_cert.TestCase):
+class ThreeBRs_TwoInfra(thread_cert.TestCase):
     """
     Test that two border routers on different infrastructures can ping each other via Thread interface.
 
     Topology:
 
-    -------(backbone0.0)-------- | ---------(backbone0.1)-------
-              |                             |
-           BR1 (Leader)  ..............  BR2 (Router)
+    ----(backbone0.0)---- | -------(backbone0.1)------
+             |                    |            |
+            BR1   .............  BR2 ........ BR3
 
     """
     USE_MESSAGE_FACTORY = False
-
-    BR1 = 1
-    BR2 = 2
+    BR1, BR2, BR3 = range(1, 4)
 
     TOPOLOGY = {
         BR1: {
@@ -65,56 +63,66 @@ class TwoBorderRoutersOnTwoInfrastructures(thread_cert.TestCase):
         BR2: {
             'name': 'BR_2',
             'backbone_network_id': 1,
-            'allowlist': [BR1],
+            'allowlist': [BR1, BR3],
+            'is_otbr': True,
+            'version': '1.3',
+        },
+        BR3: {
+            'name': 'BR_3',
+            'backbone_network_id': 1,
+            'allowlist': [BR2],
             'is_otbr': True,
             'version': '1.3',
         }
     }
 
-    def test(self):
+    def test_multi_backbone_infra(self):
+        """This test ensures that the multiple backbone infra works as expected."""
         br1: OtbrNode = self.nodes[self.BR1]
         br2: OtbrNode = self.nodes[self.BR2]
+        br3: OtbrNode = self.nodes[self.BR3]
 
         # start nodes
-        br1.start()
-        self.simulator.go(2)
-        br2.start()
+        for br in [br1, br2, br3]:
+            br.start()
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
 
-        # check roles
-        self.assertEqual('leader', br1.get_state())
-        self.assertEqual('router', br2.get_state())
-
-        # check two BRs AIL are in different subnets
+        # check BR1 and BR2 are not on the same subnet, but BR2 and BR3 are on the same subnet
         br1_infra_ip_addr = br1.bash(IPV4_CIDR_ADDR_CMD)
         br2_infra_ip_addr = br2.bash(IPV4_CIDR_ADDR_CMD)
+        br3_infra_ip_addr = br3.bash(IPV4_CIDR_ADDR_CMD)
+        assert len(br1_infra_ip_addr) == 1
+        assert len(br2_infra_ip_addr) == 1
+        assert len(br3_infra_ip_addr) == 1
 
-        self.assertEqual(len(br1_infra_ip_addr), 1)
-        self.assertEqual(len(br2_infra_ip_addr), 1)
         self.assertNotEqual(ipaddress.ip_network(br1_infra_ip_addr[0].strip(), strict=False),
                             ipaddress.ip_network(br2_infra_ip_addr[0].strip(), strict=False))
+        self.assertEqual(ipaddress.ip_network(br2_infra_ip_addr[0].strip(), strict=False),
+                         ipaddress.ip_network(br3_infra_ip_addr[0].strip(), strict=False))
 
-        # Ping test
-        br1_thread_link_local = br1.get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
-        br2_thread_link_local = br2.get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
-        br1_infra_link_local = br1.get_ip6_address(config.ADDRESS_TYPE.BACKBONE_LINK_LOCAL)
-        br2_infra_link_local = br2.get_ip6_address(config.ADDRESS_TYPE.BACKBONE_LINK_LOCAL)
+        # ping each other using Thread MLEID
+        br1_mleid = br1.get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+        br2_mleid = br2.get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+        br3_mleid = br3.get_ip6_address(config.ADDRESS_TYPE.ML_EID)
 
-        # ping each other using Thread link-local address
-        self.assertTrue(br1.ping(br2_thread_link_local))
-        self.assertTrue(br2.ping(br1_thread_link_local))
+        self.assertTrue(br1.ping(br2_mleid))
+        self.assertTrue(br1.ping(br3_mleid))
+        self.assertTrue(br2.ping(br1_mleid))
+        self.assertTrue(br2.ping(br3_mleid))
+        self.assertTrue(br3.ping(br1_mleid))
+        self.assertTrue(br3.ping(br2_mleid))
 
-        # ping each other using Infra link-local address
-        self.assertFalse(br1.ping(br2_infra_link_local, interface=br1_infra_link_local))
-        self.assertFalse(br2.ping(br1_infra_link_local, interface=br2_infra_link_local))
+        # ping each other using Infra ULA
+        br1_onlink_ula = br1.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]
+        br2_onlink_ula = br2.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]
+        br3_onlink_ula = br3.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]
 
-        # br peers
-        self.assertEqual(br1.get_br_peers_rloc16s(), [br2.get_addr16()])
-        self.assertEqual(br2.get_br_peers_rloc16s(), [br1.get_addr16()])
-
-        # br routers
-        self.assertEqual(br1.get_br_routers_ip_addresses(), [])
-        self.assertEqual(br2.get_br_routers_ip_addresses(), [])
+        self.assertFalse(br1.ping(br2_onlink_ula, backbone=True))
+        self.assertFalse(br1.ping(br3_onlink_ula, backbone=True))
+        self.assertFalse(br2.ping(br1_onlink_ula, backbone=True))
+        self.assertFalse(br3.ping(br1_onlink_ula, backbone=True))
+        self.assertTrue(br2.ping(br3_onlink_ula, backbone=True))
+        self.assertTrue(br3.ping(br2_onlink_ula, backbone=True))
 
 
 if __name__ == '__main__':
