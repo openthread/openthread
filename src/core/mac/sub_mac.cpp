@@ -413,7 +413,7 @@ void SubMac::ProcessTransmitSecurity(void)
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Transmit security will be processed after time IE content is updated.
-    VerifyOrExit(mTransmitFrame.GetTimeIeOffset() == 0);
+    VerifyOrExit(mTransmitFrame.GetTimeIe() == nullptr);
 #endif
 
     mTransmitFrame.ProcessTransmitAesCcm(*extAddress);
@@ -606,11 +606,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
         aFrame.SetIsARetransmission(true);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
-        if (aFrame.GetSecurityEnabled() && aFrame.IsSecurityProcessed() && aFrame.HasHeaderIe())
-        {
-            aFrame.DecryptTransmitAesCcm(GetExtAddress());
-        }
-
+        aFrame.Restore(GetExtAddress());
         ProcessTransmitSecurity();
 #endif
 

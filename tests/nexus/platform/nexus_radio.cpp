@@ -373,7 +373,6 @@ Radio::Radio(void)
 {
     mExtAddress.Clear();
     ClearAllBytes(mRadioContext);
-    mTxFrame.mInfo.mTxInfo.mIeInfo = &mTxIeInfo;
 }
 
 void Radio::Reset(void)
@@ -390,7 +389,6 @@ void Radio::Reset(void)
     mSrcMatchExtEntries.Clear();
     mLinkMetricsEntries.Clear();
     ClearAllBytes(mRadioContext);
-    mTxFrame.mInfo.mTxInfo.mIeInfo = &mTxIeInfo;
 }
 
 Error Radio::ConfigureEnhAckProbing(Mac::ShortAddress      aShortAddress,

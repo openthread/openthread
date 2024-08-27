@@ -91,6 +91,10 @@ jobs:
                -DOT_BORDER_ROUTING=ON -DOT_NCP_INFRA_IF=ON -DOT_SRP_SERVER=ON -DOT_NCP_DNSSD=ON -DOT_PLATFORM_DNSSD=ON -DOT_NCP_CLI_STREAM=ON
     - name: Test NCP Simulation
       run: cd build/simulation && ninja test
+    - name: Build Time Sync Simulation
+      run: ./script/cmake-build simulation -DOT_TIME_SYNC=ON -DOT_TREL=OFF -DOT_BUILD_GTEST=ON
+    - name: Test Time Sync
+      run: ./build/simulation/tests/gtest/ot-radio-spinel-rcp-gtest "--gtest_filter=RadioSpinelTimeSync.*"
     - name: Build POSIX
       run: ./script/cmake-build posix
     - name: Test POSIX

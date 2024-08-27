@@ -1304,39 +1304,6 @@ public:
      */
     void SetIsHeaderUpdated(bool aIsHeaderUpdated) { mInfo.mTxInfo.mIsHeaderUpdated = aIsHeaderUpdated; }
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    /**
-     * Sets the Time IE offset.
-     *
-     * @param[in]  aOffset  The Time IE offset, 0 means no Time IE.
-     */
-    void SetTimeIeOffset(uint8_t aOffset) { mInfo.mTxInfo.mIeInfo->mTimeIeOffset = aOffset; }
-
-    /**
-     * Gets the Time IE offset.
-     *
-     * @returns The Time IE offset, 0 means no Time IE.
-     */
-    uint8_t GetTimeIeOffset(void) const { return mInfo.mTxInfo.mIeInfo->mTimeIeOffset; }
-
-    /**
-     * Sets the offset to network time.
-     *
-     * @param[in]  aNetworkTimeOffset  The offset to network time.
-     */
-    void SetNetworkTimeOffset(int64_t aNetworkTimeOffset)
-    {
-        mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset = aNetworkTimeOffset;
-    }
-
-    /**
-     * Sets the time sync sequence.
-     *
-     * @param[in]  aTimeSyncSeq  The time sync sequence.
-     */
-    void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { mInfo.mTxInfo.mIeInfo->mTimeSyncSeq = aTimeSyncSeq; }
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-
     /**
      * Generate Imm-Ack in this frame object.
      *
@@ -1387,6 +1354,43 @@ public:
      */
     void SetTxDelayBaseTime(uint32_t aTxDelayBaseTime) { mInfo.mTxInfo.mTxDelayBaseTime = aTxDelayBaseTime; }
 #endif
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    /**
+     * Initializes the Time IE in the TX frame.
+     *
+     * This method fills the Time IE with network time offset and
+     * time sync sequence.
+     *
+     * @param[in]  aTimeOffset  The network time offset.
+     * @param[in]  aSequence    The time sync sequence.
+     */
+    void TimeSyncInit(int64_t aTimeOffset, uint8_t aSequence);
+
+    /**
+     * Finalizes the Time IE in the TX frame to network time.
+     *
+     * This method finalizes the time value of Time IE to the network time, that is, `mInfo.mTxInfo.mTimestamp` plus the
+     * network time offset stored in the Time IE.
+     */
+    void TimeSyncFinalize(void);
+
+    /**
+     * Restores the Time IE in the TX frame to network time offset.
+     *
+     * This method restores the time value of Time IE to the network time offset, that is, the network time stored in
+     * the Time IE minus the `mInfo.mTxInfo.mTimestamp`.
+     *
+     */
+    void TimeSyncRestore(void);
+#endif
+
+    /**
+     * Restore the frame so that it could be used for retransmission.
+     *
+     * @param[in]  aExtAddress  A reference to the extended address.
+     */
+    void Restore(const ExtAddress &aExtAddress);
 };
 
 OT_TOOL_PACKED_BEGIN

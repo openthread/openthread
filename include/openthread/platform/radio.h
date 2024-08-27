@@ -230,16 +230,6 @@ typedef enum
 } otRadioKeyType;
 
 /**
- * Represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.
- */
-typedef struct otRadioIeInfo
-{
-    int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time.
-    uint8_t mTimeIeOffset;      ///< The Time IE offset from the start of PSDU.
-    uint8_t mTimeSyncSeq;       ///< The Time sync sequence.
-} otRadioIeInfo;
-
-/**
  * Represents an IEEE 802.15.4 radio frame.
  */
 typedef struct otRadioFrame
@@ -262,7 +252,6 @@ typedef struct otRadioFrame
         struct
         {
             const otMacKeyMaterial *mAesKey; ///< The key material used for AES-CCM frame security.
-            otRadioIeInfo          *mIeInfo; ///< The pointer to the Header IE(s) related information.
 
             /**
              * The base time in microseconds for scheduled transmissions

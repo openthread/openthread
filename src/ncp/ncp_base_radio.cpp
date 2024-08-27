@@ -32,6 +32,8 @@
 
 #include "ncp_base.hpp"
 
+#include <stdio.h>
+
 #include <openthread/link.h>
 #include <openthread/link_raw.h>
 #include <openthread/ncp.h>
@@ -497,6 +499,21 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mRxChannelAfterTxDone));
     SuccessOrExit(mDecoder.ReadInt8(aFrame.mInfo.mTxInfo.mTxPower));
 
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    if (!mNetworkTimeExpectingOffset)
+    {
+        Mac::TimeIe *timeIe = static_cast<Mac::TxFrame &>(aFrame).GetTimeIe();
+        if (timeIe != nullptr)
+        {
+            uint64_t networkTime = timeIe->GetTime();
+            uint64_t radioNow    = otLinkRawGetRadioTime(mInstance);
+            uint64_t offset      = networkTime - radioNow;
+            timeIe->SetTime(offset);
+            aFrame.mInfo.mTxInfo.mTimestamp = 0;
+        }
+    }
+#endif
+
 exit:
     return error;
 }
@@ -594,6 +611,20 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_FRAME_COUNTER
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NEST_NETWORK_TIME_EXPECTING_OFFSET>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    value;
+
+    SuccessOrExit(error = mDecoder.ReadBool(value));
+    mNetworkTimeExpectingOffset = value;
+
+exit:
+    return error;
+}
+#endif
 
 #if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MULTIPAN_ACTIVE_INTERFACE>(void)

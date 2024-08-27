@@ -377,31 +377,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-void otMacFrameUpdateTimeIe(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioContext *aRadioContext)
-{
-    uint8_t *timeIe;
-    uint64_t time;
-
-    OT_UNUSED_VARIABLE(aRadioContext);
-    VerifyOrExit((aFrame->mInfo.mTxInfo.mIeInfo != nullptr) && (aFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0));
-
-    timeIe  = aFrame->mPsdu + aFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
-    time    = aRadioTime + aFrame->mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset;
-    *timeIe = aFrame->mInfo.mTxInfo.mIeInfo->mTimeSyncSeq;
-
-    *(++timeIe) = static_cast<uint8_t>(time & 0xff);
-    for (uint8_t i = 1; i < sizeof(uint64_t); i++)
-    {
-        time        = time >> 8;
-        *(++timeIe) = static_cast<uint8_t>(time & 0xff);
-    }
-
-exit:
-    return;
-}
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-
 otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioContext *aRadioContext)
 {
     otError error = OT_ERROR_NONE;
@@ -417,7 +392,7 @@ otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadi
     }
 #endif
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    otMacFrameUpdateTimeIe(aFrame, aRadioTime, aRadioContext);
+    static_cast<Mac::TxFrame *>(aFrame)->TimeSyncFinalize();
 #endif
     error = otMacFrameProcessTransmitSecurity(aFrame, aRadioContext);
 

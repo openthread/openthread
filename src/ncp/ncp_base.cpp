@@ -345,6 +345,9 @@ NcpBase::NcpBase(Instance *aInstance)
     memset(mCurTransmitTID, 0, sizeof(mCurTransmitTID));
     memset(mSrcMatchEnabled, 0, sizeof(mSrcMatchEnabled));
     memset(mCurScanChannel, kInvalidScanChannel, sizeof(mCurScanChannel));
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    mNetworkTimeExpectingOffset = false;
+#endif
 #endif
     memset(mIsRawStreamEnabled, 0, sizeof(mIsRawStreamEnabled));
     memset(mNextExpectedTid, 0, sizeof(mNextExpectedTid));
