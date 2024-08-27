@@ -108,10 +108,6 @@ static otRadioFrame        sReceiveFrame;
 static otRadioFrame        sTransmitFrame;
 static otRadioFrame        sAckFrame;
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-static otRadioIeInfo sTransmitIeInfo;
-#endif
-
 static otPanId  sPanid;
 static bool     sPromiscuous = false;
 static bool     sTxWait      = false;
@@ -404,12 +400,6 @@ void platformRadioInit(void)
     sReceiveFrame.mPsdu  = sReceiveMessage.mPsdu;
     sTransmitFrame.mPsdu = sTransmitMessage.mPsdu;
     sAckFrame.mPsdu      = sAckMessage.mPsdu;
-
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    sTransmitFrame.mInfo.mTxInfo.mIeInfo = &sTransmitIeInfo;
-#else
-    sTransmitFrame.mInfo.mTxInfo.mIeInfo = NULL;
-#endif
 
     for (size_t i = 0; i <= kMaxChannel - kMinChannel; i++)
     {
