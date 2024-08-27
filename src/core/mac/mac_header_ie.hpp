@@ -268,13 +268,38 @@ public:
     uint64_t GetTime(void) const { return LittleEndian::HostSwap64(mTime); }
 
     /**
-     * Sets the network time.
+     * Sets the network time offset.
      *
-     * @param[in]  aTime  The network time.
      */
-    void SetTime(uint64_t aTime) { mTime = LittleEndian::HostSwap64(aTime); }
+    void SetTimeOffset(int64_t aTimeOffset) { mTime = LittleEndian::HostSwap64(aTimeOffset); }
+
+    /**
+     * Sets the radio time.
+     *
+     * @note This SHALL be called exactly once for a TimeIe.
+     *
+     * @param[in]  aRadioTime  The current radio time, in microsecond.
+     *
+     */
+    void SetRadioTime(uint64_t aRadioTime) { mTime = LittleEndian::HostSwap64(GetTimeOffset() + aRadioTime); }
+
+    /**
+     * Fixes the network time for retransmission caused delay.
+     *
+     * @note This SHALL be called on each retransmission.
+     *
+     * @param[in]  aDelay  The delay since last attempt, in microsecond.
+     *
+     */
+    void FixForRetx(uint32_t aDelay) { mTime = LittleEndian::HostSwap64(GetTime() + aDelay); }
 
 private:
+    int64_t GetTimeOffset(void) const
+    {
+        uint64_t timeOffset = LittleEndian::HostSwap64(mTime);
+        return reinterpret_cast<int64_t &>(timeOffset);
+    }
+
     uint8_t  mSequence;
     uint64_t mTime;
 } OT_TOOL_PACKED_END;

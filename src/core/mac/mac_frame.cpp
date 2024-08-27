@@ -1315,8 +1315,7 @@ uint8_t Frame::GetFcsSize(void) const { return Trel::Link::kFcsSize; }
 
 void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 {
-    uint8_t       *psduBuffer   = mPsdu;
-    otRadioIeInfo *ieInfoBuffer = mInfo.mTxInfo.mIeInfo;
+    uint8_t *psduBuffer = mPsdu;
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     uint8_t radioType = mRadioType;
 #endif
@@ -1326,19 +1325,13 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
     // Set the original buffer pointers (and link type) back on
     // the frame (which were overwritten by above `memcpy()`).
 
-    mPsdu                 = psduBuffer;
-    mInfo.mTxInfo.mIeInfo = ieInfoBuffer;
+    mPsdu = psduBuffer;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     mRadioType = radioType;
 #endif
 
     memcpy(mPsdu, aFromFrame.mPsdu, aFromFrame.mLength);
-
-    // mIeInfo may be null when TIME_SYNC is not enabled.
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    memcpy(mInfo.mTxInfo.mIeInfo, aFromFrame.mInfo.mTxInfo.mIeInfo, sizeof(otRadioIeInfo));
-#endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     if (mRadioType != aFromFrame.GetRadioType())
@@ -1402,6 +1395,27 @@ void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
 
     mLength = kImmAckLength;
 }
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+void TxFrame::UpdateTimeIe(uint64_t aRadioTime)
+{
+    TimeIe *timeIe = GetTimeIe();
+
+    if (timeIe != nullptr)
+    {
+        OT_ASSERT(!mInfo.mTxInfo.mIsSecurityProcessed);
+
+        if (mInfo.mTxInfo.mIsARetx)
+        {
+            timeIe->FixForRetx(aRadioTime - mInfo.mTxInfo.mTimestamp);
+        }
+        else
+        {
+            timeIe->SetRadioTime(aRadioTime);
+        }
+    }
+}
+#endif
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength)

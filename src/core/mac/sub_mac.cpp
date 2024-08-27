@@ -366,7 +366,7 @@ void SubMac::ProcessTransmitSecurity(void)
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Transmit security will be processed after time IE content is updated.
-    VerifyOrExit(mTransmitFrame.GetTimeIeOffset() == 0);
+    VerifyOrExit(mTransmitFrame.GetTimeIe() == nullptr);
 #endif
 
     mTransmitFrame.ProcessTransmitAesCcm(*extAddress);
