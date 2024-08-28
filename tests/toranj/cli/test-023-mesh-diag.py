@@ -136,9 +136,13 @@ r1.cli('meshdiag topology children')
 
 childtable = r2.cli('meshdiag childtable', r1_rloc)
 verify(len([line for line in childtable if line.startswith('rloc16')]) == 2)
+verify(len([line for line in childtable if ' supvn:0 ' in line]) == 1)
+verify(len([line for line in childtable if ' supvn:' in line and 'supvn:0' not in line]) == 1)
 
 childtable = r1.cli('meshdiag childtable', r3_rloc)
 verify(len([line for line in childtable if line.startswith('rloc16')]) == 3)
+verify(len([line for line in childtable if ' supvn:0 ' in line]) == 1)
+verify(len([line for line in childtable if ' supvn:' in line and 'supvn:0' not in line]) == 2)
 
 childtable = r1.cli('meshdiag childtable', r2_rloc)
 verify(len([line for line in childtable if line.startswith('rloc16')]) == 0)

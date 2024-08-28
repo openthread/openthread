@@ -58,7 +58,7 @@ void ChildTlv::InitFrom(const Child &aChild)
     mTimeout             = BigEndian::HostSwap32(aChild.GetTimeout());
     mAge                 = BigEndian::HostSwap32(Time::MsecToSec(TimerMilli::GetNow() - aChild.GetLastHeard()));
     mConnectionTime      = BigEndian::HostSwap32(aChild.GetConnectionTime());
-    mSupervisionInterval = BigEndian::HostSwap16(aChild.GetSupervisionInterval());
+    mSupervisionInterval = aChild.IsRxOnWhenIdle() ? 0 : BigEndian::HostSwap16(aChild.GetSupervisionInterval());
     mLinkMargin          = aChild.GetLinkInfo().GetLinkMargin();
     mAverageRssi         = aChild.GetLinkInfo().GetAverageRss();
     mLastRssi            = aChild.GetLinkInfo().GetLastRss();
