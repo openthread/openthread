@@ -1232,18 +1232,33 @@ exit:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 void Frame::SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
 {
-    uint8_t *cur = GetHeaderIe(CslIe::kHeaderIeId);
-    CslIe   *csl;
+    CslIe *csl = GetCslIe();
 
-    VerifyOrExit(cur != nullptr);
-
-    csl = reinterpret_cast<CslIe *>(cur + sizeof(HeaderIe));
+    VerifyOrExit(csl != nullptr);
     csl->SetPeriod(aCslPeriod);
     csl->SetPhase(aCslPhase);
+
 exit:
     return;
 }
+
+bool Frame::HasCslIe(void) const { return GetHeaderIe(CslIe::kHeaderIeId) != nullptr; }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE)
+const CslIe *Frame::GetCslIe(void) const
+{
+    const uint8_t *cur;
+    const CslIe   *csl = nullptr;
+
+    cur = GetHeaderIe(CslIe::kHeaderIeId);
+    VerifyOrExit(cur != nullptr);
+    csl = reinterpret_cast<const CslIe *>(cur + sizeof(HeaderIe));
+
+exit:
+    return csl;
+}
+#endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 void Frame::SetEnhAckProbingIe(const uint8_t *aValue, uint8_t aLen)
