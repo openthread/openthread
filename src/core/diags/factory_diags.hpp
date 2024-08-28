@@ -210,6 +210,7 @@ private:
     void TransmitPacket(void);
     void Output(const char *aFormat, ...);
     void AppendErrorResult(Error aError);
+    void ResetTxPacket(void);
 
     static Error ParseLong(char *aString, long &aLong);
     static Error ParseBool(char *aString, bool &aBool);
