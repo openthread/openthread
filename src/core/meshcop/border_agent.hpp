@@ -349,11 +349,8 @@ DeclareTmfHandler(BorderAgent, kUriCommissionerPetition);
 DeclareTmfHandler(BorderAgent, kUriCommissionerKeepAlive);
 DeclareTmfHandler(BorderAgent, kUriRelayTx);
 DeclareTmfHandler(BorderAgent, kUriCommissionerGet);
-DeclareTmfHandler(BorderAgent, kUriCommissionerSet);
 DeclareTmfHandler(BorderAgent, kUriActiveGet);
-DeclareTmfHandler(BorderAgent, kUriActiveSet);
 DeclareTmfHandler(BorderAgent, kUriPendingGet);
-DeclareTmfHandler(BorderAgent, kUriPendingSet);
 DeclareTmfHandler(BorderAgent, kUriProxyTx);
 
 } // namespace MeshCoP

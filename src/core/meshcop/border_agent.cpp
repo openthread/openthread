@@ -471,32 +471,16 @@ void BorderAgent::HandleTmf<kUriCommissionerGet>(Coap::Message &aMessage, const 
     HandleTmfDatasetGet(aMessage, aMessageInfo, kUriCommissionerGet);
 }
 
-template <>
-void BorderAgent::HandleTmf<kUriCommissionerSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriCommissionerSet));
-}
-
 template <> void BorderAgent::HandleTmf<kUriActiveGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     HandleTmfDatasetGet(aMessage, aMessageInfo, kUriActiveGet);
     mCounters.mMgmtActiveGets++;
 }
 
-template <> void BorderAgent::HandleTmf<kUriActiveSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriActiveSet));
-}
-
 template <> void BorderAgent::HandleTmf<kUriPendingGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     HandleTmfDatasetGet(aMessage, aMessageInfo, kUriPendingGet);
     mCounters.mMgmtPendingGets++;
-}
-
-template <> void BorderAgent::HandleTmf<kUriPendingSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriPendingSet));
 }
 
 template <>
@@ -614,12 +598,6 @@ void BorderAgent::HandleTmfDatasetGet(Coap::Message &aMessage, const Ip6::Messag
 {
     Error          error    = kErrorNone;
     Coap::Message *response = nullptr;
-
-    if (mState == kStateAccepted)
-    {
-        IgnoreError(ForwardToLeader(aMessage, aMessageInfo, aUri));
-        ExitNow();
-    }
 
     // When processing `MGMT_GET` request directly on Border Agent,
     // the Security Policy flags (O-bit) should be ignore to allow
