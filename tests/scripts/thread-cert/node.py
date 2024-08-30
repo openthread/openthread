@@ -2291,6 +2291,13 @@ class NodeImpl:
         """parse `br routers` output and return the list of IPv6 addresses"""
         return [IPv6Address(line.split()[0]) for line in self.get_br_routers()]
 
+    def get_br_routers_peer_ip_addresses(self) -> List[IPv6Address]:
+        """parse `br routers` output and return the list of peer BR IPv6 addresses
+
+        peer BR is identified by the presence of `peer BR` in the output line
+        """
+        return [IPv6Address(line.split()[0]) for line in self.get_br_routers() if 'peer BR' in line]
+
     def get_netdata_omr_prefixes(self):
         omr_prefixes = []
         for prefix in self.get_prefixes():
