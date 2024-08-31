@@ -595,6 +595,7 @@ private:
     Error HandleSecureTransportSend(const uint8_t *aBuf, uint16_t aLength, Message::SubType aMessageSubType);
 
     void Process(void);
+    void Disconnect(ConnectEvent aEvent);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *StateToString(State aState);
