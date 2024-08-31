@@ -118,6 +118,12 @@ list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_BINARY_DIR}/etc/cmake)
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/etc/cmake)
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 
+if(OT_MULTIPLE_INSTANCE)
+    target_compile_options(ot-config INTERFACE
+        "-DOPENTHREAD_CONFIG_LOG_PREPEND_UPTIME=0" # Not supporting multiple instances
+    )
+endif()
+
 if(OT_PLATFORM STREQUAL "posix")
     target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/src/posix/platform)
     target_compile_definitions(ot-config INTERFACE OPENTHREAD_PLATFORM_POSIX=1)
