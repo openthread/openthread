@@ -32,6 +32,8 @@
 
 #include <openthread/logging.h>
 #include <openthread/message.h>
+#include <openthread/nat64.h>
+#include <openthread/openthread-system.h>
 #include <openthread/udp.h>
 #include <openthread/platform/dns.h>
 #include <openthread/platform/time.h>
@@ -85,6 +87,8 @@ void Resolver::LoadDnsServerListFromConf(void)
     std::string   line;
     std::ifstream fp;
 
+    VerifyOrExit(mIsResolvConfEnabled);
+
     mUpstreamDnsServerCount = 0;
 
     fp.open(kResolvConfFullPath);
@@ -110,6 +114,8 @@ void Resolver::LoadDnsServerListFromConf(void)
     }
 
     mUpstreamDnsServerListFreshness = otPlatTimeGet();
+exit:
+    return;
 }
 
 void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
@@ -290,6 +296,23 @@ void Resolver::Process(const otSysMainloopContext &aContext)
     }
 }
 
+void Resolver::SetUpstreamDnsServers(const otIp6Address *aUpstreamDnsServers, int aNumServers)
+{
+    mUpstreamDnsServerCount = 0;
+
+    for (int i = 0; i < aNumServers && i < kMaxUpstreamServerCount; ++i)
+    {
+        otIp4Address ip4Address;
+
+        // TODO: support DNS servers with IPv6 addresses
+        if (otIp4FromIp4MappedIp6Address(&aUpstreamDnsServers[i], &ip4Address) == OT_ERROR_NONE)
+        {
+            mUpstreamDnsServerList[mUpstreamDnsServerCount] = ip4Address.mFields.m32;
+            mUpstreamDnsServerCount++;
+        }
+    }
+}
+
 } // namespace Posix
 } // namespace ot
 
@@ -311,6 +334,13 @@ void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery 
     OT_UNUSED_VARIABLE(aInstance);
 
     gResolver.Cancel(aTxn);
+}
+
+void otSysUpstreamDnsServerSetResolvConfEnabled(bool aEnabled) { gResolver.SetResolvConfEnabled(aEnabled); }
+
+void otSysUpstreamDnsSetServerList(const otIp6Address *aUpstreamDnsServers, int aNumServers)
+{
+    gResolver.SetUpstreamDnsServers(aUpstreamDnsServers, aNumServers);
 }
 
 #endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE

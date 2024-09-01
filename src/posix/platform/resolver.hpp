@@ -90,6 +90,24 @@ public:
      */
     void Process(const otSysMainloopContext &aContext);
 
+    /**
+     * Sets whether to retrieve upstream DNS servers from "resolv.conf".
+     *
+     * @param[in] aEnabled  TRUE if enable retrieving upstream DNS servers from "resolv.conf", FALSE otherwise.
+     *
+     */
+    void SetResolvConfEnabled(bool aEnabled) { mIsResolvConfEnabled = aEnabled; }
+
+    /**
+     * Sets the upstream DNS servers.
+     *
+     * @param[in] aUpstreamDnsServers  A pointer to the list of upstream DNS server addresses. Each address could be an
+     *                                 IPv6 address or an IPv4-mapped IPv6 address.
+     * @param[in] aNumServers          The number of upstream DNS servers.
+     *
+     */
+    void SetUpstreamDnsServers(const otIp6Address *aUpstreamDnsServers, int aNumServers);
+
 private:
     static constexpr uint64_t kDnsServerListNullCacheTimeoutMs = 1 * 60 * 1000;  // 1 minute
     static constexpr uint64_t kDnsServerListCacheTimeoutMs     = 10 * 60 * 1000; // 10 minutes
@@ -110,6 +128,7 @@ private:
     void TryRefreshDnsServerList(void);
     void LoadDnsServerListFromConf(void);
 
+    bool      mIsResolvConfEnabled    = true;
     int       mUpstreamDnsServerCount = 0;
     in_addr_t mUpstreamDnsServerList[kMaxUpstreamServerCount];
     uint64_t  mUpstreamDnsServerListFreshness = 0;
