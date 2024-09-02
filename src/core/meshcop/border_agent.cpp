@@ -32,6 +32,7 @@
  */
 
 #include "border_agent.hpp"
+#include "common/notifier.hpp"
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
@@ -752,6 +753,7 @@ void BorderAgent::Stop(void)
         mUsingEphemeralKey = false;
         mEphemeralKeyTimer.Stop();
         mEphemeralKeyTask.Post();
+        Get<Notifier>().Signal(kEventEpskcModeChanged);
     }
 #endif
 
@@ -800,6 +802,7 @@ Error BorderAgent::SetEphemeralKey(const char *aKeyString, uint32_t aTimeout, ui
     }
 
     mEphemeralKeyTask.Post();
+    Get<Notifier>().Signal(kEventEpskcModeChanged);
 
     if (aTimeout == 0)
     {
