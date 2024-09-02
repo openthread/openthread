@@ -270,7 +270,7 @@ private:
 /**
  * Implements the Thread Link Metrics Subject.
  *
- * The Subject reponds queries with reports, handles Link Metrics Management Requests and Link Probe Messages.
+ * The Subject responds queries with reports, handles Link Metrics Management Requests and Link Probe Messages.
  *
  */
 class Subject : public InstanceLocator, private NonCopyable

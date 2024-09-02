@@ -153,7 +153,7 @@ typedef Array<uint16_t, kMaxRlocs> Rlocs;
 inline bool IsRoutePreferenceValid(int8_t aPref) { return Preference::IsValid(aPref); }
 
 /**
- * Coverts a route preference to a 2-bit unsigned value.
+ * Converts a route preference to a 2-bit unsigned value.
  *
  * The @p aPref MUST be valid (value from `RoutePreference` enumeration), or the behavior is undefined.
  *
@@ -165,7 +165,7 @@ inline bool IsRoutePreferenceValid(int8_t aPref) { return Preference::IsValid(aP
 inline uint8_t RoutePreferenceToValue(int8_t aPref) { return Preference::To2BitUint(aPref); }
 
 /**
- * Coverts a 2-bit unsigned value to a route preference.
+ * Converts a 2-bit unsigned value to a route preference.
  *
  * @param[in] aValue   The 2-bit unsigned value to convert from. Note that only the first two bits of @p aValue
  *                     are used and the rest of bits are ignored.

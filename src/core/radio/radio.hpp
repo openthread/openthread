@@ -77,7 +77,7 @@ static constexpr uint64_t kMaxCslTimeout = OPENTHREAD_CONFIG_MAC_CSL_MAX_TIMEOUT
  * Implements the radio statistics logic.
  *
  * The radio statistics are the time when the radio in TX/RX/radio state.
- * Since this class collects these statistics from pure software level and no platform API is involved, a simplied
+ * Since this class collects these statistics from pure software level and no platform API is involved, a simplified
  * model is used to calculate the time of different radio states. The data may not be very accurate, but it's
  * sufficient to provide a general understanding of the proportion of time a device is in different radio states.
  *

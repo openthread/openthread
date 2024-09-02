@@ -522,7 +522,7 @@ enum
 
     /// Generic failure to associate with other peers.
     /**
-     *  This status error should not be used by implementors if
+     *  This status error should not be used by implementers if
      *  enough information is available to determine that one of the
      *  later join failure status codes would be more accurate.
      *
