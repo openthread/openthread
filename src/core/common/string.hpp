@@ -352,7 +352,7 @@ Error ParseDigit(char aDigitChar, uint8_t &aValue);
 Error ParseHexDigit(char aHexChar, uint8_t &aValue);
 
 /**
- * Coverts a boolean to "yes" or "no" string.
+ * Converts a boolean to "yes" or "no" string.
  *
  * @param[in] aBool  A boolean value to convert.
  *

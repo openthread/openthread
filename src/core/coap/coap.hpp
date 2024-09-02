@@ -91,7 +91,7 @@ class TxParameters : public otCoapTxParameters
 
 public:
     /**
-     * Coverts a pointer to `otCoapTxParameters` to `Coap::TxParamters`
+     * Converts a pointer to `otCoapTxParameters` to `Coap::TxParamters`
      *
      * If the pointer is `nullptr`, the default parameters are used instead.
      *

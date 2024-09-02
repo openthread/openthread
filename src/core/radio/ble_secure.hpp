@@ -142,7 +142,7 @@ public:
     void Disconnect(void);
 
     /**
-     * Indicates whether or not the TLS session is active (connected or conneting).
+     * Indicates whether or not the TLS session is active (connected or connecting).
      *
      * @retval TRUE  If TLS session is active.
      * @retval FALSE If TLS session is not active.

@@ -36,7 +36,7 @@
  *   Currently we support two types of multipan RCP:
  *   - Full multipan: RCP operates in parallel on both networks (for example using more than one transceiver)
  *   - Switching RCP: RCP can communicate only with one network at a time and requires network switching mechanism.
- *                    Switching can be automatic (for example time based, radio sleep based) or manually contolled by
+ *                    Switching can be automatic (for example time based, radio sleep based) or manually controlled by
  *                    the host.
  *
  *   Full multipan RCP and Automatic Switching RCP do not require any special care from the host side.
