@@ -56,7 +56,7 @@ constexpr char kResolvConfFullPath[] = "/etc/resolv.conf";
 constexpr char kNameserverItem[]     = "nameserver";
 } // namespace
 
-extern ot::Posix::Resolver gResolver;
+ot::Posix::Resolver gResolver;
 
 namespace ot {
 namespace Posix {
@@ -292,6 +292,12 @@ void Resolver::Process(const otSysMainloopContext &aContext)
 
 } // namespace Posix
 } // namespace ot
+
+void platformResolverProcess(const otSysMainloopContext *aContext) { gResolver.Process(*aContext); }
+
+void platformResolverUpdateFdSet(otSysMainloopContext *aContext) { gResolver.UpdateFdSet(*aContext); }
+
+void platformResolverInit(void) { gResolver.Init(); }
 
 void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 {

@@ -461,6 +461,28 @@ void platformSpinelManagerProcess(otInstance *aInstance, const otSysMainloopCont
  */
 void platformSpinelManagerUpdateFdSet(otSysMainloopContext *aContext);
 
+/**
+ * Initializes the resolver used by OpenThread.
+ *
+ */
+void platformResolverInit(void);
+
+/**
+ * Updates the file descriptor sets with file descriptors used by the resolver.
+ *
+ * @param[in]   aContext    A pointer to the mainloop context.
+ *
+ */
+void platformResolverUpdateFdSet(otSysMainloopContext *aContext);
+
+/**
+ * Performs the resolver processing.
+ *
+ * @param[in]  aContext  A pointer to the mainloop context.
+ *
+ */
+void platformResolverProcess(const otSysMainloopContext *aContext);
+
 #ifdef __cplusplus
 }
 #endif
