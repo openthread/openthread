@@ -308,19 +308,41 @@ exit:
 
 void BorderAgent::HandleNotifierEvents(Events aEvents)
 {
-    VerifyOrExit(aEvents.ContainsAny(kEventThreadRoleChanged | kEventCommissionerStateChanged));
-
+    if ((aEvents.ContainsAny(kEventThreadRoleChanged | kEventCommissionerStateChanged)))
+    {
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-    VerifyOrExit(Get<Commissioner>().IsDisabled());
+        VerifyOrExit(Get<Commissioner>().IsDisabled());
 #endif
 
-    if (Get<Mle::MleRouter>().IsAttached())
-    {
-        Start();
+        if (Get<Mle::MleRouter>().IsAttached())
+        {
+            Start();
+        }
+        else
+        {
+            Stop();
+        }
     }
-    else
+
+    if (aEvents.ContainsAny(kEventPskcChanged))
     {
-        Stop();
+        VerifyOrExit(mState != kStateStopped);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+        // No-op if Ephemeralkey mode is activated, new pskc will be applied
+        // when Ephemeralkey mode is deactivated.
+        VerifyOrExit(!mUsingEphemeralKey);
+#endif
+
+        {
+            Pskc pskc;
+            Get<KeyManager>().GetPskc(pskc);
+
+            // If there is secure session already established, it won't be impacted,
+            // new pskc will be applied for next connection.
+            SuccessOrExit(Get<Tmf::SecureAgent>().SetPsk(pskc.m8, Pskc::kSize));
+            pskc.Clear();
+        }
     }
 
 exit:
