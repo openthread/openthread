@@ -1473,6 +1473,27 @@ Service instance label is provided first, followed by the service name (note tha
 
 The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
 
+### dns server upstream \[enable|disable\]
+
+Enable/Disable the upstream DNS feature. If no argument is provided, it prints whether the upstream DNS feature is enabled.
+
+`OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE` is required.
+
+Enable the upstream DNS feature.
+
+```
+> dns server upstream enable
+Done
+```
+
+Get whether the upstream DNS feature is enabled.
+
+```
+> dns server upstream
+Enabled
+Done
+```
+
 ### dns compression \[enable|disable\]
 
 Enable/Disable the "DNS name compression" mode.
