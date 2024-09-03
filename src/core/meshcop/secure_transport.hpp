@@ -492,12 +492,15 @@ public:
 private:
     enum State : uint8_t
     {
-        kStateClosed,       // UDP socket is closed.
-        kStateOpen,         // UDP socket is open.
-        kStateInitializing, // The service is initializing.
-        kStateConnecting,   // The service is establishing a connection.
-        kStateConnected,    // The service has a connection established.
-        kStateCloseNotify,  // The service is closing a connection.
+        kStateClosed,                 // UDP socket is closed.
+        kStateOpen,                   // UDP socket is open.
+        kStateInitializing,           // The service is initializing.
+        kStateConnecting,             // The service is establishing a connection.
+        kStateConnected,              // The service has a connection established.
+        kStateCloseNotifyPeerClosed,  // Disconnecting, peer closed.
+        kStateCloseNotifyLocalClosed, // Disconnecting, local closed.
+        kStateCloseNotifyMaxAttempts, // Closing connection, max number of attempts reached.
+        kStateCloseNotifyError,       // Disconnecting, other errors.
     };
 
     static constexpr uint32_t kGuardTimeNewConnectionMilli = 2000;
@@ -516,7 +519,10 @@ private:
     bool IsStateInitializing(void) const { return mState == kStateInitializing; }
     bool IsStateConnecting(void) const { return mState == kStateConnecting; }
     bool IsStateConnected(void) const { return mState == kStateConnected; }
-    bool IsStateCloseNotify(void) const { return mState == kStateCloseNotify; }
+    bool IsStateCloseNotify(void) const
+    {
+        return mState >= kStateCloseNotifyPeerClosed && mState <= kStateCloseNotifyError;
+    }
     bool IsStateConnectingOrConnected(void) const { return mState == kStateConnecting || mState == kStateConnected; }
     void SetState(State aState);
 
@@ -595,7 +601,8 @@ private:
     Error HandleSecureTransportSend(const uint8_t *aBuf, uint16_t aLength, Message::SubType aMessageSubType);
 
     void Process(void);
-    void Disconnect(ConnectEvent aEvent);
+    void Disconnect(State aState);
+    void NotifyConnectEvent(void);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *StateToString(State aState);
@@ -678,8 +685,6 @@ private:
 
     Message::SubType mMessageSubType;
     Message::SubType mMessageDefaultSubType;
-
-    ConnectEvent mConnectEvent;
 };
 
 } // namespace MeshCoP

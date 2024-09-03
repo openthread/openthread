@@ -484,7 +484,7 @@ exit:
 
 void SecureTransport::Close(void)
 {
-    Disconnect(kDisconnectedLocalClosed);
+    Disconnect(kStateCloseNotifyLocalClosed);
 
     SetState(kStateClosed);
     mTimerSet = false;
@@ -494,15 +494,14 @@ void SecureTransport::Close(void)
     mTimer.Stop();
 }
 
-void SecureTransport::Disconnect(void) { Disconnect(kDisconnectedLocalClosed); }
+void SecureTransport::Disconnect(void) { Disconnect(kStateCloseNotifyLocalClosed); }
 
-void SecureTransport::Disconnect(ConnectEvent aEvent)
+void SecureTransport::Disconnect(State aState)
 {
     VerifyOrExit(IsStateConnectingOrConnected());
 
     mbedtls_ssl_close_notify(&mSsl);
-    SetState(kStateCloseNotify);
-    mConnectEvent = aEvent;
+    SetState(aState);
     mTimer.Start(kGuardTimeNewConnectionMilli);
 
     mMessageInfo.Clear();
@@ -1046,24 +1045,25 @@ void SecureTransport::HandleTimer(void)
         if ((mMaxConnectionAttempts > 0) && (mRemainingConnectionAttempts == 0))
         {
             Close();
-            mConnectEvent = kDisconnectedMaxAttempts;
+            SetState(kStateCloseNotifyMaxAttempts);
+            NotifyConnectEvent();
             mAutoCloseCallback.InvokeIfSet();
         }
         else
         {
+            NotifyConnectEvent();
             SetState(kStateOpen);
             mTimer.Stop();
         }
-        mConnectedCallback.InvokeIfSet(mConnectEvent);
     }
 }
 
 void SecureTransport::Process(void)
 {
-    uint8_t      buf[OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN];
-    bool         shouldDisconnect = false;
-    int          rval;
-    ConnectEvent event;
+    uint8_t buf[OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN];
+    bool    shouldDisconnect = false;
+    int     rval;
+    State   state;
 
     while (IsStateConnectingOrConnected())
     {
@@ -1074,8 +1074,7 @@ void SecureTransport::Process(void)
             if (mSsl.MBEDTLS_PRIVATE(state) == MBEDTLS_SSL_HANDSHAKE_OVER)
             {
                 SetState(kStateConnected);
-                mConnectEvent = kConnected;
-                mConnectedCallback.InvokeIfSet(mConnectEvent);
+                NotifyConnectEvent();
             }
         }
         else
@@ -1097,7 +1096,7 @@ void SecureTransport::Process(void)
             {
             case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
                 mbedtls_ssl_close_notify(&mSsl);
-                event = kDisconnectedPeerClosed;
+                state = kStateCloseNotifyPeerClosed;
                 ExitNow(shouldDisconnect = true);
                 OT_UNREACHABLE_CODE(break);
 
@@ -1106,7 +1105,7 @@ void SecureTransport::Process(void)
 
             case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
                 mbedtls_ssl_close_notify(&mSsl);
-                event = kDisconnectedError;
+                state = kStateCloseNotifyError;
                 ExitNow(shouldDisconnect = true);
                 OT_UNREACHABLE_CODE(break);
 
@@ -1115,7 +1114,7 @@ void SecureTransport::Process(void)
                 {
                     mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
                                                    MBEDTLS_SSL_ALERT_MSG_BAD_RECORD_MAC);
-                    event = kDisconnectedError;
+                    state = kStateCloseNotifyError;
                     ExitNow(shouldDisconnect = true);
                 }
 
@@ -1126,7 +1125,7 @@ void SecureTransport::Process(void)
                 {
                     mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
                                                    MBEDTLS_SSL_ALERT_MSG_HANDSHAKE_FAILURE);
-                    event = kDisconnectedError;
+                    state = kStateCloseNotifyError;
                     ExitNow(shouldDisconnect = true);
                 }
 
@@ -1146,8 +1145,39 @@ exit:
 
     if (shouldDisconnect)
     {
-        Disconnect(event);
+        Disconnect(state);
     }
+}
+
+void SecureTransport::NotifyConnectEvent(void)
+{
+    ConnectEvent event;
+
+    switch (mState)
+    {
+    case kStateConnected:
+        event = kConnected;
+        break;
+    case kStateCloseNotifyPeerClosed:
+        event = kDisconnectedPeerClosed;
+        break;
+    case kStateCloseNotifyLocalClosed:
+        event = kDisconnectedLocalClosed;
+        break;
+    case kStateCloseNotifyMaxAttempts:
+        event = kDisconnectedMaxAttempts;
+        break;
+    case kStateCloseNotifyError:
+        event = kDisconnectedError;
+        break;
+    default:
+        // event not for notification
+        ExitNow();
+    }
+    mConnectedCallback.InvokeIfSet(event);
+
+exit:
+    return;
 }
 
 void SecureTransport::HandleMbedtlsDebug(void *aContext, int aLevel, const char *aFile, int aLine, const char *aStr)
@@ -1220,12 +1250,15 @@ exit:
 const char *SecureTransport::StateToString(State aState)
 {
     static const char *const kStateStrings[] = {
-        "Closed",       // (0) kStateClosed
-        "Open",         // (1) kStateOpen
-        "Initializing", // (2) kStateInitializing
-        "Connecting",   // (3) kStateConnecting
-        "Connected",    // (4) kStateConnected
-        "CloseNotify",  // (5) kStateCloseNotify
+        "Closed",                  // (0) kStateClosed
+        "Open",                    // (1) kStateOpen
+        "Initializing",            // (2) kStateInitializing
+        "Connecting",              // (3) kStateConnecting
+        "Connected",               // (4) kStateConnected
+        "DisconnectedPeerClosed",  // (5) kStateCloseNotifyPeerClosed
+        "DisconnectedLocalClosed", // (6) kStateCloseNotifyLocalClosed
+        "DisconnectedMaxAttempts", // (7) kStateCloseNotifyMaxAttempts
+        "DisconnectedError",       // (8) kStateCloseNotifyError
     };
 
     static_assert(0 == kStateClosed, "kStateClosed valid is incorrect");
@@ -1233,7 +1266,10 @@ const char *SecureTransport::StateToString(State aState)
     static_assert(2 == kStateInitializing, "kStateInitializing valid is incorrect");
     static_assert(3 == kStateConnecting, "kStateConnecting valid is incorrect");
     static_assert(4 == kStateConnected, "kStateConnected valid is incorrect");
-    static_assert(5 == kStateCloseNotify, "kStateCloseNotify valid is incorrect");
+    static_assert(5 == kStateCloseNotifyPeerClosed, "kStateCloseNotifyPeerClosed valid is incorrect");
+    static_assert(6 == kStateCloseNotifyLocalClosed, "kStateCloseNotifyLocalClosed valid is incorrect");
+    static_assert(7 == kStateCloseNotifyMaxAttempts, "kStateCloseNotifyMaxAttempts valid is incorrect");
+    static_assert(8 == kStateCloseNotifyError, "kStateCloseNotifyError valid is incorrect");
 
     return kStateStrings[aState];
 }
