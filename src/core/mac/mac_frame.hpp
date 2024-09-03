@@ -134,6 +134,67 @@ private:
 
 } OT_TOOL_PACKED_END;
 
+/**
+ * Implements CSL IE data structure.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class CslIe
+{
+public:
+    static constexpr uint8_t kHeaderIeId    = 0x1a;
+    static constexpr uint8_t kIeContentSize = sizeof(uint16_t) * 2;
+
+    /**
+     * Returns the CSL Period.
+     *
+     * @returns the CSL Period.
+     *
+     */
+    uint16_t GetPeriod(void) const { return LittleEndian::HostSwap16(mPeriod); }
+
+    /**
+     * Sets the CSL Period.
+     *
+     * @param[in]  aPeriod  The CSL Period.
+     *
+     */
+    void SetPeriod(uint16_t aPeriod) { mPeriod = LittleEndian::HostSwap16(aPeriod); }
+
+    /**
+     * Returns the CSL Phase.
+     *
+     * @returns the CSL Phase.
+     *
+     */
+    uint16_t GetPhase(void) const { return LittleEndian::HostSwap16(mPhase); }
+
+    /**
+     * Sets the CSL Phase.
+     *
+     * @param[in]  aPhase  The CSL Phase.
+     *
+     */
+    void SetPhase(uint16_t aPhase) { mPhase = LittleEndian::HostSwap16(aPhase); }
+
+private:
+    uint16_t mPhase;
+    uint16_t mPeriod;
+} OT_TOOL_PACKED_END;
+
+/**
+ * Implements Termination2 IE.
+ *
+ * Is empty for template specialization.
+ *
+ */
+class Termination2Ie
+{
+public:
+    static constexpr uint8_t kHeaderIeId    = 0x7f;
+    static constexpr uint8_t kIeContentSize = 0;
+};
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || \
     OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 /**
@@ -1023,7 +1084,34 @@ public:
      *
      */
     void SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase);
+
+    /**
+     * Indicates whether or not the frame contains CSL IE.
+     *
+     * @retval TRUE   If the frame contains CSL IE.
+     * @retval FALSE  If the frame doesn't contain CSL IE.
+     *
+     */
+    bool HasCslIe(void) const;
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE)
+    /**
+     * Returns a pointer to a CSL IE.
+     *
+     * @returns A pointer to the CSL IE, `nullptr` if not found.
+     *
+     */
+    const CslIe *GetCslIe(void) const;
+
+    /**
+     * Returns a pointer to a CSL IE.
+     *
+     * @returns A pointer to the CSL IE, `nullptr` if not found.
+     *
+     */
+    CslIe *GetCslIe(void) { return AsNonConst(AsConst(this)->GetCslIe()); }
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE)
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     /**
@@ -1765,67 +1853,6 @@ private:
     char            mNetworkName[MeshCoP::NetworkName::kMaxSize];
     otExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
-
-/**
- * Implements CSL IE data structure.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class CslIe
-{
-public:
-    static constexpr uint8_t kHeaderIeId    = 0x1a;
-    static constexpr uint8_t kIeContentSize = sizeof(uint16_t) * 2;
-
-    /**
-     * Returns the CSL Period.
-     *
-     * @returns the CSL Period.
-     *
-     */
-    uint16_t GetPeriod(void) const { return LittleEndian::HostSwap16(mPeriod); }
-
-    /**
-     * Sets the CSL Period.
-     *
-     * @param[in]  aPeriod  The CSL Period.
-     *
-     */
-    void SetPeriod(uint16_t aPeriod) { mPeriod = LittleEndian::HostSwap16(aPeriod); }
-
-    /**
-     * Returns the CSL Phase.
-     *
-     * @returns the CSL Phase.
-     *
-     */
-    uint16_t GetPhase(void) const { return LittleEndian::HostSwap16(mPhase); }
-
-    /**
-     * Sets the CSL Phase.
-     *
-     * @param[in]  aPhase  The CSL Phase.
-     *
-     */
-    void SetPhase(uint16_t aPhase) { mPhase = LittleEndian::HostSwap16(aPhase); }
-
-private:
-    uint16_t mPhase;
-    uint16_t mPeriod;
-} OT_TOOL_PACKED_END;
-
-/**
- * Implements Termination2 IE.
- *
- * Is empty for template specialization.
- *
- */
-class Termination2Ie
-{
-public:
-    static constexpr uint8_t kHeaderIeId    = 0x7f;
-    static constexpr uint8_t kIeContentSize = 0;
-};
 
 /**
  * @}
