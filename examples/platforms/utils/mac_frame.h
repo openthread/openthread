@@ -334,6 +334,48 @@ uint8_t otMacFrameGenerateEnhAckProbingIe(uint8_t *aDest, const uint8_t *aIeData
  */
 void otMacFrameSetEnhAckProbingIe(otRadioFrame *aFrame, const uint8_t *aData, uint8_t aDataLen);
 
+/**
+ * Represents the context for radio layer.
+ */
+typedef struct otRadioContext
+{
+    otExtAddress     mExtAddress; ///< In little-endian byte order.
+    uint32_t         mMacFrameCounter;
+    uint32_t         mCslSampleTime; ///< The sample time based on the microsecond timer.
+    uint16_t         mCslPeriod;     ///< In unit of 10 symbols.
+    otShortAddress   mShortAddress;
+    otRadioKeyType   mKeyType;
+    uint8_t          mKeyId;
+    otMacKeyMaterial mPrevKey;
+    otMacKeyMaterial mCurrKey;
+    otMacKeyMaterial mNextKey;
+} otRadioContext;
+
+/**
+ * Perform processing of SFD callback from ISR.
+ *
+ * @param[in]  aFrame        The target frame that contains the IE. MUST NOT be `NULL`.
+ * @param[in]  aRadioTime    The radio time when the SFD was at the antenna.
+ * @param[in]  aRadioContext The radio context accessible in ISR.
+ *
+ * @returns the error processing the callback. The caller should abort transmission on failures.
+ *
+ */
+otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioContext *aRadioContext);
+
+/**
+ * Perform processing of SFD callback from ISR.
+ *
+ * @param[in]  aFrame        The target frame that contains the IE. MUST NOT be `NULL`.
+ * @param[in]  aRadioContext The radio context accessible in ISR.
+ *
+ * @retval OT_ERROR_NONE     Successfully processed security.
+ * @retval OT_ERROR_FAILED   Failed to processed security.
+ * @retval OT_ERROR_SECURITY Failed to processed security for missing key.
+ *
+ */
+otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *aRadioContext);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
