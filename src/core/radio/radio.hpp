@@ -535,7 +535,7 @@ public:
     /**
      * Enables CSL sampling in radio.
      *
-     * @param[in]  aCslPeriod    CSL period, 0 for disabling CSL.
+     * @param[in]  aCslPeriod    CSL period in unit of 10 symbols, 0 for disabling CSL.
      * @param[in]  aShortAddr    The short source address of CSL receiver's peer.
      * @param[in]  aExtAddr      The extended source address of CSL receiver's peer.
      *
@@ -546,7 +546,7 @@ public:
      * @retval  kErrorNone           Successfully enabled or disabled CSL.
      *
      */
-    Error EnableCsl(uint32_t aCslPeriod, otShortAddress aShortAddr, const otExtAddress *aExtAddr);
+    Error EnableCsl(uint16_t aCslPeriod, otShortAddress aShortAddr, const otExtAddress *aExtAddr);
 
     /**
      * Resets CSL receiver in radio.
@@ -974,7 +974,7 @@ inline Error Radio::ReceiveAt(uint8_t aChannel, uint32_t aStart, uint32_t aDurat
     return error;
 }
 
-inline Error Radio::EnableCsl(uint32_t aCslPeriod, otShortAddress aShortAddr, const otExtAddress *aExtAddr)
+inline Error Radio::EnableCsl(uint16_t aCslPeriod, otShortAddress aShortAddr, const otExtAddress *aExtAddr)
 {
     return otPlatRadioEnableCsl(GetInstancePtr(), aCslPeriod, aShortAddr, aExtAddr);
 }

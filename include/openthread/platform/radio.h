@@ -1181,7 +1181,7 @@ otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCo
  *
  */
 otError otPlatRadioEnableCsl(otInstance         *aInstance,
-                             uint32_t            aCslPeriod,
+                             uint16_t            aCslPeriod,
                              otShortAddress      aShortAddr,
                              const otExtAddress *aExtAddr);
 

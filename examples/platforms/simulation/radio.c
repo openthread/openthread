@@ -139,7 +139,7 @@ static uint8_t sAckIeDataLength = 0;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 static uint32_t sCslSampleTime;
-static uint32_t sCslPeriod;
+static uint16_t sCslPeriod;
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
@@ -738,7 +738,7 @@ void radioSendMessage(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (sCslPeriod > 0 && !sTransmitFrame.mInfo.mTxInfo.mIsHeaderUpdated)
     {
-        otMacFrameSetCslIe(&sTransmitFrame, (uint16_t)sCslPeriod, getCslPhase());
+        otMacFrameSetCslIe(&sTransmitFrame, sCslPeriod, getCslPhase());
     }
 #endif
 
@@ -918,7 +918,7 @@ void radioSendAck(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (sCslPeriod > 0)
         {
-            otMacFrameSetCslIe(&sAckFrame, (uint16_t)sCslPeriod, getCslPhase());
+            otMacFrameSetCslIe(&sAckFrame, sCslPeriod, getCslPhase());
         }
 #endif
         if (otMacFrameIsSecurityEnabled(&sAckFrame))
@@ -1200,7 +1200,7 @@ static uint8_t generateAckIeData(uint8_t *aLinkMetricsIeData, uint8_t aLinkMetri
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 otError otPlatRadioEnableCsl(otInstance         *aInstance,
-                             uint32_t            aCslPeriod,
+                             uint16_t            aCslPeriod,
                              otShortAddress      aShortAddr,
                              const otExtAddress *aExtAddr)
 {

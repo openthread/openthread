@@ -424,7 +424,7 @@ OT_TOOL_WEAK uint16_t otPlatTimeGetXtalAccuracy(void) { return 0; }
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-OT_TOOL_WEAK otError otPlatRadioEnableCsl(otInstance *, uint32_t, otShortAddress, const otExtAddress *)
+OT_TOOL_WEAK otError otPlatRadioEnableCsl(otInstance *, uint16_t, otShortAddress, const otExtAddress *)
 {
     return OT_ERROR_NONE;
 }
