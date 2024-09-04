@@ -248,16 +248,19 @@ otError otBorderAgentSetEphemeralKey(otInstance *aInstance,
  * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE`.
  *
  * Can be used to cancel a previously set ephemeral key before it times out. If the Border Agent is not running or
- * there is no ephemeral key in use, calling this function has no effect.
+ * there is no ephemeral key in use, calling this function has no effect and returns `OT_ERROR_NONE`.
  *
  * If a commissioner is connected using the ephemeral key and is currently active, calling this function does not
- * change its state. In this case the `otBorderAgentIsEphemeralKeyActive()` will continue to return `TRUE` until the
- * commissioner disconnects.
+ * change its state, and `OT_ERROR_INVALID_STATE` is returned. In this case the `otBorderAgentIsEphemeralKeyActive()`
+ * will continue to return `TRUE` until the commissioner disconnects.
  *
  * @param[in] aInstance    The OpenThread instance.
  *
+ * @retval OT_ERROR_NONE           Successfully cleared the ephemeral key.
+ * @retval OT_ERROR_INVALID_STATE  Border Agent is connected to an external commissioner.
+ *
  */
-void otBorderAgentClearEphemeralKey(otInstance *aInstance);
+otError otBorderAgentClearEphemeralKey(otInstance *aInstance);
 
 /**
  * Indicates whether or not an ephemeral key is currently active.

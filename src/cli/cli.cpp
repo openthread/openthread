@@ -505,7 +505,7 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
          */
         else if (aArgs[1] == "clear")
         {
-            otBorderAgentClearEphemeralKey(GetInstancePtr());
+            error = otBorderAgentClearEphemeralKey(GetInstancePtr());
         }
         /**
          * @cli ba ephemeralkey callback (enable, disable)

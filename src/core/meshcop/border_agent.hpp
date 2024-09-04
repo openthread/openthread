@@ -212,8 +212,11 @@ public:
      * change its state. In this case the `IsEphemeralKeyActive()` will continue to return `true` until the commissioner
      * disconnects.
      *
+     * @retval kErrorNone            Successfully cleared the ephemeral key.
+     * @retval kErrorInvalidState    Border Agent is connected to an external commissioner.
+     *
      */
-    void ClearEphemeralKey(void);
+    Error ClearEphemeralKey(void);
 
     /**
      * Indicates whether or not an ephemeral key is currently active.

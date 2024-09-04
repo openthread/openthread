@@ -851,8 +851,10 @@ exit:
     return error;
 }
 
-void BorderAgent::ClearEphemeralKey(void)
+Error BorderAgent::ClearEphemeralKey(void)
 {
+    Error error = kErrorNone;
+
     VerifyOrExit(mUsingEphemeralKey);
 
     LogInfo("Clearing ephemeral key");
@@ -875,22 +877,24 @@ void BorderAgent::ClearEphemeralKey(void)
         break;
 
     case kStateStopped:
+        break;
     case kStateConnected:
     case kStateAccepted:
         // If there is an active commissioner connection, we wait till
         // it gets disconnected before removing ephemeral key and
         // restarting the agent.
+        error = kErrorInvalidState;
         break;
     }
 
 exit:
-    return;
+    return error;
 }
 
 void BorderAgent::HandleEphemeralKeyTimeout(void)
 {
     LogInfo("Ephemeral key timed out");
-    ClearEphemeralKey();
+    IgnoreError(ClearEphemeralKey());
 }
 
 void BorderAgent::InvokeEphemeralKeyCallback(void) { mEphemeralKeyCallback.InvokeIfSet(); }

@@ -91,9 +91,9 @@ otError otBorderAgentSetEphemeralKey(otInstance *aInstance,
     return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().SetEphemeralKey(aKeyString, aTimeout, aUdpPort);
 }
 
-void otBorderAgentClearEphemeralKey(otInstance *aInstance)
+otError otBorderAgentClearEphemeralKey(otInstance *aInstance)
 {
-    AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().ClearEphemeralKey();
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().ClearEphemeralKey();
 }
 
 bool otBorderAgentIsEphemeralKeyActive(otInstance *aInstance)
