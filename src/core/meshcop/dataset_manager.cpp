@@ -890,13 +890,25 @@ Error PendingDatasetManager::ReadActiveTimestamp(Timestamp &aTimestamp) const
     Error   error = kErrorNotFound;
     Dataset dataset;
 
-    // If the delay timer is not running, then the pending dataset is not valid, avoid
-    // reading from nonvolatile memory if there's no point.
-    VerifyOrExit(mDelayTimer.IsRunning());
-
     SuccessOrExit(Read(dataset));
 
     SuccessOrExit(dataset.Read<ActiveTimestampTlv>(aTimestamp));
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+Error PendingDatasetManager::ReadRemainingDelay(uint32_t &aRemainingDelay)
+{
+    Error    error = kErrorNotFound;
+    Dataset  dataset;
+
+    VerifyOrExit(mDelayTimer.IsRunning(), error = kErrorInvalidState);
+
+    SuccessOrExit(Read(dataset));
+
+    SuccessOrExit(dataset.Read<DelayTimerTlv>(aRemainingDelay));
     error = kErrorNone;
 
 exit:

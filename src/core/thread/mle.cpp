@@ -3644,6 +3644,7 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
     bool               isFromOrphan;
     bool               channelAndPanIdMatch;
     int                timestampCompare;
+    uint32_t           pendingRemainingDelay;
 
     Log(kMessageReceive, kTypeAnnounce, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -3683,9 +3684,11 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
             VerifyOrExit(!channelAndPanIdMatch);
         }
 
-        if (Get<MeshCoP::PendingDatasetManager>().ReadActiveTimestamp(pendingActiveTimestamp) == kErrorNone)
+        if (Get<MeshCoP::PendingDatasetManager>().ReadRemainingDelay(pendingRemainingDelay) == kErrorNone &&
+            Get<MeshCoP::PendingDatasetManager>().ReadActiveTimestamp(pendingActiveTimestamp) == kErrorNone)
         {
-            VerifyOrExit(timestamp > pendingActiveTimestamp);
+            VerifyOrExit(pendingRemainingDelay < kAnnounceBackoffForPendingDataset &&
+                timestamp > pendingActiveTimestamp);
         }
 
         if (mAttachState == kAttachStateProcessAnnounce)

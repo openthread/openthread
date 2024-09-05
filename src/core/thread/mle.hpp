@@ -771,25 +771,26 @@ private:
     // Constants
 
     // All time intervals are in milliseconds
-    static constexpr uint32_t kParentRequestRouterTimeout     = 750;  // Wait time after tx of Parent Req to routers
-    static constexpr uint32_t kParentRequestReedTimeout       = 1250; // Wait timer after tx of Parent Req to REEDs
-    static constexpr uint32_t kParentRequestDuplicateMargin   = 50;   // Margin to detect duplicate received Parent Req
-    static constexpr uint32_t kChildIdResponseTimeout         = 1250; // Wait time to receive Child ID Response
-    static constexpr uint32_t kAttachStartJitter              = 50;   // Max jitter time added to start of attach
-    static constexpr uint32_t kAnnounceProcessTimeout         = 250;  // Delay after Announce rx before processing
-    static constexpr uint32_t kAnnounceTimeout                = 1400; // Total timeout for sending Announce messages
-    static constexpr uint16_t kMinAnnounceDelay               = 80;   // Min delay between Announcement messages
-    static constexpr uint32_t kParentResponseMaxDelayRouters  = 500;  // Max response delay for Parent Req to routers
-    static constexpr uint32_t kParentResponseMaxDelayAll      = 1000; // Max response delay for Parent Req to all
-    static constexpr uint32_t kChildUpdateRequestPendingDelay = 100;  // Delay for aggregating Child Update Req
-    static constexpr uint32_t kMaxLinkAcceptDelay             = 1000; // Max delay to tx Link Accept for multicast Req
-    static constexpr uint32_t kChildIdRequestTimeout          = 5000; // Max delay to rx a Child ID Req after Parent Res
-    static constexpr uint32_t kLinkRequestTimeout             = 2000; // Max delay to rx a Link Accept
-    static constexpr uint32_t kDetachGracefullyTimeout        = 1000; // Timeout for graceful detach
-    static constexpr uint32_t kUnicastRetxDelay               = 1000; // Base delay for MLE unicast retx
-    static constexpr uint32_t kMulticastRetxDelay             = 5000; // Base delay for MLE multicast retx
-    static constexpr uint32_t kMulticastRetxDelayMin          = kMulticastRetxDelay * 9 / 10;  // 0.9 * base delay
-    static constexpr uint32_t kMulticastRetxDelayMax          = kMulticastRetxDelay * 11 / 10; // 1.1 * base delay
+    static constexpr uint32_t kParentRequestRouterTimeout       = 750;  // Wait time after tx of Parent Req to routers
+    static constexpr uint32_t kParentRequestReedTimeout         = 1250; // Wait timer after tx of Parent Req to REEDs
+    static constexpr uint32_t kParentRequestDuplicateMargin     = 50;   // Margin to detect duplicate received Parent Req
+    static constexpr uint32_t kChildIdResponseTimeout           = 1250; // Wait time to receive Child ID Response
+    static constexpr uint32_t kAttachStartJitter                = 50;   // Max jitter time added to start of attach
+    static constexpr uint32_t kAnnounceProcessTimeout           = 250;  // Delay after Announce rx before processing
+    static constexpr uint32_t kAnnounceTimeout                  = 1400; // Total timeout for sending Announce messages
+    static constexpr uint16_t kMinAnnounceDelay                 = 80;   // Min delay between Announcement messages
+    static constexpr uint32_t kParentResponseMaxDelayRouters    = 500;  // Max response delay for Parent Req to routers
+    static constexpr uint32_t kParentResponseMaxDelayAll        = 1000; // Max response delay for Parent Req to all
+    static constexpr uint32_t kChildUpdateRequestPendingDelay   = 100;  // Delay for aggregating Child Update Req
+    static constexpr uint32_t kMaxLinkAcceptDelay               = 1000; // Max delay to tx Link Accept for multicast Req
+    static constexpr uint32_t kChildIdRequestTimeout            = 5000; // Max delay to rx a Child ID Req after Parent Res
+    static constexpr uint32_t kLinkRequestTimeout               = 2000; // Max delay to rx a Link Accept
+    static constexpr uint32_t kDetachGracefullyTimeout          = 1000; // Timeout for graceful detach
+    static constexpr uint32_t kUnicastRetxDelay                 = 1000; // Base delay for MLE unicast retx
+    static constexpr uint32_t kMulticastRetxDelay               = 5000; // Base delay for MLE multicast retx
+    static constexpr uint32_t kMulticastRetxDelayMin            = kMulticastRetxDelay * 9 / 10;  // 0.9 * base delay
+    static constexpr uint32_t kMulticastRetxDelayMax            = kMulticastRetxDelay * 11 / 10; // 1.1 * base delay
+    static constexpr uint32_t kAnnounceBackoffForPendingDataset = 60000; // Max delay left to block Announce processing.
 
     static constexpr uint8_t kMaxTxCount                = 3; // Max tx count for MLE message
     static constexpr uint8_t kMaxCriticalTxCount        = 6; // Max tx count for critical MLE message
