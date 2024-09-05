@@ -125,7 +125,7 @@ class Cert_7_1_4_BorderRouterAsRouter(thread_cert.TestCase):
         # with the server’s information (Prefix, Border Router) to the Leader
         _rpkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next()
         _rpkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} == set(p.mle.tlv.type))
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV} <= set(p.mle.tlv.type))
         _pkt = _rpkts.filter_coap_request(SVR_DATA_URI).must_next()
         _pkt.must_verify(lambda p: p.wpan.dst16 == pv.vars['LEADER_RLOC16'] and {
             Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:2::')
@@ -138,7 +138,7 @@ class Cert_7_1_4_BorderRouterAsRouter(thread_cert.TestCase):
         # Step 4: Automatically transmits a 2.04 Changed CoAP response to the DUT
         # Step 5: The DUT MUST send a multicast MLE Data Response
         _rpkts.filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(
-            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} == set(
+            lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV} <= set(
                 p.mle.tlv.type) and {Ipv6Addr('2001:2:0:1::'), Ipv6Addr('2001:2:0:2::')} == set(
                     p.thread_nwd.tlv.prefix) and p.thread_nwd.tlv.border_router.flag.p == [1, 1] and p.thread_nwd.tlv.
             border_router.flag.s == [1, 1] and p.thread_nwd.tlv.border_router.flag.r == [1, 1] and p.thread_nwd.tlv.

@@ -1316,7 +1316,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
                 ProcessCsl(*aAckFrame, dstAddr);
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-                if (!mRxOnWhenIdle && aFrame.GetHeaderIe(CslIe::kHeaderIeId) != nullptr)
+                if (!mRxOnWhenIdle && aFrame.HasCslIe())
                 {
                     Get<DataPollSender>().ResetKeepAliveTimer();
                 }
@@ -2356,19 +2356,17 @@ bool Mac::IsCslSupported(void) const
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
 {
-    const uint8_t *cur;
-    Child         *child;
-    const CslIe   *csl;
+    Child       *child;
+    const CslIe *csl;
 
     VerifyOrExit(aFrame.IsVersion2015() && aFrame.GetSecurityEnabled());
 
-    cur = aFrame.GetHeaderIe(CslIe::kHeaderIeId);
-    VerifyOrExit(cur != nullptr);
+    csl = aFrame.GetCslIe();
+    VerifyOrExit(csl != nullptr);
 
     child = Get<ChildTable>().FindChild(aSrcAddr, Child::kInStateAnyExceptInvalid);
     VerifyOrExit(child != nullptr);
 
-    csl = reinterpret_cast<const CslIe *>(cur + sizeof(HeaderIe));
     VerifyOrExit(csl->GetPeriod() >= kMinCslIePeriod);
 
     child->SetCslPeriod(csl->GetPeriod());

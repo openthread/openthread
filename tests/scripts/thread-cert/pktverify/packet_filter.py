@@ -363,7 +363,7 @@ class PacketFilter(object):
 
         return self.filter_LLANMA(). \
             filter_mle_cmd(consts.MLE_ADVERTISEMENT). \
-            filter(lambda p: tlv_set ==
+            filter(lambda p: tlv_set <=
                              set(p.mle.tlv.type) and \
                              p.ipv6.hlim == 255, **kwargs
                    )

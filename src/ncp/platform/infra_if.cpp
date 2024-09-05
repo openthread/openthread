@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2024, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,74 +26,37 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file implements the `Heap::String` (a heap allocated string).
- */
+#include <openthread/platform/infra_if.h>
 
-#include "heap_string.hpp"
+#include "ncp/ncp_base.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/string.hpp"
-
-namespace ot {
-namespace Heap {
-
-Error String::Set(const char *aCString)
+#if OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE
+bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
 {
-    Error  error = kErrorNone;
-    size_t curSize;
-    size_t newSize;
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+    OT_UNUSED_VARIABLE(aAddress);
 
-    VerifyOrExit(aCString != nullptr, Free());
-
-    curSize = (mStringBuffer != nullptr) ? strlen(mStringBuffer) + 1 : 0;
-    newSize = strlen(aCString) + 1;
-
-    if (curSize != newSize)
-    {
-        char *newBuffer = static_cast<char *>(Heap::CAlloc(sizeof(char), newSize));
-
-        VerifyOrExit(newBuffer != nullptr, error = kErrorNoBufs);
-
-        Heap::Free(mStringBuffer);
-        mStringBuffer = newBuffer;
-    }
-
-    memcpy(mStringBuffer, aCString, newSize);
-
-exit:
-    return error;
+    return true;
 }
 
-Error String::Set(String &&aString)
+otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
+                                 const otIp6Address *aDestAddress,
+                                 const uint8_t      *aBuffer,
+                                 uint16_t            aBufferLength)
 {
-    VerifyOrExit(mStringBuffer != aString.mStringBuffer);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+    OT_UNUSED_VARIABLE(aDestAddress);
+    OT_UNUSED_VARIABLE(aBuffer);
+    OT_UNUSED_VARIABLE(aBufferLength);
 
-    Heap::Free(mStringBuffer);
-    mStringBuffer         = aString.mStringBuffer;
-    aString.mStringBuffer = nullptr;
-
-exit:
-    return kErrorNone;
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-void String::Free(void)
+otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex)
 {
-    Heap::Free(mStringBuffer);
-    mStringBuffer = nullptr;
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-bool String::operator==(const char *aCString) const
-{
-    bool isEqual;
-
-    VerifyOrExit((aCString != nullptr) && (mStringBuffer != nullptr), isEqual = (mStringBuffer == aCString));
-    isEqual = StringMatch(mStringBuffer, aCString);
-
-exit:
-    return isEqual;
-}
-
-} // namespace Heap
-} // namespace ot
+#endif // OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE

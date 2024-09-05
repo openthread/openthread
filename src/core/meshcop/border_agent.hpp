@@ -298,7 +298,7 @@ private:
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void HandleTmfDatasetGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Dataset::Type aType);
+    void HandleTmfDatasetGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
     void HandleTimeout(void);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
@@ -349,11 +349,8 @@ DeclareTmfHandler(BorderAgent, kUriCommissionerPetition);
 DeclareTmfHandler(BorderAgent, kUriCommissionerKeepAlive);
 DeclareTmfHandler(BorderAgent, kUriRelayTx);
 DeclareTmfHandler(BorderAgent, kUriCommissionerGet);
-DeclareTmfHandler(BorderAgent, kUriCommissionerSet);
 DeclareTmfHandler(BorderAgent, kUriActiveGet);
-DeclareTmfHandler(BorderAgent, kUriActiveSet);
 DeclareTmfHandler(BorderAgent, kUriPendingGet);
-DeclareTmfHandler(BorderAgent, kUriPendingSet);
 DeclareTmfHandler(BorderAgent, kUriProxyTx);
 
 } // namespace MeshCoP

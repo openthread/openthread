@@ -308,19 +308,41 @@ exit:
 
 void BorderAgent::HandleNotifierEvents(Events aEvents)
 {
-    VerifyOrExit(aEvents.ContainsAny(kEventThreadRoleChanged | kEventCommissionerStateChanged));
-
+    if ((aEvents.ContainsAny(kEventThreadRoleChanged | kEventCommissionerStateChanged)))
+    {
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-    VerifyOrExit(Get<Commissioner>().IsDisabled());
+        VerifyOrExit(Get<Commissioner>().IsDisabled());
 #endif
 
-    if (Get<Mle::MleRouter>().IsAttached())
-    {
-        Start();
+        if (Get<Mle::MleRouter>().IsAttached())
+        {
+            Start();
+        }
+        else
+        {
+            Stop();
+        }
     }
-    else
+
+    if (aEvents.ContainsAny(kEventPskcChanged))
     {
-        Stop();
+        VerifyOrExit(mState != kStateStopped);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+        // No-op if Ephemeralkey mode is activated, new pskc will be applied
+        // when Ephemeralkey mode is deactivated.
+        VerifyOrExit(!mUsingEphemeralKey);
+#endif
+
+        {
+            Pskc pskc;
+            Get<KeyManager>().GetPskc(pskc);
+
+            // If there is secure session already established, it won't be impacted,
+            // new pskc will be applied for next connection.
+            SuccessOrExit(Get<Tmf::SecureAgent>().SetPsk(pskc.m8, Pskc::kSize));
+            pskc.Clear();
+        }
     }
 
 exit:
@@ -468,35 +490,19 @@ void BorderAgent::HandleTmf<kUriCommissionerPetition>(Coap::Message &aMessage, c
 template <>
 void BorderAgent::HandleTmf<kUriCommissionerGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriCommissionerGet));
-}
-
-template <>
-void BorderAgent::HandleTmf<kUriCommissionerSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriCommissionerSet));
+    HandleTmfDatasetGet(aMessage, aMessageInfo, kUriCommissionerGet);
 }
 
 template <> void BorderAgent::HandleTmf<kUriActiveGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    HandleTmfDatasetGet(aMessage, aMessageInfo, Dataset::kActive);
+    HandleTmfDatasetGet(aMessage, aMessageInfo, kUriActiveGet);
     mCounters.mMgmtActiveGets++;
-}
-
-template <> void BorderAgent::HandleTmf<kUriActiveSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriActiveSet));
 }
 
 template <> void BorderAgent::HandleTmf<kUriPendingGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    HandleTmfDatasetGet(aMessage, aMessageInfo, Dataset::kPending);
+    HandleTmfDatasetGet(aMessage, aMessageInfo, kUriPendingGet);
     mCounters.mMgmtPendingGets++;
-}
-
-template <> void BorderAgent::HandleTmf<kUriPendingSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriPendingSet));
 }
 
 template <>
@@ -610,42 +616,41 @@ exit:
     return error;
 }
 
-void BorderAgent::HandleTmfDatasetGet(Coap::Message          &aMessage,
-                                      const Ip6::MessageInfo &aMessageInfo,
-                                      Dataset::Type           aType)
+void BorderAgent::HandleTmfDatasetGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri)
 {
     Error          error    = kErrorNone;
     Coap::Message *response = nullptr;
-
-    if (mState == kStateAccepted)
-    {
-        Uri uri = (aType == Dataset::kActive) ? kUriActiveGet : kUriPendingGet;
-
-        IgnoreError(ForwardToLeader(aMessage, aMessageInfo, uri));
-        ExitNow();
-    }
 
     // When processing `MGMT_GET` request directly on Border Agent,
     // the Security Policy flags (O-bit) should be ignore to allow
     // the commissioner candidate to get the full Operational Dataset.
 
-    if (aType == Dataset::kActive)
+    switch (aUri)
     {
+    case kUriActiveGet:
         response = Get<ActiveDatasetManager>().ProcessGetRequest(aMessage, DatasetManager::kIgnoreSecurityPolicyFlags);
-    }
-    else
-    {
+        break;
+
+    case kUriPendingGet:
         response = Get<PendingDatasetManager>().ProcessGetRequest(aMessage, DatasetManager::kIgnoreSecurityPolicyFlags);
+        break;
+
+    case kUriCommissionerGet:
+        response = Get<NetworkData::Leader>().ProcessCommissionerGetRequest(aMessage);
+        break;
+
+    default:
+        break;
     }
 
     VerifyOrExit(response != nullptr, error = kErrorParse);
 
     SuccessOrExit(error = Get<Tmf::SecureAgent>().SendMessage(*response, aMessageInfo));
 
-    LogInfo("Sent %sGet response to non-active commissioner", Dataset::TypeToString(aType));
+    LogInfo("Sent %s response to non-active commissioner", PathForUri(aUri));
 
 exit:
-    LogWarnOnError(error, "send Active/PendingGet response");
+    LogWarnOnError(error, "send Active/Pending/CommissionerGet response");
     FreeMessageOnError(response, error);
 }
 

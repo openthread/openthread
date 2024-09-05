@@ -215,10 +215,6 @@ static otIp6Prefix        sAddedExternalRoutes[kMaxExternalRoutesNum];
 static constexpr uint32_t kNat64RoutePriority = 100; ///< Priority for route to NAT64 CIDR, 100 means a high priority.
 #endif
 
-#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-ot::Posix::Resolver gResolver;
-#endif
-
 #if defined(RTM_NEWMADDR) || defined(__NetBSD__)
 // on some BSDs (mac OS, FreeBSD), we get RTM_NEWMADDR/RTM_DELMADDR messages, so we don't need to monitor using MLD
 // on NetBSD, MLD monitoring simply doesn't work
@@ -226,7 +222,7 @@ ot::Posix::Resolver gResolver;
 #else
 // on some platforms (Linux, but others might be made to work), we do not get information about multicast
 // group joining via AF_NETLINK or AF_ROUTE sockets.  on those platform, we must listen for IPv6 ICMP
-// MLDv2 messages to know when mulicast memberships change
+// MLDv2 messages to know when multicast memberships change
 // 		https://stackoverflow.com/questions/37346289/using-netlink-is-it-possible-to-listen-whenever-multicast-group-membership-is-ch
 #define OPENTHREAD_POSIX_USE_MLD_MONITOR 1
 #endif // defined(RTM_NEWMADDR) || defined(__NetBSD__)
@@ -2285,9 +2281,6 @@ void platformNetifSetUp(void)
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     nat64Init();
 #endif
-#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-    gResolver.Init();
-#endif
 }
 
 void platformNetifTearDown(void) {}
@@ -2343,10 +2336,6 @@ void platformNetifUpdateFdSet(otSysMainloopContext *aContext)
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     FD_SET(sMLDMonitorFd, &aContext->mReadFdSet);
     FD_SET(sMLDMonitorFd, &aContext->mErrorFdSet);
-#endif
-
-#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-    gResolver.UpdateFdSet(*aContext);
 #endif
 
     if (sTunFd > aContext->mMaxFd)
@@ -2409,10 +2398,6 @@ void platformNetifProcess(const otSysMainloopContext *aContext)
     {
         processMLDEvent(gInstance);
     }
-#endif
-
-#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-    gResolver.Process(*aContext);
 #endif
 
 exit:

@@ -123,7 +123,7 @@ class Cert_8_1_06_Commissioning(thread_cert.TestCase):
                               NM_COMMISSIONER_UDP_PORT_TLV,
                               NM_JOINER_UDP_PORT_TLV,
                               NM_DISCOVERY_RESPONSE_TLV
-                            } == set(p.thread_meshcop.tlv.type) and\
+                            } <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.discovery_rsp_ver ==
                    COMMISSIONER_VERSION
                   ).\

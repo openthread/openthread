@@ -196,7 +196,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
             MLE_DATA_RESPONSE).must_next()
         _pkt.must_verify(lambda p: {
             SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV
-        } == set(p.mle.tlv.type) and {NM_COMMISSIONER_SESSION_ID_TLV, NM_BORDER_AGENT_LOCATOR_TLV} <= set(
+        } <= set(p.mle.tlv.type) and {NM_COMMISSIONER_SESSION_ID_TLV, NM_BORDER_AGENT_LOCATOR_TLV} <= set(
             p.thread_meshcop.tlv.type) and p.thread_nwd.tlv.stable == [0])
 
         # Step 9: Router MUST send a unicast MLE Data Request to the Leader
@@ -209,7 +209,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
                 lambda p: {
                     SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV,
                     PENDING_OPERATION_DATASET_TLV
-                } == set(p.mle.tlv.type) and {
+                } <= set(p.mle.tlv.type) and {
                     NM_COMMISSIONER_SESSION_ID_TLV, NM_BORDER_AGENT_LOCATOR_TLV, NM_ACTIVE_TIMESTAMP_TLV,
                     NM_NETWORK_NAME_TLV, NM_NETWORK_KEY_TLV
                 } <= set(p.thread_meshcop.tlv.type) and p.thread_nwd.tlv.stable == [0])
@@ -222,7 +222,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
             MLE_DATA_RESPONSE).must_next().must_verify(
                 lambda p: {
                     SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV
-                } == set(p.mle.tlv.type) and p.mle.tlv.leader_data.data_version == _pkt.mle.tlv.leader_data.
+                } <= set(p.mle.tlv.type) and p.mle.tlv.leader_data.data_version == _pkt.mle.tlv.leader_data.
                 data_version and p.mle.tlv.leader_data.stable_data_version == _pkt.mle.tlv.leader_data.
                 stable_data_version and {NM_COMMISSIONER_SESSION_ID_TLV, NM_BORDER_AGENT_LOCATOR_TLV} <= set(
                     p.thread_meshcop.tlv.type) and p.thread_nwd.tlv.stable == [0])
@@ -231,7 +231,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
         pkts.filter_wpan_src64(ROUTER_1).filter_wpan_dst64(SED).filter_mle_cmd(
             MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(lambda p: {
                 SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV
-            } == set(p.mle.tlv.type) and p.mle.tlv.leader_data.data_version == _pkt.mle.tlv.leader_data.data_version)
+            } <= set(p.mle.tlv.type) and p.mle.tlv.leader_data.data_version == _pkt.mle.tlv.leader_data.data_version)
 
         # Step 13: SED MUST send a unicast MLE Data Request to Router_1
         _pkts_sed.filter_wpan_src64(SED).filter_wpan_dst64(ROUTER_1).filter_mle_cmd(MLE_DATA_REQUEST).must_next(

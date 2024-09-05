@@ -180,6 +180,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE
+ *
+ * Define to 1 to enable the NCP based implementation of platform InfraIf APIs.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE
+#define OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
  *
  * TODO: complete.

@@ -148,6 +148,10 @@ build_simulation()
         options+=("${ot_extra_options[@]}")
     fi
 
+    if [[ ${OT_NODE_TYPE} == rcp* ]]; then
+        options+=("-DOT_SIMULATION_INFRA_IF=OFF")
+    fi
+
     OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-simulation-${version}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
 
     if [[ ${VIRTUAL_TIME} == 1 ]] && [[ ${OT_NODE_TYPE} == rcp* ]]; then

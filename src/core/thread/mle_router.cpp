@@ -2211,6 +2211,7 @@ void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
     child->SetDeviceMode(mode);
 
     tlvList.Add(Tlv::kMode);
+    tlvList.Add(Tlv::kLinkMargin);
 
     // Parent MUST include Leader Data TLV in Child Update Response
     tlvList.Add(Tlv::kLeaderData);
@@ -2921,7 +2922,11 @@ Error MleRouter::SendChildUpdateRequest(Child &aChild)
     SuccessOrExit(error = message->AppendNetworkDataTlv(aChild.GetNetworkDataType()));
     SuccessOrExit(error = message->AppendActiveAndPendingTimestampTlvs());
 
-    if (!aChild.IsStateValid())
+    if (aChild.IsStateValid())
+    {
+        SuccessOrExit(error = message->AppendLinkMarginTlv(aChild.GetLinkInfo().GetLinkMargin()));
+    }
+    else
     {
         SuccessOrExit(error = message->AppendTlvRequestTlv(kTlvs));
 
@@ -3027,6 +3032,10 @@ void MleRouter::SendChildUpdateResponse(Child                  *aChild,
 
         case Tlv::kTimeout:
             SuccessOrExit(error = message->AppendTimeoutTlv(aChild->GetTimeout()));
+            break;
+
+        case Tlv::kLinkMargin:
+            SuccessOrExit(error = message->AppendLinkMarginTlv(aChild->GetLinkInfo().GetLinkMargin()));
             break;
 
         case Tlv::kSupervisionInterval:

@@ -111,7 +111,7 @@ class Cert_6_2_2_NewPartition(thread_cert.TestCase):
         _ed_pkts.filter_mle_cmd(MLE_ADVERTISEMENT).must_not_next()
         _ed_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_not_next()
         _ed_pkts.filter_wpan_dst64(ROUTER_1).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
-            lambda p: {MODE_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV} < set(p.mle.tlv.type))
+            lambda p: {MODE_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV} <= set(p.mle.tlv.type))
 
         # Step 8: The DUT MUST respond with ICMPv6 Echo Reply
         _ed_pkts.filter('ipv6.dst == {ROUTER_1_MLEID} and ipv6.src == {ED_MLEID}',

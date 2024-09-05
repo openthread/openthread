@@ -195,7 +195,7 @@ class TestCryptoEngine(unittest.TestCase):
 
 
 class TestCryptoMaterialCreator(unittest.TestCase):
-    """ Key generaion was described in Thread specification.
+    """ Key generation was described in Thread specification.
 
     Read more: Thread 1.1.0 Specification Candidate Final - 7.1.4 Key Generation
 

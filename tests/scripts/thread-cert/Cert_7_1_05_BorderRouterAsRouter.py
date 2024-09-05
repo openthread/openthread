@@ -188,7 +188,7 @@ class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
                               SOURCE_ADDRESS_TLV,
                               MODE_TLV,
                               ADDRESS_REGISTRATION_TLV
-                             } < set(p.mle.tlv.type) and\
+                             } <= set(p.mle.tlv.type) and\
                    len(p.mle.tlv.addr_reg_iid) >= 3 and\
                    set(p.mle.tlv.addr_reg_iid) < set(_pkt.mle.tlv.addr_reg_iid)
                    ).\
@@ -214,7 +214,7 @@ class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
                               SOURCE_ADDRESS_TLV,
                               LEADER_DATA_TLV,
                               ACTIVE_TIMESTAMP_TLV
-                             } == set(p.mle.tlv.type) and\
+                             } <= set(p.mle.tlv.type) and\
                              {
                               Ipv6Addr(PREFIX_2001[:-3]),
                               Ipv6Addr(PREFIX_2003[:-3])
@@ -246,7 +246,7 @@ class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
                               SOURCE_ADDRESS_TLV,
                               MODE_TLV,
                               ADDRESS_REGISTRATION_TLV
-                             } < set(p.mle.tlv.type) and\
+                             } <= set(p.mle.tlv.type) and\
                    len(p.mle.tlv.addr_reg_iid) >= 2 and\
                    set(p.mle.tlv.addr_reg_iid) < set(_pkt.mle.tlv.addr_reg_iid)
                    ).\

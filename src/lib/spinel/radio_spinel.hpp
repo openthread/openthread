@@ -172,7 +172,7 @@ public:
      *                                         directly do a hardware reset.
      * @param[in]  aSpinelDriver               A pointer to the spinel driver instance that this object depends on.
      * @param[in]  aRequiredRadioCaps          The required radio capabilities. RadioSpinel will check if RCP has
-     *                                         the required capabilities during initiailization.
+     *                                         the required capabilities during initialization.
      * @param[in]  aEnableRcpTimeSync          TRUE to enable RCP time sync, FALSE to not enable.
      *
      */
@@ -1316,7 +1316,6 @@ private:
     int8_t       mCcaEnergyDetectThreshold;
     int8_t       mTransmitPower;
     int8_t       mFemLnaGain;
-    uint32_t     mMacFrameCounter;
     bool         mCoexEnabled : 1;
     bool         mSrcMatchEnabled : 1;
 

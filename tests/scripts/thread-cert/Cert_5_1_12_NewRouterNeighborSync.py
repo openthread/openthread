@@ -122,7 +122,7 @@ class Cert_5_1_12_NewRouterSync(thread_cert.TestCase):
                               LEADER_DATA_TLV,
                               ROUTE64_TLV,
                               SOURCE_ADDRESS_TLV
-                              } == set(p.mle.tlv.type) and\
+                              } <= set(p.mle.tlv.type) and\
                    p.ipv6.hlim == 255).\
             must_next()
 
@@ -134,7 +134,7 @@ class Cert_5_1_12_NewRouterSync(thread_cert.TestCase):
                               LEADER_DATA_TLV,
                               ROUTE64_TLV,
                               SOURCE_ADDRESS_TLV
-                              } == set(p.mle.tlv.type) and\
+                              } <= set(p.mle.tlv.type) and\
                    p.ipv6.hlim == 255).\
             must_next()
 

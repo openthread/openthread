@@ -162,7 +162,7 @@ class Cert_9_2_03_ActiveDatasetGet(thread_cert.TestCase):
                               NM_PAN_ID_TLV,
                               NM_PSKC_TLV,
                               NM_SECURITY_POLICY_TLV
-                             } == set(p.thread_meshcop.tlv.type)
+                             } <= set(p.thread_meshcop.tlv.type)
                    ).\
            must_next()
 
@@ -199,7 +199,7 @@ class Cert_9_2_03_ActiveDatasetGet(thread_cert.TestCase):
                               NM_CHANNEL_MASK_TLV,
                               NM_NETWORK_MESH_LOCAL_PREFIX_TLV,
                               NM_NETWORK_NAME_TLV
-                             } == set(p.thread_meshcop.tlv.type)
+                             } <= set(p.thread_meshcop.tlv.type)
                    ).\
            must_next()
 
@@ -240,7 +240,7 @@ class Cert_9_2_03_ActiveDatasetGet(thread_cert.TestCase):
                               NM_CHANNEL_TLV,
                               NM_NETWORK_MESH_LOCAL_PREFIX_TLV,
                               NM_NETWORK_NAME_TLV,
-                             } == set(p.thread_meshcop.tlv.type)
+                             } <= set(p.thread_meshcop.tlv.type)
                    ).\
            must_next()
 

@@ -34,6 +34,7 @@ import logging
 
 from tlv.tlv import TLV
 from tlv.tcat_tlv import TcatTLVType
+from time import time
 import utils
 
 logger = logging.getLogger(__name__)
@@ -60,7 +61,7 @@ class BleStreamSecure:
         if cafile:
             self.ssl_context.load_verify_locations(cafile=cafile)
 
-    async def do_handshake(self):
+    async def do_handshake(self, timeout=30.0):
         is_debug = logger.getEffectiveLevel() <= logging.DEBUG
         self.ssl_object = self.ssl_context.wrap_bio(
             incoming=self.incoming,
@@ -68,7 +69,8 @@ class BleStreamSecure:
             server_side=False,
             server_hostname=None,
         )
-        while True:
+        start = time()
+        while (time() - start) < timeout:
             try:
                 if not is_debug:
                     print('.', end='')
@@ -97,6 +99,10 @@ class BleStreamSecure:
                 if output:
                     self.incoming.write(output)
                 await asyncio.sleep(0.02)
+        else:
+            print('TLS Connection timed out.')
+            return False
+        return True
 
     async def send(self, bytes):
         self.ssl_object.write(bytes)

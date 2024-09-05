@@ -255,16 +255,14 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         LogInfo("Failed to send data poll, error:%s, retx:%d/%d", ErrorToString(aError), mPollTxFailureCounter,
-                (aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr) ? kMaxCslPollRetxAttempts
-                                                                         : kMaxPollRetxAttempts);
+                aFrame.HasCslIe() ? kMaxCslPollRetxAttempts : kMaxPollRetxAttempts);
 #else
         LogInfo("Failed to send data poll, error:%s, retx:%d/%d", ErrorToString(aError), mPollTxFailureCounter,
                 kMaxPollRetxAttempts);
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (mPollTxFailureCounter <
-            ((aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr) ? kMaxCslPollRetxAttempts : kMaxPollRetxAttempts))
+        if (mPollTxFailureCounter < (aFrame.HasCslIe() ? kMaxCslPollRetxAttempts : kMaxPollRetxAttempts))
 #else
         if (mPollTxFailureCounter < kMaxPollRetxAttempts)
 #endif
@@ -344,7 +342,7 @@ void DataPollSender::ProcessTxDone(const Mac::TxFrame &aFrame, const Mac::RxFram
     VerifyOrExit(aFrame.GetSecurityEnabled());
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (aFrame.mInfo.mTxInfo.mIsARetx && (aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr))
+    if (aFrame.mInfo.mTxInfo.mIsARetx && aFrame.HasCslIe())
     {
         // For retransmission frame, use a data poll to resync its parent with correct CSL phase
         sendDataPoll = true;
@@ -583,7 +581,7 @@ Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
                                            Mac::Frame::kSecurityEncMic32, Mac::Frame::kKeyIdMode1, nullptr);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (frame->GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr)
+    if (frame->HasCslIe())
     {
         // Disable frame retransmission when the data poll has CSL IE included
         aTxFrames.SetMaxFrameRetries(0);

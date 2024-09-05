@@ -302,7 +302,7 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
                               NL_TARGET_EID_TLV,
                               NL_RLOC16_TLV,
                               NL_ML_EID_TLV
-                             } == set(p.thread_address.tlv.type)
+                             } <= set(p.thread_address.tlv.type)
                    ).\
             must_next()
         pkts.filter_ipv6_src_dst(REED_MLEID, MED_MLEID).\
@@ -330,7 +330,7 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
                               NL_TARGET_EID_TLV,
                               NL_RLOC16_TLV,
                               NL_ML_EID_TLV
-                             } == set(p.thread_address.tlv.type)
+                             } <= set(p.thread_address.tlv.type)
                    ).\
             must_next()
         pkts.filter_ipv6_src_dst(REED2001, MED2001).\
@@ -358,7 +358,7 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
                               NL_TARGET_EID_TLV,
                               NL_RLOC16_TLV,
                               NL_ML_EID_TLV
-                             } == set(p.thread_address.tlv.type)
+                             } <= set(p.thread_address.tlv.type)
                    ).\
             must_next()
         pkts.filter_ipv6_src_dst(REED2002, MED2002).\

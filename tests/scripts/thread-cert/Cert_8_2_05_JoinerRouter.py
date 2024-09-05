@@ -161,7 +161,7 @@ class Cert_8_2_05_JoinerRouter(thread_cert.TestCase):
                               NM_COMMISSIONER_UDP_PORT_TLV,
                               NM_JOINER_UDP_PORT_TLV,
                               NM_DISCOVERY_RESPONSE_TLV
-                            } == set(p.thread_meshcop.tlv.type)
+                            } <= set(p.thread_meshcop.tlv.type)
                   ).\
             must_next()
 
@@ -198,7 +198,7 @@ class Cert_8_2_05_JoinerRouter(thread_cert.TestCase):
                               NM_JOINER_UDP_PORT_TLV,
                               NM_JOINER_IID_TLV,
                               NM_JOINER_ROUTER_LOCATOR_TLV
-                             } == set(p.thread_meshcop.tlv.type) and\
+                             } <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.udp_port == [_ch_pkt.udp.dstport] and\
                    p.thread_meshcop.tlv.jr_locator == JOINER_ROUTER_RLOC16
                    ).\
@@ -223,7 +223,7 @@ class Cert_8_2_05_JoinerRouter(thread_cert.TestCase):
                               NM_JOINER_IID_TLV,
                               NM_JOINER_ROUTER_LOCATOR_TLV,
                               NM_JOINER_ROUTER_KEK_TLV
-                             } == set(p.thread_meshcop.tlv.type) and\
+                             } <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.udp_port == [_ch_pkt.udp.dstport] and\
                    p.thread_meshcop.tlv.jr_locator == JOINER_ROUTER_RLOC16
                    ).\

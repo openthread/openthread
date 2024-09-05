@@ -230,7 +230,7 @@ class Cert_5_7_01_CoapDiagCommands_Base(thread_cert.TestCase):
                               DG_NETWORK_DATA_TLV,
                               DG_IPV6_ADDRESS_LIST_TLV,
                               DG_CHANNEL_PAGES_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
         pkts.filter_wpan_src64(DUT).\
@@ -246,7 +246,7 @@ class Cert_5_7_01_CoapDiagCommands_Base(thread_cert.TestCase):
                               DG_NETWORK_DATA_TLV,
                               DG_IPV6_ADDRESS_LIST_TLV,
                               DG_CHANNEL_PAGES_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
 
@@ -263,7 +263,7 @@ class Cert_5_7_01_CoapDiagCommands_Base(thread_cert.TestCase):
             filter(lambda p: {
                               DG_TYPE_LIST_TLV,
                               DG_MAC_COUNTERS_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
         pkts.filter_wpan_src64(DUT).\
@@ -271,7 +271,7 @@ class Cert_5_7_01_CoapDiagCommands_Base(thread_cert.TestCase):
             filter_coap_ack(DIAG_GET_URI).\
             filter(lambda p: {
                               DG_MAC_COUNTERS_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
 
@@ -288,7 +288,7 @@ class Cert_5_7_01_CoapDiagCommands_Base(thread_cert.TestCase):
             filter(lambda p: {
                               DG_TYPE_LIST_TLV,
                               DG_TIMEOUT_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
         pkts.filter_wpan_src64(DUT).\
@@ -311,7 +311,7 @@ class Cert_5_7_01_CoapDiagCommands_Base(thread_cert.TestCase):
                               DG_TYPE_LIST_TLV,
                               DG_BATTERY_LEVEL_TLV,
                               DG_SUPPLY_VOLTAGE_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
         pkts.filter_wpan_src64(DUT).\
@@ -334,7 +334,7 @@ class Cert_5_7_01_CoapDiagCommands_Base(thread_cert.TestCase):
             filter(lambda p: {
                               DG_TYPE_LIST_TLV,
                               DG_CHILD_TABLE_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
 
@@ -344,7 +344,7 @@ class Cert_5_7_01_CoapDiagCommands_Base(thread_cert.TestCase):
                 filter_coap_ack(DIAG_GET_URI).\
                 filter(lambda p: {
                                   DG_CHILD_TABLE_TLV
-                                  } == set(p.thread_diagnostic.tlv.type)
+                                  } <= set(p.thread_diagnostic.tlv.type)
                        ).\
                 must_next()
         else:
@@ -366,7 +366,7 @@ class Cert_5_7_01_CoapDiagCommands_Base(thread_cert.TestCase):
             filter(lambda p: {
                               DG_TYPE_LIST_TLV,
                               DG_MAC_COUNTERS_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
         pkts.filter_wpan_src64(DUT).\
@@ -389,7 +389,7 @@ class Cert_5_7_01_CoapDiagCommands_Base(thread_cert.TestCase):
             filter(lambda p: {
                               DG_TYPE_LIST_TLV,
                               DG_MAC_COUNTERS_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
         pkts.filter_wpan_src64(DUT).\
@@ -397,7 +397,7 @@ class Cert_5_7_01_CoapDiagCommands_Base(thread_cert.TestCase):
             filter_coap_ack(DIAG_GET_URI).\
             filter(lambda p: {
                               DG_MAC_COUNTERS_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
 

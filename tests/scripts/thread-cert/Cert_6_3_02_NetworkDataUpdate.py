@@ -113,16 +113,16 @@ class Cert_6_3_2_NetworkDataUpdate(thread_cert.TestCase):
         # Step 3: The DUT MUST send a MLE Child Update Request to the Leader
         _epkts.range(pkts.index).filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
             lambda p: p.wpan.dst64 == LEADER and {LEADER_DATA_TLV, ADDRESS_REGISTRATION_TLV, MODE_TLV, TIMEOUT_TLV
-                                                 } < set(p.mle.tlv.type))
+                                                 } <= set(p.mle.tlv.type))
 
         # Step 10: The DUT MUST send a MLE Data Request frame to
         # request the updated Network Data
         _epkts.filter_mle_cmd(MLE_DATA_REQUEST).must_next().must_verify(
-            lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV} < set(p.mle.tlv.type))
+            lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV} <= set(p.mle.tlv.type))
 
         # Step 12: The DUT MUST send a MLE Child Update Request to the Leader
         _epkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).filter_wpan_dst64(LEADER).must_next().must_verify(
-            lambda p: {ADDRESS_REGISTRATION_TLV, MODE_TLV, TIMEOUT_TLV} < set(p.mle.tlv.type))
+            lambda p: {ADDRESS_REGISTRATION_TLV, MODE_TLV, TIMEOUT_TLV} <= set(p.mle.tlv.type))
 
 
 if __name__ == '__main__':

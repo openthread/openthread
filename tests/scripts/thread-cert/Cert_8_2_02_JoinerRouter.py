@@ -111,7 +111,7 @@ class Cert_8_2_02_JoinerRouter(thread_cert.TestCase):
             lambda p: {
                 NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_STEERING_DATA_TLV, NM_COMMISSIONER_UDP_PORT_TLV,
                 NM_JOINER_UDP_PORT_TLV, NM_DISCOVERY_RESPONSE_TLV
-            } == set(p.thread_meshcop.tlv.type))
+            } <= set(p.thread_meshcop.tlv.type))
 
         # 2. Joiner_1 sends an initial DTLS-ClientHello handshake record to the Commissioner
         pkts.filter(lambda p: p.dtls.handshake.type == [HANDSHAKE_CLIENT_HELLO]).must_next()

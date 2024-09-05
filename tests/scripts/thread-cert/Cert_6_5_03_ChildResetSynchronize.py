@@ -95,7 +95,7 @@ class Cert_6_5_3_ChildResetSynchronize(thread_cert.TestCase):
         _ed_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next()
         _leader_pkts.range(_ed_pkts.index).filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
         _ed_pkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).must_next().must_verify(
-            lambda p: {MODE_TLV} < set(p.mle.tlv.type))
+            lambda p: {MODE_TLV} <= set(p.mle.tlv.type))
 
         # Step 4: Leader send an MLE Child Update Response
         _leader_pkts.range(_ed_pkts.index).filter_mle_cmd(MLE_CHILD_UPDATE_RESPONSE).must_next()

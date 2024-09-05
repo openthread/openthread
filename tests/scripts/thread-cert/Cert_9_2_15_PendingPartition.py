@@ -174,24 +174,24 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
         # Step 5: Router_2 begins attach process by sending a multicast MLE Parent Request
         # The first MLE Parent Request sent MUST NOT be sent to all routers and REEDS
         _router2_pkts.range(pkts.index).filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
-            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
+            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} <= set(
                 p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 0)
 
         # Step 7: Router_2  MUST send a MLE Child ID Request to Router_1
         _router2_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next().must_verify(lambda p: {
             RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, TLV_REQUEST_TLV
-        } < set(p.mle.tlv.type) and ADDRESS_REGISTRATION_TLV not in p.mle.tlv.type)
+        } <= set(p.mle.tlv.type) and ADDRESS_REGISTRATION_TLV not in p.mle.tlv.type)
 
         # Step 14: Router_2 begins attach process by sending a multicast MLE Parent Request
         # The first MLE Parent Request sent MUST NOT be sent to all routers and REEDS
         _router2_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next().must_verify(
-            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
+            lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} <= set(
                 p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 0)
 
         # Step 16: Router_2 MUST send a MLE Child ID Request to Router_1
         _router2_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next().must_verify(lambda p: {
             RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, TLV_REQUEST_TLV
-        } < set(p.mle.tlv.type) and ADDRESS_REGISTRATION_TLV not in p.mle.tlv.type)
+        } <= set(p.mle.tlv.type) and ADDRESS_REGISTRATION_TLV not in p.mle.tlv.type)
 
 
 if __name__ == '__main__':

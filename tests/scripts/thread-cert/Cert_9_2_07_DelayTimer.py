@@ -159,7 +159,7 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
 
         # Step 4: Leader MUST send a unicast MLE Child ID Response to the Router
         _lpkts.filter_wpan_dst64(ROUTER).filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next(
-        ).must_verify(lambda p: {ACTIVE_OPERATION_DATASET_TLV, ACTIVE_TIMESTAMP_TLV} < set(p.mle.tlv.type) and {
+        ).must_verify(lambda p: {ACTIVE_OPERATION_DATASET_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type) and {
             NM_CHANNEL_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_KEY_TLV,
             NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_NETWORK_NAME_TLV, NM_PAN_ID_TLV, NM_PSKC_TLV, NM_SECURITY_POLICY_TLV
         } <= set(p.thread_meshcop.tlv.type) and p.mle.tlv.active_tstamp == LEADER_ACTIVE_TIMESTAMP)
@@ -177,7 +177,7 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
 
         # Step 10: Leader MUST send a unicast MLE Data Response to the Router
         _lpkts.filter_wpan_dst64(ROUTER).filter_mle_cmd(MLE_DATA_RESPONSE).must_next(
-        ).must_verify(lambda p: {ACTIVE_OPERATION_DATASET_TLV, ACTIVE_TIMESTAMP_TLV} < set(p.mle.tlv.type) and {
+        ).must_verify(lambda p: {ACTIVE_OPERATION_DATASET_TLV, ACTIVE_TIMESTAMP_TLV} <= set(p.mle.tlv.type) and {
             NM_CHANNEL_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_KEY_TLV,
             NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_NETWORK_NAME_TLV, NM_PAN_ID_TLV, NM_PSKC_TLV, NM_SECURITY_POLICY_TLV
         } <= set(p.thread_meshcop.tlv.type) and p.mle.tlv.active_tstamp == ROUTER_ACTIVE_TIMESTAMP)
@@ -198,7 +198,7 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
 
         # Step 16: Leader MUST send a unicast MLE Data Response to the Router
         _lpkts.filter_wpan_dst64(ROUTER).filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(
-            lambda p: {ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV} < set(p.mle.tlv.type) and p.mle.tlv.active_tstamp
+            lambda p: {ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV} <= set(p.mle.tlv.type) and p.mle.tlv.active_tstamp
             == ROUTER_ACTIVE_TIMESTAMP and p.mle.tlv.pending_tstamp == ROUTER_PENDING_TIMESTAMP)
 
         # Step 18: The DUT MUST send MGMT_PENDING_SET.rsp to the Commissioner
