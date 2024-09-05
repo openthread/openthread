@@ -899,17 +899,16 @@ exit:
     return error;
 }
 
-Error PendingDatasetManager::ReadRemainingDelay(uint32_t &aRemainingDelay)
+Error PendingDatasetManager::ReadRemainingDelay(uint32_t &aRemainingDelay) const
 {
-    Error   error = kErrorNotFound;
-    Dataset dataset;
+    Error     error = kErrorNone;
+    TimeMilli now   = TimerMilli::GetNow();
+
+    aRemainingDelay = 0;
 
     VerifyOrExit(mDelayTimer.IsRunning(), error = kErrorInvalidState);
-
-    SuccessOrExit(Read(dataset));
-
-    SuccessOrExit(dataset.Read<DelayTimerTlv>(aRemainingDelay));
-    error = kErrorNone;
+    VerifyOrExit(mDelayTimer.GetFireTime() > now);
+    aRemainingDelay = mDelayTimer.GetFireTime() - now;
 
 exit:
     return error;

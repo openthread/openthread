@@ -3644,7 +3644,6 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
     bool               isFromOrphan;
     bool               channelAndPanIdMatch;
     int                timestampCompare;
-    uint32_t           pendingRemainingDelay;
 
     Log(kMessageReceive, kTypeAnnounce, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -3684,11 +3683,22 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
             VerifyOrExit(!channelAndPanIdMatch);
         }
 
-        if (Get<MeshCoP::PendingDatasetManager>().ReadRemainingDelay(pendingRemainingDelay) == kErrorNone &&
-            Get<MeshCoP::PendingDatasetManager>().ReadActiveTimestamp(pendingActiveTimestamp) == kErrorNone)
+        if (Get<MeshCoP::PendingDatasetManager>().ReadActiveTimestamp(pendingActiveTimestamp) == kErrorNone)
         {
-            VerifyOrExit(pendingRemainingDelay < kAnnounceBackoffForPendingDataset &&
-                         timestamp > pendingActiveTimestamp);
+            // Ignore the Announce and take no action, if a pending
+            // dataset exists with an equal or more recent timestamp,
+            // and it will be applied soon.
+
+            if (pendingActiveTimestamp >= timestamp)
+            {
+                uint32_t remainingDelay;
+
+                if ((Get<MeshCoP::PendingDatasetManager>().ReadRemainingDelay(remainingDelay) == kErrorNone) &&
+                    (remainingDelay < kAnnounceBackoffForPendingDataset))
+                {
+                    ExitNow();
+                }
+            }
         }
 
         if (mAttachState == kAttachStateProcessAnnounce)

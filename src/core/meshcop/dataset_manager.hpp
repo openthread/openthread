@@ -461,7 +461,7 @@ public:
      * @retval kErrorNotFound The pending dataset is not currently valid.
      *
      */
-    Error ReadRemainingDelay(uint32_t &aRemainingDelay);
+    Error ReadRemainingDelay(uint32_t &aRemainingDelay) const;
 
 #if OPENTHREAD_FTD
     /**
