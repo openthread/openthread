@@ -901,8 +901,8 @@ exit:
 
 Error PendingDatasetManager::ReadRemainingDelay(uint32_t &aRemainingDelay)
 {
-    Error    error = kErrorNotFound;
-    Dataset  dataset;
+    Error   error = kErrorNotFound;
+    Dataset dataset;
 
     VerifyOrExit(mDelayTimer.IsRunning(), error = kErrorInvalidState);
 
