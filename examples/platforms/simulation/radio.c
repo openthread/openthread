@@ -436,11 +436,9 @@ void platformRadioInit(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 static uint16_t getCslPhase(void)
 {
-    uint32_t curTime       = otPlatAlarmMicroGetNow();
-    uint32_t cslPeriodInUs = sCslPeriod * OT_US_PER_TEN_SYMBOLS;
-    uint32_t diff = ((sCslSampleTime % cslPeriodInUs) - (curTime % cslPeriodInUs) + cslPeriodInUs) % cslPeriodInUs;
-
-    return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
+    uint32_t diff = (sCslSampleTime - otPlatAlarmMicroGetNow()) / OT_US_PER_TEN_SYMBOLS;
+    assert(diff < sCslPeriod);
+    return (uint16_t)diff;
 }
 #endif
 
