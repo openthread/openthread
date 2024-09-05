@@ -3688,7 +3688,7 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
             Get<MeshCoP::PendingDatasetManager>().ReadActiveTimestamp(pendingActiveTimestamp) == kErrorNone)
         {
             VerifyOrExit(pendingRemainingDelay < kAnnounceBackoffForPendingDataset &&
-                timestamp > pendingActiveTimestamp);
+                         timestamp > pendingActiveTimestamp);
         }
 
         if (mAttachState == kAttachStateProcessAnnounce)
