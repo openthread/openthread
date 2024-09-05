@@ -3949,7 +3949,7 @@ void RoutingManager::PdPrefixManager::Evaluate(void)
 
     bool shouldPause =
         !(favoredPrefix.IsEmpty() || favoredPrefix.GetPreference() < OmrPrefixManager::kPdRoutePreference ||
-          favoredPrefix.GetPrefix() == mPrefix.GetPrefix());
+          favoredPrefix.GetPrefix() == mPrefix.GetPrefix() || mPrefix.GetPrefix() < favoredPrefix.GetPrefix());
 
     PauseResume(/* aPause= */ shouldPause);
 }
