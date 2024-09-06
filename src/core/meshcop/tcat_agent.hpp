@@ -272,7 +272,7 @@ public:
     };
 
     /**
-     * Initializes the Joiner object.
+     * Initializes the TCAT agent object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
@@ -280,20 +280,20 @@ public:
     explicit TcatAgent(Instance &aInstance);
 
     /**
-     * Enables the TCAT protocol.
+     * Enables the TCAT agent.
      *
      * @param[in] aAppDataReceiveCallback   A pointer to a function that is called when the user data is received.
      * @param[in] aHandler                  A pointer to a function that is called when the join operation completes.
      * @param[in] aContext                  A context pointer.
      *
-     * @retval kErrorNone           Successfully started the TCAT agent.
-     * @retval kErrorInvalidArgs    The aVendorInfo is invalid.
+     * @retval kErrorNone        Successfully started the TCAT agent.
+     * @retval kErrorFailed      Failed to start due to missing vendor info.
      *
      */
     Error Start(AppDataReceiveCallback aAppDataReceiveCallback, JoinCallback aHandler, void *aContext);
 
     /**
-     * Stops the TCAT protocol.
+     * Stops the TCAT agent.
      *
      */
     void Stop(void);
@@ -318,19 +318,19 @@ public:
     /**
      * Indicates whether or not the TCAT agent is connected.
      *
-     * @retval TRUE   The TCAT agent is connected.
+     * @retval TRUE   The TCAT agent is connected with a TCAT commissioner.
      * @retval FALSE  The TCAT agent is not connected.
      *
      */
     bool IsConnected(void) const { return mState == kStateConnected; }
 
     /**
-     * Indicates whether or not a command class is authorized.
+     * Indicates whether or not a TCAT command class is authorized for use.
      *
-     * @param[in] aCommandClass Command class to subject for authorization check.
+     * @param[in] aCommandClass Command class to subject to authorization check.
      *
-     * @retval TRUE   The command class is authorized.
-     * @retval FALSE  The command class is not authorized.
+     * @retval TRUE   The command class is authorized for use by the present TCAT commissioner.
+     * @retval FALSE  The command class is not authorized for use.
      *
      */
     bool IsCommandClassAuthorized(CommandClass aCommandClass) const;
@@ -338,11 +338,11 @@ public:
     /**
      * Gets TCAT advertisement data.
      *
-     * @param[out] aLen Advertisement length.
+     * @param[out] aLen               Advertisement data length (up to OT_TCAT_ADVERTISEMENT_MAX_LEN).
      * @param[out] aAdvertisementData Advertisement data.
      *
-     * @retval kErrorNone           Successfully started the TCAT agent.
-     * @retval kErrorInvalidArgs    The aVendorInfo is invalid or provided incorrect parameters.
+     * @retval kErrorNone           Successfully retrieved the TCAT advertisement data.
+     * @retval kErrorInvalidArgs    The data could not be retrieved, or aAdvertisementData is null.
      *
      */
     Error GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementData);

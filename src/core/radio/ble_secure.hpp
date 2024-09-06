@@ -169,13 +169,13 @@ public:
     bool IsTcatEnabled(void) const { return mTcatAgent.IsEnabled(); }
 
     /**
-     * Indicates whether or not a TCAT command class is authorized.
+     * Indicates whether or not a TCAT command class is authorized for use.
      *
      * @param[in]  aInstance  A pointer to an OpenThread instance.
-     * @param[in]  aCommandClass  A command class to check.
+     * @param[in]  aCommandClass  A command class to subject to authorization check.
      *
-     * @retval TRUE   The command class is authorized.
-     * @retval FALSE  The command class is not authorized.
+     * @retval TRUE   The command class is authorized for use by the present TCAT commissioner.
+     * @retval FALSE  The command class is not authorized for use.
      *
      */
     bool IsCommandClassAuthorized(CommandClass aCommandClass) const

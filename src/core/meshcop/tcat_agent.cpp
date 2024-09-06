@@ -393,7 +393,8 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
         switch (tlv.GetType())
         {
         case kTlvDisconnect:
-            error = kErrorAbort;
+            error    = kErrorAbort;
+            response = true; // true - to avoid response-with-status being sent.
             break;
 
         case kTlvSetActiveOperationalDataset:
@@ -415,9 +416,11 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
             response = true;
             error    = kErrorNone;
             break;
+
         case kTlvDecommission:
             error = HandleDecomission();
             break;
+
         case kTlvPing:
             error = HandlePing(aIncomingMessage, aOutgoingMessage, offset, length, response);
             break;
@@ -433,6 +436,7 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
         case kTlvGetProvisioningURL:
             error = HandleGetProvisioningUrl(aOutgoingMessage, response);
             break;
+
         default:
             error = kErrorInvalidCommand;
         }
