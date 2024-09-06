@@ -4600,9 +4600,10 @@ void NcpBase::HandlePcapFrame(const otRadioFrame *aFrame, bool aIsTx)
     SuccessOrExit(mEncoder.WriteData(aFrame->mPsdu, aFrame->mLength));
 
     // Append metadata (rssi, etc)
-    SuccessOrExit(mEncoder.WriteInt8(aFrame->mInfo.mRxInfo.mRssi)); // RSSI
-    SuccessOrExit(mEncoder.WriteInt8(-128));                        // Noise floor (Currently unused)
-    SuccessOrExit(mEncoder.WriteUint16(flags));                     // Flags
+    SuccessOrExit(
+        mEncoder.WriteInt8((aIsTx ? static_cast<int8_t>(OT_RADIO_RSSI_INVALID) : aFrame->mInfo.mRxInfo.mRssi))); // RSSI
+    SuccessOrExit(mEncoder.WriteInt8(-128));    // Noise floor (Currently unused)
+    SuccessOrExit(mEncoder.WriteUint16(flags)); // Flags
 
     SuccessOrExit(mEncoder.OpenStruct()); // PHY-data
     // Empty for now
