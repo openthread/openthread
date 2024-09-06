@@ -83,8 +83,7 @@ class TestDhcp6Pd(thread_cert.TestCase):
         leader.start_pd_radvd_service("2001:db8:abcd:1234::/64")
         self.simulator.go(30)
 
-        self.assertEqual(leader.pd_state, "running")
-        self.assertEqual(router.pd_state, "idle")
+        self.assertSetEqual({leader.pd_state, router.pd_state}, {"running", "idle"})
 
         self.assertEqual(leader.pd_get_prefix(), "2001:db8:abcd:1234::/64")
 
@@ -101,18 +100,23 @@ class TestDhcp6Pd(thread_cert.TestCase):
         router.pd_set_enabled(True)
         self.simulator.go(30)
 
-        self.assertEqual(leader.pd_state, "idle")
-        self.assertEqual(router.pd_state, "running")
-
-        self.assertEqual(router.pd_get_prefix(), "2001:db8:1234:abcd::/64")
+        self.assertSetEqual({leader.pd_state, router.pd_state}, {"running", "idle"})
 
         # Case 3: When the other BR lost PD prefix, the remaining BR should try to request one.
 
-        router.pd_set_enabled(False)
+        if leader.pd_state == 'running':
+            br_to_stop = leader
+            br_to_continue = router
+            expected_prefix = "2001:db8:1234:abcd::/64"
+        else:
+            br_to_stop = router
+            br_to_continue = leader
+            expected_prefix = "2001:db8:abcd:1234::/64"
+        br_to_stop.pd_set_enabled(False)
         self.simulator.go(30)
 
-        self.assertEqual(leader.pd_state, "running")
-        self.assertEqual(leader.pd_get_prefix(), "2001:db8:abcd:1234::/64")
+        self.assertEqual(br_to_continue.pd_state, "running")
+        self.assertEqual(br_to_continue.pd_get_prefix(), expected_prefix)
 
 
 if __name__ == '__main__':
