@@ -183,7 +183,7 @@ exit:
     return;
 }
 
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
+#ifdef CMD_diag
 template <> otError Interpreter::Process<Cmd("diag")>(Arg aArgs[])
 {
     char *args[kMaxArgs];
@@ -200,8 +200,9 @@ void Interpreter::HandleDiagOutput(const char *aFormat, va_list aArguments, void
 }
 
 void Interpreter::HandleDiagOutput(const char *aFormat, va_list aArguments) { OutputFormatV(aFormat, aArguments); }
-#endif
+#endif // CMD_diag
 
+#ifdef CMD_version
 template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -242,7 +243,9 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
 
     return error;
 }
+#endif // CMD_version
 
+#ifdef CMD_reset
 template <> otError Interpreter::Process<Cmd("reset")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -274,6 +277,7 @@ template <> otError Interpreter::Process<Cmd("reset")>(Arg aArgs[])
 
     return error;
 }
+#endif // CMD_reset
 
 void Interpreter::ProcessLine(char *aBuf)
 {
@@ -298,7 +302,7 @@ void Interpreter::ProcessLine(char *aBuf)
     {
         LogInput(args);
 
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
+#if CMD_diag
         if (otDiagIsEnabled(GetInstancePtr()) && (args[0] != "diag") && (args[0] != "factoryreset"))
         {
             OutputLine("under diagnostics mode, execute 'diag stop' before running any other commands.");
@@ -362,13 +366,11 @@ otError Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLen
     return error;
 }
 
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
-
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+#ifdef CMD_history
 template <> otError Interpreter::Process<Cmd("history")>(Arg aArgs[]) { return mHistory.Process(aArgs); }
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+#ifdef CMD_ba
 template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -623,13 +625,13 @@ void Interpreter::HandleBorderAgentEphemeralKeyStateChange(void)
 }
 #endif
 
-#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+#endif // CMD_ba
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#ifdef CMD_br
 template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[]) { return mBr.Process(aArgs); }
 #endif
 
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+#ifdef CMD_nat64
 template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -924,12 +926,13 @@ void Interpreter::OutputNat64Counters(const otNat64Counters &aCounters)
 }
 #endif
 
-#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+#endif // CMD_nat64
 
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-
+#ifdef CMD_bbr
 template <> otError Interpreter::Process<Cmd("bbr")>(Arg aArgs[]) { return mBbr.Process(aArgs); }
+#endif
 
+#ifdef CMD_domainname
 /**
  * @cli domainname
  * @code
@@ -955,8 +958,9 @@ template <> otError Interpreter::Process<Cmd("domainname")>(Arg aArgs[])
      */
     return ProcessGetSet(aArgs, otThreadGetDomainName, otThreadSetDomainName);
 }
+#endif // CMD_domainname
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
+#ifdef CMD_dua
 template <> otError Interpreter::Process<Cmd("dua")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -1018,10 +1022,9 @@ template <> otError Interpreter::Process<Cmd("dua")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE
+#endif // CMD_dua
 
-#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-
+#ifdef CMD_bufferinfo
 /**
  * @cli bufferinfo
  * @code
@@ -1110,7 +1113,9 @@ template <> otError Interpreter::Process<Cmd("bufferinfo")>(Arg aArgs[])
 
     return error;
 }
+#endif // CMD_bufferinfo
 
+#ifdef CMD_ccathreshold
 /**
  * @cli ccathreshold (get,set)
  * @code
@@ -1149,13 +1154,16 @@ template <> otError Interpreter::Process<Cmd("ccathreshold")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_ccathreshold
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#ifdef CMD_ccm
 template <> otError Interpreter::Process<Cmd("ccm")>(Arg aArgs[])
 {
     return ProcessEnableDisable(aArgs, otThreadSetCcmEnabled);
 }
+#endif
 
+#ifdef CMD_test
 template <> otError Interpreter::Process<Cmd("test")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -1191,7 +1199,9 @@ template <> otError Interpreter::Process<Cmd("test")>(Arg aArgs[])
 
     return error;
 }
+#endif // CMD_test
 
+#ifdef CMD_tvcheck
 /**
  * @cli tvcheck (enable,disable)
  * @code
@@ -1212,8 +1222,9 @@ template <> otError Interpreter::Process<Cmd("tvcheck")>(Arg aArgs[])
 {
     return ProcessEnableDisable(aArgs, otThreadSetThreadVersionCheckEnabled);
 }
-#endif
+#endif // CMD_tvcheck
 
+#ifdef CMD_channel
 /**
  * @cli channel (get,set)
  * @code
@@ -1624,8 +1635,9 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_channel
 
-#if OPENTHREAD_FTD
+#ifdef CMD_child
 template <> otError Interpreter::Process<Cmd("child")>(Arg aArgs[])
 {
     otError          error = OT_ERROR_NONE;
@@ -1761,7 +1773,9 @@ template <> otError Interpreter::Process<Cmd("child")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_child
 
+#ifdef CMD_childip
 template <> otError Interpreter::Process<Cmd("childip")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -1838,7 +1852,9 @@ template <> otError Interpreter::Process<Cmd("childip")>(Arg aArgs[])
 
     return error;
 }
+#endif // CMD_childip
 
+#ifdef CMD_childmax
 /**
  * @cli childmax
  * @code
@@ -1863,8 +1879,9 @@ template <> otError Interpreter::Process<Cmd("childmax")>(Arg aArgs[])
      */
     return ProcessGetSet(aArgs, otThreadGetMaxAllowedChildren, otThreadSetMaxAllowedChildren);
 }
-#endif // OPENTHREAD_FTD
+#endif // CMD_childmax
 
+#ifdef CMD_childsupervision
 template <> otError Interpreter::Process<Cmd("childsupervision")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
@@ -1932,7 +1949,9 @@ template <> otError Interpreter::Process<Cmd("childsupervision")>(Arg aArgs[])
 
     return error;
 }
+#endif // CMD_childsupervision
 
+#ifdef CMD_childtimeout
 /** @cli childtimeout
  * @code
  * childtimeout
@@ -1955,16 +1974,17 @@ template <> otError Interpreter::Process<Cmd("childtimeout")>(Arg aArgs[])
      */
     return ProcessGetSet(aArgs, otThreadGetChildTimeout, otThreadSetChildTimeout);
 }
+#endif // CMD_childtimeout
 
-#if OPENTHREAD_CONFIG_COAP_API_ENABLE
+#ifdef CMD_coap
 template <> otError Interpreter::Process<Cmd("coap")>(Arg aArgs[]) { return mCoap.Process(aArgs); }
 #endif
 
-#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+#ifdef CMD_coaps
 template <> otError Interpreter::Process<Cmd("coaps")>(Arg aArgs[]) { return mCoapSecure.Process(aArgs); }
 #endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+#if CMD_coex
 template <> otError Interpreter::Process<Cmd("coex")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -2031,9 +2051,9 @@ template <> otError Interpreter::Process<Cmd("coex")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+#endif // CMD_coex
 
-#if OPENTHREAD_FTD
+#ifdef CMD_contextreusedelay
 /**
  * @cli contextreusedelay (get,set)
  * @code
@@ -2094,6 +2114,7 @@ void Interpreter::OutputBorderRouterCounters(void)
 }
 #endif // OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
 
+#ifdef CMD_counters
 template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -2443,8 +2464,9 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
 
     return error;
 }
+#endif // CMD_counters
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#ifdef CMD_csl
 template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -2520,9 +2542,9 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
 
     return error;
 }
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#endif // CMD_csl
 
-#if OPENTHREAD_FTD
+#ifdef CMD_delaytimermin
 template <> otError Interpreter::Process<Cmd("delaytimermin")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -2567,8 +2589,9 @@ template <> otError Interpreter::Process<Cmd("delaytimermin")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif
+#endif // CMD_delaytimermin
 
+#ifdef CMD_detach
 /**
  * @cli detach
  * @code
@@ -2621,7 +2644,9 @@ void Interpreter::HandleDetachGracefullyResult(void)
     OutputLine("Finished detaching");
     OutputResult(OT_ERROR_NONE);
 }
+#endif // CMD_detach
 
+#ifdef CMD_discover
 /**
  * @cli discover
  * @code
@@ -2700,16 +2725,17 @@ template <> otError Interpreter::Process<Cmd("discover")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_discover
 
-#if OPENTHREAD_CLI_DNS_ENABLE
+#ifdef CMD_dns
 template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[]) { return mDns.Process(aArgs); }
 #endif
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
+#ifdef CMD_mdns
 template <> otError Interpreter::Process<Cmd("mdns")>(Arg aArgs[]) { return mMdns.Process(aArgs); }
 #endif
 
-#if OPENTHREAD_FTD
+#ifdef CMD_eidcache
 void Interpreter::OutputEidCacheEntry(const otCacheEntryInfo &aEntry)
 {
     static const char *const kStateStrings[] = {
@@ -2780,8 +2806,9 @@ template <> otError Interpreter::Process<Cmd("eidcache")>(Arg aArgs[])
 exit:
     return OT_ERROR_NONE;
 }
-#endif
+#endif // CMD_eidcache
 
+#ifdef CMD_eui64
 /**
  * @cli eui64
  * @code
@@ -2807,7 +2834,9 @@ template <> otError Interpreter::Process<Cmd("eui64")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_eui64
 
+#ifdef CMD_extaddr
 template <> otError Interpreter::Process<Cmd("extaddr")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -2848,7 +2877,9 @@ template <> otError Interpreter::Process<Cmd("extaddr")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_extaddr
 
+#ifdef CMD_log
 template <> otError Interpreter::Process<Cmd("log")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -2920,7 +2951,9 @@ template <> otError Interpreter::Process<Cmd("log")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_log
 
+#ifdef CMD_extpanid
 template <> otError Interpreter::Process<Cmd("extpanid")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -2963,7 +2996,9 @@ template <> otError Interpreter::Process<Cmd("extpanid")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_extpanid
 
+#ifdef CMD_factoryreset
 /**
  * @cli factoryreset
  * @code
@@ -2980,8 +3015,9 @@ template <> otError Interpreter::Process<Cmd("factoryreset")>(Arg aArgs[])
 
     return OT_ERROR_NONE;
 }
+#endif
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#ifdef CMD_fake
 template <> otError Interpreter::Process<Cmd("fake")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
@@ -3027,8 +3063,9 @@ template <> otError Interpreter::Process<Cmd("fake")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif
+#endif // CMD_fake
 
+#ifdef CMD_fem
 template <> otError Interpreter::Process<Cmd("fem")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -3095,7 +3132,9 @@ template <> otError Interpreter::Process<Cmd("fem")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_fem
 
+#ifdef CMD_ifconfig
 template <> otError Interpreter::Process<Cmd("ifconfig")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -3156,7 +3195,9 @@ template <> otError Interpreter::Process<Cmd("ifconfig")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_ifconfig
 
+#ifdef CMD_instanceid
 template <> otError Interpreter::Process<Cmd("instanceid")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
@@ -3179,7 +3220,9 @@ template <> otError Interpreter::Process<Cmd("instanceid")>(Arg aArgs[])
 
     return error;
 }
+#endif // CMD_instanceid
 
+#ifdef CMD_ipaddr
 template <> otError Interpreter::Process<Cmd("ipaddr")>(Arg aArgs[])
 {
     otError error   = OT_ERROR_NONE;
@@ -3323,7 +3366,9 @@ template <> otError Interpreter::Process<Cmd("ipaddr")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_ipaddr
 
+#ifdef CMD_ipmaddr
 template <> otError Interpreter::Process<Cmd("ipmaddr")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -3428,7 +3473,9 @@ template <> otError Interpreter::Process<Cmd("ipmaddr")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_ipmaddr
 
+#ifdef CMD_keysequence
 template <> otError Interpreter::Process<Cmd("keysequence")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
@@ -3485,7 +3532,9 @@ template <> otError Interpreter::Process<Cmd("keysequence")>(Arg aArgs[])
 
     return error;
 }
+#endif // CMD_keysequence
 
+#ifdef CMD_leaderdata
 /**
  * @cli leaderdata
  * @code
@@ -3519,8 +3568,9 @@ template <> otError Interpreter::Process<Cmd("leaderdata")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_leaderdata
 
-#if OPENTHREAD_FTD
+#ifdef CMD_partitionid
 template <> otError Interpreter::Process<Cmd("partitionid")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
@@ -3567,7 +3617,9 @@ template <> otError Interpreter::Process<Cmd("partitionid")>(Arg aArgs[])
 
     return error;
 }
+#endif // CMD_partitionid
 
+#ifdef CMD_leaderweight
 /**
  * @cli leaderweight
  * @code
@@ -3592,8 +3644,9 @@ template <> otError Interpreter::Process<Cmd("leaderweight")>(Arg aArgs[])
      */
     return ProcessGetSet(aArgs, otThreadGetLocalLeaderWeight, otThreadSetLocalLeaderWeight);
 }
+#endif // CMD_leaderweight
 
-#if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
+#ifdef CMD_deviceprops
 template <> otError Interpreter::Process<Cmd("deviceprops")>(Arg aArgs[])
 {
     static const char *const kPowerSupplyStrings[4] = {
@@ -3692,15 +3745,13 @@ template <> otError Interpreter::Process<Cmd("deviceprops")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
+#endif // CMD_deviceprops
 
-#endif // OPENTHREAD_FTD
-
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-
+#ifdef CMD_linkmetrics
 template <> otError Interpreter::Process<Cmd("linkmetrics")>(Arg aArgs[]) { return mLinkMetrics.Process(aArgs); }
+#endif // CMD_linkmetrics
 
-#if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
+#ifdef CMD_linkmetricsmgr
 template <> otError Interpreter::Process<Cmd("linkmetricsmgr")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -3761,12 +3812,9 @@ template <> otError Interpreter::Process<Cmd("linkmetricsmgr")>(Arg aArgs[])
 
     return error;
 }
-#endif // OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
+#endif // CMD_linkmetricsmgr
 
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-
-#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
-
+#ifdef CMD_locate
 template <> otError Interpreter::Process<Cmd("locate")>(Arg aArgs[])
 {
     otError      error = OT_ERROR_INVALID_ARGS;
@@ -3854,9 +3902,9 @@ exit:
     return;
 }
 
-#endif //  OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+#endif // CMD_locate
 
-#if OPENTHREAD_FTD
+#ifdef CMD_pskc
 template <> otError Interpreter::Process<Cmd("pskc")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -3922,8 +3970,9 @@ template <> otError Interpreter::Process<Cmd("pskc")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#ifdef CMD_pskcref
 template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -3971,10 +4020,9 @@ template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif
-#endif // OPENTHREAD_FTD
+#endif // CMD_pskcref
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#ifdef CMD_mleadvimax
 /**
  * @cli mleadvimax
  * @code
@@ -3991,7 +4039,7 @@ template <> otError Interpreter::Process<Cmd("mleadvimax")>(Arg aArgs[])
 }
 #endif
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#ifdef CMD_mliid
 /**
  * @cli mliid
  * @code
@@ -4019,9 +4067,9 @@ template <> otError Interpreter::Process<Cmd("mliid")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif
+#endif // CMD_mliid
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#ifdef CMD_mlr
 /**
  * @cli mlr reg
  * @code
@@ -4123,8 +4171,9 @@ void Interpreter::HandleMlrRegResult(otError             aError,
     OutputResult(aError);
 }
 
-#endif // (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#endif // CMD_mlr
 
+#ifdef CMD_mode
 template <> otError Interpreter::Process<Cmd("mode")>(Arg aArgs[])
 {
     otError          error = OT_ERROR_NONE;
@@ -4187,7 +4236,9 @@ template <> otError Interpreter::Process<Cmd("mode")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_mode
 
+#ifdef CMD_multiradio
 /**
  * @cli multiradio
  * @code
@@ -4287,7 +4338,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_MULTI_RADIO
 void Interpreter::OutputMultiRadioInfo(const otMultiRadioNeighborInfo &aMultiRadioInfo)
 {
     bool isFirst = true;
@@ -4307,9 +4357,9 @@ void Interpreter::OutputMultiRadioInfo(const otMultiRadioNeighborInfo &aMultiRad
 
     OutputLine("]");
 }
-#endif // OPENTHREAD_CONFIG_MULTI_RADIO
+#endif // CMD_multiradio
 
-#if OPENTHREAD_FTD
+#ifdef CMD_neighbor
 template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
 {
     otError                error = OT_ERROR_NONE;
@@ -4516,8 +4566,9 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
 
     return error;
 }
-#endif // OPENTHREAD_FTD
+#endif // CMD_neighbor
 
+#ifdef CMD_netstat
 /**
  * @cli netstat
  * @code
@@ -4554,8 +4605,9 @@ template <> otError Interpreter::Process<Cmd("netstat")>(Arg aArgs[])
 
     return OT_ERROR_NONE;
 }
+#endif // CMD_netstat
 
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+#ifdef CMD_service
 template <> otError Interpreter::Process<Cmd("service")>(Arg aArgs[])
 {
     otError         error = OT_ERROR_INVALID_COMMAND;
@@ -4657,11 +4709,13 @@ template <> otError Interpreter::Process<Cmd("service")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+#endif // CMD_service
 
+#ifdef CMD_netdata
 template <> otError Interpreter::Process<Cmd("netdata")>(Arg aArgs[]) { return mNetworkData.Process(aArgs); }
+#endif // CMD_netdata
 
-#if OPENTHREAD_FTD
+#ifdef CMD_networkidtimeout
 /**
  * @cli networkidtimeout (get,set)
  * @code
@@ -4687,8 +4741,9 @@ template <> otError Interpreter::Process<Cmd("networkidtimeout")>(Arg aArgs[])
 {
     return ProcessGetSet(aArgs, otThreadGetNetworkIdTimeout, otThreadSetNetworkIdTimeout);
 }
-#endif
+#endif // CMD_networkidtimeout
 
+#ifdef CMD_networkkey
 template <> otError Interpreter::Process<Cmd("networkkey")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -4731,8 +4786,9 @@ template <> otError Interpreter::Process<Cmd("networkkey")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_networkkey
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#ifdef CMD_networkkeyref
 template <> otError Interpreter::Process<Cmd("networkkeyref")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -4752,8 +4808,9 @@ template <> otError Interpreter::Process<Cmd("networkkeyref")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif
+#endif // CMD_networkkeyref
 
+#ifdef CMD_networkname
 /**
  * @cli networkname
  * @code
@@ -4780,8 +4837,9 @@ template <> otError Interpreter::Process<Cmd("networkname")>(Arg aArgs[])
      */
     return ProcessGetSet(aArgs, otThreadGetNetworkName, otThreadSetNetworkName);
 }
+#endif // CMD_networkname
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#ifdef CMD_networktime
 template <> otError Interpreter::Process<Cmd("networktime")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -4861,9 +4919,9 @@ template <> otError Interpreter::Process<Cmd("networktime")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#endif // CMD_networktime
 
-#if OPENTHREAD_FTD
+#ifdef CMD_nexthop
 template <> otError Interpreter::Process<Cmd("nexthop")>(Arg aArgs[])
 {
     constexpr uint8_t  kRouterIdOffset = 10; // Bit offset of Router ID in RLOC16
@@ -4960,9 +5018,9 @@ template <> otError Interpreter::Process<Cmd("nexthop")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_nexthop
 
-#if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE
-
+#ifdef CMD_meshdiag
 template <> otError Interpreter::Process<Cmd("meshdiag")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -5406,10 +5464,9 @@ exit:
     OutputResult(aError);
 }
 
-#endif // OPENTHREAD_CONFIG_MESH_DIAG_ENABLE
+#endif // CMD_meshdiag
 
-#endif // OPENTHREAD_FTD
-
+#ifdef CMD_panid
 template <> otError Interpreter::Process<Cmd("panid")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -5444,7 +5501,9 @@ template <> otError Interpreter::Process<Cmd("panid")>(Arg aArgs[])
 
     return error;
 }
+#endif // CMD_panid
 
+#ifdef CMD_parent
 template <> otError Interpreter::Process<Cmd("parent")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -5510,8 +5569,9 @@ template <> otError Interpreter::Process<Cmd("parent")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_parent
 
-#if OPENTHREAD_FTD
+#ifdef CMD_parentpriority
 /**
  * @cli parentpriority (get,set)
  * @code
@@ -5533,9 +5593,9 @@ template <> otError Interpreter::Process<Cmd("parentpriority")>(Arg aArgs[])
 {
     return ProcessGetSet(aArgs, otThreadGetParentPriority, otThreadSetParentPriority);
 }
-#endif
+#endif // CMD_parentpriority
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#ifdef CMD_routeridrange
 template <> otError Interpreter::Process<Cmd("routeridrange")>(Arg *aArgs)
 {
     uint8_t minRouterId;
@@ -5558,9 +5618,9 @@ template <> otError Interpreter::Process<Cmd("routeridrange")>(Arg *aArgs)
 exit:
     return error;
 }
-#endif
+#endif // CMD_routeridrange
 
-#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+#ifdef CMD_ping
 /**
  * @cli ping
  * @code
@@ -5597,8 +5657,9 @@ exit:
  * @sa otPingSenderPing
  */
 template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[]) { return mPing.Process(aArgs); }
-#endif // OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+#endif // CMD_ping
 
+#ifdef CMD_platform
 /**
  * @cli platform
  * @code
@@ -5615,7 +5676,9 @@ template <> otError Interpreter::Process<Cmd("platform")>(Arg aArgs[])
     OutputLine("%s", OPENTHREAD_CONFIG_PLATFORM_INFO);
     return OT_ERROR_NONE;
 }
+#endif // CMD_platform
 
+#ifdef CMD_pollperiod
 /**
  * @cli pollperiod (get,set)
  * @code
@@ -5636,7 +5699,9 @@ template <> otError Interpreter::Process<Cmd("pollperiod")>(Arg aArgs[])
 {
     return ProcessGetSet(aArgs, otLinkGetPollPeriod, otLinkSetPollPeriod);
 }
+#endif // CMD_pollperiod
 
+#ifdef CMD_promiscuous
 template <> otError Interpreter::Process<Cmd("promiscuous")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -5715,8 +5780,9 @@ void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx)
         OutputLine("%s", info.mLine);
     }
 }
+#endif // CMD_promiscuous
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#ifdef CMD_prefix
 template <> otError Interpreter::Process<Cmd("prefix")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -5830,8 +5896,9 @@ template <> otError Interpreter::Process<Cmd("prefix")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#endif // CMD_prefix
 
+#ifdef CMD_preferrouterid
 /**
  * @cli preferrouterid
  * @code
@@ -5843,34 +5910,20 @@ exit:
  * Specifies the preferred router ID that the leader should provide when solicited.
  * @sa otThreadSetPreferredRouterId
  */
-#if OPENTHREAD_FTD
 template <> otError Interpreter::Process<Cmd("preferrouterid")>(Arg aArgs[])
 {
     return ProcessSet(aArgs, otThreadSetPreferredRouterId);
 }
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+#ifdef CMD_radiofilter
 template <> otError Interpreter::Process<Cmd("radiofilter")>(Arg aArgs[])
 {
     return ProcessEnableDisable(aArgs, otLinkIsRadioFilterEnabled, otLinkSetRadioFilterEnabled);
 }
 #endif
 
-#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
-inline unsigned long UsToSInt(uint64_t aUs) { return ToUlong(static_cast<uint32_t>(aUs / 1000000)); }
-inline unsigned long UsToSDec(uint64_t aUs) { return ToUlong(static_cast<uint32_t>(aUs % 1000000)); }
-
-void Interpreter::OutputRadioStatsTime(const char *aTimeName, uint64_t aTimeUs, uint64_t aTotalTimeUs)
-{
-    uint32_t timePercentInt = static_cast<uint32_t>(aTimeUs * 100 / aTotalTimeUs);
-    uint32_t timePercentDec = static_cast<uint32_t>((aTimeUs * 100 % aTotalTimeUs) * 100 / aTotalTimeUs);
-
-    OutputLine("%s Time: %lu.%06lus (%lu.%02lu%%)", aTimeName, UsToSInt(aTimeUs), UsToSDec(aTimeUs),
-               ToUlong(timePercentInt), ToUlong(timePercentDec));
-}
-#endif // OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
-
+#ifdef CMD_radio
 template <> otError Interpreter::Process<Cmd("radio")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -5958,6 +6011,23 @@ template <> otError Interpreter::Process<Cmd("radio")>(Arg aArgs[])
     return error;
 }
 
+#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
+inline unsigned long UsToSInt(uint64_t aUs) { return ToUlong(static_cast<uint32_t>(aUs / 1000000)); }
+inline unsigned long UsToSDec(uint64_t aUs) { return ToUlong(static_cast<uint32_t>(aUs % 1000000)); }
+
+void Interpreter::OutputRadioStatsTime(const char *aTimeName, uint64_t aTimeUs, uint64_t aTotalTimeUs)
+{
+    uint32_t timePercentInt = static_cast<uint32_t>(aTimeUs * 100 / aTotalTimeUs);
+    uint32_t timePercentDec = static_cast<uint32_t>((aTimeUs * 100 % aTotalTimeUs) * 100 / aTotalTimeUs);
+
+    OutputLine("%s Time: %lu.%06lus (%lu.%02lu%%)", aTimeName, UsToSInt(aTimeUs), UsToSDec(aTimeUs),
+               ToUlong(timePercentInt), ToUlong(timePercentDec));
+}
+#endif // OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
+
+#endif // CMD_radio
+
+#ifdef CMD_rcp
 template <> otError Interpreter::Process<Cmd("rcp")>(Arg aArgs[])
 {
     otError     error   = OT_ERROR_NONE;
@@ -5987,6 +6057,9 @@ template <> otError Interpreter::Process<Cmd("rcp")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_rcp
+
+#ifdef CMD_region
 /**
  * @cli region
  * @code
@@ -6031,8 +6104,9 @@ template <> otError Interpreter::Process<Cmd("region")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_region
 
-#if OPENTHREAD_FTD
+#ifdef CMD_releaserouterid
 /**
  * @cli releaserouterid (routerid)
  * @code
@@ -6049,6 +6123,8 @@ template <> otError Interpreter::Process<Cmd("releaserouterid")>(Arg aArgs[])
     return ProcessSet(aArgs, otThreadReleaseRouterId);
 }
 #endif
+
+#ifdef CMD_rloc16
 /**
  * @cli rloc16
  * @code
@@ -6068,8 +6144,9 @@ template <> otError Interpreter::Process<Cmd("rloc16")>(Arg aArgs[])
 
     return OT_ERROR_NONE;
 }
+#endif // CMD_rloc16
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#ifdef CMD_route
 template <> otError Interpreter::Process<Cmd("route")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -6143,9 +6220,9 @@ template <> otError Interpreter::Process<Cmd("route")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#endif // CMD_route
 
-#if OPENTHREAD_FTD
+#ifdef CMD_router
 template <> otError Interpreter::Process<Cmd("router")>(Arg aArgs[])
 {
     otError      error = OT_ERROR_NONE;
@@ -6289,6 +6366,9 @@ template <> otError Interpreter::Process<Cmd("router")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_router
+
+#ifdef CMD_routerdowngradethreshold
 /**
  * @cli routerdowngradethreshold (get,set)
  * @code routerdowngradethreshold
@@ -6308,7 +6388,9 @@ template <> otError Interpreter::Process<Cmd("routerdowngradethreshold")>(Arg aA
 {
     return ProcessGetSet(aArgs, otThreadGetRouterDowngradeThreshold, otThreadSetRouterDowngradeThreshold);
 }
+#endif // CMD_routerdowngradethreshold
 
+#ifdef CMD_routereligible
 /**
  * @cli routereligible
  * @code
@@ -6339,7 +6421,9 @@ template <> otError Interpreter::Process<Cmd("routereligible")>(Arg aArgs[])
      */
     return ProcessEnableDisable(aArgs, otThreadIsRouterEligible, otThreadSetRouterEligible);
 }
+#endif // CMD_routereligible
 
+#ifdef CMD_routerselectionjitter
 /**
  * @cli routerselectionjitter
  * @code
@@ -6361,6 +6445,9 @@ template <> otError Interpreter::Process<Cmd("routerselectionjitter")>(Arg aArgs
 {
     return ProcessGetSet(aArgs, otThreadGetRouterSelectionJitter, otThreadSetRouterSelectionJitter);
 }
+#endif // CMD_routerselectionjitter
+
+#ifdef CMD_routerupgradethreshold
 /**
  * @cli routerupgradethreshold (get,set)
  * @code
@@ -6382,6 +6469,9 @@ template <> otError Interpreter::Process<Cmd("routerupgradethreshold")>(Arg aArg
 {
     return ProcessGetSet(aArgs, otThreadGetRouterUpgradeThreshold, otThreadSetRouterUpgradeThreshold);
 }
+#endif // CMD_routerupgradethreshold
+
+#ifdef CMD_childrouterlinks
 /**
  * @cli childrouterlinks (get,set)
  * @code
@@ -6403,8 +6493,9 @@ template <> otError Interpreter::Process<Cmd("childrouterlinks")>(Arg aArgs[])
 {
     return ProcessGetSet(aArgs, otThreadGetChildRouterLinks, otThreadSetChildRouterLinks);
 }
-#endif // OPENTHREAD_FTD
+#endif // CMD_childrouterlinks
 
+#ifdef CMD_scan
 template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
 {
     otError  error        = OT_ERROR_NONE;
@@ -6562,7 +6653,9 @@ void Interpreter::HandleEnergyScanResult(otEnergyScanResult *aResult)
 exit:
     return;
 }
+#endif // CMD_scan
 
+#ifdef CMD_singleton
 /**
  * @cli singleton
  * @code
@@ -6583,8 +6676,9 @@ template <> otError Interpreter::Process<Cmd("singleton")>(Arg aArgs[])
 
     return OT_ERROR_NONE;
 }
+#endif // CMD_singleton
 
-#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+#ifdef CMD_sntp
 template <> otError Interpreter::Process<Cmd("sntp")>(Arg aArgs[])
 {
     otError          error = OT_ERROR_NONE;
@@ -6672,9 +6766,9 @@ void Interpreter::HandleSntpResponse(uint64_t aTime, otError aResult)
 
     OutputResult(OT_ERROR_NONE);
 }
-#endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+#endif // CMD_sntp
 
-#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE || OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+#ifdef CMD_srp
 template <> otError Interpreter::Process<Cmd("srp")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -6708,8 +6802,9 @@ template <> otError Interpreter::Process<Cmd("srp")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE || OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+#endif // CMD_srp
 
+#ifdef CMD_state
 template <> otError Interpreter::Process<Cmd("state")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -6772,7 +6867,9 @@ template <> otError Interpreter::Process<Cmd("state")>(Arg aArgs[])
 
     return error;
 }
+#endif // CMD_state
 
+#ifdef CMD_thread
 template <> otError Interpreter::Process<Cmd("thread")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -6825,8 +6922,9 @@ template <> otError Interpreter::Process<Cmd("thread")>(Arg aArgs[])
 
     return error;
 }
+#endif // CMD_thread
 
-#if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+#ifdef CMD_timeinqueue
 template <> otError Interpreter::Process<Cmd("timeinqueue")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -6957,10 +7055,13 @@ template <> otError Interpreter::Process<Cmd("timeinqueue")>(Arg aArgs[])
 
     return error;
 }
-#endif // OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+#endif // CMD_timeinqueue
 
+#ifdef CMD_dataset
 template <> otError Interpreter::Process<Cmd("dataset")>(Arg aArgs[]) { return mDataset.Process(aArgs); }
+#endif // CMD_dataset
 
+#ifdef CMD_txpower
 /**
  * @cli txpower (get,set)
  * @code
@@ -6997,7 +7098,9 @@ template <> otError Interpreter::Process<Cmd("txpower")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_txpower
 
+#ifdef CMD_debug
 /**
  * @cli debug
  * @par
@@ -7119,17 +7222,21 @@ template <> otError Interpreter::Process<Cmd("debug")>(Arg aArgs[])
 
     return OT_ERROR_NONE;
 }
+#endif // CMD_debug
 
-#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
+#ifdef CMD_tcat
 template <> otError Interpreter::Process<Cmd("tcat")>(Arg aArgs[]) { return mTcat.Process(aArgs); }
 #endif
 
-#if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
+#ifdef CMD_tcp
 template <> otError Interpreter::Process<Cmd("tcp")>(Arg aArgs[]) { return mTcp.Process(aArgs); }
 #endif
 
+#ifdef CMD_udp
 template <> otError Interpreter::Process<Cmd("udp")>(Arg aArgs[]) { return mUdp.Process(aArgs); }
+#endif
 
+#ifdef CMD_unsecureport
 template <> otError Interpreter::Process<Cmd("unsecureport")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -7210,8 +7317,9 @@ template <> otError Interpreter::Process<Cmd("unsecureport")>(Arg aArgs[])
 
     return error;
 }
+#endif // CMD_unsecureport
 
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+#ifdef CMD_uptime
 template <> otError Interpreter::Process<Cmd("uptime")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -7255,17 +7363,17 @@ template <> otError Interpreter::Process<Cmd("uptime")>(Arg aArgs[])
 
     return error;
 }
-#endif
+#endif // CMD_uptime
 
-#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+#ifdef CMD_commissioner
 template <> otError Interpreter::Process<Cmd("commissioner")>(Arg aArgs[]) { return mCommissioner.Process(aArgs); }
 #endif
 
-#if OPENTHREAD_CONFIG_JOINER_ENABLE
+#ifdef CMD_joiner
 template <> otError Interpreter::Process<Cmd("joiner")>(Arg aArgs[]) { return mJoiner.Process(aArgs); }
 #endif
 
-#if OPENTHREAD_FTD
+#ifdef CMD_joinerport
 /**
  * @cli joinerport
  * @code
@@ -7290,12 +7398,13 @@ template <> otError Interpreter::Process<Cmd("joinerport")>(Arg aArgs[])
      */
     return ProcessGetSet(aArgs, otThreadGetJoinerUdpPort, otThreadSetJoinerUdpPort);
 }
-#endif
+#endif // CMD_joinerport
 
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+#ifdef CMD_macfilter
 template <> otError Interpreter::Process<Cmd("macfilter")>(Arg aArgs[]) { return mMacFilter.Process(aArgs); }
 #endif
 
+#ifdef CMD_mac
 template <> otError Interpreter::Process<Cmd("mac")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -7401,7 +7510,9 @@ template <> otError Interpreter::Process<Cmd("mac")>(Arg aArgs[])
 exit:
     return error;
 }
+#endif // CMD_mac
 
+#ifdef CMD_trel
 /**
  * @cli trel
  * @code
@@ -7413,7 +7524,6 @@ exit:
  * #otTrelIsEnabled
  * @note `OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE` is required for all `trel` sub-commands.
  */
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -7611,9 +7721,9 @@ void Interpreter::OutputTrelCounters(const otTrelCounters &aCounters)
     OutputFormat("Bytes %s ", Uint64ToString(aCounters.mTxBytes, u64StringBuffer));
     OutputLine("Failures %s", Uint64ToString(aCounters.mTxFailure, u64StringBuffer));
 }
+#endif // CMD_trel
 
-#endif
-
+#ifdef CMD_vendor
 template <> otError Interpreter::Process<Cmd("vendor")>(Arg aArgs[])
 {
     Error error = OT_ERROR_INVALID_ARGS;
@@ -7741,9 +7851,9 @@ template <> otError Interpreter::Process<Cmd("vendor")>(Arg aArgs[])
 
     return error;
 }
+#endif // CMD_vendor
 
-#if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
-
+#ifdef CMD_networkdiagnostic
 template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
 {
     static constexpr uint16_t kMaxTlvs = 35;
@@ -8130,7 +8240,7 @@ void Interpreter::OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiag
     OutputLine(aIndentSize, "Mode:");
     OutputMode(aIndentSize + kIndentSize, aChildEntry.mMode);
 }
-#endif // OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+#endif // CMD_networkdiagnostic
 
 #if OPENTHREAD_FTD
 void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
@@ -8155,8 +8265,7 @@ void Interpreter::HandleIp6Receive(otMessage *aMessage, void *aContext)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
-
+#ifdef CMD_verhoeff
 template <> otError Interpreter::Process<Cmd("verhoeff")>(Arg aArgs[])
 {
     otError error;
@@ -8204,9 +8313,7 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
-
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+#endif // CMD_verhoeff
 
 void Interpreter::Initialize(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext)
 {
@@ -8265,256 +8372,357 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
     }
 
     static constexpr Command kCommands[] = {
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+#ifdef CMD_ba
         CmdEntry("ba"),
 #endif
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+#ifdef CMD_bbr
         CmdEntry("bbr"),
 #endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#ifdef CMD_br
         CmdEntry("br"),
 #endif
+#ifdef CMD_bufferinfo
         CmdEntry("bufferinfo"),
+#endif
+#ifdef CMD_ccathreshold
         CmdEntry("ccathreshold"),
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#endif
+#ifdef CMD_ccm
         CmdEntry("ccm"),
 #endif
+#ifdef CMD_channel
         CmdEntry("channel"),
-#if OPENTHREAD_FTD
+#endif
+#ifdef CMD_child
         CmdEntry("child"),
+#endif
+#ifdef CMD_childip
         CmdEntry("childip"),
+#endif
+#ifdef CMD_childmax
         CmdEntry("childmax"),
+#endif
+#ifdef CMD_childrouterlinks
         CmdEntry("childrouterlinks"),
 #endif
+#ifdef CMD_childsupervision
         CmdEntry("childsupervision"),
+#endif
+#ifdef CMD_childtimeout
         CmdEntry("childtimeout"),
-#if OPENTHREAD_CONFIG_COAP_API_ENABLE
+#endif
+#ifdef CMD_coap
         CmdEntry("coap"),
 #endif
-#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+#ifdef CMD_coaps
         CmdEntry("coaps"),
 #endif
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+#ifdef CMD_coex
         CmdEntry("coex"),
 #endif
-#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+#ifdef CMD_commissioner
         CmdEntry("commissioner"),
 #endif
-#if OPENTHREAD_FTD
+#ifdef CMD_contextreusedelay
         CmdEntry("contextreusedelay"),
 #endif
+#ifdef CMD_counters
         CmdEntry("counters"),
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#endif
+#ifdef CMD_csl
         CmdEntry("csl"),
 #endif
+#ifdef CMD_dataset
         CmdEntry("dataset"),
+#endif
+#ifdef CMD_debug
         CmdEntry("debug"),
-#if OPENTHREAD_FTD
+#endif
+#ifdef CMD_delaytimermin
         CmdEntry("delaytimermin"),
 #endif
+#ifdef CMD_detach
         CmdEntry("detach"),
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
+#endif
+#ifdef CMD_deviceprops
         CmdEntry("deviceprops"),
 #endif
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
+#ifdef CMD_diag
         CmdEntry("diag"),
 #endif
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#ifdef CMD_discover
         CmdEntry("discover"),
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE || OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE || \
-    OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#endif
+#ifdef CMD_dns
         CmdEntry("dns"),
 #endif
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+#ifdef CMD_domainname
         CmdEntry("domainname"),
 #endif
-#if OPENTHREAD_CONFIG_DUA_ENABLE
+#ifdef CMD_dua
         CmdEntry("dua"),
 #endif
-#if OPENTHREAD_FTD
+#ifdef CMD_eidcache
         CmdEntry("eidcache"),
 #endif
+#ifdef CMD_eui64
         CmdEntry("eui64"),
+#endif
+#ifdef CMD_extaddr
         CmdEntry("extaddr"),
+#endif
+#ifdef CMD_extpanid
         CmdEntry("extpanid"),
+#endif
+#ifdef CMD_factoryreset
         CmdEntry("factoryreset"),
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#endif
+#ifdef CMD_fake
         CmdEntry("fake"),
 #endif
+#ifdef CMD_fem
         CmdEntry("fem"),
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+#endif
+#ifdef CMD_history
         CmdEntry("history"),
 #endif
+#ifdef CMD_ifconfig
         CmdEntry("ifconfig"),
+#endif
+#ifdef CMD_instanceid
         CmdEntry("instanceid"),
+#endif
+#ifdef CMD_ipaddr
         CmdEntry("ipaddr"),
+#endif
+#ifdef CMD_ipmaddr
         CmdEntry("ipmaddr"),
-#if OPENTHREAD_CONFIG_JOINER_ENABLE
+#endif
+#ifdef CMD_joiner
         CmdEntry("joiner"),
 #endif
-#if OPENTHREAD_FTD
+#ifdef CMD_joinerport
         CmdEntry("joinerport"),
 #endif
+#ifdef CMD_keysequence
         CmdEntry("keysequence"),
+#endif
+#ifdef CMD_leaderdata
         CmdEntry("leaderdata"),
-#if OPENTHREAD_FTD
+#endif
+#ifdef CMD_leaderweight
         CmdEntry("leaderweight"),
 #endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
+#ifdef CMD_linkmetrics
         CmdEntry("linkmetrics"),
-#if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
+#endif
+#ifdef CMD_linkmetricsmgr
         CmdEntry("linkmetricsmgr"),
 #endif
-#endif
-#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+#ifdef CMD_locate
         CmdEntry("locate"),
 #endif
+#ifdef CMD_log
         CmdEntry("log"),
+#endif
+#ifdef CMD_mac
         CmdEntry("mac"),
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+#endif
+#ifdef CMD_macfilter
         CmdEntry("macfilter"),
 #endif
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
+#ifdef CMD_mdns
         CmdEntry("mdns"),
 #endif
-#if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
+#ifdef CMD_meshdiag
         CmdEntry("meshdiag"),
 #endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#ifdef CMD_mleadvimax
         CmdEntry("mleadvimax"),
 #endif
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#ifdef CMD_mliid
         CmdEntry("mliid"),
 #endif
-#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#ifdef CMD_mlr
         CmdEntry("mlr"),
 #endif
+#ifdef CMD_mode
         CmdEntry("mode"),
+#endif
+#ifdef CMD_multiradio
         CmdEntry("multiradio"),
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+#endif
+#ifdef CMD_nat64
         CmdEntry("nat64"),
 #endif
-#if OPENTHREAD_FTD
+#ifdef CMD_neighbor
         CmdEntry("neighbor"),
 #endif
+#ifdef CMD_netdata
         CmdEntry("netdata"),
+#endif
+#ifdef CMD_netstat
         CmdEntry("netstat"),
-#if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+#endif
+#ifdef CMD_networkdiagnostic
         CmdEntry("networkdiagnostic"),
 #endif
-#if OPENTHREAD_FTD
+#ifdef CMD_networkidtimeout
         CmdEntry("networkidtimeout"),
 #endif
+#ifdef CMD_networkkey
         CmdEntry("networkkey"),
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#endif
+#ifdef CMD_networkkeyref
         CmdEntry("networkkeyref"),
 #endif
+#ifdef CMD_networkname
         CmdEntry("networkname"),
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#endif
+#ifdef CMD_networktime
         CmdEntry("networktime"),
 #endif
-#if OPENTHREAD_FTD
+#ifdef CMD_nexthop
         CmdEntry("nexthop"),
 #endif
+#ifdef CMD_panid
         CmdEntry("panid"),
+#endif
+#ifdef CMD_parent
         CmdEntry("parent"),
-#if OPENTHREAD_FTD
+#endif
+#ifdef CMD_parentpriority
         CmdEntry("parentpriority"),
+#endif
+#ifdef CMD_partitionid
         CmdEntry("partitionid"),
 #endif
-#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+#ifdef CMD_ping
         CmdEntry("ping"),
 #endif
+#ifdef CMD_platform
         CmdEntry("platform"),
+#endif
+#ifdef CMD_pollperiod
         CmdEntry("pollperiod"),
-#if OPENTHREAD_FTD
+#endif
+#ifdef CMD_preferrouterid
         CmdEntry("preferrouterid"),
 #endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#ifdef CMD_prefix
         CmdEntry("prefix"),
 #endif
+#ifdef CMD_promiscuous
         CmdEntry("promiscuous"),
-#if OPENTHREAD_FTD
+#endif
+#ifdef CMD_pskc
         CmdEntry("pskc"),
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#endif
+#ifdef CMD_pskcref
         CmdEntry("pskcref"),
 #endif
-#endif
-#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
+#ifdef CMD_radio
         CmdEntry("radio"),
 #endif
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+#ifdef CMD_radiofilter
         CmdEntry("radiofilter"),
 #endif
+#ifdef CMD_rcp
         CmdEntry("rcp"),
+#endif
+#ifdef CMD_region
         CmdEntry("region"),
-#if OPENTHREAD_FTD
+#endif
+#ifdef CMD_releaserouterid
         CmdEntry("releaserouterid"),
 #endif
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+#ifdef CMD_reset
         CmdEntry("reset"),
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#endif
+#ifdef CMD_rloc16
         CmdEntry("rloc16"),
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#endif
+#ifdef CMD_route
         CmdEntry("route"),
 #endif
-#if OPENTHREAD_FTD
+#ifdef CMD_router
         CmdEntry("router"),
+#endif
+#ifdef CMD_routerdowngradethreshold
         CmdEntry("routerdowngradethreshold"),
+#endif
+#ifdef CMD_routereligible
         CmdEntry("routereligible"),
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#endif
+#ifdef CMD_routeridrange
         CmdEntry("routeridrange"),
 #endif
+#ifdef CMD_routerselectionjitter
         CmdEntry("routerselectionjitter"),
+#endif
+#ifdef CMD_routerupgradethreshold
         CmdEntry("routerupgradethreshold"),
 #endif
+#ifdef CMD_scan
         CmdEntry("scan"),
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+#endif
+#ifdef CMD_service
         CmdEntry("service"),
 #endif
+#ifdef CMD_singleton
         CmdEntry("singleton"),
-#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+#endif
+#ifdef CMD_sntp
         CmdEntry("sntp"),
 #endif
-#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE || OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+#ifdef CMD_srp
         CmdEntry("srp"),
 #endif
+#ifdef CMD_state
         CmdEntry("state"),
-#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
+#endif
+#ifdef CMD_tcat
         CmdEntry("tcat"),
 #endif
-#if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
+#ifdef CMD_tcp
         CmdEntry("tcp"),
 #endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#ifdef CMD_test
         CmdEntry("test"),
 #endif
+#ifdef CMD_thread
         CmdEntry("thread"),
-#if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+#endif
+#ifdef CMD_timeinqueue
         CmdEntry("timeinqueue"),
 #endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#ifdef CMD_trel
         CmdEntry("trel"),
 #endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#ifdef CMD_tvcheck
         CmdEntry("tvcheck"),
 #endif
+#ifdef CMD_txpower
         CmdEntry("txpower"),
+#endif
+#ifdef CMD_udp
         CmdEntry("udp"),
+#endif
+#ifdef CMD_unsecureport
         CmdEntry("unsecureport"),
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+#endif
+#ifdef CMD_uptime
         CmdEntry("uptime"),
 #endif
+#ifdef CMD_vendor
         CmdEntry("vendor"),
-#if OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
+#endif
+#ifdef CMD_verhoeff
         CmdEntry("verhoeff"),
 #endif
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+#ifdef CMD_version
         CmdEntry("version"),
+#endif
     };
 
 #undef CmdEntry

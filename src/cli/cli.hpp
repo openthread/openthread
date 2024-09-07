@@ -49,6 +49,7 @@
 #include <openthread/link.h>
 #include <openthread/logging.h>
 #include <openthread/mesh_diag.h>
+#include <openthread/multi_radio.h>
 #include <openthread/netdata.h>
 #include <openthread/ping_sender.h>
 #include <openthread/sntp.h>
@@ -78,6 +79,7 @@
 #include "cli/cli_tcp.hpp"
 #include "cli/cli_udp.hpp"
 #include "cli/cli_utils.hpp"
+#include "cli/cmd_condition_eval.h"
 
 #include "common/array.hpp"
 #include "common/code_utils.hpp"
@@ -230,14 +232,14 @@ private:
 #if OPENTHREAD_FTD
     void OutputEidCacheEntry(const otCacheEntryInfo &aEntry);
 #endif
-#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+#if CMD_locate
     static void HandleLocateResult(void               *aContext,
                                    otError             aError,
                                    const otIp6Address *aMeshLocalAddress,
                                    uint16_t            aRloc16);
     void        HandleLocateResult(otError aError, const otIp6Address *aMeshLocalAddress, uint16_t aRloc16);
 #endif
-#if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
+#if CMD_meshdiag
     static void HandleMeshDiagDiscoverDone(otError aError, otMeshDiagRouterInfo *aRouterInfo, void *aContext);
     void        HandleMeshDiagDiscoverDone(otError aError, otMeshDiagRouterInfo *aRouterInfo);
     static void HandleMeshDiagQueryChildTableResult(otError                     aError,
@@ -257,8 +259,8 @@ private:
     void        HandleMeshDiagQueryRouterNeighborTableResult(otError                              aError,
                                                              const otMeshDiagRouterNeighborEntry *aNeighborEntry);
 
-#endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#endif // CMD_meshdiag
+#if CMD_mlr
     static void HandleMlrRegResult(void               *aContext,
                                    otError             aError,
                                    uint8_t             aMlrStatus,
@@ -269,7 +271,7 @@ private:
                                    const otIp6Address *aFailedAddresses,
                                    uint8_t             aFailedAddressNum);
 #endif
-#if OPENTHREAD_CONFIG_MULTI_RADIO
+#if CMD_multiradio
     void OutputMultiRadioInfo(const otMultiRadioNeighborInfo &aMultiRadioInfo);
 #endif
 
@@ -323,8 +325,10 @@ private:
 #endif
 #endif
 
+#ifdef CMD_detach
     static void HandleDetachGracefullyResult(void *aContext);
     void        HandleDetachGracefullyResult(void);
+#endif
 
 #if OPENTHREAD_FTD
     static void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext);
@@ -337,7 +341,7 @@ private:
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
+#if CMD_diag
     static void HandleDiagOutput(const char *aFormat, va_list aArguments, void *aContext);
     void        HandleDiagOutput(const char *aFormat, va_list aArguments);
 #endif
