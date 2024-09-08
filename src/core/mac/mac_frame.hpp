@@ -156,31 +156,6 @@ public:
     bool IsEmpty(void) const { return (mLength == 0); }
 
     /**
-     * Initializes the MAC header.
-     *
-     * Determines and writes the Frame Control Field (FCF) and Security Control in the frame along with
-     * given source and destination addresses and PAN IDs.
-     *
-     * The Ack Request bit in FCF is set if there is destination and it is not broadcast and frame type @p aType is not
-     * ACK. The Frame Pending and IE Present bits are not set.
-     *
-     * @param[in] aType          Frame type.
-     * @param[in] aVersion       Frame version.
-     * @param[in] aAddrs         Frame source and destination addresses (each can be none, short, or extended).
-     * @param[in] aPanIds        Source and destination PAN IDs.
-     * @param[in] aSecurityLevel Frame security level.
-     * @param[in] aKeyIdMode     Frame security key ID mode.
-     * @param[in] aSuppressSequence     Whether to suppress sequence number.
-     */
-    void InitMacHeader(Type             aType,
-                       Version          aVersion,
-                       const Addresses &aAddrs,
-                       const PanIds    &aPanIds,
-                       SecurityLevel    aSecurityLevel,
-                       KeyIdMode        aKeyIdMode        = kKeyIdMode0,
-                       bool             aSuppressSequence = false);
-
-    /**
      * Validates the frame.
      *
      * @retval kErrorNone    Successfully parsed the MAC header.
@@ -1136,6 +1111,45 @@ public:
 class TxFrame : public Frame
 {
 public:
+    /**
+     * Represents header information.
+     */
+    struct Info : public Clearable<Info>
+    {
+        /**
+         * Initializes the `Info` by clearing all its fields (setting all bytes to zero).
+         */
+        Info(void) { Clear(); }
+
+        /**
+         * Prepares MAC headers based on `Info` fields in a given `TxFrame`.
+         *
+         * This method uses the `Info` structure to construct the MAC address and security headers in @p aTxFrame.
+         * It determines the Frame Control Field (FCF), including setting the appropriate frame type, security level,
+         * and addressing mode flags. It populates the source and destination addresses and PAN IDs within the MAC
+         * header based on the information provided in the `Info` structure.
+         *
+         * It sets the Ack Request bit in the FCF if the following criteria are met:
+         *   - A destination address is present
+         *   - The destination address is not the broadcast address
+         *   - The frame type is not an ACK frame
+         *
+         * The Frame Pending and IE Present flags in the FCF are not set. They may need to be set separately depending
+         * on the specific requirements of the frame being transmitted.
+         *
+         * @param[in,out] aTxFrame  The `TxFrame` instance in which to prepare and append the MAC headers.
+         */
+        void PrepareHeadersIn(TxFrame &aTxFrame) const;
+
+        Type          mType;                 ///< Frame type.
+        Version       mVersion;              ///< Frame version.
+        Addresses     mAddrs;                ///< Frame source and destination addresses.
+        PanIds        mPanIds;               ///< Source and destination PAN Ids.
+        SecurityLevel mSecurityLevel;        ///< Frame security level.
+        KeyIdMode     mKeyIdMode;            ///< Frame security key ID mode.
+        bool          mSuppressSequence : 1; ///< Whether to suppress seq number.
+    };
+
     /**
      * Sets the channel on which to send the frame.
      *

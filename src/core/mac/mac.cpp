@@ -722,15 +722,17 @@ void Mac::FinishOperation(void)
 
 TxFrame *Mac::PrepareBeaconRequest(void)
 {
-    TxFrame  &frame = mLinks.GetTxFrames().GetBroadcastTxFrame();
-    Addresses addrs;
-    PanIds    panIds;
+    TxFrame      &frame = mLinks.GetTxFrames().GetBroadcastTxFrame();
+    TxFrame::Info frameInfo;
 
-    addrs.mSource.SetNone();
-    addrs.mDestination.SetShort(kShortAddrBroadcast);
-    panIds.SetDestination(kShortAddrBroadcast);
+    frameInfo.mAddrs.mSource.SetNone();
+    frameInfo.mAddrs.mDestination.SetShort(kShortAddrBroadcast);
+    frameInfo.mPanIds.SetDestination(kShortAddrBroadcast);
 
-    frame.InitMacHeader(Frame::kTypeMacCmd, Frame::kVersion2003, addrs, panIds, Frame::kSecurityNone);
+    frameInfo.mType    = Frame::kTypeMacCmd;
+    frameInfo.mVersion = Frame::kVersion2003;
+
+    frameInfo.PrepareHeadersIn(frame);
 
     IgnoreError(frame.SetCommandId(Frame::kMacCmdBeaconRequest));
 
@@ -741,10 +743,9 @@ TxFrame *Mac::PrepareBeaconRequest(void)
 
 TxFrame *Mac::PrepareBeacon(void)
 {
-    TxFrame  *frame;
-    Beacon   *beacon = nullptr;
-    Addresses addrs;
-    PanIds    panIds;
+    TxFrame      *frame;
+    TxFrame::Info frameInfo;
+    Beacon       *beacon = nullptr;
 #if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
     uint8_t        beaconLength;
     BeaconPayload *beaconPayload = nullptr;
@@ -758,11 +759,14 @@ TxFrame *Mac::PrepareBeacon(void)
     frame = &mLinks.GetTxFrames().GetBroadcastTxFrame();
 #endif
 
-    addrs.mSource.SetExtended(GetExtAddress());
-    panIds.SetSource(mPanId);
-    addrs.mDestination.SetNone();
+    frameInfo.mAddrs.mSource.SetExtended(GetExtAddress());
+    frameInfo.mPanIds.SetSource(mPanId);
+    frameInfo.mAddrs.mDestination.SetNone();
 
-    frame->InitMacHeader(Frame::kTypeBeacon, Frame::kVersion2003, addrs, panIds, Frame::kSecurityNone);
+    frameInfo.mType    = Frame::kTypeBeacon;
+    frameInfo.mVersion = Frame::kVersion2003;
+
+    frameInfo.PrepareHeadersIn(*frame);
 
     beacon = reinterpret_cast<Beacon *>(frame->GetPayload());
     beacon->Init();

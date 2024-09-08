@@ -55,9 +55,9 @@ public:
      * `FrameBuilder` MUST be initialized before its other methods are used.
      *
      * @param[in] aBuffer   A pointer to a buffer.
-     * @param[in] aLength   The data length (number of bytes in @p aBuffer).
+     * @param[in] aLength   The max data length (number of bytes in @p aBuffer).
      */
-    void Init(void *aBuffer, uint16_t aLength);
+    void Init(void *aBuffer, uint16_t aMaxLength);
 
     /**
      * Returns a pointer to the start of `FrameBuilder` buffer.
@@ -209,6 +209,38 @@ public:
         static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
 
         return AppendBytes(&aObject, sizeof(ObjectType));
+    }
+
+    /**
+     * Appends the given number of bytes to the `FrameBuilder`.
+     *
+     * This method reserves @p aLength bytes at the current position of the `FrameBuilder` and returns a pointer to the
+     * start of this reserved buffer if successful. The reserved bytes are left uninitialized. The caller is
+     * responsible for initializing them.
+     *
+     * @param[in] aLength  The number of bytes to append.
+     *
+     * @returns A pointer to the start of the appended bytes if successful, or `nullptr` if there are not enough
+     *          remaining bytes to append @p aLength bytes.
+     */
+    void *AppendLength(uint16_t aLength);
+
+    /**
+     * Appends an object to the `FrameBuilder`.
+     *
+     * @tparam ObjectType  The object type to append.
+     *
+     * This method reserves bytes in `FrameBuilder`  to accommodate an `ObjectType` and returns a pointer to the
+     * appended `ObjectType`. The `ObjectType` bytes are left uninitialized. Caller is responsible to initialize them.
+     *
+     * @returns A pointer the appended `ObjectType` if successful, or `nullptr` if there are not enough remaining
+     *          bytes to append an `ObjectType`.
+     */
+    template <typename ObjectType> ObjectType *Append(void)
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        return static_cast<ObjectType *>(AppendLength(sizeof(ObjectType)));
     }
 
     /**
