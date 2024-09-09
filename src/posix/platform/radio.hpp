@@ -91,8 +91,15 @@ public:
     RcpCapsDiag &GetRcpCapsDiag(void) { return mRcpCapsDiag; }
 #endif
 
-private:
+    /**
+     * Processes the radio url to set the radio related parameters
+     *
+     * @param[in] aRadioUrl  A reference to the radio url string.
+     *
+     */
     void ProcessRadioUrl(const RadioUrl &aRadioUrl);
+
+private:
     void ProcessMaxPowerTable(const RadioUrl &aRadioUrl);
 
 #if OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE && OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE

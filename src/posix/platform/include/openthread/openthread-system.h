@@ -320,6 +320,14 @@ void otSysTrelInit(const char *aInterfaceName);
  */
 void otSysTrelDeinit(void);
 
+/**
+ * Sets the radio url to configure the radio related parameters.
+ *
+ * @param[in] aRadioUrl  A pointer to the radio url string.
+ *
+ */
+void otSysSetRadioUrl(const char *aRadioUrl);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif

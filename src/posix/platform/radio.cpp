@@ -225,6 +225,17 @@ void platformRadioHandleStateChange(otInstance *aInstance, otChangedFlags aFlags
     }
 }
 
+void otSysSetRadioUrl(const char *aRadioUrl)
+{
+    ot::Posix::RadioUrl radioUrl(aRadioUrl);
+
+    VerifyOrExit((aRadioUrl != nullptr) && (radioUrl.GetPath() != nullptr));
+    sRadio.ProcessRadioUrl(radioUrl);
+
+exit:
+    return;
+}
+
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     OT_UNUSED_VARIABLE(aInstance);
