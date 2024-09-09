@@ -906,7 +906,7 @@ Error PendingDatasetManager::ReadRemainingDelay(uint32_t &aRemainingDelay) const
 
     aRemainingDelay = 0;
 
-    VerifyOrExit(mDelayTimer.IsRunning(), error = kErrorInvalidState);
+    VerifyOrExit(mDelayTimer.IsRunning(), error = kErrorNotFound);
     VerifyOrExit(mDelayTimer.GetFireTime() > now);
     aRemainingDelay = mDelayTimer.GetFireTime() - now;
 
