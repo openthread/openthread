@@ -140,6 +140,7 @@ set(COMMON_SOURCES
     mac/mac.cpp
     mac/mac_filter.cpp
     mac/mac_frame.cpp
+    mac/mac_header_ie.cpp
     mac/mac_links.cpp
     mac/mac_types.cpp
     mac/sub_mac.cpp
@@ -289,6 +290,7 @@ set(RADIO_COMMON_SOURCES
     instance/instance.cpp
     mac/link_raw.cpp
     mac/mac_frame.cpp
+    mac/mac_header_ie.cpp
     mac/mac_types.cpp
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
