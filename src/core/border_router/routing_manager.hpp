@@ -688,7 +688,6 @@ private:
     using Option                 = Ip6::Nd::Option;
     using PrefixInfoOption       = Ip6::Nd::PrefixInfoOption;
     using RouteInfoOption        = Ip6::Nd::RouteInfoOption;
-    using RaFlagsExtOption       = Ip6::Nd::RaFlagsExtOption;
     using RouterAdvert           = Ip6::Nd::RouterAdvert;
     using NeighborAdvertMessage  = Ip6::Nd::NeighborAdvertMessage;
     using NeighborSolicitMessage = Ip6::Nd::NeighborSolicitMessage;
@@ -980,7 +979,7 @@ private:
             uint8_t          mNsProbeCount;
             bool             mManagedAddressConfigFlag : 1;
             bool             mOtherConfigFlag : 1;
-            bool             mStubRouterFlag : 1;
+            bool             mSnacRouterFlag : 1;
             bool             mIsLocalDevice : 1;
             bool             mAllEntriesDisregarded : 1;
         };
@@ -1080,7 +1079,6 @@ private:
         void ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter, RouterAdvOrigin aRaOrigin);
         void ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
         void ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
-        void ProcessRaFlagsExtOption(const RaFlagsExtOption &aFlagsOption, Router &aRouter);
         void Evaluate(void);
         void DetermineStaleTimeFor(const OnLinkPrefix &aPrefix, NextFireTime &aStaleTime);
         void DetermineStaleTimeFor(const RoutePrefix &aPrefix, NextFireTime &aStaleTime);
@@ -1584,6 +1582,7 @@ private:
     static bool IsValidOnLinkPrefix(const PrefixInfoOption &aPio);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
 
+    static void LogRaHeader(const RouterAdvert::Header &aRaHeader);
     static void LogPrefixInfoOption(const Ip6::Prefix &aPrefix, uint32_t aValidLifetime, uint32_t aPreferredLifetime);
     static void LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime, RoutePreference aPreference);
 

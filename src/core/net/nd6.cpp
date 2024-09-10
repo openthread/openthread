@@ -179,6 +179,8 @@ void RaFlagsExtOption::Init(void)
     Clear();
     SetType(kTypeRaFlagsExtension);
     SetSize(sizeof(RaFlagsExtOption));
+
+    OT_UNUSED_VARIABLE(mFlags);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -283,25 +285,6 @@ Error RouterAdvert::TxMessage::AppendRouteInfoOption(const Prefix   &aPrefix,
     rio->SetRouteLifetime(aRouteLifetime);
     rio->SetPreference(aPreference);
     rio->SetPrefix(aPrefix);
-
-exit:
-    return error;
-}
-
-Error RouterAdvert::TxMessage::AppendFlagsExtensionOption(bool aStubRouterFlag)
-{
-    Error             error = kErrorNone;
-    RaFlagsExtOption *flagsOption;
-
-    flagsOption = static_cast<RaFlagsExtOption *>(AppendOption(sizeof(RaFlagsExtOption)));
-    VerifyOrExit(flagsOption != nullptr, error = kErrorNoBufs);
-
-    flagsOption->Init();
-
-    if (aStubRouterFlag)
-    {
-        flagsOption->SetStubRouterFlag();
-    }
 
 exit:
     return error;
