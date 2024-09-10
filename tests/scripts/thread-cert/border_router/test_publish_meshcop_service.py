@@ -233,7 +233,7 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.assertEqual(bool(state_bitmap >> 11 & 1), br.ephemeral_key_enabled)  # ePSKc is supported or not
         self.assertEqual(service_data['txt']['nn'], br.get_network_name())
         self.assertEqual(service_data['txt']['rv'], '1')
-        self.assertIn(service_data['txt']['tv'], ['1.1.0', '1.1.1', '1.2.0', '1.3.0'])
+        self.assertIn(service_data['txt']['tv'], ['1.1.0', '1.1.1', '1.2.0', '1.3.0', '1.4.0'])
 
     def discover_services(self, host, type):
         instance_names = host.browse_mdns_services(type)

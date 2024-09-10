@@ -287,7 +287,7 @@ endif()
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 set(OT_THREAD_VERSION_VALUES "1.1" "1.2" "1.3" "1.3.1" "1.4")
-set(OT_THREAD_VERSION "1.3" CACHE STRING "set Thread version")
+set(OT_THREAD_VERSION "1.4" CACHE STRING "set Thread version")
 set_property(CACHE OT_THREAD_VERSION PROPERTY STRINGS "${OT_THREAD_VERSION_VALUES}")
 list(FIND OT_THREAD_VERSION_VALUES "${OT_THREAD_VERSION}" ot_index)
 if(ot_index EQUAL -1)
