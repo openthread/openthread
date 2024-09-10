@@ -349,6 +349,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DYNAMIC_STORE_FRAME_AHEAD_COUNTER_ENABLE
+ *
+ * Enable setting the store frame counter ahead.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DYNAMIC_STORE_FRAME_AHEAD_COUNTER_ENABLE
+#define OPENTHREAD_CONFIG_DYNAMIC_STORE_FRAME_AHEAD_COUNTER_ENABLE 0
+#endif
+
+/**
  * @}
  *
  */
