@@ -640,9 +640,6 @@ void TestMacFrameApi(void)
     VerifyOrQuit(frame.GetType() == Mac::Frame::kTypeMacCmd);
     SuccessOrQuit(frame.GetCommandId(commandId));
     VerifyOrQuit(commandId == Mac::Frame::kMacCmdDataRequest);
-    SuccessOrQuit(frame.SetCommandId(Mac::Frame::kMacCmdBeaconRequest));
-    SuccessOrQuit(frame.GetCommandId(commandId));
-    VerifyOrQuit(commandId == Mac::Frame::kMacCmdBeaconRequest);
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     // IEEE 802.15.4-2015 Mac Command
@@ -660,9 +657,6 @@ void TestMacFrameApi(void)
     SuccessOrQuit(frame.GetCommandId(commandId));
     VerifyOrQuit(commandId == Mac::Frame::kMacCmdDataRequest);
     printf("commandId:%d\n", commandId);
-    SuccessOrQuit(frame.SetCommandId(Mac::Frame::kMacCmdOrphanNotification));
-    SuccessOrQuit(frame.GetCommandId(commandId));
-    VerifyOrQuit(commandId == Mac::Frame::kMacCmdOrphanNotification);
 
 #endif
 }

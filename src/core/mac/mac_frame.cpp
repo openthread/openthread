@@ -238,7 +238,7 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
 
     if (mType == kTypeMacCmd)
     {
-        builder.Append<uint8_t>(); // Placeholder for Command ID
+        IgnoreError(builder.AppendUint8(mCommandId));
     }
 
     builder.AppendLength(micSize + aTxFrame.GetFcsSize());
@@ -820,19 +820,6 @@ Error Frame::GetCommandId(uint8_t &aCommandId) const
     VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
     aCommandId = mPsdu[IsVersion2015() ? index : (index - 1)];
-
-exit:
-    return error;
-}
-
-Error Frame::SetCommandId(uint8_t aCommandId)
-{
-    Error   error = kErrorNone;
-    uint8_t index = FindPayloadIndex();
-
-    VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
-
-    mPsdu[IsVersion2015() ? index : (index - 1)] = aCommandId;
 
 exit:
     return error;
