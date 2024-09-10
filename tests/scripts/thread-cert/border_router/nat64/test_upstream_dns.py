@@ -72,12 +72,12 @@ class UpstreamDns(thread_cert.TestCase):
             'name': 'BR',
             'allowlist': [ROUTER],
             'is_otbr': True,
-            'version': '1.3',
+            'version': '1.4',
         },
         ROUTER: {
             'name': 'Router',
             'allowlist': [BR],
-            'version': '1.3',
+            'version': '1.4',
         },
         HOST: {
             'name': 'Host',

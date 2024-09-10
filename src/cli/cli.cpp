@@ -3661,7 +3661,7 @@ template <> otError Interpreter::Process<Cmd("deviceprops")>(Arg aArgs[])
     {
         otDeviceProperties props;
         bool               value;
-        uint8_t            index;
+        size_t             index;
 
         for (index = 0; index < OT_ARRAY_LENGTH(kPowerSupplyStrings); index++)
         {

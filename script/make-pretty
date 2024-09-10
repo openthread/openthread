@@ -137,7 +137,7 @@ OT_CLANG_TIDY_BUILD_OPTS=(
     '-DOT_SRP_ADV_PROXY=ON'
     '-DOT_SRP_CLIENT=ON'
     '-DOT_SRP_SERVER=ON'
-    '-DOT_THREAD_VERSION=1.3'
+    '-DOT_THREAD_VERSION=1.4'
     '-DOT_TREL=ON'
     '-DOT_COVERAGE=ON'
     '-DOT_LOG_LEVEL_DYNAMIC=ON'
@@ -174,7 +174,7 @@ do_clang_tidy_fix()
 
     (mkdir -p ./build/cmake-tidy \
         && cd ./build/cmake-tidy \
-        && THREAD_VERSION=1.3 cmake "${OT_CLANG_TIDY_BUILD_OPTS[@]}" ../.. \
+        && THREAD_VERSION=1.4 cmake "${OT_CLANG_TIDY_BUILD_OPTS[@]}" ../.. \
         && ../../script/clang-tidy -j"$OT_BUILD_JOBS" "${OT_CLANG_TIDY_FIX_DIRS[@]}" -fix)
 }
 
@@ -186,7 +186,7 @@ do_clang_tidy_check()
 
     (mkdir -p ./build/cmake-tidy \
         && cd ./build/cmake-tidy \
-        && THREAD_VERSION=1.3 cmake "${OT_CLANG_TIDY_BUILD_OPTS[@]}" ../.. \
+        && THREAD_VERSION=1.4 cmake "${OT_CLANG_TIDY_BUILD_OPTS[@]}" ../.. \
         && ../../script/clang-tidy -j"$OT_BUILD_JOBS" "${OT_CLANG_TIDY_FIX_DIRS[@]}")
 }
 

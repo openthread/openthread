@@ -625,8 +625,8 @@ class OtCli:
             if self.version != '1.1' and self.is_bbr:
                 if 'OT_CLI_PATH_BBR' in os.environ:
                     cmd = os.environ['OT_CLI_PATH_BBR']
-                elif 'top_builddir_1_3_bbr' in os.environ:
-                    srcdir = os.environ['top_builddir_1_3_bbr']
+                elif 'top_builddir_1_4_bbr' in os.environ:
+                    srcdir = os.environ['top_builddir_1_4_bbr']
                     cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             # Load Thread device of the testing environment version (may be 1.1 or 1.2)
@@ -692,13 +692,13 @@ class OtCli:
             # Load Thread 1.2 BBR device when testing Thread 1.2 scenarios
             # which requires device with Backbone functionality.
             if self.version != '1.1' and self.is_bbr:
-                if 'OT_NCP_PATH_1_3_BBR' in os.environ:
+                if 'OT_NCP_PATH_1_4_BBR' in os.environ:
                     cmd = 'spinel-cli.py -p "%s%s" -n' % (
-                        os.environ['OT_NCP_PATH_1_3_BBR'],
+                        os.environ['OT_NCP_PATH_1_4_BBR'],
                         args,
                     )
-                elif 'top_builddir_1_3_bbr' in os.environ:
-                    srcdir = os.environ['top_builddir_1_3_bbr']
+                elif 'top_builddir_1_4_bbr' in os.environ:
+                    srcdir = os.environ['top_builddir_1_4_bbr']
                     cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
                     cmd = 'spinel-cli.py -p "%s%s" -n' % (
                         cmd,
