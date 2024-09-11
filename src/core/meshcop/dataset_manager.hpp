@@ -441,6 +441,28 @@ public:
      */
     explicit PendingDatasetManager(Instance &aInstance);
 
+    /**
+     * Reads the Active Timestamp in the Pending Operational Dataset.
+     *
+     * @param[out] aTimestamp A reference to return the read timestamp.
+     *
+     * @retval kErrorNone     The active timestamp was successfully fetched.
+     * @retval kErrorNotFound The pending dataset is not currently valid.
+     *
+     */
+    Error ReadActiveTimestamp(Timestamp &aTimestamp) const;
+
+    /**
+     * Reads the remaining delay time in ms.
+     *
+     * @param[out] aRemainingDelay A reference to return the remaining delay time.
+     *
+     * @retval kErrorNone     The remaining delay time was successfully fetched.
+     * @retval kErrorNotFound The pending dataset is not currently valid.
+     *
+     */
+    Error ReadRemainingDelay(uint32_t &aRemainingDelay) const;
+
 #if OPENTHREAD_FTD
     /**
      * Starts the Leader functions for maintaining the Active Operational Dataset.

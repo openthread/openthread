@@ -3663,6 +3663,7 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
     Error              error = kErrorNone;
     ChannelTlvValue    channelTlvValue;
     MeshCoP::Timestamp timestamp;
+    MeshCoP::Timestamp pendingActiveTimestamp;
     uint8_t            channel;
     uint16_t           panId;
     bool               isFromOrphan;
@@ -3705,6 +3706,24 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
         if (IsDetached())
         {
             VerifyOrExit(!channelAndPanIdMatch);
+        }
+
+        if (Get<MeshCoP::PendingDatasetManager>().ReadActiveTimestamp(pendingActiveTimestamp) == kErrorNone)
+        {
+            // Ignore the Announce and take no action, if a pending
+            // dataset exists with an equal or more recent timestamp,
+            // and it will be applied soon.
+
+            if (pendingActiveTimestamp >= timestamp)
+            {
+                uint32_t remainingDelay;
+
+                if ((Get<MeshCoP::PendingDatasetManager>().ReadRemainingDelay(remainingDelay) == kErrorNone) &&
+                    (remainingDelay < kAnnounceBackoffForPendingDataset))
+                {
+                    ExitNow();
+                }
+            }
         }
 
         if (mAttachState == kAttachStateProcessAnnounce)
