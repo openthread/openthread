@@ -29,6 +29,7 @@
 from cli.command import Command, CommandResultNone
 from dataset.dataset import ThreadDataset, initial_dataset
 from tlv.dataset_tlv import MeshcopTlvType
+from copy import deepcopy
 
 
 def handle_dataset_entry_command(type: MeshcopTlvType, args, context):
@@ -71,13 +72,23 @@ class DatasetHelpCommand(Command):
         return CommandResultNone()
 
 
-class PrintDatasetHexCommand(Command):
+class DatasetHexCommand(Command):
 
     def get_help_string(self) -> str:
-        return 'Print current dataset as a hexadecimal string.'
+        return 'Get or set dataset as hex-encoded TLVs.'
 
     async def execute_default(self, args, context):
         ds: ThreadDataset = context['dataset']
+        if args:
+            try:
+                ds_tmp = deepcopy(ds)
+                tlvs_str: str = args[0]
+                tlvs_bytes = bytes.fromhex(tlvs_str)
+                ds_tmp.set_from_bytes(tlvs_bytes)
+                ds.clear()
+                ds.set_from_bytes(tlvs_bytes)
+            except Exception as e:
+                print(e)
         print(ds.to_bytes().hex())
         return CommandResultNone()
 
@@ -207,7 +218,7 @@ class DatasetCommand(Command):
         self._subcommands = {
             'clear': DatasetClearCommand(),
             'help': DatasetHelpCommand(),
-            'hex': PrintDatasetHexCommand(),
+            'hex': DatasetHexCommand(),
             'reload': ReloadDatasetCommand(),
             'activetimestamp': ActiveTimestampCommand(),
             'pendingtimestamp': PendingTimestampCommand(),
