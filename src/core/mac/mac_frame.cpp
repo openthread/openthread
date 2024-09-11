@@ -47,13 +47,6 @@
 namespace ot {
 namespace Mac {
 
-void HeaderIe::Init(uint16_t aId, uint8_t aLen)
-{
-    Init();
-    SetId(aId);
-    SetLength(aLen);
-}
-
 void Frame::InitMacHeader(Type             aType,
                           Version          aVersion,
                           const Addresses &aAddrs,

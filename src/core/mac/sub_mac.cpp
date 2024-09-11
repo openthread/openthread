@@ -473,11 +473,6 @@ void SubMac::BeginTransmit(void)
 
     SetState(kStateTransmit);
 
-    if (mPcapCallback.IsSet())
-    {
-        mPcapCallback.Invoke(&mTransmitFrame, true);
-    }
-
     error = Get<Radio>().Transmit(mTransmitFrame);
 
     if (error == kErrorInvalidState && mTransmitFrame.mInfo.mTxInfo.mTxDelay > 0)
@@ -497,6 +492,11 @@ exit:
 
 void SubMac::HandleTransmitStarted(TxFrame &aFrame)
 {
+    if (mPcapCallback.IsSet())
+    {
+        mPcapCallback.Invoke(&aFrame, true);
+    }
+
     if (ShouldHandleAckTimeout() && aFrame.GetAckRequest())
     {
         StartTimer(kAckTimeout);

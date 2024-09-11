@@ -3578,10 +3578,9 @@ enum
      * The format of PHY-specific data for a Thread device contains the following
      * optional fields:
 
-     *   `C` : 802.15.4 channel (Receive channel)
+     *   `C` : 802.15.4 channel
      *   `C` : IEEE 802.15.4 LQI
-     *   `L` : The timestamp milliseconds
-     *   `S` : The timestamp microseconds, offset to mMsec
+     *   `X` : The timestamp in microseconds
      *
      * Frames written to this stream with `CMD_PROP_VALUE_SET` will be sent out
      * over the radio. This allows the caller to use the radio directly.

@@ -181,7 +181,7 @@ class PingCommand(Command):
         data = TLV(TcatTLVType.PING.value, to_send).to_bytes()
         elapsed_time = time()
         response = await bless.send_with_resp(data)
-        elapsed_time = time() - elapsed_time
+        elapsed_time = 1e3 * (time() - elapsed_time)
         if not response:
             return
 
@@ -189,7 +189,7 @@ class PingCommand(Command):
         if tlv_response.value != to_send:
             print("Received malformed response.")
 
-        print(f"Roundtrip time {elapsed_time} s.")
+        print(f"Roundtrip time: {elapsed_time} ms")
 
         return CommandResultTLV(tlv_response)
 
