@@ -20,12 +20,40 @@ This test is used for testing RCP capabilities.
 - DUT : The device under test.
 - Reference Device : The device that supports all tested features.
 
-### Python Dependences
+### Test Guide
 
-Before running the test script on PC, testers should install dependences first.
+1. Install and create python virtual environment. This is a one-time step.
 
 ```bash
-$ pip3 install -r ./tools/cp-caps/requirements.txt ./tools/otci
+$ sudo apt install python3-venv
+$ python3 -m venv ot-env
+```
+
+2. Enter the python virtual environment.
+
+```bash
+$ source ot-env/bin/activate
+(ot-env) $
+```
+
+3. Before running the test script on PC, testers should install dependences in the python virtual environment first. This is a one-time step if there is no changes in `tools/otci`.
+
+```bash
+(ot-env) $ pip3 install -r ./tools/cp-caps/requirements.txt ./tools/otci
+```
+
+4. Run test scripts.
+
+```bash
+(ot-env) $ DUT_ADB_USB=1269UCKFZTAM95OR REF_ADB_USB=44061HFAG01AQK python3 ./tools/cp-caps/rcp_caps_test.py -t
+Throughput ----------------------------------------------- 75.6 Kbits/sec
+```
+
+5. Exit the python virtual environment after tests are finished.
+
+```bash
+(ot-env) $ deactivate
+$
 ```
 
 ### Reference Device
@@ -53,7 +81,7 @@ $ nrfjprog -f nrf52 --chiperase --program ot-cli-ftd.hex --reset
 Show help info.
 
 ```bash
-$ python3 ./tools/cp-caps/rcp_caps_test.py -h
+(ot-env) $ python3 ./tools/cp-caps/rcp_caps_test.py -h
 usage: rcp_caps_test.py [-h] [-c] [-d] [-p] [-t] [-v]
 
 This script is used for testing RCP capabilities.
@@ -92,7 +120,7 @@ Following environment variables are used to configure diag command parameters:
 > Note: If you meet the error `LIBUSB_ERROR_BUSY` when you are using the ADB usb interface, please run the command `adb kill-server` to kill the adb server.
 
 ```bash
-$ DUT_ADB_USB=1269UCKFZTAM95OR REF_CLI_SERIAL=/dev/ttyACM0 DUT_DIAG_GPIO=2 DUT_DIAG_RAW_POWER_SETTING=44556688 DUT_DIAG_POWER=11 python3 ./tools/cp-caps/rcp_caps_test.py -d
+(ot-env) $ DUT_ADB_USB=1269UCKFZTAM95OR REF_CLI_SERIAL=/dev/ttyACM0 DUT_DIAG_GPIO=2 DUT_DIAG_RAW_POWER_SETTING=44556688 DUT_DIAG_POWER=11 python3 ./tools/cp-caps/rcp_caps_test.py -d
 diag channel --------------------------------------------- OK
 diag channel 20 ------------------------------------------ OK
 diag power ----------------------------------------------- OK
@@ -133,7 +161,7 @@ diag gpio set 2 1 ---------------------------------------- NotSupported
 The parameter `-c` or `--csl` starts to test whether the RCP supports the CSL transmitter.
 
 ```bash
-$ DUT_ADB_USB=TW69UCKFZTGM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 ./tools/cp-caps/rcp_caps_test.py -c
+(ot-env) $ DUT_ADB_USB=TW69UCKFZTGM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 ./tools/cp-caps/rcp_caps_test.py -c
 CSL Transmitter ------------------------------------------ OK
 ```
 
@@ -142,7 +170,7 @@ CSL Transmitter ------------------------------------------ OK
 The parameter `-p` or `--data-poll` starts to test whether the RCP supports data poll.
 
 ```bash
-$ DUT_ADB_USB=1269UCKFZTAM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 ./tools/cp-caps/rcp_caps_test.py -p
+(ot-env) $ DUT_ADB_USB=1269UCKFZTAM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 ./tools/cp-caps/rcp_caps_test.py -p
 Data Poll Parent ----------------------------------------- OK
 Data Poll Child ------------------------------------------ OK
 ```
@@ -152,7 +180,7 @@ Data Poll Child ------------------------------------------ OK
 The parameter `-l` or `--link-metrics` starts to test whether the RCP supports link metrics.
 
 ```bash
-$ DUT_ADB_USB=1269UCKFZTAM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 ./tools/cp-caps/rcp_caps_test.py -l
+(ot-env) $ DUT_ADB_USB=1269UCKFZTAM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 ./tools/cp-caps/rcp_caps_test.py -l
 Link Metrics Initiator ----------------------------------- OK
 Link Metrics Subject ------------------------------------- OK
 ```
@@ -162,6 +190,6 @@ Link Metrics Subject ------------------------------------- OK
 The parameter `-t` or `--throughput` starts to test the Thread network 1-hop throughput of the DUT.
 
 ```bash
-$ DUT_ADB_USB=1269UCKFZTAM95OR REF_ADB_USB=44061HFAG01AQK python3 ./tools/cp-caps/rcp_caps_test.py -t
+(ot-env) $ DUT_ADB_USB=1269UCKFZTAM95OR REF_ADB_USB=44061HFAG01AQK python3 ./tools/cp-caps/rcp_caps_test.py -t
 Throughput ----------------------------------------------- 75.6 Kbits/sec
 ```
