@@ -4239,9 +4239,20 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
         AdvanceTime(1000000);
         VerifyPdOmrPrefix(raPrefix);
 
+        sExpectedRios.Add(newRaPrefix);
+
+        // When the prefix is replaced, there will be a short period when the old prefix is still in the netdata, and PD
+        // manager will refuse to request the prefix.
         SendRouterAdvertToBorderRoutingProcessIcmp6Ra(
             {Pio(raPrefix, 0, 0), Pio(newRaPrefix, kValidLitime, kPreferredLifetime)});
-        sExpectedRios.Add(newRaPrefix);
+        for (int i = 5; i < 50; i++)
+        {
+            AdvanceTime(1000);
+            if (otBorderRoutingDhcp6PdGetState(sInstance) == OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING)
+            {
+                SendRouterAdvertToBorderRoutingProcessIcmp6Ra({Pio(newRaPrefix, kValidLitime, kPreferredLifetime)});
+            }
+        }
 
         AdvanceTime(1000000);
         VerifyOrQuit(sExpectedRios.SawAll());

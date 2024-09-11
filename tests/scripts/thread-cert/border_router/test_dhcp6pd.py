@@ -90,6 +90,7 @@ class TestDhcp6Pd(thread_cert.TestCase):
         # Case 2: More than one BR receives PD prefix
         # The BR with "smaller" PD prefix wins
 
+        # Clean up and ensure no prefix is currently published.
         leader.pd_set_enabled(False)
         router.pd_set_enabled(False)
         self.simulator.go(30)

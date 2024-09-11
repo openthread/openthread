@@ -3972,6 +3972,10 @@ void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState
         break;
     }
 
+    // When the prefix is replaced, there will be a short period when the old prefix is still in the netdata, and PD
+    // manager will refuse to request the prefix.
+    // TODO: Either update the comment for the state callback or add a random delay when notifing the upper layer for
+    // state change.
     mStateCallback.InvokeIfSet(static_cast<otBorderRoutingDhcp6PdState>(newState));
 
 exit:
