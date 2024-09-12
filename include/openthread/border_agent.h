@@ -82,22 +82,13 @@ extern "C" {
 #define OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_TIMEOUT (10 * 60 * 1000u)
 
 /**
- * @struct otBorderAgentId
- *
- * Represents a Border Agent ID.
+ * Represents a Border Agent Identifier.
  *
  */
-OT_TOOL_PACKED_BEGIN
-struct otBorderAgentId
+typedef struct otBorderAgentId
 {
-    uint8_t mId[OT_BORDER_AGENT_ID_LENGTH];
-} OT_TOOL_PACKED_END;
-
-/**
- * Represents a Border Agent ID.
- *
- */
-typedef struct otBorderAgentId otBorderAgentId;
+    uint8_t mId[OT_BORDER_AGENT_ID_LENGTH]; ///< Border Agent ID bytes.
+} otBorderAgentId;
 
 /**
  * Defines the Border Agent state.

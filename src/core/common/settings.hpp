@@ -772,7 +772,6 @@ public:
      * Represents the Border Agent ID.
      *
      */
-    OT_TOOL_PACKED_BEGIN
     class BorderAgentId
     {
         friend class Settings;
@@ -780,40 +779,14 @@ public:
     public:
         static constexpr Key kKey = kKeyBorderAgentId; ///< The associated key.
 
-        /**
-         * Initializes the `BorderAgentId` object.
-         *
-         */
-        void Init(void) { ClearAllBytes(mId); }
-
-        /**
-         * Returns the Border Agent ID.
-         *
-         * @returns The Border Agent ID.
-         *
-         */
-        const MeshCoP::BorderAgent::Id &GetId(void) const { return mId; }
-
-        /**
-         * Returns the Border Agent ID.
-         *
-         * @returns The Border Agent ID.
-         *
-         */
-        MeshCoP::BorderAgent::Id &GetId(void) { return mId; }
-
-        /**
-         * Sets the Border Agent ID.
-         *
-         */
-        void SetId(const MeshCoP::BorderAgent::Id &aId) { mId = aId; }
+        typedef MeshCoP::BorderAgent::Id ValueType; ///< The associated value type.
 
     private:
-        void Log(Action aAction) const;
+        static void Log(Action aAction, const MeshCoP::BorderAgent::Id &aId);
 
-        MeshCoP::BorderAgent::Id mId;
-    } OT_TOOL_PACKED_END;
-#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+        BorderAgentId(void) = delete;
+    };
+#endif
 
 protected:
     explicit SettingsBase(Instance &aInstance)
