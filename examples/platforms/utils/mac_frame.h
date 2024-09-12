@@ -366,7 +366,7 @@ otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadi
 /**
  * Perform processing of SFD callback from ISR.
  *
- * @param[in]  aFrame        The target frame that contains the IE. MUST NOT be `NULL`.
+ * @param[in]  aFrame        The target frame. MUST NOT be `NULL`.
  * @param[in,out]  aRadioContext The radio context accessible in ISR.
  *
  * @retval OT_ERROR_NONE     Successfully processed security.
