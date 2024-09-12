@@ -354,9 +354,15 @@ typedef struct otRadioContext
 /**
  * Perform processing of SFD callback from ISR.
  *
- * @param[in]  aFrame        The target frame that contains the IE. MUST NOT be `NULL`.
- * @param[in]  aRadioTime    The radio time when the SFD was at the antenna.
- * @param[in]  aRadioContext The radio context accessible in ISR.
+ * This function may do multiple tasks as follows.
+ *
+ *  - CSL IE will be populated (if present)
+ *  - Time IE will be populated (if present)
+ *  - Tx security will be performed (including assignment of security frame counter and key id if not assigned)
+ *
+ * @param[in,out]   aFrame          The target frame. MUST NOT be `NULL`.
+ * @param[in]       aRadioTime      The radio time when the SFD was at the antenna.
+ * @param[in,out]       aRadioContext   The radio context accessible in ISR.
  *
  * @returns the error processing the callback. The caller should abort transmission on failures.
  *
@@ -364,10 +370,10 @@ typedef struct otRadioContext
 otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioContext *aRadioContext);
 
 /**
- * Perform processing of SFD callback from ISR.
+ * Process frame tx security.
  *
- * @param[in]  aFrame        The target frame. MUST NOT be `NULL`.
- * @param[in,out]  aRadioContext The radio context accessible in ISR.
+ * @param[in,out]   aFrame          The target frame. MUST NOT be `NULL`.
+ * @param[in,out]   aRadioContext   The radio context accessible in ISR.
  *
  * @retval OT_ERROR_NONE     Successfully processed security.
  * @retval OT_ERROR_FAILED   Failed to processed security.
