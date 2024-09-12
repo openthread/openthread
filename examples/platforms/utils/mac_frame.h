@@ -362,7 +362,7 @@ typedef struct otRadioContext
  *
  * @param[in,out]   aFrame          The target frame. MUST NOT be `NULL`.
  * @param[in]       aRadioTime      The radio time when the SFD was at the antenna.
- * @param[in,out]       aRadioContext   The radio context accessible in ISR.
+ * @param[in,out]   aRadioContext   The radio context accessible in ISR.
  *
  * @returns the error processing the callback. The caller should abort transmission on failures.
  *
