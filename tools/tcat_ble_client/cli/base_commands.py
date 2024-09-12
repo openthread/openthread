@@ -40,6 +40,9 @@ from utils import select_device_by_user_input
 from os import path
 from time import time
 from secrets import token_bytes
+from hashlib import sha256
+import hmac
+import binascii
 
 
 class HelpCommand(Command):
@@ -55,6 +58,10 @@ class HelpCommand(Command):
         return CommandResultNone()
 
 
+class DataNotPrepared(Exception):
+    pass
+
+
 class BleCommand(Command):
 
     @abstractmethod
@@ -62,19 +69,22 @@ class BleCommand(Command):
         pass
 
     @abstractmethod
-    def prepare_data(self, context):
+    def prepare_data(self, args, context):
         pass
 
     async def execute_default(self, args, context):
         bless: BleStreamSecure = context['ble_sstream']
 
         print(self.get_log_string())
-        data = self.prepare_data(context)
-        response = await bless.send_with_resp(data)
-        if not response:
-            return
-        tlv_response = TLV.from_bytes(response)
-        return CommandResultTLV(tlv_response)
+        try:
+            data = self.prepare_data(args, context)
+            response = await bless.send_with_resp(data)
+            if not response:
+                return
+            tlv_response = TLV.from_bytes(response)
+            return CommandResultTLV(tlv_response)
+        except DataNotPrepared as err:
+            print('Command failed', err)
 
 
 class HelloCommand(BleCommand):
@@ -85,7 +95,7 @@ class HelloCommand(BleCommand):
     def get_help_string(self) -> str:
         return 'Send round trip "Hello world!" message.'
 
-    def prepare_data(self, context):
+    def prepare_data(self, args, context):
         return TLV(TcatTLVType.APPLICATION.value, bytes('Hello world!', 'ascii')).to_bytes()
 
 
@@ -97,7 +107,7 @@ class CommissionCommand(BleCommand):
     def get_help_string(self) -> str:
         return 'Update the connected device with current dataset.'
 
-    def prepare_data(self, context):
+    def prepare_data(self, args, context):
         dataset: ThreadDataset = context['dataset']
         dataset_bytes = dataset.to_bytes()
         return TLV(TcatTLVType.ACTIVE_DATASET.value, dataset_bytes).to_bytes()
@@ -111,7 +121,7 @@ class DecommissionCommand(BleCommand):
     def get_help_string(self) -> str:
         return 'Stop Thread interface and decommission device from current network.'
 
-    def prepare_data(self, context):
+    def prepare_data(self, args, context):
         return TLV(TcatTLVType.DECOMMISSION.value, bytes()).to_bytes()
 
 
@@ -123,7 +133,7 @@ class GetDeviceIdCommand(BleCommand):
     def get_help_string(self) -> str:
         return 'Get unique identifier for the TCAT device.'
 
-    def prepare_data(self, context):
+    def prepare_data(self, args, context):
         return TLV(TcatTLVType.GET_DEVICE_ID.value, bytes()).to_bytes()
 
 
@@ -135,7 +145,7 @@ class GetExtPanIDCommand(BleCommand):
     def get_help_string(self) -> str:
         return 'Get extended PAN ID that is commissioned in the active dataset.'
 
-    def prepare_data(self, context):
+    def prepare_data(self, args, context):
         return TLV(TcatTLVType.GET_EXT_PAN_ID.value, bytes()).to_bytes()
 
 
@@ -147,7 +157,7 @@ class GetProvisioningUrlCommand(BleCommand):
     def get_help_string(self) -> str:
         return 'Get a URL for an application suited to commission the TCAT device.'
 
-    def prepare_data(self, context):
+    def prepare_data(self, args, context):
         return TLV(TcatTLVType.GET_PROVISIONING_URL.value, bytes()).to_bytes()
 
 
@@ -159,8 +169,113 @@ class GetNetworkNameCommand(BleCommand):
     def get_help_string(self) -> str:
         return 'Get the Thread network name that is commissioned in the active dataset.'
 
-    def prepare_data(self, context):
+    def prepare_data(self, args, context):
         return TLV(TcatTLVType.GET_NETWORK_NAME.value, bytes()).to_bytes()
+
+
+class PresentHash(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Presenting hash.'
+
+    def get_help_string(self) -> str:
+        return 'Present calculated hash.'
+
+    def prepare_data(self, args, context):
+        type = args[0]
+        code = None
+        tlv_type = None
+        if type == "pskd":
+            code = bytes(args[1], 'utf-8')
+            tlv_type = TcatTLVType.PRESENT_PSKD_HASH.value
+        elif type == "pskc":
+            code = bytes.fromhex(args[1])
+            tlv_type = TcatTLVType.PRESENT_PSKC_HASH.value
+        elif type == "install":
+            code = bytes(args[1], 'utf-8')
+            tlv_type = TcatTLVType.PRESENT_INSTALL_CODE_HASH.value
+        else:
+            raise DataNotPrepared("Hash code name incorrect.")
+        bless: BleStreamSecure = context['ble_sstream']
+        if bless.peer_public_key is None:
+            raise DataNotPrepared("Peer certificate not present.")
+
+        if bless.peer_challenge is None:
+            raise DataNotPrepared("Peer challenge not present.")
+
+        hash = hmac.new(code, digestmod=sha256)
+        hash.update(bless.peer_challenge)
+        hash.update(bless.peer_public_key)
+
+        data = TLV(tlv_type, hash.digest()).to_bytes()
+        return data
+
+
+class GetPskdHash(Command):
+
+    def get_log_string(self) -> str:
+        return 'Retrieving peer PSKd hash.'
+
+    def get_help_string(self) -> str:
+        return 'Get calculated PSKd hash.'
+
+    async def execute_default(self, args, context):
+        bless: BleStreamSecure = context['ble_sstream']
+
+        print(self.get_log_string())
+        try:
+            if bless.peer_public_key is None:
+                print("Peer certificate not present.")
+                return
+            challenge_size = 8
+            challenge = token_bytes(challenge_size)
+            pskd = bytes(args[0], 'utf-8')
+            data = TLV(TcatTLVType.GET_PSKD_HASH.value, challenge).to_bytes()
+            response = await bless.send_with_resp(data)
+            if not response:
+                return
+            tlv_response = TLV.from_bytes(response)
+            if tlv_response.value != None:
+                hash = hmac.new(pskd, digestmod=sha256)
+                hash.update(challenge)
+                hash.update(bless.peer_public_key)
+                digest = hash.digest()
+                if digest == tlv_response.value:
+                    print('Requested hash is valid.')
+                else:
+                    print('Requested hash is NOT valid.')
+            return CommandResultTLV(tlv_response)
+        except DataNotPrepared as err:
+            print('Command failed', err)
+
+
+class GetRandomNumberChallenge(Command):
+
+    def get_log_string(self) -> str:
+        return 'Retrieving random challenge.'
+
+    def get_help_string(self) -> str:
+        return 'Get the device random number challenge.'
+
+    async def execute_default(self, args, context):
+        bless: BleStreamSecure = context['ble_sstream']
+
+        print(self.get_log_string())
+        try:
+            data = TLV(TcatTLVType.GET_RANDOM_NUMBER_CHALLENGE.value, bytes()).to_bytes()
+            response = await bless.send_with_resp(data)
+            if not response:
+                return
+            tlv_response = TLV.from_bytes(response)
+            if tlv_response.value != None:
+                if len(tlv_response.value) == 8:
+                    bless.peer_challenge = tlv_response.value
+                else:
+                    print('Challenge format invalid.')
+                    return CommandResultNone()
+            return CommandResultTLV(tlv_response)
+        except DataNotPrepared as err:
+            print('Command failed', err)
 
 
 class PingCommand(Command):
@@ -202,7 +317,7 @@ class ThreadStartCommand(BleCommand):
     def get_help_string(self) -> str:
         return 'Enable thread interface.'
 
-    def prepare_data(self, context):
+    def prepare_data(self, args, context):
         return TLV(TcatTLVType.THREAD_START.value, bytes()).to_bytes()
 
 
@@ -214,7 +329,7 @@ class ThreadStopCommand(BleCommand):
     def get_help_string(self) -> str:
         return 'Disable thread interface.'
 
-    def prepare_data(self, context):
+    def prepare_data(self, args, context):
         return TLV(TcatTLVType.THREAD_STOP.value, bytes()).to_bytes()
 
 

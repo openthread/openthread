@@ -325,6 +325,14 @@ public:
      */
     Error GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementData);
 
+    /**
+     * @brief Gets the Install Code Verify Status during the current session.
+     *
+     * @retval TRUE  The install code was correctly verified.
+     * @retval FALSE The install code was not verified.
+     */
+    bool GetInstallCodeVerifyStatus(void) const { return mInstallCodeVerified; }
+
 private:
     Error Connected(MeshCoP::SecureTransport &aTlsContext);
     void  Disconnected(void);
@@ -336,23 +344,42 @@ private:
                      Message       &aOutgoingMessage,
                      uint16_t       aOffset,
                      uint16_t       aLength,
-                     bool          &response);
-    Error HandleGetNetworkName(Message &aOutgoingMessage, bool &response);
-    Error HandleGetDeviceId(Message &aOutgoingMessage, bool &response);
-    Error HandleGetExtPanId(Message &aOutgoingMessage, bool &response);
-    Error HandleGetProvisioningUrl(Message &aOutgoingMessage, bool &response);
+                     bool          &aResponse);
+    Error HandleGetNetworkName(Message &aOutgoingMessage, bool &aResponse);
+    Error HandleGetDeviceId(Message &aOutgoingMessage, bool &aResponse);
+    Error HandleGetExtPanId(Message &aOutgoingMessage, bool &aResponse);
+    Error HandleGetProvisioningUrl(Message &aOutgoingMessage, bool &aResponse);
+    Error HandlePresentPskdHash(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength);
+    Error HandlePresentPskcHash(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength);
+    Error HandlePresentInstallCodeHash(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength);
+    Error HandleRequestRandomNumberChallenge(Message &aOutgoingMessage, bool &aResponse);
+    Error HandleRequestPskdHash(const Message &aIncomingMessage,
+                                Message       &aOutgoingMessage,
+                                uint16_t       aOffset,
+                                uint16_t       aLength,
+                                bool          &aResponse);
     Error HandleStartThreadInterface(void);
 
-    bool         CheckCommandClassAuthorizationFlags(CommandClassFlags aCommissionerCommandClassFlags,
-                                                     CommandClassFlags aDeviceCommandClassFlags,
-                                                     Dataset          *aDataset) const;
+    Error VerifyHash(const Message &aIncomingMessage,
+                     uint16_t       aOffset,
+                     uint16_t       aLength,
+                     const void    *aBuf,
+                     size_t         aBufLen);
+    void  CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBufLen, Crypto::HmacSha256::Hash &aHash);
+
+    bool CheckCommandClassAuthorizationFlags(CommandClassFlags aCommissionerCommandClassFlags,
+                                             CommandClassFlags aDeviceCommandClassFlags,
+                                             Dataset          *aDataset) const;
+
     bool         CanProcessTlv(uint8_t aTlvType) const;
     CommandClass GetCommandClass(uint8_t aTlvType) const;
 
     static constexpr uint16_t kJoinerUdpPort            = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
     static constexpr uint16_t kPingPayloadMaxLength     = 512;
     static constexpr uint16_t kProvisioningUrlMaxLength = 64;
+    static constexpr uint16_t kMaxPskdLength            = OT_JOINER_MAX_PSKD_LENGTH;
     static constexpr uint16_t kTcatMaxDeviceIdSize      = OT_TCAT_MAX_DEVICEID_SIZE;
+    static constexpr uint16_t kInstallCodeMaxSize       = 255;
 
     JoinerPskd                       mJoinerPskd;
     const VendorInfo                *mVendorInfo;
@@ -369,6 +396,10 @@ private:
     bool                             mCommissionerHasNetworkName : 1;
     bool                             mCommissionerHasDomainName : 1;
     bool                             mCommissionerHasExtendedPanId : 1;
+    uint64_t                         mRandomChallenge;
+    bool                             mPskdVerified : 1;
+    bool                             mPskcVerified : 1;
+    bool                             mInstallCodeVerified : 1;
 
     friend class Ble::BleSecure;
 };

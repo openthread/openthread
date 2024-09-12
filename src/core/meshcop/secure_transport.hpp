@@ -301,6 +301,14 @@ public:
      * @param[in]  aX509CaCertChainLength   The length of chain.
      */
     void SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
+
+    /**
+     * Extracts public key from it's own certificate.
+     *
+     * @returns Public key from own certificate in form of entire ASN.1 field.
+     */
+    const mbedtls_asn1_buf &GetOwnPublicKey(void) const { return mOwnCert.pk_raw; }
+
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 #if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)

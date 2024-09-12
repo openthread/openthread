@@ -87,12 +87,10 @@ async def main():
         print('Setting up secure TLS channel..', end='')
         try:
             await ble_sstream.do_handshake()
-            print('\nDone')
-            ble_sstream.log_cert_identities()
+            print('Done')
         except Exception as e:
-            print('\nFailed')
+            print('Failed')
             logger.error(e)
-            ble_sstream.log_cert_identities()
             quit_with_reason('TLS handshake failure')
 
     ds = ThreadDataset()
