@@ -185,6 +185,16 @@ const otTrelCounters *otTrelGetCounters(otInstance *aInstance);
 void otTrelResetCounters(otInstance *aInstance);
 
 /**
+ * Gets the UDP port of the TREL interface.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns UDP port of the TREL interface.
+ *
+ */
+uint16_t otTrelGetUdpPort(otInstance *aInstance);
+
+/**
  * @}
  *
  */
