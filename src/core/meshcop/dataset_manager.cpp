@@ -291,6 +291,10 @@ Error DatasetManager::Save(const Dataset &aDataset, bool aAllowOlderTimestamp)
     {
         mTimer.Start(kSendSetDelay);
     }
+    else if (IsPendingDataset() && !Get<PendingDatasetManager>().IsDelayTimerRunning())
+    {
+        LocalSave(aDataset);
+    }
 
     SignalDatasetChange();
 

@@ -426,6 +426,19 @@ public:
     Error ReadActiveTimestamp(Timestamp &aTimestamp) const;
 
     /**
+     * Indicates whether the Pending Dataset delay timer is running.
+     *
+     * This indicates that device has a valid Pending Dataset and it will be applied once the delay timer expires. It
+     * helps differentiate scenarios like after a device reboot, where the Pending Dataset might be restored from
+     * non-volatile settings, but the delay timer hasn't been started yet.
+     *
+     * @retval TRUE  The delay timer is running.
+     * @retval FALSE The delay timer is not running.
+     *
+     */
+    bool IsDelayTimerRunning(void) const { return mDelayTimer.IsRunning(); }
+
+    /**
      * Reads the remaining delay time in ms.
      *
      * @param[out] aRemainingDelay A reference to return the remaining delay time.

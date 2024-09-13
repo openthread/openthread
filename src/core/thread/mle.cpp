@@ -2826,7 +2826,8 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
             break;
         }
 #endif
-        if (pendingTimestamp != Get<MeshCoP::PendingDatasetManager>().GetTimestamp())
+        if (!Get<MeshCoP::PendingDatasetManager>().IsDelayTimerRunning() ||
+            (pendingTimestamp != Get<MeshCoP::PendingDatasetManager>().GetTimestamp()))
         {
             VerifyOrExit(aRxInfo.mMessage.ContainsTlv(Tlv::kPendingDataset), dataRequest = true);
             savePendingDataset = true;
@@ -4774,6 +4775,7 @@ Error Mle::TxMessage::AppendPendingTimestampTlv(void)
     const MeshCoP::Timestamp &timestamp = Get<MeshCoP::PendingDatasetManager>().GetTimestamp();
 
     VerifyOrExit(timestamp.IsValid());
+    VerifyOrExit(Get<MeshCoP::PendingDatasetManager>().IsDelayTimerRunning());
     error = Tlv::Append<PendingTimestampTlv>(*this, timestamp);
 
 exit:

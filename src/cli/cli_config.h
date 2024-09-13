@@ -192,4 +192,17 @@
 #define OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_CLI_DATASET_UPDATER_OUTPUT_RESULT
+ *
+ * Define as 1 to have the CLI `dataset updater` command output the result when Dataset Update is finished.
+ *
+ * This can be used to disable outputting the `dataset updater` result in tests where CLI command outputs are parsed
+ * and extra asynchronous output can cause the test to fail.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_DATASET_UPDATER_OUTPUT_RESULT
+#define OPENTHREAD_CONFIG_CLI_DATASET_UPDATER_OUTPUT_RESULT 1
+#endif
+
 #endif // CONFIG_CLI_H_
