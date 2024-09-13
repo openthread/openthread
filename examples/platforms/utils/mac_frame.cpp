@@ -29,6 +29,10 @@
 #include "mac_frame.h"
 
 #include <assert.h>
+
+#include <openthread/platform/radio.h>
+
+#include "common/code_utils.hpp"
 #include "mac/mac_frame.hpp"
 
 using namespace ot;
@@ -277,3 +281,100 @@ void otMacFrameSetEnhAckProbingIe(otRadioFrame *aFrame, const uint8_t *aData, ui
     reinterpret_cast<Mac::Frame *>(aFrame)->SetEnhAckProbingIe(aData, aDataLen);
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+static uint16_t ComputeCslPhase(uint32_t aRadioTime, otRadioContext *aRadioContext)
+{
+    return (aRadioContext->mCslSampleTime - aRadioTime) % (aRadioContext->mCslPeriod * OT_US_PER_TEN_SYMBOLS) /
+           OT_US_PER_TEN_SYMBOLS;
+}
+#endif
+otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *aRadioContext)
+{
+    otError error = OT_ERROR_NONE;
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    otMacKeyMaterial *key = nullptr;
+    uint8_t           keyId;
+
+    VerifyOrExit(otMacFrameIsSecurityEnabled(aFrame) && otMacFrameIsKeyIdMode1(aFrame) &&
+                 !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
+
+    if (otMacFrameIsAck(aFrame))
+    {
+        keyId = otMacFrameGetKeyId(aFrame);
+
+        VerifyOrExit(keyId != 0, error = OT_ERROR_FAILED);
+
+        if (keyId == aRadioContext->mKeyId)
+        {
+            key = &aRadioContext->mCurrKey;
+        }
+        else if (keyId == aRadioContext->mKeyId - 1)
+        {
+            key = &aRadioContext->mPrevKey;
+        }
+        else if (keyId == aRadioContext->mKeyId + 1)
+        {
+            key = &aRadioContext->mNextKey;
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_SECURITY);
+        }
+    }
+    else if (!aFrame->mInfo.mTxInfo.mIsHeaderUpdated)
+    {
+        key   = &aRadioContext->mCurrKey;
+        keyId = aRadioContext->mKeyId;
+    }
+
+    if (key != nullptr)
+    {
+        aFrame->mInfo.mTxInfo.mAesKey = key;
+
+        otMacFrameSetKeyId(aFrame, keyId);
+        otMacFrameSetFrameCounter(aFrame, aRadioContext->mMacFrameCounter++);
+        aFrame->mInfo.mTxInfo.mIsHeaderUpdated = true;
+    }
+#else
+    VerifyOrExit(!aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+
+    otMacFrameProcessTransmitAesCcm(aFrame, &aRadioContext->mExtAddress);
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+void otMacFrameUpdateTimeIe(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioContext *aRadioContext)
+{
+    if (aFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
+    {
+        uint8_t *timeIe = aFrame->mPsdu + aFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
+        uint64_t time   = aRadioTime + aFrame->mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset;
+
+        *timeIe = aFrame->mInfo.mTxInfo.mIeInfo->mTimeSyncSeq;
+
+        *(++timeIe) = static_cast<uint8_t>(time & 0xff);
+        for (uint8_t i = 1; i < sizeof(uint64_t); i++)
+        {
+            time        = time >> 8;
+            *(++timeIe) = static_cast<uint8_t>(time & 0xff);
+        }
+    }
+}
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioContext *aRadioContext)
+{
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (aRadioContext->mCslPeriod > 0) // CSL IE should be filled for every transmit attempt
+    {
+        otMacFrameSetCslIe(aFrame, aRadioContext->mCslPeriod, ComputeCslPhase(aRadioTime, aRadioContext));
+    }
+#endif
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    otMacFrameUpdateTimeIe(aFrame, aRadioTime, aRadioContext);
+#endif
+    return otMacFrameProcessTransmitSecurity(aFrame, aRadioContext);
+}
