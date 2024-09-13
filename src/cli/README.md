@@ -3948,6 +3948,16 @@ Done
 Done
 ```
 
+### trel port
+
+Get the TREL UDP port number.
+
+```bash
+> trel port
+49154
+Done
+```
+
 ### tvcheck enable
 
 Enable thread version check when upgrading to router or leader.

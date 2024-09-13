@@ -256,6 +256,14 @@ public:
      */
     void ResetCounters(void);
 
+    /**
+     * Returns the TREL UDP port.
+     *
+     * @returns The TREL UDP port.
+     *
+     */
+    uint16_t GetUdpPort(void) const { return mUdpPort; }
+
 private:
 #if OPENTHREAD_CONFIG_TREL_PEER_TABLE_SIZE != 0
     static constexpr uint16_t kPeerTableSize = OPENTHREAD_CONFIG_TREL_PEER_TABLE_SIZE;

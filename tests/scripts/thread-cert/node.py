@@ -1451,6 +1451,11 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def get_trel_port(self):
+        cmd = 'trel port'
+        self.send_command(cmd)
+        return int(self._expect_command_output()[0])
+
     def set_epskc(self, keystring: str, timeout=120000, port=0):
         cmd = 'ba ephemeralkey set ' + keystring + ' ' + str(timeout) + ' ' + str(port)
         self.send_command(cmd)
