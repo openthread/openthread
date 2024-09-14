@@ -1157,8 +1157,6 @@ private:
     public:
         explicit OmrPrefixManager(Instance &aInstance);
 
-        static constexpr RoutePreference kPdRoutePreference = RoutePreference::kRoutePreferenceMedium;
-
         void                    Init(const Ip6::Prefix &aBrUlaPrefix);
         void                    Start(void);
         void                    Stop(void);
@@ -1505,6 +1503,8 @@ private:
         // client.
 
         typedef Dhcp6PdState State;
+
+        static constexpr RoutePreference kPdRoutePreference = RoutePreference::kRoutePreferenceMedium;
 
         explicit PdPrefixManager(Instance &aInstance);
 

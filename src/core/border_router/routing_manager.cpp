@@ -2332,7 +2332,7 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
         {
             RemoveLocalFromNetData();
             mLocalPrefix.mPrefix         = Get<RoutingManager>().mPdPrefixManager.GetPrefix();
-            mLocalPrefix.mPreference     = kPdRoutePreference;
+            mLocalPrefix.mPreference     = PdPrefixManager::kPdRoutePreference;
             mLocalPrefix.mIsDomainPrefix = false;
             LogInfo("Setting local OMR prefix to PD prefix: %s", mLocalPrefix.GetPrefix().ToString().AsCString());
         }
@@ -3947,11 +3947,11 @@ void RoutingManager::PdPrefixManager::Evaluate(void)
 {
     const FavoredOmrPrefix &favoredPrefix = Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix();
 
-    bool shouldPause =
-        !(favoredPrefix.IsEmpty() || favoredPrefix.GetPreference() < OmrPrefixManager::kPdRoutePreference ||
-          favoredPrefix.GetPrefix() == mPrefix.GetPrefix());
+    bool shouldPause = !favoredPrefix.IsEmpty() &&
+                       favoredPrefix.GetPrefix() != mPrefix.GetPrefix() &&
+                       favoredPrefix.GetPreference() >= kPdRoutePreference;
 
-    PauseResume(/* aPause= */ shouldPause);
+    PauseResume(/* aPause */ shouldPause);
 }
 
 void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState)

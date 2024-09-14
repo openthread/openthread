@@ -4245,14 +4245,11 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
         // manager will refuse to request the prefix.
         SendRouterAdvertToBorderRoutingProcessIcmp6Ra(
             {Pio(raPrefix, 0, 0), Pio(newRaPrefix, kValidLitime, kPreferredLifetime)});
-        for (int i = 5; i < 50; i++)
-        {
-            AdvanceTime(1000);
-            if (otBorderRoutingDhcp6PdGetState(sInstance) == OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING)
-            {
-                SendRouterAdvertToBorderRoutingProcessIcmp6Ra({Pio(newRaPrefix, kValidLitime, kPreferredLifetime)});
-            }
-        }
+        // Advance a short period of time to wait for a stable PD state.
+        AdvanceTime(5000);
+        VerifyOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetDhcp6PdState() ==
+                     BorderRouter::RoutingManager::kDhcp6PdStateRunning);
+        SendRouterAdvertToBorderRoutingProcessIcmp6Ra({Pio(newRaPrefix, kValidLitime, kPreferredLifetime)});
 
         AdvanceTime(1000000);
         VerifyOrQuit(sExpectedRios.SawAll());
