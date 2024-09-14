@@ -885,6 +885,35 @@ PendingDatasetManager::PendingDatasetManager(Instance &aInstance)
 {
 }
 
+Error PendingDatasetManager::ReadActiveTimestamp(Timestamp &aTimestamp) const
+{
+    Error   error = kErrorNotFound;
+    Dataset dataset;
+
+    SuccessOrExit(Read(dataset));
+
+    SuccessOrExit(dataset.Read<ActiveTimestampTlv>(aTimestamp));
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+Error PendingDatasetManager::ReadRemainingDelay(uint32_t &aRemainingDelay) const
+{
+    Error     error = kErrorNone;
+    TimeMilli now   = TimerMilli::GetNow();
+
+    aRemainingDelay = 0;
+
+    VerifyOrExit(mDelayTimer.IsRunning(), error = kErrorNotFound);
+    VerifyOrExit(mDelayTimer.GetFireTime() > now);
+    aRemainingDelay = mDelayTimer.GetFireTime() - now;
+
+exit:
+    return error;
+}
+
 void PendingDatasetManager::StartDelayTimer(void)
 {
     Dataset dataset;
