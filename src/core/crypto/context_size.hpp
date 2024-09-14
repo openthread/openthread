@@ -30,7 +30,8 @@
 #define CRYPTO_CONTEXT_HPP_
 
 #include "openthread-core-config.h"
-#include "openthread/crypto.h"
+
+#include <openthread/crypto.h>
 
 #if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
 #include <mbedtls/aes.h>
