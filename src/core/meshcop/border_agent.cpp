@@ -38,7 +38,6 @@
 #include "coap/coap_message.hpp"
 #include "common/as_core_type.hpp"
 #include "common/heap.hpp"
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/owned_ptr.hpp"
 #include "common/settings.hpp"

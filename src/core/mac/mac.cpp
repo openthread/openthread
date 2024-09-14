@@ -40,7 +40,6 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
-#include "common/locator_getters.hpp"
 #include "common/random.hpp"
 #include "common/string.hpp"
 #include "crypto/aes_ccm.hpp"

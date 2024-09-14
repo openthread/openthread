@@ -39,8 +39,8 @@
 
 #include "common/as_core_type.hpp"
 #include "common/debug.hpp"
-#include "common/locator_getters.hpp"
 #include "common/uptime.hpp"
+#include "instance/instance.hpp"
 #include "thread/version.hpp"
 
 using namespace ot;

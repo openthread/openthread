@@ -39,8 +39,8 @@
 #include <openthread/platform/toolchain.h>
 
 #include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "instance/instance.hpp"
 #include "net/checksum.hpp"
 #include "net/ip4_types.hpp"
 #include "net/ip6.hpp"

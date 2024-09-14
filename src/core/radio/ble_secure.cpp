@@ -31,7 +31,6 @@
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
 #include <openthread/platform/ble.h>
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/tlvs.hpp"
 #include "instance/instance.hpp"

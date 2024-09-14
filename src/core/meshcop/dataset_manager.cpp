@@ -37,7 +37,6 @@
 #include <stdio.h>
 
 #include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/notifier.hpp"
 #include "instance/instance.hpp"

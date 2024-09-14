@@ -353,7 +353,7 @@ public:
     }
 
 private:
-    static void HandleTimer(Timer &aTimer); // Implemented in `locator_getters.hpp`
+    static void HandleTimer(Timer &aTimer); // Implemented in `instance.hpp`
 };
 
 /**
@@ -514,7 +514,7 @@ public:
     }
 
 private:
-    static void HandleTimer(Timer &aTimer); // Implemented in `locator_getters.hpp`
+    static void HandleTimer(Timer &aTimer); // Implemented in `instance.hpp`
 };
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE

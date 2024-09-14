@@ -37,7 +37,6 @@
 
 #include "common/as_core_type.hpp"
 #include "common/const_cast.hpp"
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/new.hpp"
 #include "common/num_utils.hpp"

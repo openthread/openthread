@@ -35,8 +35,8 @@
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace BackboneRouter {

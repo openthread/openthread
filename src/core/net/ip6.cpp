@@ -38,7 +38,6 @@
 #include "backbone_router/ndproxy_table.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"

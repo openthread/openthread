@@ -35,8 +35,8 @@
 
 #if OPENTHREAD_FTD
 
-#include "common/locator_getters.hpp"
 #include "common/num_utils.hpp"
+#include "instance/instance.hpp"
 #include "meshcop/meshcop.hpp"
 #include "net/ip6.hpp"
 #include "net/tcp6.hpp"

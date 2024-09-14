@@ -37,9 +37,9 @@
 
 #include "common/as_core_type.hpp"
 #include "common/encoding.hpp"
-#include "common/locator_getters.hpp"
 #include "common/num_utils.hpp"
 #include "common/random.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Utils {

@@ -38,7 +38,6 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
-#include "common/locator_getters.hpp"
 #include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
