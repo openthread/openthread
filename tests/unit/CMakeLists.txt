@@ -162,6 +162,39 @@ macro(ot_unit_test name)
 endmacro()
 
 #----------------------------------------------------------------------------------------------------------------------
+
+macro(ot_unit_ncp_test name)
+
+    # Macro to add an OpenThread unit test for NCP functions.
+    #
+    #   Unit test name will be `ot-test-ncp-{name}`. Test source file of
+    #   `test_ncp_{name}.cpp` is used. Optional extra arguments can be
+    #   passed to provide additional source files.
+
+    add_executable(ot-test-ncp-${name}
+        test_ncp_${name}.cpp ${ARGN}
+    )
+
+    target_include_directories(ot-test-ncp-${name}
+    PRIVATE
+        ${COMMON_INCLUDES}
+    )
+
+    target_link_libraries(ot-test-ncp-${name}
+    PRIVATE
+        openthread-ncp-ftd
+        ${COMMON_LIBS}
+    )
+
+    target_compile_options(ot-test-ncp-${name}
+    PRIVATE
+        -DOPENTHREAD_FTD=1
+    )
+
+    add_test(NAME ot-test-ncp-${name} COMMAND ot-test-ncp-${name})
+endmacro()
+
+#----------------------------------------------------------------------------------------------------------------------
 # Unit tests
 
 ot_unit_test(address_sanitizer)
@@ -227,6 +260,8 @@ ot_unit_test(tlv)
 ot_unit_test(toolchain test_toolchain_c.c)
 ot_unit_test(trickle_timer)
 ot_unit_test(url)
+
+ot_unit_ncp_test(infra_if)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

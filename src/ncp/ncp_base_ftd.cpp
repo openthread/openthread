@@ -1403,6 +1403,64 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
+#if OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_INFRA_IF_SETUP>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    isInfraRunning;
+
+    SuccessOrExit(error = mDecoder.ReadUint32(mInfraIfIndex));
+    SuccessOrExit(error = mDecoder.ReadBool(isInfraRunning));
+
+    mInfraIfAddrCount = 0;
+    while (!mDecoder.IsAllReadInStruct())
+    {
+        const otIp6Address *addr;
+
+        SuccessOrExit(error = mDecoder.ReadIp6Address(addr));
+        SuccessOrExit(error = InfraIfAddAddress(*addr));
+    }
+
+    IgnoreError(otBorderRoutingSetEnabled(mInstance, /* aEnabled */ false));
+    SuccessOrExit(error = otBorderRoutingInit(mInstance, mInfraIfIndex, isInfraRunning));
+    SuccessOrExit(error = otBorderRoutingSetEnabled(mInstance, /* aEnabled */ true));
+
+exit:
+    return error;
+}
+
+otError NcpBase::InfraIfAddAddress(const otIp6Address &aAddress)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mInfraIfAddrCount < kMaxInfraIfAddrs, error = OT_ERROR_NO_BUFS);
+    memcpy(&mInfraIfAddrs[mInfraIfAddrCount++], &aAddress, sizeof(aAddress));
+exit:
+    return error;
+}
+
+bool NcpBase::InfraIfContainsAddress(const otIp6Address &aAddress)
+{
+    bool result = false;
+
+    for (uint8_t i = 0; i < mInfraIfAddrCount; i++)
+    {
+        if (memcmp(&mInfraIfAddrs[i], &aAddress, sizeof(aAddress)) == 0)
+        {
+            result = true;
+            break;
+        }
+    }
+    return result;
+}
+
+bool NcpBase::InfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
+{
+    return aInfraIfIndex == mInfraIfIndex && InfraIfContainsAddress(*aAddress);
+}
+
+#endif // OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE
+
 } // namespace Ncp
 } // namespace ot
 

@@ -4946,6 +4946,21 @@ enum
 
     SPINEL_PROP_MULTIPAN__END = 0x910,
 
+    SPINEL_PROP_INFRA_IF__BEGIN = 0x910,
+
+    /// Infrastructure interface setup.
+    /** Format: `LbA(6)`
+     * Type: Write
+     *
+     * `L`: The infrastructure interface index.
+     * `b`: If the infrastrue interface is running.
+     * `A(6)`: The IPv6 addresses of the infrastructure interface.
+     *
+     */
+    SPINEL_PROP_INFRA_IF_SETUP = SPINEL_PROP_INFRA_IF__BEGIN + 1,
+
+    SPINEL_PROP_INFRA_IF__END = 0x920,
+
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,
 
     SPINEL_PROP_NEST_STREAM_MFG = SPINEL_PROP_NEST__BEGIN + 0,
