@@ -2460,7 +2460,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 #if OPENTHREAD_FTD
     if (neighbor == nullptr)
     {
-        // As an FED, we may have rx-only neighbors. We find and set
+        // As an FTD child, we may have rx-only neighbors. We find and set
         // `neighbor` to perform security processing (frame counter
         // and key sequence checks) for messages from such neighbors.
 
@@ -2521,9 +2521,9 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     {
         // Clear the `neighbor` if it is a rx-only one before calling
         // `Handle{Msg}()`, except for a subset of MLE messages such
-        // as MLE Advertisement. This ensures that, as an FED, we are
-        // selective about which messages to process from rx-only
-        // neighbors.
+        // as MLE Advertisement. This ensures that, as an FTD child,
+        // we are selective about which messages to process from
+        // rx-only neighbors.
 
         switch (command)
         {
@@ -2807,7 +2807,7 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
             SetLeaderData(leaderData);
 
 #if OPENTHREAD_FTD
-            SuccessOrExit(error = Get<MleRouter>().ReadAndProcessRouteTlvOnFed(aRxInfo, mParent.GetRouterId()));
+            SuccessOrExit(error = Get<MleRouter>().ReadAndProcessRouteTlvOnFtdChild(aRxInfo, mParent.GetRouterId()));
 #endif
 
             mRetrieveNewNetworkData = true;
@@ -2853,7 +2853,7 @@ void Mle::HandleDataResponse(RxInfo &aRxInfo)
 #endif
 
 #if OPENTHREAD_FTD
-    SuccessOrExit(error = Get<MleRouter>().ReadAndProcessRouteTlvOnFed(aRxInfo, mParent.GetRouterId()));
+    SuccessOrExit(error = Get<MleRouter>().ReadAndProcessRouteTlvOnFtdChild(aRxInfo, mParent.GetRouterId()));
 #endif
 
     error = HandleLeaderData(aRxInfo);
@@ -3355,7 +3355,8 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     SetLeaderData(leaderData);
 
 #if OPENTHREAD_FTD
-    SuccessOrExit(error = Get<MleRouter>().ReadAndProcessRouteTlvOnFed(aRxInfo, RouterIdFromRloc16(sourceAddress)));
+    SuccessOrExit(error =
+                      Get<MleRouter>().ReadAndProcessRouteTlvOnFtdChild(aRxInfo, RouterIdFromRloc16(sourceAddress)));
 #endif
 
     mParentCandidate.CopyTo(mParent);
