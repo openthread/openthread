@@ -33,7 +33,7 @@
 
 #include "thread/tmf.hpp"
 
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 #include "net/ip6_types.hpp"
 
 namespace ot {

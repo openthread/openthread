@@ -37,7 +37,6 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/heap.hpp"
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"

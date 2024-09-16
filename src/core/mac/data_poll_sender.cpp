@@ -34,7 +34,6 @@
 #include "data_poll_sender.hpp"
 
 #include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/num_utils.hpp"

@@ -39,7 +39,6 @@
 #include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/const_cast.hpp"
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/random.hpp"
 #include "instance/instance.hpp"

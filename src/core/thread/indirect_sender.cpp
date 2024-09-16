@@ -36,7 +36,6 @@
 #if OPENTHREAD_FTD
 
 #include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
 #include "common/message.hpp"
 #include "instance/instance.hpp"
 #include "thread/child.hpp"

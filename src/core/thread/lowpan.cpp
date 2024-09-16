@@ -36,7 +36,6 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
-#include "common/locator_getters.hpp"
 #include "common/numeric_limits.hpp"
 #include "instance/instance.hpp"
 #include "net/ip6.hpp"

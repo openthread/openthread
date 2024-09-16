@@ -47,6 +47,7 @@
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/error.hpp"
+#include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
@@ -1107,6 +1108,35 @@ template <> inline FactoryDiags::Diags &Instance::Get(void) { return mDiags; }
 
 #if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 template <> inline Utils::PowerCalibration &Instance::Get(void) { return mPowerCalibration; }
+#endif
+
+//---------------------------------------------------------------------------------------------------------------------
+
+template <typename InstanceGetProvider>
+template <typename Type>
+inline Type &GetProvider<InstanceGetProvider>::Get(void) const
+{
+    return static_cast<const InstanceGetProvider *>(this)->GetInstance().template Get<Type>();
+}
+
+template <typename Owner, void (Owner::*HandleTaskletPtr)(void)>
+void TaskletIn<Owner, HandleTaskletPtr>::HandleTasklet(Tasklet &aTasklet)
+{
+    (aTasklet.Get<Owner>().*HandleTaskletPtr)();
+}
+
+template <typename Owner, void (Owner::*HandleTimertPtr)(void)>
+void TimerMilliIn<Owner, HandleTimertPtr>::HandleTimer(Timer &aTimer)
+{
+    (aTimer.Get<Owner>().*HandleTimertPtr)();
+}
+
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+template <typename Owner, void (Owner::*HandleTimertPtr)(void)>
+void TimerMicroIn<Owner, HandleTimertPtr>::HandleTimer(Timer &aTimer)
+{
+    (aTimer.Get<Owner>().*HandleTimertPtr)();
+}
 #endif
 
 /**

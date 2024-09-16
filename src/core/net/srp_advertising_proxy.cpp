@@ -37,7 +37,6 @@
 
 #include "common/as_core_type.hpp"
 #include "common/debug.hpp"
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/serial_number.hpp"
 #include "common/type_traits.hpp"

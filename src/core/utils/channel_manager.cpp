@@ -38,7 +38,6 @@
 #if (OPENTHREAD_FTD || OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
 
 #include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/random.hpp"
 #include "common/string.hpp"

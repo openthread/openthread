@@ -35,7 +35,6 @@
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/timer.hpp"
 #include "crypto/hkdf_sha256.hpp"

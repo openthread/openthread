@@ -35,7 +35,6 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/locator_getters.hpp"
 #include "common/random.hpp"
 #include "instance/instance.hpp"
 #include "thread/mle_router.hpp"

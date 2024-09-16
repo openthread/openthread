@@ -43,8 +43,8 @@
 
 #include "common/as_core_type.hpp"
 #include "common/debug.hpp"
-#include "common/locator_getters.hpp"
 #include "common/random.hpp"
+#include "instance/instance.hpp"
 #include "mac/mac_frame.hpp"
 
 using namespace ot;

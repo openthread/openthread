@@ -40,7 +40,6 @@
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "instance/instance.hpp"
 #include "meshcop/meshcop.hpp"

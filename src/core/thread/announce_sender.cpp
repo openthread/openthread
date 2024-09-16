@@ -36,7 +36,6 @@
 #include <openthread/platform/radio.h>
 
 #include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/random.hpp"
 #include "instance/instance.hpp"

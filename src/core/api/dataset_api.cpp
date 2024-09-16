@@ -36,7 +36,7 @@
 #include <openthread/dataset.h>
 
 #include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 #include "meshcop/dataset_manager.hpp"
 #include "meshcop/meshcop.hpp"
 
