@@ -361,6 +361,15 @@ typedef struct otRadioFrame
             bool mCsmaCaEnabled : 1;       ///< Set to true to enable CSMA-CA for this packet, false otherwise.
             bool mCslPresent : 1;          ///< Set to true if CSL header IE is present.
             bool mIsSecurityProcessed : 1; ///< True if SubMac should skip the AES processing of this frame.
+
+            /**
+             * The time of the local radio clock in microseconds when the end of
+             * the SFD was present at the local antenna.
+             *
+             * The platform should update this field before otPlatRadioTxStarted() is fired for each transmit attempt.
+             *
+             */
+            uint64_t mTimestamp;
         } mTxInfo;
 
         /**

@@ -376,5 +376,6 @@ otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadi
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     otMacFrameUpdateTimeIe(aFrame, aRadioTime, aRadioContext);
 #endif
+    aFrame->mInfo.mTxInfo.mTimestamp = aRadioTime;
     return otMacFrameProcessTransmitSecurity(aFrame, aRadioContext);
 }

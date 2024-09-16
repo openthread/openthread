@@ -358,6 +358,7 @@ typedef struct otRadioContext
  *
  *  - CSL IE will be populated (if present)
  *  - Time IE will be populated (if present)
+ *  - Tx timestamp will be populated
  *  - Tx security will be performed (including assignment of security frame counter and key id if not assigned)
  *
  * @param[in,out]   aFrame          The target frame. MUST NOT be `NULL`.
