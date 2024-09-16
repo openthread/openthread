@@ -874,14 +874,12 @@ Error MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
                                            Mac::Addresses     &aMeshAddrs,
                                            LogLevel            aLogLevel)
 {
-    Error                  error             = kErrorFailed;
-    bool                   hasFragmentHeader = false;
-    bool                   shouldLogRss;
-    Lowpan::MeshHeader     meshHeader;
-    Lowpan::FragmentHeader fragmentHeader;
-    uint16_t               headerLength;
-    bool                   shouldLogRadio = false;
-    const char            *radioString    = "";
+    Error                     error             = kErrorFailed;
+    bool                      hasFragmentHeader = false;
+    Lowpan::MeshHeader        meshHeader;
+    Lowpan::FragmentHeader    fragmentHeader;
+    uint16_t                  headerLength;
+    String<kMaxLogStringSize> string;
 
     SuccessOrExit(meshHeader.ParseFrom(aMessage, headerLength));
 
@@ -896,23 +894,17 @@ Error MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
         aOffset += headerLength;
     }
 
-    shouldLogRss = (aAction == kMessageReceive) || (aAction == kMessageReassemblyDrop);
+    string.Append("%s mesh frame, len:%u, ", MessageActionToString(aAction, aError), aMessage.GetLength());
 
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    shouldLogRadio = true;
-    radioString    = aMessage.IsRadioTypeSet() ? RadioTypeToString(aMessage.GetRadioType()) : "all";
-#endif
+    AppendMacAddrToLogString(string, aAction, aMacAddress);
 
-    LogAt(aLogLevel, "%s mesh frame, len:%d%s%s, msrc:%s, mdst:%s, hops:%d, frag:%s, sec:%s%s%s%s%s%s%s",
-          MessageActionToString(aAction, aError), aMessage.GetLength(),
-          (aMacAddress == nullptr) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
-          (aMacAddress == nullptr) ? "" : aMacAddress->ToString().AsCString(),
-          aMeshAddrs.mSource.ToString().AsCString(), aMeshAddrs.mDestination.ToString().AsCString(),
-          meshHeader.GetHopsLeft() + ((aAction == kMessageReceive) ? 1 : 0), ToYesNo(hasFragmentHeader),
-          ToYesNo(aMessage.IsLinkSecurityEnabled()),
-          (aError == kErrorNone) ? "" : ", error:", (aError == kErrorNone) ? "" : ErrorToString(aError),
-          shouldLogRss ? ", rss:" : "", shouldLogRss ? aMessage.GetRssAverager().ToString().AsCString() : "",
-          shouldLogRadio ? ", radio:" : "", radioString);
+    string.Append("msrc:%s, mdst:%s, hops:%d, frag:%s, ", aMeshAddrs.mSource.ToString().AsCString(),
+                  aMeshAddrs.mDestination.ToString().AsCString(),
+                  meshHeader.GetHopsLeft() + ((aAction == kMessageReceive) ? 1 : 0), ToYesNo(hasFragmentHeader));
+
+    AppendSecErrorPrioRssRadioLabelsToLogString(string, aAction, aMessage, aError);
+
+    LogAt(aLogLevel, "%s", string.AsCString());
 
     if (hasFragmentHeader)
     {

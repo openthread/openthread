@@ -43,6 +43,7 @@
 #include "net/ip6.hpp"
 #include "net/ip6_filter.hpp"
 #include "net/netif.hpp"
+#include "net/socket.hpp"
 #include "net/tcp6.hpp"
 #include "net/udp6.hpp"
 #include "radio/radio.hpp"
@@ -1882,27 +1883,27 @@ const char *MeshForwarder::MessagePriorityToString(const Message &aMessage)
 #if OPENTHREAD_CONFIG_LOG_SRC_DST_IP_ADDRESSES
 void MeshForwarder::LogIp6SourceDestAddresses(const Ip6::Headers &aHeaders, LogLevel aLogLevel)
 {
-    uint16_t srcPort = aHeaders.GetSourcePort();
-    uint16_t dstPort = aHeaders.GetDestinationPort();
-
-    if (srcPort != 0)
-    {
-        LogAt(aLogLevel, "    src:[%s]:%d", aHeaders.GetSourceAddress().ToString().AsCString(), srcPort);
-    }
-    else
-    {
-        LogAt(aLogLevel, "    src:[%s]", aHeaders.GetSourceAddress().ToString().AsCString());
-    }
-
-    if (dstPort != 0)
-    {
-        LogAt(aLogLevel, "    dst:[%s]:%d", aHeaders.GetDestinationAddress().ToString().AsCString(), dstPort);
-    }
-    else
-    {
-        LogAt(aLogLevel, "    dst:[%s]", aHeaders.GetDestinationAddress().ToString().AsCString());
-    }
+    LogIp6AddressAndPort("src", aHeaders.GetSourceAddress(), aHeaders.GetSourcePort(), aLogLevel);
+    LogIp6AddressAndPort("dst", aHeaders.GetDestinationAddress(), aHeaders.GetDestinationPort(), aLogLevel);
 }
+
+void MeshForwarder::LogIp6AddressAndPort(const char         *aLabel,
+                                         const Ip6::Address &aAddress,
+                                         uint16_t            aPort,
+                                         LogLevel            aLogLevel)
+{
+    Ip6::SockAddr::InfoString string;
+
+    string.Append("[%s]", aAddress.ToString().AsCString());
+
+    if (aPort != 0)
+    {
+        string.Append(":%u", aPort);
+    }
+
+    LogAt(aLogLevel, "    %s:%s", aLabel, string.AsCString());
+}
+
 #else
 void MeshForwarder::LogIp6SourceDestAddresses(const Ip6::Headers &, LogLevel) {}
 #endif
@@ -1913,30 +1914,19 @@ void MeshForwarder::LogIp6Message(MessageAction       aAction,
                                   Error               aError,
                                   LogLevel            aLogLevel)
 {
-    Ip6::Headers headers;
-    bool         shouldLogRss;
-    bool         shouldLogRadio = false;
-    const char  *radioString    = "";
+    Ip6::Headers              headers;
+    String<kMaxLogStringSize> string;
 
     SuccessOrExit(headers.ParseFrom(aMessage));
 
-    shouldLogRss = (aAction == kMessageReceive) || (aAction == kMessageReassemblyDrop);
+    string.Append("%s IPv6 %s msg, len:%u, chksum:%04x, ecn:%s, ", MessageActionToString(aAction, aError),
+                  Ip6::Ip6::IpProtoToString(headers.GetIpProto()), aMessage.GetLength(), headers.GetChecksum(),
+                  Ip6::Ip6::EcnToString(headers.GetEcn()));
 
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    shouldLogRadio = true;
-    radioString    = aMessage.IsRadioTypeSet() ? RadioTypeToString(aMessage.GetRadioType()) : "all";
-#endif
+    AppendMacAddrToLogString(string, aAction, aMacAddress);
+    AppendSecErrorPrioRssRadioLabelsToLogString(string, aAction, aMessage, aError);
 
-    LogAt(aLogLevel, "%s IPv6 %s msg, len:%d, chksum:%04x, ecn:%s%s%s, sec:%s%s%s, prio:%s%s%s%s%s",
-          MessageActionToString(aAction, aError), Ip6::Ip6::IpProtoToString(headers.GetIpProto()), aMessage.GetLength(),
-          headers.GetChecksum(), Ip6::Ip6::EcnToString(headers.GetEcn()),
-          (aMacAddress == nullptr) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
-          (aMacAddress == nullptr) ? "" : aMacAddress->ToString().AsCString(),
-          ToYesNo(aMessage.IsLinkSecurityEnabled()),
-          (aError == kErrorNone) ? "" : ", error:", (aError == kErrorNone) ? "" : ErrorToString(aError),
-          MessagePriorityToString(aMessage), shouldLogRss ? ", rss:" : "",
-          shouldLogRss ? aMessage.GetRssAverager().ToString().AsCString() : "", shouldLogRadio ? ", radio:" : "",
-          radioString);
+    LogAt(aLogLevel, "%s", string.AsCString());
 
     if (aAction != kMessagePrepareIndirect)
     {
@@ -1945,6 +1935,51 @@ void MeshForwarder::LogIp6Message(MessageAction       aAction,
 
 exit:
     return;
+}
+
+void MeshForwarder::AppendMacAddrToLogString(StringWriter       &aString,
+                                             MessageAction       aAction,
+                                             const Mac::Address *aMacAddress)
+{
+    VerifyOrExit(aMacAddress != nullptr);
+
+    if (aAction == kMessageReceive)
+    {
+        aString.Append("from:");
+    }
+    else
+    {
+        aString.Append("to:");
+    }
+
+    aString.Append("%s, ", aMacAddress->ToString().AsCString());
+
+exit:
+    return;
+}
+
+void MeshForwarder::AppendSecErrorPrioRssRadioLabelsToLogString(StringWriter  &aString,
+                                                                MessageAction  aAction,
+                                                                const Message &aMessage,
+                                                                Error          aError)
+{
+    aString.Append("sec:%s, ", ToYesNo(aMessage.IsLinkSecurityEnabled()));
+
+    if (aError != kErrorNone)
+    {
+        aString.Append("error:%s, ", ErrorToString(aError));
+    }
+
+    aString.Append("prio:%s", MessagePriorityToString(aMessage));
+
+    if ((aAction == kMessageReceive) || (aAction == kMessageReassemblyDrop))
+    {
+        aString.Append(", rss:%s", aMessage.GetRssAverager().ToString().AsCString());
+    }
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    aString.Append(", radio:%s", aMessage.IsRadioTypeSet() ? RadioTypeToString(aMessage.GetRadioType()) : "all");
+#endif
 }
 
 void MeshForwarder::LogMessage(MessageAction aAction, const Message &aMessage)

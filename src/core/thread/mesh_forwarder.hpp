@@ -638,12 +638,20 @@ private:
                          Error               aError,
                          LogLevel            aLogLevel);
 #endif
+#if OPENTHREAD_CONFIG_LOG_SRC_DST_IP_ADDRESSES
+    void LogIp6AddressAndPort(const char *aLabel, const Ip6::Address &aAddress, uint16_t aPort, LogLevel aLogLevel);
+#endif
     void LogIp6SourceDestAddresses(const Ip6::Headers &aHeaders, LogLevel aLogLevel);
     void LogIp6Message(MessageAction       aAction,
                        const Message      &aMessage,
                        const Mac::Address *aAddress,
                        Error               aError,
                        LogLevel            aLogLevel);
+    void AppendSecErrorPrioRssRadioLabelsToLogString(StringWriter  &aString,
+                                                     MessageAction  aAction,
+                                                     const Message &aMessage,
+                                                     Error          aError);
+    void AppendMacAddrToLogString(StringWriter &aString, MessageAction aAction, const Mac::Address *aMacAddress);
 #endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
     using TxTask = TaskletIn<MeshForwarder, &MeshForwarder::ScheduleTransmissionTask>;
