@@ -701,53 +701,37 @@ exit:
     return;
 }
 
-bool MeshForwarder::FragmentPriorityList::UpdateOnTimeTick(void)
-{
-    bool continueRxingTicks = false;
-
-    for (Entry &entry : mEntries)
-    {
-        if (!entry.IsExpired())
-        {
-            entry.DecrementLifetime();
-
-            if (!entry.IsExpired())
-            {
-                continueRxingTicks = true;
-            }
-        }
-    }
-
-    return continueRxingTicks;
-}
-
 void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                                            uint16_t                aFragmentLength,
                                            uint16_t                aSrcRloc16,
                                            Message::Priority       aPriority)
 {
-    FragmentPriorityList::Entry *entry;
+    FwdFrameInfo *entry;
 
-    entry = mFragmentPriorityList.FindEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag());
+    entry = FindFwdFrameInfoEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag());
 
     if (entry == nullptr)
     {
         VerifyOrExit(aFragmentHeader.GetDatagramOffset() == 0);
 
-        mFragmentPriorityList.AllocateEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag(), aPriority);
+        entry = mFwdFrameInfoArray.PushBack();
+        VerifyOrExit(entry != nullptr);
+
+        entry->Init(aSrcRloc16, aFragmentHeader.GetDatagramTag(), aPriority);
         Get<TimeTicker>().RegisterReceiver(TimeTicker::kMeshForwarder);
+
         ExitNow();
     }
 
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
     OT_UNUSED_VARIABLE(aFragmentLength);
 #else
-    // We can clear the entry in `mFragmentPriorityList` if it is the
+    // We can remove the entry in `mFwdFrameInfoArray` if it is the
     // last fragment. But if "delay aware active queue management" is
     // used we need to keep entry until the message is sent.
     if (aFragmentHeader.GetDatagramOffset() + aFragmentLength >= aFragmentHeader.GetDatagramSize())
     {
-        entry->Clear();
+        mFwdFrameInfoArray.Remove(*entry);
     }
     else
 #endif
@@ -759,55 +743,51 @@ exit:
     return;
 }
 
-MeshForwarder::FragmentPriorityList::Entry *MeshForwarder::FragmentPriorityList::FindEntry(uint16_t aSrcRloc16,
-                                                                                           uint16_t aTag)
+void MeshForwarder::FwdFrameInfo::Init(uint16_t aSrcRloc16, uint16_t aDatagramTag, Message::Priority aPriority)
 {
-    Entry *rval = nullptr;
-
-    for (Entry &entry : mEntries)
-    {
-        if (!entry.IsExpired() && entry.Matches(aSrcRloc16, aTag))
-        {
-            rval = &entry;
-            break;
-        }
-    }
-
-    return rval;
+    mSrcRloc16   = aSrcRloc16;
+    mDatagramTag = aDatagramTag;
+    mLifetime    = kLifetime;
+    mPriority    = aPriority;
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+    mShouldDrop = false;
+#endif
 }
 
-MeshForwarder::FragmentPriorityList::Entry *MeshForwarder::FragmentPriorityList::AllocateEntry(
-    uint16_t          aSrcRloc16,
-    uint16_t          aTag,
-    Message::Priority aPriority)
+bool MeshForwarder::FwdFrameInfo::Matches(const Info &aInfo) const
 {
-    Entry *newEntry = nullptr;
+    return (mSrcRloc16 == aInfo.mSrcRloc16) && (mDatagramTag == aInfo.mDatagramTag);
+}
 
-    for (Entry &entry : mEntries)
+MeshForwarder::FwdFrameInfo *MeshForwarder::FindFwdFrameInfoEntry(uint16_t aSrcRloc16, uint16_t aDatagramTag)
+{
+    FwdFrameInfo::Info info;
+
+    info.mSrcRloc16   = aSrcRloc16;
+    info.mDatagramTag = aDatagramTag;
+
+    return mFwdFrameInfoArray.FindMatching(info);
+}
+
+bool MeshForwarder::UpdateFwdFrameInfoArrayOnTimeTick(void)
+{
+    for (FwdFrameInfo &entry : mFwdFrameInfoArray)
     {
-        if (entry.IsExpired())
-        {
-            entry.Clear();
-            entry.mSrcRloc16   = aSrcRloc16;
-            entry.mDatagramTag = aTag;
-            entry.mPriority    = aPriority;
-            entry.ResetLifetime();
-            newEntry = &entry;
-            break;
-        }
+        entry.DecrementLifetime();
     }
 
-    return newEntry;
+    mFwdFrameInfoArray.RemoveAllMatching(FwdFrameInfo::kIsExpired);
+
+    return !mFwdFrameInfoArray.IsEmpty();
 }
 
 Error MeshForwarder::GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                                          uint16_t                aSrcRloc16,
                                          Message::Priority      &aPriority)
 {
-    Error                        error = kErrorNone;
-    FragmentPriorityList::Entry *entry;
+    Error               error = kErrorNone;
+    const FwdFrameInfo *entry = FindFwdFrameInfoEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag());
 
-    entry = mFragmentPriorityList.FindEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag());
     VerifyOrExit(entry != nullptr, error = kErrorNotFound);
     aPriority = entry->GetPriority();
 

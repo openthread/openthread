@@ -129,10 +129,6 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
 
     ResetCounters();
 
-#if OPENTHREAD_FTD
-    mFragmentPriorityList.Clear();
-#endif
-
 #if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
     mTxQueueStats.Clear();
 #endif
@@ -164,7 +160,7 @@ void MeshForwarder::Stop(void)
 
 #if OPENTHREAD_FTD
     mIndirectSender.Stop();
-    mFragmentPriorityList.Clear();
+    mFwdFrameInfoArray.Clear();
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
@@ -327,9 +323,7 @@ Error MeshForwarder::UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend)
 
             if ((shouldMarkEcn && !isEcnCapable) || (timeInQueue >= kTimeInQueueDropMsg))
             {
-                FragmentPriorityList::Entry *entry;
-
-                entry = mFragmentPriorityList.FindEntry(meshHeader.GetSource(), fragmentHeader.GetDatagramTag());
+                FwdFrameInfo *entry = FindFwdFrameInfoEntry(meshHeader.GetSource(), fragmentHeader.GetDatagramTag());
 
                 if (entry != nullptr)
                 {
@@ -358,9 +352,8 @@ Error MeshForwarder::UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend)
         }
         else if (hasFragmentHeader)
         {
-            FragmentPriorityList::Entry *entry;
+            FwdFrameInfo *entry = FindFwdFrameInfoEntry(meshHeader.GetSource(), fragmentHeader.GetDatagramTag());
 
-            entry = mFragmentPriorityList.FindEntry(meshHeader.GetSource(), fragmentHeader.GetDatagramTag());
             VerifyOrExit(entry != nullptr);
 
             if (entry->ShouldDrop())
@@ -368,12 +361,12 @@ Error MeshForwarder::UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend)
                 error = kErrorDrop;
             }
 
-            // We can clear the entry if it is the last fragment and
+            // We can remove the entry if it is the last fragment and
             // only if the message is being prepared to be sent out.
             if (aPreparingToSend && (fragmentHeader.GetDatagramOffset() + aMessage.GetLength() - offset >=
                                      fragmentHeader.GetDatagramSize()))
             {
-                entry->Clear();
+                mFwdFrameInfoArray.Remove(*entry);
             }
         }
     }
@@ -1588,7 +1581,7 @@ void MeshForwarder::HandleTimeTick(void)
     bool continueRxingTicks = false;
 
 #if OPENTHREAD_FTD
-    continueRxingTicks = mFragmentPriorityList.UpdateOnTimeTick();
+    continueRxingTicks = UpdateFwdFrameInfoArrayOnTimeTick();
 #endif
 
     continueRxingTicks = UpdateReassemblyList() || continueRxingTicks;

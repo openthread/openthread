@@ -444,64 +444,69 @@ private:
     };
 
 #if OPENTHREAD_FTD
-    class FragmentPriorityList : public Clearable<FragmentPriorityList>
-    {
-    public:
-        class Entry : public Clearable<Entry>
-        {
-            friend class FragmentPriorityList;
 
-        public:
-            // Lifetime of an entry in seconds.
-            static constexpr uint8_t kLifetime =
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-                OT_MAX(kReassemblyTimeout, OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_FRAG_TAG_RETAIN_TIME);
+    static constexpr uint16_t kQmFwdEntries = OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_FRAG_TAG_ENTRY_LIST_SIZE;
 #else
-                kReassemblyTimeout;
+    static constexpr uint16_t kQmFwdEntries = 0;
 #endif
+    static constexpr uint16_t kPrioFwdEntries = OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES;
+    static constexpr uint16_t kFwdInfoEntries = OT_MAX(kPrioFwdEntries, kQmFwdEntries);
 
-            Message::Priority GetPriority(void) const { return static_cast<Message::Priority>(mPriority); }
-            bool              IsExpired(void) const { return (mLifetime == 0); }
-            void              DecrementLifetime(void) { mLifetime--; }
-            void              ResetLifetime(void) { mLifetime = kLifetime; }
+    class FwdFrameInfo
+    {
+        // Tracks information (priority, drop status) for forwarded
+        // mesh-header fragmented frames. This ensures consistent
+        // priority assignment to all fragments of the same message and
+        // facilitates delay-aware queue management, where dropping
+        // one fragment leads to dropping all subsequent fragments of
+        // the same message.
 
-            bool Matches(uint16_t aSrcRloc16, uint16_t aTag) const
-            {
-                return (mSrcRloc16 == aSrcRloc16) && (mDatagramTag == aTag);
-            }
-
-#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-            bool ShouldDrop(void) const { return mShouldDrop; }
-            void MarkToDrop(void) { mShouldDrop = true; }
-#endif
-
-        private:
-            uint16_t mSrcRloc16;
-            uint16_t mDatagramTag;
-            uint8_t  mLifetime;
-            uint8_t  mPriority : 2;
-#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-            bool mShouldDrop : 1;
-#endif
-
-            static_assert(Message::kNumPriorities <= 4, "mPriority as a 2-bit does not fit all `Priority` values");
+    public:
+        enum ExpireChecker : uint8_t
+        {
+            kIsExpired,
         };
 
-        Entry *AllocateEntry(uint16_t aSrcRloc16, uint16_t aTag, Message::Priority aPriority);
-        Entry *FindEntry(uint16_t aSrcRloc16, uint16_t aTag);
-        bool   UpdateOnTimeTick(void);
+        struct Info
+        {
+            uint16_t mSrcRloc16;
+            uint16_t mDatagramTag;
+        };
+
+        void Init(uint16_t aSrcRloc16, uint16_t aDatagramTag, Message::Priority aPriority);
+        bool Matches(const Info &aInfo) const;
+        bool Matches(const ExpireChecker) const { return IsExpired(); }
+        void ResetLifetime(void) { mLifetime = kLifetime; }
+        void DecrementLifetime(void) { mLifetime--; }
+        bool IsExpired(void) const { return (mLifetime == 0); }
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+        bool ShouldDrop(void) const { return mShouldDrop; }
+        void MarkToDrop(void) { mShouldDrop = true; }
+#endif
+        Message::Priority GetPriority(void) const { return static_cast<Message::Priority>(mPriority); }
 
     private:
-        static constexpr uint16_t kNumEntries =
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-            OT_MAX(OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES,
-                   OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_FRAG_TAG_ENTRY_LIST_SIZE);
+        static constexpr uint8_t kRetainTime = OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_FRAG_TAG_RETAIN_TIME;
 #else
-            OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES;
+        static constexpr uint8_t kRetainTime = 0;
+#endif
+        static constexpr uint8_t kLifetime = OT_MAX(kReassemblyTimeout, kRetainTime);
+
+        uint16_t mSrcRloc16;
+        uint16_t mDatagramTag;
+        uint8_t  mLifetime;
+        uint8_t  mPriority : 2;
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+        bool mShouldDrop : 1;
 #endif
 
-        Entry mEntries[kNumEntries];
+        static_assert(Message::kNumPriorities <= 4, "mPriority as a 2-bit does not fit all `Priority` values");
     };
+
+    using FwdFrameInfoArray = Array<FwdFrameInfo, kFwdInfoEntries>;
+
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
@@ -591,10 +596,16 @@ private:
     void ScheduleTransmissionTask(void);
 
     Error GetFramePriority(RxInfo &aRxInfo, Message::Priority &aPriority);
+
+#if OPENTHREAD_FTD
+    FwdFrameInfo *FindFwdFrameInfoEntry(uint16_t aSrcRloc16, uint16_t aDatagramTag);
+    bool          UpdateFwdFrameInfoArrayOnTimeTick(void);
+
     Error GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                               uint16_t                aSrcRloc16,
                               Message::Priority      &aPriority);
     void  GetForwardFramePriority(RxInfo &aRxInfo, Message::Priority &aPriority);
+#endif
 
     bool                CalcIePresent(const Message *aMessage);
     Mac::Frame::Version CalcFrameVersion(const Neighbor *aNeighbor, bool aIePresent) const;
@@ -684,8 +695,8 @@ private:
     otIpCounters mIpCounters;
 
 #if OPENTHREAD_FTD
-    FragmentPriorityList mFragmentPriorityList;
-    IndirectSender       mIndirectSender;
+    IndirectSender    mIndirectSender;
+    FwdFrameInfoArray mFwdFrameInfoArray;
 #endif
 
     DataPollSender mDataPollSender;
