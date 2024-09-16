@@ -488,21 +488,6 @@ public:
      */
     bool IsValid(void) const { return GetSize() >= sizeof(*this); }
 
-    /**
-     * Indicates whether or not the Stub Router Flag is set.
-     *
-     * @retval TRUE   The Stub Router Flag is set.
-     * @retval FALSE  The Stub Router Flag is not set.
-     *
-     */
-    bool IsStubRouterFlagSet(void) const { return (mFlags[0] & kStubRouterFlag) != 0; }
-
-    /**
-     * Sets the Stub Router Flag.
-     *
-     */
-    void SetStubRouterFlag(void) { mFlags[0] |= kStubRouterFlag; }
-
     RaFlagsExtOption(void) = delete;
 
 private:
@@ -515,10 +500,6 @@ private:
     //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     //  ... for assignment                                              |
     //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                                .
-
-    // Stub router flags defined in [https://www.ietf.org/archive/id/draft-hui-stub-router-ra-flag-01.txt]
-
-    static constexpr uint8_t kStubRouterFlag = 1 << 7;
 
     uint8_t mFlags[6];
 } OT_TOOL_PACKED_END;
@@ -639,6 +620,21 @@ public:
         void SetOtherConfigFlag(void) { mFlags |= kOtherConfigFlag; }
 
         /**
+         * Indicates whether or not the SNAC Router Flag is set in the RA message header.
+         *
+         * @retval TRUE   The SNAC Router Flag is set.
+         * @retval FALSE  The SNAC Router Flag is not set.
+         *
+         */
+        bool IsSnacRouterFlagSet(void) const { return (mFlags & kSnacRouterFlag) != 0; }
+
+        /**
+         * Sets the SNAC Router Flag in the RA message header.
+         *
+         */
+        void SetSnacRouterFlag(void) { mFlags |= kSnacRouterFlag; }
+
+        /**
          * This method returns the ICMPv6 message type.
          *
          * @returns The ICMPv6 message type.
@@ -654,7 +650,7 @@ public:
         //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
         //  |     Type      |     Code      |          Checksum             |
         //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-        //  | Cur Hop Limit |M|O| |Prf|     |       Router Lifetime         |
+        //  | Cur Hop Limit |M|O| |Prf| |S| |       Router Lifetime         |
         //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
         //  |                         Reachable Time                        |
         //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -665,6 +661,7 @@ public:
 
         static constexpr uint8_t kManagedAddressConfigFlag = 1 << 7;
         static constexpr uint8_t kOtherConfigFlag          = 1 << 6;
+        static constexpr uint8_t kSnacRouterFlag           = 1 << 1;
         static constexpr uint8_t kPreferenceOffset         = 3;
         static constexpr uint8_t kPreferenceMask           = 3 << kPreferenceOffset;
 
@@ -820,17 +817,6 @@ public:
          *
          */
         Error AppendRouteInfoOption(const Prefix &aPrefix, uint32_t aRouteLifetime, RoutePreference aPreference);
-
-        /**
-         * Appends a Flags Extension Option to the RA message.
-         *
-         * @param[in] aStubRouterFlag    The stub router flag.
-         *
-         * @retval kErrorNone    Option is appended successfully.
-         * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
-         *
-         */
-        Error AppendFlagsExtensionOption(bool aStubRouterFlag);
 
         /**
          * Appends bytes from a given buffer to the RA message.

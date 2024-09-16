@@ -283,12 +283,12 @@ Info per prefix entry:
 - Flags in received Router Advertisement header:
   - M: Managed Address Config flag
   - O: Other Config flag
-  - Stub: Stub Router flag (indicates whether the router is a stub router)
+  - S: SNAC Router flag
 
 ```bash
 > br prefixtable
-prefix:fd00:1234:5678:0::/64, on-link:no, ms-since-rx:29526, lifetime:1800, route-prf:med, router:ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1)
-prefix:1200:abba:baba:0::/64, on-link:yes, ms-since-rx:29527, lifetime:1800, preferred:1800, router:ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1)
+prefix:fd00:1234:5678:0::/64, on-link:no, ms-since-rx:29526, lifetime:1800, route-prf:med, router:ff02:0:0:0:0:0:0:1 (M:0 O:0 S:1)
+prefix:1200:abba:baba:0::/64, on-link:yes, ms-since-rx:29527, lifetime:1800, preferred:1800, router:ff02:0:0:0:0:0:0:1 (M:0 O:0 S:1)
 Done
 ```
 
@@ -394,7 +394,7 @@ Info per router:
 - Flags in received Router Advertisement header:
   - M: Managed Address Config flag
   - O: Other Config flag
-  - Stub: Stub Router flag (indicates whether the router is a stub router)
+  - S: SNAC Router flag (indicates whether the router is a stub router)
 - Milliseconds since last received message from this router
 - Reachability flag: A router is marked as unreachable if it fails to respond to multiple Neighbor Solicitation probes.
 - Age: Duration interval since this router was first discovered. It is formatted as `{hh}:{mm}:{ss}` for hours, minutes, seconds, if the duration is less than 24 hours. If the duration is 24 hours or more, the format is `{dd}d.{hh}:{mm}:{ss}` for days, hours, minutes, seconds.
@@ -403,6 +403,6 @@ Info per router:
 
 ```bash
 > br routers
-ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1) ms-since-rx:1505 reachable:yes age:00:18:13
+ff02:0:0:0:0:0:0:1 (M:0 O:0 S:1) ms-since-rx:1505 reachable:yes age:00:18:13
 Done
 ```

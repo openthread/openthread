@@ -105,7 +105,7 @@ for br in [br1, br1]:
     verify(len(routers) > 0)
     for router in routers:
         verify('reachable:yes' in router)
-        verify('Stub:1' in router)
+        verify('S:1' in router)
         verify(not router.endswith('(peer BR)'))
 
 # -----------------------------------------------------------------------------------------------------------------------
