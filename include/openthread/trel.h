@@ -39,7 +39,7 @@
 #include <openthread/dataset.h>
 #include <openthread/ip6.h>
 #include <openthread/platform/radio.h>
-#include "openthread/platform/trel.h"
+#include <openthread/platform/trel.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -32,10 +32,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <openthread/error.h>
+#include <openthread/tcat.h>
 #include <openthread/platform/ble.h>
 
-#include "openthread/error.h"
-#include "openthread/tcat.h"
 #include "utils/code_utils.h"
 
 #define PLAT_BLE_MSG_DATA_MAX 2048

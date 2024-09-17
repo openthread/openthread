@@ -32,8 +32,6 @@
  */
 
 #include "factory_diags.hpp"
-#include "common/error.hpp"
-#include "openthread/platform/radio.h"
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
@@ -42,9 +40,11 @@
 
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
+#include <openthread/platform/radio.h>
 
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
+#include "common/error.hpp"
 #include "common/string.hpp"
 #include "instance/instance.hpp"
 #include "radio/radio.hpp"

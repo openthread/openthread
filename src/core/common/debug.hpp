@@ -43,7 +43,7 @@
 
 #if OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
 
-#include "openthread/platform/misc.h"
+#include <openthread/platform/misc.h>
 
 /**
  * Allow the build system to provide a custom file name.

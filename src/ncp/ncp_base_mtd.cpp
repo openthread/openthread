@@ -59,7 +59,7 @@
 #include <openthread/server.h>
 #endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-#include "openthread/backbone_router.h"
+#include <openthread/backbone_router.h>
 #endif
 #if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
 #include <openthread/srp_client_buffers.h>
