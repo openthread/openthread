@@ -1174,7 +1174,7 @@ exit:
     return rval;
 }
 
-Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, const LeaderData &aLeaderData)
+Error MleRouter::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, const LeaderData &aLeaderData)
 {
     // This method processes a received MLE Advertisement message on
     // an FTD device. It is called from `Mle::HandleAdvertisement()`
@@ -2149,7 +2149,7 @@ exit:
     LogProcessError(kTypeChildIdRequest, error);
 }
 
-void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
+void MleRouter::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
 {
     Error           error = kErrorNone;
     Mac::ExtAddress extAddr;
@@ -2367,7 +2367,7 @@ exit:
     LogProcessError(kTypeChildUpdateRequestOfChild, error);
 }
 
-void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
+void MleRouter::HandleChildUpdateResponseOnParent(RxInfo &aRxInfo)
 {
     Error       error = kErrorNone;
     uint16_t    sourceAddress;
