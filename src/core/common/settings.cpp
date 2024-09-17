@@ -107,15 +107,16 @@ void SettingsBase::SrpServerInfo::Log(Action aAction) const
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
-void SettingsBase::BorderAgentId::Log(Action aAction) const
+void SettingsBase::BorderAgentId::Log(Action aAction, const MeshCoP::BorderAgent::Id &aId)
 {
-    char         buffer[sizeof(BorderAgentId) * 2 + 1];
-    StringWriter sw(buffer, sizeof(buffer));
+    static constexpr uint8_t kStringSize = sizeof(MeshCoP::BorderAgent::Id) * 2 + 1;
 
-    sw.AppendHexBytes(GetId().mId, sizeof(BorderAgentId));
-    LogInfo("%s BorderAgentId {id:%s}", ActionToString(aAction), buffer);
+    String<kStringSize> string;
+
+    string.AppendHexBytes(aId.mId, sizeof(aId));
+    LogInfo("%s BorderAgentId {id:%s}", ActionToString(aAction), string.AsCString());
 }
-#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+#endif
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
@@ -533,7 +534,7 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
         case kKeyBorderAgentId:
-            reinterpret_cast<const BorderAgentId *>(aValue)->Log(aAction);
+            BorderAgentId::Log(aAction, *reinterpret_cast<const MeshCoP::BorderAgent::Id *>(aValue));
             break;
 #endif
 

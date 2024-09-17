@@ -268,35 +268,32 @@ BorderAgent::BorderAgent(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 Error BorderAgent::GetId(Id &aId)
 {
-    Error                   error = kErrorNone;
-    Settings::BorderAgentId id;
+    Error error = kErrorNone;
 
-    VerifyOrExit(!mIdInitialized, error = kErrorNone);
-
-    if (Get<Settings>().Read(id) != kErrorNone)
-    {
-        Random::NonCrypto::Fill(id.GetId());
-        SuccessOrExit(error = Get<Settings>().Save(id));
-    }
-
-    mId            = id.GetId();
-    mIdInitialized = true;
-
-exit:
-    if (error == kErrorNone)
+    if (mIdInitialized)
     {
         aId = mId;
+        ExitNow();
     }
+
+    if (Get<Settings>().Read<Settings::BorderAgentId>(mId) != kErrorNone)
+    {
+        Random::NonCrypto::Fill(mId);
+        SuccessOrExit(error = Get<Settings>().Save<Settings::BorderAgentId>(mId));
+    }
+
+    mIdInitialized = true;
+    aId            = mId;
+
+exit:
     return error;
 }
 
 Error BorderAgent::SetId(const Id &aId)
 {
-    Error                   error = kErrorNone;
-    Settings::BorderAgentId id;
+    Error error = kErrorNone;
 
-    id.SetId(aId);
-    SuccessOrExit(error = Get<Settings>().Save(id));
+    SuccessOrExit(error = Get<Settings>().Save<Settings::BorderAgentId>(aId));
     mId            = aId;
     mIdInitialized = true;
 
