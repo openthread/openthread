@@ -368,15 +368,15 @@ public:
     void UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighborId);
 
     /**
-     * Updates the routes on an FED based on a received `RouteTlv` from the parent.
+     * Updates the routes on an FTD child based on a received `RouteTlv` from the parent.
      *
-     * MUST be called when device is an FED child and @p aRouteTlv is received from its current parent.
+     * MUST be called when device is an FTD child and @p aRouteTlv is received from its current parent.
      *
      * @param[in]  aRouteTlv    The received `RouteTlv` from parent.
      * @param[in]  aParentId    The Router ID of parent.
      *
      */
-    void UpdateRoutesOnFed(const Mle::RouteTlv &aRouteTlv, uint8_t aParentId);
+    void UpdateRouterOnFtdChild(const Mle::RouteTlv &aRouteTlv, uint8_t aParentId);
 
     /**
      * Gets the allocated Router ID set.

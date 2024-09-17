@@ -681,7 +681,7 @@ exit:
     return;
 }
 
-void RouterTable::UpdateRoutesOnFed(const Mle::RouteTlv &aRouteTlv, uint8_t aParentId)
+void RouterTable::UpdateRouterOnFtdChild(const Mle::RouteTlv &aRouteTlv, uint8_t aParentId)
 {
     for (uint8_t routerId = 0, index = 0; routerId <= Mle::kMaxRouterId;
          index += aRouteTlv.IsRouterIdSet(routerId) ? 1 : 0, routerId++)
