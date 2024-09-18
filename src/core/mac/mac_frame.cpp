@@ -39,6 +39,7 @@
 #include "common/debug.hpp"
 #include "common/frame_builder.hpp"
 #include "common/log.hpp"
+#include "common/num_utils.hpp"
 #include "radio/trel_link.hpp"
 #if !OPENTHREAD_RADIO || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
 #include "crypto/aes_ccm.hpp"
@@ -193,13 +194,13 @@ void Frame::InitMacHeader(Type             aType,
 
     if (aSuppressSequence)
     {
-        fcf |= kFcfSequenceSupression;
+        fcf |= kFcfSequenceSuppression;
     }
 
     builder.Init(mPsdu, GetMtu());
     IgnoreError(builder.AppendLittleEndianUint16(fcf));
 
-    if (!IsSequenceSuppressed(fcf))
+    if (IsSequencePresent(fcf))
     {
         IgnoreError(builder.AppendUint8(0)); // Seq number
     }
@@ -238,9 +239,20 @@ void Frame::InitMacHeader(Type             aType,
     mLength += GetFcsSize();
 }
 
-uint16_t Frame::GetFrameControlField(void) const { return LittleEndian::ReadUint16(mPsdu); }
-
-void Frame::SetFrameControlField(uint16_t aFcf) { LittleEndian::WriteUint16(aFcf, mPsdu); }
+void Frame::SetFrameControlField(uint16_t aFcf)
+{
+#if OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
+    if (IsShortFcf(aFcf))
+    {
+        OT_ASSERT((aFcf >> 8) == 0);
+        mPsdu[0] = static_cast<uint8_t>(aFcf);
+    }
+    else
+#endif
+    {
+        LittleEndian::WriteUint16(aFcf, mPsdu);
+    }
+}
 
 Error Frame::ValidatePsdu(void) const
 {
@@ -254,44 +266,106 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+bool Frame::IsWakeupFrame(void) const
+{
+    const uint16_t fcf    = GetFrameControlField();
+    bool           result = false;
+    uint8_t        keyIdMode;
+    uint8_t        firstIeIndex;
+    Address        srcAddress;
+
+    // Wake-up frame is a Multipurpose frame without Ack Request...
+    VerifyOrExit((fcf & kFcfFrameTypeMask) == kTypeMultipurpose);
+    VerifyOrExit((fcf & kMpFcfAckRequest) == 0);
+
+    // ... with extended source address...
+    SuccessOrExit(GetSrcAddr(srcAddress));
+    VerifyOrExit(srcAddress.IsExtended());
+
+    // ... secured with Key Id Mode 2...
+    SuccessOrExit(GetKeyIdMode(keyIdMode));
+    VerifyOrExit(keyIdMode == kKeyIdMode2);
+
+    // ... that has Rendezvous Time IE and Connection IE...
+    VerifyOrExit(GetRendezvousTimeIe() != nullptr);
+    VerifyOrExit(GetConnectionIe() != nullptr);
+
+    // ... but no other IEs nor payload.
+    firstIeIndex = FindHeaderIeIndex();
+    VerifyOrExit(mPsdu + firstIeIndex + sizeof(HeaderIe) + RendezvousTimeIe::kIeContentSize + sizeof(HeaderIe) +
+                     ConnectionIe::kIeContentSize ==
+                 GetFooter());
+
+    result = true;
+
+exit:
+    return result;
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
 void Frame::SetAckRequest(bool aAckRequest)
 {
+    uint16_t fcf  = GetFrameControlField();
+    uint16_t mask = Select<kFcfAckRequest, kMpFcfAckRequest>(fcf);
+
     if (aAckRequest)
     {
-        mPsdu[0] |= kFcfAckRequest;
+        fcf |= mask;
     }
     else
     {
-        mPsdu[0] &= ~kFcfAckRequest;
+        fcf &= ~mask;
     }
+
+    SetFrameControlField(fcf);
 }
 
 void Frame::SetFramePending(bool aFramePending)
 {
+    uint16_t fcf  = GetFrameControlField();
+    uint16_t mask = Select<kFcfFramePending, kMpFcfFramePending>(fcf);
+
     if (aFramePending)
     {
-        mPsdu[0] |= kFcfFramePending;
+        fcf |= mask;
     }
     else
     {
-        mPsdu[0] &= ~kFcfFramePending;
+        fcf &= ~mask;
     }
+
+    SetFrameControlField(fcf);
 }
 
 void Frame::SetIePresent(bool aIePresent)
 {
-    uint16_t fcf = GetFrameControlField();
+    uint16_t fcf  = GetFrameControlField();
+    uint16_t mask = Select<kFcfIePresent, kMpFcfIePresent>(fcf);
 
     if (aIePresent)
     {
-        fcf |= kFcfIePresent;
+        fcf |= mask;
     }
     else
     {
-        fcf &= ~kFcfIePresent;
+        fcf &= ~mask;
     }
 
     SetFrameControlField(fcf);
+}
+
+uint8_t Frame::SkipSequenceIndex(void) const
+{
+    uint16_t fcf   = GetFrameControlField();
+    uint8_t  index = GetFcfSize(fcf);
+
+    if (IsSequencePresent(fcf))
+    {
+        index += kDsnSize;
+    }
+
+    return index;
 }
 
 uint8_t Frame::FindDstPanIdIndex(void) const
@@ -300,7 +374,7 @@ uint8_t Frame::FindDstPanIdIndex(void) const
 
     VerifyOrExit(IsDstPanIdPresent(), index = kInvalidIndex);
 
-    index = kFcfSize + GetSeqNumSize();
+    index = SkipSequenceIndex();
 
 exit:
     return index;
@@ -308,9 +382,16 @@ exit:
 
 bool Frame::IsDstPanIdPresent(uint16_t aFcf)
 {
-    bool present = true;
+    bool present;
 
-    if (IsVersion2015(aFcf))
+#if OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
+    if (IsMultipurpose(aFcf))
+    {
+        present = (aFcf & kMpFcfPanidPresent) != 0;
+    }
+    else
+#endif
+        if (IsVersion2015(aFcf))
     {
         // Original table at `InitMacHeader()`
         //
@@ -348,6 +429,7 @@ bool Frame::IsDstPanIdPresent(uint16_t aFcf)
             present = false;
             break;
         default:
+            present = true;
             break;
         }
     }
@@ -382,19 +464,18 @@ void Frame::SetDstPanId(PanId aPanId)
 uint8_t Frame::GetSequence(void) const
 {
     OT_ASSERT(IsSequencePresent());
-    return GetPsdu()[kSequenceIndex];
+
+    return GetPsdu()[GetFcfSize(GetFrameControlField())];
 }
 
 void Frame::SetSequence(uint8_t aSequence)
 {
     OT_ASSERT(IsSequencePresent());
-    GetPsdu()[kSequenceIndex] = aSequence;
+
+    GetPsdu()[GetFcfSize(GetFrameControlField())] = aSequence;
 }
 
-uint8_t Frame::FindDstAddrIndex(void) const
-{
-    return kFcfSize + GetSeqNumSize() + (IsDstPanIdPresent() ? sizeof(PanId) : 0);
-}
+uint8_t Frame::FindDstAddrIndex(void) const { return SkipSequenceIndex() + (IsDstPanIdPresent() ? sizeof(PanId) : 0); }
 
 Error Frame::GetDstAddr(Address &aAddress) const
 {
@@ -403,13 +484,13 @@ Error Frame::GetDstAddr(Address &aAddress) const
 
     VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
-    switch (GetFrameControlField() & kFcfDstAddrMask)
+    switch (GetFcfDstAddr(GetFrameControlField()))
     {
-    case kFcfDstAddrShort:
+    case kFcfAddrShort:
         aAddress.SetShort(LittleEndian::ReadUint16(&mPsdu[index]));
         break;
 
-    case kFcfDstAddrExt:
+    case kFcfAddrExt:
         aAddress.SetExtended(&mPsdu[index], ExtAddress::kReverseByteOrder);
         break;
 
@@ -424,7 +505,7 @@ exit:
 
 void Frame::SetDstAddr(ShortAddress aShortAddress)
 {
-    OT_ASSERT((GetFrameControlField() & kFcfDstAddrMask) == kFcfDstAddrShort);
+    OT_ASSERT(GetFcfDstAddr(GetFrameControlField()) == kFcfAddrShort);
     LittleEndian::WriteUint16(aShortAddress, &mPsdu[FindDstAddrIndex()]);
 }
 
@@ -432,7 +513,7 @@ void Frame::SetDstAddr(const ExtAddress &aExtAddress)
 {
     uint8_t index = FindDstAddrIndex();
 
-    OT_ASSERT((GetFrameControlField() & kFcfDstAddrMask) == kFcfDstAddrExt);
+    OT_ASSERT(GetFcfDstAddr(GetFrameControlField()) == kFcfAddrExt);
     OT_ASSERT(index != kInvalidIndex);
 
     aExtAddress.CopyTo(&mPsdu[index], ExtAddress::kReverseByteOrder);
@@ -458,25 +539,25 @@ void Frame::SetDstAddr(const Address &aAddress)
 
 uint8_t Frame::FindSrcPanIdIndex(void) const
 {
-    uint8_t  index = 0;
-    uint16_t fcf   = GetFrameControlField();
+    uint16_t fcf = GetFrameControlField();
+    uint8_t  index;
 
-    VerifyOrExit(IsSrcPanIdPresent(), index = kInvalidIndex);
+    VerifyOrExit(IsSrcPanIdPresent(fcf), index = kInvalidIndex);
 
-    index += kFcfSize + GetSeqNumSize();
+    index = SkipSequenceIndex();
 
     if (IsDstPanIdPresent(fcf))
     {
         index += sizeof(PanId);
     }
 
-    switch (fcf & kFcfDstAddrMask)
+    switch (GetFcfDstAddr(fcf))
     {
-    case kFcfDstAddrShort:
+    case kFcfAddrShort:
         index += sizeof(ShortAddress);
         break;
 
-    case kFcfDstAddrExt:
+    case kFcfAddrExt:
         index += sizeof(ExtAddress);
         break;
     }
@@ -487,39 +568,51 @@ exit:
 
 bool Frame::IsSrcPanIdPresent(uint16_t aFcf)
 {
-    bool present = IsSrcAddrPresent(aFcf) && ((aFcf & kFcfPanidCompression) == 0);
+    bool present;
 
-    // Special case for a IEEE 802.15.4-2015 frame: When both
-    // addresses are extended, then the source PAN iD is not present
-    // independent of PAN ID Compression. In this case, if the PAN ID
-    // compression is set, it indicates that no PAN ID is in the
-    // frame, while if the PAN ID Compression is zero, it indicates
-    // the presence of the destination PAN ID in the frame.
-    //
-    // +----+--------------+--------------+--------------++--------------+
-    // | No |  Dest Addr   |   Src Addr   |  PAN ID Comp ||  Src PAN ID  |
-    // +----+--------------+--------------+--------------++--------------+
-    // |  1 | Not Present  | Not Present  |      0       || Not Present  |
-    // |  2 | Not Present  | Not Present  |      1       || Not Present  |
-    // |  3 | Present      | Not Present  |      0       || Not Present  |
-    // |  4 | Present      | Not Present  |      1       || Not Present  |
-    // |  5 | Not Present  | Present      |      0       || Present      |
-    // |  6 | Not Present  | Present      |      1       || Not Present  |
-    // +----+--------------+--------------+--------------++--------------+
-    // |  7 | Extended     | Extended     |      0       || Not Present  |
-    // |  8 | Extended     | Extended     |      1       || Not Present  |
-    // |----+--------------+--------------+--------------++--------------+
-    // |  9 | Short        | Short        |      0       || Present      |
-    // | 10 | Short        | Extended     |      0       || Present      |
-    // | 11 | Extended     | Short        |      0       || Present      |
-    // | 12 | Short        | Extended     |      1       || Not Present  |
-    // | 13 | Extended     | Short        |      1       || Not Present  |
-    // | 14 | Short        | Short        |      1       || Not Present  |
-    // +----+--------------+--------------+--------------++--------------+
-
-    if (IsVersion2015(aFcf) && ((aFcf & (kFcfDstAddrMask | kFcfSrcAddrMask)) == (kFcfDstAddrExt | kFcfSrcAddrExt)))
+#if OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
+    if (IsMultipurpose(aFcf))
     {
+        // Sources PAN ID is implicitly equal to Destination PAN ID in Multipurpose frames
         present = false;
+    }
+    else
+#endif
+        if (IsVersion2015(aFcf) && ((aFcf & (kFcfDstAddrMask | kFcfSrcAddrMask)) == (kFcfDstAddrExt | kFcfSrcAddrExt)))
+    {
+        // Special case for a IEEE 802.15.4-2015 frame: When both
+        // addresses are extended, then the source PAN iD is not present
+        // independent of PAN ID Compression. In this case, if the PAN ID
+        // compression is set, it indicates that no PAN ID is in the
+        // frame, while if the PAN ID Compression is zero, it indicates
+        // the presence of the destination PAN ID in the frame.
+        //
+        // +----+--------------+--------------+--------------++--------------+
+        // | No |  Dest Addr   |   Src Addr   |  PAN ID Comp ||  Src PAN ID  |
+        // +----+--------------+--------------+--------------++--------------+
+        // |  1 | Not Present  | Not Present  |      0       || Not Present  |
+        // |  2 | Not Present  | Not Present  |      1       || Not Present  |
+        // |  3 | Present      | Not Present  |      0       || Not Present  |
+        // |  4 | Present      | Not Present  |      1       || Not Present  |
+        // |  5 | Not Present  | Present      |      0       || Present      |
+        // |  6 | Not Present  | Present      |      1       || Not Present  |
+        // +----+--------------+--------------+--------------++--------------+
+        // |  7 | Extended     | Extended     |      0       || Not Present  |
+        // |  8 | Extended     | Extended     |      1       || Not Present  |
+        // |----+--------------+--------------+--------------++--------------+
+        // |  9 | Short        | Short        |      0       || Present      |
+        // | 10 | Short        | Extended     |      0       || Present      |
+        // | 11 | Extended     | Short        |      0       || Present      |
+        // | 12 | Short        | Extended     |      1       || Not Present  |
+        // | 13 | Extended     | Short        |      1       || Not Present  |
+        // | 14 | Short        | Short        |      1       || Not Present  |
+        // +----+--------------+--------------+--------------++--------------+
+
+        present = false;
+    }
+    else
+    {
+        present = IsSrcAddrPresent(aFcf) && ((aFcf & kFcfPanidCompression) == 0);
     }
 
     return present;
@@ -551,23 +644,21 @@ exit:
 
 uint8_t Frame::FindSrcAddrIndex(void) const
 {
-    uint8_t  index = 0;
     uint16_t fcf   = GetFrameControlField();
-
-    index += kFcfSize + GetSeqNumSize();
+    uint8_t  index = SkipSequenceIndex();
 
     if (IsDstPanIdPresent(fcf))
     {
         index += sizeof(PanId);
     }
 
-    switch (fcf & kFcfDstAddrMask)
+    switch (GetFcfDstAddr(fcf))
     {
-    case kFcfDstAddrShort:
+    case kFcfAddrShort:
         index += sizeof(ShortAddress);
         break;
 
-    case kFcfDstAddrExt:
+    case kFcfAddrExt:
         index += sizeof(ExtAddress);
         break;
     }
@@ -588,17 +679,17 @@ Error Frame::GetSrcAddr(Address &aAddress) const
 
     VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
-    switch (fcf & kFcfSrcAddrMask)
+    switch (GetFcfSrcAddr(fcf))
     {
-    case kFcfSrcAddrShort:
+    case kFcfAddrShort:
         aAddress.SetShort(LittleEndian::ReadUint16(&mPsdu[index]));
         break;
 
-    case kFcfSrcAddrExt:
+    case kFcfAddrExt:
         aAddress.SetExtended(&mPsdu[index], ExtAddress::kReverseByteOrder);
         break;
 
-    case kFcfSrcAddrNone:
+    case kFcfAddrNone:
         aAddress.SetNone();
         break;
 
@@ -616,7 +707,7 @@ void Frame::SetSrcAddr(ShortAddress aShortAddress)
 {
     uint8_t index = FindSrcAddrIndex();
 
-    OT_ASSERT((GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrShort);
+    OT_ASSERT(GetFcfSrcAddr(GetFrameControlField()) == kFcfAddrShort);
     OT_ASSERT(index != kInvalidIndex);
 
     LittleEndian::WriteUint16(aShortAddress, &mPsdu[index]);
@@ -626,7 +717,7 @@ void Frame::SetSrcAddr(const ExtAddress &aExtAddress)
 {
     uint8_t index = FindSrcAddrIndex();
 
-    OT_ASSERT((GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrExt);
+    OT_ASSERT(GetFcfSrcAddr(GetFrameControlField()) == kFcfAddrExt);
     OT_ASSERT(index != kInvalidIndex);
 
     aExtAddress.CopyTo(&mPsdu[index], ExtAddress::kReverseByteOrder);
@@ -964,8 +1055,6 @@ uint8_t Frame::SkipAddrFieldIndex(void) const
 
     VerifyOrExit(kFcfSize + GetFcsSize() <= mLength, index = kInvalidIndex);
 
-    VerifyOrExit(!IsSequencePresent() || kFcfSize + kDsnSize + GetFcsSize() <= mLength, index = kInvalidIndex);
-
     index = CalculateAddrFieldSize(GetFrameControlField());
 
 exit:
@@ -974,7 +1063,7 @@ exit:
 
 uint8_t Frame::CalculateAddrFieldSize(uint16_t aFcf)
 {
-    uint8_t size = kFcfSize + GetSeqNumSize(aFcf);
+    uint8_t size = GetFcfSize(aFcf) + (IsSequencePresent(aFcf) ? kDsnSize : 0);
 
     // This static method calculates the size (number of bytes) of
     // Address header field for a given Frame Control `aFcf` value.
@@ -988,16 +1077,16 @@ uint8_t Frame::CalculateAddrFieldSize(uint16_t aFcf)
         size += sizeof(PanId);
     }
 
-    switch (aFcf & kFcfDstAddrMask)
+    switch (GetFcfDstAddr(aFcf))
     {
-    case kFcfDstAddrNone:
+    case kFcfAddrNone:
         break;
 
-    case kFcfDstAddrShort:
+    case kFcfAddrShort:
         size += sizeof(ShortAddress);
         break;
 
-    case kFcfDstAddrExt:
+    case kFcfAddrExt:
         size += sizeof(ExtAddress);
         break;
 
@@ -1010,16 +1099,16 @@ uint8_t Frame::CalculateAddrFieldSize(uint16_t aFcf)
         size += sizeof(PanId);
     }
 
-    switch (aFcf & kFcfSrcAddrMask)
+    switch (GetFcfSrcAddr(aFcf))
     {
-    case kFcfSrcAddrNone:
+    case kFcfAddrNone:
         break;
 
-    case kFcfSrcAddrShort:
+    case kFcfAddrShort:
         size += sizeof(ShortAddress);
         break;
 
-    case kFcfSrcAddrExt:
+    case kFcfAddrExt:
         size += sizeof(ExtAddress);
         break;
 
@@ -1151,6 +1240,16 @@ template <> void Frame::InitIeContentAt<TimeIe>(uint8_t &aIndex)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+template <> void Frame::InitIeContentAt<RendezvousTimeIe>(uint8_t &aIndex) { aIndex += sizeof(RendezvousTimeIe); }
+
+template <> void Frame::InitIeContentAt<ConnectionIe>(uint8_t &aIndex)
+{
+    reinterpret_cast<ConnectionIe *>(mPsdu + aIndex)->Init();
+    aIndex += sizeof(ConnectionIe);
+}
+#endif
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 template <> void Frame::InitIeContentAt<CslIe>(uint8_t &aIndex) { aIndex += sizeof(CslIe); }
 #endif
@@ -1186,7 +1285,8 @@ exit:
     return header;
 }
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE || \
+    OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 const uint8_t *Frame::GetThreadIe(uint8_t aSubType) const
 {
     uint8_t        index        = FindHeaderIeIndex();
@@ -1218,7 +1318,8 @@ const uint8_t *Frame::GetThreadIe(uint8_t aSubType) const
 exit:
     return header;
 }
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE ||
+       // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
@@ -1342,6 +1443,10 @@ uint8_t Frame::GetFcsSize(void) const { return Trel::Link::kFcsSize; }
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 template Error Frame::AppendHeaderIeAt<TimeIe>(uint8_t &aIndex);
 #endif
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+template Error Frame::AppendHeaderIeAt<RendezvousTimeIe>(uint8_t &aIndex);
+template Error Frame::AppendHeaderIeAt<ConnectionIe>(uint8_t &aIndex);
+#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 template Error Frame::AppendHeaderIeAt<CslIe>(uint8_t &aIndex);
 #endif
@@ -1433,7 +1538,7 @@ void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
     }
     LittleEndian::WriteUint16(fcf, mPsdu);
 
-    mPsdu[kSequenceIndex] = aFrame.GetSequence();
+    mPsdu[kFcfSize] = aFrame.GetSequence();
 
     mLength = kImmAckLength;
 }
@@ -1518,6 +1623,62 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+Error TxFrame::GenerateWakeupFrame(PanId aPanId, const Address &aDest, const Address &aSource)
+{
+    Error    error = kErrorNone;
+    uint16_t fcf   = kTypeMultipurpose | kMpFcfLongFrame | kMpFcfPanidPresent | kMpFcfSecurityEnabled |
+                   kMpFcfSequenceSuppression | kMpFcfIePresent;
+    uint8_t index = 0;
+
+    switch (aDest.GetType())
+    {
+    case Address::Type::kTypeShort:
+        fcf |= kMpFcfDstAddrShort;
+        break;
+    case Address::Type::kTypeExtended:
+        fcf |= kMpFcfDstAddrExt;
+        break;
+    default:
+        ExitNow(error = kErrorInvalidArgs);
+        break;
+    }
+
+    switch (aSource.GetType())
+    {
+    case Address::Type::kTypeShort:
+        fcf |= kMpFcfSrcAddrShort;
+        break;
+    case Address::Type::kTypeExtended:
+        fcf |= kMpFcfSrcAddrExt;
+        break;
+    default:
+        ExitNow(error = kErrorInvalidArgs);
+        break;
+    }
+
+    mLength = CalculateAddrFieldSize(fcf);
+
+    OT_ASSERT(mLength != kInvalidSize);
+
+    SetFrameControlField(fcf);
+    SetDstPanId(aPanId);
+    SetDstAddr(aDest);
+    SetSrcAddr(aSource);
+
+    mPsdu[mLength] = kKeyIdMode2 | kSecurityEncMic32;
+    mLength += CalculateSecurityHeaderSize(kKeyIdMode2 | kSecurityEncMic32);
+    mLength += CalculateMicSize(kKeyIdMode2 | kSecurityEncMic32);
+    mLength += GetFcsSize();
+
+    SuccessOrExit(error = AppendHeaderIeAt<RendezvousTimeIe>(index));
+    SuccessOrExit(error = AppendHeaderIeAt<ConnectionIe>(index));
+
+exit:
+    return error;
+}
+#endif
+
 Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey)
 {
 #if OPENTHREAD_RADIO
@@ -1575,15 +1736,19 @@ Frame::InfoString Frame::ToInfoString(void) const
     InfoString string;
     uint8_t    commandId, type;
     Address    src, dst;
+    uint32_t   frameCounter;
+    bool       sequencePresent;
 
-    if (IsSequencePresent())
+    string.Append("len:%d", mLength);
+
+    sequencePresent = IsSequencePresent();
+
+    if (sequencePresent)
     {
-        string.Append("len:%d, seqnum:%d, type:", mLength, GetSequence());
+        string.Append(", seqnum:%d", GetSequence());
     }
-    else
-    {
-        string.Append("len:%d, type:", mLength);
-    }
+
+    string.Append(", type:");
 
     type = GetType();
 
@@ -1624,6 +1789,12 @@ Frame::InfoString Frame::ToInfoString(void) const
 
         break;
 
+#if OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
+    case kTypeMultipurpose:
+        string.Append("MP");
+        break;
+#endif
+
     default:
         string.Append("%d", type);
         break;
@@ -1634,6 +1805,11 @@ Frame::InfoString Frame::ToInfoString(void) const
 
     string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", src.ToString().AsCString(), dst.ToString().AsCString(),
                   ToYesNo(GetSecurityEnabled()), ToYesNo(GetAckRequest()));
+
+    if (!sequencePresent && GetFrameCounter(frameCounter) == kErrorNone)
+    {
+        string.Append(", fc:%lu", ToUlong(frameCounter));
+    }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     string.Append(", radio:%s", RadioTypeToString(GetRadioType()));

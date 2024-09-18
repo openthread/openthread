@@ -193,8 +193,6 @@ public:
     static constexpr uint8_t kIeContentSize = 0;
 };
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || \
-    OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 /**
  * Implements vendor specific Header IE generation and parsing.
  *
@@ -307,7 +305,6 @@ private:
 } OT_TOOL_PACKED_END;
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 class ThreadIe
 {
 public:
@@ -316,10 +313,118 @@ public:
     static constexpr uint32_t kVendorOuiThreadCompanyId = 0xeab89b;
     static constexpr uint8_t  kEnhAckProbingIe          = 0x00;
 };
-#endif
 
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE ||
-       // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+/**
+ * This class implements Rendezvous Time IE data structure.
+ *
+ * IEEE 802.15.4 Rendezvous Time IE contains two fields, Rendezvous Time and
+ * Wake-up Interval, but the Wake-up Interval is not used in Thread, so it is
+ * not included in this class.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class RendezvousTimeIe
+{
+public:
+    static constexpr uint8_t kHeaderIeId    = 0x1d;
+    static constexpr uint8_t kIeContentSize = sizeof(uint16_t);
+
+    /**
+     * This method returns the Rendezvous Time.
+     *
+     * @returns the Rendezvous Time in the units of 10 symbols.
+     *
+     */
+    uint16_t GetRendezvousTime(void) const { return LittleEndian::HostSwap16(mRendezvousTime); }
+
+    /**
+     * This method sets the Rendezvous Time.
+     *
+     * @param[in]  aRendezvousTime  The Rendezvous Time in the units of 10 symbols.
+     *
+     */
+    void SetRendezvousTime(uint16_t aRendezvousTime) { mRendezvousTime = LittleEndian::HostSwap16(aRendezvousTime); }
+
+private:
+    uint16_t mRendezvousTime;
+} OT_TOOL_PACKED_END;
+
+/**
+ * Implements Connection IE data structure.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ConnectionIe : public VendorIeHeader
+{
+public:
+    static constexpr uint8_t kHeaderIeId      = ThreadIe::kHeaderIeId;
+    static constexpr uint8_t kIeContentSize   = ThreadIe::kIeContentSize + sizeof(uint8_t);
+    static constexpr uint8_t kThreadIeSubtype = 0x01;
+
+    /**
+     * Initializes the Connection IE.
+     *
+     */
+    void Init(void)
+    {
+        SetVendorOui(ThreadIe::kVendorOuiThreadCompanyId);
+        SetSubType(kThreadIeSubtype);
+        mConnectionWindow = 0;
+    }
+
+    /**
+     * Returns the Retry Interval.
+     *
+     * The Retry Interval defines how frequently the Wake-up End Device is
+     * supposed to retry sending the Parent Request to the Wake-up Coordinator.
+     *
+     * @returns the Retry Interval in the units of Wake-up Intervals (7.5ms by default).
+     *
+     */
+    uint8_t GetRetryInterval(void) const { return (mConnectionWindow & kRetryIntervalMask) >> kRetryIntervalOffset; }
+
+    /**
+     * Sets the Retry Interval.
+     *
+     * @param[in]  aRetryInterval  The Retry Interval in the units of Wake-up Intervals (7.5ms by default).
+     *
+     */
+    void SetRetryInterval(uint8_t aRetryInterval)
+    {
+        mConnectionWindow = (aRetryInterval << kRetryIntervalOffset) | (mConnectionWindow & ~kRetryIntervalMask);
+    }
+
+    /**
+     * Returns the Retry Count.
+     *
+     * The Retry Count defines how many times the Wake-up End Device is supposed
+     * to retry sending the Parent Request to the Wakeup Coordinator.
+     *
+     * @returns the Retry Count.
+     *
+     */
+    uint8_t GetRetryCount(void) const { return mConnectionWindow & kRetryCountMask; }
+
+    /**
+     * Sets the Retry Count
+     *
+     * @param[in]  aRetryCount  The Retry Count.
+     *
+     */
+    void SetRetryCount(uint8_t aRetryCount)
+    {
+        mConnectionWindow = aRetryCount | (mConnectionWindow & ~kRetryCountMask);
+    }
+
+private:
+    static constexpr uint8_t kRetryIntervalOffset = 4;
+    static constexpr uint8_t kRetryIntervalMask   = 0x3 << kRetryIntervalOffset;
+    static constexpr uint8_t kRetryCountMask      = 0xf;
+
+    uint8_t mConnectionWindow;
+} OT_TOOL_PACKED_END;
+#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 /**
  * @}

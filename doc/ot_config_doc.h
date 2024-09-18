@@ -85,6 +85,7 @@
  * @defgroup config-time-sync                Time Sync Service
  * @defgroup config-tmf                      Thread Management Framework Service
  * @defgroup config-trel                     TREL
+ * @defgroup config-wakeup                   Wake-up
  *
  * @}
  *
