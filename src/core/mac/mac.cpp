@@ -35,24 +35,9 @@
 
 #include <stdio.h>
 
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/random.hpp"
-#include "common/string.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "instance/instance.hpp"
-#include "mac/mac_frame.hpp"
-#include "radio/radio.hpp"
-#include "thread/child.hpp"
-#include "thread/child_table.hpp"
-#include "thread/link_quality.hpp"
-#include "thread/mle_router.hpp"
-#include "thread/neighbor.hpp"
-#include "thread/thread_netif.hpp"
 
 namespace ot {
 namespace Mac {

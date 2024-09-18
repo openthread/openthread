@@ -30,11 +30,7 @@
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
-#include "common/log.hpp"
-#include "common/num_utils.hpp"
-#include "common/time.hpp"
 #include "instance/instance.hpp"
-#include "mac/mac.hpp"
 
 namespace ot {
 

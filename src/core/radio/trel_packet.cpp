@@ -34,8 +34,6 @@
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {

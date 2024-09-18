@@ -34,7 +34,6 @@
 
 #include "extended_panid.hpp"
 
-#include "common/notifier.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {

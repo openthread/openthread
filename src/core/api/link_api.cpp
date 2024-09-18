@@ -33,12 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/link.h>
-
-#include "common/as_core_type.hpp"
 #include "instance/instance.hpp"
-#include "mac/mac.hpp"
-#include "radio/radio.hpp"
 
 using namespace ot;
 

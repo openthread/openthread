@@ -33,11 +33,7 @@
 
 #include "child_supervision.hpp"
 
-#include "openthread-core-config.h"
-#include "common/code_utils.hpp"
-#include "common/log.hpp"
 #include "instance/instance.hpp"
-#include "thread/thread_netif.hpp"
 
 namespace ot {
 

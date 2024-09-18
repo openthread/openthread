@@ -33,23 +33,7 @@
 
 #include "mesh_forwarder.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/message.hpp"
-#include "common/random.hpp"
-#include "common/time_ticker.hpp"
 #include "instance/instance.hpp"
-#include "net/ip6.hpp"
-#include "net/ip6_filter.hpp"
-#include "net/netif.hpp"
-#include "net/socket.hpp"
-#include "net/tcp6.hpp"
-#include "net/udp6.hpp"
-#include "radio/radio.hpp"
-#include "thread/mle.hpp"
-#include "thread/mle_router.hpp"
-#include "thread/thread_netif.hpp"
 
 namespace ot {
 

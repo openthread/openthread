@@ -33,31 +33,7 @@
 
 #include "mle.hpp"
 
-#include <openthread/platform/radio.h>
-#include <openthread/platform/time.h>
-
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/num_utils.hpp"
-#include "common/numeric_limits.hpp"
-#include "common/random.hpp"
-#include "common/serial_number.hpp"
-#include "common/settings.hpp"
 #include "instance/instance.hpp"
-#include "meshcop/meshcop.hpp"
-#include "meshcop/meshcop_tlvs.hpp"
-#include "net/netif.hpp"
-#include "net/udp6.hpp"
-#include "thread/address_resolver.hpp"
-#include "thread/key_manager.hpp"
-#include "thread/link_metrics.hpp"
-#include "thread/mle_router.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/time_sync_service.hpp"
-#include "thread/version.hpp"
 
 namespace ot {
 namespace Mle {

@@ -37,7 +37,6 @@
 
 #include <openthread/jam_detection.h>
 
-#include "common/as_core_type.hpp"
 #include "instance/instance.hpp"
 
 using namespace ot;

@@ -45,6 +45,7 @@
 #endif // OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
 
 #include <openthread/dnssd_server.h>
+#include <openthread/platform/dns.h>
 
 #include "border_router/infra_if.hpp"
 #include "common/as_core_type.hpp"

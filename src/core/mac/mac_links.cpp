@@ -33,7 +33,6 @@
 
 #include "mac_links.hpp"
 
-#include "common/code_utils.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {

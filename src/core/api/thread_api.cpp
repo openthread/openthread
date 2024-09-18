@@ -35,13 +35,7 @@
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
-#include <openthread/thread.h>
-
-#include "common/as_core_type.hpp"
-#include "common/debug.hpp"
-#include "common/uptime.hpp"
 #include "instance/instance.hpp"
-#include "thread/version.hpp"
 
 using namespace ot;
 

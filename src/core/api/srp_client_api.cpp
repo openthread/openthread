@@ -35,9 +35,6 @@
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
-#include <openthread/srp_client.h>
-
-#include "common/as_core_type.hpp"
 #include "instance/instance.hpp"
 
 using namespace ot;

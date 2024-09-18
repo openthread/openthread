@@ -31,22 +31,11 @@
  *   This file implements TCP/IPv6 sockets.
  */
 
-#include "openthread-core-config.h"
+#include "tcp6.hpp"
 
 #if OPENTHREAD_CONFIG_TCP_ENABLE
 
-#include "tcp6.hpp"
-
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/error.hpp"
-#include "common/log.hpp"
-#include "common/num_utils.hpp"
-#include "common/random.hpp"
 #include "instance/instance.hpp"
-#include "net/checksum.hpp"
-#include "net/ip6.hpp"
-#include "net/netif.hpp"
 
 #include "../../third_party/tcplp/tcplp.h"
 

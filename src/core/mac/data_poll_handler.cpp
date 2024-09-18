@@ -35,8 +35,6 @@
 
 #if OPENTHREAD_FTD
 
-#include "common/code_utils.hpp"
-#include "common/log.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {

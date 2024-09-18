@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <openthread/border_router.h>
+#include <openthread/netdata.h>
 #include <openthread/server.h>
 
 #include "coap/coap.hpp"

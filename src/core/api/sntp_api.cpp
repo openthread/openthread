@@ -37,7 +37,6 @@
 
 #include <openthread/sntp.h>
 
-#include "common/as_core_type.hpp"
 #include "instance/instance.hpp"
 
 using namespace ot;

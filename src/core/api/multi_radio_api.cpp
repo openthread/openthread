@@ -37,10 +37,7 @@
 
 #include <openthread/multi_radio.h>
 
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
 #include "instance/instance.hpp"
-#include "thread/radio_selector.hpp"
 
 using namespace ot;
 

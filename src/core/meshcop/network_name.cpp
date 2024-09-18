@@ -34,7 +34,6 @@
 
 #include "network_name.hpp"
 
-#include "common/notifier.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {

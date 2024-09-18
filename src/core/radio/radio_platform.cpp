@@ -30,13 +30,7 @@
  *   This file implements the radio platform callbacks into OpenThread and default/weak radio platform APIs.
  */
 
-#include <openthread/instance.h>
-#include <openthread/platform/time.h>
-
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
 #include "instance/instance.hpp"
-#include "radio/radio.hpp"
 
 using namespace ot;
 

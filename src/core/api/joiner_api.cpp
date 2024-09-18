@@ -35,10 +35,6 @@
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
 
-#include <openthread/joiner.h>
-
-#include "common/as_core_type.hpp"
-#include "common/debug.hpp"
 #include "instance/instance.hpp"
 
 using namespace ot;
