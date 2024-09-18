@@ -225,6 +225,9 @@ void Mle::Stop(StopMode aMode)
     Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocalRloc);
     Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocalEid);
 
+    mDelayedResponses.DequeueAndFreeAll();
+    mDelayedResponseTimer.Stop();
+
     SetRole(kRoleDisabled);
 
 exit:
