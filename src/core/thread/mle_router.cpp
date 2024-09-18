@@ -3116,7 +3116,7 @@ void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
     {
         Get<MeshForwarder>().RemoveDataResponseMessages();
 
-        RemoveDelayedDataResponseMessage();
+        mDelayedSender.RemoveDataResponseMessage();
 
         SuccessOrExit(error = message->SendAfterDelay(aDestination, aDelay));
         Log(kMessageDelay, kTypeDataResponse, aDestination);

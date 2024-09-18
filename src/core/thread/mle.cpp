@@ -82,12 +82,12 @@ Mle::Mle(Instance &aInstance)
 #endif
     , mAlternateTimestamp(0)
     , mNeighborTable(aInstance)
+    , mDelayedSender(aInstance)
     , mSocket(aInstance, *this)
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     , mParentSearch(aInstance)
 #endif
     , mAttachTimer(aInstance)
-    , mDelayedResponseTimer(aInstance)
     , mMessageTransmissionTimer(aInstance)
     , mDetachGracefullyTimer(aInstance)
 {
@@ -1556,88 +1556,6 @@ exit:
     return delay;
 }
 
-void Mle::HandleDelayedResponseTimer(void)
-{
-    NextFireTime nextSendTime;
-
-    for (Message &message : mDelayedResponses)
-    {
-        DelayedResponseMetadata metadata;
-
-        metadata.ReadFrom(message);
-
-        if (nextSendTime.GetNow() < metadata.mSendTime)
-        {
-            nextSendTime.UpdateIfEarlier(metadata.mSendTime);
-        }
-        else
-        {
-            mDelayedResponses.Dequeue(message);
-            SendDelayedResponse(static_cast<TxMessage &>(message), metadata);
-        }
-    }
-
-    mDelayedResponseTimer.FireAt(nextSendTime);
-}
-
-void Mle::SendDelayedResponse(TxMessage &aMessage, const DelayedResponseMetadata &aMetadata)
-{
-    Error error = kErrorNone;
-
-    aMetadata.RemoveFrom(aMessage);
-
-    if (aMessage.GetSubType() == Message::kSubTypeMleDataRequest)
-    {
-        SuccessOrExit(error = aMessage.AppendActiveAndPendingTimestampTlvs());
-    }
-
-    SuccessOrExit(error = aMessage.SendTo(aMetadata.mDestination));
-
-    Log(kMessageSend, kTypeGenericDelayed, aMetadata.mDestination);
-
-    if (!IsRxOnWhenIdle())
-    {
-        // Start fast poll mode, assuming enqueued msg is MLE Data Request.
-        // Note: Finer-grade check may be required when deciding whether or
-        // not to enter fast poll mode for other type of delayed message.
-
-        Get<DataPollSender>().SendFastPolls(DataPollSender::kDefaultFastPolls);
-    }
-
-exit:
-    if (error != kErrorNone)
-    {
-        aMessage.Free();
-    }
-}
-
-void Mle::RemoveDelayedDataResponseMessage(void)
-{
-    RemoveDelayedMessage(Message::kSubTypeMleDataResponse, kTypeDataResponse, nullptr);
-}
-
-void Mle::RemoveDelayedDataRequestMessage(const Ip6::Address &aDestination)
-{
-    RemoveDelayedMessage(Message::kSubTypeMleDataRequest, kTypeDataRequest, &aDestination);
-}
-
-void Mle::RemoveDelayedMessage(Message::SubType aSubType, MessageType aMessageType, const Ip6::Address *aDestination)
-{
-    for (Message &message : mDelayedResponses)
-    {
-        DelayedResponseMetadata metadata;
-
-        metadata.ReadFrom(message);
-
-        if ((message.GetSubType() == aSubType) &&
-            ((aDestination == nullptr) || (metadata.mDestination == *aDestination)))
-        {
-            mDelayedResponses.DequeueAndFree(message);
-            Log(kMessageRemoveDelayed, aMessageType, metadata.mDestination);
-        }
-    }
-}
-
 void Mle::SendParentRequest(ParentRequestType aType)
 {
     Error        error = kErrorNone;
@@ -1814,7 +1732,7 @@ Error Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlv
     Error      error = kErrorNone;
     TxMessage *message;
 
-    RemoveDelayedDataRequestMessage(aDestination);
+    mDelayedSender.RemoveDataRequestMessage(aDestination);
 
     VerifyOrExit((message = NewMleMessage(kCommandDataRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendTlvRequestTlv(aTlvs, aTlvsLength));
@@ -4379,9 +4297,116 @@ void Mle::TlvList::AddElementsFrom(const TlvList &aTlvList)
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// DelayedResponseMetadata
+// DelayedSender
 
-void Mle::DelayedResponseMetadata::ReadFrom(const Message &aMessage)
+Mle::DelayedSender::DelayedSender(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mTimer(aInstance)
+{
+}
+
+Error Mle::DelayedSender::SendMessage(TxMessage &aMessage, const Ip6::Address &aDestination, uint16_t aDelay)
+{
+    Error    error = kErrorNone;
+    Metadata metadata;
+
+    metadata.mSendTime    = TimerMilli::GetNow() + aDelay;
+    metadata.mDestination = aDestination;
+
+    SuccessOrExit(error = metadata.AppendTo(aMessage));
+    mQueue.Enqueue(aMessage);
+
+    mTimer.FireAtIfEarlier(metadata.mSendTime);
+
+exit:
+    return error;
+}
+
+void Mle::DelayedSender::HandleTimer(void)
+{
+    NextFireTime nextSendTime;
+
+    for (Message &message : mQueue)
+    {
+        Metadata metadata;
+
+        metadata.ReadFrom(message);
+
+        if (nextSendTime.GetNow() < metadata.mSendTime)
+        {
+            nextSendTime.UpdateIfEarlier(metadata.mSendTime);
+        }
+        else
+        {
+            mQueue.Dequeue(message);
+            Send(static_cast<TxMessage &>(message), metadata);
+        }
+    }
+
+    mTimer.FireAt(nextSendTime);
+}
+
+void Mle::DelayedSender::Send(TxMessage &aMessage, const Metadata &aMetadata)
+{
+    Error error = kErrorNone;
+
+    aMetadata.RemoveFrom(aMessage);
+
+    if (aMessage.GetSubType() == Message::kSubTypeMleDataRequest)
+    {
+        SuccessOrExit(error = aMessage.AppendActiveAndPendingTimestampTlvs());
+    }
+
+    SuccessOrExit(error = aMessage.SendTo(aMetadata.mDestination));
+
+    Log(kMessageSend, kTypeGenericDelayed, aMetadata.mDestination);
+
+    if (!Get<Mle>().IsRxOnWhenIdle())
+    {
+        // Start fast poll mode, assuming enqueued msg is MLE Data Request.
+        // Note: Finer-grade check may be required when deciding whether or
+        // not to enter fast poll mode for other type of delayed message.
+
+        Get<DataPollSender>().SendFastPolls(DataPollSender::kDefaultFastPolls);
+    }
+
+exit:
+    if (error != kErrorNone)
+    {
+        aMessage.Free();
+    }
+}
+
+void Mle::DelayedSender::RemoveDataResponseMessage(void)
+{
+    RemoveMessage(Message::kSubTypeMleDataResponse, kTypeDataResponse, nullptr);
+}
+
+void Mle::DelayedSender::RemoveDataRequestMessage(const Ip6::Address &aDestination)
+{
+    RemoveMessage(Message::kSubTypeMleDataRequest, kTypeDataRequest, &aDestination);
+}
+
+void Mle::DelayedSender::RemoveMessage(Message::SubType    aSubType,
+                                       MessageType         aMessageType,
+                                       const Ip6::Address *aDestination)
+{
+    for (Message &message : mQueue)
+    {
+        Metadata metadata;
+
+        metadata.ReadFrom(message);
+
+        if ((message.GetSubType() == aSubType) &&
+            ((aDestination == nullptr) || (metadata.mDestination == *aDestination)))
+        {
+            mQueue.DequeueAndFree(message);
+            Log(kMessageRemoveDelayed, aMessageType, metadata.mDestination);
+        }
+    }
+}
+
+void Mle::DelayedSender::Metadata::ReadFrom(const Message &aMessage)
 {
     uint16_t length = aMessage.GetLength();
 
@@ -4389,7 +4414,7 @@ void Mle::DelayedResponseMetadata::ReadFrom(const Message &aMessage)
     IgnoreError(aMessage.Read(length - sizeof(*this), *this));
 }
 
-void Mle::DelayedResponseMetadata::RemoveFrom(Message &aMessage) const { aMessage.RemoveFooter(sizeof(*this)); }
+void Mle::DelayedSender::Metadata::RemoveFrom(Message &aMessage) const { aMessage.RemoveFooter(sizeof(*this)); }
 
 //---------------------------------------------------------------------------------------------------------------------
 // TxMessage
@@ -4845,19 +4870,7 @@ exit:
 
 Error Mle::TxMessage::SendAfterDelay(const Ip6::Address &aDestination, uint16_t aDelay)
 {
-    Error                   error = kErrorNone;
-    DelayedResponseMetadata metadata;
-
-    metadata.mSendTime    = TimerMilli::GetNow() + aDelay;
-    metadata.mDestination = aDestination;
-
-    SuccessOrExit(error = metadata.AppendTo(*this));
-    Get<Mle>().mDelayedResponses.Enqueue(*this);
-
-    Get<Mle>().mDelayedResponseTimer.FireAtIfEarlier(metadata.mSendTime);
-
-exit:
-    return error;
+    return Get<Mle>().mDelayedSender.SendMessage(*this, aDestination, aDelay);
 }
 
 #if OPENTHREAD_FTD
