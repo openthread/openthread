@@ -736,7 +736,7 @@ void Frame::SetFrameCounter(uint32_t aFrameCounter)
 
     LittleEndian::WriteUint32(aFrameCounter, &mPsdu[index]);
 
-    static_cast<Mac::TxFrame *>(this)->SetIsHeaderUpdated(true);
+    static_cast<TxFrame *>(this)->SetIsHeaderUpdated(true);
 }
 
 const uint8_t *Frame::GetKeySource(void) const
