@@ -411,6 +411,34 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
 
         OutputLine("%s", Stringify(otBorderAgentGetState(GetInstancePtr()), kStateStrings));
     }
+    /**
+     * @cli ba start
+     * @code
+     * ba start
+     * Done
+     * @endcode
+     * @par
+     * Starts the border agent service
+     * @sa otBorderAgentStart
+     */
+    else if (aArgs[0] == "start")
+    {
+        otBorderAgentStart(GetInstancePtr());
+    }
+    /**
+     * @cli ba stop
+     * @code
+     * ba stop
+     * Done
+     * @endcode
+     * @par
+     * Stops the border agent service
+     * @sa otBorderAgentStop
+     */
+    else if (aArgs[0] == "stop")
+    {
+        otBorderAgentStop(GetInstancePtr());
+    }
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     /**
      * @cli ba id (get,set)

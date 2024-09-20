@@ -372,6 +372,24 @@ Started
 Done
 ```
 
+### ba start
+
+Start border agent service.
+
+```bash
+> ba start
+Done
+```
+
+### ba stop
+
+Stop border agent service.
+
+```bash
+> ba stop
+Done
+```
+
 ### ba ephemeralkey
 
 Indicates if an ephemeral key is active.

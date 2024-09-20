@@ -86,6 +86,16 @@ leader.ba_clear_ephemeral_key()
 verify(leader.ba_is_ephemeral_key_active() == 'inactive')
 verify(int(leader.ba_get_port()) == port)
 
+leader.ba_set_ephemeral_key('newnewkey')
+verify(leader.ba_is_ephemeral_key_active() == 'active')
+
+leader.ba_stop()
+verify(leader.ba_get_state() == 'Stopped')
+
+leader.ba_start()
+verify(leader.ba_get_state() == 'Started')
+verify(leader.ba_is_ephemeral_key_active() == 'inactive')
+
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 

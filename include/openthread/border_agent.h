@@ -300,6 +300,23 @@ void otBorderAgentSetEphemeralKeyCallback(otInstance                       *aIns
                                           void                             *aContext);
 
 /**
+ * Starts the Border Agent service.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ *
+ */
+void otBorderAgentStart(otInstance *aInstance);
+
+/**
+ * Stops the Border Agent service. If there is an active connection with a commissioner (candidate),
+ * the connection will be terminated.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ *
+ */
+void otBorderAgentStop(otInstance *aInstance);
+
+/**
  * @}
  *
  */

@@ -513,6 +513,12 @@ class Node(object):
     def ba_clear_ephemeral_key(self):
         self._cli_no_output('ba ephemeralkey clear')
 
+    def ba_start(self):
+        return self._cli_no_output('ba start')
+
+    def ba_stop(self):
+        return self._cli_no_output('ba stop')
+
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # UDP
 

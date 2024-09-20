@@ -115,4 +115,8 @@ const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance)
     return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetCounters();
 }
 
+void otBorderAgentStart(otInstance *aInstance) { AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().Start(); }
+
+void otBorderAgentStop(otInstance *aInstance) { AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().Stop(); }
+
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
