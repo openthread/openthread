@@ -44,7 +44,7 @@ namespace ot {
 
 constexpr uint16_t kMaxSpinelBufferSize = 2048;
 
-static otError GenerateSpinelInfraIfSetUpFrame(uint32_t            akInfraIfIndex,
+static otError GenerateSpinelInfraIfStateFrame(uint32_t            akInfraIfIndex,
                                                bool                aIsRunning,
                                                const otIp6Address *aAddrs,
                                                uint8_t             aAddrCount,
@@ -57,7 +57,7 @@ static otError GenerateSpinelInfraIfSetUpFrame(uint32_t            akInfraIfInde
     Spinel::Encoder encoder(ncpBuffer);
 
     uint8_t header = SPINEL_HEADER_FLAG | 0 /* Iid */ | 1 /* Tid */;
-    SuccessOrExit(error = encoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_INFRA_IF_SETUP));
+    SuccessOrExit(error = encoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_INFRA_IF_STATE));
     SuccessOrExit(error = encoder.WriteUint32(akInfraIfIndex));
     SuccessOrExit(error = encoder.WriteBool(true));
     for (uint8_t i = 0; i < aAddrCount; i++)
@@ -89,7 +89,7 @@ void TestNcpInfraIfSetUp(void)
 
     VerifyOrQuit(otBorderRoutingGetState(instance) == OT_BORDER_ROUTING_STATE_UNINITIALIZED);
 
-    SuccessOrQuit(GenerateSpinelInfraIfSetUpFrame(kInfraIfIndex, true /* IsRunning */, infraIfAddresses,
+    SuccessOrQuit(GenerateSpinelInfraIfStateFrame(kInfraIfIndex, true /* IsRunning */, infraIfAddresses,
                                                   sizeof(infraIfAddresses) / sizeof(infraIfAddresses[0]), recvBuf,
                                                   recvLen));
     ncpBase.HandleReceive(recvBuf, recvLen);
@@ -98,12 +98,48 @@ void TestNcpInfraIfSetUp(void)
     VerifyOrQuit(!otPlatInfraIfHasAddress(kInfraIfIndex + 100, &infraIfAddresses[0]));
 
     SuccessOrQuit(
-        GenerateSpinelInfraIfSetUpFrame(kInfraIfIndex, true /* IsRunning */, infraIfAddresses, 0, recvBuf, recvLen));
+        GenerateSpinelInfraIfStateFrame(kInfraIfIndex, true /* IsRunning */, infraIfAddresses, 0, recvBuf, recvLen));
     ncpBase.HandleReceive(recvBuf, recvLen);
     VerifyOrQuit(otBorderRoutingGetState(instance) == OT_BORDER_ROUTING_STATE_STOPPED);
     VerifyOrQuit(!otPlatInfraIfHasAddress(kInfraIfIndex, &infraIfAddresses[0]));
 
     printf("Test Ncp Infra If SetUp passed.\n");
+}
+
+void TestNcpInfraIfUpdate(void)
+{
+    Instance    *instance = static_cast<Instance *>(testInitInstance());
+    Ncp::NcpBase ncpBase(instance);
+
+    uint8_t            recvBuf[kMaxSpinelBufferSize];
+    uint16_t           recvLen;
+    constexpr uint32_t kInfraIfIndex1 = 1;
+    constexpr uint32_t kInfraIfIndex2 = 2;
+
+    const otIp6Address infraIfAddresses[] = {
+        {0xfd, 0x35, 0x7a, 0x7d, 0x0f, 0x16, 0xe7, 0xe3, 0xc9, 0x79, 0x59, 0x29, 0xc8, 0xc2, 0xa3, 0x7b},
+        {0xfd, 0x35, 0x7a, 0x7d, 0x0f, 0x16, 0xe7, 0xe3, 0x7b, 0xa3, 0xc2, 0xc8, 0x29, 0x59, 0x79, 0xc9},
+    };
+
+    SuccessOrQuit(
+        GenerateSpinelInfraIfStateFrame(kInfraIfIndex1, true /* IsRunning */, infraIfAddresses, 1, recvBuf, recvLen));
+    ncpBase.HandleReceive(recvBuf, recvLen);
+    VerifyOrQuit(otPlatInfraIfHasAddress(kInfraIfIndex1, &infraIfAddresses[0]));
+    VerifyOrQuit(!otPlatInfraIfHasAddress(kInfraIfIndex1, &infraIfAddresses[1]));
+
+    SuccessOrQuit(
+        GenerateSpinelInfraIfStateFrame(kInfraIfIndex1, true /* IsRunning */, infraIfAddresses, 2, recvBuf, recvLen));
+    ncpBase.HandleReceive(recvBuf, recvLen);
+    VerifyOrQuit(otPlatInfraIfHasAddress(kInfraIfIndex1, &infraIfAddresses[0]));
+    VerifyOrQuit(otPlatInfraIfHasAddress(kInfraIfIndex1, &infraIfAddresses[1]));
+
+    SuccessOrQuit(
+        GenerateSpinelInfraIfStateFrame(kInfraIfIndex2, true /* IsRunning */, infraIfAddresses, 2, recvBuf, recvLen));
+    ncpBase.HandleReceive(recvBuf, recvLen);
+    VerifyOrQuit(!otPlatInfraIfHasAddress(kInfraIfIndex1, &infraIfAddresses[0]));
+    VerifyOrQuit(!otPlatInfraIfHasAddress(kInfraIfIndex1, &infraIfAddresses[1]));
+    VerifyOrQuit(otPlatInfraIfHasAddress(kInfraIfIndex2, &infraIfAddresses[0]));
+    VerifyOrQuit(otPlatInfraIfHasAddress(kInfraIfIndex2, &infraIfAddresses[1]));
 }
 
 } // namespace ot
@@ -114,6 +150,7 @@ int main(void)
 {
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE
     ot::TestNcpInfraIfSetUp();
+    ot::TestNcpInfraIfUpdate();
 #endif
     printf("All tests passed\n");
     return 0;
