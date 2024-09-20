@@ -168,8 +168,12 @@ private:
     class SlaacAddress : public Ip6::Netif::UnicastAddress
     {
     public:
+        static constexpr uint8_t kInvalidContextId = 0;
+
         bool      IsInUse(void) const { return mValid; }
         void      MarkAsNotInUse(void) { mValid = false; }
+        uint8_t   GetContextId(void) const { return mContextId; }
+        void      SetContextId(uint8_t aContextId) { mContextId = aContextId; }
         uint8_t   GetDomainId(void) const { return mDomainId; }
         void      SetDomainId(uint8_t aDomainId) { mDomainId = aDomainId; }
         bool      IsDeprecating(void) const { return (mExpirationTime.GetValue() != kNotDeprecated); };
@@ -188,6 +192,7 @@ private:
     private:
         static constexpr uint32_t kNotDeprecated = 0; // Special `mExpirationTime` value to indicate not deprecated.
 
+        uint8_t   mContextId;
         uint8_t   mDomainId;
         TimeMilli mExpirationTime;
     };
@@ -200,6 +205,7 @@ private:
     void        DeprecateAddress(SlaacAddress &aAddress);
     void        RemoveAddress(SlaacAddress &aAddress);
     void        AddAddressFor(const NetworkData::OnMeshPrefixConfig &aConfig);
+    bool        UpdateContextIdFor(SlaacAddress &aSlaacAddress);
     void        HandleTimer(void);
     void        GetIidSecretKey(IidSecretKey &aKey) const;
     void        HandleNotifierEvents(Events aEvents);

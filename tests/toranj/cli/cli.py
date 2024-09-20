@@ -351,6 +351,12 @@ class Node(object):
     def set_pollperiod(self, period):
         self._cli_no_output('pollperiod', period)
 
+    def get_child_timeout(self):
+        return self._cli_single_output('childtimeout')
+
+    def set_child_timeout(self, timeout):
+        self._cli_no_output('childtimeout', timeout)
+
     def get_partition_id(self):
         return self._cli_single_output('partitionid')
 
@@ -367,6 +373,9 @@ class Node(object):
 
     def get_child_table(self):
         return Node.parse_table(self.cli('child table'))
+
+    def get_child_ip(self):
+        return self.cli('childip')
 
     def get_neighbor_table(self):
         return Node.parse_table(self.cli('neighbor table'))

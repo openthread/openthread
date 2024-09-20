@@ -138,8 +138,11 @@ exit:
 
 void Mle::ScheduleChildUpdateRequest(void)
 {
-    mChildUpdateRequestState = kChildUpdateRequestPending;
-    ScheduleMessageTransmissionTimer();
+    if (mChildUpdateRequestState != kChildUpdateRequestPending)
+    {
+        mChildUpdateRequestState = kChildUpdateRequestPending;
+        ScheduleMessageTransmissionTimer();
+    }
 }
 
 Error Mle::Disable(void)
@@ -1055,13 +1058,21 @@ void Mle::InitNeighbor(Neighbor &aNeighbor, const RxInfo &aRxInfo)
     aNeighbor.SetLastHeard(TimerMilli::GetNow());
 }
 
+void Mle::ScheduleChildUpdateRequestIfMtdChild(void)
+{
+    if (IsChild() && !IsFullThreadDevice())
+    {
+        ScheduleChildUpdateRequest();
+    }
+}
+
 void Mle::HandleNotifierEvents(Events aEvents)
 {
     VerifyOrExit(!IsDisabled());
 
     if (aEvents.Contains(kEventThreadRoleChanged))
     {
-        if (IsChild() && !IsFullThreadDevice() && mAddressRegistrationMode == kAppendMeshLocalOnly)
+        if (mAddressRegistrationMode == kAppendMeshLocalOnly)
         {
             // If only mesh-local address was registered in the "Child
             // ID Request" message, after device is attached, trigger a
@@ -1069,7 +1080,7 @@ void Mle::HandleNotifierEvents(Events aEvents)
             // addresses.
 
             mAddressRegistrationMode = kAppendAllAddresses;
-            ScheduleChildUpdateRequest();
+            ScheduleChildUpdateRequestIfMtdChild();
         }
     }
 
@@ -1083,10 +1094,7 @@ void Mle::HandleNotifierEvents(Events aEvents)
             Get<Notifier>().Signal(kEventThreadMeshLocalAddrChanged);
         }
 
-        if (IsChild() && !IsFullThreadDevice())
-        {
-            ScheduleChildUpdateRequest();
-        }
+        ScheduleChildUpdateRequestIfMtdChild();
     }
 
     if (aEvents.ContainsAny(kEventIp6MulticastSubscribed | kEventIp6MulticastUnsubscribed))
@@ -1097,15 +1105,14 @@ void Mle::HandleNotifierEvents(Events aEvents)
         // parent of 1.2 or higher version as it could depend on its
         // parent to perform Multicast Listener Report.
 
-        if (IsChild() && !IsFullThreadDevice() &&
-            (!IsRxOnWhenIdle()
+        if (!IsRxOnWhenIdle()
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-             || !GetParent().IsThreadVersion1p1()
+            || !GetParent().IsThreadVersion1p1()
 #endif
-                 ))
+        )
 
         {
-            ScheduleChildUpdateRequest();
+            ScheduleChildUpdateRequestIfMtdChild();
         }
     }
 

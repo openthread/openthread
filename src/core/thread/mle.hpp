@@ -667,6 +667,15 @@ public:
         return (&aAddress == &mLinkLocalAllThreadNodes) || (&aAddress == &mRealmLocalAllThreadNodes);
     }
 
+    /**
+     * Schedules a "Child Update Request" transmission if the device is an MTD child.
+     *
+     * For example, the `Slaac` class, which manages SLAAC addresses, calls this method to notify `Mle` that an
+     * existing SLAAC address's Context ID has changed. This can occur due to Network Data updates where the same
+     * on-mesh prefix receives a new Context ID.
+     */
+    void ScheduleChildUpdateRequestIfMtdChild(void);
+
 #if OPENTHREAD_CONFIG_DYNAMIC_STORE_FRAME_AHEAD_COUNTER_ENABLE
     /**
      * Sets the store frame counter ahead.
