@@ -217,9 +217,8 @@ protected:
         bool    mMulticastLoop : 1;       // Whether this multicast message may be looped back.
         bool    mResolvingAddress : 1;    // Whether the message is pending an address query resolution.
         bool    mAllowLookbackToHost : 1; // Whether the message is allowed to be looped back to host.
-        bool    mIsDstPanIdBroadcast : 1; // IWhether the dest PAN ID is broadcast.
-        uint8_t mOrigin : 2;
-        // The origin of the message.
+        bool    mIsDstPanIdBroadcast : 1; // Whether the dest PAN ID is broadcast.
+        uint8_t mOrigin : 2;              // The origin of the message.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         uint8_t mRadioType : 2;      // The radio link type the message was received on, or should be sent on.
         bool    mIsRadioTypeSet : 1; // Whether the radio type is set.
