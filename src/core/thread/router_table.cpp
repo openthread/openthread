@@ -30,15 +30,7 @@
 
 #if OPENTHREAD_FTD
 
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/timer.hpp"
 #include "instance/instance.hpp"
-#include "thread/mle.hpp"
-#include "thread/mle_router.hpp"
-#include "thread/network_data_leader.hpp"
-#include "thread/thread_netif.hpp"
 
 namespace ot {
 
@@ -682,7 +674,7 @@ exit:
     return;
 }
 
-void RouterTable::UpdateRoutesOnFed(const Mle::RouteTlv &aRouteTlv, uint8_t aParentId)
+void RouterTable::UpdateRouterOnFtdChild(const Mle::RouteTlv &aRouteTlv, uint8_t aParentId)
 {
     for (uint8_t routerId = 0, index = 0; routerId <= Mle::kMaxRouterId;
          index += aRouteTlv.IsRouterIdSet(routerId) ? 1 : 0, routerId++)

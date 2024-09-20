@@ -124,8 +124,6 @@ otError otBleSecureSetTcatVendorInfo(otInstance *aInstance, const otTcatVendorIn
  * Enables the TCAT protocol over BLE Secure.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aVendorInfo       A pointer to the Vendor Information (must remain valid after the method call, may be
- *                               NULL).
  * @param[in]  aHandler          A pointer to a function that is called when the join operation completes.
  *
  * @retval OT_ERROR_NONE              Successfully started the BLE Secure Joiner role.

@@ -33,32 +33,7 @@
 
 #include "mle.hpp"
 
-#include <openthread/platform/radio.h>
-#include <openthread/platform/time.h>
-
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/locator_getters.hpp"
-#include "common/num_utils.hpp"
-#include "common/numeric_limits.hpp"
-#include "common/random.hpp"
-#include "common/serial_number.hpp"
-#include "common/settings.hpp"
 #include "instance/instance.hpp"
-#include "meshcop/meshcop.hpp"
-#include "meshcop/meshcop_tlvs.hpp"
-#include "net/netif.hpp"
-#include "net/udp6.hpp"
-#include "thread/address_resolver.hpp"
-#include "thread/key_manager.hpp"
-#include "thread/link_metrics.hpp"
-#include "thread/mle_router.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/time_sync_service.hpp"
-#include "thread/version.hpp"
 
 namespace ot {
 namespace Mle {
@@ -2461,7 +2436,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 #if OPENTHREAD_FTD
     if (neighbor == nullptr)
     {
-        // As an FED, we may have rx-only neighbors. We find and set
+        // As an FTD child, we may have rx-only neighbors. We find and set
         // `neighbor` to perform security processing (frame counter
         // and key sequence checks) for messages from such neighbors.
 
@@ -2522,9 +2497,9 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     {
         // Clear the `neighbor` if it is a rx-only one before calling
         // `Handle{Msg}()`, except for a subset of MLE messages such
-        // as MLE Advertisement. This ensures that, as an FED, we are
-        // selective about which messages to process from rx-only
-        // neighbors.
+        // as MLE Advertisement. This ensures that, as an FTD child,
+        // we are selective about which messages to process from
+        // rx-only neighbors.
 
         switch (command)
         {
@@ -2568,31 +2543,11 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         break;
 
     case kCommandChildUpdateRequest:
-#if OPENTHREAD_FTD
-        if (IsRouterOrLeader())
-        {
-            Get<MleRouter>().HandleChildUpdateRequest(rxInfo);
-        }
-        else
-#endif
-        {
-            HandleChildUpdateRequest(rxInfo);
-        }
-
+        HandleChildUpdateRequest(rxInfo);
         break;
 
     case kCommandChildUpdateResponse:
-#if OPENTHREAD_FTD
-        if (IsRouterOrLeader())
-        {
-            Get<MleRouter>().HandleChildUpdateResponse(rxInfo);
-        }
-        else
-#endif
-        {
-            HandleChildUpdateResponse(rxInfo);
-        }
-
+        HandleChildUpdateResponse(rxInfo);
         break;
 
 #if OPENTHREAD_FTD
@@ -2787,7 +2742,7 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
 #if OPENTHREAD_FTD
     if (IsFullThreadDevice())
     {
-        SuccessOrExit(error = Get<MleRouter>().HandleAdvertisement(aRxInfo, sourceAddress, leaderData));
+        SuccessOrExit(error = Get<MleRouter>().HandleAdvertisementOnFtd(aRxInfo, sourceAddress, leaderData));
     }
 #endif
 
@@ -2808,7 +2763,7 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
             SetLeaderData(leaderData);
 
 #if OPENTHREAD_FTD
-            SuccessOrExit(error = Get<MleRouter>().ReadAndProcessRouteTlvOnFed(aRxInfo, mParent.GetRouterId()));
+            SuccessOrExit(error = Get<MleRouter>().ReadAndProcessRouteTlvOnFtdChild(aRxInfo, mParent.GetRouterId()));
 #endif
 
             mRetrieveNewNetworkData = true;
@@ -2854,7 +2809,7 @@ void Mle::HandleDataResponse(RxInfo &aRxInfo)
 #endif
 
 #if OPENTHREAD_FTD
-    SuccessOrExit(error = Get<MleRouter>().ReadAndProcessRouteTlvOnFed(aRxInfo, mParent.GetRouterId()));
+    SuccessOrExit(error = Get<MleRouter>().ReadAndProcessRouteTlvOnFtdChild(aRxInfo, mParent.GetRouterId()));
 #endif
 
     error = HandleLeaderData(aRxInfo);
@@ -3356,7 +3311,8 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     SetLeaderData(leaderData);
 
 #if OPENTHREAD_FTD
-    SuccessOrExit(error = Get<MleRouter>().ReadAndProcessRouteTlvOnFed(aRxInfo, RouterIdFromRloc16(sourceAddress)));
+    SuccessOrExit(error =
+                      Get<MleRouter>().ReadAndProcessRouteTlvOnFtdChild(aRxInfo, RouterIdFromRloc16(sourceAddress)));
 #endif
 
     mParentCandidate.CopyTo(mParent);
@@ -3389,6 +3345,20 @@ exit:
 }
 
 void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
+{
+#if OPENTHREAD_FTD
+    if (IsRouterOrLeader())
+    {
+        Get<MleRouter>().HandleChildUpdateRequestOnParent(aRxInfo);
+    }
+    else
+#endif
+    {
+        HandleChildUpdateRequestOnChild(aRxInfo);
+    }
+}
+
+void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
 {
     Error       error = kErrorNone;
     uint16_t    sourceAddress;
@@ -3498,6 +3468,20 @@ exit:
 }
 
 void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
+{
+#if OPENTHREAD_FTD
+    if (IsRouterOrLeader())
+    {
+        Get<MleRouter>().HandleChildUpdateResponseOnParent(aRxInfo);
+    }
+    else
+#endif
+    {
+        HandleChildUpdateResponseOnChild(aRxInfo);
+    }
+}
+
+void Mle::HandleChildUpdateResponseOnChild(RxInfo &aRxInfo)
 {
     Error       error = kErrorNone;
     uint8_t     status;

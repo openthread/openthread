@@ -1315,7 +1315,9 @@ private:
     void       HandleAdvertisement(RxInfo &aRxInfo);
     void       HandleChildIdResponse(RxInfo &aRxInfo);
     void       HandleChildUpdateRequest(RxInfo &aRxInfo);
+    void       HandleChildUpdateRequestOnChild(RxInfo &aRxInfo);
     void       HandleChildUpdateResponse(RxInfo &aRxInfo);
+    void       HandleChildUpdateResponseOnChild(RxInfo &aRxInfo);
     void       HandleDataResponse(RxInfo &aRxInfo);
     void       HandleParentResponse(RxInfo &aRxInfo);
     void       HandleAnnounce(RxInfo &aRxInfo);

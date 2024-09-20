@@ -35,12 +35,7 @@
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#include "border_router/routing_manager.hpp"
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 #include "instance/instance.hpp"
-#include "net/icmp6.hpp"
 
 namespace ot {
 namespace BorderRouter {

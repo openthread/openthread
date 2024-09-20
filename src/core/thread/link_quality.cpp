@@ -33,12 +33,6 @@
 
 #include "link_quality.hpp"
 
-#include <stdio.h>
-
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/num_utils.hpp"
-#include "common/numeric_limits.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {

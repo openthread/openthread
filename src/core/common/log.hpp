@@ -78,6 +78,8 @@ enum LogLevel : uint8_t
 
 constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
 
+constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max size of log string
+
 #if OT_SHOULD_LOG && (OPENTHREAD_CONFIG_LOG_LEVEL != OT_LOG_LEVEL_NONE)
 /**
  * Registers log module name.

@@ -35,17 +35,9 @@
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
-#include <string.h>
-#include <openthread/diag.h>
-#include <openthread/thread.h>
-#include <openthread/platform/diag.h>
 #include <openthread/platform/time.h>
 
-#include "common/as_core_type.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/random.hpp"
-#include "mac/mac_frame.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 

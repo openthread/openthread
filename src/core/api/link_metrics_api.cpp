@@ -34,10 +34,8 @@
 #include "openthread-core-config.h"
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-#include <openthread/link_metrics.h>
 
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 

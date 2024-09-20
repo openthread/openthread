@@ -36,9 +36,7 @@
 
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
 
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Utils {

@@ -29,7 +29,7 @@
 #ifndef OT_POSIX_PLATFORM_UTILS_HPP_
 #define OT_POSIX_PLATFORM_UTILS_HPP_
 
-#include "openthread/error.h"
+#include <openthread/error.h>
 
 namespace ot {
 namespace Posix {

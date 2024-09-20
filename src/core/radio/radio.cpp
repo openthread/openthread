@@ -28,11 +28,7 @@
 
 #include "radio.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/timer.hpp"
-#include "mac/mac_frame.hpp"
-#include "utils/otns.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 

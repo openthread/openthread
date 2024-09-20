@@ -36,7 +36,6 @@
 #include <openthread/platform/misc.h>
 
 #include "common/new.hpp"
-#include "radio/trel_link.hpp"
 #include "utils/heap.hpp"
 
 namespace ot {

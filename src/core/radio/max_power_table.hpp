@@ -29,8 +29,7 @@
 #ifndef OT_CORE_RADIO_MAX_POWER_TABLE_HPP_
 #define OT_CORE_RADIO_MAX_POWER_TABLE_HPP_
 
-#include "core/radio/radio.hpp"
-#include "openthread/platform/radio.h"
+#include "radio/radio.hpp"
 
 namespace ot {
 

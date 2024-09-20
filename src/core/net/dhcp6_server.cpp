@@ -35,15 +35,7 @@
 
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
 
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/encoding.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "instance/instance.hpp"
-#include "thread/mle.hpp"
-#include "thread/thread_netif.hpp"
 
 namespace ot {
 namespace Dhcp6 {

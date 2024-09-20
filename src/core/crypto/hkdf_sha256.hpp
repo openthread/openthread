@@ -37,10 +37,11 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/platform/crypto.h>
+
 #include "common/code_utils.hpp"
 #include "crypto/context_size.hpp"
 #include "crypto/hmac_sha256.hpp"
-#include "openthread/platform/crypto.h"
 
 namespace ot {
 namespace Crypto {

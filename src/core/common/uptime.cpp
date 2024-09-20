@@ -35,9 +35,6 @@
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {

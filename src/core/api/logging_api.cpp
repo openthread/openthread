@@ -33,11 +33,6 @@
 
 #include "openthread-core-config.h"
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/string.hpp"
 #include "instance/instance.hpp"
 
 using namespace ot;

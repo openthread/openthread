@@ -30,11 +30,6 @@
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/numeric_limits.hpp"
-#include "common/type_traits.hpp"
 #include "instance/instance.hpp"
 
 /**

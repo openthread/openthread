@@ -435,9 +435,6 @@ void ValidateRouterAdvert(const Icmp6Packet &aPacket)
     bool                             sawExpectedPio = false;
     Array<Ip6::Prefix, kMaxPrefixes> pioPrefixes;
     Array<Ip6::Prefix, kMaxPrefixes> rioPrefixes;
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE
-    bool sawStubRouterFlag = false;
-#endif
 
     VerifyOrQuit(raMsg.IsValid());
 
@@ -467,6 +464,8 @@ void ValidateRouterAdvert(const Icmp6Packet &aPacket)
         VerifyOrQuit(raMsg.GetHeader().IsOtherConfigFlagSet());
         break;
     }
+
+    VerifyOrQuit(raMsg.GetHeader().IsSnacRouterFlagSet());
 
     sDeprecatingPrefixes.Clear();
 
@@ -544,26 +543,10 @@ void ValidateRouterAdvert(const Icmp6Packet &aPacket)
             break;
         }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE
-        case Ip6::Nd::Option::kTypeRaFlagsExtension:
-        {
-            const Ip6::Nd::RaFlagsExtOption &flagsOption = static_cast<const Ip6::Nd::RaFlagsExtOption &>(option);
-
-            VerifyOrQuit(flagsOption.IsValid());
-            VerifyOrQuit(flagsOption.IsStubRouterFlagSet());
-            sawStubRouterFlag = true;
-            break;
-        }
-#endif
-
         default:
             VerifyOrQuit(false, "Unexpected option type in RA msg");
         }
     }
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE
-    VerifyOrQuit(sawStubRouterFlag);
-#endif
 
     if (!sRaValidated)
     {
@@ -595,8 +578,8 @@ void LogRouterAdvert(const Icmp6Packet &aPacket)
 
     VerifyOrQuit(raMsg.IsValid());
 
-    Log("     RA header - M:%u, O:%u", raMsg.GetHeader().IsManagedAddressConfigFlagSet(),
-        raMsg.GetHeader().IsOtherConfigFlagSet());
+    Log("     RA header - M:%u, O:%u, S:%u", raMsg.GetHeader().IsManagedAddressConfigFlagSet(),
+        raMsg.GetHeader().IsOtherConfigFlagSet(), raMsg.GetHeader().IsSnacRouterFlagSet());
     Log("     RA header - lifetime %u, prf:%s", raMsg.GetHeader().GetRouterLifetime(),
         PreferenceToString(raMsg.GetHeader().GetDefaultRouterPreference()));
 
@@ -626,15 +609,6 @@ void LogRouterAdvert(const Icmp6Packet &aPacket)
             rio.GetPrefix(prefix);
             Log("     RIO - %s, prf:%s, lifetime:%u", prefix.ToString().AsCString(),
                 PreferenceToString(rio.GetPreference()), rio.GetRouteLifetime());
-            break;
-        }
-
-        case Ip6::Nd::Option::kTypeRaFlagsExtension:
-        {
-            const Ip6::Nd::RaFlagsExtOption &flagsOption = static_cast<const Ip6::Nd::RaFlagsExtOption &>(option);
-
-            VerifyOrQuit(flagsOption.IsValid());
-            Log("     FlagsExt - StubRouter:%u", flagsOption.IsStubRouterFlagSet());
             break;
         }
 
@@ -864,13 +838,13 @@ struct RaFlags : public Clearable<RaFlags>
     RaFlags(void)
         : mManagedAddressConfigFlag(false)
         , mOtherConfigFlag(false)
-        , mStubRouterFlag(false)
+        , mSnacRouterFlag(false)
     {
     }
 
     bool mManagedAddressConfigFlag;
     bool mOtherConfigFlag;
-    bool mStubRouterFlag;
+    bool mSnacRouterFlag;
 };
 
 void BuildRouterAdvert(Ip6::Nd::RouterAdvert::TxMessage &aRaMsg,
@@ -896,12 +870,12 @@ void BuildRouterAdvert(Ip6::Nd::RouterAdvert::TxMessage &aRaMsg,
         header.SetOtherConfigFlag();
     }
 
-    SuccessOrQuit(aRaMsg.AppendHeader(header));
-
-    if (aRaFlags.mStubRouterFlag)
+    if (aRaFlags.mSnacRouterFlag)
     {
-        SuccessOrQuit(aRaMsg.AppendFlagsExtensionOption(/* aStubRouterFlag */ true));
+        header.SetSnacRouterFlag();
     }
+
+    SuccessOrQuit(aRaMsg.AppendHeader(header));
 
     for (; aNumPios > 0; aPios++, aNumPios--)
     {
@@ -1111,7 +1085,7 @@ struct InfraRouter
     InfraRouter(const Ip6::Address &aAddress,
                 bool                aManagedAddressConfigFlag,
                 bool                aOtherConfigFlag,
-                bool                aStubRouterFlag,
+                bool                aSnacRouterFlag,
                 bool                aIsLocalDevice = false)
         : mAddress(aAddress)
         , mIsLocalDevice(aIsLocalDevice)
@@ -1119,7 +1093,7 @@ struct InfraRouter
         mFlags.Clear();
         mFlags.mManagedAddressConfigFlag = aManagedAddressConfigFlag;
         mFlags.mOtherConfigFlag          = aOtherConfigFlag;
-        mFlags.mStubRouterFlag           = aStubRouterFlag;
+        mFlags.mSnacRouterFlag           = aSnacRouterFlag;
     }
 
     Ip6::Address mAddress;
@@ -1146,8 +1120,8 @@ void VerifyDiscoveredRouters(const InfraRouter *aRouters, uint16_t aNumRouters)
     {
         bool didFind = false;
 
-        Log("   address:%s, M:%u, O:%u, StubRouter:%u%s", AsCoreType(&entry.mAddress).ToString().AsCString(),
-            entry.mManagedAddressConfigFlag, entry.mOtherConfigFlag, entry.mStubRouterFlag,
+        Log("   address:%s, M:%u, O:%u, S:%u%s", AsCoreType(&entry.mAddress).ToString().AsCString(),
+            entry.mManagedAddressConfigFlag, entry.mOtherConfigFlag, entry.mSnacRouterFlag,
             entry.mIsLocalDevice ? " (this BR)" : "");
 
         for (uint16_t index = 0; index < aNumRouters; index++)
@@ -1156,7 +1130,7 @@ void VerifyDiscoveredRouters(const InfraRouter *aRouters, uint16_t aNumRouters)
             {
                 VerifyOrQuit(entry.mManagedAddressConfigFlag == aRouters[index].mFlags.mManagedAddressConfigFlag);
                 VerifyOrQuit(entry.mOtherConfigFlag == aRouters[index].mFlags.mOtherConfigFlag);
-                VerifyOrQuit(entry.mStubRouterFlag == aRouters[index].mFlags.mStubRouterFlag);
+                VerifyOrQuit(entry.mSnacRouterFlag == aRouters[index].mFlags.mSnacRouterFlag);
                 VerifyOrQuit(entry.mIsLocalDevice == aRouters[index].mIsLocalDevice);
                 didFind = true;
             }
@@ -3131,7 +3105,7 @@ void TestLearningAndCopyingOfFlags(void)
     SendRouterAdvert(routerAddressA, raFlags);
 
     AdvanceTime(1);
-    VerifyDiscoveredRouters({InfraRouter(routerAddressA, /* M */ true, /* O */ false, /* StubRouter */ false)});
+    VerifyDiscoveredRouters({InfraRouter(routerAddressA, /* M */ true, /* O */ false, /* S */ false)});
 
     sRaValidated           = false;
     sExpectedRaHeaderFlags = kRaHeaderFlagsOnlyM;
@@ -3157,18 +3131,18 @@ void TestLearningAndCopyingOfFlags(void)
     VerifyOrQuit(sRaValidated);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Send an RA from router A with both M and StubRouter flags.
+    // Send an RA from router A with both M and S flags.
     // Since it is from a stub router, the M flag should be ignored.
     // Ensure emitted RA does not set the M flag.
 
     raFlags.Clear();
     raFlags.mManagedAddressConfigFlag = true;
-    raFlags.mStubRouterFlag           = true;
+    raFlags.mSnacRouterFlag           = true;
 
     SendRouterAdvert(routerAddressA, raFlags);
 
     AdvanceTime(1);
-    VerifyDiscoveredRouters({InfraRouter(routerAddressA, /* M */ true, /* O */ false, /* StubRouter */ true)});
+    VerifyDiscoveredRouters({InfraRouter(routerAddressA, /* M */ true, /* O */ false, /* S */ true)});
 
     sRaValidated           = false;
     sExpectedRaHeaderFlags = kRaHeaderFlagsNone;
@@ -3186,8 +3160,8 @@ void TestLearningAndCopyingOfFlags(void)
     SendRouterAdvert(routerAddressB, raFlags);
 
     AdvanceTime(1);
-    VerifyDiscoveredRouters({InfraRouter(routerAddressA, /* M */ true, /* O */ false, /* StubRouter */ true),
-                             InfraRouter(routerAddressB, /* M */ false, /* O */ true, /* StubRouter */ false)});
+    VerifyDiscoveredRouters({InfraRouter(routerAddressA, /* M */ true, /* O */ false, /* S */ true),
+                             InfraRouter(routerAddressB, /* M */ false, /* O */ true, /* S */ false)});
 
     sRaValidated           = false;
     sExpectedRaHeaderFlags = kRaHeaderFlagsOnlyO;
@@ -3206,9 +3180,9 @@ void TestLearningAndCopyingOfFlags(void)
                      DefaultRoute(0, NetworkData::kRoutePreferenceMedium), raFlags);
 
     AdvanceTime(1);
-    VerifyDiscoveredRouters({InfraRouter(routerAddressA, /* M */ true, /* O */ false, /* StubRouter */ true),
-                             InfraRouter(routerAddressB, /* M */ false, /* O */ true, /* StubRouter */ false),
-                             InfraRouter(routerAddressC, /* M */ true, /* O */ false, /* StubRouter */ false)});
+    VerifyDiscoveredRouters({InfraRouter(routerAddressA, /* M */ true, /* O */ false, /* S */ true),
+                             InfraRouter(routerAddressB, /* M */ false, /* O */ true, /* S */ false),
+                             InfraRouter(routerAddressC, /* M */ true, /* O */ false, /* S */ false)});
 
     sRaValidated           = false;
     sExpectedPio           = kPioDeprecatingLocalOnLink;
@@ -3229,7 +3203,7 @@ void TestLearningAndCopyingOfFlags(void)
 
     // Router C should be in the table since it will have a deprecating
     // on-link prefix.
-    VerifyDiscoveredRouters({InfraRouter(routerAddressC, /* M */ true, /* O */ false, /* StubRouter */ false)});
+    VerifyDiscoveredRouters({InfraRouter(routerAddressC, /* M */ true, /* O */ false, /* S */ false)});
 
     sRaValidated           = false;
     sExpectedPio           = kPioAdvertisingLocalOnLink;
@@ -3297,7 +3271,7 @@ void TestLearnRaHeader(void)
 
     AdvanceTime(1);
     VerifyDiscoveredRouters(
-        {InfraRouter(sInfraIfAddress, /* M */ false, /* O */ false, /* StubRouter */ false, /* IsLocalDevice */ true)});
+        {InfraRouter(sInfraIfAddress, /* M */ false, /* O */ false, /* S */ false, /* IsLocalDevice */ true)});
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // RoutingManager should learn the header from the

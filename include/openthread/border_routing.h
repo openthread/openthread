@@ -107,7 +107,7 @@ typedef struct otBorderRoutingRouterEntry
     uint32_t     mAge;                          ///< The router's age in seconds (duration since its first discovery).
     bool         mManagedAddressConfigFlag : 1; ///< The router's Managed Address Config flag (`M` flag).
     bool         mOtherConfigFlag : 1;          ///< The router's Other Config flag (`O` flag).
-    bool         mStubRouterFlag : 1;           ///< The router's Stub Router flag.
+    bool         mSnacRouterFlag : 1;           ///< The router's SNAC Router flag (`S` flag).
     bool         mIsLocalDevice : 1;            ///< This router is the local device (this BR).
     bool         mIsReachable : 1;              ///< This router is reachable.
     bool         mIsPeerBr : 1;                 ///< This router is (likely) a peer BR.

@@ -33,18 +33,7 @@
 
 #include "announce_begin_server.hpp"
 
-#include <openthread/platform/radio.h>
-
-#include "coap/coap_message.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "instance/instance.hpp"
-#include "meshcop/meshcop_tlvs.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/uri_paths.hpp"
 
 namespace ot {
 

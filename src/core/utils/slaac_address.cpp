@@ -35,16 +35,8 @@
 
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
-#include "common/array.hpp"
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/numeric_limits.hpp"
-#include "common/random.hpp"
-#include "common/settings.hpp"
 #include "crypto/sha256.hpp"
 #include "instance/instance.hpp"
-#include "net/ip6_address.hpp"
 
 namespace ot {
 namespace Utils {

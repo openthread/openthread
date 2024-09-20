@@ -44,6 +44,7 @@
 #endif
 
 #include <openthread/link.h>
+#include <openthread/link_metrics.h>
 
 #include "common/as_core_type.hpp"
 #include "common/callback.hpp"

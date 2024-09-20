@@ -44,6 +44,8 @@
 
 #if (OPENTHREAD_FTD || OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
 
+#include <openthread/channel_manager.h>
+
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"

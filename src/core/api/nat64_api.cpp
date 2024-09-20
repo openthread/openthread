@@ -33,16 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/border_router.h>
-#include <openthread/ip6.h>
-#include <openthread/nat64.h>
-
-#include "border_router/routing_manager.hpp"
-#include "common/debug.hpp"
 #include "instance/instance.hpp"
-#include "net/ip4_types.hpp"
-#include "net/ip6_headers.hpp"
-#include "net/nat64_translator.hpp"
 
 using namespace ot;
 
