@@ -225,6 +225,15 @@ public:
      */
     bool ShouldDeferHostSend(void);
 
+    /**
+     * Check if the infrastructure interface has an IPv6 address.
+     *
+     * @param[in]  aInfraIfIndex  The index of the instructure interface to query.
+     * @param[in]  aAddress       The IPv6 address to query.
+     *
+     */
+    bool InfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress);
+
 protected:
     static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
 
@@ -745,6 +754,16 @@ protected:
     spinel_status_t mDatasetSendMgmtPendingSetResult;
 
     uint64_t mLogTimestampBase; // Timestamp base used for logging
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE
+    otError InfraIfAddAddress(const otIp6Address &aAddress);
+    bool    InfraIfContainsAddress(const otIp6Address &aAddress);
+
+    static constexpr uint8_t kMaxInfraIfAddrs = 10;
+    otIp6Address             mInfraIfAddrs[kMaxInfraIfAddrs];
+    uint8_t                  mInfraIfAddrCount;
+    uint32_t                 mInfraIfIndex;
+#endif
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     char    *mDiagOutput;

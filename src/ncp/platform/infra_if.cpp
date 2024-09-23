@@ -33,10 +33,7 @@
 #if OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE
 bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
 {
-    OT_UNUSED_VARIABLE(aInfraIfIndex);
-    OT_UNUSED_VARIABLE(aAddress);
-
-    return true;
+    return ot::Ncp::NcpBase::GetNcpInstance()->InfraIfHasAddress(aInfraIfIndex, aAddress);
 }
 
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
