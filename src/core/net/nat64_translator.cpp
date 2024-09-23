@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes implementation for the NAT64 translator.
- *
  */
 
 #include "nat64_translator.hpp"

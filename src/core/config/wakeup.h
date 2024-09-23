@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes compile-time configurations for the Wake-up Coordinator and Wake-up End Device roles.
- *
  */
 
 #ifndef CONFIG_WAKEUP_H_
@@ -42,7 +41,6 @@
  *   This module includes configuration variables for the Wake-up Coordinator and Wake-up End Device roles.
  *
  * @{
- *
  */
 
 /**
@@ -50,7 +48,6 @@
  *
  * Define to 1 to enable the Wake-up Coordinator role that is capable of establishing
  * a link with one or more Wake-up End Devices by sending a sequence of wake-up frames.
- *
  */
 #ifndef OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 #define OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE 0
@@ -61,7 +58,6 @@
  *
  * Define to 1 to enable the Wake-up End Device role that periodically listens for wake-up
  * frames to establish a link with a Wake-up Coordinator device.
- *
  */
 #ifndef OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 #define OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE 0
@@ -69,7 +65,6 @@
 
 /**
  * @}
- *
  */
 
 #endif // CONFIG_WAKEUP_H_

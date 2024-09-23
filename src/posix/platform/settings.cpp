@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file implements the OpenThread platform abstraction for non-volatile storage of settings.
- *
  */
 
 #include "openthread-posix-config.h"
@@ -111,7 +110,6 @@ static int swapOpen(otInstance *aInstance)
  *
  * @param[in]   aFd     The file descriptor of the current swap file.
  * @param[in]   aLength Number of bytes to copy.
- *
  */
 static void swapWrite(otInstance *aInstance, int aFd, uint16_t aLength)
 {

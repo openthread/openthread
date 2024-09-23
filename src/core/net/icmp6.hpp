@@ -56,21 +56,18 @@ namespace Ip6 {
  *   This module includes definitions for ICMPv6.
  *
  * @{
- *
  */
 
 class Headers;
 
 /**
  * Implements ICMPv6.
- *
  */
 class Icmp : public InstanceLocator, private NonCopyable
 {
 public:
     /*
      * Implements ICMPv6 header generation and parsing.
-     *
      */
     OT_TOOL_PACKED_BEGIN
     class Header : public otIcmp6Header, public Clearable<Header>
@@ -78,7 +75,6 @@ public:
     public:
         /**
          * ICMPv6 Message Types
-         *
          */
         enum Type : uint8_t
         {
@@ -96,7 +92,6 @@ public:
 
         /**
          * ICMPv6 Message Codes
-         *
          */
         enum Code : uint8_t
         {
@@ -115,7 +110,6 @@ public:
          *
          * @retval TRUE if the ICMPv6 message is an error message.
          * @retval FALSE if the ICMPv6 message is an informational message.
-         *
          */
         bool IsError(void) const { return mType < OT_ICMP6_TYPE_ECHO_REQUEST; }
 
@@ -123,7 +117,6 @@ public:
          * Returns the ICMPv6 message type.
          *
          * @returns The ICMPv6 message type.
-         *
          */
         Type GetType(void) const { return static_cast<Type>(mType); }
 
@@ -131,7 +124,6 @@ public:
          * Sets the ICMPv6 message type.
          *
          * @param[in]  aType  The ICMPv6 message type.
-         *
          */
         void SetType(Type aType) { mType = static_cast<uint8_t>(aType); }
 
@@ -139,7 +131,6 @@ public:
          * Returns the ICMPv6 message code.
          *
          * @returns The ICMPv6 message code.
-         *
          */
         Code GetCode(void) const { return static_cast<Code>(mCode); }
 
@@ -147,7 +138,6 @@ public:
          * Sets the ICMPv6 message code.
          *
          * @param[in]  aCode  The ICMPv6 message code.
-         *
          */
         void SetCode(Code aCode) { mCode = static_cast<uint8_t>(aCode); }
 
@@ -155,7 +145,6 @@ public:
          * Returns the ICMPv6 message checksum.
          *
          * @returns The ICMPv6 message checksum.
-         *
          */
         uint16_t GetChecksum(void) const { return BigEndian::HostSwap16(mChecksum); }
 
@@ -163,7 +152,6 @@ public:
          * Sets the ICMPv6 message checksum.
          *
          * @param[in]  aChecksum  The ICMPv6 message checksum.
-         *
          */
         void SetChecksum(uint16_t aChecksum) { mChecksum = BigEndian::HostSwap16(aChecksum); }
 
@@ -171,7 +159,6 @@ public:
          * Returns the ICMPv6 message ID for Echo Requests and Replies.
          *
          * @returns The ICMPv6 message ID.
-         *
          */
         uint16_t GetId(void) const { return BigEndian::HostSwap16(mData.m16[0]); }
 
@@ -179,7 +166,6 @@ public:
          * Sets the ICMPv6 message ID for Echo Requests and Replies.
          *
          * @param[in]  aId  The ICMPv6 message ID.
-         *
          */
         void SetId(uint16_t aId) { mData.m16[0] = BigEndian::HostSwap16(aId); }
 
@@ -187,7 +173,6 @@ public:
          * Returns the ICMPv6 message sequence for Echo Requests and Replies.
          *
          * @returns The ICMPv6 message sequence.
-         *
          */
         uint16_t GetSequence(void) const { return BigEndian::HostSwap16(mData.m16[1]); }
 
@@ -195,14 +180,12 @@ public:
          * Sets the ICMPv6 message sequence for Echo Requests and Replies.
          *
          * @param[in]  aSequence  The ICMPv6 message sequence.
-         *
          */
         void SetSequence(uint16_t aSequence) { mData.m16[1] = BigEndian::HostSwap16(aSequence); }
     } OT_TOOL_PACKED_END;
 
     /**
      * Implements ICMPv6 message handlers.
-     *
      */
     class Handler : public otIcmp6Handler, public LinkedListEntry<Handler>
     {
@@ -214,7 +197,6 @@ public:
          *
          * @param[in]  aCallback  A pointer to the function that is called when receiving an ICMPv6 message.
          * @param[in]  aContext   A pointer to arbitrary context information.
-         *
          */
         Handler(otIcmp6ReceiveCallback aCallback, void *aContext)
         {
@@ -234,7 +216,6 @@ public:
      * Initializes the object.
      *
      * @param[in]  aInstance A reference to the OpenThread instance.
-     *
      */
     explicit Icmp(Instance &aInstance);
 
@@ -242,7 +223,6 @@ public:
      * Returns a new ICMP message with sufficient header space reserved.
      *
      * @returns A pointer to the message or `nullptr` if no buffers are available.
-     *
      */
     Message *NewMessage(void);
 
@@ -253,7 +233,6 @@ public:
      *
      * @retval kErrorNone     Successfully registered the ICMPv6 handler.
      * @retval kErrorAlready  The ICMPv6 handler is already registered.
-     *
      */
     Error RegisterHandler(Handler &aHandler);
 
@@ -267,7 +246,6 @@ public:
      *
      * @retval kErrorNone     Successfully enqueued the ICMPv6 Echo Request message.
      * @retval kErrorNoBufs   Insufficient buffers available to generate an ICMPv6 Echo Request message.
-     *
      */
     Error SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo, uint16_t aIdentifier);
 
@@ -281,7 +259,6 @@ public:
      *
      * @retval kErrorNone     Successfully enqueued the ICMPv6 error message.
      * @retval kErrorNoBufs   Insufficient buffers available.
-     *
      */
     Error SendError(Header::Type aType, Header::Code aCode, const MessageInfo &aMessageInfo, const Message &aMessage);
 
@@ -295,7 +272,6 @@ public:
      *
      * @retval kErrorNone     Successfully enqueued the ICMPv6 error message.
      * @retval kErrorNoBufs   Insufficient buffers available.
-     *
      */
     Error SendError(Header::Type aType, Header::Code aCode, const MessageInfo &aMessageInfo, const Headers &aHeaders);
 
@@ -308,7 +284,6 @@ public:
      * @retval kErrorNone     Successfully processed the ICMPv6 message.
      * @retval kErrorNoBufs   Insufficient buffers available to generate the reply.
      * @retval kErrorDrop     The ICMPv6 message was invalid and dropped.
-     *
      */
     Error HandleMessage(Message &aMessage, MessageInfo &aMessageInfo);
 
@@ -317,7 +292,6 @@ public:
      *
      * @retval TRUE   ICMPv6 Echo processing is enabled.
      * @retval FALSE  ICMPv6 Echo processing is disabled.
-     *
      */
     otIcmp6EchoMode GetEchoMode(void) const { return mEchoMode; }
 
@@ -325,7 +299,6 @@ public:
      * Sets the ICMPv6 echo mode.
      *
      * @param[in]  aMode  The ICMPv6 echo mode.
-     *
      */
     void SetEchoMode(otIcmp6EchoMode aMode) { mEchoMode = aMode; }
 
@@ -336,7 +309,6 @@ public:
      *
      * @retval TRUE if OpenThread should respond with an ICMPv6 Echo Reply.
      * @retval FALSE if OpenThread should not respond with an ICMPv6 Echo Reply.
-     *
      */
     bool ShouldHandleEchoRequest(const Address &aAddress);
 
@@ -344,7 +316,6 @@ public:
      * Returns the ICMPv6 Echo sequence number.
      *
      * @returns The sequence number of the next ICMPv6 Echo request.
-     *
      */
     uint16_t GetEchoSequence(void) const { return mEchoSequence; }
 
@@ -359,7 +330,6 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace Ip6

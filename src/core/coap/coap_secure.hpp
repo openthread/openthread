@@ -54,14 +54,12 @@ class CoapSecure : public CoapBase
 public:
     /**
      * Function pointer which is called reporting a connection event (when connection established or disconnected)
-     *
      */
     typedef otHandleCoapSecureClientConnect ConnectEventCallback;
 
     /**
      * Callback to notify when the agent is automatically stopped due to reaching the maximum number of connection
      * attempts.
-     *
      */
     typedef otCoapSecureAutoStopCallback AutoStopCallback;
 
@@ -70,7 +68,6 @@ public:
      *
      * @param[in]  aInstance           A reference to the OpenThread instance.
      * @param[in]  aLayerTwoSecurity   Specifies whether to use layer two security or not.
-     *
      */
     explicit CoapSecure(Instance &aInstance, bool aLayerTwoSecurity = false);
 
@@ -81,7 +78,6 @@ public:
      *
      * @retval kErrorNone        Successfully started the CoAP agent.
      * @retval kErrorAlready     Already started.
-     *
      */
     Error Start(uint16_t aPort);
 
@@ -96,7 +92,6 @@ public:
      *
      * @retval kErrorNone        Successfully started the CoAP agent.
      * @retval kErrorAlready     Already started.
-     *
      */
     Error Start(uint16_t aPort, uint16_t aMaxAttempts, AutoStopCallback aCallback, void *aContext);
 
@@ -108,7 +103,6 @@ public:
      *
      * @retval kErrorNone        Successfully started the CoAP agent.
      * @retval kErrorAlready     Already started.
-     *
      */
     Error Start(MeshCoP::SecureTransport::TransportCallback aCallback, void *aContext);
 
@@ -117,7 +111,6 @@ public:
      *
      * @param[in]  aCallback  A pointer to a function to get called when connection state changes.
      * @param[in]  aContext   A pointer to arbitrary context information.
-     *
      */
     void SetConnectEventCallback(ConnectEventCallback aCallback, void *aContext)
     {
@@ -126,7 +119,6 @@ public:
 
     /**
      * Stops the secure CoAP agent.
-     *
      */
     void Stop(void);
 
@@ -138,7 +130,6 @@ public:
      * established.
      *
      * @retval kErrorNone  Successfully started DTLS connection.
-     *
      */
     Error Connect(const Ip6::SockAddr &aSockAddr, ConnectEventCallback aCallback, void *aContext);
 
@@ -147,7 +138,6 @@ public:
      *
      * @retval TRUE  If DTLS session is active.
      * @retval FALSE If DTLS session is not active.
-     *
      */
     bool IsConnectionActive(void) const { return mDtls.IsConnectionActive(); }
 
@@ -156,7 +146,6 @@ public:
      *
      * @retval TRUE   The DTLS session is connected.
      * @retval FALSE  The DTLS session is not connected.
-     *
      */
     bool IsConnected(void) const { return mDtls.IsConnected(); }
 
@@ -165,13 +154,11 @@ public:
      *
      * @retval TRUE   The DTLS session is closed
      * @retval FALSE  The DTLS session is not closed.
-     *
      */
     bool IsClosed(void) const { return mDtls.IsClosed(); }
 
     /**
      * Stops the DTLS connection.
-     *
      */
     void Disconnect(void) { mDtls.Disconnect(); }
 
@@ -179,7 +166,6 @@ public:
      * Returns a reference to the DTLS object.
      *
      * @returns  A reference to the DTLS object.
-     *
      */
     MeshCoP::SecureTransport &GetDtls(void) { return mDtls; }
 
@@ -187,7 +173,6 @@ public:
      * Gets the UDP port of this agent.
      *
      * @returns  UDP port number.
-     *
      */
     uint16_t GetUdpPort(void) const { return mDtls.GetUdpPort(); }
 
@@ -199,7 +184,6 @@ public:
      *
      * @retval kErrorNone         Successfully set the PSK.
      * @retval kErrorInvalidArgs  The PSK is invalid.
-     *
      */
     Error SetPsk(const uint8_t *aPsk, uint8_t aPskLength) { return mDtls.SetPsk(aPsk, aPskLength); }
 
@@ -207,7 +191,6 @@ public:
      * Sets the PSK.
      *
      * @param[in]  aPskd  A Joiner PSKd.
-     *
      */
     void SetPsk(const MeshCoP::JoinerPskd &aPskd);
 
@@ -223,7 +206,6 @@ public:
      * @param[in]  aPskLength    The PSK char length.
      * @param[in]  aPskIdentity  The Identity Name for the PSK.
      * @param[in]  aPskIdLength  The PSK Identity Length.
-     *
      */
     void SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength)
     {
@@ -241,7 +223,6 @@ public:
      * @param[in]  aX509Length        The length of certificate.
      * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
      * @param[in]  aPrivateKeyLength  The length of the private key.
-     *
      */
     void SetCertificate(const uint8_t *aX509Cert,
                         uint32_t       aX509Length,
@@ -258,7 +239,6 @@ public:
      *
      * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
      * @param[in]  aX509CaCertChainLength   The length of chain.
-     *
      */
     void SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
     {
@@ -278,7 +258,6 @@ public:
      *
      * @retval kErrorNone    Successfully get the peer certificate.
      * @retval kErrorNoBufs  Can't allocate memory for certificate.
-     *
      */
     Error GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
     {
@@ -291,7 +270,6 @@ public:
      * of peer certificate.
      *
      * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should be verified
-     *
      */
     void SetSslAuthMode(bool aVerifyPeerCertificate) { mDtls.SetSslAuthMode(aVerifyPeerCertificate); }
 
@@ -314,7 +292,6 @@ public:
      * @retval kErrorNone          Successfully sent CoAP message.
      * @retval kErrorNoBufs        Failed to allocate retransmission data.
      * @retval kErrorInvalidState  DTLS connection was not initialized.
-     *
      */
     Error SendMessage(Message                    &aMessage,
                       ResponseHandler             aHandler      = nullptr,
@@ -339,7 +316,6 @@ public:
      * @retval kErrorNone          Successfully sent CoAP message.
      * @retval kErrorNoBufs        Failed to allocate retransmission data.
      * @retval kErrorInvalidState  DTLS connection was not initialized.
-     *
      */
     Error SendMessage(Message                    &aMessage,
                       const Ip6::MessageInfo     &aMessageInfo,
@@ -362,7 +338,6 @@ public:
      * @retval kErrorNone          Successfully sent CoAP message.
      * @retval kErrorNoBufs        Failed to allocate retransmission data.
      * @retval kErrorInvalidState  DTLS connection was not initialized.
-     *
      */
     Error SendMessage(Message &aMessage, ResponseHandler aHandler = nullptr, void *aContext = nullptr);
 
@@ -381,7 +356,6 @@ public:
      * @retval kErrorNone          Successfully sent CoAP message.
      * @retval kErrorNoBufs        Failed to allocate retransmission data.
      * @retval kErrorInvalidState  DTLS connection was not initialized.
-     *
      */
     Error SendMessage(Message                &aMessage,
                       const Ip6::MessageInfo &aMessageInfo,
@@ -394,7 +368,6 @@ public:
      *
      * @param[in]  aMessage      A reference to the received message.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
-     *
      */
     void HandleUdpReceive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
     {
@@ -405,7 +378,6 @@ public:
      * Returns the DTLS session's peer address.
      *
      * @return DTLS session's message info.
-     *
      */
     const Ip6::MessageInfo &GetMessageInfo(void) const { return mDtls.GetMessageInfo(); }
 

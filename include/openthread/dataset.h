@@ -59,7 +59,6 @@ extern "C" {
  * @struct otNetworkKey
  *
  * Represents a Thread Network Key.
- *
  */
 OT_TOOL_PACKED_BEGIN
 struct otNetworkKey
@@ -69,13 +68,11 @@ struct otNetworkKey
 
 /**
  * Represents a Thread Network Key.
- *
  */
 typedef struct otNetworkKey otNetworkKey;
 
 /**
  * This datatype represents KeyRef to NetworkKey.
- *
  */
 typedef otCryptoKeyRef otNetworkKeyRef; ///< Reference to Key
 
@@ -85,7 +82,6 @@ typedef otCryptoKeyRef otNetworkKeyRef; ///< Reference to Key
  * Represents a Network Name.
  *
  * The `otNetworkName` is a null terminated C string (i.e., `m8` char array MUST end with null char `\0`).
- *
  */
 typedef struct otNetworkName
 {
@@ -96,7 +92,6 @@ typedef struct otNetworkName
 
 /**
  * Represents an Extended PAN ID.
- *
  */
 OT_TOOL_PACKED_BEGIN
 struct otExtendedPanId
@@ -106,7 +101,6 @@ struct otExtendedPanId
 
 /**
  * Represents an Extended PAN ID.
- *
  */
 typedef struct otExtendedPanId otExtendedPanId;
 
@@ -114,7 +108,6 @@ typedef struct otExtendedPanId otExtendedPanId;
 
 /**
  * Represents a Mesh Local Prefix.
- *
  */
 typedef otIp6NetworkPrefix otMeshLocalPrefix;
 
@@ -122,7 +115,6 @@ typedef otIp6NetworkPrefix otMeshLocalPrefix;
 
 /**
  * Represents PSKc.
- *
  */
 OT_TOOL_PACKED_BEGIN
 struct otPskc
@@ -132,19 +124,16 @@ struct otPskc
 
 /**
  * Represents a PSKc.
- *
  */
 typedef struct otPskc otPskc;
 
 /**
  * This datatype represents KeyRef to PSKc.
- *
  */
 typedef otCryptoKeyRef otPskcRef; ///< Reference to Key
 
 /**
  * Represent Security Policy.
- *
  */
 typedef struct otSecurityPolicy
 {
@@ -164,7 +153,6 @@ typedef struct otSecurityPolicy
 
 /**
  * Represents Channel Mask.
- *
  */
 typedef uint32_t otChannelMask;
 
@@ -197,7 +185,6 @@ typedef uint32_t otChannelMask;
 
 /**
  * Represents presence of different components in Active or Pending Operational Dataset.
- *
  */
 typedef struct otOperationalDatasetComponents
 {
@@ -217,7 +204,6 @@ typedef struct otOperationalDatasetComponents
 
 /**
  * Represents a Thread Dataset timestamp component.
- *
  */
 typedef struct otTimestamp
 {
@@ -230,7 +216,6 @@ typedef struct otTimestamp
  * Represents an Active or Pending Operational Dataset.
  *
  * Components in Dataset are optional. `mComponents` structure specifies which components are present in the Dataset.
- *
  */
 typedef struct otOperationalDataset
 {
@@ -251,7 +236,6 @@ typedef struct otOperationalDataset
 
 /**
  * Maximum length of Operational Dataset in bytes.
- *
  */
 #define OT_OPERATIONAL_DATASET_MAX_LENGTH 254
 
@@ -259,7 +243,6 @@ typedef struct otOperationalDataset
  * Represents an Active or Pending Operational Dataset.
  *
  * The Operational Dataset is TLV encoded as specified by Thread.
- *
  */
 typedef struct otOperationalDatasetTlvs
 {
@@ -269,7 +252,6 @@ typedef struct otOperationalDatasetTlvs
 
 /**
  * Represents meshcop TLV types.
- *
  */
 typedef enum otMeshcopTlvType
 {
@@ -326,7 +308,6 @@ typedef enum otMeshcopTlvType
  * @retval  OT_ERROR_PARSE             An error occurred during parsing the response.
  * @retval  OT_ERROR_ABORT             The request was reset by peer.
  * @retval  OT_ERROR_RESPONSE_TIMEOUT  No response or acknowledgment received during timeout period.
- *
  */
 typedef void (*otDatasetMgmtSetCallback)(otError aResult, void *aContext);
 
@@ -336,7 +317,6 @@ typedef void (*otDatasetMgmtSetCallback)(otError aResult, void *aContext);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns TRUE if a valid network is present in the Active Operational Dataset, FALSE otherwise.
- *
  */
 bool otDatasetIsCommissioned(otInstance *aInstance);
 
@@ -348,7 +328,6 @@ bool otDatasetIsCommissioned(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE          Successfully retrieved the Active Operational Dataset.
  * @retval OT_ERROR_NOT_FOUND     No corresponding value in the setting store.
- *
  */
 otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset);
 
@@ -360,7 +339,6 @@ otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset
  *
  * @retval OT_ERROR_NONE          Successfully retrieved the Active Operational Dataset.
  * @retval OT_ERROR_NOT_FOUND     No corresponding value in the setting store.
- *
  */
 otError otDatasetGetActiveTlvs(otInstance *aInstance, otOperationalDatasetTlvs *aDataset);
 
@@ -389,7 +367,6 @@ otError otDatasetGetActiveTlvs(otInstance *aInstance, otOperationalDatasetTlvs *
  * @param[in]  aDataset  A pointer to the Active Operational Dataset.
  *
  * @retval OT_ERROR_NONE    Successfully set the Active Operational Dataset.
- *
  */
 otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset);
 
@@ -414,7 +391,6 @@ otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aD
  *
  * @retval OT_ERROR_NONE          Successfully set the Active Operational Dataset.
  * @retval OT_ERROR_INVALID_ARGS  The @p aDataset is invalid. It is too long or contains incorrect TLV formatting.
- *
  */
 otError otDatasetSetActiveTlvs(otInstance *aInstance, const otOperationalDatasetTlvs *aDataset);
 
@@ -426,7 +402,6 @@ otError otDatasetSetActiveTlvs(otInstance *aInstance, const otOperationalDataset
  *
  * @retval OT_ERROR_NONE          Successfully retrieved the Pending Operational Dataset.
  * @retval OT_ERROR_NOT_FOUND     No corresponding value in the setting store.
- *
  */
 otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset);
 
@@ -438,7 +413,6 @@ otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDatase
  *
  * @retval OT_ERROR_NONE          Successfully retrieved the Pending Operational Dataset.
  * @retval OT_ERROR_NOT_FOUND     No corresponding value in the setting store.
- *
  */
 otError otDatasetGetPendingTlvs(otInstance *aInstance, otOperationalDatasetTlvs *aDataset);
 
@@ -454,7 +428,6 @@ otError otDatasetGetPendingTlvs(otInstance *aInstance, otOperationalDatasetTlvs 
  * @param[in]  aDataset  A pointer to the Pending Operational Dataset.
  *
  * @retval OT_ERROR_NONE    Successfully set the Pending Operational Dataset.
- *
  */
 otError otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *aDataset);
 
@@ -466,7 +439,6 @@ otError otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *a
  *
  * @retval OT_ERROR_NONE          Successfully set the Pending Operational Dataset.
  * @retval OT_ERROR_INVALID_ARGS  The @p aDataset is invalid. It is too long or contains incorrect TLV formatting.
- *
  */
 otError otDatasetSetPendingTlvs(otInstance *aInstance, const otOperationalDatasetTlvs *aDataset);
 
@@ -481,7 +453,6 @@ otError otDatasetSetPendingTlvs(otInstance *aInstance, const otOperationalDatase
  *
  * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
- *
  */
 otError otDatasetSendMgmtActiveGet(otInstance                           *aInstance,
                                    const otOperationalDatasetComponents *aDatasetComponents,
@@ -502,7 +473,6 @@ otError otDatasetSendMgmtActiveGet(otInstance                           *aInstan
  * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
  * @retval OT_ERROR_BUSY          A previous request is ongoing.
- *
  */
 otError otDatasetSendMgmtActiveSet(otInstance                 *aInstance,
                                    const otOperationalDataset *aDataset,
@@ -522,7 +492,6 @@ otError otDatasetSendMgmtActiveSet(otInstance                 *aInstance,
  *
  * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
- *
  */
 otError otDatasetSendMgmtPendingGet(otInstance                           *aInstance,
                                     const otOperationalDatasetComponents *aDatasetComponents,
@@ -543,7 +512,6 @@ otError otDatasetSendMgmtPendingGet(otInstance                           *aInsta
  * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
  * @retval OT_ERROR_BUSY          A previous request is ongoing.
- *
  */
 otError otDatasetSendMgmtPendingSet(otInstance                 *aInstance,
                                     const otOperationalDataset *aDataset,
@@ -564,7 +532,6 @@ otError otDatasetSendMgmtPendingSet(otInstance                 *aInstance,
  *
  * @retval OT_ERROR_NONE          Successfully generate PSKc.
  * @retval OT_ERROR_INVALID_ARGS  If any of the input arguments is invalid.
- *
  */
 otError otDatasetGeneratePskc(const char            *aPassPhrase,
                               const otNetworkName   *aNetworkName,
@@ -582,7 +549,6 @@ otError otDatasetGeneratePskc(const char            *aPassPhrase,
  *
  * @retval OT_ERROR_NONE           Successfully set @p aNetworkName from @p aNameString.
  * @retval OT_ERROR_INVALID_ARGS   @p aNameStrng is invalid (too long or does not follow UTF-8 encoding).
- *
  */
 otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameString);
 
@@ -594,7 +560,6 @@ otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameSt
  *
  * @retval OT_ERROR_NONE          Successfully set @p aDataset from @p aDatasetTlvs.
  * @retval OT_ERROR_INVALID_ARGS  @p aDatasetTlvs's length is longer than `OT_OPERATIONAL_DATASET_MAX_LENGTH`.
- *
  */
 otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOperationalDataset *aDataset);
 
@@ -603,7 +568,6 @@ otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOpera
  *
  * @param[in]  aDataset      An Operational dataset to convert to TLVs.
  * @param[out] aDatasetTlvs  A pointer to dataset TLVs to return the result.
- *
  */
 void otDatasetConvertToTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs);
 
@@ -618,13 +582,11 @@ void otDatasetConvertToTlvs(const otOperationalDataset *aDataset, otOperationalD
  * @retval OT_ERROR_NONE          Successfully updated @p aDatasetTlvs.
  * @retval OT_ERROR_INVALID_ARGS  @p aDataset contains invalid values.
  * @retval OT_ERROR_NO_BUFS       Not enough space space in @p aDatasetTlvs to apply the update.
- *
  */
 otError otDatasetUpdateTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

@@ -49,7 +49,6 @@ extern "C" {
  *   This module includes OpenThread logging related definitions.
  *
  * @{
- *
  */
 
 /**
@@ -59,7 +58,6 @@ extern "C" {
  * currently set dynamic log level. Otherwise, this function returns the build-time configured log level.
  *
  * @returns The log level.
- *
  */
 otLogLevel otLoggingGetLevel(void);
 
@@ -72,7 +70,6 @@ otLogLevel otLoggingGetLevel(void);
  *
  * @retval OT_ERROR_NONE            Successfully updated log level.
  * @retval OT_ERROR_INVALID_ARGS    Log level value is invalid.
- *
  */
 otError otLoggingSetLevel(otLogLevel aLogLevel);
 
@@ -84,7 +81,6 @@ otError otLoggingSetLevel(otLogLevel aLogLevel);
  *
  * @param[in]  aFormat  The format string.
  * @param[in]  ...      Arguments for the format specification.
- *
  */
 void otLogCritPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
@@ -96,7 +92,6 @@ void otLogCritPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHE
  *
  * @param[in]  aFormat  The format string.
  * @param[in]  ...      Arguments for the format specification.
- *
  */
 void otLogWarnPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
@@ -108,7 +103,6 @@ void otLogWarnPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHE
  *
  * @param[in]  aFormat  The format string.
  * @param[in]  ...      Arguments for the format specification.
- *
  */
 void otLogNotePlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
@@ -120,7 +114,6 @@ void otLogNotePlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHE
  *
  * @param[in]  aFormat  The format string.
  * @param[in]  ...      Arguments for the format specification.
- *
  */
 void otLogInfoPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
@@ -132,7 +125,6 @@ void otLogInfoPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHE
  *
  * @param[in]  aFormat  The format string.
  * @param[in]  ...      Arguments for the format specification.
- *
  */
 void otLogDebgPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
@@ -145,7 +137,6 @@ void otLogDebgPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHE
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
- *
  */
 void otDumpCritPlat(const char *aText, const void *aData, uint16_t aDataLength);
 
@@ -158,7 +149,6 @@ void otDumpCritPlat(const char *aText, const void *aData, uint16_t aDataLength);
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
- *
  */
 void otDumpWarnPlat(const char *aText, const void *aData, uint16_t aDataLength);
 
@@ -171,7 +161,6 @@ void otDumpWarnPlat(const char *aText, const void *aData, uint16_t aDataLength);
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
- *
  */
 void otDumpNotePlat(const char *aText, const void *aData, uint16_t aDataLength);
 
@@ -184,7 +173,6 @@ void otDumpNotePlat(const char *aText, const void *aData, uint16_t aDataLength);
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
- *
  */
 void otDumpInfoPlat(const char *aText, const void *aData, uint16_t aDataLength);
 
@@ -197,7 +185,6 @@ void otDumpInfoPlat(const char *aText, const void *aData, uint16_t aDataLength);
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
- *
  */
 void otDumpDebgPlat(const char *aText, const void *aData, uint16_t aDataLength);
 
@@ -216,7 +203,6 @@ void otDumpDebgPlat(const char *aText, const void *aData, uint16_t aDataLength);
  * @param[in] aPlatModuleName   The platform sub-module name.
  * @param[in] aFormat           The format string.
  * @param[in] ...               Arguments for the format specification.
- *
  */
 void otLogPlat(otLogLevel aLogLevel, const char *aPlatModuleName, const char *aFormat, ...)
     OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 4);
@@ -236,7 +222,6 @@ void otLogPlat(otLogLevel aLogLevel, const char *aPlatModuleName, const char *aF
  * @param[in] aPlatModuleName   The platform sub-module name.
  * @param[in] aFormat           The format string.
  * @param[in] aArgs             Arguments for the format specification.
- *
  */
 void otLogPlatArgs(otLogLevel aLogLevel, const char *aPlatModuleName, const char *aFormat, va_list aArgs);
 
@@ -249,7 +234,6 @@ void otLogPlatArgs(otLogLevel aLogLevel, const char *aPlatModuleName, const char
  * @param[in]  aLogLevel The log level.
  * @param[in]  aFormat   The format string.
  * @param[in]  ...       Arguments for the format specification.
- *
  */
 void otLogCli(otLogLevel aLogLevel, const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
@@ -257,7 +241,6 @@ void otLogCli(otLogLevel aLogLevel, const char *aFormat, ...) OT_TOOL_PRINTF_STY
 
 /**
  * Represents information used for generating hex dump output.
- *
  */
 typedef struct
 {
@@ -288,13 +271,11 @@ typedef struct
  *
  * @retval OT_ERROR_NONE       Successfully generated the next line, `mLine` field in @p aInfo is updated.
  * @retval OT_ERROR_NOT_FOUND  Reached the end and no more line to generate.
- *
  */
 otError otLogGenerateNextHexDumpLine(otLogHexDumpInfo *aInfo);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

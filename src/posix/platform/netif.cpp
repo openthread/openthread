@@ -1115,7 +1115,6 @@ static uint8_t getIpVersion(const uint8_t *data)
 
 /**
  * Returns nullptr if data does not point to a valid ICMPv6 RA message.
- *
  */
 static const uint8_t *getIcmp6RaMessage(const uint8_t *data, ssize_t length)
 {
@@ -1137,7 +1136,6 @@ exit:
 
 /**
  * Returns false if the message is not an ICMPv6 RA message.
- *
  */
 static otError tryProcessIcmp6RaMessage(otInstance *aInstance, const uint8_t *data, ssize_t length)
 {
@@ -1163,7 +1161,6 @@ exit:
 #ifdef __linux__
 /**
  * Returns whether the address is a required anycast address (RFC2373, 2.6.1).
- *
  */
 static bool isRequiredAnycast(const uint8_t *aAddress, uint8_t aPrefixLength)
 {

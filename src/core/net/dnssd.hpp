@@ -67,14 +67,12 @@ namespace ot {
  *   APIs (delegating the DNS-SD implementation to platform layer).
  *
  * @{
- *
  */
 
 extern "C" void otPlatDnssdStateHandleStateChange(otInstance *aInstance);
 
 /**
  * Represents DNS-SD module.
- *
  */
 class Dnssd : public InstanceLocator, private NonCopyable
 {
@@ -83,7 +81,6 @@ class Dnssd : public InstanceLocator, private NonCopyable
 public:
     /**
      * Represents state of DNS-SD platform.
-     *
      */
     enum State : uint8_t
     {
@@ -135,13 +132,11 @@ public:
      * Represents a range of `RequestId` values.
      *
      * The range is stored using start and end ID values. The implementation handles the case when ID values roll over.
-     *
      */
     struct RequestIdRange : public Clearable<RequestIdRange>
     {
         /**
          * Initializes a range as empty.
-         *
          */
         RequestIdRange(void)
             : mStart(0)
@@ -153,7 +148,6 @@ public:
          * Adds a request ID to the range.
          *
          * @param[in] aId   The ID to add to the range.
-         *
          */
         void Add(RequestId aId);
 
@@ -161,7 +155,6 @@ public:
          * Removes a request ID from the range.
          *
          * @param[in] aId   The ID to remove from the range.
-         *
          */
         void Remove(RequestId aId);
 
@@ -172,7 +165,6 @@ public:
          *
          * @retval TRUE  The @p aID is contained within the range.
          * @retval FALSE The @p aId is not contained within the range.
-         *
          */
         bool Contains(RequestId aId) const;
 
@@ -181,7 +173,6 @@ public:
          *
          * @retval TRUE  The range is empty.
          * @retval FALSE The range is not empty.
-         *
          */
         bool IsEmpty(void) const { return (mStart == mEnd); }
 
@@ -200,7 +191,6 @@ public:
      * Initializes `Dnssd` object.
      *
      * @param[in]  aInstance  The OpenThread instance.
-     *
      */
     explicit Dnssd(Instance &aInstance);
 
@@ -208,7 +198,6 @@ public:
      * Gets the current state of DNS-SD platform module.
      *
      * @returns The current state of DNS-SD platform.
-     *
      */
     State GetState(void) const;
 
@@ -217,7 +206,6 @@ public:
      *
      * @retval TRUE   The DNS-SD platform is ready.
      * @retval FALSE  The DNS-SD platform is not ready.
-     *
      */
     bool IsReady(void) const { return GetState() == kReady; }
 
@@ -230,7 +218,6 @@ public:
      * @param[in] aService     Information about service to unregister.
      * @param[in] aRequestId   The ID associated with this request.
      * @param[in] aCallback    The callback function pointer to report the outcome (may be `nullptr`).
-     *
      */
     void RegisterService(const Service &aService, RequestId aRequestId, RegisterCallback aCallback);
 
@@ -243,7 +230,6 @@ public:
      * @param[in] aService      Information about service to unregister.
      * @param[in] aRequestId    The ID associated with this request.
      * @param[in] aCallback     The callback function pointer to report the outcome (may be `nullptr`).
-     *
      */
     void UnregisterService(const Service &aService, RequestId aRequestId, RegisterCallback aCallback);
 
@@ -256,7 +242,6 @@ public:
      * @param[in] aHost         Information about host to register.
      * @param[in] aRequestId    The ID associated with this request.
      * @param[in] aCallback     The callback function pointer to report the outcome (may be `nullptr`).
-     *
      */
     void RegisterHost(const Host &aHost, RequestId aRequestId, RegisterCallback aCallback);
 
@@ -269,7 +254,6 @@ public:
      * @param[in] aHost         Information about the host to unregister.
      * @param[in] aRequestId    The ID associated with this request.
      * @param[in] aCallback     The callback function pointer to report the outcome (may be NULL if no callback needed).
-     *
      */
     void UnregisterHost(const Host &aHost, RequestId aRequestId, RegisterCallback aCallback);
 
@@ -282,7 +266,6 @@ public:
      * @param[in] aKey          Information about the key to register.
      * @param[in] aRequestId    The ID associated with this request.
      * @param[in] aCallback     The callback function pointer to report the outcome (may be `nullptr`).
-     *
      */
     void RegisterKey(const Key &aKey, RequestId aRequestId, RegisterCallback aCallback);
 
@@ -295,7 +278,6 @@ public:
      * @param[in] aKey          Information about the key to unregister.
      * @param[in] aRequestId    The ID associated with this request.
      * @param[in] aCallback     The callback function pointer to report the outcome (may be NULL if no callback needed).
-     *
      */
     void UnregisterKey(const Key &aKey, RequestId aRequestId, RegisterCallback aCallback);
 
@@ -306,7 +288,6 @@ public:
      * of this method.
      *
      * @param[in] aBrowser    The browser to be started.
-     *
      */
     void StartBrowser(const Browser &aBrowser);
 
@@ -317,7 +298,6 @@ public:
      * of this method.
      *
      * @param[in] aBrowser    The browser to stop.
-     *
      */
     void StopBrowser(const Browser &aBrowser);
 
@@ -328,7 +308,6 @@ public:
      * of this method.
      *
      * @param[in] aResolver    The resolver to be started.
-     *
      */
     void StartSrvResolver(const SrvResolver &aResolver);
 
@@ -339,7 +318,6 @@ public:
      * of this method.
      *
      * @param[in] aResolver    The resolver to stop.
-     *
      */
     void StopSrvResolver(const SrvResolver &aResolver);
 
@@ -350,7 +328,6 @@ public:
      * of this method.
      *
      * @param[in] aResolver    The resolver to be started.
-     *
      */
     void StartTxtResolver(const TxtResolver &aResolver);
 
@@ -361,7 +338,6 @@ public:
      * of this method.
      *
      * @param[in] aResolver    The resolver to stop.
-     *
      */
     void StopTxtResolver(const TxtResolver &aResolver);
 
@@ -372,7 +348,6 @@ public:
      * behavior of this method.
      *
      * @param[in] aResolver    The resolver to be started.
-     *
      */
     void StartIp6AddressResolver(const AddressResolver &aResolver);
 
@@ -383,7 +358,6 @@ public:
      * behavior of this method.
      *
      * @param[in] aResolver    The resolver to stop.
-     *
      */
     void StopIp6AddressResolver(const AddressResolver &aResolver);
 
@@ -394,7 +368,6 @@ public:
      * behavior of this method.
      *
      * @param[in] aResolver    The resolver to be started.
-     *
      */
     void StartIp4AddressResolver(const AddressResolver &aResolver);
 
@@ -405,7 +378,6 @@ public:
      * behavior of this method.
      *
      * @param[in] aResolver    The resolver to stop.
-     *
      */
     void StopIp4AddressResolver(const AddressResolver &aResolver);
 
@@ -414,7 +386,6 @@ public:
      * Handles native mDNS state change.
      *
      * This is used to notify `Dnssd` when `Multicast::Dns::Core` gets enabled or disabled.
-     *
      */
     void HandleMdnsCoreStateChange(void);
 #endif
@@ -424,7 +395,6 @@ public:
      * Selects whether to use the native mDNS or the platform `otPlatDnssd` APIs.
      *
      * @param[in] aUseMdns    TRUE to use the native mDNS module, FALSE to use platform APIs.
-     *
      */
     void SetUseNativeMdns(bool aUseMdns) { mUseNativeMdns = aUseMdns; }
 
@@ -433,7 +403,6 @@ public:
      *
      * @retval TRUE    `Dnssd` is using the native mDSN module.
      * @retval FALSE   `Dnssd` is using the platform `otPlatDnssd` APIs.
-     *
      */
     bool ShouldUseNativeMdns(void) const { return mUseNativeMdns; }
 #endif
@@ -448,7 +417,6 @@ private:
 
 /**
  * @}
- *
  */
 
 DefineMapEnum(otPlatDnssdState, Dnssd::State);

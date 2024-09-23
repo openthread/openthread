@@ -53,12 +53,10 @@ namespace Ip6 {
  *   This module includes definitions for MPL.
  *
  * @{
- *
  */
 
 /**
  * Implements MPL header generation and parsing.
- *
  */
 OT_TOOL_PACKED_BEGIN
 class MplOption : public Option
@@ -69,7 +67,6 @@ public:
 
     /**
      * MPL Seed Id Lengths.
-     *
      */
     enum SeedIdLength : uint8_t
     {
@@ -85,7 +82,6 @@ public:
      * The @p aSeedIdLength MUST be either `kSeedIdLength0` or `kSeedIdLength2`. Other values are not supported.
      *
      * @param[in] aSeedIdLength   The MPL Seed Id Length.
-     *
      */
     void Init(SeedIdLength aSeedIdLength);
 
@@ -93,7 +89,6 @@ public:
      * Returns the MPL Seed Id Length value.
      *
      * @returns The MPL Seed Id Length value.
-     *
      */
     SeedIdLength GetSeedIdLength(void) const { return static_cast<SeedIdLength>(mControl & kSeedIdLengthMask); }
 
@@ -102,19 +97,16 @@ public:
      *
      * @retval TRUE   If the MPL M flag is set.
      * @retval FALSE  If the MPL M flag is not set.
-     *
      */
     bool IsMaxFlagSet(void) const { return (mControl & kMaxFlag) != 0; }
 
     /**
      * Clears the MPL M flag.
-     *
      */
     void ClearMaxFlag(void) { mControl &= ~kMaxFlag; }
 
     /**
      * Sets the MPL M flag.
-     *
      */
     void SetMaxFlag(void) { mControl |= kMaxFlag; }
 
@@ -122,7 +114,6 @@ public:
      * Returns the MPL Sequence value.
      *
      * @returns The MPL Sequence value.
-     *
      */
     uint8_t GetSequence(void) const { return mSequence; }
 
@@ -130,7 +121,6 @@ public:
      * Sets the MPL Sequence value.
      *
      * @param[in]  aSequence  The MPL Sequence value.
-     *
      */
     void SetSequence(uint8_t aSequence) { mSequence = aSequence; }
 
@@ -138,7 +128,6 @@ public:
      * Returns the MPL Seed Id value.
      *
      * @returns The MPL Seed Id value.
-     *
      */
     uint16_t GetSeedId(void) const { return BigEndian::HostSwap16(mSeedId); }
 
@@ -146,7 +135,6 @@ public:
      * Sets the MPL Seed Id value.
      *
      * @param[in]  aSeedId  The MPL Seed Id value.
-     *
      */
     void SetSeedId(uint16_t aSeedId) { mSeedId = BigEndian::HostSwap16(aSeedId); }
 
@@ -161,7 +149,6 @@ private:
 
 /**
  * Implements MPL message processing.
- *
  */
 class Mpl : public InstanceLocator, private NonCopyable
 {
@@ -172,7 +159,6 @@ public:
      * Initializes the MPL object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit Mpl(Instance &aInstance);
 
@@ -181,7 +167,6 @@ public:
      *
      * @param[in]  aOption   A reference to the MPL header to initialize.
      * @param[in]  aAddress  A reference to the IPv6 Source Address.
-     *
      */
     void InitOption(MplOption &aOption, const Address &aAddress);
 
@@ -199,7 +184,6 @@ public:
      *
      * @retval kErrorNone  Successfully processed the MPL option.
      * @retval kErrorDrop  The MPL message is a duplicate and should be dropped.
-     *
      */
     Error ProcessOption(Message &aMessage, const OffsetRange &aOffsetRange, const Address &aAddress, bool &aReceive);
 
@@ -208,7 +192,6 @@ public:
      * Returns a reference to the buffered message set.
      *
      * @returns A reference to the buffered message set.
-     *
      */
     const MessageQueue &GetBufferedMessageSet(void) const { return mBufferedMessageSet; }
 #endif
@@ -264,7 +247,6 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace Ip6

@@ -56,7 +56,6 @@ class Child;
 
 /**
  * Implements CSL tx scheduling functionality.
- *
  */
 class CslTxScheduler : public InstanceLocator, private NonCopyable
 {
@@ -70,7 +69,6 @@ public:
      * Defines all the child info required for scheduling CSL transmissions.
      *
      * `Child` class publicly inherits from this class.
-     *
      */
     class ChildInfo
     {
@@ -160,7 +158,6 @@ public:
 
     /**
      * Defines the callbacks used by the `CslTxScheduler`.
-     *
      */
     class Callbacks : public InstanceLocator
     {
@@ -173,7 +170,6 @@ public:
          * Initializes the callbacks object.
          *
          * @param[in]  aInstance   A reference to the OpenThread instance.
-         *
          */
         explicit Callbacks(Instance &aInstance);
 
@@ -186,7 +182,6 @@ public:
          *
          * @retval kErrorNone   Frame was prepared successfully.
          * @retval kErrorAbort  CSL transmission should be aborted (no frame for the child).
-         *
          */
         Error PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
 
@@ -200,7 +195,6 @@ public:
          *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
          *                        kErrorAbort when transmission was aborted for other reasons.
          * @param[in]  aChild     The child to which the frame was transmitted.
-         *
          */
         void HandleSentFrameToChild(const Mac::TxFrame &aFrame,
                                     const FrameContext &aContext,
@@ -211,7 +205,6 @@ public:
      * Initializes the CSL tx scheduler object.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
-     *
      */
     explicit CslTxScheduler(Instance &aInstance);
 
@@ -221,20 +214,17 @@ public:
      * It would then request the `Mac` to do the CSL tx. If the last CSL tx has been fired at `Mac` but hasn't been
      * done yet, and it's aborted, this method would set `mCslTxChild` to `nullptr` to notify the `HandleTransmitDone`
      * that the operation has been aborted.
-     *
      */
     void Update(void);
 
     /**
      * Clears all the states inside `CslTxScheduler` and the related states in each child.
-     *
      */
     void Clear(void);
 
     /**
      * Updates the value of `mCslFrameRequestAheadUs`, based on bus speed, bus latency
      * and `OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US`.
-     *
      */
     void UpdateFrameRequestAhead(void);
 
@@ -261,7 +251,6 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace ot

@@ -57,7 +57,6 @@ namespace Cli {
 
 /**
  * Represents a ID number value associated with a CLI command string.
- *
  */
 typedef uint64_t CommandId;
 
@@ -67,7 +66,6 @@ typedef uint64_t CommandId;
  * @param[in] aString   The CLI command string.
  *
  * @returns The associated `CommandId` with @p aString.
- *
  */
 constexpr static CommandId Cmd(const char *aString)
 {
@@ -78,7 +76,6 @@ class Utils;
 
 /**
  * Implements the basic output functions.
- *
  */
 class OutputImplementer
 {
@@ -90,7 +87,6 @@ public:
      *
      * @param[in] aCallback           A pointer to an `otCliOutputCallback` to deliver strings to the CLI console.
      * @param[in] aCallbackContext    An arbitrary context to pass in when invoking @p aCallback.
-     *
      */
     OutputImplementer(otCliOutputCallback aCallback, void *aCallbackContext);
 
@@ -116,7 +112,6 @@ private:
 
 /**
  * Provides CLI helper methods.
- *
  */
 class Utils
 {
@@ -127,7 +122,6 @@ public:
      * Represent a CLI command table entry, mapping a command with `aName` to a handler method.
      *
      * @tparam Cli    The CLI module type.
-     *
      */
     template <typename Cli> struct CommandEntry
     {
@@ -140,7 +134,6 @@ public:
          *
          * @return zero means perfect match, positive (> 0) indicates @p aName is larger than entry's name, and
          *         negative (< 0) indicates @p aName is smaller than entry's name.
-         *
          */
         int Compare(const char *aName) const { return strcmp(aName, mName); }
 
@@ -152,7 +145,6 @@ public:
          *
          * @retval TRUE  if @p aFirst and @p aSecond are in order, i.e. `aFirst < aSecond`.
          * @retval FALSE if @p aFirst and @p aSecond are not in order, i.e. `aFirst >= aSecond`.
-         *
          */
         constexpr static bool AreInOrder(const CommandEntry &aFirst, const CommandEntry &aSecond)
         {
@@ -177,7 +169,6 @@ public:
      * @param[in] aNotFound   The string to return if the @p aEnum is not in the @p aTable.
      *
      * @returns The string representation of @p aEnum from @p aTable, or @p aNotFound if it is not in the table.
-     *
      */
     template <typename EnumType, uint16_t kLength>
     static const char *Stringify(EnumType aEnum,
@@ -192,7 +183,6 @@ public:
      *
      * @param[in] aInstance           A pointer to OpenThread instance.
      * @param[in] aImplementer        An `OutputImplementer`.
-     *
      */
     Utils(otInstance *aInstance, OutputImplementer &aImplementer)
         : mInstance(aInstance)
@@ -204,13 +194,11 @@ public:
      * Returns the pointer to OpenThread instance.
      *
      * @returns The pointer to the OpenThread instance.
-     *
      */
     otInstance *GetInstancePtr(void) { return mInstance; }
 
     /**
      * Represents a buffer which is used when converting a `uint64` value to string in decimal format.
-     *
      */
     struct Uint64StringBuffer
     {
@@ -226,7 +214,6 @@ public:
      * @param[in] aBuffer  A buffer to allocate the string from.
      *
      * @returns A pointer to the start of the string (null-terminated) representation of @p aUint64.
-     *
      */
     static const char *Uint64ToString(uint64_t aUint64, Uint64StringBuffer &aBuffer);
 
@@ -235,7 +222,6 @@ public:
      *
      * @param[in]  aFormat  A pointer to the format string.
      * @param[in]  ...      A variable list of arguments to format.
-     *
      */
     void OutputFormat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
@@ -246,7 +232,6 @@ public:
      * @param[in]  aIndentSize   Number of indentation space chars to prepend to the string.
      * @param[in]  aFormat       A pointer to the format string.
      * @param[in]  ...           A variable list of arguments to format.
-     *
      */
     void OutputFormat(uint8_t aIndentSize, const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 4);
 
@@ -255,7 +240,6 @@ public:
      *
      * @param[in]  aFormat  A pointer to the format string.
      * @param[in]  ...      A variable list of arguments to format.
-     *
      */
     void OutputLine(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
@@ -266,13 +250,11 @@ public:
      * @param[in]  aIndentSize   Number of indentation space chars to prepend to the string.
      * @param[in]  aFormat       A pointer to the format string.
      * @param[in]  ...           A variable list of arguments to format.
-     *
      */
     void OutputLine(uint8_t aIndentSize, const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 4);
 
     /**
      * Delivered newline "\r\n" to the CLI console.
-     *
      */
     void OutputNewLine(void);
 
@@ -280,7 +262,6 @@ public:
      * Outputs a given number of space chars to the CLI console.
      *
      * @param[in] aCount  Number of space chars to output.
-     *
      */
     void OutputSpaces(uint8_t aCount);
 
@@ -289,7 +270,6 @@ public:
      *
      * @param[in]  aBytes   A pointer to data which should be printed.
      * @param[in]  aLength  @p aBytes length.
-     *
      */
     void OutputBytes(const uint8_t *aBytes, uint16_t aLength);
 
@@ -299,7 +279,6 @@ public:
      *
      * @param[in]  aBytes   A pointer to data which should be printed.
      * @param[in]  aLength  @p aBytes length.
-     *
      */
     void OutputBytesLine(const uint8_t *aBytes, uint16_t aLength);
 
@@ -309,7 +288,6 @@ public:
      * @tparam kBytesLength   The length of @p aBytes array.
      *
      * @param[in]  aBytes     A array of @p kBytesLength bytes which should be printed.
-     *
      */
     template <uint8_t kBytesLength> void OutputBytes(const uint8_t (&aBytes)[kBytesLength])
     {
@@ -323,7 +301,6 @@ public:
      * @tparam kBytesLength   The length of @p aBytes array.
      *
      * @param[in]  aBytes     A array of @p kBytesLength bytes which should be printed.
-     *
      */
     template <uint8_t kBytesLength> void OutputBytesLine(const uint8_t (&aBytes)[kBytesLength])
     {
@@ -334,7 +311,6 @@ public:
      * Outputs an Extended MAC Address to the CLI console.
      *
      * param[in] aExtAddress  The Extended MAC Address to output.
-     *
      */
     void OutputExtAddress(const otExtAddress &aExtAddress) { OutputBytes(aExtAddress.m8); }
 
@@ -342,7 +318,6 @@ public:
      * Outputs an Extended MAC Address to the CLI console and at the end it also outputs newline "\r\n".
      *
      * param[in] aExtAddress  The Extended MAC Address to output.
-     *
      */
     void OutputExtAddressLine(const otExtAddress &aExtAddress) { OutputBytesLine(aExtAddress.m8); }
 
@@ -350,7 +325,6 @@ public:
      * Outputs a `uint64_t` value in decimal format.
      *
      * @param[in] aUint64   The `uint64_t` value to output.
-     *
      */
     void OutputUint64(uint64_t aUint64);
 
@@ -358,7 +332,6 @@ public:
      * Outputs a `uint64_t` value in decimal format and at the end it also outputs newline "\r\n".
      *
      * @param[in] aUint64   The `uint64_t` value to output.
-     *
      */
     void OutputUint64Line(uint64_t aUint64);
 
@@ -366,7 +339,6 @@ public:
      * Outputs "Enabled" or "Disabled" status to the CLI console (it also appends newline "\r\n").
      *
      * @param[in] aEnabled  A boolean indicating the status. TRUE outputs "Enabled", FALSE outputs "Disabled".
-     *
      */
     void OutputEnabledDisabledStatus(bool aEnabled);
 
@@ -376,7 +348,6 @@ public:
      * Outputs an IPv6 address to the CLI console.
      *
      * @param[in]  aAddress  A reference to the IPv6 address.
-     *
      */
     void OutputIp6Address(const otIp6Address &aAddress);
 
@@ -384,7 +355,6 @@ public:
      * Outputs an IPv6 address to the CLI console and at the end it also outputs newline "\r\n".
      *
      * @param[in]  aAddress  A reference to the IPv6 address.
-     *
      */
     void OutputIp6AddressLine(const otIp6Address &aAddress);
 
@@ -392,7 +362,6 @@ public:
      * Outputs an IPv6 prefix to the CLI console.
      *
      * @param[in]  aPrefix  A reference to the IPv6 prefix.
-     *
      */
     void OutputIp6Prefix(const otIp6Prefix &aPrefix);
 
@@ -400,7 +369,6 @@ public:
      * Outputs an IPv6 prefix to the CLI console and at the end it also outputs newline "\r\n".
      *
      * @param[in]  aPrefix  A reference to the IPv6 prefix.
-     *
      */
     void OutputIp6PrefixLine(const otIp6Prefix &aPrefix);
 
@@ -408,7 +376,6 @@ public:
      * Outputs an IPv6 network prefix to the CLI console.
      *
      * @param[in]  aPrefix  A reference to the IPv6 network prefix.
-     *
      */
     void OutputIp6Prefix(const otIp6NetworkPrefix &aPrefix);
 
@@ -416,7 +383,6 @@ public:
      * Outputs an IPv6 network prefix to the CLI console and at the end it also outputs newline "\r\n".
      *
      * @param[in]  aPrefix  A reference to the IPv6 network prefix.
-     *
      */
     void OutputIp6PrefixLine(const otIp6NetworkPrefix &aPrefix);
 
@@ -424,7 +390,6 @@ public:
      * Outputs an IPv6 socket address to the CLI console.
      *
      * @param[in] aSockAddr   A reference to the IPv6 socket address.
-     *
      */
     void OutputSockAddr(const otSockAddr &aSockAddr);
 
@@ -432,7 +397,6 @@ public:
      * Outputs an IPv6 socket address to the CLI console and at the end it also outputs newline "\r\n".
      *
      * @param[in] aSockAddr   A reference to the IPv6 socket address.
-     *
      */
     void OutputSockAddrLine(const otSockAddr &aSockAddr);
 
@@ -441,13 +405,11 @@ public:
      *
      * @param[in] aTxtData        A pointer to a buffer containing the DNS TXT data.
      * @param[in] aTxtDataLength  The length of @p aTxtData (in bytes).
-     *
      */
     void OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength);
 
     /**
      * Represents a buffer which is used when converting an encoded rate value to percentage string.
-     *
      */
     struct PercentageStringBuffer
     {
@@ -467,7 +429,6 @@ public:
      * @param[in] aBuffer  A buffer to allocate the string from.
      *
      * @returns A pointer to the start of the string (null-terminated) representation of @p aValue.
-     *
      */
     static const char *PercentageToString(uint16_t aValue, PercentageStringBuffer &aBuffer);
 
@@ -488,7 +449,6 @@ public:
      *
      * @param[in] aTitles   An array specifying the table column titles.
      * @param[in] aWidths   An array specifying the table column widths (in number of chars).
-     *
      */
     template <uint8_t kTableNumColumns>
     void OutputTableHeader(const char *const (&aTitles)[kTableNumColumns], const uint8_t (&aWidths)[kTableNumColumns])
@@ -508,7 +468,6 @@ public:
      * @tparam kTableNumColumns   The number columns in the table.
      *
      * @param[in] aWidths   An array specifying the table column widths (in number of chars).
-     *
      */
     template <uint8_t kTableNumColumns> void OutputTableSeparator(const uint8_t (&aWidths)[kTableNumColumns])
     {
@@ -522,7 +481,6 @@ public:
      * @tparam kLength  The length of command table array.
      *
      * @param[in] aCommandTable   The command table array.
-     *
      */
     template <typename Cli, uint16_t kLength> void OutputCommandTable(const CommandEntry<Cli> (&aCommandTable)[kLength])
     {
@@ -538,7 +496,6 @@ public:
      * @tparam ObjectType    The object type.
      *
      * @param[in] aObject    A reference to the object of type `ObjectType` to clear all its bytes.
-     *
      */
     template <typename ObjectType> static void ClearAllBytes(ObjectType &aObject)
     {
@@ -567,7 +524,6 @@ public:
      *
      * @retval OT_ERROR_NONE             Successfully parsed the @p aString and updated @p aEnable.
      * @retval OT_ERROR_INVALID_COMMAND  The @p aString is not "enable" or "disable" command.
-     *
      */
     static otError ParseEnableOrDisable(const Arg &aArg, bool &aEnable);
 
@@ -658,7 +614,6 @@ public:
      *
      * @retval OT_ERROR_NONE             Successfully parsed @p aArg and updated @p aPreference.
      * @retval OT_ERROR_INVALID_ARG      @p aArg is not a valid preference string "high", "med", or "low".
-     *
      */
     static otError ParsePreference(const Arg &aArg, otRoutePreference &aPreference);
 
@@ -668,7 +623,6 @@ public:
      * @param[in] aPreference   The preference value to convert (`OT_ROUTE_PREFERENCE_*` values).
      *
      * @returns A string representation @p aPreference.
-     *
      */
     static const char *PreferenceToString(signed int aPreference);
 
@@ -686,7 +640,6 @@ public:
      * @retval OT_ERROR_NONE           The argument was parsed successfully.
      * @retval OT_ERROR_INVALID_ARGS   The argument is empty or does not contain a valid IP address.
      * @retval OT_ERROR_INVALID_STATE  No valid NAT64 prefix in the network data.
-     *
      */
     static otError ParseToIp6Address(otInstance   *aInstance,
                                      const Arg    &aArg,
@@ -701,7 +654,6 @@ public:
      *
      * @retval OT_ERROR_NONE           The argument was parsed successfully.
      * @retval OT_ERROR_INVALID_ARGS   The argument is empty or does not contain a valid joiner discerner.
-     *
      */
     static otError ParseJoinerDiscerner(Arg &aArg, otJoinerDiscerner &aDiscerner);
 
@@ -714,7 +666,6 @@ public:
      *
      * @retval OT_ERROR_NONE           The argument was parsed successfully.
      * @retval OT_ERROR_INVALID_ARGS   The argument is empty or does not contain a valid configuration.
-     *
      */
     static otError ParsePrefix(Arg aArgs[], otBorderRouterConfig &aConfig);
 
@@ -726,7 +677,6 @@ public:
      *
      * @retval OT_ERROR_NONE           The argument was parsed successfully.
      * @retval OT_ERROR_INVALID_ARGS   The argument is empty or does not contain a valid configuration.
-     *
      */
     static otError ParseRoute(Arg aArgs[], otExternalRouteConfig &aConfig);
 #endif
@@ -743,7 +693,6 @@ public:
      * @param[out] aStringBuffer   A reference to an string array to place the string.
      *
      * @returns A pointer @p aStringBuffer which contains the converted string.
-     *
      */
     static const char *LinkModeToString(const otLinkModeConfig &aLinkMode, char (&aStringBuffer)[kLinkModeStringSize]);
 
@@ -753,7 +702,6 @@ public:
      * @param[in] aOrigin   The IPv6 address origin to convert.
      *
      * @returns A human-readable string representation of @p aOrigin.
-     *
      */
     static const char *AddressOriginToString(uint8_t aOrigin);
 

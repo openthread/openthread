@@ -42,7 +42,6 @@ namespace ot {
 
 /**
  * Represents Thread URIs.
- *
  */
 enum Uri : uint8_t
 {
@@ -95,7 +94,6 @@ enum Uri : uint8_t
  * @param[in] aUri   A URI.
  *
  * @returns The path string for @p aUri.
- *
  */
 const char *PathForUri(Uri aUri);
 
@@ -105,7 +103,6 @@ const char *PathForUri(Uri aUri);
  * @param[in] aPath    A path string.
  *
  * @returns The URI associated with @p aPath or `kUriUnknown` if no match is found.
- *
  */
 Uri UriFromPath(const char *aPath);
 
@@ -115,7 +112,6 @@ Uri UriFromPath(const char *aPath);
  * @tparam kUri   The URI to convert to string.
  *
  * @returns The string representation of @p kUri.
- *
  */
 template <Uri kUri> const char *UriToString(void);
 

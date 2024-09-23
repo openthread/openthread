@@ -46,7 +46,6 @@
  * @param[in] aArray  Name of the array variable.
  *
  * @returns Number of elements in the array.
- *
  */
 #define OT_ARRAY_LENGTH(aArray) (sizeof(aArray) / sizeof(aArray[0]))
 
@@ -59,7 +58,6 @@
  * @param[in]    Name of the array variable
  *
  * @returns Pointer to the past-the-end element.
- *
  */
 #define OT_ARRAY_END(aArray) (&aArray[OT_ARRAY_LENGTH(aArray)])
 
@@ -70,7 +68,6 @@
  * @param[in] aAlignment    The desired alignment.
  *
  * @returns The aligned pointer.
- *
  */
 #define OT_ALIGN(aPointer, aAlignment) \
     ((void *)(((uintptr_t)(aPointer) + (aAlignment)-1UL) & ~((uintptr_t)(aAlignment)-1UL)))
@@ -84,13 +81,11 @@
 
 /**
  * Returns the smaller of @p a and @p b.
- *
  */
 #define OT_MIN(a, b) ((b) < (a) ? (b) : (a))
 
 /**
  * Returns the greater of @p a and @p b.
- *
  */
 #define OT_MAX(a, b) ((a) < (b) ? (b) : (a))
 
@@ -99,7 +94,6 @@
  * label 'exit' if the status is unsuccessful.
  *
  * @param[in]  aStatus     A scalar status to be evaluated against zero (0).
- *
  */
 #define SuccessOrExit(aStatus) \
     do                         \
@@ -116,7 +110,6 @@
  *
  * @param[in]  aCondition  A Boolean expression to be evaluated.
  * @param[in]  aAction     An optional expression or block to execute when the assertion fails.
- *
  */
 #define VerifyOrExit(...)                 \
     do                                    \
@@ -135,7 +128,6 @@
  *       function body.
  *
  * @param[in]  ...         An optional expression or block to execute when the assertion fails.
- *
  */
 #define ExitNow(...) \
     do               \
@@ -151,7 +143,6 @@
  * safely ignored.
  *
  * @param[in]  aStatement  The function/method to execute.
- *
  */
 #define IgnoreReturnValue(aStatement) \
     do                                \
@@ -168,7 +159,6 @@
  * the error can be safely ignored or there is guaranteed to be no error.
  *
  * @param[in]  aError  The error to be ignored.
- *
  */
 static inline void IgnoreError(otError aError) { OT_UNUSED_VARIABLE(aError); }
 

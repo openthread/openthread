@@ -47,7 +47,6 @@ namespace Ip6 {
  * All or a portion of the chain is appended to the end of `mMulticastAddresses` linked-list. If the interface is
  * subscribed to all-routers multicast addresses (using `SubscribeAllRoutersMulticast()`) then all the five entries
  * are appended. Otherwise only the last three are appended.
- *
  */
 
 // "ff03::fc"

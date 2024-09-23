@@ -44,14 +44,12 @@ class Parent;
 
 /**
  * Represents a Thread Router
- *
  */
 class Router : public Neighbor
 {
 public:
     /**
      * Represents diagnostic information for a Thread Router.
-     *
      */
     class Info : public otRouterInfo, public Clearable<Info>
     {
@@ -60,7 +58,6 @@ public:
          * Sets the `Info` instance from a given `Router`.
          *
          * @param[in] aRouter   A router.
-         *
          */
         void SetFrom(const Router &aRouter);
 
@@ -68,7 +65,6 @@ public:
          * Sets the `Info` instance from a given `Parent`.
          *
          * @param[in] aParent   A parent.
-         *
          */
         void SetFrom(const Parent &aParent);
     };
@@ -77,19 +73,16 @@ public:
      * Initializes the `Router` object.
      *
      * @param[in] aInstance  A reference to OpenThread instance.
-     *
      */
     void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
 
     /**
      * Clears the router entry.
-     *
      */
     void Clear(void);
 
     /**
      * Sets the `Router` entry from a `Parent`
-     *
      */
     void SetFrom(const Parent &aParent);
 
@@ -97,7 +90,6 @@ public:
      * Gets the router ID of the next hop to this router.
      *
      * @returns The router ID of the next hop to this router.
-     *
      */
     uint8_t GetNextHop(void) const { return mNextHop; }
 
@@ -105,7 +97,6 @@ public:
      * Gets the link quality out value for this router.
      *
      * @returns The link quality out value for this router.
-     *
      */
     LinkQuality GetLinkQualityOut(void) const { return static_cast<LinkQuality>(mLinkQualityOut); }
 
@@ -113,7 +104,6 @@ public:
      * Sets the link quality out value for this router.
      *
      * @param[in]  aLinkQuality  The link quality out value for this router.
-     *
      */
     void SetLinkQualityOut(LinkQuality aLinkQuality) { mLinkQualityOut = aLinkQuality; }
 
@@ -121,7 +111,6 @@ public:
      * Gets the two-way link quality value (minimum of link quality in and out).
      *
      * @returns The two-way link quality value.
-     *
      */
     LinkQuality GetTwoWayLinkQuality(void) const;
 
@@ -129,7 +118,6 @@ public:
      * Get the route cost to this router.
      *
      * @returns The route cost to this router.
-     *
      */
     uint8_t GetCost(void) const { return mCost; }
 
@@ -141,7 +129,6 @@ public:
      *
      * @retval TRUE   If there was a change, i.e., @p aNextHop or @p aCost were different from their previous values.
      * @retval FALSE  If no change to next hop and cost values (new values are the same as before).
-     *
      */
     bool SetNextHopAndCost(uint8_t aNextHop, uint8_t aCost);
 
@@ -150,7 +137,6 @@ public:
      *
      * @retval TRUE   If there was a change (next hop was valid before).
      * @retval FALSE  No change to next hop (next hop was invalid before).
-     *
      */
     bool SetNextHopToInvalid(void);
 
@@ -167,7 +153,6 @@ private:
 
 /**
  * Represent parent of a child node.
- *
  */
 class Parent : public Router
 {
@@ -176,7 +161,6 @@ public:
      * Initializes the `Parent`.
      *
      * @param[in] aInstance  A reference to OpenThread instance.
-     *
      */
     void Init(Instance &aInstance)
     {
@@ -188,7 +172,6 @@ public:
 
     /**
      * Clears the parent entry.
-     *
      */
     void Clear(void);
 
@@ -196,7 +179,6 @@ public:
      * Gets route cost from parent to leader.
      *
      * @returns The route cost from parent to leader
-     *
      */
     uint8_t GetLeaderCost(void) const { return mLeaderCost; }
 
@@ -204,7 +186,6 @@ public:
      * Sets route cost from parent to leader.
      *
      * @param[in] aLeaderCost  The route cost.
-     *
      */
     void SetLeaderCost(uint8_t aLeaderCost) { mLeaderCost = aLeaderCost; }
 
@@ -213,7 +194,6 @@ public:
      * Gets the CSL accuracy (clock accuracy and uncertainty).
      *
      * @returns The CSL accuracy.
-     *
      */
     const Mac::CslAccuracy &GetCslAccuracy(void) const { return mCslAccuracy; }
 
@@ -221,7 +201,6 @@ public:
      * Sets CSL accuracy.
      *
      * @param[in] aCslAccuracy  The CSL accuracy.
-     *
      */
     void SetCslAccuracy(const Mac::CslAccuracy &aCslAccuracy) { mCslAccuracy = aCslAccuracy; }
 #endif

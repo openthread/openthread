@@ -39,7 +39,6 @@
  * @param[in] aTextMessag    A text message to describe the buffer content (printed before the buffer content)
  * @param[in] aBuffer        A pointer to the buffer
  * @param[in] aBufferLength  Number of bytes in the buffer.
- *
  */
 void DumpBuffer(const char *aTextMessage, const uint8_t *aBuffer, uint16_t aBufferLength);
 

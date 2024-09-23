@@ -70,7 +70,6 @@ namespace Utils {
 
 /**
  * Implements History Tracker.
- *
  */
 class HistoryTracker : public InstanceLocator, private NonCopyable
 {
@@ -88,13 +87,11 @@ public:
      * This constant specifies the maximum age of entries which is 49 days (value in msec).
      *
      * Entries older than the max age will give this value as their age.
-     *
      */
     static constexpr uint32_t kMaxAge = OT_HISTORY_TRACKER_MAX_AGE;
 
     /**
      * This constant specifies the recommend string size to represent an entry age
-     *
      */
     static constexpr uint16_t kEntryAgeStringSize = OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE;
 
@@ -102,13 +99,11 @@ public:
      * This constants specified no next hop.
      *
      * Used for `mNextHop` in `RouteInfo` structure.
-     *
      */
     static constexpr uint8_t kNoNextHop = OT_HISTORY_TRACKER_NO_NEXT_HOP;
 
     /**
      * Represents an iterator to iterate through a history list.
-     *
      */
     class Iterator : public otHistoryTrackerIterator
     {
@@ -120,7 +115,6 @@ public:
          *
          * An iterator MUST be initialized before it is used. An iterator can be initialized again to start from
          * the beginning of the list.
-         *
          */
         void Init(void) { ResetEntryNumber(), SetInitTime(); }
 
@@ -145,7 +139,6 @@ public:
      * Initializes the `HistoryTracker`.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit HistoryTracker(Instance &aInstance);
 
@@ -159,7 +152,6 @@ public:
      *                           age.
      *
      * @returns A pointer to `NetworkInfo` entry or `nullptr` if no more entries in the list.
-     *
      */
     const NetworkInfo *IterateNetInfoHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
@@ -176,7 +168,6 @@ public:
      *                           age.
      *
      * @returns A pointer to `UnicastAddress` entry or `nullptr` if no more entries in the list.
-     *
      */
     const UnicastAddressInfo *IterateUnicastAddressHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
@@ -193,7 +184,6 @@ public:
      *                           age.
      *
      * @returns A pointer to `MulticastAddress` entry or `nullptr` if no more entries in the list.
-     *
      */
     const MulticastAddressInfo *IterateMulticastAddressHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
@@ -210,7 +200,6 @@ public:
      *                           age.
      *
      * @returns A pointer to `MessageInfo` entry or `nullptr` if no more entries in the list.
-     *
      */
     const MessageInfo *IterateRxHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
@@ -227,7 +216,6 @@ public:
      *                           age.
      *
      * @returns A pointer to `MessageInfo` entry or `nullptr` if no more entries in the list.
-     *
      */
     const MessageInfo *IterateTxHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
@@ -266,7 +254,6 @@ public:
      * @param[in]  aEntryAge The entry age (duration in msec).
      * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
      * @param[in]  aSize     The size of @p aBuffer (in bytes). Recommended to use `OT_IP6_ADDRESS_STRING_SIZE`.
-     *
      */
     static void EntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize);
 

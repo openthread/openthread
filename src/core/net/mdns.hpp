@@ -61,12 +61,10 @@
 /**
  * @file
  *   This file includes definitions for the Multicast DNS per RFC 6762.
- *
  */
 
 /**
  * Represents an opaque (and empty) type for an mDNS iterator.
- *
  */
 struct otMdnsIterator
 {
@@ -83,7 +81,6 @@ extern "C" void otPlatMdnsHandleReceive(otInstance                  *aInstance,
 
 /**
  * Implements Multicast DNS (mDNS) core.
- *
  */
 class Core : public InstanceLocator, private NonCopyable
 {
@@ -97,7 +94,6 @@ public:
      * Initializes a `Core` instance.
      *
      * @param[in] aInstance  The OpenThread instance.
-     *
      */
     explicit Core(Instance &aInstance);
 
@@ -126,14 +122,12 @@ public:
 
     /**
      * Represents a socket address info.
-     *
      */
     class AddressInfo : public otPlatMdnsAddressInfo, public Clearable<AddressInfo>, public Equatable<AddressInfo>
     {
     public:
         /**
          * Initializes the `AddressInfo` clearing all the fields.
-         *
          */
         AddressInfo(void) { Clear(); }
 
@@ -141,7 +135,6 @@ public:
          * Gets the IPv6 address.
          *
          * @returns the IPv6 address.
-         *
          */
         const Ip6::Address &GetAddress(void) const { return AsCoreType(&mAddress); }
     };
@@ -160,7 +153,6 @@ public:
      * @retval kErrorNone     Enabled or disabled the mDNS module successfully.
      * @retval kErrorAlready  mDNS is already enabled on an enable request, or is already disabled on a disable request.
      * @retval kErrorFailed   Failed to enable/disable mDNS.
-     *
      */
     Error SetEnabled(bool aEnable, uint32_t aInfraIfIndex);
 
@@ -169,14 +161,12 @@ public:
      *
      * @retval TRUE   The mDNS module is enabled.
      * @retval FALSE  The mDNS module is disabled.
-     *
      */
     bool IsEnabled(void) const { return mIsEnabled; }
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
     /**
      * Notifies `AdvertisingProxy` that `InfraIf` state changed.
-     *
      */
     void HandleInfraIfStateChanged(void);
 #endif
@@ -191,7 +181,6 @@ public:
      * port.
      *
      * @param[in] aAllow        Indicates whether or not to allow "QU" questions.
-     *
      */
     void SetQuestionUnicastAllowed(bool aAllow) { mIsQuestionUnicastAllowed = aAllow; }
 
@@ -200,7 +189,6 @@ public:
      *
      * @retval TRUE  The mDNS module is allowed to send "QU" questions.
      * @retval FALSE The mDNS module is not allowed to send "QU" questions.
-     *
      */
     bool IsQuestionUnicastAllowed(void) const { return mIsQuestionUnicastAllowed; }
 
@@ -208,7 +196,6 @@ public:
      * Sets the conflict callback.
      *
      * @param[in] aCallback  The conflict callback. Can be `nullptr` is not needed.
-     *
      */
     void SetConflictCallback(ConflictCallback aCallback) { mConflictCallback = aCallback; }
 
@@ -244,7 +231,6 @@ public:
      *
      * @retval kErrorNone          Successfully started registration. @p aCallback will report the outcome.
      * @retval kErrorInvalidState  mDNS module is not enabled.
-     *
      */
     Error RegisterHost(const Host &aHost, RequestId aRequestId, RegisterCallback aCallback);
 
@@ -265,7 +251,6 @@ public:
      *
      * @retval kErrorNone           Successfully unregistered host.
      * @retval kErrorInvalidState   mDNS module is not enabled.
-     *
      */
     Error UnregisterHost(const Host &aHost);
 
@@ -302,7 +287,6 @@ public:
      *
      * @retval kErrorNone           Successfully started registration. @p aCallback will report the outcome.
      * @retval kErrorInvalidState   mDNS module is not enabled.
-     *
      */
     Error RegisterService(const Service &aService, RequestId aRequestId, RegisterCallback aCallback);
 
@@ -326,7 +310,6 @@ public:
      *
      * @retval kErrorNone            Successfully unregistered service.
      * @retval kErrorInvalidState    mDNS module is not enabled.
-     *
      */
     Error UnregisterService(const Service &aService);
 
@@ -355,7 +338,6 @@ public:
      *
      * @retval kErrorNone            Successfully started registration. @p aCallback will report the outcome.
      * @retval kErrorInvalidState    mDNS module is not enabled.
-     *
      */
     Error RegisterKey(const Key &aKey, RequestId aRequestId, RegisterCallback aCallback);
 
@@ -380,7 +362,6 @@ public:
      *
      * @retval kErrorNone            Successfully unregistered key
      * @retval kErrorInvalidState    mDNS module is not enabled.
-     *
      */
     Error UnregisterKey(const Key &aKey);
 
@@ -402,7 +383,6 @@ public:
      * @retval kErrorNone           Browser started successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
      * @retval kErrorAlready        An identical browser (same service and callback) is already active.
-     *
      */
     Error StartBrowser(const Browser &aBrowser);
 
@@ -415,7 +395,6 @@ public:
      *
      * @retval kErrorNone           Browser stopped successfully.
      * @retval kErrorInvalidSatet  mDNS module is not enabled.
-     *
      */
     Error StopBrowser(const Browser &aBrowser);
 
@@ -439,7 +418,6 @@ public:
      * @retval kErrorNone           Resolver started successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
      * @retval kErrorAlready        An identical resolver (same service and callback) is already active.
-     *
      */
     Error StartSrvResolver(const SrvResolver &aResolver);
 
@@ -452,7 +430,6 @@ public:
      *
      * @retval kErrorNone           Resolver stopped successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
-     *
      */
     Error StopSrvResolver(const SrvResolver &aResolver);
 
@@ -476,7 +453,6 @@ public:
      * @retval kErrorNone           Resolver started successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
      * @retval kErrorAlready        An identical resolver (same service and callback) is already active.
-     *
      */
     Error StartTxtResolver(const TxtResolver &aResolver);
 
@@ -489,7 +465,6 @@ public:
      *
      * @retval kErrorNone           Resolver stopped successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
-     *
      */
     Error StopTxtResolver(const TxtResolver &aResolver);
 
@@ -513,7 +488,6 @@ public:
      * @retval kErrorNone           Resolver started successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
      * @retval kErrorAlready        An identical resolver (same host and callback) is already active.
-     *
      */
     Error StartIp6AddressResolver(const AddressResolver &aResolver);
 
@@ -526,7 +500,6 @@ public:
      *
      * @retval kErrorNone           Resolver stopped successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
-     *
      */
     Error StopIp6AddressResolver(const AddressResolver &aResolver);
 
@@ -551,7 +524,6 @@ public:
      * @retval kErrorNone           Resolver started successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
      * @retval kErrorAlready        An identical resolver (same host and callback) is already active.
-     *
      */
     Error StartIp4AddressResolver(const AddressResolver &aResolver);
 
@@ -564,7 +536,6 @@ public:
      *
      * @retval kErrorNone           Resolver stopped successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
-     *
      */
     Error StopIp4AddressResolver(const AddressResolver &aResolver);
 
@@ -574,7 +545,6 @@ public:
      * This method is mainly intended for testing. The max size threshold is used to break larger messages.
      *
      * @param[in] aMaxSize  The max message size threshold.
-     *
      */
     void SetMaxMessageSize(uint16_t aMaxSize) { mMaxMessageSize = aMaxSize; }
 
@@ -584,7 +554,6 @@ public:
      * Allocates a new iterator.
      *
      * @returns   A pointer to the newly allocated iterator or `nullptr` if it fails to allocate.
-     *
      */
     Iterator *AllocateIterator(void);
 
@@ -592,7 +561,6 @@ public:
      * Frees a previously allocated iterator.
      *
      * @param[in] aIterator  The iterator to free.
-     *
      */
     void FreeIterator(Iterator &aIterator);
 
@@ -609,7 +577,6 @@ public:
      * @retval kErrorNone         @p aHost, @p aState, & @p aIterator are updated successfully.
      * @retval kErrorNotFound     Reached the end of the list.
      * @retval kErrorInvalidArg   @p aIterator is not valid.
-     *
      */
     Error GetNextHost(Iterator &aIterator, Host &aHost, EntryState &aState) const;
 
@@ -626,7 +593,6 @@ public:
      * @retval kErrorNone         @p aService, @p aState, & @p aIterator are updated successfully.
      * @retval kErrorNotFound     Reached the end of the list.
      * @retval kErrorInvalidArg   @p aIterator is not valid.
-     *
      */
     Error GetNextService(Iterator &aIterator, Service &aService, EntryState &aState) const;
 
@@ -642,7 +608,6 @@ public:
      * @retval kErrorNone         @p aKey, @p aState, & @p aIterator are updated successfully.
      * @retval kErrorNotFound     Reached the end of the list.
      * @retval kErrorInvalidArg   @p aIterator is not valid.
-     *
      */
     Error GetNextKey(Iterator &aIterator, Key &aKey, EntryState &aState) const;
 
@@ -659,7 +624,6 @@ public:
      * @retval kErrorNone         @p aBrowser, @p aInfo, & @p aIterator are updated successfully.
      * @retval kErrorNotFound     Reached the end of the list.
      * @retval kErrorInvalidArg   @p aIterator is not valid.
-     *
      */
     Error GetNextBrowser(Iterator &aIterator, Browser &aBrowser, CacheInfo &aInfo) const;
 
@@ -676,7 +640,6 @@ public:
      * @retval kErrorNone         @p aResolver, @p aInfo, & @p aIterator are updated successfully.
      * @retval kErrorNotFound     Reached the end of the list.
      * @retval kErrorInvalidArg   @p aIterator is not valid.
-     *
      */
     Error GetNextSrvResolver(Iterator &aIterator, SrvResolver &aResolver, CacheInfo &aInfo) const;
 
@@ -693,7 +656,6 @@ public:
      * @retval kErrorNone         @p aResolver, @p aInfo, & @p aIterator are updated successfully.
      * @retval kErrorNotFound     Reached the end of the list.
      * @retval kErrorInvalidArg   @p aIterator is not valid.
-     *
      */
     Error GetNextTxtResolver(Iterator &aIterator, TxtResolver &aResolver, CacheInfo &aInfo) const;
 
@@ -711,7 +673,6 @@ public:
      * @retval kErrorNone         @p aResolver, @p aInfo, & @p aIterator are updated successfully.
      * @retval kErrorNotFound     Reached the end of the list.
      * @retval kErrorInvalidArg   @p aIterator is not valid.
-     *
      */
     Error GetNextIp6AddressResolver(Iterator &aIterator, AddressResolver &aResolver, CacheInfo &aInfo) const;
 
@@ -729,7 +690,6 @@ public:
      * @retval kErrorNone         @p aResolver, @p aInfo, & @p aIterator are updated successfully.
      * @retval kErrorNotFound     Reached the end of the list.
      * @retval kErrorInvalidArg   @p aIterator is not valid.
-     *
      */
     Error GetNextIp4AddressResolver(Iterator &aIterator, AddressResolver &aResolver, CacheInfo &aInfo) const;
 

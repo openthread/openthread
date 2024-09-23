@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes definitions for generating and processing Link Metrics TLVs.
- *
  */
 
 #ifndef LINK_METRICS_TYPES_HPP_
@@ -55,7 +54,6 @@ constexpr uint8_t kMaxTypeIds = 4; ///< Maximum number of Type IDs in a `Metrics
  * Represents Link Metric Flags indicating a set of metrics.
  *
  * @sa otLinkMetrics
- *
  */
 class Metrics : public otLinkMetrics, public Clearable<Metrics>
 {
@@ -66,7 +64,6 @@ public:
      * @param[out] aTypeIds   The array of Type IDs to populate. MUST have at least `kMaxTypeIds` elements.
      *
      * @returns Number of entries added in the array @p aTypeIds.
-     *
      */
     uint8_t ConvertToTypeIds(uint8_t aTypeIds[]) const;
 };
@@ -75,7 +72,6 @@ public:
  * Represents the results (values) for a set of metrics.
  *
  * @sa otLinkMetricsValues
- *
  */
 class MetricsValues : public otLinkMetricsValues, public Clearable<MetricsValues>
 {
@@ -84,7 +80,6 @@ public:
      * Gets the metrics flags.
      *
      * @returns The metrics flags.
-     *
      */
     Metrics &GetMetrics(void) { return static_cast<Metrics &>(mMetrics); }
 
@@ -92,7 +87,6 @@ public:
      * Gets the metrics flags.
      *
      * @returns The metrics flags.
-     *
      */
     const Metrics &GetMetrics(void) const { return static_cast<const Metrics &>(mMetrics); }
 
@@ -100,7 +94,6 @@ public:
      * Set the metrics flags.
      *
      * @param[in] aMetrics  The metrics flags to set from.
-     *
      */
     void SetMetrics(const Metrics &aMetrics) { mMetrics = aMetrics; }
 };
@@ -145,7 +138,6 @@ public:
      *
      * @retval TRUE  The @p aTypeId is extended.
      * @retval FALSE The @p aTypeId is not extended.
-     *
      */
     static bool IsExtended(uint8_t aTypeId) { return (aTypeId & kExtendedFlag); }
 
@@ -158,7 +150,6 @@ public:
      * @param[in] aTypeId   The Type ID.
      *
      * @returns the associated value length of @p aTypeId.
-     *
      */
     static uint8_t GetValueLength(uint8_t aTypeId)
     {
@@ -171,7 +162,6 @@ public:
      * This is used for testing only.
      *
      * @param[in, out] aTypeId    A reference to a Type ID variable to update.
-     *
      */
     static void MarkAsReserved(uint8_t &aTypeId) { aTypeId = (aTypeId & ~kTypeMask) | kTypeReserved; }
 
@@ -180,7 +170,6 @@ public:
 
 /**
  * Represents the Series Flags for Forward Tracking Series.
- *
  */
 class SeriesFlags : public otLinkMetricsSeriesFlags
 {
@@ -189,7 +178,6 @@ public:
      * Converts the `SeriesFlags` to `uint8_t` bit-mask (for inclusion in TLVs).
      *
      * @returns The bit-mask representation.
-     *
      */
     uint8_t ConvertToMask(void) const;
 
@@ -197,7 +185,6 @@ public:
      * Sets the `SeriesFlags` from a given bit-mask value.
      *
      * @param[in] aFlagsMask  The bit-mask flags.
-     *
      */
     void SetFrom(uint8_t aFlagsMask);
 
@@ -206,7 +193,6 @@ public:
      *
      * @retval true   The Link Probe flag is set.
      * @retval false  The Link Probe flag is not set.
-     *
      */
     bool IsLinkProbeFlagSet(void) const { return mLinkProbe; }
 
@@ -215,7 +201,6 @@ public:
      *
      * @retval true   The MAC Data flag is set.
      * @retval false  The MAC Data flag is not set.
-     *
      */
     bool IsMacDataFlagSet(void) const { return mMacData; }
 
@@ -224,7 +209,6 @@ public:
      *
      * @retval true   The MAC Data Request flag is set.
      * @retval false  The MAC Data Request flag is not set.
-     *
      */
     bool IsMacDataRequestFlagSet(void) const { return mMacDataRequest; }
 
@@ -233,7 +217,6 @@ public:
      *
      * @retval true   The Mac Ack flag is set.
      * @retval false  The Mac Ack flag is not set.
-     *
      */
     bool IsMacAckFlagSet(void) const { return mMacAck; }
 
@@ -246,7 +229,6 @@ private:
 
 /**
  * Type represent Enhanced-ACK Flags.
- *
  */
 enum EnhAckFlags : uint8_t
 {
@@ -263,7 +245,6 @@ enum EnhAckFlags : uint8_t
  *
  * Inherits `LinkedListEntry` and each `Neighbor` has a list of `SeriesInfo` so that the Subject could track
  * per Series initiated by neighbors as long as it has available resources.
- *
  */
 class SeriesInfo : public LinkedListEntry<SeriesInfo>
 {
@@ -275,7 +256,6 @@ public:
      * This constant represents Link Probe when filtering frames to be accounted using Series Flag. There's
      * already `Mac::Frame::kTypeData`, `Mac::Frame::kTypeAck` and `Mac::Frame::kTypeMacCmd`. This item is
      * added so that we can filter a Link Probe for series in the same way as other frames.
-     *
      */
     static constexpr uint8_t kSeriesTypeLinkProbe = 0;
 
@@ -285,7 +265,6 @@ public:
      * @param[in]  aSeriesId          The Series ID.
      * @param[in]  aSeriesFlagsMask   The Series Flags bitmask which specify what types of frames are to be accounted.
      * @param[in]  aMetrics           Metrics to query.
-     *
      */
     void Init(uint8_t aSeriesId, uint8_t aSeriesFlagsMask, const Metrics &aMetrics);
 
@@ -293,7 +272,6 @@ public:
      * Gets the Series ID.
      *
      * @returns  The Series ID.
-     *
      */
     uint8_t GetSeriesId(void) const { return mSeriesId; }
 
@@ -301,7 +279,6 @@ public:
      * Gets the PDU count.
      *
      * @returns  The PDU count.
-     *
      */
     uint32_t GetPduCount(void) const { return mPduCount; }
 
@@ -309,7 +286,6 @@ public:
      * Gets the average LQI.
      *
      * @returns  The average LQI.
-     *
      */
     uint8_t GetAverageLqi(void) const { return mLqiAverager.GetAverage(); }
 
@@ -317,7 +293,6 @@ public:
      * Gets the average RSS.
      *
      * @returns  The average RSS.
-     *
      */
     int8_t GetAverageRss(void) const { return mRssAverager.GetAverage(); }
 
@@ -327,7 +302,6 @@ public:
      * @param[in]  aFrameType    The type of the frame.
      * @param[in]  aLqi          The LQI value.
      * @param[in]  aRss          The RSS value.
-     *
      */
     void AggregateLinkMetrics(uint8_t aFrameType, uint8_t aLqi, int8_t aRss);
 
@@ -335,7 +309,6 @@ public:
      * Gets the metrics.
      *
      * @returns  The metrics associated with `SeriesInfo`.
-     *
      */
     const Metrics &GetLinkMetrics(void) const { return mMetrics; }
 
@@ -354,7 +327,6 @@ private:
 
 /**
  * Type represents Link Metrics Status.
- *
  */
 enum Status : uint8_t
 {

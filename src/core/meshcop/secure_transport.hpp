@@ -101,7 +101,6 @@ public:
 
     /**
      * Function pointer which is called reporting a connection event (when connection established or disconnected)
-     *
      */
     typedef otHandleCoapSecureClientConnect ConnectedHandler;
 
@@ -111,7 +110,6 @@ public:
      * @param[in]  aInstance            A reference to the OpenThread instance.
      * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
      * @param[in]  aDatagramTransport   Specifies if dtls of tls connection should be used.
-     *
      */
     explicit SecureTransport(Instance &aInstance, bool aLayerTwoSecurity, bool aDatagramTransport = true);
 
@@ -121,7 +119,6 @@ public:
      * @param[in]  aContext  A pointer to application-specific context.
      * @param[in]  aBuf      A pointer to the received data buffer.
      * @param[in]  aLength   Number of bytes in the received data buffer.
-     *
      */
     typedef void (*ReceiveHandler)(void *aContext, uint8_t *aBuf, uint16_t aLength);
 
@@ -131,7 +128,6 @@ public:
      * @param[in]  aContext      A pointer to arbitrary context information.
      * @param[in]  aMessage      A reference to the message to send.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
-     *
      */
     typedef Error (*TransportCallback)(void *aContext, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -140,7 +136,6 @@ public:
      * attempts (set from `SetMaxConnectionAttempts()`).
      *
      * @param[in] aContext    A pointer to arbitrary context information.
-     *
      */
     typedef void (*AutoCloseCallback)(void *aContext);
 
@@ -153,7 +148,6 @@ public:
      *
      * @retval kErrorNone     Successfully opened the socket.
      * @retval kErrorAlready  The connection is already open.
-     *
      */
     Error Open(ReceiveHandler aReceiveHandler, ConnectedHandler aConnectedHandler, void *aContext);
 
@@ -171,7 +165,6 @@ public:
      *
      * @retval kErrorNone          Successfully set the maximum allowed connection attempts and callback.
      * @retval kErrorInvalidState  Socket is not closed.
-     *
      */
     Error SetMaxConnectionAttempts(uint16_t aMaxAttempts, AutoCloseCallback aCallback, void *aContext);
 
@@ -183,7 +176,6 @@ public:
      * @retval kErrorNone           Successfully bound the socket.
      * @retval kErrorInvalidState   The socket is not open.
      * @retval kErrorAlready        Already bound.
-     *
      */
     Error Bind(uint16_t aPort);
 
@@ -191,7 +183,6 @@ public:
      * Gets the UDP port of this session.
      *
      * @returns  UDP port number.
-     *
      */
     uint16_t GetUdpPort(void) const;
 
@@ -204,7 +195,6 @@ public:
      * @retval kErrorNone           Successfully bound the socket.
      * @retval kErrorInvalidState   The socket is not open.
      * @retval kErrorAlready        Already bound.
-     *
      */
     Error Bind(TransportCallback aCallback, void *aContext);
 
@@ -219,7 +209,6 @@ public:
      *
      * @retval kErrorNone          Successfully started handshake.
      * @retval kErrorInvalidState  The socket is not open.
-     *
      */
     Error Connect(const Ip6::SockAddr &aSockAddr);
 
@@ -228,7 +217,6 @@ public:
      *
      * @retval TRUE  If session is active.
      * @retval FALSE If session is not active.
-     *
      */
     bool IsConnectionActive(void) const { return mState >= kStateConnecting; }
 
@@ -237,7 +225,6 @@ public:
      *
      * @retval TRUE   The session is connected.
      * @retval FALSE  The session is not connected.
-     *
      */
     bool IsConnected(void) const { return mState == kStateConnected; }
 
@@ -246,19 +233,16 @@ public:
      *
      * @retval TRUE   The session is closed.
      * @retval FALSE  The session is not closed.
-     *
      */
     bool IsClosed(void) const { return mState == kStateClosed; }
 
     /**
      * Disconnects the session.
-     *
      */
     void Disconnect(void);
 
     /**
      * Closes the socket.
-     *
      */
     void Close(void);
 
@@ -269,7 +253,6 @@ public:
      *
      * @retval kErrorNone          Successfully set the PSK.
      * @retval kErrorInvalidArgs   The PSK is invalid.
-     *
      */
     Error SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
@@ -287,7 +270,6 @@ public:
      * @param[in]  aPskIdLength  The PSK Identity Length.
      *
      * @retval kErrorNone  Successfully set the PSK.
-     *
      */
     void SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength);
 
@@ -303,7 +285,6 @@ public:
      * @param[in]  aX509CertLength    The length of certificate.
      * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
      * @param[in]  aPrivateKeyLength  The length of the private key.
-     *
      */
     void SetCertificate(const uint8_t *aX509Certificate,
                         uint32_t       aX509CertLength,
@@ -318,7 +299,6 @@ public:
      *
      * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
      * @param[in]  aX509CaCertChainLength   The length of chain.
-     *
      */
     void SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -336,7 +316,6 @@ public:
      * @retval kErrorInvalidState   Not connected yet.
      * @retval kErrorNone           Successfully get the peer certificate.
      * @retval kErrorNoBufs         Can't allocate memory for certificate.
-     *
      */
     Error GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
 #endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
@@ -360,7 +339,6 @@ public:
      * @retval kErrorInvalidArgs    Invalid attribute length.
      * @retval kErrorNone           Successfully read attribute.
      * @retval kErrorNoBufs         Insufficient memory for storing the attribute value.
-     *
      */
     Error GetPeerSubjectAttributeByOid(const char *aOid,
                                        size_t      aOidLength,
@@ -386,7 +364,6 @@ public:
      * @retval kErrorInvalidState     Not connected yet.
      * @retval kErrorNotImplemented   The value of aThreadOidDescriptor is >127.
      * @retval kErrorParse            The certificate extensions could not be parsed.
-     *
      */
     Error GetThreadAttributeFromPeerCertificate(int      aThreadOidDescriptor,
                                                 uint8_t *aAttributeBuffer,
@@ -411,7 +388,6 @@ public:
      * @retval kErrorInvalidState     Not connected yet.
      * @retval kErrorNotImplemented   The value of aThreadOidDescriptor is >127.
      * @retval kErrorParse            The certificate extensions could not be parsed.
-     *
      */
     Error GetThreadAttributeFromOwnCertificate(int      aThreadOidDescriptor,
                                                uint8_t *aAttributeBuffer,
@@ -424,7 +400,6 @@ public:
      * Must called before start.
      *
      * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should verify.
-     *
      */
     void SetSslAuthMode(bool aVerifyPeerCertificate) { mVerifyPeerCertificate = aVerifyPeerCertificate; }
 #endif // OPENTHREAD_CONFIG_TLS_API_ENABLE
@@ -437,7 +412,6 @@ public:
      * @param[in]  aLength    Number of bytes in the Client ID.
      *
      * @retval kErrorNone  Successfully set the Client ID.
-     *
      */
     Error SetClientId(const uint8_t *aClientId, uint8_t aLength);
 #endif
@@ -450,7 +424,6 @@ public:
      *
      * @retval kErrorNone     Successfully sent the data via the session.
      * @retval kErrorNoBufs   A message is too long.
-     *
      */
     Error Send(Message &aMessage, uint16_t aLength);
 
@@ -458,7 +431,6 @@ public:
      * Provides a received message to the SecureTransport object.
      *
      * @param[in]  aMessage  A reference to the message.
-     *
      */
     void Receive(Message &aMessage);
 
@@ -467,7 +439,6 @@ public:
      * sub-type.
      *
      * @param[in]  aMessageSubType  The default message sub-type.
-     *
      */
     void SetDefaultMessageSubType(Message::SubType aMessageSubType) { mMessageDefaultSubType = aMessageSubType; }
 
@@ -475,7 +446,6 @@ public:
      * Returns the session's peer address.
      *
      * @return session's message info.
-     *
      */
     const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
 
@@ -485,7 +455,6 @@ public:
      *
      * @param[in]  aMessage  A reference to the message to receive.
      * @param[in]  aMessageInfo A reference to the message info associated with @p aMessage.
-     *
      */
     void HandleReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -528,7 +497,6 @@ private:
      * Set keys and/or certificates for dtls session dependent of used cipher suite.
      *
      * @retval mbedtls error, 0 if successfully.
-     *
      */
     int SetApplicationSecureKeys(void);
 

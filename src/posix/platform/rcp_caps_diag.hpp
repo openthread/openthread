@@ -56,7 +56,6 @@ public:
      * Constructor initializes the object.
      *
      * @param[in]  aRadioSpinel  A reference to the Spinel::RadioSpinel instance.
-     *
      */
     explicit RcpCapsDiag(Spinel::RadioSpinel &aRadioSpinel)
         : mRadioSpinel(aRadioSpinel)
@@ -76,7 +75,6 @@ public:
      * @retval  OT_ERROR_INVALID_ARGS       The command is supported but invalid arguments provided.
      * @retval  OT_ERROR_NONE               The command is successfully processed.
      * @retval  OT_ERROR_INVALID_COMMAND    The command is not valid or not supported.
-     *
      */
     otError DiagProcess(char *aArgs[], uint8_t aArgsLength);
 
@@ -85,7 +83,6 @@ public:
      *
      * @param[in]  aCallback   A pointer to a function that is called on outputting diag messages.
      * @param[in]  aContext    A user context pointer.
-     *
      */
     void SetDiagOutputCallback(otPlatDiagOutputCallback aCallback, void *aContext);
 

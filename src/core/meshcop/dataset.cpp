@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file implements common methods for manipulating MeshCoP Datasets.
- *
  */
 
 #include "dataset.hpp"

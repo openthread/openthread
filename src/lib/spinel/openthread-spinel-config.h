@@ -36,7 +36,6 @@
 
 /**
  * Include project specific lib config file if defined.
- *
  */
 #ifdef OPENTHREAD_PROJECT_LIB_CONFIG_FILE
 #include OPENTHREAD_PROJECT_LIB_CONFIG_FILE
@@ -47,7 +46,6 @@
  *
  * Specifies the rx frame buffer size used by `SpinelInterface` in RCP host (posix) code. This is applicable/used when
  * `RadioSpinel` platform is used.
- *
  */
 #ifndef OPENTHREAD_LIB_SPINEL_RX_FRAME_BUFFER_SIZE
 #define OPENTHREAD_LIB_SPINEL_RX_FRAME_BUFFER_SIZE 8192
@@ -57,7 +55,6 @@
  * @def OPENTHREAD_LIB_SPINEL_LOG_MAX_SIZE
  *
  * The maximum log string size (number of chars).
- *
  */
 #ifndef OPENTHREAD_LIB_SPINEL_LOG_MAX_SIZE
 #define OPENTHREAD_LIB_SPINEL_LOG_MAX_SIZE 1024
@@ -67,7 +64,6 @@
  * @def OPENTHREAD_LIB_SPINEL_NCP_LOG_MAX_SIZE
  *
  * The maximum OpenThread log string size (number of chars) supported by NCP using Spinel `StreamWrite`.
- *
  */
 #ifndef OPENTHREAD_LIB_SPINEL_NCP_LOG_MAX_SIZE
 #define OPENTHREAD_LIB_SPINEL_NCP_LOG_MAX_SIZE 150
@@ -77,7 +73,6 @@
  * @def OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
  *
  * Define 1 to enable feeding an OpenThread message to encoder/decoder.
- *
  */
 #ifndef OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
 #define OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE 0
@@ -88,7 +83,6 @@
  *
  * Defines the max count of RCP failures allowed to be recovered.
  * 0 means to disable RCP failure recovering.
- *
  */
 #ifndef OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT
 #define OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT 0
@@ -98,7 +92,6 @@
  * @def OPENTHREAD_SPINEL_CONFIG_ABORT_ON_UNEXPECTED_RCP_RESET_ENABLE
  *
  * Define 1 to abort the host when receiving unexpected reset from RCP.
- *
  */
 #ifndef OPENTHREAD_SPINEL_CONFIG_ABORT_ON_UNEXPECTED_RCP_RESET_ENABLE
 #define OPENTHREAD_SPINEL_CONFIG_ABORT_ON_UNEXPECTED_RCP_RESET_ENABLE 0
@@ -110,7 +103,6 @@
  * This setting configures the interval (in units of microseconds) for host-rcp
  * time sync. The host will recalculate the time offset between host and RCP
  * every interval.
- *
  */
 #ifndef OPENTHREAD_SPINEL_CONFIG_RCP_TIME_SYNC_INTERVAL
 #define OPENTHREAD_SPINEL_CONFIG_RCP_TIME_SYNC_INTERVAL (60 * 1000 * 1000)
@@ -120,7 +112,6 @@
  * @def OPENTHREAD_SPINEL_CONFIG_BROADCAST_IID
  *
  * Define broadcast IID for spinel frames dedicated to all hosts in multipan configuration.
- *
  */
 #ifndef OPENTHREAD_SPINEL_CONFIG_BROADCAST_IID
 #define OPENTHREAD_SPINEL_CONFIG_BROADCAST_IID SPINEL_HEADER_IID_3
@@ -130,7 +121,6 @@
  * @def OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
  *
  * Enables compilation of vendor specific code for Spinel
- *
  */
 #ifndef OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
 #define OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE 0
@@ -140,7 +130,6 @@
  * @def OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
  *
  * Header file defining class VendorRadioSpinel
- *
  */
 #ifndef OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
 #define OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER "lib/spinel/example_vendor_hook.hpp"
@@ -150,7 +139,6 @@
  * @def OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS
  *
  * Defines the Tx wait duration in seconds.
- *
  */
 #ifndef OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS
 #define OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS 5

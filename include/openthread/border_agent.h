@@ -48,42 +48,35 @@ extern "C" {
  *   This module includes functions for the Thread Border Agent role.
  *
  * @{
- *
  */
 
 /**
  * The length of Border Agent/Router ID in bytes.
- *
  */
 #define OT_BORDER_AGENT_ID_LENGTH (16)
 
 /**
  * Minimum length of the ephemeral key string.
- *
  */
 #define OT_BORDER_AGENT_MIN_EPHEMERAL_KEY_LENGTH (6)
 
 /**
  * Maximum length of the ephemeral key string.
- *
  */
 #define OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_LENGTH (32)
 
 /**
  * Default ephemeral key timeout interval in milliseconds.
- *
  */
 #define OT_BORDER_AGENT_DEFAULT_EPHEMERAL_KEY_TIMEOUT (2 * 60 * 1000u)
 
 /**
  * Maximum ephemeral key timeout interval in milliseconds.
- *
  */
 #define OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_TIMEOUT (10 * 60 * 1000u)
 
 /**
  * Represents a Border Agent Identifier.
- *
  */
 typedef struct otBorderAgentId
 {
@@ -92,7 +85,6 @@ typedef struct otBorderAgentId
 
 /**
  * Defines the Border Agent state.
- *
  */
 typedef enum otBorderAgentState
 {
@@ -129,7 +121,6 @@ typedef struct otBorderAgentCounters
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  * @returns A pointer to the Border Agent counters.
- *
  */
 const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance);
 
@@ -139,7 +130,6 @@ const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance);
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  * @returns The current #otBorderAgentState of the Border Agent.
- *
  */
 otBorderAgentState otBorderAgentGetState(otInstance *aInstance);
 
@@ -149,7 +139,6 @@ otBorderAgentState otBorderAgentGetState(otInstance *aInstance);
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  * @returns UDP port of the Border Agent.
- *
  */
 uint16_t otBorderAgentGetUdpPort(otInstance *aInstance);
 
@@ -169,7 +158,6 @@ uint16_t otBorderAgentGetUdpPort(otInstance *aInstance);
  * @retval ...            If failed to retrieve the Border Agent ID.
  *
  * @sa otBorderAgentSetId
- *
  */
 otError otBorderAgentGetId(otInstance *aInstance, otBorderAgentId *aId);
 
@@ -189,7 +177,6 @@ otError otBorderAgentGetId(otInstance *aInstance, otBorderAgentId *aId);
  * @retval ...            If failed to set the Border Agent ID.
  *
  * @sa otBorderAgentGetId
- *
  */
 otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId);
 
@@ -226,7 +213,6 @@ otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId);
  * @retval OT_ERROR_INVALID_ARGS   The given @p aKeyString is not valid (too short or too long).
  * @retval OT_ERROR_FAILED         Failed to set the key (e.g., could not bind to UDP port).
 
- *
  */
 otError otBorderAgentSetEphemeralKey(otInstance *aInstance,
                                      const char *aKeyString,
@@ -246,7 +232,6 @@ otError otBorderAgentSetEphemeralKey(otInstance *aInstance,
  * commissioner disconnects.
  *
  * @param[in] aInstance    The OpenThread instance.
- *
  */
 void otBorderAgentClearEphemeralKey(otInstance *aInstance);
 
@@ -259,7 +244,6 @@ void otBorderAgentClearEphemeralKey(otInstance *aInstance);
  *
  * @retval TRUE    An ephemeral key is active.
  * @retval FALSE   No ephemeral key is active.
- *
  */
 bool otBorderAgentIsEphemeralKeyActive(otInstance *aInstance);
 
@@ -279,7 +263,6 @@ bool otBorderAgentIsEphemeralKeyActive(otInstance *aInstance);
  * Any OpenThread API, including `otBorderAgent` APIs, can be safely called from this callback.
  *
  * @param[in] aContext   A pointer to an arbitrary context (provided when callback is set).
- *
  */
 typedef void (*otBorderAgentEphemeralKeyCallback)(void *aContext);
 
@@ -293,7 +276,6 @@ typedef void (*otBorderAgentEphemeralKeyCallback)(void *aContext);
  * @param[in] aInstance    The OpenThread instance.
  * @param[in] aCallback    The callback function pointer.
  * @param[in] aContext     The arbitrary context to use with callback.
- *
  */
 void otBorderAgentSetEphemeralKeyCallback(otInstance                       *aInstance,
                                           otBorderAgentEphemeralKeyCallback aCallback,
@@ -301,7 +283,6 @@ void otBorderAgentSetEphemeralKeyCallback(otInstance                       *aIns
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

@@ -868,7 +868,6 @@ void TestBuffer(void)
  * When writing a frame, use a random length (1 up to `kMaxFrameLen`) and generate random byte sequences.
  * When reading a frame ensure the length and the content matches what was written earlier.
  * Handle the cases where buffer gets full or empty.
- *
  */
 
 enum

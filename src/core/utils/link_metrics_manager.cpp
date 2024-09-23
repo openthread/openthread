@@ -363,7 +363,6 @@ exit:
 
 /**
  * @}
- *
  */
 
 } // namespace Utils

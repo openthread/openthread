@@ -61,12 +61,10 @@ namespace Trel {
  *   This module includes definitions for Thread Radio Encapsulation Link (TREL)
  *
  * @{
- *
  */
 
 /**
  * Represents a Thread Radio Encapsulation Link (TREL).
- *
  */
 class Link : public InstanceLocator
 {
@@ -82,7 +80,6 @@ public:
      * Initializes the `Link` object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit Link(Instance &aInstance);
 
@@ -90,32 +87,27 @@ public:
      * Sets the PAN Identifier.
      *
      * @param[in] aPanId   A PAN Identifier.
-     *
      */
     void SetPanId(Mac::PanId aPanId) { mPanId = aPanId; }
 
     /**
      * Notifies TREL radio link that device's extended MAC address has changed for it to update any
      * internal address/state.
-     *
      */
     void HandleExtAddressChange(void) { mInterface.HandleExtAddressChange(); }
 
     /**
      * Enables the TREL radio link.
-     *
      */
     void Enable(void);
 
     /**
      * Disables the TREL radio link.
-     *
      */
     void Disable(void);
 
     /**
      * Requests TREL radio link to transition to Sleep mode
-     *
      */
     void Sleep(void);
 
@@ -125,7 +117,6 @@ public:
      * `Mac::HandleReceivedFrame()` is used to notify MAC layer upon receiving a frame.
      *
      * @param[in] aChannel   The channel to receive on.
-     *
      */
     void Receive(uint8_t aChannel);
 
@@ -133,7 +124,6 @@ public:
      * Gets the radio transmit frame for TREL radio link.
      *
      * @returns The transmit frame.
-     *
      */
     Mac::TxFrame &GetTransmitFrame(void) { return mTxFrame; }
 
@@ -144,7 +134,6 @@ public:
      *
      * `Mac::RecordFrameTransmitStatus()` and `Mac::HandleTransmitDone()` are used to notify the success or error status
      * of frame transmission upon completion of send.
-     *
      */
     void Send(void);
 
@@ -200,7 +189,6 @@ private:
  * Defines all the neighbor info required for TREL link.
  *
  * `Neighbor` class publicly inherits from this class.
- *
  */
 class NeighborInfo
 {
@@ -239,7 +227,6 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace Trel

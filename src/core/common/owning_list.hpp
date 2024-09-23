@@ -45,7 +45,6 @@ namespace ot {
 /**
  * Represents a singly linked list which owns its entries and frees them upon destruction of the
  * list.
- *
  */
 template <typename Type> class OwningList : public LinkedList<Type>
 {
@@ -55,7 +54,6 @@ template <typename Type> class OwningList : public LinkedList<Type>
 public:
     /**
      * This is the default constructor for `OwningList`
-     *
      */
     OwningList(void) = default;
 
@@ -63,13 +61,11 @@ public:
      * This is the destructor for `OwningList`.
      *
      * On destruction, all existing entries in the list are freed.
-     *
      */
     ~OwningList(void) { Free(); }
 
     /**
      * Clears the list and frees all existing entries in it.
-     *
      */
     void Free(void)
     {
@@ -80,7 +76,6 @@ public:
 
     /**
      * Clears the list and frees all existing entries in it.
-     *
      */
     void Clear(void) { Free(); }
 
@@ -90,7 +85,6 @@ public:
      * @note This method does not change the popped entry itself, i.e., the popped entry next pointer stays as before.
      *
      * @returns An `OwnedPtr` to the entry that was popped (set to null if list of empty).
-     *
      */
     OwnedPtr<Type> Pop(void) { return OwnedPtr<Type>(LinkedList<Type>::Pop()); }
 
@@ -103,7 +97,6 @@ public:
      *                        otherwise (if it is `nullptr`) the entry at the head of the list is popped.
      *
      * @returns An `OwnedPtr` to the entry that was popped (set to null if there is no entry to pop).
-     *
      */
     OwnedPtr<Type> PopAfter(Type *aPrevEntry) { return OwnedPtr<Type>(LinkedList<Type>::PopAfter(aPrevEntry)); }
 
@@ -122,7 +115,6 @@ public:
      * @param[in] aIndicator   An entry indicator to match against entries in the list.
      *
      * @returns An `OwnedPtr` to the entry that was removed (set to null if there is no matching entry to remove).
-     *
      */
     template <typename Indicator> OwnedPtr<Type> RemoveMatching(const Indicator &aIndicator)
     {
@@ -143,7 +135,6 @@ public:
      *
      * @param[in] aIndicator   An entry indicator to match against entries in the list.
      * @param[in] aRemovedList The list to add the removed entries to.
-     *
      */
     template <typename Indicator> void RemoveAllMatching(const Indicator &aIndicator, OwningList &aRemovedList)
     {
@@ -163,7 +154,6 @@ public:
      *
      * @retval TRUE    At least one matching entry was removed.
      * @retval FALSE   No matching entry was found.
-     *
      */
     template <typename Indicator> bool RemoveAndFreeAllMatching(const Indicator &aIndicator)
     {

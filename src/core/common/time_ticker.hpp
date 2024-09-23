@@ -50,7 +50,6 @@ namespace ot {
  * The time ticker emits periodic ticks (with 1 second period interval) to a set of registered tick receiver modules.
  * The tick receivers (OpenThread objects) are identified by the `Receiver` enumeration. The receiver objects
  * must provide `HandleTimeTick()` method which would be invoked by `TimeTicker` periodically.
- *
  */
 class TimeTicker : public InstanceLocator, private NonCopyable
 {
@@ -59,7 +58,6 @@ public:
      * Represents time tick receivers.
      *
      * Contains the list of all OpenThread modules that can be registered as time tick receivers.
-     *
      */
     enum Receiver : uint8_t
     {
@@ -79,7 +77,6 @@ public:
 
     /**
      * Initializes the `TimeTicker` instance.
-     *
      */
     explicit TimeTicker(Instance &aInstance);
 
@@ -87,7 +84,6 @@ public:
      * Registers a receiver with `TimeTicker` to receive periodic ticks.
      *
      * @param[in] aReceiver   A tick receiver identifier.
-     *
      */
     void RegisterReceiver(Receiver aReceiver);
 
@@ -95,7 +91,6 @@ public:
      * Unregisters a receiver with `TimeTicker` to receive periodic ticks.
      *
      * @param[in] aReceiver   A tick receiver identifier.
-     *
      */
     void UnregisterReceiver(Receiver aReceiver);
 
@@ -106,7 +101,6 @@ public:
      *
      * @retval TRUE   If @p aReceiver is registered with `TimeTicker`.
      * @retval FALSE  If @p aReceiver is not registered with `TimeTicker`.
-     *
      */
     bool IsReceiverRegistered(Receiver aReceiver) const { return (mReceivers & Mask(aReceiver)) != 0; }
 

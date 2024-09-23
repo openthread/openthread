@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file implements MeshCoP Datasets manager to process commands.
- *
  */
 
 #include "dataset_manager.hpp"

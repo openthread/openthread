@@ -50,7 +50,6 @@ extern "C" {
  *  This module includes functions to manage local network data with the OpenThread Border Router.
  *
  * @{
- *
  */
 
 /**
@@ -103,7 +102,6 @@ otError otBorderRouterRemoveOnMeshPrefix(otInstance *aInstance, const otIp6Prefi
  *
  * @retval OT_ERROR_NONE       Successfully found the next On Mesh prefix.
  * @retval OT_ERROR_NOT_FOUND  No subsequent On Mesh prefix exists in the Thread Network Data.
- *
  */
 otError otBorderRouterGetNextOnMeshPrefix(otInstance            *aInstance,
                                           otNetworkDataIterator *aIterator,
@@ -148,7 +146,6 @@ otError otBorderRouterRemoveRoute(otInstance *aInstance, const otIp6Prefix *aPre
  *
  * @retval OT_ERROR_NONE       Successfully found the next External Route.
  * @retval OT_ERROR_NOT_FOUND  No subsequent external route entry exists in the Thread Network Data.
- *
  */
 otError otBorderRouterGetNextRoute(otInstance            *aInstance,
                                    otNetworkDataIterator *aIterator,
@@ -172,7 +169,6 @@ otError otBorderRouterRegister(otInstance *aInstance);
  * Function pointer callback which is invoked when Network Data (local or leader) gets full.
  *
  * @param[in] aContext A pointer to arbitrary context information.
- *
  */
 typedef void (*otBorderRouterNetDataFullCallback)(void *aContext);
 
@@ -191,7 +187,6 @@ typedef void (*otBorderRouterNetDataFullCallback)(void *aContext);
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aCallback    The callback.
  * @param[in]  aContext     A pointer to arbitrary context information used with @p aCallback.
- *
  */
 void otBorderRouterSetNetDataFullCallback(otInstance                       *aInstance,
                                           otBorderRouterNetDataFullCallback aCallback,
@@ -199,7 +194,6 @@ void otBorderRouterSetNetDataFullCallback(otInstance                       *aIns
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

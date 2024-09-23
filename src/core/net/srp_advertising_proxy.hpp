@@ -65,7 +65,6 @@ namespace Srp {
 
 /**
  * Implements SRP Advertising Proxy.
- *
  */
 class AdvertisingProxy : public InstanceLocator, private NonCopyable
 {
@@ -75,7 +74,6 @@ public:
 
     /**
      * Represents counters for Advertising Proxy.
-     *
      */
     struct Counters : public Clearable<Counters>
     {
@@ -94,7 +92,6 @@ public:
      * Initializes the `AdvertisingProxy` object.
      *
      * @param[in] aInstance  The OpenThread instance
-     *
      */
     explicit AdvertisingProxy(Instance &aInstance);
 
@@ -103,7 +100,6 @@ public:
      *
      * @retval TRUE   The Advertising Proxy is running.
      * @retval FALSE  The Advertising Proxy is not running (it is stopped).
-     *
      */
     bool IsRunning(void) const { return mState == kStateRunning; }
 
@@ -120,7 +116,6 @@ public:
      *
      * @param[in] aHost     The `aHost` instance constructed from processing a newly received SRP Update message.
      * @param[in] aMetadata The `MessageMetadata` associated with the received SRP Update message by server.
-     *
      */
     void Advertise(Host &aHost, const Server::MessageMetadata &aMetadata);
 
@@ -139,7 +134,6 @@ public:
      * passed back to the client, triggering it to retry its registration.
      *
      * @param[in] aHost  The host which is being removed.
-     *
      */
     void AdvertiseRemovalOf(Host &aHost);
 
@@ -158,7 +152,6 @@ public:
      * services are removed.
      *
      * @param[in] aHost  The host which is being removed.
-     *
      */
     void AdvertiseRemovalOf(Service &aService);
 
@@ -166,13 +159,11 @@ public:
      * Gets the set of counters.
      *
      * @returns The `AdvertisingProxy` counter.
-     *
      */
     const Counters &GetCounters(void) const { return mCounters; }
 
     /**
      * Resets the counters
-     *
      */
     void ResetCounters(void) { mCounters.Clear(); }
 
@@ -182,7 +173,6 @@ public:
      * The default value of `OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_UPDATE_TIMEOUT` is used when not explicitly set.
      *
      * @returns The advertisement timeout (in msec).
-     *
      */
     uint32_t GetAdvTimeout(void) const { return mAdvTimeout; }
 
@@ -193,25 +183,21 @@ public:
      * the behavior of `AdvertisingProxy` when new `Advertise()` requests replace entries in earlier requests.
      *
      * @param[in] aTimeout   The advertisement timeout (in msec).
-     *
      */
     void SetAdvTimeout(uint32_t aTimeout) { mAdvTimeout = Max(aTimeout, kAdvTimeout); }
 
     /**
      * Notifies `AdvertisingProxy` that SRP sever state changed.
-     *
      */
     void HandleServerStateChange(void) { UpdateState(); }
 
     /**
      * Notifies `AdvertisingProxy` that DND-SD platform state changed.
-     *
      */
     void HandleDnssdPlatformStateChange(void) { UpdateState(); }
 
     /**
      * Notifies `AdvertisingProxy` that `InfraIf` state changed.
-     *
      */
     void HandleInfraIfStateChanged(void) { UpdateState(); }
 

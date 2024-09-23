@@ -53,7 +53,6 @@ namespace Posix {
 
 /**
  * Manages infrastructure network interface.
- *
  */
 class InfraNetif : public Mainloop::Source, public Logger<InfraNetif>, private NonCopyable
 {
@@ -64,7 +63,6 @@ public:
      * Updates the fd_set and timeout for mainloop.
      *
      * @param[in,out]   aContext    A reference to the mainloop context.
-     *
      */
     void Update(otSysMainloopContext &aContext) override;
 
@@ -72,7 +70,6 @@ public:
      * Performs infrastructure network interface processing.
      *
      * @param[in]   aContext   A reference to the mainloop context.
-     *
      */
     void Process(const otSysMainloopContext &aContext) override;
 
@@ -82,7 +79,6 @@ public:
      * To specify the infrastructure network interface, you need to call SetInfraNetif() after Init().
      *
      * @note This method is called before OpenThread instance is created.
-     *
      */
     void Init(void);
 
@@ -92,7 +88,6 @@ public:
      * @param[in]  aIfName       A pointer to infrastructure network interface name.
      * @param[in]  aIcmp6Socket  A SOCK_RAW socket for sending/receiving ICMPv6 messages. If you don't need border
      *                           routing feature, you can pass in -1.
-     *
      */
     void SetInfraNetif(const char *aIfName, int aIcmp6Socket);
 
@@ -100,7 +95,6 @@ public:
      * Sets up the infrastructure network interface.
      *
      * @note This method is called after OpenThread instance is created.
-     *
      */
     void SetUp(void);
 
@@ -108,7 +102,6 @@ public:
      * Tears down the infrastructure network interface.
      *
      * @note This method is called before OpenThread instance is destructed.
-     *
      */
     void TearDown(void);
 
@@ -116,13 +109,11 @@ public:
      * Deinitializes the infrastructure network interface.
      *
      * @note This method is called after OpenThread instance is destructed.
-     *
      */
     void Deinit(void);
 
     /**
      * Checks whether the infrastructure network interface is running.
-     *
      */
     bool IsRunning(void) const;
 
@@ -130,7 +121,6 @@ public:
      * Returns the ifr_flags of the infrastructure network interface.
      *
      * @returns The ifr_flags of the infrastructure network interface.
-     *
      */
     uint32_t GetFlags(void) const;
 
@@ -138,7 +128,6 @@ public:
      * This functions counts the number of addresses on the infrastructure network interface.
      *
      * @param[out] aAddressCounters  The counters of addresses on infrastructure network interface.
-     *
      */
     void CountAddresses(otSysInfraNetIfAddressCounters &aAddressCounters) const;
 
@@ -147,7 +136,6 @@ public:
      *
      * @param[in] aInstance  A pointer to the OpenThread instance.
      * @param[in] aFlags     Flags that denote the state change events.
-     *
      */
     void HandleBackboneStateChange(otInstance *aInstance, otChangedFlags aFlags);
 
@@ -167,7 +155,6 @@ public:
      *
      * @retval OT_ERROR_NONE    Successfully sent the ICMPv6 message.
      * @retval OT_ERROR_FAILED  Failed to send the ICMPv6 message.
-     *
      */
     otError SendIcmp6Nd(uint32_t            aInfraIfIndex,
                         const otIp6Address &aDestAddress,
@@ -183,7 +170,6 @@ public:
      *
      * @retval  OT_ERROR_NONE    Successfully request address look-up.
      * @retval  OT_ERROR_FAILED  Failed to request address look-up.
-     *
      */
     otError DiscoverNat64Prefix(uint32_t aInfraIfIndex);
 #endif
@@ -192,7 +178,6 @@ public:
      * Gets the infrastructure network interface name.
      *
      * @returns The infrastructure network interface name, or `nullptr` if not specified.
-     *
      */
     const char *GetNetifName(void) const { return (mInfraIfIndex != 0) ? mInfraIfName : nullptr; }
 
@@ -200,7 +185,6 @@ public:
      * Gets the infrastructure network interface index.
      *
      * @returns The infrastructure network interface index.
-     *
      */
     uint32_t GetNetifIndex(void) const { return mInfraIfIndex; }
 
@@ -208,7 +192,6 @@ public:
      * Gets the infrastructure network interface singleton.
      *
      * @returns The singleton object.
-     *
      */
     static InfraNetif &Get(void);
 
@@ -218,7 +201,6 @@ public:
      * @param[in] aInfraIfName  The infrastructure network interface name.
      *
      * @returns The file descriptor of the socket.
-     *
      */
     static int CreateIcmp6Socket(const char *aInfraIfName);
 

@@ -42,7 +42,6 @@ namespace ot {
 
 /**
  * Implements CRC16 computations.
- *
  */
 class Crc16
 {
@@ -57,13 +56,11 @@ public:
      * Initializes the object.
      *
      * @param[in]  aPolynomial  The polynomial value.
-     *
      */
     explicit Crc16(Polynomial aPolynomial);
 
     /**
      * Initializes the CRC16 computation.
-     *
      */
     void Init(void) { mCrc = 0; }
 
@@ -71,7 +68,6 @@ public:
      * Feeds a byte value into the CRC16 computation.
      *
      * @param[in]  aByte  The byte value.
-     *
      */
     void Update(uint8_t aByte);
 
@@ -79,7 +75,6 @@ public:
      * Gets the current CRC16 value.
      *
      * @returns The current CRC16 value.
-     *
      */
     uint16_t Get(void) const { return mCrc; }
 

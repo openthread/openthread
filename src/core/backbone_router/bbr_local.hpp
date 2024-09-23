@@ -69,7 +69,6 @@ namespace BackboneRouter {
 
 /**
  * Implements the definitions for local Backbone Router service.
- *
  */
 class Local : public InstanceLocator, private NonCopyable
 {
@@ -80,7 +79,6 @@ public:
 
     /**
      * Represents Backbone Router state.
-     *
      */
     enum State : uint8_t
     {
@@ -91,7 +89,6 @@ public:
 
     /**
      * Represents registration mode used as input to `AddService()` method.
-     *
      */
     enum RegisterMode : uint8_t
     {
@@ -103,7 +100,6 @@ public:
      * Initializes the local Backbone Router.
      *
      * @param[in] aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit Local(Instance &aInstance);
 
@@ -111,7 +107,6 @@ public:
      * Enables/disables Backbone function.
      *
      * @param[in]  aEnable  TRUE to enable the backbone function, FALSE otherwise.
-     *
      */
     void SetEnabled(bool aEnable);
 
@@ -120,13 +115,11 @@ public:
      *
      *
      * @returns The current state of Backbone Router.
-     *
      */
     State GetState(void) const { return mState; }
 
     /**
      * Resets the local Thread Network Data.
-     *
      */
     void Reset(void);
 
@@ -134,7 +127,6 @@ public:
      * Gets local Backbone Router configuration.
      *
      * @param[out]  aConfig  The local Backbone Router configuration.
-     *
      */
     void GetConfig(Config &aConfig) const;
 
@@ -145,7 +137,6 @@ public:
      *
      * @retval kErrorNone         Successfully updated configuration.
      * @retval kErrorInvalidArgs  The configuration in @p aConfig is invalid.
-     *
      */
     Error SetConfig(const Config &aConfig);
 
@@ -157,7 +148,6 @@ public:
      * @retval kErrorNone            Successfully added the Service entry.
      * @retval kErrorInvalidState    Not in the ready state to register.
      * @retval kErrorNoBufs          Insufficient space to add the Service entry.
-     *
      */
     Error AddService(RegisterMode aMode);
 
@@ -166,7 +156,6 @@ public:
      *
      * @retval  True  if the Backbone Router is Primary.
      * @retval  False if the Backbone Router is not Primary.
-     *
      */
     bool IsPrimary(void) const { return mState == kStatePrimary; }
 
@@ -175,7 +164,6 @@ public:
      *
      * @retval  True  if the Backbone Router is enabled.
      * @retval  False if the Backbone Router is not enabled.
-     *
      */
     bool IsEnabled(void) const { return mState != kStateDisabled; }
 
@@ -183,7 +171,6 @@ public:
      * Sets the Backbone Router registration jitter value.
      *
      * @param[in]  aRegistrationJitter the Backbone Router registration jitter value to set.
-     *
      */
     void SetRegistrationJitter(uint8_t aRegistrationJitter) { mRegistrationJitter = aRegistrationJitter; }
 
@@ -191,7 +178,6 @@ public:
      * Returns the Backbone Router registration jitter value.
      *
      * @returns The Backbone Router registration jitter value.
-     *
      */
     uint8_t GetRegistrationJitter(void) const { return mRegistrationJitter; }
 
@@ -200,7 +186,6 @@ public:
      *
      * @param[in]  aState   The state or state change of Primary Backbone Router.
      * @param[in]  aConfig  The Primary Backbone Router service.
-     *
      */
     void HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config &aConfig);
 
@@ -211,7 +196,6 @@ public:
      *
      * @retval kErrorNone      Successfully got the Domain Prefix configuration.
      * @retval kErrorNotFound  No Domain Prefix was configured.
-     *
      */
     Error GetDomainPrefix(NetworkData::OnMeshPrefixConfig &aConfig);
 
@@ -223,7 +207,6 @@ public:
      * @retval kErrorNone         Successfully removed the Domain Prefix.
      * @retval kErrorInvalidArgs  @p aPrefix is invalid.
      * @retval kErrorNotFound     No Domain Prefix was configured or @p aPrefix doesn't match.
-     *
      */
     Error RemoveDomainPrefix(const Ip6::Prefix &aPrefix);
 
@@ -234,7 +217,6 @@ public:
      *
      * @returns kErrorNone          Successfully set the local Domain Prefix.
      * @returns kErrorInvalidArgs   @p aConfig is invalid.
-     *
      */
     Error SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig);
 
@@ -242,7 +224,6 @@ public:
      * Returns a reference to the All Network Backbone Routers Multicast Address.
      *
      * @returns A reference to the All Network Backbone Routers Multicast Address.
-     *
      */
     const Ip6::Address &GetAllNetworkBackboneRoutersAddress(void) const { return mAllNetworkBackboneRouters; }
 
@@ -250,13 +231,11 @@ public:
      * Returns a reference to the All Domain Backbone Routers Multicast Address.
      *
      * @returns A reference to the All Domain Backbone Routers Multicast Address.
-     *
      */
     const Ip6::Address &GetAllDomainBackboneRoutersAddress(void) const { return mAllDomainBackboneRouters; }
 
     /**
      * Applies the Mesh Local Prefix.
-     *
      */
     void ApplyNewMeshLocalPrefix(void);
 
@@ -264,7 +243,6 @@ public:
      * Updates the subscription of All Domain Backbone Routers Multicast Address.
      *
      * @param[in]  aEvent  The Domain Prefix event.
-     *
      */
     void HandleDomainPrefixUpdate(DomainPrefixEvent aEvent);
 
@@ -273,7 +251,6 @@ public:
      *
      * @param[in] aCallback  The callback function.
      * @param[in] aContext   A user context pointer.
-     *
      */
     void SetDomainPrefixCallback(DomainPrefixCallback aCallback, void *aContext)
     {

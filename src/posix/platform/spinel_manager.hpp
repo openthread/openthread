@@ -46,25 +46,21 @@ class SpinelManager
 public:
     /**
      * Returns the static instance of the SpinelManager.
-     *
      */
     static SpinelManager &GetSpinelManager(void);
 
     /**
      * Returns the static instance of the SpinelDriver.
-     *
      */
     Spinel::SpinelDriver &GetSpinelDriver(void) { return mSpinelDriver; }
 
     /**
      * Constructor of the SpinelManager
-     *
      */
     SpinelManager(void);
 
     /**
      * Destructor of the SpinelManager
-     *
      */
     ~SpinelManager(void);
 
@@ -76,13 +72,11 @@ public:
      * @retval  OT_COPROCESSOR_UNKNOWN  The initialization fails.
      * @retval  OT_COPROCESSOR_RCP      The Co-processor is a RCP.
      * @retval  OT_COPROCESSOR_NCP      The Co-processor is a NCP.
-     *
      */
     CoprocessorType Init(const char *aUrl);
 
     /**
      * Deinitializes the SpinelManager.
-     *
      */
     void Deinit(void);
 
@@ -90,7 +84,6 @@ public:
      * Returns the spinel interface.
      *
      * @returns The spinel interface.
-     *
      */
     Spinel::SpinelInterface &GetSpinelInterface(void)
     {

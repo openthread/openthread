@@ -171,7 +171,6 @@ void SubMac::HandleCslTimer(void)
      *       ^            ^                                       ^            ^
      *       |------------|---------------------------------------|------------|---------------------------------------|
      *          sample                   sleep                        sample                    sleep
-     *
      */
     uint32_t periodUs = mCslPeriod * kUsPerTenSymbols;
     uint32_t timeAhead, timeAfter, winStart, winDuration;

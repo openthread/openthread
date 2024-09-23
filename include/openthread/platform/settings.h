@@ -48,7 +48,6 @@ extern "C" {
  *   This module includes the platform abstraction for non-volatile storage of settings.
  *
  * @{
- *
  */
 
 /**
@@ -57,7 +56,6 @@ extern "C" {
  * Note: When adding a new settings key, if the settings corresponding to the key contains security sensitive
  *       information, the developer MUST add the key to the array `aSensitiveKeys` which is passed in
  *       `otPlatSettingsInit()`.
- *
  */
 enum
 {
@@ -98,7 +96,6 @@ enum
  * @param[in]  aSensitiveKeys        A pointer to an array containing the list of sensitive keys. May be NULL only if
  *                                   @p aSensitiveKeysLength is 0, which means that there is no sensitive keys.
  * @param[in]  aSensitiveKeysLength  The number of entries in the @p aSensitiveKeys array.
- *
  */
 void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, uint16_t aSensitiveKeysLength);
 
@@ -106,7 +103,6 @@ void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, u
  * Performs any de-initialization for the settings subsystem, if necessary.
  *
  * @param[in]  aInstance The OpenThread instance structure.
- *
  */
 void otPlatSettingsDeinit(otInstance *aInstance);
 
@@ -244,7 +240,6 @@ void otPlatSettingsWipe(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

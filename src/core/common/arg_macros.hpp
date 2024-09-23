@@ -40,7 +40,6 @@
  * @param[in] ...   A list of arguments (MUST contain at least one).
  *
  * @returns The first argument in the given list of input arguments.
- *
  */
 #define OT_FIRST_ARG(...) _OT_GET_FIRST_ARG(__VA_ARGS__, JUNK)
 
@@ -52,7 +51,6 @@
  * @param[in] ...   A list of arguments (MUST contain either one or two arguments).
  *
  * @returns The second argument if any.
- *
  */
 #define OT_SECOND_ARG(...) _OT_GET_SECOND_ARG(_OT_HAS_ONE_ARG_OR_TWO_ARGS(__VA_ARGS__), __VA_ARGS__)
 
@@ -67,7 +65,6 @@
  * @param[in] ...  A list of arguments (MUST contain at least one).
  *
  * @returns A comma separated list of arguments excluding the first one.
- *
  */
 #define OT_REST_ARGS(...) _OT_GET_REST_ARGS(_OT_HAS_ONE_ARG_VS_TWO_OR_MORE(__VA_ARGS__), __VA_ARGS__)
 
