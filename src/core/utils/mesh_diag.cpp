@@ -35,11 +35,6 @@
 
 #if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
 
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {

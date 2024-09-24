@@ -40,6 +40,7 @@
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "common/numeric_limits.hpp"
+#include "mac/mac_header_ie.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/network_name.hpp"
 
@@ -52,215 +53,6 @@ namespace Mac {
  * @{
  *
  */
-
-/**
- * Implements IEEE 802.15.4 IE (Information Element) header generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class HeaderIe
-{
-public:
-    /**
-     * Initializes the Header IE.
-     *
-     */
-    void Init(void) { mFields.m16 = 0; }
-
-    /**
-     * Initializes the Header IE with Id and Length.
-     *
-     * @param[in]  aId   The IE Element Id.
-     * @param[in]  aLen  The IE content length.
-     *
-     */
-    void Init(uint16_t aId, uint8_t aLen);
-
-    /**
-     * Returns the IE Element Id.
-     *
-     * @returns the IE Element Id.
-     *
-     */
-    uint16_t GetId(void) const { return (LittleEndian::HostSwap16(mFields.m16) & kIdMask) >> kIdOffset; }
-
-    /**
-     * Sets the IE Element Id.
-     *
-     * @param[in]  aId  The IE Element Id.
-     *
-     */
-    void SetId(uint16_t aId)
-    {
-        mFields.m16 = LittleEndian::HostSwap16((LittleEndian::HostSwap16(mFields.m16) & ~kIdMask) |
-                                               ((aId << kIdOffset) & kIdMask));
-    }
-
-    /**
-     * Returns the IE content length.
-     *
-     * @returns the IE content length.
-     *
-     */
-    uint8_t GetLength(void) const { return mFields.m8[0] & kLengthMask; }
-
-    /**
-     * Sets the IE content length.
-     *
-     * @param[in]  aLength  The IE content length.
-     *
-     */
-    void SetLength(uint8_t aLength) { mFields.m8[0] = (mFields.m8[0] & ~kLengthMask) | (aLength & kLengthMask); }
-
-private:
-    // Header IE format:
-    //
-    // +-----------+------------+--------+
-    // | Bits: 0-6 |    7-14    |   15   |
-    // +-----------+------------+--------+
-    // | Length    | Element ID | Type=0 |
-    // +-----------+------------+--------+
-
-    static constexpr uint8_t  kSize       = 2;
-    static constexpr uint8_t  kIdOffset   = 7;
-    static constexpr uint8_t  kLengthMask = 0x7f;
-    static constexpr uint16_t kIdMask     = 0x00ff << kIdOffset;
-
-    union OT_TOOL_PACKED_FIELD
-    {
-        uint8_t  m8[kSize];
-        uint16_t m16;
-    } mFields;
-
-} OT_TOOL_PACKED_END;
-
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || \
-    OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-/**
- * Implements vendor specific Header IE generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class VendorIeHeader
-{
-public:
-    static constexpr uint8_t kHeaderIeId    = 0x00;
-    static constexpr uint8_t kIeContentSize = sizeof(uint8_t) * 4;
-
-    /**
-     * Returns the Vendor OUI.
-     *
-     * @returns The Vendor OUI.
-     *
-     */
-    uint32_t GetVendorOui(void) const { return LittleEndian::ReadUint24(mOui); }
-
-    /**
-     * Sets the Vendor OUI.
-     *
-     * @param[in]  aVendorOui  A Vendor OUI.
-     *
-     */
-    void SetVendorOui(uint32_t aVendorOui) { LittleEndian::WriteUint24(aVendorOui, mOui); }
-
-    /**
-     * Returns the Vendor IE sub-type.
-     *
-     * @returns The Vendor IE sub-type.
-     *
-     */
-    uint8_t GetSubType(void) const { return mSubType; }
-
-    /**
-     * Sets the Vendor IE sub-type.
-     *
-     * @param[in]  aSubType  The Vendor IE sub-type.
-     *
-     */
-    void SetSubType(uint8_t aSubType) { mSubType = aSubType; }
-
-private:
-    static constexpr uint8_t kOuiSize = 3;
-
-    uint8_t mOui[kOuiSize];
-    uint8_t mSubType;
-} OT_TOOL_PACKED_END;
-
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-/**
- * Implements Time Header IE generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class TimeIe : public VendorIeHeader
-{
-public:
-    static constexpr uint32_t kVendorOuiNest = 0x18b430;
-    static constexpr uint8_t  kVendorIeTime  = 0x01;
-    static constexpr uint8_t  kHeaderIeId    = VendorIeHeader::kHeaderIeId;
-    static constexpr uint8_t  kIeContentSize = VendorIeHeader::kIeContentSize + sizeof(uint8_t) + sizeof(uint64_t);
-
-    /**
-     * Initializes the time IE.
-     *
-     */
-    void Init(void)
-    {
-        SetVendorOui(kVendorOuiNest);
-        SetSubType(kVendorIeTime);
-    }
-
-    /**
-     * Returns the time sync sequence.
-     *
-     * @returns the time sync sequence.
-     *
-     */
-    uint8_t GetSequence(void) const { return mSequence; }
-
-    /**
-     * Sets the tine sync sequence.
-     *
-     * @param[in]  aSequence The time sync sequence.
-     *
-     */
-    void SetSequence(uint8_t aSequence) { mSequence = aSequence; }
-
-    /**
-     * Returns the network time.
-     *
-     * @returns the network time, in microseconds.
-     *
-     */
-    uint64_t GetTime(void) const { return LittleEndian::HostSwap64(mTime); }
-
-    /**
-     * Sets the network time.
-     *
-     * @param[in]  aTime  The network time.
-     *
-     */
-    void SetTime(uint64_t aTime) { mTime = LittleEndian::HostSwap64(aTime); }
-
-private:
-    uint8_t  mSequence;
-    uint64_t mTime;
-} OT_TOOL_PACKED_END;
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-class ThreadIe
-{
-public:
-    static constexpr uint8_t  kHeaderIeId               = VendorIeHeader::kHeaderIeId;
-    static constexpr uint8_t  kIeContentSize            = VendorIeHeader::kIeContentSize;
-    static constexpr uint32_t kVendorOuiThreadCompanyId = 0xeab89b;
-    static constexpr uint8_t  kEnhAckProbingIe          = 0x00;
-};
-#endif
-
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE ||
-       // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 /**
  * Implements IEEE 802.15.4 MAC frame generation and parsing.
@@ -277,10 +69,11 @@ public:
      */
     enum Type : uint16_t
     {
-        kTypeBeacon = 0, ///< Beacon Frame Type.
-        kTypeData   = 1, ///< Data Frame Type.
-        kTypeAck    = 2, ///< Ack Frame Type.
-        kTypeMacCmd = 3, ///< MAC Command Frame Type.
+        kTypeBeacon       = 0, ///< Beacon Frame Type.
+        kTypeData         = 1, ///< Data Frame Type.
+        kTypeAck          = 2, ///< Ack Frame Type.
+        kTypeMacCmd       = 3, ///< MAC Command Frame Type.
+        kTypeMultipurpose = 5, ///< Multipurpose Frame Type.
     };
 
     /**
@@ -423,6 +216,59 @@ public:
      */
     bool IsAck(void) const { return GetType() == kTypeAck; }
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    /**
+     * This method returns whether the frame is an IEEE 802.15.4 Wake-up frame.
+     *
+     * @retval TRUE   If this is a Wake-up frame.
+     * @retval FALSE  If this is not a Wake-up frame.
+     *
+     */
+    bool IsWakeupFrame(void) const;
+
+    /**
+     * This method returns the Rendezvous Time IE of a wake-up frame.
+     *
+     * @returns Pointer to the Rendezvous Time IE.
+     *
+     */
+    RendezvousTimeIe *GetRendezvousTimeIe(void) { return AsNonConst(AsConst(this)->GetRendezvousTimeIe()); }
+
+    /**
+     * This method returns the Rendezvous Time IE of a wake-up frame.
+     *
+     * @returns Const pointer to the Rendezvous Time IE.
+     *
+     */
+    const RendezvousTimeIe *GetRendezvousTimeIe(void) const
+    {
+        const uint8_t *ie = GetHeaderIe(RendezvousTimeIe::kHeaderIeId);
+
+        return (ie != nullptr) ? reinterpret_cast<const RendezvousTimeIe *>(ie + sizeof(HeaderIe)) : nullptr;
+    }
+
+    /**
+     * This method returns the Connection IE of a wake-up frame.
+     *
+     * @returns Pointer to the Connection IE.
+     *
+     */
+    ConnectionIe *GetConnectionIe(void) { return AsNonConst(AsConst(this)->GetConnectionIe()); }
+
+    /**
+     * This method returns the Connection IE of a wake-up frame.
+     *
+     * @returns Const pointer to the Connection IE.
+     *
+     */
+    const ConnectionIe *GetConnectionIe(void) const
+    {
+        const uint8_t *ie = GetThreadIe(ConnectionIe::kThreadIeSubtype);
+
+        return (ie != nullptr) ? reinterpret_cast<const ConnectionIe *>(ie + sizeof(HeaderIe)) : nullptr;
+    }
+#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
     /**
      * Returns the IEEE 802.15.4 Frame Version.
      *
@@ -446,7 +292,7 @@ public:
      * @retval FALSE  If security is not enabled.
      *
      */
-    bool GetSecurityEnabled(void) const { return (GetPsdu()[0] & kFcfSecurityEnabled) != 0; }
+    bool GetSecurityEnabled(void) const { return IsSecurityEnabled(GetFrameControlField()); }
 
     /**
      * Indicates whether or not the Frame Pending bit is set.
@@ -455,10 +301,12 @@ public:
      * @retval FALSE  If the Frame Pending bit is not set.
      *
      */
-    bool GetFramePending(void) const { return (GetPsdu()[0] & kFcfFramePending) != 0; }
+    bool GetFramePending(void) const { return IsFramePending(GetFrameControlField()); }
 
     /**
      * Sets the Frame Pending bit.
+     *
+     * @note This method must not be called on a Multipurpose frame with short Frame Control field.
      *
      * @param[in]  aFramePending  The Frame Pending bit.
      *
@@ -472,10 +320,12 @@ public:
      * @retval FALSE  If the Ack Request bit is not set.
      *
      */
-    bool GetAckRequest(void) const { return (GetPsdu()[0] & kFcfAckRequest) != 0; }
+    bool GetAckRequest(void) const { return IsAckRequest(GetFrameControlField()); }
 
     /**
      * Sets the Ack Request bit.
+     *
+     * @note This method must not be called on a Multipurpose frame with short Frame Control field.
      *
      * @param[in]  aAckRequest  The Ack Request bit.
      *
@@ -484,6 +334,8 @@ public:
 
     /**
      * Indicates whether or not the PanId Compression bit is set.
+     *
+     * @note This method must not be called on a Multipurpose frame, which lacks this flag.
      *
      * @retval TRUE   If the PanId Compression bit is set.
      * @retval FALSE  If the PanId Compression bit is not set.
@@ -498,10 +350,12 @@ public:
      * @retval FALSE  If no IE present.
      *
      */
-    bool IsIePresent(void) const { return (GetFrameControlField() & kFcfIePresent) != 0; }
+    bool IsIePresent(void) const { return IsIePresent(GetFrameControlField()); }
 
     /**
      * Sets the IE Present bit.
+     *
+     * @note This method must not be called on a Multipurpose frame with short Frame Control field.
      *
      * @param[in]  aIePresent   The IE Present bit.
      *
@@ -530,16 +384,7 @@ public:
      * @returns TRUE if the Sequence Number is present, FALSE otherwise.
      *
      */
-    uint8_t IsSequencePresent(void) const { return !IsSequenceSuppressed(GetFrameControlField()); }
-
-    /**
-     * Get the size of the sequence number.
-     *
-     * @retval      0       The size of sequence number is 0, indicating it's not present.
-     * @retval      1       The size of sequence number is 1, indicating it's present.
-     *
-     */
-    uint8_t GetSeqNumSize(void) const { return GetSeqNumSize(GetFrameControlField()); }
+    uint8_t IsSequencePresent(void) const { return IsSequencePresent(GetFrameControlField()); }
 
     /**
      * Indicates whether or not the Destination PAN ID is present.
@@ -1023,7 +868,34 @@ public:
      *
      */
     void SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase);
+
+    /**
+     * Indicates whether or not the frame contains CSL IE.
+     *
+     * @retval TRUE   If the frame contains CSL IE.
+     * @retval FALSE  If the frame doesn't contain CSL IE.
+     *
+     */
+    bool HasCslIe(void) const;
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE)
+    /**
+     * Returns a pointer to a CSL IE.
+     *
+     * @returns A pointer to the CSL IE, `nullptr` if not found.
+     *
+     */
+    const CslIe *GetCslIe(void) const;
+
+    /**
+     * Returns a pointer to a CSL IE.
+     *
+     * @returns A pointer to the CSL IE, `nullptr` if not found.
+     *
+     */
+    CslIe *GetCslIe(void) { return AsNonConst(AsConst(this)->GetCslIe()); }
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE)
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     /**
@@ -1100,30 +972,71 @@ public:
      * @returns The Frame Control field.
      *
      */
-    uint16_t GetFrameControlField(void) const;
+    uint16_t GetFrameControlField(void) const
+    {
+        uint16_t fcf = mPsdu[0];
+
+#if OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
+        if (!IsShortFcf(fcf))
+#endif
+        {
+            fcf |= (mPsdu[1] << 8);
+        }
+
+        return fcf;
+    }
 
 protected:
+    static constexpr uint8_t kShortFcfSize        = sizeof(uint8_t);
     static constexpr uint8_t kSecurityControlSize = sizeof(uint8_t);
     static constexpr uint8_t kFrameCounterSize    = sizeof(uint32_t);
     static constexpr uint8_t kCommandIdSize       = sizeof(uint8_t);
     static constexpr uint8_t kKeyIndexSize        = sizeof(uint8_t);
 
-    static constexpr uint16_t kFcfFrameTypeMask      = 7 << 0;
-    static constexpr uint16_t kFcfSecurityEnabled    = 1 << 3;
-    static constexpr uint16_t kFcfFramePending       = 1 << 4;
-    static constexpr uint16_t kFcfAckRequest         = 1 << 5;
-    static constexpr uint16_t kFcfPanidCompression   = 1 << 6;
-    static constexpr uint16_t kFcfSequenceSupression = 1 << 8;
-    static constexpr uint16_t kFcfIePresent          = 1 << 9;
-    static constexpr uint16_t kFcfDstAddrNone        = 0 << 10;
-    static constexpr uint16_t kFcfDstAddrShort       = 2 << 10;
-    static constexpr uint16_t kFcfDstAddrExt         = 3 << 10;
-    static constexpr uint16_t kFcfDstAddrMask        = 3 << 10;
-    static constexpr uint16_t kFcfFrameVersionMask   = 3 << 12;
-    static constexpr uint16_t kFcfSrcAddrNone        = 0 << 14;
-    static constexpr uint16_t kFcfSrcAddrShort       = 2 << 14;
-    static constexpr uint16_t kFcfSrcAddrExt         = 3 << 14;
-    static constexpr uint16_t kFcfSrcAddrMask        = 3 << 14;
+    static constexpr uint16_t kFcfFrameTypeMask = 7 << 0;
+
+    static constexpr uint16_t kFcfAddrNone  = 0;
+    static constexpr uint16_t kFcfAddrShort = 2;
+    static constexpr uint16_t kFcfAddrExt   = 3;
+    static constexpr uint16_t kFcfAddrMask  = 3;
+
+    // Frame Control field format for general MAC frame
+    static constexpr uint16_t kFcfSecurityEnabled     = 1 << 3;
+    static constexpr uint16_t kFcfFramePending        = 1 << 4;
+    static constexpr uint16_t kFcfAckRequest          = 1 << 5;
+    static constexpr uint16_t kFcfPanidCompression    = 1 << 6;
+    static constexpr uint16_t kFcfSequenceSuppression = 1 << 8;
+    static constexpr uint16_t kFcfIePresent           = 1 << 9;
+    static constexpr uint16_t kFcfDstAddrShift        = 10;
+    static constexpr uint16_t kFcfDstAddrNone         = kFcfAddrNone << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfDstAddrShort        = kFcfAddrShort << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfDstAddrExt          = kFcfAddrExt << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfDstAddrMask         = kFcfAddrMask << kFcfDstAddrShift;
+    static constexpr uint16_t kFcfFrameVersionMask    = 3 << 12;
+    static constexpr uint16_t kFcfSrcAddrShift        = 14;
+    static constexpr uint16_t kFcfSrcAddrNone         = kFcfAddrNone << kFcfSrcAddrShift;
+    static constexpr uint16_t kFcfSrcAddrShort        = kFcfAddrShort << kFcfSrcAddrShift;
+    static constexpr uint16_t kFcfSrcAddrExt          = kFcfAddrExt << kFcfSrcAddrShift;
+    static constexpr uint16_t kFcfSrcAddrMask         = kFcfAddrMask << kFcfSrcAddrShift;
+
+    // Frame Control field format for MAC Multipurpose frame
+    static constexpr uint16_t kMpFcfLongFrame           = 1 << 3;
+    static constexpr uint16_t kMpFcfDstAddrShift        = 4;
+    static constexpr uint16_t kMpFcfDstAddrNone         = kFcfAddrNone << kMpFcfDstAddrShift;
+    static constexpr uint16_t kMpFcfDstAddrShort        = kFcfAddrShort << kMpFcfDstAddrShift;
+    static constexpr uint16_t kMpFcfDstAddrExt          = kFcfAddrExt << kMpFcfDstAddrShift;
+    static constexpr uint16_t kMpFcfDstAddrMask         = kFcfAddrMask << kMpFcfDstAddrShift;
+    static constexpr uint16_t kMpFcfSrcAddrShift        = 6;
+    static constexpr uint16_t kMpFcfSrcAddrNone         = kFcfAddrNone << kMpFcfSrcAddrShift;
+    static constexpr uint16_t kMpFcfSrcAddrShort        = kFcfAddrShort << kMpFcfSrcAddrShift;
+    static constexpr uint16_t kMpFcfSrcAddrExt          = kFcfAddrExt << kMpFcfSrcAddrShift;
+    static constexpr uint16_t kMpFcfSrcAddrMask         = kFcfAddrMask << kMpFcfSrcAddrShift;
+    static constexpr uint16_t kMpFcfPanidPresent        = 1 << 8;
+    static constexpr uint16_t kMpFcfSecurityEnabled     = 1 << 9;
+    static constexpr uint16_t kMpFcfSequenceSuppression = 1 << 10;
+    static constexpr uint16_t kMpFcfFramePending        = 1 << 11;
+    static constexpr uint16_t kMpFcfAckRequest          = 1 << 14;
+    static constexpr uint16_t kMpFcfIePresent           = 1 << 15;
 
     static constexpr uint8_t kSecLevelMask  = 7 << 0;
     static constexpr uint8_t kKeyIdModeMask = 3 << 3;
@@ -1139,12 +1052,12 @@ protected:
     static constexpr uint8_t kKeySourceSizeMode2 = 4;
     static constexpr uint8_t kKeySourceSizeMode3 = 8;
 
-    static constexpr uint8_t kInvalidIndex  = 0xff;
-    static constexpr uint8_t kInvalidSize   = kInvalidIndex;
-    static constexpr uint8_t kMaxPsduSize   = kInvalidSize - 1;
-    static constexpr uint8_t kSequenceIndex = kFcfSize;
+    static constexpr uint8_t kInvalidIndex = 0xff;
+    static constexpr uint8_t kInvalidSize  = kInvalidIndex;
+    static constexpr uint8_t kMaxPsduSize  = kInvalidSize - 1;
 
     void    SetFrameControlField(uint16_t aFcf);
+    uint8_t SkipSequenceIndex(void) const;
     uint8_t FindDstPanIdIndex(void) const;
     uint8_t FindDstAddrIndex(void) const;
     uint8_t FindSrcPanIdIndex(void) const;
@@ -1162,16 +1075,55 @@ protected:
 
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
 
-    static bool IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != kFcfDstAddrNone; }
-    static bool IsDstPanIdPresent(uint16_t aFcf);
-    static bool IsSequenceSuppressed(uint16_t aFcf)
-    {
-        return (aFcf & (kFcfSequenceSupression | kFcfFrameVersionMask)) == (kFcfSequenceSupression | kVersion2015);
-    }
-    static uint8_t GetSeqNumSize(uint16_t aFcf) { return !IsSequenceSuppressed(aFcf) ? kDsnSize : 0; }
+#if OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
+    static uint8_t GetFcfSize(uint16_t aFcf) { return IsShortFcf(aFcf) ? kShortFcfSize : kFcfSize; }
+#else
+    // clang-format off
+    static uint8_t GetFcfSize(uint16_t /* aFcf */) { return kFcfSize; }
+    // clang-format on
+#endif
 
-    static bool IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone; }
+#if OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
+    template <uint16_t kValue, uint16_t kMpValue> static uint16_t Select(uint16_t aFcf)
+    {
+        return IsMultipurpose(aFcf) ? kMpValue : kValue;
+    }
+#else
+    template <uint16_t kValue, uint16_t kMpValue> static uint16_t Select(uint16_t /* aFcf */) { return kValue; }
+#endif
+
+    template <uint16_t kValue, uint16_t kMpValue> static uint16_t MaskFcf(uint16_t aFcf)
+    {
+        return aFcf & Select<kValue, kMpValue>(aFcf);
+    }
+
+    static uint16_t GetFcfDstAddr(uint16_t aFcf)
+    {
+        return MaskFcf<kFcfDstAddrMask, kMpFcfDstAddrMask>(aFcf) >> Select<kFcfDstAddrShift, kMpFcfDstAddrShift>(aFcf);
+    }
+
+    static uint16_t GetFcfSrcAddr(uint16_t aFcf)
+    {
+        return MaskFcf<kFcfSrcAddrMask, kMpFcfSrcAddrMask>(aFcf) >> Select<kFcfSrcAddrShift, kMpFcfSrcAddrShift>(aFcf);
+    }
+
+    static bool IsMultipurpose(uint16_t aFcf) { return (aFcf & kFcfFrameTypeMask) == kTypeMultipurpose; }
+    static bool IsShortFcf(uint16_t aFcf)
+    {
+        return (aFcf & (kFcfFrameTypeMask | kMpFcfLongFrame)) == (kTypeMultipurpose | 0);
+    }
+    static bool IsSequencePresent(uint16_t aFcf)
+    {
+        return !MaskFcf<kFcfSequenceSuppression, kMpFcfSequenceSuppression>(aFcf);
+    }
+    static bool IsDstAddrPresent(uint16_t aFcf) { return MaskFcf<kFcfDstAddrMask, kMpFcfDstAddrMask>(aFcf); }
+    static bool IsDstPanIdPresent(uint16_t aFcf);
+    static bool IsSrcAddrPresent(uint16_t aFcf) { return MaskFcf<kFcfSrcAddrMask, kMpFcfSrcAddrMask>(aFcf); }
     static bool IsSrcPanIdPresent(uint16_t aFcf);
+    static bool IsSecurityEnabled(uint16_t aFcf) { return MaskFcf<kFcfSecurityEnabled, kMpFcfSecurityEnabled>(aFcf); }
+    static bool IsFramePending(uint16_t aFcf) { return MaskFcf<kFcfFramePending, kMpFcfFramePending>(aFcf); }
+    static bool IsIePresent(uint16_t aFcf) { return MaskFcf<kFcfIePresent, kMpFcfIePresent>(aFcf); }
+    static bool IsAckRequest(uint16_t aFcf) { return MaskFcf<kFcfAckRequest, kMpFcfAckRequest>(aFcf); }
     static bool IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kVersion2015; }
 
     static uint8_t CalculateAddrFieldSize(uint16_t aFcf);
@@ -1556,6 +1508,21 @@ public:
      */
     Error GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    /**
+     * Generate IEE 802.15.4 Wake-up frame.
+     *
+     * @param[in]    aPanId     A destination PAN identifier
+     * @param[in]    aDest      A destination address (short or extended)
+     * @param[in]    aSource    A source address (short or extended)
+     *
+     * @retval  kErrorNone        Successfully generated Wake-up frame.
+     * @retval  kErrorInvalidArgs @p aDest or @p aSource have incorrect type.
+     *
+     */
+    Error GenerateWakeupFrame(PanId aPanId, const Address &aDest, const Address &aSource);
+#endif
+
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /**
      * Set TX delay field for the frame.
@@ -1765,67 +1732,6 @@ private:
     char            mNetworkName[MeshCoP::NetworkName::kMaxSize];
     otExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
-
-/**
- * Implements CSL IE data structure.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class CslIe
-{
-public:
-    static constexpr uint8_t kHeaderIeId    = 0x1a;
-    static constexpr uint8_t kIeContentSize = sizeof(uint16_t) * 2;
-
-    /**
-     * Returns the CSL Period.
-     *
-     * @returns the CSL Period.
-     *
-     */
-    uint16_t GetPeriod(void) const { return LittleEndian::HostSwap16(mPeriod); }
-
-    /**
-     * Sets the CSL Period.
-     *
-     * @param[in]  aPeriod  The CSL Period.
-     *
-     */
-    void SetPeriod(uint16_t aPeriod) { mPeriod = LittleEndian::HostSwap16(aPeriod); }
-
-    /**
-     * Returns the CSL Phase.
-     *
-     * @returns the CSL Phase.
-     *
-     */
-    uint16_t GetPhase(void) const { return LittleEndian::HostSwap16(mPhase); }
-
-    /**
-     * Sets the CSL Phase.
-     *
-     * @param[in]  aPhase  The CSL Phase.
-     *
-     */
-    void SetPhase(uint16_t aPhase) { mPhase = LittleEndian::HostSwap16(aPhase); }
-
-private:
-    uint16_t mPhase;
-    uint16_t mPeriod;
-} OT_TOOL_PACKED_END;
-
-/**
- * Implements Termination2 IE.
- *
- * Is empty for template specialization.
- *
- */
-class Termination2Ie
-{
-public:
-    static constexpr uint8_t kHeaderIeId    = 0x7f;
-    static constexpr uint8_t kIeContentSize = 0;
-};
 
 /**
  * @}

@@ -35,16 +35,7 @@
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
-#include "common/code_utils.hpp"
-#include "common/encoding.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/num_utils.hpp"
-#include "common/numeric_limits.hpp"
 #include "instance/instance.hpp"
-#include "mac/mac.hpp"
-#include "thread/link_metrics_tlvs.hpp"
-#include "thread/neighbor_table.hpp"
 
 namespace ot {
 namespace LinkMetrics {

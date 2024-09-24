@@ -30,16 +30,7 @@
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "instance/instance.hpp"
-#include "net/udp6.hpp"
-#include "thread/network_data_types.hpp"
-#include "thread/thread_netif.hpp"
 
 /**
  * @file

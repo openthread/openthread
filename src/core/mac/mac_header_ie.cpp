@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017-2019, The OpenThread Authors.
+ *  Copyright (c) 2016-2024, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,48 +28,20 @@
 
 /**
  * @file
- *   This file includes definitions locator getter methods.
- *
+ *   This file implements IEEE 802.15.4 header IE generation and parsing.
  */
 
-#ifndef LOCATOR_GETTERS_HPP_
-#define LOCATOR_GETTERS_HPP_
-
-#include "openthread-core-config.h"
-
-#include "common/locator.hpp"
-#include "common/tasklet.hpp"
-#include "instance/instance.hpp"
+#include "mac_header_ie.hpp"
 
 namespace ot {
+namespace Mac {
 
-template <typename InstanceGetProvider>
-template <typename Type>
-inline Type &GetProvider<InstanceGetProvider>::Get(void) const
+void HeaderIe::Init(uint16_t aId, uint8_t aLen)
 {
-    return static_cast<const InstanceGetProvider *>(this)->GetInstance().template Get<Type>();
+    Init();
+    SetId(aId);
+    SetLength(aLen);
 }
 
-template <typename Owner, void (Owner::*HandleTaskletPtr)(void)>
-void TaskletIn<Owner, HandleTaskletPtr>::HandleTasklet(Tasklet &aTasklet)
-{
-    (aTasklet.Get<Owner>().*HandleTaskletPtr)();
-}
-
-template <typename Owner, void (Owner::*HandleTimertPtr)(void)>
-void TimerMilliIn<Owner, HandleTimertPtr>::HandleTimer(Timer &aTimer)
-{
-    (aTimer.Get<Owner>().*HandleTimertPtr)();
-}
-
-#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-template <typename Owner, void (Owner::*HandleTimertPtr)(void)>
-void TimerMicroIn<Owner, HandleTimertPtr>::HandleTimer(Timer &aTimer)
-{
-    (aTimer.Get<Owner>().*HandleTimertPtr)();
-}
-#endif
-
+} // namespace Mac
 } // namespace ot
-
-#endif // LOCATOR_GETTERS_HPP_

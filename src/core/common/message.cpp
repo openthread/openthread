@@ -33,17 +33,7 @@
 
 #include "message.hpp"
 
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/heap.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/num_utils.hpp"
-#include "common/numeric_limits.hpp"
 #include "instance/instance.hpp"
-#include "net/checksum.hpp"
-#include "net/ip6.hpp"
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 
@@ -661,7 +651,13 @@ uint16_t Message::ReadBytes(const OffsetRange &aOffsetRange, void *aBuf) const
 
 Error Message::Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const
 {
-    return (ReadBytes(aOffset, aBuf, aLength) == aLength) ? kErrorNone : kErrorParse;
+    Error error = kErrorNone;
+
+    VerifyOrExit(aOffset + aLength <= GetLength(), error = kErrorParse);
+    ReadBytes(aOffset, aBuf, aLength);
+
+exit:
+    return error;
 }
 
 Error Message::Read(const OffsetRange &aOffsetRange, void *aBuf, uint16_t aLength) const
@@ -669,7 +665,7 @@ Error Message::Read(const OffsetRange &aOffsetRange, void *aBuf, uint16_t aLengt
     Error error = kErrorNone;
 
     VerifyOrExit(aOffsetRange.Contains(aLength), error = kErrorParse);
-    VerifyOrExit(ReadBytes(aOffsetRange.GetOffset(), aBuf, aLength) == aLength, error = kErrorParse);
+    error = Read(aOffsetRange.GetOffset(), aBuf, aLength);
 
 exit:
     return error;

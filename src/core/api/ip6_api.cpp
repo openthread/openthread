@@ -33,14 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/ip6.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
-#include "net/ip4_types.hpp"
-#include "net/ip6_headers.hpp"
-#include "thread/network_data_leader.hpp"
-#include "utils/slaac_address.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 

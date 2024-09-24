@@ -32,22 +32,10 @@
  */
 
 #include "tcat_agent.hpp"
-#include <openthread/tcat.h>
-#include "meshcop/network_name.hpp"
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
-#include "common/array.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/locator_getters.hpp"
-#include "common/string.hpp"
 #include "instance/instance.hpp"
-#include "radio/radio.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/uri_paths.hpp"
-#include "utils/otns.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -393,7 +381,8 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
         switch (tlv.GetType())
         {
         case kTlvDisconnect:
-            error = kErrorAbort;
+            error    = kErrorAbort;
+            response = true; // true - to avoid response-with-status being sent.
             break;
 
         case kTlvSetActiveOperationalDataset:
@@ -415,9 +404,11 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
             response = true;
             error    = kErrorNone;
             break;
+
         case kTlvDecommission:
             error = HandleDecomission();
             break;
+
         case kTlvPing:
             error = HandlePing(aIncomingMessage, aOutgoingMessage, offset, length, response);
             break;
@@ -433,6 +424,7 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
         case kTlvGetProvisioningURL:
             error = HandleGetProvisioningUrl(aOutgoingMessage, response);
             break;
+
         default:
             error = kErrorInvalidCommand;
         }

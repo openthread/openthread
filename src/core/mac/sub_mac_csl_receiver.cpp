@@ -35,9 +35,6 @@
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -60,7 +57,7 @@ void SubMac::UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame)
 {
     // Actual synchronization timestamp should be from the sent frame instead of the current time.
     // Assuming the error here since it is bounded and has very small effect on the final window duration.
-    if (aAckFrame != nullptr && aFrame.GetHeaderIe(CslIe::kHeaderIeId) != nullptr)
+    if (aAckFrame != nullptr && aFrame.HasCslIe())
     {
         mCslLastSync = TimeMicro(GetLocalTime());
     }

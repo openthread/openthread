@@ -33,14 +33,7 @@
 
 #include "icmp6.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/message.hpp"
 #include "instance/instance.hpp"
-#include "net/checksum.hpp"
-#include "net/ip6.hpp"
 
 namespace ot {
 namespace Ip6 {

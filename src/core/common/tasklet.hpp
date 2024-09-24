@@ -171,7 +171,7 @@ public:
     }
 
 private:
-    static void HandleTasklet(Tasklet &aTasklet); // Implemented in `locator_getters.hpp`
+    static void HandleTasklet(Tasklet &aTasklet); // Implemented in `instance.hpp`
 };
 
 /**

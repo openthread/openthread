@@ -305,7 +305,7 @@ void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const 
 
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#if OPENTHREAD_SIMULATION_IMPLEMENT_INFRA_IF && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 /**
  * Initializes the platform infra-if module.
@@ -339,7 +339,7 @@ void platformInfraIfUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aM
  */
 void platformInfraIfProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
 
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif // OPENTHREAD_SIMULATION_IMPLEMENT_INFRA_IF && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_SIMULATION_MDNS_SOCKET_IMPLEMENT_POSIX
 

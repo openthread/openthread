@@ -35,15 +35,7 @@
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
 
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "instance/instance.hpp"
-#include "net/ip6_address.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/uri_paths.hpp"
-#include "utils/slaac_address.hpp"
 
 namespace ot {
 

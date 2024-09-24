@@ -35,10 +35,6 @@
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
 
-#include <string.h>
-
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {

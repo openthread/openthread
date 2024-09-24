@@ -35,10 +35,7 @@
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
-#include <openthread/diag.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 

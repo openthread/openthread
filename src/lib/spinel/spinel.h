@@ -3578,10 +3578,9 @@ enum
      * The format of PHY-specific data for a Thread device contains the following
      * optional fields:
 
-     *   `C` : 802.15.4 channel (Receive channel)
+     *   `C` : 802.15.4 channel
      *   `C` : IEEE 802.15.4 LQI
-     *   `L` : The timestamp milliseconds
-     *   `S` : The timestamp microseconds, offset to mMsec
+     *   `X` : The timestamp in microseconds
      *
      * Frames written to this stream with `CMD_PROP_VALUE_SET` will be sent out
      * over the radio. This allows the caller to use the radio directly.
@@ -4946,6 +4945,21 @@ enum
     SPINEL_PROP_MULTIPAN_ACTIVE_INTERFACE = SPINEL_PROP_MULTIPAN__BEGIN + 0,
 
     SPINEL_PROP_MULTIPAN__END = 0x910,
+
+    SPINEL_PROP_INFRA_IF__BEGIN = 0x910,
+
+    /// Infrastructure interface setup.
+    /** Format: `LbA(6)`
+     * Type: Write
+     *
+     * `L`: The infrastructure interface index.
+     * `b`: If the infrastrue interface is running.
+     * `A(6)`: The IPv6 addresses of the infrastructure interface.
+     *
+     */
+    SPINEL_PROP_INFRA_IF_SETUP = SPINEL_PROP_INFRA_IF__BEGIN + 1,
+
+    SPINEL_PROP_INFRA_IF__END = 0x920,
 
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,
 

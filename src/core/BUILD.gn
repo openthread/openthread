@@ -420,7 +420,6 @@ openthread_core_files = [
   "common/iterator_utils.hpp",
   "common/linked_list.hpp",
   "common/locator.hpp",
-  "common/locator_getters.hpp",
   "common/log.cpp",
   "common/log.hpp",
   "common/logging.hpp",
@@ -499,6 +498,8 @@ openthread_core_files = [
   "mac/mac_filter.hpp",
   "mac/mac_frame.cpp",
   "mac/mac_frame.hpp",
+  "mac/mac_header_ie.cpp",
+  "mac/mac_header_ie.hpp",
   "mac/mac_links.cpp",
   "mac/mac_links.hpp",
   "mac/mac_types.cpp",
@@ -772,6 +773,7 @@ openthread_radio_sources = [
   "instance/instance.cpp",
   "mac/link_raw.cpp",
   "mac/mac_frame.cpp",
+  "mac/mac_header_ie.cpp",
   "mac/mac_types.cpp",
   "mac/sub_mac.cpp",
   "mac/sub_mac_callbacks.cpp",
@@ -840,6 +842,7 @@ source_set("libopenthread_core_config") {
     "config/time_sync.h",
     "config/tmf.h",
     "config/trel.h",
+    "config/wakeup.h",
     "openthread-core-config.h",
   ]
   public_configs = [

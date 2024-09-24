@@ -34,26 +34,7 @@
 
 #if OPENTHREAD_FTD
 
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/locator_getters.hpp"
-#include "common/num_utils.hpp"
-#include "common/random.hpp"
-#include "common/serial_number.hpp"
-#include "common/settings.hpp"
 #include "instance/instance.hpp"
-#include "mac/mac_types.hpp"
-#include "meshcop/meshcop.hpp"
-#include "net/icmp6.hpp"
-#include "thread/key_manager.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/thread_tlvs.hpp"
-#include "thread/time_sync_service.hpp"
-#include "thread/uri_paths.hpp"
-#include "thread/version.hpp"
-#include "utils/otns.hpp"
 
 namespace ot {
 namespace Mle {
@@ -1112,12 +1093,12 @@ Error MleRouter::ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo)
     return error;
 }
 
-Error MleRouter::ReadAndProcessRouteTlvOnFed(RxInfo &aRxInfo, uint8_t aParentId)
+Error MleRouter::ReadAndProcessRouteTlvOnFtdChild(RxInfo &aRxInfo, uint8_t aParentId)
 {
     // This method reads and processes Route TLV from message on an
-    // FED if message contains one. It returns `kErrorNone` when
-    // successfully processed or if there is no Route TLV in the
-    // message.
+    // FTD child if message contains one. It returns `kErrorNone`
+    // when successfully processed or if there is no Route TLV in
+    // the message.
     //
     // It MUST be used only when device is acting as a child and
     // for a message received from device's current parent.
@@ -1131,7 +1112,7 @@ Error MleRouter::ReadAndProcessRouteTlvOnFed(RxInfo &aRxInfo, uint8_t aParentId)
     {
     case kErrorNone:
         SuccessOrExit(error = ProcessRouteTlv(routeTlv, aRxInfo));
-        mRouterTable.UpdateRoutesOnFed(routeTlv, aParentId);
+        mRouterTable.UpdateRouterOnFtdChild(routeTlv, aParentId);
         mRequestRouteTlv = false;
         break;
     case kErrorNotFound:
@@ -1175,7 +1156,7 @@ exit:
     return rval;
 }
 
-Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, const LeaderData &aLeaderData)
+Error MleRouter::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, const LeaderData &aLeaderData)
 {
     // This method processes a received MLE Advertisement message on
     // an FTD device. It is called from `Mle::HandleAdvertisement()`
@@ -1290,7 +1271,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
                 mRouterRoleTransition.StartTimeout();
             }
 
-            mRouterTable.UpdateRoutesOnFed(routeTlv, routerId);
+            mRouterTable.UpdateRouterOnFtdChild(routeTlv, routerId);
         }
         else
         {
@@ -2150,7 +2131,7 @@ exit:
     LogProcessError(kTypeChildIdRequest, error);
 }
 
-void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
+void MleRouter::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
 {
     Error           error = kErrorNone;
     Mac::ExtAddress extAddr;
@@ -2368,7 +2349,7 @@ exit:
     LogProcessError(kTypeChildUpdateRequestOfChild, error);
 }
 
-void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
+void MleRouter::HandleChildUpdateResponseOnParent(RxInfo &aRxInfo)
 {
     Error       error = kErrorNone;
     uint16_t    sourceAddress;
@@ -3350,8 +3331,8 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message          *aMessage,
 
     // We keep the router table next hop and cost as what we had as a
     // REED, i.e., our parent was the next hop towards all other
-    // routers and we tracked its cost towards them. As FED, we may
-    // have established links with a subset of neighboring routers.
+    // routers and we tracked its cost towards them. As an FTD child,
+    // we may have established links with a subset of neighboring routers.
     // We ensure to clear these links to avoid using them (since will
     // be rejected by the neighbor).
 

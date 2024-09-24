@@ -217,9 +217,8 @@ protected:
         bool    mMulticastLoop : 1;       // Whether this multicast message may be looped back.
         bool    mResolvingAddress : 1;    // Whether the message is pending an address query resolution.
         bool    mAllowLookbackToHost : 1; // Whether the message is allowed to be looped back to host.
-        bool    mIsDstPanIdBroadcast : 1; // IWhether the dest PAN ID is broadcast.
-        uint8_t mOrigin : 2;
-        // The origin of the message.
+        bool    mIsDstPanIdBroadcast : 1; // Whether the dest PAN ID is broadcast.
+        uint8_t mOrigin : 2;              // The origin of the message.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         uint8_t mRadioType : 2;      // The radio link type the message was received on, or should be sent on.
         bool    mIsRadioTypeSet : 1; // Whether the radio type is set.
@@ -762,6 +761,12 @@ public:
     /**
      * Reads bytes from the message.
      *
+     * The provided buffer @p aBuf MUST contain at least @p aLength bytes.
+     *
+     * If there are fewer bytes available in the message than the requested @p aLength, the available bytes are read
+     * and copied into @p aBuf. This method returns the actual number of bytes successfully read from the message and
+     * written into @p aBuf.
+     *
      * @param[in]  aOffset  Byte offset within the message to begin reading.
      * @param[out] aBuf     A pointer to a data buffer to copy the read bytes into.
      * @param[in]  aLength  Number of bytes to read.
@@ -774,6 +779,10 @@ public:
     /**
      * Reads bytes from the message.
      *
+     * If there are fewer bytes available in the message than the provided length in @p aOffsetRange, the available
+     * bytes are read and copied into @p aBuf. This method returns the actual number of bytes successfully read from
+     * the message and written into @p aBuf.
+     *
      * @param[in]  aOffsetRange  The offset range in the message to read bytes from.
      * @param[out] aBuf          A pointer to a data buffer to copy the read bytes into.
      *
@@ -784,9 +793,6 @@ public:
 
     /**
      * Reads a given number of bytes from the message.
-     *
-     * If there are fewer bytes available in the message than the requested read length, the available bytes will be
-     * read and copied into @p aBuf. In this case `kErrorParse` will be returned.
      *
      * @param[in]  aOffset  Byte offset within the message to begin reading.
      * @param[out] aBuf     A pointer to a data buffer to copy the read bytes into.
@@ -801,9 +807,6 @@ public:
     /**
      * Reads a given number of bytes from the message.
      *
-     * If there are fewer bytes available in the message or @p aOffsetRange than the requested @p aLength, the
-     * available bytes are read and copied into @p aBuf. In this case `kErrorParse` will be returned.
-     *
      * @param[in]  aOffsetRange  The offset range in the message to read from.
      * @param[out] aBuf          A pointer to a data buffer to copy the read bytes into.
      * @param[in]  aLength       Number of bytes to read.
@@ -816,10 +819,6 @@ public:
 
     /**
      * Reads an object from the message.
-     *
-     * If there are fewer bytes available in the message than the requested object size, the available bytes will be
-     * read and copied into @p aObject (@p aObject will be read partially). In this case `kErrorParse` will
-     * be returned.
      *
      * @tparam     ObjectType   The object type to read from the message.
      *
@@ -839,10 +838,6 @@ public:
 
     /**
      * Reads an object from the message.
-     *
-     * If there are fewer bytes available in the message or @p aOffsetRange than the requested object size, the
-     * available bytes will be read and copied into @p aObject (@p aObject will be read partially). In this case
-     * `kErrorParse` will be returned.
      *
      * @tparam     ObjectType   The object type to read from the message.
      *

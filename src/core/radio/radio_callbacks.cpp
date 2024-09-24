@@ -33,7 +33,6 @@
 
 #include "radio.hpp"
 
-#include "common/locator_getters.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {

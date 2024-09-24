@@ -34,8 +34,7 @@
 
 #include "extended_panid.hpp"
 
-#include "common/locator_getters.hpp"
-#include "common/notifier.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace MeshCoP {

@@ -33,13 +33,6 @@
 
 #include "coap_message.hpp"
 
-#include "coap/coap.hpp"
-#include "common/array.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/random.hpp"
-#include "common/string.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -373,7 +366,8 @@ exit:
 
 Error Message::ParseHeader(void)
 {
-    Error            error = kErrorNone;
+    Error            error  = kErrorNone;
+    uint16_t         offset = GetOffset();
     Option::Iterator iterator;
 
     OT_ASSERT(GetReserved() >=
@@ -381,10 +375,13 @@ Error Message::ParseHeader(void)
 
     GetHelpData().Clear();
 
-    GetHelpData().mHeaderOffset = GetOffset();
-    IgnoreError(Read(GetHelpData().mHeaderOffset, GetHelpData().mHeader));
+    GetHelpData().mHeaderOffset = offset;
+
+    SuccessOrExit(error = Read(offset, &GetHelpData().mHeader, kMinHeaderLength));
+    offset += kMinHeaderLength;
 
     VerifyOrExit(GetTokenLength() <= kMaxTokenLength, error = kErrorParse);
+    SuccessOrExit(error = Read(offset, GetHelpData().mHeader.mToken, GetTokenLength()));
 
     SuccessOrExit(error = iterator.Init(*this));
 

@@ -737,6 +737,27 @@ public:
         return (&aAddress == &mLinkLocalAllThreadNodes) || (&aAddress == &mRealmLocalAllThreadNodes);
     }
 
+#if OPENTHREAD_CONFIG_DYNAMIC_STORE_FRAME_AHEAD_COUNTER_ENABLE
+    /**
+     * Sets the store frame counter ahead.
+     *
+     * @param[in]  aStoreFrameCounterAhead  The store frame counter ahead to set.
+     *
+     */
+    void SetStoreFrameCounterAhead(uint32_t aStoreFrameCounterAhead)
+    {
+        mStoreFrameCounterAhead = aStoreFrameCounterAhead;
+    }
+
+    /**
+     * Gets the current store frame counter ahead.
+     *
+     * @returns The current store frame counter ahead.
+     *
+     */
+    uint32_t GetStoreFrameCounterAhead(void) { return mStoreFrameCounterAhead; }
+#endif // OPENTHREAD_CONFIG_DYNAMIC_STORE_FRAME_AHEAD_COUNTER_ENABLE
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
      * Gets the CSL timeout.
@@ -790,6 +811,7 @@ private:
     static constexpr uint32_t kMulticastRetxDelay             = 5000; // Base delay for MLE multicast retx
     static constexpr uint32_t kMulticastRetxDelayMin          = kMulticastRetxDelay * 9 / 10;  // 0.9 * base delay
     static constexpr uint32_t kMulticastRetxDelayMax          = kMulticastRetxDelay * 11 / 10; // 1.1 * base delay
+    static constexpr uint32_t kAnnounceBackoffForPendingDataset = 60000; // Max delay left to block Announce processing.
 
     static constexpr uint8_t kMaxTxCount                = 3; // Max tx count for MLE message
     static constexpr uint8_t kMaxCriticalTxCount        = 6; // Max tx count for critical MLE message
@@ -829,12 +851,12 @@ private:
     static constexpr uint8_t kMaxServiceAlocs = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS;
 #endif
 
-    static constexpr uint8_t  kMleHopLimit              = 255;
-    static constexpr uint8_t  kMleSecurityTagSize       = 4;
-    static constexpr uint32_t kStoreFrameCounterAhead   = OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
-    static constexpr uint8_t  kMaxIpAddressesToRegister = OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER;
-    static constexpr uint32_t kDefaultChildTimeout      = OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT;
-    static constexpr uint32_t kDefaultCslTimeout        = OPENTHREAD_CONFIG_CSL_TIMEOUT;
+    static constexpr uint8_t  kMleHopLimit                   = 255;
+    static constexpr uint8_t  kMleSecurityTagSize            = 4;
+    static constexpr uint32_t kDefaultStoreFrameCounterAhead = OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
+    static constexpr uint8_t  kMaxIpAddressesToRegister      = OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER;
+    static constexpr uint32_t kDefaultChildTimeout           = OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT;
+    static constexpr uint32_t kDefaultCslTimeout             = OPENTHREAD_CONFIG_CSL_TIMEOUT;
 
     //------------------------------------------------------------------------------------------------------------------
     // Enumerations
@@ -1293,7 +1315,9 @@ private:
     void       HandleAdvertisement(RxInfo &aRxInfo);
     void       HandleChildIdResponse(RxInfo &aRxInfo);
     void       HandleChildUpdateRequest(RxInfo &aRxInfo);
+    void       HandleChildUpdateRequestOnChild(RxInfo &aRxInfo);
     void       HandleChildUpdateResponse(RxInfo &aRxInfo);
+    void       HandleChildUpdateResponseOnChild(RxInfo &aRxInfo);
     void       HandleDataResponse(RxInfo &aRxInfo);
     void       HandleParentResponse(RxInfo &aRxInfo);
     void       HandleAnnounce(RxInfo &aRxInfo);
@@ -1431,6 +1455,7 @@ private:
     uint16_t mAttachCounter;
     uint16_t mAnnounceDelay;
     uint16_t mAlternatePanId;
+    uint32_t mStoreFrameCounterAhead;
     uint32_t mTimeout;
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     uint32_t mCslTimeout;

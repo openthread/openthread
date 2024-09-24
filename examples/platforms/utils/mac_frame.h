@@ -334,6 +334,55 @@ uint8_t otMacFrameGenerateEnhAckProbingIe(uint8_t *aDest, const uint8_t *aIeData
  */
 void otMacFrameSetEnhAckProbingIe(otRadioFrame *aFrame, const uint8_t *aData, uint8_t aDataLen);
 
+/**
+ * Represents the context for radio layer.
+ */
+typedef struct otRadioContext
+{
+    otExtAddress     mExtAddress; ///< In little-endian byte order.
+    uint32_t         mMacFrameCounter;
+    uint32_t         mCslSampleTime; ///< The sample time based on the microsecond timer.
+    uint16_t         mCslPeriod;     ///< In unit of 10 symbols.
+    otShortAddress   mShortAddress;
+    otRadioKeyType   mKeyType;
+    uint8_t          mKeyId;
+    otMacKeyMaterial mPrevKey;
+    otMacKeyMaterial mCurrKey;
+    otMacKeyMaterial mNextKey;
+} otRadioContext;
+
+/**
+ * Perform processing of SFD callback from ISR.
+ *
+ * This function may do multiple tasks as follows.
+ *
+ *  - CSL IE will be populated (if present)
+ *  - Time IE will be populated (if present)
+ *  - Tx timestamp will be populated
+ *  - Tx security will be performed (including assignment of security frame counter and key id if not assigned)
+ *
+ * @param[in,out]   aFrame          The target frame. MUST NOT be `NULL`.
+ * @param[in]       aRadioTime      The radio time when the SFD was at the antenna.
+ * @param[in,out]   aRadioContext   The radio context accessible in ISR.
+ *
+ * @returns the error processing the callback. The caller should abort transmission on failures.
+ *
+ */
+otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioContext *aRadioContext);
+
+/**
+ * Process frame tx security.
+ *
+ * @param[in,out]   aFrame          The target frame. MUST NOT be `NULL`.
+ * @param[in,out]   aRadioContext   The radio context accessible in ISR.
+ *
+ * @retval OT_ERROR_NONE     Successfully processed security.
+ * @retval OT_ERROR_FAILED   Failed to processed security.
+ * @retval OT_ERROR_SECURITY Failed to processed security for missing key.
+ *
+ */
+otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *aRadioContext);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

@@ -37,15 +37,7 @@
 
 #include <openthread/platform/time.h>
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/num_utils.hpp"
-#include "common/random.hpp"
-#include "common/time.hpp"
 #include "instance/instance.hpp"
-#include "mac/mac_frame.hpp"
 
 namespace ot {
 namespace Mac {
@@ -473,11 +465,6 @@ void SubMac::BeginTransmit(void)
 
     SetState(kStateTransmit);
 
-    if (mPcapCallback.IsSet())
-    {
-        mPcapCallback.Invoke(&mTransmitFrame, true);
-    }
-
     error = Get<Radio>().Transmit(mTransmitFrame);
 
     if (error == kErrorInvalidState && mTransmitFrame.mInfo.mTxInfo.mTxDelay > 0)
@@ -497,6 +484,11 @@ exit:
 
 void SubMac::HandleTransmitStarted(TxFrame &aFrame)
 {
+    if (mPcapCallback.IsSet())
+    {
+        mPcapCallback.Invoke(&aFrame, true);
+    }
+
     if (ShouldHandleAckTimeout() && aFrame.GetAckRequest())
     {
         StartTimer(kAckTimeout);

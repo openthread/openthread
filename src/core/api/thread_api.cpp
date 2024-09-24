@@ -35,13 +35,7 @@
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
-#include <openthread/thread.h>
-
-#include "common/as_core_type.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/uptime.hpp"
-#include "thread/version.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -509,6 +503,18 @@ otError otThreadDetachGracefully(otInstance *aInstance, otDetachGracefullyCallba
 {
     return AsCoreType(aInstance).Get<Mle::MleRouter>().DetachGracefully(aCallback, aContext);
 }
+
+#if OPENTHREAD_CONFIG_DYNAMIC_STORE_FRAME_AHEAD_COUNTER_ENABLE
+void otThreadSetStoreFrameCounterAhead(otInstance *aInstance, uint32_t aStoreFrameCounterAhead)
+{
+    return AsCoreType(aInstance).Get<Mle::Mle>().SetStoreFrameCounterAhead(aStoreFrameCounterAhead);
+}
+
+uint32_t otThreadGetStoreFrameCounterAhead(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mle::Mle>().GetStoreFrameCounterAhead();
+}
+#endif
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 

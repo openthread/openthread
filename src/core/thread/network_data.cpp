@@ -33,17 +33,7 @@
 
 #include "network_data.hpp"
 
-#include "coap/coap_message.hpp"
-#include "common/array.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "instance/instance.hpp"
-#include "mac/mac_types.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/thread_tlvs.hpp"
-#include "thread/uri_paths.hpp"
 
 namespace ot {
 namespace NetworkData {

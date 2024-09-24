@@ -35,25 +35,9 @@
 
 #include <stdio.h>
 
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/locator_getters.hpp"
-#include "common/random.hpp"
-#include "common/string.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "instance/instance.hpp"
-#include "mac/mac_frame.hpp"
-#include "radio/radio.hpp"
-#include "thread/child.hpp"
-#include "thread/child_table.hpp"
-#include "thread/link_quality.hpp"
-#include "thread/mle_router.hpp"
-#include "thread/neighbor.hpp"
-#include "thread/thread_netif.hpp"
 
 namespace ot {
 namespace Mac {
@@ -1316,7 +1300,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
                 ProcessCsl(*aAckFrame, dstAddr);
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-                if (!mRxOnWhenIdle && aFrame.GetHeaderIe(CslIe::kHeaderIeId) != nullptr)
+                if (!mRxOnWhenIdle && aFrame.HasCslIe())
                 {
                     Get<DataPollSender>().ResetKeepAliveTimer();
                 }
@@ -2356,19 +2340,17 @@ bool Mac::IsCslSupported(void) const
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
 {
-    const uint8_t *cur;
-    Child         *child;
-    const CslIe   *csl;
+    Child       *child;
+    const CslIe *csl;
 
     VerifyOrExit(aFrame.IsVersion2015() && aFrame.GetSecurityEnabled());
 
-    cur = aFrame.GetHeaderIe(CslIe::kHeaderIeId);
-    VerifyOrExit(cur != nullptr);
+    csl = aFrame.GetCslIe();
+    VerifyOrExit(csl != nullptr);
 
     child = Get<ChildTable>().FindChild(aSrcAddr, Child::kInStateAnyExceptInvalid);
     VerifyOrExit(child != nullptr);
 
-    csl = reinterpret_cast<const CslIe *>(cur + sizeof(HeaderIe));
     VerifyOrExit(csl->GetPeriod() >= kMinCslIePeriod);
 
     child->SetCslPeriod(csl->GetPeriod());

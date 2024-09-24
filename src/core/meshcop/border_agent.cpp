@@ -35,19 +35,7 @@
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
-#include "coap/coap_message.hpp"
-#include "common/as_core_type.hpp"
-#include "common/heap.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/owned_ptr.hpp"
-#include "common/settings.hpp"
 #include "instance/instance.hpp"
-#include "meshcop/meshcop.hpp"
-#include "meshcop/meshcop_tlvs.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/thread_tlvs.hpp"
-#include "thread/uri_paths.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -269,35 +257,32 @@ BorderAgent::BorderAgent(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 Error BorderAgent::GetId(Id &aId)
 {
-    Error                   error = kErrorNone;
-    Settings::BorderAgentId id;
+    Error error = kErrorNone;
 
-    VerifyOrExit(!mIdInitialized, error = kErrorNone);
-
-    if (Get<Settings>().Read(id) != kErrorNone)
-    {
-        Random::NonCrypto::Fill(id.GetId());
-        SuccessOrExit(error = Get<Settings>().Save(id));
-    }
-
-    mId            = id.GetId();
-    mIdInitialized = true;
-
-exit:
-    if (error == kErrorNone)
+    if (mIdInitialized)
     {
         aId = mId;
+        ExitNow();
     }
+
+    if (Get<Settings>().Read<Settings::BorderAgentId>(mId) != kErrorNone)
+    {
+        Random::NonCrypto::Fill(mId);
+        SuccessOrExit(error = Get<Settings>().Save<Settings::BorderAgentId>(mId));
+    }
+
+    mIdInitialized = true;
+    aId            = mId;
+
+exit:
     return error;
 }
 
 Error BorderAgent::SetId(const Id &aId)
 {
-    Error                   error = kErrorNone;
-    Settings::BorderAgentId id;
+    Error error = kErrorNone;
 
-    id.SetId(aId);
-    SuccessOrExit(error = Get<Settings>().Save(id));
+    SuccessOrExit(error = Get<Settings>().Save<Settings::BorderAgentId>(aId));
     mId            = aId;
     mIdInitialized = true;
 

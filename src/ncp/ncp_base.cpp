@@ -317,6 +317,10 @@ NcpBase::NcpBase(Instance *aInstance)
     , mDidInitialUpdates(false)
     , mDatasetSendMgmtPendingSetResult(SPINEL_STATUS_OK)
     , mLogTimestampBase(0)
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE
+    , mInfraIfAddrCount(0)
+    , mInfraIfIndex(0)
+#endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     , mDiagOutput(nullptr)
     , mDiagOutputLen(0)

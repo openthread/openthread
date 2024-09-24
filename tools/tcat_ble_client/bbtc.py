@@ -96,15 +96,12 @@ async def main():
             quit_with_reason('TLS handshake failure')
 
     ds = ThreadDataset()
-    cli = CLI(ds, ble_sstream)
+    cli = CLI(ds, args, ble_sstream)
     loop = asyncio.get_running_loop()
     print('Enter \'help\' to see available commands' ' or \'exit\' to exit the application.')
     while True:
         user_input = await loop.run_in_executor(None, lambda: input('> '))
         if user_input.lower() == 'exit':
-            print('Disconnecting...')
-            if ble_sstream is not None:
-                await ble_sstream.close()
             break
         try:
             result: CommandResult = await cli.evaluate_input(user_input)
@@ -112,6 +109,10 @@ async def main():
                 result.pretty_print()
         except Exception as e:
             logger.error(e)
+
+    print('Disconnecting...')
+    if ble_sstream is not None:
+        await ble_sstream.close()
 
 
 async def get_device_by_args(args):

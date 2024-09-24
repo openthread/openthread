@@ -3661,7 +3661,7 @@ template <> otError Interpreter::Process<Cmd("deviceprops")>(Arg aArgs[])
     {
         otDeviceProperties props;
         bool               value;
-        uint8_t            index;
+        size_t             index;
 
         for (index = 0; index < OT_ARRAY_LENGTH(kPowerSupplyStrings); index++)
         {
@@ -7576,6 +7576,20 @@ template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
         {
             error = OT_ERROR_INVALID_ARGS;
         }
+    }
+    /**
+     * @cli trel port
+     * @code
+     * trel port
+     * 49153
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otTrelGetUdpPort
+     */
+    else if (aArgs[0] == "port")
+    {
+        OutputLine("%hu", otTrelGetUdpPort(GetInstancePtr()));
     }
     else
     {

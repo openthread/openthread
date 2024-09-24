@@ -42,24 +42,7 @@
 #include <openthread/platform/border_routing.h>
 #include <openthread/platform/infra_if.h>
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/num_utils.hpp"
-#include "common/numeric_limits.hpp"
-#include "common/random.hpp"
-#include "common/settings.hpp"
-#include "common/type_traits.hpp"
 #include "instance/instance.hpp"
-#include "meshcop/extended_panid.hpp"
-#include "net/ip6.hpp"
-#include "net/nat64_translator.hpp"
-#include "net/nd6.hpp"
-#include "thread/mle_router.hpp"
-#include "thread/network_data_leader.hpp"
-#include "thread/network_data_local.hpp"
-#include "thread/network_data_notifier.hpp"
 
 namespace ot {
 
@@ -602,16 +585,11 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
     }
 
     mRxRaTracker.SetHeaderFlagsOn(header);
+    header.SetSnacRouterFlag();
 
     SuccessOrExit(error = raMsg.AppendHeader(header));
 
-    LogInfo("- RA Header - flags - M:%u O:%u", header.IsManagedAddressConfigFlagSet(), header.IsOtherConfigFlagSet());
-    LogInfo("- RA Header - default route - lifetime:%u", header.GetRouterLifetime());
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE
-    SuccessOrExit(error = raMsg.AppendFlagsExtensionOption(/* aStubRouterFlag */ true));
-    LogInfo("- FlagsExt - StubRouter:1");
-#endif
+    LogRaHeader(header);
 
     // Append PIO for local on-link prefix if is either being
     // advertised or deprecated and for old prefix if is being
@@ -875,6 +853,13 @@ exit:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
+void RoutingManager::LogRaHeader(const RouterAdvert::Header &aRaHeader)
+{
+    LogInfo("- RA Header - flags - M:%u O:%u S:%u", aRaHeader.IsManagedAddressConfigFlagSet(),
+            aRaHeader.IsOtherConfigFlagSet(), aRaHeader.IsSnacRouterFlagSet());
+    LogInfo("- RA Header - default route - lifetime:%u", aRaHeader.GetRouterLifetime());
+}
+
 void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix &aPrefix,
                                          uint32_t           aValidLifetime,
                                          uint32_t           aPreferredLifetime)
@@ -906,6 +891,7 @@ const char *RoutingManager::RouterAdvOriginToString(RouterAdvOrigin aRaOrigin)
 
 #else
 
+void RoutingManager::LogRaHeader(const RouterAdvert::Header &) {}
 void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix &, uint32_t, uint32_t) {}
 void RoutingManager::LogRouteInfoOption(const Ip6::Prefix &, uint32_t, RoutePreference) {}
 
@@ -1206,10 +1192,6 @@ void RoutingManager::RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert:
             ProcessRouteInfoOption(static_cast<const RouteInfoOption &>(option), *router);
             break;
 
-        case Option::kTypeRaFlagsExtension:
-            ProcessRaFlagsExtOption(static_cast<const RaFlagsExtOption &>(option), *router);
-            break;
-
         default:
             break;
         }
@@ -1229,22 +1211,14 @@ void RoutingManager::RxRaTracker::ProcessRaHeader(const RouterAdvert::Header &aR
                                                   Router                     &aRouter,
                                                   RouterAdvOrigin             aRaOrigin)
 {
-    bool                managedFlag = aRaHeader.IsManagedAddressConfigFlagSet();
-    bool                otherFlag   = aRaHeader.IsOtherConfigFlagSet();
     Entry<RoutePrefix> *entry;
     Ip6::Prefix         prefix;
 
-    LogInfo("- RA Header - flags - M:%u O:%u", managedFlag, otherFlag);
+    LogRaHeader(aRaHeader);
 
-    if (aRouter.mManagedAddressConfigFlag != managedFlag)
-    {
-        aRouter.mManagedAddressConfigFlag = managedFlag;
-    }
-
-    if (aRouter.mOtherConfigFlag != otherFlag)
-    {
-        aRouter.mOtherConfigFlag = otherFlag;
-    }
+    aRouter.mManagedAddressConfigFlag = aRaHeader.IsManagedAddressConfigFlagSet();
+    aRouter.mOtherConfigFlag          = aRaHeader.IsOtherConfigFlagSet();
+    aRouter.mSnacRouterFlag           = aRaHeader.IsSnacRouterFlagSet();
 
     if (aRaOrigin == kThisBrOtherEntity)
     {
@@ -1416,17 +1390,6 @@ void RoutingManager::RxRaTracker::ProcessRouteInfoOption(const RouteInfoOption &
     }
 
     entry->SetDisregardFlag(disregard);
-
-exit:
-    return;
-}
-
-void RoutingManager::RxRaTracker::ProcessRaFlagsExtOption(const RaFlagsExtOption &aRaFlagsOption, Router &aRouter)
-{
-    VerifyOrExit(aRaFlagsOption.IsValid());
-    aRouter.mStubRouterFlag = aRaFlagsOption.IsStubRouterFlagSet();
-
-    LogInfo("- FlagsExt - StubRouter:%u", aRouter.mStubRouterFlag);
 
 exit:
     return;
@@ -2150,7 +2113,7 @@ void RoutingManager::RxRaTracker::Router::CopyInfoTo(RouterEntry &aEntry, TimeMi
     aEntry.mAge                      = aUptime - mDiscoverTime;
     aEntry.mManagedAddressConfigFlag = mManagedAddressConfigFlag;
     aEntry.mOtherConfigFlag          = mOtherConfigFlag;
-    aEntry.mStubRouterFlag           = mStubRouterFlag;
+    aEntry.mSnacRouterFlag           = mSnacRouterFlag;
     aEntry.mIsLocalDevice            = mIsLocalDevice;
     aEntry.mIsReachable              = IsReachable();
     aEntry.mIsPeerBr                 = IsPeerBr();
@@ -2168,7 +2131,7 @@ void RoutingManager::RxRaTracker::DecisionFactors::UpdateFlagsFrom(const Router 
     // stub router (e.g., another Thread BR) includes the `M` or `O`
     // flag, we also include the same flag.
 
-    VerifyOrExit(!aRouter.mStubRouterFlag);
+    VerifyOrExit(!aRouter.mSnacRouterFlag);
     VerifyOrExit(aRouter.IsReachable());
 
     if (aRouter.mManagedAddressConfigFlag)

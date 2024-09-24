@@ -625,8 +625,8 @@ class OtCli:
             if self.version != '1.1' and self.is_bbr:
                 if 'OT_CLI_PATH_BBR' in os.environ:
                     cmd = os.environ['OT_CLI_PATH_BBR']
-                elif 'top_builddir_1_3_bbr' in os.environ:
-                    srcdir = os.environ['top_builddir_1_3_bbr']
+                elif 'top_builddir_1_4_bbr' in os.environ:
+                    srcdir = os.environ['top_builddir_1_4_bbr']
                     cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             # Load Thread device of the testing environment version (may be 1.1 or 1.2)
@@ -692,13 +692,13 @@ class OtCli:
             # Load Thread 1.2 BBR device when testing Thread 1.2 scenarios
             # which requires device with Backbone functionality.
             if self.version != '1.1' and self.is_bbr:
-                if 'OT_NCP_PATH_1_3_BBR' in os.environ:
+                if 'OT_NCP_PATH_1_4_BBR' in os.environ:
                     cmd = 'spinel-cli.py -p "%s%s" -n' % (
-                        os.environ['OT_NCP_PATH_1_3_BBR'],
+                        os.environ['OT_NCP_PATH_1_4_BBR'],
                         args,
                     )
-                elif 'top_builddir_1_3_bbr' in os.environ:
-                    srcdir = os.environ['top_builddir_1_3_bbr']
+                elif 'top_builddir_1_4_bbr' in os.environ:
+                    srcdir = os.environ['top_builddir_1_4_bbr']
                     cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
                     cmd = 'spinel-cli.py -p "%s%s" -n' % (
                         cmd,
@@ -1450,6 +1450,11 @@ class NodeImpl:
         cmd = 'trel counters reset'
         self.send_command(cmd)
         self._expect_done()
+
+    def get_trel_port(self):
+        cmd = 'trel port'
+        self.send_command(cmd)
+        return int(self._expect_command_output()[0])
 
     def set_epskc(self, keystring: str, timeout=120000, port=0):
         cmd = 'ba ephemeralkey set ' + keystring + ' ' + str(timeout) + ' ' + str(port)
@@ -2281,8 +2286,8 @@ class NodeImpl:
 
     def get_br_routers(self) -> List[str]:
         # Example output of `br routers` command:
-        #   fe80:0:0:0:42:acff:fe14:3 (M:0 O:0 Stub:1) ms-since-rx:144160 reachable:yes age:00:17:36 (peer BR)
-        #   fe80:0:0:0:42:acff:fe14:2 (M:0 O:0 Stub:1) ms-since-rx:45179 reachable:yes age:00:17:36
+        #   fe80:0:0:0:42:acff:fe14:3 (M:0 O:0 S:1) ms-since-rx:144160 reachable:yes age:00:17:36 (peer BR)
+        #   fe80:0:0:0:42:acff:fe14:2 (M:0 O:0 S:1) ms-since-rx:45179 reachable:yes age:00:17:36
         #   Done
         self.send_command('br routers')
         return self._expect_command_output()

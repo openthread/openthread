@@ -39,12 +39,20 @@ set(COMMON_SOURCES
     ncp_base_radio.cpp
     ncp_spi.cpp
     ncp_hdlc.cpp
+    platform/infra_if.cpp
 )
 
 set(OT_NCP_VENDOR_HOOK_SOURCE "" CACHE STRING "set vendor hook source file for NCP")
 if(OT_NCP_VENDOR_HOOK_SOURCE)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=1")
     list(APPEND COMMON_SOURCES ${OT_NCP_VENDOR_HOOK_SOURCE_DIR}${OT_NCP_VENDOR_HOOK_SOURCE})
+endif()
+
+option(OT_NCP_INFRA_IF "enable NCP Infra If support")
+if (OT_NCP_INFRA_IF)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE=1")
+else()
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE=0")
 endif()
 
 set(COMMON_NCP_SOURCES

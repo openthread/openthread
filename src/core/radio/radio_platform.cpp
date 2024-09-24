@@ -34,10 +34,7 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
 #include "instance/instance.hpp"
-#include "radio/radio.hpp"
 
 using namespace ot;
 
@@ -189,38 +186,38 @@ extern "C" void otPlatDiagRadioTransmitDone(otInstance *, otRadioFrame *, otErro
 //---------------------------------------------------------------------------------------------------------------------
 // Default/weak implementation of radio platform APIs
 
-OT_TOOL_WEAK uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance)
+extern "C" OT_TOOL_WEAK uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
     return Radio::kSupportedChannels;
 }
 
-OT_TOOL_WEAK uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance)
+extern "C" OT_TOOL_WEAK uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance)
 {
     return otPlatRadioGetSupportedChannelMask(aInstance);
 }
 
-OT_TOOL_WEAK const char *otPlatRadioGetVersionString(otInstance *aInstance)
+extern "C" OT_TOOL_WEAK const char *otPlatRadioGetVersionString(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return otGetVersionString();
 }
 
-OT_TOOL_WEAK otRadioState otPlatRadioGetState(otInstance *aInstance)
+extern "C" OT_TOOL_WEAK otRadioState otPlatRadioGetState(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
     return OT_RADIO_STATE_INVALID;
 }
 
-OT_TOOL_WEAK void otPlatRadioSetMacKey(otInstance             *aInstance,
-                                       uint8_t                 aKeyIdMode,
-                                       uint8_t                 aKeyId,
-                                       const otMacKeyMaterial *aPrevKey,
-                                       const otMacKeyMaterial *aCurrKey,
-                                       const otMacKeyMaterial *aNextKey,
-                                       otRadioKeyType          aKeyType)
+extern "C" OT_TOOL_WEAK void otPlatRadioSetMacKey(otInstance             *aInstance,
+                                                  uint8_t                 aKeyIdMode,
+                                                  uint8_t                 aKeyId,
+                                                  const otMacKeyMaterial *aPrevKey,
+                                                  const otMacKeyMaterial *aCurrKey,
+                                                  const otMacKeyMaterial *aNextKey,
+                                                  otRadioKeyType          aKeyType)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aKeyIdMode);
@@ -231,13 +228,13 @@ OT_TOOL_WEAK void otPlatRadioSetMacKey(otInstance             *aInstance,
     OT_UNUSED_VARIABLE(aKeyType);
 }
 
-OT_TOOL_WEAK void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
+extern "C" OT_TOOL_WEAK void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aMacFrameCounter);
 }
 
-OT_TOOL_WEAK void otPlatRadioSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMacFrameCounter)
+extern "C" OT_TOOL_WEAK void otPlatRadioSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMacFrameCounter)
 {
     // Radio platforms that support `OT_RADIO_CAPS_TRANSMIT_SEC` should
     // provide this radio platform function.
@@ -259,23 +256,23 @@ OT_TOOL_WEAK void otPlatRadioSetMacFrameCounterIfLarger(otInstance *aInstance, u
     otPlatRadioSetMacFrameCounter(aInstance, aMacFrameCounter);
 }
 
-OT_TOOL_WEAK uint64_t otPlatTimeGet(void) { return UINT64_MAX; }
+extern "C" OT_TOOL_WEAK uint64_t otPlatTimeGet(void) { return UINT64_MAX; }
 
-OT_TOOL_WEAK uint64_t otPlatRadioGetNow(otInstance *aInstance)
+extern "C" OT_TOOL_WEAK uint64_t otPlatRadioGetNow(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
     return otPlatTimeGet();
 }
 
-OT_TOOL_WEAK uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance)
+extern "C" OT_TOOL_WEAK uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
     return 0;
 }
 
-OT_TOOL_WEAK uint32_t otPlatRadioGetBusLatency(otInstance *aInstance)
+extern "C" OT_TOOL_WEAK uint32_t otPlatRadioGetBusLatency(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -283,27 +280,27 @@ OT_TOOL_WEAK uint32_t otPlatRadioGetBusLatency(otInstance *aInstance)
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-OT_TOOL_WEAK otError otPlatRadioResetCsl(otInstance *aInstance)
+extern "C" OT_TOOL_WEAK otError otPlatRadioResetCsl(otInstance *aInstance)
 {
     return otPlatRadioEnableCsl(aInstance, 0, Mac::kShortAddrInvalid, nullptr);
 }
 #endif
 
-OT_TOOL_WEAK uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
+extern "C" OT_TOOL_WEAK uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
     return NumericLimits<uint8_t>::kMax;
 }
 
-OT_TOOL_WEAK uint8_t otPlatRadioGetCslUncertainty(otInstance *aInstance)
+extern "C" OT_TOOL_WEAK uint8_t otPlatRadioGetCslUncertainty(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
     return NumericLimits<uint8_t>::kMax;
 }
 
-OT_TOOL_WEAK otError otPlatRadioGetFemLnaGain(otInstance *aInstance, int8_t *aGain)
+extern "C" OT_TOOL_WEAK otError otPlatRadioGetFemLnaGain(otInstance *aInstance, int8_t *aGain)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aGain);
@@ -311,7 +308,7 @@ OT_TOOL_WEAK otError otPlatRadioGetFemLnaGain(otInstance *aInstance, int8_t *aGa
     return kErrorNotImplemented;
 }
 
-OT_TOOL_WEAK otError otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGain)
+extern "C" OT_TOOL_WEAK otError otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGain)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aGain);
@@ -319,7 +316,9 @@ OT_TOOL_WEAK otError otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGai
     return kErrorNotImplemented;
 }
 
-OT_TOOL_WEAK otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower)
+extern "C" OT_TOOL_WEAK otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance,
+                                                                      uint8_t     aChannel,
+                                                                      int8_t      aMaxPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aChannel);
@@ -328,7 +327,7 @@ OT_TOOL_WEAK otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance
     return kErrorNotImplemented;
 }
 
-OT_TOOL_WEAK otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
+extern "C" OT_TOOL_WEAK otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aRegionCode);
@@ -336,7 +335,7 @@ OT_TOOL_WEAK otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegio
     return kErrorNotImplemented;
 }
 
-OT_TOOL_WEAK otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
+extern "C" OT_TOOL_WEAK otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aRegionCode);
@@ -344,7 +343,10 @@ OT_TOOL_WEAK otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegi
     return kErrorNotImplemented;
 }
 
-OT_TOOL_WEAK otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
+extern "C" OT_TOOL_WEAK otError otPlatRadioReceiveAt(otInstance *aInstance,
+                                                     uint8_t     aChannel,
+                                                     uint32_t    aStart,
+                                                     uint32_t    aDuration)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aChannel);
@@ -354,7 +356,7 @@ OT_TOOL_WEAK otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChanne
     return kErrorNotImplemented;
 }
 
-OT_TOOL_WEAK void otPlatRadioSetRxOnWhenIdle(otInstance *aInstance, bool aEnable)
+extern "C" OT_TOOL_WEAK void otPlatRadioSetRxOnWhenIdle(otInstance *aInstance, bool aEnable)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aEnable);

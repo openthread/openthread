@@ -37,8 +37,6 @@
 
 #include <openthread/trel.h>
 
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
 #include "instance/instance.hpp"
 
 using namespace ot;
@@ -81,5 +79,7 @@ const otTrelCounters *otTrelGetCounters(otInstance *aInstance)
 }
 
 void otTrelResetCounters(otInstance *aInstance) { AsCoreType(aInstance).Get<Trel::Interface>().ResetCounters(); }
+
+uint16_t otTrelGetUdpPort(otInstance *aInstance) { return AsCoreType(aInstance).Get<Trel::Interface>().GetUdpPort(); }
 
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

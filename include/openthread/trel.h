@@ -39,7 +39,7 @@
 #include <openthread/dataset.h>
 #include <openthread/ip6.h>
 #include <openthread/platform/radio.h>
-#include "openthread/platform/trel.h"
+#include <openthread/platform/trel.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -183,6 +183,16 @@ const otTrelCounters *otTrelGetCounters(otInstance *aInstance);
  *
  */
 void otTrelResetCounters(otInstance *aInstance);
+
+/**
+ * Gets the UDP port of the TREL interface.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns UDP port of the TREL interface.
+ *
+ */
+uint16_t otTrelGetUdpPort(otInstance *aInstance);
 
 /**
  * @}

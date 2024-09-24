@@ -59,7 +59,7 @@
 #include <openthread/server.h>
 #endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-#include "openthread/backbone_router.h"
+#include <openthread/backbone_router.h>
 #endif
 #if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
 #include <openthread/srp_client_buffers.h>
@@ -4600,11 +4600,17 @@ void NcpBase::HandlePcapFrame(const otRadioFrame *aFrame, bool aIsTx)
     SuccessOrExit(mEncoder.WriteData(aFrame->mPsdu, aFrame->mLength));
 
     // Append metadata (rssi, etc)
-    SuccessOrExit(mEncoder.WriteInt8(aFrame->mInfo.mRxInfo.mRssi)); // RSSI
-    SuccessOrExit(mEncoder.WriteInt8(-128));                        // Noise floor (Currently unused)
-    SuccessOrExit(mEncoder.WriteUint16(flags));                     // Flags
+    SuccessOrExit(
+        mEncoder.WriteInt8((aIsTx ? static_cast<int8_t>(OT_RADIO_RSSI_INVALID) : aFrame->mInfo.mRxInfo.mRssi))); // RSSI
+    SuccessOrExit(mEncoder.WriteInt8(-128));    // Noise floor (Currently unused)
+    SuccessOrExit(mEncoder.WriteUint16(flags)); // Flags
 
-    SuccessOrExit(mEncoder.OpenStruct()); // PHY-data
+    SuccessOrExit(mEncoder.OpenStruct());                 // PHY-data
+    SuccessOrExit(mEncoder.WriteUint8(aFrame->mChannel)); // Channel
+    SuccessOrExit(
+        mEncoder.WriteUint8(aIsTx ? static_cast<uint8_t>(OT_RADIO_LQI_NONE) : aFrame->mInfo.mRxInfo.mLqi)); // LQI
+    SuccessOrExit(
+        mEncoder.WriteUint64(aIsTx ? aFrame->mInfo.mTxInfo.mTimestamp : aFrame->mInfo.mRxInfo.mTimestamp)); // Timestamp
     // Empty for now
     SuccessOrExit(mEncoder.CloseStruct());
 

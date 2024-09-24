@@ -181,7 +181,7 @@ class PingCommand(Command):
         data = TLV(TcatTLVType.PING.value, to_send).to_bytes()
         elapsed_time = time()
         response = await bless.send_with_resp(data)
-        elapsed_time = time() - elapsed_time
+        elapsed_time = 1e3 * (time() - elapsed_time)
         if not response:
             return
 
@@ -189,7 +189,7 @@ class PingCommand(Command):
         if tlv_response.value != to_send:
             print("Received malformed response.")
 
-        print(f"Roundtrip time {elapsed_time} s.")
+        print(f"Roundtrip time: {elapsed_time} ms")
 
         return CommandResultTLV(tlv_response)
 
@@ -251,13 +251,16 @@ class ScanCommand(Command):
         print(f'Connecting to {device}')
         ble_stream = await BleStream.create(device.address, BBTC_SERVICE_UUID, BBTC_TX_CHAR_UUID, BBTC_RX_CHAR_UUID)
         ble_sstream = BleStreamSecure(ble_stream)
+        cert_path = context['cmd_args'].cert_path if context['cmd_args'] else 'auth'
         ble_sstream.load_cert(
-            certfile=path.join('auth', 'commissioner_cert.pem'),
-            keyfile=path.join('auth', 'commissioner_key.pem'),
-            cafile=path.join('auth', 'ca_cert.pem'),
+            certfile=path.join(cert_path, 'commissioner_cert.pem'),
+            keyfile=path.join(cert_path, 'commissioner_key.pem'),
+            cafile=path.join(cert_path, 'ca_cert.pem'),
         )
-
         print('Setting up secure channel...')
-        await ble_sstream.do_handshake()
-        print('Done')
-        context['ble_sstream'] = ble_sstream
+        if await ble_sstream.do_handshake():
+            print('Done')
+            context['ble_sstream'] = ble_sstream
+        else:
+            print('Secure channel not established.')
+            await ble_stream.disconnect()

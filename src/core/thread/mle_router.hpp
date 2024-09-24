@@ -607,11 +607,11 @@ private:
     void  HandleLinkAccept(RxInfo &aRxInfo);
     Error HandleLinkAccept(RxInfo &aRxInfo, bool aRequest);
     void  HandleLinkAcceptAndRequest(RxInfo &aRxInfo);
-    Error HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, const LeaderData &aLeaderData);
+    Error HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, const LeaderData &aLeaderData);
     void  HandleParentRequest(RxInfo &aRxInfo);
     void  HandleChildIdRequest(RxInfo &aRxInfo);
-    void  HandleChildUpdateRequest(RxInfo &aRxInfo);
-    void  HandleChildUpdateResponse(RxInfo &aRxInfo);
+    void  HandleChildUpdateRequestOnParent(RxInfo &aRxInfo);
+    void  HandleChildUpdateResponseOnParent(RxInfo &aRxInfo);
     void  HandleDataRequest(RxInfo &aRxInfo);
     void  HandleNetworkDataUpdateRouter(void);
     void  HandleDiscoveryRequest(RxInfo &aRxInfo);
@@ -620,7 +620,7 @@ private:
     static bool IsMessageChildUpdateRequest(const Message &aMessage);
 
     Error ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo);
-    Error ReadAndProcessRouteTlvOnFed(RxInfo &aRxInfo, uint8_t aParentId);
+    Error ReadAndProcessRouteTlvOnFtdChild(RxInfo &aRxInfo, uint8_t aParentId);
 
     void     StopAdvertiseTrickleTimer(void);
     uint32_t DetermineAdvertiseIntervalMax(void) const;

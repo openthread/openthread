@@ -33,14 +33,7 @@
 
 #include "ip6_mpl.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/message.hpp"
-#include "common/random.hpp"
-#include "common/serial_number.hpp"
 #include "instance/instance.hpp"
-#include "net/ip6.hpp"
 
 namespace ot {
 namespace Ip6 {
