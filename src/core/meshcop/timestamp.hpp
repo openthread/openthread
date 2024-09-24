@@ -36,13 +36,11 @@
 
 #include "openthread-core-config.h"
 
-#include <string.h>
-
 #include <openthread/dataset.h>
-#include <openthread/platform/toolchain.h>
 
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
+#include "common/error.hpp"
 #include "common/random.hpp"
 
 namespace ot {

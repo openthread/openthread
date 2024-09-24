@@ -36,9 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <stdbool.h>
-#include <stdint.h>
-
 #include <openthread/heap.h>
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 #include <openthread/platform/memory.h>

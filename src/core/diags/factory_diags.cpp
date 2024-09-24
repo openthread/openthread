@@ -35,9 +35,6 @@
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>

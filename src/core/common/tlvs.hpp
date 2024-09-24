@@ -37,7 +37,6 @@
 #include "openthread-core-config.h"
 
 #include <openthread/thread.h>
-#include <openthread/platform/toolchain.h>
 
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"

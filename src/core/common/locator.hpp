@@ -38,8 +38,6 @@
 
 #include <openthread/platform/toolchain.h>
 
-#include <stdint.h>
-
 namespace ot {
 
 class Instance;

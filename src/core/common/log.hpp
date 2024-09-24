@@ -38,7 +38,6 @@
 
 #include <openthread/logging.h>
 #include <openthread/platform/logging.h>
-#include <openthread/platform/toolchain.h>
 
 #include "common/error.hpp"
 

@@ -34,8 +34,6 @@
 #ifndef CODE_UTILS_HPP_
 #define CODE_UTILS_HPP_
 
-#include <stdbool.h>
-
 #include <openthread/error.h>
 
 #include "common/arg_macros.hpp"

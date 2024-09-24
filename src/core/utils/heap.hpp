@@ -38,8 +38,7 @@
 
 #if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
-#include <stddef.h>
-#include <stdint.h>
+#include <openthread/platform/toolchain.h>
 
 #include "common/const_cast.hpp"
 #include "common/non_copyable.hpp"

@@ -34,8 +34,6 @@
 #include "string.hpp"
 #include "debug.hpp"
 
-#include <string.h>
-
 namespace ot {
 
 namespace {

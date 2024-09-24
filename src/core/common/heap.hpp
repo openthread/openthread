@@ -36,8 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#include <stddef.h>
-#include <string.h>
+#include <openthread/platform/toolchain.h>
 
 namespace ot {
 namespace Heap {

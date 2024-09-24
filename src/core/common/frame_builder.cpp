@@ -33,8 +33,6 @@
 
 #include "frame_builder.hpp"
 
-#include <string.h>
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"

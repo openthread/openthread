@@ -36,9 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <stdint.h>
-#include <stdio.h>
-
 #include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/error.hpp"

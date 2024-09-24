@@ -38,8 +38,6 @@
 
 #include <openthread/error.h>
 
-#include <stdint.h>
-
 namespace ot {
 
 /**

@@ -36,9 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <stddef.h>
-#include <stdint.h>
-
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 

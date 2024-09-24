@@ -33,8 +33,6 @@
 
 #include "sub_mac.hpp"
 
-#include <stdio.h>
-
 #include <openthread/platform/time.h>
 
 #include "instance/instance.hpp"

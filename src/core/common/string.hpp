@@ -36,10 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-
 #include "common/binary_search.hpp"
 #include "common/code_utils.hpp"
 #include "common/error.hpp"

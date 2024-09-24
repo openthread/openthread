@@ -38,8 +38,6 @@
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
-#include <string.h>
-
 #include <openthread/diag.h>
 #include <openthread/platform/radio.h>
 

@@ -36,8 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#include <ctype.h>
-#include <stdio.h>
+#include <openthread/platform/toolchain.h>
 
 #if OPENTHREAD_CONFIG_ASSERT_ENABLE
 

@@ -38,8 +38,6 @@
 
 #if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 
-#include <stdint.h>
-
 #include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"

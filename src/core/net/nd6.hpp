@@ -38,10 +38,7 @@
 
 #include "openthread-core-config.h"
 
-#include <stdint.h>
-
 #include <openthread/netdata.h>
-#include <openthread/platform/toolchain.h>
 
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"

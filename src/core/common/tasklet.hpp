@@ -36,9 +36,8 @@
 
 #include "openthread-core-config.h"
 
-#include <stdio.h>
-
 #include <openthread/tasklet.h>
+#include <openthread/platform/toolchain.h>
 
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"

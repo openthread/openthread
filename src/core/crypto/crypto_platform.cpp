@@ -32,8 +32,6 @@
 
 #include "openthread-core-config.h"
 
-#include <string.h>
-
 #include <mbedtls/aes.h>
 #include <mbedtls/cmac.h>
 #include <mbedtls/ctr_drbg.h>

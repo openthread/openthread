@@ -36,8 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#include <stddef.h>
-#include <stdint.h>
+#include <openthread/platform/toolchain.h>
 
 #include "common/equatable.hpp"
 #include "common/serial_number.hpp"

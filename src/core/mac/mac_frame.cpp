@@ -33,8 +33,6 @@
 
 #include "mac_frame.hpp"
 
-#include <stdio.h>
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/frame_builder.hpp"

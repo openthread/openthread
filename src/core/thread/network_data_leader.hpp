@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <stdint.h>
-
 #include "coap/coap.hpp"
 #include "common/const_cast.hpp"
 #include "common/non_copyable.hpp"

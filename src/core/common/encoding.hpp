@@ -45,7 +45,7 @@
 #endif
 #endif
 
-#include <stdint.h>
+#include <openthread/platform/toolchain.h>
 
 namespace ot {
 

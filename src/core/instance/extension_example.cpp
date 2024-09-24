@@ -33,9 +33,6 @@
 
 #include "openthread-core-config.h"
 
-#include <stdbool.h>
-#include <stdint.h>
-
 #include "common/code_utils.hpp"
 #include "common/new.hpp"
 #include "instance/extension.hpp"

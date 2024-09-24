@@ -35,7 +35,7 @@
 
 #if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
-#include <string.h>
+#include <openthread/platform/toolchain.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"

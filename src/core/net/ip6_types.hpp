@@ -36,9 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <stddef.h>
-#include <stdint.h>
-
 namespace ot {
 namespace Ip6 {
 

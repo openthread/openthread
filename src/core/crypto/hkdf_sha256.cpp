@@ -33,8 +33,6 @@
 
 #include "hkdf_sha256.hpp"
 
-#include <string.h>
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/error.hpp"

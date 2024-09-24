@@ -38,8 +38,6 @@
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
-#include <stdint.h>
-
 #include "common/as_core_type.hpp"
 #include "common/const_cast.hpp"
 #include "common/non_copyable.hpp"

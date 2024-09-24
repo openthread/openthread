@@ -34,9 +34,6 @@
 #ifndef PARSE_CMD_LINE_HPP_
 #define PARSE_CMD_LINE_HPP_
 
-#include <stdint.h>
-#include <string.h>
-
 #include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>

@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <stdint.h>
-
 #include "common/numeric_limits.hpp"
 #include "common/type_traits.hpp"
 

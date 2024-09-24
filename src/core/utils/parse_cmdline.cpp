@@ -33,8 +33,6 @@
 
 #include "parse_cmdline.hpp"
 
-#include <string.h>
-
 #include "common/code_utils.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/string.hpp"

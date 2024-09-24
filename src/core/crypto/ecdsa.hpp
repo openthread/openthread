@@ -38,9 +38,6 @@
 
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
 
-#include <stdint.h>
-#include <stdlib.h>
-
 #include <openthread/crypto.h>
 #include <openthread/platform/crypto.h>
 

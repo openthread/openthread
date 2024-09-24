@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <stddef.h>
-
 #include <openthread/ip6.h>
 #include <openthread/nat64.h>
 #include <openthread/udp.h>

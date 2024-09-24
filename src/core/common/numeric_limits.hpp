@@ -34,7 +34,7 @@
 #ifndef NUMERIC_LIMITS_HPP_
 #define NUMERIC_LIMITS_HPP_
 
-#include <stdint.h>
+#include <openthread/platform/toolchain.h>
 
 namespace ot {
 

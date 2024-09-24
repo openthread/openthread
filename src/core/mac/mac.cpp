@@ -33,8 +33,6 @@
 
 #include "mac.hpp"
 
-#include <stdio.h>
-
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "instance/instance.hpp"

@@ -33,8 +33,6 @@
 
 #include "log.hpp"
 
-#include <ctype.h>
-
 #include <openthread/platform/logging.h>
 
 #include "common/code_utils.hpp"

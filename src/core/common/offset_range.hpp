@@ -36,9 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <stdbool.h>
-#include <stdint.h>
-
 #include "common/clearable.hpp"
 
 namespace ot {

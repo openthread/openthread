@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <stdint.h>
-
 #include <openthread/message.h>
 #include <openthread/nat64.h>
 #include <openthread/platform/messagepool.h>

@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <stddef.h>
-
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"

@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <stdint.h>
-
 #include "common/message.hpp"
 #include "net/ip4_types.hpp"
 #include "net/ip6_address.hpp"

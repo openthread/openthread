@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <stdio.h>
-
 #include "common/const_cast.hpp"
 #include "common/error.hpp"
 #include "common/iterator_utils.hpp"

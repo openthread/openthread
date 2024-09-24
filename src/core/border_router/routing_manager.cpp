@@ -35,8 +35,6 @@
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#include <string.h>
-
 #include <openthread/border_router.h>
 #include <openthread/platform/border_routing.h>
 #include <openthread/platform/infra_if.h>

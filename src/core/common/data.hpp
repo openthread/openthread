@@ -36,9 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <stdint.h>
-#include <string.h>
-
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/const_cast.hpp"

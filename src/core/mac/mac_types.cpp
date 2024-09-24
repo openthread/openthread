@@ -33,8 +33,6 @@
 
 #include "mac_types.hpp"
 
-#include <stdio.h>
-
 #include "common/code_utils.hpp"
 #include "common/random.hpp"
 #include "common/string.hpp"

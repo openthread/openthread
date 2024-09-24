@@ -36,9 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <stdint.h>
-#include <string.h>
-
 #include <openthread/link.h>
 #include <openthread/thread.h>
 

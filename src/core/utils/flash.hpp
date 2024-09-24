@@ -33,11 +33,6 @@
 
 #if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
 
-#include <stdint.h>
-#include <string.h>
-
-#include <openthread/platform/toolchain.h>
-
 #include "common/debug.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
