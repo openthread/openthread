@@ -201,6 +201,7 @@ void NcpBase::LinkRawTransmitDone(uint8_t aIid, otRadioFrame *aFrame, otRadioFra
 
             SuccessOrExit(mEncoder.WriteUint8(keyId));
             SuccessOrExit(mEncoder.WriteUint32(frameCounter));
+            SuccessOrExit(mEncoder.WriteUint64(aFrame->mInfo.mTxInfo.mTimestamp));
         }
 
         SuccessOrExit(mEncoder.EndFrame());
@@ -457,6 +458,7 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     aFrame.mInfo.mTxInfo.mIsSecurityProcessed  = false;
     aFrame.mInfo.mTxInfo.mTxDelay              = 0;
     aFrame.mInfo.mTxInfo.mTxDelayBaseTime      = 0;
+    aFrame.mInfo.mTxInfo.mTimestamp            = 0;
 
     // All the next parameters are optional. Note that even if the
     // decoder fails to parse any of optional parameters we still want to
