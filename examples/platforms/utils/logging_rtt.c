@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file implements the OpenThread platform abstraction for logging.
- *
  */
 
 #include <openthread-core-config.h>

@@ -62,7 +62,6 @@ namespace ot {
 
 /**
  * Implements the EID-to-RLOC mapping and caching.
- *
  */
 class AddressResolver : public InstanceLocator, private NonCopyable
 {
@@ -75,7 +74,6 @@ class AddressResolver : public InstanceLocator, private NonCopyable
 public:
     /**
      * Represents an iterator used for iterating through the EID cache table entries.
-     *
      */
     class Iterator : public otCacheEntryIterator, public Clearable<Iterator>
     {
@@ -92,7 +90,6 @@ public:
 
     /**
      * Represents an EID cache entry.
-     *
      */
     class EntryInfo : public otCacheEntryInfo, public Clearable<EntryInfo>
     {
@@ -108,14 +105,12 @@ public:
 
     /**
      * Initializes the object.
-     *
      */
     explicit AddressResolver(Instance &aInstance);
 
 #if OPENTHREAD_FTD
     /**
      * Clears the EID-to-RLOC cache.
-     *
      */
     void Clear(void);
 
@@ -129,7 +124,6 @@ public:
      *
      * @retval kErrorNone      Successfully populated @p aInfo with the info for the next EID cache entry.
      * @retval kErrorNotFound  No more entries in the address cache table.
-     *
      */
     Error GetNextCacheEntry(EntryInfo &aInfo, Iterator &aIterator) const;
 
@@ -137,7 +131,6 @@ public:
      * Removes the EID-to-RLOC cache entries corresponding to an RLOC16.
      *
      * @param[in]  aRloc16  The RLOC16 address.
-     *
      */
     void RemoveEntriesForRloc16(uint16_t aRloc16);
 
@@ -145,7 +138,6 @@ public:
      * Removes all EID-to-RLOC cache entries associated with a Router ID.
      *
      * @param[in]  aRouterId  The Router ID.
-     *
      */
     void RemoveEntriesForRouterId(uint8_t aRouterId);
 
@@ -153,7 +145,6 @@ public:
      * Removes the cache entry for the EID.
      *
      * @param[in]  aEid               A reference to the EID.
-     *
      */
     void RemoveEntryForAddress(const Ip6::Address &aEid);
 
@@ -162,7 +153,6 @@ public:
      *
      * @param[in] aOldRloc16    The old RLOC16.
      * @param[in] aNewRloc16    The new RLOC16.
-     *
      */
     void ReplaceEntriesForRloc16(uint16_t aOldRloc16, uint16_t aNewRloc16);
 
@@ -175,7 +165,6 @@ public:
      * @param[in] aEid             A reference to the EID.
      * @param[in] aRloc16          The RLOC16 corresponding to @p aEid.
      * @param[in] aDest            The short MAC address destination of the received snooped message.
-     *
      */
     void UpdateSnoopedCacheEntry(const Ip6::Address &aEid, uint16_t aRloc16, uint16_t aDest);
 
@@ -189,7 +178,6 @@ public:
      * @retval kErrorAddressQuery   Initiated an Address Query if allowed.
      * @retval kErrorDrop           Earlier Address Query for the EID timed out. In retry timeout interval.
      * @retval kErrorNoBufs         Insufficient buffer space available to send Address Query.
-     *
      */
     Error Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
     {
@@ -205,7 +193,6 @@ public:
      * @param[in]   aEid   A reference to the EID to lookup.
      *
      * @returns The RLOC16 mapping to @p aEid or `Mle::kInvalidRloc16` if it is not found in the address cache.
-     *
      */
     uint16_t LookUp(const Ip6::Address &aEid);
 
@@ -213,7 +200,6 @@ public:
      * Restarts any ongoing address queries.
      *
      * Any existing address queries will be restarted as if they are being sent for the first time.
-     *
      */
     void RestartAddressQueries(void);
 
@@ -225,7 +211,6 @@ public:
      * @param[in]  aLastTransactionTimeTlv  A pointer to the Last Transaction Time if the ADDR_NTF.ans message contains
      *                                      a Last Transaction Time TLV.
      * @param[in]  aDestination             The destination to send the ADDR_NTF.ans message.
-     *
      */
     void SendAddressQueryResponse(const Ip6::Address             &aTarget,
                                   const Ip6::InterfaceIdentifier &aMeshLocalIid,
@@ -238,7 +223,6 @@ public:
      * @param aTarget        The target address of the ADDR_ERR.ntf message.
      * @param aMeshLocalIid  The ML-IID of the ADDR_ERR.ntf message.
      * @param aDestination   The destination to send the ADDR_ERR.ntf message.
-     *
      */
     void SendAddressError(const Ip6::Address             &aTarget,
                           const Ip6::InterfaceIdentifier &aMeshLocalIid,

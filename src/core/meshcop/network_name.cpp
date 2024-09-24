@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file implements Network Name management.
- *
  */
 
 #include "network_name.hpp"

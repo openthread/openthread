@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes compile-time configurations for ping sender module.
- *
  */
 
 #ifndef CONFIG_PING_SENDER_H_
@@ -42,7 +41,6 @@
  *   This module includes configuration variables for Ping Sender.
  *
  * @{
- *
  */
 
 /**
@@ -51,7 +49,6 @@
  * Define to 1 to enable ping sender module.
  *
  * Ping sender module implements sending ICMPv6 Echo Request messages and processing ICMPv6 Echo Reply messages.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 #define OPENTHREAD_CONFIG_PING_SENDER_ENABLE 0
@@ -61,7 +58,6 @@
  * @def OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_INTERVAL
  *
  * Specifies the default ping interval (time between sending echo requests) in milliseconds.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_INTERVAL
 #define OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_INTERVAL 1000
@@ -72,7 +68,6 @@
  *
  * Specifies the default ping timeout in milliseconds. The timeout is the max acceptable time gap between each ping
  * request and its reply.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_TIMEOUT
 #define OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_TIMEOUT 3000
@@ -83,7 +78,6 @@
  *
  * Specifies the default ping data size in bytes. The data size specifies the Echo Request data payload which excludes
  * the IPv6 and ICMPv6 headers.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_SIZE
 #define OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_SIZE 8
@@ -93,7 +87,6 @@
  * @def OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_COUNT
  *
  * Specifies the default ping count (number of ping messages to send).
- *
  */
 #ifndef OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_COUNT
 #define OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_COUNT 1
@@ -101,7 +94,6 @@
 
 /**
  * @}
- *
  */
 
 #endif // CONFIG_PING_SENDER_H_

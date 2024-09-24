@@ -51,7 +51,6 @@ extern "C" {
  *   This module includes the platform abstraction for SPI slave communication.
  *
  * @{
- *
  */
 
 /**
@@ -92,7 +91,6 @@ typedef bool (*otPlatSpiSlaveTransactionCompleteCallback)(void    *aContext,
  * callback MUST be called from the same OS context as any other OpenThread API/callback.
  *
  * @param[in] aContext           Context pointer passed into `otPlatSpiSlaveEnable()`.
- *
  */
 typedef void (*otPlatSpiSlaveTransactionProcessCallback)(void *aContext);
 
@@ -111,7 +109,6 @@ typedef void (*otPlatSpiSlaveTransactionProcessCallback)(void *aContext);
  * @retval OT_ERROR_NONE     Successfully enabled the SPI Slave interface.
  * @retval OT_ERROR_ALREADY  SPI Slave interface is already enabled.
  * @retval OT_ERROR_FAILED   Failed to enable the SPI Slave interface.
- *
  */
 otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCompleteCallback,
                              otPlatSpiSlaveTransactionProcessCallback  aProcessCallback,
@@ -161,7 +158,6 @@ void otPlatSpiSlaveDisable(void);
  * @retval OT_ERROR_NONE           Transaction was successfully prepared.
  * @retval OT_ERROR_BUSY           A transaction is currently in progress.
  * @retval OT_ERROR_INVALID_STATE  otPlatSpiSlaveEnable() hasn't been called.
- *
  */
 otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf,
                                          uint16_t aOutputBufLen,
@@ -171,7 +167,6 @@ otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf,
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

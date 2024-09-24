@@ -544,7 +544,6 @@ template <> otError Br::Process<Cmd("pd")>(Arg aArgs[])
      * @cparam br pd @ca{enable|disable}
      * @par api_copy
      * #otBorderRoutingDhcp6PdSetEnabled
-     *
      */
     if (ProcessEnableDisable(aArgs, otBorderRoutingDhcp6PdSetEnabled) == OT_ERROR_NONE)
     {

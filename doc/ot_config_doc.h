@@ -88,5 +88,4 @@
  * @defgroup config-wakeup                   Wake-up
  *
  * @}
- *
  */

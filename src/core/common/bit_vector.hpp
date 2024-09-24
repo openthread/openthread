@@ -51,14 +51,12 @@ namespace ot {
  *   This module includes definitions for bit-vector.
  *
  * @{
- *
  */
 
 /**
  * Represents a bit-vector.
  *
  * @tparam N  Specifies the number of bits.
- *
  */
 template <uint16_t N> class BitVector : public Equatable<BitVector<N>>, public Clearable<BitVector<N>>
 {
@@ -70,7 +68,6 @@ public:
      *
      * @retval TRUE   If the given index is set.
      * @retval FALSE  If the given index is clear.
-     *
      */
     bool Get(uint16_t aIndex) const
     {
@@ -83,7 +80,6 @@ public:
      *
      * @param[in] aIndex  The index.
      * @param[in] aValue  TRUE to set the mask, or FALSE to clear the mask.
-     *
      */
     void Set(uint16_t aIndex, bool aValue)
     {
@@ -104,7 +100,6 @@ public:
      *
      * @retval TRUE   If any index is set.
      * @retval FALSE  If all indexes are clear.
-     *
      */
     bool HasAny(void) const
     {
@@ -128,7 +123,6 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace ot

@@ -48,12 +48,10 @@ extern "C" {
  *   This module includes error definitions used in OpenThread.
  *
  * @{
- *
  */
 
 /**
  * Represents error codes used throughout OpenThread.
- *
  */
 typedef enum OT_MUST_USE_RESULT otError
 {
@@ -230,7 +228,6 @@ typedef enum OT_MUST_USE_RESULT otError
 
     /**
      * Special error code used to indicate success/error status is pending and not yet known.
-     *
      */
     OT_ERROR_PENDING = 36,
 
@@ -256,13 +253,11 @@ typedef enum OT_MUST_USE_RESULT otError
  * @param[in]  aError     An otError enum.
  *
  * @returns  A string representation of an otError.
- *
  */
 const char *otThreadErrorToString(otError aError);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

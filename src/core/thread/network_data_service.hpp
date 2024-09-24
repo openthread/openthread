@@ -54,7 +54,6 @@ const uint32_t kThreadEnterpriseNumber = ServiceTlv::kThreadEnterpriseNumber; //
 
 /**
  * Represents information about an DNS/SRP server parsed from related Network Data service entries.
- *
  */
 struct DnsSrpAnycastInfo
 {
@@ -65,7 +64,6 @@ struct DnsSrpAnycastInfo
 
 /**
  * Represents the `DnsSrpUnicast` entry type.
- *
  */
 enum DnsSrpUnicastType : uint8_t
 {
@@ -75,7 +73,6 @@ enum DnsSrpUnicastType : uint8_t
 
 /**
  * Represents information about an DNS/SRP server parsed from related Network Data service entries.
- *
  */
 struct DnsSrpUnicastInfo
 {
@@ -85,14 +82,12 @@ struct DnsSrpUnicastInfo
 
 /**
  * Manages the Thread Service entries in Thread Network Data.
- *
  */
 class Manager : public InstanceLocator, private NonCopyable
 {
 public:
     /**
      * Represents an iterator used to iterate through Network Data Service entries.
-     *
      */
     class Iterator : public Clearable<Iterator>
     {
@@ -101,7 +96,6 @@ public:
     public:
         /**
          * Initializes the iterator (as empty/clear).
-         *
          */
         Iterator(void)
             : mServiceTlv(nullptr)
@@ -111,7 +105,6 @@ public:
 
         /**
          * Resets the iterator to start from beginning.
-         *
          */
         void Reset(void)
         {
@@ -128,7 +121,6 @@ public:
      * Initializes the `Manager` object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit Manager(Instance &aInstance)
         : InstanceLocator(aInstance)
@@ -143,7 +135,6 @@ public:
      *
      * @retval kErrorNone     Successfully added the Service entry.
      * @retval kErrorNoBufs   Insufficient space to add the Service entry.
-     *
      */
     Error AddDnsSrpAnycastService(uint8_t aSequenceNumber)
     {
@@ -157,7 +148,6 @@ public:
      *
      * @retval kErrorNone       Successfully removed the Service entry.
      * @retval kErrorNotFound   Could not find the Service entry.
-     *
      */
     Error RemoveDnsSrpAnycastService(uint8_t aSequenceNumber)
     {
@@ -172,7 +162,6 @@ public:
      *
      * @retval kErrorNone     Successfully added the Service entry.
      * @retval kErrorNoBufs   Insufficient space to add the Service entry.
-     *
      */
     Error AddDnsSrpUnicastServiceWithAddrInServiceData(const Ip6::Address &aAddress, uint16_t aPort)
     {
@@ -187,7 +176,6 @@ public:
      *
      * @retval kErrorNone       Successfully removed the Service entry.
      * @retval kErrorNotFound   Could not find the Service entry.
-     *
      */
     Error RemoveDnsSrpUnicastServiceWithAddrInServiceData(const Ip6::Address &aAddress, uint16_t aPort)
     {
@@ -202,7 +190,6 @@ public:
      *
      * @retval kErrorNone     Successfully added the Service entry.
      * @retval kErrorNoBufs   Insufficient space to add the Service entry.
-     *
      */
     Error AddDnsSrpUnicastServiceWithAddrInServerData(const Ip6::Address &aAddress, uint16_t aPort)
     {
@@ -214,7 +201,6 @@ public:
      *
      * @retval kErrorNone       Successfully removed the Service entry.
      * @retval kErrorNotFound   Could not find the Service entry.
-     *
      */
     Error RemoveDnsSrpUnicastServiceWithAddrInServerData(void) { return RemoveService(kDnsSrpUnicastServiceNumber); }
 
@@ -228,7 +214,6 @@ public:
      *
      * @retval kErrorNone     Successfully added the Service entry.
      * @retval kErrorNoBufs   Insufficient space to add the Service entry.
-     *
      */
     Error AddBackboneRouterService(uint8_t aSequenceNumber, uint16_t aReregistrationDelay, uint32_t aMlrTimeout)
     {
@@ -241,7 +226,6 @@ public:
      *
      * @retval kErrorNone       Successfully removed the Service entry.
      * @retval kErrorNotFound   Could not find the Service entry.
-     *
      */
     Error RemoveBackboneRouterService(void) { return RemoveService(kBackboneRouterServiceNumber); }
 #endif
@@ -253,7 +237,6 @@ public:
      * Gets the Primary Backbone Router (PBBR) in the Thread Network Data.
      *
      * @param[out]  aConfig      The Primary Backbone Router configuration.
-     *
      */
     void GetBackboneRouterPrimary(ot::BackboneRouter::Config &aConfig) const;
 
@@ -264,7 +247,6 @@ public:
      *
      * @retval kErrorNone       Successfully got the Service ID.
      * @retval kErrorNotFound   The specified service was not found.
-     *
      */
     Error GetBackboneRouterServiceId(uint8_t &aServiceId) const
     {
@@ -283,7 +265,6 @@ public:
      *
      * @retval kErrorNone       Successfully got the next info. @p aInfo and @p aIterator are updated.
      * @retval kErrorNotFound   No more matching entries in the Network Data.
-     *
      */
     Error GetNextDnsSrpAnycastInfo(Iterator &aIterator, DnsSrpAnycastInfo &aInfo) const;
 
@@ -298,7 +279,6 @@ public:
      *
      * @retval kErrorNone       Successfully found the preferred info. @p aInfo is updated.
      * @retval kErrorNotFound   No "DNS/SRP Service Anycast" entry in Network Data.
-     *
      */
     Error FindPreferredDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo) const;
 
@@ -314,7 +294,6 @@ public:
      *
      * @retval kErrorNone       Successfully got the next info. @p aInfo and @p aIterator are updated.
      * @retval kErrorNotFound   No more matching entries in the Network Data.
-     *
      */
     Error GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo) const;
 

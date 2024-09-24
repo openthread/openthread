@@ -44,7 +44,6 @@ namespace ot {
 /**
  * Provides constants and static methods to convert between `int8_t` preference and its 2-bit unsigned
  * representation.
- *
  */
 class Preference
 {
@@ -62,7 +61,6 @@ public:
      * @param[in] aPrf   The preference to convert to `uint8_t`.
      *
      * @returns The 2-bit unsigned value representing @p aPrf.
-     *
      */
     static uint8_t To2BitUint(int8_t aPrf);
 
@@ -81,7 +79,6 @@ public:
      *                        ignored.
      *
      * @returns The signed preference `kHigh`, `kMedium`, or `kLow` corresponding to @p a2BitUint.
-     *
      */
     static int8_t From2BitUint(uint8_t a2BitUint);
 
@@ -93,7 +90,6 @@ public:
      *
      * @retval TRUE   if @p aPrf is valid.
      * @retval FALSE  if @p aPrf is not valid
-     *
      */
     static bool IsValid(int8_t aPrf);
 
@@ -105,7 +101,6 @@ public:
      *
      * @retval TRUE   if the first 2 bits of @p a2BitUint are `0b00`, `0b01`, or `0b11`.
      * @retval FALSE  if the first 2 bits of @p a2BitUint are `0b01`.
-     *
      */
     static bool Is2BitUintValid(uint8_t a2BitUint) { return ((a2BitUint & k2BitMask) != k2BitReserved); }
 
@@ -115,7 +110,6 @@ public:
      * @param[in] aPrf  The preference to convert.
      *
      * @returns The string representation of @p aPrf.
-     *
      */
     static const char *ToString(int8_t aPrf);
 

@@ -61,7 +61,6 @@ class Child;
 
 /**
  * Implements the data poll (mac data request command) handler.
- *
  */
 class DataPollHandler : public InstanceLocator, private NonCopyable
 {
@@ -72,7 +71,6 @@ public:
 
     /**
      * Defines frame change request types used as input to `RequestFrameChange()`.
-     *
      */
     enum FrameChange : uint8_t
     {
@@ -84,7 +82,6 @@ public:
      * Defines all the child info required for handling of data polls and indirect frame transmissions.
      *
      * `Child` class publicly inherits from this class.
-     *
      */
     class ChildInfo
     {
@@ -137,7 +134,6 @@ public:
 
     /**
      * Defines the callbacks used by the `DataPollHandler`.
-     *
      */
     class Callbacks : public InstanceLocator
     {
@@ -151,7 +147,6 @@ public:
          * for the context when a new frame is prepared (from the callback `PrepareFrameForChild()`). It ensures
          * to save the context along with the prepared frame and provide the same context back in the callback
          * `HandleSentFrameToChild()` when the indirect transmission of the frame is finished.
-         *
          */
         typedef IndirectSenderBase::FrameContext FrameContext;
 
@@ -159,7 +154,6 @@ public:
          * Initializes the callbacks object.
          *
          * @param[in]  aInstance   A reference to the OpenThread instance.
-         *
          */
         explicit Callbacks(Instance &aInstance);
 
@@ -172,7 +166,6 @@ public:
          *
          * @retval kErrorNone   Frame was prepared successfully.
          * @retval kErrorAbort  Indirect transmission to child should be aborted (no frame for the child).
-         *
          */
         Error PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
 
@@ -186,7 +179,6 @@ public:
          *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
          *                        kErrorAbort when transmission was aborted for other reasons.
          * @param[in]  aChild     The child to which the frame was transmitted.
-         *
          */
         void HandleSentFrameToChild(const Mac::TxFrame &aFrame,
                                     const FrameContext &aContext,
@@ -200,7 +192,6 @@ public:
          * updated.
          *
          * @param[in]  aChild     The child to update.
-         *
          */
         void HandleFrameChangeDone(Child &aChild);
     };
@@ -209,13 +200,11 @@ public:
      * Initializes the data poll handler object.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
-     *
      */
     explicit DataPollHandler(Instance &aInstance);
 
     /**
      * Clears any state/info saved per child for indirect frame transmission.
-     *
      */
     void Clear(void);
 
@@ -229,7 +218,6 @@ public:
      * the frame transmission.
      *
      * @param[in]  aChild     The child which has a new frame.
-     *
      */
     void HandleNewFrame(Child &aChild);
 
@@ -263,7 +251,6 @@ public:
      *
      * @param[in]  aChange    The frame change type.
      * @param[in]  aChild     The child to process its frame change.
-     *
      */
     void RequestFrameChange(FrameChange aChange, Child &aChild);
 
@@ -290,7 +277,6 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace ot

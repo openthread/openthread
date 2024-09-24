@@ -61,7 +61,6 @@ extern "C" {
  *   (`OPENTHREAD_CONFIG_BLE_TCAT_ENABLE`) is enabled.
  *
  * @{
- *
  */
 
 #define OT_TCAT_MAX_SERVICE_NAME_LENGTH \
@@ -74,7 +73,6 @@ extern "C" {
 
 /**
  * Represents TCAT status code.
- *
  */
 typedef enum otTcatStatusCode
 {
@@ -92,7 +90,6 @@ typedef enum otTcatStatusCode
 
 /**
  * Represents TCAT application protocol.
- *
  */
 typedef enum otTcatApplicationProtocol
 {
@@ -104,7 +101,6 @@ typedef enum otTcatApplicationProtocol
 
 /**
  * Represents a TCAT command class.
- *
  */
 typedef enum otTcatCommandClass
 {
@@ -118,7 +114,6 @@ typedef enum otTcatCommandClass
 
 /**
  * Represents Advertised Device ID type. (used during TCAT advertisement)
- *
  */
 typedef enum otTcatAdvertisedDeviceIdType
 {
@@ -139,7 +134,6 @@ typedef struct otTcatAdvertisedDeviceId
 
 /**
  * Represents General Device ID type.
- *
  */
 typedef struct otTcatGeneralDeviceId
 {
@@ -151,7 +145,6 @@ typedef struct otTcatGeneralDeviceId
  * This structure represents a TCAT vendor information.
  *
  * The content of this structure MUST persist and remain unchanged while a TCAT session is running.
- *
  */
 typedef struct otTcatVendorInfo
 {
@@ -178,7 +171,6 @@ typedef struct otTcatVendorInfo
  * @param[in]  aTcatApplicationProtocol  The protocol type of the message received.
  * @param[in]  aServiceName              The name of the service the message is direced to.
  * @param[in]  aContext                  A pointer to arbitrary context information.
- *
  */
 typedef void (*otHandleTcatApplicationDataReceive)(otInstance               *aInstance,
                                                    const otMessage          *aMessage,
@@ -193,13 +185,11 @@ typedef void (*otHandleTcatApplicationDataReceive)(otInstance               *aIn
  * @param[in]  aError           OT_ERROR_NONE if the join process succeeded.
  *                              OT_ERROR_SECURITY if the join process failed due to security credentials.
  * @param[in]  aContext         A pointer to arbitrary context information.
- *
  */
 typedef void (*otHandleTcatJoin)(otError aError, void *aContext);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

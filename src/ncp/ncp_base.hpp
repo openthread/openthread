@@ -97,7 +97,6 @@ public:
      * Creates and initializes an NcpBase instance.
      *
      * @param[in]  aInstance  The OpenThread instance structure.
-     *
      */
     explicit NcpBase(Instance *aInstance);
 
@@ -107,7 +106,6 @@ public:
      *
      * @param[in]  aInstances  The OpenThread instances structure pointer array.
      * @param[in]  aCount      Number of the instances in the array.
-     *
      */
     explicit NcpBase(Instance **aInstances, uint8_t aCount);
 
@@ -117,7 +115,6 @@ public:
      * Returns the pointer to the single NCP instance.
      *
      * @returns Pointer to the single NCP instance.
-     *
      */
     static NcpBase *GetNcpInstance(void);
 
@@ -131,7 +128,6 @@ public:
      * @param[in] aInstance  Instance pointer to match with IID
      *
      * @returns Spinel Interface Identifier to use for communication for this instance
-     *
      */
     uint8_t InstanceToIid(Instance *aInstance);
 
@@ -146,7 +142,6 @@ public:
      * @param[in] aIid  IID used in the Spinel communication
      *
      * @returns OpenThread instance object associated with the given IID
-     *
      */
     Instance *IidToInstance(uint8_t aIid);
 
@@ -161,7 +156,6 @@ public:
      * This method returns the IID of the current spinel command.
      *
      * @returns IID.
-     *
      */
     spinel_iid_t GetCurCommandIid(void) const;
 
@@ -179,7 +173,6 @@ public:
      * @retval OT_ERROR_BUSY         There are not enough resources to complete this
      *                               request. This is usually a temporary condition.
      * @retval OT_ERROR_INVALID_ARGS The given aStreamId was invalid.
-     *
      */
     otError StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
 
@@ -189,7 +182,6 @@ public:
      * @param[in] aLogLevel   The log level
      * @param[in] aLogRegion  The log region
      * @param[in] aLogString  The log string
-     *
      */
     void Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogString);
 
@@ -199,7 +191,6 @@ public:
      *
      * @param[in] aAllowPeekDelegate      Delegate function pointer for peek operation.
      * @param[in] aAllowPokeDelegate      Delegate function pointer for poke operation.
-     *
      */
     void RegisterPeekPokeDelegates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
                                    otNcpDelegateAllowPeekPoke aAllowPokeDelegate);
@@ -230,7 +221,6 @@ public:
      *
      * @param[in]  aInfraIfIndex  The index of the instructure interface to query.
      * @param[in]  aAddress       The IPv6 address to query.
-     *
      */
     bool InfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress);
 
@@ -241,7 +231,6 @@ protected:
 
     /**
      * Represents the `ResponseEntry` type.
-     *
      */
     enum ResponseType
     {
@@ -252,7 +241,6 @@ protected:
 
     /**
      * Represents a spinel response entry.
-     *
      */
     struct ResponseEntry
     {
@@ -572,7 +560,6 @@ protected:
      *
      * @retval OT_ERROR_NONE     The response is prepared.
      * @retval OT_ERROR_NO_BUFS  Out of buffer while preparing the response.
-     *
      */
     otError VendorCommandHandler(uint8_t aHeader, unsigned int aCommand);
 
@@ -587,7 +574,6 @@ protected:
      *     implement mechanisms to re-send a failed/pending response or an async spinel frame.
      *
      * @param[in] aFrameTag    The tag of the frame removed from NCP buffer.
-     *
      */
     void VendorHandleFrameRemovedFromNcpBuffer(Spinel::Buffer::FrameTag aFrameTag);
 
@@ -604,7 +590,6 @@ protected:
      * @retval OT_ERROR_NONE          Successfully retrieved the property value and prepared the response.
      * @retval OT_ERROR_NOT_FOUND     Does not support the given property key.
      * @retval OT_ERROR_NO_BUFS       Out of buffer while preparing the response.
-     *
      */
     otError VendorGetPropertyHandler(spinel_prop_key_t aPropKey);
 
@@ -623,7 +608,6 @@ protected:
      *
      * @returns OT_ERROR_NOT_FOUND if it does not support the given property key, otherwise the error in either parsing
      *          of the input or the "set" operation.
-     *
      */
     otError VendorSetPropertyHandler(spinel_prop_key_t aPropKey);
 

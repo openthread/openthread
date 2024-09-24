@@ -70,7 +70,6 @@ static void handleSignal(int aSignal)
 
 /**
  * Defines the argument return values.
- *
  */
 enum
 {

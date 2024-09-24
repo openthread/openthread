@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file implements function for managing Thread Network Data service/server entries.
- *
  */
 
 #include "network_data_service.hpp"

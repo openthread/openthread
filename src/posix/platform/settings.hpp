@@ -43,7 +43,6 @@ namespace Posix {
  *
  * @retval OT_ERROR_NONE        The given setting was found and fetched successfully.
  * @retval OT_ERROR_NOT_FOUND   The given key or index was not found in the setting store.
- *
  */
 otError PlatformSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength);
 
@@ -54,7 +53,6 @@ otError PlatformSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, ui
  * @param[in]  aKey          The key associated with the requested setting.
  * @param[in]  aValue        A pointer to where the new value of the setting should be read from.
  * @param[in]  aValueLength  The length of the data pointed to by aValue.
- *
  */
 void PlatformSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
@@ -65,7 +63,6 @@ void PlatformSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aV
  * @param[in]  aKey          The key associated with the requested setting.
  * @param[in]  aValue        A pointer to where the new value of the setting should be read from.
  * @param[in]  aValueLength  The length of the data pointed to by aValue.
- *
  */
 void PlatformSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
@@ -83,7 +80,6 @@ void PlatformSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aV
  *
  * @retval OT_ERROR_NONE        The given key and index was found and removed successfully.
  * @retval OT_ERROR_NOT_FOUND   The given key or index was not found in the setting store.
- *
  */
 otError PlatformSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex, int *aSwapFd);
 
@@ -93,7 +89,6 @@ otError PlatformSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex,
  * @param[in]   aInstance    The OpenThread instance structure.
  * @param[out]  aKeys        A pointer to where the pointer to the array containing sensitive keys should be written.
  * @param[out]  aKeysLength  A pointer to where the count of sensitive keys should be written.
- *
  */
 void PlatformSettingsGetSensitiveKeys(otInstance *aInstance, const uint16_t **aKeys, uint16_t *aKeysLength);
 

@@ -77,7 +77,6 @@ class HistoryTracker;
 
 /**
  * Represents link-specific information for messages received from the Thread radio.
- *
  */
 class ThreadLinkInfo : public otThreadLinkInfo, public Clearable<ThreadLinkInfo>
 {
@@ -86,7 +85,6 @@ public:
      * Returns the IEEE 802.15.4 Source PAN ID.
      *
      * @returns The IEEE 802.15.4 Source PAN ID.
-     *
      */
     Mac::PanId GetPanId(void) const { return mPanId; }
 
@@ -94,7 +92,6 @@ public:
      * Returns the IEEE 802.15.4 Channel.
      *
      * @returns The IEEE 802.15.4 Channel.
-     *
      */
     uint8_t GetChannel(void) const { return mChannel; }
 
@@ -103,7 +100,6 @@ public:
      *
      * @retval TRUE   If Destination PAN ID is broadcast.
      * @retval FALSE  If Destination PAN ID is not broadcast.
-     *
      */
     bool IsDstPanIdBroadcast(void) const { return mIsDstPanIdBroadcast; }
 
@@ -112,7 +108,6 @@ public:
      *
      * @retval TRUE   If link security is enabled.
      * @retval FALSE  If link security is not enabled.
-     *
      */
     bool IsLinkSecurityEnabled(void) const { return mLinkSecurity; }
 
@@ -120,7 +115,6 @@ public:
      * Returns the Received Signal Strength (RSS) in dBm.
      *
      * @returns The Received Signal Strength (RSS) in dBm.
-     *
      */
     int8_t GetRss(void) const { return mRss; }
 
@@ -128,7 +122,6 @@ public:
      * Returns the frame/radio Link Quality Indicator (LQI) value.
      *
      * @returns The Link Quality Indicator value.
-     *
      */
     uint8_t GetLqi(void) const { return mLqi; }
 
@@ -137,7 +130,6 @@ public:
      * Returns the Time Sync Sequence.
      *
      * @returns The Time Sync Sequence.
-     *
      */
     uint8_t GetTimeSyncSeq(void) const { return mTimeSyncSeq; }
 
@@ -145,7 +137,6 @@ public:
      * Returns the time offset to the Thread network time (in microseconds).
      *
      * @returns The time offset to the Thread network time (in microseconds).
-     *
      */
     int64_t GetNetworkTimeOffset(void) const { return mNetworkTimeOffset; }
 #endif
@@ -154,14 +145,12 @@ public:
      * Sets the `ThreadLinkInfo` from a given received frame.
      *
      * @param[in] aFrame  A received frame.
-     *
      */
     void SetFrom(const Mac::RxFrame &aFrame);
 };
 
 /**
  * Implements mesh forwarding within Thread.
- *
  */
 class MeshForwarder : public InstanceLocator, private NonCopyable
 {
@@ -178,19 +167,16 @@ public:
      * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit MeshForwarder(Instance &aInstance);
 
     /**
      * Enables mesh forwarding and the IEEE 802.15.4 MAC layer.
-     *
      */
     void Start(void);
 
     /**
      * Disables mesh forwarding and the IEEE 802.15.4 MAC layer.
-     *
      */
     void Stop(void);
 
@@ -198,7 +184,6 @@ public:
      * Submits a message to the mesh forwarder for forwarding.
      *
      * @param[in]  aMessagePtr  An owned pointer to a message (transfer ownership).
-     *
      */
     void SendMessage(OwnedPtr<Message> aMessagePtr);
 
@@ -209,7 +194,6 @@ public:
      * @retval kErrorNone          Successfully enqueued an empty message.
      * @retval kErrorInvalidState  Device is not in Rx-Off-When-Idle mode or it has no parent.
      * @retval kErrorNoBufs        Insufficient message buffers available.
-     *
      */
     Error SendEmptyMessage(void);
 #endif
@@ -219,7 +203,6 @@ public:
      *
      * @param[in]  aEid    A reference to the EID that has been resolved.
      * @param[in]  aError  kErrorNone on success and kErrorDrop otherwise.
-     *
      */
     void HandleResolved(const Ip6::Address &aEid, Error aError);
 
@@ -228,7 +211,6 @@ public:
      *
      * @retval TRUE   The rx-on-when-idle mode is enabled.
      * @retval FALSE  The rx-on-when-idle-mode is disabled.
-     *
      */
     bool GetRxOnWhenIdle(void) const;
 
@@ -236,7 +218,6 @@ public:
      * Sets the rx-on-when-idle mode
      *
      * @param[in]  aRxOnWhenIdle  TRUE to enable, FALSE otherwise.
-     *
      */
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
@@ -249,7 +230,6 @@ public:
      *
      * @return TRUE   If the @p aMessage satisfies the predicate condition.
      * @return FALSE  If the @p aMessage does not satisfy the predicate condition.
-     *
      */
     typedef bool (&MessageChecker)(const Message &aMessage);
 
@@ -260,7 +240,6 @@ public:
      *
      * @param[in] aChild            The child whose messages are to be evaluated.
      * @param[in] aMessageChecker   The predicate function to filter messages.
-     *
      */
     void RemoveMessagesForChild(Child &aChild, MessageChecker aMessageChecker);
 
@@ -268,7 +247,6 @@ public:
 
     /**
      * Frees unicast/multicast MLE Data Responses from Send Message Queue if any.
-     *
      */
     void RemoveDataResponseMessages(void);
 
@@ -279,7 +257,6 @@ public:
      *
      * @retval kErrorNone       Successfully evicted a low priority message.
      * @retval kErrorNotFound   No low priority messages available to evict.
-     *
      */
     Error EvictMessage(Message::Priority aPriority);
 
@@ -287,7 +264,6 @@ public:
      * Returns a reference to the send queue.
      *
      * @returns  A reference to the send queue.
-     *
      */
     const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
 
@@ -295,7 +271,6 @@ public:
      * Returns a reference to the reassembly queue.
      *
      * @returns  A reference to the reassembly queue.
-     *
      */
     const MessageQueue &GetReassemblyQueue(void) const { return mReassemblyList; }
 
@@ -303,13 +278,11 @@ public:
      * Returns a reference to the IP level counters.
      *
      * @returns A reference to the IP level counters.
-     *
      */
     const otIpCounters &GetCounters(void) const { return mIpCounters; }
 
     /**
      * Resets the IP level counters.
-     *
      */
     void ResetCounters(void) { ClearAllBytes(mIpCounters); }
 
@@ -335,7 +308,6 @@ public:
      * @param[out] aBinInterval   Reference to return the histogram bin interval length in milliseconds.
      *
      * @returns A pointer to an array of @p aNumBins entries representing the collected histogram info.
-     *
      */
     const uint32_t *GetTimeInQueueHistogram(uint16_t &aNumBins, uint32_t &aBinInterval) const
     {
@@ -351,13 +323,11 @@ public:
      * The collected statistics can be reset by calling `ResetTimeInQueueStat()`.
      *
      * @returns The maximum time-in-queue in milliseconds for all messages in the TX queue (so far).
-     *
      */
     uint32_t GetMaxTimeInQueue(void) const { return mTxQueueStats.GetMaxInterval(); }
 
     /**
      * Resets the TX queue time-in-queue statistics.
-     *
      */
     void ResetTimeInQueueStat(void) { mTxQueueStats.Clear(); }
 #endif
@@ -375,7 +345,6 @@ public:
      * @param[in] aNeighbor  The neighbor for which the deferred ack status is being reported.
      * @param[in] aError     The deferred ack error status: `kErrorNone` to indicate a deferred ack was received,
      *                       `kErrorNoAck` to indicate an ack timeout.
-     *
      */
     void HandleDeferredAck(Neighbor &aNeighbor, Error aError);
 #endif
@@ -708,7 +677,6 @@ private:
 
 /**
  * @}
- *
  */
 
 DefineCoreType(otThreadLinkInfo, ThreadLinkInfo);

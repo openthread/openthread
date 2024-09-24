@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file implements Channel Manager.
- *
  */
 
 #include "channel_manager.hpp"

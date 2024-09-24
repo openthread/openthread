@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file implements Extended PAN ID management.
- *
  */
 
 #include "extended_panid.hpp"

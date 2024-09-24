@@ -48,14 +48,12 @@ extern "C" {
  *   This module includes functions that control the Thread stack's execution.
  *
  * @{
- *
  */
 
 /**
  * Run all queued OpenThread tasklets at the time this is called.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
- *
  */
 void otTaskletsProcess(otInstance *aInstance);
 
@@ -66,7 +64,6 @@ void otTaskletsProcess(otInstance *aInstance);
  *
  * @retval TRUE   If there are tasklets pending.
  * @retval FALSE  If there are no tasklets pending.
- *
  */
 bool otTaskletsArePending(otInstance *aInstance);
 
@@ -74,13 +71,11 @@ bool otTaskletsArePending(otInstance *aInstance);
  * OpenThread calls this function when the tasklet queue transitions from empty to non-empty.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
- *
  */
 extern void otTaskletsSignalPending(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

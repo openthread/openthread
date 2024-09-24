@@ -28,7 +28,6 @@
 
 /**
  * @file This file includes definitions for spinel helper methods.
- *
  */
 
 #ifndef SPINEL_HELPER_HPP_

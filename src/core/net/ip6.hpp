@@ -70,7 +70,6 @@ namespace ot {
  *
  * @brief
  *   This namespace includes definitions for IPv6 networking.
- *
  */
 namespace Ip6 {
 
@@ -88,7 +87,6 @@ namespace Ip6 {
  * @defgroup core-ip6-netif Network Interfaces
  *
  * @}
- *
  */
 
 /**
@@ -98,12 +96,10 @@ namespace Ip6 {
  *   This module includes definitions for core IPv6 networking.
  *
  * @{
- *
  */
 
 /**
  * Implements the core IPv6 message processing.
- *
  */
 class Ip6 : public InstanceLocator, private NonCopyable
 {
@@ -116,7 +112,6 @@ public:
      * Initializes the object.
      *
      * @param[in]  aInstance   A reference to the otInstance object.
-     *
      */
     explicit Ip6(Instance &aInstance);
 
@@ -125,7 +120,6 @@ public:
      * enabled and `kPriorityMedium`).
      *
      * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
-     *
      */
     Message *NewMessage(void);
 
@@ -136,7 +130,6 @@ public:
      * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
      *
      * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
-     *
      */
     Message *NewMessage(uint16_t aReserved);
 
@@ -147,7 +140,6 @@ public:
      * @param[in]  aSettings  The message settings.
      *
      * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
-     *
      */
     Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings);
 
@@ -163,7 +155,6 @@ public:
      *
      * @returns A pointer to the message or `nullptr` if malformed IPv6 header or insufficient message buffers are
      *          available.
-     *
      */
     Message *NewMessageFromData(const uint8_t *aData, uint16_t aDataLength, const Message::Settings &aSettings);
 
@@ -173,7 +164,6 @@ public:
      * @param[in]  aDscp  The IPv6 DSCP value.
      *
      * @returns The message priority level.
-     *
      */
     static Message::Priority DscpToPriority(uint8_t aDscp);
 
@@ -186,7 +176,6 @@ public:
      *
      * @retval kErrorNone     Successfully enqueued the message into an output interface.
      * @retval kErrorNoBufs   Insufficient available buffer to add the IPv6 headers.
-     *
      */
     Error SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
 
@@ -200,7 +189,6 @@ public:
      * @retval kErrorNoBufs   Could not allocate necessary message buffers when processing the datagram.
      * @retval kErrorNoRoute  No route to host.
      * @retval kErrorParse    Encountered a malformed header when processing the message.
-     *
      */
     Error SendRaw(OwnedPtr<Message> aMessage);
 
@@ -214,7 +202,6 @@ public:
      * @retval kErrorNoBufs   Could not allocate necessary message buffers when processing the datagram.
      * @retval kErrorNoRoute  No route to host.
      * @retval kErrorParse    Encountered a malformed header when processing the message.
-     *
      */
     Error HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled = false);
 
@@ -230,7 +217,6 @@ public:
      *
      * @sa IsReceiveIp6FilterEnabled
      * @sa SetReceiveIp6FilterEnabled
-     *
      */
     void SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCallbackContext)
     {
@@ -246,7 +232,6 @@ public:
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      * @sa SetReceiveDatagramCallback
-     *
      */
     void SetNat64ReceiveIp4DatagramCallback(otNat64ReceiveIp4Callback aCallback, void *aCallbackContext)
     {
@@ -262,7 +247,6 @@ public:
      *
      * @sa SetReceiveDatagramCallback
      * @sa SetReceiveIp6FilterEnabled
-     *
      */
     bool IsReceiveIp6FilterEnabled(void) const { return mIsReceiveIp6FilterEnabled; }
 
@@ -274,7 +258,6 @@ public:
      *
      * @sa SetReceiveDatagramCallback
      * @sa IsReceiveIp6FilterEnabled
-     *
      */
     void SetReceiveIp6FilterEnabled(bool aEnabled) { mIsReceiveIp6FilterEnabled = aEnabled; }
 
@@ -285,7 +268,6 @@ public:
      *
      * @retval  kErrorNone      Found a source address and updated SockAddr of @p aMessageInfo.
      * @retval  kErrorNotFound  No source address was found and @p aMessageInfo is unchanged.
-     *
      */
     Error SelectSourceAddress(MessageInfo &aMessageInfo) const;
 
@@ -295,7 +277,6 @@ public:
      * @param[in]  aDestination  The destination address.
      *
      * @returns A pointer to the selected IPv6 source address or `nullptr` if no source address was found.
-     *
      */
     const Address *SelectSourceAddress(const Address &aDestination) const;
 
@@ -303,7 +284,6 @@ public:
      * Returns a reference to the send queue.
      *
      * @returns A reference to the send queue.
-     *
      */
     const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
 
@@ -313,7 +293,6 @@ public:
      * @param[in] aIpProto  An IP protocol number.
      *
      * @returns The string representation of @p aIpProto.
-     *
      */
     static const char *IpProtoToString(uint8_t aIpProto);
 
@@ -323,7 +302,6 @@ public:
      * @param[in] aEcn   The 2-bit ECN value.
      *
      * @returns The string representation of @p aEcn.
-     *
      */
     static const char *EcnToString(Ecn aEcn);
 
@@ -335,7 +313,6 @@ public:
      * Returns a reference to the Border Routing counters.
      *
      * @returns A reference to the Border Routing counters.
-     *
      */
     const BrCounters &GetBorderRoutingCounters(void) const { return mBrCounters; }
 
@@ -343,13 +320,11 @@ public:
      * Returns a reference to the Border Routing counters.
      *
      * @returns A reference to the Border Routing counters.
-     *
      */
     BrCounters &GetBorderRoutingCounters(void) { return mBrCounters; }
 
     /**
      * Resets the Border Routing counters.
-     *
      */
     void ResetBorderRoutingCounters(void) { ClearAllBytes(mBrCounters); }
 
@@ -361,7 +336,6 @@ public:
      * Enables or disables the filter that drops TMF UDP messages from untrusted origin.
      *
      * @param[in]  aEnabled  TRUE to enable filter, FALSE otherwise.
-     *
      */
     void SetTmfOriginFilterEnabled(bool aEnabled) { mTmfOriginFilterEnabled = aEnabled; }
 
@@ -369,7 +343,6 @@ public:
      * Indicates whether the filter that drops TMF UDP messages from untrusted origin is enabled or not.
      *
      * @returns TRUE if the filter is enabled, FALSE otherwise.
-     *
      */
     bool IsTmfOriginFilterEnabled(void) { return mTmfOriginFilterEnabled; }
 
@@ -457,7 +430,6 @@ private:
 
 /**
  * Represents parsed IPv6 header along with UDP/TCP/ICMP6 headers from a received message/frame.
- *
  */
 class Headers : private Clearable<Headers>
 {
@@ -471,7 +443,6 @@ public:
      *
      * @retval kErrorNone    The headers are parsed successfully.
      * @retval kErrorParse   Failed to parse the headers.
-     *
      */
     Error ParseFrom(const Message &aMessage);
 
@@ -485,7 +456,6 @@ public:
      * @retval kErrorNone           Successfully decompressed and parsed IPv6 and UDP/TCP/ICMP6 headers.
      * @retval kErrorNotFound       Lowpan frame is a next fragment and does not contain IPv6 headers.
      * @retval kErrorParse          Failed to parse the headers.
-     *
      */
     Error DecompressFrom(const Message &aMessage, uint16_t aOffset, const Mac::Addresses &aMacAddrs);
 
@@ -499,7 +469,6 @@ public:
      * @retval kErrorNone           Successfully decompressed and parsed IPv6 and UDP/TCP/ICMP6 headers.
      * @retval kErrorNotFound       Lowpan frame is a next fragment and does not contain IPv6 headers.
      * @retval kErrorParse          Failed to parse the headers.
-     *
      */
     Error DecompressFrom(const FrameData &aFrameData, const Mac::Addresses &aMacAddrs, Instance &aInstance);
 
@@ -507,7 +476,6 @@ public:
      * Returns the IPv6 header.
      *
      * @returns The IPv6 header.
-     *
      */
     const Header &GetIp6Header(void) const { return mIp6Header; }
 
@@ -515,7 +483,6 @@ public:
      * Returns the IP protocol number from IPv6 Next Header field.
      *
      * @returns The IP protocol number.
-     *
      */
     uint8_t GetIpProto(void) const { return mIp6Header.GetNextHeader(); }
 
@@ -523,7 +490,6 @@ public:
      * Returns the 2-bit Explicit Congestion Notification (ECN) from Traffic Class field from IPv6 header.
      *
      * @returns The ECN value.
-     *
      */
     Ecn GetEcn(void) const { return mIp6Header.GetEcn(); }
 
@@ -532,7 +498,6 @@ public:
      *
      * @retval TRUE   If the protocol number in IPv6 header is UDP.
      * @retval FALSE  If the protocol number in IPv6 header is not UDP.
-     *
      */
     bool IsUdp(void) const { return GetIpProto() == kProtoUdp; }
 
@@ -541,7 +506,6 @@ public:
      *
      * @retval TRUE   If the protocol number in IPv6 header is TCP.
      * @retval FALSE  If the protocol number in IPv6 header is not TCP.
-     *
      */
     bool IsTcp(void) const { return GetIpProto() == kProtoTcp; }
 
@@ -550,7 +514,6 @@ public:
      *
      * @retval TRUE   If the protocol number in IPv6 header is ICMPv6.
      * @retval FALSE  If the protocol number in IPv6 header is not ICMPv6.
-     *
      */
     bool IsIcmp6(void) const { return GetIpProto() == kProtoIcmp6; }
 
@@ -558,7 +521,6 @@ public:
      * Returns the source IPv6 address from IPv6 header.
      *
      * @returns The source IPv6 address.
-     *
      */
     const Address &GetSourceAddress(void) const { return mIp6Header.GetSource(); }
 
@@ -566,7 +528,6 @@ public:
      * Returns the destination IPv6 address from IPv6 header.
      *
      * @returns The destination IPv6 address.
-     *
      */
     const Address &GetDestinationAddress(void) const { return mIp6Header.GetDestination(); }
 
@@ -576,7 +537,6 @@ public:
      * MUST be used when `IsUdp() == true`. Otherwise its behavior is undefined
      *
      * @returns The UDP header.
-     *
      */
     const Udp::Header &GetUdpHeader(void) const { return mHeader.mUdp; }
 
@@ -586,7 +546,6 @@ public:
      * MUST be used when `IsTcp() == true`. Otherwise its behavior is undefined
      *
      * @returns The TCP header.
-     *
      */
     const Tcp::Header &GetTcpHeader(void) const { return mHeader.mTcp; }
 
@@ -596,7 +555,6 @@ public:
      * MUST be used when `IsIcmp6() == true`. Otherwise its behavior is undefined
      *
      * @returns The ICMPv6 header.
-     *
      */
     const Icmp::Header &GetIcmpHeader(void) const { return mHeader.mIcmp; }
 
@@ -604,7 +562,6 @@ public:
      * Returns the source port number if header is UDP or TCP, or zero otherwise
      *
      * @returns The source port number under UDP / TCP or zero.
-     *
      */
     uint16_t GetSourcePort(void) const;
 
@@ -612,7 +569,6 @@ public:
      * Returns the destination port number if header is UDP or TCP, or zero otherwise.
      *
      * @returns The destination port number under UDP / TCP or zero.
-     *
      */
     uint16_t GetDestinationPort(void) const;
 
@@ -620,7 +576,6 @@ public:
      * Returns the checksum values from corresponding UDP, TCP, or ICMPv6 header.
      *
      * @returns The checksum value.
-     *
      */
     uint16_t GetChecksum(void) const;
 
@@ -636,7 +591,6 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace Ip6

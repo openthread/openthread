@@ -47,14 +47,12 @@ namespace ot {
 
 /**
  * Implements handling Announce Begin Requests.
- *
  */
 class AnnounceBeginClient : public InstanceLocator
 {
 public:
     /**
      * Initializes the object.
-     *
      */
     explicit AnnounceBeginClient(Instance &aInstance);
 
@@ -68,7 +66,6 @@ public:
      *
      * @retval kErrorNone    Successfully enqueued the Announce Begin message.
      * @retval kErrorNoBufs  Insufficient buffers to generate a Announce Begin message.
-     *
      */
     Error SendRequest(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod, const Ip6::Address &aAddress);
 };

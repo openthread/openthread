@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes implementation for the RA-based routing management.
- *
  */
 
 #include "border_router/routing_manager.hpp"

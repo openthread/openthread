@@ -58,7 +58,6 @@ public:
      * Initializes the Leader object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit Leader(Instance &aInstance);
 
@@ -66,7 +65,6 @@ public:
      * Sets the session ID.
      *
      * @param[in] aSessionId  The session ID to use.
-     *
      */
     void SetSessionId(uint16_t aSessionId) { mSessionId = aSessionId; }
 
@@ -74,7 +72,6 @@ public:
      * Sends a MGMT_DATASET_CHANGED message to commissioner.
      *
      * @param[in]  aAddress   The IPv6 address of destination.
-     *
      */
     void SendDatasetChanged(const Ip6::Address &aAddress);
 
@@ -85,7 +82,6 @@ public:
      *
      * @retval  kErrorNone         Successfully set the minimal delay timer.
      * @retval  kErrorInvalidArgs  If @p aDelayTimerMinimal is not valid.
-     *
      */
     Error SetDelayTimerMinimal(uint32_t aDelayTimerMinimal);
 
@@ -93,13 +89,11 @@ public:
      * Gets minimal delay timer.
      *
      * @retval the minimal delay timer (in ms).
-     *
      */
     uint32_t GetDelayTimerMinimal(void) const { return mDelayTimerMinimal; }
 
     /**
      * Sets empty Commissioner Data TLV in the Thread Network Data.
-     *
      */
     void SetEmptyCommissionerData(void);
 

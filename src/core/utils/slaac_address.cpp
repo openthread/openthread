@@ -387,7 +387,6 @@ Error Slaac::GenerateIid(Ip6::Netif::UnicastAddress &aAddress, uint8_t &aDadCoun
      *  - The `secret_key` is randomly generated on first use (using true
      *    random number generator) and saved in non-volatile settings for
      *    future use.
-     *
      */
 
     Error                error      = kErrorFailed;

@@ -51,7 +51,6 @@ extern "C" {
  *   is enabled.
  *
  * @{
- *
  */
 
 /**
@@ -59,7 +58,6 @@ extern "C" {
  *
  * @param[in]  aJamState Current jam state (`true` if jam is detected, `false` otherwise).
  * @param[in]  aContext  A pointer to application-specific context.
- *
  */
 typedef void (*otJamDetectionCallback)(bool aJamState, void *aContext);
 
@@ -70,7 +68,6 @@ typedef void (*otJamDetectionCallback)(bool aJamState, void *aContext);
  * @param[in]  aRssiThreshold  The RSSI threshold.
  *
  * @retval OT_ERROR_NONE    Successfully set the threshold.
- *
  */
 otError otJamDetectionSetRssiThreshold(otInstance *aInstance, int8_t aRssiThreshold);
 
@@ -91,7 +88,6 @@ int8_t otJamDetectionGetRssiThreshold(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE          Successfully set the window.
  * @retval OT_ERROR_INVALID_ARGS  The given input parameter not within valid range (1-63)
- *
  */
 otError otJamDetectionSetWindow(otInstance *aInstance, uint8_t aWindow);
 
@@ -101,7 +97,6 @@ otError otJamDetectionSetWindow(otInstance *aInstance, uint8_t aWindow);
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
  * @returns The Jam Detection Window.
- *
  */
 uint8_t otJamDetectionGetWindow(otInstance *aInstance);
 
@@ -117,7 +112,6 @@ uint8_t otJamDetectionGetWindow(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE          Successfully set the window.
  * @retval OT_ERROR_INVALID_ARGS  The given input is not within the valid range.
- *
  */
 otError otJamDetectionSetBusyPeriod(otInstance *aInstance, uint8_t aBusyPeriod);
 
@@ -127,7 +121,6 @@ otError otJamDetectionSetBusyPeriod(otInstance *aInstance, uint8_t aBusyPeriod);
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
  * @returns The Jam Detection Busy Period.
- *
  */
 uint8_t otJamDetectionGetBusyPeriod(otInstance *aInstance);
 
@@ -140,7 +133,6 @@ uint8_t otJamDetectionGetBusyPeriod(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE         Successfully started the jamming detection.
  * @retval OT_ERROR_ALREADY      Jam detection has been started before.
- *
  */
 otError otJamDetectionStart(otInstance *aInstance, otJamDetectionCallback aCallback, void *aContext);
 
@@ -151,7 +143,6 @@ otError otJamDetectionStart(otInstance *aInstance, otJamDetectionCallback aCallb
  *
  * @retval OT_ERROR_NONE         Successfully stopped the jamming detection.
  * @retval OT_ERROR_ALREADY      Jam detection is already stopped.
- *
  */
 otError otJamDetectionStop(otInstance *aInstance);
 
@@ -161,7 +152,6 @@ otError otJamDetectionStop(otInstance *aInstance);
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
  * @returns The Jam Detection status (true if enabled, false otherwise).
- *
  */
 bool otJamDetectionIsEnabled(otInstance *aInstance);
 
@@ -171,7 +161,6 @@ bool otJamDetectionIsEnabled(otInstance *aInstance);
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
  * @returns The Jam Detection state (`true` jam is detected, `false' otherwise).
- *
  */
 bool otJamDetectionGetState(otInstance *aInstance);
 
@@ -188,13 +177,11 @@ bool otJamDetectionGetState(otInstance *aInstance);
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
  * @returns The current history bitmap.
- *
  */
 uint64_t otJamDetectionGetHistoryBitmap(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

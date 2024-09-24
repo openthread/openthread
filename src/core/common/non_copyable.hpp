@@ -38,7 +38,6 @@ namespace ot {
 
 /**
  * Makes any class that derives from it non-copyable. It is intended to be used as a private base class.
- *
  */
 class NonCopyable
 {

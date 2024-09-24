@@ -68,7 +68,6 @@ public:
      * Pointer to call when application data was received over the TLS connection.
      *
      *  Please see otHandleTcatApplicationDataReceive for details.
-     *
      */
     typedef otHandleTcatApplicationDataReceive AppDataReceiveCallback;
 
@@ -76,13 +75,11 @@ public:
      * Pointer to call to notify the completion of a join operation.
      *
      * Please see otHandleTcatJoin for details.
-     *
      */
     typedef otHandleTcatJoin JoinCallback;
 
     /**
      * Represents a TCAT command class.
-     *
      */
     enum CommandClass
     {
@@ -96,7 +93,6 @@ public:
 
     /**
      * The certificate authorization field header type to indicate the type and version of the certificate.
-     *
      */
     enum CertificateAuthorizationFieldHeader : uint8_t
     {
@@ -106,7 +102,6 @@ public:
 
     /**
      * The command class flag type to indicate which requirements apply for a given command class.
-     *
      */
     enum CommandClassFlags : uint8_t
     {
@@ -122,7 +117,6 @@ public:
      *
      * Represents a data structure for storing TCAT Commissioner authorization information in the
      * certificate ASN.1 field 1.3.6.1.4.1.44970.3.
-     *
      */
     OT_TOOL_PACKED_BEGIN
     struct CertificateAuthorizationField
@@ -139,7 +133,6 @@ public:
 
     /**
      * Represents the TCAT vendor information.
-     *
      */
     class VendorInfo : public otTcatVendorInfo
     {
@@ -148,14 +141,12 @@ public:
          * Validates whether the TCAT vendor information is valid.
          *
          * @returns Whether the parameters are valid.
-         *
          */
         bool IsValid(void) const;
     };
 
     /**
      * TCAT Command TLV Types.
-     *
      */
     enum CommandTlvType : uint8_t
     {
@@ -205,7 +196,6 @@ public:
 
     /**
      * TCAT Response Types.
-     *
      */
     enum StatusCode : uint8_t
     {
@@ -224,7 +214,6 @@ public:
 
     /**
      * Represents TCAT application protocol.
-     *
      */
     enum TcatApplicationProtocol : uint8_t
     {
@@ -236,7 +225,6 @@ public:
 
     /**
      * Represents a TCAT certificate V3 extension attribute (OID 1.3.6.1.4.1.44970.x).
-     *
      */
     enum TcatCertificateAttribute
     {
@@ -249,7 +237,6 @@ public:
 
     /**
      * Represents TCAT status.
-     *
      */
     enum State : uint8_t
     {
@@ -260,7 +247,6 @@ public:
 
     /**
      * Represents Device ID type.
-     *
      */
     enum TcatDeviceIdType : uint8_t
     {
@@ -275,7 +261,6 @@ public:
      * Initializes the TCAT agent object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit TcatAgent(Instance &aInstance);
 
@@ -288,13 +273,11 @@ public:
      *
      * @retval kErrorNone        Successfully started the TCAT agent.
      * @retval kErrorFailed      Failed to start due to missing vendor info.
-     *
      */
     Error Start(AppDataReceiveCallback aAppDataReceiveCallback, JoinCallback aHandler, void *aContext);
 
     /**
      * Stops the TCAT agent.
-     *
      */
     void Stop(void);
 
@@ -302,7 +285,6 @@ public:
      * Set the TCAT Vendor Info object
      *
      * @param[in] aVendorInfo A pointer to the Vendor Information (must remain valid after the method call).
-     *
      */
     Error SetTcatVendorInfo(const VendorInfo &aVendorInfo);
 
@@ -311,7 +293,6 @@ public:
      *
      * @retval TRUE   The TCAT agent is enabled.
      * @retval FALSE  The TCAT agent is not enabled.
-     *
      */
     bool IsEnabled(void) const { return mState != kStateDisabled; }
 
@@ -320,7 +301,6 @@ public:
      *
      * @retval TRUE   The TCAT agent is connected with a TCAT commissioner.
      * @retval FALSE  The TCAT agent is not connected.
-     *
      */
     bool IsConnected(void) const { return mState == kStateConnected; }
 
@@ -331,7 +311,6 @@ public:
      *
      * @retval TRUE   The command class is authorized for use by the present TCAT commissioner.
      * @retval FALSE  The command class is not authorized for use.
-     *
      */
     bool IsCommandClassAuthorized(CommandClass aCommandClass) const;
 
@@ -343,7 +322,6 @@ public:
      *
      * @retval kErrorNone           Successfully retrieved the TCAT advertisement data.
      * @retval kErrorInvalidArgs    The data could not be retrieved, or aAdvertisementData is null.
-     *
      */
     Error GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementData);
 
@@ -407,7 +385,6 @@ typedef UintTlvInfo<MeshCoP::TcatAgent::kTlvResponseWithStatus, uint8_t> Respons
 
 /**
  * Represent Device Type and Status
- *
  */
 struct DeviceTypeAndStatus
 {

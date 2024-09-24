@@ -50,7 +50,6 @@ extern "C" {
  * Represents a DSO connection.
  *
  * It is an opaque struct (the platform implementation only deals with pointers to this struct).
- *
  */
 typedef struct otPlatDsoConnection otPlatDsoConnection;
 
@@ -61,7 +60,6 @@ typedef struct otPlatDsoConnection otPlatDsoConnection;
  * @param[in] aConnection   A pointer to the DSO connection.
  *
  * @returns A pointer to the `otInstance`.
- *
  */
 extern otInstance *otPlatDsoGetInstance(otPlatDsoConnection *aConnection);
 
@@ -74,7 +72,6 @@ extern otInstance *otPlatDsoGetInstance(otPlatDsoConnection *aConnection);
  *
  * @param[in] aInstance    The OpenThread instance.
  * @param[in] aEnable      TRUE to start listening, FALSE to stop listening.
- *
  */
 void otPlatDsoEnableListening(otInstance *aInstance, bool aEnable);
 
@@ -93,7 +90,6 @@ void otPlatDsoEnableListening(otInstance *aInstance, bool aEnable);
  * @param[in] aPeerSockAddr  The socket address (IPv6 address and port number) of the peer requesting connection.
  *
  * @returns A pointer to the `otPlatDsoConnection` to use if to accept, or `NULL` if to reject.
- *
  */
 extern otPlatDsoConnection *otPlatDsoAccept(otInstance *aInstance, const otSockAddr *aPeerSockAddr);
 
@@ -105,7 +101,6 @@ extern otPlatDsoConnection *otPlatDsoAccept(otInstance *aInstance, const otSockA
  *
  * @param[in] aConnection     The connection.
  * @param[in] aPeerSockAddr   The socket address (IPv6 address and port number) of the peer to connect to.
- *
  */
 void otPlatDsoConnect(otPlatDsoConnection *aConnection, const otSockAddr *aPeerSockAddr);
 
@@ -118,7 +113,6 @@ void otPlatDsoConnect(otPlatDsoConnection *aConnection, const otSockAddr *aPeerS
  * Only after this callback, the connection can be used to send and receive messages.
  *
  * @param[in] aConnection     The connection.
- *
  */
 extern void otPlatDsoHandleConnected(otPlatDsoConnection *aConnection);
 
@@ -137,7 +131,6 @@ extern void otPlatDsoHandleConnected(otPlatDsoConnection *aConnection);
  *
  * @param[in] aConnection   The connection to send on.
  * @param[in] aMessage      The message to send.
- *
  */
 void otPlatDsoSend(otPlatDsoConnection *aConnection, otMessage *aMessage);
 
@@ -155,13 +148,11 @@ void otPlatDsoSend(otPlatDsoConnection *aConnection, otMessage *aMessage);
  *
  * @param[in] aConnection   The connection on which the message was received.
  * @param[in] aMessage      The received message.
- *
  */
 extern void otPlatDsoHandleReceive(otPlatDsoConnection *aConnection, otMessage *aMessage);
 
 /**
  * Defines disconnect modes.
- *
  */
 typedef enum
 {
@@ -178,7 +169,6 @@ typedef enum
  *
  * @param[in] aConnection   The connection to disconnect
  * @param[in] aMode         The disconnect mode (close gracefully or forcibly abort).
- *
  */
 void otPlatDsoDisconnect(otPlatDsoConnection *aConnection, otPlatDsoDisconnectMode aMode);
 
@@ -191,7 +181,6 @@ void otPlatDsoDisconnect(otPlatDsoConnection *aConnection, otPlatDsoDisconnectMo
  *
  * @param[in] aConnection   The connection which disconnected.
  * @param[in] aMode         The disconnect mode (closed gracefully or forcibly aborted).
- *
  */
 extern void otPlatDsoHandleDisconnected(otPlatDsoConnection *aConnection, otPlatDsoDisconnectMode aMode);
 

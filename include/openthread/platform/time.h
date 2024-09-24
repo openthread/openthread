@@ -53,7 +53,6 @@ extern "C" {
  *   This module includes the platform abstraction for the time service.
  *
  * @{
- *
  */
 
 /**
@@ -73,7 +72,6 @@ extern "C" {
  * accuracy limits announced by @ref otPlatTimeGetXtalAccuracy.
  *
  * @returns The current time in microseconds.
- *
  */
 uint64_t otPlatTimeGet(void);
 
@@ -90,13 +88,11 @@ uint64_t otPlatTimeGet(void);
  * implementation.
  *
  * @returns The current platform clock accuracy, in PPM.
- *
  */
 uint16_t otPlatTimeGetXtalAccuracy(void);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

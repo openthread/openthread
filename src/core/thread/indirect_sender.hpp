@@ -63,7 +63,6 @@ class Child;
 
 /**
  * Implements indirect transmission.
- *
  */
 class IndirectSender : public InstanceLocator, public IndirectSenderBase, private NonCopyable
 {
@@ -78,7 +77,6 @@ public:
      * Defines all the child info required for indirect transmission.
      *
      * `Child` class publicly inherits from this class.
-     *
      */
     class ChildInfo
     {
@@ -92,7 +90,6 @@ public:
          * Returns the number of queued messages for the child.
          *
          * @returns Number of queued messages for the child.
-         *
          */
         uint16_t GetIndirectMessageCount(void) const { return mQueuedMessageCount; }
 
@@ -137,13 +134,11 @@ public:
      * Initializes the object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit IndirectSender(Instance &aInstance);
 
     /**
      * Enables indirect transmissions.
-     *
      */
     void Start(void) { mEnabled = true; }
 
@@ -151,7 +146,6 @@ public:
      * Disables indirect transmission.
      *
      * Any previously scheduled indirect transmission is canceled.
-     *
      */
     void Stop(void);
 
@@ -160,7 +154,6 @@ public:
      *
      * @param[in] aMessage  The message to add.
      * @param[in] aChild    The (sleepy) child for indirect transmission.
-     *
      */
     void AddMessageForSleepyChild(Message &aMessage, Child &aChild);
 
@@ -172,7 +165,6 @@ public:
      *
      * @retval kErrorNone          Successfully removed the message for indirect transmission.
      * @retval kErrorNotFound      The message was not scheduled for indirect transmission to the child.
-     *
      */
     Error RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
 
@@ -180,7 +172,6 @@ public:
      * Removes all added messages for a specific child and frees message (with no indirect/direct tx).
      *
      * @param[in]  aChild  A reference to a child whose messages shall be removed.
-     *
      */
     void ClearAllMessagesForSleepyChild(Child &aChild);
 
@@ -189,7 +180,6 @@ public:
      *
      * @param[in] aChild            A reference to the child.
      * @param[in] aUseShortAddress  `true` to use short address, `false` to use extended address.
-     *
      */
     void SetChildUseShortAddress(Child &aChild, bool aUseShortAddress);
 
@@ -198,7 +188,6 @@ public:
      *
      * @param[in]  aChild    The child whose device mode was changed.
      * @param[in]  aOldMode  The old device mode of the child.
-     *
      */
     void HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMode);
 
@@ -225,7 +214,6 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace ot

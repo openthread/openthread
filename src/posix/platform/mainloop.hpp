@@ -42,7 +42,6 @@ namespace Mainloop {
 
 /**
  * Is the base for all mainloop event sources.
- *
  */
 class Source
 {
@@ -53,7 +52,6 @@ public:
      * Registers events in the mainloop.
      *
      * @param[in,out]   aContext    A reference to the mainloop context.
-     *
      */
     virtual void Update(otSysMainloopContext &aContext) = 0;
 
@@ -61,13 +59,11 @@ public:
      * Processes the mainloop events.
      *
      * @param[in]   aContext    A reference to the mainloop context.
-     *
      */
     virtual void Process(const otSysMainloopContext &aContext) = 0;
 
     /**
      * Marks destructor virtual method.
-     *
      */
     virtual ~Source() = default;
 
@@ -77,7 +73,6 @@ private:
 
 /**
  * Manages mainloop.
- *
  */
 class Manager
 {
@@ -86,7 +81,6 @@ public:
      * Updates event polls in the mainloop context.
      *
      * @param[in,out]   aContext    A reference to the mainloop context.
-     *
      */
     void Update(otSysMainloopContext &aContext);
 
@@ -94,7 +88,6 @@ public:
      * Processes events in the mainloop context.
      *
      * @param[in]   aContext    A reference to the mainloop context.
-     *
      */
     void Process(const otSysMainloopContext &aContext);
 
@@ -102,7 +95,6 @@ public:
      * Adds a new event source into the mainloop.
      *
      * @param[in]   aSource     A reference to the event source.
-     *
      */
     void Add(Source &aSource);
 
@@ -110,7 +102,6 @@ public:
      * Removes an event source from the mainloop.
      *
      * @param[in]   aSource     A reference to the event source.
-     *
      */
     void Remove(Source &aSource);
 
@@ -118,7 +109,6 @@ public:
      * Returns the Mainloop singleton.
      *
      * @returns A reference to the Mainloop singleton.
-     *
      */
     static Manager &Get(void);
 

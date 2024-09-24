@@ -36,7 +36,6 @@
  *   This module includes configuration variables for the Crypto Backend Library.
  *
  * @{
- *
  */
 
 /**
@@ -48,7 +47,6 @@
  * - @sa OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
  * - @sa OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
  * - @sa OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM
- *
  */
 #ifndef OPENTHREAD_CONFIG_CRYPTO_LIB
 #define OPENTHREAD_CONFIG_CRYPTO_LIB OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
@@ -67,7 +65,6 @@
  * @def OPENTHREAD_CONFIG_AES_CONTEXT_SIZE
  *
  * The size of the AES context byte array. Only applicable with OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM.
- *
  */
 #ifndef OPENTHREAD_CONFIG_AES_CONTEXT_SIZE
 #error "OPENTHREAD_CONFIG_AES_CONTEXT_SIZE is missing"
@@ -77,7 +74,6 @@
  * @def OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE
  *
  * The size of the HMAC_SHA256 context byte array. Only applicable with OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM.
- *
  */
 #ifndef OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE
 #error "OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE is missing"
@@ -87,7 +83,6 @@
  * @def OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE
  *
  * The size of the HKDF context byte array. Only applicable with OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM.
- *
  */
 #ifndef OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE
 #error "OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE is missing"
@@ -97,7 +92,6 @@
  * @def OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE
  *
  * The size of the SHA256 context byte array. Only applicable with OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM.
- *
  */
 #ifndef OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE
 #error "OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE is missing"
@@ -107,7 +101,6 @@
 
 /**
  * @}
- *
  */
 
 #endif // CONFIG_CRYPTO_H_

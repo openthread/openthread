@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes compile-time configurations for the DIAG service.
- *
  */
 
 #ifndef CONFIG_DIAG_H_
@@ -42,14 +41,12 @@
  *   This module includes configuration variables for the DIAG service.
  *
  * @{
- *
  */
 
 /**
  * @def OPENTHREAD_CONFIG_DIAG_ENABLE
  *
  * Define to 1 to enable Factory Diagnostics support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DIAG_ENABLE
 #define OPENTHREAD_CONFIG_DIAG_ENABLE 0
@@ -59,7 +56,6 @@
  * @def OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
  *
  * Define OpenThread diagnostic mode output buffer size in bytes
- *
  */
 #ifndef OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
 #define OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE 256
@@ -69,7 +65,6 @@
  * @def OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX
  *
  * Define OpenThread diagnostic mode max command line arguments.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX
 #define OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX 32
@@ -79,7 +74,6 @@
  * @def OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE
  *
  * Define OpenThread diagnostic mode command line buffer size in bytes.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE
 #define OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE 256
@@ -87,7 +81,6 @@
 
 /**
  * @}
- *
  */
 
 #endif // CONFIG_DIAG_H_

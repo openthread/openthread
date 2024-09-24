@@ -65,25 +65,21 @@ class BorderAgent : public InstanceLocator, private NonCopyable
 public:
     /**
      * Minimum length of the ephemeral key string.
-     *
      */
     static constexpr uint16_t kMinEphemeralKeyLength = OT_BORDER_AGENT_MIN_EPHEMERAL_KEY_LENGTH;
 
     /**
      * Maximum length of the ephemeral key string.
-     *
      */
     static constexpr uint16_t kMaxEphemeralKeyLength = OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_LENGTH;
 
     /**
      * Default ephemeral key timeout interval in milliseconds.
-     *
      */
     static constexpr uint32_t kDefaultEphemeralKeyTimeout = OT_BORDER_AGENT_DEFAULT_EPHEMERAL_KEY_TIMEOUT;
 
     /**
      * Maximum ephemeral key timeout interval in milliseconds.
-     *
      */
     static constexpr uint32_t kMaxEphemeralKeyTimeout = OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_TIMEOUT;
 
@@ -91,7 +87,6 @@ public:
 
     /**
      * Defines the Border Agent state.
-     *
      */
     enum State : uint8_t
     {
@@ -105,7 +100,6 @@ public:
      * Initializes the `BorderAgent` object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit BorderAgent(Instance &aInstance);
 
@@ -121,7 +115,6 @@ public:
      *
      * @retval kErrorNone  If successfully retrieved the Border Agent ID.
      * @retval ...         If failed to retrieve the Border Agent ID.
-     *
      */
     Error GetId(Id &aId);
 
@@ -136,7 +129,6 @@ public:
      *
      * @retval kErrorNone  If successfully set the Border Agent ID.
      * @retval ...         If failed to set the Border Agent ID.
-     *
      */
     Error SetId(const Id &aId);
 #endif
@@ -145,19 +137,16 @@ public:
      * Gets the UDP port of this service.
      *
      * @returns  UDP port number.
-     *
      */
     uint16_t GetUdpPort(void) const;
 
     /**
      * Starts the Border Agent service.
-     *
      */
     void Start(void) { IgnoreError(Start(kUdpPort)); }
 
     /**
      * Stops the Border Agent service.
-     *
      */
     void Stop(void);
 
@@ -165,7 +154,6 @@ public:
      * Gets the state of the Border Agent service.
      *
      * @returns The state of the Border Agent service.
-     *
      */
     State GetState(void) const { return mState; }
 
@@ -198,7 +186,6 @@ public:
      * @retval kErrorInvalidState   Agent is not running or connected to external commissioner.
      * @retval kErrorInvalidArgs    The given @p aKeyString is not valid.
      * @retval kErrorFailed         Failed to set the key (e.g., could not bind to UDP port).
-     *
      */
     Error SetEphemeralKey(const char *aKeyString, uint32_t aTimeout, uint16_t aUdpPort);
 
@@ -211,7 +198,6 @@ public:
      * If a commissioner is connected using the ephemeral key and is currently active, calling this method does not
      * change its state. In this case the `IsEphemeralKeyActive()` will continue to return `true` until the commissioner
      * disconnects.
-     *
      */
     void ClearEphemeralKey(void);
 
@@ -220,14 +206,11 @@ public:
      *
      * @retval TRUE    An ephemeral key is active.
      * @retval FALSE   No ephemeral key is active.
-     *
      */
     bool IsEphemeralKeyActive(void) const { return mUsingEphemeralKey; }
 
     /**
      * Callback function pointer to notify when there is any changes related to use of ephemeral key by Border Agent.
-     *
-     *
      */
     typedef otBorderAgentEphemeralKeyCallback EphemeralKeyCallback;
 
@@ -242,7 +225,6 @@ public:
      * Gets the set of border agent counters.
      *
      * @returns The border agent counters.
-     *
      */
     const otBorderAgentCounters *GetCounters(void) { return &mCounters; }
 
@@ -251,7 +233,6 @@ public:
      * bound.
      *
      * @returns  The current UDP Proxy port or 0 if no Proxy Transmit has been received yet.
-     *
      */
     uint16_t GetUdpProxyPort(void) const { return mUdpProxyPort; }
 

@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file implements the Network Data Publisher.
- *
  */
 
 #include "network_data_publisher.hpp"

@@ -47,7 +47,6 @@ namespace Spinel {
  * `Buffer` implements priority FIFO logic for storing and reading frames. Two priority levels of high and low
  * are supported. Within same priority level first-in-first-out order is preserved. High priority frames are read
  * ahead of any low priority ones.
- *
  */
 class Buffer
 {
@@ -57,7 +56,6 @@ public:
     /**
      * Defines the priority of a frame. High priority frames are read before low priority frames. Within same priority
      * level FIFO order is preserved.
-     *
      */
     enum Priority
     {
@@ -68,13 +66,11 @@ public:
     /**
      * Defines the (abstract) frame tag type. The tag is a unique value (within currently queued frames) associated
      * with a frame in the `Buffer`. Frame tags can be compared with one another using operator `==`.
-     *
      */
     typedef const void *FrameTag;
 
     /**
      * Defines the tag value indicating an invalid tag (e.g., when there is no frame).
-     *
      */
     static const FrameTag kInvalidTag;
 
@@ -82,14 +78,12 @@ public:
      * Defines the structure to hold a write position for an input frame (frame being written).
      *
      * It should be considered as an opaque data structure to users of `Buffer`.
-     *
      */
     struct WritePosition
     {
     public:
         /**
          * The constructor for a `WritePosition` object.
-         *
          */
         WritePosition(void)
             : mPosition(nullptr)
@@ -112,7 +106,6 @@ public:
      * @param[in] aTag                  The tag associated with the frame which is added or removed.
      * @param[in] aPriority             The priority of frame.
      * @param[in] aBuffer               A pointer to the `Buffer`.
-     *
      */
     typedef void (*BufferCallback)(void *aContext, FrameTag aTag, Priority aPriority, Buffer *aBuffer);
 
@@ -121,13 +114,11 @@ public:
      *
      * @param[in] aBuffer               A pointer to a buffer which will be used by NCP frame buffer.
      * @param[in] aBufferLength         The buffer size (in bytes).
-     *
      */
     Buffer(uint8_t *aBuffer, uint16_t aBufferLength);
 
     /**
      * Clears the NCP frame buffer. All the frames are cleared/removed.
-     *
      */
     void Clear(void);
 
@@ -138,7 +129,6 @@ public:
      *
      * @param[in] aFrameAddedCallback   Callback invoked when a new frame is successfully added to buffer.
      * @param[in] aFrameAddedContext    A pointer to arbitrary context used with frame added callback.
-     *
      */
     void SetFrameAddedCallback(BufferCallback aFrameAddedCallback, void *aFrameAddedContext);
 
@@ -149,7 +139,6 @@ public:
      *
      * @param[in] aFrameRemovedCallback Callback invoked when a frame is removed from buffer.
      * @param[in] aFrameRemovedContext  A pointer to arbitrary context used with frame removed callback.
-     *
      */
     void SetFrameRemovedCallback(BufferCallback aFrameRemovedCallback, void *aFrameRemovedContext);
 
@@ -160,7 +149,6 @@ public:
      * `InFrameBegin()` will discard and clear the previous unfinished frame.
      *
      * @param[in] aPriority             Priority level of the new input frame.
-     *
      */
     void InFrameBegin(Priority aPriority);
 
@@ -178,7 +166,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added given byte to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the byte.
      * @retval OT_ERROR_INVALID_STATE   `InFrameBegin()` has not been called earlier to start the frame.
-     *
      */
     otError InFrameFeedByte(uint8_t aByte);
 
@@ -197,7 +184,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully added new data to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add data.
      * @retval OT_ERROR_INVALID_STATE   `InFrameBegin()` has not been called earlier to start the frame.
-     *
      */
     otError InFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength);
 
@@ -223,7 +209,6 @@ public:
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the message.
      * @retval OT_ERROR_INVALID_STATE   `InFrameBegin()` has not been called earlier to start the frame.
      * @retval OT_ERROR_INVALID_ARGS    If @p aMessage is nullptr.
-     *
      */
     otError InFrameFeedMessage(otMessage *aMessage);
 #endif
@@ -239,7 +224,6 @@ public:
      *
      * @retval OT_ERROR_NONE            Successfully saved current write position in @p aPosition.
      * @retval OT_ERROR_INVALID_STATE   `InFrameBegin()` has not been called earlier to start the frame.
-     *
      */
     otError InFrameGetPosition(WritePosition &aPosition);
 
@@ -262,7 +246,6 @@ public:
      * @retval OT_ERROR_INVALID_ARGS    The given write position is not valid (i.e., if it does not belong to same
      *                                  input frame), or the input frame has an added `otMessage`, or the write
      *                                  operation will go beyond the current end of the input frame.
-     *
      */
     otError InFrameOverwrite(const WritePosition &aPosition, const uint8_t *aDataBuffer, uint16_t aDataBufferLength);
 
@@ -280,7 +263,6 @@ public:
      * @retval OT_ERROR_INVALID_STATE   No input frame (`InFrameBegin()` has not been called).
      * @retval OT_ERROR_INVALID_ARGS    The given write position is not valid (does not belong to same input frame), or
      *                                  the input frame has an added `otMessage`.
-     *
      */
     otError InFrameReset(const WritePosition &aPosition);
 
@@ -295,7 +277,6 @@ public:
      *
      * @returns The distance (number of bytes) from a write position to current end of frame, or zero for invalid
      *          arguments.
-     *
      */
     uint16_t InFrameGetDistance(const WritePosition &aPosition) const;
 
@@ -311,7 +292,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully ended the input frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add message.
      * @retval OT_ERROR_INVALID_STATE   `InFrameBegin()` has not been called earlier to start the frame.
-     *
      */
     otError InFrameEnd(void);
 
@@ -330,7 +310,6 @@ public:
      *
      * @retval TRUE                     Buffer is not empty and contains at least one full frame for reading.
      * @retval FALSE                    Buffer is empty and contains no frame for reading.
-     *
      */
     bool IsEmpty(void) const;
 
@@ -348,7 +327,6 @@ public:
      *
      * @retval OT_ERROR_NONE            Successfully started/prepared a new output frame for reading.
      * @retval OT_ERROR_NOT_FOUND       No frame available in buffer for reading.
-     *
      */
     otError OutFrameBegin(void);
 
@@ -362,7 +340,6 @@ public:
      * @retval TRUE                     Frame has ended (no more bytes available to read from current output frame), or
      *                                  there is currently no prepared/active output frame.
      * @retval FALSE                    Frame still has more data to read.
-     *
      */
     bool OutFrameHasEnded(void);
 
@@ -375,7 +352,6 @@ public:
      *
      * @returns The next byte from the current output frame or zero if current output frame has ended or there is
      * prepared/active output from.
-     *
      */
     uint8_t OutFrameReadByte(void);
 
@@ -392,7 +368,6 @@ public:
      * @param[out]  aDataBuffer          A pointer to a data buffer.
      *
      * @returns The number of bytes read and copied into data buffer.
-     *
      */
     uint16_t OutFrameRead(uint16_t aReadLength, uint8_t *aDataBuffer);
 
@@ -410,7 +385,6 @@ public:
      *
      * @retval OT_ERROR_NONE            Successfully removed the front frame.
      * @retval OT_ERROR_NOT_FOUND       No frame available in NCP frame buffer to remove.
-     *
      */
     otError OutFrameRemove(void);
 
@@ -424,7 +398,6 @@ public:
      * If there is no frame in buffer, this method returns zero.
      *
      * @returns The number of bytes (length) of current/front frame, or zero if no frame in buffer.
-     *
      */
     uint16_t OutFrameGetLength(void);
 
@@ -439,7 +412,6 @@ public:
      * If there is no frame in buffer, this method returns `kInvalidTag`.
      *
      * @returns The tag assigned to the current/from output frame, or `kInvalidTag` if no frame in buffer.
-     *
      */
     FrameTag OutFrameGetTag(void);
 
@@ -561,8 +533,6 @@ private:
      *                        |                                      |
      *                         \------------------V-----------------/
      *                             Current InFrame (being written)
-     *
-     *
      */
 
     enum

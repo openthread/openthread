@@ -51,7 +51,6 @@ namespace Posix {
 
 /**
  * Updates the target power table and calibrated power table to the RCP.
- *
  */
 class Configuration : public Logger<Configuration>
 {
@@ -77,7 +76,6 @@ public:
      *
      * @retval  OT_ERROR_NONE             Successfully set region code.
      * @retval  OT_ERROR_FAILED           Failed to set the region code.
-     *
      */
     otError SetRegion(uint16_t aRegionCode);
 
@@ -88,7 +86,6 @@ public:
      * ISO 3166 alpha-2 code.
      *
      * @returns  The region code.
-     *
      */
     uint16_t GetRegion(void) const { return mRegionCode; }
 
@@ -96,7 +93,6 @@ public:
      * Get the radio supported channel mask that the device is allowed to be on.
      *
      * @returns The radio supported channel mask.
-     *
      */
     uint32_t GetSupportedChannelMask(void) const { return mSupportedChannelMask; }
 
@@ -104,7 +100,6 @@ public:
      * Gets the radio preferred channel mask that the device prefers to form on.
      *
      * @returns The radio preferred channel mask.
-     *
      */
     uint32_t GetPreferredChannelMask(void) const { return mPreferredChannelMask; }
 
@@ -113,7 +108,6 @@ public:
      *
      * @retval TRUE  If there are any valid configuration keys in the configuration file.
      * @retval FALSE If the configuration file doesn't exist or there is no key in the configuration file.
-     *
      */
     bool IsValid(void) const;
 

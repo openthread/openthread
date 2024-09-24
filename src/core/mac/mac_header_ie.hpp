@@ -48,12 +48,10 @@ namespace Mac {
  * @addtogroup core-mac
  *
  * @{
- *
  */
 
 /**
  * Implements IEEE 802.15.4 IE (Information Element) header generation and parsing.
- *
  */
 OT_TOOL_PACKED_BEGIN
 class HeaderIe
@@ -61,7 +59,6 @@ class HeaderIe
 public:
     /**
      * Initializes the Header IE.
-     *
      */
     void Init(void) { mFields.m16 = 0; }
 
@@ -70,7 +67,6 @@ public:
      *
      * @param[in]  aId   The IE Element Id.
      * @param[in]  aLen  The IE content length.
-     *
      */
     void Init(uint16_t aId, uint8_t aLen);
 
@@ -78,7 +74,6 @@ public:
      * Returns the IE Element Id.
      *
      * @returns the IE Element Id.
-     *
      */
     uint16_t GetId(void) const { return (LittleEndian::HostSwap16(mFields.m16) & kIdMask) >> kIdOffset; }
 
@@ -86,7 +81,6 @@ public:
      * Sets the IE Element Id.
      *
      * @param[in]  aId  The IE Element Id.
-     *
      */
     void SetId(uint16_t aId)
     {
@@ -98,7 +92,6 @@ public:
      * Returns the IE content length.
      *
      * @returns the IE content length.
-     *
      */
     uint8_t GetLength(void) const { return mFields.m8[0] & kLengthMask; }
 
@@ -106,7 +99,6 @@ public:
      * Sets the IE content length.
      *
      * @param[in]  aLength  The IE content length.
-     *
      */
     void SetLength(uint8_t aLength) { mFields.m8[0] = (mFields.m8[0] & ~kLengthMask) | (aLength & kLengthMask); }
 
@@ -134,7 +126,6 @@ private:
 
 /**
  * Implements CSL IE data structure.
- *
  */
 OT_TOOL_PACKED_BEGIN
 class CslIe
@@ -147,7 +138,6 @@ public:
      * Returns the CSL Period.
      *
      * @returns the CSL Period.
-     *
      */
     uint16_t GetPeriod(void) const { return LittleEndian::HostSwap16(mPeriod); }
 
@@ -155,7 +145,6 @@ public:
      * Sets the CSL Period.
      *
      * @param[in]  aPeriod  The CSL Period.
-     *
      */
     void SetPeriod(uint16_t aPeriod) { mPeriod = LittleEndian::HostSwap16(aPeriod); }
 
@@ -163,7 +152,6 @@ public:
      * Returns the CSL Phase.
      *
      * @returns the CSL Phase.
-     *
      */
     uint16_t GetPhase(void) const { return LittleEndian::HostSwap16(mPhase); }
 
@@ -171,7 +159,6 @@ public:
      * Sets the CSL Phase.
      *
      * @param[in]  aPhase  The CSL Phase.
-     *
      */
     void SetPhase(uint16_t aPhase) { mPhase = LittleEndian::HostSwap16(aPhase); }
 
@@ -184,7 +171,6 @@ private:
  * Implements Termination2 IE.
  *
  * Is empty for template specialization.
- *
  */
 class Termination2Ie
 {
@@ -195,7 +181,6 @@ public:
 
 /**
  * Implements vendor specific Header IE generation and parsing.
- *
  */
 OT_TOOL_PACKED_BEGIN
 class VendorIeHeader
@@ -208,7 +193,6 @@ public:
      * Returns the Vendor OUI.
      *
      * @returns The Vendor OUI.
-     *
      */
     uint32_t GetVendorOui(void) const { return LittleEndian::ReadUint24(mOui); }
 
@@ -216,7 +200,6 @@ public:
      * Sets the Vendor OUI.
      *
      * @param[in]  aVendorOui  A Vendor OUI.
-     *
      */
     void SetVendorOui(uint32_t aVendorOui) { LittleEndian::WriteUint24(aVendorOui, mOui); }
 
@@ -224,7 +207,6 @@ public:
      * Returns the Vendor IE sub-type.
      *
      * @returns The Vendor IE sub-type.
-     *
      */
     uint8_t GetSubType(void) const { return mSubType; }
 
@@ -232,7 +214,6 @@ public:
      * Sets the Vendor IE sub-type.
      *
      * @param[in]  aSubType  The Vendor IE sub-type.
-     *
      */
     void SetSubType(uint8_t aSubType) { mSubType = aSubType; }
 
@@ -246,7 +227,6 @@ private:
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 /**
  * Implements Time Header IE generation and parsing.
- *
  */
 OT_TOOL_PACKED_BEGIN
 class TimeIe : public VendorIeHeader
@@ -259,7 +239,6 @@ public:
 
     /**
      * Initializes the time IE.
-     *
      */
     void Init(void)
     {
@@ -271,7 +250,6 @@ public:
      * Returns the time sync sequence.
      *
      * @returns the time sync sequence.
-     *
      */
     uint8_t GetSequence(void) const { return mSequence; }
 
@@ -279,7 +257,6 @@ public:
      * Sets the tine sync sequence.
      *
      * @param[in]  aSequence The time sync sequence.
-     *
      */
     void SetSequence(uint8_t aSequence) { mSequence = aSequence; }
 
@@ -287,7 +264,6 @@ public:
      * Returns the network time.
      *
      * @returns the network time, in microseconds.
-     *
      */
     uint64_t GetTime(void) const { return LittleEndian::HostSwap64(mTime); }
 
@@ -295,7 +271,6 @@ public:
      * Sets the network time.
      *
      * @param[in]  aTime  The network time.
-     *
      */
     void SetTime(uint64_t aTime) { mTime = LittleEndian::HostSwap64(aTime); }
 
@@ -321,7 +296,6 @@ public:
  * IEEE 802.15.4 Rendezvous Time IE contains two fields, Rendezvous Time and
  * Wake-up Interval, but the Wake-up Interval is not used in Thread, so it is
  * not included in this class.
- *
  */
 OT_TOOL_PACKED_BEGIN
 class RendezvousTimeIe
@@ -334,7 +308,6 @@ public:
      * This method returns the Rendezvous Time.
      *
      * @returns the Rendezvous Time in the units of 10 symbols.
-     *
      */
     uint16_t GetRendezvousTime(void) const { return LittleEndian::HostSwap16(mRendezvousTime); }
 
@@ -342,7 +315,6 @@ public:
      * This method sets the Rendezvous Time.
      *
      * @param[in]  aRendezvousTime  The Rendezvous Time in the units of 10 symbols.
-     *
      */
     void SetRendezvousTime(uint16_t aRendezvousTime) { mRendezvousTime = LittleEndian::HostSwap16(aRendezvousTime); }
 
@@ -352,7 +324,6 @@ private:
 
 /**
  * Implements Connection IE data structure.
- *
  */
 OT_TOOL_PACKED_BEGIN
 class ConnectionIe : public VendorIeHeader
@@ -364,7 +335,6 @@ public:
 
     /**
      * Initializes the Connection IE.
-     *
      */
     void Init(void)
     {
@@ -380,7 +350,6 @@ public:
      * supposed to retry sending the Parent Request to the Wake-up Coordinator.
      *
      * @returns the Retry Interval in the units of Wake-up Intervals (7.5ms by default).
-     *
      */
     uint8_t GetRetryInterval(void) const { return (mConnectionWindow & kRetryIntervalMask) >> kRetryIntervalOffset; }
 
@@ -388,7 +357,6 @@ public:
      * Sets the Retry Interval.
      *
      * @param[in]  aRetryInterval  The Retry Interval in the units of Wake-up Intervals (7.5ms by default).
-     *
      */
     void SetRetryInterval(uint8_t aRetryInterval)
     {
@@ -402,7 +370,6 @@ public:
      * to retry sending the Parent Request to the Wakeup Coordinator.
      *
      * @returns the Retry Count.
-     *
      */
     uint8_t GetRetryCount(void) const { return mConnectionWindow & kRetryCountMask; }
 
@@ -410,7 +377,6 @@ public:
      * Sets the Retry Count
      *
      * @param[in]  aRetryCount  The Retry Count.
-     *
      */
     void SetRetryCount(uint8_t aRetryCount)
     {
@@ -428,7 +394,6 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace Mac

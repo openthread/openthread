@@ -176,7 +176,6 @@ void TestMacCommandFrame(void)
 
 /**
  * Verifies in-place encryption/decryption.
- *
  */
 void TestInPlaceAesCcmProcessing(void)
 {
