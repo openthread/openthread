@@ -170,9 +170,10 @@ public:
      * Setting the ephemeral key again before a previously set one is timed out will replace the previous one and will
      * reset the timeout.
      *
-     * While the timeout interval is in effect, the ephemeral key can be used only once by an external commissioner to
-     * connect. Once the commissioner disconnects, the ephemeral key is cleared, and Border Agent reverts to using
-     * PSKc.
+     * During the timeout interval, the ephemeral key can be used only once by an external commissioner to establish a
+     * connection. After the commissioner disconnects, the ephemeral key is cleared, and the Border Agent reverts to
+     * using PSKc. If the timeout expires while a commissioner is still connected, the session will be terminated, and
+     * the Border Agent will cease using the ephemeral key and revert to PSKc.
      *
      * @param[in] aKeyString   The ephemeral key.
      * @param[in] aTimeout     The timeout duration in milliseconds to use the ephemeral key.
@@ -197,7 +198,7 @@ public:
      *
      * If a commissioner is connected using the ephemeral key and is currently active, calling this method does not
      * change its state. In this case the `IsEphemeralKeyActive()` will continue to return `true` until the commissioner
-     * disconnects.
+     * disconnects, or the ephemeral key timeout expires.
      */
     void ClearEphemeralKey(void);
 
