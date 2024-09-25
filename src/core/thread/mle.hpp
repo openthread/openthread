@@ -586,12 +586,7 @@ public:
      *
      * @returns A reference to the send queue.
      */
-    const MessageQueue &GetMessageQueue(void) const { return mDelayedResponses; }
-
-    /**
-     * Frees multicast MLE Data Response from Delayed Message Queue if any.
-     */
-    void RemoveDelayedDataResponseMessage(void);
+    const MessageQueue &GetMessageQueue(void) const { return mDelayedSender.GetQueue(); }
 
     /**
      * Gets the MLE counters.
@@ -1093,14 +1088,38 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    struct DelayedResponseMetadata
-    {
-        Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
-        void  ReadFrom(const Message &aMessage);
-        void  RemoveFrom(Message &aMessage) const;
+    void HandleDelayedSenderTimer(void) { mDelayedSender.HandleTimer(); }
 
-        Ip6::Address mDestination; // IPv6 address of the message destination.
-        TimeMilli    mSendTime;    // Time when the message shall be sent.
+    class DelayedSender : public InstanceLocator
+    {
+    public:
+        explicit DelayedSender(Instance &aInstance);
+
+        Error SendMessage(TxMessage &aMessage, const Ip6::Address &aDestination, uint16_t aDelay);
+        void  RemoveDataRequestMessage(const Ip6::Address &aDestination);
+        void  RemoveDataResponseMessage(void);
+        void  HandleTimer(void);
+
+        const MessageQueue &GetQueue(void) const { return mQueue; }
+
+    private:
+        struct Metadata
+        {
+            Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
+            void  ReadFrom(const Message &aMessage);
+            void  RemoveFrom(Message &aMessage) const;
+
+            Ip6::Address mDestination;
+            TimeMilli    mSendTime;
+        };
+
+        void Send(TxMessage &aMessage, const Metadata &aMetadata);
+        void RemoveMessage(Message::SubType aSubType, MessageType aMessageType, const Ip6::Address *aDestination);
+
+        using DelayTimer = TimerMilliIn<Mle, &Mle::HandleDelayedSenderTimer>;
+
+        MessageQueue mQueue;
+        DelayTimer   mTimer;
     };
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1223,7 +1242,6 @@ private:
     void       ClearParentCandidate(void) { mParentCandidate.Clear(); }
     Error      SendDataRequest(const Ip6::Address &aDestination);
     void       HandleNotifierEvents(Events aEvents);
-    void       SendDelayedResponse(TxMessage &aMessage, const DelayedResponseMetadata &aMetadata);
     void       HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void       ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
     void       HandleDetachGracefullyTimer(void);
@@ -1243,7 +1261,6 @@ private:
     bool       IsAnnounceAttach(void) const { return mAlternatePanId != Mac::kPanIdBroadcast; }
     void       ScheduleMessageTransmissionTimer(void);
     void       HandleAttachTimer(void);
-    void       HandleDelayedResponseTimer(void);
     void       HandleMessageTransmissionTimer(void);
     void       ProcessKeySequence(RxInfo &aRxInfo);
     void       HandleAdvertisement(RxInfo &aRxInfo);
@@ -1280,8 +1297,6 @@ private:
                                       const Ip6::MessageInfo &aMessageInfo,
                                       uint16_t                aCmdOffset,
                                       const SecurityHeader   &aHeader);
-    void RemoveDelayedMessage(Message::SubType aSubType, MessageType aMessageType, const Ip6::Address *aDestination);
-    void RemoveDelayedDataRequestMessage(const Ip6::Address &aDestination);
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     void InformPreviousParent(void);
@@ -1352,7 +1367,6 @@ private:
 
     using DetachGracefullyTimer = TimerMilliIn<Mle, &Mle::HandleDetachGracefullyTimer>;
     using AttachTimer           = TimerMilliIn<Mle, &Mle::HandleAttachTimer>;
-    using DelayTimer            = TimerMilliIn<Mle, &Mle::HandleDelayedResponseTimer>;
     using MsgTxTimer            = TimerMilliIn<Mle, &Mle::HandleMessageTransmissionTimer>;
     using MleSocket             = Ip6::Udp::SocketIn<Mle, &Mle::HandleUdpReceive>;
 
@@ -1402,7 +1416,7 @@ private:
     LeaderData      mLeaderData;
     Parent          mParent;
     NeighborTable   mNeighborTable;
-    MessageQueue    mDelayedResponses;
+    DelayedSender   mDelayedSender;
     TxChallenge     mParentRequestChallenge;
     ParentCandidate mParentCandidate;
     MleSocket       mSocket;
@@ -1418,7 +1432,6 @@ private:
     Callback<otThreadParentResponseCallback> mParentResponseCallback;
 #endif
     AttachTimer                  mAttachTimer;
-    DelayTimer                   mDelayedResponseTimer;
     MsgTxTimer                   mMessageTransmissionTimer;
     DetachGracefullyTimer        mDetachGracefullyTimer;
     Ip6::NetworkPrefix           mMeshLocalPrefix;
