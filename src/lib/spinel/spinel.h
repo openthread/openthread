@@ -603,6 +603,13 @@ typedef enum
     SPINEL_IPV6_ICMP_PING_OFFLOAD_RLOC_ALOC_ONLY = 4,
 } spinel_ipv6_icmp_ping_offload_mode_t;
 
+typedef uint8_t spinel_ipv6_icmp_type_t;
+
+enum
+{
+    SPINEL_IPV6_ICMP_TYPE_ND = 0,
+};
+
 typedef enum
 {
     SPINEL_SCAN_STATE_IDLE     = 0,
