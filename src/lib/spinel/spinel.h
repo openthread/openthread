@@ -4729,15 +4729,20 @@ enum
 
     SPINEL_PROP_INFRA_IF__BEGIN = 0x910,
 
-    /// Infrastructure interface setup.
+    /// Infrastructure interface state.
     /** Format: `LbA(6)`
      * Type: Write
      *
      * `L`: The infrastructure interface index.
-     * `b`: If the infrastrue interface is running.
+     * `b`: If the infrastructure interface is running.
      * `A(6)`: The IPv6 addresses of the infrastructure interface.
+     *
+     * If the InfraIf hasn't been set up on NCP or the InfraIf changes, NCP will re-initialize
+     * the border routing module. NCP will compare the infrastructure interface index and decide
+     * whether to re-initialize the border routing module. Otherwise, NCP will simply update the
+     * InfraIf state and addresses.
      */
-    SPINEL_PROP_INFRA_IF_SETUP = SPINEL_PROP_INFRA_IF__BEGIN + 1,
+    SPINEL_PROP_INFRA_IF_STATE = SPINEL_PROP_INFRA_IF__BEGIN + 1,
 
     SPINEL_PROP_INFRA_IF__END = 0x920,
 

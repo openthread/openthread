@@ -1404,12 +1404,13 @@ exit:
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 #if OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_INFRA_IF_SETUP>(void)
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_INFRA_IF_STATE>(void)
 {
-    otError error = OT_ERROR_NONE;
-    bool    isInfraRunning;
+    otError  error = OT_ERROR_NONE;
+    uint32_t infraIfIndex;
+    bool     isInfraRunning;
 
-    SuccessOrExit(error = mDecoder.ReadUint32(mInfraIfIndex));
+    SuccessOrExit(error = mDecoder.ReadUint32(infraIfIndex));
     SuccessOrExit(error = mDecoder.ReadBool(isInfraRunning));
 
     mInfraIfAddrCount = 0;
@@ -1421,9 +1422,17 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_INFRA_IF_SETUP>(void)
         SuccessOrExit(error = InfraIfAddAddress(*addr));
     }
 
-    IgnoreError(otBorderRoutingSetEnabled(mInstance, /* aEnabled */ false));
-    SuccessOrExit(error = otBorderRoutingInit(mInstance, mInfraIfIndex, isInfraRunning));
-    SuccessOrExit(error = otBorderRoutingSetEnabled(mInstance, /* aEnabled */ true));
+    if (infraIfIndex != mInfraIfIndex)
+    {
+        mInfraIfIndex = infraIfIndex;
+        IgnoreError(otBorderRoutingSetEnabled(mInstance, /* aEnabled */ false));
+        SuccessOrExit(error = otBorderRoutingInit(mInstance, mInfraIfIndex, isInfraRunning));
+        SuccessOrExit(error = otBorderRoutingSetEnabled(mInstance, /* aEnabled */ true));
+    }
+    else
+    {
+        SuccessOrExit(error = otPlatInfraIfStateChanged(mInstance, mInfraIfIndex, isInfraRunning));
+    }
 
 exit:
     return error;
