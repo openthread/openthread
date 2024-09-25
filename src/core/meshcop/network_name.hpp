@@ -101,7 +101,7 @@ class NetworkName : public otNetworkName, public Unequatable<NetworkName>
 {
 public:
     static constexpr const char *kNetworkNameInit = "OpenThread";
-    static constexpr const char *kDomainNameInit  = "DefaultDomain";
+    static constexpr const char *kDomainNameInit  = "DefaultDomain"; // Section 5.22 Thread spec, MUST NOT change.
 
     /**
      * This constant specified the maximum number of chars in Network Name (excludes null char).
@@ -237,6 +237,14 @@ public:
      * @retval kErrorInvalidArgs   Given name is too long.
      */
     Error SetDomainName(const NameData &aNameData);
+
+    /**
+     * Checks whether the Thread Domain Name is currently set to the default name.
+     *
+     * @returns true if Thread Domain Name equals "DefaultDomain", false otherwise.
+     */
+    bool IsDefaultDomainNameSet(void) const;
+
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 private:

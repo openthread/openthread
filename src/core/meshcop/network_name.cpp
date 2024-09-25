@@ -157,6 +157,11 @@ Error NetworkNameManager::SetDomainName(const NameData &aNameData)
 
     return (error == kErrorAlready) ? kErrorNone : error;
 }
+
+bool NetworkNameManager::IsDefaultDomainNameSet(void) const
+{
+    return StringMatch(mDomainName.GetAsCString(), NetworkName::kDomainNameInit);
+}
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 } // namespace MeshCoP

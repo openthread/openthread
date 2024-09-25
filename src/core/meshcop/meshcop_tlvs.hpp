@@ -108,6 +108,7 @@ public:
         kPeriod                  = OT_MESHCOP_TLV_PERIOD,                   ///< Period TLV
         kScanDuration            = OT_MESHCOP_TLV_SCAN_DURATION,            ///< Scan Duration TLV
         kEnergyList              = OT_MESHCOP_TLV_ENERGY_LIST,              ///< Energy List TLV
+        kThreadDomainName        = OT_MESHCOP_TLV_THREAD_DOMAIN_NAME,       ///< Thread Domain Name TLV
         kDiscoveryRequest        = OT_MESHCOP_TLV_DISCOVERYREQUEST,         ///< Discovery Request TLV
         kDiscoveryResponse       = OT_MESHCOP_TLV_DISCOVERYRESPONSE,        ///< Discovery Response TLV
         kJoinerAdvertisement     = OT_MESHCOP_TLV_JOINERADVERTISEMENT,      ///< Joiner Advertisement TLV
@@ -118,11 +119,12 @@ public:
      */
     static constexpr uint8_t kMaxProvisioningUrlLength = OT_PROVISIONING_URL_MAX_SIZE;
 
-    static constexpr uint8_t kMaxCommissionerIdLength  = 64; ///< Max length of Commissioner ID TLV.
-    static constexpr uint8_t kMaxVendorNameLength      = 32; ///< Max length of Vendor Name TLV.
-    static constexpr uint8_t kMaxVendorModelLength     = 32; ///< Max length of Vendor Model TLV.
-    static constexpr uint8_t kMaxVendorSwVersionLength = 16; ///< Max length of Vendor SW Version TLV.
-    static constexpr uint8_t kMaxVendorDataLength      = 64; ///< Max length of Vendor Data TLV.
+    static constexpr uint8_t kMaxCommissionerIdLength   = 64; ///< Max length of Commissioner ID TLV.
+    static constexpr uint8_t kMaxVendorNameLength       = 32; ///< Max length of Vendor Name TLV.
+    static constexpr uint8_t kMaxVendorModelLength      = 32; ///< Max length of Vendor Model TLV.
+    static constexpr uint8_t kMaxVendorSwVersionLength  = 16; ///< Max length of Vendor SW Version TLV.
+    static constexpr uint8_t kMaxVendorDataLength       = 64; ///< Max length of Vendor Data TLV.
+    static constexpr uint8_t kMaxThreadDomainNameLength = 16; ///< Max length of Thread Domain Name TLV.
 
     /**
      * Returns the Type value.
@@ -936,6 +938,11 @@ private:
     uint16_t mDestinationPort;
     // Followed by the UDP Payload.
 } OT_TOOL_PACKED_END;
+
+/**
+ * Implements Thread Domain Name TLV type.
+ */
+typedef StringTlvInfo<Tlv::kThreadDomainName, Tlv::kMaxThreadDomainNameLength> ThreadDomainNameTlv;
 
 /**
  * Implements Discovery Request TLV generation and parsing.
