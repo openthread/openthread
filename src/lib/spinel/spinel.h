@@ -3284,6 +3284,15 @@ enum
      */
     SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET_TLVS = SPINEL_PROP_THREAD_EXT__BEGIN + 62,
 
+    /// Wake-up Channel
+    /** Format: `C`
+     *
+     * The Wake-up sample channel. Channel value should be `0` (Set Wake-up Channel unspecified,
+     * which means the device will use the PAN channel) or within the range [1, 10] (if 915-MHz
+     * supported) and [11, 26] (if 2.4 GHz supported).
+     */
+    SPINEL_PROP_THREAD_WAKEUP_CHANNEL = SPINEL_PROP_THREAD_EXT__BEGIN + 63,
+
     SPINEL_PROP_THREAD_EXT__END = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN = 0x60,

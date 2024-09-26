@@ -186,9 +186,23 @@ Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
 
             if (error != kErrorNone)
             {
-                LogCrit("Failed to set channel to %u when applying dataset: %s", channel, ErrorToString(error));
+                LogCrit("Failed to set PAN channel to %u when applying dataset: %s", channel, ErrorToString(error));
             }
 
+            break;
+        }
+
+        case Tlv::kWakeupChannel:
+        {
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+            uint8_t channel = static_cast<uint8_t>(cur->ReadValueAs<WakeupChannelTlv>().GetChannel());
+            error           = Get<Mac::Mac>().SetWakeupChannel(channel);
+
+            if (error != kErrorNone)
+            {
+                LogCrit("Failed to set wake-up channel to %u when applying dataset: %s", channel, ErrorToString(error));
+            }
+#endif
             break;
         }
 
@@ -676,6 +690,11 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
     if (aDatasetComponents.IsPresent<Dataset::kChannel>())
     {
         tlvList.Add(Tlv::kChannel);
+    }
+
+    if (aDatasetComponents.IsPresent<Dataset::kWakeupChannel>())
+    {
+        tlvList.Add(Tlv::kWakeupChannel);
     }
 
     if (aDatasetComponents.IsPresent<Dataset::kPskc>())

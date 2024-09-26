@@ -82,6 +82,7 @@ Mac::Mac(Instance &aInstance)
     , mCslChannel(0)
     , mCslPeriod(0)
 #endif
+    , mWakeupChannel(OPENTHREAD_CONFIG_DEFAULT_WAKEUP_CHANNEL)
     , mActiveScanHandler(nullptr) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     , mScanHandlerContext(nullptr)
     , mLinks(aInstance)
@@ -2396,6 +2397,25 @@ void Mac::SetRadioFilterEnabled(bool aFilterEnabled)
 {
     mLinks.GetSubMac().SetRadioFilterEnabled(aFilterEnabled);
     UpdateIdleMode();
+}
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+Error Mac::SetWakeupChannel(uint8_t aChannel)
+{
+    Error error = kErrorNone;
+
+    if (aChannel == 0)
+    {
+        mWakeupChannel = GetPanChannel();
+        ExitNow();
+    }
+
+    VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
+    mWakeupChannel = aChannel;
+
+exit:
+    return error;
 }
 #endif
 

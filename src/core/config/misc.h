@@ -482,6 +482,15 @@
 #endif // OPENTHREAD_CONFIG_DEFAULT_CHANNEL
 
 /**
+ * @def OPENTHREAD_CONFIG_DEFAULT_WAKEUP_CHANNEL
+ *
+ * The default IEEE 802.15.4 wake-up channel.
+ */
+#ifndef OPENTHREAD_CONFIG_DEFAULT_WAKEUP_CHANNEL
+#define OPENTHREAD_CONFIG_DEFAULT_WAKEUP_CHANNEL 11
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_OTNS_ENABLE
  *
  * Define to 1 to enable OTNS interactions.

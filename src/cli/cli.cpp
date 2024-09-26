@@ -8198,6 +8198,29 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+/**
+ * @cli wakeupchannel (get,set)
+ * @code
+ * wakeupchannel
+ * 12
+ * Done
+ * @endcode
+ * @code
+ * wakeupchannel 12
+ * Done
+ * @endcode
+ * @cparam wakeupchannel [@ca{channel}]
+ * Use `channel` to set the wake-up channel.
+ * @par
+ * Gets or sets the wake-up channel value.
+ */
+template <> otError Interpreter::Process<Cmd("wakeupchannel")>(Arg aArgs[])
+{
+    return ProcessGetSet(aArgs, otLinkGetWakeupChannel, otLinkSetWakeupChannel);
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 void Interpreter::Initialize(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext)
