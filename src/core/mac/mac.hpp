@@ -680,6 +680,25 @@ public:
      */
     Error GetRegion(uint16_t &aRegionCode) const;
 
+    /**
+     * Gets the Wake-up channel.
+     *
+     * @returns Wake-up channel.
+     */
+    uint8_t GetWakeupChannel(void) const { return mWakeupChannel; }
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    /**
+     * Sets the Wake-up channel.
+     *
+     * @param[in]  aChannel  The Wake-up channel.
+     *
+     * @retval kErrorNone          Successfully set the wake-up channel.
+     * @retval kErrorInvalidArgs   The @p aChannel is not in the supported channel mask.
+     */
+    Error SetWakeupChannel(uint8_t aChannel);
+#endif
+
 private:
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;
 
@@ -809,6 +828,7 @@ private:
     uint8_t  mCslChannel;
     uint16_t mCslPeriod;
 #endif
+    uint8_t mWakeupChannel;
 
     union
     {

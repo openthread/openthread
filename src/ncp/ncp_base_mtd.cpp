@@ -4793,6 +4793,26 @@ exit:
     return;
 }
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_WAKEUP_CHANNEL>(void)
+{
+    uint8_t wakeupChannel;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(wakeupChannel));
+
+    error = otLinkSetWakeupChannel(mInstance, wakeupChannel);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_WAKEUP_CHANNEL>(void)
+{
+    return mEncoder.WriteUint8(otLinkGetWakeupChannel(mInstance));
+}
+#endif
+
 } // namespace Ncp
 } // namespace ot
 

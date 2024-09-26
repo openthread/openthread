@@ -200,6 +200,7 @@ typedef struct otOperationalDatasetComponents
     bool mIsPskcPresent;             ///< TRUE if PSKc is present, FALSE otherwise.
     bool mIsSecurityPolicyPresent;   ///< TRUE if Security Policy is present, FALSE otherwise.
     bool mIsChannelMaskPresent;      ///< TRUE if Channel Mask is present, FALSE otherwise.
+    bool mIsWakeupChannelPresent;    ///< TRUE if Wake-up Channel is present, FALSE otherwise.
 } otOperationalDatasetComponents;
 
 /**
@@ -228,6 +229,7 @@ typedef struct otOperationalDataset
     uint32_t                       mDelay;            ///< Delay Timer
     otPanId                        mPanId;            ///< PAN ID
     uint16_t                       mChannel;          ///< Channel
+    uint16_t                       mWakeupChannel;    ///< Wake-up Channel
     otPskc                         mPskc;             ///< PSKc
     otSecurityPolicy               mSecurityPolicy;   ///< Security Policy
     otChannelMask                  mChannelMask;      ///< Channel Mask
@@ -293,6 +295,7 @@ typedef enum otMeshcopTlvType
     OT_MESHCOP_TLV_SCAN_DURATION            = 56,  ///< meshcop Scan Duration TLV
     OT_MESHCOP_TLV_ENERGY_LIST              = 57,  ///< meshcop Energy List TLV
     OT_MESHCOP_TLV_THREAD_DOMAIN_NAME       = 59,  ///< meshcop Thread Domain Name TLV
+    OT_MESHCOP_TLV_WAKEUP_CHANNEL           = 74,  ///< meshcop Wake-up Channel TLV
     OT_MESHCOP_TLV_DISCOVERYREQUEST         = 128, ///< meshcop Discovery Request TLV
     OT_MESHCOP_TLV_DISCOVERYRESPONSE        = 129, ///< meshcop Discovery Response TLV
     OT_MESHCOP_TLV_JOINERADVERTISEMENT      = 241, ///< meshcop Joiner Advertisement TLV

@@ -19,6 +19,7 @@ The Active Operational Dataset includes parameters that are currently in use acr
 
 - Active Timestamp
 - Channel
+- Wake-up Channel
 - Channel Mask
 - Extended PAN ID
 - Mesh-Local Prefix
@@ -46,6 +47,7 @@ The Pending Operational Dataset is used to communicate changes to the Active Ope
    > dataset
    Active Timestamp: 1
    Channel: 15
+   Wake-up Channel: 16
    Channel Mask: 0x07fff800
    Ext PAN ID: 39758ec8144b07fb
    Mesh Local Prefix: fdf1:f1ad:d079:7dc0::/64
@@ -105,6 +107,7 @@ After the device successfully attaches to a Thread network, the device will retr
    > dataset active
    Active Timestamp: 1
    Channel: 15
+   Wake-up Channel: 16
    Channel Mask: 0x07fff800
    Ext PAN ID: 39758ec8144b07fb
    Mesh Local Prefix: fdf1:f1ad:d079:7dc0::/64
@@ -303,6 +306,7 @@ Normally, an active Commissioner will set a new Pending Operational Dataset. For
 - [securitypolicy](#securitypolicy)
 - [tlvs](#tlvs)
 - [updater](#updater)
+- [wakeupchannel](#wakeupchannel)
 
 ## Command Details
 
@@ -336,6 +340,7 @@ pskc
 securitypolicy
 set
 tlvs
+wakeupchannel
 Done
 ```
 
@@ -349,6 +354,7 @@ Print Active Operational Dataset in human-readable form.
 > dataset active
 Active Timestamp: 1
 Channel: 15
+Wake-up Channel: 16
 Channel Mask: 0x07fff800
 Ext PAN ID: 39758ec8144b07fb
 Mesh Local Prefix: fdf1:f1ad:d079:7dc0::/64
@@ -364,7 +370,7 @@ Print Active Operational Dataset as hex-encoded TLVs.
 
 ```bash
 > dataset active -x
-0e080000000000010000000300000f35060004001fffe0020839758ec8144b07fb0708fdf1f1add0797dc00510f366cec7a446bab978d90d27abe38f23030f4f70656e5468726561642d353933380102593804103ca67c969efb0d0c74a4d8ee923b576c0c0402a0f7f8
+0e08000000000001000000030000164a0300001735060004001fffe00208b182e6a17996cecc0708fd3f363fa8f1b0bc0510ebb6f6a447c96e1542176df3a834ac0e030f4f70656e5468726561642d3663393901026c99041096e9cdfe1eb1363a3676e2b94df0271b0c0402a0f7f8
 Done
 ```
 
@@ -826,5 +832,24 @@ Done
 Done
 > dataset updater
 Disabled
+Done
+```
+
+### wakeupchannel
+
+Usage: `wakeupchannel [channel]`
+
+Get wake-up channel.
+
+```bash
+> dataset wakeupchannel
+13
+Done
+```
+
+Set wake-up channel.
+
+```bash
+> dataset wakeupchannel 13
 Done
 ```

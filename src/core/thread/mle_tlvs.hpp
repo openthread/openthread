@@ -98,6 +98,7 @@ public:
         kPendingDataset        = 25, ///< Pending Operational Dataset TLV
         kDiscovery             = 26, ///< Thread Discovery TLV
         kSupervisionInterval   = 27, ///< Supervision Interval TLV
+        kWakeupChannel         = 74, ///< Wakeup Channel TLV
         kCslChannel            = 80, ///< CSL Channel TLV
         kCslTimeout            = 85, ///< CSL Timeout TLV
         kCslClockAccuracy      = 86, ///< CSL Clock Accuracy TLV
