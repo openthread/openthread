@@ -134,6 +134,10 @@ void TestHkdfSha256(void)
         uint8_t            outKey[kMaxOuttKey];
         Crypto::Key        testInputKey;
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+        Crypto::Storage::KeyRef keyRef;
+#endif
+
         printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
         DumpBuffer("\nInput Key", test->mInKey, test->mInKeyLength);
         DumpBuffer("\nSalt", test->mSalt, test->mSaltLength);
@@ -141,9 +145,16 @@ void TestHkdfSha256(void)
         DumpBuffer("\nExpected Output Key", test->mOutKey, test->mOutKeyLength);
 
         memset(outKey, kFillByte, sizeof(outKey));
-        memset(&testInputKey, 0x00, sizeof(testInputKey));
-        testInputKey.mKey       = test->mInKey;
-        testInputKey.mKeyLength = test->mInKeyLength;
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+        SuccessOrQuit(Crypto::Storage::ImportKey(
+            keyRef, Crypto::Storage::kKeyTypeDerive, Crypto::Storage::kKeyAlgorithmHkdfSha256,
+            Crypto::Storage::kUsageDerive, Crypto::Storage::kTypeVolatile, test->mInKey, test->mInKeyLength));
+
+        testInputKey.SetAsKeyRef(keyRef);
+#else
+        testInputKey.Set(test->mInKey, test->mInKeyLength);
+#endif
 
         hkdf.Extract(test->mSalt, test->mSaltLength, testInputKey);
         hkdf.Expand(test->mInfo, test->mInfoLength, outKey, test->mOutKeyLength);
@@ -156,6 +167,10 @@ void TestHkdfSha256(void)
         {
             VerifyOrQuit(outKey[i] == kFillByte, "HKDF-SHA-256 wrote beyond output key length");
         }
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+        Crypto::Storage::DestroyKey(keyRef);
+#endif
     }
 
     testFreeInstance(instance);
