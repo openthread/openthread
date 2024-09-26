@@ -446,18 +446,6 @@ void Mpl::HandleRetransmissionTimer(void)
     mRetransmissionTimer.FireAt(nextTime);
 }
 
-void Mpl::Metadata::ReadFrom(const Message &aMessage)
-{
-    uint16_t length = aMessage.GetLength();
-
-    OT_ASSERT(length >= sizeof(*this));
-    IgnoreError(aMessage.Read(length - sizeof(*this), *this));
-}
-
-void Mpl::Metadata::RemoveFrom(Message &aMessage) const { aMessage.RemoveFooter(sizeof(*this)); }
-
-void Mpl::Metadata::UpdateIn(Message &aMessage) const { aMessage.Write(aMessage.GetLength() - sizeof(*this), *this); }
-
 void Mpl::Metadata::GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval)
 {
     // Emulate Trickle timer behavior and set up the next retransmission within [0,I) range.

@@ -236,17 +236,8 @@ private:
         uint32_t mTransmitTimestampFraction;  // Fraction part of above value.
     } OT_TOOL_PACKED_END;
 
-    class QueryMetadata
+    struct QueryMetadata : public Message::FooterData<QueryMetadata>
     {
-    public:
-        Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
-        void  ReadFrom(const Message &aMessage)
-        {
-            IgnoreError(aMessage.Read(aMessage.GetLength() - sizeof(*this), *this));
-        }
-
-        void UpdateIn(Message &aMessage) const { aMessage.Write(aMessage.GetLength() - sizeof(*this), *this); }
-
         uint32_t                  mTransmitTimestamp;   // Time at client when request departed for server
         Callback<ResponseHandler> mResponseHandler;     // Response handler callback
         TimeMilli                 mTransmissionTime;    // Time when the timer should shoot for this message
