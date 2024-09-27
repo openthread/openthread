@@ -1563,7 +1563,7 @@ Error Client::ReplaceWithIp4Query(Query &aQuery)
 
     info.ReadFrom(aQuery);
 
-    VerifyOrExit(info.mQueryType == kIp4AddressQuery);
+    VerifyOrExit(info.mQueryType == kIp6AddressQuery);
     VerifyOrExit(info.mConfig.GetNat64Mode() == QueryConfig::kNat64Allow);
 
     // We send a new query for IPv4 address resolution
