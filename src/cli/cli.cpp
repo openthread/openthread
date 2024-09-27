@@ -8303,6 +8303,32 @@ template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
         error = ProcessEnableDisable(aArgs + 1, otLinkIsWakeupListenEnabled, otLinkSetWakeUpListenEnabled);
     }
 #endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    /**
+     * @cli wakeup attach
+     * @code
+     * wakeup attach 1ece0a6c4653a7c1 7500 1000
+     * Done
+     * @endcode
+     * @cparam Wake-up End Device extended address @ca{extaddr}
+     * @cparam wake-up interval (us) @ca{wakeup-interval}
+     * @cparam wake-up duration (ms) @ca{wakeup-duration}
+     * @par
+     * Attaches a Wake-up End Device.
+     */
+    else if (aArgs[0] == "attach")
+    {
+        otExtAddress extAddress;
+        uint16_t     wakeupIntervalUs;
+        uint16_t     wakeupDurationMs;
+
+        SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddress.m8));
+        SuccessOrExit(error = aArgs[2].ParseAsUint16(wakeupIntervalUs));
+        SuccessOrExit(error = aArgs[3].ParseAsUint16(wakeupDurationMs));
+
+        error = otThreadAttachWed(GetInstancePtr(), &extAddress, wakeupIntervalUs, wakeupDurationMs);
+    }
+#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
     else
     {
         ExitNow(error = OT_ERROR_INVALID_ARGS);
@@ -8626,7 +8652,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
         CmdEntry("wakeup"),
 #endif
-#endif
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
     };
 
 #undef CmdEntry
