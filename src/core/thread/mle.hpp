@@ -45,6 +45,7 @@
 #include "common/timer.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "mac/mac.hpp"
+#include "mac/wakeup_tx_scheduler.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/meshcop.hpp"
@@ -119,6 +120,8 @@ class Mle : public InstanceLocator, private NonCopyable
 
 public:
     typedef otDetachGracefullyCallback DetachCallback; ///< Callback to signal end of graceful detach.
+
+    typedef otWakeupCallback WakeupCallback; ///< Callback to communicate the result of waking a Wake-up End Device
 
     /**
      * Initializes the MLE object.
@@ -726,6 +729,27 @@ public:
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    /**
+     * Attempts to wake a Wake-up End Device.
+     *
+     * @param[in] aWedAddress The extended address of the Wake-up End Device.
+     * @param[in] aIntervalUs An interval between consecutive wake-up frames (in microseconds).
+     * @param[in] aDurationMs Duration of the wake-up sequence (in milliseconds).
+     * @param[in] aCallback   A pointer to function that is called when the wake-up succeeds or fails.
+     * @param[in] aContext    A pointer to callback application-specific context.
+     *
+     * @retval kErrorNone         Successfully started the wake-up.
+     * @retval kErrorInvalidState Another wake-up request is still in progress.
+     * @retval kErrorInvalidArgs  The wake-up interval or duration are invalid.
+     */
+    Error Wakeup(const Mac::ExtAddress &aWedAddress,
+                 uint16_t               aIntervalUs,
+                 uint16_t               aDurationMs,
+                 WakeupCallback         aCallback,
+                 void                  *aCallbackContext);
+#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+
 private:
     //------------------------------------------------------------------------------------------------------------------
     // Constants
@@ -923,6 +947,15 @@ private:
         kTypeTimeSync,
 #endif
     };
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    enum WedAttachState : uint8_t{
+        kWedDetached,
+        kWedAttaching,
+        kWedAttached,
+        kWedDetaching,
+    };
+#endif
 
     //------------------------------------------------------------------------------------------------------------------
     // Nested types
@@ -1374,6 +1407,10 @@ private:
     static void Log(MessageAction, MessageType, const Ip6::Address &, uint16_t) {}
 #endif
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    void HandleWedAttachTimer(void);
+#endif
+
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
     static const char *AttachModeToString(AttachMode aMode);
     static const char *AttachStateToString(AttachState aState);
@@ -1398,6 +1435,9 @@ private:
     using AttachTimer = TimerMilliIn<Mle, &Mle::HandleAttachTimer>;
     using MsgTxTimer  = TimerMilliIn<Mle, &Mle::HandleMessageTransmissionTimer>;
     using MleSocket   = Ip6::Udp::SocketIn<Mle, &Mle::HandleUdpReceive>;
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    using WedAttachTimer = TimerMicroIn<Mle, &Mle::HandleWedAttachTimer>;
+#endif
 
     static const otMeshLocalPrefix kMeshLocalPrefixInit;
 
@@ -1464,6 +1504,13 @@ private:
     Ip6::Netif::UnicastAddress   mMeshLocalRloc;
     Ip6::Netif::MulticastAddress mLinkLocalAllThreadNodes;
     Ip6::Netif::MulticastAddress mRealmLocalAllThreadNodes;
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    WakeupTxScheduler        mWakeupTxScheduler;
+    WedAttachState           mWedAttachState;
+    WedAttachTimer           mWedAttachTimer;
+    Callback<WakeupCallback> mWakeupCallback;
+#endif
 };
 
 } // namespace Mle

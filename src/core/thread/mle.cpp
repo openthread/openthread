@@ -86,6 +86,11 @@ Mle::Mle(Instance &aInstance)
 #endif
     , mAttachTimer(aInstance)
     , mMessageTransmissionTimer(aInstance)
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    , mWakeupTxScheduler(aInstance)
+    , mWedAttachState(kWedDetached)
+    , mWedAttachTimer(aInstance)
+#endif
 {
     mParent.Init(aInstance);
     mParentCandidate.Init(aInstance);
@@ -4350,6 +4355,54 @@ uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
            aCslAccuracy.GetUncertaintyInMicrosec() * k;
 }
 #endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+void Mle::HandleWedAttachTimer(void)
+{
+    switch (mWedAttachState)
+    {
+    case kWedAttaching:
+        // Connection timeout
+        if (!IsRxOnWhenIdle())
+        {
+            Get<MeshForwarder>().SetRxOnWhenIdle(false);
+        }
+
+        LogInfo("Connection window closed");
+
+        mWedAttachState = kWedDetached;
+        mWakeupCallback.InvokeAndClearIfSet(kErrorFailed);
+        break;
+    default:
+        break;
+    }
+}
+
+Error Mle::Wakeup(const Mac::ExtAddress &aWedAddress,
+                  uint16_t               aIntervalUs,
+                  uint16_t               aDurationMs,
+                  WakeupCallback         aCallback,
+                  void                  *aCallbackContext)
+{
+    Error error;
+
+    VerifyOrExit((aIntervalUs > 0) && (aDurationMs > 0), error = kErrorInvalidArgs);
+    VerifyOrExit(aIntervalUs < aDurationMs * Time::kOneMsecInUsec, error = kErrorInvalidArgs);
+    VerifyOrExit(mWedAttachState == kWedDetached, error = kErrorInvalidState);
+
+    SuccessOrExit(error = mWakeupTxScheduler.WakeUp(aWedAddress, aIntervalUs, aDurationMs));
+
+    mWedAttachState = kWedAttaching;
+    mWakeupCallback.Set(aCallback, aCallbackContext);
+    Get<MeshForwarder>().SetRxOnWhenIdle(true);
+    mWedAttachTimer.FireAt(mWakeupTxScheduler.GetTxEndTime() + mWakeupTxScheduler.GetConnectionWindowUs());
+
+    LogInfo("Connection window open");
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 
 Error Mle::DetachGracefully(DetachCallback aCallback, void *aContext)
 {

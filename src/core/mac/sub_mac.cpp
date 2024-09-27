@@ -373,7 +373,17 @@ void SubMac::ProcessTransmitSecurity(void)
     }
 
     VerifyOrExit(ShouldHandleTransmitSecurity());
-    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    if (mTransmitFrame.GetType() == Frame::kTypeMultipurpose)
+    {
+        VerifyOrExit(keyIdMode == Frame::kKeyIdMode2);
+    }
+    else
+#endif
+    {
+        VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
+    }
 
     mTransmitFrame.SetAesKey(GetCurrentMacKey());
 

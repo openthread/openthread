@@ -147,6 +147,7 @@ set(COMMON_SOURCES
     mac/sub_mac_callbacks.cpp
     mac/sub_mac_csl_receiver.cpp
     mac/sub_mac_wed.cpp
+    mac/wakeup_tx_scheduler.cpp
     meshcop/announce_begin_client.cpp
     meshcop/border_agent.cpp
     meshcop/commissioner.cpp
