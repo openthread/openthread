@@ -603,13 +603,6 @@ typedef enum
     SPINEL_IPV6_ICMP_PING_OFFLOAD_RLOC_ALOC_ONLY = 4,
 } spinel_ipv6_icmp_ping_offload_mode_t;
 
-typedef uint8_t spinel_ipv6_icmp_type_t;
-
-enum
-{
-    SPINEL_IPV6_ICMP_TYPE_ND = 0,
-};
-
 typedef enum
 {
     SPINEL_SCAN_STATE_IDLE     = 0,
@@ -4769,6 +4762,16 @@ enum
      * `d`: The data of the ICMPv6 packet. The host MUST ensure the hoplimit is 255.
      */
     SPINEL_PROP_INFRA_IF_RECV_ICMP6 = SPINEL_PROP_INFRA_IF__BEGIN + 2,
+
+    /// ICMP6 message sent by NCP and needs to be sent on the infrastructure interface.
+    /** Format: `L6d`
+     * Type: Unsolicited notifications only
+     *
+     * `L`: The infrastructure interface index.
+     * `6`: The IP6 destination address of the message to send.
+     * `d`: The data of the message to send.
+     */
+    SPINEL_PROP_INFRA_IF_SEND_ICMP6 = SPINEL_PROP_INFRA_IF__BEGIN + 3,
 
     SPINEL_PROP_INFRA_IF__END = 0x920,
 
