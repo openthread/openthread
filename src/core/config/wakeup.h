@@ -54,6 +54,31 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_CONNECTION_RETRY_INTERVAL
+ *
+ * The Connection Retry Interval defines how frequently the Wake-up End Device is supposed to retry sending the initial
+ * MLE message to the Wakeup Coordinator after receiving a wake-up frame, in the units of Wake-up Intervals (7.5ms by
+ * default).
+ *
+ * The Wake-up Coordinator includes this value in each wake-up frame.
+ */
+#ifndef OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_CONNECTION_RETRY_INTERVAL
+#define OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_CONNECTION_RETRY_INTERVAL 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_CONNECTION_RETRY_COUNT
+ *
+ * The Connection Retry Count defines how many times the Wake-up End Device is supposed to retry sending the initial MLE
+ * message to the Wakeup Coordinator after receiving a wake-up frame.
+ *
+ * The Wake-up Coordinator includes this value in each wake-up frame.
+ */
+#ifndef OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_CONNECTION_RETRY_COUNT
+#define OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_CONNECTION_RETRY_COUNT 12
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
  *
  * Define to 1 to enable the Wake-up End Device role that periodically listens for wake-up

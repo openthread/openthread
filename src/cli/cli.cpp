@@ -8220,11 +8220,38 @@ template <> otError Interpreter::Process<Cmd("wakeupchannel")>(Arg aArgs[])
     return ProcessGetSet(aArgs, otLinkGetWakeupChannel, otLinkSetWakeupChannel);
 }
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
-    bool    enable;
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    /**
+     * @cli wakeup attach
+     * @code
+     * wakeup attach 1ece0a6c4653a7c1 7500 1000
+     * Done
+     * @endcode
+     * @cparam Wake-up End Device extended address @ca{extaddr}
+     * @cparam wake-up interval (us) @ca{wakeup-interval}
+     * @cparam wake-up duration (ms) @ca{wakeup-duration}
+     * @par
+     * Attaches a Wake-up End Device.
+     */
+    if (aArgs[0] == "attach")
+    {
+        otExtAddress extAddress;
+        uint16_t     wakeupIntervalUs;
+        uint16_t     wakeupDurationMs;
+
+        SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddress.m8));
+        SuccessOrExit(error = aArgs[2].ParseAsUint16(wakeupIntervalUs));
+        SuccessOrExit(error = aArgs[3].ParseAsUint16(wakeupDurationMs));
+
+        error = otThreadAttachWed(GetInstancePtr(), &extAddress, wakeupIntervalUs, wakeupDurationMs);
+    }
+#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    bool enable;
 
     /**
      * @cli wakeup
@@ -8319,6 +8346,7 @@ template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
             OutputLine("disabled");
         }
     }
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     else
     {
         ExitNow(error = OT_ERROR_INVALID_ARGS);
@@ -8327,7 +8355,6 @@ template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
@@ -8640,11 +8667,11 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
         CmdEntry("version"),
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_PERIPHERAL_ENABLE
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
         CmdEntry("wakeup"),
         CmdEntry("wakeupchannel"),
 #endif
-#endif
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
     };
 
 #undef CmdEntry
