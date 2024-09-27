@@ -39,6 +39,7 @@
 
 #include "common/arg_macros.hpp"
 #include "common/array.hpp"
+#include "common/clearable.hpp"
 #include "common/string.hpp"
 #include "common/time.hpp"
 #include "instance/instance.hpp"
@@ -353,6 +354,64 @@ const char *ServiceModeToString(Dns::Client::QueryConfig::ServiceMode aMode)
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+static constexpr uint16_t kMaxAddresses = 10;
+
+struct AddressInfo
+{
+    void Reset(void) { ClearAllBytes(*this); }
+
+    uint16_t          mCallbackCount;
+    Error             mError;
+    Dns::Name::Buffer mHostName;
+    Ip6::Address      mHostAddresses[kMaxAddresses];
+    uint8_t           mNumHostAddresses;
+};
+
+static AddressInfo sAddressInfo;
+
+void AddressCallback(otError aError, const otDnsAddressResponse *aResponse, void *aContext)
+{
+    const Dns::Client::AddressResponse &response = AsCoreType(aResponse);
+
+    Log("AddressCallback");
+    Log("   Error: %s", ErrorToString(aError));
+
+    VerifyOrQuit(aContext == sInstance);
+
+    sAddressInfo.mCallbackCount++;
+    sAddressInfo.mError = aError;
+
+    SuccessOrExit(aError);
+
+    SuccessOrQuit(response.GetHostName(sAddressInfo.mHostName, sizeof(sAddressInfo.mHostName)));
+    Log("   HostName: %s", sAddressInfo.mHostName);
+
+    for (uint16_t index = 0;; index++)
+    {
+        Error    error;
+        uint32_t ttl;
+
+        VerifyOrQuit(index < kMaxAddresses);
+
+        error = response.GetAddress(index, sAddressInfo.mHostAddresses[index], ttl);
+
+        if (error == kErrorNotFound)
+        {
+            sAddressInfo.mNumHostAddresses = index;
+            break;
+        }
+
+        SuccessOrQuit(error);
+
+        Log("  %2u) %s ttl:%lu", index + 1, sAddressInfo.mHostAddresses[index].ToString().AsCString(), ToUlong(ttl));
+    }
+
+exit:
+    return;
+}
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 struct BrowseInfo
 {
     void Reset(void) { mCallbackCount = 0; }
@@ -498,6 +557,7 @@ void TestDnsClient(void)
     };
 
     Array<Ip6::Address, kNumAddresses>      addresses;
+    NetworkData::ExternalRouteConfig        routeConfig;
     Srp::Server                            *srpServer;
     Srp::Client                            *srpClient;
     Srp::Client::Service                    service1;
@@ -513,6 +573,22 @@ void TestDnsClient(void)
     Log("TestDnsClient");
 
     InitTest();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Add a route prefix (with NAT64 flag) to network data");
+
+    routeConfig.Clear();
+    SuccessOrQuit(AsCoreType(&routeConfig.mPrefix.mPrefix).FromString("64:ff9b::"));
+    routeConfig.mPrefix.mLength = 96;
+    routeConfig.mPreference     = NetworkData::kRoutePreferenceMedium;
+    routeConfig.mNat64          = true;
+    routeConfig.mStable         = true;
+
+    SuccessOrQuit(otBorderRouterAddRoute(sInstance, &routeConfig));
+    SuccessOrQuit(otBorderRouterRegister(sInstance));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Add addresses on Thread netif");
 
     for (const char *addrString : kAddresses)
     {
@@ -582,6 +658,40 @@ void TestDnsClient(void)
 
     VerifyOrQuit(dnsClient->GetDefaultConfig().GetServiceMode() ==
                  Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `ResolveAddress()`
+
+    sAddressInfo.Reset();
+    Log("ResolveAddress(%s)", kHostFullName);
+    SuccessOrQuit(dnsClient->ResolveAddress(kHostFullName, AddressCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sAddressInfo.mCallbackCount == 1);
+    SuccessOrQuit(sAddressInfo.mError);
+    VerifyOrQuit(sAddressInfo.mNumHostAddresses == GetArrayLength(kAddresses));
+
+    for (uint8_t index = 0; index < sAddressInfo.mNumHostAddresses; index++)
+    {
+        VerifyOrQuit(addresses.Contains(sAddressInfo.mHostAddresses[index]));
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `ResolveIp4Address()`
+
+    sAddressInfo.Reset();
+    Log("ResolveIp4Address(%s)", kHostFullName);
+    SuccessOrQuit(dnsClient->ResolveIp4Address(kHostFullName, AddressCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sAddressInfo.mCallbackCount == 1);
+    SuccessOrQuit(sAddressInfo.mError);
+    VerifyOrQuit(sAddressInfo.mNumHostAddresses == 0);
+
+    sAddressInfo.Reset();
+    Log("ResolveIp4Address(%s)", "badname");
+    SuccessOrQuit(dnsClient->ResolveIp4Address("badname", AddressCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sAddressInfo.mCallbackCount == 1);
+    VerifyOrQuit(sAddressInfo.mError != kErrorNone);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Validate DNS Client `Browse()`
