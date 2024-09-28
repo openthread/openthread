@@ -1609,6 +1609,11 @@ void TestDnsClient(void)
     SuccessOrQuit(otBorderRouterRegister(sInstance));
     AdvanceTime(1000);
 
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA) && OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    // On a first attempt, SRP Client generates the SRP Key which adds additional heap allocation.
+    heapAllocations += 1;
+#endif
+
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
