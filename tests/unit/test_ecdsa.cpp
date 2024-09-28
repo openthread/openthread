@@ -77,7 +77,13 @@ void TestEcdsaVector(void)
 
     Instance *instance = testInitInstance();
 
-    Ecdsa::P256::KeyPair   keyPair;
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    Ecdsa::P256::KeyPairAsRef keyPair;
+    Crypto::Storage::KeyRef   keyRef;
+#else
+    Ecdsa::P256::KeyPair keyPair;
+#endif
+
     Ecdsa::P256::PublicKey publicKey;
     Ecdsa::P256::Signature signature;
     Sha256                 sha256;
@@ -89,10 +95,18 @@ void TestEcdsaVector(void)
     printf("Test ECDA with test vector from RFC 6979 (A.2.5)\n");
 
     printf("\nLoading key-pair ----------------------------------------------------------\n");
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    SuccessOrQuit(Crypto::Storage::ImportKey(keyRef, Storage::kKeyTypeEcdsa, Storage::kKeyAlgorithmEcdsa,
+                                             (Storage::kUsageSignHash | Storage::kUsageVerifyHash),
+                                             Storage::kTypeVolatile, kKeyPairInfo, sizeof(kKeyPairInfo)));
+    keyPair.SetKeyRef(keyRef);
+#else
     memcpy(keyPair.GetDerBytes(), kKeyPairInfo, sizeof(kKeyPairInfo));
     keyPair.SetDerLength(sizeof(kKeyPairInfo));
 
     DumpBuffer("KeyPair", keyPair.GetDerBytes(), keyPair.GetDerLength());
+#endif
 
     SuccessOrQuit(keyPair.GetPublicKey(publicKey));
     DumpBuffer("PublicKey", publicKey.GetBytes(), Ecdsa::P256::PublicKey::kSize);
@@ -109,6 +123,7 @@ void TestEcdsaVector(void)
     DumpBuffer("Hash", hash.GetBytes(), sizeof(hash));
 
     printf("\nSign the message ----------------------------------------------------------\n");
+
     SuccessOrQuit(keyPair.Sign(hash, signature));
     DumpBuffer("Signature", signature.GetBytes(), sizeof(signature));
 
@@ -135,7 +150,13 @@ void TestEcdsaKeyGenerationSignAndVerify(void)
 
     const char kMessage[] = "You are not a drop in the ocean. You are the entire ocean in a drop.";
 
-    Ecdsa::P256::KeyPair   keyPair;
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    Crypto::Storage::KeyRef   keyRef = 0x1234;
+    Ecdsa::P256::KeyPairAsRef keyPair(keyRef);
+#else
+    Ecdsa::P256::KeyPair keyPair;
+#endif
+
     Ecdsa::P256::PublicKey publicKey;
     Ecdsa::P256::Signature signature;
     Sha256                 sha256;
@@ -149,7 +170,9 @@ void TestEcdsaKeyGenerationSignAndVerify(void)
     printf("\nGenerating key-pair -------------------------------------------------------\n");
     SuccessOrQuit(keyPair.Generate());
 
+#if !OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     DumpBuffer("KeyPair", keyPair.GetDerBytes(), keyPair.GetDerLength());
+#endif
 
     SuccessOrQuit(keyPair.GetPublicKey(publicKey));
     DumpBuffer("PublicKey", publicKey.GetBytes(), Ecdsa::P256::PublicKey::kSize);
@@ -174,6 +197,10 @@ void TestEcdsaKeyGenerationSignAndVerify(void)
     sha256.Finish(hash);
     VerifyOrQuit(publicKey.Verify(hash, signature) != kErrorNone, "PublicKey::Verify() passed for invalid signature");
     printf("\nSignature verification correctly failed with incorrect hash/signature.\n\n");
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    Crypto::Storage::DestroyKey(keyRef);
+#endif
 
     testFreeInstance(instance);
 }
