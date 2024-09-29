@@ -64,7 +64,6 @@ public:
      * Initializes the Joiner Router object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit JoinerRouter(Instance &aInstance);
 
@@ -72,7 +71,6 @@ public:
      * Returns the Joiner UDP Port.
      *
      * @returns The Joiner UDP Port number.
-     *
      */
     uint16_t GetJoinerUdpPort(void) const;
 
@@ -80,7 +78,6 @@ public:
      * Sets the Joiner UDP Port.
      *
      * @param[in]  aJoinerUdpPort  The Joiner UDP Port number.
-     *
      */
     void SetJoinerUdpPort(uint16_t aJoinerUdpPort);
 

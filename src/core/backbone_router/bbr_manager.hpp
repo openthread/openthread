@@ -57,7 +57,6 @@ namespace BackboneRouter {
 
 /**
  * Implements the definitions for Backbone Router management.
- *
  */
 class Manager : public InstanceLocator, private NonCopyable
 {
@@ -70,7 +69,6 @@ public:
      * Initializes the Backbone Router manager.
      *
      * @param[in] aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit Manager(Instance &aInstance);
 
@@ -79,7 +77,6 @@ public:
      * Returns the NdProxy Table.
      *
      * @returns The NdProxy Table.
-     *
      */
     NdProxyTable &GetNdProxyTable(void);
 #endif
@@ -94,7 +91,6 @@ public:
      * @param[in] aMlIid    A pointer to the Mesh Local IID. If `nullptr`, respond with @p aStatus for any
      *                      coming DUA.req, otherwise only respond the one with matching @p aMlIid.
      * @param[in] aStatus   The status to respond.
-     *
      */
     void ConfigNextDuaRegistrationResponse(const Ip6::InterfaceIdentifier *aMlIid, uint8_t aStatus);
 
@@ -106,7 +102,6 @@ public:
      *       Only used for test and certification.
      *
      * @param[in] aStatus  The status to respond.
-     *
      */
     void ConfigNextMulticastListenerRegistrationResponse(ThreadStatusTlv::MlrStatus aStatus);
 #endif
@@ -117,7 +112,6 @@ public:
      * Gets the Multicast Listeners Table.
      *
      * @returns The Multicast Listeners Table.
-     *
      */
     MulticastListenersTable &GetMulticastListenersTable(void) { return mMulticastListenersTable; }
 #endif
@@ -130,7 +124,6 @@ public:
      *
      * @retval TRUE   If messages destined to the Domain Unicast Address should be forwarded to the Backbone link.
      * @retval FALSE  If messages destined to the Domain Unicast Address should not be forwarded to the Backbone link.
-     *
      */
     bool ShouldForwardDuaToBackbone(const Ip6::Address &aAddress);
 
@@ -138,7 +131,6 @@ public:
      * Returns a reference to the Backbone TMF agent.
      *
      * @returns A reference to the Backbone TMF agent.
-     *
      */
     BackboneTmfAgent &GetBackboneTmfAgent(void) { return mBackboneTmfAgent; }
 
@@ -152,7 +144,6 @@ public:
      * @retval kErrorNone          Successfully sent BB.qry on backbone link.
      * @retval kErrorInvalidState  If the Backbone Router is not primary, or not enabled.
      * @retval kErrorNoBufs        If insufficient message buffers available.
-     *
      */
     Error SendBackboneQuery(const Ip6::Address &aDua, uint16_t aRloc16 = Mle::kInvalidRloc16);
 
@@ -165,7 +156,6 @@ public:
      *
      * @retval kErrorNone          Successfully sent PRO_BB.ntf on backbone link.
      * @retval kErrorNoBufs        If insufficient message buffers available.
-     *
      */
     Error SendProactiveBackboneNotification(const Ip6::Address             &aDua,
                                             const Ip6::InterfaceIdentifier &aMeshLocalIid,

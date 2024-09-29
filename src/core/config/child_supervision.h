@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes compile-time configurations for Child Supervision.
- *
  */
 
 #ifndef CONFIG_CHILD_SUPERVISION_H_
@@ -42,7 +41,6 @@
  *   This module includes configuration variables for Child Supervision.
  *
  * @{
- *
  */
 
 /**
@@ -55,7 +53,6 @@
  * Child supervision feature provides a mechanism for parent to ensure that a message is sent to each sleepy child
  * within the supervision interval. If there is no transmission to the child within the supervision interval, child
  * supervisor will enqueue and send a supervision message (a data message with empty payload) to the child.
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL
 #define OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL 129
@@ -71,7 +68,6 @@
  *
  * If the sleepy child does not hear from its parent within the specified timeout interval, it initiates the re-attach
  * process (MLE Child Update Request/Response exchange with its parent).
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHILD_SUPERVISION_CHECK_TIMEOUT
 #define OPENTHREAD_CONFIG_CHILD_SUPERVISION_CHECK_TIMEOUT 190
@@ -90,7 +86,6 @@
  *
  * The config can be set to zero to effectively disable it, i.e., if a child does not provide "Supervision Interval TLV"
  * it indicates that it does not want to be supervised and then parent will use zero interval for the child.
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHILD_SUPERVISION_OLDER_VERSION_CHILD_DEFAULT_INTERVAL
 #define OPENTHREAD_CONFIG_CHILD_SUPERVISION_OLDER_VERSION_CHILD_DEFAULT_INTERVAL 129
@@ -98,7 +93,6 @@
 
 /**
  * @}
- *
  */
 
 #endif // CONFIG_CHILD_SUPERVISION_H_

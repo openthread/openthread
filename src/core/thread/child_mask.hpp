@@ -47,18 +47,15 @@ namespace ot {
  *   This module includes definitions for OpenThread Child Mask.
  *
  * @{
- *
  */
 
 /**
  * Represents a bit-vector of child mask.
- *
  */
 typedef BitVector<OPENTHREAD_CONFIG_MLE_MAX_CHILDREN> ChildMask;
 
 /**
  * @}
- *
  */
 
 } // namespace ot

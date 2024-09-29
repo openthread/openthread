@@ -46,7 +46,6 @@ extern "C" {
  * @addtogroup api-operational-dataset
  *
  * @{
- *
  */
 
 /**
@@ -57,7 +56,6 @@ extern "C" {
  *
  * @retval OT_ERROR_NONE    Successfully created a new Operational Dataset.
  * @retval OT_ERROR_FAILED  Failed to generate random values for new parameters.
- *
  */
 otError otDatasetCreateNewNetwork(otInstance *aInstance, otOperationalDataset *aDataset);
 
@@ -67,7 +65,6 @@ otError otDatasetCreateNewNetwork(otInstance *aInstance, otOperationalDataset *a
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @retval the value of minimal delay timer (in ms).
- *
  */
 uint32_t otDatasetGetDelayTimerMinimal(otInstance *aInstance);
 
@@ -82,13 +79,11 @@ uint32_t otDatasetGetDelayTimerMinimal(otInstance *aInstance);
  *
  * @retval  OT_ERROR_NONE          Successfully set minimal delay timer.
  * @retval  OT_ERROR_INVALID_ARGS  If @p aDelayTimerMinimal is not valid.
- *
  */
 otError otDatasetSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

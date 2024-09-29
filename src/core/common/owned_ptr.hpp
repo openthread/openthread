@@ -49,7 +49,6 @@ namespace ot {
  * The `Type` class MUST provide `Free()` method which frees the instance.
  *
  * @tparam Type  The pointer type.
- *
  */
 template <class Type> class OwnedPtr : public Ptr<Type>
 {
@@ -58,7 +57,6 @@ template <class Type> class OwnedPtr : public Ptr<Type>
 public:
     /**
      * This is the default constructor for `OwnedPtr` initializing it as null.
-     *
      */
     OwnedPtr(void) = default;
 
@@ -68,7 +66,6 @@ public:
      * The `OwnedPtr` takes the ownership of the object at @p aPointer.
      *
      * @param[in] aPointer  A pointer to object to initialize with.
-     *
      */
     explicit OwnedPtr(Type *aPointer)
         : Ptr<Type>(aPointer)
@@ -81,7 +78,6 @@ public:
      * The `OwnedPtr` takes over the ownership of the object from @p aOther. After this call, @p aOther will be null.
      *
      * @param[in] aOther   An rvalue reference to another `OwnedPtr`.
-     *
      */
     OwnedPtr(OwnedPtr &&aOther)
     {
@@ -93,7 +89,6 @@ public:
      * This is the destructor for `OwnedPtr`.
      *
      * Upon destruction, the `OwnedPtr` invokes `Free()` method on its managed object (if any).
-     *
      */
     ~OwnedPtr(void) { Delete(); }
 
@@ -102,7 +97,6 @@ public:
      *
      * Invokes `Free()` method on the `Type` object owned by `OwnedPtr` (if any). It will also set the
      * `OwnedPtr` to null.
-     *
      */
     void Free(void)
     {
@@ -118,7 +112,6 @@ public:
      * being the same pointer as the one currently managed by `OwnedPtr`).
      *
      * @param[in] aPointer   A pointer to the new object to replace with.
-     *
      */
     void Reset(Type *aPointer = nullptr)
     {
@@ -135,7 +128,6 @@ public:
      * After this call, the `OwnedPtr` will be null.
      *
      * @returns The pointer to the object owned by `OwnedPtr` or `nullptr` if `OwnedPtr` was null.
-     *
      */
     Type *Release(void)
     {
@@ -148,7 +140,6 @@ public:
      * Allows passing of the ownership to another `OwnedPtr` using move semantics.
      *
      * @returns An rvalue reference of the pointer to move from.
-     *
      */
     OwnedPtr &&PassOwnership(void) { return static_cast<OwnedPtr &&>(*this); }
 
@@ -163,7 +154,6 @@ public:
      * @param[in] aOther   An rvalue reference to an `OwnedPtr` to move from.
      *
      * @returns A reference to this `OwnedPtr`.
-     *
      */
     OwnedPtr &operator=(OwnedPtr &&aOther)
     {

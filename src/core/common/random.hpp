@@ -50,20 +50,17 @@ namespace Random {
 
 /**
  * Manages random number generator initialization/deinitialization.
- *
  */
 class Manager : private NonCopyable
 {
 public:
     /**
      * Initializes the object.
-     *
      */
     Manager(void);
 
     /**
      * This destructor deinitializes the object.
-     *
      */
     ~Manager(void);
 
@@ -71,7 +68,6 @@ public:
      * Generates and returns a random value using a non-crypto Pseudo Random Number Generator.
      *
      * @returns    A random `uint32_t` value.
-     *
      */
     static uint32_t NonCryptoGetUint32(void);
 
@@ -83,7 +79,6 @@ public:
      * @param[in]  aSize    Size of buffer (number of bytes to fill).
      *
      * @retval kErrorNone    Successfully filled buffer with random values.
-     *
      */
     static Error CryptoFillBuffer(uint8_t *aBuffer, uint16_t aSize) { return otPlatCryptoRandomGet(aBuffer, aSize); }
 #endif
@@ -109,7 +104,6 @@ namespace NonCrypto {
  * Generates and returns a random `uint32_t` value.
  *
  * @returns    A random `uint32_t` value.
- *
  */
 inline uint32_t GetUint32(void) { return Manager::NonCryptoGetUint32(); }
 
@@ -117,7 +111,6 @@ inline uint32_t GetUint32(void) { return Manager::NonCryptoGetUint32(); }
  * Generates and returns a random byte.
  *
  * @returns A random `uint8_t` value.
- *
  */
 inline uint8_t GetUint8(void) { return static_cast<uint8_t>(GetUint32() & 0xff); }
 
@@ -125,7 +118,6 @@ inline uint8_t GetUint8(void) { return static_cast<uint8_t>(GetUint32() & 0xff);
  * Generates and returns a random `uint16_t` value.
  *
  * @returns A random `uint16_t` value.
- *
  */
 inline uint16_t GetUint16(void) { return static_cast<uint16_t>(GetUint32() & 0xffff); }
 
@@ -136,7 +128,6 @@ inline uint16_t GetUint16(void) { return static_cast<uint16_t>(GetUint32() & 0xf
  * @param[in]  aMax  A maximum value (this value is excluded from returned random result).
  *
  * @returns    A random `uint8_t` value in the given range (i.e., aMin <= random value < aMax).
- *
  */
 uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax);
 
@@ -149,7 +140,6 @@ uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax);
  * @param[in]  aMax  A maximum value (this value is excluded from returned random result).
  *
  * @returns    A random `uint16_t` value in the given range (i.e., aMin <= random value < aMax).
- *
  */
 uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax);
 
@@ -162,7 +152,6 @@ uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax);
  * @param[in]  aMax  A maximum value (this value is excluded from returned random result).
  *
  * @returns    A random `uint32_t` value in the given range (i.e., aMin <= random value < aMax).
- *
  */
 uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax);
 
@@ -171,7 +160,6 @@ uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax);
  *
  * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
  * @param[in]  aSize    Size of buffer (number of bytes to fill).
- *
  */
 void FillBuffer(uint8_t *aBuffer, uint16_t aSize);
 
@@ -181,7 +169,6 @@ void FillBuffer(uint8_t *aBuffer, uint16_t aSize);
  * @tparam    ObjectType   The object type to fill.
  *
  * @param[in] aObject      A reference to the object to fill.
- *
  */
 template <typename ObjectType> void Fill(ObjectType &aObject)
 {
@@ -197,7 +184,6 @@ template <typename ObjectType> void Fill(ObjectType &aObject)
  * @param[in]  aJitter    Maximum jitter. Random jitter is selected from the range `[-aJitter, aJitter]`.
  *
  * @returns    The given value with an added random jitter.
- *
  */
 uint32_t AddJitter(uint32_t aValue, uint16_t aJitter);
 
@@ -214,7 +200,6 @@ namespace Crypto {
  * @param[in]  aSize    Size of buffer (number of bytes to fill).
  *
  * @retval kErrorNone    Successfully filled buffer with random values.
- *
  */
 inline Error FillBuffer(uint8_t *aBuffer, uint16_t aSize) { return Manager::CryptoFillBuffer(aBuffer, aSize); }
 
@@ -227,7 +212,6 @@ inline Error FillBuffer(uint8_t *aBuffer, uint16_t aSize) { return Manager::Cryp
  *
  * @retval kErrorNone    Successfully filled @p aObject with random values.
  * @retval kErrorFailed  Failed to generate secure random bytes to fill the object.
- *
  */
 template <typename ObjectType> Error Fill(ObjectType &aObject)
 {

@@ -119,7 +119,6 @@ void CslTxScheduler::Clear(void)
  * Always finds the most recent CSL tx among all children,
  * and requests `Mac` to do CSL tx at specific time. It shouldn't be called
  * when `Mac` is already starting to do the CSL tx (indicated by `mCslTxMessage`).
- *
  */
 void CslTxScheduler::RescheduleCslTx(void)
 {

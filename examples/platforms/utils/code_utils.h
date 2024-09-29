@@ -40,7 +40,6 @@
  *  condition is false.
  *
  *  @param[in]  aCondition  A Boolean expression to be evaluated.
- *
  */
 #define otEXPECT(aCondition) \
     do                       \
@@ -59,7 +58,6 @@
  *  @param[in]  aCondition  A Boolean expression to be evaluated.
  *  @param[in]  aAction     An expression or block to execute when the
  *                          assertion fails.
- *
  */
 #define otEXPECT_ACTION(aCondition, aAction) \
     do                                       \
@@ -77,7 +75,6 @@
  * @param[in] aArray  Name of the array variable.
  *
  * @returns Number of elements in the array.
- *
  */
 #define otARRAY_LENGTH(aArray) (sizeof(aArray) / sizeof(aArray[0]))
 

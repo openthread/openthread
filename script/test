@@ -131,6 +131,8 @@ build_simulation()
         options+=("-DOT_LINK_METRICS_INITIATOR=ON")
         options+=("-DOT_LINK_METRICS_SUBJECT=ON")
         options+=("-DOT_LINK_METRICS_MANAGER=ON")
+        options+=("-DOT_WAKEUP_COORDINATOR=ON")
+        options+=("-DOT_WAKEUP_END_DEVICE=ON")
     fi
 
     if [[ ${OT_NODE_TYPE} == cli* ]]; then

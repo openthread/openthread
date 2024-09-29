@@ -35,7 +35,6 @@
  * the error message is only intended to give a hint of what the possible new
  * configuration name may be. Please check the documentation of the new
  * configuration parameter for details about behavior of each option before use.
- *
  */
 
 #ifndef OPENTHREAD_CORE_CONFIG_CHECK_H_

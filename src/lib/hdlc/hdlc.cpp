@@ -46,7 +46,6 @@ namespace Hdlc {
  * @param[in]  aByte  The input byte value.
  *
  * @returns The updated FCS.
- *
  */
 static uint16_t UpdateFcs(uint16_t aFcs, uint8_t aByte);
 
@@ -61,7 +60,6 @@ enum
 
 /**
  * FCS lookup table
- *
  */
 enum
 {

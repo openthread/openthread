@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes compile-time configurations for Parent Search.
- *
  */
 
 #ifndef CONFIG_PARENT_SEARCH_H_
@@ -42,7 +41,6 @@
  *   This module includes configuration variables for Parent Search.
  *
  * @{
- *
  */
 
 /**
@@ -60,7 +58,6 @@
  * Since the parent search process can be power consuming (child needs to stays in RX mode to collect parent response)
  * and to limit its impact on battery-powered devices, after a parent search is triggered, the child will not trigger
  * another one before a specified backoff interval specified by `OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL`.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
 #define OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE 0
@@ -72,7 +69,6 @@
  * Specifies the interval in seconds for a child to check the trigger condition to perform a parent search.
  *
  * Applicable only if periodic parent search feature is enabled (see `OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE`).
- *
  */
 #ifndef OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL
 #define OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL (9 * 60)
@@ -84,8 +80,6 @@
  * Specifies the backoff interval in seconds for a child to not perform a parent search after triggering one.
  *
  * Applicable only if periodic parent search feature is enabled (see `OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE`).
- *
- *
  */
 #ifndef OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL
 #define OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL (10 * 60 * 60)
@@ -97,7 +91,6 @@
  * Specifies the RSS threshold used to trigger a parent search.
  *
  * Applicable only if periodic parent search feature is enabled (see `OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE`).
- *
  */
 #ifndef OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD
 #define OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD -65
@@ -105,7 +98,6 @@
 
 /**
  * @}
- *
  */
 
 #endif // CONFIG_PARENT_SEARCH_H_

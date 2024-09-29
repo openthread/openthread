@@ -61,7 +61,6 @@ namespace Heap {
  *
  * @tparam  Type                  The array element type.
  * @tparam  kCapacityIncrements   Number of elements to allocate at a time when updating the array buffer.
- *
  */
 template <typename Type, uint16_t kCapacityIncrements = 2> class Array
 {
@@ -70,7 +69,6 @@ public:
 
     /**
      * Initializes the `Array` as empty.
-     *
      */
     Array(void)
         : mArray(nullptr)
@@ -81,7 +79,6 @@ public:
 
     /**
      * This is the destructor for `Array` object.
-     *
      */
     ~Array(void) { Free(); }
 
@@ -89,7 +86,6 @@ public:
      * Frees any buffer allocated by the `Array`.
      *
      * The `Array` destructor will automatically call `Free()`. This method allows caller to free buffer explicitly.
-     *
      */
     void Free(void)
     {
@@ -106,7 +102,6 @@ public:
      * the current capacity of the array.
      *
      * Invokes `Type` destructor on all cleared existing elements of array.
-     *
      */
     void Clear(void)
     {
@@ -122,7 +117,6 @@ public:
      * Returns the current array length (number of elements in the array).
      *
      * @returns The array length.
-     *
      */
     IndexType GetLength(void) const { return mLength; }
 
@@ -132,7 +126,6 @@ public:
      * The returned raw pointer is valid only while the `Array` remains unchanged.
      *
      * @returns A pointer to the array buffer or `nullptr` if the array is empty.
-     *
      */
     const Type *AsCArray(void) const { return (mLength != 0) ? mArray : nullptr; }
 
@@ -144,7 +137,6 @@ public:
      * reserved using `ReserveCapacity()` method.
      *
      * @returns The current capacity of the array.
-     *
      */
     IndexType GetCapacity(void) const { return mCapacity; }
 
@@ -157,7 +149,6 @@ public:
      *
      * @retval kErrorNone     Array was successfully updated to support @p aCapacity.
      * @retval kErrorNoBufs   Could not allocate buffer.
-     *
      */
     Error ReserveCapacity(IndexType aCapacity) { return Allocate(aCapacity); }
 
@@ -165,7 +156,6 @@ public:
      * Sets the array by taking the buffer from another given array (using move semantics).
      *
      * @param[in] aOther    The other `Heap::Array` to take from (rvalue reference).
-     *
      */
     void TakeFrom(Array &&aOther)
     {
@@ -186,7 +176,6 @@ public:
      * @param[in] aIndex  The index to get.
      *
      * @returns A reference to the element in array at @p aIndex.
-     *
      */
     Type &operator[](IndexType aIndex) { return mArray[aIndex]; }
 
@@ -198,7 +187,6 @@ public:
      * @param[in] aIndex  The index to get.
      *
      * @returns A reference to the element in array at @p aIndex.
-     *
      */
     const Type &operator[](IndexType aIndex) const { return mArray[aIndex]; }
 
@@ -211,7 +199,6 @@ public:
      * @param[in] aIndex  The index to get.
      *
      * @returns A pointer to element in array at @p aIndex or `nullptr` if @p aIndex is not valid.
-     *
      */
     Type *At(IndexType aIndex) { return (aIndex < mLength) ? &mArray[aIndex] : nullptr; }
 
@@ -224,7 +211,6 @@ public:
      * @param[in] aIndex  The index to get.
      *
      * @returns A pointer to element in array at @p aIndex or `nullptr` if @p aIndex is not valid.
-     *
      */
     const Type *At(IndexType aIndex) const { return (aIndex < mLength) ? &mArray[aIndex] : nullptr; }
 
@@ -234,7 +220,6 @@ public:
      * The returned pointer is valid only while the `Array` remains unchanged.
      *
      * @returns A pointer to the front element or `nullptr` if array is empty.
-     *
      */
     Type *Front(void) { return At(0); }
 
@@ -244,7 +229,6 @@ public:
      * The returned pointer is valid only while the `Array` remains unchanged.
      *
      * @returns A pointer to the front element or `nullptr` if array is empty.
-     *
      */
     const Type *Front(void) const { return At(0); }
 
@@ -254,7 +238,6 @@ public:
      * The returned pointer is valid only while the `Array` remains unchanged.
      *
      * @returns A pointer to the back element or `nullptr` if array is empty.
-     *
      */
     Type *Back(void) { return (mLength > 0) ? &mArray[mLength - 1] : nullptr; }
 
@@ -264,7 +247,6 @@ public:
      * The returned pointer is valid only while the `Array` remains unchanged.
      *
      * @returns A pointer to the back element or `nullptr` if array is empty.
-     *
      */
     const Type *Back(void) const { return (mLength > 0) ? &mArray[mLength - 1] : nullptr; }
 
@@ -278,7 +260,6 @@ public:
      *
      * @retval kErrorNone    Successfully pushed back @p aEntry to the end of the array.
      * @retval kErrorNoBufs  Could not allocate buffer to grow the array.
-     *
      */
     Error PushBack(const Type &aEntry)
     {
@@ -305,7 +286,6 @@ public:
      *
      * @retval kErrorNone    Successfully pushed back @p aEntry to the end of the array.
      * @retval kErrorNoBufs  Could not allocate buffer to grow the array.
-     *
      */
     Error PushBack(Type &&aEntry)
     {
@@ -332,7 +312,6 @@ public:
      * The returned pointer is valid only while the `Array` remains unchanged.
      *
      * @return A pointer to the newly appended element or `nullptr` if could not allocate buffer to grow the array
-     *
      */
     Type *PushBack(void)
     {
@@ -353,7 +332,6 @@ public:
      * Removes the last element in the array.
      *
      * Will invoke the `Type` destructor on the removed element.
-     *
      */
     void PopBack(void)
     {
@@ -372,7 +350,6 @@ public:
      * @param[in] aElement  A reference to an element in the array.
      *
      * @returns The index of @p aElement in the array.
-     *
      */
     IndexType IndexOf(const Type &aElement) const { return static_cast<IndexType>(&aElement - mArray); }
 
@@ -385,7 +362,6 @@ public:
      * @param[in] aEntry   The entry to search for within the array.
      *
      * @returns A pointer to matched array element, or `nullptr` if a match could not be found.
-     *
      */
     Type *Find(const Type &aEntry) { return AsNonConst(AsConst(this)->Find(aEntry)); }
 
@@ -398,7 +374,6 @@ public:
      * @param[in] aEntry   The entry to search for within the array.
      *
      * @returns A pointer to matched array element, or `nullptr` if a match could not be found.
-     *
      */
     const Type *Find(const Type &aEntry) const
     {
@@ -425,7 +400,6 @@ public:
      *
      * @retval TRUE   The array contains a matching element with @p aEntry.
      * @retval FALSE  The array does not contain a matching element with @p aEntry.
-     *
      */
     bool Contains(const Type &aEntry) const { return Find(aEntry) != nullptr; }
 
@@ -443,7 +417,6 @@ public:
      * @param[in]  aIndicator  An indicator to match with elements in the array.
      *
      * @returns A pointer to the matched array element, or `nullptr` if a match could not be found.
-     *
      */
     template <typename Indicator> Type *FindMatching(const Indicator &aIndicator)
     {
@@ -464,7 +437,6 @@ public:
      * @param[in]  aIndicator  An indicator to match with elements in the array.
      *
      * @returns A pointer to the matched array element, or `nullptr` if a match could not be found.
-     *
      */
     template <typename Indicator> const Type *FindMatching(const Indicator &aIndicator) const
     {
@@ -495,7 +467,6 @@ public:
      *
      * @retval TRUE   The array contains a matching element with @p aIndicator.
      * @retval FALSE  The array does not contain a matching element with @p aIndicator.
-     *
      */
     template <typename Indicator> bool ContainsMatching(const Indicator &aIndicator) const
     {

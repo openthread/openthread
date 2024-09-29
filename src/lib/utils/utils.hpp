@@ -33,7 +33,6 @@
  *   The macros in this file should be exclusively used by code under 'lib'. It's RECOMMENDED that only
  *   include this file in sources under 'lib' and not include this file in headers under 'lib'. Because
  *   headers under 'lib' may be included externally and the common macros may cause redefinition.
- *
  */
 
 #ifndef LIB_UTILS_CODE_UTILS_HPP_
@@ -47,7 +46,6 @@
  * label 'exit' if the status is unsuccessful.
  *
  * @param[in]  aStatus     A scalar status to be evaluated against zero (0).
- *
  */
 #define EXPECT_NO_ERROR(aStatus) \
     do                           \
@@ -60,7 +58,6 @@
 
 /**
  * Does nothing. This is passed to EXPECT when there is no action to do.
- *
  */
 #define NO_ACTION
 
@@ -70,7 +67,6 @@
  *
  * @param[in]  aCondition  A Boolean expression to be evaluated.
  * @param[in]  aAction     An optional expression or block to execute when the assertion fails.
- *
  */
 #define EXPECT(aCondition, aAction) \
     do                              \
@@ -89,7 +85,6 @@
  *       function body.
  *
  * @param[in]  ...         An optional expression or block to execute when the assertion fails.
- *
  */
 #define EXIT_NOW(...) \
     do                \
@@ -105,7 +100,6 @@
  * safely ignored.
  *
  * @param[in]  aStatement  The function/method to execute.
- *
  */
 #define IGNORE_RETURN(aStatement) \
     do                            \
@@ -119,7 +113,6 @@
  * Overload the new operator to new an object at a specific address.
  *
  * @param[in]  p  The pointer of the address.
- *
  */
 inline void *operator new(size_t, void *p) throw() { return p; }
 

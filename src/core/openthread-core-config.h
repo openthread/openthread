@@ -45,7 +45,6 @@
  * 1. Project specific header file (`OPENTHREAD_PROJECT_CORE_CONFIG_FILE`)
  * 2. Platform specific header file (`OPENTHREAD_PLATFORM_CORE_CONFIG_FILE`)
  * 3. Default config values as specified by `config/{module}.h`
- *
  */
 
 #ifdef OPENTHREAD_PROJECT_CORE_CONFIG_FILE
@@ -110,6 +109,7 @@
 #include "config/time_sync.h"
 #include "config/tmf.h"
 #include "config/trel.h"
+#include "config/wakeup.h"
 
 #undef OPENTHREAD_CORE_CONFIG_H_IN
 

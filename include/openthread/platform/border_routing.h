@@ -61,7 +61,6 @@ extern "C" {
  * @param[in] aInstance A pointer to an OpenThread instance.
  * @param[in] aMessage  A pointer to an ICMPv6 RouterAdvertisement message.
  * @param[in] aLength   The length of ICMPv6 RouterAdvertisement message.
- *
  */
 extern void otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength);
 
@@ -79,7 +78,6 @@ extern void otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const uint8
  *
  * @param[in] aInstance   A pointer to an OpenThread instance.
  * @param[in] aPrefixInfo A pointer to the prefix information structure
- *
  */
 extern void otPlatBorderRoutingProcessDhcp6PdPrefix(otInstance                            *aInstance,
                                                     const otBorderRoutingPrefixTableEntry *aPrefixInfo);

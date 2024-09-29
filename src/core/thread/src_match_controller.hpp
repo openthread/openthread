@@ -66,7 +66,6 @@ class Child;
  *
  * The source address match table provides the list of children for which there is a pending frame. Either a short
  * address or an extended/long address can be added to the source address match table.
- *
  */
 class SourceMatchController : public InstanceLocator, private NonCopyable
 {
@@ -75,7 +74,6 @@ public:
      * Initializes the object.
      *
      * @param[in]  aInstance    A reference to the OpenThread instance
-     *
      */
     explicit SourceMatchController(Instance &aInstance);
 
@@ -83,7 +81,6 @@ public:
      * Returns the current state of source address matching.
      *
      * @returns `true` if source address matching is enabled, `false` otherwise.
-     *
      */
     bool IsEnabled(void) const { return mEnabled; }
 
@@ -91,7 +88,6 @@ public:
      * Increments the message count for a child and updates the source match table.
      *
      * @param[in] aChild    A reference to the child.
-     *
      */
     void IncrementMessageCount(Child &aChild);
 
@@ -99,7 +95,6 @@ public:
      * Decrements the message count for a child and updates the source match table.
      *
      * @param[in] aChild    A reference to the child.
-     *
      */
     void DecrementMessageCount(Child &aChild);
 
@@ -107,7 +102,6 @@ public:
      * Resets the message count for a child to zero and updates the source match table.
      *
      * @param[in] aChild    A reference to the child.
-     *
      */
     void ResetMessageCount(Child &aChild);
 
@@ -117,14 +111,12 @@ public:
      *
      * @param[in] aChild            A reference to the child.
      * @param[in] aUseShortAddress  `true` to match on short source address, `false` otherwise.
-     *
      */
     void SetSrcMatchAsShort(Child &aChild, bool aUseShortAddress);
 
 private:
     /**
      * Clears the source match table.
-     *
      */
     void ClearTable(void);
 
@@ -136,7 +128,6 @@ private:
      * acknowledgment frames in response to MAC Data Request commands.
      *
      * @param[in] aEnable   `true` to enable, `false` to disable.
-     *
      */
     void Enable(bool aEnable);
 
@@ -149,7 +140,6 @@ private:
      * the child is marked to remember the pending entry and source matching is disabled.
      *
      * @param[in] aChild    A reference to the child.
-     *
      */
     void AddEntry(Child &aChild);
 
@@ -161,7 +151,6 @@ private:
      * entries are added. If all pending entries are successfully added, source matching is enabled.
      *
      * @param[in] aChild    A reference to the child.
-     *
      */
     void ClearEntry(Child &aChild);
 
@@ -173,7 +162,6 @@ private:
      *
      * @retval kErrorNone     Child's address was added successfully to the source match table.
      * @retval kErrorNoBufs   No available space in the source match table.
-     *
      */
     Error AddAddress(const Child &aChild);
 
@@ -182,7 +170,6 @@ private:
      *
      * @retval kErrorNone     All pending entries were successfully added.
      * @retval kErrorNoBufs   No available space in the source match table.
-     *
      */
     Error AddPendingEntries(void);
 
@@ -191,7 +178,6 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace ot

@@ -408,7 +408,7 @@ jobs:
             CXX: clang++
           - CC: gcc
             CXX: g++
-    runs-on: macos-12
+    runs-on: macos-14
     env:
       CC: ${{ matrix.CC }}
       CXX: ${{ matrix.CXX }}

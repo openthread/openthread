@@ -652,7 +652,6 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * @cparam nat64 @ca{enable|disable}
      * @par api_copy
      * #otNat64SetEnabled
-     *
      */
     if (ProcessEnableDisable(aArgs, otNat64SetEnabled) == OT_ERROR_NONE)
     {
@@ -687,7 +686,6 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * - `Active`: NAT64 translator is enabled and is translating packets.
      * @sa otNat64GetPrefixManagerState
      * @sa otNat64GetTranslatorState
-     *
      */
     else if (aArgs[0] == "state")
     {
@@ -719,7 +717,6 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
          * @endcode
          * @par api_copy
          * #otNat64GetCidr
-         *
          */
         if (aArgs[1].IsEmpty())
         {
@@ -737,7 +734,6 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
          * @endcode
          * @par api_copy
          * #otPlatNat64SetIp4Cidr
-         *
          */
         else
         {
@@ -760,7 +756,6 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * @endcode
      * @par api_copy
      * #otNat64GetNextAddressMapping
-     *
      */
     else if (aArgs[0] == "mappings")
     {
@@ -839,7 +834,6 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
      * @sa otNat64GetCounters
      * @sa otNat64GetErrorCounters
-     *
      */
     else if (aArgs[0] == "counters")
     {
@@ -3718,7 +3712,6 @@ template <> otError Interpreter::Process<Cmd("linkmetricsmgr")>(Arg aArgs[])
      * @cparam linkmetricsmgr @ca{enable|disable}
      * @par api_copy
      * #otLinkMetricsManagerSetEnabled
-     *
      */
     if (ProcessEnableDisable(aArgs, otLinkMetricsManagerIsEnabled, otLinkMetricsManagerSetEnabled) == OT_ERROR_NONE)
     {
@@ -3732,7 +3725,6 @@ template <> otError Interpreter::Process<Cmd("linkmetricsmgr")>(Arg aArgs[])
      * @endcode
      * @par api_copy
      * #otLinkMetricsManagerGetMetricsValueByExtAddr
-     *
      */
     else if (aArgs[0] == "show")
     {
@@ -8205,6 +8197,29 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+/**
+ * @cli wakeupchannel (get,set)
+ * @code
+ * wakeupchannel
+ * 12
+ * Done
+ * @endcode
+ * @code
+ * wakeupchannel 12
+ * Done
+ * @endcode
+ * @cparam wakeupchannel [@ca{channel}]
+ * Use `channel` to set the wake-up channel.
+ * @par
+ * Gets or sets the wake-up channel value.
+ */
+template <> otError Interpreter::Process<Cmd("wakeupchannel")>(Arg aArgs[])
+{
+    return ProcessGetSet(aArgs, otLinkGetWakeupChannel, otLinkSetWakeupChannel);
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 

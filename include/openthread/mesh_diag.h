@@ -51,13 +51,11 @@ extern "C" {
  *   The Mesh Diagnostics APIs require `OPENTHREAD_CONFIG_MESH_DIAG_ENABLE` and `OPENTHREAD_FTD`.
  *
  * @{
- *
  */
 
 /**
  * Represents the set of configurations used when discovering mesh topology indicating which items to
  * discover.
- *
  */
 typedef struct otMeshDiagDiscoverConfig
 {
@@ -69,7 +67,6 @@ typedef struct otMeshDiagDiscoverConfig
  * An opaque iterator to iterate over list of IPv6 addresses of a router.
  *
  * Pointers to instance of this type are provided in `otMeshDiagRouterInfo`.
- *
  */
 typedef struct otMeshDiagIp6AddrIterator otMeshDiagIp6AddrIterator;
 
@@ -77,7 +74,6 @@ typedef struct otMeshDiagIp6AddrIterator otMeshDiagIp6AddrIterator;
  * An opaque iterator to iterate over list of children of a router.
  *
  * Pointers to instance of this type are provided in `otMeshDiagRouterInfo`.
- *
  */
 typedef struct otMeshDiagChildIterator otMeshDiagChildIterator;
 
@@ -86,13 +82,11 @@ typedef struct otMeshDiagChildIterator otMeshDiagChildIterator;
  *
  * This is used in `otMeshDiagRouterInfo` for `mVersion` property when device does not provide its version. This
  * indicates that device is likely running 1.3.0 (version value 4) or earlier.
- *
  */
 #define OT_MESH_DIAG_VERSION_UNKNOWN 0xffff
 
 /**
  * Represents information about a router in Thread mesh discovered using `otMeshDiagDiscoverTopology()`.
- *
  */
 typedef struct otMeshDiagRouterInfo
 {
@@ -112,7 +106,6 @@ typedef struct otMeshDiagRouterInfo
      * The array is indexed based on Router ID. `mLinkQualities[routerId]` indicates the incoming link quality, the
      * router sees to the router with `routerId`. Link quality is a value in [0, 3]. Value zero indicates no link.
      * Larger value indicate better link quality (as defined by Thread specification).
-     *
      */
     uint8_t mLinkQualities[OT_NETWORK_MAX_ROUTER_ID + 1];
 
@@ -124,7 +117,6 @@ typedef struct otMeshDiagRouterInfo
      *
      * The pointer can be NULL when there was no request to discover IPv6 addresses (in `otMeshDiagDiscoverConfig`) or
      * if the router did not provide the list.
-     *
      */
     otMeshDiagIp6AddrIterator *mIp6AddrIterator;
 
@@ -136,14 +128,12 @@ typedef struct otMeshDiagRouterInfo
      *
      * The pointer can be NULL when there was no request to discover children (in `otMeshDiagDiscoverConfig`) or
      * if the router did not provide the list.
-     *
      */
     otMeshDiagChildIterator *mChildIterator;
 } otMeshDiagRouterInfo;
 
 /**
  * Represents information about a discovered child in Thread mesh using `otMeshDiagDiscoverTopology()`.
- *
  */
 typedef struct otMeshDiagChildInfo
 {
@@ -166,7 +156,6 @@ typedef struct otMeshDiagChildInfo
  *                         OT_ERROR_RESPONSE_TIMEOUT   Timed out waiting for response from one or more routers.
  * @param[in] aRouterInfo  The discovered router info (can be null if `aError` is OT_ERROR_RESPONSE_TIMEOUT).
  * @param[in] aContext     Application-specific context.
- *
  */
 typedef void (*otMeshDiagDiscoverCallback)(otError aError, otMeshDiagRouterInfo *aRouterInfo, void *aContext);
 
@@ -182,7 +171,6 @@ typedef void (*otMeshDiagDiscoverCallback)(otError aError, otMeshDiagRouterInfo 
  * @retval OT_ERROR_BUSY            A previous discovery request is still ongoing.
  * @retval OT_ERROR_INVALID_STATE   Device is not attached.
  * @retval OT_ERROR_NO_BUFS         Could not allocate buffer to send discovery messages.
- *
  */
 otError otMeshDiagDiscoverTopology(otInstance                     *aInstance,
                                    const otMeshDiagDiscoverConfig *aConfig,
@@ -193,7 +181,6 @@ otError otMeshDiagDiscoverTopology(otInstance                     *aInstance,
  * Cancels an ongoing topology discovery if there is one, otherwise no action.
  *
  * When ongoing discovery is cancelled, the callback from `otMeshDiagDiscoverTopology()` will not be called anymore.
- *
  */
 void otMeshDiagCancel(otInstance *aInstance);
 
@@ -210,7 +197,6 @@ void otMeshDiagCancel(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE       Successfully retrieved the next address. @p aIp6Address and @p aIterator are updated.
  * @retval OT_ERROR_NOT_FOUND  No more address. Reached the end of the list.
- *
  */
 otError otMeshDiagGetNextIp6Address(otMeshDiagIp6AddrIterator *aIterator, otIp6Address *aIp6Address);
 
@@ -225,7 +211,6 @@ otError otMeshDiagGetNextIp6Address(otMeshDiagIp6AddrIterator *aIterator, otIp6A
  *
  * @retval OT_ERROR_NONE       Successfully retrieved the next child. @p aChildInfo and @p aIterator are updated.
  * @retval OT_ERROR_NOT_FOUND  No more child. Reached the end of the list.
- *
  */
 otError otMeshDiagGetNextChildInfo(otMeshDiagChildIterator *aIterator, otMeshDiagChildInfo *aChildInfo);
 
@@ -237,7 +222,6 @@ otError otMeshDiagGetNextChildInfo(otMeshDiagChildIterator *aIterator, otMeshDia
  * layer,  while `mMessageErrorRate` tracks the IPv6 message error rate (above MAC layer and after MAC retries) when
  * an IPv6 message is dropped. For example, if the message is large and requires 6LoWPAN fragmentation, message tx is
  * considered as failed if one of its fragment frame tx fails (for example, never acked).
- *
  */
 typedef struct otMeshDiagChildEntry
 {
@@ -275,7 +259,6 @@ typedef struct otMeshDiagChildEntry
  *                         OT_ERROR_RESPONSE_TIMEOUT   Timed out waiting for response.
  * @param[in] aChildEntry  The child entry (can be null if `aError` is OT_ERROR_RESPONSE_TIMEOUT or OT_ERROR_NONE).
  * @param[in] aContext     Application-specific context.
- *
  */
 typedef void (*otMeshDiagQueryChildTableCallback)(otError                     aError,
                                                   const otMeshDiagChildEntry *aChildEntry,
@@ -294,7 +277,6 @@ typedef void (*otMeshDiagQueryChildTableCallback)(otError                     aE
  * @retval OT_ERROR_INVALID_ARGS   The @p aRloc16 is not a valid router RLOC16.
  * @retval OT_ERROR_INVALID_STATE  Device is not attached.
  * @retval OT_ERROR_NO_BUFS        Could not allocate buffer to send query messages.
- *
  */
 otError otMeshDiagQueryChildTable(otInstance                       *aInstance,
                                   uint16_t                          aRloc16,
@@ -315,7 +297,6 @@ otError otMeshDiagQueryChildTable(otInstance                       *aInstance,
  * @param[in] aIp6AddrIterator  An iterator to go through the IPv6 addresses of the child with @p aRloc using
  *                              `otMeshDiagGetNextIp6Address()`. Set to NULL on `OT_ERROR_RESPONSE_TIMEOUT`.
  * @param[in] aContext          Application-specific context.
- *
  */
 typedef void (*otMeshDiagChildIp6AddrsCallback)(otError                    aError,
                                                 uint16_t                   aChildRloc16,
@@ -335,7 +316,6 @@ typedef void (*otMeshDiagChildIp6AddrsCallback)(otError                    aErro
  * @retval OT_ERROR_INVALID_ARGS   The @p aRloc16 is not a valid  RLOC16.
  * @retval OT_ERROR_INVALID_STATE  Device is not attached.
  * @retval OT_ERROR_NO_BUFS        Could not allocate buffer to send query messages.
- *
  */
 otError otMeshDiagQueryChildrenIp6Addrs(otInstance                     *aInstance,
                                         uint16_t                        aRloc16,
@@ -350,7 +330,6 @@ otError otMeshDiagQueryChildrenIp6Addrs(otInstance                     *aInstanc
  * layer,  while `mMessageErrorRate` tracks the IPv6 message error rate (above MAC layer and after MAC retries) when
  * an IPv6 message is dropped. For example, if the message is large and requires 6LoWPAN fragmentation, message tx is
  * considered as failed if one of its fragment frame tx fails (for example, never acked).
- *
  */
 typedef struct otMeshDiagRouterNeighborEntry
 {
@@ -378,7 +357,6 @@ typedef struct otMeshDiagRouterNeighborEntry
  *                            OT_ERROR_RESPONSE_TIMEOUT   Timed out waiting for response.
  * @param[in] aNeighborEntry  The neighbor entry (can be null if `aError` is RESPONSE_TIMEOUT or NONE).
  * @param[in] aContext        Application-specific context.
- *
  */
 typedef void (*otMeshDiagQueryRouterNeighborTableCallback)(otError                              aError,
                                                            const otMeshDiagRouterNeighborEntry *aNeighborEntry,
@@ -397,7 +375,6 @@ typedef void (*otMeshDiagQueryRouterNeighborTableCallback)(otError              
  * @retval OT_ERROR_INVALID_ARGS   The @p aRloc16 is not a valid router RLOC16.
  * @retval OT_ERROR_INVALID_STATE  Device is not attached.
  * @retval OT_ERROR_NO_BUFS        Could not allocate buffer to send query messages.
- *
  */
 otError otMeshDiagQueryRouterNeighborTable(otInstance                                *aInstance,
                                            uint16_t                                   aRloc16,
@@ -406,7 +383,6 @@ otError otMeshDiagQueryRouterNeighborTable(otInstance                           
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

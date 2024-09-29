@@ -55,7 +55,6 @@ public:
      * Constructor
      *
      * @param[in]  aInstance  The OpenThread instance structure.
-     *
      */
     explicit NcpHdlc(Instance *aInstance, otNcpHdlcSendCallback aSendCallback);
 
@@ -66,7 +65,6 @@ public:
      * @param[in]  aInstancs      The OpenThread instance pointers array.
      * @param[in]  aCount         Number of instances in the array.
      * @param[in]  aSendCallback  Callback for sending data.
-     *
      */
     explicit NcpHdlc(Instance **aInstances, uint8_t aCount, otNcpHdlcSendCallback aSendCallback);
 
@@ -74,13 +72,11 @@ public:
 
     /**
      * Is called when uart tx is finished. It prepares and sends the next data chunk (if any) to uart.
-     *
      */
     void HandleHdlcSendDone(void);
 
     /**
      * Is called when uart received a data buffer.
-     *
      */
     void HandleHdlcReceiveDone(const uint8_t *aBuf, uint16_t aBufLength);
 

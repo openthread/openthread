@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes compile-time configurations for Channel Monitor.
- *
  */
 
 #ifndef CONFIG_CHANNEL_MONITOR_H_
@@ -42,14 +41,12 @@
  *   This module includes configuration variables for Channel Monitor.
  *
  * @{
- *
  */
 
 /**
  * @def OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
  *
  * Define to 1 to enable Channel Monitor support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #define OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE 0
@@ -64,7 +61,6 @@
  * interval.
  *
  * Applicable only if Channel Monitoring feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is set).
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_INTERVAL
 #define OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_INTERVAL 41000
@@ -81,7 +77,6 @@
  * It is recommended that this value is set to same value as the CCA threshold used by radio.
  *
  * Applicable only if Channel Monitoring feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is set).
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MONITOR_RSSI_THRESHOLD
 #define OPENTHREAD_CONFIG_CHANNEL_MONITOR_RSSI_THRESHOLD -75
@@ -96,7 +91,6 @@
  * that are above the RSSI threshold within (approximately) this sample window.
  *
  * Applicable only if Channel Monitoring feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is set).
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_WINDOW
 #define OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_WINDOW 960
@@ -104,7 +98,6 @@
 
 /**
  * @}
- *
  */
 
 #endif // CONFIG_CHANNEL_MONITOR_H_

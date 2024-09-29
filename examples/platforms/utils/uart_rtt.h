@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file defines the RTT implementation of the uart API and default constants used by uart_rtt.c.
- *
  */
 
 #ifndef UTILS_UART_RTT_H
@@ -48,7 +47,6 @@ extern "C" {
  * @def UART_RTT_BUFFER_INDEX
  *
  * RTT buffer index used for the uart.
- *
  */
 #ifndef UART_RTT_BUFFER_INDEX
 #define UART_RTT_BUFFER_INDEX 1
@@ -64,7 +62,6 @@ extern "C" {
  *
  * RTT name used for the uart. Only used if UART_RTT_BUFFER_INDEX is not 0.
  * Otherwise, the buffer name is fixed to "Terminal".
- *
  */
 #ifndef UART_RTT_BUFFER_NAME
 #define UART_RTT_BUFFER_NAME "Terminal"
@@ -76,7 +73,6 @@ extern "C" {
  * RTT up buffer size used for the uart. Only used if UART_RTT_BUFFER_INDEX
  * is not 0. To configure buffer #0 size, check the BUFFER_SIZE_UP definition
  * in SEGGER_RTT_Conf.h
- *
  */
 #ifndef UART_RTT_UP_BUFFER_SIZE
 #define UART_RTT_UP_BUFFER_SIZE 256
@@ -88,7 +84,6 @@ extern "C" {
  * RTT down buffer size used for the uart. Only used if UART_RTT_BUFFER_INDEX
  * is not 0. To configure buffer #0 size, check the BUFFER_SIZE_DOWN definition
  * in SEGGER_RTT_Conf.h
- *
  */
 #ifndef UART_RTT_DOWN_BUFFER_SIZE
 #define UART_RTT_DOWN_BUFFER_SIZE 16
@@ -99,7 +94,6 @@ extern "C" {
  *
  * Size of the temporary buffer used when reading from the RTT channel. It will be
  * locally allocated on the stack.
- *
  */
 #ifndef UART_RTT_READ_BUFFER_SIZE
 #define UART_RTT_READ_BUFFER_SIZE 16
@@ -107,7 +101,6 @@ extern "C" {
 
 /**
  * Updates the rtt uart. Must be called frequently to process receive and send done.
- *
  */
 void utilsUartRttProcess(void);
 

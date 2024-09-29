@@ -62,14 +62,12 @@ extern "C" {
  *   (`OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE`) is enabled.
  *
  * @{
- *
  */
 
 #define OT_DEFAULT_COAP_SECURE_PORT 5684 ///< Default CoAP Secure port, as specified in RFC 7252
 
 /**
  * CoAP secure connection event types.
- *
  */
 typedef enum otCoapSecureConnectEvent
 {
@@ -85,7 +83,6 @@ typedef enum otCoapSecureConnectEvent
  *
  * @param[in]  aEvent      The connection event.
  * @param[in]  aContext    A pointer to arbitrary context information.
- *
  */
 typedef void (*otHandleCoapSecureClientConnect)(otCoapSecureConnectEvent aEvent, void *aContext);
 
@@ -94,7 +91,6 @@ typedef void (*otHandleCoapSecureClientConnect)(otCoapSecureConnectEvent aEvent,
  * number of connection attempts.
  *
  * @param[in] aContext    A pointer to arbitrary context information.
- *
  */
 typedef void (*otCoapSecureAutoStopCallback)(void *aContext);
 
@@ -105,7 +101,6 @@ typedef void (*otCoapSecureAutoStopCallback)(void *aContext);
  * @param[in]  aPort      The local UDP port to bind to.
  *
  * @retval OT_ERROR_NONE  Successfully started the CoAP Secure server.
- *
  */
 otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort);
 
@@ -121,7 +116,6 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort);
  *
  * @retval OT_ERROR_NONE        Successfully started the CoAP agent.
  * @retval OT_ERROR_ALREADY     Already started.
- *
  */
 otError otCoapSecureStartWithMaxConnAttempts(otInstance                  *aInstance,
                                              uint16_t                     aPort,
@@ -133,7 +127,6 @@ otError otCoapSecureStartWithMaxConnAttempts(otInstance                  *aInsta
  * Stops the CoAP Secure server.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
- *
  */
 void otCoapSecureStop(otInstance *aInstance);
 
@@ -148,7 +141,6 @@ void otCoapSecureStop(otInstance *aInstance);
  * @param[in]  aPskLength    The PSK length.
  * @param[in]  aPskIdentity  The Identity Name for the PSK.
  * @param[in]  aPskIdLength  The PSK Identity Length.
- *
  */
 void otCoapSecureSetPsk(otInstance    *aInstance,
                         const uint8_t *aPsk,
@@ -170,7 +162,6 @@ void otCoapSecureSetPsk(otInstance    *aInstance,
  * @retval OT_ERROR_INVALID_STATE   Not connected yet.
  * @retval OT_ERROR_NONE            Successfully get the peer certificate.
  * @retval OT_ERROR_NO_BUFS         Can't allocate memory for certificate.
- *
  */
 otError otCoapSecureGetPeerCertificateBase64(otInstance    *aInstance,
                                              unsigned char *aPeerCert,
@@ -185,7 +176,6 @@ otError otCoapSecureGetPeerCertificateBase64(otInstance    *aInstance,
  *
  * @param[in]   aInstance               A pointer to an OpenThread instance.
  * @param[in]   aVerifyPeerCertificate  true, to verify the peer certificate.
- *
  */
 void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertificate);
 
@@ -200,7 +190,6 @@ void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertifica
  * @param[in]  aX509Length        The length of certificate.
  * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
  * @param[in]  aPrivateKeyLength  The length of the private key.
- *
  */
 void otCoapSecureSetCertificate(otInstance    *aInstance,
                                 const uint8_t *aX509Cert,
@@ -219,7 +208,6 @@ void otCoapSecureSetCertificate(otInstance    *aInstance,
  * @param[in]  aInstance                A pointer to an OpenThread instance.
  * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
  * @param[in]  aX509CaCertChainLength   The length of chain.
- *
  */
 void otCoapSecureSetCaCertificateChain(otInstance    *aInstance,
                                        const uint8_t *aX509CaCertificateChain,
@@ -235,7 +223,6 @@ void otCoapSecureSetCaCertificateChain(otInstance    *aInstance,
  * @param[in]  aContext                A pointer to arbitrary context information.
  *
  * @retval OT_ERROR_NONE  Successfully started DTLS connection.
- *
  */
 otError otCoapSecureConnect(otInstance                     *aInstance,
                             const otSockAddr               *aSockAddr,
@@ -246,7 +233,6 @@ otError otCoapSecureConnect(otInstance                     *aInstance,
  * Stops the DTLS connection.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
- *
  */
 void otCoapSecureDisconnect(otInstance *aInstance);
 
@@ -257,7 +243,6 @@ void otCoapSecureDisconnect(otInstance *aInstance);
  *
  * @retval TRUE   The DTLS session is connected.
  * @retval FALSE  The DTLS session is not connected.
- *
  */
 bool otCoapSecureIsConnected(otInstance *aInstance);
 
@@ -268,7 +253,6 @@ bool otCoapSecureIsConnected(otInstance *aInstance);
  *
  * @retval TRUE  If DTLS session is active.
  * @retval FALSE If DTLS session is not active.
- *
  */
 bool otCoapSecureIsConnectionActive(otInstance *aInstance);
 
@@ -279,7 +263,6 @@ bool otCoapSecureIsConnectionActive(otInstance *aInstance);
  *
  * @retval TRUE   The DTLS session is closed.
  * @retval FALSE  The DTLS session is not closed.
- *
  */
 bool otCoapSecureIsClosed(otInstance *aInstance);
 
@@ -303,7 +286,6 @@ bool otCoapSecureIsClosed(otInstance *aInstance);
  * @retval OT_ERROR_NONE           Successfully sent CoAP message.
  * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
  * @retval OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
- *
  */
 otError otCoapSecureSendRequestBlockWise(otInstance                 *aInstance,
                                          otMessage                  *aMessage,
@@ -327,7 +309,6 @@ otError otCoapSecureSendRequestBlockWise(otInstance                 *aInstance,
  * @retval OT_ERROR_NONE           Successfully sent CoAP message.
  * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
  * @retval OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
- *
  */
 otError otCoapSecureSendRequest(otInstance           *aInstance,
                                 otMessage            *aMessage,
@@ -339,7 +320,6 @@ otError otCoapSecureSendRequest(otInstance           *aInstance,
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aResource  A pointer to the resource.
- *
  */
 void otCoapSecureAddResource(otInstance *aInstance, otCoapResource *aResource);
 
@@ -348,7 +328,6 @@ void otCoapSecureAddResource(otInstance *aInstance, otCoapResource *aResource);
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aResource  A pointer to the resource.
- *
  */
 void otCoapSecureRemoveResource(otInstance *aInstance, otCoapResource *aResource);
 
@@ -357,7 +336,6 @@ void otCoapSecureRemoveResource(otInstance *aInstance, otCoapResource *aResource
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aResource  A pointer to the resource.
- *
  */
 void otCoapSecureAddBlockWiseResource(otInstance *aInstance, otCoapBlockwiseResource *aResource);
 
@@ -366,7 +344,6 @@ void otCoapSecureAddBlockWiseResource(otInstance *aInstance, otCoapBlockwiseReso
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aResource  A pointer to the resource.
- *
  */
 void otCoapSecureRemoveBlockWiseResource(otInstance *aInstance, otCoapBlockwiseResource *aResource);
 
@@ -376,7 +353,6 @@ void otCoapSecureRemoveBlockWiseResource(otInstance *aInstance, otCoapBlockwiseR
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aHandler   A function pointer that shall be called when an unhandled request arrives.
  * @param[in]  aContext   A pointer to arbitrary context information. May be NULL if not used.
- *
  */
 void otCoapSecureSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext);
 
@@ -387,7 +363,6 @@ void otCoapSecureSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler a
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aHandler      A pointer to a function that will be called once DTLS connection has changed.
  * @param[in]  aContext      A pointer to arbitrary context information. May be NULL if not used.
- *
  */
 void otCoapSecureSetClientConnectEventCallback(otInstance                     *aInstance,
                                                otHandleCoapSecureClientConnect aHandler,
@@ -407,7 +382,6 @@ void otCoapSecureSetClientConnectEventCallback(otInstance                     *a
  *
  * @retval OT_ERROR_NONE     Successfully enqueued the CoAP response message.
  * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to send the CoAP response.
- *
  */
 otError otCoapSecureSendResponseBlockWise(otInstance                 *aInstance,
                                           otMessage                  *aMessage,
@@ -424,13 +398,11 @@ otError otCoapSecureSendResponseBlockWise(otInstance                 *aInstance,
  *
  * @retval OT_ERROR_NONE     Successfully enqueued the CoAP response message.
  * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to send the CoAP response.
- *
  */
 otError otCoapSecureSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

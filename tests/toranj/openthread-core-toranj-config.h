@@ -28,7 +28,6 @@
 
 /**
  * This header file defines the OpenThread core configuration options used in NCP build for `toranj` test framework.
- *
  */
 
 #if !defined(OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_) && !defined(OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_)

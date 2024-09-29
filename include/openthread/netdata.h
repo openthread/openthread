@@ -46,7 +46,6 @@ extern "C" {
  * @addtogroup api-thread-general
  *
  * @{
- *
  */
 
 #define OT_NETWORK_DATA_ITERATOR_INIT 0 ///< Value to initialize `otNetworkDataIterator`.
@@ -74,7 +73,6 @@ typedef struct otBorderRouterConfig
 
 /**
  * Represents 6LoWPAN Context ID information associated with a prefix in Network Data.
- *
  */
 typedef struct otLowpanContextInfo
 {
@@ -85,7 +83,6 @@ typedef struct otLowpanContextInfo
 
 /**
  * Represents an External Route configuration.
- *
  */
 typedef struct otExternalRouteConfig
 {
@@ -100,7 +97,6 @@ typedef struct otExternalRouteConfig
 
 /**
  * Defines valid values for `mPreference` in `otExternalRouteConfig` and `otBorderRouterConfig`.
- *
  */
 typedef enum otRoutePreference
 {
@@ -114,7 +110,6 @@ typedef enum otRoutePreference
 
 /**
  * Represents a Server configuration.
- *
  */
 typedef struct otServerConfig
 {
@@ -126,7 +121,6 @@ typedef struct otServerConfig
 
 /**
  * Represents a Service configuration.
- *
  */
 typedef struct otServiceConfig
 {
@@ -148,7 +142,6 @@ typedef struct otServiceConfig
  *
  * @retval OT_ERROR_NONE    Successfully copied the Thread Network Data into @p aData and updated @p aDataLength.
  * @retval OT_ERROR_NO_BUFS Not enough space in @p aData to fully copy the Thread Network Data.
- *
  */
 otError otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength);
 
@@ -158,7 +151,6 @@ otError otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_
  * @param[in] aInstance    A pointer to an OpenThread instance.
  *
  * @return The length of the Network Data.
- *
  */
 uint8_t otNetDataGetLength(otInstance *aInstance);
 
@@ -169,7 +161,6 @@ uint8_t otNetDataGetLength(otInstance *aInstance);
  * @param[in] aInstance    A pointer to an OpenThread instance.
  *
  * @return The maximum length of the Network Data (high water mark for Network Data length).
- *
  */
 uint8_t otNetDataGetMaxLength(otInstance *aInstance);
 
@@ -179,7 +170,6 @@ uint8_t otNetDataGetMaxLength(otInstance *aInstance);
  * @param[in] aInstance    A pointer to an OpenThread instance.
  *
  * @sa otNetDataGetMaxLength
- *
  */
 void otNetDataResetMaxLength(otInstance *aInstance);
 
@@ -193,7 +183,6 @@ void otNetDataResetMaxLength(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE       Successfully found the next On Mesh prefix.
  * @retval OT_ERROR_NOT_FOUND  No subsequent On Mesh prefix exists in the Thread Network Data.
- *
  */
 otError otNetDataGetNextOnMeshPrefix(otInstance            *aInstance,
                                      otNetworkDataIterator *aIterator,
@@ -209,7 +198,6 @@ otError otNetDataGetNextOnMeshPrefix(otInstance            *aInstance,
  *
  * @retval OT_ERROR_NONE       Successfully found the next External Route.
  * @retval OT_ERROR_NOT_FOUND  No subsequent external route entry exists in the Thread Network Data.
- *
  */
 otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig);
 
@@ -223,7 +211,6 @@ otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIte
  *
  * @retval OT_ERROR_NONE       Successfully found the next service.
  * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the partition's Network Data.
- *
  */
 otError otNetDataGetNextService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig);
 
@@ -237,7 +224,6 @@ otError otNetDataGetNextService(otInstance *aInstance, otNetworkDataIterator *aI
  *
  * @retval OT_ERROR_NONE       Successfully found the next 6LoWPAN Context ID info.
  * @retval OT_ERROR_NOT_FOUND  No subsequent 6LoWPAN Context info exists in the partition's Network Data.
- *
  */
 otError otNetDataGetNextLowpanContextInfo(otInstance            *aInstance,
                                           otNetworkDataIterator *aIterator,
@@ -248,7 +234,6 @@ otError otNetDataGetNextLowpanContextInfo(otInstance            *aInstance,
  *
  * @param[in]  aInstance   A pointer to the OpenThread instance.
  * @param[out] aDataset    A pointer to a `otCommissioningDataset` to populate.
- *
  */
 void otNetDataGetCommissioningDataset(otInstance *aInstance, otCommissioningDataset *aDataset);
 
@@ -258,7 +243,6 @@ void otNetDataGetCommissioningDataset(otInstance *aInstance, otCommissioningData
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The Network Data Version.
- *
  */
 uint8_t otNetDataGetVersion(otInstance *aInstance);
 
@@ -268,7 +252,6 @@ uint8_t otNetDataGetVersion(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The Stable Network Data Version.
- *
  */
 uint8_t otNetDataGetStableVersion(otInstance *aInstance);
 
@@ -281,7 +264,6 @@ uint8_t otNetDataGetStableVersion(otInstance *aInstance);
  * @retval OT_ERROR_NONE          @p aEui64 is included in the steering data.
  * @retval OT_ERROR_INVALID_STATE No steering data present.
  * @retval OT_ERROR_NOT_FOUND     @p aEui64 is not included in the steering data.
- *
  */
 otError otNetDataSteeringDataCheckJoiner(otInstance *aInstance, const otExtAddress *aEui64);
 
@@ -297,7 +279,6 @@ struct otJoinerDiscerner;
  * @retval OT_ERROR_NONE          @p aDiscerner is included in the steering data.
  * @retval OT_ERROR_INVALID_STATE No steering data present.
  * @retval OT_ERROR_NOT_FOUND     @p aDiscerner is not included in the steering data.
- *
  */
 otError otNetDataSteeringDataCheckJoinerWithDiscerner(otInstance                     *aInstance,
                                                       const struct otJoinerDiscerner *aDiscerner);
@@ -311,13 +292,11 @@ otError otNetDataSteeringDataCheckJoinerWithDiscerner(otInstance                
  * @returns  Whether @p aPrefix is a valid OMR prefix and Leader's Network Data contains the OMR prefix @p aPrefix.
  *
  * @note This API is only available when `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` is used.
- *
  */
 bool otNetDataContainsOmrPrefix(otInstance *aInstance, const otIp6Prefix *aPrefix);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

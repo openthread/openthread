@@ -46,7 +46,6 @@
  *   This module includes the platform abstraction for the message pool.
  *
  * @{
- *
  */
 
 #ifdef __cplusplus
@@ -55,7 +54,6 @@ extern "C" {
 
 /**
  * Represents an OpenThread message buffer.
- *
  */
 typedef struct otMessageBuffer
 {
@@ -70,7 +68,6 @@ typedef struct otMessageBuffer
  * @param[in] aInstance            A pointer to the OpenThread instance.
  * @param[in] aMinNumFreeBuffers   An uint16 containing the minimum number of free buffers desired by OpenThread.
  * @param[in] aBufferSize          The size in bytes of a buffer object.
- *
  */
 void otPlatMessagePoolInit(otInstance *aInstance, uint16_t aMinNumFreeBuffers, size_t aBufferSize);
 
@@ -84,7 +81,6 @@ void otPlatMessagePoolInit(otInstance *aInstance, uint16_t aMinNumFreeBuffers, s
  * @param[in] aInstance            A pointer to the OpenThread instance.
  *
  * @returns A pointer to the buffer or NULL if no buffers are available.
- *
  */
 otMessageBuffer *otPlatMessagePoolNew(otInstance *aInstance);
 
@@ -95,7 +91,6 @@ otMessageBuffer *otPlatMessagePoolNew(otInstance *aInstance);
  *
  * @param[in]  aInstance  A pointer to the OpenThread instance.
  * @param[in]  aBuffer    The buffer to free.
- *
  */
 void otPlatMessagePoolFree(otInstance *aInstance, otMessageBuffer *aBuffer);
 
@@ -107,7 +102,6 @@ void otPlatMessagePoolFree(otInstance *aInstance, otMessageBuffer *aBuffer);
  * @param[in]  aInstance  A pointer to the OpenThread instance.
  *
  * @returns The number of buffers currently free and available to OpenThread.
- *
  */
 uint16_t otPlatMessagePoolNumFreeBuffers(otInstance *aInstance);
 
@@ -117,7 +111,6 @@ uint16_t otPlatMessagePoolNumFreeBuffers(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 #endif // OPENTHREAD_PLATFORM_MESSAGEPOOL_H_

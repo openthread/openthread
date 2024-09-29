@@ -29,7 +29,6 @@
 /**
  * This header file defines the OpenThread core configuration example for an FTD device (not acting as BR). This is
  * intended for use in `script/check-size`.
- *
  */
 
 #ifndef OT_CORE_CONFIG_CHECK_SIZE_FTD_H_

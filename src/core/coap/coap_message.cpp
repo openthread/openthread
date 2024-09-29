@@ -114,7 +114,6 @@ uint8_t Message::WriteExtendedOptionField(uint16_t aValue, uint8_t *&aBuffer)
      * If `269 <= aValue`, two-byte extension is used and the value minis 269
      * is written as a 16-bit unsigned integer and `14 (kOption2ByteExtension)`
      * is returned.
-     *
      */
 
     uint8_t rval;

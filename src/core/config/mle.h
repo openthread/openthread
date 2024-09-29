@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes compile-time configurations for the MLE service.
- *
  */
 
 #ifndef CONFIG_MLE_H_
@@ -42,7 +41,6 @@
  *   This module includes configuration variables for the MLE service.
  *
  * @{
- *
  */
 
 /**
@@ -52,7 +50,6 @@
  *
  * @note Thread specifies this value to be 32.  Changing this value may cause interoperability issues with standard
  *       Thread 1.1 devices.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_MAX_ROUTERS
 #define OPENTHREAD_CONFIG_MLE_MAX_ROUTERS 32
@@ -62,7 +59,6 @@
  * @def OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
  *
  * The maximum number of children.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
 #define OPENTHREAD_CONFIG_MLE_MAX_CHILDREN 10
@@ -72,7 +68,6 @@
  * @def OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT
  *
  * The default child timeout value (in seconds).
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT
 #define OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT 240
@@ -82,7 +77,6 @@
  * @def OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
  *
  * The maximum number of supported IPv6 address registrations per child.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
 #define OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD 4
@@ -92,7 +86,6 @@
  * @def OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER
  *
  * The maximum number of IPv6 address registrations for MTD.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER
 #define OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER (OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD)
@@ -105,7 +98,6 @@
  * device.
  *
  * It is enabled by default on Thread Version 1.4 or later.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 #define OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE \
@@ -118,7 +110,6 @@
  * Specifies the default value for `mLeaderWeightAdjustment` in `otDeviceProperties`. MUST be from -16 up to +16.
  *
  * This value is used to adjust the calculated Leader Weight from `otDeviceProperties`.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_DEFAULT_LEADER_WEIGHT_ADJUSTMENT
 #define OPENTHREAD_CONFIG_MLE_DEFAULT_LEADER_WEIGHT_ADJUSTMENT 0
@@ -128,7 +119,6 @@
  * @def OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
  *
  * Enable setting steering data out of band.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 #define OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE 0
@@ -151,7 +141,6 @@
  * Once the wait time reaches the maximum, a random jitter interval is added to it. The maximum value for jitter is
  * specified by `OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_JITTER_INTERVAL`. The random jitter is selected uniformly within
  * range `[-JITTER, +JITTER]`. It is only added when the backoff wait interval is at maximum value.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE
 #define OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE 1
@@ -165,7 +154,6 @@
  * Applicable only if attach backoff feature is enabled (see `OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE`).
  *
  * Please see `OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE` description for more details.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MINIMUM_INTERVAL
 #define OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MINIMUM_INTERVAL 251
@@ -179,7 +167,6 @@
  * Applicable only if attach backoff feature is enabled (see `OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE`).
  *
  * Please see `OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE` description for more details.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MAXIMUM_INTERVAL
 #define OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MAXIMUM_INTERVAL 1200000 // 1200 seconds = 20 minutes
@@ -193,7 +180,6 @@
  * Applicable only if attach backoff feature is enabled (see `OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE`).
  *
  * Please see `OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE` description for more details.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_JITTER_INTERVAL
 #define OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_JITTER_INTERVAL 2000
@@ -213,7 +199,6 @@
  * therefore attaches and detaches frequently from the parent.  Using a non-zero wait interval ensures that the attach
  * backoff interval does not reset on each attach and that the device does not drain its battery quickly trying to
  * re-attach too frequently.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_DELAY_TO_RESET_BACKOFF_INTERVAL
 #define OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_DELAY_TO_RESET_BACKOFF_INTERVAL 20000
@@ -223,7 +208,6 @@
  * @def OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT
  *
  * Define to 1 to send an MLE Link Request when MAX_NEIGHBOR_AGE is reached for a neighboring router.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT
 #define OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT 1
@@ -233,7 +217,6 @@
  * @def OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN
  *
  * Specifies the minimum link margin in dBm required before attempting to establish a link with a neighboring router.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN
 #define OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN 10
@@ -243,7 +226,6 @@
  * @def OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN
  *
  * Specifies the minimum link margin in dBm required before attempting to merge to a different partition.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN
 #define OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN 10
@@ -253,7 +235,6 @@
  * @def OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS
  *
  * Specifies the desired number of router links that a REED / FED attempts to maintain.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS
 #define OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS 3
@@ -264,7 +245,6 @@
  *
  * Enable experimental mode for 'deep' networks, allowing packet routes up to 32 nodes.
  * This mode is incompatible with Thread 1.1.1 and older.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 #define OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE 0
@@ -277,7 +257,6 @@
  * a device.
  *
  * @note The unicast MLE announce message is sent in addition to (and after) the multicast MLE Announce.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE
 #define OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE 1
@@ -290,7 +269,6 @@
  *
  * If this feature is enabled, when a device attaches to a new parent, it will send an IP message (with empty payload
  * and mesh-local IP address as the source address) to its previous parent.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
 #define OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH 1
@@ -302,7 +280,6 @@
  * Define as 1 to support `otThreadRegisterParentResponseCallback()` API which registers a callback to notify user
  * of received Parent Response message(s) during attach. This API is mainly intended for debugging and therefore is
  * disabled by default.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
 #define OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE 0
@@ -312,7 +289,6 @@
  * @def OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
  *
  * Define as 1 to enable Link Metrics initiator feature.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 #define OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE 0
@@ -322,7 +298,6 @@
  * @def OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
  *
  * Define as 1 to enable Link Metrics subject feature.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 #define OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE 0
@@ -332,7 +307,6 @@
  * @def OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED
  *
  * The max number of series that a Link Metrics Subject can track simultaneously.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED
 #define OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
@@ -342,7 +316,6 @@
  * @def OPENTHREAD_CONFIG_MLE_LINK_METRICS_SERIES_MTD
  *
  * The max number of series that a Link Metrics Subject (MTD device) can track simultaneously.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_LINK_METRICS_SERIES_MTD
 #define OPENTHREAD_CONFIG_MLE_LINK_METRICS_SERIES_MTD 2
@@ -352,7 +325,6 @@
  * @def OPENTHREAD_CONFIG_DYNAMIC_STORE_FRAME_AHEAD_COUNTER_ENABLE
  *
  * Enable setting the store frame counter ahead.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DYNAMIC_STORE_FRAME_AHEAD_COUNTER_ENABLE
 #define OPENTHREAD_CONFIG_DYNAMIC_STORE_FRAME_AHEAD_COUNTER_ENABLE 0
@@ -360,7 +332,6 @@
 
 /**
  * @}
- *
  */
 
 #endif // CONFIG_MLE_H_

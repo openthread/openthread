@@ -128,7 +128,6 @@ int otPlatDebugUart_kbhit(void);
  *
  * @retval (negative) no data available, see otPlatDebugUart_kbhit()
  * @retval (0x00..0x0ff) data byte value
- *
  */
 int otPlatDebugUart_getc(void);
 
@@ -179,13 +178,11 @@ void otPlatDebugUart_puts_no_nl(const char *s);
  * @returns OT_ERROR_FAILED
  *
  * Platforms that desire this MUST provide an implementation.
- *
  */
 otError otPlatDebugUart_logfile(const char *filename);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

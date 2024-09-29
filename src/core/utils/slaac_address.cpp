@@ -196,6 +196,15 @@ void Slaac::RemoveOrDeprecateAddresses(void)
             {
                 RemoveAddress(slaacAddr);
             }
+
+            if (UpdateContextIdFor(slaacAddr))
+            {
+                // If the Context ID of an existing address changes,
+                // notify MLE so an MTD child can re-register its
+                // addresses with the parent.
+
+                Get<Mle::Mle>().ScheduleChildUpdateRequestIfMtdChild();
+            }
         }
         else if (!slaacAddr.IsDeprecating())
         {
@@ -341,12 +350,33 @@ void Slaac::AddAddressFor(const NetworkData::OnMeshPrefixConfig &aConfig)
 
     IgnoreError(GenerateIid(*newAddress, dadCounter));
 
+    newAddress->SetContextId(SlaacAddress::kInvalidContextId);
+    UpdateContextIdFor(*newAddress);
+
     LogAddress(kAdding, *newAddress);
 
     Get<ThreadNetif>().AddUnicastAddress(*newAddress);
 
 exit:
     return;
+}
+
+bool Slaac::UpdateContextIdFor(SlaacAddress &aSlaacAddress)
+{
+    bool            didChange = false;
+    Lowpan::Context context;
+
+    if (Get<NetworkData::Leader>().GetContext(aSlaacAddress.GetAddress(), context) != kErrorNone)
+    {
+        context.mContextId = SlaacAddress::kInvalidContextId;
+    }
+
+    VerifyOrExit(context.mContextId != aSlaacAddress.GetContextId());
+    aSlaacAddress.SetContextId(context.mContextId);
+    didChange = true;
+
+exit:
+    return didChange;
 }
 
 void Slaac::HandleTimer(void)
@@ -387,7 +417,6 @@ Error Slaac::GenerateIid(Ip6::Netif::UnicastAddress &aAddress, uint8_t &aDadCoun
      *  - The `secret_key` is randomly generated on first use (using true
      *    random number generator) and saved in non-volatile settings for
      *    future use.
-     *
      */
 
     Error                error      = kErrorFailed;

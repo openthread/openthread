@@ -30,6 +30,8 @@
  *   This file implements the radio platform callbacks into OpenThread and default/weak radio platform APIs.
  */
 
+#include <openthread/instance.h>
+#include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
 #include "instance/instance.hpp"
@@ -83,6 +85,12 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
     Instance     &instance = AsCoreType(aInstance);
     Mac::TxFrame &txFrame  = *static_cast<Mac::TxFrame *>(aFrame);
     Mac::RxFrame *ackFrame = static_cast<Mac::RxFrame *>(aAckFrame);
+#if OPENTHREAD_RADIO
+    uint8_t channel = txFrame.mInfo.mTxInfo.mRxChannelAfterTxDone;
+
+    OT_ASSERT((otPlatRadioGetSupportedChannelMask(aInstance) & (1UL << channel)) != 0);
+    IgnoreError(otPlatRadioReceive(aInstance, channel));
+#endif
 
     VerifyOrExit(instance.IsInitialized());
 
@@ -141,7 +149,12 @@ extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *
 extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
     Mac::TxFrame &txFrame = *static_cast<Mac::TxFrame *>(aFrame);
+#if OPENTHREAD_RADIO
+    uint8_t channel = txFrame.mInfo.mTxInfo.mRxChannelAfterTxDone;
 
+    OT_ASSERT((otPlatRadioGetSupportedChannelMask(aInstance) & (1UL << channel)) != 0);
+    IgnoreError(otPlatRadioReceive(aInstance, channel));
+#endif
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     txFrame.SetRadioType(Mac::kRadioTypeIeee802154);
 #endif

@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes implementations for IPv6 Neighbor Discovery (ND6).
- *
  */
 
 #include "nd6.hpp"

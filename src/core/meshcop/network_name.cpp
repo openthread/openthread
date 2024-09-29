@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file implements Network Name management.
- *
  */
 
 #include "network_name.hpp"
@@ -157,6 +156,11 @@ Error NetworkNameManager::SetDomainName(const NameData &aNameData)
     Error error = mDomainName.Set(aNameData);
 
     return (error == kErrorAlready) ? kErrorNone : error;
+}
+
+bool NetworkNameManager::IsDefaultDomainNameSet(void) const
+{
+    return StringMatch(mDomainName.GetAsCString(), NetworkName::kDomainNameInit);
 }
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 

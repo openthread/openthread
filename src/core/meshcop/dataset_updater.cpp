@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file implements Dataset Updater.
- *
  */
 
 #include "dataset_updater.hpp"

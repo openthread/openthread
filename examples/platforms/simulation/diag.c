@@ -44,7 +44,6 @@
 
 /**
  * Diagnostics mode variables.
- *
  */
 static bool sDiagMode = false;
 

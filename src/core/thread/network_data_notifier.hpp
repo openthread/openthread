@@ -54,7 +54,6 @@ class NetworkData;
 
 /**
  * Implements the SVR_DATA.ntf transmission logic.
- *
  */
 class Notifier : public InstanceLocator, private NonCopyable
 {
@@ -66,7 +65,6 @@ public:
      * Constructor.
      *
      * @param[in] aInstance  The OpenThread instance.
-     *
      */
     explicit Notifier(Instance &aInstance);
 
@@ -76,7 +74,6 @@ public:
      * Posts a tasklet to sync new server data with leader so if there are multiple changes within the same
      * flow of execution (multiple calls to this method) they are all synchronized together and included in the same
      * message to the leader.
-     *
      */
     void HandleServerDataUpdated(void);
 
@@ -88,13 +85,11 @@ public:
      *
      * @param[in] aCallback   The callback.
      * @param[in] aContext    The context to use with @p aCallback.
-     *
      */
     void SetNetDataFullCallback(NetDataCallback aCallback, void *aContext);
 
     /**
      * Signals that network data (local or leader) is getting full.
-     *
      */
     void SignalNetworkDataFull(void) { mNetDataFullTask.Post(); }
 #endif
@@ -116,7 +111,6 @@ public:
      *
      * @retval TRUE    Device is eligible to request router role upgrade as a border router.
      * @retval FALSE   Device is not eligible to request router role upgrade as a border router.
-     *
      */
     bool IsEligibleForRouterRoleUpgradeAsBorderRouter(void) const;
 #endif

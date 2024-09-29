@@ -58,19 +58,16 @@ namespace Crypto {
  * @addtogroup core-security
  *
  * @{
- *
  */
 
 /**
  * Implements SHA-256 computation.
- *
  */
 class Sha256
 {
 public:
     /**
      * Represents a SHA-256 hash.
-     *
      */
     class Hash : public otCryptoSha256Hash, public Clearable<Hash>, public Equatable<Hash>
     {
@@ -81,26 +78,22 @@ public:
          * Returns a pointer to a byte array containing the hash value.
          *
          * @returns A pointer to a byte array containing the hash.
-         *
          */
         const uint8_t *GetBytes(void) const { return m8; }
     };
 
     /**
      * Constructor for `Sha256` object.
-     *
      */
     Sha256(void);
 
     /**
      * Destructor for `Sha256` object.
-     *
      */
     ~Sha256(void);
 
     /**
      * Starts the SHA-256 computation.
-     *
      */
     void Start(void);
 
@@ -109,7 +102,6 @@ public:
      *
      * @param[in]  aBuf        A pointer to the input buffer.
      * @param[in]  aBufLength  The length of @p aBuf in bytes.
-     *
      */
     void Update(const void *aBuf, uint16_t aBufLength);
 
@@ -119,7 +111,6 @@ public:
      * @tparam    ObjectType   The object type.
      *
      * @param[in] aObject      A reference to the object.
-     *
      */
     template <typename ObjectType> void Update(const ObjectType &aObject)
     {
@@ -133,7 +124,6 @@ public:
      * @param[in] aMessage    The message to read the data from.
      * @param[in] aOffset     The offset into @p aMessage to start to read.
      * @param[in] aLength     The number of bytes to read.
-     *
      */
     void Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
@@ -141,7 +131,6 @@ public:
      * Finalizes the hash computation.
      *
      * @param[out]  aHash  A reference to a `Hash` to output the calculated hash.
-     *
      */
     void Finish(Hash &aHash);
 
@@ -152,7 +141,6 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace Crypto

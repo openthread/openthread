@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes definitions for the NAT64 translator.
- *
  */
 
 #ifndef NAT64_TRANSLATOR_HPP_
@@ -62,7 +61,6 @@ enum State : uint8_t
  * @param[in]  aState     A state.
  *
  * @returns  A string representation of @p aState.
- *
  */
 const char *StateToString(State aState);
 
@@ -70,7 +68,6 @@ const char *StateToString(State aState);
 
 /**
  * Implements the NAT64 translator.
- *
  */
 class Translator : public InstanceLocator, private NonCopyable
 {
@@ -83,7 +80,6 @@ public:
 
     /**
      * The possible results of NAT64 translation.
-     *
      */
     enum Result : uint8_t
     {
@@ -96,7 +92,6 @@ public:
 
     /**
      * Represents the counters for the protocols supported by NAT64.
-     *
      */
     class ProtocolCounters : public otNat64ProtocolCounters, public Clearable<ProtocolCounters>
     {
@@ -106,7 +101,6 @@ public:
          *
          * @param[in] aProtocol    The protocol of the packet.
          * @param[in] aPacketSize  The size of the packet.
-         *
          */
         void Count6To4Packet(uint8_t aProtocol, uint64_t aPacketSize);
 
@@ -115,14 +109,12 @@ public:
          *
          * @param[in] aProtocol    The protocol of the packet.
          * @param[in] aPacketSize  The size of the packet.
-         *
          */
         void Count4To6Packet(uint8_t aProtocol, uint64_t aPacketSize);
     };
 
     /**
      * Represents the counters of dropped packets due to errors when handling NAT64 packets.
-     *
      */
     class ErrorCounters : public otNat64ErrorCounters, public Clearable<otNat64ErrorCounters>
     {
@@ -139,7 +131,6 @@ public:
          * Adds the counter for the given reason when translating an IPv4 datagram.
          *
          * @param[in] aReason    The reason of packet drop.
-         *
          */
         void Count4To6(Reason aReason) { mCount4To6[aReason]++; }
 
@@ -147,14 +138,12 @@ public:
          * Adds the counter for the given reason when translating an IPv6 datagram.
          *
          * @param[in] aReason    The reason of packet drop.
-         *
          */
         void Count6To4(Reason aReason) { mCount6To4[aReason]++; }
     };
 
     /**
      * Initializes the NAT64 translator.
-     *
      */
     explicit Translator(Instance &aInstance);
 
@@ -164,7 +153,6 @@ public:
      * Note: Disabling the translator will invalidate all address mappings.
      *
      * @param[in]  aEnabled   A boolean to enable/disable NAT64 translator.
-     *
      */
     void SetEnabled(bool aEnabled);
 
@@ -174,7 +162,6 @@ public:
      * @retval  kNat64StateDisabled  The translator is disabled.
      * @retval  kNat64StateIdle      The translator is not configured with a valid NAT64 prefix and a CIDR.
      * @retval  kNat64StateActive    The translator is translating packets.
-     *
      */
     State GetState(void) const { return mState; }
 
@@ -191,7 +178,6 @@ public:
      * @retval kErrorNoBufs   Could not allocate necessary message buffers when processing the datagram.
      * @retval kErrorNoRoute  No route to host.
      * @retval kErrorParse    Encountered a malformed header when processing the message.
-     *
      */
     Error SendMessage(Message &aMessage);
 
@@ -203,7 +189,6 @@ public:
      * @param[in]  aSettings  The message settings.
      *
      * @returns A pointer to the message buffer or NULL if no message buffers are available or parameters are invalid.
-     *
      */
     Message *NewIp4Message(const Message::Settings &aSettings);
 
@@ -217,7 +202,6 @@ public:
      * @retval kNotTranslated The message is already an IPv6 datagram. @p aMessage is not updated.
      * @retval kForward       The caller should continue forwarding the datagram.
      * @retval kDrop          The caller should drop the datagram silently.
-     *
      */
     Result TranslateToIp6(Message &message);
 
@@ -231,7 +215,6 @@ public:
      * @retval kNotTranslated The datagram is not sending to the configured NAT64 prefix.
      * @retval kForward       The caller should continue forwarding the datagram.
      * @retval kDrop          The caller should drop the datagram silently.
-     *
      */
     Result TranslateFromIp6(Message &aMessage);
 
@@ -247,7 +230,6 @@ public:
      *
      * @retval  kErrorInvalidArgs    The the given CIDR a valid CIDR for NAT64.
      * @retval  kErrorNone           Successfully enabled/disabled the NAT64 translator.
-     *
      */
     Error SetIp4Cidr(const Ip4::Cidr &aCidr);
 
@@ -256,14 +238,12 @@ public:
      * Equals to `ClearNat64Prefix` when an empty prefix is provided.
      *
      * @param[in] aNat64Prefix The prefix of the NAT64-mapped addresses.
-     *
      */
     void SetNat64Prefix(const Ip6::Prefix &aNat64Prefix);
 
     /**
      * Clear the prefix of NAT64-mapped addresses in the thread network. The address mapping table will not be cleared.
      * The translator will return kNotTranslated for all IPv6 datagrams and kDrop for all IPv4 datagrams.
-     *
      */
     void ClearNat64Prefix(void);
 
@@ -275,7 +255,6 @@ public:
      * An iterator can be initialized again to restart from the beginning of the mapping info.
      *
      * @param[out] aIterator  An iterator to initialize.
-     *
      */
     void InitAddressMappingIterator(AddressMappingIterator &aIterator);
 
@@ -291,7 +270,6 @@ public:
      * @retval kErrorNone      Successfully found the next NAT64 address mapping info (@p aMapping was successfully
      *                         updated).
      * @retval kErrorNotFound  No subsequent NAT64 address mapping info was found.
-     *
      */
     Error GetNextAddressMapping(AddressMappingIterator &aIterator, otNat64AddressMapping &aMapping);
 
@@ -301,7 +279,6 @@ public:
      * The counters are initialized to zero when the OpenThread instance is initialized.
      *
      * @param[out] aCounters A `ProtocolCounters` where the counters of NAT64 translator will be placed.
-     *
      */
     void GetCounters(ProtocolCounters &aCounters) const { aCounters = mCounters; }
 
@@ -311,7 +288,6 @@ public:
      * The counters are initialized to zero when the OpenThread instance is initialized.
      *
      * @param[out] aCounters  An `ErrorCounters` where the counters of NAT64 translator will be placed.
-     *
      */
     void GetErrorCounters(ErrorCounters &aCounters) const { aCounters = mErrorCounters; }
 
@@ -322,7 +298,6 @@ public:
      *
      * @retval kErrorNone       @p aCidr is set to the configured CIDR.
      * @retval kErrorNotFound   The translator is not configured with an IPv4 CIDR.
-     *
      */
     Error GetIp4Cidr(Ip4::Cidr &aCidr);
 
@@ -333,7 +308,6 @@ public:
      *
      * @retval kErrorNone       @p aPrefix is set to the configured prefix.
      * @retval kErrorNotFound   The translator is not configured with an IPv6 prefix.
-     *
      */
     Error GetIp6Prefix(Ip6::Prefix &aPrefix);
 

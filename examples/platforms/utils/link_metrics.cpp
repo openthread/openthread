@@ -50,7 +50,6 @@ class LinkMetricsDataInfo : public LinkedListEntry<LinkMetricsDataInfo>, public 
 public:
     /**
      * Constructor.
-     *
      */
     LinkMetricsDataInfo(void) { Clear(); };
 
@@ -61,7 +60,6 @@ public:
      * @param[in]  aShortAddress    Short Address of the Probing Initiator tracked by this object.
      * @param[in]  aExtAddress      A reference to the Extended Address of the Probing Initiator tracked by this
      *                              object.
-     *
      */
     void Set(otLinkMetrics aLinkMetrics, otShortAddress aShortAddress, const otExtAddress &aExtAddress)
     {
@@ -81,7 +79,6 @@ public:
      *                       at least 2 bytes (per spec 4.11.3.4.4.6). Otherwise the behavior would be undefined.
      *
      * @returns  The number of bytes written. `0` on failure.
-     *
      */
     uint8_t GetEnhAckData(uint8_t aLqi, int8_t aRssi, uint8_t *aData) const
     {
@@ -117,7 +114,6 @@ public:
      * Gets the length of Link Metrics Data.
      *
      * @returns  The number of bytes for the data.
-     *
      */
     uint8_t GetEnhAckDataLen() const
     {
@@ -129,7 +125,6 @@ public:
      * Gets the metrics configured for the Enhanced-ACK Based Probing.
      *
      * @returns  The metrics configured.
-     *
      */
     otLinkMetrics GetLinkMetrics(void) const { return mLinkMetrics; }
 

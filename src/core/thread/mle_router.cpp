@@ -2758,6 +2758,14 @@ Error MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, const M
     SuccessOrExit(
         error = Tlv::Append<MeshCoP::JoinerUdpPortTlv>(*message, Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort()));
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_4)
+    if (!Get<MeshCoP::NetworkNameManager>().IsDefaultDomainNameSet())
+    {
+        SuccessOrExit(error = Tlv::Append<MeshCoP::ThreadDomainNameTlv>(
+                          *message, Get<MeshCoP::NetworkNameManager>().GetDomainName().GetAsCString()));
+    }
+#endif
+
     tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
     message->Write(startOffset - sizeof(tlv), tlv);
 
@@ -3108,7 +3116,7 @@ void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
     {
         Get<MeshForwarder>().RemoveDataResponseMessages();
 
-        RemoveDelayedDataResponseMessage();
+        mDelayedSender.RemoveDataResponseMessage();
 
         SuccessOrExit(error = message->SendAfterDelay(aDestination, aDelay));
         Log(kMessageDelay, kTypeDataResponse, aDestination);

@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes compile-time configurations for CoAP.
- *
  */
 
 #ifndef CONFIG_COAP_H_
@@ -42,7 +41,6 @@
  *   This module includes configuration variables for CoAP.
  *
  * @{
- *
  */
 
 /**
@@ -51,7 +49,6 @@
  * Maximum number of cached responses for CoAP Confirmable messages.
  *
  * Cached responses are used for message deduplication.
- *
  */
 #ifndef OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES
 #define OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES 10
@@ -61,7 +58,6 @@
  * @def OPENTHREAD_CONFIG_COAP_API_ENABLE
  *
  * Define to 1 to enable the CoAP API.
- *
  */
 #ifndef OPENTHREAD_CONFIG_COAP_API_ENABLE
 #define OPENTHREAD_CONFIG_COAP_API_ENABLE 0
@@ -71,7 +67,6 @@
  * @def OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
  *
  * Define to 1 to enable the CoAP Observe (RFC7641) API.
- *
  */
 #ifndef OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
 #define OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE 0
@@ -81,7 +76,6 @@
  * @def OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
  *
  * Define to 1 to enable the CoAP Block-Wise Transfer.
- *
  */
 #ifndef OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 #define OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE 0
@@ -91,7 +85,6 @@
  * @def OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH
  *
  * This setting configures the maximum length of one block during a CoAP Block-Wise Transfer.
- *
  */
 #ifndef OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH
 #define OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH 1024
@@ -101,7 +94,6 @@
  * @def OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
  *
  * Define to 1 to enable the CoAP Secure API.
- *
  */
 #ifndef OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #define OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE 0
@@ -109,7 +101,6 @@
 
 /**
  * @}
- *
  */
 
 #endif // CONFIG_COAP_H_

@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file implements MeshCoP Datasets manager to process commands.
- *
  */
 
 #include "meshcop/dataset_manager.hpp"
@@ -282,6 +281,14 @@ Error ActiveDatasetManager::GenerateLocal(void)
 
         channelValue.SetChannelAndPage(Get<Mac::Mac>().GetPanChannel());
         IgnoreError(dataset.Write<ChannelTlv>(channelValue));
+    }
+
+    if (!dataset.Contains<WakeupChannelTlv>())
+    {
+        ChannelTlvValue channelValue;
+
+        channelValue.SetChannelAndPage(Get<Mac::Mac>().GetWakeupChannel());
+        IgnoreError(dataset.Write<WakeupChannelTlv>(channelValue));
     }
 
     if (!dataset.Contains<ChannelMaskTlv>())

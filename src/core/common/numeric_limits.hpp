@@ -46,7 +46,6 @@ static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
  * @param[in] aItem   The item (type or variable or expression) to get the bit-size of.
  *
  * @returns Number of bits of @p aItem.
- *
  */
 #define BitSizeOf(aItem) (sizeof(aItem) * kBitsPerByte)
 
@@ -56,7 +55,6 @@ static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
  * @param[in] aBitSize    The bit-size (number of bits).
  *
  * @returns Number of bytes to represent @p aBitSize.
- *
  */
 #define BytesForBitSize(aBitSize) static_cast<uint8_t>(((aBitSize) + (kBitsPerByte - 1)) / kBitsPerByte)
 
@@ -64,7 +62,6 @@ static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
  * Provides a way to query properties of arithmetic types.
  *
  * There are no members if `Type` is not a supported arithmetic type.
- *
  */
 template <typename Type> struct NumericLimits
 {

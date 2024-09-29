@@ -50,12 +50,10 @@ extern "C" {
  *   The functions in this module are available when `OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE` is enabled.
  *
  * @{
- *
  */
 
 /**
  * Specifies the maximum length of decimal string input in `otVerhoeffChecksum` functions.
- *
  */
 #define OT_VERHOEFF_CHECKSUM_MAX_STRING_LENGTH 128
 
@@ -70,7 +68,6 @@ extern "C" {
  * @retval OT_ERROR_NONE            Successfully calculated the checksum, @p aChecksum is updated.
  * @retval OT_ERROR_INVALID_ARGS    The @p aDecimalString is not valid, i.e. it either contains chars other than
  *                                  ['0'-'9'], or is longer than `OT_VERHOEFF_CHECKSUM_MAX_STRING_LENGTH`.
- *
  */
 otError otVerhoeffChecksumCalculate(const char *aDecimalString, char *aChecksum);
 
@@ -85,13 +82,11 @@ otError otVerhoeffChecksumCalculate(const char *aDecimalString, char *aChecksum)
  * @retval OT_ERROR_FAILED          Checksum validation failed.
  * @retval OT_ERROR_INVALID_ARGS    The @p aDecimalString is not valid, i.e. it either contains chars other than
  *                                  ['0'-'9'], or is longer than `OT_VERHOEFF_CHECKSUM_MAX_STRING_LENGTH`.
- *
  */
 otError otVerhoeffChecksumValidate(const char *aDecimalString);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

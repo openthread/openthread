@@ -48,13 +48,11 @@ namespace ot {
  *
  * @brief
  *   This namespace includes definitions for the HDLC-lite encoder and decoder.
- *
  */
 namespace Hdlc {
 
 /**
  * Implements the HDLC-lite encoder.
- *
  */
 class Encoder
 {
@@ -63,7 +61,6 @@ public:
      * Initializes the object.
      *
      * @param[in] aWritePointer   The `FrameWritePointer` used by `Encoder` to write the encoded frames.
-     *
      */
     explicit Encoder(Spinel::FrameWritePointer &aWritePointer);
 
@@ -72,7 +69,6 @@ public:
      *
      * @retval OT_ERROR_NONE     Successfully started the HDLC frame.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to start the HDLC frame.
-     *
      */
     otError BeginFrame(void);
 
@@ -85,7 +81,6 @@ public:
      *
      * @retval OT_ERROR_NONE     Successfully encoded and added the byte to frame buffer.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to encode and add the byte.
-     *
      */
     otError Encode(uint8_t aByte);
 
@@ -100,7 +95,6 @@ public:
      *
      * @retval OT_ERROR_NONE     Successfully encoded and added the data to frame.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to add the frame.
-     *
      */
     otError Encode(const uint8_t *aData, uint16_t aLength);
 
@@ -109,7 +103,6 @@ public:
      *
      * @retval OT_ERROR_NONE     Successfully ended the HDLC frame.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to end the HDLC frame.
-     *
      */
     otError EndFrame(void);
 
@@ -120,7 +113,6 @@ private:
 
 /**
  * Implements the HDLC-lite decoder.
- *
  */
 class Decoder
 {
@@ -136,13 +128,11 @@ public:
      * @param[in] aError   OT_ERROR_NONE    if the frame was decoded successfully,
      *                     OT_ERROR_PARSE   if the Frame Check Sequence (FCS) was incorrect in decoded frame,
      *                     OT_ERROR_NO_BUFS insufficient buffer space available to save the decoded frame.
-     *
      */
     typedef void (*FrameHandler)(void *aContext, otError aError);
 
     /**
      * Initializes the object.
-     *
      */
     Decoder(void);
 
@@ -152,7 +142,6 @@ public:
      * @param[in] aFrameWritePointer   The `FrameWritePointer` used by `Decoder` to write the decoded frames.
      * @param[in] aFrameHandler        The frame handler callback function pointer.
      * @param[in] aContext             A pointer to arbitrary context information.
-     *
      */
     void Init(Spinel::FrameWritePointer &aFrameWritePointer, FrameHandler aFrameHandler, void *aContext);
 
@@ -166,13 +155,11 @@ public:
      *
      * @param[in]  aData    A pointer to a buffer containing data to be fed to decoder.
      * @param[in]  aLength  The number of bytes in @p aData.
-     *
      */
     void Decode(const uint8_t *aData, uint16_t aLength);
 
     /**
      * Resets internal states of the decoder.
-     *
      */
     void Reset(void);
 
