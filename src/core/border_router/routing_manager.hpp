@@ -1606,15 +1606,15 @@ private:
 // Template specializations and declarations
 
 template <>
-inline RoutingManager::RxRaTracker::Entry<RoutingManager::OnLinkPrefix> &RoutingManager::RxRaTracker::SharedEntry::
-    GetEntry(void)
+inline RoutingManager::RxRaTracker::Entry<RoutingManager::OnLinkPrefix>
+    &RoutingManager::RxRaTracker::SharedEntry::GetEntry(void)
 {
     return mOnLinkEntry;
 }
 
 template <>
-inline RoutingManager::RxRaTracker::Entry<RoutingManager::RoutePrefix> &RoutingManager::RxRaTracker::SharedEntry::
-    GetEntry(void)
+inline RoutingManager::RxRaTracker::Entry<RoutingManager::RoutePrefix>
+    &RoutingManager::RxRaTracker::SharedEntry::GetEntry(void)
 {
     return mRouteEntry;
 }
