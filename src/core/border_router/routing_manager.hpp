@@ -1500,9 +1500,10 @@ private:
         using PrefixTimer   = TimerMilliIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerTimer>;
         using StateCallback = Callback<PdCallback>;
 
-        bool          mEnabled;
-        bool          mIsStarted;
-        bool          mIsPaused;
+        bool mEnabled;   ///< Whether PdPrefixManager is enabled. (guards the overall PdPrefixManager functions)
+        bool mIsStarted; ///< Whether PdPrefixManager is started. (monitoring prefixes)
+        bool mIsPaused;  ///< Whether PdPrefixManager is paused. (when there is another BR advertising another prefix)
+
         uint32_t      mNumPlatformPioProcessed;
         uint32_t      mNumPlatformRaReceived;
         TimeMilli     mLastPlatformRaTime;
@@ -1605,15 +1606,15 @@ private:
 // Template specializations and declarations
 
 template <>
-inline RoutingManager::RxRaTracker::Entry<RoutingManager::OnLinkPrefix>
-    &RoutingManager::RxRaTracker::SharedEntry::GetEntry(void)
+inline RoutingManager::RxRaTracker::Entry<RoutingManager::OnLinkPrefix> &RoutingManager::RxRaTracker::SharedEntry::
+    GetEntry(void)
 {
     return mOnLinkEntry;
 }
 
 template <>
-inline RoutingManager::RxRaTracker::Entry<RoutingManager::RoutePrefix>
-    &RoutingManager::RxRaTracker::SharedEntry::GetEntry(void)
+inline RoutingManager::RxRaTracker::Entry<RoutingManager::RoutePrefix> &RoutingManager::RxRaTracker::SharedEntry::
+    GetEntry(void)
 {
     return mRouteEntry;
 }
