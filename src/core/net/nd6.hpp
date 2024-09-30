@@ -38,6 +38,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
 #include <stdint.h>
 
 #include <openthread/netdata.h>
@@ -972,5 +974,7 @@ static_assert(sizeof(NeighborAdvertMessage) == 24, "Invalid NeighborAdvertMessag
 } // namespace Nd
 } // namespace Ip6
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #endif // ND6_HPP_
