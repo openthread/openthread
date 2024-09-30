@@ -493,7 +493,7 @@ template <> void BorderAgent::HandleTmf<kUriPendingGet>(Coap::Message &aMessage,
 template <>
 void BorderAgent::HandleTmf<kUriCommissionerKeepAlive>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    VerifyOrExit(mState != kStateStopped);
+    VerifyOrExit(mState == kStateAccepted);
 
     SuccessOrExit(ForwardToLeader(aMessage, aMessageInfo, kUriLeaderKeepAlive));
     mTimer.Start(kKeepAliveTimeout);
@@ -747,7 +747,7 @@ void BorderAgent::HandleTimeout(void)
     if (Get<Tmf::SecureAgent>().IsConnected())
     {
         Get<Tmf::SecureAgent>().Disconnect();
-        LogWarn("Reset commissioner session");
+        LogWarn("Reset secure session");
     }
 }
 
