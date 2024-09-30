@@ -353,6 +353,7 @@ do_build_otbr_docker()
         "-DOT_UPTIME=ON"
         "-DOTBR_DNS_UPSTREAM_QUERY=ON"
         "-DOTBR_DUA_ROUTING=ON"
+        "-DOTBR_DHCP6_PD=ON"
     )
     local args=(
         "BORDER_ROUTING=${BORDER_ROUTING}"

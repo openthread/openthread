@@ -462,6 +462,9 @@ void RoutingManager::EvaluateRoutingPolicy(void)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     mNat64PrefixManager.Evaluate();
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+    mPdPrefixManager.Evaluate();
+#endif
 
     if (IsInitialPolicyEvaluationDone())
     {
@@ -2291,7 +2294,7 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
         {
             RemoveLocalFromNetData();
             mLocalPrefix.mPrefix         = Get<RoutingManager>().mPdPrefixManager.GetPrefix();
-            mLocalPrefix.mPreference     = RoutePreference::kRoutePreferenceMedium;
+            mLocalPrefix.mPreference     = PdPrefixManager::kPdRoutePreference;
             mLocalPrefix.mIsDomainPrefix = false;
             LogInfo("Setting local OMR prefix to PD prefix: %s", mLocalPrefix.GetPrefix().ToString().AsCString());
         }
@@ -3845,7 +3848,8 @@ exit:
 RoutingManager::PdPrefixManager::PdPrefixManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(false)
-    , mIsRunning(false)
+    , mIsStarted(false)
+    , mIsPaused(false)
     , mNumPlatformPioProcessed(0)
     , mNumPlatformRaReceived(0)
     , mLastPlatformRaTime(0)
@@ -3869,8 +3873,20 @@ void RoutingManager::PdPrefixManager::StartStop(bool aStart)
 {
     State oldState = GetState();
 
-    VerifyOrExit(aStart != mIsRunning);
-    mIsRunning = aStart;
+    VerifyOrExit(aStart != mIsStarted);
+    mIsStarted = aStart;
+    EvaluateStateChange(oldState);
+
+exit:
+    return;
+}
+
+void RoutingManager::PdPrefixManager::PauseResume(bool aPause)
+{
+    State oldState = GetState();
+
+    VerifyOrExit(aPause != mIsPaused);
+    mIsPaused = aPause;
     EvaluateStateChange(oldState);
 
 exit:
@@ -3883,10 +3899,20 @@ RoutingManager::PdPrefixManager::State RoutingManager::PdPrefixManager::GetState
 
     if (mEnabled)
     {
-        state = mIsRunning ? kDhcp6PdStateRunning : kDhcp6PdStateStopped;
+        state = mIsStarted ? (mIsPaused ? kDhcp6PdStateIdle : kDhcp6PdStateRunning) : kDhcp6PdStateStopped;
     }
 
     return state;
+}
+
+void RoutingManager::PdPrefixManager::Evaluate(void)
+{
+    const FavoredOmrPrefix &favoredPrefix = Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix();
+
+    bool shouldPause = !favoredPrefix.IsEmpty() && favoredPrefix.GetPrefix() != mPrefix.GetPrefix() &&
+                       favoredPrefix.GetPreference() >= kPdRoutePreference;
+
+    PauseResume(/* aPause */ shouldPause);
 }
 
 void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState)
@@ -3900,12 +3926,17 @@ void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState
     {
     case kDhcp6PdStateDisabled:
     case kDhcp6PdStateStopped:
+    case kDhcp6PdStateIdle:
         WithdrawPrefix();
         break;
     case kDhcp6PdStateRunning:
         break;
     }
 
+    // When the prefix is replaced, there will be a short period when the old prefix is still in the netdata, and PD
+    // manager will refuse to request the prefix.
+    // TODO: Either update the comment for the state callback or add a random delay when notifing the upper layer for
+    // state change.
     mStateCallback.InvokeIfSet(static_cast<otBorderRoutingDhcp6PdState>(newState));
 
 exit:
@@ -4129,11 +4160,13 @@ const char *RoutingManager::PdPrefixManager::StateToString(State aState)
         "Disabled", // (0) kDisabled
         "Stopped",  // (1) kStopped
         "Running",  // (2) kRunning
+        "Idle",     // (3) kIdle
     };
 
     static_assert(0 == kDhcp6PdStateDisabled, "kDhcp6PdStateDisabled value is incorrect");
     static_assert(1 == kDhcp6PdStateStopped, "kDhcp6PdStateStopped value is incorrect");
     static_assert(2 == kDhcp6PdStateRunning, "kDhcp6PdStateRunning value is incorrect");
+    static_assert(3 == kDhcp6PdStateIdle, "kDhcp6PdStateIdle value is incorrect");
 
     return kStateStrings[aState];
 }

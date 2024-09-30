@@ -564,6 +564,7 @@ template <> otError Br::Process<Cmd("pd")>(Arg aArgs[])
             "disabled", // (0) OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED
             "stopped",  // (1) OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED
             "running",  // (2) OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING
+            "idle",     // (3) OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE
         };
 
         static_assert(0 == OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED,
@@ -572,6 +573,8 @@ template <> otError Br::Process<Cmd("pd")>(Arg aArgs[])
                       "OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED value is not expected!");
         static_assert(2 == OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING,
                       "OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING value is not expected!");
+        static_assert(3 == OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE,
+                      "OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE value is not expected!");
 
         OutputLine("%s", Stringify(otBorderRoutingDhcp6PdGetState(GetInstancePtr()), kDhcpv6PdStateStrings));
     }

@@ -145,6 +145,7 @@ public:
         kDhcp6PdStateDisabled = OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED, ///< Disabled.
         kDhcp6PdStateStopped  = OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED,  ///< Enabled, but currently stopped.
         kDhcp6PdStateRunning  = OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING,  ///< Enabled, and running.
+        kDhcp6PdStateIdle     = OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE,     ///< Enabled, but is not requesting prefix.
     };
 
     /**
@@ -1457,6 +1458,8 @@ private:
 
         typedef Dhcp6PdState State;
 
+        static constexpr RoutePreference kPdRoutePreference = RoutePreference::kRoutePreferenceMedium;
+
         explicit PdPrefixManager(Instance &aInstance);
 
         void               SetEnabled(bool aEnabled);
@@ -1473,6 +1476,7 @@ private:
         Error GetProcessedRaInfo(PdProcessedRaInfo &aPdProcessedRaInfo) const;
         void  HandleTimer(void) { WithdrawPrefix(); }
         void  SetStateCallback(PdCallback aCallback, void *aContext) { mStateCallback.Set(aCallback, aContext); }
+        void  Evaluate(void);
 
     private:
         class PrefixEntry : public OnLinkPrefix
@@ -1489,14 +1493,17 @@ private:
         void EvaluateStateChange(State aOldState);
         void WithdrawPrefix(void);
         void StartStop(bool aStart);
+        void PauseResume(bool aPause);
 
         static const char *StateToString(State aState);
 
         using PrefixTimer   = TimerMilliIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerTimer>;
         using StateCallback = Callback<PdCallback>;
 
-        bool          mEnabled;
-        bool          mIsRunning;
+        bool mEnabled;   // Whether PdPrefixManager is enabled. (guards the overall PdPrefixManager functions)
+        bool mIsStarted; // Whether PdPrefixManager is started. (monitoring prefixes)
+        bool mIsPaused;  // Whether PdPrefixManager is paused. (when there is another BR advertising another prefix)
+
         uint32_t      mNumPlatformPioProcessed;
         uint32_t      mNumPlatformRaReceived;
         TimeMilli     mLastPlatformRaTime;
