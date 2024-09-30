@@ -1103,12 +1103,8 @@ private:
         const MessageQueue &GetQueue(void) const { return mQueue; }
 
     private:
-        struct Metadata
+        struct Metadata : public Message::FooterData<Metadata>
         {
-            Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
-            void  ReadFrom(const Message &aMessage);
-            void  RemoveFrom(Message &aMessage) const;
-
             Ip6::Address mDestination;
             TimeMilli    mSendTime;
         };

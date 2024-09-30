@@ -406,6 +406,71 @@ public:
     };
 
     /**
+     * Represents footer data appended to the end of a `Message`.
+     *
+     * This data typically represents some metadata associated with the `Message` that is appended to its end. It can
+     * be read later from the message, updated (re-written) in the message, or fully removed from it.
+     *
+     * Users of `FooterData` MUST follow CRTP-style inheritance, i.e., the `DataType` itself MUST publicly inherit
+     * from `FooterData<DataType>`.
+     *
+     * @tparam DataType   The footer data type.
+     */
+    template <typename DataType> class FooterData
+    {
+    public:
+        /**
+         * Appends the footer data to the end of a given message.
+         *
+         * @param[in,out] aMessage   The message to append to.
+         *
+         * @retval kErrorNone    Successfully appended the footer data.
+         * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
+         */
+        Error AppendTo(Message &aMessage) const { return aMessage.Append<DataType>(AsDataType()); }
+
+        /**
+         * Reads the footer data from a given message.
+         *
+         * Caller MUST ensure data was successfully appended to the message beforehand. Otherwise behavior is undefined.
+         *
+         * @param[in] aMessage   The message to read from.
+         */
+        void ReadFrom(const Message &aMessage)
+        {
+            IgnoreError(aMessage.Read<DataType>(aMessage.GetLength() - sizeof(DataType), AsDataType()));
+        }
+
+        /**
+         * Updates the footer data in a given message (rewriting over the previously appended data).
+         *
+         * Caller MUST ensure data was successfully appended to the message beforehand. Otherwise behavior is undefined.
+         *
+         * @param[in,out] aMessage   The message to update.
+         */
+        void UpdateIn(Message &aMessage) const
+        {
+            aMessage.Write<DataType>(aMessage.GetLength() - sizeof(DataType), AsDataType());
+        }
+
+        /**
+         * Removes the footer data from a given message.
+         *
+         * Caller MUST ensure data was successfully appended to the message beforehand. Otherwise behavior is undefined.
+         *
+         * @param[in,out] aMessage   The message to remove the data from.
+         */
+        void RemoveFrom(Message &aMessage) const { aMessage.RemoveFooter(sizeof(DataType)); }
+
+    protected:
+        FooterData(void) = default;
+
+    private:
+        const DataType &AsDataType(void) const { return static_cast<const DataType &>(*this); }
+        DataType       &AsDataType(void) { return static_cast<DataType &>(*this); }
+    };
+
+    /**
      * Returns a reference to the OpenThread Instance which owns the `Message`.
      *
      * @returns A reference to the `Instance`.

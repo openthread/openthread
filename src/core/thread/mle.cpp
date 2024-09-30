@@ -4413,16 +4413,6 @@ void Mle::DelayedSender::RemoveMessage(Message::SubType    aSubType,
     }
 }
 
-void Mle::DelayedSender::Metadata::ReadFrom(const Message &aMessage)
-{
-    uint16_t length = aMessage.GetLength();
-
-    OT_ASSERT(length >= sizeof(*this));
-    IgnoreError(aMessage.Read(length - sizeof(*this), *this));
-}
-
-void Mle::DelayedSender::Metadata::RemoveFrom(Message &aMessage) const { aMessage.RemoveFooter(sizeof(*this)); }
-
 //---------------------------------------------------------------------------------------------------------------------
 // TxMessage
 

@@ -1123,18 +1123,6 @@ void Server::ConstructFullServiceSubTypeName(const char   *aServiceType,
     fullName.Append("%s._sub.%s.%s", aSubTypeLabel, aServiceType, kDefaultDomainName);
 }
 
-void Server::ProxyQueryInfo::ReadFrom(const ProxyQuery &aQuery)
-{
-    SuccessOrAssert(aQuery.Read(aQuery.GetLength() - sizeof(ProxyQueryInfo), *this));
-}
-
-void Server::ProxyQueryInfo::RemoveFrom(ProxyQuery &aQuery) const { aQuery.RemoveFooter(sizeof(ProxyQueryInfo)); }
-
-void Server::ProxyQueryInfo::UpdateIn(ProxyQuery &aQuery) const
-{
-    aQuery.Write(aQuery.GetLength() - sizeof(ProxyQueryInfo), *this);
-}
-
 Error Server::Response::ExtractServiceInstanceLabel(const char *aInstanceName, Name::LabelBuffer &aLabel)
 {
     uint16_t     offset;

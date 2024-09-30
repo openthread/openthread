@@ -85,11 +85,8 @@ private:
     static constexpr uint16_t kDefaultJoinerUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
     static constexpr uint32_t kJoinerEntrustTxDelay = 50; // in msec
 
-    struct JoinerEntrustMetadata
+    struct JoinerEntrustMetadata : public Message::FooterData<JoinerEntrustMetadata>
     {
-        Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
-        void  ReadFrom(const Message &aMessage);
-
         Ip6::MessageInfo mMessageInfo; // Message info of the message to send.
         TimeMilli        mSendTime;    // Time when the message shall be sent.
         Kek              mKek;         // KEK used by MAC layer to encode this message.

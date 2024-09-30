@@ -219,13 +219,9 @@ private:
     static constexpr uint8_t kChildRetransmissions  = 0; // MPL retransmissions for Children.
     static constexpr uint8_t kRouterRetransmissions = 2; // MPL retransmissions for Routers.
 
-    struct Metadata
+    struct Metadata : public Message::FooterData<Metadata>
     {
-        Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
-        void  ReadFrom(const Message &aMessage);
-        void  RemoveFrom(Message &aMessage) const;
-        void  UpdateIn(Message &aMessage) const;
-        void  GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval);
+        void GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval);
 
         TimeMilli mTransmissionTime;
         uint16_t  mSeedId;

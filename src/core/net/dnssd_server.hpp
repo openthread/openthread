@@ -445,12 +445,8 @@ private:
         NameOffsets       mOffsets;
     };
 
-    struct ProxyQueryInfo
+    struct ProxyQueryInfo : Message::FooterData<ProxyQueryInfo>
     {
-        void ReadFrom(const ProxyQuery &aQuery);
-        void RemoveFrom(ProxyQuery &aQuery) const;
-        void UpdateIn(ProxyQuery &aQuery) const;
-
         QueryType        mType;
         Ip6::MessageInfo mMessageInfo;
         TimeMilli        mExpireTime;
