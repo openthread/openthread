@@ -1500,9 +1500,9 @@ private:
         using PrefixTimer   = TimerMilliIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerTimer>;
         using StateCallback = Callback<PdCallback>;
 
-        bool mEnabled;   ///< Whether PdPrefixManager is enabled. (guards the overall PdPrefixManager functions)
-        bool mIsStarted; ///< Whether PdPrefixManager is started. (monitoring prefixes)
-        bool mIsPaused;  ///< Whether PdPrefixManager is paused. (when there is another BR advertising another prefix)
+        bool mEnabled;   // Whether PdPrefixManager is enabled. (guards the overall PdPrefixManager functions)
+        bool mIsStarted; // Whether PdPrefixManager is started. (monitoring prefixes)
+        bool mIsPaused;  // Whether PdPrefixManager is paused. (when there is another BR advertising another prefix)
 
         uint32_t      mNumPlatformPioProcessed;
         uint32_t      mNumPlatformRaReceived;
