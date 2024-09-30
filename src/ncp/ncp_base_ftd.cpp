@@ -1403,7 +1403,7 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-#if OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE
+#if OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_INFRA_IF_STATE>(void)
 {
     otError  error = OT_ERROR_NONE;
@@ -1433,6 +1433,26 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_INFRA_IF_STATE>(void)
     {
         SuccessOrExit(error = otPlatInfraIfStateChanged(mInstance, mInfraIfIndex, isInfraRunning));
     }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_INFRA_IF_RECV_ICMP6>(void)
+{
+    otError             error = OT_ERROR_NONE;
+    uint32_t            infraIfIndex;
+    const otIp6Address *address;
+    const uint8_t      *icmp6Data = nullptr;
+    uint16_t            len;
+
+    SuccessOrExit(error = mDecoder.ReadUint32(infraIfIndex));
+    VerifyOrExit(mInfraIfIndex == infraIfIndex, error = OT_ERROR_DROP);
+    SuccessOrExit(error = mDecoder.ReadIp6Address(address));
+    SuccessOrExit(error = mDecoder.ReadData(icmp6Data, len));
+
+    // Currently the ICMP6 messages can only be ND messages.
+    otPlatInfraIfRecvIcmp6Nd(mInstance, infraIfIndex, address, icmp6Data, len);
 
 exit:
     return error;
@@ -1468,7 +1488,7 @@ bool NcpBase::InfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAdd
     return aInfraIfIndex == mInfraIfIndex && InfraIfContainsAddress(*aAddress);
 }
 
-#endif // OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE
+#endif // OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 } // namespace Ncp
 } // namespace ot

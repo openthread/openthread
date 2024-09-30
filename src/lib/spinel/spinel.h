@@ -4753,6 +4753,16 @@ enum
      */
     SPINEL_PROP_INFRA_IF_STATE = SPINEL_PROP_INFRA_IF__BEGIN + 1,
 
+    /// Received ICMPv6 packet on the infrastructure interface.
+    /** Format: `L6d`
+     * Type: Write-only
+     *
+     * `L`: The infrastructure interface index.
+     * `6`: The IP6 source address of the ICMPv6 packet.
+     * `d`: The data of the ICMPv6 packet. The host MUST ensure the hoplimit is 255.
+     */
+    SPINEL_PROP_INFRA_IF_RECV_ICMP6 = SPINEL_PROP_INFRA_IF__BEGIN + 2,
+
     SPINEL_PROP_INFRA_IF__END = 0x920,
 
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,

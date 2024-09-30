@@ -739,7 +739,7 @@ protected:
 
     uint64_t mLogTimestampBase; // Timestamp base used for logging
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     otError InfraIfAddAddress(const otIp6Address &aAddress);
     bool    InfraIfContainsAddress(const otIp6Address &aAddress);
 
