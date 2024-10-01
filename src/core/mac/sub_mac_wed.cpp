@@ -28,61 +28,60 @@
 
 /**
  * @file
- *   This file includes compile-time configurations for the Wake-up Coordinator and Wake-up End Device roles.
+ *   This file implements the Wake-up End Device of the subset of IEEE 802.15.4 MAC primitives.
  */
 
-#ifndef CONFIG_WAKEUP_H_
-#define CONFIG_WAKEUP_H_
+#include "sub_mac.hpp"
 
-/**
- * @addtogroup config-wakeup
- *
- * @brief
- *   This module includes configuration variables for the Wake-up Coordinator and Wake-up End Device roles.
- *
- * @{
- */
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
-/**
- * @def OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
- *
- * Define to 1 to enable the Wake-up Coordinator role that is capable of establishing
- * a link with one or more Wake-up End Devices by sending a sequence of wake-up frames.
- */
-#ifndef OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-#define OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE 0
-#endif
+#include "instance/instance.hpp"
 
-/**
- * @def OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
- *
- * Define to 1 to enable the Wake-up End Device role that periodically listens for wake-up
- * frames to establish a link with a Wake-up Coordinator device.
- */
-#ifndef OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-#define OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE 0
-#endif
+namespace ot {
+namespace Mac {
 
-/**
- * @def OPENTHREAD_CONFIG_WED_LISTEN_INTERVAL
- *
- * The default WED listen interval in microseconds.
- */
-#ifndef OPENTHREAD_CONFIG_WED_LISTEN_INTERVAL
-#define OPENTHREAD_CONFIG_WED_LISTEN_INTERVAL 1000000
-#endif
+RegisterLogModule("SubMac");
 
-/**
- * @def OPENTHREAD_CONFIG_WED_LISTEN_DURATION
- *
- * The default WED listen duration in microseconds.
- */
-#ifndef OPENTHREAD_CONFIG_WED_LISTEN_DURATION
-#define OPENTHREAD_CONFIG_WED_LISTEN_DURATION 8000
-#endif
+void SubMac::WedInit(void)
+{
+    mWedListenInterval = 0;
+    mWedTimer.Stop();
+}
 
-/**
- * @}
- */
+void SubMac::UpdateWakeupListening(uint32_t aInterval, uint16_t aDuration, uint8_t aChannel)
+{
+    OT_ASSERT(RadioSupportsReceiveTiming());
 
-#endif // CONFIG_WAKEUP_H_
+    VerifyOrExit(aInterval != mWedListenInterval || aDuration != mWedListenDuration || aChannel != mWakeupChannel);
+
+    mWedListenInterval = aInterval;
+    mWedListenDuration = aDuration;
+    mWakeupChannel     = aChannel;
+    mWedTimer.Stop();
+
+    if (mWedListenInterval > 0)
+    {
+        mWedSampleTime = TimeMicro(otPlatRadioGetNow(&GetInstance())) + kCslReceiveTimeAhead;
+        HandleWedTimer();
+    }
+
+exit:
+    return;
+}
+
+void SubMac::HandleWedTimer(Timer &aTimer) { aTimer.Get<SubMac>().HandleWedTimer(); }
+
+void SubMac::HandleWedTimer(void)
+{
+    if (RadioSupportsReceiveTiming() && (mState != kStateDisabled))
+    {
+        IgnoreError(Get<Radio>().ReceiveAt(mWakeupChannel, mWedSampleTime.GetValue(), mWedListenDuration));
+    }
+    mWedSampleTime += mWedListenInterval;
+    mWedTimer.FireAt(mWedSampleTime - kCslReceiveTimeAhead);
+}
+
+} // namespace Mac
+} // namespace ot
+
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE

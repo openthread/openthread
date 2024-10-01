@@ -8219,6 +8219,115 @@ template <> otError Interpreter::Process<Cmd("wakeupchannel")>(Arg aArgs[])
 {
     return ProcessGetSet(aArgs, otLinkGetWakeupChannel, otLinkSetWakeupChannel);
 }
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    /**
+     * @cli wakeup
+     * @code
+     * wakeup
+     * channel: 12
+     * interval: 1000000us
+     * duration: 8000us
+     * Done
+     * @endcode
+     * @par
+     * Gets the wake-up listening configuration.
+     * @sa otLinkGetWakeupChannel
+     * @sa otLinkGetWedListenInterval
+     * @sa otLinkGetWedListenDuration
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine("channel: %u", otLinkGetWakeupChannel(GetInstancePtr()));
+        OutputLine("interval: %luus", ToUlong(otLinkGetWedListenInterval(GetInstancePtr())));
+        OutputLine("duration: %luus", ToUlong(otLinkGetWedListenDuration(GetInstancePtr())));
+    }
+    /**
+     * @cli wakeup (enable,disable)
+     * @code
+     * wakeup enable
+     * Done
+     * @endcode
+     * @code
+     * wakeup disable
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otLinkWedListenSetEnabled
+     */
+    else if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
+    {
+        error = otLinkWedListenSetEnabled(GetInstancePtr(), enable);
+    }
+    /**
+     * @cli wakeup interval
+     * @code
+     * wakeup interval 1000000
+     * Done
+     * @endcode
+     * @cparam wakeup interval @ca{interval}
+     * @par api_copy
+     * #otLinkSetWedListenInterval
+     */
+    else if (aArgs[0] == "interval")
+    {
+        error = ProcessSet(aArgs + 1, otLinkSetWedListenInterval);
+    }
+    /**
+     * @cli wakeup duration
+     * @code
+     * wakeup duration 8000
+     * Done
+     * @endcode
+     * @cparam wakeup duration @ca{duration}
+     * @par api_copy
+     * #otLinkSetWedListenDuration
+     */
+    else if (aArgs[0] == "duration")
+    {
+        error = ProcessSet(aArgs + 1, otLinkSetWedListenDuration);
+    }
+    /**
+     * @cli wakeup state
+     * @code
+     * wakeup state
+     * disabled
+     * Done
+     * @endcode
+     * @code
+     * wakeup state
+     * enabled
+     * Done
+     * @endcode
+     * @par
+     * Prints current wake-up listening link state.
+     * #otLinkIsWedListenEnabled
+     */
+    else if (aArgs[0] == "state")
+    {
+        if (otLinkIsWedListenEnabled(GetInstancePtr()))
+        {
+            OutputLine("enabled");
+        }
+        else
+        {
+            OutputLine("disabled");
+        }
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
@@ -8530,6 +8639,12 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
         CmdEntry("version"),
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_PERIPHERAL_ENABLE
+        CmdEntry("wakeup"),
+        CmdEntry("wakeupchannel"),
+#endif
+#endif
     };
 
 #undef CmdEntry

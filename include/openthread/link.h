@@ -1127,6 +1127,68 @@ uint8_t otLinkGetWakeupChannel(otInstance *aInstance);
 otError otLinkSetWakeupChannel(otInstance *aInstance, uint8_t aChannel);
 
 /**
+ * Enables or disables listening for wake-up frames.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aEnable       true to enable listening for wake-up frames, or false otherwise.
+ *
+ * @retval OT_ERROR_NONE          Successfully enabled / disabled the listening for wake-up frames.
+ * @retval OT_ERROR_INVALID_STATE Could not enable listening for wake-up frames due to bad configuration.
+ */
+otError otLinkWedListenSetEnabled(otInstance *aInstance, bool aEnable);
+
+/**
+ * Returns whether listening for wake-up frames is enabled.
+ *
+ * @retval TRUE   If listening for wake-up frames is enabled.
+ * @retval FALSE  If listening for wake-up frames is not enabled.
+ */
+bool otLinkIsWedListenEnabled(otInstance *aInstance);
+
+/**
+ * Gets the WED listen interval in microseconds.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ *
+ * @returns The WED listen interval in microseconds.
+ */
+uint32_t otLinkGetWedListenInterval(otInstance *aInstance);
+
+/**
+ * Sets the WED listen interval in microseconds.
+ *
+ * The WED listen interval must be a multiple of `OT_LINK_CSL_PERIOD_TEN_SYMBOLS_UNIT_IN_USEC`, otherwise
+ * `OT_ERROR_INVALID_ARGS` is returned.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aInterval      The WED listen interval in microseconds.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the WED listen interval.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid WED listen interval.
+ */
+otError otLinkSetWedListenInterval(otInstance *aInstance, uint32_t aInterval);
+
+/**
+ * Gets the WED listen duration.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ *
+ * @returns The WED listen duration in microseconds.
+ */
+uint16_t otLinkGetWedListenDuration(otInstance *aInstance);
+
+/**
+ * Sets the WED listen duration in microseconds.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aDuration      The WED listen duration in microseconds.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the WED listen duration.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid WED listen duration.
+ */
+otError otLinkSetWedListenDuration(otInstance *aInstance, uint16_t aDuration);
+
+/**
  * @}
  */
 

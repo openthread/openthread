@@ -508,6 +508,7 @@ openthread_core_files = [
   "mac/sub_mac.hpp",
   "mac/sub_mac_callbacks.cpp",
   "mac/sub_mac_csl_receiver.cpp",
+  "mac/sub_mac_wed.cpp",
   "meshcop/announce_begin_client.cpp",
   "meshcop/announce_begin_client.hpp",
   "meshcop/border_agent.cpp",
