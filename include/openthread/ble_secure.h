@@ -415,7 +415,6 @@ otError otBleSecureFlush(otInstance *aInstance);
  * @retval TRUE  The install code was correctly verified.
  * @retval FALSE The install code was not verified.
  */
-
 bool otBleSecureGetInstallCodeVerifyStatus(otInstance *aInstance);
 
 /**
