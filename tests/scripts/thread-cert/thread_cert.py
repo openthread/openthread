@@ -38,7 +38,7 @@ import sys
 import time
 import traceback
 import unittest
-from typing import Optional, Callable, Union, Mapping, Any
+from typing import Optional, Callable, Union, Mapping
 
 import config
 import debug
@@ -102,8 +102,9 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
     SUPPORT_THREAD_1_1 = True
     PACKET_VERIFICATION = config.PACKET_VERIFICATION_DEFAULT
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, methodName, *args, **kwargs):
+        self._test_method_name = methodName
+        super().__init__('_run_test', *args, **kwargs)
 
         logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -111,17 +112,29 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         self._do_packet_verification = PACKET_VERIFICATION and hasattr(self, 'verify') \
                                        and self.PACKET_VERIFICATION == PACKET_VERIFICATION
 
+        if self._do_packet_verification and os.uname().sysname != "Linux":
+            raise NotImplementedError(
+                f'{self.test_name}: Packet Verification not available on {os.uname().sysname} (Linux only).')
+
         # store all the backbone network names that are used in the test case,
         # it keeps empty when there's no backbone traffic in the test (no otbr or host nodes)
         self._backbone_network_names = []
 
-    def skipTest(self, reason: Any) -> None:
-        self._testSkipped = True
-        super(TestCase, self).skipTest(reason)
+    def _run_test(self):
+        method = getattr(self, self._test_method_name)
+        result = None
+        try:
+            result = method()
+        except:
+            self._do_packet_verification = False
+            raise
+
+        if self._do_packet_verification:
+            self.simulator.go(3)
+
+        return result
 
     def setUp(self):
-        self._testSkipped = False
-
         if ENV_THREAD_VERSION == '1.1' and not self.SUPPORT_THREAD_1_1:
             self.skipTest('Thread 1.1 not supported.')
 
@@ -282,13 +295,6 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
     def tearDown(self):
         """Destroy nodes and simulator.
         """
-        if self._do_packet_verification and os.uname().sysname != "Linux":
-            raise NotImplementedError(
-                f'{self.test_name}: Packet Verification not available on {os.uname().sysname} (Linux only).')
-
-        if self._do_packet_verification:
-            self.simulator.go(3)
-
         if self._has_backbone_traffic():
             # Stop Backbone sniffer before stopping nodes so that we don't capture Codecov Uploading traffic
             self._stop_backbone_sniffer()
@@ -316,8 +322,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             self._test_info['pcap'] = pcap_filename
 
             test_info_path = self._output_test_info()
-            if not self._testSkipped:
-                self._verify_packets(test_info_path)
+            self._verify_packets(test_info_path)
 
     def flush_all(self):
         """Flush away all captured messages of all nodes.
