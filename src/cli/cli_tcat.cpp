@@ -92,8 +92,9 @@ namespace Cli {
 otTcatAdvertisedDeviceId sAdvertisedDeviceIds[OT_TCAT_DEVICE_ID_MAX];
 otTcatGeneralDeviceId    sGeneralDeviceId;
 
-const char kPskdVendor[] = "JJJJJJ";
-const char kUrl[]        = "dummy_url";
+const char kPskdVendor[]    = "JJJJJJ";
+const char kInstallVendor[] = "InstallCode";
+const char kUrl[]           = "dummy_url";
 
 static bool IsDeviceIdSet(void)
 {
@@ -293,6 +294,7 @@ template <> otError Tcat::Process<Cmd("start")>(Arg aArgs[])
     ClearAllBytes(mVendorInfo);
     mVendorInfo.mPskdString      = kPskdVendor;
     mVendorInfo.mProvisioningUrl = kUrl;
+    mVendorInfo.mInstallCode     = kInstallVendor;
 
     if (IsDeviceIdSet())
     {

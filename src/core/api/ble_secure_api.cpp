@@ -186,4 +186,9 @@ otError otBleSecureSendApplicationTlv(otInstance *aInstance, uint8_t *aBuf, uint
 
 otError otBleSecureFlush(otInstance *aInstance) { return AsCoreType(aInstance).Get<Ble::BleSecure>().Flush(); }
 
+bool otBleSecureGetInstallCodeVerifyStatus(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Ble::BleSecure>().GetInstallCodeVerifyStatus();
+}
+
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE

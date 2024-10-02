@@ -60,7 +60,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
-        pip install bleak
+        pip install bleak 'cryptography==43.0.0'
     - name: Run RCP Mode
       run: |
         ulimit -c unlimited
