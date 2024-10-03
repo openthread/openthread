@@ -348,13 +348,6 @@ public:
     Error GetDstPanId(PanId &aPanId) const;
 
     /**
-     * Sets the Destination PAN Identifier.
-     *
-     * @param[in]  aPanId  The Destination PAN Identifier.
-     */
-    void SetDstPanId(PanId aPanId);
-
-    /**
      * Indicates whether or not the Destination Address is present for this object.
      *
      * @retval TRUE   If the Destination Address is present.
@@ -370,27 +363,6 @@ public:
      * @retval kErrorNone  Successfully retrieved the Destination Address.
      */
     Error GetDstAddr(Address &aAddress) const;
-
-    /**
-     * Sets the Destination Address.
-     *
-     * @param[in]  aShortAddress  The Destination Address.
-     */
-    void SetDstAddr(ShortAddress aShortAddress);
-
-    /**
-     * Sets the Destination Address.
-     *
-     * @param[in]  aExtAddress  The Destination Address.
-     */
-    void SetDstAddr(const ExtAddress &aExtAddress);
-
-    /**
-     * Sets the Destination Address.
-     *
-     * @param[in]  aAddress  The Destination Address.
-     */
-    void SetDstAddr(const Address &aAddress);
 
     /**
      * Indicates whether or not the Source Address is present for this object.
@@ -410,15 +382,6 @@ public:
     Error GetSrcPanId(PanId &aPanId) const;
 
     /**
-     * Sets the Source PAN Identifier.
-     *
-     * @param[in]  aPanId  The Source PAN Identifier.
-     *
-     * @retval kErrorNone   Successfully set the Source PAN Identifier.
-     */
-    Error SetSrcPanId(PanId aPanId);
-
-    /**
      * Indicates whether or not the Source Address is present for this object.
      *
      * @retval TRUE   If the Source Address is present.
@@ -436,27 +399,6 @@ public:
     Error GetSrcAddr(Address &aAddress) const;
 
     /**
-     * Sets the Source Address.
-     *
-     * @param[in]  aShortAddress  The Source Address.
-     */
-    void SetSrcAddr(ShortAddress aShortAddress);
-
-    /**
-     * Sets the Source Address.
-     *
-     * @param[in]  aExtAddress  The Source Address.
-     */
-    void SetSrcAddr(const ExtAddress &aExtAddress);
-
-    /**
-     * Sets the Source Address.
-     *
-     * @param[in]  aAddress  The Source Address.
-     */
-    void SetSrcAddr(const Address &aAddress);
-
-    /**
      * Gets the Security Control Field.
      *
      * @param[out]  aSecurityControlField  The Security Control Field.
@@ -465,13 +407,6 @@ public:
      * @retval kErrorParse  Failed to find the security control field in the frame.
      */
     Error GetSecurityControlField(uint8_t &aSecurityControlField) const;
-
-    /**
-     * Sets the Security Control Field.
-     *
-     * @param[in]  aSecurityControlField  The Security Control Field.
-     */
-    void SetSecurityControlField(uint8_t aSecurityControlField);
 
     /**
      * Gets the Security Level Identifier.
