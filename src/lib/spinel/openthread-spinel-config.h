@@ -89,6 +89,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES
+ *
+ * Defines size of the local source match table used by RadioSpinel
+ * when OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT is used.
+ */
+#ifndef OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES
+#define OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
+#endif
+
+/**
  * @def OPENTHREAD_SPINEL_CONFIG_ABORT_ON_UNEXPECTED_RCP_RESET_ENABLE
  *
  * Define 1 to abort the host when receiving unexpected reset from RCP.
