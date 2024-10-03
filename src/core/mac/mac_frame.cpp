@@ -450,14 +450,6 @@ exit:
     return error;
 }
 
-void Frame::SetDstPanId(PanId aPanId)
-{
-    uint8_t index = FindDstPanIdIndex();
-
-    OT_ASSERT(index != kInvalidIndex);
-    LittleEndian::WriteUint16(aPanId, &mPsdu[index]);
-}
-
 uint8_t Frame::GetSequence(void) const
 {
     OT_ASSERT(IsSequencePresent());
@@ -498,40 +490,6 @@ Error Frame::GetDstAddr(Address &aAddress) const
 
 exit:
     return error;
-}
-
-void Frame::SetDstAddr(ShortAddress aShortAddress)
-{
-    OT_ASSERT(GetFcfDstAddr(GetFrameControlField()) == kFcfAddrShort);
-    LittleEndian::WriteUint16(aShortAddress, &mPsdu[FindDstAddrIndex()]);
-}
-
-void Frame::SetDstAddr(const ExtAddress &aExtAddress)
-{
-    uint8_t index = FindDstAddrIndex();
-
-    OT_ASSERT(GetFcfDstAddr(GetFrameControlField()) == kFcfAddrExt);
-    OT_ASSERT(index != kInvalidIndex);
-
-    aExtAddress.CopyTo(&mPsdu[index], ExtAddress::kReverseByteOrder);
-}
-
-void Frame::SetDstAddr(const Address &aAddress)
-{
-    switch (aAddress.GetType())
-    {
-    case Address::kTypeShort:
-        SetDstAddr(aAddress.GetShort());
-        break;
-
-    case Address::kTypeExtended:
-        SetDstAddr(aAddress.GetExtended());
-        break;
-
-    default:
-        OT_ASSERT(false);
-        OT_UNREACHABLE_CODE(break);
-    }
 }
 
 uint8_t Frame::FindSrcPanIdIndex(void) const
@@ -627,18 +585,6 @@ exit:
     return error;
 }
 
-Error Frame::SetSrcPanId(PanId aPanId)
-{
-    Error   error = kErrorNone;
-    uint8_t index = FindSrcPanIdIndex();
-
-    VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
-    LittleEndian::WriteUint16(aPanId, &mPsdu[index]);
-
-exit:
-    return error;
-}
-
 uint8_t Frame::FindSrcAddrIndex(void) const
 {
     uint16_t fcf   = GetFrameControlField();
@@ -700,43 +646,6 @@ exit:
     return error;
 }
 
-void Frame::SetSrcAddr(ShortAddress aShortAddress)
-{
-    uint8_t index = FindSrcAddrIndex();
-
-    OT_ASSERT(GetFcfSrcAddr(GetFrameControlField()) == kFcfAddrShort);
-    OT_ASSERT(index != kInvalidIndex);
-
-    LittleEndian::WriteUint16(aShortAddress, &mPsdu[index]);
-}
-
-void Frame::SetSrcAddr(const ExtAddress &aExtAddress)
-{
-    uint8_t index = FindSrcAddrIndex();
-
-    OT_ASSERT(GetFcfSrcAddr(GetFrameControlField()) == kFcfAddrExt);
-    OT_ASSERT(index != kInvalidIndex);
-
-    aExtAddress.CopyTo(&mPsdu[index], ExtAddress::kReverseByteOrder);
-}
-
-void Frame::SetSrcAddr(const Address &aAddress)
-{
-    switch (aAddress.GetType())
-    {
-    case Address::kTypeShort:
-        SetSrcAddr(aAddress.GetShort());
-        break;
-
-    case Address::kTypeExtended:
-        SetSrcAddr(aAddress.GetExtended());
-        break;
-
-    default:
-        OT_ASSERT(false);
-    }
-}
-
 Error Frame::GetSecurityControlField(uint8_t &aSecurityControlField) const
 {
     Error   error = kErrorNone;
@@ -748,15 +657,6 @@ Error Frame::GetSecurityControlField(uint8_t &aSecurityControlField) const
 
 exit:
     return error;
-}
-
-void Frame::SetSecurityControlField(uint8_t aSecurityControlField)
-{
-    uint8_t index = FindSecurityHeaderIndex();
-
-    OT_ASSERT(index != kInvalidIndex);
-
-    mPsdu[index] = aSecurityControlField;
 }
 
 uint8_t Frame::FindSecurityHeaderIndex(void) const

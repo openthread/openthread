@@ -626,9 +626,6 @@ void TestMacFrameApi(void)
     VerifyOrQuit(frame.IsSrcAddrPresent());
     SuccessOrQuit(frame.GetSecurityControlField(scf));
     VerifyOrQuit(scf == 0x0d);
-    frame.SetSecurityControlField(0xff);
-    SuccessOrQuit(frame.GetSecurityControlField(scf));
-    VerifyOrQuit(scf == 0xff);
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
     // IEEE 802.15.4-2006 Mac Command
