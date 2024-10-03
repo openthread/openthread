@@ -1626,10 +1626,14 @@ exit:
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 Error TxFrame::GenerateWakeupFrame(PanId aPanId, const Address &aDest, const Address &aSource)
 {
-    Error    error = kErrorNone;
-    uint16_t fcf   = kTypeMultipurpose | kMpFcfLongFrame | kMpFcfPanidPresent | kMpFcfSecurityEnabled |
-                   kMpFcfSequenceSuppression | kMpFcfIePresent;
-    uint8_t index = 0;
+    Error        error = kErrorNone;
+    uint16_t     fcf;
+    uint8_t      secCtl;
+    uint8_t      index = 0;
+    FrameBuilder builder;
+
+    fcf = kTypeMultipurpose | kMpFcfLongFrame | kMpFcfPanidPresent | kMpFcfSecurityEnabled | kMpFcfSequenceSuppression |
+          kMpFcfIePresent;
 
     switch (aDest.GetType())
     {
@@ -1641,7 +1645,6 @@ Error TxFrame::GenerateWakeupFrame(PanId aPanId, const Address &aDest, const Add
         break;
     default:
         ExitNow(error = kErrorInvalidArgs);
-        break;
     }
 
     switch (aSource.GetType())
@@ -1654,22 +1657,22 @@ Error TxFrame::GenerateWakeupFrame(PanId aPanId, const Address &aDest, const Add
         break;
     default:
         ExitNow(error = kErrorInvalidArgs);
-        break;
     }
 
-    mLength = CalculateAddrFieldSize(fcf);
+    builder.Init(mPsdu, GetMtu());
 
-    OT_ASSERT(mLength != kInvalidSize);
+    IgnoreError(builder.AppendLittleEndianUint16(fcf));
+    IgnoreError(builder.AppendLittleEndianUint16(aPanId));
+    IgnoreError(builder.AppendMacAddress(aDest));
+    IgnoreError(builder.AppendMacAddress(aSource));
 
-    SetFrameControlField(fcf);
-    SetDstPanId(aPanId);
-    SetDstAddr(aDest);
-    SetSrcAddr(aSource);
+    secCtl = kKeyIdMode2 | kSecurityEncMic32;
+    IgnoreError(builder.AppendUint8(secCtl));
+    builder.AppendLength(CalculateSecurityHeaderSize(secCtl) - sizeof(secCtl));
 
-    mPsdu[mLength] = kKeyIdMode2 | kSecurityEncMic32;
-    mLength += CalculateSecurityHeaderSize(kKeyIdMode2 | kSecurityEncMic32);
-    mLength += CalculateMicSize(kKeyIdMode2 | kSecurityEncMic32);
-    mLength += GetFcsSize();
+    builder.AppendLength(CalculateMicSize(secCtl) + GetFcsSize());
+
+    mLength = builder.GetLength();
 
     SuccessOrExit(error = AppendHeaderIeAt<RendezvousTimeIe>(index));
     SuccessOrExit(error = AppendHeaderIeAt<ConnectionIe>(index));
@@ -1677,7 +1680,7 @@ Error TxFrame::GenerateWakeupFrame(PanId aPanId, const Address &aDest, const Add
 exit:
     return error;
 }
-#endif
+#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 
 Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey)
 {
