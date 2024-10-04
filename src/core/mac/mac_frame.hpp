@@ -942,6 +942,8 @@ protected:
     static bool IsAckRequest(uint16_t aFcf) { return MaskFcf<kFcfAckRequest, kMpFcfAckRequest>(aFcf); }
     static bool IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kVersion2015; }
 
+    static uint16_t DetermineFcfAddrType(const Address &aAddress, uint16_t aBitShift);
+
     static uint8_t CalculateAddrFieldSize(uint16_t aFcf);
     static uint8_t CalculateSecurityHeaderSize(uint8_t aSecurityControl);
     static uint8_t CalculateMicSize(uint8_t aSecurityControl);

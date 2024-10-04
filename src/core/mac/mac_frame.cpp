@@ -56,36 +56,12 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
 
     fcf = static_cast<uint16_t>(mType) | static_cast<uint16_t>(mVersion);
 
-    switch (mAddrs.mSource.GetType())
-    {
-    case Address::kTypeNone:
-        fcf |= kFcfSrcAddrNone;
-        break;
-    case Address::kTypeShort:
-        fcf |= kFcfSrcAddrShort;
-        break;
-    case Address::kTypeExtended:
-        fcf |= kFcfSrcAddrExt;
-        break;
-    }
+    fcf |= DetermineFcfAddrType(mAddrs.mSource, kFcfSrcAddrShift);
+    fcf |= DetermineFcfAddrType(mAddrs.mDestination, kFcfDstAddrShift);
 
-    switch (mAddrs.mDestination.GetType())
+    if (!mAddrs.mDestination.IsNone() && !mAddrs.mDestination.IsBroadcast() && (mType != kTypeAck))
     {
-    case Address::kTypeNone:
-        fcf |= kFcfDstAddrNone;
-        break;
-    case Address::kTypeShort:
-        fcf |= kFcfDstAddrShort;
-        fcf |= ((mAddrs.mDestination.GetShort() == kShortAddrBroadcast) ? 0 : kFcfAckRequest);
-        break;
-    case Address::kTypeExtended:
-        fcf |= (kFcfDstAddrExt | kFcfAckRequest);
-        break;
-    }
-
-    if (mType == kTypeAck)
-    {
-        fcf &= ~kFcfAckRequest;
+        fcf |= kFcfAckRequest;
     }
 
     fcf |= (mSecurityLevel != kSecurityNone) ? kFcfSecurityEnabled : 0;
@@ -917,6 +893,33 @@ exit:
     return index;
 }
 
+uint16_t Frame::DetermineFcfAddrType(const Address &aAddress, uint16_t aBitShift)
+{
+    // Determines the FCF address type for a given `aAddress`. The
+    // result will be bit-shifted using `aBitShift` value which
+    // correspond to whether address is the source or destination
+    // and whether the frame uses the general format or is a
+    // multipurpose frame
+
+    uint16_t fcfAddrType = kFcfAddrNone;
+
+    switch (aAddress.GetType())
+    {
+    case Address::kTypeNone:
+        break;
+    case Address::kTypeShort:
+        fcfAddrType = kFcfAddrShort;
+        break;
+    case Address::kTypeExtended:
+        fcfAddrType = kFcfAddrExt;
+        break;
+    }
+
+    fcfAddrType <<= aBitShift;
+
+    return fcfAddrType;
+}
+
 uint8_t Frame::CalculateSecurityHeaderSize(uint8_t aSecurityControl)
 {
     uint8_t size = kSecurityControlSize + kFrameCounterSize;
@@ -1535,29 +1538,10 @@ Error TxFrame::GenerateWakeupFrame(PanId aPanId, const Address &aDest, const Add
     fcf = kTypeMultipurpose | kMpFcfLongFrame | kMpFcfPanidPresent | kMpFcfSecurityEnabled | kMpFcfSequenceSuppression |
           kMpFcfIePresent;
 
-    switch (aDest.GetType())
-    {
-    case Address::Type::kTypeShort:
-        fcf |= kMpFcfDstAddrShort;
-        break;
-    case Address::Type::kTypeExtended:
-        fcf |= kMpFcfDstAddrExt;
-        break;
-    default:
-        ExitNow(error = kErrorInvalidArgs);
-    }
+    VerifyOrExit(!aDest.IsNone() && !aSource.IsNone(), error = kErrorInvalidArgs);
 
-    switch (aSource.GetType())
-    {
-    case Address::Type::kTypeShort:
-        fcf |= kMpFcfSrcAddrShort;
-        break;
-    case Address::Type::kTypeExtended:
-        fcf |= kMpFcfSrcAddrExt;
-        break;
-    default:
-        ExitNow(error = kErrorInvalidArgs);
-    }
+    fcf |= DetermineFcfAddrType(aDest, kMpFcfDstAddrShift);
+    fcf |= DetermineFcfAddrType(aSource, kMpFcfSrcAddrShift);
 
     builder.Init(mPsdu, GetMtu());
 
