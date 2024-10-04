@@ -1696,6 +1696,7 @@ void TestProxyTimeout(void)
 
     config.Clear();
     config.mResponseTimeout = 120 * 1000; // 2 minutes (in msec)
+    config.mNat64Mode       = OT_DNS_NAT64_DISALLOW;
     dnsClient->SetDefaultConfig(config);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
