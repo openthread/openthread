@@ -304,6 +304,14 @@ void otSysUpstreamDnsServerSetResolvConfEnabled(bool aEnabled);
  */
 void otSysUpstreamDnsSetServerList(const otIp6Address *aUpstreamDnsServers, int aNumServers);
 
+/**
+ * Sets the radio url to configure the radio related parameters.
+ *
+ * @param[in] aRadioUrl  A pointer to the radio url string.
+ *
+ */
+void otSysSetRadioUrl(const char *aRadioUrl);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif
