@@ -48,7 +48,9 @@
 
 #include <mbedtls/net_sockets.h>
 #include <mbedtls/ssl.h>
+#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
 #include <mbedtls/ssl_cookie.h>
+#endif
 #include <mbedtls/version.h>
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
@@ -624,7 +626,7 @@ private:
     mbedtls_ssl_context mSsl;
     mbedtls_ssl_config  mConf;
 
-#ifdef MBEDTLS_SSL_COOKIE_C
+#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
     mbedtls_ssl_cookie_ctx mCookieCtx;
 #endif
 
