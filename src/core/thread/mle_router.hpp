@@ -490,6 +490,9 @@ public:
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
 private:
+    //------------------------------------------------------------------------------------------------------------------
+    // Constants
+
     // Advertisement trickle timer constants - all times are in milliseconds.
     static constexpr uint32_t kAdvIntervalMin                = 1000;  // I_MIN
     static constexpr uint32_t kAdvIntervalNeighborMultiplier = 4000;  // Multiplier for I_MAX per router neighbor
@@ -534,6 +537,9 @@ private:
     static constexpr int8_t kParentPriorityLow         = -1;
     static constexpr int8_t kParentPriorityUnspecified = -2;
 
+    //------------------------------------------------------------------------------------------------------------------
+    // Nested types
+
     class RouterRoleTransition
     {
     public:
@@ -553,134 +559,126 @@ private:
         uint8_t mJitter;
     };
 
-    void  HandleDetachStart(void);
-    void  HandleChildStart(AttachMode aMode);
-    void  HandleSecurityPolicyChanged(void);
-    void  HandleLinkRequest(RxInfo &aRxInfo);
-    void  HandleLinkAccept(RxInfo &aRxInfo);
-    Error HandleLinkAccept(RxInfo &aRxInfo, bool aRequest);
-    void  HandleLinkAcceptAndRequest(RxInfo &aRxInfo);
-    Error HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, const LeaderData &aLeaderData);
-    void  HandleParentRequest(RxInfo &aRxInfo);
-    void  HandleChildIdRequest(RxInfo &aRxInfo);
-    void  HandleChildUpdateRequestOnParent(RxInfo &aRxInfo);
-    void  HandleChildUpdateResponseOnParent(RxInfo &aRxInfo);
-    void  HandleDataRequest(RxInfo &aRxInfo);
-    void  HandleNetworkDataUpdateRouter(void);
-    void  HandleDiscoveryRequest(RxInfo &aRxInfo);
+    //------------------------------------------------------------------------------------------------------------------
+    // Methods
 
-    static bool IsMessageMleSubType(const Message &aMessage);
-    static bool IsMessageChildUpdateRequest(const Message &aMessage);
-
-    Error ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo);
-    Error ReadAndProcessRouteTlvOnFtdChild(RxInfo &aRxInfo, uint8_t aParentId);
-
+    void     HandleDetachStart(void);
+    void     HandleChildStart(AttachMode aMode);
+    void     HandleSecurityPolicyChanged(void);
+    void     HandleLinkRequest(RxInfo &aRxInfo);
+    void     HandleLinkAccept(RxInfo &aRxInfo);
+    Error    HandleLinkAccept(RxInfo &aRxInfo, bool aRequest);
+    void     HandleLinkAcceptAndRequest(RxInfo &aRxInfo);
+    Error    HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, const LeaderData &aLeaderData);
+    void     HandleParentRequest(RxInfo &aRxInfo);
+    void     HandleChildIdRequest(RxInfo &aRxInfo);
+    void     HandleChildUpdateRequestOnParent(RxInfo &aRxInfo);
+    void     HandleChildUpdateResponseOnParent(RxInfo &aRxInfo);
+    void     HandleDataRequest(RxInfo &aRxInfo);
+    void     HandleNetworkDataUpdateRouter(void);
+    void     HandleDiscoveryRequest(RxInfo &aRxInfo);
+    Error    ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo);
+    Error    ReadAndProcessRouteTlvOnFtdChild(RxInfo &aRxInfo, uint8_t aParentId);
     void     StopAdvertiseTrickleTimer(void);
     uint32_t DetermineAdvertiseIntervalMax(void) const;
+    Error    SendAddressSolicit(ThreadStatusTlv::Status aStatus);
+    void     SendAddressSolicitResponse(const Coap::Message    &aRequest,
+                                        ThreadStatusTlv::Status aResponseStatus,
+                                        const Router           *aRouter,
+                                        const Ip6::MessageInfo &aMessageInfo);
+    void     SendAddressRelease(void);
+    void     SendAdvertisement(void);
+    Error    SendLinkAccept(const RxInfo      &aRxInfo,
+                            Neighbor          *aNeighbor,
+                            const TlvList     &aRequestedTlvList,
+                            const RxChallenge &aChallenge);
+    void     SendParentResponse(Child *aChild, const RxChallenge &aChallenge, bool aRoutersOnlyRequest);
+    Error    SendChildIdResponse(Child &aChild);
+    Error    SendChildUpdateRequest(Child &aChild);
+    void     SendChildUpdateResponse(Child                  *aChild,
+                                     const Ip6::MessageInfo &aMessageInfo,
+                                     const TlvList          &aTlvList,
+                                     const RxChallenge      &aChallenge);
+    void     SendDataResponse(const Ip6::Address &aDestination,
+                              const TlvList      &aTlvList,
+                              uint16_t            aDelay,
+                              const Message      *aRequestMessage = nullptr);
+    Error    SendDiscoveryResponse(const Ip6::Address &aDestination, const Message &aDiscoverRequestMessage);
+    void     SetStateRouter(uint16_t aRloc16);
+    void     SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode);
+    void     SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStartMode aStartMode);
+    void     StopLeader(void);
+    void     SynchronizeChildNetworkData(void);
+    Error    ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild);
+    bool     HasNeighborWithGoodLinkQuality(void) const;
+    void     HandlePartitionChange(void);
+    void     SetChildStateToValid(Child &aChild);
+    bool     HasChildren(void);
+    void     RemoveChildren(void);
+    bool     ShouldDowngrade(uint8_t aNeighborId, const RouteTlv &aRouteTlv) const;
+    bool     NeighborHasComparableConnectivity(const RouteTlv &aRouteTlv, uint8_t aNeighborId) const;
+    void     HandleAdvertiseTrickleTimer(void);
+    void     HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
+    void     HandleTimeTick(void);
 
-    Error SendAddressSolicit(ThreadStatusTlv::Status aStatus);
-    void  SendAddressSolicitResponse(const Coap::Message    &aRequest,
-                                     ThreadStatusTlv::Status aResponseStatus,
-                                     const Router           *aRouter,
-                                     const Ip6::MessageInfo &aMessageInfo);
-    void  SendAddressRelease(void);
-    void  SendAdvertisement(void);
-    Error SendLinkAccept(const RxInfo      &aRxInfo,
-                         Neighbor          *aNeighbor,
-                         const TlvList     &aRequestedTlvList,
-                         const RxChallenge &aChallenge);
-    void  SendParentResponse(Child *aChild, const RxChallenge &aChallenge, bool aRoutersOnlyRequest);
-    Error SendChildIdResponse(Child &aChild);
-    Error SendChildUpdateRequest(Child &aChild);
-    void  SendChildUpdateResponse(Child                  *aChild,
-                                  const Ip6::MessageInfo &aMessageInfo,
-                                  const TlvList          &aTlvList,
-                                  const RxChallenge      &aChallenge);
-    void  SendDataResponse(const Ip6::Address &aDestination,
-                           const TlvList      &aTlvList,
-                           uint16_t            aDelay,
-                           const Message      *aRequestMessage = nullptr);
-    Error SendDiscoveryResponse(const Ip6::Address &aDestination, const Message &aDiscoverRequestMessage);
-    void  SetStateRouter(uint16_t aRloc16);
-    void  SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode);
-    void  SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStartMode aStartMode);
-    void  StopLeader(void);
-    void  SynchronizeChildNetworkData(void);
-    Error ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild);
-    bool  HasNeighborWithGoodLinkQuality(void) const;
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     void SignalDuaAddressEvent(const Child &aChild, const Ip6::Address &aOldDua) const;
 #endif
 
+    static bool IsMessageMleSubType(const Message &aMessage);
+    static bool IsMessageChildUpdateRequest(const Message &aMessage);
+    static void HandleAdvertiseTrickleTimer(TrickleTimer &aTimer);
     static void HandleAddressSolicitResponse(void                *aContext,
                                              otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
                                              Error                aResult);
-    void HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    //------------------------------------------------------------------------------------------------------------------
+    // Variables
 
-    void HandlePartitionChange(void);
-
-    void SetChildStateToValid(Child &aChild);
-    bool HasChildren(void);
-    void RemoveChildren(void);
-    bool ShouldDowngrade(uint8_t aNeighborId, const RouteTlv &aRouteTlv) const;
-    bool NeighborHasComparableConnectivity(const RouteTlv &aRouteTlv, uint8_t aNeighborId) const;
-
-    static void HandleAdvertiseTrickleTimer(TrickleTimer &aTimer);
-    void        HandleAdvertiseTrickleTimer(void);
-    void        HandleTimeTick(void);
-
-    TrickleTimer mAdvertiseTrickleTimer;
-
-#if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
-    DeviceProperties mDeviceProperties;
-#endif
-
-    ChildTable  mChildTable;
-    RouterTable mRouterTable;
-
-    uint8_t     mChallengeTimeout;
-    TxChallenge mChallenge;
-
-    uint16_t mNextChildId;
-    uint8_t  mNetworkIdTimeout;
-    uint8_t  mRouterUpgradeThreshold;
-    uint8_t  mRouterDowngradeThreshold;
-    uint8_t  mLeaderWeight;
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    uint32_t mPreferredLeaderPartitionId; ///< only for certification testing
-    bool     mCcmEnabled : 1;
-    bool     mThreadVersionCheckEnabled : 1;
-#endif
     bool mRouterEligible : 1;
     bool mAddressSolicitPending : 1;
     bool mAddressSolicitRejected : 1;
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    bool mCcmEnabled : 1;
+    bool mThreadVersionCheckEnabled : 1;
+#endif
 
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;
-
-    uint32_t mPreviousPartitionIdRouter;         ///< The partition ID when last operating as a router
-    uint32_t mPreviousPartitionId;               ///< The partition ID when last attached
-    uint8_t  mPreviousPartitionRouterIdSequence; ///< The router ID sequence when last attached
-    uint8_t  mPreviousPartitionIdTimeout;        ///< The partition ID timeout when last attached
-
-    RouterRoleTransition mRouterRoleTransition;
-
+    uint8_t mChallengeTimeout;
+    uint8_t mNetworkIdTimeout;
+    uint8_t mRouterUpgradeThreshold;
+    uint8_t mRouterDowngradeThreshold;
+    uint8_t mLeaderWeight;
+    uint8_t mPreviousPartitionRouterIdSequence;
+    uint8_t mPreviousPartitionIdTimeout;
     uint8_t mChildRouterLinks;
-
-    int8_t mParentPriority; ///< The assigned parent priority value, -2 means not assigned.
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     uint8_t mMaxChildIpAddresses;
 #endif
+    int8_t   mParentPriority;
+    uint16_t mNextChildId;
+    uint32_t mPreviousPartitionIdRouter;
+    uint32_t mPreviousPartitionId;
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    uint32_t mPreferredLeaderPartitionId;
+#endif
 
+    TrickleTimer               mAdvertiseTrickleTimer;
+    ChildTable                 mChildTable;
+    RouterTable                mRouterTable;
+    TxChallenge                mChallenge;
+    RouterRoleTransition       mRouterRoleTransition;
+    Ip6::Netif::UnicastAddress mLeaderAloc;
+#if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
+    DeviceProperties mDeviceProperties;
+#endif
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     MeshCoP::SteeringData mSteeringData;
 #endif
-
-    Ip6::Netif::UnicastAddress mLeaderAloc;
-
     Callback<otThreadDiscoveryRequestCallback> mDiscoveryRequestCallback;
 };
 
