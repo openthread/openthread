@@ -52,7 +52,7 @@ jobs:
       CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -138,7 +138,7 @@ jobs:
       VIRTUAL_TIME: 1
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -182,7 +182,7 @@ jobs:
       OT_READLINE: 'readline'
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -232,7 +232,7 @@ jobs:
       OT_READLINE: 'off'
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -262,7 +262,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -296,7 +296,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
