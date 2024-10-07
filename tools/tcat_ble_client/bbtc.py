@@ -49,6 +49,7 @@ async def main():
     logging.basicConfig(level=logging.WARNING)
 
     parser = argparse.ArgumentParser(description='Device parameters')
+    parser.add_argument('-a', '--adapter', help='Select HCI adapter')
     parser.add_argument('--debug', help='Enable debug logs', action='store_true')
     parser.add_argument('--info', help='Enable info logs', action='store_true')
     parser.add_argument('--cert_path', help='Path to certificate chain and key', action='store', default='auth')
@@ -122,10 +123,10 @@ async def get_device_by_args(args):
         device = await ble_scanner.find_first_by_name(args.name)
         device = await BleStream.create(device.address, BBTC_SERVICE_UUID, BBTC_TX_CHAR_UUID, BBTC_RX_CHAR_UUID)
     elif args.scan:
-        tcat_devices = await ble_scanner.scan_tcat_devices()
+        tcat_devices = await ble_scanner.scan_tcat_devices(adapter=args.adapter)
         device = select_device_by_user_input(tcat_devices)
         if device:
-            device = await BleStream.create(device.address, BBTC_SERVICE_UUID, BBTC_TX_CHAR_UUID, BBTC_RX_CHAR_UUID)
+            device = await BleStream.create(device, BBTC_SERVICE_UUID, BBTC_TX_CHAR_UUID, BBTC_RX_CHAR_UUID)
     elif args.simulation:
         device = UdpStream("127.0.0.1", int(args.simulation))
 
