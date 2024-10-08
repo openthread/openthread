@@ -501,11 +501,12 @@ Error Mle::BecomeDetached(void)
 
     VerifyOrExit(!IsDisabled(), error = kErrorInvalidState);
 
-    // In case role is already detached and attach state is `kAttachStateStart`
-    // (i.e., waiting to start an attach attempt), there is no need to make any
-    // changes.
-
-    VerifyOrExit(!IsDetached() || mAttachState != kAttachStateStart);
+    if (IsDetached() && (mAttachState == kAttachStateStart))
+    {
+        // Already detached and waiting to start an attach attempt, so
+        // there is not need to make any changes.
+        ExitNow();
+    }
 
     // Not in reattach stage after reset
     if (mReattachState == kReattachStop)
