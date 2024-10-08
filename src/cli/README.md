@@ -133,6 +133,7 @@ Done
 - [vendor](#vendor-name)
 - [verhoeff](#verhoeff-calculate)
 - [version](#version)
+- [wakeup](#wakeup)
 - [wakeupchannel](#wakeupchannel)
 
 ## OpenThread Command Details
@@ -4393,15 +4394,84 @@ Factory Diagnostics module is enabled only when building OpenThread with `OPENTH
 
 [diag]: ../../src/core/diags/README.md
 
-### wakeupchannel
+### wakeup
 
-Get the wake-up channel.
+Get the Wake-up End Device listen configuration.
 
-Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
 
 ```bash
-> wakeupchannel
-12
+> wakeup
+channel: 12
+interval: 1000000us
+duration: 8000us
+Done
+```
+
+### wakeup enable
+
+Enable the WED listening feature.
+
+`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
+
+```bash
+> wakeup enable
+Done
+```
+
+### wakeup disable
+
+Disable the WED listening feature.
+
+`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
+
+```bash
+> wakeup disable
+Done
+```
+
+### wakeup state
+
+Shows the WED listening state, among `disabled` and `enabled`.
+
+`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
+
+```bash
+> wakeup state
+enabled
+Done
+```
+
+### wakeup interval \<interval\>
+
+Set the WED listen interval in microseconds. Disable WED listening by setting this parameter to `0`.
+
+`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
+
+```bash
+> wakeup interval 1000000
+Done
+```
+
+### wakeup duration \<duration\>
+
+Set the WED listen duration in microseconds.
+
+`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
+
+```bash
+> wakeup duration 8000
+Done
+```
+
+### wakeup attach \<extaddr\> \<wakeup-interval\> \<wakeup-duration\>
+
+Attaches a Wake-up End Device.
+
+`OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` is required.
+
+```bash
+> wakeup attach 1ece0a6c4653a7c1 7500 1000
 Done
 ```
 

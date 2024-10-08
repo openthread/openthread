@@ -60,6 +60,9 @@ Mac::Mac(Instance &aInstance)
     , mShouldDelaySleep(false)
     , mDelayingSleep(false)
 #endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    , mWedListenEnabled(false)
+#endif
     , mOperation(kOperationIdle)
     , mPendingOperations(0)
     , mBeaconSequence(Random::NonCrypto::GetUint8())
@@ -83,6 +86,10 @@ Mac::Mac(Instance &aInstance)
     , mCslPeriod(0)
 #endif
     , mWakeupChannel(OPENTHREAD_CONFIG_DEFAULT_WAKEUP_CHANNEL)
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    , mWedListenInterval(kDefaultWedListenInterval)
+    , mWedListenDuration(kDefaultWedListenDuration)
+#endif
     , mActiveScanHandler(nullptr) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     , mScanHandlerContext(nullptr)
     , mLinks(aInstance)
@@ -195,6 +202,9 @@ bool Mac::IsInTransmitState(void) const
 #endif
     case kOperationTransmitBeacon:
     case kOperationTransmitPoll:
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    case kOperationTransmitWakeup:
+#endif
         retval = true;
         break;
 
@@ -510,6 +520,17 @@ exit:
 #endif
 #endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+void Mac::RequestWakeupFrameTransmission()
+{
+    VerifyOrExit(IsEnabled());
+    StartOperation(kOperationTransmitWakeup);
+
+exit:
+    return;
+}
+#endif
+
 Error Mac::RequestDataPollTransmission(void)
 {
     Error error = kErrorNone;
@@ -630,6 +651,12 @@ void Mac::PerformNextOperation(void)
     {
         mOperation = kOperationWaitingForData;
     }
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    else if (IsPending(kOperationTransmitWakeup))
+    {
+        mOperation = kOperationTransmitWakeup;
+    }
+#endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     else if (IsPending(kOperationTransmitDataCsl) && TimerMilli::GetNow() >= mCslTxFireTime)
     {
@@ -701,6 +728,9 @@ void Mac::PerformNextOperation(void)
 #endif
 #endif
     case kOperationTransmitPoll:
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    case kOperationTransmitWakeup:
+#endif
         BeginTransmit();
         break;
 
@@ -891,8 +921,17 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 
     case Frame::kKeyIdMode2:
     {
-        const uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
+        uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+        if (aFrame.IsWakeupFrame())
+        {
+            // Just set the key source here, further security processing will happen in SubMac
+            BigEndian::WriteUint32(keyManager.GetCurrentKeySequence(), keySource);
+            aFrame.SetKeySource(keySource);
+            ExitNow();
+        }
+#endif
         aFrame.SetAesKey(mMode2KeyMaterial);
 
         mKeyIdMode2FrameCounter++;
@@ -1012,6 +1051,15 @@ void Mac::BeginTransmit(void)
 
 #endif
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    case kOperationTransmitWakeup:
+        frame = Get<WakeupTxScheduler>().PrepareWakeupFrame(txFrames);
+        VerifyOrExit(frame != nullptr);
+        frame->SetChannel(mWakeupChannel);
+        frame->SetRxChannelAfterTxDone(mRadioChannel);
+        break;
+#endif
 
     default:
         OT_ASSERT(false);
@@ -1455,6 +1503,13 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         break;
 #endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    case kOperationTransmitWakeup:
+        FinishOperation();
+        PerformNextOperation();
+        break;
+#endif
+
     default:
         OT_ASSERT(false);
     }
@@ -1591,8 +1646,27 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         break;
 
     case Frame::kKeyIdMode2:
-        macKey     = &mMode2KeyMaterial;
-        extAddress = &AsCoreType(&sMode2ExtAddress);
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        if (aFrame.IsWakeupFrame())
+        {
+            uint32_t sequence;
+
+            // TODO: Avoid generating a new key if a wake-up frame was recently received already
+
+            IgnoreError(aFrame.GetKeyId(keyid));
+            sequence = BigEndian::ReadUint32(aFrame.GetKeySource());
+            VerifyOrExit(((sequence & 0x7f) + 1) == keyid, error = kErrorSecurity);
+
+            macKey     = (sequence == keyManager.GetCurrentKeySequence()) ? mLinks.GetCurrentMacKey(aFrame)
+                                                                          : &keyManager.GetTemporaryMacKey(sequence);
+            extAddress = &aSrcAddr.GetExtended();
+        }
+        else
+#endif
+        {
+            macKey     = &mMode2KeyMaterial;
+            extAddress = &AsCoreType(&sMode2ExtAddress);
+        }
         break;
 
     default:
@@ -1974,6 +2048,12 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         mCounters.mRxData++;
         break;
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    case Frame::kTypeMultipurpose:
+        SuccessOrExit(error = HandleWakeupFrame(*aFrame));
+        OT_FALL_THROUGH;
+#endif
+
     default:
         mCounters.mRxOther++;
         ExitNow();
@@ -2177,6 +2257,9 @@ const char *Mac::OperationToString(Operation aOperation)
         "TransmitDataCsl", // (8) kOperationTransmitDataCsl
 #endif
 #endif
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+        "TransmitWakeup", // kOperationTransmitWakeup
+#endif
     };
 
     static_assert(kOperationIdle == 0, "kOperationIdle value is incorrect");
@@ -2318,6 +2401,14 @@ void Mac::SetCslChannel(uint8_t aChannel)
 
 void Mac::SetCslPeriod(uint16_t aPeriod)
 {
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    if (IsWedListenEnabled() && aPeriod != 0)
+    {
+        WedListenEnable(false);
+        LogWarn("Disabling wake-up frame listening due to CSL period change");
+    }
+#endif
+
     mCslPeriod = aPeriod;
     UpdateCsl();
 }
@@ -2418,10 +2509,114 @@ Error Mac::SetWakeupChannel(uint8_t aChannel)
     VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
     mWakeupChannel = aChannel;
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    UpdateWakeupListening();
+#endif
+
 exit:
     return error;
 }
 #endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+void Mac::SetWedListenInterval(uint32_t aInterval)
+{
+    mWedListenInterval = aInterval;
+    UpdateWakeupListening();
+}
+
+void Mac::SetWedListenDuration(uint16_t aDuration)
+{
+    mWedListenDuration = aDuration;
+    UpdateWakeupListening();
+}
+
+Error Mac::WedListenEnable(bool aEnable)
+{
+    Error error = kErrorNone;
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (aEnable == true && IsCslEnabled())
+    {
+        LogWarn("Cannot enable wake-up frame listening while CSL is enabled");
+        ExitNow(error = kErrorInvalidState);
+    }
+#endif
+
+    if (aEnable == mWedListenEnabled)
+    {
+        LogInfo("Listening for wake up frames was already %s", aEnable ? "started" : "stopped");
+        ExitNow();
+    }
+
+    mWedListenEnabled = aEnable;
+    UpdateWakeupListening();
+
+    LogInfo("Listening for wake up frames %s: chan:%u, addr:%s", aEnable ? "started" : "stopped", mWakeupChannel,
+            GetExtAddress().ToString().AsCString());
+
+exit:
+    return error;
+}
+
+void Mac::UpdateWakeupListening(void)
+{
+    uint32_t interval = mWedListenEnabled ? mWedListenInterval : 0;
+    uint16_t duration = mWedListenEnabled ? mWedListenDuration : 0;
+    uint8_t  channel  = mWakeupChannel ? mWakeupChannel : mPanChannel;
+
+    mLinks.UpdateWakeupListening(interval, duration, channel);
+}
+
+Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
+{
+    Error               error = kErrorNone;
+    const ConnectionIe *connectionIe;
+    uint32_t            rvTimeUs;
+    uint64_t            rvTimestampUs;
+    uint32_t            attachDelayMs;
+    uint64_t            radioNowUs;
+    uint8_t             retryInterval;
+    uint8_t             retryCount;
+
+    VerifyOrExit(mWedListenEnabled && aFrame.IsWakeupFrame());
+    connectionIe  = aFrame.GetConnectionIe();
+    retryInterval = connectionIe->GetRetryInterval();
+    retryCount    = connectionIe->GetRetryCount();
+    VerifyOrExit(retryInterval > 0 && retryCount > 0, error = kErrorInvalidArgs);
+
+    radioNowUs    = otPlatRadioGetNow(&GetInstance());
+    rvTimeUs      = aFrame.GetRendezvousTimeIe()->GetRendezvousTime() * kUsPerTenSymbols;
+    rvTimestampUs = aFrame.GetTimestamp() + kRadioHeaderPhrDuration + aFrame.GetLength() * kOctetDuration + rvTimeUs;
+    if (rvTimestampUs > radioNowUs + OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US)
+    {
+        attachDelayMs = static_cast<uint32_t>(rvTimestampUs - radioNowUs - OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US);
+        attachDelayMs = attachDelayMs / 1000;
+    }
+    else
+    {
+        attachDelayMs = 0;
+    }
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    {
+        uint32_t frameCounter;
+
+        IgnoreError(aFrame.GetFrameCounter(frameCounter));
+        LogInfo("Received wake-up frame, fc:%lu, rendezvous:%luus, retries:%u/%u", ToUlong(frameCounter),
+                ToUlong(rvTimeUs), retryCount, retryInterval);
+    }
+#endif
+
+    // Stop receiving more wake up frames
+    IgnoreError(WedListenEnable(false));
+
+    // TODO: start MLE attach process with the WC
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 } // namespace Mac
 } // namespace ot

@@ -98,7 +98,6 @@ public:
 
     /**
      * Sets the local socket address to RLOC address and the peer socket address to leader RLOC.
-q     *
      */
     void SetSockAddrToRlocPeerAddrToLeaderRloc(void);
 

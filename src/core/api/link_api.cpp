@@ -504,3 +504,64 @@ otError otLinkGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 
     return error;
 }
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+otError otLinkWedListenSetEnabled(otInstance *aInstance, bool aEnable)
+{
+    Error error = kErrorInvalidState;
+
+    VerifyOrExit(otLinkGetWedListenInterval(aInstance) > otLinkGetWedListenDuration(aInstance));
+
+    error = AsCoreType(aInstance).Get<Mac::Mac>().WedListenEnable(aEnable);
+
+exit:
+    return error;
+}
+
+bool otLinkIsWedListenEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().IsWedListenEnabled();
+}
+
+uint32_t otLinkGetWedListenInterval(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().GetWedListenInterval();
+}
+
+otError otLinkSetWedListenInterval(otInstance *aInstance, uint32_t aInterval)
+{
+    Error    error = kErrorNone;
+    uint16_t intervalInTenSymbolsUnit;
+
+    if (aInterval == 0)
+    {
+        intervalInTenSymbolsUnit = 0;
+    }
+    else
+    {
+        VerifyOrExit((aInterval % kUsPerTenSymbols) == 0, error = kErrorInvalidArgs);
+        intervalInTenSymbolsUnit = ClampToUint16(aInterval / kUsPerTenSymbols);
+    }
+
+    AsCoreType(aInstance).Get<Mac::Mac>().SetWedListenInterval(intervalInTenSymbolsUnit);
+
+exit:
+    return error;
+}
+
+uint16_t otLinkGetWedListenDuration(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().GetWedListenDuration();
+}
+
+otError otLinkSetWedListenDuration(otInstance *aInstance, uint16_t aDuration)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aDuration >= kMinWedListenDuration, error = kErrorInvalidArgs);
+    AsCoreType(aInstance).Get<Mac::Mac>().SetWedListenDuration(aDuration);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE

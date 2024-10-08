@@ -53,6 +53,9 @@ SubMac::SubMac(Instance &aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mCslTimer(aInstance, SubMac::HandleCslTimer)
 #endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    , mWedTimer(aInstance, SubMac::HandleWedTimer)
+#endif
 {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mCslParentAccuracy.Init();
@@ -89,6 +92,9 @@ void SubMac::Init(void)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     CslInit();
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    WedInit();
 #endif
 }
 
@@ -202,6 +208,9 @@ Error SubMac::Disable(void)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mCslTimer.Stop();
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    mWedTimer.Stop();
 #endif
 
     mTimer.Stop();
@@ -349,8 +358,23 @@ void SubMac::ProcessTransmitSecurity(void)
         mTransmitFrame.SetKeyId(mKeyId);
     }
 
-    VerifyOrExit(ShouldHandleTransmitSecurity());
-    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    if (mTransmitFrame.GetType() == Frame::kTypeMultipurpose)
+    {
+        // For now, process the Multipurpose frame security in SubMac even if the radio supports transmit security
+        // (which makes `ShouldHandleTransmitSecurity()` return false). The reason is that the Multipurpose frame
+        // support is a new thing in Thread and platforms that process transmit security for generic frame format in
+        // their radio layer, may not be ready to do the same for the Multipurpose frames.
+        //
+        // This behavior should be considered transitional and eventually removed in the future.
+        VerifyOrExit(keyIdMode == Frame::kKeyIdMode2);
+    }
+    else
+#endif
+    {
+        VerifyOrExit(ShouldHandleTransmitSecurity());
+        VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
+    }
 
     mTransmitFrame.SetAesKey(GetCurrentMacKey());
 
@@ -602,6 +626,15 @@ void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
     bool     allowError = false;
 
     OT_UNUSED_VARIABLE(allowError);
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    if (aFrame.GetType() == Frame::kTypeMultipurpose && aFrame.GetFrameCounter(frameCounter) == kErrorNone)
+    {
+        // As long as Multipurpose frames are encrypted in SubMac, sync the frame counter used by the radio layer after
+        // a Multipurpose frame transmission.
+        Get<Radio>().SetMacFrameCounter(frameCounter + 1);
+    }
+#endif
 
     VerifyOrExit(!ShouldHandleTransmitSecurity() && aFrame.GetSecurityEnabled() && aFrame.IsHeaderUpdated());
 
