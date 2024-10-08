@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2024, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,33 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_subdirectory(cli)
-add_subdirectory(core)
-add_subdirectory(lib)
-add_subdirectory(ncp)
-add_subdirectory(rtos)
+
+add_library(openthread-rtos
+            radio.cpp
+            hdlc_interface.cpp)
+
+target_link_libraries(openthread-rtos
+    PRIVATE
+        ot-config
+        ot-config-ftd
+)
+
+target_compile_definitions(openthread-rtos
+    PUBLIC
+        ${OT_PUBLIC_DEFINES}
+    PRIVATE
+        OPENTHREAD_FTD=1
+)
+
+target_compile_options(openthread-rtos PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_include_directories(openthread-rtos PRIVATE
+    ${OT_PUBLIC_INCLUDES}
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/src/core
+    ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/src/rtos/zephyr
+)
