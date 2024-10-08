@@ -1440,7 +1440,7 @@ void MleRouter::HandleParentRequest(RxInfo &aRxInfo)
     aRxInfo.mClass = RxInfo::kPeerMessage;
     ProcessKeySequence(aRxInfo);
 
-    SendParentResponse(child, challenge, !ScanMaskTlv::IsEndDeviceFlagSet(scanMask));
+    SendParentResponse(*child, challenge, !ScanMaskTlv::IsEndDeviceFlagSet(scanMask));
 
 exit:
     LogProcessError(kTypeParentRequest, error);
@@ -1673,7 +1673,7 @@ exit:
     return;
 }
 
-void MleRouter::SendParentResponse(Child *aChild, const RxChallenge &aChallenge, bool aRoutersOnlyRequest)
+void MleRouter::SendParentResponse(Child &aChild, const RxChallenge &aChallenge, bool aRoutersOnlyRequest)
 {
     Error        error = kErrorNone;
     Ip6::Address destination;
@@ -1688,24 +1688,24 @@ void MleRouter::SendParentResponse(Child *aChild, const RxChallenge &aChallenge,
     SuccessOrExit(error = message->AppendLinkAndMleFrameCounterTlvs());
     SuccessOrExit(error = message->AppendResponseTlv(aChallenge));
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (aChild->IsTimeSyncEnabled())
+    if (aChild.IsTimeSyncEnabled())
     {
         SuccessOrExit(error = message->AppendTimeParameterTlv());
     }
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    if (aChild->IsThreadVersionCslCapable())
+    if (aChild.IsThreadVersionCslCapable())
     {
         SuccessOrExit(error = message->AppendCslClockAccuracyTlv());
     }
 #endif
-    aChild->GenerateChallenge();
-    SuccessOrExit(error = message->AppendChallengeTlv(aChild->GetChallenge()));
-    SuccessOrExit(error = message->AppendLinkMarginTlv(aChild->GetLinkInfo().GetLinkMargin()));
+    aChild.GenerateChallenge();
+    SuccessOrExit(error = message->AppendChallengeTlv(aChild.GetChallenge()));
+    SuccessOrExit(error = message->AppendLinkMarginTlv(aChild.GetLinkInfo().GetLinkMargin()));
     SuccessOrExit(error = message->AppendConnectivityTlv());
     SuccessOrExit(error = message->AppendVersionTlv());
 
-    destination.SetToLinkLocalAddress(aChild->GetExtAddress());
+    destination.SetToLinkLocalAddress(aChild.GetExtAddress());
 
     delay = 1 + Random::NonCrypto::GetUint16InRange(0, aRoutersOnlyRequest ? kParentResponseMaxDelayRouters
                                                                            : kParentResponseMaxDelayAll);
