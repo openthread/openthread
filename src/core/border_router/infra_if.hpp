@@ -165,6 +165,19 @@ public:
      */
     void DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPrefix);
 
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+    /**
+     * Gets the IPv6 address of the CCM Registrar, that has been discovered (by this interface and associated
+     * protocols) on the infrastructure network.
+     *
+     * @param[out] aRegistrarAddress    The Registrar IPv6 address that was discovered or configured.
+     *
+     * @retval  kErrorNone    Successfully returned a discovered/configured Registrar IPv6 address.
+     * @retval  kErrorFailed  Failed to discover a Registrar, and none was configured.
+     */
+    Error GetDiscoveredCcmRegistrarAddress(Ip6::Address &aRegistrarAddress);
+#endif
+
     /**
      * Handles infrastructure interface state changes.
      *
