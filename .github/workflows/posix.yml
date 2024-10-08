@@ -46,7 +46,7 @@ permissions:
 jobs:
 
   expects-linux:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       CFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
       CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
@@ -57,6 +57,10 @@ jobs:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3 # v5.2.0
+      with:
+        python-version: '3.12'
+        cache: pip
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
@@ -92,7 +96,7 @@ jobs:
         retention-days: 1
     - name: Run TUN Mode
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
         sudo apt-get install --no-install-recommends -y bind9-host ntp socat
         sudo systemctl restart ntp
@@ -130,7 +134,7 @@ jobs:
         retention-days: 1
 
   thread-cert:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       COVERAGE: 1
       PYTHONUNBUFFERED: 1
@@ -151,7 +155,7 @@ jobs:
         cache: pip
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y lcov ninja-build
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
@@ -175,7 +179,7 @@ jobs:
 
   pty-linux:
     name: pty-linux OT_DAEMON=${{ matrix.OT_DAEMON }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -193,8 +197,8 @@ jobs:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y socat expect lcov net-tools ninja-build
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y socat expect lcov libreadline-dev net-tools ninja-build
         cd /tmp
         wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
         tar xvf bsd-licensed.tar.gz
@@ -263,7 +267,7 @@ jobs:
         script/check-posix-pty check
 
   rcp-stack-reset:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
@@ -297,7 +301,7 @@ jobs:
     - expects-linux
     - pty-linux
     - thread-cert
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1

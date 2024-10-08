@@ -47,7 +47,7 @@ jobs:
 
   toranj-ncp:
     name: toranj-ncp-${{ matrix.TORANJ_RADIO }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -74,7 +74,7 @@ jobs:
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build & Run
@@ -84,7 +84,7 @@ jobs:
 
   toranj-cli:
     name: toranj-cli-${{ matrix.TORANJ_RADIO }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         TORANJ_RADIO: ['15.4', 'trel', 'multi']
@@ -109,7 +109,7 @@ jobs:
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build & Run
@@ -128,7 +128,7 @@ jobs:
 
   toranj-unittest:
     name: toranj-unittest
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
@@ -217,7 +217,7 @@ jobs:
   upload-coverage:
     needs:
     - toranj-cli
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1

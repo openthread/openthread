@@ -46,7 +46,7 @@ permissions:
 jobs:
 
   pretty:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
@@ -62,7 +62,7 @@ jobs:
         cache: pip
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y clang-format-14 clang-tidy-14 shellcheck
         python3 -m pip install yapf==0.31.0
         sudo snap install shfmt
@@ -88,7 +88,7 @@ jobs:
         fail_on_error: true
 
   spell-check:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
@@ -111,7 +111,7 @@ jobs:
         script/code-spell check
 
   cmake-version:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
@@ -138,7 +138,7 @@ jobs:
 
   package:
     name: package-${{ matrix.compiler }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -163,14 +163,14 @@ jobs:
         submodules: true
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
     - name: Package
       run: |
         script/test package
 
   scan-build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
@@ -182,14 +182,14 @@ jobs:
         submodules: true
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y clang-tools-14 ninja-build
     - name: Run
       run: |
         script/check-scan-build
 
   mbedtls2-build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
@@ -214,7 +214,7 @@ jobs:
 
   arm-gcc:
     name: arm-gcc-${{ matrix.gcc_ver }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -258,7 +258,7 @@ jobs:
     - name: Bootstrap
       run: |
         cd /tmp
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y build-essential lib32z1 ninja-build gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
         wget --tries 4 --no-check-certificate --quiet ${{ matrix.gcc_download_url }} -O gcc-arm
         tar xf gcc-arm
@@ -279,7 +279,7 @@ jobs:
 
   gcc:
     name: gcc-${{ matrix.gcc_ver }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -298,7 +298,7 @@ jobs:
         submodules: true
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         case ${{ matrix.gcc_ver }} in
           11)
             sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
@@ -312,7 +312,7 @@ jobs:
 
   clang:
     name: clang-${{ matrix.clang_ver }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -342,7 +342,7 @@ jobs:
           script/check-posix-build
 
   gn:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
@@ -354,7 +354,7 @@ jobs:
         submodules: true
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build
         cd /tmp
         wget -O gn.zip https://chrome-infra-packages.appspot.com/dl/gn/gn/linux-amd64/+/latest
@@ -400,7 +400,7 @@ jobs:
 
   android-ndk:
     name: android-ndk
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container:
       image: openthread/environment
     steps:
