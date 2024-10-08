@@ -142,10 +142,10 @@ jobs:
             description: "LowPower"
           - otbr_mdns: "mDNSResponder"
             otbr_trel: 0
-            cert_scripts: ./tests/scripts/thread-cert/border_router/nat64/*.py
+            cert_scripts: ./tests/scripts/thread-cert/border_router/internet/*.py
             packet_verification: 1
             nat64: 1
-            description: "nat64"
+            description: "internet access"
           - otbr_mdns: "avahi"
             otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
