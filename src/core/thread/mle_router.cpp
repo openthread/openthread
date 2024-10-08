@@ -2883,29 +2883,16 @@ Error MleRouter::SendChildUpdateRequest(Child &aChild)
     Ip6::Address destination;
     TxMessage   *message = nullptr;
 
-    if (!aChild.IsRxOnWhenIdle())
+    if (!aChild.IsRxOnWhenIdle() && aChild.IsStateRestoring())
     {
-        uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
+        // No need to send the resync "Child Update Request"
+        // to the sleepy child if there is one already
+        // queued.
 
-        for (const Message &msg : Get<MeshForwarder>().GetSendQueue())
-        {
-            if (msg.GetChildMask(childIndex) && msg.GetSubType() == Message::kSubTypeMleChildUpdateRequest)
-            {
-                // No need to send the resync "Child Update Request"
-                // to the sleepy child if there is one already
-                // queued.
-                if (aChild.IsStateRestoring())
-                {
-                    ExitNow();
-                }
-
-                // Remove queued outdated "Child Update Request" when
-                // there is newer Network Data is to send.
-                Get<MeshForwarder>().RemoveMessagesForChild(aChild, IsMessageChildUpdateRequest);
-                break;
-            }
-        }
+        VerifyOrExit(!Get<IndirectSender>().HasQueuedMessageForSleepyChild(aChild, IsMessageChildUpdateRequest));
     }
+
+    Get<MeshForwarder>().RemoveMessagesForChild(aChild, IsMessageChildUpdateRequest);
 
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendSourceAddressTlv());
