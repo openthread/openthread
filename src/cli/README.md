@@ -373,6 +373,15 @@ Started
 Done
 ```
 
+### ba disconnect
+
+Disconnects border agent from any active secure sessions.
+
+```bash
+> ba disconnect
+Done
+```
+
 ### ba ephemeralkey
 
 Indicates if an ephemeral key is active.

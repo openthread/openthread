@@ -157,6 +157,17 @@ public:
      */
     State GetState(void) const { return mState; }
 
+    /**
+     * Disconnects the Border Agent from any active secure sessions.
+     *
+     * If Border Agent is connected to a commissioner candidate with ephemeral key, calling this API
+     * will cause the ephemeral key to be cleared after the session is disconnected.
+     *
+     * The Border Agent state may not change immediately upon calling this method, the state will be
+     * updated when the connection update is notified by `HandleConnected()`.
+     */
+    void Disconnect(void);
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     /**
      * Sets the ephemeral key for a given timeout duration.

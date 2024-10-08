@@ -775,6 +775,16 @@ exit:
     return;
 }
 
+void BorderAgent::Disconnect(void)
+{
+    VerifyOrExit(mState == kStateConnected || mState == kStateAccepted);
+
+    Get<Tmf::SecureAgent>().Disconnect();
+
+exit:
+    return;
+}
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
 Error BorderAgent::SetEphemeralKey(const char *aKeyString, uint32_t aTimeout, uint16_t aUdpPort)
