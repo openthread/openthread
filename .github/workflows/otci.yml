@@ -65,7 +65,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib ninja-build python3-setuptools python3-wheel
+        sudo apt-get --no-install-recommends install -y ninja-build python3-setuptools python3-wheel
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
         python3 -m pip install pytype adb-shell
     - name: Style check
