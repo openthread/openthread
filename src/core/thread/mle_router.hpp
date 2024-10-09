@@ -592,7 +592,7 @@ private:
                             Neighbor          *aNeighbor,
                             const TlvList     &aRequestedTlvList,
                             const RxChallenge &aChallenge);
-    void     SendParentResponse(Child *aChild, const RxChallenge &aChallenge, bool aRoutersOnlyRequest);
+    void     SendParentResponse(Child &aChild, const RxChallenge &aChallenge, bool aRoutersOnlyRequest);
     Error    SendChildIdResponse(Child &aChild);
     Error    SendChildUpdateRequest(Child &aChild);
     void     SendChildUpdateResponse(Child                  *aChild,

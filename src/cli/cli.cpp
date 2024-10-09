@@ -411,6 +411,20 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
 
         OutputLine("%s", Stringify(otBorderAgentGetState(GetInstancePtr()), kStateStrings));
     }
+    /**
+     * @cli ba disconnect
+     * @code
+     * ba disconnect
+     * Done
+     * @endcode
+     * @par
+     * Disconnects the Border Agent from any active secure sessions
+     * @sa otBorderAgentDisconnect
+     */
+    else if (aArgs[0] == "disconnect")
+    {
+        otBorderAgentDisconnect(GetInstancePtr());
+    }
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     /**
      * @cli ba id (get,set)

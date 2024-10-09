@@ -212,6 +212,14 @@ public:
     void ClearAutoAddrConfigFlag(void) { mFlags &= ~kAutoConfigFlagMask; }
 
     /**
+     * Indicates whether or not the DhCPv6-PD Preferred (P) flag is set.
+     *
+     * @retval TRUE  The DHCPv6-PD Preferred (P) flag is set.
+     * @retval FALSE The DHCPv6-PD Preferred (P) flag is not set.
+     */
+    bool IsDhcp6PdPreferredFlagSet(void) const { return (mFlags & kDhcp6PdPreferredFlagMask) != 0; }
+
+    /**
      * Sets the valid lifetime of the prefix in seconds.
      *
      * @param[in]  aValidLifetime  The valid lifetime in seconds.
@@ -272,7 +280,7 @@ private:
     //   0                   1                   2                   3
     //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    //  |     Type      |    Length     | Prefix Length |L|A| Reserved1 |
+    //  |     Type      |    Length     | Prefix Length |L|A|R|P| Rsvd1 |
     //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     //  |                         Valid Lifetime                        |
     //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -288,9 +296,13 @@ private:
     //  +                                                               +
     //  |                                                               |
     //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //
+    //  Reference for P Flag (DHCPv6-PD preferred flag):
+    //  https://bib.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-6man-pio-pflag.xml
 
-    static constexpr uint8_t kAutoConfigFlagMask = 0x40; // Autonomous address-configuration flag.
-    static constexpr uint8_t kOnLinkFlagMask     = 0x80; // On-link flag.
+    static constexpr uint8_t kOnLinkFlagMask           = 0x80; // On-link - L flag.
+    static constexpr uint8_t kAutoConfigFlagMask       = 0x40; // Autonomous address-configuration - A flag.
+    static constexpr uint8_t kDhcp6PdPreferredFlagMask = 0x10; // DHCPv6-PD preferred - P flag.
 
     uint8_t  mPrefixLength;      // The prefix length in bits.
     uint8_t  mFlags;             // The flags field.

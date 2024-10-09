@@ -670,7 +670,8 @@ bool RoutingManager::IsValidOnLinkPrefix(const PrefixInfoOption &aPio)
 
     aPio.GetPrefix(prefix);
 
-    return IsValidOnLinkPrefix(prefix) && aPio.IsOnLinkFlagSet() && aPio.IsAutoAddrConfigFlagSet();
+    return IsValidOnLinkPrefix(prefix) && aPio.IsOnLinkFlagSet() &&
+           (aPio.IsAutoAddrConfigFlagSet() || aPio.IsDhcp6PdPreferredFlagSet());
 }
 
 bool RoutingManager::IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix)

@@ -138,7 +138,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel ninja-build lcov
+        sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel ninja-build lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
@@ -209,7 +209,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel ninja-build lcov
+        sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel ninja-build lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
@@ -348,7 +348,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y libreadline6-dev g++-multilib ninja-build python3-setuptools python3-wheel llvm lcov
+        sudo apt-get --no-install-recommends install -y libreadline6-dev ninja-build python3-setuptools python3-wheel llvm lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
