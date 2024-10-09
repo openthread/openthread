@@ -57,7 +57,6 @@ public:
      * @param aTimeout The timeout in us.
      *
      * @returns the remaining timeout.
-     *
      */
     uint64_t Run(uint64_t aTimeoutInUs = 0);
 
