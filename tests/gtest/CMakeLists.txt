@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2024, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,17 +26,42 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-option(OT_BUILD_GTEST "enable gtest")
+cmake_minimum_required(VERSION 3.14)
+project(openthread-gtest)
 
-if(OT_FTD AND BUILD_TESTING)
-    add_subdirectory(unit)
-    if(OT_BUILD_GTEST)
-        add_subdirectory(gtest)
-    endif()
-endif()
+# GoogleTest requires at least C++14
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(OT_FUZZ_TARGETS "enable fuzz targets" OFF)
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
 
-if(OT_FUZZ_TARGETS)
-    add_subdirectory(fuzz)
-endif()
+include(GoogleTest)
+
+add_library(ot-fake-platform
+    fake_platform.cpp
+)
+target_link_libraries(ot-fake-platform
+    ot-config
+)
+
+add_library(ot-fake-ftd INTERFACE)
+target_link_libraries(ot-fake-ftd INTERFACE
+    openthread-ftd
+    ot-fake-platform
+)
+
+add_executable(ot-ftd-gtest
+    dataset_test.cpp
+)
+target_link_libraries(ot-ftd-gtest
+    ot-fake-ftd
+    GTest::gmock_main
+)
+gtest_discover_tests(ot-ftd-gtest)
