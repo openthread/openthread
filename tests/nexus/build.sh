@@ -1,5 +1,6 @@
+#!/bin/bash
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2024, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,21 +27,40 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-option(OT_BUILD_GTEST "enable gtest")
+display_usage()
+{
+    echo ""
+    echo "Nexus build script "
+    echo ""
+    echo ""
+}
 
-if(OT_FTD AND BUILD_TESTING AND (NOT OT_PLATFORM STREQUAL "nexus"))
-    add_subdirectory(unit)
-    if(OT_BUILD_GTEST)
-        add_subdirectory(gtest)
-    endif()
-endif()
+die()
+{
+    echo " *** ERROR: " "$*"
+    exit 1
+}
 
-option(OT_FUZZ_TARGETS "enable fuzz targets" OFF)
+cd "$(dirname "$0")" || die "cd failed"
+cd ../.. || die "cd failed"
 
-if(OT_FUZZ_TARGETS)
-    add_subdirectory(fuzz)
-endif()
+if [ -n "${top_builddir}" ]; then
+    top_srcdir=$(pwd)
+    mkdir -p "${top_builddir}"
+else
+    top_srcdir=.
+    top_builddir=.
+fi
 
-if(OT_PLATFORM STREQUAL "nexus")
-    add_subdirectory(nexus)
-endif()
+echo "===================================================================================================="
+echo "Building OpenThread Nexus test platform"
+echo "===================================================================================================="
+cd "${top_builddir}" || die "cd failed"
+cmake -GNinja -DOT_PLATFORM=nexus -DOT_COMPILE_WARNING_AS_ERROR=ON \
+    -DOT_MULTIPLE_INSTANCE=ON \
+    -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
+    -DOT_PROJECT_CONFIG=../tests/nexus/openthread-core-nexus-config.h \
+    "${top_srcdir}" || die
+ninja || die
+
+exit 0

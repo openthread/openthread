@@ -190,6 +190,30 @@ jobs:
       run: |
         ./tests/toranj/build.sh posix-15.4
 
+  nexus:
+    name: nexus
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      with:
+        submodules: true
+    - name: Bootstrap
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y clang-10 clang++-10 ninja-build llvm lcov
+        sudo apt-get --no-install-recommends install -y g++-multilib
+    - name: Build & Run
+      run: |
+        ./tests/nexus/build.sh
+        ninja test
+
   upload-coverage:
     needs:
     - toranj-cli
