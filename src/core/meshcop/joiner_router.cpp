@@ -334,14 +334,6 @@ exit:
     return;
 }
 
-void JoinerRouter::JoinerEntrustMetadata::ReadFrom(const Message &aMessage)
-{
-    uint16_t length = aMessage.GetLength();
-
-    OT_ASSERT(length >= sizeof(*this));
-    IgnoreError(aMessage.Read(length - sizeof(*this), *this));
-}
-
 } // namespace MeshCoP
 } // namespace ot
 

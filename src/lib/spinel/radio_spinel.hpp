@@ -1213,14 +1213,16 @@ private:
     uint8_t mRcpFailure : 2;          ///< RCP failure reason, should recover and retry operation.
 
     // Properties set by core.
-    uint8_t      mKeyIdMode;
-    uint8_t      mKeyId;
-    otMacKey     mPrevKey;
-    otMacKey     mCurrKey;
-    otMacKey     mNextKey;
-    uint16_t     mSrcMatchShortEntries[OPENTHREAD_CONFIG_MLE_MAX_CHILDREN];
+    uint8_t  mKeyIdMode;
+    uint8_t  mKeyId;
+    otMacKey mPrevKey;
+    otMacKey mCurrKey;
+    otMacKey mNextKey;
+    static_assert(OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES >= OPENTHREAD_CONFIG_MLE_MAX_CHILDREN,
+                  "SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES is not large enough to cover MLE_MAX_CHILDREN");
+    uint16_t     mSrcMatchShortEntries[OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES];
     int16_t      mSrcMatchShortEntryCount;
-    otExtAddress mSrcMatchExtEntries[OPENTHREAD_CONFIG_MLE_MAX_CHILDREN];
+    otExtAddress mSrcMatchExtEntries[OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES];
     int16_t      mSrcMatchExtEntryCount;
     uint8_t      mScanChannel;
     uint16_t     mScanDuration;

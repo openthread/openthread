@@ -509,13 +509,7 @@ private:
     void     HandleFragment(RxInfo &aRxInfo);
     void     HandleLowpanHc(RxInfo &aRxInfo);
 
-    void     PrepareMacHeaders(Mac::TxFrame             &aFrame,
-                               Mac::Frame::Type          aFrameType,
-                               const Mac::Addresses     &aMacAddr,
-                               const Mac::PanIds        &aPanIds,
-                               Mac::Frame::SecurityLevel aSecurityLevel,
-                               Mac::Frame::KeyIdMode     aKeyIdMode,
-                               const Message            *aMessage);
+    void     PrepareMacHeaders(Mac::TxFrame &aTxFrame, Mac::TxFrame::Info &aTxFrameInfo, const Message *aMessage);
     uint16_t PrepareDataFrame(Mac::TxFrame         &aFrame,
                               Message              &aMessage,
                               const Mac::Addresses &aMacAddrs,

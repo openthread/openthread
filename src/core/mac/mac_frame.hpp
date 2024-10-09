@@ -156,31 +156,6 @@ public:
     bool IsEmpty(void) const { return (mLength == 0); }
 
     /**
-     * Initializes the MAC header.
-     *
-     * Determines and writes the Frame Control Field (FCF) and Security Control in the frame along with
-     * given source and destination addresses and PAN IDs.
-     *
-     * The Ack Request bit in FCF is set if there is destination and it is not broadcast and frame type @p aType is not
-     * ACK. The Frame Pending and IE Present bits are not set.
-     *
-     * @param[in] aType          Frame type.
-     * @param[in] aVersion       Frame version.
-     * @param[in] aAddrs         Frame source and destination addresses (each can be none, short, or extended).
-     * @param[in] aPanIds        Source and destination PAN IDs.
-     * @param[in] aSecurityLevel Frame security level.
-     * @param[in] aKeyIdMode     Frame security key ID mode.
-     * @param[in] aSuppressSequence     Whether to suppress sequence number.
-     */
-    void InitMacHeader(Type             aType,
-                       Version          aVersion,
-                       const Addresses &aAddrs,
-                       const PanIds    &aPanIds,
-                       SecurityLevel    aSecurityLevel,
-                       KeyIdMode        aKeyIdMode        = kKeyIdMode0,
-                       bool             aSuppressSequence = false);
-
-    /**
      * Validates the frame.
      *
      * @retval kErrorNone    Successfully parsed the MAC header.
@@ -373,13 +348,6 @@ public:
     Error GetDstPanId(PanId &aPanId) const;
 
     /**
-     * Sets the Destination PAN Identifier.
-     *
-     * @param[in]  aPanId  The Destination PAN Identifier.
-     */
-    void SetDstPanId(PanId aPanId);
-
-    /**
      * Indicates whether or not the Destination Address is present for this object.
      *
      * @retval TRUE   If the Destination Address is present.
@@ -395,27 +363,6 @@ public:
      * @retval kErrorNone  Successfully retrieved the Destination Address.
      */
     Error GetDstAddr(Address &aAddress) const;
-
-    /**
-     * Sets the Destination Address.
-     *
-     * @param[in]  aShortAddress  The Destination Address.
-     */
-    void SetDstAddr(ShortAddress aShortAddress);
-
-    /**
-     * Sets the Destination Address.
-     *
-     * @param[in]  aExtAddress  The Destination Address.
-     */
-    void SetDstAddr(const ExtAddress &aExtAddress);
-
-    /**
-     * Sets the Destination Address.
-     *
-     * @param[in]  aAddress  The Destination Address.
-     */
-    void SetDstAddr(const Address &aAddress);
 
     /**
      * Indicates whether or not the Source Address is present for this object.
@@ -435,15 +382,6 @@ public:
     Error GetSrcPanId(PanId &aPanId) const;
 
     /**
-     * Sets the Source PAN Identifier.
-     *
-     * @param[in]  aPanId  The Source PAN Identifier.
-     *
-     * @retval kErrorNone   Successfully set the Source PAN Identifier.
-     */
-    Error SetSrcPanId(PanId aPanId);
-
-    /**
      * Indicates whether or not the Source Address is present for this object.
      *
      * @retval TRUE   If the Source Address is present.
@@ -461,27 +399,6 @@ public:
     Error GetSrcAddr(Address &aAddress) const;
 
     /**
-     * Sets the Source Address.
-     *
-     * @param[in]  aShortAddress  The Source Address.
-     */
-    void SetSrcAddr(ShortAddress aShortAddress);
-
-    /**
-     * Sets the Source Address.
-     *
-     * @param[in]  aExtAddress  The Source Address.
-     */
-    void SetSrcAddr(const ExtAddress &aExtAddress);
-
-    /**
-     * Sets the Source Address.
-     *
-     * @param[in]  aAddress  The Source Address.
-     */
-    void SetSrcAddr(const Address &aAddress);
-
-    /**
      * Gets the Security Control Field.
      *
      * @param[out]  aSecurityControlField  The Security Control Field.
@@ -490,13 +407,6 @@ public:
      * @retval kErrorParse  Failed to find the security control field in the frame.
      */
     Error GetSecurityControlField(uint8_t &aSecurityControlField) const;
-
-    /**
-     * Sets the Security Control Field.
-     *
-     * @param[in]  aSecurityControlField  The Security Control Field.
-     */
-    void SetSecurityControlField(uint8_t aSecurityControlField);
 
     /**
      * Gets the Security Level Identifier.
@@ -1032,6 +942,8 @@ protected:
     static bool IsAckRequest(uint16_t aFcf) { return MaskFcf<kFcfAckRequest, kMpFcfAckRequest>(aFcf); }
     static bool IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kVersion2015; }
 
+    static uint16_t DetermineFcfAddrType(const Address &aAddress, uint16_t aBitShift);
+
     static uint8_t CalculateAddrFieldSize(uint16_t aFcf);
     static uint8_t CalculateSecurityHeaderSize(uint8_t aSecurityControl);
     static uint8_t CalculateMicSize(uint8_t aSecurityControl);
@@ -1136,6 +1048,45 @@ public:
 class TxFrame : public Frame
 {
 public:
+    /**
+     * Represents header information.
+     */
+    struct Info : public Clearable<Info>
+    {
+        /**
+         * Initializes the `Info` by clearing all its fields (setting all bytes to zero).
+         */
+        Info(void) { Clear(); }
+
+        /**
+         * Prepares MAC headers based on `Info` fields in a given `TxFrame`.
+         *
+         * This method uses the `Info` structure to construct the MAC address and security headers in @p aTxFrame.
+         * It determines the Frame Control Field (FCF), including setting the appropriate frame type, security level,
+         * and addressing mode flags. It populates the source and destination addresses and PAN IDs within the MAC
+         * header based on the information provided in the `Info` structure.
+         *
+         * It sets the Ack Request bit in the FCF if the following criteria are met:
+         *   - A destination address is present
+         *   - The destination address is not the broadcast address
+         *   - The frame type is not an ACK frame
+         *
+         * The Frame Pending and IE Present flags in the FCF are not set. They may need to be set separately depending
+         * on the specific requirements of the frame being transmitted.
+         *
+         * @param[in,out] aTxFrame  The `TxFrame` instance in which to prepare and append the MAC headers.
+         */
+        void PrepareHeadersIn(TxFrame &aTxFrame) const;
+
+        Type          mType;                 ///< Frame type.
+        Version       mVersion;              ///< Frame version.
+        Addresses     mAddrs;                ///< Frame source and destination addresses.
+        PanIds        mPanIds;               ///< Source and destination PAN Ids.
+        SecurityLevel mSecurityLevel;        ///< Frame security level.
+        KeyIdMode     mKeyIdMode;            ///< Frame security key ID mode.
+        bool          mSuppressSequence : 1; ///< Whether to suppress seq number.
+    };
+
     /**
      * Sets the channel on which to send the frame.
      *

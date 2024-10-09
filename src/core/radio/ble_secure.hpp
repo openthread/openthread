@@ -335,6 +335,13 @@ public:
     }
 
     /**
+     * Extracts public key from it's own certificate.
+     *
+     * @returns Public key from own certificate in form of entire ASN.1 field.
+     */
+    const mbedtls_asn1_buf &GetOwnPublicKey(void) const { return mTls.GetOwnPublicKey(); }
+
+    /**
      * Sets the authentication mode for the BLE secure connection. It disables or enables the verification
      * of peer certificate.
      *
@@ -418,6 +425,14 @@ public:
      * @param[in]  aMtu             The updated ATT_MTU value.
      */
     Error HandleBleMtuUpdate(uint16_t aMtu);
+
+    /**
+     * @brief Gets the Install Code Verify Status during the current session.
+     *
+     * @return TRUE The install code was correctly verfied.
+     * @return FALSE The install code was not verified.
+     */
+    bool GetInstallCodeVerifyStatus(void) const { return mTcatAgent.GetInstallCodeVerifyStatus(); }
 
 private:
     enum BleState : uint8_t

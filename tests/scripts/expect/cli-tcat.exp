@@ -31,13 +31,7 @@ source "tests/scripts/expect/_common.exp"
 
 spawn_node 1 "cli"
 
-switch_node 1
-send "tcat start\n"
-expect_line "Done"
-
-spawn python "tools/tcat_ble_client/bbtc.py" --simulation 1 --cert_path "tools/tcat_ble_client/auth"
-set py_client "$spawn_id"
-expect_line "Done"
+spawn_tcat_client_for_node 1
 
 send "network_name\n"
 expect_line "\tTYPE:\tRESPONSE_W_STATUS"
@@ -83,8 +77,7 @@ expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
 expect_line "\tLEN:\t9"
 expect_line "\tVALUE:\t0x64756d6d795f75726c"
 
-send "exit\n"
-expect eof
+dispose_tcat_client 1
 
 switch_node 1
 send "tcat stop\n"
@@ -96,3 +89,5 @@ expect_line "Done"
 
 wait_for "state" "leader"
 expect_line "Done"
+
+dispose_all

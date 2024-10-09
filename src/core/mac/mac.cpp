@@ -82,6 +82,7 @@ Mac::Mac(Instance &aInstance)
     , mCslChannel(0)
     , mCslPeriod(0)
 #endif
+    , mWakeupChannel(OPENTHREAD_CONFIG_DEFAULT_WAKEUP_CHANNEL)
     , mActiveScanHandler(nullptr) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     , mScanHandlerContext(nullptr)
     , mLinks(aInstance)
@@ -721,15 +722,17 @@ void Mac::FinishOperation(void)
 
 TxFrame *Mac::PrepareBeaconRequest(void)
 {
-    TxFrame  &frame = mLinks.GetTxFrames().GetBroadcastTxFrame();
-    Addresses addrs;
-    PanIds    panIds;
+    TxFrame      &frame = mLinks.GetTxFrames().GetBroadcastTxFrame();
+    TxFrame::Info frameInfo;
 
-    addrs.mSource.SetNone();
-    addrs.mDestination.SetShort(kShortAddrBroadcast);
-    panIds.SetDestination(kShortAddrBroadcast);
+    frameInfo.mAddrs.mSource.SetNone();
+    frameInfo.mAddrs.mDestination.SetShort(kShortAddrBroadcast);
+    frameInfo.mPanIds.SetDestination(kShortAddrBroadcast);
 
-    frame.InitMacHeader(Frame::kTypeMacCmd, Frame::kVersion2003, addrs, panIds, Frame::kSecurityNone);
+    frameInfo.mType    = Frame::kTypeMacCmd;
+    frameInfo.mVersion = Frame::kVersion2003;
+
+    frameInfo.PrepareHeadersIn(frame);
 
     IgnoreError(frame.SetCommandId(Frame::kMacCmdBeaconRequest));
 
@@ -740,10 +743,9 @@ TxFrame *Mac::PrepareBeaconRequest(void)
 
 TxFrame *Mac::PrepareBeacon(void)
 {
-    TxFrame  *frame;
-    Beacon   *beacon = nullptr;
-    Addresses addrs;
-    PanIds    panIds;
+    TxFrame      *frame;
+    TxFrame::Info frameInfo;
+    Beacon       *beacon = nullptr;
 #if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
     uint8_t        beaconLength;
     BeaconPayload *beaconPayload = nullptr;
@@ -757,11 +759,14 @@ TxFrame *Mac::PrepareBeacon(void)
     frame = &mLinks.GetTxFrames().GetBroadcastTxFrame();
 #endif
 
-    addrs.mSource.SetExtended(GetExtAddress());
-    panIds.SetSource(mPanId);
-    addrs.mDestination.SetNone();
+    frameInfo.mAddrs.mSource.SetExtended(GetExtAddress());
+    frameInfo.mPanIds.SetSource(mPanId);
+    frameInfo.mAddrs.mDestination.SetNone();
 
-    frame->InitMacHeader(Frame::kTypeBeacon, Frame::kVersion2003, addrs, panIds, Frame::kSecurityNone);
+    frameInfo.mType    = Frame::kTypeBeacon;
+    frameInfo.mVersion = Frame::kVersion2003;
+
+    frameInfo.PrepareHeadersIn(*frame);
 
     beacon = reinterpret_cast<Beacon *>(frame->GetPayload());
     beacon->Init();
@@ -2396,6 +2401,25 @@ void Mac::SetRadioFilterEnabled(bool aFilterEnabled)
 {
     mLinks.GetSubMac().SetRadioFilterEnabled(aFilterEnabled);
     UpdateIdleMode();
+}
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+Error Mac::SetWakeupChannel(uint8_t aChannel)
+{
+    Error error = kErrorNone;
+
+    if (aChannel == 0)
+    {
+        mWakeupChannel = GetPanChannel();
+        ExitNow();
+    }
+
+    VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
+    mWakeupChannel = aChannel;
+
+exit:
+    return error;
 }
 #endif
 

@@ -501,11 +501,12 @@ Error Mle::BecomeDetached(void)
 
     VerifyOrExit(!IsDisabled(), error = kErrorInvalidState);
 
-    // In case role is already detached and attach state is `kAttachStateStart`
-    // (i.e., waiting to start an attach attempt), there is no need to make any
-    // changes.
-
-    VerifyOrExit(!IsDetached() || mAttachState != kAttachStateStart);
+    if (IsDetached() && (mAttachState == kAttachStateStart))
+    {
+        // Already detached and waiting to start an attach attempt, so
+        // there is not need to make any changes.
+        ExitNow();
+    }
 
     // Not in reattach stage after reset
     if (mReattachState == kReattachStop)
@@ -4412,16 +4413,6 @@ void Mle::DelayedSender::RemoveMessage(Message::SubType    aSubType,
         }
     }
 }
-
-void Mle::DelayedSender::Metadata::ReadFrom(const Message &aMessage)
-{
-    uint16_t length = aMessage.GetLength();
-
-    OT_ASSERT(length >= sizeof(*this));
-    IgnoreError(aMessage.Read(length - sizeof(*this), *this));
-}
-
-void Mle::DelayedSender::Metadata::RemoveFrom(Message &aMessage) const { aMessage.RemoveFooter(sizeof(*this)); }
 
 //---------------------------------------------------------------------------------------------------------------------
 // TxMessage

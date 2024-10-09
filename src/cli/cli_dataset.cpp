@@ -134,6 +134,12 @@ const Dataset::ComponentMapper *Dataset::LookupMapper(const char *aName) const
             &Dataset::OutputSecurityPolicy,
             &Dataset::ParseSecurityPolicy,
         },
+        {
+            "wakeupchannel",
+            &Components::mIsWakeupChannelPresent,
+            &Dataset::OutputWakeupChannel,
+            &Dataset::ParseWakeupChannel,
+        },
     };
 
     static_assert(BinarySearch::IsSorted(kMappers), "kMappers is not sorted");
@@ -181,6 +187,24 @@ void Dataset::OutputActiveTimestamp(const otOperationalDataset &aDataset)
  * Gets or sets #otOperationalDataset::mChannel.
  */
 void Dataset::OutputChannel(const otOperationalDataset &aDataset) { OutputLine("%u", aDataset.mChannel); }
+
+/**
+ * @cli dataset wakeupchannel (get,set)
+ * @code
+ * dataset wakeupchannel
+ * 13
+ * Done
+ * @endcode
+ * @code
+ * dataset wakeupchannel 13
+ * Done
+ * @endcode
+ * @cparam dataset wakeupchannel [@ca{channel-num}]
+ * Use the optional `channel-num` argument to set the wake-up channel.
+ * @par
+ * Gets or sets #otOperationalDataset::mWakeupChannel.
+ */
+void Dataset::OutputWakeupChannel(const otOperationalDataset &aDataset) { OutputLine("%u", aDataset.mWakeupChannel); }
 
 /**
  * @cli dataset channelmask (get,set)
@@ -412,6 +436,11 @@ otError Dataset::ParseChannel(Arg *&aArgs, otOperationalDataset &aDataset)
     return aArgs++->ParseAsUint16(aDataset.mChannel);
 }
 
+otError Dataset::ParseWakeupChannel(Arg *&aArgs, otOperationalDataset &aDataset)
+{
+    return aArgs++->ParseAsUint16(aDataset.mWakeupChannel);
+}
+
 otError Dataset::ParseChannelMask(Arg *&aArgs, otOperationalDataset &aDataset)
 {
     return aArgs++->ParseAsUint32(aDataset.mChannelMask);
@@ -561,6 +590,7 @@ otError Dataset::Print(otOperationalDatasetTlvs &aDatasetTlvs)
         {"Pending Timestamp", "pendingtimestamp"},
         {"Active Timestamp", "activetimestamp"},
         {"Channel", "channel"},
+        {"Wake-up Channel", "wakeupchannel"},
         {"Channel Mask", "channelmask"},
         {"Delay", "delay"},
         {"Ext PAN ID", "extpanid"},

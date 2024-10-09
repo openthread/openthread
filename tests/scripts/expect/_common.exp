@@ -266,4 +266,35 @@ proc fail {message} {
     error $message
 }
 
+proc spawn_tcat_client_for_node {id} {
+    global tcat_ids
+    global spawn_id
+
+    switch_node $id
+
+    send "tcat start\n"
+    expect_line "Done"
+
+    spawn python "tools/tcat_ble_client/bbtc.py" --simulation $id --cert_path "tools/tcat_ble_client/auth"
+    expect_line "Done"
+
+    set tcat_ids($id) $spawn_id
+
+    return $spawn_id
+}
+
+proc switch_tcat_client_for_node {id} {
+    global tcat_ids
+    global spawn_id
+
+    send_user "\n# ${id}\n"
+    set spawn_id $tcat_ids($id)
+}
+
+proc dispose_tcat_client {id} {
+    switch_tcat_client_for_node $id
+    send "exit\n"
+    expect eof
+}
+
 set timeout 10

@@ -89,6 +89,7 @@ public:
         kDelay,            ///< Delay
         kPanId,            ///< PAN Identifier
         kChannel,          ///< Channel
+        kWakeupChannel,    ///< Wakeup Channel
         kPskc,             ///< PSKc
         kSecurityPolicy,   ///< Security Policy
         kChannelMask,      ///< Channel Mask
@@ -686,6 +687,7 @@ DefineIsPresentAndMarkAsPresent(MeshLocalPrefix)
 DefineIsPresentAndMarkAsPresent(Delay)
 DefineIsPresentAndMarkAsPresent(PanId)
 DefineIsPresentAndMarkAsPresent(Channel)
+DefineIsPresentAndMarkAsPresent(WakeupChannel)
 DefineIsPresentAndMarkAsPresent(Pskc)
 DefineIsPresentAndMarkAsPresent(SecurityPolicy)
 DefineIsPresentAndMarkAsPresent(ChannelMask)
@@ -704,6 +706,7 @@ template <> struct Dataset::TypeFor<Dataset::kMeshLocalPrefix>  { using Type = I
 template <> struct Dataset::TypeFor<Dataset::kDelay>            { using Type = uint32_t; };
 template <> struct Dataset::TypeFor<Dataset::kPanId>            { using Type = Mac::PanId; };
 template <> struct Dataset::TypeFor<Dataset::kChannel>          { using Type = uint16_t; };
+template <> struct Dataset::TypeFor<Dataset::kWakeupChannel>    { using Type = uint16_t; };
 template <> struct Dataset::TypeFor<Dataset::kPskc>             { using Type = Pskc; };
 template <> struct Dataset::TypeFor<Dataset::kSecurityPolicy>   { using Type = SecurityPolicy; };
 template <> struct Dataset::TypeFor<Dataset::kChannelMask>      { using Type = uint32_t; };
@@ -738,6 +741,8 @@ template <> inline const uint32_t &Dataset::Info::Get<Dataset::kDelay>(void) con
 template <> inline const Mac::PanId &Dataset::Info::Get<Dataset::kPanId>(void) const { return mPanId; }
 
 template <> inline const uint16_t &Dataset::Info::Get<Dataset::kChannel>(void) const { return mChannel; }
+
+template <> inline const uint16_t &Dataset::Info::Get<Dataset::kWakeupChannel>(void) const { return mWakeupChannel; }
 
 template <> inline const Pskc &Dataset::Info::Get<Dataset::kPskc>(void) const { return AsCoreType(&mPskc); }
 

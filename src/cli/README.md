@@ -133,6 +133,7 @@ Done
 - [vendor](#vendor-name)
 - [verhoeff](#verhoeff-calculate)
 - [version](#version)
+- [wakeupchannel](#wakeupchannel)
 
 ## OpenThread Command Details
 
@@ -369,6 +370,15 @@ Possible states are
 ```bash
 > ba state
 Started
+Done
+```
+
+### ba disconnect
+
+Disconnects border agent from any active secure sessions.
+
+```bash
+> ba disconnect
 Done
 ```
 
@@ -3948,6 +3958,26 @@ Done
 Done
 ```
 
+### trel counters
+
+Get the TREL counters.
+
+```bash
+> trel counters
+Inbound:  Packets 32 Bytes 4000
+Outbound: Packets 4 Bytes 320 Failures 1
+Done
+```
+
+### trel counters reset
+
+Reset the TREL counters.
+
+```bash
+> trel counters reset
+Done
+```
+
 ### trel port
 
 Get the TREL UDP port number.
@@ -4371,3 +4401,26 @@ Done
 Factory Diagnostics module is enabled only when building OpenThread with `OPENTHREAD_CONFIG_DIAG_ENABLE=1` option. Go [diagnostics module][diag] for more information.
 
 [diag]: ../../src/core/diags/README.md
+
+### wakeupchannel
+
+Get the wake-up channel.
+
+Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+
+```bash
+> wakeupchannel
+12
+Done
+```
+
+### wakeupchannel \<channel\>
+
+Set the wake-up channel.
+
+Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+
+```bash
+> wakeupchannel 12
+Done
+```

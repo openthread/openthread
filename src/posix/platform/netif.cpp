@@ -1095,7 +1095,8 @@ exit:
     }
 }
 
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || \
+    (OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE)
 static constexpr uint8_t kIpVersion4 = 4;
 static constexpr uint8_t kIpVersion6 = 6;
 
@@ -1111,7 +1112,7 @@ static uint8_t getIpVersion(const uint8_t *data)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
 /**
  * Returns nullptr if data does not point to a valid ICMPv6 RA message.
@@ -1156,7 +1157,7 @@ static otError tryProcessIcmp6RaMessage(otInstance *aInstance, const uint8_t *da
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
 #ifdef __linux__
 /**
@@ -1222,7 +1223,7 @@ static void processTransmit(otInstance *aInstance)
     }
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
     if (tryProcessIcmp6RaMessage(aInstance, reinterpret_cast<uint8_t *>(&packet[offset]), rval) == OT_ERROR_NONE)
     {
         ExitNow();

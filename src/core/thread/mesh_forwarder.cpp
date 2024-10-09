@@ -162,21 +162,23 @@ exit:
 
 void MeshForwarder::PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &aMacDest, bool aAckRequest)
 {
-    Mac::Addresses addresses;
-    Mac::PanIds    panIds;
+    Mac::TxFrame::Info frameInfo;
 
-    addresses.mSource.SetShort(Get<Mac::Mac>().GetShortAddress());
+    frameInfo.mAddrs.mSource.SetShort(Get<Mac::Mac>().GetShortAddress());
 
-    if (addresses.mSource.IsShortAddrInvalid() || aMacDest.IsExtended())
+    if (frameInfo.mAddrs.mSource.IsShortAddrInvalid() || aMacDest.IsExtended())
     {
-        addresses.mSource.SetExtended(Get<Mac::Mac>().GetExtAddress());
+        frameInfo.mAddrs.mSource.SetExtended(Get<Mac::Mac>().GetExtAddress());
     }
 
-    addresses.mDestination = aMacDest;
-    panIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
+    frameInfo.mAddrs.mDestination = aMacDest;
+    frameInfo.mPanIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
 
-    PrepareMacHeaders(aFrame, Mac::Frame::kTypeData, addresses, panIds, Mac::Frame::kSecurityEncMic32,
-                      Mac::Frame::kKeyIdMode1, nullptr);
+    frameInfo.mType          = Mac::Frame::kTypeData;
+    frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
+    frameInfo.mKeyIdMode     = Mac::Frame::kKeyIdMode1;
+
+    PrepareMacHeaders(aFrame, frameInfo, nullptr);
 
     aFrame.SetAckRequest(aAckRequest);
     aFrame.SetPayloadLength(0);
@@ -836,26 +838,20 @@ exit:
     return frame;
 }
 
-void MeshForwarder::PrepareMacHeaders(Mac::TxFrame             &aFrame,
-                                      Mac::Frame::Type          aFrameType,
-                                      const Mac::Addresses     &aMacAddrs,
-                                      const Mac::PanIds        &aPanIds,
-                                      Mac::Frame::SecurityLevel aSecurityLevel,
-                                      Mac::Frame::KeyIdMode     aKeyIdMode,
-                                      const Message            *aMessage)
+void MeshForwarder::PrepareMacHeaders(Mac::TxFrame &aTxFrame, Mac::TxFrame::Info &aTxFrameInfo, const Message *aMessage)
 {
-    bool                iePresent;
-    Mac::Frame::Version version;
+    bool iePresent;
 
     iePresent = CalcIePresent(aMessage);
-    version   = CalcFrameVersion(Get<NeighborTable>().FindNeighbor(aMacAddrs.mDestination), iePresent);
+    aTxFrameInfo.mVersion =
+        CalcFrameVersion(Get<NeighborTable>().FindNeighbor(aTxFrameInfo.mAddrs.mDestination), iePresent);
 
-    aFrame.InitMacHeader(aFrameType, version, aMacAddrs, aPanIds, aSecurityLevel, aKeyIdMode);
+    aTxFrameInfo.PrepareHeadersIn(aTxFrame);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     if (iePresent)
     {
-        AppendHeaderIe(aMessage, aFrame);
+        AppendHeaderIe(aMessage, aTxFrame);
     }
 #endif
 }
@@ -879,59 +875,58 @@ uint16_t MeshForwarder::PrepareDataFrame(Mac::TxFrame         &aFrame,
                                          uint16_t              aMeshDest,
                                          bool                  aAddFragHeader)
 {
-    Mac::Frame::SecurityLevel securityLevel;
-    Mac::Frame::KeyIdMode     keyIdMode;
-    Mac::PanIds               panIds;
-    uint16_t                  payloadLength;
-    uint16_t                  origMsgOffset;
-    uint16_t                  nextOffset;
-    FrameBuilder              frameBuilder;
+    Mac::TxFrame::Info frameInfo;
+    uint16_t           payloadLength;
+    uint16_t           origMsgOffset;
+    uint16_t           nextOffset;
+    FrameBuilder       frameBuilder;
 
 start:
-
-    securityLevel = Mac::Frame::kSecurityNone;
-    keyIdMode     = Mac::Frame::kKeyIdMode1;
+    frameInfo.Clear();
 
     if (aMessage.IsLinkSecurityEnabled())
     {
-        securityLevel = Mac::Frame::kSecurityEncMic32;
+        frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
 
         switch (aMessage.GetSubType())
         {
         case Message::kSubTypeJoinerEntrust:
-            keyIdMode = Mac::Frame::kKeyIdMode0;
+            frameInfo.mKeyIdMode = Mac::Frame::kKeyIdMode0;
             break;
 
         case Message::kSubTypeMleAnnounce:
-            keyIdMode = Mac::Frame::kKeyIdMode2;
+            frameInfo.mKeyIdMode = Mac::Frame::kKeyIdMode2;
             break;
 
         default:
-            // Use the `kKeyIdMode1`
+            frameInfo.mKeyIdMode = Mac::Frame::kKeyIdMode1;
             break;
         }
     }
 
-    panIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
+    frameInfo.mPanIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
 
     switch (aMessage.GetSubType())
     {
     case Message::kSubTypeMleAnnounce:
         aFrame.SetChannel(aMessage.GetChannel());
         aFrame.SetRxChannelAfterTxDone(Get<Mac::Mac>().GetPanChannel());
-        panIds.SetDestination(Mac::kPanIdBroadcast);
+        frameInfo.mPanIds.SetDestination(Mac::kPanIdBroadcast);
         break;
 
     case Message::kSubTypeMleDiscoverRequest:
     case Message::kSubTypeMleDiscoverResponse:
-        panIds.SetDestination(aMessage.GetPanId());
+        frameInfo.mPanIds.SetDestination(aMessage.GetPanId());
         break;
 
     default:
         break;
     }
 
-    PrepareMacHeaders(aFrame, Mac::Frame::kTypeData, aMacAddrs, panIds, securityLevel, keyIdMode, &aMessage);
+    frameInfo.mType  = Mac::Frame::kTypeData;
+    frameInfo.mAddrs = aMacAddrs;
+
+    PrepareMacHeaders(aFrame, frameInfo, &aMessage);
 
     frameBuilder.Init(aFrame.GetPayload(), aFrame.GetMaxPayloadLength());
 

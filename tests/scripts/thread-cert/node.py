@@ -2310,6 +2310,20 @@ class NodeImpl:
         self.send_command(cmd)
         return self._expect_command_output()[0]
 
+    def pd_get_prefix(self):
+        cmd = 'br pd omrprefix'
+        self.send_command(cmd)
+        return self._expect_command_output()[0].split(" ")[0]
+
+    def pd_set_enabled(self, enable):
+        self.send_command('br pd {}'.format("enable" if enable else "disable"))
+        self._expect_done()
+
+    @property
+    def pd_state(self):
+        self.send_command('br pd state')
+        return self._expect_command_output()[0].strip()
+
     def get_netdata_non_nat64_routes(self):
         nat64_routes = []
         routes = self.get_routes()
@@ -4094,6 +4108,33 @@ interface eth0
 };
 EOF
 """ % (prefix, 'on' if slaac else 'off'))
+        self.bash('service radvd start')
+        self.bash('service radvd status')  # Make sure radvd service is running
+
+    def start_pd_radvd_service(self, prefix):
+        self.bash("""cat >/etc/radvd.conf <<EOF
+interface wpan0
+{
+    AdvSendAdvert on;
+
+    AdvReachableTime 20;
+    AdvRetransTimer 20;
+    AdvDefaultLifetime 180;
+    MinRtrAdvInterval 120;
+    MaxRtrAdvInterval 180;
+    AdvDefaultPreference low;
+
+    prefix %s
+    {
+        AdvOnLink on;
+        AdvAutonomous on;
+        AdvRouterAddr off;
+        AdvPreferredLifetime 180;
+        AdvValidLifetime 180;
+    };
+};
+EOF
+""" % (prefix,))
         self.bash('service radvd start')
         self.bash('service radvd status')  # Make sure radvd service is running
 

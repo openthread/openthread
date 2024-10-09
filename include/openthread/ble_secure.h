@@ -408,6 +408,16 @@ otError otBleSecureSendApplicationTlv(otInstance *aInstance, uint8_t *aBuf, uint
 otError otBleSecureFlush(otInstance *aInstance);
 
 /**
+ * Gets the Install Code Verify Status during the current session.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ *
+ * @retval TRUE  The install code was correctly verified.
+ * @retval FALSE The install code was not verified.
+ */
+bool otBleSecureGetInstallCodeVerifyStatus(otInstance *aInstance);
+
+/**
  * @}
  */
 

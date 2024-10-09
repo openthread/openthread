@@ -1101,6 +1101,32 @@ otError otLinkSetRegion(otInstance *aInstance, uint16_t aRegionCode);
 otError otLinkGetRegion(otInstance *aInstance, uint16_t *aRegionCode);
 
 /**
+ * Gets the Wake-up channel.
+ *
+ * Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The Wake-up channel.
+ */
+uint8_t otLinkGetWakeupChannel(otInstance *aInstance);
+
+/**
+ * Sets the Wake-up channel.
+ *
+ * Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aChannel   The Wake-up sample channel. Channel value should be `0` (Set Wake-up Channel unspecified,
+ *                        which means the device will use the PAN channel) or within the range [1, 10] (if 915-MHz
+ *                        supported) and [11, 26] (if 2.4 GHz supported).
+ *
+ * @retval OT_ERROR_NONE           Successfully set the Wake-up channel.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid @p aChannel.
+ */
+otError otLinkSetWakeupChannel(otInstance *aInstance, uint8_t aChannel);
+
+/**
  * @}
  */
 

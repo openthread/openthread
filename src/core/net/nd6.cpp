@@ -33,6 +33,8 @@
 
 #include "nd6.hpp"
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -323,3 +325,5 @@ NeighborAdvertMessage::NeighborAdvertMessage(void)
 } // namespace Nd
 } // namespace Ip6
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

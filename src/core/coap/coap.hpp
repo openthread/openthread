@@ -315,11 +315,8 @@ public:
 private:
     static constexpr uint16_t kMaxCachedResponses = OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES;
 
-    struct ResponseMetadata
+    struct ResponseMetadata : public Message::FooterData<ResponseMetadata>
     {
-        Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
-        void  ReadFrom(const Message &aMessage);
-
         TimeMilli        mDequeueTime;
         Ip6::MessageInfo mMessageInfo;
     };
@@ -793,12 +790,8 @@ protected:
     void SetResourceHandler(ResourceHandler aHandler) { mResourceHandler = aHandler; }
 
 private:
-    struct Metadata
+    struct Metadata : public Message::FooterData<Metadata>
     {
-        Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
-        void  ReadFrom(const Message &aMessage);
-        void  UpdateIn(Message &aMessage) const;
-
         Ip6::Address    mSourceAddress;            // IPv6 address of the message source.
         Ip6::Address    mDestinationAddress;       // IPv6 address of the message destination.
         uint16_t        mDestinationPort;          // UDP port of the message destination.

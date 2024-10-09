@@ -104,7 +104,7 @@ SecureTransport::SecureTransport(Instance &aInstance, bool aLayerTwoSecurity, bo
     ClearAllBytes(mSsl);
     ClearAllBytes(mConf);
 
-#ifdef MBEDTLS_SSL_COOKIE_C
+#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
     ClearAllBytes(mCookieCtx);
 #endif
 }

@@ -48,7 +48,9 @@
 
 #include <mbedtls/net_sockets.h>
 #include <mbedtls/ssl.h>
+#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
 #include <mbedtls/ssl_cookie.h>
+#endif
 #include <mbedtls/version.h>
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
@@ -301,6 +303,14 @@ public:
      * @param[in]  aX509CaCertChainLength   The length of chain.
      */
     void SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
+
+    /**
+     * Extracts public key from it's own certificate.
+     *
+     * @returns Public key from own certificate in form of entire ASN.1 field.
+     */
+    const mbedtls_asn1_buf &GetOwnPublicKey(void) const { return mOwnCert.pk_raw; }
+
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 #if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
@@ -616,7 +626,7 @@ private:
     mbedtls_ssl_context mSsl;
     mbedtls_ssl_config  mConf;
 
-#ifdef MBEDTLS_SSL_COOKIE_C
+#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
     mbedtls_ssl_cookie_ctx mCookieCtx;
 #endif
 

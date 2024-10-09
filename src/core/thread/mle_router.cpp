@@ -43,31 +43,33 @@ RegisterLogModule("Mle");
 
 MleRouter::MleRouter(Instance &aInstance)
     : Mle(aInstance)
-    , mAdvertiseTrickleTimer(aInstance, MleRouter::HandleAdvertiseTrickleTimer)
-    , mChildTable(aInstance)
-    , mRouterTable(aInstance)
-    , mChallengeTimeout(0)
-    , mNextChildId(kMaxChildId)
-    , mNetworkIdTimeout(kNetworkIdTimeout)
-    , mRouterUpgradeThreshold(kRouterUpgradeThreshold)
-    , mRouterDowngradeThreshold(kRouterDowngradeThreshold)
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    , mPreferredLeaderPartitionId(0)
-    , mCcmEnabled(false)
-    , mThreadVersionCheckEnabled(true)
-#endif
     , mRouterEligible(true)
     , mAddressSolicitPending(false)
     , mAddressSolicitRejected(false)
-    , mPreviousPartitionIdRouter(0)
-    , mPreviousPartitionId(0)
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mCcmEnabled(false)
+    , mThreadVersionCheckEnabled(true)
+#endif
+    , mChallengeTimeout(0)
+    , mNetworkIdTimeout(kNetworkIdTimeout)
+    , mRouterUpgradeThreshold(kRouterUpgradeThreshold)
+    , mRouterDowngradeThreshold(kRouterDowngradeThreshold)
     , mPreviousPartitionRouterIdSequence(0)
     , mPreviousPartitionIdTimeout(0)
     , mChildRouterLinks(kChildRouterLinks)
-    , mParentPriority(kParentPriorityUnspecified)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mMaxChildIpAddresses(0)
 #endif
+    , mParentPriority(kParentPriorityUnspecified)
+    , mNextChildId(kMaxChildId)
+    , mPreviousPartitionIdRouter(0)
+    , mPreviousPartitionId(0)
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mPreferredLeaderPartitionId(0)
+#endif
+    , mAdvertiseTrickleTimer(aInstance, MleRouter::HandleAdvertiseTrickleTimer)
+    , mChildTable(aInstance)
+    , mRouterTable(aInstance)
 {
     mDeviceMode.Set(mDeviceMode.Get() | DeviceMode::kModeFullThreadDevice | DeviceMode::kModeFullNetworkData);
 
@@ -1438,7 +1440,7 @@ void MleRouter::HandleParentRequest(RxInfo &aRxInfo)
     aRxInfo.mClass = RxInfo::kPeerMessage;
     ProcessKeySequence(aRxInfo);
 
-    SendParentResponse(child, challenge, !ScanMaskTlv::IsEndDeviceFlagSet(scanMask));
+    SendParentResponse(*child, challenge, !ScanMaskTlv::IsEndDeviceFlagSet(scanMask));
 
 exit:
     LogProcessError(kTypeParentRequest, error);
@@ -1671,7 +1673,7 @@ exit:
     return;
 }
 
-void MleRouter::SendParentResponse(Child *aChild, const RxChallenge &aChallenge, bool aRoutersOnlyRequest)
+void MleRouter::SendParentResponse(Child &aChild, const RxChallenge &aChallenge, bool aRoutersOnlyRequest)
 {
     Error        error = kErrorNone;
     Ip6::Address destination;
@@ -1686,24 +1688,24 @@ void MleRouter::SendParentResponse(Child *aChild, const RxChallenge &aChallenge,
     SuccessOrExit(error = message->AppendLinkAndMleFrameCounterTlvs());
     SuccessOrExit(error = message->AppendResponseTlv(aChallenge));
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (aChild->IsTimeSyncEnabled())
+    if (aChild.IsTimeSyncEnabled())
     {
         SuccessOrExit(error = message->AppendTimeParameterTlv());
     }
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    if (aChild->IsThreadVersionCslCapable())
+    if (aChild.IsThreadVersionCslCapable())
     {
         SuccessOrExit(error = message->AppendCslClockAccuracyTlv());
     }
 #endif
-    aChild->GenerateChallenge();
-    SuccessOrExit(error = message->AppendChallengeTlv(aChild->GetChallenge()));
-    SuccessOrExit(error = message->AppendLinkMarginTlv(aChild->GetLinkInfo().GetLinkMargin()));
+    aChild.GenerateChallenge();
+    SuccessOrExit(error = message->AppendChallengeTlv(aChild.GetChallenge()));
+    SuccessOrExit(error = message->AppendLinkMarginTlv(aChild.GetLinkInfo().GetLinkMargin()));
     SuccessOrExit(error = message->AppendConnectivityTlv());
     SuccessOrExit(error = message->AppendVersionTlv());
 
-    destination.SetToLinkLocalAddress(aChild->GetExtAddress());
+    destination.SetToLinkLocalAddress(aChild.GetExtAddress());
 
     delay = 1 + Random::NonCrypto::GetUint16InRange(0, aRoutersOnlyRequest ? kParentResponseMaxDelayRouters
                                                                            : kParentResponseMaxDelayAll);
