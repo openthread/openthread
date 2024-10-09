@@ -179,46 +179,51 @@ public:
 protected:
     struct Metadata
     {
+        bool mDirectTx : 1;            // Whether a direct transmission is required.
+        bool mLinkSecurity : 1;        // Whether link security is enabled.
+        bool mInPriorityQ : 1;         // Whether the message is queued in normal or priority queue.
+        bool mTxSuccess : 1;           // Whether the direct tx of the message was successful.
+        bool mDoNotEvict : 1;          // Whether this message may be evicted.
+        bool mMulticastLoop : 1;       // Whether this multicast message may be looped back.
+        bool mResolvingAddress : 1;    // Whether the message is pending an address query resolution.
+        bool mAllowLookbackToHost : 1; // Whether the message is allowed to be looped back to host.
+        bool mIsDstPanIdBroadcast : 1; // Whether the dest PAN ID is broadcast.
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        bool mIsRadioTypeSet : 1; // Whether the radio type is set.
+#endif
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        bool mTimeSync : 1; // Whether the message is also used for time sync purpose.
+#endif
+        uint8_t mPriority : 2; // The message priority level (higher value is higher priority).
+        uint8_t mOrigin : 2;   // The origin of the message.
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        uint8_t mRadioType : 2; // The radio link type the message was received on, or should be sent on.
+        static_assert(Mac::kNumRadioTypes <= (1 << 2), "mRadioType bitfield cannot store all radio type values");
+#endif
+        uint8_t mType : 3;    // The message type.
+        uint8_t mSubType : 4; // The message sub type.
+        uint8_t mChannel;     // The message channel (used for MLE Announce).
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        uint8_t mTimeSyncSeq; // The time sync sequence.
+#endif
+        uint16_t mLength;      // Current message length (number of bytes).
+        uint16_t mOffset;      // A byte offset within the message.
+        uint16_t mReserved;    // Number of reserved bytes (for header).
+        uint16_t mMeshDest;    // Used for unicast non-link-local messages.
+        uint16_t mPanId;       // PAN ID (used for MLE Discover Request and Response).
+        uint32_t mDatagramTag; // The datagram tag used for 6LoWPAN frags or IPv6fragmentation.
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        int64_t mNetworkTimeOffset; // The time offset to the Thread network time, in microseconds.
+#endif
+        TimeMilli    mTimestamp;   // The message timestamp.
         Message     *mNext;        // Next message in a doubly linked list.
         Message     *mPrev;        // Previous message in a doubly linked list.
         MessagePool *mMessagePool; // Message pool for this message.
         void        *mQueue;       // The queue where message is queued (if any). Queue type from `mInPriorityQ`.
-        uint32_t     mDatagramTag; // The datagram tag used for 6LoWPAN frags or IPv6fragmentation.
-        TimeMilli    mTimestamp;   // The message timestamp.
-        uint16_t     mReserved;    // Number of reserved bytes (for header).
-        uint16_t     mLength;      // Current message length (number of bytes).
-        uint16_t     mOffset;      // A byte offset within the message.
-        uint16_t     mMeshDest;    // Used for unicast non-link-local messages.
-        uint16_t     mPanId;       // PAN ID (used for MLE Discover Request and Response).
-        uint8_t      mChannel;     // The message channel (used for MLE Announce).
         RssAverager  mRssAverager; // The averager maintaining the received signal strength (RSS) average.
         LqiAverager  mLqiAverager; // The averager maintaining the Link quality indicator (LQI) average.
 #if OPENTHREAD_FTD
         ChildMask mChildMask; // ChildMask to indicate which sleepy children need to receive this.
-#endif
-
-        uint8_t mType : 3;                // The message type.
-        uint8_t mSubType : 4;             // The message sub type.
-        bool    mDirectTx : 1;            // Whether a direct transmission is required.
-        bool    mLinkSecurity : 1;        // Whether link security is enabled.
-        uint8_t mPriority : 2;            // The message priority level (higher value is higher priority).
-        bool    mInPriorityQ : 1;         // Whether the message is queued in normal or priority queue.
-        bool    mTxSuccess : 1;           // Whether the direct tx of the message was successful.
-        bool    mDoNotEvict : 1;          // Whether this message may be evicted.
-        bool    mMulticastLoop : 1;       // Whether this multicast message may be looped back.
-        bool    mResolvingAddress : 1;    // Whether the message is pending an address query resolution.
-        bool    mAllowLookbackToHost : 1; // Whether the message is allowed to be looped back to host.
-        bool    mIsDstPanIdBroadcast : 1; // Whether the dest PAN ID is broadcast.
-        uint8_t mOrigin : 2;              // The origin of the message.
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-        uint8_t mRadioType : 2;      // The radio link type the message was received on, or should be sent on.
-        bool    mIsRadioTypeSet : 1; // Whether the radio type is set.
-        static_assert(Mac::kNumRadioTypes <= (1 << 2), "mRadioType bitfield cannot store all radio type values");
-#endif
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-        bool    mTimeSync : 1;      // Whether the message is also used for time sync purpose.
-        int64_t mNetworkTimeOffset; // The time offset to the Thread network time, in microseconds.
-        uint8_t mTimeSyncSeq;       // The time sync sequence.
 #endif
     };
 
