@@ -62,10 +62,14 @@ jobs:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+    - uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3 # v5.2.0
+      with:
+        python-version: '3.12'
+        cache: pip
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y ninja-build python3-setuptools python3-wheel
+        sudo apt-get --no-install-recommends install -y ninja-build
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
         python3 -m pip install pytype adb-shell
     - name: Style check
