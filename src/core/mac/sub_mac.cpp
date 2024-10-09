@@ -37,6 +37,7 @@
 
 #include <openthread/platform/time.h>
 
+#include "common/code_utils.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -798,7 +799,7 @@ bool SubMac::ShouldHandleCsmaBackOff(void) const
 {
     bool swCsma = true;
 
-    VerifyOrExit(!RadioSupportsCsmaBackoff(), swCsma = false);
+    VerifyOrExit(mTransmitFrame.IsCsmaCaEnabled() && !RadioSupportsCsmaBackoff(), swCsma = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(Get<LinkRaw>().IsEnabled());
