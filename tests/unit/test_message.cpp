@@ -70,7 +70,7 @@ void TestMessage(void)
     message->SetLinkSecurityEnabled(Message::kWithLinkSecurity);
     SuccessOrQuit(message->SetPriority(Message::Priority::kPriorityNet));
     message->SetType(Message::Type::kType6lowpan);
-    message->SetSubType(Message::SubType::kSubTypeMleChildIdRequest);
+    message->SetSubType(Message::SubType::kSubTypeJoinerEntrust);
     message->SetLoopbackToHostAllowed(true);
     message->SetOrigin(Message::kOriginHostUntrusted);
     SuccessOrQuit(message->SetLength(kMaxSize));

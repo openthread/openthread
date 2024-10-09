@@ -305,7 +305,7 @@ void MeshForwarder::RemoveDataResponseMessages(void)
 
     for (Message &message : mSendQueue)
     {
-        if (message.GetSubType() != Message::kSubTypeMleDataResponse)
+        if (!message.IsMleCommand(Mle::kCommandDataResponse))
         {
             continue;
         }

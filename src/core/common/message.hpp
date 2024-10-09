@@ -202,6 +202,7 @@ protected:
 #endif
         uint8_t mType : 3;    // The message type.
         uint8_t mSubType : 4; // The message sub type.
+        uint8_t mMleCommand;  // The MLE command type (used when `mSubType is `Mle`).
         uint8_t mChannel;     // The message channel (used for MLE Announce).
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         uint8_t mTimeSyncSeq; // The time sync sequence.
@@ -289,18 +290,12 @@ public:
      */
     enum SubType : uint8_t
     {
-        kSubTypeNone                   = 0,  ///< None
-        kSubTypeMleAnnounce            = 1,  ///< MLE Announce
-        kSubTypeMleDiscoverRequest     = 2,  ///< MLE Discover Request
-        kSubTypeMleDiscoverResponse    = 3,  ///< MLE Discover Response
-        kSubTypeJoinerEntrust          = 4,  ///< Joiner Entrust
-        kSubTypeMplRetransmission      = 5,  ///< MPL next retransmission message
-        kSubTypeMleGeneral             = 6,  ///< General MLE
-        kSubTypeJoinerFinalizeResponse = 7,  ///< Joiner Finalize Response
-        kSubTypeMleChildUpdateRequest  = 8,  ///< MLE Child Update Request
-        kSubTypeMleDataResponse        = 9,  ///< MLE Data Response
-        kSubTypeMleChildIdRequest      = 10, ///< MLE Child ID Request
-        kSubTypeMleDataRequest         = 11, ///< MLE Data Request
+        kSubTypeNone                   = 0, ///< None
+        kSubTypeMle                    = 1, ///< MLE message
+        kSubTypeMplRetransmission      = 2, ///< MPL next retransmission message
+        kSubTypeJoinerEntrust          = 3, ///< Joiner Entrust
+        kSubTypeJoinerFinalizeResponse = 4, ///< Joiner Finalize Response
+
     };
 
     enum Priority : uint8_t
@@ -566,12 +561,43 @@ public:
     void SetSubType(SubType aSubType) { GetMetadata().mSubType = aSubType; }
 
     /**
-     * Returns whether or not the message is of MLE subtype.
+     * Indicates whether or not the message is of MLE sub type.
      *
-     * @retval TRUE   If message is of MLE subtype.
-     * @retval FALSE  If message is not of MLE subtype.
+     * @retval TRUE   The message is of MLE sub type.
+     * @retval FALSE  The message is not of MLE sub type.
      */
-    bool IsSubTypeMle(void) const;
+    bool IsSubTypeMle(void) const { return (GetSubType() == kSubTypeMle); }
+
+    /**
+     * Indicates whether or not the message is a given MLE command.
+     *
+     * It checks `IsSubTypeMle()` and then if `GetMleCommand()` is the same as `aMleCommand`.
+     *
+     * @param[in] aMleCommand  The MLE command type.
+     *
+     * @retval TRUE  The message is an MLE command of @p aMleCommand type.
+     * @retval FALSE The message is not an MLE command of @p aMleCommand type.
+     */
+    bool IsMleCommand(Mle::Command aMleCommand) const;
+
+    /**
+     * Gets the MLE command type.
+     *
+     * Caller MUST ensure that message sub type is `kSubTypeMle` before calling this method. Otherwise the returned
+     * value is not meaningful.
+     *
+     * @returns The message's MLE command type.
+     */
+    Mle::Command GetMleCommand(void) const { return static_cast<Mle::Command>(GetMetadata().mMleCommand); }
+
+    /**
+     * Set the MLE command type of message.
+     *
+     * Caller should also set the sub type to `kSubTypeMle`.
+     *
+     * @param[in] aMleCommand  The MLE command type.
+     */
+    void SetMleCommand(Mle::Command aMleCommand) { GetMetadata().mMleCommand = aMleCommand; }
 
     /**
      * Checks whether this multicast message may be looped back.
