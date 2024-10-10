@@ -729,12 +729,11 @@ TxFrame *Mac::PrepareBeaconRequest(void)
     frameInfo.mAddrs.mDestination.SetShort(kShortAddrBroadcast);
     frameInfo.mPanIds.SetDestination(kShortAddrBroadcast);
 
-    frameInfo.mType    = Frame::kTypeMacCmd;
-    frameInfo.mVersion = Frame::kVersion2003;
+    frameInfo.mType      = Frame::kTypeMacCmd;
+    frameInfo.mCommandId = Frame::kMacCmdBeaconRequest;
+    frameInfo.mVersion   = Frame::kVersion2003;
 
     frameInfo.PrepareHeadersIn(frame);
-
-    IgnoreError(frame.SetCommandId(Frame::kMacCmdBeaconRequest));
 
     LogInfo("Sending Beacon Request");
 

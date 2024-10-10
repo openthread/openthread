@@ -482,15 +482,6 @@ public:
     Error GetCommandId(uint8_t &aCommandId) const;
 
     /**
-     * Sets the Command ID.
-     *
-     * @param[in]  aCommandId  The Command ID.
-     *
-     * @retval kErrorNone  Successfully set the Command ID.
-     */
-    Error SetCommandId(uint8_t aCommandId);
-
-    /**
      * Indicates whether the frame is a MAC Data Request command (data poll).
      *
      * For 802.15.4-2015 and above frame, the frame should be already decrypted.
@@ -1065,6 +1056,7 @@ public:
         PanIds        mPanIds;               ///< Source and destination PAN Ids.
         SecurityLevel mSecurityLevel;        ///< Frame security level.
         KeyIdMode     mKeyIdMode;            ///< Frame security key ID mode.
+        CommandId     mCommandId;            ///< Command ID (applicable when `mType == kTypeMacCmd`).
         bool          mSuppressSequence : 1; ///< Whether to suppress seq number.
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT

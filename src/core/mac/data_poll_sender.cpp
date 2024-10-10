@@ -567,6 +567,7 @@ Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
     frameInfo.mPanIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
 
     frameInfo.mType          = Mac::Frame::kTypeMacCmd;
+    frameInfo.mCommandId     = Mac::Frame::kMacCmdDataRequest;
     frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
     frameInfo.mKeyIdMode     = Mac::Frame::kKeyIdMode1;
 
@@ -579,8 +580,6 @@ Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
         aTxFrames.SetMaxFrameRetries(0);
     }
 #endif
-
-    IgnoreError(frame->SetCommandId(Mac::Frame::kMacCmdDataRequest));
 
 exit:
     return frame;
