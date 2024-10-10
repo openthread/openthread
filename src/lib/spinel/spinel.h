@@ -4763,6 +4763,16 @@ enum
      */
     SPINEL_PROP_INFRA_IF_RECV_ICMP6 = SPINEL_PROP_INFRA_IF__BEGIN + 2,
 
+    /// ICMP6 message sent by NCP and needs to be sent on the infrastructure interface.
+    /** Format: `L6d`
+     * Type: Unsolicited notifications only
+     *
+     * `L`: The infrastructure interface index.
+     * `6`: The IP6 destination address of the message to send.
+     * `d`: The data of the message to send.
+     */
+    SPINEL_PROP_INFRA_IF_SEND_ICMP6 = SPINEL_PROP_INFRA_IF__BEGIN + 3,
+
     SPINEL_PROP_INFRA_IF__END = 0x920,
 
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,
