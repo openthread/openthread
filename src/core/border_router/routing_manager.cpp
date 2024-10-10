@@ -4068,7 +4068,7 @@ void RoutingManager::PdPrefixManager::Process(const RouterAdvert::Icmp6Packet *a
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
     }
 
-    if (HasPrefix() && currentPrefixUpdated)
+    if (HasPrefix())
     {
         mTimer.FireAt(mPrefix.GetDeprecationTime());
     }
