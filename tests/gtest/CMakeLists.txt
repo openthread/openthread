@@ -65,3 +65,24 @@ target_link_libraries(ot-ftd-gtest
     GTest::gmock_main
 )
 gtest_discover_tests(ot-ftd-gtest)
+
+add_library(ot-fake-rcp
+    fake_coprocessor_platform.cpp
+)
+target_link_libraries(ot-fake-rcp
+    openthread-hdlc
+    openthread-rcp
+    openthread-radio-spinel
+    openthread-radio
+    ot-fake-platform
+)
+
+add_executable(ot-radio-spinel-rcp-gtest
+    radio_spinel_rcp_test.cpp
+)
+target_link_libraries(ot-radio-spinel-rcp-gtest
+    ot-fake-rcp
+    GTest::gmock_main
+)
+
+gtest_discover_tests(ot-radio-spinel-rcp-gtest)
