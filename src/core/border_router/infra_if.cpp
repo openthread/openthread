@@ -137,6 +137,14 @@ exit:
     }
 }
 
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+Error InfraIf::GetDiscoveredCcmRegistrarAddress(Ip6::Address &aRegistrarAddress)
+{
+    // FIXME this is a test implementation. Real implementation would require DNS lookup, or CoAP discovery, etc.
+    return aRegistrarAddress.FromString("910b::1234");
+}
+#endif
+
 Error InfraIf::HandleStateChanged(uint32_t aIfIndex, bool aIsRunning)
 {
     Error error = kErrorNone;

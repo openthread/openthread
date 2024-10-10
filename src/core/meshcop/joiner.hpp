@@ -49,6 +49,7 @@
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_types.hpp"
+#include "meshcop/ccm/cbrski_client.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "meshcop/secure_transport.hpp"
@@ -78,6 +79,18 @@ public:
     };
 
     /**
+     * Type defines Join operation types.
+     */
+    enum Operation : uint8_t
+    {
+        kOperationCcmAeCbrski = OT_JOIN_OPERATION_AE_CBRSKI,
+        kOperationCcmNkp      = OT_JOIN_OPERATION_NKP,
+        kOperationCcmEstCoaps = OT_JOIN_OPERATION_EST_COAPS,
+        kOperationCcmBrCbrski = OT_JOIN_OPERATION_BR_CBRSKI,
+        kOperationMeshcop     = OT_JOIN_OPERATION_MESHCOP,
+    };
+
+    /**
      * Initializes the Joiner object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
@@ -85,7 +98,7 @@ public:
     explicit Joiner(Instance &aInstance);
 
     /**
-     * Starts the Joiner service.
+     * Starts the Joiner service for MeshCoP commissioning.
      *
      * @param[in]  aPskd             A pointer to the PSKd.
      * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be `nullptr`).
@@ -108,6 +121,30 @@ public:
                 const char      *aVendorData,
                 otJoinerCallback aCallback,
                 void            *aContext);
+
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+    /**
+     * Starts the Joiner service in Commercial Commissioning Mode (CCM) for the selected
+     * commissioning operation.
+     *
+     * Only selected CCM operations are supported; and any operations may have prerequisite operation(s).
+     * See `otJoinerStartCcm` or the Operation enum for details.
+     *
+     * Requires `OPENTHREAD_CONFIG_CCM_ENABLE` to be enabled.
+     *
+     * @param[in]  aOperation      CCM commissioning operation to perform/attempt.
+     * @param[in]  aCallback       A pointer to a function that is called when the selected join operation completes.
+     * @param[in]  aContext        A pointer to application-specific context, used in callback.
+     *
+     * @retval kErrorNone          Successfully started the CCM Joiner service and requested operation.
+     * @retval kErrorBusy          A previous join attempt/operation is still on-going.
+     * @retval kErrorInvalidState  The IPv6 stack is not enabled or Thread stack is not fully enabled; or the
+     *                             requested operation is missing a prerequisite operation.
+     * @retval kErrorInvalidArgs   Selected aOperation is not supported by this device.
+     *
+     */
+    Error StartCcm(Operation aOperation, otJoinerCallback aCallback, void *aContext);
+#endif
 
     /**
      * Stops the Joiner service.
@@ -171,11 +208,29 @@ public:
      */
     static const char *StateToString(State aState);
 
+    /**
+     * Converts a given Joiner Operation to its human-readable string representation.
+     *
+     * @param[in] aOperation  The Joiner operation to convert.
+     *
+     * @returns A human-readable string representation of @p aOperation.
+     */
+    static const char *OperationToString(Operation aOperation);
+
 private:
-    static constexpr uint16_t kJoinerUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
+    static constexpr uint16_t kJoinerUdpPortBase            = (OPENTHREAD_CONFIG_JOINER_UDP_PORT - kOperationMeshcop);
+    static constexpr uint16_t kMeshcopJoinerUdpSourcePort   = kJoinerUdpPortBase + kOperationMeshcop;
+    static constexpr uint16_t kCcmCbrskiJoinerUdpSourcePort = kJoinerUdpPortBase + kOperationCcmAeCbrski;
+    static constexpr uint16_t kCcmNkpJoinerUdpSourcePort    = kJoinerUdpPortBase + kOperationCcmNkp;
+    // configured Joiner port denotes the MeshCoP protocol port. Other ports derived from this single config.
+    // Protocol info is multiplexed into the 4 lower bits of the Joiner (source) port number.
+    static_assert(kMeshcopJoinerUdpSourcePort % 16 == kOperationMeshcop,
+                  "OPENTHREAD_CONFIG_JOINER_UDP_PORT modulo 16 must be 0 for MeshCoP-Ext");
 
     static constexpr uint32_t kConfigExtAddressDelay = 100;  // in msec.
     static constexpr uint32_t kResponseTimeout       = 4000; ///< Max wait time to receive response (in msec).
+    static constexpr uint32_t kCcmCbrskiVoucherResponseTimeout =
+        12000; ///< Max wait time for cBRSKI to receive voucher response (in msec), TODO adapt value.
 
     struct JoinerRouter
     {
@@ -198,6 +253,11 @@ private:
                                              Error                aResult);
     void HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+    static void HandleCbrskiClientDone(Error aErr, void *aContext);
+    void        HandleCbrskiClientDone(Error aErr);
+#endif
+
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void HandleTimer(void);
@@ -207,7 +267,7 @@ private:
     void    SaveDiscoveredJoinerRouter(const Mle::DiscoverScanner::ScanResult &aResult);
     void    TryNextJoinerRouter(Error aPrevError);
     Error   Connect(JoinerRouter &aRouter);
-    void    Finish(Error aError);
+    void    Finish(Error aError, bool aInvokeCallback);
     uint8_t CalculatePriority(int8_t aRssi, bool aSteeringDataAllowsAny);
 
     Error PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
@@ -215,6 +275,9 @@ private:
                                        const char *aVendorModel,
                                        const char *aVendorSwVersion,
                                        const char *aVendorData);
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+    Error PrepareCcmNkpJoinerFinalizeMessage(void);
+#endif
     void  FreeJoinerFinalizeMessage(void);
     void  SendJoinerFinalize(void);
     void  SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo);
@@ -225,10 +288,16 @@ private:
 
     using JoinerTimer = TimerMilliIn<Joiner, &Joiner::HandleTimer>;
 
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+    CbrskiClient *mCbrskiClient;
+#endif
+
+    Operation       mJoinerOperation;
     Mac::ExtAddress mId;
     JoinerDiscerner mDiscerner;
 
-    State mState;
+    State    mState;
+    uint16_t mJoinerSourcePort;
 
     Callback<otJoinerCallback> mCallback;
 

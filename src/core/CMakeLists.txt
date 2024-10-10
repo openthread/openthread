@@ -148,7 +148,13 @@ set(COMMON_SOURCES
     mac/sub_mac_csl_receiver.cpp
     meshcop/announce_begin_client.cpp
     meshcop/border_agent.cpp
+    meshcop/ccm/cbor.cpp
+    meshcop/ccm/cbrski_client.cpp
+    meshcop/ccm/cose.cpp
+    meshcop/ccm/credentials.cpp
+    meshcop/ccm/joiner_ccm.cpp
     meshcop/commissioner.cpp
+    meshcop/commissioner_ext.cpp
     meshcop/dataset.cpp
     meshcop/dataset_manager.cpp
     meshcop/dataset_manager_ftd.cpp

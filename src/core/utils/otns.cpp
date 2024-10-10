@@ -161,8 +161,9 @@ void Otns::EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &a
 
     SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 
-    EmitStatus("coap=send,%d,%d,%d,%s,%s,%d", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(), uriPath,
-               aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
+    EmitStatus("coap=send,%d,%d,%d,%s,%s,%d,%s,%d", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(), uriPath,
+               aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort(),
+               aMessageInfo.GetSockAddr().ToString().AsCString(), aMessageInfo.GetSockPort());
 
 exit:
     LogWarnOnError(error, "EmitCoapSend");

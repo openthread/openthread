@@ -169,6 +169,74 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+
+/**
+ * @cli joiner startae
+ * @code
+ * joiner startae
+ * Done
+ * @endcode
+ * @cparam joiner startae
+ * @par api_copy
+ * #otJoinerStartAe
+ */
+template <> otError Joiner::Process<Cmd("startae")>(Arg aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgs);
+    otError error;
+
+    error =
+        otJoinerStartCcm(GetInstancePtr(), otJoinOperation::OT_JOIN_OPERATION_AE_CBRSKI, &Joiner::HandleCallback, this);
+
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+/**
+ * @cli joiner startccmbr
+ * @code
+ * joiner startccmbr
+ * Done
+ * @endcode
+ * @cparam joiner startccmbr
+ * @par api_copy
+ * #otJoinerStartCcmBr
+ */
+template <> otError Joiner::Process<Cmd("startccmbr")>(Arg aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgs);
+    otError error;
+
+    error =
+        otJoinerStartCcm(GetInstancePtr(), otJoinOperation::OT_JOIN_OPERATION_BR_CBRSKI, &Joiner::HandleCallback, this);
+
+    return error;
+}
+#endif
+
+/**
+ * @cli joiner startnkp
+ * @code
+ * joiner startnkp
+ * Done
+ * @endcode
+ * @cparam joiner startnkp
+ * @par api_copy
+ * #otJoinerStartNkp
+ */
+template <> otError Joiner::Process<Cmd("startnkp")>(Arg aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgs);
+    otError error;
+
+    error = otJoinerStartCcm(GetInstancePtr(), otJoinOperation::OT_JOIN_OPERATION_NKP, &Joiner::HandleCallback, this);
+
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_CCM_ENABLE
+
 /**
  * @cli joiner stop
  * @code
@@ -222,7 +290,18 @@ otError Joiner::Process(Arg aArgs[])
     }
 
     static constexpr Command kCommands[] = {
-        CmdEntry("discerner"), CmdEntry("id"), CmdEntry("start"), CmdEntry("state"), CmdEntry("stop"),
+        CmdEntry("discerner"),
+        CmdEntry("id"),
+        CmdEntry("start"),
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+        CmdEntry("startae"),
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        CmdEntry("startccmbr"),
+#endif
+        CmdEntry("startnkp"),
+#endif
+        CmdEntry("state"),
+        CmdEntry("stop"),
     };
 
 #undef CmdEntry

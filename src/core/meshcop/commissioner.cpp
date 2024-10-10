@@ -56,6 +56,7 @@ Commissioner::Commissioner(Instance &aInstance)
     , mEnergyScan(aInstance)
     , mPanIdQuery(aInstance)
     , mState(kStateDisabled)
+    , mExtCommSocket()
 {
     ClearAllBytes(mJoiners);
 
@@ -81,6 +82,12 @@ void Commissioner::SetState(State aState)
 
 exit:
     return;
+}
+
+void Commissioner::UpdateMeshcopExtMode()
+{
+    const SecurityPolicy &secPolicy = Get<KeyManager>().GetSecurityPolicy();
+    mMeshcopExtMode                 = secPolicy.mCommercialCommissioningEnabled;
 }
 
 void Commissioner::SignalJoinerEvent(JoinerEvent aEvent, const Joiner *aJoiner) const
@@ -255,6 +262,10 @@ void Commissioner::RemoveJoinerEntry(Commissioner::Joiner &aJoiner)
         mActiveJoiner = nullptr;
     }
 
+    if (CountJoiners() == 0)
+    {
+        IgnoreError(Get<Ip6::Udp>().Close(mExtCommSocket));
+    }
     SendCommissionerSet();
 
     LogJoinerEntry("Removed", joinerCopy);
@@ -278,6 +289,7 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
     mStateCallback.Set(aStateCallback, aCallbackContext);
     mJoinerCallback.Set(aJoinerCallback, aCallbackContext);
     mTransmitAttempts = 0;
+    UpdateMeshcopExtMode();
 
     SuccessOrExit(error = SendPetition());
     SetState(kStatePetition);
@@ -316,6 +328,7 @@ Error Commissioner::Stop(ResignMode aResignMode)
     }
 
     mTimer.Stop();
+    mMeshcopExtMode = false;
 
     SetState(kStateDisabled);
 
@@ -406,6 +419,8 @@ void Commissioner::ClearJoiners(void)
         joiner.mType = Joiner::kTypeUnused;
     }
 
+    IgnoreError(Get<Ip6::Udp>().Close(mExtCommSocket));
+
     SendCommissionerSet();
 }
 
@@ -437,6 +452,16 @@ Error Commissioner::AddJoiner(const Mac::ExtAddress *aEui64,
     VerifyOrExit(joiner != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = joiner->mPskd.SetFrom(aPskd));
+
+    // when first Joiner added and Meshcop-Ext mode set, enable a socket for talking with External Commissioner
+    if (mMeshcopExtMode && CountJoiners() == 0)
+    {
+        // FIXME Allow multiple joiners with same socket, or multiple sockets.
+        SuccessOrExit(error = Get<Ip6::Udp>().Open(mExtCommSocket, HandleExtCommissionerCallback, this));
+        // Bind socket using unspecified addr and port: backbone / AIL interface & stack will determine those.
+        SuccessOrExit(error =
+                          Get<Ip6::Udp>().Bind(mExtCommSocket, Ip6::SockAddr(), Ip6::NetifIdentifier::kNetifBackbone));
+    }
 
     if (aDiscerner != nullptr)
     {
@@ -558,6 +583,19 @@ void Commissioner::RemoveJoiner(Joiner &aJoiner, uint32_t aDelay)
     {
         RemoveJoinerEntry(aJoiner);
     }
+}
+
+int Commissioner::CountJoiners()
+{
+    int count = 0;
+    for (Joiner &joiner : mJoiners)
+    {
+        if (joiner.mType != Joiner::kTypeUnused)
+        {
+            count++;
+        }
+    }
+    return count;
 }
 
 Error Commissioner::SetProvisioningUrl(const char *aProvisioningUrl)
@@ -883,12 +921,13 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    Error                    error;
-    uint16_t                 joinerPort;
-    Ip6::InterfaceIdentifier joinerIid;
-    uint16_t                 joinerRloc;
-    Ip6::MessageInfo         joinerMessageInfo;
-    OffsetRange              offsetRange;
+    Error                      error;
+    uint16_t                   joinerPort;
+    Ip6::InterfaceIdentifier   joinerIid;
+    uint16_t                   joinerRloc;
+    Ip6::MessageInfo           joinerMessageInfo;
+    OffsetRange                offsetRange;
+    MeshCoP::Joiner::Operation joinerOperation;
 
     VerifyOrExit(mState == kStateActive, error = kErrorInvalidState);
 
@@ -899,6 +938,34 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
     SuccessOrExit(error = Tlv::Find<JoinerRouterLocatorTlv>(aMessage, joinerRloc));
 
     SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kJoinerDtlsEncapsulation, offsetRange));
+
+    // determine type of join operation, based on type ID embedded in Joiner's UDP source port.
+    joinerOperation = static_cast<MeshCoP::Joiner::Operation>(joinerPort & 0x000f);
+    if (mMeshcopExtMode)
+    {
+        // FIXME: first check for protocol being active, before handling protocol/operation.
+        // active protocols are encoded in a bitmask in steering data (future PR).
+        switch (joinerOperation)
+        {
+        // some protocols are always handled locally by this Commissioner.
+        case MeshCoP::Joiner::Operation::kOperationCcmNkp:
+            OT_FALL_THROUGH;
+        case MeshCoP::Joiner::Operation::kOperationMeshcop:
+            break;
+        default:
+            LogInfo("Received %s (%s, 0x%04x) - send to ExtComm", UriToString<kUriRelayRx>(),
+                    joinerIid.ToString().AsCString(), joinerRloc);
+            mJoinerIid  = joinerIid;
+            mJoinerPort = joinerPort;
+            mJoinerRloc = joinerRloc;
+            aMessage.SetOffset(offsetRange.GetOffset());
+            SuccessOrExit(error = aMessage.SetLength(offsetRange.GetEndOffset()));
+
+            // FIMXE add identified joiner from list of N possible joiners.
+            SendToExtCommissioner(joinerOperation, aMessage);
+            ExitNow(); // no handling by local Commissioner.
+        }
+    }
 
     if (!Get<Tmf::SecureAgent>().IsConnectionActive())
     {
@@ -911,7 +978,17 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
         joiner = FindBestMatchingJoinerEntry(receivedId);
         VerifyOrExit(joiner != nullptr);
 
-        Get<Tmf::SecureAgent>().SetPsk(joiner->mPskd);
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+        // for NKP Joiners to CCM Commissioner, configure LDevID credentials on DTLS server.
+        if (mMeshcopExtMode && joinerOperation == MeshCoP::Joiner::kOperationCcmNkp)
+        {
+            SuccessOrExit(error = Get<Credentials>().ConfigureLdevid(&Get<Tmf::SecureAgent>().GetDtls()));
+        }
+        else
+#endif
+        {
+            Get<Tmf::SecureAgent>().SetPsk(joiner->mPskd);
+        }
         mActiveJoiner = joiner;
 
         mJoinerSessionTimer.Start(kJoinerSessionTimeoutMillis);
@@ -965,6 +1042,7 @@ void Commissioner::HandleTmf<kUriDatasetChanged>(Coap::Message &aMessage, const 
     VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
     LogInfo("Received %s", UriToString<kUriDatasetChanged>());
+    UpdateMeshcopExtMode();
 
     SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
 
@@ -1069,23 +1147,23 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    Error            error = kErrorNone;
+    Error            error;
     ExtendedTlv      tlv;
     Coap::Message   *message;
     Tmf::MessageInfo messageInfo(GetInstance());
     Kek              kek;
 
-    Get<KeyManager>().ExtractKek(kek);
-
     message = Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(kUriRelayTx);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
+    // FIXME - extend below for multiple concurrent Joiners, up to N.
     SuccessOrExit(error = Tlv::Append<JoinerUdpPortTlv>(*message, mJoinerPort));
     SuccessOrExit(error = Tlv::Append<JoinerIidTlv>(*message, mJoinerIid));
     SuccessOrExit(error = Tlv::Append<JoinerRouterLocatorTlv>(*message, mJoinerRloc));
 
     if (aMessage.GetSubType() == Message::kSubTypeJoinerFinalizeResponse)
     {
+        Get<KeyManager>().ExtractKek(kek);
         SuccessOrExit(error = Tlv::Append<JoinerRouterKekTlv>(*message, kek));
     }
 
@@ -1101,6 +1179,7 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
     aMessage.Free();
 
 exit:
+    LogWarnOnError(error, "Comm::SendRelayTransmit()");
     FreeMessageOnError(message, error);
     return error;
 }

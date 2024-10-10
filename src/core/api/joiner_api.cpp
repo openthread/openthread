@@ -53,6 +53,14 @@ otError otJoinerStart(otInstance      *aInstance,
                                                               aVendorSwVersion, aVendorData, aCallback, aContext);
 }
 
+#if OPENTHREAD_CONFIG_CCM_ENABLE
+otError otJoinerStartCcm(otInstance *aInstance, otJoinOperation aOperation, otJoinerCallback aCallback, void *aContext)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::Joiner>().StartCcm(static_cast<MeshCoP::Joiner::Operation>(aOperation),
+                                                                 aCallback, aContext);
+}
+#endif
+
 void otJoinerStop(otInstance *aInstance) { AsCoreType(aInstance).Get<MeshCoP::Joiner>().Stop(); }
 
 otJoinerState otJoinerGetState(otInstance *aInstance)

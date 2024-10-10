@@ -79,6 +79,46 @@ typedef struct otJoinerDiscerner
 } otJoinerDiscerner;
 
 /**
+ * Type defines Join operation identifiers for MeshCoP-Ext. It includes both CCM and non-CCM join operations.
+ * Identifiers 0-15 SHOULD be used only for operations that go through a Joiner Router. Identifiers >= 16 are
+ * for operations that don't use a Joiner Router.
+ */
+typedef enum otJoinOperation
+{
+    /**
+     * Thread Autonomous Enrollment (AE) using the IETF cBRSKI onboarding protocol.
+     * This includes receiving the cBRSKI Voucher and doing EST-coaps simple enrollment to get
+     * an LDevID (=operational cert) for the local domain.
+     */
+    OT_JOIN_OPERATION_AE_CBRSKI = 1,
+
+    /**
+     * Thread Network Key Provisioning (NKP) to get Thread network key, authenticated by LDevID.
+     * Prerequisite is storing an LDevID (=operational cert) for the local domain.
+     */
+    OT_JOIN_OPERATION_NKP = 2,
+
+    /**
+     * Any EST-coaps operation via Joiner Router authenticated with LDevID (e.g. reenrollment).
+     * Prerequisite is having a valid/previous LDevID already stored in the Credentials store.
+     */
+    OT_JOIN_OPERATION_EST_COAPS = 3,
+
+    /**
+     * Thread MeshCoP commissioning.
+     */
+    OT_JOIN_OPERATION_MESHCOP = 8,
+
+    /**
+     * Border-Router-specific cBRSKI operation. This is equal to AE_CBRSKI except that the
+     * local Thread interface is not used. Instead, the BR will use its infrastructure
+     * network interface to contact the cBRSKI Registrar directly, without Thread relaying.
+     */
+    OT_JOIN_OPERATION_BR_CBRSKI = 16,
+
+} otJoinOperation;
+
+/**
  * Pointer is called to notify the completion of a join operation.
  *
  * @param[in]  aError    OT_ERROR_NONE if the join process succeeded.
@@ -90,7 +130,7 @@ typedef struct otJoinerDiscerner
 typedef void (*otJoinerCallback)(otError aError, void *aContext);
 
 /**
- * Enables the Thread Joiner role.
+ * Enables the Thread Joiner role for MeshCoP commissioning.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aPskd             A pointer to the PSKd.
@@ -116,6 +156,38 @@ otError otJoinerStart(otInstance      *aInstance,
                       const char      *aVendorData,
                       otJoinerCallback aCallback,
                       void            *aContext);
+
+/**
+ * Enables the Thread CCM Joiner role and starts the selected join operation. Following operations are
+ * supported:
+ *
+ * `OT_JOIN_OPERATION_AE_CBRSKI` : Thread Autonomous Enrollment (AE) using the IETF cBRSKI protocol.
+ * The joiner will first attempt to retrieve a signed Voucher from its manufacturer, to check if joining
+ * the current domain is approved. If ok, it will perform EST-CoAPS [RFC 9148] simple-enrollment to get
+ * an LDevID (=operational cert). If this operation succeeds, the joiner is ready for NKP.
+ *
+ * `OT_JOIN_OPERATION_NKP` : Network Key Provisioning (NKP). The Joiner will attempt to retrieve Network
+ * Credentials for a discovered ('best') Thread network that is part of its Thread Domain. The domain is
+ * encoded in its LDevID X.509v3 certificate. If NKP succeeds, then the Joiner is ready to start Thread
+ * and attach to this network. NKP requires an LDevID certificate stored in the device, obtained in some
+ * way (e.g. via cBRSKI, or TCAT, or EST-CoAPS).
+ *
+ * Other methods are not (yet) supported here and will return OT_ERROR_INVALID_ARGS.
+ *
+ * @note Requires the feature `OPENTHREAD_CONFIG_CCM_ENABLE` to be enabled.
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ * @param[in]  aOperation      The join operation to perform (see options above).
+ * @param[in]  aCallback       A pointer to a function that is called when the join operation completes.
+ * @param[in]  aContext        A pointer to application-specific context used in callback.
+ *
+ * @retval OT_ERROR_NONE           Successfully started the CCM Joiner role and requested operation.
+ * @retval OT_ERROR_BUSY           A previous join attempt/operation is still on-going.
+ * @retval OT_ERROR_INVALID_ARGS   The `aOperation` is not supported.
+ * @retval OT_ERROR_INVALID_STATE  The present state is not suitable for the operation, e.g. if already connected to a
+ *                                 Thread Network or missing a required prerequisite (e.g. LDevID).
+ */
+otError otJoinerStartCcm(otInstance *aInstance, otJoinOperation aOperation, otJoinerCallback aCallback, void *aContext);
 
 /**
  * Disables the Thread Joiner role.
