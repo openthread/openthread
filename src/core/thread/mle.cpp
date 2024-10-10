@@ -50,6 +50,7 @@ Mle::Mle(Instance &aInstance)
     , mRequestRouteTlv(false)
     , mHasRestored(false)
     , mReceivedResponseFromParent(false)
+    , mDetachingGracefully(false)
     , mInitiallyAttachedAsSleepy(false)
 #if OPENTHREAD_FTD
     , mWasLeader(false)
@@ -89,7 +90,6 @@ Mle::Mle(Instance &aInstance)
 #endif
     , mAttachTimer(aInstance)
     , mMessageTransmissionTimer(aInstance)
-    , mDetachGracefullyTimer(aInstance)
 {
     mParent.Init(aInstance);
     mParentCandidate.Init(aInstance);
@@ -231,8 +231,11 @@ void Mle::Stop(StopMode aMode)
     SetRole(kRoleDisabled);
 
 exit:
-    mDetachGracefullyTimer.Stop();
-    mDetachGracefullyCallback.InvokeAndClearIfSet();
+    if (mDetachingGracefully)
+    {
+        mDetachingGracefully = false;
+        mDetachGracefullyCallback.InvokeAndClearIfSet();
+    }
 }
 
 void Mle::ResetCounters(void)
@@ -1383,6 +1386,12 @@ void Mle::HandleAttachTimer(void)
     uint32_t          delay          = 0;
     bool              shouldAnnounce = true;
     ParentRequestType type;
+
+    if (mDetachingGracefully)
+    {
+        Stop();
+        ExitNow();
+    }
 
     // First, check if we are waiting to receive parent responses and
     // found an acceptable parent candidate.
@@ -3492,7 +3501,7 @@ void Mle::HandleChildUpdateResponseOnChild(RxInfo &aRxInfo)
         switch (Tlv::Find<TimeoutTlv>(aRxInfo.mMessage, timeout))
         {
         case kErrorNone:
-            if (timeout == 0 && IsDetachingGracefully())
+            if (timeout == 0 && mDetachingGracefully)
             {
                 Stop();
             }
@@ -4232,14 +4241,12 @@ uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
 }
 #endif
 
-Error Mle::DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext)
+Error Mle::DetachGracefully(DetachCallback aCallback, void *aContext)
 {
     Error    error   = kErrorNone;
     uint32_t timeout = kDetachGracefullyTimeout;
 
-    VerifyOrExit(!IsDetachingGracefully(), error = kErrorBusy);
-
-    OT_ASSERT(!mDetachGracefullyCallback.IsSet());
+    VerifyOrExit(!mDetachingGracefully, error = kErrorBusy);
 
     mDetachGracefullyCallback.Set(aCallback, aContext);
 
@@ -4272,13 +4279,12 @@ Error Mle::DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext
         break;
     }
 
-    mDetachGracefullyTimer.Start(timeout);
+    mDetachingGracefully = true;
+    mAttachTimer.Start(timeout);
 
 exit:
     return error;
 }
-
-void Mle::HandleDetachGracefullyTimer(void) { Stop(); }
 
 //---------------------------------------------------------------------------------------------------------------------
 // TlvList
