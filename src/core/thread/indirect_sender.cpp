@@ -97,7 +97,7 @@ void IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
 
     if ((aMessage.GetType() != Message::kTypeSupervision) && (aChild.GetIndirectMessageCount() > 1))
     {
-        Message *supervisionMessage = FindIndirectMessage(aChild, /* aSupervisionTypeOnly */ true);
+        Message *supervisionMessage = FindQueuedMessageForSleepyChild(aChild, AcceptSupervisionMessage);
 
         if (supervisionMessage != nullptr)
         {
@@ -151,6 +151,23 @@ exit:
     return;
 }
 
+const Message *IndirectSender::FindQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker) const
+{
+    const Message *match      = nullptr;
+    uint16_t       childIndex = Get<ChildTable>().GetChildIndex(aChild);
+
+    for (const Message &message : Get<MeshForwarder>().mSendQueue)
+    {
+        if (message.GetChildMask(childIndex) && aChecker(message))
+        {
+            match = &message;
+            break;
+        }
+    }
+
+    return match;
+}
+
 void IndirectSender::SetChildUseShortAddress(Child &aChild, bool aUseShortAddress)
 {
     VerifyOrExit(aChild.IsIndirectSourceMatchShort() != aUseShortAddress);
@@ -201,24 +218,6 @@ void IndirectSender::HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMo
     // case.
 }
 
-Message *IndirectSender::FindIndirectMessage(Child &aChild, bool aSupervisionTypeOnly)
-{
-    Message *msg        = nullptr;
-    uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
-
-    for (Message &message : Get<MeshForwarder>().mSendQueue)
-    {
-        if (message.GetChildMask(childIndex) &&
-            (!aSupervisionTypeOnly || (message.GetType() == Message::kTypeSupervision)))
-        {
-            msg = &message;
-            break;
-        }
-    }
-
-    return msg;
-}
-
 void IndirectSender::RequestMessageUpdate(Child &aChild)
 {
     Message *curMessage = aChild.GetIndirectMessage();
@@ -253,7 +252,7 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
 
     VerifyOrExit(!aChild.IsWaitingForMessageUpdate());
 
-    newMessage = FindIndirectMessage(aChild);
+    newMessage = FindQueuedMessageForSleepyChild(aChild, AcceptAnyMessage);
 
     VerifyOrExit(curMessage != newMessage);
 
@@ -296,7 +295,7 @@ exit:
 
 void IndirectSender::UpdateIndirectMessage(Child &aChild)
 {
-    Message *message = FindIndirectMessage(aChild);
+    Message *message = FindQueuedMessageForSleepyChild(aChild, AcceptAnyMessage);
 
     aChild.SetWaitingForMessageUpdate(false);
     aChild.SetIndirectMessage(message);
@@ -553,6 +552,18 @@ void IndirectSender::ClearMessagesForRemovedChildren(void)
 
         ClearAllMessagesForSleepyChild(child);
     }
+}
+
+bool IndirectSender::AcceptAnyMessage(const Message &aMessage)
+{
+    OT_UNUSED_VARIABLE(aMessage);
+
+    return true;
+}
+
+bool IndirectSender::AcceptSupervisionMessage(const Message &aMessage)
+{
+    return aMessage.GetType() == Message::kTypeSupervision;
 }
 
 } // namespace ot

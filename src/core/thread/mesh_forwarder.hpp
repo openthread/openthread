@@ -222,16 +222,7 @@ public:
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
 #if OPENTHREAD_FTD
-
-    /**
-     * Represents a predicate function for checking if a given `Message` meets specific criteria.
-     *
-     * @param[in] aMessage The message to evaluate.
-     *
-     * @return TRUE   If the @p aMessage satisfies the predicate condition.
-     * @return FALSE  If the @p aMessage does not satisfy the predicate condition.
-     */
-    typedef bool (&MessageChecker)(const Message &aMessage);
+    typedef IndirectSender::MessageChecker MessageChecker; ///< General predicate function checking a message.
 
     /**
      * Removes and frees messages queued for a child, based on a given predicate.
@@ -242,8 +233,7 @@ public:
      * @param[in] aMessageChecker   The predicate function to filter messages.
      */
     void RemoveMessagesForChild(Child &aChild, MessageChecker aMessageChecker);
-
-#endif // OPENTHREAD_FTD
+#endif
 
     /**
      * Frees unicast/multicast MLE Data Responses from Send Message Queue if any.
