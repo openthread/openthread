@@ -49,7 +49,7 @@ RegisterLogModule("Ip6");
 
 Ip6::Ip6(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mIsReceiveIp6FilterEnabled(false)
+    , mReceiveFilterEnabled(false)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mTmfOriginFilterEnabled(true)
 #endif
@@ -750,7 +750,7 @@ void Ip6::UpdateReassemblyList(void)
 
     for (Message &message : mReassemblyList)
     {
-        if (now - message.GetTimestamp() >= TimeMilli::SecToMsec(kIp6ReassemblyTimeout))
+        if (now - message.GetTimestamp() >= TimeMilli::SecToMsec(kReassemblyTimeout))
         {
             LogNote("Reassembly timeout.");
             SendIcmpError(message, Icmp::Header::kTypeTimeExceeded, Icmp::Header::kCodeFragmReasTimeEx);
@@ -935,7 +935,7 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
 
     VerifyOrExit(aMessagePtr->IsLoopbackToHostAllowed());
 
-    VerifyOrExit(mReceiveIp6DatagramCallback.IsSet(), error = kErrorNoRoute);
+    VerifyOrExit(mReceiveCallback.IsSet(), error = kErrorNoRoute);
 
     // Do not pass IPv6 packets that exceed kMinimalMtu.
     VerifyOrExit(aMessagePtr->GetLength() <= kMinimalMtu, error = kErrorDrop);
@@ -954,7 +954,7 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
         VerifyOrExit(aReceive, error = kErrorDrop);
     }
 
-    if (mIsReceiveIp6FilterEnabled && aReceive)
+    if (mReceiveFilterEnabled && aReceive)
     {
         switch (aIpProto)
         {
@@ -1007,9 +1007,9 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
         ExitNow(error = kErrorDrop);
 
     case Nat64::Translator::kForward:
-        VerifyOrExit(mReceiveIp4DatagramCallback.IsSet(), error = kErrorNoRoute);
+        VerifyOrExit(mIp4ReceiveCallback.IsSet(), error = kErrorNoRoute);
         // Pass message to callback transferring its ownership.
-        mReceiveIp4DatagramCallback.Invoke(messagePtr.Release());
+        mIp4ReceiveCallback.Invoke(messagePtr.Release());
         ExitNow();
     }
 #endif
@@ -1032,7 +1032,7 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
 #endif
 
     // Pass message to callback transferring its ownership.
-    mReceiveIp6DatagramCallback.Invoke(messagePtr.Release());
+    mReceiveCallback.Invoke(messagePtr.Release());
 
 exit:
     return error;
@@ -1455,12 +1455,12 @@ exit:
 
     if (counter)
     {
-        counter->mPackets += 1;
+        counter->mPackets++;
         counter->mBytes += aMessageLength;
     }
     if (internetCounter)
     {
-        internetCounter->mPackets += 1;
+        internetCounter->mPackets++;
         internetCounter->mBytes += aMessageLength;
     }
 }

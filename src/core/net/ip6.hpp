@@ -108,6 +108,8 @@ class Ip6 : public InstanceLocator, private NonCopyable
     friend class Mpl;
 
 public:
+    typedef otIp6ReceiveCallback ReceiveCallback; ///< IPv6 receive callback function pointer.
+
     /**
      * Initializes the object.
      *
@@ -206,60 +208,46 @@ public:
     Error HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled = false);
 
     /**
-     * Registers a callback to provide received raw IPv6 datagrams.
+     * Sets the callback to provide received raw IPv6 datagrams.
      *
-     * By default, this callback does not pass Thread control traffic.  See SetReceiveIp6FilterEnabled() to change
+     * By default, this callback does not pass Thread control traffic. See `SetReceiveIp6FilterEnabled()` to change
      * the Thread control traffic filter setting.
      *
-     * @param[in]  aCallback         A pointer to a function that is called when an IPv6 datagram is received
-     *                               or `nullptr` to disable the callback.
-     * @param[in]  aCallbackContext  A pointer to application-specific context.
-     *
-     * @sa IsReceiveIp6FilterEnabled
-     * @sa SetReceiveIp6FilterEnabled
+     * @param[in]  aCallback    The receive callback function. Can be `nullptr` to disable the callback.
+     * @param[in]  aContext     A pointer to application-specific context.
      */
-    void SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCallbackContext)
-    {
-        mReceiveIp6DatagramCallback.Set(aCallback, aCallbackContext);
-    }
+    void SetReceiveCallback(ReceiveCallback aCallback, void *aContext) { mReceiveCallback.Set(aCallback, aContext); }
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    typedef otNat64ReceiveIp4Callback Ip4ReceiveCallback; ///< NAT64 IPv4 receive callback function pointer.
+
     /**
-     * Registers a callback to provide received translated IPv4 datagrams.
+     * Sets the callback to provide received translated IPv4 datagrams.
      *
-     * @param[in]  aCallback         A pointer to a function that is called when a translated IPv4 datagram is received
-     *                               or `nullptr` to disable the callback.
-     * @param[in]  aCallbackContext  A pointer to application-specific context.
-     *
-     * @sa SetReceiveDatagramCallback
+     * @param[in]  aCallback  The NAT64 IPv4 callbac, used when translated IPv4 datagram is received.
+     * @param[in]  aContext   A pointer to application-specific context.
      */
-    void SetNat64ReceiveIp4DatagramCallback(otNat64ReceiveIp4Callback aCallback, void *aCallbackContext)
+    void SetNat64ReceiveIp4Callback(Ip4ReceiveCallback aCallback, void *aContext)
     {
-        mReceiveIp4DatagramCallback.Set(aCallback, aCallbackContext);
+        mIp4ReceiveCallback.Set(aCallback, aContext);
     }
 #endif
 
     /**
      * Indicates whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
-     * via the callback specified in SetReceiveIp6DatagramCallback().
+     * via the callback specified in `SetReceiveIp6Callback()`.
      *
      * @returns  TRUE if Thread control traffic is filtered out, FALSE otherwise.
-     *
-     * @sa SetReceiveDatagramCallback
-     * @sa SetReceiveIp6FilterEnabled
      */
-    bool IsReceiveIp6FilterEnabled(void) const { return mIsReceiveIp6FilterEnabled; }
+    bool IsReceiveIp6FilterEnabled(void) const { return mReceiveFilterEnabled; }
 
     /**
      * Sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
-     * via the callback specified in SetReceiveIp6DatagramCallback().
+     * via the callback specified in `SetReceiveIp6Callback()`.
      *
      * @param[in]  aEnabled  TRUE if Thread control traffic is filtered out, FALSE otherwise.
-     *
-     * @sa SetReceiveDatagramCallback
-     * @sa IsReceiveIp6FilterEnabled
      */
-    void SetReceiveIp6FilterEnabled(bool aEnabled) { mIsReceiveIp6FilterEnabled = aEnabled; }
+    void SetReceiveIp6FilterEnabled(bool aEnabled) { mReceiveFilterEnabled = aEnabled; }
 
     /**
      * Performs default source address selection.
@@ -349,8 +337,8 @@ public:
 #endif
 
 private:
-    static constexpr uint8_t kDefaultHopLimit      = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT;
-    static constexpr uint8_t kIp6ReassemblyTimeout = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT;
+    static constexpr uint8_t kDefaultHopLimit   = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT;
+    static constexpr uint8_t kReassemblyTimeout = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT;
 
     static constexpr uint16_t kMinimalMtu = 1280;
 
@@ -396,33 +384,25 @@ private:
 
     using SendQueueTask = TaskletIn<Ip6, &Ip6::HandleSendQueue>;
 
-    bool mIsReceiveIp6FilterEnabled;
-
+    bool mReceiveFilterEnabled;
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    bool mTmfOriginFilterEnabled : 1;
+    bool mTmfOriginFilterEnabled;
 #endif
-
-    Callback<otIp6ReceiveCallback> mReceiveIp6DatagramCallback;
-
+    Callback<ReceiveCallback> mReceiveCallback;
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    Callback<otNat64ReceiveIp4Callback> mReceiveIp4DatagramCallback;
+    Callback<Ip4ReceiveCallback> mIp4ReceiveCallback;
 #endif
-
     PriorityQueue mSendQueue;
     SendQueueTask mSendQueueTask;
-
-    Icmp mIcmp;
-    Udp  mUdp;
-    Mpl  mMpl;
-
+    Icmp          mIcmp;
+    Udp           mUdp;
+    Mpl           mMpl;
 #if OPENTHREAD_CONFIG_TCP_ENABLE
     Tcp mTcp;
 #endif
-
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
     MessageQueue mReassemblyList;
 #endif
-
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
     BrCounters mBrCounters;
 #endif

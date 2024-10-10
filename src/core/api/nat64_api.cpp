@@ -61,7 +61,7 @@ otError otNat64Send(otInstance *aInstance, otMessage *aMessage)
 
 void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callback aCallback, void *aContext)
 {
-    AsCoreType(aInstance).Get<Ip6::Ip6>().SetNat64ReceiveIp4DatagramCallback(aCallback, aContext);
+    AsCoreType(aInstance).Get<Ip6::Ip6>().SetNat64ReceiveIp4Callback(aCallback, aContext);
 }
 
 void otNat64InitAddressMappingIterator(otInstance *aInstance, otNat64AddressMappingIterator *aIterator)
