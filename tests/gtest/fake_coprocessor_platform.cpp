@@ -28,12 +28,19 @@
 
 #include "fake_coprocessor_platform.hpp"
 
+#include <openthread/instance.h>
+#include <openthread/link.h>
 #include <openthread/ncp.h>
+#include <openthread/platform/toolchain.h>
 
 #include "common/code_utils.hpp"
 #include "lib/hdlc/hdlc.hpp"
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_interface.hpp"
+
+// Currently radio spinel depends on this OpenThread user API
+// TODO remove this dependency in future.
+OT_TOOL_WEAK uint32_t otLinkGetFrameCounter(otInstance *) { return 0; }
 
 namespace ot {
 
