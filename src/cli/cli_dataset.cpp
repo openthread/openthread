@@ -1246,7 +1246,11 @@ void Dataset::HandleDatasetUpdater(otError aError, void *aContext)
 
 void Dataset::HandleDatasetUpdater(otError aError)
 {
+#if OPENTHREAD_CONFIG_CLI_DATASET_UPDATER_OUTPUT_RESULT
     OutputLine("Dataset update complete: %s", otThreadErrorToString(aError));
+#else
+    OT_UNUSED_VARIABLE(aError);
+#endif
 }
 
 #endif // OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
