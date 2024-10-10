@@ -805,7 +805,7 @@ private:
     void        HandleTimer(void);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-    Error ReplaceWithIp4Query(Query &aQuery);
+    Error ReplaceWithIp4Query(Query &aQuery, const Message &aResponseMessage);
 #endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
     Error Resolve(const char        *aInstanceLabel,

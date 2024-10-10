@@ -1309,17 +1309,18 @@ void Client::ProcessResponse(const Message &aResponseMessage)
 
     SuccessOrExit(ParseResponse(aResponseMessage, query, responseError));
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+    if (ReplaceWithIp4Query(*query, aResponseMessage) == kErrorNone)
+    {
+        ExitNow();
+    }
+#endif
+
     if (responseError != kErrorNone)
     {
         // Received an error from server, check if we can replace
         // the query.
 
-#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-        if (ReplaceWithIp4Query(*query) == kErrorNone)
-        {
-            ExitNow();
-        }
-#endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
         if (ReplaceWithSeparateSrvTxtQueries(*query) == kErrorNone)
         {
@@ -1556,15 +1557,40 @@ void Client::HandleTimer(void)
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
 
-Error Client::ReplaceWithIp4Query(Query &aQuery)
+Error Client::ReplaceWithIp4Query(Query &aQuery, const Message &aResponseMessage)
 {
     Error     error = kErrorFailed;
     QueryInfo info;
+    Header    header;
 
     info.ReadFrom(aQuery);
 
     VerifyOrExit(info.mQueryType == kIp6AddressQuery);
     VerifyOrExit(info.mConfig.GetNat64Mode() == QueryConfig::kNat64Allow);
+
+    // Check the response to the IPv6 query from the server. If the
+    // response code is success but the answer section is empty
+    // (indicating the name exists but has no IPv6 address), or the
+    // response code indicates an error other than `NameError`, we
+    // replace the query with an IPv4 address resolution query for
+    // the same name. If the server responded with `NameError`
+    // (RCode=3), it indicates that the name doesn't exist, so there
+    // is no need to try an IPv4 query.
+
+    SuccessOrExit(aResponseMessage.Read(aResponseMessage.GetOffset(), header));
+
+    switch (header.GetResponseCode())
+    {
+    case Header::kResponseSuccess:
+        VerifyOrExit(header.GetAnswerCount() == 0);
+        OT_FALL_THROUGH;
+
+    default:
+        break;
+
+    case Header::kResponseNameError:
+        ExitNow();
+    }
 
     // We send a new query for IPv4 address resolution
     // for the same host name. We reuse the existing `aQuery`
