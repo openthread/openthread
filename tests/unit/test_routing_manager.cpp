@@ -126,7 +126,7 @@ static otRadioFrame sRadioTxFrame;
 static uint8_t      sRadioTxFramePsdu[OT_RADIO_FRAME_MAX_SIZE];
 static bool         sRadioTxOngoing = false;
 
-using Icmp6Packet = Ip6::Nd::RouterAdvert::Icmp6Packet;
+using Icmp6Packet = Ip6::Nd::Icmp6Packet;
 
 enum ExpectedPio
 {
@@ -332,12 +332,12 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
 
     case Ip6::Icmp::Header::kTypeNeighborSolicit:
     {
-        const Ip6::Nd::NeighborSolicitMessage *nsMsg =
-            reinterpret_cast<const Ip6::Nd::NeighborSolicitMessage *>(packet.GetBytes());
+        const Ip6::Nd::NeighborSolicitHeader *nsMsg =
+            reinterpret_cast<const Ip6::Nd::NeighborSolicitHeader *>(packet.GetBytes());
 
         Log("  Neighbor Solicit message");
 
-        VerifyOrQuit(packet.GetLength() >= sizeof(Ip6::Nd::NeighborSolicitMessage));
+        VerifyOrQuit(packet.GetLength() >= sizeof(Ip6::Nd::NeighborSolicitHeader));
         VerifyOrQuit(nsMsg->IsValid());
         sNsEmitted = true;
 
@@ -875,7 +875,7 @@ void BuildRouterAdvert(Ip6::Nd::RouterAdvert::TxMessage &aRaMsg,
         header.SetSnacRouterFlag();
     }
 
-    SuccessOrQuit(aRaMsg.AppendHeader(header));
+    SuccessOrQuit(aRaMsg.Append(header));
 
     for (; aNumPios > 0; aPios++, aNumPios--)
     {
