@@ -168,6 +168,15 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
         fcf |= kFcfSequenceSuppression;
     }
 
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    fcf |= (mAppendTimeIe ? kFcfIePresent : 0);
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    fcf |= (mAppendCslIe ? kFcfIePresent : 0);
+#endif
+#endif
+
     builder.Init(aTxFrame.mPsdu, aTxFrame.GetMtu());
     IgnoreError(builder.AppendLittleEndianUint16(fcf));
 
@@ -201,6 +210,31 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
 
         micSize = CalculateMicSize(secCtl);
     }
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    if (mAppendTimeIe)
+    {
+        builder.Append<HeaderIe>()->Init(TimeIe::kHeaderIeId, sizeof(TimeIe));
+        builder.Append<TimeIe>()->Init();
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (mAppendCslIe)
+    {
+        builder.Append<HeaderIe>()->Init(CslIe::kHeaderIeId, sizeof(CslIe));
+        builder.Append<CslIe>();
+    }
+#endif
+
+    if ((fcf & kFcfIePresent) && ((mType == kTypeMacCmd) || !mEmptyPayload))
+    {
+        builder.Append<HeaderIe>()->Init(Termination2Ie::kHeaderIeId, Termination2Ie::kIeContentSize);
+    }
+
+#endif //  OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
     if (mType == kTypeMacCmd)
     {
@@ -1098,65 +1132,6 @@ exit:
     return index;
 }
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-template <typename IeType> Error Frame::AppendHeaderIeAt(uint8_t &aIndex)
-{
-    Error error = kErrorNone;
-
-    SuccessOrExit(error = InitIeHeaderAt(aIndex, IeType::kHeaderIeId, IeType::kIeContentSize));
-
-    InitIeContentAt<IeType>(aIndex);
-
-exit:
-    return error;
-}
-
-Error Frame::InitIeHeaderAt(uint8_t &aIndex, uint8_t ieId, uint8_t ieContentSize)
-{
-    Error error = kErrorNone;
-
-    SetIePresent(true);
-
-    if (aIndex == 0)
-    {
-        aIndex = FindHeaderIeIndex();
-    }
-
-    VerifyOrExit(aIndex != kInvalidIndex, error = kErrorNotFound);
-
-    reinterpret_cast<HeaderIe *>(mPsdu + aIndex)->Init(ieId, ieContentSize);
-    aIndex += sizeof(HeaderIe);
-
-    mLength += sizeof(HeaderIe) + ieContentSize;
-exit:
-    return error;
-}
-
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-template <> void Frame::InitIeContentAt<TimeIe>(uint8_t &aIndex)
-{
-    reinterpret_cast<TimeIe *>(mPsdu + aIndex)->Init();
-    aIndex += sizeof(TimeIe);
-}
-#endif
-
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-template <> void Frame::InitIeContentAt<RendezvousTimeIe>(uint8_t &aIndex) { aIndex += sizeof(RendezvousTimeIe); }
-
-template <> void Frame::InitIeContentAt<ConnectionIe>(uint8_t &aIndex)
-{
-    reinterpret_cast<ConnectionIe *>(mPsdu + aIndex)->Init();
-    aIndex += sizeof(ConnectionIe);
-}
-#endif
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-template <> void Frame::InitIeContentAt<CslIe>(uint8_t &aIndex) { aIndex += sizeof(CslIe); }
-#endif
-
-template <> void Frame::InitIeContentAt<Termination2Ie>(uint8_t &aIndex) { OT_UNUSED_VARIABLE(aIndex); }
-#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-
 const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
 {
     uint8_t        index        = FindHeaderIeIndex();
@@ -1338,21 +1313,6 @@ uint16_t Frame::GetMtu(void) const { return Trel::Link::kMtuSize; }
 uint8_t Frame::GetFcsSize(void) const { return Trel::Link::kFcsSize; }
 #endif
 
-// Explicit instantiation
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-template Error Frame::AppendHeaderIeAt<TimeIe>(uint8_t &aIndex);
-#endif
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-template Error Frame::AppendHeaderIeAt<RendezvousTimeIe>(uint8_t &aIndex);
-template Error Frame::AppendHeaderIeAt<ConnectionIe>(uint8_t &aIndex);
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-template Error Frame::AppendHeaderIeAt<CslIe>(uint8_t &aIndex);
-#endif
-template Error Frame::AppendHeaderIeAt<Termination2Ie>(uint8_t &aIndex);
-#endif
-
 void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 {
     uint8_t       *psduBuffer   = mPsdu;
@@ -1532,7 +1492,6 @@ Error TxFrame::GenerateWakeupFrame(PanId aPanId, const Address &aDest, const Add
     Error        error = kErrorNone;
     uint16_t     fcf;
     uint8_t      secCtl;
-    uint8_t      index = 0;
     FrameBuilder builder;
 
     fcf = kTypeMultipurpose | kMpFcfLongFrame | kMpFcfPanidPresent | kMpFcfSecurityEnabled | kMpFcfSequenceSuppression |
@@ -1554,12 +1513,15 @@ Error TxFrame::GenerateWakeupFrame(PanId aPanId, const Address &aDest, const Add
     IgnoreError(builder.AppendUint8(secCtl));
     builder.AppendLength(CalculateSecurityHeaderSize(secCtl) - sizeof(secCtl));
 
+    builder.Append<HeaderIe>()->Init(RendezvousTimeIe::kHeaderIeId, sizeof(RendezvousTimeIe));
+    builder.Append<RendezvousTimeIe>();
+
+    builder.Append<HeaderIe>()->Init(ConnectionIe::kHeaderIeId, sizeof(ConnectionIe));
+    builder.Append<ConnectionIe>()->Init();
+
     builder.AppendLength(CalculateMicSize(secCtl) + GetFcsSize());
 
     mLength = builder.GetLength();
-
-    SuccessOrExit(error = AppendHeaderIeAt<RendezvousTimeIe>(index));
-    SuccessOrExit(error = AppendHeaderIeAt<ConnectionIe>(index));
 
 exit:
     return error;

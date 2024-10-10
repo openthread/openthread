@@ -560,12 +560,6 @@ private:
     void  GetForwardFramePriority(RxInfo &aRxInfo, Message::Priority &aPriority);
 #endif
 
-    bool                CalcIePresent(const Message *aMessage);
-    Mac::Frame::Version CalcFrameVersion(const Neighbor *aNeighbor, bool aIePresent) const;
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    void AppendHeaderIe(const Message *aMessage, Mac::TxFrame &aFrame);
-#endif
-
     void PauseMessageTransmissions(void) { mTxPaused = true; }
     void ResumeMessageTransmissions(void);
 
