@@ -115,6 +115,35 @@ enum DeviceRole : uint8_t
     kRoleLeader   = OT_DEVICE_ROLE_LEADER,   ///< The Thread Leader role.
 };
 
+/**
+ * Represents MLE commands.
+ */
+enum Command : uint8_t
+{
+    kCommandLinkRequest                   = 0,  ///< Link Request command
+    kCommandLinkAccept                    = 1,  ///< Link Accept command
+    kCommandLinkAcceptAndRequest          = 2,  ///< Link Accept And Request command
+    kCommandLinkReject                    = 3,  ///< Link Reject command
+    kCommandAdvertisement                 = 4,  ///< Advertisement command
+    kCommandUpdate                        = 5,  ///< Update command
+    kCommandUpdateRequest                 = 6,  ///< Update Request command
+    kCommandDataRequest                   = 7,  ///< Data Request command
+    kCommandDataResponse                  = 8,  ///< Data Response command
+    kCommandParentRequest                 = 9,  ///< Parent Request command
+    kCommandParentResponse                = 10, ///< Parent Response command
+    kCommandChildIdRequest                = 11, ///< Child ID Request command
+    kCommandChildIdResponse               = 12, ///< Child ID Response command
+    kCommandChildUpdateRequest            = 13, ///< Child Update Request command
+    kCommandChildUpdateResponse           = 14, ///< Child Update Response command
+    kCommandAnnounce                      = 15, ///< Announce command
+    kCommandDiscoveryRequest              = 16, ///< Discovery Request command
+    kCommandDiscoveryResponse             = 17, ///< Discovery Response command
+    kCommandLinkMetricsManagementRequest  = 18, ///< Link Metrics Management Request command
+    kCommandLinkMetricsManagementResponse = 19, ///< Link Metrics Management Response command
+    kCommandLinkProbe                     = 20, ///< Link Probe command
+    kCommandTimeSync                      = 99, ///< Time Sync command
+};
+
 constexpr uint16_t kAloc16Leader                      = 0xfc00;
 constexpr uint16_t kAloc16DhcpAgentStart              = 0xfc01;
 constexpr uint16_t kAloc16DhcpAgentEnd                = 0xfc0f;

@@ -792,32 +792,6 @@ private:
     //------------------------------------------------------------------------------------------------------------------
     // Enumerations
 
-    enum Command : uint8_t
-    {
-        kCommandLinkRequest                   = 0,
-        kCommandLinkAccept                    = 1,
-        kCommandLinkAcceptAndRequest          = 2,
-        kCommandLinkReject                    = 3,
-        kCommandAdvertisement                 = 4,
-        kCommandUpdate                        = 5,
-        kCommandUpdateRequest                 = 6,
-        kCommandDataRequest                   = 7,
-        kCommandDataResponse                  = 8,
-        kCommandParentRequest                 = 9,
-        kCommandParentResponse                = 10,
-        kCommandChildIdRequest                = 11,
-        kCommandChildIdResponse               = 12,
-        kCommandChildUpdateRequest            = 13,
-        kCommandChildUpdateResponse           = 14,
-        kCommandAnnounce                      = 15,
-        kCommandDiscoveryRequest              = 16,
-        kCommandDiscoveryResponse             = 17,
-        kCommandLinkMetricsManagementRequest  = 18,
-        kCommandLinkMetricsManagementResponse = 19,
-        kCommandLinkProbe                     = 20,
-        kCommandTimeSync                      = 99,
-    };
-
     enum AttachMode : uint8_t
     {
         kAnyPartition,    // Attach to any Thread partition.
@@ -1112,7 +1086,7 @@ private:
         };
 
         void Send(TxMessage &aMessage, const Metadata &aMetadata);
-        void RemoveMessage(Message::SubType aSubType, MessageType aMessageType, const Ip6::Address *aDestination);
+        void RemoveMessage(Command aCommand, MessageType aMessageType, const Ip6::Address *aDestination);
 
         using DelayTimer = TimerMilliIn<Mle, &Mle::HandleDelayedSenderTimer>;
 

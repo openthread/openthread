@@ -318,28 +318,9 @@ void Message::SetOffset(uint16_t aOffset)
     GetMetadata().mOffset = aOffset;
 }
 
-bool Message::IsSubTypeMle(void) const
+bool Message::IsMleCommand(Mle::Command aMleCommand) const
 {
-    bool rval;
-
-    switch (GetMetadata().mSubType)
-    {
-    case kSubTypeMleGeneral:
-    case kSubTypeMleAnnounce:
-    case kSubTypeMleDiscoverRequest:
-    case kSubTypeMleDiscoverResponse:
-    case kSubTypeMleChildUpdateRequest:
-    case kSubTypeMleDataResponse:
-    case kSubTypeMleChildIdRequest:
-        rval = true;
-        break;
-
-    default:
-        rval = false;
-        break;
-    }
-
-    return rval;
+    return (GetSubType() == kSubTypeMle) && (GetMetadata().mMleCommand == aMleCommand);
 }
 
 Error Message::SetPriority(Priority aPriority)
