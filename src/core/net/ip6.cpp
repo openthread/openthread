@@ -231,59 +231,57 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(aHeader.GetDestination().IsMulticast() &&
-                 aHeader.GetDestination().GetScope() >= Address::kRealmLocalScope);
-
-    if (aHeader.GetDestination().IsRealmLocalMulticast())
+    if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal())
     {
-        aMessage.RemoveHeader(sizeof(aHeader));
+        error = PrepareMulticastToLargerThanRealmLocal(aMessage, aHeader);
+        ExitNow();
+    }
 
-        if (aHeader.GetNextHeader() == kProtoHopOpts)
+    VerifyOrExit(aHeader.GetDestination().IsRealmLocalMulticast());
+
+    aMessage.RemoveHeader(sizeof(aHeader));
+
+    if (aHeader.GetNextHeader() == kProtoHopOpts)
+    {
+        HopByHopHeader hbh;
+        uint16_t       hbhSize;
+        MplOption      mplOption;
+        PadOption      padOption;
+
+        // Read existing hop-by-hop option header
+        SuccessOrExit(error = aMessage.Read(0, hbh));
+        hbhSize = hbh.GetSize();
+
+        VerifyOrExit(hbhSize <= aHeader.GetPayloadLength(), error = kErrorParse);
+
+        // Increment hop-by-hop option header length by one which
+        // increases its total size by 8 bytes.
+        hbh.SetLength(hbh.GetLength() + 1);
+        aMessage.Write(0, hbh);
+
+        // Make space for MPL Option + padding (8 bytes) at the end
+        // of hop-by-hop header
+        SuccessOrExit(error = aMessage.InsertHeader(hbhSize, ExtensionHeader::kLengthUnitSize));
+
+        // Insert MPL Option
+        mMpl.InitOption(mplOption, aHeader.GetSource());
+        aMessage.WriteBytes(hbhSize, &mplOption, mplOption.GetSize());
+
+        // Insert Pad Option (if needed)
+        if (padOption.InitToPadHeaderWithSize(mplOption.GetSize()) == kErrorNone)
         {
-            HopByHopHeader hbh;
-            uint16_t       hbhSize;
-            MplOption      mplOption;
-            PadOption      padOption;
-
-            // Read existing hop-by-hop option header
-            SuccessOrExit(error = aMessage.Read(0, hbh));
-            hbhSize = hbh.GetSize();
-
-            VerifyOrExit(hbhSize <= aHeader.GetPayloadLength(), error = kErrorParse);
-
-            // Increment hop-by-hop option header length by one which
-            // increases its total size by 8 bytes.
-            hbh.SetLength(hbh.GetLength() + 1);
-            aMessage.Write(0, hbh);
-
-            // Make space for MPL Option + padding (8 bytes) at the end
-            // of hop-by-hop header
-            SuccessOrExit(error = aMessage.InsertHeader(hbhSize, ExtensionHeader::kLengthUnitSize));
-
-            // Insert MPL Option
-            mMpl.InitOption(mplOption, aHeader.GetSource());
-            aMessage.WriteBytes(hbhSize, &mplOption, mplOption.GetSize());
-
-            // Insert Pad Option (if needed)
-            if (padOption.InitToPadHeaderWithSize(mplOption.GetSize()) == kErrorNone)
-            {
-                aMessage.WriteBytes(hbhSize + mplOption.GetSize(), &padOption, padOption.GetSize());
-            }
-
-            // Update IPv6 Payload Length
-            aHeader.SetPayloadLength(aHeader.GetPayloadLength() + ExtensionHeader::kLengthUnitSize);
-        }
-        else
-        {
-            SuccessOrExit(error = AddMplOption(aMessage, aHeader));
+            aMessage.WriteBytes(hbhSize + mplOption.GetSize(), &padOption, padOption.GetSize());
         }
 
-        SuccessOrExit(error = aMessage.Prepend(aHeader));
+        // Update IPv6 Payload Length
+        aHeader.SetPayloadLength(aHeader.GetPayloadLength() + ExtensionHeader::kLengthUnitSize);
     }
     else
     {
-        SuccessOrExit(error = PrepareMulticastToLargerThanRealmLocal(aMessage, aHeader));
+        SuccessOrExit(error = AddMplOption(aMessage, aHeader));
     }
+
+    SuccessOrExit(error = aMessage.Prepend(aHeader));
 
 exit:
     return error;
