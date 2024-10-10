@@ -487,6 +487,9 @@ class Node(object):
     def get_ip_counters(self):
         return Node.parse_list(self.cli('counters ip'))
 
+    def get_mac_counters(self):
+        return Node.parse_list(self.cli('counters mac'))
+
     def get_br_counter_unicast_outbound_packets(self):
         outputs = self.cli('counters br')
         for line in outputs:

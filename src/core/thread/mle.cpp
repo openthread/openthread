@@ -52,10 +52,8 @@ Mle::Mle(Instance &aInstance)
     , mReceivedResponseFromParent(false)
     , mDetachingGracefully(false)
     , mInitiallyAttachedAsSleepy(false)
-#if OPENTHREAD_FTD
-    , mWasLeader(false)
-#endif
     , mRole(kRoleDisabled)
+    , mLastSavedRole(kRoleDisabled)
     , mDeviceMode(DeviceMode::kModeRxOnWhenIdle)
     , mAttachState(kAttachStateIdle)
     , mReattachState(kReattachStop)
@@ -68,9 +66,6 @@ Mle::Mle(Instance &aInstance)
     , mDataRequestAttempts(0)
     , mAnnounceChannel(0)
     , mAlternateChannel(0)
-#if OPENTHREAD_FTD
-    , mLinkRequestAttempts(0)
-#endif
     , mRloc16(kInvalidRloc16)
     , mPreviousParentRloc(kInvalidRloc16)
     , mAttachCounter(0)
@@ -228,6 +223,10 @@ void Mle::Stop(StopMode aMode)
     Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocalRloc);
     Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocalEid);
 
+#if OPENTHREAD_FTD
+    Get<MleRouter>().mRouterRoleRestorer.Stop();
+#endif
+
     SetRole(kRoleDisabled);
 
 exit:
@@ -367,7 +366,9 @@ void Mle::Restore(void)
     // force re-attach when version mismatch.
     VerifyOrExit(networkInfo.GetVersion() == kThreadVersion);
 
-    switch (networkInfo.GetRole())
+    mLastSavedRole = static_cast<DeviceRole>(networkInfo.GetRole());
+
+    switch (mLastSavedRole)
     {
     case kRoleChild:
     case kRoleRouter:
@@ -426,8 +427,6 @@ void Mle::Restore(void)
         Get<MleRouter>().SetPreviousPartitionId(networkInfo.GetPreviousPartitionId());
         Get<ChildTable>().Restore();
     }
-
-    mWasLeader = networkInfo.GetRole() == kRoleLeader;
 #endif
 
     // Successfully restored the network information from
@@ -457,6 +456,7 @@ Error Mle::Store(void)
         networkInfo.SetExtAddress(Get<Mac::Mac>().GetExtAddress());
         networkInfo.SetMeshLocalIid(mMeshLocalEid.GetAddress().GetIid());
         networkInfo.SetVersion(kThreadVersion);
+        mLastSavedRole = mRole;
 
         if (IsChild())
         {
@@ -1393,6 +1393,14 @@ void Mle::HandleAttachTimer(void)
         ExitNow();
     }
 
+#if OPENTHREAD_FTD
+    if (IsDetached() && Get<MleRouter>().mRouterRoleRestorer.IsActive())
+    {
+        Get<MleRouter>().mRouterRoleRestorer.HandleTimer();
+        ExitNow();
+    }
+#endif
+
     // First, check if we are waiting to receive parent responses and
     // found an acceptable parent candidate.
 
@@ -1799,13 +1807,6 @@ void Mle::ScheduleMessageTransmissionTimer(void)
 {
     uint32_t interval = 0;
 
-#if OPENTHREAD_FTD
-    if (mRole == kRoleDetached && mLinkRequestAttempts > 0)
-    {
-        ExitNow(interval = Random::NonCrypto::GetUint32InRange(kMulticastRetxDelayMin, kMulticastRetxDelayMax));
-    }
-#endif
-
     switch (mChildUpdateRequestState)
     {
     case kChildUpdateRequestNone:
@@ -1860,19 +1861,6 @@ void Mle::HandleMessageTransmissionTimer(void)
     //  - Retransmission of "Child Update Request",
     //  - Retransmission of "Data Request" on a child,
     //  - Sending periodic keep-alive "Child Update Request" messages on a non-sleepy (rx-on) child.
-    //  - Retransmission of "Link Request" after router reset
-
-#if OPENTHREAD_FTD
-    // Retransmit multicast link request if no response has been received
-    // and maximum transmission limit has not been reached.
-    if (mRole == kRoleDetached && mLinkRequestAttempts > 0)
-    {
-        IgnoreError(Get<MleRouter>().SendLinkRequest(nullptr));
-        mLinkRequestAttempts--;
-        ScheduleMessageTransmissionTimer();
-        ExitNow();
-    }
-#endif
 
     switch (mChildUpdateRequestState)
     {

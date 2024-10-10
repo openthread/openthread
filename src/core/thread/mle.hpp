@@ -1373,11 +1373,9 @@ private:
     bool mReceivedResponseFromParent : 1;
     bool mDetachingGracefully : 1;
     bool mInitiallyAttachedAsSleepy : 1;
-#if OPENTHREAD_FTD
-    bool mWasLeader : 1;
-#endif
 
     DeviceRole              mRole;
+    DeviceRole              mLastSavedRole;
     DeviceMode              mDeviceMode;
     AttachState             mAttachState;
     ReattachState           mReattachState;
@@ -1386,14 +1384,11 @@ private:
     AddressRegistrationMode mAddressRegistrationMode;
     ChildUpdateRequestState mChildUpdateRequestState;
 
-    uint8_t mParentRequestCounter;
-    uint8_t mChildUpdateAttempts;
-    uint8_t mDataRequestAttempts;
-    uint8_t mAnnounceChannel;
-    uint8_t mAlternateChannel;
-#if OPENTHREAD_FTD
-    uint8_t mLinkRequestAttempts;
-#endif
+    uint8_t  mParentRequestCounter;
+    uint8_t  mChildUpdateAttempts;
+    uint8_t  mDataRequestAttempts;
+    uint8_t  mAnnounceChannel;
+    uint8_t  mAlternateChannel;
     uint16_t mRloc16;
     uint16_t mPreviousParentRloc;
     uint16_t mAttachCounter;

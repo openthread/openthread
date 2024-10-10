@@ -512,7 +512,6 @@ private:
     static constexpr uint8_t  kRouterDowngradeThreshold      = 23;
     static constexpr uint8_t  kRouterUpgradeThreshold        = 16;
     static constexpr uint16_t kDiscoveryMaxJitter            = 250; // Max jitter delay Discovery Responses (in msec).
-    static constexpr uint16_t kChallengeTimeout              = 2;   // Challenge timeout (in sec).
     static constexpr uint16_t kUnsolicitedDataResponseJitter = 500; // Max delay for unsol Data Response (in msec).
     static constexpr uint8_t  kLeaderDowngradeExtraDelay     = 10;  // Extra delay to downgrade leader (in sec).
     static constexpr uint8_t  kDefaultLeaderWeight           = 64;
@@ -557,6 +556,32 @@ private:
     private:
         uint8_t mTimeout;
         uint8_t mJitter;
+    };
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    class RouterRoleRestorer : public InstanceLocator
+    {
+        // Attempts to restore the router or leader role after an MLE
+        // restart(e.g., after a device reboot) by sending multicast
+        // Link Requests.
+
+    public:
+        RouterRoleRestorer(Instance &aInstance);
+
+        bool IsActive(void) const { return mAttempts > 0; }
+        void Start(DeviceRole aPreviousRole);
+        void Stop(void) { mAttempts = 0; }
+        void HandleTimer(void);
+
+        void               GenerateRandomChallenge(void) { mChallenge.GenerateRandom(); }
+        const TxChallenge &GetChallenge(void) const { return mChallenge; }
+
+    private:
+        void SendMulticastLinkRequest(void);
+
+        uint8_t     mAttempts;
+        TxChallenge mChallenge;
     };
 
     //------------------------------------------------------------------------------------------------------------------
@@ -648,7 +673,6 @@ private:
 
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;
-    uint8_t mChallengeTimeout;
     uint8_t mNetworkIdTimeout;
     uint8_t mRouterUpgradeThreshold;
     uint8_t mRouterDowngradeThreshold;
@@ -670,7 +694,7 @@ private:
     TrickleTimer               mAdvertiseTrickleTimer;
     ChildTable                 mChildTable;
     RouterTable                mRouterTable;
-    TxChallenge                mChallenge;
+    RouterRoleRestorer         mRouterRoleRestorer;
     RouterRoleTransition       mRouterRoleTransition;
     Ip6::Netif::UnicastAddress mLeaderAloc;
 #if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE

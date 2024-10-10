@@ -50,7 +50,6 @@ MleRouter::MleRouter(Instance &aInstance)
     , mCcmEnabled(false)
     , mThreadVersionCheckEnabled(true)
 #endif
-    , mChallengeTimeout(0)
     , mNetworkIdTimeout(kNetworkIdTimeout)
     , mRouterUpgradeThreshold(kRouterUpgradeThreshold)
     , mRouterDowngradeThreshold(kRouterDowngradeThreshold)
@@ -70,6 +69,7 @@ MleRouter::MleRouter(Instance &aInstance)
     , mAdvertiseTrickleTimer(aInstance, MleRouter::HandleAdvertiseTrickleTimer)
     , mChildTable(aInstance)
     , mRouterTable(aInstance)
+    , mRouterRoleRestorer(aInstance)
 {
     mDeviceMode.Set(mDeviceMode.Get() | DeviceMode::kModeFullThreadDevice | DeviceMode::kModeFullNetworkData);
 
@@ -224,18 +224,7 @@ Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
     switch (mRole)
     {
     case kRoleDetached:
-        // If router had more than `kMinCriticalChildrenCount` children
-        // or was a leader prior to reset we treat the multicast Link
-        // Request as a critical message.
-        mLinkRequestAttempts =
-            (mWasLeader || mChildTable.GetNumChildren(Child::kInStateValidOrRestoring) >= kMinCriticalChildrenCount)
-                ? kMaxCriticalTxCount
-                : kMaxTxCount;
-
-        SuccessOrExit(error = SendLinkRequest(nullptr));
-        mLinkRequestAttempts--;
-        ScheduleMessageTransmissionTimer();
-        Get<TimeTicker>().RegisterReceiver(TimeTicker::kMleRouter);
+        mRouterRoleRestorer.Start(mLastSavedRole);
         break;
 
     case kRoleChild:
@@ -435,12 +424,12 @@ void MleRouter::SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, Leade
     Get<ThreadNetif>().SubscribeAllRoutersMulticast();
     mPreviousPartitionIdRouter = mLeaderData.GetPartitionId();
     Get<Mac::Mac>().SetBeaconEnabled(true);
+    Get<TimeTicker>().RegisterReceiver(TimeTicker::kMleRouter);
 
     if (aRole == kRoleLeader)
     {
         GetLeaderAloc(mLeaderAloc.GetAddress());
         Get<ThreadNetif>().AddUnicastAddress(mLeaderAloc);
-        Get<TimeTicker>().RegisterReceiver(TimeTicker::kMleRouter);
         Get<NetworkData::Leader>().Start(aStartMode);
         Get<MeshCoP::ActiveDatasetManager>().StartLeader();
         Get<MeshCoP::PendingDatasetManager>().StartLeader();
@@ -580,8 +569,6 @@ Error MleRouter::SendLinkRequest(Neighbor *aNeighbor)
     TxMessage   *message = nullptr;
     Ip6::Address destination;
 
-    VerifyOrExit(mChallengeTimeout == 0);
-
     destination.Clear();
 
     VerifyOrExit((message = NewMleMessage(kCommandLinkRequest)) != nullptr, error = kErrorNoBufs);
@@ -623,10 +610,8 @@ Error MleRouter::SendLinkRequest(Neighbor *aNeighbor)
 
     if (aNeighbor == nullptr)
     {
-        mChallenge.GenerateRandom();
-        mChallengeTimeout = kChallengeTimeout;
-
-        SuccessOrExit(error = message->AppendChallengeTlv(mChallenge));
+        mRouterRoleRestorer.GenerateRandomChallenge();
+        SuccessOrExit(error = message->AppendChallengeTlv(mRouterRoleRestorer.GetChallenge()));
         destination.SetToLinkLocalAllRoutersMulticast();
     }
     else
@@ -894,7 +879,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
         break;
 
     case Neighbor::kStateInvalid:
-        VerifyOrExit((mLinkRequestAttempts > 0 || mChallengeTimeout > 0) && (response == mChallenge),
+        VerifyOrExit(mRouterRoleRestorer.IsActive() && (response == mRouterRoleRestorer.GetChallenge()),
                      error = kErrorSecurity);
 
         OT_FALL_THROUGH;
@@ -955,7 +940,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
             SetStateRouter(GetRloc16());
         }
 
-        mLinkRequestAttempts    = 0;
+        mRouterRoleRestorer.Stop();
         mRetrieveNewNetworkData = true;
         IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr()));
         shouldUpdateRoutes = true;
@@ -1327,8 +1312,7 @@ Error MleRouter::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddre
     // Send unicast link request if no link to router and no
     // unicast/multicast link request in progress
 
-    if (!router->IsStateValid() && !router->IsStateLinkRequest() && (mChallengeTimeout == 0) &&
-        (linkMargin >= kLinkRequestMinMargin))
+    if (!router->IsStateValid() && !router->IsStateLinkRequest() && (linkMargin >= kLinkRequestMinMargin))
     {
         InitNeighbor(*router, aRxInfo);
         router->SetState(Neighbor::kStateLinkRequest);
@@ -1485,11 +1469,6 @@ void MleRouter::HandleTimeTick(void)
 
     VerifyOrExit(IsFullThreadDevice(), Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMleRouter));
 
-    if (mChallengeTimeout > 0)
-    {
-        mChallengeTimeout--;
-    }
-
     if (mPreviousPartitionIdTimeout > 0)
     {
         mPreviousPartitionIdTimeout--;
@@ -1503,12 +1482,6 @@ void MleRouter::HandleTimeTick(void)
     switch (mRole)
     {
     case kRoleDetached:
-        if (mChallengeTimeout == 0 && mLinkRequestAttempts == 0)
-        {
-            IgnoreError(BecomeDetached());
-            ExitNow();
-        }
-
         break;
 
     case kRoleChild:
@@ -3874,6 +3847,80 @@ bool MleRouter::RouterRoleTransition::HandleTimeTick(void)
 
 exit:
     return expired;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// RouterRoleRestorer
+
+MleRouter::RouterRoleRestorer::RouterRoleRestorer(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mAttempts(0)
+{
+}
+
+void MleRouter::RouterRoleRestorer::Start(DeviceRole aPreviousRole)
+{
+    // If the device was previously the leader or had more than
+    // `kMinCriticalChildrenCount` children, we use more link
+    // request attempts.
+
+    mAttempts = 0;
+
+    switch (aPreviousRole)
+    {
+    case kRoleRouter:
+        if (Get<MleRouter>().mChildTable.GetNumChildren(Child::kInStateValidOrRestoring) < kMinCriticalChildrenCount)
+        {
+            mAttempts = kMaxTxCount;
+            break;
+        }
+
+        OT_FALL_THROUGH;
+
+    case kRoleLeader:
+        mAttempts = kMaxCriticalTxCount;
+        break;
+
+    case kRoleChild:
+    case kRoleDetached:
+    case kRoleDisabled:
+        break;
+    }
+
+    SendMulticastLinkRequest();
+}
+
+void MleRouter::RouterRoleRestorer::HandleTimer(void)
+{
+    if (mAttempts > 0)
+    {
+        mAttempts--;
+    }
+
+    SendMulticastLinkRequest();
+}
+
+void MleRouter::RouterRoleRestorer::SendMulticastLinkRequest(void)
+{
+    uint32_t delay;
+
+    VerifyOrExit(Get<Mle>().IsDetached(), mAttempts = 0);
+
+    if (mAttempts == 0)
+    {
+        IgnoreError(Get<Mle>().BecomeDetached());
+        ExitNow();
+    }
+
+    IgnoreError(Get<MleRouter>().SendLinkRequest(nullptr));
+
+    delay = (mAttempts == 1) ? kLinkRequestTimeout
+                             : Random::NonCrypto::GetUint32InRange(kMulticastRetxDelayMin, kMulticastRetxDelayMax);
+
+    Get<Mle>().mAttachTimer.Start(delay);
+
+exit:
+    return;
 }
 
 } // namespace Mle
