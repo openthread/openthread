@@ -42,6 +42,17 @@ def handle_dataset_entry_command(type: MeshcopTlvType, args, context):
     return CommandResultNone()
 
 
+class DatasetClearCommand(Command):
+
+    def get_help_string(self) -> str:
+        return 'Clear dataset.'
+
+    async def execute_default(self, args, context):
+        ds: ThreadDataset = context['dataset']
+        ds.clear()
+        return CommandResultNone()
+
+
 class DatasetHelpCommand(Command):
 
     def get_help_string(self) -> str:
@@ -194,6 +205,7 @@ class DatasetCommand(Command):
 
     def __init__(self):
         self._subcommands = {
+            'clear': DatasetClearCommand(),
             'help': DatasetHelpCommand(),
             'hex': PrintDatasetHexCommand(),
             'reload': ReloadDatasetCommand(),

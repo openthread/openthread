@@ -62,3 +62,6 @@ class ThreadDataset:
             self.entries[type].set(args)
             return
         raise KeyError(f'Key {type} not available in the dataset.')
+
+    def clear(self):
+        self.entries.clear()
