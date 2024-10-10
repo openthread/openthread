@@ -520,6 +520,14 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     /**
+     * Get the current radio time in microseconds referenced to a continuous monotonic local radio clock (64 bits
+     * width).
+     *
+     * @returns The current radio clock time.
+     */
+    uint64_t GetNow(void);
+
+    /**
      * Get the current accuracy, in units of ± ppm, of the clock used for scheduling CSL operations.
      *
      * @note Platforms may optimize this value based on operational conditions (i.e.: temperature).
@@ -921,10 +929,10 @@ inline Error Radio::ResetCsl(void) { return otPlatRadioResetCsl(GetInstancePtr()
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-inline uint8_t Radio::GetCslAccuracy(void) { return otPlatRadioGetCslAccuracy(GetInstancePtr()); }
-#endif
+inline uint64_t Radio::GetNow(void) { return otPlatRadioGetNow(GetInstancePtr()); }
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+inline uint8_t Radio::GetCslAccuracy(void) { return otPlatRadioGetCslAccuracy(GetInstancePtr()); }
+
 inline uint8_t Radio::GetCslUncertainty(void) { return otPlatRadioGetCslUncertainty(GetInstancePtr()); }
 #endif
 
@@ -1029,6 +1037,8 @@ inline Error Radio::ResetCsl(void) { return kErrorNotImplemented; }
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+inline uint64_t Radio::GetNow(void) { return NumericLimits<uint64_t>::kMax; }
+
 inline uint8_t Radio::GetCslAccuracy(void) { return NumericLimits<uint8_t>::kMax; }
 
 inline uint8_t Radio::GetCslUncertainty(void) { return NumericLimits<uint8_t>::kMax; }
