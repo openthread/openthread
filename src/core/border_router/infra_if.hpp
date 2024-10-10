@@ -126,6 +126,19 @@ public:
     bool HasAddress(const Ip6::Address &aAddress) const;
 
     /**
+     * Indicates whether or not a given IPv6 address has on-link prefix for a given infra interface.
+     *
+     * MUST be used when interface is initialized.
+     *
+     * @param[in]  aAddress            The IPv6 address.
+     *
+     * @retval TRUE   The infrastructure interface has @p aAddress's prefix.
+     * @retval FALSE  The infrastructure interface does not have @p aAddress's prefix.
+     *
+     */
+    bool HasAddressWithOnLinkPrefix(const Ip6::Address &aAddress) const;
+
+    /**
      * Sends an ICMPv6 Neighbor Discovery packet on the infrastructure interface.
      *
      * MUST be used when interface is initialized.
