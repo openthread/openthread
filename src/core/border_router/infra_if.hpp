@@ -121,7 +121,6 @@ public:
      *
      * @retval  kErrorNone    Successfully get the infrastructure interface link-layer address.
      * @retval  kErrorFailed  Failed to get the infrastructure interface link-layer address.
-     *
      */
     Error GetLinkLayerAddress(LinkLayerAddress &aLinkLayerAddress);
 

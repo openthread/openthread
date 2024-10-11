@@ -49,7 +49,6 @@ extern "C" {
 
 /**
  * Represents an InfraIf Link-Layer Address.
- *
  */
 typedef struct otPlatInfraIfLinkLayerAddress
 {
@@ -178,7 +177,6 @@ extern void otPlatInfraIfDiscoverNat64PrefixDone(otInstance        *aInstance,
  *
  * @retval  OT_ERROR_NONE    Successfully get the infrastructure interface link-layer address.
  * @retval  OT_ERROR_FAILED  Failed to get the infrastructure interface link-layer address.
- *
  */
 otError otPlatGetInfraIfLinkLayerAddress(otInstance                    *aInstance,
                                          uint32_t                       aIfIndex,

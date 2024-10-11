@@ -490,7 +490,6 @@ static_assert(sizeof(RaFlagsExtOption) == 8, "invalid RaFlagsExtOption structure
 
 /**
  * Defines the ND6 Tx Message.
- *
  */
 class TxMessage
 {
@@ -499,7 +498,6 @@ public:
      * Gets the prepared ND6 message as an `Icmp6Packet`.
      *
      * @param[out] aPacket   A reference to an `Icmp6Packet`.
-     *
      */
     void GetAsPacket(Icmp6Packet &aPacket) const { aPacket.Init(mArray.AsCArray(), mArray.GetLength()); }
 
@@ -511,7 +509,6 @@ public:
      *
      * @retval kErrorNone    Bytes are appended successfully.
      * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
-     *
      */
     Error AppendBytes(const uint8_t *aBytes, uint16_t aLength);
 
@@ -523,7 +520,6 @@ public:
      *
      * @retval kErrorNone    Option is appended successfully.
      * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
-     *
      */
     Error AppendLinkLayerOption(LinkLayerAddress &aLinkLayerAddress, Option::Type aType);
 
@@ -535,8 +531,7 @@ public:
      * @param[in] aObject      A reference to the object to append to the message.
      *
      * @retval kErrorNone      Successfully appended the object.
-     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
-     *
+     * @retval kErrorNoBufs    Insufficient available buffers to grow the message.
      */
     template <typename ObjectType> Error Append(const ObjectType &aObject)
     {
@@ -866,7 +861,6 @@ public:
      *
      * @retval TRUE  If the message header is valid.
      * @retval FALSE If the message header is not valid.
-     *
      */
     bool IsValid(void) const { return (mType == Icmp::Header::kTypeNeighborSolicit) && (mCode == 0); }
 
