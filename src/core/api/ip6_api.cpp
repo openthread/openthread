@@ -100,7 +100,7 @@ otError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Addre
 
 void otIp6SetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallback, void *aCallbackContext)
 {
-    AsCoreType(aInstance).Get<Ip6::Ip6>().SetReceiveDatagramCallback(aCallback, aCallbackContext);
+    AsCoreType(aInstance).Get<Ip6::Ip6>().SetReceiveCallback(aCallback, aCallbackContext);
 }
 
 void otIp6SetAddressCallback(otInstance *aInstance, otIp6AddressCallback aCallback, void *aCallbackContext)
