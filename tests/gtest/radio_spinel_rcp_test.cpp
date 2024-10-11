@@ -92,3 +92,43 @@ TEST(RadioSpinelTransmit, shouldPassDesiredTxPowerToRadioPlatform)
 
     platform.GoInMs(1000);
 }
+
+TEST(RadioSpinelTransmit, shouldCauseSwitchingToRxChannelAfterTxDone)
+{
+    FakeCoprocessorPlatform platform;
+
+    constexpr Mac::PanId kSrcPanId  = 0x1234;
+    constexpr Mac::PanId kDstPanId  = 0x4321;
+    constexpr uint8_t    kDstAddr[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+    constexpr uint16_t   kSrcAddr   = 0xac00;
+    constexpr int8_t     kTxPower   = 100;
+
+    uint8_t      frameBuffer[OT_RADIO_FRAME_MAX_SIZE];
+    Mac::TxFrame txFrame;
+
+    txFrame.mPsdu = frameBuffer;
+
+    {
+        Mac::TxFrame::Info frameInfo;
+
+        frameInfo.mType    = Mac::Frame::kTypeData;
+        frameInfo.mVersion = Mac::Frame::kVersion2006;
+        frameInfo.mAddrs.mSource.SetShort(kSrcAddr);
+        frameInfo.mAddrs.mDestination.SetExtended(kDstAddr);
+        frameInfo.mPanIds.SetSource(kSrcPanId);
+        frameInfo.mPanIds.SetDestination(kDstPanId);
+        frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
+
+        frameInfo.PrepareHeadersIn(txFrame);
+    }
+
+    txFrame.mInfo.mTxInfo.mTxPower              = kTxPower;
+    txFrame.mChannel                            = 11;
+    txFrame.mInfo.mTxInfo.mRxChannelAfterTxDone = 25;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.Receive(11), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.Transmit(txFrame), kErrorNone);
+    platform.GoInMs(1000);
+    EXPECT_EQ(platform.GetReceiveChannel(), 25);
+}

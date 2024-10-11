@@ -36,6 +36,7 @@
 
 #include <inttypes.h>
 
+#include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
@@ -71,8 +72,14 @@ public:
     virtual void StartMicroAlarm(uint32_t aT0, uint32_t aDt);
     virtual void StopMicroAlarm();
 
+    uint8_t               GetReceiveChannel(void) const { return mChannel; }
     virtual otRadioFrame *GetTransmitBuffer() { return &mTransmitFrame; }
     virtual otError       Transmit(otRadioFrame *aFrame);
+    virtual otError       Receive(uint8_t aChannel)
+    {
+        mChannel = aChannel;
+        return OT_ERROR_NONE;
+    }
 
     virtual otError SettingsGet(uint16_t aKey, uint16_t aIndex, uint8_t *aValue, uint16_t *aValueLength) const;
     virtual otError SettingsSet(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
@@ -106,6 +113,7 @@ protected:
 
     otRadioFrame mTransmitFrame;
     uint8_t      mTransmitBuffer[OT_RADIO_FRAME_MAX_SIZE];
+    uint8_t      mChannel = 0;
 
     uint8_t mFlash[kFlashSwapSize * kFlashSwapNum];
 
