@@ -294,6 +294,7 @@ otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     otMacKeyMaterial *key = nullptr;
     uint8_t           keyId;
+    uint32_t          frameCounter;
 
     VerifyOrExit(otMacFrameIsSecurityEnabled(aFrame) && otMacFrameIsKeyIdMode1(aFrame) &&
                  !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
@@ -306,15 +307,18 @@ otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *
 
         if (keyId == aRadioContext->mKeyId)
         {
-            key = &aRadioContext->mCurrKey;
+            key          = &aRadioContext->mCurrKey;
+            frameCounter = aRadioContext->mMacFrameCounter++;
         }
         else if (keyId == aRadioContext->mKeyId - 1)
         {
-            key = &aRadioContext->mPrevKey;
+            key          = &aRadioContext->mPrevKey;
+            frameCounter = aRadioContext->mPrevMacFrameCounter++;
         }
         else if (keyId == aRadioContext->mKeyId + 1)
         {
-            key = &aRadioContext->mNextKey;
+            key          = &aRadioContext->mNextKey;
+            frameCounter = 0;
         }
         else
         {
@@ -323,8 +327,9 @@ otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *
     }
     else if (!aFrame->mInfo.mTxInfo.mIsHeaderUpdated)
     {
-        key   = &aRadioContext->mCurrKey;
-        keyId = aRadioContext->mKeyId;
+        key          = &aRadioContext->mCurrKey;
+        keyId        = aRadioContext->mKeyId;
+        frameCounter = aRadioContext->mMacFrameCounter++;
     }
 
     if (key != nullptr)
@@ -332,7 +337,7 @@ otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *
         aFrame->mInfo.mTxInfo.mAesKey = key;
 
         otMacFrameSetKeyId(aFrame, keyId);
-        otMacFrameSetFrameCounter(aFrame, aRadioContext->mMacFrameCounter++);
+        otMacFrameSetFrameCounter(aFrame, frameCounter);
         aFrame->mInfo.mTxInfo.mIsHeaderUpdated = true;
     }
 #else
