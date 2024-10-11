@@ -519,6 +519,66 @@ public:
     Error EnableCsl(uint32_t aCslPeriod, otShortAddress aShortAddr, const otExtAddress *aExtAddr);
 
     /**
+     * Returns the maximum number of csl neighbors supported.
+     *
+     * If the multi csl api is not implemented returns 0.
+     *
+     * @retval  The number of supported csl neighbors.
+     */
+    uint32_t GetMaxMultiCslNeighbors(void);
+
+    /**
+     * Enable or disable CSL receiver.
+     *
+     * Any call to this function automatically clears the csl neighbor table.
+     *
+     * @param[in]  aCslPeriod  CSL period, 0 for disabling CSL. In units of 10 symbols.
+     *
+     * @retval  kErrorNotImplemented  Radio driver doesn't support multi CSL.
+     * @retval  kErrorFailed          Other platform specific errors.
+     * @retval  kErrorNone            Successfully enabled or disabled CSL.
+     */
+    Error EnableMultiCsl(uint32_t aCslPeriod);
+
+    /**
+     * Adds a entry to the csl neighbor table.
+     *
+     * @param[in]  aShortAddress  The short address of the csl neighbor. May be invalid.
+     * @param[in]  aExtAddress    The extended address of the csl neighbor. Must be valid.
+     *
+     * @note To update a entry it must first be cleared. Platforms may consider adding a
+     *       address that already exists in the table as an error.
+     *
+     * @retval  kErrorNotImplemented  Radio driver doesn't support multi CSL.
+     * @retval  kErrorNoBufs          No available entry in the table.
+     * @retval  kErrorNone            Successfully added entry to the table.
+     */
+    Error AddCslEntry(otShortAddress aShortAddr, const otExtAddress &aExtAddr);
+
+    /**
+     * Removes a entry from the csl neighbor table.
+     *
+     * @param[in]  aShortAddress  The short address of the csl neighbor.
+     * @param[in]  aExtAddress    The extended address of the csl neighbor.
+     *
+     * @note Both the short and extended address must match the previous call to otPlatRadioAddCslEntry.
+     *       For example it is invalid to only provide the ext address when the entry also contains a short address.
+     *
+     * @retval  kErrorNotImplemented  Radio driver doesn't support multi CSL.
+     * @retval  kErrorNoAddress       The short or extended address is not in the table.
+     * @retval  kErrorNone            Successfully removed the addresses from the table.
+     */
+    Error ClearCslEntry(otShortAddress aShortAddr, const otExtAddress &aExtAddr);
+
+    /**
+     * Clears the csl neighbor table.
+     *
+     * @retval  kErrorNotImplemented  Radio driver doesn't support multi CSL.
+     * @retval  kErrorNone            Successfully cleared the csl neighbor table.
+     */
+    Error ClearCslEntries(void);
+
+    /**
      * Resets CSL receiver in radio.
      *
      * @retval  kErrorNotImplemented Radio driver doesn't support CSL.
@@ -937,6 +997,25 @@ inline Error Radio::EnableCsl(uint32_t aCslPeriod, otShortAddress aShortAddr, co
 {
     return otPlatRadioEnableCsl(GetInstancePtr(), aCslPeriod, aShortAddr, aExtAddr);
 }
+
+inline uint32_t Radio::GetMaxMultiCslNeighbors(void) { return otPlatRadioGetMaxMultiCslNeighbors(GetInstancePtr()); }
+
+inline Error Radio::EnableMultiCsl(uint32_t aCslPeriod)
+{
+    return otPlatRadioEnableMultiCsl(GetInstancePtr(), aCslPeriod);
+}
+
+inline Error Radio::AddCslEntry(otShortAddress aShortAddress, const otExtAddress &aExtAddress)
+{
+    return otPlatRadioAddCslEntry(GetInstancePtr(), aShortAddress, &aExtAddress);
+}
+
+inline Error Radio::ClearCslEntry(otShortAddress aShortAddress, const otExtAddress &aExtAddress)
+{
+    return otPlatRadioClearCslEntry(GetInstancePtr(), aShortAddress, &aExtAddress);
+}
+
+inline Error Radio::ClearCslEntries(void) { return otPlatRadioClearCslEntries(GetInstancePtr()); }
 
 inline Error Radio::ResetCsl(void) { return otPlatRadioResetCsl(GetInstancePtr()); }
 #endif

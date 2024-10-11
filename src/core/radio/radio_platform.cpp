@@ -280,9 +280,77 @@ extern "C" OT_TOOL_WEAK uint32_t otPlatRadioGetBusLatency(otInstance *aInstance)
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+extern "C" OT_TOOL_WEAK otError otPlatRadioEnableCsl(otInstance         *aInstance,
+                                                     uint32_t            aCslPeriod,
+                                                     otShortAddress      aShortAddr,
+                                                     const otExtAddress *aExtAddr)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aCslPeriod);
+    OT_UNUSED_VARIABLE(aShortAddr);
+    OT_UNUSED_VARIABLE(aExtAddr);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+extern "C" OT_TOOL_WEAK uint32_t otPlatRadioGetMaxMultiCslNeighbors(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return 0;
+}
+
+extern "C" OT_TOOL_WEAK otError otPlatRadioEnableMultiCsl(otInstance *aInstance, uint32_t aCslPeriod)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aCslPeriod);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+extern "C" OT_TOOL_WEAK otError otPlatRadioAddCslEntry(otInstance         *aInstance,
+                                                       otShortAddress      aShortAddr,
+                                                       const otExtAddress *aExtAddr)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aShortAddr);
+    OT_UNUSED_VARIABLE(aExtAddr);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+extern "C" OT_TOOL_WEAK otError otPlatRadioClearCslEntry(otInstance         *aInstance,
+                                                         otShortAddress      aShortAddr,
+                                                         const otExtAddress *aExtAddr)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aShortAddr);
+    OT_UNUSED_VARIABLE(aExtAddr);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+extern "C" OT_TOOL_WEAK otError otPlatRadioClearCslEntries(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
 extern "C" OT_TOOL_WEAK otError otPlatRadioResetCsl(otInstance *aInstance)
 {
-    return otPlatRadioEnableCsl(aInstance, 0, Mac::kShortAddrInvalid, nullptr);
+    otError error;
+
+    if (otPlatRadioGetMaxMultiCslNeighbors(aInstance) == 0)
+    {
+        error = otPlatRadioEnableCsl(aInstance, 0, Mac::kShortAddrInvalid, nullptr);
+    }
+    else
+    {
+        error = otPlatRadioEnableMultiCsl(aInstance, 0);
+    }
+
+    return error;
 }
 #endif
 

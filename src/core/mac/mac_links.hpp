@@ -442,16 +442,14 @@ public:
      * @retval  TRUE if CSL Period or CSL Channel changed.
      * @retval  FALSE if CSL Period and CSL Channel did not change.
      */
-    bool UpdateCsl(uint16_t aPeriod, uint8_t aChannel, otShortAddress aShortAddr, const otExtAddress *aExtAddr)
+    bool UpdateCsl(uint16_t aPeriod, uint8_t aChannel)
     {
         bool retval = false;
 
         OT_UNUSED_VARIABLE(aPeriod);
         OT_UNUSED_VARIABLE(aChannel);
-        OT_UNUSED_VARIABLE(aShortAddr);
-        OT_UNUSED_VARIABLE(aExtAddr);
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-        retval = mSubMac.UpdateCsl(aPeriod, aChannel, aShortAddr, aExtAddr);
+        retval = mSubMac.UpdateCsl(aPeriod, aChannel);
 #endif
         return retval;
     }

@@ -2330,8 +2330,7 @@ void Mac::UpdateCsl(void)
     uint16_t period  = IsCslEnabled() ? GetCslPeriod() : 0;
     uint8_t  channel = GetCslChannel() ? GetCslChannel() : mRadioChannel;
 
-    if (mLinks.UpdateCsl(period, channel, Get<Mle::Mle>().GetParent().GetRloc16(),
-                         &Get<Mle::Mle>().GetParent().GetExtAddress()))
+    if (mLinks.UpdateCsl(period, channel))
     {
         if (Get<Mle::Mle>().IsChild())
         {
@@ -2384,6 +2383,19 @@ bool Mac::IsCslCapable(void) const { return (GetCslPeriod() > 0) && IsCslSupport
 bool Mac::IsCslSupported(void) const
 {
     return Get<Mle::MleRouter>().IsChild() && Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported();
+}
+
+void Mac::UpdateCslParent(void)
+{
+    if (Get<Mle::Mle>().IsChild())
+    {
+        ConfigureCslNeighbor(kCslParentIndex, Get<Mle::Mle>().GetParent().GetRloc16(),
+                             Get<Mle::Mle>().GetParent().GetExtAddress(), Get<Mle::Mle>().GetParent().GetCslAccuracy());
+    }
+    else
+    {
+        ClearCslNeighbor(kCslParentIndex);
+    }
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 

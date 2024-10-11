@@ -697,6 +697,7 @@ void Mle::SetStateDetached(void)
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     Get<Mac::Mac>().UpdateCsl();
+    Get<Mac::Mac>().UpdateCslParent();
 #endif
 }
 
@@ -745,6 +746,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
     mPreviousParentRloc = mParent.GetRloc16();
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    Get<Mac::Mac>().UpdateCslParent();
     Get<Mac::Mac>().UpdateCsl();
 #endif
 }
@@ -3245,10 +3247,6 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     mParentCandidate.CopyTo(mParent);
     mParentCandidate.Clear();
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    Get<Mac::Mac>().SetCslParentAccuracy(mParent.GetCslAccuracy());
-#endif
-
     mParent.SetRloc16(sourceAddress);
 
     IgnoreError(aRxInfo.mMessage.ReadAndSetNetworkDataTlv(leaderData));
@@ -3515,7 +3513,8 @@ void Mle::HandleChildUpdateResponseOnChild(RxInfo &aRxInfo)
             switch (aRxInfo.mMessage.ReadCslClockAccuracyTlv(cslAccuracy))
             {
             case kErrorNone:
-                Get<Mac::Mac>().SetCslParentAccuracy(cslAccuracy);
+                mParent.SetCslAccuracy(cslAccuracy);
+                Get<Mac::Mac>().UpdateCslParent();
                 break;
             case kErrorNotFound:
                 break;

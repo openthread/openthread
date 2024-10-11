@@ -42,29 +42,93 @@ namespace Mac {
 
 RegisterLogModule("SubMac");
 
+void SubMac::CslNeighbor::Init(void) { mValid = false; }
+
+uint32_t SubMac::CslNeighbor::GetSemiWindow(uint32_t aCurrentTime, uint32_t aOurAccuracy, uint32_t aOurUncertainty)
+{
+    uint32_t elapsed    = aCurrentTime - mCslLastSync.GetValue();
+    uint32_t semiWindow = 0;
+
+    VerifyOrExit(IsValid());
+
+    semiWindow = static_cast<uint32_t>(static_cast<uint64_t>(elapsed) *
+                                       (aOurAccuracy + mCslAccuracy.GetClockAccuracy()) / 1000000);
+    semiWindow += aOurUncertainty + mCslAccuracy.GetUncertaintyInMicrosec();
+
+exit:
+    return semiWindow;
+}
+
 void SubMac::CslInit(void)
 {
     mCslPeriod     = 0;
     mCslChannel    = 0;
-    mCslPeerShort  = 0;
     mIsCslSampling = false;
     mCslSampleTime = TimeMicro{0};
-    mCslLastSync   = TimeMicro{0};
     mCslTimer.Stop();
+
+    mMaxCslNeighbors = Min(kCslMaxNeighbors, Get<Radio>().GetMaxMultiCslNeighbors());
+    mMultiCsl        = mMaxCslNeighbors > 0;
+    if (mMaxCslNeighbors == 0)
+    {
+        mMaxCslNeighbors = 1;
+    }
+
+    for (CslNeighbor &neighbor : mCslNeighbors)
+    {
+        neighbor.Init();
+    }
+}
+
+void SubMac::UpdateCslNeighbors(void)
+{
+    if (mMultiCsl)
+    {
+        IgnoreError(Get<Radio>().ClearCslEntries());
+        for (uint8_t i = 0; i < mMaxCslNeighbors; i++)
+        {
+            CslNeighbor neighbor = mCslNeighbors[i];
+            if (neighbor.IsValid())
+            {
+                IgnoreError(Get<Radio>().AddCslEntry(neighbor.mShortAddr, neighbor.mExtAddr));
+            }
+        }
+    }
+    else if (mCslNeighbors[0].IsValid())
+    {
+        IgnoreError(Get<Radio>().EnableCsl(mCslPeriod, mCslNeighbors[0].mShortAddr, &mCslNeighbors[0].mExtAddr));
+    }
+    else
+    {
+        IgnoreError(Get<Radio>().EnableCsl(mCslPeriod, kShortAddrInvalid, nullptr));
+    }
 }
 
 void SubMac::UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame)
 {
+    TimeMicro    lastSync = TimeMicro(GetLocalTime());
+    Address      address;
+    CslNeighbor *neighbor;
+
     // Actual synchronization timestamp should be from the sent frame instead of the current time.
     // Assuming the error here since it is bounded and has very small effect on the final window duration.
-    if (aAckFrame != nullptr && aFrame.HasCslIe())
+    if (aAckFrame != nullptr && aFrame.HasCslIe() && aFrame.IsDstAddrPresent())
     {
-        mCslLastSync = TimeMicro(GetLocalTime());
+        IgnoreError(aFrame.GetDstAddr(address));
+        neighbor = FindCslNeighbor(address);
+
+        if (neighbor != nullptr)
+        {
+            neighbor->mCslLastSync = lastSync;
+        }
     }
 }
 
 void SubMac::UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError)
 {
+    Address      address;
+    CslNeighbor *neighbor;
+
     VerifyOrExit(aFrame != nullptr && aError == kErrorNone);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
@@ -72,13 +136,19 @@ void SubMac::UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError)
 #endif
 
     // Assuming the risk of the parent missing the Enh-ACK in favor of smaller CSL receive window
-    if ((mCslPeriod > 0) && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
+    if ((mCslPeriod > 0) && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck && aFrame->IsDstAddrPresent())
     {
+        IgnoreError(aFrame->GetDstAddr(address));
+        neighbor = FindCslNeighbor(address);
+
+        if (neighbor != nullptr)
+        {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
-        mCslLastSync = TimerMicro::GetNow();
+            neighbor->mCslLastSync = TimerMicro::GetNow();
 #else
-        mCslLastSync = TimeMicro(static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp));
+            neighbor->mCslLastSync = TimeMicro(static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp));
 #endif
+        }
     }
 
 exit:
@@ -107,20 +177,22 @@ exit:
     return;
 }
 
-bool SubMac::UpdateCsl(uint16_t aPeriod, uint8_t aChannel, otShortAddress aShortAddr, const otExtAddress *aExtAddr)
+bool SubMac::UpdateCsl(uint16_t aPeriod, uint8_t aChannel)
 {
     bool diffPeriod  = aPeriod != mCslPeriod;
     bool diffChannel = aChannel != mCslChannel;
-    bool diffPeer    = aShortAddr != mCslPeerShort;
-    bool retval      = diffPeriod || diffChannel || diffPeer;
+    bool retval      = diffPeriod || diffChannel;
 
     VerifyOrExit(retval);
-    mCslChannel = aChannel;
 
-    VerifyOrExit(diffPeriod || diffPeer);
-    mCslPeriod    = aPeriod;
-    mCslPeerShort = aShortAddr;
-    IgnoreError(Get<Radio>().EnableCsl(aPeriod, aShortAddr, aExtAddr));
+    mCslChannel = aChannel;
+    mCslPeriod  = aPeriod;
+
+    if (mMultiCsl)
+    {
+        IgnoreError(Get<Radio>().EnableMultiCsl(aPeriod));
+    }
+    UpdateCslNeighbors();
 
     mCslTimer.Stop();
     if (mCslPeriod > 0)
@@ -132,6 +204,66 @@ bool SubMac::UpdateCsl(uint16_t aPeriod, uint8_t aChannel, otShortAddress aShort
 
 exit:
     return retval;
+}
+
+void SubMac::ConfigureCslNeighbor(uint16_t            aIndex,
+                                  otShortAddress      aShortAddr,
+                                  const otExtAddress &aExtAddr,
+                                  CslAccuracy         aCslAccuracy)
+{
+    CslNeighbor *neighbor;
+
+    VerifyOrExit(aIndex < mMaxCslNeighbors);
+
+    neighbor = &mCslNeighbors[aIndex];
+
+    if (mMultiCsl && neighbor->IsValid())
+    {
+        IgnoreError(Get<Radio>().ClearCslEntry(neighbor->mShortAddr, neighbor->mExtAddr));
+    }
+
+    if (!neighbor->IsValid())
+    {
+        // Only update this if it wasn't initialized before
+        neighbor->mCslLastSync = TimeMicro(GetLocalTime());
+    }
+
+    neighbor->mCslAccuracy = aCslAccuracy;
+    neighbor->mShortAddr   = aShortAddr;
+    neighbor->mExtAddr     = static_cast<const ExtAddress &>(aExtAddr);
+    neighbor->mValid       = true;
+
+    if (mMultiCsl)
+    {
+        IgnoreError(Get<Radio>().AddCslEntry(aShortAddr, aExtAddr));
+    }
+    else
+    {
+        UpdateCslNeighbors();
+    }
+
+exit:
+    return;
+}
+
+void SubMac::ClearCslNeighbor(uint16_t aIndex)
+{
+    VerifyOrExit(aIndex < mMaxCslNeighbors);
+
+    if (mMultiCsl && mCslNeighbors[aIndex].IsValid())
+    {
+        IgnoreError(Get<Radio>().ClearCslEntry(mCslNeighbors[aIndex].mShortAddr, mCslNeighbors[aIndex].mExtAddr));
+    }
+
+    mCslNeighbors[aIndex].Init();
+
+    if (!mMultiCsl)
+    {
+        UpdateCslNeighbors();
+    }
+
+exit:
+    return;
 }
 
 void SubMac::HandleCslTimer(Timer &aTimer) { aTimer.Get<SubMac>().HandleCslTimer(); }
@@ -226,16 +358,16 @@ void SubMac::HandleCslTimer(void)
 
 void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
 {
-    uint32_t semiPeriod = mCslPeriod * kUsPerTenSymbols / 2;
-    uint32_t curTime, elapsed, semiWindow;
+    uint32_t semiPeriod     = mCslPeriod * kUsPerTenSymbols / 2;
+    uint32_t ourAccuracy    = Get<Radio>().GetCslAccuracy() * 10;
+    uint32_t ourUncertainty = Get<Radio>().GetCslUncertainty();
+    uint32_t curTime        = GetLocalTime();
+    uint32_t semiWindow     = 0;
 
-    curTime = GetLocalTime();
-    elapsed = curTime - mCslLastSync.GetValue();
-
-    semiWindow =
-        static_cast<uint32_t>(static_cast<uint64_t>(elapsed) *
-                              (Get<Radio>().GetCslAccuracy() + mCslParentAccuracy.GetClockAccuracy()) / 1000000);
-    semiWindow += mCslParentAccuracy.GetUncertaintyInMicrosec() + Get<Radio>().GetCslUncertainty() * 10;
+    for (CslNeighbor &neighbor : mCslNeighbors)
+    {
+        semiWindow = Max(semiWindow, neighbor.GetSemiWindow(curTime, ourAccuracy, ourUncertainty));
+    }
 
     aAhead = Min(semiPeriod, semiWindow + kMinReceiveOnAhead + kCslReceiveTimeAhead);
     aAfter = Min(semiPeriod, semiWindow + kMinReceiveOnAfter);
@@ -252,6 +384,62 @@ uint32_t SubMac::GetLocalTime(void)
 #endif
 
     return now;
+}
+
+SubMac::CslNeighbor *SubMac::FindCslNeighbor(const Address &aAddress)
+{
+    CslNeighbor *neighbor = nullptr;
+
+    switch (aAddress.GetType())
+    {
+    case Address::kTypeNone:
+        break;
+
+    case Address::kTypeShort:
+        neighbor = FindCslNeighbor(aAddress.GetShort());
+        break;
+
+    case Address::kTypeExtended:
+        neighbor = FindCslNeighbor(aAddress.GetExtended());
+        break;
+    }
+
+    return neighbor;
+}
+
+SubMac::CslNeighbor *SubMac::FindCslNeighbor(ShortAddress aAddress)
+{
+    CslNeighbor *neighbor = nullptr;
+
+    VerifyOrExit(aAddress != kShortAddrInvalid);
+
+    for (uint32_t i = 0; i < mMaxCslNeighbors; i++)
+    {
+        if (mCslNeighbors[i].IsValid() && mCslNeighbors[i].mShortAddr == aAddress)
+        {
+            neighbor = &mCslNeighbors[i];
+            break;
+        }
+    }
+
+exit:
+    return neighbor;
+}
+
+SubMac::CslNeighbor *SubMac::FindCslNeighbor(const ExtAddress &aAddress)
+{
+    CslNeighbor *neighbor = nullptr;
+
+    for (uint32_t i = 0; i < mMaxCslNeighbors; i++)
+    {
+        if (mCslNeighbors[i].IsValid() && mCslNeighbors[i].mExtAddr == aAddress)
+        {
+            neighbor = &mCslNeighbors[i];
+            break;
+        }
+    }
+
+    return neighbor;
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
