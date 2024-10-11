@@ -215,9 +215,9 @@ generate_size_diff()
     local -a size_diff
 
     for i in 0 1 2 3; do
-        size_diff[$i]="$((size_new["$i"] - size_old["$i"]))"
-        if [[ ${size_diff["$i"]} != 0 ]]; then
-            size_diff["$i"]=$(printf '%+d' "${size_diff["$i"]}")
+        size_diff[i]="$((size_new[i] - size_old[i]))"
+        if [[ ${size_diff[i]} != 0 ]]; then
+            size_diff[i]=$(printf '%+d' "${size_diff[i]}")
         fi
     done
 
