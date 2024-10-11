@@ -43,21 +43,26 @@
 #include <stdint.h>
 
 #include <openthread/netdata.h>
+#include <openthread/platform/infra_if.h>
 #include <openthread/platform/toolchain.h>
 
+#include "border_router/infra_if.hpp"
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
 #include "common/heap_array.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6.hpp"
+#include "net/ip6_headers.hpp"
 #include "thread/network_data_types.hpp"
 
 namespace ot {
 namespace Ip6 {
 namespace Nd {
 
-typedef NetworkData::RoutePreference RoutePreference; ///< Route Preference
+typedef NetworkData::RoutePreference  RoutePreference;  ///< Route Preference
+typedef Data<kWithUint16Length>       Icmp6Packet;      ///< A data buffer for an ICMPv6 packet.
+typedef otPlatInfraIfLinkLayerAddress LinkLayerAddress; ///< An infra-if link-layer address.
 
 /**
  * Represents the variable length options in Neighbor Discovery messages.
@@ -73,6 +78,8 @@ class Option
 public:
     enum Type : uint8_t
     {
+        kSourceLinkLayerAddr  = 1,  ///< Source Link Layer Address Option.
+        kTargetLinkLayerAddr  = 2,  ///< Target Link Layer Address Option.
         kTypePrefixInfo       = 3,  ///< Prefix Information Option.
         kTypeRouteInfo        = 24, ///< Route Information Option.
         kTypeRaFlagsExtension = 26, ///< RA Flags Extension Option.
@@ -482,6 +489,66 @@ private:
 static_assert(sizeof(RaFlagsExtOption) == 8, "invalid RaFlagsExtOption structure");
 
 /**
+ * Defines the ND6 Tx Message.
+ */
+class TxMessage
+{
+public:
+    /**
+     * Gets the prepared ND6 message as an `Icmp6Packet`.
+     *
+     * @param[out] aPacket   A reference to an `Icmp6Packet`.
+     */
+    void GetAsPacket(Icmp6Packet &aPacket) const { aPacket.Init(mArray.AsCArray(), mArray.GetLength()); }
+
+    /**
+     * Appends bytes from a given buffer to the ND6 message.
+     *
+     * @param[in] aBytes     A pointer to the buffer containing the bytes to append.
+     * @param[in] aLength    The buffer length.
+     *
+     * @retval kErrorNone    Bytes are appended successfully.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
+     */
+    Error AppendBytes(const uint8_t *aBytes, uint16_t aLength);
+
+    /**
+     * Appends a Source/Target Link Layer Address Option to the ND6 message.
+     *
+     * @param[in] aLinkLayerAddress    The AIL Layer Address.
+     * @param[in] aType                The type of Link Layer Address Option, Source or Target
+     *
+     * @retval kErrorNone    Option is appended successfully.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
+     */
+    Error AppendLinkLayerOption(LinkLayerAddress &aLinkLayerAddress, Option::Type aType);
+
+    /**
+     * Appends an object to the ND6 message.
+     *
+     * @tparam    ObjectType   The object type to append to the message.
+     *
+     * @param[in] aObject      A reference to the object to append to the message.
+     *
+     * @retval kErrorNone      Successfully appended the object.
+     * @retval kErrorNoBufs    Insufficient available buffers to grow the message.
+     */
+    template <typename ObjectType> Error Append(const ObjectType &aObject)
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        return AppendBytes(reinterpret_cast<const uint8_t *>(&aObject), sizeof(ObjectType));
+    }
+
+protected:
+    static constexpr uint16_t kCapacityIncrement = 256;
+
+    Option *AppendOption(uint16_t aOptionSize);
+
+    Heap::Array<uint8_t, kCapacityIncrement> mArray;
+};
+
+/**
  * Defines Router Advertisement components.
  */
 class RouterAdvert
@@ -635,8 +702,6 @@ public:
 
     static_assert(sizeof(Header) == 16, "Invalid RA `Header`");
 
-    typedef Data<kWithUint16Length> Icmp6Packet; ///< A data buffer containing an ICMPv6 packet.
-
     /**
      * Represents a received RA message.
      */
@@ -716,26 +781,9 @@ public:
     /**
      * Represents an RA message to be sent.
      */
-    class TxMessage
+    class TxMessage : public ot::Ip6::Nd::TxMessage
     {
     public:
-        /**
-         * Gets the prepared RA message as an `Icmp6Packet`.
-         *
-         * @param[out] aPacket   A reference to an `Icmp6Packet`.
-         */
-        void GetAsPacket(Icmp6Packet &aPacket) const { aPacket.Init(mArray.AsCArray(), mArray.GetLength()); }
-
-        /**
-         * Appends the RA header.
-         *
-         * @param[in] aHeader  The RA header.
-         *
-         * @retval kErrorNone    Header is written successfully.
-         * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
-         */
-        Error AppendHeader(const Header &aHeader);
-
         /**
          * Appends a Prefix Info Option to the RA message.
          *
@@ -764,30 +812,12 @@ public:
         Error AppendRouteInfoOption(const Prefix &aPrefix, uint32_t aRouteLifetime, RoutePreference aPreference);
 
         /**
-         * Appends bytes from a given buffer to the RA message.
-         *
-         * @param[in] aBytes     A pointer to the buffer containing the bytes to append.
-         * @param[in] aLength    The buffer length.
-         *
-         * @retval kErrorNone    Bytes are appended successfully.
-         * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
-         */
-        Error AppendBytes(const uint8_t *aBytes, uint16_t aLength);
-
-        /**
          * Indicates whether or not the received RA message contains any options.
          *
          * @retval TRUE   If the RA message contains at least one option.
          * @retval FALSE  If the RA message contains no options.
          */
         bool ContainsAnyOptions(void) const { return (mArray.GetLength() > sizeof(Header)); }
-
-    private:
-        static constexpr uint16_t kCapacityIncrement = 256;
-
-        Option *AppendOption(uint16_t aOptionSize);
-
-        Heap::Array<uint8_t, kCapacityIncrement> mArray;
     };
 
     RouterAdvert(void) = delete;
@@ -800,37 +830,37 @@ public:
  * https://tools.ietf.org/html/rfc4861#section-4.1
  */
 OT_TOOL_PACKED_BEGIN
-class RouterSolicitMessage
+class RouterSolicitHeader
 {
 public:
     /**
      * Initializes the Router Solicitation message.
      */
-    RouterSolicitMessage(void);
+    RouterSolicitHeader(void);
 
 private:
     Icmp::Header mHeader; // The common ICMPv6 header.
 } OT_TOOL_PACKED_END;
 
-static_assert(sizeof(RouterSolicitMessage) == 8, "invalid RouterSolicitMessage structure");
-
+static_assert(sizeof(RouterSolicitHeader) == 8, "invalid RouterSolicitHeader structure");
 /**
  * Represents a Neighbor Solicitation (NS) message.
  */
 OT_TOOL_PACKED_BEGIN
-class NeighborSolicitMessage : public Clearable<NeighborSolicitMessage>
+class NeighborSolicitHeader : public Clearable<NeighborSolicitHeader>
 {
 public:
     /**
-     * Initializes the Neighbor Solicitation message.
+     * Initializes the Neighbor Solicitation message header.
+     *
      */
-    NeighborSolicitMessage(void);
+    NeighborSolicitHeader(void);
 
     /**
      * Indicates whether the Neighbor Solicitation message is valid (proper Type and Code).
      *
-     * @retval TRUE  If the message is valid.
-     * @retval FALSE If the message is not valid.
+     * @retval TRUE  If the message header is valid.
+     * @retval FALSE If the message header is not valid.
      */
     bool IsValid(void) const { return (mType == Icmp::Header::kTypeNeighborSolicit) && (mCode == 0); }
 
@@ -876,7 +906,7 @@ private:
     Address  mTargetAddress;
 } OT_TOOL_PACKED_END;
 
-static_assert(sizeof(NeighborSolicitMessage) == 24, "Invalid NeighborSolicitMessage definition");
+static_assert(sizeof(NeighborSolicitHeader) == 24, "Invalid NeighborSolicitHeader definition");
 
 /**
  * Represents a Neighbor Advertisement (NA) message.

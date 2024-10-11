@@ -208,9 +208,9 @@ void RouterAdvert::Header::SetDefaultRouterPreference(RoutePreference aPreferenc
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// RouterAdver::TxMessage
+// TxMessage
 
-Option *RouterAdvert::TxMessage::AppendOption(uint16_t aOptionSize)
+Option *TxMessage::AppendOption(uint16_t aOptionSize)
 {
     // This method appends an option with a given size to the RA
     // message by reserving space in the data buffer if there is
@@ -228,7 +228,7 @@ exit:
     return option;
 }
 
-Error RouterAdvert::TxMessage::AppendBytes(const uint8_t *aBytes, uint16_t aLength)
+Error TxMessage::AppendBytes(const uint8_t *aBytes, uint16_t aLength)
 {
     Error error = kErrorNone;
 
@@ -244,10 +244,35 @@ exit:
     return error;
 }
 
-Error RouterAdvert::TxMessage::AppendHeader(const Header &aHeader)
+Error TxMessage::AppendLinkLayerOption(LinkLayerAddress &aLinkLayerAddress, Option::Type aType)
 {
-    return AppendBytes(reinterpret_cast<const uint8_t *>(&aHeader), sizeof(Header));
+    Error    error;
+    Option   option;
+    uint16_t size;
+
+    size = sizeof(Option) + aLinkLayerAddress.mLength;
+
+    option.SetType(aType);
+    option.SetSize(size);
+
+    SuccessOrExit(error = Append(option));
+    SuccessOrExit(error = AppendBytes(aLinkLayerAddress.mAddress, aLinkLayerAddress.mLength));
+
+    // `SetSize()` rounds up to ensure the option's size is a multiple
+    // of `kLengthUnit = 8` bytes and ends on a 64-bit boundary. Append
+    // any necessary zero padding bytes.
+
+    for (; size < option.GetSize(); size++)
+    {
+        SuccessOrExit(error = Append<uint8_t>(0));
+    }
+
+exit:
+    return error;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+// RouterAdver::TxMessage
 
 Error RouterAdvert::TxMessage::AppendPrefixInfoOption(const Prefix &aPrefix,
                                                       uint32_t      aValidLifetime,
@@ -290,18 +315,18 @@ exit:
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// RouterSolicitMessage
+// RouterSolicitHeader
 
-RouterSolicitMessage::RouterSolicitMessage(void)
+RouterSolicitHeader::RouterSolicitHeader(void)
 {
     mHeader.Clear();
     mHeader.SetType(Icmp::Header::kTypeRouterSolicit);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// NeighborSolicitMessage
+// NeighborSolicitHeader
 
-NeighborSolicitMessage::NeighborSolicitMessage(void)
+NeighborSolicitHeader::NeighborSolicitHeader(void)
 {
     OT_UNUSED_VARIABLE(mChecksum);
     OT_UNUSED_VARIABLE(mReserved);

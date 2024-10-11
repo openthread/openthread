@@ -57,8 +57,9 @@ class InfraIf : public InstanceLocator
 public:
     static constexpr uint16_t kInfoStringSize = 20; ///< Max chars for the info string (`ToString()`).
 
-    typedef String<kInfoStringSize> InfoString;  ///< String type returned from `ToString()`.
-    typedef Data<kWithUint16Length> Icmp6Packet; ///< An IMCPv6 packet (data containing the IP payload)
+    typedef String<kInfoStringSize>       InfoString;       ///< String type returned from `ToString()`.
+    typedef Data<kWithUint16Length>       Icmp6Packet;      ///< An IMCPv6 packet (data containing the IP payload)
+    typedef otPlatInfraIfLinkLayerAddress LinkLayerAddress; ///< A link-layer address
 
     /**
      * Initializes the `InfraIf`.
@@ -112,6 +113,16 @@ public:
      * @param[in]  aIfIndex        The infrastructure interface index.
      */
     void SetIfIndex(uint32_t aIfIndex) { mIfIndex = aIfIndex; }
+
+    /**
+     * Gets the infrastructure interface link-layer address.
+     *
+     * @param[out]  aLinkLayerAddress     A reference to return the interface link-layer address.
+     *
+     * @retval  kErrorNone    Successfully get the infrastructure interface link-layer address.
+     * @retval  kErrorFailed  Failed to get the infrastructure interface link-layer address.
+     */
+    Error GetLinkLayerAddress(LinkLayerAddress &aLinkLayerAddress);
 
     /**
      * Indicates whether or not the infra interface has the given IPv6 address assigned.

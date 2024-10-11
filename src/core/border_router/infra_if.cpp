@@ -137,6 +137,11 @@ exit:
     }
 }
 
+Error InfraIf::GetLinkLayerAddress(LinkLayerAddress &aLinkLayerAddress)
+{
+    return otPlatGetInfraIfLinkLayerAddress(&GetInstance(), mIfIndex, &aLinkLayerAddress);
+}
+
 Error InfraIf::HandleStateChanged(uint32_t aIfIndex, bool aIsRunning)
 {
     Error error = kErrorNone;
@@ -216,5 +221,12 @@ OT_TOOL_WEAK otError otPlatInfraIfSendIcmp6Nd(uint32_t, const otIp6Address *, co
 
 OT_TOOL_WEAK otError otPlatInfraIfDiscoverNat64Prefix(uint32_t) { return OT_ERROR_FAILED; }
 #endif
+
+extern "C" OT_TOOL_WEAK otError otPlatGetInfraIfLinkLayerAddress(otInstance *,
+                                                                 uint32_t,
+                                                                 otPlatInfraIfLinkLayerAddress *)
+{
+    return OT_ERROR_FAILED;
+}
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
