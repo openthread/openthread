@@ -343,45 +343,6 @@ jobs:
           script/check-simulation-build
           script/check-posix-build
 
-  clang-m32:
-    name: clang-m32-${{ matrix.clang_ver }}
-    runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
-      matrix:
-        clang_ver: ["9", "10", "11", "12", "13"]
-    env:
-      CC: clang-${{ matrix.clang_ver }}
-      CXX: clang++-${{ matrix.clang_ver }}
-      CFLAGS: -m32 -Wconversion
-      CXXFLAGS: -m32 -Wconversion
-      LDFLAGS: -m32
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
-        with:
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-        with:
-          submodules: true
-      - name: Bootstrap
-        run: |
-          sudo dpkg --add-architecture i386
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          echo 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal main
-          deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal main
-          # 13
-          deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main
-          deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main' | sudo tee -a /etc/apt/sources.list
-          sudo apt-get update
-          sudo apt-get --no-install-recommends install -y clang-${{ matrix.clang_ver }} clang++-${{ matrix.clang_ver }} ninja-build
-          sudo apt-get --no-install-recommends install -y g++-multilib libreadline-dev:i386 libncurses-dev:i386
-      - name: Build
-        run: |
-          script/check-simulation-build
-          script/check-posix-build
-
   gn:
     runs-on: ubuntu-20.04
     steps:
