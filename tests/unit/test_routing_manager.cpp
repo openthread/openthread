@@ -4300,21 +4300,21 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
 
         sExpectedRios.Add(raPrefix);
         sExpectedRios.Clear();
-        AdvanceTime(10000);
+        AdvanceTime(10 * 1000);
 
         VerifyPdOmrPrefix(raPrefix);
         VerifyOmrPrefixInNetData(raPrefix, /* aDefaultRoute */ false);
 
-        AdvanceTime(1000000);
+        AdvanceTime(1000 * 1000);
         VerifyPdOmrPrefix(raPrefix);
 
         // Send new prefix without deprecating old prefix.
         // The old prefix should be preferred for another (1800 - 10 - 1000) = 790s
         SendRouterAdvertToBorderRoutingProcessIcmp6Ra({Pio(newRaPrefix, kValidLitime, kPreferredLifetime)});
-        AdvanceTime(500000);
+        AdvanceTime(500 * 1000);
         VerifyPdOmrPrefix(raPrefix);
 
-        AdvanceTime(300000);
+        AdvanceTime(300 * 1000);
         // Old Prefix should be removed now.
         VerifyNoPdOmrPrefix();
 
@@ -4329,11 +4329,11 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
                      BorderRouter::RoutingManager::kDhcp6PdStateRunning);
         SendRouterAdvertToBorderRoutingProcessIcmp6Ra({Pio(newRaPrefix, kValidLitime, kPreferredLifetime)});
 
-        AdvanceTime(1000000);
+        AdvanceTime(1000 * 1000);
         VerifyOrQuit(sExpectedRios.SawAll());
         VerifyPdOmrPrefix(newRaPrefix);
 
-        AdvanceTime(1000000);
+        AdvanceTime(1000 * 1000);
         VerifyNoPdOmrPrefix();
         VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     }
