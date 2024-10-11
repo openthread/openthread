@@ -153,6 +153,48 @@ def check_child1_state():
 
 verify_within(check_child1_state, 10)
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Remove all nodes and restart `router` on its own
+
+del leader
+del child1
+del child2
+
+del router
+router = cli.Node(index=2)
+router.interface_up()
+router.thread_start()
+
+
+def check_router_become_leader():
+    verify(router.get_state() == 'leader')
+
+
+verify_within(check_router_become_leader, 10)
+
+# Router device should attempt 3 Link Request to restore its
+# previous role, before sending Parent Request (7 times)
+
+counters = router.get_mac_counters()
+print(int(counters['TxBroadcast']) >= 10)
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Remove all nodes and restart `leader` on its own
+
+del router
+
+leader = cli.Node(index=1)
+leader.interface_up()
+leader.thread_start()
+
+verify_within(check_leader_state, 10)
+
+# Leader device should attempt 6 Link Request to restore its
+# previous role, before sending Parent Request (7 times)
+
+counters = leader.get_mac_counters()
+print(int(counters['TxBroadcast']) >= 13)
+
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
