@@ -315,6 +315,7 @@ typedef struct otRadioContext
 {
     otExtAddress     mExtAddress; ///< In little-endian byte order.
     uint32_t         mMacFrameCounter;
+    uint32_t         mPrevMacFrameCounter;
     uint32_t         mCslSampleTime; ///< The sample time based on the microsecond timer.
     uint16_t         mCslPeriod;     ///< In unit of 10 symbols.
     otShortAddress   mShortAddress;
