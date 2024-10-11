@@ -858,8 +858,6 @@ protected:
     uint8_t FindHeaderIeIndex(void) const;
 #endif
 
-    static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
-
 #if OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
     static uint8_t GetFcfSize(uint16_t aFcf) { return IsShortFcf(aFcf) ? kShortFcfSize : kFcfSize; }
 #else
@@ -915,6 +913,7 @@ protected:
 
     static uint8_t CalculateAddrFieldSize(uint16_t aFcf);
     static uint8_t CalculateSecurityHeaderSize(uint8_t aSecurityControl);
+    static uint8_t CalculateKeySourceSize(uint8_t aSecurityControl);
     static uint8_t CalculateMicSize(uint8_t aSecurityControl);
 };
 

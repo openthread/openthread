@@ -746,55 +746,55 @@ const uint8_t *Frame::GetKeySource(void) const
     return &mPsdu[index + kSecurityControlSize + kFrameCounterSize];
 }
 
-uint8_t Frame::GetKeySourceLength(uint8_t aKeyIdMode)
+uint8_t Frame::CalculateKeySourceSize(uint8_t aSecurityControl)
 {
-    uint8_t len = 0;
+    uint8_t size = 0;
 
-    switch (aKeyIdMode)
+    switch (aSecurityControl & kKeyIdModeMask)
     {
     case kKeyIdMode0:
-        len = kKeySourceSizeMode0;
+        size = kKeySourceSizeMode0;
         break;
 
     case kKeyIdMode1:
-        len = kKeySourceSizeMode1;
+        size = kKeySourceSizeMode1;
         break;
 
     case kKeyIdMode2:
-        len = kKeySourceSizeMode2;
+        size = kKeySourceSizeMode2;
         break;
 
     case kKeyIdMode3:
-        len = kKeySourceSizeMode3;
+        size = kKeySourceSizeMode3;
         break;
     }
 
-    return len;
+    return size;
 }
 
 void Frame::SetKeySource(const uint8_t *aKeySource)
 {
-    uint8_t keySourceLength;
+    uint8_t keySourceSize;
     uint8_t index = FindSecurityHeaderIndex();
 
     OT_ASSERT(index != kInvalidIndex);
 
-    keySourceLength = GetKeySourceLength(mPsdu[index] & kKeyIdModeMask);
+    keySourceSize = CalculateKeySourceSize(mPsdu[index]);
 
-    memcpy(&mPsdu[index + kSecurityControlSize + kFrameCounterSize], aKeySource, keySourceLength);
+    memcpy(&mPsdu[index + kSecurityControlSize + kFrameCounterSize], aKeySource, keySourceSize);
 }
 
 Error Frame::GetKeyId(uint8_t &aKeyId) const
 {
     Error   error = kErrorNone;
-    uint8_t keySourceLength;
+    uint8_t keySourceSize;
     uint8_t index = FindSecurityHeaderIndex();
 
     VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
-    keySourceLength = GetKeySourceLength(mPsdu[index] & kKeyIdModeMask);
+    keySourceSize = CalculateKeySourceSize(mPsdu[index]);
 
-    aKeyId = mPsdu[index + kSecurityControlSize + kFrameCounterSize + keySourceLength];
+    aKeyId = mPsdu[index + kSecurityControlSize + kFrameCounterSize + keySourceSize];
 
 exit:
     return error;
@@ -802,14 +802,14 @@ exit:
 
 void Frame::SetKeyId(uint8_t aKeyId)
 {
-    uint8_t keySourceLength;
+    uint8_t keySourceSize;
     uint8_t index = FindSecurityHeaderIndex();
 
     OT_ASSERT(index != kInvalidIndex);
 
-    keySourceLength = GetKeySourceLength(mPsdu[index] & kKeyIdModeMask);
+    keySourceSize = CalculateKeySourceSize(mPsdu[index]);
 
-    mPsdu[index + kSecurityControlSize + kFrameCounterSize + keySourceLength] = aKeyId;
+    mPsdu[index + kSecurityControlSize + kFrameCounterSize + keySourceSize] = aKeyId;
 }
 
 Error Frame::GetCommandId(uint8_t &aCommandId) const
@@ -943,27 +943,15 @@ uint16_t Frame::DetermineFcfAddrType(const Address &aAddress, uint16_t aBitShift
 
 uint8_t Frame::CalculateSecurityHeaderSize(uint8_t aSecurityControl)
 {
-    uint8_t size = kSecurityControlSize + kFrameCounterSize;
+    uint8_t size;
 
     VerifyOrExit((aSecurityControl & kSecLevelMask) != kSecurityNone, size = kInvalidSize);
 
-    switch (aSecurityControl & kKeyIdModeMask)
+    size = kSecurityControlSize + kFrameCounterSize + CalculateKeySourceSize(aSecurityControl);
+
+    if ((aSecurityControl & kKeyIdModeMask) != kKeyIdMode0)
     {
-    case kKeyIdMode0:
-        size += kKeySourceSizeMode0;
-        break;
-
-    case kKeyIdMode1:
-        size += kKeySourceSizeMode1 + kKeyIndexSize;
-        break;
-
-    case kKeyIdMode2:
-        size += kKeySourceSizeMode2 + kKeyIndexSize;
-        break;
-
-    case kKeyIdMode3:
-        size += kKeySourceSizeMode3 + kKeyIndexSize;
-        break;
+        size += kKeyIndexSize;
     }
 
 exit:
