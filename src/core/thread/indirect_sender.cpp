@@ -90,9 +90,9 @@ void IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
     OT_ASSERT(!aChild.IsRxOnWhenIdle());
 
     childIndex = Get<ChildTable>().GetChildIndex(aChild);
-    VerifyOrExit(!aMessage.GetChildMask(childIndex));
+    VerifyOrExit(!aMessage.GetIndirectTxChildMask().Has(childIndex));
 
-    aMessage.SetChildMask(childIndex);
+    aMessage.GetIndirectTxChildMask().Add(childIndex);
     mSourceMatchController.IncrementMessageCount(aChild);
 
     if ((aMessage.GetType() != Message::kTypeSupervision) && (aChild.GetIndirectMessageCount() > 1))
@@ -117,9 +117,9 @@ Error IndirectSender::RemoveMessageFromSleepyChild(Message &aMessage, Child &aCh
     Error    error      = kErrorNone;
     uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 
-    VerifyOrExit(aMessage.GetChildMask(childIndex), error = kErrorNotFound);
+    VerifyOrExit(aMessage.GetIndirectTxChildMask().Has(childIndex), error = kErrorNotFound);
 
-    aMessage.ClearChildMask(childIndex);
+    aMessage.GetIndirectTxChildMask().Remove(childIndex);
     mSourceMatchController.DecrementMessageCount(aChild);
 
     RequestMessageUpdate(aChild);
@@ -134,7 +134,7 @@ void IndirectSender::ClearAllMessagesForSleepyChild(Child &aChild)
 
     for (Message &message : Get<MeshForwarder>().mSendQueue)
     {
-        message.ClearChildMask(Get<ChildTable>().GetChildIndex(aChild));
+        message.GetIndirectTxChildMask().Remove(Get<ChildTable>().GetChildIndex(aChild));
 
         Get<MeshForwarder>().RemoveMessageIfNoPendingTx(message);
     }
@@ -158,7 +158,7 @@ const Message *IndirectSender::FindQueuedMessageForSleepyChild(const Child &aChi
 
     for (const Message &message : Get<MeshForwarder>().mSendQueue)
     {
-        if (message.GetChildMask(childIndex) && aChecker(message))
+        if (message.GetIndirectTxChildMask().Has(childIndex) && aChecker(message))
         {
             match = &message;
             break;
@@ -194,9 +194,9 @@ void IndirectSender::HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMo
 
         for (Message &message : Get<MeshForwarder>().mSendQueue)
         {
-            if (message.GetChildMask(childIndex))
+            if (message.GetIndirectTxChildMask().Has(childIndex))
             {
-                message.ClearChildMask(childIndex);
+                message.GetIndirectTxChildMask().Remove(childIndex);
                 message.SetDirectTransmission();
             }
         }
@@ -228,7 +228,7 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
     // case where we have a pending "replace frame" request and while
     // waiting for the callback, the current message is removed.
 
-    if ((curMessage != nullptr) && !curMessage->GetChildMask(Get<ChildTable>().GetChildIndex(aChild)))
+    if ((curMessage != nullptr) && !curMessage->GetIndirectTxChildMask().Has(Get<ChildTable>().GetChildIndex(aChild)))
     {
         // Set the indirect message for this child to `nullptr` to ensure
         // it is not processed on `HandleSentFrameToChild()` callback.
@@ -523,9 +523,9 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
             }
         }
 
-        if (message->GetChildMask(childIndex))
+        if (message->GetIndirectTxChildMask().Has(childIndex))
         {
-            message->ClearChildMask(childIndex);
+            message->GetIndirectTxChildMask().Remove(childIndex);
             mSourceMatchController.DecrementMessageCount(aChild);
         }
 
