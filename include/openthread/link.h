@@ -1181,6 +1181,17 @@ void otLinkGetWakeupListenParameters(otInstance *aInstance, uint32_t *aInterval,
 otError otLinkSetWakeupListenParameters(otInstance *aInstance, uint32_t aInterval, uint32_t aDuration);
 
 /**
+ * Sets the rx-on-when-idle state.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aRxOnWhenIdle  TRUE to keep radio in Receive state, FALSE to put to Sleep state during idle periods.
+ *
+ * @retval OT_ERROR_NONE             If successful.
+ * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+ */
+otError otLinkSetRxOnWhenIdle(otInstance *aInstance, bool aRxOnWhenIdle);
+
+/**
  * @}
  */
 
