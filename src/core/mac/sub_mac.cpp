@@ -59,10 +59,6 @@ SubMac::SubMac(Instance &aInstance)
     , mWedTimer(aInstance, SubMac::HandleWedTimer)
 #endif
 {
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    mCslParentAccuracy.Init();
-#endif
-
     Init();
 }
 

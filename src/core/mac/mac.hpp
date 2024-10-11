@@ -616,22 +616,19 @@ public:
      */
     bool IsCslSupported(void) const;
 
-    /**
-     * Returns parent CSL accuracy (clock accuracy and uncertainty).
-     *
-     * @returns The parent CSL accuracy.
-     */
-    const CslAccuracy &GetCslParentAccuracy(void) const { return mLinks.GetSubMac().GetCslParentAccuracy(); }
+    uint8_t GetMaxCslNeighbors(void) const { return mLinks.GetSubMac().GetMaxCslNeighbors(); }
 
-    /**
-     * Sets parent CSL accuracy.
-     *
-     * @param[in] aCslAccuracy  The parent CSL accuracy.
-     */
-    void SetCslParentAccuracy(const CslAccuracy &aCslAccuracy)
+    void ConfigureCslNeighbor(uint16_t       aIndex,
+                              otShortAddress aShortAddr,
+                              otExtAddress  &aExtAddr,
+                              CslAccuracy    aCslAccuracy)
     {
-        mLinks.GetSubMac().SetCslParentAccuracy(aCslAccuracy);
+        mLinks.GetSubMac().ConfigureCslNeighbor(aIndex, aShortAddr, aExtAddr, aCslAccuracy);
     }
+
+    void ClearCslNeighbor(uint16_t aIndex) { mLinks.GetSubMac().ClearCslNeighbor(aIndex); }
+
+    void UpdateCslParent(void);
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
@@ -747,6 +744,10 @@ public:
 
 private:
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    static constexpr uint16_t kCslParentIndex = 0;
+#endif
 
     enum Operation : uint8_t
     {
