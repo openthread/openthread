@@ -4287,6 +4287,57 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
         VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     }
 
+    // 6. Replace a prefix, on some platforms, there might be no messages to deprecate the old prefix, instead, they
+    // send new prefixes directly.
+    //    In this case, we still use the old prefix as long as the old prefix preferred lifetime is not exceeded, and
+    //    replace it with the new prefix when expired.
+    Log("6. Replace prefix.");
+    {
+        Ip6::Prefix raPrefix    = PrefixFromString("2001:db8:1:2::", 64);
+        Ip6::Prefix newRaPrefix = PrefixFromString("2001:db8:3:4::", 64);
+
+        SendRouterAdvertToBorderRoutingProcessIcmp6Ra({Pio(raPrefix, kValidLitime, kPreferredLifetime)});
+
+        sExpectedRios.Add(raPrefix);
+        sExpectedRios.Clear();
+        AdvanceTime(10 * 1000);
+
+        VerifyPdOmrPrefix(raPrefix);
+        VerifyOmrPrefixInNetData(raPrefix, /* aDefaultRoute */ false);
+
+        AdvanceTime(1000 * 1000);
+        VerifyPdOmrPrefix(raPrefix);
+
+        // Send new prefix without deprecating old prefix.
+        // The old prefix should be preferred for another (1800 - 10 - 1000) = 790s
+        SendRouterAdvertToBorderRoutingProcessIcmp6Ra({Pio(newRaPrefix, kValidLitime, kPreferredLifetime)});
+        AdvanceTime(500 * 1000);
+        VerifyPdOmrPrefix(raPrefix);
+
+        AdvanceTime(300 * 1000);
+        // Old Prefix should be removed now.
+        VerifyNoPdOmrPrefix();
+
+        sExpectedRios.Add(newRaPrefix);
+
+        // When the prefix is replaced, there will be a short period when the old prefix is still in the netdata, and PD
+        // manager will refuse to request the prefix.
+        SendRouterAdvertToBorderRoutingProcessIcmp6Ra({Pio(newRaPrefix, kValidLitime, kPreferredLifetime)});
+        // Advance a short period of time to wait for a stable PD state.
+        AdvanceTime(5000);
+        VerifyOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetDhcp6PdState() ==
+                     BorderRouter::RoutingManager::kDhcp6PdStateRunning);
+        SendRouterAdvertToBorderRoutingProcessIcmp6Ra({Pio(newRaPrefix, kValidLitime, kPreferredLifetime)});
+
+        AdvanceTime(1000 * 1000);
+        VerifyOrQuit(sExpectedRios.SawAll());
+        VerifyPdOmrPrefix(newRaPrefix);
+
+        AdvanceTime(1000 * 1000);
+        VerifyNoPdOmrPrefix();
+        VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+    }
+
     SuccessOrQuit(otBorderRoutingSetEnabled(sInstance, false));
     VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
 
