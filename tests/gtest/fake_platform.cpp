@@ -345,7 +345,7 @@ otError otPlatRadioDisable(otInstance *) { return OT_ERROR_NONE; }
 
 otError otPlatRadioSleep(otInstance *) { return OT_ERROR_NONE; }
 
-otError otPlatRadioReceive(otInstance *, uint8_t) { return OT_ERROR_NONE; }
+otError otPlatRadioReceive(otInstance *, uint8_t aChannel) { return FakePlatform::CurrentPlatform().Receive(aChannel); }
 
 otError otPlatRadioTransmit(otInstance *, otRadioFrame *aFrame)
 {
