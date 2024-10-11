@@ -4354,7 +4354,7 @@ void Mle::DelayedSender::Send(TxMessage &aMessage, const Metadata &aMetadata)
 
     aMetadata.RemoveFrom(aMessage);
 
-    if (aMessage.GetSubType() == Message::kSubTypeMleDataRequest)
+    if (aMessage.IsMleCommand(kCommandDataRequest))
     {
         SuccessOrExit(error = aMessage.AppendActiveAndPendingTimestampTlvs());
     }
@@ -4381,17 +4381,15 @@ exit:
 
 void Mle::DelayedSender::RemoveDataResponseMessage(void)
 {
-    RemoveMessage(Message::kSubTypeMleDataResponse, kTypeDataResponse, nullptr);
+    RemoveMessage(kCommandDataResponse, kTypeDataResponse, nullptr);
 }
 
 void Mle::DelayedSender::RemoveDataRequestMessage(const Ip6::Address &aDestination)
 {
-    RemoveMessage(Message::kSubTypeMleDataRequest, kTypeDataRequest, &aDestination);
+    RemoveMessage(kCommandDataRequest, kTypeDataRequest, &aDestination);
 }
 
-void Mle::DelayedSender::RemoveMessage(Message::SubType    aSubType,
-                                       MessageType         aMessageType,
-                                       const Ip6::Address *aDestination)
+void Mle::DelayedSender::RemoveMessage(Command aCommand, MessageType aMessageType, const Ip6::Address *aDestination)
 {
     for (Message &message : mQueue)
     {
@@ -4399,8 +4397,7 @@ void Mle::DelayedSender::RemoveMessage(Message::SubType    aSubType,
 
         metadata.ReadFrom(message);
 
-        if ((message.GetSubType() == aSubType) &&
-            ((aDestination == nullptr) || (metadata.mDestination == *aDestination)))
+        if (message.IsMleCommand(aCommand) && ((aDestination == nullptr) || (metadata.mDestination == *aDestination)))
         {
             mQueue.DequeueAndFree(message);
             Log(kMessageRemoveDelayed, aMessageType, metadata.mDestination);
@@ -4416,52 +4413,20 @@ Mle::TxMessage *Mle::NewMleMessage(Command aCommand)
     Error             error = kErrorNone;
     TxMessage        *message;
     Message::Settings settings(Message::kNoLinkSecurity, Message::kPriorityNet);
-    Message::SubType  subType;
     uint8_t           securitySuite;
 
     message = static_cast<TxMessage *>(mSocket.NewMessage(0, settings));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     securitySuite = k154Security;
-    subType       = Message::kSubTypeMleGeneral;
 
-    switch (aCommand)
+    if ((aCommand == kCommandDiscoveryRequest) || (aCommand == kCommandDiscoveryResponse))
     {
-    case kCommandAnnounce:
-        subType = Message::kSubTypeMleAnnounce;
-        break;
-
-    case kCommandDiscoveryRequest:
-        subType       = Message::kSubTypeMleDiscoverRequest;
         securitySuite = kNoSecurity;
-        break;
-
-    case kCommandDiscoveryResponse:
-        subType       = Message::kSubTypeMleDiscoverResponse;
-        securitySuite = kNoSecurity;
-        break;
-
-    case kCommandChildUpdateRequest:
-        subType = Message::kSubTypeMleChildUpdateRequest;
-        break;
-
-    case kCommandDataResponse:
-        subType = Message::kSubTypeMleDataResponse;
-        break;
-
-    case kCommandChildIdRequest:
-        subType = Message::kSubTypeMleChildIdRequest;
-        break;
-
-    case kCommandDataRequest:
-        subType = Message::kSubTypeMleDataRequest;
-        break;
-
-    default:
-        break;
     }
 
-    message->SetSubType(subType);
+    message->SetSubType(Message::kSubTypeMle);
+    message->SetMleCommand(aCommand);
 
     SuccessOrExit(error = message->Append(securitySuite));
 

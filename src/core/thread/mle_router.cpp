@@ -1921,28 +1921,11 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 
-bool MleRouter::IsMessageMleSubType(const Message &aMessage)
-{
-    bool isMle = false;
-
-    switch (aMessage.GetSubType())
-    {
-    case Message::kSubTypeMleGeneral:
-    case Message::kSubTypeMleChildIdRequest:
-    case Message::kSubTypeMleChildUpdateRequest:
-    case Message::kSubTypeMleDataResponse:
-        isMle = true;
-        break;
-    default:
-        break;
-    }
-
-    return isMle;
-}
+bool MleRouter::IsMessageMleSubType(const Message &aMessage) { return aMessage.IsSubTypeMle(); }
 
 bool MleRouter::IsMessageChildUpdateRequest(const Message &aMessage)
 {
-    return aMessage.GetSubType() == Message::kSubTypeMleChildUpdateRequest;
+    return aMessage.IsMleCommand(kCommandChildUpdateRequest);
 }
 
 void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)

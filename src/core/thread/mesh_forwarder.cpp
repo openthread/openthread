@@ -778,7 +778,7 @@ Mac::TxFrame *MeshForwarder::HandleFrameRequest(Mac::TxFrames &aTxFrames)
     switch (mSendMessage->GetType())
     {
     case Message::kTypeIp6:
-        if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
+        if (mSendMessage->IsMleCommand(Mle::kCommandDiscoveryRequest))
         {
             frame = Get<Mle::DiscoverScanner>().PrepareDiscoveryRequestFrame(*frame);
             VerifyOrExit(frame != nullptr);
@@ -792,7 +792,7 @@ Mac::TxFrame *MeshForwarder::HandleFrameRequest(Mac::TxFrames &aTxFrames)
         mMessageNextOffset =
             PrepareDataFrame(*frame, *mSendMessage, mMacAddrs, mAddMeshHeader, mMeshSource, mMeshDest, addFragHeader);
 
-        if ((mSendMessage->GetSubType() == Message::kSubTypeMleChildIdRequest) && mSendMessage->IsLinkSecurityEnabled())
+        if (mSendMessage->IsMleCommand(Mle::kCommandChildIdRequest) && mSendMessage->IsLinkSecurityEnabled())
         {
             LogNote("Child ID Request requires fragmentation, aborting tx");
             mMessageNextOffset = mSendMessage->GetLength();
@@ -856,7 +856,7 @@ void MeshForwarder::PrepareMacHeaders(Mac::TxFrame &aTxFrame, Mac::TxFrame::Info
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (Get<Mac::Mac>().IsCslEnabled() &&
-        !(aMessage != nullptr && aMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest))
+        !(aMessage != nullptr && aMessage->IsMleCommand(Mle::kCommandDiscoveryRequest)))
     {
         aTxFrameInfo.mAppendCslIe = true;
         aTxFrameInfo.mVersion     = Mac::Frame::kVersion2015;
@@ -934,39 +934,40 @@ start:
     {
         frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
 
-        switch (aMessage.GetSubType())
+        if (aMessage.GetSubType() == Message::kSubTypeJoinerEntrust)
         {
-        case Message::kSubTypeJoinerEntrust:
             frameInfo.mKeyIdMode = Mac::Frame::kKeyIdMode0;
-            break;
-
-        case Message::kSubTypeMleAnnounce:
+        }
+        else if (aMessage.IsMleCommand(Mle::kCommandAnnounce))
+        {
             frameInfo.mKeyIdMode = Mac::Frame::kKeyIdMode2;
-            break;
-
-        default:
+        }
+        else
+        {
             frameInfo.mKeyIdMode = Mac::Frame::kKeyIdMode1;
-            break;
         }
     }
 
     frameInfo.mPanIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
 
-    switch (aMessage.GetSubType())
+    if (aMessage.IsSubTypeMle())
     {
-    case Message::kSubTypeMleAnnounce:
-        aFrame.SetChannel(aMessage.GetChannel());
-        aFrame.SetRxChannelAfterTxDone(Get<Mac::Mac>().GetPanChannel());
-        frameInfo.mPanIds.SetDestination(Mac::kPanIdBroadcast);
-        break;
+        switch (aMessage.GetMleCommand())
+        {
+        case Mle::kCommandAnnounce:
+            aFrame.SetChannel(aMessage.GetChannel());
+            aFrame.SetRxChannelAfterTxDone(Get<Mac::Mac>().GetPanChannel());
+            frameInfo.mPanIds.SetDestination(Mac::kPanIdBroadcast);
+            break;
 
-    case Message::kSubTypeMleDiscoverRequest:
-    case Message::kSubTypeMleDiscoverResponse:
-        frameInfo.mPanIds.SetDestination(aMessage.GetPanId());
-        break;
+        case Mle::kCommandDiscoveryRequest:
+        case Mle::kCommandDiscoveryResponse:
+            frameInfo.mPanIds.SetDestination(aMessage.GetPanId());
+            break;
 
-    default:
-        break;
+        default:
+            break;
+        }
     }
 
     frameInfo.mType  = Mac::Frame::kTypeData;
@@ -1345,20 +1346,15 @@ void MeshForwarder::FinalizeMessageDirectTx(Message &aMessage, Error aError)
         aMessage.GetTxSuccess() ? mIpCounters.mTxSuccess++ : mIpCounters.mTxFailure++;
     }
 
-    switch (aMessage.GetSubType())
+    if (aMessage.IsMleCommand(Mle::kCommandDiscoveryRequest))
     {
-    case Message::kSubTypeMleDiscoverRequest:
         // Note that `HandleDiscoveryRequestFrameTxDone()` may update
         // `aMessage` and mark it again for direct transmission.
         Get<Mle::DiscoverScanner>().HandleDiscoveryRequestFrameTxDone(aMessage, aError);
-        break;
-
-    case Message::kSubTypeMleChildIdRequest:
+    }
+    else if (aMessage.IsMleCommand(Mle::kCommandChildIdRequest))
+    {
         Get<Mle::Mle>().HandleChildIdRequestTxDone(aMessage);
-        break;
-
-    default:
-        break;
     }
 
 exit:
