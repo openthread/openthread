@@ -224,16 +224,6 @@ typedef enum
 } otRadioKeyType;
 
 /**
- * Represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.
- */
-typedef struct otRadioIeInfo
-{
-    int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time.
-    uint8_t mTimeIeOffset;      ///< The Time IE offset from the start of PSDU.
-    uint8_t mTimeSyncSeq;       ///< The Time sync sequence.
-} otRadioIeInfo;
-
-/**
  * Represents an IEEE 802.15.4 radio frame.
  */
 typedef struct otRadioFrame
@@ -256,7 +246,6 @@ typedef struct otRadioFrame
         struct
         {
             const otMacKeyMaterial *mAesKey; ///< The key material used for AES-CCM frame security.
-            otRadioIeInfo          *mIeInfo; ///< The pointer to the Header IE(s) related information.
 
             /**
              * The base time in microseconds for scheduled transmissions
@@ -887,7 +876,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame);
  * The radio driver calls this method to notify OpenThread that the transmission has started.
  *
  * @note  This function should be called by the same thread that executes all of the other OpenThread code. It should
- *        not be called by ISR or any other task.
+ *        not be called by ISR or any other task. It should be called after the frame is finalized, i.e. IEs updated,
+ *        security processed, etc.
  *
  * @param[in]  aInstance  A pointer to the OpenThread instance structure.
  * @param[in]  aFrame     A pointer to the frame that is being transmitted.

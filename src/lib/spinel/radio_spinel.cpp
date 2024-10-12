@@ -141,11 +141,6 @@ void RadioSpinel::Init(bool          aSkipRcpCompatibilityCheck,
     mSpinelDriver = aSpinelDriver;
     mSpinelDriver->SetFrameHandler(&HandleReceivedFrame, &HandleSavedFrame, this);
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    memset(&mTxIeInfo, 0, sizeof(otRadioIeInfo));
-    mTxRadioFrame.mInfo.mTxInfo.mIeInfo = &mTxIeInfo;
-#endif
-
     EXPECT_NO_ERROR(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_EUI64_S, sIeeeEui64.m8));
     InitializeCaps(supportsRcpApiVersion, supportsRcpMinHostApiVersion);
 
@@ -1567,6 +1562,7 @@ void RadioSpinel::HandleTransmitDone(uint32_t          aCommand,
     {
         uint8_t  keyId;
         uint32_t frameCounter;
+        uint64_t txTime;
 
         // Replace transmit frame security key index and frame counter with the one filled by RCP
         unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT32_S, &keyId,
@@ -1574,6 +1570,11 @@ void RadioSpinel::HandleTransmitDone(uint32_t          aCommand,
         EXPECT(unpacked > 0, error = OT_ERROR_PARSE);
         static_cast<Mac::TxFrame *>(mTransmitFrame)->SetKeyId(keyId);
         static_cast<Mac::TxFrame *>(mTransmitFrame)->SetFrameCounter(frameCounter);
+
+        aBuffer += unpacked;
+        aLength -= unpacked;
+        unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT64_S, &txTime);
+        EXPECT(unpacked > 0, error = OT_ERROR_NONE);
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
         mMacFrameCounterSet = true;
@@ -1604,43 +1605,6 @@ otError RadioSpinel::Transmit(otRadioFrame &aFrame)
     EXPECT(mState == kStateReceive || (mState == kStateSleep && (sRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX)), NO_ACTION);
 
     mTransmitFrame = &aFrame;
-
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (mTransmitFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
-    {
-        uint64_t netRadioTime = otPlatRadioGetNow(mInstance);
-        uint64_t netSyncTime;
-        uint8_t *timeIe = mTransmitFrame->mPsdu + mTransmitFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
-
-        if (netRadioTime == UINT64_MAX)
-        {
-            // If we can't get the radio time, get the platform time
-            netSyncTime = static_cast<uint64_t>(static_cast<int64_t>(otPlatTimeGet()) +
-                                                mTransmitFrame->mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset);
-        }
-        else
-        {
-            uint32_t transmitDelay = 0;
-
-            // If supported, add a delay and transmit the network time at a precise moment
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-            transmitDelay                                  = kTxWaitUs / 10;
-            mTransmitFrame->mInfo.mTxInfo.mTxDelayBaseTime = static_cast<uint32_t>(netRadioTime);
-            mTransmitFrame->mInfo.mTxInfo.mTxDelay         = transmitDelay;
-#endif
-            netSyncTime = static_cast<uint64_t>(static_cast<int64_t>(netRadioTime) + transmitDelay +
-                                                mTransmitFrame->mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset);
-        }
-
-        *(timeIe++) = mTransmitFrame->mInfo.mTxInfo.mIeInfo->mTimeSyncSeq;
-
-        for (uint8_t i = 0; i < sizeof(uint64_t); i++)
-        {
-            *(timeIe++) = static_cast<uint8_t>(netSyncTime & 0xff);
-            netSyncTime = netSyncTime >> 8;
-        }
-    }
-#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     // `otPlatRadioTxStarted()` is triggered immediately for now, which may be earlier than real started time.
     if (mCallbacks.mTxStarted != nullptr)

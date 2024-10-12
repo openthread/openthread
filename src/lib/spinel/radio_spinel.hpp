@@ -1176,10 +1176,6 @@ private:
     otRadioFrame      mAckRadioFrame;
     otRadioFrame     *mTransmitFrame; ///< Points to the frame to send
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    otRadioIeInfo mTxIeInfo;
-#endif
-
     otExtAddress        mExtendedAddress;
     uint16_t            mShortAddress;
     uint16_t            mPanId;

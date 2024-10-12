@@ -350,37 +350,18 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-void otMacFrameUpdateTimeIe(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioContext *aRadioContext)
-{
-    if (aFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
-    {
-        uint8_t *timeIe = aFrame->mPsdu + aFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
-        uint64_t time   = aRadioTime + aFrame->mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset;
-
-        *timeIe = aFrame->mInfo.mTxInfo.mIeInfo->mTimeSyncSeq;
-
-        *(++timeIe) = static_cast<uint8_t>(time & 0xff);
-        for (uint8_t i = 1; i < sizeof(uint64_t); i++)
-        {
-            time        = time >> 8;
-            *(++timeIe) = static_cast<uint8_t>(time & 0xff);
-        }
-    }
-}
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-
 otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioContext *aRadioContext)
 {
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    // TimeIe must be updated before updating the radio frame's tx timestamp
+    static_cast<Mac::TxFrame *>(aFrame)->UpdateTimeIe(aRadioTime);
+#endif
+    aFrame->mInfo.mTxInfo.mTimestamp = aRadioTime;
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (aRadioContext->mCslPeriod > 0) // CSL IE should be filled for every transmit attempt
     {
         otMacFrameSetCslIe(aFrame, aRadioContext->mCslPeriod, ComputeCslPhase(aRadioTime, aRadioContext));
     }
 #endif
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    otMacFrameUpdateTimeIe(aFrame, aRadioTime, aRadioContext);
-#endif
-    aFrame->mInfo.mTxInfo.mTimestamp = aRadioTime;
     return otMacFrameProcessTransmitSecurity(aFrame, aRadioContext);
 }
