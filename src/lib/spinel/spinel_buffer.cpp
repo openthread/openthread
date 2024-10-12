@@ -784,6 +784,8 @@ otError Buffer::OutFrameRemove(void)
     uint8_t  numSegments;
     FrameTag tag;
 
+    OT_UNUSED_VARIABLE(numSegments);
+
     EXPECT(!IsEmpty(), error = OT_ERROR_NOT_FOUND);
 
     OutFrameSelectReadDirection();
@@ -883,6 +885,8 @@ uint16_t Buffer::OutFrameGetLength(void)
 #if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     otMessage *message = nullptr;
 #endif
+
+    OT_UNUSED_VARIABLE(numSegments);
 
     // If the frame length was calculated before, return the previously calculated length.
     EXPECT(mReadFrameLength == kUnknownFrameLength, frameLength = mReadFrameLength);

@@ -719,6 +719,8 @@ void MlrManager::CheckInvariants(void) const
 #if OPENTHREAD_EXAMPLES_SIMULATION && OPENTHREAD_CONFIG_ASSERT_ENABLE
     uint16_t registeringNum = 0;
 
+    OT_UNUSED_VARIABLE(registeringNum);
+
     OT_ASSERT(!mMlrPending || mSendDelay == 0);
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
