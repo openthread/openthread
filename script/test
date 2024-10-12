@@ -706,12 +706,10 @@ main()
             cert)
                 shift
                 do_cert "$@"
-                shift $#
                 ;;
             cert_suite)
                 shift
                 do_cert_suite "$@"
-                shift $#
                 ;;
             get_thread_wireshark)
                 do_get_thread_wireshark

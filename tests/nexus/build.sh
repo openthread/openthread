@@ -27,14 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-display_usage()
-{
-    echo ""
-    echo "Nexus build script "
-    echo ""
-    echo ""
-}
-
 die()
 {
     echo " *** ERROR: " "$*"
