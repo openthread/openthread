@@ -6765,6 +6765,31 @@ template <> otError Interpreter::Process<Cmd("state")>(Arg aArgs[])
     return error;
 }
 
+/**
+ * @cli targetpower
+ * @code
+ * targetpower 11 1000
+ * Done
+ * @endcode
+ * @par
+ * Set the target power (in unit of 0.01dBm) for the specified channel.
+ * @sa otPlatRadioSetChannelTargetPower
+ */
+template <> otError Interpreter::Process<Cmd("targetpower")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t channel;
+    int16_t targetPower;
+
+    SuccessOrExit(error = aArgs[0].ParseAsUint8(channel));
+    SuccessOrExit(error = aArgs[1].ParseAsInt16(targetPower));
+
+    error = otPlatRadioSetChannelTargetPower(GetInstancePtr(), channel, targetPower);
+
+exit:
+    return error;
+}
+
 template <> otError Interpreter::Process<Cmd("thread")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -8476,6 +8501,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("srp"),
 #endif
         CmdEntry("state"),
+        CmdEntry("targetpower"),
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
         CmdEntry("tcat"),
 #endif

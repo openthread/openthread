@@ -3751,6 +3751,15 @@ Disabled
 >
 ```
 
+### targetpower \<channel\> \<targetpower\>
+
+Set the target power (in unit of 0.01dBm) for the specified channel.
+
+```bash
+> targetpower 11 1000
+Done
+```
+
 ### thread start
 
 Enable Thread protocol operation and attach to a Thread network.
