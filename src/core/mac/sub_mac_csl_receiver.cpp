@@ -125,7 +125,7 @@ bool SubMac::UpdateCsl(uint16_t aPeriod, uint8_t aChannel, otShortAddress aShort
     mCslTimer.Stop();
     if (mCslPeriod > 0)
     {
-        mCslSampleTime = TimeMicro(static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance())));
+        mCslSampleTime = TimeMicro(static_cast<uint32_t>(Get<Radio>().GetNow()));
         mIsCslSampling = false;
         HandleCslTimer();
     }
@@ -248,7 +248,7 @@ uint32_t SubMac::GetLocalTime(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
     now = TimerMicro::GetNow().GetValue();
 #else
-    now = static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance()));
+    now = static_cast<uint32_t>(Get<Radio>().GetNow());
 #endif
 
     return now;

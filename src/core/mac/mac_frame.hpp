@@ -972,7 +972,7 @@ public:
      * 6.9.1 (albeit both unrelated to OT).
      *
      * The time is relative to the local radio clock as defined by
-     * `otPlatRadioGetNow`.
+     * `Radio::GetNow()`.
      *
      * @returns The timestamp in microseconds.
      */
