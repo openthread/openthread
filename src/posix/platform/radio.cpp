@@ -175,7 +175,12 @@ void Radio::ProcessMaxPowerTable(const RadioUrl &aRadioUrl)
          str != nullptr && channel <= ot::Radio::kChannelMax; str = strtok_r(nullptr, ",", &pSave))
     {
         power = static_cast<int8_t>(strtol(str, nullptr, 0));
-        error = mRadioSpinel.SetChannelMaxTransmitPower(channel, power);
+        error = mRadioSpinel.SetChannelTargetPower(channel, power * 100);
+        if (error == OT_ERROR_NOT_IMPLEMENTED)
+        {
+            error = mRadioSpinel.SetChannelMaxTransmitPower(channel, power);
+        }
+
         VerifyOrDie((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_IMPLEMENTED), OT_EXIT_FAILURE);
         if (error == OT_ERROR_NOT_IMPLEMENTED)
         {

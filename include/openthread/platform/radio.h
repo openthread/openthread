@@ -1189,6 +1189,8 @@ uint8_t otPlatRadioGetCslUncertainty(otInstance *aInstance);
  * @param[in]  aChannel     The radio channel.
  * @param[in]  aMaxPower    The max power in dBm, passing OT_RADIO_RSSI_INVALID will disable this channel.
  *
+ * @deprecated `otPlatRadioSetChannelTargetPower()` is preferred for better granularity.
+ *
  * @retval  OT_ERROR_NOT_IMPLEMENTED  The feature is not implemented
  * @retval  OT_ERROR_INVALID_ARGS     The specified channel is not valid.
  * @retval  OT_ERROR_FAILED           Other platform specific errors.
