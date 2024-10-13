@@ -34,6 +34,7 @@
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 
 #include <openthread/mdns.h>
+#include <openthread/platform/infra_if.h>
 #include <openthread/platform/mdns_socket.h>
 
 #include "common/as_core_type.hpp"
@@ -137,6 +138,13 @@ public:
          * @returns the IPv6 address.
          */
         const Ip6::Address &GetAddress(void) const { return AsCoreType(&mAddress); }
+
+        /**
+         * Gets the infrastructure interface index.
+         *
+         * @returns the infrastructure interface index.
+         */
+        uint32_t GetInfraIfIndex(void) const { return mInfraIfIndex; }
     };
 
     /**

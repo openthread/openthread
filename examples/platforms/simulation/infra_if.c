@@ -31,6 +31,7 @@
 #include <openthread/icmp6.h>
 #include <openthread/ip6.h>
 #include <openthread/logging.h>
+#include <openthread/nat64.h>
 #include <openthread/platform/infra_if.h>
 
 #include "simul_utils.h"
@@ -77,6 +78,11 @@ static Message      sPendingTx[INFRA_IF_MAX_PENDING_TX];
 static bool addressesMatch(const otIp6Address *aFirstAddr, const otIp6Address *aSecondAddr)
 {
     return memcmp(aFirstAddr, aSecondAddr, sizeof(otIp6Address)) == 0;
+}
+
+static bool addressesPrefixMatch(const otIp6Address *aFirstAddr, const otIp6Address *aSecondAddr)
+{
+    return memcmp(aFirstAddr, aSecondAddr, sizeof(otIp6NetworkPrefix)) == 0;
 }
 
 static uint16_t getMessageSize(const Message *aMessage)
@@ -176,6 +182,16 @@ bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddres
     OT_UNUSED_VARIABLE(aInfraIfIndex);
 
     return addressesMatch(aAddress, &sIp6Address);
+}
+
+bool otPlatInfraIfHasOnLinkPrefix(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
+{
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+
+    otIp4Address ip4Addr;
+    bool         isMappedAddress = (otIp4FromIp4MappedIp6Address(aAddress, &ip4Addr) == OT_ERROR_NONE);
+
+    return isMappedAddress ? true : addressesPrefixMatch(aAddress, &sIp6Address);
 }
 
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
@@ -332,6 +348,15 @@ OT_TOOL_WEAK void otPlatInfraIfRecvIcmp6Nd(otInstance         *aInstance,
     OT_UNUSED_VARIABLE(aBufferLength);
 
     fprintf(stderr, "\n\r Weak otPlatInfraIfRecvIcmp6Nd is being used\n\r");
+    exit(1);
+}
+
+OT_TOOL_WEAK otError otIp4FromIp4MappedIp6Address(const otIp6Address *aIp6Address, otIp4Address *aIp4Address)
+{
+    OT_UNUSED_VARIABLE(aIp6Address);
+    OT_UNUSED_VARIABLE(aIp4Address);
+
+    fprintf(stderr, "\n\rWeak otIp4FromIp4MappedIp6Address() is incorrectly used\n\r");
     exit(1);
 }
 

@@ -3358,15 +3358,23 @@ Error Core::RxMessage::Init(Instance          &aInstance,
         }
     }
 
-    if (mIsUnicast && mIsQuery)
+    if (mIsUnicast)
     {
+        // For queries:
         // Direct Unicast Queries to Port 5353 (RFC 6762 - section 5.5).
         // Responders SHOULD check that the source address in the query
         // packet matches the local subnet for that link and silently ignore
         // the packet if not.
 
-        LogInfo("We do not yet support unicast query to mDNS port");
-        ExitNow(error = kErrorNotCapable);
+        // For responses:
+        // Source Address Check (RFC 6762 - section 11).
+
+        if (!aSenderAddress.GetAddress().IsLinkLocalUnicast())
+        {
+            VerifyOrExit(aSenderAddress.GetInfraIfIndex() == Get<Core>().mInfraIfIndex, error = kErrorParse);
+            VerifyOrExit(Get<BorderRouter::InfraIf>().HasAddressWithOnLinkPrefix(aSenderAddress.GetAddress()),
+                         error = kErrorParse);
+        }
     }
 
     mRecordCounts.ReadFrom(header);

@@ -294,6 +294,13 @@ bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddres
     return AsCoreType(aAddress) == sInfraIfAddress;
 }
 
+bool otPlatInfraIfHasOnLinkPrefix(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
+{
+    VerifyOrQuit(aInfraIfIndex == kInfraIfIndex);
+
+    return memcmp(aAddress, &sInfraIfAddress, sizeof(otIp6NetworkPrefix)) == 0;
+}
+
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
                                  const uint8_t      *aBuffer,
