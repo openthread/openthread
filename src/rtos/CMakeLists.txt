@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2024, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,11 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_subdirectory(cli)
-add_subdirectory(core)
-add_subdirectory(lib)
-add_subdirectory(ncp)
-add_subdirectory(rtos)
+set(COMMON_INCLUDES
+    ${OT_PUBLIC_INCLUDES}
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/src/core
+    ${PROJECT_SOURCE_DIR}/src/rtos/zephyr
+)
+
+add_subdirectory(zephyr)
