@@ -385,7 +385,15 @@ Error Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
                  error = (aServerSockAddr == GetServerAddress()) ? kErrorNone : kErrorBusy);
 
     SuccessOrExit(error = mSocket.Open());
-    SuccessOrExit(error = mSocket.Connect(aServerSockAddr));
+
+    error = mSocket.Connect(aServerSockAddr);
+    if (error != kErrorNone)
+    {
+        LogInfo("Failed to connect to server %s: %s", aServerSockAddr.GetAddress().ToString().AsCString(),
+                ErrorToString(error));
+        IgnoreError(mSocket.Close());
+        ExitNow();
+    }
 
     LogInfo("%starting, server %s", (aRequester == kRequesterUser) ? "S" : "Auto-s",
             aServerSockAddr.ToString().AsCString());
