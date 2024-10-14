@@ -26,6 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <string.h>
+#include <errno.h>
+
 #include "srp_client.hpp"
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
@@ -403,6 +406,11 @@ Error Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
 #endif
 
 exit:
+    if(error != kErrorNone && mSocket.IsOpen())
+    {
+        LogInfo("cannot connect to server %s port %d: %s", aServerSockAddr.GetAddress().ToString().AsCString(), aServerSockAddr.GetPort(), strerror(errno));
+        IgnoreError(mSocket.Close());
+    }
     return error;
 }
 
