@@ -1153,49 +1153,33 @@ otError otLinkSetWakeUpListenEnabled(otInstance *aInstance, bool aEnable);
 bool otLinkIsWakeupListenEnabled(otInstance *aInstance);
 
 /**
- * Gets the WED listen interval in microseconds.
+ * Get the wake-up listen parameters.
  *
  * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
  *
- * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[out] aInterval   A pointer to return the wake-up listen interval in microseconds.
+ * @param[out] aDuration   A pointer to return the wake-up listen duration in microseconds.
  *
- * @returns The WED listen interval in microseconds.
  */
-uint32_t otLinkGetWedListenInterval(otInstance *aInstance);
+void otLinkGetWakeupListenParameters(otInstance *aInstance, uint32_t *aInterval, uint32_t *aDuration);
 
 /**
- * Sets the WED listen interval in microseconds.
+ * Set the wake-up listen parameters.
+ *
+ * The listen interval must be greater than the listen duration.
+ * The listen duration must be greater or equal than the minumum supported.
  *
  * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
  *
- * @param[in]  aInstance      A pointer to an OpenThread instance.
- * @param[in]  aInterval      The WED listen interval in microseconds.
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aInterval   The wake-up listen interval in microseconds.
+ * @param[in]  aDuration   The wake-up listen duration in microseconds.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the wake-up listen parameters.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid wake-up listen parameters.
  */
-void otLinkSetWedListenInterval(otInstance *aInstance, uint32_t aInterval);
-
-/**
- * Gets the WED listen duration.
- *
- * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
- *
- * @param[in]  aInstance      A pointer to an OpenThread instance.
- *
- * @returns The WED listen duration in microseconds.
- */
-uint32_t otLinkGetWedListenDuration(otInstance *aInstance);
-
-/**
- * Sets the WED listen duration in microseconds.
- *
- * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
- *
- * @param[in]  aInstance      A pointer to an OpenThread instance.
- * @param[in]  aDuration      The WED listen duration in microseconds.
- *
- * @retval OT_ERROR_NONE           Successfully set the WED listen duration.
- * @retval OT_ERROR_INVALID_ARGS   Invalid WED listen duration.
- */
-otError otLinkSetWedListenDuration(otInstance *aInstance, uint32_t aDuration);
+otError otLinkSetWakeupListenParameters(otInstance *aInstance, uint32_t aInterval, uint32_t aDuration);
 
 /**
  * @}

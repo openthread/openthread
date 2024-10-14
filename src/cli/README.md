@@ -4425,49 +4425,27 @@ Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAK
 Done
 ```
 
-### wakeup interval
+### wakeup parameters
 
-Get the wake-up listen interval.
+Get the wake-up listen interval and duration.
 
 Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
 
 ```bash
-> wakeup interval
-1000000
+> wakeup parameters
+interval: 1000000us
+duration: 8000us
 Done
 ```
 
-### wakeup interval \<interval\>
+### wakeup parameters \<interval\> \<duration\>
 
-Set the wake-up listen interval.
-
-Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
-
-```bash
-> wakeup interval 1000000
-Done
-```
-
-### wakeup duration
-
-Get the wake-up listen duration.
+Set the wake-up listen interval and duration.
 
 Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
 
 ```bash
-> wakeup duration
-8000
-Done
-```
-
-### wakeup duration \<duration\>
-
-Set the wake-up listen duration.
-
-Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
-
-```bash
-> wakeup duration 8000
+> wakeup parameters 1000000 8000
 Done
 ```
 

@@ -87,8 +87,8 @@ Mac::Mac(Instance &aInstance)
 #endif
     , mWakeupChannel(OPENTHREAD_CONFIG_DEFAULT_WAKEUP_CHANNEL)
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    , mWedListenInterval(kDefaultWedListenInterval)
-    , mWedListenDuration(kDefaultWedListenDuration)
+    , mWakeupListenInterval(kDefaultWedListenInterval)
+    , mWakeupListenDuration(kDefaultWedListenDuration)
 #endif
     , mActiveScanHandler(nullptr) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     , mScanHandlerContext(nullptr)
@@ -2467,19 +2467,21 @@ exit:
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-void Mac::SetWedListenInterval(uint32_t aInterval)
+void Mac::GetWakeupListenParameters(uint32_t &aInterval, uint32_t &aDuration) const
 {
-    mWedListenInterval = aInterval;
-    UpdateWakeupListening();
+    aInterval = mWakeupListenInterval;
+    aDuration = mWakeupListenDuration;
 }
 
-Error Mac::SetWedListenDuration(uint32_t aDuration)
+Error Mac::SetWakeupListenParameters(uint32_t aInterval, uint32_t aDuration)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(aDuration >= kMinWedListenDuration, error = kErrorInvalidArgs);
+    VerifyOrExit(aDuration >= kMinWakeupListenDuration, error = kErrorInvalidArgs);
+    VerifyOrExit(aInterval > aDuration, error = kErrorInvalidArgs);
 
-    mWedListenDuration = aDuration;
+    mWakeupListenInterval = aInterval;
+    mWakeupListenDuration = aDuration;
     UpdateWakeupListening();
 
 exit:
@@ -2489,8 +2491,6 @@ exit:
 Error Mac::SetWakeupListenEnabled(bool aEnable)
 {
     Error error = kErrorNone;
-
-    VerifyOrExit(GetWedListenInterval() > GetWedListenDuration(), error = kErrorInvalidArgs);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (aEnable && GetCslPeriod() > 0)
@@ -2520,7 +2520,7 @@ void Mac::UpdateWakeupListening(void)
 {
     uint8_t channel = mWakeupChannel ? mWakeupChannel : mPanChannel;
 
-    mLinks.UpdateWakeupListening(mWakeupListenEnabled, mWedListenInterval, mWedListenDuration, channel);
+    mLinks.UpdateWakeupListening(mWakeupListenEnabled, mWakeupListenInterval, mWakeupListenDuration, channel);
 }
 
 Error Mac::HandleWakeupFrame(const RxFrame &aFrame)

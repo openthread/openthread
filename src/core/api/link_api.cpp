@@ -516,23 +516,13 @@ bool otLinkIsWakeupListenEnabled(otInstance *aInstance)
     return AsCoreType(aInstance).Get<Mac::Mac>().IsWakeupListenEnabled();
 }
 
-uint32_t otLinkGetWedListenInterval(otInstance *aInstance)
+void otLinkGetWakeupListenParameters(otInstance *aInstance, uint32_t *aInterval, uint32_t *aDuration)
 {
-    return AsCoreType(aInstance).Get<Mac::Mac>().GetWedListenInterval();
+    AsCoreType(aInstance).Get<Mac::Mac>().GetWakeupListenParameters(*aInterval, *aDuration);
 }
 
-void otLinkSetWedListenInterval(otInstance *aInstance, uint32_t aInterval)
+otError otLinkSetWakeupListenParameters(otInstance *aInstance, uint32_t aInterval, uint32_t aDuration)
 {
-    return AsCoreType(aInstance).Get<Mac::Mac>().SetWedListenInterval(aInterval);
-}
-
-uint32_t otLinkGetWedListenDuration(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().GetWedListenDuration();
-}
-
-otError otLinkSetWedListenDuration(otInstance *aInstance, uint32_t aDuration)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().SetWedListenDuration(aDuration);
+    return AsCoreType(aInstance).Get<Mac::Mac>().SetWakeupListenParameters(aInterval, aDuration);
 }
 #endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE

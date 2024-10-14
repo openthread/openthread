@@ -8241,46 +8241,40 @@ template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
     }
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     /**
-     * @cli wakeup interval (get,set)
+     * @cli wakeup paramters (get,set)
      * @code
-     * wakeup interval
-     * 12
+     * wakeup paramters
+     * interval: 1000000us
+     * duration: 8000us
      * Done
      * @endcode
      * @code
-     * wakeup interval 1000000
+     * wakeup paramters 1000000 8000
      * Done
      * @endcode
-     * @cparam wakeup interval @ca{interval}
+     * @cparam wakeup paramters @ca{interval} @ca{duration}
      * @par
-     * Gets or sets the wake-up interval value.
-     * @sa otLinkGetWedListenInterval
-     * @sa otLinkSetWedListenInterval
+     * Gets or sets the wake-up listen interval and wake-up listen duration values.
+     * @sa otLinkGetWakeUpListenParameters
+     * @sa otLinkSetWakeUpListenParameters
      */
-    else if (aArgs[0] == "interval")
+    else if (aArgs[0] == "paramters")
     {
-        error = ProcessGetSet(aArgs + 1, otLinkGetWedListenInterval, otLinkSetWedListenInterval);
-    }
-    /**
-     * @cli wakeup duration (get,set)
-     * @code
-     * wakeup duration
-     * 8000
-     * Done
-     * @endcode
-     * @code
-     * wakeup duration 8000
-     * Done
-     * @endcode
-     * @cparam wakeup duration @ca{duration}
-     * @par
-     * Gets or sets the wake-up duration value.
-     * @sa otLinkGetWedListenDuration
-     * @sa otLinkSetWedListenDuration
-     */
-    else if (aArgs[0] == "duration")
-    {
-        error = ProcessGetSet(aArgs + 1, otLinkGetWedListenDuration, otLinkSetWedListenDuration);
+        uint32_t interval;
+        uint32_t duration;
+
+        if (aArgs[1].IsEmpty())
+        {
+            otLinkGetWakeupListenParameters(GetInstancePtr(), &interval, &duration);
+            OutputLine("interval: %luus", ToUlong(interval));
+            OutputLine("duration: %luus", ToUlong(duration));
+        }
+        else
+        {
+            SuccessOrExit(error = aArgs[1].ParseAsUint32(interval));
+            SuccessOrExit(error = aArgs[2].ParseAsUint32(duration));
+            error = otLinkSetWakeupListenParameters(GetInstancePtr(), interval, duration);
+        }
     }
     /**
      * @cli wakeup listen (enable,disable)

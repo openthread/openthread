@@ -478,8 +478,8 @@ public:
      * Configures wake-up listening parameters in all radios.
      *
      * @param[in]  aEnable    Whether to enable or disable wake-up listening.
-     * @param[in]  aInterval  The WED listen interval in microseconds.
-     * @param[in]  aDuration  The WED listen duration in microseconds.
+     * @param[in]  aInterval  The wake-up listen interval in microseconds.
+     * @param[in]  aDuration  The wake-up listen duration in microseconds.
      * @param[in]  aChannel   The wake-up channel.
      */
     void UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aDuration, uint8_t aChannel)

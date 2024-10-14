@@ -485,8 +485,8 @@ public:
      * Configures wake-up listening parameters in all radios.
      *
      * @param[in]  aEnable    Whether to enable or disable wake-up listening.
-     * @param[in]  aInterval  The WED listen interval in microseconds.
-     * @param[in]  aDuration  The WED listen duration in microseconds.
+     * @param[in]  aInterval  The wake-up listen interval in microseconds.
+     * @param[in]  aDuration  The wake-up listen duration in microseconds.
      * @param[in]  aChannel   The wake-up channel.
      */
     void UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aDuration, uint8_t aChannel);
@@ -558,7 +558,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    // Margin to be applied after the end of a WED listen duration to schedule the next listen interval.
+    // Margin to be applied after the end of a wake-up listen duration to schedule the next listen interval.
     // The value is in usec.
     static constexpr uint32_t kWedReceiveTimeAfter = OPENTHREAD_CONFIG_WED_RECEIVE_TIME_AFTER;
 #endif
@@ -660,11 +660,11 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    uint32_t   mWedListenInterval;  // The WED listen interval, in microseconds.
-    uint32_t   mWedListenDuration;  // The WED listen duration, in microseconds.
-    uint8_t    mWakeupChannel;      // The wake-up sample channel.
-    TimeMicro  mWedSampleTime;      // The WED sample time of the current interval in local time.
-    uint64_t   mWedSampleTimeRadio; // The WED sample time of the current interval in radio time.
+    uint32_t   mWakeupListenInterval; // The wake-up listen interval, in microseconds.
+    uint32_t   mWakeupListenDuration; // The wake-up listen duration, in microseconds.
+    uint8_t    mWakeupChannel;        // The wake-up sample channel.
+    TimeMicro  mWedSampleTime;        // The WED sample time of the current interval in local time.
+    uint64_t   mWedSampleTimeRadio;   // The WED sample time of the current interval in radio time.
     TimerMicro mWedTimer;
 #endif
 };

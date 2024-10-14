@@ -44,7 +44,7 @@ RegisterLogModule("SubMac");
 
 void SubMac::WedInit(void)
 {
-    mWedListenInterval = 0;
+    mWakeupListenInterval = 0;
     mWedTimer.Stop();
 }
 
@@ -52,15 +52,15 @@ void SubMac::UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aD
 {
     VerifyOrExit(RadioSupportsReceiveTiming());
 
-    mWedListenInterval = aInterval;
-    mWedListenDuration = aDuration;
-    mWakeupChannel     = aChannel;
+    mWakeupListenInterval = aInterval;
+    mWakeupListenDuration = aDuration;
+    mWakeupChannel        = aChannel;
     mWedTimer.Stop();
 
     if (aEnable)
     {
-        mWedSampleTime      = TimerMicro::GetNow() + kCslReceiveTimeAhead - mWedListenInterval;
-        mWedSampleTimeRadio = Get<Radio>().GetNow() + kCslReceiveTimeAhead - mWedListenInterval;
+        mWedSampleTime      = TimerMicro::GetNow() + kCslReceiveTimeAhead - mWakeupListenInterval;
+        mWedSampleTimeRadio = Get<Radio>().GetNow() + kCslReceiveTimeAhead - mWakeupListenInterval;
 
         HandleWedTimer();
     }
@@ -73,14 +73,14 @@ void SubMac::HandleWedTimer(Timer &aTimer) { aTimer.Get<SubMac>().HandleWedTimer
 
 void SubMac::HandleWedTimer(void)
 {
-    mWedSampleTime += mWedListenInterval;
-    mWedSampleTimeRadio += mWedListenInterval;
-    mWedTimer.FireAt(mWedSampleTime + mWedListenDuration + kWedReceiveTimeAfter);
+    mWedSampleTime += mWakeupListenInterval;
+    mWedSampleTimeRadio += mWakeupListenInterval;
+    mWedTimer.FireAt(mWedSampleTime + mWakeupListenDuration + kWedReceiveTimeAfter);
 
     if (mState != kStateDisabled)
     {
         IgnoreError(
-            Get<Radio>().ReceiveAt(mWakeupChannel, static_cast<uint32_t>(mWedSampleTimeRadio), mWedListenDuration));
+            Get<Radio>().ReceiveAt(mWakeupChannel, static_cast<uint32_t>(mWedSampleTimeRadio), mWakeupListenDuration));
     }
 }
 

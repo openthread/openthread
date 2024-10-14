@@ -704,35 +704,26 @@ public:
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     /**
-     * Gets the WED listen interval.
+     * Gets the wake-up listen parameters.
      *
-     * @returns WED listen interval in microseconds.
+     * @param[out]  aInterval  A reference to return the wake-up listen interval in microseconds.
+     * @param[out]  aDuration  A reference to return the wake-up listen duration in microseconds.
      */
-    uint32_t GetWedListenInterval(void) const { return mWedListenInterval; }
+    void GetWakeupListenParameters(uint32_t &aInterval, uint32_t &aDuration) const;
 
     /**
-     * Sets the WED listen interval.
+     * Sets the wake-up listen parameters.
      *
-     * @param[in]  aInterval  The WED listen interval in microseconds.
+     * The listen interval must be greater than the listen duration.
+     * The listen duration must be greater or equal than `kMinWakeupListenDuration`.
+     *
+     * @param[in]  aInterval  The wake-up listen interval in microseconds.
+     * @param[in]  aDuration  The wake-up listen duration in microseconds.
+     *
+     * @retval kErrorNone          Successfully set the wake-up listen parameters.
+     * @retval kErrorInvalidArgs   Configured listen interval is not greater than listen duration.
      */
-    void SetWedListenInterval(uint32_t aInterval);
-
-    /**
-     * Gets the WED listen duration.
-     *
-     * @returns WED listen duration in microseconds.
-     */
-    uint32_t GetWedListenDuration(void) const { return mWedListenDuration; }
-
-    /**
-     * Sets the WED listen duration.
-     *
-     * @param[in]  aDuration  The WED listen duration in microseconds.
-     *
-     * @retval kErrorNone          Successfully set the WED listen duration.
-     * @retval kErrorInvalidArgs   The @p aDuration is below the minimum supported.
-     */
-    Error SetWedListenDuration(uint32_t aDuration);
+    Error SetWakeupListenParameters(uint32_t aInterval, uint32_t aDuration);
 
     /**
      * Enables/disables listening for wake-up frames.
@@ -892,8 +883,8 @@ private:
 #endif
     uint8_t mWakeupChannel;
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    uint32_t mWedListenInterval;
-    uint32_t mWedListenDuration;
+    uint32_t mWakeupListenInterval;
+    uint32_t mWakeupListenDuration;
 #endif
     union
     {

@@ -65,9 +65,9 @@ static constexpr uint64_t kMaxCslTimeout = OPENTHREAD_CONFIG_MAC_CSL_MAX_TIMEOUT
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 /**
- * Minimum WED listen duration supported in microseconds.
+ * Minimum wake-up listen duration supported in microseconds.
  */
-static constexpr uint32_t kMinWedListenDuration = 100;
+static constexpr uint32_t kMinWakeupListenDuration = 100;
 #endif
 
 /**
