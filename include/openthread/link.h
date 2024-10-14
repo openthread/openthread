@@ -1160,7 +1160,6 @@ bool otLinkIsWakeupListenEnabled(otInstance *aInstance);
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[out] aInterval   A pointer to return the wake-up listen interval in microseconds.
  * @param[out] aDuration   A pointer to return the wake-up listen duration in microseconds.
- *
  */
 void otLinkGetWakeupListenParameters(otInstance *aInstance, uint32_t *aInterval, uint32_t *aDuration);
 
