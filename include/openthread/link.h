@@ -1168,7 +1168,7 @@ void otLinkGetWakeupListenParameters(otInstance *aInstance, uint32_t *aInterval,
  * Set the wake-up listen parameters.
  *
  * The listen interval must be greater than the listen duration.
- * The listen duration must be greater or equal than the minumum supported.
+ * The listen duration must be greater or equal than the minimum supported.
  *
  * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
  *
