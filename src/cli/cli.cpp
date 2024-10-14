@@ -8241,24 +8241,24 @@ template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
     }
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     /**
-     * @cli wakeup paramters (get,set)
+     * @cli wakeup parameters (get,set)
      * @code
-     * wakeup paramters
+     * wakeup parameters
      * interval: 1000000us
      * duration: 8000us
      * Done
      * @endcode
      * @code
-     * wakeup paramters 1000000 8000
+     * wakeup parameters 1000000 8000
      * Done
      * @endcode
-     * @cparam wakeup paramters @ca{interval} @ca{duration}
+     * @cparam wakeup parameters @ca{interval} @ca{duration}
      * @par
      * Gets or sets the wake-up listen interval and wake-up listen duration values.
      * @sa otLinkGetWakeUpListenParameters
      * @sa otLinkSetWakeUpListenParameters
      */
-    else if (aArgs[0] == "paramters")
+    else if (aArgs[0] == "parameters")
     {
         uint32_t interval;
         uint32_t duration;
