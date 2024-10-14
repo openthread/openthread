@@ -255,7 +255,7 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority)
 exit:
     if ((error == kErrorNone) && (evict != nullptr))
     {
-        EvictMessage(*evict);
+        FinalizeAndRemoveMessage(*evict, kErrorNoBufs, kMessageEvict);
     }
 
     return error;
@@ -299,30 +299,28 @@ void MeshForwarder::RemoveMessagesForChild(Child &aChild, MessageChecker &aMessa
     }
 }
 
+void MeshForwarder::FinalizeMessageIndirectTxs(Message &aMessage)
+{
+    VerifyOrExit(!aMessage.GetIndirectTxChildMask().IsEmpty());
+
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
+    {
+        IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, child));
+        VerifyOrExit(!aMessage.GetIndirectTxChildMask().IsEmpty());
+    }
+
+exit:
+    return;
+}
+
 void MeshForwarder::RemoveDataResponseMessages(void)
 {
-    Ip6::Header ip6Header;
-
     for (Message &message : mSendQueue)
     {
-        if (!message.IsMleCommand(Mle::kCommandDataResponse))
+        if (message.IsMleCommand(Mle::kCommandDataResponse))
         {
-            continue;
+            FinalizeAndRemoveMessage(message, kErrorDrop, kMessageDrop);
         }
-
-        IgnoreError(message.Read(0, ip6Header));
-
-        if (!(ip6Header.GetDestination().IsMulticast()))
-        {
-            for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
-            {
-                IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(message, child));
-            }
-        }
-
-        LogMessage(kMessageDrop, message);
-        FinalizeMessageDirectTx(message, kErrorDrop);
-        RemoveMessageIfNoPendingTx(message);
     }
 }
 
