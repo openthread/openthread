@@ -60,6 +60,9 @@ Mac::Mac(Instance &aInstance)
     , mShouldDelaySleep(false)
     , mDelayingSleep(false)
 #endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    , mWakeupListenEnabled(false)
+#endif
     , mOperation(kOperationIdle)
     , mPendingOperations(0)
     , mBeaconSequence(Random::NonCrypto::GetUint8())
@@ -83,6 +86,10 @@ Mac::Mac(Instance &aInstance)
     , mCslPeriod(0)
 #endif
     , mWakeupChannel(OPENTHREAD_CONFIG_DEFAULT_WAKEUP_CHANNEL)
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    , mWakeupListenInterval(kDefaultWedListenInterval)
+    , mWakeupListenDuration(kDefaultWedListenDuration)
+#endif
     , mActiveScanHandler(nullptr) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     , mScanHandlerContext(nullptr)
     , mLinks(aInstance)
@@ -1590,8 +1597,27 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         break;
 
     case Frame::kKeyIdMode2:
-        macKey     = &mMode2KeyMaterial;
-        extAddress = &AsCoreType(&sMode2ExtAddress);
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        if (aFrame.IsWakeupFrame())
+        {
+            uint32_t sequence;
+
+            // TODO: Avoid generating a new key if a wake-up frame was recently received already
+
+            IgnoreError(aFrame.GetKeyId(keyid));
+            sequence = BigEndian::ReadUint32(aFrame.GetKeySource());
+            VerifyOrExit(((sequence & 0x7f) + 1) == keyid, error = kErrorSecurity);
+
+            macKey     = (sequence == keyManager.GetCurrentKeySequence()) ? mLinks.GetCurrentMacKey(aFrame)
+                                                                          : &keyManager.GetTemporaryMacKey(sequence);
+            extAddress = &aSrcAddr.GetExtended();
+        }
+        else
+#endif
+        {
+            macKey     = &mMode2KeyMaterial;
+            extAddress = &AsCoreType(&sMode2ExtAddress);
+        }
         break;
 
     default:
@@ -1973,6 +1999,12 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         mCounters.mRxData++;
         break;
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    case Frame::kTypeMultipurpose:
+        SuccessOrExit(error = HandleWakeupFrame(*aFrame));
+        OT_FALL_THROUGH;
+#endif
+
     default:
         mCounters.mRxOther++;
         ExitNow();
@@ -2317,6 +2349,14 @@ void Mac::SetCslChannel(uint8_t aChannel)
 
 void Mac::SetCslPeriod(uint16_t aPeriod)
 {
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    if (IsWakeupListenEnabled() && aPeriod != 0)
+    {
+        IgnoreError(SetWakeupListenEnabled(false));
+        LogWarn("Disabling wake-up frame listening due to CSL period change");
+    }
+#endif
+
     mCslPeriod = aPeriod;
     UpdateCsl();
 }
@@ -2417,10 +2457,122 @@ Error Mac::SetWakeupChannel(uint8_t aChannel)
     VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
     mWakeupChannel = aChannel;
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    UpdateWakeupListening();
+#endif
+
 exit:
     return error;
 }
 #endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+void Mac::GetWakeupListenParameters(uint32_t &aInterval, uint32_t &aDuration) const
+{
+    aInterval = mWakeupListenInterval;
+    aDuration = mWakeupListenDuration;
+}
+
+Error Mac::SetWakeupListenParameters(uint32_t aInterval, uint32_t aDuration)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aDuration >= kMinWakeupListenDuration, error = kErrorInvalidArgs);
+    VerifyOrExit(aInterval > aDuration, error = kErrorInvalidArgs);
+
+    mWakeupListenInterval = aInterval;
+    mWakeupListenDuration = aDuration;
+    UpdateWakeupListening();
+
+exit:
+    return error;
+}
+
+Error Mac::SetWakeupListenEnabled(bool aEnable)
+{
+    Error error = kErrorNone;
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (aEnable && GetCslPeriod() > 0)
+    {
+        LogWarn("Cannot enable wake-up frame listening while CSL is enabled");
+        ExitNow(error = kErrorInvalidState);
+    }
+#endif
+
+    if (aEnable == mWakeupListenEnabled)
+    {
+        LogInfo("Listening for wake up frames was already %s", aEnable ? "started" : "stopped");
+        ExitNow();
+    }
+
+    mWakeupListenEnabled = aEnable;
+    UpdateWakeupListening();
+
+    LogInfo("Listening for wake up frames %s: chan:%u, addr:%s", aEnable ? "started" : "stopped", mWakeupChannel,
+            GetExtAddress().ToString().AsCString());
+
+exit:
+    return error;
+}
+
+void Mac::UpdateWakeupListening(void)
+{
+    uint8_t channel = mWakeupChannel ? mWakeupChannel : mPanChannel;
+
+    mLinks.UpdateWakeupListening(mWakeupListenEnabled, mWakeupListenInterval, mWakeupListenDuration, channel);
+}
+
+Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
+{
+    Error               error = kErrorNone;
+    const ConnectionIe *connectionIe;
+    uint32_t            rvTimeUs;
+    uint64_t            rvTimestampUs;
+    uint32_t            attachDelayMs;
+    uint64_t            radioNowUs;
+    uint8_t             retryInterval;
+    uint8_t             retryCount;
+
+    VerifyOrExit(mWakeupListenEnabled && aFrame.IsWakeupFrame());
+    connectionIe  = aFrame.GetConnectionIe();
+    retryInterval = connectionIe->GetRetryInterval();
+    retryCount    = connectionIe->GetRetryCount();
+    VerifyOrExit(retryInterval > 0 && retryCount > 0, error = kErrorInvalidArgs);
+
+    radioNowUs    = otPlatRadioGetNow(&GetInstance());
+    rvTimeUs      = aFrame.GetRendezvousTimeIe()->GetRendezvousTime() * kUsPerTenSymbols;
+    rvTimestampUs = aFrame.GetTimestamp() + kRadioHeaderPhrDuration + aFrame.GetLength() * kOctetDuration + rvTimeUs;
+    if (rvTimestampUs > radioNowUs + OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US)
+    {
+        attachDelayMs = static_cast<uint32_t>(rvTimestampUs - radioNowUs - OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US);
+        attachDelayMs = attachDelayMs / 1000;
+    }
+    else
+    {
+        attachDelayMs = 0;
+    }
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    {
+        uint32_t frameCounter;
+
+        IgnoreError(aFrame.GetFrameCounter(frameCounter));
+        LogInfo("Received wake-up frame, fc:%lu, rendezvous:%luus, retries:%u/%u", ToUlong(frameCounter),
+                ToUlong(rvTimeUs), retryCount, retryInterval);
+    }
+#endif
+
+    // Stop receiving more wake up frames
+    IgnoreError(SetWakeupListenEnabled(false));
+
+    // TODO: start MLE attach process with the WC
+    OT_UNUSED_VARIABLE(attachDelayMs);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 } // namespace Mac
 } // namespace ot

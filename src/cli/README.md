@@ -133,7 +133,7 @@ Done
 - [vendor](#vendor-name)
 - [verhoeff](#verhoeff-calculate)
 - [version](#version)
-- [wakeupchannel](#wakeupchannel)
+- [wakeup](#wakeup-channel)
 
 ## OpenThread Command Details
 
@@ -4402,25 +4402,72 @@ Factory Diagnostics module is enabled only when building OpenThread with `OPENTH
 
 [diag]: ../../src/core/diags/README.md
 
-### wakeupchannel
+### wakeup channel
 
 Get the wake-up channel.
 
 Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
 
 ```bash
-> wakeupchannel
+> wakeup channel
 12
 Done
 ```
 
-### wakeupchannel \<channel\>
+### wakeup channel \<channel\>
 
 Set the wake-up channel.
 
 Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
 
 ```bash
-> wakeupchannel 12
+> wakeup channel 12
+Done
+```
+
+### wakeup parameters
+
+Get the wake-up listen interval and duration.
+
+Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+
+```bash
+> wakeup parameters
+interval: 1000000us
+duration: 8000us
+Done
+```
+
+### wakeup parameters \<interval\> \<duration\>
+
+Set the wake-up listen interval and duration.
+
+Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+
+```bash
+> wakeup parameters 1000000 8000
+Done
+```
+
+### wakeup listen
+
+Show the state of wake-up listening feature.
+
+`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
+
+```bash
+> wakeup listen
+Enabled
+Done
+```
+
+### wakeup listen \[enable|disable\]
+
+Enable/disable listening for wake-up frames.
+
+`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
+
+```bash
+> wakeup listen enable
 Done
 ```

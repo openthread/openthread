@@ -64,6 +64,34 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_WED_LISTEN_INTERVAL
+ *
+ * The default wake-up listen interval in microseconds.
+ */
+#ifndef OPENTHREAD_CONFIG_WED_LISTEN_INTERVAL
+#define OPENTHREAD_CONFIG_WED_LISTEN_INTERVAL 1000000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_WED_LISTEN_DURATION
+ *
+ * The default wake-up listen duration in microseconds.
+ */
+#ifndef OPENTHREAD_CONFIG_WED_LISTEN_DURATION
+#define OPENTHREAD_CONFIG_WED_LISTEN_DURATION 8000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_WED_RECEIVE_TIME_AFTER
+ *
+ * Margin to be applied after the end of a wake-up listen duration to schedule the next listen interval, in units of
+ * microseconds.
+ */
+#ifndef OPENTHREAD_CONFIG_WED_RECEIVE_TIME_AFTER
+#define OPENTHREAD_CONFIG_WED_RECEIVE_TIME_AFTER 500
+#endif
+
+/**
  * @}
  */
 

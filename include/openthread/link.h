@@ -1127,6 +1127,60 @@ uint8_t otLinkGetWakeupChannel(otInstance *aInstance);
 otError otLinkSetWakeupChannel(otInstance *aInstance, uint8_t aChannel);
 
 /**
+ * Enables or disables listening for wake-up frames.
+ *
+ * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aEnable       true to enable listening for wake-up frames, or false otherwise.
+ *
+ * @retval OT_ERROR_NONE          Successfully enabled / disabled the listening for wake-up frames.
+ * @retval OT_ERROR_INVALID_ARGS  The listen duration is greater than the listen interval.
+ * @retval OT_ERROR_INVALID_STATE Could not enable listening for wake-up frames due to bad configuration.
+ */
+otError otLinkSetWakeUpListenEnabled(otInstance *aInstance, bool aEnable);
+
+/**
+ * Returns whether listening for wake-up frames is enabled.
+ *
+ * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   If listening for wake-up frames is enabled.
+ * @retval FALSE  If listening for wake-up frames is not enabled.
+ */
+bool otLinkIsWakeupListenEnabled(otInstance *aInstance);
+
+/**
+ * Get the wake-up listen parameters.
+ *
+ * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[out] aInterval   A pointer to return the wake-up listen interval in microseconds.
+ * @param[out] aDuration   A pointer to return the wake-up listen duration in microseconds.
+ */
+void otLinkGetWakeupListenParameters(otInstance *aInstance, uint32_t *aInterval, uint32_t *aDuration);
+
+/**
+ * Set the wake-up listen parameters.
+ *
+ * The listen interval must be greater than the listen duration.
+ * The listen duration must be greater or equal than the minimum supported.
+ *
+ * Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aInterval   The wake-up listen interval in microseconds.
+ * @param[in]  aDuration   The wake-up listen duration in microseconds.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the wake-up listen parameters.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid wake-up listen parameters.
+ */
+otError otLinkSetWakeupListenParameters(otInstance *aInstance, uint32_t aInterval, uint32_t aDuration);
+
+/**
  * @}
  */
 

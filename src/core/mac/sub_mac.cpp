@@ -53,6 +53,9 @@ SubMac::SubMac(Instance &aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mCslTimer(aInstance, SubMac::HandleCslTimer)
 #endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    , mWedTimer(aInstance, SubMac::HandleWedTimer)
+#endif
 {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mCslParentAccuracy.Init();
@@ -89,6 +92,9 @@ void SubMac::Init(void)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     CslInit();
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    WedInit();
 #endif
 }
 
@@ -202,6 +208,9 @@ Error SubMac::Disable(void)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mCslTimer.Stop();
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    mWedTimer.Stop();
 #endif
 
     mTimer.Stop();

@@ -89,6 +89,9 @@ constexpr uint8_t kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST; ///< Num of 
 
 constexpr uint16_t kMinCslIePeriod = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD;
 
+constexpr uint32_t kDefaultWedListenInterval = OPENTHREAD_CONFIG_WED_LISTEN_INTERVAL;
+constexpr uint32_t kDefaultWedListenDuration = OPENTHREAD_CONFIG_WED_LISTEN_DURATION;
+
 /**
  * Defines the function pointer called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
  */
@@ -681,23 +684,66 @@ public:
     Error GetRegion(uint16_t &aRegionCode) const;
 
     /**
-     * Gets the Wake-up channel.
+     * Gets the wake-up channel.
      *
-     * @returns Wake-up channel.
+     * @returns wake-up channel.
      */
     uint8_t GetWakeupChannel(void) const { return mWakeupChannel; }
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     /**
-     * Sets the Wake-up channel.
+     * Sets the wake-up channel.
      *
-     * @param[in]  aChannel  The Wake-up channel.
+     * @param[in]  aChannel  The wake-up channel.
      *
      * @retval kErrorNone          Successfully set the wake-up channel.
      * @retval kErrorInvalidArgs   The @p aChannel is not in the supported channel mask.
      */
     Error SetWakeupChannel(uint8_t aChannel);
 #endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    /**
+     * Gets the wake-up listen parameters.
+     *
+     * @param[out]  aInterval  A reference to return the wake-up listen interval in microseconds.
+     * @param[out]  aDuration  A reference to return the wake-up listen duration in microseconds.
+     */
+    void GetWakeupListenParameters(uint32_t &aInterval, uint32_t &aDuration) const;
+
+    /**
+     * Sets the wake-up listen parameters.
+     *
+     * The listen interval must be greater than the listen duration.
+     * The listen duration must be greater or equal than `kMinWakeupListenDuration`.
+     *
+     * @param[in]  aInterval  The wake-up listen interval in microseconds.
+     * @param[in]  aDuration  The wake-up listen duration in microseconds.
+     *
+     * @retval kErrorNone          Successfully set the wake-up listen parameters.
+     * @retval kErrorInvalidArgs   Configured listen interval is not greater than listen duration.
+     */
+    Error SetWakeupListenParameters(uint32_t aInterval, uint32_t aDuration);
+
+    /**
+     * Enables/disables listening for wake-up frames.
+     *
+     * @param[in]  aEnable  TRUE to enable listening for wake-up frames, FALSE otherwise
+     *
+     * @retval kErrorNone          Successfully enabled/disabled listening for wake-up frames.
+     * @retval kErrorInvalidArgs   Configured listen interval is not greater than listen duration.
+     * @retval kErrorInvalidState  Could not enable/disable listening for wake-up frames.
+     */
+    Error SetWakeupListenEnabled(bool aEnable);
+
+    /**
+     * Returns whether listening for wake-up frames is enabled.
+     *
+     * @retval TRUE   If listening for wake-up frames is enabled.
+     * @retval FALSE  If listening for wake-up frames is not enabled.
+     */
+    bool IsWakeupListenEnabled(void) const { return mWakeupListenEnabled; }
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 private:
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;
@@ -787,6 +833,10 @@ private:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     void ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor);
 #endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    Error HandleWakeupFrame(const RxFrame &aFrame);
+    void  UpdateWakeupListening(void);
+#endif
     static const char *OperationToString(Operation aOperation);
 
     using OperationTask = TaskletIn<Mac, &Mac::PerformNextOperation>;
@@ -803,6 +853,9 @@ private:
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     bool mShouldDelaySleep : 1;
     bool mDelayingSleep : 1;
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    bool mWakeupListenEnabled : 1;
 #endif
     Operation   mOperation;
     uint16_t    mPendingOperations;
@@ -829,7 +882,10 @@ private:
     uint16_t mCslPeriod;
 #endif
     uint8_t mWakeupChannel;
-
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    uint32_t mWakeupListenInterval;
+    uint32_t mWakeupListenDuration;
+#endif
     union
     {
         ActiveScanHandler mActiveScanHandler;

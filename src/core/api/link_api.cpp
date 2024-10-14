@@ -504,3 +504,25 @@ otError otLinkGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 
     return error;
 }
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+otError otLinkSetWakeUpListenEnabled(otInstance *aInstance, bool aEnable)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().SetWakeupListenEnabled(aEnable);
+}
+
+bool otLinkIsWakeupListenEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().IsWakeupListenEnabled();
+}
+
+void otLinkGetWakeupListenParameters(otInstance *aInstance, uint32_t *aInterval, uint32_t *aDuration)
+{
+    AsCoreType(aInstance).Get<Mac::Mac>().GetWakeupListenParameters(*aInterval, *aDuration);
+}
+
+otError otLinkSetWakeupListenParameters(otInstance *aInstance, uint32_t aInterval, uint32_t aDuration)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().SetWakeupListenParameters(aInterval, aDuration);
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE

@@ -473,6 +473,27 @@ public:
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    /**
+     * Configures wake-up listening parameters in all radios.
+     *
+     * @param[in]  aEnable    Whether to enable or disable wake-up listening.
+     * @param[in]  aInterval  The wake-up listen interval in microseconds.
+     * @param[in]  aDuration  The wake-up listen duration in microseconds.
+     * @param[in]  aChannel   The wake-up channel.
+     */
+    void UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aDuration, uint8_t aChannel)
+    {
+        OT_UNUSED_VARIABLE(aEnable);
+        OT_UNUSED_VARIABLE(aInterval);
+        OT_UNUSED_VARIABLE(aDuration);
+        OT_UNUSED_VARIABLE(aChannel);
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+        mSubMac.UpdateWakeupListening(aEnable, aInterval, aDuration, aChannel);
+#endif
+    }
+#endif
+
     /**
      * Transitions all radio links to Receive.
      *
