@@ -8213,25 +8213,109 @@ exit:
 #endif // OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-/**
- * @cli wakeupchannel (get,set)
- * @code
- * wakeupchannel
- * 12
- * Done
- * @endcode
- * @code
- * wakeupchannel 12
- * Done
- * @endcode
- * @cparam wakeupchannel [@ca{channel}]
- * Use `channel` to set the wake-up channel.
- * @par
- * Gets or sets the wake-up channel value.
- */
-template <> otError Interpreter::Process<Cmd("wakeupchannel")>(Arg aArgs[])
+template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
 {
-    return ProcessGetSet(aArgs, otLinkGetWakeupChannel, otLinkSetWakeupChannel);
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli wakeup channel (get,set)
+     * @code
+     * wakeup channel
+     * 12
+     * Done
+     * @endcode
+     * @code
+     * wakeup channel 12
+     * Done
+     * @endcode
+     * @cparam wakeup channel [@ca{channel}]
+     * Use `channel` to set the wake-up channel.
+     * @par
+     * Gets or sets the wake-up channel value.
+     * @sa otLinkGetWakeupChannel
+     * @sa otLinkSetWakeupChannel
+     */
+    if (aArgs[0] == "channel")
+    {
+        error = ProcessGetSet(aArgs + 1, otLinkGetWakeupChannel, otLinkSetWakeupChannel);
+    }
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    /**
+     * @cli wakeup interval (get,set)
+     * @code
+     * wakeup interval
+     * 12
+     * Done
+     * @endcode
+     * @code
+     * wakeup interval 1000000
+     * Done
+     * @endcode
+     * @cparam wakeup interval @ca{interval}
+     * @par
+     * Gets or sets the wake-up interval value.
+     * @sa otLinkGetWedListenInterval
+     * @sa otLinkSetWedListenInterval
+     */
+    else if (aArgs[0] == "interval")
+    {
+        error = ProcessGetSet(aArgs + 1, otLinkGetWedListenInterval, otLinkSetWedListenInterval);
+    }
+    /**
+     * @cli wakeup duration (get,set)
+     * @code
+     * wakeup duration
+     * 8000
+     * Done
+     * @endcode
+     * @code
+     * wakeup duration 8000
+     * Done
+     * @endcode
+     * @cparam wakeup duration @ca{duration}
+     * @par
+     * Gets or sets the wake-up duration value.
+     * @sa otLinkGetWedListenDuration
+     * @sa otLinkSetWedListenDuration
+     */
+    else if (aArgs[0] == "duration")
+    {
+        error = ProcessGetSet(aArgs + 1, otLinkGetWedListenDuration, otLinkSetWedListenDuration);
+    }
+    /**
+     * @cli wakeup listen (enable,disable)
+     * @code
+     * wakeup listen
+     * disabled
+     * Done
+     * @endcode
+     * @code
+     * wakeup listen enable
+     * Done
+     * @endcode
+     * @code
+     * wakeup listen
+     * enabled
+     * Done
+     * @endcode
+     * @cparam wakeup listen @ca{enable}
+     * @par
+     * Gets or sets current wake-up listening link state.
+     * @sa otLinkIsWakeupListenEnabled
+     * @sa otLinkSetWakeUpListenEnabled
+     */
+    else if (aArgs[0] == "listen")
+    {
+        error = ProcessEnableDisable(aArgs + 1, otLinkIsWakeupListenEnabled, otLinkSetWakeUpListenEnabled);
+    }
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+exit:
+    return error;
 }
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
@@ -8544,6 +8628,11 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
         CmdEntry("version"),
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        CmdEntry("wakeup"),
+#endif
+#endif
     };
 
 #undef CmdEntry
