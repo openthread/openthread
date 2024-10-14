@@ -68,7 +68,7 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority)
 
     if (message->GetPriority() < static_cast<uint8_t>(aPriority))
     {
-        EvictMessage(*message);
+        FinalizeAndRemoveMessage(*message, kErrorNoBufs, kMessageEvict);
         ExitNow(error = kErrorNone);
     }
 

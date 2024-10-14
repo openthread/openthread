@@ -184,32 +184,6 @@ void MeshForwarder::PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &
     aFrame.SetPayloadLength(0);
 }
 
-void MeshForwarder::EvictMessage(Message &aMessage)
-{
-    PriorityQueue *queue = aMessage.GetPriorityQueue();
-
-    OT_ASSERT(queue != nullptr);
-
-    LogMessage(kMessageEvict, aMessage, kErrorNoBufs);
-
-    if (queue == &mSendQueue)
-    {
-#if OPENTHREAD_FTD
-        for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
-        {
-            IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, child));
-        }
-#endif
-
-        FinalizeMessageDirectTx(aMessage, kErrorNoBufs);
-        RemoveMessageIfNoPendingTx(aMessage);
-    }
-    else
-    {
-        queue->DequeueAndFree(aMessage);
-    }
-}
-
 void MeshForwarder::ResumeMessageTransmissions(void)
 {
     if (mTxPaused)
@@ -1359,6 +1333,18 @@ void MeshForwarder::FinalizeMessageDirectTx(Message &aMessage, Error aError)
 
 exit:
     return;
+}
+
+void MeshForwarder::FinalizeAndRemoveMessage(Message &aMessage, Error aError, MessageAction aAction)
+{
+    LogMessage(aAction, aMessage, aError);
+
+#if OPENTHREAD_FTD
+    FinalizeMessageIndirectTxs(aMessage);
+#endif
+
+    FinalizeMessageDirectTx(aMessage, aError);
+    RemoveMessageIfNoPendingTx(aMessage);
 }
 
 bool MeshForwarder::RemoveMessageIfNoPendingTx(Message &aMessage)
