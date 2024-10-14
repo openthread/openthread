@@ -244,7 +244,7 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority)
                 continue;
             }
 
-            if (message->IsChildPending())
+            if (!message->GetIndirectTxChildMask().IsEmpty())
             {
                 evict = message;
                 ExitNow(error = kErrorNone);
