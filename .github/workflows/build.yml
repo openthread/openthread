@@ -80,10 +80,12 @@ jobs:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
-    - uses: gaurav-nelson/github-action-markdown-link-check@5c5dfc0ac2e225883c0e5f03a85311ec2830d368 # v1
+    - name: Run linkspector
+      uses: umbrelladocs/action-linkspector@v1
       with:
-        use-verbose-mode: 'yes'
-        max-depth: 3
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        reporter: github-pr-review
+        fail_on_error: true
 
   spell-check:
     runs-on: ubuntu-22.04
