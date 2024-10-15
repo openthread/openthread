@@ -1730,10 +1730,26 @@ Error Mle::SendDataRequestAfterDelay(const Ip6::Address &aDestination, uint16_t 
 {
     static const uint8_t kTlvs[] = {Tlv::kNetworkData, Tlv::kRoute};
 
+    Error error;
+
+    mDelayedSender.RemoveDataRequestMessage(aDestination);
+
     // Based on `mRequestRouteTlv` include both Network Data and Route
     // TLVs or only Network Data TLV.
 
-    return SendDataRequest(aDestination, kTlvs, mRequestRouteTlv ? 2 : 1, aDelay);
+    error = SendDataRequest(aDestination, kTlvs, mRequestRouteTlv ? 2 : 1, aDelay);
+
+    if (IsChild() && !IsRxOnWhenIdle())
+    {
+        mDataRequestState = kDataRequestActive;
+
+        if (mChildUpdateRequestState == kChildUpdateRequestNone)
+        {
+            ScheduleMessageTransmissionTimer();
+        }
+    }
+
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
@@ -1756,8 +1772,6 @@ Error Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlv
 {
     Error      error = kErrorNone;
     TxMessage *message;
-
-    mDelayedSender.RemoveDataRequestMessage(aDestination);
 
     VerifyOrExit((message = NewMleMessage(kCommandDataRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendTlvRequestTlv(aTlvs, aTlvsLength));
@@ -1789,17 +1803,6 @@ Error Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlv
 
 exit:
     FreeMessageOnError(message, error);
-
-    if (IsChild() && !IsRxOnWhenIdle())
-    {
-        mDataRequestState = kDataRequestActive;
-
-        if (mChildUpdateRequestState == kChildUpdateRequestNone)
-        {
-            ScheduleMessageTransmissionTimer();
-        }
-    }
-
     return error;
 }
 
