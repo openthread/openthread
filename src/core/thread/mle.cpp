@@ -217,6 +217,7 @@ void Mle::Stop(StopMode aMode)
 
     VerifyOrExit(!IsDisabled());
 
+    mDelayedSender.Stop();
     Get<KeyManager>().Stop();
     SetStateDetached();
     Get<ThreadNetif>().UnsubscribeMulticast(mRealmLocalAllThreadNodes);
@@ -1738,21 +1739,16 @@ exit:
 
 Error Mle::SendDataRequest(const Ip6::Address &aDestination)
 {
-    return SendDataRequestAfterDelay(aDestination, /* aDelay */ 0);
-}
-
-Error Mle::SendDataRequestAfterDelay(const Ip6::Address &aDestination, uint16_t aDelay)
-{
     static const uint8_t kTlvs[] = {Tlv::kNetworkData, Tlv::kRoute};
 
-    Error error;
+    Error error = kErrorNone;
 
-    mDelayedSender.RemoveDataRequestMessage(aDestination);
+    VerifyOrExit(IsAttached());
 
     // Based on `mRequestRouteTlv` include both Network Data and Route
     // TLVs or only Network Data TLV.
 
-    error = SendDataRequest(aDestination, kTlvs, mRequestRouteTlv ? 2 : 1, aDelay);
+    error = SendDataRequest(aDestination, kTlvs, mRequestRouteTlv ? 2 : 1);
 
     if (IsChild() && !IsRxOnWhenIdle())
     {
@@ -1764,6 +1760,7 @@ Error Mle::SendDataRequestAfterDelay(const Ip6::Address &aDestination, uint16_t 
         }
     }
 
+exit:
     return error;
 }
 
@@ -1773,16 +1770,15 @@ Error Mle::SendDataRequestForLinkMetricsReport(const Ip6::Address               
 {
     static const uint8_t kTlvs[] = {Tlv::kLinkMetricsReport};
 
-    return SendDataRequest(aDestination, kTlvs, sizeof(kTlvs), /* aDelay */ 0, &aQueryInfo);
+    return SendDataRequest(aDestination, kTlvs, sizeof(kTlvs), &aQueryInfo);
 }
 
 Error Mle::SendDataRequest(const Ip6::Address                      &aDestination,
                            const uint8_t                           *aTlvs,
                            uint8_t                                  aTlvsLength,
-                           uint16_t                                 aDelay,
                            const LinkMetrics::Initiator::QueryInfo *aQueryInfo)
 #else
-Error Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aDelay)
+Error Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength)
 #endif
 {
     Error      error = kErrorNone;
@@ -1798,22 +1794,14 @@ Error Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlv
     }
 #endif
 
-    if (aDelay)
-    {
-        SuccessOrExit(error = message->SendAfterDelay(aDestination, aDelay));
-        Log(kMessageDelay, kTypeDataRequest, aDestination);
-    }
-    else
-    {
-        SuccessOrExit(error = message->AppendActiveAndPendingTimestampTlvs());
+    SuccessOrExit(error = message->AppendActiveAndPendingTimestampTlvs());
 
-        SuccessOrExit(error = message->SendTo(aDestination));
-        Log(kMessageSend, kTypeDataRequest, aDestination);
+    SuccessOrExit(error = message->SendTo(aDestination));
+    Log(kMessageSend, kTypeDataRequest, aDestination);
 
-        if (!IsRxOnWhenIdle())
-        {
-            Get<DataPollSender>().SendFastPolls(DataPollSender::kDefaultFastPolls);
-        }
+    if (!IsRxOnWhenIdle())
+    {
+        Get<DataPollSender>().SendFastPolls(DataPollSender::kDefaultFastPolls);
     }
 
 exit:
@@ -2719,8 +2707,8 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
 
     if (mRetrieveNewNetworkData || IsNetworkDataNewer(leaderData))
     {
-        delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
-        IgnoreError(SendDataRequestAfterDelay(aRxInfo.mMessageInfo.GetPeerAddr(), delay));
+        delay = 1 + Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
+        mDelayedSender.ScheduleDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), delay);
     }
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
@@ -2901,7 +2889,7 @@ exit:
 
         if (aRxInfo.mMessageInfo.GetSockAddr().IsMulticast())
         {
-            delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
+            delay = 1 + Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
         }
         else
         {
@@ -2911,7 +2899,7 @@ exit:
             delay = 10;
         }
 
-        IgnoreError(SendDataRequestAfterDelay(aRxInfo.mMessageInfo.GetPeerAddr(), delay));
+        mDelayedSender.ScheduleDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), delay);
     }
     else if (error == kErrorNone)
     {
@@ -4328,100 +4316,210 @@ Mle::DelayedSender::DelayedSender(Instance &aInstance)
 {
 }
 
-Error Mle::DelayedSender::SendMessage(TxMessage &aMessage, const Ip6::Address &aDestination, uint16_t aDelay)
+void Mle::DelayedSender::Stop(void)
 {
-    Error    error = kErrorNone;
-    Metadata metadata;
+    mTimer.Stop();
+    mSchedules.DequeueAndFreeAll();
+}
 
-    metadata.mSendTime    = TimerMilli::GetNow() + aDelay;
-    metadata.mDestination = aDestination;
-
-    SuccessOrExit(error = metadata.AppendTo(aMessage));
-    mQueue.Enqueue(aMessage);
-
-    mTimer.FireAtIfEarlier(metadata.mSendTime);
+void Mle::DelayedSender::ScheduleDataRequest(const Ip6::Address &aDestination, uint16_t aDelay)
+{
+    VerifyOrExit(!HasMatchingSchedule(kTypeDataRequest, aDestination));
+    AddSchedule(kTypeDataRequest, aDestination, aDelay, nullptr, 0);
 
 exit:
-    return error;
+    return;
+}
+
+#if OPENTHREAD_FTD
+
+void Mle::DelayedSender::ScheduleParentResponse(const ParentResponseInfo &aInfo, uint16_t aDelay)
+{
+    Ip6::Address destination;
+
+    destination.SetToLinkLocalAddress(aInfo.mChildExtAddress);
+
+    RemoveMatchingSchedules(kTypeParentResponse, destination);
+    AddSchedule(kTypeParentResponse, destination, aDelay, &aInfo, sizeof(aInfo));
+}
+
+void Mle::DelayedSender::ScheduleMulticastDataResponse(uint16_t aDelay)
+{
+    Ip6::Address destination;
+
+    destination.SetToLinkLocalAllNodesMulticast();
+
+    Get<MeshForwarder>().RemoveDataResponseMessages();
+    RemoveMatchingSchedules(kTypeDataResponse, destination);
+    AddSchedule(kTypeDataResponse, destination, aDelay, nullptr, 0);
+}
+
+void Mle::DelayedSender::ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint16_t aDelay)
+{
+    Ip6::Address destination;
+
+    destination.SetToLinkLocalAddress(aInfo.mExtAddress);
+
+    RemoveMatchingSchedules(kTypeLinkAccept, destination);
+    AddSchedule(kTypeLinkAccept, destination, aDelay, &aInfo, sizeof(aInfo));
+}
+
+void Mle::DelayedSender::ScheduleDiscoveryResponse(const Ip6::Address          &aDestination,
+                                                   const DiscoveryResponseInfo &aInfo,
+                                                   uint16_t                     aDelay)
+{
+    AddSchedule(kTypeDiscoveryResponse, aDestination, aDelay, &aInfo, sizeof(aInfo));
+}
+
+#endif // OPENTHREAD_FTD
+
+void Mle::DelayedSender::AddSchedule(MessageType         aMessageType,
+                                     const Ip6::Address &aDestination,
+                                     uint16_t            aDelay,
+                                     const void         *aInfo,
+                                     uint16_t            aInfoSize)
+{
+    Schedule *schedule = Get<MessagePool>().Allocate(Message::kTypeOther);
+    Header    header;
+
+    VerifyOrExit(schedule != nullptr);
+
+    header.mSendTime    = TimerMilli::GetNow() + aDelay;
+    header.mDestination = aDestination;
+    header.mMessageType = aMessageType;
+    SuccessOrExit(schedule->Append(header));
+
+    if (aInfo != nullptr)
+    {
+        SuccessOrExit(schedule->AppendBytes(aInfo, aInfoSize));
+    }
+
+    mTimer.FireAtIfEarlier(header.mSendTime);
+
+    mSchedules.Enqueue(*schedule);
+    schedule = nullptr;
+
+    Log(kMessageDelay, aMessageType, aDestination);
+
+exit:
+    FreeMessage(schedule);
 }
 
 void Mle::DelayedSender::HandleTimer(void)
 {
     NextFireTime nextSendTime;
+    MessageQueue schedulesToExecute;
 
-    for (Message &message : mQueue)
+    for (Schedule &schedule : mSchedules)
     {
-        Metadata metadata;
+        Header header;
 
-        metadata.ReadFrom(message);
+        header.ReadFrom(schedule);
 
-        if (nextSendTime.GetNow() < metadata.mSendTime)
+        if (nextSendTime.GetNow() < header.mSendTime)
         {
-            nextSendTime.UpdateIfEarlier(metadata.mSendTime);
+            nextSendTime.UpdateIfEarlier(header.mSendTime);
         }
         else
         {
-            mQueue.Dequeue(message);
-            Send(static_cast<TxMessage &>(message), metadata);
+            mSchedules.Dequeue(schedule);
+            schedulesToExecute.Enqueue(schedule);
         }
     }
 
     mTimer.FireAt(nextSendTime);
-}
 
-void Mle::DelayedSender::Send(TxMessage &aMessage, const Metadata &aMetadata)
-{
-    Error error = kErrorNone;
-
-    aMetadata.RemoveFrom(aMessage);
-
-    if (aMessage.IsMleCommand(kCommandDataRequest))
+    for (Schedule &schedule : schedulesToExecute)
     {
-        SuccessOrExit(error = aMessage.AppendActiveAndPendingTimestampTlvs());
+        Execute(schedule);
     }
 
-    SuccessOrExit(error = aMessage.SendTo(aMetadata.mDestination));
+    schedulesToExecute.DequeueAndFreeAll();
+}
 
-    Log(kMessageSend, kTypeGenericDelayed, aMetadata.mDestination);
+void Mle::DelayedSender::Execute(const Schedule &aSchedule)
+{
+    Header header;
 
-    if (!Get<Mle>().IsRxOnWhenIdle())
+    header.ReadFrom(aSchedule);
+
+    switch (header.mMessageType)
     {
-        // Start fast poll mode, assuming enqueued msg is MLE Data Request.
-        // Note: Finer-grade check may be required when deciding whether or
-        // not to enter fast poll mode for other type of delayed message.
+    case kTypeDataRequest:
+        IgnoreError(Get<Mle>().SendDataRequest(header.mDestination));
+        break;
 
-        Get<DataPollSender>().SendFastPolls(DataPollSender::kDefaultFastPolls);
+#if OPENTHREAD_FTD
+    case kTypeParentResponse:
+    {
+        ParentResponseInfo info;
+
+        IgnoreError(aSchedule.Read(sizeof(Header), info));
+        Get<MleRouter>().SendParentResponse(info);
+        break;
     }
 
-exit:
-    if (error != kErrorNone)
+    case kTypeDataResponse:
+        Get<MleRouter>().SendMulticastDataResponse();
+        break;
+
+    case kTypeLinkAccept:
     {
-        aMessage.Free();
+        LinkAcceptInfo info;
+
+        IgnoreError(aSchedule.Read(sizeof(Header), info));
+        IgnoreError(Get<MleRouter>().SendLinkAccept(info));
+        break;
+    }
+
+    case kTypeDiscoveryResponse:
+    {
+        DiscoveryResponseInfo info;
+
+        IgnoreError(aSchedule.Read(sizeof(Header), info));
+        IgnoreError(Get<MleRouter>().SendDiscoveryResponse(header.mDestination, info));
+        break;
+    }
+#endif // OPENTHREAD_FTD
+
+    default:
+        break;
     }
 }
 
-void Mle::DelayedSender::RemoveDataResponseMessage(void)
+bool Mle::DelayedSender::Match(const Schedule &aSchedule, MessageType aMessageType, const Ip6::Address &aDestination)
 {
-    RemoveMessage(kCommandDataResponse, kTypeDataResponse, nullptr);
+    Header header;
+
+    header.ReadFrom(aSchedule);
+
+    return (header.mMessageType == aMessageType) && (header.mDestination == aDestination);
 }
 
-void Mle::DelayedSender::RemoveDataRequestMessage(const Ip6::Address &aDestination)
+bool Mle::DelayedSender::HasMatchingSchedule(MessageType aMessageType, const Ip6::Address &aDestination) const
 {
-    RemoveMessage(kCommandDataRequest, kTypeDataRequest, &aDestination);
-}
+    bool hasMatching = false;
 
-void Mle::DelayedSender::RemoveMessage(Command aCommand, MessageType aMessageType, const Ip6::Address *aDestination)
-{
-    for (Message &message : mQueue)
+    for (const Schedule &schedule : mSchedules)
     {
-        Metadata metadata;
-
-        metadata.ReadFrom(message);
-
-        if (message.IsMleCommand(aCommand) && ((aDestination == nullptr) || (metadata.mDestination == *aDestination)))
+        if (Match(schedule, aMessageType, aDestination))
         {
-            mQueue.DequeueAndFree(message);
-            Log(kMessageRemoveDelayed, aMessageType, metadata.mDestination);
+            hasMatching = true;
+            break;
+        }
+    }
+
+    return hasMatching;
+}
+
+void Mle::DelayedSender::RemoveMatchingSchedules(MessageType aMessageType, const Ip6::Address &aDestination)
+{
+    for (Schedule &schedule : mSchedules)
+    {
+        if (Match(schedule, aMessageType, aDestination))
+        {
+            mSchedules.DequeueAndFree(schedule);
+            Log(kMessageRemoveDelayed, aMessageType, aDestination);
         }
     }
 }
@@ -4844,11 +4942,6 @@ Error Mle::TxMessage::SendTo(const Ip6::Address &aDestination)
 
 exit:
     return error;
-}
-
-Error Mle::TxMessage::SendAfterDelay(const Ip6::Address &aDestination, uint16_t aDelay)
-{
-    return Get<Mle>().mDelayedSender.SendMessage(*this, aDestination, aDelay);
 }
 
 #if OPENTHREAD_FTD

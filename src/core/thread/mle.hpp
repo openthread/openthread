@@ -994,7 +994,6 @@ private:
         }
 
         Error SendTo(const Ip6::Address &aDestination);
-        Error SendAfterDelay(const Ip6::Address &aDestination, uint16_t aDelay);
 
     private:
         Error AppendCompressedAddressEntry(uint8_t aContextId, const Ip6::Address &aAddress);
@@ -1064,6 +1063,33 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+#if OPENTHREAD_FTD
+    struct ParentResponseInfo
+    {
+        Mac::ExtAddress mChildExtAddress; // The child extended address.
+        RxChallenge     mRxChallenge;     // The challenge from the Parent Request.
+    };
+
+    struct LinkAcceptInfo
+    {
+        Mac::ExtAddress mExtAddress;       // The neighbor/router extended address.
+        TlvList         mRequestedTlvList; // The requested TLVs in Link Request.
+        RxChallenge     mRxChallenge;      // The challenge in Link Request.
+        uint8_t         mLinkMargin;       // Link margin of the received Link Request.
+    };
+
+    struct DiscoveryResponseInfo
+    {
+        Mac::PanId mPanId;
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        Mac::RadioType mRadioType;
+#endif
+    };
+
+#endif // OPENTHREAD_FTD
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     void HandleDelayedSenderTimer(void) { mDelayedSender.HandleTimer(); }
 
     class DelayedSender : public InstanceLocator
@@ -1071,26 +1097,46 @@ private:
     public:
         explicit DelayedSender(Instance &aInstance);
 
-        Error SendMessage(TxMessage &aMessage, const Ip6::Address &aDestination, uint16_t aDelay);
-        void  RemoveDataRequestMessage(const Ip6::Address &aDestination);
-        void  RemoveDataResponseMessage(void);
-        void  HandleTimer(void);
+        void Stop(void);
 
-        const MessageQueue &GetQueue(void) const { return mQueue; }
+        void ScheduleDataRequest(const Ip6::Address &aDestination, uint16_t aDelay);
+#if OPENTHREAD_FTD
+        void ScheduleParentResponse(const ParentResponseInfo &aInfo, uint16_t aDelay);
+        void ScheduleMulticastDataResponse(uint16_t aDelay);
+        void ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint16_t aDelay);
+        void ScheduleDiscoveryResponse(const Ip6::Address          &aDestination,
+                                       const DiscoveryResponseInfo &aInfo,
+                                       uint16_t                     aDelay);
+#endif
+        void                HandleTimer(void);
+        const MessageQueue &GetQueue(void) const { return mSchedules; }
 
     private:
-        struct Metadata : public Message::FooterData<Metadata>
+        typedef Message Schedule;
+
+        struct Header
         {
-            Ip6::Address mDestination;
+            void ReadFrom(const Schedule &aSchedule) { IgnoreError(aSchedule.Read(/* aOffset */ 0, *this)); }
+
             TimeMilli    mSendTime;
+            Ip6::Address mDestination;
+            MessageType  mMessageType;
         };
 
-        void Send(TxMessage &aMessage, const Metadata &aMetadata);
-        void RemoveMessage(Command aCommand, MessageType aMessageType, const Ip6::Address *aDestination);
+        void AddSchedule(MessageType         aMessageType,
+                         const Ip6::Address &aDestination,
+                         uint16_t            aDelay,
+                         const void         *aInfo,
+                         uint16_t            aInfoSize);
+        void Execute(const Schedule &aSchedule);
+        bool HasMatchingSchedule(MessageType aMessageType, const Ip6::Address &aDestination) const;
+        void RemoveMatchingSchedules(MessageType aMessageType, const Ip6::Address &aDestination);
+
+        static bool Match(const Schedule &aSchedule, MessageType aMessageType, const Ip6::Address &aDestination);
 
         using DelayTimer = TimerMilliIn<Mle, &Mle::HandleDelayedSenderTimer>;
 
-        MessageQueue mQueue;
+        MessageQueue mSchedules;
         DelayTimer   mTimer;
     };
 
@@ -1217,7 +1263,6 @@ private:
     void       HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void       ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
     Error      SendChildUpdateRequest(ChildUpdateRequestMode aMode);
-    Error      SendDataRequestAfterDelay(const Ip6::Address &aDestination, uint16_t aDelay);
     Error      SendChildUpdateRequest(void);
     Error      SendChildUpdateResponse(const TlvList      &aTlvList,
                                        const RxChallenge  &aChallenge,
@@ -1300,10 +1345,9 @@ private:
     Error SendDataRequest(const Ip6::Address                      &aDestination,
                           const uint8_t                           *aTlvs,
                           uint8_t                                  aTlvsLength,
-                          uint16_t                                 aDelay,
                           const LinkMetrics::Initiator::QueryInfo *aQueryInfo = nullptr);
 #else
-    Error SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aDelay);
+    Error       SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength);
 #endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
