@@ -753,6 +753,9 @@ Client::Client(Instance &aInstance)
     static_assert(kServiceQuerySrv == 3, "kServiceQuerySrv value is not correct");
     static_assert(kServiceQueryTxt == 4, "kServiceQuerySrv value is not correct");
 #endif
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+    ClearAllBytes(mSendLink);
+#endif
 }
 
 Error Client::Start(void)
