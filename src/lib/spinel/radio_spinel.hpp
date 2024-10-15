@@ -1006,8 +1006,10 @@ public:
 
     /**
      *  A callback type for restoring vendor properties.
+     *
+     * @param[in] aContext  A pointer to the user context.
      */
-    typedef void (*otRadioSpinelVendorRestorePropertiesCallback)(void *context);
+    typedef void (*otRadioSpinelVendorRestorePropertiesCallback)(void *aContext);
 
     /**
      * Registers a callback to restore vendor properties.
@@ -1016,10 +1018,31 @@ public:
      * properties occurs (such as an unexpected RCP reset), the user can restore the vendor properties via the callback.
      *
      * @param[in] aCallback The callback.
-     * @param[in] aContext  The context.
+     * @param[in] aContext  A pointer to the user context.
      */
     void SetVendorRestorePropertiesCallback(otRadioSpinelVendorRestorePropertiesCallback aCallback, void *aContext);
 #endif // OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
+
+#if OPENTHREAD_SPINEL_CONFIG_COMPATIBILITY_ERROR_CALLBACK_ENABLE
+    /**
+     * A callback type for handling compatibility error of radio spinel.
+     *
+     * @param[in] aContext  A pointer to the user context.
+     */
+    typedef void (*otRadioSpinelCompatibilityErrorCallback)(void *aContext);
+
+    /**
+     * Registers a callback to handle error of radio spinel.
+     *
+     * This function is used to register a callback to handle radio spinel compatibility errors. When a radio spinel
+     * compatibility error occurs that cannot be resolved by a restart (e.g., RCP version mismatch), the user can
+     * handle the error through the callback(such as OTA) instead of letting the program crash directly.
+     *
+     * @param[in] aCallback The callback.
+     * @param[in] aContext  A pointer to the user context.
+     */
+    void SetCompatibilityErrorCallback(otRadioSpinelCompatibilityErrorCallback aCallback, void *aContext);
+#endif
 
     /**
      * Enables or disables the time synchronization between the host and RCP.
@@ -1155,6 +1178,8 @@ private:
     void PlatDiagOutput(const char *aFormat, ...);
 #endif
 
+    void HandleCompatibilityError(void);
+
     otInstance *mInstance;
 
     RadioSpinelCallbacks mCallbacks; ///< Callbacks for notifications of higher layer.
@@ -1260,6 +1285,11 @@ private:
 #if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
     otRadioSpinelVendorRestorePropertiesCallback mVendorRestorePropertiesCallback;
     void                                        *mVendorRestorePropertiesContext;
+#endif
+
+#if OPENTHREAD_SPINEL_CONFIG_COMPATIBILITY_ERROR_CALLBACK_ENABLE
+    otRadioSpinelCompatibilityErrorCallback mCompatibilityErrorCallback;
+    void                                   *mCompatibilityErrorContext;
 #endif
 
     bool mTimeSyncEnabled : 1;
