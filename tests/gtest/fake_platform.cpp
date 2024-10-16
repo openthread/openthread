@@ -35,6 +35,7 @@
 #include <string.h>
 #include <sys/time.h>
 
+#include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/tasklet.h>
 #include <openthread/tcat.h>
@@ -47,7 +48,8 @@
 #include <openthread/platform/logging.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/toolchain.h>
-#include "openthread/error.h"
+#include <openthread/platform/trel.h>
+#include <openthread/platform/udp.h>
 
 using namespace ot;
 
@@ -90,6 +92,7 @@ FakePlatform::~FakePlatform()
     sPlatform = nullptr;
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 void FakePlatform::StartMicroAlarm(uint32_t aT0, uint32_t aDt)
 {
     uint64_t start = mNow;
@@ -102,6 +105,10 @@ void FakePlatform::StartMicroAlarm(uint32_t aT0, uint32_t aDt)
 
     mMicroAlarmStart = start;
 }
+
+void FakePlatform::StopMicroAlarm() { mMicroAlarmStart = kAlarmStop; }
+#endif
+
 void FakePlatform::StartMilliAlarm(uint32_t aT0, uint32_t aDt)
 {
     uint64_t start = mNow - (mNow % OT_US_PER_MS);
@@ -115,8 +122,6 @@ void FakePlatform::StartMilliAlarm(uint32_t aT0, uint32_t aDt)
     mMilliAlarmStart = start;
 }
 
-void FakePlatform::StopMicroAlarm() { mMicroAlarmStart = kAlarmStop; }
-
 void FakePlatform::StopMilliAlarm() { mMilliAlarmStart = kAlarmStop; }
 
 void FakePlatform::ProcessAlarm(uint64_t &aTimeout)
@@ -124,12 +129,12 @@ void FakePlatform::ProcessAlarm(uint64_t &aTimeout)
     uint64_t end = mNow + aTimeout;
 
     uint64_t *alarm = &end;
-
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     if (mMicroAlarmStart < *alarm)
     {
         alarm = &mMicroAlarmStart;
     }
-
+#endif
     if (mMilliAlarmStart < *alarm)
     {
         alarm = &mMilliAlarmStart;
@@ -141,12 +146,14 @@ void FakePlatform::ProcessAlarm(uint64_t &aTimeout)
         mNow = *alarm;
     }
     *alarm = kAlarmStop;
-
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     if (alarm == &mMicroAlarmStart)
     {
         otPlatAlarmMicroFired(mInstance);
     }
-    else if (alarm == &mMilliAlarmStart)
+    else
+#endif
+        if (alarm == &mMilliAlarmStart)
     {
         otPlatAlarmMilliFired(mInstance);
     }
@@ -244,7 +251,7 @@ otError FakePlatform::SettingsDelete(uint16_t aKey, int aIndex)
         return OT_ERROR_NOT_FOUND;
     }
 
-    if (aIndex >= setting->second.size())
+    if (static_cast<std::size_t>(aIndex) >= setting->second.size())
     {
         return OT_ERROR_NOT_FOUND;
     }
@@ -309,12 +316,14 @@ void otPlatAlarmMilliStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
 }
 
 uint32_t otPlatAlarmMilliGetNow(void) { return FakePlatform::CurrentPlatform().GetNow() / OT_US_PER_MS; }
-void     otPlatAlarmMicroStop(otInstance *) { FakePlatform::CurrentPlatform().StopMicroAlarm(); }
 
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+void otPlatAlarmMicroStop(otInstance *) { FakePlatform::CurrentPlatform().StopMicroAlarm(); }
 void otPlatAlarmMicroStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
 {
     FakePlatform::CurrentPlatform().StartMicroAlarm(aT0, aDt);
 }
+#endif
 
 uint64_t otPlatTimeGet(void) { return FakePlatform::CurrentPlatform().GetNow(); }
 uint16_t otPlatTimeGetXtalAccuracy(void) { return 0; }
@@ -392,6 +401,11 @@ bool otPlatRadioIsCoexEnabled(otInstance *) { return true; }
 
 otError otPlatRadioSetCoexEnabled(otInstance *, bool) { return OT_ERROR_NOT_IMPLEMENTED; }
 
+otError otPlatRadioConfigureEnhAckProbing(otInstance *, otLinkMetrics, otShortAddress, const otExtAddress *)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
 void otPlatReset(otInstance *) {}
 
 otPlatResetReason otPlatGetResetReason(otInstance *) { return OT_PLAT_RESET_REASON_POWER_ON; }
@@ -426,7 +440,7 @@ void otPlatDiagRadioReceived(otInstance *, otRadioFrame *, otError) {}
 
 void otPlatDiagAlarmCallback(otInstance *) {}
 
-OT_TOOL_WEAK void otPlatLog(otLogLevel aLevel, otLogRegion aRegion, const char *aFormat, ...) {}
+OT_TOOL_WEAK void otPlatLog(otLogLevel, otLogRegion, const char *, ...) {}
 
 void *otPlatCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
 
@@ -438,7 +452,7 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t, const otIp6Address *, const uint8_t *
 
 otError otPlatInfraIfDiscoverNat64Prefix(uint32_t) { return OT_ERROR_FAILED; }
 
-void otPlatDsoEnableListening(otInstance *aInstance, bool) {}
+void otPlatDsoEnableListening(otInstance *, bool) {}
 
 void otPlatDsoConnect(otPlatDsoConnection *, const otSockAddr *) {}
 
@@ -450,7 +464,7 @@ otError otPlatBleEnable(otInstance *) { return OT_ERROR_NONE; }
 
 otError otPlatBleDisable(otInstance *) { return OT_ERROR_NONE; }
 
-otError otPlatBleGetAdvertisementBuffer(otInstance *, uint8_t **aAdvertisementBuffer) { return OT_ERROR_NO_BUFS; }
+otError otPlatBleGetAdvertisementBuffer(otInstance *, uint8_t **) { return OT_ERROR_NO_BUFS; }
 
 otError otPlatBleGapAdvStart(otInstance *, uint16_t) { return OT_ERROR_NONE; }
 
@@ -467,6 +481,10 @@ void otPlatBleGetLinkCapabilities(otInstance *, otBleLinkCapabilities *) {}
 bool otPlatBleSupportsMultiRadio(otInstance *) { return false; }
 
 otError otPlatBleGapAdvSetData(otInstance *, uint8_t *, uint16_t) { return OT_ERROR_NONE; }
+
+void otPlatSettingsInit(otInstance *, const uint16_t *, uint16_t) {}
+
+void otPlatSettingsDeinit(otInstance *) {}
 
 otError otPlatSettingsGet(otInstance *, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
@@ -504,6 +522,28 @@ void otPlatFlashRead(otInstance *, uint8_t aSwapIndex, uint32_t aOffset, void *a
 void otPlatFlashWrite(otInstance *, uint8_t aSwapIndex, uint32_t aOffset, const void *aData, uint32_t aSize)
 {
     FakePlatform::CurrentPlatform().FlashWrite(aSwapIndex, aOffset, aData, aSize);
+}
+
+void                      otPlatTrelEnable(otInstance *, uint16_t *) {}
+void                      otPlatTrelDisable(otInstance *) {}
+void                      otPlatTrelRegisterService(otInstance *, uint16_t, const uint8_t *, uint8_t) {}
+void                      otPlatTrelSend(otInstance *, const uint8_t *, uint16_t, const otSockAddr *) {}
+const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *) { return nullptr; }
+void                      otPlatTrelResetCounters(otInstance *) {}
+
+otError otPlatUdpSocket(otUdpSocket *) { return OT_ERROR_NOT_IMPLEMENTED; }
+otError otPlatUdpClose(otUdpSocket *) { return OT_ERROR_NOT_IMPLEMENTED; }
+otError otPlatUdpBind(otUdpSocket *) { return OT_ERROR_NOT_IMPLEMENTED; }
+otError otPlatUdpBindToNetif(otUdpSocket *, otNetifIdentifier) { return OT_ERROR_NOT_IMPLEMENTED; }
+otError otPlatUdpConnect(otUdpSocket *) { return OT_ERROR_NOT_IMPLEMENTED; }
+otError otPlatUdpSend(otUdpSocket *, otMessage *, const otMessageInfo *) { return OT_ERROR_NOT_IMPLEMENTED; }
+otError otPlatUdpJoinMulticastGroup(otUdpSocket *, otNetifIdentifier, const otIp6Address *)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+otError otPlatUdpLeaveMulticastGroup(otUdpSocket *, otNetifIdentifier, const otIp6Address *)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 } // extern "C"
