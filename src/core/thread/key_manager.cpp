@@ -400,6 +400,18 @@ const Mle::KeyMaterial &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
     return mTemporaryMleKey;
 }
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+const Mle::KeyMaterial &KeyManager::GetTemporaryMacKey(uint32_t aKeySequence)
+{
+    HashKeys hashKeys;
+
+    ComputeKeys(aKeySequence, hashKeys);
+    mTemporaryMacKey.SetFrom(hashKeys.GetMacKey());
+
+    return mTemporaryMacKey;
+}
+#endif
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 const Mac::KeyMaterial &KeyManager::GetTemporaryTrelMacKey(uint32_t aKeySequence)
 {

@@ -53,7 +53,7 @@ jobs:
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+    - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
       with:
         submodules: true
     - uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3 # v5.2.0
@@ -79,11 +79,13 @@ jobs:
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-    - uses: gaurav-nelson/github-action-markdown-link-check@5c5dfc0ac2e225883c0e5f03a85311ec2830d368 # v1
+    - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+    - name: Run linkspector
+      uses: umbrelladocs/action-linkspector@v1
       with:
-        use-verbose-mode: 'yes'
-        max-depth: 3
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        reporter: github-pr-review
+        fail_on_error: true
 
   spell-check:
     runs-on: ubuntu-22.04
@@ -93,7 +95,7 @@ jobs:
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+    - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
       with:
         submodules: true
     - uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3 # v5.2.0
@@ -116,7 +118,7 @@ jobs:
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+    - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
       with:
         submodules: true
     - name: Bootstrap
@@ -156,7 +158,7 @@ jobs:
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+    - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
       with:
         submodules: true
     - name: Bootstrap
@@ -175,7 +177,7 @@ jobs:
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+    - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
       with:
         submodules: true
     - name: Bootstrap
@@ -194,14 +196,14 @@ jobs:
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+    - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
       with:
         submodules: true
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
         rm -rf third_party/mbedtls/repo
-    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+    - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
       with:
         repository: ARMmbed/mbedtls
         ref: v2.28.8
@@ -250,7 +252,7 @@ jobs:
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+    - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
       with:
         submodules: true
     - name: Bootstrap
@@ -291,7 +293,7 @@ jobs:
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+    - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
       with:
         submodules: true
     - name: Bootstrap
@@ -314,7 +316,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        clang_ver: ["9", "10", "11", "12", "13"]
+        clang_ver: ["17", "18", "19"]
     env:
       CC: clang-${{ matrix.clang_ver }}
       CXX: clang++-${{ matrix.clang_ver }}
@@ -324,20 +326,16 @@ jobs:
         with:
           egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
         with:
           submodules: true
       - name: Bootstrap
         run: |
-          sudo rm /etc/apt/sources.list.d/*
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          echo 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal main
-          deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal main
-          # 13
-          deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main
-          deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main' | sudo tee -a /etc/apt/sources.list
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh ${{ matrix.clang_ver }}
           sudo apt-get update
-          sudo apt-get --no-install-recommends install -y clang-${{ matrix.clang_ver }} clang++-${{ matrix.clang_ver }} ninja-build libreadline-dev libncurses-dev
+          sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
       - name: Build
         run: |
           script/check-simulation-build
@@ -351,7 +349,7 @@ jobs:
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+    - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
       with:
         submodules: true
     - name: Bootstrap
@@ -387,7 +385,7 @@ jobs:
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+    - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
       with:
         submodules: true
     - name: Bootstrap
@@ -411,7 +409,7 @@ jobs:
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+    - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
       with:
         submodules: true
     - name: Install unzip

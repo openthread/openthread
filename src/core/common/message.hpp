@@ -1053,37 +1053,23 @@ public:
 
 #if OPENTHREAD_FTD
     /**
-     * Returns whether or not the message forwarding is scheduled for the child.
+     * Gets the indirect transmission `ChildMask` associated with this `Message`.
      *
-     * @param[in]  aChildIndex  The index into the child table.
+     * The `ChildMask` indicates the set of children for which this message is scheduled for indirect transmission.
      *
-     * @retval TRUE   If the message is scheduled to be forwarded to the child.
-     * @retval FALSE  If the message is not scheduled to be forwarded to the child.
+     * @returns A reference to the indirect transmission `ChildMask`.
      */
-    bool GetChildMask(uint16_t aChildIndex) const;
+    ChildMask &GetIndirectTxChildMask(void) { return GetMetadata().mChildMask; }
 
     /**
-     * Unschedules forwarding of the message to the child.
+     * Gets the indirect transmission `ChildMask` associated with this `Message`.
      *
-     * @param[in]  aChildIndex  The index into the child table.
-     */
-    void ClearChildMask(uint16_t aChildIndex);
-
-    /**
-     * Schedules forwarding of the message to the child.
+     * The `ChildMask` indicates the set of children for which this message is scheduled for indirect transmission.
      *
-     * @param[in]  aChildIndex  The index into the child table.
+     * @returns A reference to the indirect transmission `ChildMask`.
      */
-    void SetChildMask(uint16_t aChildIndex);
-
-    /**
-     * Returns whether or not the message forwarding is scheduled for at least one child.
-     *
-     * @retval TRUE   If message forwarding is scheduled for at least one child.
-     * @retval FALSE  If message forwarding is not scheduled for any child.
-     */
-    bool IsChildPending(void) const;
-#endif // OPENTHREAD_FTD
+    const ChildMask &GetIndirectTxChildMask(void) const { return GetMetadata().mChildMask; }
+#endif
 
     /**
      * Returns the RLOC16 of the mesh destination.

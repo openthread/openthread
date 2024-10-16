@@ -530,7 +530,6 @@ private:
                                  Message::Priority       aPriority);
     Error HandleDatagram(Message &aMessage, const Mac::Address &aMacSource);
     void  ClearReassemblyList(void);
-    void  EvictMessage(Message &aMessage);
     void  HandleDiscoverComplete(void);
 
     void          HandleReceivedFrame(Mac::RxFrame &aFrame);
@@ -543,6 +542,7 @@ private:
     void HandleSentFrame(Mac::TxFrame &aFrame, Error aError);
     void UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor);
     void FinalizeMessageDirectTx(Message &aMessage, Error aError);
+    void FinalizeAndRemoveMessage(Message &aMessage, Error aError, MessageAction aAction);
     bool RemoveMessageIfNoPendingTx(Message &aMessage);
 
     void HandleTimeTick(void);
@@ -551,6 +551,7 @@ private:
     Error GetFramePriority(RxInfo &aRxInfo, Message::Priority &aPriority);
 
 #if OPENTHREAD_FTD
+    void          FinalizeMessageIndirectTxs(Message &aMessage);
     FwdFrameInfo *FindFwdFrameInfoEntry(uint16_t aSrcRloc16, uint16_t aDatagramTag);
     bool          UpdateFwdFrameInfoArrayOnTimeTick(void);
 
@@ -558,6 +559,7 @@ private:
                               uint16_t                aSrcRloc16,
                               Message::Priority      &aPriority);
     void  GetForwardFramePriority(RxInfo &aRxInfo, Message::Priority &aPriority);
+
 #endif
 
     void PauseMessageTransmissions(void) { mTxPaused = true; }

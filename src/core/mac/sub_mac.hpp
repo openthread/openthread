@@ -480,6 +480,18 @@ public:
     bool IsRadioFilterEnabled(void) const { return mRadioFilterEnabled; }
 #endif
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    /**
+     * Configures wake-up listening parameters in all radios.
+     *
+     * @param[in]  aEnable    Whether to enable or disable wake-up listening.
+     * @param[in]  aInterval  The wake-up listen interval in microseconds.
+     * @param[in]  aDuration  The wake-up listen duration in microseconds.
+     * @param[in]  aChannel   The wake-up channel.
+     */
+    void UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aDuration, uint8_t aChannel);
+#endif
+
 private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     void        CslInit(void);
@@ -492,6 +504,11 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
     void LogReceived(RxFrame *aFrame);
 #endif
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    void        WedInit(void);
+    static void HandleWedTimer(Timer &aTimer);
+    void        HandleWedTimer(void);
 #endif
 
     static constexpr uint8_t  kCsmaMinBe         = 3;                  // macMinBE (IEEE 802.15.4-2006).
@@ -530,14 +547,20 @@ private:
 #endif
     };
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     // Radio on times needed before and after MHR time for proper frame detection
     static constexpr uint32_t kMinReceiveOnAhead = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AHEAD;
     static constexpr uint32_t kMinReceiveOnAfter = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AFTER;
 
-    // CSL receivers would wake up `kCslReceiveTimeAhead` earlier
+    // CSL/wake-up listening receivers would wake up `kCslReceiveTimeAhead` earlier
     // than expected sample window. The value is in usec.
     static constexpr uint32_t kCslReceiveTimeAhead = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    // Margin to be applied after the end of a wake-up listen duration to schedule the next listen interval.
+    // The value is in usec.
+    static constexpr uint32_t kWedReceiveTimeAfter = OPENTHREAD_CONFIG_WED_RECEIVE_TIME_AFTER;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -634,6 +657,15 @@ private:
     TimeMicro   mCslLastSync;       // The timestamp of the last successful CSL synchronization.
     CslAccuracy mCslParentAccuracy; // The parent's CSL accuracy (clock accuracy and uncertainty).
     TimerMicro  mCslTimer;
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    uint32_t   mWakeupListenInterval; // The wake-up listen interval, in microseconds.
+    uint32_t   mWakeupListenDuration; // The wake-up listen duration, in microseconds.
+    uint8_t    mWakeupChannel;        // The wake-up sample channel.
+    TimeMicro  mWedSampleTime;        // The WED sample time of the current interval in local time.
+    uint64_t   mWedSampleTimeRadio;   // The WED sample time of the current interval in radio time.
+    TimerMicro mWedTimer;
 #endif
 };
 

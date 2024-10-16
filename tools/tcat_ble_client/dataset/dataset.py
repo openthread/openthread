@@ -18,7 +18,7 @@ from typing import Dict, List
 
 from tlv.tlv import TLV
 from tlv.dataset_tlv import MeshcopTlvType
-from dataset.dataset_entries import DatasetEntry, create_dataset_entry
+from dataset.dataset_entries import DatasetEntry, create_dataset_entry, ENTRY_CLASSES
 
 initial_dataset = bytes([
     0x0E, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x12, 0x35, 0x06, 0x00, 0x04,
@@ -58,8 +58,11 @@ class ThreadDataset:
         return self.entries[type]
 
     def set_entry(self, type: MeshcopTlvType, args: List[str]):
-        if type in self.entries:
-            self.entries[type].set(args)
+        if type in ENTRY_CLASSES:
+            if type in self.entries:
+                self.entries[type].set(args)
+            else:
+                self.entries[type] = create_dataset_entry(type, args)
             return
         raise KeyError(f'Key {type} not available in the dataset.')
 

@@ -112,6 +112,10 @@ RadioSpinel::RadioSpinel(void)
     , mVendorRestorePropertiesCallback(nullptr)
     , mVendorRestorePropertiesContext(nullptr)
 #endif
+#if OPENTHREAD_SPINEL_CONFIG_COMPATIBILITY_ERROR_CALLBACK_ENABLE
+    , mCompatibilityErrorCallback(nullptr)
+    , mCompatibilityErrorContext(nullptr)
+#endif
     , mTimeSyncEnabled(false)
     , mTimeSyncOn(false)
     , mSpinelDriver(nullptr)
@@ -198,7 +202,7 @@ otError RadioSpinel::CheckSpinelVersion(void)
     {
         LogCrit("Spinel version mismatch - Posix:%d.%d, RCP:%d.%d", SPINEL_PROTOCOL_VERSION_THREAD_MAJOR,
                 SPINEL_PROTOCOL_VERSION_THREAD_MINOR, versionMajor, versionMinor);
-        DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+        HandleCompatibilityError();
     }
 
 exit:
@@ -210,13 +214,13 @@ void RadioSpinel::InitializeCaps(bool &aSupportsRcpApiVersion, bool &aSupportsRc
     if (!GetSpinelDriver().CoprocessorHasCap(SPINEL_CAP_CONFIG_RADIO))
     {
         LogCrit("The co-processor isn't a RCP!");
-        DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+        HandleCompatibilityError();
     }
 
     if (!GetSpinelDriver().CoprocessorHasCap(SPINEL_CAP_MAC_RAW))
     {
         LogCrit("RCP capability list does not include support for radio/raw mode");
-        DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+        HandleCompatibilityError();
     }
 
     sSupportsLogStream            = GetSpinelDriver().CoprocessorHasCap(SPINEL_CAP_OPENTHREAD_LOG_METADATA);
@@ -251,7 +255,7 @@ otError RadioSpinel::CheckRadioCapabilities(otRadioCaps aRequiredRadioCaps)
             }
         }
 
-        DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+        HandleCompatibilityError();
     }
 
 exit:
@@ -279,7 +283,7 @@ otError RadioSpinel::CheckRcpApiVersion(bool aSupportsRcpApiVersion, bool aSuppo
             LogCrit("RCP and host are using incompatible API versions");
             LogCrit("RCP API Version %u is older than min required by host %u", rcpApiVersion,
                     SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION);
-            DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+            HandleCompatibilityError();
         }
     }
 
@@ -299,7 +303,7 @@ otError RadioSpinel::CheckRcpApiVersion(bool aSupportsRcpApiVersion, bool aSuppo
             LogCrit("RCP and host are using incompatible API versions");
             LogCrit("RCP requires min host API version %u but host is older and at version %u", minHostRcpApiVersion,
                     SPINEL_RCP_API_VERSION);
-            DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+            HandleCompatibilityError();
         }
     }
 
@@ -2398,6 +2402,25 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+
+#if OPENTHREAD_SPINEL_CONFIG_COMPATIBILITY_ERROR_CALLBACK_ENABLE
+void RadioSpinel::SetCompatibilityErrorCallback(otRadioSpinelCompatibilityErrorCallback aCallback, void *aContext)
+{
+    mCompatibilityErrorCallback = aCallback;
+    mCompatibilityErrorContext  = aContext;
+}
+#endif
+
+void RadioSpinel::HandleCompatibilityError(void)
+{
+#if OPENTHREAD_SPINEL_CONFIG_COMPATIBILITY_ERROR_CALLBACK_ENABLE
+    if (mCompatibilityErrorCallback)
+    {
+        mCompatibilityErrorCallback(mCompatibilityErrorContext);
+    }
+#endif
+    DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+}
 
 } // namespace Spinel
 } // namespace ot

@@ -37,6 +37,7 @@
 
 #include <openthread/platform/time.h>
 
+#include "common/code_utils.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -52,6 +53,9 @@ SubMac::SubMac(Instance &aInstance)
     , mTimer(aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mCslTimer(aInstance, SubMac::HandleCslTimer)
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    , mWedTimer(aInstance, SubMac::HandleWedTimer)
 #endif
 {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -89,6 +93,9 @@ void SubMac::Init(void)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     CslInit();
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    WedInit();
 #endif
 }
 
@@ -202,6 +209,9 @@ Error SubMac::Disable(void)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mCslTimer.Stop();
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    mWedTimer.Stop();
 #endif
 
     mTimer.Stop();
@@ -789,7 +799,7 @@ bool SubMac::ShouldHandleCsmaBackOff(void) const
 {
     bool swCsma = true;
 
-    VerifyOrExit(!RadioSupportsCsmaBackoff(), swCsma = false);
+    VerifyOrExit(mTransmitFrame.IsCsmaCaEnabled() && !RadioSupportsCsmaBackoff(), swCsma = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(Get<LinkRaw>().IsEnabled());
