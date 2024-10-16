@@ -91,6 +91,7 @@ constexpr uint16_t kMinCslIePeriod = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD;
 
 constexpr uint32_t kDefaultWedListenInterval = OPENTHREAD_CONFIG_WED_LISTEN_INTERVAL;
 constexpr uint32_t kDefaultWedListenDuration = OPENTHREAD_CONFIG_WED_LISTEN_DURATION;
+constexpr uint16_t kDefaultWakeupInterval    = OPENTHREAD_CONFIG_MAC_CSL_WAKEUP_INTERVAL;
 
 /**
  * Defines the function pointer called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
@@ -213,6 +214,16 @@ public:
     void RequestCslFrameTransmission(uint32_t aDelay);
 #endif
 
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    /**
+     * Requests `Mac` to start an enhanced CSL tx operation after a delay of @p aDelay time.
+     *
+     * @param[in]  aDelay  Delay time for `Mac` to start an enhanced CSL tx, in units of milliseconds.
+     *
+     */
+    void RequestEnhCslFrameTransmission(uint32_t aDelay);
 #endif
 
     /**
@@ -763,6 +774,9 @@ private:
         kOperationTransmitDataCsl,
 #endif
 #endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        kOperationTransmitDataEnhCsl,
+#endif
     };
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
@@ -883,8 +897,9 @@ private:
 #endif
     uint8_t mWakeupChannel;
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    uint32_t mWakeupListenInterval;
-    uint32_t mWakeupListenDuration;
+    uint32_t  mWakeupListenInterval;
+    uint32_t  mWakeupListenDuration;
+    TimeMilli mEnhCslTxFireTime;
 #endif
     union
     {

@@ -173,8 +173,7 @@ Error Mle::Start(StartMode aMode)
     Get<ThreadNetif>().SubscribeMulticast(mRealmLocalAllThreadNodes);
 
     SetRloc16(GetRloc16());
-
-    mAttachCounter = 0;
+    ResetAttachCounter();
 
     Get<KeyManager>().Start();
 
@@ -336,6 +335,45 @@ void Mle::SetAttachState(AttachState aState)
 
 exit:
     return;
+}
+
+void Mle::ResetAttachCounter(void)
+{
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    VerifyOrExit(!IsWakeupCoordPresent());
+
+#if OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE
+    mAttachFireTime = TimeMilli(0);
+#endif
+#endif
+
+    mAttachCounter = 0;
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+exit:
+    return;
+#endif
+}
+
+void Mle::IncrementAttachCounter(void)
+{
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    VerifyOrExit(!IsWakeupCoordPresent());
+#endif
+
+    mAttachCounter++;
+
+    if (mAttachCounter == 0)
+    {
+        mAttachCounter--;
+    }
+
+    mCounters.mAttachAttempts++;
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+exit:
+    return;
+#endif
 }
 
 void Mle::Restore(void)
@@ -560,7 +598,7 @@ void Mle::Attach(AttachMode aMode)
 
     if (!IsDetached())
     {
-        mAttachCounter = 0;
+        ResetAttachCounter();
     }
 
     if (mReattachState == kReattachStart)
@@ -839,7 +877,7 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
 
         if (shouldReattach)
         {
-            mAttachCounter = 0;
+            ResetAttachCounter();
             IgnoreError(BecomeDetached());
             ExitNow();
         }
@@ -847,7 +885,7 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
 
     if (IsDetached())
     {
-        mAttachCounter = 0;
+        ResetAttachCounter();
         SetStateDetached();
         Attach(kAnyPartition);
     }
@@ -1060,6 +1098,12 @@ void Mle::InitNeighbor(Neighbor &aNeighbor, const RxInfo &aRxInfo)
     aNeighbor.GetLinkInfo().AddRss(aRxInfo.mMessage.GetAverageRss());
     aNeighbor.ResetLinkFailures();
     aNeighbor.SetLastHeard(TimerMilli::GetNow());
+}
+
+void Mle::InitParentCandidate(Mac::ExtAddress &aAddress)
+{
+    mParentCandidate.Clear();
+    mParentCandidate.SetExtAddress(aAddress);
 }
 
 void Mle::ScheduleChildUpdateRequestIfMtdChild(void)
@@ -1280,7 +1324,7 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
-Error Mle::DetermineParentRequestType(ParentRequestType &aType) const
+Error Mle::DetermineParentRequestType(ParentRequestType &aType, uint32_t *aTimeout) const
 {
     // This method determines the Parent Request type to use during an
     // attach cycle based on `mAttachMode`, `mAttachCounter` and
@@ -1296,6 +1340,28 @@ Error Mle::DetermineParentRequestType(ParentRequestType &aType) const
     Error error = kErrorNone;
 
     OT_ASSERT(mAttachState == kAttachStateParentRequest);
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    if (IsWakeupCoordPresent())
+    {
+        aType = kToWakeupCoord;
+
+        if (aTimeout != nullptr)
+        {
+            TimeMilli now       = TimerMilli::GetNow();
+            TimeMilli windowEnd = mWakeupCoordAttachTime + mWakeupCoordAttachWindow;
+
+            VerifyOrExit(now < windowEnd, error = kErrorNotFound);
+            // Let the connection window only limit the duration of Parent Request transmissions,
+            // but wait for Parent Response a bit longer than that.
+            *aTimeout = (windowEnd - now) + kWakeupCoordParentRespTimeout;
+        }
+
+        ExitNow();
+    }
+#else
+    OT_UNUSED_VARIABLE(aTimeout);
+#endif
 
     aType = kToRoutersAndReeds;
 
@@ -1414,7 +1480,7 @@ void Mle::HandleAttachTimer(void)
     switch (mAttachState)
     {
     case kAttachStateIdle:
-        mAttachCounter = 0;
+        ResetAttachCounter();
         break;
 
     case kAttachStateProcessAnnounce:
@@ -1422,8 +1488,17 @@ void Mle::HandleAttachTimer(void)
         break;
 
     case kAttachStateStart:
-        LogNote("Attach attempt %d, %s %s", mAttachCounter, AttachModeToString(mAttachMode),
-                ReattachStateToString(mReattachState));
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        if (IsWakeupCoordPresent())
+        {
+            LogNote("Attach attempt to Wake-up Coordinator");
+        }
+        else
+#endif
+        {
+            LogNote("Attach attempt %d, %s %s", mAttachCounter, AttachModeToString(mAttachMode),
+                    ReattachStateToString(mReattachState));
+        }
 
         SetAttachState(kAttachStateParentRequest);
         mParentCandidate.SetState(Neighbor::kStateInvalid);
@@ -1435,10 +1510,9 @@ void Mle::HandleAttachTimer(void)
 
     case kAttachStateParentRequest:
         mParentRequestCounter++;
-        if (DetermineParentRequestType(type) == kErrorNone)
+        if (DetermineParentRequestType(type, &delay) == kErrorNone)
         {
             SendParentRequest(type);
-            delay = (type == kToRouters) ? kParentRequestRouterTimeout : kParentRequestReedTimeout;
             break;
         }
 
@@ -1492,6 +1566,10 @@ bool Mle::PrepareAnnounceState(void)
 {
     bool             shouldAnnounce = false;
     Mac::ChannelMask channelMask;
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    VerifyOrExit(!IsWakeupCoordPresent());
+#endif
 
     VerifyOrExit(!IsChild() && (mReattachState == kReattachStop) &&
                  (Get<MeshCoP::ActiveDatasetManager>().IsPartiallyComplete() || !IsFullThreadDevice()));
@@ -1594,11 +1672,20 @@ void Mle::SendParentRequest(ParentRequestType aType)
     {
     case kToRouters:
         scanMask = ScanMaskTlv::kRouterFlag;
+        destination.SetToLinkLocalAllRoutersMulticast();
         break;
 
     case kToRoutersAndReeds:
         scanMask = ScanMaskTlv::kRouterFlag | ScanMaskTlv::kEndDeviceFlag;
+        destination.SetToLinkLocalAllRoutersMulticast();
         break;
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    case kToWakeupCoord:
+        scanMask = ScanMaskTlv::kRouterFlag | ScanMaskTlv::kEndDeviceFlag;
+        destination.SetToLinkLocalAddress(mWakeupCoord);
+        break;
+#endif
     }
 
     VerifyOrExit((message = NewMleMessage(kCommandParentRequest)) != nullptr, error = kErrorNoBufs);
@@ -1609,8 +1696,12 @@ void Mle::SendParentRequest(ParentRequestType aType)
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     SuccessOrExit(error = message->AppendTimeRequestTlv());
 #endif
-
-    destination.SetToLinkLocalAllRoutersMulticast();
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    if (aType == kToWakeupCoord)
+    {
+        SuccessOrExit(error = message->AppendCslClockAccuracyTlv());
+    }
+#endif
     SuccessOrExit(error = message->SendTo(destination));
 
     switch (aType)
@@ -1622,6 +1713,13 @@ void Mle::SendParentRequest(ParentRequestType aType)
     case kToRoutersAndReeds:
         Log(kMessageSend, kTypeParentRequestToRoutersReeds, destination);
         break;
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    case kToWakeupCoord:
+        Log(kMessageSend, kTypeParentRequestToWakeupCoord, destination);
+        LogInfo("Sent Parent Request FC: %lu", ToUlong(Get<KeyManager>().GetMleFrameCounter() - 1));
+        break;
+#endif
     }
 
 exit:
@@ -2097,6 +2195,9 @@ void Mle::SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, Annou
     MeshCoP::Timestamp activeTimestamp;
     TxMessage         *message = nullptr;
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    VerifyOrExit(!IsWakeupCoordPresent(), error = kErrorInvalidState);
+#endif
     VerifyOrExit(Get<Mac::Mac>().GetSupportedChannelMask().ContainsChannel(aChannel), error = kErrorInvalidArgs);
     VerifyOrExit((message = NewMleMessage(kCommandAnnounce)) != nullptr, error = kErrorNoBufs);
     message->SetLinkSecurityEnabled(true);
@@ -3646,7 +3747,7 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
         mAlternatePanId     = panId;
         SetAttachState(kAttachStateProcessAnnounce);
         mAttachTimer.Start(kAnnounceProcessTimeout);
-        mAttachCounter = 0;
+        ResetAttachCounter();
 
         LogNote("Delay processing Announce - channel %d, panid 0x%02x", channel, panId);
     }
@@ -3805,6 +3906,9 @@ void Mle::InformPreviousParent(void)
     Message         *message = nullptr;
     Ip6::MessageInfo messageInfo;
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    VerifyOrExit(!IsWakeupCoordPresent());
+#endif
     VerifyOrExit((message = Get<Ip6::Ip6>().NewMessage(0)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->SetLength(0));
 
@@ -4026,6 +4130,9 @@ const char *Mle::MessageTypeToString(MessageType aType)
 #endif
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         "Time Sync", // (31) kTypeTimeSync
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        "Parent Request", // kTypeParentRequestToWakeupCoord
 #endif
     };
 
@@ -5152,6 +5259,32 @@ exit:
     return error;
 }
 #endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+void Mle::AttachToWakeupCoord(const Mac::ExtAddress &aCoord, TimeMilli aAttachTime, uint32_t aAttachWindowMs)
+{
+#if OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE
+    if (mAttachTimer.IsRunning())
+    {
+        mAttachFireTime = mAttachTimer.GetFireTime();
+    }
+#endif
+
+    mPreviousRole = mRole;
+    SetStateDetached();
+    mParent.Clear();
+    SetRloc16(Mac::kShortAddrInvalid);
+    // Clear the current network data to avoid needless address registrations as the Wake-up Coordinator acts as a
+    // leader and establishes new network data, anyway.
+    Get<NetworkData::Leader>().Reset();
+
+    mWakeupCoord             = aCoord;
+    mWakeupCoordAttachTime   = aAttachTime;
+    mWakeupCoordAttachWindow = aAttachWindowMs;
+
+    Attach(kAnyPartition);
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 // ParentCandidate
