@@ -29,7 +29,7 @@
 #ifndef OT_GTEST_FAKE_PLATFORM_HPP_
 #define OT_GTEST_FAKE_PLATFORM_HPP_
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include <map>
 #include <vector>
@@ -69,8 +69,10 @@ public:
 
     virtual void StartMilliAlarm(uint32_t aT0, uint32_t aDt);
     virtual void StopMilliAlarm();
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     virtual void StartMicroAlarm(uint32_t aT0, uint32_t aDt);
     virtual void StopMicroAlarm();
+#endif
 
     uint8_t               GetReceiveChannel(void) const { return mChannel; }
     virtual otRadioFrame *GetTransmitBuffer() { return &mTransmitFrame; }
@@ -107,8 +109,10 @@ protected:
 
     otInstance *mInstance = nullptr;
 
-    uint64_t mNow             = 0;
+    uint64_t mNow = 0;
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     uint64_t mMicroAlarmStart = kAlarmStop;
+#endif
     uint64_t mMilliAlarmStart = kAlarmStop;
 
     otRadioFrame mTransmitFrame;
