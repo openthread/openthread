@@ -743,6 +743,8 @@ private:
         kNoQuery,
     };
 
+    struct QueryTypeChecker;
+
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
     enum TcpState : uint8_t
     {

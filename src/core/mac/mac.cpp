@@ -38,6 +38,7 @@
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "instance/instance.hpp"
+#include "utils/static-counter.hpp"
 
 namespace ot {
 namespace Mac {
@@ -2192,6 +2193,25 @@ uint8_t Mac::ComputeLinkMargin(int8_t aRss) const { return ot::ComputeLinkMargin
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
+struct Mac::OperationChecker
+{
+    StaticCounterInit(0);
+
+    CheckEnum(kOperationIdle, "kOperationIdle value is incorrect");
+    CheckEnum(kOperationActiveScan, "kOperationActiveScan value is incorrect");
+    CheckEnum(kOperationEnergyScan, "kOperationEnergyScan value is incorrect");
+    CheckEnum(kOperationTransmitBeacon, "kOperationTransmitBeacon value is incorrect");
+    CheckEnum(kOperationTransmitDataDirect, "kOperationTransmitDataDirect value is incorrect");
+    CheckEnum(kOperationTransmitPoll, "kOperationTransmitPoll value is incorrect");
+    CheckEnum(kOperationWaitingForData, "kOperationWaitingForData value is incorrect");
+#if OPENTHREAD_FTD
+    CheckEnum(kOperationTransmitDataIndirect, "kOperationTransmitDataIndirect value is incorrect");
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    CheckEnum(kOperationTransmitDataCsl, "TransmitDataCsl value is incorrect");
+#endif
+#endif
+};
+
 const char *Mac::OperationToString(Operation aOperation)
 {
     static const char *const kOperationStrings[] = {
@@ -2209,20 +2229,6 @@ const char *Mac::OperationToString(Operation aOperation)
 #endif
 #endif
     };
-
-    static_assert(kOperationIdle == 0, "kOperationIdle value is incorrect");
-    static_assert(kOperationActiveScan == 1, "kOperationActiveScan value is incorrect");
-    static_assert(kOperationEnergyScan == 2, "kOperationEnergyScan value is incorrect");
-    static_assert(kOperationTransmitBeacon == 3, "kOperationTransmitBeacon value is incorrect");
-    static_assert(kOperationTransmitDataDirect == 4, "kOperationTransmitDataDirect value is incorrect");
-    static_assert(kOperationTransmitPoll == 5, "kOperationTransmitPoll value is incorrect");
-    static_assert(kOperationWaitingForData == 6, "kOperationWaitingForData value is incorrect");
-#if OPENTHREAD_FTD
-    static_assert(kOperationTransmitDataIndirect == 7, "kOperationTransmitDataIndirect value is incorrect");
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    static_assert(kOperationTransmitDataCsl == 8, "TransmitDataCsl value is incorrect");
-#endif
-#endif
 
     return kOperationStrings[aOperation];
 }

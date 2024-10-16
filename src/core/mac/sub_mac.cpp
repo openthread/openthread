@@ -39,6 +39,7 @@
 
 #include "common/code_utils.hpp"
 #include "instance/instance.hpp"
+#include "utils/static-counter.hpp"
 
 namespace ot {
 namespace Mac {
@@ -990,6 +991,27 @@ void SubMac::StartTimerAt(Time aStartTime, uint32_t aDelayUs)
 
 // LCOV_EXCL_START
 
+struct SubMac::StateValueChecker
+{
+    StaticCounterInit(0);
+
+    CheckEnum(kStateDisabled, "kStateDisabled value is not correct");
+    CheckEnum(kStateSleep, "kStateSleep value is not correct");
+    CheckEnum(kStateReceive, "kStateReceive value is not correct");
+    CheckEnum(kStateCsmaBackoff, "kStateCsmaBackoff value is not correct");
+    CheckEnum(kStateTransmit, "kStateTransmit value is not correct");
+    CheckEnum(kStateEnergyScan, "kStateEnergyScan value is not correct");
+#if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
+    CheckEnum(kStateDelayBeforeRetx, "kStateDelayBeforeRetx value is not correct");
+#endif
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    CheckEnum(kStateCslTransmit, "kStateCslTransmit value is not correct");
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    CheckEnum(kStateCslSample, "kStateCslSample value is not correct");
+#endif
+};
+
 const char *SubMac::StateToString(State aState)
 {
     static const char *const kStateStrings[] = {
@@ -1009,33 +1031,6 @@ const char *SubMac::StateToString(State aState)
         "CslSample", // (8) kStateCslSample
 #endif
     };
-
-    static_assert(kStateDisabled == 0, "kStateDisabled value is not correct");
-    static_assert(kStateSleep == 1, "kStateSleep value is not correct");
-    static_assert(kStateReceive == 2, "kStateReceive value is not correct");
-    static_assert(kStateCsmaBackoff == 3, "kStateCsmaBackoff value is not correct");
-    static_assert(kStateTransmit == 4, "kStateTransmit value is not correct");
-    static_assert(kStateEnergyScan == 5, "kStateEnergyScan value is not correct");
-
-#if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
-    static_assert(kStateDelayBeforeRetx == 6, "kStateDelayBeforeRetx value is not correct");
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    static_assert(kStateCslTransmit == 7, "kStateCslTransmit value is not correct");
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    static_assert(kStateCslSample == 8, "kStateCslSample value is not correct");
-#endif
-#elif OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    static_assert(kStateCslSample == 7, "kStateCslSample value is not correct");
-#endif
-
-#elif !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    static_assert(kStateCslTransmit == 6, "kStateCslTransmit value is not correct");
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    static_assert(kStateCslSample == 7, "kStateCslSample value is not correct");
-#endif
-#elif OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    static_assert(kStateCslSample == 6, "kStateCslSample value is not correct");
-#endif
 
     return kStateStrings[aState];
 }

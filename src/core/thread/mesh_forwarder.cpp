@@ -34,6 +34,7 @@
 #include "mesh_forwarder.hpp"
 
 #include "instance/instance.hpp"
+#include "utils/static-counter.hpp"
 
 namespace ot {
 
@@ -1750,6 +1751,25 @@ exit:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
+struct MeshForwarder::MessageActionChecker
+{
+    StaticCounterInit(0);
+
+    CheckEnum(kMessageReceive, "kMessageReceive value is incorrect");
+    CheckEnum(kMessageTransmit, "kMessageTransmit value is incorrect");
+    CheckEnum(kMessagePrepareIndirect, "kMessagePrepareIndirect value is incorrect");
+    CheckEnum(kMessageDrop, "kMessageDrop value is incorrect");
+    CheckEnum(kMessageReassemblyDrop, "kMessageReassemblyDrop value is incorrect");
+    CheckEnum(kMessageEvict, "kMessageEvict value is incorrect");
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+    CheckEnum(kMessageMarkEcn, "kMessageMarkEcn is incorrect");
+    CheckEnum(kMessageQueueMgmtDrop, "kMessageQueueMgmtDrop is incorrect");
+#endif
+#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
+    CheckEnum(kMessageFullQueueDrop, "kMessageFullQueueDrop is incorrect");
+#endif
+};
+
 const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aError)
 {
     static const char *const kMessageActionStrings[] = {
@@ -1769,24 +1789,6 @@ const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aE
     };
 
     const char *string = kMessageActionStrings[aAction];
-
-    static_assert(kMessageReceive == 0, "kMessageReceive value is incorrect");
-    static_assert(kMessageTransmit == 1, "kMessageTransmit value is incorrect");
-    static_assert(kMessagePrepareIndirect == 2, "kMessagePrepareIndirect value is incorrect");
-    static_assert(kMessageDrop == 3, "kMessageDrop value is incorrect");
-    static_assert(kMessageReassemblyDrop == 4, "kMessageReassemblyDrop value is incorrect");
-    static_assert(kMessageEvict == 5, "kMessageEvict value is incorrect");
-#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-    static_assert(kMessageMarkEcn == 6, "kMessageMarkEcn is incorrect");
-    static_assert(kMessageQueueMgmtDrop == 7, "kMessageQueueMgmtDrop is incorrect");
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-    static_assert(kMessageFullQueueDrop == 8, "kMessageFullQueueDrop is incorrect");
-#endif
-#else
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-    static_assert(kMessageFullQueueDrop == 6, "kMessageFullQueueDrop is incorrect");
-#endif
-#endif
 
     if ((aAction == kMessageTransmit) && (aError != kErrorNone))
     {

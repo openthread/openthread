@@ -31,6 +31,7 @@
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 #include "instance/instance.hpp"
+#include "utils/static-counter.hpp"
 
 /**
  * @file
@@ -726,6 +727,22 @@ const uint16_t *const Client::kQuestionRecordTypes[] = {
 #endif
 };
 
+struct Client::QueryTypeChecker
+{
+    StaticCounterInit(0);
+
+    CheckEnum(kIp6AddressQuery, "kIp6AddressQuery value is not correct");
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+    CheckEnum(kIp4AddressQuery, "kIp4AddressQuery value is not correct");
+#endif
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    CheckEnum(kBrowseQuery, "kBrowseQuery value is not correct");
+    CheckEnum(kServiceQuerySrvTxt, "kServiceQuerySrvTxt value is not correct");
+    CheckEnum(kServiceQuerySrv, "kServiceQuerySrv value is not correct");
+    CheckEnum(kServiceQueryTxt, "kServiceQueryTxt value is not correct");
+#endif
+};
+
 Client::Client(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance, *this)
@@ -738,21 +755,6 @@ Client::Client(Instance &aInstance)
     , mUserDidSetDefaultAddress(false)
 #endif
 {
-    static_assert(kIp6AddressQuery == 0, "kIp6AddressQuery value is not correct");
-#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-    static_assert(kIp4AddressQuery == 1, "kIp4AddressQuery value is not correct");
-#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    static_assert(kBrowseQuery == 2, "kBrowseQuery value is not correct");
-    static_assert(kServiceQuerySrvTxt == 3, "kServiceQuerySrvTxt value is not correct");
-    static_assert(kServiceQuerySrv == 4, "kServiceQuerySrv value is not correct");
-    static_assert(kServiceQueryTxt == 5, "kServiceQueryTxt value is not correct");
-#endif
-#elif OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    static_assert(kBrowseQuery == 1, "kBrowseQuery value is not correct");
-    static_assert(kServiceQuerySrvTxt == 2, "kServiceQuerySrvTxt value is not correct");
-    static_assert(kServiceQuerySrv == 3, "kServiceQuerySrv value is not correct");
-    static_assert(kServiceQueryTxt == 4, "kServiceQuerySrv value is not correct");
-#endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
     ClearAllBytes(mSendLink);
 #endif
