@@ -110,8 +110,23 @@ class PublishMeshCopService(thread_cert.TestCase):
         # check Meshcop-e service
         self.check_meshcop_e_service(host, True)
 
-        # deactivate ePSKc mode
-        br1.deactivate_ephemeral_key_mode()
+        # deactivate ePSKc mode in force
+        br1.deactivate_ephemeral_key_mode(retain_active_session=False)
+        self.assertEqual(br1.get_ephemeral_key_state(), 'inactive')
+        self.simulator.go(10)
+        # check Meshcop-e service
+        self.check_meshcop_e_service(host, False)
+
+        # activate ePSKc mode by default lifetime
+        lifetime = 0
+        ephemeral_key = br1.activate_ephemeral_key_mode(lifetime)
+        self.assertEqual(len(ephemeral_key), 9)
+        self.assertEqual(br1.get_ephemeral_key_state(), 'active')
+        # check Meshcop-e service
+        self.check_meshcop_e_service(host, True)
+
+        # deactivate ePSKc mode NOT in force
+        br1.deactivate_ephemeral_key_mode(retain_active_session=True)
         self.assertEqual(br1.get_ephemeral_key_state(), 'inactive')
         self.simulator.go(10)
         # check Meshcop-e service

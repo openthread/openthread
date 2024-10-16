@@ -425,8 +425,8 @@ class OtbrDocker:
     def activate_ephemeral_key_mode(self, lifetime):
         return self.call_dbus_method('io.openthread.BorderRouter', 'ActivateEphemeralKeyMode', lifetime)
 
-    def deactivate_ephemeral_key_mode(self):
-        return self.call_dbus_method('io.openthread.BorderRouter', 'DeactivateEphemeralKeyMode')
+    def deactivate_ephemeral_key_mode(self, retain_active_session):
+        return self.call_dbus_method('io.openthread.BorderRouter', 'DeactivateEphemeralKeyMode', retain_active_session)
 
     @property
     def nat64_cidr(self):
