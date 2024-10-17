@@ -124,6 +124,30 @@ class ThreeBRs_TwoInfra(thread_cert.TestCase):
         self.assertTrue(br2.ping(br3_onlink_ula, backbone=True))
         self.assertTrue(br3.ping(br2_onlink_ula, backbone=True))
 
+    def test_adjcent_peer_br_count_less_than_netdata_peer_br_count(self):
+        """This test ensures that the peer BR counts are correct.
+
+        The adjcent_peer_br count should be less than netdata_peer_br count in Mutil-AIL topology.
+        """
+        br1: OtbrNode = self.nodes[self.BR1]
+        br2: OtbrNode = self.nodes[self.BR2]
+        br3: OtbrNode = self.nodes[self.BR3]
+
+        for br in [br1, br2, br3]:
+            br.start()
+
+        # sleep some time more to ensure every BR gets the network data, otherwise the test can fail sometimes.
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY + 3)
+
+        self.assertEqual(len(br1.get_br_routers_peer_ip_addresses()), 0)
+        self.assertEqual(len(br1.get_br_peers_rloc16s()), 2)
+
+        self.assertEqual(len(br2.get_br_routers_peer_ip_addresses()), 1)
+        self.assertEqual(len(br2.get_br_peers_rloc16s()), 2)
+
+        self.assertEqual(len(br3.get_br_routers_peer_ip_addresses()), 1)
+        self.assertEqual(len(br3.get_br_peers_rloc16s()), 2)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
