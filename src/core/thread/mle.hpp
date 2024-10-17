@@ -57,6 +57,7 @@
 #include "thread/neighbor_table.hpp"
 #include "thread/network_data_types.hpp"
 #include "thread/router.hpp"
+#include "thread/wakeup_tx_scheduler.hpp"
 
 namespace ot {
 
@@ -718,6 +719,36 @@ public:
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    /**
+     * Indicates whether a Wake-up End Device is being attached.
+     *
+     * @retval true   A Wake-up End Device is being attached.
+     * @retval false  A Wake-up End Device is not being attached.
+     */
+    bool IsWedAttaching(void) const { return mWedAttachState == kWedAttaching; }
+
+    /**
+     * Indicates whether a Wake-up End Device is currently attached.
+     *
+     * @retval true   A Wake-up End Device is attached.
+     * @retval false  A Wake-up End Device is not attached.
+     */
+    bool IsWedAttached(void) const { return mWedAttachState == kWedAttached || mWedAttachState == kWedDetaching; }
+
+    /**
+     * Attempts to attach a Wake-up End Device.
+     *
+     * @param[in] aWedAddress The extended address of the Wake-up End Device.
+     * @param[in] aIntervalUs An interval between consecutive wake-up frames (in microseconds).
+     * @param[in] aDurationMs Duration of the wake-up sequence (in milliseconds).
+     *
+     * @retval kErrorNone         Successfully started the attachment.
+     * @retval kErrorInvalidState Another attachment request is still in progress.
+     */
+    Error AttachWed(const Mac::ExtAddress &aWedAddress, uint16_t aIntervalUs, uint16_t aDurationMs);
+#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+
 private:
     //------------------------------------------------------------------------------------------------------------------
     // Constants
@@ -1335,6 +1366,11 @@ private:
     //------------------------------------------------------------------------------------------------------------------
     // Variables
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    void HandleWedAttachTimer(void);
+    using WedAttachTimer = TimerMicroIn<Mle, &Mle::HandleWedAttachTimer>;
+#endif
+
     using AttachTimer = TimerMilliIn<Mle, &Mle::HandleAttachTimer>;
     using MsgTxTimer  = TimerMilliIn<Mle, &Mle::HandleMessageTransmissionTimer>;
     using MleSocket   = Ip6::Udp::SocketIn<Mle, &Mle::HandleUdpReceive>;
@@ -1404,6 +1440,19 @@ private:
     Ip6::Netif::UnicastAddress   mMeshLocalRloc;
     Ip6::Netif::MulticastAddress mLinkLocalAllThreadNodes;
     Ip6::Netif::MulticastAddress mRealmLocalAllThreadNodes;
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    enum WedAttachState : uint8_t{
+        kWedDetached,
+        kWedAttaching,
+        kWedAttached,
+        kWedDetaching,
+    };
+
+    WakeupTxScheduler mWakeupTxScheduler;
+    WedAttachState    mWedAttachState;
+    WedAttachTimer    mWedAttachTimer;
+#endif
 };
 
 } // namespace Mle

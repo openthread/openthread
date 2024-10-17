@@ -131,6 +131,7 @@
 #include "thread/thread_netif.hpp"
 #include "thread/time_sync_service.hpp"
 #include "thread/tmf.hpp"
+#include "thread/wakeup_tx_scheduler.hpp"
 #include "utils/channel_manager.hpp"
 #include "utils/channel_monitor.hpp"
 #include "utils/heap.hpp"
@@ -785,6 +786,10 @@ template <> inline NeighborTable &Instance::Get(void) { return mMleRouter.mNeigh
 template <> inline ChildTable &Instance::Get(void) { return mMleRouter.mChildTable; }
 
 template <> inline RouterTable &Instance::Get(void) { return mMleRouter.mRouterTable; }
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+template <> inline WakeupTxScheduler &Instance::Get(void) { return mMleRouter.mWakeupTxScheduler; }
 #endif
 
 template <> inline Ip6::Netif &Instance::Get(void) { return mThreadNetif; }

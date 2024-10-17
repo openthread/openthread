@@ -85,6 +85,11 @@ Mle::Mle(Instance &aInstance)
 #endif
     , mAttachTimer(aInstance)
     , mMessageTransmissionTimer(aInstance)
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    , mWakeupTxScheduler(aInstance)
+    , mWedAttachState(kWedDetached)
+    , mWedAttachTimer(aInstance)
+#endif
 {
     mParent.Init(aInstance);
     mParentCandidate.Init(aInstance);
@@ -4231,6 +4236,52 @@ uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
            aCslAccuracy.GetUncertaintyInMicrosec() * k;
 }
 #endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+void Mle::HandleWedAttachTimer(void)
+{
+    switch (mWedAttachState)
+    {
+    case kWedAttaching:
+        // Connection timeout
+        mWedAttachState = kWedDetached;
+
+        if (!IsRxOnWhenIdle())
+        {
+            Get<MeshForwarder>().SetRxOnWhenIdle(false);
+        }
+
+        LogInfo("Connection window closed");
+        break;
+    default:
+        break;
+    }
+}
+
+Error Mle::AttachWed(const Mac::ExtAddress &aWedAddress, uint16_t aIntervalUs, uint16_t aDurationMs)
+{
+    Error error;
+
+    VerifyOrExit(mWedAttachState == kWedDetached, error = kErrorInvalidState);
+
+    mWedAttachState = kWedAttaching;
+    error           = mWakeupTxScheduler.WakeUp(aWedAddress, aIntervalUs, aDurationMs);
+
+    if (error != kErrorNone)
+    {
+        mWedAttachState = kWedDetached;
+        ExitNow();
+    }
+
+    mWedAttachTimer.FireAt(mWakeupTxScheduler.GetTxEndTime() + mWakeupTxScheduler.GetConnectionWindowUs());
+    Get<MeshForwarder>().SetRxOnWhenIdle(true);
+
+    LogInfo("Connection window open");
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 
 Error Mle::DetachGracefully(DetachCallback aCallback, void *aContext)
 {

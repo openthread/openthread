@@ -4471,3 +4471,14 @@ Enable/disable listening for wake-up frames.
 > wakeup listen enable
 Done
 ```
+
+### wakeup attach \<extaddr\> \<wakeup-interval\> \<wakeup-duration\>
+
+Attaches a Wake-up End Device.
+
+`OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` is required.
+
+```bash
+> wakeup attach 1ece0a6c4653a7c1 7500 1000
+Done
+```
