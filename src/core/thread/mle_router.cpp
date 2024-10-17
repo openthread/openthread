@@ -1587,7 +1587,7 @@ void MleRouter::HandleTimeTick(void)
         }
         else if (IsRouterOrLeader() && child.IsStateRestored())
         {
-            IgnoreError(SendChildUpdateRequest(child));
+            IgnoreError(SendChildUpdateRequestToChild(child));
         }
     }
 
@@ -2139,7 +2139,7 @@ void MleRouter::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         if (mode.IsRxOnWhenIdle())
         {
             tlvList.Add(Tlv::kStatus);
-            SendChildUpdateResponse(nullptr, aRxInfo.mMessageInfo, tlvList, challenge);
+            SendChildUpdateResponseToChild(nullptr, aRxInfo.mMessageInfo, tlvList, challenge);
         }
 
         ExitNow();
@@ -2306,7 +2306,7 @@ void MleRouter::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
     }
 #endif
 
-    SendChildUpdateResponse(child, aRxInfo.mMessageInfo, tlvList, challenge);
+    SendChildUpdateResponseToChild(child, aRxInfo.mMessageInfo, tlvList, challenge);
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
 
@@ -2554,7 +2554,7 @@ void MleRouter::SynchronizeChildNetworkData(void)
             continue;
         }
 
-        SuccessOrExit(SendChildUpdateRequest(child));
+        SuccessOrExit(SendChildUpdateRequestToChild(child));
     }
 
 exit:
@@ -2845,7 +2845,7 @@ exit:
     return error;
 }
 
-Error MleRouter::SendChildUpdateRequest(Child &aChild)
+Error MleRouter::SendChildUpdateRequestToChild(Child &aChild)
 {
     static const uint8_t kTlvs[] = {Tlv::kTimeout, Tlv::kAddressRegistration};
 
@@ -2914,10 +2914,10 @@ exit:
     return error;
 }
 
-void MleRouter::SendChildUpdateResponse(Child                  *aChild,
-                                        const Ip6::MessageInfo &aMessageInfo,
-                                        const TlvList          &aTlvList,
-                                        const RxChallenge      &aChallenge)
+void MleRouter::SendChildUpdateResponseToChild(Child                  *aChild,
+                                               const Ip6::MessageInfo &aMessageInfo,
+                                               const TlvList          &aTlvList,
+                                               const RxChallenge      &aChallenge)
 {
     Error      error = kErrorNone;
     TxMessage *message;
