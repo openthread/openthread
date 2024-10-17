@@ -82,6 +82,9 @@ enum
     OT_RADIO_LQI_NONE      = 0,   ///< LQI measurement not supported
     OT_RADIO_RSSI_INVALID  = 127, ///< Invalid or unknown RSSI value
     OT_RADIO_POWER_INVALID = 127, ///< Invalid or unknown power value
+
+    OT_RADIO_INVALID_SHORT_ADDR   = 0xfffe, ///< Invalid short address.
+    OT_RADIO_BROADCAST_SHORT_ADDR = 0xffff, ///< Broadcast short address.
 };
 
 /**
@@ -120,17 +123,18 @@ typedef uint16_t otRadioCaps;
  */
 enum
 {
-    OT_RADIO_CAPS_NONE                 = 0,      ///< Radio supports no capability.
-    OT_RADIO_CAPS_ACK_TIMEOUT          = 1 << 0, ///< Radio supports AckTime event.
-    OT_RADIO_CAPS_ENERGY_SCAN          = 1 << 1, ///< Radio supports Energy Scans.
-    OT_RADIO_CAPS_TRANSMIT_RETRIES     = 1 << 2, ///< Radio supports tx retry logic with collision avoidance (CSMA).
-    OT_RADIO_CAPS_CSMA_BACKOFF         = 1 << 3, ///< Radio supports CSMA backoff for frame transmission (but no retry).
-    OT_RADIO_CAPS_SLEEP_TO_TX          = 1 << 4, ///< Radio supports direct transition from sleep to TX with CSMA.
-    OT_RADIO_CAPS_TRANSMIT_SEC         = 1 << 5, ///< Radio supports tx security.
-    OT_RADIO_CAPS_TRANSMIT_TIMING      = 1 << 6, ///< Radio supports tx at specific time.
-    OT_RADIO_CAPS_RECEIVE_TIMING       = 1 << 7, ///< Radio supports rx at specific time.
-    OT_RADIO_CAPS_RX_ON_WHEN_IDLE      = 1 << 8, ///< Radio supports RxOnWhenIdle handling.
-    OT_RADIO_CAPS_TRANSMIT_FRAME_POWER = 1 << 9, ///< Radio supports setting per-frame transmit power.
+    OT_RADIO_CAPS_NONE                 = 0,       ///< Radio supports no capability.
+    OT_RADIO_CAPS_ACK_TIMEOUT          = 1 << 0,  ///< Radio supports AckTime event.
+    OT_RADIO_CAPS_ENERGY_SCAN          = 1 << 1,  ///< Radio supports Energy Scans.
+    OT_RADIO_CAPS_TRANSMIT_RETRIES     = 1 << 2,  ///< Radio supports tx retry logic with collision avoidance (CSMA).
+    OT_RADIO_CAPS_CSMA_BACKOFF         = 1 << 3,  ///< Radio supports CSMA backoff for frame tx (but no retry).
+    OT_RADIO_CAPS_SLEEP_TO_TX          = 1 << 4,  ///< Radio supports direct transition from sleep to TX with CSMA.
+    OT_RADIO_CAPS_TRANSMIT_SEC         = 1 << 5,  ///< Radio supports tx security.
+    OT_RADIO_CAPS_TRANSMIT_TIMING      = 1 << 6,  ///< Radio supports tx at specific time.
+    OT_RADIO_CAPS_RECEIVE_TIMING       = 1 << 7,  ///< Radio supports rx at specific time.
+    OT_RADIO_CAPS_RX_ON_WHEN_IDLE      = 1 << 8,  ///< Radio supports RxOnWhenIdle handling.
+    OT_RADIO_CAPS_TRANSMIT_FRAME_POWER = 1 << 9,  ///< Radio supports setting per-frame transmit power.
+    OT_RADIO_CAPS_ALT_SHORT_ADDR       = 1 << 10, ///< Radio supports setting alternate short address.
 };
 
 #define OT_PANID_BROADCAST 0xffff ///< IEEE 802.15.4 Broadcast PAN ID
@@ -516,6 +520,26 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
  * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
  */
 void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddress);
+
+/**
+ * Set the alternate short address.
+ *
+ * This is an optional radio platform API. The radio platform MUST indicate support for this API by including the
+ * capability `OT_RADIO_CAPS_ALT_SHORT_ADDR` in `otPlatRadioGetCaps()`.
+ *
+ * When supported, the radio should accept received frames destined to the specified alternate short address in
+ * addition to the short address provided in `otPlatRadioSetShortAddress()`.
+ *
+ * The @p aShortAddress can be set to `OT_RADIO_INVALID_SHORT_ADDR` (0xfffe) to clear any previously set alternate
+ * short address.
+ *
+ * This function is used by OpenThread stack during child-to-router role transitions, allowing the device to continue
+ * receiving frames addressed to its previous short address for a short period.
+ *
+ * @param[in] aInstance      The OpenThread instance structure.
+ * @param[in] aShortAddress  The alternate IEEE 802.15.4 short address. `OT_RADIO_INVALID_SHORT_ADDR` to clear.
+ */
+void otPlatRadioSetAlternateShortAddress(otInstance *aInstance, otShortAddress aShortAddress);
 
 /**
  * Get the radio's transmit power in dBm.

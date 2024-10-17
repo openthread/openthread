@@ -252,6 +252,20 @@ public:
     void SetShortAddress(ShortAddress aShortAddress) { mLinks.SetShortAddress(aShortAddress); }
 
     /**
+     * Gets the alternate short address.
+     *
+     * @returns The alternate short address, or `kShortAddrInvalid` if there is no alternate address.
+     */
+    ShortAddress GetAlternateShortAddress(void) const { return mLinks.GetAlternateShortAddress(); }
+
+    /**
+     * Sets the alternate short address.
+     *
+     * @param[in] aShortAddress   The alternate short address. Use `kShortAddrInvalid` to clear the alternate address.
+     */
+    void SetAlternateShortAddress(ShortAddress aShortAddress) { mLinks.SetAlternateShortAddress(aShortAddress); }
+
+    /**
      * Returns the IEEE 802.15.4 PAN Channel.
      *
      * @returns The IEEE 802.15.4 PAN Channel.
@@ -807,6 +821,7 @@ private:
     bool     ShouldSendBeacon(void) const;
     bool     IsJoinable(void) const;
     void     BeginTransmit(void);
+    Error    FilterDestShortAddress(ShortAddress aDestAddress) const;
     void     UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame &aRxFrame);
     bool     HandleMacCommand(RxFrame &aFrame);
     void     HandleTimer(void);

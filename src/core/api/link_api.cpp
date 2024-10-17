@@ -182,6 +182,11 @@ otShortAddress otLinkGetShortAddress(otInstance *aInstance)
     return AsCoreType(aInstance).Get<Mac::Mac>().GetShortAddress();
 }
 
+otShortAddress otLinkGetAlternateShortAddress(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().GetAlternateShortAddress();
+}
+
 uint8_t otLinkGetMaxFrameRetriesDirect(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Mac::Mac>().GetMaxFrameRetriesDirect();

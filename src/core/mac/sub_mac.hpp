@@ -233,6 +233,20 @@ public:
     void SetShortAddress(ShortAddress aShortAddress);
 
     /**
+     * Gets the alternate short address.
+     *
+     * @returns The alternate short address, or `kShortAddrInvalid` if there is no alternate address.
+     */
+    ShortAddress GetAlternateShortAddress(void) const { return mAlternateShortAddress; }
+
+    /**
+     * Sets the alternate short address.
+     *
+     * @param[in] aShortAddress   The short address. Use `kShortAddrInvalid` to clear it.
+     */
+    void SetAlternateShortAddress(ShortAddress aShortAddress);
+
+    /**
      * Gets the extended address.
      *
      * @returns A reference to the extended address.
@@ -627,6 +641,7 @@ private:
     uint8_t      mCsmaBackoffs;
     uint8_t      mTransmitRetries;
     ShortAddress mShortAddress;
+    ShortAddress mAlternateShortAddress;
     ExtAddress   mExtAddress;
     bool         mRxOnWhenIdle : 1;
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
