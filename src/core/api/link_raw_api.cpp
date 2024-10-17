@@ -33,13 +33,13 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-
 #include <openthread/platform/time.h>
 
 #include "instance/instance.hpp"
 
 using namespace ot;
+
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 otError otLinkRawSetReceiveDone(otInstance *aInstance, otLinkRawReceiveDone aCallback)
 {
@@ -276,3 +276,21 @@ void otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui
 #endif // OPENTHREAD_RADIO
 
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+
+otError otLinkSetRxOnWhenIdle(otInstance *aInstance, bool aRxOnWhenIdle)
+{
+    Error error = OT_ERROR_NONE;
+
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    VerifyOrExit(AsCoreType(aInstance).Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
+#else
+    VerifyOrExit(AsCoreType(aInstance).Get<Mac::Mac>().IsEnabled() &&
+                     AsCoreType(aInstance).Get<Mle::Mle>().IsDisabled(),
+                 error = kErrorInvalidState);
+#endif
+
+    AsCoreType(aInstance).Get<Mac::SubMac>().SetRxOnWhenIdle(aRxOnWhenIdle);
+
+exit:
+    return error;
+}

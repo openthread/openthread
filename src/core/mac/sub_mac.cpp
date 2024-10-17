@@ -306,6 +306,7 @@ Error SubMac::Send(void)
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kStateCslTransmit:
 #endif
+    case kStateWaitingForData:
     case kStateTransmit:
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     case kStateDelayBeforeRetx:
@@ -586,7 +587,19 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
     SetState(kStateReceive);
 
 #if OPENTHREAD_RADIO
-    if (aFrame.GetChannel() != aFrame.GetRxChannelAfterTxDone())
+    if (!mRxOnWhenIdle)
+    {
+        if (aAckFrame != nullptr && aAckFrame->GetFramePending() && aFrame.IsDataRequestCommand())
+        {
+            SetState(kStateWaitingForData);
+            mTimer.Start(kDataPollTimeout);
+        }
+        else
+        {
+            IgnoreError(Sleep());
+        }
+    }
+    else if (aFrame.GetChannel() != aFrame.GetRxChannelAfterTxDone())
     {
         // On RCP build, we switch immediately to the specified RX
         // channel if it is different from the channel on which frame
@@ -669,6 +682,7 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     case kStateDisabled:
     case kStateCsmaBackoff:
     case kStateTransmit:
+    case kStateWaitingForData:
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kStateCslTransmit:
 #endif
@@ -760,6 +774,10 @@ void SubMac::HandleTimer(void)
         LogDebg("Ack timer timed out");
         IgnoreError(Get<Radio>().Receive(mTransmitFrame.GetChannel()));
         HandleTransmitDone(mTransmitFrame, nullptr, kErrorNoAck);
+        break;
+
+    case kStateWaitingForData:
+        IgnoreError(Sleep());
         break;
 
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
@@ -993,20 +1011,21 @@ void SubMac::StartTimerAt(Time aStartTime, uint32_t aDelayUs)
 const char *SubMac::StateToString(State aState)
 {
     static const char *const kStateStrings[] = {
-        "Disabled",    // (0) kStateDisabled
-        "Sleep",       // (1) kStateSleep
-        "Receive",     // (2) kStateReceive
-        "CsmaBackoff", // (3) kStateCsmaBackoff
-        "Transmit",    // (4) kStateTransmit
-        "EnergyScan",  // (5) kStateEnergyScan
+        "Disabled",       // (0) kStateDisabled
+        "Sleep",          // (1) kStateSleep
+        "Receive",        // (2) kStateReceive
+        "CsmaBackoff",    // (3) kStateCsmaBackoff
+        "Transmit",       // (4) kStateTransmit
+        "EnergyScan",     // (5) kStateEnergyScan
+        "WaitingForData", // (6) kStateWaitingForData
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
-        "DelayBeforeRetx", // (6) kStateDelayBeforeRetx
+        "DelayBeforeRetx", // (7) kStateDelayBeforeRetx
 #endif
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        "CslTransmit", // (7) kStateCslTransmit
+        "CslTransmit", // (8) kStateCslTransmit
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        "CslSample", // (8) kStateCslSample
+        "CslSample", // (9) kStateCslSample
 #endif
     };
 
@@ -1015,26 +1034,27 @@ const char *SubMac::StateToString(State aState)
     static_assert(kStateReceive == 2, "kStateReceive value is not correct");
     static_assert(kStateCsmaBackoff == 3, "kStateCsmaBackoff value is not correct");
     static_assert(kStateTransmit == 4, "kStateTransmit value is not correct");
-    static_assert(kStateEnergyScan == 5, "kStateEnergyScan value is not correct");
+    static_assert(kStateWaitingForData == 5, "kStateWaitingForData value is not correct");
+    static_assert(kStateEnergyScan == 6, "kStateEnergyScan value is not correct");
 
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
-    static_assert(kStateDelayBeforeRetx == 6, "kStateDelayBeforeRetx value is not correct");
+    static_assert(kStateDelayBeforeRetx == 7, "kStateDelayBeforeRetx value is not correct");
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    static_assert(kStateCslTransmit == 8, "kStateCslTransmit value is not correct");
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    static_assert(kStateCslSample == 9, "kStateCslSample value is not correct");
+#endif
+#elif OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    static_assert(kStateCslSample == 8, "kStateCslSample value is not correct");
+#endif
+
+#elif !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     static_assert(kStateCslTransmit == 7, "kStateCslTransmit value is not correct");
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     static_assert(kStateCslSample == 8, "kStateCslSample value is not correct");
 #endif
 #elif OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     static_assert(kStateCslSample == 7, "kStateCslSample value is not correct");
-#endif
-
-#elif !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    static_assert(kStateCslTransmit == 6, "kStateCslTransmit value is not correct");
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    static_assert(kStateCslSample == 7, "kStateCslSample value is not correct");
-#endif
-#elif OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    static_assert(kStateCslSample == 6, "kStateCslSample value is not correct");
 #endif
 
     return kStateStrings[aState];

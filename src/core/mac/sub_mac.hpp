@@ -103,6 +103,9 @@ class LinkRaw;
  */
 class SubMac : public InstanceLocator, private NonCopyable
 {
+    static constexpr uint32_t kDataPollTimeout =
+        OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT; ///< Timeout for receiving Data Frame (in msec).
+
     friend class Radio::Callbacks;
     friend class LinkRaw;
 
@@ -530,12 +533,13 @@ private:
 
     enum State : uint8_t
     {
-        kStateDisabled,    // Radio is disabled.
-        kStateSleep,       // Radio is in sleep.
-        kStateReceive,     // Radio in in receive.
-        kStateCsmaBackoff, // CSMA backoff before transmission.
-        kStateTransmit,    // Radio is transmitting.
-        kStateEnergyScan,  // Energy scan.
+        kStateDisabled,       // Radio is disabled.
+        kStateSleep,          // Radio is in sleep.
+        kStateReceive,        // Radio in in receive.
+        kStateCsmaBackoff,    // CSMA backoff before transmission.
+        kStateTransmit,       // Radio is transmitting.
+        kStateWaitingForData, // Radio is waiting for data.
+        kStateEnergyScan,     // Energy scan.
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
         kStateDelayBeforeRetx, // Delay before retx
 #endif

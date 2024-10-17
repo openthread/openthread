@@ -85,12 +85,6 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
     Instance     &instance = AsCoreType(aInstance);
     Mac::TxFrame &txFrame  = *static_cast<Mac::TxFrame *>(aFrame);
     Mac::RxFrame *ackFrame = static_cast<Mac::RxFrame *>(aAckFrame);
-#if OPENTHREAD_RADIO
-    uint8_t channel = txFrame.mInfo.mTxInfo.mRxChannelAfterTxDone;
-
-    OT_ASSERT((otPlatRadioGetSupportedChannelMask(aInstance) & (1UL << channel)) != 0);
-    IgnoreError(otPlatRadioReceive(aInstance, channel));
-#endif
 
     VerifyOrExit(instance.IsInitialized());
 
@@ -152,8 +146,11 @@ extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame 
 #if OPENTHREAD_RADIO
     uint8_t channel = txFrame.mInfo.mTxInfo.mRxChannelAfterTxDone;
 
-    OT_ASSERT((otPlatRadioGetSupportedChannelMask(aInstance) & (1UL << channel)) != 0);
-    IgnoreError(otPlatRadioReceive(aInstance, channel));
+    if (channel != aFrame->mChannel)
+    {
+        OT_ASSERT((otPlatRadioGetSupportedChannelMask(aInstance) & (1UL << channel)) != 0);
+        IgnoreError(otPlatRadioReceive(aInstance, channel));
+    }
 #endif
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     txFrame.SetRadioType(Mac::kRadioTypeIeee802154);
