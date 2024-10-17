@@ -250,6 +250,10 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
         {
             long value;
 
+            aArgs++;
+            aArgsLength--;
+
+            VerifyOrExit(aArgsLength > 1, error = kErrorInvalidArgs);
             SuccessOrExit(error = ParseLong(aArgs[0], value));
             txPower = static_cast<int8_t>(value);
         }
