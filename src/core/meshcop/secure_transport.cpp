@@ -38,20 +38,7 @@
 #include <mbedtls/pem.h>
 #endif
 
-#include <openthread/platform/radio.h>
-
-#include "common/as_core_type.hpp"
-#include "common/clearable.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/timer.hpp"
-#include "crypto/mbedtls.hpp"
-#include "crypto/sha256.hpp"
 #include "instance/instance.hpp"
-#include "thread/thread_netif.hpp"
 
 #if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 
@@ -117,7 +104,7 @@ SecureTransport::SecureTransport(Instance &aInstance, bool aLayerTwoSecurity, bo
     ClearAllBytes(mSsl);
     ClearAllBytes(mConf);
 
-#ifdef MBEDTLS_SSL_COOKIE_C
+#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
     ClearAllBytes(mCookieCtx);
 #endif
 }

@@ -33,7 +33,6 @@
  *
  *   APIs defined in this module could be used by a platform to implement Enhanced-ACK Based Probing feature
  *   (Probing Subject side) in its radio driver.
- *
  */
 
 #ifndef OPENTHREAD_UTILS_LINK_METRICS_H
@@ -52,7 +51,6 @@ extern "C" {
  *
  * @param[in]  aNoiseFloor    The noise floor used by Link Metrics. It should be set to the platform's
  *                            noise floor (measured noise floor, receiver sensitivity or a constant).
- *
  */
 void otLinkMetricsInit(int8_t aNoiseFloor);
 
@@ -72,7 +70,6 @@ void otLinkMetricsInit(int8_t aNoiseFloor);
  * @retval  OT_ERROR_INVALID_ARGS    @p aExtAddress is `nullptr`.
  * @retval  OT_ERROR_NOT_FOUND       The Initiator indicated by @p aShortAddress is not found when trying to clear.
  * @retval  OT_ERROR_NO_BUFS         No more Initiator can be supported.
- *
  */
 otError otLinkMetricsConfigureEnhAckProbing(otShortAddress      aShortAddress,
                                             const otExtAddress *aExtAddress,
@@ -93,7 +90,6 @@ otError otLinkMetricsConfigureEnhAckProbing(otShortAddress      aShortAddress,
  *                            configured before.
  *
  * @returns  The size of data read. Would be `0` if the Initiator is not found or @p aData is invalid.
- *
  */
 uint8_t otLinkMetricsEnhAckGenData(const otMacAddress *aMacAddress, uint8_t aLqi, int8_t aRssi, uint8_t *aData);
 
@@ -103,13 +99,11 @@ uint8_t otLinkMetricsEnhAckGenData(const otMacAddress *aMacAddress, uint8_t aLqi
  * @param[in]  aMacAddress    The Mac address of the Initiator.
  *
  * @returns  The size of data. `0` if it's not configured for the Initiator.
- *
  */
 uint8_t otLinkMetricsEnhAckGetDataLen(const otMacAddress *aMacAddress);
 
 /**
  * This method resets Enhanced-ACK Based Probing data.
- *
  */
 void otLinkMetricsResetEnhAckProbing(void);
 

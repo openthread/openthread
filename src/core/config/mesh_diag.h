@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes compile-time configurations for Mesh Diagnostic module.
- *
  */
 
 #ifndef CONFIG_MESH_DIAG_H_
@@ -42,7 +41,6 @@
  *   This module includes configuration variables for Mesh Diagnostic.
  *
  * @{
- *
  */
 
 #include "config/border_routing.h"
@@ -53,7 +51,6 @@
  * Define to 1 to enable Mesh Diagnostic module.
  *
  * By default this feature is enabled if device is configured to act as Border Router.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MESH_DIAG_ENABLE
 #define OPENTHREAD_CONFIG_MESH_DIAG_ENABLE OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -63,7 +60,6 @@
  * @def OPENTHREAD_CONFIG_MESH_DIAG_RESPONSE_TIMEOUT
  *
  * Specifies the timeout interval in milliseconds waiting for response from router during discover.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MESH_DIAG_RESPONSE_TIMEOUT
 #define OPENTHREAD_CONFIG_MESH_DIAG_RESPONSE_TIMEOUT 5000
@@ -71,7 +67,6 @@
 
 /**
  * @}
- *
  */
 
 #endif // CONFIG_MESH_DIAG_H_

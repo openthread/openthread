@@ -35,19 +35,7 @@
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
-#include "coap/coap_message.hpp"
-#include "common/as_core_type.hpp"
-#include "common/heap.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/owned_ptr.hpp"
-#include "common/settings.hpp"
 #include "instance/instance.hpp"
-#include "meshcop/meshcop.hpp"
-#include "meshcop/meshcop_tlvs.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/thread_tlvs.hpp"
-#include "thread/uri_paths.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -269,35 +257,32 @@ BorderAgent::BorderAgent(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 Error BorderAgent::GetId(Id &aId)
 {
-    Error                   error = kErrorNone;
-    Settings::BorderAgentId id;
+    Error error = kErrorNone;
 
-    VerifyOrExit(!mIdInitialized, error = kErrorNone);
-
-    if (Get<Settings>().Read(id) != kErrorNone)
-    {
-        Random::NonCrypto::Fill(id.GetId());
-        SuccessOrExit(error = Get<Settings>().Save(id));
-    }
-
-    mId            = id.GetId();
-    mIdInitialized = true;
-
-exit:
-    if (error == kErrorNone)
+    if (mIdInitialized)
     {
         aId = mId;
+        ExitNow();
     }
+
+    if (Get<Settings>().Read<Settings::BorderAgentId>(mId) != kErrorNone)
+    {
+        Random::NonCrypto::Fill(mId);
+        SuccessOrExit(error = Get<Settings>().Save<Settings::BorderAgentId>(mId));
+    }
+
+    mIdInitialized = true;
+    aId            = mId;
+
+exit:
     return error;
 }
 
 Error BorderAgent::SetId(const Id &aId)
 {
-    Error                   error = kErrorNone;
-    Settings::BorderAgentId id;
+    Error error = kErrorNone;
 
-    id.SetId(aId);
-    SuccessOrExit(error = Get<Settings>().Save(id));
+    SuccessOrExit(error = Get<Settings>().Save<Settings::BorderAgentId>(aId));
     mId            = aId;
     mIdInitialized = true;
 
@@ -508,7 +493,7 @@ template <> void BorderAgent::HandleTmf<kUriPendingGet>(Coap::Message &aMessage,
 template <>
 void BorderAgent::HandleTmf<kUriCommissionerKeepAlive>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    VerifyOrExit(mState != kStateStopped);
+    VerifyOrExit(mState == kStateAccepted);
 
     SuccessOrExit(ForwardToLeader(aMessage, aMessageInfo, kUriLeaderKeepAlive));
     mTimer.Start(kKeepAliveTimeout);
@@ -687,11 +672,12 @@ void BorderAgent::HandleConnected(SecureTransport::ConnectEvent aEvent)
         if (mUsingEphemeralKey)
         {
             RestartAfterRemovingEphemeralKey();
+
             if (aEvent == SecureTransport::kDisconnectedError)
             {
                 mCounters.mEpskcSecureSessionFailures++;
             }
-            if (aEvent == SecureTransport::kDisconnectedPeerClosed)
+            else if (aEvent == SecureTransport::kDisconnectedPeerClosed)
             {
                 mCounters.mEpskcDeactivationDisconnects++;
             }
@@ -701,6 +687,7 @@ void BorderAgent::HandleConnected(SecureTransport::ConnectEvent aEvent)
         {
             mState        = kStateStarted;
             mUdpProxyPort = 0;
+
             if (aEvent == SecureTransport::kDisconnectedError)
             {
                 mCounters.mPskcSecureSessionFailures++;
@@ -760,7 +747,7 @@ void BorderAgent::HandleTimeout(void)
     if (Get<Tmf::SecureAgent>().IsConnected())
     {
         Get<Tmf::SecureAgent>().Disconnect();
-        LogWarn("Reset commissioner session");
+        LogWarn("Reset secure session");
     }
 }
 
@@ -783,6 +770,16 @@ void BorderAgent::Stop(void)
     mState        = kStateStopped;
     mUdpProxyPort = 0;
     LogInfo("Border Agent stopped");
+
+exit:
+    return;
+}
+
+void BorderAgent::Disconnect(void)
+{
+    VerifyOrExit(mState == kStateConnected || mState == kStateAccepted);
+
+    Get<Tmf::SecureAgent>().Disconnect();
 
 exit:
     return;
@@ -857,16 +854,7 @@ void BorderAgent::ClearEphemeralKey(void)
 
     LogInfo("Clearing ephemeral key");
 
-    if (mEphemeralKeyTimer.IsRunning())
-    {
-        mCounters.mEpskcDeactivationClears++;
-    }
-    else
-    {
-        mCounters.mEpskcDeactivationTimeouts++;
-    }
-
-    mEphemeralKeyTimer.Stop();
+    mCounters.mEpskcDeactivationClears++;
 
     switch (mState)
     {
@@ -877,9 +865,10 @@ void BorderAgent::ClearEphemeralKey(void)
     case kStateStopped:
     case kStateConnected:
     case kStateAccepted:
-        // If there is an active commissioner connection, we wait till
-        // it gets disconnected before removing ephemeral key and
-        // restarting the agent.
+        // If a commissioner connection is currently active, we'll
+        // wait for it to disconnect or for the ephemeral key timeout
+        // or `kKeepAliveTimeout` to expire before removing the key
+        // and restarting the agent.
         break;
     }
 
@@ -890,7 +879,8 @@ exit:
 void BorderAgent::HandleEphemeralKeyTimeout(void)
 {
     LogInfo("Ephemeral key timed out");
-    ClearEphemeralKey();
+    mCounters.mEpskcDeactivationTimeouts++;
+    RestartAfterRemovingEphemeralKey();
 }
 
 void BorderAgent::InvokeEphemeralKeyCallback(void) { mEphemeralKeyCallback.InvokeIfSet(); }
@@ -911,8 +901,8 @@ void BorderAgent::HandleSecureAgentStopped(void *aContext)
 void BorderAgent::HandleSecureAgentStopped(void)
 {
     LogInfo("Reached max allowed connection attempts with ephemeral key");
-    RestartAfterRemovingEphemeralKey();
     mCounters.mEpskcDeactivationMaxAttempts++;
+    RestartAfterRemovingEphemeralKey();
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE

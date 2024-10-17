@@ -44,7 +44,6 @@ namespace ot {
 
 /**
  * Verifies single variable allocating and freeing.
- *
  */
 void TestAllocateSingle(void)
 {
@@ -78,7 +77,6 @@ void TestAllocateSingle(void)
  *
  * @param[in]   aSizeLimit  The maximum allocation size.
  * @param[in]   aSeed       The seed for generating random sizes.
- *
  */
 void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
 {

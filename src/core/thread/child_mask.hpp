@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#include "common/bit_vector.hpp"
+#include "common/bit_set.hpp"
 
 namespace ot {
 
@@ -47,18 +47,15 @@ namespace ot {
  *   This module includes definitions for OpenThread Child Mask.
  *
  * @{
- *
  */
 
 /**
- * Represents a bit-vector of child mask.
- *
+ * Represents a bit-set of child mask.
  */
-typedef BitVector<OPENTHREAD_CONFIG_MLE_MAX_CHILDREN> ChildMask;
+typedef BitSet<OPENTHREAD_CONFIG_MLE_MAX_CHILDREN> ChildMask;
 
 /**
  * @}
- *
  */
 
 } // namespace ot

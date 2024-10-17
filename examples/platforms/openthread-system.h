@@ -49,7 +49,6 @@ extern "C" {
  *
  * @param[in]  argc  Number of arguments in @p argv.
  * @param[in]  argv  Argument vector.
- *
  */
 void otSysInit(int argc, char *argv[]);
 
@@ -58,7 +57,6 @@ void otSysInit(int argc, char *argv[]);
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
  *       when deinitialization of OpenThread's drivers is most appropriate.
- *
  */
 void otSysDeinit(void);
 
@@ -69,7 +67,6 @@ void otSysDeinit(void);
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
  *       in the main loop to determine when to shut down and re-initialize the OpenThread instance.
- *
  */
 bool otSysPseudoResetWasRequested(void);
 
@@ -80,7 +77,6 @@ bool otSysPseudoResetWasRequested(void);
  *       in the main loop when processing OpenThread's drivers is most appropriate.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
- *
  */
 void otSysProcessDrivers(otInstance *aInstance);
 
@@ -89,7 +85,6 @@ void otSysProcessDrivers(otInstance *aInstance);
  *
  * @note This function is not handled by the OpenThread library. Instead, the system/RTOS should handle this function
  *       and schedule a call to `otSysProcessDrivers()`.
- *
  */
 extern void otSysEventSignalPending(void);
 

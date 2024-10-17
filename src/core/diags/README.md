@@ -86,7 +86,7 @@ Set the frame (hex encoded) to be used by `diag send` and `diag repeat`. The fra
 
 - Specify `-s` to indicate that tx security is already processed so that it should be skipped in the radio layer.
 - Specify `-c` to enable CSMA/CA for this frame in the radio layer.
-- Specify `-p` to indicate that tx power in dBm for this frame.
+- Specify `-p` to specify the tx power in dBm for this frame.
 
 ```bash
 > diag frame 11223344

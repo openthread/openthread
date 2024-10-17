@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes compile-time configurations for Border Routing Manager.
- *
  */
 
 #ifndef CONFIG_BORDER_ROUTING_H_
@@ -42,14 +41,12 @@
  *   This module includes configuration variables for Border Routing Manager.
  *
  * @{
- *
  */
 
 /**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
  *
  * Define to 1 to enable Border Routing Manager feature.
- *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE 0
@@ -65,7 +62,6 @@
  *
  * When disabled pre-allocated pools are used instead where max number of entries are specified by
  * `OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS` and `MAX_DISCOVERED_PREFIXES` configurations.
- *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE 1
@@ -82,7 +78,6 @@
  * on-link prefix or determining which route to publish in the Thread Network Data).
  *
  * It is recommended to enable this feature alongside `OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE`.
- *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
@@ -107,7 +102,6 @@
  * Destination Unreachable - No Route" messages. This reachability function will only generate "ICMPv6 Destination
  * Unreachable - Communication Administratively Prohibited" messages for specific cases  where there may be a
  * default route to the destination but the source address type prohibits usable communication with this destination.
- *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABILITY_CHECK_ICMP6_ERROR_ENABLE
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABILITY_CHECK_ICMP6_ERROR_ENABLE 1
@@ -120,7 +114,6 @@
  *
  * Applicable only when heap allocation is not used, i.e., `OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE` is
  * disabled.
- *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS 16
@@ -133,7 +126,6 @@
  *
  * Applicable only when heap allocation is not used, i.e., `OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE` is
  * disabled.
- *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES 64
@@ -144,7 +136,6 @@
  *
  * Specifies maximum number of on-mesh prefixes (discovered from Thread Network Data) that are included as Route Info
  * Option in emitted Router Advertisement messages.
- *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES 16
@@ -154,7 +145,6 @@
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_OLD_ON_LINK_PREFIXES
  *
  * Specifies maximum number of old local on-link prefixes (being deprecated) maintained by routing manager.
- *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_OLD_ON_LINK_PREFIXES
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_OLD_ON_LINK_PREFIXES 3
@@ -172,21 +162,9 @@
  * active.
  *
  * This parameter can be considered to large value to practically disable this behavior.
- *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_ROUTER_ACTIVE_CHECK_TIMEOUT
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_ROUTER_ACTIVE_CHECK_TIMEOUT (60 * 1000) // (in msec).
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE
- *
- * Define to 1 so for the routing manager to include the Flags Extension Option with Stub Router flag in the emitted
- * Router Advertisement messages from this Border Router.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE 1
 #endif
 
 /**
@@ -196,7 +174,6 @@
  *
  * The desired use case is the prefix will be allocated by other software on the interface, and they will advertise the
  * assigned prefix to the thread interface via router advertisement messages.
- *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE 0
@@ -208,7 +185,6 @@
  * Define to 1 to enable testing related APIs to be provided by the `RoutingManager`.
  *
  * This is intended for testing only. Production devices SHOULD set this to zero.
- *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_TESTING_API_ENABLE
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_TESTING_API_ENABLE 0
@@ -220,7 +196,6 @@
  * Define to 1 to add mock (empty) implementation of infra-if platform APIs.
  *
  * This is intended for generating code size report only and should not be used otherwise.
- *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MOCK_PLAT_APIS_ENABLE
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_MOCK_PLAT_APIS_ENABLE 0
@@ -228,7 +203,6 @@
 
 /**
  * @}
- *
  */
 
 #endif // CONFIG_BORDER_ROUTING_H_

@@ -30,7 +30,6 @@
  * @file
  * @brief
  *   This file includes the platform abstraction for Thread Radio Encapsulation Link (TREL) using DNS-SD and UDP/IPv6.
- *
  */
 
 #ifndef OPENTHREAD_PLATFORM_TREL_H_
@@ -54,7 +53,6 @@ extern "C" {
  *   UDP/IPv6.
  *
  * @{
- *
  */
 
 /**
@@ -82,7 +80,6 @@ extern "C" {
  *
  * @param[in]  aInstance  The OpenThread instance.
  * @param[out] aUdpPort   A pointer to return the selected port number by platform layer.
- *
  */
 void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort);
 
@@ -93,13 +90,11 @@ void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort);
  * TREL DNS-SD service (from `otPlatTrelRegisterService()`) and MUST close the UDP socket used to receive TREL messages.
  *
  * @pram[in]  aInstance  The OpenThread instance.
- *
  */
 void otPlatTrelDisable(otInstance *aInstance);
 
 /**
  * Represents a TREL peer info discovered using DNS-SD browse on the service name "_trel._udp".
- *
  */
 typedef struct otPlatTrelPeerInfo
 {
@@ -108,14 +103,12 @@ typedef struct otPlatTrelPeerInfo
      *
      * - TRUE indicates that peer is removed.
      * - FALSE indicates that it is a new entry or an update to an existing entry.
-     *
      */
     bool mRemoved;
 
     /**
      * The TXT record data (encoded as specified by DNS-SD) from the SRV record of the discovered TREL peer service
      * instance.
-     *
      */
     const uint8_t *mTxtData;
 
@@ -127,7 +120,6 @@ typedef struct otPlatTrelPeerInfo
      * The port number is determined from the SRV record of the discovered TREL peer service instance. The IPv6 address
      * is determined from the DNS-SD query for AAAA records on the hostname indicated in the SRV record of the
      * discovered service instance. If multiple host IPv6 addressees are discovered, one with highest scope is used.
-     *
      */
     otSockAddr mSockAddr;
 } otPlatTrelPeerInfo;
@@ -140,7 +132,6 @@ typedef struct otPlatTrelPeerInfo
  *
  * @param[in] aInstance   The OpenThread instance.
  * @param[in] aInfo       A pointer to the TREL peer info.
- *
  */
 extern void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
 
@@ -164,8 +155,6 @@ extern void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPl
  * @param[in] aPort       The port number to include in the SRV record of the advertised service.
  * @param[in] aTxtData    A pointer to the TXT record data (encoded) to be include in the advertised service.
  * @param[in] aTxtLength  The length of @p aTxtData (number of bytes).
- *
- *
  */
 void otPlatTrelRegisterService(otInstance *aInstance, uint16_t aPort, const uint8_t *aTxtData, uint8_t aTxtLength);
 
@@ -176,7 +165,6 @@ void otPlatTrelRegisterService(otInstance *aInstance, uint16_t aPort, const uint
  * @param[in] aUdpPayload      A pointer to UDP payload.
  * @param[in] aUdpPayloadLen   The payload length (number of bytes).
  * @param[in] aDestSockAddr    The destination socket address.
- *
  */
 void otPlatTrelSend(otInstance       *aInstance,
                     const uint8_t    *aUdpPayload,
@@ -193,13 +181,11 @@ void otPlatTrelSend(otInstance       *aInstance,
  * @param[in] aInstance        The OpenThread instance structure.
  * @param[in] aBuffer          A buffer containing the received UDP payload.
  * @param[in] aLength          UDP payload length (number of bytes).
- *
  */
 extern void otPlatTrelHandleReceived(otInstance *aInstance, uint8_t *aBuffer, uint16_t aLength);
 
 /**
  * Represents a group of TREL related counters in the platform layer.
- *
  */
 typedef struct otPlatTrelCounters
 {
@@ -214,7 +200,6 @@ typedef struct otPlatTrelCounters
  * Gets the pointer to the TREL counters in the platform layer.
  *
  * @param[in] aInstance        The OpenThread instance structure.
- *
  */
 const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *aInstance);
 
@@ -222,13 +207,11 @@ const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *aInstance);
  * Resets the TREL counters in the platform layer.
  *
  * @param[in] aInstance        The OpenThread instance structure.
- *
  */
 void otPlatTrelResetCounters(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

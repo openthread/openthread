@@ -28,7 +28,6 @@
 
 /**
  * This header file defines the OpenThread core configuration options used in NCP build for `toranj` test framework.
- *
  */
 
 #if !defined(OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_) && !defined(OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_)
@@ -66,6 +65,8 @@
 #define OPENTHREAD_CONFIG_MESH_DIAG_ENABLE 1
 
 #define OPENTHREAD_CONFIG_BLE_TCAT_ENABLE 1
+
+#define OPENTHREAD_CONFIG_TLS_ENABLE 1
 
 #define OPENTHREAD_CONFIG_COMMISSIONER_ENABLE 1
 

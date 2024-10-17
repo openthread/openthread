@@ -48,14 +48,12 @@ extern "C" {
  *   This module includes the platform abstraction for secure non-volatile storage of settings.
  *
  * @{
- *
  */
 
 /**
  * Performs any initialization for the secure settings subsystem, if necessary.
  *
  * @param[in]  aInstance The OpenThread instance structure.
- *
  */
 void otPosixSecureSettingsInit(otInstance *aInstance);
 
@@ -63,7 +61,6 @@ void otPosixSecureSettingsInit(otInstance *aInstance);
  * Performs any de-initialization for the secure settings subsystem, if necessary.
  *
  * @param[in]  aInstance The OpenThread instance structure.
- *
  */
 void otPosixSecureSettingsDeinit(otInstance *aInstance);
 
@@ -92,7 +89,6 @@ void otPosixSecureSettingsDeinit(otInstance *aInstance);
  * @retval OT_ERROR_NONE             The given setting was found and fetched successfully.
  * @retval OT_ERROR_NOT_FOUND        The given setting was not found in the setting store.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on this platform.
- *
  */
 otError otPosixSecureSettingsGet(otInstance *aInstance,
                                  uint16_t    aKey,
@@ -115,7 +111,6 @@ otError otPosixSecureSettingsGet(otInstance *aInstance,
  * @retval OT_ERROR_NONE             The given setting was changed or staged.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on this platform.
  * @retval OT_ERROR_NO_BUFS          No space remaining to store the given setting.
- *
  */
 otError otPosixSecureSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
@@ -137,7 +132,6 @@ otError otPosixSecureSettingsSet(otInstance *aInstance, uint16_t aKey, const uin
  * @retval OT_ERROR_NONE             The given setting was added or staged to be added.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on this platform.
  * @retval OT_ERROR_NO_BUFS          No space remaining to store the given setting.
- *
  */
 otError otPosixSecureSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
@@ -154,7 +148,6 @@ otError otPosixSecureSettingsAdd(otInstance *aInstance, uint16_t aKey, const uin
  * @retval OT_ERROR_NONE             The given key and index was found and removed successfully.
  * @retval OT_ERROR_NOT_FOUND        The given key or index was not found in the setting store.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on this platform.
- *
  */
 otError otPosixSecureSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex);
 
@@ -162,13 +155,11 @@ otError otPosixSecureSettingsDelete(otInstance *aInstance, uint16_t aKey, int aI
  * Deletes all settings from the secure settings store, resetting it to its initial factory state.
  *
  * @param[in] aInstance  The OpenThread instance structure.
- *
  */
 void otPosixSecureSettingsWipe(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

@@ -110,8 +110,23 @@ class PublishMeshCopService(thread_cert.TestCase):
         # check Meshcop-e service
         self.check_meshcop_e_service(host, True)
 
-        # deactivate ePSKc mode
-        br1.deactivate_ephemeral_key_mode()
+        # deactivate ePSKc mode in force
+        br1.deactivate_ephemeral_key_mode(retain_active_session=False)
+        self.assertEqual(br1.get_ephemeral_key_state(), 'inactive')
+        self.simulator.go(10)
+        # check Meshcop-e service
+        self.check_meshcop_e_service(host, False)
+
+        # activate ePSKc mode by default lifetime
+        lifetime = 0
+        ephemeral_key = br1.activate_ephemeral_key_mode(lifetime)
+        self.assertEqual(len(ephemeral_key), 9)
+        self.assertEqual(br1.get_ephemeral_key_state(), 'active')
+        # check Meshcop-e service
+        self.check_meshcop_e_service(host, True)
+
+        # deactivate ePSKc mode NOT in force
+        br1.deactivate_ephemeral_key_mode(retain_active_session=True)
         self.assertEqual(br1.get_ephemeral_key_state(), 'inactive')
         self.simulator.go(10)
         # check Meshcop-e service
@@ -133,8 +148,7 @@ class PublishMeshCopService(thread_cert.TestCase):
         br1.stop()
         br1.set_active_dataset(updateExisting=True, network_name='ot-br1-1')
         br1.start()
-        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
-        self.simulator.go(5)  # Needs to wait extra some time to update meshcop service on state changes.
+        self.simulator.go(config.LEADER_REBOOT_DELAY)
         self.check_meshcop_service(br1, host)
 
         # verify that there are two meshcop services
@@ -142,7 +156,7 @@ class PublishMeshCopService(thread_cert.TestCase):
         br2.start()
         br2.disable_backbone_router()
         br2.enable_br()
-        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
+        self.simulator.go(config.LEADER_REBOOT_DELAY)
 
         service_instances = host.browse_mdns_services('_meshcop._udp')
         self.assertEqual(len(service_instances), 2)

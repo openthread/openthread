@@ -92,7 +92,6 @@ namespace ot {
  *
  * @brief
  *   This namespace contains definitions for the CLI interpreter.
- *
  */
 namespace Cli {
 
@@ -103,7 +102,6 @@ extern "C" void otCliOutputFormat(const char *aFmt, ...);
 
 /**
  * Implements the CLI interpreter.
- *
  */
 class Interpreter : public OutputImplementer, public Utils
 {
@@ -139,7 +137,6 @@ public:
      * Returns a reference to the interpreter object.
      *
      * @returns A reference to the interpreter object.
-     *
      */
     static Interpreter &GetInterpreter(void)
     {
@@ -154,7 +151,6 @@ public:
      * @param[in]  aInstance  The OpenThread instance structure.
      * @param[in]  aCallback  A pointer to a callback method.
      * @param[in]  aContext   A pointer to a user context.
-     *
      */
     static void Initialize(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
@@ -162,7 +158,6 @@ public:
      * Returns whether the interpreter is initialized.
      *
      * @returns  Whether the interpreter is initialized.
-     *
      */
     static bool IsInitialized(void) { return sInterpreter != nullptr; }
 
@@ -170,7 +165,6 @@ public:
      * Interprets a CLI command.
      *
      * @param[in]  aBuf        A pointer to a string.
-     *
      */
     void ProcessLine(char *aBuf);
 

@@ -92,8 +92,9 @@ namespace Cli {
 otTcatAdvertisedDeviceId sAdvertisedDeviceIds[OT_TCAT_DEVICE_ID_MAX];
 otTcatGeneralDeviceId    sGeneralDeviceId;
 
-const char kPskdVendor[] = "JJJJJJ";
-const char kUrl[]        = "dummy_url";
+const char kPskdVendor[]    = "JJJJJJ";
+const char kInstallVendor[] = "InstallCode";
+const char kUrl[]           = "dummy_url";
 
 static bool IsDeviceIdSet(void)
 {
@@ -137,6 +138,23 @@ static void HandleBleSecureReceive(otInstance               *aInstance,
     IgnoreReturnValue(otBleSecureFlush(aInstance));
 }
 
+/**
+ * @cli tcat advid
+ * @code
+ * tcat advid ianapen f378aabb
+ * Done
+ * @endcode
+ * @cparam tcat advid [@ca{id_type}] [@ca{value}]
+ * * The `id_type` has five possible values:
+ *   * `clear` - removes all previously set advertised IDs.
+ *   * `oui24` - sets OUI24 ID type.
+ *   * `oui36` - sets OUI36 ID type.
+ *   * `discriminator` - sets discriminator ID type.
+ *   * `ianapen` - sets IANA PEN ID type.
+ * * The `value` hexstring value of the ID.
+ * @par
+ * Sets/clears advertised ID type and value.
+ */
 template <> otError Tcat::Process<Cmd("advid")>(Arg aArgs[])
 {
     otError                  error = OT_ERROR_NONE;
@@ -212,6 +230,17 @@ exit:
     return error;
 }
 
+/**
+ * @cli tcat devid
+ * @code
+ * tcat devid ianapen f378aabb
+ * Done
+ * @endcode
+ * @cparam tcat devid [@ca{value}|clear]
+ * * The `value` hexstring value of the ID. `clear` is a special value removing previously set ID.
+ * @par
+ * Sets/clears vendor specific device ID.
+ */
 template <> otError Tcat::Process<Cmd("devid")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -241,6 +270,21 @@ exit:
     return error;
 }
 
+/**
+ * @cli tcat start
+ * @code
+ * tcat start
+ * Done
+ * @endcode
+ * @par
+ * Starts TCAT operation.
+ * @sa otBleSecureSetCertificate
+ * @sa otBleSecureSetCaCertificateChain
+ * @sa otBleSecureSetSslAuthMode
+ * @sa otBleSecureSetTcatVendorInfo
+ * @sa otBleSecureStart
+ * @sa otBleSecureTcatStart
+ */
 template <> otError Tcat::Process<Cmd("start")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -250,6 +294,7 @@ template <> otError Tcat::Process<Cmd("start")>(Arg aArgs[])
     ClearAllBytes(mVendorInfo);
     mVendorInfo.mPskdString      = kPskdVendor;
     mVendorInfo.mProvisioningUrl = kUrl;
+    mVendorInfo.mInstallCode     = kInstallVendor;
 
     if (IsDeviceIdSet())
     {
@@ -279,6 +324,16 @@ exit:
     return error;
 }
 
+/**
+ * @cli tcat stop
+ * @code
+ * tcat stop
+ * Done
+ * @endcode
+ * @par
+ * Stops TCAT operation.
+ * @sa otBleSecureStop
+ */
 template <> otError Tcat::Process<Cmd("stop")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);

@@ -47,7 +47,6 @@
  * @param[in]  aSource  The byte array.
  *
  * @returns The 64-bit value as a uint64_t.
- *
  */
 static inline uint64_t otEncodingReadUint64Le(const uint8_t *aSource)
 {

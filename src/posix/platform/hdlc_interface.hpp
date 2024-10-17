@@ -47,7 +47,6 @@ namespace Posix {
 
 /**
  * Defines an HDLC interface to the Radio Co-processor (RCP)
- *
  */
 class HdlcInterface : public ot::Spinel::SpinelInterface, public Logger<HdlcInterface>
 {
@@ -58,13 +57,11 @@ public:
      * Initializes the object.
      *
      * @param[in] aRadioUrl  RadioUrl parsed from radio url.
-     *
      */
     HdlcInterface(const Url::Url &aRadioUrl);
 
     /**
      * This destructor deinitializes the object.
-     *
      */
     ~HdlcInterface(void);
 
@@ -80,13 +77,11 @@ public:
      * @retval OT_ERROR_NONE       The interface is initialized successfully
      * @retval OT_ERROR_ALREADY    The interface is already initialized.
      * @retval OT_ERROR_FAILED     Failed to initialize the interface.
-     *
      */
     otError Init(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer);
 
     /**
      * Deinitializes the interface to the RCP.
-     *
      */
     void Deinit(void);
 
@@ -102,7 +97,6 @@ public:
      * @retval OT_ERROR_NONE     Successfully encoded and sent the spinel frame.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to encode the frame.
      * @retval OT_ERROR_FAILED   Failed to send due to socket not becoming writable within `kMaxWaitTime`.
-     *
      */
     otError SendFrame(const uint8_t *aFrame, uint16_t aLength);
 
@@ -113,7 +107,6 @@ public:
      *
      * @retval OT_ERROR_NONE             Part or all of spinel frame is received.
      * @retval OT_ERROR_RESPONSE_TIMEOUT No spinel frame is received within @p aTimeout.
-     *
      */
     otError WaitForFrame(uint64_t aTimeoutUs);
 
@@ -121,7 +114,6 @@ public:
      * Updates the file descriptor sets with file descriptors used by the radio driver.
      *
      * @param[in,out]   aMainloopContext  A pointer to the mainloop context containing fd_sets.
-     *
      */
     void UpdateFdSet(void *aMainloopContext);
 
@@ -129,7 +121,6 @@ public:
      * Performs radio driver processing.
      *
      * @param[in]   aMainloopContext  A pointer to the mainloop context containing fd_sets.
-     *
      */
     void Process(const void *aMainloopContext);
 
@@ -137,7 +128,6 @@ public:
      * Returns the bus speed between the host and the radio.
      *
      * @returns   Bus speed in bits/second.
-     *
      */
     uint32_t GetBusSpeed(void) const { return mBaudRate; }
 
@@ -146,7 +136,6 @@ public:
      *
      * @retval OT_ERROR_NONE            Successfully reset the RCP.
      * @retval OT_ERROR_NOT_IMPLEMENT   The hardware reset is not implemented.
-     *
      */
     otError HardwareReset(void) { return OT_ERROR_NOT_IMPLEMENTED; }
 
@@ -154,7 +143,6 @@ public:
      * Returns the RCP interface metrics.
      *
      * @returns The RCP interface metrics.
-     *
      */
     const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void) const { return &mInterfaceMetrics; }
 
@@ -175,7 +163,6 @@ public:
 private:
     /**
      * Is called when RCP is reset to recreate the connection with it.
-     *
      */
     otError ResetConnection(void);
 
@@ -184,7 +171,6 @@ private:
      *
      * If a full HDLC frame is decoded while reading data, this method invokes the `HandleReceivedFrame()` (on the
      * `aCallback` object from constructor) to pass the received frame to be processed.
-     *
      */
     void Read(void);
 
@@ -194,7 +180,6 @@ private:
      *
      * @retval OT_ERROR_NONE   Socket is writable.
      * @retval OT_ERROR_FAILED Socket did not become writable within `kMaxWaitTime`.
-     *
      */
     otError WaitForWritable(void);
 
@@ -209,7 +194,6 @@ private:
      *
      * @retval OT_ERROR_NONE    Frame was written successfully.
      * @retval OT_ERROR_FAILED  Failed to write due to socket not becoming writable within `kMaxWaitTime`.
-     *
      */
     otError Write(const uint8_t *aFrame, uint16_t aLength);
 
@@ -221,7 +205,6 @@ private:
      *
      * @param[in] aBuffer  A pointer to buffer containing data.
      * @param[in] aLength  The length (number of bytes) in the buffer.
-     *
      */
     void Decode(const uint8_t *aBuffer, uint16_t aLength);
 
@@ -240,7 +223,6 @@ private:
 
     /**
      * Closes file associated with the file descriptor.
-     *
      */
     void CloseFile(void);
 

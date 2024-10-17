@@ -30,11 +30,7 @@
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/num_utils.hpp"
-#include "common/time.hpp"
-#include "mac/mac.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -123,7 +119,6 @@ void CslTxScheduler::Clear(void)
  * Always finds the most recent CSL tx among all children,
  * and requests `Mac` to do CSL tx at specific time. It shouldn't be called
  * when `Mac` is already starting to do the CSL tx (indicated by `mCslTxMessage`).
- *
  */
 void CslTxScheduler::RescheduleCslTx(void)
 {
@@ -161,7 +156,7 @@ uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild,
                                                      uint32_t    &aDelayFromLastRx,
                                                      uint32_t     aAheadUs) const
 {
-    uint64_t radioNow   = otPlatRadioGetNow(&GetInstance());
+    uint64_t radioNow   = Get<Radio>().GetNow();
     uint32_t periodInUs = aChild.GetCslPeriod() * kUsPerTenSymbols;
 
     /* see CslTxScheduler::ChildInfo::mCslPhase */

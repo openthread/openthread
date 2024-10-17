@@ -30,13 +30,7 @@
 
 #if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/new.hpp"
 #include "instance/instance.hpp"
-#include "meshcop/secure_transport.hpp"
-
-#include "thread/thread_netif.hpp"
 
 /**
  * @file

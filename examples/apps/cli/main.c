@@ -51,7 +51,6 @@
  * Initializes the CLI app.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
- *
  */
 extern void otAppCliInit(otInstance *aInstance);
 

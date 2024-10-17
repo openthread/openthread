@@ -29,7 +29,7 @@
 #ifndef OT_POSIX_PLATFORM_UTILS_HPP_
 #define OT_POSIX_PLATFORM_UTILS_HPP_
 
-#include "openthread/error.h"
+#include <openthread/error.h>
 
 namespace ot {
 namespace Posix {
@@ -42,7 +42,6 @@ namespace Posix {
  *
  * @retval OT_ERROR_NONE    The command was executed successfully.
  * @retval OT_ERROR_FAILED  It failed to execute the command.
- *
  */
 otError ExecuteCommand(const char *aFormat, ...);
 

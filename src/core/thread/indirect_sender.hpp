@@ -63,7 +63,6 @@ class Child;
 
 /**
  * Implements indirect transmission.
- *
  */
 class IndirectSender : public InstanceLocator, public IndirectSenderBase, private NonCopyable
 {
@@ -78,7 +77,6 @@ public:
      * Defines all the child info required for indirect transmission.
      *
      * `Child` class publicly inherits from this class.
-     *
      */
     class ChildInfo
     {
@@ -92,7 +90,6 @@ public:
          * Returns the number of queued messages for the child.
          *
          * @returns Number of queued messages for the child.
-         *
          */
         uint16_t GetIndirectMessageCount(void) const { return mQueuedMessageCount; }
 
@@ -134,16 +131,24 @@ public:
     };
 
     /**
+     * Represents a predicate function for checking if a given `Message` meets specific criteria.
+     *
+     * @param[in] aMessage The message to evaluate.
+     *
+     * @retval TRUE   If the @p aMessage satisfies the predicate condition.
+     * @retval FALSE  If the @p aMessage does not satisfy the predicate condition.
+     */
+    typedef bool (&MessageChecker)(const Message &aMessage);
+
+    /**
      * Initializes the object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit IndirectSender(Instance &aInstance);
 
     /**
      * Enables indirect transmissions.
-     *
      */
     void Start(void) { mEnabled = true; }
 
@@ -151,7 +156,6 @@ public:
      * Disables indirect transmission.
      *
      * Any previously scheduled indirect transmission is canceled.
-     *
      */
     void Stop(void);
 
@@ -160,7 +164,6 @@ public:
      *
      * @param[in] aMessage  The message to add.
      * @param[in] aChild    The (sleepy) child for indirect transmission.
-     *
      */
     void AddMessageForSleepyChild(Message &aMessage, Child &aChild);
 
@@ -172,7 +175,6 @@ public:
      *
      * @retval kErrorNone          Successfully removed the message for indirect transmission.
      * @retval kErrorNotFound      The message was not scheduled for indirect transmission to the child.
-     *
      */
     Error RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
 
@@ -180,16 +182,60 @@ public:
      * Removes all added messages for a specific child and frees message (with no indirect/direct tx).
      *
      * @param[in]  aChild  A reference to a child whose messages shall be removed.
-     *
      */
     void ClearAllMessagesForSleepyChild(Child &aChild);
+
+    /**
+     * Finds the first queued message for a given sleepy child that also satisfies the conditions of a given
+     * `MessageChecker`.
+     *
+     * The caller MUST ensure that @p aChild is sleepy.
+     *
+     * @param[in] aChild     The sleepy child to check.
+     * @param[in] aChecker   The predicate function to apply.
+     *
+     * @returns A pointer to the matching queued message, or `nullptr` if none is found.
+     */
+    Message *FindQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker)
+    {
+        return AsNonConst(AsConst(this)->FindQueuedMessageForSleepyChild(aChild, aChecker));
+    }
+
+    /**
+     * Finds the first queued message for a given sleepy child that also satisfies the conditions of a given
+     * `MessageChecker`.
+     *
+     * The caller MUST ensure that @p aChild is sleepy.
+     *
+     * @param[in] aChild     The sleepy child to check.
+     * @param[in] aChecker   The predicate function to apply.
+     *
+     * @returns A pointer to the matching queued message, or `nullptr` if none is found.
+     */
+    const Message *FindQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker) const;
+
+    /**
+     * Indicates whether there is any queued message for a given sleepy child that also satisfies the conditions of a
+     * given `MessageChecker`.
+     *
+     * The caller MUST ensure that @p aChild is sleepy.
+     *
+     * @param[in] aChild    The sleepy child to check for.
+     * @param[in] aChecker  The predicate function to apply.
+     *
+     * @retval TRUE   There is a queued message satisfying @p aChecker for sleepy child @p aChild.
+     * @retval FALSE  There is no queued message satisfying @p aChecker for sleepy child @p aChild.
+     */
+    bool HasQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker) const
+    {
+        return (FindQueuedMessageForSleepyChild(aChild, aChecker) != nullptr);
+    }
 
     /**
      * Sets whether to use the extended or short address for a child.
      *
      * @param[in] aChild            A reference to the child.
      * @param[in] aUseShortAddress  `true` to use short address, `false` to use extended address.
-     *
      */
     void SetChildUseShortAddress(Child &aChild, bool aUseShortAddress);
 
@@ -198,7 +244,6 @@ public:
      *
      * @param[in]  aChild    The child whose device mode was changed.
      * @param[in]  aOldMode  The old device mode of the child.
-     *
      */
     void HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMode);
 
@@ -209,11 +254,13 @@ private:
     void  HandleFrameChangeDone(Child &aChild);
 
     void     UpdateIndirectMessage(Child &aChild);
-    Message *FindIndirectMessage(Child &aChild, bool aSupervisionTypeOnly = false);
     void     RequestMessageUpdate(Child &aChild);
     uint16_t PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, Message &aMessage);
     void     PrepareEmptyFrame(Mac::TxFrame &aFrame, Child &aChild, bool aAckRequest);
     void     ClearMessagesForRemovedChildren(void);
+
+    static bool AcceptAnyMessage(const Message &aMessage);
+    static bool AcceptSupervisionMessage(const Message &aMessage);
 
     bool                  mEnabled;
     SourceMatchController mSourceMatchController;
@@ -225,7 +272,6 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace ot

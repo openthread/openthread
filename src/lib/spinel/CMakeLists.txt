@@ -104,6 +104,7 @@ target_link_libraries(openthread-radio-spinel
     INTERFACE
         ot-lib-config
     PRIVATE
+        openthread-platform
         ot-config
 )
 

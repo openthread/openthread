@@ -33,11 +33,7 @@
 
 #include "uri_paths.hpp"
 
-#include "common/binary_search.hpp"
-#include "common/debug.hpp"
-#include "common/string.hpp"
-
-#include <string.h>
+#include "instance/instance.hpp"
 
 namespace ot {
 

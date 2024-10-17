@@ -45,7 +45,6 @@ namespace Posix {
 
 /**
  * Implements platform mDNS socket APIs.
- *
  */
 class MdnsSocket : public Mainloop::Source, public Logger<MdnsSocket>, private NonCopyable
 {
@@ -56,7 +55,6 @@ public:
      * Gets the `MdnsSocket` singleton.
      *
      * @returns The singleton object.
-     *
      */
     static MdnsSocket &Get(void);
 
@@ -64,7 +62,6 @@ public:
      * Initializes the `MdnsSocket`.
      *
      * Called before OpenThread instance is created.
-     *
      */
     void Init(void);
 
@@ -72,7 +69,6 @@ public:
      * Sets up the `MdnsSocket`.
      *
      * Called after OpenThread instance is created.
-     *
      */
     void SetUp(void);
 
@@ -80,7 +76,6 @@ public:
      * Tears down the `MdnsSocket`.
      *
      * Called before OpenThread instance is destructed.
-     *
      */
     void TearDown(void);
 
@@ -88,7 +83,6 @@ public:
      * Deinitializes the `MdnsSocket`.
      *
      * Called after OpenThread instance is destructed.
-     *
      */
     void Deinit(void);
 
@@ -96,7 +90,6 @@ public:
      * Updates the fd_set and timeout for mainloop.
      *
      * @param[in,out]   aContext    A reference to the mainloop context.
-     *
      */
     void Update(otSysMainloopContext &aContext) override;
 
@@ -104,7 +97,6 @@ public:
      * Performs `MdnsSocket` processing.
      *
      * @param[in]   aContext   A reference to the mainloop context.
-     *
      */
     void Process(const otSysMainloopContext &aContext) override;
 

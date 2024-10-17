@@ -53,7 +53,6 @@ namespace Cli {
 
 /**
  * Implements the CLI CoAP Secure server and client.
- *
  */
 class CoapSecure : private Utils
 {
@@ -63,7 +62,6 @@ public:
      *
      * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
-     *
      */
     CoapSecure(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
@@ -77,7 +75,6 @@ public:
      * @retval OT_ERROR_INVALID_COMMAND   Invalid or unknown CLI command.
      * @retval OT_ERROR_INVALID_ARGS      Invalid arguments.
      * @retval ...                        Error during execution of the CLI command.
-     *
      */
     otError Process(Arg aArgs[]);
 

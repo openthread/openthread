@@ -57,7 +57,6 @@ namespace Utils {
 
 /**
  * Implements the OTNS Stub that interacts with OTNS.
- *
  */
 class Otns : public InstanceLocator, private NonCopyable
 {
@@ -68,7 +67,6 @@ public:
      * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit Otns(Instance &aInstance)
         : InstanceLocator(aInstance)
@@ -79,7 +77,6 @@ public:
      * Emits radio short address to OTNS when changed.
      *
      * @param[in]  aShortAddress  The new short address.
-     *
      */
     static void EmitShortAddress(uint16_t aShortAddress);
 
@@ -87,7 +84,6 @@ public:
      * Emits radio extended address to OTNS when changed.
      *
      * @param[in]  aExtAddress  The new extended address.
-     *
      */
     static void EmitExtendedAddress(const Mac::ExtAddress &aExtAddress);
 
@@ -98,7 +94,6 @@ public:
      * @param[in]  aPingLength   The data length of the ping request.
      * @param[in]  aTimestamp    The timestamp of the ping request.
      * @param[in]  aHopLimit     The hop limit of the ping request.
-     *
      */
     static void EmitPingRequest(const Ip6::Address &aPeerAddress,
                                 uint16_t            aPingLength,
@@ -112,7 +107,6 @@ public:
      * @param[in]  aPingLength   The data length of the ping reply.
      * @param[in]  aTimestamp    The timestamp of the ping reply.
      * @param[in]  aHopLimit     The hop limit of the ping reply.
-     *
      */
     static void EmitPingReply(const Ip6::Address &aPeerAddress,
                               uint16_t            aPingLength,
@@ -124,7 +118,6 @@ public:
      *
      * @param[in]  aEvent     The event type.
      * @param[in]  aNeighbor  The neighbor that is added or removed.
-     *
      */
     static void EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeighbor);
 
@@ -132,7 +125,6 @@ public:
      * Emits a transmit event to OTNS.
      *
      * @param[in]  aFrame  The frame of the transmission.
-     *
      */
     static void EmitTransmit(const Mac::TxFrame &aFrame);
 
@@ -140,7 +132,6 @@ public:
      * Emits the device mode to OTNS.
      *
      * @param[in] aMode The device mode.
-     *
      */
     static void EmitDeviceMode(Mle::DeviceMode aMode);
 
@@ -149,7 +140,6 @@ public:
      *
      * @param[in] aMessage      The sending COAP message.
      * @param[in] aMessageInfo  The message info.
-     *
      */
     static void EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -159,7 +149,6 @@ public:
      * @param[in] aError        The error in sending the COAP message.
      * @param[in] aMessage      The COAP message failed to send.
      * @param[in] aMessageInfo  The message info.
-     *
      */
     static void EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -168,7 +157,6 @@ public:
      *
      * @param[in] aMessage      The received COAP message.
      * @param[in] aMessageInfo  The message info.
-     *
      */
     static void EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

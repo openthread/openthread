@@ -470,9 +470,9 @@ exit:
  * @code
  * br prefixtable
  * prefix:fd00:1234:5678:0::/64, on-link:no, ms-since-rx:29526, lifetime:1800, route-prf:med,
- * router:ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1)
+ * router:ff02:0:0:0:0:0:0:1 (M:0 O:0 S:1)
  * prefix:1200:abba:baba:0::/64, on-link:yes, ms-since-rx:29527, lifetime:1800, preferred:1800,
- * router:ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1)
+ * router:ff02:0:0:0:0:0:0:1 (M:0 O:0 S:1)
  * Done
  * @endcode
  * @par
@@ -488,7 +488,7 @@ exit:
  * - Flags in received Router Advertisement header:
  *   - M: Managed Address Config flag
  *   - O: Other Config flag
- *   - Stub: Stub Router flag (indicates whether the router is a stub router)
+ *   - S: SNAC Router flag
  * @sa otBorderRoutingGetNextPrefixTableEntry
  */
 template <> otError Br::Process<Cmd("prefixtable")>(Arg aArgs[])
@@ -544,7 +544,6 @@ template <> otError Br::Process<Cmd("pd")>(Arg aArgs[])
      * @cparam br pd @ca{enable|disable}
      * @par api_copy
      * #otBorderRoutingDhcp6PdSetEnabled
-     *
      */
     if (ProcessEnableDisable(aArgs, otBorderRoutingDhcp6PdSetEnabled) == OT_ERROR_NONE)
     {
@@ -565,6 +564,7 @@ template <> otError Br::Process<Cmd("pd")>(Arg aArgs[])
             "disabled", // (0) OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED
             "stopped",  // (1) OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED
             "running",  // (2) OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING
+            "idle",     // (3) OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE
         };
 
         static_assert(0 == OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED,
@@ -573,6 +573,8 @@ template <> otError Br::Process<Cmd("pd")>(Arg aArgs[])
                       "OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED value is not expected!");
         static_assert(2 == OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING,
                       "OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING value is not expected!");
+        static_assert(3 == OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE,
+                      "OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE value is not expected!");
 
         OutputLine("%s", Stringify(otBorderRoutingDhcp6PdGetState(GetInstancePtr()), kDhcpv6PdStateStrings));
     }
@@ -609,7 +611,7 @@ exit:
  * @cli br routers
  * @code
  * br routers
- * ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1) ms-since-rx:1505 reachable:yes age:00:18:13
+ * ff02:0:0:0:0:0:0:1 (M:0 O:0 S:1) ms-since-rx:1505 reachable:yes age:00:18:13
  * Done
  * @endcode
  * @par
@@ -619,7 +621,7 @@ exit:
  * - Flags in received Router Advertisement header:
  *   - M: Managed Address Config flag
  *   - O: Other Config flag
- *   - Stub: Stub Router flag (indicates whether the router is a stub router)
+ *   - S: SNAC Router flag (indicates whether the router is a stub router)
  * - Milliseconds since last received message from this router
  * - Reachability flag: A router is marked as unreachable if it fails to respond to multiple Neighbor Solicitation
  *   probes.
@@ -653,8 +655,8 @@ exit:
 void Br::OutputRouterInfo(const otBorderRoutingRouterEntry &aEntry, RouterOutputMode aMode)
 {
     OutputIp6Address(aEntry.mAddress);
-    OutputFormat(" (M:%u O:%u Stub:%u)", aEntry.mManagedAddressConfigFlag, aEntry.mOtherConfigFlag,
-                 aEntry.mStubRouterFlag);
+    OutputFormat(" (M:%u O:%u S:%u)", aEntry.mManagedAddressConfigFlag, aEntry.mOtherConfigFlag,
+                 aEntry.mSnacRouterFlag);
 
     if (aMode == kLongVersion)
     {

@@ -50,7 +50,6 @@ namespace Posix {
 
 /**
  * Manages Thread radio.
- *
  */
 class Radio : public Logger<Radio>
 {
@@ -59,7 +58,6 @@ public:
 
     /**
      * Creates the radio manager.
-     *
      */
     Radio(void);
 
@@ -67,7 +65,6 @@ public:
      * Initialize the Thread radio.
      *
      * @param[in]   aUrl    A pointer to the null-terminated URL.
-     *
      */
     void Init(const char *aUrl);
 
@@ -75,7 +72,6 @@ public:
      * Acts as an accessor to the spinel interface instance used by the radio.
      *
      * @returns A reference to the radio's spinel interface instance.
-     *
      */
     Spinel::SpinelInterface &GetSpinelInterface(void) { return SpinelManager::GetSpinelManager().GetSpinelInterface(); }
 
@@ -83,7 +79,6 @@ public:
      * Acts as an accessor to the radio spinel instance used by the radio.
      *
      * @returns A reference to the radio spinel instance.
-     *
      */
     Spinel::RadioSpinel &GetRadioSpinel(void) { return mRadioSpinel; }
 
@@ -91,7 +86,6 @@ public:
      * Acts as an accessor to the RCP capability diagnostic instance used by the radio.
      *
      * @returns A reference to the RCP capability diagnostic instance.
-     *
      */
 #if OPENTHREAD_POSIX_CONFIG_RCP_CAPS_DIAG_ENABLE
     RcpCapsDiag &GetRcpCapsDiag(void) { return mRcpCapsDiag; }

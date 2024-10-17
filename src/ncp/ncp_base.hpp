@@ -97,7 +97,6 @@ public:
      * Creates and initializes an NcpBase instance.
      *
      * @param[in]  aInstance  The OpenThread instance structure.
-     *
      */
     explicit NcpBase(Instance *aInstance);
 
@@ -107,7 +106,6 @@ public:
      *
      * @param[in]  aInstances  The OpenThread instances structure pointer array.
      * @param[in]  aCount      Number of the instances in the array.
-     *
      */
     explicit NcpBase(Instance **aInstances, uint8_t aCount);
 
@@ -117,7 +115,6 @@ public:
      * Returns the pointer to the single NCP instance.
      *
      * @returns Pointer to the single NCP instance.
-     *
      */
     static NcpBase *GetNcpInstance(void);
 
@@ -131,7 +128,6 @@ public:
      * @param[in] aInstance  Instance pointer to match with IID
      *
      * @returns Spinel Interface Identifier to use for communication for this instance
-     *
      */
     uint8_t InstanceToIid(Instance *aInstance);
 
@@ -146,7 +142,6 @@ public:
      * @param[in] aIid  IID used in the Spinel communication
      *
      * @returns OpenThread instance object associated with the given IID
-     *
      */
     Instance *IidToInstance(uint8_t aIid);
 
@@ -161,7 +156,6 @@ public:
      * This method returns the IID of the current spinel command.
      *
      * @returns IID.
-     *
      */
     spinel_iid_t GetCurCommandIid(void) const;
 
@@ -179,7 +173,6 @@ public:
      * @retval OT_ERROR_BUSY         There are not enough resources to complete this
      *                               request. This is usually a temporary condition.
      * @retval OT_ERROR_INVALID_ARGS The given aStreamId was invalid.
-     *
      */
     otError StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
 
@@ -189,7 +182,6 @@ public:
      * @param[in] aLogLevel   The log level
      * @param[in] aLogRegion  The log region
      * @param[in] aLogString  The log string
-     *
      */
     void Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogString);
 
@@ -199,7 +191,6 @@ public:
      *
      * @param[in] aAllowPeekDelegate      Delegate function pointer for peek operation.
      * @param[in] aAllowPokeDelegate      Delegate function pointer for poke operation.
-     *
      */
     void RegisterPeekPokeDelegates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
                                    otNcpDelegateAllowPeekPoke aAllowPokeDelegate);
@@ -225,6 +216,34 @@ public:
      */
     bool ShouldDeferHostSend(void);
 
+    /**
+     * Check if the infrastructure interface has an IPv6 address.
+     *
+     * @param[in]  aInfraIfIndex  The index of the instructure interface to query.
+     * @param[in]  aAddress       The IPv6 address to query.
+     */
+    bool InfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress);
+
+    /**
+     * Send a ICMP6 ND message through the Infrastructure interface on the host.
+     *
+     * @param[in]  aInfraIfIndex  The index of the infrastructure interface this message is sent to.
+     * @param[in]  aDestAddress   The destination address this message is sent to.
+     * @param[in]  aBuffer        The ICMPv6 message buffer. The ICMPv6 checksum is left zero and the
+     *                            platform should do the checksum calculate.
+     * @param[in]  aBufferLength  The length of the message buffer.
+     *
+     * @note  Per RFC 4861, the implementation should send the message with IPv6 link-local source address
+     *        of interface @p aInfraIfIndex and IP Hop Limit 255.
+     *
+     * @retval OT_ERROR_NONE    Successfully sent the ICMPv6 message.
+     * @retval OT_ERROR_FAILED  Failed to send the ICMPv6 message.
+     */
+    otError InfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
+                               const otIp6Address *aDestAddress,
+                               const uint8_t      *aBuffer,
+                               uint16_t            aBufferLength);
+
 protected:
     static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
 
@@ -232,7 +251,6 @@ protected:
 
     /**
      * Represents the `ResponseEntry` type.
-     *
      */
     enum ResponseType
     {
@@ -243,7 +261,6 @@ protected:
 
     /**
      * Represents a spinel response entry.
-     *
      */
     struct ResponseEntry
     {
@@ -563,7 +580,6 @@ protected:
      *
      * @retval OT_ERROR_NONE     The response is prepared.
      * @retval OT_ERROR_NO_BUFS  Out of buffer while preparing the response.
-     *
      */
     otError VendorCommandHandler(uint8_t aHeader, unsigned int aCommand);
 
@@ -578,7 +594,6 @@ protected:
      *     implement mechanisms to re-send a failed/pending response or an async spinel frame.
      *
      * @param[in] aFrameTag    The tag of the frame removed from NCP buffer.
-     *
      */
     void VendorHandleFrameRemovedFromNcpBuffer(Spinel::Buffer::FrameTag aFrameTag);
 
@@ -595,7 +610,6 @@ protected:
      * @retval OT_ERROR_NONE          Successfully retrieved the property value and prepared the response.
      * @retval OT_ERROR_NOT_FOUND     Does not support the given property key.
      * @retval OT_ERROR_NO_BUFS       Out of buffer while preparing the response.
-     *
      */
     otError VendorGetPropertyHandler(spinel_prop_key_t aPropKey);
 
@@ -614,7 +628,6 @@ protected:
      *
      * @returns OT_ERROR_NOT_FOUND if it does not support the given property key, otherwise the error in either parsing
      *          of the input or the "set" operation.
-     *
      */
     otError VendorSetPropertyHandler(spinel_prop_key_t aPropKey);
 
@@ -745,6 +758,16 @@ protected:
     spinel_status_t mDatasetSendMgmtPendingSetResult;
 
     uint64_t mLogTimestampBase; // Timestamp base used for logging
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    otError InfraIfAddAddress(const otIp6Address &aAddress);
+    bool    InfraIfContainsAddress(const otIp6Address &aAddress);
+
+    static constexpr uint8_t kMaxInfraIfAddrs = 10;
+    otIp6Address             mInfraIfAddrs[kMaxInfraIfAddrs];
+    uint8_t                  mInfraIfAddrCount;
+    uint32_t                 mInfraIfIndex;
+#endif
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     char    *mDiagOutput;

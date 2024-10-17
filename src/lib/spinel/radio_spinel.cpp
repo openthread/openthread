@@ -112,6 +112,10 @@ RadioSpinel::RadioSpinel(void)
     , mVendorRestorePropertiesCallback(nullptr)
     , mVendorRestorePropertiesContext(nullptr)
 #endif
+#if OPENTHREAD_SPINEL_CONFIG_COMPATIBILITY_ERROR_CALLBACK_ENABLE
+    , mCompatibilityErrorCallback(nullptr)
+    , mCompatibilityErrorContext(nullptr)
+#endif
     , mTimeSyncEnabled(false)
     , mTimeSyncOn(false)
     , mSpinelDriver(nullptr)
@@ -198,7 +202,7 @@ otError RadioSpinel::CheckSpinelVersion(void)
     {
         LogCrit("Spinel version mismatch - Posix:%d.%d, RCP:%d.%d", SPINEL_PROTOCOL_VERSION_THREAD_MAJOR,
                 SPINEL_PROTOCOL_VERSION_THREAD_MINOR, versionMajor, versionMinor);
-        DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+        HandleCompatibilityError();
     }
 
 exit:
@@ -210,13 +214,13 @@ void RadioSpinel::InitializeCaps(bool &aSupportsRcpApiVersion, bool &aSupportsRc
     if (!GetSpinelDriver().CoprocessorHasCap(SPINEL_CAP_CONFIG_RADIO))
     {
         LogCrit("The co-processor isn't a RCP!");
-        DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+        HandleCompatibilityError();
     }
 
     if (!GetSpinelDriver().CoprocessorHasCap(SPINEL_CAP_MAC_RAW))
     {
         LogCrit("RCP capability list does not include support for radio/raw mode");
-        DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+        HandleCompatibilityError();
     }
 
     sSupportsLogStream            = GetSpinelDriver().CoprocessorHasCap(SPINEL_CAP_OPENTHREAD_LOG_METADATA);
@@ -251,7 +255,7 @@ otError RadioSpinel::CheckRadioCapabilities(otRadioCaps aRequiredRadioCaps)
             }
         }
 
-        DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+        HandleCompatibilityError();
     }
 
 exit:
@@ -279,7 +283,7 @@ otError RadioSpinel::CheckRcpApiVersion(bool aSupportsRcpApiVersion, bool aSuppo
             LogCrit("RCP and host are using incompatible API versions");
             LogCrit("RCP API Version %u is older than min required by host %u", rcpApiVersion,
                     SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION);
-            DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+            HandleCompatibilityError();
         }
     }
 
@@ -299,7 +303,7 @@ otError RadioSpinel::CheckRcpApiVersion(bool aSupportsRcpApiVersion, bool aSuppo
             LogCrit("RCP and host are using incompatible API versions");
             LogCrit("RCP requires min host API version %u but host is older and at version %u", minHostRcpApiVersion,
                     SPINEL_RCP_API_VERSION);
-            DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+            HandleCompatibilityError();
         }
     }
 
@@ -984,7 +988,7 @@ otError RadioSpinel::AddSrcMatchShortEntry(uint16_t aShortAddress)
     EXPECT_NO_ERROR(error = Insert(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, SPINEL_DATATYPE_UINT16_S, aShortAddress));
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    assert(mSrcMatchShortEntryCount < OPENTHREAD_CONFIG_MLE_MAX_CHILDREN);
+    assert(mSrcMatchShortEntryCount < OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES);
 
     for (int i = 0; i < mSrcMatchShortEntryCount; ++i)
     {
@@ -1009,7 +1013,7 @@ otError RadioSpinel::AddSrcMatchExtEntry(const otExtAddress &aExtAddress)
                         Insert(SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, SPINEL_DATATYPE_EUI64_S, aExtAddress.m8));
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    assert(mSrcMatchExtEntryCount < OPENTHREAD_CONFIG_MLE_MAX_CHILDREN);
+    assert(mSrcMatchExtEntryCount < OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES);
 
     for (int i = 0; i < mSrcMatchExtEntryCount; ++i)
     {
@@ -1643,26 +1647,30 @@ otError RadioSpinel::Transmit(otRadioFrame &aFrame)
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     // `otPlatRadioTxStarted()` is triggered immediately for now, which may be earlier than real started time.
-    mCallbacks.mTxStarted(mInstance, mTransmitFrame);
+    if (mCallbacks.mTxStarted != nullptr)
+    {
+        mCallbacks.mTxStarted(mInstance, mTransmitFrame);
+    }
 
     error = Request(SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
-                    SPINEL_DATATYPE_DATA_WLEN_S                                      // Frame data
-                        SPINEL_DATATYPE_UINT8_S                                      // Channel
-                            SPINEL_DATATYPE_UINT8_S                                  // MaxCsmaBackoffs
-                                SPINEL_DATATYPE_UINT8_S                              // MaxFrameRetries
-                                    SPINEL_DATATYPE_BOOL_S                           // CsmaCaEnabled
-                                        SPINEL_DATATYPE_BOOL_S                       // IsHeaderUpdated
-                                            SPINEL_DATATYPE_BOOL_S                   // IsARetx
-                                                SPINEL_DATATYPE_BOOL_S               // IsSecurityProcessed
-                                                    SPINEL_DATATYPE_UINT32_S         // TxDelay
-                                                        SPINEL_DATATYPE_UINT32_S     // TxDelayBaseTime
-                                                            SPINEL_DATATYPE_UINT8_S, // RxChannelAfterTxDone
+                    SPINEL_DATATYPE_DATA_WLEN_S                                         // Frame data
+                        SPINEL_DATATYPE_UINT8_S                                         // Channel
+                            SPINEL_DATATYPE_UINT8_S                                     // MaxCsmaBackoffs
+                                SPINEL_DATATYPE_UINT8_S                                 // MaxFrameRetries
+                                    SPINEL_DATATYPE_BOOL_S                              // CsmaCaEnabled
+                                        SPINEL_DATATYPE_BOOL_S                          // IsHeaderUpdated
+                                            SPINEL_DATATYPE_BOOL_S                      // IsARetx
+                                                SPINEL_DATATYPE_BOOL_S                  // IsSecurityProcessed
+                                                    SPINEL_DATATYPE_UINT32_S            // TxDelay
+                                                        SPINEL_DATATYPE_UINT32_S        // TxDelayBaseTime
+                                                            SPINEL_DATATYPE_UINT8_S     // RxChannelAfterTxDone
+                                                                SPINEL_DATATYPE_INT8_S, // TxPower
                     mTransmitFrame->mPsdu, mTransmitFrame->mLength, mTransmitFrame->mChannel,
                     mTransmitFrame->mInfo.mTxInfo.mMaxCsmaBackoffs, mTransmitFrame->mInfo.mTxInfo.mMaxFrameRetries,
                     mTransmitFrame->mInfo.mTxInfo.mCsmaCaEnabled, mTransmitFrame->mInfo.mTxInfo.mIsHeaderUpdated,
                     mTransmitFrame->mInfo.mTxInfo.mIsARetx, mTransmitFrame->mInfo.mTxInfo.mIsSecurityProcessed,
                     mTransmitFrame->mInfo.mTxInfo.mTxDelay, mTransmitFrame->mInfo.mTxInfo.mTxDelayBaseTime,
-                    mTransmitFrame->mInfo.mTxInfo.mRxChannelAfterTxDone);
+                    mTransmitFrame->mInfo.mTxInfo.mRxChannelAfterTxDone, mTransmitFrame->mInfo.mTxInfo.mTxPower);
 
     if (error == OT_ERROR_NONE)
     {
@@ -2394,6 +2402,25 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+
+#if OPENTHREAD_SPINEL_CONFIG_COMPATIBILITY_ERROR_CALLBACK_ENABLE
+void RadioSpinel::SetCompatibilityErrorCallback(otRadioSpinelCompatibilityErrorCallback aCallback, void *aContext)
+{
+    mCompatibilityErrorCallback = aCallback;
+    mCompatibilityErrorContext  = aContext;
+}
+#endif
+
+void RadioSpinel::HandleCompatibilityError(void)
+{
+#if OPENTHREAD_SPINEL_CONFIG_COMPATIBILITY_ERROR_CALLBACK_ENABLE
+    if (mCompatibilityErrorCallback)
+    {
+        mCompatibilityErrorCallback(mCompatibilityErrorContext);
+    }
+#endif
+    DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+}
 
 } // namespace Spinel
 } // namespace ot

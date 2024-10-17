@@ -50,7 +50,6 @@ extern "C" {
  *   This module includes functions that control SNTP communication.
  *
  * @{
- *
  */
 
 #define OT_SNTP_DEFAULT_SERVER_IP "2001:4860:4806:8::" ///< Defines default SNTP Server address - Google NTP Server.
@@ -58,7 +57,6 @@ extern "C" {
 
 /**
  * Implements SNTP Query parameters.
- *
  */
 typedef struct otSntpQuery
 {
@@ -78,7 +76,6 @@ typedef struct otSntpQuery
  * @retval  OT_ERROR_BUSY              The Kiss-o'-death packet has been received.
  * @retval  OT_ERROR_RESPONSE_TIMEOUT  No SNTP response has been received within timeout.
  * @retval  OT_ERROR_FAILED            A response was received but contains incorrect data.
- *
  */
 typedef void (*otSntpResponseHandler)(void *aContext, uint64_t aTime, otError aResult);
 
@@ -91,7 +88,6 @@ typedef void (*otSntpResponseHandler)(void *aContext, uint64_t aTime, otError aR
  * @param[in]  aQuery      A pointer to specify SNTP query parameters.
  * @param[in]  aHandler    A function pointer that shall be called on response reception or time-out.
  * @param[in]  aContext    A pointer to arbitrary context information.
- *
  */
 otError otSntpClientQuery(otInstance           *aInstance,
                           const otSntpQuery    *aQuery,
@@ -105,13 +101,11 @@ otError otSntpClientQuery(otInstance           *aInstance,
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aUnixEra    Unix era number.
- *
  */
 void otSntpClientSetUnixEra(otInstance *aInstance, uint32_t aUnixEra);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

@@ -46,14 +46,12 @@ namespace ot {
 
 /**
  * Implements the flash storage driver.
- *
  */
 class Flash : public InstanceLocator
 {
 public:
     /**
      * Constructor.
-     *
      */
     explicit Flash(Instance &aInstance)
         : InstanceLocator(aInstance)
@@ -62,7 +60,6 @@ public:
 
     /**
      * Initializes the flash storage driver.
-     *
      */
     void Init(void);
 
@@ -81,7 +78,6 @@ public:
      *
      * @retval kErrorNone       The value was fetched successfully.
      * @retval kErrorNotFound   The key was not found.
-     *
      */
     Error Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const;
 
@@ -98,7 +94,6 @@ public:
      *
      * @retval kErrorNone     The value was changed.
      * @retval kErrorNoBufs   Not enough space to store the value.
-     *
      */
     Error Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
@@ -112,7 +107,6 @@ public:
      *
      * @retval kErrorNone    The value was added.
      * @retval kErrorNoBufs  Not enough space to store the value.
-     *
      */
     Error Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
@@ -126,13 +120,11 @@ public:
      *
      * @retval kErrorNone      The given key and index was found and removed successfully.
      * @retval kErrorNotFound  The given key or index was not found.
-     *
      */
     Error Delete(uint16_t aKey, int aIndex);
 
     /**
      * Removes all values.
-     *
      */
     void Wipe(void);
 

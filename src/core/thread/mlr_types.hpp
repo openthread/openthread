@@ -44,12 +44,10 @@ namespace ot {
  * @addtogroup core-mlr
  *
  * @{
- *
  */
 
 /**
  * Multicast Listener Registration state for multicast addresses.
- *
  */
 enum MlrState : uint8_t
 {

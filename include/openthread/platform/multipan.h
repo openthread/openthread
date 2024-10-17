@@ -41,7 +41,6 @@
  *
  *   Full multipan RCP and Automatic Switching RCP do not require any special care from the host side.
  *   Manual Switching RCP requires host to switch currently active network.
- *
  */
 
 #ifndef OPENTHREAD_PLATFORM_MULTIPAN_H_
@@ -63,7 +62,6 @@ extern "C" {
  *   This module includes the platform abstraction for multipan support.
  *
  * @{
- *
  */
 
 /**
@@ -77,7 +75,6 @@ extern "C" {
  * @retval  OT_ERROR_NONE               Successfully retrieved the property.
  * @retval  OT_ERROR_NOT_IMPLEMENTED    Failed due to lack of the support in radio.
  * @retval  OT_ERROR_INVALID_COMMAND    Platform supports all interfaces simultaneously.
- *
  */
 otError otPlatMultipanGetActiveInstance(otInstance **aInstance);
 
@@ -99,7 +96,6 @@ otError otPlatMultipanGetActiveInstance(otInstance **aInstance);
  * @retval  OT_ERROR_NOT_IMPLEMENTED    Failed due to unknown instance or more instances than interfaces available.
  * @retval  OT_ERROR_INVALID_COMMAND    Platform supports all interfaces simultaneously.
  * @retval  OT_ERROR_ALREADY            Given interface is already active.
- *
  */
 otError otPlatMultipanSetActiveInstance(otInstance *aInstance, bool aCompletePending);
 
@@ -111,7 +107,6 @@ otError otPlatMultipanSetActiveInstance(otInstance *aInstance, bool aCompletePen
  *
  * @param[in]  aInstance The OpenThread instance structure.
  * @param[in]  aSuccess  True if successfully switched the interfaces, false if switching failed.
- *
  */
 extern void otPlatMultipanSwitchoverDone(otInstance *aInstance, bool aSuccess);
 
@@ -135,7 +130,6 @@ uint8_t otPlatMultipanInstanceToIid(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

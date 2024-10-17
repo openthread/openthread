@@ -29,13 +29,11 @@
 /**
  * @file
  *   This file implements Extended PAN ID management.
- *
  */
 
 #include "extended_panid.hpp"
 
-#include "common/locator_getters.hpp"
-#include "common/notifier.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace MeshCoP {

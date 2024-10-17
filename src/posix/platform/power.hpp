@@ -52,7 +52,6 @@ public:
      *
      * @retval OT_ERROR_NONE           Successfully set the regulatory domain.
      * @retval OT_ERROR_INVALID_ARGS   Given regulatory domain is too long.
-     *
      */
     otError Set(const char *aDomain);
 
@@ -63,7 +62,6 @@ public:
      *
      * @retval TRUE   If the two `Domain` instances are equal.
      * @retval FALSE  If the two `Domain` instances not equal.
-     *
      */
     bool operator==(const Domain &aOther) const { return strcmp(m8, aOther.m8) == 0; }
 
@@ -74,7 +72,6 @@ public:
      *
      * @retval TRUE   If the two regulatory domains are not equal.
      * @retval FALSE  If the two regulatory domains are equal.
-     *
      */
     bool operator!=(const char *aCString) const { return (aCString == nullptr) ? true : strcmp(m8, aCString) != 0; }
 
@@ -82,7 +79,6 @@ public:
      * Gets the regulatory domain as a null terminated C string.
      *
      * @returns The regulatory domain as a null terminated C string array.
-     *
      */
     const char *AsCString(void) const { return m8; }
 
@@ -107,7 +103,6 @@ public:
      *
      * @retval OT_ERROR_NONE   Successfully parsed the target power string.
      * @retval OT_ERROR_PARSE  Failed to parse the target power string.
-     *
      */
     otError FromString(char *aString);
 
@@ -115,7 +110,6 @@ public:
      * Returns the start channel.
      *
      * @returns The channel.
-     *
      */
     uint8_t GetChannelStart(void) const { return mChannelStart; }
 
@@ -123,7 +117,6 @@ public:
      * Returns the end channel.
      *
      * @returns The channel.
-     *
      */
     uint8_t GetChannelEnd(void) const { return mChannelEnd; }
 
@@ -131,7 +124,6 @@ public:
      * Returns the target power.
      *
      * @returns The target power, in 0.01 dBm.
-     *
      */
     int16_t GetTargetPower(void) const { return mTargetPower; }
 
@@ -139,7 +131,6 @@ public:
      * Converts the target power into a human-readable string.
      *
      * @returns  An `InfoString` object representing the target power.
-     *
      */
     InfoString ToString(void) const;
 
@@ -163,7 +154,6 @@ public:
      *
      * @retval OT_ERROR_NONE           Successfully set the raw power setting.
      * @retval OT_ERROR_INVALID_ARGS   The given raw power setting is too long.
-     *
      */
     otError Set(const char *aRawPowerSetting);
 
@@ -171,7 +161,6 @@ public:
      * Converts the raw power setting into a human-readable string.
      *
      * @returns  An `InfoString` object representing the calibrated power.
-     *
      */
     InfoString ToString(void) const;
 
@@ -202,7 +191,6 @@ public:
      *
      * @retval OT_ERROR_NONE   Successfully parsed the calibrated power string.
      * @retval OT_ERROR_PARSE  Failed to parse the calibrated power string.
-     *
      */
     otError FromString(char *aString);
 
@@ -210,7 +198,6 @@ public:
      * Returns the start channel.
      *
      * @returns The channel.
-     *
      */
     uint8_t GetChannelStart(void) const { return mChannelStart; }
 
@@ -218,7 +205,6 @@ public:
      * Sets the start channel.
      *
      * @param[in]  aChannelStart  The start channel.
-     *
      */
     void SetChannelStart(uint8_t aChannelStart) { mChannelStart = aChannelStart; }
 
@@ -226,7 +212,6 @@ public:
      * Returns the end channel.
      *
      * @returns The channel.
-     *
      */
     uint8_t GetChannelEnd(void) const { return mChannelEnd; }
 
@@ -234,7 +219,6 @@ public:
      * Sets the end channel.
      *
      * @param[in]  aChannelEnd  The end channel.
-     *
      */
     void SetChannelEnd(uint8_t aChannelEnd) { mChannelEnd = aChannelEnd; }
 
@@ -242,7 +226,6 @@ public:
      * Returns the actual power.
      *
      * @returns The actual measured power, in 0.01 dBm.
-     *
      */
     int16_t GetActualPower(void) const { return mActualPower; }
 
@@ -250,7 +233,6 @@ public:
      * Sets the actual channel.
      *
      * @param[in]  aActualPower  The actual power in 0.01 dBm.
-     *
      */
     void SetActualPower(int16_t aActualPower) { mActualPower = aActualPower; }
 
@@ -258,7 +240,6 @@ public:
      * Returns the raw power setting.
      *
      * @returns A reference to the raw power setting.
-     *
      */
     const RawPowerSetting &GetRawPowerSetting(void) const { return mRawPowerSetting; }
 
@@ -266,7 +247,6 @@ public:
      * Sets the raw power setting.
      *
      * @param[in]  aRawPowerSetting  The raw power setting.
-     *
      */
     void SetRawPowerSetting(const RawPowerSetting &aRawPowerSetting) { mRawPowerSetting = aRawPowerSetting; }
 
@@ -274,7 +254,6 @@ public:
      * Converts the calibrated power into a human-readable string.
      *
      * @returns  An `InfoString` object representing the calibrated power.
-     *
      */
     InfoString ToString(void) const;
 

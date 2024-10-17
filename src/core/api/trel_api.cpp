@@ -37,8 +37,6 @@
 
 #include <openthread/trel.h>
 
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
 #include "instance/instance.hpp"
 
 using namespace ot;

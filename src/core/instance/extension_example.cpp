@@ -45,7 +45,6 @@ namespace Extension {
 
 /**
  * Defines the vendor extension object.
- *
  */
 class Extension : public ExtensionBase
 {

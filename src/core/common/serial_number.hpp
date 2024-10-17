@@ -59,7 +59,6 @@ public:
      *
      * @retval TRUE  If @p aFirst is less than @p aSecond.
      * @retval FALSE If @p aFirst is not less than @p aSecond.
-     *
      */
     template <typename UintType> static bool IsLess(UintType aFirst, UintType aSecond)
     {
@@ -87,7 +86,6 @@ public:
      *
      * @retval TRUE  If @p aFirst is greater than @p aSecond.
      * @retval FALSE If @p aFirst is not greater than @p aSecond.
-     *
      */
     template <typename UintType> static bool IsGreater(UintType aFirst, UintType aSecond)
     {

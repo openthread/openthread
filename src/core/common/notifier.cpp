@@ -33,12 +33,7 @@
 
 #include "notifier.hpp"
 
-#include "border_router/routing_manager.hpp"
-#include "common/array.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 

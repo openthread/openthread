@@ -55,7 +55,6 @@ public:
      * Pointer to call when the secure BLE connection state changes.
      *
      *  Please see otHandleBleSecureConnect for details.
-     *
      */
     typedef otHandleBleSecureConnect ConnectCallback;
 
@@ -64,13 +63,11 @@ public:
      * If line mode is activated the function is called only after EOL has been received.
      *
      *  Please see otHandleBleSecureReceive for details.
-     *
      */
     typedef otHandleBleSecureReceive ReceiveCallback;
 
     /**
      * Represents a TCAT command class.
-     *
      */
     typedef MeshCoP::TcatAgent::CommandClass CommandClass;
 
@@ -78,7 +75,6 @@ public:
      * Constructor initializes the object.
      *
      * @param[in]  aInstance    A reference to the OpenThread instance.
-     *
      */
     explicit BleSecure(Instance &aInstance);
 
@@ -94,7 +90,6 @@ public:
      *
      * @retval kErrorNone       Successfully started the BLE agent.
      * @retval kErrorAlready    Already started.
-     *
      */
     Error Start(ConnectCallback aConnectHandler, ReceiveCallback aReceiveHandler, bool aTlvMode, void *aContext);
 
@@ -106,7 +101,6 @@ public:
      * @retval kErrorNone           Successfully started the BLE Secure Joiner role.
      * @retval kErrorInvalidArgs    The aVendorInfo is invalid.
      * @retval kErrorInvaidState    The BLE function has not been started or line mode is not selected.
-     *
      */
     Error TcatStart(MeshCoP::TcatAgent::JoinCallback aHandler);
 
@@ -114,7 +108,6 @@ public:
      * Set the TCAT Vendor Info object
      *
      * @param[in] aVendorInfo A pointer to the Vendor Information (must remain valid after the method call).
-     *
      */
     Error TcatSetVendorInfo(const MeshCoP::TcatAgent::VendorInfo &aVendorInfo)
     {
@@ -123,7 +116,6 @@ public:
 
     /**
      * Stops the secure BLE agent.
-     *
      */
     void Stop(void);
 
@@ -131,13 +123,11 @@ public:
      * Initializes TLS session with a peer using an already open BLE connection.
      *
      * @retval kErrorNone  Successfully started TLS connection.
-     *
      */
     Error Connect(void);
 
     /**
      * Stops the BLE and TLS connection.
-     *
      */
     void Disconnect(void);
 
@@ -146,7 +136,6 @@ public:
      *
      * @retval TRUE  If TLS session is active.
      * @retval FALSE If TLS session is not active.
-     *
      */
     bool IsConnectionActive(void) const { return mTls.IsConnectionActive(); }
 
@@ -155,7 +144,6 @@ public:
      *
      * @retval TRUE   The TLS session is connected.
      * @retval FALSE  The TLS session is not connected.
-     *
      */
     bool IsConnected(void) const { return mTls.IsConnected(); }
 
@@ -164,7 +152,6 @@ public:
      *
      * @retval TRUE   The TCAT agent is enabled.
      * @retval FALSE  The TCAT agent is not enabled.
-     *
      */
     bool IsTcatEnabled(void) const { return mTcatAgent.IsEnabled(); }
 
@@ -176,7 +163,6 @@ public:
      *
      * @retval TRUE   The command class is authorized for use by the present TCAT commissioner.
      * @retval FALSE  The command class is not authorized for use.
-     *
      */
     bool IsCommandClassAuthorized(CommandClass aCommandClass) const
     {
@@ -191,7 +177,6 @@ public:
      *
      * @retval kErrorNone         Successfully set the PSK.
      * @retval kErrorInvalidArgs  The PSK is invalid.
-     *
      */
     Error SetPsk(const uint8_t *aPsk, uint8_t aPskLength) { return mTls.SetPsk(aPsk, aPskLength); }
 
@@ -199,7 +184,6 @@ public:
      * Sets the PSK.
      *
      * @param[in]  aPskd  A Joiner PSKd.
-     *
      */
     void SetPsk(const MeshCoP::JoinerPskd &aPskd);
 
@@ -213,7 +197,6 @@ public:
      * @param[in]  aPskLength    The PSK char length.
      * @param[in]  aPskIdentity  The Identity Name for the PSK.
      * @param[in]  aPskIdLength  The PSK Identity Length.
-     *
      */
     void SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength)
     {
@@ -231,7 +214,6 @@ public:
      * @param[in]  aX509Length        The length of certificate.
      * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
      * @param[in]  aPrivateKeyLength  The length of the private key.
-     *
      */
     void SetCertificate(const uint8_t *aX509Cert,
                         uint32_t       aX509Length,
@@ -248,7 +230,6 @@ public:
      *
      * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
      * @param[in]  aX509CaCertChainLength   The length of chain.
-     *
      */
     void SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
     {
@@ -270,7 +251,6 @@ public:
      * @retval kErrorInvalidArgs    @p aInstance or @p aCertLength is invalid.
      * @retval kErrorInvalidState   Not connected yet.
      * @retval kErrorNoBufs         Can't allocate memory for certificate.
-     *
      */
     Error GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength);
 #endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
@@ -293,7 +273,6 @@ public:
      * @retval kErrorInvalidState   Not connected yet.
      * @retval kErrorNone           Successfully read attribute.
      * @retval kErrorNoBufs         Insufficient memory for storing the attribute value.
-     *
      */
     Error GetPeerSubjectAttributeByOid(const char *aOid,
                                        size_t      aOidLength,
@@ -321,7 +300,6 @@ public:
      * @retval kErrorInvalidState     Not connected yet.
      * @retval kErrorNotImplemented   The value of aThreadOidDescriptor is >127.
      * @retval kErrorParse            The certificate extensions could not be parsed.
-     *
      */
     Error GetThreadAttributeFromPeerCertificate(int      aThreadOidDescriptor,
                                                 uint8_t *aAttributeBuffer,
@@ -348,7 +326,6 @@ public:
      * @retval kErrorInvalidState     Not connected yet.
      * @retval kErrorNotImplemented   The value of aThreadOidDescriptor is >127.
      * @retval kErrorParse            The certificate extensions could not be parsed.
-     *
      */
     Error GetThreadAttributeFromOwnCertificate(int      aThreadOidDescriptor,
                                                uint8_t *aAttributeBuffer,
@@ -358,11 +335,17 @@ public:
     }
 
     /**
+     * Extracts public key from it's own certificate.
+     *
+     * @returns Public key from own certificate in form of entire ASN.1 field.
+     */
+    const mbedtls_asn1_buf &GetOwnPublicKey(void) const { return mTls.GetOwnPublicKey(); }
+
+    /**
      * Sets the authentication mode for the BLE secure connection. It disables or enables the verification
      * of peer certificate.
      *
      * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should be verified
-     *
      */
     void SetSslAuthMode(bool aVerifyPeerCertificate) { mTls.SetSslAuthMode(aVerifyPeerCertificate); }
 
@@ -378,7 +361,6 @@ public:
      * @retval kErrorNone          Successfully sent message.
      * @retval kErrorNoBufs        Failed to allocate buffer memory.
      * @retval kErrorInvalidState  TLS connection was not initialized.
-     *
      */
     Error SendMessage(Message &aMessage);
 
@@ -391,7 +373,6 @@ public:
      * @retval kErrorNone          Successfully sent data.
      * @retval kErrorNoBufs        Failed to allocate buffer memory.
      * @retval kErrorInvalidState  TLS connection was not initialized.
-     *
      */
     Error Send(uint8_t *aBuf, uint16_t aLength);
 
@@ -404,7 +385,6 @@ public:
      * @retval kErrorNone          Successfully sent data.
      * @retval kErrorNoBufs        Failed to allocate buffer memory.
      * @retval kErrorInvalidState  TLS connection was not initialized.
-     *
      */
     Error SendApplicationTlv(uint8_t *aBuf, uint16_t aLength);
 
@@ -414,7 +394,6 @@ public:
      * @retval kErrorNone          Successfully enqueued data into the output interface.
      * @retval kErrorNoBufs        Failed to allocate buffer memory.
      * @retval kErrorInvalidState  TLS connection was not initialized.
-     *
      */
     Error Flush(void);
 
@@ -423,7 +402,6 @@ public:
      *
      * @param[in]  aBuf            A pointer to the data received.
      * @param[in]  aLength         A number indicating the length of the data buffer.
-     *
      */
     Error HandleBleReceive(uint8_t *aBuf, uint16_t aLength);
 
@@ -431,7 +409,6 @@ public:
      * Used to notify the secure BLE server that a BLE Device has been connected.
      *
      * @param[in]  aConnectionId    The identifier of the open connection.
-     *
      */
     void HandleBleConnected(uint16_t aConnectionId);
 
@@ -439,7 +416,6 @@ public:
      * Used to notify the secure BLE server that the BLE Device has been disconnected.
      *
      * @param[in]  aConnectionId    The identifier of the open connection.
-     *
      */
     void HandleBleDisconnected(uint16_t aConnectionId);
 
@@ -447,9 +423,16 @@ public:
      * Used to notify the secure BLE server that the BLE Device has updated ATT_MTU size.
      *
      * @param[in]  aMtu             The updated ATT_MTU value.
-     *
      */
     Error HandleBleMtuUpdate(uint16_t aMtu);
+
+    /**
+     * @brief Gets the Install Code Verify Status during the current session.
+     *
+     * @return TRUE The install code was correctly verfied.
+     * @return FALSE The install code was not verified.
+     */
+    bool GetInstallCodeVerifyStatus(void) const { return mTcatAgent.GetInstallCodeVerifyStatus(); }
 
 private:
     enum BleState : uint8_t

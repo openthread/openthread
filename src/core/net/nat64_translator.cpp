@@ -29,21 +29,13 @@
 /**
  * @file
  *   This file includes implementation for the NAT64 translator.
- *
  */
 
 #include "nat64_translator.hpp"
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
-#include <openthread/platform/toolchain.h>
-
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "net/checksum.hpp"
-#include "net/ip4_types.hpp"
-#include "net/ip6.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Nat64 {

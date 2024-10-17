@@ -49,7 +49,6 @@ namespace Heap {
  * @param[in] aSize    Size of each object.
  *
  * @returns A pointer to the allocated buffer or `nullptr` if fails to allocate.
- *
  */
 void *CAlloc(size_t aCount, size_t aSize);
 
@@ -59,7 +58,6 @@ void *CAlloc(size_t aCount, size_t aSize);
  * A heap allocated buffer MUST be freed only once.
  *
  * @param[in] aPointer   A pointer to the previously heap allocated buffer. Can be `nullptr` which does nothing.
- *
  */
 void Free(void *aPointer);
 

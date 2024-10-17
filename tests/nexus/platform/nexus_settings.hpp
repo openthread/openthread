@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017-2019, The OpenThread Authors.
+ *  Copyright (c) 2024, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,50 +26,57 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes definitions locator getter methods.
- *
- */
+#ifndef OT_NEXUS_SETTINGS_HPP_
+#define OT_NEXUS_SETTINGS_HPP_
 
-#ifndef LOCATOR_GETTERS_HPP_
-#define LOCATOR_GETTERS_HPP_
-
-#include "openthread-core-config.h"
-
-#include "common/locator.hpp"
-#include "common/tasklet.hpp"
+#include "common/const_cast.hpp"
+#include "common/owning_list.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
+namespace Nexus {
 
-template <typename InstanceGetProvider>
-template <typename Type>
-inline Type &GetProvider<InstanceGetProvider>::Get(void) const
+struct Settings
 {
-    return static_cast<const InstanceGetProvider *>(this)->GetInstance().template Get<Type>();
-}
+    enum SetAddMode : uint8_t
+    {
+        kSet,
+        kAdd,
+    };
 
-template <typename Owner, void (Owner::*HandleTaskletPtr)(void)>
-void TaskletIn<Owner, HandleTaskletPtr>::HandleTasklet(Tasklet &aTasklet)
-{
-    (aTasklet.Get<Owner>().*HandleTaskletPtr)();
-}
+    Error Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const;
+    Error SetOrAdd(SetAddMode aMode, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
+    Error Delete(uint16_t aKey, int aIndex);
+    void  Wipe(void);
 
-template <typename Owner, void (Owner::*HandleTimertPtr)(void)>
-void TimerMilliIn<Owner, HandleTimertPtr>::HandleTimer(Timer &aTimer)
-{
-    (aTimer.Get<Owner>().*HandleTimertPtr)();
-}
+    struct IndexMatcher
+    {
+        IndexMatcher(int aIndex) { mIndex = aIndex; }
 
-#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-template <typename Owner, void (Owner::*HandleTimertPtr)(void)>
-void TimerMicroIn<Owner, HandleTimertPtr>::HandleTimer(Timer &aTimer)
-{
-    (aTimer.Get<Owner>().*HandleTimertPtr)();
-}
-#endif
+        int mIndex;
+    };
 
+    struct Entry : public Heap::Allocatable<Entry>, public LinkedListEntry<Entry>
+    {
+        struct Value : public Heap::Allocatable<Value>, public LinkedListEntry<Value>
+        {
+            bool Matches(const IndexMatcher &aIndexMataher) const { return (AsNonConst(aIndexMataher).mIndex-- == 0); }
+
+            Value     *mNext;
+            Heap::Data mData;
+        };
+
+        bool Matches(uint16_t aKey) const { return mKey == aKey; }
+
+        Entry            *mNext;
+        uint16_t          mKey;
+        OwningList<Value> mValues;
+    };
+
+    OwningList<Entry> mEntries;
+};
+
+} // namespace Nexus
 } // namespace ot
 
-#endif // LOCATOR_GETTERS_HPP_
+#endif // OT_NEXUS_SETTINGS_HPP_

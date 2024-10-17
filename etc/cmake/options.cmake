@@ -256,6 +256,8 @@ ot_option(OT_TX_QUEUE_STATS OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE "tx que
 ot_option(OT_UDP_FORWARD OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE "UDP forward")
 ot_option(OT_UPTIME OPENTHREAD_CONFIG_UPTIME_ENABLE "uptime")
 ot_option(OT_VERHOEFF_CHECKSUM OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE "verhoeff checksum")
+ot_option(OT_WAKEUP_COORDINATOR OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE "wake-up coordinator")
+ot_option(OT_WAKEUP_END_DEVICE OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE "wake-up end device")
 
 option(OT_DOC "build OpenThread documentation")
 message(STATUS "- - - - - - - - - - - - - - - - ")
@@ -263,7 +265,7 @@ message(STATUS "- - - - - - - - - - - - - - - - ")
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Get a list of the available platforms and output as a list to the 'arg_platforms' argument
 function(ot_get_platforms arg_platforms)
-    list(APPEND result "NO" "posix" "external")
+    list(APPEND result "NO" "posix" "external" "nexus")
     set(platforms_dir "${PROJECT_SOURCE_DIR}/examples/platforms")
     file(GLOB platforms RELATIVE "${platforms_dir}" "${platforms_dir}/*")
     foreach(platform IN LISTS platforms)

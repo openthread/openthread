@@ -35,18 +35,7 @@
 
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 
-#include <openthread/platform/dns.h>
-
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/string.hpp"
 #include "instance/instance.hpp"
-#include "net/srp_server.hpp"
-#include "net/udp6.hpp"
 
 namespace ot {
 namespace Dns {
@@ -1132,18 +1121,6 @@ void Server::ConstructFullServiceSubTypeName(const char   *aServiceType,
     StringWriter fullName(aFullName, sizeof(aFullName));
 
     fullName.Append("%s._sub.%s.%s", aSubTypeLabel, aServiceType, kDefaultDomainName);
-}
-
-void Server::ProxyQueryInfo::ReadFrom(const ProxyQuery &aQuery)
-{
-    SuccessOrAssert(aQuery.Read(aQuery.GetLength() - sizeof(ProxyQueryInfo), *this));
-}
-
-void Server::ProxyQueryInfo::RemoveFrom(ProxyQuery &aQuery) const { aQuery.RemoveFooter(sizeof(ProxyQueryInfo)); }
-
-void Server::ProxyQueryInfo::UpdateIn(ProxyQuery &aQuery) const
-{
-    aQuery.Write(aQuery.GetLength() - sizeof(ProxyQueryInfo), *this);
 }
 
 Error Server::Response::ExtractServiceInstanceLabel(const char *aInstanceName, Name::LabelBuffer &aLabel)

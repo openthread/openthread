@@ -44,6 +44,8 @@
 
 #if (OPENTHREAD_FTD || OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
 
+#include <openthread/channel_manager.h>
+
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
@@ -65,7 +67,6 @@ namespace Utils {
 
 /**
  * Implements the Channel Manager.
- *
  */
 class ChannelManager : public InstanceLocator, private NonCopyable
 {
@@ -73,7 +74,6 @@ public:
 #if OPENTHREAD_FTD
     /**
      * Minimum delay (in seconds) used for network channel change.
-     *
      */
     static constexpr uint16_t kMinimumDelay = OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY;
 #endif
@@ -82,7 +82,6 @@ public:
      * Initializes a `ChanelManager` object.
      *
      * @param[in]   aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit ChannelManager(Instance &aInstance);
 
@@ -98,7 +97,6 @@ public:
      * If the requested channel changes, it will trigger a `Notifier` event `kEventChannelManagerNewChannelChanged`.
      *
      * @param[in] aChannel             The new channel for the Thread network.
-     *
      */
     void RequestNetworkChannelChange(uint8_t aChannel);
 #endif
@@ -107,7 +105,6 @@ public:
      * Gets the channel from the last successful call to `RequestNetworkChannelChange()` or `ChangeCslChannel()`.
      *
      * @returns The last requested channel, or zero if there has been no channel change request yet.
-     *
      */
     uint8_t GetRequestedChannel(void) const { return mChannel; }
 
@@ -116,7 +113,6 @@ public:
      * Gets the delay (in seconds) used for a channel change.
      *
      * @returns The delay (in seconds)
-     *
      */
     uint16_t GetDelay(void) const { return mDelay; }
 
@@ -130,7 +126,6 @@ public:
      *
      * @retval kErrorNone          Delay was updated successfully.
      * @retval kErrorInvalidArgs   The given delay @p aDelay is shorter than `kMinimumDelay`.
-     *
      */
     Error SetDelay(uint16_t aDelay);
 #endif // OPENTHREAD_FTD
@@ -163,7 +158,6 @@ public:
      * @retval kErrorNone              Channel selection finished successfully.
      * @retval kErrorNotFound          Supported channels is empty, therefore could not select a channel.
      * @retval kErrorInvalidState      Thread is not enabled or not enough data to select new channel.
-     *
      */
     Error RequestNetworkChannelSelect(bool aSkipQualityCheck);
 #endif // OPENTHREAD_FTD
@@ -193,7 +187,6 @@ public:
      * @retval kErrorNone              Channel selection finished successfully.
      * @retval kErrorNotFound          Supported channels is empty, therefore could not select a channel.
      * @retval kErrorInvalidState      Thread is not enabled or not enough data to select new channel.
-     *
      */
     Error RequestCslChannelSelect(bool aSkipQualityCheck);
 #endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
@@ -206,7 +199,6 @@ public:
      * can be set by `SetAutoChannelSelectionInterval()`.
      *
      * @param[in]  aEnabled  Indicates whether to enable or disable this functionality.
-     *
      */
     void SetAutoNetworkChannelSelectionEnabled(bool aEnabled);
 
@@ -214,7 +206,6 @@ public:
      * Indicates whether the auto-channel-selection functionality is enabled or not.
      *
      * @returns TRUE if enabled, FALSE if disabled.
-     *
      */
     bool GetAutoNetworkChannelSelectionEnabled(void) const { return mAutoSelectEnabled; }
 #endif
@@ -227,7 +218,6 @@ public:
      * can be set by `SetAutoChannelSelectionInterval()`.
      *
      * @param[in]  aEnabled  Indicates whether to enable or disable this functionality.
-     *
      */
     void SetAutoCslChannelSelectionEnabled(bool aEnabled);
 
@@ -235,7 +225,6 @@ public:
      * Indicates whether the auto-channel-selection functionality is enabled or not.
      *
      * @returns TRUE if enabled, FALSE if disabled.
-     *
      */
     bool GetAutoCslChannelSelectionEnabled(void) const { return mAutoSelectCslEnabled; }
 #endif
@@ -247,7 +236,6 @@ public:
      *
      * @retval kErrorNone          The interval was set successfully.
      * @retval kErrorInvalidArgs   The @p aInterval is not valid (zero).
-     *
      */
     Error SetAutoChannelSelectionInterval(uint32_t aInterval);
 
@@ -255,7 +243,6 @@ public:
      * Gets the period interval (in seconds) used by auto-channel-selection functionality.
      *
      * @returns The interval (in seconds).
-     *
      */
     uint32_t GetAutoChannelSelectionInterval(void) const { return mAutoSelectInterval; }
 
@@ -263,7 +250,6 @@ public:
      * Gets the supported channel mask.
      *
      * @returns  The supported channels mask.
-     *
      */
     uint32_t GetSupportedChannels(void) const { return mSupportedChannelMask.GetMask(); }
 
@@ -271,7 +257,6 @@ public:
      * Sets the supported channel mask.
      *
      * @param[in]  aChannelMask  A channel mask.
-     *
      */
     void SetSupportedChannels(uint32_t aChannelMask);
 
@@ -279,7 +264,6 @@ public:
      * Gets the favored channel mask.
      *
      * @returns  The favored channels mask.
-     *
      */
     uint32_t GetFavoredChannels(void) const { return mFavoredChannelMask.GetMask(); }
 
@@ -287,7 +271,6 @@ public:
      * Sets the favored channel mask.
      *
      * @param[in]  aChannelMask  A channel mask.
-     *
      */
     void SetFavoredChannels(uint32_t aChannelMask);
 
@@ -295,7 +278,6 @@ public:
      * Gets the CCA failure rate threshold
      *
      * @returns  The CCA failure rate threshold
-     *
      */
     uint16_t GetCcaFailureRateThreshold(void) const { return mCcaFailureRateThreshold; }
 
@@ -303,7 +285,6 @@ public:
      * Sets the CCA failure rate threshold
      *
      * @param[in]  aThreshold  A CCA failure rate threshold.
-     *
      */
     void SetCcaFailureRateThreshold(uint16_t aThreshold);
 
@@ -383,7 +364,6 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace Utils

@@ -6,7 +6,7 @@
 #
 ipaddress==1.0.23
     # via -r requirements.in
-lxml==4.9.2
+lxml==5.3.0
     # via pyshark
 packaging==23.0
     # via pyshark

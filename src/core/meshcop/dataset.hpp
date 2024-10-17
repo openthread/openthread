@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes definitions for managing MeshCoP Datasets.
- *
  */
 
 #ifndef MESHCOP_DATASET_HPP_
@@ -54,7 +53,6 @@ namespace MeshCoP {
 
 /**
  * Represents MeshCop Dataset.
- *
  */
 class Dataset
 {
@@ -65,7 +63,6 @@ public:
 
     /**
      * Represents the Dataset type (active or pending).
-     *
      */
     enum Type : uint8_t
     {
@@ -75,13 +72,11 @@ public:
 
     /**
      * Represents a Dataset as a sequence of TLVs.
-     *
      */
     typedef otOperationalDatasetTlvs Tlvs;
 
     /**
      * Represents a component in Dataset.
-     *
      */
     enum Component : uint8_t
     {
@@ -94,6 +89,7 @@ public:
         kDelay,            ///< Delay
         kPanId,            ///< PAN Identifier
         kChannel,          ///< Channel
+        kWakeupChannel,    ///< Wakeup Channel
         kPskc,             ///< PSKc
         kSecurityPolicy,   ///< Security Policy
         kChannelMask,      ///< Channel Mask
@@ -105,7 +101,6 @@ public:
 
     /**
      * Represents presence of different components in Active or Pending Operational Dataset.
-     *
      */
     class Components : public otOperationalDatasetComponents, public Clearable<Components>
     {
@@ -119,7 +114,6 @@ public:
          *
          * @retval TRUE   The component is present in the Dataset.
          * @retval FALSE  The component is not present in the Dataset.
-         *
          */
         template <Component kComponent> bool IsPresent(void) const;
 
@@ -129,7 +123,6 @@ public:
 
     /**
      * Represents the information about the fields contained an Active or Pending Operational Dataset.
-     *
      */
     class Info : public otOperationalDataset, public Clearable<Info>
     {
@@ -141,7 +134,6 @@ public:
          *
          * @retval TRUE   The component is present in the Dataset.
          * @retval FALSE  The component is not present in the Dataset.
-         *
          */
         template <Component kComponent> bool IsPresent(void) const { return GetComponents().IsPresent<kComponent>(); }
 
@@ -153,7 +145,6 @@ public:
          * MUST be used when component is present in the Dataset, otherwise its behavior is undefined.
          *
          * @returns The component value.
-         *
          */
         template <Component kComponent> const typename TypeFor<kComponent>::Type &Get(void) const;
 
@@ -165,7 +156,6 @@ public:
          * MUST be used when component is present in the Dataset, otherwise its behavior is undefined.
          *
          * @pram[out] aComponent  A reference to output the component value.
-         *
          */
         template <Component kComponent> void Get(typename TypeFor<kComponent>::Type &aComponent) const;
 
@@ -175,7 +165,6 @@ public:
          * @tparam  kComponent  The component to set.
          *
          * @param[in] aComponent   The component value.
-         *
          */
         template <Component kComponent> void Set(const typename TypeFor<kComponent>::Type &aComponent)
         {
@@ -189,7 +178,6 @@ public:
          * @tparam  kComponent  The component to set.
          *
          * @returns A reference to the component in the Dataset.
-         *
          */
         template <Component kComponent> typename TypeFor<kComponent>::Type &Update(void)
         {
@@ -208,7 +196,6 @@ public:
          * @param[in] aInstance    The OpenThread instance.
          *
          * @retval kErrorNone If the Dataset was generated successfully.
-         *
          */
         Error GenerateRandom(Instance &aInstance);
 
@@ -219,13 +206,11 @@ public:
 
     /**
      * Initializes the object.
-     *
      */
     Dataset(void);
 
     /**
      * Clears the Dataset.
-     *
      */
     void Clear(void) { mLength = 0; }
 
@@ -239,7 +224,6 @@ public:
      *
      * @retval kErrorNone   Successfully validated all the TLVs in the Dataset.
      * @retval kErrorParse  Dataset TLVs is not well-formed.
-     *
      */
     Error ValidateTlvs(void) const;
 
@@ -253,7 +237,6 @@ public:
      *
      * @retval  TRUE       The TLV format and value is valid, or TLV type is unknown (not supported in Dataset).
      * @retval  FALSE      The TLV format or value is invalid.
-     *
      */
     static bool IsTlvValid(const Tlv &aTlv);
 
@@ -264,7 +247,6 @@ public:
      *
      * @retval TRUE    TLV with @p aType is present in the Dataset.
      * @retval FALSE   TLV with @p aType is not present in the Dataset.
-     *
      */
     bool ContainsTlv(Tlv::Type aType) const { return (FindTlv(aType) != nullptr); }
 
@@ -275,7 +257,6 @@ public:
      *
      * @retval TRUE    TLV of @p aTlvType is present in the Dataset.
      * @retval FALSE   TLV of @p aTlvType is not present in the Dataset.
-     *
      */
     template <typename TlvType> bool Contains(void) const
     {
@@ -290,7 +271,6 @@ public:
      *
      * @retval TRUE    The Dataset contains all the TLVs in @p aTlvTypes array.
      * @retval FALSE   The Dataset does not contain all the TLVs in @p aTlvTypes array.
-     *
      */
     bool ContainsAllTlvs(const Tlv::Type aTlvTypes[], uint8_t aLength) const;
 
@@ -301,7 +281,6 @@ public:
      *
      * @retval TRUE    The Dataset contains all the required TLVs for @p aType.
      * @retval FALSE   The Dataset does not contain all the required TLVs for @p aType.
-     *
      */
     bool ContainsAllRequiredTlvsFor(Type aType) const;
 
@@ -311,7 +290,6 @@ public:
      * @param[in] aType  The TLV type to find.
      *
      * @returns A pointer to the TLV or `nullptr` if not found.
-     *
      */
     Tlv *FindTlv(Tlv::Type aType) { return AsNonConst(AsConst(this)->FindTlv(aType)); }
 
@@ -321,7 +299,6 @@ public:
      * @param[in] aType  The TLV type to find.
      *
      * @returns A pointer to the TLV or `nullptr` if not found.
-     *
      */
     const Tlv *FindTlv(Tlv::Type aType) const;
 
@@ -336,7 +313,6 @@ public:
      *
      * @retval kErrorNone      Successfully found and read the TLV value. @p aValue is updated.
      * @retval kErrorNotFound  Could not find the TLV in the Dataset.
-     *
      */
     template <typename SimpleTlvType> Error Read(typename SimpleTlvType::ValueType &aValue) const
     {
@@ -356,7 +332,6 @@ public:
      *
      * @retval kErrorNone      Successfully found and read the TLV value. @p aValue is updated.
      * @retval kErrorNotFound  Could not find the TLV in the Dataset.
-     *
      */
     template <typename UintTlvType> Error Read(typename UintTlvType::UintValueType &aValue) const
     {
@@ -374,7 +349,6 @@ public:
      *
      * @retval kErrorNone    Successfully updated the TLV.
      * @retval kErrorNoBufs  Could not add the TLV due to insufficient buffer space.
-     *
      */
     Error WriteTlv(const Tlv &aTlv);
 
@@ -389,7 +363,6 @@ public:
      *
      * @retval kErrorNone    Successfully updated the TLV.
      * @retval kErrorNoBufs  Could not add the TLV due to insufficient buffer space.
-     *
      */
     Error WriteTlv(Tlv::Type aType, const void *aValue, uint8_t aLength);
 
@@ -404,7 +377,6 @@ public:
      *
      * @retval kErrorNone    Successfully updated the TLV.
      * @retval kErrorNoBufs  Could not add the TLV due to insufficient buffer space.
-     *
      */
     template <typename SimpleTlvType> Error Write(const typename SimpleTlvType::ValueType &aValue)
     {
@@ -422,7 +394,6 @@ public:
      *
      * @retval kErrorNone    Successfully updated the TLV.
      * @retval kErrorNoBufs  Could not add the TLV due to insufficient buffer space.
-     *
      */
     template <typename UintTlvType> Error Write(typename UintTlvType::UintValueType aValue)
     {
@@ -442,7 +413,6 @@ public:
      * @retval kErrorNone    Successfully merged TLVs from @p Dataset into this Dataset.
      * @retval kErrorParse   The @p aDataset is not valid.
      * @retval kErrorNoBufs  Could not add the TLVs due to insufficient buffer space.
-     *
      */
     Error WriteTlvsFrom(const Dataset &aDataset);
 
@@ -458,7 +428,6 @@ public:
      * @retval kErrorNone    Successfully merged TLVs from @p Dataset into this Dataset.
      * @retval kErrorParse   The @p aTlvs is not valid.
      * @retval kErrorNoBufs  Could not add the TLVs due to insufficient buffer space.
-     *
      */
     Error WriteTlvsFrom(const uint8_t *aTlvs, uint8_t aLength);
 
@@ -471,7 +440,6 @@ public:
      *
      * @retval kErrorNone    Successfully merged TLVs from @p aDataseInfo into this Dataset.
      * @retval kErrorNoBufs  Could not add the TLVs due to insufficient buffer space.
-     *
      */
     Error WriteTlvsFrom(const Dataset::Info &aDatasetInfo);
 
@@ -487,7 +455,6 @@ public:
      *
      * @retval kErrorNone    Successfully merged TLVs from @p Dataset into this Dataset.
      * @retval kErrorNoBufs  Could not append the TLVs due to insufficient buffer space.
-     *
      */
     Error AppendTlvsFrom(const uint8_t *aTlvs, uint8_t aLength);
 
@@ -497,7 +464,6 @@ public:
      * If the Dataset does not contain the given TLV type, no action is performed.
      *
      * @param[in] aType  The TLV type to remove.
-     *
      */
     void RemoveTlv(Tlv::Type aType);
 
@@ -509,7 +475,6 @@ public:
      *
      * @retval kErrorNone      Timestamp was read successfully. @p aTimestamp is updated.
      * @retval kErrorNotFound  Could not find the requested Timestamp TLV.
-     *
      */
     Error ReadTimestamp(Type aType, Timestamp &aTimestamp) const;
 
@@ -523,7 +488,6 @@ public:
      *
      * @retval kErrorNone    Successfully updated the Timestamp TLV.
      * @retval kErrorNoBufs  Could not append the Timestamp TLV due to insufficient buffer space.
-     *
      */
     Error WriteTimestamp(Type aType, const Timestamp &aTimestamp);
 
@@ -531,7 +495,6 @@ public:
      * Removes the Timestamp TLV (Active or Pending) from the Dataset.
      *
      * @param[in] aType       The timestamp type, active or pending.
-     *
      */
     void RemoveTimestamp(Type aType);
 
@@ -539,7 +502,6 @@ public:
      * Returns a pointer to the byte representation of the Dataset.
      *
      * @returns A pointer to the byte representation of the Dataset.
-     *
      */
     uint8_t *GetBytes(void) { return mTlvs; }
 
@@ -547,7 +509,6 @@ public:
      * Returns a pointer to the byte representation of the Dataset.
      *
      * @returns A pointer to the byte representation of the Dataset.
-     *
      */
     const uint8_t *GetBytes(void) const { return mTlvs; }
 
@@ -555,7 +516,6 @@ public:
      * Converts the TLV representation to structure representation.
      *
      * @param[out] aDatasetInfo  A reference to `Info` object to output the Dataset.
-     *
      */
     void ConvertTo(Info &aDatasetInfo) const;
 
@@ -563,7 +523,6 @@ public:
      * Converts the TLV representation to structure representation.
      *
      * @param[out] aTlvs  A reference to output the Dataset as a sequence of TLVs.
-     *
      */
     void ConvertTo(Tlvs &aTlvs) const;
 
@@ -571,7 +530,6 @@ public:
      * Returns the Dataset length in bytes.
      *
      * @returns The Dataset length in bytes.
-     *
      */
     uint8_t GetLength(void) const { return mLength; }
 
@@ -579,7 +537,6 @@ public:
      * Sets the Dataset size in bytes.
      *
      * @param[in] aSize  The Dataset size in bytes.
-     *
      */
     void SetLength(uint8_t aLength) { mLength = aLength; }
 
@@ -587,7 +544,6 @@ public:
      * Returns the local time the dataset was last updated.
      *
      * @returns The local time the dataset was last updated.
-     *
      */
     TimeMilli GetUpdateTime(void) const { return mUpdateTime; }
 
@@ -595,7 +551,6 @@ public:
      * Sets this Dataset using an existing Dataset.
      *
      * @param[in]  aDataset  The input Dataset.
-     *
      */
     void SetFrom(const Dataset &aDataset);
 
@@ -603,7 +558,6 @@ public:
      * Sets the Dataset from a given structure representation.
      *
      * @param[in]  aDatasetInfo  The input Dataset as `Dataset::Info`.
-     *
      */
     void SetFrom(const Info &aDatasetInfo);
 
@@ -614,7 +568,6 @@ public:
      *
      * @retval kErrorNone         Successfully set the Dataset.
      * @retval kErrorInvalidArgs  The @p aTlvs is invalid and its length is longer than `kMaxLength`.
-     *
      */
     Error SetFrom(const Tlvs &aTlvs);
 
@@ -626,7 +579,6 @@ public:
      *
      * @retval kErrorNone         Successfully set the Dataset.
      * @retval kErrorInvalidArgs  @p aLength is longer than `kMaxLength`.
-     *
      */
     Error SetFrom(const uint8_t *aTlvs, uint8_t aLength);
 
@@ -639,7 +591,6 @@ public:
      * @retval kErrorNone    Successfully set the Dataset.
      * @retval kInvalidArgs  The given offset range length is longer than `kMaxLength`.
      * @retval kErrorParse   Could not read or parse the dataset from @p aMessage.
-     *
      */
     Error SetFrom(const Message &aMessage, const OffsetRange &aOffsetRange);
 
@@ -647,7 +598,6 @@ public:
      * Returns a pointer to the start of Dataset TLVs sequence.
      *
      * @return  A pointer to the start of Dataset TLVs sequence.
-     *
      */
     Tlv *GetTlvsStart(void) { return reinterpret_cast<Tlv *>(mTlvs); }
 
@@ -655,7 +605,6 @@ public:
      * Returns a pointer to the start of Dataset TLVs sequence.
      *
      * @return  A pointer to start of Dataset TLVs sequence.
-     *
      */
     const Tlv *GetTlvsStart(void) const { return reinterpret_cast<const Tlv *>(mTlvs); }
 
@@ -665,7 +614,6 @@ public:
      * Note that past-the-end points to the byte after the end of the last TLV in Dataset TLVs sequence.
      *
      * @return  A pointer to past-the-end of Dataset TLVs sequence.
-     *
      */
     Tlv *GetTlvsEnd(void) { return reinterpret_cast<Tlv *>(mTlvs + mLength); }
 
@@ -675,7 +623,6 @@ public:
      * Note that past-the-end points to the byte after the end of the last TLV in Dataset TLVs sequence.
      *
      * @return  A pointer to past-the-end of Dataset TLVs sequence.
-     *
      */
     const Tlv *GetTlvsEnd(void) const { return reinterpret_cast<const Tlv *>(mTlvs + mLength); }
 
@@ -689,7 +636,6 @@ public:
      *
      * @retval TRUE   The current Dataset is a subset of @p aOther.
      * @retval FALSE  The current Dataset is not a subset of @p aOther.
-     *
      */
     bool IsSubsetOf(const Dataset &aOther) const;
 
@@ -697,7 +643,6 @@ public:
      * Converts a Dataset Type to a string.
      *
      * @param[in]  aType   A Dataset type.
-     *
      */
     static const char *TypeToString(Type aType);
 
@@ -742,6 +687,7 @@ DefineIsPresentAndMarkAsPresent(MeshLocalPrefix)
 DefineIsPresentAndMarkAsPresent(Delay)
 DefineIsPresentAndMarkAsPresent(PanId)
 DefineIsPresentAndMarkAsPresent(Channel)
+DefineIsPresentAndMarkAsPresent(WakeupChannel)
 DefineIsPresentAndMarkAsPresent(Pskc)
 DefineIsPresentAndMarkAsPresent(SecurityPolicy)
 DefineIsPresentAndMarkAsPresent(ChannelMask)
@@ -760,6 +706,7 @@ template <> struct Dataset::TypeFor<Dataset::kMeshLocalPrefix>  { using Type = I
 template <> struct Dataset::TypeFor<Dataset::kDelay>            { using Type = uint32_t; };
 template <> struct Dataset::TypeFor<Dataset::kPanId>            { using Type = Mac::PanId; };
 template <> struct Dataset::TypeFor<Dataset::kChannel>          { using Type = uint16_t; };
+template <> struct Dataset::TypeFor<Dataset::kWakeupChannel>    { using Type = uint16_t; };
 template <> struct Dataset::TypeFor<Dataset::kPskc>             { using Type = Pskc; };
 template <> struct Dataset::TypeFor<Dataset::kSecurityPolicy>   { using Type = SecurityPolicy; };
 template <> struct Dataset::TypeFor<Dataset::kChannelMask>      { using Type = uint32_t; };
@@ -794,6 +741,8 @@ template <> inline const uint32_t &Dataset::Info::Get<Dataset::kDelay>(void) con
 template <> inline const Mac::PanId &Dataset::Info::Get<Dataset::kPanId>(void) const { return mPanId; }
 
 template <> inline const uint16_t &Dataset::Info::Get<Dataset::kChannel>(void) const { return mChannel; }
+
+template <> inline const uint16_t &Dataset::Info::Get<Dataset::kWakeupChannel>(void) const { return mWakeupChannel; }
 
 template <> inline const Pskc &Dataset::Info::Get<Dataset::kPskc>(void) const { return AsCoreType(&mPskc); }
 

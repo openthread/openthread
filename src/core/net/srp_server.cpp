@@ -35,17 +35,7 @@
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
-#include "common/as_core_type.hpp"
-#include "common/const_cast.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/new.hpp"
-#include "common/num_utils.hpp"
-#include "common/random.hpp"
-#include "common/string.hpp"
 #include "instance/instance.hpp"
-#include "net/dns_types.hpp"
-#include "thread/thread_netif.hpp"
 
 namespace ot {
 namespace Srp {

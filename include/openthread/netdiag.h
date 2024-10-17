@@ -46,7 +46,6 @@ extern "C" {
  * @addtogroup api-thread-general
  *
  * @{
- *
  */
 
 #define OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS 0           ///< MAC Extended Address TLV
@@ -91,7 +90,6 @@ typedef uint16_t otNetworkDiagIterator; ///< Used to iterate through Network Dia
 
 /**
  * Represents a Network Diagnostic Connectivity value.
- *
  */
 typedef struct otNetworkDiagConnectivity
 {
@@ -108,7 +106,6 @@ typedef struct otNetworkDiagConnectivity
 
 /**
  * Represents a Network Diagnostic Route data.
- *
  */
 typedef struct otNetworkDiagRouteData
 {
@@ -120,7 +117,6 @@ typedef struct otNetworkDiagRouteData
 
 /**
  * Represents a Network Diagnostic Route64 TLV value.
- *
  */
 typedef struct otNetworkDiagRoute
 {
@@ -136,7 +132,6 @@ typedef struct otNetworkDiagRoute
  * Represents a Network Diagnostic Mac Counters value.
  *
  * See <a href="https://www.ietf.org/rfc/rfc2863">RFC 2863</a> for definitions of member fields.
- *
  */
 typedef struct otNetworkDiagMacCounters
 {
@@ -153,7 +148,6 @@ typedef struct otNetworkDiagMacCounters
 
 /**
  * Represents a Network Diagnostics MLE Counters value.
- *
  */
 typedef struct otNetworkDiagMleCounters
 {
@@ -176,7 +170,6 @@ typedef struct otNetworkDiagMleCounters
 
 /**
  * Represents a Network Diagnostic Child Table Entry.
- *
  */
 typedef struct otNetworkDiagChildEntry
 {
@@ -188,7 +181,6 @@ typedef struct otNetworkDiagChildEntry
 
 /**
  * Represents a Network Diagnostic TLV.
- *
  */
 typedef struct otNetworkDiagTlv
 {
@@ -253,7 +245,6 @@ typedef struct otNetworkDiagTlv
  * @retval OT_ERROR_PARSE      Parsing the next Network Diagnostic failed.
  *
  * @Note A subsequent call to this function is allowed only when current return value is OT_ERROR_NONE.
- *
  */
 otError otThreadGetNextDiagnosticTlv(const otMessage       *aMessage,
                                      otNetworkDiagIterator *aIterator,
@@ -268,7 +259,6 @@ otError otThreadGetNextDiagnosticTlv(const otMessage       *aMessage,
  * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage. Available only when
  *                           @p aError is `OT_ERROR_NONE`.
  * @param[in]  aContext      A pointer to application-specific context.
- *
  */
 typedef void (*otReceiveDiagnosticGetCallback)(otError              aError,
                                                otMessage           *aMessage,
@@ -290,7 +280,6 @@ typedef void (*otReceiveDiagnosticGetCallback)(otError              aError,
  *
  * @retval OT_ERROR_NONE    Successfully queued the DIAG_GET.req.
  * @retval OT_ERROR_NO_BUFS Insufficient message buffers available to send DIAG_GET.req.
- *
  */
 otError otThreadSendDiagnosticGet(otInstance                    *aInstance,
                                   const otIp6Address            *aDestination,
@@ -311,7 +300,6 @@ otError otThreadSendDiagnosticGet(otInstance                    *aInstance,
  *
  * @retval OT_ERROR_NONE    Successfully queued the DIAG_RST.ntf.
  * @retval OT_ERROR_NO_BUFS Insufficient message buffers available to send DIAG_RST.ntf.
- *
  */
 otError otThreadSendDiagnosticReset(otInstance         *aInstance,
                                     const otIp6Address *aDestination,
@@ -324,7 +312,6 @@ otError otThreadSendDiagnosticReset(otInstance         *aInstance,
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  *
  * @returns The vendor name string.
- *
  */
 const char *otThreadGetVendorName(otInstance *aInstance);
 
@@ -334,7 +321,6 @@ const char *otThreadGetVendorName(otInstance *aInstance);
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  *
  * @returns The vendor model string.
- *
  */
 const char *otThreadGetVendorModel(otInstance *aInstance);
 
@@ -344,7 +330,6 @@ const char *otThreadGetVendorModel(otInstance *aInstance);
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  *
  * @returns The vendor software version string.
- *
  */
 const char *otThreadGetVendorSwVersion(otInstance *aInstance);
 
@@ -354,7 +339,6 @@ const char *otThreadGetVendorSwVersion(otInstance *aInstance);
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  *
  * @returns The vendor app URL string.
- *
  */
 const char *otThreadGetVendorAppUrl(otInstance *aInstance);
 
@@ -371,7 +355,6 @@ const char *otThreadGetVendorAppUrl(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE          Successfully set the vendor name.
  * @retval OT_ERROR_INVALID_ARGS  @p aVendorName is not valid (too long or not UTF8).
- *
  */
 otError otThreadSetVendorName(otInstance *aInstance, const char *aVendorName);
 
@@ -388,7 +371,6 @@ otError otThreadSetVendorName(otInstance *aInstance, const char *aVendorName);
  *
  * @retval OT_ERROR_NONE          Successfully set the vendor model.
  * @retval OT_ERROR_INVALID_ARGS  @p aVendorModel is not valid (too long or not UTF8).
- *
  */
 otError otThreadSetVendorModel(otInstance *aInstance, const char *aVendorModel);
 
@@ -405,7 +387,6 @@ otError otThreadSetVendorModel(otInstance *aInstance, const char *aVendorModel);
  *
  * @retval OT_ERROR_NONE          Successfully set the vendor software version.
  * @retval OT_ERROR_INVALID_ARGS  @p aVendorSwVersion is not valid (too long or not UTF8).
- *
  */
 otError otThreadSetVendorSwVersion(otInstance *aInstance, const char *aVendorSwVersion);
 
@@ -422,13 +403,11 @@ otError otThreadSetVendorSwVersion(otInstance *aInstance, const char *aVendorSwV
  *
  * @retval OT_ERROR_NONE          Successfully set the vendor app URL string.
  * @retval OT_ERROR_INVALID_ARGS  @p aVendorAppUrl is not valid (too long or not UTF8).
- *
  */
 otError otThreadSetVendorAppUrl(otInstance *aInstance, const char *aVendorAppUrl);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

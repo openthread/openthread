@@ -53,7 +53,6 @@ namespace ot {
  * The `Type` can inherit from `RetainCountable` which provides the retain counting methods.
  *
  * @tparam Type  The pointer type.
- *
  */
 template <class Type> class RetainPtr : public Ptr<Type>
 {
@@ -62,7 +61,6 @@ template <class Type> class RetainPtr : public Ptr<Type>
 public:
     /**
      * This is the default constructor for `RetainPtr` initializing it as null.
-     *
      */
     RetainPtr(void) = default;
 
@@ -72,7 +70,6 @@ public:
      * Upon construction the `RetainPtr` will increment the retain count on @p aPointer (if not null).
      *
      * @param[in] aPointer  A pointer to object to initialize with.
-     *
      */
     explicit RetainPtr(Type *aPointer)
         : Ptr<Type>(aPointer)
@@ -84,7 +81,6 @@ public:
      * Initializes the `RetainPtr` from another `RetainPtr`.
      *
      * @param[in] aOther   Another `RetainPtr`.
-     *
      */
     RetainPtr(const RetainPtr &aOther)
         : Ptr<Type>(aOther.mPointer)
@@ -97,7 +93,6 @@ public:
      *
      * Upon destruction, the `RetainPtr` will decrement the retain count on the managed object (if not null) and
      * free the object if its retain count reaches zero.
-     *
      */
     ~RetainPtr(void) { DecrementRetainCount(); }
 
@@ -108,7 +103,6 @@ public:
      * managed by `RetainPtr`).
      *
      * @param[in] aPointer   A pointer to a new object to replace with.
-     *
      */
     void Reset(Type *aPointer = nullptr)
     {
@@ -127,7 +121,6 @@ public:
      * After this call, the `RetainPtr` will be null.
      *
      * @returns The pointer to the object managed by `RetainPtr` or `nullptr` if `RetainPtr` was null.
-     *
      */
     Type *Release(void)
     {
@@ -146,7 +139,6 @@ public:
      * @param[in] aOther   A reference to another `RetainPtr`.
      *
      * @returns A reference to this `RetainPtr`.
-     *
      */
     RetainPtr &operator=(const RetainPtr &aOther)
     {
@@ -174,7 +166,6 @@ private:
 
 /**
  * Provides mechanism to track retain count.
- *
  */
 class RetainCountable
 {
@@ -183,7 +174,6 @@ class RetainCountable
 protected:
     /**
      * This constrictor initializes the object starting with retain count of zero.
-     *
      */
     RetainCountable(void)
         : mRetainCount(0)
@@ -194,13 +184,11 @@ protected:
      * Returns the current retain count.
      *
      * @returns The current retain count.
-     *
      */
     uint16_t GetRetainCount(void) const { return mRetainCount; }
 
     /**
      * Increments the retain count.
-     *
      */
     void IncrementRetainCount(void) { ++mRetainCount; }
 
@@ -208,7 +196,6 @@ protected:
      * Decrements the retain count.
      *
      * @returns The retain count value after decrementing it.
-     *
      */
     uint16_t DecrementRetainCount(void) { return --mRetainCount; }
 

@@ -55,7 +55,6 @@ extern uint64_t gInstanceRaw[];
  *   This module includes definitions for OpenThread instance locator.
  *
  * @{
- *
  */
 
 /**
@@ -68,7 +67,6 @@ extern uint64_t gInstanceRaw[];
  * @tparam InstanceGetProvider   The template sub-lass used in CRTP style inheritance.
  *                               `InstanceGetProvider` MUST provide a method with the following signature:
  *                               `Instance &GetInstance(void) const`
- *
  */
 template <class InstanceGetProvider> class GetProvider
 {
@@ -82,7 +80,6 @@ public:
      * `Instance` through the member variable property hierarchy.
      *
      * @returns A reference to the `Type` object of the instance.
-     *
      */
     template <typename Type> inline Type &Get(void) const; // Implemented in `locator_getters.hpp`.
 
@@ -99,7 +96,6 @@ protected:
  *
  * If multiple-instance feature is supported, the owning/parent OpenThread `Instance` is tracked as a reference. In the
  * single-instance case, this class becomes an empty base class.
- *
  */
 class InstanceLocator : public GetProvider<InstanceLocator>
 {
@@ -110,7 +106,6 @@ public:
      * Returns a reference to the parent OpenThread Instance.
      *
      * @returns A reference to the parent otInstance.
-     *
      */
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     Instance &GetInstance(void) const { return *mInstance; }
@@ -123,7 +118,6 @@ protected:
      * Initializes the object.
      *
      * @param[in]  aInstance  A reference to the OpenThread Instance.
-     *
      */
     explicit InstanceLocator(Instance &aInstance)
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
@@ -152,14 +146,12 @@ private:
  *
  * The inheriting class from `InstanceLocatorInit` should ensure that object is properly initialized after the object
  * is created and more importantly that it is re-initialized when/if it is cleared or reset.
- *
  */
 class InstanceLocatorInit : public InstanceLocator
 {
 protected:
     /**
      * This is the default constructor for the `InstanceLocatorInit` object.
-     *
      */
     InstanceLocatorInit(void)
         : InstanceLocator()
@@ -182,7 +174,6 @@ protected:
 
 /**
  * @}
- *
  */
 
 } // namespace ot

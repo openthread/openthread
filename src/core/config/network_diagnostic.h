@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes compile-time configurations for the Network Diagnostics.
- *
  */
 
 #ifndef CONFIG_NETWORK_DIAGNOSTIC_H_
@@ -42,14 +41,12 @@
  *   This module includes configuration variables for Network Diagnostics.
  *
  * @{
- *
  */
 
 /**
  * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
  *
  * Specifies the default Vendor Name string.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME ""
@@ -59,7 +56,6 @@
  * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL
  *
  * Specifies the default Vendor Model string.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL ""
@@ -69,7 +65,6 @@
  * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION
  *
  * Specifies the default Vendor SW Version string.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION ""
@@ -79,7 +74,6 @@
  * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL
  *
  * Specifies the default Vendor App URL string.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL ""
@@ -98,7 +92,6 @@
  * `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_*` are treated as the default values (used when OT stack is initialized).
  *
  * Enabled by default for reference devices, when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is defined.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -106,7 +99,6 @@
 
 /**
  * @}
- *
  */
 
 #endif // CONFIG_NETWORK_DIAGNOSTIC_H_

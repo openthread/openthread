@@ -35,13 +35,7 @@
 
 #if OPENTHREAD_FTD
 
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/message.hpp"
 #include "instance/instance.hpp"
-#include "thread/child.hpp"
-#include "thread/mesh_forwarder.hpp"
-#include "thread/mle_tlvs.hpp"
 
 namespace ot {
 
@@ -96,14 +90,14 @@ void IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
     OT_ASSERT(!aChild.IsRxOnWhenIdle());
 
     childIndex = Get<ChildTable>().GetChildIndex(aChild);
-    VerifyOrExit(!aMessage.GetChildMask(childIndex));
+    VerifyOrExit(!aMessage.GetIndirectTxChildMask().Has(childIndex));
 
-    aMessage.SetChildMask(childIndex);
+    aMessage.GetIndirectTxChildMask().Add(childIndex);
     mSourceMatchController.IncrementMessageCount(aChild);
 
     if ((aMessage.GetType() != Message::kTypeSupervision) && (aChild.GetIndirectMessageCount() > 1))
     {
-        Message *supervisionMessage = FindIndirectMessage(aChild, /* aSupervisionTypeOnly */ true);
+        Message *supervisionMessage = FindQueuedMessageForSleepyChild(aChild, AcceptSupervisionMessage);
 
         if (supervisionMessage != nullptr)
         {
@@ -123,9 +117,9 @@ Error IndirectSender::RemoveMessageFromSleepyChild(Message &aMessage, Child &aCh
     Error    error      = kErrorNone;
     uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 
-    VerifyOrExit(aMessage.GetChildMask(childIndex), error = kErrorNotFound);
+    VerifyOrExit(aMessage.GetIndirectTxChildMask().Has(childIndex), error = kErrorNotFound);
 
-    aMessage.ClearChildMask(childIndex);
+    aMessage.GetIndirectTxChildMask().Remove(childIndex);
     mSourceMatchController.DecrementMessageCount(aChild);
 
     RequestMessageUpdate(aChild);
@@ -140,7 +134,7 @@ void IndirectSender::ClearAllMessagesForSleepyChild(Child &aChild)
 
     for (Message &message : Get<MeshForwarder>().mSendQueue)
     {
-        message.ClearChildMask(Get<ChildTable>().GetChildIndex(aChild));
+        message.GetIndirectTxChildMask().Remove(Get<ChildTable>().GetChildIndex(aChild));
 
         Get<MeshForwarder>().RemoveMessageIfNoPendingTx(message);
     }
@@ -155,6 +149,23 @@ void IndirectSender::ClearAllMessagesForSleepyChild(Child &aChild)
 
 exit:
     return;
+}
+
+const Message *IndirectSender::FindQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker) const
+{
+    const Message *match      = nullptr;
+    uint16_t       childIndex = Get<ChildTable>().GetChildIndex(aChild);
+
+    for (const Message &message : Get<MeshForwarder>().mSendQueue)
+    {
+        if (message.GetIndirectTxChildMask().Has(childIndex) && aChecker(message))
+        {
+            match = &message;
+            break;
+        }
+    }
+
+    return match;
 }
 
 void IndirectSender::SetChildUseShortAddress(Child &aChild, bool aUseShortAddress)
@@ -183,9 +194,9 @@ void IndirectSender::HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMo
 
         for (Message &message : Get<MeshForwarder>().mSendQueue)
         {
-            if (message.GetChildMask(childIndex))
+            if (message.GetIndirectTxChildMask().Has(childIndex))
             {
-                message.ClearChildMask(childIndex);
+                message.GetIndirectTxChildMask().Remove(childIndex);
                 message.SetDirectTransmission();
             }
         }
@@ -207,24 +218,6 @@ void IndirectSender::HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMo
     // case.
 }
 
-Message *IndirectSender::FindIndirectMessage(Child &aChild, bool aSupervisionTypeOnly)
-{
-    Message *msg        = nullptr;
-    uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
-
-    for (Message &message : Get<MeshForwarder>().mSendQueue)
-    {
-        if (message.GetChildMask(childIndex) &&
-            (!aSupervisionTypeOnly || (message.GetType() == Message::kTypeSupervision)))
-        {
-            msg = &message;
-            break;
-        }
-    }
-
-    return msg;
-}
-
 void IndirectSender::RequestMessageUpdate(Child &aChild)
 {
     Message *curMessage = aChild.GetIndirectMessage();
@@ -235,7 +228,7 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
     // case where we have a pending "replace frame" request and while
     // waiting for the callback, the current message is removed.
 
-    if ((curMessage != nullptr) && !curMessage->GetChildMask(Get<ChildTable>().GetChildIndex(aChild)))
+    if ((curMessage != nullptr) && !curMessage->GetIndirectTxChildMask().Has(Get<ChildTable>().GetChildIndex(aChild)))
     {
         // Set the indirect message for this child to `nullptr` to ensure
         // it is not processed on `HandleSentFrameToChild()` callback.
@@ -259,7 +252,7 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
 
     VerifyOrExit(!aChild.IsWaitingForMessageUpdate());
 
-    newMessage = FindIndirectMessage(aChild);
+    newMessage = FindQueuedMessageForSleepyChild(aChild, AcceptAnyMessage);
 
     VerifyOrExit(curMessage != newMessage);
 
@@ -302,7 +295,7 @@ exit:
 
 void IndirectSender::UpdateIndirectMessage(Child &aChild)
 {
-    Message *message = FindIndirectMessage(aChild);
+    Message *message = FindQueuedMessageForSleepyChild(aChild, AcceptAnyMessage);
 
     aChild.SetWaitingForMessageUpdate(false);
     aChild.SetIndirectMessage(message);
@@ -530,9 +523,9 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
             }
         }
 
-        if (message->GetChildMask(childIndex))
+        if (message->GetIndirectTxChildMask().Has(childIndex))
         {
-            message->ClearChildMask(childIndex);
+            message->GetIndirectTxChildMask().Remove(childIndex);
             mSourceMatchController.DecrementMessageCount(aChild);
         }
 
@@ -559,6 +552,18 @@ void IndirectSender::ClearMessagesForRemovedChildren(void)
 
         ClearAllMessagesForSleepyChild(child);
     }
+}
+
+bool IndirectSender::AcceptAnyMessage(const Message &aMessage)
+{
+    OT_UNUSED_VARIABLE(aMessage);
+
+    return true;
+}
+
+bool IndirectSender::AcceptSupervisionMessage(const Message &aMessage)
+{
+    return aMessage.GetType() == Message::kTypeSupervision;
 }
 
 } // namespace ot

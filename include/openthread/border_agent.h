@@ -48,60 +48,43 @@ extern "C" {
  *   This module includes functions for the Thread Border Agent role.
  *
  * @{
- *
  */
 
 /**
  * The length of Border Agent/Router ID in bytes.
- *
  */
 #define OT_BORDER_AGENT_ID_LENGTH (16)
 
 /**
  * Minimum length of the ephemeral key string.
- *
  */
 #define OT_BORDER_AGENT_MIN_EPHEMERAL_KEY_LENGTH (6)
 
 /**
  * Maximum length of the ephemeral key string.
- *
  */
 #define OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_LENGTH (32)
 
 /**
  * Default ephemeral key timeout interval in milliseconds.
- *
  */
 #define OT_BORDER_AGENT_DEFAULT_EPHEMERAL_KEY_TIMEOUT (2 * 60 * 1000u)
 
 /**
  * Maximum ephemeral key timeout interval in milliseconds.
- *
  */
 #define OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_TIMEOUT (10 * 60 * 1000u)
 
 /**
- * @struct otBorderAgentId
- *
- * Represents a Border Agent ID.
- *
+ * Represents a Border Agent Identifier.
  */
-OT_TOOL_PACKED_BEGIN
-struct otBorderAgentId
+typedef struct otBorderAgentId
 {
-    uint8_t mId[OT_BORDER_AGENT_ID_LENGTH];
-} OT_TOOL_PACKED_END;
-
-/**
- * Represents a Border Agent ID.
- *
- */
-typedef struct otBorderAgentId otBorderAgentId;
+    uint8_t mId[OT_BORDER_AGENT_ID_LENGTH]; ///< Border Agent ID bytes.
+} otBorderAgentId;
 
 /**
  * Defines the Border Agent state.
- *
  */
 typedef enum otBorderAgentState
 {
@@ -138,7 +121,6 @@ typedef struct otBorderAgentCounters
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  * @returns A pointer to the Border Agent counters.
- *
  */
 const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance);
 
@@ -148,7 +130,6 @@ const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance);
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  * @returns The current #otBorderAgentState of the Border Agent.
- *
  */
 otBorderAgentState otBorderAgentGetState(otInstance *aInstance);
 
@@ -158,7 +139,6 @@ otBorderAgentState otBorderAgentGetState(otInstance *aInstance);
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  * @returns UDP port of the Border Agent.
- *
  */
 uint16_t otBorderAgentGetUdpPort(otInstance *aInstance);
 
@@ -178,7 +158,6 @@ uint16_t otBorderAgentGetUdpPort(otInstance *aInstance);
  * @retval ...            If failed to retrieve the Border Agent ID.
  *
  * @sa otBorderAgentSetId
- *
  */
 otError otBorderAgentGetId(otInstance *aInstance, otBorderAgentId *aId);
 
@@ -198,7 +177,6 @@ otError otBorderAgentGetId(otInstance *aInstance, otBorderAgentId *aId);
  * @retval ...            If failed to set the Border Agent ID.
  *
  * @sa otBorderAgentGetId
- *
  */
 otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId);
 
@@ -217,9 +195,10 @@ otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId);
  * Setting the ephemeral key again before a previously set key has timed out will replace the previously set key and
  * reset the timeout.
  *
- * While the timeout interval is in effect, the ephemeral key can be used only once by an external commissioner to
- * connect. Once the commissioner disconnects, the ephemeral key is cleared, and the Border Agent reverts to using
- * PSKc.
+ * During the timeout interval, the ephemeral key can be used only once by an external commissioner to establish a
+ * connection. After the commissioner disconnects, the ephemeral key is cleared, and the Border Agent reverts to
+ * using PSKc. If the timeout expires while a commissioner is still connected, the session will be terminated, and the
+ * Border Agent will cease using the ephemeral key and revert to PSKc.
  *
  * @param[in] aInstance    The OpenThread instance.
  * @param[in] aKeyString   The ephemeral key string (used as PSK excluding the trailing null `\0` character).
@@ -235,7 +214,6 @@ otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId);
  * @retval OT_ERROR_INVALID_ARGS   The given @p aKeyString is not valid (too short or too long).
  * @retval OT_ERROR_FAILED         Failed to set the key (e.g., could not bind to UDP port).
 
- *
  */
 otError otBorderAgentSetEphemeralKey(otInstance *aInstance,
                                      const char *aKeyString,
@@ -252,10 +230,9 @@ otError otBorderAgentSetEphemeralKey(otInstance *aInstance,
  *
  * If a commissioner is connected using the ephemeral key and is currently active, calling this function does not
  * change its state. In this case the `otBorderAgentIsEphemeralKeyActive()` will continue to return `TRUE` until the
- * commissioner disconnects.
+ * commissioner disconnects, or the ephemeral key timeout expires.
  *
  * @param[in] aInstance    The OpenThread instance.
- *
  */
 void otBorderAgentClearEphemeralKey(otInstance *aInstance);
 
@@ -268,7 +245,6 @@ void otBorderAgentClearEphemeralKey(otInstance *aInstance);
  *
  * @retval TRUE    An ephemeral key is active.
  * @retval FALSE   No ephemeral key is active.
- *
  */
 bool otBorderAgentIsEphemeralKeyActive(otInstance *aInstance);
 
@@ -288,7 +264,6 @@ bool otBorderAgentIsEphemeralKeyActive(otInstance *aInstance);
  * Any OpenThread API, including `otBorderAgent` APIs, can be safely called from this callback.
  *
  * @param[in] aContext   A pointer to an arbitrary context (provided when callback is set).
- *
  */
 typedef void (*otBorderAgentEphemeralKeyCallback)(void *aContext);
 
@@ -302,15 +277,26 @@ typedef void (*otBorderAgentEphemeralKeyCallback)(void *aContext);
  * @param[in] aInstance    The OpenThread instance.
  * @param[in] aCallback    The callback function pointer.
  * @param[in] aContext     The arbitrary context to use with callback.
- *
  */
 void otBorderAgentSetEphemeralKeyCallback(otInstance                       *aInstance,
                                           otBorderAgentEphemeralKeyCallback aCallback,
                                           void                             *aContext);
 
 /**
- * @}
+ * Disconnects the Border Agent from any active secure sessions.
  *
+ * If Border Agent is connected to a commissioner candidate with ephemeral key, calling this API
+ * will cause the ephemeral key to be cleared after the session is disconnected.
+ *
+ * The Border Agent state may not change immediately upon calling this method. The state will be
+ * updated when the connection update is notified with a delay.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ */
+void otBorderAgentDisconnect(otInstance *aInstance);
+
+/**
+ * @}
  */
 
 #ifdef __cplusplus

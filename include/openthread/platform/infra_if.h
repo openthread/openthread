@@ -30,7 +30,6 @@
  * @file
  * @brief
  *   This file includes the platform abstraction for the infrastructure network interface.
- *
  */
 
 #ifndef OPENTHREAD_PLATFORM_INFRA_IF_H_
@@ -46,6 +45,17 @@
 extern "C" {
 #endif
 
+#define OT_PLAT_INFRA_IF_MAX_LINK_LAYER_ADDR_LENGTH 16 ///< Maximum InfraIf Link-layer address length.
+
+/**
+ * Represents an InfraIf Link-Layer Address.
+ */
+typedef struct otPlatInfraIfLinkLayerAddress
+{
+    uint8_t mAddress[OT_PLAT_INFRA_IF_MAX_LINK_LAYER_ADDR_LENGTH]; ///< The link-layer address bytes.
+    uint8_t mLength;                                               ///< The address length (number of bytes).
+} otPlatInfraIfLinkLayerAddress;
+
 /**
  * @addtogroup plat-infra-if
  *
@@ -53,7 +63,6 @@ extern "C" {
  *   This module includes the platform abstraction for the adjacent infrastructure network interface.
  *
  * @{
- *
  */
 
 /**
@@ -63,7 +72,6 @@ extern "C" {
  * @param[in]  aAddress       The IPv6 address.
  *
  * @returns  TRUE if the infra interface has given IPv6 address assigned, FALSE otherwise.
- *
  */
 bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress);
 
@@ -83,7 +91,6 @@ bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddres
  *
  * @retval OT_ERROR_NONE    Successfully sent the ICMPv6 message.
  * @retval OT_ERROR_FAILED  Failed to send the ICMPv6 message.
- *
  */
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
@@ -104,7 +111,6 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
  *
  * @note  Per RFC 4861, the caller should enforce that the source address MUST be a IPv6 link-local
  *        address and the IP Hop Limit MUST be 255.
- *
  */
 extern void otPlatInfraIfRecvIcmp6Nd(otInstance         *aInstance,
                                      uint32_t            aInfraIfIndex,
@@ -129,7 +135,6 @@ extern void otPlatInfraIfRecvIcmp6Nd(otInstance         *aInstance,
  * @retval  OT_ERROR_INVALID_STATE  The Routing Manager is not initialized.
  * @retval  OT_ERROR_INVALID_ARGS   The @p aInfraIfIndex doesn't match the infra interface the
  *                                  Routing Manager are initialized with.
- *
  */
 extern otError otPlatInfraIfStateChanged(otInstance *aInstance, uint32_t aInfraIfIndex, bool aIsRunning);
 
@@ -142,7 +147,6 @@ extern otError otPlatInfraIfStateChanged(otInstance *aInstance, uint32_t aInfraI
  *
  * @retval  OT_ERROR_NONE    Successfully request NAT64 prefix discovery.
  * @retval  OT_ERROR_FAILED  Failed to request NAT64 prefix discovery.
- *
  */
 otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex);
 
@@ -156,15 +160,30 @@ otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex);
  * @param[in]  aInstance      The OpenThread instance structure.
  * @param[in]  aInfraIfIndex  The index of the infrastructure interface on which the NAT64 prefix is discovered.
  * @param[in]  aIp6Prefix     A pointer to NAT64 prefix.
- *
  */
 extern void otPlatInfraIfDiscoverNat64PrefixDone(otInstance        *aInstance,
                                                  uint32_t           aInfraIfIndex,
                                                  const otIp6Prefix *aIp6Prefix);
 
 /**
- * @}
+ * Get the link-layer address of the infrastructure interface.
  *
+ * OpenThread invokes this method when the address is required, for example: when generating an ND6 message
+ * which includes a source link-layer address option.
+ *
+ * @param[in]  aInstance                    The OpenThread instance structure.
+ * @param[in]  aInfraIfIndex                The index of the infrastructure interface.
+ * @param[out] aInfraIfLinkLayerAddress     A pointer to infrastructure interface link-layer address.
+ *
+ * @retval  OT_ERROR_NONE    Successfully get the infrastructure interface link-layer address.
+ * @retval  OT_ERROR_FAILED  Failed to get the infrastructure interface link-layer address.
+ */
+otError otPlatGetInfraIfLinkLayerAddress(otInstance                    *aInstance,
+                                         uint32_t                       aIfIndex,
+                                         otPlatInfraIfLinkLayerAddress *aInfraIfLinkLayerAddress);
+
+/**
+ * @}
  */
 
 #ifdef __cplusplus

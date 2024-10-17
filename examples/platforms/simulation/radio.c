@@ -1144,8 +1144,11 @@ void otPlatRadioSetMacKey(otInstance             *aInstance,
 
     otEXPECT(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
 
-    sRadioContext.mKeyId   = aKeyId;
-    sRadioContext.mKeyType = aKeyType;
+    sRadioContext.mKeyId               = aKeyId;
+    sRadioContext.mKeyType             = aKeyType;
+    sRadioContext.mPrevMacFrameCounter = sRadioContext.mMacFrameCounter;
+    sRadioContext.mMacFrameCounter     = 0;
+
     memcpy(&sRadioContext.mPrevKey, aPrevKey, sizeof(otMacKeyMaterial));
     memcpy(&sRadioContext.mCurrKey, aCurrKey, sizeof(otMacKeyMaterial));
     memcpy(&sRadioContext.mNextKey, aNextKey, sizeof(otMacKeyMaterial));

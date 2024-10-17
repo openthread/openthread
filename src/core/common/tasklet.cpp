@@ -34,7 +34,7 @@
 #include "tasklet.hpp"
 
 #include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 

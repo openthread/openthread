@@ -33,12 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/dataset.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
-#include "meshcop/dataset_manager.hpp"
-#include "meshcop/meshcop.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 

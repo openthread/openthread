@@ -29,7 +29,6 @@
 /**
  * This header file defines the OpenThread core configuration example for an Border Router. This is intended for use
  * in `script/check-size`.
- *
  */
 
 #ifndef OT_CORE_CONFIG_CHECK_SIZE_BR_H_

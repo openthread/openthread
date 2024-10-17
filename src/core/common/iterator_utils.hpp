@@ -43,7 +43,6 @@ namespace ot {
  *   This module includes definitions for OpenThread generic item-pointer iterator class.
  *
  * @{
- *
  */
 
 /**
@@ -59,7 +58,6 @@ namespace ot {
  * @tparam  IteratorType  The Iterator class that inherits this class. The class MUST have a method `Advance()` which
  *                        moves the pointer to the next. `Advance()` SHALL NOT be called when `IsDone()` is `true` and
  *                        would set the pointer to `nullptr` when there's no more elements.
- *
  */
 template <typename ItemType, typename IteratorType> class ItemPtrIterator
 {
@@ -69,7 +67,6 @@ public:
      *
      * @retval TRUE   There are no more items to be accessed (iterator has reached the end).
      * @retval FALSE  The current item is valid.
-     *
      */
     bool IsDone(void) const { return mItem == nullptr; }
 
@@ -79,7 +76,6 @@ public:
      * The iterator is moved to point to the next item using IteratorType's `Advance` method.
      * If there are no more items, the iterator becomes empty (i.e., `operator*` returns `nullptr` and `IsDone()`
      * returns `true`).
-     *
      */
     void operator++(void) { static_cast<IteratorType *>(this)->Advance(); }
 
@@ -89,7 +85,6 @@ public:
      * The iterator is moved to point to the next item using IteratorType's `Advance` method.
      * If there are no more items, the iterator becomes empty (i.e., `operator*` returns `nullptr` and `IsDone()`
      * returns `true`).
-     *
      */
     void operator++(int) { static_cast<IteratorType *>(this)->Advance(); }
 
@@ -100,7 +95,6 @@ public:
      * MUST be used when the iterator is not empty/finished (i.e., `IsDone()` returns `false`).
      *
      * @returns A reference to the item currently pointed by the iterator.
-     *
      */
     ItemType &operator*(void) { return *mItem; }
 
@@ -109,7 +103,6 @@ public:
      * currently pointing.
      *
      * @returns A pointer to the item associated with the iterator, or `nullptr` if iterator is empty/done.
-     *
      */
     ItemType *operator->(void) { return mItem; }
 
@@ -121,7 +114,6 @@ public:
      *
      * @retval TRUE   If the two `Iterator` objects point to the same item or both are done.
      * @retval FALSE  If the two `Iterator` objects do not point to the same item.
-     *
      */
     bool operator==(const IteratorType &aOther) const { return mItem == aOther.mItem; }
 
@@ -133,14 +125,12 @@ public:
      *
      * @retval TRUE   If the two `Iterator` objects do not point to the same item.
      * @retval FALSE  If the two `Iterator` objects point to the same item or both are done.
-     *
      */
     bool operator!=(const IteratorType &aOther) const { return mItem != aOther.mItem; }
 
 protected:
     /**
      * Default constructor
-     *
      */
     ItemPtrIterator(void)
         : mItem(nullptr)
@@ -149,7 +139,6 @@ protected:
 
     /**
      * Constructor with an Item pointer.
-     *
      */
     explicit ItemPtrIterator(ItemType *item)
         : mItem(item)
@@ -161,7 +150,6 @@ protected:
 
 /**
  * @}
- *
  */
 
 } // namespace ot

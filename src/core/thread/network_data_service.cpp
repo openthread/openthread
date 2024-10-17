@@ -29,15 +29,11 @@
 /**
  * @file
  *   This file implements function for managing Thread Network Data service/server entries.
- *
  */
 
 #include "network_data_service.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
 #include "instance/instance.hpp"
-#include "thread/network_data_local.hpp"
 
 namespace ot {
 namespace NetworkData {

@@ -134,7 +134,7 @@ case ${build_config} in
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
         ninja || die
-        cp -p ${top_builddir}/examples/apps/ncp/ot-ncp-ftd ${top_builddir}/examples/apps/ncp/ot-ncp-ftd-15.4
+        cp -p "${top_builddir}/examples/apps/ncp/ot-ncp-ftd" "${top_builddir}/examples/apps/ncp/ot-ncp-ftd-15.4"
         ;;
 
     ncp-trel)
@@ -150,7 +150,7 @@ case ${build_config} in
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
         ninja || die
-        cp -p ${top_builddir}/examples/apps/ncp/ot-ncp-ftd ${top_builddir}/examples/apps/ncp/ot-ncp-ftd-trel
+        cp -p "${top_builddir}/examples/apps/ncp/ot-ncp-ftd" "${top_builddir}/examples/apps/ncp/ot-ncp-ftd-trel"
         ;;
 
     ncp-15.4+trel | ncp-trel+15.4)
@@ -166,7 +166,7 @@ case ${build_config} in
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
         ninja || die
-        cp -p ${top_builddir}/examples/apps/ncp/ot-ncp-ftd ${top_builddir}/examples/apps/ncp/ot-ncp-ftd-15.4-trel
+        cp -p "${top_builddir}/examples/apps/ncp/ot-ncp-ftd" "${top_builddir}/examples/apps/ncp/ot-ncp-ftd-15.4-trel"
         ;;
 
     cli | cli-)
@@ -194,7 +194,7 @@ case ${build_config} in
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
         ninja || die
-        cp -p ${top_builddir}/examples/apps/cli/ot-cli-ftd ${top_builddir}/examples/apps/cli/ot-cli-ftd-15.4
+        cp -p "${top_builddir}/examples/apps/cli/ot-cli-ftd" "${top_builddir}/examples/apps/cli/ot-cli-ftd-15.4"
         ;;
 
     cli-trel)
@@ -209,7 +209,7 @@ case ${build_config} in
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
         ninja || die
-        cp -p ${top_builddir}/examples/apps/cli/ot-cli-ftd ${top_builddir}/examples/apps/cli/ot-cli-ftd-trel
+        cp -p "${top_builddir}/examples/apps/cli/ot-cli-ftd" "${top_builddir}/examples/apps/cli/ot-cli-ftd-trel"
         ;;
 
     cli-15.4+trel | cli-trel+15.4)
@@ -224,7 +224,7 @@ case ${build_config} in
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
         ninja || die
-        cp -p ${top_builddir}/examples/apps/cli/ot-cli-ftd ${top_builddir}/examples/apps/cli/ot-cli-ftd-15.4-trel
+        cp -p "${top_builddir}/examples/apps/cli/ot-cli-ftd" "${top_builddir}/examples/apps/cli/ot-cli-ftd-15.4-trel"
         ;;
 
     rcp)

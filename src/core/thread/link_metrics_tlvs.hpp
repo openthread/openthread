@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes definitions for generating and processing Link Metrics TLVs.
- *
  */
 
 #ifndef LINK_METRICS_TLVS_HPP_
@@ -52,14 +51,12 @@ namespace LinkMetrics {
 
 /**
  * Defines constants related to Link Metrics Sub-TLVs.
- *
  */
 class SubTlv
 {
 public:
     /**
      * Link Metrics Sub-TLV types.
-     *
      */
     enum Type : uint8_t
     {
@@ -74,19 +71,16 @@ public:
 
 /**
  * Defines Link Metrics Query ID Sub-TLV constants and types.
- *
  */
 typedef UintTlvInfo<SubTlv::kQueryId, uint8_t> QueryIdSubTlv;
 
 /**
  * Defines a Link Metrics Status Sub-Tlv.
- *
  */
 typedef UintTlvInfo<SubTlv::kStatus, uint8_t> StatusSubTlv;
 
 /**
  * Implements Link Metrics Report Sub-TLV generation and parsing.
- *
  */
 OT_TOOL_PACKED_BEGIN
 class ReportSubTlv : public Tlv, public TlvInfo<SubTlv::kReport>
@@ -96,7 +90,6 @@ public:
 
     /**
      * Initializes the TLV.
-     *
      */
     void Init(void) { SetType(SubTlv::kReport); }
 
@@ -105,7 +98,6 @@ public:
      *
      * @retval true   The TLV appears to be well-formed.
      * @retval false  The TLV does not appear to be well-formed.
-     *
      */
     bool IsValid(void) const { return GetLength() >= kMinLength; }
 
@@ -113,7 +105,6 @@ public:
      * Returns the Link Metrics Type ID.
      *
      * @returns The Link Metrics Type ID.
-     *
      */
     uint8_t GetMetricsTypeId(void) const { return mMetricsTypeId; }
 
@@ -121,7 +112,6 @@ public:
      * Sets the Link Metrics Type ID.
      *
      * @param[in]  aMetricsTypeId  The Link Metrics Type ID to set.
-     *
      */
     void SetMetricsTypeId(uint8_t aMetricsTypeId) { mMetricsTypeId = aMetricsTypeId; }
 
@@ -129,7 +119,6 @@ public:
      * Returns the metric value in 8 bits.
      *
      * @returns The metric value.
-     *
      */
     uint8_t GetMetricsValue8(void) const { return mMetricsValue.m8; }
 
@@ -137,7 +126,6 @@ public:
      * Returns the metric value in 32 bits.
      *
      * @returns The metric value.
-     *
      */
     uint32_t GetMetricsValue32(void) const { return BigEndian::HostSwap32(mMetricsValue.m32); }
 
@@ -145,7 +133,6 @@ public:
      * Sets the metric value (8 bits).
      *
      * @param[in]  aMetricsValue  Metrics value.
-     *
      */
     void SetMetricsValue8(uint8_t aMetricsValue)
     {
@@ -157,7 +144,6 @@ public:
      * Sets the metric value (32 bits).
      *
      * @param[in]  aMetricsValue  Metrics value.
-     *
      */
     void SetMetricsValue32(uint32_t aMetricsValue)
     {
@@ -176,7 +162,6 @@ private:
 
 /**
  * Implements Link Metrics Query Options Sub-TLV generation and parsing.
- *
  */
 OT_TOOL_PACKED_BEGIN
 class QueryOptionsSubTlv : public Tlv, public TlvInfo<SubTlv::kQueryOptions>
@@ -184,7 +169,6 @@ class QueryOptionsSubTlv : public Tlv, public TlvInfo<SubTlv::kQueryOptions>
 public:
     /**
      * Initializes the TLV.
-     *
      */
     void Init(void)
     {
@@ -197,7 +181,6 @@ public:
      *
      * @retval TRUE   If the TLV appears to be well-formed.
      * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
      */
     bool IsValid(void) const { return GetLength() >= sizeof(uint8_t); }
 
@@ -205,7 +188,6 @@ public:
 
 /**
  * Defines Link Metrics Forward Probing Registration Sub-TLV.
- *
  */
 OT_TOOL_PACKED_BEGIN
 class FwdProbingRegSubTlv : public Tlv, public TlvInfo<SubTlv::kFwdProbingReg>
@@ -215,7 +197,6 @@ public:
 
     /**
      * Initializes the TLV.
-     *
      */
     void Init(void)
     {
@@ -228,7 +209,6 @@ public:
      *
      * @retval true   The TLV appears to be well-formed.
      * @retval false  The TLV does not appear to be well-formed.
-     *
      */
     bool IsValid(void) const { return GetLength() >= kMinLength; }
 
@@ -236,7 +216,6 @@ public:
      * Gets the Forward Series ID value.
      *
      * @returns The Forward Series ID.
-     *
      */
     uint8_t GetSeriesId(void) const { return mSeriesId; }
 
@@ -244,7 +223,6 @@ public:
      * Sets the Forward Series ID value.
      *
      * @param[in] aSeriesId  The Forward Series ID.
-     *
      */
     void SetSeriesId(uint8_t aSeriesId) { mSeriesId = aSeriesId; }
 
@@ -252,7 +230,6 @@ public:
      * Gets the Forward Series Flags bit-mask.
      *
      * @returns The Forward Series Flags mask.
-     *
      */
     uint8_t GetSeriesFlagsMask(void) const { return mSeriesFlagsMask; }
 
@@ -260,7 +237,6 @@ public:
      * Sets the Forward Series Flags bit-mask
      *
      * @param[in] aSeriesFlagsMask  The Forward Series Flags.
-     *
      */
     void SetSeriesFlagsMask(uint8_t aSeriesFlagsMask) { mSeriesFlagsMask = aSeriesFlagsMask; }
 
@@ -268,7 +244,6 @@ public:
      * Gets the start of Type ID array.
      *
      * @returns The start of Type ID array. Array has `kMaxTypeIds` max length.
-     *
      */
     uint8_t *GetTypeIds(void) { return mTypeIds; }
 
@@ -286,7 +261,6 @@ public:
 
     /**
      * Initializes the TLV.
-     *
      */
     void Init(void)
     {
@@ -299,7 +273,6 @@ public:
      *
      * @retval true   The TLV appears to be well-formed.
      * @retval false  The TLV does not appear to be well-formed.
-     *
      */
     bool IsValid(void) const { return GetLength() >= kMinLength; }
 
@@ -307,7 +280,6 @@ public:
      * Gets the Enhanced ACK Flags.
      *
      * @returns The Enhanced ACK Flags.
-     *
      */
     uint8_t GetEnhAckFlags(void) const { return mEnhAckFlags; }
 
@@ -315,7 +287,6 @@ public:
      * Sets Enhanced ACK Flags.
      *
      * @param[in] aEnhAckFlags  The value of Enhanced ACK Flags.
-     *
      */
     void SetEnhAckFlags(EnhAckFlags aEnhAckFlags) { mEnhAckFlags = aEnhAckFlags; }
 
@@ -323,7 +294,6 @@ public:
      * Gets the start of Type ID array.
      *
      * @returns The start of Type ID array. Array has `kMaxTypeIds` max length.
-     *
      */
     uint8_t *GetTypeIds(void) { return mTypeIds; }
 

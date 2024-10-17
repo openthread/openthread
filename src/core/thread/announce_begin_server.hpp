@@ -46,7 +46,6 @@ namespace ot {
 
 /**
  * Implements handling Announce Begin Requests.
- *
  */
 class AnnounceBeginServer : public AnnounceSenderBase
 {
@@ -55,7 +54,6 @@ class AnnounceBeginServer : public AnnounceSenderBase
 public:
     /**
      * Initializes the object.
-     *
      */
     explicit AnnounceBeginServer(Instance &aInstance);
 
@@ -65,7 +63,6 @@ public:
      * @param[in]  aChannelMask   The channels to use for transmission.
      * @param[in]  aCount         The number of transmissions per channel.
      * @param[in]  aPeriod        The time between transmissions (milliseconds).
-     *
      */
     void SendAnnounce(uint32_t aChannelMask, uint8_t aCount = kDefaultCount, uint16_t aPeriod = kDefaultPeriod);
 

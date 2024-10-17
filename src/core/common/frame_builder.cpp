@@ -45,11 +45,11 @@
 
 namespace ot {
 
-void FrameBuilder::Init(void *aBuffer, uint16_t aLength)
+void FrameBuilder::Init(void *aBuffer, uint16_t aMaxLength)
 {
     mBuffer    = static_cast<uint8_t *>(aBuffer);
     mLength    = 0;
-    mMaxLength = aLength;
+    mMaxLength = aMaxLength;
 }
 
 Error FrameBuilder::AppendUint8(uint8_t aUint8) { return Append<uint8_t>(aUint8); }
@@ -117,6 +117,18 @@ exit:
     return error;
 }
 #endif
+
+void *FrameBuilder::AppendLength(uint16_t aLength)
+{
+    void *buffer = nullptr;
+
+    VerifyOrExit(CanAppend(aLength));
+    buffer = &mBuffer[mLength];
+    mLength += aLength;
+
+exit:
+    return buffer;
+}
 
 void FrameBuilder::WriteBytes(uint16_t aOffset, const void *aBuffer, uint16_t aLength)
 {

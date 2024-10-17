@@ -56,7 +56,6 @@
  * Initializes the NCP app.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
- *
  */
 extern void otAppNcpInit(otInstance *aInstance);
 extern void otAppNcpInitMulti(otInstance **aInstances, uint8_t count);

@@ -57,19 +57,16 @@ public:
      * Initializes the Thread network interface.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit ThreadNetif(Instance &aInstance);
 
     /**
      * Enables the Thread network interface.
-     *
      */
     void Up(void);
 
     /**
      * Disables the Thread network interface.
-     *
      */
     void Down(void);
 
@@ -78,7 +75,6 @@ public:
      *
      * @retval TRUE   If the Thread network interface is enabled.
      * @retval FALSE  If the Thread network interface is not enabled.
-     *
      */
     bool IsUp(void) const { return mIsUp; }
 

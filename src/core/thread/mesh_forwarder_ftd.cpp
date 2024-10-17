@@ -35,12 +35,7 @@
 
 #if OPENTHREAD_FTD
 
-#include "common/locator_getters.hpp"
-#include "common/num_utils.hpp"
-#include "meshcop/meshcop.hpp"
-#include "net/ip6.hpp"
-#include "net/tcp6.hpp"
-#include "net/udp6.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -249,7 +244,7 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority)
                 continue;
             }
 
-            if (message->IsChildPending())
+            if (!message->GetIndirectTxChildMask().IsEmpty())
             {
                 evict = message;
                 ExitNow(error = kErrorNone);
@@ -260,7 +255,7 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority)
 exit:
     if ((error == kErrorNone) && (evict != nullptr))
     {
-        EvictMessage(*evict);
+        FinalizeAndRemoveMessage(*evict, kErrorNoBufs, kMessageEvict);
     }
 
     return error;
@@ -304,41 +299,42 @@ void MeshForwarder::RemoveMessagesForChild(Child &aChild, MessageChecker &aMessa
     }
 }
 
+void MeshForwarder::FinalizeMessageIndirectTxs(Message &aMessage)
+{
+    VerifyOrExit(!aMessage.GetIndirectTxChildMask().IsEmpty());
+
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
+    {
+        IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, child));
+        VerifyOrExit(!aMessage.GetIndirectTxChildMask().IsEmpty());
+    }
+
+exit:
+    return;
+}
+
 void MeshForwarder::RemoveDataResponseMessages(void)
 {
-    Ip6::Header ip6Header;
-
     for (Message &message : mSendQueue)
     {
-        if (message.GetSubType() != Message::kSubTypeMleDataResponse)
+        if (message.IsMleCommand(Mle::kCommandDataResponse))
         {
-            continue;
+            FinalizeAndRemoveMessage(message, kErrorDrop, kMessageDrop);
         }
-
-        IgnoreError(message.Read(0, ip6Header));
-
-        if (!(ip6Header.GetDestination().IsMulticast()))
-        {
-            for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
-            {
-                IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(message, child));
-            }
-        }
-
-        LogMessage(kMessageDrop, message);
-        FinalizeMessageDirectTx(message, kErrorDrop);
-        RemoveMessageIfNoPendingTx(message);
     }
 }
 
 void MeshForwarder::SendMesh(Message &aMessage, Mac::TxFrame &aFrame)
 {
-    Mac::PanIds panIds;
+    Mac::TxFrame::Info frameInfo;
 
-    panIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
+    frameInfo.mType          = Mac::Frame::kTypeData;
+    frameInfo.mAddrs         = mMacAddrs;
+    frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
+    frameInfo.mKeyIdMode     = Mac::Frame::kKeyIdMode1;
+    frameInfo.mPanIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
 
-    PrepareMacHeaders(aFrame, Mac::Frame::kTypeData, mMacAddrs, panIds, Mac::Frame::kSecurityEncMic32,
-                      Mac::Frame::kKeyIdMode1, &aMessage);
+    PrepareMacHeaders(aFrame, frameInfo, &aMessage);
 
     // write payload
     OT_ASSERT(aMessage.GetLength() <= aFrame.GetMaxPayloadLength());
@@ -701,53 +697,37 @@ exit:
     return;
 }
 
-bool MeshForwarder::FragmentPriorityList::UpdateOnTimeTick(void)
-{
-    bool continueRxingTicks = false;
-
-    for (Entry &entry : mEntries)
-    {
-        if (!entry.IsExpired())
-        {
-            entry.DecrementLifetime();
-
-            if (!entry.IsExpired())
-            {
-                continueRxingTicks = true;
-            }
-        }
-    }
-
-    return continueRxingTicks;
-}
-
 void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                                            uint16_t                aFragmentLength,
                                            uint16_t                aSrcRloc16,
                                            Message::Priority       aPriority)
 {
-    FragmentPriorityList::Entry *entry;
+    FwdFrameInfo *entry;
 
-    entry = mFragmentPriorityList.FindEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag());
+    entry = FindFwdFrameInfoEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag());
 
     if (entry == nullptr)
     {
         VerifyOrExit(aFragmentHeader.GetDatagramOffset() == 0);
 
-        mFragmentPriorityList.AllocateEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag(), aPriority);
+        entry = mFwdFrameInfoArray.PushBack();
+        VerifyOrExit(entry != nullptr);
+
+        entry->Init(aSrcRloc16, aFragmentHeader.GetDatagramTag(), aPriority);
         Get<TimeTicker>().RegisterReceiver(TimeTicker::kMeshForwarder);
+
         ExitNow();
     }
 
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
     OT_UNUSED_VARIABLE(aFragmentLength);
 #else
-    // We can clear the entry in `mFragmentPriorityList` if it is the
+    // We can remove the entry in `mFwdFrameInfoArray` if it is the
     // last fragment. But if "delay aware active queue management" is
     // used we need to keep entry until the message is sent.
     if (aFragmentHeader.GetDatagramOffset() + aFragmentLength >= aFragmentHeader.GetDatagramSize())
     {
-        entry->Clear();
+        mFwdFrameInfoArray.Remove(*entry);
     }
     else
 #endif
@@ -759,55 +739,51 @@ exit:
     return;
 }
 
-MeshForwarder::FragmentPriorityList::Entry *MeshForwarder::FragmentPriorityList::FindEntry(uint16_t aSrcRloc16,
-                                                                                           uint16_t aTag)
+void MeshForwarder::FwdFrameInfo::Init(uint16_t aSrcRloc16, uint16_t aDatagramTag, Message::Priority aPriority)
 {
-    Entry *rval = nullptr;
-
-    for (Entry &entry : mEntries)
-    {
-        if (!entry.IsExpired() && entry.Matches(aSrcRloc16, aTag))
-        {
-            rval = &entry;
-            break;
-        }
-    }
-
-    return rval;
+    mSrcRloc16   = aSrcRloc16;
+    mDatagramTag = aDatagramTag;
+    mLifetime    = kLifetime;
+    mPriority    = aPriority;
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+    mShouldDrop = false;
+#endif
 }
 
-MeshForwarder::FragmentPriorityList::Entry *MeshForwarder::FragmentPriorityList::AllocateEntry(
-    uint16_t          aSrcRloc16,
-    uint16_t          aTag,
-    Message::Priority aPriority)
+bool MeshForwarder::FwdFrameInfo::Matches(const Info &aInfo) const
 {
-    Entry *newEntry = nullptr;
+    return (mSrcRloc16 == aInfo.mSrcRloc16) && (mDatagramTag == aInfo.mDatagramTag);
+}
 
-    for (Entry &entry : mEntries)
+MeshForwarder::FwdFrameInfo *MeshForwarder::FindFwdFrameInfoEntry(uint16_t aSrcRloc16, uint16_t aDatagramTag)
+{
+    FwdFrameInfo::Info info;
+
+    info.mSrcRloc16   = aSrcRloc16;
+    info.mDatagramTag = aDatagramTag;
+
+    return mFwdFrameInfoArray.FindMatching(info);
+}
+
+bool MeshForwarder::UpdateFwdFrameInfoArrayOnTimeTick(void)
+{
+    for (FwdFrameInfo &entry : mFwdFrameInfoArray)
     {
-        if (entry.IsExpired())
-        {
-            entry.Clear();
-            entry.mSrcRloc16   = aSrcRloc16;
-            entry.mDatagramTag = aTag;
-            entry.mPriority    = aPriority;
-            entry.ResetLifetime();
-            newEntry = &entry;
-            break;
-        }
+        entry.DecrementLifetime();
     }
 
-    return newEntry;
+    mFwdFrameInfoArray.RemoveAllMatching(FwdFrameInfo::kIsExpired);
+
+    return !mFwdFrameInfoArray.IsEmpty();
 }
 
 Error MeshForwarder::GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                                          uint16_t                aSrcRloc16,
                                          Message::Priority      &aPriority)
 {
-    Error                        error = kErrorNone;
-    FragmentPriorityList::Entry *entry;
+    Error               error = kErrorNone;
+    const FwdFrameInfo *entry = FindFwdFrameInfoEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag());
 
-    entry = mFragmentPriorityList.FindEntry(aSrcRloc16, aFragmentHeader.GetDatagramTag());
     VerifyOrExit(entry != nullptr, error = kErrorNotFound);
     aPriority = entry->GetPriority();
 
@@ -874,14 +850,12 @@ Error MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
                                            Mac::Addresses     &aMeshAddrs,
                                            LogLevel            aLogLevel)
 {
-    Error                  error             = kErrorFailed;
-    bool                   hasFragmentHeader = false;
-    bool                   shouldLogRss;
-    Lowpan::MeshHeader     meshHeader;
-    Lowpan::FragmentHeader fragmentHeader;
-    uint16_t               headerLength;
-    bool                   shouldLogRadio = false;
-    const char            *radioString    = "";
+    Error                     error             = kErrorFailed;
+    bool                      hasFragmentHeader = false;
+    Lowpan::MeshHeader        meshHeader;
+    Lowpan::FragmentHeader    fragmentHeader;
+    uint16_t                  headerLength;
+    String<kMaxLogStringSize> string;
 
     SuccessOrExit(meshHeader.ParseFrom(aMessage, headerLength));
 
@@ -896,23 +870,17 @@ Error MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
         aOffset += headerLength;
     }
 
-    shouldLogRss = (aAction == kMessageReceive) || (aAction == kMessageReassemblyDrop);
+    string.Append("%s mesh frame, len:%u, ", MessageActionToString(aAction, aError), aMessage.GetLength());
 
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    shouldLogRadio = true;
-    radioString    = aMessage.IsRadioTypeSet() ? RadioTypeToString(aMessage.GetRadioType()) : "all";
-#endif
+    AppendMacAddrToLogString(string, aAction, aMacAddress);
 
-    LogAt(aLogLevel, "%s mesh frame, len:%d%s%s, msrc:%s, mdst:%s, hops:%d, frag:%s, sec:%s%s%s%s%s%s%s",
-          MessageActionToString(aAction, aError), aMessage.GetLength(),
-          (aMacAddress == nullptr) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
-          (aMacAddress == nullptr) ? "" : aMacAddress->ToString().AsCString(),
-          aMeshAddrs.mSource.ToString().AsCString(), aMeshAddrs.mDestination.ToString().AsCString(),
-          meshHeader.GetHopsLeft() + ((aAction == kMessageReceive) ? 1 : 0), ToYesNo(hasFragmentHeader),
-          ToYesNo(aMessage.IsLinkSecurityEnabled()),
-          (aError == kErrorNone) ? "" : ", error:", (aError == kErrorNone) ? "" : ErrorToString(aError),
-          shouldLogRss ? ", rss:" : "", shouldLogRss ? aMessage.GetRssAverager().ToString().AsCString() : "",
-          shouldLogRadio ? ", radio:" : "", radioString);
+    string.Append("msrc:%s, mdst:%s, hops:%d, frag:%s, ", aMeshAddrs.mSource.ToString().AsCString(),
+                  aMeshAddrs.mDestination.ToString().AsCString(),
+                  meshHeader.GetHopsLeft() + ((aAction == kMessageReceive) ? 1 : 0), ToYesNo(hasFragmentHeader));
+
+    AppendSecErrorPrioRssRadioLabelsToLogString(string, aAction, aMessage, aError);
+
+    LogAt(aLogLevel, "%s", string.AsCString());
 
     if (hasFragmentHeader)
     {

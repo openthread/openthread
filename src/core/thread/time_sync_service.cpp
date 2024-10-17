@@ -37,12 +37,6 @@
 
 #include "time_sync_service.hpp"
 
-#include <openthread/platform/alarm-micro.h>
-#include <openthread/platform/alarm-milli.h>
-#include <openthread/platform/time.h>
-
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "instance/instance.hpp"
 
 #define ABS(value) (((value) >= 0) ? (value) : -(value))
@@ -70,7 +64,7 @@ TimeSync::TimeSync(Instance &aInstance)
 
 TimeSync::Status TimeSync::GetTime(uint64_t &aNetworkTime) const
 {
-    aNetworkTime = static_cast<uint64_t>(static_cast<int64_t>(otPlatTimeGet()) + mNetworkTimeOffset);
+    aNetworkTime = static_cast<uint64_t>(static_cast<int64_t>(Get<Radio>().GetNow()) + mNetworkTimeOffset);
 
     return mCurrentStatus;
 }

@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes compile-time configurations for platform-specific services.
- *
  */
 
 #ifndef CONFIG_PLATFORM_H_
@@ -44,14 +43,12 @@
  *   This module includes configuration variables for platform-specific services.
  *
  * @{
- *
  */
 
 /**
  * @def OPENTHREAD_CONFIG_PLATFORM_INFO
  *
  * The platform-specific string to insert into the OpenThread version string.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_INFO
 #define OPENTHREAD_CONFIG_PLATFORM_INFO "NONE"
@@ -63,7 +60,6 @@
  * The message pool is managed by platform defined logic when this flag is set.
  * This feature would typically be used when operating in a multi-threaded system
  * and multiple threads need to access the message pool.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
 #define OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT 0
@@ -73,7 +69,6 @@
  * @def OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
  *
  * The assert is managed by platform defined logic when this flag is set.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
 #define OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT 0
@@ -83,7 +78,6 @@
  * @def OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
  *
  * Define to 1 to enable platform NETIF support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 #define OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE 0
@@ -93,7 +87,6 @@
  * @def OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
  *
  * Define to 1 to enable platform UDP support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 #define OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE 0
@@ -103,7 +96,6 @@
  * @def OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
  *
  * Define to 1 if you want to enable microsecond backoff timer implemented in platform.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 #define OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE 0
@@ -113,7 +105,6 @@
  * @def OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
  *
  * Define as 1 to enable DNSSD (mDNS) platform module.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 #define OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE 0
@@ -127,7 +118,6 @@
  *
  * This config is mainly intended for testing, allowing test-specific `otPlatDnssd` APIs to be used instead of the
  * native mDNS module in unit tests.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
 #define OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION 0
@@ -137,7 +127,6 @@
  * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
  *
  * Define to 1 if you want to enable radio coexistence implemented in platform.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 #define OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE 0
@@ -147,7 +136,6 @@
  * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT
  *
  * Define to 1 if you want to enable proprietary radio support as defined by platform.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT
 #define OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT 0
@@ -157,7 +145,6 @@
  * @def OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET
  *
  * Default NVM offset while using key refs. Platforms can override this definition based on implementation
- *
  */
 #ifndef OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET
 #define OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET 0x20000
@@ -167,7 +154,6 @@
  * @def OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
  *
  * Define to 1 if you want to enable key ref usage support as defined by platform.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 #define OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE 0
@@ -177,7 +163,6 @@
  * @def OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE
  *
  * Define to 1 if you want to make MAC keys exportable.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE
 #define OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE 0
@@ -187,7 +172,6 @@
  * @def OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
  *
  * Define as 1 to enable platform power calibration support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 #define OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE 0
@@ -213,7 +197,6 @@
 
 /**
  * @}
- *
  */
 
 #endif // CONFIG_PLATFORM_H_
