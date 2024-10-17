@@ -249,7 +249,7 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
 
             VerifyOrExit(aArgsLength > 1, error = kErrorInvalidArgs);
             SuccessOrExit(error = ParseLong(aArgs[0], value));
-            txPower = static_cast<int8_t>
+            txPower = static_cast<int8_t>(value);
         }
         else if (StringMatch(aArgs[0], "-c"))
         {
