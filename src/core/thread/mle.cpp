@@ -134,11 +134,7 @@ exit:
 
 void Mle::ScheduleChildUpdateRequest(void)
 {
-    if (mChildUpdateRequestState != kChildUpdateRequestPending)
-    {
-        mChildUpdateRequestState = kChildUpdateRequestPending;
-        ScheduleMessageTransmissionTimer();
-    }
+    mDelayedSender.ScheduleChildUpdateRequestToParent(kChildUpdateRequestDelay);
 }
 
 Error Mle::Disable(void)
@@ -684,6 +680,7 @@ void Mle::SetStateDetached(void)
     SetRole(kRoleDetached);
     SetAttachState(kAttachStateIdle);
     mAttachTimer.Stop();
+    mDelayedSender.RemoveScheduledChildUpdateRequestToParent();
     mMessageTransmissionTimer.Stop();
     mChildUpdateRequestState   = kChildUpdateRequestNone;
     mChildUpdateAttempts       = 0;
@@ -1800,9 +1797,6 @@ void Mle::ScheduleMessageTransmissionTimer(void)
     case kChildUpdateRequestNone:
         break;
 
-    case kChildUpdateRequestPending:
-        ExitNow(interval = kChildUpdateRequestPendingDelay);
-
     case kChildUpdateRequestActive:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (Get<Mac::Mac>().IsCslEnabled())
@@ -1871,18 +1865,6 @@ void Mle::HandleMessageTransmissionTimer(void)
 
         // Keep-alive "Child Update Request" only on a non-sleepy child
         VerifyOrExit(IsChild() && IsRxOnWhenIdle());
-        break;
-
-    case kChildUpdateRequestPending:
-        if (Get<Notifier>().IsPending())
-        {
-            // Add another delay to ensures the Child Update Request is sent
-            // only after all pending changes are incorporated.
-            ScheduleMessageTransmissionTimer();
-            ExitNow();
-        }
-
-        mChildUpdateAttempts = 0;
         break;
 
     case kChildUpdateRequestActive:
@@ -4292,6 +4274,26 @@ exit:
     return;
 }
 
+void Mle::DelayedSender::ScheduleChildUpdateRequestToParent(uint16_t aDelay)
+{
+    Ip6::Address destination;
+
+    destination.SetToLinkLocalAddress(Get<Mle>().mParent.GetExtAddress());
+    VerifyOrExit(!HasMatchingSchedule(kTypeChildUpdateRequestAsChild, destination));
+    AddSchedule(kTypeChildUpdateRequestAsChild, destination, aDelay, nullptr, 0);
+
+exit:
+    return;
+}
+
+void Mle::DelayedSender::RemoveScheduledChildUpdateRequestToParent(void)
+{
+    Ip6::Address destination;
+
+    destination.SetToLinkLocalAddress(Get<Mle>().mParent.GetExtAddress());
+    RemoveMatchingSchedules(kTypeChildUpdateRequestAsChild, destination);
+}
+
 #if OPENTHREAD_FTD
 
 void Mle::DelayedSender::ScheduleParentResponse(const ParentResponseInfo &aInfo, uint16_t aDelay)
@@ -4398,6 +4400,10 @@ void Mle::DelayedSender::Execute(const Schedule &aSchedule, const Header &aHeade
         IgnoreError(Get<Mle>().SendDataRequest(aHeader.mDestination));
         break;
 
+    case kTypeChildUpdateRequestAsChild:
+        IgnoreError(Get<Mle>().SendChildUpdateRequestToParent());
+        break;
+
 #if OPENTHREAD_FTD
     case kTypeParentResponse:
     {
@@ -4444,7 +4450,9 @@ bool Mle::DelayedSender::Match(const Schedule &aSchedule, MessageType aMessageTy
     Header header;
 
     header.ReadFrom(aSchedule);
-    VerifyOrExit((header.mMessageType == aMessageType) && (header.mDestination == aDestination));
+    VerifyOrExit(header.mMessageType == aMessageType);
+    VerifyOrExit(header.mDestination == aDestination);
+
     match = true;
 
 exit:
