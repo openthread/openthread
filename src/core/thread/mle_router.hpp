@@ -362,14 +362,6 @@ public:
      */
     void FillConnectivityTlv(ConnectivityTlv &aTlv);
 
-    /**
-     * Generates an MLE Child Update Request message to be sent to the parent.
-     *
-     * @retval kErrorNone     Successfully generated an MLE Child Update Request message.
-     * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Child Update Request message.
-     */
-    Error SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
-
     Error SendLinkRequest(Neighbor *aNeighbor);
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
@@ -619,11 +611,11 @@ private:
     Error    SendLinkAccept(const LinkAcceptInfo &aInfo);
     void     SendParentResponse(const ParentResponseInfo &aInfo);
     Error    SendChildIdResponse(Child &aChild);
-    Error    SendChildUpdateRequest(Child &aChild);
-    void     SendChildUpdateResponse(Child                  *aChild,
-                                     const Ip6::MessageInfo &aMessageInfo,
-                                     const TlvList          &aTlvList,
-                                     const RxChallenge      &aChallenge);
+    Error    SendChildUpdateRequestToChild(Child &aChild);
+    void     SendChildUpdateResponseToChild(Child                  *aChild,
+                                            const Ip6::MessageInfo &aMessageInfo,
+                                            const TlvList          &aTlvList,
+                                            const RxChallenge      &aChallenge);
     void     SendMulticastDataResponse(void);
     void     SendDataResponse(const Ip6::Address &aDestination,
                               const TlvList      &aTlvList,

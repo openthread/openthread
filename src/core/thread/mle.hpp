@@ -641,6 +641,14 @@ public:
      */
     void ScheduleChildUpdateRequest(void);
 
+    /**
+     * Sends a Child Update Request to the parent.
+     *
+     * @retval kErrorNone     Successfully prepared and sent an MLE Child Update Request message.
+     * @retval kErrorNoBufs   Insufficient buffers to construct the MLE Child Update Request message.
+     */
+    Error SendChildUpdateRequestToParent(void);
+
     /*
      * Indicates whether or not the device has restored the network information from
      * non-volatile settings after boot.
@@ -1262,8 +1270,7 @@ private:
     void       HandleNotifierEvents(Events aEvents);
     void       HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void       ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
-    Error      SendChildUpdateRequest(ChildUpdateRequestMode aMode);
-    Error      SendChildUpdateRequest(void);
+    Error      SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode);
     Error      SendChildUpdateResponse(const TlvList      &aTlvList,
                                        const RxChallenge  &aChallenge,
                                        const Ip6::Address &aDestination);
