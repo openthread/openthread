@@ -53,15 +53,15 @@ Mle::Mle(Instance &aInstance)
     , mReceivedResponseFromParent(false)
     , mDetachingGracefully(false)
     , mInitiallyAttachedAsSleepy(false)
+    , mWaitingForChildUpdateResponse(false)
+    , mWaitingForDataResponse(false)
     , mRole(kRoleDisabled)
     , mLastSavedRole(kRoleDisabled)
     , mDeviceMode(DeviceMode::kModeRxOnWhenIdle)
     , mAttachState(kAttachStateIdle)
     , mReattachState(kReattachStop)
     , mAttachMode(kAnyPartition)
-    , mDataRequestState(kDataRequestNone)
     , mAddressRegistrationMode(kAppendAllAddresses)
-    , mChildUpdateRequestState(kChildUpdateRequestNone)
     , mParentRequestCounter(0)
     , mChildUpdateAttempts(0)
     , mDataRequestAttempts(0)
@@ -134,11 +134,7 @@ exit:
 
 void Mle::ScheduleChildUpdateRequest(void)
 {
-    if (mChildUpdateRequestState != kChildUpdateRequestPending)
-    {
-        mChildUpdateRequestState = kChildUpdateRequestPending;
-        ScheduleMessageTransmissionTimer();
-    }
+    mDelayedSender.ScheduleChildUpdateRequestToParent(kChildUpdateRequestDelay);
 }
 
 Error Mle::Disable(void)
@@ -685,12 +681,13 @@ void Mle::SetStateDetached(void)
     SetRole(kRoleDetached);
     SetAttachState(kAttachStateIdle);
     mAttachTimer.Stop();
+    mDelayedSender.RemoveScheduledChildUpdateRequestToParent();
     mMessageTransmissionTimer.Stop();
-    mChildUpdateRequestState   = kChildUpdateRequestNone;
-    mChildUpdateAttempts       = 0;
-    mDataRequestState          = kDataRequestNone;
-    mDataRequestAttempts       = 0;
-    mInitiallyAttachedAsSleepy = false;
+    mWaitingForChildUpdateResponse = false;
+    mChildUpdateAttempts           = 0;
+    mWaitingForDataResponse        = false;
+    mDataRequestAttempts           = 0;
+    mInitiallyAttachedAsSleepy     = false;
     Get<MeshForwarder>().SetRxOnWhenIdle(true);
     Get<Mac::Mac>().SetBeaconEnabled(false);
 #if OPENTHREAD_FTD
@@ -1752,9 +1749,9 @@ Error Mle::SendDataRequest(const Ip6::Address &aDestination)
 
     if (IsChild() && !IsRxOnWhenIdle())
     {
-        mDataRequestState = kDataRequestActive;
+        mWaitingForDataResponse = true;
 
-        if (mChildUpdateRequestState == kChildUpdateRequestNone)
+        if (!mWaitingForChildUpdateResponse)
         {
             ScheduleMessageTransmissionTimer();
         }
@@ -1813,15 +1810,8 @@ void Mle::ScheduleMessageTransmissionTimer(void)
 {
     uint32_t interval = 0;
 
-    switch (mChildUpdateRequestState)
+    if (mWaitingForChildUpdateResponse)
     {
-    case kChildUpdateRequestNone:
-        break;
-
-    case kChildUpdateRequestPending:
-        ExitNow(interval = kChildUpdateRequestPendingDelay);
-
-    case kChildUpdateRequestActive:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (Get<Mac::Mac>().IsCslEnabled())
         {
@@ -1834,12 +1824,8 @@ void Mle::ScheduleMessageTransmissionTimer(void)
         }
     }
 
-    switch (mDataRequestState)
+    if (mWaitingForDataResponse)
     {
-    case kDataRequestNone:
-        break;
-
-    case kDataRequestActive:
         ExitNow(interval = kUnicastRetxDelay);
     }
 
@@ -1863,15 +1849,13 @@ void Mle::HandleMessageTransmissionTimer(void)
 {
     // The `mMessageTransmissionTimer` is used for:
     //
-    //  - Delaying kEvent notification triggered "Child Update Request" transmission (to allow aggregation),
     //  - Retransmission of "Child Update Request",
     //  - Retransmission of "Data Request" on a child,
     //  - Sending periodic keep-alive "Child Update Request" messages on a non-sleepy (rx-on) child.
 
-    switch (mChildUpdateRequestState)
+    if (!mWaitingForChildUpdateResponse)
     {
-    case kChildUpdateRequestNone:
-        if (mDataRequestState == kDataRequestActive)
+        if (mWaitingForDataResponse)
         {
             Ip6::Address destination;
 
@@ -1889,22 +1873,6 @@ void Mle::HandleMessageTransmissionTimer(void)
 
         // Keep-alive "Child Update Request" only on a non-sleepy child
         VerifyOrExit(IsChild() && IsRxOnWhenIdle());
-        break;
-
-    case kChildUpdateRequestPending:
-        if (Get<Notifier>().IsPending())
-        {
-            // Add another delay to ensures the Child Update Request is sent
-            // only after all pending changes are incorporated.
-            ScheduleMessageTransmissionTimer();
-            ExitNow();
-        }
-
-        mChildUpdateAttempts = 0;
-        break;
-
-    case kChildUpdateRequestActive:
-        break;
     }
 
     VerifyOrExit(mChildUpdateAttempts < kMaxChildKeepAliveAttempts, IgnoreError(BecomeDetached()));
@@ -1938,7 +1906,8 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
     {
         // Enable MLE retransmissions on all Child Update Request
         // messages, except when actively detaching.
-        mChildUpdateRequestState = kChildUpdateRequestActive;
+        mWaitingForChildUpdateResponse = true;
+        mDelayedSender.RemoveScheduledChildUpdateRequestToParent();
         ScheduleMessageTransmissionTimer();
     }
 
@@ -2743,7 +2712,7 @@ void Mle::HandleDataResponse(RxInfo &aRxInfo)
 
     error = HandleLeaderData(aRxInfo);
 
-    if (mDataRequestState == kDataRequestNone && !IsRxOnWhenIdle())
+    if (!mWaitingForDataResponse && !IsRxOnWhenIdle())
     {
         // Stop fast data poll request by MLE since we received
         // the response.
@@ -2903,8 +2872,8 @@ exit:
     }
     else if (error == kErrorNone)
     {
-        mDataRequestAttempts = 0;
-        mDataRequestState    = kDataRequestNone;
+        mDataRequestAttempts    = 0;
+        mWaitingForDataResponse = false;
 
         // Here the `mMessageTransmissionTimer` is intentionally not canceled
         // so that when it fires from its callback a "Child Update" is sent
@@ -3560,10 +3529,10 @@ exit:
 
     if (error == kErrorNone)
     {
-        if (mChildUpdateRequestState == kChildUpdateRequestActive)
+        if (mWaitingForChildUpdateResponse)
         {
-            mChildUpdateAttempts     = 0;
-            mChildUpdateRequestState = kChildUpdateRequestNone;
+            mChildUpdateAttempts           = 0;
+            mWaitingForChildUpdateResponse = false;
             ScheduleMessageTransmissionTimer();
         }
     }
@@ -4331,6 +4300,26 @@ exit:
     return;
 }
 
+void Mle::DelayedSender::ScheduleChildUpdateRequestToParent(uint16_t aDelay)
+{
+    Ip6::Address destination;
+
+    destination.SetToLinkLocalAddress(Get<Mle>().mParent.GetExtAddress());
+    VerifyOrExit(!HasMatchingSchedule(kTypeChildUpdateRequestAsChild, destination));
+    AddSchedule(kTypeChildUpdateRequestAsChild, destination, aDelay, nullptr, 0);
+
+exit:
+    return;
+}
+
+void Mle::DelayedSender::RemoveScheduledChildUpdateRequestToParent(void)
+{
+    Ip6::Address destination;
+
+    destination.SetToLinkLocalAddress(Get<Mle>().mParent.GetExtAddress());
+    RemoveMatchingSchedules(kTypeChildUpdateRequestAsChild, destination);
+}
+
 #if OPENTHREAD_FTD
 
 void Mle::DelayedSender::ScheduleParentResponse(const ParentResponseInfo &aInfo, uint16_t aDelay)
@@ -4447,6 +4436,10 @@ void Mle::DelayedSender::Execute(const Schedule &aSchedule)
     {
     case kTypeDataRequest:
         IgnoreError(Get<Mle>().SendDataRequest(header.mDestination));
+        break;
+
+    case kTypeChildUpdateRequestAsChild:
+        IgnoreError(Get<Mle>().SendChildUpdateRequestToParent());
         break;
 
 #if OPENTHREAD_FTD
