@@ -1845,7 +1845,9 @@ void RoutingManager::RxRaTracker::SetHeaderFlagsOn(RouterAdvert::Header &aHeader
 
 bool RoutingManager::RxRaTracker::IsAddressOnLink(const Ip6::Address &aAddress) const
 {
-    bool isOnLink = false;
+    bool isOnLink = Get<RoutingManager>().mOnLinkPrefixManager.AddressMatchesLocalPrefix(aAddress);
+
+    VerifyOrExit(!isOnLink);
 
     for (const Router &router : mRouters)
     {
@@ -2621,6 +2623,17 @@ void RoutingManager::OnLinkPrefixManager::Stop(void)
         SetState(kDeprecating);
         break;
     }
+}
+
+bool RoutingManager::OnLinkPrefixManager::AddressMatchesLocalPrefix(const Ip6::Address &aAddress) const
+{
+    bool matches = false;
+
+    VerifyOrExit(GetState() != kIdle);
+    matches = aAddress.MatchesPrefix(mLocalPrefix);
+
+exit:
+    return matches;
 }
 
 void RoutingManager::OnLinkPrefixManager::Evaluate(void)

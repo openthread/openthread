@@ -1160,6 +1160,7 @@ private:
         void               Evaluate(void);
         const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
         const Ip6::Prefix &GetFavoredDiscoveredPrefix(void) const { return mFavoredDiscoveredPrefix; }
+        bool               AddressMatchesLocalPrefix(const Ip6::Address &aAddress) const;
         bool               IsInitalEvaluationDone(void) const;
         void               HandleRaPrefixTableChanged(void);
         bool               ShouldPublishUlaRoute(void) const;
