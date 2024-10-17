@@ -31,7 +31,7 @@
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 #include "instance/instance.hpp"
-#include "utils/static-counter.hpp"
+#include "utils/static_counter.hpp"
 
 /**
  * @file

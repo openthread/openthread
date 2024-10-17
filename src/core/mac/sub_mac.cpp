@@ -39,7 +39,7 @@
 
 #include "common/code_utils.hpp"
 #include "instance/instance.hpp"
-#include "utils/static-counter.hpp"
+#include "utils/static_counter.hpp"
 
 namespace ot {
 namespace Mac {
