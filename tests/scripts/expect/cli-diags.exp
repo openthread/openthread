@@ -166,6 +166,13 @@ send "diag send 1\n"
 expect "length 0x3"
 expect "Done"
 
+send_user "send frame with tx power\n"
+send "diag frame -p 11 112233\n"
+expect "Done"
+send "diag send 1\n"
+expect "length 0x3"
+expect "Done"
+
 send "diag repeat stop\n"
 expect "Done"
 
