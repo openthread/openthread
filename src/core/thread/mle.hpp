@@ -731,25 +731,25 @@ private:
     // Constants
 
     // All time intervals are in milliseconds
-    static constexpr uint32_t kParentRequestRouterTimeout     = 750;  // Wait time after tx of Parent Req to routers
-    static constexpr uint32_t kParentRequestReedTimeout       = 1250; // Wait timer after tx of Parent Req to REEDs
-    static constexpr uint32_t kParentRequestDuplicateMargin   = 50;   // Margin to detect duplicate received Parent Req
-    static constexpr uint32_t kChildIdResponseTimeout         = 1250; // Wait time to receive Child ID Response
-    static constexpr uint32_t kAttachStartJitter              = 50;   // Max jitter time added to start of attach
-    static constexpr uint32_t kAnnounceProcessTimeout         = 250;  // Delay after Announce rx before processing
-    static constexpr uint32_t kAnnounceTimeout                = 1400; // Total timeout for sending Announce messages
-    static constexpr uint16_t kMinAnnounceDelay               = 80;   // Min delay between Announcement messages
-    static constexpr uint32_t kParentResponseMaxDelayRouters  = 500;  // Max response delay for Parent Req to routers
-    static constexpr uint32_t kParentResponseMaxDelayAll      = 1000; // Max response delay for Parent Req to all
-    static constexpr uint32_t kChildUpdateRequestPendingDelay = 100;  // Delay for aggregating Child Update Req
-    static constexpr uint32_t kMaxLinkAcceptDelay             = 1000; // Max delay to tx Link Accept for multicast Req
-    static constexpr uint32_t kChildIdRequestTimeout          = 5000; // Max delay to rx a Child ID Req after Parent Res
-    static constexpr uint32_t kLinkRequestTimeout             = 2000; // Max delay to rx a Link Accept
-    static constexpr uint32_t kDetachGracefullyTimeout        = 1000; // Timeout for graceful detach
-    static constexpr uint32_t kUnicastRetxDelay               = 1000; // Base delay for MLE unicast retx
-    static constexpr uint32_t kMulticastRetxDelay             = 5000; // Base delay for MLE multicast retx
-    static constexpr uint32_t kMulticastRetxDelayMin          = kMulticastRetxDelay * 9 / 10;  // 0.9 * base delay
-    static constexpr uint32_t kMulticastRetxDelayMax          = kMulticastRetxDelay * 11 / 10; // 1.1 * base delay
+    static constexpr uint32_t kParentRequestRouterTimeout    = 750;  // Wait time after tx of Parent Req to routers
+    static constexpr uint32_t kParentRequestReedTimeout      = 1250; // Wait timer after tx of Parent Req to REEDs
+    static constexpr uint32_t kParentRequestDuplicateMargin  = 50;   // Margin to detect duplicate received Parent Req
+    static constexpr uint32_t kChildIdResponseTimeout        = 1250; // Wait time to receive Child ID Response
+    static constexpr uint32_t kAttachStartJitter             = 50;   // Max jitter time added to start of attach
+    static constexpr uint32_t kAnnounceProcessTimeout        = 250;  // Delay after Announce rx before processing
+    static constexpr uint32_t kAnnounceTimeout               = 1400; // Total timeout for sending Announce messages
+    static constexpr uint16_t kMinAnnounceDelay              = 80;   // Min delay between Announcement messages
+    static constexpr uint32_t kParentResponseMaxDelayRouters = 500;  // Max response delay for Parent Req to routers
+    static constexpr uint32_t kParentResponseMaxDelayAll     = 1000; // Max response delay for Parent Req to all
+    static constexpr uint32_t kChildUpdateRequestDelay       = 100;  // Delay for aggregating Child Update Req
+    static constexpr uint32_t kMaxLinkAcceptDelay            = 1000; // Max delay to tx Link Accept for multicast Req
+    static constexpr uint32_t kChildIdRequestTimeout         = 5000; // Max delay to rx a Child ID Req after Parent Res
+    static constexpr uint32_t kLinkRequestTimeout            = 2000; // Max delay to rx a Link Accept
+    static constexpr uint32_t kDetachGracefullyTimeout       = 1000; // Timeout for graceful detach
+    static constexpr uint32_t kUnicastRetxDelay              = 1000; // Base delay for MLE unicast retx
+    static constexpr uint32_t kMulticastRetxDelay            = 5000; // Base delay for MLE multicast retx
+    static constexpr uint32_t kMulticastRetxDelayMin         = kMulticastRetxDelay * 9 / 10;  // 0.9 * base delay
+    static constexpr uint32_t kMulticastRetxDelayMax         = kMulticastRetxDelay * 11 / 10; // 1.1 * base delay
     static constexpr uint32_t kAnnounceBackoffForPendingDataset = 60000; // Max delay left to block Announce processing.
 
     static constexpr uint8_t kMaxTxCount                = 3; // Max tx count for MLE message
@@ -859,24 +859,11 @@ private:
         kToRoutersAndReeds, // Parent Request to all routers and REEDs.
     };
 
-    enum ChildUpdateRequestState : uint8_t
-    {
-        kChildUpdateRequestNone,    // No pending or active Child Update Request.
-        kChildUpdateRequestPending, // Pending Child Update Request due to relative OT_CHANGED event.
-        kChildUpdateRequestActive,  // Child Update Request has been sent and Child Update Response is expected.
-    };
-
     enum ChildUpdateRequestMode : uint8_t // Used in `SendChildUpdateRequest()`
     {
         kNormalChildUpdateRequest, // Normal Child Update Request.
         kAppendChallengeTlv,       // Append Challenge TLV to Child Update Request even if currently attached.
         kAppendZeroTimeout,        // Use zero timeout when appending Timeout TLV (used for graceful detach).
-    };
-
-    enum DataRequestState : uint8_t
-    {
-        kDataRequestNone,   // Not waiting for a Data Response.
-        kDataRequestActive, // Data Request has been sent, Data Response is expected.
     };
 
     enum SecuritySuite : uint8_t
@@ -1108,6 +1095,7 @@ private:
         void Stop(void);
 
         void ScheduleDataRequest(const Ip6::Address &aDestination, uint16_t aDelay);
+        void ScheduleChildUpdateRequestToParent(uint16_t aDelay);
 #if OPENTHREAD_FTD
         void ScheduleParentResponse(const ParentResponseInfo &aInfo, uint16_t aDelay);
         void ScheduleMulticastDataResponse(uint16_t aDelay);
@@ -1116,6 +1104,8 @@ private:
                                        const DiscoveryResponseInfo &aInfo,
                                        uint16_t                     aDelay);
 #endif
+        void RemoveScheduledChildUpdateRequestToParent(void);
+
         void                HandleTimer(void);
         const MessageQueue &GetQueue(void) const { return mSchedules; }
 
@@ -1398,6 +1388,8 @@ private:
     bool mReceivedResponseFromParent : 1;
     bool mDetachingGracefully : 1;
     bool mInitiallyAttachedAsSleepy : 1;
+    bool mWaitingForChildUpdateResponse : 1;
+    bool mWaitingForDataResponse : 1;
 
     DeviceRole              mRole;
     DeviceRole              mLastSavedRole;
@@ -1405,9 +1397,7 @@ private:
     AttachState             mAttachState;
     ReattachState           mReattachState;
     AttachMode              mAttachMode;
-    DataRequestState        mDataRequestState;
     AddressRegistrationMode mAddressRegistrationMode;
-    ChildUpdateRequestState mChildUpdateRequestState;
 
     uint8_t  mParentRequestCounter;
     uint8_t  mChildUpdateAttempts;
