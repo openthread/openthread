@@ -238,12 +238,20 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
     uint16_t size              = OT_RADIO_FRAME_MAX_SIZE;
     bool     securityProcessed = false;
     bool     csmaCaEnabled     = false;
+    int8_t   txPower           = OT_RADIO_POWER_INVALID;
 
     while (aArgsLength > 1)
     {
         if (StringMatch(aArgs[0], "-s"))
         {
             securityProcessed = true;
+        }
+        else if (StringMatch(aArgs[0], "-p"))
+        {
+            long value;
+
+            SuccessOrExit(error = ParseLong(aArgs[0], value));
+            txPower = static_cast<int8_t>(value);
         }
         else if (StringMatch(aArgs[0], "-c"))
         {
@@ -267,6 +275,7 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
     ResetTxPacket();
     mTxPacket->mInfo.mTxInfo.mCsmaCaEnabled       = csmaCaEnabled;
     mTxPacket->mInfo.mTxInfo.mIsSecurityProcessed = securityProcessed;
+    mTxPacket->mInfo.mTxInfo.mTxPower             = txPower;
     mTxPacket->mLength                            = size;
     mIsTxPacketSet                                = true;
 
