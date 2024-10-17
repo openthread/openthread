@@ -2193,25 +2193,6 @@ uint8_t Mac::ComputeLinkMargin(int8_t aRss) const { return ot::ComputeLinkMargin
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-struct Mac::OperationChecker
-{
-    StaticCounterInit(0);
-
-    CheckEnum(kOperationIdle, "kOperationIdle value is incorrect");
-    CheckEnum(kOperationActiveScan, "kOperationActiveScan value is incorrect");
-    CheckEnum(kOperationEnergyScan, "kOperationEnergyScan value is incorrect");
-    CheckEnum(kOperationTransmitBeacon, "kOperationTransmitBeacon value is incorrect");
-    CheckEnum(kOperationTransmitDataDirect, "kOperationTransmitDataDirect value is incorrect");
-    CheckEnum(kOperationTransmitPoll, "kOperationTransmitPoll value is incorrect");
-    CheckEnum(kOperationWaitingForData, "kOperationWaitingForData value is incorrect");
-#if OPENTHREAD_FTD
-    CheckEnum(kOperationTransmitDataIndirect, "kOperationTransmitDataIndirect value is incorrect");
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    CheckEnum(kOperationTransmitDataCsl, "TransmitDataCsl value is incorrect");
-#endif
-#endif
-};
-
 const char *Mac::OperationToString(Operation aOperation)
 {
     static const char *const kOperationStrings[] = {
@@ -2226,6 +2207,25 @@ const char *Mac::OperationToString(Operation aOperation)
         "TransmitDataIndirect", // (7) kOperationTransmitDataIndirect
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         "TransmitDataCsl", // (8) kOperationTransmitDataCsl
+#endif
+#endif
+    };
+
+    struct OperationChecker
+    {
+        InitEnumValidatorCounter();
+
+        ValidateNextEnum(kOperationIdle);
+        ValidateNextEnum(kOperationActiveScan);
+        ValidateNextEnum(kOperationEnergyScan);
+        ValidateNextEnum(kOperationTransmitBeacon);
+        ValidateNextEnum(kOperationTransmitDataDirect);
+        ValidateNextEnum(kOperationTransmitPoll);
+        ValidateNextEnum(kOperationWaitingForData);
+#if OPENTHREAD_FTD
+        ValidateNextEnum(kOperationTransmitDataIndirect);
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        ValidateNextEnum(kOperationTransmitDataCsl);
 #endif
 #endif
     };

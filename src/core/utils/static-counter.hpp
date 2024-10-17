@@ -31,39 +31,36 @@
  *   This file provides a compile time counter and utilities based on it.
  */
 
-#ifndef ENUM_VALUE_CHECKER_HPP_
-#define ENUM_VALUE_CHECKER_HPP_
-
-#define OT_TOKENPASTE(x, y) x##y
-#define OT_TOKENPASTE2(x, y) OT_TOKENPASTE(x, y)
+#ifndef OT_UTILS_STATIC_COUNTER_HPP_
+#define OT_UTILS_STATIC_COUNTER_HPP_
 
 namespace ot {
 
 template <int N> struct StaticInt : public StaticInt<N - 1>
 {
 public:
-    static constexpr const int value = N;
+    static constexpr int kValue = N;
 };
 
 template <> struct StaticInt<0>
 {
 public:
-    static constexpr const int value = 0;
+    static constexpr int kValue = 0;
 };
 
 #define StaticCounterInit(N) static constexpr StaticInt<N> StaticCounter(StaticInt<N>)
 
-#define StaticCounterValue() decltype(StaticCounter(StaticInt<255>{}))::value
+#define StaticCounterValue() decltype(StaticCounter(StaticInt<255>{}))::kValue
 
-#define StaticCounterIncr()                                                                                         \
-    static constexpr const int OT_TOKENPASTE2(value_, __LINE__) = decltype(StaticCounter(StaticInt<255>{}))::value; \
-    static constexpr StaticInt<OT_TOKENPASTE2(value_, __LINE__) + 1> StaticCounter(                                 \
-        StaticInt<OT_TOKENPASTE2(value_, __LINE__) + 1>)
+#define StaticCounterIncr() \
+    static constexpr StaticInt<StaticCounterValue() + 1> StaticCounter(StaticInt<StaticCounterValue() + 1>)
 
-#define CheckEnum(kValue, kMessage)                          \
-    static_assert(kValue == StaticCounterValue(), kMessage); \
+#define InitEnumValidatorCounter() StaticCounterInit(0)
+
+#define ValidateNextEnum(kEnumartor)                                                      \
+    static_assert(kEnumartor == StaticCounterValue(), #kEnumartor " value is incorrect"); \
     StaticCounterIncr()
 
 } // namespace ot
 
-#endif // ENUM_VALUE_CHECKER_HPP_
+#endif // OT_UTILS_STATIC_COUNTER_HPP_

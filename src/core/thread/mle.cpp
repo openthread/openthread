@@ -3987,50 +3987,6 @@ const char *Mle::MessageActionToString(MessageAction aAction)
     return kMessageActionStrings[aAction];
 }
 
-struct Mle::MessageTypeChecker
-{
-    StaticCounterInit(0);
-
-    CheckEnum(kTypeAdvertisement, "kTypeAdvertisement value is incorrect");
-    CheckEnum(kTypeAnnounce, "kTypeAnnounce value is incorrect");
-    CheckEnum(kTypeChildIdRequest, "kTypeChildIdRequest value is incorrect");
-    CheckEnum(kTypeChildIdRequestShort, "kTypeChildIdRequestShort value is incorrect");
-    CheckEnum(kTypeChildIdResponse, "kTypeChildIdResponse value is incorrect");
-    CheckEnum(kTypeChildUpdateRequestAsChild, "kTypeChildUpdateRequestAsChild value is incorrect");
-    CheckEnum(kTypeChildUpdateResponseAsChild, "kTypeChildUpdateResponseAsChild value is incorrect");
-    CheckEnum(kTypeDataRequest, "kTypeDataRequest value is incorrect");
-    CheckEnum(kTypeDataResponse, "kTypeDataResponse value is incorrect");
-    CheckEnum(kTypeDiscoveryRequest, "kTypeDiscoveryRequest value is incorrect");
-    CheckEnum(kTypeDiscoveryResponse, "kTypeDiscoveryResponse value is incorrect");
-    CheckEnum(kTypeGenericDelayed, "kTypeGenericDelayed value is incorrect");
-    CheckEnum(kTypeGenericUdp, "kTypeGenericUdp value is incorrect");
-    CheckEnum(kTypeParentRequestToRouters, "kTypeParentRequestToRouters value is incorrect");
-    CheckEnum(kTypeParentRequestToRoutersReeds, "kTypeParentRequestToRoutersReeds value is incorrect");
-    CheckEnum(kTypeParentResponse, "kTypeParentResponse value is incorrect");
-#if OPENTHREAD_FTD
-    CheckEnum(kTypeAddressRelease, "kTypeAddressRelease value is incorrect");
-    CheckEnum(kTypeAddressReleaseReply, "kTypeAddressReleaseReply value is incorrect");
-    CheckEnum(kTypeAddressReply, "kTypeAddressReply value is incorrect");
-    CheckEnum(kTypeAddressSolicit, "kTypeAddressSolicit value is incorrect");
-    CheckEnum(kTypeChildUpdateRequestOfChild, "kTypeChildUpdateRequestOfChild value is incorrect");
-    CheckEnum(kTypeChildUpdateResponseOfChild, "kTypeChildUpdateResponseOfChild value is incorrect");
-    CheckEnum(kTypeChildUpdateResponseOfUnknownChild, "kTypeChildUpdateResponseOfUnknownChild is incorrect");
-    CheckEnum(kTypeLinkAccept, "kTypeLinkAccept value is incorrect");
-    CheckEnum(kTypeLinkAcceptAndRequest, "kTypeLinkAcceptAndRequest value is incorrect");
-    CheckEnum(kTypeLinkReject, "kTypeLinkReject value is incorrect");
-    CheckEnum(kTypeLinkRequest, "kTypeLinkRequest value is incorrect");
-    CheckEnum(kTypeParentRequest, "kTypeParentRequest value is incorrect");
-#endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    CheckEnum(kTypeLinkMetricsManagementRequest, "kTypeLinkMetricsManagementRequest value is incorrect)");
-    CheckEnum(kTypeLinkMetricsManagementResponse, "kTypeLinkMetricsManagementResponse value is incorrect)");
-    CheckEnum(kTypeLinkProbe, "kTypeLinkProbe value is incorrect)");
-#endif
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    CheckEnum(kTypeTimeSync, "kTypeTimeSync value is incorrect");
-#endif
-};
-
 const char *Mle::MessageTypeToString(MessageType aType)
 {
     static const char *const kMessageTypeStrings[] = {
@@ -4071,6 +4027,50 @@ const char *Mle::MessageTypeToString(MessageType aType)
 #endif
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         "Time Sync", // (31) kTypeTimeSync
+#endif
+    };
+
+    struct MessageTypeChecker
+    {
+        InitEnumValidatorCounter();
+
+        ValidateNextEnum(kTypeAdvertisement);
+        ValidateNextEnum(kTypeAnnounce);
+        ValidateNextEnum(kTypeChildIdRequest);
+        ValidateNextEnum(kTypeChildIdRequestShort);
+        ValidateNextEnum(kTypeChildIdResponse);
+        ValidateNextEnum(kTypeChildUpdateRequestAsChild);
+        ValidateNextEnum(kTypeChildUpdateResponseAsChild);
+        ValidateNextEnum(kTypeDataRequest);
+        ValidateNextEnum(kTypeDataResponse);
+        ValidateNextEnum(kTypeDiscoveryRequest);
+        ValidateNextEnum(kTypeDiscoveryResponse);
+        ValidateNextEnum(kTypeGenericDelayed);
+        ValidateNextEnum(kTypeGenericUdp);
+        ValidateNextEnum(kTypeParentRequestToRouters);
+        ValidateNextEnum(kTypeParentRequestToRoutersReeds);
+        ValidateNextEnum(kTypeParentResponse);
+#if OPENTHREAD_FTD
+        ValidateNextEnum(kTypeAddressRelease);
+        ValidateNextEnum(kTypeAddressReleaseReply);
+        ValidateNextEnum(kTypeAddressReply);
+        ValidateNextEnum(kTypeAddressSolicit);
+        ValidateNextEnum(kTypeChildUpdateRequestOfChild);
+        ValidateNextEnum(kTypeChildUpdateResponseOfChild);
+        ValidateNextEnum(kTypeChildUpdateResponseOfUnknownChild);
+        ValidateNextEnum(kTypeLinkAccept);
+        ValidateNextEnum(kTypeLinkAcceptAndRequest);
+        ValidateNextEnum(kTypeLinkReject);
+        ValidateNextEnum(kTypeLinkRequest);
+        ValidateNextEnum(kTypeParentRequest);
+#endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+        ValidateNextEnum(kTypeLinkMetricsManagementRequest);
+        ValidateNextEnum(kTypeLinkMetricsManagementResponse);
+        ValidateNextEnum(kTypeLinkProbe);
+#endif
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        ValidateNextEnum(kTypeTimeSync);
 #endif
     };
 

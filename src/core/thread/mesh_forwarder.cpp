@@ -1751,25 +1751,6 @@ exit:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
-struct MeshForwarder::MessageActionChecker
-{
-    StaticCounterInit(0);
-
-    CheckEnum(kMessageReceive, "kMessageReceive value is incorrect");
-    CheckEnum(kMessageTransmit, "kMessageTransmit value is incorrect");
-    CheckEnum(kMessagePrepareIndirect, "kMessagePrepareIndirect value is incorrect");
-    CheckEnum(kMessageDrop, "kMessageDrop value is incorrect");
-    CheckEnum(kMessageReassemblyDrop, "kMessageReassemblyDrop value is incorrect");
-    CheckEnum(kMessageEvict, "kMessageEvict value is incorrect");
-#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-    CheckEnum(kMessageMarkEcn, "kMessageMarkEcn is incorrect");
-    CheckEnum(kMessageQueueMgmtDrop, "kMessageQueueMgmtDrop is incorrect");
-#endif
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-    CheckEnum(kMessageFullQueueDrop, "kMessageFullQueueDrop is incorrect");
-#endif
-};
-
 const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aError)
 {
     static const char *const kMessageActionStrings[] = {
@@ -1789,6 +1770,25 @@ const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aE
     };
 
     const char *string = kMessageActionStrings[aAction];
+
+    struct MessageActionChecker
+    {
+        InitEnumValidatorCounter();
+
+        ValidateNextEnum(kMessageReceive);
+        ValidateNextEnum(kMessageTransmit);
+        ValidateNextEnum(kMessagePrepareIndirect);
+        ValidateNextEnum(kMessageDrop);
+        ValidateNextEnum(kMessageReassemblyDrop);
+        ValidateNextEnum(kMessageEvict);
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+        ValidateNextEnum(kMessageMarkEcn);
+        ValidateNextEnum(kMessageQueueMgmtDrop);
+#endif
+#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
+        ValidateNextEnum(kMessageFullQueueDrop);
+#endif
+    };
 
     if ((aAction == kMessageTransmit) && (aError != kErrorNone))
     {

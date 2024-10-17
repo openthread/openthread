@@ -727,22 +727,6 @@ const uint16_t *const Client::kQuestionRecordTypes[] = {
 #endif
 };
 
-struct Client::QueryTypeChecker
-{
-    StaticCounterInit(0);
-
-    CheckEnum(kIp6AddressQuery, "kIp6AddressQuery value is not correct");
-#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-    CheckEnum(kIp4AddressQuery, "kIp4AddressQuery value is not correct");
-#endif
-#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    CheckEnum(kBrowseQuery, "kBrowseQuery value is not correct");
-    CheckEnum(kServiceQuerySrvTxt, "kServiceQuerySrvTxt value is not correct");
-    CheckEnum(kServiceQuerySrv, "kServiceQuerySrv value is not correct");
-    CheckEnum(kServiceQueryTxt, "kServiceQueryTxt value is not correct");
-#endif
-};
-
 Client::Client(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance, *this)
@@ -755,6 +739,22 @@ Client::Client(Instance &aInstance)
     , mUserDidSetDefaultAddress(false)
 #endif
 {
+    struct QueryTypeChecker
+    {
+        InitEnumValidatorCounter();
+
+        ValidateNextEnum(kIp6AddressQuery);
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+        ValidateNextEnum(kIp4AddressQuery);
+#endif
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+        ValidateNextEnum(kBrowseQuery);
+        ValidateNextEnum(kServiceQuerySrvTxt);
+        ValidateNextEnum(kServiceQuerySrv);
+        ValidateNextEnum(kServiceQueryTxt);
+#endif
+    };
+
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
     ClearAllBytes(mSendLink);
 #endif

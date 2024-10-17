@@ -991,27 +991,6 @@ void SubMac::StartTimerAt(Time aStartTime, uint32_t aDelayUs)
 
 // LCOV_EXCL_START
 
-struct SubMac::StateValueChecker
-{
-    StaticCounterInit(0);
-
-    CheckEnum(kStateDisabled, "kStateDisabled value is not correct");
-    CheckEnum(kStateSleep, "kStateSleep value is not correct");
-    CheckEnum(kStateReceive, "kStateReceive value is not correct");
-    CheckEnum(kStateCsmaBackoff, "kStateCsmaBackoff value is not correct");
-    CheckEnum(kStateTransmit, "kStateTransmit value is not correct");
-    CheckEnum(kStateEnergyScan, "kStateEnergyScan value is not correct");
-#if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
-    CheckEnum(kStateDelayBeforeRetx, "kStateDelayBeforeRetx value is not correct");
-#endif
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    CheckEnum(kStateCslTransmit, "kStateCslTransmit value is not correct");
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    CheckEnum(kStateCslSample, "kStateCslSample value is not correct");
-#endif
-};
-
 const char *SubMac::StateToString(State aState)
 {
     static const char *const kStateStrings[] = {
@@ -1029,6 +1008,27 @@ const char *SubMac::StateToString(State aState)
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         "CslSample", // (8) kStateCslSample
+#endif
+    };
+
+    struct StateValueChecker
+    {
+        InitEnumValidatorCounter();
+
+        ValidateNextEnum(kStateDisabled);
+        ValidateNextEnum(kStateSleep);
+        ValidateNextEnum(kStateReceive);
+        ValidateNextEnum(kStateCsmaBackoff);
+        ValidateNextEnum(kStateTransmit);
+        ValidateNextEnum(kStateEnergyScan);
+#if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
+        ValidateNextEnum(kStateDelayBeforeRetx);
+#endif
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        ValidateNextEnum(kStateCslTransmit);
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        ValidateNextEnum(kStateCslSample);
 #endif
     };
 

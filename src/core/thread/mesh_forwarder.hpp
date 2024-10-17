@@ -377,8 +377,6 @@ private:
 #endif
     };
 
-    struct MessageActionChecker;
-
     struct RxInfo : public InstanceLocator
     {
         static constexpr uint16_t kInfoStringSize = 70;

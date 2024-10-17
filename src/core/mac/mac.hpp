@@ -765,8 +765,6 @@ private:
 #endif
     };
 
-    struct OperationChecker;
-
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
     struct RetryHistogram
     {

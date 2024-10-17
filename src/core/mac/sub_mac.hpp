@@ -667,7 +667,6 @@ private:
     uint64_t   mWedSampleTimeRadio;   // The WED sample time of the current interval in radio time.
     TimerMicro mWedTimer;
 #endif
-    struct StateValueChecker;
 };
 
 /**
