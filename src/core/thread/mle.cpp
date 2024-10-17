@@ -200,7 +200,7 @@ Error Mle::Start(StartMode aMode)
     else
     {
         mChildUpdateAttempts = 0;
-        IgnoreError(SendChildUpdateRequest());
+        IgnoreError(SendChildUpdateRequestToParent());
     }
 
 exit:
@@ -786,7 +786,7 @@ void Mle::SetTimeout(uint32_t aTimeout)
 
     if (IsChild())
     {
-        IgnoreError(SendChildUpdateRequest());
+        IgnoreError(SendChildUpdateRequestToParent());
     }
 
 exit:
@@ -864,7 +864,7 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
     else if (IsChild())
     {
         SetStateChild(GetRloc16());
-        IgnoreError(SendChildUpdateRequest());
+        IgnoreError(SendChildUpdateRequestToParent());
     }
 
 exit:
@@ -1909,7 +1909,7 @@ void Mle::HandleMessageTransmissionTimer(void)
 
     VerifyOrExit(mChildUpdateAttempts < kMaxChildKeepAliveAttempts, IgnoreError(BecomeDetached()));
 
-    if (SendChildUpdateRequest() == kErrorNone)
+    if (SendChildUpdateRequestToParent() == kErrorNone)
     {
         mChildUpdateAttempts++;
     }
@@ -1918,9 +1918,9 @@ exit:
     return;
 }
 
-Error Mle::SendChildUpdateRequest(void) { return SendChildUpdateRequest(kNormalChildUpdateRequest); }
+Error Mle::SendChildUpdateRequestToParent(void) { return SendChildUpdateRequestToParent(kNormalChildUpdateRequest); }
 
-Error Mle::SendChildUpdateRequest(ChildUpdateRequestMode aMode)
+Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
 {
     Error                   error = kErrorNone;
     Ip6::Address            destination;
@@ -2077,7 +2077,7 @@ Error Mle::SendChildUpdateResponse(const TlvList      &aTlvList,
 
     if (checkAddress && HasUnregisteredAddress())
     {
-        IgnoreError(SendChildUpdateRequest());
+        IgnoreError(SendChildUpdateRequestToParent());
     }
 
 exit:
@@ -2629,7 +2629,7 @@ void Mle::ReestablishLinkWithNeighbor(Neighbor &aNeighbor)
 
     if (IsChild() && (&aNeighbor == &mParent))
     {
-        IgnoreError(SendChildUpdateRequest(kAppendChallengeTlv));
+        IgnoreError(SendChildUpdateRequestToParent(kAppendChallengeTlv));
         ExitNow();
     }
 
@@ -2645,7 +2645,7 @@ void Mle::ReestablishLinkWithNeighbor(Neighbor &aNeighbor)
         Child &child = static_cast<Child &>(aNeighbor);
 
         child.SetState(Child::kStateChildUpdateRequest);
-        IgnoreError(Get<MleRouter>().SendChildUpdateRequest(child));
+        IgnoreError(Get<MleRouter>().SendChildUpdateRequestToChild(child));
     }
 #endif
 
@@ -4263,7 +4263,7 @@ Error Mle::DetachGracefully(DetachCallback aCallback, void *aContext)
         break;
 
     case kRoleChild:
-        IgnoreError(SendChildUpdateRequest(kAppendZeroTimeout));
+        IgnoreError(SendChildUpdateRequestToParent(kAppendZeroTimeout));
         break;
 
     case kRoleDisabled:
