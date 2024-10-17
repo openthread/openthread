@@ -39,6 +39,7 @@
 
 #include "common/code_utils.hpp"
 #include "instance/instance.hpp"
+#include "utils/static_counter.hpp"
 
 namespace ot {
 namespace Mac {
@@ -1010,32 +1011,26 @@ const char *SubMac::StateToString(State aState)
 #endif
     };
 
-    static_assert(kStateDisabled == 0, "kStateDisabled value is not correct");
-    static_assert(kStateSleep == 1, "kStateSleep value is not correct");
-    static_assert(kStateReceive == 2, "kStateReceive value is not correct");
-    static_assert(kStateCsmaBackoff == 3, "kStateCsmaBackoff value is not correct");
-    static_assert(kStateTransmit == 4, "kStateTransmit value is not correct");
-    static_assert(kStateEnergyScan == 5, "kStateEnergyScan value is not correct");
+    struct StateValueChecker
+    {
+        InitEnumValidatorCounter();
 
+        ValidateNextEnum(kStateDisabled);
+        ValidateNextEnum(kStateSleep);
+        ValidateNextEnum(kStateReceive);
+        ValidateNextEnum(kStateCsmaBackoff);
+        ValidateNextEnum(kStateTransmit);
+        ValidateNextEnum(kStateEnergyScan);
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
-    static_assert(kStateDelayBeforeRetx == 6, "kStateDelayBeforeRetx value is not correct");
+        ValidateNextEnum(kStateDelayBeforeRetx);
+#endif
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    static_assert(kStateCslTransmit == 7, "kStateCslTransmit value is not correct");
+        ValidateNextEnum(kStateCslTransmit);
+#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    static_assert(kStateCslSample == 8, "kStateCslSample value is not correct");
+        ValidateNextEnum(kStateCslSample);
 #endif
-#elif OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    static_assert(kStateCslSample == 7, "kStateCslSample value is not correct");
-#endif
-
-#elif !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    static_assert(kStateCslTransmit == 6, "kStateCslTransmit value is not correct");
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    static_assert(kStateCslSample == 7, "kStateCslSample value is not correct");
-#endif
-#elif OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    static_assert(kStateCslSample == 6, "kStateCslSample value is not correct");
-#endif
+    };
 
     return kStateStrings[aState];
 }

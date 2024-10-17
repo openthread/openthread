@@ -743,6 +743,7 @@ openthread_core_files = [
   "utils/slaac_address.hpp",
   "utils/srp_client_buffers.cpp",
   "utils/srp_client_buffers.hpp",
+  "utils/static_counter.hpp",
   "utils/verhoeff_checksum.cpp",
   "utils/verhoeff_checksum.hpp",
 ]
