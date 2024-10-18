@@ -34,6 +34,7 @@
 #include "mesh_forwarder.hpp"
 
 #include "instance/instance.hpp"
+#include "utils/static_counter.hpp"
 
 namespace ot {
 
@@ -1770,23 +1771,24 @@ const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aE
 
     const char *string = kMessageActionStrings[aAction];
 
-    static_assert(kMessageReceive == 0, "kMessageReceive value is incorrect");
-    static_assert(kMessageTransmit == 1, "kMessageTransmit value is incorrect");
-    static_assert(kMessagePrepareIndirect == 2, "kMessagePrepareIndirect value is incorrect");
-    static_assert(kMessageDrop == 3, "kMessageDrop value is incorrect");
-    static_assert(kMessageReassemblyDrop == 4, "kMessageReassemblyDrop value is incorrect");
-    static_assert(kMessageEvict == 5, "kMessageEvict value is incorrect");
+    struct MessageActionChecker
+    {
+        InitEnumValidatorCounter();
+
+        ValidateNextEnum(kMessageReceive);
+        ValidateNextEnum(kMessageTransmit);
+        ValidateNextEnum(kMessagePrepareIndirect);
+        ValidateNextEnum(kMessageDrop);
+        ValidateNextEnum(kMessageReassemblyDrop);
+        ValidateNextEnum(kMessageEvict);
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-    static_assert(kMessageMarkEcn == 6, "kMessageMarkEcn is incorrect");
-    static_assert(kMessageQueueMgmtDrop == 7, "kMessageQueueMgmtDrop is incorrect");
+        ValidateNextEnum(kMessageMarkEcn);
+        ValidateNextEnum(kMessageQueueMgmtDrop);
+#endif
 #if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-    static_assert(kMessageFullQueueDrop == 8, "kMessageFullQueueDrop is incorrect");
+        ValidateNextEnum(kMessageFullQueueDrop);
 #endif
-#else
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-    static_assert(kMessageFullQueueDrop == 6, "kMessageFullQueueDrop is incorrect");
-#endif
-#endif
+    };
 
     if ((aAction == kMessageTransmit) && (aError != kErrorNone))
     {

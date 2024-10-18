@@ -34,6 +34,7 @@
 #include "mle.hpp"
 
 #include "instance/instance.hpp"
+#include "utils/static_counter.hpp"
 
 namespace ot {
 namespace Mle {
@@ -4029,61 +4030,49 @@ const char *Mle::MessageTypeToString(MessageType aType)
 #endif
     };
 
-    static_assert(kTypeAdvertisement == 0, "kTypeAdvertisement value is incorrect");
-    static_assert(kTypeAnnounce == 1, "kTypeAnnounce value is incorrect");
-    static_assert(kTypeChildIdRequest == 2, "kTypeChildIdRequest value is incorrect");
-    static_assert(kTypeChildIdRequestShort == 3, "kTypeChildIdRequestShort value is incorrect");
-    static_assert(kTypeChildIdResponse == 4, "kTypeChildIdResponse value is incorrect");
-    static_assert(kTypeChildUpdateRequestAsChild == 5, "kTypeChildUpdateRequestAsChild value is incorrect");
-    static_assert(kTypeChildUpdateResponseAsChild == 6, "kTypeChildUpdateResponseAsChild value is incorrect");
-    static_assert(kTypeDataRequest == 7, "kTypeDataRequest value is incorrect");
-    static_assert(kTypeDataResponse == 8, "kTypeDataResponse value is incorrect");
-    static_assert(kTypeDiscoveryRequest == 9, "kTypeDiscoveryRequest value is incorrect");
-    static_assert(kTypeDiscoveryResponse == 10, "kTypeDiscoveryResponse value is incorrect");
-    static_assert(kTypeGenericDelayed == 11, "kTypeGenericDelayed value is incorrect");
-    static_assert(kTypeGenericUdp == 12, "kTypeGenericUdp value is incorrect");
-    static_assert(kTypeParentRequestToRouters == 13, "kTypeParentRequestToRouters value is incorrect");
-    static_assert(kTypeParentRequestToRoutersReeds == 14, "kTypeParentRequestToRoutersReeds value is incorrect");
-    static_assert(kTypeParentResponse == 15, "kTypeParentResponse value is incorrect");
+    struct MessageTypeChecker
+    {
+        InitEnumValidatorCounter();
+
+        ValidateNextEnum(kTypeAdvertisement);
+        ValidateNextEnum(kTypeAnnounce);
+        ValidateNextEnum(kTypeChildIdRequest);
+        ValidateNextEnum(kTypeChildIdRequestShort);
+        ValidateNextEnum(kTypeChildIdResponse);
+        ValidateNextEnum(kTypeChildUpdateRequestAsChild);
+        ValidateNextEnum(kTypeChildUpdateResponseAsChild);
+        ValidateNextEnum(kTypeDataRequest);
+        ValidateNextEnum(kTypeDataResponse);
+        ValidateNextEnum(kTypeDiscoveryRequest);
+        ValidateNextEnum(kTypeDiscoveryResponse);
+        ValidateNextEnum(kTypeGenericDelayed);
+        ValidateNextEnum(kTypeGenericUdp);
+        ValidateNextEnum(kTypeParentRequestToRouters);
+        ValidateNextEnum(kTypeParentRequestToRoutersReeds);
+        ValidateNextEnum(kTypeParentResponse);
 #if OPENTHREAD_FTD
-    static_assert(kTypeAddressRelease == 16, "kTypeAddressRelease value is incorrect");
-    static_assert(kTypeAddressReleaseReply == 17, "kTypeAddressReleaseReply value is incorrect");
-    static_assert(kTypeAddressReply == 18, "kTypeAddressReply value is incorrect");
-    static_assert(kTypeAddressSolicit == 19, "kTypeAddressSolicit value is incorrect");
-    static_assert(kTypeChildUpdateRequestOfChild == 20, "kTypeChildUpdateRequestOfChild value is incorrect");
-    static_assert(kTypeChildUpdateResponseOfChild == 21, "kTypeChildUpdateResponseOfChild value is incorrect");
-    static_assert(kTypeChildUpdateResponseOfUnknownChild == 22, "kTypeChildUpdateResponseOfUnknownChild is incorrect");
-    static_assert(kTypeLinkAccept == 23, "kTypeLinkAccept value is incorrect");
-    static_assert(kTypeLinkAcceptAndRequest == 24, "kTypeLinkAcceptAndRequest value is incorrect");
-    static_assert(kTypeLinkReject == 25, "kTypeLinkReject value is incorrect");
-    static_assert(kTypeLinkRequest == 26, "kTypeLinkRequest value is incorrect");
-    static_assert(kTypeParentRequest == 27, "kTypeParentRequest value is incorrect");
+        ValidateNextEnum(kTypeAddressRelease);
+        ValidateNextEnum(kTypeAddressReleaseReply);
+        ValidateNextEnum(kTypeAddressReply);
+        ValidateNextEnum(kTypeAddressSolicit);
+        ValidateNextEnum(kTypeChildUpdateRequestOfChild);
+        ValidateNextEnum(kTypeChildUpdateResponseOfChild);
+        ValidateNextEnum(kTypeChildUpdateResponseOfUnknownChild);
+        ValidateNextEnum(kTypeLinkAccept);
+        ValidateNextEnum(kTypeLinkAcceptAndRequest);
+        ValidateNextEnum(kTypeLinkReject);
+        ValidateNextEnum(kTypeLinkRequest);
+        ValidateNextEnum(kTypeParentRequest);
+#endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    static_assert(kTypeLinkMetricsManagementRequest == 28, "kTypeLinkMetricsManagementRequest value is incorrect)");
-    static_assert(kTypeLinkMetricsManagementResponse == 29, "kTypeLinkMetricsManagementResponse value is incorrect)");
-    static_assert(kTypeLinkProbe == 30, "kTypeLinkProbe value is incorrect)");
+        ValidateNextEnum(kTypeLinkMetricsManagementRequest);
+        ValidateNextEnum(kTypeLinkMetricsManagementResponse);
+        ValidateNextEnum(kTypeLinkProbe);
+#endif
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    static_assert(kTypeTimeSync == 31, "kTypeTimeSync value is incorrect");
+        ValidateNextEnum(kTypeTimeSync);
 #endif
-#else
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    static_assert(kTypeTimeSync == 28, "kTypeTimeSync value is incorrect");
-#endif
-#endif
-#else // OPENTHREAD_FTD
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    static_assert(kTypeLinkMetricsManagementRequest == 16, "kTypeLinkMetricsManagementRequest value is incorrect)");
-    static_assert(kTypeLinkMetricsManagementResponse == 17, "kTypeLinkMetricsManagementResponse value is incorrect)");
-    static_assert(kTypeLinkProbe == 18, "kTypeLinkProbe value is incorrect)");
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    static_assert(kTypeTimeSync == 19, "kTypeTimeSync value is incorrect");
-#endif
-#else
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    static_assert(kTypeTimeSync == 16, "kTypeTimeSync value is incorrect");
-#endif
-#endif
-#endif // OPENTHREAD_FTD
+    };
 
     return kMessageTypeStrings[aType];
 }

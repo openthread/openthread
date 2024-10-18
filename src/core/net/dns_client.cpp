@@ -31,6 +31,7 @@
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 #include "instance/instance.hpp"
+#include "utils/static_counter.hpp"
 
 /**
  * @file
@@ -738,21 +739,22 @@ Client::Client(Instance &aInstance)
     , mUserDidSetDefaultAddress(false)
 #endif
 {
-    static_assert(kIp6AddressQuery == 0, "kIp6AddressQuery value is not correct");
+    struct QueryTypeChecker
+    {
+        InitEnumValidatorCounter();
+
+        ValidateNextEnum(kIp6AddressQuery);
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-    static_assert(kIp4AddressQuery == 1, "kIp4AddressQuery value is not correct");
+        ValidateNextEnum(kIp4AddressQuery);
+#endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    static_assert(kBrowseQuery == 2, "kBrowseQuery value is not correct");
-    static_assert(kServiceQuerySrvTxt == 3, "kServiceQuerySrvTxt value is not correct");
-    static_assert(kServiceQuerySrv == 4, "kServiceQuerySrv value is not correct");
-    static_assert(kServiceQueryTxt == 5, "kServiceQueryTxt value is not correct");
+        ValidateNextEnum(kBrowseQuery);
+        ValidateNextEnum(kServiceQuerySrvTxt);
+        ValidateNextEnum(kServiceQuerySrv);
+        ValidateNextEnum(kServiceQueryTxt);
 #endif
-#elif OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    static_assert(kBrowseQuery == 1, "kBrowseQuery value is not correct");
-    static_assert(kServiceQuerySrvTxt == 2, "kServiceQuerySrvTxt value is not correct");
-    static_assert(kServiceQuerySrv == 3, "kServiceQuerySrv value is not correct");
-    static_assert(kServiceQueryTxt == 4, "kServiceQuerySrv value is not correct");
-#endif
+    };
+
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
     ClearAllBytes(mSendLink);
 #endif

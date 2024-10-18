@@ -38,6 +38,7 @@
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "instance/instance.hpp"
+#include "utils/static_counter.hpp"
 
 namespace ot {
 namespace Mac {
@@ -2210,19 +2211,24 @@ const char *Mac::OperationToString(Operation aOperation)
 #endif
     };
 
-    static_assert(kOperationIdle == 0, "kOperationIdle value is incorrect");
-    static_assert(kOperationActiveScan == 1, "kOperationActiveScan value is incorrect");
-    static_assert(kOperationEnergyScan == 2, "kOperationEnergyScan value is incorrect");
-    static_assert(kOperationTransmitBeacon == 3, "kOperationTransmitBeacon value is incorrect");
-    static_assert(kOperationTransmitDataDirect == 4, "kOperationTransmitDataDirect value is incorrect");
-    static_assert(kOperationTransmitPoll == 5, "kOperationTransmitPoll value is incorrect");
-    static_assert(kOperationWaitingForData == 6, "kOperationWaitingForData value is incorrect");
+    struct OperationChecker
+    {
+        InitEnumValidatorCounter();
+
+        ValidateNextEnum(kOperationIdle);
+        ValidateNextEnum(kOperationActiveScan);
+        ValidateNextEnum(kOperationEnergyScan);
+        ValidateNextEnum(kOperationTransmitBeacon);
+        ValidateNextEnum(kOperationTransmitDataDirect);
+        ValidateNextEnum(kOperationTransmitPoll);
+        ValidateNextEnum(kOperationWaitingForData);
 #if OPENTHREAD_FTD
-    static_assert(kOperationTransmitDataIndirect == 7, "kOperationTransmitDataIndirect value is incorrect");
+        ValidateNextEnum(kOperationTransmitDataIndirect);
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    static_assert(kOperationTransmitDataCsl == 8, "TransmitDataCsl value is incorrect");
+        ValidateNextEnum(kOperationTransmitDataCsl);
 #endif
 #endif
+    };
 
     return kOperationStrings[aOperation];
 }
