@@ -1372,26 +1372,24 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PENDING_DATASE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ACTIVE_DATASET_TLVS>(void)
 {
-    otError                  error = OT_ERROR_NONE;
     otOperationalDatasetTlvs dataset;
 
-    SuccessOrExit(error = otDatasetGetActiveTlvs(mInstance, &dataset));
-    SuccessOrExit(error = mEncoder.WriteData(dataset.mTlvs, dataset.mLength));
-
-exit:
-    return error;
+    if (otDatasetGetActiveTlvs(mInstance, &dataset) != OT_ERROR_NONE)
+    {
+        dataset.mLength = 0;
+    }
+    return mEncoder.WriteData(dataset.mTlvs, dataset.mLength);
 }
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PENDING_DATASET_TLVS>(void)
 {
-    otError                  error = OT_ERROR_NONE;
     otOperationalDatasetTlvs dataset;
 
-    SuccessOrExit(error = otDatasetGetPendingTlvs(mInstance, &dataset));
-    SuccessOrExit(error = mEncoder.WriteData(dataset.mTlvs, dataset.mLength));
-
-exit:
-    return error;
+    if (otDatasetGetPendingTlvs(mInstance, &dataset) != OT_ERROR_NONE)
+    {
+        dataset.mLength = 0;
+    }
+    return mEncoder.WriteData(dataset.mTlvs, dataset.mLength);
 }
 
 otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
