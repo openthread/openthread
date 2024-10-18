@@ -312,10 +312,24 @@ otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSett
  * @retval  OT_ERROR_INVALID_ARGS   The given CIDR is not a valid IPv4 CIDR for NAT64.
  * @retval  OT_ERROR_NONE           Successfully set the CIDR for NAT64.
  *
- * @sa otBorderRouterSend
- * @sa otBorderRouterSetReceiveCallback
+ * @sa otNat64Send
+ * @sa otNat64SetReceiveIp4Callback
  */
 otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr);
+
+/**
+ * Clears the CIDR used when setting the source address of the outgoing translated IPv4 packets.
+ *
+ * Is available only when OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE is enabled.
+ *
+ * @note This function can be called at any time, but the NAT64 translator will be reset and all existing sessions
+ * will be expired when clearing the configured CIDR.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @sa otNat64SetIp4Cidr
+ */
+void otNat64ClearIp4Cidr(otInstance *aInstance);
 
 /**
  * Translates an IPv4 datagram to an IPv6 datagram and sends via the Thread interface.

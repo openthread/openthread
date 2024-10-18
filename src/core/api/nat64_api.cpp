@@ -49,6 +49,8 @@ otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr)
     return AsCoreType(aInstance).Get<Nat64::Translator>().SetIp4Cidr(AsCoreType(aCidr));
 }
 
+void otNat64ClearIp4Cidr(otInstance *aInstance) { AsCoreType(aInstance).Get<Nat64::Translator>().ClearIp4Cidr(); }
+
 otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
     return AsCoreType(aInstance).Get<Nat64::Translator>().NewIp4Message(Message::Settings::From(aSettings));
