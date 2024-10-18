@@ -1115,6 +1115,28 @@ void otThreadSetStoreFrameCounterAhead(otInstance *aInstance, uint32_t aStoreFra
 uint32_t otThreadGetStoreFrameCounterAhead(otInstance *aInstance);
 
 /**
+ * Attempts to attach a Wake-up End Device.
+ *
+ * Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` to be enabled.
+ *
+ * The attachment starts with transmitting a wake-up frame sequence to the Wake-up End Device.
+ * During the wake-up sequence, and for a short time after the last wake-up frame is sent, the Wake-up Coordinator keeps
+ * its receiver on to be able to receive an initial mesh link establishment message from the WED.
+ *
+ * @param[in] aInstance         A pointer to an OpenThread instance.
+ * @param[in] aWedAddress       The extended address of the Wake-up End Device.
+ * @param[in] aWakeupIntervalUs An interval between consecutive wake-up frames (in microseconds).
+ * @param[in] aWakeupDurationMs Duration of the wake-up sequence (in milliseconds).
+ *
+ * @retval OT_ERROR_NONE          Successfully started the attachment.
+ * @retval OT_ERROR_INVALID_STATE Another attachment request is still in progress.
+ */
+otError otThreadAttachWed(otInstance         *aInstance,
+                          const otExtAddress *aWedAddress,
+                          uint16_t            aWakeupIntervalUs,
+                          uint16_t            aWakeupDurationMs);
+
+/**
  * @}
  */
 

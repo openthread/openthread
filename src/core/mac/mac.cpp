@@ -203,6 +203,9 @@ bool Mac::IsInTransmitState(void) const
 #endif
     case kOperationTransmitBeacon:
     case kOperationTransmitPoll:
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    case kOperationTransmitWakeup:
+#endif
         retval = true;
         break;
 
@@ -518,6 +521,17 @@ exit:
 #endif
 #endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+void Mac::RequestWakeupFrameTransmission(void)
+{
+    VerifyOrExit(IsEnabled());
+    StartOperation(kOperationTransmitWakeup);
+
+exit:
+    return;
+}
+#endif
+
 Error Mac::RequestDataPollTransmission(void)
 {
     Error error = kErrorNone;
@@ -638,6 +652,12 @@ void Mac::PerformNextOperation(void)
     {
         mOperation = kOperationWaitingForData;
     }
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    else if (IsPending(kOperationTransmitWakeup))
+    {
+        mOperation = kOperationTransmitWakeup;
+    }
+#endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     else if (IsPending(kOperationTransmitDataCsl) && TimerMilli::GetNow() >= mCslTxFireTime)
     {
@@ -709,6 +729,9 @@ void Mac::PerformNextOperation(void)
 #endif
 #endif
     case kOperationTransmitPoll:
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    case kOperationTransmitWakeup:
+#endif
         BeginTransmit();
         break;
 
@@ -898,8 +921,17 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 
     case Frame::kKeyIdMode2:
     {
-        const uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
+        uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+        if (aFrame.IsWakeupFrame())
+        {
+            // Just set the key source here, further security processing will happen in SubMac
+            BigEndian::WriteUint32(keyManager.GetCurrentKeySequence(), keySource);
+            aFrame.SetKeySource(keySource);
+            ExitNow();
+        }
+#endif
         aFrame.SetAesKey(mMode2KeyMaterial);
 
         mKeyIdMode2FrameCounter++;
@@ -1019,6 +1051,15 @@ void Mac::BeginTransmit(void)
 
 #endif
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    case kOperationTransmitWakeup:
+        frame = Get<WakeupTxScheduler>().PrepareWakeupFrame(txFrames);
+        VerifyOrExit(frame != nullptr);
+        frame->SetChannel(mWakeupChannel);
+        frame->SetRxChannelAfterTxDone(mRadioChannel);
+        break;
+#endif
 
     default:
         OT_ASSERT(false);
@@ -1461,6 +1502,13 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         PerformNextOperation();
         break;
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    case kOperationTransmitWakeup:
+        FinishOperation();
+        PerformNextOperation();
+        break;
+#endif
 
     default:
         OT_ASSERT(false);
@@ -2208,6 +2256,9 @@ const char *Mac::OperationToString(Operation aOperation)
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         "TransmitDataCsl", // (8) kOperationTransmitDataCsl
 #endif
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+        "TransmitWakeup", // kOperationTransmitWakeup
 #endif
     };
 

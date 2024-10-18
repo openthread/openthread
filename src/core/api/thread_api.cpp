@@ -516,6 +516,17 @@ uint32_t otThreadGetStoreFrameCounterAhead(otInstance *aInstance)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+otError otThreadAttachWed(otInstance         *aInstance,
+                          const otExtAddress *aWedAddress,
+                          uint16_t            aWakeupIntervalUs,
+                          uint16_t            aWakeupDurationMs)
+{
+    return AsCoreType(aInstance).Get<Mle::Mle>().AttachWed(AsCoreType(aWedAddress), aWakeupIntervalUs,
+                                                           aWakeupDurationMs);
+}
+#endif
+
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
