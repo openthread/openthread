@@ -533,10 +533,10 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddr
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower);
 
 /**
- * Set the radio's transmit power in dBm.
+ * Set the radio's transmit power in dBm for all channels.
  *
  * @note The real transmit power will be no larger than the power specified in the max power table for
- * the current channel.
+ * the current channel that was configured by `otPlatRadioSetChannelMaxTransmitPower()`.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aPower     The transmit power in dBm.
@@ -1185,6 +1185,9 @@ uint8_t otPlatRadioGetCslUncertainty(otInstance *aInstance);
 /**
  * Set the max transmit power for a specific channel.
  *
+ * @note This function will be deprecated in October 2027. It is recommended to use the function
+ *       `otPlatRadioSetChannelTargetPower()`.
+ *
  * @param[in]  aInstance    The OpenThread instance structure.
  * @param[in]  aChannel     The radio channel.
  * @param[in]  aMaxPower    The max power in dBm, passing OT_RADIO_RSSI_INVALID will disable this channel.
@@ -1300,7 +1303,9 @@ otError otPlatRadioClearCalibratedPowers(otInstance *aInstance);
  * Set the target power for the given channel.
  *
  * @note This API is an optional radio platform API. It's up to the platform layer to implement it.
- *       If this API is implemented, the function `otPlatRadioSetTransmitPower()` should be disabled.
+ *       If this function and `otPlatRadioSetTransmitPower()` are implemented at the same time:
+ *       - If neither of these two functions is called, the radio outputs the platform-defined default power.
+ *       - If both functions are called, the last one to be called takes effect.
  *
  * The radio driver should set the actual output power to be less than or equal to the @p aTargetPower and as close
  * as possible to the @p aTargetPower. If the @p aTargetPower is lower than the minimum output power supported
