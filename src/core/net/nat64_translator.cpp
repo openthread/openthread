@@ -510,6 +510,17 @@ exit:
     return err;
 }
 
+void Translator::ClearIp4Cidr(void)
+{
+    mIp4Cidr.Clear();
+    mAddressMappingPool.FreeAll();
+    mActiveAddressMappings.Clear();
+    mIp4AddressPool.Clear();
+
+    UpdateState();
+    Get<Notifier>().Signal(kEventNat64TranslatorStateChanged);
+}
+
 void Translator::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
 {
     if (aNat64Prefix.GetLength() == 0)
