@@ -1488,10 +1488,14 @@ const char *Ip6::EcnToString(Ecn aEcn)
         "ce", // (3) kEcnMarked    (Congestion Encountered)
     };
 
-    static_assert(0 == kEcnNotCapable, "kEcnNotCapable value is incorrect");
-    static_assert(1 == kEcnCapable1, "kEcnCapable1 value is incorrect");
-    static_assert(2 == kEcnCapable0, "kEcnCapable0 value is incorrect");
-    static_assert(3 == kEcnMarked, "kEcnMarked value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kEcnNotCapable);
+        ValidateNextEnum(kEcnCapable1);
+        ValidateNextEnum(kEcnCapable0);
+        ValidateNextEnum(kEcnMarked);
+    };
 
     return kEcnStrings[aEcn];
 }
