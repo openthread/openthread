@@ -47,7 +47,7 @@ jobs:
 
   thread-1-4:
     name: thread-1-4-${{ matrix.compiler.c }}-${{ matrix.arch }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       CFLAGS: -${{ matrix.arch }}
       CXXFLAGS: -${{ matrix.arch }}
@@ -62,7 +62,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        compiler: [{c: "gcc", cxx: "g++", gcov: "gcc"}, { c: "clang-10", cxx: "clang++-10", gcov: "llvm"}]
+        compiler: [{c: "gcc", cxx: "g++", gcov: "gcc"}, { c: "clang", cxx: "clang++", gcov: "llvm"}]
         arch: ["m32", "m64"]
     steps:
     - name: Harden Runner
@@ -81,7 +81,7 @@ jobs:
       run: |
         sudo dpkg --add-architecture i386
         sudo apt-get update
-        sudo apt-get --no-install-recommends install -y clang-10 clang++-10 ninja-build llvm lcov
+        sudo apt-get --no-install-recommends install -y ninja-build llvm lcov
         sudo apt-get --no-install-recommends install -y g++-multilib libreadline-dev:i386 libncurses-dev:i386
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
@@ -120,7 +120,7 @@ jobs:
         retention-days: 1
 
   packet-verification-low-power:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     env:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 1
@@ -145,7 +145,7 @@ jobs:
         cache: pip
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
@@ -197,7 +197,7 @@ jobs:
         retention-days: 1
 
   packet-verification-1-1-on-1-4:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     env:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 1
@@ -220,7 +220,7 @@ jobs:
         cache: pip
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
@@ -249,7 +249,7 @@ jobs:
         retention-days: 1
 
   channel-manager-csl:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     env:
       CFLAGS: -m32
       CXXFLAGS: -m32
@@ -272,7 +272,7 @@ jobs:
         cache: pip
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y g++-multilib lcov ninja-build
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
@@ -297,7 +297,7 @@ jobs:
         retention-days: 1
 
   expects:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     env:
       COVERAGE: 1
       THREAD_VERSION: 1.4
@@ -346,7 +346,7 @@ jobs:
         retention-days: 1
 
   thread-1-4-posix:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       COVERAGE: 1
       PYTHONUNBUFFERED: 1
@@ -371,7 +371,7 @@ jobs:
         cache: pip
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y libreadline6-dev ninja-build llvm lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
@@ -420,7 +420,7 @@ jobs:
     - packet-verification-1-1-on-1-4
     - expects
     - thread-1-4-posix
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
