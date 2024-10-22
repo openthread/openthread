@@ -641,6 +641,14 @@ public:
      */
     void ScheduleChildUpdateRequest(void);
 
+    /**
+     * Sends a Child Update Request to the parent.
+     *
+     * @retval kErrorNone     Successfully prepared and sent an MLE Child Update Request message.
+     * @retval kErrorNoBufs   Insufficient buffers to construct the MLE Child Update Request message.
+     */
+    Error SendChildUpdateRequestToParent(void);
+
     /*
      * Indicates whether or not the device has restored the network information from
      * non-volatile settings after boot.
@@ -723,25 +731,25 @@ private:
     // Constants
 
     // All time intervals are in milliseconds
-    static constexpr uint32_t kParentRequestRouterTimeout     = 750;  // Wait time after tx of Parent Req to routers
-    static constexpr uint32_t kParentRequestReedTimeout       = 1250; // Wait timer after tx of Parent Req to REEDs
-    static constexpr uint32_t kParentRequestDuplicateMargin   = 50;   // Margin to detect duplicate received Parent Req
-    static constexpr uint32_t kChildIdResponseTimeout         = 1250; // Wait time to receive Child ID Response
-    static constexpr uint32_t kAttachStartJitter              = 50;   // Max jitter time added to start of attach
-    static constexpr uint32_t kAnnounceProcessTimeout         = 250;  // Delay after Announce rx before processing
-    static constexpr uint32_t kAnnounceTimeout                = 1400; // Total timeout for sending Announce messages
-    static constexpr uint16_t kMinAnnounceDelay               = 80;   // Min delay between Announcement messages
-    static constexpr uint32_t kParentResponseMaxDelayRouters  = 500;  // Max response delay for Parent Req to routers
-    static constexpr uint32_t kParentResponseMaxDelayAll      = 1000; // Max response delay for Parent Req to all
-    static constexpr uint32_t kChildUpdateRequestPendingDelay = 100;  // Delay for aggregating Child Update Req
-    static constexpr uint32_t kMaxLinkAcceptDelay             = 1000; // Max delay to tx Link Accept for multicast Req
-    static constexpr uint32_t kChildIdRequestTimeout          = 5000; // Max delay to rx a Child ID Req after Parent Res
-    static constexpr uint32_t kLinkRequestTimeout             = 2000; // Max delay to rx a Link Accept
-    static constexpr uint32_t kDetachGracefullyTimeout        = 1000; // Timeout for graceful detach
-    static constexpr uint32_t kUnicastRetxDelay               = 1000; // Base delay for MLE unicast retx
-    static constexpr uint32_t kMulticastRetxDelay             = 5000; // Base delay for MLE multicast retx
-    static constexpr uint32_t kMulticastRetxDelayMin          = kMulticastRetxDelay * 9 / 10;  // 0.9 * base delay
-    static constexpr uint32_t kMulticastRetxDelayMax          = kMulticastRetxDelay * 11 / 10; // 1.1 * base delay
+    static constexpr uint32_t kParentRequestRouterTimeout    = 750;  // Wait time after tx of Parent Req to routers
+    static constexpr uint32_t kParentRequestReedTimeout      = 1250; // Wait timer after tx of Parent Req to REEDs
+    static constexpr uint32_t kParentRequestDuplicateMargin  = 50;   // Margin to detect duplicate received Parent Req
+    static constexpr uint32_t kChildIdResponseTimeout        = 1250; // Wait time to receive Child ID Response
+    static constexpr uint32_t kAttachStartJitter             = 50;   // Max jitter time added to start of attach
+    static constexpr uint32_t kAnnounceProcessTimeout        = 250;  // Delay after Announce rx before processing
+    static constexpr uint32_t kAnnounceTimeout               = 1400; // Total timeout for sending Announce messages
+    static constexpr uint16_t kMinAnnounceDelay              = 80;   // Min delay between Announcement messages
+    static constexpr uint32_t kParentResponseMaxDelayRouters = 500;  // Max response delay for Parent Req to routers
+    static constexpr uint32_t kParentResponseMaxDelayAll     = 1000; // Max response delay for Parent Req to all
+    static constexpr uint32_t kChildUpdateRequestDelay       = 100;  // Delay for aggregating Child Update Req
+    static constexpr uint32_t kMaxLinkAcceptDelay            = 1000; // Max delay to tx Link Accept for multicast Req
+    static constexpr uint32_t kChildIdRequestTimeout         = 5000; // Max delay to rx a Child ID Req after Parent Res
+    static constexpr uint32_t kLinkRequestTimeout            = 2000; // Max delay to rx a Link Accept
+    static constexpr uint32_t kDetachGracefullyTimeout       = 1000; // Timeout for graceful detach
+    static constexpr uint32_t kUnicastRetxDelay              = 1000; // Base delay for MLE unicast retx
+    static constexpr uint32_t kMulticastRetxDelay            = 5000; // Base delay for MLE multicast retx
+    static constexpr uint32_t kMulticastRetxDelayMin         = kMulticastRetxDelay * 9 / 10;  // 0.9 * base delay
+    static constexpr uint32_t kMulticastRetxDelayMax         = kMulticastRetxDelay * 11 / 10; // 1.1 * base delay
     static constexpr uint32_t kAnnounceBackoffForPendingDataset = 60000; // Max delay left to block Announce processing.
 
     static constexpr uint8_t kMaxTxCount                = 3; // Max tx count for MLE message
@@ -853,9 +861,8 @@ private:
 
     enum ChildUpdateRequestState : uint8_t
     {
-        kChildUpdateRequestNone,    // No pending or active Child Update Request.
-        kChildUpdateRequestPending, // Pending Child Update Request due to relative OT_CHANGED event.
-        kChildUpdateRequestActive,  // Child Update Request has been sent and Child Update Response is expected.
+        kChildUpdateRequestNone,   // Not waiting for Child Update Response
+        kChildUpdateRequestActive, // Child Update Request has been sent and Child Update Response is expected.
     };
 
     enum ChildUpdateRequestMode : uint8_t // Used in `SendChildUpdateRequest()`
@@ -994,7 +1001,6 @@ private:
         }
 
         Error SendTo(const Ip6::Address &aDestination);
-        Error SendAfterDelay(const Ip6::Address &aDestination, uint16_t aDelay);
 
     private:
         Error AppendCompressedAddressEntry(uint8_t aContextId, const Ip6::Address &aAddress);
@@ -1064,6 +1070,33 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+#if OPENTHREAD_FTD
+    struct ParentResponseInfo
+    {
+        Mac::ExtAddress mChildExtAddress; // The child extended address.
+        RxChallenge     mRxChallenge;     // The challenge from the Parent Request.
+    };
+
+    struct LinkAcceptInfo
+    {
+        Mac::ExtAddress mExtAddress;       // The neighbor/router extended address.
+        TlvList         mRequestedTlvList; // The requested TLVs in Link Request.
+        RxChallenge     mRxChallenge;      // The challenge in Link Request.
+        uint8_t         mLinkMargin;       // Link margin of the received Link Request.
+    };
+
+    struct DiscoveryResponseInfo
+    {
+        Mac::PanId mPanId;
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        Mac::RadioType mRadioType;
+#endif
+    };
+
+#endif // OPENTHREAD_FTD
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     void HandleDelayedSenderTimer(void) { mDelayedSender.HandleTimer(); }
 
     class DelayedSender : public InstanceLocator
@@ -1071,26 +1104,47 @@ private:
     public:
         explicit DelayedSender(Instance &aInstance);
 
-        Error SendMessage(TxMessage &aMessage, const Ip6::Address &aDestination, uint16_t aDelay);
-        void  RemoveDataRequestMessage(const Ip6::Address &aDestination);
-        void  RemoveDataResponseMessage(void);
-        void  HandleTimer(void);
+        void ScheduleDataRequest(const Ip6::Address &aDestination, uint16_t aDelay);
+        void ScheduleChildUpdateRequestToParent(uint16_t aDelay);
+#if OPENTHREAD_FTD
+        void ScheduleParentResponse(const ParentResponseInfo &aInfo, uint16_t aDelay);
+        void ScheduleMulticastDataResponse(uint16_t aDelay);
+        void ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint16_t aDelay);
+        void ScheduleDiscoveryResponse(const Ip6::Address          &aDestination,
+                                       const DiscoveryResponseInfo &aInfo,
+                                       uint16_t                     aDelay);
+#endif
+        void RemoveScheduledChildUpdateRequestToParent(void);
 
-        const MessageQueue &GetQueue(void) const { return mQueue; }
+        void                HandleTimer(void);
+        const MessageQueue &GetQueue(void) const { return mSchedules; }
 
     private:
-        struct Metadata : public Message::FooterData<Metadata>
+        typedef Message Schedule;
+
+        struct Header
         {
-            Ip6::Address mDestination;
+            void ReadFrom(const Schedule &aSchedule) { IgnoreError(aSchedule.Read(/* aOffset */ 0, *this)); }
+
             TimeMilli    mSendTime;
+            Ip6::Address mDestination;
+            MessageType  mMessageType;
         };
 
-        void Send(TxMessage &aMessage, const Metadata &aMetadata);
-        void RemoveMessage(Command aCommand, MessageType aMessageType, const Ip6::Address *aDestination);
+        void AddSchedule(MessageType         aMessageType,
+                         const Ip6::Address &aDestination,
+                         uint16_t            aDelay,
+                         const void         *aInfo,
+                         uint16_t            aInfoSize);
+        void Execute(const Schedule &aSchedule, const Header &aHeader);
+        bool HasMatchingSchedule(MessageType aMessageType, const Ip6::Address &aDestination) const;
+        void RemoveMatchingSchedules(MessageType aMessageType, const Ip6::Address &aDestination);
+
+        static bool Match(const Schedule &aSchedule, MessageType aMessageType, const Ip6::Address &aDestination);
 
         using DelayTimer = TimerMilliIn<Mle, &Mle::HandleDelayedSenderTimer>;
 
-        MessageQueue mQueue;
+        MessageQueue mSchedules;
         DelayTimer   mTimer;
     };
 
@@ -1216,9 +1270,7 @@ private:
     void       HandleNotifierEvents(Events aEvents);
     void       HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void       ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
-    Error      SendChildUpdateRequest(ChildUpdateRequestMode aMode);
-    Error      SendDataRequestAfterDelay(const Ip6::Address &aDestination, uint16_t aDelay);
-    Error      SendChildUpdateRequest(void);
+    Error      SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode);
     Error      SendChildUpdateResponse(const TlvList      &aTlvList,
                                        const RxChallenge  &aChallenge,
                                        const Ip6::Address &aDestination);
@@ -1300,10 +1352,9 @@ private:
     Error SendDataRequest(const Ip6::Address                      &aDestination,
                           const uint8_t                           *aTlvs,
                           uint8_t                                  aTlvsLength,
-                          uint16_t                                 aDelay,
                           const LinkMetrics::Initiator::QueryInfo *aQueryInfo = nullptr);
 #else
-    Error SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aDelay);
+    Error       SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength);
 #endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

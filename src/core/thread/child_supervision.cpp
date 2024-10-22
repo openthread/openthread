@@ -160,7 +160,7 @@ void SupervisionListener::SetInterval(uint16_t aInterval)
 
     if (Get<Mle::Mle>().IsChild())
     {
-        IgnoreError(Get<Mle::Mle>().SendChildUpdateRequest());
+        IgnoreError(Get<Mle::Mle>().SendChildUpdateRequestToParent());
     }
 
 exit:
@@ -210,7 +210,7 @@ void SupervisionListener::HandleTimer(void)
     LogWarn("Supervision timeout. No frame from parent in %u sec", mTimeout);
     mCounter++;
 
-    IgnoreError(Get<Mle::MleRouter>().SendChildUpdateRequest());
+    IgnoreError(Get<Mle::Mle>().SendChildUpdateRequestToParent());
 
 exit:
     RestartTimer();

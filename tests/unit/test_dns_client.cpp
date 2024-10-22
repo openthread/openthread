@@ -225,6 +225,8 @@ void InitTest(void)
 
 void FinalizeTest(void)
 {
+    AdvanceTime(30 * 1000);
+
     SuccessOrQuit(otIp6SetEnabled(sInstance, false));
     SuccessOrQuit(otThreadSetEnabled(sInstance, false));
     // Make sure there is no message/buffer leak
