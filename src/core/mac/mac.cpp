@@ -201,6 +201,9 @@ bool Mac::IsInTransmitState(void) const
     case kOperationTransmitDataCsl:
 #endif
 #endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    case kOperationTransmitDataEnhCsl:
+#endif
     case kOperationTransmitBeacon:
     case kOperationTransmitPoll:
         retval = true;
@@ -518,6 +521,20 @@ exit:
 #endif
 #endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+void Mac::RequestEnhCslFrameTransmission(uint32_t aDelay)
+{
+    VerifyOrExit(mEnabled);
+
+    mEnhCslTxFireTime = TimerMilli::GetNow() + aDelay;
+
+    StartOperation(kOperationTransmitDataEnhCsl);
+
+exit:
+    return;
+}
+#endif
+
 Error Mac::RequestDataPollTransmission(void)
 {
     Error error = kErrorNone;
@@ -542,6 +559,13 @@ void Mac::UpdateIdleMode(void)
     bool shouldSleep = !mRxOnWhenIdle && !mPromiscuous;
 
     VerifyOrExit(mOperation == kOperationIdle);
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    if (IsPending(kOperationTransmitDataEnhCsl))
+    {
+        mTimer.FireAt(mEnhCslTxFireTime);
+    }
+#endif
 
     if (!mRxOnWhenIdle)
     {
@@ -644,6 +668,12 @@ void Mac::PerformNextOperation(void)
         mOperation = kOperationTransmitDataCsl;
     }
 #endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    else if (IsPending(kOperationTransmitDataEnhCsl) && TimerMilli::GetNow() >= mEnhCslTxFireTime)
+    {
+        mOperation = kOperationTransmitDataEnhCsl;
+    }
+#endif
     else if (IsPending(kOperationActiveScan))
     {
         mOperation = kOperationActiveScan;
@@ -707,6 +737,9 @@ void Mac::PerformNextOperation(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
 #endif
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    case kOperationTransmitDataEnhCsl:
 #endif
     case kOperationTransmitPoll:
         BeginTransmit();
@@ -1019,6 +1052,23 @@ void Mac::BeginTransmit(void)
 
 #endif
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    case kOperationTransmitDataEnhCsl:
+        txFrames.SetChannel(mRadioChannel);
+        txFrames.SetMaxCsmaBackoffs(kMaxCsmaBackoffsCsl);
+        txFrames.SetMaxFrameRetries(kMaxFrameRetriesCsl);
+        frame = Get<EnhCslSender>().HandleFrameRequest(txFrames);
+        VerifyOrExit(frame != nullptr);
+
+        // If the frame is marked as retransmission, then data sequence number is already set.
+        if (!frame->IsARetransmission())
+        {
+            frame->SetSequence(mDataSequence++);
+        }
+
+        break;
+#endif
 
     default:
         OT_ASSERT(false);
@@ -1454,13 +1504,24 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
             mRetryHistogram.mTxIndirectRetrySuccess[mLinks.GetTransmitRetries()]++;
         }
 #endif
-
         DumpDebg("TX", aFrame.GetHeader(), aFrame.GetLength());
         FinishOperation();
         Get<DataPollHandler>().HandleSentFrame(aFrame, aError);
         PerformNextOperation();
         break;
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    case kOperationTransmitDataEnhCsl:
+        mCounters.mTxData++;
+
+        DumpDebg("TX", aFrame.GetHeader(), aFrame.GetLength());
+        FinishOperation();
+        Get<EnhCslSender>().HandleSentFrame(aFrame, aError);
+        PerformNextOperation();
+
+        break;
+#endif
 
     default:
         OT_ASSERT(false);
@@ -1488,6 +1549,12 @@ void Mac::HandleTimer(void)
         break;
 
     case kOperationIdle:
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        if (IsPending(kOperationTransmitDataEnhCsl))
+        {
+            PerformNextOperation();
+        }
+#endif
         if (!mRxOnWhenIdle)
         {
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
@@ -1603,7 +1670,8 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         {
             uint32_t sequence;
 
-            // TODO: Avoid generating a new key if a wake-up frame was recently received already
+            // Avoid generating a new key if a wake-up frame was recently received already
+            VerifyOrExit(!Get<Mle::Mle>().IsWakeupCoordPresent(), error = kErrorInvalidState);
 
             IgnoreError(aFrame.GetKeyId(keyid));
             sequence = BigEndian::ReadUint32(aFrame.GetKeySource());
@@ -2209,6 +2277,9 @@ const char *Mac::OperationToString(Operation aOperation)
         "TransmitDataCsl", // (8) kOperationTransmitDataCsl
 #endif
 #endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        "TransmitDataEnhCsl", // kOperationTransmitDataEnhCsl
+#endif
     };
 
     struct OperationChecker
@@ -2531,7 +2602,8 @@ void Mac::UpdateWakeupListening(void)
 
 Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
 {
-    Error               error = kErrorNone;
+    Error               error             = kErrorNone;
+    constexpr uint32_t  kWakeupIntervalUs = kDefaultWedListenInterval * kUsPerTenSymbols;
     const ConnectionIe *connectionIe;
     uint32_t            rvTimeUs;
     uint64_t            rvTimestampUs;
@@ -2539,6 +2611,8 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
     uint64_t            radioNowUs;
     uint8_t             retryInterval;
     uint8_t             retryCount;
+    Neighbor           *coord;
+    Address             coordAddress;
 
     VerifyOrExit(mWakeupListenEnabled && aFrame.IsWakeupFrame());
     connectionIe  = aFrame.GetConnectionIe();
@@ -2572,8 +2646,21 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
     // Stop receiving more wake up frames
     IgnoreError(SetWakeupListenEnabled(false));
 
-    // TODO: start MLE attach process with the WC
-    OT_UNUSED_VARIABLE(attachDelayMs);
+    IgnoreError(aFrame.GetSrcAddr(coordAddress));
+    Get<Mle::Mle>().InitParentCandidate(coordAddress.GetExtended());
+    coord = &Get<Mle::MleRouter>().GetParentCandidate();
+    coord->SetEnhCslPeriod(kDefaultWedListenInterval * retryInterval);
+    coord->SetEnhCslPhase(0);
+    coord->SetEnhCslSynchronized(true);
+    coord->SetEnhCslLastHeard(TimerMilli::GetNow());
+    // Rendezvous time is the time when the WC begins listening for the connection request from the awakened WED.
+    // Since EnhCslSender schedules a frame's PHR at `LastRxTimestamp + Phase + n*Period`, increase the timestamp
+    // by SHR length and the CSL uncertainty to make sure SHR begins while the WC is already listening.
+    coord->SetEnhLastRxTimestamp(rvTimestampUs + kRadioHeaderShrDuration + Get<Radio>().GetCslUncertainty() * 10);
+    coord->SetEnhCslMaxTxAttempts(retryCount);
+
+    Get<Mle::Mle>().AttachToWakeupCoord(coordAddress.GetExtended(), TimerMilli::GetNow() + attachDelayMs,
+                                        kWakeupIntervalUs * retryInterval * retryCount / 1000);
 
 exit:
     return error;

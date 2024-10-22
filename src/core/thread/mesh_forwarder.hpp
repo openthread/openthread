@@ -52,6 +52,7 @@
 #include "net/ip6.hpp"
 #include "thread/address_resolver.hpp"
 #include "thread/child.hpp"
+#include "thread/enh_csl_sender.hpp"
 #include "thread/indirect_sender.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/network_data_leader.hpp"
@@ -161,6 +162,9 @@ class MeshForwarder : public InstanceLocator, private NonCopyable
     friend class Ip6::Ip6;
     friend class Mle::DiscoverScanner;
     friend class TimeTicker;
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    friend class EnhCslSender;
+#endif
 
 public:
     /**
@@ -649,6 +653,10 @@ private:
 #endif
 
     DataPollSender mDataPollSender;
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    EnhCslSender mEnhCslSender;
+#endif
 
 #if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
     TxQueueStats mTxQueueStats;

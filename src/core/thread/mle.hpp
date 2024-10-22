@@ -116,6 +116,10 @@ class Mle : public InstanceLocator, private NonCopyable
     friend class ot::LinkMetrics::Initiator;
 #endif
     friend class ot::UnitTester;
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    friend class ot::EnhCslSender;
+    friend class ot::Mac::Mac;
+#endif
 
 public:
     typedef otDetachGracefullyCallback DetachCallback; ///< Callback to signal end of graceful detach.
@@ -718,6 +722,27 @@ public:
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    /**
+     * Returns whether the Thread interface is currently communicating to a Wake-up Coordinator.
+     *
+     * @retval TRUE   If the Thread interface is communicating to a Wake-up Coordinator.
+     * @retval FALSE  If the Thread interface is not communicating to a Wake-up Coordinator.
+     */
+    bool IsWakeupCoordPresent() const { return mWakeupCoordAttachWindow > 0; }
+
+    /**
+     * Attaches to a Wake-up Coordinator.
+     *
+     * This detaches from the current parent and initiates attachment to the Wake-up Coordinator.
+     *
+     * @param[in] aCoord          The extended address of the Wake-up Coordinator.
+     * @param[in] aAttachTime     The time when Parent Requests start being sent to the Wake-up Coordinator.
+     * @param[in] aAttachWindowMs The connection window for receiving the Parent Response.
+     */
+    void AttachToWakeupCoord(const Mac::ExtAddress &aCoord, TimeMilli aAttachTime, uint32_t aAttachWindowMs);
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
 private:
     //------------------------------------------------------------------------------------------------------------------
     // Constants
@@ -849,6 +874,9 @@ private:
     {
         kToRouters,         // Parent Request to routers only.
         kToRoutersAndReeds, // Parent Request to all routers and REEDs.
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        kToWakeupCoord, // Parent Request unicast to a known Wake-up Coordinator device.
+#endif
     };
 
     enum ChildUpdateRequestState : uint8_t
@@ -924,6 +952,9 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         kTypeTimeSync,
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        kTypeParentRequestToWakeupCoord,
 #endif
     };
 
@@ -1061,6 +1092,26 @@ private:
         Neighbor               *mNeighbor;     // Neighbor from which message was received (can be `nullptr`).
         Class                   mClass;        // The message class (authoritative, peer, or unknown).
     };
+
+    /*
+     * Resets the attach counter.
+     *
+     */
+    void ResetAttachCounter(void);
+
+    /**
+     * Increments the attach counter.
+     *
+     */
+    void IncrementAttachCounter(void);
+
+    /*
+     * Initialize parent candidate.
+     *
+     * @param[in] aAddress  The MAC Address of the parent candidate.
+     *
+     */
+    void InitParentCandidate(Mac::ExtAddress &aAddress);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1255,7 +1306,7 @@ private:
     void       SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, AnnounceMode aMode = kNormalAnnounce);
     uint32_t   Reattach(void);
     bool       HasAcceptableParentCandidate(void) const;
-    Error      DetermineParentRequestType(ParentRequestType &aType) const;
+    Error      DetermineParentRequestType(ParentRequestType &aType, uint32_t *aTimeout = nullptr) const;
     bool       IsBetterParent(uint16_t                aRloc16,
                               uint8_t                 aTwoWayLinkMargin,
                               const ConnectivityTlv  &aConnectivityTlv,
@@ -1404,6 +1455,15 @@ private:
     Ip6::Netif::UnicastAddress   mMeshLocalRloc;
     Ip6::Netif::MulticastAddress mLinkLocalAllThreadNodes;
     Ip6::Netif::MulticastAddress mRealmLocalAllThreadNodes;
+#if OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE
+    TimeMilli mAttachFireTime;
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    DeviceRole      mPreviousRole;
+    Mac::ExtAddress mWakeupCoord;
+    TimeMilli       mWakeupCoordAttachTime;
+    uint32_t        mWakeupCoordAttachWindow;
+#endif
 };
 
 } // namespace Mle

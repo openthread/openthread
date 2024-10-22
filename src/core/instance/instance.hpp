@@ -835,6 +835,10 @@ template <> inline MeshCoP::Leader &Instance::Get(void) { return mLeader; }
 template <> inline MeshCoP::JoinerRouter &Instance::Get(void) { return mJoinerRouter; }
 #endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+template <> inline EnhCslSender &Instance::Get(void) { return mMeshForwarder.mEnhCslSender; }
+#endif
+
 template <> inline AnnounceBeginServer &Instance::Get(void) { return mAnnounceBegin; }
 
 template <> inline DataPollSender &Instance::Get(void) { return mMeshForwarder.mDataPollSender; }

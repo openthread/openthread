@@ -109,6 +109,9 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mIndirectSender(aInstance)
 #endif
     , mDataPollSender(aInstance)
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    , mEnhCslSender(aInstance)
+#endif
 {
     mFragTag = Random::NonCrypto::GetUint16();
 
@@ -686,14 +689,27 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
     Get<Mac::Mac>().SetRxOnWhenIdle(aRxOnWhenIdle);
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    // Data polls not allowed in enhanced CSL mode
+    if (!Get<Mle::Mle>().IsWakeupCoordPresent())
+#endif
+    {
+        if (aRxOnWhenIdle)
+        {
+            mDataPollSender.StopPolling();
+        }
+        else
+        {
+            mDataPollSender.StartPolling();
+        }
+    }
+
     if (aRxOnWhenIdle)
     {
-        mDataPollSender.StopPolling();
         Get<SupervisionListener>().Stop();
     }
     else
     {
-        mDataPollSender.StartPolling();
         Get<SupervisionListener>().Start();
     }
 }
@@ -1083,7 +1099,12 @@ start:
 
     if (nextOffset < aMessage.GetLength())
     {
-        aFrame.SetFramePending(true);
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        if (!Get<Mle::Mle>().IsWakeupCoordPresent())
+#endif
+        {
+            aFrame.SetFramePending(true);
+        }
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         aMessage.SetTimeSync(false);
 #endif
