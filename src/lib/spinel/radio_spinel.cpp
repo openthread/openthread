@@ -162,8 +162,9 @@ void RadioSpinel::Init(bool          aSkipRcpCompatibilityCheck,
     if (!aSkipRcpCompatibilityCheck)
     {
         SuccessOrDie(CheckRcpApiVersion(supportsRcpApiVersion, supportsRcpMinHostApiVersion));
-        SuccessOrDie(CheckRadioCapabilities(aRequiredRadioCaps));
     }
+
+    SuccessOrDie(CheckRadioCapabilities(aRequiredRadioCaps));
 
     mRxRadioFrame.mPsdu  = mRxPsdu;
     mTxRadioFrame.mPsdu  = mTxPsdu;
