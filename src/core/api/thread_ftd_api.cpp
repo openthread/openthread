@@ -257,6 +257,13 @@ otError otThreadGetNextCacheEntry(otInstance *aInstance, otCacheEntryInfo *aEntr
                                                                           AsCoreType(aIterator));
 }
 
+void otThreadUpdateSnoopedCacheEntry(otInstance *aInstance, const otIp6Address *aEid, uint16_t aRloc16)
+{
+    uint16_t devRloc16 = AsCoreType(aInstance).Get<Mle::Mle>().GetRloc16();
+
+    return AsCoreType(aInstance).Get<AddressResolver>().UpdateSnoopedCacheEntry(AsCoreType(aEid), aRloc16, devRloc16);
+}
+
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 void otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
