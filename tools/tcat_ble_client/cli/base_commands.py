@@ -73,6 +73,9 @@ class BleCommand(Command):
         pass
 
     async def execute_default(self, args, context):
+        if 'ble_sstream' not in context or context['ble_sstream'] is None:
+            print("Device not connected.")
+            return CommandResultNone()
         bless: BleStreamSecure = context['ble_sstream']
 
         print(self.get_log_string())
@@ -85,6 +88,7 @@ class BleCommand(Command):
             return CommandResultTLV(tlv_response)
         except DataNotPrepared as err:
             print('Command failed', err)
+        return CommandResultNone()
 
 
 class HelloCommand(BleCommand):
@@ -298,7 +302,7 @@ class PingCommand(Command):
         response = await bless.send_with_resp(data)
         elapsed_time = 1e3 * (time() - elapsed_time)
         if not response:
-            return
+            return CommandResultNone()
 
         tlv_response = TLV.from_bytes(response)
         if tlv_response.value != to_send:
@@ -352,7 +356,8 @@ class ScanCommand(Command):
         return 'Perform scan for TCAT devices.'
 
     async def execute_default(self, args, context):
-        if not (context['ble_sstream'] is None):
+        if 'ble_sstream' in context and context['ble_stream'] is not None:
+            context['ble_sstream'].close()
             del context['ble_sstream']
 
         tcat_devices = await ble_scanner.scan_tcat_devices()
@@ -379,3 +384,14 @@ class ScanCommand(Command):
         else:
             print('Secure channel not established.')
             await ble_stream.disconnect()
+        return CommandResultNone()
+
+
+class DisconnectCommand(Command):
+
+    def get_help_string(self) -> str:
+        return 'Disconnect from device'
+
+    async def execute_default(self, args, context):
+        await context['ble_sstream'].close()
+        return CommandResultNone()

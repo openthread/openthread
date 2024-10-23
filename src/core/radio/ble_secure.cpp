@@ -444,6 +444,7 @@ void BleSecure::HandleTlsReceive(uint8_t *aBuf, uint16_t aLength)
 
                 if (error == kErrorAbort)
                 {
+                    LogInfo("Disconnecting tcat client.");
                     // kErrorAbort indicates that a Disconnect command TLV has been received.
                     Disconnect();
                     // BleSecure is not stopped here, it must remain active in advertising state and

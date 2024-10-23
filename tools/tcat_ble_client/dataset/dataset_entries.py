@@ -306,7 +306,7 @@ class Pskc(DatasetEntry):
             args[0] = args[0][2:]
         pskc = args[0]
         if (len(pskc) > self.maxlen * 2):
-            raise ValueError('Invalid length of Pskc. Can be max ' f'{self.length * 2} hex characters.')
+            raise ValueError(f'Invalid length of Pskc. Can be max {self.length * 2} hex characters.')
         self.data = pskc
 
     def set_from_tlv(self, tlv: TLV):

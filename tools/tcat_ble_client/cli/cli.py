@@ -29,9 +29,10 @@ import readline
 import shlex
 from argparse import ArgumentParser
 from ble.ble_stream_secure import BleStreamSecure
-from cli.base_commands import (HelpCommand, HelloCommand, CommissionCommand, DecommissionCommand, GetDeviceIdCommand,
-                               GetPskdHash, GetExtPanIDCommand, GetNetworkNameCommand, GetProvisioningUrlCommand,
-                               PingCommand, GetRandomNumberChallenge, ThreadStateCommand, ScanCommand, PresentHash)
+from cli.base_commands import (DisconnectCommand, HelpCommand, HelloCommand, CommissionCommand, DecommissionCommand,
+                               GetDeviceIdCommand, GetPskdHash, GetExtPanIDCommand, GetNetworkNameCommand,
+                               GetProvisioningUrlCommand, PingCommand, GetRandomNumberChallenge, ThreadStateCommand,
+                               ScanCommand, PresentHash)
 from cli.dataset_commands import (DatasetCommand)
 from dataset.dataset import ThreadDataset
 from typing import Optional
@@ -48,6 +49,7 @@ class CLI:
             'hello': HelloCommand(),
             'commission': CommissionCommand(),
             'decommission': DecommissionCommand(),
+            'disconnect': DisconnectCommand(),
             'device_id': GetDeviceIdCommand(),
             'ext_panid': GetExtPanIDCommand(),
             'provisioning_url': GetProvisioningUrlCommand(),
