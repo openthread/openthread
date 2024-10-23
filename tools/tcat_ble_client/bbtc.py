@@ -97,7 +97,7 @@ async def main():
     ds = ThreadDataset()
     cli = CLI(ds, args, ble_sstream)
     loop = asyncio.get_running_loop()
-    print('Enter \'help\' to see available commands' ' or \'exit\' to exit the application.')
+    print('Enter \'help\' to see available commands or \'exit\' to exit the application.')
     while True:
         user_input = await loop.run_in_executor(None, lambda: input('> '))
         if user_input.lower() == 'exit':
