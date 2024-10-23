@@ -156,7 +156,7 @@ public:
     /**
      * Initialize this radio transceiver.
      *
-     * @param[in]  aSkipRcpCompatibilityCheck  TRUE to skip RCP compatibility check, FALSE to perform the check.
+     * @param[in]  aSkipRcpVersionCheck        TRUE to skip RCP version check, FALSE to perform the check.
      * @param[in]  aSoftwareReset              When doing RCP recovery, TRUE to try software reset first, FALSE to
      *                                         directly do a hardware reset.
      * @param[in]  aSpinelDriver               A pointer to the spinel driver instance that this object depends on.
@@ -164,7 +164,7 @@ public:
      *                                         the required capabilities during initialization.
      * @param[in]  aEnableRcpTimeSync          TRUE to enable RCP time sync, FALSE to not enable.
      */
-    void Init(bool          aSkipRcpCompatibilityCheck,
+    void Init(bool          aSkipRcpVersionCheck,
               bool          aSoftwareReset,
               SpinelDriver *aSpinelDriver,
               otRadioCaps   aRequiredRadioCaps,
