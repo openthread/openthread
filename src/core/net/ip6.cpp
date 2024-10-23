@@ -972,9 +972,12 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
             Udp::Header udp;
 
             IgnoreError(aMessagePtr->Read(aMessagePtr->GetOffset(), udp));
-            VerifyOrExit(Get<Udp>().ShouldUsePlatformUdp(udp.GetDestinationPort()) &&
-                             !Get<Udp>().IsPortInUse(udp.GetDestinationPort()),
-                         error = kErrorNoRoute);
+
+            if (Get<Udp>().IsPortInUse(udp.GetDestinationPort()))
+            {
+                ExitNow(error = kErrorNoRoute);
+            }
+
             break;
         }
 

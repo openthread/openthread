@@ -634,16 +634,6 @@ public:
      */
     bool IsPortInUse(uint16_t aPort) const;
 
-    /**
-     * Returns whether a udp port belongs to the platform or the stack.
-     *
-     * @param[in]   aPort       The udp port
-     *
-     * @retval True when the port belongs to the platform.
-     * @retval False when the port belongs to the stack.
-     */
-    bool ShouldUsePlatformUdp(uint16_t aPort) const;
-
 private:
     static constexpr uint16_t kDynamicPortMin = 49152; // Service Name and Transport Protocol Port Number Registry
     static constexpr uint16_t kDynamicPortMax = 65535; // Service Name and Transport Protocol Port Number Registry
