@@ -37,7 +37,7 @@ class TLV():
         self.value: bytes = value
 
     def __str__(self):
-        return f'TLV\n\tTYPE:\t0x{self.type:02x}\n\tVALUE:\t{self.value}'
+        return f'TLV\n\tTYPE:\t0x{self.type:02x}\n\tVALUE:\t{self.value.hex()}'
 
     @staticmethod
     def parse_tlvs(data: bytes) -> List[TLV]:
