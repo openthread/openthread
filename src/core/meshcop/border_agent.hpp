@@ -173,7 +173,8 @@ public:
      * Sets the ephemeral key for a given timeout duration.
      *
      * The ephemeral key can be set when the Border Agent is already running and is not currently connected to any
-     * external commissioner (i.e., it is in `kStateStarted` state).
+     * external commissioner (i.e., it is in `kStateStarted` state). To terminate active commissioner sessions,
+     * use the `Disconnect()` function.
      *
      * The given @p aKeyString is directly used as the ephemeral PSK (excluding the trailing null `\0` character). Its
      * length must be between `kMinEphemeralKeyLength` and `kMaxEphemeralKeyLength`, inclusive.
@@ -209,7 +210,8 @@ public:
      *
      * If a commissioner is connected using the ephemeral key and is currently active, calling this method does not
      * change its state. In this case the `IsEphemeralKeyActive()` will continue to return `true` until the commissioner
-     * disconnects, or the ephemeral key timeout expires.
+     * disconnects, or the ephemeral key timeout expires. To terminate active commissioner sessions, use the
+     * `Disconnect()` function.
      */
     void ClearEphemeralKey(void);
 
