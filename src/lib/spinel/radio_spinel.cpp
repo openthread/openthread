@@ -124,7 +124,7 @@ RadioSpinel::RadioSpinel(void)
     memset(&mCallbacks, 0, sizeof(mCallbacks));
 }
 
-void RadioSpinel::Init(bool          aSkipRcpCompatibilityCheck,
+void RadioSpinel::Init(bool          aSkipRcpVersionCheck,
                        bool          aSoftwareReset,
                        SpinelDriver *aSpinelDriver,
                        otRadioCaps   aRequiredRadioCaps,
@@ -159,11 +159,12 @@ void RadioSpinel::Init(bool          aSkipRcpCompatibilityCheck,
         EXPECT_NO_ERROR(error = Set(SPINEL_PROP_RCP_LOG_CRASH_DUMP, nullptr));
     }
 
-    if (!aSkipRcpCompatibilityCheck)
+    if (!aSkipRcpVersionCheck)
     {
         SuccessOrDie(CheckRcpApiVersion(supportsRcpApiVersion, supportsRcpMinHostApiVersion));
-        SuccessOrDie(CheckRadioCapabilities(aRequiredRadioCaps));
     }
+
+    SuccessOrDie(CheckRadioCapabilities(aRequiredRadioCaps));
 
     mRxRadioFrame.mPsdu  = mRxPsdu;
     mTxRadioFrame.mPsdu  = mTxPsdu;
