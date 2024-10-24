@@ -187,6 +187,7 @@ otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId);
  *
  * The ephemeral key can be set when the Border Agent is already running and is not currently connected to any external
  * commissioner (i.e., it is in `OT_BORDER_AGENT_STATE_STARTED` state). Otherwise `OT_ERROR_INVALID_STATE` is returned.
+ * To terminate active commissioner sessions, use the `otBorderAgentDisconnect()` API.
  *
  * The given @p aKeyString is directly used as the ephemeral PSK (excluding the trailing null `\0` character ).
  * The @p aKeyString length must be between `OT_BORDER_AGENT_MIN_EPHEMERAL_KEY_LENGTH` and
@@ -230,7 +231,8 @@ otError otBorderAgentSetEphemeralKey(otInstance *aInstance,
  *
  * If a commissioner is connected using the ephemeral key and is currently active, calling this function does not
  * change its state. In this case the `otBorderAgentIsEphemeralKeyActive()` will continue to return `TRUE` until the
- * commissioner disconnects, or the ephemeral key timeout expires.
+ * commissioner disconnects, or the ephemeral key timeout expires. To terminate active commissioner sessions, use the
+ * `otBorderAgentDisconnect()` API.
  *
  * @param[in] aInstance    The OpenThread instance.
  */
