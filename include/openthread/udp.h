@@ -110,6 +110,16 @@ otError otUdpSendDatagram(otInstance *aInstance, otMessage *aMessage, otMessageI
 typedef void (*otUdpReceive)(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
+ * Defines the OpenThread network interface identifiers.
+ */
+typedef enum otNetifIdentifier
+{
+    OT_NETIF_UNSPECIFIED = 0, ///< Unspecified network interface.
+    OT_NETIF_THREAD,          ///< The Thread interface.
+    OT_NETIF_BACKBONE,        ///< The Backbone interface.
+} otNetifIdentifier;
+
+/**
  * Represents a UDP socket.
  */
 typedef struct otUdpSocket
@@ -120,17 +130,8 @@ typedef struct otUdpSocket
     void               *mContext;  ///< A pointer to application-specific context.
     void               *mHandle;   ///< A handle to platform's UDP.
     struct otUdpSocket *mNext;     ///< A pointer to the next UDP socket (internal use only).
+    otNetifIdentifier   mNetifId;  ///< The network interface identifier.
 } otUdpSocket;
-
-/**
- * Defines the OpenThread network interface identifiers.
- */
-typedef enum otNetifIdentifier
-{
-    OT_NETIF_UNSPECIFIED = 0, ///< Unspecified network interface.
-    OT_NETIF_THREAD,          ///< The Thread interface.
-    OT_NETIF_BACKBONE,        ///< The Backbone interface.
-} otNetifIdentifier;
 
 /**
  * Allocate a new message buffer for sending a UDP message.
