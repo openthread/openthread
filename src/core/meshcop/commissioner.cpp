@@ -1117,9 +1117,13 @@ const char *Commissioner::StateToString(State aState)
         "active",   // (2) kStateActive
     };
 
-    static_assert(kStateDisabled == 0, "kStateDisabled value is incorrect");
-    static_assert(kStatePetition == 1, "kStatePetition value is incorrect");
-    static_assert(kStateActive == 2, "kStateActive value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kStateDisabled);
+        ValidateNextEnum(kStatePetition);
+        ValidateNextEnum(kStateActive);
+    };
 
     return kStateStrings[aState];
 }

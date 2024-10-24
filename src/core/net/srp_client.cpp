@@ -181,12 +181,16 @@ const uint32_t Client::TxJitter::kMaxJitters[] = {
 
 void Client::TxJitter::Request(Reason aReason)
 {
-    static_assert(0 == kOnDeviceReboot, "kOnDeviceReboot value is incorrect");
-    static_assert(1 == kOnServerStart, "kOnServerStart value is incorrect");
-    static_assert(2 == kOnServerRestart, "kOnServerRestart value is incorrect");
-    static_assert(3 == kOnServerSwitch, "kOnServerSwitch value is incorrect");
-    static_assert(4 == kOnSlaacAddrAdd, "kOnSlaacAddrAdd value is incorrect");
-    static_assert(5 == kOnSlaacAddrRemove, "kOnSlaacAddrRemove value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kOnDeviceReboot);
+        ValidateNextEnum(kOnServerStart);
+        ValidateNextEnum(kOnServerRestart);
+        ValidateNextEnum(kOnServerSwitch);
+        ValidateNextEnum(kOnSlaacAddrAdd);
+        ValidateNextEnum(kOnSlaacAddrRemove);
+    };
 
     uint32_t maxJitter = kMaxJitters[aReason];
 
@@ -246,12 +250,16 @@ const char *Client::TxJitter::ReasonToString(Reason aReason)
         "OnSlaacAddrRemove", // (5) kOnSlaacAddrRemove
     };
 
-    static_assert(0 == kOnDeviceReboot, "kOnDeviceReboot value is incorrect");
-    static_assert(1 == kOnServerStart, "kOnServerStart value is incorrect");
-    static_assert(2 == kOnServerRestart, "kOnServerRestart value is incorrect");
-    static_assert(3 == kOnServerSwitch, "kOnServerSwitch value is incorrect");
-    static_assert(4 == kOnSlaacAddrAdd, "kOnSlaacAddrAdd value is incorrect");
-    static_assert(5 == kOnSlaacAddrRemove, "kOnSlaacAddrRemove value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kOnDeviceReboot);
+        ValidateNextEnum(kOnServerStart);
+        ValidateNextEnum(kOnServerRestart);
+        ValidateNextEnum(kOnServerSwitch);
+        ValidateNextEnum(kOnSlaacAddrAdd);
+        ValidateNextEnum(kOnSlaacAddrRemove);
+    };
 
     return kReasonStrings[aReason];
 }
@@ -315,12 +323,16 @@ const char *Client::AutoStart::StateToString(State aState)
         "Unicast",       // (5) kSelectedUnicast
     };
 
-    static_assert(0 == kDisabled, "kDisabled value is incorrect");
-    static_assert(1 == kFirstTimeSelecting, "kFirstTimeSelecting value is incorrect");
-    static_assert(2 == kReselecting, "kReselecting value is incorrect");
-    static_assert(3 == kSelectedUnicastPreferred, "kSelectedUnicastPreferred value is incorrect");
-    static_assert(4 == kSelectedAnycast, "kSelectedAnycast value is incorrect");
-    static_assert(5 == kSelectedUnicast, "kSelectedUnicast value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kDisabled);
+        ValidateNextEnum(kFirstTimeSelecting);
+        ValidateNextEnum(kReselecting);
+        ValidateNextEnum(kSelectedUnicastPreferred);
+        ValidateNextEnum(kSelectedAnycast);
+        ValidateNextEnum(kSelectedUnicast);
+    };
 
     return kStateStrings[aState];
 }
@@ -359,22 +371,26 @@ Client::Client(Instance &aInstance)
     , mGuardTimer(aInstance)
 #endif
 {
-    mHostInfo.Init();
-
     // The `Client` implementation uses different constant array of
     // `ItemState` to define transitions between states in `Pause()`,
     // `Stop()`, `SendUpdate`, and `ProcessResponse()`, or to convert
     // an `ItemState` to string. Here, we assert that the enumeration
     // values are correct.
 
-    static_assert(kToAdd == 0, "kToAdd value is not correct");
-    static_assert(kAdding == 1, "kAdding value is not correct");
-    static_assert(kToRefresh == 2, "kToRefresh value is not correct");
-    static_assert(kRefreshing == 3, "kRefreshing value is not correct");
-    static_assert(kToRemove == 4, "kToRemove value is not correct");
-    static_assert(kRemoving == 5, "kRemoving value is not correct");
-    static_assert(kRegistered == 6, "kRegistered value is not correct");
-    static_assert(kRemoved == 7, "kRemoved value is not correct");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kToAdd);
+        ValidateNextEnum(kAdding);
+        ValidateNextEnum(kToRefresh);
+        ValidateNextEnum(kRefreshing);
+        ValidateNextEnum(kToRemove);
+        ValidateNextEnum(kRemoving);
+        ValidateNextEnum(kRegistered);
+        ValidateNextEnum(kRemoved);
+    };
+
+    mHostInfo.Init();
 }
 
 Error Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
@@ -2554,12 +2570,16 @@ const char *Client::StateToString(State aState)
         "ToRetry",  // kStateToRetry  (5)
     };
 
-    static_assert(kStateStopped == 0, "kStateStopped value is not correct");
-    static_assert(kStatePaused == 1, "kStatePaused value is not correct");
-    static_assert(kStateToUpdate == 2, "kStateToUpdate value is not correct");
-    static_assert(kStateUpdating == 3, "kStateUpdating value is not correct");
-    static_assert(kStateUpdated == 4, "kStateUpdated value is not correct");
-    static_assert(kStateToRetry == 5, "kStateToRetry value is not correct");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kStateStopped);
+        ValidateNextEnum(kStatePaused);
+        ValidateNextEnum(kStateToUpdate);
+        ValidateNextEnum(kStateUpdating);
+        ValidateNextEnum(kStateUpdated);
+        ValidateNextEnum(kStateToRetry);
+    };
 
     return kStateStrings[aState];
 }

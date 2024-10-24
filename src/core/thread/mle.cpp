@@ -3979,10 +3979,14 @@ const char *Mle::MessageActionToString(MessageAction aAction)
         "Remove Delayed", // (3) kMessageRemoveDelayed
     };
 
-    static_assert(kMessageSend == 0, "kMessageSend value is incorrect");
-    static_assert(kMessageReceive == 1, "kMessageReceive value is incorrect");
-    static_assert(kMessageDelay == 2, "kMessageDelay value is incorrect");
-    static_assert(kMessageRemoveDelayed == 3, "kMessageRemoveDelayed value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kMessageSend);
+        ValidateNextEnum(kMessageReceive);
+        ValidateNextEnum(kMessageDelay);
+        ValidateNextEnum(kMessageRemoveDelayed);
+    };
 
     return kMessageActionStrings[aAction];
 }
@@ -4030,10 +4034,9 @@ const char *Mle::MessageTypeToString(MessageType aType)
 #endif
     };
 
-    struct MessageTypeChecker
+    struct EnumCheck
     {
         InitEnumValidatorCounter();
-
         ValidateNextEnum(kTypeAdvertisement);
         ValidateNextEnum(kTypeAnnounce);
         ValidateNextEnum(kTypeChildIdRequest);
@@ -4130,11 +4133,15 @@ const char *Mle::AttachModeToString(AttachMode aMode)
         "BetterParent",    // (4) kBetterParent
     };
 
-    static_assert(kAnyPartition == 0, "kAnyPartition value is incorrect");
-    static_assert(kSamePartition == 1, "kSamePartition value is incorrect");
-    static_assert(kBetterPartition == 2, "kBetterPartition value is incorrect");
-    static_assert(kDowngradeToReed == 3, "kDowngradeToReed value is incorrect");
-    static_assert(kBetterParent == 4, "kBetterParent value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kAnyPartition);
+        ValidateNextEnum(kSamePartition);
+        ValidateNextEnum(kBetterPartition);
+        ValidateNextEnum(kDowngradeToReed);
+        ValidateNextEnum(kBetterParent);
+    };
 
     return kAttachModeStrings[aMode];
 }
@@ -4150,12 +4157,16 @@ const char *Mle::AttachStateToString(AttachState aState)
         "ChildIdReq",      // (5) kAttachStateChildIdRequest
     };
 
-    static_assert(kAttachStateIdle == 0, "kAttachStateIdle value is incorrect");
-    static_assert(kAttachStateProcessAnnounce == 1, "kAttachStateProcessAnnounce value is incorrect");
-    static_assert(kAttachStateStart == 2, "kAttachStateStart value is incorrect");
-    static_assert(kAttachStateParentRequest == 3, "kAttachStateParentRequest value is incorrect");
-    static_assert(kAttachStateAnnounce == 4, "kAttachStateAnnounce value is incorrect");
-    static_assert(kAttachStateChildIdRequest == 5, "kAttachStateChildIdRequest value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kAttachStateIdle);
+        ValidateNextEnum(kAttachStateProcessAnnounce);
+        ValidateNextEnum(kAttachStateStart);
+        ValidateNextEnum(kAttachStateParentRequest);
+        ValidateNextEnum(kAttachStateAnnounce);
+        ValidateNextEnum(kAttachStateChildIdRequest);
+    };
 
     return kAttachStateStrings[aState];
 }
@@ -4169,10 +4180,14 @@ const char *Mle::ReattachStateToString(ReattachState aState)
         "reattaching with Pending Dataset", // (3) kReattachPending
     };
 
-    static_assert(kReattachStop == 0, "kReattachStop value is incorrect");
-    static_assert(kReattachStart == 1, "kReattachStart value is incorrect");
-    static_assert(kReattachActive == 2, "kReattachActive value is incorrect");
-    static_assert(kReattachPending == 3, "kReattachPending value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kReattachStop);
+        ValidateNextEnum(kReattachStart);
+        ValidateNextEnum(kReattachActive);
+        ValidateNextEnum(kReattachPending);
+    };
 
     return kReattachStateStrings[aState];
 }

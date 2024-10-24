@@ -51,10 +51,14 @@ const char *StateToString(State aState)
         "Active",
     };
 
-    static_assert(0 == kStateDisabled, "kStateDisabled value is incorrect");
-    static_assert(1 == kStateNotRunning, "kStateNotRunning value is incorrect");
-    static_assert(2 == kStateIdle, "kStateIdle value is incorrect");
-    static_assert(3 == kStateActive, "kStateActive value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kStateDisabled);
+        ValidateNextEnum(kStateNotRunning);
+        ValidateNextEnum(kStateIdle);
+        ValidateNextEnum(kStateActive);
+    };
 
     return kStateString[aState];
 }

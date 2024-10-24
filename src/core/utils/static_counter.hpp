@@ -61,6 +61,8 @@ public:
     static_assert(kEnumartor == StaticCounterValue(), #kEnumartor " value is incorrect"); \
     StaticCounterIncr()
 
+#define SkipNextEnum() StaticCounterIncr()
+
 } // namespace ot
 
 #endif // OT_UTILS_STATIC_COUNTER_HPP_

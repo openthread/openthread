@@ -467,9 +467,13 @@ void Slaac::LogAddress(Action aAction, const SlaacAddress &aAddress)
         "Deprecating", // (2) kDeprecating
     };
 
-    static_assert(kAdding == 0, "kAdding value is incorrect");
-    static_assert(kRemoving == 1, "kRemoving value is incorrect");
-    static_assert(kDeprecating == 2, "kDeprecating value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kAdding);
+        ValidateNextEnum(kRemoving);
+        ValidateNextEnum(kDeprecating);
+    };
 
     LogInfo("%s %s", kActionStrings[aAction], aAddress.GetAddress().ToString().AsCString());
 }

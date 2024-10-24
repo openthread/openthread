@@ -129,15 +129,19 @@ const char *SettingsBase::ActionToString(Action aAction)
 #endif
     };
 
-    static_assert(0 == kActionRead, "kActionRead value is incorrect");
-    static_assert(1 == kActionSave, "kActionSave value is incorrect");
-    static_assert(2 == kActionResave, "kActionResave value is incorrect");
-    static_assert(3 == kActionDelete, "kActionDelete value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kActionRead);
+        ValidateNextEnum(kActionSave);
+        ValidateNextEnum(kActionResave);
+        ValidateNextEnum(kActionDelete);
 #if OPENTHREAD_FTD
-    static_assert(4 == kActionAdd, "kActionAdd value is incorrect");
-    static_assert(5 == kActionRemove, "kActionRemove value is incorrect");
-    static_assert(6 == kActionDeleteAll, "kActionDeleteAll value is incorrect");
+        ValidateNextEnum(kActionAdd);
+        ValidateNextEnum(kActionRemove);
+        ValidateNextEnum(kActionDeleteAll);
 #endif
+    };
 
     return kActionStrings[aAction];
 }
@@ -167,19 +171,28 @@ const char *SettingsBase::KeyToString(Key aKey)
         "BorderAgentId"      // (17) kKeyBorderAgentId
     };
 
-    static_assert(1 == kKeyActiveDataset, "kKeyActiveDataset value is incorrect");
-    static_assert(2 == kKeyPendingDataset, "kKeyPendingDataset value is incorrect");
-    static_assert(3 == kKeyNetworkInfo, "kKeyNetworkInfo value is incorrect");
-    static_assert(4 == kKeyParentInfo, "kKeyParentInfo value is incorrect");
-    static_assert(5 == kKeyChildInfo, "kKeyChildInfo value is incorrect");
-    static_assert(7 == kKeySlaacIidSecretKey, "kKeySlaacIidSecretKey value is incorrect");
-    static_assert(8 == kKeyDadInfo, "kKeyDadInfo value is incorrect");
-    static_assert(11 == kKeySrpEcdsaKey, "kKeySrpEcdsaKey value is incorrect");
-    static_assert(12 == kKeySrpClientInfo, "kKeySrpClientInfo value is incorrect");
-    static_assert(13 == kKeySrpServerInfo, "kKeySrpServerInfo value is incorrect");
-    static_assert(15 == kKeyBrUlaPrefix, "kKeyBrUlaPrefix value is incorrect");
-    static_assert(16 == kKeyBrOnLinkPrefixes, "kKeyBrOnLinkPrefixes is incorrect");
-    static_assert(17 == kKeyBorderAgentId, "kKeyBorderAgentId is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        SkipNextEnum();
+        ValidateNextEnum(kKeyActiveDataset);
+        ValidateNextEnum(kKeyPendingDataset);
+        ValidateNextEnum(kKeyNetworkInfo);
+        ValidateNextEnum(kKeyParentInfo);
+        ValidateNextEnum(kKeyChildInfo);
+        SkipNextEnum();
+        ValidateNextEnum(kKeySlaacIidSecretKey);
+        ValidateNextEnum(kKeyDadInfo);
+        SkipNextEnum();
+        SkipNextEnum();
+        ValidateNextEnum(kKeySrpEcdsaKey);
+        ValidateNextEnum(kKeySrpClientInfo);
+        ValidateNextEnum(kKeySrpServerInfo);
+        SkipNextEnum();
+        ValidateNextEnum(kKeyBrUlaPrefix);
+        ValidateNextEnum(kKeyBrOnLinkPrefixes);
+        ValidateNextEnum(kKeyBorderAgentId);
+    };
 
     static_assert(kLastKey == kKeyBorderAgentId, "kLastKey is not valid");
 
