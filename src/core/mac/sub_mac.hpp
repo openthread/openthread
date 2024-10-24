@@ -372,7 +372,16 @@ public:
      * @retval  TRUE if CSL Period or CSL Channel changed.
      * @retval  FALSE if CSL Period and CSL Channel did not change.
      */
-    bool UpdateCsl(uint16_t aPeriod, uint8_t aChannel, otShortAddress aShortAddr, const otExtAddress *aExtAddr);
+    bool UpdateCsl(uint16_t aPeriod, uint8_t aChannel);
+
+    uint8_t GetMaxCslNeighbors(void) const { return mMaxCslNeighbors; }
+
+    void ConfigureCslNeighbor(uint16_t            aIndex,
+                              otShortAddress      aShortAddr,
+                              const otExtAddress &aExtAddr,
+                              CslAccuracy         aCslAccuracy);
+
+    void ClearCslNeighbor(uint16_t aIndex);
 
     /**
      * Lets `SubMac` start CSL sample mode given a configured non-zero CSL period.
@@ -380,21 +389,6 @@ public:
      * `SubMac` would switch the radio state between `Receive` and `Sleep` according the CSL timer.
      */
     void CslSample(void);
-
-    /**
-     * Returns parent CSL accuracy (clock accuracy and uncertainty).
-     *
-     * @returns The parent CSL accuracy.
-     */
-    const CslAccuracy &GetCslParentAccuracy(void) const { return mCslParentAccuracy; }
-
-    /**
-     * Sets parent CSL accuracy.
-     *
-     * @param[in] aCslAccuracy  The parent CSL accuracy.
-     */
-    void SetCslParentAccuracy(const CslAccuracy &aCslAccuracy) { mCslParentAccuracy = aCslAccuracy; }
-
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
@@ -494,13 +488,36 @@ public:
 
 private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    void        CslInit(void);
-    void        UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame);
-    void        UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
-    static void HandleCslTimer(Timer &aTimer);
-    void        HandleCslTimer(void);
-    void        GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
-    uint32_t    GetLocalTime(void);
+    static constexpr uint32_t kCslMaxNeighbors = 1;
+
+    struct CslNeighbor
+    {
+        CslAccuracy mCslAccuracy;
+        TimeMicro   mCslLastSync;
+
+        ShortAddress mShortAddr; ///< The neighbor short address. May be invalid.
+        ExtAddress   mExtAddr;   ///< The neighbor ext address. Must be valid.
+        bool         mValid;     ///< If false all fields are undefined.
+
+        void Init(void);
+
+        inline bool IsValid(void) { return mValid; }
+
+        // Calculates the required semi window for this neighbor or 0 if the neighbor is invalid.
+        uint32_t GetSemiWindow(uint32_t aCurrentTime, uint32_t aOurAccuracy, uint32_t aOurUncertainty);
+    };
+
+    void         CslInit(void);
+    void         UpdateCslNeighbors(void);
+    void         UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame);
+    void         UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
+    static void  HandleCslTimer(Timer &aTimer);
+    void         HandleCslTimer(void);
+    void         GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
+    uint32_t     GetLocalTime(void);
+    CslNeighbor *FindCslNeighbor(const Address &aAddress);
+    CslNeighbor *FindCslNeighbor(ShortAddress aAddress);
+    CslNeighbor *FindCslNeighbor(const ExtAddress &aAddress);
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
     void LogReceived(RxFrame *aFrame);
 #endif
@@ -648,15 +665,17 @@ private:
     SubMacTimer mTimer;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint16_t mCslPeriod;            // The CSL sample period, in units of 10 symbols (160 microseconds).
-    uint8_t  mCslChannel : 7;       // The CSL sample channel.
-    bool     mIsCslSampling : 1;    // Indicates that the radio is receiving in CSL state for platforms not supporting
-                                    // delayed reception.
-    uint16_t    mCslPeerShort;      // The CSL peer short address.
-    TimeMicro   mCslSampleTime;     // The CSL sample time of the current period relative to the local radio clock.
-    TimeMicro   mCslLastSync;       // The timestamp of the last successful CSL synchronization.
-    CslAccuracy mCslParentAccuracy; // The parent's CSL accuracy (clock accuracy and uncertainty).
-    TimerMicro  mCslTimer;
+    uint16_t mCslPeriod;          // The CSL sample period, in units of 10 symbols (160 microseconds).
+    uint8_t  mCslChannel : 7;     // The CSL sample channel.
+    bool     mIsCslSampling : 1;  // Indicates that the radio is receiving in CSL state for platforms not supporting
+                                  // delayed reception.
+    uint8_t mMaxCslNeighbors : 7; // The maximum number of used csl neighbors
+    bool    mMultiCsl : 1;        // If true we are using the multi csl api
+
+    TimeMicro  mCslSampleTime; // The CSL sample time of the current period relative to the local radio clock.
+    TimerMicro mCslTimer;
+
+    CslNeighbor mCslNeighbors[kCslMaxNeighbors];
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE

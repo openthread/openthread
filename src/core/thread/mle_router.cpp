@@ -447,6 +447,7 @@ void MleRouter::SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, Leade
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     Get<Mac::Mac>().UpdateCsl();
+    Get<Mac::Mac>().UpdateCslParent();
 #endif
 
     LogNote("Partition ID 0x%lx", ToUlong(mLeaderData.GetPartitionId()));
