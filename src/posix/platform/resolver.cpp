@@ -175,7 +175,7 @@ Resolver::Transaction *Resolver::AllocateTransaction(otPlatDnsUpstreamQuery *aTh
     {
         if (txn.mThreadTxn == nullptr)
         {
-            fdOrError = socket(AF_INET, SOCK_DGRAM, 0);
+            fdOrError = CreateUdpSocket();
             if (fdOrError < 0)
             {
                 LogInfo("Failed to create socket for upstream resolver: %d", fdOrError);
@@ -311,6 +311,27 @@ void Resolver::SetUpstreamDnsServers(const otIp6Address *aUpstreamDnsServers, in
             mUpstreamDnsServerCount++;
         }
     }
+}
+
+int Resolver::CreateUdpSocket(void)
+{
+    int fd = -1;
+
+    VerifyOrExit(otSysGetInfraNetifName() != nullptr, LogDebg("No infra network interface available"));
+    fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    VerifyOrExit(fd >= 0, LogDebg("Failed to create the UDP socket: %s", strerror(errno)));
+#if OPENTHREAD_POSIX_CONFIG_UPSTREAM_DNS_BIND_TO_INFRA_NETIF
+    if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, otSysGetInfraNetifName(), strlen(otSysGetInfraNetifName())) < 0)
+    {
+        LogDebg("Failed to bind the UDP socket to infra interface %s: %s", otSysGetInfraNetifName(), strerror(errno));
+        close(fd);
+        fd = -1;
+        ExitNow();
+    }
+#endif
+
+exit:
+    return fd;
 }
 
 } // namespace Posix
