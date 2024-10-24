@@ -844,6 +844,25 @@ class Node(object):
     def br_count_peers(self):
         return self._cli_single_output('br peers count')
 
+    #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # trel
+
+    def trel_get_peers(self):
+        peers = self.cli('trel peers ')
+        return Node.parse_table(peers)
+
+    def trel_test_get_sock_addr(self):
+        return self._cli_single_output('treltest sockaddr')
+
+    def trel_test_change_sock_addr(self):
+        return self._cli_no_output('treltest changesockaddr')
+
+    def trel_test_change_sock_port(self):
+        return self._cli_no_output('treltest changesockport')
+
+    def trel_test_get_notify_addr_counter(self):
+        return self._cli_single_output('treltest notifyaddrcounter')
+
     # ------------------------------------------------------------------------------------------------------------------
     # Helper methods
 
