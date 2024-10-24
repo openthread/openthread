@@ -89,7 +89,6 @@ TEST(RadioSpinelTransmit, shouldPassDesiredTxPowerToRadioPlatform)
         .Times(1);
 
     ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
-    ASSERT_EQ(platform.mRadioSpinel.Receive(11), kErrorNone);
     ASSERT_EQ(platform.mRadioSpinel.Transmit(txFrame), kErrorNone);
 
     platform.GoInMs(1000);
@@ -129,7 +128,6 @@ TEST(RadioSpinelTransmit, shouldCauseSwitchingToRxChannelAfterTxDone)
     txFrame.mInfo.mTxInfo.mRxChannelAfterTxDone = 25;
 
     ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
-    ASSERT_EQ(platform.mRadioSpinel.Receive(11), kErrorNone);
     ASSERT_EQ(platform.mRadioSpinel.Transmit(txFrame), kErrorNone);
     platform.GoInMs(1000);
     EXPECT_EQ(platform.GetReceiveChannel(), 25);
@@ -186,7 +184,6 @@ TEST(RadioSpinelTransmit, shouldSkipCsmaCaWhenDisabled)
     EXPECT_CALL(platform, Receive(11)).Times(1);
 
     ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
-    ASSERT_EQ(platform.mRadioSpinel.Receive(12), kErrorNone);
     ASSERT_EQ(platform.mRadioSpinel.Transmit(txFrame), kErrorNone);
 
     platform.GoInMs(1000);
@@ -237,14 +234,12 @@ TEST(RadioSpinelTransmit, shouldPerformCsmaCaWhenEnabled)
                 })))
         .Times(1);
 
-    EXPECT_CALL(platform, Receive).Times(AnyNumber());
     // Receive(11) will be called exactly twice:
     // 1. one time to prepare for TX because the fake platform doesn't support sleep-to-tx capability.
     // 2. one time in CSMA backoff because rx-on-when-idle is true.
     EXPECT_CALL(platform, Receive(11)).Times(2);
 
     ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
-    ASSERT_EQ(platform.mRadioSpinel.Receive(12), kErrorNone);
     ASSERT_EQ(platform.mRadioSpinel.Transmit(txFrame), kErrorNone);
 
     platform.GoInMs(1000);
