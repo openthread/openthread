@@ -80,6 +80,7 @@
 #include "common/settings.hpp"
 #include "crypto/mbedtls.hpp"
 #include "mac/mac.hpp"
+#include "mac/wakeup_tx_scheduler.hpp"
 #include "meshcop/border_agent.hpp"
 #include "meshcop/commissioner.hpp"
 #include "meshcop/dataset_manager.hpp"
@@ -786,6 +787,10 @@ template <> inline NeighborTable &Instance::Get(void) { return mMleRouter.mNeigh
 template <> inline ChildTable &Instance::Get(void) { return mMleRouter.mChildTable; }
 
 template <> inline RouterTable &Instance::Get(void) { return mMleRouter.mRouterTable; }
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+template <> inline WakeupTxScheduler &Instance::Get(void) { return mMleRouter.mWakeupTxScheduler; }
 #endif
 
 template <> inline Ip6::Netif &Instance::Get(void) { return mThreadNetif; }
