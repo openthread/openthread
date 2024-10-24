@@ -1282,6 +1282,7 @@ private:
         {
             kProcessed,
             kSaveAsMultiPacket,
+            kSaveAsSharedReply,
         };
 
         Error               Init(Instance          &aInstance,
@@ -1294,7 +1295,7 @@ private:
         const RecordCounts &GetRecordCounts(void) const { return mRecordCounts; }
         const AddressInfo  &GetSenderAddress(void) const { return mSenderAddress; }
         void                ClearProcessState(void);
-        ProcessOutcome      ProcessQuery(bool aShouldProcessTruncated);
+        ProcessOutcome      ProcessQuery(bool aShouldProcessTruncated, bool aShouldProcessSharedReply);
         void                ProcessResponse(void);
 
     private:
@@ -1396,6 +1397,31 @@ private:
 
         OwningList<RxMsgEntry> mRxMsgEntries;
         MultiPacketTimer       mTimer;
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    void HandleSharedReplyTimer(void) { mSharedReplyMessages.HandleTimer(); }
+
+    class SharedReplyMessages : public InstanceLocator
+    {
+    public:
+        explicit SharedReplyMessages(Instance &aInstance);
+
+        void Add(OwnedPtr<RxMessage> &aRxMessagePtr);
+        void HandleTimer(void);
+        void Clear(void);
+
+    private:
+        static constexpr uint32_t kMaxDelayTime     = 500; // msec
+        static constexpr uint32_t kMinResponseDelay = 20;  // msec
+        static constexpr uint32_t kMaxResponseDelay = 120; // msec
+
+        using SharedReplyTimer = TimerMilliIn<Core, &Core::HandleSharedReplyTimer>;
+
+        OwningList<RxMessage>  mRxMessages;
+        SharedReplyTimer       mTimer;
+        TimeMilli              mCurrentDelayTime;
     };
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1980,6 +2006,7 @@ private:
     OwningList<ServiceEntry> mServiceEntries;
     OwningList<ServiceType>  mServiceTypes;
     MultiPacketRxMessages    mMultiPacketRxMessages;
+    SharedReplyMessages      mSharedReplyMessages;
     TimeMilli                mNextProbeTxTime;
     EntryTimer               mEntryTimer;
     EntryTask                mEntryTask;

@@ -4050,6 +4050,172 @@ void TestMultiPacket(void)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+void TestSharedReply(void)
+{
+    static const char *const kSubTypes[] = {"_s1", "_r2", "vxy"};
+
+    Core             *mdns = InitTest();
+    Core::Service     tcpService;
+    Core::Service     udpService;
+    const DnsMessage *dnsMsg;
+    uint16_t          heapAllocations;
+    DnsNameString     fullTcpServiceName;
+    DnsNameString     fullTcpServiceType;
+    DnsNameString     fullUdpServiceName;
+    DnsNameString     fullUdpServiceType;
+
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("TestSharedReply");
+
+    AdvanceTime(1);
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    tcpService.mHostName            = "host";
+    tcpService.mServiceInstance     = "tcpsrv";
+    tcpService.mServiceType         = "_http._tcp";
+    tcpService.mSubTypeLabels       = kSubTypes;
+    tcpService.mSubTypeLabelsLength = 3;
+    tcpService.mTxtData             = kTxtData1;
+    tcpService.mTxtDataLength       = sizeof(kTxtData1);
+    tcpService.mPort                = 8080;
+    tcpService.mPriority            = 3;
+    tcpService.mWeight              = 4;
+    tcpService.mTtl                 = 4500;
+
+    udpService.mHostName            = "host";
+    udpService.mServiceInstance     = "udp_srv";
+    udpService.mServiceType         = "_srv._udp";
+    udpService.mSubTypeLabels       = kSubTypes;
+    udpService.mSubTypeLabelsLength = 3;
+    udpService.mTxtData             = kTxtData2;
+    udpService.mTxtDataLength       = sizeof(kTxtData2);
+    udpService.mPort                = 8332;
+    udpService.mPriority            = 6;
+    udpService.mWeight              = 2;
+    udpService.mTtl                 = 4500;
+
+    fullTcpServiceName.Append("%s.%s.local.", tcpService.mServiceInstance, tcpService.mServiceType);
+    fullTcpServiceType.Append("%s.local.", tcpService.mServiceType);
+
+    fullUdpServiceName.Append("%s.%s.local.", udpService.mServiceInstance, udpService.mServiceType);
+    fullUdpServiceType.Append("%s.local.", udpService.mServiceType);
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("Register a first `ServiceEntry` with sub-types, check probes and announcements");
+
+    sDnsMessages.Clear();
+
+    sRegCallbacks[0].Reset();
+    SuccessOrQuit(mdns->RegisterService(tcpService, 0, HandleSuccessCallback));
+
+    for (uint8_t probeCount = 0; probeCount < 3; probeCount++)
+    {
+        sDnsMessages.Clear();
+
+        VerifyOrQuit(!sRegCallbacks[0].mWasCalled);
+        AdvanceTime(250);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 2, /* Addnl */ 0);
+        dnsMsg->ValidateAsProbeFor(tcpService, /* aUnicastRequest */ (probeCount == 0));
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    for (uint8_t anncCount = 0; anncCount < kNumAnnounces; anncCount++)
+    {
+        sDnsMessages.Clear();
+
+        AdvanceTime((anncCount == 0) ? 250 : (1U << (anncCount - 1)) * 1000);
+        VerifyOrQuit(sRegCallbacks[0].mWasCalled);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 7, /* Auth */ 0, /* Addnl */ 1);
+        dnsMsg->Validate(tcpService, kInAnswerSection, kCheckSrv | kCheckTxt | kCheckPtr | kCheckServicesPtr);
+
+        for (uint16_t index = 0; index < tcpService.mSubTypeLabelsLength; index++)
+        {
+            dnsMsg->ValidateSubType(tcpService.mSubTypeLabels[index], tcpService);
+        }
+
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("Register a second `ServiceEntry` with sub-types, check probes and announcements");
+
+    sDnsMessages.Clear();
+
+    sRegCallbacks[0].Reset();
+    SuccessOrQuit(mdns->RegisterService(udpService, 0, HandleSuccessCallback));
+
+    for (uint8_t probeCount = 0; probeCount < 3; probeCount++)
+    {
+        sDnsMessages.Clear();
+
+        VerifyOrQuit(!sRegCallbacks[0].mWasCalled);
+        AdvanceTime(250);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 2, /* Addnl */ 0);
+        dnsMsg->ValidateAsProbeFor(udpService, /* aUnicastRequest */ (probeCount == 0));
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    for (uint8_t anncCount = 0; anncCount < kNumAnnounces; anncCount++)
+    {
+        sDnsMessages.Clear();
+
+        AdvanceTime((anncCount == 0) ? 250 : (1U << (anncCount - 1)) * 1000);
+        VerifyOrQuit(sRegCallbacks[0].mWasCalled);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 7, /* Auth */ 0, /* Addnl */ 1);
+        dnsMsg->Validate(udpService, kInAnswerSection, kCheckSrv | kCheckTxt | kCheckPtr | kCheckServicesPtr);
+
+        for (uint16_t index = 0; index < udpService.mSubTypeLabelsLength; index++)
+        {
+            dnsMsg->ValidateSubType(udpService.mSubTypeLabels[index], udpService);
+        }
+
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("Send two PTR queries back to back and validate the response");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQuery(fullTcpServiceType.AsCString(), ResourceRecord::kTypePtr);
+    SendQuery(fullUdpServiceType.AsCString(), ResourceRecord::kTypePtr);
+
+    AdvanceTime(1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 2, /* Auth */ 0, /* Addnl */ 4);
+    dnsMsg->Validate(tcpService, kInAnswerSection, kCheckPtr);
+    dnsMsg->Validate(tcpService, kInAdditionalSection, kCheckSrv | kCheckTxt);
+    dnsMsg->Validate(udpService, kInAnswerSection, kCheckPtr);
+    dnsMsg->Validate(udpService, kInAdditionalSection, kCheckSrv | kCheckTxt);
+
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of test");
+
+    testFreeInstance(sInstance);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 void TestQuestionUnicastDisallowed(void)
 {
     Core             *mdns = InitTest();
@@ -7124,6 +7290,7 @@ int main(void)
     ot::Dns::Multicast::TestHostOrServiceAndKeyReg();
     ot::Dns::Multicast::TestQuery();
     ot::Dns::Multicast::TestMultiPacket();
+    ot::Dns::Multicast::TestSharedReply();
     ot::Dns::Multicast::TestQuestionUnicastDisallowed();
     ot::Dns::Multicast::TestTxMessageSizeLimit();
     ot::Dns::Multicast::TestHostConflict();

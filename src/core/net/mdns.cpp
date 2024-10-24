@@ -70,6 +70,7 @@ Core::Core(Instance &aInstance)
     , mMaxMessageSize(kMaxMessageSize)
     , mInfraIfIndex(0)
     , mMultiPacketRxMessages(aInstance)
+    , mSharedReplyMessages(aInstance)
     , mNextProbeTxTime(TimerMilli::GetNow() - 1)
     , mEntryTimer(aInstance)
     , mEntryTask(aInstance)
@@ -106,6 +107,7 @@ Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex)
         mServiceEntries.Clear();
         mServiceTypes.Clear();
         mMultiPacketRxMessages.Clear();
+        mSharedReplyMessages.Clear();
         mTxMessageHistory.Clear();
         mEntryTimer.Stop();
 
@@ -275,7 +277,7 @@ void Core::HandleMessage(Message &aMessage, bool aIsUnicast, const AddressInfo &
             ExitNow();
         }
 
-        switch (rxMessagePtr->ProcessQuery(/* aShouldProcessTruncated */ false))
+        switch (rxMessagePtr->ProcessQuery(/* aShouldProcessTruncated */ false, /* aShouldProcessSharedReply*/ false))
         {
         case RxMessage::kProcessed:
             break;
@@ -288,6 +290,11 @@ void Core::HandleMessage(Message &aMessage, bool aIsUnicast, const AddressInfo &
             // containing additional known-answer records.
 
             mMultiPacketRxMessages.AddNew(rxMessagePtr);
+            break;
+
+        case RxMessage::kSaveAsSharedReply:
+
+            mSharedReplyMessages.Add(rxMessagePtr);
             break;
         }
     }
@@ -3445,7 +3452,7 @@ void Core::RxMessage::ClearProcessState(void)
     }
 }
 
-Core::RxMessage::ProcessOutcome Core::RxMessage::ProcessQuery(bool aShouldProcessTruncated)
+Core::RxMessage::ProcessOutcome Core::RxMessage::ProcessQuery(bool aShouldProcessTruncated, bool aShouldProcessSharedReply)
 {
     ProcessOutcome outcome             = kProcessed;
     bool           shouldDelay         = false;
@@ -3464,9 +3471,14 @@ Core::RxMessage::ProcessOutcome Core::RxMessage::ProcessQuery(bool aShouldProces
         // determines whether we need to add any random delay before
         // responding.
 
-        if (!question.mCanAnswer || !question.mIsUnique)
-        {
+        if (!question.mCanAnswer) {
             shouldDelay = true;
+        }
+
+        if (!question.mIsUnique && !aShouldProcessSharedReply && !mTruncated && !aShouldProcessTruncated)
+        {
+            outcome = kSaveAsSharedReply;
+            ExitNow();
         }
 
         if (question.mCanAnswer)
@@ -3495,7 +3507,7 @@ Core::RxMessage::ProcessOutcome Core::RxMessage::ProcessQuery(bool aShouldProces
 
     answerTime = TimerMilli::GetNow();
 
-    if (shouldDelay)
+    if (shouldDelay && !aShouldProcessSharedReply)
     {
         answerTime += Random::NonCrypto::GetUint32InRange(kMinResponseDelay, kMaxResponseDelay);
     }
@@ -4113,7 +4125,7 @@ void Core::MultiPacketRxMessages::HandleTimer(void)
 
     for (RxMsgEntry &expiredEntry : expiredEntries)
     {
-        expiredEntry.mRxMessages.GetHead()->ProcessQuery(/* aShouldProcessTruncated */ true);
+        expiredEntry.mRxMessages.GetHead()->ProcessQuery(/* aShouldProcessTruncated */ true, /* aShouldProcessSharedReply*/ false);
     }
 
     for (const RxMsgEntry &msgEntry : mRxMsgEntries)
@@ -4188,6 +4200,53 @@ void Core::MultiPacketRxMessages::RxMsgEntry::Add(OwnedPtr<RxMessage> &aRxMessag
 
 exit:
     return;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Core::SharedReplyMessages
+
+Core::SharedReplyMessages::SharedReplyMessages(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mTimer(aInstance)
+    , mCurrentDelayTime(0)
+{
+}
+
+void Core::SharedReplyMessages::Add(OwnedPtr<RxMessage> &aRxMessagePtr)
+{
+    TimeMilli now = TimerMilli::GetNow();
+
+    if(mRxMessages.IsEmpty())
+    {
+        mCurrentDelayTime = now;
+    }
+
+    mRxMessages.Push(*aRxMessagePtr.Release());
+
+    mCurrentDelayTime += Random::NonCrypto::GetUint32InRange(kMinResponseDelay, kMaxResponseDelay);
+
+    if ( (mCurrentDelayTime.GetValue() - now.GetValue()) > kMaxDelayTime )
+    {
+        mCurrentDelayTime = now;
+    }
+
+    mTimer.FireAt(mCurrentDelayTime);
+}
+
+void Core::SharedReplyMessages::HandleTimer(void)
+{
+    for (RxMessage &rxMsg : mRxMessages)
+    {
+        rxMsg.ProcessQuery(/* aShouldProcessTruncated */ false, /* aShouldProcessSharedReply*/ true);
+    }
+
+    mRxMessages.Clear();
+}
+
+void Core::SharedReplyMessages::Clear(void)
+{
+    mTimer.Stop();
+    mRxMessages.Clear();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
