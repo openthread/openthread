@@ -41,14 +41,14 @@ import shlex
 # Topology:
 #    ----------------(eth)--------------------
 #           |                 |
-#          BR (Leader)      HOST
+#          BR (Leader)      DNS SERVER
 #           |
 #        ROUTER
 #
 
 BR = 1
 ROUTER = 2
-HOST = 3
+DNS_SERVER = 3
 
 TEST_DOMAIN = 'test.domain'
 TEST_DOMAIN_IP6_ADDRESSES = {'2001:db8::1'}
@@ -70,17 +70,15 @@ class UpstreamDns(thread_cert.TestCase):
     TOPOLOGY = {
         BR: {
             'name': 'BR',
-            'allowlist': [ROUTER],
             'is_otbr': True,
             'version': '1.4',
         },
         ROUTER: {
             'name': 'Router',
-            'allowlist': [BR],
             'version': '1.4',
         },
-        HOST: {
-            'name': 'Host',
+        DNS_SERVER: {
+            'name': 'DNS Server',
             'is_host': True
         },
     }
@@ -88,26 +86,24 @@ class UpstreamDns(thread_cert.TestCase):
     def test(self):
         br = self.nodes[BR]
         router = self.nodes[ROUTER]
-        host = self.nodes[HOST]
+        dns_server = self.nodes[DNS_SERVER]
 
-        host.start(start_radvd=False)
-        self.simulator.go(5)
+        self._start_dns_server(dns_server)
+        dns_server_addr = dns_server.get_ether_addrs(ipv4=True, ipv6=False)[0]
+
+        # Update BR's /etc/resolv.conf and force BR to reload it
+        br.bash(shlex.join(['echo', 'nameserver ' + dns_server_addr]) + ' >> /etc/resolv.conf')
+        br.stop_otbr_service()
+        br.start_otbr_service()
 
         br.start()
-        # When feature flag is enabled, NAT64 might be disabled by default. So
-        # ensure NAT64 is enabled here.
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br.get_state())
 
+        # When feature flag is enabled, NAT64 might be disabled by default. So
+        # ensure NAT64 is enabled here.
         br.nat64_set_enabled(True)
         br.srp_server_set_enabled(True)
-
-        br.bash('service bind9 stop')
-
-        br.bash(shlex.join(['echo', TEST_DOMAIN_BIND_CONF]) + ' >> /etc/bind/named.conf.local')
-        br.bash(shlex.join(['echo', TEST_DOMAIN_BIND_ZONE]) + ' >> /etc/bind/db.test.domain')
-
-        br.bash('service bind9 start')
 
         router.start()
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
@@ -129,6 +125,15 @@ class UpstreamDns(thread_cert.TestCase):
         self.assertEqual(len(resolved_names), len(TEST_DOMAIN_IP6_ADDRESSES))
         for record in resolved_names:
             self.assertIn(ipaddress.IPv6Address(record[0]).compressed, TEST_DOMAIN_IP6_ADDRESSES)
+
+    def _start_dns_server(self, dns_server):
+        dns_server.start(start_radvd=False)
+        dns_server.bash('service bind9 stop')
+
+        dns_server.bash(shlex.join(['echo', TEST_DOMAIN_BIND_CONF]) + ' >> /etc/bind/named.conf.local')
+        dns_server.bash(shlex.join(['echo', TEST_DOMAIN_BIND_ZONE]) + ' >> /etc/bind/db.test.domain')
+
+        dns_server.bash('service bind9 start')
 
 
 if __name__ == '__main__':
