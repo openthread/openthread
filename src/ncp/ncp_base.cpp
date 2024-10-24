@@ -1599,7 +1599,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_RX_ON_WHEN_IDLE_M
     otError error = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadBool(enabled));
-    otPlatRadioSetRxOnWhenIdle(mInstance, enabled);
+    SuccessOrExit(error = otLinkSetRxOnWhenIdle(mInstance, enabled));
 
 exit:
     return error;
