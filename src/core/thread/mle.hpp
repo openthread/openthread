@@ -766,6 +766,9 @@ private:
     static constexpr uint32_t kParentResponseMaxDelayRouters = 500;  // Max response delay for Parent Req to routers
     static constexpr uint32_t kParentResponseMaxDelayAll     = 1000; // Max response delay for Parent Req to all
     static constexpr uint32_t kChildUpdateRequestDelay       = 100;  // Delay for aggregating Child Update Req
+    static constexpr uint32_t kMaxLinkRequestDelayOnRouter   = 1000; // Max delay to tx Link Request on Adv rx
+    static constexpr uint32_t kMinLinkRequestDelayOnChild    = 1500; // Min delay to tx Link Request on Adv rx (child)
+    static constexpr uint32_t kMaxLinkRequestDelayOnChild    = 3000; // Max delay to tx Link Request on Adv rx (child)
     static constexpr uint32_t kMaxLinkAcceptDelay            = 1000; // Max delay to tx Link Accept for multicast Req
     static constexpr uint32_t kChildIdRequestTimeout         = 5000; // Max delay to rx a Child ID Req after Parent Res
     static constexpr uint32_t kLinkRequestTimeout            = 2000; // Max delay to rx a Link Accept
@@ -1134,6 +1137,7 @@ private:
 #if OPENTHREAD_FTD
         void ScheduleParentResponse(const ParentResponseInfo &aInfo, uint16_t aDelay);
         void ScheduleMulticastDataResponse(uint16_t aDelay);
+        void ScheduleLinkRequest(const Router &aRouter, uint16_t aDelay);
         void ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint16_t aDelay);
         void ScheduleDiscoveryResponse(const Ip6::Address          &aDestination,
                                        const DiscoveryResponseInfo &aInfo,
