@@ -304,6 +304,22 @@ void otSysUpstreamDnsServerSetResolvConfEnabled(bool aEnabled);
  */
 void otSysUpstreamDnsSetServerList(const otIp6Address *aUpstreamDnsServers, int aNumServers);
 
+/**
+ * Initializes TREL on the given interface.
+ *
+ * After this call, TREL is ready to be enabled on the interface. Callers need to make sure TREL is disabled prior
+ * to this call.
+ */
+void otSysTrelInit(const char *aInterfaceName);
+
+/**
+ * Deinitializes TREL.
+ *
+ * After this call, TREL is deinitialized. It's ready to be initialized on any given interface. Callers need to
+ * make sure TREL is disabled prior to this call.
+ */
+void otSysTrelDeinit(void);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif
