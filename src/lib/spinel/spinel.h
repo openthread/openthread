@@ -4775,6 +4775,26 @@ enum
 
     SPINEL_PROP_INFRA_IF__END = 0x920,
 
+    SPINEL_PROP_SRP_SERVER__BEGIN = 0x920,
+
+    /// SRP server state.
+    /** Format `b`
+     * Type: Read-Write
+     *
+     * `b`: Whether to enable or disable the SRP server.
+     */
+    SPINEL_PROP_SRP_SERVER_ENABLED = SPINEL_PROP_SRP_SERVER__BEGIN + 1,
+
+    /// SRP server auto enable mode.
+    /** Format `b`
+     * Type: Read-Write
+     *
+     * `b`: A boolean that indicates the SRP server auto enable mode.
+     */
+    SPINEL_PROP_SRP_SERVER_AUTO_ENABLE_MODE = SPINEL_PROP_SRP_SERVER__BEGIN + 2,
+
+    SPINEL_PROP_SRP_SERVER__END = 0x930,
+
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,
 
     SPINEL_PROP_NEST_STREAM_MFG = SPINEL_PROP_NEST__BEGIN + 0,
