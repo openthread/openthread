@@ -62,7 +62,7 @@
 #include "common/uptime.hpp"
 #include "diags/factory_diags.hpp"
 #include "instance/extension.hpp"
-#include "mac/link_raw.hpp"
+#include "mac/mac_links.hpp"
 #include "radio/radio.hpp"
 #include "utils/otns.hpp"
 #include "utils/power_calibration.hpp"
@@ -710,8 +710,8 @@ private:
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
-#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    Mac::LinkRaw mLinkRaw;
+#if OPENTHREAD_RADIO
+    Mac::Links mLinks;
 #endif
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
@@ -797,6 +797,7 @@ template <> inline Ip6::Ip6 &Instance::Get(void) { return mIp6; }
 template <> inline Mac::Mac &Instance::Get(void) { return mMac; }
 
 template <> inline Mac::SubMac &Instance::Get(void) { return mMac.mLinks.mSubMac; }
+template <> inline Mac::Links  &Instance::Get(void) { return mMac.mLinks; }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 template <> inline Trel::Link &Instance::Get(void) { return mMac.mLinks.mTrel; }
@@ -1081,14 +1082,10 @@ template <> inline Ble::BleSecure &Instance::Get(void) { return mApplicationBleS
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
-#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-template <> inline Mac::LinkRaw &Instance::Get(void) { return mLinkRaw; }
-
 #if OPENTHREAD_RADIO
-template <> inline Mac::SubMac &Instance::Get(void) { return mLinkRaw.mSubMac; }
+template <> inline Mac::SubMac &Instance::Get(void) { return mLinks.mSubMac; }
+template <> inline Mac::Links  &Instance::Get(void) { return mLinks; }
 #endif
-
-#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 template <> inline Tasklet::Scheduler &Instance::Get(void) { return mTaskletScheduler; }
 

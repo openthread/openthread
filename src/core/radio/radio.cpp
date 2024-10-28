@@ -78,6 +78,11 @@ void Radio::Init(void)
 
 void Radio::SetExtendedAddress(const Mac::ExtAddress &aExtAddress)
 {
+    Mac::ExtAddress address;
+
+    // Reverse the byte order before setting on radio.
+    address.Set(aExtAddress.m8, Mac::ExtAddress::kReverseByteOrder);
+
     otPlatRadioSetExtendedAddress(GetInstancePtr(), &aExtAddress);
 
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE

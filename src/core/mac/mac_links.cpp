@@ -38,9 +38,12 @@
 namespace ot {
 namespace Mac {
 
+RegisterLogModule("MacLinks");
+
 //---------------------------------------------------------------------------------------------------------------------
 // TxFrames
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 TxFrames::TxFrames(Instance &aInstance)
     : InstanceLocator(aInstance)
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
@@ -114,6 +117,7 @@ TxFrame &TxFrames::GetBroadcastTxFrame(void)
 }
 
 #endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 //---------------------------------------------------------------------------------------------------------------------
 // Links
@@ -121,20 +125,160 @@ TxFrame &TxFrames::GetBroadcastTxFrame(void)
 Links::Links(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSubMac(aInstance)
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
     , mTrel(aInstance)
 #endif
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     , mTxFrames(aInstance)
-#if !OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    , mShortAddress(kShortAddrInvalid)
-    , mAlternateShortAddress(kShortAddrInvalid)
 #endif
 {
-#if !OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    Init();
+}
+
+void Links::Init(void)
+{
+    mSubMac.Init();
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    mEnergyScanDoneCallback = nullptr;
+    mTransmitDoneCallback   = nullptr;
+    mReceiveDoneCallback    = nullptr;
+#endif
     mExtAddress.Clear();
+    mShortAddress          = kShortAddrInvalid;
+    mAlternateShortAddress = kShortAddrInvalid;
+}
+
+void Links::SetShortAddress(ShortAddress aShortAddress)
+{
+    mShortAddress = aShortAddress;
+    Get<Radio>().SetShortAddress(aShortAddress);
+    LogDebg("RadioShortAddress: 0x%04x", mShortAddress);
+}
+
+void Links::SetAlternateShortAddress(ShortAddress aShortAddress)
+{
+    mAlternateShortAddress = aShortAddress;
+    Get<Radio>().SetAlternateShortAddress(aShortAddress);
+    LogDebg("RadioAlternateShortAddress: 0x%04x", mAlternateShortAddress);
+}
+
+void Links::SetExtAddress(const ExtAddress &aExtAddress)
+{
+    mExtAddress = aExtAddress;
+    Get<Radio>().SetExtendedAddress(aExtAddress);
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+    mTrel.HandleExtAddressChange();
+#endif
+    LogDebg("RadioExtAddress: %s", mExtAddress.ToString().AsCString());
+}
+
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+void Links::InvokeReceiveDone(RxFrame *aFrame, Error aError)
+{
+    LogDebg("ReceiveDone(%d bytes), error:%s", (aFrame != nullptr) ? aFrame->mLength : 0, ErrorToString(aError));
+
+    if (mReceiveDoneCallback)
+    {
+        if (aError == kErrorNone)
+        {
+            mReceiveDoneCallback(&GetInstance(), aFrame, aError);
+        }
+    }
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    else
+    {
+        Get<Mac>().HandleReceivedFrame(aFrame, aError);
+    }
 #endif
 }
 
+Error Links::Transmit(otLinkRawTransmitDone aCallback)
+{
+    Error error = kErrorNone;
+
+    SuccessOrExit(error = mSubMac.Send());
+    mTransmitDoneCallback = aCallback;
+
+exit:
+    return error;
+}
+
+void Links::InvokeTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
+{
+    LogDebg("TransmitDone(%d bytes), error:%s", aFrame.mLength, ErrorToString(aError));
+
+    if (mTransmitDoneCallback)
+    {
+        mTransmitDoneCallback(&GetInstance(), &aFrame, aAckFrame, aError);
+        mTransmitDoneCallback = nullptr;
+    }
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    else
+    {
+        Get<Mac>().HandleTransmitDone(aFrame, aAckFrame, aError);
+    }
+#endif
+}
+
+Error Links::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLinkRawEnergyScanDone aCallback)
+{
+    Error error;
+
+    SuccessOrExit(error = EnergyScan(aScanChannel, aScanDuration));
+    mEnergyScanDoneCallback = aCallback;
+
+exit:
+    return error;
+}
+
+void Links::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
+{
+    if (mEnergyScanDoneCallback != nullptr)
+    {
+        mEnergyScanDoneCallback(&GetInstance(), aEnergyScanMaxRssi);
+        mEnergyScanDoneCallback = nullptr;
+    }
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    else
+    {
+        Get<Mac>().EnergyScanDone(aEnergyScanMaxRssi);
+    }
+#endif
+}
+
+void Links::SetMacKey(uint8_t aKeyIdMode, uint8_t aKeyId, const Key &aPrevKey, const Key &aCurrKey, const Key &aNextKey)
+{
+    KeyMaterial prevKey;
+    KeyMaterial currKey;
+    KeyMaterial nextKey;
+
+    prevKey.SetFrom(aPrevKey);
+    currKey.SetFrom(aCurrKey);
+    nextKey.SetFrom(aNextKey);
+
+    mSubMac.SetMacKey(aKeyIdMode, aKeyId, prevKey, currKey, nextKey);
+}
+
+void Links::SetMacFrameCounter(uint32_t aFrameCounter, bool aSetIfLarger)
+{
+    mSubMac.SetFrameCounter(aFrameCounter, aSetIfLarger);
+}
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+void Links::RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx)
+{
+    OT_UNUSED_VARIABLE(aWillRetx);
+
+    if (aError != kErrorNone)
+    {
+        LogInfo("Frame tx failed, error:%s, retries:%d/%d, %s", ErrorToString(aError), aRetryCount,
+                aFrame.GetMaxFrameRetries(), aFrame.ToInfoString().AsCString());
+    }
+}
+#endif
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 
 void Links::Send(TxFrame &aFrame, RadioTypes aRadioTypes)
@@ -268,6 +412,7 @@ exit:
     return;
 }
 #endif // #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#endif // #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 } // namespace Mac
 } // namespace ot

@@ -261,8 +261,8 @@ Instance::Instance(void)
     , mNat64Translator(*this)
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
-#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    , mLinkRaw(*this)
+#if OPENTHREAD_RADIO
+    , mLinks(*this)
 #endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     , mExtension(Extension::ExtensionBase::Init(*this))
@@ -378,7 +378,7 @@ Error Instance::ResetToBootloader(void) { return otPlatResetToBootloader(this); 
 void Instance::ResetRadioStack(void)
 {
     mRadio.Init();
-    mLinkRaw.Init();
+    mLinks.Init();
 }
 #endif
 

@@ -43,7 +43,7 @@ otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
     Instance &instance = AsCoreType(aInstance);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(!instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
+    VerifyOrExit(!instance.Get<Mac::Links>().IsLinkRawEnabled(), error = kErrorInvalidState);
 #endif
 
     if (aEnabled)

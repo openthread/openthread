@@ -104,7 +104,7 @@ class LinkRaw;
 class SubMac : public InstanceLocator, private NonCopyable
 {
     friend class Radio::Callbacks;
-    friend class LinkRaw;
+    friend class Links;
 
 public:
     /**
@@ -217,48 +217,6 @@ public:
      * @param[in] aPanId  The PAN ID.
      */
     void SetPanId(PanId aPanId);
-
-    /**
-     * Gets the short address.
-     *
-     * @returns The short address.
-     */
-    ShortAddress GetShortAddress(void) const { return mShortAddress; }
-
-    /**
-     * Sets the short address.
-     *
-     * @param[in] aShortAddress   The short address.
-     */
-    void SetShortAddress(ShortAddress aShortAddress);
-
-    /**
-     * Gets the alternate short address.
-     *
-     * @returns The alternate short address, or `kShortAddrInvalid` if there is no alternate address.
-     */
-    ShortAddress GetAlternateShortAddress(void) const { return mAlternateShortAddress; }
-
-    /**
-     * Sets the alternate short address.
-     *
-     * @param[in] aShortAddress   The short address. Use `kShortAddrInvalid` to clear it.
-     */
-    void SetAlternateShortAddress(ShortAddress aShortAddress);
-
-    /**
-     * Gets the extended address.
-     *
-     * @returns A reference to the extended address.
-     */
-    const ExtAddress &GetExtAddress(void) const { return mExtAddress; }
-
-    /**
-     * Sets extended address.
-     *
-     * @param[in] aExtAddress  The extended address.
-     */
-    void SetExtAddress(const ExtAddress &aExtAddress);
 
     /**
      * Registers a callback to provide received packet capture for IEEE 802.15.4 frames.
@@ -636,14 +594,11 @@ private:
         TimerMilliIn<SubMac, &SubMac::HandleTimer>;
 #endif
 
-    otRadioCaps  mRadioCaps;
-    State        mState;
-    uint8_t      mCsmaBackoffs;
-    uint8_t      mTransmitRetries;
-    ShortAddress mShortAddress;
-    ShortAddress mAlternateShortAddress;
-    ExtAddress   mExtAddress;
-    bool         mRxOnWhenIdle : 1;
+    otRadioCaps mRadioCaps;
+    State       mState;
+    uint8_t     mCsmaBackoffs;
+    uint8_t     mTransmitRetries;
+    bool        mRxOnWhenIdle : 1;
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     bool mRadioFilterEnabled : 1;
 #endif
