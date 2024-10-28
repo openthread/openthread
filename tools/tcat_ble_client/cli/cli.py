@@ -33,6 +33,7 @@ from cli.base_commands import (DisconnectCommand, HelpCommand, HelloCommand, Com
                                GetDeviceIdCommand, GetPskdHash, GetExtPanIDCommand, GetNetworkNameCommand,
                                GetProvisioningUrlCommand, PingCommand, GetRandomNumberChallenge, ThreadStateCommand,
                                ScanCommand, PresentHash)
+from .tlv_commands import TlvCommand
 from cli.dataset_commands import (DatasetCommand)
 from dataset.dataset import ThreadDataset
 from typing import Optional
@@ -61,6 +62,7 @@ class CLI:
             'random_challenge': GetRandomNumberChallenge(),
             'present_hash': PresentHash(),
             'peer_pskd_hash': GetPskdHash(),
+            'tlv': TlvCommand()
         }
         self._context = {
             'ble_sstream': ble_sstream,
