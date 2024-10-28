@@ -36,8 +36,11 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/link_raw.h>
+
 #include "common/debug.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
 #include "mac/sub_mac.hpp"
@@ -56,6 +59,7 @@ namespace Mac {
  * @{
  */
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 /**
  * Represents tx frames for different radio link types.
  */
@@ -270,6 +274,7 @@ private:
     RadioTypes mRequiredRadioTypes;
 #endif
 };
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 /**
  * Represents MAC radio links (multi radio).
@@ -287,6 +292,11 @@ public:
     explicit Links(Instance &aInstance);
 
     /**
+     * Initializes the states of the raw link-layer.
+     */
+    void Init(void);
+
+    /**
      * Sets the PAN ID.
      *
      * @param[in] aPanId  The PAN ID.
@@ -296,8 +306,11 @@ public:
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
         mSubMac.SetPanId(aPanId);
 #endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
         mTrel.SetPanId(aPanId);
+#endif
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+        mPanId = aPanId;
 #endif
     }
 
@@ -306,90 +319,42 @@ public:
      *
      * @returns The MAC Short Address.
      */
-    ShortAddress GetShortAddress(void) const
-    {
-        return
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-            mSubMac.GetShortAddress();
-#else
-            mShortAddress;
-#endif
-    }
+    ShortAddress GetShortAddress(void) const { return mShortAddress; }
 
     /**
      * Sets the MAC Short Address.
      *
      * @param[in] aShortAddress   A MAC Short Address.
      */
-    void SetShortAddress(ShortAddress aShortAddress)
-    {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-        mSubMac.SetShortAddress(aShortAddress);
-#else
-        mShortAddress = aShortAddress;
-#endif
-    }
+    void SetShortAddress(ShortAddress aShortAddress);
 
     /**
      * Gets the alternate MAC short address.
      *
      * @returns The alternate MAC short address, or `kShortAddrInvalid` if there is no alternate address.
      */
-    ShortAddress GetAlternateShortAddress(void) const
-    {
-        return
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-            mSubMac.GetAlternateShortAddress();
-#else
-            mAlternateShortAddress;
-#endif
-    }
+    ShortAddress GetAlternateShortAddress(void) const { return mAlternateShortAddress; }
 
     /**
      * Sets the alternate MAC short address.
      *
      * @param[in] aShortAddress   The alternate short address. Use `kShortAddrInvalid` to clear it.
      */
-    void SetAlternateShortAddress(ShortAddress aShortAddress)
-    {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-        mSubMac.SetAlternateShortAddress(aShortAddress);
-#else
-        mAlternateShortAddress = aShortAddress;
-#endif
-    }
+    void SetAlternateShortAddress(ShortAddress aShortAddress);
 
     /**
      * Gets the MAC Extended Address.
      *
      * @returns The MAC Extended Address.
      */
-    const ExtAddress &GetExtAddress(void) const
-    {
-        return
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-            mSubMac.GetExtAddress();
-#else
-            mExtAddress;
-#endif
-    }
+    const ExtAddress &GetExtAddress(void) const { return mExtAddress; }
 
     /**
      * Sets the MAC Extended Address.
      *
      * @param[in] aExtAddress  A MAC Extended Address.
      */
-    void SetExtAddress(const ExtAddress &aExtAddress)
-    {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-        mSubMac.SetExtAddress(aExtAddress);
-#else
-        mExtAddress = aExtAddress;
-#endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-        mTrel.HandleExtAddressChange();
-#endif
-    }
+    void SetExtAddress(const ExtAddress &aExtAddress);
 
     /**
      * Registers a callback to provide received packet capture for IEEE 802.15.4 frames.
@@ -428,7 +393,7 @@ public:
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
         IgnoreError(mSubMac.Enable());
 #endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE && !OPENTHREAD_RADIO
         mTrel.Enable();
 #endif
     }
@@ -441,7 +406,7 @@ public:
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
         IgnoreError(mSubMac.Disable());
 #endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE && !OPENTHREAD_RADIO
         mTrel.Disable();
 #endif
     }
@@ -454,7 +419,7 @@ public:
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
         IgnoreError(mSubMac.Sleep());
 #endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE && !OPENTHREAD_RADIO
         mTrel.Sleep();
 #endif
     }
@@ -496,7 +461,7 @@ public:
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
         mSubMac.CslSample();
 #endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE && !OPENTHREAD_RADIO
         mTrel.Sleep();
 #endif
     }
@@ -533,11 +498,16 @@ public:
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
         IgnoreError(mSubMac.Receive(aChannel));
 #endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#if OPENTHREAD_RADIO
+        OT_UNUSED_VARIABLE(aChannel);
+#elif OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
         mTrel.Receive(aChannel);
 #endif
     }
 
+    TxFrame &GetTxFrame802154(void) { return mSubMac.GetTransmitFrame(); }
+
+#if !OPENTHREAD_RADIO
     /**
      * Gets the radio transmit frames.
      *
@@ -575,6 +545,7 @@ public:
     void Send(TxFrame &aFrame, RadioTypes aRadioTypes);
 
 #endif // !OPENTHREAD_CONFIG_MULTI_RADIO
+#endif // !OPENTHREAD_RADIO
 
     /**
      * Gets the number of transmit retries for the last transmitted frame.
@@ -691,23 +662,176 @@ public:
     void SetMacFrameCounter(TxFrame &aFrame);
 #endif
 
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    /**
+     * Starts a (single) Transmit on the link-layer.
+     *
+     * @note The callback @p aCallback will not be called if this call does not return kErrorNone.
+     *
+     * @param[in]  aCallback            A pointer to a function called on completion of the transmission.
+     *
+     * @retval kErrorNone           Successfully transitioned to Transmit.
+     * @retval kErrorInvalidState   The radio was not in the Receive state.
+     */
+    Error Transmit(otLinkRawTransmitDone aCallback);
+
+    /**
+     * Invokes the mTransmitDoneCallback, if set.
+     *
+     * @param[in]  aFrame     The transmitted frame.
+     * @param[in]  aAckFrame  A pointer to the ACK frame, `nullptr` if no ACK was received.
+     * @param[in]  aError     kErrorNone when the frame was transmitted,
+     *                        kErrorNoAck when the frame was transmitted but no ACK was received,
+     *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
+     *                        kErrorAbort when transmission was aborted for other reasons.
+     */
+    void InvokeTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
+
+    /**
+     * Enables/disables the raw link-layer.
+     *
+     * @note this API must be called when Thread is disabled.
+     *
+     * @param[in]  aCallback  A pointer to a function called on receipt of a IEEE 802.15.4 frame, `nullptr` to disable
+     *                        raw link-layer.
+     */
+    void SetReceiveDone(otLinkRawReceiveDone aCallback) { mReceiveDoneCallback = aCallback; }
+
+    /**
+     * Invokes the mReceiveDoneCallback, if set.
+     *
+     * @param[in]  aFrame    A pointer to the received frame or `nullptr` if the receive operation failed.
+     * @param[in]  aError    kErrorNone when successfully received a frame,
+     *                       kErrorAbort when reception was aborted and a frame was not received,
+     *                       kErrorNoBufs when a frame could not be received due to lack of rx buffer space.
+     */
+    void InvokeReceiveDone(RxFrame *aFrame, Error aError);
+
+    /**
+     * Returns true if the raw link-layer is enabled.
+     *
+     * @returns true if enabled, false otherwise.
+     */
+    bool IsLinkRawEnabled(void) const { return mReceiveDoneCallback != nullptr; }
+
+    /**
+     * Starts a (single) Energy Scan on the link-layer.
+     *
+     * @param[in]  aScanChannel     The channel to perform the energy scan on.
+     * @param[in]  aScanDuration    The duration, in milliseconds, for the channel to be scanned.
+     * @param[in]  aCallback        A pointer to a function called on completion of a scanned channel.
+     *
+     * @retval kErrorNone            Successfully started scanning the channel.
+     * @retval kErrorBusy            The radio is performing energy scanning.
+     * @retval kErrorNotImplemented  The radio doesn't support energy scanning.
+     * @retval kErrorInvalidState    If the raw link-layer isn't enabled.
+     */
+    Error EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLinkRawEnergyScanDone aCallback);
+
+    /**
+     * Invokes the mEnergyScanDoneCallback, if set.
+     *
+     * @param[in]   aEnergyScanMaxRssi  The max RSSI for energy scan.
+     */
+    void InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi);
+
+    /**
+     * Returns PANID.
+     *
+     * @returns PANID.
+     */
+    PanId GetPanId(void) const { return mPanId; }
+
+    /**
+     * Gets the current receiving channel.
+     *
+     * @returns Current receiving channel.
+     */
+    uint8_t GetChannel(void) const { return mReceiveChannel; }
+
+    /**
+     * Sets the receiving channel.
+     *
+     * @param[in]  aChannel     The channel to use for receiving.
+     */
+    void SetChannel(uint8_t aChannel) { mReceiveChannel = aChannel; }
+
+    /**
+     * Updates MAC keys and key index.
+     *
+     * @param[in]   aKeyIdMode        The key ID mode.
+     * @param[in]   aKeyId            The key index.
+     * @param[in]   aPrevKey          The previous MAC key.
+     * @param[in]   aCurrKey          The current MAC key.
+     * @param[in]   aNextKey          The next MAC key.
+     */
+    void SetMacKey(uint8_t aKeyIdMode, uint8_t aKeyId, const Key &aPrevKey, const Key &aCurrKey, const Key &aNextKey);
+
+    /**
+     * Sets the current MAC frame counter value.
+     *
+     * @param[in] aFrameCounter  The MAC frame counter value.
+     * @param[in] aSetIfLarger   If `true`, set only if the new value @p aFrameCounter is larger than current value.
+     *                           If `false`, set the new value independent of the current value.
+     */
+    void SetMacFrameCounter(uint32_t aFrameCounter, bool aSetIfLarger);
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    /**
+     * Records the status of a frame transmission attempt and is mainly used for logging failures.
+     *
+     * Unlike `HandleTransmitDone` which is called after all transmission attempts of frame to indicate final status
+     * of a frame transmission request, this method is invoked on all frame transmission attempts.
+     *
+     * @param[in] aFrame      The transmitted frame.
+     * @param[in] aError      kErrorNone when the frame was transmitted successfully,
+     *                        kErrorNoAck when the frame was transmitted but no ACK was received,
+     *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
+     *                        kErrorAbort when transmission was aborted for other reasons.
+     * @param[in] aRetryCount Indicates number of transmission retries for this frame.
+     * @param[in] aWillRetx   Indicates whether frame will be retransmitted or not. This is applicable only
+     *                        when there was an error in transmission (i.e., `aError` is not NONE).
+     */
+    void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
+#else
+    void RecordFrameTransmitStatus(const TxFrame &, Error, uint8_t, bool) {}
+#endif
+
+    /**
+     * Returns the capabilities of the raw link-layer.
+     *
+     * @returns The radio capability bit vector.
+     */
+    otRadioCaps GetCaps802154(void) const { return mSubMac.GetCaps(); }
+
+    /**
+     * Starts a (recurring) Receive on the link-layer.
+     */
+    void Receive(void) { Receive(mReceiveChannel); }
+#endif // OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+
 private:
     static constexpr int8_t kDefaultNoiseFloor = Radio::kDefaultReceiveSensitivity;
+    ExtAddress              mExtAddress;
+    ShortAddress            mShortAddress;
+    ShortAddress            mAlternateShortAddress;
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    PanId                   mPanId;
+    uint8_t                 mReceiveChannel;
+    otLinkRawReceiveDone    mReceiveDoneCallback;
+    otLinkRawTransmitDone   mTransmitDoneCallback;
+    otLinkRawEnergyScanDone mEnergyScanDoneCallback;
+#endif
 
     SubMac mSubMac;
+#if !OPENTHREAD_RADIO
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     Trel::Link mTrel;
 #endif
-
     // `TxFrames` member definition should be after `mSubMac`, `mTrel`
     // definitions to allow it to use their methods from its
     // constructor.
     TxFrames mTxFrames;
-
-#if !OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    ShortAddress mShortAddress;
-    ShortAddress mAlternateShortAddress;
-    ExtAddress   mExtAddress;
 #endif
 };
 

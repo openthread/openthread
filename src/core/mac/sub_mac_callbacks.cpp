@@ -43,25 +43,23 @@ SubMac::Callbacks::Callbacks(Instance &aInstance)
 {
 }
 
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
-
 void SubMac::Callbacks::ReceiveDone(RxFrame *aFrame, Error aError)
 {
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    if (Get<LinkRaw>().IsEnabled())
-    {
-        Get<LinkRaw>().InvokeReceiveDone(aFrame, aError);
-    }
-    else
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    Get<Links>().InvokeReceiveDone(aFrame, aError);
+#else
+    Get<Mac>().HandleReceivedFrame(aFrame, aError);
 #endif
-    {
-        Get<Mac>().HandleReceivedFrame(aFrame, aError);
-    }
 }
 
 void SubMac::Callbacks::RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel)
 {
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     Get<Mac>().RecordCcaStatus(aCcaSuccess, aChannel);
+#else
+    OT_UNUSED_VARIABLE(aCcaSuccess);
+    OT_UNUSED_VARIABLE(aChannel);
+#endif
 }
 
 void SubMac::Callbacks::RecordFrameTransmitStatus(const TxFrame &aFrame,
@@ -69,66 +67,39 @@ void SubMac::Callbacks::RecordFrameTransmitStatus(const TxFrame &aFrame,
                                                   uint8_t        aRetryCount,
                                                   bool           aWillRetx)
 {
+#if OPENTHREAD_RADIO
+    Get<Links>().RecordFrameTransmitStatus(aFrame, aError, aRetryCount, aWillRetx);
+#else
     Get<Mac>().RecordFrameTransmitStatus(aFrame, aError, aRetryCount, aWillRetx);
+#endif
 }
 
 void SubMac::Callbacks::TransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 {
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    if (Get<LinkRaw>().IsEnabled())
-    {
-        Get<LinkRaw>().InvokeTransmitDone(aFrame, aAckFrame, aError);
-    }
-    else
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    Get<Links>().InvokeTransmitDone(aFrame, aAckFrame, aError);
+#elif OPENTHREAD_FTD || OPENTHREAD_MTD
+    Get<Mac>().HandleTransmitDone(aFrame, aAckFrame, aError);
 #endif
-    {
-        Get<Mac>().HandleTransmitDone(aFrame, aAckFrame, aError);
-    }
 }
 
 void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
 {
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    if (Get<LinkRaw>().IsEnabled())
-    {
-        Get<LinkRaw>().InvokeEnergyScanDone(aMaxRssi);
-    }
-    else
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    Get<Links>().InvokeEnergyScanDone(aMaxRssi);
+#elif OPENTHREAD_FTD || OPENTHREAD_MTD
+    Get<Mac>().EnergyScanDone(aMaxRssi);
 #endif
-    {
-        Get<Mac>().EnergyScanDone(aMaxRssi);
-    }
 }
 
 void SubMac::Callbacks::FrameCounterUsed(uint32_t aFrameCounter)
 {
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     Get<KeyManager>().MacFrameCounterUsed(aFrameCounter);
+#else
+    OT_UNUSED_VARIABLE(aFrameCounter);
+#endif
 }
-
-#elif OPENTHREAD_RADIO
-
-void SubMac::Callbacks::ReceiveDone(RxFrame *aFrame, Error aError) { Get<LinkRaw>().InvokeReceiveDone(aFrame, aError); }
-
-void SubMac::Callbacks::RecordCcaStatus(bool, uint8_t) {}
-
-void SubMac::Callbacks::RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                                  Error          aError,
-                                                  uint8_t        aRetryCount,
-                                                  bool           aWillRetx)
-{
-    Get<LinkRaw>().RecordFrameTransmitStatus(aFrame, aError, aRetryCount, aWillRetx);
-}
-
-void SubMac::Callbacks::TransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
-{
-    Get<LinkRaw>().InvokeTransmitDone(aFrame, aAckFrame, aError);
-}
-
-void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi) { Get<LinkRaw>().InvokeEnergyScanDone(aMaxRssi); }
-
-void SubMac::Callbacks::FrameCounterUsed(uint32_t aFrameCounter) { OT_UNUSED_VARIABLE(aFrameCounter); }
-
-#endif // OPENTHREAD_RADIO
 
 } // namespace Mac
 } // namespace ot

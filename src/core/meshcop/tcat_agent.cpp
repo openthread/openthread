@@ -785,7 +785,7 @@ Error TcatAgent::HandleStartThreadInterface(void)
     VerifyOrExit(datasetInfo.IsPresent<Dataset::kNetworkKey>(), error = kErrorInvalidState);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(!Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
+    VerifyOrExit(!Get<Mac::Links>().IsLinkRawEnabled(), error = kErrorInvalidState);
 #endif
 
     Get<ThreadNetif>().Up();

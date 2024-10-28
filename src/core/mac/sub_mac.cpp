@@ -68,12 +68,9 @@ SubMac::SubMac(Instance &aInstance)
 
 void SubMac::Init(void)
 {
-    mState                 = kStateDisabled;
-    mCsmaBackoffs          = 0;
-    mTransmitRetries       = 0;
-    mShortAddress          = kShortAddrInvalid;
-    mAlternateShortAddress = kShortAddrInvalid;
-    mExtAddress.Clear();
+    mState             = kStateDisabled;
+    mCsmaBackoffs      = 0;
+    mTransmitRetries   = 0;
     mRxOnWhenIdle      = true;
     mEnergyScanMaxRssi = Radio::kInvalidRssi;
     mEnergyScanEndTime = Time{0};
@@ -157,38 +154,6 @@ void SubMac::SetPanId(PanId aPanId)
 {
     Get<Radio>().SetPanId(aPanId);
     LogDebg("RadioPanId: 0x%04x", aPanId);
-}
-
-void SubMac::SetShortAddress(ShortAddress aShortAddress)
-{
-    mShortAddress = aShortAddress;
-    Get<Radio>().SetShortAddress(mShortAddress);
-    LogDebg("RadioShortAddress: 0x%04x", mShortAddress);
-}
-
-void SubMac::SetAlternateShortAddress(ShortAddress aShortAddress)
-{
-    VerifyOrExit(mAlternateShortAddress != aShortAddress);
-
-    mAlternateShortAddress = aShortAddress;
-    Get<Radio>().SetAlternateShortAddress(mAlternateShortAddress);
-    LogDebg("RadioAlternateShortAddress: 0x%04x", mAlternateShortAddress);
-
-exit:
-    return;
-}
-
-void SubMac::SetExtAddress(const ExtAddress &aExtAddress)
-{
-    ExtAddress address;
-
-    mExtAddress = aExtAddress;
-
-    // Reverse the byte order before setting on radio.
-    address.Set(aExtAddress.m8, ExtAddress::kReverseByteOrder);
-    Get<Radio>().SetExtendedAddress(address);
-
-    LogDebg("RadioExtAddress: %s", mExtAddress.ToString().AsCString());
 }
 
 void SubMac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
@@ -390,7 +355,7 @@ void SubMac::ProcessTransmitSecurity(void)
         SignalFrameCounterUsed(frameCounter, mKeyId);
     }
 
-    extAddress = &GetExtAddress();
+    extAddress = &Get<Links>().GetExtAddress();
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Transmit security will be processed after time IE content is updated.
@@ -643,7 +608,7 @@ void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
     // parsing fails.
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    allowError = Get<LinkRaw>().IsEnabled();
+    allowError = Get<Links>().IsLinkRawEnabled();
 #endif
 
     VerifyOrExit(aFrame.GetKeyIdMode(keyIdMode) == kErrorNone, OT_ASSERT(allowError));
@@ -802,7 +767,7 @@ bool SubMac::ShouldHandleTransmitSecurity(void) const
     VerifyOrExit(!RadioSupportsTransmitSecurity(), swTxSecurity = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+    VerifyOrExit(Get<Links>().IsLinkRawEnabled());
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
@@ -820,7 +785,7 @@ bool SubMac::ShouldHandleCsmaBackOff(void) const
     VerifyOrExit(mTransmitFrame.IsCsmaCaEnabled() && !RadioSupportsCsmaBackoff(), swCsma = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+    VerifyOrExit(Get<Links>().IsLinkRawEnabled());
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
@@ -838,7 +803,7 @@ bool SubMac::ShouldHandleAckTimeout(void) const
     VerifyOrExit(!RadioSupportsAckTimeout(), swAckTimeout = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+    VerifyOrExit(Get<Links>().IsLinkRawEnabled());
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
@@ -856,7 +821,7 @@ bool SubMac::ShouldHandleRetries(void) const
     VerifyOrExit(!RadioSupportsRetries(), swRetries = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+    VerifyOrExit(Get<Links>().IsLinkRawEnabled());
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
@@ -874,7 +839,7 @@ bool SubMac::ShouldHandleEnergyScan(void) const
     VerifyOrExit(!RadioSupportsEnergyScan(), swEnergyScan = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+    VerifyOrExit(Get<Links>().IsLinkRawEnabled());
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
@@ -892,7 +857,7 @@ bool SubMac::ShouldHandleTransmitTargetTime(void) const
     VerifyOrExit(!RadioSupportsTransmitTiming(), swTxDelay = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+    VerifyOrExit(Get<Links>().IsLinkRawEnabled());
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
