@@ -591,7 +591,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
     SetState(kStateReceive);
 
 #if OPENTHREAD_RADIO
-    if (aFrame.GetChannel() != aFrame.GetRxChannelAfterTxDone())
+    if (aFrame.GetChannel() != aFrame.GetRxChannelAfterTxDone() && mRxOnWhenIdle)
     {
         // On RCP build, we switch immediately to the specified RX
         // channel if it is different from the channel on which frame
