@@ -1215,12 +1215,16 @@ const char *SecureTransport::StateToString(State aState)
         "CloseNotify",  // (5) kStateCloseNotify
     };
 
-    static_assert(0 == kStateClosed, "kStateClosed valid is incorrect");
-    static_assert(1 == kStateOpen, "kStateOpen valid is incorrect");
-    static_assert(2 == kStateInitializing, "kStateInitializing valid is incorrect");
-    static_assert(3 == kStateConnecting, "kStateConnecting valid is incorrect");
-    static_assert(4 == kStateConnected, "kStateConnected valid is incorrect");
-    static_assert(5 == kStateCloseNotify, "kStateCloseNotify valid is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kStateClosed);
+        ValidateNextEnum(kStateOpen);
+        ValidateNextEnum(kStateInitializing);
+        ValidateNextEnum(kStateConnecting);
+        ValidateNextEnum(kStateConnected);
+        ValidateNextEnum(kStateCloseNotify);
+    };
 
     return kStateStrings[aState];
 }

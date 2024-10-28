@@ -737,12 +737,16 @@ const char *Server::Response::QueryTypeToString(QueryType aType)
         "A",         // (5) kAQuery
     };
 
-    static_assert(0 == kPtrQuery, "kPtrQuery value is incorrect");
-    static_assert(1 == kSrvQuery, "kSrvQuery value is incorrect");
-    static_assert(2 == kTxtQuery, "kTxtQuery value is incorrect");
-    static_assert(3 == kSrvTxtQuery, "kSrvTxtQuery value is incorrect");
-    static_assert(4 == kAaaaQuery, "kAaaaQuery value is incorrect");
-    static_assert(5 == kAQuery, "kAQuery value is incorrect");
+    struct EumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kPtrQuery);
+        ValidateNextEnum(kSrvQuery);
+        ValidateNextEnum(kTxtQuery);
+        ValidateNextEnum(kSrvTxtQuery);
+        ValidateNextEnum(kAaaaQuery);
+        ValidateNextEnum(kAQuery);
+    };
 
     return kTypeNames[aType];
 }

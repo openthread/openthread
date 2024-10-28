@@ -66,6 +66,7 @@
 #include "radio/radio.hpp"
 #include "utils/otns.hpp"
 #include "utils/power_calibration.hpp"
+#include "utils/static_counter.hpp"
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 #include "backbone_router/backbone_tmf.hpp"

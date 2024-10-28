@@ -470,11 +470,15 @@ const char *Publisher::Entry::StateToString(State aState)
         "Removing", // (4) kRemoving
     };
 
-    static_assert(0 == kNoEntry, "kNoEntry value is not correct");
-    static_assert(1 == kToAdd, "kToAdd value is not correct");
-    static_assert(2 == kAdding, "kAdding value is not correct");
-    static_assert(3 == kAdded, "kAdded value is not correct");
-    static_assert(4 == kRemoving, "kRemoving value is not correct");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kNoEntry);
+        ValidateNextEnum(kToAdd);
+        ValidateNextEnum(kAdding);
+        ValidateNextEnum(kAdded);
+        ValidateNextEnum(kRemoving);
+    };
 
     return kStateStrings[aState];
 }

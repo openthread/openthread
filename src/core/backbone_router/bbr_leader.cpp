@@ -106,12 +106,16 @@ const char *Leader::StateToString(State aState)
         "Unchanged",       //  (5) kStateUnchanged
     };
 
-    static_assert(0 == kStateNone, "kStateNone value is incorrect");
-    static_assert(1 == kStateAdded, "kStateAdded value is incorrect");
-    static_assert(2 == kStateRemoved, "kStateRemoved value is incorrect");
-    static_assert(3 == kStateToTriggerRereg, "kStateToTriggerRereg value is incorrect");
-    static_assert(4 == kStateRefreshed, "kStateRefreshed value is incorrect");
-    static_assert(5 == kStateUnchanged, "kStateUnchanged value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kStateNone);
+        ValidateNextEnum(kStateAdded);
+        ValidateNextEnum(kStateRemoved);
+        ValidateNextEnum(kStateToTriggerRereg);
+        ValidateNextEnum(kStateRefreshed);
+        ValidateNextEnum(kStateUnchanged);
+    };
 
     return kStateStrings[aState];
 }
@@ -125,10 +129,14 @@ const char *Leader::DomainPrefixEventToString(DomainPrefixEvent aEvent)
         "Unchanged", // (3) kDomainPrefixUnchanged
     };
 
-    static_assert(0 == kDomainPrefixAdded, "kDomainPrefixAdded value is incorrect");
-    static_assert(1 == kDomainPrefixRemoved, "kDomainPrefixRemoved value is incorrect");
-    static_assert(2 == kDomainPrefixRefreshed, "kDomainPrefixRefreshed value is incorrect");
-    static_assert(3 == kDomainPrefixUnchanged, "kDomainPrefixUnchanged value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kDomainPrefixAdded);
+        ValidateNextEnum(kDomainPrefixRemoved);
+        ValidateNextEnum(kDomainPrefixRefreshed);
+        ValidateNextEnum(kDomainPrefixUnchanged);
+    };
 
     return kEventStrings[aEvent];
 }

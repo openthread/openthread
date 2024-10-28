@@ -363,10 +363,14 @@ const char *Message::PriorityToString(Priority aPriority)
         "net",    // (3) kPriorityNet
     };
 
-    static_assert(kPriorityLow == 0, "kPriorityLow value is incorrect");
-    static_assert(kPriorityNormal == 1, "kPriorityNormal value is incorrect");
-    static_assert(kPriorityHigh == 2, "kPriorityHigh value is incorrect");
-    static_assert(kPriorityNet == 3, "kPriorityNet value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kPriorityLow);
+        ValidateNextEnum(kPriorityNormal);
+        ValidateNextEnum(kPriorityHigh);
+        ValidateNextEnum(kPriorityNet);
+    };
 
     return kPriorityStrings[aPriority];
 }
