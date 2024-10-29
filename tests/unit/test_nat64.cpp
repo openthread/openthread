@@ -350,6 +350,7 @@ void TestPacketCounter(void)
         sInstance->Get<Nat64::Translator>().SetNat64Prefix(nat64prefix);
     }
 
+    // Step 1: Make the mapping table dirty.
     {
         // fd02::1               fd01::ac10:f3c5       UDP      52     43981 → 4660 Len=4
         const uint8_t kIp6Packet[] = {
@@ -407,6 +408,7 @@ void TestPacketCounter(void)
         VerifyOrQuit(totalMappingCount == 1);
     }
 
+    // Step 2: Release the mapping table item.
     {
         const uint8_t ip6Address[] = {0xfd, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -418,6 +420,8 @@ void TestPacketCounter(void)
         sInstance->Get<Nat64::Translator>().SetNat64Prefix(nat64prefix);
     }
 
+    // Step 3: Reuse the same object for new mapping table item.
+    // If the counters are not reset, the verification below will fail.
     {
         // fd02::1               fd01::ac10:f3c5       UDP      52     43981 → 4660 Len=4
         const uint8_t kIp6Packet[] = {
