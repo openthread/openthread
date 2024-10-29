@@ -234,6 +234,14 @@ public:
     Error SetIp4Cidr(const Ip4::Cidr &aCidr);
 
     /**
+     * Clears the CIDR used when setting the source address of the outgoing translated IPv4 datagrams.
+     *
+     * @note The NAT64 translator will be reset and all existing sessions will be expired when clearing the configured
+     * CIDR.
+     */
+    void ClearIp4Cidr(void);
+
+    /**
      * Sets the prefix of NAT64-mapped addresses in the thread network. The address mapping table will not be cleared.
      * Equals to `ClearNat64Prefix` when an empty prefix is provided.
      *
