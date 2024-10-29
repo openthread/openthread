@@ -1508,6 +1508,62 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_SRP_SERVER_ENABLED>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enable));
+    otSrpServerSetEnabled(mInstance, enable);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SRP_SERVER_ENABLED>(void)
+{
+    otError          error          = OT_ERROR_NONE;
+    uint8_t          header         = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
+    otSrpServerState srpServerState = otSrpServerGetState(mInstance);
+
+    SuccessOrExit(error = mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_SRP_SERVER_ENABLED));
+    SuccessOrExit(error = mEncoder.WriteBool(srpServerState != OT_SRP_SERVER_STATE_DISABLED));
+    SuccessOrExit(error = mEncoder.EndFrame());
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_SRP_SERVER_AUTO_ENABLE_MODE>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enable));
+    otSrpServerSetAutoEnableMode(mInstance, enable);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SRP_SERVER_AUTO_ENABLE_MODE>(void)
+{
+    otError error  = OT_ERROR_NONE;
+    uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
+
+    SuccessOrExit(error =
+                      mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_SRP_SERVER_AUTO_ENABLE_MODE));
+    SuccessOrExit(error = mEncoder.WriteBool(otSrpServerIsAutoEnableMode(mInstance)));
+    SuccessOrExit(error = mEncoder.EndFrame());
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+
 } // namespace Ncp
 } // namespace ot
 
