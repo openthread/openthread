@@ -893,9 +893,13 @@ const char *RoutingManager::RouterAdvOriginToString(RouterAdvOrigin aRaOrigin)
         "(this BR other sw entity)", // (2) kThisBrOtherEntity
     };
 
-    static_assert(0 == kAnotherRouter, "kAnotherRouter value is incorrect");
-    static_assert(1 == kThisBrRoutingManager, "kThisBrRoutingManager value is incorrect");
-    static_assert(2 == kThisBrOtherEntity, "kThisBrOtherEntity value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kAnotherRouter);
+        ValidateNextEnum(kThisBrRoutingManager);
+        ValidateNextEnum(kThisBrOtherEntity);
+    };
 
     return kOriginStrings[aRaOrigin];
 }
@@ -3010,10 +3014,14 @@ const char *RoutingManager::OnLinkPrefixManager::StateToString(State aState)
         "Deprecating", // (3) kDeprecating
     };
 
-    static_assert(0 == kIdle, "kIdle value is incorrect");
-    static_assert(1 == kPublishing, "kPublishing value is incorrect");
-    static_assert(2 == kAdvertising, "kAdvertising value is incorrect");
-    static_assert(3 == kDeprecating, "kDeprecating value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kIdle);
+        ValidateNextEnum(kPublishing);
+        ValidateNextEnum(kAdvertising);
+        ValidateNextEnum(kDeprecating);
+    };
 
     return kStateStrings[aState];
 }
@@ -3493,9 +3501,13 @@ const char *RoutingManager::RoutePublisher::StateToString(State aState)
         "ula",       // (2) kPublishUla
     };
 
-    static_assert(0 == kDoNotPublish, "kDoNotPublish value is incorrect");
-    static_assert(1 == kPublishDefault, "kPublishDefault value is incorrect");
-    static_assert(2 == kPublishUla, "kPublishUla value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kDoNotPublish);
+        ValidateNextEnum(kPublishDefault);
+        ValidateNextEnum(kPublishUla);
+    };
 
     return kStateStrings[aState];
 }
@@ -4204,10 +4216,14 @@ const char *RoutingManager::PdPrefixManager::StateToString(State aState)
         "Idle",     // (3) kIdle
     };
 
-    static_assert(0 == kDhcp6PdStateDisabled, "kDhcp6PdStateDisabled value is incorrect");
-    static_assert(1 == kDhcp6PdStateStopped, "kDhcp6PdStateStopped value is incorrect");
-    static_assert(2 == kDhcp6PdStateRunning, "kDhcp6PdStateRunning value is incorrect");
-    static_assert(3 == kDhcp6PdStateIdle, "kDhcp6PdStateIdle value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kDhcp6PdStateDisabled);
+        ValidateNextEnum(kDhcp6PdStateStopped);
+        ValidateNextEnum(kDhcp6PdStateRunning);
+        ValidateNextEnum(kDhcp6PdStateIdle);
+    };
 
     return kStateStrings[aState];
 }

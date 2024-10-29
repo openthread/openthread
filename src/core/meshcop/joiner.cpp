@@ -597,12 +597,16 @@ const char *Joiner::StateToString(State aState)
         "Joined",     // (5) kStateJoined
     };
 
-    static_assert(kStateIdle == 0, "kStateIdle value is incorrect");
-    static_assert(kStateDiscover == 1, "kStateDiscover value is incorrect");
-    static_assert(kStateConnect == 2, "kStateConnect value is incorrect");
-    static_assert(kStateConnected == 3, "kStateConnected value is incorrect");
-    static_assert(kStateEntrust == 4, "kStateEntrust value is incorrect");
-    static_assert(kStateJoined == 5, "kStateJoined value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kStateIdle);
+        ValidateNextEnum(kStateDiscover);
+        ValidateNextEnum(kStateConnect);
+        ValidateNextEnum(kStateConnected);
+        ValidateNextEnum(kStateEntrust);
+        ValidateNextEnum(kStateJoined);
+    };
 
     return kStateStrings[aState];
 }

@@ -406,6 +406,9 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance *, otLinkMetrics, otShortAd
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
+// Add WEAK here because in some unit test there is an implementation for `otPlatRadioSetChannelTargetPower`
+OT_TOOL_WEAK otError otPlatRadioSetChannelTargetPower(otInstance *, uint8_t, int16_t) { return OT_ERROR_NONE; }
+
 void otPlatReset(otInstance *) {}
 
 otPlatResetReason otPlatGetResetReason(otInstance *) { return OT_PLAT_RESET_REASON_POWER_ON; }

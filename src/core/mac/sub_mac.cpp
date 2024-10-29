@@ -139,6 +139,10 @@ otRadioCaps SubMac::GetCaps(void) const
     caps |= OT_RADIO_CAPS_RX_ON_WHEN_IDLE;
 #endif
 
+#if OPENTHREAD_RADIO
+    caps |= OT_RADIO_CAPS_SLEEP_TO_TX;
+#endif
+
 #else
     caps = OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_TRANSMIT_RETRIES |
            OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING |
@@ -587,7 +591,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
     SetState(kStateReceive);
 
 #if OPENTHREAD_RADIO
-    if (aFrame.GetChannel() != aFrame.GetRxChannelAfterTxDone())
+    if (aFrame.GetChannel() != aFrame.GetRxChannelAfterTxDone() && mRxOnWhenIdle)
     {
         // On RCP build, we switch immediately to the specified RX
         // channel if it is different from the channel on which frame

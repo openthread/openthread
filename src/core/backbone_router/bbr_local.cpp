@@ -449,9 +449,13 @@ const char *Local::ActionToString(Action aAction)
         "Remove", // (2) kActionRemove
     };
 
-    static_assert(0 == kActionSet, "kActionSet value is incorrect");
-    static_assert(1 == kActionAdd, "kActionAdd value is incorrect");
-    static_assert(2 == kActionRemove, "kActionRemove value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kActionSet);
+        ValidateNextEnum(kActionAdd);
+        ValidateNextEnum(kActionRemove);
+    };
 
     return kActionStrings[aAction];
 }

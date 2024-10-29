@@ -225,10 +225,14 @@ uint8_t CostForLinkQuality(LinkQuality aLinkQuality)
         kCostForLinkQuality3, // Link cost for `kLinkQuality3` (3).
     };
 
-    static_assert(kLinkQuality0 == 0, "kLinkQuality0 is invalid");
-    static_assert(kLinkQuality1 == 1, "kLinkQuality1 is invalid");
-    static_assert(kLinkQuality2 == 2, "kLinkQuality2 is invalid");
-    static_assert(kLinkQuality3 == 3, "kLinkQuality3 is invalid");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kLinkQuality0);
+        ValidateNextEnum(kLinkQuality1);
+        ValidateNextEnum(kLinkQuality2);
+        ValidateNextEnum(kLinkQuality3);
+    };
 
     uint8_t cost = Mle::kMaxRouteCost;
 

@@ -142,9 +142,13 @@ void MulticastListenersTable::Log(Action              aAction,
         "Expire", // (2) kExpire
     };
 
-    static_assert(0 == kAdd, "kAdd value is incorrect");
-    static_assert(1 == kRemove, "kRemove value is incorrect");
-    static_assert(2 == kExpire, "kExpire value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kAdd);
+        ValidateNextEnum(kRemove);
+        ValidateNextEnum(kExpire);
+    };
 
     LogDebg("%s %s expire %lu: %s", kActionStrings[aAction], aAddress.ToString().AsCString(),
             ToUlong(aExpireTime.GetValue()), ErrorToString(aError));
