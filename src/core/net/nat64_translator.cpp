@@ -363,7 +363,8 @@ Translator::AddressMapping *Translator::AllocateMapping(const Ip6::Address &aIp6
     VerifyOrExit(mapping != nullptr);
 
     mActiveAddressMappings.Push(*mapping);
-    mapping->mId  = ++mNextMappingId;
+    mapping->mId = ++mNextMappingId;
+    mapping->mCounters.Clear();
     mapping->mIp6 = aIp6Addr;
     // PopBack must return a valid address since it is not empty.
     mapping->mIp4 = *mIp4AddressPool.PopBack();
