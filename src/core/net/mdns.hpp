@@ -753,7 +753,7 @@ private:
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Forward declarations
 
-    class EntryTimerContext;
+    struct EntryContext;
     class TxMessage;
     class RxMessage;
     class ServiceEntry;
@@ -873,7 +873,7 @@ private:
         void     UpdateTtl(uint32_t aTtl);
 
         void     StartAnnouncing(void);
-        bool     ShouldAppendTo(TxMessage &aResponse, TimeMilli aNow) const;
+        bool     ShouldAppendTo(EntryContext &aContext) const;
         bool     CanAnswer(void) const;
         void     ScheduleAnswer(const AnswerInfo &aInfo);
         void     UpdateStateAfterAnswer(const TxMessage &aResponse);
@@ -983,7 +983,7 @@ private:
         void AnswerNonProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, uint16_t aRecordsLength);
         void ScheduleNsecAnswer(const AnswerInfo &aInfo);
 
-        template <typename EntryType> void HandleTimer(EntryTimerContext &aContext);
+        template <typename EntryType> void HandleTimer(EntryContext &aContext);
 
         RecordInfo mKeyRecord;
 
@@ -1029,9 +1029,9 @@ private:
         void  Unregister(const Host &aHost);
         void  Unregister(const Key &aKey);
         void  AnswerQuestion(const AnswerInfo &aInfo);
-        void  HandleTimer(EntryTimerContext &aContext);
+        void  HandleTimer(EntryContext &aContext);
         void  ClearAppendState(void);
-        void  PrepareResponse(TxMessage &aResponse, TimeMilli aNow);
+        void  PrepareResponse(EntryContext &aContext);
         void  HandleConflict(void);
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
         Error CopyInfoTo(Host &aHost, EntryState &aState) const;
@@ -1044,7 +1044,7 @@ private:
         void  ScheduleToRemoveIfEmpty(void);
         void  PrepareProbe(TxMessage &aProbe);
         void  StartAnnouncing(void);
-        void  PrepareResponseRecords(TxMessage &aResponse, TimeMilli aNow);
+        void  PrepareResponseRecords(EntryContext &aContext);
         void  UpdateRecordsState(const TxMessage &aResponse);
         void  DetermineNextFireTime(void);
         void  AppendAddressRecordsTo(TxMessage &aTxMessage, Section aSection);
@@ -1088,9 +1088,9 @@ private:
         void  AnswerServiceNameQuestion(const AnswerInfo &aInfo);
         void  AnswerServiceTypeQuestion(const AnswerInfo &aInfo, const char *aSubLabel);
         bool  ShouldSuppressKnownAnswer(uint32_t aTtl, const char *aSubLabel) const;
-        void  HandleTimer(EntryTimerContext &aContext);
+        void  HandleTimer(EntryContext &aContext);
         void  ClearAppendState(void);
-        void  PrepareResponse(TxMessage &aResponse, TimeMilli aNow);
+        void  PrepareResponse(EntryContext &aContext);
         void  HandleConflict(void);
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
         Error CopyInfoTo(Service &aService, EntryState &aState, EntryIterator &aIterator) const;
@@ -1117,7 +1117,7 @@ private:
         void  ScheduleToRemoveIfEmpty(void);
         void  PrepareProbe(TxMessage &aProbe);
         void  StartAnnouncing(void);
-        void  PrepareResponseRecords(TxMessage &aResponse, TimeMilli aNow);
+        void  PrepareResponseRecords(EntryContext &aContext);
         void  UpdateRecordsState(const TxMessage &aResponse);
         void  DetermineNextFireTime(void);
         void  DiscoverOffsetsAndHost(HostEntry *&aHost);
@@ -1180,11 +1180,11 @@ private:
         void     ClearAppendState(void);
         void     AnswerQuestion(const AnswerInfo &aInfo);
         bool     ShouldSuppressKnownAnswer(uint32_t aTtl) const;
-        void     HandleTimer(EntryTimerContext &aContext);
-        void     PrepareResponse(TxMessage &aResponse, TimeMilli aNow);
+        void     HandleTimer(EntryContext &aContext);
+        void     PrepareResponse(EntryContext &aContext);
 
     private:
-        void PrepareResponseRecords(TxMessage &aResponse, TimeMilli aNow);
+        void PrepareResponseRecords(EntryContext &aContext);
         void AppendPtrRecordTo(TxMessage &aResponse, uint16_t aServiceTypeOffset);
 
         ServiceType *mNext;
@@ -1195,7 +1195,7 @@ private:
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    class TxMessage : public InstanceLocator
+    class TxMessage : public InstanceLocator, private NonCopyable
     {
     public:
         enum Type : uint8_t
@@ -1208,7 +1208,7 @@ private:
         };
 
         TxMessage(Instance &aInstance, Type aType, uint16_t aQueryId = 0);
-        TxMessage(Instance &aInstance, Type aType, const AddressInfo &aUnicastDest, uint16_t aQueryId = 0);
+        TxMessage(Instance &aInstance, Type aType, const AddressInfo &aUnicastDest, uint16_t aQueryId);
         Type          GetType(void) const { return mType; }
         Message      &SelectMessageFor(Section aSection);
         AppendOutcome AppendLabel(Section aSection, const char *aLabel, uint16_t &aCompressOffset);
@@ -1253,16 +1253,13 @@ private:
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    class EntryTimerContext : public InstanceLocator // Used by `HandleEntryTimer`.
+    struct EntryContext : private NonCopyable // Used when preparing entry response (e.g. from `HandleEntryTimer()`).
     {
-    public:
-        EntryTimerContext(Instance &aInstance);
-        TimeMilli     GetNow(void) const { return mNextFireTime.GetNow(); }
-        NextFireTime &GetNextFireTime(void) { return mNextFireTime; }
-        TxMessage    &GetProbeMessage(void) { return mProbeMessage; }
-        TxMessage    &GetResponseMessage(void) { return mResponseMessage; }
+        EntryContext(Instance &aInstance, TxMessage::Type aResponseType);
+        EntryContext(Instance &aInstance, TxMessage::Type aResponseType, const AddressInfo &aDest, uint16_t aQueryId);
 
-    private:
+        TimeMilli GetNow(void) const { return mNextFireTime.GetNow(); }
+
         NextFireTime mNextFireTime;
         TxMessage    mProbeMessage;
         TxMessage    mResponseMessage;
@@ -1334,7 +1331,7 @@ private:
                                         Name              &aServiceType) const;
         void AnswerAllServicesQuestion(const Question &aQuestion, const AnswerInfo &aInfo);
         bool ShouldSuppressKnownAnswer(const Question &aQuestion, const ServiceType &aServiceType) const;
-        void SendUnicastResponse(const AddressInfo &aUnicastDest);
+        void SendUnicastResponse(void);
         void IterateOnAllRecordsInResponse(RecordProcessor aRecordProcessor);
         void ProcessRecordForConflict(const Name &aName, const ResourceRecord &aRecord, uint16_t aRecordOffset);
         void ProcessPtrRecord(const Name &aName, const ResourceRecord &aRecord, uint16_t aRecordOffset);
@@ -1493,15 +1490,11 @@ private:
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    class CacheTimerContext : public InstanceLocator
+    struct CacheContext : private NonCopyable
     {
-    public:
-        CacheTimerContext(Instance &aInstance);
-        TimeMilli     GetNow(void) const { return mNextFireTime.GetNow(); }
-        NextFireTime &GetNextFireTime(void) { return mNextFireTime; }
-        TxMessage    &GetQueryMessage(void) { return mQueryMessage; }
+        CacheContext(Instance &aInstance);
+        TimeMilli GetNow(void) const { return mNextFireTime.GetNow(); }
 
-    private:
         NextFireTime mNextFireTime;
         TxMessage    mQueryMessage;
     };
@@ -1548,7 +1541,7 @@ private:
         // (e.g., query message construction).
 
     public:
-        void HandleTimer(CacheTimerContext &aContext);
+        void HandleTimer(CacheContext &aContext);
         void ClearEmptyCallbacks(void);
         void ScheduleQuery(TimeMilli aQueryTime);
 
@@ -1582,7 +1575,7 @@ private:
 
         void SetIsActive(bool aIsActive);
         bool ShouldQuery(TimeMilli aNow);
-        void PrepareQuery(CacheTimerContext &aContext);
+        void PrepareQuery(CacheContext &aContext);
         void ProcessExpiredRecords(TimeMilli aNow);
         void DetermineNextInitialQueryTime(void);
 
