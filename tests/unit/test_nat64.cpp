@@ -31,8 +31,8 @@
 #include "test_platform.h"
 #include "test_util.hpp"
 
-#include "inttypes.h"
-#include "string.h"
+#include <inttypes.h>
+#include <string.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -142,7 +142,7 @@ void TestCase4To6(const char *aTestName,
     printf("  ... PASS\n");
 }
 
-void PrintCounter(const otNat64Counters &aCounter)
+void PrintCounters(const otNat64Counters &aCounter)
 {
     printf(" ... 4To6Packets = %" PRIu64 "\n", aCounter.m4To6Packets);
     printf(" ... 4To6Bytes   = %" PRIu64 "\n", aCounter.m4To6Bytes);
@@ -153,13 +153,13 @@ void PrintCounter(const otNat64Counters &aCounter)
 void PrintProtocolCounters(const otNat64ProtocolCounters &aCounter)
 {
     printf(" Total \n");
-    PrintCounter(aCounter.mTotal);
+    PrintCounters(aCounter.mTotal);
     printf(" ICMP \n");
-    PrintCounter(aCounter.mIcmp);
+    PrintCounters(aCounter.mIcmp);
     printf(" UDP \n");
-    PrintCounter(aCounter.mUdp);
+    PrintCounters(aCounter.mUdp);
     printf(" TCP \n");
-    PrintCounter(aCounter.mTcp);
+    PrintCounters(aCounter.mTcp);
 }
 
 void VerifyCounters(const otNat64ProtocolCounters &aExpected, const otNat64ProtocolCounters &aActual)
@@ -429,7 +429,7 @@ void TestPacketCounter(void)
             0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xfd, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             172,  16,   243,  197,  0xab, 0xcd, 0x12, 0x34, 0x00, 0x0c, 0xe3, 0x31, 0x61, 0x62, 0x63, 0x64,
         };
-        // 192.168.123.1         172.16.243.197        UDP      32     43981 → 4660 Len=4
+        // 192.168.124.1         172.16.243.197        UDP      32     43981 → 4660 Len=4
         const uint8_t kIp4Packet[] = {0x45, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11, 0x9e,
                                       0x4d, 192,  168,  124,  1,    172,  16,   243,  197,  0xab, 0xcd,
                                       0x12, 0x34, 0x00, 0x0c, 0xa0, 0x8d, 0x61, 0x62, 0x63, 0x64};
