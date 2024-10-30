@@ -177,6 +177,15 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE
+ *
+ * Define to 1 to enable NCP based implementation of platform DNS-SD APIs.
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE
+#define OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
  *
  * TODO: complete.

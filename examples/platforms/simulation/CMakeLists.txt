@@ -52,6 +52,13 @@ else()
     target_compile_definitions(ot-simulation-config INTERFACE "OPENTHREAD_SIMULATION_IMPLEMENT_INFRA_IF=0")
 endif()
 
+option(OT_SIMULATION_DNSSD "enable simulation dnssd" ON)
+if (OT_SIMULATION_DNSSD)
+    target_compile_definitions(ot-simulation-config INTERFACE "OPENTHREAD_SIMULATION_IMPLEMENT_DNSSD=1")
+else()
+    target_compile_definitions(ot-simulation-config INTERFACE "OPENTHREAD_SIMULATION_IMPLEMENT_DNSSD=0")
+endif()
+
 if(NOT OT_PLATFORM_CONFIG)
     set(OT_PLATFORM_CONFIG "openthread-core-simulation-config.h" PARENT_SCOPE)
 endif()

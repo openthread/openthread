@@ -116,3 +116,12 @@
 #ifndef OPENTHREAD_SIMULATION_IMPLEMENT_INFRA_IF
 #define OPENTHREAD_SIMULATION_IMPLEMENT_INFRA_IF 1
 #endif
+
+/**
+ * @def OPENTHREAD_SIMULATION_IMPLEMENT_DNSSD
+ *
+ * Define as 1 for the simulation platform to provide implementation of `otPlatDnssd` APIs.
+ */
+#ifndef OPENTHREAD_SIMULATION_IMPLEMENT_DNSSD
+#define OPENTHREAD_SIMULATION_IMPLEMENT_DNSSD 1
+#endif
