@@ -257,6 +257,9 @@ bool otBorderAgentIsEphemeralKeyActive(otInstance *aInstance);
  *
  * - The Border Agent starts using an ephemeral key.
  * - Any parameter related to the ephemeral key, such as the port number, changes.
+ * - A commissioner candidate successfully establishes a secure session with the Border Agent using the ephemeral key.
+ *   This situation can be identified by `otBorderAgentGetState()` being `OT_BORDER_AGENT_STATE_ACTIVE` (this event
+ *   can be used to stop advertising the mDNS service "_meshcop-e._udp").
  * - The Border Agent stops using the ephemeral key due to:
  *   - A direct call to `otBorderAgentClearEphemeralKey()`.
  *   - The ephemeral key timing out.
