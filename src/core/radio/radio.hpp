@@ -331,6 +331,13 @@ public:
     void SetShortAddress(Mac::ShortAddress aShortAddress);
 
     /**
+     * Set the altrnate short address.
+     *
+     * @param[in] aShortAddress  The alternate short address.
+     */
+    void SetAlternateShortAddress(Mac::ShortAddress aShortAddress);
+
+    /**
      * Sets MAC key and key ID.
      *
      * @param[in] aKeyIdMode  MAC key ID mode.
@@ -840,6 +847,11 @@ inline int8_t Radio::GetReceiveSensitivity(void) const { return otPlatRadioGetRe
 
 inline void Radio::SetPanId(Mac::PanId aPanId) { otPlatRadioSetPanId(GetInstancePtr(), aPanId); }
 
+inline void Radio::SetAlternateShortAddress(Mac::ShortAddress aShortAddress)
+{
+    otPlatRadioSetAlternateShortAddress(GetInstancePtr(), aShortAddress);
+}
+
 inline void Radio::SetMacKey(uint8_t                 aKeyIdMode,
                              uint8_t                 aKeyId,
                              const Mac::KeyMaterial &aPrevKey,
@@ -1002,6 +1014,8 @@ inline void Radio::SetPanId(Mac::PanId) {}
 inline void Radio::SetExtendedAddress(const Mac::ExtAddress &) {}
 
 inline void Radio::SetShortAddress(Mac::ShortAddress) {}
+
+inline void Radio::SetAlternateShortAddress(Mac::ShortAddress) {}
 
 inline void Radio::SetMacKey(uint8_t,
                              uint8_t,

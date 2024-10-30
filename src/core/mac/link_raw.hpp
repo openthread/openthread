@@ -184,6 +184,16 @@ public:
     Error SetShortAddress(ShortAddress aShortAddress);
 
     /**
+     * Sets the alternate short address.
+     *
+     * @param[in] aShortAddress   The short address. Use `kShortAddrInvalid` to clear it.
+     *
+     * @retval kErrorNone            If successful.
+     * @retval kErrorInvalidState    If the raw link-layer isn't enabled.
+     */
+    Error SetAlternateShortAddress(ShortAddress aShortAddress);
+
+    /**
      * Returns PANID.
      *
      * @returns PANID.

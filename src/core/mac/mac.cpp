@@ -118,6 +118,9 @@ Mac::Mac(Instance &aInstance)
     SetPanId(mPanId);
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
+#if OPENTHREAD_FTD
+    SetAlternateShortAddress(kShortAddrInvalid);
+#endif
 
     mMode2KeyMaterial.SetFrom(AsCoreType(&sMode2Key));
 }
@@ -1766,6 +1769,33 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
+Error Mac::FilterDestShortAddress(ShortAddress aDestAddress) const
+{
+    Error error = kErrorNone;
+
+    if (aDestAddress == GetShortAddress())
+    {
+        ExitNow();
+    }
+
+#if OPENTHREAD_FTD
+    if ((GetAlternateShortAddress() != kShortAddrInvalid) && (aDestAddress == GetAlternateShortAddress()))
+    {
+        ExitNow();
+    }
+#endif
+
+    if (mRxOnWhenIdle && (aDestAddress == kShortAddrBroadcast))
+    {
+        ExitNow();
+    }
+
+    error = kErrorDestinationAddressFiltered;
+
+exit:
+    return error;
+}
+
 void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 {
     Address   srcaddr;
@@ -1795,8 +1825,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         break;
 
     case Address::kTypeShort:
-        VerifyOrExit((mRxOnWhenIdle && dstaddr.IsBroadcast()) || dstaddr.GetShort() == GetShortAddress(),
-                     error = kErrorDestinationAddressFiltered);
+        SuccessOrExit(error = FilterDestShortAddress(dstaddr.GetShort()));
 
 #if OPENTHREAD_FTD
         // Allow multicasts from neighbor routers if FTD

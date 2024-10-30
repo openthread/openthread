@@ -331,6 +331,35 @@ public:
     }
 
     /**
+     * Gets the alternate MAC short address.
+     *
+     * @returns The alternate MAC short address, or `kShortAddrInvalid` if there is no alternate address.
+     */
+    ShortAddress GetAlternateShortAddress(void) const
+    {
+        return
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+            mSubMac.GetAlternateShortAddress();
+#else
+            mAlternateShortAddress;
+#endif
+    }
+
+    /**
+     * Sets the alternate MAC short address.
+     *
+     * @param[in] aShortAddress   The alternate short address. Use `kShortAddrInvalid` to clear it.
+     */
+    void SetAlternateShortAddress(ShortAddress aShortAddress)
+    {
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+        mSubMac.SetAlternateShortAddress(aShortAddress);
+#else
+        mAlternateShortAddress = aShortAddress;
+#endif
+    }
+
+    /**
      * Gets the MAC Extended Address.
      *
      * @returns The MAC Extended Address.
@@ -677,6 +706,7 @@ private:
 
 #if !OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     ShortAddress mShortAddress;
+    ShortAddress mAlternateShortAddress;
     ExtAddress   mExtAddress;
 #endif
 };

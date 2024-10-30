@@ -588,9 +588,18 @@ otError otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod);
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @returns A pointer to the IEEE 802.15.4 Short Address.
+ * @returns The IEEE 802.15.4 Short Address.
  */
 otShortAddress otLinkGetShortAddress(otInstance *aInstance);
+
+/**
+ * Get the IEEE 802.15.4 alternate short address.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The alternate short address, or `OT_RADIO_INVALID_SHORT_ADDR` (0xfffe) if there is no alternate address.
+ */
+otShortAddress otLinkGetAlternateShortAddress(otInstance *aInstance);
 
 /**
  * Returns the maximum number of frame retries during direct transmission.

@@ -846,6 +846,17 @@ exit:
     return error;
 }
 
+otError RadioSpinel::SetAlternateShortAddress(uint16_t aAddress)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(sRadioCaps & OT_RADIO_CAPS_ALT_SHORT_ADDR);
+    error = Set(SPINEL_PROP_MAC_15_4_ALT_SADDR, SPINEL_DATATYPE_UINT16_S, aAddress);
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
 otError RadioSpinel::ReadMacKey(const otMacKeyMaterial &aKeyMaterial, otMacKey &aKey)

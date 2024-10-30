@@ -70,7 +70,7 @@ Done
 - [linkmetricsmgr](#linkmetricsmgr-disable)
 - [locate](#locate)
 - [log](#log-filename-filename)
-- [mac](#mac-retries-direct)
+- [mac](#mac-altshortaddr)
 - [macfilter](#macfilter)
 - [meshdiag](#meshdiag-topology-ip6-addrs-children)
 - [mliid](#mliid-iid)
@@ -4193,6 +4193,16 @@ Print API version number.
 ```bash
 > version api
 28
+Done
+```
+
+### mac altshortaddr
+
+Get the alternate short address used by MAC layer. Can be `0xfffe` if not set.
+
+```bash
+> mac altshortaddr
+0x4801
 Done
 ```
 

@@ -256,6 +256,12 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
     SuccessOrDie(GetRadioSpinel().SetShortAddress(aAddress));
 }
 
+void otPlatRadioSetAlternateShortAddress(otInstance *aInstance, uint16_t aAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    SuccessOrDie(GetRadioSpinel().SetAlternateShortAddress(aAddress));
+}
+
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
     OT_UNUSED_VARIABLE(aInstance);
