@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023, The OpenThread Authors.
+ *  Copyright (c) 2024, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,11 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-simulation.h"
-
+#include <openthread/instance.h>
 #include <openthread/platform/dnssd.h>
 
-#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE && OPENTHREAD_SIMULATION_IMPLEMENT_DNSSD
+#include "ncp/ncp_base.hpp"
+
+#if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 otPlatDnssdState otPlatDnssdGetState(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -164,4 +165,4 @@ void otPlatDnssdStopIp4AddressResolver(otInstance *aInstance, const otPlatDnssdA
     OT_UNUSED_VARIABLE(aResolver);
 }
 
-#endif // OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE && OPENTHREAD_SIMULATION_IMPLEMENT_DNSSD
+#endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
