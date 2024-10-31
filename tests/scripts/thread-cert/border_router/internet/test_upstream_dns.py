@@ -91,8 +91,11 @@ class UpstreamDns(thread_cert.TestCase):
         self._start_dns_server(dns_server)
         dns_server_addr = dns_server.get_ether_addrs(ipv4=True, ipv6=False)[0]
 
+        # Disable the bind9 service on the BR otherwise bind9 may respond to Thread devices' DNS queries
+        br.bash('service bind9 stop')
+
         # Update BR's /etc/resolv.conf and force BR to reload it
-        br.bash(shlex.join(['echo', 'nameserver ' + dns_server_addr]) + ' >> /etc/resolv.conf')
+        br.bash(shlex.join(['echo', 'nameserver ' + dns_server_addr]) + ' > /etc/resolv.conf')
         br.stop_otbr_service()
         br.start_otbr_service()
 
