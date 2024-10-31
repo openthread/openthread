@@ -416,4 +416,13 @@
 #define OPENTHREAD_POSIX_CONFIG_UPSTREAM_DNS_BIND_TO_INFRA_NETIF 1
 #endif
 
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_TREL_SELECT_INFRA_IF
+ *
+ * Define to 1 to let TREL select the infrastructure interface, otherwise use the interface in the TREL URL.
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_TREL_SELECT_INFRA_IF
+#define OPENTHREAD_POSIX_CONFIG_TREL_SELECT_INFRA_IF 0
+#endif
+
 #endif // OPENTHREAD_PLATFORM_POSIX_CONFIG_H_
