@@ -244,6 +244,15 @@ public:
                                const uint8_t      *aBuffer,
                                uint16_t            aBufferLength);
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    /**
+     * Gets the Dnssd state.
+     *
+     * Returns the platform dnssd state.
+     */
+    otPlatDnssdState DnssdGetState(void);
+#endif
+
 protected:
     static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
 
@@ -759,7 +768,8 @@ protected:
 
     uint64_t mLogTimestampBase; // Timestamp base used for logging
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#if OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     otError InfraIfAddAddress(const otIp6Address &aAddress);
     bool    InfraIfContainsAddress(const otIp6Address &aAddress);
 
@@ -767,6 +777,11 @@ protected:
     otIp6Address             mInfraIfAddrs[kMaxInfraIfAddrs];
     uint8_t                  mInfraIfAddrCount;
     uint32_t                 mInfraIfIndex;
+#endif
+
+#if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdState mDnssdState;
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE

@@ -261,6 +261,7 @@ ot_unit_test(toolchain test_toolchain_c.c)
 ot_unit_test(trickle_timer)
 ot_unit_test(url)
 
+ot_unit_ncp_test(dnssd)
 ot_unit_ncp_test(infra_if)
 ot_unit_ncp_test(srp_server)
 

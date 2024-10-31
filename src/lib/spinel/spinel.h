@@ -4785,6 +4785,17 @@ enum
 
     SPINEL_PROP_SRP_SERVER__BEGIN = 0x920,
 
+    SPINEL_PROP_DNSSD__BEGIN = 0x930,
+
+    /// Dnssd State
+    /** Format `b`: Write-only
+     *
+     * `C`: The dnssd state.
+     */
+    SPINEL_PROP_DNSSD_STATE = SPINEL_PROP_DNSSD__BEGIN + 1,
+
+    SPINEL_PROP_DNSSD__END = 0x950,
+
     /// SRP server state.
     /** Format `b`
      * Type: Read-Write

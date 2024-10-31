@@ -31,12 +31,12 @@
 
 #include "ncp/ncp_base.hpp"
 
-#if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 otPlatDnssdState otPlatDnssdGetState(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return OT_PLAT_DNSSD_STOPPED;
+    return ot::Ncp::NcpBase::GetNcpInstance()->DnssdGetState();
 }
 
 void otPlatDnssdRegisterService(otInstance                 *aInstance,
@@ -165,4 +165,4 @@ void otPlatDnssdStopIp4AddressResolver(otInstance *aInstance, const otPlatDnssdA
     OT_UNUSED_VARIABLE(aResolver);
 }
 
-#endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE

@@ -79,12 +79,17 @@ jobs:
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
     - name: Build Simulation
-      run: ./script/cmake-build simulation -DOT_BUILD_GTEST=ON -DOT_BORDER_ROUTING=ON -DOT_BORDER_ROUTING_DHCP6_PD=ON -DOT_NCP_INFRA_IF=ON -DOT_SRP_SERVER=ON
+      run: ./script/cmake-build simulation -DOT_BUILD_GTEST=ON -DOT_BORDER_ROUTING=ON -DOT_BORDER_ROUTING_DHCP6_PD=ON
     - name: Test Simulation
       run: cd build/simulation && ninja test
     - name: Build Multipan Simulation
       run: ./script/cmake-build simulation -DOT_BUILD_GTEST=ON -DOT_MULTIPAN_TEST=ON
     - name: Test Multipan Simulation
+      run: cd build/simulation && ninja test
+    - name: Build NCP Simulation
+      run: ./script/cmake-build simulation -DOT_BUILD_GTEST=OFF -DOT_MTD=OFF -DOT_RCP=OFF -DOT_APP_CLI=OFF -DOT_APP_RCP=OFF \
+               -DOT_BORDER_ROUTING=ON -DOT_NCP_INFRA_IF=ON -DOT_SRP_SERVER=ON -DOT_NCP_DNSSD=ON -DOT_PLATFORM_DNSSD=ON
+    - name: Test NCP Simulation
       run: cd build/simulation && ninja test
     - name: Build POSIX
       run: ./script/cmake-build posix
