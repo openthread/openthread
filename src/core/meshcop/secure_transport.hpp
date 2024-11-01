@@ -107,15 +107,6 @@ public:
     typedef otHandleCoapSecureClientConnect ConnectedHandler;
 
     /**
-     * Initializes the SecureTransport object.
-     *
-     * @param[in]  aInstance            A reference to the OpenThread instance.
-     * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
-     * @param[in]  aDatagramTransport   Specifies if dtls of tls connection should be used.
-     */
-    explicit SecureTransport(Instance &aInstance, bool aLayerTwoSecurity, bool aDatagramTransport = true);
-
-    /**
      * Pointer is called when data is received from the session.
      *
      * @param[in]  aContext  A pointer to application-specific context.
@@ -140,6 +131,15 @@ public:
      * @param[in] aContext    A pointer to arbitrary context information.
      */
     typedef void (*AutoCloseCallback)(void *aContext);
+
+    /**
+     * Initializes the SecureTransport object.
+     *
+     * @param[in]  aInstance            A reference to the OpenThread instance.
+     * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
+     * @param[in]  aDatagramTransport   Specifies if dtls of tls connection should be used.
+     */
+    explicit SecureTransport(Instance &aInstance, bool aLayerTwoSecurity, bool aDatagramTransport = true);
 
     /**
      * Opens the socket.
@@ -581,25 +581,25 @@ private:
 
     using TransportSocket = Ip6::Udp::SocketIn<SecureTransport, &SecureTransport::HandleReceive>;
 
+#if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
+    static const uint16_t kGroups[];
+#else
+    static const mbedtls_ecp_group_id kCurves[];
+#endif
+
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
+#if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
+    static const uint16_t kSignatures[];
+#else
+    static const int kHashes[];
+#endif
+#endif
+
     State mState;
 
     int     mCipherSuites[2];
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
-
-#if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
-    static const uint16_t sGroups[];
-#else
-    static const mbedtls_ecp_group_id sCurves[];
-#endif
-
-#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
-#if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
-    static const uint16_t sSignatures[];
-#else
-    static const int sHashes[];
-#endif
-#endif
 
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -646,7 +646,6 @@ private:
 
     Callback<ConnectedHandler> mConnectedCallback;
     Callback<ReceiveHandler>   mReceiveCallback;
-    void                      *mContext;
 
     Ip6::MessageInfo mMessageInfo;
     TransportSocket  mSocket;
