@@ -474,9 +474,7 @@ void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort)
 
     VerifyOrExit(!IsSystemDryRun());
 
-    assert(sInitialized);
-
-    VerifyOrExit(!sEnabled);
+    VerifyOrExit(sInitialized && !sEnabled);
 
     PrepareSocket(*aUdpPort);
     trelDnssdStartBrowse();
@@ -560,6 +558,12 @@ void otPlatTrelResetCounters(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     ResetCounters();
+}
+
+bool otPlatTrelIsInitialized(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sInitialized;
 }
 
 void otSysTrelInit(const char *aInterfaceName)

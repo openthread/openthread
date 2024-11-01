@@ -455,6 +455,8 @@ OT_TOOL_WEAK void otPlatTrelRegisterService(otInstance *, uint16_t, const uint8_
 OT_TOOL_WEAK const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *) { return nullptr; }
 
 OT_TOOL_WEAK void otPlatTrelResetCounters(otInstance *) {}
+
+OT_TOOL_WEAK bool otPlatTrelIsInitialized(otInstance *) { return true; }
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

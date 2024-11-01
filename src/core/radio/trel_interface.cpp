@@ -46,7 +46,6 @@ const char Interface::kTxtRecordExtPanIdKey[]   = "xp";
 
 Interface::Interface(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mInitialized(false)
     , mEnabled(false)
     , mFiltered(false)
     , mRegisterServiceTask(aInstance)
@@ -55,15 +54,16 @@ Interface::Interface(Instance &aInstance)
 
 void Interface::Init(void)
 {
-    OT_ASSERT(!mInitialized);
-
-    mInitialized = true;
+    VerifyOrExit(otPlatTrelIsInitialized(/* aInstance */ nullptr));
 
     if (mEnabled)
     {
         mEnabled = false;
         Enable();
     }
+
+exit:
+    return;
 }
 
 void Interface::SetEnabled(bool aEnable)
@@ -80,10 +80,9 @@ void Interface::SetEnabled(bool aEnable)
 
 void Interface::Enable(void)
 {
-    VerifyOrExit(!mEnabled);
+    VerifyOrExit(!mEnabled && otPlatTrelIsInitialized(/* aInstance */ nullptr));
 
     mEnabled = true;
-    VerifyOrExit(mInitialized);
 
     otPlatTrelEnable(&GetInstance(), &mUdpPort);
 
@@ -96,10 +95,9 @@ exit:
 
 void Interface::Disable(void)
 {
-    VerifyOrExit(mEnabled);
+    VerifyOrExit(mEnabled && otPlatTrelIsInitialized(/* aInstance */ nullptr));
 
     mEnabled = false;
-    VerifyOrExit(mInitialized);
 
     otPlatTrelDisable(&GetInstance());
     mPeerTable.Clear();
@@ -111,7 +109,7 @@ exit:
 
 void Interface::HandleExtAddressChange(void)
 {
-    VerifyOrExit(mInitialized && mEnabled);
+    VerifyOrExit(mEnabled);
     LogDebg("Extended Address changed, re-registering DNS-SD service");
     mRegisterServiceTask.Post();
 
@@ -121,7 +119,7 @@ exit:
 
 void Interface::HandleExtPanIdChange(void)
 {
-    VerifyOrExit(mInitialized && mEnabled);
+    VerifyOrExit(mEnabled);
     LogDebg("Extended PAN ID changed, re-registering DNS-SD service");
     mRegisterServiceTask.Post();
 
@@ -143,7 +141,7 @@ void Interface::RegisterService(void)
     MutableData<kWithUint16Length> txtData;
     Dns::TxtEntry                  txtEntries[2];
 
-    VerifyOrExit(mInitialized && mEnabled);
+    VerifyOrExit(mEnabled);
 
     txtEntries[0].Init(kTxtRecordExtAddressKey, Get<Mac::Mac>().GetExtAddress().m8, sizeof(Mac::ExtAddress));
     txtEntries[1].Init(kTxtRecordExtPanIdKey, Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId().m8,
@@ -180,7 +178,7 @@ void Interface::HandleDiscoveredPeerInfo(const Peer::Info &aInfo)
     MeshCoP::ExtendedPanId extPanId;
     bool                   isNew = false;
 
-    VerifyOrExit(mInitialized && mEnabled);
+    VerifyOrExit(mEnabled);
 
     SuccessOrExit(ParsePeerInfoTxtData(aInfo, extAddress, extPanId));
 
@@ -351,7 +349,7 @@ Error Interface::Send(const Packet &aPacket, bool aIsDiscovery)
     Error error = kErrorNone;
     Peer *peerEntry;
 
-    VerifyOrExit(mInitialized && mEnabled, error = kErrorAbort);
+    VerifyOrExit(mEnabled, error = kErrorAbort);
     VerifyOrExit(!mFiltered);
 
     switch (aPacket.GetHeader().GetType())
@@ -395,7 +393,7 @@ void Interface::HandleReceived(uint8_t *aBuffer, uint16_t aLength)
 {
     LogDebg("HandleReceived(aLength:%u)", aLength);
 
-    VerifyOrExit(mInitialized && mEnabled && !mFiltered);
+    VerifyOrExit(mEnabled && !mFiltered);
 
     mRxPacket.Init(aBuffer, aLength);
     Get<Link>().ProcessReceivedPacket(mRxPacket);

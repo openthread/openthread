@@ -533,6 +533,7 @@ void                      otPlatTrelRegisterService(otInstance *, uint16_t, cons
 void                      otPlatTrelSend(otInstance *, const uint8_t *, uint16_t, const otSockAddr *) {}
 const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *) { return nullptr; }
 void                      otPlatTrelResetCounters(otInstance *) {}
+bool                      otPlatTrelIsInitialized(otInstance *) { return true; }
 
 otError otPlatUdpSocket(otUdpSocket *) { return OT_ERROR_NOT_IMPLEMENTED; }
 otError otPlatUdpClose(otUdpSocket *) { return OT_ERROR_NOT_IMPLEMENTED; }

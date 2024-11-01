@@ -94,6 +94,11 @@ void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort);
 void otPlatTrelDisable(otInstance *aInstance);
 
 /**
+ * Returns if the TREL is initialized in the platform layer.
+ */
+bool otPlatTrelIsInitialized(otInstance *aInstance);
+
+/**
  * Represents a TREL peer info discovered using DNS-SD browse on the service name "_trel._udp".
  */
 typedef struct otPlatTrelPeerInfo

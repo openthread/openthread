@@ -377,6 +377,12 @@ void otPlatTrelResetCounters(otInstance *aInstance)
     memset(&sCounters, 0, sizeof(sCounters));
 }
 
+bool otPlatTrelIsInitialized(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return true;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 
 // This is added for RCP build to be built ok
