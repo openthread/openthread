@@ -180,13 +180,8 @@ exit:
 
 void SubMac::SetExtAddress(const ExtAddress &aExtAddress)
 {
-    ExtAddress address;
-
     mExtAddress = aExtAddress;
-
-    // Reverse the byte order before setting on radio.
-    address.Set(aExtAddress.m8, ExtAddress::kReverseByteOrder);
-    Get<Radio>().SetExtendedAddress(address);
+    Get<Radio>().SetExtendedAddress(aExtAddress);
 
     LogDebg("RadioExtAddress: %s", mExtAddress.ToString().AsCString());
 }
