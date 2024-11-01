@@ -7314,7 +7314,7 @@ template <> otError Interpreter::Process<Cmd("mac")>(Arg aArgs[])
      * Done
      * @endcode
      * @par api_copy
-     * otLinkGetAlternateShortAddress
+     * #otLinkGetAlternateShortAddress
      */
     if (aArgs[0] == "altshortaddr")
     {
