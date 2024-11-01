@@ -46,7 +46,7 @@ permissions:  # added using https://github.com/step-security/secure-workflows
 jobs:
 
   tcplp-buffering:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
@@ -62,7 +62,7 @@ jobs:
       run: third_party/tcplp/lib/test/test_all
 
   unit-tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       COVERAGE: 1
     steps:
@@ -76,7 +76,7 @@ jobs:
         submodules: true
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
     - name: Build Simulation
       run: ./script/cmake-build simulation -DOT_BUILD_GTEST=ON -DOT_BORDER_ROUTING=ON -DOT_BORDER_ROUTING_DHCP6_PD=ON
@@ -106,7 +106,7 @@ jobs:
 
   upload-coverage:
     needs: unit-tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1

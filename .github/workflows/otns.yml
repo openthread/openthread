@@ -55,7 +55,7 @@ jobs:
 
   unittests:
     name: Unittests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
@@ -72,7 +72,7 @@ jobs:
         python-version: "3.9"
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y lcov ninja-build
     - name: Run
       run: |
@@ -100,7 +100,7 @@ jobs:
 
   examples:
     name: Examples
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
@@ -112,7 +112,7 @@ jobs:
           python-version: "3.9"
       - name: Bootstrap
         run: |
-          sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+          sudo apt-get update
           sudo apt-get --no-install-recommends install -y lcov ninja-build
       - name: Run
         run: |
@@ -139,7 +139,7 @@ jobs:
 
   stress-tests:
     name: Stress ${{ matrix.suite }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -174,7 +174,7 @@ jobs:
           python-version: "3.9"
       - name: Bootstrap
         run: |
-          sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+          sudo apt-get update
           sudo apt-get --no-install-recommends install -y lcov ninja-build
       - name: Run
         run: |
@@ -205,7 +205,7 @@ jobs:
       - unittests
       - examples
       - stress-tests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1

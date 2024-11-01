@@ -46,7 +46,7 @@ permissions:
 jobs:
 
   packet-verification:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     env:
       PACKET_VERIFICATION: 1
       REFERENCE_DEVICE: 1
@@ -68,7 +68,7 @@ jobs:
         cache: pip
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
@@ -97,7 +97,7 @@ jobs:
         retention-days: 1
 
   cli-ftd:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     env:
       CFLAGS: -m32
       CXXFLAGS: -m32
@@ -121,7 +121,7 @@ jobs:
         cache: pip
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y lcov ninja-build g++-multilib
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
@@ -146,7 +146,7 @@ jobs:
 
   cli-mtd:
     name: cli-mtd MESSAGE_USE_HEAP=${{ matrix.message_use_heap }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -176,7 +176,7 @@ jobs:
         cache: pip
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y lcov ninja-build g++-multilib
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
@@ -200,7 +200,7 @@ jobs:
         retention-days: 1
 
   cli-time-sync:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     env:
       CFLAGS: -m32
       CXXFLAGS: -m32
@@ -224,7 +224,7 @@ jobs:
         cache: pip
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get update
         sudo apt-get --no-install-recommends install -y g++-multilib lcov ninja-build
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
@@ -248,7 +248,7 @@ jobs:
         retention-days: 1
 
   expects:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     env:
       CFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
       CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
@@ -295,7 +295,7 @@ jobs:
         retention-days: 1
 
   ot-commissioner:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       THREAD_VERSION: 1.1
     steps:
@@ -307,11 +307,14 @@ jobs:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
         submodules: true
+    - uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3 # v5.2.0
+      with:
+        python-version: '3.12'
+        cache: pip
     - name: Bootstrap
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
-        sudo rm /etc/apt/sources.list.d/*
         sudo apt-get update
         sudo apt-get install -y avahi-daemon avahi-utils lcov
         script/git-tool clone https://github.com/openthread/ot-commissioner.git /tmp/ot-commissioner --depth 1 --branch main
@@ -345,7 +348,7 @@ jobs:
         retention-days: 1
 
   multiple-instance:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     env:
       COVERAGE: 1
       THREAD_VERSION: 1.1
@@ -389,7 +392,7 @@ jobs:
         retention-days: 1
 
   simulation-local-host:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     env:
       COVERAGE: 1
     steps:
@@ -425,7 +428,7 @@ jobs:
     - expects
     - ot-commissioner
     - multiple-instance
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
