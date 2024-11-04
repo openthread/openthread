@@ -53,6 +53,7 @@
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 #include <openthread/srp_client.h>
 #endif
+#include <openthread/platform/dnssd.h>
 
 #include "changed_props_set.hpp"
 #include "common/tasklet.hpp"
@@ -245,6 +246,28 @@ public:
                                uint16_t            aBufferLength);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    /**
+     * Registers or updates a host on the infrastructure network's DNS-SD module (on host).
+     *
+     * @param[in] aHost         Information about the host to register.
+     * @param[in] aRequestId    The ID associated with this request.
+     * @param[in] aCallback     The callback function pointer to report the outcome (may be NULL if no callback needed).
+     */
+    void DnssdRegisterHost(const otPlatDnssdHost      *aHost,
+                           otPlatDnssdRequestId        aRequestId,
+                           otPlatDnssdRegisterCallback aCallback);
+
+    /**
+     * Unregisters a host on the infrastructure network's DNS-SD module (on host).
+     *
+     * @param[in] aHost         Information about the host to register.
+     * @param[in] aRequestId    The ID associated with this request.
+     * @param[in] aCallback     The callback function pointer to report the outcome (may be NULL if no callback needed).
+     */
+    void DnssdUnregisterHost(const otPlatDnssdHost      *aHost,
+                             otPlatDnssdRequestId        aRequestId,
+                             otPlatDnssdRegisterCallback aCallback);
+
     /**
      * Gets the Dnssd state.
      *
@@ -780,6 +803,34 @@ protected:
 #endif
 
 #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+
+    template <typename DnssdObjType>
+    void DnssdUpdate(const DnssdObjType         *Obj,
+                     otPlatDnssdRequestId        aRequestId,
+                     otPlatDnssdRegisterCallback aCallback,
+                     bool                        aRegister)
+    {
+        otError          error  = OT_ERROR_NONE;
+        uint8_t          header = SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID;
+        spinel_command_t cmd    = aRegister ? SPINEL_CMD_PROP_VALUE_INSERTED : SPINEL_CMD_PROP_VALUE_REMOVED;
+
+        VerifyOrExit(mDnssdState == OT_PLAT_DNSSD_READY, error = OT_ERROR_INVALID_STATE);
+
+        SuccessOrExit(error = mEncoder.BeginFrame(header, cmd));
+        SuccessOrExit(error = EncodeDnssd(Obj));
+        SuccessOrExit(error = mEncoder.WriteUint32(aRequestId));
+        SuccessOrExit(error = mEncoder.WriteData(reinterpret_cast<const uint8_t *>(&aCallback), sizeof(aCallback)));
+        SuccessOrExit(error = mEncoder.EndFrame());
+
+    exit:
+        if (error != OT_ERROR_NONE)
+        {
+            aCallback(mInstance, aRequestId, error);
+        }
+    }
+
+    template <typename DnssdObjType> otError EncodeDnssd(const DnssdObjType *aObj);
+
     otPlatDnssdState mDnssdState;
 #endif
 #endif

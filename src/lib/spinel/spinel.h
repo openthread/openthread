@@ -4785,17 +4785,6 @@ enum
 
     SPINEL_PROP_SRP_SERVER__BEGIN = 0x920,
 
-    SPINEL_PROP_DNSSD__BEGIN = 0x930,
-
-    /// Dnssd State
-    /** Format `b`: Write-only
-     *
-     * `C`: The dnssd state.
-     */
-    SPINEL_PROP_DNSSD_STATE = SPINEL_PROP_DNSSD__BEGIN + 1,
-
-    SPINEL_PROP_DNSSD__END = 0x950,
-
     /// SRP server state.
     /** Format `b`
      * Type: Read-Write
@@ -4813,6 +4802,41 @@ enum
     SPINEL_PROP_SRP_SERVER_AUTO_ENABLE_MODE = SPINEL_PROP_SRP_SERVER__BEGIN + 2,
 
     SPINEL_PROP_SRP_SERVER__END = 0x930,
+
+    SPINEL_PROP_DNSSD__BEGIN = 0x930,
+
+    /// Dnssd State
+    /** Format `C`: Write-only
+     *
+     * `C`: The dnssd state.
+     */
+    SPINEL_PROP_DNSSD_STATE = SPINEL_PROP_DNSSD__BEGIN + 1,
+
+    /// Dnssd Request Result
+    /** Format `CLD`: Write
+     *
+     * `C` : The result of the request. A unsigned int8 corresponds to otError.
+     * `L` : The Dnssd Request ID.
+     * `D` : The context of the request. (A pointer to the callback for the request)
+     *
+     * Host uses this property to notify the NCP of the result of NCP's DNS-SD request.
+     */
+    SPINEL_PROP_DNSSD_REQUEST_RESULT = SPINEL_PROP_DNSSD__BEGIN + 2,
+
+    /// DNS-SD Host
+    /** Format `USA(6)LD`: Inserted/Removed
+     *
+     * `U`    : The host name.
+     * `S`    : The count of IPv6 addresses.
+     * `A(6)` : The IPv6 addresses of the host.
+     * `L`    : The Dnssd Request ID.
+     * `D`    : The context of the request. (A pointer to the callback for the request)
+     *
+     * NCP uses this property to register/unregister a DNS-SD host.
+     */
+    SPINEL_PROP_DNSSD_HOST = SPINEL_PROP_DNSSD__BEGIN + 3,
+
+    SPINEL_PROP_DNSSD__END = 0x950,
 
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,
 

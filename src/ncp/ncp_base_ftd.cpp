@@ -1566,6 +1566,36 @@ exit:
 
 #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 
+template <> otError NcpBase::EncodeDnssd<otPlatDnssdHost>(const otPlatDnssdHost *aHost)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_DNSSD_HOST));
+    SuccessOrExit(error = mEncoder.WriteUtf8(aHost->mHostName == nullptr ? "" : aHost->mHostName));
+    SuccessOrExit(error = mEncoder.WriteUint16(aHost->mAddressesLength));
+    for (uint8_t i = 0; i < aHost->mAddressesLength; i++)
+    {
+        SuccessOrExit(error = mEncoder.WriteIp6Address(aHost->mAddresses[i]));
+    }
+
+exit:
+    return error;
+}
+
+void NcpBase::DnssdRegisterHost(const otPlatDnssdHost      *aHost,
+                                otPlatDnssdRequestId        aRequestId,
+                                otPlatDnssdRegisterCallback aCallback)
+{
+    DnssdUpdate(aHost, aRequestId, aCallback, /* aRegister */ true);
+}
+
+void NcpBase::DnssdUnregisterHost(const otPlatDnssdHost      *aHost,
+                                  otPlatDnssdRequestId        aRequestId,
+                                  otPlatDnssdRegisterCallback aCallback)
+{
+    DnssdUpdate(aHost, aRequestId, aCallback, /* aRegister */ false);
+}
+
 otPlatDnssdState NcpBase::DnssdGetState(void) { return mDnssdState; }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_STATE>(void)
@@ -1580,6 +1610,26 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_STATE>(void)
         mDnssdState = static_cast<otPlatDnssdState>(state);
         otPlatDnssdStateHandleStateChange(mInstance);
     }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_REQUEST_RESULT>(void)
+{
+    otError                     error = OT_ERROR_NONE;
+    otPlatDnssdRequestId        requestId;
+    uint8_t                     result;
+    otPlatDnssdRegisterCallback callback = nullptr;
+    const uint8_t              *context;
+    uint16_t                    contextLen;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(result));
+    SuccessOrExit(error = mDecoder.ReadUint32(requestId));
+    SuccessOrExit(error = mDecoder.ReadData(context, contextLen));
+    VerifyOrExit(contextLen == sizeof(otPlatDnssdRegisterCallback), error = OT_ERROR_PARSE);
+    callback = *reinterpret_cast<const otPlatDnssdRegisterCallback *>(context);
+    callback(mInstance, requestId, static_cast<otError>(result));
 
 exit:
     return error;
