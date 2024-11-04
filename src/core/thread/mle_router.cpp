@@ -82,6 +82,7 @@ MleRouter::MleRouter(Instance &aInstance)
     , mPreviousPartitionId(0)
     , mPreviousPartitionRouterIdSequence(0)
     , mPreviousPartitionIdTimeout(0)
+    , mDisallowRouterRoleTimeout(0)
     , mChildRouterLinks(kChildRouterLinks)
     , mParentPriority(kParentPriorityUnspecified)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -122,6 +123,9 @@ bool MleRouter::IsRouterEligible(void) const
     const SecurityPolicy &secPolicy = Get<KeyManager>().GetSecurityPolicy();
 
     VerifyOrExit(mRouterEligible && IsFullThreadDevice());
+#if ALTERNATE_RESET_LUTRON == 1
+    VerifyOrExit(mDisallowRouterRoleTimeout == 0);
+    #endif
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1
     VerifyOrExit(secPolicy.mRoutersEnabled);
@@ -1492,6 +1496,18 @@ exit:
     return haveNeighbor;
 }
 
+void MleRouter::ResetRouterDisallowed(void)
+{
+    mDisallowRouterRoleTimeout = 120;
+    LogInfo("mDisallowRouterRoleTimeout set from Network Data change");
+}
+
+void MleRouter::ResetRouterDisallowedOnInit(void)
+{
+    mDisallowRouterRoleTimeout = 120;
+    LogInfo("mDisallowRouterRoleTimeout set from Child init");
+}
+
 void MleRouter::HandleTimeTick(void)
 {
     bool roleTransitionTimeoutExpired = false;
@@ -1506,6 +1522,15 @@ void MleRouter::HandleTimeTick(void)
     if (mPreviousPartitionIdTimeout > 0)
     {
         mPreviousPartitionIdTimeout--;
+    }
+
+    if (mDisallowRouterRoleTimeout > 0)
+    {
+        mDisallowRouterRoleTimeout--;
+        if (mDisallowRouterRoleTimeout == 0)
+        {
+            LogInfo("mDisallowRouterRoleTimeout timed out");
+        }
     }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1554,7 +1579,25 @@ void MleRouter::HandleTimeTick(void)
         if ((mRouterTable.GetActiveRouterCount() > 0) && (mRouterTable.GetLeaderAge() >= mNetworkIdTimeout))
         {
             LogInfo("Leader age timeout");
+#if ALTERNATE_RESET_LUTRON == 1
+            if (mRole == kRoleRouter)
+            {
+                BecomeLeader();
+            }
+            else if (mRole == kRoleChild)
+            {
+                // leader is gone, disable router role ... for now? 2 minutes
+                mDisallowRouterRoleTimeout = 120;
+                LogInfo("mDisallowRouterRoleTimeout set from ID timeout");
+            }
+            else
+            {
+                // don't leave this here, just making sure assumptions are correct for now
+                OT_ASSERT(false);
+            }
+#else
             Attach(kSamePartition);
+#endif
         }
 
         if (roleTransitionTimeoutExpired && mRouterTable.GetActiveRouterCount() > mRouterDowngradeThreshold)
@@ -1620,7 +1663,11 @@ void MleRouter::HandleTimeTick(void)
         }
         else if (IsRouterOrLeader() && child.IsStateRestored())
         {
-            IgnoreError(SendChildUpdateRequest(child));
+            if (!mDeterminingLeader)
+            {
+                LogDebg("After determining leader");
+                IgnoreError(SendChildUpdateRequest(child));
+            }
         }
     }
 
@@ -1673,7 +1720,10 @@ void MleRouter::HandleTimeTick(void)
 
     mRouterTable.HandleTimeTick();
 
-    SynchronizeChildNetworkData();
+    if (!mDeterminingLeader)
+    {
+        SynchronizeChildNetworkData();
+    }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (IsRouterOrLeader())
@@ -2559,7 +2609,10 @@ void MleRouter::HandleNetworkDataUpdateRouter(void)
     delay = IsLeader() ? 0 : Random::NonCrypto::GetUint16InRange(0, kUnsolicitedDataResponseJitter);
     SendDataResponse(destination, tlvList, delay);
 
-    SynchronizeChildNetworkData();
+    if (!mDeterminingLeader)
+    {
+        SynchronizeChildNetworkData();
+    }
 
 exit:
     return;
@@ -2568,6 +2621,8 @@ exit:
 void MleRouter::SynchronizeChildNetworkData(void)
 {
     VerifyOrExit(IsRouterOrLeader());
+
+    LogDebg("SendingFrom SynchronizeChildNetworkData");
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
@@ -2583,6 +2638,8 @@ void MleRouter::SynchronizeChildNetworkData(void)
 
         SuccessOrExit(SendChildUpdateRequest(child));
     }
+
+    LogDebg("ending");
 
 exit:
     return;

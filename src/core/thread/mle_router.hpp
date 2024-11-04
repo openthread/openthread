@@ -650,6 +650,9 @@ private:
     void  HandleNetworkDataUpdateRouter(void);
     void  HandleDiscoveryRequest(RxInfo &aRxInfo);
 
+    void ResetRouterDisallowed(void);
+    void ResetRouterDisallowedOnInit(void);
+
     Error ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo);
     Error ReadAndProcessRouteTlvOnFed(RxInfo &aRxInfo, uint8_t aParentId);
 
@@ -744,6 +747,7 @@ private:
     uint32_t mPreviousPartitionId;               ///< The partition ID when last attached
     uint8_t  mPreviousPartitionRouterIdSequence; ///< The router ID sequence when last attached
     uint8_t  mPreviousPartitionIdTimeout;        ///< The partition ID timeout when last attached
+    uint8_t  mDisallowRouterRoleTimeout;
 
     RouterRoleTransition mRouterRoleTransition;
 

@@ -780,6 +780,11 @@ private:
     static constexpr uint8_t kMaxCriticalTxCount        = 6; // Max tx count for critical MLE message
     static constexpr uint8_t kMaxChildKeepAliveAttempts = 4; // Max keep alive attempts before reattach
 
+    static constexpr uint32_t kChildResetMinTimeoutMS    = 16000u;
+    static constexpr uint32_t kChildResetTimeoutJitterMS = 15000u;
+    static constexpr uint32_t kChildResetReconnectMinTimeMS = 0;
+    static constexpr uint32_t kChildResetReconnectJitterMS  = 15000u;
+
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Attach backoff feature (CONFIG_ENABLE_ATTACH_BACKOFF) - Intervals are in milliseconds.
 
@@ -1269,6 +1274,7 @@ private:
     bool       IsAnnounceAttach(void) const { return mAlternatePanId != Mac::kPanIdBroadcast; }
     void       ScheduleMessageTransmissionTimer(void);
     void       HandleAttachTimer(void);
+    void       HandleResetTimer(void);
     void       HandleDelayedResponseTimer(void);
     void       HandleMessageTransmissionTimer(void);
     void       ProcessKeySequence(RxInfo &aRxInfo);
@@ -1378,6 +1384,7 @@ private:
     using AttachTimer           = TimerMilliIn<Mle, &Mle::HandleAttachTimer>;
     using DelayTimer            = TimerMilliIn<Mle, &Mle::HandleDelayedResponseTimer>;
     using MsgTxTimer            = TimerMilliIn<Mle, &Mle::HandleMessageTransmissionTimer>;
+    using ResetTimer            = TimerMilliIn<Mle, &Mle::HandleResetTimer>;
 
     static const otMeshLocalPrefix kMeshLocalPrefixInit;
 
@@ -1391,6 +1398,7 @@ private:
 #endif
 
     DeviceRole              mRole;
+    DeviceRole              mPreviousRole;
     DeviceMode              mDeviceMode;
     AttachState             mAttachState;
     ReattachState           mReattachState;
@@ -1449,6 +1457,11 @@ private:
     Ip6::Netif::UnicastAddress   mMeshLocal16;
     Ip6::Netif::MulticastAddress mLinkLocalAllThreadNodes;
     Ip6::Netif::MulticastAddress mRealmLocalAllThreadNodes;
+
+    ResetTimer      mResetTimer;      ///< timer to delay children/routers from sending messages
+	bool            mAwaitingRestore;
+    bool            mStartedRestore;
+    bool            mDeterminingLeader;
 };
 
 } // namespace Mle
