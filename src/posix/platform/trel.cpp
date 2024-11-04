@@ -474,9 +474,7 @@ void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort)
 
     VerifyOrExit(!IsSystemDryRun());
 
-    assert(sInitialized);
-
-    VerifyOrExit(!sEnabled);
+    VerifyOrExit(sInitialized && !sEnabled);
 
     PrepareSocket(*aUdpPort);
     trelDnssdStartBrowse();
@@ -493,8 +491,7 @@ void otPlatTrelDisable(otInstance *aInstance)
 
     VerifyOrExit(!IsSystemDryRun());
 
-    assert(sInitialized);
-    VerifyOrExit(sEnabled);
+    VerifyOrExit(sInitialized && sEnabled);
 
     close(sSocket);
     sSocket = -1;
@@ -540,6 +537,8 @@ void otPlatTrelRegisterService(otInstance *aInstance, uint16_t aPort, const uint
 {
     OT_UNUSED_VARIABLE(aInstance);
     VerifyOrExit(!IsSystemDryRun());
+
+    VerifyOrExit(sEnabled);
 
     trelDnssdRegisterService(aPort, aTxtData, aTxtLength);
 
