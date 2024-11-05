@@ -137,16 +137,12 @@ exit:
 
 otError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    Mac::ExtAddress address;
-    Error           error    = kErrorNone;
-    Instance       &instance = AsCoreType(aInstance);
-
-    AssertPointerIsNotNull(aExtAddress);
+    Error     error    = kErrorNone;
+    Instance &instance = AsCoreType(aInstance);
 
     VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
 
-    address.Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
-    error = instance.Get<Radio>().AddSrcMatchExtEntry(address);
+    error = instance.Get<Radio>().AddSrcMatchExtEntry(AsCoreType(aExtAddress));
 
 exit:
     return error;
@@ -166,16 +162,12 @@ exit:
 
 otError otLinkRawSrcMatchClearExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    Mac::ExtAddress address;
-    Error           error    = kErrorNone;
-    Instance       &instance = AsCoreType(aInstance);
-
-    AssertPointerIsNotNull(aExtAddress);
+    Error     error    = kErrorNone;
+    Instance &instance = AsCoreType(aInstance);
 
     VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
 
-    address.Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
-    error = instance.Get<Radio>().ClearSrcMatchExtEntry(address);
+    error = instance.Get<Radio>().ClearSrcMatchExtEntry(AsCoreType(aExtAddress));
 
 exit:
     return error;

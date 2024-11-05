@@ -319,7 +319,7 @@ public:
     /**
      * Sets the Extended Address for address filtering.
      *
-     * @param[in] aExtAddress  The IEEE 802.15.4 Extended Address stored in little-endian byte order.
+     * @param[in] aExtAddress  The IEEE 802.15.4 Extended Address stored in big-endian byte order.
      */
     void SetExtendedAddress(const Mac::ExtAddress &aExtAddress);
 
@@ -636,7 +636,7 @@ public:
     /**
      * Adds an extended address to the source address match table.
      *
-     * @param[in]  aExtAddress  The extended address to be added stored in little-endian byte order.
+     * @param[in]  aExtAddress  The extended address to be added stored in big-endian byte order.
      *
      * @retval kErrorNone     Successfully added extended address to the source match table.
      * @retval kErrorNoBufs   No available entry in the source match table.
@@ -656,7 +656,7 @@ public:
     /**
      * Removes an extended address from the source address match table.
      *
-     * @param[in]  aExtAddress  The extended address to be removed stored in little-endian byte order.
+     * @param[in]  aExtAddress  The extended address to be removed stored in big-endian byte order.
      *
      * @retval kErrorNone       Successfully removed the extended address from the source match table.
      * @retval kErrorNoAddress  The extended address is not in source address match table.
@@ -979,11 +979,6 @@ inline void Radio::EnableSrcMatch(bool aEnable) { otPlatRadioEnableSrcMatch(GetI
 inline Error Radio::AddSrcMatchShortEntry(Mac::ShortAddress aShortAddress)
 {
     return otPlatRadioAddSrcMatchShortEntry(GetInstancePtr(), aShortAddress);
-}
-
-inline Error Radio::AddSrcMatchExtEntry(const Mac::ExtAddress &aExtAddress)
-{
-    return otPlatRadioAddSrcMatchExtEntry(GetInstancePtr(), &aExtAddress);
 }
 
 inline Error Radio::ClearSrcMatchShortEntry(Mac::ShortAddress aShortAddress)
