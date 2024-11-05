@@ -616,22 +616,19 @@ private:
                                         const Ip6::MessageInfo &aMessageInfo);
     void     SendAddressRelease(void);
     void     SendAdvertisement(void);
-    Error    SendLinkAccept(const RxInfo      &aRxInfo,
-                            Neighbor          *aNeighbor,
-                            const TlvList     &aRequestedTlvList,
-                            const RxChallenge &aChallenge);
-    void     SendParentResponse(Child &aChild, const RxChallenge &aChallenge, bool aRoutersOnlyRequest);
+    Error    SendLinkAccept(const LinkAcceptInfo &aInfo);
+    void     SendParentResponse(const ParentResponseInfo &aInfo);
     Error    SendChildIdResponse(Child &aChild);
     Error    SendChildUpdateRequest(Child &aChild);
     void     SendChildUpdateResponse(Child                  *aChild,
                                      const Ip6::MessageInfo &aMessageInfo,
                                      const TlvList          &aTlvList,
                                      const RxChallenge      &aChallenge);
+    void     SendMulticastDataResponse(void);
     void     SendDataResponse(const Ip6::Address &aDestination,
                               const TlvList      &aTlvList,
-                              uint16_t            aDelay,
                               const Message      *aRequestMessage = nullptr);
-    Error    SendDiscoveryResponse(const Ip6::Address &aDestination, const Message &aDiscoverRequestMessage);
+    Error    SendDiscoveryResponse(const Ip6::Address &aDestination, const DiscoveryResponseInfo &aInfo);
     void     SetStateRouter(uint16_t aRloc16);
     void     SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode);
     void     SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStartMode aStartMode);
