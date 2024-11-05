@@ -221,7 +221,7 @@ Instance::Instance(void)
     , mApplicationCoap(*this)
 #endif
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-    , mApplicationCoapSecure(*this, /* aLayerTwoSecurity */ true)
+    , mApplicationCoapSecure(*this, kWithLinkSecurity)
 #endif
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
     , mApplicationBleSecure(*this)

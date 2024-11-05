@@ -92,7 +92,7 @@ Error Icmp::SendError(Header::Type aType, Header::Code aCode, const MessageInfo 
     MessageInfo       messageInfoLocal;
     Message          *message = nullptr;
     Header            icmp6Header;
-    Message::Settings settings(Message::kWithLinkSecurity, Message::kPriorityNet);
+    Message::Settings settings(kWithLinkSecurity, Message::kPriorityNet);
 
     if (aHeaders.GetIpProto() == kProtoIcmp6)
     {

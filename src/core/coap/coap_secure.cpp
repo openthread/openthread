@@ -42,7 +42,7 @@ namespace Coap {
 
 RegisterLogModule("CoapSecure");
 
-CoapSecure::CoapSecure(Instance &aInstance, bool aLayerTwoSecurity)
+CoapSecure::CoapSecure(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity)
     : CoapBase(aInstance, &CoapSecure::Send)
     , mDtls(aInstance, aLayerTwoSecurity)
     , mTransmitTask(aInstance, CoapSecure::HandleTransmit, this)

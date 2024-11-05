@@ -273,7 +273,7 @@ Message::Priority Agent::DscpToPriority(uint8_t aDscp)
 #if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 
 SecureAgent::SecureAgent(Instance &aInstance)
-    : Coap::CoapSecure(aInstance)
+    : Coap::CoapSecure(aInstance, kNoLinkSecurity)
 {
     SetResourceHandler(&HandleResource);
 }

@@ -4531,7 +4531,7 @@ Mle::TxMessage *Mle::NewMleMessage(Command aCommand)
 {
     Error             error = kErrorNone;
     TxMessage        *message;
-    Message::Settings settings(Message::kNoLinkSecurity, Message::kPriorityNet);
+    Message::Settings settings(kNoLinkSecurity, Message::kPriorityNet);
     uint8_t           securitySuite;
 
     message = static_cast<TxMessage *>(mSocket.NewMessage(0, settings));
