@@ -2723,12 +2723,13 @@ class OTCI(object):
                        panid: Optional[int] = None,
                        pskc: Optional[str] = None,
                        security_policy: Optional[tuple] = None,
-                       pending_timestamp: Optional[int] = None) -> bytes:
+                       pending_timestamp: Optional[int] = None,
+                       wakeup_channel: Optional[int] = None) -> bytes:
         """Creates a new Operational Dataset with given parameters."""
         self.dataset_clear_buffer()
         self.dataset_init_buffer()
-        self.dataset_set_buffer(active_timestamp, channel, channel_mask, extpanid, mesh_local_prefix, network_key,
-                                network_name, panid, pskc, security_policy, pending_timestamp)
+        self.dataset_set_buffer(active_timestamp, channel, wakeup_channel, channel_mask, extpanid, mesh_local_prefix,
+                                network_key, network_name, panid, pskc, security_policy, pending_timestamp)
         return self.get_dataset_tlvs_bytes()
 
     def join(self, dataset: bytes) -> None:
