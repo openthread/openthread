@@ -2181,7 +2181,7 @@ void RadioSpinel::RestoreProperties(void)
         static constexpr uint16_t kFrameCounterGuard = 1000;
 
         SuccessOrDie(Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S,
-                         otLinkGetFrameCounter(mInstance) + kFrameCounterGuard));
+                         otPlatRadioGetFrameCounter(mInstance) + kFrameCounterGuard));
     }
 
     for (int i = 0; i < mSrcMatchShortEntryCount; ++i)

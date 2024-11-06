@@ -734,6 +734,8 @@ void otPlatRadioSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMacF
  */
 uint64_t otPlatRadioGetNow(otInstance *aInstance);
 
+uint32_t otPlatRadioGetFrameCounter(otInstance *aInstance);
+
 /**
  * Get the bus speed in bits/second between the host and the radio chip.
  *

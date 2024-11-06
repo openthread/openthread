@@ -268,6 +268,11 @@ extern "C" OT_TOOL_WEAK uint64_t otPlatRadioGetNow(otInstance *aInstance)
     return otPlatTimeGet();
 }
 
+extern "C" OT_TOOL_WEAK uint32_t otPlatRadioGetFrameCounter(otInstance *aInstance)
+{
+    return otLinkGetFrameCounter(aInstance);
+}
+
 extern "C" OT_TOOL_WEAK uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
