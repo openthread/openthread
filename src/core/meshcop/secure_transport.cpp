@@ -61,7 +61,7 @@ const int SecureTransport::kHashes[] = {MBEDTLS_MD_SHA256, MBEDTLS_MD_NONE};
 #endif
 #endif
 
-SecureTransport::SecureTransport(Instance &aInstance, bool aLayerTwoSecurity, bool aDatagramTransport)
+SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, bool aDatagramTransport)
     : InstanceLocator(aInstance)
     , mState(kStateClosed)
     , mPskLength(0)

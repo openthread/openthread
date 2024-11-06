@@ -109,7 +109,7 @@ Message *CoapBase::NewMessage(void) { return NewMessage(Message::Settings::GetDe
 
 Message *CoapBase::NewPriorityMessage(void)
 {
-    return NewMessage(Message::Settings(Message::kWithLinkSecurity, Message::kPriorityNet));
+    return NewMessage(Message::Settings(kWithLinkSecurity, Message::kPriorityNet));
 }
 
 Message *CoapBase::NewPriorityConfirmablePostMessage(Uri aUri)

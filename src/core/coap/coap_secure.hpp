@@ -69,7 +69,7 @@ public:
      * @param[in]  aInstance           A reference to the OpenThread instance.
      * @param[in]  aLayerTwoSecurity   Specifies whether to use layer two security or not.
      */
-    explicit CoapSecure(Instance &aInstance, bool aLayerTwoSecurity = false);
+    explicit CoapSecure(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity);
 
     /**
      * Starts the secure CoAP agent.

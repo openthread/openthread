@@ -48,7 +48,7 @@ RegisterLogModule("BleSecure");
 
 BleSecure::BleSecure(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTls(aInstance, false, false)
+    , mTls(aInstance, kNoLinkSecurity, /* aDatagramTransport */ false)
     , mTcatAgent(aInstance)
     , mTlvMode(false)
     , mReceivedMessage(nullptr)

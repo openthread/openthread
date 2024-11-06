@@ -139,7 +139,7 @@ public:
      * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
      * @param[in]  aDatagramTransport   Specifies if dtls of tls connection should be used.
      */
-    explicit SecureTransport(Instance &aInstance, bool aLayerTwoSecurity, bool aDatagramTransport = true);
+    explicit SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, bool aDatagramTransport = true);
 
     /**
      * Opens the socket.

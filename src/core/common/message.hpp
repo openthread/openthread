@@ -148,6 +148,15 @@ class PriorityQueue;
 class ThreadLinkInfo;
 
 /**
+ * Represents the link security mode indicating whether to use MAC (layer two) security.
+ */
+enum LinkSecurityMode : bool
+{
+    kNoLinkSecurity   = false, ///< Link security disabled (no link security).
+    kWithLinkSecurity = true,  ///< Link security enabled.
+};
+
+/**
  * Represents a Message buffer.
  */
 class Buffer : public otMessageBuffer, public LinkedListEntry<Buffer>
@@ -307,15 +316,6 @@ public:
     };
 
     static constexpr uint8_t kNumPriorities = 4; ///< Number of priority levels.
-
-    /**
-     * Represents the link security mode (used by `Settings` constructor).
-     */
-    enum LinkSecurityMode : bool
-    {
-        kNoLinkSecurity   = false, ///< Link security disabled (no link security).
-        kWithLinkSecurity = true,  ///< Link security enabled.
-    };
 
     /**
      * Represents the message ownership model when a `Message` instance is passed to a method/function.
