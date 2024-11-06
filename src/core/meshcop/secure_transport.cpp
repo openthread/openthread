@@ -78,27 +78,6 @@ SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwo
     , mMessageSubType(Message::kSubTypeNone)
     , mMessageDefaultSubType(Message::kSubTypeNone)
 {
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE
-#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-    mPreSharedKey         = nullptr;
-    mPreSharedKeyIdentity = nullptr;
-    mPreSharedKeyIdLength = 0;
-    mPreSharedKeyLength   = 0;
-#endif
-
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    mCaChainSrc       = nullptr;
-    mCaChainLength    = 0;
-    mOwnCertSrc       = nullptr;
-    mOwnCertLength    = 0;
-    mPrivateKeySrc    = nullptr;
-    mPrivateKeyLength = 0;
-    ClearAllBytes(mCaChain);
-    ClearAllBytes(mOwnCert);
-    ClearAllBytes(mPrivateKey);
-#endif
-#endif
-
     ClearAllBytes(mCipherSuites);
     ClearAllBytes(mPsk);
     ClearAllBytes(mSsl);
@@ -117,12 +96,8 @@ void SecureTransport::FreeMbedtls(void)
         mbedtls_ssl_cookie_free(&mCookieCtx);
     }
 #endif
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    mbedtls_x509_crt_free(&mCaChain);
-    mbedtls_x509_crt_free(&mOwnCert);
-    mbedtls_pk_free(&mPrivateKey);
-#endif
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+    mEcdheEcdsaInfo.Free();
 #endif
     mbedtls_ssl_config_free(&mConf);
     mbedtls_ssl_free(&mSsl);
@@ -271,12 +246,8 @@ Error SecureTransport::Setup(bool aClient)
 
     mbedtls_ssl_init(&mSsl);
     mbedtls_ssl_config_init(&mConf);
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    mbedtls_x509_crt_init(&mCaChain);
-    mbedtls_x509_crt_init(&mOwnCert);
-    mbedtls_pk_init(&mPrivateKey);
-#endif
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+    mEcdheEcdsaInfo.Init();
 #endif
 #if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
     if (mDatagramTransport)
@@ -417,41 +388,15 @@ int SecureTransport::SetApplicationSecureKeys(void)
     {
     case MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:
     case MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:
-
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-        if (mCaChainSrc != nullptr)
-        {
-            rval = mbedtls_x509_crt_parse(&mCaChain, static_cast<const unsigned char *>(mCaChainSrc),
-                                          static_cast<size_t>(mCaChainLength));
-            VerifyOrExit(rval == 0);
-            mbedtls_ssl_conf_ca_chain(&mConf, &mCaChain, nullptr);
-        }
-
-        if (mOwnCertSrc != nullptr && mPrivateKeySrc != nullptr)
-        {
-            rval = mbedtls_x509_crt_parse(&mOwnCert, static_cast<const unsigned char *>(mOwnCertSrc),
-                                          static_cast<size_t>(mOwnCertLength));
-            VerifyOrExit(rval == 0);
-
-#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
-            rval = mbedtls_pk_parse_key(&mPrivateKey, static_cast<const unsigned char *>(mPrivateKeySrc),
-                                        static_cast<size_t>(mPrivateKeyLength), nullptr, 0,
-                                        Crypto::MbedTls::CryptoSecurePrng, nullptr);
-#else
-            rval = mbedtls_pk_parse_key(&mPrivateKey, static_cast<const unsigned char *>(mPrivateKeySrc),
-                                        static_cast<size_t>(mPrivateKeyLength), nullptr, 0);
-#endif
-            VerifyOrExit(rval == 0);
-            rval = mbedtls_ssl_conf_own_cert(&mConf, &mOwnCert, &mPrivateKey);
-            VerifyOrExit(rval == 0);
-        }
+        rval = mEcdheEcdsaInfo.SetSecureKeys(mConf);
+        VerifyOrExit(rval == 0);
 #endif
         break;
 
     case MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8:
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-        rval = mbedtls_ssl_conf_psk(&mConf, static_cast<const unsigned char *>(mPreSharedKey), mPreSharedKeyLength,
-                                    static_cast<const unsigned char *>(mPreSharedKeyIdentity), mPreSharedKeyIdLength);
+        rval = mPskInfo.SetSecureKeys(mConf);
         VerifyOrExit(rval == 0);
 #endif
         break;
@@ -518,6 +463,54 @@ exit:
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
+void SecureTransport::EcdheEcdsaInfo::Init(void)
+{
+    mbedtls_x509_crt_init(&mCaChain);
+    mbedtls_x509_crt_init(&mOwnCert);
+    mbedtls_pk_init(&mPrivateKey);
+}
+
+void SecureTransport::EcdheEcdsaInfo::Free(void)
+{
+    mbedtls_x509_crt_free(&mCaChain);
+    mbedtls_x509_crt_free(&mOwnCert);
+    mbedtls_pk_free(&mPrivateKey);
+}
+
+int SecureTransport::EcdheEcdsaInfo::SetSecureKeys(mbedtls_ssl_config &aConfig)
+{
+    int rval = 0;
+
+    if (mCaChainSrc != nullptr)
+    {
+        rval = mbedtls_x509_crt_parse(&mCaChain, static_cast<const unsigned char *>(mCaChainSrc),
+                                      static_cast<size_t>(mCaChainLength));
+        VerifyOrExit(rval == 0);
+        mbedtls_ssl_conf_ca_chain(&aConfig, &mCaChain, nullptr);
+    }
+
+    if (mOwnCertSrc != nullptr && mPrivateKeySrc != nullptr)
+    {
+        rval = mbedtls_x509_crt_parse(&mOwnCert, static_cast<const unsigned char *>(mOwnCertSrc),
+                                      static_cast<size_t>(mOwnCertLength));
+        VerifyOrExit(rval == 0);
+
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+        rval = mbedtls_pk_parse_key(&mPrivateKey, static_cast<const unsigned char *>(mPrivateKeySrc),
+                                    static_cast<size_t>(mPrivateKeyLength), nullptr, 0,
+                                    Crypto::MbedTls::CryptoSecurePrng, nullptr);
+#else
+        rval = mbedtls_pk_parse_key(&mPrivateKey, static_cast<const unsigned char *>(mPrivateKeySrc),
+                                    static_cast<size_t>(mPrivateKeyLength), nullptr, 0);
+#endif
+        VerifyOrExit(rval == 0);
+        rval = mbedtls_ssl_conf_own_cert(&aConfig, &mOwnCert, &mPrivateKey);
+    }
+
+exit:
+    return rval;
+}
+
 void SecureTransport::SetCertificate(const uint8_t *aX509Certificate,
                                      uint32_t       aX509CertLength,
                                      const uint8_t *aPrivateKey,
@@ -529,10 +522,10 @@ void SecureTransport::SetCertificate(const uint8_t *aX509Certificate,
     OT_ASSERT(aPrivateKeyLength > 0);
     OT_ASSERT(aPrivateKey != nullptr);
 
-    mOwnCertSrc       = aX509Certificate;
-    mOwnCertLength    = aX509CertLength;
-    mPrivateKeySrc    = aPrivateKey;
-    mPrivateKeyLength = aPrivateKeyLength;
+    mEcdheEcdsaInfo.mOwnCertSrc       = aX509Certificate;
+    mEcdheEcdsaInfo.mOwnCertLength    = aX509CertLength;
+    mEcdheEcdsaInfo.mPrivateKeySrc    = aPrivateKey;
+    mEcdheEcdsaInfo.mPrivateKeyLength = aPrivateKeyLength;
 
     if (mDatagramTransport)
     {
@@ -551,13 +544,20 @@ void SecureTransport::SetCaCertificateChain(const uint8_t *aX509CaCertificateCha
     OT_ASSERT(aX509CaCertChainLength > 0);
     OT_ASSERT(aX509CaCertificateChain != nullptr);
 
-    mCaChainSrc    = aX509CaCertificateChain;
-    mCaChainLength = aX509CaCertChainLength;
+    mEcdheEcdsaInfo.mCaChainSrc    = aX509CaCertificateChain;
+    mEcdheEcdsaInfo.mCaChainLength = aX509CaCertChainLength;
 }
 
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+
+int SecureTransport::PskInfo::SetSecureKeys(mbedtls_ssl_config &aConfig) const
+{
+    return mbedtls_ssl_conf_psk(&aConfig, static_cast<const unsigned char *>(mPreSharedKey), mPreSharedKeyLength,
+                                static_cast<const unsigned char *>(mPreSharedKeyIdentity), mPreSharedKeyIdLength);
+}
+
 void SecureTransport::SetPreSharedKey(const uint8_t *aPsk,
                                       uint16_t       aPskLength,
                                       const uint8_t *aPskIdentity,
@@ -568,15 +568,16 @@ void SecureTransport::SetPreSharedKey(const uint8_t *aPsk,
     OT_ASSERT(aPskLength > 0);
     OT_ASSERT(aPskIdLength > 0);
 
-    mPreSharedKey         = aPsk;
-    mPreSharedKeyLength   = aPskLength;
-    mPreSharedKeyIdentity = aPskIdentity;
-    mPreSharedKeyIdLength = aPskIdLength;
+    mPskInfo.mPreSharedKey         = aPsk;
+    mPskInfo.mPreSharedKeyLength   = aPskLength;
+    mPskInfo.mPreSharedKeyIdentity = aPskIdentity;
+    mPskInfo.mPreSharedKeyIdLength = aPskIdLength;
 
     mCipherSuites[0] = MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8;
     mCipherSuites[1] = 0;
 }
-#endif
+
+#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 #if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 Error SecureTransport::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
@@ -657,7 +658,7 @@ Error SecureTransport::GetThreadAttributeFromOwnCertificate(int      aThreadOidD
                                                             uint8_t *aAttributeBuffer,
                                                             size_t  *aAttributeLength)
 {
-    const mbedtls_x509_crt *cert = &mOwnCert;
+    const mbedtls_x509_crt *cert = &mEcdheEcdsaInfo.mOwnCert;
 
     return GetThreadAttributeFromCertificate(cert, aThreadOidDescriptor, aAttributeBuffer, aAttributeLength);
 }
