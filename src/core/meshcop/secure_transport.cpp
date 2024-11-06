@@ -1144,29 +1144,33 @@ void SecureTransport::HandleMbedtlsDebug(void *aContext, int aLevel, const char 
 
 void SecureTransport::HandleMbedtlsDebug(int aLevel, const char *aFile, int aLine, const char *aStr)
 {
-    OT_UNUSED_VARIABLE(aStr);
-    OT_UNUSED_VARIABLE(aFile);
-    OT_UNUSED_VARIABLE(aLine);
+    LogLevel logLevel = kLogLevelDebg;
 
     switch (aLevel)
     {
     case 1:
-        LogCrit("[%u] %s", mSocket.GetSockName().mPort, aStr);
+        logLevel = kLogLevelCrit;
         break;
 
     case 2:
-        LogWarn("[%u] %s", mSocket.GetSockName().mPort, aStr);
+        logLevel = kLogLevelWarn;
         break;
 
     case 3:
-        LogInfo("[%u] %s", mSocket.GetSockName().mPort, aStr);
+        logLevel = kLogLevelInfo;
         break;
 
     case 4:
     default:
-        LogDebg("[%u] %s", mSocket.GetSockName().mPort, aStr);
         break;
     }
+
+    LogAt(logLevel, "[%u] %s", mSocket.GetSockName().mPort, aStr);
+
+    OT_UNUSED_VARIABLE(aStr);
+    OT_UNUSED_VARIABLE(aFile);
+    OT_UNUSED_VARIABLE(aLine);
+    OT_UNUSED_VARIABLE(logLevel);
 }
 
 Error SecureTransport::HandleSecureTransportSend(const uint8_t   *aBuf,
