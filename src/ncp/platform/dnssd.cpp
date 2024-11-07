@@ -67,9 +67,9 @@ void otPlatDnssdRegisterHost(otInstance                 *aInstance,
                              otPlatDnssdRegisterCallback aCallback)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aHost);
-    OT_UNUSED_VARIABLE(aRequestId);
-    OT_UNUSED_VARIABLE(aCallback);
+    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
+
+    ncp->DnssdRegisterHost(aHost, aRequestId, aCallback);
 }
 
 void otPlatDnssdUnregisterHost(otInstance                 *aInstance,
@@ -78,9 +78,9 @@ void otPlatDnssdUnregisterHost(otInstance                 *aInstance,
                                otPlatDnssdRegisterCallback aCallback)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aHost);
-    OT_UNUSED_VARIABLE(aRequestId);
-    OT_UNUSED_VARIABLE(aCallback);
+    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
+
+    ncp->DnssdUnregisterHost(aHost, aRequestId, aCallback);
 }
 
 void otPlatDnssdRegisterKey(otInstance                 *aInstance,
