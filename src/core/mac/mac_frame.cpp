@@ -153,9 +153,17 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
                 break;
             }
         }
-        else if (mPanIds.GetSource() != mPanIds.GetDestination()) // Rows 9-14.
+        else if (mPanIds.IsDestinationPresent())
         {
-            break;
+            // Both addresses are present and either is a short address - rows 9 to 14.
+            if (mPanIds.IsSourcePresent()) // Rows 9 to 11.
+            {
+                break;
+            }
+        }
+        else
+        {
+            OT_ASSERT(false);
         }
 
         fcf |= kFcfPanidCompression;
