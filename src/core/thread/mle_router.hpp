@@ -362,6 +362,14 @@ public:
      */
     void FillConnectivityTlv(ConnectivityTlv &aTlv);
 
+    /**
+     * Schedule tx of MLE Advertisement message (unicast) to the given neighboring router after a random delay.
+     *
+     * @param[in] aRouter  The router to send the Advertisement to.
+     *
+     */
+    void ScheduleUnicastAdvertisementTo(const Router &aRouter);
+
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     /**
      * Sets steering data out of band
@@ -494,6 +502,7 @@ private:
     static constexpr uint32_t kAdvIntervalMaxLogRoutes = 5000;
 #endif
 
+    static constexpr uint32_t kMaxUnicastAdvertisementDelay  = 1000;   // Max random delay for unciast Adv tx
     static constexpr uint32_t kMaxNeighborAge                = 100000; // Max neighbor age (in msec)
     static constexpr uint32_t kMaxLeaderToRouterTimeout      = 90000;  // (in msec)
     static constexpr uint8_t  kMinDowngradeNeighbors         = 7;
@@ -605,7 +614,8 @@ private:
                                         const Router           *aRouter,
                                         const Ip6::MessageInfo &aMessageInfo);
     void     SendAddressRelease(void);
-    void     SendAdvertisement(void);
+    void     SendMulticastAdvertisement(void);
+    void     SendAdvertisement(const Ip6::Address &aDestination);
     void     SendLinkRequest(Router *aRouter);
     Error    SendLinkAccept(const LinkAcceptInfo &aInfo);
     void     SendParentResponse(const ParentResponseInfo &aInfo);
