@@ -269,6 +269,50 @@ public:
                              otPlatDnssdRegisterCallback aCallback);
 
     /**
+     * Registers or updates a service on the infrastructure network's DNS-SD module (on host).
+     *
+     * @param[in] aService      Information about the service to register.
+     * @param[in] aRequestId    The ID associated with this request.
+     * @param[in] aCallback     The callback function pointer to report the outcome (may be NULL if no callback needed).
+     */
+    void DnssdRegisterService(const otPlatDnssdService   *aService,
+                              otPlatDnssdRequestId        aRequestId,
+                              otPlatDnssdRegisterCallback aCallback);
+
+    /**
+     * Unregisters a service on the infrastructure network's DNS-SD module (on host).
+     *
+     * @param[in] aService      Information about the service to unregister.
+     * @param[in] aRequestId    The ID associated with this request.
+     * @param[in] aCallback     The callback function pointer to report the outcome (may be NULL if no callback needed).
+     */
+    void DnssdUnregisterService(const otPlatDnssdService   *aService,
+                                otPlatDnssdRequestId        aRequestId,
+                                otPlatDnssdRegisterCallback aCallback);
+
+    /**
+     * Registers or updates a key record on the infrastructure network's DNS-SD module (on host).
+     *
+     * @param[in] aKey          Information about the key record to register.
+     * @param[in] aRequestId    The ID associated with this request.
+     * @param[in] aCallback     The callback function pointer to report the outcome (may be NULL if no callback needed).
+     */
+    void DnssdRegisterKey(const otPlatDnssdKey       *aKey,
+                          otPlatDnssdRequestId        aRequestId,
+                          otPlatDnssdRegisterCallback aCallback);
+
+    /**
+     * Unregisters a key record on the infrastructure network's DNS-SD module (on host).
+     *
+     * @param[in] aKey          Information about the key record to register.
+     * @param[in] aRequestId    The ID associated with this request.
+     * @param[in] aCallback     The callback function pointer to report the outcome (may be NULL if no callback needed).
+     */
+    void DnssdUnregisterKey(const otPlatDnssdKey       *aKey,
+                            otPlatDnssdRequestId        aRequestId,
+                            otPlatDnssdRegisterCallback aCallback);
+
+    /**
      * Gets the Dnssd state.
      *
      * Returns the platform dnssd state.

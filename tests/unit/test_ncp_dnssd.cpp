@@ -117,9 +117,11 @@ void TestNcpDnssdRegistrations(void)
     Instance    *instance = static_cast<Instance *>(testInitInstance());
     Ncp::NcpBase ncpBase(instance);
 
-    uint8_t         recvBuf[kMaxSpinelBufferSize];
-    uint16_t        recvLen;
-    otPlatDnssdHost dnssdHost;
+    uint8_t            recvBuf[kMaxSpinelBufferSize];
+    uint16_t           recvLen;
+    otPlatDnssdHost    dnssdHost;
+    otPlatDnssdService dnssdService;
+    otPlatDnssdKey     dnssdKey;
 
     sRequestId = 0; // Use 0 to indicate `sRequestId` hasn't been set.
 
@@ -139,6 +141,41 @@ void TestNcpDnssdRegistrations(void)
     ncpBase.HandleReceive(recvBuf, recvLen);
     VerifyOrQuit(sRequestId == 2);
     VerifyOrQuit(sError == OT_ERROR_NOT_FOUND);
+
+    dnssdService.mHostName            = "test-service";
+    dnssdService.mServiceInstance     = nullptr;
+    dnssdService.mServiceType         = nullptr;
+    dnssdService.mSubTypeLabelsLength = 0;
+    dnssdService.mPort                = 1234;
+    dnssdService.mTxtDataLength       = 0;
+    otPlatDnssdRegisterService(instance, &dnssdService, 3 /* aRequestId */, TestPlatDnssdRegisterCallback);
+    SuccessOrQuit(GenerateSpinelDnssdRequestResultFrame(3 /* aRequestId */, OT_ERROR_NONE, recvBuf, recvLen));
+    ncpBase.HandleReceive(recvBuf, recvLen);
+    VerifyOrQuit(sRequestId == 3);
+    VerifyOrQuit(sError == OT_ERROR_NONE);
+
+    sRequestId = 0;
+    sError     = OT_ERROR_FAILED;
+    otPlatDnssdUnregisterService(instance, &dnssdService, 3 /* aRequestId */, TestPlatDnssdRegisterCallback);
+    ncpBase.HandleReceive(recvBuf, recvLen);
+    VerifyOrQuit(sRequestId == 3);
+    VerifyOrQuit(sError == OT_ERROR_NONE);
+
+    dnssdKey.mName          = "test-key";
+    dnssdKey.mServiceType   = "someType";
+    dnssdKey.mKeyDataLength = 0;
+    otPlatDnssdRegisterKey(instance, &dnssdKey, 4 /* aRequestId */, TestPlatDnssdRegisterCallback);
+    SuccessOrQuit(GenerateSpinelDnssdRequestResultFrame(4 /* aRequestId */, OT_ERROR_NONE, recvBuf, recvLen));
+    ncpBase.HandleReceive(recvBuf, recvLen);
+    VerifyOrQuit(sRequestId == 4);
+    VerifyOrQuit(sError == OT_ERROR_NONE);
+
+    sRequestId = 0;
+    sError     = OT_ERROR_FAILED;
+    otPlatDnssdUnregisterKey(instance, &dnssdKey, 4 /* aRequestId */, TestPlatDnssdRegisterCallback);
+    ncpBase.HandleReceive(recvBuf, recvLen);
+    VerifyOrQuit(sRequestId == 4);
+    VerifyOrQuit(sError == OT_ERROR_NONE);
 }
 
 } // namespace ot

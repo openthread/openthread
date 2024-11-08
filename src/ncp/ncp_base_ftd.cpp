@@ -1582,6 +1582,50 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::EncodeDnssd<otPlatDnssdService>(const otPlatDnssdService *aService)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_DNSSD_SERVICE));
+    SuccessOrExit(error = mEncoder.WriteUtf8(aService->mHostName == nullptr ? "" : aService->mHostName));
+    SuccessOrExit(error = mEncoder.WriteUtf8(aService->mServiceInstance == nullptr ? "" : aService->mServiceInstance));
+    SuccessOrExit(error = mEncoder.WriteUtf8(aService->mServiceType == nullptr ? "" : aService->mServiceType));
+    SuccessOrExit(error = mEncoder.OpenStruct());
+    for (uint8_t i = 0; i < aService->mSubTypeLabelsLength; i++)
+    {
+        SuccessOrExit(error = mEncoder.WriteUtf8(aService->mSubTypeLabels[i]));
+    }
+    SuccessOrExit(error = mEncoder.CloseStruct());
+    SuccessOrExit(error = mEncoder.WriteDataWithLen(aService->mTxtData, aService->mTxtDataLength));
+    SuccessOrExit(error = mEncoder.WriteUint16(aService->mPort));
+    SuccessOrExit(error = mEncoder.WriteUint16(aService->mPriority));
+    SuccessOrExit(error = mEncoder.WriteUint16(aService->mWeight));
+    SuccessOrExit(error = mEncoder.WriteUint16(aService->mTtl));
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::EncodeDnssd<otPlatDnssdKey>(const otPlatDnssdKey *aKey)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_DNSSD_KEY_RECORD));
+    SuccessOrExit(error = mEncoder.WriteUtf8(aKey->mName == nullptr ? "" : aKey->mName));
+    SuccessOrExit(error = mEncoder.OpenStruct());
+    if (aKey->mServiceType != nullptr)
+    {
+        mEncoder.WriteUtf8(aKey->mServiceType);
+    }
+    SuccessOrExit(error = mEncoder.CloseStruct());
+    SuccessOrExit(error = mEncoder.WriteDataWithLen(aKey->mKeyData, aKey->mKeyDataLength));
+    SuccessOrExit(error = mEncoder.WriteUint16(aKey->mClass));
+    SuccessOrExit(error = mEncoder.WriteUint16(aKey->mTtl));
+
+exit:
+    return error;
+}
+
 void NcpBase::DnssdRegisterHost(const otPlatDnssdHost      *aHost,
                                 otPlatDnssdRequestId        aRequestId,
                                 otPlatDnssdRegisterCallback aCallback)
@@ -1594,6 +1638,34 @@ void NcpBase::DnssdUnregisterHost(const otPlatDnssdHost      *aHost,
                                   otPlatDnssdRegisterCallback aCallback)
 {
     DnssdUpdate(aHost, aRequestId, aCallback, /* aRegister */ false);
+}
+
+void NcpBase::DnssdRegisterService(const otPlatDnssdService   *aService,
+                                   otPlatDnssdRequestId        aRequestId,
+                                   otPlatDnssdRegisterCallback aCallback)
+{
+    DnssdUpdate(aService, aRequestId, aCallback, /* aRegister */ true);
+}
+
+void NcpBase::DnssdUnregisterService(const otPlatDnssdService   *aService,
+                                     otPlatDnssdRequestId        aRequestId,
+                                     otPlatDnssdRegisterCallback aCallback)
+{
+    DnssdUpdate(aService, aRequestId, aCallback, /* aRegister */ false);
+}
+
+void NcpBase::DnssdRegisterKey(const otPlatDnssdKey       *aKey,
+                               otPlatDnssdRequestId        aRequestId,
+                               otPlatDnssdRegisterCallback aCallback)
+{
+    DnssdUpdate(aKey, aRequestId, aCallback, /* aRegister */ true);
+}
+
+void NcpBase::DnssdUnregisterKey(const otPlatDnssdKey       *aKey,
+                                 otPlatDnssdRequestId        aRequestId,
+                                 otPlatDnssdRegisterCallback aCallback)
+{
+    DnssdUpdate(aKey, aRequestId, aCallback, /* aRegister */ false);
 }
 
 otPlatDnssdState NcpBase::DnssdGetState(void) { return mDnssdState; }
