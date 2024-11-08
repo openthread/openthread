@@ -112,6 +112,19 @@ public:
         return (mHandler == aHandler) && (mContext == aContext);
     }
 
+    /**
+     * Overloads operator `==` to evaluate whether or not two given `Callback` objects are equal.
+     *
+     * @param[in] aOtherCallback   The callback to compare with.
+     *
+     * @retval TRUE  The two callbacks are equal.
+     * @retval FALSE The two callbacks are not equal.
+     */
+    bool operator==(const CallbackBase &aOtherCallback) const
+    {
+        return Matches(aOtherCallback.mHandler, aOtherCallback.mContext);
+    }
+
 protected:
     CallbackBase(void)
         : mHandler(nullptr)
