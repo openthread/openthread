@@ -205,15 +205,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT
- *
- * Define to 1 to send an MLE Link Request when MAX_NEIGHBOR_AGE is reached for a neighboring router.
- */
-#ifndef OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT
-#define OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT 1
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN
  *
  * Specifies the minimum link margin in dBm required before attempting to establish a link with a neighboring router.
