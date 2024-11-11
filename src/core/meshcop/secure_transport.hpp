@@ -261,8 +261,7 @@ public:
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     /**
-     * Sets the Pre-Shared Key (PSK) for sessions-
-     * identified by a PSK.
+     * Sets the Pre-Shared Key (PSK) for sessions-identified by a PSK.
      *
      * DTLS mode "PSK with AES 128 CCM 8" for Application CoAPS.
      *
@@ -294,8 +293,7 @@ public:
                         uint32_t       aPrivateKeyLength);
 
     /**
-     * Sets the trusted top level CAs. It is needed for validate the
-     * certificate of the peer.
+     * Sets the trusted top level CAs. It is needed for validate the certificate of the peer.
      *
      * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
      *
@@ -309,7 +307,7 @@ public:
      *
      * @returns Public key from own certificate in form of entire ASN.1 field.
      */
-    const mbedtls_asn1_buf &GetOwnPublicKey(void) const { return mOwnCert.pk_raw; }
+    const mbedtls_asn1_buf &GetOwnPublicKey(void) const { return mEcdheEcdsaInfo.mOwnCert.pk_raw; }
 
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
@@ -490,6 +488,40 @@ private:
     static constexpr size_t kSecureTransportKeyBlockSize     = 40;
     static constexpr size_t kSecureTransportRandomBufferSize = 32;
 
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+    struct EcdheEcdsaInfo : public Clearable<EcdheEcdsaInfo>
+    {
+        EcdheEcdsaInfo(void) { Clear(); }
+        void Init(void);
+        void Free(void);
+        int  SetSecureKeys(mbedtls_ssl_config &aConfig);
+
+        const uint8_t     *mCaChainSrc;
+        const uint8_t     *mOwnCertSrc;
+        const uint8_t     *mPrivateKeySrc;
+        uint32_t           mOwnCertLength;
+        uint32_t           mCaChainLength;
+        uint32_t           mPrivateKeyLength;
+        mbedtls_x509_crt   mCaChain;
+        mbedtls_x509_crt   mOwnCert;
+        mbedtls_pk_context mPrivateKey;
+    };
+#endif
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+    struct PskInfo : public Clearable<PskInfo>
+    {
+        PskInfo(void) { Clear(); }
+        int SetSecureKeys(mbedtls_ssl_config &aConfig) const;
+
+        const uint8_t *mPreSharedKey;
+        const uint8_t *mPreSharedKeyIdentity;
+        uint16_t       mPreSharedKeyLength;
+        uint16_t       mPreSharedKeyIdLength;
+    };
+#endif
+#endif // OPENTHREAD_CONFIG_TLS_API_ENABLE
+
     bool IsStateClosed(void) const { return mState == kStateClosed; }
     bool IsStateOpen(void) const { return mState == kStateOpen; }
     bool IsStateInitializing(void) const { return mState == kStateInitializing; }
@@ -503,13 +535,7 @@ private:
     Error Setup(bool aClient);
 
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
-    /**
-     * Set keys and/or certificates for dtls session dependent of used cipher suite.
-     *
-     * @retval mbedtls error, 0 if successfully.
-     */
-    int SetApplicationSecureKeys(void);
-
+    int   SetApplicationSecureKeys(void);
     Error GetThreadAttributeFromCertificate(const mbedtls_x509_crt *aCert,
                                             int                     aThreadOidDescriptor,
                                             uint8_t                *aAttributeBuffer,
@@ -601,24 +627,12 @@ private:
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
 
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    const uint8_t     *mCaChainSrc;
-    uint32_t           mCaChainLength;
-    const uint8_t     *mOwnCertSrc;
-    uint32_t           mOwnCertLength;
-    const uint8_t     *mPrivateKeySrc;
-    uint32_t           mPrivateKeyLength;
-    mbedtls_x509_crt   mCaChain;
-    mbedtls_x509_crt   mOwnCert;
-    mbedtls_pk_context mPrivateKey;
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+    EcdheEcdsaInfo mEcdheEcdsaInfo;
 #endif
-#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-    const uint8_t *mPreSharedKey;
-    const uint8_t *mPreSharedKeyIdentity;
-    uint16_t       mPreSharedKeyLength;
-    uint16_t       mPreSharedKeyIdLength;
-#endif
+
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+    PskInfo mPskInfo;
 #endif
 
     bool mVerifyPeerCertificate;
