@@ -116,6 +116,12 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
         // | 13 | Extended     | Short        | Present      | Not Present  |      1       |
         // | 14 | Short        | Short        | Present      | Not Present  |      1       |
         // +----+--------------+--------------+--------------+--------------+--------------+
+        //
+        // This table shows the combination of flags allowed in an encoded MAC
+        // header. Regarding rows 9-14, when both Source and Destination
+        // Address fields are present and at least one uses a short address
+        // format, then if the source and destination PAN IDs are equal, PAN
+        // ID compression is set to 1.
 
         if (mAddrs.mDestination.IsNone())
         {
