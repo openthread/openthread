@@ -43,51 +43,27 @@ Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTask(aInstance)
 {
-    for (ExternalCallback &callback : mExternalCallbacks)
-    {
-        callback.Clear();
-    }
 }
 
-Error Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aContext)
+Error Notifier::RegisterCallback(StateChangedCallback aCallback, void *aContext)
 {
-    Error             error          = kErrorNone;
-    ExternalCallback *unusedCallback = nullptr;
+    Error            error = kErrorNone;
+    ExternalCallback newCallback;
 
-    VerifyOrExit(aCallback != nullptr);
-
-    for (ExternalCallback &callback : mExternalCallbacks)
-    {
-        VerifyOrExit(!callback.Matches(aCallback, aContext), error = kErrorAlready);
-
-        if (!callback.IsSet() && (unusedCallback == nullptr))
-        {
-            unusedCallback = &callback;
-        }
-    }
-
-    VerifyOrExit(unusedCallback != nullptr, error = kErrorNoBufs);
-
-    unusedCallback->Set(aCallback, aContext);
+    newCallback.Set(aCallback, aContext);
+    VerifyOrExit(!mExternalCallbacks.Contains(newCallback), error = kErrorAlready);
+    error = mExternalCallbacks.PushBack(newCallback);
 
 exit:
     return error;
 }
 
-void Notifier::RemoveCallback(otStateChangedCallback aCallback, void *aContext)
+void Notifier::RemoveCallback(StateChangedCallback aCallback, void *aContext)
 {
-    VerifyOrExit(aCallback != nullptr);
+    ExternalCallback callbackToRemove;
 
-    for (ExternalCallback &callback : mExternalCallbacks)
-    {
-        if (callback.Matches(aCallback, aContext))
-        {
-            callback.Clear();
-        }
-    }
-
-exit:
-    return;
+    callbackToRemove.Set(aCallback, aContext);
+    mExternalCallbacks.Remove(callbackToRemove);
 }
 
 void Notifier::Signal(Event aEvent)

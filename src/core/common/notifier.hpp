@@ -42,6 +42,7 @@
 #include <openthread/instance.h>
 #include <openthread/platform/toolchain.h>
 
+#include "common/array.hpp"
 #include "common/callback.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
@@ -179,14 +180,17 @@ private:
  *
  * For core internal modules, `Notifier` class emits events directly to them by invoking method `HandleNotifierEvents()`
  * on the module instance.
- *
- * A `otStateChangedCallback` callback can be explicitly registered with the `Notifier`. This is mainly intended for use
- * by external users (i.e.provided as an OpenThread public API). Max number of such callbacks that can be registered at
- * the same time is specified by `OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS` configuration parameter.
  */
 class Notifier : public InstanceLocator, private NonCopyable
 {
 public:
+    /**
+     * Maximum number of external callback handlers that can be registered.
+     */
+    static constexpr uint16_t kMaxExternalHandlers = OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS;
+
+    typedef otStateChangedCallback StateChangedCallback; ///< State changed callback
+
     /**
      * Initializes a `Notifier` instance.
      *
@@ -195,7 +199,10 @@ public:
     explicit Notifier(Instance &aInstance);
 
     /**
-     * Registers an `otStateChangedCallback` handler.
+     * Registers an external `StateChangedCallback`.
+     *
+     * This is intended for use by external users (i.e., provided as an OpenThread public API). `kMaxExternalHandlers`
+     * specifies the maximum number of callbacks.
      *
      * @param[in]  aCallback     A pointer to the handler function that is called to notify of the changes.
      * @param[in]  aContext      A pointer to arbitrary context information.
@@ -204,15 +211,15 @@ public:
      * @retval kErrorAlready  The callback was already registered.
      * @retval kErrorNoBufs   Could not add the callback due to resource constraints.
      */
-    Error RegisterCallback(otStateChangedCallback aCallback, void *aContext);
+    Error RegisterCallback(StateChangedCallback aCallback, void *aContext);
 
     /**
-     * Removes/unregisters a previously registered `otStateChangedCallback` handler.
+     * Removes/unregisters a previously registered `StateChangedCallback` handler.
      *
      * @param[in]  aCallback     A pointer to the callback function pointer.
      * @param[in]  aContext      A pointer to arbitrary context information.
      */
-    void RemoveCallback(otStateChangedCallback aCallback, void *aContext);
+    void RemoveCallback(StateChangedCallback aCallback, void *aContext);
 
     /**
      * Schedules signaling of an event.
@@ -279,8 +286,6 @@ public:
     }
 
 private:
-    static constexpr uint16_t kMaxExternalHandlers = OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS;
-
     // Character limit to divide the log into multiple lines in `LogChangedFlags()`.
     static constexpr uint16_t kFlagsStringLineLimit = 70;
 
@@ -289,19 +294,20 @@ private:
 
     static constexpr uint16_t kFlagsStringBufferSize = kFlagsStringLineLimit + kMaxFlagNameLength;
 
-    typedef Callback<otStateChangedCallback> ExternalCallback;
+    typedef Callback<StateChangedCallback> ExternalCallback;
 
     void EmitEvents(void);
 
     void        LogEvents(Events aEvents) const;
     const char *EventToString(Event aEvent) const;
 
-    using EmitEventsTask = TaskletIn<Notifier, &Notifier::EmitEvents>;
+    using EmitEventsTask        = TaskletIn<Notifier, &Notifier::EmitEvents>;
+    using ExternalCallbackArray = Array<ExternalCallback, kMaxExternalHandlers>;
 
-    Events           mEventsToSignal;
-    Events           mSignaledEvents;
-    EmitEventsTask   mTask;
-    ExternalCallback mExternalCallbacks[kMaxExternalHandlers];
+    Events                mEventsToSignal;
+    Events                mSignaledEvents;
+    EmitEventsTask        mTask;
+    ExternalCallbackArray mExternalCallbacks;
 };
 
 /**
