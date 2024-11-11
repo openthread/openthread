@@ -192,7 +192,6 @@ template <> otError Joiner::Process<Cmd("startae")>(Arg aArgs[])
     return error;
 }
 
-#if OPENTHREAD_CONFIG_CCM_ENABLE
 /**
  * @cli joiner startccmbr
  * @code
@@ -213,7 +212,6 @@ template <> otError Joiner::Process<Cmd("startccmbr")>(Arg aArgs[])
 
     return error;
 }
-#endif
 
 /**
  * @cli joiner startnkp
@@ -231,6 +229,26 @@ template <> otError Joiner::Process<Cmd("startnkp")>(Arg aArgs[])
     otError error;
 
     error = otJoinerStartCcm(GetInstancePtr(), otJoinOperation::OT_JOIN_OPERATION_NKP, &Joiner::HandleCallback, this);
+
+    return error;
+}
+
+/**
+ * @cli joiner startccm
+ * @code
+ * joiner startccm
+ * Done
+ * @endcode
+ * @cparam joiner startccm
+ * @par api_copy
+ * #otJoinerStartCcm
+ */
+template <> otError Joiner::Process<Cmd("startccm")>(Arg aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgs);
+    otError error;
+
+    error = otJoinerStartCcm(GetInstancePtr(), otJoinOperation::OT_JOIN_OPERATION_CCM_ALL, &Joiner::HandleCallback, this);
 
     return error;
 }
@@ -295,6 +313,7 @@ otError Joiner::Process(Arg aArgs[])
         CmdEntry("start"),
 #if OPENTHREAD_CONFIG_CCM_ENABLE
         CmdEntry("startae"),
+        CmdEntry("startccm"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
         CmdEntry("startccmbr"),
 #endif

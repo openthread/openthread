@@ -58,7 +58,7 @@ Error Joiner::StartCcm(Operation aOperation, otJoinerCallback aCallback, void *a
     Ip6::SockAddr                sockAddr;
 
     VerifyOrExit(mState == kStateIdle, error = kErrorBusy);
-    VerifyOrExit((Get<ThreadNetif>().IsUp() || aOperation == kOperationCcmBrCbrski) &&
+    VerifyOrExit((Get<ThreadNetif>().IsUp() || aOperation == kOperationCcmBrCbrski  || aOperation == kOperationCcmAll) &&
                      Get<Mle::Mle>().GetRole() == Mle::kRoleDisabled,
                  error = kErrorInvalidState);
 
@@ -81,12 +81,21 @@ Error Joiner::StartCcm(Operation aOperation, otJoinerCallback aCallback, void *a
         SuccessOrExit(error = Get<Credentials>().ConfigureLdevid(&Get<Tmf::SecureAgent>().GetDtls()));
         mJoinerSourcePort = kCcmNkpJoinerUdpSourcePort;
         break;
+    case kOperationCcmAll:
+        break;
     default:
         ExitNow(error = kErrorInvalidArgs);
     }
 
     mJoinerOperation = aOperation;
     LogInfo("Start operation %s (%d)", OperationToString(mJoinerOperation), mJoinerOperation);
+
+    if (aOperation == kOperationCcmAll)
+    {
+        mCallbackCcmAll.Set(aCallback, aContext);
+        error = StartCcmAll();
+        ExitNow();
+    }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     if (aOperation == kOperationCcmBrCbrski)
@@ -139,6 +148,45 @@ exit:
     return error;
 }
 
+Error Joiner::StartCcmAll(void)
+{
+    Error error;
+    bool done = false;
+    bool isNeedAe = !Get<Credentials>().HasOperationalCert();
+    bool isNeedNkp = !Get<ActiveDatasetManager>().IsComplete() && !Get<ActiveDatasetManager>().IsPartiallyComplete();
+    bool isNeedUp = !Get<ThreadNetif>().IsUp();
+    bool isNeedThreadStart = Get<Mle::MleRouter>().IsDisabled();
+
+    LogDebg("StartCcmAll nAe=%d nNk=%d nUp=%d nTs=%d", isNeedAe, isNeedNkp, isNeedUp, isNeedThreadStart); // FIXME can be removed
+    if (isNeedUp){
+        Get<ThreadNetif>().Up();
+    }
+
+    if (isNeedAe){
+        error = StartCcm(Joiner::Operation::kOperationCcmAeCbrski, HandleCcmAllOperationDone, this);
+    }
+    else if (isNeedNkp)
+    {
+        error = StartCcm(Joiner::Operation::kOperationCcmNkp, HandleCcmAllOperationDone, this);
+    }
+    else if (isNeedThreadStart)
+    {
+        error = Get<Mle::MleRouter>().Start();
+    }
+    else
+    {
+        mCallbackCcmAll.InvokeIfSet(kErrorNone);
+        done = true;
+        error = kErrorAbort; // set abort error to signal HandleCcmAllOperationDone() to stop recursion.
+    }
+
+    if (error != kErrorNone && !done)
+    {
+        mCallbackCcmAll.InvokeIfSet(error);
+    }
+    return error;
+}
+
 Error Joiner::PrepareCcmNkpJoinerFinalizeMessage(void)
 {
     Error                 error = kErrorNone;
@@ -168,12 +216,37 @@ exit:
     return error;
 }
 
+void Joiner::HandleCcmAllOperationDone(Error aErr, void *aContext)
+{
+    static_cast<Joiner *>(aContext)->HandleCcmAllOperationDone(aErr);
+}
+
+void Joiner::HandleCcmAllOperationDone(Error aErr) {
+    Error error;
+
+    if (aErr == kErrorNone)
+    {
+        error = StartCcmAll(); // proceed with next required operation
+    }
+    else
+    {
+        error = aErr;
+    }
+
+    if (error != kErrorNone)
+    {
+        LogDebg("CCM 'all' operation finish (err=%s)", otThreadErrorToString(error));
+        mCallbackCcmAll.InvokeIfSet(error);
+        mCallbackCcmAll.Clear();
+    }
+}
+
 void Joiner::HandleCbrskiClientDone(Error aErr, void *aContext)
 {
     static_cast<Joiner *>(aContext)->HandleCbrskiClientDone(aErr);
 }
 
-void Joiner::HandleCbrskiClientDone(Error aErr) { Finish(aErr, true); }
+void Joiner::HandleCbrskiClientDone(Error aErr) { Finish(aErr, /* aInvokeCallback */ true); }
 
 } // namespace MeshCoP
 } // namespace ot

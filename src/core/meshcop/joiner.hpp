@@ -88,6 +88,7 @@ public:
         kOperationCcmEstCoaps = OT_JOIN_OPERATION_EST_COAPS,
         kOperationCcmBrCbrski = OT_JOIN_OPERATION_BR_CBRSKI,
         kOperationMeshcop     = OT_JOIN_OPERATION_MESHCOP,
+        kOperationCcmAll      = OT_JOIN_OPERATION_CCM_ALL,
     };
 
     /**
@@ -254,8 +255,11 @@ private:
     void HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
 #if OPENTHREAD_CONFIG_CCM_ENABLE
+    Error       StartCcmAll(void);
     static void HandleCbrskiClientDone(Error aErr, void *aContext);
     void        HandleCbrskiClientDone(Error aErr);
+    static void HandleCcmAllOperationDone(Error aErr, void *aContext);
+    void        HandleCcmAllOperationDone(Error aErr);
 #endif
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -290,6 +294,7 @@ private:
 
 #if OPENTHREAD_CONFIG_CCM_ENABLE
     CbrskiClient *mCbrskiClient;
+    Callback<otJoinerCallback> mCallbackCcmAll;
 #endif
 
     Operation       mJoinerOperation;

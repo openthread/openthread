@@ -215,13 +215,11 @@ void Joiner::Finish(Error aError, bool aInvokeCallback)
     SetState(kStateIdle);
     FreeJoinerFinalizeMessage();
 
+exit:
     if (aInvokeCallback)
     {
         mCallback.InvokeIfSet(aError);
     }
-
-exit:
-    return;
 }
 
 uint8_t Joiner::CalculatePriority(int8_t aRssi, bool aSteeringDataAllowsAny)
@@ -348,7 +346,7 @@ void Joiner::TryNextJoinerRouter(Error aPrevError)
         aPrevError = kErrorNotFound;
     }
 
-    Finish(aPrevError, true);
+    Finish(aPrevError, /* aInvokeCallback */ true);
 
 exit:
     return;
@@ -615,7 +613,7 @@ void Joiner::HandleTimer(void)
         OT_ASSERT(false);
     }
 
-    Finish(error, true);
+    Finish(error, /* aInvokeCallback */ true);
 }
 
 // LCOV_EXCL_START
@@ -654,6 +652,8 @@ const char *Joiner::OperationToString(Joiner::Operation aOperation)
         return "NKP";
     case kOperationCcmEstCoaps:
         return "EST-CoAPS/JR";
+    case kOperationCcmAll:
+        return "CCM(All)";
 #endif
     case kOperationMeshcop:
         return "MeshCoP";

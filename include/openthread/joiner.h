@@ -81,7 +81,7 @@ typedef struct otJoinerDiscerner
 /**
  * Type defines Join operation identifiers for MeshCoP-Ext. It includes both CCM and non-CCM join operations.
  * Identifiers 0-15 SHOULD be used only for operations that go through a Joiner Router. Identifiers >= 16 are
- * for operations that don't use a Joiner Router.
+ * for operations that don't use a Joiner Router or operations composed of multiple sub-operations.
  */
 typedef enum otJoinOperation
 {
@@ -115,6 +115,13 @@ typedef enum otJoinOperation
      * network interface to contact the cBRSKI Registrar directly, without Thread relaying.
      */
     OT_JOIN_OPERATION_BR_CBRSKI = 16,
+
+    /**
+     * CCM do-all operation which will perform AE/cBRSKI, NKP, Thread-start as needed to get
+     * a node attached to a Thread Network. It is a meta-operation that calls multiple other
+     * operations under the hood.
+     */
+    OT_JOIN_OPERATION_CCM_ALL = 17,
 
 } otJoinOperation;
 
