@@ -40,7 +40,7 @@ import otci
 from otci import OTCI
 from otci.types import Ip6Addr
 
-CP_CAPABILITY_VERSION = "0.1.0"
+CP_CAPABILITY_VERSION = "0.1.1-dev"
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -49,6 +49,8 @@ class RcpCaps(object):
     """
     This class represents an OpenThread RCP capability test instance.
     """
+
+    DEFAULT_FORMAT_ALIGN_LENGTH = 58  # The default formatted string alignment length
 
     def __init__(self):
         self.__dut = self.__connect_dut()
@@ -79,6 +81,113 @@ class RcpCaps(object):
         self.__test_diag_powersettings()
         self.__test_diag_gpio_mode()
         self.__test_diag_gpio_value()
+
+        self.__ref.diag_stop()
+        self.__dut.diag_stop()
+
+    def test_frame_format(self):
+        """Test whether the DUT supports sending and receiving 802.15.4 frames of all formats."""
+        frames = [
+            {
+                'name': 'ver:2003,Cmd,seq,dst[addr:short,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                'psdu': '030800ffffffff070000'
+            },
+            {
+                'name': 'ver:2003,Bcon,seq,dst[addr:no,pan:no],src[addr:extd,pan:id],sec:no,ie:no,plen:30',
+                'psdu': '00c000eeee0102030405060708ff0f000003514f70656e54687265616400000000000001020304050607080000'
+            },
+            {
+                'name': 'ver:2006,Cmd,seq,dst[addr:short,pan:id],src[addr:short,pan:no],sec:l5,ie:no,plen:0',
+                'psdu': '4b98ddddddaaaabbbb0d708001020304050607081565'
+            },
+            {
+                'name': 'ver:2006,Cmd,seq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:l5,ie:no,plen:0',
+                'psdu': '4bdcdddddd102030405060708001020304050607080d6e54687265046400820ee803'
+            },
+            {
+                'name': 'ver:2006,Data,seq,dst[addr:extd,pan:id],src[addr:extd,pan:id],sec:no,ie:no,plen:0',
+                'psdu': '01dcdddddd1020304050607080000001020304050607085468'
+            },
+            {
+                'name': 'ver:2006,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
+                'psdu': '0198ddddddaaaaeeeebbbb7080'
+            },
+            {
+                'name': 'ver:2006,Data,seq,dst[addr:extd,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                'psdu': '011cdddddd10203040506070800000'
+            },
+            {
+                'name': 'ver:2006,Data,seq,dst[addr:short,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                'psdu': '0118ddddddaaaa3040'
+            },
+            {
+                'name': 'ver:2015,Data,seq,dst[addr:no,pan:no],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                'psdu': '0120dddddd'
+            },
+            {
+                'name': 'ver:2015,Data,seq,dst[addr:no,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                'psdu': '4120ddddddaaaa'
+            },
+            {
+                'name': 'ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                'psdu': '012cdddddd10203040506070800000'
+            },
+            {
+                'name': 'ver:2015,Data,seq,dst[addr:extd,pan:no],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                'psdu': '412cdd10203040506070807080'
+            },
+            {
+                'name': 'ver:2015,Data,seq,dst[addr:no,pan:no],src[addr:extd,pan:id],sec:no,ie:no,plen:0',
+                'psdu': '01e0ddeeee01020304050607080000'
+            },
+            {
+                'name': 'ver:2015,Data,seq,dst[addr:no,pan:no],src[addr:extd,pan:no],sec:no,ie:no,plen:0',
+                'psdu': '41e0dd01020304050607080708'
+            },
+            {
+                'name': 'ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:no,ie:no,plen:0',
+                'psdu': '01ecdddddd102030405060708001020304050607080708'
+            },
+            {
+                'name': 'ver:2015,Data,seq,dst[addr:extd,pan:no],src[addr:extd,pan:no],sec:no,ie:no,plen:0',
+                'psdu': '41ecdd102030405060708001020304050607080708'
+            },
+            {
+                'name': 'ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
+                'psdu': '01a8ddddddaaaaeeeebbbb0102'
+            },
+            {
+                'name': 'ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:extd,pan:id],sec:no,ie:no,plen:0',
+                'psdu': '01e8ddddddaaaaeeee01020304050607080708'
+            },
+            {
+                'name': 'ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
+                'psdu': '01acdddddd1020304050607080eeeebbbb0708'
+            },
+            {
+                'name': 'ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie[csl],plen:0',
+                'psdu': '01aaddddddaaaaeeeebbbb040dc800e8030708'
+            },
+            {
+                'name': 'ver:2015,Data,noseq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
+                'psdu': '01a9ddddaaaaeeeebbbbbb04'
+            },
+        ]
+
+        self.__dut.factory_reset()
+        self.__ref.factory_reset()
+
+        ret = self.__dut.is_command_supported('diag start')
+        if ret is False:
+            print('Diag commands are not supported')
+            return
+
+        self.__dut.diag_start()
+        self.__ref.diag_start()
+
+        for frame in frames:
+            self.__test_send_formated_frame(self.__dut, self.__ref, 'TX ' + frame['name'], frame['psdu'], 100)
+            self.__test_send_formated_frame(self.__ref, self.__dut, 'RX ' + frame['name'], frame['psdu'], 100)
 
         self.__ref.diag_stop()
         self.__dut.diag_stop()
@@ -476,34 +585,44 @@ class RcpCaps(object):
         self.__output_format_bool(cmd_diag_repeat, ret)
         self.__output_format_bool(cmd_diag_repeat_stop, ret)
 
-    def __test_diag_frame(self):
+    def __test_send_formated_frame(self,
+                                   sender: OTCI,
+                                   receiver: OTCI,
+                                   format_name: str,
+                                   frame: str,
+                                   align_length: int = DEFAULT_FORMAT_ALIGN_LENGTH):
         packets = 100
         threshold = 80
         channel = 20
-        frame = '00010203040506070809'
         cmd_diag_frame = f'diag frame {frame}'
         commands = [cmd_diag_frame, f'diag send {packets}', f'diag stats', f'diag stats clear']
 
         if self.__support_commands(commands):
-            self.__dut.wait(1)
-            self.__dut.diag_set_channel(channel)
-            self.__ref.diag_set_channel(channel)
-            self.__ref.diag_radio_receive()
+            sender.wait(1)
+            sender.diag_set_channel(channel)
+            receiver.diag_set_channel(channel)
+            receiver.diag_radio_receive()
 
-            self.__dut.diag_stats_clear()
-            self.__ref.diag_stats_clear()
+            sender.diag_stats_clear()
+            sender.diag_stats_clear()
 
-            self.__ref.diag_frame(frame)
-            self.__dut.diag_send(packets, None)
-            self.__dut.wait(1)
-            dut_stats = self.__dut.diag_get_stats()
-            ref_stats = self.__ref.diag_get_stats()
+            sender.diag_frame(frame)
+            sender.diag_send(packets, None)
+            sender.wait(1)
+            sender_stats = sender.diag_get_stats()
+            receiver_stats = receiver.diag_get_stats()
 
-            ret = dut_stats['sent_packets'] == packets and ref_stats['received_packets'] > threshold
+            ret = sender_stats['sent_packets'] == packets and receiver_stats['received_packets'] > threshold
         else:
             ret = False
 
-        self.__output_format_bool(cmd_diag_frame, ret)
+        self.__output_format_bool(format_name, ret, align_length)
+
+    def __test_diag_frame(self):
+        frame = '00010203040506070809'
+        cmd_diag_frame = f'diag frame {frame}'
+
+        self.__test_send_formated_frame(self.__dut, self.__ref, cmd_diag_frame, frame)
 
     def __support_commands(self, commands: List[str]) -> bool:
         ret = True
@@ -533,10 +652,12 @@ class RcpCaps(object):
             node = otci.connect_otbr_adb_tcp(os.getenv('DUT_ADB_TCP'))
         elif os.getenv('DUT_ADB_USB'):
             node = otci.connect_otbr_adb_usb(os.getenv('DUT_ADB_USB'))
+        elif os.getenv('DUT_CLI_SERIAL'):
+            node = otci.connect_cli_serial(os.getenv('DUT_CLI_SERIAL'))
         elif os.getenv('DUT_SSH'):
             node = otci.connect_otbr_ssh(os.getenv('DUT_SSH'))
         else:
-            self.__fail("Please set DUT_ADB_TCP, DUT_ADB_USB or DUT_SSH to connect to the DUT device.")
+            self.__fail("Please set DUT_ADB_TCP, DUT_ADB_USB, DUT_CLI_SERIAL or DUT_SSH to connect to the DUT device.")
 
         return node
 
@@ -552,12 +673,12 @@ class RcpCaps(object):
 
         return node
 
-    def __output_format_string(self, name: str, value: str):
-        prefix = '{0:-<58}'.format('{} '.format(name))
+    def __output_format_string(self, name: str, value: str, align_length: int = DEFAULT_FORMAT_ALIGN_LENGTH):
+        prefix = (name + ' ').ljust(align_length, '-')
         print(f'{prefix} {value}')
 
-    def __output_format_bool(self, name: str, value: bool):
-        self.__output_format_string(name, 'OK' if value else 'NotSupported')
+    def __output_format_bool(self, name: str, value: bool, align_length: int = DEFAULT_FORMAT_ALIGN_LENGTH):
+        self.__output_format_string(name, 'OK' if value else 'NotSupported', align_length)
 
     def __fail(self, value: str):
         print(f'{value}')
@@ -569,11 +690,12 @@ def parse_arguments():
     description_msg = 'This script is used for testing RCP capabilities.'
     epilog_msg = textwrap.dedent(
         'Device Interfaces:\r\n'
-        '  DUT_SSH=<device_ip>            Connect to the DUT via ssh\r\n'
         '  DUT_ADB_TCP=<device_ip>        Connect to the DUT via adb tcp\r\n'
         '  DUT_ADB_USB=<serial_number>    Connect to the DUT via adb usb\r\n'
-        '  REF_CLI_SERIAL=<serial_device> Connect to the reference device via cli serial port\r\n'
+        '  DUT_CLI_SERIAL=<serial_device> Connect to the DUT via cli serial port\r\n'
+        '  DUT_SSH=<device_ip>            Connect to the DUT via ssh\r\n'
         '  REF_ADB_USB=<serial_number>    Connect to the reference device via adb usb\r\n'
+        '  REF_CLI_SERIAL=<serial_device> Connect to the reference device via cli serial port\r\n'
         '  REF_SSH=<device_ip>            Connect to the reference device via ssh\r\n'
         '\r\n'
         'Example:\r\n'
@@ -605,6 +727,14 @@ def parse_arguments():
         action='store_true',
         default=False,
         help='test whether the RCP supports all diag commands',
+    )
+
+    parser.add_argument(
+        '-f',
+        '--frame-format',
+        action='store_true',
+        default=False,
+        help='test whether the RCP supports 802.15.4 frames of all formats',
     )
 
     parser.add_argument(
@@ -669,6 +799,9 @@ def main():
 
     if arguments.throughput:
         rcp_caps.test_throughput()
+
+    if arguments.frame_format:
+        rcp_caps.test_frame_format()
 
 
 if __name__ == '__main__':
