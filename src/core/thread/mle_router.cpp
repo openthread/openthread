@@ -534,7 +534,7 @@ exit:
     return;
 }
 
-void MleRouter::SendAdvertisement(void)
+void MleRouter::SendAdvertisement(Neighbor *aNeighbor)
 {
     Error        error = kErrorNone;
     Ip6::Address destination;
@@ -574,7 +574,14 @@ void MleRouter::SendAdvertisement(void)
         OT_ASSERT(false);
     }
 
-    destination.SetToLinkLocalAllNodesMulticast();
+    if (nullptr != aNeighbor)
+    {
+        destination.SetToLinkLocalAddress(aNeighbor->GetExtAddress());
+    }
+    else
+    {
+        destination.SetToLinkLocalAllNodesMulticast();
+    }
     SuccessOrExit(error = message->SendTo(destination));
 
     Log(kMessageSend, kTypeAdvertisement, destination);
@@ -1080,6 +1087,40 @@ exit:
     return error;
 }
 
+bool MleRouter::DetectAsymmetricLinks(const RouteTlv &aRouteTlv, RxInfo &aRxInfo)
+{
+    Neighbor *neighbor = aRxInfo.mNeighbor;
+    bool      status   = false;
+    VerifyOrExit(neighbor);
+    for (uint8_t routerId = 0, index = 0; routerId <= kMaxRouterId;
+         index += aRouteTlv.IsRouterIdSet(routerId) ? 1 : 0, routerId++)
+    {
+        if (routerId != RouterIdFromRloc16(GetRloc16()))
+        {
+            continue;
+        }
+        Router *router = mRouterTable.FindRouterById(RouterIdFromRloc16(neighbor->GetRloc16()));
+        if (aRouteTlv.IsRouterIdSet(routerId))
+        {
+            LinkQuality linkQualityOut = aRouteTlv.GetLinkQualityOut(index);
+            LinkQuality linkQualityIn  = aRouteTlv.GetLinkQualityIn(index);
+            // Identify scenario where the route TLV indicates no outgoing link,
+            // but the link in and the router table link out quality indicates a good link
+            if (linkQualityOut == 0)
+            {
+                if ((linkQualityIn > kLinkQuality2) && (router->GetLinkQualityOut() > kLinkQuality2))
+                {
+                    LogWarn("Detected asymmetric link via advertisement from 0x%x, LqIn:%d, LqOut:%d, rtrLqOut:%d",
+                            neighbor->GetRloc16(), linkQualityIn, linkQualityOut, router->GetLinkQualityOut());
+                    return true;
+                }
+            }
+        }
+    }
+exit:
+    return status;
+}
+
 Error MleRouter::ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo)
 {
     // This method processes `aRouteTlv` read from an MLE message.
@@ -1270,6 +1311,15 @@ Error MleRouter::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddre
     if (aRxInfo.IsNeighborStateValid() && mRouterTable.IsRouteTlvIdSequenceMoreRecent(routeTlv))
     {
         SuccessOrExit(error = ProcessRouteTlv(routeTlv, aRxInfo));
+    }
+    if (routeTlv.IsValid() && DetectAsymmetricLinks(routeTlv, aRxInfo))
+    {
+        router = Get<RouterTable>().FindRouterByRloc16(aRxInfo.mNeighbor->GetRloc16());
+        if (nullptr != router)
+        {
+            LogInfo("Send unicast advertisement to neighbor router rloc:0x%x", aRxInfo.mNeighbor->GetRloc16());
+            SendAdvertisement(router);
+        }
     }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

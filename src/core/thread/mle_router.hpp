@@ -598,6 +598,7 @@ private:
     void     HandleNetworkDataUpdateRouter(void);
     void     HandleDiscoveryRequest(RxInfo &aRxInfo);
     Error    ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo);
+    bool     DetectAsymmetricLinks(const RouteTlv &aRouteTlv, RxInfo &aRxInfo);
     Error    ReadAndProcessRouteTlvOnFtdChild(RxInfo &aRxInfo, uint8_t aParentId);
     void     StopAdvertiseTrickleTimer(void);
     uint32_t DetermineAdvertiseIntervalMax(void) const;
@@ -607,7 +608,7 @@ private:
                                         const Router           *aRouter,
                                         const Ip6::MessageInfo &aMessageInfo);
     void     SendAddressRelease(void);
-    void     SendAdvertisement(void);
+    void     SendAdvertisement(Neighbor *aNeighbor = nullptr);
     Error    SendLinkAccept(const LinkAcceptInfo &aInfo);
     void     SendParentResponse(const ParentResponseInfo &aInfo);
     Error    SendChildIdResponse(Child &aChild);
