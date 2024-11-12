@@ -1653,14 +1653,12 @@ void MleRouter::HandleTimeTick(void)
 
         if (router.IsStateValid() && (age >= kMaxNeighborAge))
         {
-#if OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT
             if (age < kMaxNeighborAge + kMaxTxCount * kUnicastRetxDelay)
             {
                 LogInfo("No Adv from router 0x%04x - sending Link Request", router.GetRloc16());
                 IgnoreError(SendLinkRequest(&router));
             }
             else
-#endif
             {
                 LogInfo("Router 0x%04x timeout expired", router.GetRloc16());
                 RemoveNeighbor(router);
