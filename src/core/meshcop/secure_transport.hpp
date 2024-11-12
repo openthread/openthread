@@ -467,6 +467,15 @@ public:
     void HandleReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
+    static constexpr uint32_t kGuardTimeNewConnectionMilli     = 2000;
+    static constexpr size_t   kSecureTransportKeyBlockSize     = 40;
+    static constexpr size_t   kSecureTransportRandomBufferSize = 32;
+#if !OPENTHREAD_CONFIG_TLS_API_ENABLE
+    static constexpr uint16_t kApplicationDataMaxLength = 1152;
+#else
+    static constexpr uint16_t         kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH;
+#endif
+
     enum State : uint8_t
     {
         kStateClosed,       // UDP socket is closed.
@@ -477,16 +486,18 @@ private:
         kStateCloseNotify,  // The service is closing a connection.
     };
 
-    static constexpr uint32_t kGuardTimeNewConnectionMilli = 2000;
-
-#if !OPENTHREAD_CONFIG_TLS_API_ENABLE
-    static constexpr uint16_t kApplicationDataMaxLength = 1152;
-#else
-    static constexpr uint16_t         kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH;
+    enum CipherSuite : uint8_t
+    {
+        kEcjpakeWithAes128Ccm8,
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+        kPskWithAes128Ccm8,
 #endif
-
-    static constexpr size_t kSecureTransportKeyBlockSize     = 40;
-    static constexpr size_t kSecureTransportRandomBufferSize = 32;
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+        kEcdheEcdsaWithAes128Ccm8,
+        kEcdheEcdsaWithAes128GcmSha256,
+#endif
+        kUnspecifiedCipherSuite,
+    };
 
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -621,9 +632,11 @@ private:
 #endif
 #endif
 
-    State mState;
+    static const int kCipherSuites[][2];
 
-    int     mCipherSuites[2];
+    State       mState;
+    CipherSuite mCipherSuite;
+
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
 

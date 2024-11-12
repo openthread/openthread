@@ -61,9 +61,21 @@ const int SecureTransport::kHashes[] = {MBEDTLS_MD_SHA256, MBEDTLS_MD_NONE};
 #endif
 #endif
 
+const int SecureTransport::kCipherSuites[][2] = {
+    /* kEcjpakeWithAes128Ccm8         */ {MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8, 0},
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+    /* kPskWithAes128Ccm8             */ {MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8, 0},
+#endif
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+    /* kEcdheEcdsaWithAes128Ccm8      */ {MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8, 0},
+    /* kEcdheEcdsaWithAes128GcmSha256 */ {MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, 0},
+#endif
+};
+
 SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, bool aDatagramTransport)
     : InstanceLocator(aInstance)
     , mState(kStateClosed)
+    , mCipherSuite(kUnspecifiedCipherSuite)
     , mPskLength(0)
     , mVerifyPeerCertificate(true)
     , mTimer(aInstance, SecureTransport::HandleTimer, this)
@@ -78,7 +90,6 @@ SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwo
     , mMessageSubType(Message::kSubTypeNone)
     , mMessageDefaultSubType(Message::kSubTypeNone)
 {
-    ClearAllBytes(mCipherSuites);
     ClearAllBytes(mPsk);
     ClearAllBytes(mSsl);
     ClearAllBytes(mConf);
@@ -237,7 +248,28 @@ exit:
 
 Error SecureTransport::Setup(bool aClient)
 {
+    // We use `kCipherSuites[mCipherSuite]` to look up the cipher
+    // suites array to pass to `mbedtls_ssl_conf_ciphersuites()`
+    // associated with `mCipherSuite`. We validate that the `enum`
+    // values are correct and match the order in the `kCipherSuites[]`
+    // array.
+
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kEcjpakeWithAes128Ccm8);
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+        ValidateNextEnum(kPskWithAes128Ccm8);
+#endif
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+        ValidateNextEnum(kEcdheEcdsaWithAes128Ccm8);
+        ValidateNextEnum(kEcdheEcdsaWithAes128GcmSha256);
+#endif
+    };
+
     int rval;
+
+    OT_ASSERT(mCipherSuite != kUnspecifiedCipherSuite);
 
     // do not handle new connection before guard time expired
     VerifyOrExit(IsStateOpen(), rval = MBEDTLS_ERR_SSL_TIMEOUT);
@@ -261,9 +293,9 @@ Error SecureTransport::Setup(bool aClient)
         mDatagramTransport ? MBEDTLS_SSL_TRANSPORT_DATAGRAM : MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
     VerifyOrExit(rval == 0);
 
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE
-    if (mVerifyPeerCertificate && (mCipherSuites[0] == MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8 ||
-                                   mCipherSuites[0] == MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256))
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+    if (mVerifyPeerCertificate &&
+        (mCipherSuite == kEcdheEcdsaWithAes128Ccm8 || mCipherSuite == kEcdheEcdsaWithAes128GcmSha256))
     {
         mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_REQUIRED);
     }
@@ -284,9 +316,9 @@ Error SecureTransport::Setup(bool aClient)
     mbedtls_ssl_conf_max_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
 #endif
 
-    OT_ASSERT(mCipherSuites[1] == 0);
-    mbedtls_ssl_conf_ciphersuites(&mConf, mCipherSuites);
-    if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    mbedtls_ssl_conf_ciphersuites(&mConf, kCipherSuites[mCipherSuite]);
+
+    if (mCipherSuite == kEcjpakeWithAes128Ccm8)
     {
 #if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
         mbedtls_ssl_conf_groups(&mConf, kGroups);
@@ -331,7 +363,7 @@ Error SecureTransport::Setup(bool aClient)
         mbedtls_ssl_set_timer_cb(&mSsl, this, &SecureTransport::HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
     }
 
-    if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    if (mCipherSuite == kEcjpakeWithAes128Ccm8)
     {
         rval = mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
     }
@@ -346,7 +378,7 @@ Error SecureTransport::Setup(bool aClient)
     mReceiveMessage = nullptr;
     mMessageSubType = Message::kSubTypeNone;
 
-    if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    if (mCipherSuite == kEcjpakeWithAes128Ccm8)
     {
         LogInfo("DTLS started");
     }
@@ -384,22 +416,22 @@ int SecureTransport::SetApplicationSecureKeys(void)
 {
     int rval = 0;
 
-    switch (mCipherSuites[0])
+    switch (mCipherSuite)
     {
-    case MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:
-    case MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+    case kEcdheEcdsaWithAes128Ccm8:
+    case kEcdheEcdsaWithAes128GcmSha256:
         rval = mEcdheEcdsaInfo.SetSecureKeys(mConf);
         VerifyOrExit(rval == 0);
-#endif
         break;
+#endif
 
-    case MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8:
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+    case kPskWithAes128Ccm8:
         rval = mPskInfo.SetSecureKeys(mConf);
         VerifyOrExit(rval == 0);
-#endif
         break;
+#endif
 
     default:
         LogCrit("Application Coap Secure: Not supported cipher.");
@@ -452,9 +484,8 @@ Error SecureTransport::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
     VerifyOrExit(aPskLength <= sizeof(mPsk), error = kErrorInvalidArgs);
 
     memcpy(mPsk, aPsk, aPskLength);
-    mPskLength       = aPskLength;
-    mCipherSuites[0] = MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8;
-    mCipherSuites[1] = 0;
+    mPskLength   = aPskLength;
+    mCipherSuite = kEcjpakeWithAes128Ccm8;
 
 exit:
     return error;
@@ -527,16 +558,7 @@ void SecureTransport::SetCertificate(const uint8_t *aX509Certificate,
     mEcdheEcdsaInfo.mPrivateKeySrc    = aPrivateKey;
     mEcdheEcdsaInfo.mPrivateKeyLength = aPrivateKeyLength;
 
-    if (mDatagramTransport)
-    {
-        mCipherSuites[0] = MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8;
-    }
-    else
-    {
-        mCipherSuites[0] = MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256;
-    }
-
-    mCipherSuites[1] = 0;
+    mCipherSuite = mDatagramTransport ? kEcdheEcdsaWithAes128Ccm8 : kEcdheEcdsaWithAes128GcmSha256;
 }
 
 void SecureTransport::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
@@ -573,8 +595,7 @@ void SecureTransport::SetPreSharedKey(const uint8_t *aPsk,
     mPskInfo.mPreSharedKeyIdentity = aPskIdentity;
     mPskInfo.mPreSharedKeyIdLength = aPskIdLength;
 
-    mCipherSuites[0] = MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8;
-    mCipherSuites[1] = 0;
+    mCipherSuite = kPskWithAes128Ccm8;
 }
 
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
@@ -791,7 +812,7 @@ int SecureTransport::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLe
     Error error;
     int   rval = 0;
 
-    if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    if (mCipherSuite == kEcjpakeWithAes128Ccm8)
     {
         LogDebg("HandleMbedtlsTransmit DTLS");
     }
@@ -835,7 +856,7 @@ int SecureTransport::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
 {
     int rval;
 
-    if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    if (mCipherSuite == kEcjpakeWithAes128Ccm8)
     {
         LogDebg("HandleMbedtlsReceive DTLS");
     }
@@ -870,16 +891,7 @@ int SecureTransport::HandleMbedtlsGetTimer(void)
 {
     int rval;
 
-    if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
-    {
-        LogDebg("HandleMbedtlsGetTimer");
-    }
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE
-    else
-    {
-        LogDebg("HandleMbedtlsGetTimer");
-    }
-#endif
+    LogDebg("HandleMbedtlsGetTimer");
 
     if (!mTimerSet)
     {
@@ -908,7 +920,7 @@ void SecureTransport::HandleMbedtlsSetTimer(void *aContext, uint32_t aIntermedia
 
 void SecureTransport::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
 {
-    if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    if (mCipherSuite == kEcjpakeWithAes128Ccm8)
     {
         LogDebg("SetTimer DTLS");
     }
@@ -958,7 +970,7 @@ void SecureTransport::HandleMbedtlsExportKeys(mbedtls_ssl_key_export_type aType,
     unsigned char        keyBlock[kSecureTransportKeyBlockSize];
     unsigned char        randBytes[2 * kSecureTransportRandomBufferSize];
 
-    VerifyOrExit(mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8);
+    VerifyOrExit(mCipherSuite == kEcjpakeWithAes128Ccm8);
     VerifyOrExit(aType == MBEDTLS_SSL_KEY_EXPORT_TLS12_MASTER_SECRET);
 
     memcpy(randBytes, aServerRandom, kSecureTransportRandomBufferSize);
@@ -1003,7 +1015,7 @@ int SecureTransport::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
     Crypto::Sha256::Hash kek;
     Crypto::Sha256       sha256;
 
-    VerifyOrExit(mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8);
+    VerifyOrExit(mCipherSuite == kEcjpakeWithAes128Ccm8);
 
     sha256.Start();
     sha256.Update(aKeyBlock, 2 * static_cast<uint16_t>(aMacLength + aKeyLength + aIvLength));
@@ -1122,7 +1134,7 @@ void SecureTransport::Process(void)
             }
 
             mbedtls_ssl_session_reset(&mSsl);
-            if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+            if (mCipherSuite == kEcjpakeWithAes128Ccm8)
             {
                 mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
             }
