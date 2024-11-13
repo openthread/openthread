@@ -584,7 +584,7 @@ exit:
     LogSendError(kTypeAdvertisement, error);
 }
 
-Error MleRouter::SendLinkRequest(Neighbor *aNeighbor)
+void MleRouter::SendLinkRequest(Router *aRouter)
 {
     static const uint8_t kDetachedTlvs[]      = {Tlv::kAddress16, Tlv::kRoute};
     static const uint8_t kRouterTlvs[]        = {Tlv::kLinkMargin};
@@ -612,7 +612,7 @@ Error MleRouter::SendLinkRequest(Neighbor *aNeighbor)
 
     case kRoleRouter:
     case kRoleLeader:
-        if (aNeighbor == nullptr || !aNeighbor->IsStateValid())
+        if (aRouter == nullptr || !aRouter->IsStateValid())
         {
             SuccessOrExit(error = message->AppendTlvRequestTlv(kRouterTlvs));
         }
@@ -633,7 +633,7 @@ Error MleRouter::SendLinkRequest(Neighbor *aNeighbor)
     SuccessOrExit(error = message->AppendTimeRequestTlv());
 #endif
 
-    if (aNeighbor == nullptr)
+    if (aRouter == nullptr)
     {
         mRouterRoleRestorer.GenerateRandomChallenge();
         SuccessOrExit(error = message->AppendChallengeTlv(mRouterRoleRestorer.GetChallenge()));
@@ -641,10 +641,10 @@ Error MleRouter::SendLinkRequest(Neighbor *aNeighbor)
     }
     else
     {
-        if (!aNeighbor->IsStateValid())
+        if (!aRouter->IsStateValid())
         {
-            aNeighbor->GenerateChallenge();
-            SuccessOrExit(error = message->AppendChallengeTlv(aNeighbor->GetChallenge()));
+            aRouter->GenerateChallenge();
+            SuccessOrExit(error = message->AppendChallengeTlv(aRouter->GetChallenge()));
         }
         else
         {
@@ -654,7 +654,8 @@ Error MleRouter::SendLinkRequest(Neighbor *aNeighbor)
             SuccessOrExit(error = message->AppendChallengeTlv(challenge));
         }
 
-        destination.SetToLinkLocalAddress(aNeighbor->GetExtAddress());
+        destination.SetToLinkLocalAddress(aRouter->GetExtAddress());
+        aRouter->RestartLinkAcceptTimeout();
     }
 
     SuccessOrExit(error = message->SendTo(destination));
@@ -663,7 +664,6 @@ Error MleRouter::SendLinkRequest(Neighbor *aNeighbor)
 
 exit:
     FreeMessageOnError(message, error);
-    return error;
 }
 
 void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
@@ -1044,6 +1044,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
     router->SetLinkQualityOut(LinkQualityForLinkMargin(linkMargin));
     router->SetState(Neighbor::kStateValid);
     router->SetKeySequence(aRxInfo.mKeySequence);
+    router->ClearLinkAcceptTimeout();
 
     mNeighborTable.Signal(NeighborTable::kRouterAdded, *router);
 
@@ -1306,7 +1307,7 @@ Error MleRouter::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddre
             {
                 InitNeighbor(*router, aRxInfo);
                 router->SetState(Neighbor::kStateLinkRequest);
-                IgnoreError(SendLinkRequest(router));
+                SendLinkRequest(router);
                 ExitNow(error = kErrorNoRoute);
             }
         }
@@ -1355,7 +1356,7 @@ Error MleRouter::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddre
     {
         InitNeighbor(*router, aRxInfo);
         router->SetState(Neighbor::kStateLinkRequest);
-        IgnoreError(SendLinkRequest(router));
+        SendLinkRequest(router);
         ExitNow(error = kErrorNoRoute);
     }
 
@@ -1653,16 +1654,25 @@ void MleRouter::HandleTimeTick(void)
 
         if (router.IsStateValid() && (age >= kMaxNeighborAge))
         {
-            if (age < kMaxNeighborAge + kMaxTxCount * kUnicastRetxDelay)
+            bool sendLinkRequest = true;
+
+            // Once router age expires, we send Link Request every
+            // time tick, up to `kMaxTxCount`. After the last
+            // attempt, we wait for the "Link Accept" timeout
+            // (~3 seconds), before the router is removed.
+
+            if (!router.IsWaitingForLinkAccept())
             {
                 LogInfo("No Adv from router 0x%04x - sending Link Request", router.GetRloc16());
-                IgnoreError(SendLinkRequest(&router));
             }
             else
             {
-                LogInfo("Router 0x%04x timeout expired", router.GetRloc16());
-                RemoveNeighbor(router);
-                continue;
+                sendLinkRequest = (age < kMaxNeighborAge + kMaxTxCount * TimeMilli::kOneSecondInMsec);
+            }
+
+            if (sendLinkRequest)
+            {
+                SendLinkRequest(&router);
             }
         }
 
@@ -1675,9 +1685,9 @@ void MleRouter::HandleTimeTick(void)
         }
 #endif
 
-        if (router.IsStateLinkRequest() && (age >= kLinkRequestTimeout))
+        if (router.IsWaitingForLinkAccept() && (router.DecrementLinkAcceptTimeout() == 0))
         {
-            LogInfo("Router 0x%04x - Link Request timeout expired", router.GetRloc16());
+            LogInfo("Router 0x%04x - Link Accept timeout expired", router.GetRloc16());
             RemoveNeighbor(router);
             continue;
         }
@@ -3390,7 +3400,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message          *aMessage,
 
     if (mParent.GetVersion() < kThreadVersion1p3)
     {
-        IgnoreError(SendLinkRequest(&mParent));
+        SendLinkRequest(&mParent);
     }
 
     // We send an Advertisement to inform our former parent of our
@@ -3962,7 +3972,7 @@ void MleRouter::RouterRoleRestorer::SendMulticastLinkRequest(void)
         ExitNow();
     }
 
-    IgnoreError(Get<MleRouter>().SendLinkRequest(nullptr));
+    Get<MleRouter>().SendLinkRequest(nullptr);
 
     delay = (mAttempts == 1) ? kLinkRequestTimeout
                              : Random::NonCrypto::GetUint32InRange(kMulticastRetxDelayMin, kMulticastRetxDelayMax);

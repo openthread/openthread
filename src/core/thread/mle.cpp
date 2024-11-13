@@ -2662,7 +2662,7 @@ void Mle::ReestablishLinkWithNeighbor(Neighbor &aNeighbor)
 
     if (IsRouterRloc16(aNeighbor.GetRloc16()))
     {
-        IgnoreError(Get<MleRouter>().SendLinkRequest(&aNeighbor));
+        Get<MleRouter>().SendLinkRequest(static_cast<Router *>(&aNeighbor));
     }
     else if (Get<ChildTable>().Contains(aNeighbor))
     {
@@ -3928,7 +3928,7 @@ Error Mle::ParentSearch::SelectBetterParent(void)
     }
 
     VerifyOrExit(mSelectedParent != nullptr, error = kErrorNotFound);
-    mSelectedParent->SetParentReselectTimeout(kParentReselectTimeout);
+    mSelectedParent->RestartParentReselectTimeout();
 
     LogInfo("PeriodicParentSearch: Selected router 0x%04x as parent with RSS %d", mSelectedParent->GetRloc16(),
             mSelectedParent->GetLinkInfo().GetAverageRss());

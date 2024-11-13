@@ -362,8 +362,6 @@ public:
      */
     void FillConnectivityTlv(ConnectivityTlv &aTlv);
 
-    Error SendLinkRequest(Neighbor *aNeighbor);
-
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     /**
      * Sets steering data out of band
@@ -608,6 +606,7 @@ private:
                                         const Ip6::MessageInfo &aMessageInfo);
     void     SendAddressRelease(void);
     void     SendAdvertisement(void);
+    void     SendLinkRequest(Router *aRouter);
     Error    SendLinkAccept(const LinkAcceptInfo &aInfo);
     void     SendParentResponse(const ParentResponseInfo &aInfo);
     Error    SendChildIdResponse(Child &aChild);

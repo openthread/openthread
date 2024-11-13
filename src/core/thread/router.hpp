@@ -87,6 +87,38 @@ public:
     void SetFrom(const Parent &aParent);
 
     /**
+     * Restarts the Link Accept timeout (setting it to max value).
+     *
+     * This method is used after sending a Link Request to the router to restart the timeout and start waiting to
+     * receive a Link Accept response.
+     */
+    void RestartLinkAcceptTimeout(void) { mLinkAcceptTimeout = Mle::kLinkAcceptTimeout; }
+
+    /**
+     * Clears the Link Accept timeout value (setting it to zero).
+     *
+     * This method is used when we successfully receive and process a Link Accept.
+     */
+    void ClearLinkAcceptTimeout(void) { mLinkAcceptTimeout = 0; }
+
+    /**
+     * Indicates whether or not we are waiting to receive a Link Accept from this router (timeout is non-zero).
+     *
+     * @retval TRUE   Waiting to receive a Link Accept response.
+     * @retval FALSE  Not waiting to receive a Link Accept response.
+     */
+    bool IsWaitingForLinkAccept(void) const { return (mLinkAcceptTimeout > 0); }
+
+    /**
+     * Decrements the Link Accept timeout value (in seconds).
+     *
+     * Caller MUST ensure the current value is non-zero by checking `IsWaitingForLinkAccept()`.
+     *
+     * @returns The decremented timeout value.
+     */
+    uint8_t DecrementLinkAcceptTimeout(void) { return --mLinkAcceptTimeout; }
+
+    /**
      * Gets the router ID of the next hop to this router.
      *
      * @returns The router ID of the next hop to this router.
@@ -157,11 +189,9 @@ public:
     void SetSelectableAsParent(bool aIsSelectable) { mIsSelectableAsParent = aIsSelectable; }
 
     /**
-     * Sets timeout duration in seconds to block reselecting this router as parent.
-     *
-     * @param[in] aTimeout   The timeout duration in seconds.
+     * Restarts timeout to block reselecting this router as parent (setting it to `kParentReselectTimeout`).
      */
-    void SetParentReselectTimeout(uint16_t aTimeout) { mParentReselectTimeout = aTimeout; }
+    void RestartParentReselectTimeout(void) { mParentReselectTimeout = Mle::kParentReselectTimeout; }
 
     /**
      * Gets the remaining timeout duration in seconds to block reselecting this router parent.
@@ -177,17 +207,24 @@ public:
 #endif
 
 private:
-    uint8_t mNextHop;            ///< The next hop towards this router
-    uint8_t mLinkQualityOut : 2; ///< The link quality out for this router
+    static_assert(Mle::kLinkAcceptTimeout < 4, "kLinkAcceptTimeout won't fit in mLinkAcceptTimeout (2-bit field)");
 
-#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
-    uint8_t mCost; ///< The cost to this router via neighbor router
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
+    static_assert(Mle::kParentReselectTimeout <= (1U << 15) - 1,
+                  "kParentReselectTimeout won't fit in mParentReselectTimeout (15-bit filed)");
+#endif
+
+    uint8_t mNextHop;               // The next hop towards this router
+    uint8_t mLinkAcceptTimeout : 2; // Timeout (in seconds) after sending Link Request waiting for Link Accept
+    uint8_t mLinkQualityOut : 2;    // The link quality out for this router (learned from received Route TLV)
+#if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+    uint8_t mCost : 4; // The cost to this router via neighbor router
 #else
-    uint8_t mCost : 4; ///< The cost to this router via neighbor router
+    uint8_t mCost;
 #endif
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-    bool     mIsSelectableAsParent : 1;
-    uint16_t mParentReselectTimeout;
+    uint16_t mIsSelectableAsParent : 1;
+    uint16_t mParentReselectTimeout : 15;
 #endif
 };
 

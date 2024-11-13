@@ -1243,8 +1243,7 @@ private:
         static constexpr int8_t   kRssThreshold    = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD;
 
 #if OPENTHREAD_FTD
-        static constexpr int8_t   kRssMarginOverParent   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_MARGIN;
-        static constexpr uint16_t kParentReselectTimeout = OPENTHREAD_CONFIG_PARENT_SEARCH_RESELECT_TIMEOUT; // in sec
+        static constexpr int8_t kRssMarginOverParent = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_MARGIN;
 
         Error SelectBetterParent(void);
         void  CompareAndUpdateSelectedParent(Router &aRouter);

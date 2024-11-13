@@ -91,6 +91,15 @@ constexpr uint8_t kMaxRouteCost = 16; ///< Maximum path cost
 #endif
 
 constexpr uint8_t kMeshLocalPrefixContextId = 0; ///< Reserved 6lowpan context ID for Mesh Local Prefix
+constexpr uint8_t kLinkAcceptTimeout        = 3; ///< Timeout in seconds to rx Link Accept after Link Request tx.
+
+/**
+ * Specifies parent reselect timeout duration in seconds used on FTD child devices.
+ *
+ * When an attach attempt to a neighboring router selected as a potential new parent fails, the same router
+ * cannot be selected again until this timeout expires.
+ */
+constexpr uint16_t kParentReselectTimeout = OPENTHREAD_CONFIG_PARENT_SEARCH_RESELECT_TIMEOUT;
 
 /**
  * Number of consecutive tx failures to child (with no-ack error) to consider child-parent link broken.
