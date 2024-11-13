@@ -861,22 +861,17 @@ exit:
     return error;
 }
 
-void MleRouter::HandleLinkAccept(RxInfo &aRxInfo)
-{
-    Error error = HandleLinkAccept(aRxInfo, false);
-
-    LogProcessError(kTypeLinkAccept, error);
-}
+void MleRouter::HandleLinkAccept(RxInfo &aRxInfo) { HandleLinkAcceptVariant(aRxInfo, kTypeLinkAccept); }
 
 void MleRouter::HandleLinkAcceptAndRequest(RxInfo &aRxInfo)
 {
-    Error error = HandleLinkAccept(aRxInfo, true);
-
-    LogProcessError(kTypeLinkAcceptAndRequest, error);
+    HandleLinkAcceptVariant(aRxInfo, kTypeLinkAcceptAndRequest);
 }
 
-Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
+void MleRouter::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
 {
+    // Handles "Link Accept" or "Link Accept And Request".
+
     Error           error = kErrorNone;
     Router         *router;
     Neighbor::State neighborState;
@@ -894,8 +889,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
 
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
-    Log(kMessageReceive, aRequest ? kTypeLinkAcceptAndRequest : kTypeLinkAccept, aRxInfo.mMessageInfo.GetPeerAddr(),
-        sourceAddress);
+    Log(kMessageReceive, aMessageType, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
     VerifyOrExit(IsRouterRloc16(sourceAddress), error = kErrorParse);
 
@@ -1056,7 +1050,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
     aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
     ProcessKeySequence(aRxInfo);
 
-    if (aRequest)
+    if (aMessageType == kTypeLinkAcceptAndRequest)
     {
         LinkAcceptInfo info;
 
@@ -1078,7 +1072,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
     }
 
 exit:
-    return error;
+    LogProcessError(aMessageType, error);
 }
 
 Error MleRouter::ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo)
