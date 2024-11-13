@@ -108,12 +108,12 @@ void otNetDataGetCommissioningDataset(otInstance *aInstance, otCommissioningData
 
 uint8_t otNetDataGetVersion(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderData().GetDataVersion(NetworkData::kFullSet);
+    return AsCoreType(aInstance).Get<Mle::Mle>().GetLeaderData().GetDataVersion(NetworkData::kFullSet);
 }
 
 uint8_t otNetDataGetStableVersion(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderData().GetDataVersion(NetworkData::kStableSubset);
+    return AsCoreType(aInstance).Get<Mle::Mle>().GetLeaderData().GetDataVersion(NetworkData::kStableSubset);
 }
 
 otError otNetDataSteeringDataCheckJoiner(otInstance *aInstance, const otExtAddress *aEui64)

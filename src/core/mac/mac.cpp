@@ -1829,7 +1829,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 
 #if OPENTHREAD_FTD
         // Allow multicasts from neighbor routers if FTD
-        if (neighbor == nullptr && dstaddr.IsBroadcast() && Get<Mle::MleRouter>().IsFullThreadDevice())
+        if (neighbor == nullptr && dstaddr.IsBroadcast() && Get<Mle::Mle>().IsFullThreadDevice())
         {
             neighbor = Get<NeighborTable>().FindRxOnlyNeighborRouter(srcaddr);
         }
@@ -2412,7 +2412,7 @@ bool Mac::IsCslCapable(void) const { return (GetCslPeriod() > 0) && IsCslSupport
 
 bool Mac::IsCslSupported(void) const
 {
-    return Get<Mle::MleRouter>().IsChild() && Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported();
+    return Get<Mle::Mle>().IsChild() && Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported();
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 

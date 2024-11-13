@@ -40,6 +40,7 @@
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
+#include "mac/mac.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
 #include "thread/thread_tlvs.hpp"

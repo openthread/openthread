@@ -229,7 +229,7 @@ Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
 #endif
 
         case Tlv::kMeshLocalPrefix:
-            Get<Mle::MleRouter>().SetMeshLocalPrefix(cur->ReadValueAs<MeshLocalPrefixTlv>());
+            Get<Mle::Mle>().SetMeshLocalPrefix(cur->ReadValueAs<MeshLocalPrefixTlv>());
             break;
 
         case Tlv::kSecurityPolicy:
@@ -324,7 +324,7 @@ void DatasetManager::SaveLocal(const Dataset &aDataset)
 {
     LocalSave(aDataset);
 
-    switch (Get<Mle::MleRouter>().GetRole())
+    switch (Get<Mle::Mle>().GetRole())
     {
     case Mle::kRoleDisabled:
         Restore(aDataset);
@@ -439,7 +439,7 @@ void DatasetManager::SyncLocalWithLeader(const Dataset &aDataset)
     Error error = kErrorNone;
 
     VerifyOrExit(!mMgmtPending, error = kErrorBusy);
-    VerifyOrExit(Get<Mle::MleRouter>().IsChild() || Get<Mle::MleRouter>().IsRouter(), error = kErrorInvalidState);
+    VerifyOrExit(Get<Mle::Mle>().IsChild() || Get<Mle::Mle>().IsRouter(), error = kErrorInvalidState);
 
     VerifyOrExit(mNetworkTimestamp < mLocalTimestamp, error = kErrorAlready);
 

@@ -54,7 +54,7 @@ Server::Server(Instance &aInstance)
 Error Server::UpdateService(void)
 {
     Error                           error  = kErrorNone;
-    uint16_t                        rloc16 = Get<Mle::MleRouter>().GetRloc16();
+    uint16_t                        rloc16 = Get<Mle::Mle>().GetRloc16();
     NetworkData::Iterator           iterator;
     NetworkData::OnMeshPrefixConfig config;
     Lowpan::Context                 lowpanContext;
@@ -159,7 +159,7 @@ void Server::AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context
 
     VerifyOrExit(newEntry != nullptr, error = kErrorNoBufs);
 
-    newEntry->Set(aIp6Prefix, Get<Mle::MleRouter>().GetMeshLocalPrefix(), aContext.mContextId);
+    newEntry->Set(aIp6Prefix, Get<Mle::Mle>().GetMeshLocalPrefix(), aContext.mContextId);
     Get<ThreadNetif>().AddUnicastAddress(newEntry->GetAloc());
     mPrefixAgentsCount++;
 

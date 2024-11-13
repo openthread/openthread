@@ -618,9 +618,9 @@ exit:
 
 Error MeshForwarder::UpdateIp6Route(Message &aMessage)
 {
-    Mle::MleRouter &mle   = Get<Mle::MleRouter>();
-    Error           error = kErrorNone;
-    Ip6::Header     ip6Header;
+    Mle::Mle   &mle   = Get<Mle::Mle>();
+    Error       error = kErrorNone;
+    Ip6::Header ip6Header;
 
     mAddMeshHeader = false;
 
@@ -714,7 +714,7 @@ void MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::
     {
         aMacAddr.SetShort(Mac::kShortAddrBroadcast);
     }
-    else if (Get<Mle::MleRouter>().IsRoutingLocator(aIp6Addr))
+    else if (Get<Mle::Mle>().IsRoutingLocator(aIp6Addr))
     {
         aMacAddr.SetShort(aIp6Addr.GetIid().GetLocator());
     }
@@ -780,7 +780,7 @@ Mac::TxFrame *MeshForwarder::HandleFrameRequest(Mac::TxFrames &aTxFrames)
     {
         Mac::Address macDestAddr;
 
-        macDestAddr.SetShort(Get<Mle::MleRouter>().GetParent().GetRloc16());
+        macDestAddr.SetShort(Get<Mle::Mle>().GetParent().GetRloc16());
         PrepareEmptyFrame(*frame, macDestAddr, /* aAckRequest */ true);
     }
     break;
@@ -1163,7 +1163,7 @@ void MeshForwarder::UpdateNeighborLinkFailures(Neighbor &aNeighbor,
             (aNeighbor.GetLinkFailures() >= aFailLimit))
         {
 #if OPENTHREAD_FTD
-            Get<Mle::MleRouter>().RemoveRouterLink(static_cast<Router &>(aNeighbor));
+            Get<Mle::Mle>().RemoveRouterLink(static_cast<Router &>(aNeighbor));
 #else
             IgnoreError(Get<Mle::Mle>().BecomeDetached());
 #endif
@@ -1733,7 +1733,7 @@ Error MeshForwarder::SendEmptyMessage(void)
     OwnedPtr<Message> messagePtr;
 
     VerifyOrExit(mEnabled && !Get<Mac::Mac>().GetRxOnWhenIdle() &&
-                     Get<Mle::MleRouter>().GetParent().IsStateValidOrRestoring(),
+                     Get<Mle::Mle>().GetParent().IsStateValidOrRestoring(),
                  error = kErrorInvalidState);
 
     messagePtr.Reset(Get<MessagePool>().Allocate(Message::kTypeMacEmptyData));

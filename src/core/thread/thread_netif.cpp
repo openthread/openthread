@@ -57,7 +57,7 @@ void ThreadNetif::Up(void)
     mIsUp = true;
 
     SubscribeAllNodesMulticast();
-    IgnoreError(Get<Mle::MleRouter>().Enable());
+    IgnoreError(Get<Mle::Mle>().Enable());
     IgnoreError(Get<Tmf::Agent>().Start());
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
     IgnoreError(Get<Dns::ServiceDiscovery::Server>().Start());
@@ -91,7 +91,7 @@ void ThreadNetif::Down(void)
     Get<Tmf::SecureAgent>().Stop();
 #endif
     IgnoreError(Get<Tmf::Agent>().Stop());
-    IgnoreError(Get<Mle::MleRouter>().Disable());
+    IgnoreError(Get<Mle::Mle>().Disable());
     RemoveAllExternalUnicastAddresses();
     UnsubscribeAllExternalMulticastAddresses();
     UnsubscribeAllRoutersMulticast();

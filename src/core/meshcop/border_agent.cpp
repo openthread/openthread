@@ -299,7 +299,7 @@ void BorderAgent::HandleNotifierEvents(Events aEvents)
         VerifyOrExit(Get<Commissioner>().IsDisabled());
 #endif
 
-        if (Get<Mle::MleRouter>().IsAttached())
+        if (Get<Mle::Mle>().IsAttached())
         {
             Start();
         }

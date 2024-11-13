@@ -265,7 +265,7 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = kErrorInvalidState);
+    VerifyOrExit(Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
     VerifyOrExit(mState == kStateDisabled, error = kErrorAlready);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
@@ -938,7 +938,7 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
     aMessage.SetOffset(offsetRange.GetOffset());
     SuccessOrExit(error = aMessage.SetLength(offsetRange.GetEndOffset()));
 
-    joinerMessageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocalEid());
+    joinerMessageInfo.SetPeerAddr(Get<Mle::Mle>().GetMeshLocalEid());
     joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);
     joinerMessageInfo.SetPeerPort(mJoinerPort);
 
@@ -1032,7 +1032,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
 
-    joinerMessageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocalEid());
+    joinerMessageInfo.SetPeerAddr(Get<Mle::Mle>().GetMeshLocalEid());
     joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);
     joinerMessageInfo.SetPeerPort(mJoinerPort);
 
