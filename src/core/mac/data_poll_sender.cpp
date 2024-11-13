@@ -517,6 +517,11 @@ uint32_t DataPollSender::CalculatePollPeriod(void) const
     return period;
 }
 
+void DataPollSender::HandlePollTimer(void)
+{
+    IgnoreError(SendDataPoll());
+}
+
 uint32_t DataPollSender::GetDefaultPollPeriod(void) const
 {
     uint32_t pollAhead = static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;

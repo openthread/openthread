@@ -2444,6 +2444,8 @@ exit:
     return error;
 }
 
+void Client::HandleGuardTimer(void){}
+
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
 void Client::SelectNextServer(bool aDisallowSwitchOnRegisteredHost)
 {
