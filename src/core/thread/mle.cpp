@@ -3853,6 +3853,11 @@ exit:
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
 
+void Mle::HandleParentSearchTimer(void)
+{
+    mParentSearch.HandleTimer();
+}
+
 void Mle::ParentSearch::SetEnabled(bool aEnabled)
 {
     VerifyOrExit(mEnabled != aEnabled);
@@ -4422,6 +4427,11 @@ void Mle::TlvList::AddElementsFrom(const TlvList &aTlvList)
 
 //---------------------------------------------------------------------------------------------------------------------
 // DelayedSender
+
+void Mle::HandleDelayedSenderTimer(void)
+{
+    mDelayedSender.HandleTimer();
+}
 
 Mle::DelayedSender::DelayedSender(Instance &aInstance)
     : InstanceLocator(aInstance)

@@ -806,6 +806,64 @@ bool RoutingManager::NetworkDataContainsUlaRoute(void) const
     return contains;
 }
 
+void RoutingManager::HandleRxRaTrackerSignalTask(void)
+{
+    mRxRaTracker.HandleSignalTask();
+}
+
+void RoutingManager::HandleRxRaTrackerExpirationTimer(void)
+{
+    mRxRaTracker.HandleExpirationTimer();
+}
+
+void RoutingManager::HandleRxRaTrackerStaleTimer(void)
+{
+    mRxRaTracker.HandleStaleTimer();
+}
+
+void RoutingManager::HandleRxRaTrackerRouterTimer(void)
+{
+    mRxRaTracker.HandleRouterTimer();
+}
+
+void RoutingManager::HandleOnLinkPrefixManagerTimer(void)
+{
+    mOnLinkPrefixManager.HandleTimer();
+}
+
+void RoutingManager::HandleRioAdvertiserimer(void)
+{
+    mRioAdvertiser.HandleTimer();
+}
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
+void RoutingManager::HandleNat64PrefixManagerTimer(void)
+{
+    mNat64PrefixManager.HandleTimer();
+}
+
+#endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
+void RoutingManager::HandleRoutePublisherTimer(void)
+{
+    mRoutePublisher.HandleTimer();
+}
+
+void RoutingManager::HandleRsSenderTimer(void)
+{
+    mRsSender.HandleTimer();
+}
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+
+void HandlePdPrefixManagerTimer(void)
+{
+    mPdPrefixManager.HandleTimer();
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABILITY_CHECK_ICMP6_ERROR_ENABLE
 
 void RoutingManager::CheckReachabilityToSendIcmpError(const Message &aMessage, const Ip6::Header &aIp6Header)
