@@ -259,6 +259,7 @@ public:
     Error SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
+
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     /**
      * Sets the Pre-Shared Key (PSK) for sessions-identified by a PSK.
@@ -273,7 +274,6 @@ public:
      * @retval kErrorNone  Successfully set the PSK.
      */
     void SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength);
-
 #endif
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -410,6 +410,7 @@ public:
      * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should verify.
      */
     void SetSslAuthMode(bool aVerifyPeerCertificate) { mVerifyPeerCertificate = aVerifyPeerCertificate; }
+
 #endif // OPENTHREAD_CONFIG_TLS_API_ENABLE
 
 #ifdef MBEDTLS_SSL_SRV_C
@@ -434,21 +435,6 @@ public:
      * @retval kErrorNoBufs   A message is too long.
      */
     Error Send(Message &aMessage, uint16_t aLength);
-
-    /**
-     * Provides a received message to the SecureTransport object.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     */
-    void Receive(Message &aMessage);
-
-    /**
-     * Sets the default message sub-type that will be used for all messages without defined
-     * sub-type.
-     *
-     * @param[in]  aMessageSubType  The default message sub-type.
-     */
-    void SetDefaultMessageSubType(Message::SubType aMessageSubType) { mMessageDefaultSubType = aMessageSubType; }
 
     /**
      * Returns the session's peer address.
@@ -499,8 +485,7 @@ private:
         kUnspecifiedCipherSuite,
     };
 
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
     struct EcdheEcdsaInfo : public Clearable<EcdheEcdsaInfo>
     {
         EcdheEcdsaInfo(void) { Clear(); }
@@ -519,7 +504,8 @@ private:
         mbedtls_pk_context mPrivateKey;
     };
 #endif
-#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
     struct PskInfo : public Clearable<PskInfo>
     {
         PskInfo(void) { Clear(); }
@@ -531,7 +517,6 @@ private:
         uint16_t       mPreSharedKeyIdLength;
     };
 #endif
-#endif // OPENTHREAD_CONFIG_TLS_API_ENABLE
 
     bool IsStateClosed(void) const { return mState == kStateClosed; }
     bool IsStateOpen(void) const { return mState == kStateOpen; }
@@ -606,9 +591,9 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    void  HandleReceive(const uint8_t *aBuf, uint16_t aLength);
     Error HandleSecureTransportSend(const uint8_t *aBuf, uint16_t aLength, Message::SubType aMessageSubType);
 
+    void Receive(Message &aMessage);
     void Process(void);
     void Disconnect(ConnectEvent aEvent);
 
@@ -678,10 +663,8 @@ private:
     TransportSocket  mSocket;
 
     Callback<TransportCallback> mTransportCallback;
-    void                       *mTransportContext;
 
     Message::SubType mMessageSubType;
-    Message::SubType mMessageDefaultSubType;
 
     ConnectEvent mConnectEvent;
 };

@@ -88,7 +88,6 @@ SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwo
     , mReceiveMessage(nullptr)
     , mSocket(aInstance, *this)
     , mMessageSubType(Message::kSubTypeNone)
-    , mMessageDefaultSubType(Message::kSubTypeNone)
 {
     ClearAllBytes(mPsk);
     ClearAllBytes(mSsl);
@@ -825,8 +824,7 @@ int SecureTransport::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLe
 
     error = HandleSecureTransportSend(aBuf, static_cast<uint16_t>(aLength), mMessageSubType);
 
-    // Restore default sub type.
-    mMessageSubType = mMessageDefaultSubType;
+    mMessageSubType = Message::kSubTypeNone;
 
     switch (error)
     {
@@ -1190,20 +1188,14 @@ Error SecureTransport::HandleSecureTransportSend(const uint8_t   *aBuf,
                                                  uint16_t         aLength,
                                                  Message::SubType aMessageSubType)
 {
-    Error        error   = kErrorNone;
-    ot::Message *message = nullptr;
+    Error    error   = kErrorNone;
+    Message *message = nullptr;
 
     VerifyOrExit((message = mSocket.NewMessage()) != nullptr, error = kErrorNoBufs);
     message->SetSubType(aMessageSubType);
     message->SetLinkSecurityEnabled(mLayerTwoSecurity);
 
     SuccessOrExit(error = message->AppendBytes(aBuf, aLength));
-
-    // Set message sub type in case Joiner Finalize Response is appended to the message.
-    if (aMessageSubType != Message::kSubTypeNone)
-    {
-        message->SetSubType(aMessageSubType);
-    }
 
     if (mTransportCallback.IsSet())
     {
