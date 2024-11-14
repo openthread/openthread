@@ -719,6 +719,10 @@ private:
     static constexpr uint32_t kMaxInitialQueryDelay     = 120; // msec
     static constexpr uint32_t kRandomDelayReuseInterval = 2;   // msec
 
+    static constexpr uint32_t kMinResponseDelay            = 20;  // msec
+    static constexpr uint32_t kMaxResponseDelay            = 120; // msec
+    static constexpr uint32_t kResponseAggregationMaxDelay = 500; // msec
+
     static constexpr uint32_t kUnspecifiedTtl       = 0;
     static constexpr uint32_t kDefaultTtl           = 120;
     static constexpr uint32_t kDefaultKeyTtl        = kDefaultTtl;
@@ -815,8 +819,11 @@ private:
 
     struct AnswerInfo
     {
+        TimeMilli GetAnswerTime(void) const { return (mQueryRxTime + mAnswerDelay); }
+
         uint16_t  mQuestionRrType;
-        TimeMilli mAnswerTime;
+        uint16_t  mAnswerDelay;
+        TimeMilli mQueryRxTime;
         bool      mIsProbe;
         bool      mUnicastResponse;
         bool      mLegacyUnicastResponse;
@@ -873,11 +880,13 @@ private:
         void     UpdateTtl(uint32_t aTtl);
 
         void     StartAnnouncing(void);
-        bool     ShouldAppendTo(EntryContext &aContext) const;
+        bool     ShouldAppendTo(EntryContext &aContext);
         bool     CanAnswer(void) const;
         void     ScheduleAnswer(const AnswerInfo &aInfo);
+        Error    ExtendAnswerDelay(EntryContext &aContext);
         void     UpdateStateAfterAnswer(const TxMessage &aResponse);
         void     UpdateFireTimeOn(FireTime &aFireTime);
+        void     DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const;
         uint32_t GetDurationSinceLastMulticast(TimeMilli aTime) const;
         Error    GetLastMulticastTime(TimeMilli &aLastMulticastTime) const;
 
@@ -901,6 +910,8 @@ private:
             kAppendedInUnicastMsg,
         };
 
+        TimeMilli GetAnswerTime(void) const { return mQueryRxTime + mAnswerDelay; }
+
         static constexpr uint32_t kMinIntervalBetweenMulticast = 1000; // msec
         static constexpr uint32_t kLastMulticastTimeAge        = 10 * Time::kOneHourInMsec;
 
@@ -910,12 +921,14 @@ private:
         bool        mMulticastAnswerPending : 1;
         bool        mUnicastAnswerPending : 1;
         bool        mIsLastMulticastValid : 1;
+        bool        mCanExtendAnswerDelay : 1;
         uint8_t     mAnnounceCounter;
         AppendState mAppendState;
         Section     mAppendSection;
+        uint16_t    mAnswerDelay;
         uint32_t    mTtl;
         TimeMilli   mAnnounceTime;
-        TimeMilli   mAnswerTime;
+        TimeMilli   mQueryRxTime;
         TimeMilli   mLastMulticastTime;
     };
 
@@ -978,6 +991,7 @@ private:
                                 NameAppender     aNameAppender);
         bool ShouldAnswerNsec(TimeMilli aNow) const;
         void DetermineNextFireTime(void);
+        void DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const;
         void ScheduleTimer(void);
         void AnswerProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, uint16_t aRecordsLength);
         void AnswerNonProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, uint16_t aRecordsLength);
@@ -988,10 +1002,11 @@ private:
         RecordInfo mKeyRecord;
 
     private:
-        void SetState(State aState);
-        void ClearKey(void);
-        void ScheduleCallbackTask(void);
-        void CheckMessageSizeLimitToPrepareAgain(TxMessage &aTxMessage, bool &aPrepareAgain);
+        void      SetState(State aState);
+        void      ClearKey(void);
+        void      ScheduleCallbackTask(void);
+        void      CheckMessageSizeLimitToPrepareAgain(TxMessage &aTxMessage, bool &aPrepareAgain);
+        TimeMilli GetNsecAnswerTime(void) const { return mNsecQueryRxTime + mNsecAnswerDelay; }
 
         State      mState;
         uint8_t    mProbeCount;
@@ -999,7 +1014,8 @@ private:
         bool       mUnicastNsecPending : 1;
         bool       mAppendedNsec : 1;
         bool       mBypassCallbackStateCheck : 1;
-        TimeMilli  mNsecAnswerTime;
+        uint16_t   mNsecAnswerDelay;
+        TimeMilli  mNsecQueryRxTime;
         Heap::Data mKeyData;
         Callback   mCallback;
         Callback   mKeyCallback;
@@ -1033,6 +1049,7 @@ private:
         void  ClearAppendState(void);
         void  PrepareResponse(EntryContext &aContext);
         void  HandleConflict(void);
+        void  DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const;
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
         Error CopyInfoTo(Host &aHost, EntryState &aState) const;
         Error CopyInfoTo(Key &aKey, EntryState &aState) const;
@@ -1092,6 +1109,7 @@ private:
         void  ClearAppendState(void);
         void  PrepareResponse(EntryContext &aContext);
         void  HandleConflict(void);
+        void  DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const;
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
         Error CopyInfoTo(Service &aService, EntryState &aState, EntryIterator &aIterator) const;
         Error CopyInfoTo(Key &aKey, EntryState &aState) const;
@@ -1182,6 +1200,7 @@ private:
         bool     ShouldSuppressKnownAnswer(uint32_t aTtl) const;
         void     HandleTimer(EntryContext &aContext);
         void     PrepareResponse(EntryContext &aContext);
+        void     DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const;
 
     private:
         void PrepareResponseRecords(EntryContext &aContext);
@@ -1263,6 +1282,7 @@ private:
         NextFireTime mNextFireTime;
         TxMessage    mProbeMessage;
         TxMessage    mResponseMessage;
+        TimeMilli    mNextAggrTxTime;
     };
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1317,11 +1337,8 @@ private:
             bool     mIsForAllServicesDnssd : 1; // Is for "_services._dns-sd._udp" (all service types).
         };
 
-        static constexpr uint32_t kMinResponseDelay = 20;  // msec
-        static constexpr uint32_t kMaxResponseDelay = 120; // msec
-
         void ProcessQuestion(Question &aQuestion);
-        void AnswerQuestion(const Question &aQuestion, TimeMilli aAnswerTime);
+        void AnswerQuestion(const Question &aQuestion, uint16_t aDelay);
         void AnswerServiceTypeQuestion(const Question &aQuestion, const AnswerInfo &aInfo, ServiceEntry &aFirstEntry);
         bool ShouldSuppressKnownAnswer(const Name         &aServiceType,
                                        const char         *aSubLabel,
@@ -1341,6 +1358,7 @@ private:
         void ProcessARecord(const Name &aName, const ResourceRecord &aRecord, uint16_t aRecordOffset);
 
         RxMessage            *mNext;
+        TimeMilli             mRxTime;
         OwnedPtr<Message>     mMessagePtr;
         Heap::Array<Question> mQuestions;
         AddressInfo           mSenderAddress;

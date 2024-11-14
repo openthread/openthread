@@ -53,6 +53,14 @@ NextFireTime::NextFireTime(Time aNow)
 
 void NextFireTime::UpdateIfEarlier(Time aTime) { mNextTime = Min(mNextTime, Max(mNow, aTime)); }
 
+void NextFireTime::UpdateIfEarlierAndInFuture(Time aTime)
+{
+    if (aTime > mNow)
+    {
+        mNextTime = Min(mNextTime, aTime);
+    }
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // `Timer`
 

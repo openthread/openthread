@@ -303,6 +303,31 @@ exit:
 void Core::HandleEntryTimer(void)
 {
     EntryContext context(GetInstance(), TxMessage::kMulticastResponse);
+    NextFireTime nextAggrTxTime(context.GetNow());
+
+    // Determine the next multicast transmission time that is explicitly
+    // after `GetNow()` to set `mNextAggrTxTime`. This is used for
+    // response aggregation. As `HandleTimer()` is called on different
+    // entries, they can decide to extend their answer delay to the
+    // determined `mNextAggrTxTime` so that all answers are included in
+    // the same response message.
+
+    for (HostEntry &entry : mHostEntries)
+    {
+        entry.DetermineNextAggrTxTime(nextAggrTxTime);
+    }
+
+    for (ServiceEntry &entry : mServiceEntries)
+    {
+        entry.DetermineNextAggrTxTime(nextAggrTxTime);
+    }
+
+    for (ServiceType &serviceType : mServiceTypes)
+    {
+        serviceType.DetermineNextAggrTxTime(nextAggrTxTime);
+    }
+
+    context.mNextAggrTxTime = nextAggrTxTime.GetNextTime();
 
     // We process host entries before service entries. This order
     // ensures we can determine whether host addresses have already
@@ -613,22 +638,35 @@ void Core::RecordInfo::ScheduleAnswer(const AnswerInfo &aInfo)
         // that did not receive and cache the previous transmission will
         // retry its request.
 
-        VerifyOrExit(GetDurationSinceLastMulticast(aInfo.mAnswerTime) >= kMinIntervalBetweenMulticast);
+        VerifyOrExit(GetDurationSinceLastMulticast(aInfo.GetAnswerTime()) >= kMinIntervalBetweenMulticast);
     }
 
     if (mMulticastAnswerPending)
     {
-        VerifyOrExit(aInfo.mAnswerTime < mAnswerTime);
-    }
+        TimeMilli targetAnswerTime;
 
-    mMulticastAnswerPending = true;
-    mAnswerTime             = aInfo.mAnswerTime;
+        if (mCanExtendAnswerDelay && aInfo.mIsProbe)
+        {
+            mCanExtendAnswerDelay = false;
+        }
+
+        targetAnswerTime = Min(aInfo.GetAnswerTime(), GetAnswerTime());
+        mQueryRxTime     = Min(aInfo.mQueryRxTime, mQueryRxTime);
+        mAnswerDelay     = targetAnswerTime - mQueryRxTime;
+    }
+    else
+    {
+        mMulticastAnswerPending = true;
+        mCanExtendAnswerDelay   = !aInfo.mIsProbe;
+        mQueryRxTime            = aInfo.mQueryRxTime;
+        mAnswerDelay            = aInfo.mAnswerDelay;
+    }
 
 exit:
     return;
 }
 
-bool Core::RecordInfo::ShouldAppendTo(EntryContext &aContext) const
+bool Core::RecordInfo::ShouldAppendTo(EntryContext &aContext)
 {
     bool shouldAppend = false;
 
@@ -644,7 +682,20 @@ bool Core::RecordInfo::ShouldAppendTo(EntryContext &aContext) const
             ExitNow();
         }
 
-        shouldAppend = mMulticastAnswerPending && (mAnswerTime <= aContext.GetNow());
+        if (mMulticastAnswerPending && (GetAnswerTime() <= aContext.GetNow()))
+        {
+            // Check if we can delay the answer further so that it can
+            // be aggregated with other responses scheduled to go out a
+            // little later.
+
+            if (ExtendAnswerDelay(aContext) == kErrorNone)
+            {
+                ExitNow();
+            }
+
+            shouldAppend = true;
+        }
+
         break;
 
     case TxMessage::kUnicastResponse:
@@ -658,6 +709,36 @@ bool Core::RecordInfo::ShouldAppendTo(EntryContext &aContext) const
 
 exit:
     return shouldAppend;
+}
+
+Error Core::RecordInfo::ExtendAnswerDelay(EntryContext &aContext)
+{
+    Error error = kErrorFailed;
+
+    // Extend the answer delay for response aggregation when possible.
+    //
+    // This method is called when we have a pending multicast answer
+    // (`mMulticastAnswerPending`) and the answer time has already
+    // expired. We first check if the answer can be delayed (e.g., it
+    // is not allowed for probe responses) and that there is an
+    // upcoming `mNextAggrTxTime` within a short window of time from
+    // `GetNow()`, before extending the delay. We ensure that the
+    // overall answer delay does not exceed
+    // `kResponseAggregationMaxDelay`.
+
+    VerifyOrExit(mCanExtendAnswerDelay);
+
+    VerifyOrExit(aContext.mNextAggrTxTime != aContext.GetNow().GetDistantFuture());
+    VerifyOrExit(aContext.mNextAggrTxTime - aContext.GetNow() < kResponseAggregationMaxDelay);
+
+    VerifyOrExit(aContext.mNextAggrTxTime - mQueryRxTime < kResponseAggregationMaxDelay);
+
+    mAnswerDelay = aContext.mNextAggrTxTime - mQueryRxTime;
+
+    error = kErrorNone;
+
+exit:
+    return error;
 }
 
 void Core::RecordInfo::UpdateStateAfterAnswer(const TxMessage &aResponse)
@@ -720,7 +801,7 @@ void Core::RecordInfo::UpdateFireTimeOn(FireTime &aFireTime)
 
     if (mMulticastAnswerPending)
     {
-        aFireTime.SetFireTime(mAnswerTime);
+        aFireTime.SetFireTime(GetAnswerTime());
     }
 
     if (mIsLastMulticastValid)
@@ -742,6 +823,24 @@ void Core::RecordInfo::UpdateFireTimeOn(FireTime &aFireTime)
         {
             aFireTime.SetFireTime(lastMulticastAgeTime);
         }
+    }
+
+exit:
+    return;
+}
+
+void Core::RecordInfo::DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const
+{
+    VerifyOrExit(mIsPresent);
+
+    if (mAnnounceCounter < kNumberOfAnnounces)
+    {
+        aNextAggrTxTime.UpdateIfEarlierAndInFuture(mAnnounceTime);
+    }
+
+    if (mMulticastAnswerPending)
+    {
+        aNextAggrTxTime.UpdateIfEarlierAndInFuture(GetAnswerTime());
     }
 
 exit:
@@ -1070,18 +1169,27 @@ void Core::Entry::ScheduleNsecAnswer(const AnswerInfo &aInfo)
     {
         if (mMulticastNsecPending)
         {
-            VerifyOrExit(aInfo.mAnswerTime < mNsecAnswerTime);
-        }
+            TimeMilli targetAnswerTime = Min(aInfo.GetAnswerTime(), GetNsecAnswerTime());
 
-        mMulticastNsecPending = true;
-        mNsecAnswerTime       = aInfo.mAnswerTime;
+            mNsecQueryRxTime = Min(aInfo.mQueryRxTime, mNsecQueryRxTime);
+            mNsecAnswerDelay = targetAnswerTime - mNsecQueryRxTime;
+        }
+        else
+        {
+            mMulticastNsecPending = true;
+            mNsecQueryRxTime      = aInfo.mQueryRxTime;
+            mNsecAnswerDelay      = aInfo.mAnswerDelay;
+        }
     }
 
 exit:
     return;
 }
 
-bool Core::Entry::ShouldAnswerNsec(TimeMilli aNow) const { return mMulticastNsecPending && (mNsecAnswerTime <= aNow); }
+bool Core::Entry::ShouldAnswerNsec(TimeMilli aNow) const
+{
+    return mMulticastNsecPending && (GetNsecAnswerTime() <= aNow);
+}
 
 void Core::Entry::AnswerNonProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, uint16_t aRecordsLength)
 {
@@ -1127,7 +1235,7 @@ void Core::Entry::AnswerProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, 
     TimeMilli  now               = TimerMilli::GetNow();
     AnswerInfo info              = aInfo;
 
-    info.mAnswerTime = now;
+    info.mAnswerDelay = 0;
 
     OT_ASSERT(info.mIsProbe);
 
@@ -1157,7 +1265,8 @@ void Core::Entry::AnswerProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, 
             }
             else if (record.GetLastMulticastTime(lastMulticastTime) == kErrorNone)
             {
-                info.mAnswerTime = Max(info.mAnswerTime, lastMulticastTime + kMinIntervalProbeResponse);
+                info.mAnswerDelay =
+                    Max(info.GetAnswerTime(), lastMulticastTime + kMinIntervalProbeResponse) - info.mQueryRxTime;
             }
         }
     }
@@ -1175,7 +1284,7 @@ void Core::Entry::AnswerProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, 
 
     if (!shouldDelay)
     {
-        info.mAnswerTime = now;
+        info.mAnswerDelay = 0;
     }
 
     for (uint16_t index = 0; index < aRecordsLength; index++)
@@ -1193,7 +1302,17 @@ void Core::Entry::DetermineNextFireTime(void)
 
     if (mMulticastNsecPending)
     {
-        SetFireTime(mNsecAnswerTime);
+        SetFireTime(GetNsecAnswerTime());
+    }
+}
+
+void Core::Entry::DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const
+{
+    mKeyRecord.DetermineNextAggrTxTime(aNextAggrTxTime);
+
+    if (mMulticastNsecPending)
+    {
+        aNextAggrTxTime.UpdateIfEarlierAndInFuture(GetNsecAnswerTime());
     }
 }
 
@@ -1233,6 +1352,7 @@ template <typename EntryType> void Core::Entry::HandleTimer(EntryContext &aConte
     case kRemoving:
         ExitNow();
     }
+
     thisAsEntryType->DetermineNextFireTime();
 
 exit:
@@ -1605,6 +1725,17 @@ void Core::HostEntry::DetermineNextFireTime(void)
 
     Entry::DetermineNextFireTime();
     mAddrRecord.UpdateFireTimeOn(*this);
+
+exit:
+    return;
+}
+
+void Core::HostEntry::DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const
+{
+    VerifyOrExit(GetState() == kRegistered);
+
+    Entry::DetermineNextAggrTxTime(aNextAggrTxTime);
+    mAddrRecord.DetermineNextAggrTxTime(aNextAggrTxTime);
 
 exit:
     return;
@@ -2265,6 +2396,25 @@ exit:
     return;
 }
 
+void Core::ServiceEntry::DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const
+{
+    VerifyOrExit(GetState() == kRegistered);
+
+    Entry::DetermineNextAggrTxTime(aNextAggrTxTime);
+
+    mPtrRecord.DetermineNextAggrTxTime(aNextAggrTxTime);
+    mSrvRecord.DetermineNextAggrTxTime(aNextAggrTxTime);
+    mTxtRecord.DetermineNextAggrTxTime(aNextAggrTxTime);
+
+    for (const SubType &subType : mSubTypes)
+    {
+        subType.mPtrRecord.DetermineNextAggrTxTime(aNextAggrTxTime);
+    }
+
+exit:
+    return;
+}
+
 void Core::ServiceEntry::DiscoverOffsetsAndHost(HostEntry *&aHostEntry)
 {
     // Discovers the `HostEntry` associated with this `ServiceEntry`
@@ -2824,6 +2974,11 @@ exit:
     return;
 }
 
+void Core::ServiceType::DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const
+{
+    mServicesPtr.DetermineNextAggrTxTime(aNextAggrTxTime);
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 // Core::TxMessage
 
@@ -3304,6 +3459,7 @@ Core::EntryContext::EntryContext(Instance &aInstance, TxMessage::Type aResponseT
     : mProbeMessage(aInstance, TxMessage::kMulticastProbe)
     , mResponseMessage(aInstance, aResponseType)
 {
+    mNextAggrTxTime = mNextFireTime.GetNow().GetDistantFuture();
 }
 
 Core::EntryContext::EntryContext(Instance          &aInstance,
@@ -3313,6 +3469,7 @@ Core::EntryContext::EntryContext(Instance          &aInstance,
     : mProbeMessage(aInstance, TxMessage::kMulticastProbe)
     , mResponseMessage(aInstance, aResponseType, aDest, aQueryId)
 {
+    mNextAggrTxTime = mNextFireTime.GetNow().GetDistantFuture();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -3332,7 +3489,8 @@ Error Core::RxMessage::Init(Instance          &aInstance,
 
     InstanceLocatorInit::Init(aInstance);
 
-    mNext = nullptr;
+    mNext   = nullptr;
+    mRxTime = TimerMilli::GetNow();
 
     VerifyOrExit(!aMessagePtr.IsNull(), error = kErrorInvalidArgs);
 
@@ -3464,7 +3622,7 @@ Core::RxMessage::ProcessOutcome Core::RxMessage::ProcessQuery(bool aShouldProces
     bool           shouldDelay         = false;
     bool           canAnswer           = false;
     bool           needUnicastResponse = false;
-    TimeMilli      answerTime;
+    uint16_t       delay               = 0;
 
     for (Question &question : mQuestions)
     {
@@ -3506,16 +3664,14 @@ Core::RxMessage::ProcessOutcome Core::RxMessage::ProcessQuery(bool aShouldProces
         ExitNow();
     }
 
-    answerTime = TimerMilli::GetNow();
-
     if (shouldDelay)
     {
-        answerTime += Random::NonCrypto::GetUint32InRange(kMinResponseDelay, kMaxResponseDelay);
+        delay = Random::NonCrypto::GetUint32InRange(kMinResponseDelay, kMaxResponseDelay);
     }
 
     for (const Question &question : mQuestions)
     {
-        AnswerQuestion(question, answerTime);
+        AnswerQuestion(question, delay);
     }
 
     if (needUnicastResponse)
@@ -3625,7 +3781,7 @@ exit:
     return;
 }
 
-void Core::RxMessage::AnswerQuestion(const Question &aQuestion, TimeMilli aAnswerTime)
+void Core::RxMessage::AnswerQuestion(const Question &aQuestion, uint16_t aDelay)
 {
     HostEntry    *hostEntry;
     ServiceEntry *serviceEntry;
@@ -3634,7 +3790,8 @@ void Core::RxMessage::AnswerQuestion(const Question &aQuestion, TimeMilli aAnswe
     VerifyOrExit(aQuestion.mCanAnswer);
 
     answerInfo.mQuestionRrType        = aQuestion.mRrType;
-    answerInfo.mAnswerTime            = aAnswerTime;
+    answerInfo.mAnswerDelay           = aDelay;
+    answerInfo.mQueryRxTime           = mRxTime;
     answerInfo.mIsProbe               = aQuestion.mIsProbe;
     answerInfo.mUnicastResponse       = aQuestion.mUnicastResponse;
     answerInfo.mLegacyUnicastResponse = mIsLegacyUnicast;

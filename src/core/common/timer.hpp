@@ -96,6 +96,21 @@ public:
     void UpdateIfEarlier(Time aTime);
 
     /**
+     * Updates the tracked next fire time with a new given time, but only if it is earlier than the current
+     * fire time and in the future relative to `GetNow()`.
+     *
+     * If the given @p aTime is not in the future relative to `GetNow()`, it is ignored. This is unlike
+     * `UpdateIfEarlier()`, which allows all `aTime` values, including ones that are in the past (where it uses
+     * `GetNow()`).
+     *
+     * This method can be used to track the next fire time among non-expired times, ensuring the tracked next fire time
+     * will be in the future relative to `GetNow()`.
+     *
+     * @param[in] aTime     The new time.
+     */
+    void UpdateIfEarlierAndInFuture(Time aTime);
+
+    /**
      * Indicates whether or not next fire time is set.
      *
      * @retval TRUE   The next fire time is set.
