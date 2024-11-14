@@ -46,6 +46,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "lib/spinel/spinel.h"
 #include "radio/radio.hpp"
 
 namespace ot {
@@ -1680,6 +1681,31 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_RAW_STREAM_ENABLE
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
     mIsRawStreamEnabled[mCurCommandIid] = enabled;
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_RX_AT>(void)
+{
+    otError  error = OT_ERROR_NONE;
+    uint64_t when;
+    uint32_t duration;
+    uint8_t  channel;
+
+    SuccessOrExit(error = mDecoder.ReadUint64(when));
+    SuccessOrExit(error = mDecoder.ReadUint32(duration));
+    SuccessOrExit(error = mDecoder.ReadUint8(channel));
+
+    {
+        uint64_t now = otPlatRadioGetNow(mInstance);
+        uint32_t start;
+
+        VerifyOrExit(when > now && (when - now) < UINT32_MAX, error = OT_ERROR_INVALID_ARGS);
+
+        start = when - now;
+        error = otPlatRadioReceiveAt(mInstance, channel, start, duration);
+    }
 
 exit:
     return error;

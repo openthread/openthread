@@ -570,6 +570,22 @@ public:
     otError Receive(uint8_t aChannel);
 
     /**
+     * Schedule a radio reception window at a specific time and duration.
+     *
+     * @param[in]  aWhen      The receive window start time in the local
+     *                        radio clock, see `otPlatRadioGetNow`. The radio
+     *                        receiver SHALL be on and ready to receive the first
+     *                        symbol of a frame's SHR at the window start time.
+     * @param[in]  aDuration  The receive window duration, in microseconds, as
+     *                        measured by the local radio clock.
+     * @param[in]  aChannel   The channel to use for receiving.
+     *
+     * @retval OT_ERROR_NONE          Successfully scheduled the reception.
+     * @retval OT_ERROR_INVALID_STATE The radio was disabled.
+     */
+    otError ReceiveAt(uint64_t aWhen, uint32_t aDuration, uint8_t aChannel);
+
+    /**
      * Switches the radio state from Receive to Sleep.
      *
      * @retval OT_ERROR_NONE          Successfully transitioned to Sleep.

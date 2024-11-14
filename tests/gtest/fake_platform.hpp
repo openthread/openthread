@@ -77,7 +77,16 @@ public:
     uint8_t               GetReceiveChannel(void) const { return mChannel; }
     virtual otRadioFrame *GetTransmitBuffer() { return &mTransmitFrame; }
     virtual otError       Transmit(otRadioFrame *aFrame);
-    virtual otError       Receive(uint8_t aChannel)
+    virtual otError       ReceiveAt(uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
+    {
+        mReceiveAtChannel = aChannel;
+        mReceiveAtStart   = mNow + aStart;
+        mReceiveAtEnd     = mReceiveAtStart + aDuration;
+
+        return OT_ERROR_NONE;
+    }
+
+    virtual otError Receive(uint8_t aChannel)
     {
         mChannel = aChannel;
         return OT_ERROR_NONE;
@@ -114,6 +123,10 @@ protected:
     uint64_t mMicroAlarmStart = kAlarmStop;
 #endif
     uint64_t mMilliAlarmStart = kAlarmStop;
+
+    uint64_t mReceiveAtStart   = kAlarmStop;
+    uint64_t mReceiveAtEnd     = kAlarmStop;
+    uint64_t mReceiveAtChannel = 0;
 
     otRadioFrame mTransmitFrame;
     uint8_t      mTransmitBuffer[OT_RADIO_FRAME_MAX_SIZE];

@@ -139,6 +139,14 @@ void FakePlatform::ProcessAlarm(uint64_t &aTimeout)
     {
         alarm = &mMilliAlarmStart;
     }
+    if (mReceiveAtStart < *alarm)
+    {
+        alarm = &mReceiveAtStart;
+    }
+    else if (mReceiveAtEnd < *alarm)
+    {
+        alarm = &mReceiveAtEnd;
+    }
 
     if (mNow < *alarm)
     {
@@ -146,17 +154,24 @@ void FakePlatform::ProcessAlarm(uint64_t &aTimeout)
         mNow = *alarm;
     }
     *alarm = kAlarmStop;
-#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-    if (alarm == &mMicroAlarmStart)
+    if (alarm == &mReceiveAtStart)
     {
-        otPlatAlarmMicroFired(mInstance);
+        mChannel = mReceiveAtChannel;
     }
-    else
-#endif
-        if (alarm == &mMilliAlarmStart)
+    if (alarm == &mReceiveAtEnd)
+    {
+        mChannel = 0;
+    }
+    else if (alarm == &mMilliAlarmStart)
     {
         otPlatAlarmMilliFired(mInstance);
     }
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+    else if (alarm == &mMicroAlarmStart)
+    {
+        otPlatAlarmMicroFired(mInstance);
+    }
+#endif
 }
 
 uint64_t FakePlatform::Run(uint64_t aTimeoutInUs)
@@ -355,6 +370,11 @@ otError otPlatRadioDisable(otInstance *) { return OT_ERROR_NONE; }
 otError otPlatRadioSleep(otInstance *) { return OT_ERROR_NONE; }
 
 otError otPlatRadioReceive(otInstance *, uint8_t aChannel) { return FakePlatform::CurrentPlatform().Receive(aChannel); }
+
+otError otPlatRadioReceiveAt(otInstance *, uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
+{
+    return FakePlatform::CurrentPlatform().ReceiveAt(aChannel, aStart, aDuration);
+}
 
 otError otPlatRadioTransmit(otInstance *, otRadioFrame *aFrame)
 {

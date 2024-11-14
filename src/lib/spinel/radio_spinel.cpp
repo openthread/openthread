@@ -1727,6 +1727,20 @@ exit:
     return error;
 }
 
+otError RadioSpinel::ReceiveAt(uint64_t aWhen, uint32_t aDuration, uint8_t aChannel)
+{
+    otError error = OT_ERROR_NONE;
+
+    EXPECT(mState != kStateDisabled, error = OT_ERROR_INVALID_STATE);
+
+    error = Set(SPINEL_PROP_MAC_RX_AT, SPINEL_DATATYPE_UINT64_S SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_UINT8_S, aWhen,
+                aDuration, aChannel);
+    EXPECT_NO_ERROR(error);
+
+exit:
+    return error;
+}
+
 otError RadioSpinel::Sleep(void)
 {
     otError error = OT_ERROR_NONE;

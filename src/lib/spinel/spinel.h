@@ -2101,6 +2101,17 @@ enum
      */
     SPINEL_PROP_MAC_15_4_ALT_SADDR = SPINEL_PROP_MAC__BEGIN + 12,
 
+    /// MAC Receive At
+    /** Format: `XLC`
+     *
+     * Schedule a radio reception window at a specific time and duration.
+     *
+     *   `X`: The receive window start time.
+     *   `L`: The receive window duration.
+     *   `C`: The receive channel.
+     */
+    SPINEL_PROP_MAC_RX_AT = SPINEL_PROP_MAC__BEGIN + 13,
+
     SPINEL_PROP_MAC__END = 0x40,
 
     SPINEL_PROP_MAC_EXT__BEGIN = 0x1300,
