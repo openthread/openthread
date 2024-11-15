@@ -152,7 +152,7 @@ exit:
 
 void Local::UpdateRloc(PrefixTlv &aPrefixTlv)
 {
-    uint16_t rloc16 = Get<Mle::MleRouter>().GetRloc16();
+    uint16_t rloc16 = Get<Mle::Mle>().GetRloc16();
 
     for (NetworkDataTlv *cur = aPrefixTlv.GetSubTlvs(); cur < aPrefixTlv.GetNext(); cur = cur->GetNext())
     {
@@ -197,7 +197,7 @@ Error Local::AddService(uint32_t           aEnterpriseNumber,
     serviceTlv->SetSubTlvsLength(sizeof(ServerTlv) + aServerData.GetLength());
 
     serverTlv = As<ServerTlv>(serviceTlv->GetSubTlvs());
-    serverTlv->Init(Get<Mle::MleRouter>().GetRloc16(), aServerData);
+    serverTlv->Init(Get<Mle::Mle>().GetRloc16(), aServerData);
 
     // According to Thread spec 1.1.1, section 5.18.6 Service TLV:
     // "The Stable flag is set if any of the included sub-TLVs have their Stable flag set."
@@ -237,7 +237,7 @@ exit:
 
 void Local::UpdateRloc(ServiceTlv &aService)
 {
-    uint16_t rloc16 = Get<Mle::MleRouter>().GetRloc16();
+    uint16_t rloc16 = Get<Mle::Mle>().GetRloc16();
 
     for (NetworkDataTlv *cur = aService.GetSubTlvs(); cur < aService.GetNext(); cur = cur->GetNext())
     {

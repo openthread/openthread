@@ -61,7 +61,7 @@ void MlrManager::HandleNotifierEvents(Events aEvents)
     }
 #endif
 
-    if (aEvents.Contains(kEventThreadRoleChanged) && Get<Mle::MleRouter>().IsChild())
+    if (aEvents.Contains(kEventThreadRoleChanged) && Get<Mle::Mle>().IsChild())
     {
         // Reregistration after re-attach
         UpdateReregistrationDelay(true);
@@ -211,9 +211,9 @@ void MlrManager::UpdateTimeTickerRegistration(void)
 
 void MlrManager::SendMlr(void)
 {
-    Error           error;
-    Mle::MleRouter &mle = Get<Mle::MleRouter>();
-    AddressArray    addresses;
+    Error        error;
+    Mle::Mle    &mle = Get<Mle::Mle>();
+    AddressArray addresses;
 
     VerifyOrExit(!mMlrPending, error = kErrorBusy);
     VerifyOrExit(mle.IsAttached(), error = kErrorInvalidState);
@@ -370,7 +370,7 @@ Error MlrManager::SendMlrMessage(const Ip6::Address   *aAddresses,
     OT_UNUSED_VARIABLE(aTimeout);
 
     Error            error   = kErrorNone;
-    Mle::MleRouter  &mle     = Get<Mle::MleRouter>();
+    Mle::Mle        &mle     = Get<Mle::Mle>();
     Coap::Message   *message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
     Ip6AddressesTlv  addressesTlv;
@@ -607,7 +607,7 @@ void MlrManager::Reregister(void)
 
 void MlrManager::UpdateReregistrationDelay(bool aRereg)
 {
-    Mle::MleRouter &mle = Get<Mle::MleRouter>();
+    Mle::Mle &mle = Get<Mle::Mle>();
 
     bool needSendMlr = (mle.IsFullThreadDevice() || mle.GetParent().IsThreadVersion1p1()) &&
                        Get<BackboneRouter::Leader>().HasPrimary();

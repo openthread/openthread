@@ -164,7 +164,7 @@ Error Leader::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext
 
     aContext.mPrefix.SetLength(0);
 
-    if (Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
+    if (Get<Mle::Mle>().IsMeshLocalAddress(aAddress))
     {
         GetContextForMeshLocalPrefix(aContext);
     }
@@ -236,7 +236,7 @@ exit:
 
 void Leader::GetContextForMeshLocalPrefix(Lowpan::Context &aContext) const
 {
-    aContext.mPrefix.Set(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+    aContext.mPrefix.Set(Get<Mle::Mle>().GetMeshLocalPrefix());
     aContext.mContextId    = Mle::kMeshLocalPrefixContextId;
     aContext.mCompressFlag = true;
     aContext.mIsValid      = true;
@@ -247,7 +247,7 @@ bool Leader::IsOnMesh(const Ip6::Address &aAddress) const
     const PrefixTlv *prefixTlv = nullptr;
     bool             isOnMesh  = false;
 
-    VerifyOrExit(!Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress), isOnMesh = true);
+    VerifyOrExit(!Get<Mle::Mle>().IsMeshLocalAddress(aAddress), isOnMesh = true);
 
     while ((prefixTlv = FindNextMatchingPrefixTlv(aAddress, prefixTlv)) != nullptr)
     {
@@ -484,7 +484,7 @@ Error Leader::SetNetworkData(uint8_t            aVersion,
     }
 
 #if OPENTHREAD_FTD
-    if (Get<Mle::MleRouter>().IsLeader())
+    if (Get<Mle::Mle>().IsLeader())
     {
         Get<Leader>().HandleNetworkDataRestoredAfterReset();
     }

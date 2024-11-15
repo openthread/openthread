@@ -214,7 +214,7 @@ void Link::BeginTransmit(void)
     {
         uint16_t fcf = Mac::Frame::kTypeAck;
 
-        if (!Get<Mle::MleRouter>().IsRxOnWhenIdle())
+        if (!Get<Mle::Mle>().IsRxOnWhenIdle())
         {
             fcf |= kFcfFramePending;
         }
@@ -275,20 +275,20 @@ void Link::HandleTimer(void)
     // router/leader during a partition merge, so it is always treated
     // as a neighbor.
 
-    switch (Get<Mle::MleRouter>().GetRole())
+    switch (Get<Mle::Mle>().GetRole())
     {
     case Mle::kRoleDisabled:
         break;
 
     case Mle::kRoleDetached:
     case Mle::kRoleChild:
-        HandleTimer(Get<Mle::MleRouter>().GetParent());
+        HandleTimer(Get<Mle::Mle>().GetParent());
 
         OT_FALL_THROUGH;
 
     case Mle::kRoleRouter:
     case Mle::kRoleLeader:
-        HandleTimer(Get<Mle::MleRouter>().GetParentCandidate());
+        HandleTimer(Get<Mle::Mle>().GetParentCandidate());
         break;
     }
 }

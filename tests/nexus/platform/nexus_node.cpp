@@ -40,7 +40,7 @@ void Node::Form(void)
     Get<MeshCoP::ActiveDatasetManager>().SaveLocal(datasetInfo);
 
     Get<ThreadNetif>().Up();
-    SuccessOrQuit(Get<Mle::MleRouter>().Start());
+    SuccessOrQuit(Get<Mle::Mle>().Start());
 }
 
 void Node::Join(Node &aNode, JoinMode aJoinMode)
@@ -51,7 +51,7 @@ void Node::Join(Node &aNode, JoinMode aJoinMode)
     switch (aJoinMode)
     {
     case kAsFed:
-        SuccessOrQuit(Get<Mle::MleRouter>().SetRouterEligible(false));
+        SuccessOrQuit(Get<Mle::Mle>().SetRouterEligible(false));
         OT_FALL_THROUGH;
 
     case kAsFtd:
@@ -72,7 +72,7 @@ void Node::Join(Node &aNode, JoinMode aJoinMode)
     Get<MeshCoP::ActiveDatasetManager>().SaveLocal(dataset);
 
     Get<ThreadNetif>().Up();
-    SuccessOrQuit(Get<Mle::MleRouter>().Start());
+    SuccessOrQuit(Get<Mle::Mle>().Start());
 }
 
 void Node::AllowList(Node &aNode)

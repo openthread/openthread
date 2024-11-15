@@ -116,7 +116,7 @@ exit:
 
 void AnnounceSenderBase::HandleTimer(void)
 {
-    Get<Mle::MleRouter>().SendAnnounce(mChannel);
+    Get<Mle::Mle>().SendAnnounce(mChannel);
 
     // Go to the next channel in the mask. If we have reached the end
     // of the channel mask, we start over from the first channel in
@@ -206,7 +206,7 @@ void AnnounceSender::HandleRoleChanged(void)
 
     case Mle::kRoleChild:
 #if OPENTHREAD_FTD
-        if (Get<Mle::MleRouter>().IsRouterEligible() && Get<Mle::Mle>().IsRxOnWhenIdle())
+        if (Get<Mle::Mle>().IsRouterEligible() && Get<Mle::Mle>().IsRxOnWhenIdle())
         {
             break;
         }

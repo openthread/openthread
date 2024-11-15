@@ -1382,7 +1382,7 @@ Error Ip6::RouteLookup(const Address &aSource, const Address &aDestination) cons
 
     if (error == kErrorNone)
     {
-        if (rloc == Get<Mle::MleRouter>().GetRloc16())
+        if (rloc == Get<Mle::Mle>().GetRloc16())
         {
             error = kErrorNoRoute;
         }

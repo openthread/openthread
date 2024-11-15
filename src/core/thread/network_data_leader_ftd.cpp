@@ -58,7 +58,7 @@ void Leader::Start(Mle::LeaderStartMode aStartMode)
 
 void Leader::IncrementVersion(void)
 {
-    if (Get<Mle::MleRouter>().IsLeader())
+    if (Get<Mle::Mle>().IsLeader())
     {
         IncrementVersions(/* aIncludeStable */ false);
     }
@@ -66,7 +66,7 @@ void Leader::IncrementVersion(void)
 
 void Leader::IncrementVersionAndStableVersion(void)
 {
-    if (Get<Mle::MleRouter>().IsLeader())
+    if (Get<Mle::Mle>().IsLeader())
     {
         IncrementVersions(/* aIncludeStable */ true);
     }
@@ -293,7 +293,7 @@ template <> void Leader::HandleTmf<kUriCommissionerSet>(Coap::Message &aMessage,
     state = MeshCoP::StateTlv::kAccept;
 
 exit:
-    if (Get<Mle::MleRouter>().IsLeader())
+    if (Get<Mle::Mle>().IsLeader())
     {
         SendCommissioningSetResponse(aMessage, aMessageInfo, state);
     }
@@ -664,7 +664,7 @@ void Leader::CheckForNetDataGettingFull(const NetworkData &aNetworkData, uint16_
     // device. If provided, then entries matching old RLOC16 are first
     // removed, before checking if new entries from @p aNetworkData can fit.
 
-    if (!Get<Mle::MleRouter>().IsLeader())
+    if (!Get<Mle::Mle>().IsLeader())
     {
         // Create a clone of the leader's network data, and try to register
         // `aNetworkData` into the copy (as if this device itself is the
@@ -1415,7 +1415,7 @@ void Leader::HandleTimer(void)
     if (mWaitingForNetDataSync)
     {
         LogInfo("Timed out waiting for netdata on restoring leader role after reset");
-        IgnoreError(Get<Mle::MleRouter>().BecomeDetached());
+        IgnoreError(Get<Mle::Mle>().BecomeDetached());
     }
     else
     {

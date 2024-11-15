@@ -44,7 +44,7 @@
 #include "common/numeric_limits.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
-#include "thread/mle_router.hpp"
+#include "thread/mle.hpp"
 #include "thread/network_data.hpp"
 #include "thread/tmf.hpp"
 

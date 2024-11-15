@@ -266,7 +266,7 @@ void otIp6SetSlaacPrefixFilter(otInstance *aInstance, otIp6SlaacPrefixFilter aFi
 
 otError otIp6SetMeshLocalIid(otInstance *aInstance, const otIp6InterfaceIdentifier *aIid)
 {
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().SetMeshLocalIid(AsCoreType(aIid));
+    return AsCoreType(aInstance).Get<Mle::Mle>().SetMeshLocalIid(AsCoreType(aIid));
 }
 
 #endif

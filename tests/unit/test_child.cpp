@@ -78,7 +78,7 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
     {
         Ip6::Address address;
 
-        if (sInstance->Get<Mle::MleRouter>().IsMeshLocalAddress(aAddressList[index]))
+        if (sInstance->Get<Mle::Mle>().IsMeshLocalAddress(aAddressList[index]))
         {
             SuccessOrQuit(aChild.GetMeshLocalIp6Address(address));
             VerifyOrQuit(address == aAddressList[index], "GetMeshLocalIp6Address() did not return expected address");
@@ -127,7 +127,7 @@ void TestChildIp6Address(void)
     numAddresses = 0;
 
     // First addresses uses the mesh local prefix (mesh-local address).
-    addresses[numAddresses] = sInstance->Get<Mle::MleRouter>().GetMeshLocalEid();
+    addresses[numAddresses] = sInstance->Get<Mle::Mle>().GetMeshLocalEid();
     addresses[numAddresses].SetIid(meshLocalIid);
 
     numAddresses++;

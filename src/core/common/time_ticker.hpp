@@ -62,7 +62,7 @@ public:
     enum Receiver : uint8_t
     {
         kMeshForwarder,          ///< `MeshForwarder`
-        kMleRouter,              ///< `Mle::MleRouter`
+        kMle,                    ///< `Mle::Mle`
         kAddressResolver,        ///< `AddressResolver`
         kChildSupervisor,        ///< `ChildSupervisor`
         kIp6FragmentReassembler, ///< `Ip6::Ip6` (handling of fragmented messages)

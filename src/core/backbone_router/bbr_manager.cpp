@@ -495,7 +495,7 @@ bool Manager::ShouldForwardDuaToBackbone(const Ip6::Address &aAddress)
     // Do not forward to Backbone if the DUA belongs to a MTD Child (which may have failed in DUA registration)
     VerifyOrExit(Get<NeighborTable>().FindNeighbor(aAddress) == nullptr);
     // Forward to Backbone only if the DUA is resolved to the PBBR's RLOC16
-    VerifyOrExit(Get<AddressResolver>().LookUp(aAddress) == Get<Mle::MleRouter>().GetRloc16());
+    VerifyOrExit(Get<AddressResolver>().LookUp(aAddress) == Get<Mle::Mle>().GetRloc16());
 
     forwardToBackbone = true;
 
@@ -688,7 +688,7 @@ void Manager::HandleDadBackboneAnswer(const Ip6::Address &aDua, const Ip6::Inter
     {
         Ip6::Address dest;
 
-        dest.SetToRoutingLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), ndProxy->GetRloc16());
+        dest.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), ndProxy->GetRloc16());
         Get<AddressResolver>().SendAddressError(aDua, aMeshLocalIid, &dest);
     }
 
@@ -706,7 +706,7 @@ void Manager::HandleExtendedBackboneAnswer(const Ip6::Address             &aDua,
 {
     Ip6::Address dest;
 
-    dest.SetToRoutingLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), aSrcRloc16);
+    dest.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aSrcRloc16);
     Get<AddressResolver>().SendAddressQueryResponse(aDua, aMeshLocalIid, &aTimeSinceLastTransaction, dest);
 
     LogInfo("HandleExtendedBackboneAnswer: target=%s, mliid=%s, LTT=%lus, rloc16=%04x", aDua.ToString().AsCString(),

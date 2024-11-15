@@ -176,7 +176,7 @@ Error Local::AddService(RegisterMode aMode)
     {
     case kDecideBasedOnState:
         VerifyOrExit(!Get<BackboneRouter::Leader>().HasPrimary() ||
-                     Get<BackboneRouter::Leader>().GetServer16() == Get<Mle::MleRouter>().GetRloc16());
+                     Get<BackboneRouter::Leader>().GetServer16() == Get<Mle::Mle>().GetRloc16());
         break;
     case kForceRegistration:
         break;
@@ -213,7 +213,7 @@ void Local::SetState(State aState)
     {
     case kStateDisabled:
         // Update All Network Backbone Routers Multicast Address for both Secondary and Primary state.
-        mAllNetworkBackboneRouters.SetMulticastNetworkPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+        mAllNetworkBackboneRouters.SetMulticastNetworkPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
         break;
     case kStateSecondary:
         break;
@@ -225,7 +225,7 @@ void Local::SetState(State aState)
     if (aState == kStatePrimary)
     {
         // Add Primary Backbone Router ALOC for Primary Backbone Router.
-        mBbrPrimaryAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+        mBbrPrimaryAloc.GetAddress().SetPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
         Get<ThreadNetif>().AddUnicastAddress(mBbrPrimaryAloc);
     }
 
@@ -241,14 +241,14 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config
 {
     OT_UNUSED_VARIABLE(aState);
 
-    VerifyOrExit(IsEnabled() && Get<Mle::MleRouter>().IsAttached());
+    VerifyOrExit(IsEnabled() && Get<Mle::Mle>().IsAttached());
 
     // Wait some jitter before trying to Register.
     if (aConfig.mServer16 == Mle::kInvalidRloc16)
     {
         mRegistrationTimeout = 1;
 
-        if (!Get<Mle::MleRouter>().IsLeader())
+        if (!Get<Mle::Mle>().IsLeader())
         {
             mRegistrationTimeout +=
                 Random::NonCrypto::GetUint16InRange(0, static_cast<uint16_t>(mRegistrationJitter) + 1);
@@ -256,7 +256,7 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config
 
         Get<TimeTicker>().RegisterReceiver(TimeTicker::kBbrLocal);
     }
-    else if (aConfig.mServer16 != Get<Mle::MleRouter>().GetRloc16())
+    else if (aConfig.mServer16 != Get<Mle::Mle>().GetRloc16())
     {
         Reset();
     }
@@ -285,7 +285,7 @@ void Local::HandleTimeTick(void)
     // Delay registration while router role transition is pending
     // (i.e., device may soon switch from REED to router role).
 
-    VerifyOrExit(!Get<Mle::MleRouter>().IsRouterRoleTransitionPending());
+    VerifyOrExit(!Get<Mle::Mle>().IsRouterRoleTransitionPending());
 
     if (mRegistrationTimeout > 0)
     {
@@ -362,7 +362,7 @@ void Local::ApplyNewMeshLocalPrefix(void)
     VerifyOrExit(IsEnabled());
 
     Get<BackboneTmfAgent>().UnsubscribeMulticast(mAllNetworkBackboneRouters);
-    mAllNetworkBackboneRouters.SetMulticastNetworkPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+    mAllNetworkBackboneRouters.SetMulticastNetworkPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
     Get<BackboneTmfAgent>().SubscribeMulticast(mAllNetworkBackboneRouters);
 
 exit:

@@ -789,7 +789,7 @@ Error TcatAgent::HandleStartThreadInterface(void)
 #endif
 
     Get<ThreadNetif>().Up();
-    error = Get<Mle::MleRouter>().Start();
+    error = Get<Mle::Mle>().Start();
 
 exit:
     return error;

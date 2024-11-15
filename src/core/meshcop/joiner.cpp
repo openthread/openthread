@@ -135,7 +135,7 @@ Error Joiner::Start(const char      *aPskd,
     // Use random-generated extended address.
     randomAddress.GenerateRandom();
     Get<Mac::Mac>().SetExtAddress(randomAddress);
-    Get<Mle::MleRouter>().UpdateLinkLocalAddress();
+    Get<Mle::Mle>().UpdateLinkLocalAddress();
 
     SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(kJoinerUdpPort));
     Get<Tmf::SecureAgent>().SetPsk(joinerPskd);
@@ -253,7 +253,7 @@ void Joiner::HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult)
     else
     {
         Get<Mac::Mac>().SetExtAddress(mId);
-        Get<Mle::MleRouter>().UpdateLinkLocalAddress();
+        Get<Mle::Mle>().UpdateLinkLocalAddress();
 
         mJoinerRouterIndex = 0;
         TryNextJoinerRouter(kErrorNone);
@@ -570,7 +570,7 @@ void Joiner::HandleTimer(void)
 
         extAddress.GenerateRandom();
         Get<Mac::Mac>().SetExtAddress(extAddress);
-        Get<Mle::MleRouter>().UpdateLinkLocalAddress();
+        Get<Mle::Mle>().UpdateLinkLocalAddress();
 
         error = kErrorNone;
         break;

@@ -206,7 +206,7 @@ void ExternalRouteConfig::SetFrom(Instance            &aInstance,
     SetFromTlvFlags(aHasRouteEntry.GetFlags());
     mStable              = aHasRouteTlv.IsStable();
     mRloc16              = aHasRouteEntry.GetRloc();
-    mNextHopIsThisDevice = (aHasRouteEntry.GetRloc() == aInstance.Get<Mle::MleRouter>().GetRloc16());
+    mNextHopIsThisDevice = (aHasRouteEntry.GetRloc() == aInstance.Get<Mle::Mle>().GetRloc16());
 }
 
 void ExternalRouteConfig::SetFromTlvFlags(uint8_t aFlags)

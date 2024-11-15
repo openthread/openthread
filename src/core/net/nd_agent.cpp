@@ -43,7 +43,7 @@ namespace NeighborDiscovery {
 void Agent::UpdateService(void)
 {
     Error                           error;
-    uint16_t                        rloc16 = Get<Mle::MleRouter>().GetRloc16();
+    uint16_t                        rloc16 = Get<Mle::Mle>().GetRloc16();
     NetworkData::Iterator           iterator;
     NetworkData::OnMeshPrefixConfig config;
     Lowpan::Context                 lowpanContext;
@@ -99,7 +99,7 @@ void Agent::UpdateService(void)
             uint16_t aloc16 = Mle::kAloc16NeighborDiscoveryAgentStart + lowpanContext.mContextId - 1;
 
             mAloc.InitAsThreadOrigin();
-            mAloc.GetAddress().SetToAnycastLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), aloc16);
+            mAloc.GetAddress().SetToAnycastLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aloc16);
             mAloc.mMeshLocal = true;
             Get<ThreadNetif>().AddUnicastAddress(mAloc);
             ExitNow();

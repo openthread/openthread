@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/thread_ftd.h>
+
 #include "coap/coap.hpp"
 #include "common/as_core_type.hpp"
 #include "common/linked_list.hpp"

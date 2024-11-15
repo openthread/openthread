@@ -120,7 +120,6 @@
 #include "thread/link_quality.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/mle.hpp"
-#include "thread/mle_router.hpp"
 #include "thread/mlr_manager.hpp"
 #include "thread/network_data_local.hpp"
 #include "thread/network_data_notifier.hpp"
@@ -549,7 +548,7 @@ private:
     Lowpan::Lowpan                 mLowpan;
     Mac::Mac                       mMac;
     MeshForwarder                  mMeshForwarder;
-    Mle::MleRouter                 mMleRouter;
+    Mle::Mle                       mMle;
     Mle::DiscoverScanner           mDiscoverScanner;
     AddressResolver                mAddressResolver;
 
@@ -772,20 +771,16 @@ template <> inline MeshForwarder &Instance::Get(void) { return mMeshForwarder; }
 template <> inline RadioSelector &Instance::Get(void) { return mRadioSelector; }
 #endif
 
-template <> inline Mle::Mle &Instance::Get(void) { return mMleRouter; }
-
-#if OPENTHREAD_FTD
-template <> inline Mle::MleRouter &Instance::Get(void) { return mMleRouter; }
-#endif
+template <> inline Mle::Mle &Instance::Get(void) { return mMle; }
 
 template <> inline Mle::DiscoverScanner &Instance::Get(void) { return mDiscoverScanner; }
 
-template <> inline NeighborTable &Instance::Get(void) { return mMleRouter.mNeighborTable; }
+template <> inline NeighborTable &Instance::Get(void) { return mMle.mNeighborTable; }
 
 #if OPENTHREAD_FTD
-template <> inline ChildTable &Instance::Get(void) { return mMleRouter.mChildTable; }
+template <> inline ChildTable &Instance::Get(void) { return mMle.mChildTable; }
 
-template <> inline RouterTable &Instance::Get(void) { return mMleRouter.mRouterTable; }
+template <> inline RouterTable &Instance::Get(void) { return mMle.mRouterTable; }
 #endif
 
 template <> inline Ip6::Netif &Instance::Get(void) { return mThreadNetif; }

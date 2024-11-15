@@ -86,7 +86,7 @@ void TimeSync::HandleTimeSyncMessage(const Message &aMessage)
 
         LogInfo("Older time sync seq received:%u. Forwarding current seq:%u", aMessage.GetTimeSyncSeq(), mTimeSyncSeq);
     }
-    else if (Get<Mle::MleRouter>().IsLeader() && timeSyncSeqDelta > 0)
+    else if (Get<Mle::Mle>().IsLeader() && timeSyncSeqDelta > 0)
     {
         // Another device is forwarding a later time sync sequence, perhaps because it merged from a different
         // partition. The leader is authoritative, so ensure all devices synchronize to the time being seeded by this
@@ -97,13 +97,13 @@ void TimeSync::HandleTimeSyncMessage(const Message &aMessage)
         LogInfo("Newer time sync seq:%u received by leader. Setting current seq to:%u and forwarding",
                 aMessage.GetTimeSyncSeq(), mTimeSyncSeq);
     }
-    else if (!Get<Mle::MleRouter>().IsLeader())
+    else if (!Get<Mle::Mle>().IsLeader())
     {
         // For all devices aside from the leader, update network time in following three cases:
         //  1. During first attach.
         //  2. Already attached, and a newer time sync sequence was received.
         //  3. During reattach or migration process.
-        if (mTimeSyncSeq == OT_TIME_SYNC_INVALID_SEQ || timeSyncSeqDelta > 0 || Get<Mle::MleRouter>().IsDetached())
+        if (mTimeSyncSeq == OT_TIME_SYNC_INVALID_SEQ || timeSyncSeqDelta > 0 || Get<Mle::Mle>().IsDetached())
         {
             // Update network time and forward it.
             mLastTimeSyncReceived = TimerMilli::GetNow();
@@ -137,8 +137,7 @@ void TimeSync::NotifyTimeSyncCallback(void) { mTimeSyncCallback.InvokeIfSet(); }
 #if OPENTHREAD_FTD
 void TimeSync::ProcessTimeSync(void)
 {
-    if (Get<Mle::MleRouter>().IsLeader() &&
-        (TimerMilli::GetNow() - mLastTimeSyncSent > Time::SecToMsec(mTimeSyncPeriod)))
+    if (Get<Mle::Mle>().IsLeader() && (TimerMilli::GetNow() - mLastTimeSyncSent > Time::SecToMsec(mTimeSyncPeriod)))
     {
         IncrementTimeSyncSeq();
         mTimeSyncRequired = true;
@@ -148,7 +147,7 @@ void TimeSync::ProcessTimeSync(void)
 
     if (mTimeSyncRequired)
     {
-        VerifyOrExit(Get<Mle::MleRouter>().SendTimeSync() == kErrorNone);
+        VerifyOrExit(Get<Mle::Mle>().SendTimeSync() == kErrorNone);
 
         mLastTimeSyncSent = TimerMilli::GetNow();
         mTimeSyncRequired = false;
@@ -168,7 +167,7 @@ void TimeSync::HandleNotifierEvents(Events aEvents)
         stateChanged = true;
     }
 
-    if (aEvents.Contains(kEventThreadPartitionIdChanged) && !Get<Mle::MleRouter>().IsLeader())
+    if (aEvents.Contains(kEventThreadPartitionIdChanged) && !Get<Mle::Mle>().IsLeader())
     {
         // Partition has changed. Accept any network time currently being seeded on the new partition
         // and don't attempt to forward the currently held network time from the previous partition.
@@ -200,7 +199,7 @@ void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
 
     mTimer.Stop();
 
-    switch (Get<Mle::MleRouter>().GetRole())
+    switch (Get<Mle::Mle>().GetRole())
     {
     case Mle::kRoleDisabled:
     case Mle::kRoleDetached:
