@@ -62,6 +62,7 @@
 #include "lib/spinel/spinel_buffer.hpp"
 #include "lib/spinel/spinel_decoder.hpp"
 #include "lib/spinel/spinel_encoder.hpp"
+#include "lib/spinel/spinel_prop_codec.hpp"
 
 #if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
 #define SPINEL_HEADER_IID_BROADCAST OPENTHREAD_SPINEL_CONFIG_BROADCAST_IID
@@ -849,7 +850,7 @@ protected:
 #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 
     template <typename DnssdObjType>
-    void DnssdUpdate(const DnssdObjType         *Obj,
+    void DnssdUpdate(const DnssdObjType         *aObj,
                      otPlatDnssdRequestId        aRequestId,
                      otPlatDnssdRegisterCallback aCallback,
                      bool                        aRegister)
@@ -858,12 +859,11 @@ protected:
         uint8_t          header = SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID;
         spinel_command_t cmd    = aRegister ? SPINEL_CMD_PROP_VALUE_INSERTED : SPINEL_CMD_PROP_VALUE_REMOVED;
 
+        VerifyOrExit(aObj != nullptr, error = OT_ERROR_INVALID_ARGS);
         VerifyOrExit(mDnssdState == OT_PLAT_DNSSD_READY, error = OT_ERROR_INVALID_STATE);
 
         SuccessOrExit(error = mEncoder.BeginFrame(header, cmd));
-        SuccessOrExit(error = EncodeDnssd(Obj));
-        SuccessOrExit(error = mEncoder.WriteUint32(aRequestId));
-        SuccessOrExit(error = mEncoder.WriteData(reinterpret_cast<const uint8_t *>(&aCallback), sizeof(aCallback)));
+        SuccessOrExit(error = Spinel::EncodeDnssd(mEncoder, *aObj, aRequestId, aCallback));
         SuccessOrExit(error = mEncoder.EndFrame());
 
     exit:
@@ -873,11 +873,9 @@ protected:
         }
     }
 
-    template <typename DnssdObjType> otError EncodeDnssd(const DnssdObjType *aObj);
-
     otPlatDnssdState mDnssdState;
-#endif
-#endif
+#endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+#endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     char    *mDiagOutput;

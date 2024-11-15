@@ -1566,66 +1566,6 @@ exit:
 
 #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 
-template <> otError NcpBase::EncodeDnssd<otPlatDnssdHost>(const otPlatDnssdHost *aHost)
-{
-    otError error = OT_ERROR_NONE;
-
-    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_DNSSD_HOST));
-    SuccessOrExit(error = mEncoder.WriteUtf8(aHost->mHostName == nullptr ? "" : aHost->mHostName));
-    SuccessOrExit(error = mEncoder.WriteUint16(aHost->mAddressesLength));
-    for (uint8_t i = 0; i < aHost->mAddressesLength; i++)
-    {
-        SuccessOrExit(error = mEncoder.WriteIp6Address(aHost->mAddresses[i]));
-    }
-
-exit:
-    return error;
-}
-
-template <> otError NcpBase::EncodeDnssd<otPlatDnssdService>(const otPlatDnssdService *aService)
-{
-    otError error = OT_ERROR_NONE;
-
-    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_DNSSD_SERVICE));
-    SuccessOrExit(error = mEncoder.WriteUtf8(aService->mHostName == nullptr ? "" : aService->mHostName));
-    SuccessOrExit(error = mEncoder.WriteUtf8(aService->mServiceInstance == nullptr ? "" : aService->mServiceInstance));
-    SuccessOrExit(error = mEncoder.WriteUtf8(aService->mServiceType == nullptr ? "" : aService->mServiceType));
-    SuccessOrExit(error = mEncoder.OpenStruct());
-    for (uint8_t i = 0; i < aService->mSubTypeLabelsLength; i++)
-    {
-        SuccessOrExit(error = mEncoder.WriteUtf8(aService->mSubTypeLabels[i]));
-    }
-    SuccessOrExit(error = mEncoder.CloseStruct());
-    SuccessOrExit(error = mEncoder.WriteDataWithLen(aService->mTxtData, aService->mTxtDataLength));
-    SuccessOrExit(error = mEncoder.WriteUint16(aService->mPort));
-    SuccessOrExit(error = mEncoder.WriteUint16(aService->mPriority));
-    SuccessOrExit(error = mEncoder.WriteUint16(aService->mWeight));
-    SuccessOrExit(error = mEncoder.WriteUint16(aService->mTtl));
-
-exit:
-    return error;
-}
-
-template <> otError NcpBase::EncodeDnssd<otPlatDnssdKey>(const otPlatDnssdKey *aKey)
-{
-    otError error = OT_ERROR_NONE;
-
-    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_DNSSD_KEY_RECORD));
-    SuccessOrExit(error = mEncoder.WriteUtf8(aKey->mName == nullptr ? "" : aKey->mName));
-    SuccessOrExit(error = mEncoder.OpenStruct());
-    if (aKey->mServiceType != nullptr)
-    {
-        mEncoder.WriteUtf8(aKey->mServiceType);
-    }
-    SuccessOrExit(error = mEncoder.CloseStruct());
-    SuccessOrExit(error = mEncoder.WriteDataWithLen(aKey->mKeyData, aKey->mKeyDataLength));
-    SuccessOrExit(error = mEncoder.WriteUint16(aKey->mClass));
-    SuccessOrExit(error = mEncoder.WriteUint16(aKey->mTtl));
-
-exit:
-    return error;
-}
-
 void NcpBase::DnssdRegisterHost(const otPlatDnssdHost      *aHost,
                                 otPlatDnssdRequestId        aRequestId,
                                 otPlatDnssdRegisterCallback aCallback)
