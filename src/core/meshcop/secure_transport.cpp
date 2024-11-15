@@ -206,17 +206,17 @@ void SecureTransport::HandleReceive(Message &aMessage, const Ip6::MessageInfo &a
 #ifdef MBEDTLS_SSL_SRV_C
     if (IsStateConnecting())
     {
-        IgnoreError(SetClientId(mMessageInfo.GetPeerAddr().mFields.m8, sizeof(mMessageInfo.GetPeerAddr().mFields)));
+        mbedtls_ssl_set_client_transport_id(&mSsl, mMessageInfo.GetPeerAddr().GetBytes(), sizeof(Ip6::Address));
     }
 #endif
 
-    Receive(aMessage);
+    mReceiveMessage = &aMessage;
+    Process();
+    mReceiveMessage = nullptr;
 
 exit:
     return;
 }
-
-uint16_t SecureTransport::GetUdpPort(void) const { return mSocket.GetSockName().GetPort(); }
 
 Error SecureTransport::Bind(uint16_t aPort)
 {
@@ -355,11 +355,11 @@ Error SecureTransport::Setup(bool aClient)
     rval = mbedtls_ssl_setup(&mSsl, &mConf);
     VerifyOrExit(rval == 0);
 
-    mbedtls_ssl_set_bio(&mSsl, this, &SecureTransport::HandleMbedtlsTransmit, HandleMbedtlsReceive, nullptr);
+    mbedtls_ssl_set_bio(&mSsl, this, HandleMbedtlsTransmit, HandleMbedtlsReceive, /* RecvTimeoutFn */ nullptr);
 
     if (mDatagramTransport)
     {
-        mbedtls_ssl_set_timer_cb(&mSsl, this, &SecureTransport::HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
+        mbedtls_ssl_set_timer_cb(&mSsl, this, HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
     }
 
     if (mCipherSuite == kEcjpakeWithAes128Ccm8)
@@ -376,17 +376,6 @@ Error SecureTransport::Setup(bool aClient)
 
     mReceiveMessage = nullptr;
     mMessageSubType = Message::kSubTypeNone;
-
-    if (mCipherSuite == kEcjpakeWithAes128Ccm8)
-    {
-        LogInfo("DTLS started");
-    }
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE
-    else
-    {
-        LogInfo("Application Secure (D)TLS started");
-    }
-#endif
 
     SetState(kStateConnecting);
 
@@ -456,8 +445,6 @@ void SecureTransport::Close(void)
     IgnoreError(mSocket.Close());
     mTimer.Stop();
 }
-
-void SecureTransport::Disconnect(void) { Disconnect(kDisconnectedLocalClosed); }
 
 void SecureTransport::Disconnect(ConnectEvent aEvent)
 {
@@ -761,14 +748,6 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_TLS_API_ENABLE
 
-#ifdef MBEDTLS_SSL_SRV_C
-Error SecureTransport::SetClientId(const uint8_t *aClientId, uint8_t aLength)
-{
-    int rval = mbedtls_ssl_set_client_transport_id(&mSsl, aClientId, aLength);
-    return Crypto::MbedTls::MapError(rval);
-}
-#endif
-
 Error SecureTransport::Send(Message &aMessage, uint16_t aLength)
 {
     Error   error = kErrorNone;
@@ -792,15 +771,6 @@ exit:
     return error;
 }
 
-void SecureTransport::Receive(Message &aMessage)
-{
-    mReceiveMessage = &aMessage;
-
-    Process();
-
-    mReceiveMessage = nullptr;
-}
-
 int SecureTransport::HandleMbedtlsTransmit(void *aContext, const unsigned char *aBuf, size_t aLength)
 {
     return static_cast<SecureTransport *>(aContext)->HandleMbedtlsTransmit(aBuf, aLength);
@@ -808,22 +778,27 @@ int SecureTransport::HandleMbedtlsTransmit(void *aContext, const unsigned char *
 
 int SecureTransport::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
 {
-    Error error;
-    int   rval = 0;
+    Error    error   = kErrorNone;
+    Message *message = mSocket.NewMessage();
+    int      rval;
 
-    if (mCipherSuite == kEcjpakeWithAes128Ccm8)
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+    message->SetSubType(mMessageSubType);
+    message->SetLinkSecurityEnabled(mLayerTwoSecurity);
+
+    SuccessOrExit(error = message->AppendBytes(aBuf, static_cast<uint16_t>(aLength)));
+
+    if (mTransportCallback.IsSet())
     {
-        LogDebg("HandleMbedtlsTransmit DTLS");
+        error = mTransportCallback.Invoke(*message, mMessageInfo);
     }
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE
     else
     {
-        LogDebg("HandleMbedtlsTransmit TLS");
+        error = mSocket.SendTo(*message, mMessageInfo);
     }
-#endif
 
-    error = HandleSecureTransportSend(aBuf, static_cast<uint16_t>(aLength), mMessageSubType);
-
+exit:
+    FreeMessageOnError(message, error);
     mMessageSubType = Message::kSubTypeNone;
 
     switch (error)
@@ -837,7 +812,7 @@ int SecureTransport::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLe
         break;
 
     default:
-        LogWarn("HandleMbedtlsTransmit: %s error", ErrorToString(error));
+        LogWarnOnError(error, "HandleMbedtlsTransmit");
         rval = MBEDTLS_ERR_NET_SEND_FAILED;
         break;
     }
@@ -852,29 +827,16 @@ int SecureTransport::HandleMbedtlsReceive(void *aContext, unsigned char *aBuf, s
 
 int SecureTransport::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
 {
-    int rval;
+    int      rval = MBEDTLS_ERR_SSL_WANT_READ;
+    uint16_t readLength;
 
-    if (mCipherSuite == kEcjpakeWithAes128Ccm8)
-    {
-        LogDebg("HandleMbedtlsReceive DTLS");
-    }
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE
-    else
-    {
-        LogDebg("HandleMbedtlsReceive TLS");
-    }
-#endif
+    VerifyOrExit(mReceiveMessage != nullptr);
 
-    VerifyOrExit(mReceiveMessage != nullptr && (rval = mReceiveMessage->GetLength() - mReceiveMessage->GetOffset()) > 0,
-                 rval = MBEDTLS_ERR_SSL_WANT_READ);
+    readLength = mReceiveMessage->ReadBytes(mReceiveMessage->GetOffset(), aBuf, static_cast<uint16_t>(aLength));
+    VerifyOrExit(readLength > 0);
 
-    if (aLength > static_cast<size_t>(rval))
-    {
-        aLength = static_cast<size_t>(rval);
-    }
-
-    rval = mReceiveMessage->ReadBytes(mReceiveMessage->GetOffset(), aBuf, static_cast<uint16_t>(aLength));
-    mReceiveMessage->MoveOffset(rval);
+    mReceiveMessage->MoveOffset(readLength);
+    rval = static_cast<int>(readLength);
 
 exit:
     return rval;
@@ -888,8 +850,6 @@ int SecureTransport::HandleMbedtlsGetTimer(void *aContext)
 int SecureTransport::HandleMbedtlsGetTimer(void)
 {
     int rval;
-
-    LogDebg("HandleMbedtlsGetTimer");
 
     if (!mTimerSet)
     {
@@ -918,17 +878,6 @@ void SecureTransport::HandleMbedtlsSetTimer(void *aContext, uint32_t aIntermedia
 
 void SecureTransport::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
 {
-    if (mCipherSuite == kEcjpakeWithAes128Ccm8)
-    {
-        LogDebg("SetTimer DTLS");
-    }
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE
-    else
-    {
-        LogDebg("SetTimer TLS");
-    }
-#endif
-
     if (aFinish == 0)
     {
         mTimerSet = false;
@@ -982,7 +931,6 @@ void SecureTransport::HandleMbedtlsExportKeys(mbedtls_ssl_key_export_type aType,
     sha256.Update(keyBlock, kSecureTransportKeyBlockSize);
     sha256.Finish(kek);
 
-    LogDebg("Generated KEK");
     Get<KeyManager>().SetKek(kek.GetBytes());
 
 exit:
@@ -1019,7 +967,6 @@ int SecureTransport::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
     sha256.Update(aKeyBlock, 2 * static_cast<uint16_t>(aMacLength + aKeyLength + aIvLength));
     sha256.Finish(kek);
 
-    LogDebg("Generated KEK");
     Get<KeyManager>().SetKek(kek.GetBytes());
 
 exit:
@@ -1182,33 +1129,6 @@ void SecureTransport::HandleMbedtlsDebug(int aLevel, const char *aFile, int aLin
     OT_UNUSED_VARIABLE(aFile);
     OT_UNUSED_VARIABLE(aLine);
     OT_UNUSED_VARIABLE(logLevel);
-}
-
-Error SecureTransport::HandleSecureTransportSend(const uint8_t   *aBuf,
-                                                 uint16_t         aLength,
-                                                 Message::SubType aMessageSubType)
-{
-    Error    error   = kErrorNone;
-    Message *message = nullptr;
-
-    VerifyOrExit((message = mSocket.NewMessage()) != nullptr, error = kErrorNoBufs);
-    message->SetSubType(aMessageSubType);
-    message->SetLinkSecurityEnabled(mLayerTwoSecurity);
-
-    SuccessOrExit(error = message->AppendBytes(aBuf, aLength));
-
-    if (mTransportCallback.IsSet())
-    {
-        SuccessOrExit(error = mTransportCallback.Invoke(*message, mMessageInfo));
-    }
-    else
-    {
-        SuccessOrExit(error = mSocket.SendTo(*message, mMessageInfo));
-    }
-
-exit:
-    FreeMessageOnError(message, error);
-    return error;
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
