@@ -35,6 +35,7 @@
 #include "lib/platform/exit_code.h"
 #include "lib/spinel/spinel.h"
 #include "lib/utils/math.hpp"
+#include "lib/utils/new.hpp"
 #include "lib/utils/utils.hpp"
 
 namespace ot {

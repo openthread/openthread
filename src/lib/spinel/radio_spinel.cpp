@@ -48,6 +48,7 @@
 #include "lib/spinel/spinel_decoder.hpp"
 #include "lib/spinel/spinel_driver.hpp"
 #include "lib/spinel/spinel_helper.hpp"
+#include "lib/utils/new.hpp"
 #include "lib/utils/utils.hpp"
 
 namespace ot {

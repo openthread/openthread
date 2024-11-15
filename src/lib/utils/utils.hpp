@@ -109,11 +109,4 @@
         }                         \
     } while (false)
 
-/**
- * Overload the new operator to new an object at a specific address.
- *
- * @param[in]  p  The pointer of the address.
- */
-inline void *operator new(size_t, void *p) throw() { return p; }
-
 #endif // LIB_UTILS_CODE_UTILS_HPP_
