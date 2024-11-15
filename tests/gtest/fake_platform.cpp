@@ -39,8 +39,6 @@
 #include <openthread/instance.h>
 #include <openthread/tasklet.h>
 #include <openthread/tcat.h>
-#include <openthread/platform/alarm-micro.h>
-#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/ble.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/dso_transport.h>
@@ -124,11 +122,15 @@ void FakePlatform::StartMilliAlarm(uint32_t aT0, uint32_t aDt)
 
 void FakePlatform::StopMilliAlarm() { mMilliAlarmStart = kAlarmStop; }
 
-void FakePlatform::ProcessAlarm(uint64_t &aTimeout)
-{
-    uint64_t end = mNow + aTimeout;
+template <> void FakePlatform::HandleSchedule<&FakePlatform::mReceiveAtStart>() { mChannel = mReceiveAtChannel; }
 
-    uint64_t *alarm = &end;
+template <> void FakePlatform::HandleSchedule<&FakePlatform::mReceiveAtEnd>() { mChannel = 0; }
+
+void FakePlatform::ProcessSchedules(uint64_t &aTimeout)
+{
+    uint64_t guard = mNow + aTimeout;
+
+    uint64_t *alarm = &guard;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     if (mMicroAlarmStart < *alarm)
     {
@@ -154,22 +156,27 @@ void FakePlatform::ProcessAlarm(uint64_t &aTimeout)
         mNow = *alarm;
     }
     *alarm = kAlarmStop;
-    if (alarm == &mReceiveAtStart)
+
+    if (alarm == &guard)
     {
-        mChannel = mReceiveAtChannel;
+        // nonthing scheduled within this period.
     }
-    if (alarm == &mReceiveAtEnd)
+    else if (alarm == &mReceiveAtEnd)
     {
-        mChannel = 0;
+        FakePlatform::HandleSchedule<&FakePlatform::mReceiveAtEnd>();
+    }
+    else if (alarm == &mReceiveAtStart)
+    {
+        FakePlatform::HandleSchedule<&FakePlatform::mReceiveAtStart>();
     }
     else if (alarm == &mMilliAlarmStart)
     {
-        otPlatAlarmMilliFired(mInstance);
+        FakePlatform::HandleSchedule<&FakePlatform::mMilliAlarmStart>();
     }
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     else if (alarm == &mMicroAlarmStart)
     {
-        otPlatAlarmMicroFired(mInstance);
+        FakePlatform::HandleSchedule<&FakePlatform::mMicroAlarmStart>();
     }
 #endif
 }
@@ -182,7 +189,7 @@ uint64_t FakePlatform::Run(uint64_t aTimeoutInUs)
     }
     else
     {
-        ProcessAlarm(aTimeoutInUs);
+        ProcessSchedules(aTimeoutInUs);
     }
 
     return aTimeoutInUs;

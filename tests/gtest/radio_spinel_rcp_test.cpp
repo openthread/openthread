@@ -305,8 +305,8 @@ TEST(RadioSpinelReceiveAt, shouldReceiveAtGiveRadioTime)
 
     ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
     ASSERT_EQ(platform.mRadioSpinel.SetRxOnWhenIdle(false), kErrorNone);
-    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(platform.mRadioSpinel.GetNow() + 100000, 10000, 11), kErrorNone);
-    platform.GoInUs(99999);
+    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(100000, 10000, 11), kErrorNone);
+    platform.GoInUs(100000);
     EXPECT_EQ(platform.GetReceiveChannel(), 0);
     platform.GoInUs(1);
     EXPECT_EQ(platform.GetReceiveChannel(), 11);

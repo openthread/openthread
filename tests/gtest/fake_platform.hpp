@@ -38,6 +38,8 @@
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/platform/alarm-micro.h>
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
@@ -107,7 +109,7 @@ public:
     virtual uint64_t GetEui64() const { return 0; }
 
 protected:
-    void ProcessAlarm(uint64_t &aTimeout);
+    void ProcessSchedules(uint64_t &aTimeout);
 
     static constexpr uint64_t kAlarmStop = 0xffffffffffffffffUL;
 
@@ -124,18 +126,32 @@ protected:
 #endif
     uint64_t mMilliAlarmStart = kAlarmStop;
 
-    uint64_t mReceiveAtStart   = kAlarmStop;
-    uint64_t mReceiveAtEnd     = kAlarmStop;
-    uint64_t mReceiveAtChannel = 0;
+    uint64_t mReceiveAtStart = kAlarmStop;
+    uint64_t mReceiveAtEnd   = kAlarmStop;
+
+    template <uint64_t FakePlatform::*T> void HandleSchedule();
 
     otRadioFrame mTransmitFrame;
     uint8_t      mTransmitBuffer[OT_RADIO_FRAME_MAX_SIZE];
-    uint8_t      mChannel = 0;
+    uint8_t      mChannel          = 0;
+    uint8_t      mReceiveAtChannel = 0;
 
     uint8_t mFlash[kFlashSwapSize * kFlashSwapNum];
 
     std::map<uint32_t, std::vector<std::vector<uint8_t>>> mSettings;
 };
+
+template <> inline void FakePlatform::HandleSchedule<&FakePlatform::mMilliAlarmStart>()
+{
+    otPlatAlarmMilliFired(mInstance);
+}
+
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+template <> inline void FakePlatform::HandleSchedule<&FakePlatform::mMicroAlarmStart>()
+{
+    otPlatAlarmMicroFired(mInstance);
+}
+#endif
 
 } // namespace ot
 
