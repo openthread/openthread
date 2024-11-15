@@ -199,8 +199,7 @@ void SecureTransport::HandleReceive(Message &aMessage, const Ip6::MessageInfo &a
     else
     {
         // Once DTLS session is started, communicate only with a single peer.
-        VerifyOrExit((mMessageInfo.GetPeerAddr() == aMessageInfo.GetPeerAddr()) &&
-                     (mMessageInfo.GetPeerPort() == aMessageInfo.GetPeerPort()));
+        VerifyOrExit(mMessageInfo.HasSamePeerAddrAndPort(aMessageInfo));
     }
 
 #ifdef MBEDTLS_SSL_SRV_C

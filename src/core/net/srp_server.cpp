@@ -778,8 +778,7 @@ const Server::UpdateMetadata *Server::FindOutstandingUpdate(const MessageMetadat
     for (const UpdateMetadata &update : mOutstandingUpdates)
     {
         if (aMessageMetadata.mDnsHeader.GetMessageId() == update.GetDnsHeader().GetMessageId() &&
-            aMessageMetadata.mMessageInfo->GetPeerAddr() == update.GetMessageInfo().GetPeerAddr() &&
-            aMessageMetadata.mMessageInfo->GetPeerPort() == update.GetMessageInfo().GetPeerPort())
+            aMessageMetadata.mMessageInfo->HasSamePeerAddrAndPort(update.GetMessageInfo()))
         {
             ExitNow(ret = &update);
         }
