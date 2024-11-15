@@ -4836,6 +4836,42 @@ enum
      */
     SPINEL_PROP_DNSSD_HOST = SPINEL_PROP_DNSSD__BEGIN + 3,
 
+    /// DNS-SD Service
+    /**
+     * Format `UUUt(A(U))dSSSSLD`: Inserted/Removed
+     *
+     * `U`       : The host name (does not include domain name).
+     * `U`       : The service instance name label (not the full name).
+     * `U`       : The service type (e.g., "_mt._udp", does not include domain name).
+     * `t(A(U))` : Array of sub-type labels (can be empty array if no label).
+     * `d`       : Encoded TXT data bytes.
+     * `S`       : The service port number.
+     * `S`       : The service priority.
+     * `S`       : The service weight.
+     * `S`       : The service TTL in seconds.
+     * `L`       : The Dnssd Request ID.
+     * `D`       : The context of the request. (A pointer to the callback for the request)
+     *
+     * NCP uses this property to register/unregister a DNS-SD service.
+     */
+    SPINEL_PROP_DNSSD_SERVICE = SPINEL_PROP_DNSSD__BEGIN + 4,
+
+    /// DNS-SD Key Record
+    /**
+     * Format `Ut(U)dSSLD`: Inserted/Removed
+     *
+     * `U`    : A host or a service instance name (does not include domain name).
+     * `t(U)` : The service type if key is for a service (does not include domain name).
+     * `d`    : Byte array containing the key record data.
+     * `S`    : The resource record class.
+     * `S`    : The TTL in seconds.
+     * `L`    : The Dnssd Request ID.
+     * `D`    : The context of the request. (A pointer to the callback for the request)
+     *
+     * NCP uses this property to register/unregister a DNS-SD key record.
+     */
+    SPINEL_PROP_DNSSD_KEY_RECORD = SPINEL_PROP_DNSSD__BEGIN + 5,
+
     SPINEL_PROP_DNSSD__END = 0x950,
 
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,

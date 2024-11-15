@@ -45,9 +45,9 @@ void otPlatDnssdRegisterService(otInstance                 *aInstance,
                                 otPlatDnssdRegisterCallback aCallback)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aService);
-    OT_UNUSED_VARIABLE(aRequestId);
-    OT_UNUSED_VARIABLE(aCallback);
+    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
+
+    ncp->DnssdRegisterService(aService, aRequestId, aCallback);
 }
 
 void otPlatDnssdUnregisterService(otInstance                 *aInstance,
@@ -56,9 +56,9 @@ void otPlatDnssdUnregisterService(otInstance                 *aInstance,
                                   otPlatDnssdRegisterCallback aCallback)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aService);
-    OT_UNUSED_VARIABLE(aRequestId);
-    OT_UNUSED_VARIABLE(aCallback);
+    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
+
+    ncp->DnssdUnregisterService(aService, aRequestId, aCallback);
 }
 
 void otPlatDnssdRegisterHost(otInstance                 *aInstance,
@@ -89,9 +89,9 @@ void otPlatDnssdRegisterKey(otInstance                 *aInstance,
                             otPlatDnssdRegisterCallback aCallback)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aKey);
-    OT_UNUSED_VARIABLE(aRequestId);
-    OT_UNUSED_VARIABLE(aCallback);
+    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
+
+    ncp->DnssdRegisterKey(aKey, aRequestId, aCallback);
 }
 
 void otPlatDnssdUnregisterKey(otInstance                 *aInstance,
@@ -100,9 +100,9 @@ void otPlatDnssdUnregisterKey(otInstance                 *aInstance,
                               otPlatDnssdRegisterCallback aCallback)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aKey);
-    OT_UNUSED_VARIABLE(aRequestId);
-    OT_UNUSED_VARIABLE(aCallback);
+    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
+
+    ncp->DnssdUnregisterKey(aKey, aRequestId, aCallback);
 }
 
 void otPlatDnssdStartBrowser(otInstance *aInstance, const otPlatDnssdBrowser *aBrowser)
