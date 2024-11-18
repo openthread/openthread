@@ -41,6 +41,7 @@
 #include <openthread/platform/debug_uart.h>
 
 #include "simul_utils.h"
+#include "lib/platform/exit_code.h"
 #include "utils/code_utils.h"
 #include "utils/uart.h"
 
@@ -203,7 +204,7 @@ otError otPlatUartFlush(void)
     else
     {
         perror("write(UART)");
-        exit(EXIT_FAILURE);
+        DieNow(OT_EXIT_ERROR_ERRNO);
     }
 
 exit:
@@ -226,7 +227,7 @@ void platformUartProcess(void)
     if (rval < 0)
     {
         perror("poll");
-        exit(EXIT_FAILURE);
+        DieNow(OT_EXIT_ERROR_ERRNO);
     }
 
     if (rval > 0)
@@ -234,13 +235,13 @@ void platformUartProcess(void)
         if ((pollfd[0].revents & error_flags) != 0)
         {
             perror("s_in_fd");
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_ERROR_ERRNO);
         }
 
         if ((pollfd[1].revents & error_flags) != 0)
         {
             perror("s_out_fd");
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_ERROR_ERRNO);
         }
 
         if (pollfd[0].revents & POLLIN)
@@ -250,7 +251,7 @@ void platformUartProcess(void)
             if (rval <= 0)
             {
                 perror("read");
-                exit(EXIT_FAILURE);
+                DieNow(OT_EXIT_ERROR_ERRNO);
             }
 
             otPlatUartReceived(s_receive_buffer, (uint16_t)rval);
@@ -273,7 +274,7 @@ void platformUartProcess(void)
             else if (errno != EINTR)
             {
                 perror("write");
-                exit(EXIT_FAILURE);
+                DieNow(OT_EXIT_ERROR_ERRNO);
             }
         }
     }

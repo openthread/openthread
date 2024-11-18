@@ -114,7 +114,7 @@ void platformAlarmInit(uint32_t aSpeedUpFactor)
         if (sigaction(OPENTHREAD_CONFIG_MICRO_TIMER_SIGNAL, &sa, NULL) == -1)
         {
             perror("sigaction");
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_ERROR_ERRNO);
         }
 
         struct sigevent sev;
@@ -126,7 +126,7 @@ void platformAlarmInit(uint32_t aSpeedUpFactor)
         if (-1 == timer_create(CLOCK_MONOTONIC, &sev, &sMicroTimer))
         {
             perror("timer_create");
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_ERROR_ERRNO);
         }
     }
 #endif
@@ -198,7 +198,7 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
         if (-1 == timer_settime(sMicroTimer, 0, &its, NULL))
         {
             perror("otPlatAlarmMicroStartAt timer_settime()");
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_ERROR_ERRNO);
         }
     }
 #endif // __linux__
@@ -217,7 +217,7 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
         if (-1 == timer_settime(sMicroTimer, 0, &its, NULL))
         {
             perror("otPlatAlarmMicroStop timer_settime()");
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_ERROR_ERRNO);
         }
     }
 #endif // __linux__

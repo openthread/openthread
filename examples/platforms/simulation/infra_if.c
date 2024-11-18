@@ -34,6 +34,7 @@
 #include <openthread/platform/infra_if.h>
 
 #include "simul_utils.h"
+#include "lib/platform/exit_code.h"
 #include "utils/code_utils.h"
 
 #if OPENTHREAD_SIMULATION_IMPLEMENT_INFRA_IF && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -252,7 +253,7 @@ void platformInfraIfInit(void)
         if (*endptr != '\0')
         {
             fprintf(stderr, "\r\nInvalid PORT_OFFSET: %s\r\n", str);
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_FAILURE);
         }
 
         sPortOffset *= (MAX_NETWORK_SIZE + 1);
@@ -332,7 +333,7 @@ OT_TOOL_WEAK void otPlatInfraIfRecvIcmp6Nd(otInstance         *aInstance,
     OT_UNUSED_VARIABLE(aBufferLength);
 
     fprintf(stderr, "\n\r Weak otPlatInfraIfRecvIcmp6Nd is being used\n\r");
-    exit(1);
+    DieNow(OT_EXIT_FAILURE);
 }
 
 #endif // OPENTHREAD_SIMULATION_IMPLEMENT_INFRA_IF && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
