@@ -39,8 +39,6 @@
 #include <openthread/instance.h>
 #include <openthread/tasklet.h>
 #include <openthread/tcat.h>
-#include <openthread/platform/alarm-micro.h>
-#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/ble.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/dso_transport.h>
@@ -124,11 +122,15 @@ void FakePlatform::StartMilliAlarm(uint32_t aT0, uint32_t aDt)
 
 void FakePlatform::StopMilliAlarm() { mMilliAlarmStart = kAlarmStop; }
 
-void FakePlatform::ProcessAlarm(uint64_t &aTimeout)
-{
-    uint64_t end = mNow + aTimeout;
+template <> void FakePlatform::HandleSchedule<&FakePlatform::mReceiveAtStart>() { mChannel = mReceiveAtChannel; }
 
-    uint64_t *alarm = &end;
+template <> void FakePlatform::HandleSchedule<&FakePlatform::mReceiveAtEnd>() { mChannel = 0; }
+
+void FakePlatform::ProcessSchedules(uint64_t &aTimeout)
+{
+    uint64_t guard = mNow + aTimeout;
+
+    uint64_t *alarm = &guard;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     if (mMicroAlarmStart < *alarm)
     {
@@ -139,6 +141,14 @@ void FakePlatform::ProcessAlarm(uint64_t &aTimeout)
     {
         alarm = &mMilliAlarmStart;
     }
+    if (mReceiveAtStart < *alarm)
+    {
+        alarm = &mReceiveAtStart;
+    }
+    else if (mReceiveAtEnd < *alarm)
+    {
+        alarm = &mReceiveAtEnd;
+    }
 
     if (mNow < *alarm)
     {
@@ -146,17 +156,29 @@ void FakePlatform::ProcessAlarm(uint64_t &aTimeout)
         mNow = *alarm;
     }
     *alarm = kAlarmStop;
+
+    if (alarm == &guard)
+    {
+        // nonthing scheduled within this period.
+    }
+    else if (alarm == &mReceiveAtEnd)
+    {
+        FakePlatform::HandleSchedule<&FakePlatform::mReceiveAtEnd>();
+    }
+    else if (alarm == &mReceiveAtStart)
+    {
+        FakePlatform::HandleSchedule<&FakePlatform::mReceiveAtStart>();
+    }
+    else if (alarm == &mMilliAlarmStart)
+    {
+        FakePlatform::HandleSchedule<&FakePlatform::mMilliAlarmStart>();
+    }
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-    if (alarm == &mMicroAlarmStart)
+    else if (alarm == &mMicroAlarmStart)
     {
-        otPlatAlarmMicroFired(mInstance);
+        FakePlatform::HandleSchedule<&FakePlatform::mMicroAlarmStart>();
     }
-    else
 #endif
-        if (alarm == &mMilliAlarmStart)
-    {
-        otPlatAlarmMilliFired(mInstance);
-    }
 }
 
 uint64_t FakePlatform::Run(uint64_t aTimeoutInUs)
@@ -167,7 +189,7 @@ uint64_t FakePlatform::Run(uint64_t aTimeoutInUs)
     }
     else
     {
-        ProcessAlarm(aTimeoutInUs);
+        ProcessSchedules(aTimeoutInUs);
     }
 
     return aTimeoutInUs;
@@ -355,6 +377,11 @@ otError otPlatRadioDisable(otInstance *) { return OT_ERROR_NONE; }
 otError otPlatRadioSleep(otInstance *) { return OT_ERROR_NONE; }
 
 otError otPlatRadioReceive(otInstance *, uint8_t aChannel) { return FakePlatform::CurrentPlatform().Receive(aChannel); }
+
+otError otPlatRadioReceiveAt(otInstance *, uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
+{
+    return FakePlatform::CurrentPlatform().ReceiveAt(aChannel, aStart, aDuration);
+}
 
 otError otPlatRadioTransmit(otInstance *, otRadioFrame *aFrame)
 {

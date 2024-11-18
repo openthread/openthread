@@ -285,3 +285,31 @@ TEST(RadioSpinelTransmit, shouldNotCauseSwitchingToRxAfterTxDoneIfNotRxOnWhenIdl
     platform.GoInMs(1000);
     EXPECT_EQ(platform.GetReceiveChannel(), 11);
 }
+
+TEST(RadioSpinelReceiveAt, shouldReceiveAtGiveRadioTime)
+{
+    class MockPlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        MOCK_METHOD(otError, ReceiveAt, (uint8_t aChannel, uint32_t aStart, uint32_t aDuration), (override));
+    };
+
+    MockPlatform platform;
+
+    ON_CALL(platform, ReceiveAt)
+        .WillByDefault([&platform](uint8_t aChannel, uint32_t aStart, uint32_t aDuration) -> otError {
+            return platform.FakePlatform::ReceiveAt(aChannel, aStart, aDuration);
+        });
+
+    EXPECT_CALL(platform, ReceiveAt).Times(1);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.SetRxOnWhenIdle(false), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.ReceiveAt(100000, 10000, 11), kErrorNone);
+    platform.GoInUs(100000);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+    platform.GoInUs(1);
+    EXPECT_EQ(platform.GetReceiveChannel(), 11);
+    platform.GoInUs(10000);
+    EXPECT_EQ(platform.GetReceiveChannel(), 0);
+}
