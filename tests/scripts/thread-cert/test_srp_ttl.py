@@ -73,7 +73,6 @@ class SrpTtl(thread_cert.TestCase):
         # Start the server and client devices.
         #
 
-        server.srp_server_set_enabled(True)
         server.srp_server_set_lease_range(120, 240, KEY_LEASE, KEY_LEASE)
         server.start()
         self.simulator.go(config.LEADER_STARTUP_DELAY)
@@ -85,53 +84,75 @@ class SrpTtl(thread_cert.TestCase):
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(client.get_state(), 'router')
 
-        self.simulator.go(15)
-        self.assertEqual(client.srp_client_get_auto_start_mode(), 'Enabled')
-
-        client.srp_client_set_host_name('my-host')
-        client.srp_client_set_host_address('2001::1')
-        client.srp_client_add_service('my-service', '_ipps._tcp', 12345)
-        self.simulator.go(2)
-
         #
-        # CLIENT_TTL < TTL_MIN < LEASE_MAX ==> TTL_MIN
+        # Perform test steps twice, with and without SRP coder
+        # use enabled on client.
         #
 
-        client.srp_client_set_ttl(100)
-        server.srp_server_set_ttl_range(120, 240)
-        server.srp_server_set_lease_range(120, 240, KEY_LEASE, KEY_LEASE)
-        self.simulator.go(KEY_LEASE)
-        self.check_ttl(120)
+        for client_coder_enable in [False, True]:
+            print('-' * 80)
+            client.srp_client_set_coder_enable(client_coder_enable)
 
-        #
-        # TTL_MIN < CLIENT_TTL < TTL_MAX < LEASE_MAX ==> CLIENT_TTL
-        #
+            server.srp_server_set_enabled(True)
 
-        client.srp_client_set_ttl(100)
-        server.srp_server_set_ttl_range(60, 120)
-        server.srp_server_set_lease_range(120, 240, KEY_LEASE, KEY_LEASE)
-        self.simulator.go(KEY_LEASE)
-        self.check_ttl(100)
+            client.srp_client_enable_auto_start_mode()
+            self.assertEqual(client.srp_client_get_auto_start_mode(), 'Enabled')
 
-        #
-        # TTL_MAX < LEASE_MAX < CLIENT_TTL ==> TTL_MAX
-        #
+            self.simulator.go(15)
 
-        client.srp_client_set_ttl(240)
-        server.srp_server_set_ttl_range(60, 120)
-        server.srp_server_set_lease_range(120, 240, KEY_LEASE, KEY_LEASE)
-        self.simulator.go(KEY_LEASE)
-        self.check_ttl(120)
+            client.srp_client_set_host_name('my-host')
+            client.srp_client_set_host_address('2001::1')
+            client.srp_client_add_service('my-service', '_ipps._tcp', 12345)
+            self.simulator.go(2)
 
-        #
-        # LEASE_MAX < TTL_MAX < CLIENT_TTL ==> LEASE_MAX
-        #
+            #
+            # CLIENT_TTL < TTL_MIN < LEASE_MAX ==> TTL_MIN
+            #
 
-        client.srp_client_set_ttl(240)
-        server.srp_server_set_ttl_range(60, 120)
-        server.srp_server_set_lease_range(30, 60, KEY_LEASE, KEY_LEASE)
-        self.simulator.go(KEY_LEASE)
-        self.check_ttl(60)
+            client.srp_client_set_ttl(100)
+            server.srp_server_set_ttl_range(120, 240)
+            server.srp_server_set_lease_range(120, 240, KEY_LEASE, KEY_LEASE)
+            self.simulator.go(KEY_LEASE)
+            self.check_ttl(120)
+
+            #
+            # TTL_MIN < CLIENT_TTL < TTL_MAX < LEASE_MAX ==> CLIENT_TTL
+            #
+
+            client.srp_client_set_ttl(100)
+            server.srp_server_set_ttl_range(60, 120)
+            server.srp_server_set_lease_range(120, 240, KEY_LEASE, KEY_LEASE)
+            self.simulator.go(KEY_LEASE)
+            self.check_ttl(100)
+
+            #
+            # TTL_MAX < LEASE_MAX < CLIENT_TTL ==> TTL_MAX
+            #
+
+            client.srp_client_set_ttl(240)
+            server.srp_server_set_ttl_range(60, 120)
+            server.srp_server_set_lease_range(120, 240, KEY_LEASE, KEY_LEASE)
+            self.simulator.go(KEY_LEASE)
+            self.check_ttl(120)
+
+            #
+            # LEASE_MAX < TTL_MAX < CLIENT_TTL ==> LEASE_MAX
+            #
+
+            client.srp_client_set_ttl(240)
+            server.srp_server_set_ttl_range(60, 120)
+            server.srp_server_set_lease_range(30, 60, KEY_LEASE, KEY_LEASE)
+            self.simulator.go(KEY_LEASE)
+            self.check_ttl(60)
+
+            #
+            # Stop client and server and clear previous configs.
+            #
+
+            client.srp_client_clear_host()
+            client.srp_client_stop()
+            client.srp_client_set_ttl(0)
+            server.srp_server_set_enabled(False)
 
     def check_ttl(self, ttl):
         """Check that we have properly registered host and service instance.
