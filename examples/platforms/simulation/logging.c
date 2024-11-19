@@ -101,7 +101,7 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
     if (sLogFile == NULL)
     {
-        char logString[512];
+        char logString[12 /* NodeId */ + OPENTHREAD_CONFIG_LOG_MAX_SIZE];
         int  offset;
 
         offset = snprintf(logString, sizeof(logString), "[%lu]", (unsigned long)gNodeId);
