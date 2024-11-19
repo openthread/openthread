@@ -123,9 +123,8 @@ bool MleRouter::IsRouterEligible(void) const
     const SecurityPolicy &secPolicy = Get<KeyManager>().GetSecurityPolicy();
 
     VerifyOrExit(mRouterEligible && IsFullThreadDevice());
-#if ALTERNATE_RESET_LUTRON == 1
+
     VerifyOrExit(mDisallowRouterRoleTimeout == 0);
-    #endif
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1
     VerifyOrExit(secPolicy.mRoutersEnabled);
@@ -1579,7 +1578,7 @@ void MleRouter::HandleTimeTick(void)
         if ((mRouterTable.GetActiveRouterCount() > 0) && (mRouterTable.GetLeaderAge() >= mNetworkIdTimeout))
         {
             LogInfo("Leader age timeout");
-#if ALTERNATE_RESET_LUTRON == 1
+
             if (mRole == kRoleRouter)
             {
                 BecomeLeader();
@@ -1590,14 +1589,6 @@ void MleRouter::HandleTimeTick(void)
                 mDisallowRouterRoleTimeout = 120;
                 LogInfo("mDisallowRouterRoleTimeout set from ID timeout");
             }
-            else
-            {
-                // don't leave this here, just making sure assumptions are correct for now
-                OT_ASSERT(false);
-            }
-#else
-            Attach(kSamePartition);
-#endif
         }
 
         if (roleTransitionTimeoutExpired && mRouterTable.GetActiveRouterCount() > mRouterDowngradeThreshold)
@@ -2622,8 +2613,6 @@ void MleRouter::SynchronizeChildNetworkData(void)
 {
     VerifyOrExit(IsRouterOrLeader());
 
-    LogDebg("SendingFrom SynchronizeChildNetworkData");
-
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
         if (child.IsRxOnWhenIdle())
@@ -2638,8 +2627,6 @@ void MleRouter::SynchronizeChildNetworkData(void)
 
         SuccessOrExit(SendChildUpdateRequest(child));
     }
-
-    LogDebg("ending");
 
 exit:
     return;

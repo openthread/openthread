@@ -782,8 +782,6 @@ private:
 
     static constexpr uint32_t kChildResetMinTimeoutMS    = 16000u;
     static constexpr uint32_t kChildResetTimeoutJitterMS = 15000u;
-    static constexpr uint32_t kChildResetReconnectMinTimeMS = 0;
-    static constexpr uint32_t kChildResetReconnectJitterMS  = 15000u;
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Attach backoff feature (CONFIG_ENABLE_ATTACH_BACKOFF) - Intervals are in milliseconds.
@@ -1460,7 +1458,6 @@ private:
 
     ResetTimer      mResetTimer;      ///< timer to delay children/routers from sending messages
 	bool            mAwaitingRestore;
-    bool            mStartedRestore;
     bool            mDeterminingLeader;
 };
 
