@@ -1004,10 +1004,10 @@ void SecureTransport::HandleTimer(void)
 
 void SecureTransport::Process(void)
 {
-    uint8_t      buf[OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN];
-    bool         shouldDisconnect = false;
+    uint8_t      buf[kMaxContentLen];
     int          rval;
-    ConnectEvent event;
+    ConnectEvent disconnectEvent;
+    bool         shouldReset;
 
     while (IsStateConnectingOrConnected())
     {
@@ -1025,72 +1025,76 @@ void SecureTransport::Process(void)
         else
         {
             rval = mbedtls_ssl_read(&mSsl, buf, sizeof(buf));
-        }
 
-        if (rval > 0)
-        {
-            mReceiveCallback.InvokeIfSet(buf, static_cast<uint16_t>(rval));
-        }
-        else if (rval == 0 || rval == MBEDTLS_ERR_SSL_WANT_READ || rval == MBEDTLS_ERR_SSL_WANT_WRITE)
-        {
-            break;
-        }
-        else
-        {
-            switch (rval)
+            if (rval > 0)
             {
-            case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
-                mbedtls_ssl_close_notify(&mSsl);
-                event = kDisconnectedPeerClosed;
-                ExitNow(shouldDisconnect = true);
-                OT_UNREACHABLE_CODE(break);
+                mReceiveCallback.InvokeIfSet(buf, static_cast<uint16_t>(rval));
+                continue;
+            }
+        }
 
-            case MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED:
-                break;
+        // Check `rval` to determine if the connection should be
+        // disconnected, reset, or if we should wait.
 
-            case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
-                mbedtls_ssl_close_notify(&mSsl);
-                event = kDisconnectedError;
-                ExitNow(shouldDisconnect = true);
-                OT_UNREACHABLE_CODE(break);
+        disconnectEvent = kConnected;
+        shouldReset     = true;
 
-            case MBEDTLS_ERR_SSL_INVALID_MAC:
-                if (mSsl.MBEDTLS_PRIVATE(state) != MBEDTLS_SSL_HANDSHAKE_OVER)
-                {
-                    mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
-                                                   MBEDTLS_SSL_ALERT_MSG_BAD_RECORD_MAC);
-                    event = kDisconnectedError;
-                    ExitNow(shouldDisconnect = true);
-                }
+        switch (rval)
+        {
+        case 0:
+        case MBEDTLS_ERR_SSL_WANT_READ:
+        case MBEDTLS_ERR_SSL_WANT_WRITE:
+            shouldReset = false;
+            break;
 
-                break;
+        case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
+            mbedtls_ssl_close_notify(&mSsl);
+            disconnectEvent = kDisconnectedPeerClosed;
+            break;
 
-            default:
-                if (mSsl.MBEDTLS_PRIVATE(state) != MBEDTLS_SSL_HANDSHAKE_OVER)
-                {
-                    mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
-                                                   MBEDTLS_SSL_ALERT_MSG_HANDSHAKE_FAILURE);
-                    event = kDisconnectedError;
-                    ExitNow(shouldDisconnect = true);
-                }
+        case MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED:
+            break;
 
-                break;
+        case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
+            mbedtls_ssl_close_notify(&mSsl);
+            disconnectEvent = kDisconnectedError;
+            break;
+
+        case MBEDTLS_ERR_SSL_INVALID_MAC:
+            if (mSsl.MBEDTLS_PRIVATE(state) != MBEDTLS_SSL_HANDSHAKE_OVER)
+            {
+                mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
+                                               MBEDTLS_SSL_ALERT_MSG_BAD_RECORD_MAC);
+                disconnectEvent = kDisconnectedError;
+            }
+            break;
+
+        default:
+            if (mSsl.MBEDTLS_PRIVATE(state) != MBEDTLS_SSL_HANDSHAKE_OVER)
+            {
+                mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
+                                               MBEDTLS_SSL_ALERT_MSG_HANDSHAKE_FAILURE);
+                disconnectEvent = kDisconnectedError;
             }
 
+            break;
+        }
+
+        if (disconnectEvent != kConnected)
+        {
+            Disconnect(disconnectEvent);
+        }
+        else if (shouldReset)
+        {
             mbedtls_ssl_session_reset(&mSsl);
+
             if (mCipherSuite == kEcjpakeWithAes128Ccm8)
             {
                 mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
             }
-            break;
         }
-    }
 
-exit:
-
-    if (shouldDisconnect)
-    {
-        Disconnect(event);
+        break; // from `while()` loop
     }
 }
 

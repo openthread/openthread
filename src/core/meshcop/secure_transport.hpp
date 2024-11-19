@@ -441,6 +441,7 @@ public:
     void HandleReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
+    static constexpr uint16_t kMaxContentLen                   = OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN;
     static constexpr uint32_t kGuardTimeNewConnectionMilli     = 2000;
     static constexpr size_t   kSecureTransportKeyBlockSize     = 40;
     static constexpr size_t   kSecureTransportRandomBufferSize = 32;
