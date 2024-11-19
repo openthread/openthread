@@ -215,6 +215,13 @@ public:
 
 #endif
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    /**
+     * Requests `Mac` to start a wake-up frame transmission.
+     */
+    void RequestWakeupFrameTransmission(void);
+#endif
+
     /**
      * Requests transmission of a data poll (MAC Data Request) frame.
      *
@@ -776,6 +783,9 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kOperationTransmitDataCsl,
 #endif
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+        kOperationTransmitWakeup,
 #endif
     };
 

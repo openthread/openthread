@@ -223,6 +223,16 @@ typedef struct otThreadParentResponseInfo
 typedef void (*otDetachGracefullyCallback)(void *aContext);
 
 /**
+ * Informs the application about the result of waking a Wake-up End Device.
+ *
+ * @param[in] aError   OT_ERROR_NONE    Indicates that the Wake-up End Device has been added as a neighbor.
+ *                     OT_ERROR_FAILED  Indicates that the Wake-up End Device has not received a wake-up frame, or it
+ *                                      has failed the MLE procedure.
+ * @param[in] aContext A pointer to application-specific context.
+ */
+typedef void (*otWakeupCallback)(otError aError, void *aContext);
+
+/**
  * Starts Thread protocol operation.
  *
  * The interface must be up when calling this function.
@@ -1114,6 +1124,36 @@ void otThreadSetStoreFrameCounterAhead(otInstance *aInstance, uint32_t aStoreFra
  * @returns The current store frame counter ahead.
  */
 uint32_t otThreadGetStoreFrameCounterAhead(otInstance *aInstance);
+
+/**
+ * Attempts to wake a Wake-up End Device.
+ *
+ * Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` to be enabled.
+ *
+ * The wake-up starts with transmitting a wake-up frame sequence to the Wake-up End Device.
+ * During the wake-up sequence, and for a short time after the last wake-up frame is sent, the Wake-up Coordinator keeps
+ * its receiver on to be able to receive an initial mesh link establishment message from the WED.
+ *
+ * @warning The functionality implemented by this function is still in the design phase.
+ *          Consequently, the prototype and semantics of this function are subject to change.
+ *
+ * @param[in] aInstance         A pointer to an OpenThread instance.
+ * @param[in] aWedAddress       The extended address of the Wake-up End Device.
+ * @param[in] aWakeupIntervalUs An interval between consecutive wake-up frames (in microseconds).
+ * @param[in] aWakeupDurationMs Duration of the wake-up sequence (in milliseconds).
+ * @param[in] aCallback         A pointer to function that is called when the wake-up succeeds or fails.
+ * @param[in] aContext          A pointer to callback application-specific context.
+ *
+ * @retval OT_ERROR_NONE          Successfully started the wake-up.
+ * @retval OT_ERROR_INVALID_STATE Another attachment request is still in progress.
+ * @retval OT_ERROR_INVALID_ARGS  The wake-up interval or duration are invalid.
+ */
+otError otThreadWakeup(otInstance         *aInstance,
+                       const otExtAddress *aWedAddress,
+                       uint16_t            aWakeupIntervalUs,
+                       uint16_t            aWakeupDurationMs,
+                       otWakeupCallback    aCallback,
+                       void               *aCallbackContext);
 
 /**
  * @}
