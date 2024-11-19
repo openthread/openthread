@@ -232,6 +232,7 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
     {
         builder.Append<HeaderIe>()->Init(CslIe::kHeaderIeId, sizeof(CslIe));
         builder.Append<CslIe>();
+        aTxFrame.SetCslIePresent(true);
     }
 #endif
 
