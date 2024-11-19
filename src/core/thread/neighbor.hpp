@@ -714,46 +714,43 @@ protected:
     void Init(Instance &aInstance);
 
 private:
-    enum : uint32_t
-    {
-        kLastRxFragmentTagTimeout = OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT, ///< Frag tag timeout in msec.
-    };
+    static constexpr uint32_t kLastRxFragmentTagTimeout = OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT; // in msec
 
-    Mac::ExtAddress mMacAddr;   ///< The IEEE 802.15.4 Extended Address
-    TimeMilli       mLastHeard; ///< Time when last heard.
+    Mac::ExtAddress mMacAddr;
+    TimeMilli       mLastHeard;
     union
     {
         struct
         {
-            Mac::LinkFrameCounters mLinkFrameCounters; ///< The Link Frame Counters
-            uint32_t               mMleFrameCounter;   ///< The MLE Frame Counter
+            Mac::LinkFrameCounters mLinkFrameCounters;
+            uint32_t               mMleFrameCounter;
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-            uint32_t mLinkAckFrameCounter; ///< The Link Ack Frame Counter
+            uint32_t mLinkAckFrameCounter;
 #endif
         } mValid;
         struct
         {
-            Mle::TxChallenge mChallenge; ///< The challenge value
+            Mle::TxChallenge mChallenge;
         } mPending;
     } mValidPending;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    uint16_t  mLastRxFragmentTag;     ///< Last received fragment tag
-    TimeMilli mLastRxFragmentTagTime; ///< The time last fragment tag was received and set.
+    uint16_t  mLastRxFragmentTag;
+    TimeMilli mLastRxFragmentTagTime;
 #endif
 
-    uint32_t mKeySequence; ///< Current key sequence
-    uint16_t mRloc16;      ///< The RLOC16
-    uint8_t  mState : 4;   ///< The link state
-    uint8_t  mMode : 4;    ///< The MLE device mode
+    uint32_t mKeySequence;
+    uint16_t mRloc16;
+    uint8_t  mState : 4;
+    uint8_t  mMode : 4;
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    uint8_t mLinkFailures : 7;    ///< Consecutive link failure count
-    bool    mTimeSyncEnabled : 1; ///< Indicates whether or not time sync feature is enabled.
+    uint8_t mLinkFailures : 7;
+    bool    mTimeSyncEnabled : 1;
 #else
-    uint8_t mLinkFailures; ///< Consecutive link failure count
+    uint8_t mLinkFailures;
 #endif
-    uint16_t        mVersion;  ///< The MLE version
-    LinkQualityInfo mLinkInfo; ///< Link quality info (contains average RSS, link margin and link quality)
+    uint16_t        mVersion;
+    LinkQualityInfo mLinkInfo;
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     // A list of Link Metrics Forward Tracking Series that is being
     // tracked for this neighbor. Note that this device is the

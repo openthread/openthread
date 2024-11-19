@@ -392,8 +392,6 @@ private:
 
     uint16_t mSupervisionInterval;
     uint16_t mSecondsSinceSupervision;
-
-    static_assert(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < 8192, "mQueuedMessageCount cannot fit max required!");
 };
 
 DefineCoreType(otChildInfo, Child::Info);
