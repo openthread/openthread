@@ -199,6 +199,16 @@ public:
      * @param[in]  aIsHost  TRUE if the peer is via the host interface, FALSE otherwise.
      */
     void SetIsHostInterface(bool aIsHost) { mIsHostInterface = aIsHost; }
+
+    /**
+     * Checks if the peer address and port match those of another `MessageInfo`.
+     *
+     * @param[in] aOther  The other `MessageInfo` to compare with.
+     *
+     * @retval TRUE   The peer address and port of the two `MessageInfo` objects match.
+     * @retval FALSE  The peer address and port of the two `MessageInfo` objects do not match.
+     */
+    bool HasSamePeerAddrAndPort(const MessageInfo &aOther) const;
 };
 
 /**

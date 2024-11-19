@@ -1483,8 +1483,7 @@ const Message *ResponsesQueue::FindMatchedResponse(const Message &aRequest, cons
 
             metadata.ReadFrom(message);
 
-            if ((metadata.mMessageInfo.GetPeerPort() == aMessageInfo.GetPeerPort()) &&
-                (metadata.mMessageInfo.GetPeerAddr() == aMessageInfo.GetPeerAddr()))
+            if (metadata.mMessageInfo.HasSamePeerAddrAndPort(aMessageInfo))
             {
                 response = &message;
                 break;
