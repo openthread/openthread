@@ -42,6 +42,7 @@
 #include <openthread/platform/time.h>
 
 #include "simul_utils.h"
+#include "lib/platform/exit_code.h"
 #include "utils/code_utils.h"
 #include "utils/link_metrics.h"
 #include "utils/mac_frame.h"
@@ -1231,7 +1232,7 @@ void parseFromEnvAsUint16(const char *aEnvName, uint16_t *aValue)
         if (*endptr != '\0')
         {
             fprintf(stderr, "Invalid %s: %s\n", aEnvName, env);
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_FAILURE);
         }
     }
 }

@@ -32,6 +32,7 @@
 #include <openthread/platform/trel.h>
 
 #include "simul_utils.h"
+#include "lib/platform/exit_code.h"
 #include "utils/code_utils.h"
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -316,7 +317,7 @@ void platformTrelInit(uint32_t aSpeedUpFactor)
         if (*endptr != '\0')
         {
             fprintf(stderr, "\r\nInvalid PORT_OFFSET: %s\r\n", str);
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_FAILURE);
         }
 
         sPortOffset *= (MAX_NETWORK_SIZE + 1);
