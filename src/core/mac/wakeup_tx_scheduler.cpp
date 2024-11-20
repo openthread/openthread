@@ -31,10 +31,11 @@
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 
 #include "common/code_utils.hpp"
+#include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/num_utils.hpp"
 #include "common/time.hpp"
-#include "core/instance/instance.hpp"
+#include "instance/instance.hpp"
 #include "radio/radio.hpp"
 
 namespace ot {
