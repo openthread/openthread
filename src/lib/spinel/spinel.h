@@ -4859,7 +4859,7 @@ enum
      * `S`       : The service port number.
      * `S`       : The service priority.
      * `S`       : The service weight.
-     * `S`       : The service TTL in seconds.
+     * `L`       : The service TTL in seconds.
      * `L`       : The Dnssd Request ID.
      * `D`       : The context of the request. (A pointer to the callback for the request)
      *
@@ -4875,7 +4875,7 @@ enum
      * `t(U)` : The service type if key is for a service (does not include domain name).
      * `d`    : Byte array containing the key record data.
      * `S`    : The resource record class.
-     * `S`    : The TTL in seconds.
+     * `L`    : The TTL in seconds.
      * `L`    : The Dnssd Request ID.
      * `D`    : The context of the request. (A pointer to the callback for the request)
      *
