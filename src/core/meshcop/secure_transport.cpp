@@ -1049,7 +1049,6 @@ void SecureTransport::Process(void)
             break;
 
         case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
-            mbedtls_ssl_close_notify(&mSsl);
             disconnectEvent = kDisconnectedPeerClosed;
             break;
 
@@ -1057,7 +1056,6 @@ void SecureTransport::Process(void)
             break;
 
         case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
-            mbedtls_ssl_close_notify(&mSsl);
             disconnectEvent = kDisconnectedError;
             break;
 
