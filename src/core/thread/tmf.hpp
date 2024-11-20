@@ -197,7 +197,7 @@ private:
 /**
  * Implements functionality of the secure TMF agent.
  */
-class SecureAgent : public Coap::CoapSecure
+class SecureAgent : public Coap::CoapSecureBase
 {
 public:
     /**

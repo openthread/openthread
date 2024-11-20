@@ -368,7 +368,7 @@ public:
      *
      * @returns A reference to the application COAP Secure object.
      */
-    Coap::CoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
+    Coap::ApplicationCoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
 #endif
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -657,7 +657,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-    Coap::CoapSecure mApplicationCoapSecure;
+    Coap::ApplicationCoapSecure mApplicationCoapSecure;
 #endif
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
