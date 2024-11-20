@@ -605,54 +605,38 @@ private:
 
     static const int kCipherSuites[][2];
 
-    State       mState;
-    CipherSuite mCipherSuite;
-
-    uint8_t mPsk[kPskMaxLength];
-    uint8_t mPskLength;
-
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
-    EcdheEcdsaInfo mEcdheEcdsaInfo;
-#endif
-
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
-    PskInfo mPskInfo;
-#endif
-
-    bool mVerifyPeerCertificate;
-
-    mbedtls_ssl_context mSsl;
-    mbedtls_ssl_config  mConf;
-
+    bool                        mLayerTwoSecurity : 1;
+    bool                        mDatagramTransport : 1;
+    bool                        mTimerSet : 1;
+    bool                        mVerifyPeerCertificate : 1;
+    State                       mState;
+    CipherSuite                 mCipherSuite;
+    Message::SubType            mMessageSubType;
+    ConnectEvent                mConnectEvent;
+    uint8_t                     mPskLength;
+    uint16_t                    mMaxConnectionAttempts;
+    uint16_t                    mRemainingConnectionAttempts;
+    Message                    *mReceiveMessage;
+    Ip6::MessageInfo            mMessageInfo;
+    TransportSocket             mSocket;
+    uint8_t                     mPsk[kPskMaxLength];
+    TimerMilliContext           mTimer;
+    TimeMilli                   mTimerIntermediate;
+    Callback<AutoCloseCallback> mAutoCloseCallback;
+    Callback<ConnectedHandler>  mConnectedCallback;
+    Callback<ReceiveHandler>    mReceiveCallback;
+    Callback<TransportCallback> mTransportCallback;
+    mbedtls_ssl_context         mSsl;
+    mbedtls_ssl_config          mConf;
 #if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
     mbedtls_ssl_cookie_ctx mCookieCtx;
 #endif
-
-    TimerMilliContext mTimer;
-
-    TimeMilli mTimerIntermediate;
-    bool      mTimerSet : 1;
-
-    bool mLayerTwoSecurity : 1;
-    bool mDatagramTransport : 1;
-
-    uint16_t                    mMaxConnectionAttempts;
-    uint16_t                    mRemainingConnectionAttempts;
-    Callback<AutoCloseCallback> mAutoCloseCallback;
-
-    Message *mReceiveMessage;
-
-    Callback<ConnectedHandler> mConnectedCallback;
-    Callback<ReceiveHandler>   mReceiveCallback;
-
-    Ip6::MessageInfo mMessageInfo;
-    TransportSocket  mSocket;
-
-    Callback<TransportCallback> mTransportCallback;
-
-    Message::SubType mMessageSubType;
-
-    ConnectEvent mConnectEvent;
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+    EcdheEcdsaInfo mEcdheEcdsaInfo;
+#endif
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+    PskInfo mPskInfo;
+#endif
 };
 
 } // namespace MeshCoP
