@@ -84,8 +84,8 @@ void TestDnssd(void)
     SuccessOrQuit(error = DecodeDnssdHost(decoder, dnssdHostDecode, requestId, callbackData, callbackDataLen));
     VerifyOrQuit(strcmp(dnssdHostDecode.mHostName, dnssdHostEncode.mHostName) == 0);
     VerifyOrQuit(dnssdHostDecode.mAddressesLength == dnssdHostEncode.mAddressesLength);
-    VerifyOrQuit(memcmp(dnssdHostDecode.mAddresses, dnssdHostEncode.mAddresses, sizeof(dnssdHostEncode.mAddresses)) ==
-                 0);
+    VerifyOrQuit(memcmp(dnssdHostDecode.mAddresses, dnssdHostEncode.mAddresses,
+                        dnssdHostDecode.mAddressesLength * sizeof(otIp6Address)) == 0);
     VerifyOrQuit(requestId == 1);
     VerifyOrQuit(callbackDataLen == sizeof(otPlatDnssdRegisterCallback));
     VerifyOrQuit(*reinterpret_cast<const otPlatDnssdRegisterCallback *>(callbackData) == DnssdFakeCallback);
