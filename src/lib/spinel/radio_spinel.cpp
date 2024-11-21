@@ -997,10 +997,13 @@ otError RadioSpinel::AddSrcMatchShortEntry(uint16_t aShortAddress)
 {
     otError error;
 
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    EXPECT(mSrcMatchShortEntryCount < OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES, error = OT_ERROR_NO_BUFS);
+#endif
+
     EXPECT_NO_ERROR(error = Insert(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, SPINEL_DATATYPE_UINT16_S, aShortAddress));
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    assert(mSrcMatchShortEntryCount < OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES);
 
     for (int i = 0; i < mSrcMatchShortEntryCount; ++i)
     {
@@ -1021,11 +1024,14 @@ otError RadioSpinel::AddSrcMatchExtEntry(const otExtAddress &aExtAddress)
 {
     otError error;
 
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    EXPECT(mSrcMatchExtEntryCount < OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES, error = OT_ERROR_NO_BUFS);
+#endif
+
     EXPECT_NO_ERROR(error =
                         Insert(SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, SPINEL_DATATYPE_EUI64_S, aExtAddress.m8));
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    assert(mSrcMatchExtEntryCount < OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES);
 
     for (int i = 0; i < mSrcMatchExtEntryCount; ++i)
     {
