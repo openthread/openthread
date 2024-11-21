@@ -4540,6 +4540,21 @@ void Mle::DelayedSender::ScheduleMulticastDataResponse(uint16_t aDelay)
     AddSchedule(kTypeDataResponse, destination, aDelay, nullptr, 0);
 }
 
+void Mle::DelayedSender::ScheduleLinkRequest(const Router &aRouter, uint16_t aDelay)
+{
+    Ip6::Address destination;
+    uint16_t     routerRloc16;
+
+    destination.SetToLinkLocalAddress(aRouter.GetExtAddress());
+
+    VerifyOrExit(!HasMatchingSchedule(kTypeLinkRequest, destination));
+    routerRloc16 = aRouter.GetRloc16();
+    AddSchedule(kTypeLinkRequest, destination, aDelay, &routerRloc16, sizeof(uint16_t));
+
+exit:
+    return;
+}
+
 void Mle::DelayedSender::ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint16_t aDelay)
 {
     Ip6::Address destination;
@@ -4659,6 +4674,22 @@ void Mle::DelayedSender::Execute(const Schedule &aSchedule)
 
         IgnoreError(aSchedule.Read(sizeof(Header), info));
         IgnoreError(Get<MleRouter>().SendLinkAccept(info));
+        break;
+    }
+
+    case kTypeLinkRequest:
+    {
+        uint16_t rlco16;
+        Router  *router;
+
+        IgnoreError(aSchedule.Read(sizeof(Header), rlco16));
+        router = Get<RouterTable>().FindRouterByRloc16(rlco16);
+
+        if (router != nullptr)
+        {
+            Get<MleRouter>().SendLinkRequest(router);
+        }
+
         break;
     }
 

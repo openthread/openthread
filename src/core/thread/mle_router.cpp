@@ -1188,6 +1188,7 @@ Error MleRouter::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddre
     RouteTlv routeTlv;
     Router  *router;
     uint8_t  routerId;
+    uint32_t delay;
 
     switch (aRxInfo.mMessage.ReadRouteTlv(routeTlv))
     {
@@ -1301,7 +1302,8 @@ Error MleRouter::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddre
             {
                 InitNeighbor(*router, aRxInfo);
                 router->SetState(Neighbor::kStateLinkRequest);
-                SendLinkRequest(router);
+                delay = Random::NonCrypto::GetUint32InRange(kMinLinkRequestDelayOnChild, kMaxLinkRequestDelayOnChild);
+                mDelayedSender.ScheduleLinkRequest(*router, delay);
                 ExitNow(error = kErrorNoRoute);
             }
         }
@@ -1350,7 +1352,8 @@ Error MleRouter::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddre
     {
         InitNeighbor(*router, aRxInfo);
         router->SetState(Neighbor::kStateLinkRequest);
-        SendLinkRequest(router);
+        delay = Random::NonCrypto::GetUint32InRange(0, kMaxLinkRequestDelayOnRouter);
+        mDelayedSender.ScheduleLinkRequest(*router, delay);
         ExitNow(error = kErrorNoRoute);
     }
 
@@ -1651,7 +1654,8 @@ void MleRouter::HandleTimeTick(void)
             bool sendLinkRequest = true;
 
             // Once router age expires, we send Link Request every
-            // time tick, up to `kMaxTxCount`. After the last
+            // time tick (second), up to `kMaxTxCount`. Each rx is
+            // randomly delayed (one second window). After the last
             // attempt, we wait for the "Link Accept" timeout
             // (~3 seconds), before the router is removed.
 
@@ -1666,7 +1670,8 @@ void MleRouter::HandleTimeTick(void)
 
             if (sendLinkRequest)
             {
-                SendLinkRequest(&router);
+                mDelayedSender.ScheduleLinkRequest(
+                    router, Random::NonCrypto::GetUint32InRange(0, kMaxLinkRequestDelayOnRouter));
             }
         }
 
