@@ -26,51 +26,28 @@
   POSSIBILITY OF SUCH DAMAGE.
 """
 
-import base64
 from tlv import advertised_tlv
 
 
-def get_int_in_range(min_value, max_value):
-    while True:
-        try:
-            user_input = int(input('> '))
-            if min_value <= user_input <= max_value:
-                return user_input
-            else:
-                print('The value is out of range. Try again.')
-        except ValueError:
-            print('The value is not an integer. Try again.')
-        except KeyboardInterrupt:
-            quit_with_reason('Program interrupted by user. Quitting.')
+class AdvertisedData:
 
+    def __init__(self):
+        self._op_code = None
+        self._version = None
+        self._tlvs = []
 
-def quit_with_reason(reason):
-    print(reason)
-    exit(1)
+    def __str__(self) -> str:
+        res = ''
+        res += f'OPCODE: {self._op_code} THREAD VERSION: {self._version}\n'
+        res += 'TLVs:\n'
+        for tlv in self._tlvs:
+            res += f'\t{str(tlv)}\n'
+        return res
 
-
-def select_device_by_user_input(tcat_devices):
-    if tcat_devices:
-        print('Found devices:\n')
-        for i, (device, adv) in enumerate(tcat_devices):
-            print(f'{i + 1}: {device.name} - {device.address}')
-            print(str(adv))
-    else:
-        print('\nNo devices found.')
-        return None
-
-    print('\nSelect the target number to connect to it.')
-    selected = get_int_in_range(1, len(tcat_devices))
-    device = tcat_devices[selected - 1][0]
-    print('Selected ', device)
-
-    return device
-
-
-def base64_string(bindata):
-    return base64.b64encode(bindata).decode('ascii')
-
-
-def load_cert_pem(fn):
-    with open(fn, 'r') as file:
-        return file.read()
+    @staticmethod
+    def from_bytes(data: bytes):
+        res = AdvertisedData()
+        res._op_code = data[0] & 0x0f
+        res._version = (data[0] & 0xf0) >> 4
+        res._tlvs.extend(advertised_tlv.parse_tlvs(data[1:]))
+        return res
