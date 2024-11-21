@@ -967,4 +967,5 @@ OT_TOOL_WEAK void otPlatDnssdStopIp4AddressResolver(otInstance *aInstance, const
 OT_TOOL_WEAK otError otPlatLogCrashDump(void) { return OT_ERROR_NONE; }
 #endif
 
+OT_TOOL_WEAK void otPlatAssertFail(const char *, int) {}
 } // extern "C"
