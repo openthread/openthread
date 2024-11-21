@@ -93,7 +93,8 @@ extern "C" {
  * stack.
  */
 #ifndef LOG_PARSE_BUFFER_SIZE
-#define LOG_PARSE_BUFFER_SIZE 128
+#define LOG_PARSE_BUFFER_SIZE \
+    (19 /* Timestamp */ + 8 /* RTT color code */ + OPENTHREAD_CONFIG_LOG_MAX_SIZE + 1 /* \n */)
 #endif
 
 /**
