@@ -105,7 +105,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mTxDelayTimer(aInstance)
 #endif
     , mScheduleTransmissionTask(aInstance)
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     , mIndirectSender(aInstance)
 #endif
     , mDataPollSender(aInstance)

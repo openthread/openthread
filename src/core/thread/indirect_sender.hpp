@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_FTD
-
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
@@ -59,7 +57,12 @@ namespace ot {
  * @{
  */
 
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
+class CslNeighbor;
+#if OPENTHREAD_FTD
 class Child;
+#endif
 
 /**
  * Implements indirect transmission.
@@ -67,23 +70,27 @@ class Child;
 class IndirectSender : public InstanceLocator, public IndirectSenderBase, private NonCopyable
 {
     friend class Instance;
+#if OPENTHREAD_FTD
     friend class DataPollHandler;
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     friend class CslTxScheduler;
 #endif
 
 public:
     /**
-     * Defines all the child info required for indirect transmission.
+     * Defines all the neighbor info required for indirect (CSL or data-poll) transmission.
      *
-     * `Child` class publicly inherits from this class.
+     * Sub-classes of `Neighbor`, e.g., `CslNeighbor` or `Child` publicly inherits from this class.
      */
-    class ChildInfo
+    class NeighborInfo
     {
         friend class IndirectSender;
+#if OPENTHREAD_FTD
         friend class DataPollHandler;
-        friend class CslTxScheduler;
         friend class SourceMatchController;
+#endif
+        friend class CslTxScheduler;
 
     public:
         /**
@@ -159,6 +166,7 @@ public:
      */
     void Stop(void);
 
+#if OPENTHREAD_FTD
     /**
      * Adds a message for indirect transmission to a sleepy child.
      *
@@ -247,8 +255,20 @@ public:
      */
     void HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMode);
 
+#endif // OPENTHREAD_FTD
+
 private:
-    // Callbacks from `DataPollHandler` or `CslTxScheduler`
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    // Callbacks from `CslTxScheduler`
+    Error PrepareFrameForCslNeighbor(Mac::TxFrame &aFrame, FrameContext &aContext, CslNeighbor &aCslNeighbor);
+    void  HandleSentFrameToCslNeighbor(const Mac::TxFrame &aFrame,
+                                       const FrameContext &aContext,
+                                       Error               aError,
+                                       CslNeighbor        &aCslNeighbor);
+#endif
+
+#if OPENTHREAD_FTD
+    // Callbacks from `DataPollHandler`
     Error PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
     void  HandleSentFrameToChild(const Mac::TxFrame &aFrame, const FrameContext &aContext, Error aError, Child &aChild);
     void  HandleFrameChangeDone(Child &aChild);
@@ -261,21 +281,24 @@ private:
 
     static bool AcceptAnyMessage(const Message &aMessage);
     static bool AcceptSupervisionMessage(const Message &aMessage);
+#endif // OPENTHREAD_FTD
 
-    bool                  mEnabled;
+    bool mEnabled;
+#if OPENTHREAD_FTD
     SourceMatchController mSourceMatchController;
     DataPollHandler       mDataPollHandler;
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     CslTxScheduler mCslTxScheduler;
 #endif
 };
+
+#endif // #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 /**
  * @}
  */
 
 } // namespace ot
-
-#endif // OPENTHREAD_FTD
 
 #endif // INDIRECT_SENDER_HPP_
