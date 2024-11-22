@@ -194,6 +194,15 @@ static void PrepareSocket(uint16_t &aUdpPort)
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
 
+#ifdef __linux__
+    // Bind to the TREL interface
+    if (setsockopt(sSocket, SOL_SOCKET, SO_BINDTODEVICE, sInterfaceName, strlen(sInterfaceName)) < 0)
+    {
+        LogCrit("Failed to bind socket to the interface %s", sInterfaceName);
+        DieNow(OT_EXIT_ERROR_ERRNO);
+    }
+#endif
+
     sockLen = sizeof(sockAddr);
 
     if (getsockname(sSocket, (struct sockaddr *)&sockAddr, &sockLen) == -1)
