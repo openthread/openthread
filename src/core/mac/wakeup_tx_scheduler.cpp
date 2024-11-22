@@ -160,7 +160,12 @@ void WakeupTxScheduler::UpdateFrameRequestAhead(void)
 
     uint32_t busSpeedHz  = Get<Radio>().GetBusSpeed();
     uint32_t busLatency  = Get<Radio>().GetBusLatency();
-    uint32_t busTxTimeUs = ((busSpeedHz == 0) ? 0 : (kWakeupFrameWeight * 8 * 1000000 + busSpeedHz - 1) / busSpeedHz);
+    uint32_t busTxTimeUs = 0;
+
+    if (busSpeedHz != 0)
+    {
+        busSpeedHz = DivideAndRoundUp<uint32_t>(kWakeupFrameWeight * 8 * 1000000, busSpeedHz);
+    }
 
     mTxRequestAheadTimeUs = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US + busTxTimeUs + busLatency;
 }

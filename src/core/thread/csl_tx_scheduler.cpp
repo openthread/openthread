@@ -49,13 +49,20 @@ void CslTxScheduler::UpdateFrameRequestAhead(void)
 {
     uint32_t busSpeedHz = Get<Radio>().GetBusSpeed();
     uint32_t busLatency = Get<Radio>().GetBusLatency();
+    uint32_t busTxTime  = 0;
 
-    // longest frame on bus is 127 bytes with some metadata, use 150 bytes for bus Tx time estimation
-    uint32_t busTxTimeUs = ((busSpeedHz == 0) ? 0 : (150 * 8 * 1000000 + busSpeedHz - 1) / busSpeedHz);
+    if (busSpeedHz != 0)
+    {
+        // Longest frame on bus is 127 bytes with some metadata, we use
+        // 150 bytes for bus Tx time estimation
 
-    mCslFrameRequestAheadUs = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US + busTxTimeUs + busLatency;
+        busTxTime = DivideAndRoundUp<uint32_t>(150 * 8 * 1000000, busSpeedHz);
+    }
+
+    mCslFrameRequestAheadUs = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US + busTxTime + busLatency;
+
     LogInfo("Bus TX Time: %lu usec, Latency: %lu usec. Calculated CSL Frame Request Ahead: %lu usec",
-            ToUlong(busTxTimeUs), ToUlong(busLatency), ToUlong(mCslFrameRequestAheadUs));
+            ToUlong(busTxTime), ToUlong(busLatency), ToUlong(mCslFrameRequestAheadUs));
 }
 
 void CslTxScheduler::Update(void)

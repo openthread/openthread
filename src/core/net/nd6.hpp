@@ -108,7 +108,7 @@ public:
      *
      * @param[in]  aSize  The size of option in bytes.
      */
-    void SetSize(uint16_t aSize) { mLength = static_cast<uint8_t>((aSize + kLengthUnit - 1) / kLengthUnit); }
+    void SetSize(uint16_t aSize) { mLength = static_cast<uint8_t>(DivideAndRoundUp(aSize, kLengthUnit)); }
 
     /**
      * Returns the size of the option in bytes.
