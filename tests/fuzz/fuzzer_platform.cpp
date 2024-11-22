@@ -45,6 +45,7 @@
 #include <openthread/platform/settings.h>
 
 #include "mac/mac_frame.hpp"
+#include "openthread/error.h"
 
 using namespace ot;
 
@@ -118,11 +119,17 @@ void FuzzerPlatformProcess(otInstance *aInstance)
             sRadioAckFrame.mLength  = IEEE802154_ACK_LENGTH;
             sRadioAckFrame.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
             sRadioAckFrame.mPsdu[1] = 0;
-            error                   = otMacFrameGetSequence(&sRadioTransmitFrame, &sRadioAckFrame.mPsdu[2]);
-            OT_ASSERT(error == OT_ERROR_NONE);
             sRadioAckFrame.mChannel = sRadioTransmitFrame.mChannel;
+            error                   = otMacFrameGetSequence(&sRadioTransmitFrame, &sRadioAckFrame.mPsdu[2]);
 
-            otPlatRadioTxDone(aInstance, &sRadioTransmitFrame, &sRadioAckFrame, OT_ERROR_NONE);
+            if (error == OT_ERROR_NONE)
+            {
+                otPlatRadioTxDone(aInstance, &sRadioTransmitFrame, &sRadioAckFrame, OT_ERROR_NONE);
+            }
+            else
+            {
+                otPlatRadioTxDone(aInstance, &sRadioTransmitFrame, nullptr, OT_ERROR_NO_ACK);
+            }
         }
         else
         {
