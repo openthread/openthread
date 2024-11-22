@@ -310,8 +310,6 @@ void IndirectSender::UpdateIndirectMessage(Child &aChild)
     {
         Mac::Address childAddress;
 
-        mDataPollHandler.HandleNewFrame(aChild);
-
         aChild.GetMacAddress(childAddress);
         Get<MeshForwarder>().LogMessage(MeshForwarder::kMessagePrepareIndirect, *message, kErrorNone, &childAddress);
     }
@@ -460,7 +458,6 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
     if ((message != nullptr) && (nextOffset < message->GetLength()))
     {
         aChild.SetIndirectFragmentOffset(nextOffset);
-        mDataPollHandler.HandleNewFrame(aChild);
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         mCslTxScheduler.Update();
 #endif

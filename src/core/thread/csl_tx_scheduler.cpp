@@ -36,34 +36,11 @@ namespace ot {
 
 RegisterLogModule("CslTxScheduler");
 
-CslTxScheduler::Callbacks::Callbacks(Instance &aInstance)
-    : InstanceLocator(aInstance)
-{
-}
-
-inline Error CslTxScheduler::Callbacks::PrepareFrameForChild(Mac::TxFrame &aFrame,
-                                                             FrameContext &aContext,
-                                                             Child        &aChild)
-{
-    return Get<IndirectSender>().PrepareFrameForChild(aFrame, aContext, aChild);
-}
-
-inline void CslTxScheduler::Callbacks::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
-                                                              const FrameContext &aContext,
-                                                              Error               aError,
-                                                              Child              &aChild)
-{
-    Get<IndirectSender>().HandleSentFrameToChild(aFrame, aContext, aError, aChild);
-}
-
-//---------------------------------------------------------
-
 CslTxScheduler::CslTxScheduler(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mCslTxChild(nullptr)
     , mCslTxMessage(nullptr)
     , mFrameContext()
-    , mCallbacks(aInstance)
 {
     UpdateFrameRequestAhead();
 }
@@ -190,7 +167,8 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
     frame = &aTxFrames.GetTxFrame();
 #endif
 
-    VerifyOrExit(mCallbacks.PrepareFrameForChild(*frame, mFrameContext, *mCslTxChild) == kErrorNone, frame = nullptr);
+    VerifyOrExit(Get<IndirectSender>().PrepareFrameForChild(*frame, mFrameContext, *mCslTxChild) == kErrorNone,
+                 frame = nullptr);
     mCslTxMessage = mCslTxChild->GetIndirectMessage();
     VerifyOrExit(mCslTxMessage != nullptr, frame = nullptr);
 
@@ -328,7 +306,7 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, C
         OT_UNREACHABLE_CODE(break);
     }
 
-    mCallbacks.HandleSentFrameToChild(aFrame, mFrameContext, aError, aChild);
+    Get<IndirectSender>().HandleSentFrameToChild(aFrame, mFrameContext, aError, aChild);
 
 exit:
     return;
