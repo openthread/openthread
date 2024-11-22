@@ -812,6 +812,24 @@ public:
         return mask;
     }
 
+    /**
+     * Get the bus speed in bits/second between the host and the radio chip.
+     *
+     * @returns The bus speed in bits/second between the host and the radio chip.
+     *          Return 0 when the MAC and above layer and Radio layer resides on the same chip.
+     */
+    uint32_t GetBusSpeed(void);
+
+    /**
+     * Get the bus latency in microseconds between the host and the radio chip.
+     *
+     * @param[in]   aInstance    A pointer to an OpenThread instance.
+     *
+     * @returns The bus latency in microseconds between the host and the radio chip.
+     *          Return 0 when the MAC and above layer and Radio layer resides on the same chip.
+     */
+    uint32_t GetBusLatency(void);
+
 private:
     otInstance *GetInstancePtr(void) const { return reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance()); }
 
@@ -995,6 +1013,10 @@ inline void Radio::ClearSrcMatchShortEntries(void) { otPlatRadioClearSrcMatchSho
 
 inline void Radio::ClearSrcMatchExtEntries(void) { otPlatRadioClearSrcMatchExtEntries(GetInstancePtr()); }
 
+inline uint32_t Radio::GetBusSpeed(void) { return otPlatRadioGetBusSpeed(GetInstancePtr()); }
+
+inline uint32_t Radio::GetBusLatency(void) { return otPlatRadioGetBusLatency(GetInstancePtr()); }
+
 #else //----------------------------------------------------------------------------------------------------------------
 
 inline otRadioCaps Radio::GetCaps(void)
@@ -1094,6 +1116,10 @@ inline Error Radio::ClearSrcMatchExtEntry(const Mac::ExtAddress &) { return kErr
 inline void Radio::ClearSrcMatchShortEntries(void) {}
 
 inline void Radio::ClearSrcMatchExtEntries(void) {}
+
+inline uint32_t Radio::GetBusSpeed(void) { return 0; }
+
+inline uint32_t Radio::GetBusLatency(void) { return 0; }
 
 #endif // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 

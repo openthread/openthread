@@ -47,8 +47,8 @@ CslTxScheduler::CslTxScheduler(Instance &aInstance)
 
 void CslTxScheduler::UpdateFrameRequestAhead(void)
 {
-    uint32_t busSpeedHz = otPlatRadioGetBusSpeed(&GetInstance());
-    uint32_t busLatency = otPlatRadioGetBusLatency(&GetInstance());
+    uint32_t busSpeedHz = Get<Radio>().GetBusSpeed();
+    uint32_t busLatency = Get<Radio>().GetBusLatency();
 
     // longest frame on bus is 127 bytes with some metadata, use 150 bytes for bus Tx time estimation
     uint32_t busTxTimeUs = ((busSpeedHz == 0) ? 0 : (150 * 8 * 1000000 + busSpeedHz - 1) / busSpeedHz);

@@ -158,8 +158,8 @@ void WakeupTxScheduler::UpdateFrameRequestAhead(void)
     // This is used to make sure that a wake-up frame is received by the radio early enough to be transmitted on time.
     constexpr uint32_t kWakeupFrameWeight = 100;
 
-    uint32_t busSpeedHz  = otPlatRadioGetBusSpeed(&GetInstance());
-    uint32_t busLatency  = otPlatRadioGetBusLatency(&GetInstance());
+    uint32_t busSpeedHz  = Get<Radio>().GetBusSpeed();
+    uint32_t busLatency  = Get<Radio>().GetBusLatency();
     uint32_t busTxTimeUs = ((busSpeedHz == 0) ? 0 : (kWakeupFrameWeight * 8 * 1000000 + busSpeedHz - 1) / busSpeedHz);
 
     mTxRequestAheadTimeUs = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US + busTxTimeUs + busLatency;
