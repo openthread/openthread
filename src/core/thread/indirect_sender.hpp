@@ -67,9 +67,9 @@ class Child;
 class IndirectSender : public InstanceLocator, public IndirectSenderBase, private NonCopyable
 {
     friend class Instance;
-    friend class DataPollHandler::Callbacks;
+    friend class DataPollHandler;
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    friend class CslTxScheduler::Callbacks;
+    friend class CslTxScheduler;
 #endif
 
 public:
@@ -248,7 +248,7 @@ public:
     void HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMode);
 
 private:
-    // Callbacks from DataPollHandler
+    // Callbacks from `DataPollHandler` or `CslTxScheduler`
     Error PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
     void  HandleSentFrameToChild(const Mac::TxFrame &aFrame, const FrameContext &aContext, Error aError, Child &aChild);
     void  HandleFrameChangeDone(Child &aChild);
