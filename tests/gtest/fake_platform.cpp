@@ -575,5 +575,5 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket *, otNetifIdentifier, const otI
 {
     return OT_ERROR_NOT_IMPLEMENTED;
 }
-
+void otPlatAssertFail(const char *, int) {}
 } // extern "C"
