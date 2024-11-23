@@ -764,8 +764,8 @@ Error Client::Start(void)
 {
     Error error;
 
-    SuccessOrExit(error = mSocket.Open());
-    SuccessOrExit(error = mSocket.Bind(0, Ip6::kNetifUnspecified));
+    SuccessOrExit(error = mSocket.Open(Ip6::kNetifUnspecified));
+    SuccessOrExit(error = mSocket.Bind(0));
 
 exit:
     return error;

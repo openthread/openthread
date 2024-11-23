@@ -89,19 +89,13 @@ Message *Udp::Socket::NewMessage(uint16_t aReserved, const Message::Settings &aS
     return Get<Udp>().NewMessage(aReserved, aSettings);
 }
 
-Error Udp::Socket::Open(void) { return Get<Udp>().Open(*this, mHandler, mContext); }
+Error Udp::Socket::Open(NetifIdentifier aNetifId) { return Get<Udp>().Open(*this, aNetifId, mHandler, mContext); }
 
 bool Udp::Socket::IsOpen(void) const { return Get<Udp>().IsOpen(*this); }
 
-Error Udp::Socket::Bind(const SockAddr &aSockAddr, NetifIdentifier aNetifIdentifier)
-{
-    return Get<Udp>().Bind(*this, aSockAddr, aNetifIdentifier);
-}
+Error Udp::Socket::Bind(const SockAddr &aSockAddr) { return Get<Udp>().Bind(*this, aSockAddr); }
 
-Error Udp::Socket::Bind(uint16_t aPort, NetifIdentifier aNetifIdentifier)
-{
-    return Bind(SockAddr(aPort), aNetifIdentifier);
-}
+Error Udp::Socket::Bind(uint16_t aPort) { return Bind(SockAddr(aPort)); }
 
 Error Udp::Socket::Connect(const SockAddr &aSockAddr) { return Get<Udp>().Connect(*this, aSockAddr); }
 
@@ -172,13 +166,14 @@ exit:
     return error;
 }
 
-Error Udp::Open(SocketHandle &aSocket, ReceiveHandler aHandler, void *aContext)
+Error Udp::Open(SocketHandle &aSocket, NetifIdentifier aNetifId, ReceiveHandler aHandler, void *aContext)
 {
     Error error = kErrorNone;
 
     OT_ASSERT(!IsOpen(aSocket));
 
     aSocket.Clear();
+    aSocket.SetNetifId(aNetifId);
     aSocket.mHandler = aHandler;
     aSocket.mContext = aContext;
 
@@ -193,15 +188,13 @@ exit:
     return error;
 }
 
-Error Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr, NetifIdentifier aNetifIdentifier)
+Error Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr)
 {
     Error error = kErrorNone;
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    SuccessOrExit(error = otPlatUdpBindToNetif(&aSocket, MapEnum(aNetifIdentifier)));
+    SuccessOrExit(error = otPlatUdpBindToNetif(&aSocket, MapEnum(aSocket.GetNetifId())));
 #endif
-
-    aSocket.mNetifId = MapEnum(aNetifIdentifier);
 
     VerifyOrExit(aSockAddr.GetAddress().IsUnspecified() || Get<ThreadNetif>().HasUnicastAddress(aSockAddr.GetAddress()),
                  error = kErrorInvalidArgs);
@@ -237,7 +230,7 @@ Error Udp::Connect(SocketHandle &aSocket, const SockAddr &aSockAddr)
 
     if (!aSocket.IsBound())
     {
-        SuccessOrExit(error = Bind(aSocket, aSocket.GetSockName(), kNetifThread));
+        SuccessOrExit(error = Bind(aSocket, aSocket.GetSockName()));
     }
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
@@ -300,7 +293,7 @@ Error Udp::SendTo(SocketHandle &aSocket, Message &aMessage, const MessageInfo &a
 
     if (!aSocket.IsBound())
     {
-        SuccessOrExit(error = Bind(aSocket, aSocket.GetSockName(), kNetifThread));
+        SuccessOrExit(error = Bind(aSocket, aSocket.GetSockName()));
     }
 
     messageInfoLocal.SetSockPort(aSocket.GetSockName().mPort);

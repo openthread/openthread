@@ -162,7 +162,7 @@ void Client::Start(void)
 {
     VerifyOrExit(!mSocket.IsBound());
 
-    IgnoreError(mSocket.Open());
+    IgnoreError(mSocket.Open(Ip6::kNetifThread));
     IgnoreError(mSocket.Bind(kDhcpClientPort));
 
     ProcessNextIdentityAssociation();

@@ -400,9 +400,10 @@ Error Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
     VerifyOrExit(GetState() == kStateStopped,
                  error = (aServerSockAddr == GetServerAddress()) ? kErrorNone : kErrorBusy);
 
-    SuccessOrExit(error = mSocket.Open());
+    SuccessOrExit(error = mSocket.Open(Ip6::kNetifThread));
 
     error = mSocket.Connect(aServerSockAddr);
+
     if (error != kErrorNone)
     {
         LogInfo("Failed to connect to server %s: %s", aServerSockAddr.GetAddress().ToString().AsCString(),

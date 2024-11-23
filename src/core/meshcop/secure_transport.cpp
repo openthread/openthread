@@ -131,7 +131,7 @@ Error SecureTransport::Open(ReceiveHandler aReceiveHandler, ConnectedHandler aCo
 
     VerifyOrExit(IsStateClosed(), error = kErrorAlready);
 
-    SuccessOrExit(error = mSocket.Open());
+    SuccessOrExit(error = mSocket.Open(Ip6::kNetifUnspecified));
 
     mConnectedCallback.Set(aConnectedHandler, aContext);
     mReceiveCallback.Set(aReceiveHandler, aContext);
@@ -225,7 +225,7 @@ Error SecureTransport::Bind(uint16_t aPort)
     VerifyOrExit(IsStateOpen(), error = kErrorInvalidState);
     VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
 
-    SuccessOrExit(error = mSocket.Bind(aPort, Ip6::kNetifUnspecified));
+    SuccessOrExit(error = mSocket.Bind(aPort));
 
 exit:
     return error;
