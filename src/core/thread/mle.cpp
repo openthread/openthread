@@ -127,7 +127,7 @@ Error Mle::Enable(void)
     Error error = kErrorNone;
 
     UpdateLinkLocalAddress();
-    SuccessOrExit(error = mSocket.Open(Ip6::kNetifThread));
+    SuccessOrExit(error = mSocket.Open(Ip6::kNetifThreadInternal));
     SuccessOrExit(error = mSocket.Bind(kUdpPort));
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE

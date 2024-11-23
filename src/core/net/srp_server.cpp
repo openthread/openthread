@@ -658,7 +658,7 @@ Error Server::PrepareSocket(void)
 #endif
 
     VerifyOrExit(!mSocket.IsOpen());
-    SuccessOrExit(error = mSocket.Open(Ip6::kNetifThread));
+    SuccessOrExit(error = mSocket.Open(Ip6::kNetifThreadHost));
     error = mSocket.Bind(mPort);
 
 exit:

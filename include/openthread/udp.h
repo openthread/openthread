@@ -115,7 +115,8 @@ typedef void (*otUdpReceive)(void *aContext, otMessage *aMessage, const otMessag
 typedef enum otNetifIdentifier
 {
     OT_NETIF_UNSPECIFIED = 0, ///< Unspecified network interface.
-    OT_NETIF_THREAD,          ///< The Thread interface.
+    OT_NETIF_THREAD_HOST,     ///< The host Thread interface - allow use of platform UDP.
+    OT_NETIF_THREAD_INTERNAL, ///< The internal Thread interface (within OpenThread) - do not use platform UDP.
     OT_NETIF_BACKBONE,        ///< The Backbone interface.
 } otNetifIdentifier;
 

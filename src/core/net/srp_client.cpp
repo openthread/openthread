@@ -400,7 +400,7 @@ Error Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
     VerifyOrExit(GetState() == kStateStopped,
                  error = (aServerSockAddr == GetServerAddress()) ? kErrorNone : kErrorBusy);
 
-    SuccessOrExit(error = mSocket.Open(Ip6::kNetifThread));
+    SuccessOrExit(error = mSocket.Open(Ip6::kNetifThreadInternal));
 
     error = mSocket.Connect(aServerSockAddr);
 

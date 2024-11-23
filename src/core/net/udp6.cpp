@@ -119,7 +119,7 @@ Error Udp::Socket::JoinNetifMulticastGroup(NetifIdentifier aNetifIdentifier, con
     VerifyOrExit(aAddress.IsMulticast(), error = kErrorInvalidArgs);
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    error = otPlatUdpJoinMulticastGroup(this, MapEnum(aNetifIdentifier), &aAddress);
+    error = Plat::JoinMulticastGroup(*this, aNetifIdentifier, aAddress);
 #endif
 
 exit:
@@ -136,13 +136,64 @@ Error Udp::Socket::LeaveNetifMulticastGroup(NetifIdentifier aNetifIdentifier, co
     VerifyOrExit(aAddress.IsMulticast(), error = kErrorInvalidArgs);
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    error = otPlatUdpLeaveMulticastGroup(this, MapEnum(aNetifIdentifier), &aAddress);
+    error = Plat::LeaveMulticastGroup(*this, aNetifIdentifier, aAddress);
 #endif
 
 exit:
     return error;
 }
 #endif
+
+//---------------------------------------------------------------------------------------------------------------------
+// Udp::Plat
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+
+Error Udp::Plat::Open(SocketHandle &aSocket)
+{
+    return aSocket.ShouldUsePlatformUdp() ? otPlatUdpSocket(&aSocket) : kErrorNone;
+}
+
+Error Udp::Plat::Close(SocketHandle &aSocket)
+{
+    return aSocket.ShouldUsePlatformUdp() ? otPlatUdpClose(&aSocket) : kErrorNone;
+}
+
+Error Udp::Plat::Bind(SocketHandle &aSocket)
+{
+    return aSocket.ShouldUsePlatformUdp() ? otPlatUdpBind(&aSocket) : kErrorNone;
+}
+
+Error Udp::Plat::BindToNetif(SocketHandle &aSocket)
+{
+    return aSocket.ShouldUsePlatformUdp() ? otPlatUdpBindToNetif(&aSocket, MapEnum(aSocket.GetNetifId())) : kErrorNone;
+}
+
+Error Udp::Plat::Connect(SocketHandle &aSocket)
+{
+    return aSocket.ShouldUsePlatformUdp() ? otPlatUdpConnect(&aSocket) : kErrorNone;
+}
+
+Error Udp::Plat::Send(SocketHandle &aSocket, Message &aMessage, const MessageInfo &aMessageInfo)
+{
+    OT_ASSERT(aSocket.ShouldUsePlatformUdp());
+
+    return otPlatUdpSend(&aSocket, &aMessage, &aMessageInfo);
+}
+
+Error Udp::Plat::JoinMulticastGroup(SocketHandle &aSocket, NetifIdentifier aNetifId, const Address &aAddress)
+{
+    return aSocket.ShouldUsePlatformUdp() ? otPlatUdpJoinMulticastGroup(&aSocket, MapEnum(aNetifId), &aAddress)
+                                          : kErrorNone;
+}
+
+Error Udp::Plat::LeaveMulticastGroup(SocketHandle &aSocket, NetifIdentifier aNetifId, const Address &aAddress)
+{
+    return aSocket.ShouldUsePlatformUdp() ? otPlatUdpLeaveMulticastGroup(&aSocket, MapEnum(aNetifId), &aAddress)
+                                          : kErrorNone;
+}
+
+#endif //  OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 // Udp
@@ -178,7 +229,7 @@ Error Udp::Open(SocketHandle &aSocket, NetifIdentifier aNetifId, ReceiveHandler 
     aSocket.mContext = aContext;
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    error = otPlatUdpSocket(&aSocket);
+    error = Plat::Open(aSocket);
 #endif
     SuccessOrExit(error);
 
@@ -193,7 +244,7 @@ Error Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr)
     Error error = kErrorNone;
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    SuccessOrExit(error = otPlatUdpBindToNetif(&aSocket, MapEnum(aSocket.GetNetifId())));
+    SuccessOrExit(error = Plat::BindToNetif(aSocket));
 #endif
 
     VerifyOrExit(aSockAddr.GetAddress().IsUnspecified() || Get<ThreadNetif>().HasUnicastAddress(aSockAddr.GetAddress()),
@@ -207,14 +258,14 @@ Error Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr)
         {
             aSocket.mSockName.mPort = GetEphemeralPort();
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-            error = otPlatUdpBind(&aSocket);
+            error = Plat::Bind(aSocket);
 #endif
         } while (error != kErrorNone);
     }
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    else if (ShouldUsePlatformUdp(aSocket))
+    else
     {
-        error = otPlatUdpBind(&aSocket);
+        error = Plat::Bind(aSocket);
     }
 #endif
 
@@ -234,10 +285,7 @@ Error Udp::Connect(SocketHandle &aSocket, const SockAddr &aSockAddr)
     }
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    if (ShouldUsePlatformUdp(aSocket))
-    {
-        error = otPlatUdpConnect(&aSocket);
-    }
+    error = Plat::Connect(aSocket);
 #endif
 
 exit:
@@ -251,9 +299,8 @@ Error Udp::Close(SocketHandle &aSocket)
     VerifyOrExit(IsOpen(aSocket));
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    error = otPlatUdpClose(&aSocket);
+    SuccessOrExit(error = Plat::Close(aSocket));
 #endif
-    SuccessOrExit(error);
 
     RemoveSocket(aSocket);
     aSocket.GetSockName().Clear();
@@ -299,9 +346,9 @@ Error Udp::SendTo(SocketHandle &aSocket, Message &aMessage, const MessageInfo &a
     messageInfoLocal.SetSockPort(aSocket.GetSockName().mPort);
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    if (ShouldUsePlatformUdp(aSocket))
+    if (aSocket.ShouldUsePlatformUdp())
     {
-        SuccessOrExit(error = otPlatUdpSend(&aSocket, &aMessage, &messageInfoLocal));
+        SuccessOrExit(error = Plat::Send(aSocket, aMessage, messageInfoLocal));
     }
     else
 #endif
@@ -446,46 +493,6 @@ bool Udp::IsPortInUse(uint16_t aPort) const
 
     return found;
 }
-
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-
-bool Udp::ShouldUsePlatformUdp(uint16_t aPort) const
-{
-    bool shouldUse = false;
-
-    VerifyOrExit(aPort != Mle::kUdpPort);
-    VerifyOrExit(aPort != Tmf::kUdpPort);
-#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE && !OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF
-    VerifyOrExit(aPort != Dns::ServiceDiscovery::Server::kPort);
-#endif
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    VerifyOrExit(aPort != Get<MeshCoP::BorderAgent>().GetUdpProxyPort());
-#endif
-#if OPENTHREAD_FTD
-    VerifyOrExit(aPort != Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort());
-#endif
-#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
-    VerifyOrExit(aPort != Dhcp6::kDhcpServerPort);
-#endif
-#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
-    VerifyOrExit(aPort != Dhcp6::kDhcpClientPort);
-#endif
-
-    shouldUse = true;
-
-exit:
-    return shouldUse;
-}
-
-bool Udp::ShouldUsePlatformUdp(const Udp::SocketHandle &aSocket) const
-{
-    return (ShouldUsePlatformUdp(aSocket.mSockName.mPort)
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-            || aSocket.IsBackbone()
-#endif
-    );
-}
-#endif // OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
 } // namespace Ip6
 } // namespace ot
