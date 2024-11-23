@@ -196,6 +196,21 @@ template <typename IntType> inline IntType DivideAndRoundToClosest(IntType aDivi
 }
 
 /**
+ * This template function divides two numbers and always rounds the result up.
+ *
+ * @tparam IntType   The integer type.
+ *
+ * @param[in] aDividend   The dividend value.
+ * @param[in] aDivisor    The divisor value.
+ *
+ * @return The result of division and rounding up.
+ */
+template <typename IntType> inline IntType DivideAndRoundUp(IntType aDividend, IntType aDivisor)
+{
+    return (aDividend + (aDivisor - 1)) / aDivisor;
+}
+
+/**
  * Casts a given `uint32_t` to `unsigned long`.
  *
  * @param[in] aUint32   A `uint32_t` value.

@@ -132,6 +132,20 @@ void TestNumUtils(void)
     VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(9, 10) == 1);
     VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(10, 10) == 1);
 
+    VerifyOrQuit(DivideAndRoundUp<uint8_t>(2, 1) == 2);
+    VerifyOrQuit(DivideAndRoundUp<uint8_t>(1, 3) == 1);
+    VerifyOrQuit(DivideAndRoundUp<uint8_t>(1, 2) == 1);
+    VerifyOrQuit(DivideAndRoundUp<uint8_t>(2, 3) == 1);
+    VerifyOrQuit(DivideAndRoundUp<uint8_t>(3, 2) == 2);
+    VerifyOrQuit(DivideAndRoundUp<uint8_t>(4, 2) == 2);
+
+    VerifyOrQuit(DivideAndRoundUp<uint8_t>(0, 10) == 0);
+    VerifyOrQuit(DivideAndRoundUp<uint8_t>(4, 10) == 1);
+    VerifyOrQuit(DivideAndRoundUp<uint8_t>(5, 10) == 1);
+    VerifyOrQuit(DivideAndRoundUp<uint8_t>(9, 10) == 1);
+    VerifyOrQuit(DivideAndRoundUp<uint8_t>(10, 10) == 1);
+    VerifyOrQuit(DivideAndRoundUp<uint8_t>(11, 10) == 2);
+
     VerifyOrQuit(CountBitsInMask<uint8_t>(0) == 0);
     VerifyOrQuit(CountBitsInMask<uint8_t>(1) == 1);
     VerifyOrQuit(CountBitsInMask<uint8_t>(2) == 1);
