@@ -41,9 +41,9 @@ using namespace ot;
 
 const otRadioTimeStats *otRadioTimeStatsGet(otInstance *aInstance)
 {
-    return &AsCoreType(aInstance).Get<RadioStatistics>().GetStats();
+    return &AsCoreType(aInstance).Get<Radio::Statistics>().GetStats();
 }
 
-void otRadioTimeStatsReset(otInstance *aInstance) { AsCoreType(aInstance).Get<RadioStatistics>().ResetTime(); }
+void otRadioTimeStatsReset(otInstance *aInstance) { AsCoreType(aInstance).Get<Radio::Statistics>().ResetTime(); }
 
 #endif // OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
