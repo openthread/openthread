@@ -2629,9 +2629,10 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
     radioNowUs    = otPlatRadioGetNow(&GetInstance());
     rvTimeUs      = aFrame.GetRendezvousTimeIe()->GetRendezvousTime() * kUsPerTenSymbols;
     rvTimestampUs = aFrame.GetTimestamp() + kRadioHeaderPhrDuration + aFrame.GetLength() * kOctetDuration + rvTimeUs;
-    if (rvTimestampUs > radioNowUs + OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US)
+
+    if (rvTimestampUs > radioNowUs + kCslRequestAhead)
     {
-        attachDelayMs = static_cast<uint32_t>(rvTimestampUs - radioNowUs - OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US);
+        attachDelayMs = static_cast<uint32_t>(rvTimestampUs - radioNowUs - kCslRequestAhead);
         attachDelayMs = attachDelayMs / 1000;
     }
     else

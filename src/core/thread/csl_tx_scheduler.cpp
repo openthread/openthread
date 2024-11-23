@@ -59,7 +59,7 @@ void CslTxScheduler::UpdateFrameRequestAhead(void)
         busTxTime = DivideAndRoundUp<uint32_t>(150 * 8 * 1000000, busSpeedHz);
     }
 
-    mCslFrameRequestAheadUs = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US + busTxTime + busLatency;
+    mCslFrameRequestAheadUs = Mac::kCslRequestAhead + busTxTime + busLatency;
 
     LogInfo("Bus TX Time: %lu usec, Latency: %lu usec. Calculated CSL Frame Request Ahead: %lu usec",
             ToUlong(busTxTime), ToUlong(busLatency), ToUlong(mCslFrameRequestAheadUs));
