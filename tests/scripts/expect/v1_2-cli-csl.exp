@@ -1,0 +1,76 @@
+#!/usr/bin/expect -f
+#
+#  Copyright (c) 2025, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+source "tests/scripts/expect/_common.exp"
+source "tests/scripts/expect/_multinode.exp"
+
+spawn_node 1
+spawn_node 2
+
+switch_node 1
+setup_default_network
+attach "leader"
+
+switch_node 2
+setup_default_network
+send "mode -\n"
+expect_line "Done"
+send "csl channel 23\n"
+expect_line "Done"
+send "csl period 500000\n"
+expect_line "Done"
+attach "child"
+
+set extaddr [get_extaddr]
+set rloc [get_rloc16]
+set mleid [get_ipaddr mleid]
+
+send_user "\n# ${rloc} ${extaddr}\n"
+
+switch_node 1
+send "child table\n"
+expect "| ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|D|N|Ver|CSL|QMsgCnt|Suprvsn| Extended MAC     |"
+expect "+-----+--------+------------+------------+-------+------+-+-+-+---+---+-------+-------+------------------+"
+expect -re "\\| +(\\d+) \\| 0x$rloc \\| +\\d+ \\| +\\d+ \\| +\\d+ \\| +\\d+ \\|\\d\\|\\d\\|\\d\\| *\\d+\\| 1 | +\\d+ \\| +\\d+ \\| $extaddr \\|"
+expect_line "Done"
+
+send "scan energy 100\n"
+expect "| Ch | RSSI |"
+expect "+----+------+"
+for {set i 11} {$i <= 26} {incr i} {
+    expect -re "\\| +$i \\| +-?\\d+ \\|"
+}
+expect_line "Done"
+
+send "ping $mleid 20 10 0.5 255\n"
+for {set i 1} {$i <= 10} {incr i} {
+    expect "28 bytes from $mleid: icmp_seq=$i"
+}
+
+dispose_all
