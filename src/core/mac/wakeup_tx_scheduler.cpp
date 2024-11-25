@@ -167,7 +167,7 @@ void WakeupTxScheduler::UpdateFrameRequestAhead(void)
         busSpeedHz = DivideAndRoundUp<uint32_t>(kWakeupFrameWeight * 8 * 1000000, busSpeedHz);
     }
 
-    mTxRequestAheadTimeUs = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US + busTxTimeUs + busLatency;
+    mTxRequestAheadTimeUs = Mac::kCslRequestAhead + busTxTimeUs + busLatency;
 }
 
 } // namespace ot

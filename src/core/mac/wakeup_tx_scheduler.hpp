@@ -95,8 +95,7 @@ public:
     void Stop(void);
 
     /**
-     * Updates the value of `mTxRequestAheadTimeUs`, based on bus speed, bus latency and
-     * `OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US`.
+     * Updates the value of `mTxRequestAheadTimeUs`, based on bus speed, bus latency and `Mac::kCslRequestAhead`.
      */
     void UpdateFrameRequestAhead(void);
 

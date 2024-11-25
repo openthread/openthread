@@ -87,6 +87,12 @@ constexpr uint8_t kMaxFrameRetriesCsl             = 0;
 
 constexpr uint8_t kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST; ///< Num of times broadcast frame is tx.
 
+/**
+ * Specifies the number of microseconds ahead of time that the MAC layer should deliver a CSL frame to the sub-MAC
+ * layer.
+ */
+constexpr uint16_t kCslRequestAhead = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US;
+
 constexpr uint16_t kMinCslIePeriod = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD;
 
 constexpr uint32_t kDefaultWedListenInterval = OPENTHREAD_CONFIG_WED_LISTEN_INTERVAL;
