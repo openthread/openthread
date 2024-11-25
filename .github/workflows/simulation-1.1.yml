@@ -55,7 +55,7 @@ jobs:
       MULTIPLY: 3
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+      uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -108,7 +108,7 @@ jobs:
       VIRTUAL_TIME: 1
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+      uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -163,7 +163,7 @@ jobs:
       MESSAGE_USE_HEAP: ${{ matrix.message_use_heap }}
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+      uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -211,7 +211,7 @@ jobs:
       VIRTUAL_TIME: 1
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+      uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -255,7 +255,7 @@ jobs:
       THREAD_VERSION: 1.1
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+      uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -300,7 +300,7 @@ jobs:
       THREAD_VERSION: 1.1
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+      uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -356,7 +356,7 @@ jobs:
       CXXFLAGS: "-DOPENTHREAD_CONFIG_LOG_PREPEND_UPTIME=0"
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+      uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -397,7 +397,7 @@ jobs:
       COVERAGE: 1
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+      uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -431,7 +431,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+      uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
