@@ -412,10 +412,6 @@ Error Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     aMessageInfo.mPeerPort = udpHeader.GetSourcePort();
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
 
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    VerifyOrExit(!ShouldUsePlatformUdp(aMessageInfo.mSockPort) || IsPortInUse(aMessageInfo.mSockPort));
-#endif
-
     for (Receiver &receiver : mReceivers)
     {
         VerifyOrExit(!receiver.HandleMessage(aMessage, aMessageInfo));
@@ -458,28 +454,36 @@ bool Udp::IsPortInUse(uint16_t aPort) const
     return found;
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+
 bool Udp::ShouldUsePlatformUdp(uint16_t aPort) const
 {
-    return (aPort != Mle::kUdpPort && aPort != Tmf::kUdpPort
+    bool shouldUse = false;
+
+    VerifyOrExit(aPort != Mle::kUdpPort);
+    VerifyOrExit(aPort != Tmf::kUdpPort);
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE && !OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF
-            && aPort != Dns::ServiceDiscovery::Server::kPort
+    VerifyOrExit(aPort != Dns::ServiceDiscovery::Server::kPort);
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-            && aPort != Get<MeshCoP::BorderAgent>().GetUdpProxyPort()
+    VerifyOrExit(aPort != Get<MeshCoP::BorderAgent>().GetUdpProxyPort());
 #endif
 #if OPENTHREAD_FTD
-            && aPort != Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort()
+    VerifyOrExit(aPort != Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort());
 #endif
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
-            && aPort != Dhcp6::kDhcpServerPort
+    VerifyOrExit(aPort != Dhcp6::kDhcpServerPort);
 #endif
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
-            && aPort != Dhcp6::kDhcpClientPort
+    VerifyOrExit(aPort != Dhcp6::kDhcpClientPort);
 #endif
-    );
+
+    shouldUse = true;
+
+exit:
+    return shouldUse;
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 bool Udp::ShouldUsePlatformUdp(const Udp::SocketHandle &aSocket) const
 {
     return (ShouldUsePlatformUdp(aSocket.mSockName.mPort)
