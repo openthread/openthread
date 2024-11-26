@@ -50,13 +50,7 @@ namespace ot {
 /**
  * Represents a Thread Child.
  */
-class Child : public Neighbor,
-              public IndirectSender::ChildInfo,
-              public DataPollHandler::ChildInfo
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    ,
-              public CslTxScheduler::ChildInfo
-#endif
+class Child : public CslNeighbor
 {
 public:
     static constexpr uint8_t kMaxRequestTlvs = 6;

@@ -200,9 +200,9 @@ bool Mac::IsInTransmitState(void) const
     case kOperationTransmitDataDirect:
 #if OPENTHREAD_FTD
     case kOperationTransmitDataIndirect:
+#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
-#endif
 #endif
     case kOperationTransmitBeacon:
     case kOperationTransmitPoll:
@@ -508,6 +508,7 @@ void Mac::RequestIndirectFrameTransmission(void)
 exit:
     return;
 }
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 void Mac::RequestCslFrameTransmission(uint32_t aDelay)
@@ -522,7 +523,6 @@ exit:
     return;
 }
 #endif
-#endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 void Mac::RequestWakeupFrameTransmission(void)
@@ -577,7 +577,7 @@ void Mac::UpdateIdleMode(void)
         }
 #endif
     }
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     else if (IsPending(kOperationTransmitDataCsl))
     {
         mTimer.FireAt(mCslTxFireTime);
@@ -661,7 +661,7 @@ void Mac::PerformNextOperation(void)
         mOperation = kOperationTransmitWakeup;
     }
 #endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     else if (IsPending(kOperationTransmitDataCsl) && TimerMilli::GetNow() >= mCslTxFireTime)
     {
         mOperation = kOperationTransmitDataCsl;
@@ -727,9 +727,9 @@ void Mac::PerformNextOperation(void)
     case kOperationTransmitDataDirect:
 #if OPENTHREAD_FTD
     case kOperationTransmitDataIndirect:
+#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
-#endif
 #endif
     case kOperationTransmitPoll:
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
@@ -1036,6 +1036,7 @@ void Mac::BeginTransmit(void)
             frame->SetSequence(mDataSequence++);
         }
         break;
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
@@ -1053,7 +1054,6 @@ void Mac::BeginTransmit(void)
         break;
 
 #endif
-#endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
     case kOperationTransmitWakeup:
@@ -1352,7 +1352,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
                 ProcessEnhAckProbing(*aAckFrame, *neighbor);
 #endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
                 ProcessCsl(*aAckFrame, dstAddr);
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -1473,7 +1473,6 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         PerformNextOperation();
         break;
 
-#if OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
         mCounters.mTxData++;
@@ -1485,6 +1484,8 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 
         break;
 #endif
+
+#if OPENTHREAD_FTD
     case kOperationTransmitDataIndirect:
         mCounters.mTxData++;
 
@@ -1550,7 +1551,7 @@ void Mac::HandleTimer(void)
             }
 #endif
         }
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         else if (IsPending(kOperationTransmitDataCsl))
         {
             PerformNextOperation();
@@ -1962,7 +1963,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         ExitNow();
     }
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     ProcessCsl(*aFrame, srcaddr);
 #endif
 
@@ -2282,9 +2283,9 @@ const char *Mac::OperationToString(Operation aOperation)
         "WaitingForData",     // (6) kOperationWaitingForData
 #if OPENTHREAD_FTD
         "TransmitDataIndirect", // (7) kOperationTransmitDataIndirect
+#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         "TransmitDataCsl", // (8) kOperationTransmitDataCsl
-#endif
 #endif
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
         "TransmitWakeup", // kOperationTransmitWakeup
@@ -2304,9 +2305,9 @@ const char *Mac::OperationToString(Operation aOperation)
         ValidateNextEnum(kOperationWaitingForData);
 #if OPENTHREAD_FTD
         ValidateNextEnum(kOperationTransmitDataIndirect);
+#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         ValidateNextEnum(kOperationTransmitDataCsl);
-#endif
 #endif
     };
 
@@ -2467,10 +2468,11 @@ bool Mac::IsCslSupported(void) const
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
 void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
 {
-    Child       *child;
+    CslNeighbor *neighbor = nullptr;
     const CslIe *csl;
 
     VerifyOrExit(aFrame.IsVersion2015() && aFrame.GetSecurityEnabled());
@@ -2478,26 +2480,33 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
     csl = aFrame.GetCslIe();
     VerifyOrExit(csl != nullptr);
 
-    child = Get<ChildTable>().FindChild(aSrcAddr, Child::kInStateAnyExceptInvalid);
-    VerifyOrExit(child != nullptr);
+#if OPENTHREAD_FTD
+    neighbor = Get<ChildTable>().FindChild(aSrcAddr, Child::kInStateAnyExceptInvalid);
+#else
+    OT_UNUSED_VARIABLE(aSrcAddr);
+#endif
+
+    VerifyOrExit(neighbor != nullptr);
 
     VerifyOrExit(csl->GetPeriod() >= kMinCslIePeriod);
 
-    child->SetCslPeriod(csl->GetPeriod());
-    child->SetCslPhase(csl->GetPhase());
-    child->SetCslSynchronized(true);
-    child->SetCslLastHeard(TimerMilli::GetNow());
-    child->SetLastRxTimestamp(aFrame.GetTimestamp());
+    neighbor->SetCslPeriod(csl->GetPeriod());
+    neighbor->SetCslPhase(csl->GetPhase());
+    neighbor->SetCslSynchronized(true);
+    neighbor->SetCslLastHeard(TimerMilli::GetNow());
+    neighbor->SetLastRxTimestamp(aFrame.GetTimestamp());
     LogDebg("Timestamp=%lu Sequence=%u CslPeriod=%u CslPhase=%u TransmitPhase=%u",
             ToUlong(static_cast<uint32_t>(aFrame.GetTimestamp())), aFrame.GetSequence(), csl->GetPeriod(),
-            csl->GetPhase(), child->GetCslPhase());
+            csl->GetPhase(), neighbor->GetCslPhase());
 
+#if OPENTHREAD_FTD
     Get<CslTxScheduler>().Update();
+#endif
 
 exit:
     return;
 }
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 void Mac::ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor)

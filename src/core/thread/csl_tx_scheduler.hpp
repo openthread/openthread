@@ -31,7 +31,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -52,7 +52,7 @@ namespace ot {
  * @{
  */
 
-class Child;
+class CslNeighbor;
 
 /**
  * Implements CSL tx scheduling functionality.
@@ -66,11 +66,11 @@ public:
     static constexpr uint8_t kMaxCslTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS;
 
     /**
-     * Defines all the child info required for scheduling CSL transmissions.
+     * Defines all the neighbor info required for scheduling CSL transmissions.
      *
-     * `Child` class publicly inherits from this class.
+     * `CslNeighbor` publicly inherits from this class.
      */
-    class ChildInfo
+    class NeighborInfo
     {
     public:
         uint8_t GetCslTxAttempts(void) const { return mCslTxAttempts; }
@@ -167,7 +167,7 @@ public:
      * Updates the next CSL transmission (finds the nearest child).
      *
      * It would then request the `Mac` to do the CSL tx. If the last CSL tx has been fired at `Mac` but hasn't been
-     * done yet, and it's aborted, this method would set `mCslTxChild` to `nullptr` to notify the `HandleTransmitDone`
+     * done yet, and it's aborted, this method would clear current tx CSL neighbor to notify the `HandleTransmitDone`
      * that the operation has been aborted.
      */
     void Update(void);
@@ -190,16 +190,18 @@ private:
 
     void RescheduleCslTx(void);
 
-    uint32_t GetNextCslTransmissionDelay(const Child &aChild, uint32_t &aDelayFromLastRx, uint32_t aAheadUs) const;
+    uint32_t GetNextCslTransmissionDelay(const CslNeighbor &aCslNeighbor,
+                                         uint32_t          &aDelayFromLastRx,
+                                         uint32_t           aAheadUs) const;
 
     // Callbacks from `Mac`
     Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
     void          HandleSentFrame(const Mac::TxFrame &aFrame, Error aError);
 
-    void HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, Child &aChild);
+    void HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, CslNeighbor &aaCslNeighbor);
 
     uint32_t     mCslFrameRequestAheadUs;
-    Child       *mCslTxChild;
+    CslNeighbor *mCslTxNeighbor;
     Message     *mCslTxMessage;
     FrameContext mFrameContext;
 };
@@ -210,6 +212,6 @@ private:
 
 } // namespace ot
 
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 #endif // CSL_TX_SCHEDULER_HPP_

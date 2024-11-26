@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_FTD
-
 #include "common/code_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -57,7 +55,11 @@ namespace ot {
  * @{
  */
 
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
+#if OPENTHREAD_FTD
 class Child;
+#endif
 
 /**
  * Implements the data poll (mac data request command) handler.
@@ -79,14 +81,14 @@ public:
     };
 
     /**
-     * Defines all the child info required for handling of data polls and indirect frame transmissions.
+     * Defines all the neighbor info required for handling of data polls and indirect frame transmissions.
      *
-     * `Child` class publicly inherits from this class.
+     * `Child` (and `CslNeighbor`) class publicly inherits from this class.
      */
-    class ChildInfo
+    class NeighborInfo
     {
         friend class DataPollHandler;
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         friend class CslTxScheduler;
 #endif
 
@@ -131,6 +133,8 @@ public:
 
         static_assert(kMaxPollTriggeredTxAttempts < (1 << 5), "mIndirectTxAttempts cannot fit max!");
     };
+
+#if OPENTHREAD_FTD
 
     /**
      * Initializes the data poll handler object.
@@ -191,14 +195,16 @@ private:
 
     Child       *mIndirectTxChild; // The child being handled (`nullptr` indicates no active indirect tx).
     FrameContext mFrameContext;    // Context for the prepared frame for the current indirect tx (if any)
+
+#endif // OPENTHREAD_FTD
 };
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 /**
  * @}
  */
 
 } // namespace ot
-
-#endif // OPENTHREAD_FTD
 
 #endif // DATA_POLL_HANDLER_HPP_

@@ -769,6 +769,22 @@ private:
 
 DefineCoreType(otNeighborInfo, Neighbor::Info);
 
+/**
+ * Represents a CSL neighbor.
+ */
+class CslNeighbor : public Neighbor
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    ,
+                    public IndirectSender::NeighborInfo,
+                    public DataPollHandler::NeighborInfo
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    ,
+                    public CslTxScheduler::NeighborInfo
+#endif
+{
+};
+
 } // namespace ot
 
 #endif // NEIGHBOR_HPP_
