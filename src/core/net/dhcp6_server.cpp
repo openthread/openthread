@@ -130,7 +130,7 @@ void Server::Start(void)
 {
     VerifyOrExit(!mSocket.IsOpen());
 
-    IgnoreError(mSocket.Open());
+    IgnoreError(mSocket.Open(Ip6::kNetifThread));
     IgnoreError(mSocket.Bind(kDhcpServerPort));
 
 exit:

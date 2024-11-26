@@ -135,6 +135,13 @@ public:
          */
         NetifIdentifier GetNetifId(void) const { return static_cast<NetifIdentifier>(mNetifId); }
 
+        /**
+         * Sets the network interface identifier.
+         *
+         * @param[in] aNetifId   The network interface identifier.
+         */
+        void SetNetifId(NetifIdentifier aNetifId) { mNetifId = static_cast<otNetifIdentifier>(aNetifId); }
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
         /**
          * Indicate whether or not the socket is bound to the backbone network interface.
@@ -200,10 +207,12 @@ public:
         /**
          * Opens the UDP socket.
          *
+         * @param[in]  aNetifId   The network interface identifier.
+         *
          * @retval kErrorNone     Successfully opened the socket.
          * @retval kErrorFailed   Failed to open the socket.
          */
-        Error Open(void);
+        Error Open(NetifIdentifier aNetifId);
 
         /**
          * Returns if the UDP socket is open.
@@ -215,25 +224,23 @@ public:
         /**
          * Binds the UDP socket.
          *
-         * @param[in]  aSockAddr            A reference to the socket address.
-         * @param[in]  aNetifIdentifier     The network interface identifier.
+         * @param[in]  aSockAddr         A reference to the socket address.
          *
          * @retval kErrorNone            Successfully bound the socket.
          * @retval kErrorInvalidArgs     Unable to bind to Thread network interface with the given address.
          * @retval kErrorFailed          Failed to bind UDP Socket.
          */
-        Error Bind(const SockAddr &aSockAddr, NetifIdentifier aNetifIdentifier = kNetifThread);
+        Error Bind(const SockAddr &aSockAddr);
 
         /**
          * Binds the UDP socket.
          *
-         * @param[in]  aPort                A port number.
-         * @param[in]  aNetifIdentifier     The network interface identifier.
+         * @param[in]  aPort             A port number.
          *
          * @retval kErrorNone            Successfully bound the socket.
          * @retval kErrorFailed          Failed to bind UDP Socket.
          */
-        Error Bind(uint16_t aPort, NetifIdentifier aNetifIdentifier = kNetifThread);
+        Error Bind(uint16_t aPort);
 
         /**
          * Binds the UDP socket.
@@ -479,13 +486,14 @@ public:
      * Opens a UDP socket.
      *
      * @param[in]  aSocket   A reference to the socket.
+     * @param[in]  aNetifId  A network interface identifier.
      * @param[in]  aHandler  A pointer to a function that is called when receiving UDP messages.
      * @param[in]  aContext  A pointer to arbitrary context information.
      *
      * @retval kErrorNone     Successfully opened the socket.
      * @retval kErrorFailed   Failed to open the socket.
      */
-    Error Open(SocketHandle &aSocket, ReceiveHandler aHandler, void *aContext);
+    Error Open(SocketHandle &aSocket, NetifIdentifier aNetifId, ReceiveHandler aHandler, void *aContext);
 
     /**
      * Returns if a UDP socket is open.
@@ -501,13 +509,12 @@ public:
      *
      * @param[in]  aSocket          A reference to the socket.
      * @param[in]  aSockAddr        A reference to the socket address.
-     * @param[in]  aNetifIdentifier The network interface identifier.
      *
      * @retval kErrorNone            Successfully bound the socket.
      * @retval kErrorInvalidArgs     Unable to bind to Thread network interface with the given address.
      * @retval kErrorFailed          Failed to bind UDP Socket.
      */
-    Error Bind(SocketHandle &aSocket, const SockAddr &aSockAddr, NetifIdentifier aNetifIdentifier);
+    Error Bind(SocketHandle &aSocket, const SockAddr &aSockAddr);
 
     /**
      * Connects a UDP socket.

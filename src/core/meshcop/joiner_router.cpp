@@ -69,7 +69,7 @@ void JoinerRouter::Start(void)
 
         VerifyOrExit(!mSocket.IsBound());
 
-        IgnoreError(mSocket.Open());
+        IgnoreError(mSocket.Open(Ip6::kNetifThread));
         IgnoreError(mSocket.Bind(port));
         IgnoreError(Get<Ip6::Filter>().AddUnsecurePort(port));
         LogInfo("Joiner Router: start");
