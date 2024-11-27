@@ -205,6 +205,7 @@ void IndirectSender::HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMo
             {
                 message.GetIndirectTxChildMask().Remove(childIndex);
                 message.SetDirectTransmission();
+                message.SetTimestampToNow();
             }
         }
 
