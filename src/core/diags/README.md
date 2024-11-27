@@ -80,13 +80,14 @@ Done
 
 ### diag frame
 
-Usage: `diag frame [-c] [-p TX_POWER] [-s] <frame>`
+Usage: `diag frame [-c] [-p TX_POWER] [-s] [-u] <frame>`
 
 Set the frame (hex encoded) to be used by `diag send` and `diag repeat`. The frame may be overwritten by `diag send` and `diag repeat`.
 
-- Specify `-s` to indicate that tx security is already processed so that it should be skipped in the radio layer.
 - Specify `-c` to enable CSMA/CA for this frame in the radio layer.
 - Specify `-p` to specify the tx power in dBm for this frame.
+- Specify `-s` to indicate that tx security is already processed hence it should be skipped in the radio layer.
+- Specify `-u` to specify the `mInfo.mTxInfo.mIsHeaderUpdated` field for this frame.
 
 ```bash
 > diag frame 11223344
