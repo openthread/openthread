@@ -334,7 +334,7 @@ public:
     bool GetInstallCodeVerifyStatus(void) const { return mInstallCodeVerified; }
 
 private:
-    Error Connected(MeshCoP::SecureTransport &aTlsContext);
+    Error Connected(MeshCoP::Tls::Extension &aTls);
     void  Disconnected(void);
 
     Error HandleSingleTlv(const Message &aIncomingMessage, Message &aOutgoingMessage);

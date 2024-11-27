@@ -88,6 +88,9 @@ namespace ot {
 
 namespace MeshCoP {
 
+/**
+ * Represents a secure transport, used as base class for `Dtls` and `Tls`.
+ */
 class SecureTransport : public InstanceLocator
 {
 public:
@@ -132,14 +135,233 @@ public:
      */
     typedef void (*AutoCloseCallback)(void *aContext);
 
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE
     /**
-     * Initializes the SecureTransport object.
+     * Represents an API extension for a `SecureTransport` (DTLS or TLS).
      *
-     * @param[in]  aInstance            A reference to the OpenThread instance.
-     * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
-     * @param[in]  aDatagramTransport   Specifies if dtls of tls connection should be used.
+     * The `Extension` provides support for additional cipher suites along with related methods to configure them.
+     * This class decouples this functionality from the common `SecureTransport` object, allowing this to be added
+     * to any class.
+     *
+     * The general pattern to use the `Extension` class is to have it be inherited by classes that want to provide the
+     * same methods for configuring ciphers (e.g. `SetPreSharedKey()` or `SetCertificate()`). An `Extension` should
+     * then be associated with a `SecureTransport` (or any of its subclasses).
      */
-    explicit SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, bool aDatagramTransport = true);
+    class Extension
+    {
+        friend SecureTransport;
+
+    public:
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+        /**
+         * Sets the Pre-Shared Key (PSK) for sessions-identified by a PSK.
+         *
+         * DTLS mode "PSK with AES 128 CCM 8" for Application CoAPS.
+         *
+         * @param[in]  aPsk          A pointer to the PSK.
+         * @param[in]  aPskLength    The PSK char length.
+         * @param[in]  aPskIdentity  The Identity Name for the PSK.
+         * @param[in]  aPskIdLength  The PSK Identity Length.
+         */
+        void SetPreSharedKey(const uint8_t *aPsk,
+                             uint16_t       aPskLength,
+                             const uint8_t *aPskIdentity,
+                             uint16_t       aPskIdLength);
+#endif
+
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+        /**
+         * Sets a reference to the own x509 certificate with corresponding private key.
+         *
+         * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
+         *
+         * @param[in]  aX509Certificate   A pointer to the PEM formatted X509 certificate.
+         * @param[in]  aX509CertLength    The length of certificate.
+         * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
+         * @param[in]  aPrivateKeyLength  The length of the private key.
+         */
+        void SetCertificate(const uint8_t *aX509Certificate,
+                            uint32_t       aX509CertLength,
+                            const uint8_t *aPrivateKey,
+                            uint32_t       aPrivateKeyLength);
+
+        /**
+         * Sets the trusted top level CAs. It is needed for validate the certificate of the peer.
+         *
+         * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
+         *
+         * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
+         * @param[in]  aX509CaCertChainLength   The length of chain.
+         */
+        void SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
+
+        /**
+         * Extracts public key from it's own certificate.
+         *
+         * @returns Public key from own certificate in form of entire ASN.1 field.
+         */
+        const mbedtls_asn1_buf &GetOwnPublicKey(void) const { return mEcdheEcdsaInfo.mOwnCert.pk_raw; }
+
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+
+#if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
+        /**
+         * Returns the peer x509 certificate base64 encoded.
+         *
+         * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
+         *
+         * @param[out]  aPeerCert        A pointer to the base64 encoded certificate buffer.
+         * @param[out]  aCertLength      The length of the base64 encoded peer certificate.
+         * @param[in]   aCertBufferSize  The buffer size of aPeerCert.
+         *
+         * @retval kErrorInvalidState   Not connected yet.
+         * @retval kErrorNone           Successfully get the peer certificate.
+         * @retval kErrorNoBufs         Can't allocate memory for certificate.
+         */
+        Error GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
+#endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
+
+#if defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
+        /**
+         * Returns an attribute value identified by its OID from the subject
+         * of the peer x509 certificate. The peer OID is provided in binary format.
+         * The attribute length is set if the attribute was successfully read or zero
+         * if unsuccessful. The ASN.1 type as is set as defineded in the ITU-T X.690 standard
+         * if the attribute was successfully read.
+         *
+         * @param[in]     aOid                A pointer to the OID to be found.
+         * @param[in]     aOidLength          The length of the OID.
+         * @param[out]    aAttributeBuffer    A pointer to the attribute buffer.
+         * @param[in,out] aAttributeLength    On input, the size the max size of @p aAttributeBuffer.
+         *                                    On output, the length of the attribute written to the buffer.
+         * @param[out]    aAsn1Type           A pointer to the ASN.1 type of the attribute written to the buffer.
+         *
+         * @retval kErrorInvalidState   Not connected yet.
+         * @retval kErrorInvalidArgs    Invalid attribute length.
+         * @retval kErrorNone           Successfully read attribute.
+         * @retval kErrorNoBufs         Insufficient memory for storing the attribute value.
+         */
+        Error GetPeerSubjectAttributeByOid(const char *aOid,
+                                           size_t      aOidLength,
+                                           uint8_t    *aAttributeBuffer,
+                                           size_t     *aAttributeLength,
+                                           int        *aAsn1Type);
+
+        /**
+         * Returns an attribute value for the OID 1.3.6.1.4.1.44970.x from the v3 extensions of
+         * the peer x509 certificate, where the last digit x is set to aThreadOidDescriptor.
+         * The attribute length is set if the attribute was successfully read or zero if unsuccessful.
+         * Requires a connection to be active.
+         *
+         * @param[in]      aThreadOidDescriptor  The last digit of the Thread attribute OID.
+         * @param[out]     aAttributeBuffer      A pointer to the attribute buffer.
+         * @param[in,out]  aAttributeLength      On input, the size the max size of @p aAttributeBuffer.
+         *                                           On output, the length of the attribute written to the buffer.
+         *
+         * @retval kErrorNone             Successfully read attribute.
+         * @retval kErrorInvalidArgs      Invalid attribute length.
+         * @retval kErrorNotFound         The requested attribute was not found.
+         * @retval kErrorNoBufs           Insufficient memory for storing the attribute value.
+         * @retval kErrorInvalidState     Not connected yet.
+         * @retval kErrorNotImplemented   The value of aThreadOidDescriptor is >127.
+         * @retval kErrorParse            The certificate extensions could not be parsed.
+         */
+        Error GetThreadAttributeFromPeerCertificate(int      aThreadOidDescriptor,
+                                                    uint8_t *aAttributeBuffer,
+                                                    size_t  *aAttributeLength);
+#endif // defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
+
+        /**
+         * Returns an attribute value for the OID 1.3.6.1.4.1.44970.x from the v3 extensions of
+         * the own x509 certificate, where the last digit x is set to aThreadOidDescriptor.
+         * The attribute length is set if the attribute was successfully read or zero if unsuccessful.
+         * Requires a connection to be active.
+         *
+         * @param[in]      aThreadOidDescriptor  The last digit of the Thread attribute OID.
+         * @param[out]     aAttributeBuffer      A pointer to the attribute buffer.
+         * @param[in,out]  aAttributeLength      On input, the size the max size of @p aAttributeBuffer.
+         *                                       On output, the length of the attribute written to the buffer.
+         *
+         * @retval kErrorNone             Successfully read attribute.
+         * @retval kErrorInvalidArgs      Invalid attribute length.
+         * @retval kErrorNotFound         The requested attribute was not found.
+         * @retval kErrorNoBufs           Insufficient memory for storing the attribute value.
+         * @retval kErrorInvalidState     Not connected yet.
+         * @retval kErrorNotImplemented   The value of aThreadOidDescriptor is >127.
+         * @retval kErrorParse            The certificate extensions could not be parsed.
+         */
+        Error GetThreadAttributeFromOwnCertificate(int      aThreadOidDescriptor,
+                                                   uint8_t *aAttributeBuffer,
+                                                   size_t  *aAttributeLength);
+
+        /**
+         * Set the authentication mode for a connection.
+         *
+         * Disable or enable the verification of peer certificate.
+         * Must called before start.
+         *
+         * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should verify.
+         */
+        void SetSslAuthMode(bool aVerifyPeerCertificate)
+        {
+            mSecureTransport.mVerifyPeerCertificate = aVerifyPeerCertificate;
+        }
+
+    protected:
+        explicit Extension(SecureTransport &aSecureTransport)
+            : mSecureTransport(aSecureTransport)
+        {
+        }
+
+    private:
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+        struct EcdheEcdsaInfo : public Clearable<EcdheEcdsaInfo>
+        {
+            EcdheEcdsaInfo(void) { Clear(); }
+            void Init(void);
+            void Free(void);
+            int  SetSecureKeys(mbedtls_ssl_config &aConfig);
+
+            const uint8_t     *mCaChainSrc;
+            const uint8_t     *mOwnCertSrc;
+            const uint8_t     *mPrivateKeySrc;
+            uint32_t           mOwnCertLength;
+            uint32_t           mCaChainLength;
+            uint32_t           mPrivateKeyLength;
+            mbedtls_x509_crt   mCaChain;
+            mbedtls_x509_crt   mOwnCert;
+            mbedtls_pk_context mPrivateKey;
+        };
+#endif
+
+#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+        struct PskInfo : public Clearable<PskInfo>
+        {
+            PskInfo(void) { Clear(); }
+            int SetSecureKeys(mbedtls_ssl_config &aConfig) const;
+
+            const uint8_t *mPreSharedKey;
+            const uint8_t *mPreSharedKeyIdentity;
+            uint16_t       mPreSharedKeyLength;
+            uint16_t       mPreSharedKeyIdLength;
+        };
+#endif
+
+        int   SetApplicationSecureKeys(void);
+        Error GetThreadAttributeFromCertificate(const mbedtls_x509_crt *aCert,
+                                                int                     aThreadOidDescriptor,
+                                                uint8_t                *aAttributeBuffer,
+                                                size_t                 *aAttributeLength);
+
+        SecureTransport &mSecureTransport;
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+        EcdheEcdsaInfo mEcdheEcdsaInfo;
+#endif
+#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+        PskInfo mPskInfo;
+#endif
+    };
+#endif // OPENTHREAD_CONFIG_TLS_API_ENABLE
 
     /**
      * Opens the socket.
@@ -258,161 +480,6 @@ public:
      */
     Error SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE
-
-#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-    /**
-     * Sets the Pre-Shared Key (PSK) for sessions-identified by a PSK.
-     *
-     * DTLS mode "PSK with AES 128 CCM 8" for Application CoAPS.
-     *
-     * @param[in]  aPsk          A pointer to the PSK.
-     * @param[in]  aPskLength    The PSK char length.
-     * @param[in]  aPskIdentity  The Identity Name for the PSK.
-     * @param[in]  aPskIdLength  The PSK Identity Length.
-     *
-     * @retval kErrorNone  Successfully set the PSK.
-     */
-    void SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength);
-#endif
-
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    /**
-     * Sets a reference to the own x509 certificate with corresponding private key.
-     *
-     * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
-     *
-     * @param[in]  aX509Certificate   A pointer to the PEM formatted X509 certificate.
-     * @param[in]  aX509CertLength    The length of certificate.
-     * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
-     * @param[in]  aPrivateKeyLength  The length of the private key.
-     */
-    void SetCertificate(const uint8_t *aX509Certificate,
-                        uint32_t       aX509CertLength,
-                        const uint8_t *aPrivateKey,
-                        uint32_t       aPrivateKeyLength);
-
-    /**
-     * Sets the trusted top level CAs. It is needed for validate the certificate of the peer.
-     *
-     * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
-     *
-     * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
-     * @param[in]  aX509CaCertChainLength   The length of chain.
-     */
-    void SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
-
-    /**
-     * Extracts public key from it's own certificate.
-     *
-     * @returns Public key from own certificate in form of entire ASN.1 field.
-     */
-    const mbedtls_asn1_buf &GetOwnPublicKey(void) const { return mEcdheEcdsaInfo.mOwnCert.pk_raw; }
-
-#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-
-#if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
-    /**
-     * Returns the peer x509 certificate base64 encoded.
-     *
-     * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
-     *
-     * @param[out]  aPeerCert        A pointer to the base64 encoded certificate buffer.
-     * @param[out]  aCertLength      The length of the base64 encoded peer certificate.
-     * @param[in]   aCertBufferSize  The buffer size of aPeerCert.
-     *
-     * @retval kErrorInvalidState   Not connected yet.
-     * @retval kErrorNone           Successfully get the peer certificate.
-     * @retval kErrorNoBufs         Can't allocate memory for certificate.
-     */
-    Error GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
-#endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
-
-#if defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
-    /**
-     * Returns an attribute value identified by its OID from the subject
-     * of the peer x509 certificate. The peer OID is provided in binary format.
-     * The attribute length is set if the attribute was successfully read or zero
-     * if unsuccessful. The ASN.1 type as is set as defineded in the ITU-T X.690 standard
-     * if the attribute was successfully read.
-     *
-     * @param[in]     aOid                A pointer to the OID to be found.
-     * @param[in]     aOidLength          The length of the OID.
-     * @param[out]    aAttributeBuffer    A pointer to the attribute buffer.
-     * @param[in,out] aAttributeLength    On input, the size the max size of @p aAttributeBuffer.
-     *                                    On output, the length of the attribute written to the buffer.
-     * @param[out]    aAsn1Type           A pointer to the ASN.1 type of the attribute written to the buffer.
-     *
-     * @retval kErrorInvalidState   Not connected yet.
-     * @retval kErrorInvalidArgs    Invalid attribute length.
-     * @retval kErrorNone           Successfully read attribute.
-     * @retval kErrorNoBufs         Insufficient memory for storing the attribute value.
-     */
-    Error GetPeerSubjectAttributeByOid(const char *aOid,
-                                       size_t      aOidLength,
-                                       uint8_t    *aAttributeBuffer,
-                                       size_t     *aAttributeLength,
-                                       int        *aAsn1Type);
-
-    /**
-     * Returns an attribute value for the OID 1.3.6.1.4.1.44970.x from the v3 extensions of
-     * the peer x509 certificate, where the last digit x is set to aThreadOidDescriptor.
-     * The attribute length is set if the attribute was successfully read or zero if unsuccessful.
-     * Requires a connection to be active.
-     *
-     * @param[in]      aThreadOidDescriptor  The last digit of the Thread attribute OID.
-     * @param[out]     aAttributeBuffer      A pointer to the attribute buffer.
-     * @param[in,out]  aAttributeLength      On input, the size the max size of @p aAttributeBuffer.
-     *                                           On output, the length of the attribute written to the buffer.
-     *
-     * @retval kErrorNone             Successfully read attribute.
-     * @retval kErrorInvalidArgs      Invalid attribute length.
-     * @retval kErrorNotFound         The requested attribute was not found.
-     * @retval kErrorNoBufs           Insufficient memory for storing the attribute value.
-     * @retval kErrorInvalidState     Not connected yet.
-     * @retval kErrorNotImplemented   The value of aThreadOidDescriptor is >127.
-     * @retval kErrorParse            The certificate extensions could not be parsed.
-     */
-    Error GetThreadAttributeFromPeerCertificate(int      aThreadOidDescriptor,
-                                                uint8_t *aAttributeBuffer,
-                                                size_t  *aAttributeLength);
-#endif // defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
-
-    /**
-     * Returns an attribute value for the OID 1.3.6.1.4.1.44970.x from the v3 extensions of
-     * the own x509 certificate, where the last digit x is set to aThreadOidDescriptor.
-     * The attribute length is set if the attribute was successfully read or zero if unsuccessful.
-     * Requires a connection to be active.
-     *
-     * @param[in]      aThreadOidDescriptor  The last digit of the Thread attribute OID.
-     * @param[out]     aAttributeBuffer      A pointer to the attribute buffer.
-     * @param[in,out]  aAttributeLength      On input, the size the max size of @p aAttributeBuffer.
-     *                                       On output, the length of the attribute written to the buffer.
-     *
-     * @retval kErrorNone             Successfully read attribute.
-     * @retval kErrorInvalidArgs      Invalid attribute length.
-     * @retval kErrorNotFound         The requested attribute was not found.
-     * @retval kErrorNoBufs           Insufficient memory for storing the attribute value.
-     * @retval kErrorInvalidState     Not connected yet.
-     * @retval kErrorNotImplemented   The value of aThreadOidDescriptor is >127.
-     * @retval kErrorParse            The certificate extensions could not be parsed.
-     */
-    Error GetThreadAttributeFromOwnCertificate(int      aThreadOidDescriptor,
-                                               uint8_t *aAttributeBuffer,
-                                               size_t  *aAttributeLength);
-
-    /**
-     * Set the authentication mode for a connection.
-     *
-     * Disable or enable the verification of peer certificate.
-     * Must called before start.
-     *
-     * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should verify.
-     */
-    void SetSslAuthMode(bool aVerifyPeerCertificate) { mVerifyPeerCertificate = aVerifyPeerCertificate; }
-
-#endif // OPENTHREAD_CONFIG_TLS_API_ENABLE
-
     /**
      * Sends data within the session.
      *
@@ -439,6 +506,13 @@ public:
      * @param[in]  aMessageInfo A reference to the message info associated with @p aMessage.
      */
     void HandleReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+protected:
+    SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, bool aDatagramTransport);
+
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE
+    void SetExtension(Extension &aExtension) { mExtension = &aExtension; }
+#endif
 
 private:
     static constexpr uint16_t kMaxContentLen                   = OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN;
@@ -474,39 +548,6 @@ private:
         kUnspecifiedCipherSuite,
     };
 
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
-    struct EcdheEcdsaInfo : public Clearable<EcdheEcdsaInfo>
-    {
-        EcdheEcdsaInfo(void) { Clear(); }
-        void Init(void);
-        void Free(void);
-        int  SetSecureKeys(mbedtls_ssl_config &aConfig);
-
-        const uint8_t     *mCaChainSrc;
-        const uint8_t     *mOwnCertSrc;
-        const uint8_t     *mPrivateKeySrc;
-        uint32_t           mOwnCertLength;
-        uint32_t           mCaChainLength;
-        uint32_t           mPrivateKeyLength;
-        mbedtls_x509_crt   mCaChain;
-        mbedtls_x509_crt   mOwnCert;
-        mbedtls_pk_context mPrivateKey;
-    };
-#endif
-
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
-    struct PskInfo : public Clearable<PskInfo>
-    {
-        PskInfo(void) { Clear(); }
-        int SetSecureKeys(mbedtls_ssl_config &aConfig) const;
-
-        const uint8_t *mPreSharedKey;
-        const uint8_t *mPreSharedKeyIdentity;
-        uint16_t       mPreSharedKeyLength;
-        uint16_t       mPreSharedKeyIdLength;
-    };
-#endif
-
     bool IsStateClosed(void) const { return mState == kStateClosed; }
     bool IsStateOpen(void) const { return mState == kStateOpen; }
     bool IsStateInitializing(void) const { return mState == kStateInitializing; }
@@ -518,14 +559,6 @@ private:
 
     void  FreeMbedtls(void);
     Error Setup(bool aClient);
-
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE
-    int   SetApplicationSecureKeys(void);
-    Error GetThreadAttributeFromCertificate(const mbedtls_x509_crt *aCert,
-                                            int                     aThreadOidDescriptor,
-                                            uint8_t                *aAttributeBuffer,
-                                            size_t                 *aAttributeLength);
-#endif
 
     static bool IsMbedtlsHandshakeOver(mbedtls_ssl_context *aSslContext);
 
@@ -633,13 +666,76 @@ private:
 #if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
     mbedtls_ssl_cookie_ctx mCookieCtx;
 #endif
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
-    EcdheEcdsaInfo mEcdheEcdsaInfo;
-#endif
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
-    PskInfo mPskInfo;
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE
+    Extension *mExtension;
 #endif
 };
+
+/**
+ * Represents a DTLS instance.
+ */
+class Dtls : public SecureTransport
+{
+public:
+    /**
+     * Initializes the `Dtls` object.
+     *
+     * @param[in]  aInstance            A reference to the OpenThread instance.
+     * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
+     */
+    Dtls(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity)
+        : SecureTransport(aInstance, aLayerTwoSecurity, /* aDatagramTransport */ true)
+    {
+    }
+};
+
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+
+/**
+ * Represents an extended DTLS instance providing `Dtls::Extension` APIs.
+ */
+class DtlsExtended : public Dtls
+{
+public:
+    /**
+     * Initializes the `DtlsExtended` object.
+     *
+     * @param[in]  aInstance            A reference to the OpenThread instance.
+     * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
+     * @param[in]  aExtension           An extension providing additional configuration methods.
+     */
+    DtlsExtended(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, Extension &aExtension)
+        : Dtls(aInstance, aLayerTwoSecurity)
+    {
+        SetExtension(aExtension);
+    }
+};
+
+#endif
+
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+
+/**
+ * Represents a TLS instance.
+ */
+class Tls : public SecureTransport
+{
+public:
+    /**
+     * Initializes the `Tls` object.
+     *
+     * @param[in]  aInstance            A reference to the OpenThread instance.
+     * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
+     * @param[in]  aExtension           An extension providing additional configuration methods.
+     */
+    Tls(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, Extension &aExtension)
+        : SecureTransport(aInstance, aLayerTwoSecurity, /* aDatagramTransport */ false)
+    {
+        SetExtension(aExtension);
+    }
+};
+
+#endif
 
 } // namespace MeshCoP
 } // namespace ot

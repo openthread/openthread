@@ -639,14 +639,14 @@ exit:
     FreeMessageOnError(response, error);
 }
 
-void BorderAgent::HandleConnected(SecureTransport::ConnectEvent aEvent, void *aContext)
+void BorderAgent::HandleConnected(Dtls::ConnectEvent aEvent, void *aContext)
 {
     static_cast<BorderAgent *>(aContext)->HandleConnected(aEvent);
 }
 
-void BorderAgent::HandleConnected(SecureTransport::ConnectEvent aEvent)
+void BorderAgent::HandleConnected(Dtls::ConnectEvent aEvent)
 {
-    if (aEvent == SecureTransport::kConnected)
+    if (aEvent == Dtls::kConnected)
     {
         LogInfo("SecureSession connected");
         mState = kStateConnected;
@@ -674,11 +674,11 @@ void BorderAgent::HandleConnected(SecureTransport::ConnectEvent aEvent)
         {
             RestartAfterRemovingEphemeralKey();
 
-            if (aEvent == SecureTransport::kDisconnectedError)
+            if (aEvent == Dtls::kDisconnectedError)
             {
                 mCounters.mEpskcSecureSessionFailures++;
             }
-            else if (aEvent == SecureTransport::kDisconnectedPeerClosed)
+            else if (aEvent == Dtls::kDisconnectedPeerClosed)
             {
                 mCounters.mEpskcDeactivationDisconnects++;
             }
@@ -689,7 +689,7 @@ void BorderAgent::HandleConnected(SecureTransport::ConnectEvent aEvent)
             mState        = kStateStarted;
             mUdpProxyPort = 0;
 
-            if (aEvent == SecureTransport::kDisconnectedError)
+            if (aEvent == Dtls::kDisconnectedError)
             {
                 mCounters.mPskcSecureSessionFailures++;
             }

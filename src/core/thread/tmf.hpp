@@ -213,6 +213,8 @@ private:
                                Message                &aMessage,
                                const Ip6::MessageInfo &aMessageInfo);
     bool        HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    MeshCoP::Dtls mDtls;
 };
 
 #endif

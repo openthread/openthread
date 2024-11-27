@@ -112,7 +112,7 @@ exit:
     return error;
 }
 
-Error TcatAgent::Connected(MeshCoP::SecureTransport &aTlsContext)
+Error TcatAgent::Connected(MeshCoP::Tls::Extension &aTls)
 {
     size_t len;
     Error  error;
@@ -120,13 +120,13 @@ Error TcatAgent::Connected(MeshCoP::SecureTransport &aTlsContext)
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
     len = sizeof(mCommissionerAuthorizationField);
     SuccessOrExit(
-        error = aTlsContext.GetThreadAttributeFromPeerCertificate(
+        error = aTls.GetThreadAttributeFromPeerCertificate(
             kCertificateAuthorizationField, reinterpret_cast<uint8_t *>(&mCommissionerAuthorizationField), &len));
     VerifyOrExit(len == sizeof(mCommissionerAuthorizationField), error = kErrorParse);
     VerifyOrExit((mCommissionerAuthorizationField.mHeader & kCommissionerFlag) == 1, error = kErrorParse);
 
     len = sizeof(mDeviceAuthorizationField);
-    SuccessOrExit(error = aTlsContext.GetThreadAttributeFromOwnCertificate(
+    SuccessOrExit(error = aTls.GetThreadAttributeFromOwnCertificate(
                       kCertificateAuthorizationField, reinterpret_cast<uint8_t *>(&mDeviceAuthorizationField), &len));
     VerifyOrExit(len == sizeof(mDeviceAuthorizationField), error = kErrorParse);
     VerifyOrExit((mDeviceAuthorizationField.mHeader & kCommissionerFlag) == 0, error = kErrorParse);
@@ -136,7 +136,7 @@ Error TcatAgent::Connected(MeshCoP::SecureTransport &aTlsContext)
     mCommissionerHasExtendedPanId = false;
 
     len = sizeof(mCommissionerDomainName) - 1;
-    if (aTlsContext.GetThreadAttributeFromPeerCertificate(
+    if (aTls.GetThreadAttributeFromPeerCertificate(
             kCertificateDomainName, reinterpret_cast<uint8_t *>(&mCommissionerDomainName), &len) == kErrorNone)
     {
         mCommissionerDomainName.m8[len] = '\0';
@@ -144,7 +144,7 @@ Error TcatAgent::Connected(MeshCoP::SecureTransport &aTlsContext)
     }
 
     len = sizeof(mCommissionerNetworkName) - 1;
-    if (aTlsContext.GetThreadAttributeFromPeerCertificate(
+    if (aTls.GetThreadAttributeFromPeerCertificate(
             kCertificateNetworkName, reinterpret_cast<uint8_t *>(&mCommissionerNetworkName), &len) == kErrorNone)
     {
         mCommissionerNetworkName.m8[len] = '\0';
@@ -152,7 +152,7 @@ Error TcatAgent::Connected(MeshCoP::SecureTransport &aTlsContext)
     }
 
     len = sizeof(mCommissionerExtendedPanId);
-    if (aTlsContext.GetThreadAttributeFromPeerCertificate(
+    if (aTls.GetThreadAttributeFromPeerCertificate(
             kCertificateExtendedPanId, reinterpret_cast<uint8_t *>(&mCommissionerExtendedPanId), &len) == kErrorNone)
     {
         if (len == sizeof(mCommissionerExtendedPanId))
