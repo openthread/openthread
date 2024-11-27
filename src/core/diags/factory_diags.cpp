@@ -212,6 +212,7 @@ Diags::Diags(Instance &aInstance)
 
 void Diags::ResetTxPacket(void)
 {
+    mIsHeaderUpdated                               = false;
     mTxPacket->mInfo.mTxInfo.mTxDelayBaseTime      = 0;
     mTxPacket->mInfo.mTxInfo.mTxDelay              = 0;
     mTxPacket->mInfo.mTxInfo.mMaxCsmaBackoffs      = 0;
@@ -231,6 +232,7 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
     uint16_t size                 = OT_RADIO_FRAME_MAX_SIZE;
     bool     securityProcessed    = false;
     bool     csmaCaEnabled        = false;
+    bool     isHeaderUpdated      = false;
     int8_t   txPower              = OT_RADIO_POWER_INVALID;
     uint8_t  maxFrameRetries      = 0;
     uint8_t  maxCsmaBackoffs      = 0;
@@ -289,6 +291,11 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
         else if (StringMatch(aArgs[0], "-s"))
         {
             securityProcessed = true;
+            isHeaderUpdated   = true;
+        }
+        else if (StringMatch(aArgs[0], "-u"))
+        {
+            isHeaderUpdated = true;
         }
         else
         {
@@ -315,6 +322,7 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
     mTxPacket->mInfo.mTxInfo.mMaxCsmaBackoffs      = maxCsmaBackoffs;
     mTxPacket->mInfo.mTxInfo.mRxChannelAfterTxDone = rxChannelAfterTxDone;
     mTxPacket->mLength                             = size;
+    mIsHeaderUpdated                               = isHeaderUpdated;
     mIsTxPacketSet                                 = true;
 
 exit:
@@ -556,7 +564,13 @@ void Diags::TransmitPacket(void)
 {
     mTxPacket->mChannel = mChannel;
 
-    if (!mIsTxPacketSet)
+    if (mIsTxPacketSet)
+    {
+        // The `mInfo.mTxInfo.mIsHeaderUpdated` field may be updated by the radio driver after the frame is sent,
+        // set the `mInfo.mTxInfo.mIsHeaderUpdated` field before transmitting the frame.
+        mTxPacket->mInfo.mTxInfo.mIsHeaderUpdated = mIsHeaderUpdated;
+    }
+    else
     {
         ResetTxPacket();
         mTxPacket->mLength = mTxLen;

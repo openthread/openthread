@@ -217,9 +217,10 @@ private:
     uint8_t       mChannel;
     int8_t        mTxPower;
     uint8_t       mTxLen;
-    bool          mIsTxPacketSet;
-    bool          mRepeatActive;
-    bool          mDiagSendOn;
+    bool          mIsHeaderUpdated : 1;
+    bool          mIsTxPacketSet : 1;
+    bool          mRepeatActive : 1;
+    bool          mDiagSendOn : 1;
 #endif
 
     otDiagOutputCallback mOutputCallback;
