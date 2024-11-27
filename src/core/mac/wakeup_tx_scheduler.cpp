@@ -156,18 +156,9 @@ void WakeupTxScheduler::UpdateFrameRequestAhead(void)
 {
     // A rough estimate of the size of data that has to be exchanged with the radio to schedule a wake-up frame TX.
     // This is used to make sure that a wake-up frame is received by the radio early enough to be transmitted on time.
-    constexpr uint32_t kWakeupFrameWeight = 100;
+    constexpr uint32_t kWakeupFrameSize = 100;
 
-    uint32_t busSpeedHz  = Get<Radio>().GetBusSpeed();
-    uint32_t busLatency  = Get<Radio>().GetBusLatency();
-    uint32_t busTxTimeUs = 0;
-
-    if (busSpeedHz != 0)
-    {
-        busSpeedHz = DivideAndRoundUp<uint32_t>(kWakeupFrameWeight * 8 * 1000000, busSpeedHz);
-    }
-
-    mTxRequestAheadTimeUs = Mac::kCslRequestAhead + busTxTimeUs + busLatency;
+    mTxRequestAheadTimeUs = Mac::kCslRequestAhead + Get<Mac::Mac>().CalculateRadioBusTransferTime(kWakeupFrameSize);
 }
 
 } // namespace ot

@@ -771,6 +771,16 @@ public:
     bool IsWakeupListenEnabled(void) const { return mWakeupListenEnabled; }
 #endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
+    /**
+     * Calculates the radio bus transfer time (in microseconds) for a given frame size based on `Radio::GetBusSpeed()`
+     * and `Radio::GetBusLatency()`.
+     *
+     * @param[in] aFrameSize   The frame size to calculate for, in bytes.
+     *
+     * @returns The calculated radio bus transfer time in microseconds.
+     */
+    uint32_t CalculateRadioBusTransferTime(uint16_t aFrameSize) const;
+
 private:
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;
 
