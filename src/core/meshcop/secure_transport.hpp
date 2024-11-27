@@ -137,9 +137,9 @@ public:
      *
      * @param[in]  aInstance            A reference to the OpenThread instance.
      * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
-     * @param[in]  aDatagramTransport   Specifies if dtls of tls connection should be used.
+     * @param[in]  aDatagramTransport   Specifies if DTLS or TLS connection should be used.
      */
-    explicit SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, bool aDatagramTransport = true);
+    SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, bool aDatagramTransport = true);
 
     /**
      * Opens the socket.
@@ -258,7 +258,207 @@ public:
      */
     Error SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
+    /**
+     * Sends data within the session.
+     *
+     * @param[in]  aMessage  A message to send via connection.
+     * @param[in]  aLength   Number of bytes in the data buffer.
+     *
+     * @retval kErrorNone     Successfully sent the data via the session.
+     * @retval kErrorNoBufs   A message is too long.
+     */
+    Error Send(Message &aMessage, uint16_t aLength);
+
+    /**
+     * Returns the session's peer address.
+     *
+     * @return session's message info.
+     */
+    const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
+
+    /**
+     * Checks and handles a received message provided to the SecureTransport object. If checks based on
+     * the message info and current connection state pass, the message is processed.
+     *
+     * @param[in]  aMessage  A reference to the message to receive.
+     * @param[in]  aMessageInfo A reference to the message info associated with @p aMessage.
+     */
+    void HandleReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+protected:
+    static constexpr uint16_t kMaxContentLen                   = OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN;
+    static constexpr uint32_t kGuardTimeNewConnectionMilli     = 2000;
+    static constexpr size_t   kSecureTransportKeyBlockSize     = 40;
+    static constexpr size_t   kSecureTransportRandomBufferSize = 32;
+#if !OPENTHREAD_CONFIG_TLS_API_ENABLE
+    static constexpr uint16_t kApplicationDataMaxLength = 1152;
+#else
+    static constexpr uint16_t         kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH;
+#endif
+
+    enum State : uint8_t
+    {
+        kStateClosed,       // UDP socket is closed.
+        kStateOpen,         // UDP socket is open.
+        kStateInitializing, // The service is initializing.
+        kStateConnecting,   // The service is establishing a connection.
+        kStateConnected,    // The service has a connection established.
+        kStateCloseNotify,  // The service is closing a connection.
+    };
+
+    enum CipherSuite : uint8_t
+    {
+        kEcjpakeWithAes128Ccm8,
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+        kPskWithAes128Ccm8,
+#endif
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+        kEcdheEcdsaWithAes128Ccm8,
+        kEcdheEcdsaWithAes128GcmSha256,
+#endif
+        kUnspecifiedCipherSuite,
+    };
+
+    bool IsStateClosed(void) const { return mState == kStateClosed; }
+    bool IsStateOpen(void) const { return mState == kStateOpen; }
+    bool IsStateInitializing(void) const { return mState == kStateInitializing; }
+    bool IsStateConnecting(void) const { return mState == kStateConnecting; }
+    bool IsStateConnected(void) const { return mState == kStateConnected; }
+    bool IsStateCloseNotify(void) const { return mState == kStateCloseNotify; }
+    bool IsStateConnectingOrConnected(void) const { return mState == kStateConnecting || mState == kStateConnected; }
+    void SetState(State aState);
+
+    void  FreeMbedtls(void);
+    Error Setup(bool aClient);
+
+    static void HandleMbedtlsDebug(void *aContext, int aLevel, const char *aFile, int aLine, const char *aStr);
+    void        HandleMbedtlsDebug(int aLevel, const char *aFile, int aLine, const char *aStr);
+
+    static int HandleMbedtlsGetTimer(void *aContext);
+    int        HandleMbedtlsGetTimer(void);
+
+    static void HandleMbedtlsSetTimer(void *aContext, uint32_t aIntermediate, uint32_t aFinish);
+    void        HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish);
+
+    static int HandleMbedtlsReceive(void *aContext, unsigned char *aBuf, size_t aLength);
+    int        HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength);
+
+    static int HandleMbedtlsTransmit(void *aContext, const unsigned char *aBuf, size_t aLength);
+    int        HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength);
+
+#ifdef MBEDTLS_SSL_EXPORT_KEYS
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+
+    static void HandleMbedtlsExportKeys(void                       *aContext,
+                                        mbedtls_ssl_key_export_type aType,
+                                        const unsigned char        *aMasterSecret,
+                                        size_t                      aMasterSecretLen,
+                                        const unsigned char         aClientRandom[32],
+                                        const unsigned char         aServerRandom[32],
+                                        mbedtls_tls_prf_types       aTlsPrfType);
+
+    void HandleMbedtlsExportKeys(mbedtls_ssl_key_export_type aType,
+                                 const unsigned char        *aMasterSecret,
+                                 size_t                      aMasterSecretLen,
+                                 const unsigned char         aClientRandom[32],
+                                 const unsigned char         aServerRandom[32],
+                                 mbedtls_tls_prf_types       aTlsPrfType);
+
+#else
+
+    static int       HandleMbedtlsExportKeys(void                *aContext,
+                                             const unsigned char *aMasterSecret,
+                                             const unsigned char *aKeyBlock,
+                                             size_t               aMacLength,
+                                             size_t               aKeyLength,
+                                             size_t               aIvLength);
+    int              HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
+                                             const unsigned char *aKeyBlock,
+                                             size_t               aMacLength,
+                                             size_t               aKeyLength,
+                                             size_t               aIvLength);
+
+#endif // (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+#endif // MBEDTLS_SSL_EXPORT_KEYS
+
+    static void HandleTimer(Timer &aTimer);
+    void        HandleTimer(void);
+
+    void Process(void);
+    void Disconnect(ConnectEvent aEvent);
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    static const char *StateToString(State aState);
+#endif
+
+    using TransportSocket = Ip6::Udp::SocketIn<SecureTransport, &SecureTransport::HandleReceive>;
+
+#if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
+    static const uint16_t kGroups[];
+#else
+    static const mbedtls_ecp_group_id kCurves[];
+#endif
+
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
+#if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
+    static const uint16_t kSignatures[];
+#else
+    static const int kHashes[];
+#endif
+#endif
+
+    static const int kCipherSuites[][2];
+
+    bool                        mLayerTwoSecurity : 1;
+    bool                        mDatagramTransport : 1;
+    bool                        mTimerSet : 1;
+    bool                        mVerifyPeerCertificate : 1;
+    bool                        mIsExtended : 1;
+    State                       mState;
+    CipherSuite                 mCipherSuite;
+    Message::SubType            mMessageSubType;
+    ConnectEvent                mConnectEvent;
+    uint8_t                     mPskLength;
+    uint16_t                    mMaxConnectionAttempts;
+    uint16_t                    mRemainingConnectionAttempts;
+    Message                    *mReceiveMessage;
+    Ip6::MessageInfo            mMessageInfo;
+    TransportSocket             mSocket;
+    uint8_t                     mPsk[kPskMaxLength];
+    TimerMilliContext           mTimer;
+    TimeMilli                   mTimerIntermediate;
+    Callback<AutoCloseCallback> mAutoCloseCallback;
+    Callback<ConnectedHandler>  mConnectedCallback;
+    Callback<ReceiveHandler>    mReceiveCallback;
+    Callback<TransportCallback> mTransportCallback;
+    mbedtls_ssl_context         mSsl;
+    mbedtls_ssl_config          mConf;
+#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
+    mbedtls_ssl_cookie_ctx mCookieCtx;
+#endif
+};
+
+//---------------------------------------------------------------------------------------------------------------------
+
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
+
+class SecureTransportExtended : public SecureTransport
+{
+    friend class SecureTransport;
+
+public:
+    /**
+     * Initializes the SecureTransportExtended object.
+     *
+     * @param[in]  aInstance            A reference to the OpenThread instance.
+     * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
+     * @param[in]  aDatagramTransport   Specifies if DTLS or TLS connection should be used.
+     */
+    SecureTransportExtended(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, bool aDatagramTransport = true)
+        : SecureTransport(aInstance, aLayerTwoSecurity, aDatagramTransport)
+    {
+        mIsExtended = true;
+    }
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     /**
@@ -411,70 +611,8 @@ public:
      */
     void SetSslAuthMode(bool aVerifyPeerCertificate) { mVerifyPeerCertificate = aVerifyPeerCertificate; }
 
-#endif // OPENTHREAD_CONFIG_TLS_API_ENABLE
-
-    /**
-     * Sends data within the session.
-     *
-     * @param[in]  aMessage  A message to send via connection.
-     * @param[in]  aLength   Number of bytes in the data buffer.
-     *
-     * @retval kErrorNone     Successfully sent the data via the session.
-     * @retval kErrorNoBufs   A message is too long.
-     */
-    Error Send(Message &aMessage, uint16_t aLength);
-
-    /**
-     * Returns the session's peer address.
-     *
-     * @return session's message info.
-     */
-    const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
-
-    /**
-     * Checks and handles a received message provided to the SecureTransport object. If checks based on
-     * the message info and current connection state pass, the message is processed.
-     *
-     * @param[in]  aMessage  A reference to the message to receive.
-     * @param[in]  aMessageInfo A reference to the message info associated with @p aMessage.
-     */
-    void HandleReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
 private:
-    static constexpr uint16_t kMaxContentLen                   = OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN;
-    static constexpr uint32_t kGuardTimeNewConnectionMilli     = 2000;
-    static constexpr size_t   kSecureTransportKeyBlockSize     = 40;
-    static constexpr size_t   kSecureTransportRandomBufferSize = 32;
-#if !OPENTHREAD_CONFIG_TLS_API_ENABLE
-    static constexpr uint16_t kApplicationDataMaxLength = 1152;
-#else
-    static constexpr uint16_t         kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH;
-#endif
-
-    enum State : uint8_t
-    {
-        kStateClosed,       // UDP socket is closed.
-        kStateOpen,         // UDP socket is open.
-        kStateInitializing, // The service is initializing.
-        kStateConnecting,   // The service is establishing a connection.
-        kStateConnected,    // The service has a connection established.
-        kStateCloseNotify,  // The service is closing a connection.
-    };
-
-    enum CipherSuite : uint8_t
-    {
-        kEcjpakeWithAes128Ccm8,
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
-        kPskWithAes128Ccm8,
-#endif
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
-        kEcdheEcdsaWithAes128Ccm8,
-        kEcdheEcdsaWithAes128GcmSha256,
-#endif
-        kUnspecifiedCipherSuite,
-    };
-
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
     struct EcdheEcdsaInfo : public Clearable<EcdheEcdsaInfo>
     {
         EcdheEcdsaInfo(void) { Clear(); }
@@ -494,7 +632,7 @@ private:
     };
 #endif
 
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
     struct PskInfo : public Clearable<PskInfo>
     {
         PskInfo(void) { Clear(); }
@@ -507,137 +645,21 @@ private:
     };
 #endif
 
-    bool IsStateClosed(void) const { return mState == kStateClosed; }
-    bool IsStateOpen(void) const { return mState == kStateOpen; }
-    bool IsStateInitializing(void) const { return mState == kStateInitializing; }
-    bool IsStateConnecting(void) const { return mState == kStateConnecting; }
-    bool IsStateConnected(void) const { return mState == kStateConnected; }
-    bool IsStateCloseNotify(void) const { return mState == kStateCloseNotify; }
-    bool IsStateConnectingOrConnected(void) const { return mState == kStateConnecting || mState == kStateConnected; }
-    void SetState(State aState);
-
-    void  FreeMbedtls(void);
-    Error Setup(bool aClient);
-
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE
     int   SetApplicationSecureKeys(void);
     Error GetThreadAttributeFromCertificate(const mbedtls_x509_crt *aCert,
                                             int                     aThreadOidDescriptor,
                                             uint8_t                *aAttributeBuffer,
                                             size_t                 *aAttributeLength);
-#endif
 
-    static void HandleMbedtlsDebug(void *aContext, int aLevel, const char *aFile, int aLine, const char *aStr);
-    void        HandleMbedtlsDebug(int aLevel, const char *aFile, int aLine, const char *aStr);
-
-    static int HandleMbedtlsGetTimer(void *aContext);
-    int        HandleMbedtlsGetTimer(void);
-
-    static void HandleMbedtlsSetTimer(void *aContext, uint32_t aIntermediate, uint32_t aFinish);
-    void        HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish);
-
-    static int HandleMbedtlsReceive(void *aContext, unsigned char *aBuf, size_t aLength);
-    int        HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength);
-
-    static int HandleMbedtlsTransmit(void *aContext, const unsigned char *aBuf, size_t aLength);
-    int        HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength);
-
-#ifdef MBEDTLS_SSL_EXPORT_KEYS
-#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
-
-    static void HandleMbedtlsExportKeys(void                       *aContext,
-                                        mbedtls_ssl_key_export_type aType,
-                                        const unsigned char        *aMasterSecret,
-                                        size_t                      aMasterSecretLen,
-                                        const unsigned char         aClientRandom[32],
-                                        const unsigned char         aServerRandom[32],
-                                        mbedtls_tls_prf_types       aTlsPrfType);
-
-    void HandleMbedtlsExportKeys(mbedtls_ssl_key_export_type aType,
-                                 const unsigned char        *aMasterSecret,
-                                 size_t                      aMasterSecretLen,
-                                 const unsigned char         aClientRandom[32],
-                                 const unsigned char         aServerRandom[32],
-                                 mbedtls_tls_prf_types       aTlsPrfType);
-
-#else
-
-    static int       HandleMbedtlsExportKeys(void                *aContext,
-                                             const unsigned char *aMasterSecret,
-                                             const unsigned char *aKeyBlock,
-                                             size_t               aMacLength,
-                                             size_t               aKeyLength,
-                                             size_t               aIvLength);
-    int              HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
-                                             const unsigned char *aKeyBlock,
-                                             size_t               aMacLength,
-                                             size_t               aKeyLength,
-                                             size_t               aIvLength);
-
-#endif // (MBEDTLS_VERSION_NUMBER >= 0x03000000)
-#endif // MBEDTLS_SSL_EXPORT_KEYS
-
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
-
-    void Process(void);
-    void Disconnect(ConnectEvent aEvent);
-
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-    static const char *StateToString(State aState);
-#endif
-
-    using TransportSocket = Ip6::Udp::SocketIn<SecureTransport, &SecureTransport::HandleReceive>;
-
-#if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
-    static const uint16_t kGroups[];
-#else
-    static const mbedtls_ecp_group_id kCurves[];
-#endif
-
-#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
-#if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
-    static const uint16_t kSignatures[];
-#else
-    static const int kHashes[];
-#endif
-#endif
-
-    static const int kCipherSuites[][2];
-
-    bool                        mLayerTwoSecurity : 1;
-    bool                        mDatagramTransport : 1;
-    bool                        mTimerSet : 1;
-    bool                        mVerifyPeerCertificate : 1;
-    State                       mState;
-    CipherSuite                 mCipherSuite;
-    Message::SubType            mMessageSubType;
-    ConnectEvent                mConnectEvent;
-    uint8_t                     mPskLength;
-    uint16_t                    mMaxConnectionAttempts;
-    uint16_t                    mRemainingConnectionAttempts;
-    Message                    *mReceiveMessage;
-    Ip6::MessageInfo            mMessageInfo;
-    TransportSocket             mSocket;
-    uint8_t                     mPsk[kPskMaxLength];
-    TimerMilliContext           mTimer;
-    TimeMilli                   mTimerIntermediate;
-    Callback<AutoCloseCallback> mAutoCloseCallback;
-    Callback<ConnectedHandler>  mConnectedCallback;
-    Callback<ReceiveHandler>    mReceiveCallback;
-    Callback<TransportCallback> mTransportCallback;
-    mbedtls_ssl_context         mSsl;
-    mbedtls_ssl_config          mConf;
-#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
-    mbedtls_ssl_cookie_ctx mCookieCtx;
-#endif
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
     EcdheEcdsaInfo mEcdheEcdsaInfo;
 #endif
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
     PskInfo mPskInfo;
 #endif
 };
+
+#endif // OPENTHREAD_CONFIG_TLS_API_ENABLE
 
 } // namespace MeshCoP
 } // namespace ot

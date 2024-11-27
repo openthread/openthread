@@ -112,7 +112,7 @@ exit:
     return error;
 }
 
-Error TcatAgent::Connected(MeshCoP::SecureTransport &aTlsContext)
+Error TcatAgent::Connected(MeshCoP::SecureTransportExtended &aTlsContext)
 {
     size_t len;
     Error  error;

@@ -293,7 +293,7 @@ public:
     const Ip6::MessageInfo &GetMessageInfo(void) const { return mDtls.GetMessageInfo(); }
 
 protected:
-    CoapSecureBase(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity);
+    CoapSecureBase(Instance &aInstance, MeshCoP::SecureTransport &aDtls);
 
     Error Open(uint16_t aMaxAttempts, AutoStopCallback aCallback, void *aContext);
 
@@ -316,7 +316,7 @@ protected:
     static void HandleTransmit(Tasklet &aTasklet);
     void        HandleTransmit(void);
 
-    MeshCoP::SecureTransport       mDtls;
+    MeshCoP::SecureTransport      &mDtls;
     Callback<ConnectEventCallback> mConnectEventCallback;
     Callback<AutoStopCallback>     mAutoStopCallback;
     ot::MessageQueue               mTransmitQueue;
@@ -337,8 +337,9 @@ public:
      * @param[in]  aInstance           A reference to the OpenThread instance.
      * @param[in]  aLayerTwoSecurity   Specifies whether to use layer two security or not.
      */
-    ApplicationCoapSecure(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity)
-        : CoapSecureBase(aInstance, aLayerTwoSecurity)
+    explicit ApplicationCoapSecure(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity)
+        : CoapSecureBase(aInstance, mDtls)
+        , mDtls(aInstance, aLayerTwoSecurity)
     {
     }
 
@@ -418,6 +419,9 @@ public:
      * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should be verified
      */
     void SetSslAuthMode(bool aVerifyPeerCertificate) { mDtls.SetSslAuthMode(aVerifyPeerCertificate); }
+
+private:
+    MeshCoP::SecureTransportExtended mDtls;
 };
 
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE

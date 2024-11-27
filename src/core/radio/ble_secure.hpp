@@ -460,18 +460,18 @@ private:
 
     using TxTask = TaskletIn<BleSecure, &BleSecure::HandleTransmit>;
 
-    MeshCoP::SecureTransport  mTls;
-    MeshCoP::TcatAgent        mTcatAgent;
-    Callback<ConnectCallback> mConnectCallback;
-    Callback<ReceiveCallback> mReceiveCallback;
-    bool                      mTlvMode;
-    ot::Message              *mReceivedMessage;
-    ot::Message              *mSendMessage;
-    ot::MessageQueue          mTransmitQueue;
-    TxTask                    mTransmitTask;
-    uint8_t                   mPacketBuffer[kPacketBufferSize];
-    BleState                  mBleState;
-    uint16_t                  mMtuSize;
+    MeshCoP::SecureTransportExtended mTls;
+    MeshCoP::TcatAgent               mTcatAgent;
+    Callback<ConnectCallback>        mConnectCallback;
+    Callback<ReceiveCallback>        mReceiveCallback;
+    bool                             mTlvMode;
+    ot::Message                     *mReceivedMessage;
+    ot::Message                     *mSendMessage;
+    ot::MessageQueue                 mTransmitQueue;
+    TxTask                           mTransmitTask;
+    uint8_t                          mPacketBuffer[kPacketBufferSize];
+    BleState                         mBleState;
+    uint16_t                         mMtuSize;
 };
 
 } // namespace Ble
