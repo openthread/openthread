@@ -89,6 +89,9 @@ SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwo
     , mSocket(aInstance, *this)
     , mTimer(aInstance, SecureTransport::HandleTimer, this)
     , mTimerIntermediate(0)
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE
+    , mExtension(nullptr)
+#endif
 {
     ClearAllBytes(mPsk);
     ClearAllBytes(mSsl);
@@ -108,7 +111,10 @@ void SecureTransport::FreeMbedtls(void)
     }
 #endif
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
-    mEcdheEcdsaInfo.Free();
+    if (mExtension != nullptr)
+    {
+        mExtension->mEcdheEcdsaInfo.Free();
+    }
 #endif
     mbedtls_ssl_config_free(&mConf);
     mbedtls_ssl_free(&mSsl);
@@ -277,9 +283,14 @@ Error SecureTransport::Setup(bool aClient)
 
     mbedtls_ssl_init(&mSsl);
     mbedtls_ssl_config_init(&mConf);
+
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
-    mEcdheEcdsaInfo.Init();
+    if (mExtension != nullptr)
+    {
+        mExtension->mEcdheEcdsaInfo.Init();
+    }
 #endif
+
 #if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
     if (mDatagramTransport)
     {
@@ -367,9 +378,9 @@ Error SecureTransport::Setup(bool aClient)
         rval = mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
     }
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
-    else
+    else if (mExtension != nullptr)
     {
-        rval = SetApplicationSecureKeys();
+        rval = mExtension->SetApplicationSecureKeys();
     }
 #endif
     VerifyOrExit(rval == 0);
@@ -400,23 +411,23 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
-int SecureTransport::SetApplicationSecureKeys(void)
+int SecureTransport::Extension::SetApplicationSecureKeys(void)
 {
     int rval = 0;
 
-    switch (mCipherSuite)
+    switch (mSecureTransport.mCipherSuite)
     {
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     case kEcdheEcdsaWithAes128Ccm8:
     case kEcdheEcdsaWithAes128GcmSha256:
-        rval = mEcdheEcdsaInfo.SetSecureKeys(mConf);
+        rval = mEcdheEcdsaInfo.SetSecureKeys(mSecureTransport.mConf);
         VerifyOrExit(rval == 0);
         break;
 #endif
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     case kPskWithAes128Ccm8:
-        rval = mPskInfo.SetSecureKeys(mConf);
+        rval = mPskInfo.SetSecureKeys(mSecureTransport.mConf);
         VerifyOrExit(rval == 0);
         break;
 #endif
@@ -425,7 +436,6 @@ int SecureTransport::SetApplicationSecureKeys(void)
         LogCrit("Application Coap Secure: Not supported cipher.");
         rval = MBEDTLS_ERR_SSL_BAD_INPUT_DATA;
         ExitNow();
-        break;
     }
 
 exit:
@@ -480,21 +490,21 @@ exit:
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
-void SecureTransport::EcdheEcdsaInfo::Init(void)
+void SecureTransport::Extension::EcdheEcdsaInfo::Init(void)
 {
     mbedtls_x509_crt_init(&mCaChain);
     mbedtls_x509_crt_init(&mOwnCert);
     mbedtls_pk_init(&mPrivateKey);
 }
 
-void SecureTransport::EcdheEcdsaInfo::Free(void)
+void SecureTransport::Extension::EcdheEcdsaInfo::Free(void)
 {
     mbedtls_x509_crt_free(&mCaChain);
     mbedtls_x509_crt_free(&mOwnCert);
     mbedtls_pk_free(&mPrivateKey);
 }
 
-int SecureTransport::EcdheEcdsaInfo::SetSecureKeys(mbedtls_ssl_config &aConfig)
+int SecureTransport::Extension::EcdheEcdsaInfo::SetSecureKeys(mbedtls_ssl_config &aConfig)
 {
     int rval = 0;
 
@@ -528,10 +538,10 @@ exit:
     return rval;
 }
 
-void SecureTransport::SetCertificate(const uint8_t *aX509Certificate,
-                                     uint32_t       aX509CertLength,
-                                     const uint8_t *aPrivateKey,
-                                     uint32_t       aPrivateKeyLength)
+void SecureTransport::Extension::SetCertificate(const uint8_t *aX509Certificate,
+                                                uint32_t       aX509CertLength,
+                                                const uint8_t *aPrivateKey,
+                                                uint32_t       aPrivateKeyLength)
 {
     OT_ASSERT(aX509CertLength > 0);
     OT_ASSERT(aX509Certificate != nullptr);
@@ -544,10 +554,12 @@ void SecureTransport::SetCertificate(const uint8_t *aX509Certificate,
     mEcdheEcdsaInfo.mPrivateKeySrc    = aPrivateKey;
     mEcdheEcdsaInfo.mPrivateKeyLength = aPrivateKeyLength;
 
-    mCipherSuite = mDatagramTransport ? kEcdheEcdsaWithAes128Ccm8 : kEcdheEcdsaWithAes128GcmSha256;
+    mSecureTransport.mCipherSuite =
+        mSecureTransport.mDatagramTransport ? kEcdheEcdsaWithAes128Ccm8 : kEcdheEcdsaWithAes128GcmSha256;
 }
 
-void SecureTransport::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
+void SecureTransport::Extension::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain,
+                                                       uint32_t       aX509CaCertChainLength)
 {
     OT_ASSERT(aX509CaCertChainLength > 0);
     OT_ASSERT(aX509CaCertificateChain != nullptr);
@@ -560,16 +572,16 @@ void SecureTransport::SetCaCertificateChain(const uint8_t *aX509CaCertificateCha
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
-int SecureTransport::PskInfo::SetSecureKeys(mbedtls_ssl_config &aConfig) const
+int SecureTransport::Extension::PskInfo::SetSecureKeys(mbedtls_ssl_config &aConfig) const
 {
     return mbedtls_ssl_conf_psk(&aConfig, static_cast<const unsigned char *>(mPreSharedKey), mPreSharedKeyLength,
                                 static_cast<const unsigned char *>(mPreSharedKeyIdentity), mPreSharedKeyIdLength);
 }
 
-void SecureTransport::SetPreSharedKey(const uint8_t *aPsk,
-                                      uint16_t       aPskLength,
-                                      const uint8_t *aPskIdentity,
-                                      uint16_t       aPskIdLength)
+void SecureTransport::Extension::SetPreSharedKey(const uint8_t *aPsk,
+                                                 uint16_t       aPskLength,
+                                                 const uint8_t *aPskIdentity,
+                                                 uint16_t       aPskIdLength)
 {
     OT_ASSERT(aPsk != nullptr);
     OT_ASSERT(aPskIdentity != nullptr);
@@ -581,30 +593,37 @@ void SecureTransport::SetPreSharedKey(const uint8_t *aPsk,
     mPskInfo.mPreSharedKeyIdentity = aPskIdentity;
     mPskInfo.mPreSharedKeyIdLength = aPskIdLength;
 
-    mCipherSuite = kPskWithAes128Ccm8;
+    mSecureTransport.mCipherSuite = kPskWithAes128Ccm8;
 }
 
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 #if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
-Error SecureTransport::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
+Error SecureTransport::Extension::GetPeerCertificateBase64(unsigned char *aPeerCert,
+                                                           size_t        *aCertLength,
+                                                           size_t         aCertBufferSize)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsStateConnected(), error = kErrorInvalidState);
+    VerifyOrExit(mSecureTransport.IsStateConnected(), error = kErrorInvalidState);
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
-    VerifyOrExit(mbedtls_base64_encode(aPeerCert, aCertBufferSize, aCertLength,
-                                       mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.p,
-                                       mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.len) == 0,
-                 error = kErrorNoBufs);
-#else
     VerifyOrExit(
-        mbedtls_base64_encode(
-            aPeerCert, aCertBufferSize, aCertLength,
-            mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(p),
-            mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(len)) == 0,
+        mbedtls_base64_encode(aPeerCert, aCertBufferSize, aCertLength,
+                              mSecureTransport.mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.p,
+                              mSecureTransport.mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.len) == 0,
         error = kErrorNoBufs);
+#else
+    VerifyOrExit(mbedtls_base64_encode(aPeerCert, aCertBufferSize, aCertLength,
+                                       mSecureTransport.mSsl.MBEDTLS_PRIVATE(session)
+                                           ->MBEDTLS_PRIVATE(peer_cert)
+                                           ->MBEDTLS_PRIVATE(raw)
+                                           .MBEDTLS_PRIVATE(p),
+                                       mSecureTransport.mSsl.MBEDTLS_PRIVATE(session)
+                                           ->MBEDTLS_PRIVATE(peer_cert)
+                                           ->MBEDTLS_PRIVATE(raw)
+                                           .MBEDTLS_PRIVATE(len)) == 0,
+                 error = kErrorNoBufs);
 #endif
 
 exit:
@@ -613,17 +632,17 @@ exit:
 #endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 
 #if defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
-Error SecureTransport::GetPeerSubjectAttributeByOid(const char *aOid,
-                                                    size_t      aOidLength,
-                                                    uint8_t    *aAttributeBuffer,
-                                                    size_t     *aAttributeLength,
-                                                    int        *aAsn1Type)
+Error SecureTransport::Extension::GetPeerSubjectAttributeByOid(const char *aOid,
+                                                               size_t      aOidLength,
+                                                               uint8_t    *aAttributeBuffer,
+                                                               size_t     *aAttributeLength,
+                                                               int        *aAsn1Type)
 {
     Error                          error = kErrorNone;
     const mbedtls_asn1_named_data *data;
     size_t                         length;
     size_t                         attributeBufferSize;
-    mbedtls_x509_crt              *peerCert = const_cast<mbedtls_x509_crt *>(mbedtls_ssl_get_peer_cert(&mSsl));
+    mbedtls_x509_crt *peerCert = const_cast<mbedtls_x509_crt *>(mbedtls_ssl_get_peer_cert(&mSecureTransport.mSsl));
 
     VerifyOrExit(aAttributeLength != nullptr, error = kErrorInvalidArgs);
     attributeBufferSize = *aAttributeLength;
@@ -650,30 +669,30 @@ exit:
     return error;
 }
 
-Error SecureTransport::GetThreadAttributeFromPeerCertificate(int      aThreadOidDescriptor,
-                                                             uint8_t *aAttributeBuffer,
-                                                             size_t  *aAttributeLength)
+Error SecureTransport::Extension::GetThreadAttributeFromPeerCertificate(int      aThreadOidDescriptor,
+                                                                        uint8_t *aAttributeBuffer,
+                                                                        size_t  *aAttributeLength)
 {
-    const mbedtls_x509_crt *cert = mbedtls_ssl_get_peer_cert(&mSsl);
+    const mbedtls_x509_crt *cert = mbedtls_ssl_get_peer_cert(&mSecureTransport.mSsl);
 
     return GetThreadAttributeFromCertificate(cert, aThreadOidDescriptor, aAttributeBuffer, aAttributeLength);
 }
 
 #endif // defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 
-Error SecureTransport::GetThreadAttributeFromOwnCertificate(int      aThreadOidDescriptor,
-                                                            uint8_t *aAttributeBuffer,
-                                                            size_t  *aAttributeLength)
+Error SecureTransport::Extension::GetThreadAttributeFromOwnCertificate(int      aThreadOidDescriptor,
+                                                                       uint8_t *aAttributeBuffer,
+                                                                       size_t  *aAttributeLength)
 {
     const mbedtls_x509_crt *cert = &mEcdheEcdsaInfo.mOwnCert;
 
     return GetThreadAttributeFromCertificate(cert, aThreadOidDescriptor, aAttributeBuffer, aAttributeLength);
 }
 
-Error SecureTransport::GetThreadAttributeFromCertificate(const mbedtls_x509_crt *aCert,
-                                                         int                     aThreadOidDescriptor,
-                                                         uint8_t                *aAttributeBuffer,
-                                                         size_t                 *aAttributeLength)
+Error SecureTransport::Extension::GetThreadAttributeFromCertificate(const mbedtls_x509_crt *aCert,
+                                                                    int                     aThreadOidDescriptor,
+                                                                    uint8_t                *aAttributeBuffer,
+                                                                    size_t                 *aAttributeLength)
 {
     Error            error  = kErrorNotFound;
     char             oid[9] = {0x2B, 0x06, 0x01, 0x04, 0x01, static_cast<char>(0x82), static_cast<char>(0xDF),

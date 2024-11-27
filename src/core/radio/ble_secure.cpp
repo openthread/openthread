@@ -48,7 +48,8 @@ RegisterLogModule("BleSecure");
 
 BleSecure::BleSecure(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTls(aInstance, kNoLinkSecurity, /* aDatagramTransport */ false)
+    , MeshCoP::Tls::Extension(mTls)
+    , mTls(aInstance, kNoLinkSecurity, *this)
     , mTcatAgent(aInstance)
     , mTlvMode(false)
     , mReceivedMessage(nullptr)
@@ -164,25 +165,11 @@ void BleSecure::Disconnect(void)
 void BleSecure::SetPsk(const MeshCoP::JoinerPskd &aPskd)
 {
     static_assert(static_cast<uint16_t>(MeshCoP::JoinerPskd::kMaxLength) <=
-                      static_cast<uint16_t>(MeshCoP::SecureTransport::kPskMaxLength),
+                      static_cast<uint16_t>(MeshCoP::Tls::kPskMaxLength),
                   "The maximum length of TLS PSK is smaller than joiner PSKd");
 
     SuccessOrAssert(mTls.SetPsk(reinterpret_cast<const uint8_t *>(aPskd.GetAsCString()), aPskd.GetLength()));
 }
-
-#if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
-Error BleSecure::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength)
-{
-    Error error;
-
-    VerifyOrExit(aCertLength != nullptr, error = kErrorInvalidArgs);
-
-    error = mTls.GetPeerCertificateBase64(aPeerCert, aCertLength, *aCertLength);
-
-exit:
-    return error;
-}
-#endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 
 Error BleSecure::SendMessage(ot::Message &aMessage)
 {
@@ -318,14 +305,14 @@ Error BleSecure::HandleBleMtuUpdate(uint16_t aMtu)
     return error;
 }
 
-void BleSecure::HandleTlsConnectEvent(MeshCoP::SecureTransport::ConnectEvent aEvent, void *aContext)
+void BleSecure::HandleTlsConnectEvent(MeshCoP::Tls::ConnectEvent aEvent, void *aContext)
 {
     return static_cast<BleSecure *>(aContext)->HandleTlsConnectEvent(aEvent);
 }
 
-void BleSecure::HandleTlsConnectEvent(MeshCoP::SecureTransport::ConnectEvent aEvent)
+void BleSecure::HandleTlsConnectEvent(MeshCoP::Tls::ConnectEvent aEvent)
 {
-    if (aEvent == MeshCoP::SecureTransport::kConnected)
+    if (aEvent == MeshCoP::Tls::kConnected)
     {
         Error err;
 
@@ -333,7 +320,7 @@ void BleSecure::HandleTlsConnectEvent(MeshCoP::SecureTransport::ConnectEvent aEv
         {
             mReceivedMessage = Get<MessagePool>().Allocate(Message::kTypeBle);
         }
-        err = mTcatAgent.Connected(mTls);
+        err = mTcatAgent.Connected(*this);
 
         if (err != kErrorNone)
         {
@@ -353,7 +340,7 @@ void BleSecure::HandleTlsConnectEvent(MeshCoP::SecureTransport::ConnectEvent aEv
         }
     }
 
-    mConnectCallback.InvokeIfSet(&GetInstance(), aEvent == MeshCoP::SecureTransport::kConnected, true);
+    mConnectCallback.InvokeIfSet(&GetInstance(), aEvent == MeshCoP::Tls::kConnected, true);
 
 exit:
     return;

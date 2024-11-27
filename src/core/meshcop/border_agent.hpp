@@ -251,8 +251,7 @@ public:
     uint16_t GetUdpProxyPort(void) const { return mUdpProxyPort; }
 
 private:
-    static_assert(kMaxEphemeralKeyLength <= SecureTransport::kPskMaxLength,
-                  "Max ephemeral key length is larger than max PSK len");
+    static_assert(kMaxEphemeralKeyLength <= Dtls::kPskMaxLength, "Max ephemeral key length is larger than max PSK len");
 
     static constexpr uint16_t kUdpPort          = OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT;
     static constexpr uint32_t kKeepAliveTimeout = 50 * 1000; // Timeout to reject a commissioner (in msec)
@@ -288,8 +287,8 @@ private:
     void                SendErrorMessage(const ForwardContext &aForwardContext, Error aError);
     void                SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, Error aError);
 
-    static void HandleConnected(SecureTransport::ConnectEvent aEvent, void *aContext);
-    void        HandleConnected(SecureTransport::ConnectEvent aEvent);
+    static void HandleConnected(Dtls::ConnectEvent aEvent, void *aContext);
+    void        HandleConnected(Dtls::ConnectEvent aEvent);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

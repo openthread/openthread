@@ -42,9 +42,9 @@ namespace Coap {
 
 RegisterLogModule("CoapSecure");
 
-CoapSecureBase::CoapSecureBase(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity)
+CoapSecureBase::CoapSecureBase(Instance &aInstance, MeshCoP::Dtls &aDtls)
     : CoapBase(aInstance, Send)
-    , mDtls(aInstance, aLayerTwoSecurity)
+    , mDtls(aDtls)
     , mTransmitTask(aInstance, HandleTransmit, this)
 {
 }
@@ -62,7 +62,7 @@ exit:
     return error;
 }
 
-Error CoapSecureBase::Start(MeshCoP::SecureTransport::TransportCallback aCallback, void *aContext)
+Error CoapSecureBase::Start(MeshCoP::Dtls::TransportCallback aCallback, void *aContext)
 {
     Error error;
 
@@ -106,7 +106,7 @@ Error CoapSecureBase::Connect(const Ip6::SockAddr &aSockAddr, ConnectEventCallba
 void CoapSecureBase::SetPsk(const MeshCoP::JoinerPskd &aPskd)
 {
     static_assert(static_cast<uint16_t>(MeshCoP::JoinerPskd::kMaxLength) <=
-                      static_cast<uint16_t>(MeshCoP::SecureTransport::kPskMaxLength),
+                      static_cast<uint16_t>(MeshCoP::Dtls::kPskMaxLength),
                   "The maximum length of DTLS PSK is smaller than joiner PSKd");
 
     SuccessOrAssert(mDtls.SetPsk(reinterpret_cast<const uint8_t *>(aPskd.GetAsCString()), aPskd.GetLength()));
@@ -172,12 +172,12 @@ Error CoapSecureBase::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessa
     return kErrorNone;
 }
 
-void CoapSecureBase::HandleDtlsConnectEvent(MeshCoP::SecureTransport::ConnectEvent aEvent, void *aContext)
+void CoapSecureBase::HandleDtlsConnectEvent(MeshCoP::Dtls::ConnectEvent aEvent, void *aContext)
 {
     return static_cast<CoapSecureBase *>(aContext)->HandleDtlsConnectEvent(aEvent);
 }
 
-void CoapSecureBase::HandleDtlsConnectEvent(MeshCoP::SecureTransport::ConnectEvent aEvent)
+void CoapSecureBase::HandleDtlsConnectEvent(MeshCoP::Dtls::ConnectEvent aEvent)
 {
     mConnectEventCallback.InvokeIfSet(aEvent);
 }

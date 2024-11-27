@@ -112,14 +112,14 @@ exit:
     return;
 }
 
-void Commissioner::HandleSecureAgentConnectEvent(SecureTransport::ConnectEvent aEvent, void *aContext)
+void Commissioner::HandleSecureAgentConnectEvent(Dtls::ConnectEvent aEvent, void *aContext)
 {
     static_cast<Commissioner *>(aContext)->HandleSecureAgentConnectEvent(aEvent);
 }
 
-void Commissioner::HandleSecureAgentConnectEvent(SecureTransport::ConnectEvent aEvent)
+void Commissioner::HandleSecureAgentConnectEvent(Dtls::ConnectEvent aEvent)
 {
-    bool isConnected = (aEvent == SecureTransport::kConnected);
+    bool isConnected = (aEvent == Dtls::kConnected);
     if (!isConnected)
     {
         mJoinerSessionTimer.Stop();
