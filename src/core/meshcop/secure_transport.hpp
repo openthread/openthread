@@ -527,6 +527,8 @@ private:
                                             size_t                 *aAttributeLength);
 #endif
 
+    static bool IsMbedtlsHandshakeOver(mbedtls_ssl_context *aSslContext);
+
     static void HandleMbedtlsDebug(void *aContext, int aLevel, const char *aFile, int aLine, const char *aStr);
     void        HandleMbedtlsDebug(int aLevel, const char *aFile, int aLine, const char *aStr);
 

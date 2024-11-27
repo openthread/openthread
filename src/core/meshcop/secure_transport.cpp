@@ -771,6 +771,16 @@ exit:
     return error;
 }
 
+bool SecureTransport::IsMbedtlsHandshakeOver(mbedtls_ssl_context *aSslContext)
+{
+    return
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+        mbedtls_ssl_is_handshake_over(aSslContext);
+#else
+        (aSslContext->MBEDTLS_PRIVATE(state) == MBEDTLS_SSL_HANDSHAKE_OVER);
+#endif
+}
+
 int SecureTransport::HandleMbedtlsTransmit(void *aContext, const unsigned char *aBuf, size_t aLength)
 {
     return static_cast<SecureTransport *>(aContext)->HandleMbedtlsTransmit(aBuf, aLength);
@@ -1016,7 +1026,7 @@ void SecureTransport::Process(void)
         {
             rval = mbedtls_ssl_handshake(&mSsl);
 
-            if (mSsl.MBEDTLS_PRIVATE(state) == MBEDTLS_SSL_HANDSHAKE_OVER)
+            if (IsMbedtlsHandshakeOver(&mSsl))
             {
                 SetState(kStateConnected);
                 mConnectEvent = kConnected;
@@ -1060,7 +1070,7 @@ void SecureTransport::Process(void)
             break;
 
         case MBEDTLS_ERR_SSL_INVALID_MAC:
-            if (mSsl.MBEDTLS_PRIVATE(state) != MBEDTLS_SSL_HANDSHAKE_OVER)
+            if (!IsMbedtlsHandshakeOver(&mSsl))
             {
                 mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
                                                MBEDTLS_SSL_ALERT_MSG_BAD_RECORD_MAC);
@@ -1069,7 +1079,7 @@ void SecureTransport::Process(void)
             break;
 
         default:
-            if (mSsl.MBEDTLS_PRIVATE(state) != MBEDTLS_SSL_HANDSHAKE_OVER)
+            if (!IsMbedtlsHandshakeOver(&mSsl))
             {
                 mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
                                                MBEDTLS_SSL_ALERT_MSG_HANDSHAKE_FAILURE);
