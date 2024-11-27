@@ -45,10 +45,22 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
 {
     Message &message = *aMessagePtr.Release();
 
-    message.SetOffset(0);
-    message.SetDatagramTag(0);
-    message.SetTimestampToNow();
-    mSendQueue.Enqueue(message);
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    CslNeighbor *cslNeighbor = Get<Mle::Mle>().GetWakeupParent();
+
+    if ((cslNeighbor != nullptr) && cslNeighbor->IsCslSynchronized())
+    {
+        mIndirectSender.AddMessageForEnhCslNeighbor(message, *cslNeighbor);
+    }
+    else
+#endif
+    {
+        message.SetOffset(0);
+        message.SetDatagramTag(0);
+        message.SetTimestampToNow();
+    }
+   
+mSendQueue.Enqueue(message);
 
     switch (message.GetType())
     {

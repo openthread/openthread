@@ -75,14 +75,15 @@ namespace Mle {
 
 constexpr uint16_t kUdpPort = 19788; ///< MLE UDP Port
 
-constexpr uint16_t kMaxChildren     = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN; ///< Maximum number of children
-constexpr uint16_t kMinChildId      = 1;                                  ///< Minimum Child ID
-constexpr uint16_t kMaxChildId      = 511;                                ///< Maximum Child ID
-constexpr uint8_t  kMaxRouters      = OPENTHREAD_CONFIG_MLE_MAX_ROUTERS;  ///< Maximum number of routers
-constexpr uint8_t  kMaxRouterId     = OT_NETWORK_MAX_ROUTER_ID;           ///< Max Router ID
-constexpr uint8_t  kInvalidRouterId = kMaxRouterId + 1;                   ///< Value indicating invalid Router ID
-constexpr uint8_t  kRouterIdOffset  = 10;                                 ///< Bit offset of router ID in RLOC16
-constexpr uint16_t kInvalidRloc16   = Mac::kShortAddrInvalid;             ///< Invalid RLOC16.
+constexpr uint16_t kMaxChildren                   = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN; ///< Maximum number of children
+constexpr uint32_t kWakeupParentParentRespTimeout = 500; ///< Max delay for receiving a Parent Response from WC (ms)
+constexpr uint16_t kMinChildId                    = 1;   ///< Minimum Child ID
+constexpr uint16_t kMaxChildId                    = 511; ///< Maximum Child ID
+constexpr uint8_t  kMaxRouters                    = OPENTHREAD_CONFIG_MLE_MAX_ROUTERS; ///< Maximum number of routers
+constexpr uint8_t  kMaxRouterId                   = OT_NETWORK_MAX_ROUTER_ID;          ///< Max Router ID
+constexpr uint8_t  kInvalidRouterId               = kMaxRouterId + 1;       ///< Value indicating invalid Router ID
+constexpr uint8_t  kRouterIdOffset                = 10;                     ///< Bit offset of router ID in RLOC16
+constexpr uint16_t kInvalidRloc16                 = Mac::kShortAddrInvalid; ///< Invalid RLOC16.
 
 #if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 constexpr uint8_t kMaxRouteCost = 127; ///< Maximum path cost

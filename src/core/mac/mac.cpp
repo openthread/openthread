@@ -1655,7 +1655,8 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         {
             uint32_t sequence;
 
-            // TODO: Avoid generating a new key if a wake-up frame was recently received already
+            // Avoid generating a new key if a wake-up frame was recently received already
+            VerifyOrExit(!Get<Mle::Mle>().IsWakeupParentPresent(), error = kErrorInvalidState);
 
             IgnoreError(aFrame.GetKeyId(keyid));
             sequence = BigEndian::ReadUint32(aFrame.GetKeySource());
@@ -2475,6 +2476,8 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
     CslNeighbor *neighbor = nullptr;
     const CslIe *csl;
 
+    OT_UNUSED_VARIABLE(aSrcAddr);
+
     VerifyOrExit(aFrame.IsVersion2015() && aFrame.GetSecurityEnabled());
 
     csl = aFrame.GetCslIe();
@@ -2482,8 +2485,14 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
 
 #if OPENTHREAD_FTD
     neighbor = Get<ChildTable>().FindChild(aSrcAddr, Child::kInStateAnyExceptInvalid);
-#else
-    OT_UNUSED_VARIABLE(aSrcAddr);
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    if (neighbor == nullptr)
+    {
+        neighbor = Get<Mle::Mle>().GetWakeupParent();
+        VerifyOrExit(neighbor->GetExtAddress() == aSrcAddr.GetExtended());
+    }
 #endif
 
     VerifyOrExit(neighbor != nullptr);
@@ -2620,7 +2629,8 @@ void Mac::UpdateWakeupListening(void)
 
 Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
 {
-    Error               error = kErrorNone;
+    Error               error             = kErrorNone;
+    constexpr uint32_t  kWakeupIntervalUs = kDefaultWedListenInterval * kUsPerTenSymbols;
     const ConnectionIe *connectionIe;
     uint32_t            rvTimeUs;
     uint64_t            rvTimestampUs;
@@ -2628,6 +2638,8 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
     uint64_t            radioNowUs;
     uint8_t             retryInterval;
     uint8_t             retryCount;
+    Address             parentAddress;
+    CslNeighbor *       parent;
 
     VerifyOrExit(mWakeupListenEnabled && aFrame.IsWakeupFrame());
     connectionIe  = aFrame.GetConnectionIe();
@@ -2662,8 +2674,23 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
     // Stop receiving more wake up frames
     IgnoreError(SetWakeupListenEnabled(false));
 
-    // TODO: start MLE attach process with the WC
-    OT_UNUSED_VARIABLE(attachDelayMs);
+    IgnoreError(aFrame.GetSrcAddr(parentAddress));
+    Get<Mle::Mle>().AddWakeupParent(parentAddress.GetExtended(), TimerMilli::GetNow() + attachDelayMs,
+                                         kWakeupIntervalUs * retryInterval * retryCount / 1000);
+    
+    parent = Get<Mle::Mle>().GetWakeupParent();
+    OT_ASSERT(parent != nullptr);
+    parent->SetCslPeriod(kDefaultWedListenInterval * retryInterval);
+    parent->SetCslPhase(0);
+    parent->SetCslSynchronized(true);
+    parent->SetCslLastHeard(TimerMilli::GetNow());
+    // Rendezvous time is the time when the WC begins listening for the connection request from the awakened WED.
+    // Since EnhCslSender schedules a frame's PHR at `LastRxTimestamp + Phase + n*Period`, increase the timestamp
+    // by SHR length and the CSL uncertainty to make sure SHR begins while the WC is already listening.
+    parent->SetLastRxTimestamp(rvTimestampUs + kRadioHeaderShrDuration + Get<Radio>().GetCslUncertainty() * 10);
+    parent->SetEnhCslMaxTxAttempts(retryCount);
+
+    Get<Mle::Mle>().AttachToWakeupParent();
 
 exit:
     return error;

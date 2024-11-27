@@ -51,6 +51,7 @@
 #include "meshcop/meshcop.hpp"
 #include "net/udp6.hpp"
 #include "thread/child.hpp"
+#include "thread/enh_csl_neighbor_table.hpp"
 #include "thread/link_metrics.hpp"
 #include "thread/link_metrics_tlvs.hpp"
 #include "thread/mle_tlvs.hpp"
@@ -117,6 +118,9 @@ class Mle : public InstanceLocator, private NonCopyable
     friend class ot::LinkMetrics::Initiator;
 #endif
     friend class ot::UnitTester;
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    friend class ot::Mac::Mac;
+#endif
 
 public:
     typedef otDetachGracefullyCallback DetachCallback; ///< Callback to signal end of graceful detach.
@@ -750,6 +754,38 @@ public:
                  void                  *aCallbackContext);
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    /**
+     * Returns whether the Thread interface is currently communicating to a Wake-up Parent.
+     *
+     * @retval TRUE   If the Thread interface is communicating to a Wake-up Parent.
+     * @retval FALSE  If the Thread interface is not communicating to a Wake-up Parent.
+     */
+    bool IsWakeupParentPresent() const { return mWakeupParentAttachWindow > 0; }
+
+    /**
+     * Adds a Wake-up Parent to the list of potential parents.
+        *
+        * @param[in] aParent         The extended address of the Wake-up Parent.
+        * @param[in] aAttachTime     The time when the Thread interface attached to the Wake-up Parent.
+        * @param[in] aAttachWindowMs The time window in milliseconds during which the Thread interface can attach to the
+        * Wake-up Parent.
+        */
+    void AddWakeupParent(const Mac::ExtAddress &aParent, TimeMilli aAttachTime, uint32_t aAttachWindowMs);
+
+    /**
+     * Returns the Wake-up Parent that the Thread interface is currently communicating to.
+        *
+        * @returns The Wake-up Parent that the Thread interface is currently communicating to.
+        */
+    CslNeighbor *GetWakeupParent(void);
+
+    /**
+    * Starts the process of attaching to a Wake-up Parent, if previously configured with `AddWakeupParent`.
+    */   
+    void AttachToWakeupParent();
+#endif
+
 private:
     //------------------------------------------------------------------------------------------------------------------
     // Constants
@@ -886,6 +922,9 @@ private:
         kToRouters,         // Parent Request to routers only.
         kToRoutersAndReeds, // Parent Request to all routers and REEDs.
         kToSelectedRouter,  // Parent Request to a selected router (e.g., by `ParentSearch` module).
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        kToWakeupParent, // Parent Request unicast to a known Wake-up Parent device.
+#endif
     };
 
     enum ChildUpdateRequestMode : uint8_t // Used in `SendChildUpdateRequest()`
@@ -948,6 +987,9 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         kTypeTimeSync,
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        kTypeParentRequestToWakeupCoord,
 #endif
     };
 
@@ -1093,6 +1135,26 @@ private:
         Neighbor               *mNeighbor;     // Neighbor from which message was received (can be `nullptr`).
         Class                   mClass;        // The message class (authoritative, peer, or unknown).
     };
+
+    /*
+     * Resets the attach counter.
+     *
+     */
+    void ResetAttachCounter(void);
+
+    /**
+     * Increments the attach counter.
+     *
+     */
+    void IncrementAttachCounter(void);
+
+    /*
+     * Initialize parent candidate.
+     *
+     * @param[in] aAddress  The MAC Address of the parent candidate.
+     *
+     */
+    void InitParentCandidate(Mac::ExtAddress &aAddress);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1343,7 +1405,7 @@ private:
     Error      HandleLeaderData(RxInfo &aRxInfo);
     void       ProcessAnnounce(void);
     bool       HasUnregisteredAddress(void);
-    uint32_t   GetAttachStartDelay(void) const;
+    uint32_t   GetAttachStartDelay(void);
     void       SendParentRequest(ParentRequestType aType);
     Error      SendChildIdRequest(void);
     Error      GetNextAnnounceChannel(uint8_t &aChannel) const;
@@ -1514,6 +1576,15 @@ private:
     WedAttachState           mWedAttachState;
     WedAttachTimer           mWedAttachTimer;
     Callback<WakeupCallback> mWakeupCallback;
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE
+    TimeMilli mAttachFireTime;
+#endif
+    DeviceRole      mPreviousRole;
+    TimeMilli       mWakeupParentAttachTime;
+    uint32_t        mWakeupParentAttachWindow;
+    CslNeighborTable mCslNeighborTable;
 #endif
 };
 

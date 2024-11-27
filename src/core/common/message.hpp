@@ -203,6 +203,9 @@ protected:
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         bool mTimeSync : 1; // Whether the message is also used for time sync purpose.
 #endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        bool mIsEnhCslNeighbor : 1; // Whether the message is for an enhanced CSL neighbor.
+#endif
         uint8_t mPriority : 2; // The message priority level (higher value is higher priority).
         uint8_t mOrigin : 2;   // The origin of the message.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -1468,6 +1471,23 @@ public:
     void ClearRadioType(void) { GetMetadata().mIsRadioTypeSet = false; }
 
 #endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    /**
+     * Indicates whether the message is destined for an enhanced CSL neighbor.
+        *
+        * @retval TRUE   If the message is destined for an enhanced CSL neighbor.
+        * @retval FALSE  If the message is not destined for an enhanced CSL neighbor.
+        */
+    bool IsForEnhancedCslNeighbor(void) const { return GetMetadata().mIsEnhCslNeighbor; }
+
+    /**
+     * Sets whether the message is destined for an enhanced CSL neighbor.
+     *
+     * @param[in]  aIsEnhCslNeighbor  TRUE if the message is destined for an enhanced CSL neighbor, FALSE otherwise.
+     */
+    void SetForEnhancedCslNeighbor(bool aIsEnhCslNeighbor) { GetMetadata().mIsEnhCslNeighbor = aIsEnhCslNeighbor; }
+#endif
 
 protected:
     class ConstIterator : public ItemPtrIterator<const Message, ConstIterator>

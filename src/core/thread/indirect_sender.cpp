@@ -88,7 +88,82 @@ exit:
     mEnabled = false;
 }
 
+uint16_t IndirectSender::PrepareDataFrame(Mac::TxFrame &aFrame, CslNeighbor &aNeighbor, Message &aMessage)
+{
+    Ip6::Header    ip6Header;
+    Mac::Addresses macAddrs;
+    uint16_t       directTxOffset;
+    uint16_t       nextOffset;
+
+    // Determine the MAC source and destination addresses.
+
+    IgnoreError(aMessage.Read(0, ip6Header));
+
+    Get<MeshForwarder>().GetMacSourceAddress(ip6Header.GetSource(), macAddrs.mSource);
+
+    if (ip6Header.GetDestination().IsLinkLocalUnicast())
+    {
+        Get<MeshForwarder>().GetMacDestinationAddress(ip6Header.GetDestination(), macAddrs.mDestination);
+    }
+    else
+    {
+        aNeighbor.GetMacAddress(macAddrs.mDestination);
+    }
+
+    // Prepare the data frame from previous neighbor's indirect offset.
+
+    directTxOffset = aMessage.GetOffset();
+    aMessage.SetOffset(aNeighbor.GetIndirectFragmentOffset());
+
+    nextOffset = Get<MeshForwarder>().PrepareDataFrameWithNoMeshHeader(aFrame, aMessage, macAddrs);
+
+    aMessage.SetOffset(directTxOffset);
+
+    return nextOffset;
+}
+
+void IndirectSender::UpdateIndirectMessage(CslNeighbor &aNeighbor)
+{
+    Message *message = nullptr;
+
 #if OPENTHREAD_FTD
+    if (IsChild(aNeighbor))
+    {
+        message = FindQueuedMessageForSleepyChild(static_cast<const Child &>(aNeighbor), AcceptAnyMessage);
+    }
+    else
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    {
+        message = FindQueuedMessageForWedNeighbor(aNeighbor);
+    }
+#endif
+    
+
+    aNeighbor.SetWaitingForMessageUpdate(false);
+    aNeighbor.SetIndirectMessage(message);
+    aNeighbor.SetIndirectFragmentOffset(0);
+    aNeighbor.SetIndirectTxSuccess(true);
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    mCslTxScheduler.Update();
+#endif
+
+    if (message != nullptr)
+    {
+        Mac::Address neighborAddress;
+
+        aNeighbor.GetMacAddress(neighborAddress);
+        Get<MeshForwarder>().LogMessage(MeshForwarder::kMessagePrepareIndirect, *message, kErrorNone, &neighborAddress);
+    }
+}
+
+#if OPENTHREAD_FTD
+bool IndirectSender::IsChild(const Neighbor &aNeighbor) const
+{
+    return Get<ChildTable>().Contains(static_cast<const Child &>(aNeighbor));
+}
 
 void IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
 {
@@ -300,28 +375,6 @@ exit:
     return;
 }
 
-void IndirectSender::UpdateIndirectMessage(Child &aChild)
-{
-    Message *message = FindQueuedMessageForSleepyChild(aChild, AcceptAnyMessage);
-
-    aChild.SetWaitingForMessageUpdate(false);
-    aChild.SetIndirectMessage(message);
-    aChild.SetIndirectFragmentOffset(0);
-    aChild.SetIndirectTxSuccess(true);
-
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    mCslTxScheduler.Update();
-#endif
-
-    if (message != nullptr)
-    {
-        Mac::Address childAddress;
-
-        aChild.GetMacAddress(childAddress);
-        Get<MeshForwarder>().LogMessage(MeshForwarder::kMessagePrepareIndirect, *message, kErrorNone, &childAddress);
-    }
-}
-
 Error IndirectSender::PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild)
 {
     Error    error   = kErrorNone;
@@ -357,34 +410,9 @@ exit:
 
 uint16_t IndirectSender::PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, Message &aMessage)
 {
-    Ip6::Header    ip6Header;
-    Mac::Addresses macAddrs;
-    uint16_t       directTxOffset;
     uint16_t       nextOffset;
 
-    // Determine the MAC source and destination addresses.
-
-    IgnoreError(aMessage.Read(0, ip6Header));
-
-    Get<MeshForwarder>().GetMacSourceAddress(ip6Header.GetSource(), macAddrs.mSource);
-
-    if (ip6Header.GetDestination().IsLinkLocalUnicast())
-    {
-        Get<MeshForwarder>().GetMacDestinationAddress(ip6Header.GetDestination(), macAddrs.mDestination);
-    }
-    else
-    {
-        aChild.GetMacAddress(macAddrs.mDestination);
-    }
-
-    // Prepare the data frame from previous child's indirect offset.
-
-    directTxOffset = aMessage.GetOffset();
-    aMessage.SetOffset(aChild.GetIndirectFragmentOffset());
-
-    nextOffset = Get<MeshForwarder>().PrepareDataFrameWithNoMeshHeader(aFrame, aMessage, macAddrs);
-
-    aMessage.SetOffset(directTxOffset);
+    nextOffset = PrepareDataFrame(aFrame, static_cast<CslNeighbor &>(aChild), aMessage);
 
     // Set `FramePending` if there are more queued messages (excluding
     // the current one being sent out) for the child (note `> 1` check).
@@ -572,6 +600,152 @@ bool IndirectSender::AcceptSupervisionMessage(const Message &aMessage)
 
 #endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+void IndirectSender::AddMessageForEnhCslNeighbor(Message &aMessage, CslNeighbor &aNeighbor)
+{
+    OT_UNUSED_VARIABLE(aNeighbor);
+
+    aMessage.SetForEnhancedCslNeighbor(true);
+}
+
+Error IndirectSender::PrepareFrameForEnhCslNeighbor(Mac::TxFrame &aFrame, FrameContext &aContext, CslNeighbor &aNeighbor)
+{
+    Error    error   = kErrorNone;
+    Message *message = aNeighbor.GetIndirectMessage();
+    VerifyOrExit(message != nullptr, error = kErrorInvalidState);
+
+    switch (message->GetType())
+    {
+    case Message::kTypeIp6:
+        aContext.mMessageNextOffset = PrepareDataFrame(aFrame, aNeighbor, *message);
+        break;
+
+    default:
+        error = kErrorNotImplemented;
+        break;
+    }
+
+exit:
+    return error;
+}
+
+Message *IndirectSender::FindQueuedMessageForWedNeighbor(CslNeighbor &aNeighbor)
+{
+    Message *match      = nullptr;
+
+    OT_UNUSED_VARIABLE(aNeighbor);
+
+    for (Message &message : Get<MeshForwarder>().mSendQueue)
+    {
+        if (message.IsForEnhancedCslNeighbor())
+        {
+            match = &message;
+            break;
+        }
+    }
+
+    return match;
+}
+
+void IndirectSender::HandleSentFrameToWedNeighbor(const Mac::TxFrame &aFrame,
+                                            const FrameContext &aContext,
+                                            Error               aError,
+                                            CslNeighbor        &aNeighbor)
+{
+    Message *message    = aNeighbor.GetIndirectMessage();
+    uint16_t nextOffset = aContext.mMessageNextOffset;
+
+    VerifyOrExit(mEnabled);
+
+    switch (aError)
+    {
+    case kErrorNone:
+        break;
+
+    case kErrorNoAck:
+    case kErrorChannelAccessFailure:
+    case kErrorAbort:
+
+        aNeighbor.SetIndirectTxSuccess(false);
+
+#if OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
+        // We set the nextOffset to end of message, since there is no need to
+        // send any remaining fragments in the message to the neighbor, if all tx
+        // attempts of current frame already failed.
+
+        if (message != nullptr)
+        {
+            nextOffset = message->GetLength();
+        }
+#endif
+        break;
+
+    default:
+        OT_ASSERT(false);
+    }
+
+    if ((message != nullptr) && (nextOffset < message->GetLength()))
+    {
+        aNeighbor.SetIndirectFragmentOffset(nextOffset);
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        mCslTxScheduler.Update();
+#endif
+        ExitNow();
+    }
+
+    if (message != nullptr)
+    {
+        // The indirect tx of this message to the neighbor is done.
+
+        Error        txError    = aError;
+        Mac::Address macDest;
+
+        aNeighbor.SetIndirectMessage(nullptr);
+        aNeighbor.GetLinkInfo().AddMessageTxStatus(aNeighbor.GetIndirectTxSuccess());
+
+#if !OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
+
+        // When `CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE` is
+        // disabled, all fragment frames of a larger message are
+        // sent even if the transmission of an earlier fragment fail.
+        // Note that `GetIndirectTxSuccess() tracks the tx success of
+        // the entire message to the child, while `txError = aError`
+        // represents the error status of the last fragment frame
+        // transmission.
+
+        if (!aNeighbor.GetIndirectTxSuccess() && (txError == kErrorNone))
+        {
+            txError = kErrorFailed;
+        }
+#endif
+
+        if (!aFrame.IsEmpty())
+        {
+            IgnoreError(aFrame.GetDstAddr(macDest));
+            Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageTransmit, *message, txError, &macDest);
+        }
+
+        if (message->GetType() == Message::kTypeIp6)
+        {
+            if (aNeighbor.GetIndirectTxSuccess())
+            {
+                Get<MeshForwarder>().mIpCounters.mTxSuccess++;
+            }
+            else
+            {
+                Get<MeshForwarder>().mIpCounters.mTxFailure++;
+            }
+        }
+
+    }
+
+     UpdateIndirectMessage(aNeighbor);
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 Error IndirectSender::PrepareFrameForCslNeighbor(Mac::TxFrame &aFrame,
@@ -581,14 +755,23 @@ Error IndirectSender::PrepareFrameForCslNeighbor(Mac::TxFrame &aFrame,
     Error error = kErrorNotFound;
 
 #if OPENTHREAD_FTD
-    // `CslNeighbor` can only be a `Child` for now, but can be changed later.
-    error = PrepareFrameForChild(aFrame, aContext, static_cast<Child &>(aCslNeighbor));
+    if (IsChild(aCslNeighbor))
+    {
+        error = PrepareFrameForChild(aFrame, aContext, static_cast<Child &>(aCslNeighbor));
+        VerifyOrExit(error != kErrorNone);
+    }
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    error = PrepareFrameForEnhCslNeighbor(aFrame, aContext, aCslNeighbor);
+    ExitNow();
 #else
     OT_UNUSED_VARIABLE(aFrame);
     OT_UNUSED_VARIABLE(aContext);
     OT_UNUSED_VARIABLE(aCslNeighbor);
+    ExitNow();
 #endif
 
+exit:
     return error;
 }
 
@@ -598,17 +781,29 @@ void IndirectSender::HandleSentFrameToCslNeighbor(const Mac::TxFrame &aFrame,
                                                   CslNeighbor        &aCslNeighbor)
 {
 #if OPENTHREAD_FTD
-    HandleSentFrameToChild(aFrame, aContext, aError, static_cast<Child &>(aCslNeighbor));
+    if (IsChild(aCslNeighbor))
+    {
+        HandleSentFrameToChild(aFrame, aContext, aError, static_cast<Child &>(aCslNeighbor));
+        ExitNow();
+    }
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    HandleSentFrameToWedNeighbor(aFrame, aContext, aError, aCslNeighbor);
+    ExitNow();
 #else
     OT_UNUSED_VARIABLE(aFrame);
     OT_UNUSED_VARIABLE(aContext);
     OT_UNUSED_VARIABLE(aError);
     OT_UNUSED_VARIABLE(aCslNeighbor);
+    ExitNow();
 #endif
+
+exit:
+    return;
 }
 
-#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
-#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 } // namespace ot
