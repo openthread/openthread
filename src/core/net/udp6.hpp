@@ -70,9 +70,10 @@ class Udp;
  */
 enum NetifIdentifier : uint8_t
 {
-    kNetifUnspecified = OT_NETIF_UNSPECIFIED, ///< Unspecified network interface.
-    kNetifThread      = OT_NETIF_THREAD,      ///< The Thread interface.
-    kNetifBackbone    = OT_NETIF_BACKBONE,    ///< The Backbone interface.
+    kNetifUnspecified    = OT_NETIF_UNSPECIFIED,     ///< Unspecified network interface.
+    kNetifThreadHost     = OT_NETIF_THREAD_HOST,     ///< The host Thread interface - allow use of platform UDP.
+    kNetifThreadInternal = OT_NETIF_THREAD_INTERNAL, ///< The internal Thread interface - do not use platform UDP.
+    kNetifBackbone       = OT_NETIF_BACKBONE,        ///< The Backbone interface.
 };
 
 /**
@@ -141,6 +142,14 @@ public:
          * @param[in] aNetifId   The network interface identifier.
          */
         void SetNetifId(NetifIdentifier aNetifId) { mNetifId = static_cast<otNetifIdentifier>(aNetifId); }
+
+        /**
+         * Indicates whether or not the socket can use platform UDP.
+         *
+         * @retval TRUE    This socket should use platform UDP.
+         * @retval FALSE   This socket is associated with the internal Thread interface and should not use platform UDP.
+         */
+        bool ShouldUsePlatformUdp(void) const { return GetNetifId() != kNetifThreadInternal; }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
         /**
@@ -649,14 +658,24 @@ private:
     static constexpr uint16_t kSrpServerPortMin = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN;
     static constexpr uint16_t kSrpServerPortMax = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX;
 
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    struct Plat
+    {
+        static Error Open(SocketHandle &aSocket);
+        static Error Close(SocketHandle &aSocket);
+        static Error Bind(SocketHandle &aSocket);
+        static Error BindToNetif(SocketHandle &aSocket);
+        static Error Connect(SocketHandle &aSocket);
+        static Error Send(SocketHandle &aSocket, Message &aMessage, const MessageInfo &aMessageInfo);
+        static Error JoinMulticastGroup(SocketHandle &aSocket, NetifIdentifier aNetifId, const Address &aAddress);
+        static Error LeaveMulticastGroup(SocketHandle &aSocket, NetifIdentifier aNetifId, const Address &aAddress);
+    };
+#endif
+
     static bool IsPortReserved(uint16_t aPort);
 
     void AddSocket(SocketHandle &aSocket);
     void RemoveSocket(SocketHandle &aSocket);
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    bool ShouldUsePlatformUdp(uint16_t aPort) const;
-    bool ShouldUsePlatformUdp(const SocketHandle &aSocket) const;
-#endif
 
     uint16_t                 mEphemeralPort;
     LinkedList<Receiver>     mReceivers;
