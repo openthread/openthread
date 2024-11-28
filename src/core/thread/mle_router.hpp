@@ -643,13 +643,14 @@ private:
     void SignalDuaAddressEvent(const Child &aChild, const Ip6::Address &aOldDua) const;
 #endif
 
-    static bool IsMessageMleSubType(const Message &aMessage);
-    static bool IsMessageChildUpdateRequest(const Message &aMessage);
-    static void HandleAdvertiseTrickleTimer(TrickleTimer &aTimer);
-    static void HandleAddressSolicitResponse(void                *aContext,
-                                             otMessage           *aMessage,
-                                             const otMessageInfo *aMessageInfo,
-                                             Error                aResult);
+    static bool  IsMessageMleSubType(const Message &aMessage);
+    static bool  IsMessageChildUpdateRequest(const Message &aMessage);
+    static void  HandleAdvertiseTrickleTimer(TrickleTimer &aTimer);
+    static void  HandleAddressSolicitResponse(void                *aContext,
+                                              otMessage           *aMessage,
+                                              const otMessageInfo *aMessageInfo,
+                                              Error                aResult);
+    static Error ParseSupervisionInterval(const Message &aMessage, uint16_t &aInterval, bool &aIsShort);
 
     //------------------------------------------------------------------------------------------------------------------
     // Variables

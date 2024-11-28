@@ -120,11 +120,18 @@ public:
 
 private:
     static constexpr uint16_t kDefaultSupervisionInterval = OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL; // (seconds)
+    static constexpr uint32_t kShortSupervisionUnitMs     = 100;
 
     void SendMessage(Child &aChild);
     void CheckState(void);
     void HandleTimeTick(void);
+    void HandleShortIntervalTimer(void);
+    void UpdateUnitsSinceLastSupervision(bool aShortInterval);
     void HandleNotifierEvents(Events aEvents);
+
+    using ShortIntervalTimer = TimerMilliIn<ChildSupervisor, &ChildSupervisor::HandleShortIntervalTimer>;
+
+    ShortIntervalTimer mShortIntervalTimer;
 };
 
 #endif // #if OPENTHREAD_FTD
@@ -209,8 +216,10 @@ public:
     void UpdateOnReceive(const Mac::Address &aSourceAddress, bool aIsSecure);
 
 private:
-    static constexpr uint16_t kDefaultTimeout  = OPENTHREAD_CONFIG_CHILD_SUPERVISION_CHECK_TIMEOUT; // (seconds)
-    static constexpr uint16_t kDefaultInterval = OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL;      // (seconds)
+    static constexpr uint16_t kDefaultTimeout  = OPENTHREAD_CONFIG_CHILD_SUPERVISION_CHECK_TIMEOUT;     // (seconds)
+    static constexpr uint16_t kDefaultInterval = OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL;          // (seconds)
+    static constexpr uint16_t kWedTimeout      = OPENTHREAD_CONFIG_CHILD_SUPERVISION_CHECK_TIMEOUT_WED; // (100 ms);
+    static constexpr uint16_t kWedInterval     = OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL_WED;      // (100 ms);
 
     void RestartTimer(void);
     void HandleTimer(void);

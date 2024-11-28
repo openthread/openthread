@@ -5021,15 +5021,16 @@ Error Mle::TxMessage::AppendSupervisionIntervalTlvIfSleepyChild(void)
     Error error = kErrorNone;
 
     VerifyOrExit(!Get<Mle>().IsRxOnWhenIdle());
-    error = AppendSupervisionIntervalTlv(Get<SupervisionListener>().GetInterval());
+    error = AppendSupervisionIntervalTlv(Get<SupervisionListener>().GetInterval(), false);
 
 exit:
     return error;
 }
 
-Error Mle::TxMessage::AppendSupervisionIntervalTlv(uint16_t aInterval)
+Error Mle::TxMessage::AppendSupervisionIntervalTlv(uint16_t aInterval, bool aIsShortInterval)
 {
-    return Tlv::Append<SupervisionIntervalTlv>(*this, aInterval);
+    return aIsShortInterval ? Tlv::Append<ShortSupervisionIntervalTlv>(*this, aInterval)
+                            : Tlv::Append<SupervisionIntervalTlv>(*this, aInterval);
 }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

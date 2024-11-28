@@ -997,7 +997,7 @@ private:
         Error AppendVersionTlv(void);
         Error AppendAddressRegistrationTlv(AddressRegistrationMode aMode = kAppendAllAddresses);
         Error AppendSupervisionIntervalTlvIfSleepyChild(void);
-        Error AppendSupervisionIntervalTlv(uint16_t aInterval);
+        Error AppendSupervisionIntervalTlv(uint16_t aInterval, bool aIsShortInterval);
         Error AppendXtalAccuracyTlv(void);
         Error AppendActiveTimestampTlv(void);
         Error AppendPendingTimestampTlv(void);

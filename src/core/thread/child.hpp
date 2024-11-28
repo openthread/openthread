@@ -312,35 +312,51 @@ public:
     void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mRequestTlvs[aIndex] = aType; }
 
     /**
-     * Returns the supervision interval (in seconds).
+     * Returns the supervision interval.
      *
-     * @returns The supervision interval (in seconds).
+     * @returns The supervision interval in seconds or units of 100 ms (if the child uses a short supervision interval).
      */
     uint16_t GetSupervisionInterval(void) const { return mSupervisionInterval; }
 
     /**
      * Sets the supervision interval.
      *
-     * @param[in] aInterval  The supervision interval (in seconds).
+     * @param[in] aInterval  The supervision interval in seconds or units of 100 ms (if the child uses a short
+     *                       supervision interval).
      */
     void SetSupervisionInterval(uint16_t aInterval) { mSupervisionInterval = aInterval; }
 
     /**
-     * Increments the number of seconds since last supervision of the child.
-     */
-    void IncrementSecondsSinceLastSupervision(void) { mSecondsSinceSupervision++; }
-
-    /**
-     * Returns the number of seconds since last supervision of the child (last message to the child)
+     * Returns whether the child uses a short supervision interval.
      *
-     * @returns Number of seconds since last supervision of the child.
+     * @retval true  The child uses a short supervision interval, defined in units of 100 ms.
+     * @retval false The child uses a normal supervision interval, defined in seconds.
      */
-    uint16_t GetSecondsSinceLastSupervision(void) const { return mSecondsSinceSupervision; }
+    bool IsShortSupervisionInterval(void) const { return mIsShortSupervisionInterval; }
 
     /**
-     * Resets the number of seconds since last supervision of the child to zero.
+     * Sets whether the child uses a short supervision interval.
+     *
+     * @param[in] aIsShort Indicates whether the child uses a short supervision interval.
      */
-    void ResetSecondsSinceLastSupervision(void) { mSecondsSinceSupervision = 0; }
+    void SetIsShortSupervisionInterval(bool aIsShort) { mIsShortSupervisionInterval = aIsShort; }
+
+    /**
+     * Increments the number of supervision time units since last supervision of the child.
+     */
+    void IncrementUnitsSinceLastSupervision(void) { mUnitsSinceSupervision++; }
+
+    /**
+     * Returns the number of supervision time units since last supervision of the child (last message to the child)
+     *
+     * @returns The supervision time units (seconds or 100ms) since last supervision of the child.
+     */
+    uint16_t GetUnitsSinceLastSupervision(void) const { return mUnitsSinceSupervision; }
+
+    /**
+     * Resets the number of supervision time units since last supervision of the child to zero.
+     */
+    void ResetUnitsSinceLastSupervision(void) { mUnitsSinceSupervision = 0; }
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
@@ -391,7 +407,8 @@ private:
     };
 
     uint16_t mSupervisionInterval;
-    uint16_t mSecondsSinceSupervision;
+    uint16_t mUnitsSinceSupervision;
+    bool     mIsShortSupervisionInterval : 1;
 };
 
 DefineCoreType(otChildInfo, Child::Info);

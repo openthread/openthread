@@ -1996,6 +1996,39 @@ bool MleRouter::IsMessageChildUpdateRequest(const Message &aMessage)
     return aMessage.IsMleCommand(kCommandChildUpdateRequest);
 }
 
+Error MleRouter::ParseSupervisionInterval(const Message &aMessage, uint16_t &aInterval, bool &aIsShort)
+{
+    Error error = kErrorNone;
+
+    switch (Tlv::Find<ShortSupervisionIntervalTlv>(aMessage, aInterval))
+    {
+    case kErrorNone:
+        aIsShort = true;
+        break;
+    case kErrorNotFound:
+        aIsShort = false;
+        break;
+    default:
+        ExitNow(error = kErrorParse);
+    }
+
+    switch (Tlv::Find<SupervisionIntervalTlv>(aMessage, aInterval))
+    {
+    case kErrorNone:
+        // Supervision Interval TLV and Short Supervision Interval TLV are mutually exclusive.
+        VerifyOrExit(!aIsShort, error = kErrorParse);
+        break;
+    case kErrorNotFound:
+        VerifyOrExit(aIsShort, error = kErrorNotFound);
+        break;
+    default:
+        ExitNow(error = kErrorParse);
+    }
+
+exit:
+    return error;
+}
+
 void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
 {
     Error              error = kErrorNone;
@@ -2010,6 +2043,7 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     Child             *child;
     Router            *router;
     uint16_t           supervisionInterval;
+    bool               shortSupervisionInterval;
 
     Log(kMessageReceive, kTypeChildIdRequest, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -2036,13 +2070,14 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadTlvRequestTlv(tlvList));
 
-    switch (Tlv::Find<SupervisionIntervalTlv>(aRxInfo.mMessage, supervisionInterval))
+    switch (ParseSupervisionInterval(aRxInfo.mMessage, supervisionInterval, shortSupervisionInterval))
     {
     case kErrorNone:
-        tlvList.Add(Tlv::kSupervisionInterval);
+        tlvList.Add(shortSupervisionInterval ? Tlv::kShortSupervisionInterval : Tlv::kSupervisionInterval);
         break;
     case kErrorNotFound:
-        supervisionInterval = (version <= kThreadVersion1p3) ? kChildSupervisionDefaultIntervalForOlderVersion : 0;
+        supervisionInterval      = (version <= kThreadVersion1p3) ? kChildSupervisionDefaultIntervalForOlderVersion : 0;
+        shortSupervisionInterval = false;
         break;
     default:
         ExitNow(error = kErrorParse);
@@ -2117,6 +2152,7 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     child->GetLinkInfo().AddRss(aRxInfo.mMessage.GetAverageRss());
     child->SetTimeout(timeout);
     child->SetSupervisionInterval(supervisionInterval);
+    child->SetIsShortSupervisionInterval(shortSupervisionInterval);
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     child->ClearLastRxFragmentTag();
 #endif
@@ -2166,6 +2202,7 @@ void MleRouter::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
     LeaderData      leaderData;
     uint32_t        timeout;
     uint16_t        supervisionInterval;
+    bool            shortSupervisionInterval;
     Child          *child;
     DeviceMode      oldMode;
     TlvList         requestedTlvList;
@@ -2270,21 +2307,22 @@ void MleRouter::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         ExitNow(error = kErrorParse);
     }
 
-    switch (Tlv::Find<SupervisionIntervalTlv>(aRxInfo.mMessage, supervisionInterval))
+    switch (ParseSupervisionInterval(aRxInfo.mMessage, supervisionInterval, shortSupervisionInterval))
     {
     case kErrorNone:
-        tlvList.Add(Tlv::kSupervisionInterval);
+        tlvList.Add(shortSupervisionInterval ? Tlv::kShortSupervisionInterval : Tlv::kSupervisionInterval);
         break;
-
     case kErrorNotFound:
         supervisionInterval =
             (child->GetVersion() <= kThreadVersion1p3) ? kChildSupervisionDefaultIntervalForOlderVersion : 0;
+        shortSupervisionInterval = false;
         break;
-
     default:
         ExitNow(error = kErrorParse);
     }
 
+    // Check that the child is not switching between normal and short supervision interval.
+    VerifyOrExit(child->IsShortSupervisionInterval() == shortSupervisionInterval, error = kErrorInvalidState);
     child->SetSupervisionInterval(supervisionInterval);
 
     switch (aRxInfo.mMessage.ReadTlvRequestTlv(requestedTlvList))
@@ -2476,10 +2514,13 @@ void MleRouter::HandleChildUpdateResponseOnParent(RxInfo &aRxInfo)
 
     {
         uint16_t supervisionInterval;
+        bool     shortSupervisionInterval;
 
-        switch (Tlv::Find<SupervisionIntervalTlv>(aRxInfo.mMessage, supervisionInterval))
+        switch (ParseSupervisionInterval(aRxInfo.mMessage, supervisionInterval, shortSupervisionInterval))
         {
         case kErrorNone:
+            // Check that the child is not switching between normal and short supervision interval.
+            VerifyOrExit(child->IsShortSupervisionInterval() == shortSupervisionInterval, error = kErrorInvalidState);
             child->SetSupervisionInterval(supervisionInterval);
             break;
         case kErrorNotFound:
@@ -2868,8 +2909,10 @@ Error MleRouter::SendChildIdResponse(Child &aChild)
             SuccessOrExit(error = message->AppendPendingDatasetTlv());
             break;
 
+        case Tlv::kShortSupervisionInterval:
         case Tlv::kSupervisionInterval:
-            SuccessOrExit(error = message->AppendSupervisionIntervalTlv(aChild.GetSupervisionInterval()));
+            SuccessOrExit(error = message->AppendSupervisionIntervalTlv(aChild.GetSupervisionInterval(),
+                                                                        aChild.IsShortSupervisionInterval()));
             break;
 
         default:
@@ -3047,8 +3090,10 @@ void MleRouter::SendChildUpdateResponseToChild(Child                  *aChild,
             SuccessOrExit(error = message->AppendLinkMarginTlv(aChild->GetLinkInfo().GetLinkMargin()));
             break;
 
+        case Tlv::kShortSupervisionInterval:
         case Tlv::kSupervisionInterval:
-            SuccessOrExit(error = message->AppendSupervisionIntervalTlv(aChild->GetSupervisionInterval()));
+            SuccessOrExit(error = message->AppendSupervisionIntervalTlv(aChild->GetSupervisionInterval(),
+                                                                        aChild->IsShortSupervisionInterval()));
             break;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
