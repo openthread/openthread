@@ -200,7 +200,7 @@ private:
         }
 
     private:
-        static constexpr uint16_t kMaxDataSize = 255;
+        static constexpr uint16_t kMaxDataSize = 512;
 
         uint8_t mData[kMaxDataSize];
     } OT_TOOL_PACKED_END;
