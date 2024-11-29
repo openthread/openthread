@@ -32,6 +32,7 @@
  */
 
 #include "openthread-core-config.h"
+#include <openthread/error.h>
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
@@ -87,7 +88,9 @@ otError otBleSecureGetPeerCertificateBase64(otInstance *aInstance, unsigned char
 {
     Error error;
 
+    VerifyOrExit(aPeerCert != nullptr, error = kErrorInvalidArgs);
     VerifyOrExit(aCertLength != nullptr, error = kErrorInvalidArgs);
+
     error = AsCoreType(aInstance).Get<Ble::BleSecure>().GetPeerCertificateBase64(aPeerCert, aCertLength, *aCertLength);
 
 exit:
@@ -96,6 +99,19 @@ exit:
 #endif
 
 #if defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
+otError otBleSecureGetPeerCertificateDer(otInstance *aInstance, unsigned char *aPeerCert, size_t *aCertLength)
+{
+    Error error;
+
+    VerifyOrExit(aPeerCert != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(aCertLength != nullptr, error = kErrorInvalidArgs);
+
+    error = AsCoreType(aInstance).Get<Ble::BleSecure>().GetPeerCertificateDer(aPeerCert, aCertLength, *aCertLength);
+
+exit:
+    return error;
+}
+
 otError otBleSecureGetPeerSubjectAttributeByOid(otInstance *aInstance,
                                                 const char *aOid,
                                                 size_t      aOidLength,
