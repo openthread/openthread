@@ -96,6 +96,11 @@ exit:
 #endif
 
 #if defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
+otError otBleSecureGetPeerCertificateRaw(otInstance *aInstance, unsigned char *aPeerCert, size_t *aCertLength)
+{
+    return AsCoreType(aInstance).Get<Ble::BleSecure>().GetPeerCertificateRaw(aPeerCert, aCertLength, *aCertLength);
+}
+
 otError otBleSecureGetPeerSubjectAttributeByOid(otInstance *aInstance,
                                                 const char *aOid,
                                                 size_t      aOidLength,

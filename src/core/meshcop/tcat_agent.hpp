@@ -339,6 +339,7 @@ private:
 
     Error HandleSingleTlv(const Message &aIncomingMessage, Message &aOutgoingMessage);
     Error HandleSetActiveOperationalDataset(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength);
+    Error HandleGetActiveOperationalDataset(Message &aOutgoingMessage, bool &aResponse);
     Error HandleDecomission(void);
     Error HandlePing(const Message &aIncomingMessage,
                      Message       &aOutgoingMessage,
@@ -359,6 +360,7 @@ private:
                                 uint16_t       aLength,
                                 bool          &aResponse);
     Error HandleStartThreadInterface(void);
+    Error HandleGetCommissionerCertificate(Message &aOutgoingMessage, bool &aResponse);
 
     Error VerifyHash(const Message &aIncomingMessage,
                      uint16_t       aOffset,

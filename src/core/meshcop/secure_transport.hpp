@@ -223,6 +223,19 @@ public:
 
 #if defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
         /**
+         * Returns the peer x509 certificate DER encoded.
+         *
+         * @param[out]  aPeerCert        A pointer to the base64 encoded certificate buffer.
+         * @param[out]  aCertLength      The length of the base64 encoded peer certificate.
+         * @param[in]   aCertBufferSize  The buffer size of aPeerCert.
+         *
+         * @retval kErrorInvalidState   Not connected yet.
+         * @retval kErrorNone           Successfully get the peer certificate.
+         * @retval kErrorNoBufs         Can't allocate memory for certificate.
+         */
+        Error GetPeerCertificateRaw(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
+
+        /**
          * Returns an attribute value identified by its OID from the subject
          * of the peer x509 certificate. The peer OID is provided in binary format.
          * The attribute length is set if the attribute was successfully read or zero
