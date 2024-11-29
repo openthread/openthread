@@ -119,9 +119,10 @@ public:
         kKeyBrUlaPrefix       = OT_SETTINGS_KEY_BR_ULA_PREFIX,
         kKeyBrOnLinkPrefixes  = OT_SETTINGS_KEY_BR_ON_LINK_PREFIXES,
         kKeyBorderAgentId     = OT_SETTINGS_KEY_BORDER_AGENT_ID,
+        kKeyTcatCommrCert     = OT_SETTINGS_KEY_TCAT_COMMR_CERT,
     };
 
-    static constexpr Key kLastKey = kKeyBorderAgentId; ///< The last (numerically) enumerator value in `Key`.
+    static constexpr Key kLastKey = kKeyTcatCommrCert; ///< The last (numerically) enumerator value in `Key`.
 
     static_assert(static_cast<uint16_t>(kLastKey) < static_cast<uint16_t>(OT_SETTINGS_KEY_VENDOR_RESERVED_MIN),
                   "Core settings keys overlap with vendor reserved keys");
@@ -801,6 +802,33 @@ public:
      * @param[in]   aType            The Dataset type (active or pending) to delete.
      */
     void DeleteOperationalDataset(MeshCoP::Dataset::Type aType);
+
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    /**
+     * Stores the Tcat Commissioner certificate.
+     *
+     * @param[in]  aCert            The DER-encoded X509 end-entity certificate to store.
+     * @param[in]  aCertLen         Certificate length.
+     */
+    void SaveTcatCommissionerCertificate(uint8_t *aCert, uint16_t aCertLen);
+
+    /**
+     * Reads the Tcat Commissioner certificate.
+     *
+     * @param[out]    aCert     Buffer to store the DER-encoded X509 end-entity certificate
+     *                          of the TCAT Commissioner.
+     * @param[in,out] aCertLen  On input, the max size of @p aCert. On output, the length of
+     *                          the DER encoded peer certificate.
+     *
+     * @retval kErrorNone       Successfully read the Dataset.
+     * @retval kErrorNotFound   No corresponding value in the setting store.
+     * @retval kErrorNoBufs     Buffer has not enough space to store the data.
+     */
+    Error ReadTcatCommissionerCertificate(uint8_t *aCert, uint16_t &aCertLen)
+    {
+        return Get<SettingsDriver>().Get(kKeyTcatCommrCert, aCert, &aCertLen);
+    }
+#endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
     /**
      * Reads a specified settings entry.
