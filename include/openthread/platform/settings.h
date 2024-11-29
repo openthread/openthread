@@ -72,6 +72,8 @@ enum
     OT_SETTINGS_KEY_BR_ULA_PREFIX        = 0x000f, ///< BR ULA prefix.
     OT_SETTINGS_KEY_BR_ON_LINK_PREFIXES  = 0x0010, ///< BR local on-link prefixes.
     OT_SETTINGS_KEY_BORDER_AGENT_ID      = 0x0011, ///< Unique Border Agent/Router ID.
+    OT_SETTINGS_KEY_TCAT_COMMISSIONER_CERTIFICATE =
+        0x0012, ///< Certificate of the TCAT Commissioner which latest updated the active dataset.
 
     // Deprecated and reserved key values:
     //
