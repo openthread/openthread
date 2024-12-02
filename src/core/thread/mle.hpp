@@ -761,7 +761,7 @@ public:
      * @retval TRUE   If the Thread interface is communicating to a Wake-up Parent.
      * @retval FALSE  If the Thread interface is not communicating to a Wake-up Parent.
      */
-    bool IsWakeupParentPresent() const { return mWakeupParentAttachWindow > 0; }
+    bool IsWakeupParentPresent(void) const { return mWakeupParentAttachWindow > 0; }
 
     /**
      * Adds a Wake-up Parent to the list of potential parents.
@@ -793,6 +793,7 @@ private:
     // All time intervals are in milliseconds
     static constexpr uint32_t kParentRequestRouterTimeout    = 750;  // Wait time after tx of Parent Req to routers
     static constexpr uint32_t kParentRequestReedTimeout      = 1250; // Wait timer after tx of Parent Req to REEDs
+    static constexpr uint32_t kWakeupParentParentRespTimeout = 500;  // Max delay for receiving a Parent Response from WC
     static constexpr uint32_t kParentRequestDuplicateMargin  = 50;   // Margin to detect duplicate received Parent Req
     static constexpr uint32_t kChildIdResponseTimeout        = 1250; // Wait time to receive Child ID Response
     static constexpr uint32_t kAttachStartJitter             = 50;   // Max jitter time added to start of attach
@@ -923,7 +924,7 @@ private:
         kToRoutersAndReeds, // Parent Request to all routers and REEDs.
         kToSelectedRouter,  // Parent Request to a selected router (e.g., by `ParentSearch` module).
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-        kToWakeupParent, // Parent Request unicast to a known Wake-up Parent device.
+        kToWakeupCoordinator, // Unicast Parent Request to a known Wake-up Coordinator device.
 #endif
     };
 

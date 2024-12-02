@@ -1386,7 +1386,7 @@ Error Mle::DetermineParentRequestType(ParentRequestType &aType) const
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     if (IsWakeupParentPresent())
     {
-        aType = kToWakeupParent;
+        aType = kToWakeupCoordinator;
         VerifyOrExit(TimerMilli::GetNow() < mWakeupParentAttachTime + mWakeupParentAttachWindow,
                      error = kErrorNotFound);
         ExitNow();
@@ -1570,7 +1570,7 @@ void Mle::HandleAttachTimer(void)
                 delay = kParentRequestReedTimeout;
                 break;
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-            case kToWakeupParent:
+            case kToWakeupCoordinator:
                 delay = kWakeupParentParentRespTimeout;
                 delay += mWakeupParentAttachTime + mWakeupParentAttachWindow - TimerMilli::GetNow();
                 break;
@@ -1745,7 +1745,7 @@ void Mle::SendParentRequest(ParentRequestType aType)
         break;
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    case kToWakeupParent:
+    case kToWakeupCoordinator:
         scanMask = ScanMaskTlv::kRouterFlag | ScanMaskTlv::kEndDeviceFlag;
         break;
 #endif
@@ -1783,7 +1783,7 @@ void Mle::SendParentRequest(ParentRequestType aType)
     else
 #endif
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    if (aType == kToWakeupParent)
+    if (aType == kToWakeupCoordinator)
     {
         destination.SetToLinkLocalAddress(GetWakeupParent()->GetExtAddress());
         SuccessOrExit(error = message->AppendCslClockAccuracyTlv());
@@ -1808,7 +1808,7 @@ void Mle::SendParentRequest(ParentRequestType aType)
         break;
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    case kToWakeupParent:
+    case kToWakeupCoordinator:
         Log(kMessageSend, kTypeParentRequestToWakeupCoord, destination);
         LogInfo("Sent Parent Request FC: %lu", ToUlong(Get<KeyManager>().GetMleFrameCounter() - 1));
         break;

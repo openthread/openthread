@@ -271,14 +271,10 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     // Callbacks from `CslTxScheduler`
     Error PrepareFrameForCslNeighbor(Mac::TxFrame &aFrame, FrameContext &aContext, CslNeighbor &aCslNeighbor);
-    void  HandleSentFrameToCslNeighbor(const Mac::TxFrame &aFrame,
-                                       const FrameContext &aContext,
-                                       Error               aError,
-                                       CslNeighbor        &aCslNeighbor);
 #endif
 
     uint16_t PrepareDataFrame(Mac::TxFrame &aFrame, CslNeighbor &aNeighbor, Message &aMessage);
-    void  HandleSentFrameToNeighbor(const Mac::TxFrame &aFrame, const FrameContext &aContext, Error aError, CslNeighbor &aNeighbor);
+    void  HandleSentFrameToCslNeighbor(const Mac::TxFrame &aFrame, const FrameContext &aContext, Error aError, CslNeighbor &aNeighbor);
     void UpdateIndirectMessage(CslNeighbor &aNeighbor);
 
 #if OPENTHREAD_FTD
@@ -286,11 +282,10 @@ private:
 
     // Callbacks from `DataPollHandler`
     Error PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
-    void  HandleSentFrameToChild(const Mac::TxFrame &aFrame, const FrameContext &aContext, Error aError, Child &aChild);
     void  HandleFrameChangeDone(Child &aChild);
 
     void     RequestMessageUpdate(Child &aChild);
-    uint16_t PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, Message &aMessage);
+    uint16_t PrepareDataFrameForSleepyChild(Mac::TxFrame &aFrame, Child &aChild, Message &aMessage);
     void     PrepareEmptyFrame(Mac::TxFrame &aFrame, Child &aChild, bool aAckRequest);
     void     ClearMessagesForRemovedChildren(void);
 
@@ -302,10 +297,6 @@ private:
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     Error PrepareFrameForEnhCslNeighbor(Mac::TxFrame &aFrame, FrameContext &aContext, CslNeighbor &aNeighbor);
     Message *FindQueuedMessageForWedNeighbor(CslNeighbor &aNeighbor);
-    void HandleSentFrameToWedNeighbor(const Mac::TxFrame &aFrame,
-                                            const FrameContext &aContext,
-                                            Error               aError,
-                                            CslNeighbor        &aNeighbor);
 #endif
 
     bool mEnabled;

@@ -2488,14 +2488,14 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    if (neighbor == nullptr)
-    {
-        neighbor = Get<Mle::Mle>().GetWakeupParent();
-        VerifyOrExit(neighbor->GetExtAddress() == aSrcAddr.GetExtended());
-    }
+    neighbor = neighbor == nullptr ? Get<Mle::Mle>().GetWakeupParent() : neighbor;
 #endif
 
     VerifyOrExit(neighbor != nullptr);
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    VerifyOrExit(neighbor->GetExtAddress() == aSrcAddr.GetExtended());
+#endif
 
     VerifyOrExit(csl->GetPeriod() >= kMinCslIePeriod);
 

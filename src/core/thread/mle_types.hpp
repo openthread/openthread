@@ -76,7 +76,6 @@ namespace Mle {
 constexpr uint16_t kUdpPort = 19788; ///< MLE UDP Port
 
 constexpr uint16_t kMaxChildren                   = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN; ///< Maximum number of children
-constexpr uint32_t kWakeupParentParentRespTimeout = 500; ///< Max delay for receiving a Parent Response from WC (ms)
 constexpr uint16_t kMinChildId                    = 1;   ///< Minimum Child ID
 constexpr uint16_t kMaxChildId                    = 511; ///< Maximum Child ID
 constexpr uint8_t  kMaxRouters                    = OPENTHREAD_CONFIG_MLE_MAX_ROUTERS; ///< Maximum number of routers

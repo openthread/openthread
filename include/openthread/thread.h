@@ -1142,7 +1142,7 @@ uint32_t otThreadGetStoreFrameCounterAhead(otInstance *aInstance);
  * @param[in] aWakeupIntervalUs An interval between consecutive wake-up frames (in microseconds).
  * @param[in] aWakeupDurationMs Duration of the wake-up sequence (in milliseconds).
  * @param[in] aCallback         A pointer to function that is called when the wake-up succeeds or fails.
- * @param[in] aCallbackContext  A pointer to callback application-specific context.
+ * @param[in] aContext          A pointer to callback application-specific context.
  *
  * @retval OT_ERROR_NONE          Successfully started the wake-up.
  * @retval OT_ERROR_INVALID_STATE Another attachment request is still in progress.
