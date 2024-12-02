@@ -32,7 +32,7 @@
 
 #include <openthread/openthread-system.h>
 
-#include "core/common/code_utils.hpp"
+#include "common/code_utils.hpp"
 #include "posix/platform/platform-posix.h"
 
 const char *otSysGetRadioUrlHelpString(void)

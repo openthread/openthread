@@ -31,14 +31,12 @@
  *   This file includes macros for validating runtime conditions.
  */
 
-#ifndef CODE_UTILS_HPP_
-#define CODE_UTILS_HPP_
-
-#include <stdbool.h>
+#ifndef OT_INCLUDE_COMMON_UTILS_CODE_UTILS_HPP_
+#define OT_INCLUDE_COMMON_UTILS_CODE_UTILS_HPP_
 
 #include <openthread/error.h>
 
-#include "common/arg_macros.hpp"
+#include "arg_macros.hpp"
 
 /**
  * Calculates the number of elements in an array.
@@ -162,4 +160,4 @@
  */
 static inline void IgnoreError(otError aError) { OT_UNUSED_VARIABLE(aError); }
 
-#endif // CODE_UTILS_HPP_
+#endif // OT_INCLUDE_COMMON_UTILS_CODE_UTILS_HPP_

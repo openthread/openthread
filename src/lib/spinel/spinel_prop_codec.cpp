@@ -31,7 +31,7 @@
  */
 
 #include "lib/spinel/spinel_prop_codec.hpp"
-#include "lib/utils/utils.hpp"
+#include "common/code_utils.hpp"
 
 namespace ot {
 namespace Spinel {
@@ -44,15 +44,15 @@ otError EncodeDnssd<otPlatDnssdHost>(Encoder                    &aEncoder,
 {
     otError error = OT_ERROR_NONE;
 
-    EXPECT_NO_ERROR(error = aEncoder.WriteUintPacked(SPINEL_PROP_DNSSD_HOST));
-    EXPECT_NO_ERROR(error = aEncoder.WriteUtf8(aObj.mHostName == nullptr ? "" : aObj.mHostName));
-    EXPECT_NO_ERROR(error = aEncoder.WriteUint16(aObj.mAddressesLength));
+    SuccessOrExit(error = aEncoder.WriteUintPacked(SPINEL_PROP_DNSSD_HOST));
+    SuccessOrExit(error = aEncoder.WriteUtf8(aObj.mHostName == nullptr ? "" : aObj.mHostName));
+    SuccessOrExit(error = aEncoder.WriteUint16(aObj.mAddressesLength));
     for (uint16_t i = 0; i < aObj.mAddressesLength; i++)
     {
-        EXPECT_NO_ERROR(error = aEncoder.WriteIp6Address(aObj.mAddresses[i]));
+        SuccessOrExit(error = aEncoder.WriteIp6Address(aObj.mAddresses[i]));
     }
-    EXPECT_NO_ERROR(error = aEncoder.WriteUint32(aRequestId));
-    EXPECT_NO_ERROR(error = aEncoder.WriteData(reinterpret_cast<const uint8_t *>(&aCallback), sizeof(aCallback)));
+    SuccessOrExit(error = aEncoder.WriteUint32(aRequestId));
+    SuccessOrExit(error = aEncoder.WriteData(reinterpret_cast<const uint8_t *>(&aCallback), sizeof(aCallback)));
 
 exit:
     return error;
@@ -66,23 +66,23 @@ otError EncodeDnssd<otPlatDnssdService>(Encoder                    &aEncoder,
 {
     otError error = OT_ERROR_NONE;
 
-    EXPECT_NO_ERROR(error = aEncoder.WriteUintPacked(SPINEL_PROP_DNSSD_SERVICE));
-    EXPECT_NO_ERROR(error = aEncoder.WriteUtf8(aObj.mHostName == nullptr ? "" : aObj.mHostName));
-    EXPECT_NO_ERROR(error = aEncoder.WriteUtf8(aObj.mServiceInstance == nullptr ? "" : aObj.mServiceInstance));
-    EXPECT_NO_ERROR(error = aEncoder.WriteUtf8(aObj.mServiceType == nullptr ? "" : aObj.mServiceType));
-    EXPECT_NO_ERROR(error = aEncoder.OpenStruct());
+    SuccessOrExit(error = aEncoder.WriteUintPacked(SPINEL_PROP_DNSSD_SERVICE));
+    SuccessOrExit(error = aEncoder.WriteUtf8(aObj.mHostName == nullptr ? "" : aObj.mHostName));
+    SuccessOrExit(error = aEncoder.WriteUtf8(aObj.mServiceInstance == nullptr ? "" : aObj.mServiceInstance));
+    SuccessOrExit(error = aEncoder.WriteUtf8(aObj.mServiceType == nullptr ? "" : aObj.mServiceType));
+    SuccessOrExit(error = aEncoder.OpenStruct());
     for (uint16_t i = 0; i < aObj.mSubTypeLabelsLength; i++)
     {
-        EXPECT_NO_ERROR(error = aEncoder.WriteUtf8(aObj.mSubTypeLabels[i]));
+        SuccessOrExit(error = aEncoder.WriteUtf8(aObj.mSubTypeLabels[i]));
     }
-    EXPECT_NO_ERROR(error = aEncoder.CloseStruct());
-    EXPECT_NO_ERROR(error = aEncoder.WriteDataWithLen(aObj.mTxtData, aObj.mTxtDataLength));
-    EXPECT_NO_ERROR(error = aEncoder.WriteUint16(aObj.mPort));
-    EXPECT_NO_ERROR(error = aEncoder.WriteUint16(aObj.mPriority));
-    EXPECT_NO_ERROR(error = aEncoder.WriteUint16(aObj.mWeight));
-    EXPECT_NO_ERROR(error = aEncoder.WriteUint32(aObj.mTtl));
-    EXPECT_NO_ERROR(error = aEncoder.WriteUint32(aRequestId));
-    EXPECT_NO_ERROR(error = aEncoder.WriteData(reinterpret_cast<const uint8_t *>(&aCallback), sizeof(aCallback)));
+    SuccessOrExit(error = aEncoder.CloseStruct());
+    SuccessOrExit(error = aEncoder.WriteDataWithLen(aObj.mTxtData, aObj.mTxtDataLength));
+    SuccessOrExit(error = aEncoder.WriteUint16(aObj.mPort));
+    SuccessOrExit(error = aEncoder.WriteUint16(aObj.mPriority));
+    SuccessOrExit(error = aEncoder.WriteUint16(aObj.mWeight));
+    SuccessOrExit(error = aEncoder.WriteUint32(aObj.mTtl));
+    SuccessOrExit(error = aEncoder.WriteUint32(aRequestId));
+    SuccessOrExit(error = aEncoder.WriteData(reinterpret_cast<const uint8_t *>(&aCallback), sizeof(aCallback)));
 
 exit:
     return error;
@@ -96,19 +96,19 @@ otError EncodeDnssd<otPlatDnssdKey>(Encoder                    &aEncoder,
 {
     otError error = OT_ERROR_NONE;
 
-    EXPECT_NO_ERROR(error = aEncoder.WriteUintPacked(SPINEL_PROP_DNSSD_KEY_RECORD));
-    EXPECT_NO_ERROR(error = aEncoder.WriteUtf8(aObj.mName == nullptr ? "" : aObj.mName));
-    EXPECT_NO_ERROR(error = aEncoder.OpenStruct());
+    SuccessOrExit(error = aEncoder.WriteUintPacked(SPINEL_PROP_DNSSD_KEY_RECORD));
+    SuccessOrExit(error = aEncoder.WriteUtf8(aObj.mName == nullptr ? "" : aObj.mName));
+    SuccessOrExit(error = aEncoder.OpenStruct());
     if (aObj.mServiceType != nullptr)
     {
-        EXPECT_NO_ERROR(error = aEncoder.WriteUtf8(aObj.mServiceType));
+        SuccessOrExit(error = aEncoder.WriteUtf8(aObj.mServiceType));
     }
-    EXPECT_NO_ERROR(error = aEncoder.CloseStruct());
-    EXPECT_NO_ERROR(error = aEncoder.WriteDataWithLen(aObj.mKeyData, aObj.mKeyDataLength));
-    EXPECT_NO_ERROR(error = aEncoder.WriteUint16(aObj.mClass));
-    EXPECT_NO_ERROR(error = aEncoder.WriteUint32(aObj.mTtl));
-    EXPECT_NO_ERROR(error = aEncoder.WriteUint32(aRequestId));
-    EXPECT_NO_ERROR(error = aEncoder.WriteData(reinterpret_cast<const uint8_t *>(&aCallback), sizeof(aCallback)));
+    SuccessOrExit(error = aEncoder.CloseStruct());
+    SuccessOrExit(error = aEncoder.WriteDataWithLen(aObj.mKeyData, aObj.mKeyDataLength));
+    SuccessOrExit(error = aEncoder.WriteUint16(aObj.mClass));
+    SuccessOrExit(error = aEncoder.WriteUint32(aObj.mTtl));
+    SuccessOrExit(error = aEncoder.WriteUint32(aRequestId));
+    SuccessOrExit(error = aEncoder.WriteData(reinterpret_cast<const uint8_t *>(&aCallback), sizeof(aCallback)));
 
 exit:
     return error;
@@ -122,11 +122,11 @@ otError DecodeDnssdHost(Decoder              &aDecoder,
 {
     otError error = OT_ERROR_NONE;
 
-    EXPECT_NO_ERROR(error = aDecoder.ReadUtf8(aHost.mHostName));
-    EXPECT_NO_ERROR(error = aDecoder.ReadUint16(aHost.mAddressesLength));
-    EXPECT_NO_ERROR(error = aDecoder.ReadIp6Address(aHost.mAddresses));
-    EXPECT_NO_ERROR(error = aDecoder.ReadUint32(aRequestId));
-    EXPECT_NO_ERROR(error = aDecoder.ReadData(aCallbackData, aCallbackDataLen));
+    SuccessOrExit(error = aDecoder.ReadUtf8(aHost.mHostName));
+    SuccessOrExit(error = aDecoder.ReadUint16(aHost.mAddressesLength));
+    SuccessOrExit(error = aDecoder.ReadIp6Address(aHost.mAddresses));
+    SuccessOrExit(error = aDecoder.ReadUint32(aRequestId));
+    SuccessOrExit(error = aDecoder.ReadData(aCallbackData, aCallbackDataLen));
 
 exit:
     return error;
@@ -143,25 +143,25 @@ otError DecodeDnssdService(Decoder              &aDecoder,
     otError error = OT_ERROR_NONE;
     uint8_t index = 0;
 
-    EXPECT_NO_ERROR(error = aDecoder.ReadUtf8(aService.mHostName));
-    EXPECT_NO_ERROR(error = aDecoder.ReadUtf8(aService.mServiceInstance));
-    EXPECT_NO_ERROR(error = aDecoder.ReadUtf8(aService.mServiceType));
-    EXPECT_NO_ERROR(error = aDecoder.OpenStruct());
+    SuccessOrExit(error = aDecoder.ReadUtf8(aService.mHostName));
+    SuccessOrExit(error = aDecoder.ReadUtf8(aService.mServiceInstance));
+    SuccessOrExit(error = aDecoder.ReadUtf8(aService.mServiceType));
+    SuccessOrExit(error = aDecoder.OpenStruct());
     while (!aDecoder.IsAllReadInStruct())
     {
-        EXPECT(index < aSubTypeLabelsCount, error = OT_ERROR_NO_BUFS);
-        EXPECT_NO_ERROR(error = aDecoder.ReadUtf8(aSubTypeLabels[index]));
+        VerifyOrExit(index < aSubTypeLabelsCount, error = OT_ERROR_NO_BUFS);
+        SuccessOrExit(error = aDecoder.ReadUtf8(aSubTypeLabels[index]));
         index++;
     }
     aSubTypeLabelsCount = index;
-    EXPECT_NO_ERROR(error = aDecoder.CloseStruct());
-    EXPECT_NO_ERROR(error = aDecoder.ReadDataWithLen(aService.mTxtData, aService.mTxtDataLength));
-    EXPECT_NO_ERROR(error = aDecoder.ReadUint16(aService.mPort));
-    EXPECT_NO_ERROR(error = aDecoder.ReadUint16(aService.mPriority));
-    EXPECT_NO_ERROR(error = aDecoder.ReadUint16(aService.mWeight));
-    EXPECT_NO_ERROR(error = aDecoder.ReadUint32(aService.mTtl));
-    EXPECT_NO_ERROR(error = aDecoder.ReadUint32(aRequestId));
-    EXPECT_NO_ERROR(error = aDecoder.ReadData(aCallbackData, aCallbackDataLen));
+    SuccessOrExit(error = aDecoder.CloseStruct());
+    SuccessOrExit(error = aDecoder.ReadDataWithLen(aService.mTxtData, aService.mTxtDataLength));
+    SuccessOrExit(error = aDecoder.ReadUint16(aService.mPort));
+    SuccessOrExit(error = aDecoder.ReadUint16(aService.mPriority));
+    SuccessOrExit(error = aDecoder.ReadUint16(aService.mWeight));
+    SuccessOrExit(error = aDecoder.ReadUint32(aService.mTtl));
+    SuccessOrExit(error = aDecoder.ReadUint32(aRequestId));
+    SuccessOrExit(error = aDecoder.ReadData(aCallbackData, aCallbackDataLen));
 
 exit:
     return error;
@@ -175,22 +175,22 @@ otError DecodeDnssdKey(Decoder              &aDecoder,
 {
     otError error = OT_ERROR_NONE;
 
-    EXPECT_NO_ERROR(error = aDecoder.ReadUtf8(aKey.mName));
-    EXPECT_NO_ERROR(error = aDecoder.OpenStruct());
+    SuccessOrExit(error = aDecoder.ReadUtf8(aKey.mName));
+    SuccessOrExit(error = aDecoder.OpenStruct());
     if (!aDecoder.IsAllReadInStruct())
     {
-        EXPECT_NO_ERROR(error = aDecoder.ReadUtf8(aKey.mServiceType));
+        SuccessOrExit(error = aDecoder.ReadUtf8(aKey.mServiceType));
     }
     else
     {
         aKey.mServiceType = nullptr;
     }
-    EXPECT_NO_ERROR(error = aDecoder.CloseStruct());
-    EXPECT_NO_ERROR(error = aDecoder.ReadDataWithLen(aKey.mKeyData, aKey.mKeyDataLength));
-    EXPECT_NO_ERROR(error = aDecoder.ReadUint16(aKey.mClass));
-    EXPECT_NO_ERROR(error = aDecoder.ReadUint32(aKey.mTtl));
-    EXPECT_NO_ERROR(error = aDecoder.ReadUint32(aRequestId));
-    EXPECT_NO_ERROR(error = aDecoder.ReadData(aCallbackData, aCallbackDataLen));
+    SuccessOrExit(error = aDecoder.CloseStruct());
+    SuccessOrExit(error = aDecoder.ReadDataWithLen(aKey.mKeyData, aKey.mKeyDataLength));
+    SuccessOrExit(error = aDecoder.ReadUint16(aKey.mClass));
+    SuccessOrExit(error = aDecoder.ReadUint32(aKey.mTtl));
+    SuccessOrExit(error = aDecoder.ReadUint32(aRequestId));
+    SuccessOrExit(error = aDecoder.ReadData(aCallbackData, aCallbackDataLen));
 
 exit:
     return error;
