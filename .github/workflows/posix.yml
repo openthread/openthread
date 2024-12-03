@@ -140,6 +140,7 @@ jobs:
       PYTHONUNBUFFERED: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
+      OT_VT_USE_UNIX_SOCKET: 1
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2

@@ -42,24 +42,24 @@ class TestDiag(thread_cert.TestCase):
         node = self.nodes[1]
 
         cases = [
-            ('diag\n', 'diagnostics mode is disabled\r\n'),
-            ('diag send 10 100\n', 'Error 13: InvalidState\r\n'),
-            ('diag start\n', 'Done\r\n'),
+            ('diag', 'diagnostics mode is disabled\r\n'),
+            ('diag send 10 100', 'Error 13: InvalidState\r\n'),
+            ('diag start', 'Done\r\n'),
             ('diag invalid test\n', 'diag feature \'invalid\' is not supported'),
             ('diag', 'diagnostics mode is enabled\r\n'),
-            ('diag channel 10\n', 'failed\r\nstatus 0x7\r\n'),
-            ('diag channel 11\n', 'set channel to 11\r\nstatus 0x00\r\n'),
-            ('diag channel\n', 'channel: 11\r\n'),
-            ('diag power -10\n', 'set tx power to -10 dBm\r\nstatus 0x00\r\n'),
-            ('diag power\n', 'tx power: -10 dBm\r\n'),
+            ('diag channel 10', 'failed\r\nstatus 0x7\r\n'),
+            ('diag channel 11', 'set channel to 11\r\nstatus 0x00\r\n'),
+            ('diag channel', 'channel: 11\r\n'),
+            ('diag power -10', 'set tx power to -10 dBm\r\nstatus 0x00\r\n'),
+            ('diag power', 'tx power: -10 dBm\r\n'),
             (
-                'diag stats\n',
+                'diag stats',
                 'received packets: 0\r\nsent packets: 0\r\n'
                 'first received packet: rssi=0, lqi=0\r\n'
                 'last received packet: rssi=0, lqi=0\r\n',
             ),
             (
-                'diag send 20 100\n',
+                'diag send 20 100',
                 r'sending 0x14 packet\(s\), length 0x64\r\nstatus 0x00\r\n',
             ),
             (
@@ -67,15 +67,15 @@ class TestDiag(thread_cert.TestCase):
                 r'sending 0x14 packet\(s\), length 0x64\r\nstatus 0x00\r\n',
             ),
             (
-                'diag repeat 100 100\n',
+                'diag repeat 100 100',
                 'sending packets of length 0x64 at the delay of 0x64 ms\r\nstatus 0x00\r\n',
             ),
             (
-                'diag repeat stop\n',
+                'diag repeat stop',
                 'repeated packet transmission is stopped\r\nstatus 0x00\r\n',
             ),
             (
-                'diag stop\n',
+                'diag stop',
                 r'received packets: 0\r\nsent packets: ([1-9]\d*)\r\n'
                 'first received packet: rssi=0, lqi=0\r\n'
                 'last received packet: rssi=0, lqi=0\r\n\n'
@@ -89,7 +89,7 @@ class TestDiag(thread_cert.TestCase):
         ]
 
         for case in cases:
-            node.send_command(case[0], expect_command_echo=False)
+            node.send_command(case[0])
             self.simulator.go(1)
             if type(self.simulator).__name__ == 'VirtualTime':
                 time.sleep(0.1)

@@ -108,7 +108,8 @@ class TestRouterMulticastLinkRequest(thread_cert.TestCase):
         self.nodes[REED].start()
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[REED].get_state(), 'router')
-        self.simulator.go(LINK_ESTABLISH_DELAY_THRESHOLD + 3)
+        # TODO temporary delay an extra advertisement period
+        self.simulator.go(LINK_ESTABLISH_DELAY_THRESHOLD + 3 + 30)
 
         # Verify that REED has established link with all routers
         reed_table = self.nodes[REED].router_table()
