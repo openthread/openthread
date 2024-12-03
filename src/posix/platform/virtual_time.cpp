@@ -40,13 +40,17 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/select.h>
+#include <sys/un.h>
 #include <unistd.h>
 
 #include "utils.hpp"
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
 
+using namespace ot::Posix;
+
 static const int kMaxNetworkSize = 33;      ///< Well-known ID used by a simulated radio supporting promiscuous mode.
+static const int kRcpBasePort    = 9000;    ///< This base port for RCP simulation.
 static const int kBasePort       = 18000;   ///< This base port for posix app simulation.
 static const int kUsPerSecond    = 1000000; ///< Number of microseconds per second.
 
@@ -54,47 +58,93 @@ static uint64_t sNow        = 0;  ///< Time of simulation.
 static int      sSockFd     = -1; ///< Socket used to communicating with simulator.
 static uint16_t sPortOffset = 0;  ///< Port offset for simulation.
 
-void virtualTimeInit(uint16_t aNodeId)
+static bool sUseUnixSocket = false;
+
+static void InitWithEnvs(void)
 {
-    struct sockaddr_in sockaddr;
-    char              *offset;
+    char *env = getenv("OT_VT_USE_UNIX_SOCKET");
+    if (env != nullptr && !strcmp(env, "1"))
+    {
+        sUseUnixSocket = true;
+    }
 
-    memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.sin_family = AF_INET;
+    env = getenv("PORT_OFFSET");
 
-    offset = getenv("PORT_OFFSET");
-
-    if (offset)
+    if (env != nullptr)
     {
         char *endptr;
 
-        sPortOffset = (uint16_t)strtol(offset, &endptr, 0);
+        sPortOffset = static_cast<uint16_t>(strtol(env, &endptr, 0));
 
         if (*endptr != '\0')
         {
             const uint8_t kMsgSize = 40;
             char          msg[kMsgSize];
 
-            snprintf(msg, sizeof(msg), "Invalid PORT_OFFSET: %s", offset);
+            snprintf(msg, sizeof(msg), "Invalid PORT_OFFSET: %s", env);
             DieNowWithMessage(msg, OT_EXIT_INVALID_ARGUMENTS);
         }
 
         sPortOffset *= (kMaxNetworkSize + 1);
     }
+}
 
-    sockaddr.sin_port        = htons(kBasePort + sPortOffset + aNodeId);
-    sockaddr.sin_addr.s_addr = INADDR_ANY;
+void virtualTimeInit(uint16_t aNodeId)
+{
+    InitWithEnvs();
 
-    sSockFd = ot::Posix::SocketWithCloseExec(AF_INET, SOCK_DGRAM, IPPROTO_UDP, ot::Posix::kSocketBlock);
+    sSockFd = sUseUnixSocket ? SocketWithCloseExec(AF_UNIX, SOCK_SEQPACKET, 0, kSocketBlock)
+                             : SocketWithCloseExec(AF_INET, SOCK_DGRAM, IPPROTO_UDP, kSocketBlock);
 
     if (sSockFd == -1)
     {
         DieNowWithMessage("socket", OT_EXIT_ERROR_ERRNO);
     }
 
-    if (bind(sSockFd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) == -1)
+    if (sUseUnixSocket)
     {
-        DieNowWithMessage("bind", OT_EXIT_ERROR_ERRNO);
+        uint16_t           port = kBasePort + sPortOffset + aNodeId;
+        struct sockaddr_un addr;
+
+        memset(&addr, 0, sizeof(addr));
+        addr.sun_family = AF_UNIX;
+        snprintf(addr.sun_path, sizeof(addr.sun_path), "vt.%u.sock", port);
+
+        if (unlink(addr.sun_path) == -1 && errno != ENOENT)
+        {
+            perror("unlink");
+            DieNow(OT_EXIT_ERROR_ERRNO);
+        }
+        if (bind(sSockFd, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) == -1)
+        {
+            perror("bind");
+            DieNow(OT_EXIT_ERROR_ERRNO);
+        }
+
+        memset(&addr, 0, sizeof(addr));
+        addr.sun_family = AF_UNIX;
+        snprintf(addr.sun_path, sizeof(addr.sun_path), "vt.%u.sock", kRcpBasePort + sPortOffset);
+
+        if (connect(sSockFd, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) == -1)
+        {
+            perror("connect");
+            DieNow(OT_EXIT_ERROR_ERRNO);
+        }
+    }
+    else
+    {
+        struct sockaddr_in sockaddr;
+
+        memset(&sockaddr, 0, sizeof(sockaddr));
+        sockaddr.sin_family = AF_INET;
+
+        sockaddr.sin_port        = htons(kBasePort + sPortOffset + aNodeId);
+        sockaddr.sin_addr.s_addr = INADDR_ANY;
+
+        if (bind(sSockFd, reinterpret_cast<struct sockaddr *>(&sockaddr), sizeof(sockaddr)) == -1)
+        {
+            DieNowWithMessage("bind", OT_EXIT_ERROR_ERRNO);
+        }
     }
 }
 
@@ -109,15 +159,23 @@ void virtualTimeDeinit(void)
 
 static void virtualTimeSendEvent(struct VirtualTimeEvent *aEvent, size_t aLength)
 {
-    ssize_t            rval;
-    struct sockaddr_in sockaddr;
+    ssize_t rval;
 
-    memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.sin_family = AF_INET;
-    inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
-    sockaddr.sin_port = htons(9000 + sPortOffset);
+    if (sUseUnixSocket)
+    {
+        rval = send(sSockFd, aEvent, aLength, 0);
+    }
+    else
+    {
+        struct sockaddr_in sockaddr;
 
-    rval = sendto(sSockFd, aEvent, aLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+        memset(&sockaddr, 0, sizeof(sockaddr));
+        sockaddr.sin_family = AF_INET;
+        inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
+        sockaddr.sin_port = htons(kRcpBasePort + sPortOffset);
+
+        rval = sendto(sSockFd, aEvent, aLength, 0, reinterpret_cast<struct sockaddr *>(&sockaddr), sizeof(sockaddr));
+    }
 
     if (rval < 0)
     {
@@ -127,9 +185,10 @@ static void virtualTimeSendEvent(struct VirtualTimeEvent *aEvent, size_t aLength
 
 void virtualTimeReceiveEvent(struct VirtualTimeEvent *aEvent)
 {
-    ssize_t rval = recvfrom(sSockFd, aEvent, sizeof(*aEvent), 0, nullptr, nullptr);
+    ssize_t rval = sUseUnixSocket ? recv(sSockFd, aEvent, sizeof(*aEvent), 0)
+                                  : recvfrom(sSockFd, aEvent, sizeof(*aEvent), 0, nullptr, nullptr);
 
-    if (rval < 0 || (uint16_t)rval < offsetof(struct VirtualTimeEvent, mData))
+    if (rval < 0 || static_cast<size_t>(rval) < offsetof(struct VirtualTimeEvent, mData))
     {
         DieNowWithMessage("recvfrom", (rval < 0) ? OT_EXIT_ERROR_ERRNO : OT_EXIT_FAILURE);
     }
@@ -141,8 +200,8 @@ void virtualTimeSendSleepEvent(const struct timeval *aTimeout)
 {
     struct VirtualTimeEvent event;
 
-    event.mDelay      = (uint64_t)aTimeout->tv_sec * kUsPerSecond + (uint64_t)aTimeout->tv_usec;
-    event.mEvent      = OT_SIM_EVENT_ALARM_FIRED;
+    event.mDelay = static_cast<uint64_t>(aTimeout->tv_sec) * kUsPerSecond + static_cast<uint64_t>(aTimeout->tv_usec);
+    event.mEvent = OT_SIM_EVENT_ALARM_FIRED;
     event.mDataLength = 0;
 
     virtualTimeSendEvent(&event, offsetof(struct VirtualTimeEvent, mData));
@@ -175,8 +234,6 @@ void virtualTimeProcess(otInstance *aInstance, const otSysMainloopContext *aCont
     struct VirtualTimeEvent event;
 
     memset(&event, 0, sizeof(event));
-
-    OT_UNUSED_VARIABLE(aInstance);
 
     if (FD_ISSET(sSockFd, &aContext->mReadFdSet))
     {

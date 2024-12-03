@@ -360,7 +360,7 @@ jobs:
       OT_NODE_TYPE: rcp
       USE_MTD: 1
       VIRTUAL_TIME: 1
-      OT_VT_USE_UNIX_SOCKET: 0
+      OT_VT_USE_UNIX_SOCKET: 1
       INTER_OP: 1
     steps:
     - name: Harden Runner
