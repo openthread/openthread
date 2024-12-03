@@ -1052,7 +1052,7 @@ private:
     void  ApplyAutoStartGuardOnAttach(void);
     void  ProcessAutoStart(void);
     Error SelectUnicastEntry(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo) const;
-    void  HandleGuardTimer(void) {}
+    void  HandleGuardTimer(void);
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
     void SelectNextServer(bool aDisallowSwitchOnRegisteredHost);
 #endif
