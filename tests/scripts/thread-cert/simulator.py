@@ -111,6 +111,12 @@ class RealTime(BaseSimulator):
         return time.time()
 
     def go(self, duration, **kwargs):
+        """Proceed the simulator for a given duration (in seconds).
+
+        Args:
+            duration: The duration in seconds to proceed.
+            **kwargs: Additional keyword arguments.
+        """
         time.sleep(duration)
 
     def stop(self):
@@ -572,7 +578,17 @@ class VirtualTime(BaseSimulator):
     def now(self):
         return self.current_time / 1000000
 
-    def go(self, duration, nodeid=None, maybeoff=False):
+    def go(self, duration, **kwargs):
+        """Proceed the simulator for a given duration (in seconds).
+
+        Args:
+            duration: The duration in seconds to proceed.
+            **kwargs: Additional keyword arguments, such as `maybeoff` (bool)
+                      to indicate if a node might be off, or `nodeid` (int).
+        """
+
+        nodeid = kwargs.get('nodeid', None)
+        maybeoff = kwargs.get('maybeoff', False)
         assert self.current_time == self._pause_time
         duration = int(duration * 1000000)
         dbg_print('running for %d us' % duration)
