@@ -72,6 +72,8 @@ public:
         return *this;
     }
 
+    uint32_t GetId(void) { return GetInstance().GetId(); }
+
     static Node &From(otInstance *aInstance) { return static_cast<Node &>(*aInstance); }
 
     Node    *mNext;
