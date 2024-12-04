@@ -30,7 +30,7 @@
 
 #include <assert.h>
 
-#include "core/common/code_utils.hpp"
+#include "common/code_utils.hpp"
 
 namespace ot {
 namespace Posix {

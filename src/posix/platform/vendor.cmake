@@ -32,7 +32,7 @@ set(OT_POSIX_CONFIG_RCP_VENDOR_INTERFACE "vendor_interface_example.cpp"
 set(OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE "" CACHE STRING
     "path to CMake file to define and link posix vendor extension")
 
-set(OT_POSIX_RCP_VENDOR_TARGET "" CACHE STRING 
+set(OT_POSIX_RCP_VENDOR_TARGET "" CACHE STRING
     "name of vendor extension CMake target to link with posix library")
 
 if(OT_POSIX_RCP_VENDOR_BUS)
@@ -47,6 +47,7 @@ if(OT_POSIX_RCP_VENDOR_BUS)
             ${PROJECT_SOURCE_DIR}/include
             ${PROJECT_SOURCE_DIR}/src
             ${PROJECT_SOURCE_DIR}/src/core
+            ${PROJECT_SOURCE_DIR}/src/include
             ${PROJECT_SOURCE_DIR}/src/posix/platform/include
     )
 
