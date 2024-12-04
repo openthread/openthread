@@ -256,25 +256,6 @@ exit:
 
 Error SecureTransport::Setup(bool aClient)
 {
-    // We use `kCipherSuites[mCipherSuite]` to look up the cipher
-    // suites array to pass to `mbedtls_ssl_conf_ciphersuites()`
-    // associated with `mCipherSuite`. We validate that the `enum`
-    // values are correct and match the order in the `kCipherSuites[]`
-    // array.
-
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kEcjpakeWithAes128Ccm8);
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
-        ValidateNextEnum(kPskWithAes128Ccm8);
-#endif
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
-        ValidateNextEnum(kEcdheEcdsaWithAes128Ccm8);
-        ValidateNextEnum(kEcdheEcdsaWithAes128GcmSha256);
-#endif
-    };
-
     int rval;
 
     OT_ASSERT(mCipherSuite != kUnspecifiedCipherSuite);
@@ -284,22 +265,10 @@ Error SecureTransport::Setup(bool aClient)
 
     SetState(kStateInitializing);
 
-    mbedtls_ssl_init(&mSsl);
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Setup the mbedtls_ssl_config `mConf`.
+
     mbedtls_ssl_config_init(&mConf);
-
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
-    if (mExtension != nullptr)
-    {
-        mExtension->mEcdheEcdsaInfo.Init();
-    }
-#endif
-
-#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
-    if (mDatagramTransport)
-    {
-        mbedtls_ssl_cookie_init(&mCookieCtx);
-    }
-#endif
 
     rval = mbedtls_ssl_config_defaults(
         &mConf, aClient ? MBEDTLS_SSL_IS_CLIENT : MBEDTLS_SSL_IS_SERVER,
@@ -329,7 +298,28 @@ Error SecureTransport::Setup(bool aClient)
     mbedtls_ssl_conf_max_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
 #endif
 
-    mbedtls_ssl_conf_ciphersuites(&mConf, kCipherSuites[mCipherSuite]);
+    {
+        // We use `kCipherSuites[mCipherSuite]` to look up the cipher
+        // suites array to pass to `mbedtls_ssl_conf_ciphersuites()`
+        // associated with `mCipherSuite`. We validate that the `enum`
+        // values are correct and match the order in the `kCipherSuites[]`
+        // array.
+
+        struct EnumCheck
+        {
+            InitEnumValidatorCounter();
+            ValidateNextEnum(kEcjpakeWithAes128Ccm8);
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+            ValidateNextEnum(kPskWithAes128Ccm8);
+#endif
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+            ValidateNextEnum(kEcdheEcdsaWithAes128Ccm8);
+            ValidateNextEnum(kEcdheEcdsaWithAes128GcmSha256);
+#endif
+        };
+
+        mbedtls_ssl_conf_ciphersuites(&mConf, kCipherSuites[mCipherSuite]);
+    }
 
     if (mCipherSuite == kEcjpakeWithAes128Ccm8)
     {
@@ -347,24 +337,45 @@ Error SecureTransport::Setup(bool aClient)
 #endif
     }
 
-#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
-    mbedtls_ssl_set_export_keys_cb(&mSsl, HandleMbedtlsExportKeys, this);
-#else
+#if (MBEDTLS_VERSION_NUMBER < 0x03000000)
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
 #endif
 
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
     mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, this);
 
-#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
-    if (!aClient && mDatagramTransport)
-    {
-        rval = mbedtls_ssl_cookie_setup(&mCookieCtx, Crypto::MbedTls::CryptoSecurePrng, nullptr);
-        VerifyOrExit(rval == 0);
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Setup the `Extension` components.
 
-        mbedtls_ssl_conf_dtls_cookies(&mConf, mbedtls_ssl_cookie_write, mbedtls_ssl_cookie_check, &mCookieCtx);
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+    if (mExtension != nullptr)
+    {
+        mExtension->mEcdheEcdsaInfo.Init();
     }
 #endif
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Setup the mbedtls_ssl_cookie_ctx `mCookieCtx`.
+
+#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
+    if (mDatagramTransport)
+    {
+        mbedtls_ssl_cookie_init(&mCookieCtx);
+
+        if (!aClient)
+        {
+            rval = mbedtls_ssl_cookie_setup(&mCookieCtx, Crypto::MbedTls::CryptoSecurePrng, nullptr);
+            VerifyOrExit(rval == 0);
+
+            mbedtls_ssl_conf_dtls_cookies(&mConf, mbedtls_ssl_cookie_write, mbedtls_ssl_cookie_check, &mCookieCtx);
+        }
+    }
+#endif
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Setup the mbedtls_ssl_context `mSsl`.
+
+    mbedtls_ssl_init(&mSsl);
 
     rval = mbedtls_ssl_setup(&mSsl, &mConf);
     VerifyOrExit(rval == 0);
@@ -375,6 +386,10 @@ Error SecureTransport::Setup(bool aClient)
     {
         mbedtls_ssl_set_timer_cb(&mSsl, this, HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
     }
+
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+    mbedtls_ssl_set_export_keys_cb(&mSsl, HandleMbedtlsExportKeys, this);
+#endif
 
     if (mCipherSuite == kEcjpakeWithAes128Ccm8)
     {
