@@ -4529,6 +4529,15 @@ void Mle::DelayedSender::ScheduleParentResponse(const ParentResponseInfo &aInfo,
     AddSchedule(kTypeParentResponse, destination, aDelay, &aInfo, sizeof(aInfo));
 }
 
+void Mle::DelayedSender::ScheduleAdvertisement(const Ip6::Address &aDestination, uint16_t aDelay)
+{
+    VerifyOrExit(!HasMatchingSchedule(kTypeAdvertisement, aDestination));
+    AddSchedule(kTypeAdvertisement, aDestination, aDelay, nullptr, 0);
+
+exit:
+    return;
+}
+
 void Mle::DelayedSender::ScheduleMulticastDataResponse(uint16_t aDelay)
 {
     Ip6::Address destination;
@@ -4663,6 +4672,10 @@ void Mle::DelayedSender::Execute(const Schedule &aSchedule)
         Get<MleRouter>().SendParentResponse(info);
         break;
     }
+
+    case kTypeAdvertisement:
+        Get<MleRouter>().SendAdvertisement(header.mDestination);
+        break;
 
     case kTypeDataResponse:
         Get<MleRouter>().SendMulticastDataResponse();

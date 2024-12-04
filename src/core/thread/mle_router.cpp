@@ -486,7 +486,7 @@ void MleRouter::HandleAdvertiseTrickleTimer(void)
 {
     VerifyOrExit(IsRouterEligible(), mAdvertiseTrickleTimer.Stop());
 
-    SendAdvertisement();
+    SendMulticastAdvertisement();
 
 exit:
     return;
@@ -534,11 +534,27 @@ exit:
     return;
 }
 
-void MleRouter::SendAdvertisement(void)
+void MleRouter::SendMulticastAdvertisement(void)
 {
-    Error        error = kErrorNone;
     Ip6::Address destination;
-    TxMessage   *message = nullptr;
+
+    destination.SetToLinkLocalAllNodesMulticast();
+    SendAdvertisement(destination);
+}
+
+void MleRouter::ScheduleUnicastAdvertisementTo(const Router &aRouter)
+{
+    Ip6::Address destination;
+
+    destination.SetToLinkLocalAddress(aRouter.GetExtAddress());
+    mDelayedSender.ScheduleAdvertisement(destination,
+                                         Random::NonCrypto::GetUint32InRange(0, kMaxUnicastAdvertisementDelay));
+}
+
+void MleRouter::SendAdvertisement(const Ip6::Address &aDestination)
+{
+    Error      error   = kErrorNone;
+    TxMessage *message = nullptr;
 
     // Suppress MLE Advertisements when trying to attach to a better
     // partition. Without this, a candidate parent might incorrectly
@@ -574,10 +590,9 @@ void MleRouter::SendAdvertisement(void)
         OT_ASSERT(false);
     }
 
-    destination.SetToLinkLocalAllNodesMulticast();
-    SuccessOrExit(error = message->SendTo(destination));
+    SuccessOrExit(error = message->SendTo(aDestination));
 
-    Log(kMessageSend, kTypeAdvertisement, destination);
+    Log(kMessageSend, kTypeAdvertisement, aDestination);
 
 exit:
     FreeMessageOnError(message, error);
@@ -1548,7 +1563,7 @@ void MleRouter::HandleTimeTick(void)
 
             if (!mAdvertiseTrickleTimer.IsRunning())
             {
-                SendAdvertisement();
+                SendMulticastAdvertisement();
 
                 mAdvertiseTrickleTimer.Start(TrickleTimer::kModePlainTimer, kReedAdvIntervalMin, kReedAdvIntervalMax);
             }
@@ -3408,7 +3423,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message          *aMessage,
     // up the dissemination of the new Router ID to other routers.
     // This can also help with quicker link establishment with our
     // former parent and other routers.
-    SendAdvertisement();
+    SendMulticastAdvertisement();
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateChildIdRequest))
     {

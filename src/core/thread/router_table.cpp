@@ -596,6 +596,25 @@ void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighbor
                 neighbor->SetLinkQualityOut(linkQuality);
                 SignalTableChanged();
             }
+
+            // If the `aRouteTlv` indicates that the neighboring
+            // router claims to have no link to us (by setting its
+            // `GetLinkQualityOut()` towards us as `kLinkQuality0`),
+            // and we have previously established a link with it, and
+            // our two-way link quality to this router is at least
+            // `kLinkQuality2`, we schedule a unicast Advertisement to
+            // be sent to this neighbor. This helps expedite recovery
+            // from any temporary router link quality mismatch.
+            // Otherwise, the neighboring router will continue to
+            // advertise that it has no link to us until our next
+            // trickle timer-triggered Advertisement transmission
+            // (which can be up to 32 seconds later).
+
+            if (neighbor->IsStateValid() && (aRouteTlv.GetLinkQualityOut(index) == kLinkQuality0) &&
+                (neighbor->GetTwoWayLinkQuality() >= kLinkQuality2))
+            {
+                Get<Mle::MleRouter>().ScheduleUnicastAdvertisementTo(*neighbor);
+            }
         }
 
         break;
