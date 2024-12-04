@@ -237,6 +237,21 @@ typedef enum OT_MUST_USE_RESULT otError
     OT_ERROR_REJECTED = 37,
 
     /**
+     * The channel provided is not supported.
+     */
+    OT_ERROR_UNSUPPORTED_CHANNEL = 38,
+
+    /**
+     * The action didn't succeed because Thread is in Disabled state.
+     */
+    OT_ERROR_THREAD_DISABLED = 39,
+
+    /*
+     * The action didn't succeed because some precondition isn't satisfied.
+     */
+    OT_ERROR_FAILED_PRECONDITION = 40,
+
+    /**
      * The number of defined errors.
      */
     OT_NUM_ERRORS,
