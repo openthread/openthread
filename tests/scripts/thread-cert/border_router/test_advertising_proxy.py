@@ -80,12 +80,6 @@ class SingleHostAndService(thread_cert.TestCase):
         host.start(start_radvd=False)
         self.simulator.go(5)
 
-        # Reserve UDP ports to verify that SRP server can skip the unavailable
-        # ports correctly
-        server.reserve_udp_port(53535)
-        server.reserve_udp_port(53536)
-        server.reserve_udp_port(53537)
-
         self.assertEqual(server.srp_server_get_state(), 'disabled')
         server.srp_server_set_enabled(True)
         server.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
@@ -93,7 +87,6 @@ class SingleHostAndService(thread_cert.TestCase):
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', server.get_state())
         self.assertEqual(server.srp_server_get_state(), 'running')
-        self.assertNotIn(server.get_srp_server_port(), [53535, 53536, 53537])
 
         client.start()
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
