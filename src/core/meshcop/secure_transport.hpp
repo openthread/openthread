@@ -655,8 +655,9 @@ private:
     Ip6::MessageInfo            mMessageInfo;
     TransportSocket             mSocket;
     uint8_t                     mPsk[kPskMaxLength];
-    TimerMilliContext           mTimer;
     TimeMilli                   mTimerIntermediate;
+    TimeMilli                   mTimerFinish;
+    TimerMilliContext           mTimer;
     Callback<AutoCloseCallback> mAutoCloseCallback;
     Callback<ConnectedHandler>  mConnectedCallback;
     Callback<ReceiveHandler>    mReceiveCallback;
