@@ -226,6 +226,24 @@ Return the state of the radio.
 sleep
 ```
 
+### diag radio enable
+
+Enable radio interface and put it in receive mode.
+
+```bash
+> diag radio enable
+Done
+```
+
+### diag radio disable
+
+Disable radio interface.
+
+```bash
+> diag radio disable
+Done
+```
+
 ### diag rawpowersetting
 
 Show the raw power setting for diagnostics module.

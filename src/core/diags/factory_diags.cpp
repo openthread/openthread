@@ -621,6 +621,14 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
             break;
         }
     }
+    else if (StringMatch(aArgs[0], "enable"))
+    {
+        SuccessOrExit(error = Get<Radio>().Enable());
+    }
+    else if (StringMatch(aArgs[0], "disable"))
+    {
+        SuccessOrExit(error = Get<Radio>().Disable());
+    }
 
 exit:
     AppendErrorResult(error);
