@@ -852,7 +852,6 @@ class NeighborSolicitHeader : public Clearable<NeighborSolicitHeader>
 public:
     /**
      * Initializes the Neighbor Solicitation message header.
-     *
      */
     NeighborSolicitHeader(void);
 

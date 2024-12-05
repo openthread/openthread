@@ -130,7 +130,6 @@
  * timeout expires.
  *
  * Applicable only if periodic parent search feature is enabled (see `OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE`).
- *
  */
 #ifndef OPENTHREAD_CONFIG_PARENT_SEARCH_RESELECT_TIMEOUT
 #define OPENTHREAD_CONFIG_PARENT_SEARCH_RESELECT_TIMEOUT (90 * 60)
@@ -141,7 +140,6 @@
  *
  * Specifies the RSS margin over the current parent RSS for allowing selection of a neighboring router as a potential
  * new parent to attach to. Used on FTD child devices.
- *
  */
 #ifndef OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_MARGIN
 #define OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_MARGIN 7
