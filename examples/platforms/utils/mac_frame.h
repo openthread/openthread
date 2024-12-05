@@ -204,6 +204,16 @@ void otMacFrameProcessTransmitAesCcm(otRadioFrame *aFrame, const otExtAddress *a
 bool otMacFrameIsVersion2015(const otRadioFrame *aFrame);
 
 /**
+ * Returns whether the frame is an IEEE 802.15.4 Wake-up frame.
+ *
+ * @param[in]   aFrame   A pointer to the IEEE 802.15.4 frame.
+ *
+ * @retval TRUE   If this is a Wake-up frame.
+ * @retval FALSE  If this is not a Wake-up frame.
+ */
+bool otMacFrameIsWakeupFrame(const otRadioFrame *aFrame);
+
+/**
  * Generate Imm-Ack for @p aFrame.
  *
  * @param[in]    aFrame             A pointer to the frame.
