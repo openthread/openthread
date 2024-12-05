@@ -218,6 +218,26 @@ set radio from sleep to receive on channel 11
 status 0x00
 ```
 
+### diag radio receive \[async\] \<number\> \[lpr\]
+
+Set the radio to receive mode and receive a specified number of frames.
+
+- async: Use the non-blocking mode.
+- number: The number of frames expected to be received.
+- l: Show Lqi.
+- p: Show Psdu.
+- r: Show Rssi.
+
+```bash
+> diag radio receive 5 lpr
+0, rssi:-49, lqi:119, len:10, psdu:000102030405060771e
+1, rssi:-51, lqi:112, len:10, psdu:000102030405060771e
+2, rssi:-42, lqi:120, len:10, psdu:000102030405060771e
+3, rssi:-54, lqi:111, len:10, psdu:000102030405060771e
+4, rssi:-56, lqi:108, len:10, psdu:000102030405060771e
+Done
+```
+
 ### diag radio state
 
 Return the state of the radio.

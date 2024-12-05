@@ -177,6 +177,28 @@ private:
         RawPowerSetting mRawPowerSetting;
     };
 
+    struct ReceiveConfig
+    {
+        ReceiveConfig(void)
+            : mIsEnabled(false)
+            , mIsAsyncCommand(false)
+            , mShowRssi(true)
+            , mShowLqi(true)
+            , mShowPsdu(false)
+            , mReceiveCount(0)
+            , mNumFrames(0)
+        {
+        }
+
+        bool     mIsEnabled : 1;
+        bool     mIsAsyncCommand : 1;
+        bool     mShowRssi : 1;
+        bool     mShowLqi : 1;
+        bool     mShowPsdu : 1;
+        uint16_t mReceiveCount;
+        uint16_t mNumFrames;
+    };
+
     Error ParseCmd(char *aString, uint8_t &aArgsLength, char *aArgs[]);
     Error ProcessChannel(uint8_t aArgsLength, char *aArgs[]);
     Error ProcessFrame(uint8_t aArgsLength, char *aArgs[]);
@@ -198,6 +220,9 @@ private:
 
     Error GetRawPowerSetting(RawPowerSetting &aRawPowerSetting);
     Error GetPowerSettings(uint8_t aChannel, PowerSettings &aPowerSettings);
+    Error ParseReceiveConfigFormat(const char *aFormat, ReceiveConfig &aConfig);
+    Error RadioReceive(void);
+    void  OutputReceivedFrame(const otRadioFrame *aFrame);
 
     void TransmitPacket(void);
     void Output(const char *aFormat, ...);
@@ -223,6 +248,7 @@ private:
     bool          mDiagSendOn : 1;
 #endif
 
+    ReceiveConfig        mReceiveConfig;
     otDiagOutputCallback mOutputCallback;
     void                *mOutputContext;
 };
