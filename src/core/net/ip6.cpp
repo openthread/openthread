@@ -1086,6 +1086,11 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
 
     SuccessOrExit(error = header.ParseFrom(*aMessagePtr));
 
+    if (!aMessagePtr->IsOriginHostTrusted())
+    {
+        VerifyOrExit(!header.GetSource().IsLoopback() && !header.GetDestination().IsLoopback(), error = kErrorDrop);
+    }
+
     // Determine `forwardThread`, `forwardHost` and `receive`
     // based on the destination address.
 
