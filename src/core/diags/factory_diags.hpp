@@ -184,6 +184,9 @@ private:
     Error ProcessGpio(uint8_t aArgsLength, char *aArgs[]);
     Error ProcessPower(uint8_t aArgsLength, char *aArgs[]);
     Error ProcessRadio(uint8_t aArgsLength, char *aArgs[]);
+#if !OPENTHREAD_RADIO
+    Error ProcessLinkRaw(uint8_t aArgsLength, char *aArgs[]);
+#endif
     Error ProcessRepeat(uint8_t aArgsLength, char *aArgs[]);
     Error ProcessPowerSettings(uint8_t aArgsLength, char *aArgs[]);
     Error ProcessRawPowerSetting(uint8_t aArgsLength, char *aArgs[]);

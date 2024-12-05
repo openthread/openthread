@@ -186,6 +186,9 @@ const struct Diags::Command Diags::sCommands[] = {
     {"powersettings", &Diags::ProcessPowerSettings},
     {"rawpowersetting", &Diags::ProcessRawPowerSetting},
     {"radio", &Diags::ProcessRadio},
+#if !OPENTHREAD_RADIO
+    {"linkraw", &Diags::ProcessLinkRaw},
+#endif
     {"repeat", &Diags::ProcessRepeat},
     {"send", &Diags::ProcessSend},
     {"start", &Diags::ProcessStart},
@@ -649,6 +652,34 @@ exit:
 }
 
 #endif // OPENTHREAD_RADIO
+
+#if !OPENTHREAD_RADIO
+Error Diags::ProcessLinkRaw(uint8_t aArgsLength, char *aArgs[])
+{
+    Error error = kErrorNone;
+
+    if (aArgsLength == 0)
+    {
+        Output("raw link is %s\r\n", otPlatRadioIsEnabled(&GetInstance()) ? "enabled" : "disabled");
+    }
+    else if (strcmp(aArgs[0], "start") == 0)
+    {
+        error = otPlatRadioEnable(&GetInstance());
+        Output("raw link started\r\n");
+    }
+    else if (strcmp(aArgs[0], "stop") == 0)
+    {
+        error = otPlatRadioEnable(&GetInstance());
+        Output("raw link stopped\r\n");
+    }
+    else
+    {
+        error = kErrorInvalidCommand;
+    }
+
+    return error;
+}
+#endif // !OPENTHREAD_RADIO
 
 Error Diags::ProcessContinuousWave(uint8_t aArgsLength, char *aArgs[])
 {
