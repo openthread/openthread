@@ -2097,7 +2097,6 @@ enum
     /** Format: `S`
      *
      * The 802.15.4 alternate short address.
-     *
      */
     SPINEL_PROP_MAC_15_4_ALT_SADDR = SPINEL_PROP_MAC__BEGIN + 12,
 

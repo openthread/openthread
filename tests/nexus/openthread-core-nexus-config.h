@@ -28,7 +28,6 @@
 
 /**
  * This header file defines the OpenThread core configuration for Nexus simulation
- *
  */
 
 #ifndef OT_CORE_NEXUS_CONFIG_H_
