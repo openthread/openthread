@@ -91,7 +91,6 @@ SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwo
     , mReceiveMessage(nullptr)
     , mSocket(aInstance, *this)
     , mTimer(aInstance, SecureTransport::HandleTimer, this)
-    , mTimerIntermediate(0)
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
     , mExtension(nullptr)
 #endif
@@ -582,23 +581,30 @@ int SecureTransport::HandleMbedtlsGetTimer(void *aContext)
 
 int SecureTransport::HandleMbedtlsGetTimer(void)
 {
-    int rval;
+    int rval = 0;
+
+    // `mbedtls_ssl_get_timer_t` return values:
+    //   -1 if cancelled
+    //    0 if none of the delays have passed,
+    //    1 if only the intermediate delay has passed,
+    //    2 if the final delay has passed.
 
     if (!mTimerSet)
     {
         rval = -1;
     }
-    else if (!mTimer.IsRunning())
-    {
-        rval = 2;
-    }
-    else if (mTimerIntermediate <= TimerMilli::GetNow())
-    {
-        rval = 1;
-    }
     else
     {
-        rval = 0;
+        TimeMilli now = TimerMilli::GetNow();
+
+        if (now >= mTimerFinish)
+        {
+            rval = 2;
+        }
+        else if (now >= mTimerIntermediate)
+        {
+            rval = 1;
+        }
     }
 
     return rval;
@@ -618,9 +624,13 @@ void SecureTransport::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFi
     }
     else
     {
-        mTimerSet = true;
-        mTimer.Start(aFinish);
-        mTimerIntermediate = TimerMilli::GetNow() + aIntermediate;
+        TimeMilli now = TimerMilli::GetNow();
+
+        mTimerSet          = true;
+        mTimerIntermediate = now + aIntermediate;
+        mTimerFinish       = now + aFinish;
+
+        mTimer.FireAt(mTimerFinish);
     }
 }
 
