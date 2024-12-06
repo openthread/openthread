@@ -74,6 +74,35 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL_WED
+ *
+ * The supervision interval in the units of 100 milliseconds to use in a Wake-up End Device when it is attached to
+ * a Wake-up Parent.
+ *
+ * Child supervision feature provides a mechanism for parent to ensure that a message is sent to each sleepy child
+ * within the supervision interval. If there is no transmission to the child within the supervision interval, child
+ * supervisor will enqueue and send a supervision message (a data message with empty payload) to the child.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL_WED
+#define OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL_WED 2
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CHILD_SUPERVISION_CHECK_TIMEOUT
+ *
+ * The supervision check timeout in the units of 100 milliseconds to use in a Wake-up End Device when it is attached to
+ * a Wake-up Parent.
+ *
+ * If the WED does not hear from the Wake-up Parent within the specified timeout interval, it tears down the current
+ * link and it may restart listening for wake-up frames.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CHILD_SUPERVISION_CHECK_TIMEOUT_WED
+#define OPENTHREAD_CONFIG_CHILD_SUPERVISION_CHECK_TIMEOUT_WED 20
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CHILD_SUPERVISION_OLDER_VERSION_CHILD_DEFAULT_INTERVAL
  *
  * Specifies the default supervision interval to use on parent for children that do not explicitly indicate their

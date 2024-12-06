@@ -43,6 +43,7 @@ RegisterLogModule("ChildSupervsn");
 
 ChildSupervisor::ChildSupervisor(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mShortIntervalTimer(aInstance)
 {
 }
 
@@ -86,9 +87,17 @@ exit:
     return;
 }
 
-void ChildSupervisor::UpdateOnSend(Child &aChild) { aChild.ResetSecondsSinceLastSupervision(); }
+void ChildSupervisor::UpdateOnSend(Child &aChild) { aChild.ResetUnitsSinceLastSupervision(); }
 
-void ChildSupervisor::HandleTimeTick(void)
+void ChildSupervisor::HandleTimeTick(void) { UpdateUnitsSinceLastSupervision(false); }
+
+void ChildSupervisor::HandleShortIntervalTimer(void)
+{
+    UpdateUnitsSinceLastSupervision(true);
+    mShortIntervalTimer.Start(kShortSupervisionUnitMs);
+}
+
+void ChildSupervisor::UpdateUnitsSinceLastSupervision(bool aShortInterval)
 {
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
@@ -97,9 +106,14 @@ void ChildSupervisor::HandleTimeTick(void)
             continue;
         }
 
-        child.IncrementSecondsSinceLastSupervision();
+        if (child.IsShortSupervisionInterval() != aShortInterval)
+        {
+            continue;
+        }
 
-        if (child.GetSecondsSinceLastSupervision() >= child.GetSupervisionInterval())
+        child.IncrementUnitsSinceLastSupervision();
+
+        if (child.GetUnitsSinceLastSupervision() >= child.GetSupervisionInterval())
         {
             SendMessage(child);
         }
@@ -108,11 +122,23 @@ void ChildSupervisor::HandleTimeTick(void)
 
 void ChildSupervisor::CheckState(void)
 {
-    // Child Supervision should run if Thread MLE operation is
-    // enabled, and there is at least one "valid" child in the
+    // Child Supervision should run if Thread MLE operation is enabled, and there is at least one "valid" child in the
     // child table.
+    //
+    // The short interval timer, which is fired every 100 ms, should run if there is at least one "valid" child that
+    // has included Short Supervision Interval TLV in the Parent Request message.
 
-    bool shouldRun = (!Get<Mle::Mle>().IsDisabled() && Get<ChildTable>().HasChildren(Child::kInStateValid));
+    bool shouldRun                   = false;
+    bool shouldRunShortIntervalTimer = false;
+
+    if (!Get<Mle::Mle>().IsDisabled())
+    {
+        for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
+        {
+            shouldRun = true;
+            shouldRunShortIntervalTimer |= child.IsShortSupervisionInterval();
+        }
+    }
 
     if (shouldRun && !Get<TimeTicker>().IsReceiverRegistered(TimeTicker::kChildSupervisor))
     {
@@ -124,6 +150,18 @@ void ChildSupervisor::CheckState(void)
     {
         Get<TimeTicker>().UnregisterReceiver(TimeTicker::kChildSupervisor);
         LogInfo("Stopping Child Supervision");
+    }
+
+    if (shouldRunShortIntervalTimer && !mShortIntervalTimer.IsRunning())
+    {
+        mShortIntervalTimer.Start(kShortSupervisionUnitMs);
+        LogInfo("Starting short interval timer");
+    }
+
+    if (!shouldRunShortIntervalTimer && mShortIntervalTimer.IsRunning())
+    {
+        mShortIntervalTimer.Stop();
+        LogInfo("Stopping short interval timer");
     }
 }
 
