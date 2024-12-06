@@ -48,6 +48,7 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
     message.SetOffset(0);
     message.SetDatagramTag(0);
     message.SetTimestampToNow();
+   
     mSendQueue.Enqueue(message);
 
     switch (message.GetType())
@@ -87,12 +88,33 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
                         mIndirectSender.AddMessageForSleepyChild(message, child);
                     }
                 }
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+                if (destinedForAll)
+                {
+                    CslNeighbor *cslNeighbor = Get<Mle::Mle>().GetWakeupParent();
+
+                    if ((cslNeighbor != nullptr) && cslNeighbor->IsCslSynchronized())
+                    {
+                        mIndirectSender.AddMessageForEnhCslNeighbor(message, *cslNeighbor);
+                    }
+                }   
+#endif
             }
         }
         else // Destination is unicast
         {
             Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(destination);
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+            CslNeighbor *cslNeighbor = Get<Mle::Mle>().GetWakeupParent();
+
+            if ((neighbor == nullptr) && (cslNeighbor != nullptr) && cslNeighbor->IsCslSynchronized())
+            {
+                mIndirectSender.AddMessageForEnhCslNeighbor(message, *cslNeighbor);
+            }
+            else
+#endif
             if ((neighbor != nullptr) && !neighbor->IsRxOnWhenIdle() && !message.IsDirectTransmission() &&
                 Get<ChildTable>().Contains(*neighbor))
             {

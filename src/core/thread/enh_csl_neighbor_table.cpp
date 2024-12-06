@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2024, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,67 +28,35 @@
 
 /**
  * @file
- *   This file implements MTD-specific mesh forwarding of IPv6/6LoWPAN messages.
+ *   This file includes definitions for enhanced CSL neighbor table.
  */
 
-#include "mesh_forwarder.hpp"
+#include "enh_csl_neighbor_table.hpp"
 
-#if OPENTHREAD_MTD
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 #include "instance/instance.hpp"
 
 namespace ot {
 
-void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
+CslNeighborTable::CslNeighborTable(Instance &aInstance)
 {
-    Message &message = *aMessagePtr.Release();
-
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    CslNeighbor *cslNeighbor = Get<Mle::Mle>().GetWakeupParent();
-
-    if ((cslNeighbor != nullptr) && cslNeighbor->IsCslSynchronized())
+    for (CslNeighbor &cslNeighbor : mCslNeighbors)
     {
-        mIndirectSender.AddMessageForEnhCslNeighbor(message, *cslNeighbor);
+        cslNeighbor.Init(aInstance);
     }
-    else
-#endif
-    {
-        message.SetDirectTransmission();
-        message.SetOffset(0);
-        message.SetDatagramTag(0);
-        message.SetTimestampToNow();
-    }
-
-    mSendQueue.Enqueue(message);
-    mScheduleTransmissionTask.Post();
-
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-    ApplyDirectTxQueueLimit(message);
-#endif
 }
 
-Error MeshForwarder::EvictMessage(Message::Priority aPriority)
+CslNeighbor *CslNeighborTable::GetNewCslNeighbor(void)
 {
-    Error    error = kErrorNotFound;
-    Message *message;
+    return mCslNeighbors;
+}
 
-#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-    error = RemoveAgedMessages();
-    VerifyOrExit(error == kErrorNotFound);
-#endif
-
-    VerifyOrExit((message = mSendQueue.GetTail()) != nullptr);
-
-    if (message->GetPriority() < static_cast<uint8_t>(aPriority))
-    {
-        FinalizeAndRemoveMessage(*message, kErrorNoBufs, kMessageEvict);
-        ExitNow(error = kErrorNone);
-    }
-
-exit:
-    return error;
+CslNeighbor *CslNeighborTable::GetFirstCslNeighbor(void)
+{
+    return mCslNeighbors;
 }
 
 } // namespace ot
 
-#endif // OPENTHREAD_MTD
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE

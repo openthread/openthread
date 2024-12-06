@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2024, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,67 +28,62 @@
 
 /**
  * @file
- *   This file implements MTD-specific mesh forwarding of IPv6/6LoWPAN messages.
+ *   This file includes definitions for the CSL neighbors table.
  */
 
-#include "mesh_forwarder.hpp"
+#ifndef ENH_CSL_NEIGHBOR_TABLE_HPP_
+#define ENH_CSL_NEIGHBOR_TABLE_HPP_
 
-#if OPENTHREAD_MTD
+#include "openthread-core-config.h"
 
-#include "instance/instance.hpp"
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
+#include "common/const_cast.hpp"
+#include "common/iterator_utils.hpp"
+#include "common/locator.hpp"
+#include "common/non_copyable.hpp"
+#include "thread/neighbor.hpp"
 
 namespace ot {
 
-void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
+/**
+ * Represents the CSL neighbors table.
+ */
+class CslNeighborTable : private NonCopyable
 {
-    Message &message = *aMessagePtr.Release();
+public:
+    /**
+     * Initializes a `CslNeighborTable` instance.
+     *
+     * @param[in]  aInstance     A reference to the OpenThread instance.
+     */
+    explicit CslNeighborTable(Instance &aInstance);
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    CslNeighbor *cslNeighbor = Get<Mle::Mle>().GetWakeupParent();
+    /**
+     * Gets a new/unused `CslNeighbor` entry from the enhanced CSL neighbor table.
+     *
+     * @note The returned neighbor entry will be cleared (`memset` to zero).
+     *
+     * @returns A pointer to a new `CslNeighbor` entry, or `nullptr` if all `CslNeighbor` entries are in use.
+     */
+    CslNeighbor *GetNewCslNeighbor(void);
 
-    if ((cslNeighbor != nullptr) && cslNeighbor->IsCslSynchronized())
-    {
-        mIndirectSender.AddMessageForEnhCslNeighbor(message, *cslNeighbor);
-    }
-    else
-#endif
-    {
-        message.SetDirectTransmission();
-        message.SetOffset(0);
-        message.SetDatagramTag(0);
-        message.SetTimestampToNow();
-    }
+    /**
+     * Gets the first `CslNeighbor` entry in the enhanced CSL neighbor table.
+     *
+     * @returns A pointer to the first `CslNeighbor` entry, or `nullptr` if the table is empty.
+     */
+    CslNeighbor *GetFirstCslNeighbor(void);
 
-    mSendQueue.Enqueue(message);
-    mScheduleTransmissionTask.Post();
+private:
+    // static constexpr uint16_t kMaxCslNeighbors = OPENTHREAD_CONFIG_MLE_MAX_ENH_CSL_NEIGHBORS;
+    static constexpr uint16_t kMaxCslNeighbors = 1;
 
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-    ApplyDirectTxQueueLimit(message);
-#endif
-}
-
-Error MeshForwarder::EvictMessage(Message::Priority aPriority)
-{
-    Error    error = kErrorNotFound;
-    Message *message;
-
-#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-    error = RemoveAgedMessages();
-    VerifyOrExit(error == kErrorNotFound);
-#endif
-
-    VerifyOrExit((message = mSendQueue.GetTail()) != nullptr);
-
-    if (message->GetPriority() < static_cast<uint8_t>(aPriority))
-    {
-        FinalizeAndRemoveMessage(*message, kErrorNoBufs, kMessageEvict);
-        ExitNow(error = kErrorNone);
-    }
-
-exit:
-    return error;
-}
+    CslNeighbor    mCslNeighbors[kMaxCslNeighbors];
+};
 
 } // namespace ot
 
-#endif // OPENTHREAD_MTD
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
+#endif // ENH_CSL_NEIGHBOR_TABLE_HPP_
