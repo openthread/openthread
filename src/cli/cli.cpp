@@ -596,24 +596,37 @@ exit:
 
 void Interpreter::OutputBorderAgentCounters(const otBorderAgentCounters &aCounters)
 {
+    struct BaCounterName
+    {
+        const uint32_t otBorderAgentCounters::*mValuePtr;
+        const char                            *mName;
+    };
+
+    static const BaCounterName kBaCounterNames[] = {
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    OutputLine("epskcActivation: %lu ", ToUlong(aCounters.mEpskcActivations));
-    OutputLine("epskcApiDeactivation: %lu ", ToUlong(aCounters.mEpskcDeactivationClears));
-    OutputLine("epskcTimeoutDeactivation: %lu ", ToUlong(aCounters.mEpskcDeactivationTimeouts));
-    OutputLine("epskcMaxAttemptDeactivation: %lu ", ToUlong(aCounters.mEpskcDeactivationMaxAttempts));
-    OutputLine("epskcDisconnectDeactivation: %lu ", ToUlong(aCounters.mEpskcDeactivationDisconnects));
-    OutputLine("epskcInvalidBaStateError: %lu ", ToUlong(aCounters.mEpskcInvalidBaStateErrors));
-    OutputLine("epskcInvalidArgsError: %lu ", ToUlong(aCounters.mEpskcInvalidArgsErrors));
-    OutputLine("epskcStartSecureSessionError: %lu ", ToUlong(aCounters.mEpskcStartSecureSessionErrors));
-    OutputLine("epskcSecureSessionSuccess: %lu ", ToUlong(aCounters.mEpskcSecureSessionSuccesses));
-    OutputLine("epskcSecureSessionFailure: %lu ", ToUlong(aCounters.mEpskcSecureSessionFailures));
-    OutputLine("epskcCommissionerPetition: %lu ", ToUlong(aCounters.mEpskcCommissionerPetitions));
+        {&otBorderAgentCounters::mEpskcActivations, "epskcActivation"},
+        {&otBorderAgentCounters::mEpskcDeactivationClears, "epskcApiDeactivation"},
+        {&otBorderAgentCounters::mEpskcDeactivationTimeouts, "epskcTimeoutDeactivation"},
+        {&otBorderAgentCounters::mEpskcDeactivationMaxAttempts, "epskcMaxAttemptDeactivation"},
+        {&otBorderAgentCounters::mEpskcDeactivationDisconnects, "epskcDisconnectDeactivation"},
+        {&otBorderAgentCounters::mEpskcInvalidBaStateErrors, "epskcInvalidBaStateError"},
+        {&otBorderAgentCounters::mEpskcInvalidArgsErrors, "epskcInvalidArgsError"},
+        {&otBorderAgentCounters::mEpskcStartSecureSessionErrors, "epskcStartSecureSessionError"},
+        {&otBorderAgentCounters::mEpskcSecureSessionSuccesses, "epskcSecureSessionSuccess"},
+        {&otBorderAgentCounters::mEpskcSecureSessionFailures, "epskcSecureSessionFailure"},
+        {&otBorderAgentCounters::mEpskcCommissionerPetitions, "epskcCommissionerPetition"},
 #endif
-    OutputLine("pskcSecureSessionSuccess: %lu ", ToUlong(aCounters.mPskcSecureSessionSuccesses));
-    OutputLine("pskcSecureSessionFailure: %lu ", ToUlong(aCounters.mPskcSecureSessionFailures));
-    OutputLine("pskcCommissionerPetition: %lu ", ToUlong(aCounters.mPskcCommissionerPetitions));
-    OutputLine("mgmtActiveGet: %lu ", ToUlong(aCounters.mMgmtActiveGets));
-    OutputLine("mgmtPendingGet: %lu", ToUlong(aCounters.mMgmtPendingGets));
+        {&otBorderAgentCounters::mPskcSecureSessionSuccesses, "pskcSecureSessionSuccess"},
+        {&otBorderAgentCounters::mPskcSecureSessionFailures, "pskcSecureSessionFailure"},
+        {&otBorderAgentCounters::mPskcCommissionerPetitions, "pskcCommissionerPetition"},
+        {&otBorderAgentCounters::mMgmtActiveGets, "mgmtActiveGet"},
+        {&otBorderAgentCounters::mMgmtPendingGets, "mgmtPendingGet"},
+    };
+
+    for (const BaCounterName &counter : kBaCounterNames)
+    {
+        OutputLine("%s: %lu", counter.mName, ToUlong(aCounters.*counter.mValuePtr));
+    }
 }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
