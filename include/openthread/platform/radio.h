@@ -283,6 +283,17 @@ typedef struct otRadioFrame
             uint8_t mMaxFrameRetries; ///< Maximum number of retries allowed after a transmission failure.
 
             /**
+             * Specifies the time window (in milliseconds) to allow additional frame transmission attempts on CSMA
+             * failure, even if `mMaxFrameRetries` has been reached.
+             *
+             * Radio platforms that do not provide `OT_RADIO_CAPS_TRANSMIT_RETRIES` can ignore this field.
+             *
+             * If a CSMA failure occurs and `mMaxFrameRetries` has been reached, the frame will still be retried as
+             * long as the elapsed time since the first transmission attempt is within the `mCsmaRetryWindow`.
+             */
+            uint16_t mCsmaRetryWindow;
+
+            /**
              * The RX channel after frame TX is done (after all frame retries - ack received, or timeout, or abort).
              *
              * Radio platforms can choose to fully ignore this. OT stack will make sure to call `otPlatRadioReceive()`

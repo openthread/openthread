@@ -170,6 +170,7 @@ public:
         mTxFrame802154.SetIsSecurityProcessed(false);
         mTxFrame802154.SetCsmaCaEnabled(true); // Set to true by default, only set to `false` for CSL transmission
         mTxFrame802154.SetIsHeaderUpdated(false);
+        mTxFrame802154.SetCsmaRetryWindow(0);
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         mTxFrame802154.SetTxDelay(0);
         mTxFrame802154.SetTxDelayBaseTime(0);
@@ -185,6 +186,7 @@ public:
         mTxFrameTrel.SetIsSecurityProcessed(false);
         mTxFrameTrel.SetCsmaCaEnabled(true);
         mTxFrameTrel.SetIsHeaderUpdated(false);
+        mTxFrameTrel.SetCsmaRetryWindow(0);
 #endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -252,6 +254,24 @@ public:
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
         mTxFrameTrel.SetMaxFrameRetries(aMaxFrameRetries);
+#endif
+    }
+
+    /**
+     * Sets the CSMA frame retry window (in milliseconds) for allowing additional tx attempts on CSMA failure, even
+     * if the maximum retry count (`GetMaxFrameRetries()`) has been reached.
+     *
+     * Can be set to zero to disable this behavior.
+     *
+     * @param[in] aWinodw  The new CSMA retry window (in msec).
+     */
+    void SetCsmaRetryWindow(uint16_t aWindow)
+    {
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+        mTxFrame802154.SetCsmaRetryWindow(aWindow);
+#endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+        mTxFrameTrel.SetCsmaRetryWindow(aWindow);
 #endif
     }
 

@@ -346,6 +346,7 @@ Error SubMac::Send(void)
 
     mCsmaBackoffs    = 0;
     mTransmitRetries = 0;
+    mTxStartTime     = TimerMilli::GetNow();
 
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     mRetxDelayBackOffExponent = kRetxDelayMinBackoffExponent;
@@ -582,13 +583,37 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
 
     // Determine whether to re-transmit the frame.
 
-    shouldRetx = ((aError != kErrorNone) && ShouldHandleRetries() && (mTransmitRetries < aFrame.GetMaxFrameRetries()));
+    shouldRetx = false;
+
+    if ((aError != kErrorNone) && ShouldHandleRetries())
+    {
+        shouldRetx = (mTransmitRetries < aFrame.GetMaxFrameRetries());
+
+        if (!shouldRetx && (aError == kErrorChannelAccessFailure))
+        {
+            // The CSMA backoff protocol introduces random wait times
+            // between channel access attempts. It's possible that
+            // all retries are exhausted within a short period when
+            // the channel is consistently busy. To avoid prematurely
+            // dropping frames due to channel congestion, we allow
+            // extra retries for CSMA failures even after reaching
+            // the maximum tx retry limit, if the time elapsed since
+            // the initial frame transmission is within the specified
+            // `GetCsmaRetryWindow()`.
+
+            shouldRetx = (TimerMilli::GetNow() - mTxStartTime < aFrame.GetCsmaRetryWindow());
+        }
+    }
 
     mCallbacks.RecordFrameTransmitStatus(aFrame, aError, mTransmitRetries, shouldRetx);
 
     if (shouldRetx)
     {
-        mTransmitRetries++;
+        if (mTransmitRetries != NumericLimits<uint8_t>::kMax)
+        {
+            mTransmitRetries++;
+        }
+
         aFrame.SetIsARetransmission(true);
 
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY

@@ -1144,6 +1144,27 @@ public:
     void SetMaxFrameRetries(uint8_t aMaxFrameRetries) { mInfo.mTxInfo.mMaxFrameRetries = aMaxFrameRetries; }
 
     /**
+     * Returns the CSMA frame retry window (in milliseconds) for allowing additional tx attempts on CSMA failure, even
+     * if the maximum retry count (`GetMaxFrameRetries()`) has been reached.
+     *
+     * If a CSMA failure occurs and the maximum retry count has been reached, the frame will still be retried as
+     * long as the elapsed time since the initial transmission attempt is within this window.
+     *
+     * @return The CSMA retry window in milliseconds.
+     */
+    uint16_t GetCsmaRetryWindow(void) const { return mInfo.mTxInfo.mCsmaRetryWindow; }
+
+    /**
+     * Sets the CSMA frame retry window (in milliseconds) for allowing additional tx attempts on CSMA failure, even
+     * if the maximum retry count (`GetMaxFrameRetries()`) has been reached.
+     *
+     * Can be set to zero to disable this behavior.
+     *
+     * @param[in] aWinodw  The new CSMA retry window (in msec).
+     */
+    void SetCsmaRetryWindow(uint16_t aWindow) { mInfo.mTxInfo.mCsmaRetryWindow = aWindow; }
+
+    /**
      * Indicates whether or not the frame is a retransmission.
      *
      * @retval TRUE   Frame is a retransmission
