@@ -80,13 +80,17 @@ Done
 
 ### diag frame
 
-Usage: `diag frame [-c] [-p TX_POWER] [-s] <frame>`
+Usage: `diag frame [-b MaxCsmaBackoffs] [-c] [-C RxChannelAfterTxDone] [-d TxDelay] [-p TxPower] [-r MaxFrameRetries] [-s] <frame>`
 
 Set the frame (hex encoded) to be used by `diag send` and `diag repeat`. The frame may be overwritten by `diag send` and `diag repeat`.
 
-- Specify `-s` to indicate that tx security is already processed so that it should be skipped in the radio layer.
+- Specify `-b` to specify the `mInfo.mTxInfo.mMaxCsmaBackoffs` field for this frame.
 - Specify `-c` to enable CSMA/CA for this frame in the radio layer.
+- Specify `-C` to specify the `mInfo.mTxInfo.mRxChannelAfterTxDone` field for this frame.
+- Specify `-d` to specify the `mInfo.mTxInfo.mTxDelay` field for this frame and the `mInfo.mTxInfo.mTxDelayBaseTime` field is set to the current radio time.
 - Specify `-p` to specify the tx power in dBm for this frame.
+- Specify `-r` to specify the `mInfo.mTxInfo.mMaxFrameRetries` field for this frame.
+- Specify `-s` to indicate that tx security is already processed thus it should be skipped in the radio layer.
 
 ```bash
 > diag frame 11223344
