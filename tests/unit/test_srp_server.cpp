@@ -1076,7 +1076,7 @@ void TestSrpClientDelayedResponse(void)
 
         sServerRxCount = 0;
 
-        SuccessOrQuit(udpSocket.Open(Ip6::kNetifThreadHost));
+        SuccessOrQuit(udpSocket.Open(Ip6::kNetifThreadInternal));
         SuccessOrQuit(udpSocket.Bind(kServerPort));
 
         //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
