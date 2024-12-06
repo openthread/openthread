@@ -598,18 +598,21 @@ public:
      *
      * @returns A reference to the MLE counters.
      */
-    const Counters &GetCounters(void)
-    {
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
-        UpdateRoleTimeCounters(mRole);
-#endif
-        return mCounters;
-    }
+    const Counters &GetCounters(void);
 
     /**
      * Resets the MLE counters.
      */
     void ResetCounters(void);
+
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    /**
+     * Determines the current attach duration (number of seconds since the device last attached).
+     *
+     * @returns Current attach duration in seconds.
+     */
+    uint32_t GetCurrentAttachDuration(void) const;
+#endif
 
 #if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
     /**
@@ -1477,10 +1480,11 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     uint32_t mCslTimeout;
 #endif
-    uint64_t mAlternateTimestamp;
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    uint32_t mLastAttachTime;
     uint64_t mLastUpdatedTimestamp;
 #endif
+    uint64_t mAlternateTimestamp;
 
     LeaderData      mLeaderData;
     Parent          mParent;

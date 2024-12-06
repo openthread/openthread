@@ -21,6 +21,7 @@ Done
 
 ## OpenThread Command List
 
+- [attachtime](#attachtime)
 - [ba](#ba)
 - [bbr](#bbr)
 - [br](README_BR.md)
@@ -136,6 +137,20 @@ Done
 - [wakeup](#wakeup-channel)
 
 ## OpenThread Command Details
+
+### attachtime
+
+Prints the attach time (duration since device was last attached).
+
+Requires `OPENTHREAD_CONFIG_UPTIME_ENABLE`.
+
+Duration is formatted as `{hh}:{mm}:{ss}` for hours, minutes, and seconds if it is less than one day. If the duration is longer than one day, the format is `{dd}d.{hh}:{mm}:{ss}`.
+
+```bash
+> attachtime
+01:38:25
+Done
+```
 
 ### bbr
 

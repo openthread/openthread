@@ -475,6 +475,13 @@ const otMleCounters *otThreadGetMleCounters(otInstance *aInstance)
 
 void otThreadResetMleCounters(otInstance *aInstance) { AsCoreType(aInstance).Get<Mle::MleRouter>().ResetCounters(); }
 
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+uint32_t otThreadGetCurrentAttachDuration(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetCurrentAttachDuration();
+}
+#endif
+
 #if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
 void otThreadRegisterParentResponseCallback(otInstance                    *aInstance,
                                             otThreadParentResponseCallback aCallback,

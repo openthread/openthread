@@ -240,6 +240,15 @@ exit:
     }
 }
 
+const Counters &Mle::GetCounters(void)
+{
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    UpdateRoleTimeCounters(mRole);
+#endif
+
+    return mCounters;
+}
+
 void Mle::ResetCounters(void)
 {
     ClearAllBytes(mCounters);
@@ -249,6 +258,12 @@ void Mle::ResetCounters(void)
 }
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
+
+uint32_t Mle::GetCurrentAttachDuration(void) const
+{
+    return IsAttached() ? Uptime::MsecToSec(Get<Uptime>().GetUptime()) - mLastAttachTime : 0;
+}
+
 void Mle::UpdateRoleTimeCounters(DeviceRole aRole)
 {
     uint64_t currentUptimeMsec = Get<Uptime>().GetUptime();
@@ -277,7 +292,8 @@ void Mle::UpdateRoleTimeCounters(DeviceRole aRole)
         break;
     }
 }
-#endif
+
+#endif // OPENTHREAD_CONFIG_UPTIME_ENABLE
 
 void Mle::SetRole(DeviceRole aRole)
 {
@@ -288,6 +304,11 @@ void Mle::SetRole(DeviceRole aRole)
     LogNote("Role %s -> %s", RoleToString(oldRole), RoleToString(mRole));
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    if ((oldRole == kRoleDetached) && IsAttached())
+    {
+        mLastAttachTime = Uptime::MsecToSec(Get<Uptime>().GetUptime());
+    }
+
     UpdateRoleTimeCounters(oldRole);
 #endif
 
