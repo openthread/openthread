@@ -204,6 +204,8 @@ private:
     void AppendErrorResult(Error aError);
     void ResetTxPacket(void);
 
+    static bool IsChannelValid(uint8_t aChannel);
+
     static const struct Command sCommands[];
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD || (OPENTHREAD_RADIO && OPENTHREAD_RADIO_CLI)

@@ -88,7 +88,7 @@ Error Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
     VerifyOrExit(aArgsLength == 1, error = kErrorInvalidArgs);
 
     SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(aArgs[0], channel));
-    VerifyOrExit(channel >= Radio::kChannelMin && channel <= Radio::kChannelMax, error = kErrorInvalidArgs);
+    VerifyOrExit(IsChannelValid(channel), error = kErrorInvalidArgs);
 
     otPlatDiagChannelSet(channel);
 
@@ -227,17 +227,48 @@ void Diags::ResetTxPacket(void)
 
 Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
 {
-    Error    error             = kErrorNone;
-    uint16_t size              = OT_RADIO_FRAME_MAX_SIZE;
-    bool     securityProcessed = false;
-    bool     csmaCaEnabled     = false;
-    int8_t   txPower           = OT_RADIO_POWER_INVALID;
+    Error    error                = kErrorNone;
+    uint16_t size                 = OT_RADIO_FRAME_MAX_SIZE;
+    bool     securityProcessed    = false;
+    bool     csmaCaEnabled        = false;
+    int8_t   txPower              = OT_RADIO_POWER_INVALID;
+    uint8_t  maxFrameRetries      = 0;
+    uint8_t  maxCsmaBackoffs      = 0;
+    uint8_t  rxChannelAfterTxDone = mChannel;
+    uint32_t txDelayBaseTime      = 0;
+    uint32_t txDelay              = 0;
 
     while (aArgsLength > 1)
     {
-        if (StringMatch(aArgs[0], "-s"))
+        if (StringMatch(aArgs[0], "-b"))
         {
-            securityProcessed = true;
+            aArgs++;
+            aArgsLength--;
+
+            VerifyOrExit(aArgsLength > 1, error = kErrorInvalidArgs);
+            SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(aArgs[0], maxCsmaBackoffs));
+        }
+        else if (StringMatch(aArgs[0], "-c"))
+        {
+            csmaCaEnabled = true;
+        }
+        else if (StringMatch(aArgs[0], "-C"))
+        {
+            aArgs++;
+            aArgsLength--;
+
+            VerifyOrExit(aArgsLength > 1, error = kErrorInvalidArgs);
+            SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(aArgs[0], rxChannelAfterTxDone));
+            VerifyOrExit(IsChannelValid(rxChannelAfterTxDone), error = kErrorInvalidArgs);
+        }
+        else if (StringMatch(aArgs[0], "-d"))
+        {
+            aArgs++;
+            aArgsLength--;
+
+            VerifyOrExit(aArgsLength > 1, error = kErrorInvalidArgs);
+            SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint32(aArgs[0], txDelay));
+            txDelayBaseTime = static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance()));
         }
         else if (StringMatch(aArgs[0], "-p"))
         {
@@ -247,9 +278,17 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
             VerifyOrExit(aArgsLength > 1, error = kErrorInvalidArgs);
             SuccessOrExit(error = Utils::CmdLineParser::ParseAsInt8(aArgs[0], txPower));
         }
-        else if (StringMatch(aArgs[0], "-c"))
+        else if (StringMatch(aArgs[0], "-r"))
         {
-            csmaCaEnabled = true;
+            aArgs++;
+            aArgsLength--;
+
+            VerifyOrExit(aArgsLength > 1, error = kErrorInvalidArgs);
+            SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(aArgs[0], maxFrameRetries));
+        }
+        else if (StringMatch(aArgs[0], "-s"))
+        {
+            securityProcessed = true;
         }
         else
         {
@@ -267,11 +306,16 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
     VerifyOrExit(size >= OT_RADIO_FRAME_MIN_SIZE, error = kErrorInvalidArgs);
 
     ResetTxPacket();
-    mTxPacket->mInfo.mTxInfo.mCsmaCaEnabled       = csmaCaEnabled;
-    mTxPacket->mInfo.mTxInfo.mIsSecurityProcessed = securityProcessed;
-    mTxPacket->mInfo.mTxInfo.mTxPower             = txPower;
-    mTxPacket->mLength                            = size;
-    mIsTxPacketSet                                = true;
+    mTxPacket->mInfo.mTxInfo.mCsmaCaEnabled        = csmaCaEnabled;
+    mTxPacket->mInfo.mTxInfo.mIsSecurityProcessed  = securityProcessed;
+    mTxPacket->mInfo.mTxInfo.mTxPower              = txPower;
+    mTxPacket->mInfo.mTxInfo.mTxDelayBaseTime      = txDelayBaseTime;
+    mTxPacket->mInfo.mTxInfo.mTxDelay              = txDelay;
+    mTxPacket->mInfo.mTxInfo.mMaxFrameRetries      = maxFrameRetries;
+    mTxPacket->mInfo.mTxInfo.mMaxCsmaBackoffs      = maxCsmaBackoffs;
+    mTxPacket->mInfo.mTxInfo.mRxChannelAfterTxDone = rxChannelAfterTxDone;
+    mTxPacket->mLength                             = size;
+    mIsTxPacketSet                                 = true;
 
 exit:
     AppendErrorResult(error);
@@ -293,7 +337,7 @@ Error Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
         uint8_t channel;
 
         SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(aArgs[0], channel));
-        VerifyOrExit(channel >= Radio::kChannelMin && channel <= Radio::kChannelMax, error = kErrorInvalidArgs);
+        VerifyOrExit(IsChannelValid(channel), error = kErrorInvalidArgs);
 
         mChannel = channel;
         IgnoreError(Get<Radio>().Receive(mChannel));
@@ -739,7 +783,7 @@ Error Diags::ProcessPowerSettings(uint8_t aArgsLength, char *aArgs[])
     else if (aArgsLength == 1)
     {
         SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(aArgs[0], channel));
-        VerifyOrExit(channel >= Radio::kChannelMin && channel <= Radio::kChannelMax, error = kErrorInvalidArgs);
+        VerifyOrExit(IsChannelValid(channel), error = kErrorInvalidArgs);
 
         SuccessOrExit(error = GetPowerSettings(channel, powerSettings));
         Output("TargetPower(0.01dBm): %d\r\nActualPower(0.01dBm): %d\r\nRawPowerSetting: %s\r\n",
@@ -846,6 +890,11 @@ void Diags::AppendErrorResult(Error aError)
     {
         Output("failed\r\nstatus %#x\r\n", aError);
     }
+}
+
+bool Diags::IsChannelValid(uint8_t aChannel)
+{
+    return (aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax);
 }
 
 Error Diags::ParseCmd(char *aString, uint8_t &aArgsLength, char *aArgs[])
