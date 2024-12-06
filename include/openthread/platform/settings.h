@@ -59,19 +59,20 @@ extern "C" {
  */
 enum
 {
-    OT_SETTINGS_KEY_ACTIVE_DATASET       = 0x0001, ///< Active Operational Dataset.
-    OT_SETTINGS_KEY_PENDING_DATASET      = 0x0002, ///< Pending Operational Dataset.
-    OT_SETTINGS_KEY_NETWORK_INFO         = 0x0003, ///< Thread network information.
-    OT_SETTINGS_KEY_PARENT_INFO          = 0x0004, ///< Parent information.
-    OT_SETTINGS_KEY_CHILD_INFO           = 0x0005, ///< Child information.
-    OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY = 0x0007, ///< SLAAC key to generate semantically opaque IID.
-    OT_SETTINGS_KEY_DAD_INFO             = 0x0008, ///< Duplicate Address Detection (DAD) information.
-    OT_SETTINGS_KEY_SRP_ECDSA_KEY        = 0x000b, ///< SRP client ECDSA public/private key pair.
-    OT_SETTINGS_KEY_SRP_CLIENT_INFO      = 0x000c, ///< The SRP client info (selected SRP server address).
-    OT_SETTINGS_KEY_SRP_SERVER_INFO      = 0x000d, ///< The SRP server info (UDP port).
-    OT_SETTINGS_KEY_BR_ULA_PREFIX        = 0x000f, ///< BR ULA prefix.
-    OT_SETTINGS_KEY_BR_ON_LINK_PREFIXES  = 0x0010, ///< BR local on-link prefixes.
-    OT_SETTINGS_KEY_BORDER_AGENT_ID      = 0x0011, ///< Unique Border Agent/Router ID.
+    OT_SETTINGS_KEY_ACTIVE_DATASET                = 0x0001, ///< Active Operational Dataset.
+    OT_SETTINGS_KEY_PENDING_DATASET               = 0x0002, ///< Pending Operational Dataset.
+    OT_SETTINGS_KEY_NETWORK_INFO                  = 0x0003, ///< Thread network information.
+    OT_SETTINGS_KEY_PARENT_INFO                   = 0x0004, ///< Parent information.
+    OT_SETTINGS_KEY_CHILD_INFO                    = 0x0005, ///< Child information.
+    OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY          = 0x0007, ///< SLAAC key to generate semantically opaque IID.
+    OT_SETTINGS_KEY_DAD_INFO                      = 0x0008, ///< Duplicate Address Detection (DAD) information.
+    OT_SETTINGS_KEY_SRP_ECDSA_KEY                 = 0x000b, ///< SRP client ECDSA public/private key pair.
+    OT_SETTINGS_KEY_SRP_CLIENT_INFO               = 0x000c, ///< The SRP client info (selected SRP server address).
+    OT_SETTINGS_KEY_SRP_SERVER_INFO               = 0x000d, ///< The SRP server info (UDP port).
+    OT_SETTINGS_KEY_BR_ULA_PREFIX                 = 0x000f, ///< BR ULA prefix.
+    OT_SETTINGS_KEY_BR_ON_LINK_PREFIXES           = 0x0010, ///< BR local on-link prefixes.
+    OT_SETTINGS_KEY_BORDER_AGENT_ID               = 0x0011, ///< Unique Border Agent/Router ID.
+    OT_SETTINGS_KEY_TCAT_COMMISSIONER_CERTIFICATE = 0x0012, ///< Unique TCAT Commissioner certificate.
 
     // Deprecated and reserved key values:
     //
