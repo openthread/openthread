@@ -494,7 +494,8 @@ private:
     static constexpr uint32_t kAdvIntervalMaxLogRoutes = 5000;
 #endif
 
-    static constexpr uint32_t kMaxNeighborAge                = 100000; // Max neighbor age (in msec)
+    static constexpr uint32_t kMaxNeighborAge                = 100000; // Max neighbor age on router (in msec)
+    static constexpr uint32_t kMaxNeighborAgeOnChild         = 150000; // Max neighbor age on FTD child (in msec)
     static constexpr uint32_t kMaxLeaderToRouterTimeout      = 90000;  // (in msec)
     static constexpr uint8_t  kMinDowngradeNeighbors         = 7;
     static constexpr uint8_t  kNetworkIdTimeout              = 120; // (in sec)
