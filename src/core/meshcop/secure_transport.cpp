@@ -470,22 +470,18 @@ exit:
     return error;
 }
 
-Error SecureTransport::Send(Message &aMessage, uint16_t aLength)
+Error SecureTransport::Send(Message &aMessage)
 {
-    Error   error = kErrorNone;
-    uint8_t buffer[kApplicationDataMaxLength];
+    Error    error  = kErrorNone;
+    uint16_t length = aMessage.GetLength();
+    uint8_t  buffer[kApplicationDataMaxLength];
 
-    VerifyOrExit(aLength <= kApplicationDataMaxLength, error = kErrorNoBufs);
+    VerifyOrExit(length <= sizeof(buffer), error = kErrorNoBufs);
 
-    // Store message specific sub type.
-    if (aMessage.GetSubType() != Message::kSubTypeNone)
-    {
-        mMessageSubType = aMessage.GetSubType();
-    }
+    mMessageSubType = aMessage.GetSubType();
+    aMessage.ReadBytes(0, buffer, length);
 
-    aMessage.ReadBytes(0, buffer, aLength);
-
-    SuccessOrExit(error = Crypto::MbedTls::MapError(mbedtls_ssl_write(&mSsl, buffer, aLength)));
+    SuccessOrExit(error = Crypto::MbedTls::MapError(mbedtls_ssl_write(&mSsl, buffer, length)));
 
     aMessage.Free();
 

@@ -468,18 +468,12 @@ void BleSecure::HandleTransmit(void)
         mTransmitTask.Post();
     }
 
-    SuccessOrExit(error = mTls.Send(*message, message->GetLength()));
+    SuccessOrExit(error = mTls.Send(*message));
+    LogDebg("Transmit");
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogNote("Transmit: %s", ErrorToString(error));
-        message->Free();
-    }
-    else
-    {
-        LogDebg("Transmit: %s", ErrorToString(error));
-    }
+    FreeMessageOnError(message, error);
+    LogWarnOnError(error, "transmit");
 }
 
 Error BleSecure::HandleTransport(void *aContext, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

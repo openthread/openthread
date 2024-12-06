@@ -481,15 +481,17 @@ public:
     Error SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
     /**
-     * Sends data within the session.
+     * Sends message to the secure session.
      *
-     * @param[in]  aMessage  A message to send via connection.
-     * @param[in]  aLength   Number of bytes in the data buffer.
+     * When successful (returning `kErrorNone`), this method takes over the ownership of @p aMessage and will free it
+     * after transmission. Otherwise, the caller keeps the ownership of @p aMessage.
      *
-     * @retval kErrorNone     Successfully sent the data via the session.
-     * @retval kErrorNoBufs   A message is too long.
+     * @param[in]  aMessage   A message to send.
+     *
+     * @retval kErrorNone     Successfully sent the message.
+     * @retval kErrorNoBufs   @p aMessage is too long.
      */
-    Error Send(Message &aMessage, uint16_t aLength);
+    Error Send(Message &aMessage);
 
     /**
      * Returns the session's peer address.
