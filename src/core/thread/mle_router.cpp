@@ -1348,7 +1348,8 @@ Error MleRouter::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddre
     // Send unicast link request if no link to router and no
     // unicast/multicast link request in progress
 
-    if (!router->IsStateValid() && !router->IsStateLinkRequest() && (linkMargin >= kLinkRequestMinMargin))
+    if (!router->IsStateValid() && !router->IsStateLinkRequest() && (linkMargin >= kLinkRequestMinMargin) &&
+        routeTlv.IsRouterIdSet(mRouterId))
     {
         InitNeighbor(*router, aRxInfo);
         router->SetState(Neighbor::kStateLinkRequest);
