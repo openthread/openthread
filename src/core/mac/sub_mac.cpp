@@ -445,7 +445,7 @@ void SubMac::StartCsmaBackoff(void)
 
     SetState(kStateCsmaBackoff);
 
-    VerifyOrExit(ShouldHandleCsmaBackOff(), BeginTransmit());
+    VerifyOrExit(mTransmitFrame.GetMaxCsmaBackoffs() > 0 && ShouldHandleCsmaBackOff(), BeginTransmit());
 
     backoffExponent = Min(backoffExponent, kCsmaMaxBe);
 
