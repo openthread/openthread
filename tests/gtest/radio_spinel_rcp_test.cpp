@@ -225,8 +225,9 @@ TEST(RadioSpinelTransmit, shouldPerformCsmaCaWhenEnabled)
         frameInfo.PrepareHeadersIn(txFrame);
     }
 
-    txFrame.mInfo.mTxInfo.mCsmaCaEnabled = true;
-    txFrame.mChannel                     = 11;
+    txFrame.mInfo.mTxInfo.mCsmaCaEnabled   = true;
+    txFrame.mInfo.mTxInfo.mMaxCsmaBackoffs = 1;
+    txFrame.mChannel                       = 11;
 
     EXPECT_CALL(platform, Transmit(Truly([](otRadioFrame *aFrame) -> bool {
                     Mac::Frame &frame = *static_cast<Mac::Frame *>(aFrame);
@@ -312,4 +313,61 @@ TEST(RadioSpinelReceiveAt, shouldReceiveAtGiveRadioTime)
     EXPECT_EQ(platform.GetReceiveChannel(), 11);
     platform.GoInUs(10000);
     EXPECT_EQ(platform.GetReceiveChannel(), 0);
+}
+
+TEST(RadioSpinelTransmit, shouldSkipCsmaBackoffWhenCsmaCaIsEnabledAndMaxBackoffsIsZero)
+{
+    class MockPlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        MOCK_METHOD(otError, Transmit, (otRadioFrame * aFrame), (override));
+        MOCK_METHOD(otError, Receive, (uint8_t aChannel), (override));
+    };
+
+    MockPlatform platform;
+
+    constexpr Mac::PanId kSrcPanId  = 0x1234;
+    constexpr Mac::PanId kDstPanId  = 0x4321;
+    constexpr uint8_t    kDstAddr[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+    constexpr uint16_t   kSrcAddr   = 0xac00;
+    constexpr int8_t     kTxPower   = 100;
+
+    uint8_t      frameBuffer[OT_RADIO_FRAME_MAX_SIZE];
+    Mac::TxFrame txFrame{};
+
+    txFrame.mPsdu = frameBuffer;
+
+    {
+        Mac::TxFrame::Info frameInfo;
+
+        frameInfo.mType    = Mac::Frame::kTypeData;
+        frameInfo.mVersion = Mac::Frame::kVersion2006;
+        frameInfo.mAddrs.mSource.SetShort(kSrcAddr);
+        frameInfo.mAddrs.mDestination.SetExtended(kDstAddr);
+        frameInfo.mPanIds.SetSource(kSrcPanId);
+        frameInfo.mPanIds.SetDestination(kDstPanId);
+        frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
+
+        frameInfo.PrepareHeadersIn(txFrame);
+    }
+
+    txFrame.mInfo.mTxInfo.mCsmaCaEnabled   = true;
+    txFrame.mInfo.mTxInfo.mMaxCsmaBackoffs = 0;
+    txFrame.mChannel                       = 11;
+
+    EXPECT_CALL(platform, Transmit(Truly([](otRadioFrame *aFrame) -> bool {
+                    Mac::Frame &frame = *static_cast<Mac::Frame *>(aFrame);
+                    return frame.mInfo.mTxInfo.mCsmaCaEnabled == true && frame.mInfo.mTxInfo.mMaxCsmaBackoffs == 0;
+                })))
+        .Times(1);
+
+    EXPECT_CALL(platform, Receive).Times(AnyNumber());
+    // Receive(11) will be called exactly once to prepare for TX because the fake platform doesn't support sleep-to-tx
+    // capability.
+    EXPECT_CALL(platform, Receive(11)).Times(1);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.Transmit(txFrame), kErrorNone);
+
+    platform.GoInMs(1000);
 }
