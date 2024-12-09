@@ -64,6 +64,9 @@ class CslTxScheduler : public InstanceLocator, private NonCopyable
 
 public:
     static constexpr uint8_t kMaxCslTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS;
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    static constexpr uint8_t kMaxEnhCslTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_ENH_CSL_TX_ATTEMPTS;
+#endif
 
     /**
      * Defines all the neighbor info required for scheduling CSL transmissions.
@@ -97,6 +100,15 @@ public:
 
         uint64_t GetLastRxTimestamp(void) const { return mLastRxTimestamp; }
         void     SetLastRxTimestamp(uint64_t aLastRxTimestamp) { mLastRxTimestamp = aLastRxTimestamp; }
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        uint8_t GetEnhCslMaxTxAttempts(void) const
+        {
+            return mCslMaxTxAttempts != 0 ? mCslMaxTxAttempts : kMaxEnhCslTriggeredTxAttempts;
+        }
+        void SetEnhCslMaxTxAttempts(uint8_t txAttempts) { mCslMaxTxAttempts = txAttempts; }
+        void ResetEnhCslMaxTxAttempts() { mCslMaxTxAttempts = 0; }
+#endif
 
     private:
         uint8_t  mCslTxAttempts : 7;   ///< Number of CSL triggered tx attempts.
@@ -152,6 +164,10 @@ public:
         TimeMilli mCslLastHeard; ///< Radio clock time when last frame containing CSL IE was heard.
         uint64_t
             mLastRxTimestamp; ///< Radio clock time when last frame containing CSL IE was received, in microseconds.
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        uint8_t mCslMaxTxAttempts; ///< Override for the maximum number of enhanced CSL triggered tx attempts.
+#endif
 
         static_assert(kMaxCslTriggeredTxAttempts < (1 << 7), "mCslTxAttempts cannot fit max!");
     };
