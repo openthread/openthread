@@ -161,6 +161,7 @@ if [ "$TORANJ_CLI" = 1 ]; then
         run cli/test-703-multi-radio-mesh-header-msg.py
         run cli/test-704-multi-radio-scan.py
         run cli/test-705-multi-radio-discover-scan.py
+        run cli/test-706-multi-radio-trel-peer-addr-port-change-discovery.py
 
         exit 0
     fi

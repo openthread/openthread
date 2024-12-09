@@ -554,10 +554,11 @@ void otPlatFlashWrite(otInstance *, uint8_t aSwapIndex, uint32_t aOffset, const 
     FakePlatform::CurrentPlatform().FlashWrite(aSwapIndex, aOffset, aData, aSize);
 }
 
-void                      otPlatTrelEnable(otInstance *, uint16_t *) {}
-void                      otPlatTrelDisable(otInstance *) {}
-void                      otPlatTrelRegisterService(otInstance *, uint16_t, const uint8_t *, uint8_t) {}
-void                      otPlatTrelSend(otInstance *, const uint8_t *, uint16_t, const otSockAddr *) {}
+void otPlatTrelEnable(otInstance *, uint16_t *) {}
+void otPlatTrelDisable(otInstance *) {}
+void otPlatTrelNotifyPeerSocketAddressDifference(otInstance *, const otSockAddr *, const otSockAddr *) {}
+void otPlatTrelRegisterService(otInstance *, uint16_t, const uint8_t *, uint8_t) {}
+void otPlatTrelSend(otInstance *, const uint8_t *, uint16_t, const otSockAddr *) {}
 const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *) { return nullptr; }
 void                      otPlatTrelResetCounters(otInstance *) {}
 
