@@ -922,7 +922,7 @@ class NodeImpl:
         assert len(payload) == payload_len
         return (direction, type, payload)
 
-    def send_command(self, cmd, go=True, expect_command_echo=True):
+    def send_command(self, cmd: str, go: bool = True, expect_command_echo: bool = True):
         print("%d: %s" % (self.nodeid, cmd))
         self.pexpect.send(cmd + '\n')
         if go:
@@ -3308,53 +3308,31 @@ class NodeImpl:
     def router_table(self):
         cmd = 'router table'
         self.send_command(cmd)
+        output = self._expect_command_output()
 
-        self._expect(r'(.*)Done')
-        g = self.pexpect.match.groups()
-        output = g[0].decode('utf8')
-        lines = output.strip().split('\n')
-        lines = [l.strip() for l in lines]
+        headers = self.__split_table_row(output[0])
+
         router_table = {}
-        for i, line in enumerate(lines):
-            if not line.startswith('|') or not line.endswith('|'):
-                if i not in (0, 2):
-                    # should not happen
-                    print("unexpected line %d: %s" % (i, line))
-
+        for line in output[2:]:
+            line = line.strip()
+            if not line:
                 continue
 
-            line = line[1:][:-1]
-            line = [x.strip() for x in line.split('|')]
-            if len(line) < 9:
-                print("unexpected line %d: %s" % (i, line))
-                continue
+            fields = self.__split_table_row(line)
+            col = lambda colname: self.__get_table_col(colname, headers, fields)
 
-            try:
-                int(line[0])
-            except ValueError:
-                if i != 1:
-                    print("unexpected line %d: %s" % (i, line))
-                continue
-
-            id = int(line[0])
-            rloc16 = int(line[1], 16)
-            nexthop = int(line[2])
-            pathcost = int(line[3])
-            lqin = int(line[4])
-            lqout = int(line[5])
-            age = int(line[6])
-            emac = str(line[7])
-            link = int(line[8])
+            id = int(col("ID"))
 
             router_table[id] = {
-                'rloc16': rloc16,
-                'nexthop': nexthop,
-                'pathcost': pathcost,
-                'lqin': lqin,
-                'lqout': lqout,
-                'age': age,
-                'emac': emac,
-                'link': link,
+                'id': id,
+                'rloc16': int(col('RLOC16'), 16),
+                'nexthop': int(col('Next Hop')),
+                'pathcost': int(col('Path Cost')),
+                'lqin': int(col('LQ In')),
+                'lqout': int(col('LQ Out')),
+                'age': int(col('Age')),
+                'emac': col('Extended MAC'),
+                'link': int(col('Link')),
             }
 
         return router_table
@@ -3725,7 +3703,7 @@ class NodeImpl:
     def get_channel_monitor_info(self) -> Dict:
         """
         Returns:
-            Dict of channel monitor info, e.g. 
+            Dict of channel monitor info, e.g.
                 {'enabled': '1',
                  'interval': '41000',
                  'threshold': '-75',
