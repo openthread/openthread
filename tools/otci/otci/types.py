@@ -56,7 +56,7 @@ class PartitionId(int):
 class NetifIdentifier(IntEnum):
     """Represents a network interface identifier."""
     UNSPECIFIED = 0
-    THERAD = 1
+    THREAD = 1
     BACKBONE = 2
 
 
