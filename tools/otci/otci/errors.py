@@ -26,6 +26,8 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
+
+import re
 from typing import List
 
 
@@ -44,8 +46,16 @@ class ExpectLineTimeoutError(OTCIError):
 class CommandError(OTCIError):
     """OTCI failed to execute a command."""
 
+    __COMMAND_OUTPUT_ERROR_PATTERN = re.compile(r'Error (\d+): (.*)')
+    OT_ERROR_FAILED = 1
+
     def __init__(self, cmd: str, output: List[str]):
         self.__output = output
+
+        m = self.__COMMAND_OUTPUT_ERROR_PATTERN.match(output)  # type: ignore
+        code, msg = (self.OT_ERROR_FAILED, "") if m is None else m.groups()  # type: ignore
+        self.code, self.msg = int(code), str(msg)  # type: ignore
+
         super(CommandError, self).__init__("Command error while executing %r:\n%s\n" % (cmd, '\n'.join(output)))
 
     def error(self) -> str:
