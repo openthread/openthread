@@ -932,6 +932,23 @@ const otMleCounters *otThreadGetMleCounters(otInstance *aInstance);
 void otThreadResetMleCounters(otInstance *aInstance);
 
 /**
+ * Gets the current attach duration (number of seconds since the device last attached).
+ *
+ * Requires the `OPENTHREAD_CONFIG_UPTIME_ENABLE` feature.
+ *
+ * If the device is not currently attached, zero will be returned.
+ *
+ * Unlike the role-tracking variables in `otMleCounters`, which track the cumulative time the device is in each role,
+ * this function tracks the time since the last successful attachment, indicating how long the device has been
+ * connected to the Thread mesh (regardless of its role, whether acting as a child, router, or leader).
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The number of seconds since last attached.
+ */
+uint32_t otThreadGetCurrentAttachDuration(otInstance *aInstance);
+
+/**
  * Pointer is called every time an MLE Parent Response message is received.
  *
  * This is used in `otThreadRegisterParentResponseCallback()`.
