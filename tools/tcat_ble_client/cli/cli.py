@@ -30,9 +30,9 @@ import shlex
 from argparse import ArgumentParser
 from ble.ble_stream_secure import BleStreamSecure
 from cli.base_commands import (DisconnectCommand, HelpCommand, HelloCommand, CommissionCommand, DecommissionCommand,
-                               GetDeviceIdCommand, GetPskdHash, GetExtPanIDCommand, GetNetworkNameCommand,
-                               GetProvisioningUrlCommand, PingCommand, GetRandomNumberChallenge, ThreadStateCommand,
-                               ScanCommand, PresentHash)
+                               ExtractDatasetCommand, GetCommissionerCertificate, GetDeviceIdCommand, GetPskdHash,
+                               GetExtPanIDCommand, GetNetworkNameCommand, GetProvisioningUrlCommand, PingCommand,
+                               GetRandomNumberChallenge, ThreadStateCommand, ScanCommand, PresentHash)
 from cli.dataset_commands import (DatasetCommand)
 from dataset.dataset import ThreadDataset
 from typing import Optional
@@ -56,11 +56,13 @@ class CLI:
             'network_name': GetNetworkNameCommand(),
             'ping': PingCommand(),
             'dataset': DatasetCommand(),
+            'get_dataset': ExtractDatasetCommand(),
             'thread': ThreadStateCommand(),
             'scan': ScanCommand(),
             'random_challenge': GetRandomNumberChallenge(),
             'present_hash': PresentHash(),
             'peer_pskd_hash': GetPskdHash(),
+            'get_commisioner_cert': GetCommissionerCertificate(),
         }
         self._context = {
             'ble_sstream': ble_sstream,
