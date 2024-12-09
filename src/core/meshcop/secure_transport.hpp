@@ -442,7 +442,7 @@ public:
      * @retval TRUE  If session is active.
      * @retval FALSE If session is not active.
      */
-    bool IsConnectionActive(void) const { return mState >= kStateConnecting; }
+    bool IsConnectionActive(void) const { return mSessionState >= kSessionConnecting; }
 
     /**
      * Indicates whether or not the session is connected.
@@ -450,15 +450,15 @@ public:
      * @retval TRUE   The session is connected.
      * @retval FALSE  The session is not connected.
      */
-    bool IsConnected(void) const { return mState == kStateConnected; }
+    bool IsConnected(void) const { return mSessionState == kSessionConnected; }
 
     /**
-     * Indicates whether or not the session is closed.
+     * Indicates whether or not the secure transpose socket is closed.
      *
-     * @retval TRUE   The session is closed.
-     * @retval FALSE  The session is not closed.
+     * @retval TRUE   The secure transport socket closed.
+     * @retval FALSE  The secure transport socket is not closed.
      */
-    bool IsClosed(void) const { return mState == kStateClosed; }
+    bool IsClosed(void) const { return !mIsOpen; }
 
     /**
      * Disconnects the session.
@@ -527,14 +527,13 @@ private:
     static constexpr uint16_t         kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH;
 #endif
 
-    enum State : uint8_t
+    enum SessionState : uint8_t
     {
-        kStateClosed,       // UDP socket is closed.
-        kStateOpen,         // UDP socket is open.
-        kStateInitializing, // The service is initializing.
-        kStateConnecting,   // The service is establishing a connection.
-        kStateConnected,    // The service has a connection established.
-        kStateCloseNotify,  // The service is closing a connection.
+        kSessionDisconnected,
+        kSessionInitializing,
+        kSessionConnecting,
+        kSessionConnected,
+        kSessionDisconnecting,
     };
 
     enum CipherSuite : uint8_t
@@ -550,14 +549,16 @@ private:
         kUnspecifiedCipherSuite,
     };
 
-    bool IsStateClosed(void) const { return mState == kStateClosed; }
-    bool IsStateOpen(void) const { return mState == kStateOpen; }
-    bool IsStateInitializing(void) const { return mState == kStateInitializing; }
-    bool IsStateConnecting(void) const { return mState == kStateConnecting; }
-    bool IsStateConnected(void) const { return mState == kStateConnected; }
-    bool IsStateCloseNotify(void) const { return mState == kStateCloseNotify; }
-    bool IsStateConnectingOrConnected(void) const { return mState == kStateConnecting || mState == kStateConnected; }
-    void SetState(State aState);
+    bool IsSessionDisconnected(void) const { return mSessionState == kSessionDisconnected; }
+    bool IsSessionInitializing(void) const { return mSessionState == kSessionInitializing; }
+    bool IsSessionConnecting(void) const { return mSessionState == kSessionConnecting; }
+    bool IsSessionConnected(void) const { return mSessionState == kSessionConnected; }
+    bool IsSessionDisconnecting(void) const { return mSessionState == kSessionDisconnecting; }
+    bool IsSessionConnectingOrConnected(void) const
+    {
+        return mSessionState == kSessionConnecting || mSessionState == kSessionConnected;
+    }
+    void SetSessionState(SessionState aSessionState);
 
     void  FreeMbedtls(void);
     Error Setup(void);
@@ -621,7 +622,7 @@ private:
     void Disconnect(ConnectEvent aEvent);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-    static const char *StateToString(State aState);
+    static const char *SessionStateToString(SessionState aState);
 #endif
 
     using TransportSocket = Ip6::Udp::SocketIn<SecureTransport, &SecureTransport::HandleReceive>;
@@ -644,10 +645,11 @@ private:
 
     bool                        mLayerTwoSecurity : 1;
     bool                        mDatagramTransport : 1;
+    bool                        mIsOpen : 1;
     bool                        mIsServer : 1;
     bool                        mTimerSet : 1;
     bool                        mVerifyPeerCertificate : 1;
-    State                       mState;
+    SessionState                mSessionState;
     CipherSuite                 mCipherSuite;
     Message::SubType            mMessageSubType;
     ConnectEvent                mConnectEvent;
