@@ -51,6 +51,7 @@
 #include "meshcop/meshcop.hpp"
 #include "net/udp6.hpp"
 #include "thread/child.hpp"
+#include "thread/enh_csl_neighbor_table.hpp"
 #include "thread/link_metrics.hpp"
 #include "thread/link_metrics_tlvs.hpp"
 #include "thread/mle_tlvs.hpp"
@@ -753,6 +754,49 @@ public:
                  void                  *aCallbackContext);
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    /**
+     * Returns whether the Thread interface is currently communicating to a Wake-up Parent.
+     *
+     * @retval TRUE   If the Thread interface is communicating to a Wake-up Parent.
+     * @retval FALSE  If the Thread interface is not communicating to a Wake-up Parent.
+     */
+    bool IsWakeupParentPresent(void) const { return mWakeupParentAttachWindow > 0; }
+
+    /**
+     * Adds a Wake-up Parent to the list of potential parents.
+     *
+     * @param[in] aParent         The extended address of the Wake-up Parent.
+     * @param[in] aAttachTime     The time when the Thread interface attached to the Wake-up Parent.
+     * @param[in] aAttachWindowMs The time window in milliseconds during which the Thread interface can attach to the
+     * Wake-up Parent.
+     */
+    void AddWakeupParent(const Mac::ExtAddress &aParent, TimeMilli aAttachTime, uint32_t aAttachWindowMs);
+
+    /**
+     * Returns the Wake-up Parent that the Thread interface is currently communicating to.
+     *
+     * @returns The Wake-up Parent that the Thread interface is currently communicating to.
+     */
+    CslNeighbor *GetWakeupParent(void);
+
+    /**
+     * Starts the process of attaching to a Wake-up Parent, if previously configured with `AddWakeupParent`.
+     */
+    void AttachToWakeupParent();
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    /**
+     * Returns a CSL Neighbor by its address.
+     *
+     * @param[in] aAddress The address of the CSL Neighbor.
+     * 
+     * @returns A pointer to the CSL Neighbor, or NULL if not found.
+     */
+    CslNeighbor *FindCslNeighbor(const Mac::Address &aAddress);
+#endif
+
 private:
     //------------------------------------------------------------------------------------------------------------------
     // Constants
@@ -760,7 +804,7 @@ private:
     // All time intervals are in milliseconds
     static constexpr uint32_t kParentRequestRouterTimeout    = 750;  // Wait time after tx of Parent Req to routers
     static constexpr uint32_t kParentRequestReedTimeout      = 1250; // Wait timer after tx of Parent Req to REEDs
-    static constexpr uint32_t kParentRequestDuplicateMargin  = 50;   // Margin to detect duplicate received Parent Req
+    static constexpr uint32_t kParentRequestDuplicateMargin  = 50;  // Margin to detect duplicate received Parent Req
     static constexpr uint32_t kChildIdResponseTimeout        = 1250; // Wait time to receive Child ID Response
     static constexpr uint32_t kAttachStartJitter             = 50;   // Max jitter time added to start of attach
     static constexpr uint32_t kAnnounceProcessTimeout        = 250;  // Delay after Announce rx before processing
@@ -1096,6 +1140,18 @@ private:
         Neighbor               *mNeighbor;     // Neighbor from which message was received (can be `nullptr`).
         Class                   mClass;        // The message class (authoritative, peer, or unknown).
     };
+
+    /*
+     * Resets the attach counter.
+     *
+     */
+    void ResetAttachCounter(void);
+
+    /**
+     * Increments the attach counter.
+     *
+     */
+    void IncrementAttachCounter(void);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1518,6 +1574,14 @@ private:
     WedAttachState           mWedAttachState;
     WedAttachTimer           mWedAttachTimer;
     Callback<WakeupCallback> mWakeupCallback;
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE
+    TimeMilli mAttachFireTime;
+#endif
+    TimeMilli        mWakeupParentAttachTime;
+    uint32_t         mWakeupParentAttachWindow;
+    CslNeighborTable mCslNeighborTable;
 #endif
 };
 

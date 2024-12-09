@@ -91,6 +91,9 @@ Mle::Mle(Instance &aInstance)
     , mWedAttachState(kWedDetached)
     , mWedAttachTimer(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    , mCslNeighborTable(aInstance)
+#endif
 {
     mParent.Init(aInstance);
     mParentCandidate.Init(aInstance);
@@ -175,8 +178,7 @@ Error Mle::Start(StartMode aMode)
     Get<ThreadNetif>().SubscribeMulticast(mRealmLocalAllThreadNodes);
 
     SetRloc16(GetRloc16());
-
-    mAttachCounter = 0;
+    ResetAttachCounter();
 
     Get<KeyManager>().Start();
 
@@ -360,6 +362,20 @@ void Mle::SetAttachState(AttachState aState)
 
 exit:
     return;
+}
+
+void Mle::ResetAttachCounter(void) { mAttachCounter = 0; }
+
+void Mle::IncrementAttachCounter(void)
+{
+    mAttachCounter++;
+
+    if (mAttachCounter == 0)
+    {
+        mAttachCounter--;
+    }
+
+    mCounters.mAttachAttempts++;
 }
 
 void Mle::Restore(void)
@@ -584,7 +600,7 @@ void Mle::Attach(AttachMode aMode)
 
     if (!IsDetached())
     {
-        mAttachCounter = 0;
+        ResetAttachCounter();
     }
 
     if (mReattachState == kReattachStart)
@@ -872,7 +888,7 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
 
         if (shouldReattach)
         {
-            mAttachCounter = 0;
+            ResetAttachCounter();
             IgnoreError(BecomeDetached());
             ExitNow();
         }
@@ -880,7 +896,7 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
 
     if (IsDetached())
     {
-        mAttachCounter = 0;
+        ResetAttachCounter();
         SetStateDetached();
         Attach(kAnyPartition);
     }
@@ -1469,7 +1485,7 @@ void Mle::HandleAttachTimer(void)
     switch (mAttachState)
     {
     case kAttachStateIdle:
-        mAttachCounter = 0;
+        ResetAttachCounter();
         break;
 
     case kAttachStateProcessAnnounce:
@@ -3702,7 +3718,7 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
         mAlternatePanId     = panId;
         SetAttachState(kAttachStateProcessAnnounce);
         mAttachTimer.Start(kAnnounceProcessTimeout);
-        mAttachCounter = 0;
+        ResetAttachCounter();
 
         LogNote("Delay processing Announce - channel %d, panid 0x%02x", channel, panId);
     }
@@ -5504,6 +5520,52 @@ Error Mle::RxMessage::ReadRouteTlv(RouteTlv &aRouteTlv) const
 
 exit:
     return error;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+void Mle::AddWakeupParent(const Mac::ExtAddress &aParent, TimeMilli aAttachTime, uint32_t aAttachWindowMs)
+{
+    CslNeighbor *parent = nullptr;
+
+    parent = mCslNeighborTable.GetNewCslNeighbor();
+    parent->SetExtAddress(aParent);
+
+    mWakeupParentAttachTime   = aAttachTime;
+    mWakeupParentAttachWindow = aAttachWindowMs;
+}
+
+CslNeighbor *Mle::GetWakeupParent(void) { return mCslNeighborTable.GetFirstCslNeighbor(); }
+
+void Mle::AttachToWakeupParent()
+{
+    CslNeighbor *parent = GetWakeupParent();
+
+    OT_ASSERT(parent != nullptr);
+
+    // TODO: Implement the logic to attach to the wakeup parent.
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+CslNeighbor *Mle::FindCslNeighbor(const Mac::Address &aAddress)
+{
+    CslNeighbor *neighbor = nullptr;
+
+    OT_UNUSED_VARIABLE(aAddress);
+
+#if OPENTHREAD_FTD
+    neighbor = Get<ChildTable>().FindChild(aAddress, Child::kInStateAnyExceptInvalid);
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    if (neighbor == nullptr)
+    {
+        neighbor = GetWakeupParent();
+    }
+#endif
+
+    return neighbor;
 }
 #endif
 
