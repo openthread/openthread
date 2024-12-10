@@ -33,13 +33,16 @@
 
 #include "error.hpp"
 
+#include <stdio.h>
+
 #include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/enum_to_string.hpp"
+#include "common/log.hpp"
 
 namespace ot {
 
-const char *ErrorToString(Error aError)
+const char *ErrorToString(otError aError)
 {
 #define ErrorMapList(_)                                               \
     _(kErrorNone, "OK")                                               \
@@ -85,5 +88,19 @@ const char *ErrorToString(Error aError)
 
     return static_cast<size_t>(aError) < GetArrayLength(kStrings) ? kStrings[aError] : "UnknownErrorType";
 }
+
+#if OPENTHREAD_CONFIG_ERROR_LINE_ENABLE
+const char *ErrorToString(const Error aError)
+{
+    // Size limit of the error string.
+    // Since mFile is not full path of source files, the size should be sufficient.
+    constexpr uint16_t kMaxErrorString = kMaxLogStringSize / 2;
+
+    static char str[kMaxErrorString];
+
+    snprintf(str, sizeof(str), "%s %s:%d", ErrorToString(aError.mError), aError.mFile, aError.mLine);
+    return str;
+}
+#endif
 
 } // namespace ot
