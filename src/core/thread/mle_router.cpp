@@ -707,7 +707,7 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
         {
             neighbor = mRouterTable.FindRouterByRloc16(sourceAddress);
             VerifyOrExit(neighbor != nullptr, error = kErrorParse);
-            VerifyOrExit(!neighbor->IsStateLinkRequest(), error = kErrorAlready);
+            VerifyOrExit(!neighbor->IsStateLinkRequest() || neighbor->GetRouterId() < mRouterId, error = kErrorAlready);
 
             if (!neighbor->IsStateValid())
             {
