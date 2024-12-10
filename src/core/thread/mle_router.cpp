@@ -1297,15 +1297,7 @@ Error MleRouter::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddre
             router = mRouterTable.FindRouterById(routerId);
             VerifyOrExit(router != nullptr);
 
-            if (!router->IsStateValid() && !router->IsStateLinkRequest() &&
-                (mRouterTable.GetNeighborCount(kLinkQuality1) < mChildRouterLinks))
-            {
-                InitNeighbor(*router, aRxInfo);
-                router->SetState(Neighbor::kStateLinkRequest);
-                delay = Random::NonCrypto::GetUint32InRange(kMinLinkRequestDelayOnChild, kMaxLinkRequestDelayOnChild);
-                mDelayedSender.ScheduleLinkRequest(*router, delay);
-                ExitNow(error = kErrorNoRoute);
-            }
+            EstablishRouterLinkOnFtdChild(*router, aRxInfo, linkMargin);
         }
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
@@ -1369,6 +1361,68 @@ exit:
     }
 
     return error;
+}
+
+void MleRouter::EstablishRouterLinkOnFtdChild(Router &aRouter, RxInfo &aRxInfo, uint8_t aLinkMargin)
+{
+    // Decide on an FTD child whether to establish a link with a
+    // router upon receiving an advertisement from it.
+
+    uint8_t  neighborCount;
+    uint32_t minDelay;
+    uint32_t maxDelay;
+
+    VerifyOrExit(!aRouter.IsStateValid() && !aRouter.IsStateLinkRequest());
+
+    // The first `mChildRouterLinks` are established quickly. After that,
+    // the "gradual router link establishment" mechanism is used, which
+    // allows `kExtraChildRouterLinks` additional router links to be
+    // established, but it is done slowly and over a longer span of time.
+    //
+    // Gradual router link establishment conditions:
+    // - The maximum `neighborCount` limit is not yet reached.
+    // - We see Link Quality 2 or better.
+    // - Always skipped in the first 5 minutes
+    //   (`kWaitDurationAfterAttach`) after the device attaches.
+    // - The child randomly decides whether to perform/skip this (with a 5%
+    //   probability, `kProbabilityPercentage`).
+    // - If the child decides to send Link Request, a longer random delay
+    //   window is used, [1.5-10] seconds.
+    //
+    // Even in a dense network, if the advertisement is received by 500 FTD
+    // children with a 5% selection probability, on average, 25 nodes will
+    // try to send a Link Request, which will be randomly spread over a
+    // [1.5-10] second window.
+    //
+    // With a 5% probability, on average, it takes 20 trials (20 advertisement
+    // receptions for an FTD child to send a Link Request). Advertisements
+    // are, on average, ~32 seconds apart, so, on average, a child will try
+    // to establish a link in `20 * 32 = 640` seconds (~10 minutes).
+
+    neighborCount = mRouterTable.GetNeighborCount(kLinkQuality1);
+
+    if (neighborCount < mChildRouterLinks)
+    {
+        minDelay = kMinLinkRequestDelayOnChild;
+        maxDelay = kMaxLinkRequestDelayOnChild;
+    }
+    else
+    {
+        VerifyOrExit(neighborCount < mChildRouterLinks + GradualChildRouterLink::kExtraChildRouterLinks);
+        VerifyOrExit(LinkQualityForLinkMargin(aLinkMargin) >= kLinkQuality2);
+        VerifyOrExit(GetCurrentAttachDuration() > GradualChildRouterLink::kWaitDurationAfterAttach);
+        VerifyOrExit(Random::NonCrypto::GetUint8InRange(0, 100) < GradualChildRouterLink::kProbabilityPercentage);
+
+        minDelay = GradualChildRouterLink::kMinLinkRequestDelay;
+        maxDelay = GradualChildRouterLink::kMaxLinkRequestDelay;
+    }
+
+    InitNeighbor(aRouter, aRxInfo);
+    aRouter.SetState(Neighbor::kStateLinkRequest);
+    mDelayedSender.ScheduleLinkRequest(aRouter, Random::NonCrypto::GetUint32InRange(minDelay, maxDelay));
+
+exit:
+    return;
 }
 
 void MleRouter::HandleParentRequest(RxInfo &aRxInfo)
