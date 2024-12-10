@@ -44,6 +44,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/un.h>
 #include <syslog.h>
 
 #include <openthread/tasklet.h>
@@ -56,6 +57,8 @@ uint32_t gNodeId = 1;
 
 extern bool          gPlatformPseudoResetWasRequested;
 static volatile bool gTerminate = false;
+
+static bool sUseUnixSocket = false;
 
 int    gArgumentsCount = 0;
 char **gArguments      = NULL;
@@ -74,20 +77,28 @@ static void handleSignal(int aSignal)
 
 void otSimSendEvent(const struct Event *aEvent)
 {
-    ssize_t            rval;
-    struct sockaddr_in sockaddr;
+    ssize_t rval;
 
-    memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.sin_family = AF_INET;
-    inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
-    sockaddr.sin_port = htons(sPortBase + sPortOffset);
+    if (sUseUnixSocket)
+    {
+        rval = send(sSockFd, aEvent, offsetof(struct Event, mData) + aEvent->mDataLength, 0);
+    }
+    else
+    {
+        struct sockaddr_in sockaddr;
 
-    rval = sendto(sSockFd, aEvent, offsetof(struct Event, mData) + aEvent->mDataLength, 0, (struct sockaddr *)&sockaddr,
-                  sizeof(sockaddr));
+        memset(&sockaddr, 0, sizeof(sockaddr));
+        sockaddr.sin_family = AF_INET;
+        inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
+        sockaddr.sin_port = htons(sPortBase + sPortOffset);
+
+        rval = sendto(sSockFd, aEvent, offsetof(struct Event, mData) + aEvent->mDataLength, 0,
+                      (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+    }
 
     if (rval < 0)
     {
-        perror("sendto");
+        perror("Send simulation event");
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
 }
@@ -95,11 +106,12 @@ void otSimSendEvent(const struct Event *aEvent)
 static void receiveEvent(otInstance *aInstance)
 {
     struct Event event;
-    ssize_t      rval = recvfrom(sSockFd, (char *)&event, sizeof(event), 0, NULL, NULL);
+    ssize_t      rval = sUseUnixSocket ? recv(sSockFd, (char *)&event, sizeof(event), 0)
+                                       : recvfrom(sSockFd, (char *)&event, sizeof(event), 0, NULL, NULL);
 
     if (rval < 0 || (uint16_t)rval < offsetof(struct Event, mData))
     {
-        perror("recvfrom");
+        perror("Receive simulation event");
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
 
@@ -166,19 +178,18 @@ otError otPlatUartFlush(void) { return OT_ERROR_NONE; }
 
 static void socket_init(void)
 {
-    struct sockaddr_in sockaddr;
-    memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.sin_family = AF_INET;
-
+    {
+        char *env = getenv("OT_VT_USE_UNIX_SOCKET");
+        if (env != NULL && !strcmp(env, "1"))
+        {
+            sUseUnixSocket = true;
+        }
+    }
     parseFromEnvAsUint16("PORT_BASE", &sPortBase);
-
     parseFromEnvAsUint16("PORT_OFFSET", &sPortOffset);
     sPortOffset *= (MAX_NETWORK_SIZE + 1);
 
-    sockaddr.sin_port        = htons((uint16_t)(sPortBase + sPortOffset + gNodeId));
-    sockaddr.sin_addr.s_addr = INADDR_ANY;
-
-    sSockFd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    sSockFd = sUseUnixSocket ? socket(AF_UNIX, SOCK_SEQPACKET, 0) : socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
     if (sSockFd == -1)
     {
@@ -186,10 +197,50 @@ static void socket_init(void)
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
 
-    if (bind(sSockFd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) == -1)
+    if (sUseUnixSocket)
     {
-        perror("bind");
-        DieNow(OT_EXIT_ERROR_ERRNO);
+        uint16_t           port = sPortBase + sPortOffset + gNodeId;
+        struct sockaddr_un addr;
+
+        memset(&addr, 0, sizeof(addr));
+        addr.sun_family = AF_UNIX;
+        sprintf(addr.sun_path, "vt.%u.sock", port);
+
+        if (unlink(addr.sun_path) == -1 && errno != ENOENT)
+        {
+            perror("unlink");
+            DieNow(OT_EXIT_ERROR_ERRNO);
+        }
+        if (bind(sSockFd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
+        {
+            perror("bind");
+            DieNow(OT_EXIT_ERROR_ERRNO);
+        }
+
+        memset(&addr, 0, sizeof(addr));
+        addr.sun_family = AF_UNIX;
+        sprintf(addr.sun_path, "vt.%u.sock", sPortBase + sPortOffset);
+
+        if (connect(sSockFd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
+        {
+            perror("connect");
+            DieNow(OT_EXIT_ERROR_ERRNO);
+        }
+    }
+    else
+    {
+        struct sockaddr_in sockaddr;
+        memset(&sockaddr, 0, sizeof(sockaddr));
+        sockaddr.sin_family = AF_INET;
+
+        sockaddr.sin_port        = htons((uint16_t)(sPortBase + sPortOffset + gNodeId));
+        sockaddr.sin_addr.s_addr = INADDR_ANY;
+
+        if (bind(sSockFd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) == -1)
+        {
+            perror("bind");
+            DieNow(OT_EXIT_ERROR_ERRNO);
+        }
     }
 }
 

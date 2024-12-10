@@ -54,6 +54,7 @@ jobs:
         virtual_time: [0, 1]
     env:
       VIRTUAL_TIME: ${{ matrix.virtual_time }}
+      OT_VT_USE_UNIX_SOCKET: ${{ matrix.virtual_time }}
       REAL_DEVICE: 0
     steps:
     - name: Harden Runner
