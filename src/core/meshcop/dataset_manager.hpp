@@ -289,7 +289,7 @@ private:
     static void HandleMgmtSetResponse(void                *aContext,
                                       otMessage           *aMessage,
                                       const otMessageInfo *aMessageInfo,
-                                      Error                aError);
+                                      otError              aError);
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     void  MoveKeysToSecureStorage(Dataset &aDataset) const;

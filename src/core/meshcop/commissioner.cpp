@@ -633,7 +633,7 @@ exit:
 void Commissioner::HandleMgmtCommissionerGetResponse(void                *aContext,
                                                      otMessage           *aMessage,
                                                      const otMessageInfo *aMessageInfo,
-                                                     Error                aResult)
+                                                     otError              aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerGetResponse(AsCoapMessagePtr(aMessage),
                                                                              AsCoreTypePtr(aMessageInfo), aResult);
@@ -704,7 +704,7 @@ exit:
 void Commissioner::HandleMgmtCommissionerSetResponse(void                *aContext,
                                                      otMessage           *aMessage,
                                                      const otMessageInfo *aMessageInfo,
-                                                     Error                aResult)
+                                                     otError              aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerSetResponse(AsCoapMessagePtr(aMessage),
                                                                              AsCoreTypePtr(aMessageInfo), aResult);
@@ -757,7 +757,7 @@ exit:
 void Commissioner::HandleLeaderPetitionResponse(void                *aContext,
                                                 otMessage           *aMessage,
                                                 const otMessageInfo *aMessageInfo,
-                                                Error                aResult)
+                                                otError              aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleLeaderPetitionResponse(AsCoapMessagePtr(aMessage),
                                                                         AsCoreTypePtr(aMessageInfo), aResult);
@@ -844,7 +844,7 @@ exit:
 void Commissioner::HandleLeaderKeepAliveResponse(void                *aContext,
                                                  otMessage           *aMessage,
                                                  const otMessageInfo *aMessageInfo,
-                                                 Error                aResult)
+                                                 otError              aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleLeaderKeepAliveResponse(AsCoapMessagePtr(aMessage),
                                                                          AsCoreTypePtr(aMessageInfo), aResult);

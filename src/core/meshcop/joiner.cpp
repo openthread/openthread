@@ -470,7 +470,7 @@ exit:
 void Joiner::HandleJoinerFinalizeResponse(void                *aContext,
                                           otMessage           *aMessage,
                                           const otMessageInfo *aMessageInfo,
-                                          Error                aResult)
+                                          otError              aResult)
 {
     static_cast<Joiner *>(aContext)->HandleJoinerFinalizeResponse(AsCoapMessagePtr(aMessage), &AsCoreType(aMessageInfo),
                                                                   aResult);

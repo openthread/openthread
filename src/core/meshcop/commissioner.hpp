@@ -396,22 +396,22 @@ private:
     static void HandleMgmtCommissionerSetResponse(void                *aContext,
                                                   otMessage           *aMessage,
                                                   const otMessageInfo *aMessageInfo,
-                                                  Error                aResult);
+                                                  otError              aResult);
     void        HandleMgmtCommissionerSetResponse(Coap::Message          *aMessage,
                                                   const Ip6::MessageInfo *aMessageInfo,
                                                   Error                   aResult);
     static void HandleMgmtCommissionerGetResponse(void                *aContext,
                                                   otMessage           *aMessage,
                                                   const otMessageInfo *aMessageInfo,
-                                                  Error                aResult);
+                                                  otError              aResult);
     void        HandleMgmtCommissionerGetResponse(Coap::Message          *aMessage,
                                                   const Ip6::MessageInfo *aMessageInfo,
                                                   Error                   aResult);
     static void HandleLeaderPetitionResponse(void                *aContext,
                                              otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
-                                             Error                aResult);
-    void HandleLeaderPetitionResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
+                                             otError              aResult);
+    void HandleLeaderPetitionResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
     static void HandleLeaderKeepAliveResponse(void                *aContext,
                                               otMessage           *aMessage,
                                               const otMessageInfo *aMessageInfo,

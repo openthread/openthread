@@ -305,7 +305,7 @@ private:
     static void HandleCoapResponse(void                *aContext,
                                    otMessage           *aMessage,
                                    const otMessageInfo *aMessageInfo,
-                                   Error                aResult);
+                                   otError              aResult);
     void HandleCoapResponse(const ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult);
     static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
     bool        HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

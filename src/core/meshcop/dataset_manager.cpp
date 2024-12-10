@@ -498,7 +498,7 @@ exit:
 void DatasetManager::HandleMgmtSetResponse(void                *aContext,
                                            otMessage           *aMessage,
                                            const otMessageInfo *aMessageInfo,
-                                           Error                aError)
+                                           otError              aError)
 {
     static_cast<DatasetManager *>(aContext)->HandleMgmtSetResponse(AsCoapMessagePtr(aMessage),
                                                                    AsCoreTypePtr(aMessageInfo), aError);
