@@ -3304,7 +3304,7 @@ exit:
 void MleRouter::HandleAddressSolicitResponse(void                *aContext,
                                              otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
-                                             Error                aResult)
+                                             otError              aResult)
 {
     static_cast<MleRouter *>(aContext)->HandleAddressSolicitResponse(AsCoapMessagePtr(aMessage),
                                                                      AsCoreTypePtr(aMessageInfo), aResult);
@@ -3312,7 +3312,7 @@ void MleRouter::HandleAddressSolicitResponse(void                *aContext,
 
 void MleRouter::HandleAddressSolicitResponse(Coap::Message          *aMessage,
                                              const Ip6::MessageInfo *aMessageInfo,
-                                             Error                   aResult)
+                                             otError                 aResult)
 {
     uint8_t             status;
     uint16_t            rloc16;
