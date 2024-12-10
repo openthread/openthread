@@ -224,6 +224,13 @@ bool otMacFrameIsKeyIdMode1(otRadioFrame *aFrame)
     return (error == OT_ERROR_NONE) ? (keyIdMode == Mac::Frame::kKeyIdMode1) : false;
 }
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+bool otMacFrameIsWakeupFrame(const otRadioFrame *aFrame)
+{
+    return static_cast<const Mac::Frame *>(aFrame)->IsWakeupFrame();
+}
+#endif
+
 uint8_t otMacFrameGetKeyId(otRadioFrame *aFrame)
 {
     uint8_t keyId = 0;
@@ -306,9 +313,15 @@ otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *
     otMacKeyMaterial *key = nullptr;
     uint8_t           keyId;
     uint32_t          frameCounter;
+    bool              processKeyId;
 
-    VerifyOrExit(otMacFrameIsSecurityEnabled(aFrame) && otMacFrameIsKeyIdMode1(aFrame) &&
-                 !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
+    processKeyId = otMacFrameIsKeyIdMode1(aFrame)
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+                   || otMacFrameIsWakeupFrame(aFrame)
+#endif
+        ;
+
+    VerifyOrExit(otMacFrameIsSecurityEnabled(aFrame) && processKeyId && !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
 
     if (otMacFrameIsAck(aFrame))
     {
