@@ -3372,7 +3372,7 @@ void Mle::DelayedSender::Execute(const Schedule &aSchedule)
         IgnoreError(aSchedule.Read(sizeof(Header), rloc16));
         router = Get<RouterTable>().FindRouterByRloc16(rloc16);
 
-        if (router != nullptr)
+        if ((router != nullptr) && (router->IsStateLinkRequest() || router->IsStateValid()))
         {
             Get<Mle>().SendLinkRequest(router);
         }
