@@ -560,7 +560,7 @@ private:
     void SetState(State aState);
 
     void  FreeMbedtls(void);
-    Error Setup(bool aClient);
+    Error Setup(void);
 
     static bool IsMbedtlsHandshakeOver(mbedtls_ssl_context *aSslContext);
 
@@ -644,6 +644,7 @@ private:
 
     bool                        mLayerTwoSecurity : 1;
     bool                        mDatagramTransport : 1;
+    bool                        mIsServer : 1;
     bool                        mTimerSet : 1;
     bool                        mVerifyPeerCertificate : 1;
     State                       mState;

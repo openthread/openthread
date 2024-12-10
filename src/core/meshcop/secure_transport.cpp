@@ -79,6 +79,7 @@ SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwo
     : InstanceLocator(aInstance)
     , mLayerTwoSecurity(aLayerTwoSecurity)
     , mDatagramTransport(aDatagramTransport)
+    , mIsServer(true)
     , mTimerSet(false)
     , mVerifyPeerCertificate(true)
     , mState(kStateClosed)
@@ -179,7 +180,9 @@ Error SecureTransport::Connect(const Ip6::SockAddr &aSockAddr)
     mMessageInfo.SetPeerAddr(aSockAddr.GetAddress());
     mMessageInfo.SetPeerPort(aSockAddr.mPort);
 
-    error = Setup(true);
+    mIsServer = false;
+
+    error = Setup();
 
 exit:
     return error;
@@ -203,7 +206,7 @@ void SecureTransport::HandleReceive(Message &aMessage, const Ip6::MessageInfo &a
         mMessageInfo.SetSockAddr(aMessageInfo.GetSockAddr());
         mMessageInfo.SetSockPort(aMessageInfo.GetSockPort());
 
-        SuccessOrExit(Setup(false));
+        SuccessOrExit(Setup());
     }
     else
     {
@@ -234,6 +237,7 @@ Error SecureTransport::Bind(uint16_t aPort)
     VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
 
     SuccessOrExit(error = mSocket.Bind(aPort));
+    mIsServer = true;
 
 exit:
     return error;
@@ -248,12 +252,13 @@ Error SecureTransport::Bind(TransportCallback aCallback, void *aContext)
     VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
 
     mTransportCallback.Set(aCallback, aContext);
+    mIsServer = true;
 
 exit:
     return error;
 }
 
-Error SecureTransport::Setup(bool aClient)
+Error SecureTransport::Setup(void)
 {
     int rval;
 
@@ -270,7 +275,7 @@ Error SecureTransport::Setup(bool aClient)
     mbedtls_ssl_config_init(&mConf);
 
     rval = mbedtls_ssl_config_defaults(
-        &mConf, aClient ? MBEDTLS_SSL_IS_CLIENT : MBEDTLS_SSL_IS_SERVER,
+        &mConf, mIsServer ? MBEDTLS_SSL_IS_SERVER : MBEDTLS_SSL_IS_CLIENT,
         mDatagramTransport ? MBEDTLS_SSL_TRANSPORT_DATAGRAM : MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
     VerifyOrExit(rval == 0);
 
@@ -361,7 +366,7 @@ Error SecureTransport::Setup(bool aClient)
     {
         mbedtls_ssl_cookie_init(&mCookieCtx);
 
-        if (!aClient)
+        if (mIsServer)
         {
             rval = mbedtls_ssl_cookie_setup(&mCookieCtx, Crypto::MbedTls::CryptoSecurePrng, nullptr);
             VerifyOrExit(rval == 0);
