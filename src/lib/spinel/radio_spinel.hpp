@@ -60,7 +60,7 @@ struct RadioSpinelCallbacks
      *                        kErrorAbort when reception was aborted and a frame was not received,
      *                        kErrorNoBufs when a frame could not be received due to lack of rx buffer space.
      */
-    void (*mReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, Error aError);
+    void (*mReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
     /**
      * The callback notifies user of `RadioSpinel` that the transmit operation has completed, providing, if
@@ -74,7 +74,7 @@ struct RadioSpinelCallbacks
      *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
      *                        kErrorAbort when transmission was aborted for other reasons.
      */
-    void (*mTransmitDone)(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, Error aError);
+    void (*mTransmitDone)(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
 
     /**
      * This callback notifies user of `RadioSpinel` that energy scan is complete.
@@ -119,7 +119,7 @@ struct RadioSpinelCallbacks
      *                        OT_ERROR_ABORT when reception was aborted and a frame was not received,
      *                        OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.
      */
-    void (*mDiagReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, Error aError);
+    void (*mDiagReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
     /**
      * This callback notifies diagnostics module using `RadioSpinel` that the transmission has completed.
@@ -132,7 +132,7 @@ struct RadioSpinelCallbacks
      *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx could not take place due to activity on the
      * channel, OT_ERROR_ABORT when transmission was aborted for other reasons.
      */
-    void (*mDiagTransmitDone)(otInstance *aInstance, otRadioFrame *aFrame, Error aError);
+    void (*mDiagTransmitDone)(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 #endif // OPENTHREAD_CONFIG_DIAG_ENABLE
 };
 
