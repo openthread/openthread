@@ -220,11 +220,24 @@ Could not fild the Android NDK CMake toolchain file
             ;;
         simulation)
             local_options+=(
-                "-DOT_LINK_RAW=ON"
-                "-DOT_DNS_DSO=ON"
                 "-DOT_DNS_CLIENT_OVER_TCP=ON"
+                "-DOT_DNS_DSO=ON"
+                "-DOT_LINK_RAW=ON"
                 "-DOT_UDP_FORWARD=ON"
             )
+
+            VERSION_1_1='\-DOT_THREAD_VERSION=1\.1\>'
+            if [[ $* =~ $VERSION_1_1 ]]; then
+                local_options+=(
+                    "-DOT_CSL_RECEIVER=OFF"
+                    "-DOT_CSL_TRANSMITTER=OFF"
+                )
+            else
+                local_options+=(
+                    "-DOT_CSL_RECEIVER=ON"
+                    "-DOT_CSL_TRANSMITTER=ON"
+                )
+            fi
             options+=("${OT_POSIX_SIM_COMMON_OPTIONS[@]}" "${local_options[@]}")
             ;;
         *)
