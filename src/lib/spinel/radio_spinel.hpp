@@ -1078,6 +1078,15 @@ public:
      */
     void SetTimeSyncState(bool aOn) { mTimeSyncOn = aOn; }
 
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    /**
+     * Enables or disables the RCP restoration feature.
+     *
+     * @param[in]  aEnabled  TRUE to enable the RCP restoration feature, FALSE otherwise.
+     */
+    void SetRcpRestorationEnabled(bool aEnabled) { mRcpRestorationEnabled = aEnabled; }
+#endif
+
 private:
     enum
     {
@@ -1283,6 +1292,7 @@ private:
     int8_t       mFemLnaGain;
     bool         mCoexEnabled : 1;
     bool         mSrcMatchEnabled : 1;
+    bool         mRcpRestorationEnabled : 1;
 
     bool mMacKeySet : 1;                   ///< Whether MAC key has been set.
     bool mCcaEnergyDetectThresholdSet : 1; ///< Whether CCA energy detect threshold has been set.

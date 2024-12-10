@@ -1070,3 +1070,7 @@ const otRcpInterfaceMetrics *otSysGetRcpInterfaceMetrics(void)
 {
     return sRadio.GetSpinelInterface().GetRcpInterfaceMetrics();
 }
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+void otSysSetRcpRestorationEnabled(bool aEnabled) { return GetRadioSpinel().SetRcpRestorationEnabled(aEnabled); }
+#endif

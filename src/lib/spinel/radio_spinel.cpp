@@ -90,6 +90,7 @@ RadioSpinel::RadioSpinel(void)
     , mSrcMatchShortEntryCount(0)
     , mSrcMatchExtEntryCount(0)
     , mSrcMatchEnabled(false)
+    , mRcpRestorationEnabled(true)
     , mMacKeySet(false)
     , mCcaEnergyDetectThresholdSet(false)
     , mTransmitPowerSet(false)
@@ -2038,6 +2039,8 @@ void RadioSpinel::RecoverFromRcpFailure(void)
     constexpr int16_t kMaxFailureCount = OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT;
     State             recoveringState  = mState;
     bool              skipReset        = false;
+
+    VerifyOrExit(mRcpRestorationEnabled);
 
     if (mRcpFailure == kRcpFailureNone)
     {

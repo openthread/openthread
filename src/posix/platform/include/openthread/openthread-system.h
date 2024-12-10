@@ -320,6 +320,13 @@ void otSysTrelInit(const char *aInterfaceName);
  */
 void otSysTrelDeinit(void);
 
+/**
+ * Enables or disables the RCP restoration feature.
+ *
+ * @param[in]  aEnabled  TRUE to enable the RCP restoration feature, FALSE otherwise.
+ */
+void otSysSetRcpRestorationEnabled(bool aEnabled);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif
