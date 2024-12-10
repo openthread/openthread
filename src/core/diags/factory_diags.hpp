@@ -206,6 +206,7 @@ private:
 
     static Error ParseLong(char *aString, long &aLong);
     static Error ParseBool(char *aString, bool &aBool);
+    static bool  IsChannelValid(uint8_t aChannel);
 
     static const struct Command sCommands[];
 
