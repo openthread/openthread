@@ -225,6 +225,19 @@ Could not fild the Android NDK CMake toolchain file
                 "-DOT_DNS_CLIENT_OVER_TCP=ON"
                 "-DOT_UDP_FORWARD=ON"
             )
+
+            local -r version_1_1_pattern_nonbsd='\-DOT_THREAD_VERSION=1\.1\>'
+            local -r version_1_1_pattern_bsd='-DOT_THREAD_VERSION=1\.1[[:>:]]'
+
+            if [[ $* =~ $version_1_1_pattern_nonbsd || $* =~ $version_1_1_pattern_bsd ]]; then
+                local_options+=(
+                    "-DOT_CSL_RECEIVER=OFF"
+                )
+            else
+                local_options+=(
+                    "-DOT_CSL_RECEIVER=ON"
+                )
+            fi
             options+=("${OT_POSIX_SIM_COMMON_OPTIONS[@]}" "${local_options[@]}")
             ;;
         *)
