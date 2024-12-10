@@ -587,6 +587,15 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ERROR_LINE_ENABLE
+ *
+ * Define to 1 to enable error line tracking.
+ */
+#ifndef OPENTHREAD_CONFIG_ERROR_LINE_ENABLE
+#define OPENTHREAD_CONFIG_ERROR_LINE_ENABLE 0
+#endif
+
+/**
  * @}
  */
 

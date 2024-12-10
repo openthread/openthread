@@ -470,13 +470,15 @@ exit:
 void Joiner::HandleJoinerFinalizeResponse(void                *aContext,
                                           otMessage           *aMessage,
                                           const otMessageInfo *aMessageInfo,
-                                          Error                aResult)
+                                          otError              aResult)
 {
     static_cast<Joiner *>(aContext)->HandleJoinerFinalizeResponse(AsCoapMessagePtr(aMessage), &AsCoreType(aMessageInfo),
                                                                   aResult);
 }
 
-void Joiner::HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
+void Joiner::HandleJoinerFinalizeResponse(Coap::Message          *aMessage,
+                                          const Ip6::MessageInfo *aMessageInfo,
+                                          otError                 aResult)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 

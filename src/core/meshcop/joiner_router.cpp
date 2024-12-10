@@ -309,7 +309,7 @@ exit:
 void JoinerRouter::HandleJoinerEntrustResponse(void                *aContext,
                                                otMessage           *aMessage,
                                                const otMessageInfo *aMessageInfo,
-                                               Error                aResult)
+                                               otError              aResult)
 {
     static_cast<JoinerRouter *>(aContext)->HandleJoinerEntrustResponse(AsCoapMessagePtr(aMessage),
                                                                        AsCoreTypePtr(aMessageInfo), aResult);

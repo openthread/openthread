@@ -641,7 +641,7 @@ exit:
 void Commissioner::HandleMgmtCommissionerGetResponse(void                *aContext,
                                                      otMessage           *aMessage,
                                                      const otMessageInfo *aMessageInfo,
-                                                     Error                aResult)
+                                                     otError              aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerGetResponse(AsCoapMessagePtr(aMessage),
                                                                              AsCoreTypePtr(aMessageInfo), aResult);
@@ -649,7 +649,7 @@ void Commissioner::HandleMgmtCommissionerGetResponse(void                *aConte
 
 void Commissioner::HandleMgmtCommissionerGetResponse(Coap::Message          *aMessage,
                                                      const Ip6::MessageInfo *aMessageInfo,
-                                                     Error                   aResult)
+                                                     otError                 aResult)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
@@ -712,7 +712,7 @@ exit:
 void Commissioner::HandleMgmtCommissionerSetResponse(void                *aContext,
                                                      otMessage           *aMessage,
                                                      const otMessageInfo *aMessageInfo,
-                                                     Error                aResult)
+                                                     otError              aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerSetResponse(AsCoapMessagePtr(aMessage),
                                                                              AsCoreTypePtr(aMessageInfo), aResult);
@@ -720,7 +720,7 @@ void Commissioner::HandleMgmtCommissionerSetResponse(void                *aConte
 
 void Commissioner::HandleMgmtCommissionerSetResponse(Coap::Message          *aMessage,
                                                      const Ip6::MessageInfo *aMessageInfo,
-                                                     Error                   aResult)
+                                                     otError                 aResult)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
@@ -765,7 +765,7 @@ exit:
 void Commissioner::HandleLeaderPetitionResponse(void                *aContext,
                                                 otMessage           *aMessage,
                                                 const otMessageInfo *aMessageInfo,
-                                                Error                aResult)
+                                                otError              aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleLeaderPetitionResponse(AsCoapMessagePtr(aMessage),
                                                                         AsCoreTypePtr(aMessageInfo), aResult);
@@ -773,7 +773,7 @@ void Commissioner::HandleLeaderPetitionResponse(void                *aContext,
 
 void Commissioner::HandleLeaderPetitionResponse(Coap::Message          *aMessage,
                                                 const Ip6::MessageInfo *aMessageInfo,
-                                                Error                   aResult)
+                                                otError                 aResult)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
@@ -852,7 +852,7 @@ exit:
 void Commissioner::HandleLeaderKeepAliveResponse(void                *aContext,
                                                  otMessage           *aMessage,
                                                  const otMessageInfo *aMessageInfo,
-                                                 Error                aResult)
+                                                 otError              aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleLeaderKeepAliveResponse(AsCoapMessagePtr(aMessage),
                                                                          AsCoreTypePtr(aMessageInfo), aResult);
@@ -860,7 +860,7 @@ void Commissioner::HandleLeaderKeepAliveResponse(void                *aContext,
 
 void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message          *aMessage,
                                                  const Ip6::MessageInfo *aMessageInfo,
-                                                 Error                   aResult)
+                                                 otError                 aResult)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
