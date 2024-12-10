@@ -286,12 +286,12 @@ private:
     bool  ProcessChildrenIp6AddrsAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     bool  ProcessRouterNeighborTableAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void HandleDiagGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
+    void HandleDiagGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
 
     static void HandleDiagGetResponse(void                *aContext,
                                       otMessage           *aMessage,
                                       const otMessageInfo *aMessageInfo,
-                                      Error                aResult);
+                                      otError              aResult);
 
     using TimeoutTimer = TimerMilliIn<MeshDiag, &MeshDiag::HandleTimer>;
 

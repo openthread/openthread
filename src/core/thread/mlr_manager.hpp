@@ -159,7 +159,7 @@ private:
     static void  HandleMlrResponse(void                *aContext,
                                    otMessage           *aMessage,
                                    const otMessageInfo *aMessageInfo,
-                                   Error                aResult);
+                                   otError              aResult);
     void         HandleMlrResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
     static Error ParseMlrResponse(Error          aResult,
                                   Coap::Message *aMessage,
@@ -170,8 +170,8 @@ private:
     static void HandleRegisterResponse(void                *aContext,
                                        otMessage           *aMessage,
                                        const otMessageInfo *aMessageInfo,
-                                       Error                aResult);
-    void        HandleRegisterResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, Error aResult);
+                                       otError              aResult);
+    void        HandleRegisterResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult);
 #endif
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE

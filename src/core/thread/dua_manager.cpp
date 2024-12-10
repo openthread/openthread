@@ -544,7 +544,7 @@ exit:
 void DuaManager::HandleDuaResponse(void                *aContext,
                                    otMessage           *aMessage,
                                    const otMessageInfo *aMessageInfo,
-                                   Error                aResult)
+                                   otError              aResult)
 {
     static_cast<DuaManager *>(aContext)->HandleDuaResponse(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
                                                            aResult);

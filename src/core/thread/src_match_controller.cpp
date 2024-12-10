@@ -143,14 +143,13 @@ Error SourceMatchController::AddAddress(const Child &aChild)
     {
         error = Get<Radio>().AddSrcMatchShortEntry(aChild.GetRloc16());
 
-        LogDebg("Adding short addr: 0x%04x -- %s (%d)", aChild.GetRloc16(), ErrorToString(error), error);
+        LogDebg("Adding short addr: 0x%04x -- %s", aChild.GetRloc16(), ErrorToString(error));
     }
     else
     {
         error = Get<Radio>().AddSrcMatchExtEntry(aChild.GetExtAddress());
 
-        LogDebg("Adding addr: %s -- %s (%d)", aChild.GetExtAddress().ToString().AsCString(), ErrorToString(error),
-                error);
+        LogDebg("Adding addr: %s -- %s", aChild.GetExtAddress().ToString().AsCString(), ErrorToString(error));
     }
 
     return error;
@@ -159,7 +158,6 @@ Error SourceMatchController::AddAddress(const Child &aChild)
 void SourceMatchController::ClearEntry(Child &aChild)
 {
     Error error = kErrorNone;
-
     if (aChild.IsIndirectSourceMatchPending())
     {
         LogDebg("Clearing pending flag for 0x%04x", aChild.GetRloc16());
@@ -171,14 +169,13 @@ void SourceMatchController::ClearEntry(Child &aChild)
     {
         error = Get<Radio>().ClearSrcMatchShortEntry(aChild.GetRloc16());
 
-        LogDebg("Clearing short addr: 0x%04x -- %s (%d)", aChild.GetRloc16(), ErrorToString(error), error);
+        LogDebg("Clearing short addr: 0x%04x -- %s", aChild.GetRloc16(), ErrorToString(error));
     }
     else
     {
         error = Get<Radio>().ClearSrcMatchExtEntry(aChild.GetExtAddress());
 
-        LogDebg("Clearing addr: %s -- %s (%d)", aChild.GetExtAddress().ToString().AsCString(), ErrorToString(error),
-                error);
+        LogDebg("Clearing addr: %s -- %s", aChild.GetExtAddress().ToString().AsCString(), ErrorToString(error));
     }
 
     SuccessOrExit(error);
