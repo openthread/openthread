@@ -146,6 +146,7 @@ add_library(openthread-posix
     rcp_caps_diag.cpp
     resolver.cpp
     settings.cpp
+    settings_file.cpp
     spinel_manager.cpp
     spi_interface.cpp
     system.cpp
@@ -207,6 +208,7 @@ target_include_directories(openthread-posix PRIVATE
 
 add_executable(ot-posix-test-settings
     settings.cpp
+    settings_file.cpp
 )
 target_compile_definitions(ot-posix-test-settings
     PRIVATE -DSELF_TEST=1 -DOPENTHREAD_CONFIG_LOG_PLATFORM=0
