@@ -205,7 +205,7 @@ otError otMacFrameGenerateEnhAck(const otRadioFrame *aFrame,
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 void otMacFrameSetCslIe(otRadioFrame *aFrame, uint16_t aCslPeriod, uint16_t aCslPhase)
 {
-    static_cast<Mac::Frame *>(aFrame)->SetCslIe(aCslPeriod, aCslPhase);
+    static_cast<Mac::TxFrame *>(aFrame)->SetCslIe(aCslPeriod, aCslPhase);
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
@@ -268,18 +268,12 @@ uint8_t otMacFrameGenerateEnhAckProbingIe(uint8_t *aDest, const uint8_t *aIeData
 
     assert(aDest != nullptr);
 
-    reinterpret_cast<Mac::HeaderIe *>(aDest)->SetId(Mac::ThreadIe::kHeaderIeId);
-    reinterpret_cast<Mac::HeaderIe *>(aDest)->SetLength(len);
-
-    aDest += sizeof(Mac::HeaderIe);
-
-    reinterpret_cast<Mac::VendorIeHeader *>(aDest)->SetVendorOui(Mac::ThreadIe::kVendorOuiThreadCompanyId);
-    reinterpret_cast<Mac::VendorIeHeader *>(aDest)->SetSubType(Mac::ThreadIe::kEnhAckProbingIe);
+    Mac::EnhAckProbingIe *ie = reinterpret_cast<Mac::HeaderIe *>(aDest)->Init<Mac::EnhAckProbingIe>(len);
 
     if (aIeData != nullptr)
     {
         aDest += sizeof(Mac::VendorIeHeader);
-        memcpy(aDest, aIeData, aIeDataLength);
+        memcpy(ie->GetData(), aIeData, aIeDataLength);
     }
 
     return sizeof(Mac::HeaderIe) + len;
@@ -289,7 +283,7 @@ void otMacFrameSetEnhAckProbingIe(otRadioFrame *aFrame, const uint8_t *aData, ui
 {
     assert(aFrame != nullptr && aData != nullptr);
 
-    reinterpret_cast<Mac::Frame *>(aFrame)->SetEnhAckProbingIe(aData, aDataLen);
+    reinterpret_cast<Mac::TxFrame *>(aFrame)->SetEnhAckProbingIe(aData, aDataLen);
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
