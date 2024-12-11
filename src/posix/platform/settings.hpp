@@ -33,57 +33,6 @@ namespace ot {
 namespace Posix {
 
 /**
- * Gets a setting from the persisted file.
- *
- * @param[in]      aInstance     The OpenThread instance structure.
- * @param[in]      aKey          The key associated with the requested setting.
- * @param[in]      aIndex        The index of the specific item to get.
- * @param[out]     aValue        A pointer to where the value of the setting should be written.
- * @param[in,out]  aValueLength  A pointer to the length of the value.
- *
- * @retval OT_ERROR_NONE        The given setting was found and fetched successfully.
- * @retval OT_ERROR_NOT_FOUND   The given key or index was not found in the setting store.
- */
-otError PlatformSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength);
-
-/**
- * Sets a setting in the persisted file.
- *
- * @param[in]  aInstance     The OpenThread instance structure.
- * @param[in]  aKey          The key associated with the requested setting.
- * @param[in]  aValue        A pointer to where the new value of the setting should be read from.
- * @param[in]  aValueLength  The length of the data pointed to by aValue.
- */
-void PlatformSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
-
-/**
- * Adds a setting to the persisted file.
- *
- * @param[in]  aInstance     The OpenThread instance structure.
- * @param[in]  aKey          The key associated with the requested setting.
- * @param[in]  aValue        A pointer to where the new value of the setting should be read from.
- * @param[in]  aValueLength  The length of the data pointed to by aValue.
- */
-void PlatformSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
-
-/**
- * Removes a setting either from swap file or persisted file.
- *
- * @param[in]  aInstance  The OpenThread instance structure.
- * @param[in]  aKey       The key associated with the requested setting.
- * @param[in]  aIndex     The index of the value to be removed. If set to -1, all values for this aKey will be removed.
- * @param[out] aSwapFd    A optional pointer to receive file descriptor of the generated swap file descriptor.
- *
- * @note
- *   If @p aSwapFd is null, operate deleting on the setting file.
- *   If @p aSwapFd is not null, operate on the swap file, and aSwapFd will point to the swap file descriptor.
- *
- * @retval OT_ERROR_NONE        The given key and index was found and removed successfully.
- * @retval OT_ERROR_NOT_FOUND   The given key or index was not found in the setting store.
- */
-otError PlatformSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex, int *aSwapFd);
-
-/**
  * Gets the sensitive keys that should be stored in the secure area.
  *
  * @param[in]   aInstance    The OpenThread instance structure.
