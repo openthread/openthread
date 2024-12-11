@@ -576,4 +576,8 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket *, otNetifIdentifier, const otI
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 void otPlatAssertFail(const char *, int) {}
+
+void    otPlatRadioUpdateCslSampleTime(otInstance *, uint32_t) {}
+otError otPlatRadioEnableCsl(otInstance *, uint32_t, otShortAddress, const otExtAddress *) { return OT_ERROR_NONE; }
+
 } // extern "C"
