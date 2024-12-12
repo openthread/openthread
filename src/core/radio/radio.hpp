@@ -814,7 +814,7 @@ public:
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
-        if (aChannelPage == kChannelPage1)
+        if (aChannelPage == kChannelPage2)
         {
             mask = OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK;
         }
