@@ -149,12 +149,12 @@ void Server::Enable(void)
     {
     case kAddressModeUnicast:
         SelectPort();
-        Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(mPort);
+        Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(mPort, kSrpVersion);
         break;
 
     case kAddressModeAnycast:
         mPort = kAnycastAddressModePort;
-        Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(mAnycastSequenceNumber);
+        Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(mAnycastSequenceNumber, kSrpVersion);
         break;
     }
 
