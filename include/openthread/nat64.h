@@ -158,11 +158,20 @@ void otNat64GetErrorCounters(otInstance *aInstance, otNat64ErrorCounters *aCount
  */
 typedef struct otNat64AddressMapping
 {
-    uint64_t mId; ///< The unique id for a mapping session.
+    uint64_t     mId;  ///< The unique id for a mapping session.
+    otIp4Address mIp4; ///< The IPv4 address of the mapping.
+    otIp6Address mIp6; ///< The IPv6 address of the mapping.
 
-    otIp4Address mIp4;             ///< The IPv4 address of the mapping.
-    otIp6Address mIp6;             ///< The IPv6 address of the mapping.
-    uint32_t     mRemainingTimeMs; ///< Remaining time before expiry in milliseconds.
+    /** The source port or ICMP ID of the mapping. Used when
+     *  OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE is true.
+     */
+    uint16_t mSrcPortOrId;
+
+    /** The translated port or ICMP ID of the mapping. Used when
+     *  OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE is true.
+     */
+    uint16_t mTranslatedPortOrId;
+    uint32_t mRemainingTimeMs; ///< Remaining time before expiry in milliseconds.
 
     otNat64ProtocolCounters mCounters;
 } otNat64AddressMapping;
