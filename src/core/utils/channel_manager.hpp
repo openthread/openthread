@@ -323,8 +323,8 @@ private:
 
 #if OPENTHREAD_FTD
     void        StartDatasetUpdate(void);
-    static void HandleDatasetUpdateDone(Error aError, void *aContext);
-    void        HandleDatasetUpdateDone(Error aError);
+    static void HandleDatasetUpdateDone(otError aError, void *aContext);
+    void        HandleDatasetUpdateDone(otError aError);
 #endif
     void  HandleTimer(void);
     void  StartAutoSelectTimer(void);

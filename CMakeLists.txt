@@ -77,7 +77,11 @@ endif()
 
 if (CMAKE_BUILD_TYPE)
     message(STATUS "OpenThread CMake build type: ${CMAKE_BUILD_TYPE}")
-endif ()
+endif()
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug" AND OT_ERROR_LINE STREQUAL "")
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_ERROR_LINE_ENABLE=1")
+endif()
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     option(OT_COMPILE_WARNING_AS_ERROR "whether to include -Werror -pedantic-errors with gcc-compatible compilers")

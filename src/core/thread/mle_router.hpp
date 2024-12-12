@@ -634,8 +634,8 @@ private:
     bool     ShouldDowngrade(uint8_t aNeighborId, const RouteTlv &aRouteTlv) const;
     bool     NeighborHasComparableConnectivity(const RouteTlv &aRouteTlv, uint8_t aNeighborId) const;
     void     HandleAdvertiseTrickleTimer(void);
-    void     HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
-    void     HandleTimeTick(void);
+    void HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
+    void HandleTimeTick(void);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -649,7 +649,7 @@ private:
     static void HandleAddressSolicitResponse(void                *aContext,
                                              otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
-                                             Error                aResult);
+                                             otError              aResult);
 
     //------------------------------------------------------------------------------------------------------------------
     // Variables
