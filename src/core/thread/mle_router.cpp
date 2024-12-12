@@ -1042,6 +1042,8 @@ void MleRouter::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageTyp
 
     mNeighborTable.Signal(NeighborTable::kRouterAdded, *router);
 
+    mDelayedSender.RemoveScheduledLinkRequest(*router);
+
     if (shouldUpdateRoutes)
     {
         mRouterTable.UpdateRoutes(routeTlv, routerId);

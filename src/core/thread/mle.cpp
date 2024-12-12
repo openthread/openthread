@@ -4576,6 +4576,14 @@ exit:
     return;
 }
 
+void Mle::DelayedSender::RemoveScheduledLinkRequest(const Router &aRouter)
+{
+    Ip6::Address destination;
+
+    destination.SetToLinkLocalAddress(aRouter.GetExtAddress());
+    RemoveMatchingSchedules(kTypeLinkRequest, destination);
+}
+
 void Mle::DelayedSender::ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint16_t aDelay)
 {
     Ip6::Address destination;

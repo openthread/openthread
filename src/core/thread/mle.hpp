@@ -1145,6 +1145,7 @@ private:
         void ScheduleDiscoveryResponse(const Ip6::Address          &aDestination,
                                        const DiscoveryResponseInfo &aInfo,
                                        uint16_t                     aDelay);
+        void RemoveScheduledLinkRequest(const Router &aRouter);
 #endif
         void RemoveScheduledChildUpdateRequestToParent(void);
 
