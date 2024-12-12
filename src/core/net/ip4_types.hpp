@@ -620,27 +620,43 @@ public:
         void SetChecksum(uint16_t aChecksum) { mChecksum = BigEndian::HostSwap16(aChecksum); }
 
         /**
+         * Returns the ICMPv4 message ID for Echo Requests and Replies.
+         *
+         * @returns The ICMPv4 message ID.
+         */
+        uint16_t GetId(void) const { return BigEndian::HostSwap16(mData.m16[0]); }
+
+        /**
+         * Sets the ICMPv4 message ID for Echo Requests and Replies.
+         *
+         * @param[in]  aId  The ICMPv4 message ID.
+         */
+        void SetId(uint16_t aId) { mData.m16[0] = BigEndian::HostSwap16(aId); }
+
+        /**
          * Returns the rest of header field in the ICMP message.
          *
          * @returns The rest of header field in the ICMP message. The returned buffer has 4 octets.
          */
-        const uint8_t *GetRestOfHeader(void) const { return mRestOfHeader; }
+        const uint8_t *GetRestOfHeader(void) const { return mData.m8; }
 
         /**
          * Sets the rest of header field in the ICMP message.
          *
          * @param[in] aRestOfHeader The rest of header field in the ICMP message. The buffer should have 4 octets.
          */
-        void SetRestOfHeader(const uint8_t *aRestOfHeader)
-        {
-            memcpy(mRestOfHeader, aRestOfHeader, sizeof(mRestOfHeader));
-        }
+        void SetRestOfHeader(const uint8_t *aRestOfHeader) { memcpy(mData.m8, aRestOfHeader, sizeof(mData)); }
 
     private:
         uint8_t  mType;
         uint8_t  mCode;
         uint16_t mChecksum;
-        uint8_t  mRestOfHeader[4];
+        union OT_TOOL_PACKED_FIELD
+        {
+            uint8_t  m8[4];
+            uint16_t m16[2];
+            uint32_t m32[1];
+        } mData; ///< Message-specific data
     } OT_TOOL_PACKED_END;
 };
 

@@ -800,32 +800,33 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * @cli nat64 mappings
      * @code
      * nat64 mappings
-     * |          | Address                   |        | 4 to 6       | 6 to 4       |
-     * +----------+---------------------------+--------+--------------+--------------+
-     * | ID       | IPv6       | IPv4         | Expiry | Pkts | Bytes | Pkts | Bytes |
-     * +----------+------------+--------------+--------+------+-------+------+-------+
-     * | 00021cb9 | fdc7::df79 | 192.168.64.2 |  7196s |    6 |   456 |   11 |  1928 |
-     * |          |                                TCP |    0 |     0 |    0 |     0 |
-     * |          |                                UDP |    1 |   136 |   16 |  1608 |
-     * |          |                               ICMP |    5 |   320 |    5 |   320 |
+     * |          | Address                   | Ports or ICMP Ids     |        | 4 to 6       | 6 to 4       |
+     * +----------+---------------------------+-----------------------+--------+--------------+--------------+
+     * | ID       | IPv6       | IPv4         | Original | Translated | Expiry | Pkts | Bytes | Pkts | Bytes |
+     * +----------+------------+--------------+-----------------------+--------+------+-------+------+-------+
+     * | 00021cb9 | fdc7::df79 | 192.168.64.2 |   65100  |   65200    |  7196s |    6 |   456 |   11 |  1928 |
+     * |                                                                   TCP |    0 |     0 |    0 |     0 |
+     * |                                                                   UDP |    1 |   136 |   16 |  1608 |
+     * |                                                                  ICMP |    5 |   320 |    5 |   320 |
      * @endcode
      * @par api_copy
      * #otNat64GetNextAddressMapping
      */
     else if (aArgs[0] == "mappings")
     {
-        static const char *const kNat64StatusLevel1Title[] = {"", "Address", "", "4 to 6", "6 to 4"};
+        static const char *const kNat64StatusLevel1Title[] = {"", "Address", "Ports or ICMP Ids",
+                                                              "", "4 to 6",  "6 to 4"};
 
         static const uint8_t kNat64StatusLevel1ColumnWidths[] = {
-            18, 61, 8, 25, 25,
+            18, 61, 23, 8, 25, 25,
         };
 
         static const char *const kNat64StatusTableHeader[] = {
-            "ID", "IPv6", "IPv4", "Expiry", "Pkts", "Bytes", "Pkts", "Bytes",
+            "ID", "IPv6", "IPv4", "Original", "Translated", "Expiry", "Pkts", "Bytes", "Pkts", "Bytes",
         };
 
         static const uint8_t kNat64StatusTableColumnWidths[] = {
-            18, 42, 18, 8, 10, 14, 10, 14,
+            18, 42, 18, 10, 12, 8, 10, 14, 10, 14,
         };
 
         otNat64AddressMappingIterator iterator;
@@ -847,19 +848,21 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
                          ToUlong(static_cast<uint32_t>(mapping.mId & 0xffffffff)));
             OutputFormat("| %40s ", ip6AddressString);
             OutputFormat("| %16s ", ip4AddressString);
+            OutputFormat("| %8u ", mapping.mSrcPortOrId);
+            OutputFormat("| %10u ", mapping.mTranslatedPortOrId);
             OutputFormat("| %5lus ", ToUlong(mapping.mRemainingTimeMs / 1000));
             OutputNat64Counters(mapping.mCounters.mTotal);
 
             OutputFormat("| %16s ", "");
-            OutputFormat("| %68s ", "TCP");
+            OutputFormat("| %92s ", "TCP");
             OutputNat64Counters(mapping.mCounters.mTcp);
 
             OutputFormat("| %16s ", "");
-            OutputFormat("| %68s ", "UDP");
+            OutputFormat("| %92s ", "UDP");
             OutputNat64Counters(mapping.mCounters.mUdp);
 
             OutputFormat("| %16s ", "");
-            OutputFormat("| %68s ", "ICMP");
+            OutputFormat("| %92s ", "ICMP");
             OutputNat64Counters(mapping.mCounters.mIcmp);
         }
     }

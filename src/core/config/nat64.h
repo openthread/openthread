@@ -80,6 +80,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
+ *
+ * Define to 1 to enable NAT64 support for port translation.
+ * This allows the NAT64 translator to operate with just one
+ * or a limited number of IPv4 addresses
+ */
+#ifndef OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
+#define OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE 0
+#endif
+
+/**
  * @}
  */
 
