@@ -93,6 +93,9 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
 #endif
     {SPINEL_PROP_PARENT_RESPONSE_INFO, SPINEL_STATUS_OK, true},
     {SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET_TLVS, SPINEL_STATUS_OK, false},
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    {SPINEL_PROP_BORDER_AGENT_MESHCOP_SERVICE_STATE, SPINEL_STATUS_OK, false}
+#endif
 };
 
 uint8_t ChangedPropsSet::GetNumEntries(void) const
