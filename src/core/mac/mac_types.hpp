@@ -199,6 +199,16 @@ public:
     }
 
     /**
+     * Overloads operator `==` to evaluate whether or not two `ExtAddress` instances are equal.
+     *
+     * @param[in]  aOther  The other `ExtAddress` instance to compare with.
+     *
+     * @retval TRUE   If the two `ExtAddress` instances are equal.
+     * @retval FALSE  If the two `ExtAddress` instances are not equal.
+     */
+    bool operator==(const ExtAddress &aOther) const;
+
+    /**
      * Converts an address to a string.
      *
      * @returns An `InfoString` containing the string representation of the Extended Address.
@@ -357,6 +367,16 @@ public:
      * @returns TRUE if address is Short Invalid Address, FALSE otherwise.
      */
     bool IsShortAddrInvalid(void) const { return ((mType == kTypeShort) && (GetShort() == kShortAddrInvalid)); }
+
+    /**
+     * Overloads operator `==` to evaluate whether or not two `Address` instances are equal.
+     *
+     * @param[in]  aOther  The other `Address` instance to compare with.
+     *
+     * @retval TRUE   If the two `Address` instances are equal.
+     * @retval FALSE  If the two `Address` instances are not equal.
+     */
+    bool operator==(const Address &aOther) const;
 
     /**
      * Converts an address to a null-terminated string
