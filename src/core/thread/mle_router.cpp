@@ -31,6 +31,7 @@
  */
 
 #include "mle_router.hpp"
+#include "thread/neighbor.hpp"
 
 #if OPENTHREAD_FTD
 
