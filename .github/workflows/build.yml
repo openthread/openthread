@@ -262,14 +262,6 @@ jobs:
         sudo apt-get --no-install-recommends install -y build-essential lib32z1 ninja-build gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
         wget --tries 4 --no-check-certificate --quiet ${{ matrix.gcc_download_url }} -O gcc-arm
         tar xf gcc-arm
-        sudo apt-get remove cmake
-        sudo apt-get purge --auto-remove cmake
-        wget http://www.cmake.org/files/v3.10/cmake-3.10.3.tar.gz
-        tar xf cmake-3.10.3.tar.gz
-        cd cmake-3.10.3
-        ./configure
-        sudo make install
-        cmake --version | grep 3.10.3
     - name: Build
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
