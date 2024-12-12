@@ -260,6 +260,16 @@ bool otMacFrameIsSecurityEnabled(otRadioFrame *aFrame);
 bool otMacFrameIsKeyIdMode1(otRadioFrame *aFrame);
 
 /**
+ * Tell if the key ID mode of @p aFrame is 2.
+ *
+ * @param[in]   aFrame          A pointer to the frame.
+ *
+ * @retval  true    The frame key ID mode is 2.
+ * @retval  false   The frame security is not enabled or key ID mode is not 2.
+ */
+bool otMacFrameIsKeyIdMode2(otRadioFrame *aFrame);
+
+/**
  * Get the key ID of @p aFrame.
  *
  * @param[in]   aFrame          A pointer to the frame.
