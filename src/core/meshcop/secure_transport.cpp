@@ -497,6 +497,7 @@ void SecureSession::Disconnect(ConnectEvent aEvent)
     mMessageInfo.Clear();
 
     FreeMbedtls();
+    mTransport.FreeMbedtls();
 
 exit:
     return;
