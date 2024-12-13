@@ -214,6 +214,7 @@ set(COMMON_SOURCES
     thread/discover_scanner.cpp
     thread/dua_manager.cpp
     thread/energy_scan_server.cpp
+    thread/enh_csl_neighbor_table.cpp
     thread/indirect_sender.cpp
     thread/key_manager.cpp
     thread/link_metrics.cpp

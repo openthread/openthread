@@ -559,6 +559,25 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_CSL_WAKEUP_INTERVAL
+ *
+ * Periodicity of wake-up frame transmission by WC (in units of 10 symbols).
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_CSL_WAKEUP_INTERVAL
+#define OPENTHREAD_CONFIG_MAC_CSL_WAKEUP_INTERVAL 47
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_ENH_CSL_TX_ATTEMPTS
+ *
+ * Maximum number of TX attempts for the enhanced CSL communication before considering the peer de-synchronized.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_ENH_CSL_TX_ATTEMPTS
+#define OPENTHREAD_CONFIG_MAC_ENH_CSL_TX_ATTEMPTS 8
+#endif
+
+/**
  * @}
  */
 

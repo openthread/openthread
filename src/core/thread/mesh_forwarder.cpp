@@ -686,14 +686,27 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
     Get<Mac::Mac>().SetRxOnWhenIdle(aRxOnWhenIdle);
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    // Data polls not allowed in enhanced CSL mode
+    if (!Get<Mle::Mle>().IsWakeupParentPresent())
+#endif
+    {
+        if (aRxOnWhenIdle)
+        {
+            mDataPollSender.StopPolling();
+        }
+        else
+        {
+            mDataPollSender.StartPolling();
+        }
+    }
+
     if (aRxOnWhenIdle)
     {
-        mDataPollSender.StopPolling();
         Get<SupervisionListener>().Stop();
     }
     else
     {
-        mDataPollSender.StartPolling();
         Get<SupervisionListener>().Start();
     }
 }
@@ -1083,7 +1096,12 @@ start:
 
     if (nextOffset < aMessage.GetLength())
     {
-        aFrame.SetFramePending(true);
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        if (!Get<Mle::Mle>().IsWakeupParentPresent())
+#endif
+        {
+            aFrame.SetFramePending(true);
+        }
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         aMessage.SetTimeSync(false);
 #endif

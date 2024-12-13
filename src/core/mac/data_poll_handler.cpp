@@ -255,7 +255,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, 
         OT_ASSERT(false);
     }
 
-    Get<IndirectSender>().HandleSentFrameToChild(aFrame, mFrameContext, aError, aChild);
+    Get<IndirectSender>().HandleSentFrameToCslNeighbor(aFrame, mFrameContext, aError, aChild);
 
 exit:
     return;

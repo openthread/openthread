@@ -91,6 +91,9 @@ Mle::Mle(Instance &aInstance)
     , mWedAttachState(kWedDetached)
     , mWedAttachTimer(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    , mCslNeighborTable(aInstance)
+#endif
 {
     mParent.Init(aInstance);
     mParentCandidate.Init(aInstance);
@@ -5512,6 +5515,58 @@ Error Mle::RxMessage::ReadRouteTlv(RouteTlv &aRouteTlv) const
 
 exit:
     return error;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+void Mle::AddWakeupParent(const Mac::ExtAddress &aParent, TimeMilli aAttachTime, uint32_t aAttachWindowMs)
+{
+    CslNeighbor *parent = nullptr;
+
+    parent = mCslNeighborTable.GetNewCslNeighbor();
+    parent->SetExtAddress(aParent);
+
+    mWakeupParentAttachTime   = aAttachTime;
+    mWakeupParentAttachWindow = aAttachWindowMs;
+}
+
+CslNeighbor *Mle::GetWakeupParent(void) { return mCslNeighborTable.GetFirstCslNeighbor(); }
+
+void Mle::AttachToWakeupParent()
+{
+    CslNeighbor *parent = GetWakeupParent();
+
+    OT_ASSERT(parent != nullptr);
+
+    // TODO: Implement the logic to attach to the wakeup parent.
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+CslNeighbor *Mle::FindCslNeighbor(const Mac::Address &aAddress)
+{
+    CslNeighbor *neighbor = nullptr;
+
+    OT_UNUSED_VARIABLE(aAddress);
+
+#if OPENTHREAD_FTD
+    neighbor = Get<ChildTable>().FindChild(aAddress, Child::kInStateAnyExceptInvalid);
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    if (neighbor == nullptr)
+    {
+        CslNeighbor *enhCslNeighbor = GetWakeupParent();
+
+        if ((enhCslNeighbor != nullptr) && aAddress.IsExtended() &&
+            (enhCslNeighbor->GetExtAddress() == aAddress.GetExtended()))
+        {
+            neighbor = enhCslNeighbor;
+        }
+    }
+#endif
+
+    return neighbor;
 }
 #endif
 

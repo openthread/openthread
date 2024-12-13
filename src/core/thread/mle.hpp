@@ -51,6 +51,7 @@
 #include "meshcop/meshcop.hpp"
 #include "net/udp6.hpp"
 #include "thread/child.hpp"
+#include "thread/enh_csl_neighbor_table.hpp"
 #include "thread/link_metrics.hpp"
 #include "thread/link_metrics_tlvs.hpp"
 #include "thread/mle_tlvs.hpp"
@@ -752,6 +753,49 @@ public:
                  WakeupCallback         aCallback,
                  void                  *aCallbackContext);
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    /**
+     * Returns whether the Thread interface is currently communicating to a Wake-up Parent.
+     *
+     * @retval TRUE   If the Thread interface is communicating to a Wake-up Parent.
+     * @retval FALSE  If the Thread interface is not communicating to a Wake-up Parent.
+     */
+    bool IsWakeupParentPresent(void) const { return mWakeupParentAttachWindow > 0; }
+
+    /**
+     * Adds a Wake-up Parent to the list of potential parents.
+     *
+     * @param[in] aParent         The extended address of the Wake-up Parent.
+     * @param[in] aAttachTime     The time when the Thread interface attached to the Wake-up Parent.
+     * @param[in] aAttachWindowMs The time window in milliseconds during which the Thread interface can attach to the
+     * Wake-up Parent.
+     */
+    void AddWakeupParent(const Mac::ExtAddress &aParent, TimeMilli aAttachTime, uint32_t aAttachWindowMs);
+
+    /**
+     * Returns the Wake-up Parent that the Thread interface is currently communicating to.
+     *
+     * @returns The Wake-up Parent that the Thread interface is currently communicating to.
+     */
+    CslNeighbor *GetWakeupParent(void);
+
+    /**
+     * Starts the process of attaching to a Wake-up Parent, if previously configured with `AddWakeupParent`.
+     */
+    void AttachToWakeupParent(void);
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    /**
+     * Returns a CSL Neighbor by its address.
+     *
+     * @param[in] aAddress The address of the CSL Neighbor.
+     *
+     * @returns A pointer to the CSL Neighbor, or NULL if not found.
+     */
+    CslNeighbor *FindCslNeighbor(const Mac::Address &aAddress);
+#endif
 
 private:
     //------------------------------------------------------------------------------------------------------------------
@@ -1519,6 +1563,11 @@ private:
     WedAttachState           mWedAttachState;
     WedAttachTimer           mWedAttachTimer;
     Callback<WakeupCallback> mWakeupCallback;
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    TimeMilli        mWakeupParentAttachTime;
+    uint32_t         mWakeupParentAttachWindow;
+    CslNeighborTable mCslNeighborTable;
 #endif
 };
 
