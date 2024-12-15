@@ -137,7 +137,8 @@ Error Joiner::Start(const char      *aPskd,
     Get<Mac::Mac>().SetExtAddress(randomAddress);
     Get<Mle::MleRouter>().UpdateLinkLocalAddress();
 
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(kJoinerUdpPort));
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Open());
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Bind(kJoinerUdpPort));
     Get<Tmf::SecureAgent>().SetConnectCallback(HandleSecureCoapClientConnect, this);
     Get<Tmf::SecureAgent>().SetPsk(joinerPskd);
 
@@ -202,7 +203,7 @@ void Joiner::Finish(Error aError)
         OT_FALL_THROUGH;
 
     case kStateDiscover:
-        Get<Tmf::SecureAgent>().Stop();
+        Get<Tmf::SecureAgent>().Close();
         break;
     }
 
@@ -368,16 +369,16 @@ exit:
     return error;
 }
 
-void Joiner::HandleSecureCoapClientConnect(Dtls::ConnectEvent aEvent, void *aContext)
+void Joiner::HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent, void *aContext)
 {
     static_cast<Joiner *>(aContext)->HandleSecureCoapClientConnect(aEvent);
 }
 
-void Joiner::HandleSecureCoapClientConnect(Dtls::ConnectEvent aEvent)
+void Joiner::HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent)
 {
     VerifyOrExit(mState == kStateConnect);
 
-    if (aEvent == Dtls::kConnected)
+    if (aEvent == Dtls::Session::kConnected)
     {
         SetState(kStateConnected);
         SendJoinerFinalize();

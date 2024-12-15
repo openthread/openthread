@@ -106,6 +106,13 @@ public:
     uint8_t GetLength(void) const { return static_cast<uint8_t>(StringLength(m8, kMaxLength + 1)); }
 
     /**
+     * Gets the PSKd as a byte array.
+     *
+     * @returns The PSKd as a byte array.
+     */
+    const uint8_t *GetBytes(void) const { return reinterpret_cast<const uint8_t *>(m8); }
+
+    /**
      * Overloads operator `==` to evaluate whether or not two PSKds are equal.
      *
      * @param[in]  aOther  The other PSKd to compare with.

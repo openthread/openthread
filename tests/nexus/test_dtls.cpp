@@ -45,29 +45,29 @@ static constexpr uint16_t kMaxAttempts = 3;
 
 static const uint8_t kPsk[] = {0x10, 0x20, 0x03, 0x15, 0x10, 0x00, 0x60, 0x16};
 
-static Dtls::ConnectEvent           sDtlsEvent[kMaxNodes];
+static Dtls::Session::ConnectEvent  sDtlsEvent[kMaxNodes];
 static Array<uint8_t, kMessageSize> sDtlsLastReceive[kMaxNodes];
 static bool                         sDtlsAutoClosed[kMaxNodes];
 
-const char *ConnectEventToString(Dtls::ConnectEvent aEvent)
+const char *ConnectEventToString(Dtls::Session::ConnectEvent aEvent)
 {
     const char *str = "";
 
     switch (aEvent)
     {
-    case Dtls::kConnected:
+    case Dtls::Session::kConnected:
         str = "kConnected";
         break;
-    case Dtls::kDisconnectedPeerClosed:
+    case Dtls::Session::kDisconnectedPeerClosed:
         str = "kDisconnectedPeerClosed";
         break;
-    case Dtls::kDisconnectedLocalClosed:
+    case Dtls::Session::kDisconnectedLocalClosed:
         str = "kDisconnectedLocalClosed";
         break;
-    case Dtls::kDisconnectedMaxAttempts:
+    case Dtls::Session::kDisconnectedMaxAttempts:
         str = "kDisconnectedMaxAttempts";
         break;
-    case Dtls::kDisconnectedError:
+    case Dtls::Session::kDisconnectedError:
         str = "kDisconnectedError";
         break;
     }
@@ -92,7 +92,7 @@ void HandleReceive(void *aContext, uint8_t *aBuf, uint16_t aLength)
     }
 }
 
-void HandleConnectEvent(Dtls::ConnectEvent aEvent, void *aContext)
+void HandleConnectEvent(Dtls::Session::ConnectEvent aEvent, void *aContext)
 {
     Node *node = static_cast<Node *>(aContext);
 
@@ -131,6 +131,17 @@ OwnedPtr<Message> PrepareMessage(Node &aNode)
     return OwnedPtr<Message>(message);
 }
 
+class DtlsTransportAndSession : public InstanceLocator, public Dtls::Transport, public Dtls::Session
+{
+public:
+    explicit DtlsTransportAndSession(Node &aNode)
+        : InstanceLocator(aNode.GetInstance())
+        , Dtls::Transport(aNode.GetInstance(), kWithLinkSecurity)
+        , Dtls::Session(static_cast<Dtls::Transport &>(*this))
+    {
+    }
+};
+
 void TestDtls(void)
 {
     Core  nexus;
@@ -159,10 +170,10 @@ void TestDtls(void)
     Log("------------------------------------------------------------------------------------------------------");
 
     {
-        Dtls          dtls0(node0.GetInstance(), kWithLinkSecurity);
-        Dtls          dtls1(node1.GetInstance(), kWithLinkSecurity);
-        Dtls          dtls2(node2.GetInstance(), kWithLinkSecurity);
-        Ip6::SockAddr sockAddr;
+        DtlsTransportAndSession dtls0(node0);
+        DtlsTransportAndSession dtls1(node1);
+        DtlsTransportAndSession dtls2(node2);
+        Ip6::SockAddr           sockAddr;
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         Log("Start DTLS (server) on node0 bound to port %u", kUdpPort);
@@ -191,7 +202,7 @@ void TestDtls(void)
 
         for (uint16_t iter = 0; iter <= kMaxAttempts + 1; iter++)
         {
-            memset(sDtlsEvent, Dtls::kConnected, sizeof(sDtlsEvent));
+            memset(sDtlsEvent, Dtls::Session::kConnected, sizeof(sDtlsEvent));
 
             SuccessOrQuit(dtls1.Connect(sockAddr));
             nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
@@ -199,8 +210,8 @@ void TestDtls(void)
             VerifyOrQuit(!dtls0.IsConnected());
             VerifyOrQuit(!dtls1.IsConnected());
 
-            VerifyOrQuit(sDtlsEvent[node0.GetId()] == Dtls::kDisconnectedError);
-            VerifyOrQuit(sDtlsEvent[node1.GetId()] == Dtls::kDisconnectedError);
+            VerifyOrQuit(sDtlsEvent[node0.GetId()] == Dtls::Session::kDisconnectedError);
+            VerifyOrQuit(sDtlsEvent[node1.GetId()] == Dtls::Session::kDisconnectedError);
         }
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -219,8 +230,8 @@ void TestDtls(void)
         VerifyOrQuit(dtls0.IsConnected());
         VerifyOrQuit(dtls1.IsConnected());
 
-        VerifyOrQuit(sDtlsEvent[node0.GetId()] == Dtls::kConnected);
-        VerifyOrQuit(sDtlsEvent[node1.GetId()] == Dtls::kConnected);
+        VerifyOrQuit(sDtlsEvent[node0.GetId()] == Dtls::Session::kConnected);
+        VerifyOrQuit(sDtlsEvent[node1.GetId()] == Dtls::Session::kConnected);
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         Log("Send message (random data and length) over DTLS session from node0 to node1");
@@ -260,8 +271,8 @@ void TestDtls(void)
         VerifyOrQuit(!dtls0.IsConnected());
         VerifyOrQuit(!dtls1.IsConnected());
 
-        VerifyOrQuit(sDtlsEvent[node0.GetId()] == Dtls::kDisconnectedPeerClosed);
-        VerifyOrQuit(sDtlsEvent[node1.GetId()] == Dtls::kDisconnectedLocalClosed);
+        VerifyOrQuit(sDtlsEvent[node0.GetId()] == Dtls::Session::kDisconnectedPeerClosed);
+        VerifyOrQuit(sDtlsEvent[node1.GetId()] == Dtls::Session::kDisconnectedLocalClosed);
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         Log("Establish a DTLS connection again");
@@ -273,8 +284,8 @@ void TestDtls(void)
         VerifyOrQuit(dtls0.IsConnected());
         VerifyOrQuit(dtls1.IsConnected());
 
-        VerifyOrQuit(sDtlsEvent[node0.GetId()] == Dtls::kConnected);
-        VerifyOrQuit(sDtlsEvent[node1.GetId()] == Dtls::kConnected);
+        VerifyOrQuit(sDtlsEvent[node0.GetId()] == Dtls::Session::kConnected);
+        VerifyOrQuit(sDtlsEvent[node1.GetId()] == Dtls::Session::kConnected);
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         Log("Try to connect from node2 - validate that it fails to connect since already connected");
@@ -302,8 +313,8 @@ void TestDtls(void)
         VerifyOrQuit(!dtls1.IsConnected());
         VerifyOrQuit(!dtls2.IsConnected());
 
-        VerifyOrQuit(sDtlsEvent[node0.GetId()] == Dtls::kDisconnectedLocalClosed);
-        VerifyOrQuit(sDtlsEvent[node1.GetId()] == Dtls::kDisconnectedPeerClosed);
+        VerifyOrQuit(sDtlsEvent[node0.GetId()] == Dtls::Session::kDisconnectedLocalClosed);
+        VerifyOrQuit(sDtlsEvent[node1.GetId()] == Dtls::Session::kDisconnectedPeerClosed);
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -339,7 +350,7 @@ void TestDtls(void)
 
         for (uint16_t iter = 0; iter < kMaxAttempts - 1; iter++)
         {
-            memset(sDtlsEvent, Dtls::kConnected, sizeof(sDtlsEvent));
+            memset(sDtlsEvent, Dtls::Session::kConnected, sizeof(sDtlsEvent));
 
             SuccessOrQuit(dtls1.Connect(sockAddr));
             nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
@@ -347,20 +358,20 @@ void TestDtls(void)
             VerifyOrQuit(!dtls0.IsConnected());
             VerifyOrQuit(!dtls1.IsConnected());
 
-            VerifyOrQuit(sDtlsEvent[node0.GetId()] == Dtls::kDisconnectedError);
-            VerifyOrQuit(sDtlsEvent[node1.GetId()] == Dtls::kDisconnectedError);
+            VerifyOrQuit(sDtlsEvent[node0.GetId()] == Dtls::Session::kDisconnectedError);
+            VerifyOrQuit(sDtlsEvent[node1.GetId()] == Dtls::Session::kDisconnectedError);
         }
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         Log("Using wrong PSK try one last time, validate the auto-close behavior");
 
-        memset(sDtlsEvent, Dtls::kConnected, sizeof(sDtlsEvent));
+        memset(sDtlsEvent, Dtls::Session::kConnected, sizeof(sDtlsEvent));
 
         SuccessOrQuit(dtls1.Connect(sockAddr));
         nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
 
-        VerifyOrQuit(sDtlsEvent[node0.GetId()] == Dtls::kDisconnectedMaxAttempts);
-        VerifyOrQuit(sDtlsEvent[node1.GetId()] == Dtls::kDisconnectedError);
+        VerifyOrQuit(sDtlsEvent[node0.GetId()] == Dtls::Session::kDisconnectedMaxAttempts);
+        VerifyOrQuit(sDtlsEvent[node1.GetId()] == Dtls::Session::kDisconnectedError);
 
         VerifyOrQuit(sDtlsAutoClosed[node0.GetId()]);
 

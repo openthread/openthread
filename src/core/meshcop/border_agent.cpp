@@ -149,10 +149,7 @@ exit:
     LogWarnOnError(error, "send error CoAP message");
 }
 
-Error BorderAgent::SendMessage(Coap::Message &aMessage)
-{
-    return Get<Tmf::SecureAgent>().SendMessage(aMessage, Get<Tmf::SecureAgent>().GetMessageInfo());
-}
+Error BorderAgent::SendMessage(Coap::Message &aMessage) { return Get<Tmf::SecureAgent>().SendMessage(aMessage); }
 
 void BorderAgent::HandleCoapResponse(void                *aContext,
                                      otMessage           *aMessage,
@@ -603,6 +600,8 @@ exit:
 
 void BorderAgent::HandleTmfDatasetGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri)
 {
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
     Error          error    = kErrorNone;
     Coap::Message *response = nullptr;
 
@@ -630,7 +629,7 @@ void BorderAgent::HandleTmfDatasetGet(Coap::Message &aMessage, const Ip6::Messag
 
     VerifyOrExit(response != nullptr, error = kErrorParse);
 
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().SendMessage(*response, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().SendMessage(*response));
 
     LogInfo("Sent %s response to non-active commissioner", PathForUri(aUri));
 
@@ -639,14 +638,14 @@ exit:
     FreeMessageOnError(response, error);
 }
 
-void BorderAgent::HandleConnected(Dtls::ConnectEvent aEvent, void *aContext)
+void BorderAgent::HandleConnected(Dtls::Session::ConnectEvent aEvent, void *aContext)
 {
     static_cast<BorderAgent *>(aContext)->HandleConnected(aEvent);
 }
 
-void BorderAgent::HandleConnected(Dtls::ConnectEvent aEvent)
+void BorderAgent::HandleConnected(Dtls::Session::ConnectEvent aEvent)
 {
-    if (aEvent == Dtls::kConnected)
+    if (aEvent == Dtls::Session::kConnected)
     {
         LogInfo("SecureSession connected");
         mState = kStateConnected;
@@ -674,11 +673,11 @@ void BorderAgent::HandleConnected(Dtls::ConnectEvent aEvent)
         {
             RestartAfterRemovingEphemeralKey();
 
-            if (aEvent == Dtls::kDisconnectedError)
+            if (aEvent == Dtls::Session::kDisconnectedError)
             {
                 mCounters.mEpskcSecureSessionFailures++;
             }
-            else if (aEvent == Dtls::kDisconnectedPeerClosed)
+            else if (aEvent == Dtls::Session::kDisconnectedPeerClosed)
             {
                 mCounters.mEpskcDeactivationDisconnects++;
             }
@@ -689,7 +688,7 @@ void BorderAgent::HandleConnected(Dtls::ConnectEvent aEvent)
             mState        = kStateStarted;
             mUdpProxyPort = 0;
 
-            if (aEvent == Dtls::kDisconnectedError)
+            if (aEvent == Dtls::Session::kDisconnectedError)
             {
                 mCounters.mPskcSecureSessionFailures++;
             }
@@ -720,15 +719,13 @@ Error BorderAgent::Start(uint16_t aUdpPort, const uint8_t *aPsk, uint8_t aPskLen
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     if (mUsingEphemeralKey)
     {
-        SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(aUdpPort, kMaxEphemeralKeyConnectionAttempts,
-                                                            HandleSecureAgentStopped, this));
+        SuccessOrExit(error = Get<Tmf::SecureAgent>().SetMaxConnectionAttempts(kMaxEphemeralKeyConnectionAttempts,
+                                                                               HandleSecureAgentStopped, this));
     }
-    else
 #endif
-    {
-        SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(aUdpPort));
-    }
 
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Open());
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Bind(aUdpPort));
     SuccessOrExit(error = Get<Tmf::SecureAgent>().SetPsk(aPsk, aPskLength));
 
     Get<Tmf::SecureAgent>().SetConnectCallback(HandleConnected, this);
@@ -766,7 +763,7 @@ void BorderAgent::Stop(void)
 #endif
 
     mTimer.Stop();
-    Get<Tmf::SecureAgent>().Stop();
+    Get<Tmf::SecureAgent>().Close();
 
     mState        = kStateStopped;
     mUdpProxyPort = 0;

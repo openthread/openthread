@@ -81,6 +81,7 @@
 #include "common/random.hpp"
 #include "common/timer.hpp"
 #include "crypto/sha256.hpp"
+#include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "net/socket.hpp"
 #include "net/udp6.hpp"
@@ -202,6 +203,16 @@ public:
      */
     bool IsConnected(void) const { return (mState == kStateConnected); }
 
+    /**
+     * Gets the `SecureTransport` used by this session.
+     *
+     * @return The `SecureTransport` instance associated with this session.
+     */
+    SecureTransport &GetTransport(void) { return mTransport; }
+
+protected:
+    explicit SecureSession(SecureTransport &aTransport);
+
 private:
     static constexpr uint32_t kGuardTimeNewConnectionMilli = 2000;
     static constexpr uint16_t kMaxContentLen               = OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN;
@@ -220,8 +231,6 @@ private:
         kStateConnected,
         kStateDisconnecting,
     };
-
-    explicit SecureSession(SecureTransport &aTransport);
 
     bool  IsDisconnected(void) const { return mState == kStateDisconnected; }
     bool  IsInitializing(void) const { return mState == kStateInitializing; }
@@ -273,7 +282,7 @@ private:
 /**
  * Represents a secure transport, used as base class for `Dtls` and `Tls`.
  */
-class SecureTransport : public InstanceLocator
+class SecureTransport : private NonCopyable
 {
     friend class SecureSession;
 
@@ -605,6 +614,13 @@ public:
     Error SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
     /**
+     * Sets the PSK.
+     *
+     * @param[in]  aPskd  A Joiner PSKd.
+     */
+    void SetPsk(const JoinerPskd &aPskd);
+
+    /**
      * Checks and handles a received message provided to the SecureTransport object. If checks based on
      * the message info and current connection state pass, the message is processed.
      *
@@ -726,48 +742,61 @@ private:
 };
 
 /**
- * Represents a DTLS instance.
+ * Defines DTLS `Transport` and `Session`.
  */
-class Dtls : public SecureTransport, public SecureSession
+class Dtls
 {
 public:
+    class Session;
+
     /**
-     * Initializes the `Dtls` object.
-     *
-     * @param[in]  aInstance            A reference to the OpenThread instance.
-     * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
+     * Represents a DTLS transport.
      */
-    Dtls(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity)
-        : SecureTransport(aInstance, aLayerTwoSecurity, /* aDatagramTransport */ true)
-        , SecureSession(*static_cast<SecureTransport *>(this))
+    class Transport : public SecureTransport
     {
-        SetSession(*static_cast<SecureSession *>(this));
-    }
-};
+        friend class Session;
 
-#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+    public:
+        /**
+         * Initializes the `Dtls::Transport` object.
+         *
+         * @param[in]  aInstance            A reference to the OpenThread instance.
+         * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
+         */
+        Transport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity)
+            : SecureTransport(aInstance, aLayerTwoSecurity, /* aDatagramTransport */ true)
+        {
+        }
 
-/**
- * Represents an extended DTLS instance providing `Dtls::Extension` APIs.
- */
-class DtlsExtended : public Dtls
-{
-public:
+    private:
+        void SetSession(Session &aSesssion) { SecureTransport::SetSession(aSesssion); }
+    };
+
     /**
-     * Initializes the `DtlsExtended` object.
-     *
-     * @param[in]  aInstance            A reference to the OpenThread instance.
-     * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
-     * @param[in]  aExtension           An extension providing additional configuration methods.
+     * Represents a DTLS session.
      */
-    DtlsExtended(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, Extension &aExtension)
-        : Dtls(aInstance, aLayerTwoSecurity)
+    class Session : public SecureSession
     {
-        SetExtension(aExtension);
-    }
-};
+    public:
+        /**
+         * Initializes the `Dtls::Session` object.
+         *
+         * @param[in] aTransport  The DTLS transport to use for this session.
+         */
+        Session(Transport &aTransport)
+            : SecureSession(aTransport)
+        {
+            aTransport.SetSession(*this);
+        }
 
-#endif
+        /**
+         * Returns the DTLS transport used by this session.
+         *
+         * @returns The DTL transport associated with this session.
+         */
+        Transport &GetTransport(void) { return static_cast<Transport &>(SecureSession::GetTransport()); }
+    };
+};
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
