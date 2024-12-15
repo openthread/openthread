@@ -110,7 +110,9 @@ otError otCoapSecureConnect(otInstance                     *aInstance,
                             otHandleCoapSecureClientConnect aHandler,
                             void                           *aContext)
 {
-    return AsCoreType(aInstance).GetApplicationCoapSecure().Connect(AsCoreType(aSockAddr), aHandler, aContext);
+    AsCoreType(aInstance).GetApplicationCoapSecure().SetConnectCallback(aHandler, aContext);
+
+    return AsCoreType(aInstance).GetApplicationCoapSecure().Connect(AsCoreType(aSockAddr));
 }
 
 void otCoapSecureDisconnect(otInstance *aInstance) { AsCoreType(aInstance).GetApplicationCoapSecure().Disconnect(); }
@@ -176,7 +178,7 @@ void otCoapSecureSetClientConnectEventCallback(otInstance                     *a
                                                otHandleCoapSecureClientConnect aHandler,
                                                void                           *aContext)
 {
-    AsCoreType(aInstance).GetApplicationCoapSecure().SetConnectEventCallback(aHandler, aContext);
+    AsCoreType(aInstance).GetApplicationCoapSecure().SetConnectCallback(aHandler, aContext);
 }
 
 void otCoapSecureSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext)

@@ -273,7 +273,7 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
 #endif
 
     SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(SendRelayTransmit, this));
-    Get<Tmf::SecureAgent>().SetConnectEventCallback(&Commissioner::HandleSecureAgentConnectEvent, this);
+    Get<Tmf::SecureAgent>().SetConnectCallback(HandleSecureAgentConnectEvent, this);
 
     mStateCallback.Set(aStateCallback, aCallbackContext);
     mJoinerCallback.Set(aJoinerCallback, aCallbackContext);
