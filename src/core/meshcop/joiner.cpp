@@ -138,6 +138,7 @@ Error Joiner::Start(const char      *aPskd,
     Get<Mle::MleRouter>().UpdateLinkLocalAddress();
 
     SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(kJoinerUdpPort));
+    Get<Tmf::SecureAgent>().SetConnectCallback(HandleSecureCoapClientConnect, this);
     Get<Tmf::SecureAgent>().SetPsk(joinerPskd);
 
     for (JoinerRouter &router : mJoinerRouters)
@@ -358,7 +359,7 @@ Error Joiner::Connect(JoinerRouter &aRouter)
 
     sockAddr.GetAddress().SetToLinkLocalAddress(aRouter.mExtAddr);
 
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Connect(sockAddr, Joiner::HandleSecureCoapClientConnect, this));
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Connect(sockAddr));
 
     SetState(kStateConnect);
 

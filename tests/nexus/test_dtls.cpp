@@ -161,14 +161,16 @@ void TestDtls(void)
     {
         Dtls          dtls0(node0.GetInstance(), kWithLinkSecurity);
         Dtls          dtls1(node1.GetInstance(), kWithLinkSecurity);
-        Dtls          dtsl2(node2.GetInstance(), kWithLinkSecurity);
+        Dtls          dtls2(node2.GetInstance(), kWithLinkSecurity);
         Ip6::SockAddr sockAddr;
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         Log("Start DTLS (server) on node0 bound to port %u", kUdpPort);
 
         SuccessOrQuit(dtls0.SetPsk(kPsk, sizeof(kPsk)));
-        SuccessOrQuit(dtls0.Open(HandleReceive, HandleConnectEvent, &node0));
+        dtls0.SetReceiveCallback(HandleReceive, &node0);
+        dtls0.SetConnectCallback(HandleConnectEvent, &node0);
+        SuccessOrQuit(dtls0.Open());
         SuccessOrQuit(dtls0.Bind(kUdpPort));
 
         nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
@@ -183,7 +185,9 @@ void TestDtls(void)
         Log("Try to establish a DTLS connection from node 1 using a wrong PSK multiple times");
 
         SuccessOrQuit(dtls1.SetPsk(kPsk, sizeof(kPsk) - 1));
-        SuccessOrQuit(dtls1.Open(HandleReceive, HandleConnectEvent, &node1));
+        dtls1.SetReceiveCallback(HandleReceive, &node1);
+        dtls1.SetConnectCallback(HandleConnectEvent, &node1);
+        SuccessOrQuit(dtls1.Open());
 
         for (uint16_t iter = 0; iter <= kMaxAttempts + 1; iter++)
         {
@@ -205,7 +209,9 @@ void TestDtls(void)
         dtls1.Close();
 
         SuccessOrQuit(dtls1.SetPsk(kPsk, sizeof(kPsk)));
-        SuccessOrQuit(dtls1.Open(HandleReceive, HandleConnectEvent, &node1));
+        dtls1.SetReceiveCallback(HandleReceive, &node1);
+        dtls1.SetConnectCallback(HandleConnectEvent, &node1);
+        SuccessOrQuit(dtls1.Open());
         SuccessOrQuit(dtls1.Connect(sockAddr));
 
         nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
@@ -273,15 +279,17 @@ void TestDtls(void)
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         Log("Try to connect from node2 - validate that it fails to connect since already connected");
 
-        SuccessOrQuit(dtsl2.SetPsk(kPsk, sizeof(kPsk)));
-        SuccessOrQuit(dtsl2.Open(HandleReceive, HandleConnectEvent, &node2));
-        SuccessOrQuit(dtsl2.Connect(sockAddr));
+        SuccessOrQuit(dtls2.SetPsk(kPsk, sizeof(kPsk)));
+        dtls2.SetReceiveCallback(HandleReceive, &node2);
+        dtls2.SetReceiveCallback(HandleReceive, &node2);
+        SuccessOrQuit(dtls2.Open());
+        SuccessOrQuit(dtls2.Connect(sockAddr));
 
         nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
 
         VerifyOrQuit(dtls0.IsConnected());
         VerifyOrQuit(dtls1.IsConnected());
-        VerifyOrQuit(!dtsl2.IsConnected());
+        VerifyOrQuit(!dtls2.IsConnected());
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         Log("Disconnect from node0 - validate the disconnect events");
@@ -292,7 +300,7 @@ void TestDtls(void)
 
         VerifyOrQuit(!dtls0.IsConnected());
         VerifyOrQuit(!dtls1.IsConnected());
-        VerifyOrQuit(!dtsl2.IsConnected());
+        VerifyOrQuit(!dtls2.IsConnected());
 
         VerifyOrQuit(sDtlsEvent[node0.GetId()] == Dtls::kDisconnectedLocalClosed);
         VerifyOrQuit(sDtlsEvent[node1.GetId()] == Dtls::kDisconnectedPeerClosed);
@@ -301,7 +309,7 @@ void TestDtls(void)
 
         dtls0.Close();
         dtls1.Close();
-        dtsl2.Close();
+        dtls2.Close();
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -311,7 +319,9 @@ void TestDtls(void)
 
         SuccessOrQuit(dtls0.SetMaxConnectionAttempts(kMaxAttempts, HandleAutoClose, &node0));
         SuccessOrQuit(dtls0.SetPsk(kPsk, sizeof(kPsk)));
-        SuccessOrQuit(dtls0.Open(HandleReceive, HandleConnectEvent, &node0));
+        dtls0.SetReceiveCallback(HandleReceive, &node0);
+        dtls0.SetConnectCallback(HandleConnectEvent, &node0);
+        SuccessOrQuit(dtls0.Open());
         SuccessOrQuit(dtls0.Bind(kUdpPort));
 
         nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
@@ -323,7 +333,9 @@ void TestDtls(void)
         Log("Using wrong PSK try to establish DTLS connection with node0 %u times", kMaxAttempts - 1);
 
         SuccessOrQuit(dtls1.SetPsk(kPsk, sizeof(kPsk) - 1));
-        SuccessOrQuit(dtls1.Open(HandleReceive, HandleConnectEvent, &node1));
+        dtls1.SetReceiveCallback(HandleReceive, &node1);
+        dtls1.SetConnectCallback(HandleConnectEvent, &node1);
+        SuccessOrQuit(dtls1.Open());
 
         for (uint16_t iter = 0; iter < kMaxAttempts - 1; iter++)
         {
@@ -356,7 +368,7 @@ void TestDtls(void)
 
         dtls0.Close();
         dtls1.Close();
-        dtsl2.Close();
+        dtls2.Close();
     }
 }
 

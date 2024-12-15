@@ -55,7 +55,7 @@ public:
     /**
      * Function pointer which is called reporting a connection event (when connection established or disconnected)
      */
-    typedef otHandleCoapSecureClientConnect ConnectEventCallback;
+    typedef MeshCoP::SecureSession::ConnectHandler ConnectHandler;
 
     /**
      * Callback to notify when the agent is automatically stopped due to reaching the maximum number of connection
@@ -104,10 +104,7 @@ public:
      * @param[in]  aCallback  A pointer to a function to get called when connection state changes.
      * @param[in]  aContext   A pointer to arbitrary context information.
      */
-    void SetConnectEventCallback(ConnectEventCallback aCallback, void *aContext)
-    {
-        mConnectEventCallback.Set(aCallback, aContext);
-    }
+    void SetConnectCallback(ConnectHandler aCallback, void *aContext) { mDtls.SetConnectCallback(aCallback, aContext); }
 
     /**
      * Stops the secure CoAP agent.
@@ -118,12 +115,11 @@ public:
      * Initializes DTLS session with a peer.
      *
      * @param[in]  aSockAddr               A reference to the remote socket address,
-     * @param[in]  aCallback               A pointer to a function that will be called once DTLS connection is
-     * established.
      *
-     * @retval kErrorNone  Successfully started DTLS connection.
+     * @retval kErrorNone          Successfully started DTLS connection.
+     * @retval kErrorInvalidState  DTLS transport is not ready.
      */
-    Error Connect(const Ip6::SockAddr &aSockAddr, ConnectEventCallback aCallback, void *aContext);
+    Error Connect(const Ip6::SockAddr &aSockAddr) { return mDtls.Connect(aSockAddr); }
 
     /**
      * Indicates whether or not the DTLS session is active.
@@ -316,11 +312,10 @@ protected:
     static void HandleTransmit(Tasklet &aTasklet);
     void        HandleTransmit(void);
 
-    MeshCoP::Dtls                 &mDtls;
-    Callback<ConnectEventCallback> mConnectEventCallback;
-    Callback<AutoStopCallback>     mAutoStopCallback;
-    ot::MessageQueue               mTransmitQueue;
-    TaskletContext                 mTransmitTask;
+    MeshCoP::Dtls             &mDtls;
+    Callback<AutoStopCallback> mAutoStopCallback;
+    ot::MessageQueue           mTransmitQueue;
+    TaskletContext             mTransmitTask;
 };
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
