@@ -93,7 +93,6 @@ Error Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
     otPlatDiagChannelSet(channel);
 
 exit:
-    AppendErrorResult(error);
     return error;
 }
 
@@ -109,7 +108,6 @@ Error Diags::ProcessPower(uint8_t aArgsLength, char *aArgs[])
     otPlatDiagTxPowerSet(power);
 
 exit:
-    AppendErrorResult(error);
     return error;
 }
 
@@ -148,7 +146,6 @@ Error Diags::ProcessEcho(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    AppendErrorResult(error);
     return error;
 }
 
@@ -326,15 +323,12 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
     mIsTxPacketSet                                 = true;
 
 exit:
-    AppendErrorResult(error);
     return error;
 }
 
 Error Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
 {
     Error error = kErrorNone;
-
-    VerifyOrExit(otPlatDiagModeGet(), error = kErrorInvalidState);
 
     if (aArgsLength == 0)
     {
@@ -351,19 +345,16 @@ Error Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
         IgnoreError(Get<Radio>().Receive(mChannel));
         otPlatDiagChannelSet(mChannel);
 
-        Output("set channel to %d\r\nstatus 0x%02x\r\n", mChannel, error);
+        Output("set channel to %d\r\n", mChannel);
     }
 
 exit:
-    AppendErrorResult(error);
     return error;
 }
 
 Error Diags::ProcessPower(uint8_t aArgsLength, char *aArgs[])
 {
     Error error = kErrorNone;
-
-    VerifyOrExit(otPlatDiagModeGet(), error = kErrorInvalidState);
 
     if (aArgsLength == 0)
     {
@@ -379,11 +370,10 @@ Error Diags::ProcessPower(uint8_t aArgsLength, char *aArgs[])
         SuccessOrExit(error = Get<Radio>().SetTransmitPower(mTxPower));
         otPlatDiagTxPowerSet(mTxPower);
 
-        Output("set tx power to %d dBm\r\nstatus 0x%02x\r\n", mTxPower, error);
+        Output("set tx power to %d dBm\r\n", mTxPower);
     }
 
 exit:
-    AppendErrorResult(error);
     return error;
 }
 
@@ -391,14 +381,13 @@ Error Diags::ProcessRepeat(uint8_t aArgsLength, char *aArgs[])
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(otPlatDiagModeGet(), error = kErrorInvalidState);
     VerifyOrExit(aArgsLength > 0, error = kErrorInvalidArgs);
 
     if (StringMatch(aArgs[0], "stop"))
     {
         otPlatAlarmMilliStop(&GetInstance());
         mRepeatActive = false;
-        Output("repeated packet transmission is stopped\r\nstatus 0x%02x\r\n", error);
+        Output("repeated packet transmission is stopped\r\n");
     }
     else
     {
@@ -431,12 +420,11 @@ Error Diags::ProcessRepeat(uint8_t aArgsLength, char *aArgs[])
         mRepeatActive = true;
         uint32_t now  = otPlatAlarmMilliGetNow();
         otPlatAlarmMilliStartAt(&GetInstance(), now, mTxPeriod);
-        Output("sending packets of length %#x at the delay of %#x ms\r\nstatus 0x%02x\r\n", static_cast<int>(mTxLen),
-               static_cast<int>(mTxPeriod), error);
+        Output("sending packets of length %#x at the delay of %#x ms\r\n", static_cast<int>(mTxLen),
+               static_cast<int>(mTxPeriod));
     }
 
 exit:
-    AppendErrorResult(error);
     return error;
 }
 
@@ -446,7 +434,6 @@ Error Diags::ProcessSend(uint8_t aArgsLength, char *aArgs[])
     uint32_t txPackets;
     uint8_t  txLength;
 
-    VerifyOrExit(otPlatDiagModeGet(), error = kErrorInvalidState);
     VerifyOrExit(aArgsLength >= 1, error = kErrorInvalidArgs);
 
     SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint32(aArgs[0], txPackets));
@@ -470,12 +457,10 @@ Error Diags::ProcessSend(uint8_t aArgsLength, char *aArgs[])
     VerifyOrExit(txLength >= OT_RADIO_FRAME_MIN_SIZE, error = kErrorInvalidArgs);
     mTxLen = txLength;
 
-    Output("sending %#x packet(s), length %#x\r\nstatus 0x%02x\r\n", static_cast<int>(mTxPackets),
-           static_cast<int>(mTxLen), error);
+    Output("sending %#x packet(s), length %#x\r\n", static_cast<int>(mTxPackets), static_cast<int>(mTxLen));
     TransmitPacket();
 
 exit:
-    AppendErrorResult(error);
     return error;
 }
 
@@ -501,18 +486,15 @@ Error Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[])
     SuccessOrExit(error = Get<Radio>().SetTransmitPower(mTxPower));
     otPlatDiagModeSet(true);
     mStats.Clear();
-    Output("start diagnostics mode\r\nstatus 0x%02x\r\n", error);
+    Output("start diagnostics mode\r\n");
 
 exit:
-    AppendErrorResult(error);
     return error;
 }
 
 Error Diags::ProcessStats(uint8_t aArgsLength, char *aArgs[])
 {
     Error error = kErrorNone;
-
-    VerifyOrExit(otPlatDiagModeGet(), error = kErrorInvalidState);
 
     if ((aArgsLength == 1) && StringMatch(aArgs[0], "clear"))
     {
@@ -531,7 +513,6 @@ Error Diags::ProcessStats(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    AppendErrorResult(error);
     return error;
 }
 
@@ -539,10 +520,6 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
-
-    Error error = kErrorNone;
-
-    VerifyOrExit(otPlatDiagModeGet(), error = kErrorInvalidState);
 
     otPlatAlarmMilliStop(&GetInstance());
     otPlatDiagModeSet(false);
@@ -552,14 +529,12 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[])
     Output("received packets: %d\r\nsent packets: %d\r\n"
            "first received packet: rssi=%d, lqi=%d\r\n"
            "last received packet: rssi=%d, lqi=%d\r\n"
-           "\nstop diagnostics mode\r\nstatus 0x%02x\r\n",
+           "\nstop diagnostics mode\r\n",
            static_cast<int>(mStats.mReceivedPackets), static_cast<int>(mStats.mSentPackets),
            static_cast<int>(mStats.mFirstRssi), static_cast<int>(mStats.mFirstLqi), static_cast<int>(mStats.mLastRssi),
-           static_cast<int>(mStats.mLastLqi), error);
+           static_cast<int>(mStats.mLastLqi));
 
-exit:
-    AppendErrorResult(error);
-    return error;
+    return kErrorNone;
 }
 
 void Diags::TransmitPacket(void)
@@ -635,13 +610,12 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
 {
     Error error = kErrorInvalidArgs;
 
-    VerifyOrExit(otPlatDiagModeGet(), error = kErrorInvalidState);
     VerifyOrExit(aArgsLength > 0, error = kErrorInvalidArgs);
 
     if (StringMatch(aArgs[0], "sleep"))
     {
         SuccessOrExit(error = Get<Radio>().Sleep());
-        Output("set radio from receive to sleep \r\nstatus 0x%02x\r\n", error);
+        Output("set radio from receive to sleep \r\n");
     }
     else if (StringMatch(aArgs[0], "receive"))
     {
@@ -653,7 +627,7 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
         if (aArgsLength == 0)
         {
             SuccessOrExit(error = RadioReceive());
-            Output("set radio from sleep to receive on channel %d\r\nstatus 0x%02x\r\n", mChannel, error);
+            Output("set radio from sleep to receive on channel %d\r\n", mChannel);
             ExitNow();
         }
 
@@ -723,7 +697,6 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    AppendErrorResult(error);
     return error;
 }
 
@@ -840,7 +813,6 @@ Error Diags::ProcessContinuousWave(uint8_t aArgsLength, char *aArgs[])
 {
     Error error = kErrorInvalidArgs;
 
-    VerifyOrExit(otPlatDiagModeGet(), error = kErrorInvalidState);
     VerifyOrExit(aArgsLength > 0, error = kErrorInvalidArgs);
 
     if (StringMatch(aArgs[0], "start"))
@@ -853,7 +825,6 @@ Error Diags::ProcessContinuousWave(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    AppendErrorResult(error);
     return error;
 }
 
@@ -861,7 +832,6 @@ Error Diags::ProcessStream(uint8_t aArgsLength, char *aArgs[])
 {
     Error error = kErrorInvalidArgs;
 
-    VerifyOrExit(otPlatDiagModeGet(), error = kErrorInvalidState);
     VerifyOrExit(aArgsLength > 0, error = kErrorInvalidArgs);
 
     if (StringMatch(aArgs[0], "start"))
@@ -874,7 +844,6 @@ Error Diags::ProcessStream(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    AppendErrorResult(error);
     return error;
 }
 
@@ -891,8 +860,6 @@ Error Diags::ProcessPowerSettings(uint8_t aArgsLength, char *aArgs[])
     Error         error = kErrorInvalidArgs;
     uint8_t       channel;
     PowerSettings powerSettings;
-
-    VerifyOrExit(otPlatDiagModeGet(), error = kErrorInvalidState);
 
     if (aArgsLength == 0)
     {
@@ -936,7 +903,6 @@ Error Diags::ProcessPowerSettings(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    AppendErrorResult(error);
     return error;
 }
 
@@ -950,8 +916,6 @@ Error Diags::ProcessRawPowerSetting(uint8_t aArgsLength, char *aArgs[])
 {
     Error           error = kErrorInvalidArgs;
     RawPowerSetting setting;
-
-    VerifyOrExit(otPlatDiagModeGet(), error = kErrorInvalidState);
 
     if (aArgsLength == 0)
     {
@@ -974,7 +938,6 @@ Error Diags::ProcessRawPowerSetting(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    AppendErrorResult(error);
     return error;
 }
 
@@ -1024,7 +987,6 @@ Error Diags::ProcessGpio(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    AppendErrorResult(error);
     return error;
 }
 
@@ -1112,6 +1074,12 @@ Error Diags::ProcessCmd(uint8_t aArgsLength, char *aArgs[])
         ExitNow();
     }
 
+    if (!otPlatDiagModeGet() && !StringMatch(aArgs[0], "start"))
+    {
+        Output("diagnostics mode is disabled\r\n");
+        ExitNow(error = kErrorInvalidState);
+    }
+
     for (const Command &command : sCommands)
     {
         if (StringMatch(aArgs[0], command.mName))
@@ -1130,6 +1098,8 @@ exit:
     {
         Output("diag feature '%s' is not supported\r\n", aArgs[0]);
     }
+
+    AppendErrorResult(error);
 
     return error;
 }

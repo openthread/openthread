@@ -48,9 +48,9 @@ class TestDiag(thread_cert.TestCase):
             ('diag invalid test\n', 'diag feature \'invalid\' is not supported'),
             ('diag', 'diagnostics mode is enabled\r\n'),
             ('diag channel 10', 'failed\r\nstatus 0x7\r\n'),
-            ('diag channel 11', 'set channel to 11\r\nstatus 0x00\r\n'),
+            ('diag channel 11', 'set channel to 11\r\n'),
             ('diag channel', 'channel: 11\r\n'),
-            ('diag power -10', 'set tx power to -10 dBm\r\nstatus 0x00\r\n'),
+            ('diag power -10', 'set tx power to -10 dBm\r\n'),
             ('diag power', 'tx power: -10 dBm\r\n'),
             (
                 'diag stats',
@@ -60,26 +60,26 @@ class TestDiag(thread_cert.TestCase):
             ),
             (
                 'diag send 20 100',
-                r'sending 0x14 packet\(s\), length 0x64\r\nstatus 0x00\r\n',
+                r'sending 0x14 packet\(s\), length 0x64\r\n',
             ),
             (
                 '  diag \t send    \t 20\t100',
-                r'sending 0x14 packet\(s\), length 0x64\r\nstatus 0x00\r\n',
+                r'sending 0x14 packet\(s\), length 0x64\r\n',
             ),
             (
                 'diag repeat 100 100',
-                'sending packets of length 0x64 at the delay of 0x64 ms\r\nstatus 0x00\r\n',
+                'sending packets of length 0x64 at the delay of 0x64 ms\r\n',
             ),
             (
                 'diag repeat stop',
-                'repeated packet transmission is stopped\r\nstatus 0x00\r\n',
+                'repeated packet transmission is stopped\r\n',
             ),
             (
                 'diag stop',
                 r'received packets: 0\r\nsent packets: ([1-9]\d*)\r\n'
                 'first received packet: rssi=0, lqi=0\r\n'
                 'last received packet: rssi=0, lqi=0\r\n\n'
-                r'stop diagnostics mode\r\nstatus 0x00\r\n',
+                r'stop diagnostics mode\r\n',
             ),
             ('diag', 'diagnostics mode is disabled\r\n'),
             (

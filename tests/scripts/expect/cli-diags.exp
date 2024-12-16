@@ -36,12 +36,10 @@ spawn_node 2
 switch_node 1
 send "diag start\n"
 expect "start diagnostics mode"
-expect "status 0x00"
 expect_line "Done"
 
 send "diag channel 11\n"
 expect "set channel to 11"
-expect "status 0x00"
 expect_line "Done"
 
 send "diag stats clear\n"
@@ -52,12 +50,10 @@ switch_node 2
 
 send "diag start\n"
 expect "start diagnostics mode"
-expect "status 0x00"
 expect_line "Done"
 
 send "diag channel 11\n"
 expect "set channel to 11"
-expect "status 0x00"
 expect_line "Done"
 
 send "diag stats clear\n"
@@ -66,7 +62,6 @@ expect_line "Done"
 
 send "diag send 10 100\n"
 expect "sending 0xa packet(s), length 0x64"
-expect "status 0x00"
 expect_line "Done"
 
 sleep 2
@@ -95,12 +90,10 @@ switch_node 2
 
 send "diag repeat 20 100\n"
 expect "sending packets of length 0x64 at the delay of 0x14 ms"
-expect "status 0x00"
 expect_line "Done"
 sleep 1
 send "diag repeat stop\n"
 expect "repeated packet transmission is stopped"
-expect "status 0x00"
 expect_line "Done"
 
 switch_node 1
@@ -123,7 +116,6 @@ spawn_node 1
 
 send "diag start\n"
 expect "start diagnostics mode"
-expect "status 0x00"
 expect_line "Done"
 
 send_user "input too short test\n"
@@ -178,17 +170,14 @@ expect "Done"
 
 send "diag channel 11\n"
 expect "set channel to 11"
-expect "status 0x00"
 expect_line "Done"
 
 send "diag power 10\n"
 expect "set tx power to 10 dBm"
-expect "status 0x00"
 expect_line "Done"
 
 send "diag radio sleep\n"
 expect "set radio from receive to sleep"
-expect "status 0x00"
 expect_line "Done"
 
 send "diag radio state\n"
@@ -197,7 +186,6 @@ expect_line "Done"
 
 send "diag radio receive\n"
 expect "set radio from sleep to receive on channel 11"
-expect "status 0x00"
 expect_line "Done"
 
 send "diag radio state\n"
