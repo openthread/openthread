@@ -357,10 +357,14 @@ Error SecureTransport::Setup(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Setup the `Extension` components.
 
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE
     if (mExtension != nullptr)
     {
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
         mExtension->mEcdheEcdsaInfo.Init();
+#endif
+        rval = mExtension->SetApplicationSecureKeys();
+        VerifyOrExit(rval == 0);
     }
 #endif
 
@@ -404,14 +408,8 @@ Error SecureTransport::Setup(void)
     if (mCipherSuite == kEcjpakeWithAes128Ccm8)
     {
         rval = mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
+        VerifyOrExit(rval == 0);
     }
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE
-    else if (mExtension != nullptr)
-    {
-        rval = mExtension->SetApplicationSecureKeys();
-    }
-#endif
-    VerifyOrExit(rval == 0);
 
     mReceiveMessage = nullptr;
     mMessageSubType = Message::kSubTypeNone;
@@ -937,6 +935,10 @@ int SecureTransport::Extension::SetApplicationSecureKeys(void)
 
     switch (mSecureTransport.mCipherSuite)
     {
+    case kEcjpakeWithAes128Ccm8:
+        // PSK will be set on `mbedtls_ssl_context` when set up.
+        break;
+
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     case kEcdheEcdsaWithAes128Ccm8:
     case kEcdheEcdsaWithAes128GcmSha256:
