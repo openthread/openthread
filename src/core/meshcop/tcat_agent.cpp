@@ -34,6 +34,7 @@
 #include "tcat_agent.hpp"
 #include <openthread/platform/settings.h>
 #include "common/code_utils.hpp"
+#include "crypto/storage.hpp"
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
@@ -65,6 +66,7 @@ TcatAgent::TcatAgent(Instance &aInstance)
     , mPskdVerified(false)
     , mPskcVerified(false)
     , mInstallCodeVerified(false)
+    , mIsCommissioned(false)
 {
     mJoinerPskd.Clear();
     mCurrentServiceName[0] = 0;
@@ -98,6 +100,7 @@ void TcatAgent::Stop(void)
     mPskdVerified        = false;
     mPskcVerified        = false;
     mInstallCodeVerified = false;
+    mIsCommissioned      = false;
     LogInfo("TCAT agent stopped");
 }
 
@@ -165,6 +168,7 @@ Error TcatAgent::Connected(MeshCoP::Tls::Extension &aTls)
     mCurrentApplicationProtocol = kApplicationProtocolNone;
     mCurrentServiceName[0]      = 0;
     mState                      = kStateConnected;
+    mIsCommissioned             = Get<ActiveDatasetManager>().IsCommissioned();
     LogInfo("TCAT agent connected");
 
 exit:
@@ -484,6 +488,10 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
             statusCode = kStatusParseError;
             break;
 
+        case kErrorInvalidArgs:
+            statusCode = kStatusValueError;
+            break;
+
         case kErrorInvalidCommand:
             statusCode = kStatusUnsupported;
             break;
@@ -498,6 +506,10 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
 
         case kErrorSecurity:
             statusCode = kStatusHashError;
+            break;
+
+        case kErrorAlready:
+            statusCode = kStatusInvalidState;
             break;
 
         default:
@@ -520,9 +532,12 @@ Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncomingMessa
     unsigned char buf[kCommissionerCertMaxLength];
     size_t        bufLen = sizeof(buf);
 
+    VerifyOrExit(!mIsCommissioned, error = kErrorAlready);
+
     offsetRange.Init(aOffset, aLength);
     SuccessOrExit(error = dataset.SetFrom(aIncomingMessage, offsetRange));
     SuccessOrExit(error = dataset.ValidateTlvs());
+    VerifyOrExit(dataset.ContainsTlv(Tlv::kNetworkKey), error = kErrorInvalidArgs);
 
     if (!CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mCommissioningFlags,
                                              mDeviceAuthorizationField.mCommissioningFlags, &dataset))
@@ -837,12 +852,27 @@ void TcatAgent::CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBuf
     Crypto::Key             cryptoKey;
     Crypto::HmacSha256      hmac;
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    Crypto::Storage::KeyRef keyRef;
+    SuccessOrExit(Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeHmac,
+                                             Crypto::Storage::kKeyAlgorithmHmacSha256, Crypto::Storage::kUsageSignHash,
+                                             Crypto::Storage::kTypeVolatile, reinterpret_cast<const uint8_t *>(aBuf),
+                                             aBufLen));
+    cryptoKey.SetAsKeyRef(keyRef);
+#else
     cryptoKey.Set(reinterpret_cast<const uint8_t *>(aBuf), static_cast<uint16_t>(aBufLen));
+#endif
 
     hmac.Start(cryptoKey);
     hmac.Update(aChallenge);
     hmac.Update(rawKey.p, static_cast<uint16_t>(rawKey.len));
     hmac.Finish(aHash);
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    Crypto::Storage::DestroyKey(keyRef);
+exit:
+#endif
+    return;
 }
 
 Error TcatAgent::HandleStartThreadInterface(void)
@@ -930,12 +960,14 @@ Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementDat
                                      reinterpret_cast<uint8_t *>(&caps));
     }
 
-    tas.mRsv                 = 0;
-    tas.mMultiradioSupport   = otPlatBleSupportsMultiRadio(&GetInstance());
-    tas.mIsCommisionned      = Get<ActiveDatasetManager>().IsCommissioned();
-    tas.mThreadNetworkActive = Get<Mle::Mle>().IsAttached();
-    tas.mDeviceType          = Get<Mle::Mle>().GetDeviceMode().IsFullThreadDevice();
-    tas.mRxOnWhenIdle        = Get<Mle::Mle>().GetDeviceMode().IsRxOnWhenIdle();
+    tas.mRsv                          = 0;
+    tas.mMultiradioSupport            = otPlatBleSupportsMultiRadio(&GetInstance());
+    tas.mStoresActiveOpertonalDataset =
+        Get<ActiveDatasetManager>().IsPartiallyComplete() || Get<ActiveDatasetManager>().IsCommissioned();
+    tas.mIsCommisionned               = Get<ActiveDatasetManager>().IsCommissioned();
+    tas.mThreadNetworkActive          = Get<Mle::Mle>().IsAttached();
+    tas.mDeviceType                   = Get<Mle::Mle>().GetDeviceMode().IsFullThreadDevice();
+    tas.mRxOnWhenIdle                 = Get<Mle::Mle>().GetDeviceMode().IsRxOnWhenIdle();
 
 #if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE || OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE || \
                        OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE)

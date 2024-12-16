@@ -34,6 +34,7 @@
 #include "mle.hpp"
 
 #include "instance/instance.hpp"
+#include "radio/ble_secure.hpp"
 #include "utils/static_counter.hpp"
 
 namespace ot {
@@ -309,6 +310,10 @@ void Mle::SetRole(DeviceRole aRole)
         mCounters.mLeaderRole++;
         break;
     }
+
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    Get<Ble::BleSecure>().NotifyAdvertisementChanged();
+#endif
 
     // If the previous state is disabled, the parent can be in kStateRestored.
     if (!IsChild() && oldRole != kRoleDisabled)

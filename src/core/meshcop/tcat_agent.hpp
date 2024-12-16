@@ -208,6 +208,8 @@ public:
         kStatusUndefined    = OT_TCAT_STATUS_UNDEFINED,     ///< The requested value, data or service is not defined
                                                             ///< (currently) or not present
         kStatusHashError = OT_TCAT_STATUS_HASH_ERROR, ///< The hash value presented by the commissioner was incorrect
+        kStatusInvalidState =
+            OT_TCAT_STATUS_INVALID_STATE, ///< The TCAT device is in invalid state to exectute the command
         kStatusUnauthorized =
             OT_TCAT_STATUS_UNAUTHORIZED, ///< Sender does not have sufficient authorization for the given command
     };
@@ -403,6 +405,7 @@ private:
     bool                             mPskdVerified : 1;
     bool                             mPskcVerified : 1;
     bool                             mInstallCodeVerified : 1;
+    bool                             mIsCommissioned : 1;
 
     friend class Ble::BleSecure;
 };

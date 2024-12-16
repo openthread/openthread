@@ -272,6 +272,14 @@ public:
      */
     bool GetInstallCodeVerifyStatus(void) const { return mTcatAgent.GetInstallCodeVerifyStatus(); }
 
+    /**
+     * @brief Notifies bleLayer that advetrisement should be updated.
+     *
+     * @retval kErrorNone          Successfully updated.
+     * @return kErrorFailed        Update failed.
+     */
+    Error NotifyAdvertisementChanged(void);
+
 private:
     enum BleState : uint8_t
     {
