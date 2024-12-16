@@ -587,6 +587,50 @@ void Diags::TransmitPacket(void)
     IgnoreError(Get<Radio>().Transmit(*static_cast<Mac::TxFrame *>(mTxPacket)));
 }
 
+Error Diags::ParseReceiveConfigFormat(const char *aFormat, ReceiveConfig &aConfig)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aFormat != nullptr, error = kErrorInvalidArgs);
+
+    for (const char *arg = aFormat; *arg != '\0'; arg++)
+    {
+        switch (*arg)
+        {
+        case 'r':
+            aConfig.mShowRssi = true;
+            break;
+
+        case 'l':
+            aConfig.mShowLqi = true;
+            break;
+
+        case 'p':
+            aConfig.mShowPsdu = true;
+            break;
+
+        default:
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+
+exit:
+    return error;
+}
+
+Error Diags::RadioReceive(void)
+{
+    Error error;
+
+    SuccessOrExit(error = Get<Radio>().Receive(mChannel));
+    SuccessOrExit(error = Get<Radio>().SetTransmitPower(mTxPower));
+    otPlatDiagChannelSet(mChannel);
+    otPlatDiagTxPowerSet(mTxPower);
+
+exit:
+    return error;
+}
+
 Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
 {
     Error error = kErrorInvalidArgs;
@@ -601,12 +645,44 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
     }
     else if (StringMatch(aArgs[0], "receive"))
     {
-        SuccessOrExit(error = Get<Radio>().Receive(mChannel));
-        SuccessOrExit(error = Get<Radio>().SetTransmitPower(mTxPower));
-        otPlatDiagChannelSet(mChannel);
-        otPlatDiagTxPowerSet(mTxPower);
+        ReceiveConfig receiveConfig;
 
-        Output("set radio from sleep to receive on channel %d\r\nstatus 0x%02x\r\n", mChannel, error);
+        aArgs++;
+        aArgsLength--;
+
+        if (aArgsLength == 0)
+        {
+            SuccessOrExit(error = RadioReceive());
+            Output("set radio from sleep to receive on channel %d\r\nstatus 0x%02x\r\n", mChannel, error);
+            ExitNow();
+        }
+
+        if (StringMatch(aArgs[0], "async"))
+        {
+            aArgs++;
+            aArgsLength--;
+            receiveConfig.mIsAsyncCommand = true;
+        }
+
+        VerifyOrExit(aArgsLength > 0);
+        SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint16(aArgs[0], receiveConfig.mNumFrames));
+        aArgs++;
+        aArgsLength--;
+
+        if (aArgsLength > 0)
+        {
+            SuccessOrExit(error = ParseReceiveConfigFormat(aArgs[0], receiveConfig));
+        }
+
+        SuccessOrExit(error = RadioReceive());
+
+        receiveConfig.mIsEnabled = true;
+        mReceiveConfig           = receiveConfig;
+
+        if (!mReceiveConfig.mIsAsyncCommand)
+        {
+            error = kErrorPending;
+        }
     }
     else if (StringMatch(aArgs[0], "state"))
     {
@@ -668,10 +744,54 @@ void Diags::AlarmFired(void)
     }
 }
 
+void Diags::OutputReceivedFrame(const otRadioFrame *aFrame)
+{
+    VerifyOrExit(mReceiveConfig.mIsEnabled && (aFrame != nullptr));
+
+    Output("%u", mReceiveConfig.mReceiveCount++);
+
+    if (mReceiveConfig.mShowRssi)
+    {
+        Output(", rssi:%d", aFrame->mInfo.mRxInfo.mRssi);
+    }
+
+    if (mReceiveConfig.mShowLqi)
+    {
+        Output(", lqi:%u", aFrame->mInfo.mRxInfo.mLqi);
+    }
+
+    if (mReceiveConfig.mShowPsdu)
+    {
+        static constexpr uint16_t kBufSize = 255;
+        char                      buf[kBufSize];
+        StringWriter              writer(buf, sizeof(buf));
+
+        writer.AppendHexBytes(aFrame->mPsdu, aFrame->mLength);
+        Output(", len:%u, psdu:%s", aFrame->mLength, buf);
+    }
+
+    Output("\r\n");
+
+    if (mReceiveConfig.mReceiveCount >= mReceiveConfig.mNumFrames)
+    {
+        mReceiveConfig.mIsEnabled = false;
+
+        if (!mReceiveConfig.mIsAsyncCommand)
+        {
+            Output("OT_ERROR_NONE");
+        }
+    }
+
+exit:
+    return;
+}
+
 void Diags::ReceiveDone(otRadioFrame *aFrame, Error aError)
 {
     if (aError == kErrorNone)
     {
+        OutputReceivedFrame(aFrame);
+
         // for sensitivity test, only record the rssi and lqi for the first and last packet
         if (mStats.mReceivedPackets == 0)
         {
@@ -910,7 +1030,7 @@ exit:
 
 void Diags::AppendErrorResult(Error aError)
 {
-    if (aError != kErrorNone)
+    if ((aError != kErrorNone) && (aError != kErrorPending))
     {
         Output("failed\r\nstatus %#x\r\n", aError);
     }

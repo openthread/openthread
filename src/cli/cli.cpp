@@ -199,7 +199,17 @@ void Interpreter::HandleDiagOutput(const char *aFormat, va_list aArguments, void
     static_cast<Interpreter *>(aContext)->HandleDiagOutput(aFormat, aArguments);
 }
 
-void Interpreter::HandleDiagOutput(const char *aFormat, va_list aArguments) { OutputFormatV(aFormat, aArguments); }
+void Interpreter::HandleDiagOutput(const char *aFormat, va_list aArguments)
+{
+    if (strcmp(aFormat, "OT_ERROR_NONE") == 0)
+    {
+        OutputResult(OT_ERROR_NONE);
+    }
+    else
+    {
+        OutputFormatV(aFormat, aArguments);
+    }
+}
 #endif
 
 template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])

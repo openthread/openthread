@@ -707,7 +707,6 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
         {
             neighbor = mRouterTable.FindRouterByRloc16(sourceAddress);
             VerifyOrExit(neighbor != nullptr, error = kErrorParse);
-            VerifyOrExit(!neighbor->IsStateLinkRequest(), error = kErrorAlready);
 
             if (!neighbor->IsStateValid())
             {
@@ -1041,6 +1040,8 @@ void MleRouter::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageTyp
     router->ClearLinkAcceptTimeout();
 
     mNeighborTable.Signal(NeighborTable::kRouterAdded, *router);
+
+    mDelayedSender.RemoveScheduledLinkRequest(*router);
 
     if (shouldUpdateRoutes)
     {
