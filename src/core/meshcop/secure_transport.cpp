@@ -1089,7 +1089,7 @@ Error SecureTransport::Extension::GetPeerCertificateDer(uint8_t *aPeerCert, size
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(mSecureTransport.IsSessionConnected(), error = kErrorInvalidState);
+    VerifyOrExit(mSecureTransport.IsStateConnected(), error = kErrorInvalidState);
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
     VerifyOrExit(mSecureTransport.mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.len < aCertBufferSize,
