@@ -297,12 +297,12 @@ protected:
 
     Error Open(uint16_t aMaxAttempts, AutoStopCallback aCallback, void *aContext);
 
-    static Error Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+    static Error Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &)
     {
-        return static_cast<CoapSecureBase &>(aCoapBase).Send(aMessage, aMessageInfo);
+        return static_cast<CoapSecureBase &>(aCoapBase).Send(aMessage);
     }
 
-    Error Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error Send(ot::Message &aMessage) { return mDtls.Send(aMessage); }
 
     static void HandleDtlsConnectEvent(MeshCoP::Dtls::ConnectEvent aEvent, void *aContext);
     void        HandleDtlsConnectEvent(MeshCoP::Dtls::ConnectEvent aEvent);
@@ -313,14 +313,9 @@ protected:
     static void HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength);
     void        HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength);
 
-    static void HandleTransmit(Tasklet &aTasklet);
-    void        HandleTransmit(void);
-
     MeshCoP::Dtls                 &mDtls;
     Callback<ConnectEventCallback> mConnectEventCallback;
     Callback<AutoStopCallback>     mAutoStopCallback;
-    ot::MessageQueue               mTransmitQueue;
-    TaskletContext                 mTransmitTask;
 };
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE

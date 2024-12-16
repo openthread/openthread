@@ -45,7 +45,6 @@ RegisterLogModule("CoapSecure");
 CoapSecureBase::CoapSecureBase(Instance &aInstance, MeshCoP::Dtls &aDtls)
     : CoapBase(aInstance, Send)
     , mDtls(aDtls)
-    , mTransmitTask(aInstance, HandleTransmit, this)
 {
 }
 
@@ -92,7 +91,6 @@ void CoapSecureBase::Stop(void)
 {
     mDtls.Close();
 
-    mTransmitQueue.DequeueAndFreeAll();
     ClearRequestsAndResponses();
 }
 
@@ -162,16 +160,6 @@ Error CoapSecureBase::SendMessage(Message                &aMessage,
 }
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
-Error CoapSecureBase::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
-    mTransmitQueue.Enqueue(aMessage);
-    mTransmitTask.Post();
-
-    return kErrorNone;
-}
-
 void CoapSecureBase::HandleDtlsConnectEvent(MeshCoP::Dtls::ConnectEvent aEvent, void *aContext)
 {
     return static_cast<CoapSecureBase *>(aContext)->HandleDtlsConnectEvent(aEvent);
@@ -209,32 +197,6 @@ void CoapSecureBase::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 
 exit:
     FreeMessage(message);
-}
-
-void CoapSecureBase::HandleTransmit(Tasklet &aTasklet)
-{
-    static_cast<CoapSecureBase *>(static_cast<TaskletContext &>(aTasklet).GetContext())->HandleTransmit();
-}
-
-void CoapSecureBase::HandleTransmit(void)
-{
-    Error        error   = kErrorNone;
-    ot::Message *message = mTransmitQueue.GetHead();
-
-    VerifyOrExit(message != nullptr);
-    mTransmitQueue.Dequeue(*message);
-
-    if (mTransmitQueue.GetHead() != nullptr)
-    {
-        mTransmitTask.Post();
-    }
-
-    SuccessOrExit(error = mDtls.Send(*message));
-    LogDebg("Transmit");
-
-exit:
-    FreeMessageOnError(message, error);
-    LogWarnOnError(error, "transmit");
 }
 
 } // namespace Coap
