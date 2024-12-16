@@ -82,8 +82,10 @@ typedef enum otTcatStatusCode
     OT_TCAT_STATUS_VALUE_ERROR   = 3, ///< The value of the transmitted TLV has an error
     OT_TCAT_STATUS_GENERAL_ERROR = 4, ///< An error not matching any other category occurred
     OT_TCAT_STATUS_BUSY          = 5, ///< Command cannot be executed because the resource is busy
-    OT_TCAT_STATUS_UNDEFINED    = 6, ///< The requested value, data or service is not defined (currently) or not present
-    OT_TCAT_STATUS_HASH_ERROR   = 7, ///< The hash value presented by the commissioner was incorrect
+    OT_TCAT_STATUS_UNDEFINED  = 6, ///< The requested value, data or service is not defined (currently) or not present
+    OT_TCAT_STATUS_HASH_ERROR = 7, ///< The hash value presented by the commissioner was incorrect
+    OT_TCAT_STATUS_INVALID_STATE = 8, /** The Command cannot be executed because the TCAT
+                                Device is not in a state correct state */
     OT_TCAT_STATUS_UNAUTHORIZED = 16, ///< Sender does not have sufficient authorization for the given command
 
 } otTcatStatusCode;
@@ -163,21 +165,17 @@ typedef struct otTcatVendorInfo
 } otTcatVendorInfo;
 
 /**
- * Pointer to call when application data was received over a TCAT TLS connection.
+ * Pointer to call when vendor specific data was received over a TCAT TLS connection.
  *
  * @param[in]  aInstance                 A pointer to an OpenThread instance.
  * @param[in]  aMessage                  A pointer to the message.
  * @param[in]  aOffset                   The offset where the application data begins.
- * @param[in]  aTcatApplicationProtocol  The protocol type of the message received.
- * @param[in]  aServiceName              The name of the service the message is direced to.
  * @param[in]  aContext                  A pointer to arbitrary context information.
  */
-typedef void (*otHandleTcatApplicationDataReceive)(otInstance               *aInstance,
-                                                   const otMessage          *aMessage,
-                                                   int32_t                   aOffset,
-                                                   otTcatApplicationProtocol aTcatApplicationProtocol,
-                                                   const char               *aServiceName,
-                                                   void                     *aContext);
+typedef void (*otHandleTcatApplicationDataReceive)(otInstance      *aInstance,
+                                                   const otMessage *aMessage,
+                                                   int32_t          aOffset,
+                                                   void            *aContext);
 
 /**
  * Pointer to call to notify the completion of a join operation.

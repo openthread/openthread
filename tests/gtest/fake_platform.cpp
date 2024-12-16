@@ -512,6 +512,8 @@ bool otPlatBleSupportsMultiRadio(otInstance *) { return false; }
 
 otError otPlatBleGapAdvSetData(otInstance *, uint8_t *, uint16_t) { return OT_ERROR_NONE; }
 
+otError otPlatBleGapAdvUpdateData(otInstance *, uint8_t *, uint16_t) { return OT_ERROR_NONE; }
+
 void otPlatSettingsInit(otInstance *, const uint16_t *, uint16_t) {}
 
 void otPlatSettingsDeinit(otInstance *) {}

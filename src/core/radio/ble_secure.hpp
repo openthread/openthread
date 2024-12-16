@@ -160,20 +160,6 @@ public:
     bool IsTcatEnabled(void) const { return mTcatAgent.IsEnabled(); }
 
     /**
-     * Indicates whether or not a TCAT command class is authorized for use.
-     *
-     * @param[in]  aInstance  A pointer to an OpenThread instance.
-     * @param[in]  aCommandClass  A command class to subject to authorization check.
-     *
-     * @retval TRUE   The command class is authorized for use by the present TCAT commissioner.
-     * @retval FALSE  The command class is not authorized for use.
-     */
-    bool IsCommandClassAuthorized(CommandClass aCommandClass) const
-    {
-        return mTcatAgent.IsCommandClassAuthorized(aCommandClass);
-    }
-
-    /**
      * Sets the PSK.
      *
      * @param[in]  aPsk        A pointer to the PSK.
@@ -275,6 +261,14 @@ public:
      * @return FALSE The install code was not verified.
      */
     bool GetInstallCodeVerifyStatus(void) const { return mTcatAgent.GetInstallCodeVerifyStatus(); }
+
+    /**
+     * @brief Notifies bleLayer that advetrisement should be updated.
+     *
+     * @retval kErrorNone          Successfully updated.
+     * @return kErrorFailed        Update failed.
+     */
+    Error NotifyAdvertisementChanged(void);
 
 private:
     enum BleState : uint8_t

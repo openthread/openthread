@@ -109,8 +109,9 @@ public:
         kPskdFlag          = 1 << 1, ///< Access requires proof-of-possession of the device's PSKd
         kNetworkNameFlag   = 1 << 2, ///< Access requires matching network name
         kExtendedPanIdFlag = 1 << 3, ///< Access requires matching XPANID
-        kThreadDomainFlag  = 1 << 4, ///< Access requires matching XPANID
+        kThreadDomainFlag  = 1 << 4, ///< Access requires matching Thread Domain Name
         kPskcFlag          = 1 << 5, ///< Access requires proof-of-possession of the device's PSKc
+        kMaxFlag           = 1 << 6, ///< Maximum value of access flags
     };
 
     /**
@@ -208,6 +209,8 @@ public:
         kStatusUndefined    = OT_TCAT_STATUS_UNDEFINED,     ///< The requested value, data or service is not defined
                                                             ///< (currently) or not present
         kStatusHashError = OT_TCAT_STATUS_HASH_ERROR, ///< The hash value presented by the commissioner was incorrect
+        kStatusInvalidState =
+            OT_TCAT_STATUS_INVALID_STATE, ///< The TCAT device is in invalid state to exectute the command
         kStatusUnauthorized =
             OT_TCAT_STATUS_UNAUTHORIZED, ///< Sender does not have sufficient authorization for the given command
     };
@@ -305,16 +308,6 @@ public:
     bool IsConnected(void) const { return mState == kStateConnected; }
 
     /**
-     * Indicates whether or not a TCAT command class is authorized for use.
-     *
-     * @param[in] aCommandClass Command class to subject to authorization check.
-     *
-     * @retval TRUE   The command class is authorized for use by the present TCAT commissioner.
-     * @retval FALSE  The command class is not authorized for use.
-     */
-    bool IsCommandClassAuthorized(CommandClass aCommandClass) const;
-
-    /**
      * Gets TCAT advertisement data.
      *
      * @param[out] aLen               Advertisement data length (up to OT_TCAT_ADVERTISEMENT_MAX_LEN).
@@ -361,6 +354,7 @@ private:
                                 bool          &aResponse);
     Error HandleStartThreadInterface(void);
     Error HandleGetCommissionerCertificate(Message &aOutgoingMessage, bool &aResponse);
+    Error HandleVendorSpecificData(const Message &aIncomingMessage, uint16_t aOffset, bool &aResponse);
 
     Error VerifyHash(const Message &aIncomingMessage,
                      uint16_t       aOffset,
@@ -369,12 +363,10 @@ private:
                      size_t         aBufLen);
     void  CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBufLen, Crypto::HmacSha256::Hash &aHash);
 
-    bool CheckCommandClassAuthorizationFlags(CommandClassFlags aCommissionerCommandClassFlags,
-                                             CommandClassFlags aDeviceCommandClassFlags,
-                                             Dataset          *aDataset) const;
-
-    bool         CanProcessTlv(uint8_t aTlvType) const;
-    CommandClass GetCommandClass(uint8_t aTlvType) const;
+    bool    CheckCommandClassAuthorizationFlags(CommandClassFlags aCommissionerCommandClassFlags,
+                                                CommandClassFlags aDeviceCommandClassFlags,
+                                                Dataset          *aDataset) const;
+    uint8_t CheckAuthorizationRequirements(CommandClassFlags aFlagsChecked, Dataset::Info *aDatasetInfo) const;
 
     static constexpr uint16_t kJoinerUdpPort             = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
     static constexpr uint16_t kPingPayloadMaxLength      = 512;
@@ -393,16 +385,19 @@ private:
     TcatApplicationProtocol          mCurrentApplicationProtocol;
     NetworkName                      mCommissionerNetworkName;
     NetworkName                      mCommissionerDomainName;
+    NetworkName                      mDeviceDomainName;
     ExtendedPanId                    mCommissionerExtendedPanId;
     char                             mCurrentServiceName[OT_TCAT_MAX_SERVICE_NAME_LENGTH + 1];
     State                            mState;
     bool                             mCommissionerHasNetworkName : 1;
     bool                             mCommissionerHasDomainName : 1;
     bool                             mCommissionerHasExtendedPanId : 1;
+    bool                             mDeviceHasDomainName : 1;
     uint64_t                         mRandomChallenge;
     bool                             mPskdVerified : 1;
     bool                             mPskcVerified : 1;
     bool                             mInstallCodeVerified : 1;
+    bool                             mIsCommissioned : 1;
 
     friend class Ble::BleSecure;
 };

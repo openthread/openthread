@@ -63,6 +63,25 @@ tcat advid clear
 Done
 ```
 
+### certid
+
+Displays ID of currently chosen device certificate.
+
+```bash
+tcat certid
+0
+Done
+```
+
+### certid \<id\>
+
+Sets ID of device certificate.
+
+```bash
+tcat certid 1
+Done
+```
+
 ### devid
 
 Displays currently set TCAT device id.
