@@ -31,6 +31,10 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE && !OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
+#error "CoAP Secure API feature requires `OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE`"
+#endif
+
 #if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 
 #include "coap/coap.hpp"
