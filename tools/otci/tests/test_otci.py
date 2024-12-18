@@ -305,7 +305,7 @@ class TestOTCI(unittest.TestCase):
         leader.wait(1)
         leader.coap_stop()
 
-        for netif in (NetifIdentifier.THERAD, NetifIdentifier.UNSPECIFIED, NetifIdentifier.BACKBONE):
+        for netif in (NetifIdentifier.THREAD, NetifIdentifier.UNSPECIFIED, NetifIdentifier.BACKBONE):
             leader.udp_open()
             leader.udp_bind("::", 1234, netif=netif)
             leader.udp_send(leader.get_ipaddr_rloc(), 1234, text='hello')
