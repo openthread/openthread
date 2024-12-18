@@ -785,7 +785,7 @@ void RadioSpinel::ProcessRadioStateMachine(void)
 {
     if (mState == kStateTransmitDone)
     {
-        mState        = kStateReceive;
+        mState        = mRxOnWhenIdle ? kStateReceive : kStateSleep;
         mTxRadioEndUs = UINT64_MAX;
 
         TransmitDone(mTransmitFrame, (mAckRadioFrame.mLength != 0) ? &mAckRadioFrame : nullptr, mTxError);
