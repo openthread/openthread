@@ -438,6 +438,12 @@ private:
     void SignalJoinerEvent(JoinerEvent aEvent, const Joiner *aJoiner) const;
     void LogJoinerEntry(const char *aAction, const Joiner &aJoiner) const;
 
+    static bool HandleSecureAgentResource(void                   *aContext,
+                                          Uri                     aUri,
+                                          Coap::Message          &aMessage,
+                                          const Ip6::MessageInfo &aMessageInfo);
+    bool        HandleSecureAgentResource(Uri aUri, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
     static const char *StateToString(State aState);
 
     using JoinerExpirationTimer = TimerMilliIn<Commissioner, &Commissioner::HandleJoinerExpirationTimer>;
@@ -469,11 +475,12 @@ private:
 
     Callback<StateCallback>  mStateCallback;
     Callback<JoinerCallback> mJoinerCallback;
+
+    Tmf::SecureAgent mSecureAgent;
 };
 
 DeclareTmfHandler(Commissioner, kUriDatasetChanged);
 DeclareTmfHandler(Commissioner, kUriRelayRx);
-DeclareTmfHandler(Commissioner, kUriJoinerFinalize);
 
 } // namespace MeshCoP
 

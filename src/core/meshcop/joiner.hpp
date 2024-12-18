@@ -237,7 +237,8 @@ private:
 
     Coap::Message *mFinalizeMessage;
 
-    JoinerTimer mTimer;
+    JoinerTimer      mTimer;
+    Tmf::SecureAgent mSecureAgent;
 };
 
 DeclareTmfHandler(Joiner, kUriJoinerEntrust);

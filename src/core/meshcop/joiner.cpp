@@ -50,6 +50,7 @@ Joiner::Joiner(Instance &aInstance)
     , mJoinerRouterIndex(0)
     , mFinalizeMessage(nullptr)
     , mTimer(aInstance)
+    , mSecureAgent(aInstance)
 {
     SetIdFromIeeeEui64();
     mDiscerner.Clear();
@@ -137,10 +138,10 @@ Error Joiner::Start(const char      *aPskd,
     Get<Mac::Mac>().SetExtAddress(randomAddress);
     Get<Mle::MleRouter>().UpdateLinkLocalAddress();
 
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Open());
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Bind(kJoinerUdpPort));
-    Get<Tmf::SecureAgent>().SetConnectCallback(HandleSecureCoapClientConnect, this);
-    Get<Tmf::SecureAgent>().SetPsk(joinerPskd);
+    SuccessOrExit(error = mSecureAgent.Open());
+    SuccessOrExit(error = mSecureAgent.Bind(kJoinerUdpPort));
+    mSecureAgent.SetConnectCallback(HandleSecureCoapClientConnect, this);
+    mSecureAgent.SetPsk(joinerPskd);
 
     for (JoinerRouter &router : mJoinerRouters)
     {
@@ -196,14 +197,14 @@ void Joiner::Finish(Error aError)
     case kStateConnected:
     case kStateEntrust:
     case kStateJoined:
-        Get<Tmf::SecureAgent>().Disconnect();
+        mSecureAgent.Disconnect();
         IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort));
         mTimer.Stop();
 
         OT_FALL_THROUGH;
 
     case kStateDiscover:
-        Get<Tmf::SecureAgent>().Close();
+        mSecureAgent.Close();
         break;
     }
 
@@ -360,7 +361,7 @@ Error Joiner::Connect(JoinerRouter &aRouter)
 
     sockAddr.GetAddress().SetToLinkLocalAddress(aRouter.mExtAddr);
 
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Connect(sockAddr));
+    SuccessOrExit(error = mSecureAgent.Connect(sockAddr));
 
     SetState(kStateConnect);
 
@@ -402,7 +403,7 @@ Error Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     Error                 error = kErrorNone;
     VendorStackVersionTlv vendorStackVersionTlv;
 
-    mFinalizeMessage = Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriJoinerFinalize);
+    mFinalizeMessage = mSecureAgent.NewPriorityConfirmablePostMessage(kUriJoinerFinalize);
     VerifyOrExit(mFinalizeMessage != nullptr, error = kErrorNoBufs);
 
     mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength());
@@ -458,7 +459,7 @@ void Joiner::SendJoinerFinalize(void)
     LogCertMessage("[THCI] direction=send | type=JOIN_FIN.req |", *mFinalizeMessage);
 #endif
 
-    SuccessOrExit(Get<Tmf::SecureAgent>().SendMessage(*mFinalizeMessage, Joiner::HandleJoinerFinalizeResponse, this));
+    SuccessOrExit(mSecureAgent.SendMessage(*mFinalizeMessage, Joiner::HandleJoinerFinalizeResponse, this));
     mFinalizeMessage = nullptr;
 
     LogInfo("Sent %s", UriToString<kUriJoinerFinalize>());
@@ -499,7 +500,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::Me
 #endif
 
 exit:
-    Get<Tmf::SecureAgent>().Disconnect();
+    mSecureAgent.Disconnect();
     IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort));
 }
 

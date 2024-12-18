@@ -587,10 +587,6 @@ private:
     MeshCoP::Commissioner mCommissioner;
 #endif
 
-#if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
-    Tmf::SecureAgent mTmfSecureAgent;
-#endif
-
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
     MeshCoP::Joiner mJoiner;
 #endif
@@ -882,10 +878,6 @@ template <> inline Ip6::Icmp &Instance::Get(void) { return mIp6.mIcmp; }
 template <> inline Ip6::Mpl &Instance::Get(void) { return mIp6.mMpl; }
 
 template <> inline Tmf::Agent &Instance::Get(void) { return mTmfAgent; }
-
-#if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
-template <> inline Tmf::SecureAgent &Instance::Get(void) { return mTmfSecureAgent; }
-#endif
 
 template <> inline MeshCoP::ExtendedPanIdManager &Instance::Get(void) { return mExtendedPanIdManager; }
 

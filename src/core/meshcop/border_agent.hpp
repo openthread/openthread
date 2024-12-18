@@ -304,6 +304,12 @@ private:
     void        HandleSecureAgentStopped(void);
 #endif
 
+    static bool HandleSecureAgentResource(void                   *aContext,
+                                          Uri                     aUri,
+                                          Coap::Message          &aMessage,
+                                          const Ip6::MessageInfo &aMessageInfo);
+    bool        HandleSecureAgentResource(Uri aUri, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
     static void HandleCoapResponse(void                *aContext,
                                    otMessage           *aMessage,
                                    const otMessageInfo *aMessageInfo,
@@ -337,9 +343,12 @@ private:
     Callback<EphemeralKeyCallback> mEphemeralKeyCallback;
 #endif
     otBorderAgentCounters mCounters;
+    Tmf::SecureAgent      mSecureAgent;
 };
 
 DeclareTmfHandler(BorderAgent, kUriRelayRx);
+
+// May remove later?
 DeclareTmfHandler(BorderAgent, kUriCommissionerPetition);
 DeclareTmfHandler(BorderAgent, kUriCommissionerKeepAlive);
 DeclareTmfHandler(BorderAgent, kUriRelayTx);

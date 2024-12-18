@@ -200,6 +200,8 @@ private:
 class SecureAgent : public Coap::Dtls::Transport, public Coap::SecureSession
 {
 public:
+    typedef bool (*ResourceHandler)(void *aContext, Uri aUri, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
     /**
      * Initializes the object.
      *
@@ -207,12 +209,16 @@ public:
      */
     explicit SecureAgent(Instance &aInstance);
 
+    SecureAgent(Instance &aInstance, ResourceHandler aResourceHandler, void *aContext);
+
 private:
     static bool HandleResource(CoapBase               &aCoapBase,
                                const char             *aUriPath,
                                Message                &aMessage,
                                const Ip6::MessageInfo &aMessageInfo);
     bool        HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    Callback<ResourceHandler> mResourceHandler;
 };
 
 #endif
