@@ -201,7 +201,7 @@ AddressResolver::CacheEntry *AddressResolver::FindCacheEntry(const Ip6::Address 
     for (CacheEntryList *list : lists)
     {
         aList = list;
-        entry = aList->FindMatching(aEid, aPrevEntry);
+        entry = aList->FindMatchingWithPrev(aPrevEntry, aEid);
         VerifyOrExit(entry == nullptr);
     }
 

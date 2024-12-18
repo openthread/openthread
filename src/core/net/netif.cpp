@@ -327,7 +327,7 @@ Error Netif::UnsubscribeExternalMulticast(const Address &aAddress)
     MulticastAddress *entry;
     MulticastAddress *prev;
 
-    entry = mMulticastAddresses.FindMatching(aAddress, prev);
+    entry = mMulticastAddresses.FindMatchingWithPrev(prev, aAddress);
     VerifyOrExit(entry != nullptr, error = kErrorNotFound);
 
     VerifyOrExit(IsMulticastAddressExternal(*entry), error = kErrorRejected);
@@ -474,7 +474,7 @@ Error Netif::RemoveExternalUnicastAddress(const Address &aAddress)
     UnicastAddress *entry;
     UnicastAddress *prev;
 
-    entry = mUnicastAddresses.FindMatching(aAddress, prev);
+    entry = mUnicastAddresses.FindMatchingWithPrev(prev, aAddress);
     VerifyOrExit(entry != nullptr, error = kErrorNotFound);
 
     VerifyOrExit(IsUnicastAddressExternal(*entry), error = kErrorRejected);
