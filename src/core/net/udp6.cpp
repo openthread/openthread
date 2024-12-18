@@ -151,46 +151,49 @@ exit:
 
 Error Udp::Plat::Open(SocketHandle &aSocket)
 {
-    return aSocket.ShouldUsePlatformUdp() ? otPlatUdpSocket(&aSocket) : kErrorNone;
+    return aSocket.ShouldUsePlatformUdp() ? MakeError(otPlatUdpSocket(&aSocket)) : kErrorNone;
 }
 
 Error Udp::Plat::Close(SocketHandle &aSocket)
 {
-    return aSocket.ShouldUsePlatformUdp() ? otPlatUdpClose(&aSocket) : kErrorNone;
+    return aSocket.ShouldUsePlatformUdp() ? MakeError(otPlatUdpClose(&aSocket)) : kErrorNone;
 }
 
 Error Udp::Plat::Bind(SocketHandle &aSocket)
 {
-    return aSocket.ShouldUsePlatformUdp() ? otPlatUdpBind(&aSocket) : kErrorNone;
+    return aSocket.ShouldUsePlatformUdp() ? MakeError(otPlatUdpBind(&aSocket)) : kErrorNone;
 }
 
 Error Udp::Plat::BindToNetif(SocketHandle &aSocket)
 {
-    return aSocket.ShouldUsePlatformUdp() ? otPlatUdpBindToNetif(&aSocket, MapEnum(aSocket.GetNetifId())) : kErrorNone;
+    return aSocket.ShouldUsePlatformUdp() ? MakeError(otPlatUdpBindToNetif(&aSocket, MapEnum(aSocket.GetNetifId())))
+                                          : kErrorNone;
 }
 
 Error Udp::Plat::Connect(SocketHandle &aSocket)
 {
-    return aSocket.ShouldUsePlatformUdp() ? otPlatUdpConnect(&aSocket) : kErrorNone;
+    return aSocket.ShouldUsePlatformUdp() ? MakeError(otPlatUdpConnect(&aSocket)) : kErrorNone;
 }
 
 Error Udp::Plat::Send(SocketHandle &aSocket, Message &aMessage, const MessageInfo &aMessageInfo)
 {
     OT_ASSERT(aSocket.ShouldUsePlatformUdp());
 
-    return otPlatUdpSend(&aSocket, &aMessage, &aMessageInfo);
+    return MakeError(otPlatUdpSend(&aSocket, &aMessage, &aMessageInfo));
 }
 
 Error Udp::Plat::JoinMulticastGroup(SocketHandle &aSocket, NetifIdentifier aNetifId, const Address &aAddress)
 {
-    return aSocket.ShouldUsePlatformUdp() ? otPlatUdpJoinMulticastGroup(&aSocket, MapEnum(aNetifId), &aAddress)
-                                          : kErrorNone;
+    return aSocket.ShouldUsePlatformUdp()
+               ? MakeError(otPlatUdpJoinMulticastGroup(&aSocket, MapEnum(aNetifId), &aAddress))
+               : kErrorNone;
 }
 
 Error Udp::Plat::LeaveMulticastGroup(SocketHandle &aSocket, NetifIdentifier aNetifId, const Address &aAddress)
 {
-    return aSocket.ShouldUsePlatformUdp() ? otPlatUdpLeaveMulticastGroup(&aSocket, MapEnum(aNetifId), &aAddress)
-                                          : kErrorNone;
+    return aSocket.ShouldUsePlatformUdp()
+               ? MakeError(otPlatUdpLeaveMulticastGroup(&aSocket, MapEnum(aNetifId), &aAddress))
+               : kErrorNone;
 }
 
 #endif //  OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE

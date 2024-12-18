@@ -351,7 +351,7 @@ Error Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
         IgnoreError(Get<Radio>().Receive(mChannel));
         otPlatDiagChannelSet(mChannel);
 
-        Output("set channel to %d\r\nstatus 0x%02x\r\n", mChannel, error);
+        Output("set channel to %d\r\nstatus 0x%02x\r\n", mChannel, static_cast<otError>(error));
     }
 
 exit:
@@ -379,7 +379,7 @@ Error Diags::ProcessPower(uint8_t aArgsLength, char *aArgs[])
         SuccessOrExit(error = Get<Radio>().SetTransmitPower(mTxPower));
         otPlatDiagTxPowerSet(mTxPower);
 
-        Output("set tx power to %d dBm\r\nstatus 0x%02x\r\n", mTxPower, error);
+        Output("set tx power to %d dBm\r\nstatus 0x%02x\r\n", mTxPower, static_cast<otError>(error));
     }
 
 exit:
@@ -398,7 +398,7 @@ Error Diags::ProcessRepeat(uint8_t aArgsLength, char *aArgs[])
     {
         otPlatAlarmMilliStop(&GetInstance());
         mRepeatActive = false;
-        Output("repeated packet transmission is stopped\r\nstatus 0x%02x\r\n", error);
+        Output("repeated packet transmission is stopped\r\nstatus 0x%02x\r\n", static_cast<otError>(error));
     }
     else
     {
@@ -432,7 +432,7 @@ Error Diags::ProcessRepeat(uint8_t aArgsLength, char *aArgs[])
         uint32_t now  = otPlatAlarmMilliGetNow();
         otPlatAlarmMilliStartAt(&GetInstance(), now, mTxPeriod);
         Output("sending packets of length %#x at the delay of %#x ms\r\nstatus 0x%02x\r\n", static_cast<int>(mTxLen),
-               static_cast<int>(mTxPeriod), error);
+               static_cast<int>(mTxPeriod), static_cast<otError>(error));
     }
 
 exit:
@@ -471,7 +471,7 @@ Error Diags::ProcessSend(uint8_t aArgsLength, char *aArgs[])
     mTxLen = txLength;
 
     Output("sending %#x packet(s), length %#x\r\nstatus 0x%02x\r\n", static_cast<int>(mTxPackets),
-           static_cast<int>(mTxLen), error);
+           static_cast<int>(mTxLen), static_cast<otError>(error));
     TransmitPacket();
 
 exit:
@@ -501,7 +501,7 @@ Error Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[])
     SuccessOrExit(error = Get<Radio>().SetTransmitPower(mTxPower));
     otPlatDiagModeSet(true);
     mStats.Clear();
-    Output("start diagnostics mode\r\nstatus 0x%02x\r\n", error);
+    Output("start diagnostics mode\r\nstatus 0x%02x\r\n", static_cast<otError>(error));
 
 exit:
     AppendErrorResult(error);
@@ -555,7 +555,7 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[])
            "\nstop diagnostics mode\r\nstatus 0x%02x\r\n",
            static_cast<int>(mStats.mReceivedPackets), static_cast<int>(mStats.mSentPackets),
            static_cast<int>(mStats.mFirstRssi), static_cast<int>(mStats.mFirstLqi), static_cast<int>(mStats.mLastRssi),
-           static_cast<int>(mStats.mLastLqi), error);
+           static_cast<int>(mStats.mLastLqi), static_cast<otError>(error));
 
 exit:
     AppendErrorResult(error);
@@ -641,7 +641,7 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
     if (StringMatch(aArgs[0], "sleep"))
     {
         SuccessOrExit(error = Get<Radio>().Sleep());
-        Output("set radio from receive to sleep \r\nstatus 0x%02x\r\n", error);
+        Output("set radio from receive to sleep \r\nstatus 0x%02x\r\n", static_cast<otError>(error));
     }
     else if (StringMatch(aArgs[0], "receive"))
     {
@@ -653,7 +653,8 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
         if (aArgsLength == 0)
         {
             SuccessOrExit(error = RadioReceive());
-            Output("set radio from sleep to receive on channel %d\r\nstatus 0x%02x\r\n", mChannel, error);
+            Output("set radio from sleep to receive on channel %d\r\nstatus 0x%02x\r\n", mChannel,
+                   static_cast<otError>(error));
             ExitNow();
         }
 
@@ -1032,7 +1033,7 @@ void Diags::AppendErrorResult(Error aError)
 {
     if ((aError != kErrorNone) && (aError != kErrorPending))
     {
-        Output("failed\r\nstatus %#x\r\n", aError);
+        Output("failed\r\nstatus %#x\r\n", static_cast<otError>(aError));
     }
 }
 

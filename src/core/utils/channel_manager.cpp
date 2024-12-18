@@ -180,12 +180,12 @@ void ChannelManager::StartDatasetUpdate(void)
     }
 }
 
-void ChannelManager::HandleDatasetUpdateDone(Error aError, void *aContext)
+void ChannelManager::HandleDatasetUpdateDone(otError aError, void *aContext)
 {
     static_cast<ChannelManager *>(aContext)->HandleDatasetUpdateDone(aError);
 }
 
-void ChannelManager::HandleDatasetUpdateDone(Error aError)
+void ChannelManager::HandleDatasetUpdateDone(otError aError)
 {
     if (aError == kErrorNone)
     {

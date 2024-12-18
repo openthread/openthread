@@ -306,7 +306,7 @@ private:
     static void HandleCoapResponse(void                *aContext,
                                    otMessage           *aMessage,
                                    const otMessageInfo *aMessageInfo,
-                                   Error                aResult);
+                                   otError              aResult);
     void  HandleCoapResponse(const ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult);
     Error ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
     Error ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);

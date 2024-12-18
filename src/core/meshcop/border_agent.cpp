@@ -157,7 +157,7 @@ Error BorderAgent::SendMessage(Coap::Message &aMessage)
 void BorderAgent::HandleCoapResponse(void                *aContext,
                                      otMessage           *aMessage,
                                      const otMessageInfo *aMessageInfo,
-                                     Error                aResult)
+                                     otError              aResult)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 

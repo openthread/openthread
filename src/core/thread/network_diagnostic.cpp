@@ -625,7 +625,10 @@ void Server::SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestina
     }
 }
 
-void Server::HandleAnswerResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, Error aResult)
+void Server::HandleAnswerResponse(void                *aContext,
+                                  otMessage           *aMessage,
+                                  const otMessageInfo *aMessageInfo,
+                                  otError              aResult)
 {
     Coap::Message *nextAnswer = static_cast<Coap::Message *>(aContext);
 
@@ -641,7 +644,7 @@ exit:
 void Server::HandleAnswerResponse(Coap::Message          &aNextAnswer,
                                   Coap::Message          *aResponse,
                                   const Ip6::MessageInfo *aMessageInfo,
-                                  Error                   aResult)
+                                  otError                 aResult)
 {
     Error error = aResult;
 
@@ -935,13 +938,13 @@ exit:
     return error;
 }
 
-void Client::HandleGetResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, Error aResult)
+void Client::HandleGetResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
 {
     static_cast<Client *>(aContext)->HandleGetResponse(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
                                                        aResult);
 }
 
-void Client::HandleGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
+void Client::HandleGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult)
 {
     SuccessOrExit(aResult);
     VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged, aResult = kErrorFailed);
