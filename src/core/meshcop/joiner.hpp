@@ -59,6 +59,10 @@ namespace ot {
 
 namespace MeshCoP {
 
+#if !OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
+#error "Joiner feature requires `OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE`"
+#endif
+
 class Joiner : public InstanceLocator, private NonCopyable
 {
     friend class Tmf::Agent;
