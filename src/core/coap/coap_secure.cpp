@@ -79,8 +79,8 @@ Error CoapSecureBase::Open(uint16_t aMaxAttempts, AutoStopCallback aCallback, vo
 
     SuccessOrExit(mDtls.SetMaxConnectionAttempts(aMaxAttempts, HandleDtlsAutoClose, this));
     mAutoStopCallback.Set(aCallback, aContext);
-    mConnectEventCallback.Clear();
-    SuccessOrExit(mDtls.Open(HandleDtlsReceive, HandleDtlsConnectEvent, this));
+    SuccessOrExit(mDtls.Open());
+    mDtls.SetReceiveCallback(HandleDtlsReceive, this);
 
     error = kErrorNone;
 
@@ -94,13 +94,6 @@ void CoapSecureBase::Stop(void)
 
     mTransmitQueue.DequeueAndFreeAll();
     ClearRequestsAndResponses();
-}
-
-Error CoapSecureBase::Connect(const Ip6::SockAddr &aSockAddr, ConnectEventCallback aCallback, void *aContext)
-{
-    mConnectEventCallback.Set(aCallback, aContext);
-
-    return mDtls.Connect(aSockAddr);
 }
 
 void CoapSecureBase::SetPsk(const MeshCoP::JoinerPskd &aPskd)
@@ -170,16 +163,6 @@ Error CoapSecureBase::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessa
     mTransmitTask.Post();
 
     return kErrorNone;
-}
-
-void CoapSecureBase::HandleDtlsConnectEvent(MeshCoP::Dtls::ConnectEvent aEvent, void *aContext)
-{
-    return static_cast<CoapSecureBase *>(aContext)->HandleDtlsConnectEvent(aEvent);
-}
-
-void CoapSecureBase::HandleDtlsConnectEvent(MeshCoP::Dtls::ConnectEvent aEvent)
-{
-    mConnectEventCallback.InvokeIfSet(aEvent);
 }
 
 void CoapSecureBase::HandleDtlsAutoClose(void *aContext)

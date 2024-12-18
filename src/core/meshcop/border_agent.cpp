@@ -731,7 +731,7 @@ Error BorderAgent::Start(uint16_t aUdpPort, const uint8_t *aPsk, uint8_t aPskLen
 
     SuccessOrExit(error = Get<Tmf::SecureAgent>().SetPsk(aPsk, aPskLength));
 
-    Get<Tmf::SecureAgent>().SetConnectEventCallback(HandleConnected, this);
+    Get<Tmf::SecureAgent>().SetConnectCallback(HandleConnected, this);
 
     mState        = kStateStarted;
     mUdpProxyPort = 0;

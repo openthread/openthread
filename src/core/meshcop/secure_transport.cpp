@@ -141,20 +141,14 @@ exit:
     return;
 }
 
-Error SecureTransport::Open(SecureSession::ReceiveHandler   aReceiveHandler,
-                            SecureSession::ConnectedHandler aConnectedHandler,
-                            void                           *aContext)
+Error SecureTransport::Open(void)
 {
     Error error;
 
     VerifyOrExit(!mIsOpen, error = kErrorAlready);
 
     SuccessOrExit(error = mSocket.Open(Ip6::kNetifUnspecified));
-
-    mIsOpen = true;
-    mSession->SetConnectedCallback(aConnectedHandler, aContext);
-    mSession->SetReceiveCallback(aReceiveHandler, aContext);
-
+    mIsOpen                      = true;
     mRemainingConnectionAttempts = mMaxConnectionAttempts;
 
 exit:

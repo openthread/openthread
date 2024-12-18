@@ -116,10 +116,9 @@ public:
     static constexpr ConnectEvent kDisconnectedError       = OT_COAP_SECURE_DISCONNECTED_ERROR;
 
     /**
-     * Function pointer which is called reporting a session connection event (when connection established or
-     * disconnected).
+     * Function pointer which is called reporting a session connection event.
      */
-    typedef otHandleCoapSecureClientConnect ConnectedHandler;
+    typedef otHandleCoapSecureClientConnect ConnectHandler;
 
     /**
      * Pointer is called when data is received from the session.
@@ -133,12 +132,12 @@ public:
     /**
      * Sets the connection event callback.
      *
-     * @param[in]  aConnectedHandler    A pointer to a function that is called when connected or disconnected.
-     * @param[in]  aContext             A pointer to arbitrary context information.
+     * @param[in]  aConnectHandler   A pointer to a function that is called when connected or disconnected.
+     * @param[in]  aContext          A pointer to arbitrary context information.
      */
-    void SetConnectedCallback(ConnectedHandler aConnectedHandler, void *aContext)
+    void SetConnectCallback(ConnectHandler aConnectHandler, void *aContext)
     {
-        mConnectedCallback.Set(aConnectedHandler, aContext);
+        mConnectedCallback.Set(aConnectHandler, aContext);
     }
 
     /**
@@ -253,19 +252,19 @@ private:
     static const char *StateToString(State aState);
 #endif
 
-    bool                       mTimerSet : 1;
-    State                      mState;
-    Message::SubType           mMessageSubType;
-    ConnectEvent               mConnectEvent;
-    TimeMilli                  mTimerIntermediate;
-    TimeMilli                  mTimerFinish;
-    SecureTransport           &mTransport;
-    Message                   *mReceiveMessage;
-    Ip6::MessageInfo           mMessageInfo;
-    Callback<ConnectedHandler> mConnectedCallback;
-    Callback<ReceiveHandler>   mReceiveCallback;
-    mbedtls_ssl_config         mConf;
-    mbedtls_ssl_context        mSsl;
+    bool                     mTimerSet : 1;
+    State                    mState;
+    Message::SubType         mMessageSubType;
+    ConnectEvent             mConnectEvent;
+    TimeMilli                mTimerIntermediate;
+    TimeMilli                mTimerFinish;
+    SecureTransport         &mTransport;
+    Message                 *mReceiveMessage;
+    Ip6::MessageInfo         mMessageInfo;
+    Callback<ConnectHandler> mConnectedCallback;
+    Callback<ReceiveHandler> mReceiveCallback;
+    mbedtls_ssl_config       mConf;
+    mbedtls_ssl_context      mSsl;
 #if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
     mbedtls_ssl_cookie_ctx mCookieCtx;
 #endif
@@ -528,18 +527,12 @@ public:
 #endif // OPENTHREAD_CONFIG_TLS_API_ENABLE
 
     /**
-     * Opens the socket.
-     *
-     * @param[in]  aReceiveHandler      A pointer to a function that is called to receive payload.
-     * @param[in]  aConnectedHandler    A pointer to a function that is called when connected or disconnected.
-     * @param[in]  aContext             A pointer to arbitrary context information.
+     * Opens the transport.
      *
      * @retval kErrorNone     Successfully opened the socket.
      * @retval kErrorAlready  The connection is already open.
      */
-    Error Open(SecureSession::ReceiveHandler   aReceiveHandler,
-               SecureSession::ConnectedHandler aConnectedHandler,
-               void                           *aContext);
+    Error Open(void);
 
     /**
      * Sets the maximum number of allowed connection requests before socket is automatically closed.
