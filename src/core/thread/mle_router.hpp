@@ -517,6 +517,16 @@ private:
     static constexpr uint8_t kChildRouterLinks        = OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS;
     static constexpr uint8_t kMaxChildIpAddresses     = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD;
 
+    // Constants for gradual router link establishment (on FTD child)
+    struct GradualChildRouterLink
+    {
+        static constexpr uint8_t  kExtraChildRouterLinks   = OPENTHREAD_CONFIG_MLE_EXTRA_CHILD_ROUTER_LINKS_GRADUAL;
+        static constexpr uint32_t kWaitDurationAfterAttach = 300;   // in seconds (5 minutes)
+        static constexpr uint32_t kMinLinkRequestDelay     = 1500;  // in msec
+        static constexpr uint32_t kMaxLinkRequestDelay     = 10000; // in msec
+        static constexpr uint32_t kProbabilityPercentage   = 5;     // in percent
+    };
+
     static constexpr uint8_t kMinCriticalChildrenCount = 6;
 
     static constexpr uint16_t kChildSupervisionDefaultIntervalForOlderVersion =
@@ -595,6 +605,7 @@ private:
     void     HandleDataRequest(RxInfo &aRxInfo);
     void     HandleNetworkDataUpdateRouter(void);
     void     HandleDiscoveryRequest(RxInfo &aRxInfo);
+    void     EstablishRouterLinkOnFtdChild(Router &aRouter, RxInfo &aRxInfo, uint8_t aLinkMargin);
     Error    ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo);
     Error    ReadAndProcessRouteTlvOnFtdChild(RxInfo &aRxInfo, uint8_t aParentId);
     void     StopAdvertiseTrickleTimer(void);
