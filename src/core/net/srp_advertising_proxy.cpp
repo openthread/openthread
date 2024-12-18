@@ -1252,7 +1252,7 @@ void AdvertisingProxy::HandleTimer(void)
 
     VerifyOrExit(mState == kStateRunning);
 
-    mAdvInfoList.RemoveAllMatching(AdvInfo::ExpirationChecker(nextTime.GetNow()), expiredList);
+    mAdvInfoList.RemoveAllMatching(expiredList, AdvInfo::ExpirationChecker(nextTime.GetNow()));
 
     for (AdvInfo &adv : mAdvInfoList)
     {
@@ -1281,7 +1281,7 @@ void AdvertisingProxy::HandleTasklet(void)
     {
         OwningList<AdvInfo> completedList;
 
-        mAdvInfoList.RemoveAllMatching(AdvInfo::CompletionChecker(), completedList);
+        mAdvInfoList.RemoveAllMatching(completedList, AdvInfo::CompletionChecker());
 
         VerifyOrExit(!completedList.IsEmpty());
 
