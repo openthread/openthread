@@ -279,21 +279,28 @@ private:
 
     Error Start(uint16_t aUdpPort);
     Error Start(uint16_t aUdpPort, const uint8_t *aPsk, uint8_t aPskLength);
-
-    void HandleNotifierEvents(Events aEvents);
-
-    Coap::Message::Code CoapCodeFromError(Error aError);
-    Error               SendMessage(Coap::Message &aMessage);
-    void                SendErrorMessage(const ForwardContext &aForwardContext, Error aError);
-    void                SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, Error aError);
-
-    static void HandleConnected(Dtls::ConnectEvent aEvent, void *aContext);
-    void        HandleConnected(Dtls::ConnectEvent aEvent);
+    void  HandleNotifierEvents(Events aEvents);
+    void  HandleTimeout(void);
+    Error ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
+    Error ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
+    Error SendMessage(Coap::Message &aMessage);
+    void  SendErrorMessage(const ForwardContext &aForwardContext, Error aError);
+    void  SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, Error aError);
+    void  HandleTmfDatasetGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void HandleTmfDatasetGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
-    void HandleTimeout(void);
+    static void HandleConnected(Dtls::ConnectEvent aEvent, void *aContext);
+    void        HandleConnected(Dtls::ConnectEvent aEvent);
+    static void HandleCoapResponse(void                *aContext,
+                                   otMessage           *aMessage,
+                                   const otMessageInfo *aMessageInfo,
+                                   Error                aResult);
+    void HandleCoapResponse(const ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult);
+    static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    bool        HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    static Coap::Message::Code CoapCodeFromError(Error aError);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     void        RestartAfterRemovingEphemeralKey(void);
@@ -302,16 +309,6 @@ private:
     static void HandleSecureAgentStopped(void *aContext);
     void        HandleSecureAgentStopped(void);
 #endif
-
-    static void HandleCoapResponse(void                *aContext,
-                                   otMessage           *aMessage,
-                                   const otMessageInfo *aMessageInfo,
-                                   Error                aResult);
-    void  HandleCoapResponse(const ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult);
-    Error ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
-    Error ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
-    static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    bool        HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     using TimeoutTimer = TimerMilliIn<BorderAgent, &BorderAgent::HandleTimeout>;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
