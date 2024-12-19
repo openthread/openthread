@@ -612,23 +612,6 @@ const char *Joiner::StateToString(State aState)
     return kStateStrings[aState];
 }
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-void Joiner::LogCertMessage(const char *aText, const Coap::Message &aMessage) const
-{
-    OT_UNUSED_VARIABLE(aText);
-
-    uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
-
-    VerifyOrExit(aMessage.GetLength() <= sizeof(buf));
-    aMessage.ReadBytes(aMessage.GetOffset(), buf, aMessage.GetLength() - aMessage.GetOffset());
-
-    DumpCert(aText, buf, aMessage.GetLength() - aMessage.GetOffset());
-
-exit:
-    return;
-}
-#endif
-
 // LCOV_EXCL_STOP
 
 } // namespace MeshCoP
