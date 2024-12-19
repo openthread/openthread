@@ -462,53 +462,45 @@ bool BorderAgent::HandleUdpReceive(void *aContext, const otMessage *aMessage, co
 
 bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Error          error;
-    Coap::Message *message = nullptr;
+    Error                     error     = kErrorNone;
+    Coap::Message            *message   = nullptr;
+    bool                      didHandle = false;
+    ExtendedTlv               extTlv;
+    UdpEncapsulationTlvHeader udpEncapHeader;
+    OffsetRange               offsetRange;
 
-    if (aMessageInfo.GetSockAddr() != mCommissionerAloc.GetAddress())
-    {
-        LogDebg("Filtered out message for commissioner: dest %s != %s (ALOC)",
-                aMessageInfo.GetSockAddr().ToString().AsCString(),
-                mCommissionerAloc.GetAddress().ToString().AsCString());
-        ExitNow(error = kErrorDestinationAddressFiltered);
-    }
+    VerifyOrExit(aMessageInfo.GetSockAddr() == mCommissionerAloc.GetAddress());
 
-    VerifyOrExit(aMessage.GetLength() > 0, error = kErrorNone);
+    didHandle = true;
+
+    VerifyOrExit(aMessage.GetLength() > 0);
 
     message = Get<Tmf::SecureAgent>().NewPriorityNonConfirmablePostMessage(kUriProxyRx);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    {
-        ExtendedTlv               extTlv;
-        UdpEncapsulationTlvHeader udpEncapHeader;
-        OffsetRange               offsetRange;
+    offsetRange.InitFromMessageOffsetToEnd(aMessage);
 
-        offsetRange.InitFromMessageOffsetToEnd(aMessage);
+    extTlv.SetType(Tlv::kUdpEncapsulation);
+    extTlv.SetLength(sizeof(UdpEncapsulationTlvHeader) + offsetRange.GetLength());
 
-        extTlv.SetType(Tlv::kUdpEncapsulation);
-        extTlv.SetLength(sizeof(UdpEncapsulationTlvHeader) + offsetRange.GetLength());
-        SuccessOrExit(error = message->Append(extTlv));
+    udpEncapHeader.SetSourcePort(aMessageInfo.GetPeerPort());
+    udpEncapHeader.SetDestinationPort(aMessageInfo.GetSockPort());
 
-        udpEncapHeader.SetSourcePort(aMessageInfo.GetPeerPort());
-        udpEncapHeader.SetDestinationPort(aMessageInfo.GetSockPort());
-        SuccessOrExit(error = message->Append(udpEncapHeader));
-        SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, offsetRange));
-    }
+    SuccessOrExit(error = message->Append(extTlv));
+    SuccessOrExit(error = message->Append(udpEncapHeader));
+    SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, offsetRange));
 
     SuccessOrExit(error = Tlv::Append<Ip6AddressTlv>(*message, aMessageInfo.GetPeerAddr()));
 
     SuccessOrExit(error = SendMessage(*message));
 
-    LogInfo("Sent to commissioner on ProxyRx (c/ur)");
+    LogInfo("Sent ProxyRx (c/ur) to commissioner");
 
 exit:
     FreeMessageOnError(message, error);
-    if (error != kErrorDestinationAddressFiltered)
-    {
-        LogWarnOnError(error, "notify commissioner on ProxyRx (c/ur)");
-    }
+    LogWarnOnError(error, "send ProxyRx (c/ur)");
 
-    return error != kErrorDestinationAddressFiltered;
+    return didHandle;
 }
 
 Error BorderAgent::ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage)
