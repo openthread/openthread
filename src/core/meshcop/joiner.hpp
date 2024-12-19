@@ -219,10 +219,6 @@ private:
     void  SendJoinerFinalize(void);
     void  SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo);
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    void LogCertMessage(const char *aText, const Coap::Message &aMessage) const;
-#endif
-
     using JoinerTimer = TimerMilliIn<Joiner, &Joiner::HandleTimer>;
 
     Mac::ExtAddress mId;
