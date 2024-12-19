@@ -2412,6 +2412,8 @@ Error Client::SelectUnicastEntry(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aIn
 
     while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, aType, unicastInfo) == kErrorNone)
     {
+        bool preferNewEntry;
+
         if (mAutoStart.HasSelectedServer() && (GetServerAddress() == unicastInfo.mSockAddr))
         {
             aInfo = unicastInfo;
@@ -2431,10 +2433,17 @@ Error Client::SelectUnicastEntry(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aIn
             ExitNow();
         }
 #endif
+        // Prefer the server with higher version number, if equal
+        // then pick the one with numerically smaller IPv6 address.
 
-        // Prefer the numerically lowest server address
+        preferNewEntry = (error == kErrorNotFound) || (unicastInfo.mVersion > aInfo.mVersion);
 
-        if ((error == kErrorNotFound) || (unicastInfo.mSockAddr.GetAddress() < aInfo.mSockAddr.GetAddress()))
+        if (!preferNewEntry && (unicastInfo.mVersion == aInfo.mVersion))
+        {
+            preferNewEntry = (unicastInfo.mSockAddr.GetAddress() < aInfo.mSockAddr.GetAddress());
+        }
+
+        if (preferNewEntry)
         {
             aInfo = unicastInfo;
             error = kErrorNone;
