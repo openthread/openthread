@@ -66,6 +66,7 @@ otRadioCaps RadioSpinel::sRadioCaps = OT_RADIO_CAPS_NONE;
 RadioSpinel::RadioSpinel(void)
     : Logger("RadioSpinel")
     , mInstance(nullptr)
+    , mCallbacks()
     , mCmdTidsInUse(0)
     , mCmdNextTid(1)
     , mTxRadioTid(0)
@@ -108,6 +109,7 @@ RadioSpinel::RadioSpinel(void)
     , mTxRadioEndUs(UINT64_MAX)
     , mRadioTimeRecalcStart(UINT64_MAX)
     , mRadioTimeOffset(UINT64_MAX)
+    , mRadioSpinelMetrics(mCallbacks)
 #if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
     , mVendorRestorePropertiesCallback(nullptr)
     , mVendorRestorePropertiesContext(nullptr)
@@ -120,7 +122,6 @@ RadioSpinel::RadioSpinel(void)
     , mTimeSyncOn(false)
     , mSpinelDriver(nullptr)
 {
-    memset(&mRadioSpinelMetrics, 0, sizeof(mRadioSpinelMetrics));
     memset(&mCallbacks, 0, sizeof(mCallbacks));
 }
 
@@ -169,6 +170,8 @@ void RadioSpinel::Init(bool          aSkipRcpVersionCheck,
     mRxRadioFrame.mPsdu  = mRxPsdu;
     mTxRadioFrame.mPsdu  = mTxPsdu;
     mAckRadioFrame.mPsdu = mAckPsdu;
+
+    mRadioSpinelMetrics.Init();
 
 exit:
     SuccessOrDie(error);
@@ -2005,7 +2008,7 @@ void RadioSpinel::HandleRcpUnexpectedReset(spinel_status_t aStatus)
 {
     OT_UNUSED_VARIABLE(aStatus);
 
-    mRadioSpinelMetrics.mRcpUnexpectedResetCount++;
+    mRadioSpinelMetrics.IncreaseRcpUnexpectedResetCount();
     LogCrit("Unexpected RCP reset: %s", spinel_status_to_cstr(aStatus));
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
@@ -2019,7 +2022,7 @@ void RadioSpinel::HandleRcpUnexpectedReset(spinel_status_t aStatus)
 
 void RadioSpinel::HandleRcpTimeout(void)
 {
-    mRadioSpinelMetrics.mRcpTimeoutCount++;
+    mRadioSpinelMetrics.IncreaseRcpTimeoutCount();
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mRcpFailure = kRcpFailureTimeout;
@@ -2055,7 +2058,7 @@ void RadioSpinel::RecoverFromRcpFailure(void)
 
     LogWarn("RCP failure detected");
 
-    ++mRadioSpinelMetrics.mRcpRestorationCount;
+    mRadioSpinelMetrics.IncreaseRcpRestorationCount();
     ++mRcpFailureCount;
     if (mRcpFailureCount > kMaxFailureCount)
     {
@@ -2455,6 +2458,74 @@ void RadioSpinel::HandleCompatibilityError(void)
     }
 #endif
     DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+}
+
+void RadioSpinel::Metrics::Init() { ReadMetrics(*reinterpret_cast<otRadioSpinelMetrics *>(this)); }
+
+const otRadioSpinelMetrics *RadioSpinel::Metrics::GetMetrics(void) const
+{
+    return reinterpret_cast<const otRadioSpinelMetrics *>(this);
+}
+
+bool RadioSpinel::Metrics::IsReadWriteCallbackValid(void) const
+{
+    return (mCallbacks.mWriteRadioSpinelMetrics != nullptr) && (mCallbacks.mReadRadioSpinelMetrics != nullptr);
+}
+
+void RadioSpinel::Metrics::ReadMetrics(otRadioSpinelMetrics &aMetrics)
+{
+    VerifyOrExit(IsReadWriteCallbackValid());
+
+    if (mCallbacks.mReadRadioSpinelMetrics(aMetrics, mCallbacks.mRadioSpinelMetricsContext) != OT_ERROR_NONE)
+    {
+        memset(&aMetrics, 0, sizeof(aMetrics));
+        mCallbacks.mWriteRadioSpinelMetrics(aMetrics, mCallbacks.mRadioSpinelMetricsContext);
+    }
+
+exit:
+    return;
+}
+
+void RadioSpinel::Metrics::WriteMetrics(otRadioSpinelMetrics &aMetrics)
+{
+    VerifyOrExit(IsReadWriteCallbackValid());
+    mCallbacks.mWriteRadioSpinelMetrics(aMetrics, mCallbacks.mRadioSpinelMetricsContext);
+
+exit:
+    return;
+}
+
+void RadioSpinel::Metrics::IncreaseCount(MetricType aType)
+{
+    otRadioSpinelMetrics &metrics = *reinterpret_cast<otRadioSpinelMetrics *>(this);
+
+    ReadMetrics(metrics);
+
+    IncreaseMetricCount(metrics, aType);
+
+    WriteMetrics(metrics);
+}
+
+void RadioSpinel::Metrics::IncreaseMetricCount(otRadioSpinelMetrics &aMetrics, MetricType aType)
+{
+    switch (aType)
+    {
+    case kTypeTimeoutCount:
+        aMetrics.mRcpTimeoutCount++;
+        break;
+    case kTypeUnexpectResetCount:
+        aMetrics.mRcpUnexpectedResetCount++;
+        break;
+    case kTypeRestorationCount:
+        aMetrics.mRcpRestorationCount++;
+        break;
+    case kTypeSpinelParseErrorCount:
+        aMetrics.mSpinelParseErrorCount++;
+        break;
+    default:
+        OT_ASSERT(false);
+        break;
+    }
 }
 
 } // namespace Spinel

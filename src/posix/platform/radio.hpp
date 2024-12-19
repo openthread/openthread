@@ -35,6 +35,7 @@
 #include "rcp_caps_diag.hpp"
 #include "spi_interface.hpp"
 #include "spinel_manager.hpp"
+#include "temp_settings.hpp"
 #include "vendor_interface.hpp"
 #include "common/code_utils.hpp"
 #include "lib/spinel/radio_spinel.hpp"
@@ -69,6 +70,11 @@ public:
     void Init(const char *aUrl);
 
     /**
+     * De-initializes the Thread radio.
+     */
+    void Deinit(void);
+
+    /**
      * Acts as an accessor to the spinel interface instance used by the radio.
      *
      * @returns A reference to the radio's spinel interface instance.
@@ -94,6 +100,28 @@ public:
 private:
     void ProcessRadioUrl(const RadioUrl &aRadioUrl);
     void ProcessMaxPowerTable(const RadioUrl &aRadioUrl);
+
+#if OPENTHREAD_POSIX_CONFIG_TEMP_SETTINGS_ENABLE
+    static void WriteRadioSpinelMetrics(const otRadioSpinelMetrics &aMetrics, void *aContext)
+    {
+        reinterpret_cast<Radio *>(aContext)->WriteRadioSpinelMetrics(aMetrics);
+    }
+
+    void WriteRadioSpinelMetrics(const otRadioSpinelMetrics &aMetrics)
+    {
+        mTempSettings.WriteRadioSpinelMetrics(aMetrics);
+    }
+
+    static otError ReadRadioSpinelMetrics(otRadioSpinelMetrics &aMetrics, void *aContext)
+    {
+        return reinterpret_cast<Radio *>(aContext)->ReadRadioSpinelMetrics(aMetrics);
+    }
+
+    otError ReadRadioSpinelMetrics(otRadioSpinelMetrics &aMetrics)
+    {
+        return mTempSettings.ReadRadioSpinelMetrics(aMetrics);
+    }
+#endif
 
 #if OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE && OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE
     static constexpr size_t kSpinelInterfaceRawSize = sizeof(ot::Posix::SpiInterface) > sizeof(ot::Posix::HdlcInterface)
@@ -124,6 +152,10 @@ private:
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_CAPS_DIAG_ENABLE
     RcpCapsDiag mRcpCapsDiag;
+#endif
+
+#if OPENTHREAD_POSIX_CONFIG_TEMP_SETTINGS_ENABLE
+    TempSettings mTempSettings;
 #endif
 };
 

@@ -67,6 +67,9 @@ Radio::Radio(void)
 #if OPENTHREAD_POSIX_CONFIG_RCP_CAPS_DIAG_ENABLE
     , mRcpCapsDiag(mRadioSpinel)
 #endif
+#if OPENTHREAD_POSIX_CONFIG_TEMP_SETTINGS_ENABLE
+    , mTempSettings()
+#endif
 {
 }
 
@@ -94,6 +97,12 @@ void Radio::Init(const char *aUrl)
     callbacks.mReceiveDone       = otPlatRadioReceiveDone;
     callbacks.mTransmitDone      = otPlatRadioTxDone;
     callbacks.mTxStarted         = otPlatRadioTxStarted;
+#if OPENTHREAD_POSIX_CONFIG_TEMP_SETTINGS_ENABLE
+    callbacks.mWriteRadioSpinelMetrics   = WriteRadioSpinelMetrics;
+    callbacks.mReadRadioSpinelMetrics    = ReadRadioSpinelMetrics;
+    callbacks.mRadioSpinelMetricsContext = reinterpret_cast<void *>(this);
+    mTempSettings.Init();
+#endif
 
     resetRadio             = !mRadioUrl.HasParam("no-reset");
     skipCompatibilityCheck = mRadioUrl.HasParam("skip-rcp-compatibility-check");
@@ -103,6 +112,15 @@ void Radio::Init(const char *aUrl)
                       (skipCompatibilityCheck ? 0 : kRequiredRadioCaps), aEnableRcpTimeSync);
 
     ProcessRadioUrl(mRadioUrl);
+}
+
+void Radio::Deinit(void)
+{
+    mRadioSpinel.Deinit();
+
+#if OPENTHREAD_POSIX_CONFIG_TEMP_SETTINGS_ENABLE
+    mTempSettings.Deinit();
+#endif
 }
 
 void Radio::ProcessRadioUrl(const RadioUrl &aRadioUrl)
@@ -215,7 +233,7 @@ ot::Spinel::RadioSpinel &GetRadioSpinel(void) { return sRadio.GetRadioSpinel(); 
 ot::Posix::RcpCapsDiag &GetRcpCapsDiag(void) { return sRadio.GetRcpCapsDiag(); }
 #endif
 
-void platformRadioDeinit(void) { GetRadioSpinel().Deinit(); }
+void platformRadioDeinit(void) { sRadio.Deinit(); }
 
 void platformRadioHandleStateChange(otInstance *aInstance, otChangedFlags aFlags)
 {
