@@ -112,7 +112,7 @@ void otBorderAgentSetEphemeralKeyCallback(otInstance                       *aIns
 
 const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetCounters();
+    return &AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetCounters();
 }
 
 void otBorderAgentDisconnect(otInstance *aInstance) { AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().Disconnect(); }

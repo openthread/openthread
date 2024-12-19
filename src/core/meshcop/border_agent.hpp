@@ -83,7 +83,8 @@ public:
      */
     static constexpr uint32_t kMaxEphemeralKeyTimeout = OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_TIMEOUT;
 
-    typedef otBorderAgentId Id; ///< Border Agent ID.
+    typedef otBorderAgentId       Id;       ///< Border Agent ID.
+    typedef otBorderAgentCounters Counters; ///< Border Agent Counters.
 
     /**
      * Defines the Border Agent state.
@@ -240,7 +241,7 @@ public:
      *
      * @returns The border agent counters.
      */
-    const otBorderAgentCounters *GetCounters(void) { return &mCounters; }
+    const Counters &GetCounters(void) { return mCounters; }
 
     /**
      * Returns the UDP Proxy port to which the commissioner is currently
@@ -335,7 +336,7 @@ private:
     EphemeralKeyTask               mEphemeralKeyTask;
     Callback<EphemeralKeyCallback> mEphemeralKeyCallback;
 #endif
-    otBorderAgentCounters mCounters;
+    Counters mCounters;
 };
 
 DeclareTmfHandler(BorderAgent, kUriRelayRx);
