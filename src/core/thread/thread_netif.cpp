@@ -87,9 +87,6 @@ void ThreadNetif::Down(void)
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
     Get<Dns::ServiceDiscovery::Server>().Stop();
 #endif
-#if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
-    Get<Tmf::SecureAgent>().Stop();
-#endif
     IgnoreError(Get<Tmf::Agent>().Stop());
     IgnoreError(Get<Mle::MleRouter>().Disable());
     RemoveAllExternalUnicastAddresses();

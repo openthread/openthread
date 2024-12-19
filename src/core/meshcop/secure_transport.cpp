@@ -76,8 +76,7 @@ const int SecureTransport::kCipherSuites[][2] = {
 // SecureTransport
 
 SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, bool aDatagramTransport)
-    : InstanceLocator(aInstance)
-    , mLayerTwoSecurity(aLayerTwoSecurity)
+    : mLayerTwoSecurity(aLayerTwoSecurity)
     , mDatagramTransport(aDatagramTransport)
     , mIsOpen(false)
     , mIsServer(true)
@@ -505,6 +504,13 @@ exit:
     return error;
 }
 
+void SecureTransport::SetPsk(const JoinerPskd &aPskd)
+{
+    static_assert(JoinerPskd::kMaxLength <= kPskMaxLength, "The max DTLS PSK length is smaller than joiner PSKd");
+
+    IgnoreError(SetPsk(aPskd.GetBytes(), aPskd.GetLength()));
+}
+
 Error SecureSession::Send(Message &aMessage)
 {
     Error    error  = kErrorNone;
@@ -715,7 +721,7 @@ void SecureTransport::HandleMbedtlsExportKeys(mbedtls_ssl_key_export_type aType,
     sha256.Update(keyBlock, kSecureTransportKeyBlockSize);
     sha256.Finish(kek);
 
-    Get<KeyManager>().SetKek(kek.GetBytes());
+    mTimer.Get<KeyManager>().SetKek(kek.GetBytes());
 
 exit:
     return;
@@ -751,7 +757,7 @@ int SecureTransport::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
     sha256.Update(aKeyBlock, 2 * static_cast<uint16_t>(aMacLength + aKeyLength + aIvLength));
     sha256.Finish(kek);
 
-    Get<KeyManager>().SetKek(kek.GetBytes());
+    mTimer.Get<KeyManager>().SetKek(kek.GetBytes());
 
 exit:
     return 0;
