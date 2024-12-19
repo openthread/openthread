@@ -2139,6 +2139,30 @@ exit:
             break;
         }
     }
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    if (aFrame->GetRadioType() == kRadioTypeTrel)
+#endif
+    {
+        if (error == kErrorNone)
+        {
+            // If the received frame is using TREL and is successfully
+            // processed, check for any discrepancy between the socket
+            // address of the received TREL packet and the information
+            // saved in the corresponding TREL peer, and signal this to
+            // the platform layer.
+            //
+            // If the frame used link security and was successfully
+            // processed, we allow the `Peer` entry socket information
+            // to be updated directly.
+
+            Get<Trel::Link>().CheckPeerAddrOnRxSuccess(aFrame->GetSecurityEnabled()
+                                                           ? Trel::Link::kAllowPeerSockAddrUpdate
+                                                           : Trel::Link::kDisallowPeerSockAddrUpdate);
+        }
+    }
+#endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 }
 
 void Mac::UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame &aRxFrame)

@@ -1383,6 +1383,10 @@ private:
     void         UpdateServiceAlocs(void);
 #endif
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    void CheckTrelPeerAddrOnSecureMleRx(const Message &aMessage);
+#endif
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     void HandleTimeSync(RxInfo &aRxInfo);
 #endif

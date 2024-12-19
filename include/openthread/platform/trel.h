@@ -136,6 +136,23 @@ typedef struct otPlatTrelPeerInfo
 extern void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
 
 /**
+ * Notifies platform that a TREL packet is received from a peer using a different socket address than the one reported
+ * earlier from `otPlatTrelHandleDiscoveredPeerInfo()`.
+ *
+ * Ideally the platform underlying DNS-SD should detect changes to advertised port and addresses by peers, however,
+ * there are situations where this is not detected reliably. This function signals to the platform layer than we
+ * received a packet from a peer with it using a different port or address. This can be used by the playroom layer to
+ * restart/confirm the DNS-SD service/address resolution for the peer service and/or take any other relevant actions.
+ *
+ * @param[in] aInstance      The OpenThread instance.
+ * @param[in] aPeerSockAddr  The address of the peer, reported from `otPlatTrelHandleDiscoveredPeerInfo()` call.
+ * @param[in] aRxSockAddr    The address of received packet from the same peer (differs from @p aPeerSockAddr).
+ */
+void otPlatTrelNotifyPeerSocketAddressDifference(otInstance       *aInstance,
+                                                 const otSockAddr *aPeerSockAddr,
+                                                 const otSockAddr *aRxSockAddr);
+
+/**
  * Registers a new service to be advertised using DNS-SD [RFC6763].
  *
  * The service name is "_trel._udp". The platform should use its own hostname, which when combined with the service
@@ -181,8 +198,12 @@ void otPlatTrelSend(otInstance       *aInstance,
  * @param[in] aInstance        The OpenThread instance structure.
  * @param[in] aBuffer          A buffer containing the received UDP payload.
  * @param[in] aLength          UDP payload length (number of bytes).
+ * @param[in] aSockAddr        The sender address.
  */
-extern void otPlatTrelHandleReceived(otInstance *aInstance, uint8_t *aBuffer, uint16_t aLength);
+extern void otPlatTrelHandleReceived(otInstance       *aInstance,
+                                     uint8_t          *aBuffer,
+                                     uint16_t          aLength,
+                                     const otSockAddr *aSenderAddr);
 
 /**
  * Represents a group of TREL related counters in the platform layer.
