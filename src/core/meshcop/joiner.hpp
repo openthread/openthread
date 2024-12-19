@@ -193,8 +193,8 @@ private:
     static void HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult, void *aContext);
     void        HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult);
 
-    static void HandleSecureCoapClientConnect(Dtls::ConnectEvent aEvent, void *aContext);
-    void        HandleSecureCoapClientConnect(Dtls::ConnectEvent aEvent);
+    static void HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent, void *aContext);
+    void        HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent);
 
     static void HandleJoinerFinalizeResponse(void                *aContext,
                                              otMessage           *aMessage,

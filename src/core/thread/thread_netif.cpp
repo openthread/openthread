@@ -88,7 +88,7 @@ void ThreadNetif::Down(void)
     Get<Dns::ServiceDiscovery::Server>().Stop();
 #endif
 #if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
-    Get<Tmf::SecureAgent>().Stop();
+    Get<Tmf::SecureAgent>().Close();
 #endif
     IgnoreError(Get<Tmf::Agent>().Stop());
     IgnoreError(Get<Mle::MleRouter>().Disable());
