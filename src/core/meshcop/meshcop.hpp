@@ -510,6 +510,18 @@ Error GeneratePskc(const char          *aPassPhrase,
  */
 void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
+/**
+ * Generates a message dump log for certification test.
+ *
+ * @param[in] aText     The title text to include in the log.
+ * @param[in] aMessage  The message to dump the content of.
+ */
+void LogCertMessage(const char *aText, const Coap::Message &aMessage);
+
+#endif
+
 } // namespace MeshCoP
 
 DefineCoreType(otJoinerPskd, MeshCoP::JoinerPskd);

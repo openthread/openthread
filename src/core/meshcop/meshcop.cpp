@@ -337,5 +337,25 @@ exit:
 }
 #endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
+void LogCertMessage(const char *aText, const Coap::Message &aMessage)
+{
+    OT_UNUSED_VARIABLE(aText);
+
+    uint8_t  buf[kBufferSize];
+    uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
+
+    VerifyOrExit(length <= sizeof(buf));
+    aMessage.ReadBytes(aMessage.GetOffset(), buf, length);
+
+    DumpCert(aText, buf, length);
+
+exit:
+    return;
+}
+
+#endif
+
 } // namespace MeshCoP
 } // namespace ot

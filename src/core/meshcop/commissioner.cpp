@@ -1003,13 +1003,7 @@ void Commissioner::HandleTmf<kUriJoinerFinalize>(Coap::Message &aMessage, const 
     }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    if (aMessage.GetLength() <= OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE)
-    {
-        uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
-
-        aMessage.ReadBytes(aMessage.GetOffset(), buf, aMessage.GetLength() - aMessage.GetOffset());
-        DumpCert("[THCI] direction=recv | type=JOIN_FIN.req |", buf, aMessage.GetLength() - aMessage.GetOffset());
-    }
+    LogCertMessage("[THCI] direction=recv | type=JOIN_FIN.req |", aMessage);
 #endif
 
     SendJoinFinalizeResponse(aMessage, state);
@@ -1037,11 +1031,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
     joinerMessageInfo.SetPeerPort(mJoinerPort);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
-
-    VerifyOrExit(message->GetLength() <= sizeof(buf));
-    message->ReadBytes(message->GetOffset(), buf, message->GetLength() - message->GetOffset());
-    DumpCert("[THCI] direction=send | type=JOIN_FIN.rsp |", buf, message->GetLength() - message->GetOffset());
+    LogCertMessage("[THCI] direction=send | type=JOIN_FIN.rsp |", *message);
 #endif
 
     SuccessOrExit(error = Get<Tmf::SecureAgent>().SendMessage(*message, joinerMessageInfo));
