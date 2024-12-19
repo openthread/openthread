@@ -160,8 +160,10 @@ typedef struct otNat64AddressMapping
 {
     uint64_t mId; ///< The unique id for a mapping session.
 
-    otIp4Address mIp4;             ///< The IPv4 address of the mapping.
-    otIp6Address mIp6;             ///< The IPv6 address of the mapping.
+    otIp4Address mIp4; ///< The IPv4 address of the mapping.
+    otIp6Address mIp6; ///< The IPv6 address of the mapping.
+    uint16_t     mSrcPortOrId;
+    uint16_t     mTranslatedPortOrId;
     uint32_t     mRemainingTimeMs; ///< Remaining time before expiry in milliseconds.
 
     otNat64ProtocolCounters mCounters;

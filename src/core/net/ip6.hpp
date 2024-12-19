@@ -467,6 +467,20 @@ public:
     uint8_t GetIpProto(void) const { return mIp6Header.GetNextHeader(); }
 
     /**
+     * Returns the IPv6 Payload Length value.
+     *
+     * @returns The IPv6 Payload Length value.
+     */
+    uint8_t GetIpLength(void) const { return mIp6Header.GetPayloadLength(); }
+
+    /**
+     * Returns the IPv6 Hop Limit value.
+     *
+     * @returns The IPv6 Hop Limit value.
+     */
+    uint8_t GetIpHopLimit(void) const { return mIp6Header.GetHopLimit(); }
+
+    /**
      * Returns the 2-bit Explicit Congestion Notification (ECN) from Traffic Class field from IPv6 header.
      *
      * @returns The ECN value.
