@@ -102,6 +102,7 @@ constexpr KeyRef kActiveDatasetPskcRef        = OPENTHREAD_CONFIG_PSA_ITS_NVM_OF
 constexpr KeyRef kPendingDatasetNetworkKeyRef = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 5;
 constexpr KeyRef kPendingDatasetPskcRef       = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 6;
 constexpr KeyRef kEcdsaRef                    = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 7;
+constexpr KeyRef kPskdRef                     = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 8;
 
 /**
  * Determine if a given `KeyRef` is valid or not.

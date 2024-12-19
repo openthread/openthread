@@ -208,6 +208,8 @@ public:
         kStatusUndefined    = OT_TCAT_STATUS_UNDEFINED,     ///< The requested value, data or service is not defined
                                                             ///< (currently) or not present
         kStatusHashError = OT_TCAT_STATUS_HASH_ERROR, ///< The hash value presented by the commissioner was incorrect
+        kStatusInvalidState =
+            OT_TCAT_STATUS_INVALID_STATE, ///< The TCAT device is in invalid state to exectute the command
         kStatusUnauthorized =
             OT_TCAT_STATUS_UNAUTHORIZED, ///< Sender does not have sufficient authorization for the given command
     };
@@ -339,6 +341,7 @@ private:
 
     Error HandleSingleTlv(const Message &aIncomingMessage, Message &aOutgoingMessage);
     Error HandleSetActiveOperationalDataset(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength);
+    Error HandleGetActiveOperationalDataset(Message &aOutgoingMessage, bool &aResponse);
     Error HandleDecomission(void);
     Error HandlePing(const Message &aIncomingMessage,
                      Message       &aOutgoingMessage,
@@ -359,6 +362,7 @@ private:
                                 uint16_t       aLength,
                                 bool          &aResponse);
     Error HandleStartThreadInterface(void);
+    Error HandleGetCommissionerCertificate(Message &aOutgoingMessage, bool &aResponse);
 
     Error VerifyHash(const Message &aIncomingMessage,
                      uint16_t       aOffset,
@@ -374,12 +378,13 @@ private:
     bool         CanProcessTlv(uint8_t aTlvType) const;
     CommandClass GetCommandClass(uint8_t aTlvType) const;
 
-    static constexpr uint16_t kJoinerUdpPort            = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
-    static constexpr uint16_t kPingPayloadMaxLength     = 512;
-    static constexpr uint16_t kProvisioningUrlMaxLength = 64;
-    static constexpr uint16_t kMaxPskdLength            = OT_JOINER_MAX_PSKD_LENGTH;
-    static constexpr uint16_t kTcatMaxDeviceIdSize      = OT_TCAT_MAX_DEVICEID_SIZE;
-    static constexpr uint16_t kInstallCodeMaxSize       = 255;
+    static constexpr uint16_t kJoinerUdpPort             = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
+    static constexpr uint16_t kPingPayloadMaxLength      = 512;
+    static constexpr uint16_t kProvisioningUrlMaxLength  = 64;
+    static constexpr uint16_t kMaxPskdLength             = OT_JOINER_MAX_PSKD_LENGTH;
+    static constexpr uint16_t kTcatMaxDeviceIdSize       = OT_TCAT_MAX_DEVICEID_SIZE;
+    static constexpr uint16_t kInstallCodeMaxSize        = 255;
+    static constexpr uint16_t kCommissionerCertMaxLength = 1024;
 
     JoinerPskd                       mJoinerPskd;
     const VendorInfo                *mVendorInfo;
@@ -400,6 +405,7 @@ private:
     bool                             mPskdVerified : 1;
     bool                             mPskcVerified : 1;
     bool                             mInstallCodeVerified : 1;
+    bool                             mIsCommissioned : 1;
 
     friend class Ble::BleSecure;
 };
