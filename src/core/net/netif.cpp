@@ -293,6 +293,7 @@ Error Netif::SubscribeExternalMulticast(const Address &aAddress)
     Error             error                      = kErrorNone;
     MulticastAddress &linkLocalAllRoutersAddress = AsCoreType(&AsNonConst(kLinkLocalAllRoutersMulticastAddress));
     ExternalMulticastAddress *entry;
+    bool                      isUnicastBasedAddress = false;
 
     VerifyOrExit(aAddress.IsMulticast(), error = kErrorInvalidArgs);
     VerifyOrExit(!IsMulticastSubscribed(aAddress), error = kErrorAlready);
@@ -304,6 +305,19 @@ Error Netif::SubscribeExternalMulticast(const Address &aAddress)
     for (const MulticastAddress *cur = &linkLocalAllRoutersAddress; cur; cur = cur->GetNext())
     {
         VerifyOrExit(cur->GetAddress() != aAddress, error = kErrorRejected);
+    }
+    // Check that the address is not a solicited node multicast
+    for (const UnicastAddress *cur = mUnicastAddresses.GetHead(); cur; cur = cur->GetNext())
+    {
+        isUnicastBasedAddress = ((aAddress.GetBytes()[8] == cur->GetAddress().GetBytes()[12] &&
+                                  aAddress.GetBytes()[9] == cur->GetAddress().GetBytes()[13] &&
+                                  aAddress.GetBytes()[10] == cur->GetAddress().GetBytes()[14] &&
+                                  aAddress.GetBytes()[11] == cur->GetAddress().GetBytes()[15]) ||
+                                 (aAddress.GetBytes()[8] == cur->GetAddress().GetBytes()[0] &&
+                                  aAddress.GetBytes()[9] == cur->GetAddress().GetBytes()[1] &&
+                                  aAddress.GetBytes()[10] == cur->GetAddress().GetBytes()[2] &&
+                                  aAddress.GetBytes()[11] == cur->GetAddress().GetBytes()[3]));
+        VerifyOrExit(!isUnicastBasedAddress, error = kErrorRejected);
     }
 
     entry = mExtMulticastAddressPool.Allocate();
