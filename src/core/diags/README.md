@@ -240,6 +240,39 @@ Set the radio to receive mode and receive a specified number of frames.
 Done
 ```
 
+### diag radio receive filter enable
+
+Enable the diag filter module to only receive frames with a specified destination address.
+
+```bash
+> diag radio receive filter enable
+Done
+```
+
+### diag radio receive filter disable
+
+Disable the diag filter module from only receiving frames with a specified destination address.
+
+```bash
+> diag radio receive filter disable
+Done
+```
+
+### diag radio receive filter \<destaddress\>
+
+Set the destination address of the radio receive filter.
+
+- destaddress: The destination mac address. It can be a short, extended or none. Use '-' to specify none.
+
+```bash
+> diag radio receive filter -
+Done
+> diag radio receive filter 0x0a17
+Done
+> diag radio receive filter dead00beef00cafe
+Done
+```
+
 ### diag radio state
 
 Return the state of the radio.

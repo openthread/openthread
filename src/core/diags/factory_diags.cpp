@@ -631,6 +631,51 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
             ExitNow();
         }
 
+        if (StringMatch(aArgs[0], "filter"))
+        {
+            aArgs++;
+            aArgsLength--;
+
+            VerifyOrExit(aArgsLength > 0);
+
+            if (StringMatch(aArgs[0], "enable"))
+            {
+                mReceiveConfig.mIsFilterEnabled = true;
+                error                           = kErrorNone;
+            }
+            else if (StringMatch(aArgs[0], "disable"))
+            {
+                mReceiveConfig.mIsFilterEnabled = false;
+                error                           = kErrorNone;
+            }
+            else
+            {
+                Mac::Address dstAddress;
+
+                if (StringMatch(aArgs[0], "-"))
+                {
+                    dstAddress.SetNone();
+                    error = kErrorNone;
+                }
+                else if (strlen(aArgs[0]) == 2 * sizeof(Mac::ExtAddress))
+                {
+                    Mac::ExtAddress extAddress;
+
+                    SuccessOrExit(error = Utils::CmdLineParser::ParseAsHexString(aArgs[0], extAddress.m8));
+                    mReceiveConfig.mFilterAddress.SetExtended(extAddress);
+                }
+                else
+                {
+                    Mac::ShortAddress shortAddress;
+
+                    SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint16(aArgs[0], shortAddress));
+                    mReceiveConfig.mFilterAddress.SetShort(shortAddress);
+                }
+            }
+
+            ExitNow();
+        }
+
         if (StringMatch(aArgs[0], "async"))
         {
             aArgs++;
@@ -650,8 +695,13 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
 
         SuccessOrExit(error = RadioReceive());
 
-        receiveConfig.mIsEnabled = true;
-        mReceiveConfig           = receiveConfig;
+        mReceiveConfig.mIsEnabled      = true;
+        mReceiveConfig.mIsAsyncCommand = receiveConfig.mIsAsyncCommand;
+        mReceiveConfig.mShowRssi       = receiveConfig.mShowRssi;
+        mReceiveConfig.mShowLqi        = receiveConfig.mShowLqi;
+        mReceiveConfig.mShowPsdu       = receiveConfig.mShowPsdu;
+        mReceiveConfig.mReceiveCount   = receiveConfig.mReceiveCount;
+        mReceiveConfig.mNumFrames      = receiveConfig.mNumFrames;
 
         if (!mReceiveConfig.mIsAsyncCommand)
         {
@@ -763,6 +813,11 @@ void Diags::ReceiveDone(otRadioFrame *aFrame, Error aError)
 {
     if (aError == kErrorNone)
     {
+        if (mReceiveConfig.mIsFilterEnabled)
+        {
+            VerifyOrExit(ShouldHandleReceivedFrame(*aFrame));
+        }
+
         OutputReceivedFrame(aFrame);
 
         // for sensitivity test, only record the rssi and lqi for the first and last packet
@@ -779,6 +834,9 @@ void Diags::ReceiveDone(otRadioFrame *aFrame, Error aError)
     }
 
     otPlatDiagRadioReceived(&GetInstance(), aFrame, aError);
+
+exit:
+    return;
 }
 
 void Diags::TransmitDone(Error aError)
@@ -805,6 +863,20 @@ void Diags::TransmitDone(Error aError)
 
 exit:
     return;
+}
+
+bool Diags::ShouldHandleReceivedFrame(const otRadioFrame &aFrame) const
+{
+    bool                ret   = false;
+    const Mac::RxFrame &frame = static_cast<const Mac::RxFrame &>(aFrame);
+    Mac::Address        dstAddress;
+
+    VerifyOrExit(frame.GetDstAddr(dstAddress) == kErrorNone);
+    VerifyOrExit(dstAddress == mReceiveConfig.mFilterAddress);
+    ret = true;
+
+exit:
+    return ret;
 }
 
 #endif // OPENTHREAD_RADIO

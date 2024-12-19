@@ -48,6 +48,7 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/string.hpp"
+#include "mac/mac_types.hpp"
 
 namespace ot {
 namespace FactoryDiags {
@@ -185,18 +186,23 @@ private:
             , mShowRssi(true)
             , mShowLqi(true)
             , mShowPsdu(false)
+            , mIsFilterEnabled(false)
             , mReceiveCount(0)
             , mNumFrames(0)
+            , mFilterAddress()
         {
         }
 
-        bool     mIsEnabled : 1;
-        bool     mIsAsyncCommand : 1;
-        bool     mShowRssi : 1;
-        bool     mShowLqi : 1;
-        bool     mShowPsdu : 1;
-        uint16_t mReceiveCount;
-        uint16_t mNumFrames;
+        bool mIsEnabled : 1;
+        bool mIsAsyncCommand : 1;
+        bool mShowRssi : 1;
+        bool mShowLqi : 1;
+        bool mShowPsdu : 1;
+        bool mIsFilterEnabled : 1;
+
+        uint16_t     mReceiveCount;
+        uint16_t     mNumFrames;
+        Mac::Address mFilterAddress;
     };
 
     Error ParseCmd(char *aString, uint8_t &aArgsLength, char *aArgs[]);
@@ -223,6 +229,7 @@ private:
     Error ParseReceiveConfigFormat(const char *aFormat, ReceiveConfig &aConfig);
     Error RadioReceive(void);
     void  OutputReceivedFrame(const otRadioFrame *aFrame);
+    bool  ShouldHandleReceivedFrame(const otRadioFrame &aFrame) const;
 
     void TransmitPacket(void);
     void Output(const char *aFormat, ...);

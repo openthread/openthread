@@ -63,6 +63,8 @@ void ExtAddress::GenerateRandom(void)
 }
 #endif
 
+bool ExtAddress::operator==(const ExtAddress &aOther) const { return (memcmp(m8, aOther.m8, sizeof(m8)) == 0); }
+
 ExtAddress::InfoString ExtAddress::ToString(void) const
 {
     InfoString string;
@@ -88,6 +90,35 @@ void ExtAddress::CopyAddress(uint8_t *aDst, const uint8_t *aSrc, CopyByteOrder a
         }
         break;
     }
+}
+
+bool Address::operator==(const Address &aOther) const
+{
+    bool ret = false;
+
+    VerifyOrExit(GetType() == aOther.GetType());
+
+    switch (GetType())
+    {
+    case kTypeNone:
+        ret = true;
+        break;
+
+    case kTypeShort:
+        ret = (GetShort() == aOther.GetShort());
+        break;
+
+    case kTypeExtended:
+        ret = (GetExtended() == aOther.GetExtended());
+        break;
+
+    default:
+        OT_ASSERT(false);
+        break;
+    }
+
+exit:
+    return ret;
 }
 
 Address::InfoString Address::ToString(void) const
