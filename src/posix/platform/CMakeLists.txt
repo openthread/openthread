@@ -150,6 +150,7 @@ add_library(openthread-posix
     spinel_manager.cpp
     spi_interface.cpp
     system.cpp
+    temp_settings.cpp
     trel.cpp
     udp.cpp
     utils.cpp

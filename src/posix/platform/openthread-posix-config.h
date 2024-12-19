@@ -425,4 +425,14 @@
 #define OPENTHREAD_POSIX_CONFIG_TREL_SELECT_INFRA_IF 0
 #endif
 
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_TEMP_SETTINGS_ENABLE
+ *
+ * Define as 1 to enable the temporary settings. The key-value pairs stored in the temporary settings will be erased
+ * after the system is rebooted.
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_TEMP_SETTINGS_ENABLE
+#define OPENTHREAD_POSIX_CONFIG_TEMP_SETTINGS_ENABLE 1
+#endif
+
 #endif // OPENTHREAD_PLATFORM_POSIX_CONFIG_H_
