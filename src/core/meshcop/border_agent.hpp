@@ -56,6 +56,10 @@ namespace ot {
 
 namespace MeshCoP {
 
+#if !OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
+#error "Border Agent feature requires `OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE`"
+#endif
+
 class BorderAgent : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;

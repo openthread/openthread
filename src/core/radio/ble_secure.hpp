@@ -48,6 +48,10 @@ namespace ot {
 
 namespace Ble {
 
+#if !OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
+#error "BLE TCAT feature requires `OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE`"
+#endif
+
 class BleSecure : public InstanceLocator, public MeshCoP::Tls::Extension, private NonCopyable
 {
 public:
