@@ -1155,6 +1155,42 @@ exit:
 #endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 
 #if defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
+Error SecureTransport::Extension::GetPeerCertificateDer(uint8_t *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mSecureTransport.IsStateConnected(), error = kErrorInvalidState);
+
+#if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
+    VerifyOrExit(mSecureTransport.mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.len < aCertBufferSize,
+                 error = kErrorNoBufs);
+
+    *aCertLength = mSecureTransport.mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.len;
+    memcpy(aPeerCert, mSecureTransport.mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.p, *aCertLength);
+
+#else
+    VerifyOrExit(mSecureTransport.mSsl.MBEDTLS_PRIVATE(session)
+                         ->MBEDTLS_PRIVATE(peer_cert)
+                         ->MBEDTLS_PRIVATE(raw)
+                         .MBEDTLS_PRIVATE(len) < aCertBufferSize,
+                 error = kErrorNoBufs);
+
+    *aCertLength = mSecureTransport.mSsl.MBEDTLS_PRIVATE(session)
+                       ->MBEDTLS_PRIVATE(peer_cert)
+                       ->MBEDTLS_PRIVATE(raw)
+                       .MBEDTLS_PRIVATE(len);
+    memcpy(aPeerCert,
+           mSecureTransport.mSsl.MBEDTLS_PRIVATE(session)
+               ->MBEDTLS_PRIVATE(peer_cert)
+               ->MBEDTLS_PRIVATE(raw)
+               .MBEDTLS_PRIVATE(p),
+           *aCertLength);
+#endif
+
+exit:
+    return error;
+}
+
 Error SecureTransport::Extension::GetPeerSubjectAttributeByOid(const char *aOid,
                                                                size_t      aOidLength,
                                                                uint8_t    *aAttributeBuffer,

@@ -66,13 +66,13 @@ class ActiveTimestamp(DatasetEntry):
     def set(self, args: List[str]):
         if len(args) == 0:
             raise ValueError('No argument for ActiveTimestamp')
-        self._seconds = int(args[0])
+        self.seconds = int(args[0])
 
     def set_from_tlv(self, tlv: TLV):
         (value,) = struct.unpack('>Q', tlv.value)
         self.ubit = value & 0x1
         self.ticks = (value >> 1) & 0x7FFF
-        self.seconds = (value >> 16) & 0xFFFF
+        self.seconds = (value >> 16) & 0xFFFFFFFFFFFF
 
     def to_tlv(self):
         value = (self.seconds << 16) | (self.ticks << 1) | self.ubit
@@ -92,7 +92,7 @@ class PendingTimestamp(DatasetEntry):
     def set(self, args: List[str]):
         if len(args) == 0:
             raise ValueError('No argument for PendingTimestamp')
-        self._seconds = int(args[0])
+        self.seconds = int(args[0])
 
     def set_from_tlv(self, tlv: TLV):
         (value,) = struct.unpack('>Q', tlv.value)

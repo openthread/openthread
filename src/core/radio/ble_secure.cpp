@@ -27,6 +27,7 @@
  */
 
 #include "ble_secure.hpp"
+#include "common/error.hpp"
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
@@ -161,7 +162,24 @@ void BleSecure::Disconnect(void)
         IgnoreReturnValue(otPlatBleGapDisconnect(&GetInstance()));
     }
 
+    // Update advertisement
+    IgnoreReturnValue(NotifyAdvertisementChanged());
+
     mConnectCallback.InvokeIfSet(&GetInstance(), false, false);
+}
+
+Error BleSecure::NotifyAdvertisementChanged(void)
+{
+    Error    error             = kErrorNone;
+    uint16_t advertisementLen  = 0;
+    uint8_t *advertisementData = nullptr;
+
+    SuccessOrExit(error = otPlatBleGetAdvertisementBuffer(&GetInstance(), &advertisementData));
+    SuccessOrExit(error = mTcatAgent.GetAdvertisementData(advertisementLen, advertisementData));
+    SuccessOrExit(error = otPlatBleGapAdvUpdateData(&GetInstance(), advertisementData, advertisementLen));
+
+exit:
+    return error;
 }
 
 void BleSecure::SetPsk(const MeshCoP::JoinerPskd &aPskd)

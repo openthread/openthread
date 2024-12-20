@@ -271,10 +271,18 @@ public:
     /**
      * @brief Gets the Install Code Verify Status during the current session.
      *
-     * @return TRUE The install code was correctly verfied.
+     * @return TRUE The install code was correctly verified.
      * @return FALSE The install code was not verified.
      */
     bool GetInstallCodeVerifyStatus(void) const { return mTcatAgent.GetInstallCodeVerifyStatus(); }
+
+    /**
+     * @brief Notifies bleLayer that advetrisement should be updated.
+     *
+     * @retval kErrorNone          Successfully updated.
+     * @return kErrorFailed        Update failed.
+     */
+    Error NotifyAdvertisementChanged(void);
 
 private:
     enum BleState : uint8_t
