@@ -58,6 +58,7 @@ class TestDiag(thread_cert.TestCase):
                 'sent success packets: 0\r\n'
                 'sent error cca packets: 0\r\n'
                 'sent error abort packets: 0\r\n'
+                'sent error invalid state packets: 0\r\n'
                 'sent error others packets: 0\r\n'
                 'first received packet: rssi=0, lqi=0\r\n'
                 'last received packet: rssi=0, lqi=0\r\n',

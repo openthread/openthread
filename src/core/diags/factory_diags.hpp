@@ -138,6 +138,7 @@ private:
         uint32_t mSentFailedPackets;
         uint32_t mSentErrorCcaPackets;
         uint32_t mSentErrorAbortPackets;
+        uint32_t mSentErrorInvalidStatePackets;
         uint32_t mSentErrorOthersPackets;
         int8_t   mFirstRssi;
         uint8_t  mFirstLqi;
@@ -232,10 +233,10 @@ private:
     Error GetPowerSettings(uint8_t aChannel, PowerSettings &aPowerSettings);
     Error ParseReceiveConfigFormat(const char *aFormat, ReceiveConfig &aConfig);
     Error RadioReceive(void);
+    Error TransmitPacket(void);
     void  OutputReceivedFrame(const otRadioFrame *aFrame);
     bool  ShouldHandleReceivedFrame(const otRadioFrame &aFrame) const;
 
-    void TransmitPacket(void);
     void Output(const char *aFormat, ...);
     void ResetTxPacket(void);
     void OutputStats(void);
