@@ -106,22 +106,24 @@ public:
      */
     enum Key : uint16_t
     {
-        kKeyActiveDataset     = OT_SETTINGS_KEY_ACTIVE_DATASET,
-        kKeyPendingDataset    = OT_SETTINGS_KEY_PENDING_DATASET,
-        kKeyNetworkInfo       = OT_SETTINGS_KEY_NETWORK_INFO,
-        kKeyParentInfo        = OT_SETTINGS_KEY_PARENT_INFO,
-        kKeyChildInfo         = OT_SETTINGS_KEY_CHILD_INFO,
-        kKeySlaacIidSecretKey = OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY,
-        kKeyDadInfo           = OT_SETTINGS_KEY_DAD_INFO,
-        kKeySrpEcdsaKey       = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
-        kKeySrpClientInfo     = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
-        kKeySrpServerInfo     = OT_SETTINGS_KEY_SRP_SERVER_INFO,
-        kKeyBrUlaPrefix       = OT_SETTINGS_KEY_BR_ULA_PREFIX,
-        kKeyBrOnLinkPrefixes  = OT_SETTINGS_KEY_BR_ON_LINK_PREFIXES,
-        kKeyBorderAgentId     = OT_SETTINGS_KEY_BORDER_AGENT_ID,
+        kKeyActiveDataset               = OT_SETTINGS_KEY_ACTIVE_DATASET,
+        kKeyPendingDataset              = OT_SETTINGS_KEY_PENDING_DATASET,
+        kKeyNetworkInfo                 = OT_SETTINGS_KEY_NETWORK_INFO,
+        kKeyParentInfo                  = OT_SETTINGS_KEY_PARENT_INFO,
+        kKeyChildInfo                   = OT_SETTINGS_KEY_CHILD_INFO,
+        kKeySlaacIidSecretKey           = OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY,
+        kKeyDadInfo                     = OT_SETTINGS_KEY_DAD_INFO,
+        kKeySrpEcdsaKey                 = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
+        kKeySrpClientInfo               = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
+        kKeySrpServerInfo               = OT_SETTINGS_KEY_SRP_SERVER_INFO,
+        kKeyBrUlaPrefix                 = OT_SETTINGS_KEY_BR_ULA_PREFIX,
+        kKeyBrOnLinkPrefixes            = OT_SETTINGS_KEY_BR_ON_LINK_PREFIXES,
+        kKeyBorderAgentId               = OT_SETTINGS_KEY_BORDER_AGENT_ID,
+        kKeyTcatCommissionerCertificate = OT_SETTINGS_KEY_TCAT_COMMISSIONER_CERTIFICATE,
     };
 
-    static constexpr Key kLastKey = kKeyBorderAgentId; ///< The last (numerically) enumerator value in `Key`.
+    static constexpr Key kLastKey =
+        kKeyTcatCommissionerCertificate; ///< The last (numerically) enumerator value in `Key`.
 
     static_assert(static_cast<uint16_t>(kLastKey) < static_cast<uint16_t>(OT_SETTINGS_KEY_VENDOR_RESERVED_MIN),
                   "Core settings keys overlap with vendor reserved keys");
@@ -801,6 +803,33 @@ public:
      * @param[in]   aType            The Dataset type (active or pending) to delete.
      */
     void DeleteOperationalDataset(MeshCoP::Dataset::Type aType);
+
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    /**
+     * Stores the Tcat Commissioner certificate.
+     *
+     * @param[in]  aCert            The DER-encoded X509 end-entity certificate to store.
+     * @param[in]  aCertLen         Certificate length.
+     *
+     */
+    void SaveTcatCommissionerCertificate(uint8_t *aCert, uint16_t aCertLen);
+
+    /**
+     * Reads the Tcat Commissioner certificate.
+     *
+     * @param[out]  aCert            Buffer to store the DER-encoded X509 end-entity certificate of the TCAT
+     * Commissioner
+     * @param[out]  aCertLen         Certificate length.
+     *
+     * @retval kErrorNone             Successfully read the Dataset.
+     * @retval kErrorNotFound         No corresponding value in the setting store.
+     * @retval kErrorNoBuffs          Buffer has not enough space to store the data.
+     */
+    Error GetTcatCommissionerCertificate(uint8_t *aCert, uint16_t &aCertLen)
+    {
+        return Get<SettingsDriver>().Get(kKeyTcatCommissionerCertificate, aCert, &aCertLen);
+    }
+#endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
     /**
      * Reads a specified settings entry.
