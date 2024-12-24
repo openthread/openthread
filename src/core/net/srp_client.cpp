@@ -1959,7 +1959,7 @@ void Client::HandleUpdateDone(void)
 
 void Client::GetRemovedServices(LinkedList<Service> &aRemovedServices)
 {
-    mServices.RemoveAllMatching(kRemoved, aRemovedServices);
+    mServices.RemoveAllMatching(aRemovedServices, kRemoved);
 }
 
 Error Client::ReadResourceRecord(const Message &aMessage, uint16_t &aOffset, Dns::ResourceRecord &aRecord)

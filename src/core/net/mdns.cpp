@@ -4276,7 +4276,7 @@ void Core::MultiPacketRxMessages::HandleTimer(void)
     NextFireTime           nextTime;
     OwningList<RxMsgEntry> expiredEntries;
 
-    mRxMsgEntries.RemoveAllMatching(ExpireChecker(nextTime.GetNow()), expiredEntries);
+    mRxMsgEntries.RemoveAllMatching(expiredEntries, ExpireChecker(nextTime.GetNow()));
 
     for (RxMsgEntry &expiredEntry : expiredEntries)
     {
@@ -5445,7 +5445,7 @@ void Core::BrowseCache::ProcessExpiredRecords(TimeMilli aNow)
 {
     OwningList<PtrEntry> expiredEntries;
 
-    mPtrEntries.RemoveAllMatching(ExpireChecker(aNow), expiredEntries);
+    mPtrEntries.RemoveAllMatching(expiredEntries, ExpireChecker(aNow));
 
     for (PtrEntry &exiredEntry : expiredEntries)
     {
