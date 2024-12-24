@@ -185,12 +185,8 @@ uint16_t BorderAgent::GetUdpPort(void) const { return mDtlsTransport.GetUdpPort(
 
 void BorderAgent::HandleNotifierEvents(Events aEvents)
 {
-    if ((aEvents.ContainsAny(kEventThreadRoleChanged | kEventCommissionerStateChanged)))
+    if (aEvents.Contains(kEventThreadRoleChanged))
     {
-#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-        VerifyOrExit(Get<Commissioner>().IsDisabled());
-#endif
-
         if (Get<Mle::MleRouter>().IsAttached())
         {
             Start();
