@@ -48,7 +48,6 @@ RegisterLogModule("BorderAgent");
 BorderAgent::BorderAgent(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kStateStopped)
-    , mUdpProxyPort(0)
     , mUdpReceiver(BorderAgent::HandleUdpReceive, this)
     , mTimer(aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
@@ -136,8 +135,7 @@ Error BorderAgent::Start(uint16_t aUdpPort, const uint8_t *aPsk, uint8_t aPskLen
 
     Get<Tmf::SecureAgent>().SetConnectCallback(HandleConnected, this);
 
-    mState        = kStateStarted;
-    mUdpProxyPort = 0;
+    mState = kStateStarted;
 
     LogInfo("Border Agent start listening on port %u", GetUdpPort());
 
@@ -162,8 +160,7 @@ void BorderAgent::Stop(void)
     mTimer.Stop();
     Get<Tmf::SecureAgent>().Stop();
 
-    mState        = kStateStopped;
-    mUdpProxyPort = 0;
+    mState = kStateStopped;
     LogInfo("Border Agent stopped");
 
 exit:
@@ -281,8 +278,7 @@ void BorderAgent::HandleConnected(Dtls::ConnectEvent aEvent)
         else
 #endif
         {
-            mState        = kStateStarted;
-            mUdpProxyPort = 0;
+            mState = kStateStarted;
 
             if (aEvent == Dtls::kDisconnectedError)
             {
@@ -643,7 +639,6 @@ template <> void BorderAgent::HandleTmf<kUriProxyTx>(Coap::Message &aMessage, co
     SuccessOrExit(error = Tlv::Find<Ip6AddressTlv>(aMessage, messageInfo.GetPeerAddr()));
 
     SuccessOrExit(error = Get<Ip6::Udp>().SendDatagram(*message, messageInfo));
-    mUdpProxyPort = udpEncapHeader.GetSourcePort();
 
     LogInfo("Proxy transmit sent to %s", messageInfo.GetPeerAddr().ToString().AsCString());
 
