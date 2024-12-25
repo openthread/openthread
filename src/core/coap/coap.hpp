@@ -358,9 +358,9 @@ public:
     typedef Error (*Interceptor)(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 
     /**
-     * Clears requests and responses used by this CoAP agent.
+     * Clears all requests and responses used by this CoAP agent and stops all timers.
      */
-    void ClearRequestsAndResponses(void);
+    void ClearAllRequestsAndResponses(void);
 
     /**
      * Clears requests with specified source address used by this CoAP agent.
