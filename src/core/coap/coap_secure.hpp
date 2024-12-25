@@ -148,8 +148,13 @@ public:
         , Dtls::Transport::Extension(static_cast<Dtls::Transport &>(*this))
         , SecureSession(aInstance, static_cast<Dtls::Transport &>(*this))
     {
+        Dtls::Transport::SetAcceptCallback(HandleDtlsAccept, this);
         Dtls::Transport::SetExtension(static_cast<Dtls::Transport::Extension &>(*this));
     }
+
+private:
+    static MeshCoP::SecureSession *HandleDtlsAccept(void *aContext, const Ip6::MessageInfo &aMessageInfo);
+    SecureSession                 *HandleDtlsAccept(void);
 };
 
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE

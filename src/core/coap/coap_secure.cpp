@@ -151,6 +151,22 @@ exit:
     FreeMessageOnError(message, error);
 }
 
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+
+MeshCoP::SecureSession *ApplicationCoapSecure::HandleDtlsAccept(void *aContext, const Ip6::MessageInfo &aMessageInfo)
+{
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    return static_cast<ApplicationCoapSecure *>(aContext)->HandleDtlsAccept();
+}
+
+SecureSession *ApplicationCoapSecure::HandleDtlsAccept(void)
+{
+    return IsSessionInUse() ? nullptr : static_cast<SecureSession *>(this);
+}
+
+#endif
+
 } // namespace Coap
 } // namespace ot
 

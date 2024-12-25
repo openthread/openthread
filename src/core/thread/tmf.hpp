@@ -208,6 +208,9 @@ public:
     explicit SecureAgent(Instance &aInstance);
 
 private:
+    static MeshCoP::SecureSession *HandleDtlsAccept(void *aContext, const Ip6::MessageInfo &aMessageInfo);
+    Coap::SecureSession           *HandleDtlsAccept(void);
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     static bool HandleResource(CoapBase               &aCoapBase,
                                const char             *aUriPath,

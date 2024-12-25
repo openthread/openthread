@@ -276,9 +276,23 @@ SecureAgent::SecureAgent(Instance &aInstance)
     : Coap::Dtls::Transport(aInstance, kNoLinkSecurity)
     , Coap::SecureSession(aInstance, static_cast<Coap::Dtls::Transport &>(*this))
 {
+    SetAcceptCallback(&HandleDtlsAccept, this);
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     SetResourceHandler(&HandleResource);
 #endif
+}
+
+MeshCoP::SecureSession *SecureAgent::HandleDtlsAccept(void *aContext, const Ip6::MessageInfo &aMessageInfo)
+{
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    return static_cast<SecureAgent *>(aContext)->HandleDtlsAccept();
+}
+
+Coap::SecureSession *SecureAgent::HandleDtlsAccept(void)
+{
+    return IsSessionInUse() ? nullptr : static_cast<Coap::SecureSession *>(this);
 }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE

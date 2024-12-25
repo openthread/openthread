@@ -51,6 +51,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
     , mUdpReceiver(BorderAgent::HandleUdpReceive, this)
     , mTimer(aInstance)
     , mDtlsTransport(aInstance, kNoLinkSecurity)
+    , mCoapDtlsSession(nullptr)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     , mIdInitialized(false)
 #endif
@@ -128,15 +129,13 @@ Error BorderAgent::Start(uint16_t aUdpPort, const uint8_t *aPsk, uint8_t aPskLen
     }
 #endif
 
-    mCoapDtlsSession.Reset(CoapDtlsSession::Allocate(GetInstance(), mDtlsTransport));
-    VerifyOrExit(mCoapDtlsSession != nullptr, error = kErrorNoBufs);
+    mDtlsTransport.SetAcceptCallback(HandleAcceptSession, this);
+    mDtlsTransport.SetRemoveSessionCallback(HandleRemoveSession, this);
 
     SuccessOrExit(error = mDtlsTransport.Open());
     SuccessOrExit(error = mDtlsTransport.Bind(aUdpPort));
 
     SuccessOrExit(error = mDtlsTransport.SetPsk(aPsk, aPskLength));
-
-    mCoapDtlsSession->SetConnectCallback(HandleConnected, this);
 
     mState = kStateStarted;
 
@@ -162,7 +161,6 @@ void BorderAgent::Stop(void)
 
     mTimer.Stop();
     mDtlsTransport.Close();
-    mCoapDtlsSession.Free();
 
     mState = kStateStopped;
     LogInfo("Border Agent stopped");
@@ -174,6 +172,7 @@ exit:
 void BorderAgent::Disconnect(void)
 {
     VerifyOrExit(mState == kStateConnected || mState == kStateAccepted);
+    VerifyOrExit(mCoapDtlsSession != nullptr);
 
     mCoapDtlsSession->Disconnect();
 
@@ -228,11 +227,50 @@ exit:
 
 void BorderAgent::HandleTimeout(void)
 {
-    if (mCoapDtlsSession->IsConnected())
-    {
-        mCoapDtlsSession->Disconnect();
-        LogWarn("Reset secure session");
-    }
+    VerifyOrExit(mCoapDtlsSession != nullptr);
+    VerifyOrExit(mCoapDtlsSession->IsConnected());
+
+    mCoapDtlsSession->Disconnect();
+    LogWarn("Reset secure session");
+
+exit:
+    return;
+}
+
+SecureSession *BorderAgent::HandleAcceptSession(void *aContext, const Ip6::MessageInfo &aMessageInfo)
+{
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    return static_cast<BorderAgent *>(aContext)->HandleAcceptSession();
+}
+
+BorderAgent::CoapDtlsSession *BorderAgent::HandleAcceptSession(void)
+{
+    CoapDtlsSession *session = nullptr;
+
+    VerifyOrExit(mCoapDtlsSession == nullptr);
+
+    session = CoapDtlsSession::Allocate(GetInstance(), mDtlsTransport);
+    VerifyOrExit(session != nullptr);
+
+    session->SetConnectCallback(HandleConnected, this);
+    mCoapDtlsSession = session;
+
+exit:
+    return session;
+}
+
+void BorderAgent::HandleRemoveSession(void *aContext, SecureSession &aSesssion)
+{
+    static_cast<BorderAgent *>(aContext)->HandleRemoveSession(aSesssion);
+}
+
+void BorderAgent::HandleRemoveSession(SecureSession &aSesssion)
+{
+    CoapDtlsSession &coapSession = static_cast<CoapDtlsSession &>(aSesssion);
+
+    coapSession.Free();
+    mCoapDtlsSession = nullptr;
 }
 
 void BorderAgent::HandleConnected(Dtls::Session::ConnectEvent aEvent, void *aContext)
@@ -314,6 +352,7 @@ Error BorderAgent::ForwardToLeader(const Coap::Message &aMessage, const Ip6::Mes
     OffsetRange              offsetRange;
 
     VerifyOrExit(mState != kStateStopped);
+    VerifyOrExit(mCoapDtlsSession != nullptr);
 
     switch (aUri)
     {
@@ -388,6 +427,7 @@ void BorderAgent::HandleCoapResponse(const ForwardContext &aForwardContext,
     Error          error;
 
     SuccessOrExit(error = aResult);
+    VerifyOrExit(mCoapDtlsSession != nullptr);
     VerifyOrExit((message = mCoapDtlsSession->NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     if (aForwardContext.IsPetition() && aResponse->GetCode() == Coap::kCodeChanged)
@@ -463,6 +503,7 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
     OffsetRange               offsetRange;
 
     VerifyOrExit(aMessageInfo.GetSockAddr() == mCommissionerAloc.GetAddress());
+    VerifyOrExit(mCoapDtlsSession != nullptr);
 
     didHandle = true;
 
@@ -498,8 +539,10 @@ exit:
 
 Error BorderAgent::ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage)
 {
-    Error       error;
+    Error       error = kErrorNone;
     OffsetRange offsetRange;
+
+    VerifyOrExit(mCoapDtlsSession != nullptr);
 
     offsetRange.InitFromMessageOffsetToEnd(aMessage);
     SuccessOrExit(error = aForwardMessage.AppendBytesFromMessage(aMessage, offsetRange));
@@ -518,6 +561,8 @@ void BorderAgent::SendErrorMessage(const ForwardContext &aForwardContext, Error 
     Error          error   = kErrorNone;
     Coap::Message *message = nullptr;
 
+    VerifyOrExit(mCoapDtlsSession != nullptr);
+
     VerifyOrExit((message = mCoapDtlsSession->NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = aForwardContext.ToHeader(*message, CoapCodeFromError(aError)));
     SuccessOrExit(error = mCoapDtlsSession->SendMessage(*message));
@@ -531,6 +576,8 @@ void BorderAgent::SendErrorMessage(const Coap::Message &aRequest, bool aSeparate
 {
     Error          error   = kErrorNone;
     Coap::Message *message = nullptr;
+
+    VerifyOrExit(mCoapDtlsSession != nullptr);
 
     VerifyOrExit((message = mCoapDtlsSession->NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
@@ -591,6 +638,8 @@ template <> void BorderAgent::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, co
     VerifyOrExit(mState != kStateStopped);
 
     VerifyOrExit(aMessage.IsNonConfirmablePostRequest(), error = kErrorDrop);
+
+    VerifyOrExit(mCoapDtlsSession != nullptr);
 
     message = mCoapDtlsSession->NewPriorityNonConfirmablePostMessage(kUriRelayRx);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
@@ -679,6 +728,8 @@ void BorderAgent::HandleTmfDatasetGet(Coap::Message &aMessage, const Ip6::Messag
 
     Error          error    = kErrorNone;
     Coap::Message *response = nullptr;
+
+    VerifyOrExit(mCoapDtlsSession != nullptr);
 
     // When processing `MGMT_GET` request directly on Border Agent,
     // the Security Policy flags (O-bit) should be ignored to allow

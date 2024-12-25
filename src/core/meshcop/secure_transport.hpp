@@ -74,6 +74,7 @@
 #include <openthread/coap_secure.h>
 
 #include "common/callback.hpp"
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
@@ -99,8 +100,10 @@ class Tls;
 /**
  * Represents a secure session.
  */
-class SecureSession : private NonCopyable
+class SecureSession : private LinkedListEntry<SecureSession>, private NonCopyable
 {
+    friend class LinkedListEntry<SecureSession>;
+    friend class LinkedList<SecureSession>;
     friend class SecureTransport;
     friend class Dtls;
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
@@ -155,10 +158,16 @@ public:
     /**
      * Establishes a secure session (as client).
      *
+     * On success, ownership of the session is passed to the associated secure transport (`GetTransport()`).
+     * The transport will then manage the session. Once the session is disconnected and removed from the transport, the
+     * secure transport signals this using the `RemoveSessionCallback` callback, where ownership is
+     * released.
+     *
      * @param[in]  aSockAddr       The server address to connect to.
      *
      * @retval kErrorNone          Successfully started session establishment
      * @retval kErrorInvalidState  Transport is not ready.
+     * @retval kErrorNoBufs        Has reached max number of allowed connection attempts.
      */
     Error Connect(const Ip6::SockAddr &aSockAddr);
 
@@ -213,6 +222,8 @@ public:
 protected:
     explicit SecureSession(SecureTransport &aTransport);
 
+    bool IsSessionInUse(void) const { return (mNext != this); }
+
 private:
     static constexpr uint32_t kGuardTimeNewConnectionMilli = 2000;
     static constexpr uint16_t kMaxContentLen               = OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN;
@@ -232,14 +243,18 @@ private:
         kStateDisconnecting,
     };
 
+    void  Init(void);
     bool  IsDisconnected(void) const { return mState == kStateDisconnected; }
     bool  IsInitializing(void) const { return mState == kStateInitializing; }
     bool  IsConnecting(void) const { return mState == kStateConnecting; }
     bool  IsDisconnecting(void) const { return mState == kStateDisconnecting; }
     bool  IsConnectingOrConnected(void) const { return mState == kStateConnecting || mState == kStateConnected; }
+    void  MarkAsNotUsed(void) { mNext = this; }
     void  SetState(State aState);
-    bool  Matches(const Ip6::MessageInfo &aInfo) { return mMessageInfo.HasSamePeerAddrAndPort(aInfo); }
-    void  HandleTransportReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    bool  Matches(const Ip6::MessageInfo &aInfo) const { return mMessageInfo.HasSamePeerAddrAndPort(aInfo); }
+    bool  Matches(State aState) const { return (mState == aState); }
+    void  Accept(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void  HandleTransportReceive(Message &aMessage);
     Error Setup(void);
     void  Disconnect(ConnectEvent aEvent);
     void  HandleTimer(TimeMilli aNow);
@@ -262,11 +277,13 @@ private:
 #endif
 
     bool                     mTimerSet : 1;
+    bool                     mIsServer : 1;
     State                    mState;
     Message::SubType         mMessageSubType;
     ConnectEvent             mConnectEvent;
     TimeMilli                mTimerIntermediate;
     TimeMilli                mTimerFinish;
+    SecureSession           *mNext;
     SecureTransport         &mTransport;
     Message                 *mReceiveMessage;
     Ip6::MessageInfo         mMessageInfo;
@@ -305,6 +322,30 @@ public:
      * @param[in] aContext    A pointer to arbitrary context information.
      */
     typedef void (*AutoCloseCallback)(void *aContext);
+
+    /**
+     * Callback to accept a new session connection request, providing the secure session to use.
+     *
+     * This method returns a pointer to a new `SecureSession` to use for the new session. The `SecureTransport` takes
+     * over the ownership of the given `SecureSession`. Once the session is disconnected and removed from the transport,
+     * the secure transport signals this using the `RemoveSessionCallback` callback, where ownership is released.
+     *
+     * `nullptr` can be returned to reject the new session connection request.
+     *
+     * @param[in] aContex       A pointer to arbitrary context information.
+     * @param[in] aMessageInfo  The message info from the new session connection request message.
+     *
+     * @returns A pointer to `SecureSession` to use for new session or `nullptr` if new connection is rejected.
+     */
+    typedef SecureSession *(*AcceptCallback)(void *aContext, const Ip6::MessageInfo &aMessageInfo);
+
+    /**
+     * Callback to signal a session is removed, releasing the ownership of the session (by `SecureTransport`).
+     *
+     * @param[in] aContex       A pointer to arbitrary context information.
+     * @param[in] aSesssion     The session being removed.
+     */
+    typedef void (*RemoveSessionCallback)(void *aContext, SecureSession &aSesssion);
 
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
     /**
@@ -561,6 +602,25 @@ public:
     Error SetMaxConnectionAttempts(uint16_t aMaxAttempts, AutoCloseCallback aCallback, void *aContext);
 
     /**
+     * Sets the `AcceptCallback` used to accept new session connection requests.
+     *
+     * @param[in] aCallback   The `AcceptCallback`.
+     * @param[in] aConext     A pointer to arbitrary context to use with `AcceptCallback`.
+     */
+    void SetAcceptCallback(AcceptCallback aCallback, void *aContext) { mAcceptCallback.Set(aCallback, aContext); }
+
+    /**
+     * Sets the `RemoveSessionCallback` used to signal when a session is removed.
+     *
+     * @param[in] aCallback   The `RemoveSessionCallback`.
+     * @param[in] aConext     A pointer to arbitrary context to use with `RemoveSessionCallback`.
+     */
+    void SetRemoveSessionCallback(RemoveSessionCallback aCallback, void *aContext)
+    {
+        mRemoveSessionCallback.Set(aCallback, aContext);
+    }
+
+    /**
      * Binds this DTLS to a UDP port.
      *
      * @param[in]  aPort              The port to bind.
@@ -629,10 +689,15 @@ public:
      */
     void HandleReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    /**
+     * Get the list of sessions associated with the `SecureTransport`.
+     *
+     * @returns The list of associated sessions.
+     */
+    LinkedList<SecureSession> &GetSessions(void) { return mSessions; }
+
 protected:
     SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, bool aDatagramTransport);
-
-    void SetSession(SecureSession &aSesssion) { mSession = &aSesssion; }
 
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
     void SetExtension(Extension &aExtension) { mExtension = &aExtension; }
@@ -655,6 +720,7 @@ private:
         kUnspecifiedCipherSuite,
     };
 
+    void RemoveDisconnectedSessions(void);
     void DecremenetRemainingConnectionAttempts(void);
     bool HasNoRemainingConnectionAttempts(void) const;
     int  Transmit(const unsigned char    *aBuf,
@@ -700,6 +766,8 @@ private:
 #endif // (MBEDTLS_VERSION_NUMBER >= 0x03000000)
 #endif // MBEDTLS_SSL_EXPORT_KEYS
 
+    static void HandleUpdateTask(Tasklet &aTasklet);
+    void        HandleUpdateTask(void);
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
@@ -721,21 +789,24 @@ private:
 
     static const int kCipherSuites[][2];
 
-    bool                        mLayerTwoSecurity : 1;
-    bool                        mDatagramTransport : 1;
-    bool                        mIsOpen : 1;
-    bool                        mIsServer : 1;
-    bool                        mVerifyPeerCertificate : 1;
-    CipherSuite                 mCipherSuite;
-    uint8_t                     mPskLength;
-    uint16_t                    mMaxConnectionAttempts;
-    uint16_t                    mRemainingConnectionAttempts;
-    SecureSession              *mSession;
-    TransportSocket             mSocket;
-    uint8_t                     mPsk[kPskMaxLength];
-    TimerMilliContext           mTimer;
-    Callback<AutoCloseCallback> mAutoCloseCallback;
-    Callback<TransportCallback> mTransportCallback;
+    bool                            mLayerTwoSecurity : 1;
+    bool                            mDatagramTransport : 1;
+    bool                            mIsOpen : 1;
+    bool                            mIsClosing : 1;
+    bool                            mVerifyPeerCertificate : 1;
+    CipherSuite                     mCipherSuite;
+    uint8_t                         mPskLength;
+    uint16_t                        mMaxConnectionAttempts;
+    uint16_t                        mRemainingConnectionAttempts;
+    LinkedList<SecureSession>       mSessions;
+    TransportSocket                 mSocket;
+    uint8_t                         mPsk[kPskMaxLength];
+    TimerMilliContext               mTimer;
+    TaskletContext                  mUpdateTask;
+    Callback<AutoCloseCallback>     mAutoCloseCallback;
+    Callback<AcceptCallback>        mAcceptCallback;
+    Callback<RemoveSessionCallback> mRemoveSessionCallback;
+    Callback<TransportCallback>     mTransportCallback;
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
     Extension *mExtension;
 #endif
@@ -767,9 +838,6 @@ public:
             : SecureTransport(aInstance, aLayerTwoSecurity, /* aDatagramTransport */ true)
         {
         }
-
-    private:
-        void SetSession(Session &aSesssion) { SecureTransport::SetSession(aSesssion); }
     };
 
     /**
@@ -786,7 +854,6 @@ public:
         Session(Transport &aTransport)
             : SecureSession(aTransport)
         {
-            aTransport.SetSession(*this);
         }
 
         /**
@@ -817,9 +884,13 @@ public:
         : SecureTransport(aInstance, aLayerTwoSecurity, /* aDatagramTransport */ false)
         , SecureSession(*static_cast<SecureTransport *>(this))
     {
-        SetSession(*static_cast<SecureSession *>(this));
         SetExtension(aExtension);
+        SetAcceptCallback(&HandleAccept, this);
     }
+
+private:
+    static SecureSession *HandleAccept(void *aContext, const Ip6::MessageInfo &aMessageInfo);
+    SecureSession        *HandleAccept(void);
 };
 
 #endif

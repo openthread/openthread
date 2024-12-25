@@ -308,6 +308,11 @@ private:
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    static SecureSession *HandleAcceptSession(void *aContext, const Ip6::MessageInfo &aMessageInfo);
+    CoapDtlsSession      *HandleAcceptSession(void);
+    static void           HandleRemoveSession(void *aContext, SecureSession &aSesssion);
+    void                  HandleRemoveSession(SecureSession &aSesssion);
+
     static void HandleConnected(Dtls::Session::ConnectEvent aEvent, void *aContext);
     void        HandleConnected(Dtls::Session::ConnectEvent aEvent);
     static void HandleCoapResponse(void                *aContext,
@@ -339,7 +344,7 @@ private:
     Ip6::Netif::UnicastAddress mCommissionerAloc;
     TimeoutTimer               mTimer;
     Dtls::Transport            mDtlsTransport;
-    OwnedPtr<CoapDtlsSession>  mCoapDtlsSession;
+    CoapDtlsSession           *mCoapDtlsSession;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     Id   mId;
     bool mIdInitialized;
