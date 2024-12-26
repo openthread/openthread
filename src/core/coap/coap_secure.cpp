@@ -34,7 +34,7 @@
 
 /**
  * @file
- *   This file implements the secure CoAP agent.
+ *   This file implements the secure CoAP session.
  */
 
 namespace ot {
@@ -42,164 +42,97 @@ namespace Coap {
 
 RegisterLogModule("CoapSecure");
 
-CoapSecureBase::CoapSecureBase(Instance &aInstance, MeshCoP::Dtls &aDtls)
-    : CoapBase(aInstance, Send)
-    , mDtls(aDtls)
-    , mTransmitTask(aInstance, HandleTransmit, this)
+SecureSession::SecureSession(Instance &aInstance, Dtls::Transport &aDtlsTransport)
+    : CoapBase(aInstance, Transmit)
+    , Dtls::Session(aDtlsTransport)
+    , mTransmitTask(aInstance, HandleTransmitTask, this)
 {
-}
-
-Error CoapSecureBase::Start(uint16_t aPort) { return Start(aPort, /* aMaxAttempts */ 0, nullptr, nullptr); }
-
-Error CoapSecureBase::Start(uint16_t aPort, uint16_t aMaxAttempts, AutoStopCallback aCallback, void *aContext)
-{
-    Error error;
-
-    SuccessOrExit(error = Open(aMaxAttempts, aCallback, aContext));
-    error = mDtls.Bind(aPort);
-
-exit:
-    return error;
-}
-
-Error CoapSecureBase::Start(MeshCoP::Dtls::TransportCallback aCallback, void *aContext)
-{
-    Error error;
-
-    SuccessOrExit(error = Open(/* aMaxAttemps */ 0, nullptr, nullptr));
-    error = mDtls.Bind(aCallback, aContext);
-
-exit:
-    return error;
-}
-
-Error CoapSecureBase::Open(uint16_t aMaxAttempts, AutoStopCallback aCallback, void *aContext)
-{
-    Error error = kErrorAlready;
-
-    SuccessOrExit(mDtls.SetMaxConnectionAttempts(aMaxAttempts, HandleDtlsAutoClose, this));
-    mAutoStopCallback.Set(aCallback, aContext);
-    SuccessOrExit(mDtls.Open());
-    mDtls.SetReceiveCallback(HandleDtlsReceive, this);
-
-    error = kErrorNone;
-
-exit:
-    return error;
-}
-
-void CoapSecureBase::Stop(void)
-{
-    mDtls.Close();
-
-    mTransmitQueue.DequeueAndFreeAll();
-    ClearRequestsAndResponses();
-}
-
-void CoapSecureBase::SetPsk(const MeshCoP::JoinerPskd &aPskd)
-{
-    static_assert(static_cast<uint16_t>(MeshCoP::JoinerPskd::kMaxLength) <=
-                      static_cast<uint16_t>(MeshCoP::Dtls::kPskMaxLength),
-                  "The maximum length of DTLS PSK is smaller than joiner PSKd");
-
-    SuccessOrAssert(mDtls.SetPsk(reinterpret_cast<const uint8_t *>(aPskd.GetAsCString()), aPskd.GetLength()));
+    Dtls::Session::SetConnectCallback(HandleDtlsConnectEvent, this);
+    Dtls::Session::SetReceiveCallback(HandleDtlsReceive, this);
 }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-Error CoapSecureBase::SendMessage(Message                    &aMessage,
-                                  ResponseHandler             aHandler,
-                                  void                       *aContext,
-                                  otCoapBlockwiseTransmitHook aTransmitHook,
-                                  otCoapBlockwiseReceiveHook  aReceiveHook)
+
+Error SecureSession::SendMessage(Message                    &aMessage,
+                                 ResponseHandler             aHandler,
+                                 void                       *aContext,
+                                 otCoapBlockwiseTransmitHook aTransmitHook,
+                                 otCoapBlockwiseReceiveHook  aReceiveHook)
 {
-    Error error = kErrorNone;
-
-    VerifyOrExit(IsConnected(), error = kErrorInvalidState);
-
-    error = CoapBase::SendMessage(aMessage, mDtls.GetMessageInfo(), TxParameters::GetDefault(), aHandler, aContext,
-                                  aTransmitHook, aReceiveHook);
-
-exit:
-    return error;
+    return IsConnected() ? CoapBase::SendMessage(aMessage, GetMessageInfo(), TxParameters::GetDefault(), aHandler,
+                                                 aContext, aTransmitHook, aReceiveHook)
+                         : kErrorInvalidState;
 }
 
-Error CoapSecureBase::SendMessage(Message                    &aMessage,
-                                  const Ip6::MessageInfo     &aMessageInfo,
-                                  ResponseHandler             aHandler,
-                                  void                       *aContext,
-                                  otCoapBlockwiseTransmitHook aTransmitHook,
-                                  otCoapBlockwiseReceiveHook  aReceiveHook)
+#else
+
+Error SecureSession::SendMessage(Message &aMessage, ResponseHandler aHandler, void *aContext)
 {
-    return CoapBase::SendMessage(aMessage, aMessageInfo, TxParameters::GetDefault(), aHandler, aContext, aTransmitHook,
-                                 aReceiveHook);
-}
-#else  // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-Error CoapSecureBase::SendMessage(Message &aMessage, ResponseHandler aHandler, void *aContext)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(IsConnected(), error = kErrorInvalidState);
-
-    error = CoapBase::SendMessage(aMessage, mDtls.GetMessageInfo(), aHandler, aContext);
-
-exit:
-    return error;
+    return IsConnected() ? CoapBase::SendMessage(aMessage, GetMessageInfo(), aHandler, aContext) : kErrorInvalidState;
 }
 
-Error CoapSecureBase::SendMessage(Message                &aMessage,
-                                  const Ip6::MessageInfo &aMessageInfo,
-                                  ResponseHandler         aHandler,
-                                  void                   *aContext)
-{
-    return CoapBase::SendMessage(aMessage, aMessageInfo, aHandler, aContext);
-}
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
-Error CoapSecureBase::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+Error SecureSession::Transmit(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    return static_cast<SecureSession &>(aCoapBase).Transmit(aMessage, aMessageInfo);
+}
+
+Error SecureSession::Transmit(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
+
+    Error error = kErrorNone;
+
+    VerifyOrExit(!GetTransport().IsClosed(), error = kErrorInvalidState);
 
     mTransmitQueue.Enqueue(aMessage);
     mTransmitTask.Post();
 
-    return kErrorNone;
+exit:
+    return error;
 }
 
-void CoapSecureBase::HandleDtlsAutoClose(void *aContext)
+void SecureSession::HandleDtlsConnectEvent(ConnectEvent aEvent, void *aContext)
 {
-    return static_cast<CoapSecureBase *>(aContext)->HandleDtlsAutoClose();
+    static_cast<SecureSession *>(aContext)->HandleDtlsConnectEvent(aEvent);
 }
 
-void CoapSecureBase::HandleDtlsAutoClose(void)
+void SecureSession::HandleDtlsConnectEvent(ConnectEvent aEvent)
 {
-    Stop();
-    mAutoStopCallback.InvokeIfSet();
+    if (aEvent != kConnected)
+    {
+        mTransmitQueue.DequeueAndFreeAll();
+        ClearRequestsAndResponses();
+    }
+
+    mConnectCallback.InvokeIfSet(aEvent);
 }
 
-void CoapSecureBase::HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength)
+void SecureSession::HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength)
 {
-    return static_cast<CoapSecureBase *>(aContext)->HandleDtlsReceive(aBuf, aLength);
+    static_cast<SecureSession *>(aContext)->HandleDtlsReceive(aBuf, aLength);
 }
 
-void CoapSecureBase::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
+void SecureSession::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 {
     ot::Message *message = nullptr;
 
     VerifyOrExit((message = Get<MessagePool>().Allocate(Message::kTypeIp6, Message::GetHelpDataReserved())) != nullptr);
     SuccessOrExit(message->AppendBytes(aBuf, aLength));
 
-    CoapBase::Receive(*message, mDtls.GetMessageInfo());
+    CoapBase::Receive(*message, GetMessageInfo());
 
 exit:
     FreeMessage(message);
 }
 
-void CoapSecureBase::HandleTransmit(Tasklet &aTasklet)
+void SecureSession::HandleTransmitTask(Tasklet &aTasklet)
 {
-    static_cast<CoapSecureBase *>(static_cast<TaskletContext &>(aTasklet).GetContext())->HandleTransmit();
+    static_cast<SecureSession *>(static_cast<TaskletContext &>(aTasklet).GetContext())->HandleTransmitTask();
 }
 
-void CoapSecureBase::HandleTransmit(void)
+void SecureSession::HandleTransmitTask(void)
 {
     Error        error   = kErrorNone;
     ot::Message *message = mTransmitQueue.GetHead();
@@ -212,12 +145,10 @@ void CoapSecureBase::HandleTransmit(void)
         mTransmitTask.Post();
     }
 
-    SuccessOrExit(error = mDtls.Send(*message));
-    LogDebg("Transmit");
+    error = Dtls::Session::Send(*message);
 
 exit:
     FreeMessageOnError(message, error);
-    LogWarnOnError(error, "transmit");
 }
 
 } // namespace Coap
