@@ -53,6 +53,11 @@ extern "C" {
  */
 
 /**
+ * The length of Border Router ULA prefix in bits.
+ */
+#define OT_BR_ULA_PREFIX_LENGTH 48
+
+/**
  * Provides a full or stable copy of the local Thread Network Data.
  *
  * @param[in]      aInstance    A pointer to an OpenThread instance.

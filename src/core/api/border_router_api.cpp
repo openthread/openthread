@@ -61,6 +61,13 @@ otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRoute
     {
         error = AsCoreType(aInstance).Get<NetworkData::Local>().AddOnMeshPrefix(AsCoreType(aConfig));
     }
+    
+    Ip6::Prefix brUlaPrefix;
+    brUlaPrefix.Set(aConfig->mPrefix.mPrefix.mFields.m8, OT_IP6_PREFIX_BITSIZE);
+    brUlaPrefix.SetSubnetId(0);
+    brUlaPrefix.SetLength(OT_BR_ULA_PREFIX_LENGTH);
+
+    IgnoreError(AsCoreType(aInstance).Get<Settings>().Save<Settings::BrUlaPrefix>(brUlaPrefix));
 
     return error;
 }
