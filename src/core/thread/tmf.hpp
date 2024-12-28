@@ -208,11 +208,13 @@ public:
     explicit SecureAgent(Instance &aInstance);
 
 private:
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     static bool HandleResource(CoapBase               &aCoapBase,
                                const char             *aUriPath,
                                Message                &aMessage,
                                const Ip6::MessageInfo &aMessageInfo);
     bool        HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+#endif
 };
 
 #endif

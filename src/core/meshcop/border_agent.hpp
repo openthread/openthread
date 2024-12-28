@@ -45,6 +45,7 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
+#include "common/owned_ptr.hpp"
 #include "common/tasklet.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/secure_transport.hpp"
@@ -64,7 +65,6 @@ class BorderAgent : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
     friend class Tmf::Agent;
-    friend class Tmf::SecureAgent;
 
 public:
     /**
@@ -258,6 +258,24 @@ private:
     static constexpr uint16_t kMaxEphemeralKeyConnectionAttempts = 10;
 #endif
 
+    class CoapDtlsSession : public Coap::SecureSession, public Heap::Allocatable<CoapDtlsSession>
+    {
+        friend Heap::Allocatable<CoapDtlsSession>;
+
+    private:
+        CoapDtlsSession(Instance &aInstance, Dtls::Transport &aDtlsTransport)
+            : Coap::SecureSession(aInstance, aDtlsTransport)
+        {
+            SetResourceHandler(&HandleResource);
+        }
+
+        static bool HandleResource(CoapBase               &aCoapBase,
+                                   const char             *aUriPath,
+                                   Coap::Message          &aMessage,
+                                   const Ip6::MessageInfo &aMessageInfo);
+        bool        HandleResource(const char *aUriPath, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    };
+
     class ForwardContext : public InstanceLocatorInit, public Heap::Allocatable<ForwardContext>
     {
     public:
@@ -281,9 +299,11 @@ private:
     void  HandleTimeout(void);
     Error ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
     Error ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
-    Error SendMessage(Coap::Message &aMessage);
     void  SendErrorMessage(const ForwardContext &aForwardContext, Error aError);
     void  SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, Error aError);
+    void  HandleTmfCommissionerKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void  HandleTmfRelayTx(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void  HandleTmfProxyTx(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void  HandleTmfDatasetGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -304,8 +324,8 @@ private:
     void        RestartAfterRemovingEphemeralKey(void);
     void        HandleEphemeralKeyTimeout(void);
     void        InvokeEphemeralKeyCallback(void);
-    static void HandleSecureAgentStopped(void *aContext);
-    void        HandleSecureAgentStopped(void);
+    static void HandleDtlsTransportClosed(void *aContext);
+    void        HandleDtlsTransportClosed(void);
 #endif
 
     using TimeoutTimer = TimerMilliIn<BorderAgent, &BorderAgent::HandleTimeout>;
@@ -318,6 +338,8 @@ private:
     Ip6::Udp::Receiver         mUdpReceiver;
     Ip6::Netif::UnicastAddress mCommissionerAloc;
     TimeoutTimer               mTimer;
+    Dtls::Transport            mDtlsTransport;
+    OwnedPtr<CoapDtlsSession>  mCoapDtlsSession;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     Id   mId;
     bool mIdInitialized;
@@ -333,13 +355,6 @@ private:
 };
 
 DeclareTmfHandler(BorderAgent, kUriRelayRx);
-DeclareTmfHandler(BorderAgent, kUriCommissionerPetition);
-DeclareTmfHandler(BorderAgent, kUriCommissionerKeepAlive);
-DeclareTmfHandler(BorderAgent, kUriRelayTx);
-DeclareTmfHandler(BorderAgent, kUriCommissionerGet);
-DeclareTmfHandler(BorderAgent, kUriActiveGet);
-DeclareTmfHandler(BorderAgent, kUriPendingGet);
-DeclareTmfHandler(BorderAgent, kUriProxyTx);
 
 } // namespace MeshCoP
 
