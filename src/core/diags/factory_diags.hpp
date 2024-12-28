@@ -228,10 +228,10 @@ private:
     Error GetPowerSettings(uint8_t aChannel, PowerSettings &aPowerSettings);
     Error ParseReceiveConfigFormat(const char *aFormat, ReceiveConfig &aConfig);
     Error RadioReceive(void);
+    Error TransmitPacket(void);
     void  OutputReceivedFrame(const otRadioFrame *aFrame);
     bool  ShouldHandleReceivedFrame(const otRadioFrame &aFrame) const;
 
-    void TransmitPacket(void);
     void Output(const char *aFormat, ...);
     void AppendErrorResult(Error aError);
     void ResetTxPacket(void);

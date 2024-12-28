@@ -457,9 +457,9 @@ Error Diags::ProcessSend(uint8_t aArgsLength, char *aArgs[])
     VerifyOrExit(txLength >= OT_RADIO_FRAME_MIN_SIZE, error = kErrorInvalidArgs);
     mTxLen = txLength;
 
-    Output("sending %#x packet(s), length %#x\r\n", static_cast<int>(mTxPackets), static_cast<int>(mTxLen));
-    TransmitPacket();
+    SuccessOrExit(error = TransmitPacket());
 
+    Output("sending %#x packet(s), length %#x\r\n", static_cast<int>(mTxPackets), static_cast<int>(mTxLen));
 exit:
     return error;
 }
@@ -537,7 +537,7 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[])
     return kErrorNone;
 }
 
-void Diags::TransmitPacket(void)
+Error Diags::TransmitPacket(void)
 {
     mTxPacket->mChannel = mChannel;
 
@@ -559,7 +559,7 @@ void Diags::TransmitPacket(void)
     }
 
     mDiagSendOn = true;
-    IgnoreError(Get<Radio>().Transmit(*static_cast<Mac::TxFrame *>(mTxPacket)));
+    return Get<Radio>().Transmit(*static_cast<Mac::TxFrame *>(mTxPacket));
 }
 
 Error Diags::ParseReceiveConfigFormat(const char *aFormat, ReceiveConfig &aConfig)
@@ -758,7 +758,11 @@ void Diags::AlarmFired(void)
     {
         uint32_t now = otPlatAlarmMilliGetNow();
 
-        TransmitPacket();
+        Error error = TransmitPacket();
+        if (error != kErrorNone)
+        {
+            Output("Packet transmission failed\r\nstatus %#x\r\n", error);
+        }
         otPlatAlarmMilliStartAt(&GetInstance(), now, mTxPeriod);
     }
     else
@@ -841,6 +845,8 @@ exit:
 
 void Diags::TransmitDone(Error aError)
 {
+    Error error;
+
     VerifyOrExit(mDiagSendOn);
     mDiagSendOn = false;
 
@@ -859,7 +865,11 @@ void Diags::TransmitDone(Error aError)
     }
 
     VerifyOrExit(!mRepeatActive);
-    TransmitPacket();
+    error = TransmitPacket();
+    if (error != kErrorNone)
+    {
+        Output("Packet transmission failed\r\nstatus %#x\r\n", error);
+    }
 
 exit:
     return;

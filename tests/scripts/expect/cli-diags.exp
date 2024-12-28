@@ -130,6 +130,24 @@ send_user "input odd length test\n"
 send "diag frame 123\n"
 expect "Error"
 
+send "diag radio sleep\n"
+expect_line "Done"
+
+send "diag radio disable\n"
+expect_line "Done"
+
+send "diag send 10 10\n"
+expect "failed"
+expect "status 0xd"
+expect "Error 13: InvalidState"
+
+send "diag radio enable\n"
+expect_line "Done"
+
+send "diag radio receive\n"
+expect "set radio from sleep to receive on channel 20"
+expect_line "Done"
+
 send_user "shortest frame test\n"
 send "diag frame 112233\n"
 expect "Done"
@@ -142,6 +160,9 @@ send "diag frame 112233445566778899001122334455667788990011223344556677889900112
 expect "Done"
 send "diag repeat 1\n"
 expect "length 0x7f"
+expect "Done"
+sleep 3
+send "diag repeat stop\n"
 expect "Done"
 
 send_user "send frame with security processed\n"
@@ -163,9 +184,6 @@ send "diag frame -p 11 112233\n"
 expect "Done"
 send "diag send 1\n"
 expect "length 0x3"
-expect "Done"
-
-send "diag repeat stop\n"
 expect "Done"
 
 send "diag channel 11\n"
