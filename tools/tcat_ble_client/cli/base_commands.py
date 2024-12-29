@@ -189,8 +189,21 @@ class PresentHash(BleCommand):
         type = args[0]
         code = None
         tlv_type = None
+
+        bless: BleStreamSecure = context['ble_sstream']
+        if bless.peer_public_key is None:
+            raise DataNotPrepared("Peer certificate not present.")
+
+        if bless.peer_challenge is None:
+            raise DataNotPrepared("Peer challenge not present.")
+
+        random_number_challenge = bless.peer_challenge
         if type == "pskd":
             code = bytes(args[1], 'utf-8')
+            try:
+                random_number_challenge = bytes.fromhex(args[2])
+            except IndexError:
+                pass
             tlv_type = TcatTLVType.PRESENT_PSKD_HASH.value
         elif type == "pskc":
             code = bytes.fromhex(args[1])
@@ -200,15 +213,9 @@ class PresentHash(BleCommand):
             tlv_type = TcatTLVType.PRESENT_INSTALL_CODE_HASH.value
         else:
             raise DataNotPrepared("Hash code name incorrect.")
-        bless: BleStreamSecure = context['ble_sstream']
-        if bless.peer_public_key is None:
-            raise DataNotPrepared("Peer certificate not present.")
-
-        if bless.peer_challenge is None:
-            raise DataNotPrepared("Peer challenge not present.")
 
         hash = hmac.new(code, digestmod=sha256)
-        hash.update(bless.peer_challenge)
+        hash.update(random_number_challenge)
         hash.update(bless.peer_public_key)
 
         data = TLV(tlv_type, hash.digest()).to_bytes()
