@@ -68,7 +68,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y avahi-daemon avahi-utils lcov
-        script/git-tool clone https://github.com/openthread/ot-commissioner.git /tmp/ot-commissioner --depth 1 --branch main
+        # script/git-tool clone https://github.com/openthread/ot-commissioner.git /tmp/ot-commissioner --depth 1 --branch main
+        git clone https://github.com/abtink/ot-commissioner.git /tmp/ot-commissioner --depth 1 --branch debug/ot-cmmr
     - name: Build
       run: |
         cd /tmp/ot-commissioner
