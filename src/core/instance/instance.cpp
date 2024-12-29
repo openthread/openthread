@@ -504,11 +504,13 @@ void Instance::ResetBufferInfo(void) { Get<MessagePool>().ResetMaxUsedBufferCoun
 
 void Instance::SetLogLevel(LogLevel aLogLevel)
 {
-    if (aLogLevel != sLogLevel)
-    {
-        sLogLevel = aLogLevel;
-        otPlatLogHandleLevelChanged(sLogLevel);
-    }
+    OT_UNUSED_VARIABLE(aLogLevel);
+
+//    if (aLogLevel != sLogLevel)
+//    {
+//        sLogLevel = aLogLevel;
+//        otPlatLogHandleLevelChanged(sLogLevel);
+//    }
 }
 
 extern "C" OT_TOOL_WEAK void otPlatLogHandleLevelChanged(otLogLevel aLogLevel) { OT_UNUSED_VARIABLE(aLogLevel); }
