@@ -167,7 +167,7 @@ public:
      */
     bool IsRunning(void) const { return (mNext != this); }
 
-protected:
+public:
     class Scheduler : public InstanceLocator, private NonCopyable
     {
         friend class Timer;

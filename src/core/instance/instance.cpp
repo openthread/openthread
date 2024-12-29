@@ -506,11 +506,11 @@ void Instance::SetLogLevel(LogLevel aLogLevel)
 {
     OT_UNUSED_VARIABLE(aLogLevel);
 
-//    if (aLogLevel != sLogLevel)
-//    {
-//        sLogLevel = aLogLevel;
-//        otPlatLogHandleLevelChanged(sLogLevel);
-//    }
+    //    if (aLogLevel != sLogLevel)
+    //    {
+    //        sLogLevel = aLogLevel;
+    //        otPlatLogHandleLevelChanged(sLogLevel);
+    //    }
 }
 
 extern "C" OT_TOOL_WEAK void otPlatLogHandleLevelChanged(otLogLevel aLogLevel) { OT_UNUSED_VARIABLE(aLogLevel); }

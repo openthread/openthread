@@ -168,6 +168,8 @@ Error CoapBase::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo
 {
     Error error;
 
+    LogCrit("CoapBase::Send()");
+
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().EmitCoapSend(AsCoapMessage(&aMessage), aMessageInfo);
 #endif
@@ -180,6 +182,9 @@ Error CoapBase::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo
         Get<Utils::Otns>().EmitCoapSendFailure(error, AsCoapMessage(&aMessage), aMessageInfo);
     }
 #endif
+
+    LogCrit("CoapBase::Send() returning %s", ErrorToString(error));
+
     return error;
 }
 
@@ -208,42 +213,71 @@ Error CoapBase::SendMessage(Message                &aMessage,
     bool     moreBlocks           = false;
 #endif
 
+    LogCrit(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+    LogCrit("CoapBase::SendMessage() is called");
+
+    LogCrit("   aMessage.GetType() = %u", aMessage.GetType());
+
     switch (aMessage.GetType())
     {
     case kTypeAck:
+        LogCrit("    case kTypeAck");
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         // Check for block-wise transfer
         if ((aTransmitHook != nullptr) && (aMessage.ReadBlockOptionValues(kOptionBlock2) == kErrorNone) &&
             (aMessage.GetBlockWiseBlockNumber() == 0))
         {
+            LogCrit("    >>> REACHED Checkpoint 1");
+
             // Set payload for first block of the transfer
             VerifyOrExit((bufLen = otCoapBlockSizeFromExponent(aMessage.GetBlockWiseBlockSize())) <= kMaxBlockLength,
                          error = kErrorNoBufs);
+            LogCrit("    >>> REACHED Checkpoint 2");
+
             SuccessOrExit(error = aTransmitHook(aContext, buf, aMessage.GetBlockWiseBlockNumber() * bufLen, &bufLen,
                                                 &moreBlocks));
+            LogCrit("    >>> REACHED Checkpoint 3");
             SuccessOrExit(error = aMessage.AppendBytes(buf, bufLen));
 
             SuccessOrExit(error = CacheLastBlockResponse(&aMessage));
+            LogCrit("    >>> REACHED Checkpoint 4");
+
         }
 #endif
 
+        LogCrit("    >>> REACHED Checkpoint 5");
+
         mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo, aTxParameters);
+        LogCrit("    >>> Checkpoint 5.5 mResponsesQueue.EnqueueResponse");
         break;
     case kTypeReset:
+        LogCrit("    case kTypeReset");
         OT_ASSERT(aMessage.GetCode() == kCodeEmpty);
         break;
     default:
+        LogCrit("    case default:");
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         // Check for block-wise transfer
         if ((aTransmitHook != nullptr) && (aMessage.ReadBlockOptionValues(kOptionBlock1) == kErrorNone) &&
             (aMessage.GetBlockWiseBlockNumber() == 0))
         {
+            LogCrit("    >>> REACHED Default case Checkpoint 1");
+
             // Set payload for first block of the transfer
             VerifyOrExit((bufLen = otCoapBlockSizeFromExponent(aMessage.GetBlockWiseBlockSize())) <= kMaxBlockLength,
                          error = kErrorNoBufs);
+
+            LogCrit("    >>> REACHED Default case Checkpoint 2");
+
             SuccessOrExit(error = aTransmitHook(aContext, buf, aMessage.GetBlockWiseBlockNumber() * bufLen, &bufLen,
                                                 &moreBlocks));
+
+            LogCrit("    >>> REACHED Default case Checkpoint 3");
+
             SuccessOrExit(error = aMessage.AppendBytes(buf, bufLen));
+
+            LogCrit("    >>> REACHED Default case Checkpoint 4");
+
 
             // Block-Wise messages always have to be confirmable
             if (aMessage.IsNonConfirmable())
@@ -253,9 +287,13 @@ Error CoapBase::SendMessage(Message                &aMessage,
         }
 #endif
 
+        LogCrit("    >>> REACHED Default case Checkpoint 5");
+
         aMessage.SetMessageId(mMessageId++);
         break;
     }
+
+    LogCrit("    >>> REACHED Checkpoint 6 - About to FINISH()");
 
     aMessage.Finish();
 
@@ -307,6 +345,8 @@ Error CoapBase::SendMessage(Message                &aMessage,
         }
 #endif // OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
 
+        LogCrit("    >>> REACHED Checkpoint 7 ");
+
         metadata.mSourceAddress            = aMessageInfo.GetSockAddr();
         metadata.mDestinationPort          = aMessageInfo.GetPeerPort();
         metadata.mDestinationAddress       = aMessageInfo.GetPeerAddr();
@@ -332,11 +372,18 @@ Error CoapBase::SendMessage(Message                &aMessage,
             TimerMilli::GetNow() +
             (metadata.mConfirmable ? metadata.mRetransmissionTimeout : aTxParameters.CalculateMaxTransmitWait());
 
+        LogCrit("    >>> REACHED Checkpoint 8 about to CopyAndEnqueueMessage ");
         storedCopy = CopyAndEnqueueMessage(aMessage, copyLength, metadata);
         VerifyOrExit(storedCopy != nullptr, error = kErrorNoBufs);
+
+
     }
 
+    LogCrit("    >>> REACHED Checkpoint 9 about to call Send()");
+
     SuccessOrExit(error = Send(aMessage, aMessageInfo));
+
+    LogCrit("    >>> REACHED Checkpoint 10 reached the end");
 
 exit:
 
@@ -344,6 +391,10 @@ exit:
     {
         DequeueMessage(*storedCopy);
     }
+
+    LogCrit("CoapBase::SendMessage() returning %s", ErrorToString(error));
+    LogCrit("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+
 
     return error;
 }
@@ -1501,22 +1552,45 @@ void ResponsesQueue::EnqueueResponse(Message                &aMessage,
     Message         *responseCopy;
     ResponseMetadata metadata;
 
+    LogCrit("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    LogCrit("ResponsesQueue::EnqueueResponse()");
+    LogCrit("  aMessage=%p", (void *)&aMessage);
+    LogCrit("  aMessage.GetLength()=%u", aMessage.GetLength());
+
     metadata.mDequeueTime = TimerMilli::GetNow() + aTxParameters.CalculateExchangeLifetime();
     metadata.mMessageInfo = aMessageInfo;
 
+    LogCrit("  About to FindMatchedResponse()");
+
     VerifyOrExit(FindMatchedResponse(aMessage, aMessageInfo) == nullptr);
+
+    LogCrit("  After FindMatchedResponse() about UpdateQueue()");
 
     UpdateQueue();
 
+    LogCrit("  After UpdateQueue(), about to clone");
+
     VerifyOrExit((responseCopy = aMessage.Clone()) != nullptr);
+
+    LogCrit("  After clone()");
 
     VerifyOrExit(metadata.AppendTo(*responseCopy) == kErrorNone, responseCopy->Free());
 
+    LogCrit("  About to Enqueue()");
+
     mQueue.Enqueue(*responseCopy);
+
+    LogCrit("  After to Enqueue()");
+    LogCrit("     mTimer.IsRunning() = %u", mTimer.IsRunning());
+    LogCrit("     mTimer.mFireTime = %lu", ToUlong(mTimer.mFireTime.GetValue()));
+    LogCrit("     metadata.mDequeueTime = %lu", ToUlong(metadata.mDequeueTime.GetValue()));
 
     mTimer.FireAtIfEarlier(metadata.mDequeueTime);
 
+    LogCrit("  After to mTimer.FireAtIfEarlier");
+
 exit:
+    LogCrit("ResponsesQueue::EnqueueResponse() returning");
     return;
 }
 

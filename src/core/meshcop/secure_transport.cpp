@@ -72,6 +72,7 @@ void SecureSession::Init(void)
 #if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
     ClearAllBytes(mCookieCtx);
 #endif
+    LogCrit("Init()");
 }
 
 void SecureSession::FreeMbedtls(void)
@@ -90,13 +91,15 @@ void SecureSession::FreeMbedtls(void)
 #endif
     mbedtls_ssl_config_free(&mConf);
     mbedtls_ssl_free(&mSsl);
+
+    LogCrit("FreeMbedtls()");
 }
 
 void SecureSession::SetState(State aState)
 {
     VerifyOrExit(mState != aState);
 
-    LogCrit("Session state: %s -> %s", StateToString(mState), StateToString(aState));
+    LogCrit("Session state: %s -> %s (mIsServer:%u)", StateToString(mState), StateToString(aState), mIsServer);
     mState = aState;
 
 exit:
@@ -106,6 +109,8 @@ exit:
 Error SecureSession::Connect(const Ip6::SockAddr &aSockAddr)
 {
     Error error;
+
+    LogCrit("Connect(), %s", aSockAddr.ToString().AsCString());
 
     VerifyOrExit(mTransport.mIsOpen, error = kErrorInvalidState);
     VerifyOrExit(!IsSessionInUse(), error = kErrorInvalidState);
@@ -124,6 +129,9 @@ exit:
 
 void SecureSession::Accept(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    LogCrit("Accept(), peerAddr:%s, port:%u", aMessageInfo.GetPeerAddr().ToString().AsCString(),
+            aMessageInfo.GetPeerPort());
+
     mMessageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
     mMessageInfo.SetPeerPort(aMessageInfo.GetPeerPort());
     mMessageInfo.SetIsHostInterface(aMessageInfo.IsHostInterface());
@@ -140,6 +148,8 @@ void SecureSession::Accept(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
 void SecureSession::HandleTransportReceive(Message &aMessage)
 {
+    LogCrit("HandleTransportReceive(), aMessage.GetLength()=%u", aMessage.GetLength());
+
     VerifyOrExit(!IsDisconnected());
 
 #ifdef MBEDTLS_SSL_SRV_C
@@ -161,6 +171,8 @@ Error SecureSession::Setup(void)
 {
     Error error = kErrorNone;
     int   rval  = 0;
+
+    LogCrit("Setup(), mIsServer=%u", mIsServer);
 
     OT_ASSERT(mTransport.mCipherSuite != SecureTransport::kUnspecifiedCipherSuite);
 
@@ -321,6 +333,8 @@ Error SecureSession::Setup(void)
 exit:
     if (IsInitializing())
     {
+        LogCrit("Setup() failed");
+
         error = (error == kErrorNone) ? Crypto::MbedTls::MapError(rval) : error;
 
         SetState(kStateDisconnected);
@@ -333,6 +347,8 @@ exit:
 
 void SecureSession::Disconnect(ConnectEvent aEvent)
 {
+    LogCrit("Disconnect(), aEvent:%u", aEvent);
+
     VerifyOrExit(mTransport.mIsOpen);
     VerifyOrExit(IsConnectingOrConnected());
 
@@ -355,6 +371,8 @@ Error SecureSession::Send(Message &aMessage)
     Error    error  = kErrorNone;
     uint16_t length = aMessage.GetLength();
     uint8_t  buffer[kApplicationDataMaxLength];
+
+    LogCrit("Send(), aMessage.GetLength()=%u", aMessage.GetLength());
 
     VerifyOrExit(length <= sizeof(buffer), error = kErrorNoBufs);
 
@@ -476,6 +494,8 @@ void SecureSession::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFini
 
 void SecureSession::HandleTimer(TimeMilli aNow)
 {
+    LogCrit("HandleTimer()");
+
     if (IsConnectingOrConnected())
     {
         VerifyOrExit(mTimerSet);
@@ -512,6 +532,8 @@ void SecureSession::Process(void)
     int          rval;
     ConnectEvent disconnectEvent;
     bool         shouldReset;
+
+    LogCrit("Process()");
 
     while (IsConnectingOrConnected())
     {
@@ -680,6 +702,8 @@ Error SecureTransport::Open(void)
 {
     Error error;
 
+    LogCrit("SecureTransport::Open()");
+
     VerifyOrExit(!mIsOpen, error = kErrorAlready);
 
     SuccessOrExit(error = mSocket.Open(Ip6::kNetifUnspecified));
@@ -694,6 +718,8 @@ Error SecureTransport::SetMaxConnectionAttempts(uint16_t aMaxAttempts, AutoClose
 {
     Error error = kErrorNone;
 
+    LogCrit("SecureTransport::SetMaxConnectionAttempts(%u)", aMaxAttempts);
+
     VerifyOrExit(!mIsOpen, error = kErrorInvalidState);
 
     mMaxConnectionAttempts = aMaxAttempts;
@@ -707,17 +733,24 @@ void SecureTransport::HandleReceive(Message &aMessage, const Ip6::MessageInfo &a
 {
     SecureSession *session;
 
+    LogCrit("SecureTransport::HandleReceive()");
+    LogCrit("   aMessageInfo.GetPeer(), %s, port:%u", aMessageInfo.GetPeerAddr().ToString().AsCString(),
+            aMessageInfo.GetPeerPort());
+
     VerifyOrExit(mIsOpen);
 
     session = mSessions.FindMatching(aMessageInfo);
 
     if (session != nullptr)
     {
+        LogCrit("   Found matching session");
         session->HandleTransportReceive(aMessage);
         ExitNow();
     }
 
     // A new connection request
+
+    LogCrit("   A new connection request");
 
     VerifyOrExit(mAcceptCallback.IsSet());
 
@@ -766,6 +799,8 @@ exit:
 
 void SecureTransport::Close(void)
 {
+    LogCrit("SecureTransport::Close()");
+
     VerifyOrExit(mIsOpen);
     VerifyOrExit(!mIsClosing);
 
@@ -799,6 +834,8 @@ void SecureTransport::RemoveDisconnectedSessions(void)
 {
     LinkedList<SecureSession> disconnectedSessions;
     SecureSession            *session;
+
+    LogCrit("SecureTransport::RemoveDisconnectedSessions()");
 
     mSessions.RemoveAllMatching(disconnectedSessions, SecureSession::kStateDisconnected);
 
@@ -982,6 +1019,8 @@ void SecureTransport::HandleUpdateTask(Tasklet &aTasklet)
 
 void SecureTransport::HandleUpdateTask(void)
 {
+    LogCrit("SecureTransport::HandleUpdateTask()");
+
     RemoveDisconnectedSessions();
 
     if (mSessions.IsEmpty() && HasNoRemainingConnectionAttempts())
@@ -999,6 +1038,8 @@ void SecureTransport::HandleTimer(Timer &aTimer)
 void SecureTransport::HandleTimer(void)
 {
     TimeMilli now = TimerMilli::GetNow();
+
+    LogCrit("SecureTransport::HandleTimer()");
 
     VerifyOrExit(mIsOpen);
 

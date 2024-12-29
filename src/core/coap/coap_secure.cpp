@@ -59,15 +59,23 @@ Error SecureSession::SendMessage(Message                    &aMessage,
                                  otCoapBlockwiseTransmitHook aTransmitHook,
                                  otCoapBlockwiseReceiveHook  aReceiveHook)
 {
-    return IsConnected() ? CoapBase::SendMessage(aMessage, GetMessageInfo(), TxParameters::GetDefault(), aHandler,
+    LogCrit("Coap::SecureSession::SendMessage() called BLOCKWISE_TRANSFER_ENABLE");
+
+    Error error =  IsConnected() ? CoapBase::SendMessage(aMessage, GetMessageInfo(), TxParameters::GetDefault(), aHandler,
                                                  aContext, aTransmitHook, aReceiveHook)
                          : kErrorInvalidState;
+
+    LogCrit("Coap::SecureSession::SendMessage() returning %s", ErrorToString(error));
+
+    return error;
 }
 
 #else
 
 Error SecureSession::SendMessage(Message &aMessage, ResponseHandler aHandler, void *aContext)
 {
+    LogCrit("Coap::SecureSession::SendMessage() called Not blockwise");
+
     return IsConnected() ? CoapBase::SendMessage(aMessage, GetMessageInfo(), aHandler, aContext) : kErrorInvalidState;
 }
 
@@ -83,6 +91,8 @@ Error SecureSession::Transmit(ot::Message &aMessage, const Ip6::MessageInfo &aMe
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     Error error = kErrorNone;
+
+    LogCrit("SecureSession::Transmit()");
 
     VerifyOrExit(!GetTransport().IsClosed(), error = kErrorInvalidState);
 

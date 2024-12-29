@@ -37,6 +37,8 @@
 
 namespace ot {
 
+RegisterLogModule("Timer");
+
 //---------------------------------------------------------------------------------------------------------------------
 // `NextFireTime`
 
@@ -113,6 +115,8 @@ void TimerMilli::StartAt(TimeMilli aStartTime, uint32_t aDelay)
 
 void TimerMilli::FireAt(TimeMilli aFireTime)
 {
+    LogCrit("FireAt(%lu)", ToUlong(aFireTime.GetValue()));
+
     mFireTime = aFireTime;
     Get<Scheduler>().Add(*this);
 }
@@ -131,6 +135,8 @@ void TimerMilli::FireAt(const NextFireTime &aNextFireTime)
 
 void TimerMilli::FireAtIfEarlier(TimeMilli aFireTime)
 {
+    LogCrit("FireAtIfEarlier()");
+
     if (!IsRunning() || (mFireTime > aFireTime))
     {
         FireAt(aFireTime);
@@ -157,7 +163,11 @@ void Timer::Scheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
     Timer *prev = nullptr;
     Time   now(aAlarmApi.AlarmGetNow());
 
+    LogCrit("Scheduler::Add()");
+
     Remove(aTimer, aAlarmApi);
+
+    LogCrit("   Scheduler::Add() - After Remove()");
 
     for (Timer &cur : mTimerList)
     {
@@ -178,6 +188,8 @@ void Timer::Scheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
     {
         mTimerList.PushAfter(aTimer, *prev);
     }
+
+    LogCrit("   Scheduler::Add() - returning");
 }
 
 void Timer::Scheduler::Remove(Timer &aTimer, const AlarmApi &aAlarmApi)
