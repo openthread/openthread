@@ -342,7 +342,7 @@ uint8_t Instance::GetIdx(Instance *aInstance)
 {
     return static_cast<uint8_t>(
         (reinterpret_cast<uint8_t *>(aInstance) - reinterpret_cast<uint8_t *>(gMultiInstanceRaw)) /
-        INSTANCE_SIZE_ALIGNED);
+        (INSTANCE_SIZE_ALIGNED * sizeof(uint64_t)));
 }
 
 #endif // #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
