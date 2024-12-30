@@ -139,16 +139,28 @@ public:
 #endif
 
     /**
-     * Gets the UDP port of this service.
+     * Gets the actively-listening UDP port of this service.
+     * Only valid if the service is running.
      *
      * @returns  UDP port number.
      */
     uint16_t GetUdpPort(void) const;
 
     /**
+     * Sets the UDP port of this service.
+     *
+     * The UDP port can only be set while the service is stopped.
+     * If 0 is used, the dynamically-assigned port can be retrieved with GetUdpPort() once started.
+     *
+     * @retval kErrorNone           Successfully set UDP port.
+     * @retval kErrorInvalidState   Service is not stopped.
+     */
+    Error SetUdpPort(const uint16_t &aUdpPort);
+
+    /**
      * Starts the Border Agent service.
      */
-    void Start(void) { IgnoreError(Start(kUdpPort)); }
+    void Start(void) { IgnoreError(Start(mUdpPort)); }
 
     /**
      * Stops the Border Agent service.
@@ -251,7 +263,7 @@ private:
     static_assert(kMaxEphemeralKeyLength <= Dtls::Transport::kPskMaxLength,
                   "Max ephemeral key length is larger than max PSK len");
 
-    static constexpr uint16_t kUdpPort          = OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT;
+    static constexpr uint16_t kDefaultUdpPort   = OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT;
     static constexpr uint32_t kKeepAliveTimeout = 50 * 1000; // Timeout to reject a commissioner (in msec)
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
@@ -338,6 +350,7 @@ private:
     Ip6::Udp::Receiver         mUdpReceiver;
     Ip6::Netif::UnicastAddress mCommissionerAloc;
     TimeoutTimer               mTimer;
+    uint16_t                   mUdpPort;
     Dtls::Transport            mDtlsTransport;
     OwnedPtr<CoapDtlsSession>  mCoapDtlsSession;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE

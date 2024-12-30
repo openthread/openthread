@@ -139,8 +139,25 @@ otBorderAgentState otBorderAgentGetState(otInstance *aInstance);
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  * @returns UDP port of the Border Agent.
+ *
+ * @sa otBorderAgentSetUdpPort
  */
 uint16_t otBorderAgentGetUdpPort(otInstance *aInstance);
+
+/**
+ * Sets the UDP port to listen on.
+ *
+ * If 0 is used, a dynamically-assigned port will be assigned on start.
+ *
+ * @param[in]    aInstance  A pointer to an OpenThread instance.
+ * @param[out]   aUdpPort   UDP port to listen on.
+ *
+ * @retval OT_ERROR_NONE           Successfully set UDP port.
+ * @retval OT_ERROR_INVALID_STATE  Border agent was not stopped.
+ *
+ * @sa otBorderAgentGetUdpPort
+ */
+otError otBorderAgentSetUdpPort(otInstance *aInstance, uint16_t aUdpPort);
 
 /**
  * Gets the randomly generated Border Agent ID.

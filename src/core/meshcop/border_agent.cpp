@@ -50,6 +50,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
     , mState(kStateStopped)
     , mUdpReceiver(BorderAgent::HandleUdpReceive, this)
     , mTimer(aInstance)
+    , mUdpPort(kDefaultUdpPort)
     , mDtlsTransport(aInstance, kNoLinkSecurity)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     , mIdInitialized(false)
@@ -181,7 +182,22 @@ exit:
     return;
 }
 
-uint16_t BorderAgent::GetUdpPort(void) const { return mDtlsTransport.GetUdpPort(); }
+uint16_t BorderAgent::GetUdpPort(void) const
+{
+    // mUdpPort is not returned here because it might be 0 for a dynamically-assigned port.
+    return mDtlsTransport.GetUdpPort();
+}
+
+Error BorderAgent::SetUdpPort(const uint16_t &aUdpPort)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mState == kStateStopped, error = kErrorInvalidState);
+    mUdpPort            = aUdpPort;
+
+    exit:
+        return error;
+}
 
 void BorderAgent::HandleNotifierEvents(Events aEvents)
 {

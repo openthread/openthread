@@ -412,18 +412,35 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
     otError error = OT_ERROR_NONE;
 
     /**
-     * @cli ba port
+     * @cli ba port (get,set)
      * @code
      * ba port
      * 49153
      * Done
      * @endcode
-     * @par api_copy
-     * #otBorderAgentGetUdpPort
+     * @code
+     * ba port 49153
+     * Done
+     * @endcode
+     * @cparam ba port [@ca{border-agent-port}]
+     * Use the optional `border-agent-port` argument to set the Border Agent ID.
+     * @par
+     * Gets or sets the UDP port for the border agent listens on.
+     * @sa otBorderAgentGetUdpPort
+     * @sa otBorderAgentSetUdpPort
      */
     if (aArgs[0] == "port")
     {
-        OutputLine("%hu", otBorderAgentGetUdpPort(GetInstancePtr()));
+        if (aArgs[1].IsEmpty())
+        {
+            OutputLine("%hu", otBorderAgentGetUdpPort(GetInstancePtr()));
+        }
+        else
+        {
+            uint16_t port;
+            SuccessOrExit(error = aArgs[1].ParseAsUint16(port));
+            error = otBorderAgentSetUdpPort(GetInstancePtr(), port);
+        }
     }
     /**
      * @cli ba state
