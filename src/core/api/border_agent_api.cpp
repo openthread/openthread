@@ -79,6 +79,11 @@ uint16_t otBorderAgentGetUdpPort(otInstance *aInstance)
     return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetUdpPort();
 }
 
+otError otBorderAgentSetUdpPort(otInstance *aInstance, uint16_t aUdpPort)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().SetUdpPort(aUdpPort);
+}
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
 otError otBorderAgentSetEphemeralKey(otInstance *aInstance,
