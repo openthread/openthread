@@ -769,7 +769,9 @@ void DatasetManager::DestroySecurelyStoredKeys(void) const
 {
     for (const SecurelyStoredTlv &entry : kSecurelyStoredTlvs)
     {
-        Crypto::Storage::DestroyKey(entry.GetKeyRef(mType));
+        uint32_t iid = otInstanceGetIdx(reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance()));
+        Crypto::Storage::KeyRef keyRef =  entry.GetKeyRef(mType) + (iid * Crypto::Storage::KeyRefMaxOffset);
+        Crypto::Storage::DestroyKey(keyRef);
     }
 }
 
@@ -777,7 +779,9 @@ void DatasetManager::MoveKeysToSecureStorage(Dataset &aDataset) const
 {
     for (const SecurelyStoredTlv &entry : kSecurelyStoredTlvs)
     {
-        SaveTlvInSecureStorageAndClearValue(aDataset, entry.mTlvType, entry.GetKeyRef(mType));
+        uint32_t iid = otInstanceGetIdx(reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance()));
+        Crypto::Storage::KeyRef keyRef =  entry.GetKeyRef(mType) + (iid * Crypto::Storage::KeyRefMaxOffset);
+        SaveTlvInSecureStorageAndClearValue(aDataset, entry.mTlvType, keyRef);
     }
 }
 
@@ -792,7 +796,10 @@ void DatasetManager::EmplaceSecurelyStoredKeys(Dataset &aDataset) const
 
     for (const SecurelyStoredTlv &entry : kSecurelyStoredTlvs)
     {
-        if (ReadTlvFromSecureStorage(aDataset, entry.mTlvType, entry.GetKeyRef(mType)) != kErrorNone)
+        uint32_t iid = otInstanceGetIdx(reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance()));
+        Crypto::Storage::KeyRef keyRef =  entry.GetKeyRef(mType) + (iid * Crypto::Storage::KeyRefMaxOffset);
+
+        if (ReadTlvFromSecureStorage(aDataset, entry.mTlvType, keyRef) != kErrorNone)
         {
             moveKeys = true;
         }

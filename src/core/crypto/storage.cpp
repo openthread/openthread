@@ -56,15 +56,15 @@ exit:
     return error;
 }
 
-void Storage::DestroyPersistentKeys(void)
+void Storage::DestroyPersistentKeys(uint32_t keybase)
 {
-    DestroyKey(kNetworkKeyRef);
-    DestroyKey(kPskcRef);
-    DestroyKey(kActiveDatasetNetworkKeyRef);
-    DestroyKey(kActiveDatasetPskcRef);
-    DestroyKey(kPendingDatasetNetworkKeyRef);
-    DestroyKey(kPendingDatasetPskcRef);
-    DestroyKey(kEcdsaRef);
+    DestroyKey(keybase + kNetworkKeyRef);
+    DestroyKey(keybase + kPskcRef);
+    DestroyKey(keybase + kActiveDatasetNetworkKeyRef);
+    DestroyKey(keybase + kActiveDatasetPskcRef);
+    DestroyKey(keybase + kPendingDatasetNetworkKeyRef);
+    DestroyKey(keybase + kPendingDatasetPskcRef);
+    DestroyKey(keybase + kEcdsaRef);
 }
 #endif
 

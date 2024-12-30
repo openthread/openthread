@@ -1110,7 +1110,8 @@ Error Client::PrepareUpdateMessage(MsgInfo &aInfo)
     aInfo.mRecordCount      = 0;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    aInfo.mKeyInfo.SetKeyRef(kSrpEcdsaKeyRef);
+    uint32_t iid = otInstanceGetIdx(reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance()));
+    aInfo.mKeyInfo.SetKeyRef(kSrpEcdsaKeyRef + (iid * Crypto::Storage::KeyRefMaxOffset));
 #endif
 
     SuccessOrExit(error = ReadOrGenerateKey(aInfo.mKeyInfo));

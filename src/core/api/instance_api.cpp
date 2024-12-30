@@ -57,6 +57,10 @@ using namespace ot;
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+uint8_t otInstanceGetIdx(otInstance *aInstance)
+{
+    return Instance::GetIdx(reinterpret_cast<Instance *>(aInstance));
+}
 otInstance *otInstanceInitMultiple(uint8_t aIdx)
 {
     Instance *instance;
@@ -76,6 +80,7 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
 }
 #else
 otInstance *otInstanceInitSingle(void) { return &Instance::InitSingle(); }
+uint8_t otInstanceGetIdx(otInstance *aInstance) { return 0; }
 #endif // #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 uint32_t otInstanceGetId(otInstance *aInstance) { return AsCoreType(aInstance).GetId(); }
