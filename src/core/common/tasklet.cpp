@@ -38,6 +38,14 @@
 
 namespace ot {
 
+Tasklet::~Tasklet(void)
+{
+    if (IsPosted())
+    {
+        Get<Scheduler>().RemoveTasklet(*this);
+    }
+}
+
 void Tasklet::Post(void)
 {
     if (!IsPosted())
@@ -61,6 +69,24 @@ void Tasklet::Scheduler::PostTasklet(Tasklet &aTasklet)
         aTasklet.mNext = mTail->mNext;
         mTail->mNext   = &aTasklet;
         mTail          = &aTasklet;
+    }
+}
+
+void Tasklet::Scheduler::RemoveTasklet(Tasklet &aTasklet)
+{
+    Tasklet *prev = mTail;
+
+    while (prev->mNext != &aTasklet)
+    {
+        prev = prev->mNext;
+    }
+
+    prev->mNext    = aTasklet.mNext;
+    aTasklet.mNext = nullptr;
+
+    if (mTail == &aTasklet)
+    {
+        mTail = prev;
     }
 }
 

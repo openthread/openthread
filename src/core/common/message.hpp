@@ -1589,6 +1589,11 @@ public:
     MessageQueue(void) { SetTail(nullptr); }
 
     /**
+     * Destructor for `MessageQueue`.
+     */
+    ~MessageQueue(void) { DequeueAndFreeAll(); }
+
+    /**
      * Returns a pointer to the first message.
      *
      * @returns A pointer to the first message.
@@ -1682,6 +1687,11 @@ public:
      * Initializes the priority queue.
      */
     PriorityQueue(void) { Clear(); }
+
+    /**
+     * Destructor for `PriorityQueue`.
+     */
+    ~PriorityQueue(void) { DequeueAndFreeAll(); }
 
     /**
      * Returns a pointer to the first message.

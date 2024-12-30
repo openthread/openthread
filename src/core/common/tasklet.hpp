@@ -91,6 +91,7 @@ public:
 
     private:
         void PostTasklet(Tasklet &aTasklet);
+        void RemoveTasklet(Tasklet &aTasklet);
 
         Tasklet *mTail; // A circular singly linked-list
     };
@@ -114,6 +115,11 @@ public:
         , mNext(nullptr)
     {
     }
+
+    /**
+     * Destructor for `Tasklet`.
+     */
+    ~Tasklet(void);
 
     /**
      * Puts the tasklet on the tasklet scheduler run queue.

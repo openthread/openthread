@@ -257,6 +257,11 @@ public:
     }
 
     /**
+     * Destructor for `TimerMilli`
+     */
+    ~TimerMilli(void) { Stop(); }
+
+    /**
      * Schedules the timer to fire after a given delay (in milliseconds) from now.
      *
      * @param[in]  aDelay   The delay in milliseconds. It must not be longer than `kMaxDelay`.
@@ -427,6 +432,11 @@ public:
         : Timer(aInstance, aHandler)
     {
     }
+
+    /**
+     * Destructor for `TimerMicro`
+     */
+    ~TimerMicro(void) { Stop(); }
 
     /**
      * Schedules the timer to fire after a given delay (in microseconds) from now.
