@@ -367,7 +367,7 @@ typedef struct otRadioFrame
              * Set to true to enable CSMA-CA for this packet, false to disable both CSMA backoff and CCA.
              *
              * When it is set to `false`, the frame MUST be sent without performing CCA. In this case `mMaxCsmaBackoffs`
-             * value MUST also be ignored.
+             * MUST also be ignored.
              */
             bool mCsmaCaEnabled : 1;
             bool mCslPresent : 1;          ///< Set to true if CSL header IE is present.
