@@ -110,13 +110,13 @@ exit:
 void MeshDiag::HandleDiagGetResponse(void                *aContext,
                                      otMessage           *aMessage,
                                      const otMessageInfo *aMessageInfo,
-                                     Error                aResult)
+                                     otError              aResult)
 {
     static_cast<MeshDiag *>(aContext)->HandleDiagGetResponse(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
                                                              aResult);
 }
 
-void MeshDiag::HandleDiagGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
+void MeshDiag::HandleDiagGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 

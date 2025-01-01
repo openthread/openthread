@@ -209,11 +209,11 @@ private:
     static void HandleAnswerResponse(void                *aContext,
                                      otMessage           *aMessage,
                                      const otMessageInfo *aMessageInfo,
-                                     Error                aResult);
+                                     otError              aResult);
     void        HandleAnswerResponse(Coap::Message          &aNextAnswer,
                                      Coap::Message          *aResponse,
                                      const Ip6::MessageInfo *aMessageInfo,
-                                     Error                   aResult);
+                                     otError                 aResult);
 #endif
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -316,8 +316,8 @@ private:
     static void HandleGetResponse(void                *aContext,
                                   otMessage           *aMessage,
                                   const otMessageInfo *aMessageInfo,
-                                  Error                aResult);
-    void        HandleGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
+                                  otError              aResult);
+    void        HandleGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

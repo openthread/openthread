@@ -76,7 +76,7 @@ exit:
 void AnycastLocator::HandleResponse(void                *aContext,
                                     otMessage           *aMessage,
                                     const otMessageInfo *aMessageInfo,
-                                    Error                aError)
+                                    otError              aError)
 {
     static_cast<AnycastLocator *>(aContext)->HandleResponse(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
                                                             aError);

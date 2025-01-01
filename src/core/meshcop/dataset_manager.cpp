@@ -498,13 +498,15 @@ exit:
 void DatasetManager::HandleMgmtSetResponse(void                *aContext,
                                            otMessage           *aMessage,
                                            const otMessageInfo *aMessageInfo,
-                                           Error                aError)
+                                           otError              aError)
 {
     static_cast<DatasetManager *>(aContext)->HandleMgmtSetResponse(AsCoapMessagePtr(aMessage),
                                                                    AsCoreTypePtr(aMessageInfo), aError);
 }
 
-void DatasetManager::HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError)
+void DatasetManager::HandleMgmtSetResponse(Coap::Message          *aMessage,
+                                           const Ip6::MessageInfo *aMessageInfo,
+                                           otError                 aError)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
