@@ -293,7 +293,7 @@ typedef struct otRadioFrame
              * This is applicable and MUST be used when radio platform provides the `OT_RADIO_CAPS_CSMA_BACKOFF`
              * capability.
              *
-             * This field MUST be ignored if `mCsmaCaEnabled` is set to `false` (i.e. CCA is disabled) or
+             * This field MUST be ignored if `mCsmaCaEnabled` is set to `false` (CCA is disabled) or
              * either `mTxDelayBaseTime` or `mTxDelay` is non-zero (frame transmission is expected at a specific time).
              *
              * It can be set to `0` to skip backoff mechanism (note that CCA MUST still be performed assuming
