@@ -54,7 +54,11 @@ class TestDiag(thread_cert.TestCase):
             ('diag power', 'tx power: -10 dBm\r\n'),
             (
                 'diag stats',
-                'received packets: 0\r\nsent packets: 0\r\n'
+                'received packets: 0\r\n'
+                'sent success packets: 0\r\n'
+                'sent error cca packets: 0\r\n'
+                'sent error abort packets: 0\r\n'
+                'sent error others packets: 0\r\n'
                 'first received packet: rssi=0, lqi=0\r\n'
                 'last received packet: rssi=0, lqi=0\r\n',
             ),
@@ -76,7 +80,11 @@ class TestDiag(thread_cert.TestCase):
             ),
             (
                 'diag stop',
-                r'received packets: 0\r\nsent packets: ([1-9]\d*)\r\n'
+                'received packets: 0\r\n'
+                r'sent success packets: ([1-9]\d*)\r\n'
+                r'sent error cca packets: ([0-9]\d*)\r\n'
+                r'sent error abort packets: ([0-9]\d*)\r\n'
+                r'sent error others packets: ([0-9]\d*)\r\n'
                 'first received packet: rssi=0, lqi=0\r\n'
                 'last received packet: rssi=0, lqi=0\r\n\n'
                 r'stop diagnostics mode\r\n',

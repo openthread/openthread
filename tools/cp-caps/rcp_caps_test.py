@@ -549,7 +549,7 @@ class RcpCaps(object):
             dut_stats = self.__dut.diag_get_stats()
             ref_stats = self.__ref.diag_get_stats()
 
-            ret = dut_stats['sent_packets'] == packets and ref_stats['received_packets'] > threshold
+            ret = dut_stats['sent_success_packets'] == packets and ref_stats['received_packets'] > threshold
         else:
             ret = False
 
@@ -578,7 +578,7 @@ class RcpCaps(object):
             dut_stats = self.__dut.diag_get_stats()
             ref_stats = self.__ref.diag_get_stats()
 
-            ret = dut_stats['sent_packets'] > threshold and ref_stats['received_packets'] > threshold
+            ret = dut_stats['sent_success_packets'] > threshold and ref_stats['received_packets'] > threshold
         else:
             ret = False
 
@@ -612,7 +612,7 @@ class RcpCaps(object):
             sender_stats = sender.diag_get_stats()
             receiver_stats = receiver.diag_get_stats()
 
-            ret = sender_stats['sent_packets'] == packets and receiver_stats['received_packets'] > threshold
+            ret = sender_stats['sent_success_packets'] == packets and receiver_stats['received_packets'] > threshold
         else:
             ret = False
 
