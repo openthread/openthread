@@ -48,7 +48,6 @@
 #include <openthread/ip6.h>
 #include <openthread/link.h>
 #include <openthread/logging.h>
-#include <openthread/mesh_diag.h>
 #include <openthread/netdata.h>
 #include <openthread/ping_sender.h>
 #include <openthread/sntp.h>
@@ -70,6 +69,7 @@
 #include "cli/cli_link_metrics.hpp"
 #include "cli/cli_mac_filter.hpp"
 #include "cli/cli_mdns.hpp"
+#include "cli/cli_mesh_diag.hpp"
 #include "cli/cli_network_data.hpp"
 #include "cli/cli_ping.hpp"
 #include "cli/cli_srp_client.hpp"
@@ -113,6 +113,7 @@ class Interpreter : public OutputImplementer, public Utils
     friend class Joiner;
     friend class LinkMetrics;
     friend class Mdns;
+    friend class MeshDiag;
     friend class NetworkData;
     friend class PingSender;
     friend class SrpClient;
@@ -230,27 +231,6 @@ private:
                                    const otIp6Address *aMeshLocalAddress,
                                    uint16_t            aRloc16);
     void        HandleLocateResult(otError aError, const otIp6Address *aMeshLocalAddress, uint16_t aRloc16);
-#endif
-#if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
-    static void HandleMeshDiagDiscoverDone(otError aError, otMeshDiagRouterInfo *aRouterInfo, void *aContext);
-    void        HandleMeshDiagDiscoverDone(otError aError, otMeshDiagRouterInfo *aRouterInfo);
-    static void HandleMeshDiagQueryChildTableResult(otError                     aError,
-                                                    const otMeshDiagChildEntry *aChildEntry,
-                                                    void                       *aContext);
-    void        HandleMeshDiagQueryChildTableResult(otError aError, const otMeshDiagChildEntry *aChildEntry);
-    static void HandleMeshDiagQueryChildIp6Addrs(otError                    aError,
-                                                 uint16_t                   aChildRloc16,
-                                                 otMeshDiagIp6AddrIterator *aIp6AddrIterator,
-                                                 void                      *aContext);
-    void        HandleMeshDiagQueryChildIp6Addrs(otError                    aError,
-                                                 uint16_t                   aChildRloc16,
-                                                 otMeshDiagIp6AddrIterator *aIp6AddrIterator);
-    static void HandleMeshDiagQueryRouterNeighborTableResult(otError                              aError,
-                                                             const otMeshDiagRouterNeighborEntry *aNeighborEntry,
-                                                             void                                *aContext);
-    void        HandleMeshDiagQueryRouterNeighborTableResult(otError                              aError,
-                                                             const otMeshDiagRouterNeighborEntry *aNeighborEntry);
-
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     static void HandleMlrRegResult(void               *aContext,
@@ -427,6 +407,9 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     PingSender mPing;
+#endif
+#if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
+    MeshDiag mMeshDiag;
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
