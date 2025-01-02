@@ -238,7 +238,7 @@ Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
     Error error = kErrorNone;
 
     VerifyOrExit(!IsDisabled(), error = kErrorInvalidState);
-    VerifyOrExit(!IsRouter(), error = kErrorNone);
+    VerifyOrExit(!IsRouter() && !IsLeader(), error = kErrorNone);
     VerifyOrExit(IsRouterEligible(), error = kErrorNotCapable);
 
     LogInfo("Attempt to become router");
