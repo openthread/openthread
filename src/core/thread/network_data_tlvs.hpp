@@ -1245,6 +1245,17 @@ public:
     }
 
     /**
+     * Gets the Service Data bytes.
+     *
+     * @returns A pointer to start of the Service Data bytes.
+     */
+    const uint8_t *GetServiceData(void) const
+    {
+        return (IsThreadEnterprise() ? &mShared.mServiceDataLengthThreadEnterprise : &mServiceDataLength) +
+               sizeof(uint8_t);
+    }
+
+    /**
      * Gets Service Data length.
      *
      * @returns length of the Service Data field in bytes.
@@ -1305,12 +1316,6 @@ public:
 
 private:
     bool IsThreadEnterprise(void) const { return (mFlagsServiceId & kThreadEnterpriseFlag) != 0; }
-
-    const uint8_t *GetServiceData(void) const
-    {
-        return (IsThreadEnterprise() ? &mShared.mServiceDataLengthThreadEnterprise : &mServiceDataLength) +
-               sizeof(uint8_t);
-    }
 
     uint8_t GetFieldsLength(void) const
     {
@@ -1393,6 +1398,13 @@ public:
     void GetServerData(ServerData &aServerData) const { aServerData.Init(GetServerData(), GetServerDataLength()); }
 
     /**
+     * Gets the Server Data bytes.
+     *
+     * @returns A pointer to start of the Server Data bytes.
+     */
+    const uint8_t *GetServerData(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
+
+    /**
      * Returns the Server Data length in bytes.
      *
      * @returns The Server Data length in bytes.
@@ -1424,8 +1436,7 @@ public:
     static uint16_t CalculateSize(uint8_t aServerDataLength) { return sizeof(ServerTlv) + aServerDataLength; }
 
 private:
-    const uint8_t *GetServerData(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
-    uint8_t       *GetServerData(void) { return AsNonConst(AsConst(this)->GetServerData()); }
+    uint8_t *GetServerData(void) { return AsNonConst(AsConst(this)->GetServerData()); }
 
     uint16_t mServer16;
 } OT_TOOL_PACKED_END;

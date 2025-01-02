@@ -832,6 +832,8 @@ public:
     void HandleServiceUpdateResult(ServiceUpdateId aId, Error aError);
 
 private:
+    static constexpr uint8_t kSrpVersion = 0;
+
     static constexpr uint16_t kUdpPayloadSize = Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
 
     static constexpr uint32_t kDefaultMinLease             = 30;          // 30 seconds.

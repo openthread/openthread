@@ -197,7 +197,7 @@ private:
 /**
  * Implements functionality of the secure TMF agent.
  */
-class SecureAgent : public Coap::CoapSecureBase
+class SecureAgent : public Coap::Dtls::Transport, public Coap::SecureSession
 {
 public:
     /**
@@ -208,13 +208,13 @@ public:
     explicit SecureAgent(Instance &aInstance);
 
 private:
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     static bool HandleResource(CoapBase               &aCoapBase,
                                const char             *aUriPath,
                                Message                &aMessage,
                                const Ip6::MessageInfo &aMessageInfo);
     bool        HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    MeshCoP::Dtls mDtls;
+#endif
 };
 
 #endif

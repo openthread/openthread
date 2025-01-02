@@ -131,8 +131,12 @@ public:
      * (from earlier call to any of `PublishDnsSrpService{Type}()` methods).
      *
      * @param[in] aSequenceNumber  The sequence number of DNS/SRP Anycast Service.
+     * @param[in] aVersion         The version number of DNS/SRP service.
      */
-    void PublishDnsSrpServiceAnycast(uint8_t aSequenceNumber) { mDnsSrpServiceEntry.PublishAnycast(aSequenceNumber); }
+    void PublishDnsSrpServiceAnycast(uint8_t aSequenceNumber, uint8_t aVersion)
+    {
+        mDnsSrpServiceEntry.PublishAnycast(aSequenceNumber, aVersion);
+    }
 
     /**
      * Requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
@@ -145,10 +149,11 @@ public:
      *
      * @param[in] aAddress   The DNS/SRP server address to publish.
      * @param[in] aPort      The SRP server port number to publish.
+     * @param[in] aVersion   The SRP server version to publish.
      */
-    void PublishDnsSrpServiceUnicast(const Ip6::Address &aAddress, uint16_t aPort)
+    void PublishDnsSrpServiceUnicast(const Ip6::Address &aAddress, uint16_t aPort, uint8_t aVersion)
     {
-        mDnsSrpServiceEntry.PublishUnicast(aAddress, aPort);
+        mDnsSrpServiceEntry.PublishUnicast(aAddress, aPort, aVersion);
     }
 
     /**
@@ -162,8 +167,12 @@ public:
      * in the Server TLV data.
      *
      * @param[in] aPort      The SRP server port number to publish.
+     * @param[in] aVersion   The SRP server version to publish.
      */
-    void PublishDnsSrpServiceUnicast(uint16_t aPort) { mDnsSrpServiceEntry.PublishUnicast(aPort); }
+    void PublishDnsSrpServiceUnicast(uint16_t aPort, uint8_t aVersion)
+    {
+        mDnsSrpServiceEntry.PublishUnicast(aPort, aVersion);
+    }
 
     /**
      * Indicates whether or not currently the "DNS/SRP Service" entry is added to the Thread Network Data.
@@ -365,9 +374,9 @@ private:
     public:
         explicit DnsSrpServiceEntry(Instance &aInstance);
         void SetCallback(DnsSrpServiceCallback aCallback, void *aContext) { mCallback.Set(aCallback, aContext); }
-        void PublishAnycast(uint8_t aSequenceNumber);
-        void PublishUnicast(const Ip6::Address &aAddress, uint16_t aPort);
-        void PublishUnicast(uint16_t aPort);
+        void PublishAnycast(uint8_t aSequenceNumber, uint8_t aVersion);
+        void PublishUnicast(const Ip6::Address &aAddress, uint16_t aPort, uint8_t aVersion);
+        void PublishUnicast(uint16_t aPort, uint8_t aVersion);
         void Unpublish(void);
         void HandleTimer(void) { Entry::HandleTimer(); }
         void HandleNotifierEvents(Events aEvents);
@@ -393,20 +402,25 @@ private:
             Type                GetType(void) const { return mType; }
             uint8_t             GetSequenceNumber(void) const { return static_cast<uint8_t>(mPortOrSeqNumber); }
             uint16_t            GetPort(void) const { return mPortOrSeqNumber; }
+            uint8_t             GetVersion(void) const { return mVersion; }
             const Ip6::Address &GetAddress(void) const { return mAddress; }
             void                SetAddress(const Ip6::Address &aAddress) { mAddress = aAddress; }
 
-            static Info InfoAnycast(uint8_t aSequenceNumber) { return Info(kTypeAnycast, aSequenceNumber); }
-            static Info InfoUnicast(Type aType, const Ip6::Address &aAddress, uint16_t aPort)
+            static Info InfoAnycast(uint8_t aSequenceNumber, uint8_t aVersion)
             {
-                return Info(aType, aPort, &aAddress);
+                return Info(kTypeAnycast, aSequenceNumber, aVersion);
+            }
+            static Info InfoUnicast(Type aType, const Ip6::Address &aAddress, uint16_t aPort, uint8_t aVersion)
+            {
+                return Info(aType, aPort, aVersion, &aAddress);
             }
 
         private:
-            Info(Type aType, uint16_t aPortOrSeqNumber, const Ip6::Address *aAddress = nullptr);
+            Info(Type aType, uint16_t aPortOrSeqNumber, uint8_t aVersion, const Ip6::Address *aAddress = nullptr);
 
             Ip6::Address mAddress;
             uint16_t     mPortOrSeqNumber;
+            uint8_t      mVersion;
             Type         mType;
         };
 

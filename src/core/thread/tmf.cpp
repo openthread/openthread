@@ -273,11 +273,15 @@ Message::Priority Agent::DscpToPriority(uint8_t aDscp)
 #if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 
 SecureAgent::SecureAgent(Instance &aInstance)
-    : Coap::CoapSecureBase(aInstance, mDtls)
-    , mDtls(aInstance, kNoLinkSecurity)
+    : Coap::Dtls::Transport(aInstance, kNoLinkSecurity)
+    , Coap::SecureSession(aInstance, static_cast<Coap::Dtls::Transport &>(*this))
 {
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     SetResourceHandler(&HandleResource);
+#endif
 }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 bool SecureAgent::HandleResource(CoapBase               &aCoapBase,
                                  const char             *aUriPath,
@@ -289,42 +293,19 @@ bool SecureAgent::HandleResource(CoapBase               &aCoapBase,
 
 bool SecureAgent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    OT_UNUSED_VARIABLE(aMessage);
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
-    bool didHandle = true;
+    bool didHandle = false;
     Uri  uri       = UriFromPath(aUriPath);
 
-#define Case(kUri, Type)                                     \
-    case kUri:                                               \
-        Get<Type>().HandleTmf<kUri>(aMessage, aMessageInfo); \
-        break
-
-    switch (uri)
+    if (uri == kUriJoinerFinalize)
     {
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-        Case(kUriJoinerFinalize, MeshCoP::Commissioner);
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-        Case(kUriCommissionerPetition, MeshCoP::BorderAgent);
-        Case(kUriCommissionerKeepAlive, MeshCoP::BorderAgent);
-        Case(kUriRelayTx, MeshCoP::BorderAgent);
-        Case(kUriCommissionerGet, MeshCoP::BorderAgent);
-        Case(kUriActiveGet, MeshCoP::BorderAgent);
-        Case(kUriPendingGet, MeshCoP::BorderAgent);
-        Case(kUriProxyTx, MeshCoP::BorderAgent);
-#endif
-
-    default:
-        didHandle = false;
-        break;
+        Get<MeshCoP::Commissioner>().HandleTmf<kUriJoinerFinalize>(aMessage, aMessageInfo);
+        didHandle = true;
     }
-
-#undef Case
 
     return didHandle;
 }
+
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 #endif // OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 

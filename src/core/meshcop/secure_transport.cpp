@@ -47,55 +47,8 @@ namespace MeshCoP {
 
 RegisterLogModule("SecTransport");
 
-#if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
-const uint16_t SecureTransport::kGroups[] = {MBEDTLS_SSL_IANA_TLS_GROUP_SECP256R1, MBEDTLS_SSL_IANA_TLS_GROUP_NONE};
-#else
-const mbedtls_ecp_group_id SecureTransport::kCurves[] = {MBEDTLS_ECP_DP_SECP256R1, MBEDTLS_ECP_DP_NONE};
-#endif
-
-#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
-#if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
-const uint16_t SecureTransport::kSignatures[] = {MBEDTLS_TLS1_3_SIG_ECDSA_SECP256R1_SHA256, MBEDTLS_TLS1_3_SIG_NONE};
-#else
-const int SecureTransport::kHashes[] = {MBEDTLS_MD_SHA256, MBEDTLS_MD_NONE};
-#endif
-#endif
-
-const int SecureTransport::kCipherSuites[][2] = {
-    /* kEcjpakeWithAes128Ccm8         */ {MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8, 0},
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
-    /* kPskWithAes128Ccm8             */ {MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8, 0},
-#endif
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
-    /* kEcdheEcdsaWithAes128Ccm8      */ {MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8, 0},
-    /* kEcdheEcdsaWithAes128GcmSha256 */ {MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, 0},
-#endif
-};
-
 //---------------------------------------------------------------------------------------------------------------------
-// SecureTransport
-
-SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, bool aDatagramTransport)
-    : InstanceLocator(aInstance)
-    , mLayerTwoSecurity(aLayerTwoSecurity)
-    , mDatagramTransport(aDatagramTransport)
-    , mIsOpen(false)
-    , mIsServer(true)
-    , mVerifyPeerCertificate(true)
-    , mCipherSuite(kUnspecifiedCipherSuite)
-    , mPskLength(0)
-    , mMaxConnectionAttempts(0)
-    , mRemainingConnectionAttempts(0)
-    , mSession(nullptr)
-    , mSocket(aInstance, *this)
-    , mTimer(aInstance, SecureTransport::HandleTimer, this)
-#if OPENTHREAD_CONFIG_TLS_API_ENABLE
-    , mExtension(nullptr)
-#endif
-{
-    ClearAllBytes(mPsk);
-    OT_UNUSED_VARIABLE(mVerifyPeerCertificate);
-}
+// SecureSession
 
 SecureSession::SecureSession(SecureTransport &aTransport)
     : mTimerSet(false)
@@ -141,33 +94,6 @@ exit:
     return;
 }
 
-Error SecureTransport::Open(void)
-{
-    Error error;
-
-    VerifyOrExit(!mIsOpen, error = kErrorAlready);
-
-    SuccessOrExit(error = mSocket.Open(Ip6::kNetifUnspecified));
-    mIsOpen                      = true;
-    mRemainingConnectionAttempts = mMaxConnectionAttempts;
-
-exit:
-    return error;
-}
-
-Error SecureTransport::SetMaxConnectionAttempts(uint16_t aMaxAttempts, AutoCloseCallback aCallback, void *aContext)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(!mIsOpen, error = kErrorInvalidState);
-
-    mMaxConnectionAttempts = aMaxAttempts;
-    mAutoCloseCallback.Set(aCallback, aContext);
-
-exit:
-    return error;
-}
-
 Error SecureSession::Connect(const Ip6::SockAddr &aSockAddr)
 {
     Error error;
@@ -185,21 +111,6 @@ Error SecureSession::Connect(const Ip6::SockAddr &aSockAddr)
 
 exit:
     return error;
-}
-
-void SecureTransport::HandleReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    VerifyOrExit(mIsOpen);
-
-    if (!mSession->IsDisconnected())
-    {
-        VerifyOrExit(mSession->Matches(aMessageInfo));
-    }
-
-    mSession->HandleTransportReceive(aMessage, aMessageInfo);
-
-exit:
-    return;
 }
 
 void SecureSession::HandleTransportReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -231,39 +142,6 @@ void SecureSession::HandleTransportReceive(Message &aMessage, const Ip6::Message
 
 exit:
     return;
-}
-
-Error SecureTransport::Bind(uint16_t aPort)
-{
-    Error error;
-
-    VerifyOrExit(mIsOpen, error = kErrorInvalidState);
-    VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
-
-    VerifyOrExit(mSession->IsDisconnected(), error = kErrorInvalidState);
-
-    SuccessOrExit(error = mSocket.Bind(aPort));
-    mIsServer = true;
-
-exit:
-    return error;
-}
-
-Error SecureTransport::Bind(TransportCallback aCallback, void *aContext)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(mIsOpen, error = kErrorInvalidState);
-    VerifyOrExit(!mSocket.IsBound(), error = kErrorAlready);
-    VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
-
-    VerifyOrExit(mSession->IsDisconnected(), error = kErrorInvalidState);
-
-    mTransportCallback.Set(aCallback, aContext);
-    mIsServer = true;
-
-exit:
-    return error;
 }
 
 Error SecureSession::Setup(void)
@@ -441,22 +319,6 @@ exit:
     return error;
 }
 
-void SecureTransport::Close(void)
-{
-    VerifyOrExit(mIsOpen);
-
-    mSession->Disconnect(SecureSession::kDisconnectedLocalClosed);
-    mSession->SetState(SecureSession::kStateDisconnected);
-
-    mIsOpen = false;
-    mTransportCallback.Clear();
-    IgnoreError(mSocket.Close());
-    mTimer.Stop();
-
-exit:
-    return;
-}
-
 void SecureSession::Disconnect(ConnectEvent aEvent)
 {
     VerifyOrExit(mTransport.mIsOpen);
@@ -476,33 +338,6 @@ void SecureSession::Disconnect(ConnectEvent aEvent)
 
 exit:
     return;
-}
-
-void SecureTransport::DecremenetRemainingConnectionAttempts(void)
-{
-    if (mRemainingConnectionAttempts > 0)
-    {
-        mRemainingConnectionAttempts--;
-    }
-}
-
-bool SecureTransport::HasNoRemainingConnectionAttempts(void) const
-{
-    return (mMaxConnectionAttempts > 0) && (mRemainingConnectionAttempts == 0);
-}
-
-Error SecureTransport::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(aPskLength <= sizeof(mPsk), error = kErrorInvalidArgs);
-
-    memcpy(mPsk, aPsk, aPskLength);
-    mPskLength   = aPskLength;
-    mCipherSuite = kEcjpakeWithAes128Ccm8;
-
-exit:
-    return error;
 }
 
 Error SecureSession::Send(Message &aMessage)
@@ -546,52 +381,6 @@ int SecureSession::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLeng
     mMessageSubType = Message::kSubTypeNone;
 
     return mTransport.Transmit(aBuf, aLength, mMessageInfo, msgSubType);
-}
-
-int SecureTransport::Transmit(const unsigned char    *aBuf,
-                              size_t                  aLength,
-                              const Ip6::MessageInfo &aMessageInfo,
-                              Message::SubType        aMessageSubType)
-{
-    Error    error   = kErrorNone;
-    Message *message = mSocket.NewMessage();
-    int      rval;
-
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
-    message->SetSubType(aMessageSubType);
-    message->SetLinkSecurityEnabled(mLayerTwoSecurity);
-
-    SuccessOrExit(error = message->AppendBytes(aBuf, static_cast<uint16_t>(aLength)));
-
-    if (mTransportCallback.IsSet())
-    {
-        error = mTransportCallback.Invoke(*message, aMessageInfo);
-    }
-    else
-    {
-        error = mSocket.SendTo(*message, aMessageInfo);
-    }
-
-exit:
-    FreeMessageOnError(message, error);
-
-    switch (error)
-    {
-    case kErrorNone:
-        rval = static_cast<int>(aLength);
-        break;
-
-    case kErrorNoBufs:
-        rval = MBEDTLS_ERR_SSL_WANT_WRITE;
-        break;
-
-    default:
-        LogWarnOnError(error, "HandleMbedtlsTransmit");
-        rval = MBEDTLS_ERR_NET_SEND_FAILED;
-        break;
-    }
-
-    return rval;
 }
 
 int SecureSession::HandleMbedtlsReceive(void *aContext, unsigned char *aBuf, size_t aLength)
@@ -672,105 +461,6 @@ void SecureSession::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFini
         mTimerFinish       = now + aFinish;
 
         mTransport.mTimer.FireAtIfEarlier(mTimerFinish);
-    }
-}
-
-#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
-
-void SecureTransport::HandleMbedtlsExportKeys(void                       *aContext,
-                                              mbedtls_ssl_key_export_type aType,
-                                              const unsigned char        *aMasterSecret,
-                                              size_t                      aMasterSecretLen,
-                                              const unsigned char         aClientRandom[32],
-                                              const unsigned char         aServerRandom[32],
-                                              mbedtls_tls_prf_types       aTlsPrfType)
-{
-    static_cast<SecureTransport *>(aContext)->HandleMbedtlsExportKeys(aType, aMasterSecret, aMasterSecretLen,
-                                                                      aClientRandom, aServerRandom, aTlsPrfType);
-}
-
-void SecureTransport::HandleMbedtlsExportKeys(mbedtls_ssl_key_export_type aType,
-                                              const unsigned char        *aMasterSecret,
-                                              size_t                      aMasterSecretLen,
-                                              const unsigned char         aClientRandom[32],
-                                              const unsigned char         aServerRandom[32],
-                                              mbedtls_tls_prf_types       aTlsPrfType)
-{
-    Crypto::Sha256::Hash kek;
-    Crypto::Sha256       sha256;
-    unsigned char        keyBlock[kSecureTransportKeyBlockSize];
-    unsigned char        randBytes[2 * kSecureTransportRandomBufferSize];
-
-    VerifyOrExit(mCipherSuite == kEcjpakeWithAes128Ccm8);
-    VerifyOrExit(aType == MBEDTLS_SSL_KEY_EXPORT_TLS12_MASTER_SECRET);
-
-    memcpy(randBytes, aServerRandom, kSecureTransportRandomBufferSize);
-    memcpy(randBytes + kSecureTransportRandomBufferSize, aClientRandom, kSecureTransportRandomBufferSize);
-
-    // Retrieve the Key block from Master secret
-    mbedtls_ssl_tls_prf(aTlsPrfType, aMasterSecret, aMasterSecretLen, "key expansion", randBytes, sizeof(randBytes),
-                        keyBlock, sizeof(keyBlock));
-
-    sha256.Start();
-    sha256.Update(keyBlock, kSecureTransportKeyBlockSize);
-    sha256.Finish(kek);
-
-    Get<KeyManager>().SetKek(kek.GetBytes());
-
-exit:
-    return;
-}
-
-#else
-
-int SecureTransport::HandleMbedtlsExportKeys(void                *aContext,
-                                             const unsigned char *aMasterSecret,
-                                             const unsigned char *aKeyBlock,
-                                             size_t               aMacLength,
-                                             size_t               aKeyLength,
-                                             size_t               aIvLength)
-{
-    return static_cast<SecureTransport *>(aContext)->HandleMbedtlsExportKeys(aMasterSecret, aKeyBlock, aMacLength,
-                                                                             aKeyLength, aIvLength);
-}
-
-int SecureTransport::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
-                                             const unsigned char *aKeyBlock,
-                                             size_t               aMacLength,
-                                             size_t               aKeyLength,
-                                             size_t               aIvLength)
-{
-    OT_UNUSED_VARIABLE(aMasterSecret);
-
-    Crypto::Sha256::Hash kek;
-    Crypto::Sha256       sha256;
-
-    VerifyOrExit(mCipherSuite == kEcjpakeWithAes128Ccm8);
-
-    sha256.Start();
-    sha256.Update(aKeyBlock, 2 * static_cast<uint16_t>(aMacLength + aKeyLength + aIvLength));
-    sha256.Finish(kek);
-
-    Get<KeyManager>().SetKek(kek.GetBytes());
-
-exit:
-    return 0;
-}
-
-#endif // (MBEDTLS_VERSION_NUMBER >= 0x03000000)
-
-void SecureTransport::HandleTimer(Timer &aTimer)
-{
-    static_cast<SecureTransport *>(static_cast<TimerMilliContext &>(aTimer).GetContext())->HandleTimer();
-}
-
-void SecureTransport::HandleTimer(void)
-{
-    if (mIsOpen)
-    {
-        TimeMilli now = TimerMilli::GetNow();
-
-        mSession->HandleTimer(now);
     }
 }
 
@@ -910,6 +600,352 @@ void SecureSession::Process(void)
     }
 }
 
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+
+const char *SecureSession::StateToString(State aState)
+{
+    static const char *const kStateStrings[] = {
+        "Disconnected",  // (0) kStateDisconnected
+        "Initializing",  // (1) kStateInitializing
+        "Connecting",    // (2) kStateConnecting
+        "Connected",     // (3) kStateConnected
+        "Disconnecting", // (4) kStateDisconnecting
+    };
+
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kStateDisconnected);
+        ValidateNextEnum(kStateInitializing);
+        ValidateNextEnum(kStateConnecting);
+        ValidateNextEnum(kStateConnected);
+        ValidateNextEnum(kStateDisconnecting);
+    };
+
+    return kStateStrings[aState];
+}
+
+#endif
+
+//---------------------------------------------------------------------------------------------------------------------
+// SecureTransport
+
+#if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
+const uint16_t SecureTransport::kGroups[] = {MBEDTLS_SSL_IANA_TLS_GROUP_SECP256R1, MBEDTLS_SSL_IANA_TLS_GROUP_NONE};
+#else
+const mbedtls_ecp_group_id SecureTransport::kCurves[] = {MBEDTLS_ECP_DP_SECP256R1, MBEDTLS_ECP_DP_NONE};
+#endif
+
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
+#if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
+const uint16_t SecureTransport::kSignatures[] = {MBEDTLS_TLS1_3_SIG_ECDSA_SECP256R1_SHA256, MBEDTLS_TLS1_3_SIG_NONE};
+#else
+const int SecureTransport::kHashes[] = {MBEDTLS_MD_SHA256, MBEDTLS_MD_NONE};
+#endif
+#endif
+
+const int SecureTransport::kCipherSuites[][2] = {
+    /* kEcjpakeWithAes128Ccm8         */ {MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8, 0},
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+    /* kPskWithAes128Ccm8             */ {MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8, 0},
+#endif
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE && defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+    /* kEcdheEcdsaWithAes128Ccm8      */ {MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8, 0},
+    /* kEcdheEcdsaWithAes128GcmSha256 */ {MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, 0},
+#endif
+};
+
+SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, bool aDatagramTransport)
+    : mLayerTwoSecurity(aLayerTwoSecurity)
+    , mDatagramTransport(aDatagramTransport)
+    , mIsOpen(false)
+    , mIsServer(true)
+    , mVerifyPeerCertificate(true)
+    , mCipherSuite(kUnspecifiedCipherSuite)
+    , mPskLength(0)
+    , mMaxConnectionAttempts(0)
+    , mRemainingConnectionAttempts(0)
+    , mSession(nullptr)
+    , mSocket(aInstance, *this)
+    , mTimer(aInstance, SecureTransport::HandleTimer, this)
+#if OPENTHREAD_CONFIG_TLS_API_ENABLE
+    , mExtension(nullptr)
+#endif
+{
+    ClearAllBytes(mPsk);
+    OT_UNUSED_VARIABLE(mVerifyPeerCertificate);
+}
+
+Error SecureTransport::Open(void)
+{
+    Error error;
+
+    VerifyOrExit(!mIsOpen, error = kErrorAlready);
+
+    SuccessOrExit(error = mSocket.Open(Ip6::kNetifUnspecified));
+    mIsOpen                      = true;
+    mRemainingConnectionAttempts = mMaxConnectionAttempts;
+
+exit:
+    return error;
+}
+
+Error SecureTransport::SetMaxConnectionAttempts(uint16_t aMaxAttempts, AutoCloseCallback aCallback, void *aContext)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!mIsOpen, error = kErrorInvalidState);
+
+    mMaxConnectionAttempts = aMaxAttempts;
+    mAutoCloseCallback.Set(aCallback, aContext);
+
+exit:
+    return error;
+}
+
+void SecureTransport::HandleReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    VerifyOrExit(mIsOpen);
+
+    if (!mSession->IsDisconnected())
+    {
+        VerifyOrExit(mSession->Matches(aMessageInfo));
+    }
+
+    mSession->HandleTransportReceive(aMessage, aMessageInfo);
+
+exit:
+    return;
+}
+
+Error SecureTransport::Bind(uint16_t aPort)
+{
+    Error error;
+
+    VerifyOrExit(mIsOpen, error = kErrorInvalidState);
+    VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
+
+    VerifyOrExit(mSession->IsDisconnected(), error = kErrorInvalidState);
+
+    SuccessOrExit(error = mSocket.Bind(aPort));
+    mIsServer = true;
+
+exit:
+    return error;
+}
+
+Error SecureTransport::Bind(TransportCallback aCallback, void *aContext)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mIsOpen, error = kErrorInvalidState);
+    VerifyOrExit(!mSocket.IsBound(), error = kErrorAlready);
+    VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
+
+    VerifyOrExit(mSession->IsDisconnected(), error = kErrorInvalidState);
+
+    mTransportCallback.Set(aCallback, aContext);
+    mIsServer = true;
+
+exit:
+    return error;
+}
+
+void SecureTransport::Close(void)
+{
+    VerifyOrExit(mIsOpen);
+
+    mSession->Disconnect(SecureSession::kDisconnectedLocalClosed);
+    mSession->SetState(SecureSession::kStateDisconnected);
+
+    mIsOpen = false;
+    mTransportCallback.Clear();
+    IgnoreError(mSocket.Close());
+    mTimer.Stop();
+
+exit:
+    return;
+}
+
+void SecureTransport::DecremenetRemainingConnectionAttempts(void)
+{
+    if (mRemainingConnectionAttempts > 0)
+    {
+        mRemainingConnectionAttempts--;
+    }
+}
+
+bool SecureTransport::HasNoRemainingConnectionAttempts(void) const
+{
+    return (mMaxConnectionAttempts > 0) && (mRemainingConnectionAttempts == 0);
+}
+
+Error SecureTransport::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aPskLength <= sizeof(mPsk), error = kErrorInvalidArgs);
+
+    memcpy(mPsk, aPsk, aPskLength);
+    mPskLength   = aPskLength;
+    mCipherSuite = kEcjpakeWithAes128Ccm8;
+
+exit:
+    return error;
+}
+
+void SecureTransport::SetPsk(const JoinerPskd &aPskd)
+{
+    static_assert(JoinerPskd::kMaxLength <= kPskMaxLength, "The max DTLS PSK length is smaller than joiner PSKd");
+
+    IgnoreError(SetPsk(aPskd.GetBytes(), aPskd.GetLength()));
+}
+
+int SecureTransport::Transmit(const unsigned char    *aBuf,
+                              size_t                  aLength,
+                              const Ip6::MessageInfo &aMessageInfo,
+                              Message::SubType        aMessageSubType)
+{
+    Error    error   = kErrorNone;
+    Message *message = mSocket.NewMessage();
+    int      rval;
+
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+    message->SetSubType(aMessageSubType);
+    message->SetLinkSecurityEnabled(mLayerTwoSecurity);
+
+    SuccessOrExit(error = message->AppendBytes(aBuf, static_cast<uint16_t>(aLength)));
+
+    if (mTransportCallback.IsSet())
+    {
+        error = mTransportCallback.Invoke(*message, aMessageInfo);
+    }
+    else
+    {
+        error = mSocket.SendTo(*message, aMessageInfo);
+    }
+
+exit:
+    FreeMessageOnError(message, error);
+
+    switch (error)
+    {
+    case kErrorNone:
+        rval = static_cast<int>(aLength);
+        break;
+
+    case kErrorNoBufs:
+        rval = MBEDTLS_ERR_SSL_WANT_WRITE;
+        break;
+
+    default:
+        LogWarnOnError(error, "HandleMbedtlsTransmit");
+        rval = MBEDTLS_ERR_NET_SEND_FAILED;
+        break;
+    }
+
+    return rval;
+}
+
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+
+void SecureTransport::HandleMbedtlsExportKeys(void                       *aContext,
+                                              mbedtls_ssl_key_export_type aType,
+                                              const unsigned char        *aMasterSecret,
+                                              size_t                      aMasterSecretLen,
+                                              const unsigned char         aClientRandom[32],
+                                              const unsigned char         aServerRandom[32],
+                                              mbedtls_tls_prf_types       aTlsPrfType)
+{
+    static_cast<SecureTransport *>(aContext)->HandleMbedtlsExportKeys(aType, aMasterSecret, aMasterSecretLen,
+                                                                      aClientRandom, aServerRandom, aTlsPrfType);
+}
+
+void SecureTransport::HandleMbedtlsExportKeys(mbedtls_ssl_key_export_type aType,
+                                              const unsigned char        *aMasterSecret,
+                                              size_t                      aMasterSecretLen,
+                                              const unsigned char         aClientRandom[32],
+                                              const unsigned char         aServerRandom[32],
+                                              mbedtls_tls_prf_types       aTlsPrfType)
+{
+    Crypto::Sha256::Hash kek;
+    Crypto::Sha256       sha256;
+    unsigned char        keyBlock[kSecureTransportKeyBlockSize];
+    unsigned char        randBytes[2 * kSecureTransportRandomBufferSize];
+
+    VerifyOrExit(mCipherSuite == kEcjpakeWithAes128Ccm8);
+    VerifyOrExit(aType == MBEDTLS_SSL_KEY_EXPORT_TLS12_MASTER_SECRET);
+
+    memcpy(randBytes, aServerRandom, kSecureTransportRandomBufferSize);
+    memcpy(randBytes + kSecureTransportRandomBufferSize, aClientRandom, kSecureTransportRandomBufferSize);
+
+    // Retrieve the Key block from Master secret
+    mbedtls_ssl_tls_prf(aTlsPrfType, aMasterSecret, aMasterSecretLen, "key expansion", randBytes, sizeof(randBytes),
+                        keyBlock, sizeof(keyBlock));
+
+    sha256.Start();
+    sha256.Update(keyBlock, kSecureTransportKeyBlockSize);
+    sha256.Finish(kek);
+
+    mTimer.Get<KeyManager>().SetKek(kek.GetBytes());
+
+exit:
+    return;
+}
+
+#else
+
+int SecureTransport::HandleMbedtlsExportKeys(void *aContext,
+                                             const unsigned char *aMasterSecret,
+                                             const unsigned char *aKeyBlock,
+                                             size_t aMacLength,
+                                             size_t aKeyLength,
+                                             size_t aIvLength)
+{
+    return static_cast<SecureTransport *>(aContext)->HandleMbedtlsExportKeys(aMasterSecret, aKeyBlock, aMacLength,
+                                                                             aKeyLength, aIvLength);
+}
+
+int SecureTransport::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
+                                             const unsigned char *aKeyBlock,
+                                             size_t aMacLength,
+                                             size_t aKeyLength,
+                                             size_t aIvLength)
+{
+    OT_UNUSED_VARIABLE(aMasterSecret);
+
+    Crypto::Sha256::Hash kek;
+    Crypto::Sha256 sha256;
+
+    VerifyOrExit(mCipherSuite == kEcjpakeWithAes128Ccm8);
+
+    sha256.Start();
+    sha256.Update(aKeyBlock, 2 * static_cast<uint16_t>(aMacLength + aKeyLength + aIvLength));
+    sha256.Finish(kek);
+
+    mTimer.Get<KeyManager>().SetKek(kek.GetBytes());
+
+exit:
+    return 0;
+}
+
+#endif // (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+
+void SecureTransport::HandleTimer(Timer &aTimer)
+{
+    static_cast<SecureTransport *>(static_cast<TimerMilliContext &>(aTimer).GetContext())->HandleTimer();
+}
+
+void SecureTransport::HandleTimer(void)
+{
+    if (mIsOpen)
+    {
+        TimeMilli now = TimerMilli::GetNow();
+
+        mSession->HandleTimer(now);
+    }
+}
+
 void SecureTransport::HandleMbedtlsDebug(void *aContext, int aLevel, const char *aFile, int aLine, const char *aStr)
 {
     static_cast<SecureTransport *>(aContext)->HandleMbedtlsDebug(aLevel, aFile, aLine, aStr);
@@ -945,33 +981,6 @@ void SecureTransport::HandleMbedtlsDebug(int aLevel, const char *aFile, int aLin
     OT_UNUSED_VARIABLE(aLine);
     OT_UNUSED_VARIABLE(logLevel);
 }
-
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-
-const char *SecureSession::StateToString(State aState)
-{
-    static const char *const kStateStrings[] = {
-        "Disconnected",  // (0) kStateDisconnected
-        "Initializing",  // (1) kStateInitializing
-        "Connecting",    // (2) kStateConnecting
-        "Connected",     // (3) kStateConnected
-        "Disconnecting", // (4) kStateDisconnecting
-    };
-
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateDisconnected);
-        ValidateNextEnum(kStateInitializing);
-        ValidateNextEnum(kStateConnecting);
-        ValidateNextEnum(kStateConnected);
-        ValidateNextEnum(kStateDisconnecting);
-    };
-
-    return kStateStrings[aState];
-}
-
-#endif
 
 //---------------------------------------------------------------------------------------------------------------------
 // SecureTransport::Extension

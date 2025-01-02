@@ -251,22 +251,21 @@ public:
     }
 
     /**
-     * Indicates whether the linked list contains an entry matching a given entry indicator.
+     * Indicates whether the linked list contains an entry matching a set of conditions.
      *
-     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
-     * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
-     * `Type` entry in the list. The `Matches()` method should be provided by `Type` class accordingly:
+     * To check that an entry matches, the `Matches()` method is invoked on each `Type` entry in the list. The
+     * `Matches()` method with the same set of `Args` input types should be provided by the `Type` class accordingly:
      *
-     *     bool Type::Matches(const Indicator &aIndicator) const
+     *      bool Type::Matches(const Args &...) const
      *
-     * @param[in] aIndicator   An entry indicator to match against entries in the list.
+     * @param[in]  aArgs       The args to pass to `Matches()`.
      *
-     * @retval TRUE   The linked list contains an entry matching @p aIndicator.
-     * @retval FALSE  The linked list contains no entry matching @p aIndicator.
+     * @retval TRUE   The linked list contains a matching entry.
+     * @retval FALSE  The linked list does not contain a matching entry.
      */
-    template <typename Indicator> bool ContainsMatching(const Indicator &aIndicator) const
+    template <typename... Args> bool ContainsMatching(const Args &...aArgs) const
     {
-        return FindMatching(aIndicator) != nullptr;
+        return FindMatching(aArgs...) != nullptr;
     }
 
     /**
@@ -318,27 +317,25 @@ public:
     }
 
     /**
-     * Removes an entry matching a given entry indicator from the linked list.
+     * Removes an entry matching a given set of conditions from the linked list.
      *
-     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
-     * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
-     * `Type` entry in the list. The `Matches()` method should be provided by `Type` class accordingly:
+     * To check that an entry matches, the `Matches()` method is invoked on each `Type` entry in the list. The
+     * `Matches()` method with the same set of `Args` input types should be provided by the `Type` class accordingly:
      *
-     *     bool Type::Matches(const Indicator &aIndicator) const
+     *      bool Type::Matches(const Args &...) const
      *
      * @note This method does not change the removed entry itself (which is returned in case of success), i.e., the
      * entry next pointer stays as before.
      *
-     *
-     * @param[in] aIndicator   An entry indicator to match against entries in the list.
+     * @param[in]  aArgs       The args to pass to `Matches()`.
      *
      * @returns A pointer to the removed matching entry if one could be found, or `nullptr` if no matching entry is
      *          found.
      */
-    template <typename Indicator> Type *RemoveMatching(const Indicator &aIndicator)
+    template <typename... Args> Type *RemoveMatching(const Args &...aArgs)
     {
         Type *prev;
-        Type *entry = FindMatchingWithPrev(prev, aIndicator);
+        Type *entry = FindMatchingWithPrev(prev, aArgs...);
 
         if (entry != nullptr)
         {
@@ -352,16 +349,15 @@ public:
      * Removes all entries in the list matching a given entry indicator from the list and adds
      * them to a new list.
      *
-     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
-     * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
-     * `Type` entry in the list. The `Matches()` method should be provided by `Type` class accordingly:
+     * To check that an entry matches, the `Matches()` method is invoked on each `Type` entry in the list. The
+     * `Matches()` method with the same set of `Args` input types should be provided by the `Type` class accordingly:
      *
-     *     bool Type::Matches(const Indicator &aIndicator) const
+     *      bool Type::Matches(const Args &...) const
      *
-     * @param[in] aIndicator   An entry indicator to match against entries in the list.
      * @param[in] aRemovedList The list to add the removed entries to.
+     * @param[in]  aArgs       The args to pass to `Matches()`.
      */
-    template <typename Indicator> void RemoveAllMatching(const Indicator &aIndicator, LinkedList &aRemovedList)
+    template <typename... Args> void RemoveAllMatching(LinkedList &aRemovedList, const Args &...aArgs)
     {
         Type *entry;
         Type *prev;
@@ -371,7 +367,7 @@ public:
         {
             next = entry->GetNext();
 
-            if (entry->Matches(aIndicator))
+            if (entry->Matches(aArgs...))
             {
                 PopAfter(prev);
                 aRemovedList.Push(*entry);
@@ -432,24 +428,23 @@ public:
     }
 
     /**
-     * Searches within the linked list to find an entry matching a given indicator.
+     * Searches within the linked list to find an entry matching a set of conditions, and if found also returns a
+     * pointer to its previous entry in the list.
      *
-     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
-     * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
-     * `Type` entry in the list. The `Matches()` method should be provided by `Type` class accordingly:
+     * To check that an entry matches, the `Matches()` method is invoked on each `Type` entry in the list. The
+     * `Matches()` method with the same set of `Args` input types should be provided by the `Type` class accordingly:
      *
-     *     bool Type::Matches(const Indicator &aIndicator) const
+     *      bool Type::Matches(const Args &...) const
      *
      * @param[out] aPrevEntry  A pointer to output the previous entry on success (when a match is found in the list).
      *                         @p aPrevEntry is set to `nullptr` if the matching entry is the head of the list.
      *                         Otherwise it is updated to point to the previous entry before the matching entry in the
      *                         list.
-     * @param[in]  aIndicator  An indicator to match with entries in the list.
+     * @param[in]  aArgs       The args to pass to `Matches()`.
      *
      * @returns A pointer to the matching entry if one is found, or `nullptr` if no matching entry was found.
      */
-    template <typename Indicator>
-    const Type *FindMatchingWithPrev(const Type *&aPrevEntry, const Indicator &aIndicator) const
+    template <typename... Args> const Type *FindMatchingWithPrev(const Type *&aPrevEntry, Args &&...aArgs) const
     {
         const Type *entry;
 
@@ -457,7 +452,7 @@ public:
 
         for (entry = mHead; entry != nullptr; aPrevEntry = entry, entry = entry->GetNext())
         {
-            if (entry->Matches(aIndicator))
+            if (entry->Matches(aArgs...))
             {
                 break;
             }
@@ -467,64 +462,61 @@ public:
     }
 
     /**
-     * Searches within the linked list to find an entry matching a given indicator, and if found
-     * returns a pointer to its previous entry in the list.
+     * Searches within the linked list to find an entry matching a set of conditions, and if found also returns a
+     * pointer to its previous entry in the list.
      *
-     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
-     * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
-     * `Type` entry in the list. The `Matches()` method should be provided by `Type` class accordingly:
+     * To check that an entry matches, the `Matches()` method is invoked on each `Type` entry in the list. The
+     * `Matches()` method with the same set of `Args` input types should be provided by the `Type` class accordingly:
      *
-     *     bool Type::Matches(const Indicator &aIndicator) const
+     *      bool Type::Matches(const Args &...) const
      *
      * @param[out] aPrevEntry  A pointer to output the previous entry on success (when a match is found in the list).
      *                         @p aPrevEntry is set to `nullptr` if the matching entry is the head of the list.
      *                         Otherwise it is updated to point to the previous entry before the matching entry in the
      *                         list.
-     * @param[in]  aIndicator  An indicator to match with entries in the list.
+     * @param[in]  aArgs       The args to pass to `Matches()`.
      *
      * @returns A pointer to the matching entry if one is found, or `nullptr` if no matching entry was found.
      */
-    template <typename Indicator> Type *FindMatchingWithPrev(Type *&aPrevEntry, const Indicator &aIndicator)
+    template <typename... Args> Type *FindMatchingWithPrev(Type *&aPrevEntry, Args &&...aArgs)
     {
-        return AsNonConst(AsConst(this)->FindMatchingWithPrev(const_cast<const Type *&>(aPrevEntry), aIndicator));
+        return AsNonConst(AsConst(this)->FindMatchingWithPrev(const_cast<const Type *&>(aPrevEntry), aArgs...));
     }
 
     /**
-     * Searches within the linked list to find an entry matching a given indicator.
+     * Searches within the linked list to find an entry matching a set of conditions.
      *
-     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
-     * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
-     * `Type` entry in the list. The `Matches()` method should be provided by `Type` class accordingly:
+     * To check that an entry matches, the `Matches()` method is invoked on each `Type` entry in the list. The
+     * `Matches()` method with the same set of `Args` input types should be provided by the `Type` class accordingly:
      *
-     *     bool Type::Matches(const Indicator &aIndicator) const
+     *      bool Type::Matches(const Args &...) const
      *
-     * @param[in]  aIndicator  An indicator to match with entries in the list.
+     * @param[in]  aArgs  The args to pass to `Matches()`.
      *
      * @returns A pointer to the matching entry if one is found, or `nullptr` if no matching entry was found.
      */
-    template <typename Indicator> const Type *FindMatching(const Indicator &aIndicator) const
+    template <typename... Args> const Type *FindMatching(const Args &...aArgs) const
     {
         const Type *prev;
 
-        return FindMatchingWithPrev(prev, aIndicator);
+        return FindMatchingWithPrev(prev, aArgs...);
     }
 
     /**
-     * Searches within the linked list to find an entry matching a given indicator.
+     * Searches within the linked list to find an entry matching a set of conditions.
      *
-     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
-     * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
-     * `Type` entry in the list. The `Matches()` method should be provided by `Type` class accordingly:
+     * To check that an entry matches, the `Matches()` method is invoked on each `Type` entry in the list. The
+     * `Matches()` method with the same set of `Args` input types should be provided by the `Type` class accordingly:
      *
-     *     bool Type::Matches(const Indicator &aIndicator) const
+     *      bool Type::Matches(const Args &...) const
      *
-     * @param[in]  aIndicator  An indicator to match with entries in the list.
+     * @param[in]  aArgs  The args to pass to `Matches()`.
      *
      * @returns A pointer to the matching entry if one is found, or `nullptr` if no matching entry was found.
      */
-    template <typename Indicator> Type *FindMatching(const Indicator &aIndicator)
+    template <typename... Args> Type *FindMatching(const Args &...aArgs)
     {
-        return AsNonConst(AsConst(this)->FindMatching(aIndicator));
+        return AsNonConst(AsConst(this)->FindMatching(aArgs...));
     }
 
     /**

@@ -341,7 +341,7 @@ uint16_t Translator::ReleaseExpiredMappings(void)
 {
     LinkedList<AddressMapping> idleMappings;
 
-    mActiveAddressMappings.RemoveAllMatching(TimerMilli::GetNow(), idleMappings);
+    mActiveAddressMappings.RemoveAllMatching(idleMappings, TimerMilli::GetNow());
 
     return ReleaseMappings(idleMappings);
 }
