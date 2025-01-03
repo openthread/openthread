@@ -252,35 +252,61 @@ private:
     {
         friend Heap::Allocatable<CoapDtlsSession>;
 
-    private:
-        CoapDtlsSession(Instance &aInstance, Dtls::Transport &aDtlsTransport)
-            : Coap::SecureSession(aInstance, aDtlsTransport)
-        {
-            SetResourceHandler(&HandleResource);
-        }
+    public:
+        Error ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
+        void  Cleanup(void);
 
+    private:
+        class ForwardContext : public Heap::Allocatable<ForwardContext>, private ot::NonCopyable
+        {
+            friend class Heap::Allocatable<ForwardContext>;
+
+        public:
+            Error ToHeader(Coap::Message &aMessage, uint8_t aCode) const;
+
+            CoapDtlsSession &mSession;
+            uint16_t         mMessageId;
+            bool             mPetition : 1;
+            bool             mSeparate : 1;
+            uint8_t          mTokenLength : 4;
+            uint8_t          mType : 2;
+            uint8_t          mToken[Coap::Message::kMaxTokenLength];
+
+        private:
+            ForwardContext(CoapDtlsSession &aSesssion, const Coap::Message &aMessage, bool aPetition, bool aSeparate);
+        };
+
+        CoapDtlsSession(Instance &aInstance, Dtls::Transport &aDtlsTransport);
+
+        void  HandleTmfCommissionerKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+        void  HandleTmfRelayTx(Coap::Message &aMessage);
+        void  HandleTmfProxyTx(Coap::Message &aMessage);
+        void  HandleTmfDatasetGet(Coap::Message &aMessage, Uri aUri);
+        Error ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
+        void  SendErrorMessage(const ForwardContext &aForwardContext, Error aError);
+        void  SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, Error aError);
+
+        static void HandleConnected(ConnectEvent aEvent, void *aContext);
+        void        HandleConnected(ConnectEvent aEvent);
+        static void HandleCoapResponse(void                *aContext,
+                                       otMessage           *aMessage,
+                                       const otMessageInfo *aMessageInfo,
+                                       otError              aResult);
+        void HandleCoapResponse(const ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult);
+        static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
+        bool        HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
         static bool HandleResource(CoapBase               &aCoapBase,
                                    const char             *aUriPath,
                                    Coap::Message          &aMessage,
                                    const Ip6::MessageInfo &aMessageInfo);
         bool        HandleResource(const char *aUriPath, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    };
+        static void HandleTimer(Timer &aTimer);
+        void        HandleTimer(void);
 
-    class ForwardContext : public InstanceLocatorInit, public Heap::Allocatable<ForwardContext>
-    {
-    public:
-        Error    Init(Instance &aInstance, const Coap::Message &aMessage, bool aPetition, bool aSeparate);
-        bool     IsPetition(void) const { return mPetition; }
-        uint16_t GetMessageId(void) const { return mMessageId; }
-        Error    ToHeader(Coap::Message &aMessage, uint8_t aCode) const;
-
-    private:
-        uint16_t mMessageId;                             // The CoAP Message ID of the original request.
-        bool     mPetition : 1;                          // Whether the forwarding request is leader petition.
-        bool     mSeparate : 1;                          // Whether the original request expects separate response.
-        uint8_t  mTokenLength : 4;                       // The CoAP Token Length of the original request.
-        uint8_t  mType : 2;                              // The CoAP Type of the original request.
-        uint8_t  mToken[Coap::Message::kMaxTokenLength]; // The CoAP Token of the original request.
+        bool                       mIsActiveCommissioner;
+        TimerMilliContext          mTimer;
+        Ip6::Udp::Receiver         mUdpReceiver;
+        Ip6::Netif::UnicastAddress mCommissionerAloc;
     };
 
     void  Start(void) { IgnoreError(Start(kUdpPort)); }
@@ -288,15 +314,6 @@ private:
     Error Start(uint16_t aUdpPort, const uint8_t *aPsk, uint8_t aPskLength);
     void  Stop(void);
     void  HandleNotifierEvents(Events aEvents);
-    void  HandleTimeout(void);
-    Error ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
-    Error ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
-    void  SendErrorMessage(const ForwardContext &aForwardContext, Error aError);
-    void  SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, Error aError);
-    void  HandleTmfCommissionerKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void  HandleTmfRelayTx(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void  HandleTmfProxyTx(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void  HandleTmfDatasetGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -305,15 +322,9 @@ private:
     static void           HandleRemoveSession(void *aContext, SecureSession &aSesssion);
     void                  HandleRemoveSession(SecureSession &aSesssion);
 
-    static void HandleConnected(Dtls::Session::ConnectEvent aEvent, void *aContext);
-    void        HandleConnected(Dtls::Session::ConnectEvent aEvent);
-    static void HandleCoapResponse(void                *aContext,
-                                   otMessage           *aMessage,
-                                   const otMessageInfo *aMessageInfo,
-                                   otError              aResult);
-    void HandleCoapResponse(const ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult);
-    static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    bool        HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleSessionConnected(CoapDtlsSession &aSesssion);
+    void HandleSessionDisconnected(CoapDtlsSession &aSesssion, CoapDtlsSession::ConnectEvent aEvent);
+    void HandleCommissionerPetitionAccepted(CoapDtlsSession &aSesssion);
 
     static Coap::Message::Code CoapCodeFromError(Error aError);
 
@@ -325,18 +336,14 @@ private:
     void        HandleDtlsTransportClosed(void);
 #endif
 
-    using TimeoutTimer = TimerMilliIn<BorderAgent, &BorderAgent::HandleTimeout>;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     using EphemeralKeyTimer = TimerMilliIn<BorderAgent, &BorderAgent::HandleEphemeralKeyTimeout>;
     using EphemeralKeyTask  = TaskletIn<BorderAgent, &BorderAgent::InvokeEphemeralKeyCallback>;
 #endif
 
-    State                      mState;
-    Ip6::Udp::Receiver         mUdpReceiver;
-    Ip6::Netif::UnicastAddress mCommissionerAloc;
-    TimeoutTimer               mTimer;
-    Dtls::Transport            mDtlsTransport;
-    CoapDtlsSession           *mCoapDtlsSession;
+    State            mState;
+    Dtls::Transport  mDtlsTransport;
+    CoapDtlsSession *mCoapDtlsSession;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     Id   mId;
     bool mIdInitialized;
