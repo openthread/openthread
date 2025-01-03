@@ -345,7 +345,8 @@ private:
     bool mIdInitialized;
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    bool                           mUsingEphemeralKey;
+    bool                           mUsingEphemeralKey : 1;
+    bool                           mDidConnectWithEphemeralKey : 1;
     uint16_t                       mOldUdpPort;
     EphemeralKeyTimer              mEphemeralKeyTimer;
     EphemeralKeyTask               mEphemeralKeyTask;

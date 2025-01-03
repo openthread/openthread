@@ -56,6 +56,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     , mUsingEphemeralKey(false)
+    , mDidConnectWithEphemeralKey(false)
     , mOldUdpPort(0)
     , mEphemeralKeyTimer(aInstance)
     , mEphemeralKeyTask(aInstance)
@@ -250,6 +251,7 @@ void BorderAgent::HandleConnected(Dtls::Session::ConnectEvent aEvent)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
         if (mUsingEphemeralKey)
         {
+            mDidConnectWithEphemeralKey = true;
             mCounters.mEpskcSecureSessionSuccesses++;
             mEphemeralKeyTask.Post();
         }
@@ -268,7 +270,10 @@ void BorderAgent::HandleConnected(Dtls::Session::ConnectEvent aEvent)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
         if (mUsingEphemeralKey)
         {
-            RestartAfterRemovingEphemeralKey();
+            if (mDidConnectWithEphemeralKey)
+            {
+                RestartAfterRemovingEphemeralKey();
+            }
 
             if (aEvent == Dtls::Session::kDisconnectedError)
             {
@@ -739,7 +744,8 @@ Error BorderAgent::SetEphemeralKey(const char *aKeyString, uint32_t aTimeout, ui
     // callbacks (like `HandleConnected()`) may be invoked from
     // `Start()` itself.
 
-    mUsingEphemeralKey = true;
+    mUsingEphemeralKey          = true;
+    mDidConnectWithEphemeralKey = false;
 
     error = Start(aUdpPort, reinterpret_cast<const uint8_t *>(aKeyString), static_cast<uint8_t>(length));
 
