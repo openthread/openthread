@@ -33,18 +33,7 @@
 
 #include "ip6_address.hpp"
 
-#include <stdio.h>
-
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/encoding.hpp"
-#include "common/num_utils.hpp"
-#include "common/numeric_limits.hpp"
-#include "common/random.hpp"
 #include "instance/instance.hpp"
-#include "net/ip4_types.hpp"
-#include "net/netif.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -215,7 +204,7 @@ void Prefix::ToString(char *aBuffer, uint16_t aSize) const
 
 void Prefix::ToString(StringWriter &aWriter) const
 {
-    uint8_t sizeInUint16 = (GetBytesSize() + sizeof(uint16_t) - 1) / sizeof(uint16_t);
+    uint8_t sizeInUint16 = DivideAndRoundUp<uint8_t>(GetBytesSize(), sizeof(uint16_t));
     Prefix  tidyPrefix   = *this;
 
     tidyPrefix.Tidy();

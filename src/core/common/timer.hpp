@@ -58,12 +58,10 @@ namespace ot {
  *   This module includes definitions for the multiplexed timer service.
  *
  * @{
- *
  */
 
 /**
  * Represents an object tracking the next fire time along with the current time (now).
- *
  */
 class NextFireTime
 {
@@ -72,13 +70,11 @@ public:
      * Initializes the `NextFireTime` with a given current time.
      *
      * @pram[in] aNow    The current time.
-     *
      */
     explicit NextFireTime(Time aNow);
 
     /**
      * Initializes the `NextFireTime` using `TimerMilli::GetNow()` for current time.
-     *
      */
     NextFireTime(void);
 
@@ -86,7 +82,6 @@ public:
      * Gets the current time (now) tracked by the `NextFireTime` object.
      *
      * @returns The current time.
-     *
      */
     Time GetNow(void) const { return mNow; }
 
@@ -97,16 +92,29 @@ public:
      * This ensures that the next fire time is never scheduled before the current time.
      *
      * @param[in] aTime   The new time.
-     *
      */
     void UpdateIfEarlier(Time aTime);
+
+    /**
+     * Updates the tracked next fire time with a new given time, but only if it is earlier than the current
+     * fire time and in the future relative to `GetNow()`.
+     *
+     * If the given @p aTime is not in the future relative to `GetNow()`, it is ignored. This is unlike
+     * `UpdateIfEarlier()`, which allows all `aTime` values, including ones that are in the past (where it uses
+     * `GetNow()`).
+     *
+     * This method can be used to track the next fire time among non-expired times, ensuring the tracked next fire time
+     * will be in the future relative to `GetNow()`.
+     *
+     * @param[in] aTime     The new time.
+     */
+    void UpdateIfEarlierAndInFuture(Time aTime);
 
     /**
      * Indicates whether or not next fire time is set.
      *
      * @retval TRUE   The next fire time is set.
      * @retval FALSE  The next fire time is not set.
-     *
      */
     bool IsSet(void) const { return (mNextTime != mNow.GetDistantFuture()); }
 
@@ -116,7 +124,6 @@ public:
      * If the next fire time is not, `GetNow().GetDistantFuture()` will be returned.
      *
      * @returns The next fire time.
-     *
      */
     Time GetNextTime(void) const { return mNextTime; }
 
@@ -127,7 +134,6 @@ private:
 
 /**
  * Implements a timer.
- *
  */
 class Timer : public InstanceLocator, public LinkedListEntry<Timer>
 {
@@ -136,7 +142,6 @@ class Timer : public InstanceLocator, public LinkedListEntry<Timer>
 public:
     /**
      * This constant defines maximum delay allowed when starting a timer.
-     *
      */
     static const uint32_t kMaxDelay = (Time::kMaxDuration >> 1);
 
@@ -144,7 +149,6 @@ public:
      * Defines a function reference which is invoked when the timer expires.
      *
      * @param[in]  aTimer    A reference to the expired timer instance.
-     *
      */
     typedef void (&Handler)(Timer &aTimer);
 
@@ -152,7 +156,6 @@ public:
      * Returns the fire time of the timer.
      *
      * @returns The fire time.
-     *
      */
     Time GetFireTime(void) const { return mFireTime; }
 
@@ -161,7 +164,6 @@ public:
      *
      * @retval TRUE   If the timer is running.
      * @retval FALSE  If the timer is not running.
-     *
      */
     bool IsRunning(void) const { return (mNext != this); }
 
@@ -211,14 +213,12 @@ extern "C" void otPlatAlarmMilliFired(otInstance *aInstance);
 
 /**
  * Implements the millisecond timer.
- *
  */
 class TimerMilli : public Timer
 {
 public:
     /**
      * Implements the millisecond timer scheduler.
-     *
      */
     class Scheduler : private Timer::Scheduler
     {
@@ -230,7 +230,6 @@ public:
          * Initializes the object.
          *
          * @param[in]  aInstance  A reference to the instance object.
-         *
          */
         explicit Scheduler(Instance &aInstance)
             : Timer::Scheduler(aInstance)
@@ -251,7 +250,6 @@ public:
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
-     *
      */
     TimerMilli(Instance &aInstance, Handler aHandler)
         : Timer(aInstance, aHandler)
@@ -262,7 +260,6 @@ public:
      * Schedules the timer to fire after a given delay (in milliseconds) from now.
      *
      * @param[in]  aDelay   The delay in milliseconds. It must not be longer than `kMaxDelay`.
-     *
      */
     void Start(uint32_t aDelay);
 
@@ -271,7 +268,6 @@ public:
      *
      * @param[in]  aStartTime  The start time.
      * @param[in]  aDelay      The delay in milliseconds. It must not be longer than `kMaxDelay`.
-     *
      */
     void StartAt(TimeMilli aStartTime, uint32_t aDelay);
 
@@ -279,7 +275,6 @@ public:
      * Schedules the timer to fire at a given fire time.
      *
      * @param[in]  aFireTime  The fire time.
-     *
      */
     void FireAt(TimeMilli aFireTime);
 
@@ -289,7 +284,6 @@ public:
      * Is @p aNextFireTime is not set, the timer is stopped.
      *
      * @param[in]  aNextFireTime  The fire time.
-     *
      */
     void FireAt(const NextFireTime &aNextFireTime);
 
@@ -298,7 +292,6 @@ public:
      * fire time is earlier than the current fire time.
      *
      * @param[in]  aFireTime  The fire time.
-     *
      */
     void FireAtIfEarlier(TimeMilli aFireTime);
 
@@ -307,13 +300,11 @@ public:
      * fire time is earlier than the current fire time.
      *
      * @param[in]  aNextFireTime  The fire time.
-     *
      */
     void FireAtIfEarlier(const NextFireTime &aNextFireTime);
 
     /**
      * Stops the timer.
-     *
      */
     void Stop(void);
 
@@ -321,7 +312,6 @@ public:
      * Returns the current time in milliseconds.
      *
      * @returns The current time in milliseconds.
-     *
      */
     static TimeMilli GetNow(void) { return TimeMilli(otPlatAlarmMilliGetNow()); }
 
@@ -336,7 +326,6 @@ protected:
  * @tparam HandleTimerPtr     A pointer to a non-static member method of `Owner` to use as timer handler.
  *
  * The `Owner` MUST be a type that is accessible using `InstanceLocator::Get<Owner>()`.
- *
  */
 template <typename Owner, void (Owner::*HandleTimerPtr)(void)> class TimerMilliIn : public TimerMilli
 {
@@ -345,7 +334,6 @@ public:
      * Initializes the timer.
      *
      * @param[in]  aInstance   The OpenThread instance.
-     *
      */
     explicit TimerMilliIn(Instance &aInstance)
         : TimerMilli(aInstance, HandleTimer)
@@ -353,7 +341,7 @@ public:
     }
 
 private:
-    static void HandleTimer(Timer &aTimer); // Implemented in `locator_getters.hpp`
+    static void HandleTimer(Timer &aTimer); // Implemented in `instance.hpp`
 };
 
 /**
@@ -363,7 +351,6 @@ private:
  * `GetOwner<Type>` method. This method works if there is a single instance of `Type` within OpenThread instance
  * hierarchy. The `TimerMilliContext` is intended for cases where there may be multiple instances of the same class/type
  * using a timer object. `TimerMilliContext` will store a context `void *` information.
- *
  */
 class TimerMilliContext : public TimerMilli
 {
@@ -374,7 +361,6 @@ public:
      * @param[in]  aInstance   A reference to the OpenThread instance.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
      * @param[in]  aContext    A pointer to an arbitrary context information.
-     *
      */
     TimerMilliContext(Instance &aInstance, Handler aHandler, void *aContext)
         : TimerMilli(aInstance, aHandler)
@@ -386,7 +372,6 @@ public:
      * Returns the pointer to the arbitrary context information.
      *
      * @returns Pointer to the arbitrary context information.
-     *
      */
     void *GetContext(void) { return mContext; }
 
@@ -400,14 +385,12 @@ extern "C" void otPlatAlarmMicroFired(otInstance *aInstance);
 
 /**
  * Implements the microsecond timer.
- *
  */
 class TimerMicro : public Timer
 {
 public:
     /**
      * Implements the microsecond timer scheduler.
-     *
      */
     class Scheduler : private Timer::Scheduler
     {
@@ -419,7 +402,6 @@ public:
          * Initializes the object.
          *
          * @param[in]  aInstance  A reference to the instance object.
-         *
          */
         explicit Scheduler(Instance &aInstance)
             : Timer::Scheduler(aInstance)
@@ -440,7 +422,6 @@ public:
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
-     *
      */
     TimerMicro(Instance &aInstance, Handler aHandler)
         : Timer(aInstance, aHandler)
@@ -451,7 +432,6 @@ public:
      * Schedules the timer to fire after a given delay (in microseconds) from now.
      *
      * @param[in]  aDelay   The delay in microseconds. It must not be be longer than `kMaxDelay`.
-     *
      */
     void Start(uint32_t aDelay);
 
@@ -460,7 +440,6 @@ public:
      *
      * @param[in]  aStartTime  The start time.
      * @param[in]  aDelay      The delay in microseconds. It must not be longer than `kMaxDelay`.
-     *
      */
     void StartAt(TimeMicro aStartTime, uint32_t aDelay);
 
@@ -468,13 +447,11 @@ public:
      * Schedules the timer to fire at a given fire time.
      *
      * @param[in]  aFireTime  The fire time.
-     *
      */
     void FireAt(TimeMicro aFireTime);
 
     /**
      * Stops the timer.
-     *
      */
     void Stop(void);
 
@@ -482,7 +459,6 @@ public:
      * Returns the current time in microseconds.
      *
      * @returns The current time in microseconds.
-     *
      */
     static TimeMicro GetNow(void) { return Time(otPlatAlarmMicroGetNow()); }
 
@@ -497,7 +473,6 @@ protected:
  * @tparam HandleTimerPtr     A pointer to a non-static member method of `Owner` to use as timer handler.
  *
  * The `Owner` MUST be a type that is accessible using `InstanceLocator::Get<Owner>()`.
- *
  */
 template <typename Owner, void (Owner::*HandleTimerPtr)(void)> class TimerMicroIn : public TimerMicro
 {
@@ -506,7 +481,6 @@ public:
      * Initializes the timer.
      *
      * @param[in]  aInstance   The OpenThread instance.
-     *
      */
     explicit TimerMicroIn(Instance &aInstance)
         : TimerMicro(aInstance, HandleTimer)
@@ -514,14 +488,13 @@ public:
     }
 
 private:
-    static void HandleTimer(Timer &aTimer); // Implemented in `locator_getters.hpp`
+    static void HandleTimer(Timer &aTimer); // Implemented in `instance.hpp`
 };
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
 /**
  * @}
- *
  */
 
 } // namespace ot

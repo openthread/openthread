@@ -31,7 +31,6 @@
 
 /**
  * This header file defines the OpenThread core configuration options for toranj with POSIX platform.
- *
  */
 
 // Include the common configuration for all platforms.

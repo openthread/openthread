@@ -33,20 +33,7 @@
 
 #include "address_resolver.hpp"
 
-#include "coap/coap_message.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/time.hpp"
 #include "instance/instance.hpp"
-#include "mac/mac_types.hpp"
-#include "thread/mesh_forwarder.hpp"
-#include "thread/mle_router.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/uri_paths.hpp"
 
 namespace ot {
 
@@ -214,7 +201,7 @@ AddressResolver::CacheEntry *AddressResolver::FindCacheEntry(const Ip6::Address 
     for (CacheEntryList *list : lists)
     {
         aList = list;
-        entry = aList->FindMatching(aEid, aPrevEntry);
+        entry = aList->FindMatchingWithPrev(aPrevEntry, aEid);
         VerifyOrExit(entry == nullptr);
     }
 
@@ -1104,18 +1091,26 @@ void AddressResolver::LogCacheEntryChange(EntryChange       aChange,
         "removing eid",           // (7) kReasonRemovingEid
     };
 
-    static_assert(0 == kEntryAdded, "kEntryAdded value is incorrect");
-    static_assert(1 == kEntryUpdated, "kEntryUpdated value is incorrect");
-    static_assert(2 == kEntryRemoved, "kEntryRemoved value is incorrect");
+    struct ChangeEnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kEntryAdded);
+        ValidateNextEnum(kEntryUpdated);
+        ValidateNextEnum(kEntryRemoved);
+    };
 
-    static_assert(0 == kReasonQueryRequest, "kReasonQueryRequest value is incorrect");
-    static_assert(1 == kReasonSnoop, "kReasonSnoop value is incorrect");
-    static_assert(2 == kReasonReceivedNotification, "kReasonReceivedNotification value is incorrect");
-    static_assert(3 == kReasonRemovingRouterId, "kReasonRemovingRouterId value is incorrect");
-    static_assert(4 == kReasonRemovingRloc16, "kReasonRemovingRloc16 value is incorrect");
-    static_assert(5 == kReasonReceivedIcmpDstUnreachNoRoute, "kReasonReceivedIcmpDstUnreachNoRoute value is incorrect");
-    static_assert(6 == kReasonEvictingForNewEntry, "kReasonEvictingForNewEntry value is incorrect");
-    static_assert(7 == kReasonRemovingEid, "kReasonRemovingEid value is incorrect");
+    struct ReasonEnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kReasonQueryRequest);
+        ValidateNextEnum(kReasonSnoop);
+        ValidateNextEnum(kReasonReceivedNotification);
+        ValidateNextEnum(kReasonRemovingRouterId);
+        ValidateNextEnum(kReasonRemovingRloc16);
+        ValidateNextEnum(kReasonReceivedIcmpDstUnreachNoRoute);
+        ValidateNextEnum(kReasonEvictingForNewEntry);
+        ValidateNextEnum(kReasonRemovingEid);
+    };
 
     LogInfo("Cache entry %s: %s, 0x%04x%s%s - %s", kChangeStrings[aChange], aEntry.GetTarget().ToString().AsCString(),
             aEntry.GetRloc16(), (aList == nullptr) ? "" : ", list:", ListToString(aList), kReasonStrings[aReason]);

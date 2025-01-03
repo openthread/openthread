@@ -59,7 +59,7 @@
 #include <openthread/server.h>
 #endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-#include "openthread/backbone_router.h"
+#include <openthread/backbone_router.h>
 #endif
 #if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
 #include <openthread/srp_client_buffers.h>
@@ -1372,26 +1372,24 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PENDING_DATASE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ACTIVE_DATASET_TLVS>(void)
 {
-    otError                  error = OT_ERROR_NONE;
     otOperationalDatasetTlvs dataset;
 
-    SuccessOrExit(error = otDatasetGetActiveTlvs(mInstance, &dataset));
-    SuccessOrExit(error = mEncoder.WriteData(dataset.mTlvs, dataset.mLength));
-
-exit:
-    return error;
+    if (otDatasetGetActiveTlvs(mInstance, &dataset) != OT_ERROR_NONE)
+    {
+        dataset.mLength = 0;
+    }
+    return mEncoder.WriteData(dataset.mTlvs, dataset.mLength);
 }
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PENDING_DATASET_TLVS>(void)
 {
-    otError                  error = OT_ERROR_NONE;
     otOperationalDatasetTlvs dataset;
 
-    SuccessOrExit(error = otDatasetGetPendingTlvs(mInstance, &dataset));
-    SuccessOrExit(error = mEncoder.WriteData(dataset.mTlvs, dataset.mLength));
-
-exit:
-    return error;
+    if (otDatasetGetPendingTlvs(mInstance, &dataset) != OT_ERROR_NONE)
+    {
+        dataset.mLength = 0;
+    }
+    return mEncoder.WriteData(dataset.mTlvs, dataset.mLength);
 }
 
 otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
@@ -4600,11 +4598,17 @@ void NcpBase::HandlePcapFrame(const otRadioFrame *aFrame, bool aIsTx)
     SuccessOrExit(mEncoder.WriteData(aFrame->mPsdu, aFrame->mLength));
 
     // Append metadata (rssi, etc)
-    SuccessOrExit(mEncoder.WriteInt8(aFrame->mInfo.mRxInfo.mRssi)); // RSSI
-    SuccessOrExit(mEncoder.WriteInt8(-128));                        // Noise floor (Currently unused)
-    SuccessOrExit(mEncoder.WriteUint16(flags));                     // Flags
+    SuccessOrExit(
+        mEncoder.WriteInt8((aIsTx ? static_cast<int8_t>(OT_RADIO_RSSI_INVALID) : aFrame->mInfo.mRxInfo.mRssi))); // RSSI
+    SuccessOrExit(mEncoder.WriteInt8(-128));    // Noise floor (Currently unused)
+    SuccessOrExit(mEncoder.WriteUint16(flags)); // Flags
 
-    SuccessOrExit(mEncoder.OpenStruct()); // PHY-data
+    SuccessOrExit(mEncoder.OpenStruct());                 // PHY-data
+    SuccessOrExit(mEncoder.WriteUint8(aFrame->mChannel)); // Channel
+    SuccessOrExit(
+        mEncoder.WriteUint8(aIsTx ? static_cast<uint8_t>(OT_RADIO_LQI_NONE) : aFrame->mInfo.mRxInfo.mLqi)); // LQI
+    SuccessOrExit(
+        mEncoder.WriteUint64(aIsTx ? aFrame->mInfo.mTxInfo.mTimestamp : aFrame->mInfo.mRxInfo.mTimestamp)); // Timestamp
     // Empty for now
     SuccessOrExit(mEncoder.CloseStruct());
 
@@ -4786,6 +4790,26 @@ void NcpBase::ProcessThreadChangedFlags(void)
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_WAKEUP_CHANNEL>(void)
+{
+    uint8_t wakeupChannel;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(wakeupChannel));
+
+    error = otLinkSetWakeupChannel(mInstance, wakeupChannel);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_WAKEUP_CHANNEL>(void)
+{
+    return mEncoder.WriteUint8(otLinkGetWakeupChannel(mInstance));
+}
+#endif
 
 } // namespace Ncp
 } // namespace ot

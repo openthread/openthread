@@ -55,7 +55,6 @@ namespace BackboneRouter {
 
 /**
  * Implements NdProxy Table maintenance on Primary Backbone Router.
- *
  */
 class NdProxyTable : public InstanceLocator, private NonCopyable
 {
@@ -64,7 +63,6 @@ public:
 
     /**
      * Represents a ND Proxy instance.
-     *
      */
     class NdProxy : private Clearable<NdProxy>
     {
@@ -76,7 +74,6 @@ public:
 
         /**
          * Represents the ND Proxy events.
-         *
          */
         enum Event
         {
@@ -90,7 +87,6 @@ public:
          * Gets the Mesh-Local IID of the ND Proxy.
          *
          * @returns  The Mesh-Local IID.
-         *
          */
         const Ip6::InterfaceIdentifier &GetMeshLocalIid(void) const { return mMeshLocalIid; }
 
@@ -98,7 +94,6 @@ public:
          * Gets the time since last transaction of the ND Proxy.
          *
          * @returns  The time since last transaction in seconds.
-         *
          */
         uint32_t GetTimeSinceLastTransaction(void) const
         {
@@ -109,7 +104,6 @@ public:
          * Gets the short address of the device who sends the DUA registration.
          *
          * @returns  The RLOC16 value.
-         *
          */
         uint16_t GetRloc16(void) const { return mRloc16; }
 
@@ -117,7 +111,6 @@ public:
          * Gets the DAD flag of the ND Proxy.
          *
          * @returns  The DAD flag.
-         *
          */
         bool GetDadFlag(void) const { return mDadFlag; }
 
@@ -150,7 +143,6 @@ public:
      * Initializes the `NdProxyTable` object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit NdProxyTable(Instance &aInstance)
         : InstanceLocator(aInstance)
@@ -169,7 +161,6 @@ public:
      * @retval kErrorNone        If registered successfully.
      * @retval kErrorDuplicated  If the IPv6 address IID is a duplicate.
      * @retval kErrorNoBufs      Insufficient buffer space available to register.
-     *
      */
     Error Register(const Ip6::InterfaceIdentifier &aAddressIid,
                    const Ip6::InterfaceIdentifier &aMeshLocalIid,
@@ -183,7 +174,6 @@ public:
      *
      * @retval TRUE   If the IPv6 address IID was registered.
      * @retval FALSE  If the IPv6 address IID was not registered.
-     *
      */
     bool IsRegistered(const Ip6::InterfaceIdentifier &aAddressIid) { return FindByAddressIid(aAddressIid) != nullptr; }
 
@@ -191,13 +181,11 @@ public:
      * Notifies Domain Prefix event.
      *
      * @param[in]  aEvent  The Domain Prefix event.
-     *
      */
     void HandleDomainPrefixUpdate(DomainPrefixEvent aEvent);
 
     /**
      * Notifies ND Proxy table of the timer tick.
-     *
      */
     void HandleTimer(void);
 
@@ -207,7 +195,6 @@ public:
      * @param[in] aDua  The Domain Unicast Address.
      *
      * @returns The `NdProxy` instance matching the specified @p aDua, or nullptr if not found.
-     *
      */
     NdProxy *ResolveDua(const Ip6::Address &aDua);
 
@@ -216,7 +203,6 @@ public:
      *
      * @param[in] aNdProxy      The ND Proxy to notify of.
      * @param[in] aDuplicated   Whether duplicate was detected.
-     *
      */
     static void NotifyDadComplete(NdProxy &aNdProxy, bool aDuplicated);
 
@@ -224,7 +210,6 @@ public:
      * Removes the ND Proxy.
      *
      * @param[in] aNdProxy      The ND Proxy to remove.
-     *
      */
     static void Erase(NdProxy &aNdProxy);
 
@@ -233,7 +218,6 @@ public:
      *
      * @param[in] aCallback  The callback function.
      * @param[in] aContext   A user context pointer.
-     *
      */
     void SetCallback(NdProxy::Callback aCallback, void *aContext) { mCallback.Set(aCallback, aContext); }
 
@@ -245,7 +229,6 @@ public:
      *
      * @retval kErrorNone       Successfully retrieve the ND Proxy info.
      * @retval kErrorNotFound   Failed to find the Domain Unicast Address in the ND Proxy table.
-     *
      */
     Error GetInfo(const Ip6::Address &aDua, otBackboneRouterNdProxyInfo &aNdProxyInfo);
 
@@ -261,7 +244,6 @@ private:
 
     /**
      * Represents an iterator for iterating through the NdProxy Table.
-     *
      */
     class Iterator : public InstanceLocator, public ItemPtrIterator<NdProxy, Iterator>
     {

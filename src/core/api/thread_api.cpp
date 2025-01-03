@@ -35,13 +35,7 @@
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
-#include <openthread/thread.h>
-
-#include "common/as_core_type.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/uptime.hpp"
-#include "thread/version.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -481,6 +475,13 @@ const otMleCounters *otThreadGetMleCounters(otInstance *aInstance)
 
 void otThreadResetMleCounters(otInstance *aInstance) { AsCoreType(aInstance).Get<Mle::MleRouter>().ResetCounters(); }
 
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+uint32_t otThreadGetCurrentAttachDuration(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetCurrentAttachDuration();
+}
+#endif
+
 #if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
 void otThreadRegisterParentResponseCallback(otInstance                    *aInstance,
                                             otThreadParentResponseCallback aCallback,
@@ -509,6 +510,31 @@ otError otThreadDetachGracefully(otInstance *aInstance, otDetachGracefullyCallba
 {
     return AsCoreType(aInstance).Get<Mle::MleRouter>().DetachGracefully(aCallback, aContext);
 }
+
+#if OPENTHREAD_CONFIG_DYNAMIC_STORE_FRAME_AHEAD_COUNTER_ENABLE
+void otThreadSetStoreFrameCounterAhead(otInstance *aInstance, uint32_t aStoreFrameCounterAhead)
+{
+    return AsCoreType(aInstance).Get<Mle::Mle>().SetStoreFrameCounterAhead(aStoreFrameCounterAhead);
+}
+
+uint32_t otThreadGetStoreFrameCounterAhead(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mle::Mle>().GetStoreFrameCounterAhead();
+}
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+otError otThreadWakeup(otInstance         *aInstance,
+                       const otExtAddress *aWedAddress,
+                       uint16_t            aWakeupIntervalUs,
+                       uint16_t            aWakeupDurationMs,
+                       otWakeupCallback    aCallback,
+                       void               *aCallbackContext)
+{
+    return AsCoreType(aInstance).Get<Mle::Mle>().Wakeup(AsCoreType(aWedAddress), aWakeupIntervalUs, aWakeupDurationMs,
+                                                        aCallback, aCallbackContext);
+}
+#endif
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 

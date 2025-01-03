@@ -46,14 +46,12 @@ extern "C" {
  * The functions in this module are available when `OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE` is enabled.
  *
  * @{
- *
  */
 
 /**
  * This constant specifies the maximum age of entries which is 49 days (in msec).
  *
  * Entries older than the max age will give this value as their age.
- *
  */
 #define OT_HISTORY_TRACKER_MAX_AGE (49 * 24 * 60 * 60 * 1000u)
 
@@ -66,7 +64,6 @@ extern "C" {
  * by caller.
  *
  * Before using an iterator, it MUST be initialized using `otHistoryTrackerInitIterator()`,
- *
  */
 typedef struct otHistoryTrackerIterator
 {
@@ -76,7 +73,6 @@ typedef struct otHistoryTrackerIterator
 
 /**
  * Represents Thread network info.
- *
  */
 typedef struct otHistoryTrackerNetworkInfo
 {
@@ -89,7 +85,6 @@ typedef struct otHistoryTrackerNetworkInfo
 /**
  * Defines the events for an IPv6 (unicast or multicast) address info (i.e., whether address is added
  * or removed).
- *
  */
 typedef enum
 {
@@ -99,7 +94,6 @@ typedef enum
 
 /**
  * Represent a unicast IPv6 address info.
- *
  */
 typedef struct otHistoryTrackerUnicastAddressInfo
 {
@@ -115,7 +109,6 @@ typedef struct otHistoryTrackerUnicastAddressInfo
 
 /**
  * Represent an IPv6 multicast address info.
- *
  */
 typedef struct otHistoryTrackerMulticastAddressInfo
 {
@@ -126,7 +119,6 @@ typedef struct otHistoryTrackerMulticastAddressInfo
 
 /**
  * Constants representing message priority used in `otHistoryTrackerMessageInfo` struct.
- *
  */
 enum
 {
@@ -141,7 +133,6 @@ enum
  *
  * Some of the fields in this struct are applicable to a RX message or a TX message only, e.g., `mAveRxRss` is the
  * average RSS of all fragment frames that form a received message and is only applicable for a RX message.
- *
  */
 typedef struct otHistoryTrackerMessageInfo
 {
@@ -166,7 +157,6 @@ typedef struct otHistoryTrackerMessageInfo
  * Event `OT_HISTORY_TRACKER_NEIGHBOR_EVENT_RESTORING` is applicable to child neighbors only. It is triggered after
  * the device (re)starts and when the previous children list is retrieved from non-volatile settings and the device
  * tries to restore connection to them.
- *
  */
 typedef enum
 {
@@ -178,7 +168,6 @@ typedef enum
 
 /**
  * Represents a neighbor info.
- *
  */
 typedef struct otHistoryTrackerNeighborInfo
 {
@@ -194,7 +183,6 @@ typedef struct otHistoryTrackerNeighborInfo
 
 /**
  * Defines the events in a router info (i.e. whether router is added, removed, or changed).
- *
  */
 typedef enum
 {
@@ -210,7 +198,6 @@ typedef enum
 
 /**
  * Represents a router table entry event.
- *
  */
 typedef struct otHistoryTrackerRouterInfo
 {
@@ -223,7 +210,6 @@ typedef struct otHistoryTrackerRouterInfo
 
 /**
  * Defines the events for a Network Data entry (i.e., whether an entry is added or removed).
- *
  */
 typedef enum
 {
@@ -233,7 +219,6 @@ typedef enum
 
 /**
  * Represent a Network Data on mesh prefix info.
- *
  */
 typedef struct otHistoryTrackerOnMeshPrefixInfo
 {
@@ -243,7 +228,6 @@ typedef struct otHistoryTrackerOnMeshPrefixInfo
 
 /**
  * Represent a Network Data extern route info.
- *
  */
 typedef struct otHistoryTrackerExternalRouteInfo
 {
@@ -263,7 +247,6 @@ typedef struct otHistoryTrackerExternalRouteInfo
  * (when entry was recorded) to the iterator initialization time.
  *
  * @param[in] aIterator  A pointer to the iterator to initialize (MUST NOT be NULL).
- *
  */
 void otHistoryTrackerInitIterator(otHistoryTrackerIterator *aIterator);
 
@@ -278,7 +261,6 @@ void otHistoryTrackerInitIterator(otHistoryTrackerIterator *aIterator);
  *                            older than max age.
  *
  * @returns A pointer to `otHistoryTrackerNetworkInfo` entry or `NULL` if no more entries in the list.
- *
  */
 const otHistoryTrackerNetworkInfo *otHistoryTrackerIterateNetInfoHistory(otInstance               *aInstance,
                                                                          otHistoryTrackerIterator *aIterator,
@@ -295,7 +277,6 @@ const otHistoryTrackerNetworkInfo *otHistoryTrackerIterateNetInfoHistory(otInsta
  *                           older than max age.
  *
  * @returns A pointer to `otHistoryTrackerUnicastAddressInfo` entry or `NULL` if no more entries in the list.
- *
  */
 const otHistoryTrackerUnicastAddressInfo *otHistoryTrackerIterateUnicastAddressHistory(
     otInstance               *aInstance,
@@ -313,7 +294,6 @@ const otHistoryTrackerUnicastAddressInfo *otHistoryTrackerIterateUnicastAddressH
  *                           older than max age.
  *
  * @returns A pointer to `otHistoryTrackerMulticastAddressInfo` entry or `NULL` if no more entries in the list.
- *
  */
 const otHistoryTrackerMulticastAddressInfo *otHistoryTrackerIterateMulticastAddressHistory(
     otInstance               *aInstance,
@@ -331,7 +311,6 @@ const otHistoryTrackerMulticastAddressInfo *otHistoryTrackerIterateMulticastAddr
  *                           older than max age.
  *
  * @returns The `otHistoryTrackerMessageInfo` entry or `NULL` if no more entries in the list.
- *
  */
 const otHistoryTrackerMessageInfo *otHistoryTrackerIterateRxHistory(otInstance               *aInstance,
                                                                     otHistoryTrackerIterator *aIterator,
@@ -348,7 +327,6 @@ const otHistoryTrackerMessageInfo *otHistoryTrackerIterateRxHistory(otInstance  
  *                           older than max age.
  *
  * @returns The `otHistoryTrackerMessageInfo` entry or `NULL` if no more entries in the list.
- *
  */
 const otHistoryTrackerMessageInfo *otHistoryTrackerIterateTxHistory(otInstance               *aInstance,
                                                                     otHistoryTrackerIterator *aIterator,
@@ -365,7 +343,6 @@ const otHistoryTrackerMessageInfo *otHistoryTrackerIterateTxHistory(otInstance  
  *                           older than max age.
  *
  * @returns The `otHistoryTrackerNeighborInfo` entry or `NULL` if no more entries in the list.
- *
  */
 const otHistoryTrackerNeighborInfo *otHistoryTrackerIterateNeighborHistory(otInstance               *aInstance,
                                                                            otHistoryTrackerIterator *aIterator,
@@ -382,7 +359,6 @@ const otHistoryTrackerNeighborInfo *otHistoryTrackerIterateNeighborHistory(otIns
  *                           older than max age.
  *
  * @returns The `otHistoryTrackerRouterInfo` entry or `NULL` if no more entries in the list.
- *
  */
 const otHistoryTrackerRouterInfo *otHistoryTrackerIterateRouterHistory(otInstance               *aInstance,
                                                                        otHistoryTrackerIterator *aIterator,
@@ -399,7 +375,6 @@ const otHistoryTrackerRouterInfo *otHistoryTrackerIterateRouterHistory(otInstanc
  *                           older than max age.
  *
  * @returns The `otHistoryTrackerOnMeshPrefixInfo` entry or `NULL` if no more entries in the list.
- *
  */
 const otHistoryTrackerOnMeshPrefixInfo *otHistoryTrackerIterateOnMeshPrefixHistory(otInstance               *aInstance,
                                                                                    otHistoryTrackerIterator *aIterator,
@@ -416,7 +391,6 @@ const otHistoryTrackerOnMeshPrefixInfo *otHistoryTrackerIterateOnMeshPrefixHisto
  *                           older than max age.
  *
  * @returns The `otHistoryTrackerExternalRouteInfo` entry or `NULL` if no more entries in the list.
- *
  */
 const otHistoryTrackerExternalRouteInfo *otHistoryTrackerIterateExternalRouteHistory(
     otInstance               *aInstance,
@@ -435,13 +409,11 @@ const otHistoryTrackerExternalRouteInfo *otHistoryTrackerIterateExternalRouteHis
  * @param[in]  aEntryAge The entry age (duration in msec).
  * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
  * @param[in]  aSize     The size of @p aBuffer. Recommended to use `OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE`.
- *
  */
 void otHistoryTrackerEntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

@@ -511,7 +511,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
         if params.get('is_bbr') or params.get('is_otbr'):
             # BBRs must not use thread version 1.1
-            version = params.get('version', '1.3')
+            version = params.get('version', '1.4')
             assert version != '1.1', params
             params['version'] = version
             params.setdefault('bbr_registration_jitter', config.DEFAULT_BBR_REGISTRATION_JITTER)
@@ -520,9 +520,9 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             assert params.get('version', '') == '', params
             params['version'] = ''
 
-        # use 1.3 node for 1.2 tests
+        # use 1.4 node for 1.2 tests
         if params.get('version') == '1.2':
-            params['version'] = '1.3'
+            params['version'] = '1.4'
 
         is_ftd = (not params.get('is_mtd') and not params.get('is_host'))
 

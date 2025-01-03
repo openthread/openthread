@@ -35,18 +35,7 @@
 
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 
-#include <openthread/platform/dns.h>
-
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/string.hpp"
 #include "instance/instance.hpp"
-#include "net/srp_server.hpp"
-#include "net/udp6.hpp"
 
 namespace ot {
 namespace Dns {
@@ -82,8 +71,8 @@ Error Server::Start(void)
 
     VerifyOrExit(!IsRunning());
 
-    SuccessOrExit(error = mSocket.Open());
-    SuccessOrExit(error = mSocket.Bind(kPort, kBindUnspecifiedNetif ? Ip6::kNetifUnspecified : Ip6::kNetifThread));
+    SuccessOrExit(error = mSocket.Open(kBindUnspecifiedNetif ? Ip6::kNetifUnspecified : Ip6::kNetifThreadInternal));
+    SuccessOrExit(error = mSocket.Bind(kPort));
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     Get<Srp::Server>().HandleDnssdServerStateChange();
@@ -748,12 +737,16 @@ const char *Server::Response::QueryTypeToString(QueryType aType)
         "A",         // (5) kAQuery
     };
 
-    static_assert(0 == kPtrQuery, "kPtrQuery value is incorrect");
-    static_assert(1 == kSrvQuery, "kSrvQuery value is incorrect");
-    static_assert(2 == kTxtQuery, "kTxtQuery value is incorrect");
-    static_assert(3 == kSrvTxtQuery, "kSrvTxtQuery value is incorrect");
-    static_assert(4 == kAaaaQuery, "kAaaaQuery value is incorrect");
-    static_assert(5 == kAQuery, "kAQuery value is incorrect");
+    struct EumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kPtrQuery);
+        ValidateNextEnum(kSrvQuery);
+        ValidateNextEnum(kTxtQuery);
+        ValidateNextEnum(kSrvTxtQuery);
+        ValidateNextEnum(kAaaaQuery);
+        ValidateNextEnum(kAQuery);
+    };
 
     return kTypeNames[aType];
 }
@@ -1132,18 +1125,6 @@ void Server::ConstructFullServiceSubTypeName(const char   *aServiceType,
     StringWriter fullName(aFullName, sizeof(aFullName));
 
     fullName.Append("%s._sub.%s.%s", aSubTypeLabel, aServiceType, kDefaultDomainName);
-}
-
-void Server::ProxyQueryInfo::ReadFrom(const ProxyQuery &aQuery)
-{
-    SuccessOrAssert(aQuery.Read(aQuery.GetLength() - sizeof(ProxyQueryInfo), *this));
-}
-
-void Server::ProxyQueryInfo::RemoveFrom(ProxyQuery &aQuery) const { aQuery.RemoveFooter(sizeof(ProxyQueryInfo)); }
-
-void Server::ProxyQueryInfo::UpdateIn(ProxyQuery &aQuery) const
-{
-    aQuery.Write(aQuery.GetLength() - sizeof(ProxyQueryInfo), *this);
 }
 
 Error Server::Response::ExtractServiceInstanceLabel(const char *aInstanceName, Name::LabelBuffer &aLabel)

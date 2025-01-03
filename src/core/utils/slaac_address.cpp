@@ -35,16 +35,8 @@
 
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
-#include "common/array.hpp"
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/numeric_limits.hpp"
-#include "common/random.hpp"
-#include "common/settings.hpp"
 #include "crypto/sha256.hpp"
 #include "instance/instance.hpp"
-#include "net/ip6_address.hpp"
 
 namespace ot {
 namespace Utils {
@@ -204,6 +196,15 @@ void Slaac::RemoveOrDeprecateAddresses(void)
             {
                 RemoveAddress(slaacAddr);
             }
+
+            if (UpdateContextIdFor(slaacAddr))
+            {
+                // If the Context ID of an existing address changes,
+                // notify MLE so an MTD child can re-register its
+                // addresses with the parent.
+
+                Get<Mle::Mle>().ScheduleChildUpdateRequestIfMtdChild();
+            }
         }
         else if (!slaacAddr.IsDeprecating())
         {
@@ -349,12 +350,33 @@ void Slaac::AddAddressFor(const NetworkData::OnMeshPrefixConfig &aConfig)
 
     IgnoreError(GenerateIid(*newAddress, dadCounter));
 
+    newAddress->SetContextId(SlaacAddress::kInvalidContextId);
+    UpdateContextIdFor(*newAddress);
+
     LogAddress(kAdding, *newAddress);
 
     Get<ThreadNetif>().AddUnicastAddress(*newAddress);
 
 exit:
     return;
+}
+
+bool Slaac::UpdateContextIdFor(SlaacAddress &aSlaacAddress)
+{
+    bool            didChange = false;
+    Lowpan::Context context;
+
+    if (Get<NetworkData::Leader>().GetContext(aSlaacAddress.GetAddress(), context) != kErrorNone)
+    {
+        context.mContextId = SlaacAddress::kInvalidContextId;
+    }
+
+    VerifyOrExit(context.mContextId != aSlaacAddress.GetContextId());
+    aSlaacAddress.SetContextId(context.mContextId);
+    didChange = true;
+
+exit:
+    return didChange;
 }
 
 void Slaac::HandleTimer(void)
@@ -395,7 +417,6 @@ Error Slaac::GenerateIid(Ip6::Netif::UnicastAddress &aAddress, uint8_t &aDadCoun
      *  - The `secret_key` is randomly generated on first use (using true
      *    random number generator) and saved in non-volatile settings for
      *    future use.
-     *
      */
 
     Error                error      = kErrorFailed;
@@ -446,9 +467,13 @@ void Slaac::LogAddress(Action aAction, const SlaacAddress &aAddress)
         "Deprecating", // (2) kDeprecating
     };
 
-    static_assert(kAdding == 0, "kAdding value is incorrect");
-    static_assert(kRemoving == 1, "kRemoving value is incorrect");
-    static_assert(kDeprecating == 2, "kDeprecating value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kAdding);
+        ValidateNextEnum(kRemoving);
+        ValidateNextEnum(kDeprecating);
+    };
 
     LogInfo("%s %s", kActionStrings[aAction], aAddress.GetAddress().ToString().AsCString());
 }

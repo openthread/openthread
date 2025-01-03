@@ -50,12 +50,10 @@ extern "C" {
  *   This module includes functions that control the Link Metrics protocol.
  *
  * @{
- *
  */
 
 /**
  * Represents the result (value) for a Link Metrics query.
- *
  */
 typedef struct otLinkMetricsValues
 {
@@ -69,7 +67,6 @@ typedef struct otLinkMetricsValues
 
 /**
  * Represents which frames are accounted in a Forward Tracking Series.
- *
  */
 typedef struct otLinkMetricsSeriesFlags
 {
@@ -83,7 +80,6 @@ typedef struct otLinkMetricsSeriesFlags
  * Enhanced-ACK Flags.
  *
  * These are used in Enhanced-ACK Based Probing to indicate whether to register or clear the probing.
- *
  */
 typedef enum otLinkMetricsEnhAckFlags
 {
@@ -93,7 +89,6 @@ typedef enum otLinkMetricsEnhAckFlags
 
 /**
  * Link Metrics Status values.
- *
  */
 typedef enum otLinkMetricsStatus
 {
@@ -112,7 +107,6 @@ typedef enum otLinkMetricsStatus
  * @param[in]  aMetricsValues  A pointer to the Link Metrics values (the query result).
  * @param[in]  aStatus         The status code in the report (only useful when @p aMetricsValues is NULL).
  * @param[in]  aContext        A pointer to application-specific context.
- *
  */
 typedef void (*otLinkMetricsReportCallback)(const otIp6Address        *aSource,
                                             const otLinkMetricsValues *aMetricsValues,
@@ -124,7 +118,6 @@ typedef void (*otLinkMetricsReportCallback)(const otIp6Address        *aSource,
  * @param[in]  aSource         A pointer to the source address.
  * @param[in]  aStatus         The status code in the response.
  * @param[in]  aContext        A pointer to application-specific context.
- *
  */
 typedef void (*otLinkMetricsMgmtResponseCallback)(const otIp6Address *aSource,
                                                   otLinkMetricsStatus aStatus,
@@ -137,7 +130,6 @@ typedef void (*otLinkMetricsMgmtResponseCallback)(const otIp6Address *aSource,
  * @param[in] aExtAddress       A pointer to the Mac extended address of the Probing Subject.
  * @param[in] aMetricsValues    A pointer to the Link Metrics values obtained from the IE.
  * @param[in] aContext          A pointer to application-specific context.
- *
  */
 typedef void (*otLinkMetricsEnhAckProbingIeReportCallback)(otShortAddress             aShortAddress,
                                                            const otExtAddress        *aExtAddress,
@@ -160,7 +152,6 @@ typedef void (*otLinkMetricsEnhAckProbingIeReportCallback)(otShortAddress       
  * @retval OT_ERROR_NO_BUFS           Insufficient buffers to generate the MLE Data Request message.
  * @retval OT_ERROR_UNKNOWN_NEIGHBOR  @p aDestination is not link-local or the neighbor is not found.
  * @retval OT_ERROR_NOT_CAPABLE       The neighbor is not a Thread 1.2 device and does not support Link Metrics.
- *
  */
 otError otLinkMetricsQuery(otInstance                 *aInstance,
                            const otIp6Address         *aDestination,
@@ -187,7 +178,6 @@ otError otLinkMetricsQuery(otInstance                 *aInstance,
  * @retval OT_ERROR_INVALID_ARGS      @p aSeriesId is not within the valid range.
  * @retval OT_ERROR_UNKNOWN_NEIGHBOR  @p aDestination is not link-local or the neighbor is not found.
  * @retval OT_ERROR_NOT_CAPABLE       The neighbor is not a Thread 1.2 device and does not support Link Metrics.
- *
  */
 otError otLinkMetricsConfigForwardTrackingSeries(otInstance                       *aInstance,
                                                  const otIp6Address               *aDestination,
@@ -216,7 +206,6 @@ otError otLinkMetricsConfigForwardTrackingSeries(otInstance                     
  * @retval OT_ERROR_INVALID_ARGS      @p aEnhAckFlags is not a valid value or @p aLinkMetricsFlags isn't correct.
  * @retval OT_ERROR_UNKNOWN_NEIGHBOR  @p aDestination is not link-local or the neighbor is not found.
  * @retval OT_ERROR_NOT_CAPABLE       The neighbor is not a Thread 1.2 device and does not support Link Metrics.
- *
  */
 otError otLinkMetricsConfigEnhAckProbing(otInstance                                *aInstance,
                                          const otIp6Address                        *aDestination,
@@ -240,7 +229,6 @@ otError otLinkMetricsConfigEnhAckProbing(otInstance                             
  * @retval OT_ERROR_INVALID_ARGS      @p aSeriesId or @p aLength is not within the valid range.
  * @retval OT_ERROR_UNKNOWN_NEIGHBOR  @p aDestination is not link-local or the neighbor is not found.
  * @retval OT_ERROR_NOT_CAPABLE       The neighbor is not a Thread 1.2 device and does not support Link Metrics.
- *
  */
 otError otLinkMetricsSendLinkProbe(otInstance         *aInstance,
                                    const otIp6Address *aDestination,
@@ -254,7 +242,6 @@ otError otLinkMetricsSendLinkProbe(otInstance         *aInstance,
  *
  * @retval TRUE   Link Metrics Manager is enabled.
  * @retval FALSE  Link Metrics Manager is not enabled.
- *
  */
 bool otLinkMetricsManagerIsEnabled(otInstance *aInstance);
 
@@ -263,7 +250,6 @@ bool otLinkMetricsManagerIsEnabled(otInstance *aInstance);
  *
  * @param[in] aInstance       A pointer to an OpenThread instance.
  * @param[in] aEnable         A boolean indicating to enable or disable.
- *
  */
 void otLinkMetricsManagerSetEnabled(otInstance *aInstance, bool aEnable);
 
@@ -277,7 +263,6 @@ void otLinkMetricsManagerSetEnabled(otInstance *aInstance, bool aEnable);
  * @retval OT_ERROR_NONE              Successfully got the Link Metrics data.
  * @retval OT_ERROR_INVALID_ARGS      The arguments are invalid.
  * @retval OT_ERROR_NOT_FOUND         No neighbor with the given extended address is found.
- *
  */
 otError otLinkMetricsManagerGetMetricsValueByExtAddr(otInstance          *aInstance,
                                                      const otExtAddress  *aExtAddress,
@@ -285,7 +270,6 @@ otError otLinkMetricsManagerGetMetricsValueByExtAddr(otInstance          *aInsta
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

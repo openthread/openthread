@@ -92,7 +92,7 @@ tcp_state_change(struct tcpcb *tp, int newstate)
 }
 
  /* samkumar: Based on tcp_newtcb in tcp_subr.c, and tcp_usr_attach in tcp_usrreq.c. */
-__attribute__((used)) void initialize_tcb(struct tcpcb* tp) {
+void initialize_tcb(struct tcpcb* tp) {
 	uint32_t ticks = tcplp_sys_get_ticks();
 
 	/* samkumar: Clear all fields starting laddr; rest are initialized by the host. */

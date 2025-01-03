@@ -49,7 +49,6 @@ namespace Posix {
  *
  * Users of this class should follow CRTP-style inheritance, i.e., the `Type` class itself should inherit from
  * `Logger<Type>`.
- *
  */
 template <typename Type> class Logger
 {
@@ -59,7 +58,6 @@ public:
      *
      * @param[in]  aFormat  The format string.
      * @param[in]  ...      Arguments for the format specification.
-     *
      */
     static void LogCrit(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2)
     {
@@ -75,7 +73,6 @@ public:
      *
      * @param[in]  aFormat  The format string.
      * @param[in]  ...      Arguments for the format specification.
-     *
      */
     static void LogWarn(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2)
     {
@@ -91,7 +88,6 @@ public:
      *
      * @param[in]  aFormat  The format string.
      * @param[in]  ...      Arguments for the format specification.
-     *
      */
     static void LogNote(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2)
     {
@@ -107,7 +103,6 @@ public:
      *
      * @param[in]  aFormat  The format string.
      * @param[in]  ...      Arguments for the format specification.
-     *
      */
     static void LogInfo(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2)
     {
@@ -123,7 +118,6 @@ public:
      *
      * @param[in]  aFormat  The format string.
      * @param[in]  ...      Arguments for the format specification.
-     *
      */
     static void LogDebg(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2)
     {

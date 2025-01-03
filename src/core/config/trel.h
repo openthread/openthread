@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes compile-time configurations for TREL.
- *
  */
 
 #ifndef CONFIG_TREL_H_
@@ -42,7 +41,6 @@
  *   This module includes configuration variables for TREL.
  *
  * @{
- *
  */
 
 /**
@@ -60,7 +58,6 @@
 
 /**
  * @}
- *
  */
 
 #endif // CONFIG_TREL_H_

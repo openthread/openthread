@@ -52,7 +52,6 @@ namespace ot {
 
 /**
  * Implements tracking of device uptime (in msec).
- *
  */
 class Uptime : public InstanceLocator, private NonCopyable
 {
@@ -63,7 +62,6 @@ public:
      * Initializes an `Uptime` instance.
      *
      * @param[in] aInstance   The OpenThread instance.
-     *
      */
     explicit Uptime(Instance &aInstance);
 
@@ -73,7 +71,6 @@ public:
      * The uptime is maintained as number of milliseconds since OpenThread instance was initialized.
      *
      * @returns The uptime (number of milliseconds).
-     *
      */
     uint64_t GetUptime(void) const;
 
@@ -88,7 +85,6 @@ public:
      *
      * @param[out] aBuffer   A pointer to a char array to output the string.
      * @param[in]  aSize     The size of @p aBuffer (in bytes). Recommended to use `OT_UPTIME_STRING_SIZE`.
-     *
      */
     void GetUptime(char *aBuffer, uint16_t aSize) const;
 
@@ -102,7 +98,6 @@ public:
      * @param[in]     aUptime        The uptime to convert.
      * @param[in,out] aWriter        A `StringWriter` to append the converted string to.
      * @param[in]     aIncludeMsec   Whether to include `.<mmm>` milliseconds in the string.
-     *
      */
     static void UptimeToString(uint64_t aUptime, StringWriter &aWriter, bool aIncludeMsec);
 
@@ -112,7 +107,6 @@ public:
      * @param[in] aUptimeInMilliseconds    Uptime in milliseconds (as `uint64_t`).
      *
      * @returns The converted @p aUptimeInMilliseconds to seconds (as `uint32_t`).
-     *
      */
     static uint32_t MsecToSec(uint64_t aUptimeInMilliseconds)
     {
@@ -125,7 +119,6 @@ public:
      * @param[in] aUptimeInSeconds    Uptime in seconds (as `uint32_t`).
      *
      * @returns The converted @p aUptimeInSeconds to milliseconds (as `uint64_t`).
-     *
      */
     static uint64_t SecToMsec(uint32_t aUptimeInSeconds) { return static_cast<uint64_t>(aUptimeInSeconds) * 1000u; }
 

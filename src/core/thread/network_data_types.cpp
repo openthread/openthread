@@ -34,7 +34,6 @@
 #include "network_data_types.hpp"
 
 #include "instance/instance.hpp"
-#include "thread/network_data_tlvs.hpp"
 
 namespace ot {
 namespace NetworkData {

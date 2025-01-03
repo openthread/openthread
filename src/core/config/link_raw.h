@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes compile-time configurations for the Link Raw service.
- *
  */
 
 #ifndef CONFIG_LINK_RAW_H_
@@ -42,14 +41,12 @@
  *   This module includes configuration variables for the Link Raw service.
  *
  * @{
- *
  */
 
 /**
  * @def OPENTHREAD_CONFIG_LINK_RAW_ENABLE
  *
  * Define to 1 to enable the Link Raw service.
- *
  */
 #ifndef OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 #define OPENTHREAD_CONFIG_LINK_RAW_ENABLE 0
@@ -57,7 +54,6 @@
 
 /**
  * @}
- *
  */
 
 #endif // CONFIG_LINK_RAW_H_

@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes compile-time configurations for TLS/DTLS.
- *
  */
 
 #ifndef CONFIG_SECURE_TRANSPORT_H_
@@ -42,7 +41,6 @@
  *   This module includes configuration variables for Secure Transport.
  *
  * @{
- *
  */
 
 #include "config/border_agent.h"
@@ -54,7 +52,6 @@
  * @def OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN
  *
  * The max length of the OpenThread dtls content buffer.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN
 #define OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN MBEDTLS_SSL_IN_CONTENT_LEN
@@ -64,7 +61,6 @@
  * @def OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
  *
  *  Define to 1 to enable DTLS/TLS.
- *
  */
 #ifndef OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 #define OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE                                         \
@@ -72,13 +68,8 @@
      OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE || OPENTHREAD_CONFIG_BLE_TCAT_ENABLE)
 #endif
 
-#ifdef OPENTHREAD_CONFIG_DTLS_ENABLE
-#error "OPENTHREAD_CONFIG_DTLS_ENABLE is deprecated please use OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE instead"
-#endif
-
 /**
  * @}
- *
  */
 
 #endif // CONFIG_SECURE_TRANSPORT_H_

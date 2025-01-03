@@ -33,16 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/border_router.h>
-#include <openthread/ip6.h>
-#include <openthread/nat64.h>
-
-#include "border_router/routing_manager.hpp"
-#include "common/debug.hpp"
 #include "instance/instance.hpp"
-#include "net/ip4_types.hpp"
-#include "net/ip6_headers.hpp"
-#include "net/nat64_translator.hpp"
 
 using namespace ot;
 
@@ -58,6 +49,8 @@ otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr)
     return AsCoreType(aInstance).Get<Nat64::Translator>().SetIp4Cidr(AsCoreType(aCidr));
 }
 
+void otNat64ClearIp4Cidr(otInstance *aInstance) { AsCoreType(aInstance).Get<Nat64::Translator>().ClearIp4Cidr(); }
+
 otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
     return AsCoreType(aInstance).Get<Nat64::Translator>().NewIp4Message(Message::Settings::From(aSettings));
@@ -70,7 +63,7 @@ otError otNat64Send(otInstance *aInstance, otMessage *aMessage)
 
 void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callback aCallback, void *aContext)
 {
-    AsCoreType(aInstance).Get<Ip6::Ip6>().SetNat64ReceiveIp4DatagramCallback(aCallback, aContext);
+    AsCoreType(aInstance).Get<Ip6::Ip6>().SetNat64ReceiveIp4Callback(aCallback, aContext);
 }
 
 void otNat64InitAddressMappingIterator(otInstance *aInstance, otNat64AddressMappingIterator *aIterator)

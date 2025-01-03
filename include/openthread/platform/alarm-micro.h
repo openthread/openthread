@@ -47,7 +47,6 @@ extern "C" {
  * @addtogroup plat-alarm
  *
  * @{
- *
  */
 
 /**
@@ -59,7 +58,6 @@ extern "C" {
  * @param[in]  aInstance  The OpenThread instance structure.
  * @param[in]  aT0        The reference time.
  * @param[in]  aDt        The time delay in microseconds from @p aT0.
- *
  */
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
 
@@ -67,7 +65,6 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
  * Stop the alarm.
  *
  * @param[in] aInstance  The OpenThread instance structure.
- *
  */
 void otPlatAlarmMicroStop(otInstance *aInstance);
 
@@ -78,7 +75,6 @@ void otPlatAlarmMicroStop(otInstance *aInstance);
  * entire range [0, 2^32-1] and MUST NOT wrap before 2^32.
  *
  * @returns  The current time in microseconds.
- *
  */
 uint32_t otPlatAlarmMicroGetNow(void);
 
@@ -91,7 +87,6 @@ extern void otPlatAlarmMicroFired(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

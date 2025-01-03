@@ -33,17 +33,7 @@
 
 #include "data_poll_sender.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/message.hpp"
-#include "common/num_utils.hpp"
 #include "instance/instance.hpp"
-#include "net/ip6.hpp"
-#include "net/netif.hpp"
-#include "thread/mesh_forwarder.hpp"
-#include "thread/mle.hpp"
-#include "thread/thread_netif.hpp"
 
 namespace ot {
 
@@ -255,16 +245,14 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         LogInfo("Failed to send data poll, error:%s, retx:%d/%d", ErrorToString(aError), mPollTxFailureCounter,
-                (aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr) ? kMaxCslPollRetxAttempts
-                                                                         : kMaxPollRetxAttempts);
+                aFrame.HasCslIe() ? kMaxCslPollRetxAttempts : kMaxPollRetxAttempts);
 #else
         LogInfo("Failed to send data poll, error:%s, retx:%d/%d", ErrorToString(aError), mPollTxFailureCounter,
                 kMaxPollRetxAttempts);
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (mPollTxFailureCounter <
-            ((aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr) ? kMaxCslPollRetxAttempts : kMaxPollRetxAttempts))
+        if (mPollTxFailureCounter < (aFrame.HasCslIe() ? kMaxCslPollRetxAttempts : kMaxPollRetxAttempts))
 #else
         if (mPollTxFailureCounter < kMaxPollRetxAttempts)
 #endif
@@ -344,7 +332,7 @@ void DataPollSender::ProcessTxDone(const Mac::TxFrame &aFrame, const Mac::RxFram
     VerifyOrExit(aFrame.GetSecurityEnabled());
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (aFrame.mInfo.mTxInfo.mIsARetx && (aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr))
+    if (aFrame.mInfo.mTxInfo.mIsARetx && aFrame.HasCslIe())
     {
         // For retransmission frame, use a data poll to resync its parent with correct CSL phase
         sendDataPoll = true;
@@ -554,43 +542,44 @@ uint32_t DataPollSender::GetDefaultPollPeriod(void) const
 
 Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
 {
-    Mac::TxFrame  *frame = nullptr;
-    Mac::Addresses addresses;
-    Mac::PanIds    panIds;
+    Mac::TxFrame      *frame = nullptr;
+    Mac::TxFrame::Info frameInfo;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     Mac::RadioType radio;
 
-    SuccessOrExit(GetPollDestinationAddress(addresses.mDestination, radio));
+    SuccessOrExit(GetPollDestinationAddress(frameInfo.mAddrs.mDestination, radio));
     frame = &aTxFrames.GetTxFrame(radio);
 #else
-    SuccessOrExit(GetPollDestinationAddress(addresses.mDestination));
+    SuccessOrExit(GetPollDestinationAddress(frameInfo.mAddrs.mDestination));
     frame = &aTxFrames.GetTxFrame();
 #endif
 
-    if (addresses.mDestination.IsExtended())
+    if (frameInfo.mAddrs.mDestination.IsExtended())
     {
-        addresses.mSource.SetExtended(Get<Mac::Mac>().GetExtAddress());
+        frameInfo.mAddrs.mSource.SetExtended(Get<Mac::Mac>().GetExtAddress());
     }
     else
     {
-        addresses.mSource.SetShort(Get<Mac::Mac>().GetShortAddress());
+        frameInfo.mAddrs.mSource.SetShort(Get<Mac::Mac>().GetShortAddress());
     }
 
-    panIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
+    frameInfo.mPanIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
 
-    Get<MeshForwarder>().PrepareMacHeaders(*frame, Mac::Frame::kTypeMacCmd, addresses, panIds,
-                                           Mac::Frame::kSecurityEncMic32, Mac::Frame::kKeyIdMode1, nullptr);
+    frameInfo.mType          = Mac::Frame::kTypeMacCmd;
+    frameInfo.mCommandId     = Mac::Frame::kMacCmdDataRequest;
+    frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
+    frameInfo.mKeyIdMode     = Mac::Frame::kKeyIdMode1;
+
+    Get<MeshForwarder>().PrepareMacHeaders(*frame, frameInfo, nullptr);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (frame->GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr)
+    if (frame->HasCslIe())
     {
         // Disable frame retransmission when the data poll has CSL IE included
         aTxFrames.SetMaxFrameRetries(0);
     }
 #endif
-
-    IgnoreError(frame->SetCommandId(Mac::Frame::kMacCmdDataRequest));
 
 exit:
     return frame;

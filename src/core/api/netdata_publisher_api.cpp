@@ -35,28 +35,29 @@
 
 #if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
 
-#include <openthread/netdata_publisher.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
-void otNetDataPublishDnsSrpServiceAnycast(otInstance *aInstance, uint8_t aSequenceNumber)
+void otNetDataPublishDnsSrpServiceAnycast(otInstance *aInstance, uint8_t aSequenceNumber, uint8_t aVersion)
 {
-    AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(aSequenceNumber);
+    AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(aSequenceNumber, aVersion);
 }
 
-void otNetDataPublishDnsSrpServiceUnicast(otInstance *aInstance, const otIp6Address *aAddress, uint16_t aPort)
+void otNetDataPublishDnsSrpServiceUnicast(otInstance         *aInstance,
+                                          const otIp6Address *aAddress,
+                                          uint16_t            aPort,
+                                          uint8_t             aVersion)
 {
-    AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(AsCoreType(aAddress), aPort);
+    AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(AsCoreType(aAddress), aPort,
+                                                                                    aVersion);
 }
 
-void otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(otInstance *aInstance, uint16_t aPort)
+void otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(otInstance *aInstance, uint16_t aPort, uint8_t aVersion)
 {
-    AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(aPort);
+    AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(aPort, aVersion);
 }
 
 bool otNetDataIsDnsSrpServiceAdded(otInstance *aInstance)

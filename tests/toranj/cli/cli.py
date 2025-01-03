@@ -312,6 +312,9 @@ class Node(object):
     def get_rloc16(self):
         return self._cli_single_output('rloc16')
 
+    def get_mac_alt_short_addr(self):
+        return self._cli_single_output('mac altshortaddr')
+
     def get_ip_addrs(self, verbose=None):
         return self.cli('ipaddr', verbose)
 
@@ -351,11 +354,23 @@ class Node(object):
     def set_pollperiod(self, period):
         self._cli_no_output('pollperiod', period)
 
+    def get_child_timeout(self):
+        return self._cli_single_output('childtimeout')
+
+    def set_child_timeout(self, timeout):
+        self._cli_no_output('childtimeout', timeout)
+
     def get_partition_id(self):
         return self._cli_single_output('partitionid')
 
     def get_nexthop(self, rloc16):
         return self._cli_single_output('nexthop', rloc16)
+
+    def get_child_max(self):
+        return self._cli_single_output('childmax')
+
+    def set_child_max(self, childmax):
+        self._cli_no_output('childmax', childmax)
 
     def get_parent_info(self):
         outputs = self.cli('parent')
@@ -367,6 +382,9 @@ class Node(object):
 
     def get_child_table(self):
         return Node.parse_table(self.cli('child table'))
+
+    def get_child_ip(self):
+        return self.cli('childip')
 
     def get_neighbor_table(self):
         return Node.parse_table(self.cli('neighbor table'))
@@ -477,6 +495,9 @@ class Node(object):
 
     def get_ip_counters(self):
         return Node.parse_list(self.cli('counters ip'))
+
+    def get_mac_counters(self):
+        return Node.parse_list(self.cli('counters mac'))
 
     def get_br_counter_unicast_outbound_packets(self):
         outputs = self.cli('counters br')
@@ -823,6 +844,25 @@ class Node(object):
     def br_count_peers(self):
         return self._cli_single_output('br peers count')
 
+    #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # trel
+
+    def trel_get_peers(self):
+        peers = self.cli('trel peers ')
+        return Node.parse_table(peers)
+
+    def trel_test_get_sock_addr(self):
+        return self._cli_single_output('treltest sockaddr')
+
+    def trel_test_change_sock_addr(self):
+        return self._cli_no_output('treltest changesockaddr')
+
+    def trel_test_change_sock_port(self):
+        return self._cli_no_output('treltest changesockport')
+
+    def trel_test_get_notify_addr_counter(self):
+        return self._cli_single_output('treltest notifyaddrcounter')
+
     # ------------------------------------------------------------------------------------------------------------------
     # Helper methods
 
@@ -874,6 +914,15 @@ class Node(object):
 
     def un_allowlist_node(self, node):
         """Removes a given node (of node `Node) from the allowlist"""
+        self._cli_no_output('macfilter addr remove', node.get_ext_addr())
+
+    def denylist_node(self, node):
+        """Adds a given node to the denylist of `self` and enables denylisting on `self`"""
+        self._cli_no_output('macfilter addr add', node.get_ext_addr())
+        self._cli_no_output('macfilter addr denylist')
+
+    def un_denylist_node(self, node):
+        """Removes a given node (of node `Node) from the denylist"""
         self._cli_no_output('macfilter addr remove', node.get_ext_addr())
 
     def set_macfilter_lqi_to_node(self, node, lqi):

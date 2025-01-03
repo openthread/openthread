@@ -32,10 +32,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <openthread/error.h>
+#include <openthread/tcat.h>
 #include <openthread/platform/ble.h>
 
-#include "openthread/error.h"
-#include "openthread/tcat.h"
+#include "lib/platform/exit_code.h"
 #include "utils/code_utils.h"
 
 #define PLAT_BLE_MSG_DATA_MAX 2048
@@ -75,7 +77,7 @@ static void initFds(void)
 exit:
     if (sFd == -1)
     {
-        exit(EXIT_FAILURE);
+        DieNow(OT_EXIT_FAILURE);
     }
 }
 
@@ -206,7 +208,7 @@ void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const f
         else if (errno != EINTR && errno != EAGAIN)
         {
             perror("recvfrom BLE simulation failed");
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_FAILURE);
         }
     }
 exit:

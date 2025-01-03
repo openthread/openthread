@@ -33,7 +33,6 @@ spawn_node 1
 
 send "diag start\n"
 expect "start diagnostics mode"
-expect "status 0x00"
 expect_line "Done"
 
 send "diag powersettings 11\n"
@@ -54,7 +53,6 @@ expect_line "Done"
 
 send "diag start\n"
 expect "start diagnostics mode"
-expect "status 0x00"
 expect_line "Done"
 
 send "diag powersettings 11\n"

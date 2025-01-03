@@ -40,7 +40,7 @@
 
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 #include "meshcop/tcat_agent.hpp"
 #include "radio/ble_secure.hpp"
 
@@ -85,9 +85,15 @@ void otBleSecureSetPsk(otInstance    *aInstance,
 #if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 otError otBleSecureGetPeerCertificateBase64(otInstance *aInstance, unsigned char *aPeerCert, size_t *aCertLength)
 {
-    return AsCoreType(aInstance).Get<Ble::BleSecure>().GetPeerCertificateBase64(aPeerCert, aCertLength);
+    Error error;
+
+    VerifyOrExit(aCertLength != nullptr, error = kErrorInvalidArgs);
+    error = AsCoreType(aInstance).Get<Ble::BleSecure>().GetPeerCertificateBase64(aPeerCert, aCertLength, *aCertLength);
+
+exit:
+    return error;
 }
-#endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
+#endif
 
 #if defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 otError otBleSecureGetPeerSubjectAttributeByOid(otInstance *aInstance,
@@ -185,5 +191,10 @@ otError otBleSecureSendApplicationTlv(otInstance *aInstance, uint8_t *aBuf, uint
 }
 
 otError otBleSecureFlush(otInstance *aInstance) { return AsCoreType(aInstance).Get<Ble::BleSecure>().Flush(); }
+
+bool otBleSecureGetInstallCodeVerifyStatus(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Ble::BleSecure>().GetInstallCodeVerifyStatus();
+}
 
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE

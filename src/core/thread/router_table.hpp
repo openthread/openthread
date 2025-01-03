@@ -58,19 +58,16 @@ public:
      * Constructor.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit RouterTable(Instance &aInstance);
 
     /**
      * Clears the router table.
-     *
      */
     void Clear(void);
 
     /**
      * Removes all neighbor links to routers.
-     *
      */
     void ClearNeighbors(void);
 
@@ -78,7 +75,6 @@ public:
      * Allocates a router with a random Router ID.
      *
      * @returns A pointer to the allocated router or `nullptr` if a Router ID is not available.
-     *
      */
     Router *Allocate(void);
 
@@ -88,7 +84,6 @@ public:
      * @param[in] aRouterId   The Router ID to try to allocate.
      *
      * @returns A pointer to the allocated router or `nullptr` if the ID @p aRouterId could not be allocated.
-     *
      */
     Router *Allocate(uint8_t aRouterId);
 
@@ -100,7 +95,6 @@ public:
      * @retval kErrorNone          Successfully released the Router ID @p aRouterId.
      * @retval kErrorInvalidState  The device is not currently operating as a leader.
      * @retval kErrorNotFound      The Router ID @p aRouterId is not currently allocated.
-     *
      */
     Error Release(uint8_t aRouterId);
 
@@ -108,7 +102,6 @@ public:
      * Removes a router link.
      *
      * @param[in]  aRouter  A reference to the router.
-     *
      */
     void RemoveRouterLink(Router &aRouter);
 
@@ -116,7 +109,6 @@ public:
      * Returns the number of active routers in the Thread network.
      *
      * @returns The number of active routers in the Thread network.
-     *
      */
     uint8_t GetActiveRouterCount(void) const { return mRouters.GetLength(); }
 
@@ -124,7 +116,6 @@ public:
      * Returns the leader in the Thread network.
      *
      * @returns A pointer to the Leader in the Thread network.
-     *
      */
     Router *GetLeader(void) { return AsNonConst(AsConst(this)->GetLeader()); }
 
@@ -132,7 +123,6 @@ public:
      * Returns the leader in the Thread network.
      *
      * @returns A pointer to the Leader in the Thread network.
-     *
      */
     const Router *GetLeader(void) const;
 
@@ -140,7 +130,6 @@ public:
      * Returns the leader's age in seconds, i.e., seconds since the last Router ID Sequence update.
      *
      * @returns The leader's age.
-     *
      */
     uint32_t GetLeaderAge(void) const;
 
@@ -150,7 +139,6 @@ public:
      * @param[in]  aRouter   A router.
      *
      * @returns The link cost to @p aRouter.
-     *
      */
     uint8_t GetLinkCost(const Router &aRouter) const;
 
@@ -160,7 +148,6 @@ public:
      * @param[in]  aRouterId  The Router ID.
      *
      * @returns The link cost to the Router.
-     *
      */
     uint8_t GetLinkCost(uint8_t aRouterId) const;
 
@@ -170,7 +157,6 @@ public:
      * @param[in]  aDestRloc16  The RLOC16 of destination
      *
      * @returns The minimum mesh path cost to @p aDestRloc16 (via direct link or forwarding).
-     *
      */
     uint8_t GetPathCost(uint16_t aDestRloc16) const;
 
@@ -178,7 +164,6 @@ public:
      * Returns the mesh path cost to leader.
      *
      * @returns The path cost to leader.
-     *
      */
     uint8_t GetPathCostToLeader(void) const;
 
@@ -188,7 +173,6 @@ public:
      * @param[in]  aDestRloc16  The RLOC16 of the destination.
      *
      * @returns A RLOC16 of the next hop if a route is known, `Mle::kInvalidRloc16` otherwise.
-     *
      */
     uint16_t GetNextHop(uint16_t aDestRloc16) const;
 
@@ -198,7 +182,6 @@ public:
      * @param[in]  aDestRloc16      The RLOC16 of the destination.
      * @param[out] aNextHopRloc16   A reference to return the RLOC16 of next hop if known, or `Mle::kInvalidRloc16`.
      * @param[out] aPathCost        A reference to return the path cost.
-     *
      */
     void GetNextHopAndPathCost(uint16_t aDestRloc16, uint16_t &aNextHopRloc16, uint8_t &aPathCost) const;
 
@@ -208,7 +191,6 @@ public:
      * @param[in]  aRouterId  The Router ID to search for.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
-     *
      */
     Router *FindRouterById(uint8_t aRouterId) { return AsNonConst(AsConst(this)->FindRouterById(aRouterId)); }
 
@@ -218,7 +200,6 @@ public:
      * @param[in]  aRouterId  The Router ID to search for.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
-     *
      */
     const Router *FindRouterById(uint8_t aRouterId) const;
 
@@ -228,7 +209,6 @@ public:
      * @param[in]  aRloc16  The RLOC16 to search for.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
-     *
      */
     Router *FindRouterByRloc16(uint16_t aRloc16) { return AsNonConst(AsConst(this)->FindRouterByRloc16(aRloc16)); }
 
@@ -238,7 +218,6 @@ public:
      * @param[in]  aRloc16  The RLOC16 to search for.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
-     *
      */
     const Router *FindRouterByRloc16(uint16_t aRloc16) const;
 
@@ -248,7 +227,6 @@ public:
      * @param[in]  aRouter  The router to find next hop of.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
-     *
      */
     Router *FindNextHopOf(const Router &aRouter) { return AsNonConst(AsConst(this)->FindNextHopOf(aRouter)); }
 
@@ -258,7 +236,6 @@ public:
      * @param[in]  aRouter  The router to find next hop of.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
-     *
      */
     const Router *FindNextHopOf(const Router &aRouter) const;
 
@@ -268,7 +245,6 @@ public:
      * @param[in]  aExtAddress  A reference to the MAC Extended Address.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
-     *
      */
     Router *FindRouter(const Mac::ExtAddress &aExtAddress);
 
@@ -280,7 +256,6 @@ public:
      * @retval TRUE  if @p aNeighbor is a `Router` in the router table.
      * @retval FALSE if @p aNeighbor is not a `Router` in the router table
      *               (i.e. it can be the parent or parent candidate, or a `Child` of the child table).
-     *
      */
     bool Contains(const Neighbor &aNeighbor) const
     {
@@ -296,7 +271,6 @@ public:
      * @retval kErrorNone          Successfully retrieved the router info for given id.
      * @retval kErrorInvalidArgs   @p aRouterId is not a valid value for a router.
      * @retval kErrorNotFound      No router entry with the given id.
-     *
      */
     Error GetRouterInfo(uint16_t aRouterId, Router::Info &aRouterInfo);
 
@@ -304,7 +278,6 @@ public:
      * Returns the Router ID Sequence.
      *
      * @returns The Router ID Sequence.
-     *
      */
     uint8_t GetRouterIdSequence(void) const { return mRouterIdSequence; }
 
@@ -312,7 +285,6 @@ public:
      * Returns the local time when the Router ID Sequence was last updated.
      *
      * @returns The local time when the Router ID Sequence was last updated.
-     *
      */
     TimeMilli GetRouterIdSequenceLastUpdated(void) const { return mRouterIdSequenceLastUpdated; }
 
@@ -324,7 +296,6 @@ public:
      *
      * @retval TRUE    The Router ID Sequence in @p aRouteTlv is more recent.
      * @retval FALSE   The Router ID Sequence in @p aRouteTlv is not more recent.
-     *
      */
     bool IsRouteTlvIdSequenceMoreRecent(const Mle::RouteTlv &aRouteTlv) const;
 
@@ -334,7 +305,6 @@ public:
      * @param[in] aLinkQuality  Link quality threshold.
      *
      * @returns Number of router neighbors with link quality of @o aLinkQuality or better.
-     *
      */
     uint8_t GetNeighborCount(LinkQuality aLinkQuality) const;
 
@@ -345,7 +315,6 @@ public:
      *
      * @retval TRUE  if @p aRouterId is allocated.
      * @retval FALSE if @p aRouterId is not allocated.
-     *
      */
     bool IsAllocated(uint8_t aRouterId) const { return mRouterIdMap.IsAllocated(aRouterId); }
 
@@ -354,7 +323,6 @@ public:
      *
      * @param[in]  aRouterIdSequence  The Router ID Sequence.
      * @param[in]  aRouterIdSet       The Router ID Set.
-     *
      */
     void UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::RouterIdSet &aRouterIdSet);
 
@@ -363,26 +331,23 @@ public:
      *
      * @param[in]  aRouteTlv    The received `RouteTlv`
      * @param[in]  aNeighborId  The router ID of neighboring router from which @p aRouteTlv is received.
-     *
      */
     void UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighborId);
 
     /**
-     * Updates the routes on an FED based on a received `RouteTlv` from the parent.
+     * Updates the routes on an FTD child based on a received `RouteTlv` from the parent.
      *
-     * MUST be called when device is an FED child and @p aRouteTlv is received from its current parent.
+     * MUST be called when device is an FTD child and @p aRouteTlv is received from its current parent.
      *
      * @param[in]  aRouteTlv    The received `RouteTlv` from parent.
      * @param[in]  aParentId    The Router ID of parent.
-     *
      */
-    void UpdateRoutesOnFed(const Mle::RouteTlv &aRouteTlv, uint8_t aParentId);
+    void UpdateRouterOnFtdChild(const Mle::RouteTlv &aRouteTlv, uint8_t aParentId);
 
     /**
      * Gets the allocated Router ID set.
      *
      * @param[out]  aRouterIdSet   A reference to output the allocated Router ID set.
-     *
      */
     void GetRouterIdSet(Mle::RouterIdSet &aRouterIdSet) const { return mRouterIdMap.GetAsRouterIdSet(aRouterIdSet); }
 
@@ -395,13 +360,11 @@ public:
      *
      * @param[out] aRouteTlv    A Route TLV to be filled.
      * @param[in]  aNeighbor    A pointer to the receiver (in case TLV is for a Link Accept message).
-     *
      */
     void FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighbor = nullptr) const;
 
     /**
      * Updates the router table and must be called with a one second period.
-     *
      */
     void HandleTimeTick(void);
 
@@ -413,7 +376,6 @@ public:
      *
      * @param[out]  aMinRouterId   Reference to return the minimum Router ID.
      * @param[out]  aMaxRouterId   Reference to return the maximum Router ID.
-     *
      */
     void GetRouterIdRange(uint8_t &aMinRouterId, uint8_t &aMaxRouterId) const;
 
@@ -427,7 +389,6 @@ public:
      *
      * @retval kErrorNone          Successfully set the Router ID range.
      * @retval kErrorInvalidArgs   The given range is not valid.
-     *
      */
     Error SetRouterIdRange(uint8_t aMinRouterId, uint8_t aMaxRouterId);
 #endif

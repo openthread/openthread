@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes definitions for heap.
- *
  */
 
 #ifndef OT_UTILS_HEAP_HPP_
@@ -61,7 +60,6 @@ namespace Utils {
  *
  * Since block metadata is of 4-byte size, mSize and mNext are separated at the beginning
  * and end of the block to make sure the mMemory is aligned with long.
- *
  */
 class Block
 {
@@ -72,7 +70,6 @@ public:
      * Returns the size of this block.
      *
      * @returns Size of this block.
-     *
      */
     uint16_t GetSize(void) const { return mSize; }
 
@@ -80,7 +77,6 @@ public:
      * Updates the size of this block.
      *
      * @param[in]   aSize   Size of this block in bytes.
-     *
      */
     void SetSize(uint16_t aSize) { mSize = aSize; }
 
@@ -92,7 +88,6 @@ public:
      * @returns Offset of the next free block in bytes.
      *
      * @retval  0   This block is not free.
-     *
      */
     uint16_t GetNext(void) const
     {
@@ -106,7 +101,6 @@ public:
      * @note This offset @p aNext must be relative to the start of the heap.
      *
      * @param[in]   aNext   Offset of the next free block in bytes.
-     *
      */
     void SetNext(uint16_t aNext)
     {
@@ -118,7 +112,6 @@ public:
      * Returns the pointer to the start of the memory for user.
      *
      * @retval  Pointer to the user memory. The pointer address is aligned to sizeof(long).
-     *
      */
     void *GetPointer(void) { return &mMemory; }
 
@@ -126,7 +119,6 @@ public:
      * Returns the offset of the free block after the left neighbor block.
      *
      * @returns Offset in bytes.
-     *
      */
     uint16_t GetLeftNext(void) const { return *(&mSize - 1); }
 
@@ -135,7 +127,6 @@ public:
      *
      * @retval  true    The left neighbor block is free.
      * @retval  false   The left neighbor block is not free.
-     *
      */
     bool IsLeftFree(void) const { return GetLeftNext() != 0; }
 
@@ -144,7 +135,6 @@ public:
      *
      * @retval  true    The block is free.
      * @retval  false   The block is not free.
-     *
      */
     bool IsFree(void) const { return mSize != kGuardBlockSize && GetNext() != 0; }
 
@@ -171,14 +161,12 @@ private:
  *     +----------------+------------+---------+---------+-----+---------+--------+
  *     | kAlignSize - 2 | kAlignSize | 4 + s1  | 4 + s2  | ... | 4 + s4  |   2    |
  *     +--------------------------------------------------------------------------+
- *
  */
 class Heap : private NonCopyable
 {
 public:
     /**
      * Initializes a memory heap.
-     *
      */
     Heap(void);
 
@@ -191,7 +179,6 @@ public:
      * @returns A pointer to the allocated memory.
      *
      * @retval  nullptr    Indicates not enough memory.
-     *
      */
     void *CAlloc(size_t aCount, size_t aSize);
 
@@ -199,13 +186,11 @@ public:
      * Free memory pointed by @p aPointer.
      *
      * @param[in]   aPointer    A pointer to the memory to free.
-     *
      */
     void Free(void *aPointer);
 
     /**
      * Returns whether the heap is clean.
-     *
      */
     bool IsClean(void) const
     {
@@ -217,7 +202,6 @@ public:
 
     /**
      * Returns the capacity of this heap.
-     *
      */
     size_t GetCapacity(void) const { return kFirstBlockSize; }
 
@@ -248,7 +232,6 @@ private:
      * @param[in]   aOffset     Offset in bytes.
      *
      * @returns A reference to the block.
-     *
      */
     Block &BlockAt(uint16_t aOffset) { return *reinterpret_cast<Block *>(&mMemory.m16[aOffset / 2]); }
 
@@ -258,7 +241,6 @@ private:
      * @param[in]   aPointer     The pointer returned by CAlloc().
      *
      * @returns A reference to the block.
-     *
      */
     Block &BlockOf(void *aPointer)
     {
@@ -271,7 +253,6 @@ private:
      * Returns the super block.
      *
      * @returns Reference to the super block.
-     *
      */
     Block &BlockSuper(void) { return BlockAt(kSuperBlockOffset); }
 
@@ -281,7 +262,6 @@ private:
      * @param[in]   aBlock  A reference to the block.
      *
      * @returns Reference to the free block after this block.
-     *
      */
     Block &BlockNext(const Block &aBlock) { return BlockAt(aBlock.GetNext()); }
 
@@ -291,7 +271,6 @@ private:
      * @param[in]   aBlock  A reference to the block.
      *
      * @returns Reference to the block on the right side.
-     *
      */
     Block &BlockRight(const Block &aBlock) { return BlockAt(BlockOffset(aBlock) + sizeof(Block) + aBlock.GetSize()); }
 
@@ -299,7 +278,6 @@ private:
      * Returns the free block before @p aBlock in the free block list.
      *
      * @returns Reference to the free block before this block.
-     *
      */
     Block &BlockPrev(const Block &aBlock);
 
@@ -307,7 +285,6 @@ private:
      * Returns whether the block on the left side of @p aBlock is free.
      *
      * @param[in]   aBlock  A reference to the block.
-     *
      */
     bool IsLeftFree(const Block &aBlock) { return (BlockOffset(aBlock) != kFirstBlockOffset && aBlock.IsLeftFree()); }
 
@@ -317,7 +294,6 @@ private:
      * @param[in]   aBlock  A reference to the block.
      *
      * @returns Offset in bytes of @p aBlock.
-     *
      */
     uint16_t BlockOffset(const Block &aBlock)
     {
@@ -331,7 +307,6 @@ private:
      *
      * @param[in]   aPrev   A reference to the block after which to place @p aBlock.
      * @param[in]   aBlock  A reference to the block.
-     *
      */
     void BlockInsert(Block &aPrev, Block &aBlock);
 

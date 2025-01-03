@@ -35,9 +35,6 @@
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -60,7 +57,7 @@ void SubMac::UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame)
 {
     // Actual synchronization timestamp should be from the sent frame instead of the current time.
     // Assuming the error here since it is bounded and has very small effect on the final window duration.
-    if (aAckFrame != nullptr && aFrame.GetHeaderIe(CslIe::kHeaderIeId) != nullptr)
+    if (aAckFrame != nullptr && aFrame.HasCslIe())
     {
         mCslLastSync = TimeMicro(GetLocalTime());
     }
@@ -128,7 +125,7 @@ bool SubMac::UpdateCsl(uint16_t aPeriod, uint8_t aChannel, otShortAddress aShort
     mCslTimer.Stop();
     if (mCslPeriod > 0)
     {
-        mCslSampleTime = TimeMicro(static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance())));
+        mCslSampleTime = TimeMicro(static_cast<uint32_t>(Get<Radio>().GetNow()));
         mIsCslSampling = false;
         HandleCslTimer();
     }
@@ -174,7 +171,6 @@ void SubMac::HandleCslTimer(void)
      *       ^            ^                                       ^            ^
      *       |------------|---------------------------------------|------------|---------------------------------------|
      *          sample                   sleep                        sample                    sleep
-     *
      */
     uint32_t periodUs = mCslPeriod * kUsPerTenSymbols;
     uint32_t timeAhead, timeAfter, winStart, winDuration;
@@ -252,7 +248,7 @@ uint32_t SubMac::GetLocalTime(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
     now = TimerMicro::GetNow().GetValue();
 #else
-    now = static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance()));
+    now = static_cast<uint32_t>(Get<Radio>().GetNow());
 #endif
 
     return now;

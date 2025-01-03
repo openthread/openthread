@@ -30,7 +30,7 @@
 
 #include <openthread/platform/dnssd.h>
 
-#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE && OPENTHREAD_SIMULATION_IMPLEMENT_DNSSD
 otPlatDnssdState otPlatDnssdGetState(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -164,4 +164,4 @@ void otPlatDnssdStopIp4AddressResolver(otInstance *aInstance, const otPlatDnssdA
     OT_UNUSED_VARIABLE(aResolver);
 }
 
-#endif // OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+#endif // OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE && OPENTHREAD_SIMULATION_IMPLEMENT_DNSSD

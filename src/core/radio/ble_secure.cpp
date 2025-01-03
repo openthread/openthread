@@ -31,11 +31,8 @@
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
 #include <openthread/platform/ble.h>
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/tlvs.hpp"
+
 #include "instance/instance.hpp"
-#include "meshcop/secure_transport.hpp"
 
 using namespace ot;
 
@@ -51,7 +48,8 @@ RegisterLogModule("BleSecure");
 
 BleSecure::BleSecure(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTls(aInstance, false, false)
+    , MeshCoP::Tls::Extension(mTls)
+    , mTls(aInstance, kNoLinkSecurity, *this)
     , mTcatAgent(aInstance)
     , mTlvMode(false)
     , mReceivedMessage(nullptr)
@@ -83,7 +81,9 @@ Error BleSecure::Start(ConnectCallback aConnectHandler, ReceiveCallback aReceive
     SuccessOrExit(error = otPlatBleGapAdvSetData(&GetInstance(), advertisementData, advertisementLen));
     SuccessOrExit(error = otPlatBleGapAdvStart(&GetInstance(), OT_BLE_ADV_INTERVAL_DEFAULT));
 
-    SuccessOrExit(error = mTls.Open(&BleSecure::HandleTlsReceive, &BleSecure::HandleTlsConnectEvent, this));
+    SuccessOrExit(error = mTls.Open());
+    mTls.SetReceiveCallback(HandleTlsReceive, this);
+    mTls.SetConnectCallback(HandleTlsConnectEvent, this);
     SuccessOrExit(error = mTls.Bind(HandleTransport, this));
 
 exit:
@@ -167,25 +167,11 @@ void BleSecure::Disconnect(void)
 void BleSecure::SetPsk(const MeshCoP::JoinerPskd &aPskd)
 {
     static_assert(static_cast<uint16_t>(MeshCoP::JoinerPskd::kMaxLength) <=
-                      static_cast<uint16_t>(MeshCoP::SecureTransport::kPskMaxLength),
+                      static_cast<uint16_t>(MeshCoP::Tls::kPskMaxLength),
                   "The maximum length of TLS PSK is smaller than joiner PSKd");
 
     SuccessOrAssert(mTls.SetPsk(reinterpret_cast<const uint8_t *>(aPskd.GetAsCString()), aPskd.GetLength()));
 }
-
-#if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
-Error BleSecure::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength)
-{
-    Error error;
-
-    VerifyOrExit(aCertLength != nullptr, error = kErrorInvalidArgs);
-
-    error = mTls.GetPeerCertificateBase64(aPeerCert, aCertLength, *aCertLength);
-
-exit:
-    return error;
-}
-#endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 
 Error BleSecure::SendMessage(ot::Message &aMessage)
 {
@@ -321,30 +307,28 @@ Error BleSecure::HandleBleMtuUpdate(uint16_t aMtu)
     return error;
 }
 
-void BleSecure::HandleTlsConnectEvent(MeshCoP::SecureTransport::ConnectEvent aEvent, void *aContext)
+void BleSecure::HandleTlsConnectEvent(MeshCoP::Tls::ConnectEvent aEvent, void *aContext)
 {
     return static_cast<BleSecure *>(aContext)->HandleTlsConnectEvent(aEvent);
 }
 
-void BleSecure::HandleTlsConnectEvent(MeshCoP::SecureTransport::ConnectEvent aEvent)
+void BleSecure::HandleTlsConnectEvent(MeshCoP::Tls::ConnectEvent aEvent)
 {
-    if (aEvent == MeshCoP::SecureTransport::kConnected)
+    if (aEvent == MeshCoP::Tls::kConnected)
     {
+        Error err;
+
         if (mReceivedMessage == nullptr)
         {
             mReceivedMessage = Get<MessagePool>().Allocate(Message::kTypeBle);
         }
+        err = mTcatAgent.Connected(*this);
 
-        if (mTcatAgent.IsEnabled())
+        if (err != kErrorNone)
         {
-            Error err = mTcatAgent.Connected(mTls);
-
-            if (err != kErrorNone)
-            {
-                mTls.Close();
-                LogWarn("Rejected TCAT Commissioner, error: %s", ErrorToString(err));
-                ExitNow();
-            }
+            mTls.Disconnect(); // must not use Close(), so that next Commissioner can connect
+            LogWarn("Rejected TCAT Commissioner, error: %s", ErrorToString(err));
+            ExitNow();
         }
     }
     else
@@ -358,7 +342,7 @@ void BleSecure::HandleTlsConnectEvent(MeshCoP::SecureTransport::ConnectEvent aEv
         }
     }
 
-    mConnectCallback.InvokeIfSet(&GetInstance(), aEvent == MeshCoP::SecureTransport::kConnected, true);
+    mConnectCallback.InvokeIfSet(&GetInstance(), aEvent == MeshCoP::Tls::kConnected, true);
 
 exit:
     return;
@@ -449,8 +433,11 @@ void BleSecure::HandleTlsReceive(uint8_t *aBuf, uint16_t aLength)
 
                 if (error == kErrorAbort)
                 {
+                    LogInfo("Disconnecting TCAT client.");
+                    // kErrorAbort indicates that a Disconnect command TLV has been received.
                     Disconnect();
-                    Stop();
+                    // BleSecure is not stopped here, it must remain active in advertising state and
+                    // must be ready to receive a next TCAT commissioner.
                     ExitNow();
                 }
             }
@@ -483,18 +470,12 @@ void BleSecure::HandleTransmit(void)
         mTransmitTask.Post();
     }
 
-    SuccessOrExit(error = mTls.Send(*message, message->GetLength()));
+    SuccessOrExit(error = mTls.Send(*message));
+    LogDebg("Transmit");
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogNote("Transmit: %s", ErrorToString(error));
-        message->Free();
-    }
-    else
-    {
-        LogDebg("Transmit: %s", ErrorToString(error));
-    }
+    FreeMessageOnError(message, error);
+    LogWarnOnError(error, "transmit");
 }
 
 Error BleSecure::HandleTransport(void *aContext, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

@@ -53,7 +53,6 @@ namespace Storage {
 
 /**
  * Defines the key types.
- *
  */
 enum KeyType : uint8_t
 {
@@ -65,7 +64,6 @@ enum KeyType : uint8_t
 
 /**
  * Defines the key algorithms.
- *
  */
 enum KeyAlgorithm : uint8_t
 {
@@ -84,7 +82,6 @@ constexpr uint8_t kUsageVerifyHash = OT_CRYPTO_KEY_USAGE_VERIFY_HASH; ///< Key U
 
 /**
  * Defines the key storage types.
- *
  */
 enum StorageType : uint8_t
 {
@@ -94,7 +91,6 @@ enum StorageType : uint8_t
 
 /**
  * This datatype represents the key reference.
- *
  */
 typedef otCryptoKeyRef KeyRef;
 
@@ -114,7 +110,6 @@ constexpr KeyRef kEcdsaRef                    = OPENTHREAD_CONFIG_PSA_ITS_NVM_OF
  *
  * @retval TRUE   If @p aKeyRef is valid.
  * @retval FALSE  If @p aKeyRef is not valid.
- *
  */
 inline bool IsKeyRefValid(KeyRef aKeyRef) { return (aKeyRef < kInvalidKeyRef); }
 
@@ -132,7 +127,6 @@ inline bool IsKeyRefValid(KeyRef aKeyRef) { return (aKeyRef < kInvalidKeyRef); }
  * @retval kErrorNone          Successfully imported the key.
  * @retval kErrorFailed        Failed to import the key.
  * @retval kErrorInvalidArgs   @p aKey was set to `nullptr`.
- *
  */
 inline Error ImportKey(KeyRef        &aKeyRef,
                        KeyType        aKeyType,
@@ -158,7 +152,6 @@ inline Error ImportKey(KeyRef        &aKeyRef,
  * @retval kErrorNone          Successfully exported  @p aKeyRef.
  * @retval kErrorFailed        Failed to export @p aKeyRef.
  * @retval kErrorInvalidArgs   @p aBuffer was `nullptr`.
- *
  */
 inline Error ExportKey(KeyRef aKeyRef, uint8_t *aBuffer, size_t aBufferLen, size_t &aKeyLen)
 {
@@ -169,7 +162,6 @@ inline Error ExportKey(KeyRef aKeyRef, uint8_t *aBuffer, size_t aBufferLen, size
  * Destroy a key stored in PSA ITS.
  *
  * @param[in]   aKeyRef   The key ref to be removed.
- *
  */
 inline void DestroyKey(KeyRef aKeyRef)
 {
@@ -186,13 +178,11 @@ inline void DestroyKey(KeyRef aKeyRef)
  *
  * @retval true                 Key Ref passed has a key associated in PSA.
  * @retval false                Key Ref passed is invalid and has no key associated in PSA.
- *
  */
 inline bool HasKey(KeyRef aKeyRef) { return otPlatCryptoHasKey(aKeyRef); }
 
 /**
  * Delete all the persistent keys stored in PSA ITS.
- *
  */
 void DestroyPersistentKeys(void);
 
@@ -205,7 +195,6 @@ void DestroyPersistentKeys(void);
  *
  * The `Key` can represent a literal key (i.e., a pointer to a byte array containing the key along with a key length)
  * or a `KeyRef` (if `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled).
- *
  */
 class Key : public otCryptoKey, public Clearable<Key>
 {
@@ -215,7 +204,6 @@ public:
      *
      * @param[in] aKeyBytes   A pointer to buffer containing the key.
      * @param[in] aKeyLength  The key length (number of bytes in @p aKeyBytes).
-     *
      */
     void Set(const uint8_t *aKeyBytes, uint16_t aKeyLength)
     {
@@ -230,7 +218,6 @@ public:
      * method returns `nullptr`.
      *
      * @returns The pointer to the byte array containing the key, or `nullptr` if the `Key` represents a `KeyRef`
-     *
      */
     const uint8_t *GetBytes(void) const { return mKey; }
 
@@ -242,7 +229,6 @@ public:
      *
      * @returns The key length (number of bytes in the byte array from `GetBytes()`), or zero if `Key` represents a
      *          `keyRef`.
-     *
      */
     uint16_t GetLength(void) const { return mKeyLength; }
 
@@ -252,7 +238,6 @@ public:
      *
      * @retval TRUE  The `Key` represents a `KeyRef`
      * @retval FALSE The `Key` represents a literal key.
-     *
      */
     bool IsKeyRef(void) const { return (mKey == nullptr); }
 
@@ -262,7 +247,6 @@ public:
      * MUST be used when `IsKeyRef()` returns `true`, otherwise its behavior is undefined.
      *
      * @returns The `KeyRef` associated with `Key`.
-     *
      */
     Storage::KeyRef GetKeyRef(void) const { return mKeyRef; }
 
@@ -270,7 +254,6 @@ public:
      * Sets the `Key` as a `KeyRef`.
      *
      * @param[in] aKeyRef   The `KeyRef` to set from.
-     *
      */
     void SetAsKeyRef(Storage::KeyRef aKeyRef)
     {
@@ -290,7 +273,6 @@ public:
      *
      * @retval kErrorNone    Successfully extracted the key, @p aKeyBuffer and @p aKeyLength are updated.
      * @retval kErrorNoBufs  Key does not fit in @p aKeyBuffer (extracted key length is larger than @p aKeyLength).
-     *
      */
     Error ExtractKey(uint8_t *aKeyBuffer, uint16_t &aKeyLength) const;
 #endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
@@ -298,7 +280,6 @@ public:
 
 /**
  * Represents a literal key derived from a `Key`.
- *
  */
 class LiteralKey : public Clearable<LiteralKey>, private NonCopyable
 {
@@ -312,7 +293,6 @@ public:
      * a `KeyRef` then the literal key is extracted. In this case, the extracted key MUST be smaller than `kMaxSize`.
      *
      * @param[in] aKey   The key to convert from.
-     *
      */
     explicit LiteralKey(const Key &aKey);
 
@@ -320,7 +300,6 @@ public:
      * Gets the pointer to the byte array containing the literal key.
      *
      * @returns The pointer to the byte array containing the literal key.
-     *
      */
     const uint8_t *GetBytes(void) const { return mKey; }
 
@@ -328,7 +307,6 @@ public:
      * Gets the key length.
      *
      * @returns The key length (number of bytes in the byte array from `GetBytes()`).
-     *
      */
     uint16_t GetLength(void) const { return mLength; }
 

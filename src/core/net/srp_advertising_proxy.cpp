@@ -35,12 +35,6 @@
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
 
-#include "common/as_core_type.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/serial_number.hpp"
-#include "common/type_traits.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -1258,7 +1252,7 @@ void AdvertisingProxy::HandleTimer(void)
 
     VerifyOrExit(mState == kStateRunning);
 
-    mAdvInfoList.RemoveAllMatching(AdvInfo::ExpirationChecker(nextTime.GetNow()), expiredList);
+    mAdvInfoList.RemoveAllMatching(expiredList, AdvInfo::ExpirationChecker(nextTime.GetNow()));
 
     for (AdvInfo &adv : mAdvInfoList)
     {
@@ -1287,7 +1281,7 @@ void AdvertisingProxy::HandleTasklet(void)
     {
         OwningList<AdvInfo> completedList;
 
-        mAdvInfoList.RemoveAllMatching(AdvInfo::CompletionChecker(), completedList);
+        mAdvInfoList.RemoveAllMatching(completedList, AdvInfo::CompletionChecker());
 
         VerifyOrExit(!completedList.IsEmpty());
 

@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/bit_set.hpp"
 #include "thread/neighbor.hpp"
 
 namespace ot {
@@ -48,40 +49,29 @@ namespace ot {
 
 /**
  * Represents a Thread Child.
- *
  */
-class Child : public Neighbor,
-              public IndirectSender::ChildInfo,
-              public DataPollHandler::ChildInfo
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    ,
-              public CslTxScheduler::ChildInfo
-#endif
+class Child : public CslNeighbor
 {
 public:
     static constexpr uint8_t kMaxRequestTlvs = 6;
 
     /**
      * Maximum number of registered IPv6 addresses per child (excluding the mesh-local EID).
-     *
      */
     static constexpr uint16_t kNumIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1;
 
     /**
      * Represents the iterator for registered IPv6 address list of an MTD child.
-     *
      */
     typedef otChildIp6AddressIterator AddressIterator;
 
     /**
      * The initial value for an `AddressIterator`.
-     *
      */
     static constexpr AddressIterator kAddressIteratorInit = OT_CHILD_IP6_ADDRESS_ITERATOR_INIT;
 
     /**
      * Represents diagnostic information for a Thread Child.
-     *
      */
     class Info : public otChildInfo, public Clearable<Info>
     {
@@ -90,14 +80,12 @@ public:
          * Sets the `Info` instance from a given `Child`.
          *
          * @param[in] aChild   A neighbor.
-         *
          */
         void SetFrom(const Child &aChild);
     };
 
     /**
      * Represents an IPv6 address entry registered by an MTD child.
-     *
      */
     class Ip6AddrEntry : public Ip6::Address
     {
@@ -109,7 +97,6 @@ public:
          *
          * @retval TRUE   The entry matches @p aAddress.
          * @retval FALSE  The entry does not match @p aAddress.
-         *
          */
         bool Matches(const Ip6::Address &aAddress) const { return (*this == aAddress); }
 
@@ -120,7 +107,6 @@ public:
          * @param[in] aChild  The child owning this address entry.
          *
          * @returns The MLR state of IPv6 address entry.
-         *
          */
         MlrState GetMlrState(const Child &aChild) const;
 
@@ -129,7 +115,6 @@ public:
          *
          * @param[in] aState    The MLR state.
          * @param[in] aChild    The child owning this address entry.
-         *
          */
         void SetMlrState(MlrState aState, Child &aChild);
 #endif
@@ -139,7 +124,6 @@ public:
      * Represents an array of IPv6 address entries registered by an MTD child.
      *
      * This array does not include the mesh-local EID.
-     *
      */
     typedef Array<Ip6AddrEntry, kNumIp6Addresses> Ip6AddressArray;
 
@@ -147,19 +131,16 @@ public:
      * Initializes the `Child` object.
      *
      * @param[in] aInstance  A reference to OpenThread instance.
-     *
      */
     void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
 
     /**
      * Clears the child entry.
-     *
      */
     void Clear(void);
 
     /**
      * Clears the IPv6 address list for the child.
-     *
      */
     void ClearIp6Addresses(void);
 
@@ -167,7 +148,6 @@ public:
      * Sets the device mode flags.
      *
      * @param[in]  aMode  The device mode flags.
-     *
      */
     void SetDeviceMode(Mle::DeviceMode aMode);
 
@@ -178,7 +158,6 @@ public:
      *
      * @retval kErrorNone      Successfully found the mesh-local address and updated @p aAddress.
      * @retval kErrorNotFound  No mesh-local IPv6 address in the IPv6 address list.
-     *
      */
     Error GetMeshLocalIp6Address(Ip6::Address &aAddress) const;
 
@@ -186,7 +165,6 @@ public:
      * Returns the Mesh Local Interface Identifier.
      *
      * @returns The Mesh Local Interface Identifier.
-     *
      */
     const Ip6::InterfaceIdentifier &GetMeshLocalIid(void) const { return mMeshLocalIid; }
 
@@ -196,7 +174,6 @@ public:
      * The array does not include the mesh-local EID. The ML-EID can retrieved using  `GetMeshLocalIp6Address()`.
      *
      * @returns The array of registered IPv6 addresses by the child.
-     *
      */
     const Ip6AddressArray &GetIp6Addresses(void) const { return mIp6Addresses; }
 
@@ -206,7 +183,6 @@ public:
      * The array does not include the mesh-local EID. The ML-EID can retrieved using  `GetMeshLocalIp6Address()`.
      *
      * @returns The array of registered IPv6 addresses by the child.
-     *
      */
     Ip6AddressArray &GetIp6Addresses(void) { return mIp6Addresses; }
 
@@ -219,7 +195,6 @@ public:
      *
      * @retval kErrorNone        Successfully got the next IPv6 address. @p aIterator and @p aAddress are updated.
      * @retval kErrorNotFound    No more address.
-     *
      */
     Error GetNextIp6Address(AddressIterator &aIterator, Ip6::Address &aAddress) const;
 
@@ -232,7 +207,6 @@ public:
      * @retval kErrorAlready       Address is already in the list.
      * @retval kErrorNoBufs        Already at maximum number of addresses. No entry available to add the new address.
      * @retval kErrorInvalidArgs   Address is invalid (it is the Unspecified Address).
-     *
      */
     Error AddIp6Address(const Ip6::Address &aAddress);
 
@@ -244,7 +218,6 @@ public:
      * @retval kErrorNone             Successfully removed the address.
      * @retval kErrorNotFound         Address was not found in the list.
      * @retval kErrorInvalidArgs      Address is invalid (it is the Unspecified Address).
-     *
      */
     Error RemoveIp6Address(const Ip6::Address &aAddress);
 
@@ -255,7 +228,6 @@ public:
      *
      * @retval TRUE           The address exists on the list.
      * @retval FALSE          Address was not found in the list.
-     *
      */
     bool HasIp6Address(const Ip6::Address &aAddress) const;
 
@@ -267,7 +239,6 @@ public:
      *
      * @retval kErrorNone      Successfully retrieved the DUA address, @p aAddress is updated.
      * @retval kErrorNotFound  Could not find any DUA address.
-     *
      */
     Error GetDomainUnicastAddress(Ip6::Address &aAddress) const;
 #endif
@@ -276,7 +247,6 @@ public:
      * Gets the child timeout.
      *
      * @returns The child timeout.
-     *
      */
     uint32_t GetTimeout(void) const { return mTimeout; }
 
@@ -284,7 +254,6 @@ public:
      * Sets the child timeout.
      *
      * @param[in]  aTimeout  The child timeout.
-     *
      */
     void SetTimeout(uint32_t aTimeout) { mTimeout = aTimeout; }
 
@@ -292,7 +261,6 @@ public:
      * Gets the network data version.
      *
      * @returns The network data version.
-     *
      */
     uint8_t GetNetworkDataVersion(void) const { return mNetworkDataVersion; }
 
@@ -300,13 +268,11 @@ public:
      * Sets the network data version.
      *
      * @param[in]  aVersion  The network data version.
-     *
      */
     void SetNetworkDataVersion(uint8_t aVersion) { mNetworkDataVersion = aVersion; }
 
     /**
      * Generates a new challenge value to use during a child attach.
-     *
      */
     void GenerateChallenge(void) { mAttachChallenge.GenerateRandom(); }
 
@@ -314,13 +280,11 @@ public:
      * Gets the current challenge value used during attach.
      *
      * @returns The current challenge value.
-     *
      */
     const Mle::TxChallenge &GetChallenge(void) const { return mAttachChallenge; }
 
     /**
      * Clears the requested TLV list.
-     *
      */
     void ClearRequestTlvs(void) { memset(mRequestTlvs, Mle::Tlv::kInvalid, sizeof(mRequestTlvs)); }
 
@@ -330,7 +294,6 @@ public:
      * @param[in]  aIndex  The index into the requested TLV list.
      *
      * @returns The requested TLV at index @p aIndex.
-     *
      */
     uint8_t GetRequestTlv(uint8_t aIndex) const { return mRequestTlvs[aIndex]; }
 
@@ -339,7 +302,6 @@ public:
      *
      * @param[in]  aIndex  The index into the requested TLV list.
      * @param[in]  aType   The TLV type.
-     *
      */
     void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mRequestTlvs[aIndex] = aType; }
 
@@ -347,7 +309,6 @@ public:
      * Returns the supervision interval (in seconds).
      *
      * @returns The supervision interval (in seconds).
-     *
      */
     uint16_t GetSupervisionInterval(void) const { return mSupervisionInterval; }
 
@@ -355,13 +316,11 @@ public:
      * Sets the supervision interval.
      *
      * @param[in] aInterval  The supervision interval (in seconds).
-     *
      */
     void SetSupervisionInterval(uint16_t aInterval) { mSupervisionInterval = aInterval; }
 
     /**
      * Increments the number of seconds since last supervision of the child.
-     *
      */
     void IncrementSecondsSinceLastSupervision(void) { mSecondsSinceSupervision++; }
 
@@ -369,13 +328,11 @@ public:
      * Returns the number of seconds since last supervision of the child (last message to the child)
      *
      * @returns Number of seconds since last supervision of the child.
-     *
      */
     uint16_t GetSecondsSinceLastSupervision(void) const { return mSecondsSinceSupervision; }
 
     /**
      * Resets the number of seconds since last supervision of the child to zero.
-     *
      */
     void ResetSecondsSinceLastSupervision(void) { mSecondsSinceSupervision = 0; }
 
@@ -387,7 +344,6 @@ public:
      *
      * @retval true   If the Child has IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
      * @retval false  If the Child does not have IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
-     *
      */
     bool HasMlrRegisteredAddress(const Ip6::Address &aAddress) const;
 
@@ -396,30 +352,28 @@ public:
      *
      * @retval true   If the Child has any IPv6 address of MLR state `kMlrStateRegistered`.
      * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateRegistered`.
-     *
      */
-    bool HasAnyMlrRegisteredAddress(void) const { return mMlrRegisteredMask.HasAny(); }
+    bool HasAnyMlrRegisteredAddress(void) const { return !mMlrRegisteredSet.IsEmpty(); }
 
     /**
      * Returns if the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
      *
      * @retval true   If the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
      * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateToRegister`.
-     *
      */
-    bool HasAnyMlrToRegisterAddress(void) const { return mMlrToRegisterMask.HasAny(); }
+    bool HasAnyMlrToRegisterAddress(void) const { return !mMlrToRegisterSet.IsEmpty(); }
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 private:
-    typedef BitVector<kNumIp6Addresses> ChildIp6AddressMask;
+    typedef BitSet<kNumIp6Addresses> ChildIp6AddressSet;
 
     uint32_t mTimeout;
 
     Ip6::InterfaceIdentifier mMeshLocalIid;
     Ip6AddressArray          mIp6Addresses;
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    ChildIp6AddressMask mMlrToRegisterMask;
-    ChildIp6AddressMask mMlrRegisteredMask;
+    ChildIp6AddressSet mMlrToRegisterSet;
+    ChildIp6AddressSet mMlrRegisteredSet;
 #endif
 
     uint8_t mNetworkDataVersion;
@@ -432,8 +386,6 @@ private:
 
     uint16_t mSupervisionInterval;
     uint16_t mSecondsSinceSupervision;
-
-    static_assert(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < 8192, "mQueuedMessageCount cannot fit max required!");
 };
 
 DefineCoreType(otChildInfo, Child::Info);

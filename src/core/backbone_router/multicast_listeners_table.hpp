@@ -53,7 +53,6 @@ namespace BackboneRouter {
 
 /**
  * Implements the definitions for Multicast Listeners Table.
- *
  */
 class MulticastListenersTable : public InstanceLocator, private NonCopyable
 {
@@ -62,7 +61,6 @@ class MulticastListenersTable : public InstanceLocator, private NonCopyable
 public:
     /**
      * Represents a Multicast Listener entry.
-     *
      */
     class Listener : public Clearable<Listener>
     {
@@ -81,7 +79,6 @@ public:
 
         /**
          * Initializes the `Listener` object.
-         *
          */
         Listener(void) { Clear(); }
 
@@ -89,7 +86,6 @@ public:
          * Returns the Multicast Listener address.
          *
          * @returns The Multicast Listener address.
-         *
          */
         const Ip6::Address &GetAddress(void) const { return mAddress; }
 
@@ -97,7 +93,6 @@ public:
          * Returns the expire time of the Multicast Listener.
          *
          * @returns The Multicast Listener expire time.
-         *
          */
         const TimeMilli GetExpireTime(void) const { return mExpireTime; }
 
@@ -115,7 +110,6 @@ public:
      * Initializes the Multicast Listeners Table.
      *
      * @param[in] aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit MulticastListenersTable(Instance &aInstance)
         : InstanceLocator(aInstance)
@@ -132,7 +126,6 @@ public:
      * @retval kErrorNone         If the Multicast Listener was successfully added.
      * @retval kErrorInvalidArgs  If the Multicast Listener address was invalid.
      * @retval kErrorNoBufs       No space available to save the Multicast Listener.
-     *
      */
     Error Add(const Ip6::Address &aAddress, TimeMilli aExpireTime);
 
@@ -140,13 +133,11 @@ public:
      * Removes a given Multicast Listener.
      *
      * @param[in] aAddress  The Multicast Listener address.
-     *
      */
     void Remove(const Ip6::Address &aAddress);
 
     /**
      * Removes expired Multicast Listeners.
-     *
      */
     void Expire(void);
 
@@ -154,7 +145,6 @@ public:
      * Counts the number of valid Multicast Listeners.
      *
      * @returns The number of valid Multicast Listeners.
-     *
      */
     uint16_t Count(void) const { return mNumValidListeners; }
 
@@ -166,13 +156,11 @@ public:
      *     for (MulticastListenersTable::Listener &listener : Get<MulticastListenersTable>().Iterate())
      *
      * @returns An IteratorBuilder instance.
-     *
      */
     IteratorBuilder Iterate(void) { return IteratorBuilder(GetInstance()); }
 
     /**
      * Removes all the Multicast Listeners.
-     *
      */
     void Clear(void);
 
@@ -181,7 +169,6 @@ public:
      *
      * @param[in] aCallback  The callback function.
      * @param[in] aContext   A user context pointer.
-     *
      */
     void SetCallback(Listener::Callback aCallback, void *aContext);
 
@@ -193,7 +180,6 @@ public:
      *
      * @retval kErrorNone         Successfully found the next Multicast Listener info.
      * @retval kErrorNotFound     No subsequent Multicast Listener was found.
-     *
      */
     Error GetNext(Listener::Iterator &aIterator, Listener::Info &aInfo);
 

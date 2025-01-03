@@ -51,12 +51,10 @@ extern "C" {
  * or remove entries.
  *
  * All the functions in this module require `OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE` to be enabled.
- *
  */
 
 /**
  * Represents the events reported from the Publisher callbacks.
- *
  */
 typedef enum otNetDataPublisherEvent
 {
@@ -74,7 +72,6 @@ typedef enum otNetDataPublisherEvent
  *
  * @param[in] aEvent     Indicates the event (whether the entry was added or removed).
  * @param[in] aContext   A pointer to application-specific context.
- *
  */
 typedef void (*otNetDataDnsSrpServicePublisherCallback)(otNetDataPublisherEvent aEvent, void *aContext);
 
@@ -88,7 +85,6 @@ typedef void (*otNetDataDnsSrpServicePublisherCallback)(otNetDataPublisherEvent 
  * @param[in] aEvent     Indicates the event (whether the entry was added or removed).
  * @param[in] aPrefix    A pointer to the prefix entry.
  * @param[in] aContext   A pointer to application-specific context.
- *
  */
 typedef void (*otNetDataPrefixPublisherCallback)(otNetDataPublisherEvent aEvent,
                                                  const otIp6Prefix      *aPrefix,
@@ -104,9 +100,9 @@ typedef void (*otNetDataPrefixPublisherCallback)(otNetDataPublisherEvent aEvent,
  *
  * @param[in] aInstance        A pointer to an OpenThread instance.
  * @param[in] aSequenceNUmber  The sequence number of DNS/SRP Anycast Service.
- *
+ * @param[in] aVersion         The version number to publish.
  */
-void otNetDataPublishDnsSrpServiceAnycast(otInstance *aInstance, uint8_t aSequenceNUmber);
+void otNetDataPublishDnsSrpServiceAnycast(otInstance *aInstance, uint8_t aSequenceNUmber, uint8_t aVersion);
 
 /**
  * Requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
@@ -122,9 +118,12 @@ void otNetDataPublishDnsSrpServiceAnycast(otInstance *aInstance, uint8_t aSequen
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aAddress   The DNS/SRP server address to publish (MUST NOT be NULL).
  * @param[in] aPort      The SRP server port number to publish.
- *
+ * @param[in] aVersion   The version number to publish.
  */
-void otNetDataPublishDnsSrpServiceUnicast(otInstance *aInstance, const otIp6Address *aAddress, uint16_t aPort);
+void otNetDataPublishDnsSrpServiceUnicast(otInstance         *aInstance,
+                                          const otIp6Address *aAddress,
+                                          uint16_t            aPort,
+                                          uint8_t             aVersion);
 
 /**
  * Requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
@@ -140,9 +139,9 @@ void otNetDataPublishDnsSrpServiceUnicast(otInstance *aInstance, const otIp6Addr
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aPort      The SRP server port number to publish.
- *
+ * @param[in] aVersion   The version number to publish.
  */
-void otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(otInstance *aInstance, uint16_t aPort);
+void otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(otInstance *aInstance, uint16_t aPort, uint8_t aVersion);
 
 /**
  * Indicates whether or not currently the "DNS/SRP Service" entry is added to the Thread Network Data.
@@ -153,7 +152,6 @@ void otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(otInstance *aInstance, uin
  *
  * @retval TRUE    The published DNS/SRP Service entry is added to the Thread Network Data.
  * @retval FALSE   The entry is not added to Thread Network Data or there is no entry to publish.
- *
  */
 bool otNetDataIsDnsSrpServiceAdded(otInstance *aInstance);
 
@@ -168,7 +166,6 @@ bool otNetDataIsDnsSrpServiceAdded(otInstance *aInstance);
  * @param[in] aInstance        A pointer to an OpenThread instance.
  * @param[in] aCallback        The callback function pointer (can be NULL if not needed).
  * @param[in] aContext         A pointer to application-specific context (used when @p aCallback is invoked).
- *
  */
 void otNetDataSetDnsSrpServicePublisherCallback(otInstance                             *aInstance,
                                                 otNetDataDnsSrpServicePublisherCallback aCallback,
@@ -181,7 +178,6 @@ void otNetDataSetDnsSrpServicePublisherCallback(otInstance                      
  * `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` must be enabled.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
- *
  */
 void otNetDataUnpublishDnsSrpService(otInstance *aInstance);
 
@@ -207,8 +203,6 @@ void otNetDataUnpublishDnsSrpService(otInstance *aInstance);
  * @retval OT_ERROR_NO_BUFS       Could not allocate an entry for the new request. Publisher supports a limited number
  *                                of entries (shared between on-mesh prefix and external route) determined by config
  *                                `OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES`.
- *
- *
  */
 otError otNetDataPublishOnMeshPrefix(otInstance *aInstance, const otBorderRouterConfig *aConfig);
 
@@ -267,7 +261,6 @@ otError otNetDataPublishExternalRoute(otInstance *aInstance, const otExternalRou
  * @retval OT_ERROR_NO_BUFS       Could not allocate an entry for the new request. Publisher supports a limited number
  *                                of entries (shared between on-mesh prefix and external route) determined by config
  *                                `OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES`.
- *
  */
 otError otNetDataReplacePublishedExternalRoute(otInstance                  *aInstance,
                                                const otIp6Prefix           *aPrefix,
@@ -284,7 +277,6 @@ otError otNetDataReplacePublishedExternalRoute(otInstance                  *aIns
  *
  * @retval TRUE    The published prefix entry is added to the Thread Network Data.
  * @retval FALSE   The entry is not added to Thread Network Data or there is no entry to publish.
- *
  */
 bool otNetDataIsPrefixAdded(otInstance *aInstance, const otIp6Prefix *aPrefix);
 
@@ -299,7 +291,6 @@ bool otNetDataIsPrefixAdded(otInstance *aInstance, const otIp6Prefix *aPrefix);
  * @param[in] aInstance        A pointer to an OpenThread instance.
  * @param[in] aCallback        The callback function pointer (can be NULL if not needed).
  * @param[in] aContext         A pointer to application-specific context (used when @p aCallback is invoked).
- *
  */
 void otNetDataSetPrefixPublisherCallback(otInstance                      *aInstance,
                                          otNetDataPrefixPublisherCallback aCallback,
@@ -315,13 +306,11 @@ void otNetDataSetPrefixPublisherCallback(otInstance                      *aInsta
  *
  * @retval OT_ERROR_NONE         The prefix was unpublished successfully.
  * @retval OT_ERROR_NOT_FOUND    Could not find the prefix in the published list.
- *
  */
 otError otNetDataUnpublishPrefix(otInstance *aInstance, const otIp6Prefix *aPrefix);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

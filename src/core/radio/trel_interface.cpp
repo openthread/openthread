@@ -34,17 +34,7 @@
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-#include <string.h>
-
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/string.hpp"
 #include "instance/instance.hpp"
-#include "net/dns_types.hpp"
 
 namespace ot {
 namespace Trel {
@@ -117,6 +107,16 @@ void Interface::Disable(void)
 
 exit:
     return;
+}
+
+Interface::Peer *Interface::FindPeer(const Mac::ExtAddress &aExtAddress)
+{
+    return mPeerTable.FindMatching(aExtAddress);
+}
+
+void Interface::NotifyPeerSocketAddressDifference(const Ip6::SockAddr &aPeerSockAddr, const Ip6::SockAddr &aRxSockAddr)
+{
+    otPlatTrelNotifyPeerSocketAddressDifference(&GetInstance(), &aPeerSockAddr, &aRxSockAddr);
 }
 
 void Interface::HandleExtAddressChange(void)
@@ -198,7 +198,7 @@ void Interface::HandleDiscoveredPeerInfo(const Peer::Info &aInfo)
 
     if (aInfo.IsRemoved())
     {
-        entry = mPeerTable.FindMatching(extAddress);
+        entry = FindPeer(extAddress);
         VerifyOrExit(entry != nullptr);
         RemovePeerEntry(*entry);
         ExitNow();
@@ -390,25 +390,28 @@ exit:
     return error;
 }
 
-extern "C" void otPlatTrelHandleReceived(otInstance *aInstance, uint8_t *aBuffer, uint16_t aLength)
+extern "C" void otPlatTrelHandleReceived(otInstance       *aInstance,
+                                         uint8_t          *aBuffer,
+                                         uint16_t          aLength,
+                                         const otSockAddr *aSenderAddress)
 {
     Instance &instance = AsCoreType(aInstance);
 
     VerifyOrExit(instance.IsInitialized());
-    instance.Get<Interface>().HandleReceived(aBuffer, aLength);
+    instance.Get<Interface>().HandleReceived(aBuffer, aLength, AsCoreType(aSenderAddress));
 
 exit:
     return;
 }
 
-void Interface::HandleReceived(uint8_t *aBuffer, uint16_t aLength)
+void Interface::HandleReceived(uint8_t *aBuffer, uint16_t aLength, const Ip6::SockAddr &aSenderAddr)
 {
     LogDebg("HandleReceived(aLength:%u)", aLength);
 
     VerifyOrExit(mInitialized && mEnabled && !mFiltered);
 
     mRxPacket.Init(aBuffer, aLength);
-    Get<Link>().ProcessReceivedPacket(mRxPacket);
+    Get<Link>().ProcessReceivedPacket(mRxPacket, aSenderAddr);
 
 exit:
     return;

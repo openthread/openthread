@@ -49,6 +49,7 @@
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 
+#include "lib/platform/exit_code.h"
 #include "utils/uart.h"
 
 uint32_t gNodeId = 1;
@@ -87,7 +88,7 @@ void otSimSendEvent(const struct Event *aEvent)
     if (rval < 0)
     {
         perror("sendto");
-        exit(EXIT_FAILURE);
+        DieNow(OT_EXIT_ERROR_ERRNO);
     }
 }
 
@@ -99,7 +100,7 @@ static void receiveEvent(otInstance *aInstance)
     if (rval < 0 || (uint16_t)rval < offsetof(struct Event, mData))
     {
         perror("recvfrom");
-        exit(EXIT_FAILURE);
+        DieNow(OT_EXIT_ERROR_ERRNO);
     }
 
     platformAlarmAdvanceNow(event.mDelay);
@@ -182,13 +183,13 @@ static void socket_init(void)
     if (sSockFd == -1)
     {
         perror("socket");
-        exit(EXIT_FAILURE);
+        DieNow(OT_EXIT_ERROR_ERRNO);
     }
 
     if (bind(sSockFd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) == -1)
     {
         perror("bind");
-        exit(EXIT_FAILURE);
+        DieNow(OT_EXIT_ERROR_ERRNO);
     }
 }
 
@@ -204,7 +205,7 @@ void otSysInit(int argc, char *argv[])
 
     if (argc != 2)
     {
-        exit(EXIT_FAILURE);
+        DieNow(OT_EXIT_FAILURE);
     }
 
     openlog(basename(argv[0]), LOG_PID, LOG_USER);
@@ -218,7 +219,7 @@ void otSysInit(int argc, char *argv[])
     if (*endptr != '\0' || gNodeId < 1 || gNodeId > MAX_NETWORK_SIZE)
     {
         fprintf(stderr, "Invalid NodeId: %s\n", argv[1]);
-        exit(EXIT_FAILURE);
+        DieNow(OT_EXIT_FAILURE);
     }
 
     socket_init();
@@ -268,7 +269,7 @@ void otSysProcessDrivers(otInstance *aInstance)
         if ((rval < 0) && (errno != EINTR))
         {
             perror("select");
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_ERROR_ERRNO);
         }
 
         if (rval > 0 && FD_ISSET(sSockFd, &read_fds))

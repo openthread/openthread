@@ -58,21 +58,21 @@ class ThreeBRs_TwoInfra(thread_cert.TestCase):
             'backbone_network_id': 0,
             'allowlist': [BR2],
             'is_otbr': True,
-            'version': '1.3',
+            'version': '1.4',
         },
         BR2: {
             'name': 'BR_2',
             'backbone_network_id': 1,
             'allowlist': [BR1, BR3],
             'is_otbr': True,
-            'version': '1.3',
+            'version': '1.4',
         },
         BR3: {
             'name': 'BR_3',
             'backbone_network_id': 1,
             'allowlist': [BR2],
             'is_otbr': True,
-            'version': '1.3',
+            'version': '1.4',
         }
     }
 

@@ -33,14 +33,7 @@
 
 #include "icmp6.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/message.hpp"
 #include "instance/instance.hpp"
-#include "net/checksum.hpp"
-#include "net/ip6.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -99,7 +92,7 @@ Error Icmp::SendError(Header::Type aType, Header::Code aCode, const MessageInfo 
     MessageInfo       messageInfoLocal;
     Message          *message = nullptr;
     Header            icmp6Header;
-    Message::Settings settings(Message::kWithLinkSecurity, Message::kPriorityNet);
+    Message::Settings settings(kWithLinkSecurity, Message::kPriorityNet);
 
     if (aHeaders.GetIpProto() == kProtoIcmp6)
     {

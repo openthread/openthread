@@ -106,7 +106,6 @@ class AdvertisingProxy;
 
 /**
  * Implements the SRP server.
- *
  */
 class Server : public InstanceLocator, private NonCopyable
 {
@@ -144,13 +143,11 @@ public:
 
     /**
      * The ID of SRP service update transaction.
-     *
      */
     typedef otSrpServerServiceUpdateId ServiceUpdateId;
 
     /**
      * The SRP server lease information of a host/service.
-     *
      */
     typedef otSrpServerLeaseInfo LeaseInfo;
 
@@ -159,7 +156,6 @@ public:
      *
      * Address mode specifies how the address and port number are determined by the SRP server and how this info ins
      * published in the Thread Network Data.
-     *
      */
     enum AddressMode : uint8_t
     {
@@ -171,7 +167,6 @@ public:
 
     /**
      * Represents the state of SRP server.
-     *
      */
     enum State : uint8_t
     {
@@ -182,7 +177,6 @@ public:
 
     /**
      * Implements a server-side SRP service.
-     *
      */
     class Service : public otSrpServerService,
                     public LinkedListEntry<Service>,
@@ -204,7 +198,6 @@ public:
          * It is guaranteed that all services are deleted if the host is deleted.
          *
          * @returns  TRUE if the service has been deleted, FALSE if not.
-         *
          */
         bool IsDeleted(void) const { return mIsDeleted; }
 
@@ -212,7 +205,6 @@ public:
          * Gets the full service instance name of the service.
          *
          * @returns  A pointer service instance name (as a null-terminated C string).
-         *
          */
         const char *GetInstanceName(void) const { return mInstanceName.AsCString(); }
 
@@ -220,7 +212,6 @@ public:
          * Gets the service instance label of the service.
          *
          * @returns  A pointer service instance label (as a null-terminated C string).
-         *
          */
         const char *GetInstanceLabel(void) const { return mInstanceLabel.AsCString(); }
 
@@ -228,7 +219,6 @@ public:
          * Gets the full service name of the service.
          *
          * @returns  A pointer service name (as a null-terminated C string).
-         *
          */
         const char *GetServiceName(void) const { return mServiceName.AsCString(); }
 
@@ -236,7 +226,6 @@ public:
          * Gets number of sub-types of this service.
          *
          * @returns The number of sub-types.
-         *
          */
         uint16_t GetNumberOfSubTypes(void) const { return mSubTypes.GetLength(); }
 
@@ -248,7 +237,6 @@ public:
          * @param[in] aIndex   The index to get.
          *
          * @returns A pointer to sub-type service name at @p aIndex, or `nullptr` if none at this index.
-         *
          */
         const char *GetSubTypeServiceNameAt(uint16_t aIndex) const;
 
@@ -259,7 +247,6 @@ public:
          *
          * @retval TRUE   Service contains the sub-type @p aSubTypeServiceName.
          * @retval FALSE  Service does not contain the sub-type @p aSubTypeServiceName.
-         *
          */
         bool HasSubTypeServiceName(const char *aSubTypeServiceName) const;
 
@@ -276,7 +263,6 @@ public:
          * @retval kErrorNoBufs       The sub-type label could not fit in @p aLabel buffer (number of chars from label
          *                            that could fit are copied in @p aLabel ensuring it is null-terminated).
          * @retval kErrorInvalidArgs  @p aSubTypeServiceName is not a valid sub-type format.
-         *
          */
         static Error ParseSubTypeServiceName(const char *aSubTypeServiceName, char *aLabel, uint8_t aLabelSize);
 
@@ -284,7 +270,6 @@ public:
          * Returns the TTL of the service instance.
          *
          * @returns The TTL of the service instance.
-         *
          */
         uint32_t GetTtl(void) const { return mTtl; }
 
@@ -292,7 +277,6 @@ public:
          * Returns the port of the service instance.
          *
          * @returns  The port of the service.
-         *
          */
         uint16_t GetPort(void) const { return mPort; }
 
@@ -300,7 +284,6 @@ public:
          * Returns the weight of the service instance.
          *
          * @returns  The weight of the service.
-         *
          */
         uint16_t GetWeight(void) const { return mWeight; }
 
@@ -308,7 +291,6 @@ public:
          * Returns the priority of the service instance.
          *
          * @returns  The priority of the service.
-         *
          */
         uint16_t GetPriority(void) const { return mPriority; }
 
@@ -316,7 +298,6 @@ public:
          * Returns the TXT record data of the service instance.
          *
          * @returns A pointer to the buffer containing the TXT record data.
-         *
          */
         const uint8_t *GetTxtData(void) const { return mTxtData.GetBytes(); }
 
@@ -324,7 +305,6 @@ public:
          * Returns the TXT record data length of the service instance.
          *
          * @return The TXT record data length (number of bytes in buffer returned from `GetTxtData()`).
-         *
          */
         uint16_t GetTxtDataLength(void) const { return mTxtData.GetLength(); }
 
@@ -332,7 +312,6 @@ public:
          * Returns the host which the service instance reside on.
          *
          * @returns  A reference to the host instance.
-         *
          */
         const Host &GetHost(void) const { return *mHost; }
 
@@ -340,7 +319,6 @@ public:
          * Returns the LEASE time of the service.
          *
          * @returns  The LEASE time in seconds.
-         *
          */
         uint32_t GetLease(void) const { return mLease; }
 
@@ -348,7 +326,6 @@ public:
          * Returns the KEY-LEASE time of the key of the service.
          *
          * @returns  The KEY-LEASE time in seconds.
-         *
          */
         uint32_t GetKeyLease(void) const { return mKeyLease; }
 
@@ -356,7 +333,6 @@ public:
          * Returns the expire time (in milliseconds) of the service.
          *
          * @returns  The service expire time in milliseconds.
-         *
          */
         TimeMilli GetExpireTime(void) const;
 
@@ -364,7 +340,6 @@ public:
          * Returns the key expire time (in milliseconds) of the service.
          *
          * @returns  The service key expire time in milliseconds.
-         *
          */
         TimeMilli GetKeyExpireTime(void) const;
 
@@ -373,7 +348,6 @@ public:
          *
          * @param[out]  aLeaseInfo  A reference to a LeaseInfo instance. It contains the LEASE time, KEY-LEASE time,
          *                          remaining LEASE time and the remaining KEY-LEASE time.
-         *
          */
         void GetLeaseInfo(LeaseInfo &aLeaseInfo) const;
 
@@ -384,7 +358,6 @@ public:
          *
          * @retval  TRUE   If the service matches the service instance name.
          * @retval  FALSE  If the service does not match the service instance name.
-         *
          */
         bool MatchesInstanceName(const char *aInstanceName) const;
 
@@ -395,7 +368,6 @@ public:
          *
          * @retval  TRUE   If the service matches the full service name.
          * @retval  FALSE  If the service does not match the full service name.
-         *
          */
         bool MatchesServiceName(const char *aServiceName) const;
 
@@ -454,7 +426,6 @@ public:
 
     /**
      * Implements the Host which registers services on the SRP server.
-     *
      */
     class Host : public otSrpServerHost,
                  public InstanceLocator,
@@ -477,7 +448,6 @@ public:
          * because the host name may retain.
          *
          * @returns  TRUE if the host is deleted, FALSE if the host is not deleted.
-         *
          */
         bool IsDeleted(void) const { return (mLease == 0); }
 
@@ -485,7 +455,6 @@ public:
          * Returns the full name of the host.
          *
          * @returns  A pointer to the null-terminated full host name.
-         *
          */
         const char *GetFullName(void) const { return mFullName.AsCString(); }
 
@@ -495,7 +464,6 @@ public:
          * @param[out]  aAddressesNum  The number of the addresses.
          *
          * @returns  A pointer to the addresses array or `nullptr` if no addresses.
-         *
          */
         const Ip6::Address *GetAddresses(uint8_t &aAddressesNum) const
         {
@@ -508,7 +476,6 @@ public:
          * Returns the TTL of the host.
          *
          * @returns The TTL of the host.
-         *
          */
         uint32_t GetTtl(void) const { return mTtl; }
 
@@ -516,7 +483,6 @@ public:
          * Returns the LEASE time of the host.
          *
          * @returns  The LEASE time in seconds.
-         *
          */
         uint32_t GetLease(void) const { return mLease; }
 
@@ -524,7 +490,6 @@ public:
          * Returns the KEY-LEASE time of the key of the host.
          *
          * @returns  The KEY-LEASE time in seconds.
-         *
          */
         uint32_t GetKeyLease(void) const { return mKeyLease; }
 
@@ -533,7 +498,6 @@ public:
          *
          * @param[out]  aLeaseInfo  A reference to a LeaseInfo instance. It contains the LEASE time, KEY-LEASE time,
          *                          remaining LEASE time and the remaining KEY-LEASE time.
-         *
          */
         void GetLeaseInfo(LeaseInfo &aLeaseInfo) const;
 
@@ -541,7 +505,6 @@ public:
          * Returns the key associated with this host.
          *
          * @returns  The host key.
-         *
          */
         const Key &GetKey(void) const { return mKey; }
 
@@ -549,7 +512,6 @@ public:
          * Returns the expire time (in milliseconds) of the host.
          *
          * @returns  The expire time in milliseconds.
-         *
          */
         TimeMilli GetExpireTime(void) const;
 
@@ -557,7 +519,6 @@ public:
          * Returns the expire time (in milliseconds) of the key of the host.
          *
          * @returns  The expire time of the key in milliseconds.
-         *
          */
         TimeMilli GetKeyExpireTime(void) const;
 
@@ -565,7 +526,6 @@ public:
          * Returns the `Service` linked list associated with the host.
          *
          * @returns The `Service` linked list.
-         *
          */
         const LinkedList<Service> &GetServices(void) const { return mServices; }
 
@@ -575,7 +535,6 @@ public:
          * @param[in] aPrevService   A pointer to the previous service or `nullptr` to start from beginning of the list.
          *
          * @returns  A pointer to the next service or `nullptr` if no more services can be found.
-         *
          */
         const Service *GetNextService(const Service *aPrevService) const;
 
@@ -585,7 +544,6 @@ public:
          * @param[in]  aFullName  The full name.
          *
          * @returns  A boolean that indicates whether the host matches the given name.
-         *
          */
         bool Matches(const char *aFullName) const;
 
@@ -636,7 +594,6 @@ public:
 
     /**
      * Handles TTL configuration.
-     *
      */
     class TtlConfig : public otSrpServerTtlConfig
     {
@@ -645,7 +602,6 @@ public:
     public:
         /**
          * Initializes to default TTL configuration.
-         *
          */
         TtlConfig(void);
 
@@ -656,7 +612,6 @@ public:
 
     /**
      * Handles LEASE and KEY-LEASE configurations.
-     *
      */
     class LeaseConfig : public otSrpServerLeaseConfig
     {
@@ -665,7 +620,6 @@ public:
     public:
         /**
          * Initialize to default LEASE and KEY-LEASE configurations.
-         *
          */
         LeaseConfig(void);
 
@@ -679,7 +633,6 @@ public:
      * Initializes the SRP server object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit Server(Instance &aInstance);
 
@@ -693,7 +646,6 @@ public:
      *        Otherwise, a SRP update will be considered failed.
      *
      * @sa  HandleServiceUpdateResult
-     *
      */
     void SetServiceHandler(otSrpServerServiceUpdateHandler aServiceHandler, void *aServiceHandlerContext)
     {
@@ -707,7 +659,6 @@ public:
      * A trailing dot is always appended even if the domain is set without it.
      *
      * @returns A pointer to the dot-joined domain string.
-     *
      */
     const char *GetDomain(void) const { return mDomain.AsCString(); }
 
@@ -723,7 +674,6 @@ public:
      * @retval  kErrorInvalidState  The SRP server is already enabled and the Domain cannot be changed.
      * @retval  kErrorInvalidArgs   The argument @p aDomain is not a valid DNS domain name.
      * @retval  kErrorNoBufs        There is no memory to store content of @p aDomain.
-     *
      */
     Error SetDomain(const char *aDomain);
 
@@ -731,7 +681,6 @@ public:
      * Returns the address mode being used by the SRP server.
      *
      * @returns The SRP server's address mode.
-     *
      */
     AddressMode GetAddressMode(void) const { return mAddressMode; }
 
@@ -742,7 +691,6 @@ public:
      *
      * @retval kErrorNone           Successfully set the address mode.
      * @retval kErrorInvalidState   The SRP server is enabled and the address mode cannot be changed.
-     *
      */
     Error SetAddressMode(AddressMode aMode);
 
@@ -752,7 +700,6 @@ public:
      * The sequence number is included in "DNS/SRP Service Anycast Address" entry published in the Network Data.
      *
      * @returns The anycast sequence number.
-     *
      */
     uint8_t GetAnycastModeSequenceNumber(void) const { return mAnycastSequenceNumber; }
 
@@ -763,7 +710,6 @@ public:
      *
      * @retval kErrorNone           Successfully set the address mode.
      * @retval kErrorInvalidState   The SRP server is enabled and the sequence number cannot be changed.
-     *
      */
     Error SetAnycastModeSequenceNumber(uint8_t aSequenceNumber);
 
@@ -771,7 +717,6 @@ public:
      * Returns the state of the SRP server.
      *
      * @returns  The state of the server.
-     *
      */
     State GetState(void) const { return mState; }
 
@@ -779,7 +724,6 @@ public:
      * Tells the port the SRP server is listening to.
      *
      * @returns  The port of the server or 0 if the SRP server is not running.
-     *
      */
     uint16_t GetPort(void) const { return (mState == kStateRunning) ? mPort : 0; }
 
@@ -787,7 +731,6 @@ public:
      * Enables/disables the SRP server.
      *
      * @param[in]  aEnabled  A boolean to enable/disable the SRP server.
-     *
      */
     void SetEnabled(bool aEnabled);
 
@@ -806,7 +749,6 @@ public:
      * will not change the current state of SRP sever (e.g., if it is enabled it stays enabled).
      *
      * @param[in] aEnabled    A boolean to enable/disable the auto-enable mode.
-     *
      */
     void SetAutoEnableMode(bool aEnabled);
 
@@ -815,7 +757,6 @@ public:
      *
      * @retval TRUE   The auto-enable mode is enabled.
      * @retval FALSE  The auto-enable mode is disabled.
-     *
      */
     bool IsAutoEnableMode(void) const { return mAutoEnable; }
 #endif
@@ -824,7 +765,6 @@ public:
      * Returns the TTL configuration.
      *
      * @param[out]  aTtlConfig  A reference to the `TtlConfig` instance.
-     *
      */
     void GetTtlConfig(TtlConfig &aTtlConfig) const { aTtlConfig = mTtlConfig; }
 
@@ -835,7 +775,6 @@ public:
      *
      * @retval  kErrorNone         Successfully set the TTL configuration
      * @retval  kErrorInvalidArgs  The TTL range is not valid.
-     *
      */
     Error SetTtlConfig(const TtlConfig &aTtlConfig);
 
@@ -843,7 +782,6 @@ public:
      * Returns the LEASE and KEY-LEASE configurations.
      *
      * @param[out]  aLeaseConfig  A reference to the `LeaseConfig` instance.
-     *
      */
     void GetLeaseConfig(LeaseConfig &aLeaseConfig) const { aLeaseConfig = mLeaseConfig; }
 
@@ -858,7 +796,6 @@ public:
      *
      * @retval  kErrorNone         Successfully set the LEASE and KEY-LEASE ranges.
      * @retval  kErrorInvalidArgs  The LEASE or KEY-LEASE range is not valid.
-     *
      */
     Error SetLeaseConfig(const LeaseConfig &aLeaseConfig);
 
@@ -866,7 +803,6 @@ public:
      * Returns the `Host` linked list.
      *
      * @returns The `Host` linked list.
-     *
      */
     const LinkedList<Host> &GetHosts(void) const { return mHosts; }
 
@@ -876,7 +812,6 @@ public:
      * @param[in]  aHost  The current SRP host; use `nullptr` to get the first SRP host.
      *
      * @returns  A pointer to the next SRP host or `nullptr` if no more SRP hosts can be found.
-     *
      */
     const Host *GetNextHost(const Host *aHost);
 
@@ -884,7 +819,6 @@ public:
      * Returns the response counters of the SRP server.
      *
      * @returns  A pointer to the response counters of the SRP server.
-     *
      */
     const otSrpServerResponseCounters *GetResponseCounters(void) const { return &mResponseCounters; }
 
@@ -894,11 +828,12 @@ public:
      *
      * @param[in]  aId     The ID of the service update transaction.
      * @param[in]  aError  The service update result.
-     *
      */
     void HandleServiceUpdateResult(ServiceUpdateId aId, Error aError);
 
 private:
+    static constexpr uint8_t kSrpVersion = 0;
+
     static constexpr uint16_t kUdpPayloadSize = Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
 
     static constexpr uint32_t kDefaultMinLease             = 30;          // 30 seconds.

@@ -52,6 +52,7 @@
 #include <sys/types.h>
 
 #include "simul_utils.h"
+#include "lib/platform/exit_code.h"
 #include "utils/code_utils.h"
 
 #define MAX_BUFFER_SIZE 1600
@@ -76,26 +77,16 @@ static int      sMdnsFd6 = -1;
 #endif
 #endif
 
-#define VerifyOrDie(aCondition, aErrMsg)                                        \
-    do                                                                          \
-    {                                                                           \
-        if (!(aCondition))                                                      \
-        {                                                                       \
-            fprintf(stderr, "\n\r" aErrMsg ". errono:%s\n\r", strerror(errno)); \
-            exit(1);                                                            \
-        }                                                                       \
-    } while (false)
-
 static void SetReuseAddrPort(int aFd)
 {
     int ret;
     int yes = 1;
 
     ret = setsockopt(aFd, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
-    VerifyOrDie(ret >= 0, "setsocketopt(SO_REUSEADDR) failed");
+    VerifyOrDie(ret >= 0, OT_EXIT_FAILURE);
 
     ret = setsockopt(aFd, SOL_SOCKET, SO_REUSEPORT, (char *)&yes, sizeof(yes));
-    VerifyOrDie(ret >= 0, "setsocketopt(SO_REUSEPORT) failed");
+    VerifyOrDie(ret >= 0, OT_EXIT_FAILURE);
 }
 
 static void OpenIp4Socket(uint32_t aInfraIfIndex)
@@ -109,7 +100,7 @@ static void OpenIp4Socket(uint32_t aInfraIfIndex)
     int                value;
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
-    VerifyOrDie(fd >= 0, "socket() failed");
+    VerifyOrDie(fd >= 0, OT_EXIT_FAILURE);
 
 #ifdef __linux__
     {
@@ -117,10 +108,10 @@ static void OpenIp4Socket(uint32_t aInfraIfIndex)
         const char *ifname;
 
         ifname = if_indextoname(aInfraIfIndex, nameBuffer);
-        VerifyOrDie(ifname != NULL, "if_indextoname() failed");
+        VerifyOrDie(ifname != NULL, OT_EXIT_ERROR_ERRNO);
 
         ret = setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, ifname, strlen(ifname));
-        VerifyOrDie(ret >= 0, "setsocketopt(SO_BINDTODEVICE) failed");
+        VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
     }
 #else
     value = aInfraIfIndex;
@@ -129,15 +120,15 @@ static void OpenIp4Socket(uint32_t aInfraIfIndex)
 
     u8  = 255;
     ret = setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL, &u8, sizeof(u8));
-    VerifyOrDie(ret >= 0, "setsocketopt(IP_MULTICAST_TTL) failed");
+    VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
 
     value = 255;
     ret   = setsockopt(fd, IPPROTO_IP, IP_TTL, &value, sizeof(value));
-    VerifyOrDie(ret >= 0, "setsocketopt(IP_TTL) failed");
+    VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
 
     u8  = 1;
     ret = setsockopt(fd, IPPROTO_IP, IP_MULTICAST_LOOP, &u8, sizeof(u8));
-    VerifyOrDie(ret >= 0, "setsocketopt(IP_MULTICAST_LOOP) failed");
+    VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
 
     SetReuseAddrPort(fd);
 
@@ -149,7 +140,7 @@ static void OpenIp4Socket(uint32_t aInfraIfIndex)
         mreqn.imr_ifindex          = aInfraIfIndex;
 
         ret = setsockopt(fd, IPPROTO_IP, IP_MULTICAST_IF, &mreqn, sizeof(mreqn));
-        VerifyOrDie(ret >= 0, "setsocketopt(IP_MULTICAST_IF) failed");
+        VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
     }
 
     memset(&addr, 0, sizeof(addr));
@@ -158,7 +149,7 @@ static void OpenIp4Socket(uint32_t aInfraIfIndex)
     addr.sin_port        = htons(MDNS_PORT);
 
     ret = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
-    VerifyOrDie(ret >= 0, "bind() failed");
+    VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
 
     sMdnsFd4 = fd;
 }
@@ -180,7 +171,7 @@ static void JoinOrLeaveIp4MulticastGroup(bool aJoin, uint32_t aInfraIfIndex)
     }
 
     ret = setsockopt(sMdnsFd4, IPPROTO_IP, aJoin ? IP_ADD_MEMBERSHIP : IP_DROP_MEMBERSHIP, &mreqn, sizeof(mreqn));
-    VerifyOrDie(ret >= 0, "setsocketopt(IP_ADD/DROP_MEMBERSHIP) failed");
+    VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
 }
 
 static void OpenIp6Socket(uint32_t aInfraIfIndex)
@@ -193,7 +184,7 @@ static void OpenIp6Socket(uint32_t aInfraIfIndex)
     int                 value;
 
     fd = socket(AF_INET6, SOCK_DGRAM, 0);
-    VerifyOrDie(fd >= 0, "socket() failed");
+    VerifyOrDie(fd >= 0, OT_EXIT_ERROR_ERRNO);
 
 #ifdef __linux__
     {
@@ -201,10 +192,10 @@ static void OpenIp6Socket(uint32_t aInfraIfIndex)
         const char *ifname;
 
         ifname = if_indextoname(aInfraIfIndex, nameBuffer);
-        VerifyOrDie(ifname != NULL, "if_indextoname() failed");
+        VerifyOrDie(ifname != NULL, OT_EXIT_ERROR_ERRNO);
 
         ret = setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, ifname, strlen(ifname));
-        VerifyOrDie(ret >= 0, "setsocketopt(SO_BINDTODEVICE) failed");
+        VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
     }
 #else
     value = aInfraIfIndex;
@@ -213,23 +204,23 @@ static void OpenIp6Socket(uint32_t aInfraIfIndex)
 
     value = 255;
     ret   = setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &value, sizeof(value));
-    VerifyOrDie(ret >= 0, "setsocketopt(IPV6_MULTICAST_HOPS) failed");
+    VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
 
     value = 255;
     ret   = setsockopt(fd, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &value, sizeof(value));
-    VerifyOrDie(ret >= 0, "setsocketopt(IPV6_UNICAST_HOPS) failed");
+    VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
 
     value = 1;
     ret   = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &value, sizeof(value));
-    VerifyOrDie(ret >= 0, "setsocketopt(IPV6_V6ONLY) failed");
+    VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
 
     value = aInfraIfIndex;
     ret   = setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &value, sizeof(value));
-    VerifyOrDie(ret >= 0, "setsocketopt(IPV6_MULTICAST_IF) failed");
+    VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
 
     value = 1;
     ret   = setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &value, sizeof(value));
-    VerifyOrDie(ret >= 0, "setsocketopt(IPV6_MULTICAST_LOOP) failed");
+    VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
 
     SetReuseAddrPort(fd);
 
@@ -238,7 +229,7 @@ static void OpenIp6Socket(uint32_t aInfraIfIndex)
     addr6.sin6_port   = htons(MDNS_PORT);
 
     ret = bind(fd, (struct sockaddr *)&addr6, sizeof(addr6));
-    VerifyOrDie(ret >= 0, "bind() failed");
+    VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
 
     sMdnsFd6 = fd;
 }
@@ -261,7 +252,7 @@ static void JoinOrLeaveIp6MulticastGroup(bool aJoin, uint32_t aInfraIfIndex)
     }
 
     ret = setsockopt(sMdnsFd6, IPPROTO_IPV6, aJoin ? IPV6_ADD_MEMBERSHIP : IPV6_DROP_MEMBERSHIP, &mreq6, sizeof(mreq6));
-    VerifyOrDie(ret >= 0, "setsocketopt(IP6_ADD/DROP_MEMBERSHIP) failed");
+    VerifyOrDie(ret >= 0, OT_EXIT_ERROR_ERRNO);
 }
 
 otError otPlatMdnsSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
@@ -319,7 +310,7 @@ void otPlatMdnsSendMulticast(otInstance *aInstance, otMessage *aMessage, uint32_
 
         bytes = sendto(sMdnsFd4, buffer, length, 0, (struct sockaddr *)&addr, sizeof(addr));
 
-        VerifyOrDie((bytes == length), "sendTo(sMdnsFd4) failed");
+        VerifyOrDie(bytes == length, OT_EXIT_ERROR_ERRNO);
     }
 
     {
@@ -332,7 +323,7 @@ void otPlatMdnsSendMulticast(otInstance *aInstance, otMessage *aMessage, uint32_
 
         bytes = sendto(sMdnsFd6, buffer, length, 0, (struct sockaddr *)&addr6, sizeof(addr6));
 
-        VerifyOrDie((bytes == length), "sendTo(sMdnsFd6) failed");
+        VerifyOrDie(bytes == length, OT_EXIT_ERROR_ERRNO);
     }
 
 exit:
@@ -364,7 +355,7 @@ void otPlatMdnsSendUnicast(otInstance *aInstance, otMessage *aMessage, const otP
 
         bytes = sendto(sMdnsFd4, buffer, length, 0, (struct sockaddr *)&addr, sizeof(addr));
 
-        VerifyOrDie((bytes == length), "sendTo(sMdnsFd4) failed");
+        VerifyOrDie(bytes == length, OT_EXIT_ERROR_ERRNO);
     }
     else
     {
@@ -377,7 +368,7 @@ void otPlatMdnsSendUnicast(otInstance *aInstance, otMessage *aMessage, const otP
 
         bytes = sendto(sMdnsFd6, buffer, length, 0, (struct sockaddr *)&addr6, sizeof(addr6));
 
-        VerifyOrDie((bytes == length), "sendTo(sMdnsFd6) failed");
+        VerifyOrDie(bytes == length, OT_EXIT_ERROR_ERRNO);
     }
 
 exit:
@@ -411,12 +402,12 @@ void platformMdnsSocketProcess(otInstance *aInstance, const fd_set *aReadFdSet)
         memset(&sockaddr, 0, sizeof(sockaddr));
         rval = recvfrom(sMdnsFd4, (char *)&buffer, sizeof(buffer), 0, (struct sockaddr *)&sockaddr, &len);
 
-        VerifyOrDie(rval >= 0, "recvfrom() failed");
+        VerifyOrDie(rval >= 0, OT_EXIT_ERROR_ERRNO);
 
         message = otIp6NewMessage(aInstance, NULL);
-        VerifyOrDie(message != NULL, "otIp6NewMessage() failed");
+        VerifyOrDie(message != NULL, OT_EXIT_FAILURE);
 
-        VerifyOrDie(otMessageAppend(message, buffer, (uint16_t)rval) == OT_ERROR_NONE, "otMessageAppend() failed");
+        VerifyOrDie(otMessageAppend(message, buffer, (uint16_t)rval) == OT_ERROR_NONE, OT_EXIT_FAILURE);
 
         memset(&addrInfo, 0, sizeof(addrInfo));
         otIp4ToIp4MappedIp6Address((otIp4Address *)(&sockaddr.sin_addr.s_addr), &addrInfo.mAddress);
@@ -437,12 +428,12 @@ void platformMdnsSocketProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 
         memset(&sockaddr6, 0, sizeof(sockaddr6));
         rval = recvfrom(sMdnsFd6, (char *)&buffer, sizeof(buffer), 0, (struct sockaddr *)&sockaddr6, &len);
-        VerifyOrDie(rval >= 0, "recvfrom(sMdnsFd6) failed");
+        VerifyOrDie(rval >= 0, OT_EXIT_ERROR_ERRNO);
 
         message = otIp6NewMessage(aInstance, NULL);
-        VerifyOrDie(message != NULL, "otIp6NewMessage() failed");
+        VerifyOrDie(message != NULL, OT_EXIT_FAILURE);
 
-        VerifyOrDie(otMessageAppend(message, buffer, (uint16_t)rval) == OT_ERROR_NONE, "otMessageAppend() failed");
+        VerifyOrDie(otMessageAppend(message, buffer, (uint16_t)rval) == OT_ERROR_NONE, OT_EXIT_FAILURE);
 
         memset(&addrInfo, 0, sizeof(addrInfo));
         memcpy(&addrInfo.mAddress, &sockaddr6.sin6_addr, sizeof(otIp6Address));
@@ -468,8 +459,7 @@ OT_TOOL_WEAK uint16_t otMessageRead(const otMessage *aMessage, uint16_t aOffset,
     OT_UNUSED_VARIABLE(aLength);
 
     fprintf(stderr, "\n\rWeak otMessageRead() is incorrectly used\n\r");
-    exit(1);
-
+    DieNow(OT_EXIT_FAILURE);
     return 0;
 }
 
@@ -477,7 +467,7 @@ OT_TOOL_WEAK void otMessageFree(otMessage *aMessage)
 {
     OT_UNUSED_VARIABLE(aMessage);
     fprintf(stderr, "\n\rWeak otMessageFree() is incorrectly used\n\r");
-    exit(1);
+    DieNow(OT_EXIT_FAILURE);
 }
 
 OT_TOOL_WEAK otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
@@ -486,7 +476,7 @@ OT_TOOL_WEAK otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSe
     OT_UNUSED_VARIABLE(aSettings);
 
     fprintf(stderr, "\n\rWeak otIp6NewMessage() is incorrectly used\n\r");
-    exit(1);
+    DieNow(OT_EXIT_FAILURE);
 
     return NULL;
 }
@@ -498,7 +488,7 @@ OT_TOOL_WEAK otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint
     OT_UNUSED_VARIABLE(aLength);
 
     fprintf(stderr, "\n\rWeak otMessageFree() is incorrectly used\n\r");
-    exit(1);
+    DieNow(OT_EXIT_FAILURE);
 
     return OT_ERROR_NOT_IMPLEMENTED;
 }
@@ -509,7 +499,7 @@ OT_TOOL_WEAK void otIp4ToIp4MappedIp6Address(const otIp4Address *aIp4Address, ot
     OT_UNUSED_VARIABLE(aIp6Address);
 
     fprintf(stderr, "\n\rWeak otIp4ToIp4MappedIp6Address() is incorrectly used\n\r");
-    exit(1);
+    DieNow(OT_EXIT_FAILURE);
 }
 
 OT_TOOL_WEAK otError otIp4FromIp4MappedIp6Address(const otIp6Address *aIp6Address, otIp4Address *aIp4Address)
@@ -518,7 +508,7 @@ OT_TOOL_WEAK otError otIp4FromIp4MappedIp6Address(const otIp6Address *aIp6Addres
     OT_UNUSED_VARIABLE(aIp4Address);
 
     fprintf(stderr, "\n\rWeak otIp4FromIp4MappedIp6Address() is incorrectly used\n\r");
-    exit(1);
+    DieNow(OT_EXIT_FAILURE);
 
     return OT_ERROR_NOT_IMPLEMENTED;
 }
@@ -534,7 +524,7 @@ OT_TOOL_WEAK void otPlatMdnsHandleReceive(otInstance                  *aInstance
     OT_UNUSED_VARIABLE(aAddress);
 
     fprintf(stderr, "\n\rWeak otPlatMdnsHandleReceive() is incorrectly used\n\r");
-    exit(1);
+    DieNow(OT_EXIT_FAILURE);
 }
 
 //---------------------------------------------------------------------------------------------------------------------

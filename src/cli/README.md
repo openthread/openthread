@@ -21,6 +21,7 @@ Done
 
 ## OpenThread Command List
 
+- [attachtime](#attachtime)
 - [ba](#ba)
 - [bbr](#bbr)
 - [br](README_BR.md)
@@ -70,7 +71,7 @@ Done
 - [linkmetricsmgr](#linkmetricsmgr-disable)
 - [locate](#locate)
 - [log](#log-filename-filename)
-- [mac](#mac-retries-direct)
+- [mac](#mac-altshortaddr)
 - [macfilter](#macfilter)
 - [meshdiag](#meshdiag-topology-ip6-addrs-children)
 - [mliid](#mliid-iid)
@@ -133,8 +134,23 @@ Done
 - [vendor](#vendor-name)
 - [verhoeff](#verhoeff-calculate)
 - [version](#version)
+- [wakeup](#wakeup-channel)
 
 ## OpenThread Command Details
+
+### attachtime
+
+Prints the attach time (duration since device was last attached).
+
+Requires `OPENTHREAD_CONFIG_UPTIME_ENABLE`.
+
+Duration is formatted as `{hh}:{mm}:{ss}` for hours, minutes, and seconds if it is less than one day. If the duration is longer than one day, the format is `{dd}d.{hh}:{mm}:{ss}`.
+
+```bash
+> attachtime
+01:38:25
+Done
+```
 
 ### bbr
 
@@ -372,6 +388,15 @@ Started
 Done
 ```
 
+### ba disconnect
+
+Disconnects border agent from any active secure sessions.
+
+```bash
+> ba disconnect
+Done
+```
+
 ### ba ephemeralkey
 
 Indicates if an ephemeral key is active.
@@ -407,7 +432,7 @@ The `port` specifies the UDP port to use with the ephemeral key. If UDP port is 
 
 Setting the ephemeral key again before a previously set one is timed out, will replace the previous one.
 
-While the timeout interval is in effect, the ephemeral key can be used only once by an external commissioner to connect. Once the commissioner disconnects, the ephemeral key is cleared, and Border Agent reverts to using PSKc.
+During the timeout interval, the ephemeral key can be used only once by an external commissioner to establish a connection. After the commissioner disconnects, the ephemeral key is cleared, and the Border Agent reverts to using PSKc. If the timeout expires while a commissioner is still connected, the session will be terminated, and the Border Agent will cease using the ephemeral key and revert to PSKc.
 
 ```bash
 > ba ephemeralkey set Z10X20g3J15w1000P60m16 5000 1234
@@ -1059,6 +1084,7 @@ Role Leader: 1
 Attach Attempts: 1
 Partition Id Changes: 1
 Better Partition Attach Attempts: 0
+Better Parent Attach Attempts: 0
 Parent Changes: 0
 Time Disabled Milli: 10026
 Time Detached Milli: 6852
@@ -1472,6 +1498,27 @@ Send a service instance resolution DNS query for a given service instance with a
 Service instance label is provided first, followed by the service name (note that service instance label can contain dot '.' character).
 
 The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
+
+### dns server upstream \[enable|disable\]
+
+Enable/Disable the upstream DNS feature. If no argument is provided, it prints whether the upstream DNS feature is enabled.
+
+`OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE` is required.
+
+Enable the upstream DNS feature.
+
+```
+> dns server upstream enable
+Done
+```
+
+Get whether the upstream DNS feature is enabled.
+
+```
+> dns server upstream
+Enabled
+Done
+```
 
 ### dns compression \[enable|disable\]
 
@@ -3927,6 +3974,36 @@ Done
 Done
 ```
 
+### trel counters
+
+Get the TREL counters.
+
+```bash
+> trel counters
+Inbound:  Packets 32 Bytes 4000
+Outbound: Packets 4 Bytes 320 Failures 1
+Done
+```
+
+### trel counters reset
+
+Reset the TREL counters.
+
+```bash
+> trel counters reset
+Done
+```
+
+### trel port
+
+Get the TREL UDP port number.
+
+```bash
+> trel port
+49154
+Done
+```
+
 ### tvcheck enable
 
 Enable thread version check when upgrading to router or leader.
@@ -4135,6 +4212,16 @@ Print API version number.
 Done
 ```
 
+### mac altshortaddr
+
+Get the alternate short address used by MAC layer. Can be `0xfffe` if not set.
+
+```bash
+> mac altshortaddr
+0x4801
+Done
+```
+
 ### mac retries direct
 
 Get the number of direct TX retries on the MAC layer.
@@ -4340,3 +4427,84 @@ Done
 Factory Diagnostics module is enabled only when building OpenThread with `OPENTHREAD_CONFIG_DIAG_ENABLE=1` option. Go [diagnostics module][diag] for more information.
 
 [diag]: ../../src/core/diags/README.md
+
+### wakeup channel
+
+Get the wake-up channel.
+
+Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+
+```bash
+> wakeup channel
+12
+Done
+```
+
+### wakeup channel \<channel\>
+
+Set the wake-up channel.
+
+Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+
+```bash
+> wakeup channel 12
+Done
+```
+
+### wakeup parameters
+
+Get the wake-up listen interval and duration.
+
+Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+
+```bash
+> wakeup parameters
+interval: 1000000us
+duration: 8000us
+Done
+```
+
+### wakeup parameters \<interval\> \<duration\>
+
+Set the wake-up listen interval and duration.
+
+Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+
+```bash
+> wakeup parameters 1000000 8000
+Done
+```
+
+### wakeup listen
+
+Show the state of wake-up listening feature.
+
+`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
+
+```bash
+> wakeup listen
+Enabled
+Done
+```
+
+### wakeup listen \[enable|disable\]
+
+Enable/disable listening for wake-up frames.
+
+`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
+
+```bash
+> wakeup listen enable
+Done
+```
+
+### wakeup wake \<extaddr\> \<wakeup-interval\> \<wakeup-duration\>
+
+Wakes a Wake-up End Device.
+
+`OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` is required.
+
+```bash
+> wakeup wake 1ece0a6c4653a7c1 7500 1090
+Done
+```

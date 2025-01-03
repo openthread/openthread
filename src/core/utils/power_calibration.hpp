@@ -30,7 +30,6 @@
  * @file
  * @brief
  *   This file includes definitions for the platform power calibration module.
- *
  */
 #ifndef POWER_CALIBRATION_HPP_
 #define POWER_CALIBRATION_HPP_
@@ -54,7 +53,6 @@ namespace Utils {
  * The power calibration module implements the radio platform power calibration APIs. It mainly stores the calibrated
  * power table and the target power table, provides an API for the platform to get the raw power setting of the
  * specified channel.
- *
  */
 class PowerCalibration : public InstanceLocator, private NonCopyable
 {
@@ -73,7 +71,6 @@ public:
      * @retval kErrorNoBufs       No available entry in the power calibration table.
      * @retval kErrorInvalidArgs  The @p aChannel, @p aActualPower or @p aRawPowerSetting is invalid or the
      *                            @ aActualPower already exists in the power calibration table.
-     *
      */
     Error AddCalibratedPower(uint8_t        aChannel,
                              int16_t        aActualPower,
@@ -82,7 +79,6 @@ public:
 
     /**
      * Clear all calibrated powers from the power calibration table.
-     *
      */
     void ClearCalibratedPowers(void);
 
@@ -94,7 +90,6 @@ public:
      *
      * @retval  kErrorNone         Successfully set the target power.
      * @retval  kErrorInvalidArgs  The @p aChannel or @p aTargetPower is invalid.
-     *
      */
     Error SetChannelTargetPower(uint8_t aChannel, int16_t aTargetPower);
 
@@ -117,7 +112,6 @@ public:
      * @retval  kErrorInvalidArgs  The @p aChannel is invalid, @p aRawPowerSetting or @p aRawPowerSettingLength is
      *                             nullptr or @aRawPowerSettingLength is too short.
      * @retval  kErrorNotFound     The power settings for the @p aChannel was not found.
-     *
      */
     Error GetPowerSettings(uint8_t   aChannel,
                            int16_t  *aTargetPower,

@@ -35,16 +35,10 @@
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
-#include <string.h>
 #include <openthread/diag.h>
 #include <openthread/platform/diag.h>
 
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/random.hpp"
 #include "instance/instance.hpp"
-#include "mac/mac_frame.hpp"
 
 namespace ot {
 namespace Mac {
@@ -162,6 +156,17 @@ Error LinkRaw::SetShortAddress(ShortAddress aShortAddress)
 
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
     mSubMac.SetShortAddress(aShortAddress);
+
+exit:
+    return error;
+}
+
+Error LinkRaw::SetAlternateShortAddress(ShortAddress aShortAddress)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
+    mSubMac.SetAlternateShortAddress(aShortAddress);
 
 exit:
     return error;

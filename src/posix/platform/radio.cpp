@@ -99,7 +99,8 @@ void Radio::Init(const char *aUrl)
     skipCompatibilityCheck = mRadioUrl.HasParam("skip-rcp-compatibility-check");
 
     mRadioSpinel.SetCallbacks(callbacks);
-    mRadioSpinel.Init(skipCompatibilityCheck, resetRadio, &GetSpinelDriver(), kRequiredRadioCaps, aEnableRcpTimeSync);
+    mRadioSpinel.Init(skipCompatibilityCheck, resetRadio, &GetSpinelDriver(),
+                      (skipCompatibilityCheck ? 0 : kRequiredRadioCaps), aEnableRcpTimeSync);
 
     ProcessRadioUrl(mRadioUrl);
 }
@@ -253,6 +254,12 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
     SuccessOrDie(GetRadioSpinel().SetShortAddress(aAddress));
+}
+
+void otPlatRadioSetAlternateShortAddress(otInstance *aInstance, uint16_t aAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    SuccessOrDie(GetRadioSpinel().SetAlternateShortAddress(aAddress));
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
@@ -1063,3 +1070,7 @@ const otRcpInterfaceMetrics *otSysGetRcpInterfaceMetrics(void)
 {
     return sRadio.GetSpinelInterface().GetRcpInterfaceMetrics();
 }
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+void otSysSetRcpRestorationEnabled(bool aEnabled) { return GetRadioSpinel().SetRcpRestorationEnabled(aEnabled); }
+#endif

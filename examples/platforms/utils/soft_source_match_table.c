@@ -31,7 +31,6 @@
  *   This file implements a software Source Match table, for radios that don't have
  *   such hardware acceleration. It supports only the single-instance build of
  *   OpenThread.
- *
  */
 
 #include "utils/soft_source_match_table.h"

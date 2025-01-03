@@ -33,11 +33,6 @@
 
 #include "neighbor.hpp"
 
-#include "common/array.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/num_utils.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -246,14 +241,18 @@ const char *Neighbor::StateToString(State aState)
         "Valid",          // (7) kStateValid
     };
 
-    static_assert(0 == kStateInvalid, "kStateInvalid value is incorrect");
-    static_assert(1 == kStateRestored, "kStateRestored value is incorrect");
-    static_assert(2 == kStateParentRequest, "kStateParentRequest value is incorrect");
-    static_assert(3 == kStateParentResponse, "kStateParentResponse value is incorrect");
-    static_assert(4 == kStateChildIdRequest, "kStateChildIdRequest value is incorrect");
-    static_assert(5 == kStateLinkRequest, "kStateLinkRequest value is incorrect");
-    static_assert(6 == kStateChildUpdateRequest, "kStateChildUpdateRequest value is incorrect");
-    static_assert(7 == kStateValid, "kStateValid value is incorrect");
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kStateInvalid);
+        ValidateNextEnum(kStateRestored);
+        ValidateNextEnum(kStateParentRequest);
+        ValidateNextEnum(kStateParentResponse);
+        ValidateNextEnum(kStateChildIdRequest);
+        ValidateNextEnum(kStateLinkRequest);
+        ValidateNextEnum(kStateChildUpdateRequest);
+        ValidateNextEnum(kStateValid);
+    };
 
     return kStateStrings[aState];
 }

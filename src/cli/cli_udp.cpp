@@ -83,7 +83,7 @@ template <> otError UdpExample::Process<Cmd("bind")>(Arg aArgs[])
 {
     otError           error;
     otSockAddr        sockaddr;
-    otNetifIdentifier netif = OT_NETIF_THREAD;
+    otNetifIdentifier netif = OT_NETIF_THREAD_HOST;
 
     if (aArgs[0] == "-u")
     {

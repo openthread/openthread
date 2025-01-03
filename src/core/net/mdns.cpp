@@ -30,11 +30,6 @@
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/numeric_limits.hpp"
-#include "common/type_traits.hpp"
 #include "instance/instance.hpp"
 
 /**
@@ -307,7 +302,32 @@ exit:
 
 void Core::HandleEntryTimer(void)
 {
-    EntryTimerContext context(GetInstance());
+    EntryContext context(GetInstance(), TxMessage::kMulticastResponse);
+    NextFireTime nextAggrTxTime(context.GetNow());
+
+    // Determine the next multicast transmission time that is explicitly
+    // after `GetNow()` to set `mNextAggrTxTime`. This is used for
+    // response aggregation. As `HandleTimer()` is called on different
+    // entries, they can decide to extend their answer delay to the
+    // determined `mNextAggrTxTime` so that all answers are included in
+    // the same response message.
+
+    for (HostEntry &entry : mHostEntries)
+    {
+        entry.DetermineNextAggrTxTime(nextAggrTxTime);
+    }
+
+    for (ServiceEntry &entry : mServiceEntries)
+    {
+        entry.DetermineNextAggrTxTime(nextAggrTxTime);
+    }
+
+    for (ServiceType &serviceType : mServiceTypes)
+    {
+        serviceType.DetermineNextAggrTxTime(nextAggrTxTime);
+    }
+
+    context.mNextAggrTxTime = nextAggrTxTime.GetNextTime();
 
     // We process host entries before service entries. This order
     // ensures we can determine whether host addresses have already
@@ -329,12 +349,12 @@ void Core::HandleEntryTimer(void)
         serviceType.HandleTimer(context);
     }
 
-    context.GetProbeMessage().Send();
-    context.GetResponseMessage().Send();
+    context.mProbeMessage.Send();
+    context.mResponseMessage.Send();
 
     RemoveEmptyEntries();
 
-    mEntryTimer.FireAtIfEarlier(context.GetNextFireTime());
+    mEntryTimer.FireAtIfEarlier(context.mNextFireTime);
 }
 
 void Core::RemoveEmptyEntries(void)
@@ -618,38 +638,64 @@ void Core::RecordInfo::ScheduleAnswer(const AnswerInfo &aInfo)
         // that did not receive and cache the previous transmission will
         // retry its request.
 
-        VerifyOrExit(GetDurationSinceLastMulticast(aInfo.mAnswerTime) >= kMinIntervalBetweenMulticast);
+        VerifyOrExit(GetDurationSinceLastMulticast(aInfo.GetAnswerTime()) >= kMinIntervalBetweenMulticast);
     }
 
     if (mMulticastAnswerPending)
     {
-        VerifyOrExit(aInfo.mAnswerTime < mAnswerTime);
-    }
+        TimeMilli targetAnswerTime;
 
-    mMulticastAnswerPending = true;
-    mAnswerTime             = aInfo.mAnswerTime;
+        if (mCanExtendAnswerDelay && aInfo.mIsProbe)
+        {
+            mCanExtendAnswerDelay = false;
+        }
+
+        targetAnswerTime = Min(aInfo.GetAnswerTime(), GetAnswerTime());
+        mQueryRxTime     = Min(aInfo.mQueryRxTime, mQueryRxTime);
+        mAnswerDelay     = targetAnswerTime - mQueryRxTime;
+    }
+    else
+    {
+        mMulticastAnswerPending = true;
+        mCanExtendAnswerDelay   = !aInfo.mIsProbe;
+        mQueryRxTime            = aInfo.mQueryRxTime;
+        mAnswerDelay            = aInfo.mAnswerDelay;
+    }
 
 exit:
     return;
 }
 
-bool Core::RecordInfo::ShouldAppendTo(TxMessage &aResponse, TimeMilli aNow) const
+bool Core::RecordInfo::ShouldAppendTo(EntryContext &aContext)
 {
     bool shouldAppend = false;
 
     VerifyOrExit(mIsPresent);
 
-    switch (aResponse.GetType())
+    switch (aContext.mResponseMessage.GetType())
     {
     case TxMessage::kMulticastResponse:
 
-        if ((mAnnounceCounter < kNumberOfAnnounces) && (mAnnounceTime <= aNow))
+        if ((mAnnounceCounter < kNumberOfAnnounces) && (mAnnounceTime <= aContext.GetNow()))
         {
             shouldAppend = true;
             ExitNow();
         }
 
-        shouldAppend = mMulticastAnswerPending && (mAnswerTime <= aNow);
+        if (mMulticastAnswerPending && (GetAnswerTime() <= aContext.GetNow()))
+        {
+            // Check if we can delay the answer further so that it can
+            // be aggregated with other responses scheduled to go out a
+            // little later.
+
+            if (ExtendAnswerDelay(aContext) == kErrorNone)
+            {
+                ExitNow();
+            }
+
+            shouldAppend = true;
+        }
+
         break;
 
     case TxMessage::kUnicastResponse:
@@ -663,6 +709,36 @@ bool Core::RecordInfo::ShouldAppendTo(TxMessage &aResponse, TimeMilli aNow) cons
 
 exit:
     return shouldAppend;
+}
+
+Error Core::RecordInfo::ExtendAnswerDelay(EntryContext &aContext)
+{
+    Error error = kErrorFailed;
+
+    // Extend the answer delay for response aggregation when possible.
+    //
+    // This method is called when we have a pending multicast answer
+    // (`mMulticastAnswerPending`) and the answer time has already
+    // expired. We first check if the answer can be delayed (e.g., it
+    // is not allowed for probe responses) and that there is an
+    // upcoming `mNextAggrTxTime` within a short window of time from
+    // `GetNow()`, before extending the delay. We ensure that the
+    // overall answer delay does not exceed
+    // `kResponseAggregationMaxDelay`.
+
+    VerifyOrExit(mCanExtendAnswerDelay);
+
+    VerifyOrExit(aContext.mNextAggrTxTime != aContext.GetNow().GetDistantFuture());
+    VerifyOrExit(aContext.mNextAggrTxTime - aContext.GetNow() < kResponseAggregationMaxDelay);
+
+    VerifyOrExit(aContext.mNextAggrTxTime - mQueryRxTime < kResponseAggregationMaxDelay);
+
+    mAnswerDelay = aContext.mNextAggrTxTime - mQueryRxTime;
+
+    error = kErrorNone;
+
+exit:
+    return error;
 }
 
 void Core::RecordInfo::UpdateStateAfterAnswer(const TxMessage &aResponse)
@@ -725,7 +801,7 @@ void Core::RecordInfo::UpdateFireTimeOn(FireTime &aFireTime)
 
     if (mMulticastAnswerPending)
     {
-        aFireTime.SetFireTime(mAnswerTime);
+        aFireTime.SetFireTime(GetAnswerTime());
     }
 
     if (mIsLastMulticastValid)
@@ -747,6 +823,24 @@ void Core::RecordInfo::UpdateFireTimeOn(FireTime &aFireTime)
         {
             aFireTime.SetFireTime(lastMulticastAgeTime);
         }
+    }
+
+exit:
+    return;
+}
+
+void Core::RecordInfo::DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const
+{
+    VerifyOrExit(mIsPresent);
+
+    if (mAnnounceCounter < kNumberOfAnnounces)
+    {
+        aNextAggrTxTime.UpdateIfEarlierAndInFuture(mAnnounceTime);
+    }
+
+    if (mMulticastAnswerPending)
+    {
+        aNextAggrTxTime.UpdateIfEarlierAndInFuture(GetAnswerTime());
     }
 
 exit:
@@ -1075,18 +1169,27 @@ void Core::Entry::ScheduleNsecAnswer(const AnswerInfo &aInfo)
     {
         if (mMulticastNsecPending)
         {
-            VerifyOrExit(aInfo.mAnswerTime < mNsecAnswerTime);
-        }
+            TimeMilli targetAnswerTime = Min(aInfo.GetAnswerTime(), GetNsecAnswerTime());
 
-        mMulticastNsecPending = true;
-        mNsecAnswerTime       = aInfo.mAnswerTime;
+            mNsecQueryRxTime = Min(aInfo.mQueryRxTime, mNsecQueryRxTime);
+            mNsecAnswerDelay = targetAnswerTime - mNsecQueryRxTime;
+        }
+        else
+        {
+            mMulticastNsecPending = true;
+            mNsecQueryRxTime      = aInfo.mQueryRxTime;
+            mNsecAnswerDelay      = aInfo.mAnswerDelay;
+        }
     }
 
 exit:
     return;
 }
 
-bool Core::Entry::ShouldAnswerNsec(TimeMilli aNow) const { return mMulticastNsecPending && (mNsecAnswerTime <= aNow); }
+bool Core::Entry::ShouldAnswerNsec(TimeMilli aNow) const
+{
+    return mMulticastNsecPending && (GetNsecAnswerTime() <= aNow);
+}
 
 void Core::Entry::AnswerNonProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, uint16_t aRecordsLength)
 {
@@ -1132,7 +1235,7 @@ void Core::Entry::AnswerProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, 
     TimeMilli  now               = TimerMilli::GetNow();
     AnswerInfo info              = aInfo;
 
-    info.mAnswerTime = now;
+    info.mAnswerDelay = 0;
 
     OT_ASSERT(info.mIsProbe);
 
@@ -1162,7 +1265,8 @@ void Core::Entry::AnswerProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, 
             }
             else if (record.GetLastMulticastTime(lastMulticastTime) == kErrorNone)
             {
-                info.mAnswerTime = Max(info.mAnswerTime, lastMulticastTime + kMinIntervalProbeResponse);
+                info.mAnswerDelay =
+                    Max(info.GetAnswerTime(), lastMulticastTime + kMinIntervalProbeResponse) - info.mQueryRxTime;
             }
         }
     }
@@ -1180,7 +1284,7 @@ void Core::Entry::AnswerProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, 
 
     if (!shouldDelay)
     {
-        info.mAnswerTime = now;
+        info.mAnswerDelay = 0;
     }
 
     for (uint16_t index = 0; index < aRecordsLength; index++)
@@ -1198,13 +1302,23 @@ void Core::Entry::DetermineNextFireTime(void)
 
     if (mMulticastNsecPending)
     {
-        SetFireTime(mNsecAnswerTime);
+        SetFireTime(GetNsecAnswerTime());
+    }
+}
+
+void Core::Entry::DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const
+{
+    mKeyRecord.DetermineNextAggrTxTime(aNextAggrTxTime);
+
+    if (mMulticastNsecPending)
+    {
+        aNextAggrTxTime.UpdateIfEarlierAndInFuture(GetNsecAnswerTime());
     }
 }
 
 void Core::Entry::ScheduleTimer(void) { ScheduleFireTimeOn(Get<Core>().mEntryTimer); }
 
-template <typename EntryType> void Core::Entry::HandleTimer(EntryTimerContext &aContext)
+template <typename EntryType> void Core::Entry::HandleTimer(EntryContext &aContext)
 {
     EntryType *thisAsEntryType = static_cast<EntryType *>(this);
 
@@ -1221,7 +1335,7 @@ template <typename EntryType> void Core::Entry::HandleTimer(EntryTimerContext &a
         {
             mProbeCount++;
             SetFireTime(aContext.GetNow() + kProbeWaitTime);
-            thisAsEntryType->PrepareProbe(aContext.GetProbeMessage());
+            thisAsEntryType->PrepareProbe(aContext.mProbeMessage);
             break;
         }
 
@@ -1231,17 +1345,18 @@ template <typename EntryType> void Core::Entry::HandleTimer(EntryTimerContext &a
         OT_FALL_THROUGH;
 
     case kRegistered:
-        thisAsEntryType->PrepareResponse(aContext.GetResponseMessage(), aContext.GetNow());
+        thisAsEntryType->PrepareResponse(aContext);
         break;
 
     case kConflict:
     case kRemoving:
         ExitNow();
     }
+
     thisAsEntryType->DetermineNextFireTime();
 
 exit:
-    UpdateNextFireTimeOn(aContext.GetNextFireTime());
+    UpdateNextFireTimeOn(aContext.mNextFireTime);
 }
 
 void Core::Entry::AppendQuestionTo(TxMessage &aTxMessage) const
@@ -1513,7 +1628,7 @@ exit:
     return;
 }
 
-void Core::HostEntry::HandleTimer(EntryTimerContext &aContext) { Entry::HandleTimer<HostEntry>(aContext); }
+void Core::HostEntry::HandleTimer(EntryContext &aContext) { Entry::HandleTimer<HostEntry>(aContext); }
 
 void Core::HostEntry::ClearAppendState(void)
 {
@@ -1552,40 +1667,42 @@ void Core::HostEntry::StartAnnouncing(void)
     mKeyRecord.StartAnnouncing();
 }
 
-void Core::HostEntry::PrepareResponse(TxMessage &aResponse, TimeMilli aNow)
+void Core::HostEntry::PrepareResponse(EntryContext &aContext)
 {
-    bool prepareAgain = false;
+    bool       prepareAgain = false;
+    TxMessage &response     = aContext.mResponseMessage;
 
     do
     {
-        aResponse.SaveCurrentState();
-        PrepareResponseRecords(aResponse, aNow);
-        aResponse.CheckSizeLimitToPrepareAgain(prepareAgain);
+        response.SaveCurrentState();
+        PrepareResponseRecords(aContext);
+        response.CheckSizeLimitToPrepareAgain(prepareAgain);
 
     } while (prepareAgain);
 
-    UpdateRecordsState(aResponse);
+    UpdateRecordsState(response);
 }
 
-void Core::HostEntry::PrepareResponseRecords(TxMessage &aResponse, TimeMilli aNow)
+void Core::HostEntry::PrepareResponseRecords(EntryContext &aContext)
 {
-    bool appendNsec = false;
+    bool       appendNsec = false;
+    TxMessage &response   = aContext.mResponseMessage;
 
-    if (mAddrRecord.ShouldAppendTo(aResponse, aNow))
+    if (mAddrRecord.ShouldAppendTo(aContext))
     {
-        AppendAddressRecordsTo(aResponse, kAnswerSection);
+        AppendAddressRecordsTo(response, kAnswerSection);
         appendNsec = true;
     }
 
-    if (mKeyRecord.ShouldAppendTo(aResponse, aNow))
+    if (mKeyRecord.ShouldAppendTo(aContext))
     {
-        AppendKeyRecordTo(aResponse, kAnswerSection);
+        AppendKeyRecordTo(response, kAnswerSection);
         appendNsec = true;
     }
 
-    if (appendNsec || ShouldAnswerNsec(aNow))
+    if (appendNsec || ShouldAnswerNsec(aContext.GetNow()))
     {
-        AppendNsecRecordTo(aResponse, kAdditionalDataSection);
+        AppendNsecRecordTo(response, kAdditionalDataSection);
     }
 }
 
@@ -1608,6 +1725,17 @@ void Core::HostEntry::DetermineNextFireTime(void)
 
     Entry::DetermineNextFireTime();
     mAddrRecord.UpdateFireTimeOn(*this);
+
+exit:
+    return;
+}
+
+void Core::HostEntry::DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const
+{
+    VerifyOrExit(GetState() == kRegistered);
+
+    Entry::DetermineNextAggrTxTime(aNextAggrTxTime);
+    mAddrRecord.DetermineNextAggrTxTime(aNextAggrTxTime);
 
 exit:
     return;
@@ -2042,7 +2170,7 @@ exit:
     return shouldSuppress;
 }
 
-void Core::ServiceEntry::HandleTimer(EntryTimerContext &aContext) { Entry::HandleTimer<ServiceEntry>(aContext); }
+void Core::ServiceEntry::HandleTimer(EntryContext &aContext) { Entry::HandleTimer<ServiceEntry>(aContext); }
 
 void Core::ServiceEntry::ClearAppendState(void)
 {
@@ -2108,26 +2236,28 @@ void Core::ServiceEntry::StartAnnouncing(void)
     UpdateServiceTypes();
 }
 
-void Core::ServiceEntry::PrepareResponse(TxMessage &aResponse, TimeMilli aNow)
+void Core::ServiceEntry::PrepareResponse(EntryContext &aContext)
 {
-    bool prepareAgain = false;
+    bool       prepareAgain = false;
+    TxMessage &response     = aContext.mResponseMessage;
 
     do
     {
-        aResponse.SaveCurrentState();
-        PrepareResponseRecords(aResponse, aNow);
-        aResponse.CheckSizeLimitToPrepareAgain(prepareAgain);
+        response.SaveCurrentState();
+        PrepareResponseRecords(aContext);
+        response.CheckSizeLimitToPrepareAgain(prepareAgain);
 
     } while (prepareAgain);
 
-    UpdateRecordsState(aResponse);
+    UpdateRecordsState(response);
 }
 
-void Core::ServiceEntry::PrepareResponseRecords(TxMessage &aResponse, TimeMilli aNow)
+void Core::ServiceEntry::PrepareResponseRecords(EntryContext &aContext)
 {
     bool       appendNsec                    = false;
     bool       appendAdditionalRecordsForPtr = false;
     HostEntry *hostEntry                     = nullptr;
+    TxMessage &response                      = aContext.mResponseMessage;
 
     DiscoverOffsetsAndHost(hostEntry);
 
@@ -2146,9 +2276,9 @@ void Core::ServiceEntry::PrepareResponseRecords(TxMessage &aResponse, TimeMilli 
     // Additional Data inclusion, but this is skipped if the record
     // is already appended in the Answer section.
 
-    if (mPtrRecord.ShouldAppendTo(aResponse, aNow))
+    if (mPtrRecord.ShouldAppendTo(aContext))
     {
-        AppendPtrRecordTo(aResponse, kAnswerSection);
+        AppendPtrRecordTo(response, kAnswerSection);
 
         if (mPtrRecord.GetTtl() > 0)
         {
@@ -2158,9 +2288,9 @@ void Core::ServiceEntry::PrepareResponseRecords(TxMessage &aResponse, TimeMilli 
 
     for (SubType &subType : mSubTypes)
     {
-        if (subType.mPtrRecord.ShouldAppendTo(aResponse, aNow))
+        if (subType.mPtrRecord.ShouldAppendTo(aContext))
         {
-            AppendPtrRecordTo(aResponse, kAnswerSection, &subType);
+            AppendPtrRecordTo(response, kAnswerSection, &subType);
 
             if (subType.mPtrRecord.GetTtl() > 0)
             {
@@ -2180,9 +2310,9 @@ void Core::ServiceEntry::PrepareResponseRecords(TxMessage &aResponse, TimeMilli 
         }
     }
 
-    if (mSrvRecord.ShouldAppendTo(aResponse, aNow))
+    if (mSrvRecord.ShouldAppendTo(aContext))
     {
-        AppendSrvRecordTo(aResponse, kAnswerSection);
+        AppendSrvRecordTo(response, kAnswerSection);
         appendNsec = true;
 
         if ((mSrvRecord.GetTtl() > 0) && (hostEntry != nullptr))
@@ -2191,15 +2321,15 @@ void Core::ServiceEntry::PrepareResponseRecords(TxMessage &aResponse, TimeMilli 
         }
     }
 
-    if (mTxtRecord.ShouldAppendTo(aResponse, aNow))
+    if (mTxtRecord.ShouldAppendTo(aContext))
     {
-        AppendTxtRecordTo(aResponse, kAnswerSection);
+        AppendTxtRecordTo(response, kAnswerSection);
         appendNsec = true;
     }
 
-    if (mKeyRecord.ShouldAppendTo(aResponse, aNow))
+    if (mKeyRecord.ShouldAppendTo(aContext))
     {
-        AppendKeyRecordTo(aResponse, kAnswerSection);
+        AppendKeyRecordTo(response, kAnswerSection);
         appendNsec = true;
     }
 
@@ -2207,22 +2337,22 @@ void Core::ServiceEntry::PrepareResponseRecords(TxMessage &aResponse, TimeMilli 
 
     if (mSrvRecord.ShouldAppendInAdditionalDataSection())
     {
-        AppendSrvRecordTo(aResponse, kAdditionalDataSection);
+        AppendSrvRecordTo(response, kAdditionalDataSection);
     }
 
     if (mTxtRecord.ShouldAppendInAdditionalDataSection())
     {
-        AppendTxtRecordTo(aResponse, kAdditionalDataSection);
+        AppendTxtRecordTo(response, kAdditionalDataSection);
     }
 
     if ((hostEntry != nullptr) && (hostEntry->mAddrRecord.ShouldAppendInAdditionalDataSection()))
     {
-        hostEntry->AppendAddressRecordsTo(aResponse, kAdditionalDataSection);
+        hostEntry->AppendAddressRecordsTo(response, kAdditionalDataSection);
     }
 
-    if (appendNsec || ShouldAnswerNsec(aNow))
+    if (appendNsec || ShouldAnswerNsec(aContext.GetNow()))
     {
-        AppendNsecRecordTo(aResponse, kAdditionalDataSection);
+        AppendNsecRecordTo(response, kAdditionalDataSection);
     }
 }
 
@@ -2260,6 +2390,25 @@ void Core::ServiceEntry::DetermineNextFireTime(void)
     for (SubType &subType : mSubTypes)
     {
         subType.mPtrRecord.UpdateFireTimeOn(*this);
+    }
+
+exit:
+    return;
+}
+
+void Core::ServiceEntry::DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const
+{
+    VerifyOrExit(GetState() == kRegistered);
+
+    Entry::DetermineNextAggrTxTime(aNextAggrTxTime);
+
+    mPtrRecord.DetermineNextAggrTxTime(aNextAggrTxTime);
+    mSrvRecord.DetermineNextAggrTxTime(aNextAggrTxTime);
+    mTxtRecord.DetermineNextAggrTxTime(aNextAggrTxTime);
+
+    for (const SubType &subType : mSubTypes)
+    {
+        subType.mPtrRecord.DetermineNextAggrTxTime(aNextAggrTxTime);
     }
 
 exit:
@@ -2727,7 +2876,7 @@ bool Core::ServiceType::ShouldSuppressKnownAnswer(uint32_t aTtl) const
     return (aTtl > mServicesPtr.GetTtl() / 2);
 }
 
-void Core::ServiceType::HandleTimer(EntryTimerContext &aContext)
+void Core::ServiceType::HandleTimer(EntryContext &aContext)
 {
     ClearAppendState();
 
@@ -2735,34 +2884,35 @@ void Core::ServiceType::HandleTimer(EntryTimerContext &aContext)
     VerifyOrExit(GetFireTime() <= aContext.GetNow());
     ClearFireTime();
 
-    PrepareResponse(aContext.GetResponseMessage(), aContext.GetNow());
+    PrepareResponse(aContext);
 
     mServicesPtr.UpdateFireTimeOn(*this);
 
 exit:
-    UpdateNextFireTimeOn(aContext.GetNextFireTime());
+    UpdateNextFireTimeOn(aContext.mNextFireTime);
 }
 
-void Core::ServiceType::PrepareResponse(TxMessage &aResponse, TimeMilli aNow)
+void Core::ServiceType::PrepareResponse(EntryContext &aContext)
 {
-    bool prepareAgain = false;
+    bool       prepareAgain = false;
+    TxMessage &response     = aContext.mResponseMessage;
 
     do
     {
-        aResponse.SaveCurrentState();
-        PrepareResponseRecords(aResponse, aNow);
-        aResponse.CheckSizeLimitToPrepareAgain(prepareAgain);
+        response.SaveCurrentState();
+        PrepareResponseRecords(aContext);
+        response.CheckSizeLimitToPrepareAgain(prepareAgain);
 
     } while (prepareAgain);
 
-    mServicesPtr.UpdateStateAfterAnswer(aResponse);
+    mServicesPtr.UpdateStateAfterAnswer(response);
 }
 
-void Core::ServiceType::PrepareResponseRecords(TxMessage &aResponse, TimeMilli aNow)
+void Core::ServiceType::PrepareResponseRecords(EntryContext &aContext)
 {
     uint16_t serviceTypeOffset = kUnspecifiedOffset;
 
-    VerifyOrExit(mServicesPtr.ShouldAppendTo(aResponse, aNow));
+    VerifyOrExit(mServicesPtr.ShouldAppendTo(aContext));
 
     // Discover compress offset for `mServiceType` if previously
     // appended from any `ServiceEntry`.
@@ -2785,7 +2935,7 @@ void Core::ServiceType::PrepareResponseRecords(TxMessage &aResponse, TimeMilli a
         }
     }
 
-    AppendPtrRecordTo(aResponse, serviceTypeOffset);
+    AppendPtrRecordTo(aContext.mResponseMessage, serviceTypeOffset);
 
 exit:
     return;
@@ -2822,6 +2972,11 @@ void Core::ServiceType::AppendPtrRecordTo(TxMessage &aResponse, uint16_t aServic
 
 exit:
     return;
+}
+
+void Core::ServiceType::DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const
+{
+    mServicesPtr.DetermineNextAggrTxTime(aNextAggrTxTime);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -3298,13 +3453,23 @@ bool Core::TxMessage::ShouldClearAppendStateOnReinit(const Entry &aEntry) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// Core::EntryTimerContext
+// Core::EntryContext
 
-Core::EntryTimerContext::EntryTimerContext(Instance &aInstance)
-    : InstanceLocator(aInstance)
-    , mProbeMessage(aInstance, TxMessage::kMulticastProbe)
-    , mResponseMessage(aInstance, TxMessage::kMulticastResponse)
+Core::EntryContext::EntryContext(Instance &aInstance, TxMessage::Type aResponseType)
+    : mProbeMessage(aInstance, TxMessage::kMulticastProbe)
+    , mResponseMessage(aInstance, aResponseType)
 {
+    mNextAggrTxTime = mNextFireTime.GetNow().GetDistantFuture();
+}
+
+Core::EntryContext::EntryContext(Instance          &aInstance,
+                                 TxMessage::Type    aResponseType,
+                                 const AddressInfo &aDest,
+                                 uint16_t           aQueryId)
+    : mProbeMessage(aInstance, TxMessage::kMulticastProbe)
+    , mResponseMessage(aInstance, aResponseType, aDest, aQueryId)
+{
+    mNextAggrTxTime = mNextFireTime.GetNow().GetDistantFuture();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -3324,7 +3489,8 @@ Error Core::RxMessage::Init(Instance          &aInstance,
 
     InstanceLocatorInit::Init(aInstance);
 
-    mNext = nullptr;
+    mNext   = nullptr;
+    mRxTime = TimerMilli::GetNow();
 
     VerifyOrExit(!aMessagePtr.IsNull(), error = kErrorInvalidArgs);
 
@@ -3456,7 +3622,7 @@ Core::RxMessage::ProcessOutcome Core::RxMessage::ProcessQuery(bool aShouldProces
     bool           shouldDelay         = false;
     bool           canAnswer           = false;
     bool           needUnicastResponse = false;
-    TimeMilli      answerTime;
+    uint16_t       delay               = 0;
 
     for (Question &question : mQuestions)
     {
@@ -3498,21 +3664,19 @@ Core::RxMessage::ProcessOutcome Core::RxMessage::ProcessQuery(bool aShouldProces
         ExitNow();
     }
 
-    answerTime = TimerMilli::GetNow();
-
     if (shouldDelay)
     {
-        answerTime += Random::NonCrypto::GetUint32InRange(kMinResponseDelay, kMaxResponseDelay);
+        delay = Random::NonCrypto::GetUint32InRange(kMinResponseDelay, kMaxResponseDelay);
     }
 
     for (const Question &question : mQuestions)
     {
-        AnswerQuestion(question, answerTime);
+        AnswerQuestion(question, delay);
     }
 
     if (needUnicastResponse)
     {
-        SendUnicastResponse(mSenderAddress);
+        SendUnicastResponse();
     }
 
 exit:
@@ -3617,7 +3781,7 @@ exit:
     return;
 }
 
-void Core::RxMessage::AnswerQuestion(const Question &aQuestion, TimeMilli aAnswerTime)
+void Core::RxMessage::AnswerQuestion(const Question &aQuestion, uint16_t aDelay)
 {
     HostEntry    *hostEntry;
     ServiceEntry *serviceEntry;
@@ -3626,7 +3790,8 @@ void Core::RxMessage::AnswerQuestion(const Question &aQuestion, TimeMilli aAnswe
     VerifyOrExit(aQuestion.mCanAnswer);
 
     answerInfo.mQuestionRrType        = aQuestion.mRrType;
-    answerInfo.mAnswerTime            = aAnswerTime;
+    answerInfo.mAnswerDelay           = aDelay;
+    answerInfo.mQueryRxTime           = mRxTime;
     answerInfo.mIsProbe               = aQuestion.mIsProbe;
     answerInfo.mUnicastResponse       = aQuestion.mUnicastResponse;
     answerInfo.mLegacyUnicastResponse = mIsLegacyUnicast;
@@ -3845,40 +4010,37 @@ exit:
     return shouldSuppress;
 }
 
-void Core::RxMessage::SendUnicastResponse(const AddressInfo &aUnicastDest)
+void Core::RxMessage::SendUnicastResponse(void)
 {
-    TxMessage response(GetInstance(),
-                       mIsLegacyUnicast ? TxMessage::kLegacyUnicastResponse : TxMessage::kUnicastResponse, aUnicastDest,
-                       mIsLegacyUnicast ? mQueryId : 0);
+    TxMessage::Type responseType = mIsLegacyUnicast ? TxMessage::kLegacyUnicastResponse : TxMessage::kUnicastResponse;
+    EntryContext    context(GetInstance(), responseType, mSenderAddress, mIsLegacyUnicast ? mQueryId : 0);
 
     if (mIsLegacyUnicast)
     {
         // RFC6762, section 6.7:
         // Legacy Unicast Response must repeat the question
-        response.AddQuestionFrom(*mMessagePtr);
+        context.mResponseMessage.AddQuestionFrom(*mMessagePtr);
     }
-
-    TimeMilli now = TimerMilli::GetNow();
 
     for (HostEntry &entry : Get<Core>().mHostEntries)
     {
         entry.ClearAppendState();
-        entry.PrepareResponse(response, now);
+        entry.PrepareResponse(context);
     }
 
     for (ServiceEntry &entry : Get<Core>().mServiceEntries)
     {
         entry.ClearAppendState();
-        entry.PrepareResponse(response, now);
+        entry.PrepareResponse(context);
     }
 
     for (ServiceType &serviceType : Get<Core>().mServiceTypes)
     {
         serviceType.ClearAppendState();
-        serviceType.PrepareResponse(response, now);
+        serviceType.PrepareResponse(context);
     }
 
-    response.Send();
+    context.mResponseMessage.Send();
 }
 
 void Core::RxMessage::ProcessResponse(void)
@@ -4114,7 +4276,7 @@ void Core::MultiPacketRxMessages::HandleTimer(void)
     NextFireTime           nextTime;
     OwningList<RxMsgEntry> expiredEntries;
 
-    mRxMsgEntries.RemoveAllMatching(ExpireChecker(nextTime.GetNow()), expiredEntries);
+    mRxMsgEntries.RemoveAllMatching(expiredEntries, ExpireChecker(nextTime.GetNow()));
 
     for (RxMsgEntry &expiredEntry : expiredEntries)
     {
@@ -4371,8 +4533,8 @@ void Core::AddPassiveIp6AddrCache(const char *aHostName)
 
 void Core::HandleCacheTimer(void)
 {
-    CacheTimerContext context(GetInstance());
-    ExpireChecker     expireChecker(context.GetNow());
+    CacheContext  context(GetInstance());
+    ExpireChecker expireChecker(context.GetNow());
 
     // First remove all expired entries.
 
@@ -4410,9 +4572,9 @@ void Core::HandleCacheTimer(void)
         addrCache.HandleTimer(context);
     }
 
-    context.GetQueryMessage().Send();
+    context.mQueryMessage.Send();
 
-    mCacheTimer.FireAtIfEarlier(context.GetNextFireTime());
+    mCacheTimer.FireAtIfEarlier(context.mNextFireTime);
 }
 
 void Core::HandleCacheTask(void)
@@ -4515,11 +4677,10 @@ void Core::ResultCallback::Invoke(Instance &aInstance, const AddressResult &aRes
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// Core::CacheTimerContext
+// Core::CacheContext
 
-Core::CacheTimerContext::CacheTimerContext(Instance &aInstance)
-    : InstanceLocator(aInstance)
-    , mQueryMessage(aInstance, TxMessage::kMulticastQuery)
+Core::CacheContext::CacheContext(Instance &aInstance)
+    : mQueryMessage(aInstance, TxMessage::kMulticastQuery)
 {
 }
 
@@ -4825,7 +4986,7 @@ void Core::CacheEntry::ClearEmptyCallbacks(void)
     }
 }
 
-void Core::CacheEntry::HandleTimer(CacheTimerContext &aContext)
+void Core::CacheEntry::HandleTimer(CacheContext &aContext)
 {
     switch (mType)
     {
@@ -4881,7 +5042,7 @@ void Core::CacheEntry::HandleTimer(CacheTimerContext &aContext)
     DetermineNextFireTime();
 
 exit:
-    UpdateNextFireTimeOn(aContext.GetNextFireTime());
+    UpdateNextFireTimeOn(aContext.mNextFireTime);
 }
 
 Core::ResultCallback *Core::CacheEntry::FindCallbackMatching(const ResultCallback &aCallback)
@@ -4946,13 +5107,13 @@ void Core::CacheEntry::DetermineNextFireTime(void)
 
 void Core::CacheEntry::ScheduleTimer(void) { ScheduleFireTimeOn(Get<Core>().mCacheTimer); }
 
-void Core::CacheEntry::PrepareQuery(CacheTimerContext &aContext)
+void Core::CacheEntry::PrepareQuery(CacheContext &aContext)
 {
     bool prepareAgain = false;
 
     do
     {
-        TxMessage &query = aContext.GetQueryMessage();
+        TxMessage &query = aContext.mQueryMessage;
 
         query.SaveCurrentState();
 
@@ -5284,7 +5445,7 @@ void Core::BrowseCache::ProcessExpiredRecords(TimeMilli aNow)
 {
     OwningList<PtrEntry> expiredEntries;
 
-    mPtrEntries.RemoveAllMatching(ExpireChecker(aNow), expiredEntries);
+    mPtrEntries.RemoveAllMatching(expiredEntries, ExpireChecker(aNow));
 
     for (PtrEntry &exiredEntry : expiredEntries)
     {

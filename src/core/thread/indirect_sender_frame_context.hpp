@@ -53,7 +53,6 @@ namespace ot {
  * Defines the `FrameContext` type.
  *
  * This is the base class for `IndirectSender`.
- *
  */
 class IndirectSenderBase
 {
@@ -68,7 +67,6 @@ public:
      * (`DataPollHandler`) is expected to provide the buffer/object for context to be stored (it is provided from the
      * lower-layer callback asking for a frame to be prepared). This model allows different implementations of
      * `DataPollHandler` to adopt different strategies on how to save the context.
-     *
      */
     struct FrameContext
     {
@@ -82,7 +80,6 @@ public:
 
 /**
  * @}
- *
  */
 
 } // namespace ot

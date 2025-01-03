@@ -306,7 +306,7 @@ class Pskc(DatasetEntry):
             args[0] = args[0][2:]
         pskc = args[0]
         if (len(pskc) > self.maxlen * 2):
-            raise ValueError('Invalid length of Pskc. Can be max ' f'{self.length * 2} hex characters.')
+            raise ValueError(f'Invalid length of PSKc. Can be max {self.length * 2} hex characters.')
         self.data = pskc
 
     def set_from_tlv(self, tlv: TLV):
@@ -476,23 +476,24 @@ class ChannelMaskEntry(DatasetEntry):
         return TLV.from_bytes(tlv)
 
 
-def create_dataset_entry(type: MeshcopTlvType, args=None):
-    entry_classes = {
-        MeshcopTlvType.ACTIVETIMESTAMP: ActiveTimestamp,
-        MeshcopTlvType.PENDINGTIMESTAMP: PendingTimestamp,
-        MeshcopTlvType.NETWORKKEY: NetworkKey,
-        MeshcopTlvType.NETWORKNAME: NetworkName,
-        MeshcopTlvType.EXTPANID: ExtPanID,
-        MeshcopTlvType.MESHLOCALPREFIX: MeshLocalPrefix,
-        MeshcopTlvType.DELAYTIMER: DelayTimer,
-        MeshcopTlvType.PANID: PanID,
-        MeshcopTlvType.CHANNEL: Channel,
-        MeshcopTlvType.PSKC: Pskc,
-        MeshcopTlvType.SECURITYPOLICY: SecurityPolicy,
-        MeshcopTlvType.CHANNELMASK: ChannelMask
-    }
+ENTRY_CLASSES = {
+    MeshcopTlvType.ACTIVETIMESTAMP: ActiveTimestamp,
+    MeshcopTlvType.PENDINGTIMESTAMP: PendingTimestamp,
+    MeshcopTlvType.NETWORKKEY: NetworkKey,
+    MeshcopTlvType.NETWORKNAME: NetworkName,
+    MeshcopTlvType.EXTPANID: ExtPanID,
+    MeshcopTlvType.MESHLOCALPREFIX: MeshLocalPrefix,
+    MeshcopTlvType.DELAYTIMER: DelayTimer,
+    MeshcopTlvType.PANID: PanID,
+    MeshcopTlvType.CHANNEL: Channel,
+    MeshcopTlvType.PSKC: Pskc,
+    MeshcopTlvType.SECURITYPOLICY: SecurityPolicy,
+    MeshcopTlvType.CHANNELMASK: ChannelMask
+}
 
-    entry_class = entry_classes.get(type)
+
+def create_dataset_entry(type: MeshcopTlvType, args=None):
+    entry_class = ENTRY_CLASSES.get(type)
     if not entry_class:
         raise ValueError(f"Invalid configuration type: {type}")
 

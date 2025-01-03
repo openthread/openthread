@@ -30,16 +30,8 @@
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "instance/instance.hpp"
-#include "net/udp6.hpp"
-#include "thread/network_data_types.hpp"
-#include "thread/thread_netif.hpp"
+#include "utils/static_counter.hpp"
 
 /**
  * @file
@@ -747,20 +739,24 @@ Client::Client(Instance &aInstance)
     , mUserDidSetDefaultAddress(false)
 #endif
 {
-    static_assert(kIp6AddressQuery == 0, "kIp6AddressQuery value is not correct");
+    struct QueryTypeChecker
+    {
+        InitEnumValidatorCounter();
+
+        ValidateNextEnum(kIp6AddressQuery);
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-    static_assert(kIp4AddressQuery == 1, "kIp4AddressQuery value is not correct");
-#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    static_assert(kBrowseQuery == 2, "kBrowseQuery value is not correct");
-    static_assert(kServiceQuerySrvTxt == 3, "kServiceQuerySrvTxt value is not correct");
-    static_assert(kServiceQuerySrv == 4, "kServiceQuerySrv value is not correct");
-    static_assert(kServiceQueryTxt == 5, "kServiceQueryTxt value is not correct");
+        ValidateNextEnum(kIp4AddressQuery);
 #endif
-#elif OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    static_assert(kBrowseQuery == 1, "kBrowseQuery value is not correct");
-    static_assert(kServiceQuerySrvTxt == 2, "kServiceQuerySrvTxt value is not correct");
-    static_assert(kServiceQuerySrv == 3, "kServiceQuerySrv value is not correct");
-    static_assert(kServiceQueryTxt == 4, "kServiceQuerySrv value is not correct");
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+        ValidateNextEnum(kBrowseQuery);
+        ValidateNextEnum(kServiceQuerySrvTxt);
+        ValidateNextEnum(kServiceQuerySrv);
+        ValidateNextEnum(kServiceQueryTxt);
+#endif
+    };
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+    ClearAllBytes(mSendLink);
 #endif
 }
 
@@ -768,8 +764,8 @@ Error Client::Start(void)
 {
     Error error;
 
-    SuccessOrExit(error = mSocket.Open());
-    SuccessOrExit(error = mSocket.Bind(0, Ip6::kNetifUnspecified));
+    SuccessOrExit(error = mSocket.Open(Ip6::kNetifUnspecified));
+    SuccessOrExit(error = mSocket.Bind(0));
 
 exit:
     return error;
@@ -1318,17 +1314,18 @@ void Client::ProcessResponse(const Message &aResponseMessage)
 
     SuccessOrExit(ParseResponse(aResponseMessage, query, responseError));
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+    if (ReplaceWithIp4Query(*query, aResponseMessage) == kErrorNone)
+    {
+        ExitNow();
+    }
+#endif
+
     if (responseError != kErrorNone)
     {
         // Received an error from server, check if we can replace
         // the query.
 
-#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-        if (ReplaceWithIp4Query(*query) == kErrorNone)
-        {
-            ExitNow();
-        }
-#endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
         if (ReplaceWithSeparateSrvTxtQueries(*query) == kErrorNone)
         {
@@ -1565,15 +1562,40 @@ void Client::HandleTimer(void)
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
 
-Error Client::ReplaceWithIp4Query(Query &aQuery)
+Error Client::ReplaceWithIp4Query(Query &aQuery, const Message &aResponseMessage)
 {
     Error     error = kErrorFailed;
     QueryInfo info;
+    Header    header;
 
     info.ReadFrom(aQuery);
 
-    VerifyOrExit(info.mQueryType == kIp4AddressQuery);
+    VerifyOrExit(info.mQueryType == kIp6AddressQuery);
     VerifyOrExit(info.mConfig.GetNat64Mode() == QueryConfig::kNat64Allow);
+
+    // Check the response to the IPv6 query from the server. If the
+    // response code is success but the answer section is empty
+    // (indicating the name exists but has no IPv6 address), or the
+    // response code indicates an error other than `NameError`, we
+    // replace the query with an IPv4 address resolution query for
+    // the same name. If the server responded with `NameError`
+    // (RCode=3), it indicates that the name doesn't exist, so there
+    // is no need to try an IPv4 query.
+
+    SuccessOrExit(aResponseMessage.Read(aResponseMessage.GetOffset(), header));
+
+    switch (header.GetResponseCode())
+    {
+    case Header::kResponseSuccess:
+        VerifyOrExit(header.GetAnswerCount() == 0);
+        OT_FALL_THROUGH;
+
+    default:
+        break;
+
+    case Header::kResponseNameError:
+        ExitNow();
+    }
 
     // We send a new query for IPv4 address resolution
     // for the same host name. We reuse the existing `aQuery`

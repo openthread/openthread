@@ -33,10 +33,11 @@ spawn_node 1
 
 send "diag rcp\n"
 expect "diagnostics mode is disabled"
-expect_line "Done"
+expect_line "failed"
+expect_line "status 0xd"
+expect_line "Error 13: InvalidState"
 send "diag start\n"
 expect "start diagnostics mode"
-expect "status 0x00"
 expect_line "Done"
 send "diag rcp\n"
 expect "diagnostics mode is enabled"

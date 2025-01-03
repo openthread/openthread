@@ -31,7 +31,8 @@
 #include "test_platform.h"
 #include "test_util.hpp"
 
-#include "string.h"
+#include <inttypes.h>
+#include <string.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -138,6 +139,36 @@ void TestCase4To6(const char *aTestName,
         VerifyOrQuit(CheckMessage(*msg, aOutMessage, aOutMessageLen));
     }
 
+    printf("  ... PASS\n");
+}
+
+void PrintCounters(const otNat64Counters &aCounter)
+{
+    printf(" ... 4To6Packets = %" PRIu64 "\n", aCounter.m4To6Packets);
+    printf(" ... 4To6Bytes   = %" PRIu64 "\n", aCounter.m4To6Bytes);
+    printf(" ... 6To4Packets = %" PRIu64 "\n", aCounter.m6To4Packets);
+    printf(" ... 6To4Bytes   = %" PRIu64 "\n", aCounter.m6To4Bytes);
+}
+
+void PrintProtocolCounters(const otNat64ProtocolCounters &aCounter)
+{
+    printf(" Total \n");
+    PrintCounters(aCounter.mTotal);
+    printf(" ICMP \n");
+    PrintCounters(aCounter.mIcmp);
+    printf(" UDP \n");
+    PrintCounters(aCounter.mUdp);
+    printf(" TCP \n");
+    PrintCounters(aCounter.mTcp);
+}
+
+void VerifyCounters(const otNat64ProtocolCounters &aExpected, const otNat64ProtocolCounters &aActual)
+{
+    printf("Expected packet counters: \n");
+    PrintProtocolCounters(aExpected);
+    printf("Actual packet counters: \n");
+    PrintProtocolCounters(aActual);
+    VerifyOrQuit(memcmp(&aExpected, &aActual, sizeof(aActual)) == 0);
     printf("  ... PASS\n");
 }
 
@@ -297,6 +328,159 @@ void TestNat64(void)
     testFreeInstance(sInstance);
 }
 
+void TestPacketCounter(void)
+{
+    Ip6::Prefix  nat64prefix;
+    Ip4::Cidr    nat64cidr;
+    Ip6::Address ip6Source;
+    Ip6::Address ip6Dest;
+
+    printf("Test: Packet counter is cleared for new mappings.\n");
+
+    sInstance = testInitInstance();
+
+    {
+        const uint8_t ip6Address[] = {0xfd, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        const uint8_t ip4Address[] = {192, 168, 123, 1};
+
+        nat64cidr.Set(ip4Address, 32);
+        nat64prefix.Set(ip6Address, 96);
+        SuccessOrQuit(sInstance->Get<Nat64::Translator>().SetIp4Cidr(nat64cidr));
+        sInstance->Get<Nat64::Translator>().SetNat64Prefix(nat64prefix);
+    }
+
+    // Step 1: Make the mapping table dirty.
+    {
+        // fd02::1               fd01::ac10:f3c5       UDP      52     43981 → 4660 Len=4
+        const uint8_t kIp6Packet[] = {
+            0x60, 0x08, 0x6e, 0x38, 0x00, 0x0c, 0x11, 0x40, 0xfd, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xfd, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            172,  16,   243,  197,  0xab, 0xcd, 0x12, 0x34, 0x00, 0x0c, 0xe3, 0x31, 0x61, 0x62, 0x63, 0x64,
+        };
+        // 192.168.123.1         172.16.243.197        UDP      32     43981 → 4660 Len=4
+        const uint8_t kIp4Packet[] = {0x45, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11, 0x9f,
+                                      0x4d, 192,  168,  123,  1,    172,  16,   243,  197,  0xab, 0xcd,
+                                      0x12, 0x34, 0x00, 0x0c, 0xa1, 0x8d, 0x61, 0x62, 0x63, 0x64};
+
+        TestCase6To4("initial translation", kIp6Packet, Nat64::Translator::kForward, kIp4Packet, sizeof(kIp4Packet));
+    }
+
+    {
+        Nat64::Translator::AddressMappingIterator iter;
+        otNat64AddressMapping                     mapping;
+        size_t                                    totalMappingCount = 0;
+
+        sInstance->Get<Nat64::Translator>().InitAddressMappingIterator(iter);
+        while (sInstance->Get<Nat64::Translator>().GetNextAddressMapping(iter, mapping) == kErrorNone)
+        {
+            totalMappingCount++;
+            VerifyCounters(otNat64ProtocolCounters{.mTotal =
+                                                       {
+                                                           .m4To6Packets = 0,
+                                                           .m4To6Bytes   = 0,
+                                                           .m6To4Packets = 1,
+                                                           .m6To4Bytes   = 12,
+                                                       },
+                                                   .mIcmp =
+                                                       {
+                                                           .m4To6Packets = 0,
+                                                           .m4To6Bytes   = 0,
+                                                           .m6To4Packets = 0,
+                                                           .m6To4Bytes   = 0,
+                                                       },
+                                                   .mUdp =
+                                                       {
+                                                           .m4To6Packets = 0,
+                                                           .m4To6Bytes   = 0,
+                                                           .m6To4Packets = 1,
+                                                           .m6To4Bytes   = 12,
+                                                       },
+                                                   .mTcp =
+                                                       {
+                                                           .m4To6Packets = 0,
+                                                           .m4To6Bytes   = 0,
+                                                           .m6To4Packets = 0,
+                                                           .m6To4Bytes   = 0,
+                                                       }},
+                           mapping.mCounters);
+        }
+        VerifyOrQuit(totalMappingCount == 1);
+    }
+
+    // Step 2: Release the mapping table item.
+    {
+        const uint8_t ip6Address[] = {0xfd, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        const uint8_t ip4Address[] = {192, 168, 124, 1};
+
+        nat64cidr.Set(ip4Address, 32);
+        nat64prefix.Set(ip6Address, 96);
+        SuccessOrQuit(sInstance->Get<Nat64::Translator>().SetIp4Cidr(nat64cidr));
+        sInstance->Get<Nat64::Translator>().SetNat64Prefix(nat64prefix);
+    }
+
+    // Step 3: Reuse the same object for new mapping table item.
+    // If the counters are not reset, the verification below will fail.
+    {
+        // fd02::1               fd01::ac10:f3c5       UDP      52     43981 → 4660 Len=4
+        const uint8_t kIp6Packet[] = {
+            0x60, 0x08, 0x6e, 0x38, 0x00, 0x0c, 0x11, 0x40, 0xfd, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xfd, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            172,  16,   243,  197,  0xab, 0xcd, 0x12, 0x34, 0x00, 0x0c, 0xe3, 0x31, 0x61, 0x62, 0x63, 0x64,
+        };
+        // 192.168.124.1         172.16.243.197        UDP      32     43981 → 4660 Len=4
+        const uint8_t kIp4Packet[] = {0x45, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11, 0x9e,
+                                      0x4d, 192,  168,  124,  1,    172,  16,   243,  197,  0xab, 0xcd,
+                                      0x12, 0x34, 0x00, 0x0c, 0xa0, 0x8d, 0x61, 0x62, 0x63, 0x64};
+
+        TestCase6To4("translation with new mapping", kIp6Packet, Nat64::Translator::kForward, kIp4Packet,
+                     sizeof(kIp4Packet));
+    }
+
+    {
+        Nat64::Translator::AddressMappingIterator iter;
+        otNat64AddressMapping                     mapping;
+        size_t                                    totalMappingCount = 0;
+
+        sInstance->Get<Nat64::Translator>().InitAddressMappingIterator(iter);
+        while (sInstance->Get<Nat64::Translator>().GetNextAddressMapping(iter, mapping) == kErrorNone)
+        {
+            totalMappingCount++;
+            VerifyCounters(otNat64ProtocolCounters{.mTotal =
+                                                       {
+                                                           .m4To6Packets = 0,
+                                                           .m4To6Bytes   = 0,
+                                                           .m6To4Packets = 1,
+                                                           .m6To4Bytes   = 12,
+                                                       },
+                                                   .mIcmp =
+                                                       {
+                                                           .m4To6Packets = 0,
+                                                           .m4To6Bytes   = 0,
+                                                           .m6To4Packets = 0,
+                                                           .m6To4Bytes   = 0,
+                                                       },
+                                                   .mUdp =
+                                                       {
+                                                           .m4To6Packets = 0,
+                                                           .m4To6Bytes   = 0,
+                                                           .m6To4Packets = 1,
+                                                           .m6To4Bytes   = 12,
+                                                       },
+                                                   .mTcp =
+                                                       {
+                                                           .m4To6Packets = 0,
+                                                           .m4To6Bytes   = 0,
+                                                           .m6To4Packets = 0,
+                                                           .m6To4Bytes   = 0,
+                                                       }},
+                           mapping.mCounters);
+        }
+        VerifyOrQuit(totalMappingCount == 1);
+    }
+}
+
 } // namespace BorderRouter
 } // namespace ot
 
@@ -306,6 +490,7 @@ int main(void)
 {
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     ot::BorderRouter::TestNat64();
+    ot::BorderRouter::TestPacketCounter();
     printf("All tests passed\n");
 #else  // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     printf("NAT64 is not enabled\n");

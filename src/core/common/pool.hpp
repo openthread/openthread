@@ -51,7 +51,6 @@ class Instance;
  *   This module includes definitions for OpenThread object pool.
  *
  * @{
- *
  */
 
 /**
@@ -60,14 +59,12 @@ class Instance;
  * @tparam Type         The object type. Type should provide `GetNext() and `SetNext()` so that it can be added to a
  *                      linked list.
  * @tparam kPoolSize    Specifies the pool size (maximum number of objects in the pool).
- *
  */
 template <class Type, uint16_t kPoolSize> class Pool : private NonCopyable
 {
 public:
     /**
      * Initializes the pool.
-     *
      */
     Pool(void)
         : mFreeList()
@@ -85,7 +82,6 @@ public:
      * each `Type` entry object. This can be realized by the `Type` class inheriting from `InstanceLocatorInit()`.
      *
      * @param[in] aInstance   A reference to the OpenThread instance.
-     *
      */
     explicit Pool(Instance &aInstance)
         : mFreeList()
@@ -102,7 +98,6 @@ public:
      *
      * @returns A pointer to the newly allocated object, or `nullptr` if all entries from the pool are already
      *          allocated.
-     *
      */
     Type *Allocate(void) { return mFreeList.Pop(); }
 
@@ -113,13 +108,11 @@ public:
      * An already freed entry MUST not be freed again.
      *
      * @param[in]  aEntry   The pool object entry to free.
-     *
      */
     void Free(Type &aEntry) { mFreeList.Push(aEntry); }
 
     /**
      * Frees all previously allocated objects.
-     *
      */
     void FreeAll(void)
     {
@@ -135,7 +128,6 @@ public:
      * Returns the pool size.
      *
      * @returns The pool size (maximum number of objects in the pool).
-     *
      */
     uint16_t GetSize(void) const { return kPoolSize; }
 
@@ -146,7 +138,6 @@ public:
      *
      * @retval TRUE if @p aObject is from the pool.
      * @retval FALSE if @p aObject is not from the pool.
-     *
      */
     bool IsPoolEntry(const Type &aObject) const { return (&mPool[0] <= &aObject) && (&aObject < GetArrayEnd(mPool)); }
 
@@ -158,7 +149,6 @@ public:
      * @param[in] aEntry  A reference to an entry from the pool.
      *
      * @returns The associated index of @p aEntry.
-     *
      */
     uint16_t GetIndexOf(const Type &aEntry) const { return static_cast<uint16_t>(&aEntry - mPool); }
 
@@ -170,7 +160,6 @@ public:
      * @param[in] aIndex  An index.
      *
      * @returns A reference to entry at index @p aIndex.
-     *
      */
     Type &GetEntryAt(uint16_t aIndex) { return mPool[aIndex]; }
 
@@ -182,7 +171,6 @@ public:
      * @param[in] aIndex  An index.
      *
      * @returns A reference to entry at index @p aIndex.
-     *
      */
     const Type &GetEntryAt(uint16_t aIndex) const { return mPool[aIndex]; }
 
@@ -193,7 +181,6 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace ot

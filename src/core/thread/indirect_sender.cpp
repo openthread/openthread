@@ -33,27 +33,21 @@
 
 #include "indirect_sender.hpp"
 
-#if OPENTHREAD_FTD
-
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/message.hpp"
 #include "instance/instance.hpp"
-#include "thread/child.hpp"
-#include "thread/mesh_forwarder.hpp"
-#include "thread/mle_tlvs.hpp"
 
 namespace ot {
 
-const Mac::Address &IndirectSender::ChildInfo::GetMacAddress(Mac::Address &aMacAddress) const
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
+const Mac::Address &IndirectSender::NeighborInfo::GetMacAddress(Mac::Address &aMacAddress) const
 {
     if (mUseShortAddress)
     {
-        aMacAddress.SetShort(static_cast<const Child *>(this)->GetRloc16());
+        aMacAddress.SetShort(static_cast<const CslNeighbor *>(this)->GetRloc16());
     }
     else
     {
-        aMacAddress.SetExtended(static_cast<const Child *>(this)->GetExtAddress());
+        aMacAddress.SetExtended(static_cast<const CslNeighbor *>(this)->GetExtAddress());
     }
 
     return aMacAddress;
@@ -62,8 +56,10 @@ const Mac::Address &IndirectSender::ChildInfo::GetMacAddress(Mac::Address &aMacA
 IndirectSender::IndirectSender(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(false)
+#if OPENTHREAD_FTD
     , mSourceMatchController(aInstance)
     , mDataPollHandler(aInstance)
+#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     , mCslTxScheduler(aInstance)
 #endif
@@ -74,6 +70,7 @@ void IndirectSender::Stop(void)
 {
     VerifyOrExit(mEnabled);
 
+#if OPENTHREAD_FTD
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
         child.SetIndirectMessage(nullptr);
@@ -81,6 +78,8 @@ void IndirectSender::Stop(void)
     }
 
     mDataPollHandler.Clear();
+#endif
+
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mCslTxScheduler.Clear();
 #endif
@@ -89,6 +88,8 @@ exit:
     mEnabled = false;
 }
 
+#if OPENTHREAD_FTD
+
 void IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
 {
     uint16_t childIndex;
@@ -96,14 +97,14 @@ void IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
     OT_ASSERT(!aChild.IsRxOnWhenIdle());
 
     childIndex = Get<ChildTable>().GetChildIndex(aChild);
-    VerifyOrExit(!aMessage.GetChildMask(childIndex));
+    VerifyOrExit(!aMessage.GetIndirectTxChildMask().Has(childIndex));
 
-    aMessage.SetChildMask(childIndex);
+    aMessage.GetIndirectTxChildMask().Add(childIndex);
     mSourceMatchController.IncrementMessageCount(aChild);
 
     if ((aMessage.GetType() != Message::kTypeSupervision) && (aChild.GetIndirectMessageCount() > 1))
     {
-        Message *supervisionMessage = FindIndirectMessage(aChild, /* aSupervisionTypeOnly */ true);
+        Message *supervisionMessage = FindQueuedMessageForSleepyChild(aChild, AcceptSupervisionMessage);
 
         if (supervisionMessage != nullptr)
         {
@@ -123,9 +124,9 @@ Error IndirectSender::RemoveMessageFromSleepyChild(Message &aMessage, Child &aCh
     Error    error      = kErrorNone;
     uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 
-    VerifyOrExit(aMessage.GetChildMask(childIndex), error = kErrorNotFound);
+    VerifyOrExit(aMessage.GetIndirectTxChildMask().Has(childIndex), error = kErrorNotFound);
 
-    aMessage.ClearChildMask(childIndex);
+    aMessage.GetIndirectTxChildMask().Remove(childIndex);
     mSourceMatchController.DecrementMessageCount(aChild);
 
     RequestMessageUpdate(aChild);
@@ -140,7 +141,7 @@ void IndirectSender::ClearAllMessagesForSleepyChild(Child &aChild)
 
     for (Message &message : Get<MeshForwarder>().mSendQueue)
     {
-        message.ClearChildMask(Get<ChildTable>().GetChildIndex(aChild));
+        message.GetIndirectTxChildMask().Remove(Get<ChildTable>().GetChildIndex(aChild));
 
         Get<MeshForwarder>().RemoveMessageIfNoPendingTx(message);
     }
@@ -155,6 +156,23 @@ void IndirectSender::ClearAllMessagesForSleepyChild(Child &aChild)
 
 exit:
     return;
+}
+
+const Message *IndirectSender::FindQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker) const
+{
+    const Message *match      = nullptr;
+    uint16_t       childIndex = Get<ChildTable>().GetChildIndex(aChild);
+
+    for (const Message &message : Get<MeshForwarder>().mSendQueue)
+    {
+        if (message.GetIndirectTxChildMask().Has(childIndex) && aChecker(message))
+        {
+            match = &message;
+            break;
+        }
+    }
+
+    return match;
 }
 
 void IndirectSender::SetChildUseShortAddress(Child &aChild, bool aUseShortAddress)
@@ -183,10 +201,11 @@ void IndirectSender::HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMo
 
         for (Message &message : Get<MeshForwarder>().mSendQueue)
         {
-            if (message.GetChildMask(childIndex))
+            if (message.GetIndirectTxChildMask().Has(childIndex))
             {
-                message.ClearChildMask(childIndex);
+                message.GetIndirectTxChildMask().Remove(childIndex);
                 message.SetDirectTransmission();
+                message.SetTimestampToNow();
             }
         }
 
@@ -207,24 +226,6 @@ void IndirectSender::HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMo
     // case.
 }
 
-Message *IndirectSender::FindIndirectMessage(Child &aChild, bool aSupervisionTypeOnly)
-{
-    Message *msg        = nullptr;
-    uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
-
-    for (Message &message : Get<MeshForwarder>().mSendQueue)
-    {
-        if (message.GetChildMask(childIndex) &&
-            (!aSupervisionTypeOnly || (message.GetType() == Message::kTypeSupervision)))
-        {
-            msg = &message;
-            break;
-        }
-    }
-
-    return msg;
-}
-
 void IndirectSender::RequestMessageUpdate(Child &aChild)
 {
     Message *curMessage = aChild.GetIndirectMessage();
@@ -235,7 +236,7 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
     // case where we have a pending "replace frame" request and while
     // waiting for the callback, the current message is removed.
 
-    if ((curMessage != nullptr) && !curMessage->GetChildMask(Get<ChildTable>().GetChildIndex(aChild)))
+    if ((curMessage != nullptr) && !curMessage->GetIndirectTxChildMask().Has(Get<ChildTable>().GetChildIndex(aChild)))
     {
         // Set the indirect message for this child to `nullptr` to ensure
         // it is not processed on `HandleSentFrameToChild()` callback.
@@ -259,7 +260,7 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
 
     VerifyOrExit(!aChild.IsWaitingForMessageUpdate());
 
-    newMessage = FindIndirectMessage(aChild);
+    newMessage = FindQueuedMessageForSleepyChild(aChild, AcceptAnyMessage);
 
     VerifyOrExit(curMessage != newMessage);
 
@@ -302,7 +303,7 @@ exit:
 
 void IndirectSender::UpdateIndirectMessage(Child &aChild)
 {
-    Message *message = FindIndirectMessage(aChild);
+    Message *message = FindQueuedMessageForSleepyChild(aChild, AcceptAnyMessage);
 
     aChild.SetWaitingForMessageUpdate(false);
     aChild.SetIndirectMessage(message);
@@ -316,8 +317,6 @@ void IndirectSender::UpdateIndirectMessage(Child &aChild)
     if (message != nullptr)
     {
         Mac::Address childAddress;
-
-        mDataPollHandler.HandleNewFrame(aChild);
 
         aChild.GetMacAddress(childAddress);
         Get<MeshForwarder>().LogMessage(MeshForwarder::kMessagePrepareIndirect, *message, kErrorNone, &childAddress);
@@ -467,7 +466,6 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
     if ((message != nullptr) && (nextOffset < message->GetLength()))
     {
         aChild.SetIndirectFragmentOffset(nextOffset);
-        mDataPollHandler.HandleNewFrame(aChild);
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         mCslTxScheduler.Update();
 #endif
@@ -530,9 +528,9 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
             }
         }
 
-        if (message->GetChildMask(childIndex))
+        if (message->GetIndirectTxChildMask().Has(childIndex))
         {
-            message->ClearChildMask(childIndex);
+            message->GetIndirectTxChildMask().Remove(childIndex);
             mSourceMatchController.DecrementMessageCount(aChild);
         }
 
@@ -561,6 +559,57 @@ void IndirectSender::ClearMessagesForRemovedChildren(void)
     }
 }
 
-} // namespace ot
+bool IndirectSender::AcceptAnyMessage(const Message &aMessage)
+{
+    OT_UNUSED_VARIABLE(aMessage);
 
-#endif // #if OPENTHREAD_FTD
+    return true;
+}
+
+bool IndirectSender::AcceptSupervisionMessage(const Message &aMessage)
+{
+    return aMessage.GetType() == Message::kTypeSupervision;
+}
+
+#endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
+Error IndirectSender::PrepareFrameForCslNeighbor(Mac::TxFrame &aFrame,
+                                                 FrameContext &aContext,
+                                                 CslNeighbor  &aCslNeighbor)
+{
+    Error error = kErrorNotFound;
+
+#if OPENTHREAD_FTD
+    // `CslNeighbor` can only be a `Child` for now, but can be changed later.
+    error = PrepareFrameForChild(aFrame, aContext, static_cast<Child &>(aCslNeighbor));
+#else
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aCslNeighbor);
+#endif
+
+    return error;
+}
+
+void IndirectSender::HandleSentFrameToCslNeighbor(const Mac::TxFrame &aFrame,
+                                                  const FrameContext &aContext,
+                                                  Error               aError,
+                                                  CslNeighbor        &aCslNeighbor)
+{
+#if OPENTHREAD_FTD
+    HandleSentFrameToChild(aFrame, aContext, aError, static_cast<Child &>(aCslNeighbor));
+#else
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aError);
+    OT_UNUSED_VARIABLE(aCslNeighbor);
+#endif
+}
+
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
+} // namespace ot

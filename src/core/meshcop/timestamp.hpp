@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes definitions for manipulating MeshCoP timestamps.
- *
  */
 
 #ifndef MESHCOP_TIMESTAMP_HPP_
@@ -51,7 +50,6 @@ namespace MeshCoP {
 
 /**
  * Implements Timestamp generation and parsing.
- *
  */
 OT_TOOL_PACKED_BEGIN
 class Timestamp : public Clearable<Timestamp>
@@ -59,7 +57,6 @@ class Timestamp : public Clearable<Timestamp>
 public:
     /**
      * Represents timestamp components.
-     *
      */
     typedef otTimestamp Info;
 
@@ -67,7 +64,6 @@ public:
      * Copies the `Timestamp` information to  `Timestamp::Info` data structure.
      *
      * @param[out] aInfo   A reference to a `Timestamp::Info` to populate.
-     *
      */
     void ConvertTo(Info &aInfo) const;
 
@@ -75,13 +71,11 @@ public:
      * Sets the `Timestamp` from a given component-wise `Info` structure.
      *
      * @param[in] aInfo    A `Timestamp::Info` structure.
-     *
      */
     void SetFrom(const Info &aInfo);
 
     /**
      * Sets the `Timestamp` to invalid value.
-     *
      */
     void SetToInvalid(void);
 
@@ -90,7 +84,6 @@ public:
      *
      * @retval TRUE   The timestamp is valid.
      * @retval FALSE  The timestamp is not valid.
-     *
      */
     bool IsValid(void) const;
 
@@ -98,7 +91,6 @@ public:
      * Sets the `Timestamp` to value used in MLE Orphan Announce messages.
      *
      * Second and ticks fields are set to zero with Authoritative flag set.
-     *
      */
     void SetToOrphanAnnounce(void);
 
@@ -107,7 +99,6 @@ public:
      *
      * @retval TRUE   The timestamp indicates an Orphan Announce message.
      * @retval FALSE  The timestamp does not indicate an Orphan Announce message.
-     *
      */
     bool IsOrphanAnnounce(void) const;
 
@@ -115,7 +106,6 @@ public:
      * Returns the Seconds value.
      *
      * @returns The Seconds value.
-     *
      */
     uint64_t GetSeconds(void) const;
 
@@ -123,7 +113,6 @@ public:
      * Sets the Seconds value.
      *
      * @param[in]  aSeconds  The Seconds value.
-     *
      */
     void SetSeconds(uint64_t aSeconds);
 
@@ -131,7 +120,6 @@ public:
      * Returns the Ticks value.
      *
      * @returns The Ticks value.
-     *
      */
     uint16_t GetTicks(void) const { return GetTicksAndAuthFlag() >> kTicksOffset; }
 
@@ -139,7 +127,6 @@ public:
      * Sets the Ticks value.
      *
      * @param[in]  aTicks  The Ticks value.
-     *
      */
     void SetTicks(uint16_t aTicks);
 
@@ -147,7 +134,6 @@ public:
      * Returns the Authoritative value.
      *
      * @returns The Authoritative value.
-     *
      */
     bool GetAuthoritative(void) const { return (GetTicksAndAuthFlag() & kAuthoritativeFlag) != 0; }
 
@@ -155,13 +141,11 @@ public:
      * Sets the Authoritative value.
      *
      * @param[in]  aAuthoritative  The Authoritative value.
-     *
      */
     void SetAuthoritative(bool aAuthoritative);
 
     /**
      * Increments the timestamp by a random number of ticks [0, 32767].
-     *
      */
     void AdvanceRandomTicks(void);
 
@@ -177,7 +161,6 @@ public:
      * @retval -1  if @p aFirst is less than @p aSecond (`aFirst < aSecond`).
      * @retval  0  if @p aFirst is equal to @p aSecond (`aFirst == aSecond`).
      * @retval  1  if @p aFirst is greater than @p aSecond (`aFirst > aSecond`).
-     *
      */
     static int Compare(const Timestamp &aFirst, const Timestamp &aSecond);
 

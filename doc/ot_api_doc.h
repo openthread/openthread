@@ -160,7 +160,6 @@
  * @}
  *
  * @}
- *
  */
 
 /**
@@ -193,5 +192,4 @@
  * @defgroup plat-trel                TREL - Platform
  *
  * @}
- *
  */

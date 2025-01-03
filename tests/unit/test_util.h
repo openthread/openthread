@@ -44,7 +44,6 @@ extern "C" {
  *
  * @param[in]  aStatus     A scalar error status to be evaluated against zero (0).
  * @param[in]  aMessage    An optional message (constant C string) to print on failure.
- *
  */
 #define SuccessOrQuit(...)                                                                                      \
     do                                                                                                          \
@@ -63,7 +62,6 @@ extern "C" {
  *
  * @param[in]  aCondition  A Boolean expression to be evaluated.
  * @param[in]  aMessage    An optional message (constant C string) to print on failure.
- *
  */
 #define VerifyOrQuit(...)                                                                                       \
     do                                                                                                          \

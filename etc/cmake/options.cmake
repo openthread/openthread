@@ -204,6 +204,7 @@ ot_option(OT_DNS_UPSTREAM_QUERY OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE "All
 ot_option(OT_DNSSD_DISCOVERY_PROXY OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE "DNS-SD discovery proxy")
 ot_option(OT_DNSSD_SERVER OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE "DNS-SD server")
 ot_option(OT_DUA OPENTHREAD_CONFIG_DUA_ENABLE "Domain Unicast Address (DUA)")
+ot_option(OT_DYNAMIC_STORE_FRAME_AHEAD_COUNTER OPENTHREAD_CONFIG_DYNAMIC_STORE_FRAME_AHEAD_COUNTER_ENABLE "dynamic store frame ahead counter")
 ot_option(OT_ECDSA OPENTHREAD_CONFIG_ECDSA_ENABLE "ECDSA")
 ot_option(OT_EXTERNAL_HEAP OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE "external heap")
 ot_option(OT_FIREWALL OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE "firewall")
@@ -234,6 +235,7 @@ ot_option(OT_OPERATIONAL_DATASET_AUTO_INIT OPENTHREAD_CONFIG_OPERATIONAL_DATASET
 ot_option(OT_OTNS OPENTHREAD_CONFIG_OTNS_ENABLE "OTNS")
 ot_option(OT_PING_SENDER OPENTHREAD_CONFIG_PING_SENDER_ENABLE "ping sender" ${OT_APP_CLI})
 ot_option(OT_PLATFORM_BOOTLOADER_MODE OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE "platform bootloader mode")
+ot_option(OT_PLATFORM_DNSSD OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE "platform dnssd")
 ot_option(OT_PLATFORM_KEY_REF OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE "platform key reference secure storage")
 ot_option(OT_PLATFORM_LOG_CRASH_DUMP OPENTHREAD_CONFIG_PLATFORM_LOG_CRASH_DUMP_ENABLE "platform log crash dump")
 ot_option(OT_PLATFORM_NETIF OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE "platform netif")
@@ -255,6 +257,8 @@ ot_option(OT_TX_QUEUE_STATS OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE "tx que
 ot_option(OT_UDP_FORWARD OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE "UDP forward")
 ot_option(OT_UPTIME OPENTHREAD_CONFIG_UPTIME_ENABLE "uptime")
 ot_option(OT_VERHOEFF_CHECKSUM OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE "verhoeff checksum")
+ot_option(OT_WAKEUP_COORDINATOR OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE "wake-up coordinator")
+ot_option(OT_WAKEUP_END_DEVICE OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE "wake-up end device")
 
 option(OT_DOC "build OpenThread documentation")
 message(STATUS "- - - - - - - - - - - - - - - - ")
@@ -262,7 +266,7 @@ message(STATUS "- - - - - - - - - - - - - - - - ")
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Get a list of the available platforms and output as a list to the 'arg_platforms' argument
 function(ot_get_platforms arg_platforms)
-    list(APPEND result "NO" "posix" "external")
+    list(APPEND result "NO" "posix" "external" "nexus")
     set(platforms_dir "${PROJECT_SOURCE_DIR}/examples/platforms")
     file(GLOB platforms RELATIVE "${platforms_dir}" "${platforms_dir}/*")
     foreach(platform IN LISTS platforms)
@@ -286,7 +290,7 @@ endif()
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 set(OT_THREAD_VERSION_VALUES "1.1" "1.2" "1.3" "1.3.1" "1.4")
-set(OT_THREAD_VERSION "1.3" CACHE STRING "set Thread version")
+set(OT_THREAD_VERSION "1.4" CACHE STRING "set Thread version")
 set_property(CACHE OT_THREAD_VERSION PROPERTY STRINGS "${OT_THREAD_VERSION_VALUES}")
 list(FIND OT_THREAD_VERSION_VALUES "${OT_THREAD_VERSION}" ot_index)
 if(ot_index EQUAL -1)
@@ -329,6 +333,7 @@ ot_string_option(OT_VENDOR_SW_VERSION OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSI
 set(OT_POWER_SUPPLY_VALUES "BATTERY" "EXTERNAL" "EXTERNAL_STABLE" "EXTERNAL_UNSTABLE")
 ot_multi_option(OT_POWER_SUPPLY OT_POWER_SUPPLY_VALUES OPENTHREAD_CONFIG_DEVICE_POWER_SUPPLY OT_POWER_SUPPLY_ "set the device power supply config")
 
+ot_int_option(OT_LOG_MAX_SIZE OPENTHREAD_CONFIG_LOG_MAX_SIZE "set maximum log string size")
 ot_int_option(OT_MAC_CSL_REQUEST_AHEAD_US OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US "set time ahead to deliver CSL frame from MAC to SubMac in microseconds")
 ot_int_option(OT_MLE_MAX_CHILDREN OPENTHREAD_CONFIG_MLE_MAX_CHILDREN "set maximum number of children")
 ot_int_option(OT_RCP_RESTORATION_MAX_COUNT OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT "set max RCP restoration count")

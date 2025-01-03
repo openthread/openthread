@@ -160,6 +160,8 @@ class TestTrelConnectivity(thread_cert.TestCase):
         self.assertTrue(counters['Outbound']['bytes'] == 0)
         self.assertTrue(counters['Outbound']['failures'] == 0)
 
+        self.assertGreater(br1.get_trel_port(), 0)
+
     def verify(self, pv: PacketVerifier):
         pkts: PacketFilter = pv.pkts
         BR1_RLOC16 = pv.vars['BR1_RLOC16']

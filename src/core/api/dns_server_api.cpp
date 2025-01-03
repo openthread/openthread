@@ -34,8 +34,6 @@
 #include "openthread-core-config.h"
 
 #include "instance/instance.hpp"
-#include "net/dns_types.hpp"
-#include "net/dnssd_server.hpp"
 
 using namespace ot;
 

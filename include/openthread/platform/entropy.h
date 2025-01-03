@@ -50,7 +50,6 @@ extern "C" {
  *   This module includes the platform abstraction for entropy generation.
  *
  * @{
- *
  */
 
 /**
@@ -64,13 +63,11 @@ extern "C" {
  * @retval OT_ERROR_NONE          Successfully filled @p aBuffer with true random values.
  * @retval OT_ERROR_FAILED        Failed to fill @p aBuffer with true random values.
  * @retval OT_ERROR_INVALID_ARGS  @p aBuffer was set to NULL.
- *
  */
 otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

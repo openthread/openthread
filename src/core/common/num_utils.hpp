@@ -50,7 +50,6 @@ namespace ot {
  * @param[in] aSecond The second value.
  *
  * @returns The minimum of @p aFirst and @p aSecond.
- *
  */
 template <typename Type> Type Min(Type aFirst, Type aSecond) { return (aFirst < aSecond) ? aFirst : aSecond; }
 
@@ -65,7 +64,6 @@ template <typename Type> Type Min(Type aFirst, Type aSecond) { return (aFirst < 
  * @param[in] aSecond The second value.
  *
  * @returns The maximum of @p aFirst and @p aSecond.
- *
  */
 template <typename Type> Type Max(Type aFirst, Type aSecond) { return (aFirst < aSecond) ? aSecond : aFirst; }
 
@@ -81,7 +79,6 @@ template <typename Type> Type Max(Type aFirst, Type aSecond) { return (aFirst < 
  * @param[in] aMax     The maximum value.
  *
  * @returns The clamped version of @aValue to the closed range [@p aMin, @p aMax].
- *
  */
 template <typename Type> Type Clamp(Type aValue, Type aMin, Type aMax)
 {
@@ -100,7 +97,6 @@ template <typename Type> Type Clamp(Type aValue, Type aMin, Type aMax)
  * @param[in] aValue  The value to clamp.
  *
  * @returns The clamped version of @p aValue to `uint8_t`.
- *
  */
 template <typename UintType> uint8_t ClampToUint8(UintType aValue)
 {
@@ -121,7 +117,6 @@ template <typename UintType> uint8_t ClampToUint8(UintType aValue)
  * @param[in] aValue  The value to clamp.
  *
  * @returns The clamped version of @p aValue to `uint16_t`.
- *
  */
 template <typename UintType> uint16_t ClampToUint16(UintType aValue)
 {
@@ -142,7 +137,6 @@ template <typename UintType> uint16_t ClampToUint16(UintType aValue)
  * @param[in] aValue  The value to clamp.
  *
  * @returns The clamped version of @p aValue to `int8_t`.
- *
  */
 template <typename IntType> int8_t ClampToInt8(IntType aValue)
 {
@@ -165,7 +159,6 @@ template <typename IntType> int8_t ClampToInt8(IntType aValue)
  * @retval 1    If @p aFirst >  @p aSecond.
  * @retval 0    If @p aFirst == @p aSecond.
  * @retval -1   If @p aFirst <  @p aSecond.
- *
  */
 template <typename Type> int ThreeWayCompare(Type aFirst, Type aSecond)
 {
@@ -181,7 +174,6 @@ template <typename Type> int ThreeWayCompare(Type aFirst, Type aSecond)
  * @retval 1    If @p aFirst is true and @p aSecond is false (true > false).
  * @retval 0    If both @p aFirst and @p aSecond are true, or both are false (they are equal).
  * @retval -1   If @p aFirst is false and @p aSecond is true (false < true).
- *
  */
 template <> inline int ThreeWayCompare(bool aFirst, bool aSecond)
 {
@@ -197,11 +189,25 @@ template <> inline int ThreeWayCompare(bool aFirst, bool aSecond)
  * @param[in] aDivisor    The divisor value.
  *
  * @return The result of division and rounding to the closest integer.
- *
  */
 template <typename IntType> inline IntType DivideAndRoundToClosest(IntType aDividend, IntType aDivisor)
 {
     return (aDividend + (aDivisor / 2)) / aDivisor;
+}
+
+/**
+ * This template function divides two numbers and always rounds the result up.
+ *
+ * @tparam IntType   The integer type.
+ *
+ * @param[in] aDividend   The dividend value.
+ * @param[in] aDivisor    The divisor value.
+ *
+ * @return The result of division and rounding up.
+ */
+template <typename IntType> inline IntType DivideAndRoundUp(IntType aDividend, IntType aDivisor)
+{
+    return (aDividend + (aDivisor - 1)) / aDivisor;
 }
 
 /**
@@ -210,7 +216,6 @@ template <typename IntType> inline IntType DivideAndRoundToClosest(IntType aDivi
  * @param[in] aUint32   A `uint32_t` value.
  *
  * @returns The @p aUint32 value as `unsigned long`.
- *
  */
 inline unsigned long ToUlong(uint32_t aUint32) { return static_cast<unsigned long>(aUint32); }
 
@@ -222,7 +227,6 @@ inline unsigned long ToUlong(uint32_t aUint32) { return static_cast<unsigned lon
  * @param[in] aMask   A bit mask.
  *
  * @returns The number of `1` bits in @p aMask.
- *
  */
 template <typename UintType> uint8_t CountBitsInMask(UintType aMask)
 {

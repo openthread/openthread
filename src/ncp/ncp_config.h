@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes compile-time configurations for the NCP.
- *
  */
 
 #ifndef CONFIG_NCP_H_
@@ -43,7 +42,6 @@
  * @def OPENTHREAD_CONFIG_NCP_SPI_ENABLE
  *
  * Define to 1 to enable NCP SPI support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_SPI_ENABLE
 #define OPENTHREAD_CONFIG_NCP_SPI_ENABLE 0
@@ -53,7 +51,6 @@
  * @def OPENTHREAD_CONFIG_NCP_HDLC_ENABLE
  *
  * Define to 1 to enable NCP HDLC support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_HDLC_ENABLE
 #define OPENTHREAD_CONFIG_NCP_HDLC_ENABLE 0
@@ -63,7 +60,6 @@
  * @def OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE
  *
  * The size of NCP message buffer in bytes.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE
 #define OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE 2048
@@ -73,7 +69,6 @@
  * @def OPENTHREAD_CONFIG_NCP_HDLC_TX_CHUNK_SIZE
  *
  * The size of NCP HDLC TX chunk in bytes.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_HDLC_TX_CHUNK_SIZE
 #define OPENTHREAD_CONFIG_NCP_HDLC_TX_CHUNK_SIZE 2048
@@ -83,7 +78,6 @@
  * @def OPENTHREAD_CONFIG_NCP_HDLC_RX_BUFFER_SIZE
  *
  * The size of NCP HDLC RX buffer in bytes.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_HDLC_RX_BUFFER_SIZE
 #if OPENTHREAD_RADIO
@@ -97,7 +91,6 @@
  * @def OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
  *
  * The size of NCP SPI (RX/TX) buffer in bytes.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
 #if OPENTHREAD_RADIO
@@ -112,7 +105,6 @@
  *
  * The size of extra data to be allocated in UART buffer,
  * needed by NCP Spinel Encrypter.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE
 #define OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE 0
@@ -122,7 +114,6 @@
  * @def OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE
  *
  * The maximum OpenThread log string size (number of chars) supported by NCP using Spinel `StreamWrite`.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE
 #define OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE 150
@@ -134,7 +125,6 @@
  * Define as 1 to enable peek/poke functionality on NCP.
  *
  * Peek/Poke allows the host to read/write to memory addresses on NCP. This is intended for debugging.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
 #define OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE 0
@@ -152,7 +142,6 @@
  *
  * The host driver implementation may further limit the number of simultaneous Spinel command frames (e.g., wpantund
  * limits this to two). This configuration option can be used to reduce the response queue size.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_SPINEL_RESPONSE_QUEUE_SIZE
 #define OPENTHREAD_CONFIG_NCP_SPINEL_RESPONSE_QUEUE_SIZE 15
@@ -173,17 +162,33 @@
  * When enabled, the platform is expected to provide `otPlatSetMcuPowerState()` and `otPlatGetMcuPowerState()`
  * functions (please see `openthread/platform/misc.h`). Host can then control the power state using
  * `SPINEL_PROP_MCU_POWER_STATE`.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
 #define OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL 0
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE
+ *
+ * Define to 1 to enable the NCP based implementation of platform InfraIf APIs.
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE
+#define OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE
+ *
+ * Define to 1 to enable NCP based implementation of platform DNS-SD APIs.
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE
+#define OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
  *
  * TODO: complete.
- *
  */
 #ifndef OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
 #define OPENTHREAD_ENABLE_NCP_VENDOR_HOOK 0

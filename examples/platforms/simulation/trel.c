@@ -28,10 +28,12 @@
 
 #include "platform-simulation.h"
 
+#include <openthread/ip6.h>
 #include <openthread/random_noncrypto.h>
 #include <openthread/platform/trel.h>
 
 #include "simul_utils.h"
+#include "lib/platform/exit_code.h"
 #include "utils/code_utils.h"
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -59,6 +61,7 @@ typedef struct Message
 {
     MessageType mType;
     otSockAddr  mSockAddr;                   // Destination (when TREL_DATA_MESSAGE), or peer addr (when DNS-SD service)
+    otSockAddr  mSourceAddr;                 // Source address (used when TREL_DATA_MESSAGE)
     uint16_t    mDataLength;                 // mData length
     uint8_t     mData[TREL_MAX_PACKET_SIZE]; // TREL UDP packet (when TREL_DATA_MESSAGE), or service TXT data.
 } Message;
@@ -69,12 +72,13 @@ static Message sPendingTx[TREL_MAX_PENDING_TX];
 static utilsSocket sSocket;
 static uint16_t    sPortOffset = 0;
 static bool        sEnabled    = false;
+static otSockAddr  sSockAddr;
 
 static bool               sServiceRegistered = false;
-static uint16_t           sServicePort;
 static uint8_t            sServiceTxtLength;
 static char               sServiceTxtData[TREL_MAX_SERVICE_TXT_DATA_LEN];
 static otPlatTrelCounters sCounters;
+static uint16_t           sNotifyAddressDiffCounter = 0;
 
 #if DEBUG_LOG
 static void dumpBuffer(const void *aBuffer, uint16_t aLength)
@@ -157,15 +161,14 @@ static void sendServiceMessage(MessageType aType)
     assert(sNumPendingTx < TREL_MAX_PENDING_TX);
     message = &sPendingTx[sNumPendingTx++];
 
-    message->mType = aType;
-    memset(&message->mSockAddr, 0, sizeof(otSockAddr));
-    message->mSockAddr.mPort = sServicePort;
-    message->mDataLength     = sServiceTxtLength;
+    message->mType       = aType;
+    message->mSockAddr   = sSockAddr;
+    message->mDataLength = sServiceTxtLength;
     memcpy(message->mData, sServiceTxtData, sServiceTxtLength);
 
 #if DEBUG_LOG
     fprintf(stderr, "\r\n[trel-sim] sendServiceMessage(%s): service-port:%u, txt-len:%u\r\n",
-            aType == TREL_DNSSD_ADD_SERVICE_MESSAGE ? "add" : "remove", sServicePort, sServiceTxtLength);
+            aType == TREL_DNSSD_ADD_SERVICE_MESSAGE ? "add" : "remove", sSockAddr.mPort, sServiceTxtLength);
 #endif
 }
 
@@ -185,7 +188,8 @@ static void processMessage(otInstance *aInstance, Message *aMessage, uint16_t aL
     {
     case TREL_DATA_MESSAGE:
         otEXPECT(aMessage->mSockAddr.mPort == sSocket.mPort);
-        otPlatTrelHandleReceived(aInstance, aMessage->mData, aMessage->mDataLength);
+        otEXPECT(otIp6IsAddressEqual(&aMessage->mSockAddr.mAddress, &sSockAddr.mAddress));
+        otPlatTrelHandleReceived(aInstance, aMessage->mData, aMessage->mDataLength, &aMessage->mSourceAddr);
         break;
 
     case TREL_DNSSD_BROWSE_MESSAGE:
@@ -247,6 +251,21 @@ void otPlatTrelDisable(otInstance *aInstance)
     }
 }
 
+void otPlatTrelNotifyPeerSocketAddressDifference(otInstance       *aInstance,
+                                                 const otSockAddr *aPeerSockAddr,
+                                                 const otSockAddr *aRxSockAddr)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aPeerSockAddr);
+    OT_UNUSED_VARIABLE(aRxSockAddr);
+
+    sNotifyAddressDiffCounter++;
+
+#if DEBUG_LOG
+    fprintf(stderr, "\r\n[trel-sim] otPlatTrelNotifyPeerSocketAddressDifference()\r\n");
+#endif
+}
+
 void otPlatTrelRegisterService(otInstance *aInstance, uint16_t aPort, const uint8_t *aTxtData, uint8_t aTxtLength)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -259,7 +278,7 @@ void otPlatTrelRegisterService(otInstance *aInstance, uint16_t aPort, const uint
     }
 
     sServiceRegistered = true;
-    sServicePort       = aPort;
+    sSockAddr.mPort    = aPort;
     sServiceTxtLength  = aTxtLength;
     memcpy(sServiceTxtData, aTxtData, aTxtLength);
 
@@ -288,6 +307,7 @@ void otPlatTrelSend(otInstance       *aInstance,
 
     message->mType       = TREL_DATA_MESSAGE;
     message->mSockAddr   = *aDestSockAddr;
+    message->mSourceAddr = sSockAddr;
     message->mDataLength = aUdpPayloadLen;
     memcpy(message->mData, aUdpPayload, aUdpPayloadLen);
 
@@ -316,13 +336,17 @@ void platformTrelInit(uint32_t aSpeedUpFactor)
         if (*endptr != '\0')
         {
             fprintf(stderr, "\r\nInvalid PORT_OFFSET: %s\r\n", str);
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_FAILURE);
         }
 
         sPortOffset *= (MAX_NETWORK_SIZE + 1);
     }
 
     utilsInitSocket(&sSocket, TREL_SIM_PORT + sPortOffset);
+
+    memset(&sSockAddr, 0, sizeof(otSockAddr));
+    sSockAddr.mAddress.mFields.m32[3] = gNodeId;
+    sSockAddr.mPort                   = sSocket.mPort;
 
     OT_UNUSED_VARIABLE(aSpeedUpFactor);
 }
@@ -378,13 +402,58 @@ void otPlatTrelResetCounters(otInstance *aInstance)
 }
 
 //---------------------------------------------------------------------------------------------------------------------
+// CLI `treltest` command
+
+OT_TOOL_WEAK void otCliOutputFormat(const char *aFmt, ...) { OT_UNUSED_VARIABLE(aFmt); }
+
+otError ProcessTrelTest(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aContext);
+
+    otError error = OT_ERROR_NONE;
+
+    otEXPECT_ACTION(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
+
+    if (!strcmp(aArgs[0], "sockaddr"))
+    {
+        char string[OT_IP6_SOCK_ADDR_STRING_SIZE];
+
+        otIp6SockAddrToString(&sSockAddr, string, sizeof(string));
+        otCliOutputFormat("%s\r\n", string);
+    }
+    else if (!strcmp(aArgs[0], "changesockaddr"))
+    {
+        sSockAddr.mAddress.mFields.m32[2]++;
+    }
+    else if (!strcmp(aArgs[0], "changesockport"))
+    {
+        sSockAddr.mPort++;
+    }
+    else if (!strcmp(aArgs[0], "notifyaddrcounter"))
+    {
+        otCliOutputFormat("%u\r\n", sNotifyAddressDiffCounter);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+exit:
+    return error;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 
 // This is added for RCP build to be built ok
-OT_TOOL_WEAK void otPlatTrelHandleReceived(otInstance *aInstance, uint8_t *aBuffer, uint16_t aLength)
+OT_TOOL_WEAK void otPlatTrelHandleReceived(otInstance       *aInstance,
+                                           uint8_t          *aBuffer,
+                                           uint16_t          aLength,
+                                           const otSockAddr *aSenderAddr)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aBuffer);
     OT_UNUSED_VARIABLE(aLength);
+    OT_UNUSED_VARIABLE(aSenderAddr);
 
     assert(false);
 }
@@ -395,6 +464,24 @@ OT_TOOL_WEAK void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, cons
     OT_UNUSED_VARIABLE(aInfo);
 
     assert(false);
+}
+
+OT_TOOL_WEAK void otIp6SockAddrToString(const otSockAddr *aSockAddr, char *aBuffer, uint16_t aSize)
+{
+    OT_UNUSED_VARIABLE(aSockAddr);
+    OT_UNUSED_VARIABLE(aBuffer);
+    OT_UNUSED_VARIABLE(aSize);
+
+    assert(false);
+}
+
+OT_TOOL_WEAK bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond)
+{
+    OT_UNUSED_VARIABLE(aFirst);
+    OT_UNUSED_VARIABLE(aSecond);
+
+    assert(false);
+    return false;
 }
 
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

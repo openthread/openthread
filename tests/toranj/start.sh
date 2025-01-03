@@ -161,6 +161,7 @@ if [ "$TORANJ_CLI" = 1 ]; then
         run cli/test-703-multi-radio-mesh-header-msg.py
         run cli/test-704-multi-radio-scan.py
         run cli/test-705-multi-radio-discover-scan.py
+        run cli/test-706-multi-radio-trel-peer-addr-port-change-discovery.py
 
         exit 0
     fi
@@ -197,6 +198,9 @@ if [ "$TORANJ_CLI" = 1 ]; then
     run cli/test-030-anycast-forwarding.py
     run cli/test-031-service-aloc-route-lookup.py
     run cli/test-032-leader-take-over.py
+    run cli/test-033-alt-short-addr-role-transition.py
+    run cli/test-034-fed-parent-search.py
+    run cli/test-035-context-id-change-addr-reg.py
     run cli/test-400-srp-client-server.py
     run cli/test-401-srp-server-address-cache-snoop.py
     run cli/test-500-two-brs-two-networks.py

@@ -33,17 +33,7 @@
 
 #include "ip6_filter.hpp"
 
-#include <stdio.h>
-
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "instance/instance.hpp"
-#include "meshcop/meshcop.hpp"
-#include "net/ip6.hpp"
-#include "net/tcp6.hpp"
-#include "net/udp6.hpp"
-#include "thread/mle.hpp"
 
 namespace ot {
 namespace Ip6 {

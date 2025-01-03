@@ -33,10 +33,6 @@
 
 #include "timer.hpp"
 
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -56,6 +52,14 @@ NextFireTime::NextFireTime(Time aNow)
 }
 
 void NextFireTime::UpdateIfEarlier(Time aTime) { mNextTime = Min(mNextTime, Max(mNow, aTime)); }
+
+void NextFireTime::UpdateIfEarlierAndInFuture(Time aTime)
+{
+    if (aTime > mNow)
+    {
+        mNextTime = Min(mNextTime, aTime);
+    }
+}
 
 //---------------------------------------------------------------------------------------------------------------------
 // `Timer`

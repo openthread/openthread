@@ -33,12 +33,7 @@
 
 #include "child_supervision.hpp"
 
-#include "openthread-core-config.h"
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "instance/instance.hpp"
-#include "thread/thread_netif.hpp"
 
 namespace ot {
 
@@ -165,7 +160,7 @@ void SupervisionListener::SetInterval(uint16_t aInterval)
 
     if (Get<Mle::Mle>().IsChild())
     {
-        IgnoreError(Get<Mle::Mle>().SendChildUpdateRequest());
+        IgnoreError(Get<Mle::Mle>().SendChildUpdateRequestToParent());
     }
 
 exit:
@@ -215,7 +210,7 @@ void SupervisionListener::HandleTimer(void)
     LogWarn("Supervision timeout. No frame from parent in %u sec", mTimeout);
     mCounter++;
 
-    IgnoreError(Get<Mle::MleRouter>().SendChildUpdateRequest());
+    IgnoreError(Get<Mle::Mle>().SendChildUpdateRequestToParent());
 
 exit:
     RestartTimer();

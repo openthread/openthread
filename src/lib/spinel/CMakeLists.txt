@@ -73,6 +73,7 @@ set(COMMON_SOURCES
     spinel_decoder.cpp
     spinel_encoder.cpp
     spinel_helper.cpp
+    spinel_prop_codec.cpp
 )
 
 set(OT_SPINEL_VENDOR_HOOK_SOURCE "" CACHE STRING "set vendor hook source file for Spinel")
@@ -104,6 +105,7 @@ target_link_libraries(openthread-radio-spinel
     INTERFACE
         ot-lib-config
     PRIVATE
+        openthread-platform
         ot-config
 )
 

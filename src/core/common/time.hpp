@@ -51,12 +51,10 @@ namespace ot {
  *   This module includes definitions for the time instance.
  *
  * @{
- *
  */
 
 /**
  * Represents a time instance.
- *
  */
 class Time : public Unequatable<Time>
 {
@@ -66,16 +64,15 @@ public:
     static constexpr uint32_t kOneHourInMsec   = kOneMinuteInMsec * 60; ///< One hour interval in msec.
     static constexpr uint32_t kOneDayInMsec    = kOneHourInMsec * 24;   ///< One day interval in msec.
     static constexpr uint32_t kOneMsecInUsec   = 1000u;                 ///< One millisecond in microseconds.
+    static constexpr uint32_t kOneSecondInUsec = 1000000u;              ///< One second interval in microseconds.
 
     /**
      * This constant defines a maximum time duration ensured to be longer than any other duration.
-     *
      */
     static const uint32_t kMaxDuration = ~static_cast<uint32_t>(0UL);
 
     /**
      * This is the default constructor for a `Time` object.
-     *
      */
     Time(void) = default;
 
@@ -83,7 +80,6 @@ public:
      * Initializes a `Time` object with a given value.
      *
      * @param[in] aValue   The numeric time value to initialize the `Time` object.
-     *
      */
     explicit Time(uint32_t aValue) { SetValue(aValue); }
 
@@ -91,7 +87,6 @@ public:
      * Gets the numeric time value associated with the `Time` object.
      *
      * @returns The numeric `Time` value.
-     *
      */
     uint32_t GetValue(void) const { return mValue; }
 
@@ -99,7 +94,6 @@ public:
      * Sets the numeric time value.
      *
      * @param[in] aValue   The numeric time value.
-     *
      */
     void SetValue(uint32_t aValue) { mValue = aValue; }
 
@@ -114,7 +108,6 @@ public:
      * @param[in]   aOther  A `Time` instance to subtract from.
      *
      * @returns The duration of interval from @p aOther to this `Time` object.
-     *
      */
     uint32_t operator-(const Time &aOther) const { return mValue - aOther.mValue; }
 
@@ -124,7 +117,6 @@ public:
      * @param[in]   aDuration  A duration.
      *
      * @returns A new `Time` which is ahead of this object by @aDuration.
-     *
      */
     Time operator+(uint32_t aDuration) const { return Time(mValue + aDuration); }
 
@@ -134,7 +126,6 @@ public:
      * @param[in]   aDuration  A duration.
      *
      * @returns A new `Time` which is behind this object by @aDuration.
-     *
      */
     Time operator-(uint32_t aDuration) const { return Time(mValue - aDuration); }
 
@@ -142,7 +133,6 @@ public:
      * Moves this `Time` object forward by a given duration.
      *
      * @param[in]   aDuration  A duration.
-     *
      */
     void operator+=(uint32_t aDuration) { mValue += aDuration; }
 
@@ -150,7 +140,6 @@ public:
      * Moves this `Time` object backward by a given duration.
      *
      * @param[in]   aDuration  A duration.
-     *
      */
     void operator-=(uint32_t aDuration) { mValue -= aDuration; }
 
@@ -161,7 +150,6 @@ public:
      *
      * @retval TRUE    The two `Time` instances are equal.
      * @retval FALSE   The two `Time` instances are not equal.
-     *
      */
     bool operator==(const Time &aOther) const { return mValue == aOther.mValue; }
 
@@ -178,7 +166,6 @@ public:
      *
      * @retval TRUE    This `Time` instance is strictly before @p aOther.
      * @retval FALSE   This `Time` instance is not strictly before @p aOther.
-     *
      */
     bool operator<(const Time &aOther) const { return SerialNumber::IsLess(mValue, aOther.mValue); }
 
@@ -189,7 +176,6 @@ public:
      *
      * @retval TRUE    This `Time` instance is after or equal to @p aOther.
      * @retval FALSE   This `Time` instance is not after or equal to @p aOther.
-     *
      */
     bool operator>=(const Time &aOther) const { return !(*this < aOther); }
 
@@ -200,7 +186,6 @@ public:
      *
      * @retval TRUE    This `Time` instance is before or equal to @p aOther.
      * @retval FALSE   This `Time` instance is not before or equal to @p aOther.
-     *
      */
     bool operator<=(const Time &aOther) const { return (aOther >= *this); }
 
@@ -211,7 +196,6 @@ public:
      *
      * @retval TRUE    This `Time` instance is strictly after @p aOther.
      * @retval FALSE   This `Time` instance is not strictly after @p aOther.
-     *
      */
     bool operator>(const Time &aOther) const { return (aOther < *this); }
 
@@ -224,7 +208,6 @@ public:
      * When comparing `GetDistantFuture()` with a time `t` the caller must ensure that `t` is already ahead of `*this`.
      *
      * @returns A new `Time` in distance future relative to current `Time` object.
-     *
      */
     Time GetDistantFuture(void) const { return Time(mValue + kDistantInterval); }
 
@@ -237,7 +220,6 @@ public:
      * When comparing `GetDistantPast()` with a time `t` the caller must ensure that the `t` is already before `*this`.
      *
      * @returns A new `Time` in distance past relative to current `Time` object.
-     *
      */
     Time GetDistantPast(void) const { return Time(mValue - kDistantInterval); }
 
@@ -247,7 +229,6 @@ public:
      * @param[in] aSeconds   The seconds value to convert to milliseconds.
      *
      * @returns The number of milliseconds.
-     *
      */
     static uint32_t constexpr SecToMsec(uint32_t aSeconds) { return aSeconds * 1000u; }
 
@@ -257,7 +238,6 @@ public:
      * @param[in] aMilliseconds  The milliseconds value to convert to seconds.
      *
      * @returns The number of seconds.
-     *
      */
     static uint32_t constexpr MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
 
@@ -269,7 +249,6 @@ private:
 
 /**
  * Represents a time instance (millisecond time).
- *
  */
 typedef Time TimeMilli;
 
@@ -277,7 +256,6 @@ typedef Time TimeMilli;
 
 /**
  * Represents a time instance (microsecond time).
- *
  */
 typedef Time TimeMicro;
 
@@ -285,7 +263,6 @@ typedef Time TimeMicro;
 
 /**
  * @}
- *
  */
 
 } // namespace ot

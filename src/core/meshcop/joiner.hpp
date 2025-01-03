@@ -59,6 +59,10 @@ namespace ot {
 
 namespace MeshCoP {
 
+#if !OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
+#error "Joiner feature requires `OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE`"
+#endif
+
 class Joiner : public InstanceLocator, private NonCopyable
 {
     friend class Tmf::Agent;
@@ -66,7 +70,6 @@ class Joiner : public InstanceLocator, private NonCopyable
 public:
     /**
      * Type defines the Joiner State.
-     *
      */
     enum State : uint8_t
     {
@@ -82,7 +85,6 @@ public:
      * Initializes the Joiner object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit Joiner(Instance &aInstance);
 
@@ -101,7 +103,6 @@ public:
      * @retval kErrorNone          Successfully started the Joiner service.
      * @retval kErrorBusy          The previous attempt is still on-going.
      * @retval kErrorInvalidState  The IPv6 stack is not enabled or Thread stack is fully enabled.
-     *
      */
     Error Start(const char      *aPskd,
                 const char      *aProvisioningUrl,
@@ -114,7 +115,6 @@ public:
 
     /**
      * Stops the Joiner service.
-     *
      */
     void Stop(void);
 
@@ -122,7 +122,6 @@ public:
      * Gets the Joiner State.
      *
      * @returns The Joiner state (see `State`).
-     *
      */
     State GetState(void) const { return mState; }
 
@@ -130,7 +129,6 @@ public:
      * Retrieves the Joiner ID.
      *
      * @returns The Joiner ID.
-     *
      */
     const Mac::ExtAddress &GetId(void) const { return mId; }
 
@@ -138,7 +136,6 @@ public:
      * Gets the Jointer Discerner.
      *
      * @returns A pointer to the current Joiner Discerner or `nullptr` if none is set.
-     *
      */
     const JoinerDiscerner *GetDiscerner(void) const;
 
@@ -156,7 +153,6 @@ public:
      * @retval kErrorNone          The Joiner Discerner updated successfully.
      * @retval kErrorInvalidArgs   @p aDiscerner is not valid (specified length is not within valid range).
      * @retval kErrorInvalidState  There is an ongoing Joining process so Joiner Discerner could not be changed.
-     *
      */
     Error SetDiscerner(const JoinerDiscerner &aDiscerner);
 
@@ -167,7 +163,6 @@ public:
      *
      * @retval kErrorNone          The Joiner Discerner cleared and Joiner ID updated.
      * @retval kErrorInvalidState  There is an ongoing Joining process so Joiner Discerner could not be changed.
-     *
      */
     Error ClearDiscerner(void);
 
@@ -177,7 +172,6 @@ public:
      * @param[in] aState  The Joiner state to convert.
      *
      * @returns A human-readable string representation of @p aState.
-     *
      */
     static const char *StateToString(State aState);
 
@@ -199,8 +193,8 @@ private:
     static void HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult, void *aContext);
     void        HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult);
 
-    static void HandleSecureCoapClientConnect(SecureTransport::ConnectEvent aEvent, void *aContext);
-    void        HandleSecureCoapClientConnect(SecureTransport::ConnectEvent aEvent);
+    static void HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent, void *aContext);
+    void        HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent);
 
     static void HandleJoinerFinalizeResponse(void                *aContext,
                                              otMessage           *aMessage,
@@ -228,10 +222,6 @@ private:
     void  FreeJoinerFinalizeMessage(void);
     void  SendJoinerFinalize(void);
     void  SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo);
-
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    void LogCertMessage(const char *aText, const Coap::Message &aMessage) const;
-#endif
 
     using JoinerTimer = TimerMilliIn<Joiner, &Joiner::HandleTimer>;
 

@@ -50,12 +50,10 @@ namespace Ip6 {
  *   This module includes definitions for TCP/IPv6 socket extensions.
  *
  * @{
- *
  */
 
 /**
  * Represents a TCP circular send buffer.
- *
  */
 class TcpCircularSendBuffer : public otTcpCircularSendBuffer
 {
@@ -109,7 +107,6 @@ public:
      * Forcibly discards all data in this TCP circular send buffer.
      *
      * @sa otTcpCircularSendBufferForceDiscardAll
-     *
      */
     void ForceDiscardAll(void);
 

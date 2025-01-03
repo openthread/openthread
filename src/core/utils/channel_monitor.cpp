@@ -35,10 +35,7 @@
 
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/random.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Utils {

@@ -56,7 +56,6 @@ namespace ot {
  *   This module includes definitions for the IEEE 802.15.4 MAC (sub-MAC).
  *
  * @{
- *
  */
 
 namespace Mac {
@@ -101,7 +100,6 @@ class LinkRaw;
  *
  * It also act as the interface (to radio platform) for setting/getting radio configurations such as short or extended
  * addresses and PAN Id.
- *
  */
 class SubMac : public InstanceLocator, private NonCopyable
 {
@@ -111,7 +109,6 @@ class SubMac : public InstanceLocator, private NonCopyable
 public:
     /**
      * Defines the callbacks notifying `SubMac` user of changes and events.
-     *
      */
     class Callbacks : public InstanceLocator
     {
@@ -120,7 +117,6 @@ public:
          * Initializes the `Callbacks` object.
          *
          * @param[in]  aInstance  A reference to the OpenThread instance.
-         *
          */
         explicit Callbacks(Instance &aInstance);
 
@@ -131,7 +127,6 @@ public:
          * @param[in]  aError    kErrorNone when successfully received a frame,
          *                       kErrorAbort when reception was aborted and a frame was not received,
          *                       kErrorNoBufs when a frame could not be received due to lack of rx buffer space.
-         *
          */
         void ReceiveDone(RxFrame *aFrame, Error aError);
 
@@ -142,7 +137,6 @@ public:
          *
          * @param[in] aCcaSuccess   TRUE if the CCA succeeded, FALSE otherwise.
          * @param[in] aChannel      The channel on which CCA was performed.
-         *
          */
         void RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel);
 
@@ -162,7 +156,6 @@ public:
          * @param[in] aRetryCount Current retry count. This is valid only when sub-mac handles frame re-transmissions.
          * @param[in] aWillRetx   Indicates whether frame will be retransmitted or not. This is applicable only
          *                        when there was an error in current transmission attempt.
-         *
          */
         void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
 
@@ -176,7 +169,6 @@ public:
          *                        kErrorNoAck when the frame was transmitted but no ACK was received,
          *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
          *                        kErrorAbort when transmission was aborted for other reasons.
-         *
          */
         void TransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
 
@@ -184,7 +176,6 @@ public:
          * Notifies user of `SubMac` that energy scan is complete.
          *
          * @param[in]  aMaxRssi  Maximum RSSI seen on the channel, or `Radio::kInvalidRssi` if failed.
-         *
          */
         void EnergyScanDone(int8_t aMaxRssi);
 
@@ -195,7 +186,6 @@ public:
          * smaller counter value after a call for a larger counter value).
          *
          * @param[in]  aFrameCounter  The MAC frame counter value which was used.
-         *
          */
         void FrameCounterUsed(uint32_t aFrameCounter);
     };
@@ -204,7 +194,6 @@ public:
      * Initializes the `SubMac` object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit SubMac(Instance &aInstance);
 
@@ -212,7 +201,6 @@ public:
      * Gets the capabilities provided by platform radio.
      *
      * @returns The capability bit vector (see `OT_RADIO_CAP_*` definitions).
-     *
      */
     otRadioCaps GetRadioCaps(void) const { return mRadioCaps; }
 
@@ -220,7 +208,6 @@ public:
      * Gets the capabilities provided by `SubMac` layer.
      *
      * @returns The capability bit vector (see `OT_RADIO_CAP_*` definitions).
-     *
      */
     otRadioCaps GetCaps(void) const;
 
@@ -228,7 +215,6 @@ public:
      * Sets the PAN ID.
      *
      * @param[in] aPanId  The PAN ID.
-     *
      */
     void SetPanId(PanId aPanId);
 
@@ -236,7 +222,6 @@ public:
      * Gets the short address.
      *
      * @returns The short address.
-     *
      */
     ShortAddress GetShortAddress(void) const { return mShortAddress; }
 
@@ -244,15 +229,27 @@ public:
      * Sets the short address.
      *
      * @param[in] aShortAddress   The short address.
-     *
      */
     void SetShortAddress(ShortAddress aShortAddress);
+
+    /**
+     * Gets the alternate short address.
+     *
+     * @returns The alternate short address, or `kShortAddrInvalid` if there is no alternate address.
+     */
+    ShortAddress GetAlternateShortAddress(void) const { return mAlternateShortAddress; }
+
+    /**
+     * Sets the alternate short address.
+     *
+     * @param[in] aShortAddress   The short address. Use `kShortAddrInvalid` to clear it.
+     */
+    void SetAlternateShortAddress(ShortAddress aShortAddress);
 
     /**
      * Gets the extended address.
      *
      * @returns A reference to the extended address.
-     *
      */
     const ExtAddress &GetExtAddress(void) const { return mExtAddress; }
 
@@ -260,7 +257,6 @@ public:
      * Sets extended address.
      *
      * @param[in] aExtAddress  The extended address.
-     *
      */
     void SetExtAddress(const ExtAddress &aExtAddress);
 
@@ -270,7 +266,6 @@ public:
      * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame
      *                               or `nullptr` to disable the callback.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
-     *
      */
     void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext)
     {
@@ -281,7 +276,6 @@ public:
      * Indicates whether radio should stay in Receive or Sleep during idle periods.
      *
      * @param[in]  aRxOnWhenIdle  TRUE to keep radio in Receive, FALSE to put to Sleep during idle periods.
-     *
      */
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
@@ -290,7 +284,6 @@ public:
      *
      * @retval kErrorNone     Successfully enabled.
      * @retval kErrorFailed   The radio could not be enabled.
-     *
      */
     Error Enable(void);
 
@@ -298,7 +291,6 @@ public:
      * Disables the radio.
      *
      * @retval kErrorNone     Successfully disabled the radio.
-     *
      */
     Error Disable(void);
 
@@ -308,7 +300,6 @@ public:
      * @retval kErrorNone          Successfully transitioned to Sleep.
      * @retval kErrorBusy          The radio was transmitting.
      * @retval kErrorInvalidState  The radio was disabled.
-     *
      */
     Error Sleep(void);
 
@@ -317,7 +308,6 @@ public:
      *
      * @retval TRUE if the sub-mac is busy transmitting or scanning.
      * @retval FALSE if the sub-mac is not busy transmitting or scanning.
-     *
      */
     bool IsTransmittingOrScanning(void) const { return (mState == kStateTransmit) || (mState == kStateEnergyScan); }
 
@@ -328,7 +318,6 @@ public:
      *
      * @retval kErrorNone          Successfully transitioned to Receive.
      * @retval kErrorInvalidState  The radio was disabled or transmitting.
-     *
      */
     Error Receive(uint8_t aChannel);
 
@@ -336,7 +325,6 @@ public:
      * Gets the radio transmit frame.
      *
      * @returns The transmit frame.
-     *
      */
     TxFrame &GetTransmitFrame(void) { return mTransmitFrame; }
 
@@ -349,7 +337,6 @@ public:
      *
      * @retval kErrorNone          Successfully started the frame transmission
      * @retval kErrorInvalidState  The radio was disabled or transmitting.
-     *
      */
     Error Send(void);
 
@@ -357,7 +344,6 @@ public:
      * Gets the number of transmit retries of last transmitted frame.
      *
      * @returns Number of transmit retries.
-     *
      */
     uint8_t GetTransmitRetries(void) const { return mTransmitRetries; }
 
@@ -365,7 +351,6 @@ public:
      * Gets the most recent RSSI measurement.
      *
      * @returns The RSSI in dBm when it is valid. `Radio::kInvalidRssi` when RSSI is invalid.
-     *
      */
     int8_t GetRssi(void) const;
 
@@ -379,7 +364,6 @@ public:
      * @retval kErrorBusy            The radio is performing energy scanning.
      * @retval kErrorInvalidState    The radio was disabled or transmitting.
      * @retval kErrorNotImplemented  Energy scan is not supported (applicable in link-raw/radio mode only).
-     *
      */
     Error EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration);
 
@@ -387,7 +371,6 @@ public:
      * Returns the noise floor value (currently use the radio receive sensitivity value).
      *
      * @returns The noise floor value in dBm.
-     *
      */
     int8_t GetNoiseFloor(void) const;
 
@@ -402,7 +385,6 @@ public:
      *
      * @retval  TRUE if CSL Period or CSL Channel changed.
      * @retval  FALSE if CSL Period and CSL Channel did not change.
-     *
      */
     bool UpdateCsl(uint16_t aPeriod, uint8_t aChannel, otShortAddress aShortAddr, const otExtAddress *aExtAddr);
 
@@ -410,7 +392,6 @@ public:
      * Lets `SubMac` start CSL sample mode given a configured non-zero CSL period.
      *
      * `SubMac` would switch the radio state between `Receive` and `Sleep` according the CSL timer.
-     *
      */
     void CslSample(void);
 
@@ -418,7 +399,6 @@ public:
      * Returns parent CSL accuracy (clock accuracy and uncertainty).
      *
      * @returns The parent CSL accuracy.
-     *
      */
     const CslAccuracy &GetCslParentAccuracy(void) const { return mCslParentAccuracy; }
 
@@ -426,7 +406,6 @@ public:
      * Sets parent CSL accuracy.
      *
      * @param[in] aCslAccuracy  The parent CSL accuracy.
-     *
      */
     void SetCslParentAccuracy(const CslAccuracy &aCslAccuracy) { mCslParentAccuracy = aCslAccuracy; }
 
@@ -440,7 +419,6 @@ public:
      * @param[in] aPrevKey    The previous MAC key.
      * @param[in] aCurrKey    The current MAC key.
      * @param[in] aNextKey    The next MAC key.
-     *
      */
     void SetMacKey(uint8_t            aKeyIdMode,
                    uint8_t            aKeyId,
@@ -452,7 +430,6 @@ public:
      * Returns a reference to the current MAC key.
      *
      * @returns A reference to the current MAC key.
-     *
      */
     const KeyMaterial &GetCurrentMacKey(void) const { return mCurrKey; }
 
@@ -460,7 +437,6 @@ public:
      * Returns a reference to the previous MAC key.
      *
      * @returns A reference to the previous MAC key.
-     *
      */
     const KeyMaterial &GetPreviousMacKey(void) const { return mPrevKey; }
 
@@ -468,13 +444,11 @@ public:
      * Returns a reference to the next MAC key.
      *
      * @returns A reference to the next MAC key.
-     *
      */
     const KeyMaterial &GetNextMacKey(void) const { return mNextKey; }
 
     /**
      * Clears the stored MAC keys.
-     *
      */
     void ClearMacKeys(void)
     {
@@ -487,7 +461,6 @@ public:
      * Returns the current MAC frame counter value.
      *
      * @returns The current MAC frame counter value.
-     *
      */
     uint32_t GetFrameCounter(void) const { return mFrameCounter; }
 
@@ -497,7 +470,6 @@ public:
      * @param[in] aFrameCounter  The MAC Frame Counter value.
      * @param[in] aSetIfLarger   If `true`, set only if the new value @p aFrameCounter is larger than the current value.
      *                           If `false`, set the new value independent of the current value.
-     *
      */
     void SetFrameCounter(uint32_t aFrameCounter, bool aSetIfLarger);
 
@@ -510,7 +482,6 @@ public:
      * frame over the air (return "no ack" error if ack is requested, otherwise return success).
      *
      * @param[in] aFilterEnabled    TRUE to enable radio filter, FALSE to disable.
-     *
      */
     void SetRadioFilterEnabled(bool aFilterEnabled) { mRadioFilterEnabled = aFilterEnabled; }
 
@@ -519,9 +490,20 @@ public:
      *
      * @retval TRUE   If the radio filter is enabled.
      * @retval FALSE  If the radio filter is disabled.
-     *
      */
     bool IsRadioFilterEnabled(void) const { return mRadioFilterEnabled; }
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    /**
+     * Configures wake-up listening parameters in all radios.
+     *
+     * @param[in]  aEnable    Whether to enable or disable wake-up listening.
+     * @param[in]  aInterval  The wake-up listen interval in microseconds.
+     * @param[in]  aDuration  The wake-up listen duration in microseconds.
+     * @param[in]  aChannel   The wake-up channel.
+     */
+    void UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aDuration, uint8_t aChannel);
 #endif
 
 private:
@@ -536,6 +518,11 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
     void LogReceived(RxFrame *aFrame);
 #endif
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    void        WedInit(void);
+    static void HandleWedTimer(Timer &aTimer);
+    void        HandleWedTimer(void);
 #endif
 
     static constexpr uint8_t  kCsmaMinBe         = 3;                  // macMinBE (IEEE 802.15.4-2006).
@@ -574,14 +561,20 @@ private:
 #endif
     };
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     // Radio on times needed before and after MHR time for proper frame detection
     static constexpr uint32_t kMinReceiveOnAhead = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AHEAD;
     static constexpr uint32_t kMinReceiveOnAfter = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AFTER;
 
-    // CSL receivers would wake up `kCslReceiveTimeAhead` earlier
+    // CSL/wake-up listening receivers would wake up `kCslReceiveTimeAhead` earlier
     // than expected sample window. The value is in usec.
     static constexpr uint32_t kCslReceiveTimeAhead = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    // Margin to be applied after the end of a wake-up listen duration to schedule the next listen interval.
+    // The value is in usec.
+    static constexpr uint32_t kWedReceiveTimeAfter = OPENTHREAD_CONFIG_WED_RECEIVE_TIME_AFTER;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -593,7 +586,6 @@ private:
 
     /**
      * Initializes the states of the sub-MAC layer.
-     *
      */
     void Init(void);
 
@@ -649,6 +641,7 @@ private:
     uint8_t      mCsmaBackoffs;
     uint8_t      mTransmitRetries;
     ShortAddress mShortAddress;
+    ShortAddress mAlternateShortAddress;
     ExtAddress   mExtAddress;
     bool         mRxOnWhenIdle : 1;
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
@@ -680,11 +673,19 @@ private:
     CslAccuracy mCslParentAccuracy; // The parent's CSL accuracy (clock accuracy and uncertainty).
     TimerMicro  mCslTimer;
 #endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    uint32_t   mWakeupListenInterval; // The wake-up listen interval, in microseconds.
+    uint32_t   mWakeupListenDuration; // The wake-up listen duration, in microseconds.
+    uint8_t    mWakeupChannel;        // The wake-up sample channel.
+    TimeMicro  mWedSampleTime;        // The WED sample time of the current interval in local time.
+    uint64_t   mWedSampleTimeRadio;   // The WED sample time of the current interval in radio time.
+    TimerMicro mWedTimer;
+#endif
 };
 
 /**
  * @}
- *
  */
 
 } // namespace Mac

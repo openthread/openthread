@@ -48,7 +48,6 @@ class Cli;
 
 /**
  * Implements the factory CLI.
- *
  */
 class Cli
 {
@@ -64,7 +63,6 @@ public:
      *
      * @param[in]   aArgs          The arguments of command line.
      * @param[in]   aArgsLength    The number of args in @p aArgs.
-     *
      */
     void ProcessCommand(Utils::CmdLineParser::Arg aArgs[]);
 
@@ -72,13 +70,11 @@ public:
      * Processes the command line.
      *
      * @param[in]  aLine   A pointer to a command line string.
-     *
      */
     void ProcessLine(char *aLine);
 
     /**
      * Outputs the prompt.
-     *
      */
     void OutputPrompt(void);
 

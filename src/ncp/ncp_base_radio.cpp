@@ -407,6 +407,19 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_15_4_ALT_SADDR>(void)
+{
+    uint16_t shortAddress;
+    otError  error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint16(shortAddress));
+
+    error = otLinkRawSetAlternateShortAddress(mInstance, shortAddress);
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MULTIPAN_ACTIVE_INTERFACE>(void)
 {
@@ -457,6 +470,7 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     aFrame.mInfo.mTxInfo.mIsSecurityProcessed  = false;
     aFrame.mInfo.mTxInfo.mTxDelay              = 0;
     aFrame.mInfo.mTxInfo.mTxDelayBaseTime      = 0;
+    aFrame.mInfo.mTxInfo.mTxPower              = OT_RADIO_POWER_INVALID;
 
     // All the next parameters are optional. Note that even if the
     // decoder fails to parse any of optional parameters we still want to
@@ -481,6 +495,7 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(mDecoder.ReadUint32(aFrame.mInfo.mTxInfo.mTxDelay));
     SuccessOrExit(mDecoder.ReadUint32(aFrame.mInfo.mTxInfo.mTxDelayBaseTime));
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mRxChannelAfterTxDone));
+    SuccessOrExit(mDecoder.ReadInt8(aFrame.mInfo.mTxInfo.mTxPower));
 
 exit:
     return error;

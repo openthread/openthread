@@ -215,10 +215,6 @@ static otIp6Prefix        sAddedExternalRoutes[kMaxExternalRoutesNum];
 static constexpr uint32_t kNat64RoutePriority = 100; ///< Priority for route to NAT64 CIDR, 100 means a high priority.
 #endif
 
-#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-ot::Posix::Resolver gResolver;
-#endif
-
 #if defined(RTM_NEWMADDR) || defined(__NetBSD__)
 // on some BSDs (mac OS, FreeBSD), we get RTM_NEWMADDR/RTM_DELMADDR messages, so we don't need to monitor using MLD
 // on NetBSD, MLD monitoring simply doesn't work
@@ -226,7 +222,7 @@ ot::Posix::Resolver gResolver;
 #else
 // on some platforms (Linux, but others might be made to work), we do not get information about multicast
 // group joining via AF_NETLINK or AF_ROUTE sockets.  on those platform, we must listen for IPv6 ICMP
-// MLDv2 messages to know when mulicast memberships change
+// MLDv2 messages to know when multicast memberships change
 // 		https://stackoverflow.com/questions/37346289/using-netlink-is-it-possible-to-listen-whenever-multicast-group-membership-is-ch
 #define OPENTHREAD_POSIX_USE_MLD_MONITOR 1
 #endif // defined(RTM_NEWMADDR) || defined(__NetBSD__)
@@ -1099,7 +1095,8 @@ exit:
     }
 }
 
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || \
+    (OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE)
 static constexpr uint8_t kIpVersion4 = 4;
 static constexpr uint8_t kIpVersion6 = 6;
 
@@ -1115,11 +1112,10 @@ static uint8_t getIpVersion(const uint8_t *data)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
 /**
  * Returns nullptr if data does not point to a valid ICMPv6 RA message.
- *
  */
 static const uint8_t *getIcmp6RaMessage(const uint8_t *data, ssize_t length)
 {
@@ -1141,7 +1137,6 @@ exit:
 
 /**
  * Returns false if the message is not an ICMPv6 RA message.
- *
  */
 static otError tryProcessIcmp6RaMessage(otInstance *aInstance, const uint8_t *data, ssize_t length)
 {
@@ -1162,12 +1157,11 @@ static otError tryProcessIcmp6RaMessage(otInstance *aInstance, const uint8_t *da
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
 #ifdef __linux__
 /**
  * Returns whether the address is a required anycast address (RFC2373, 2.6.1).
- *
  */
 static bool isRequiredAnycast(const uint8_t *aAddress, uint8_t aPrefixLength)
 {
@@ -1229,7 +1223,7 @@ static void processTransmit(otInstance *aInstance)
     }
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
     if (tryProcessIcmp6RaMessage(aInstance, reinterpret_cast<uint8_t *>(&packet[offset]), rval) == OT_ERROR_NONE)
     {
         ExitNow();
@@ -2285,9 +2279,6 @@ void platformNetifSetUp(void)
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     nat64Init();
 #endif
-#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-    gResolver.Init();
-#endif
 }
 
 void platformNetifTearDown(void) {}
@@ -2343,10 +2334,6 @@ void platformNetifUpdateFdSet(otSysMainloopContext *aContext)
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     FD_SET(sMLDMonitorFd, &aContext->mReadFdSet);
     FD_SET(sMLDMonitorFd, &aContext->mErrorFdSet);
-#endif
-
-#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-    gResolver.UpdateFdSet(*aContext);
 #endif
 
     if (sTunFd > aContext->mMaxFd)
@@ -2409,10 +2396,6 @@ void platformNetifProcess(const otSysMainloopContext *aContext)
     {
         processMLDEvent(gInstance);
     }
-#endif
-
-#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-    gResolver.Process(*aContext);
 #endif
 
 exit:

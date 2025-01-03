@@ -53,7 +53,6 @@ public:
 
     /**
      * Initialize the upstream DNS resolver.
-     *
      */
     void Init(void);
 
@@ -62,7 +61,6 @@ public:
      *
      * @param[in] aTxn   A pointer to the OpenThread upstream DNS query transaction.
      * @param[in] aQuery A pointer to a message for the payload of the DNS query.
-     *
      */
     void Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery);
 
@@ -70,7 +68,6 @@ public:
      * Cancels a upstream DNS query transaction.
      *
      * @param[in] aTxn   A pointer to the OpenThread upstream DNS query transaction.
-     *
      */
     void Cancel(otPlatDnsUpstreamQuery *aTxn);
 
@@ -78,7 +75,6 @@ public:
      * Updates the file descriptor sets with file descriptors used by the radio driver.
      *
      * @param[in,out]  aContext  The mainloop context.
-     *
      */
     void UpdateFdSet(otSysMainloopContext &aContext);
 
@@ -86,9 +82,24 @@ public:
      * Handles the result of select.
      *
      * @param[in]  aContext  The mainloop context.
-     *
      */
     void Process(const otSysMainloopContext &aContext);
+
+    /**
+     * Sets whether to retrieve upstream DNS servers from "resolv.conf".
+     *
+     * @param[in] aEnabled  TRUE if enable retrieving upstream DNS servers from "resolv.conf", FALSE otherwise.
+     */
+    void SetResolvConfEnabled(bool aEnabled) { mIsResolvConfEnabled = aEnabled; }
+
+    /**
+     * Sets the upstream DNS servers.
+     *
+     * @param[in] aUpstreamDnsServers  A pointer to the list of upstream DNS server addresses. Each address could be an
+     *                                 IPv6 address or an IPv4-mapped IPv6 address.
+     * @param[in] aNumServers          The number of upstream DNS servers.
+     */
+    void SetUpstreamDnsServers(const otIp6Address *aUpstreamDnsServers, int aNumServers);
 
 private:
     static constexpr uint64_t kDnsServerListNullCacheTimeoutMs = 1 * 60 * 1000;  // 1 minute
@@ -100,6 +111,8 @@ private:
         int                     mUdpFd;
     };
 
+    static int CreateUdpSocket(void);
+
     Transaction *GetTransaction(int aFd);
     Transaction *GetTransaction(otPlatDnsUpstreamQuery *aThreadTxn);
     Transaction *AllocateTransaction(otPlatDnsUpstreamQuery *aThreadTxn);
@@ -110,6 +123,7 @@ private:
     void TryRefreshDnsServerList(void);
     void LoadDnsServerListFromConf(void);
 
+    bool      mIsResolvConfEnabled    = true;
     int       mUpstreamDnsServerCount = 0;
     in_addr_t mUpstreamDnsServerList[kMaxUpstreamServerCount];
     uint64_t  mUpstreamDnsServerListFreshness = 0;

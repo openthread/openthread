@@ -33,16 +33,9 @@
  */
 
 #include "meshcop.hpp"
-#include <openthread/platform/toolchain.h>
 
-#include "common/clearable.hpp"
 #include "common/crc16.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/string.hpp"
-#include "crypto/sha256.hpp"
-#include "mac/mac_types.hpp"
-#include "thread/thread_netif.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -343,6 +336,26 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
+void LogCertMessage(const char *aText, const Coap::Message &aMessage)
+{
+    OT_UNUSED_VARIABLE(aText);
+
+    uint8_t  buf[kBufferSize];
+    uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
+
+    VerifyOrExit(length <= sizeof(buf));
+    aMessage.ReadBytes(aMessage.GetOffset(), buf, length);
+
+    DumpCert(aText, buf, length);
+
+exit:
+    return;
+}
+
+#endif
 
 } // namespace MeshCoP
 } // namespace ot

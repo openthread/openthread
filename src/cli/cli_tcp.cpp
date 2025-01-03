@@ -304,6 +304,8 @@ template <> otError TcpExample::Process<Cmd("deinit")>(Arg aArgs[])
 
         mbedtls_pk_free(&mPKey);
         mbedtls_x509_crt_free(&mSrvCert);
+
+        mUseTls = false;
     }
 #endif
 

@@ -52,7 +52,6 @@ public:
      * Initializes the object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit Agent(Instance &aInstance)
         : InstanceLocator(aInstance)
@@ -62,7 +61,6 @@ public:
 
     /**
      * Updates the Neighbor Discovery Agents using current Thread Network Data.
-     *
      */
     void UpdateService(void);
 

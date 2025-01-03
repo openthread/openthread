@@ -33,23 +33,8 @@
 
 #include "mesh_forwarder.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
-#include "common/locator_getters.hpp"
-#include "common/message.hpp"
-#include "common/random.hpp"
-#include "common/time_ticker.hpp"
 #include "instance/instance.hpp"
-#include "net/ip6.hpp"
-#include "net/ip6_filter.hpp"
-#include "net/netif.hpp"
-#include "net/tcp6.hpp"
-#include "net/udp6.hpp"
-#include "radio/radio.hpp"
-#include "thread/mle.hpp"
-#include "thread/mle_router.hpp"
-#include "thread/thread_netif.hpp"
+#include "utils/static_counter.hpp"
 
 namespace ot {
 
@@ -120,7 +105,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mTxDelayTimer(aInstance)
 #endif
     , mScheduleTransmissionTask(aInstance)
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     , mIndirectSender(aInstance)
 #endif
     , mDataPollSender(aInstance)
@@ -128,10 +113,6 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     mFragTag = Random::NonCrypto::GetUint16();
 
     ResetCounters();
-
-#if OPENTHREAD_FTD
-    mFragmentPriorityList.Clear();
-#endif
 
 #if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
     mTxQueueStats.Clear();
@@ -164,7 +145,7 @@ void MeshForwarder::Stop(void)
 
 #if OPENTHREAD_FTD
     mIndirectSender.Stop();
-    mFragmentPriorityList.Clear();
+    mFwdFrameInfoArray.Clear();
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
@@ -182,50 +163,26 @@ exit:
 
 void MeshForwarder::PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &aMacDest, bool aAckRequest)
 {
-    Mac::Addresses addresses;
-    Mac::PanIds    panIds;
+    Mac::TxFrame::Info frameInfo;
 
-    addresses.mSource.SetShort(Get<Mac::Mac>().GetShortAddress());
+    frameInfo.mAddrs.mSource.SetShort(Get<Mac::Mac>().GetShortAddress());
 
-    if (addresses.mSource.IsShortAddrInvalid() || aMacDest.IsExtended())
+    if (frameInfo.mAddrs.mSource.IsShortAddrInvalid() || aMacDest.IsExtended())
     {
-        addresses.mSource.SetExtended(Get<Mac::Mac>().GetExtAddress());
+        frameInfo.mAddrs.mSource.SetExtended(Get<Mac::Mac>().GetExtAddress());
     }
 
-    addresses.mDestination = aMacDest;
-    panIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
+    frameInfo.mAddrs.mDestination = aMacDest;
+    frameInfo.mPanIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
 
-    PrepareMacHeaders(aFrame, Mac::Frame::kTypeData, addresses, panIds, Mac::Frame::kSecurityEncMic32,
-                      Mac::Frame::kKeyIdMode1, nullptr);
+    frameInfo.mType          = Mac::Frame::kTypeData;
+    frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
+    frameInfo.mKeyIdMode     = Mac::Frame::kKeyIdMode1;
+
+    PrepareMacHeaders(aFrame, frameInfo, nullptr);
 
     aFrame.SetAckRequest(aAckRequest);
     aFrame.SetPayloadLength(0);
-}
-
-void MeshForwarder::EvictMessage(Message &aMessage)
-{
-    PriorityQueue *queue = aMessage.GetPriorityQueue();
-
-    OT_ASSERT(queue != nullptr);
-
-    LogMessage(kMessageEvict, aMessage, kErrorNoBufs);
-
-    if (queue == &mSendQueue)
-    {
-#if OPENTHREAD_FTD
-        for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
-        {
-            IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, child));
-        }
-#endif
-
-        FinalizeMessageDirectTx(aMessage, kErrorNoBufs);
-        RemoveMessageIfNoPendingTx(aMessage);
-    }
-    else
-    {
-        queue->DequeueAndFree(aMessage);
-    }
 }
 
 void MeshForwarder::ResumeMessageTransmissions(void)
@@ -327,9 +284,7 @@ Error MeshForwarder::UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend)
 
             if ((shouldMarkEcn && !isEcnCapable) || (timeInQueue >= kTimeInQueueDropMsg))
             {
-                FragmentPriorityList::Entry *entry;
-
-                entry = mFragmentPriorityList.FindEntry(meshHeader.GetSource(), fragmentHeader.GetDatagramTag());
+                FwdFrameInfo *entry = FindFwdFrameInfoEntry(meshHeader.GetSource(), fragmentHeader.GetDatagramTag());
 
                 if (entry != nullptr)
                 {
@@ -358,9 +313,8 @@ Error MeshForwarder::UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend)
         }
         else if (hasFragmentHeader)
         {
-            FragmentPriorityList::Entry *entry;
+            FwdFrameInfo *entry = FindFwdFrameInfoEntry(meshHeader.GetSource(), fragmentHeader.GetDatagramTag());
 
-            entry = mFragmentPriorityList.FindEntry(meshHeader.GetSource(), fragmentHeader.GetDatagramTag());
             VerifyOrExit(entry != nullptr);
 
             if (entry->ShouldDrop())
@@ -368,12 +322,12 @@ Error MeshForwarder::UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend)
                 error = kErrorDrop;
             }
 
-            // We can clear the entry if it is the last fragment and
+            // We can remove the entry if it is the last fragment and
             // only if the message is being prepared to be sent out.
             if (aPreparingToSend && (fragmentHeader.GetDatagramOffset() + aMessage.GetLength() - offset >=
                                      fragmentHeader.GetDatagramSize()))
             {
-                entry->Clear();
+                mFwdFrameInfoArray.Remove(*entry);
             }
         }
     }
@@ -799,7 +753,7 @@ Mac::TxFrame *MeshForwarder::HandleFrameRequest(Mac::TxFrames &aTxFrames)
     switch (mSendMessage->GetType())
     {
     case Message::kTypeIp6:
-        if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
+        if (mSendMessage->IsMleCommand(Mle::kCommandDiscoveryRequest))
         {
             frame = Get<Mle::DiscoverScanner>().PrepareDiscoveryRequestFrame(*frame);
             VerifyOrExit(frame != nullptr);
@@ -813,7 +767,7 @@ Mac::TxFrame *MeshForwarder::HandleFrameRequest(Mac::TxFrames &aTxFrames)
         mMessageNextOffset =
             PrepareDataFrame(*frame, *mSendMessage, mMacAddrs, mAddMeshHeader, mMeshSource, mMeshDest, addFragHeader);
 
-        if ((mSendMessage->GetSubType() == Message::kSubTypeMleChildIdRequest) && mSendMessage->IsLinkSecurityEnabled())
+        if (mSendMessage->IsMleCommand(Mle::kCommandChildIdRequest) && mSendMessage->IsLinkSecurityEnabled())
         {
             LogNote("Child ID Request requires fragmentation, aborting tx");
             mMessageNextOffset = mSendMessage->GetLength();
@@ -859,28 +813,68 @@ exit:
     return frame;
 }
 
-void MeshForwarder::PrepareMacHeaders(Mac::TxFrame             &aFrame,
-                                      Mac::Frame::Type          aFrameType,
-                                      const Mac::Addresses     &aMacAddrs,
-                                      const Mac::PanIds        &aPanIds,
-                                      Mac::Frame::SecurityLevel aSecurityLevel,
-                                      Mac::Frame::KeyIdMode     aKeyIdMode,
-                                      const Message            *aMessage)
+void MeshForwarder::PrepareMacHeaders(Mac::TxFrame &aTxFrame, Mac::TxFrame::Info &aTxFrameInfo, const Message *aMessage)
 {
-    bool                iePresent;
-    Mac::Frame::Version version;
+    aTxFrameInfo.mVersion = Mac::Frame::kVersion2006;
 
-    iePresent = CalcIePresent(aMessage);
-    version   = CalcFrameVersion(Get<NeighborTable>().FindNeighbor(aMacAddrs.mDestination), iePresent);
-
-    aFrame.InitMacHeader(aFrameType, version, aMacAddrs, aPanIds, aSecurityLevel, aKeyIdMode);
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Determine Header IE entries
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    if (iePresent)
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    if ((aMessage != nullptr) && aMessage->IsTimeSync())
     {
-        AppendHeaderIe(aMessage, aFrame);
+        aTxFrameInfo.mAppendTimeIe = true;
+        aTxFrameInfo.mVersion      = Mac::Frame::kVersion2015;
     }
 #endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (Get<Mac::Mac>().IsCslEnabled() &&
+        !(aMessage != nullptr && aMessage->IsMleCommand(Mle::kCommandDiscoveryRequest)))
+    {
+        aTxFrameInfo.mAppendCslIe = true;
+        aTxFrameInfo.mVersion     = Mac::Frame::kVersion2015;
+    }
+#endif
+
+    aTxFrameInfo.mEmptyPayload = (aMessage == nullptr) || (aMessage->GetLength() == 0);
+
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || \
+    OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Determine frame version
+
+    if (aTxFrameInfo.mVersion == Mac::Frame::kVersion2006)
+    {
+        const Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(aTxFrameInfo.mAddrs.mDestination);
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        if ((neighbor != nullptr) && Get<ChildTable>().Contains(*neighbor) &&
+            static_cast<const Child *>(neighbor)->IsCslSynchronized())
+        {
+            aTxFrameInfo.mVersion = Mac::Frame::kVersion2015;
+        }
+#endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
+        if ((neighbor != nullptr) && neighbor->IsEnhAckProbingActive())
+        {
+            aTxFrameInfo.mVersion = Mac::Frame::kVersion2015;
+        }
+#endif
+    }
+
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Prepare MAC headers
+
+    aTxFrameInfo.PrepareHeadersIn(aTxFrame);
+
+    OT_UNUSED_VARIABLE(aMessage);
 }
 
 // This method constructs a MAC data from from a given IPv6 message.
@@ -902,59 +896,59 @@ uint16_t MeshForwarder::PrepareDataFrame(Mac::TxFrame         &aFrame,
                                          uint16_t              aMeshDest,
                                          bool                  aAddFragHeader)
 {
-    Mac::Frame::SecurityLevel securityLevel;
-    Mac::Frame::KeyIdMode     keyIdMode;
-    Mac::PanIds               panIds;
-    uint16_t                  payloadLength;
-    uint16_t                  origMsgOffset;
-    uint16_t                  nextOffset;
-    FrameBuilder              frameBuilder;
+    Mac::TxFrame::Info frameInfo;
+    uint16_t           payloadLength;
+    uint16_t           origMsgOffset;
+    uint16_t           nextOffset;
+    FrameBuilder       frameBuilder;
 
 start:
-
-    securityLevel = Mac::Frame::kSecurityNone;
-    keyIdMode     = Mac::Frame::kKeyIdMode1;
+    frameInfo.Clear();
 
     if (aMessage.IsLinkSecurityEnabled())
     {
-        securityLevel = Mac::Frame::kSecurityEncMic32;
+        frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
 
-        switch (aMessage.GetSubType())
+        if (aMessage.GetSubType() == Message::kSubTypeJoinerEntrust)
         {
-        case Message::kSubTypeJoinerEntrust:
-            keyIdMode = Mac::Frame::kKeyIdMode0;
+            frameInfo.mKeyIdMode = Mac::Frame::kKeyIdMode0;
+        }
+        else if (aMessage.IsMleCommand(Mle::kCommandAnnounce))
+        {
+            frameInfo.mKeyIdMode = Mac::Frame::kKeyIdMode2;
+        }
+        else
+        {
+            frameInfo.mKeyIdMode = Mac::Frame::kKeyIdMode1;
+        }
+    }
+
+    frameInfo.mPanIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
+
+    if (aMessage.IsSubTypeMle())
+    {
+        switch (aMessage.GetMleCommand())
+        {
+        case Mle::kCommandAnnounce:
+            aFrame.SetChannel(aMessage.GetChannel());
+            aFrame.SetRxChannelAfterTxDone(Get<Mac::Mac>().GetPanChannel());
+            frameInfo.mPanIds.SetDestination(Mac::kPanIdBroadcast);
             break;
 
-        case Message::kSubTypeMleAnnounce:
-            keyIdMode = Mac::Frame::kKeyIdMode2;
+        case Mle::kCommandDiscoveryRequest:
+        case Mle::kCommandDiscoveryResponse:
+            frameInfo.mPanIds.SetDestination(aMessage.GetPanId());
             break;
 
         default:
-            // Use the `kKeyIdMode1`
             break;
         }
     }
 
-    panIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
+    frameInfo.mType  = Mac::Frame::kTypeData;
+    frameInfo.mAddrs = aMacAddrs;
 
-    switch (aMessage.GetSubType())
-    {
-    case Message::kSubTypeMleAnnounce:
-        aFrame.SetChannel(aMessage.GetChannel());
-        aFrame.SetRxChannelAfterTxDone(Get<Mac::Mac>().GetPanChannel());
-        panIds.SetDestination(Mac::kPanIdBroadcast);
-        break;
-
-    case Message::kSubTypeMleDiscoverRequest:
-    case Message::kSubTypeMleDiscoverResponse:
-        panIds.SetDestination(aMessage.GetPanId());
-        break;
-
-    default:
-        break;
-    }
-
-    PrepareMacHeaders(aFrame, Mac::Frame::kTypeData, aMacAddrs, panIds, securityLevel, keyIdMode, &aMessage);
+    PrepareMacHeaders(aFrame, frameInfo, &aMessage);
 
     frameBuilder.Init(aFrame.GetPayload(), aFrame.GetMaxPayloadLength());
 
@@ -1138,7 +1132,7 @@ Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame       &aFrame,
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if ((aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr) && aIsDataPoll)
+    if (aFrame.HasCslIe() && aIsDataPoll)
     {
         failLimit = kFailedCslDataPollTransmissions;
     }
@@ -1327,24 +1321,31 @@ void MeshForwarder::FinalizeMessageDirectTx(Message &aMessage, Error aError)
         aMessage.GetTxSuccess() ? mIpCounters.mTxSuccess++ : mIpCounters.mTxFailure++;
     }
 
-    switch (aMessage.GetSubType())
+    if (aMessage.IsMleCommand(Mle::kCommandDiscoveryRequest))
     {
-    case Message::kSubTypeMleDiscoverRequest:
         // Note that `HandleDiscoveryRequestFrameTxDone()` may update
         // `aMessage` and mark it again for direct transmission.
         Get<Mle::DiscoverScanner>().HandleDiscoveryRequestFrameTxDone(aMessage, aError);
-        break;
-
-    case Message::kSubTypeMleChildIdRequest:
+    }
+    else if (aMessage.IsMleCommand(Mle::kCommandChildIdRequest))
+    {
         Get<Mle::Mle>().HandleChildIdRequestTxDone(aMessage);
-        break;
-
-    default:
-        break;
     }
 
 exit:
     return;
+}
+
+void MeshForwarder::FinalizeAndRemoveMessage(Message &aMessage, Error aError, MessageAction aAction)
+{
+    LogMessage(aAction, aMessage, aError);
+
+#if OPENTHREAD_FTD
+    FinalizeMessageIndirectTxs(aMessage);
+#endif
+
+    FinalizeMessageDirectTx(aMessage, aError);
+    RemoveMessageIfNoPendingTx(aMessage);
 }
 
 bool MeshForwarder::RemoveMessageIfNoPendingTx(Message &aMessage)
@@ -1352,7 +1353,7 @@ bool MeshForwarder::RemoveMessageIfNoPendingTx(Message &aMessage)
     bool didRemove = false;
 
 #if OPENTHREAD_FTD
-    VerifyOrExit(!aMessage.IsDirectTransmission() && !aMessage.IsChildPending());
+    VerifyOrExit(!aMessage.IsDirectTransmission() && aMessage.GetIndirectTxChildMask().IsEmpty());
 #else
     VerifyOrExit(!aMessage.IsDirectTransmission());
 #endif
@@ -1588,7 +1589,7 @@ void MeshForwarder::HandleTimeTick(void)
     bool continueRxingTicks = false;
 
 #if OPENTHREAD_FTD
-    continueRxingTicks = mFragmentPriorityList.UpdateOnTimeTick();
+    continueRxingTicks = UpdateFwdFrameInfoArrayOnTimeTick();
 #endif
 
     continueRxingTicks = UpdateReassemblyList() || continueRxingTicks;
@@ -1746,85 +1747,6 @@ exit:
 }
 #endif
 
-bool MeshForwarder::CalcIePresent(const Message *aMessage)
-{
-    bool iePresent = false;
-
-    OT_UNUSED_VARIABLE(aMessage);
-
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    iePresent |= (aMessage != nullptr && aMessage->IsTimeSync());
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (!(aMessage != nullptr && aMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest))
-    {
-        iePresent |= Get<Mac::Mac>().IsCslEnabled();
-    }
-#endif
-#endif
-
-    return iePresent;
-}
-
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-void MeshForwarder::AppendHeaderIe(const Message *aMessage, Mac::TxFrame &aFrame)
-{
-    uint8_t index     = 0;
-    bool    iePresent = false;
-    bool    payloadPresent =
-        (aFrame.GetType() == Mac::Frame::kTypeMacCmd) || (aMessage != nullptr && aMessage->GetLength() != 0);
-
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (aMessage != nullptr && aMessage->IsTimeSync())
-    {
-        IgnoreError(aFrame.AppendHeaderIeAt<Mac::TimeIe>(index));
-        iePresent = true;
-    }
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (Get<Mac::Mac>().IsCslEnabled())
-    {
-        IgnoreError(aFrame.AppendHeaderIeAt<Mac::CslIe>(index));
-        aFrame.SetCslIePresent(true);
-        iePresent = true;
-    }
-#endif
-
-    if (iePresent && payloadPresent)
-    {
-        // Assume no Payload IE in current implementation
-        IgnoreError(aFrame.AppendHeaderIeAt<Mac::Termination2Ie>(index));
-    }
-}
-#endif
-
-Mac::Frame::Version MeshForwarder::CalcFrameVersion(const Neighbor *aNeighbor, bool aIePresent) const
-{
-    Mac::Frame::Version version = Mac::Frame::kVersion2006;
-    OT_UNUSED_VARIABLE(aNeighbor);
-
-    if (aIePresent)
-    {
-        version = Mac::Frame::kVersion2015;
-    }
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    else if ((aNeighbor != nullptr) && Get<ChildTable>().Contains(*aNeighbor) &&
-             static_cast<const Child *>(aNeighbor)->IsCslSynchronized())
-    {
-        version = Mac::Frame::kVersion2015;
-    }
-#endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    else if (aNeighbor != nullptr && aNeighbor->IsEnhAckProbingActive())
-    {
-        version = Mac::Frame::kVersion2015; ///< Set version to 2015 to fetch Link Metrics data in Enh-ACK.
-    }
-#endif
-
-    return version;
-}
-
 // LCOV_EXCL_START
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
@@ -1849,23 +1771,24 @@ const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aE
 
     const char *string = kMessageActionStrings[aAction];
 
-    static_assert(kMessageReceive == 0, "kMessageReceive value is incorrect");
-    static_assert(kMessageTransmit == 1, "kMessageTransmit value is incorrect");
-    static_assert(kMessagePrepareIndirect == 2, "kMessagePrepareIndirect value is incorrect");
-    static_assert(kMessageDrop == 3, "kMessageDrop value is incorrect");
-    static_assert(kMessageReassemblyDrop == 4, "kMessageReassemblyDrop value is incorrect");
-    static_assert(kMessageEvict == 5, "kMessageEvict value is incorrect");
+    struct MessageActionChecker
+    {
+        InitEnumValidatorCounter();
+
+        ValidateNextEnum(kMessageReceive);
+        ValidateNextEnum(kMessageTransmit);
+        ValidateNextEnum(kMessagePrepareIndirect);
+        ValidateNextEnum(kMessageDrop);
+        ValidateNextEnum(kMessageReassemblyDrop);
+        ValidateNextEnum(kMessageEvict);
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-    static_assert(kMessageMarkEcn == 6, "kMessageMarkEcn is incorrect");
-    static_assert(kMessageQueueMgmtDrop == 7, "kMessageQueueMgmtDrop is incorrect");
+        ValidateNextEnum(kMessageMarkEcn);
+        ValidateNextEnum(kMessageQueueMgmtDrop);
+#endif
 #if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-    static_assert(kMessageFullQueueDrop == 8, "kMessageFullQueueDrop is incorrect");
+        ValidateNextEnum(kMessageFullQueueDrop);
 #endif
-#else
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-    static_assert(kMessageFullQueueDrop == 6, "kMessageFullQueueDrop is incorrect");
-#endif
-#endif
+    };
 
     if ((aAction == kMessageTransmit) && (aError != kErrorNone))
     {
@@ -1883,27 +1806,27 @@ const char *MeshForwarder::MessagePriorityToString(const Message &aMessage)
 #if OPENTHREAD_CONFIG_LOG_SRC_DST_IP_ADDRESSES
 void MeshForwarder::LogIp6SourceDestAddresses(const Ip6::Headers &aHeaders, LogLevel aLogLevel)
 {
-    uint16_t srcPort = aHeaders.GetSourcePort();
-    uint16_t dstPort = aHeaders.GetDestinationPort();
-
-    if (srcPort != 0)
-    {
-        LogAt(aLogLevel, "    src:[%s]:%d", aHeaders.GetSourceAddress().ToString().AsCString(), srcPort);
-    }
-    else
-    {
-        LogAt(aLogLevel, "    src:[%s]", aHeaders.GetSourceAddress().ToString().AsCString());
-    }
-
-    if (dstPort != 0)
-    {
-        LogAt(aLogLevel, "    dst:[%s]:%d", aHeaders.GetDestinationAddress().ToString().AsCString(), dstPort);
-    }
-    else
-    {
-        LogAt(aLogLevel, "    dst:[%s]", aHeaders.GetDestinationAddress().ToString().AsCString());
-    }
+    LogIp6AddressAndPort("src", aHeaders.GetSourceAddress(), aHeaders.GetSourcePort(), aLogLevel);
+    LogIp6AddressAndPort("dst", aHeaders.GetDestinationAddress(), aHeaders.GetDestinationPort(), aLogLevel);
 }
+
+void MeshForwarder::LogIp6AddressAndPort(const char         *aLabel,
+                                         const Ip6::Address &aAddress,
+                                         uint16_t            aPort,
+                                         LogLevel            aLogLevel)
+{
+    Ip6::SockAddr::InfoString string;
+
+    string.Append("[%s]", aAddress.ToString().AsCString());
+
+    if (aPort != 0)
+    {
+        string.Append(":%u", aPort);
+    }
+
+    LogAt(aLogLevel, "    %s:%s", aLabel, string.AsCString());
+}
+
 #else
 void MeshForwarder::LogIp6SourceDestAddresses(const Ip6::Headers &, LogLevel) {}
 #endif
@@ -1914,30 +1837,19 @@ void MeshForwarder::LogIp6Message(MessageAction       aAction,
                                   Error               aError,
                                   LogLevel            aLogLevel)
 {
-    Ip6::Headers headers;
-    bool         shouldLogRss;
-    bool         shouldLogRadio = false;
-    const char  *radioString    = "";
+    Ip6::Headers              headers;
+    String<kMaxLogStringSize> string;
 
     SuccessOrExit(headers.ParseFrom(aMessage));
 
-    shouldLogRss = (aAction == kMessageReceive) || (aAction == kMessageReassemblyDrop);
+    string.Append("%s IPv6 %s msg, len:%u, chksum:%04x, ecn:%s, ", MessageActionToString(aAction, aError),
+                  Ip6::Ip6::IpProtoToString(headers.GetIpProto()), aMessage.GetLength(), headers.GetChecksum(),
+                  Ip6::Ip6::EcnToString(headers.GetEcn()));
 
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    shouldLogRadio = true;
-    radioString    = aMessage.IsRadioTypeSet() ? RadioTypeToString(aMessage.GetRadioType()) : "all";
-#endif
+    AppendMacAddrToLogString(string, aAction, aMacAddress);
+    AppendSecErrorPrioRssRadioLabelsToLogString(string, aAction, aMessage, aError);
 
-    LogAt(aLogLevel, "%s IPv6 %s msg, len:%d, chksum:%04x, ecn:%s%s%s, sec:%s%s%s, prio:%s%s%s%s%s",
-          MessageActionToString(aAction, aError), Ip6::Ip6::IpProtoToString(headers.GetIpProto()), aMessage.GetLength(),
-          headers.GetChecksum(), Ip6::Ip6::EcnToString(headers.GetEcn()),
-          (aMacAddress == nullptr) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
-          (aMacAddress == nullptr) ? "" : aMacAddress->ToString().AsCString(),
-          ToYesNo(aMessage.IsLinkSecurityEnabled()),
-          (aError == kErrorNone) ? "" : ", error:", (aError == kErrorNone) ? "" : ErrorToString(aError),
-          MessagePriorityToString(aMessage), shouldLogRss ? ", rss:" : "",
-          shouldLogRss ? aMessage.GetRssAverager().ToString().AsCString() : "", shouldLogRadio ? ", radio:" : "",
-          radioString);
+    LogAt(aLogLevel, "%s", string.AsCString());
 
     if (aAction != kMessagePrepareIndirect)
     {
@@ -1946,6 +1858,51 @@ void MeshForwarder::LogIp6Message(MessageAction       aAction,
 
 exit:
     return;
+}
+
+void MeshForwarder::AppendMacAddrToLogString(StringWriter       &aString,
+                                             MessageAction       aAction,
+                                             const Mac::Address *aMacAddress)
+{
+    VerifyOrExit(aMacAddress != nullptr);
+
+    if (aAction == kMessageReceive)
+    {
+        aString.Append("from:");
+    }
+    else
+    {
+        aString.Append("to:");
+    }
+
+    aString.Append("%s, ", aMacAddress->ToString().AsCString());
+
+exit:
+    return;
+}
+
+void MeshForwarder::AppendSecErrorPrioRssRadioLabelsToLogString(StringWriter  &aString,
+                                                                MessageAction  aAction,
+                                                                const Message &aMessage,
+                                                                Error          aError)
+{
+    aString.Append("sec:%s, ", ToYesNo(aMessage.IsLinkSecurityEnabled()));
+
+    if (aError != kErrorNone)
+    {
+        aString.Append("error:%s, ", ErrorToString(aError));
+    }
+
+    aString.Append("prio:%s", MessagePriorityToString(aMessage));
+
+    if ((aAction == kMessageReceive) || (aAction == kMessageReassemblyDrop))
+    {
+        aString.Append(", rss:%s", aMessage.GetRssAverager().ToString().AsCString());
+    }
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    aString.Append(", radio:%s", aMessage.IsRadioTypeSet() ? RadioTypeToString(aMessage.GetRadioType()) : "all");
+#endif
 }
 
 void MeshForwarder::LogMessage(MessageAction aAction, const Message &aMessage)

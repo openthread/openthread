@@ -29,24 +29,11 @@
 /**
  * @file
  *   This file implements MeshCoP Datasets manager to process commands.
- *
  */
 
 #include "dataset_manager.hpp"
 
-#include <stdio.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/notifier.hpp"
 #include "instance/instance.hpp"
-#include "meshcop/meshcop.hpp"
-#include "meshcop/meshcop_tlvs.hpp"
-#include "radio/radio.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/thread_tlvs.hpp"
-#include "thread/uri_paths.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -199,9 +186,23 @@ Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
 
             if (error != kErrorNone)
             {
-                LogCrit("Failed to set channel to %u when applying dataset: %s", channel, ErrorToString(error));
+                LogCrit("Failed to set PAN channel to %u when applying dataset: %s", channel, ErrorToString(error));
             }
 
+            break;
+        }
+
+        case Tlv::kWakeupChannel:
+        {
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+            uint8_t channel = static_cast<uint8_t>(cur->ReadValueAs<WakeupChannelTlv>().GetChannel());
+            error           = Get<Mac::Mac>().SetWakeupChannel(channel);
+
+            if (error != kErrorNone)
+            {
+                LogCrit("Failed to set wake-up channel to %u when applying dataset: %s", channel, ErrorToString(error));
+            }
+#endif
             break;
         }
 
@@ -691,6 +692,11 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
         tlvList.Add(Tlv::kChannel);
     }
 
+    if (aDatasetComponents.IsPresent<Dataset::kWakeupChannel>())
+    {
+        tlvList.Add(Tlv::kWakeupChannel);
+    }
+
     if (aDatasetComponents.IsPresent<Dataset::kPskc>())
     {
         tlvList.Add(Tlv::kPskc);
@@ -883,6 +889,35 @@ PendingDatasetManager::PendingDatasetManager(Instance &aInstance)
     : DatasetManager(aInstance, Dataset::kPending, PendingDatasetManager::HandleTimer)
     , mDelayTimer(aInstance)
 {
+}
+
+Error PendingDatasetManager::ReadActiveTimestamp(Timestamp &aTimestamp) const
+{
+    Error   error = kErrorNotFound;
+    Dataset dataset;
+
+    SuccessOrExit(Read(dataset));
+
+    SuccessOrExit(dataset.Read<ActiveTimestampTlv>(aTimestamp));
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+Error PendingDatasetManager::ReadRemainingDelay(uint32_t &aRemainingDelay) const
+{
+    Error     error = kErrorNone;
+    TimeMilli now   = TimerMilli::GetNow();
+
+    aRemainingDelay = 0;
+
+    VerifyOrExit(mDelayTimer.IsRunning(), error = kErrorNotFound);
+    VerifyOrExit(mDelayTimer.GetFireTime() > now);
+    aRemainingDelay = mDelayTimer.GetFireTime() - now;
+
+exit:
+    return error;
 }
 
 void PendingDatasetManager::StartDelayTimer(void)

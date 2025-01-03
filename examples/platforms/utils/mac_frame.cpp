@@ -29,6 +29,10 @@
 #include "mac_frame.h"
 
 #include <assert.h>
+
+#include <openthread/platform/radio.h>
+
+#include "common/code_utils.hpp"
 #include "mac/mac_frame.hpp"
 
 using namespace ot;
@@ -37,6 +41,15 @@ bool otMacFrameDoesAddrMatch(const otRadioFrame *aFrame,
                              otPanId             aPanId,
                              otShortAddress      aShortAddress,
                              const otExtAddress *aExtAddress)
+{
+    return otMacFrameDoesAddrMatchAny(aFrame, aPanId, aShortAddress, Mac::kShortAddrInvalid, aExtAddress);
+}
+
+bool otMacFrameDoesAddrMatchAny(const otRadioFrame *aFrame,
+                                otPanId             aPanId,
+                                otShortAddress      aShortAddress,
+                                otShortAddress      aAltShortAddress,
+                                const otExtAddress *aExtAddress)
 {
     const Mac::Frame &frame = *static_cast<const Mac::Frame *>(aFrame);
     bool              rval  = true;
@@ -48,7 +61,9 @@ bool otMacFrameDoesAddrMatch(const otRadioFrame *aFrame,
     switch (dst.GetType())
     {
     case Mac::Address::kTypeShort:
-        VerifyOrExit(dst.GetShort() == Mac::kShortAddrBroadcast || dst.GetShort() == aShortAddress, rval = false);
+        VerifyOrExit(dst.GetShort() == Mac::kShortAddrBroadcast || dst.GetShort() == aShortAddress ||
+                         (aAltShortAddress != Mac::kShortAddrInvalid && dst.GetShort() == aAltShortAddress),
+                     rval = false);
         break;
 
     case Mac::Address::kTypeExtended:
@@ -209,6 +224,16 @@ bool otMacFrameIsKeyIdMode1(otRadioFrame *aFrame)
     return (error == OT_ERROR_NONE) ? (keyIdMode == Mac::Frame::kKeyIdMode1) : false;
 }
 
+bool otMacFrameIsKeyIdMode2(otRadioFrame *aFrame)
+{
+    uint8_t keyIdMode;
+    otError error;
+
+    error = static_cast<const Mac::Frame *>(aFrame)->GetKeyIdMode(keyIdMode);
+
+    return (error == OT_ERROR_NONE) ? (keyIdMode == Mac::Frame::kKeyIdMode2) : false;
+}
+
 uint8_t otMacFrameGetKeyId(otRadioFrame *aFrame)
 {
     uint8_t keyId = 0;
@@ -277,3 +302,112 @@ void otMacFrameSetEnhAckProbingIe(otRadioFrame *aFrame, const uint8_t *aData, ui
     reinterpret_cast<Mac::Frame *>(aFrame)->SetEnhAckProbingIe(aData, aDataLen);
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+static uint16_t ComputeCslPhase(uint32_t aRadioTime, otRadioContext *aRadioContext)
+{
+    return (aRadioContext->mCslSampleTime - aRadioTime) % (aRadioContext->mCslPeriod * OT_US_PER_TEN_SYMBOLS) /
+           OT_US_PER_TEN_SYMBOLS;
+}
+#endif
+otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *aRadioContext)
+{
+    otError error = OT_ERROR_NONE;
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    otMacKeyMaterial *key = nullptr;
+    uint8_t           keyId;
+    uint32_t          frameCounter;
+    bool              processKeyId;
+
+    processKeyId =
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+        otMacFrameIsKeyIdMode2(aFrame) ||
+#endif
+        otMacFrameIsKeyIdMode1(aFrame);
+
+    VerifyOrExit(otMacFrameIsSecurityEnabled(aFrame) && processKeyId && !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
+
+    if (otMacFrameIsAck(aFrame))
+    {
+        keyId = otMacFrameGetKeyId(aFrame);
+
+        VerifyOrExit(keyId != 0, error = OT_ERROR_FAILED);
+
+        if (keyId == aRadioContext->mKeyId)
+        {
+            key          = &aRadioContext->mCurrKey;
+            frameCounter = aRadioContext->mMacFrameCounter++;
+        }
+        else if (keyId == aRadioContext->mKeyId - 1)
+        {
+            key          = &aRadioContext->mPrevKey;
+            frameCounter = aRadioContext->mPrevMacFrameCounter++;
+        }
+        else if (keyId == aRadioContext->mKeyId + 1)
+        {
+            key          = &aRadioContext->mNextKey;
+            frameCounter = 0;
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_SECURITY);
+        }
+    }
+    else if (!aFrame->mInfo.mTxInfo.mIsHeaderUpdated)
+    {
+        key          = &aRadioContext->mCurrKey;
+        keyId        = aRadioContext->mKeyId;
+        frameCounter = aRadioContext->mMacFrameCounter++;
+    }
+
+    if (key != nullptr)
+    {
+        aFrame->mInfo.mTxInfo.mAesKey = key;
+
+        otMacFrameSetKeyId(aFrame, keyId);
+        otMacFrameSetFrameCounter(aFrame, frameCounter);
+        aFrame->mInfo.mTxInfo.mIsHeaderUpdated = true;
+    }
+#else
+    VerifyOrExit(!aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+
+    otMacFrameProcessTransmitAesCcm(aFrame, &aRadioContext->mExtAddress);
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+void otMacFrameUpdateTimeIe(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioContext *aRadioContext)
+{
+    if (aFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
+    {
+        uint8_t *timeIe = aFrame->mPsdu + aFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
+        uint64_t time   = aRadioTime + aFrame->mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset;
+
+        *timeIe = aFrame->mInfo.mTxInfo.mIeInfo->mTimeSyncSeq;
+
+        *(++timeIe) = static_cast<uint8_t>(time & 0xff);
+        for (uint8_t i = 1; i < sizeof(uint64_t); i++)
+        {
+            time        = time >> 8;
+            *(++timeIe) = static_cast<uint8_t>(time & 0xff);
+        }
+    }
+}
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioContext *aRadioContext)
+{
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (aRadioContext->mCslPeriod > 0) // CSL IE should be filled for every transmit attempt
+    {
+        otMacFrameSetCslIe(aFrame, aRadioContext->mCslPeriod, ComputeCslPhase(aRadioTime, aRadioContext));
+    }
+#endif
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    otMacFrameUpdateTimeIe(aFrame, aRadioTime, aRadioContext);
+#endif
+    aFrame->mInfo.mTxInfo.mTimestamp = aRadioTime;
+    return otMacFrameProcessTransmitSecurity(aFrame, aRadioContext);
+}

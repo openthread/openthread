@@ -43,6 +43,7 @@
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/ip6.h>
 #include <openthread/platform/misc.h>
 
 #include "lib/spinel/coprocessor_type.h"
@@ -54,7 +55,6 @@ extern "C" {
 
 /**
  * Represents default parameters for the SPI interface.
- *
  */
 enum
 {
@@ -71,7 +71,6 @@ enum
 
 /**
  * Represents the Co-processor URLs.
- *
  */
 typedef struct otPlatformCoprocessorUrls
 {
@@ -81,7 +80,6 @@ typedef struct otPlatformCoprocessorUrls
 
 /**
  * Represents platform specific configurations.
- *
  */
 typedef struct otPlatformConfig
 {
@@ -99,7 +97,6 @@ typedef struct otPlatformConfig
 
 /**
  * Represents the platform spinel driver structure.
- *
  */
 typedef struct otSpinelDriver otSpinelDriver;
 
@@ -110,7 +107,6 @@ typedef struct otSpinelDriver otSpinelDriver;
  *       different spinel handlings.
  *
  * @returns A pointer to the spinel driver instance.
- *
  */
 otSpinelDriver *otSysGetSpinelDriver(void);
 
@@ -125,7 +121,6 @@ otSpinelDriver *otSysGetSpinelDriver(void);
  * @param[in]  aUrls  The URLs to initialize the co-processor.
  *
  * @returns The co-processor type.
- *
  */
 CoprocessorType otSysInitCoprocessor(otPlatformCoprocessorUrls *aUrls);
 
@@ -139,7 +134,6 @@ CoprocessorType otSysInitCoprocessor(otPlatformCoprocessorUrls *aUrls);
  * @param[in]  aPlatformConfig  Platform configuration structure.
  *
  * @returns A pointer to the OpenThread instance.
- *
  */
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig);
 
@@ -149,13 +143,11 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig);
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
  *       when deinitialization of OpenThread's drivers is most appropriate.
- *
  */
 void otSysDeinit(void);
 
 /**
  * Represents a context for a select() based mainloop.
- *
  */
 typedef struct otSysMainloopContext
 {
@@ -171,7 +163,6 @@ typedef struct otSysMainloopContext
  *
  * @param[in]       aInstance   The OpenThread instance structure.
  * @param[in,out]   aMainloop   A pointer to the mainloop context.
- *
  */
 void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop);
 
@@ -181,7 +172,6 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
  * @param[in,out]   aMainloop   A pointer to the mainloop context.
  *
  * @returns value returned from select().
- *
  */
 int otSysMainloopPoll(otSysMainloopContext *aMainloop);
 
@@ -193,7 +183,6 @@ int otSysMainloopPoll(otSysMainloopContext *aMainloop);
  *
  * @param[in]   aInstance   The OpenThread instance structure.
  * @param[in]   aMainloop   A pointer to the mainloop context.
- *
  */
 void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMainloop);
 
@@ -201,7 +190,6 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
  * Returns the radio url help string.
  *
  * @returns the radio url help string.
- *
  */
 const char *otSysGetRadioUrlHelpString(void);
 
@@ -211,7 +199,6 @@ extern otPlatResetReason gPlatResetReason;
  * Returns the Thread network interface name.
  *
  * @returns The Thread network interface name.
- *
  */
 const char *otSysGetThreadNetifName(void);
 
@@ -219,7 +206,6 @@ const char *otSysGetThreadNetifName(void);
  * Returns the Thread network interface index.
  *
  * @returns The Thread network interface index.
- *
  */
 unsigned int otSysGetThreadNetifIndex(void);
 
@@ -227,7 +213,6 @@ unsigned int otSysGetThreadNetifIndex(void);
  * Returns the infrastructure network interface name.
  *
  * @returns The infrastructure network interface name, or `nullptr` if not specified.
- *
  */
 const char *otSysGetInfraNetifName(void);
 
@@ -235,7 +220,6 @@ const char *otSysGetInfraNetifName(void);
  * Returns the infrastructure network interface index.
  *
  * @returns The infrastructure network interface index.
- *
  */
 uint32_t otSysGetInfraNetifIndex(void);
 
@@ -243,7 +227,6 @@ uint32_t otSysGetInfraNetifIndex(void);
  * Returns the radio spinel metrics.
  *
  * @returns The radio spinel metrics.
- *
  */
 const otRadioSpinelMetrics *otSysGetRadioSpinelMetrics(void);
 
@@ -251,7 +234,6 @@ const otRadioSpinelMetrics *otSysGetRadioSpinelMetrics(void);
  * Returns the RCP interface metrics.
  *
  * @returns The RCP interface metrics.
- *
  */
 const otRcpInterfaceMetrics *otSysGetRcpInterfaceMetrics(void);
 
@@ -259,7 +241,6 @@ const otRcpInterfaceMetrics *otSysGetRcpInterfaceMetrics(void);
  * Returns the ifr_flags of the infrastructure network interface.
  *
  * @returns The ifr_flags of infrastructure network interface.
- *
  */
 uint32_t otSysGetInfraNetifFlags(void);
 
@@ -274,7 +255,6 @@ typedef struct otSysInfraNetIfAddressCounters
  * This functions counts the number of addresses on the infrastructure network interface.
  *
  * @param[out] aAddressCounters  The counters of addresses on infrastructure network interface.
- *
  */
 void otSysCountInfraNetifAddresses(otSysInfraNetIfAddressCounters *aAddressCounters);
 
@@ -286,7 +266,6 @@ void otSysCountInfraNetifAddresses(otSysInfraNetIfAddressCounters *aAddressCount
  *
  * @param[in] aInfraNetifName  The name of the infrastructure network interface.
  * @param[in] aIcmp6Socket     A SOCK_RAW socket running on the infrastructure network interface.
- *
  */
 void otSysSetInfraNetif(const char *aInfraNetifName, int aIcmp6Socket);
 
@@ -294,7 +273,6 @@ void otSysSetInfraNetif(const char *aInfraNetifName, int aIcmp6Socket);
  * Returns TRUE if the infrastructure interface is running.
  *
  * @returns TRUE if the infrastructure interface is running, FALSE if not.
- *
  */
 bool otSysInfraIfIsRunning(void);
 
@@ -307,9 +285,47 @@ bool otSysInfraIfIsRunning(void);
  * restore the original daemon's CLI output.
  *
  * @param[in] aInstance  The OpenThread instance structure.
- *
  */
 void otSysCliInitUsingDaemon(otInstance *aInstance);
+
+/**
+ * Sets whether to retrieve upstream DNS servers from "resolv.conf".
+ *
+ * @param[in] aEnabled  TRUE if enable retrieving upstream DNS servers from "resolv.conf", FALSE otherwise.
+ */
+void otSysUpstreamDnsServerSetResolvConfEnabled(bool aEnabled);
+
+/**
+ * Sets the upstream DNS server list.
+ *
+ * @param[in] aUpstreamDnsServers  A pointer to the list of upstream DNS server addresses. Each address could be an IPv6
+ *                                 address or an IPv4-mapped IPv6 address.
+ * @param[in] aNumServers          The number of upstream DNS servers.
+ */
+void otSysUpstreamDnsSetServerList(const otIp6Address *aUpstreamDnsServers, int aNumServers);
+
+/**
+ * Initializes TREL on the given interface.
+ *
+ * After this call, TREL is ready to be enabled on the interface. Callers need to make sure TREL is disabled prior
+ * to this call.
+ */
+void otSysTrelInit(const char *aInterfaceName);
+
+/**
+ * Deinitializes TREL.
+ *
+ * After this call, TREL is deinitialized. It's ready to be initialized on any given interface. Callers need to
+ * make sure TREL is disabled prior to this call.
+ */
+void otSysTrelDeinit(void);
+
+/**
+ * Enables or disables the RCP restoration feature.
+ *
+ * @param[in]  aEnabled  TRUE to enable the RCP restoration feature, FALSE otherwise.
+ */
+void otSysSetRcpRestorationEnabled(bool aEnabled);
 
 #ifdef __cplusplus
 } // end of extern "C"

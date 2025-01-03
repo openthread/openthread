@@ -31,16 +31,11 @@
  *   This file implements TCP/IPv6 socket extensions.
  */
 
-#include "openthread-core-config.h"
+#include "tcp6_ext.hpp"
 
 #if OPENTHREAD_CONFIG_TCP_ENABLE
 
-#include "tcp6_ext.hpp"
-
-#include "common/code_utils.hpp"
-#include "common/error.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Ip6 {

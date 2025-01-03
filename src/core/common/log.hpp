@@ -48,7 +48,6 @@ namespace ot {
  * @def OT_SHOULD_LOG
  *
  * This definition indicates whether or not logging is enabled.
- *
  */
 #define OT_SHOULD_LOG (OPENTHREAD_CONFIG_LOG_OUTPUT != OPENTHREAD_CONFIG_LOG_OUTPUT_NONE)
 
@@ -58,13 +57,11 @@ namespace ot {
  * @param[in] aLevel   The log level to check.
  *
  * @returns TRUE if logging is enabled at @p aLevel, FALSE otherwise.
- *
  */
 #define OT_SHOULD_LOG_AT(aLevel) (OT_SHOULD_LOG && (OPENTHREAD_CONFIG_LOG_LEVEL >= (aLevel)))
 
 /**
  * Represents the log level.
- *
  */
 enum LogLevel : uint8_t
 {
@@ -78,7 +75,9 @@ enum LogLevel : uint8_t
 
 constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
 
-#if OT_SHOULD_LOG && (OPENTHREAD_CONFIG_LOG_LEVEL != OT_LOG_LEVEL_NONE)
+constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max size of log string
+
+#if OT_SHOULD_LOG
 /**
  * Registers log module name.
  *
@@ -86,7 +85,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * functions or macros (e.g., `LogInfo()` or `DumpInfo()`, ...) in the file.
  *
  * @param[in] aName  The log module name string (MUST be shorter than `kMaxLogModuleNameLength`).
- *
  */
 #define RegisterLogModule(aName)                                     \
     constexpr char kLogModuleName[] = aName;                         \
@@ -107,7 +105,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * Emits a log message at critical log level.
  *
  * @param[in]  ...   Arguments for the format specification.
- *
  */
 #define LogCrit(...) Logger::LogAtLevel<kLogLevelCrit>(kLogModuleName, __VA_ARGS__)
 #else
@@ -119,7 +116,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * Emits a log message at warning log level.
  *
  * @param[in]  ...   Arguments for the format specification.
- *
  */
 #define LogWarn(...) Logger::LogAtLevel<kLogLevelWarn>(kLogModuleName, __VA_ARGS__)
 #else
@@ -131,7 +127,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * Emits a log message at note log level.
  *
  * @param[in]  ...   Arguments for the format specification.
- *
  */
 #define LogNote(...) Logger::LogAtLevel<kLogLevelNote>(kLogModuleName, __VA_ARGS__)
 #else
@@ -143,7 +138,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * Emits a log message at info log level.
  *
  * @param[in]  ...   Arguments for the format specification.
- *
  */
 #define LogInfo(...) Logger::LogAtLevel<kLogLevelInfo>(kLogModuleName, __VA_ARGS__)
 #else
@@ -155,7 +149,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * Emits a log message at debug log level.
  *
  * @param[in]  ...   Arguments for the format specification.
- *
  */
 #define LogDebg(...) Logger::LogAtLevel<kLogLevelDebg>(kLogModuleName, __VA_ARGS__)
 #else
@@ -171,7 +164,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  *
  * @param[in] aError       The error to check and log.
  * @param[in] aText        The text to include in the log.
- *
  */
 #define LogWarnOnError(aError, aText) Logger::LogOnError(kLogModuleName, aError, aText)
 #else
@@ -184,7 +176,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  *
  * @param[in] aLogLevel  The log level to use.
  * @param[in] ...        Argument for the format specification.
- *
  */
 #define LogAt(aLogLevel, ...) Logger::LogInModule(kLogModuleName, aLogLevel, __VA_ARGS__)
 #else
@@ -196,7 +187,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * Emits a log message independent of the configured log level.
  *
  * @param[in]  ...   Arguments for the format specification.
- *
  */
 #define LogAlways(...) Logger::LogInModule("", kLogLevelNone, __VA_ARGS__)
 #else
@@ -208,7 +198,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * Emit a log message for the certification test.
  *
  * @param[in]  ...  Arguments for the format specification.
- *
  */
 #define LogCert(...) LogAlways(__VA_ARGS__)
 #else
@@ -222,7 +211,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
- *
  */
 #define DumpCrit(aText, aData, aDataLength) Logger::Dump<kLogLevelCrit, kLogModuleName>(aText, aData, aDataLength)
 #else
@@ -236,7 +224,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
- *
  */
 #define DumpWarn(aText, aData, aDataLength) Logger::Dump<kLogLevelWarn, kLogModuleName>(aText, aData, aDataLength)
 #else
@@ -250,7 +237,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
- *
  */
 #define DumpNote(aText, aData, aDataLength) Logger::Dump<kLogLevelNote, kLogModuleName>(aText, aData, aDataLength)
 #else
@@ -264,7 +250,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
- *
  */
 #define DumpInfo(aText, aData, aDataLength) Logger::Dump<kLogLevelInfo, kLogModuleName>(aText, aData, aDataLength)
 #else
@@ -278,7 +263,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
- *
  */
 #define DumpDebg(aText, aData, aDataLength) Logger::Dump<kLogLevelDebg, kLogModuleName>(aText, aData, aDataLength)
 #else
@@ -292,7 +276,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
- *
  */
 #define DumpAlways(aText, aData, aDataLength) Logger::DumpInModule("", kLogLevelNone, aText, aData, aDataLength)
 #endif
@@ -304,7 +287,6 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * @param[in]  aText         A string that is printed before the bytes.
  * @param[in]  aData         A pointer to the data buffer.
  * @param[in]  aDataLength   Number of bytes in @p aData.
- *
  */
 #define DumpCert(aText, aData, aDataLength) DumpAlways(aText, aData, aDataLength)
 #else
@@ -414,7 +396,6 @@ typedef otLogHexDumpInfo HexDumpInfo; ///< Represents the hex dump info.
  *
  * @retval kErrorNone      Successfully generated the next line, `mLine` field in @p aInfo is updated.
  * @retval kErrorNotFound  Reached the end and no more line to generate.
- *
  */
 Error GenerateNextHexDumpLine(HexDumpInfo &aInfo);
 

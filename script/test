@@ -56,7 +56,7 @@ readonly OT_NODE_TYPE
 OT_NATIVE_IP="${OT_NATIVE_IP:-0}"
 readonly OT_NATIVE_IP
 
-THREAD_VERSION="${THREAD_VERSION:-1.3}"
+THREAD_VERSION="${THREAD_VERSION:-1.4}"
 readonly THREAD_VERSION
 
 INTER_OP="${INTER_OP:-0}"
@@ -131,6 +131,8 @@ build_simulation()
         options+=("-DOT_LINK_METRICS_INITIATOR=ON")
         options+=("-DOT_LINK_METRICS_SUBJECT=ON")
         options+=("-DOT_LINK_METRICS_MANAGER=ON")
+        options+=("-DOT_WAKEUP_COORDINATOR=ON")
+        options+=("-DOT_WAKEUP_END_DEVICE=ON")
     fi
 
     if [[ ${OT_NODE_TYPE} == cli* ]]; then
@@ -146,6 +148,10 @@ build_simulation()
 
     if [[ ${ot_extra_options[*]+x} ]]; then
         options+=("${ot_extra_options[@]}")
+    fi
+
+    if [[ ${OT_NODE_TYPE} == rcp* ]]; then
+        options+=("-DOT_SIMULATION_INFRA_IF=OFF")
     fi
 
     OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-simulation-${version}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
@@ -259,7 +265,7 @@ do_unit()
     do_unit_version "${THREAD_VERSION}"
 
     if [[ ${THREAD_VERSION} != "1.1" && ${INTER_OP_BBR} == 1 ]]; then
-        do_unit_version "1.3-bbr"
+        do_unit_version "1.4-bbr"
     fi
 }
 
@@ -278,7 +284,7 @@ do_cert()
     esac
 
     if [[ ${THREAD_VERSION} != "1.1" ]]; then
-        export top_builddir_1_3_bbr="${OT_BUILDDIR}/openthread-simulation-1.3-bbr"
+        export top_builddir_1_4_bbr="${OT_BUILDDIR}/openthread-simulation-1.4-bbr"
         if [[ ${INTER_OP} == "1" ]]; then
             export top_builddir_1_1="${OT_BUILDDIR}/openthread-simulation-1.1"
         fi
@@ -297,7 +303,7 @@ do_cert_suite()
     export top_srcdir="${OT_SRCDIR}"
 
     if [[ ${THREAD_VERSION} != "1.1" ]]; then
-        export top_builddir_1_3_bbr="${OT_BUILDDIR}/openthread-simulation-1.3-bbr"
+        export top_builddir_1_4_bbr="${OT_BUILDDIR}/openthread-simulation-1.4-bbr"
         if [[ ${INTER_OP} == "1" ]]; then
             export top_builddir_1_1="${OT_BUILDDIR}/openthread-simulation-1.1"
         fi
@@ -347,6 +353,7 @@ do_build_otbr_docker()
         "-DOT_UPTIME=ON"
         "-DOTBR_DNS_UPSTREAM_QUERY=ON"
         "-DOTBR_DUA_ROUTING=ON"
+        "-DOTBR_DHCP6_PD=ON"
     )
     local args=(
         "BORDER_ROUTING=${BORDER_ROUTING}"
@@ -501,9 +508,9 @@ ENVIRONMENTS:
     VERBOSE         1 to build or test verbosely. The default is 0.
     VIRTUAL_TIME    1 for virtual time, otherwise real time. The default value is 0 when running expect tests,
                     otherwise default value is 1.
-    THREAD_VERSION  1.1 for Thread 1.1 stack, 1.3 for Thread 1.3 stack. The default is 1.3.
-    INTER_OP        1 to build 1.1 together. Only works when THREAD_VERSION is 1.3. The default is 0.
-    INTER_OP_BBR    1 to build bbr version together. Only works when THREAD_VERSION is 1.3. The default is 1.
+    THREAD_VERSION  1.1 for Thread 1.1 stack, 1.4 for Thread 1.4 stack. The default is 1.4.
+    INTER_OP        1 to build 1.1 together. Only works when THREAD_VERSION is 1.4. The default is 0.
+    INTER_OP_BBR    1 to build bbr version together. Only works when THREAD_VERSION is 1.4. The default is 1.
 
 COMMANDS:
     clean           Clean built files to prepare for new build.
@@ -535,7 +542,7 @@ EXAMPLES:
     THREAD_VERSION=1.1 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
     THREAD_VERSION=1.1 VIRTUAL_TIME=0 $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
 
-    # Test Thread 1.3 with real time, use 'INTER_OP=1' when the case needs both versions.
+    # Test Thread 1.4 with real time, use 'INTER_OP=1' when the case needs both versions.
     VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_test_enhanced_keep_alive.py
     INTER_OP=1 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_router_5_1_1.py
     INTER_OP=1 VIRTUAL_TIME=0 $0 clean build cert_suite tests/scripts/thread-cert/v1_2_*
@@ -642,7 +649,7 @@ envsetup()
         if [[ ${THREAD_VERSION} != "1.1" ]]; then
             export RADIO_DEVICE_1_1="${OT_BUILDDIR}/openthread-simulation-1.1/examples/apps/ncp/ot-rcp"
             export OT_CLI_PATH_1_1="${OT_BUILDDIR}/openthread-posix-1.1/src/posix/ot-cli"
-            export OT_CLI_PATH_BBR="${OT_BUILDDIR}/openthread-posix-1.3-bbr/src/posix/ot-cli"
+            export OT_CLI_PATH_BBR="${OT_BUILDDIR}/openthread-posix-1.4-bbr/src/posix/ot-cli"
         fi
     fi
 
@@ -686,7 +693,7 @@ main()
     fi
 
     [[ ${VIRTUAL_TIME} == 1 ]] && echo "Using virtual time" || echo "Using real time"
-    [[ ${THREAD_VERSION} != "1.1" ]] && echo "Using Thread 1.3 stack" || echo "Using Thread 1.1 stack"
+    [[ ${THREAD_VERSION} != "1.1" ]] && echo "Using Thread 1.4 stack" || echo "Using Thread 1.1 stack"
 
     while [[ $# != 0 ]]; do
         case "$1" in
@@ -699,12 +706,10 @@ main()
             cert)
                 shift
                 do_cert "$@"
-                shift $#
                 ;;
             cert_suite)
                 shift
                 do_cert_suite "$@"
-                shift $#
                 ;;
             get_thread_wireshark)
                 do_get_thread_wireshark

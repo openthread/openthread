@@ -32,8 +32,11 @@ import ssl
 import sys
 import logging
 
+from cryptography.x509 import load_der_x509_certificate
+from cryptography.hazmat.primitives.serialization import (Encoding, PublicFormat)
 from tlv.tlv import TLV
 from tlv.tcat_tlv import TcatTLVType
+from time import time
 import utils
 
 logger = logging.getLogger(__name__)
@@ -48,6 +51,8 @@ class BleStreamSecure:
         self.outgoing = ssl.MemoryBIO()
         self.ssl_object = None
         self.cert = ''
+        self.peer_challenge = None
+        self._peer_public_key = None
 
     def load_cert(self, certfile='', keyfile='', cafile=''):
         if certfile and keyfile:
@@ -60,7 +65,7 @@ class BleStreamSecure:
         if cafile:
             self.ssl_context.load_verify_locations(cafile=cafile)
 
-    async def do_handshake(self):
+    async def do_handshake(self, timeout=30.0):
         is_debug = logger.getEffectiveLevel() <= logging.DEBUG
         self.ssl_object = self.ssl_context.wrap_bio(
             incoming=self.incoming,
@@ -68,7 +73,8 @@ class BleStreamSecure:
             server_side=False,
             server_hostname=None,
         )
-        while True:
+        start = time()
+        while (time() - start) < timeout:
             try:
                 if not is_debug:
                     print('.', end='')
@@ -97,6 +103,15 @@ class BleStreamSecure:
                 if output:
                     self.incoming.write(output)
                 await asyncio.sleep(0.02)
+        else:
+            print('TLS Connection timed out.')
+            return False
+        print('')
+        cert = self.ssl_object.getpeercert(True)
+        cert_obj = load_der_x509_certificate(cert)
+        self._peer_public_key = cert_obj.public_key().public_bytes(Encoding.DER, PublicFormat.SubjectPublicKeyInfo)
+        self.log_cert_identities()
+        return True
 
     async def send(self, bytes):
         self.ssl_object.write(bytes)
@@ -134,8 +149,23 @@ class BleStreamSecure:
 
     async def close(self):
         if self.ssl_object.session is not None:
+            logger.debug('sending Disconnect command TLV')
             data = TLV(TcatTLVType.DISCONNECT.value, bytes()).to_bytes()
+            self.peer_challenge = None
+            self._peer_public_key = None
             await self.send(data)
+
+    @property
+    def peer_public_key(self):
+        return self._peer_public_key
+
+    @property
+    def peer_challenge(self):
+        return self._peer_challenge
+
+    @peer_challenge.setter
+    def peer_challenge(self, value):
+        self._peer_challenge = value
 
     def log_cert_identities(self):
         # using the internal object of the ssl library is necessary to see the cert data in

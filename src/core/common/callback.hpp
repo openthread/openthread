@@ -44,7 +44,6 @@ namespace ot {
 
 /**
  * Specifies the context argument position in a callback function pointer.
- *
  */
 enum CallbackContextPosition : uint8_t
 {
@@ -56,14 +55,12 @@ enum CallbackContextPosition : uint8_t
  * Is the base class for `Callback` (a function pointer handler and a `void *` context).
  *
  * @tparam HandlerType    The handler function pointer type.
- *
  */
 template <typename HandlerType> class CallbackBase
 {
 public:
     /**
      * Clears the `Callback` by setting the handler function pointer to `nullptr`.
-     *
      */
     void Clear(void) { mHandler = nullptr; }
 
@@ -72,7 +69,6 @@ public:
      *
      * @param[in] aHandler   The handler function pointer.
      * @param[in] aContext   The context associated with handler.
-     *
      */
     void Set(HandlerType aHandler, void *aContext)
     {
@@ -85,7 +81,6 @@ public:
      *
      * @retval TRUE   The handler is set.
      * @retval FALSE  The handler is not set.
-     *
      */
     bool IsSet(void) const { return (mHandler != nullptr); }
 
@@ -93,7 +88,6 @@ public:
      * Returns the handler function pointer.
      *
      * @returns The handler function pointer.
-     *
      */
     HandlerType GetHandler(void) const { return mHandler; }
 
@@ -101,7 +95,6 @@ public:
      * Returns the context associated with callback.
      *
      * @returns The context.
-     *
      */
     void *GetContext(void) const { return mContext; }
 
@@ -113,11 +106,23 @@ public:
      *
      * @retval TRUE   The callback matches @p aHandler and @p aContext.
      * @retval FALSE  The callback does not match @p aHandler and @p aContext.
-     *
      */
     bool Matches(HandlerType aHandler, void *aContext) const
     {
         return (mHandler == aHandler) && (mContext == aContext);
+    }
+
+    /**
+     * Overloads operator `==` to evaluate whether or not two given `Callback` objects are equal.
+     *
+     * @param[in] aOtherCallback   The callback to compare with.
+     *
+     * @retval TRUE  The two callbacks are equal.
+     * @retval FALSE The two callbacks are not equal.
+     */
+    bool operator==(const CallbackBase &aOtherCallback) const
+    {
+        return Matches(aOtherCallback.mHandler, aOtherCallback.mContext);
     }
 
 protected:
@@ -145,7 +150,6 @@ protected:
  *
  * @tparam  HandlerType                The function pointer handler type.
  * @tparam  CallbackContextPosition    Context position (first or last). Automatically determined at compile-time.
- *
  */
 template <typename HandlerType,
           CallbackContextPosition =
@@ -169,7 +173,6 @@ public:
 
     /**
      * Initializes `Callback` as empty (`nullptr` handler function pointer).
-     *
      */
     Callback(void) = default;
 
@@ -181,7 +184,6 @@ public:
      * @param[in] aArgs   The args to pass to the callback handler.
      *
      * @returns The return value from handler.
-     *
      */
     template <typename... Args> ReturnType Invoke(Args &&...aArgs) const
     {
@@ -194,7 +196,6 @@ public:
      * The method MUST be used when the handler function returns `void`.
      *
      * @param[in] aArgs   The args to pass to the callback handler.
-     *
      */
     template <typename... Args> void InvokeIfSet(Args &&...aArgs) const
     {
@@ -216,7 +217,6 @@ public:
      * implementation.
      *
      * @param[in] aArgs   The args to pass to the callback handler.
-     *
      */
     template <typename... Args> void InvokeAndClearIfSet(Args &&...aArgs)
     {
@@ -265,7 +265,6 @@ public:
      * implementation.
      *
      * @param[in] aArgs   The args to pass to the callback handler.
-     *
      */
     template <typename... Args> void InvokeAndClearIfSet(Args &&...aArgs)
     {

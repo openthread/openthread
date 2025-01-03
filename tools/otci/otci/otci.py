@@ -1762,6 +1762,7 @@ class OTCI(object):
         #
         # Active Timestamp: 1
         # Channel: 22
+        # Wake-up Channel: 11
         # Channel Mask: 0x07fff800
         # Ext PAN ID: 5c93ae980ff22d35
         # Mesh Local Prefix: fdc7:55fe:6363:bd01::/64
@@ -1781,6 +1782,8 @@ class OTCI(object):
                 dataset['active_timestamp'] = int(val)
             elif key == 'Channel':
                 dataset['channel'] = int(val)
+            elif key == 'Wake-up Channel':
+                dataset['wakeupchannel'] = int(val)
             elif key == 'Channel Mask':
                 dataset['channel_mask'] = int(val, 16)
             elif key == 'Ext PAN ID':
@@ -1829,6 +1832,7 @@ class OTCI(object):
     def dataset_set_buffer(self,
                            active_timestamp: Optional[int] = None,
                            channel: Optional[int] = None,
+                           wakeupchannel: Optional[int] = None,
                            channel_mask: Optional[int] = None,
                            extpanid: Optional[str] = None,
                            mesh_local_prefix: Optional[str] = None,
@@ -1843,6 +1847,9 @@ class OTCI(object):
 
         if channel is not None:
             self.execute_command(f'dataset channel {channel}')
+
+        if wakeupchannel is not None:
+            self.execute_command(f'dataset wakeupchannel {wakeupchannel}')
 
         if channel_mask is not None:
             self.execute_command(f'dataset channelmask {channel_mask}')
@@ -2716,12 +2723,13 @@ class OTCI(object):
                        panid: Optional[int] = None,
                        pskc: Optional[str] = None,
                        security_policy: Optional[tuple] = None,
-                       pending_timestamp: Optional[int] = None) -> bytes:
+                       pending_timestamp: Optional[int] = None,
+                       wakeup_channel: Optional[int] = None) -> bytes:
         """Creates a new Operational Dataset with given parameters."""
         self.dataset_clear_buffer()
         self.dataset_init_buffer()
-        self.dataset_set_buffer(active_timestamp, channel, channel_mask, extpanid, mesh_local_prefix, network_key,
-                                network_name, panid, pskc, security_policy, pending_timestamp)
+        self.dataset_set_buffer(active_timestamp, channel, wakeup_channel, channel_mask, extpanid, mesh_local_prefix,
+                                network_key, network_name, panid, pskc, security_policy, pending_timestamp)
         return self.get_dataset_tlvs_bytes()
 
     def join(self, dataset: bytes) -> None:

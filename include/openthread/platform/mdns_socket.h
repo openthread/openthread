@@ -30,7 +30,6 @@
  * @file
  * @brief
  *   This file includes the platform abstraction for mDNS socket.
- *
  */
 
 #ifndef OPENTHREAD_PLATFORM_MULTICAST_DNS_SOCKET_H_
@@ -53,12 +52,10 @@ extern "C" {
  *   This module defines platform APIs for Multicast DNS (mDNS) socket.
  *
  * @{
- *
  */
 
 /**
  * Represents a socket address info.
- *
  */
 typedef struct otPlatMdnsAddressInfo
 {
@@ -84,7 +81,6 @@ typedef struct otPlatMdnsAddressInfo
  *
  * @retval OT_ERROR_NONE     Successfully enabled/disabled listening for mDNS messages.
  * @retval OT_ERROR_FAILED   Failed to enable/disable listening for mDNS messages.
- *
  */
 otError otPlatMdnsSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex);
 
@@ -107,7 +103,6 @@ otError otPlatMdnsSetListeningEnabled(otInstance *aInstance, bool aEnable, uint3
  * @param[in] aInstance       The OpenThread instance.
  * @param[in] aMessage        The mDNS message to multicast. Ownership is transferred to the platform layer.
  * @param[in] aInfraIfIndex   The infrastructure network interface index.
- *
  */
 void otPlatMdnsSendMulticast(otInstance *aInstance, otMessage *aMessage, uint32_t aInfraIfIndex);
 
@@ -133,7 +128,6 @@ void otPlatMdnsSendMulticast(otInstance *aInstance, otMessage *aMessage, uint32_
  * @param[in] aInstance   The OpenThread instance.
  * @param[in] aMessage    The mDNS message to multicast. Ownership is transferred to platform layer.
  * @param[in] aAddress    The destination address info.
- *
  */
 void otPlatMdnsSendUnicast(otInstance *aInstance, otMessage *aMessage, const otPlatMdnsAddressInfo *aAddress);
 
@@ -154,7 +148,6 @@ void otPlatMdnsSendUnicast(otInstance *aInstance, otMessage *aMessage, const otP
  * @param[in] aMessage     The received mDNS message. Ownership is transferred to the OpenThread stack.
  * @param[in] aIsUnicast   Indicates whether the received message is unicast or multicast.
  * @param[in] aAddress     The sender's address info.
- *
  */
 extern void otPlatMdnsHandleReceive(otInstance                  *aInstance,
                                     otMessage                   *aMessage,
@@ -163,7 +156,6 @@ extern void otPlatMdnsHandleReceive(otInstance                  *aInstance,
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

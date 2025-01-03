@@ -30,13 +30,7 @@
 
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
 
-#include "common/as_core_type.hpp"
-#include "common/error.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/notifier.hpp"
-#include "thread/mle.hpp"
-#include "thread/neighbor_table.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Utils {
@@ -157,7 +151,7 @@ void LinkMetricsManager::UpdateLinkMetricsStates(void)
 {
     LinkedList<Subject> staleSubjects;
 
-    mSubjectList.RemoveAllMatching(*this, staleSubjects);
+    mSubjectList.RemoveAllMatching(staleSubjects, *this);
 
     while (!staleSubjects.IsEmpty())
     {
@@ -369,7 +363,6 @@ exit:
 
 /**
  * @}
- *
  */
 
 } // namespace Utils

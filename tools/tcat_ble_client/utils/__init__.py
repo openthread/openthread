@@ -27,6 +27,7 @@
 """
 
 import base64
+from tlv import advertised_tlv
 
 
 def get_int_in_range(min_value, max_value):
@@ -51,15 +52,16 @@ def quit_with_reason(reason):
 def select_device_by_user_input(tcat_devices):
     if tcat_devices:
         print('Found devices:\n')
-        for i, device in enumerate(tcat_devices):
+        for i, (device, adv) in enumerate(tcat_devices):
             print(f'{i + 1}: {device.name} - {device.address}')
+            print(str(adv))
     else:
         print('\nNo devices found.')
         return None
 
     print('\nSelect the target number to connect to it.')
     selected = get_int_in_range(1, len(tcat_devices))
-    device = tcat_devices[selected - 1]
+    device = tcat_devices[selected - 1][0]
     print('Selected ', device)
 
     return device

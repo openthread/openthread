@@ -34,9 +34,10 @@ include_directories(
     ${OPENTHREAD_DIR}/include
     ${OPENTHREAD_DIR}/src
     ${OPENTHREAD_DIR}/src/core
+    ${OPENTHREAD_DIR}/src/include
     ${OPENTHREAD_DIR}/src/posix/platform
 )
- 
+
 add_executable(ot-fct
     cli.cpp
     main.cpp

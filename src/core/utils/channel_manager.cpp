@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file implements Channel Manager.
- *
  */
 
 #include "channel_manager.hpp"
@@ -37,14 +36,7 @@
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 #if (OPENTHREAD_FTD || OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
 
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/random.hpp"
-#include "common/string.hpp"
 #include "instance/instance.hpp"
-#include "meshcop/dataset_updater.hpp"
-#include "radio/radio.hpp"
 
 namespace ot {
 namespace Utils {

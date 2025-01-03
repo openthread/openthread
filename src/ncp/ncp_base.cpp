@@ -46,6 +46,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "lib/spinel/spinel.h"
 #include "radio/radio.hpp"
 
 namespace ot {
@@ -317,6 +318,15 @@ NcpBase::NcpBase(Instance *aInstance)
     , mDidInitialUpdates(false)
     , mDatasetSendMgmtPendingSetResult(SPINEL_STATUS_OK)
     , mLogTimestampBase(0)
+#if OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE
+    , mInfraIfAddrCount(0)
+    , mInfraIfIndex(0)
+#endif
+#if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    , mDnssdState(OT_PLAT_DNSSD_STOPPED)
+#endif
+#endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     , mDiagOutput(nullptr)
     , mDiagOutputLen(0)
@@ -1595,7 +1605,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_RX_ON_WHEN_IDLE_M
     otError error = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadBool(enabled));
-    otPlatRadioSetRxOnWhenIdle(mInstance, enabled);
+    SuccessOrExit(error = otLinkSetRxOnWhenIdle(mInstance, enabled));
 
 exit:
     return error;
@@ -1671,6 +1681,31 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_RAW_STREAM_ENABLE
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
     mIsRawStreamEnabled[mCurCommandIid] = enabled;
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_RX_AT>(void)
+{
+    otError  error = OT_ERROR_NONE;
+    uint64_t when;
+    uint32_t duration;
+    uint8_t  channel;
+
+    SuccessOrExit(error = mDecoder.ReadUint64(when));
+    SuccessOrExit(error = mDecoder.ReadUint32(duration));
+    SuccessOrExit(error = mDecoder.ReadUint8(channel));
+
+    {
+        uint64_t now = otPlatRadioGetNow(mInstance);
+        uint32_t start;
+
+        VerifyOrExit(when > now && (when - now) < UINT32_MAX, error = OT_ERROR_INVALID_ARGS);
+
+        start = when - now;
+        error = otPlatRadioReceiveAt(mInstance, channel, start, duration);
+    }
 
 exit:
     return error;

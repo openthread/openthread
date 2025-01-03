@@ -27,7 +27,7 @@
  */
 
 // Disable OpenThread's own new implementation to avoid duplicate definition
-#define OT_CORE_COMMON_NEW_HPP_
+#define OT_INCLUDE_COMMON_NEW_HPP_
 #include "test_platform.h"
 
 #include <map>
@@ -449,6 +449,8 @@ OT_TOOL_WEAK void otPlatTrelEnable(otInstance *, uint16_t *) {}
 OT_TOOL_WEAK void otPlatTrelDisable(otInstance *) {}
 
 OT_TOOL_WEAK void otPlatTrelSend(otInstance *, const uint8_t *, uint16_t, const otSockAddr *) {}
+
+OT_TOOL_WEAK void otPlatTrelNotifyPeerSocketAddressDifference(otInstance *, const otSockAddr *, const otSockAddr *) {}
 
 OT_TOOL_WEAK void otPlatTrelRegisterService(otInstance *, uint16_t, const uint8_t *, uint8_t) {}
 
@@ -967,4 +969,5 @@ OT_TOOL_WEAK void otPlatDnssdStopIp4AddressResolver(otInstance *aInstance, const
 OT_TOOL_WEAK otError otPlatLogCrashDump(void) { return OT_ERROR_NONE; }
 #endif
 
+OT_TOOL_WEAK void otPlatAssertFail(const char *, int) {}
 } // extern "C"

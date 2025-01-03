@@ -46,14 +46,19 @@
 
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
+#include "common/debug.hpp"
 #include "common/error.hpp"
+#include "common/heap.hpp"
+#include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/random.hpp"
+#include "common/serial_number.hpp"
 #include "common/tasklet.hpp"
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
+#include "common/type_traits.hpp"
 #include "common/uptime.hpp"
 #include "diags/factory_diags.hpp"
 #include "instance/extension.hpp"
@@ -61,6 +66,7 @@
 #include "radio/radio.hpp"
 #include "utils/otns.hpp"
 #include "utils/power_calibration.hpp"
+#include "utils/static_counter.hpp"
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 #include "backbone_router/backbone_tmf.hpp"
@@ -74,6 +80,7 @@
 #include "common/settings.hpp"
 #include "crypto/mbedtls.hpp"
 #include "mac/mac.hpp"
+#include "mac/wakeup_tx_scheduler.hpp"
 #include "meshcop/border_agent.hpp"
 #include "meshcop/commissioner.hpp"
 #include "meshcop/dataset_manager.hpp"
@@ -145,12 +152,10 @@
  *   This module includes definitions for OpenThread instance.
  *
  * @{
- *
  */
 
 /**
  * Represents an opaque (and empty) type corresponding to an OpenThread instance object.
- *
  */
 typedef struct otInstance
 {
@@ -162,14 +167,12 @@ namespace ot {
  * Represents an OpenThread instance.
  *
  * Contains all the components used by OpenThread.
- *
  */
 class Instance : public otInstance, private NonCopyable
 {
 public:
     /**
      * Represents the message buffer information (number of messages/buffers in all OT stack message queues).
-     *
      */
     class BufferInfo : public otBufferInfo, public Clearable<BufferInfo>
     {
@@ -186,7 +189,6 @@ public:
                                     number of bytes required for `Instance`.
       *
       * @returns  A pointer to the new OpenThread instance.
-      *
       */
     static Instance *Init(void *aBuffer, size_t *aBufferSize);
 
@@ -200,7 +202,6 @@ public:
      * @param[in] aIdx The index of the OpenThread instance to initialize.
      *
      * @returns  A pointer to the new OpenThread instance.
-     *
      */
     static Instance *InitMultiple(uint8_t aIdx);
 
@@ -210,7 +211,6 @@ public:
      * @param[in] aIdx The index of the OpenThread instance to get.
      *
      * @returns A reference to the OpenThread instance.
-     *
      */
     static Instance &Get(uint8_t aIdx);
 
@@ -220,7 +220,6 @@ public:
      * @param[in] aInstance The reference of the OpenThread instance to get index.
      *
      * @returns The index of the OpenThread instance.
-     *
      */
     static uint8_t GetIdx(Instance *aInstance);
 #endif
@@ -234,7 +233,6 @@ public:
      * called before any other calls to OpenThread.
      *
      * @returns A reference to the single OpenThread instance.
-     *
      */
     static Instance &InitSingle(void);
 
@@ -242,7 +240,6 @@ public:
      * Returns a reference to the single OpenThread instance.
      *
      * @returns A reference to the single OpenThread instance.
-     *
      */
     static Instance &Get(void);
 #endif
@@ -254,15 +251,22 @@ public:
      * change after initialization.
      *
      * @returns The instance identifier.
-     *
      */
     uint32_t GetId(void) const { return mId; }
+
+#if OPENTHREAD_PLATFORM_NEXUS
+    /**
+     * Sets the instance identifier.
+     *
+     * @param[in] aId  The identifier to assign to the `Instance`.
+     */
+    void SetId(uint32_t aId) { mId = aId; }
+#endif
 
     /**
      * Indicates whether or not the instance is valid/initialized and not yet finalized.
      *
      * @returns TRUE if the instance is valid/initialized, FALSE otherwise.
-     *
      */
     bool IsInitialized(void) const { return mIsInitialized; }
 
@@ -271,7 +275,6 @@ public:
      *
      * The reset process ensures that all the OpenThread state/info (stored in volatile memory) is erased. Note that
      * this method does not erase any persistent state/info saved in non-volatile memory.
-     *
      */
     void Reset(void);
 
@@ -282,7 +285,6 @@ public:
      * @retval kErrorNone        Reset to bootloader successfully.
      * @retval kErrorBusy        Failed due to another operation is ongoing.
      * @retval kErrorNotCapable  Not capable of resetting to bootloader.
-     *
      */
     Error ResetToBootloader(void);
 #endif
@@ -290,7 +292,6 @@ public:
 #if OPENTHREAD_RADIO
     /**
      * Resets the internal states of the radio.
-     *
      */
     void ResetRadioStack(void);
 #endif
@@ -299,7 +300,6 @@ public:
      * Returns the active log level.
      *
      * @returns The log level.
-     *
      */
     static LogLevel GetLogLevel(void)
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
@@ -317,7 +317,6 @@ public:
      * Sets the log level.
      *
      * @param[in] aLogLevel  A log level.
-     *
      */
     static void SetLogLevel(LogLevel aLogLevel);
 #endif
@@ -326,14 +325,12 @@ public:
      * Finalizes the OpenThread instance.
      *
      * Should be called when OpenThread instance is no longer in use.
-     *
      */
     void Finalize(void);
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     /**
      * Deletes all the settings stored in non-volatile memory, and then triggers a platform reset.
-     *
      */
     void FactoryReset(void);
 
@@ -344,7 +341,6 @@ public:
      *
      * @retval kErrorNone          All persistent info/state was erased successfully.
      * @retval kErrorInvalidState  Device is not in `disabled` state/role.
-     *
      */
     Error ErasePersistentInfo(void);
 
@@ -353,7 +349,6 @@ public:
      * Returns a reference to the Heap object.
      *
      * @returns A reference to the Heap object.
-     *
      */
     static Utils::Heap &GetHeap(void);
 #endif
@@ -363,7 +358,6 @@ public:
      * Returns a reference to application COAP object.
      *
      * @returns A reference to the application COAP object.
-     *
      */
     Coap::Coap &GetApplicationCoap(void) { return mApplicationCoap; }
 #endif
@@ -373,9 +367,8 @@ public:
      * Returns a reference to application COAP Secure object.
      *
      * @returns A reference to the application COAP Secure object.
-     *
      */
-    Coap::CoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
+    Coap::ApplicationCoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
 #endif
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -388,7 +381,6 @@ public:
      * This is intended for testing only and available under a `REFERENCE_DEVICE` config.
      *
      * @param[in] aEnabled   TRUE to enable the "DNS name compression" mode, FALSE to disable.
-     *
      */
     static void SetDnsNameCompressionEnabled(bool aEnabled) { sDnsNameCompressionEnabled = aEnabled; }
 
@@ -396,7 +388,6 @@ public:
      * Indicates whether the "DNS name compression" mode is enabled or not.
      *
      * @returns TRUE if the "DNS name compressions" mode is enabled, FALSE otherwise.
-     *
      */
     static bool IsDnsNameCompressionEnabled(void) { return sDnsNameCompressionEnabled; }
 #endif
@@ -405,7 +396,6 @@ public:
      * Retrieves the the Message Buffer information.
      *
      * @param[out]  aInfo  A `BufferInfo` where information is written.
-     *
      */
     void GetBufferInfo(BufferInfo &aInfo);
 
@@ -414,7 +404,6 @@ public:
      * time.
      *
      * Resets `mMaxUsedBuffers` in `BufferInfo`.
-     *
      */
     void ResetBufferInfo(void);
 
@@ -431,13 +420,26 @@ public:
      * Specializations of the `Get<Type>()` method are defined in this file after the `Instance` class definition.
      *
      * @returns A reference to the `Type` object of the instance.
-     *
      */
     template <typename Type> inline Type &Get(void);
 
+#if OPENTHREAD_PLATFORM_NEXUS
+    /**
+     * Constructor to initialize an `Instance`
+     */
+    Instance(void);
+
+    /**
+     * Called after constructor initialization.
+     */
+    void AfterInit(void);
+#endif
+
 private:
+#if !OPENTHREAD_PLATFORM_NEXUS
     Instance(void);
     void AfterInit(void);
+#endif
 
     // Order of variables (their initialization in `Instance`)
     // is important.
@@ -655,7 +657,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-    Coap::CoapSecure mApplicationCoapSecure;
+    Coap::ApplicationCoapSecure mApplicationCoapSecure;
 #endif
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
@@ -749,7 +751,7 @@ template <> inline Radio &Instance::Get(void) { return mRadio; }
 template <> inline Radio::Callbacks &Instance::Get(void) { return mRadio.mCallbacks; }
 
 #if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
-template <> inline RadioStatistics &Instance::Get(void) { return mRadio.mRadioStatistics; }
+template <> inline Radio::Statistics &Instance::Get(void) { return mRadio.mStatistics; }
 #endif
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
@@ -787,6 +789,10 @@ template <> inline ChildTable &Instance::Get(void) { return mMleRouter.mChildTab
 template <> inline RouterTable &Instance::Get(void) { return mMleRouter.mRouterTable; }
 #endif
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+template <> inline WakeupTxScheduler &Instance::Get(void) { return mMleRouter.mWakeupTxScheduler; }
+#endif
+
 template <> inline Ip6::Netif &Instance::Get(void) { return mThreadNetif; }
 
 template <> inline ThreadNetif &Instance::Get(void) { return mThreadNetif; }
@@ -815,9 +821,15 @@ template <> inline Ip6::Filter &Instance::Get(void) { return mIp6Filter; }
 
 template <> inline AddressResolver &Instance::Get(void) { return mAddressResolver; }
 
-#if OPENTHREAD_FTD
-
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 template <> inline IndirectSender &Instance::Get(void) { return mMeshForwarder.mIndirectSender; }
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+template <> inline CslTxScheduler &Instance::Get(void) { return mMeshForwarder.mIndirectSender.mCslTxScheduler; }
+#endif
+
+#if OPENTHREAD_FTD
 
 template <> inline SourceMatchController &Instance::Get(void)
 {
@@ -825,10 +837,6 @@ template <> inline SourceMatchController &Instance::Get(void)
 }
 
 template <> inline DataPollHandler &Instance::Get(void) { return mMeshForwarder.mIndirectSender.mDataPollHandler; }
-
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-template <> inline CslTxScheduler &Instance::Get(void) { return mMeshForwarder.mIndirectSender.mCslTxScheduler; }
-#endif
 
 template <> inline MeshCoP::Leader &Instance::Get(void) { return mLeader; }
 
@@ -1109,9 +1117,37 @@ template <> inline FactoryDiags::Diags &Instance::Get(void) { return mDiags; }
 template <> inline Utils::PowerCalibration &Instance::Get(void) { return mPowerCalibration; }
 #endif
 
+//---------------------------------------------------------------------------------------------------------------------
+
+template <typename InstanceGetProvider>
+template <typename Type>
+inline Type &GetProvider<InstanceGetProvider>::Get(void) const
+{
+    return static_cast<const InstanceGetProvider *>(this)->GetInstance().template Get<Type>();
+}
+
+template <typename Owner, void (Owner::*HandleTaskletPtr)(void)>
+void TaskletIn<Owner, HandleTaskletPtr>::HandleTasklet(Tasklet &aTasklet)
+{
+    (aTasklet.Get<Owner>().*HandleTaskletPtr)();
+}
+
+template <typename Owner, void (Owner::*HandleTimertPtr)(void)>
+void TimerMilliIn<Owner, HandleTimertPtr>::HandleTimer(Timer &aTimer)
+{
+    (aTimer.Get<Owner>().*HandleTimertPtr)();
+}
+
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+template <typename Owner, void (Owner::*HandleTimertPtr)(void)>
+void TimerMicroIn<Owner, HandleTimertPtr>::HandleTimer(Timer &aTimer)
+{
+    (aTimer.Get<Owner>().*HandleTimertPtr)();
+}
+#endif
+
 /**
  * @}
- *
  */
 
 } // namespace ot

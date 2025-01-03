@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file includes definitions for managing MeshCoP Datasets.
- *
  */
 
 #ifndef MESHCOP_DATASET_MANAGER_HPP_
@@ -61,7 +60,6 @@ class DatasetManager : public InstanceLocator
 public:
     /**
      * Callback function pointer, invoked when a response to a MGMT_SET request is received or times out.
-     *
      */
     typedef otDatasetMgmtSetCallback MgmtSetCallback;
 
@@ -69,7 +67,6 @@ public:
      * Indicates whether to check or ignore Security Policy flag when processing an MGMT_GET request message.
      *
      * This is used as input in `ProcessGetRequest().
-     *
      */
     enum SecurityPolicyCheckMode : uint8_t
     {
@@ -81,13 +78,11 @@ public:
      * Returns the network Timestamp.
      *
      * @returns The network Timestamp.
-     *
      */
     const Timestamp &GetTimestamp(void) const { return mNetworkTimestamp; }
 
     /**
      * Clears the Operational Dataset.
-     *
      */
     void Clear(void);
 
@@ -96,7 +91,6 @@ public:
      *
      * @retval kErrorNone      Successfully restore the dataset.
      * @retval kErrorNotFound  There is no corresponding dataset stored in non-volatile memory.
-     *
      */
     Error Restore(void);
 
@@ -107,7 +101,6 @@ public:
      *
      * @retval kErrorNone      Successfully retrieved the dataset.
      * @retval kErrorNotFound  There is no corresponding dataset stored in non-volatile memory.
-     *
      */
     Error Read(Dataset &aDataset) const;
 
@@ -118,7 +111,6 @@ public:
      *
      * @retval kErrorNone      Successfully retrieved the dataset.
      * @retval kErrorNotFound  There is no corresponding dataset stored in non-volatile memory.
-     *
      */
     Error Read(Dataset::Info &aDatasetInfo) const;
 
@@ -129,7 +121,6 @@ public:
      *
      * @retval kErrorNone      Successfully retrieved the dataset.
      * @retval kErrorNotFound  There is no corresponding dataset stored in non-volatile memory.
-     *
      */
     Error Read(Dataset::Tlvs &aDatasetTlvs) const;
 
@@ -137,7 +128,6 @@ public:
      * Saves the Operational Dataset in non-volatile memory.
      *
      * @param[in]  aDataset  The Operational Dataset.
-     *
      */
     void SaveLocal(const Dataset &aDataset);
 
@@ -145,7 +135,6 @@ public:
      * Saves the Operational Dataset in non-volatile memory.
      *
      * @param[in]  aDatasetInfo  The Operational Dataset as `Dataset::Info`.
-     *
      */
     void SaveLocal(const Dataset::Info &aDatasetInfo);
 
@@ -156,7 +145,6 @@ public:
      *
      * @retval kErrorNone         Successfully saved the dataset.
      * @retval kErrorInvalidArgs  The @p aDatasetTlvs is invalid. It is too long or contains incorrect TLV formatting.
-     *
      */
     Error SaveLocal(const Dataset::Tlvs &aDatasetTlvs);
 
@@ -170,7 +158,6 @@ public:
      *
      * @retval kErrorNone   Successfully applied configuration.
      * @retval kErrorParse  The dataset has at least one TLV with invalid format.
-     *
      */
     Error Save(const Dataset &aDataset) { return Save(aDataset, /* aAllowOlderTimestamp */ false); }
 
@@ -181,7 +168,6 @@ public:
      *
      * @retval kErrorNone      Successfully retrieved the channel mask.
      * @retval kErrorNotFound  There is no valid channel mask stored in local dataset.
-     *
      */
     Error GetChannelMask(Mac::ChannelMask &aChannelMask) const;
 
@@ -190,7 +176,6 @@ public:
      *
      * @retval kErrorNone   Successfully applied configuration.
      * @retval kErrorParse  The dataset has at least one TLV with invalid format.
-     *
      */
     Error ApplyConfiguration(void) const;
 
@@ -206,7 +191,6 @@ public:
      * @retval kErrorNone    Successfully send the meshcop dataset command.
      * @retval kErrorNoBufs  Insufficient buffer space to send.
      * @retval kErrorBusy    A previous request is ongoing.
-     *
      */
     Error SendSetRequest(const Dataset::Info &aDatasetInfo,
                          const uint8_t       *aTlvs,
@@ -224,7 +208,6 @@ public:
      *
      * @retval kErrorNone     Successfully send the meshcop dataset command.
      * @retval kErrorNoBufs   Insufficient buffer space to send.
-     *
      */
     Error SendGetRequest(const Dataset::Components &aDatasetComponents,
                          const uint8_t             *aTlvTypes,
@@ -238,7 +221,6 @@ public:
      * @param[in] aCheckMode Indicates whether to check or ignore the Security Policy flags.
      *
      * @returns The prepared response, or `nullptr` if fails to parse the request or cannot allocate message.
-     *
      */
     Coap::Message *ProcessGetRequest(const Coap::Message &aRequest, SecurityPolicyCheckMode aCheckMode) const;
 
@@ -346,7 +328,6 @@ public:
      * Initializes the ActiveDatasetManager object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit ActiveDatasetManager(Instance &aInstance);
 
@@ -358,7 +339,6 @@ public:
      *
      * @retval TRUE   If an Active Dataset is saved but does not include an Active Timestamp.
      * @retval FALSE  If an Active Dataset is not saved or does include an Active Timestamp.
-     *
      */
     bool IsPartiallyComplete(void) const;
 
@@ -367,7 +347,6 @@ public:
      *
      * @retval TRUE   If an Active Dataset is saved and includes an Active Timestamp.
      * @retval FALSE  If an Active Dataset is not saved or does include an Active Timestamp.
-     *
      */
     bool IsComplete(void) const;
 
@@ -376,7 +355,6 @@ public:
      *
      * @retval TRUE if a valid network is present in the Active Dataset.
      * @retval FALSE if a valid network is not present in the Active Dataset.
-     *
      */
     bool IsCommissioned(void) const;
 
@@ -389,13 +367,11 @@ public:
      *
      * @retval kErrorNone    Successfully created a new Operational Dataset.
      * @retval kErrorFailed  Failed to generate random values for new parameters.
-     *
      */
     Error CreateNewNetwork(Dataset::Info &aDatasetInfo) { return aDatasetInfo.GenerateRandom(GetInstance()); }
 
     /**
      * Starts the Leader functions for maintaining the Active Operational Dataset.
-     *
      */
     void StartLeader(void);
 
@@ -406,7 +382,6 @@ public:
      * @retval kErrorNone          Successfully generated an Active Operational Dataset.
      * @retval kErrorAlready       A valid Active Operational Dataset already exists.
      * @retval kErrorInvalidState  Device is not currently attached to a network.
-     *
      */
     Error GenerateLocal(void);
 #endif
@@ -437,14 +412,32 @@ public:
      * Initializes the PendingDatasetManager object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit PendingDatasetManager(Instance &aInstance);
+
+    /**
+     * Reads the Active Timestamp in the Pending Operational Dataset.
+     *
+     * @param[out] aTimestamp A reference to return the read timestamp.
+     *
+     * @retval kErrorNone     The active timestamp was successfully fetched.
+     * @retval kErrorNotFound The pending dataset is not currently valid.
+     */
+    Error ReadActiveTimestamp(Timestamp &aTimestamp) const;
+
+    /**
+     * Reads the remaining delay time in ms.
+     *
+     * @param[out] aRemainingDelay A reference to return the remaining delay time.
+     *
+     * @retval kErrorNone     The remaining delay time was successfully fetched.
+     * @retval kErrorNotFound The pending dataset is not currently valid.
+     */
+    Error ReadRemainingDelay(uint32_t &aRemainingDelay) const;
 
 #if OPENTHREAD_FTD
     /**
      * Starts the Leader functions for maintaining the Active Operational Dataset.
-     *
      */
     void StartLeader(void);
 #endif
