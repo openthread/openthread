@@ -64,8 +64,6 @@ send "diag send 10 100\n"
 expect "sending 0xa packet(s), length 0x64"
 expect_line "Done"
 
-sleep 2
-
 send "diag stats\n"
 expect "received packets: 0"
 expect "sent packets: 10"
@@ -73,10 +71,23 @@ expect "first received packet: rssi=0, lqi=0"
 expect "last received packet: rssi=0, lqi=0"
 expect_line "Done"
 
+send "diag send async 10 100\n"
+expect "sending 0xa packet(s), length 0x64"
+expect_line "Done"
+
+sleep 2
+
+send "diag stats\n"
+expect "received packets: 0"
+expect "sent packets: 20"
+expect "first received packet: rssi=0, lqi=0"
+expect "last received packet: rssi=0, lqi=0"
+expect_line "Done"
+
 switch_node 1
 
 send "diag stats\n"
-expect "received packets: 10"
+expect "received packets: 20"
 expect "sent packets: 0"
 expect "first received packet: rssi=-20, lqi=0"
 expect "last received packet: rssi=-20, lqi=0"
@@ -142,6 +153,9 @@ send "diag frame 112233445566778899001122334455667788990011223344556677889900112
 expect "Done"
 send "diag repeat 1\n"
 expect "length 0x7f"
+expect "Done"
+
+send "diag repeat stop\n"
 expect "Done"
 
 send_user "send frame with security processed\n"

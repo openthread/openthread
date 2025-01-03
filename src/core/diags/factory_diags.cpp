@@ -199,6 +199,7 @@ Diags::Diags(Instance &aInstance)
     , mTxPower(0)
     , mTxLen(0)
     , mIsTxPacketSet(false)
+    , mIsAsyncSend(false)
     , mRepeatActive(false)
     , mDiagSendOn(false)
     , mOutputCallback(nullptr)
@@ -436,6 +437,18 @@ Error Diags::ProcessSend(uint8_t aArgsLength, char *aArgs[])
 
     VerifyOrExit(aArgsLength >= 1, error = kErrorInvalidArgs);
 
+    if (StringMatch(aArgs[0], "async"))
+    {
+        aArgs++;
+        aArgsLength--;
+        VerifyOrExit(aArgsLength >= 1, error = kErrorInvalidArgs);
+        mIsAsyncSend = true;
+    }
+    else
+    {
+        mIsAsyncSend = false;
+    }
+
     SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint32(aArgs[0], txPackets));
     mTxPackets = txPackets;
 
@@ -459,6 +472,11 @@ Error Diags::ProcessSend(uint8_t aArgsLength, char *aArgs[])
 
     Output("sending %#x packet(s), length %#x\r\n", static_cast<int>(mTxPackets), static_cast<int>(mTxLen));
     TransmitPacket();
+
+    if (!mIsAsyncSend)
+    {
+        error = kErrorPending;
+    }
 
 exit:
     return error;
@@ -854,6 +872,12 @@ void Diags::TransmitDone(Error aError)
         }
         else
         {
+            if (!mRepeatActive && !mIsAsyncSend)
+            {
+                mIsAsyncSend = true;
+                Output("OT_ERROR_NONE");
+            }
+
             ExitNow();
         }
     }
