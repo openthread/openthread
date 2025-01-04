@@ -79,6 +79,7 @@
 #include "common/notifier.hpp"
 #include "common/settings.hpp"
 #include "crypto/mbedtls.hpp"
+#include "crypto/storage.hpp"
 #include "mac/mac.hpp"
 #include "mac/wakeup_tx_scheduler.hpp"
 #include "meshcop/border_agent.hpp"
@@ -464,6 +465,10 @@ private:
 
     Random::Manager mRandomManager;
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    Crypto::Storage::KeyRefManager mCryptoStorageKeyRefManager;
+#endif
+
     // Radio is initialized before other member variables
     // (particularly, SubMac and Mac) to allow them to use its methods
     // from their constructor.
@@ -768,6 +773,10 @@ template <> inline Settings &Instance::Get(void) { return mSettings; }
 template <> inline SettingsDriver &Instance::Get(void) { return mSettingsDriver; }
 
 template <> inline MeshForwarder &Instance::Get(void) { return mMeshForwarder; }
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+template <> inline Crypto::Storage::KeyRefManager &Instance::Get(void) { return mCryptoStorageKeyRefManager; }
+#endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 template <> inline RadioSelector &Instance::Get(void) { return mRadioSelector; }
