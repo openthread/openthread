@@ -125,6 +125,17 @@ otInstance *otInstanceInitMultiple(uint8_t aIdx);
 uint32_t otInstanceGetId(otInstance *aInstance);
 
 /**
+ * Gets the index of the OpenThread instance when multiple instance is in use.
+ *
+ * @param[in] aInstance The reference of the OpenThread instance to get index.
+ *
+ * @returns The index of the OpenThread instance.
+ *
+ */
+
+uint8_t otInstanceGetIdx(otInstance *aInstance);
+
+/**
  * Indicates whether or not the instance is valid/initialized.
  *
  * The instance is considered valid if it is acquired and initialized using either `otInstanceInitSingle()` (in single

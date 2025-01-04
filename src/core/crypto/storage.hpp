@@ -102,6 +102,7 @@ constexpr KeyRef kActiveDatasetPskcRef        = OPENTHREAD_CONFIG_PSA_ITS_NVM_OF
 constexpr KeyRef kPendingDatasetNetworkKeyRef = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 5;
 constexpr KeyRef kPendingDatasetPskcRef       = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 6;
 constexpr KeyRef kEcdsaRef                    = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 7;
+constexpr KeyRef KeyRefMaxOffset              = kEcdsaRef + 1;
 
 /**
  * Determine if a given `KeyRef` is valid or not.
@@ -184,7 +185,7 @@ inline bool HasKey(KeyRef aKeyRef) { return otPlatCryptoHasKey(aKeyRef); }
 /**
  * Delete all the persistent keys stored in PSA ITS.
  */
-void DestroyPersistentKeys(void);
+void DestroyPersistentKeys(uint32_t keybase);
 
 } // namespace Storage
 
