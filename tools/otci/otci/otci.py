@@ -2550,9 +2550,29 @@ class OTCI(object):
         """Stop transmitting continuous carrier wave."""
         self.execute_command('diag cw stop')
 
-    def diag_frame(self, frame: str):
+    def diag_frame(self,
+                   frame: str,
+                   max_csma_backoffs: Optional[int] = None,
+                   csma_ca_enabled: bool = False,
+                   rx_channel_after_tx_done: Optional[int] = None,
+                   tx_delay: Optional[int] = None,
+                   tx_power: Optional[int] = None,
+                   max_frame_retries: Optional[int] = None,
+                   is_security_processed: bool = False,
+                   is_header_updated: bool = False):
         """Set the frame (hex encoded) to be used by `diag send` and `diag repeat`."""
-        self.execute_command(f'diag frame {frame}')
+        command = f'diag frame '
+        command += f'-b {max_csma_backoffs} ' if max_csma_backoffs is not None else ''
+        command += '-c ' if csma_ca_enabled else ''
+        command += f'-d {tx_delay} ' if tx_delay is not None else ''
+        command += f'-C {rx_channel_after_tx_done} ' if rx_channel_after_tx_done is not None else ''
+        command += f'-p {tx_power} ' if tx_power is not None else ''
+        command += f'-r {max_frame_retries} ' if max_frame_retries is not None else ''
+        command += '-s ' if is_security_processed else ''
+        command += '-u ' if is_header_updated else ''
+        command += f'{frame}'
+
+        self.execute_command(command)
 
     def diag_stream_start(self):
         """Start transmitting a stream of characters."""
@@ -2586,9 +2606,50 @@ class OTCI(object):
         """Enter radio sleep mode."""
         self.execute_command('diag radio sleep')
 
+    def diag_radio_enable(self):
+        """Enable the radio."""
+        self.execute_command('diag radio enable')
+
+    def diag_radio_disable(self):
+        """Disable the radio."""
+        self.execute_command('diag radio disable')
+
     def diag_radio_receive(self):
         """Set radio to receive mode."""
         self.execute_command('diag radio receive')
+
+    def diag_radio_receive_number(self, number: int):
+        """Set radio to receive mode and receive specified number of packets."""
+
+        output = self.execute_command(f'diag radio receive {number} lpr')
+
+        if len(output) != number:
+            raise UnexpectedCommandOutput(output)
+
+        result = []
+
+        for line in output:
+            data = line.split(',')
+            result.append({
+                'rssi': int(data[1].split(":")[1]),
+                'lqi': int(data[2].split(":")[1]),
+                'len': int(data[3].split(":")[1]),
+                'psdu': data[4].split(":")[1],
+            })
+
+        return result
+
+    def diag_enable_radio_receive_filter(self):
+        """Enable the radio receive filter."""
+        self.execute_command('diag radio receive filter enable')
+
+    def diag_disable_radio_receive_filter(self):
+        """Disable the radio receive filter."""
+        self.execute_command('diag radio receive filter disable')
+
+    def diag_set_radio_receive_filter_dest_mac_address(self, dest_mac_address: str):
+        """Set the destination mac address of the radio receive filter."""
+        self.execute_command(f'diag radio receive filter {dest_mac_address}')
 
     def diag_get_radio_state(self) -> str:
         """Get the state of the radio."""
