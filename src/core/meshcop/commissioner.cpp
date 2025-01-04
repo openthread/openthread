@@ -268,10 +268,6 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = kErrorInvalidState);
     VerifyOrExit(mState == kStateDisabled, error = kErrorAlready);
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    Get<BorderAgent>().Stop();
-#endif
-
     SuccessOrExit(error = Get<Tmf::SecureAgent>().Open());
     SuccessOrExit(error = Get<Tmf::SecureAgent>().Bind(SendRelayTransmit, this));
 
@@ -325,10 +321,6 @@ Error Commissioner::Stop(ResignMode aResignMode)
     {
         SendKeepAlive();
     }
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    Get<BorderAgent>().Start();
-#endif
 
 exit:
     if (error != kErrorAlready)
