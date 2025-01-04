@@ -108,6 +108,7 @@ endmacro()
 
 #----------------------------------------------------------------------------------------------------------------------
 
+ot_nexus_test(border_agent)
 ot_nexus_test(dtls)
 ot_nexus_test(form_join)
 ot_nexus_test(large_network)
