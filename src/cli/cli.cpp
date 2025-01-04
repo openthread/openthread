@@ -287,29 +287,42 @@ template <> otError Interpreter::Process<Cmd("reset")>(Arg aArgs[])
 
 void Interpreter::ProcessLine(char *aBuf)
 {
-    Arg     args[kMaxArgs + 1];
-    otError error = OT_ERROR_NONE;
+    static const char *const kCmdFactoryReset = "factoryreset";
+    Arg                      args[kMaxArgs + 1];
+    otError                  error = OT_ERROR_NONE;
 
     OT_ASSERT(aBuf != nullptr);
+
+    args[0].Clear();
 
     if (!mInternalDebugCommand)
     {
         // Ignore the command if another command is pending.
-        VerifyOrExit(!mCommandIsPending, args[0].Clear());
-        mCommandIsPending = true;
-
-        VerifyOrExit(StringLength(aBuf, kMaxLineLength) <= kMaxLineLength - 1, error = OT_ERROR_PARSE);
+        if (!mCommandIsPending)
+        {
+            mCommandIsPending = true;
+            VerifyOrExit(StringLength(aBuf, kMaxLineLength) <= kMaxLineLength - 1, error = OT_ERROR_PARSE);
+        }
+        else
+        {
+            VerifyOrExit(StringLength(aBuf, kMaxLineLength) <= kMaxLineLength - 1, args[0].Clear());
+            VerifyOrExit(ot::Utils::CmdLineParser::ParseCmd(aBuf, args, kMaxArgs) == OT_ERROR_NONE, args[0].Clear());
+            VerifyOrExit(((!args[0].IsEmpty()) && (args[0] == kCmdFactoryReset)), args[0].Clear());
+        }
     }
 
-    SuccessOrExit(error = ot::Utils::CmdLineParser::ParseCmd(aBuf, args, kMaxArgs));
-    VerifyOrExit(!args[0].IsEmpty(), mCommandIsPending = false);
+    if (args[0].IsEmpty())
+    {
+        SuccessOrExit(error = ot::Utils::CmdLineParser::ParseCmd(aBuf, args, kMaxArgs));
+        VerifyOrExit(!args[0].IsEmpty(), mCommandIsPending = false);
+    }
 
     if (!mInternalDebugCommand)
     {
         LogInput(args);
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-        if (otDiagIsEnabled(GetInstancePtr()) && (args[0] != "diag") && (args[0] != "factoryreset"))
+        if (otDiagIsEnabled(GetInstancePtr()) && (args[0] != "diag") && (args[0] != kCmdFactoryReset))
         {
             OutputLine("under diagnostics mode, execute 'diag stop' before running any other commands.");
             ExitNow(error = OT_ERROR_INVALID_STATE);
