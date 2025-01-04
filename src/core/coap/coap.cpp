@@ -53,10 +53,11 @@ CoapBase::CoapBase(Instance &aInstance, Sender aSender)
 {
 }
 
-void CoapBase::ClearRequestsAndResponses(void)
+void CoapBase::ClearAllRequestsAndResponses(void)
 {
     ClearRequests(nullptr); // Clear requests matching any address.
     mResponsesQueue.DequeueAllResponses();
+    mRetransmissionTimer.Stop();
 }
 
 void CoapBase::ClearRequests(const Ip6::Address &aAddress) { ClearRequests(&aAddress); }
@@ -1553,7 +1554,11 @@ void ResponsesQueue::UpdateQueue(void)
 
 void ResponsesQueue::DequeueResponse(Message &aMessage) { mQueue.DequeueAndFree(aMessage); }
 
-void ResponsesQueue::DequeueAllResponses(void) { mQueue.DequeueAndFreeAll(); }
+void ResponsesQueue::DequeueAllResponses(void)
+{
+    mQueue.DequeueAndFreeAll();
+    mTimer.Stop();
+}
 
 void ResponsesQueue::HandleTimer(Timer &aTimer)
 {
@@ -1693,7 +1698,7 @@ Error Coap::Stop(void)
     VerifyOrExit(mSocket.IsBound());
 
     SuccessOrExit(error = mSocket.Close());
-    ClearRequestsAndResponses();
+    ClearAllRequestsAndResponses();
 
 exit:
     return error;

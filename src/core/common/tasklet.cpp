@@ -46,6 +46,14 @@ void Tasklet::Post(void)
     }
 }
 
+void Tasklet::Unpost(void)
+{
+    if (IsPosted())
+    {
+        Get<Scheduler>().RemoveTasklet(*this);
+    }
+}
+
 void Tasklet::Scheduler::PostTasklet(Tasklet &aTasklet)
 {
     // Tasklets are saved in a circular singly linked list.
@@ -61,6 +69,24 @@ void Tasklet::Scheduler::PostTasklet(Tasklet &aTasklet)
         aTasklet.mNext = mTail->mNext;
         mTail->mNext   = &aTasklet;
         mTail          = &aTasklet;
+    }
+}
+
+void Tasklet::Scheduler::RemoveTasklet(Tasklet &aTasklet)
+{
+    Tasklet *prev = mTail;
+
+    while (prev->mNext != &aTasklet)
+    {
+        prev = prev->mNext;
+    }
+
+    prev->mNext    = aTasklet.mNext;
+    aTasklet.mNext = nullptr;
+
+    if (mTail == &aTasklet)
+    {
+        mTail = (prev != &aTasklet) ? prev : nullptr;
     }
 }
 
