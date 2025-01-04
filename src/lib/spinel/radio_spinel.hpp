@@ -134,6 +134,28 @@ struct RadioSpinelCallbacks
      */
     void (*mDiagTransmitDone)(otInstance *aInstance, otRadioFrame *aFrame, Error aError);
 #endif // OPENTHREAD_CONFIG_DIAG_ENABLE
+
+    /**
+     * This method writes the radio spinel metrics to the temporary storage.
+     *
+     * @param[in]  aMetrics   A reference to the radio spinel metrics.
+     * @param[in]  aContext   A pointer to application-specific context.
+     */
+    void (*mWriteRadioSpinelMetrics)(const otRadioSpinelMetrics &aMetrics, void *aContext);
+
+    /**
+     * This method reads the radio spinel metrics from the temporary storage.
+     *
+     * @param[out] aMetrics   A reference to the radio spinel metrics.
+     * @param[in]  aContext   A pointer to application-specific context.
+     */
+    otError (*mReadRadioSpinelMetrics)(otRadioSpinelMetrics &aMetrics, void *aContext);
+
+    /**
+     * The pointer to application-specific context for methods `mWriteRadioSpinelMetrics` and
+     * `mReadRadioSpinelMetrics`.
+     */
+    void *mRadioSpinelMetricsContext;
 };
 
 /**
@@ -958,7 +980,7 @@ public:
      *
      * @returns The radio Spinel metrics.
      */
-    const otRadioSpinelMetrics *GetRadioSpinelMetrics(void) const { return &mRadioSpinelMetrics; }
+    const otRadioSpinelMetrics *GetRadioSpinelMetrics(void) const { return mRadioSpinelMetrics.GetMetrics(); }
 
 #if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
     /**
@@ -1198,7 +1220,10 @@ private:
 
     void UpdateParseErrorCount(otError aError)
     {
-        mRadioSpinelMetrics.mSpinelParseErrorCount += (aError == OT_ERROR_PARSE) ? 1 : 0;
+        if (aError == OT_ERROR_PARSE)
+        {
+            mRadioSpinelMetrics.IncreaseSpinelParseErrorCount();
+        }
     }
 
     otError SetMacKey(uint8_t         aKeyIdMode,
@@ -1215,6 +1240,41 @@ private:
 #endif
 
     void HandleCompatibilityError(void);
+
+    class Metrics : public otRadioSpinelMetrics
+    {
+    public:
+        Metrics(RadioSpinelCallbacks &aCallbacks)
+            : mCallbacks(aCallbacks)
+        {
+            memset(reinterpret_cast<otRadioSpinelMetrics *>(this), 0, sizeof(otRadioSpinelMetrics));
+        }
+
+        void                        Init();
+        const otRadioSpinelMetrics *GetMetrics(void) const;
+
+        void IncreaseRcpTimeoutCount(void) { IncreaseCount(kTypeTimeoutCount); }
+        void IncreaseRcpUnexpectedResetCount(void) { IncreaseCount(kTypeUnexpectResetCount); }
+        void IncreaseRcpRestorationCount(void) { IncreaseCount(kTypeRestorationCount); }
+        void IncreaseSpinelParseErrorCount(void) { IncreaseCount(kTypeSpinelParseErrorCount); }
+
+    private:
+        enum MetricType : uint8_t
+        {
+            kTypeTimeoutCount,
+            kTypeUnexpectResetCount,
+            kTypeRestorationCount,
+            kTypeSpinelParseErrorCount,
+        };
+
+        bool IsReadWriteCallbackValid(void) const;
+        void ReadMetrics(otRadioSpinelMetrics &aMetrics);
+        void WriteMetrics(otRadioSpinelMetrics &aMetrics);
+        void IncreaseCount(MetricType aType);
+        void IncreaseMetricCount(otRadioSpinelMetrics &aMetrics, MetricType aType);
+
+        RadioSpinelCallbacks &mCallbacks;
+    };
 
     otInstance *mInstance;
 
@@ -1317,7 +1377,7 @@ private:
 
     MaxPowerTable mMaxPowerTable;
 
-    otRadioSpinelMetrics mRadioSpinelMetrics;
+    Metrics mRadioSpinelMetrics;
 
 #if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
     otRadioSpinelVendorRestorePropertiesCallback mVendorRestorePropertiesCallback;
