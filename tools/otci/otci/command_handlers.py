@@ -224,7 +224,7 @@ class OtCliCommandRunner(OTCommandHandler):
 
             logging.debug('%s: %s', self.__otcli, line)
 
-            if not OtCliCommandRunner.__PATTERN_LOG_LINE.match(line) and line:
+            if not OtCliCommandRunner.__PATTERN_LOG_LINE.match(line):
                 logging.info('%s: %s', self.__otcli, line)
                 self.__pending_lines.put(line)
 

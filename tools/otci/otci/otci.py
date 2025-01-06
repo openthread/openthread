@@ -994,6 +994,22 @@ class OTCI(object):
         """Disable SRP server."""
         self.execute_command('srp server disable')
 
+    def srp_server_get_addressmode(self):
+        """Disable SRP server."""
+        return self.__parse_str(self.execute_command(f'srp server addressmode'))
+
+    def srp_server_set_addressmode(self, mode: Literal['unicast', 'anycast']):
+        """Disable SRP server."""
+        self.execute_command(f'srp server addressmode {mode}')
+
+    def srp_server_get_sequence_number(self) -> int:
+        """Set SRP server sequence number."""
+        return self.__parse_int(self.execute_command(f'srp server seqnum'))
+
+    def srp_server_set_sequence_number(self, seq: int):
+        """Set SRP server sequence number."""
+        self.execute_command(f'srp server seqnum {seq}')
+
     def srp_server_get_domain(self) -> str:
         """Get the SRP server domain."""
         return self.__parse_str(self.execute_command('srp server domain'))
@@ -1724,10 +1740,26 @@ class OTCI(object):
     #
     # Network Data utilities
     #
+    def get_mesh_local_prefix(self) -> Ip6Prefix:
+        """Set the Mesh Local Prefix."""
+        return self.__parse_prefix(self.execute_command('prefix meshlocal'))
+
+    def set_mesh_local_prefix(self, prefix: str):
+        """Set the Mesh Local Prefix."""
+        self.execute_command(f'prefix meshlocal {prefix}')
+
     def get_local_prefixes(self) -> List[Tuple[Ip6Prefix, str, str, Rloc16]]:
         """Get prefixes from local Network Data."""
         output = self.execute_command('prefix')
         return self.__parse_prefixes(output)
+
+    def __parse_prefix(self, output: List[str]) -> Ip6Prefix:
+        if len(output) != 1:
+            raise UnexpectedCommandOutput(output)
+        try:
+            return Ip6Prefix(str(ipaddress.IPv6Network(output[0])))
+        except ValueError:
+            raise UnexpectedCommandOutput(output)
 
     def __parse_prefixes(self, output: List[str]) -> List[Tuple[Ip6Prefix, str, str, Rloc16]]:
         prefixes: List[Tuple[Ip6Prefix, str, str, Rloc16]] = []
@@ -1737,7 +1769,7 @@ class OTCI(object):
                 line = line[2:]
 
             prefix, flags, prf, rloc16 = line.split()[:4]
-            prefixes.append((Ip6Prefix(prefix), flags, prf, Rloc16(rloc16, 16)))
+            prefixes.append((self.__parse_prefix([prefix]), flags, prf, Rloc16(rloc16, 16)))
 
         return prefixes
 
@@ -1751,6 +1783,15 @@ class OTCI(object):
 
     def register_network_data(self):
         self.execute_command('netdata register')
+
+    def network_data_public_prefix(self, prefix: str, flags: str = 'paos', preference: str = 'med'):
+        self.execute_command(f'netdata publish prefix {prefix} {flags} {preference}')
+
+    def network_data_unpublish_prefix(self, prefix: str):
+        self.execute_command(f'netdata unpublish {prefix}')
+
+    def network_data_unpublish_dnssrp(self):
+        self.execute_command('netdata unpublish dnssrp')
 
     def get_network_data(self) -> Dict[str, List[Any]]:
         output = self.execute_command('netdata show')
@@ -2265,6 +2306,14 @@ class OTCI(object):
             prefixes[(matched.group(1) or types[idx]).lower()] = (prefix, prf)
 
         return prefixes
+
+    def br_get_onlink_prefix(self) -> Ip6Prefix:
+        """Get the On-Mesh Prefix."""
+        return self.__parse_prefix(self.execute_command('br onlinkprefix'))
+
+    def br_disable(self):
+        """Disable the Border Router."""
+        self.execute_command('br disable')
 
     #
     # Backbone Router Utilities
