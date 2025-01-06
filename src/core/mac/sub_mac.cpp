@@ -413,7 +413,7 @@ void SubMac::StartCsmaBackoff(void)
     uint8_t backoffExponent = kCsmaMinBe + mCsmaBackoffs;
 
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    if (mTransmitFrame.mInfo.mTxInfo.mTxDelay != 0)
+    if (mTransmitFrame.mInfo.mTxInfo.mTxDelay != 0 || mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime != 0)
     {
         SetState(kStateCslTransmit);
 
