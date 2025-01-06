@@ -2603,13 +2603,16 @@ class OTCI(object):
         result = {}
 
         result['received_packets'] = int(output[0].split(":")[1])
-        result['sent_packets'] = int(output[1].split(":")[1])
+        result['sent_success_packets'] = int(output[1].split(":")[1])
+        result['sent_error_cca_packets'] = int(output[2].split(":")[1])
+        result['sent_error_abort_packets'] = int(output[3].split(":")[1])
+        result['sent_error_others_packets'] = int(output[4].split(":")[1])
 
-        values = re.findall("\-?\d+", output[2])
+        values = re.findall("\-?\d+", output[5])
         result['first_received_packet_rssi'] = int(values[0])
         result['first_received_packet_lqi'] = int(values[1])
 
-        values = re.findall("\-?\d+", output[3])
+        values = re.findall("\-?\d+", output[6])
         result['last_received_packet_rssi'] = int(values[0])
         result['last_received_packet_lqi'] = int(values[1])
 

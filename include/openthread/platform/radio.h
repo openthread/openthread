@@ -266,6 +266,10 @@ typedef struct otRadioFrame
              * The base time in microseconds for scheduled transmissions
              * relative to the local radio clock, see `otPlatRadioGetNow` and
              * `mTxDelay`.
+             *
+             * If this field is non-zero, `mMaxCsmaBackoffs` should be ignored.
+             *
+             * This field does not affect CCA behavior which is controlled by `mCsmaCaEnabled`.
              */
             uint32_t mTxDelayBaseTime;
 
@@ -276,10 +280,27 @@ typedef struct otRadioFrame
              * Note: `mTxDelayBaseTime` + `mTxDelay` SHALL point to the point in
              * time when the end of the SFD will be present at the local
              * antenna, relative to the local radio clock.
+             *
+             * If this field is non-zero, `mMaxCsmaBackoffs` should be ignored.
+             *
+             * This field does not affect CCA behavior which is controlled by `mCsmaCaEnabled`.
              */
             uint32_t mTxDelay;
 
-            uint8_t mMaxCsmaBackoffs; ///< Maximum number of backoffs attempts before declaring CCA failure.
+            /**
+             * Maximum number of CSMA backoff attempts before declaring channel access failure.
+             *
+             * This is applicable and MUST be used when radio platform provides the `OT_RADIO_CAPS_CSMA_BACKOFF` and/or
+             * `OT_RADIO_CAPS_TRANSMIT_RETRIES`.
+             *
+             * This field MUST be ignored if `mCsmaCaEnabled` is set to `false` (CCA is disabled) or
+             * either `mTxDelayBaseTime` or `mTxDelay` is non-zero (frame transmission is expected at a specific time).
+             *
+             * It can be set to `0` to skip backoff mechanism (note that CCA MUST still be performed assuming
+             * `mCsmaCaEnabled` is `true`).
+             */
+            uint8_t mMaxCsmaBackoffs;
+
             uint8_t mMaxFrameRetries; ///< Maximum number of retries allowed after a transmission failure.
 
             /**
@@ -341,8 +362,14 @@ typedef struct otRadioFrame
              * it must also set this flag before passing the frame back from the `otPlatRadioTxDone()` callback.
              */
             bool mIsHeaderUpdated : 1;
-            bool mIsARetx : 1;             ///< Indicates whether the frame is a retransmission or not.
-            bool mCsmaCaEnabled : 1;       ///< Set to true to enable CSMA-CA for this packet, false otherwise.
+            bool mIsARetx : 1; ///< Indicates whether the frame is a retransmission or not.
+            /**
+             * Set to true to enable CSMA-CA for this packet, false to disable both CSMA backoff and CCA.
+             *
+             * When it is set to `false`, the frame MUST be sent without performing CCA. In this case `mMaxCsmaBackoffs`
+             * MUST also be ignored.
+             */
+            bool mCsmaCaEnabled : 1;
             bool mCslPresent : 1;          ///< Set to true if CSL header IE is present.
             bool mIsSecurityProcessed : 1; ///< True if SubMac should skip the AES processing of this frame.
 

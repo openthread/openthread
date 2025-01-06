@@ -68,7 +68,10 @@ sleep 2
 
 send "diag stats\n"
 expect "received packets: 0"
-expect "sent packets: 10"
+expect "sent success packets: 10"
+expect "sent error cca packets: 0"
+expect "sent error abort packets: 0"
+expect "sent error others packets: 0"
 expect "first received packet: rssi=0, lqi=0"
 expect "last received packet: rssi=0, lqi=0"
 expect_line "Done"
@@ -77,7 +80,10 @@ switch_node 1
 
 send "diag stats\n"
 expect "received packets: 10"
-expect "sent packets: 0"
+expect "sent success packets: 0"
+expect "sent error cca packets: 0"
+expect "sent error abort packets: 0"
+expect "sent error others packets: 0"
 expect "first received packet: rssi=-20, lqi=0"
 expect "last received packet: rssi=-20, lqi=0"
 expect_line "Done"
@@ -100,7 +106,10 @@ switch_node 1
 
 send "diag stats\n"
 expect -r {received packets: \d+}
-expect "sent packets: 0"
+expect "sent success packets: 0"
+expect "sent error cca packets: 0"
+expect "sent error abort packets: 0"
+expect "sent error others packets: 0"
 expect "first received packet: rssi=-20, lqi=0"
 expect "last received packet: rssi=-20, lqi=0"
 expect_line "Done"
