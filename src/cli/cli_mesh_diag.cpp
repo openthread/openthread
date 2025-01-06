@@ -39,7 +39,7 @@
 #include "cli/cli_utils.hpp"
 #include "common/code_utils.hpp"
 
-#if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE
+#if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
 
 namespace ot {
 namespace Cli {
@@ -99,8 +99,7 @@ template <> otError MeshDiag::Process<Cmd("topology")>(Arg aArgs[])
      * @cparam meshdiag topology [@ca{ip6-addrs}] [@ca{children}]
      * @sa otMeshDiagDiscoverTopology
      */
-    otError error = OT_ERROR_NONE;
-
+    otError                  error = OT_ERROR_NONE;
     otMeshDiagDiscoverConfig config;
 
     config.mDiscoverIp6Addresses = false;
@@ -173,8 +172,7 @@ template <> otError MeshDiag::Process<Cmd("childtable")>(Arg aArgs[])
      * @cparam meshdiag childtable @ca{router-rloc16}
      * @sa otMeshDiagQueryChildTable
      */
-    otError error = OT_ERROR_NONE;
-
+    otError  error = OT_ERROR_NONE;
     uint16_t routerRloc16;
 
     SuccessOrExit(error = aArgs[0].ParseAsUint16(routerRloc16));
@@ -210,8 +208,7 @@ template <> otError MeshDiag::Process<Cmd("childip6")>(Arg aArgs[])
      * @cparam meshdiag childip6 @ca{parent-rloc16}
      * @sa otMeshDiagQueryChildrenIp6Addrs
      */
-    otError error = OT_ERROR_NONE;
-
+    otError  error = OT_ERROR_NONE;
     uint16_t parentRloc16;
 
     SuccessOrExit(error = aArgs[0].ParseAsUint16(parentRloc16));
@@ -254,8 +251,7 @@ template <> otError MeshDiag::Process<Cmd("routerneighbortable")>(Arg aArgs[])
      * @cparam meshdiag routerneighbortable @ca{router-rloc16}
      * @sa otMeshDiagQueryRouterNeighborTable
      */
-    otError error = OT_ERROR_NONE;
-
+    otError  error = OT_ERROR_NONE;
     uint16_t routerRloc16;
 
     SuccessOrExit(error = aArgs[0].ParseAsUint16(routerRloc16));
@@ -540,4 +536,4 @@ void MeshDiag::OutputResult(otError aError) { Interpreter::GetInterpreter().Outp
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_MESH_DIAG_ENABLE
+#endif // OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD

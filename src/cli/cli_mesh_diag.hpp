@@ -40,7 +40,7 @@
 
 #include "cli/cli_utils.hpp"
 
-#if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE
+#if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
 
 namespace ot {
 namespace Cli {
@@ -112,6 +112,6 @@ private:
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_MESH_DIAG_ENABLE
+#endif // OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
 
 #endif // CLI_MESH_DIAG_HPP_
