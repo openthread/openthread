@@ -623,6 +623,27 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
                 otBorderAgentSetEphemeralKeyCallback(GetInstancePtr(), nullptr, nullptr);
             }
         }
+        /**
+         * @cli ba ephemeralkey feature (enable, disable)
+         * @code
+         * ba ephemeralkey feature
+         * Enabled
+         * Done
+         * @endcode
+         * @code
+         * ba ephemeralkey feature enable
+         * Done
+         * @endcode
+         * @cparam ba ephemeralkey feature [@ca{enable|disable}]
+         * @par api_copy
+         * #otBorderAgentIsEphemeralKeyFeatureEnabled
+         * #otBorderAgentSetEphemeralKeyFeatureEnabled
+         */
+        else if (aArgs[1] == "feature")
+        {
+            error = ProcessEnableDisable(aArgs + 2, otBorderAgentIsEphemeralKeyFeatureEnabled,
+                                         otBorderAgentSetEphemeralKeyFeatureEnabled);
+        }
         else
         {
             error = OT_ERROR_INVALID_ARGS;

@@ -54,6 +54,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
     , mIdInitialized(false)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    , mIsEphemeralKeyFeatureEnabled(OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_FEATURE_ENABLED_BY_DEFAULT)
     , mUsingEphemeralKey(false)
     , mDidConnectWithEphemeralKey(false)
     , mOldUdpPort(0)
@@ -382,6 +383,7 @@ Error BorderAgent::SetEphemeralKey(const char *aKeyString, uint32_t aTimeout, ui
     Error    error  = kErrorNone;
     uint16_t length = StringLength(aKeyString, kMaxEphemeralKeyLength + 1);
 
+    VerifyOrExit(mIsEphemeralKeyFeatureEnabled, error = kErrorNotCapable);
     VerifyOrExit(mState == kStateStarted, error = kErrorInvalidState);
     VerifyOrExit((length >= kMinEphemeralKeyLength) && (length <= kMaxEphemeralKeyLength), error = kErrorInvalidArgs);
 
@@ -496,6 +498,27 @@ void BorderAgent::HandleDtlsTransportClosed(void)
     RestartAfterRemovingEphemeralKey();
 }
 
+void BorderAgent::SetEphemeralKeyFeatureEnabled(bool aEnabled)
+{
+    VerifyOrExit(mIsEphemeralKeyFeatureEnabled != aEnabled);
+    mIsEphemeralKeyFeatureEnabled = aEnabled;
+
+    if (!mIsEphemeralKeyFeatureEnabled)
+    {
+        // If there is an active session connected with ephemeral key, we disconnect
+        // the session.
+        if (mUsingEphemeralKey)
+        {
+            Disconnect();
+        }
+        ClearEphemeralKey();
+    }
+
+    // TODO: Update MeshCoP service after new module is added.
+
+exit:
+    return;
+}
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
 //----------------------------------------------------------------------------------------------------------------------
