@@ -48,7 +48,6 @@ namespace Cli {
 /**
  * Implements the Mesh Diagnostics CLI interpreter.
  */
-
 class MeshDiag : private Utils
 {
 public:
