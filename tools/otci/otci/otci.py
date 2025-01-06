@@ -2528,7 +2528,7 @@ class OTCI(object):
     def diag_get_channel(self) -> int:
         """Get the IEEE 802.15.4 Channel value for diagnostics module."""
         line = self.__parse_str(self.execute_command('diag channel'))
-        return int(line.split()[1])
+        return int(line)
 
     def diag_set_power(self, power: int):
         """Set the tx power value(dBm) for diagnostics module."""
@@ -2537,10 +2537,7 @@ class OTCI(object):
     def diag_get_power(self) -> int:
         """Get the tx power value(dBm) for diagnostics module."""
         line = self.__parse_str(self.execute_command('diag power'))
-        if not line.endswith(' dBm'):
-            raise UnexpectedCommandOutput([line])
-
-        return int(line.split()[2])
+        return int(line)
 
     def diag_cw_start(self):
         """Start transmitting continuous carrier wave."""
@@ -2596,8 +2593,21 @@ class OTCI(object):
 
     def diag_get_stats(self) -> Dict[str, int]:
         """Get statistics during diagnostics mode."""
+        #
+        # The command 'diag stats' output example:
+        #
+        # > diag stats
+        # received packets: 10
+        # sent success packets: 10
+        # sent error cca packets: 0
+        # sent error abort packets: 0
+        # sent error others packets: 0
+        # first received packet: rssi=-65, lqi=101
+        # last received packet: rssi=-64, lqi=98
+        # Done
+        #
         output = self.execute_command('diag stats')
-        if len(output) < 4:
+        if len(output) < 7:
             raise UnexpectedCommandOutput(output)
 
         result = {}
@@ -2648,6 +2658,18 @@ class OTCI(object):
 
     def diag_get_powersettings(self) -> List[Dict[str, Any]]:
         """Get the currently used power settings table."""
+        #
+        # The command 'diag powersettings' output example:
+        #
+        # > diag powersettings
+        # | StartCh | EndCh | TargetPower | ActualPower | RawPowerSetting |
+        # +---------+-------+-------------+-------------+-----------------+
+        # |      11 |    14 |        1700 |        1000 |          223344 |
+        # |      15 |    24 |        2000 |        1900 |          112233 |
+        # |      25 |    25 |        1600 |        1000 |          223344 |
+        # |      26 |    26 |        1600 |        1500 |          334455 |
+        # Done
+        #
         result = []
         output = self.execute_command(f'diag powersettings')
 
@@ -2672,6 +2694,15 @@ class OTCI(object):
 
     def diag_get_channel_powersettings(self, channel: int) -> Dict[str, Any]:
         """Gets the currently used power settings for the given channel."""
+        #
+        # The command 'diag powersettings <channel>' output example:
+        #
+        # > diag powersettings 11
+        # TargetPower(0.01dBm): 1700
+        # ActualPower(0.01dBm): 1000
+        # RawPowerSetting: 223344
+        # Done
+        #
         result = {}
         output = self.execute_command(f'diag powersettings {channel}')
 
