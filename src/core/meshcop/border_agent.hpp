@@ -146,16 +146,6 @@ public:
     uint16_t GetUdpPort(void) const;
 
     /**
-     * Starts the Border Agent service.
-     */
-    void Start(void) { IgnoreError(Start(kUdpPort)); }
-
-    /**
-     * Stops the Border Agent service.
-     */
-    void Stop(void);
-
-    /**
      * Gets the state of the Border Agent service.
      *
      * @returns The state of the Border Agent service.
@@ -293,8 +283,10 @@ private:
         uint8_t  mToken[Coap::Message::kMaxTokenLength]; // The CoAP Token of the original request.
     };
 
+    void  Start(void) { IgnoreError(Start(kUdpPort)); }
     Error Start(uint16_t aUdpPort);
     Error Start(uint16_t aUdpPort, const uint8_t *aPsk, uint8_t aPskLength);
+    void  Stop(void);
     void  HandleNotifierEvents(Events aEvents);
     void  HandleTimeout(void);
     Error ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
@@ -345,7 +337,8 @@ private:
     bool mIdInitialized;
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    bool                           mUsingEphemeralKey;
+    bool                           mUsingEphemeralKey : 1;
+    bool                           mDidConnectWithEphemeralKey : 1;
     uint16_t                       mOldUdpPort;
     EphemeralKeyTimer              mEphemeralKeyTimer;
     EphemeralKeyTask               mEphemeralKeyTask;

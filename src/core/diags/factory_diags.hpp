@@ -134,7 +134,11 @@ private:
     struct Stats : public Clearable<Stats>
     {
         uint32_t mReceivedPackets;
-        uint32_t mSentPackets;
+        uint32_t mSentSuccessPackets;
+        uint32_t mSentFailedPackets;
+        uint32_t mSentErrorCcaPackets;
+        uint32_t mSentErrorAbortPackets;
+        uint32_t mSentErrorOthersPackets;
         int8_t   mFirstRssi;
         uint8_t  mFirstLqi;
         int8_t   mLastRssi;
@@ -233,8 +237,8 @@ private:
 
     void TransmitPacket(void);
     void Output(const char *aFormat, ...);
-    void AppendErrorResult(Error aError);
     void ResetTxPacket(void);
+    void OutputStats(void);
 
     static bool IsChannelValid(uint8_t aChannel);
 

@@ -37,7 +37,6 @@ Start diagnostics mode.
 
 ```bash
 > diag start
-start diagnostics mode
 Done
 ```
 
@@ -47,7 +46,7 @@ Get the IEEE 802.15.4 Channel value for diagnostics module.
 
 ```bash
 > diag channel
-channel: 11
+11
 Done
 ```
 
@@ -57,7 +56,6 @@ Set the IEEE 802.15.4 Channel value for diagnostics module.
 
 ```bash
 > diag channel 11
-set channel to 11
 Done
 ```
 
@@ -123,7 +121,7 @@ Get the tx power value(dBm) for diagnostics module.
 
 ```bash
 > diag power
-tx power: -10 dBm
+-10
 Done
 ```
 
@@ -133,7 +131,6 @@ Set the tx power value(dBm) for diagnostics module.
 
 ```bash
 > diag power -10
-set tx power to -10 dBm
 Done
 ```
 
@@ -170,11 +167,13 @@ Done
 
 Transmit a fixed number of packets.
 
-Send the frame set by `diag frame` if length is omitted. Otherwise overwrite the frame set by `diag frame` and send a frame of the given length(MUST be in range [3, 127]).
+- packets: The number of packets to be sent.
+- length: The length of packet. The valid range is [3, 127].
+
+Send the frame set by `diag frame` if length is omitted. Otherwise overwrite the frame set by `diag frame` and send a frame of the given length.
 
 ```bash
 > diag send 20 100
-sending 0x14 packet(s), length 0x64
 Done
 ```
 
@@ -182,11 +181,13 @@ Done
 
 Transmit packets repeatedly with a fixed interval.
 
-Send the frame set by `diag frame` if length is omitted. Otherwise overwrite the frame set by `diag frame` and send a frame of the given length (MUST be in range [3, 127]).
+- delay: The interval between two consecutive packets in milliseconds.
+- length: The length of packet. The valid range is [3, 127].
+
+Send the frame set by `diag frame` if length is omitted. Otherwise overwrite the frame set by `diag frame` and send a frame of the given length.
 
 ```bash
 > diag repeat 100 100
-sending packets of length 0x64 at the delay of 0x64 ms
 Done
 ```
 
@@ -196,7 +197,6 @@ Stop repeated packet transmission.
 
 ```bash
 > diag repeat stop
-repeated packet transmission is stopped
 Done
 ```
 
@@ -206,7 +206,6 @@ Enter radio sleep mode.
 
 ```bash
 > diag radio sleep
-set radio from receive to sleep
 Done
 ```
 
@@ -216,7 +215,6 @@ Set radio from sleep mode to receive mode.
 
 ```bash
 > diag radio receive
-set radio from sleep to receive on channel 11
 Done
 ```
 
@@ -345,7 +343,10 @@ Print statistics during diagnostics mode.
 ```bash
 > diag stats
 received packets: 10
-sent packets: 10
+sent success packets: 10
+sent error cca packets: 0
+sent error abort packets: 0
+sent error others packets: 0
 first received packet: rssi=-65, lqi=101
 last received packet: rssi=-64, lqi=98
 Done
@@ -357,7 +358,6 @@ Clear statistics during diagnostics mode.
 
 ```bash
 > diag stats clear
-stats cleared
 Done
 ```
 
@@ -416,12 +416,6 @@ Stop diagnostics mode and print statistics.
 
 ```bash
 > diag stop
-received packets: 10
-sent packets: 10
-first received packet: rssi=-65, lqi=101
-last received packet: rssi=-61, lqi=98
-
-stop diagnostics mode
 Done
 ```
 

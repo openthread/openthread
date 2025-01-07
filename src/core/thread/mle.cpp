@@ -34,6 +34,7 @@
 #include "mle.hpp"
 
 #include "instance/instance.hpp"
+#include "openthread/platform/toolchain.h"
 #include "utils/static_counter.hpp"
 
 namespace ot {
@@ -5293,6 +5294,8 @@ Error Mle::TxMessage::AppendDatasetTlv(MeshCoP::Dataset::Type aDatasetType)
         error   = Get<MeshCoP::PendingDatasetManager>().Read(dataset);
         tlvType = Tlv::kPendingDataset;
         break;
+    default:
+        OT_ASSERT(false);
     }
 
     if (error != kErrorNone)
