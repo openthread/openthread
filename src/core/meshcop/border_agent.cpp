@@ -141,7 +141,7 @@ Error BorderAgent::Start(uint16_t aUdpPort, const uint8_t *aPsk, uint8_t aPskLen
 
     mState = kStateStarted;
 
-    LogInfo("Border Agent start listening on port %u", GetUdpPort());
+    LogWarn("Border Agent start listening on port %u", GetUdpPort());
 
 exit:
     LogWarnOnError(error, "start agent");
@@ -166,7 +166,7 @@ void BorderAgent::Stop(void)
     mCoapDtlsSession.Free();
 
     mState = kStateStopped;
-    LogInfo("Border Agent stopped");
+    LogWarn("Border Agent stopped");
 
 exit:
     return;
@@ -241,7 +241,7 @@ void BorderAgent::HandleConnected(Dtls::Session::ConnectEvent aEvent)
 {
     if (aEvent == Dtls::Session::kConnected)
     {
-        LogInfo("SecureSession connected");
+        LogWarn("SecureSession connected");
         mState = kStateConnected;
         mTimer.Start(kKeepAliveTimeout);
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
@@ -259,7 +259,7 @@ void BorderAgent::HandleConnected(Dtls::Session::ConnectEvent aEvent)
     }
     else
     {
-        LogInfo("SecureSession disconnected");
+        LogWarn("SecureSession disconnected");
         IgnoreError(Get<Ip6::Udp>().RemoveReceiver(mUdpReceiver));
         Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
 
@@ -355,7 +355,7 @@ Error BorderAgent::ForwardToLeader(const Coap::Message &aMessage, const Ip6::Mes
 
     forwardContext.Release();
 
-    LogInfo("Forwarded request to leader on %s", PathForUri(aUri));
+    LogWarn("Forwarded request to leader on %s", PathForUri(aUri));
 
 exit:
     LogWarnOnError(error, "forward to leader");
@@ -419,12 +419,12 @@ void BorderAgent::HandleCoapResponse(const ForwardContext &aForwardContext,
                 mCounters.mPskcCommissionerPetitions++;
             }
 
-            LogInfo("Commissioner accepted - SessionId:%u ALOC:%s", sessionId,
+            LogWarn("Commissioner accepted - SessionId:%u ALOC:%s", sessionId,
                     mCommissionerAloc.GetAddress().ToString().AsCString());
         }
         else
         {
-            LogInfo("Commissioner rejected");
+            LogWarn("Commissioner rejected");
         }
     }
 
@@ -488,7 +488,7 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
 
     SuccessOrExit(error = mCoapDtlsSession->SendMessage(*message));
 
-    LogInfo("Sent ProxyRx (c/ur) to commissioner");
+    LogWarn("Sent ProxyRx (c/ur) to commissioner");
 
 exit:
     FreeMessageOnError(message, error);
@@ -507,7 +507,7 @@ Error BorderAgent::ForwardToCommissioner(Coap::Message &aForwardMessage, const M
 
     SuccessOrExit(error = mCoapDtlsSession->SendMessage(aForwardMessage));
 
-    LogInfo("Sent to commissioner");
+    LogWarn("Sent to commissioner");
 
 exit:
     LogWarnOnError(error, "send to commissioner");
@@ -597,7 +597,7 @@ template <> void BorderAgent::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, co
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = ForwardToCommissioner(*message, aMessage));
-    LogInfo("Sent to commissioner on RelayRx (c/rx)");
+    LogWarn("Sent to commissioner on RelayRx (c/rx)");
 
 exit:
     FreeMessageOnError(message, error);
@@ -633,7 +633,7 @@ void BorderAgent::HandleTmfProxyTx(Coap::Message &aMessage, const Ip6::MessageIn
 
     SuccessOrExit(error = Get<Ip6::Udp>().SendDatagram(*message, messageInfo));
 
-    LogInfo("Proxy transmit sent to %s", messageInfo.GetPeerAddr().ToString().AsCString());
+    LogWarn("Proxy transmit sent to %s", messageInfo.GetPeerAddr().ToString().AsCString());
 
 exit:
     FreeMessageOnError(message, error);
@@ -667,7 +667,7 @@ void BorderAgent::HandleTmfRelayTx(Coap::Message &aMessage, const Ip6::MessageIn
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    LogInfo("Sent to joiner router request on RelayTx (c/tx)");
+    LogWarn("Sent to joiner router request on RelayTx (c/tx)");
 
 exit:
     FreeMessageOnError(message, error);
@@ -709,7 +709,7 @@ void BorderAgent::HandleTmfDatasetGet(Coap::Message &aMessage, const Ip6::Messag
 
     SuccessOrExit(error = mCoapDtlsSession->SendMessage(*response));
 
-    LogInfo("Sent %s response to non-active commissioner", PathForUri(aUri));
+    LogWarn("Sent %s response to non-active commissioner", PathForUri(aUri));
 
 exit:
     LogWarnOnError(error, "send Active/Pending/CommissionerGet response");
@@ -765,7 +765,7 @@ Error BorderAgent::SetEphemeralKey(const char *aKeyString, uint32_t aTimeout, ui
     mEphemeralKeyTimer.Start(aTimeout);
     mCounters.mEpskcActivations++;
 
-    LogInfo("Allow ephemeral key for %lu msec on port %u", ToUlong(aTimeout), GetUdpPort());
+    LogWarn("Allow ephemeral key for %lu msec on port %u", ToUlong(aTimeout), GetUdpPort());
 
 exit:
     switch (error)
@@ -787,7 +787,7 @@ void BorderAgent::ClearEphemeralKey(void)
 {
     VerifyOrExit(mUsingEphemeralKey);
 
-    LogInfo("Clearing ephemeral key");
+    LogWarn("Clearing ephemeral key");
 
     mCounters.mEpskcDeactivationClears++;
 
@@ -813,7 +813,7 @@ exit:
 
 void BorderAgent::HandleEphemeralKeyTimeout(void)
 {
-    LogInfo("Ephemeral key timed out");
+    LogWarn("Ephemeral key timed out");
     mCounters.mEpskcDeactivationTimeouts++;
     RestartAfterRemovingEphemeralKey();
 }
@@ -822,7 +822,7 @@ void BorderAgent::InvokeEphemeralKeyCallback(void) { mEphemeralKeyCallback.Invok
 
 void BorderAgent::RestartAfterRemovingEphemeralKey(void)
 {
-    LogInfo("Removing ephemeral key and restarting agent");
+    LogWarn("Removing ephemeral key and restarting agent");
 
     Stop();
     IgnoreError(Start(mOldUdpPort));
@@ -835,7 +835,7 @@ void BorderAgent::HandleDtlsTransportClosed(void *aContext)
 
 void BorderAgent::HandleDtlsTransportClosed(void)
 {
-    LogInfo("Reached max allowed connection attempts with ephemeral key");
+    LogWarn("Reached max allowed connection attempts with ephemeral key");
     mCounters.mEpskcDeactivationMaxAttempts++;
     RestartAfterRemovingEphemeralKey();
 }

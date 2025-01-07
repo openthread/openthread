@@ -87,7 +87,7 @@ void SecureSession::SetState(State aState)
 {
     VerifyOrExit(mState != aState);
 
-    LogInfo("Session state: %s -> %s", StateToString(mState), StateToString(aState));
+    LogWarn("Session state: %s -> %s", StateToString(mState), StateToString(aState));
     mState = aState;
 
 exit:
