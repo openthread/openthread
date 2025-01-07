@@ -35,33 +35,26 @@ spawn_node 2
 
 switch_node 1
 send "diag start\n"
-expect "start diagnostics mode"
 expect_line "Done"
 
 send "diag channel 11\n"
-expect "set channel to 11"
 expect_line "Done"
 
 send "diag stats clear\n"
-expect "stats cleared"
 expect_line "Done"
 
 switch_node 2
 
 send "diag start\n"
-expect "start diagnostics mode"
 expect_line "Done"
 
 send "diag channel 11\n"
-expect "set channel to 11"
 expect_line "Done"
 
 send "diag stats clear\n"
-expect "stats cleared"
 expect_line "Done"
 
 send "diag send 10 100\n"
-expect "sending 0xa packet(s), length 0x64"
 expect_line "Done"
 
 sleep 2
@@ -89,17 +82,14 @@ expect "last received packet: rssi=-20, lqi=0"
 expect_line "Done"
 
 send "diag stats clear\n"
-expect "stats cleared"
 expect_line "Done"
 
 switch_node 2
 
 send "diag repeat 20 100\n"
-expect "sending packets of length 0x64 at the delay of 0x14 ms"
 expect_line "Done"
 sleep 1
 send "diag repeat stop\n"
-expect "repeated packet transmission is stopped"
 expect_line "Done"
 
 switch_node 1
@@ -115,7 +105,6 @@ expect "last received packet: rssi=-20, lqi=0"
 expect_line "Done"
 
 send "diag stats clear\n"
-expect "stats cleared"
 expect_line "Done"
 
 dispose_all
@@ -124,7 +113,6 @@ dispose_all
 spawn_node 1
 
 send "diag start\n"
-expect "start diagnostics mode"
 expect_line "Done"
 
 send_user "input too short test\n"
@@ -143,50 +131,42 @@ send_user "shortest frame test\n"
 send "diag frame 112233\n"
 expect "Done"
 send "diag send 1\n"
-expect "length 0x3"
 expect "Done"
 
 send_user "longest frame test\n"
 send "diag frame 11223344556677889900112233445566778899001122334455667788990011223344556677889900112233445566778899001122334455667788990011223344556677889900112233445566778899001122334455667788990011223344556677889900112233445566778899001122334455667788990011223344556677\n"
 expect "Done"
 send "diag repeat 1\n"
-expect "length 0x7f"
 expect "Done"
 
 send_user "send frame with security processed\n"
 send "diag frame -s 112233\n"
 expect "Done"
 send "diag send 1\n"
-expect "length 0x3"
 expect "Done"
 
 send_user "send frame with CSMA/CA enabled\n"
 send "diag frame -c 112233\n"
 expect "Done"
 send "diag send 1\n"
-expect "length 0x3"
 expect "Done"
 
 send_user "send frame with tx power\n"
 send "diag frame -p 11 112233\n"
 expect "Done"
 send "diag send 1\n"
-expect "length 0x3"
 expect "Done"
 
 send "diag repeat stop\n"
 expect "Done"
 
 send "diag channel 11\n"
-expect "set channel to 11"
 expect_line "Done"
 
 send "diag power 10\n"
-expect "set tx power to 10 dBm"
 expect_line "Done"
 
 send "diag radio sleep\n"
-expect "set radio from receive to sleep"
 expect_line "Done"
 
 send "diag radio state\n"
@@ -194,7 +174,6 @@ expect "sleep"
 expect_line "Done"
 
 send "diag radio receive\n"
-expect "set radio from sleep to receive on channel 11"
 expect_line "Done"
 
 send "diag radio state\n"
@@ -254,8 +233,6 @@ send "diag stop\n"
 expect_line "Done"
 
 send "diag channel\n"
-expect "failed"
-expect "status 0xd"
 expect "Error 13: InvalidState"
 
 dispose_all

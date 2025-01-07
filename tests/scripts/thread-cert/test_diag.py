@@ -47,11 +47,11 @@ class TestDiag(thread_cert.TestCase):
             ('diag start', 'Done\r\n'),
             ('diag invalid test\n', 'diag feature \'invalid\' is not supported'),
             ('diag', 'diagnostics mode is enabled\r\n'),
-            ('diag channel 10', 'failed\r\nstatus 0x7\r\n'),
-            ('diag channel 11', 'set channel to 11\r\n'),
-            ('diag channel', 'channel: 11\r\n'),
-            ('diag power -10', 'set tx power to -10 dBm\r\n'),
-            ('diag power', 'tx power: -10 dBm\r\n'),
+            ('diag channel 10', 'Error 7: InvalidArgs\r\n'),
+            ('diag channel 11', 'Done\r\n'),
+            ('diag channel', '11\r\n'),
+            ('diag power -10', 'Done\r\n'),
+            ('diag power', '-10\r\n'),
             (
                 'diag stats',
                 'received packets: 0\r\n'
@@ -62,37 +62,15 @@ class TestDiag(thread_cert.TestCase):
                 'first received packet: rssi=0, lqi=0\r\n'
                 'last received packet: rssi=0, lqi=0\r\n',
             ),
-            (
-                'diag send 20 100',
-                r'sending 0x14 packet\(s\), length 0x64\r\n',
-            ),
-            (
-                '  diag \t send    \t 20\t100',
-                r'sending 0x14 packet\(s\), length 0x64\r\n',
-            ),
-            (
-                'diag repeat 100 100',
-                'sending packets of length 0x64 at the delay of 0x64 ms\r\n',
-            ),
-            (
-                'diag repeat stop',
-                'repeated packet transmission is stopped\r\n',
-            ),
-            (
-                'diag stop',
-                'received packets: 0\r\n'
-                r'sent success packets: ([1-9]\d*)\r\n'
-                r'sent error cca packets: ([0-9]\d*)\r\n'
-                r'sent error abort packets: ([0-9]\d*)\r\n'
-                r'sent error others packets: ([0-9]\d*)\r\n'
-                'first received packet: rssi=0, lqi=0\r\n'
-                'last received packet: rssi=0, lqi=0\r\n\n'
-                r'stop diagnostics mode\r\n',
-            ),
+            ('diag send 20 100', 'Done\r\n'),
+            ('  diag \t send    \t 20\t100', 'Done\r\n'),
+            ('diag repeat 100 100', 'Done\r\n'),
+            ('diag repeat stop', 'Done\r\n'),
+            ('diag stop', 'Done\r\n'),
             ('diag', 'diagnostics mode is disabled\r\n'),
             (
                 'diag 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32',
-                r'Error 7: InvalidArgs\r\n',
+                'Error 7: InvalidArgs\r\n',
             ),
         ]
 
