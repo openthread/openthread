@@ -149,7 +149,8 @@ build_nrf52840()
         -DOT_APP_CLI=ON -DOT_APP_NCP=ON -DOT_APP_RCP=${ot_rcp} \
         -DOT_FTD=${ot_ftd} -DOT_MTD=${ot_mtd} -DOT_RCP=${ot_rcp} \
         -DBUILD_TESTING=OFF \
-        -DOT_PROJECT_CONFIG="${config_file}"
+        -DOT_PROJECT_CONFIG="${config_file}" \
+        "$@"
 
     if [[ $1 == "br" ]]; then
         mv ./build/bin/ot-cli-ftd ./build/bin/ot-cli-ftd-br
@@ -313,13 +314,13 @@ size_nrf52840()
 
     generate_table_header
 
-    build_nrf52840 ftd new
-    build_nrf52840 mtd new
-    build_nrf52840 br new
+    build_nrf52840 ftd new "$@"
+    build_nrf52840 mtd new "$@"
+    build_nrf52840 br new "$@"
 
-    build_nrf52840 ftd old
-    build_nrf52840 mtd old
-    build_nrf52840 br old
+    build_nrf52840 ftd old "$@"
+    build_nrf52840 mtd old "$@"
+    build_nrf52840 br old "$@"
 
     local ftd_files=(
         "ot-cli-ftd"
@@ -367,9 +368,10 @@ main()
     elif [[ $1 == setup ]]; then
         setup
     elif [[ $1 == nrf52840 ]]; then
-        size_nrf52840
+        shift
+        size_nrf52840 "$@"
     else
-        echo "USAGE: $0 [setup|nrf52840]"
+        echo "USAGE: $0 [setup | nrf52840 [CMAKE_OPTION ...]]"
         exit 128
     fi
 }
