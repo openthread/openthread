@@ -42,6 +42,7 @@
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/error.hpp"
+#include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 
 namespace ot {
@@ -94,14 +95,84 @@ enum StorageType : uint8_t
  */
 typedef otCryptoKeyRef KeyRef;
 
-constexpr KeyRef kInvalidKeyRef               = 0x80000000; ///< Invalid `KeyRef` value (PSA_KEY_ID_VENDOR_MAX + 1).
-constexpr KeyRef kNetworkKeyRef               = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 1;
-constexpr KeyRef kPskcRef                     = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 2;
-constexpr KeyRef kActiveDatasetNetworkKeyRef  = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 3;
-constexpr KeyRef kActiveDatasetPskcRef        = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 4;
-constexpr KeyRef kPendingDatasetNetworkKeyRef = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 5;
-constexpr KeyRef kPendingDatasetPskcRef       = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 6;
-constexpr KeyRef kEcdsaRef                    = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 7;
+constexpr KeyRef kInvalidKeyRef = 0x80000000; ///< Invalid `KeyRef` value (PSA_KEY_ID_VENDOR_MAX + 1).
+
+/**
+ * Manages and selects the `KeyRef` values.
+ */
+class KeyRefManager : public InstanceLocator
+{
+public:
+    /**
+     * Represents difference `KeyRef` types.
+     */
+    enum Type : uint8_t
+    {
+        kNetworkKey               = 1,
+        kPskc                     = 2,
+        kActiveDatasetNetworkKey  = 3,
+        kActiveDatasetPskc        = 4,
+        kPendingDatasetNetworkKey = 5,
+        kPendingDatasetPskc       = 6,
+        kEcdsa                    = 7,
+    };
+
+    /**
+     * Initializes the `KeyRefManager`.
+     *
+     * @param[in]  aInstance     A reference to the OpenThread instance.
+     */
+    explicit KeyRefManager(Instance &aInstance)
+        : InstanceLocator(aInstance)
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+        , mExtraOffset(0)
+#endif
+    {
+    }
+
+    /**
+     * Determines the `KeyRef` to use for a given `Type`.
+     *
+     * @param[in] aType  The key ref type.
+     *
+     * @returns The `KeyRef` associated with @p aType.
+     */
+    KeyRef KeyRefFor(Type aType)
+    {
+        KeyRef keyRef = kPsaItsNvmOffset + aType;
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+        keyRef += mExtraOffset;
+#endif
+        return keyRef;
+    }
+
+    /**
+     * Delete all the persistent keys.
+     */
+    void DestroyPersistentKeys(void);
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    static constexpr uint32_t kKeyRefExtraOffset = 32; ///< Recommended extra offset to use.
+
+    /**
+     * Sets the additional `KeyRef` offset value to use when determining the `KeyRef`s.
+     *
+     * This is intended for when `MULTIPLE_INSTANCE_ENABLE` is enabled to ensure different `ot::Instance`s use
+     * different `KeyRef` value ranges.
+     *
+     * @param[in] aOffset  The offset value.
+     */
+    void SetKeyRefExtraOffset(uint32_t aOffset) { mExtraOffset = aOffset; }
+#endif
+
+private:
+    static constexpr KeyRef kPsaItsNvmOffset = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET;
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    uint32_t mExtraOffset;
+#endif
+};
 
 /**
  * Determine if a given `KeyRef` is valid or not.
@@ -180,11 +251,6 @@ inline void DestroyKey(KeyRef aKeyRef)
  * @retval false                Key Ref passed is invalid and has no key associated in PSA.
  */
 inline bool HasKey(KeyRef aKeyRef) { return otPlatCryptoHasKey(aKeyRef); }
-
-/**
- * Delete all the persistent keys stored in PSA ITS.
- */
-void DestroyPersistentKeys(void);
 
 } // namespace Storage
 

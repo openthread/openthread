@@ -76,6 +76,9 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     , mTimerMicroScheduler(*this)
 #endif
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    , mCryptoStorageKeyRefManager(*this)
+#endif
     , mRadio(*this)
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
     , mUptime(*this)
@@ -276,6 +279,14 @@ Instance::Instance(void)
     , mIsInitialized(false)
     , mId(Random::NonCrypto::GetUint32())
 {
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+    mCryptoStorageKeyRefManager.SetKeyRefExtraOffset(Crypto::Storage::KeyRefManager::kKeyRefExtraOffset * GetIdx(this));
+#else
+#error "MULTIPLE_INSTANCE (without static allocation) is used with PLATFORM_KEY_REFERENCES_ENABLE " \
+       "The `KeyRef` values will be shared across different `Instance` objects"
+#endif
+#endif
 }
 
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE

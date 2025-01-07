@@ -586,7 +586,7 @@ void KeyManager::StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteE
 {
     NetworkKeyRef keyRef;
 
-    keyRef = Crypto::Storage::kNetworkKeyRef;
+    keyRef = Get<Crypto::Storage::KeyRefManager>().KeyRefFor(Crypto::Storage::KeyRefManager::kNetworkKey);
 
     if (!aOverWriteExisting)
     {
@@ -617,7 +617,7 @@ exit:
 
 void KeyManager::StorePskc(const Pskc &aPskc)
 {
-    PskcRef keyRef = Crypto::Storage::kPskcRef;
+    PskcRef keyRef = Get<Crypto::Storage::KeyRefManager>().KeyRefFor(Crypto::Storage::KeyRefManager::kPskc);
 
     Crypto::Storage::DestroyKey(keyRef);
 
@@ -671,7 +671,8 @@ void KeyManager::DestroyTemporaryKeys(void)
     Get<Mac::Mac>().ClearMode2Key();
 }
 
-void KeyManager::DestroyPersistentKeys(void) { Crypto::Storage::DestroyPersistentKeys(); }
+void KeyManager::DestroyPersistentKeys(void) { Get<Crypto::Storage::KeyRefManager>().DestroyPersistentKeys(); }
+
 #endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
 } // namespace ot

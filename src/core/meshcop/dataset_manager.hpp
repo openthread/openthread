@@ -238,18 +238,20 @@ private:
     };
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    using KeyRef = Crypto::Storage::KeyRef;
+    using KeyRef        = Crypto::Storage::KeyRef;
+    using KeyRefManager = Crypto::Storage::KeyRefManager;
+    using KeyRefType    = Crypto::Storage::KeyRefManager::Type;
 
     struct SecurelyStoredTlv
     {
-        KeyRef GetKeyRef(Dataset::Type aType) const
+        KeyRefType GetKeyRefType(Dataset::Type aType) const
         {
-            return (aType == Dataset::kActive) ? mActiveKeyRef : mPendingKeyRef;
+            return (aType == Dataset::kActive) ? mActiveKeyRefType : mPendingKeyRefType;
         }
 
-        Tlv::Type mTlvType;
-        KeyRef    mActiveKeyRef;
-        KeyRef    mPendingKeyRef;
+        Tlv::Type  mTlvType;
+        KeyRefType mActiveKeyRefType;
+        KeyRefType mPendingKeyRefType;
     };
 
     static const SecurelyStoredTlv kSecurelyStoredTlvs[];
