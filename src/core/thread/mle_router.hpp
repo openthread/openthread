@@ -649,7 +649,7 @@ private:
     static void HandleAddressSolicitResponse(void                *aContext,
                                              otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
-                                             Error                aResult);
+                                             otError              aResult);
 
     //------------------------------------------------------------------------------------------------------------------
     // Variables

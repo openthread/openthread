@@ -3305,7 +3305,7 @@ exit:
 void MleRouter::HandleAddressSolicitResponse(void                *aContext,
                                              otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
-                                             Error                aResult)
+                                             otError              aResult)
 {
     static_cast<MleRouter *>(aContext)->HandleAddressSolicitResponse(AsCoapMessagePtr(aMessage),
                                                                      AsCoreTypePtr(aMessageInfo), aResult);

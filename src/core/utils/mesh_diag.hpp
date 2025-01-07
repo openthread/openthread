@@ -291,7 +291,7 @@ private:
     static void HandleDiagGetResponse(void                *aContext,
                                       otMessage           *aMessage,
                                       const otMessageInfo *aMessageInfo,
-                                      Error                aResult);
+                                      otError              aResult);
 
     using TimeoutTimer = TimerMilliIn<MeshDiag, &MeshDiag::HandleTimer>;
 
