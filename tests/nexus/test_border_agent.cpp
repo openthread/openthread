@@ -54,6 +54,8 @@ void TestBorderAgent(void)
     // - node0 leader acting as Border Agent,
     // - node1 staying disconnected (acting as candidate)
 
+    node0.GetInstance().SetLogLevel(kLogLevelInfo);
+
     node0.Form();
     nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
     VerifyOrQuit(node0.Get<Mle::Mle>().IsLeader());
@@ -198,6 +200,8 @@ void TestBorderAgentEphemeralKey(void)
     Log("TestBorderAgentEphemeralKey");
 
     nexus.AdvanceTime(0);
+
+    node0.GetInstance().SetLogLevel(kLogLevelInfo);
 
     // Form the topology:
     // - node0 leader acting as Border Agent,
