@@ -67,4 +67,7 @@ jobs:
     - name: Build & Run
       run: |
         ./tests/nexus/build.sh
-        while ./tests/nexus/nexus_border_agent; do :; done
+        cd ./tests/nexus
+        while ./nexus_border_agent; do :; done
+        ls -l
+        ls /var/lib/systemd/coredump
