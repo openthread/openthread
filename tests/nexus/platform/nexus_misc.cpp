@@ -28,6 +28,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include <openthread/platform/entropy.h>
 #include <openthread/platform/logging.h>
@@ -104,6 +105,19 @@ exit:
     return error;
 }
 
+void otPlatAssertFail(const char *aFilename, int aLineNumber)
+{
+    Log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+    Log("Assert failed at %s:%d", aFilename, aLineNumber);
+    Log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
+
+    // For debug build, use assert to generate a core dump
+    //    assert(false);
+    exit(1);
+}
+
+
 //---------------------------------------------------------------------------------------------------------------------
 // Misc
 
@@ -139,15 +153,15 @@ static void LogVarArgs(Node *aActiveNode, const char *aFormat, va_list aArgs)
 {
     uint32_t now = Core::Get().GetNow().GetValue();
 
-    printf("%02u:%02u:%02u.%03u ", now / 3600000, (now / 60000) % 60, (now / 1000) % 60, now % 1000);
+    fprintf(stderr, "%02u:%02u:%02u.%03u ", now / 3600000, (now / 60000) % 60, (now / 1000) % 60, now % 1000);
 
     if (aActiveNode != nullptr)
     {
-        printf("%03u ", aActiveNode->GetInstance().GetId());
+        fprintf(stderr, "%03u ", aActiveNode->GetInstance().GetId());
     }
 
-    vprintf(aFormat, aArgs);
-    printf("\n");
+    vfprintf(stderr, aFormat, aArgs);
+    fprintf(stderr, "\n");
 }
 
 } // namespace Nexus
