@@ -14,7 +14,7 @@ The diagnostics module supports common diagnostics features that are listed belo
 - [diag stream](#diag-stream-start)
 - [diag power](#diag-power)
 - [diag powersettings](#diag-powersettings)
-- [diag send](#diag-send-packets-length)
+- [diag send](#diag-send-async-packets-length)
 - [diag repeat](#diag-repeat-delay-length)
 - [diag radio](#diag-radio-sleep)
 - [diag rawpowersetting](#diag-rawpowersetting)
@@ -163,10 +163,11 @@ RawPowerSetting: 223344
 Done
 ```
 
-### diag send \<packets\> [length]
+### diag send [async] \<packets\> [length]
 
 Transmit a fixed number of packets.
 
+- async: Use the non-blocking mode.
 - packets: The number of packets to be sent.
 - length: The length of packet. The valid range is [3, 127].
 
@@ -174,6 +175,8 @@ Send the frame set by `diag frame` if length is omitted. Otherwise overwrite the
 
 ```bash
 > diag send 20 100
+Done
+> diag send async 20 100
 Done
 ```
 
