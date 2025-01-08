@@ -55,6 +55,7 @@ CoapBase::CoapBase(Instance &aInstance, Sender aSender)
 
 void CoapBase::ClearRequestsAndResponses(void)
 {
+    LogWarn("~~~~ CoapBase::ClearRequestsAndResponses()");
     ClearRequests(nullptr); // Clear requests matching any address.
     mResponsesQueue.DequeueAllResponses();
 }
@@ -342,6 +343,7 @@ exit:
 
     if (error != kErrorNone && storedCopy != nullptr)
     {
+        LogWarn("~~~~ CoapBase::SendMessage() with error about to dequeue");
         DequeueMessage(*storedCopy);
     }
 
@@ -513,6 +515,8 @@ void CoapBase::FinalizeCoapTransaction(Message                &aRequest,
                                        const Ip6::MessageInfo *aMessageInfo,
                                        Error                   aResult)
 {
+    LogWarn("~~~~ CoapBase::FinalizeCoapTransaction()");
+
     DequeueMessage(aRequest);
 
     if (aMetadata.mResponseHandler != nullptr)
@@ -560,6 +564,8 @@ exit:
 
 void CoapBase::DequeueMessage(Message &aMessage)
 {
+    LogWarn("~~~~ CoapBase::DequeueMessage()");
+
     mPendingRequests.Dequeue(aMessage);
 
     if (mRetransmissionTimer.IsRunning() && (mPendingRequests.GetHead() == nullptr))
@@ -1123,6 +1129,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
                 // response.
                 if (metadata.mResponseHandler == nullptr)
                 {
+                    LogWarn("~~~~ CoapBase::ProcessReceivedResponse() about to DequeueMessage");
                     DequeueMessage(*request);
                 }
             }
