@@ -51,6 +51,13 @@ SecureSession::SecureSession(Instance &aInstance, Dtls::Transport &aDtlsTranspor
     Dtls::Session::SetReceiveCallback(HandleDtlsReceive, this);
 }
 
+void SecureSession::Cleanup(void)
+{
+    ClearAllRequestsAndResponses();
+    mTransmitQueue.DequeueAndFreeAll();
+    mTransmitTask.Unpost();
+}
+
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 Error SecureSession::SendMessage(Message                    &aMessage,
@@ -103,7 +110,7 @@ void SecureSession::HandleDtlsConnectEvent(ConnectEvent aEvent)
     if (aEvent != kConnected)
     {
         mTransmitQueue.DequeueAndFreeAll();
-        ClearRequestsAndResponses();
+        ClearAllRequestsAndResponses();
     }
 
     mConnectCallback.InvokeIfSet(aEvent);
@@ -150,6 +157,22 @@ void SecureSession::HandleTransmitTask(void)
 exit:
     FreeMessageOnError(message, error);
 }
+
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+
+MeshCoP::SecureSession *ApplicationCoapSecure::HandleDtlsAccept(void *aContext, const Ip6::MessageInfo &aMessageInfo)
+{
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    return static_cast<ApplicationCoapSecure *>(aContext)->HandleDtlsAccept();
+}
+
+SecureSession *ApplicationCoapSecure::HandleDtlsAccept(void)
+{
+    return IsSessionInUse() ? nullptr : static_cast<SecureSession *>(this);
+}
+
+#endif
 
 } // namespace Coap
 } // namespace ot
