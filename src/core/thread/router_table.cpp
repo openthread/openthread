@@ -617,7 +617,7 @@ void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighbor
 
         router = FindRouterById(routerId);
 
-        if (router == nullptr || Get<Mle::Mle>().HasRloc16(router->GetRloc16()) || router == neighbor)
+        if (router == nullptr || Get<Mle::Mle>().HasRloc16(router->GetRloc16()))
         {
             continue;
         }
@@ -627,33 +627,53 @@ void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighbor
         cost = aRouteTlv.GetRouteCost(index);
         cost = (cost == 0) ? Mle::kMaxRouteCost : cost;
 
-        if ((nextHop == nullptr) || (nextHop == neighbor))
+        if (router == neighbor)
         {
-            // `router` has no next hop or next hop is neighbor (sender)
-
-            if (cost + linkCostToNeighbor < Mle::kMaxRouteCost)
+            uint8_t curCost = router->GetCost();
+            uint8_t newCost = linkCostToNeighbor;
+            if (nextHop == nullptr)
             {
-                if (router->SetNextHopAndCost(aNeighborId, cost))
-                {
-                    SignalTableChanged();
-                }
+                curCost += Mle::kMaxRouteCost;
             }
-            else if (nextHop == neighbor)
+            else
             {
-                router->SetNextHopToInvalid();
-                router->SetLastHeard(TimerMilli::GetNow());
+                curCost += GetLinkCost(*nextHop);
+            }
+            if (newCost <= curCost && router->SetNextHopAndCost(aNeighborId, newCost))
+            {
                 SignalTableChanged();
             }
         }
         else
         {
-            uint8_t curCost = router->GetCost() + GetLinkCost(*nextHop);
-            uint8_t newCost = cost + linkCostToNeighbor;
-
-            if (newCost < curCost)
+            if ((nextHop == nullptr) || (nextHop == neighbor))
             {
-                router->SetNextHopAndCost(aNeighborId, cost);
-                SignalTableChanged();
+                // `router` has no next hop or next hop is neighbor (sender)
+
+                if (cost + linkCostToNeighbor < Mle::kMaxRouteCost)
+                {
+                    if (router->SetNextHopAndCost(aNeighborId, cost))
+                    {
+                        SignalTableChanged();
+                    }
+                }
+                else if (nextHop == neighbor)
+                {
+                    router->SetNextHopToInvalid();
+                    router->SetLastHeard(TimerMilli::GetNow());
+                    SignalTableChanged();
+                }
+            }
+            else
+            {
+                uint8_t curCost = router->GetCost() + GetLinkCost(*nextHop);
+                uint8_t newCost = cost + linkCostToNeighbor;
+
+                if (newCost < curCost)
+                {
+                    router->SetNextHopAndCost(aNeighborId, cost);
+                    SignalTableChanged();
+                }
             }
         }
     }
