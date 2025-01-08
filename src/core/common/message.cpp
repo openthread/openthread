@@ -869,6 +869,8 @@ void Message::SetPriorityQueue(PriorityQueue *aPriorityQueue)
 
 void MessageQueue::Enqueue(Message &aMessage, QueuePosition aPosition)
 {
+    LogWarn("MessgeQueue(%p)::Enqueue(%p), Id:%u", (void *)this, (void *)&aMessage, aMessage.GetInstance().GetId());
+
     OT_ASSERT(!aMessage.IsInAQueue());
     OT_ASSERT((aMessage.Next() == nullptr) && (aMessage.Prev() == nullptr));
 
@@ -900,6 +902,13 @@ void MessageQueue::Enqueue(Message &aMessage, QueuePosition aPosition)
 
 void MessageQueue::Dequeue(Message &aMessage)
 {
+    LogWarn("MessgeQueue(%p)::Dequeue(%p), Id:%u", (void *)this, (void *)&aMessage, aMessage.GetInstance().GetId());
+
+    if (aMessage.GetMessageQueue() != this)
+    {
+        LogWarn("============  Message is already dequeued");
+    }
+
     OT_ASSERT(aMessage.GetMessageQueue() == this);
     OT_ASSERT((aMessage.Next() != nullptr) && (aMessage.Prev() != nullptr));
 
@@ -1014,6 +1023,8 @@ void PriorityQueue::Enqueue(Message &aMessage)
     Message          *tail;
     Message          *next;
 
+    LogWarn("PriorityQueue::Enqueue(%p), Id:%u", (void *)&aMessage, aMessage.GetInstance().GetId());
+
     OT_ASSERT(!aMessage.IsInAQueue());
 
     aMessage.SetPriorityQueue(this);
@@ -1044,6 +1055,8 @@ void PriorityQueue::Dequeue(Message &aMessage)
 {
     Message::Priority priority;
     Message          *tail;
+
+    LogWarn("PriorityQueue::Dequeue(%p), Id:%u", (void *)&aMessage, aMessage.GetInstance().GetId());
 
     OT_ASSERT(aMessage.GetPriorityQueue() == this);
 
