@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <type_traits>
+
 #include "common/as_core_type.hpp"
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
@@ -186,44 +188,6 @@ public:
      * @retval FALSE  If this is not a Wake-up frame.
      */
     bool IsWakeupFrame(void) const;
-
-    /**
-     * This method returns the Rendezvous Time IE of a wake-up frame.
-     *
-     * @returns Pointer to the Rendezvous Time IE.
-     */
-    RendezvousTimeIe *GetRendezvousTimeIe(void) { return AsNonConst(AsConst(this)->GetRendezvousTimeIe()); }
-
-    /**
-     * This method returns the Rendezvous Time IE of a wake-up frame.
-     *
-     * @returns Const pointer to the Rendezvous Time IE.
-     */
-    const RendezvousTimeIe *GetRendezvousTimeIe(void) const
-    {
-        const uint8_t *ie = GetHeaderIe(RendezvousTimeIe::kHeaderIeId);
-
-        return (ie != nullptr) ? reinterpret_cast<const RendezvousTimeIe *>(ie + sizeof(HeaderIe)) : nullptr;
-    }
-
-    /**
-     * This method returns the Connection IE of a wake-up frame.
-     *
-     * @returns Pointer to the Connection IE.
-     */
-    ConnectionIe *GetConnectionIe(void) { return AsNonConst(AsConst(this)->GetConnectionIe()); }
-
-    /**
-     * This method returns the Connection IE of a wake-up frame.
-     *
-     * @returns Const pointer to the Connection IE.
-     */
-    const ConnectionIe *GetConnectionIe(void) const
-    {
-        const uint8_t *ie = GetThreadIe(ConnectionIe::kThreadIeSubtype);
-
-        return (ie != nullptr) ? reinterpret_cast<const ConnectionIe *>(ie + sizeof(HeaderIe)) : nullptr;
-    }
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
     /**
@@ -600,64 +564,54 @@ public:
      */
     const uint8_t *GetFooter(void) const;
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-
-    /**
-     * Returns a pointer to the vendor specific Time IE.
-     *
-     * @returns A pointer to the Time IE, `nullptr` if not found.
-     */
-    TimeIe *GetTimeIe(void) { return AsNonConst(AsConst(this)->GetTimeIe()); }
-
-    /**
-     * Returns a pointer to the vendor specific Time IE.
-     *
-     * @returns A pointer to the Time IE, `nullptr` if not found.
-     */
-    const TimeIe *GetTimeIe(void) const;
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     /**
-     * Returns a pointer to the Header IE.
+     * Returns a pointer to the Header IE Header.
      *
-     * @param[in] aIeId  The Element Id of the Header IE.
+     * @tparam[in] ContentType  The Header IE Content type. It should be a Vendor Specific Header IE with a uint8_t
+     *                          field as first field to specify its subtype.
      *
-     * @returns A pointer to the Header IE, `nullptr` if not found.
+     * @returns A pointer to the Header IE Header, `nullptr` if not found.
      */
-    uint8_t *GetHeaderIe(uint8_t aIeId) { return AsNonConst(AsConst(this)->GetHeaderIe(aIeId)); }
+    template <
+        typename ContentType,
+        typename std::enable_if<std::is_base_of<HeaderIe::Trait<VendorIeHeader::kHeaderIeId>, ContentType>::value &&
+                                    std::is_same<decltype(ContentType::kSubType), const uint8_t>::value,
+                                int>::type = 0>
+    const HeaderIe *GetHeaderIe(void) const
+    {
+        return GetVendorHeaderIeWithSubType(ContentType::kVendorOui, ContentType::kSubType);
+    }
 
     /**
-     * Returns a pointer to the Header IE.
+     * Returns a pointer to the Header IE Header.
      *
-     * @param[in] aIeId  The Element Id of the Header IE.
+     * @tparam[in] ContentType  The Header IE Content type. It should not be a Vendor Specific Header IE.
      *
-     * @returns A pointer to the Header IE, `nullptr` if not found.
+     * @returns A pointer to the Header IE Header, `nullptr` if not found.
      */
-    const uint8_t *GetHeaderIe(uint8_t aIeId) const;
+    template <
+        typename ContentType,
+        typename std::enable_if<!std::is_base_of<HeaderIe::Trait<VendorIeHeader::kHeaderIeId>, ContentType>::value,
+                                int>::type = 0>
+    const HeaderIe *GetHeaderIe(void) const
+    {
+        return GetHeaderIe(ContentType::kHeaderIeId);
+    }
 
     /**
-     * Returns a pointer to a specific Thread IE.
+     * Returns a pointer to the Header IE Content.
      *
-     * A Thread IE is a vendor specific IE with Vendor OUI as `kVendorOuiThreadCompanyId`.
+     * @tparam[in] ContentType  The Header IE Content type.
      *
-     * @param[in] aSubType  The sub type of the Thread IE.
+     * @returns Const pointer to the Header IE Content, `nullptr` if not found.
      *
-     * @returns A pointer to the Thread IE, `nullptr` if not found.
      */
-    uint8_t *GetThreadIe(uint8_t aSubType) { return AsNonConst(AsConst(this)->GetThreadIe(aSubType)); }
-
-    /**
-     * Returns a pointer to a specific Thread IE.
-     *
-     * A Thread IE is a vendor specific IE with Vendor OUI as `kVendorOuiThreadCompanyId`.
-     *
-     * @param[in] aSubType  The sub type of the Thread IE.
-     *
-     * @returns A pointer to the Thread IE, `nullptr` if not found.
-     */
-    const uint8_t *GetThreadIe(uint8_t aSubType) const;
-
+    template <typename ContentType> const ContentType *GetHeaderIeContent(void) const
+    {
+        const HeaderIe *ie = GetHeaderIe<ContentType>();
+        return (ie != nullptr) ? ie->GetContent<ContentType>() : nullptr;
+    }
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
      * Finds CSL IE in the frame and modify its content.
@@ -675,32 +629,6 @@ public:
      */
     bool HasCslIe(void) const;
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    /**
-     * Returns a pointer to a CSL IE.
-     *
-     * @returns A pointer to the CSL IE, `nullptr` if not found.
-     */
-    const CslIe *GetCslIe(void) const;
-
-    /**
-     * Returns a pointer to a CSL IE.
-     *
-     * @returns A pointer to the CSL IE, `nullptr` if not found.
-     */
-    CslIe *GetCslIe(void) { return AsNonConst(AsConst(this)->GetCslIe()); }
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    /**
-     * Finds Enhanced ACK Probing (Vendor Specific) IE and set its value.
-     *
-     * @param[in] aValue  A pointer to the value to set.
-     * @param[in] aLen    The length of @p aValue.
-     */
-    void SetEnhAckProbingIe(const uint8_t *aValue, uint8_t aLen);
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
@@ -843,6 +771,9 @@ protected:
     static constexpr uint8_t kInvalidIndex = 0xff;
     static constexpr uint8_t kInvalidSize  = kInvalidIndex;
     static constexpr uint8_t kMaxPsduSize  = kInvalidSize - 1;
+
+    const HeaderIe *GetVendorHeaderIeWithSubType(uint32_t aVendorOui, uint8_t aSubType) const;
+    const HeaderIe *GetHeaderIe(uint8_t aIeId) const;
 
     void    SetFrameControlField(uint16_t aFcf);
     uint8_t SkipSequenceIndex(void) const;
@@ -998,7 +929,7 @@ public:
      */
     int64_t ComputeNetworkTimeOffset(void) const
     {
-        return static_cast<int64_t>(GetTimeIe()->GetTime() - GetTimestamp());
+        return static_cast<int64_t>(GetHeaderIeContent<TimeIe>()->GetTime() - GetTimestamp());
     }
 
     /**
@@ -1006,7 +937,7 @@ public:
      *
      * @returns  The time sync sequence.
      */
-    uint8_t ReadTimeSyncSeq(void) const { return GetTimeIe()->GetSequence(); }
+    uint8_t ReadTimeSyncSeq(void) const { return GetHeaderIeContent<TimeIe>()->GetSequence(); }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 };
 
@@ -1068,6 +999,32 @@ public:
         bool mEmptyPayload : 1; ///< Whether payload is empty (to decide about appending Termination2 IE).
 #endif
     };
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    /**
+     * Returns a pointer to the Header IE Content.
+     *
+     * @tparam[in] ContentType  The Header IE Content type.
+     *
+     * @returns A non-const pointer to the Header IE Content, `nullptr` if not found.
+     */
+    template <typename ContentType> ContentType *GetHeaderIeContent(void)
+    {
+        return AsNonConst(AsConst(this)->Frame::GetHeaderIeContent<ContentType>());
+    }
+
+    /**
+     * Returns a pointer to the Header IE Header.
+     *
+     * @tparam[in] ContentType  The Header IE Content type.
+     *
+     * @returns A non-const pointer to the Header IE Header, `nullptr` if not found.
+     */
+    template <typename ContentType> HeaderIe *GetHeaderIe(void)
+    {
+        return AsNonConst(AsConst(this)->GetHeaderIe<ContentType>());
+    }
+#endif
 
     /**
      * Sets the channel on which to send the frame.
@@ -1338,6 +1295,24 @@ public:
      * @param[in]    aTxDelayBaseTime    The delay base time for the TX frame.
      */
     void SetTxDelayBaseTime(uint32_t aTxDelayBaseTime) { mInfo.mTxInfo.mTxDelayBaseTime = aTxDelayBaseTime; }
+#endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    /**
+     * Finds Enhanced ACK Probing (Vendor Specific) IE and set its value.
+     *
+     * @param[in] aValue  A pointer to the value to set.
+     * @param[in] aLen    The length of @p aValue.
+     */
+    void SetEnhAckProbingIe(const uint8_t *aValue, uint8_t aLen);
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    /**
+     * Finds CSL IE in the frame and modify its content.
+     *
+     * @param[in] aCslPeriod  CSL Period in CSL IE.
+     * @param[in] aCslPhase   CSL Phase in CSL IE.
+     */
+    void SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase);
 #endif
 };
 
