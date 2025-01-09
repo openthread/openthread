@@ -288,48 +288,78 @@ template <> otError Interpreter::Process<Cmd("reset")>(Arg aArgs[])
     return error;
 }
 
-void Interpreter::ProcessLine(char *aBuf)
+void Interpreter::ProcessLine(char *aLine)
 {
     Arg     args[kMaxArgs + 1];
-    otError error = OT_ERROR_NONE;
+    otError error              = OT_ERROR_PARSE;
+    bool    shouldOutputResult = true;
 
-    OT_ASSERT(aBuf != nullptr);
+    OT_ASSERT(aLine != nullptr);
 
-    if (!mInternalDebugCommand)
+    // Validate and parse the input command line. The `error` is
+    // checked later after other conditions are handled.
+
+    if (StringLength(aLine, kMaxLineLength) <= kMaxLineLength - 1)
     {
-        // Ignore the command if another command is pending.
-        VerifyOrExit(!mCommandIsPending, args[0].Clear());
-        mCommandIsPending = true;
-
-        VerifyOrExit(StringLength(aBuf, kMaxLineLength) <= kMaxLineLength - 1, error = OT_ERROR_PARSE);
+        error = ot::Utils::CmdLineParser::ParseCmd(aLine, args, kMaxArgs);
     }
 
-    SuccessOrExit(error = ot::Utils::CmdLineParser::ParseCmd(aBuf, args, kMaxArgs));
-    VerifyOrExit(!args[0].IsEmpty(), mCommandIsPending = false);
-
-    if (!mInternalDebugCommand)
+    if (mInternalDebugCommand)
     {
-        LogInput(args);
+        // The `mInternalDebugCommand` indicates that we are executing
+        // the "debug" command which itself will emit a sequence of
+        // CLI commands. During this, `mCommandIsPending` is `true`
+        // and should remain `true` until all emitted commands by
+        // "debug" are processed.
+
+        OT_ASSERT((error == OT_ERROR_NONE) && !args[0].IsEmpty());
+        error = ProcessCommand(args);
+        ExitNow();
+    }
+
+    if (mCommandIsPending)
+    {
+        // If a previous command is still pending, ignore the new
+        // command (even if there is a parse error). We do not
+        // need to `OutputPrompt()` either.
+
+        shouldOutputResult = false;
+        ExitNow();
+    }
+
+    mCommandIsPending = true;
+
+    // Make sure the parsing of the command at the top of this
+    // method did not fail.
+
+    SuccessOrExit(error);
+
+    if (args[0].IsEmpty())
+    {
+        // Got an empty command line.
+
+        mCommandIsPending  = false;
+        shouldOutputResult = false;
+        OutputPrompt();
+        ExitNow();
+    }
+
+    LogInput(args);
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-        if (otDiagIsEnabled(GetInstancePtr()) && (args[0] != "diag") && (args[0] != "factoryreset"))
-        {
-            OutputLine("under diagnostics mode, execute 'diag stop' before running any other commands.");
-            ExitNow(error = OT_ERROR_INVALID_STATE);
-        }
-#endif
+    if (otDiagIsEnabled(GetInstancePtr()) && (args[0] != "diag") && (args[0] != "factoryreset"))
+    {
+        OutputLine("under diagnostics mode, execute 'diag stop' before running any other commands.");
+        ExitNow(error = OT_ERROR_INVALID_STATE);
     }
+#endif
 
     error = ProcessCommand(args);
 
 exit:
-    if ((error != OT_ERROR_NONE) || !args[0].IsEmpty())
+    if (shouldOutputResult)
     {
         OutputResult(error);
-    }
-    else if (!mCommandIsPending)
-    {
-        OutputPrompt();
     }
 }
 

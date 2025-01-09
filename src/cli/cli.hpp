@@ -165,9 +165,9 @@ public:
     /**
      * Interprets a CLI command.
      *
-     * @param[in]  aBuf        A pointer to a string.
+     * @param[in]  aLine        A pointer to a command string.
      */
-    void ProcessLine(char *aBuf);
+    void ProcessLine(char *aLine);
 
     /**
      * Adds commands to the user command table.
