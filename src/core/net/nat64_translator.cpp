@@ -552,8 +552,13 @@ exit:
 
 void Translator::HandleMappingExpirerTimer(void)
 {
-    LogInfo("Released %d expired mappings", ReleaseExpiredMappings());
+    uint16_t numReleased = ReleaseExpiredMappings();
+
+    LogInfo("Released %u expired mappings", numReleased);
+
     mMappingExpirerTimer.Start(kAddressMappingIdleTimeoutMsec);
+
+    OT_UNUSED_VARIABLE(numReleased);
 }
 
 void Translator::InitAddressMappingIterator(AddressMappingIterator &aIterator)
