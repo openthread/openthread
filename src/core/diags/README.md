@@ -349,6 +349,7 @@ received packets: 10
 sent success packets: 10
 sent error cca packets: 0
 sent error abort packets: 0
+sent error invalid state packets: 0
 sent error others packets: 0
 first received packet: rssi=-65, lqi=101
 last received packet: rssi=-64, lqi=98
