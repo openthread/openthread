@@ -34,7 +34,7 @@ import sys
 import textwrap
 import threading
 
-from typing import List
+from typing import List, Optional
 
 import otci
 from otci import OTCI
@@ -647,11 +647,14 @@ class RcpCaps(object):
     def __get_dut_diag_raw_power_setting(self) -> str:
         return os.getenv('DUT_DIAG_RAW_POWER_SETTING', '112233')
 
+    def __get_adb_key(self) -> Optional[str]:
+        return os.getenv('ADB_KEY', None)
+
     def __connect_dut(self) -> OTCI:
         if os.getenv('DUT_ADB_TCP'):
-            node = otci.connect_otbr_adb_tcp(os.getenv('DUT_ADB_TCP'))
+            node = otci.connect_otbr_adb_tcp(os.getenv('DUT_ADB_TCP'), adb_key=self.__get_adb_key())
         elif os.getenv('DUT_ADB_USB'):
-            node = otci.connect_otbr_adb_usb(os.getenv('DUT_ADB_USB'))
+            node = otci.connect_otbr_adb_usb(os.getenv('DUT_ADB_USB'), adb_key=self.__get_adb_key())
         elif os.getenv('DUT_CLI_SERIAL'):
             node = otci.connect_cli_serial(os.getenv('DUT_CLI_SERIAL'))
         elif os.getenv('DUT_SSH'):
@@ -667,7 +670,7 @@ class RcpCaps(object):
         elif os.getenv('REF_SSH'):
             node = otci.connect_otbr_ssh(os.getenv('REF_SSH'))
         elif os.getenv('REF_ADB_USB'):
-            node = otci.connect_otbr_adb_usb(os.getenv('REF_ADB_USB'))
+            node = otci.connect_otbr_adb_usb(os.getenv('REF_ADB_USB'), adb_key=self.__get_adb_key())
         else:
             self.__fail("Please set REF_CLI_SERIAL, REF_SSH or REF_ADB_USB to connect to the reference device.")
 
@@ -697,6 +700,7 @@ def parse_arguments():
         '  REF_ADB_USB=<serial_number>    Connect to the reference device via adb usb\r\n'
         '  REF_CLI_SERIAL=<serial_device> Connect to the reference device via cli serial port\r\n'
         '  REF_SSH=<device_ip>            Connect to the reference device via ssh\r\n'
+        '  ADB_KEY=<adb_key>              Full path to the adb key\r\n'
         '\r\n'
         'Example:\r\n'
         f'  DUT_ADB_USB=1169UC2F2T0M95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 {sys.argv[0]} -d\r\n')

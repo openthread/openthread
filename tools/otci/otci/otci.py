@@ -3175,13 +3175,13 @@ def connect_otbr_ssh(host: str, port: int = 22, username='pi', password='raspber
     return OTCI(cmd_handler)
 
 
-def connect_otbr_adb_tcp(host: str, port: int = 5555):
-    cmd_handler = OtbrAdbTcpCommandRunner(host, port)
+def connect_otbr_adb_tcp(host: str, port: int = 5555, adb_key: Optional[str] = None):
+    cmd_handler = OtbrAdbTcpCommandRunner(host, port, adb_key)
     return OTCI(cmd_handler)
 
 
-def connect_otbr_adb_usb(serial: str):
-    cmd_handler = OtbrAdbUsbCommandRunner(serial)
+def connect_otbr_adb_usb(serial: str, adb_key: Optional[str] = None):
+    cmd_handler = OtbrAdbUsbCommandRunner(serial, adb_key)
     return OTCI(cmd_handler)
 
 

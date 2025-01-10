@@ -77,6 +77,7 @@ Device Interfaces:
   REF_ADB_USB=<serial_number>    Connect to the reference device via adb usb
   REF_CLI_SERIAL=<serial_device> Connect to the reference device via cli serial port
   REF_SSH=<device_ip>            Connect to the reference device via ssh
+  ADB_KEY=<adb_key>              Full path to the adb key
 
 Example:
   DUT_ADB_USB=1169UC2F2T0M95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 ./tools/cp-caps/rcp_caps_test.py -d
