@@ -35,7 +35,7 @@ readonly OT_TMP_DIR
 OT_SHA_NEW=${GITHUB_SHA:-$(git rev-parse HEAD)}
 readonly OT_SHA_NEW
 
-OT_SHA_OLD="$(git cat-file -p "${OT_SHA_NEW}" | grep 'parent ' | head -n1 | cut -d' ' -f2)"
+OT_SHA_OLD="${OT_SHA_OLD:-$(git cat-file -p "${OT_SHA_NEW}" | grep 'parent ' | head -n1 | cut -d' ' -f2)}"
 readonly OT_SHA_OLD
 
 OT_REPORT_FILE_TABLE="${OT_TMP_DIR}/report_table"
