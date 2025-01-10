@@ -640,6 +640,8 @@ openthread_core_files = [
   "thread/dua_manager.hpp",
   "thread/energy_scan_server.cpp",
   "thread/energy_scan_server.hpp",
+  "thread/enh_csl_neighbor_table.cpp",
+  "thread/enh_csl_neighbor_table.hpp",
   "thread/indirect_sender.cpp",
   "thread/indirect_sender.hpp",
   "thread/indirect_sender_frame_context.hpp",
