@@ -534,6 +534,20 @@ public:
         uint16_t GetDestinationPort(void) const { return BigEndian::HostSwap16(mDestination); }
 
         /**
+         * Sets the TCP Source Port.
+         *
+         * @param[in]  aPort  The TCP Source Port.
+         */
+        void SetSourcePort(uint16_t aPort) { mSource = BigEndian::HostSwap16(aPort); }
+
+        /**
+         * Sets the TCP Destination Port.
+         *
+         * @param[in]  aPort  The TCP Destination Port.
+         */
+        void SetDestinationPort(uint16_t aPort) { mDestination = BigEndian::HostSwap16(aPort); }
+
+        /**
          * Returns the TCP Sequence Number.
          *
          * @returns The TCP Sequence Number.
