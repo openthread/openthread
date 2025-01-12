@@ -119,6 +119,27 @@ public:
     uint8_t DecrementLinkAcceptTimeout(void) { return --mLinkAcceptTimeout; }
 
     /**
+     * Sets the counter tracking the number of Link Request attempts during link re-establishment to its maximum value
+     * `Mle::kLinkRequestAttempts`.
+     */
+    void SetLinkRequestAttemptsToMax(void) { mLinkRequestAttempts = Mle::kLinkRequestAttempts; }
+
+    /**
+     * Indicates whether there are remaining Link Request attempts (during link re-establishment).
+     *
+     * @retval TRUE   There are remaining Link Request attempts.
+     * @retval FALSE  There are no more Link Request attempts (the counter is zero).
+     */
+    bool HasRemainingLinkRequestAttempts(void) const { return mLinkRequestAttempts > 0; }
+
+    /**
+     * Decrements the counter tracking the number of remaining Link Request attempts during link re-establishment.
+     *
+     * Caller MUST ensure the current counter is non-zero by checking `HasRemainingLinkRequestAttempts()`.
+     */
+    void DecrementLinkRequestAttempts(void) { mLinkRequestAttempts--; }
+
+    /**
      * Gets the router ID of the next hop to this router.
      *
      * @returns The router ID of the next hop to this router.
@@ -208,14 +229,16 @@ public:
 
 private:
     static_assert(Mle::kLinkAcceptTimeout < 4, "kLinkAcceptTimeout won't fit in mLinkAcceptTimeout (2-bit field)");
+    static_assert(Mle::kLinkRequestAttempts < 4, "kLinkRequestAttempts won't fit in mLinkRequestAttempts (2-bit field");
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     static_assert(Mle::kParentReselectTimeout <= (1U << 15) - 1,
                   "kParentReselectTimeout won't fit in mParentReselectTimeout (15-bit filed)");
 #endif
 
-    uint8_t mNextHop;               // The next hop towards this router
-    uint8_t mLinkAcceptTimeout : 2; // Timeout (in seconds) after sending Link Request waiting for Link Accept
+    uint8_t mNextHop;                 // The next hop towards this router
+    uint8_t mLinkRequestAttempts : 2; // Number of Link Request attempts
+    uint8_t mLinkAcceptTimeout : 2;   // Timeout (in seconds) after sending Link Request waiting for Link Accept
 #if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
     uint8_t mCost : 4; // The cost to this router via neighbor router
 #else

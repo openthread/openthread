@@ -1142,11 +1142,12 @@ private:
         void ScheduleAdvertisement(const Ip6::Address &aDestination, uint16_t aDelay);
         void ScheduleMulticastDataResponse(uint16_t aDelay);
         void ScheduleLinkRequest(const Router &aRouter, uint16_t aDelay);
+        void RemoveScheduledLinkRequest(const Router &aRouter);
+        bool HasAnyScheduledLinkRequest(const Router &aRouter) const;
         void ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint16_t aDelay);
         void ScheduleDiscoveryResponse(const Ip6::Address          &aDestination,
                                        const DiscoveryResponseInfo &aInfo,
                                        uint16_t                     aDelay);
-        void RemoveScheduledLinkRequest(const Router &aRouter);
 #endif
         void RemoveScheduledChildUpdateRequestToParent(void);
 
