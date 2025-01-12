@@ -352,7 +352,7 @@ public:
      *
      * @returns The current link quality value (value 0-3 as per Thread specification).
      */
-    LinkQuality GetLinkQuality(void) const { return mLinkQuality; }
+    LinkQuality GetLinkQualityIn(void) const { return static_cast<LinkQuality>(mLinkQualityIn); }
 
     /**
      * Returns the most recent RSS value.
@@ -407,6 +407,22 @@ public:
      */
     uint16_t GetMessageErrorRate(void) const { return mMessageErrorRate.GetFailureRate(); }
 
+    /**
+     * Gets the link quality out value.
+     *
+     * This indicates the Link Quality from the perspective of the neighbor.
+     *
+     * @returns The link quality out value.
+     */
+    LinkQuality GetLinkQualityOut(void) const { return static_cast<LinkQuality>(mLinkQualityOut); }
+
+    /**
+     * Sets the link quality out value.
+     *
+     * @param[in]  aLinkQuality  The link quality out value.
+     */
+    void SetLinkQualityOut(LinkQuality aLinkQuality) { mLinkQualityOut = aLinkQuality; }
+
 private:
     // Constants for obtaining link quality from link margin:
 
@@ -422,14 +438,14 @@ private:
 
     static constexpr uint8_t kNoLinkQuality = 0xff; // Indicate that there is no previous/last link quality.
 
-    void SetLinkQuality(LinkQuality aLinkQuality) { mLinkQuality = aLinkQuality; }
+    void SetLinkQualityIn(LinkQuality aLinkQuality) { mLinkQualityIn = aLinkQuality; }
 
     static LinkQuality CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLastLinkQuality);
 
-    RssAverager mRssAverager;
-    LinkQuality mLinkQuality;
-    int8_t      mLastRss;
-
+    RssAverager        mRssAverager;
+    uint8_t            mLinkQualityIn : 2;
+    uint8_t            mLinkQualityOut : 2;
+    int8_t             mLastRss;
     SuccessRateTracker mFrameErrorRate;
     SuccessRateTracker mMessageErrorRate;
 };

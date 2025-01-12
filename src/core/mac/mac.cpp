@@ -2167,7 +2167,7 @@ exit:
 
 void Mac::UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame &aRxFrame)
 {
-    LinkQuality oldLinkQuality = aNeighbor.GetLinkInfo().GetLinkQuality();
+    LinkQuality oldLinkQuality = aNeighbor.GetLinkInfo().GetLinkQualityIn();
 
     aNeighbor.GetLinkInfo().AddRss(aRxFrame.GetRssi());
 
@@ -2179,7 +2179,7 @@ void Mac::UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame &aRxFrame)
     // quality gets changed.
 
     VerifyOrExit(Get<Mle::Mle>().IsChild() && (&aNeighbor == &Get<Mle::Mle>().GetParent()));
-    VerifyOrExit(aNeighbor.GetLinkInfo().GetLinkQuality() != oldLinkQuality);
+    VerifyOrExit(aNeighbor.GetLinkInfo().GetLinkQualityIn() != oldLinkQuality);
     Get<Notifier>().Signal(kEventParentLinkQualityChanged);
 
 exit:
