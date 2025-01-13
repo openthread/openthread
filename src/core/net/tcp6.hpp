@@ -360,14 +360,11 @@ public:
         friend void ::tcplp_sys_set_timer(struct tcpcb *aTcb, uint8_t aTimerFlag, uint32_t aDelay);
         friend void ::tcplp_sys_stop_timer(struct tcpcb *aTcb, uint8_t aTimerFlag);
 
-        enum : uint8_t
-        {
-            kTimerDelack       = 0,
-            kTimerRexmtPersist = 1,
-            kTimerKeep         = 2,
-            kTimer2Msl         = 3,
-            kNumTimers         = 4,
-        };
+        static constexpr uint8_t kTimerDelack       = 0;
+        static constexpr uint8_t kTimerRexmtPersist = 1;
+        static constexpr uint8_t kTimerKeep         = 2;
+        static constexpr uint8_t kTimer2Msl         = 3;
+        static constexpr uint8_t kNumTimers         = 4;
 
         static uint8_t TimerFlagToIndex(uint8_t aTimerFlag);
 
