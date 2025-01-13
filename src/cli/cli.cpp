@@ -290,11 +290,14 @@ template <> otError Interpreter::Process<Cmd("reset")>(Arg aArgs[])
 
 void Interpreter::ProcessLine(char *aLine)
 {
-    Arg     args[kMaxArgs + 1];
-    otError error              = OT_ERROR_PARSE;
-    bool    shouldOutputResult = true;
+    static const char kCmdFactoryReset[] = "factoryreset";
+    Arg               args[kMaxArgs + 1];
+    otError           error              = OT_ERROR_PARSE;
+    bool              shouldOutputResult = true;
 
     OT_ASSERT(aLine != nullptr);
+
+    args[0].Clear();
 
     // Validate and parse the input command line. The `error` is
     // checked later after other conditions are handled.
@@ -317,7 +320,7 @@ void Interpreter::ProcessLine(char *aLine)
         ExitNow();
     }
 
-    if (mCommandIsPending)
+    if (mCommandIsPending && (args[0] != kCmdFactoryReset))
     {
         // If a previous command is still pending, ignore the new
         // command (even if there is a parse error). We do not
@@ -347,7 +350,7 @@ void Interpreter::ProcessLine(char *aLine)
     LogInput(args);
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-    if (otDiagIsEnabled(GetInstancePtr()) && (args[0] != "diag") && (args[0] != "factoryreset"))
+    if (otDiagIsEnabled(GetInstancePtr()) && (args[0] != "diag") && (args[0] != kCmdFactoryReset))
     {
         OutputLine("under diagnostics mode, execute 'diag stop' before running any other commands.");
         ExitNow(error = OT_ERROR_INVALID_STATE);
