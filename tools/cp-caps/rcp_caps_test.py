@@ -33,12 +33,15 @@ import os
 import sys
 import textwrap
 import threading
+import queue
 
+from dataclasses import dataclass
 from typing import List, Optional
 
 import otci
 from otci import OTCI
 from otci.types import Ip6Addr
+from otci.errors import ExpectLineTimeoutError
 
 CP_CAPABILITY_VERSION = "0.1.1-dev"
 
@@ -75,6 +78,11 @@ class RcpCaps(object):
         self.__test_diag_repeat()
         self.__test_diag_send()
         self.__test_diag_frame()
+
+        # The self.__test_diag_frame will factoryreset the device
+        self.__dut.diag_start()
+        self.__ref.diag_start()
+
         self.__test_diag_echo()
         self.__test_diag_utils()
         self.__test_diag_rawpowersetting()
@@ -85,112 +93,98 @@ class RcpCaps(object):
         self.__ref.diag_stop()
         self.__dut.diag_stop()
 
+    @dataclass
+    class Frame:
+        """Represents a thread radio frame.
+
+        Attributes:
+          name: The description of the frame.
+          tx_frame: The psdu of the frame that to be sent.
+          dst_address: The destination Mac address of the tx_frame.
+        """
+        name: str
+        tx_frame: str
+        dst_address: str
+
     def test_frame_format(self):
         """Test whether the DUT supports sending and receiving 802.15.4 frames of all formats."""
         frames = [
-            {
-                'name': 'ver:2003,Cmd,seq,dst[addr:short,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '030800ffffffff070000'
-            },
-            {
-                'name': 'ver:2003,Bcon,seq,dst[addr:no,pan:no],src[addr:extd,pan:id],sec:no,ie:no,plen:30',
-                'psdu': '00c000eeee0102030405060708ff0f000003514f70656e54687265616400000000000001020304050607080000'
-            },
-            {
-                'name': 'ver:2006,Cmd,seq,dst[addr:short,pan:id],src[addr:short,pan:no],sec:l5,ie:no,plen:0',
-                'psdu': '4b98ddddddaaaabbbb0d708001020304050607081565'
-            },
-            {
-                'name': 'ver:2006,Cmd,seq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:l5,ie:no,plen:0',
-                'psdu': '4bdcdddddd102030405060708001020304050607080d6e54687265046400820ee803'
-            },
-            {
-                'name': 'ver:2006,Data,seq,dst[addr:extd,pan:id],src[addr:extd,pan:id],sec:no,ie:no,plen:0',
-                'psdu': '01dcdddddd1020304050607080000001020304050607085468'
-            },
-            {
-                'name': 'ver:2006,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
-                'psdu': '0198ddddddaaaaeeeebbbb7080'
-            },
-            {
-                'name': 'ver:2006,Data,seq,dst[addr:extd,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '011cdddddd10203040506070800000'
-            },
-            {
-                'name': 'ver:2006,Data,seq,dst[addr:short,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '0118ddddddaaaa3040'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:no,pan:no],src[addr:no,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '0120dddddd'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:no,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '4120ddddddaaaa'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '012cdddddd10203040506070800000'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:extd,pan:no],src[addr:no,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '412cdd10203040506070807080'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:no,pan:no],src[addr:extd,pan:id],sec:no,ie:no,plen:0',
-                'psdu': '01e0ddeeee01020304050607080000'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:no,pan:no],src[addr:extd,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '41e0dd01020304050607080708'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '01ecdddddd102030405060708001020304050607080708'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:extd,pan:no],src[addr:extd,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '41ecdd102030405060708001020304050607080708'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
-                'psdu': '01a8ddddddaaaaeeeebbbb0102'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:extd,pan:id],sec:no,ie:no,plen:0',
-                'psdu': '01e8ddddddaaaaeeee01020304050607080708'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
-                'psdu': '01acdddddd1020304050607080eeeebbbb0708'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie[csl],plen:0',
-                'psdu': '01aaddddddaaaaeeeebbbb040dc800e8030708'
-            },
-            {
-                'name': 'ver:2015,Data,noseq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
-                'psdu': '01a9ddddaaaaeeeebbbbbb04'
-            },
+            self.Frame(name='ver:2003,Cmd,seq,dst[addr:short,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='030800ffffffff070000',
+                       dst_address='0xffff'),
+            self.Frame(
+                name='ver:2003,Bcon,seq,dst[addr:no,pan:no],src[addr:extd,pan:id],sec:no,ie:no,plen:30',
+                tx_frame='00c000eeee0102030405060708ff0f000003514f70656e54687265616400000000000001020304050607080000',
+                dst_address='-'),
+            self.Frame(
+                name='ver:2003,MP,noseq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:l5,ie[ren con],plen:0',
+                tx_frame=
+                'fd87dddd1020304050607080010203040506070815000000007265616401820ee80305009bb8ea011c807aa1120000',
+                dst_address='8070605040302010'),
+            self.Frame(name='ver:2006,Cmd,seq,dst[addr:short,pan:id],src[addr:short,pan:no],sec:l5,ie:no,plen:0',
+                       tx_frame='4b9800ddddaaaabbbb0d0000000001043daa1aea0000',
+                       dst_address='0xaaaa'),
+            self.Frame(name='ver:2006,Cmd,seq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:l5,ie:no,plen:0',
+                       tx_frame='4bdc00dddd102030405060708001020304050607080d000000000104483cb8a90000',
+                       dst_address='8070605040302010'),
+            self.Frame(name='ver:2006,Data,seq,dst[addr:extd,pan:id],src[addr:extd,pan:id],sec:no,ie:no,plen:0',
+                       tx_frame='41dc00dddd102030405060708001020304050607080000',
+                       dst_address='8070605040302010'),
+            self.Frame(name='ver:2006,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
+                       tx_frame='019800ddddaaaaeeeebbbb0000',
+                       dst_address='0xaaaa'),
+            self.Frame(name='ver:2006,Data,seq,dst[addr:extd,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='011c00dddd10203040506070800000',
+                       dst_address='8070605040302010'),
+            self.Frame(name='ver:2006,Data,seq,dst[addr:short,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='011800ddddaaaa0000',
+                       dst_address='0xaaaa'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:no,pan:no],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='0120000000',
+                       dst_address='-'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:no,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='412000dddd0000',
+                       dst_address='-'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='012c00dddd10203040506070800000',
+                       dst_address='8070605040302010'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:extd,pan:no],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='412c0010203040506070800000',
+                       dst_address='8070605040302010'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:no,pan:no],src[addr:extd,pan:id],sec:no,ie:no,plen:0',
+                       tx_frame='01e000eeee01020304050607080000',
+                       dst_address='-'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:no,pan:no],src[addr:extd,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='41e00001020304050607080000',
+                       dst_address='-'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='01ec00dddd102030405060708001020304050607080000',
+                       dst_address='8070605040302010'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:extd,pan:no],src[addr:extd,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='41ec00102030405060708001020304050607080000',
+                       dst_address='8070605040302010'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
+                       tx_frame='01a800ddddaaaaeeeebbbb0000',
+                       dst_address='0xaaaa'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:extd,pan:id],sec:no,ie:no,plen:0',
+                       tx_frame='01e800ddddaaaaeeee01020304050607080000',
+                       dst_address='0xaaaa'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
+                       tx_frame='01ac00dddd1020304050607080eeeebbbb0000',
+                       dst_address='8070605040302010'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie[csl],plen:0',
+                       tx_frame='01aa00ddddaaaaeeeebbbb040dc800e8030000',
+                       dst_address='0xaaaa'),
+            self.Frame(name='ver:2015,Data,noseq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
+                       tx_frame='01a9ddddaaaaeeeebbbb0000',
+                       dst_address='0xaaaa'),
         ]
 
-        self.__dut.factory_reset()
-        self.__ref.factory_reset()
-
-        ret = self.__dut.is_command_supported('diag start')
-        if ret is False:
-            print('Diag commands are not supported')
-            return
-
-        self.__dut.diag_start()
-        self.__ref.diag_start()
-
         for frame in frames:
-            self.__test_send_formated_frame(self.__dut, self.__ref, 'TX ' + frame['name'], frame['psdu'], 100)
-            self.__test_send_formated_frame(self.__ref, self.__dut, 'RX ' + frame['name'], frame['psdu'], 100)
-
-        self.__ref.diag_stop()
-        self.__dut.diag_stop()
+            ret = self.__test_send_formatted_frames_retries(self.__dut, self.__ref, frame)
+            self.__output_format_bool(f'TX {frame.name}', ret, align_length=100)
+            ret = self.__test_send_formatted_frames_retries(self.__ref, self.__dut, frame)
+            self.__output_format_bool(f'RX {frame.name}', ret, align_length=100)
 
     def test_csl(self):
         """Test whether the DUT supports CSL transmitter."""
@@ -585,44 +579,85 @@ class RcpCaps(object):
         self.__output_format_bool(cmd_diag_repeat, ret)
         self.__output_format_bool(cmd_diag_repeat_stop, ret)
 
-    def __test_send_formated_frame(self,
-                                   sender: OTCI,
-                                   receiver: OTCI,
-                                   format_name: str,
-                                   frame: str,
-                                   align_length: int = DEFAULT_FORMAT_ALIGN_LENGTH):
-        packets = 100
-        threshold = 80
-        channel = 20
-        cmd_diag_frame = f'diag frame {frame}'
-        commands = [cmd_diag_frame, f'diag send {packets}', f'diag stats', f'diag stats clear']
+    def __test_send_formatted_frames_retries(self,
+                                             sender: OTCI,
+                                             receiver: OTCI,
+                                             frame: Frame,
+                                             max_send_retries: int = 5):
+        for i in range(0, max_send_retries):
+            if self.__test_send_formatted_frame(sender, receiver, frame):
+                return True
 
-        if self.__support_commands(commands):
-            sender.wait(1)
-            sender.diag_set_channel(channel)
-            receiver.diag_set_channel(channel)
-            receiver.diag_radio_receive()
+        return False
 
-            sender.diag_stats_clear()
-            sender.diag_stats_clear()
+    def __test_send_formatted_frame(self, sender: OTCI, receiver: OTCI, frame: Frame):
+        sender.factory_reset()
+        receiver.factory_reset()
 
-            sender.diag_frame(frame)
-            sender.diag_send(packets, None)
-            sender.wait(1)
-            sender_stats = sender.diag_get_stats()
-            receiver_stats = receiver.diag_get_stats()
+        sender.diag_start()
+        receiver.diag_start()
 
-            ret = sender_stats['sent_success_packets'] == packets and receiver_stats['received_packets'] > threshold
+        channel = 11
+        num_sent_frames = 1
+
+        sender.diag_set_channel(channel)
+        receiver.diag_set_channel(channel)
+        receiver.diag_radio_receive()
+        receiver.diag_set_radio_receive_filter_dest_mac_address(frame.dst_address)
+        receiver.diag_enable_radio_receive_filter()
+
+        result_queue = queue.Queue()
+        receive_task = threading.Thread(target=self.__radio_receive_task,
+                                        args=(receiver, num_sent_frames, result_queue),
+                                        daemon=True)
+        receive_task.start()
+
+        sender.wait(0.1)
+
+        sender.diag_frame(frame.tx_frame,
+                          is_security_processed=True,
+                          max_csma_backoffs=4,
+                          max_frame_retries=4,
+                          csma_ca_enabled=True)
+        sender.diag_send(num_sent_frames, is_async=False)
+
+        receive_task.join()
+
+        if result_queue.empty():
+            ret = False  # No frame is received.
         else:
-            ret = False
+            received_frames = result_queue.get()
+            if len(received_frames) != num_sent_frames:
+                ret = False
+            else:
+                # The radio driver may not append the FCF field to the received frame. Do not check the FCF field here.
+                FCF_LENGTH = 4
+                ret = frame.tx_frame[:-FCF_LENGTH] == received_frames[0]['psdu'][:-FCF_LENGTH]
 
-        self.__output_format_bool(format_name, ret, align_length)
+        if ret:
+            sender.diag_stop()
+            receiver.diag_stop()
+        else:
+            # The command 'diag radio receive <number>' may fail to receive specified number of frames in default
+            # timeout time. In this case, the diag module still in 'sync' mode, and it only allows users to run the
+            # command `factoryreset` to terminate the test.
+            sender.factory_reset()
+            receiver.factory_reset()
+
+        return ret
+
+    def __radio_receive_task(self, receiver: OTCI, number: int, result_queue: queue):
+        try:
+            result = receiver.diag_radio_receive_number(number)
+        except ExpectLineTimeoutError:
+            pass
+        else:
+            result_queue.put(result)
 
     def __test_diag_frame(self):
-        frame = '00010203040506070809'
-        cmd_diag_frame = f'diag frame {frame}'
-
-        self.__test_send_formated_frame(self.__dut, self.__ref, cmd_diag_frame, frame)
+        frame = self.Frame(name='diag frame 00010203040506070809', tx_frame='00010203040506070809', dst_address='-')
+        ret = self.__test_send_formatted_frames_retries(self.__dut, self.__ref, frame)
+        self.__output_format_bool(frame.name, ret)
 
     def __support_commands(self, commands: List[str]) -> bool:
         ret = True
