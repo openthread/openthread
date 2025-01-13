@@ -619,6 +619,18 @@ otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRoute
 otError otThreadGetNextCacheEntry(otInstance *aInstance, otCacheEntryInfo *aEntryInfo, otCacheEntryIterator *aIterator);
 
 /**
+ * Adds or updates a snooped EID cache entry into address cache table.
+ *
+ * This function allows an application-specific mechanism to determine the RLOC16 and add/update a snoop optimization
+ * entry in address (by inspecting a received message to create a cache entry that maps an EID to an RLOC).
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aEid        The EID IPv6 address.
+ * @param[in]  aRloc16     The RLOC16 corresponding to @p aEid.
+ */
+void otThreadUpdateSnoopedCacheEntry(otInstance *aInstance, const otIp6Address *aEid, uint16_t aRloc16);
+
+/**
  * Get the Thread PSKc
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
