@@ -130,14 +130,14 @@ public:
      *
      * @returns The link quality out value for this router.
      */
-    LinkQuality GetLinkQualityOut(void) const { return static_cast<LinkQuality>(mLinkQualityOut); }
+    LinkQuality GetLinkQualityOut(void) const { return GetLinkInfo().GetLinkQualityOut(); }
 
     /**
      * Sets the link quality out value for this router.
      *
      * @param[in]  aLinkQuality  The link quality out value for this router.
      */
-    void SetLinkQualityOut(LinkQuality aLinkQuality) { mLinkQualityOut = aLinkQuality; }
+    void SetLinkQualityOut(LinkQuality aLinkQuality) { GetLinkInfo().SetLinkQualityOut(aLinkQuality); }
 
     /**
      * Gets the two-way link quality value (minimum of link quality in and out).
@@ -216,7 +216,6 @@ private:
 
     uint8_t mNextHop;               // The next hop towards this router
     uint8_t mLinkAcceptTimeout : 2; // Timeout (in seconds) after sending Link Request waiting for Link Accept
-    uint8_t mLinkQualityOut : 2;    // The link quality out for this router (learned from received Route TLV)
 #if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
     uint8_t mCost : 4; // The cost to this router via neighbor router
 #else
