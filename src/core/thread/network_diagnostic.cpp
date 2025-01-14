@@ -238,6 +238,71 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+Error Server::AppendChildTableAsChildTlvs(Message &aMessage)
+{
+    Error    error = kErrorNone;
+    ChildTlv childTlv;
+
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
+    {
+        childTlv.InitFrom(child);
+
+        SuccessOrExit(error = childTlv.AppendTo(aMessage));
+    }
+
+    // Add empty TLV to indicate end of the list
+
+    childTlv.InitAsEmpty();
+    SuccessOrExit(error = childTlv.AppendTo(aMessage));
+
+exit:
+    return error;
+}
+
+Error Server::AppendRouterNeighborTlvs(Message &aMessage)
+{
+    Error             error = kErrorNone;
+    RouterNeighborTlv neighborTlv;
+
+    for (Router &router : Get<RouterTable>())
+    {
+        if (router.IsStateValid())
+        {
+            neighborTlv.InitFrom(router);
+            SuccessOrExit(error = neighborTlv.AppendTo(aMessage));
+        }
+    }
+
+    // Add empty TLV to indicate end of the list
+
+    neighborTlv.InitAsEmpty();
+    SuccessOrExit(error = neighborTlv.AppendTo(aMessage));
+
+exit:
+    return error;
+}
+
+Error Server::AppendChildTableIp6AddressList(Message &aMessage)
+{
+    Error error = kErrorNone;
+    Tlv   tlv;
+
+    for (const Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
+    {
+        SuccessOrExit(error = AppendChildIp6AddressListTlv(aMessage, child));
+    }
+
+    // Add empty TLV to indicate end of the list
+
+    tlv.SetType(Tlv::kChildIp6AddressList);
+    tlv.SetLength(0);
+    SuccessOrExit(error = aMessage.Append(tlv));
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 #endif // OPENTHREAD_FTD
 
 Error Server::AppendMacCounters(Message &aMessage)
@@ -281,6 +346,48 @@ Error Server::AppendRequestedTlvs(const Message &aRequest, Message &aResponse)
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+Error Server::AppendRequestedTlvsForTcat(const Message &aRequest, Message &aResponse, OffsetRange &aOffsetRange)
+{
+    Error error = kErrorNone;
+
+    while (!aOffsetRange.IsEmpty())
+    {
+        uint8_t tlvType;
+
+        SuccessOrExit(error = aRequest.Read(aOffsetRange, tlvType));
+        aOffsetRange.AdvanceOffset(sizeof(uint8_t));
+
+#if OPENTHREAD_FTD
+        switch (tlvType)
+        {
+        case ChildTlv::kType:
+            SuccessOrExit(error = AppendChildTableAsChildTlvs(aResponse));
+            break;
+
+        case ChildIp6AddressListTlv::kType:
+            SuccessOrExit(error = AppendChildTableIp6AddressList(aResponse));
+            break;
+
+        case RouterNeighborTlv::kType:
+            SuccessOrExit(error = AppendRouterNeighborTlvs(aResponse));
+            break;
+
+        default:
+            SuccessOrExit(error = AppendDiagTlv(tlvType, aResponse));
+            break;
+        }
+
+#elif OPENTHREAD_MTD
+        SuccessOrExit(error = AppendDiagTlv(tlvType, aResponse));
+#endif
+    }
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
 Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
 {
@@ -786,7 +893,7 @@ exit:
     return error;
 }
 
-Error Server::AppendChildIp6AddressListTlv(Coap::Message &aAnswer, const Child &aChild)
+Error Server::AppendChildIp6AddressListTlv(Message &aAnswer, const Child &aChild)
 {
     Error                       error      = kErrorNone;
     uint16_t                    numIp6Addr = aChild.GetIp6Addresses().GetLength();

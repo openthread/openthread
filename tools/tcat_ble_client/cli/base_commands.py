@@ -33,6 +33,7 @@ from ble.ble_stream import BleStream
 from ble.ble_stream_secure import BleStreamSecure
 from ble import ble_scanner
 from tlv.tlv import TLV
+from tlv.diagnostic_tlv import DiagnosticTLVType
 from tlv.tcat_tlv import TcatTLVType
 from cli.command import Command, CommandResultNone, CommandResultTLV
 from dataset.dataset import ThreadDataset
@@ -384,6 +385,31 @@ class ScanCommand(Command):
             print('Secure channel not established.')
             await ble_stream.disconnect()
         return CommandResultNone()
+
+
+class DiagnosticTlvsCommand(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Retrieving diagnostic information.'
+
+    def get_help_string(self) -> str:
+        return 'Get diagnostic TLVs from the TCAT device.'
+
+    def prepare_data(self, args, context):
+        num_args = DiagnosticTLVType.names_to_numbers(args)
+        try:
+            if not num_args:
+                raise ValueError()
+            vals = [int(x) for x in num_args]
+            tlvs = bytes(vals)
+        except ValueError:
+            print('Please provide a list of diagnostic TLV types as names or numbers')
+            print('TLV Types:')
+            for key, value in DiagnosticTLVType.get_dict().items():
+                print(f'{key} = {value},')
+            raise DataNotPrepared()
+
+        return TLV(TcatTLVType.GET_DIAGNOSTIC_TLVS.value, tlvs).to_bytes()
 
 
 class ThreadStartCommand(BleCommand):
