@@ -49,7 +49,7 @@ void ThreadNetif::Up(void)
 
     // Enable the MAC just in case it was disabled while the Interface was down.
     Get<Mac::Mac>().SetEnabled(true);
-#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MONITOR_ON_STARTUP_ENABLE
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MONITOR_AUTO_START_ENABLE
     IgnoreError(Get<Utils::ChannelMonitor>().Start());
 #endif
     Get<MeshForwarder>().Start();
