@@ -313,6 +313,60 @@ class PingCommand(Command):
         return CommandResultTLV(tlv_response)
 
 
+class DiagnosticTlvsCommand(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Retrieving diagnostic information.'
+
+    def get_help_string(self) -> str:
+        return 'Get diagnostic TLVs from the TCAT device.'
+
+    def prepare_data(self, args, context):
+        tlv_dict = {
+            'extaddr': '0',
+            'macaddr': '1',
+            'mode': '2',
+            'timeout': '3',
+            'connectivity': '4',
+            'route64': '5',
+            'leaderdata': '6',
+            'networkdata': '7',
+            'ipaddr': '8',
+            'maccounters': '9',
+            'batterylevel': '14',
+            'supplyvoltage': '15',
+            'childtable': '16',
+            'channelpages': '17',
+            'maxchildtimeout': '19',
+            'eui64': '23',
+            'version': '24',
+            'vendorname': '25',
+            'vendormodel': '26',
+            'vendorswversion': '27',
+            'threadstackversion': '28',
+            'mlecounters': '34',
+            'vendorappurl': '35',
+            'channeldenylist': '36'
+        }
+
+        num_args = [x if x not in tlv_dict else tlv_dict[x] for x in args]
+
+        try:
+            if not num_args:
+                raise ValueError()
+            vals = [int(x) for x in num_args]
+            tlvs = bytes(vals)
+        except ValueError:
+            print('Please provide a list of diagnostic TLV types as names or numbers')
+            print('TLV Types:')
+            for x in tlv_dict:
+                print(x, '=', tlv_dict[x], end=', ')
+            print('')
+            raise DataNotPrepared()
+
+        return TLV(TcatTLVType.GET_DIAGNOSTIC_TLVS.value, tlvs).to_bytes()
+
+
 class ThreadStartCommand(BleCommand):
 
     def get_log_string(self) -> str:
