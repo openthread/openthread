@@ -1720,32 +1720,6 @@ void MleRouter::HandleTimeTick(void)
 
         age = TimerMilli::GetNow() - router.GetLastHeard();
 
-        if (router.IsStateValid() && (age >= kMaxNeighborAge))
-        {
-            bool sendLinkRequest = true;
-
-            // Once router age expires, we send Link Request every
-            // time tick (second), up to `kMaxTxCount`. Each rx is
-            // randomly delayed (one second window). After the last
-            // attempt, we wait for the "Link Accept" timeout
-            // (~3 seconds), before the router is removed.
-
-            if (!router.IsWaitingForLinkAccept())
-            {
-                LogInfo("No Adv from router 0x%04x - sending Link Request", router.GetRloc16());
-            }
-            else
-            {
-                sendLinkRequest = (age < kMaxNeighborAge + kMaxTxCount * TimeMilli::kOneSecondInMsec);
-            }
-
-            if (sendLinkRequest)
-            {
-                mDelayedSender.ScheduleLinkRequest(
-                    router, Random::NonCrypto::GetUint32InRange(0, kMaxLinkRequestDelayOnRouter));
-            }
-        }
-
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
         router.DecrementParentReselectTimeout();
 
@@ -1754,6 +1728,28 @@ void MleRouter::HandleTimeTick(void)
             router.SetSelectableAsParent(false);
         }
 #endif
+
+        if (router.IsStateValid() && (age >= kMaxNeighborAge))
+        {
+            // Once router age expires, we send Link Request every
+            // time tick (second), up to max attempts. Each rx is
+            // randomly delayed (one second window). After the last
+            // attempt, we wait for the "Link Accept" timeout
+            // (~3 seconds), before the router is removed.
+
+            if (!mDelayedSender.HasAnyScheduledLinkRequest(router) && !router.IsWaitingForLinkAccept())
+            {
+                LogInfo("No Adv from router 0x%04x - sending Link Request", router.GetRloc16());
+                router.SetLinkRequestAttemptsToMax();
+            }
+
+            if (router.HasRemainingLinkRequestAttempts())
+            {
+                router.DecrementLinkRequestAttempts();
+                mDelayedSender.ScheduleLinkRequest(
+                    router, Random::NonCrypto::GetUint32InRange(0, kMaxLinkRequestDelayOnRouter));
+            }
+        }
 
         if (router.IsWaitingForLinkAccept() && (router.DecrementLinkAcceptTimeout() == 0))
         {
