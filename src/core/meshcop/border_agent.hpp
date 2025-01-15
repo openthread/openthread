@@ -228,6 +228,21 @@ public:
         mEphemeralKeyCallback.Set(aCallback, aContext);
     }
 
+    /**
+     * Enables/disables the Border Agent Ephemeral Key feature.
+     *
+     * The Ephemeral Key feature can only be used when it's enabled. If an ephemeral key is already active and then
+     * this method is called to disable the feature, the in-use ephemeral key will be cleared.
+     *
+     * @param[in] aIsEnabled  Whether to enable the BA Ephemeral Key feature.
+     */
+    void SetEphemeralKeyFeatureEnabled(bool aEnabled);
+
+    /**
+     * Indicates whether the Border Agent Ephemeral Key feature state is enabled.
+     */
+    bool IsEphemeralKeyFeatureEnabled(void) { return mIsEphemeralKeyFeatureEnabled; }
+
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
     /**
@@ -349,6 +364,7 @@ private:
     bool mIdInitialized;
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    bool                           mIsEphemeralKeyFeatureEnabled : 1;
     bool                           mUsingEphemeralKey : 1;
     bool                           mDidConnectWithEphemeralKey : 1;
     uint16_t                       mOldUdpPort;

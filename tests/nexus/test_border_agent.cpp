@@ -212,6 +212,17 @@ void TestBorderAgentEphemeralKey(void)
     node1.Get<ThreadNetif>().Up();
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Check Border Agent ephemeral key feature enabled");
+
+    node0.Get<MeshCoP::BorderAgent>().SetEphemeralKeyFeatureEnabled(false);
+    VerifyOrQuit(!node0.Get<MeshCoP::BorderAgent>().IsEphemeralKeyFeatureEnabled());
+    VerifyOrQuit(node0.Get<MeshCoP::BorderAgent>().SetEphemeralKey(kEphemeralKey, /* aTimeout */ 0, kUdpPort) ==
+                 kErrorNotCapable);
+
+    node0.Get<MeshCoP::BorderAgent>().SetEphemeralKeyFeatureEnabled(true);
+    VerifyOrQuit(node0.Get<MeshCoP::BorderAgent>().IsEphemeralKeyFeatureEnabled());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Check Border Agent ephemeral key initial state");
 
     sEphemeralKeyCallbackCalled = false;

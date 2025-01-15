@@ -55,6 +55,11 @@ leader.form('ba-ephemeral')
 
 verify(leader.get_state() == 'leader')
 
+leader.ba_set_ephemeral_key_feature_enabled(False)
+verify(leader.ba_is_ephemeral_key_feature_enabled() == 'Disabled')
+leader.ba_set_ephemeral_key_feature_enabled(True)
+verify(leader.ba_is_ephemeral_key_feature_enabled() == 'Enabled')
+
 verify(leader.ba_is_ephemeral_key_active() == 'inactive')
 
 port = int(leader.ba_get_port())
