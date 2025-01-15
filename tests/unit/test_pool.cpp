@@ -58,10 +58,7 @@ private:
     bool mInitWithInstance;
 };
 
-enum : uint16_t
-{
-    kPoolSize = 11,
-};
+constexpr uint16_t kPoolSize = 11;
 
 typedef Pool<Entry, kPoolSize> EntryPool;
 
