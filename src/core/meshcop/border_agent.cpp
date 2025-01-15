@@ -633,8 +633,6 @@ Error BorderAgent::CoapDtlsSession::ForwardToLeader(const Coap::Message    &aMes
     bool                     separate = false;
     OffsetRange              offsetRange;
 
-    VerifyOrExit(Get<BorderAgent>().mState != kStateStopped);
-
     switch (aUri)
     {
     case kUriLeaderPetition:
@@ -877,8 +875,6 @@ void BorderAgent::CoapDtlsSession::HandleTmfProxyTx(Coap::Message &aMessage)
     OffsetRange               offsetRange;
     UdpEncapsulationTlvHeader udpEncapHeader;
 
-    VerifyOrExit(Get<BorderAgent>().mState != kStateStopped);
-
     SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kUdpEncapsulation, offsetRange));
 
     SuccessOrExit(error = aMessage.Read(offsetRange, udpEncapHeader));
@@ -911,8 +907,6 @@ void BorderAgent::CoapDtlsSession::HandleTmfRelayTx(Coap::Message &aMessage)
     Coap::Message   *message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
     OffsetRange      offsetRange;
-
-    VerifyOrExit(Get<BorderAgent>().mState != kStateStopped);
 
     VerifyOrExit(aMessage.IsNonConfirmablePostRequest());
 
