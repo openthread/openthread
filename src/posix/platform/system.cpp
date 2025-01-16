@@ -488,6 +488,8 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 #endif
 }
 
+extern "C" OT_TOOL_WEAK otError otSysResetRcpHardware(void) { return OT_ERROR_NOT_IMPLEMENTED; }
+
 bool IsSystemDryRun(void) { return gDryRun; }
 
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE && OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE

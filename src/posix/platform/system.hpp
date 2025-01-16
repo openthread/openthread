@@ -26,6 +26,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef OT_POSIX_PLATFORM_SYSTEM_HPP_
+#define OT_POSIX_PLATFORM_SYSTEM_HPP_
+
+#include <openthread/error.h>
+
 /**
  * @file
  * @brief
@@ -38,3 +43,14 @@
  * @returns  If the system runs in dry-run mode.
  */
 bool IsSystemDryRun(void);
+
+/**
+ * Triggers a hardware reset of the radio chip.
+ *
+ * Overwrite this to use platform-specific function to trigger hardware reset.
+ *
+ * @returns otError OT_ERROR_NOT_IMPLEMENTED means using default implementation
+ */
+extern "C" otError otSysResetRcpHardware(void);
+
+#endif // OT_POSIX_PLATFORM_SYSTEM_HPP_

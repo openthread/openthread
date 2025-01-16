@@ -131,7 +131,7 @@ public:
      * @retval OT_ERROR_NONE            Successfully reset the RCP.
      * @retval OT_ERROR_NOT_IMPLEMENT   The hardware reset is not implemented.
      */
-    virtual otError HardwareReset(void) = 0;
+    virtual otError HardwareReset(void) { return otSysResetRcpHardware(); }
 
     /**
      * Returns the RCP interface metrics.
