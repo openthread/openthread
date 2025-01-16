@@ -503,7 +503,8 @@ private:
 #endif
 
     static constexpr uint32_t kMaxUnicastAdvertisementDelay  = 1000;   // Max random delay for unciast Adv tx
-    static constexpr uint32_t kMaxNeighborAge                = 100000; // Max neighbor age (in msec)
+    static constexpr uint32_t kMaxNeighborAge                = 100000; // Max neighbor age on router (in msec)
+    static constexpr uint32_t kMaxNeighborAgeOnChild         = 150000; // Max neighbor age on FTD child (in msec)
     static constexpr uint32_t kMaxLeaderToRouterTimeout      = 90000;  // (in msec)
     static constexpr uint8_t  kMinDowngradeNeighbors         = 7;
     static constexpr uint8_t  kNetworkIdTimeout              = 120; // (in sec)
