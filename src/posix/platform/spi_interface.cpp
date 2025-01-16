@@ -34,6 +34,7 @@
 #include "spi_interface.hpp"
 
 #include "platform-posix.h"
+#include "system.hpp"
 
 #include <assert.h>
 #include <errno.h>
@@ -310,6 +311,12 @@ exit:
 
 void SpiInterface::TriggerReset(void)
 {
+    if (otSysHardwareReset() != OT_ERROR_NOT_IMPLEMENTED)
+    {
+        LogNote("Triggered platform-specific hardware reset");
+        return;
+    }
+
     // Set Reset pin to low level.
     SetGpioValue(mResetGpioValueFd, 0);
 
