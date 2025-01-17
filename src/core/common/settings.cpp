@@ -274,7 +274,7 @@ void Settings::SaveTcatCommissionerCertificate(uint8_t *aCert, uint16_t aCertLen
 
     SuccessOrAssert(error);
 }
-#endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+#endif
 
 #if OPENTHREAD_FTD
 Error Settings::AddChildInfo(const ChildInfo &aChildInfo)
