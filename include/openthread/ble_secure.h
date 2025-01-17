@@ -188,7 +188,6 @@ otError otBleSecureGetPeerCertificateBase64(otInstance *aInstance, unsigned char
  * @retval OT_ERROR_INVALID_ARGS    @p aInstance or @p aCertLength is invalid.
  * @retval OT_ERROR_INVALID_STATE   Not connected yet.
  * @retval OT_ERROR_NO_BUFS         Can't allocate memory for certificate.
- *
  */
 otError otBleSecureGetPeerCertificateDer(otInstance *aInstance, unsigned char *aPeerCert, size_t *aCertLength);
 
