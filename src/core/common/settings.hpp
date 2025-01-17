@@ -816,14 +816,14 @@ public:
     /**
      * Reads the Tcat Commissioner certificate.
      *
-     * @param[out]  aCert            Buffer to store the DER-encoded X509 end-entity certificate of the TCAT
-     * Commissioner
-     * @param[in,out]  aCertLen      On input, the max size of @p aCert. On output, the length of the DER encoded peer
-     * certificate.
+     * @param[out]    aCert     Buffer to store the DER-encoded X509 end-entity certificate
+     *                          of the TCAT Commissioner.
+     * @param[in,out] aCertLen  On input, the max size of @p aCert. On output, the length of
+     *                          the DER encoded peer certificate.
      *
-     * @retval kErrorNone             Successfully read the Dataset.
-     * @retval kErrorNotFound         No corresponding value in the setting store.
-     * @retval kErrorNoBufs          Buffer has not enough space to store the data.
+     * @retval kErrorNone       Successfully read the Dataset.
+     * @retval kErrorNotFound   No corresponding value in the setting store.
+     * @retval kErrorNoBufs     Buffer has not enough space to store the data.
      */
     Error ReadTcatCommissionerCertificate(uint8_t *aCert, uint16_t &aCertLen)
     {
