@@ -809,7 +809,6 @@ public:
      *
      * @param[in]  aCert            The DER-encoded X509 end-entity certificate to store.
      * @param[in]  aCertLen         Certificate length.
-     *
      */
     void SaveTcatCommissionerCertificate(uint8_t *aCert, uint16_t aCertLen);
 
