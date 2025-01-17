@@ -168,7 +168,8 @@ const char *SettingsBase::KeyToString(Key aKey)
         "",                  // (14) Removed (previously NAT64 prefix)
         "BrUlaPrefix",       // (15) kKeyBrUlaPrefix
         "BrOnLinkPrefixes",  // (16) kKeyBrOnLinkPrefixes
-        "BorderAgentId"      // (17) kKeyBorderAgentId
+        "BorderAgentId",     // (17) kKeyBorderAgentId
+        "TcatCommrCert"      // (18) kKeyTcatCommrCert
     };
 
     struct EnumCheck
@@ -192,9 +193,10 @@ const char *SettingsBase::KeyToString(Key aKey)
         ValidateNextEnum(kKeyBrUlaPrefix);
         ValidateNextEnum(kKeyBrOnLinkPrefixes);
         ValidateNextEnum(kKeyBorderAgentId);
+        ValidateNextEnum(kKeyTcatCommrCert);
     };
 
-    static_assert(kLastKey == kKeyBorderAgentId, "kLastKey is not valid");
+    static_assert(kLastKey == kKeyTcatCommrCert, "kLastKey is not valid");
 
     OT_ASSERT(aKey <= kLastKey);
 
@@ -262,6 +264,17 @@ void Settings::DeleteOperationalDataset(MeshCoP::Dataset::Type aType)
     Log(kActionDelete, error, key);
     OT_ASSERT(error != kErrorNotImplemented);
 }
+
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+void Settings::SaveTcatCommissionerCertificate(uint8_t *aCert, uint16_t aCertLen)
+{
+    Error error = Get<SettingsDriver>().Set(kKeyTcatCommrCert, aCert, aCertLen);
+
+    Log(kActionSave, error, kKeyTcatCommrCert);
+
+    SuccessOrAssert(error);
+}
+#endif
 
 #if OPENTHREAD_FTD
 Error Settings::AddChildInfo(const ChildInfo &aChildInfo)
