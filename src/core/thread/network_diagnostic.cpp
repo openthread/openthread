@@ -221,14 +221,11 @@ Error Server::AppendRouterNeighborTlvs(Message &aMessage)
 
     for (Router &router : Get<RouterTable>())
     {
-        if (!router.IsStateValid())
+        if (router.IsStateValid())
         {
-            continue;
+            neighborTlv.InitFrom(router);
+            SuccessOrExit(error = neighborTlv.AppendTo(aMessage));
         }
-
-        neighborTlv.InitFrom(router);
-
-        SuccessOrExit(error = neighborTlv.AppendTo(aMessage));
     }
 
 exit:
