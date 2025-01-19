@@ -26,6 +26,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 """
 
+
 class DiagnosticTLVType:
 
     def __init__(self):
@@ -65,4 +66,3 @@ class DiagnosticTLVType:
     def get_dict():
         res = DiagnosticTLVType()
         return res._tlv_dict
-
