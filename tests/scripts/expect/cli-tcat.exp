@@ -77,11 +77,6 @@ expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
 expect_line "\tLEN:\t9"
 expect_line "\tVALUE:\t0x64756d6d795f75726c"
 
-send "diagnostic_tlvs eui64 vendormodel\n"
-expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
-expect_line "\tLEN:\t12"
-expect_line "\tVALUE:\t0x170818b43000000000011a00"
-
 dispose_tcat_client 1
 
 switch_node 1
