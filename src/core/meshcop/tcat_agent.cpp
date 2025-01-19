@@ -560,7 +560,7 @@ Error TcatAgent::HandleGetDiagnosticTlvs(const Message &aIncomingMessage,
     extTlv.SetLength(0);
     SuccessOrExit(error = aOutgoingMessage.Append(extTlv));
 
-    error = Get<NetworkDiagnostic::Server>().AppendRequestedTlvs(aIncomingMessage, aOutgoingMessage, offsetRange);
+    error = Get<NetworkDiagnostic::Server>().AppendRequestedTlvsForTcat(aIncomingMessage, aOutgoingMessage, offsetRange);
 
     // Ensure enough message buffers are left for transmission of the result. Report error otherwise.
     if (Get<MessagePool>().GetFreeBufferCount() < kBufferReserve)

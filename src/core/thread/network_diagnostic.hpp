@@ -197,7 +197,7 @@ private:
     void  PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const;
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-    Error AppendRequestedTlvs(const Message &aRequest, Message &aResponse, OffsetRange &aOffsetRange);
+    Error AppendRequestedTlvsForTcat(const Message &aRequest, Message &aResponse, OffsetRange &aOffsetRange);
 #endif
 
 #if OPENTHREAD_MTD

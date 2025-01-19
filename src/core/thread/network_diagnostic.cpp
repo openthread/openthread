@@ -290,7 +290,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-Error Server::AppendRequestedTlvs(const Message &aRequest, Message &aResponse, OffsetRange &aOffsetRange)
+Error Server::AppendRequestedTlvsForTcat(const Message &aRequest, Message &aResponse, OffsetRange &aOffsetRange)
 {
     Error error = kErrorNone;
 
