@@ -287,7 +287,8 @@ private:
     static constexpr uint8_t  kInitialMtuSize   = 23; // ATT_MTU
     static constexpr uint8_t  kGattOverhead     = 3;  // BLE GATT payload fits MTU size - 3 bytes
     static constexpr uint8_t  kPacketBufferSize = OT_BLE_ATT_MTU_MAX - kGattOverhead;
-    static constexpr uint16_t kTxBleHandle      = 0; // Characteristics Handle for TX (not used)
+    static constexpr uint16_t kTxBleHandle      = 0;   // Characteristics Handle for TX (not used)
+    static constexpr uint16_t kTlsDataMaxSize   = 800; // Maximum size of data chunks sent with mTls.Send(..)
 
     static void HandleTlsConnectEvent(MeshCoP::Tls::ConnectEvent aEvent, void *aContext);
     void        HandleTlsConnectEvent(MeshCoP::Tls::ConnectEvent aEvent);
