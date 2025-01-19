@@ -359,9 +359,8 @@ class DiagnosticTlvsCommand(BleCommand):
         except ValueError:
             print('Please provide a list of diagnostic TLV types as names or numbers')
             print('TLV Types:')
-            for x in tlv_dict:
-                print(x, '=', tlv_dict[x], end=', ')
-            print('')
+            for key, value  in tlv_dict.items():
+                print(f'{key} = {value},')
             raise DataNotPrepared()
 
         return TLV(TcatTLVType.GET_DIAGNOSTIC_TLVS.value, tlvs).to_bytes()
