@@ -33,6 +33,7 @@ from ble.ble_stream import BleStream
 from ble.ble_stream_secure import BleStreamSecure
 from ble import ble_scanner
 from tlv.tlv import TLV
+from tlv.diagnostic_tlv import DiagnosticTLVType
 from tlv.tcat_tlv import TcatTLVType
 from cli.command import Command, CommandResultNone, CommandResultTLV
 from dataset.dataset import ThreadDataset
@@ -322,35 +323,7 @@ class DiagnosticTlvsCommand(BleCommand):
         return 'Get diagnostic TLVs from the TCAT device.'
 
     def prepare_data(self, args, context):
-        tlv_dict = {
-            'extaddr': '0',
-            'macaddr': '1',
-            'mode': '2',
-            'timeout': '3',
-            'connectivity': '4',
-            'route64': '5',
-            'leaderdata': '6',
-            'networkdata': '7',
-            'ipaddr': '8',
-            'maccounters': '9',
-            'batterylevel': '14',
-            'supplyvoltage': '15',
-            'childtable': '16',
-            'channelpages': '17',
-            'maxchildtimeout': '19',
-            'eui64': '23',
-            'version': '24',
-            'vendorname': '25',
-            'vendormodel': '26',
-            'vendorswversion': '27',
-            'threadstackversion': '28',
-            'mlecounters': '34',
-            'vendorappurl': '35',
-            'channeldenylist': '36'
-        }
-
-        num_args = [x if x not in tlv_dict else tlv_dict[x] for x in args]
-
+        num_args = DiagnosticTLVType.names_to_numbers(args)
         try:
             if not num_args:
                 raise ValueError()
@@ -359,7 +332,7 @@ class DiagnosticTlvsCommand(BleCommand):
         except ValueError:
             print('Please provide a list of diagnostic TLV types as names or numbers')
             print('TLV Types:')
-            for key, value  in tlv_dict.items():
+            for key, value  in DiagnosticTLVType.get_dict().items():
                 print(f'{key} = {value},')
             raise DataNotPrepared()
 
