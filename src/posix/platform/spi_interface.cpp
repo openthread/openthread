@@ -34,7 +34,6 @@
 #include "spi_interface.hpp"
 
 #include "platform-posix.h"
-#include "system.hpp"
 
 #include <assert.h>
 #include <errno.h>
@@ -311,7 +310,7 @@ exit:
 
 void SpiInterface::TriggerReset(void)
 {
-    VerifyOrExit(otSysResetRcpHardware() == OT_ERROR_NOT_IMPLEMENTED);
+    VerifyOrExit(SpinelInterface::HardwareReset() == OT_ERROR_NOT_IMPLEMENTED);
 
     // Set Reset pin to low level.
     SetGpioValue(mResetGpioValueFd, 0);

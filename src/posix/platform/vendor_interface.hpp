@@ -127,14 +127,6 @@ public:
     uint32_t GetBusSpeed(void) const;
 
     /**
-     * Hardware resets the RCP.
-     *
-     * @retval OT_ERROR_NONE            Successfully reset the RCP.
-     * @retval OT_ERROR_NOT_IMPLEMENT   The hardware reset is not implemented.
-     */
-    otError HardwareReset(void);
-
-    /**
      * Returns the RCP interface metrics.
      *
      * @returns The RCP interface metrics.
