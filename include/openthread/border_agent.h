@@ -327,6 +327,59 @@ void otBorderAgentSetEphemeralKeyCallback(otInstance                       *aIns
 void otBorderAgentDisconnect(otInstance *aInstance);
 
 /**
+ * Enables/Disables the MeshCoP service publisher.
+ *
+ * Requires `OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE`.
+ *
+ * When this is enabled and the state of platform Dnssd is ready, the MeshCoP service will be published. When this is
+ * disabled, the existing MeshCoP service will be unpublished. By default, the service publisher is disabled.
+ *
+ * @param[in] aInstance     The OpenThread instance.
+ * @param[in] aIsEnabled    Whether to enable the service publisher.
+ */
+void otBorderAgentSetServicePublisherEnabled(otInstance *aInstance, bool aIsEnabled);
+
+/**
+ * Defines the vendor TXT entry in the MeshCoP service.
+ */
+typedef struct otBorderAgentVendorTxtEntry
+{
+    const char    *mKey;    ///< A pointer to the key.
+    const uint8_t *mValue;  ///< A pointer to the value.
+    uint16_t       mLength; ///< The length of the value.
+} otBorderAgentVendorTxtEntry;
+
+/**
+ * Sets the value of the MeshCoP service.
+ *
+ * Requires `OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE`.
+ *
+ * This method allows the user to set the values displayed in the MeshCoP service, including the basic service instance
+ * name, the product name and vendor specific values like "vn" (vendor name) or "vo" (vendor oui).
+ *
+ * This API allows the user to only set part of the values while keeping other values unchanged by passing a nullptr in
+ * the parameter. For example, passing nullptr to @p aBaseServiceInstanceName and @p aProductName and a valid pointer
+ * to @p aVendorTxtEntries will only update the vendor TXT entries.
+ *
+ * The key of any vendor TXT entries MUST start with 'v'. And the value length of key "vo" MUST be 3. The total length
+ * of the encoded vendor txt entries SHALL NOT exceed 256 bytes.
+ *
+ * @param[in] aInstance                   The OpenThread instance.
+ * @param[in] aBaseServiceInstanceName    A pointer to the basic service instance name.
+ * @param[in] aProductName                A pointer to the product name.
+ * @param[in] aVendorTxtEntries           A pointer to the array of the vendor TXT entries.
+ * @param[in] aLength                     Then length of the vendor TXT entries.
+ *
+ * @retval OT_ERROR_NONE            If successfully set the MeshCoP Service values.
+ * @retval OT_ERROR_INVALID_ARGS    Some parameters passed are invalid.
+ * @retval OT_ERROR_NO_BUFS         The vendor TXT entries passed are too long.
+ */
+otError otBorderAgentSetMeshCopServiceValues(otInstance                        *aInstance,
+                                             const char                        *aBaseServiceInstanceName,
+                                             const char                        *aProductName,
+                                             const otBorderAgentVendorTxtEntry *aVendorTxtEntries,
+                                             uint8_t                            aLength);
+/**
  * @}
  */
 
