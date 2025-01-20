@@ -182,6 +182,19 @@ void otNetDataSetDnsSrpServicePublisherCallback(otInstance                      
 void otNetDataUnpublishDnsSrpService(otInstance *aInstance);
 
 /**
+ * Sets the maximum value (in milliseconds) of the random delay used before adding a DNS/SRP Service entry in the Thread
+ * Network Data.
+ *
+ * This API overrides the default value specified by `OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_DELAY_TO_ADD`.
+ *
+ * `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` must be enabled.
+ *
+ * @param[in] aInstance        A pointer to an OpenThread instance.
+ * @param[in] aMaxDelayMillis  The maximum delay to add. Must be larger than 1.
+ */
+void otNetDataSetDnsSrpServiceMaxDelayToAdd(otInstance *aInstance, uint32_t aMaxDelayMillis);
+
+/**
  * Requests an on-mesh prefix to be published in the Thread Network Data.
  *
  * Requires the feature `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` to be enabled.
