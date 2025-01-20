@@ -93,7 +93,7 @@ Set the frame (hex encoded) to be used by `diag send` and `diag repeat`. The fra
 - Specify `-u` to specify the `mInfo.mTxInfo.mIsHeaderUpdated` field for this frame.
 
 ```bash
-> diag frame 11223344
+> diag frame 0200ffc0ba
 Done
 ```
 
