@@ -54,7 +54,7 @@ namespace Cli {
  * anycast
  * Done
  * @endcode
- * @cparam srp server addrmode [@ca{anycast}|@ca{unicast}]
+ * @cparam srp server addrmode [@ca{anycast}|@ca{unicast}|@ca{unicast-force-add}]
  * @par
  * Gets or sets the address mode used by the SRP server.
  * @par
@@ -78,6 +78,10 @@ template <> otError SrpServer::Process<Cmd("addrmode")>(Arg aArgs[])
         case OT_SRP_SERVER_ADDRESS_MODE_ANYCAST:
             OutputLine("anycast");
             break;
+
+        case OT_SRP_SERVER_ADDRESS_MODE_UNICAST_FORCE_ADD:
+            OutputLine("unicast-force-add");
+            break;
         }
 
         error = OT_ERROR_NONE;
@@ -89,6 +93,10 @@ template <> otError SrpServer::Process<Cmd("addrmode")>(Arg aArgs[])
     else if (aArgs[0] == "anycast")
     {
         error = otSrpServerSetAddressMode(GetInstancePtr(), OT_SRP_SERVER_ADDRESS_MODE_ANYCAST);
+    }
+    else if (aArgs[0] == "unicast-force-add")
+    {
+        error = otSrpServerSetAddressMode(GetInstancePtr(), OT_SRP_SERVER_ADDRESS_MODE_UNICAST_FORCE_ADD);
     }
 
     return error;
