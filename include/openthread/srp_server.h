@@ -84,11 +84,17 @@ typedef enum
  *
  * Address mode specifies how the address and port number are determined by the SRP server and how this info is
  * published in the Thread Network Data.
+ *
+ * @warning Using the `OT_SRP_SERVER_ADDRESS_MODE_UNICAST_FORCE_ADD` option will make the implementation
+ * non-compliant with the Thread specification. This option is intended for testing and specific use-cases.
+ * When selected, the SRP server, upon being enabled, will bypass the Network Data publisher and always add the
+ * "SRP/DNS unicast" entry directly to the Network Data, regardless of how many other similar entries are present.
  */
 typedef enum otSrpServerAddressMode
 {
-    OT_SRP_SERVER_ADDRESS_MODE_UNICAST = 0, ///< Unicast address mode.
-    OT_SRP_SERVER_ADDRESS_MODE_ANYCAST = 1, ///< Anycast address mode.
+    OT_SRP_SERVER_ADDRESS_MODE_UNICAST           = 0, ///< Unicast address mode. Use Network Data publisher.
+    OT_SRP_SERVER_ADDRESS_MODE_ANYCAST           = 1, ///< Anycast address mode. Use Network Data publisher
+    OT_SRP_SERVER_ADDRESS_MODE_UNICAST_FORCE_ADD = 2, ///< Unicast address mode. Immediately force add to Network Data.
 } otSrpServerAddressMode;
 
 /**
