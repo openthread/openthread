@@ -259,6 +259,7 @@ private:
     bool          mIsAsyncSend : 1;
     bool          mRepeatActive : 1;
     bool          mDiagSendOn : 1;
+    bool          mIsSleepOn : 1;
 #endif
 
     ReceiveConfig        mReceiveConfig;
