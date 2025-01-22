@@ -158,6 +158,18 @@ expect_line "Done"
 send "diag radio receive\n"
 expect_line "Done"
 
+send "diag repeat 100 100\n"
+expect "Done"
+
+send "diag send 1 10\n"
+expect "Error 13: InvalidState"
+
+send "diag repeat stop\n"
+expect "Done"
+
+send "diag send 1 10\n"
+expect "Done"
+
 send_user "shortest frame test\n"
 send "diag frame 112233\n"
 expect "Done"
