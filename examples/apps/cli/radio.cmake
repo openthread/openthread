@@ -48,6 +48,13 @@ if(NOT DEFINED OT_MBEDTLS_RCP)
     set(OT_MBEDTLS_RCP ${OT_MBEDTLS})
 endif()
 
+target_compile_definitions(ot-cli-radio PRIVATE
+    OPENTHREAD_FTD=0
+    OPENTHREAD_MTD=0
+    OPENTHREAD_RADIO=1
+    OPENTHREAD_MDNS=0
+)
+
 target_link_libraries(ot-cli-radio PRIVATE
     openthread-cli-radio
     ${OT_PLATFORM_LIB_RCP}
