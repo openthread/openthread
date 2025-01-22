@@ -4180,6 +4180,13 @@ bool RoutingManager::PdPrefixManager::PrefixEntry::IsValidPdPrefix(void) const
            !GetPrefix().IsMulticast();
 }
 
+bool RoutingManager::PdPrefixManager::PrefixEntry::IsValidGUAPrefix(void) const
+{
+    // Check if the prefix falls within the GUA range (2000::/3).
+
+    return (GetPrefix().mPrefix.mFields.m16[0] >= 0x2000) && (GetPrefix().mPrefix.mFields.m16[0] <= 0x3fff);
+}
+
 bool RoutingManager::PdPrefixManager::PrefixEntry::IsFavoredOver(const PrefixEntry &aOther) const
 {
     bool isFavored;
@@ -4199,9 +4206,16 @@ bool RoutingManager::PdPrefixManager::PrefixEntry::IsFavoredOver(const PrefixEnt
         ExitNow();
     }
 
-    // Numerically smaller prefix is favored.
-
-    isFavored = GetPrefix() < aOther.GetPrefix();
+    // If one is GUA prefix and the other is ULA prefix, GUA is always favored;
+    // otherwise, the new prefix is favored
+    if (IsValidGUAPrefix() != aOther.IsValidGUAPrefix())
+    {
+        isFavored = GetPrefix() < aOther.GetPrefix();
+    }
+    else
+    {
+        isFavored = GetLastUpdateTime() > aOther.GetLastUpdateTime();
+    }
 
 exit:
     return isFavored;

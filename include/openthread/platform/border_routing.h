@@ -71,8 +71,12 @@ extern void otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const uint8
  *
  * The prefix lifetime can be updated by calling the function again with updated time values.
  * If the preferred lifetime of the prefix is set to 0, the prefix becomes deprecated.
- * When this function is called multiple times, the smallest prefix is preferred as this rule allows
- * choosing a GUA instead of a ULA.
+ * When multiple prefixes are available, one is selected based on the following
+ * rules:
+ *
+ * 1. A GUA prefix is always preferred over a ULA prefix.
+ * 2. Among prefixes of the same type (GUA or ULA), the one with the most recent
+ *    update time is preferred.
  *
  * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE`.
  *

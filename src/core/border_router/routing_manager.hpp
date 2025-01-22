@@ -1489,6 +1489,7 @@ private:
             PrefixEntry(void) { Clear(); }
             bool IsEmpty(void) const { return (GetPrefix().GetLength() == 0); }
             bool IsValidPdPrefix(void) const;
+            bool IsValidGUAPrefix(void) const;
             bool IsFavoredOver(const PrefixEntry &aOther) const;
         };
 
