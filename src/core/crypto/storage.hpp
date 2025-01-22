@@ -97,6 +97,8 @@ typedef otCryptoKeyRef KeyRef;
 
 constexpr KeyRef kInvalidKeyRef = 0x80000000; ///< Invalid `KeyRef` value (PSA_KEY_ID_VENDOR_MAX + 1).
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+
 /**
  * Manages and selects the `KeyRef` values.
  */
@@ -173,6 +175,8 @@ private:
     uint32_t mExtraOffset;
 #endif
 };
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 /**
  * Determine if a given `KeyRef` is valid or not.
