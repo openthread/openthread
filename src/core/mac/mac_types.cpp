@@ -54,7 +54,7 @@ PanId GenerateRandomPanId(void)
     return panId;
 }
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 void ExtAddress::GenerateRandom(void)
 {
     IgnoreError(Random::Crypto::Fill(*this));

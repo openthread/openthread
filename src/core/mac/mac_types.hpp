@@ -110,10 +110,12 @@ public:
      */
     void Fill(uint8_t aByte) { memset(this, aByte, sizeof(*this)); }
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
      * Generates a random IEEE 802.15.4 Extended Address.
      */
     void GenerateRandom(void);
+#endif
 
     /**
      * Sets the Extended Address from a given byte array.

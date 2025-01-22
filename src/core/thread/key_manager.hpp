@@ -140,7 +140,7 @@ class NetworkKey : public otNetworkKey, public Equatable<NetworkKey>, public Cle
 public:
     static constexpr uint8_t kSize = OT_NETWORK_KEY_SIZE; ///< Size of the Thread Network Key (in bytes).
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
      * Generates a cryptographically secure random sequence to populate the Thread Network Key.
      *
@@ -168,7 +168,7 @@ class Pskc : public otPskc, public Equatable<Pskc>, public Clearable<Pskc>
 public:
     static constexpr uint8_t kSize = OT_PSKC_MAX_SIZE; ///< Size (number of bytes) of the PSKc.
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
      * Generates a cryptographically secure random sequence to populate the Thread PSKc.
      *
