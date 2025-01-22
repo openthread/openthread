@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2025, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,56 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_FTD OR OT_MTD OR OT_RCP)
-    include(full.cmake)
+set(OT_PLATFORM_LIB_MDNS "openthread-posix-mdns" PARENT_SCOPE)
+
+if(NOT OT_PLATFORM_CONFIG)
+    set(OT_PLATFORM_CONFIG "openthread-core-posix-mdns-config.h" PARENT_SCOPE)
+endif()
+
+list(APPEND OT_PLATFORM_DEFINES
+    "_BSD_SOURCE=1"
+    "_DEFAULT_SOURCE=1"
+    "OPENTHREAD_EXAMPLES_POSIX_MDNS=1"
+)
+
+set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
+
+add_library(openthread-posix-mdns
+    alarm.c
+    logging.c
+    mdns_socket.c
+    misc.c
+    system.c
+    uart.c
+)
+
+target_compile_definitions(openthread-posix-mdns PRIVATE OPENTHREAD_MDNS=1)
+
+find_library(LIBRT rt)
+if(LIBRT)
+    target_link_libraries(openthread-posix-mdns PRIVATE ${LIBRT})
+endif()
+
+target_link_libraries(openthread-posix-mdns PRIVATE
+    openthread-platform
+    ot-config
+)
+
+target_compile_options(openthread-posix-mdns PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_include_directories(openthread-posix-mdns PRIVATE
+    ${OT_PUBLIC_INCLUDES}
+    ${PROJECT_SOURCE_DIR}/examples/platforms
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/src/core
+)
+
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    set(CPACK_PACKAGE_NAME "openthread-posix-mdns")
+    set(CPACK_GENERATOR "DEB")
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "OpenThread Authors (https://github.com/openthread/openthread)")
+    set(CPACK_PACKAGE_CONTACT "OpenThread Authors (https://github.com/openthread/openthread)")
+    include(CPack)
 endif()

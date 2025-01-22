@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2025, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_FTD OR OT_MTD OR OT_RCP)
-    include(full.cmake)
+if(OT_MDNS_LIB)
+    include(mdns.cmake)
 endif()
