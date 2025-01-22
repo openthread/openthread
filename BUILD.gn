@@ -47,6 +47,7 @@ config("openthread_ftd_config") {
     "OPENTHREAD_FTD=1",
     "OPENTHREAD_MTD=0",
     "OPENTHREAD_RADIO=0",
+    "OPENTHREAD_MDNS=0",
   ]
 }
 
@@ -55,6 +56,7 @@ config("openthread_mtd_config") {
     "OPENTHREAD_MTD=1",
     "OPENTHREAD_FTD=0",
     "OPENTHREAD_RADIO=0",
+    "OPENTHREAD_MDNS=0",
   ]
 }
 
@@ -63,6 +65,16 @@ config("openthread_radio_config") {
     "OPENTHREAD_RADIO=1",
     "OPENTHREAD_FTD=0",
     "OPENTHREAD_MTD=0",
+    "OPENTHREAD_MDNS=0",
+  ]
+}
+
+config("openthread_mdns_config") {
+  defines = [
+    "OPENTHREAD_FTD=0",
+    "OPENTHREAD_MTD=0",
+    "OPENTHREAD_RADIO=0",
+    "OPENTHREAD_MDNS=1",
   ]
 }
 
@@ -79,6 +91,11 @@ group("libopenthread-mtd") {
 group("libopenthread-radio") {
   public_deps = [ "include/openthread" ]
   deps = [ "src/core:libopenthread-radio" ]
+}
+
+group("libopenthread-mdns") {
+  public_deps = [ "include/openthread" ]
+  deps = [ "src/core:libopenthread-mdns" ]
 }
 
 group("libopenthread-cli-ftd") {

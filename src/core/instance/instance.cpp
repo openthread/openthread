@@ -40,8 +40,8 @@
 
 namespace ot {
 
-#if (OPENTHREAD_FTD + OPENTHREAD_MTD + OPENTHREAD_RADIO) != 1
-#error "Exactly one of {OPENTHREAD_FTD, OPENTHREAD_MTD, OPENTHREAD_RADIO} MUST be set"
+#if (OPENTHREAD_FTD + OPENTHREAD_MTD + OPENTHREAD_RADIO + OPENTHREAD_MDNS) != 1
+#error "Exactly one of {OPENTHREAD_FTD, OPENTHREAD_MTD, OPENTHREAD_RADIO, OPENTHREAD_MDNS} MUST be set"
 #endif
 
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
@@ -61,14 +61,13 @@ static uint64_t gMultiInstanceRaw[MULTI_INSTANCE_SIZE];
 
 #endif
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
-#if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_MDNS) && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 OT_DEFINE_ALIGNED_VAR(sHeapRaw, sizeof(Utils::Heap), uint64_t);
 Utils::Heap *Instance::sHeap{nullptr};
 #endif
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_MDNS) && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 bool Instance::sDnsNameCompressionEnabled = true;
-#endif
 #endif
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
@@ -80,19 +79,23 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     , mTimerMicroScheduler(*this)
 #endif
-    , mRadio(*this)
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
     , mUptime(*this)
+#endif
+#if OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO
+    , mRadio(*this)
 #endif
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     , mOtns(*this)
 #endif
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_MDNS
+    , mMessagePool(*this)
+#endif
+#if OPENTHREAD_MTD || OPENTHREAD_FTD // -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- -
     , mNotifier(*this)
     , mTimeTicker(*this)
     , mSettings(*this)
     , mSettingsDriver(*this)
-    , mMessagePool(*this)
 #if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE || OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
     // DNS-SD (mDNS) platform is initialized early to
     // allow other modules to use it.
@@ -284,18 +287,23 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     , mNat64Translator(*this)
 #endif
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
-#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - --
+#if OPENTHREAD_RADIO || ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_LINK_RAW_ENABLE)
     , mLinkRaw(*this)
 #endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     , mExtension(Extension::ExtensionBase::Init(*this))
 #endif
+#if OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     , mDiags(*this)
 #endif
 #if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
     , mPowerCalibration(*this)
+#endif
+#endif
+#if OPENTHREAD_MDNS
+    , mMdnsCore(*this)
 #endif
     , mIsInitialized(false)
     , mId(Random::NonCrypto::GetUint32())
@@ -310,7 +318,7 @@ Instance::Instance(void)
 #endif
 }
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_MDNS) && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 Utils::Heap &Instance::GetHeap(void)
 {
     if (nullptr == sHeap)
@@ -398,6 +406,8 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
+#if !OPENTHREAD_MDNS
+
 void Instance::Reset(void) { otPlatReset(this); }
 
 #if OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE
@@ -411,6 +421,8 @@ void Instance::ResetRadioStack(void)
     mLinkRaw.Init();
 }
 #endif
+
+#endif // !OPENTHREAD_MDNS
 
 void Instance::AfterInit(void)
 {
@@ -454,7 +466,9 @@ void Instance::Finalize(void)
     Get<Settings>().Deinit();
 #endif
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_RADIO
     IgnoreError(Get<Mac::SubMac>().Disable());
+#endif
 
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 

@@ -31,7 +31,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+#if ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE) || OPENTHREAD_MDNS
 
 #include <openthread/mdns.h>
 #include <openthread/platform/mdns_socket.h>
@@ -52,8 +52,10 @@
 #include "common/timer.hpp"
 #include "net/dns_types.hpp"
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF && !OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 #error "OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF requires OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE"
+#endif
 #endif
 
 /**
@@ -204,7 +206,7 @@ public:
      */
     bool IsEnabled(void) const { return mIsEnabled; }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     /**
      * Enables or disables the mDNS auto-enable mode.
      *
@@ -231,7 +233,7 @@ public:
      */
     bool GetAutoEnableMode(void) const { return mAutoEnable; }
 
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif // (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
     /**
      * Gets the local host name.
@@ -2365,8 +2367,10 @@ private:
     static const char kSubServiceLabel[];     // "_sub"
     static const char kServicesDnssdLabels[]; // "_services._dns-sd._udp"
 
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    bool mAutoEnable;
+#endif
     bool                     mIsEnabled;
-    bool                     mAutoEnable;
     bool                     mIsQuestionUnicastAllowed;
     uint16_t                 mMaxMessageSize;
     uint32_t                 mInfraIfIndex;
@@ -2437,6 +2441,6 @@ DefineCoreType(otPlatMdnsAddressInfo, Dns::Multicast::Core::AddressInfo);
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+#endif // ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE) || OPENTHREAD_MDNS
 
 #endif // MULTICAST_DNS_HPP_

@@ -70,7 +70,7 @@ static otError ProcessExit(void *aContext, uint8_t aArgsLength, char *aArgs[])
     exit(EXIT_SUCCESS);
 }
 
-#if OPENTHREAD_EXAMPLES_SIMULATION
+#if OPENTHREAD_EXAMPLES_SIMULATION && (OPENTHREAD_FTD || OPENTHREAD_MTD)
 extern otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 extern otError ProcessTrelTest(void *aContext, uint8_t aArgsLength, char *aArgs[]);
@@ -79,7 +79,7 @@ extern otError ProcessTrelTest(void *aContext, uint8_t aArgsLength, char *aArgs[
 
 static const otCliCommand kCommands[] = {
     {"exit", ProcessExit},
-#if OPENTHREAD_EXAMPLES_SIMULATION
+#if OPENTHREAD_EXAMPLES_SIMULATION && (OPENTHREAD_MTD || OPENTHREAD_FTD)
     /*
      * The CLI command `nodeidfilter` only works for simulation in real time.
      *

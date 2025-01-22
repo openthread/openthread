@@ -1333,6 +1333,7 @@ public:
      */
     void SetLinkSecurityEnabled(bool aEnabled) { GetMetadata().mLinkSecurity = aEnabled; }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     /**
      * Updates the average RSS (Received Signal Strength) associated with the message by adding the given
      * RSS value to the average. Note that a message can be composed of multiple 802.15.4 data frame fragments each
@@ -1403,6 +1404,7 @@ public:
      * @param[in] aLinkInfo   The `ThreadLinkInfo` instance from which to set message's related properties.
      */
     void UpdateLinkInfoFrom(const ThreadLinkInfo &aLinkInfo);
+#endif
 
     /**
      * Indicates whether or not the message is also used for time sync purpose.

@@ -169,6 +169,7 @@ public:
      */
     Error AppendBytes(const void *aBuffer, uint16_t aLength);
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_RADIO
     /**
      * Appends a given `Mac::Address` to the `FrameBuilder`.
      *
@@ -178,6 +179,7 @@ public:
      * @retval kErrorNoBufs  Insufficient available buffers.
      */
     Error AppendMacAddress(const Mac::Address &aMacAddress);
+#endif
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**

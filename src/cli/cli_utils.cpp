@@ -158,7 +158,7 @@ void Utils::OutputUint64Line(uint64_t aUint64)
 
 void Utils::OutputEnabledDisabledStatus(bool aEnabled) { OutputLine(aEnabled ? "Enabled" : "Disabled"); }
 
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_MDNS
 
 void Utils::OutputIp6Address(const otIp6Address &aAddress)
 {
@@ -301,7 +301,7 @@ const char *Utils::PercentageToString(uint16_t aValue, PercentageStringBuffer &a
     return aBuffer.mChars;
 }
 
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_MDNS
 
 void Utils::OutputFormatV(const char *aFormat, va_list aArguments) { mImplementer.OutputV(aFormat, aArguments); }
 

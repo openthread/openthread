@@ -86,18 +86,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_SIMULATION_MDNS_SOCKET_IMPLEMENT_POSIX
- *
- * Define as 1 for the simulation platform to provide a simplified implementation of `otPlatMdns` APIs using posix
- * socket.
- *
- * This is intended for testing of the OpenThread Multicast DNS (mDNS) module.
- */
-#ifndef OPENTHREAD_SIMULATION_MDNS_SOCKET_IMPLEMENT_POSIX
-#define OPENTHREAD_SIMULATION_MDNS_SOCKET_IMPLEMENT_POSIX 0
-#endif
-
-/**
  * @def OPENTHREAD_SIMULATION_IMPLMENT_INFRA_IF
  *
  * Define as 1 for the simulation platform to provide implementation of `otPlatInfra` APIs.
@@ -113,4 +101,11 @@
  */
 #ifndef OPENTHREAD_SIMULATION_IMPLEMENT_DNSSD
 #define OPENTHREAD_SIMULATION_IMPLEMENT_DNSSD 1
+#endif
+
+//----------------------------------------------------------------------------------------------------------------------
+// Deprecated/Removed simulation configs
+
+#ifdef OPENTHREAD_SIMULATION_MDNS_SOCKET_IMPLEMENT_POSIX
+#error "OPENTHREAD_SIMULATION_MDNS_SOCKET_IMPLEMENT_POSIX is removed and replaced with `examples/platforms/posix_mdns`"
 #endif

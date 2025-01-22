@@ -51,6 +51,7 @@ main()
     gn args gn-out --list
     ninja -C gn-out
     test -f gn-out/obj/src/core/libopenthread-ftd.a
+    test -f gn-out/obj/src/core/libopenthread-mdns.a
 }
 
 main "$@"
