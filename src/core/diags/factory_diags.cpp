@@ -343,8 +343,12 @@ Error Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
         VerifyOrExit(IsChannelValid(channel), error = kErrorInvalidArgs);
 
         mChannel = channel;
-        IgnoreError(Get<Radio>().Receive(mChannel));
         otPlatDiagChannelSet(mChannel);
+
+        if (!mIsSleepOn)
+        {
+            IgnoreError(Get<Radio>().Receive(mChannel));
+        }
     }
 
 exit:
@@ -620,6 +624,7 @@ Error Diags::RadioReceive(void)
     SuccessOrExit(error = Get<Radio>().SetTransmitPower(mTxPower));
     otPlatDiagChannelSet(mChannel);
     otPlatDiagTxPowerSet(mTxPower);
+    mIsSleepOn = false;
 
 exit:
     return error;
@@ -634,6 +639,7 @@ Error Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[])
     if (StringMatch(aArgs[0], "sleep"))
     {
         SuccessOrExit(error = Get<Radio>().Sleep());
+        mIsSleepOn = true;
     }
     else if (StringMatch(aArgs[0], "receive"))
     {
@@ -860,6 +866,11 @@ void Diags::TransmitDone(Error aError)
 {
     VerifyOrExit(mDiagSendOn);
     mDiagSendOn = false;
+
+    if (mIsSleepOn)
+    {
+        IgnoreError(Get<Radio>().Sleep());
+    }
 
     switch (aError)
     {
