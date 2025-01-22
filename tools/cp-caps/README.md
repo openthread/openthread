@@ -54,7 +54,7 @@ Show help info.
 
 ```bash
 $ python3 ./tools/cp-caps/rcp_caps_test.py -h
-usage: rcp_caps_test.py [-h] [-c] [-l] [-d] [-f] [-p] [-t] [-v] [-D]
+usage: rcp_caps_test.py [-h] [-c] [-l] [-d] [-f] [-p] [-t] [-T] [-v] [-D]
 
 This script is used for testing RCP capabilities.
 
@@ -66,6 +66,7 @@ options:
   -f, --frame-format   test whether the RCP supports 802.15.4 frames of all formats
   -p, --data-poll      test whether the RCP supports data poll
   -t, --throughput     test Thread network 1-hop throughput
+  -T, --tx-info        test mTxInfo field of the radio frame
   -v, --version        output version
   -D, --debug          output debug information
 
@@ -220,4 +221,20 @@ TX ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie[csl
 RX ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie[csl],plen:0 ----------- OK
 TX ver:2015,Data,noseq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0 ----------- OK
 RX ver:2015,Data,noseq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0 ----------- OK
+```
+
+### Test mTxInfo field of the radio frame.
+
+The option `-T` or `--tx-info` tests whether the RCP supports the mTxInfo field of the radio frame.
+
+```bash
+$ DUT_ADB_USB=1269UCKFZTAM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 ./tools/cp-caps/rcp_caps_test.py -T
+mIsSecurityProcessed=True -------------------------------- OK
+mIsSecurityProcessed=False ------------------------------- OK
+mTxDelayBaseTime=now,mTxDelay=500000 --------------------- OK
+mRxChannelAfterTxDone ------------------------------------ OK
+mCsmaCaEnabled=0 ----------------------------------------- OK
+mCsmaCaEnabled=1 ----------------------------------------- OK
+mMaxCsmaBackoffs=0 --------------------------------------- OK (6 ms)
+mMaxCsmaBackoffs=100 ------------------------------------- OK (560 ms)
 ```
