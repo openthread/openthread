@@ -56,6 +56,12 @@ set(COMMON_SOURCES
     cli_utils.cpp
 )
 
+set(MDNS_COMMON_SOURCES
+    cli.cpp
+    cli_mdns.cpp
+    cli_utils.cpp
+)
+
 set(OT_CLI_VENDOR_EXTENSION "" CACHE STRING "Path to CMake file to define and link cli vendor extension")
 if(OT_CLI_VENDOR_EXTENSION)
     set(OT_CLI_VENDOR_TARGET "" CACHE STRING "Name of vendor extension CMake target to link with cli app")
@@ -73,6 +79,10 @@ endif()
 
 if(OT_RCP)
     include(radio.cmake)
+endif()
+
+if(OT_MDNS_LIB)
+    include(mdns.cmake)
 endif()
 
 set_property(SOURCE cli_joiner.cpp

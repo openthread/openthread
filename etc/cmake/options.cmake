@@ -33,6 +33,7 @@ option(OT_APP_RCP "enable RCP app" ON)
 option(OT_FTD "enable FTD" ON)
 option(OT_MTD "enable MTD" ON)
 option(OT_RCP "enable RCP" ON)
+option(OT_MDNS_LIB "enable mDNS library" ON)
 
 option(OT_LINKER_MAP "generate .map files for example apps" ON)
 
@@ -42,6 +43,8 @@ message(STATUS OT_APP_RCP=${OT_APP_RCP})
 message(STATUS OT_FTD=${OT_FTD})
 message(STATUS OT_MTD=${OT_MTD})
 message(STATUS OT_RCP=${OT_RCP})
+message(STATUS OT_MDNS_LIB=${OT_MDNS_LIB})
+
 
 set(OT_CONFIG_VALUES
     ""
