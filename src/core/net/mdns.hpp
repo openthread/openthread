@@ -31,7 +31,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+#if ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE) || OPENTHREAD_MDNS
 
 #include <openthread/mdns.h>
 #include <openthread/platform/mdns_socket.h>
@@ -165,9 +165,9 @@ public:
      */
     bool IsEnabled(void) const { return mIsEnabled; }
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
     /**
-     * Notifies `AdvertisingProxy` that `InfraIf` state changed.
+     * Notifies mDNS core that `InfraIf` state changed.
      */
     void HandleInfraIfStateChanged(void);
 #endif
@@ -2203,6 +2203,6 @@ DefineCoreType(otPlatMdnsAddressInfo, Dns::Multicast::Core::AddressInfo);
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+#endif // ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE) || OPENTHREAD_MDNS
 
 #endif // MULTICAST_DNS_HPP_

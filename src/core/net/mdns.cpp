@@ -28,7 +28,7 @@
 
 #include "mdns.hpp"
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+#if ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE) || OPENTHREAD_MDNS
 
 #include "common/crc.hpp"
 #include "instance/instance.hpp"
@@ -119,13 +119,15 @@ Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex)
         mCacheTimer.Stop();
     }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     Get<Dnssd>().HandleMdnsCoreStateChange();
+#endif
 
 exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
 void Core::HandleInfraIfStateChanged(void)
 {
     IgnoreError(SetEnabled(Get<BorderRouter::InfraIf>().IsRunning(), Get<BorderRouter::InfraIf>().GetIfIndex()));
@@ -7177,6 +7179,6 @@ OT_TOOL_WEAK void otPlatMdnsSendUnicast(otInstance                  *aInstance,
     OT_UNUSED_VARIABLE(aAddress);
 }
 
-#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_MOCK_PLAT_APIS_ENABLE
+#endif // ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE) || OPENTHREAD_MDNS
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
