@@ -49,9 +49,7 @@
 #include "common/locator.hpp"
 #include "common/owned_ptr.hpp"
 #include "common/owning_list.hpp"
-#include "common/retain_ptr.hpp"
 #include "common/timer.hpp"
-#include "crypto/sha256.hpp"
 #include "net/dns_types.hpp"
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF && !OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -1432,24 +1430,29 @@ private:
     private:
         static constexpr uint32_t kExpireInterval = TimeMilli::SecToMsec(10); // in msec
 
-        typedef Crypto::Sha256::Hash Hash;
-
-        struct HashEntry : public LinkedListEntry<HashEntry>, public Heap::Allocatable<HashEntry>
+        struct MsgInfo : public Clearable<MsgInfo>, public Equatable<MsgInfo>
         {
-            bool Matches(const Hash &aHash) const { return aHash == mHash; }
-            bool Matches(const ExpireChecker &aExpireChecker) const { return mExpireTime <= aExpireChecker.mNow; }
+            void InitFrom(const Message &aMessage);
 
-            HashEntry *mNext;
-            Hash       mHash;
-            TimeMilli  mExpireTime;
+            uint16_t mMsgLength;
+            uint16_t mCrc16;
+            uint32_t mCrc32;
         };
 
-        static void CalculateHash(const Message &aMessage, Hash &aHash);
+        struct MsgEntry : public LinkedListEntry<MsgEntry>, public Heap::Allocatable<MsgEntry>
+        {
+            bool Matches(const MsgInfo &aInfo) const { return mInfo == aInfo; }
+            bool Matches(const ExpireChecker &aExpireChecker) const { return mExpireTime <= aExpireChecker.mNow; }
+
+            MsgEntry *mNext;
+            MsgInfo   mInfo;
+            TimeMilli mExpireTime;
+        };
 
         using TxMsgHistoryTimer = TimerMilliIn<Core, &Core::HandleTxMessageHistoryTimer>;
 
-        OwningList<HashEntry> mHashEntries;
-        TxMsgHistoryTimer     mTimer;
+        OwningList<MsgEntry> mMsgEntries;
+        TxMsgHistoryTimer    mTimer;
     };
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
