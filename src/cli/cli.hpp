@@ -112,12 +112,14 @@ class Interpreter : public OutputImplementer, public Utils
     friend class Dns;
     friend class Joiner;
     friend class LinkMetrics;
-    friend class Mdns;
     friend class MeshDiag;
     friend class NetworkData;
     friend class PingSender;
     friend class SrpClient;
     friend class SrpServer;
+#endif
+#if OPENTHREAD_CLI_MDNS_ENABLE
+    friend class Mdns;
 #endif
     friend void otCliPlatLogv(otLogLevel, otLogRegion, const char *, va_list);
     friend void otCliAppendResult(otError aError);
@@ -317,7 +319,7 @@ private:
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO) && OPENTHREAD_CONFIG_DIAG_ENABLE
     static void HandleDiagOutput(const char *aFormat, va_list aArguments, void *aContext);
     void        HandleDiagOutput(const char *aFormat, va_list aArguments);
 #endif
@@ -355,10 +357,6 @@ private:
 
 #if OPENTHREAD_CLI_DNS_ENABLE
     Dns mDns;
-#endif
-
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
-    Mdns mMdns;
 #endif
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -412,10 +410,15 @@ private:
 #if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
     MeshDiag mMeshDiag;
 #endif
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
     bool mLocateInProgress : 1;
+#endif
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+
+#if OPENTHREAD_CLI_MDNS_ENABLE
+    Mdns mMdns;
 #endif
 };
 

@@ -97,6 +97,7 @@ public:
      */
     void SetMessageId(uint16_t aMessageId) { mMessageId = BigEndian::HostSwap16(aMessageId); }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     /**
      * Sets the Message ID to a crypto-secure randomly generated number.
      *
@@ -104,6 +105,7 @@ public:
      * @retval  kErrorFailed   Could not generate random Message ID.
      */
     Error SetRandomMessageId(void);
+#endif
 
     /**
      * Defines types of DNS message.
