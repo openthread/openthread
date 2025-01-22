@@ -424,9 +424,9 @@ tcp_dropwithreset(struct ip6_hdr* ip6, struct tcphdr *th, struct tcpcb *tp, otIn
 
 /*
  * TCP input handling is split into multiple parts:
- *   tcp6_input is a thin wrapper around tcp_input for the extended
+ *   tcp6_input is a thin wrapper around tcplp_input for the extended
  *	ip6_protox[] call format in ip6_input
- *   tcp_input handles primary segment validation, inpcb lookup and
+ *   tcplp_input handles primary segment validation, inpcb lookup and
  *	SYN processing on listen sockets
  *   tcp_do_segment processes the ACK and text of the segment for
  *	establishing, established and closing connections
@@ -435,7 +435,7 @@ tcp_dropwithreset(struct ip6_hdr* ip6, struct tcphdr *th, struct tcpcb *tp, otIn
    tcp_input(struct mbuf **mp, int *offp, int proto) */
 /* NOTE: tcp_fields_to_host(th) must be called before this function is called. */
 int
-tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* tp, struct tcpcb_listen* tpl,
+tcplp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* tp, struct tcpcb_listen* tpl,
           struct tcplp_signals* sig)
 {
 	/*
@@ -830,7 +830,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 		tp->snd_wl1 = th->th_seq;
 		/*
 		 * samkumar: We remove the "+ 1"s below since we use
-		 * tcp_output to send the appropriate SYN-ACK. For
+		 * tcplp_output to send the appropriate SYN-ACK. For
 		 * example, syncache_tfo_expand eliminates the "+ 1"s
 		 * too. My understanding is that syncache_socket has
 		 * the "+ 1"s because it's normally called once the
@@ -959,7 +959,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 			tp->t_flags |= TF_ACKNOW; // samkumar: my addition
 		}
 
-		tcp_output(tp); // to send the SYN-ACK
+		tcplp_output(tp); // to send the SYN-ACK
 
 		tp->accepted_from = tpl;
 		return (IPPROTO_DONE);
@@ -1175,12 +1175,12 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 				else
 					/*
 					 * samkumar: The original code here would set
-					 * mss to either TCP6_MSS or TCP_MSS depending
+					 * mss to either TCP6_MAXSS or TCP_MAXSS depending
 					 * on whether the INP_IPV6 flag is present in
 					 * tp->t_inpcb->inp_vflag. In TCPlp, we always
 					 * assume IPv6.
 					 */
-					mss = TCP6_MSS;
+					mss = TCP6_MAXSS;
 				tcp_fastopen_update_cache(tp, mss,
 				    to.to_tfo_len, to.to_tfo_cookie);
 			} else
@@ -1312,7 +1312,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 				 * using current (possibly backed-off) value.
 				 * If process is waiting for space,
 				 * wakeup/selwakeup/signal.  If data
-				 * are ready to send, let tcp_output
+				 * are ready to send, let tcplp_output
 				 * decide between more output or persist.
 				 */
 
@@ -1335,7 +1335,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 				 * lbuf_used_space.
 				 */
 				if (lbuf_used_space(&tp->sendbuf))
-					(void) tcp_output(tp);
+					(void) tcplp_output(tp);
 				goto check_delack;
 			}
 		} else if (th->th_ack == tp->snd_una &&
@@ -1456,7 +1456,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 				tp->t_flags |= TF_DELACK;
 			} else {
 				tp->t_flags |= TF_ACKNOW;
-				tcp_output(tp);
+				tcplp_output(tp);
 			}
 			goto check_delack;
 		}
@@ -1626,7 +1626,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 			tcp_timer_activate(tp, TT_REXMT, 0);
 			tcp_state_change(tp, TCPS_SYN_RECEIVED);
 			/*
-			 * samkumar: We would have incremented snd_next in tcp_output when
+			 * samkumar: We would have incremented snd_next in tcplp_output when
 			 * we sent the original SYN, so decrement it here. (Another
 			 * consequence of removing the SYN cache.)
 			 */
@@ -1734,7 +1734,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 					tcp_state_change(tp, TCPS_CLOSED);
 					/* FALLTHROUGH */
 				default:
-					tp = tcp_close(tp);
+					tp = tcp_close_tcb(tp);
 					tcplp_sys_connection_lost(tp, droperror);
 				}
 			} else {
@@ -2129,7 +2129,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 #ifdef INSTRUMENT_TCP
 					tcplp_sys_log("TCP DUPACK");
 #endif
-					(void) tcp_output(tp);
+					(void) tcplp_output(tp);
 					goto drop;
 				} else if (tp->t_dupacks == tcprexmtthresh) {
 					tcp_seq onxt = tp->snd_nxt;
@@ -2165,13 +2165,13 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 					if (tp->t_flags & TF_SACK_PERMIT) {
 						tp->sack_newdata = tp->snd_nxt;
 						tp->snd_cwnd = tp->t_maxseg;
-						(void) tcp_output(tp);
+						(void) tcplp_output(tp);
 						goto drop;
 					}
 
 					tp->snd_nxt = th->th_ack;
 					tp->snd_cwnd = tp->t_maxseg;
-					(void) tcp_output(tp);
+					(void) tcplp_output(tp);
 					/*
 					 * samkumar: I added casts to uint64_t below to
 					 * fix an OpenThread code scanning alert relating
@@ -2220,7 +2220,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 					    (tp->t_dupacks - tp->snd_limited) *
 					    tp->t_maxseg;
 					/*
-					 * Only call tcp_output when there
+					 * Only call tcplp_output when there
 					 * is new data available to be sent.
 					 * Otherwise we would send pure ACKs.
 					 */
@@ -2231,7 +2231,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 					avail = lbuf_used_space(&tp->sendbuf) -
 					    (tp->snd_nxt - tp->snd_una);
 					if (avail > 0)
-						(void) tcp_output(tp);
+						(void) tcplp_output(tp);
 					sent = tp->snd_max - oldsndmax;
 					if (sent > tp->t_maxseg) {
 						KASSERT((tp->t_dupacks == 2 &&
@@ -2478,7 +2478,7 @@ process_ACK:
 		 */
 		case TCPS_LAST_ACK:
 			if (ourfinisacked) {
-				tp = tcp_close(tp);
+				tp = tcp_close_tcb(tp);
 				tcplp_sys_connection_lost(tp, CONN_LOST_NORMAL);
 				goto drop;
 			}
@@ -2721,7 +2721,7 @@ step6:
 	 * Return any desired output.
 	 */
 	if (needoutput || (tp->t_flags & TF_ACKNOW))
-		(void) tcp_output(tp);
+		(void) tcplp_output(tp);
 
 check_delack:
 	if (tp->t_flags & TF_DELACK) {
@@ -2754,7 +2754,7 @@ dropafterack:
 	}
 
 	tp->t_flags |= TF_ACKNOW;
-	(void) tcp_output(tp);
+	(void) tcplp_output(tp);
 	return;
 
 dropwithreset:
@@ -3111,7 +3111,7 @@ tcp_mss_update(struct tcpcb *tp, int offer, int mtuoffer,
 	 * Sanity check: make sure that maxopd will be large
 	 * enough to allow some data on segments even if the
 	 * all the option space is used (40bytes).  Otherwise
-	 * funny things may happen in tcp_output.
+	 * funny things may happen in tcplp_output.
 	 */
 	/*
 	 * samkumar: When I was experimenting with different MSS values, I had
@@ -3258,7 +3258,7 @@ tcp_newreno_partial_ack(struct tcpcb *tp, struct tcphdr *th)
 #ifdef INSTRUMENT_TCP
 	tcplp_sys_log("TCP Partial_ACK");
 #endif
-	(void) tcp_output(tp);
+	(void) tcplp_output(tp);
 	tp->snd_cwnd = ocwnd;
 	if (SEQ_GT(onxt, tp->snd_nxt))
 		tp->snd_nxt = onxt;

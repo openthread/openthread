@@ -140,8 +140,8 @@ struct tcphdr {
  *
  * We use explicit numerical definition here to avoid header pollution.
  */
-#define	TCP_MSS		536
-#define	TCP6_MSS	1220
+#define	TCP_MAXSS   536
+#define	TCP6_MAXSS  1220
 
 /*
  * Limit the lowest MSS we accept for path MTU discovery and the TCP SYN MSS
