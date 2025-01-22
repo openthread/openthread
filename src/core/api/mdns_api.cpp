@@ -33,7 +33,20 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
+#ifdef OPENTHREAD_CONFIG_ENABLE_MDNS_API
+#error "OPENTHREAD_CONFIG_ENABLE_MDNS_API MUST not be defined directly. It is derived from other configs"
+#endif
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#define OPENTHREAD_CONFIG_ENABLE_MDNS_API \
+    (OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE)
+#elif OPENTHREAD_MDNS
+#define OPENTHREAD_CONFIG_ENABLE_MDNS_API 1
+#else
+#define OPENTHREAD_CONFIG_ENABLE_MDNS_API 0
+#endif
+
+#if OPENTHREAD_CONFIG_ENABLE_MDNS_API
 
 #include "instance/instance.hpp"
 
@@ -158,18 +171,18 @@ otError otMdnsGetNextKey(otInstance *aInstance, otMdnsIterator *aIterator, otMdn
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
-otError otMdnsStartBrowser(otInstance *aInstance, const otMdnsBrowser *aBroswer)
+otError otMdnsStartBrowser(otInstance *aInstance, const otMdnsBrowser *aBrowser)
 {
-    AssertPointerIsNotNull(aBroswer);
+    AssertPointerIsNotNull(aBrowser);
 
-    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StartBrowser(*aBroswer);
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StartBrowser(*aBrowser);
 }
 
-otError otMdnsStopBrowser(otInstance *aInstance, const otMdnsBrowser *aBroswer)
+otError otMdnsStopBrowser(otInstance *aInstance, const otMdnsBrowser *aBrowser)
 {
-    AssertPointerIsNotNull(aBroswer);
+    AssertPointerIsNotNull(aBrowser);
 
-    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StopBrowser(*aBroswer);
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StopBrowser(*aBrowser);
 }
 
 otError otMdnsStartSrvResolver(otInstance *aInstance, const otMdnsSrvResolver *aResolver)
@@ -318,4 +331,4 @@ otError otMdnsGetNextRecordQuerier(otInstance          *aInstance,
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
-#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
+#endif // OPENTHREAD_CONFIG_ENABLE_MDNS_API
