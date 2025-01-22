@@ -80,6 +80,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_RADIO
 Error FrameBuilder::AppendMacAddress(const Mac::Address &aMacAddress)
 {
     Error error = kErrorNone;
@@ -103,6 +104,7 @@ Error FrameBuilder::AppendMacAddress(const Mac::Address &aMacAddress)
 exit:
     return error;
 }
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_RADIO
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 Error FrameBuilder::AppendBytesFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
