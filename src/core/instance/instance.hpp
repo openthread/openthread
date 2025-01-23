@@ -442,6 +442,23 @@ private:
     void AfterInit(void);
 #endif
 
+    //-----------------------------------------------------------------------------------------------------------------
+    // `static` variables
+
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+    static LogLevel sLogLevel;
+#endif
+
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    static Utils::Heap *sHeap;
+#endif
+
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    static bool sDnsNameCompressionEnabled;
+#endif
+
+    //-----------------------------------------------------------------------------------------------------------------
+
     // Order of variables (their initialization in `Instance`)
     // is important.
     //
@@ -457,11 +474,8 @@ private:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // Random::Manager is initialized before other objects. Note that it
     // requires MbedTls which itself may use Heap.
-#if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-    static Utils::Heap *sHeap;
-#endif
     Crypto::MbedTls mMbedTls;
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+#endif
 
     Random::Manager mRandomManager;
 
@@ -720,10 +734,6 @@ private:
     Mac::LinkRaw mLinkRaw;
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
-    static LogLevel sLogLevel;
-#endif
-
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     Extension::ExtensionBase &mExtension;
 #endif
@@ -736,10 +746,6 @@ private:
 #endif
 
     bool mIsInitialized;
-
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
-    static bool sDnsNameCompressionEnabled;
-#endif
 
     uint32_t mId;
 };
