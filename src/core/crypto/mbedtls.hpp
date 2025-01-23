@@ -86,7 +86,7 @@ public:
      */
     static Error MapError(int aMbedTlsError);
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
      * Fills a given buffer with cryptographically secure random bytes.
      *
