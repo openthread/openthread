@@ -57,6 +57,8 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+
 void Storage::KeyRefManager::DestroyPersistentKeys(void)
 {
     DestroyKey(KeyRefFor(kNetworkKey));
@@ -67,6 +69,8 @@ void Storage::KeyRefManager::DestroyPersistentKeys(void)
     DestroyKey(KeyRefFor(kPendingDatasetPskc));
     DestroyKey(KeyRefFor(kEcdsa));
 }
+
+#endif
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 

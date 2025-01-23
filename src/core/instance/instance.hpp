@@ -465,10 +465,6 @@ private:
 
     Random::Manager mRandomManager;
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    Crypto::Storage::KeyRefManager mCryptoStorageKeyRefManager;
-#endif
-
     // Radio is initialized before other member variables
     // (particularly, SubMac and Mac) to allow them to use its methods
     // from their constructor.
@@ -492,6 +488,10 @@ private:
     // DNS-SD (mDNS) platform is initialized early to
     // allow other modules to use it.
     Dnssd mDnssd;
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    Crypto::Storage::KeyRefManager mCryptoStorageKeyRefManager;
 #endif
 
     Ip6::Ip6    mIp6;

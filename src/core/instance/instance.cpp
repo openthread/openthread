@@ -76,9 +76,6 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     , mTimerMicroScheduler(*this)
 #endif
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    , mCryptoStorageKeyRefManager(*this)
-#endif
     , mRadio(*this)
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
     , mUptime(*this)
@@ -93,6 +90,9 @@ Instance::Instance(void)
     // DNS-SD (mDNS) platform is initialized early to
     // allow other modules to use it.
     , mDnssd(*this)
+#endif
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    , mCryptoStorageKeyRefManager(*this)
 #endif
     , mIp6(*this)
     , mThreadNetif(*this)
