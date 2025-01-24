@@ -65,6 +65,10 @@ otInstance *otInstanceInitMultiple(uint8_t aIdx)
 
     return instance;
 }
+uint8_t otInstanceGetIdx(otInstance *aInstance)
+{
+    return Instance::GetIdx(reinterpret_cast<Instance *>(aInstance));
+}
 #endif // OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
 otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
 {
