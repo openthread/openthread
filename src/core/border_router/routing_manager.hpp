@@ -804,10 +804,10 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    void HandleRxRaTrackerSignalTask(void) { mRxRaTracker.HandleSignalTask(); }
-    void HandleRxRaTrackerExpirationTimer(void) { mRxRaTracker.HandleExpirationTimer(); }
-    void HandleRxRaTrackerStaleTimer(void) { mRxRaTracker.HandleStaleTimer(); }
-    void HandleRxRaTrackerRouterTimer(void) { mRxRaTracker.HandleRouterTimer(); }
+    void HandleRxRaTrackerSignalTask(void);
+    void HandleRxRaTrackerExpirationTimer(void);
+    void HandleRxRaTrackerStaleTimer(void);
+    void HandleRxRaTrackerRouterTimer(void);
 
     class RxRaTracker : public InstanceLocator
     {
@@ -1144,7 +1144,7 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    void HandleOnLinkPrefixManagerTimer(void) { mOnLinkPrefixManager.HandleTimer(); }
+    void HandleOnLinkPrefixManagerTimer(void);
 
     class OnLinkPrefixManager : public InstanceLocator
     {
@@ -1215,7 +1215,7 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    void HandleRioAdvertiserimer(void) { mRioAdvertiser.HandleTimer(); }
+    void HandleRioAdvertiserimer(void);
 
     class RioAdvertiser : public InstanceLocator
     {
@@ -1278,7 +1278,7 @@ private:
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
-    void HandleNat64PrefixManagerTimer(void) { mNat64PrefixManager.HandleTimer(); }
+    void HandleNat64PrefixManagerTimer(void);
 
     class Nat64PrefixManager : public InstanceLocator
     {
@@ -1326,7 +1326,7 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    void HandleRoutePublisherTimer(void) { mRoutePublisher.HandleTimer(); }
+    void HandleRoutePublisherTimer(void);
 
     class RoutePublisher : public InstanceLocator // Manages the routes that are published in net data
     {
@@ -1411,7 +1411,7 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    void HandleRsSenderTimer(void) { mRsSender.HandleTimer(); }
+    void HandleRsSenderTimer(void);
 
     class RsSender : public InstanceLocator
     {

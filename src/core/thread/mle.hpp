@@ -1126,7 +1126,7 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    void HandleDelayedSenderTimer(void) { mDelayedSender.HandleTimer(); }
+    void HandleDelayedSenderTimer(void);
 
     class DelayedSender : public InstanceLocator
     {
@@ -1253,7 +1253,7 @@ private:
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-    void HandleParentSearchTimer(void) { mParentSearch.HandleTimer(); }
+    void HandleParentSearchTimer(void);
 
     class ParentSearch : public InstanceLocator
     {
