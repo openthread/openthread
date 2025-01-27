@@ -156,6 +156,7 @@ Error Joiner::Start(const char      *aPskd,
     }
     else
     {
+        SetIdFromIeeeEui64();
         SteeringData::CalculateHashBitIndexes(mId, filterIndexes);
     }
 
