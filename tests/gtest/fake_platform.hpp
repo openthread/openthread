@@ -34,6 +34,8 @@
 #include <map>
 #include <vector>
 
+#define OT_INCLUDE_COMMON_NEW_HPP_
+
 #include <inttypes.h>
 
 #include <openthread/error.h>
