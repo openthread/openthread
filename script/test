@@ -670,6 +670,10 @@ envsetup()
     readonly VIRTUAL_TIME
     export OT_NODE_TYPE VIRTUAL_TIME
 
+    if [[ ${VIRTUAL_TIME} == 1 ]]; then
+        export OT_VT_USE_UNIX_SOCKET=1
+    fi
+
     # CMake always works in verbose mode if VERBOSE exists in environments.
     if [[ ${VERBOSE} == 1 ]]; then
         export VERBOSE
