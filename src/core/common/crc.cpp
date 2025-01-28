@@ -28,61 +28,65 @@
 
 /**
  * @file
- *   This file includes definitions for CRC16 computations.
+ *   This file implements CRC16 computations.
  */
 
-#ifndef CRC16_HPP_
-#define CRC16_HPP_
-
-#include "openthread-core-config.h"
-
-#include <stdint.h>
+#include "crc.hpp"
 
 namespace ot {
 
-/**
- * Implements CRC16 computations.
- */
-class Crc16
+template <typename UintType> UintType CrcCalculator<UintType>::FeedByte(uint8_t aByte)
 {
-public:
-    enum Polynomial : uint16_t
+    static constexpr UintType kMsb      = kIsUint16 ? (1u << 15) : (1u << 31);
+    static constexpr uint8_t  kBitShift = kIsUint16 ? 8 : 24;
+
+    mCrc ^= (static_cast<UintType>(aByte) << kBitShift);
+
+    for (uint8_t i = 8; i > 0; i--)
     {
-        kCcitt = 0x1021, ///< CRC16_CCITT
-        kAnsi  = 0x8005, ///< CRC16-ANSI
-    };
+        bool msbIsSet = (mCrc & kMsb);
 
-    /**
-     * Initializes the object.
-     *
-     * @param[in]  aPolynomial  The polynomial value.
-     */
-    explicit Crc16(Polynomial aPolynomial);
+        mCrc <<= 1;
 
-    /**
-     * Initializes the CRC16 computation.
-     */
-    void Init(void) { mCrc = 0; }
+        if (msbIsSet)
+        {
+            mCrc ^= mPolynomial;
+        }
+    }
 
-    /*c*
-     * Feeds a byte value into the CRC16 computation.
-     *
-     * @param[in]  aByte  The byte value.
-     */
-    void Update(uint8_t aByte);
+    return mCrc;
+}
 
-    /**
-     * Gets the current CRC16 value.
-     *
-     * @returns The current CRC16 value.
-     */
-    uint16_t Get(void) const { return mCrc; }
+template <typename UintType> UintType CrcCalculator<UintType>::FeedBytes(const void *aBytes, uint16_t aLength)
+{
+    const uint8_t *bytes = reinterpret_cast<const uint8_t *>(aBytes);
 
-private:
-    uint16_t mPolynomial;
-    uint16_t mCrc;
-};
+    while (aLength-- > 0)
+    {
+        FeedByte(*bytes++);
+    }
+
+    return mCrc;
+}
+
+template <typename UintType>
+UintType CrcCalculator<UintType>::Feed(const Message &aMessage, const OffsetRange &aOffsetRange)
+{
+    uint16_t       length = aOffsetRange.GetLength();
+    Message::Chunk chunk;
+
+    aMessage.GetFirstChunk(aOffsetRange.GetOffset(), length, chunk);
+
+    while (chunk.GetLength() > 0)
+    {
+        FeedBytes(chunk.GetBytes(), chunk.GetLength());
+        aMessage.GetNextChunk(length, chunk);
+    }
+
+    return mCrc;
+}
+
+template class CrcCalculator<uint16_t>;
+template class CrcCalculator<uint32_t>;
 
 } // namespace ot
-
-#endif // CRC16_HPP_
