@@ -51,6 +51,7 @@
 #include "net/dns_types.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
+#include "net/srp_coder.hpp"
 #include "net/udp6.hpp"
 #include "thread/network_data_service.hpp"
 
@@ -73,6 +74,7 @@ class Client : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
     friend class ot::Ip6::Netif;
+    friend class Coder;
 
     using DnsSrpUnicastInfo = NetworkData::Service::DnsSrpUnicastInfo;
     using DnsSrpUnicastType = NetworkData::Service::DnsSrpUnicastType;
@@ -657,6 +659,27 @@ public:
      */
     void ClearHostAndServices(void);
 
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+
+    /**
+     * Enables/Disables use of SRP coder to send coded SRP update message.
+     *
+     * @param[in] aEnable  TRUE to enable, FALSE to disable use of SRP coder.
+     *
+     */
+    void SetMessageCoderEnabled(bool aEnable) { mUseMessageCoder = aEnable; }
+
+    /**
+     * Indicates whether the use of SRP coder to send coded SRP update message is enabled or disabled.
+     *
+     * @retval   TRUE   If the use of SRP coder is enabled.
+     * @retval   FALSE  If the use of SRP coder is disabled
+     *
+     */
+    bool IsMessageCoderEnabled(void) const { return mUseMessageCoder; }
+
+#endif // OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+
 #if OPENTHREAD_CONFIG_SRP_CLIENT_DOMAIN_NAME_API_ENABLE
     /**
      * Gets the domain name being used by SRP client.
@@ -756,6 +779,9 @@ private:
 
     static constexpr uint16_t kUdpPayloadSize = Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
 
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    static constexpr bool kDefaultUseMessageCoder = OPENTHREAD_CONFIG_SRP_CODER_USE_BY_CLIENT_ENABLE;
+#endif
     // -------------------------------
     // Lease related constants
 
@@ -996,6 +1022,10 @@ private:
         uint16_t          mHostNameOffset;
         uint16_t          mRecordCount;
         KeyInfo           mKeyInfo;
+
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+        Coder::MsgEncoder mCodedMsg;
+#endif
     };
 
     Error        Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester);
@@ -1079,6 +1109,9 @@ private:
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     bool mServiceKeyRecordEnabled : 1;
     bool mUseShortLeaseOption : 1;
+#endif
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    bool mUseMessageCoder : 1;
 #endif
 
     uint16_t mNextMessageId;
