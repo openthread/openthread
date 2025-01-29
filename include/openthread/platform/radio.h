@@ -702,6 +702,10 @@ void otPlatRadioSetRxOnWhenIdle(otInstance *aInstance, bool aEnable);
  *
  * Is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
  *
+ * The radio platform should reset the current security MAC frame counter tracked by the radio on this call. While this
+ * is highly recommended, the OpenThread stack, as a safeguard, will also reset the frame counter using the
+ * `otPlatRadioSetMacFrameCounter()` before calling this API.
+ *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[in]   aKeyIdMode   The key ID mode.
  * @param[in]   aKeyId       Current MAC key index.
