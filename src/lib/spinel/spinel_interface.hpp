@@ -40,6 +40,13 @@
 #include "lib/spinel/radio_spinel_metrics.h"
 #include "lib/spinel/spinel.h"
 
+/**
+ * Weak/default spinel interface implementation to trigger hardware reset of the radio chip.
+ *
+ * Overwrite this to use platform-specific function to trigger hardware reset.
+ */
+extern "C" OT_TOOL_WEAK otError otSysResetRcpHardware(void) { return OT_ERROR_NOT_IMPLEMENTED; }
+
 namespace ot {
 namespace Spinel {
 
@@ -131,7 +138,7 @@ public:
      * @retval OT_ERROR_NONE            Successfully reset the RCP.
      * @retval OT_ERROR_NOT_IMPLEMENT   The hardware reset is not implemented.
      */
-    virtual otError HardwareReset(void) = 0;
+    virtual otError HardwareReset(void) { return otSysResetRcpHardware(); }
 
     /**
      * Returns the RCP interface metrics.
