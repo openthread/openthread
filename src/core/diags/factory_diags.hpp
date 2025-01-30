@@ -134,7 +134,12 @@ private:
     struct Stats : public Clearable<Stats>
     {
         uint32_t mReceivedPackets;
-        uint32_t mSentPackets;
+        uint32_t mSentSuccessPackets;
+        uint32_t mSentFailedPackets;
+        uint32_t mSentErrorCcaPackets;
+        uint32_t mSentErrorAbortPackets;
+        uint32_t mSentErrorInvalidStatePackets;
+        uint32_t mSentErrorOthersPackets;
         int8_t   mFirstRssi;
         uint8_t  mFirstLqi;
         int8_t   mLastRssi;
@@ -228,13 +233,13 @@ private:
     Error GetPowerSettings(uint8_t aChannel, PowerSettings &aPowerSettings);
     Error ParseReceiveConfigFormat(const char *aFormat, ReceiveConfig &aConfig);
     Error RadioReceive(void);
+    Error TransmitPacket(void);
     void  OutputReceivedFrame(const otRadioFrame *aFrame);
     bool  ShouldHandleReceivedFrame(const otRadioFrame &aFrame) const;
 
-    void TransmitPacket(void);
     void Output(const char *aFormat, ...);
-    void AppendErrorResult(Error aError);
     void ResetTxPacket(void);
+    void OutputStats(void);
 
     static bool IsChannelValid(uint8_t aChannel);
 
@@ -251,8 +256,10 @@ private:
     uint8_t       mTxLen;
     bool          mIsHeaderUpdated : 1;
     bool          mIsTxPacketSet : 1;
+    bool          mIsAsyncSend : 1;
     bool          mRepeatActive : 1;
     bool          mDiagSendOn : 1;
+    bool          mIsSleepOn : 1;
 #endif
 
     ReceiveConfig        mReceiveConfig;

@@ -68,11 +68,14 @@ Done
 Assigns a name (i.e. IPv6 address and port) to the example socket.
 
 - netif: the network interface to bind to.
-  - not specified: Thread network interface.
+  - not specified: Thread stack network interface.
   - `-u`: unspecified network interface.
   - `-b`: Backbone network interface.
+  - `-h`: Host Thread network interface.
 - ip: the unicast IPv6 address or the unspecified IPv6 address (`::`).
 - port: the UDP port
+
+> Note: the netif parameter values (-u, -b, -h) are only valid if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE is set.
 
 ```bash
 > udp bind :: 1234
@@ -80,6 +83,8 @@ Done
 > udp bind -u :: 1234
 Done
 > udp bind -b :: 1234
+Done
+> udp bind -h :: 1234
 Done
 ```
 

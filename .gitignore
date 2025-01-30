@@ -50,6 +50,7 @@ CTestTestfile.cmake
 ot-test-*
 ot_testing/
 Testing/
+tests/nexus/nexus_*
 
 # Misc
 DartConfiguration.tcl

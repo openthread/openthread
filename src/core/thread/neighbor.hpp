@@ -583,7 +583,7 @@ public:
      *
      * @returns The link quality in value.
      */
-    LinkQuality GetLinkQualityIn(void) const { return GetLinkInfo().GetLinkQuality(); }
+    LinkQuality GetLinkQualityIn(void) const { return GetLinkInfo().GetLinkQualityIn(); }
 
     /**
      * Generates a new challenge value for MLE Link Request/Response exchanges.

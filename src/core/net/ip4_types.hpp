@@ -620,27 +620,43 @@ public:
         void SetChecksum(uint16_t aChecksum) { mChecksum = BigEndian::HostSwap16(aChecksum); }
 
         /**
+         * Returns the ICMPv4 message ID for Echo Requests and Replies.
+         *
+         * @returns The ICMPv4 message ID.
+         */
+        uint16_t GetId(void) const { return BigEndian::HostSwap16(mData.m16[0]); }
+
+        /**
+         * Sets the ICMPv4 message ID for Echo Requests and Replies.
+         *
+         * @param[in]  aId  The ICMPv4 message ID.
+         */
+        void SetId(uint16_t aId) { mData.m16[0] = BigEndian::HostSwap16(aId); }
+
+        /**
          * Returns the rest of header field in the ICMP message.
          *
          * @returns The rest of header field in the ICMP message. The returned buffer has 4 octets.
          */
-        const uint8_t *GetRestOfHeader(void) const { return mRestOfHeader; }
+        const uint8_t *GetRestOfHeader(void) const { return mData.m8; }
 
         /**
          * Sets the rest of header field in the ICMP message.
          *
          * @param[in] aRestOfHeader The rest of header field in the ICMP message. The buffer should have 4 octets.
          */
-        void SetRestOfHeader(const uint8_t *aRestOfHeader)
-        {
-            memcpy(mRestOfHeader, aRestOfHeader, sizeof(mRestOfHeader));
-        }
+        void SetRestOfHeader(const uint8_t *aRestOfHeader) { memcpy(mData.m8, aRestOfHeader, sizeof(mData)); }
 
     private:
         uint8_t  mType;
         uint8_t  mCode;
         uint16_t mChecksum;
-        uint8_t  mRestOfHeader[4];
+        union OT_TOOL_PACKED_FIELD
+        {
+            uint8_t  m8[4];
+            uint16_t m16[2];
+            uint32_t m32[1];
+        } mData;
     } OT_TOOL_PACKED_END;
 };
 
@@ -651,6 +667,155 @@ static constexpr uint8_t kProtoIcmp = 1;              ///< ICMP for IPv4
 
 using Tcp = Ip6::Tcp; // TCP in IPv4 is the same as TCP in IPv6
 using Udp = Ip6::Udp; // UDP in IPv4 is the same as UDP in IPv6
+
+/**
+ * Represents parsed IPv4 header along with UDP/TCP/ICMP4 headers from a received message/frame.
+ */
+class Headers : private Clearable<Headers>
+{
+    friend class Clearable<Headers>;
+
+public:
+    /**
+     * Parses the IPv4 and UDP/TCP/ICMP4 headers from a given message.
+     *
+     * @param[in] aMessage   The message to parse the headers from.
+     *
+     * @retval kErrorNone    The headers are parsed successfully.
+     * @retval kErrorParse   Failed to parse the headers.
+     */
+    Error ParseFrom(const Message &aMessage);
+
+    /**
+     * Returns the IPv4 header.
+     *
+     * @returns The IPv4 header.
+     */
+    const Header &GetIp4Header(void) const { return mIp4Header; }
+
+    /**
+     * Returns the IP protocol number from IPv4 Protocol field.
+     *
+     * @returns The IP protocol number.
+     */
+    uint8_t GetIpProto(void) const { return mIp4Header.GetProtocol(); }
+
+    /**
+     * Returns the IPv4 header Total length value.
+     *
+     * @returns The IPv4 header Total length value.
+     */
+    uint8_t GetIpLength(void) const { return mIp4Header.GetTotalLength(); }
+
+    /**
+     * Returns the IPv4 TTL value.
+     *
+     * @returns The IPv4 TTL value.
+     */
+    uint8_t GetIpTtl(void) const { return mIp4Header.GetTtl(); }
+
+    /**
+     * Indicates if the protocol number from IPv4 header is UDP.
+     *
+     * @retval TRUE   If the protocol number in IPv4 header is UDP.
+     * @retval FALSE  If the protocol number in IPv4 header is not UDP.
+     */
+    bool IsUdp(void) const { return GetIpProto() == kProtoUdp; }
+
+    /**
+     * Indicates if the protocol number from IPv4 header is TCP.
+     *
+     * @retval TRUE   If the protocol number in IPv4 header is TCP.
+     * @retval FALSE  If the protocol number in IPv4 header is not TCP.
+     */
+    bool IsTcp(void) const { return GetIpProto() == kProtoTcp; }
+
+    /**
+     * Indicates if the protocol number from IPv4 header is ICMPv4.
+     *
+     * @retval TRUE   If the protocol number in IPv4 header is ICMPv4.
+     * @retval FALSE  If the protocol number in IPv4 header is not ICMPv4.
+     */
+    bool IsIcmp4(void) const { return GetIpProto() == kProtoIcmp; }
+
+    /**
+     * Returns the source IPv4 address from IPv4 header.
+     *
+     * @returns The source IPv4 address.
+     */
+    const Address &GetSourceAddress(void) const { return mIp4Header.GetSource(); }
+
+    /**
+     * Returns the destination IPv4 address from IPv4 header.
+     *
+     * @returns The destination IPv4 address.
+     */
+    const Address &GetDestinationAddress(void) const { return mIp4Header.GetDestination(); }
+
+    /**
+     * Returns the UDP header.
+     *
+     * MUST be used when `IsUdp() == true`. Otherwise its behavior is undefined
+     *
+     * @returns The UDP header.
+     */
+    const Udp::Header &GetUdpHeader(void) const { return mHeader.mUdp; }
+
+    /**
+     * Returns the TCP header.
+     *
+     * MUST be used when `IsTcp() == true`. Otherwise its behavior is undefined
+     *
+     * @returns The TCP header.
+     */
+    const Tcp::Header &GetTcpHeader(void) const { return mHeader.mTcp; }
+
+    /**
+     * Returns the ICMPv4 header.
+     *
+     * MUST be used when `IsIcmp4() == true`. Otherwise its behavior is undefined
+     *
+     * @returns The ICMPv4 header.
+     */
+    const Icmp::Header &GetIcmpHeader(void) const { return mHeader.mIcmp; }
+
+    /**
+     * Returns the source port number if the header is UDP or TCP, or zero otherwise
+     *
+     * @returns The source port number under UDP / TCP or zero.
+     */
+    uint16_t GetSourcePort(void) const;
+
+    /**
+     * Returns the destination port number if the header is UDP or TCP, or zero otherwise.
+     *
+     * @returns The destination port number under UDP / TCP or zero.
+     */
+    uint16_t GetDestinationPort(void) const;
+
+    /**
+     * Sets the destination port number if the header is UDP or TCP, does nothing otherwise
+     *
+     * @param[in]  aDstPort  The UDP / TCP destination Port.
+     */
+    void SetDestinationPort(uint16_t aDstPort);
+
+    /**
+     * Returns the checksum values from corresponding UDP, TCP, or ICMPv4 header.
+     *
+     * @returns The checksum value.
+     */
+    uint16_t GetChecksum(void) const;
+
+private:
+    Header mIp4Header;
+    union
+    {
+        Udp::Header  mUdp;
+        Tcp::Header  mTcp;
+        Icmp::Header mIcmp;
+    } mHeader;
+};
 
 /**
  * @}

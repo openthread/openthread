@@ -214,5 +214,121 @@ exit:
     return error;
 }
 
+//---------------------------------------------------------------------------------------------------------------------
+// Headers
+
+Error Headers::ParseFrom(const Message &aMessage)
+{
+    Error error = kErrorParse;
+
+    Clear();
+
+    SuccessOrExit(mIp4Header.ParseFrom(aMessage));
+
+    switch (mIp4Header.GetProtocol())
+    {
+    case kProtoUdp:
+        SuccessOrExit(aMessage.Read(sizeof(Header), mHeader.mUdp));
+        break;
+    case kProtoTcp:
+        SuccessOrExit(aMessage.Read(sizeof(Header), mHeader.mTcp));
+        break;
+    case kProtoIcmp:
+        SuccessOrExit(aMessage.Read(sizeof(Header), mHeader.mIcmp));
+        break;
+    default:
+        break;
+    }
+
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+uint16_t Headers::GetSourcePort(void) const
+{
+    uint16_t port = 0;
+
+    switch (GetIpProto())
+    {
+    case kProtoUdp:
+        port = mHeader.mUdp.GetSourcePort();
+        break;
+
+    case kProtoTcp:
+        port = mHeader.mTcp.GetSourcePort();
+        break;
+
+    default:
+        break;
+    }
+
+    return port;
+}
+
+uint16_t Headers::GetDestinationPort(void) const
+{
+    uint16_t port = 0;
+
+    switch (GetIpProto())
+    {
+    case kProtoUdp:
+        port = mHeader.mUdp.GetDestinationPort();
+        break;
+
+    case kProtoTcp:
+        port = mHeader.mTcp.GetDestinationPort();
+        break;
+
+    default:
+        break;
+    }
+
+    return port;
+}
+
+void Headers::SetDestinationPort(uint16_t aDstPort)
+{
+    switch (GetIpProto())
+    {
+    case kProtoUdp:
+        mHeader.mUdp.SetDestinationPort(aDstPort);
+        break;
+
+    case kProtoTcp:
+        mHeader.mTcp.SetDestinationPort(aDstPort);
+        break;
+
+    default:
+        break;
+    }
+}
+
+uint16_t Headers::GetChecksum(void) const
+{
+    uint16_t checksum = 0;
+
+    switch (GetIpProto())
+    {
+    case kProtoUdp:
+        checksum = mHeader.mUdp.GetChecksum();
+        break;
+
+    case kProtoTcp:
+        checksum = mHeader.mTcp.GetChecksum();
+        break;
+
+    case kProtoIcmp:
+        checksum = mHeader.mIcmp.GetChecksum();
+        break;
+
+    default:
+        break;
+    }
+
+    return checksum;
+}
+
 } // namespace Ip4
 } // namespace ot

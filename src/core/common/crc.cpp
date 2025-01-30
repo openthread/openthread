@@ -31,34 +31,62 @@
  *   This file implements CRC16 computations.
  */
 
-#include "crc16.hpp"
+#include "crc.hpp"
 
 namespace ot {
 
-Crc16::Crc16(Polynomial aPolynomial)
+template <typename UintType> UintType CrcCalculator<UintType>::FeedByte(uint8_t aByte)
 {
-    mPolynomial = static_cast<uint16_t>(aPolynomial);
-    Init();
-}
+    static constexpr UintType kMsb      = kIsUint16 ? (1u << 15) : (1u << 31);
+    static constexpr uint8_t  kBitShift = kIsUint16 ? 8 : 24;
 
-void Crc16::Update(uint8_t aByte)
-{
-    uint8_t i;
+    mCrc ^= (static_cast<UintType>(aByte) << kBitShift);
 
-    mCrc = mCrc ^ static_cast<uint16_t>(aByte << 8);
-    i    = 8;
-
-    do
+    for (uint8_t i = 8; i > 0; i--)
     {
-        if (mCrc & 0x8000)
+        bool msbIsSet = (mCrc & kMsb);
+
+        mCrc <<= 1;
+
+        if (msbIsSet)
         {
-            mCrc = static_cast<uint16_t>(mCrc << 1) ^ mPolynomial;
+            mCrc ^= mPolynomial;
         }
-        else
-        {
-            mCrc = static_cast<uint16_t>(mCrc << 1);
-        }
-    } while (--i);
+    }
+
+    return mCrc;
 }
+
+template <typename UintType> UintType CrcCalculator<UintType>::FeedBytes(const void *aBytes, uint16_t aLength)
+{
+    const uint8_t *bytes = reinterpret_cast<const uint8_t *>(aBytes);
+
+    while (aLength-- > 0)
+    {
+        FeedByte(*bytes++);
+    }
+
+    return mCrc;
+}
+
+template <typename UintType>
+UintType CrcCalculator<UintType>::Feed(const Message &aMessage, const OffsetRange &aOffsetRange)
+{
+    uint16_t       length = aOffsetRange.GetLength();
+    Message::Chunk chunk;
+
+    aMessage.GetFirstChunk(aOffsetRange.GetOffset(), length, chunk);
+
+    while (chunk.GetLength() > 0)
+    {
+        FeedBytes(chunk.GetBytes(), chunk.GetLength());
+        aMessage.GetNextChunk(length, chunk);
+    }
+
+    return mCrc;
+}
+
+template class CrcCalculator<uint16_t>;
+template class CrcCalculator<uint32_t>;
 
 } // namespace ot

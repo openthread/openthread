@@ -71,7 +71,7 @@ using namespace Crypto;
 #define OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
 #endif
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 static mbedtls_ctr_drbg_context sCtrDrbgContext;
 static mbedtls_entropy_context  sEntropyContext;
 #ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
@@ -147,7 +147,7 @@ exit:
     return error;
 }
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 // HMAC implementations
 OT_TOOL_WEAK otError otPlatCryptoHmacSha256Init(otCryptoContext *aContext)
@@ -660,7 +660,7 @@ exit:
 
 #endif // #if OPENTHREAD_CONFIG_ECDSA_ENABLE
 
-#endif // #if !OPENTHREAD_RADIO
+#endif // #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 #if OPENTHREAD_FTD
 
@@ -752,7 +752,7 @@ exit:
 
 #elif OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
 
 OT_TOOL_WEAK otError otPlatCryptoEcdsaGenerateKey(otPlatCryptoEcdsaKeyPair *aKeyPair)
@@ -795,7 +795,7 @@ OT_TOOL_WEAK otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *a
 }
 #endif // #if OPENTHREAD_CONFIG_ECDSA_ENABLE
 
-#endif // #if !OPENTHREAD_RADIO
+#endif // #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 #if OPENTHREAD_FTD
 

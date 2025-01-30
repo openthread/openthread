@@ -404,6 +404,10 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
             error = HandleSetActiveOperationalDataset(aIncomingMessage, offset, length);
             break;
 
+        case kTlvGetActiveOperationalDataset:
+            error = HandleGetActiveOperationalDataset(aOutgoingMessage, response);
+            break;
+
         case kTlvStartThreadInterface:
             error = HandleStartThreadInterface();
             break;
@@ -453,6 +457,9 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
             break;
         case kTlvRequestPskdHash:
             error = HandleRequestPskdHash(aIncomingMessage, aOutgoingMessage, offset, length, response);
+            break;
+        case kTlvGetCommissionerCertificate:
+            error = HandleGetCommissionerCertificate(aOutgoingMessage, response);
             break;
         default:
             error = kErrorInvalidCommand;
@@ -509,17 +516,22 @@ Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncomingMessa
     Dataset     dataset;
     OffsetRange offsetRange;
     Error       error;
+    uint8_t     buf[kCommissionerCertMaxLength];
+    size_t      bufLen = sizeof(buf);
 
     offsetRange.Init(aOffset, aLength);
     SuccessOrExit(error = dataset.SetFrom(aIncomingMessage, offsetRange));
     SuccessOrExit(error = dataset.ValidateTlvs());
 
-    if (!CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mApplicationFlags,
-                                             mDeviceAuthorizationField.mApplicationFlags, &dataset))
+    if (!CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mCommissioningFlags,
+                                             mDeviceAuthorizationField.mCommissioningFlags, &dataset))
     {
         error = kErrorRejected;
         ExitNow();
     }
+
+    SuccessOrExit(error = Get<Ble::BleSecure>().GetPeerCertificateDer(buf, &bufLen, bufLen));
+    Get<Settings>().SaveTcatCommissionerCertificate(buf, static_cast<uint16_t>(bufLen));
 
     Get<ActiveDatasetManager>().SaveLocal(dataset);
 
@@ -527,15 +539,73 @@ exit:
     return error;
 }
 
+Error TcatAgent::HandleGetActiveOperationalDataset(Message &aOutgoingMessage, bool &aResponse)
+{
+    Error         error = kErrorNone;
+    Dataset       dataset;
+    Dataset::Tlvs datasetTlvs;
+
+    if (!CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mCommissioningFlags,
+                                             mDeviceAuthorizationField.mCommissioningFlags, &dataset))
+    {
+        error = kErrorRejected;
+        ExitNow();
+    }
+
+    SuccessOrExit(error = Get<ActiveDatasetManager>().Read(datasetTlvs));
+    SuccessOrExit(
+        error = Tlv::AppendTlv(aOutgoingMessage, kTlvResponseWithPayload, datasetTlvs.mTlvs, datasetTlvs.mLength));
+    aResponse = true;
+
+exit:
+    return error;
+}
+
+Error TcatAgent::HandleGetCommissionerCertificate(Message &aOutgoingMessage, bool &aResponse)
+{
+    Error    error = kErrorNone;
+    Dataset  dataset;
+    uint8_t  buf[kCommissionerCertMaxLength];
+    uint16_t bufLen = sizeof(buf);
+
+    if (!CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mCommissioningFlags,
+                                             mDeviceAuthorizationField.mCommissioningFlags, &dataset))
+    {
+        error = kErrorRejected;
+        ExitNow();
+    }
+
+    VerifyOrExit(kErrorNone == Get<Settings>().ReadTcatCommissionerCertificate(buf, bufLen),
+                 error = kErrorInvalidState);
+    SuccessOrExit(error = Tlv::AppendTlv(aOutgoingMessage, kTlvResponseWithPayload, buf, bufLen));
+    aResponse = true;
+
+exit:
+    return error;
+}
+
 Error TcatAgent::HandleDecomission(void)
 {
-    Error error = kErrorNone;
+    Error         error = kErrorNone;
+    unsigned char buf[kCommissionerCertMaxLength];
+    size_t        bufLen = sizeof(buf);
+    Dataset       dataset;
+
+    if (!CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mDecommissioningFlags,
+                                             mDeviceAuthorizationField.mDecommissioningFlags, &dataset))
+    {
+        error = kErrorRejected;
+        ExitNow();
+    }
+
+    SuccessOrExit(error = Get<Ble::BleSecure>().GetPeerCertificateDer(buf, &bufLen, bufLen));
+    Get<Settings>().SaveTcatCommissionerCertificate(buf, static_cast<uint16_t>(bufLen));
 
     IgnoreReturnValue(otThreadSetEnabled(&GetInstance(), false));
     Get<ActiveDatasetManager>().Clear();
     Get<PendingDatasetManager>().Clear();
 
-    error = Get<Instance>().ErasePersistentInfo();
+    IgnoreReturnValue(Get<Instance>().ErasePersistentInfo());
 
 #if !OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     {
@@ -545,6 +615,7 @@ Error TcatAgent::HandleDecomission(void)
     }
 #endif
 
+exit:
     return error;
 }
 

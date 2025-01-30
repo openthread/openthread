@@ -143,7 +143,7 @@ public:
      */
     void Payload(void *aPlainText, void *aCipherText, uint32_t aLength, Mode aMode);
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
      * Processes the payload within a given message.
      *

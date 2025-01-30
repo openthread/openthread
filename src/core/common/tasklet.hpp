@@ -91,6 +91,7 @@ public:
 
     private:
         void PostTasklet(Tasklet &aTasklet);
+        void RemoveTasklet(Tasklet &aTasklet);
 
         Tasklet *mTail; // A circular singly linked-list
     };
@@ -121,6 +122,13 @@ public:
      * If the tasklet is already posted, no change is made and run queue stays as before.
      */
     void Post(void);
+
+    /**
+     * Removes the tasklet from the tasklet scheduler run queue.
+     *
+     * If the tasklet is not posted, no change is made and run queue stays as before.
+     */
+    void Unpost(void);
 
     /**
      * Indicates whether the tasklet is posted or not.

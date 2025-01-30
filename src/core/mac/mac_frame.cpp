@@ -41,7 +41,7 @@
 #include "common/log.hpp"
 #include "common/num_utils.hpp"
 #include "radio/trel_link.hpp"
-#if !OPENTHREAD_RADIO || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
 #include "crypto/aes_ccm.hpp"
 #endif
 

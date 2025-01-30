@@ -77,14 +77,11 @@ public:
     otError Process(Arg aArgs[]);
 
 private:
-    using Command = CommandEntry<Br>;
-
+    using Command    = CommandEntry<Br>;
     using PrefixType = uint8_t;
-    enum : PrefixType
-    {
-        kPrefixTypeLocal   = 1u << 0,
-        kPrefixTypeFavored = 1u << 1,
-    };
+
+    static constexpr PrefixType kPrefixTypeLocal   = 1u << 0;
+    static constexpr PrefixType kPrefixTypeFavored = 1u << 1;
 
     enum RouterOutputMode : uint8_t
     {

@@ -271,7 +271,7 @@ public:
     /**
      * @brief Gets the Install Code Verify Status during the current session.
      *
-     * @return TRUE The install code was correctly verfied.
+     * @return TRUE The install code was correctly verified.
      * @return FALSE The install code was not verified.
      */
     bool GetInstallCodeVerifyStatus(void) const { return mTcatAgent.GetInstallCodeVerifyStatus(); }

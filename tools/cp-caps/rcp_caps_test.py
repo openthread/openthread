@@ -33,12 +33,16 @@ import os
 import sys
 import textwrap
 import threading
+import time
+import queue
 
-from typing import List
+from dataclasses import dataclass
+from typing import List, Optional
 
 import otci
 from otci import OTCI
 from otci.types import Ip6Addr
+from otci.errors import ExpectLineTimeoutError, InvalidArgumentsError
 
 CP_CAPABILITY_VERSION = "0.1.1-dev"
 
@@ -75,6 +79,11 @@ class RcpCaps(object):
         self.__test_diag_repeat()
         self.__test_diag_send()
         self.__test_diag_frame()
+
+        # The self.__test_diag_frame will factoryreset the device
+        self.__dut.diag_start()
+        self.__ref.diag_start()
+
         self.__test_diag_echo()
         self.__test_diag_utils()
         self.__test_diag_rawpowersetting()
@@ -85,112 +94,110 @@ class RcpCaps(object):
         self.__ref.diag_stop()
         self.__dut.diag_stop()
 
+    @dataclass
+    class Frame:
+        """Represents a thread radio frame.
+
+        Attributes:
+          name: The description of the frame.
+          tx_frame: The psdu of the frame that to be sent.
+          dst_address: The destination MAC address of the tx_frame. It is used by the receiver to filter
+              out the tx_frame.
+          is_security_processed: The value of the otRadioFrame.mInfo.mTxInfo.mIsSecurityProcessed field.
+              If it is set to False, the active_dataset and src_ext_address are should also be set for the
+              radio driver to encrypt the tx_frame.
+          expect_rx_frame: The frame expected to be received. The frame expected to be received should be
+              the same as the tx_frame if the expect_rx_frame is set to None.
+          active_dataset: The active dataset.
+          src_ext_address: The source extended MAC address of the transmitter.
+        """
+        name: str
+        tx_frame: str
+        dst_address: str
+        is_security_processed: Optional[bool] = True
+        expect_rx_frame: Optional[str] = None
+        active_dataset: Optional[str] = None
+        src_ext_address: Optional[str] = None
+
     def test_frame_format(self):
         """Test whether the DUT supports sending and receiving 802.15.4 frames of all formats."""
         frames = [
-            {
-                'name': 'ver:2003,Cmd,seq,dst[addr:short,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '030800ffffffff070000'
-            },
-            {
-                'name': 'ver:2003,Bcon,seq,dst[addr:no,pan:no],src[addr:extd,pan:id],sec:no,ie:no,plen:30',
-                'psdu': '00c000eeee0102030405060708ff0f000003514f70656e54687265616400000000000001020304050607080000'
-            },
-            {
-                'name': 'ver:2006,Cmd,seq,dst[addr:short,pan:id],src[addr:short,pan:no],sec:l5,ie:no,plen:0',
-                'psdu': '4b98ddddddaaaabbbb0d708001020304050607081565'
-            },
-            {
-                'name': 'ver:2006,Cmd,seq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:l5,ie:no,plen:0',
-                'psdu': '4bdcdddddd102030405060708001020304050607080d6e54687265046400820ee803'
-            },
-            {
-                'name': 'ver:2006,Data,seq,dst[addr:extd,pan:id],src[addr:extd,pan:id],sec:no,ie:no,plen:0',
-                'psdu': '01dcdddddd1020304050607080000001020304050607085468'
-            },
-            {
-                'name': 'ver:2006,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
-                'psdu': '0198ddddddaaaaeeeebbbb7080'
-            },
-            {
-                'name': 'ver:2006,Data,seq,dst[addr:extd,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '011cdddddd10203040506070800000'
-            },
-            {
-                'name': 'ver:2006,Data,seq,dst[addr:short,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '0118ddddddaaaa3040'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:no,pan:no],src[addr:no,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '0120dddddd'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:no,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '4120ddddddaaaa'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '012cdddddd10203040506070800000'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:extd,pan:no],src[addr:no,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '412cdd10203040506070807080'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:no,pan:no],src[addr:extd,pan:id],sec:no,ie:no,plen:0',
-                'psdu': '01e0ddeeee01020304050607080000'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:no,pan:no],src[addr:extd,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '41e0dd01020304050607080708'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '01ecdddddd102030405060708001020304050607080708'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:extd,pan:no],src[addr:extd,pan:no],sec:no,ie:no,plen:0',
-                'psdu': '41ecdd102030405060708001020304050607080708'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
-                'psdu': '01a8ddddddaaaaeeeebbbb0102'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:extd,pan:id],sec:no,ie:no,plen:0',
-                'psdu': '01e8ddddddaaaaeeee01020304050607080708'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
-                'psdu': '01acdddddd1020304050607080eeeebbbb0708'
-            },
-            {
-                'name': 'ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie[csl],plen:0',
-                'psdu': '01aaddddddaaaaeeeebbbb040dc800e8030708'
-            },
-            {
-                'name': 'ver:2015,Data,noseq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
-                'psdu': '01a9ddddaaaaeeeebbbbbb04'
-            },
+            self.Frame(name='ver:2003,Cmd,seq,dst[addr:short,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='030800ffffffff070000',
+                       dst_address='0xffff'),
+            self.Frame(
+                name='ver:2003,Bcon,seq,dst[addr:no,pan:no],src[addr:extd,pan:id],sec:no,ie:no,plen:30',
+                tx_frame='00c000eeee0102030405060708ff0f000003514f70656e54687265616400000000000001020304050607080000',
+                dst_address='-'),
+            self.Frame(
+                name='ver:2003,MP,noseq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:l5,ie[ren con],plen:0',
+                tx_frame=
+                'fd87dddd1020304050607080010203040506070815000000007265616401820ee80305009bb8ea011c807aa1120000',
+                dst_address='8070605040302010'),
+            self.Frame(name='ver:2006,Cmd,seq,dst[addr:short,pan:id],src[addr:short,pan:no],sec:l5,ie:no,plen:0',
+                       tx_frame='4b9800ddddaaaabbbb0d0000000001043daa1aea0000',
+                       dst_address='0xaaaa'),
+            self.Frame(name='ver:2006,Cmd,seq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:l5,ie:no,plen:0',
+                       tx_frame='4bdc00dddd102030405060708001020304050607080d000000000104483cb8a90000',
+                       dst_address='8070605040302010'),
+            self.Frame(name='ver:2006,Data,seq,dst[addr:extd,pan:id],src[addr:extd,pan:id],sec:no,ie:no,plen:0',
+                       tx_frame='41dc00dddd102030405060708001020304050607080000',
+                       dst_address='8070605040302010'),
+            self.Frame(name='ver:2006,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
+                       tx_frame='019800ddddaaaaeeeebbbb0000',
+                       dst_address='0xaaaa'),
+            self.Frame(name='ver:2006,Data,seq,dst[addr:extd,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='011c00dddd10203040506070800000',
+                       dst_address='8070605040302010'),
+            self.Frame(name='ver:2006,Data,seq,dst[addr:short,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='011800ddddaaaa0000',
+                       dst_address='0xaaaa'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:no,pan:no],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='0120000000',
+                       dst_address='-'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:no,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='412000dddd0000',
+                       dst_address='-'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='012c00dddd10203040506070800000',
+                       dst_address='8070605040302010'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:extd,pan:no],src[addr:no,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='412c0010203040506070800000',
+                       dst_address='8070605040302010'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:no,pan:no],src[addr:extd,pan:id],sec:no,ie:no,plen:0',
+                       tx_frame='01e000eeee01020304050607080000',
+                       dst_address='-'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:no,pan:no],src[addr:extd,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='41e00001020304050607080000',
+                       dst_address='-'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:extd,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='01ec00dddd102030405060708001020304050607080000',
+                       dst_address='8070605040302010'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:extd,pan:no],src[addr:extd,pan:no],sec:no,ie:no,plen:0',
+                       tx_frame='41ec00102030405060708001020304050607080000',
+                       dst_address='8070605040302010'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
+                       tx_frame='01a800ddddaaaaeeeebbbb0000',
+                       dst_address='0xaaaa'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:extd,pan:id],sec:no,ie:no,plen:0',
+                       tx_frame='01e800ddddaaaaeeee01020304050607080000',
+                       dst_address='0xaaaa'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:extd,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
+                       tx_frame='01ac00dddd1020304050607080eeeebbbb0000',
+                       dst_address='8070605040302010'),
+            self.Frame(name='ver:2015,Data,seq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie[csl],plen:0',
+                       tx_frame='01aa00ddddaaaaeeeebbbb040dc800e8030000',
+                       dst_address='0xaaaa'),
+            self.Frame(name='ver:2015,Data,noseq,dst[addr:short,pan:id],src[addr:short,pan:id],sec:no,ie:no,plen:0',
+                       tx_frame='01a9ddddaaaaeeeebbbb0000',
+                       dst_address='0xaaaa'),
         ]
 
-        self.__dut.factory_reset()
-        self.__ref.factory_reset()
-
-        ret = self.__dut.is_command_supported('diag start')
-        if ret is False:
-            print('Diag commands are not supported')
-            return
-
-        self.__dut.diag_start()
-        self.__ref.diag_start()
-
         for frame in frames:
-            self.__test_send_formated_frame(self.__dut, self.__ref, 'TX ' + frame['name'], frame['psdu'], 100)
-            self.__test_send_formated_frame(self.__ref, self.__dut, 'RX ' + frame['name'], frame['psdu'], 100)
-
-        self.__ref.diag_stop()
-        self.__dut.diag_stop()
+            ret = self.__test_send_formatted_frames_retries(self.__dut, self.__ref, frame)
+            self.__output_format_bool(f'TX {frame.name}', ret, align_length=100)
+            ret = self.__test_send_formatted_frames_retries(self.__ref, self.__dut, frame)
+            self.__output_format_bool(f'RX {frame.name}', ret, align_length=100)
 
     def test_csl(self):
         """Test whether the DUT supports CSL transmitter."""
@@ -274,9 +281,216 @@ class RcpCaps(object):
         self.__ref.leave()
         self.__dut.leave()
 
+    def test_radio_frame_tx_info(self):
+        self.__test_radio_frame_tx_info_is_security_processed()
+        self.__test_radio_frame_tx_info_tx_delay()
+        self.__test_radio_frame_tx_info_rx_channel_after_tx_done()
+        self.__test_radio_frame_tx_info_csma_ca_enabled()
+        self.__test_radio_frame_tx_info_max_csma_backoffs()
+
     #
     # Private methods
     #
+    def __test_radio_frame_tx_info_is_security_processed(self):
+        self.__dut.factory_reset()
+        active_dataset = self.__get_default_dataset()
+
+        frames = [
+            self.Frame(
+                name='mIsSecurityProcessed=True',
+                tx_frame='09ec00dddd102030405060708001020304050607080d0000000001db622c220fde64408db9128c93d50000',
+                dst_address='8070605040302010',
+                is_security_processed=True),
+            self.Frame(
+                name='mIsSecurityProcessed=False',
+                tx_frame='09ec00dddd102030405060708001020304050607080d000000000000010203040506070809000000000000',
+                expect_rx_frame=
+                '09ec00dddd102030405060708001020304050607080d0000000001db622c220fde64408db9128c93d50000',
+                is_security_processed=False,
+                dst_address='8070605040302010',
+                active_dataset=active_dataset,
+                src_ext_address='0807060504030201'),
+        ]
+
+        for frame in frames:
+            ret = self.__test_send_formatted_frame(self.__dut, self.__ref, frame)
+            self.__output_format_bool(frame.name, ret)
+
+    def __test_radio_frame_tx_info_tx_delay(self):
+        self.__dut.factory_reset()
+        self.__ref.factory_reset()
+
+        # Enable the IPv6 interface to force the host and the RCP to synchronize the radio time.
+        self.__dut.set_dataset_bytes('active', self.__get_default_dataset())
+        self.__dut.ifconfig_up()
+        self.__dut.wait(0.5)
+        self.__dut.ifconfig_down()
+
+        self.__dut.diag_start()
+        self.__ref.diag_start()
+
+        channel = 11
+        packets = 1
+        dut_tx_delay_sec = 0.5
+        dut_tx_delay_us = int(dut_tx_delay_sec * 1000000)
+        ref_rx_delay_sec = dut_tx_delay_sec / 2
+        ref_address = 'dead00beefcafe01'
+        dut_tx_frame = '01ec00dddd01fecaefbe00adde02fecaefbe00adde000102030405060708090000'
+
+        self.__dut.diag_set_channel(channel)
+        self.__ref.diag_set_channel(channel)
+        self.__ref.diag_radio_receive()
+        self.__ref.diag_set_radio_receive_filter_dest_mac_address(ref_address)
+        self.__ref.diag_enable_radio_receive_filter()
+
+        self.__dut.diag_frame(dut_tx_frame, tx_delay=dut_tx_delay_us)
+        self.__dut.diag_send(packets, is_async=True)
+
+        self.__ref.wait(ref_rx_delay_sec)
+        stats = self.__ref.diag_get_stats()
+        ret = stats['received_packets'] == 0
+
+        if ret is True:
+            self.__ref.wait(ref_rx_delay_sec)
+            stats = self.__ref.diag_get_stats()
+            ret = stats['received_packets'] == 1
+
+        self.__output_format_bool(f'mTxDelayBaseTime=now,mTxDelay={dut_tx_delay_us}', ret)
+
+        self.__ref.diag_stop()
+        self.__dut.diag_stop()
+
+    def __test_radio_frame_tx_info_rx_channel_after_tx_done(self):
+        self.__dut.factory_reset()
+        self.__ref.factory_reset()
+
+        self.__dut.diag_start()
+        self.__ref.diag_start()
+
+        channel = 11
+        num_sent_frames = 1
+        rx_channel_after_tx_done = 25
+        dut_address = 'dead00beefcafe01'
+        dut_tx_frame = '01ec00dddd02fecaefbe00adde01fecaefbe00adde000102030405060708090000'
+        ref_tx_frame = '01ec00dddd01fecaefbe00adde02fecaefbe00adde000102030405060708090000'
+
+        self.__dut.diag_set_channel(channel)
+        self.__dut.diag_set_radio_receive_filter_dest_mac_address(dut_address)
+        self.__dut.diag_enable_radio_receive_filter()
+        self.__dut.diag_stats_clear()
+
+        self.__dut.diag_frame(dut_tx_frame, rx_channel_after_tx_done=rx_channel_after_tx_done)
+        self.__dut.diag_send(num_sent_frames, is_async=False)
+        stats = self.__dut.diag_get_stats()
+        ret = stats['sent_success_packets'] == num_sent_frames
+
+        if ret:
+            self.__ref.diag_set_channel(rx_channel_after_tx_done)
+            self.__ref.diag_frame(ref_tx_frame)
+            self.__ref.diag_send(num_sent_frames, is_async=False)
+            stats = self.__dut.diag_get_stats()
+            ret = stats['received_packets'] == num_sent_frames
+
+        self.__ref.diag_stop()
+        self.__dut.diag_stop()
+
+        self.__output_format_bool('mRxChannelAfterTxDone', ret)
+
+    def __test_radio_frame_tx_info_csma_ca_enabled(self):
+        self.__dut.factory_reset()
+        self.__ref.factory_reset()
+
+        self.__dut.diag_start()
+        self.__ref.diag_start()
+
+        channel = 11
+        num_sent_frames = 1
+        tx_frame = '01ec00dddd01fecaefbe00adde02fecaefbe00adde000102030405060708090000'
+
+        self.__dut.diag_set_channel(channel)
+        self.__ref.diag_set_channel(channel)
+        self.__ref.diag_cw_start()
+
+        self.__dut.diag_stats_clear()
+        self.__dut.diag_frame(tx_frame, csma_ca_enabled=False)
+        self.__dut.diag_send(num_sent_frames, is_async=False)
+        dut_stats = self.__dut.diag_get_stats()
+        ret = dut_stats['sent_success_packets'] == num_sent_frames
+        self.__output_format_bool('mCsmaCaEnabled=0', ret)
+
+        self.__dut.diag_stats_clear()
+        self.__dut.diag_frame(tx_frame, csma_ca_enabled=True)
+        self.__dut.diag_send(num_sent_frames, is_async=False)
+        dut_stats = self.__dut.diag_get_stats()
+        ret = dut_stats['sent_error_cca_packets'] == num_sent_frames
+        self.__output_format_bool('mCsmaCaEnabled=1', ret)
+
+        self.__ref.diag_cw_stop()
+        self.__ref.diag_stop()
+        self.__dut.diag_stop()
+
+    def __test_radio_frame_tx_info_max_csma_backoffs(self):
+        self.__dut.factory_reset()
+        self.__ref.factory_reset()
+
+        self.__dut.diag_start()
+        self.__ref.diag_start()
+
+        channel = 11
+        num_sent_frames = 1
+        tx_frame = '01ec00dddd01fecaefbe00adde02fecaefbe00adde000102030405060708090000'
+
+        self.__dut.diag_set_channel(channel)
+        self.__ref.diag_set_channel(channel)
+
+        self.__ref.diag_cw_start()
+        self.__dut.wait(0.05)
+
+        # When the max_csma_backoffs is set to 0, the radio driver should skip backoff and do CCA once.
+        # The CCA time is 192 us. Theoretically, the `diag send` command should return after 192us.
+        # But considering the Spinel delay and the system IO delay, here sets the max_time_cost to 20 ms.
+        max_time_cost = 20
+        max_csma_backoffs = 0
+        self.__dut.diag_stats_clear()
+        self.__dut.diag_frame(tx_frame, csma_ca_enabled=True, max_frame_retries=0, max_csma_backoffs=max_csma_backoffs)
+        start_time = time.time()
+        self.__dut.diag_send(num_sent_frames, is_async=False)
+        end_time = time.time()
+        time_cost = int((end_time - start_time) * 1000)
+        ret = 'OK' if time_cost < max_time_cost else 'NotSupported'
+        self.__output_format_string(f'mMaxCsmaBackoffs={max_csma_backoffs}', f'{ret} ({time_cost} ms)')
+
+        # Basic information for calculating the backoff time:
+        #   aTurnaroundTime = 192 us
+        #   aCCATime = 128 us
+        #   backoffExponent = (macMinBe, macMaxBe) = (3, 5)
+        #   backoffPeriod = random() % (1 << backoffExponent)
+        #   backoff = backoffPeriod * aUnitBackoffPeriod = backoffPeriod * (aTurnaroundTime + aCCATime)
+        #           = backoffPeriod * 320 us
+        #   backoff = (random() % (1 << backoffExponent)) * 320us
+        #
+        # The max_csma_backoffs is set to 100 here, the `backoffExponent` will be set to 5 in most retries.
+        #   backoff = (random() % 32) * 320us
+        #   average_backoff = 16 * 320us = 5120 us
+        #   total_backoff = average_backoff * 100 = 5120 us * 100 = 512 ms
+        #
+        # Here sets the max_time_cost to half of total_backoff.
+        #
+        max_time_cost = 256
+        max_frame_retries = 0
+        max_csma_backoffs = 100
+        self.__dut.diag_frame(tx_frame, csma_ca_enabled=True, max_frame_retries=0, max_csma_backoffs=max_csma_backoffs)
+        start_time = time.time()
+        self.__dut.diag_send(num_sent_frames, is_async=False)
+        end_time = time.time()
+        time_cost = int((end_time - start_time) * 1000)
+        ret = 'OK' if time_cost > max_time_cost else 'NotSupported'
+        self.__output_format_string(f'mMaxCsmaBackoffs={max_csma_backoffs}', f'{ret} ({time_cost} ms)')
+
+        self.__ref.diag_cw_stop()
+        self.__ref.diag_stop()
+        self.__dut.diag_stop()
+
     def __run_link_metrics_test_commands(self, initiator: OTCI, subject_address: Ip6Addr) -> bool:
         seriesid = 1
         series_flags = 'ldra'
@@ -549,7 +763,7 @@ class RcpCaps(object):
             dut_stats = self.__dut.diag_get_stats()
             ref_stats = self.__ref.diag_get_stats()
 
-            ret = dut_stats['sent_packets'] == packets and ref_stats['received_packets'] > threshold
+            ret = dut_stats['sent_success_packets'] == packets and ref_stats['received_packets'] > threshold
         else:
             ret = False
 
@@ -578,51 +792,104 @@ class RcpCaps(object):
             dut_stats = self.__dut.diag_get_stats()
             ref_stats = self.__ref.diag_get_stats()
 
-            ret = dut_stats['sent_packets'] > threshold and ref_stats['received_packets'] > threshold
+            ret = dut_stats['sent_success_packets'] > threshold and ref_stats['received_packets'] > threshold
         else:
             ret = False
 
         self.__output_format_bool(cmd_diag_repeat, ret)
         self.__output_format_bool(cmd_diag_repeat_stop, ret)
 
-    def __test_send_formated_frame(self,
-                                   sender: OTCI,
-                                   receiver: OTCI,
-                                   format_name: str,
-                                   frame: str,
-                                   align_length: int = DEFAULT_FORMAT_ALIGN_LENGTH):
-        packets = 100
-        threshold = 80
-        channel = 20
-        cmd_diag_frame = f'diag frame {frame}'
-        commands = [cmd_diag_frame, f'diag send {packets}', f'diag stats', f'diag stats clear']
+    def __test_send_formatted_frames_retries(self,
+                                             sender: OTCI,
+                                             receiver: OTCI,
+                                             frame: Frame,
+                                             max_send_retries: int = 5):
+        for i in range(0, max_send_retries):
+            if self.__test_send_formatted_frame(sender, receiver, frame):
+                return True
 
-        if self.__support_commands(commands):
-            sender.wait(1)
-            sender.diag_set_channel(channel)
-            receiver.diag_set_channel(channel)
-            receiver.diag_radio_receive()
+        return False
 
-            sender.diag_stats_clear()
-            sender.diag_stats_clear()
+    def __test_send_formatted_frame(self, sender: OTCI, receiver: OTCI, frame: Frame):
+        sender.factory_reset()
+        receiver.factory_reset()
 
-            sender.diag_frame(frame)
-            sender.diag_send(packets, None)
-            sender.wait(1)
-            sender_stats = sender.diag_get_stats()
-            receiver_stats = receiver.diag_get_stats()
+        # When the 'is_security_processed' is False, it means the frame may need the radio driver
+        # to encrypt the frame. Here sets the active dataset and the MAC source address for the
+        # radio driver to encrypt the frame.
+        if frame.is_security_processed is False:
+            if frame.active_dataset is None or frame.src_ext_address is None:
+                raise InvalidArgumentsError(
+                    "When the 'is_security_processed' is 'False', the 'active_dataset' and 'src_ext_address' must be set"
+                )
+            sender.set_dataset_bytes('active', frame.active_dataset)
+            sender.set_extaddr(frame.src_ext_address)
 
-            ret = sender_stats['sent_packets'] == packets and receiver_stats['received_packets'] > threshold
+        sender.diag_start()
+        receiver.diag_start()
+
+        channel = 11
+        num_sent_frames = 1
+
+        sender.diag_set_channel(channel)
+        receiver.diag_set_channel(channel)
+        receiver.diag_radio_receive()
+        receiver.diag_set_radio_receive_filter_dest_mac_address(frame.dst_address)
+        receiver.diag_enable_radio_receive_filter()
+
+        result_queue = queue.Queue()
+        receive_task = threading.Thread(target=self.__radio_receive_task,
+                                        args=(receiver, num_sent_frames, result_queue),
+                                        daemon=True)
+        receive_task.start()
+
+        sender.wait(0.1)
+
+        sender.diag_frame(frame.tx_frame,
+                          is_security_processed=frame.is_security_processed,
+                          max_csma_backoffs=4,
+                          max_frame_retries=4,
+                          csma_ca_enabled=True)
+        sender.diag_send(num_sent_frames, is_async=False)
+
+        receive_task.join()
+
+        if result_queue.empty():
+            ret = False  # No frame is received.
         else:
-            ret = False
+            received_frames = result_queue.get()
+            if len(received_frames) != num_sent_frames:
+                ret = False
+            else:
+                # The radio driver may not append the FCF field to the received frame. Do not check the FCF field here.
+                FCF_LENGTH = 4
+                expect_frame = frame.expect_rx_frame or frame.tx_frame
+                ret = expect_frame[:-FCF_LENGTH] == received_frames[0]['psdu'][:-FCF_LENGTH]
 
-        self.__output_format_bool(format_name, ret, align_length)
+        if ret:
+            sender.diag_stop()
+            receiver.diag_stop()
+        else:
+            # The command 'diag radio receive <number>' may fail to receive specified number of frames in default
+            # timeout time. In this case, the diag module still in 'sync' mode, and it only allows users to run the
+            # command `factoryreset` to terminate the test.
+            sender.factory_reset()
+            receiver.factory_reset()
+
+        return ret
+
+    def __radio_receive_task(self, receiver: OTCI, number: int, result_queue: queue):
+        try:
+            result = receiver.diag_radio_receive_number(number)
+        except ExpectLineTimeoutError:
+            pass
+        else:
+            result_queue.put(result)
 
     def __test_diag_frame(self):
-        frame = '00010203040506070809'
-        cmd_diag_frame = f'diag frame {frame}'
-
-        self.__test_send_formated_frame(self.__dut, self.__ref, cmd_diag_frame, frame)
+        frame = self.Frame(name='diag frame 00010203040506070809', tx_frame='00010203040506070809', dst_address='-')
+        ret = self.__test_send_formatted_frames_retries(self.__dut, self.__ref, frame)
+        self.__output_format_bool(frame.name, ret)
 
     def __support_commands(self, commands: List[str]) -> bool:
         ret = True
@@ -647,11 +914,14 @@ class RcpCaps(object):
     def __get_dut_diag_raw_power_setting(self) -> str:
         return os.getenv('DUT_DIAG_RAW_POWER_SETTING', '112233')
 
+    def __get_adb_key(self) -> Optional[str]:
+        return os.getenv('ADB_KEY', None)
+
     def __connect_dut(self) -> OTCI:
         if os.getenv('DUT_ADB_TCP'):
-            node = otci.connect_otbr_adb_tcp(os.getenv('DUT_ADB_TCP'))
+            node = otci.connect_otbr_adb_tcp(os.getenv('DUT_ADB_TCP'), adb_key=self.__get_adb_key())
         elif os.getenv('DUT_ADB_USB'):
-            node = otci.connect_otbr_adb_usb(os.getenv('DUT_ADB_USB'))
+            node = otci.connect_otbr_adb_usb(os.getenv('DUT_ADB_USB'), adb_key=self.__get_adb_key())
         elif os.getenv('DUT_CLI_SERIAL'):
             node = otci.connect_cli_serial(os.getenv('DUT_CLI_SERIAL'))
         elif os.getenv('DUT_SSH'):
@@ -667,7 +937,7 @@ class RcpCaps(object):
         elif os.getenv('REF_SSH'):
             node = otci.connect_otbr_ssh(os.getenv('REF_SSH'))
         elif os.getenv('REF_ADB_USB'):
-            node = otci.connect_otbr_adb_usb(os.getenv('REF_ADB_USB'))
+            node = otci.connect_otbr_adb_usb(os.getenv('REF_ADB_USB'), adb_key=self.__get_adb_key())
         else:
             self.__fail("Please set REF_CLI_SERIAL, REF_SSH or REF_ADB_USB to connect to the reference device.")
 
@@ -697,6 +967,7 @@ def parse_arguments():
         '  REF_ADB_USB=<serial_number>    Connect to the reference device via adb usb\r\n'
         '  REF_CLI_SERIAL=<serial_device> Connect to the reference device via cli serial port\r\n'
         '  REF_SSH=<device_ip>            Connect to the reference device via ssh\r\n'
+        '  ADB_KEY=<adb_key>              Full path to the adb key\r\n'
         '\r\n'
         'Example:\r\n'
         f'  DUT_ADB_USB=1169UC2F2T0M95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 {sys.argv[0]} -d\r\n')
@@ -754,6 +1025,14 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        '-T',
+        '--tx-info',
+        action='store_true',
+        default=False,
+        help='test mTxInfo field of the radio frame',
+    )
+
+    parser.add_argument(
         '-v',
         '--version',
         action='store_true',
@@ -799,6 +1078,9 @@ def main():
 
     if arguments.throughput:
         rcp_caps.test_throughput()
+
+    if arguments.tx_info:
+        rcp_caps.test_radio_frame_tx_info()
 
     if arguments.frame_format:
         rcp_caps.test_frame_format()

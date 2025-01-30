@@ -1619,6 +1619,23 @@ uint16_t Headers::GetSourcePort(void) const
     return port;
 }
 
+void Headers::SetSourcePort(uint16_t aSrcPort)
+{
+    switch (GetIpProto())
+    {
+    case kProtoUdp:
+        mHeader.mUdp.SetSourcePort(aSrcPort);
+        break;
+
+    case kProtoTcp:
+        mHeader.mTcp.SetSourcePort(aSrcPort);
+        break;
+
+    default:
+        break;
+    }
+}
+
 uint16_t Headers::GetDestinationPort(void) const
 {
     uint16_t port = 0;

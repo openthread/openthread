@@ -181,9 +181,35 @@ otError otBorderAgentGetId(otInstance *aInstance, otBorderAgentId *aId);
 otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId);
 
 /**
+ * Indicates whether the Border Agent Ephemeral Key feature is enabled.
+ *
+ * The Ephemeral Key feature can only be used when it's enabled. This information will be displayed in a bitmap in the
+ * txt records of the meshcop service published by this Border Router.
+ *
+ * The default value is `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_FEATURE_ENABLED_BY_DEFAULT`.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ */
+bool otBorderAgentIsEphemeralKeyFeatureEnabled(otInstance *aInstance);
+
+/**
+ * Enables/disables the Border Agent Ephemeral Key feature.
+ *
+ * If an ephemeral key is already active and then this method is called to disable the feature, the in-use ephemeral
+ * key will be cleared.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aEnabled     Whether to enable the BA Ephemeral Key feature.
+ */
+void otBorderAgentSetEphemeralKeyFeatureEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
  * Sets the ephemeral key for a given timeout duration.
  *
  * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE`.
+ *
+ * The API SHOULD only be called when the Ephemeral Key feature is enabled (which can be set by
+ * `otBorderAgentSetEphemeralKeyFeatureEnabled`) or configured as enabled by default.
  *
  * The ephemeral key can be set when the Border Agent is already running and is not currently connected to any external
  * commissioner (i.e., it is in `OT_BORDER_AGENT_STATE_STARTED` state). Otherwise `OT_ERROR_INVALID_STATE` is returned.
@@ -213,8 +239,8 @@ otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId);
  * @retval OT_ERROR_NONE           Successfully set the ephemeral key.
  * @retval OT_ERROR_INVALID_STATE  Border Agent is not running or it is connected to an external commissioner.
  * @retval OT_ERROR_INVALID_ARGS   The given @p aKeyString is not valid (too short or too long).
+ * @retval OT_ERROR_NOT_CAPABLE    The Ephemeral Key feature is not enabled.
  * @retval OT_ERROR_FAILED         Failed to set the key (e.g., could not bind to UDP port).
-
  */
 otError otBorderAgentSetEphemeralKey(otInstance *aInstance,
                                      const char *aKeyString,

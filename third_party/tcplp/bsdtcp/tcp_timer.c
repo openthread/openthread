@@ -80,7 +80,7 @@ tcp_timer_delack(struct tcpcb* tp)
 	 * I also removed stats collection, locking, and vnet, throughout the code.
 	 */
 	tp->t_flags |= TF_ACKNOW;
-	(void) tcp_output(tp);
+	(void) tcplp_output(tp);
 	return 0;
 }
 
@@ -224,7 +224,7 @@ tcp_timer_persist(struct tcpcb* tp)
 	tcp_setpersist(tp);
 	tp->t_flags |= TF_FORCEDATA;
 	tcplp_sys_log("Persist output: %zu bytes in sendbuf", lbuf_used_space(&tp->sendbuf));
-	(void) tcp_output(tp);
+	(void) tcplp_output(tp);
 	tp->t_flags &= ~TF_FORCEDATA;
 
 out:
@@ -286,7 +286,7 @@ tcp_timer_2msl(struct tcpcb* tp)
 	 * state, and acts appropriately if so.
 	 */
 	if (tp->t_state == TCP6S_TIME_WAIT) {
-		tp = tcp_close(tp);
+		tp = tcp_close_tcb(tp);
 		tcplp_sys_connection_lost(tp, CONN_LOST_NORMAL);
 		dropped = 1;
 		return dropped;
@@ -303,7 +303,7 @@ tcp_timer_2msl(struct tcpcb* tp)
 	 */
 	if (tcp_fast_finwait2_recycle && tp->t_state == TCPS_FIN_WAIT_2 &&
 	    tpiscantrcv(tp)) {
-		tp = tcp_close(tp);
+		tp = tcp_close_tcb(tp);
 		tcplp_sys_connection_lost(tp, CONN_LOST_NORMAL);
 		dropped = 1;
 	} else {
@@ -315,7 +315,7 @@ tcp_timer_2msl(struct tcpcb* tp)
 			tpmarktimeractive(tp, TT_2MSL);
 			tcplp_sys_set_timer(tp, TT_2MSL, TP_KEEPINTVL(tp));
 		} else {
-			tp = tcp_close(tp);
+			tp = tcp_close_tcb(tp);
 			tcplp_sys_connection_lost(tp, CONN_LOST_NORMAL);
 			dropped = 1;
 		}
@@ -455,7 +455,7 @@ tcp_timer_rexmt(struct tcpcb *tp)
 
 	cc_cong_signal(tp, NULL, CC_RTO);
 
-	(void) tcp_output(tp);
+	(void) tcplp_output(tp);
 
 out:
 	/*

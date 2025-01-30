@@ -33,8 +33,8 @@ import queue
 import subprocess
 import time
 import traceback
-from collections import Counter
-from typing import List
+from collections import Counter, defaultdict
+from typing import List, Dict
 
 import config
 
@@ -57,13 +57,13 @@ def bash(cmd: str, check=True, stdout=None):
     subprocess.run(cmd, shell=True, check=check, stdout=stdout)
 
 
-def run_cert(job_id: int, port_offset: int, script: str, run_directory: str):
+def run_cert(iteration_id: int, port_offset: int, script: str, run_directory: str):
     if not os.access(script, os.X_OK):
         logging.warning('Skip test %s, not executable', script)
         return
 
     try:
-        test_name = os.path.splitext(os.path.basename(script))[0] + '_' + str(job_id)
+        test_name = os.path.splitext(os.path.basename(script))[0] + '_' + str(iteration_id)
         logfile = f'{run_directory}/{test_name}.log' if run_directory else f'{test_name}.log'
         env = os.environ.copy()
         env['PORT_OFFSET'] = str(port_offset)
@@ -151,48 +151,48 @@ class PortOffsetPool:
         self._pool.put_nowait(port_offset)
 
 
+def print_summary(scripts: List[str], script_successes: Dict[str, List[int]], script_failures: Dict[str, List[int]]):
+    print("---------------------------------------")
+    print("Summary")
+    print("---------------------------------------")
+    for script in scripts:
+        success_count = len(script_successes[script])
+        failure_count = len(script_failures[script])
+        color = _COLOR_PASS if failure_count == 0 else _COLOR_FAIL
+        message = f'{color}PASS {success_count} FAIL {failure_count}{_COLOR_NONE} {script}'
+        if failure_count > 0:
+            message += f' {_COLOR_FAIL}Failed iterations: {script_failures[script]}{_COLOR_NONE}'
+        print(message)
+
+
 def run_tests(scripts: List[str], multiply: int = 1, run_directory: str = None):
-    script_fail_count = Counter()
-    script_succ_count = Counter()
+    scripts = list(set(scripts))
 
     # Run each script for multiple times
     script_ids = [(script, i) for script in scripts for i in range(multiply)]
     port_offset_pool = PortOffsetPool(MAX_JOBS)
 
-    def error_callback(port_offset, script, err, start_time):
+    # From the test script path to the iteration IDs
+    script_failures: Dict[str, List[int]] = defaultdict(list)
+    script_successes: Dict[str, List[int]] = defaultdict(list)
+
+    def result_callback(iteration_id, script, dic, port_offset):
         port_offset_pool.release(port_offset)
-
-        elapsed_time = round(time.time() - start_time)
-        script_fail_count[script] += 1
-        if script_succ_count[script] + script_fail_count[script] == multiply:
-            color = _COLOR_PASS if script_fail_count[script] == 0 else _COLOR_FAIL
-            print(
-                f'{color}PASS {script_succ_count[script]} FAIL {script_fail_count[script]}{_COLOR_NONE} {script} in {elapsed_time}s'
-            )
-
-    def pass_callback(port_offset, script, start_time):
-        port_offset_pool.release(port_offset)
-
-        elapsed_time = round(time.time() - start_time)
-        script_succ_count[script] += 1
-        if script_succ_count[script] + script_fail_count[script] == multiply:
-            color = _COLOR_PASS if script_fail_count[script] == 0 else _COLOR_FAIL
-            print(
-                f'{color}PASS {script_succ_count[script]} FAIL {script_fail_count[script]}{_COLOR_NONE} {script} in {elapsed_time}s'
-            )
+        dic[script].append(iteration_id)
 
     for script, i in script_ids:
         port_offset = port_offset_pool.allocate()
-        start_time = time.time()
         pool.apply_async(run_cert, [i, port_offset, script, run_directory],
-                         callback=lambda ret, port_offset=port_offset, script=script, start_time=start_time:
-                         pass_callback(port_offset, script, start_time),
-                         error_callback=lambda err, port_offset=port_offset, script=script, start_time=start_time:
-                         error_callback(port_offset, script, err, start_time))
+                         callback=lambda ret, id=i, script=script, port_offset=port_offset: result_callback(
+                             id, script, script_successes, port_offset),
+                         error_callback=lambda ret, id=i, script=script, port_offset=port_offset: result_callback(
+                             id, script, script_failures, port_offset))
 
     pool.close()
     pool.join()
-    return sum(script_fail_count.values())
+
+    print_summary(scripts, script_successes, script_failures)
+    return sum(len(l) for l in script_failures.values())
 
 
 def main():

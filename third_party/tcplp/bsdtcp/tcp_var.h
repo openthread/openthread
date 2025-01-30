@@ -381,10 +381,9 @@ void initialize_tcb(struct tcpcb* tp);
 
 /* Copied from the "dead" portions below. */
 
-void	 tcp_init(void);
 void	 tcp_state_change(struct tcpcb *, int);
 tcp_seq tcp_new_isn(struct tcpcb *);
-struct tcpcb *tcp_close(struct tcpcb *);
+struct tcpcb *tcp_close_tcb(struct tcpcb *);
 struct tcpcb *tcp_drop(struct tcpcb *, int);
 void
 tcp_respond(struct tcpcb *tp, otInstance* instance, struct ip6_hdr* ip6gen, struct tcphdr *thgen,
@@ -483,7 +482,7 @@ void tcp_usr_abort(struct tcpcb* tp);
 
 /*
  * Structure to hold TCP options that are only used during segment
- * processing (in tcp_input), but not held in the tcpcb.
+ * processing (in tcplp_input), but not held in the tcpcb.
  * It's basically used to reduce the number of parameters
  * to tcp_dooptions and tcp_addoptions.
  * The binary order of the to_flags is relevant for packing of the
@@ -596,9 +595,9 @@ void	 tcp_twclose(struct tcpcb*, int);
 int	 tcp_twcheck(struct tcpcb*, struct tcphdr *, int);
 void tcp_dropwithreset(struct ip6_hdr* ip6, struct tcphdr *th, struct tcpcb *tp, otInstance* instance,
     int tlen, int rstreason);
-int tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* tp, struct tcpcb_listen* tpl,
+int tcplp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* tp, struct tcpcb_listen* tpl,
           struct tcplp_signals* sig);
-int	 tcp_output(struct tcpcb *);
+int	 tcplp_output(struct tcpcb *);
 void tcpip_maketemplate(struct tcpcb *, struct tcptemp*);
 void	 tcpip_fillheaders(struct tcpcb *, otMessageInfo *, void *);
 uint64_t	 tcp_maxmtu6(struct tcpcb*, struct tcp_ifcap *);

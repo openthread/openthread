@@ -268,10 +268,6 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = kErrorInvalidState);
     VerifyOrExit(mState == kStateDisabled, error = kErrorAlready);
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    Get<BorderAgent>().Stop();
-#endif
-
     SuccessOrExit(error = Get<Tmf::SecureAgent>().Open());
     SuccessOrExit(error = Get<Tmf::SecureAgent>().Bind(SendRelayTransmit, this));
 
@@ -325,10 +321,6 @@ Error Commissioner::Stop(ResignMode aResignMode)
     {
         SendKeepAlive();
     }
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    Get<BorderAgent>().Start();
-#endif
 
 exit:
     if (error != kErrorAlready)
@@ -641,7 +633,7 @@ exit:
 void Commissioner::HandleMgmtCommissionerGetResponse(void                *aContext,
                                                      otMessage           *aMessage,
                                                      const otMessageInfo *aMessageInfo,
-                                                     Error                aResult)
+                                                     otError              aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerGetResponse(AsCoapMessagePtr(aMessage),
                                                                              AsCoreTypePtr(aMessageInfo), aResult);
@@ -712,7 +704,7 @@ exit:
 void Commissioner::HandleMgmtCommissionerSetResponse(void                *aContext,
                                                      otMessage           *aMessage,
                                                      const otMessageInfo *aMessageInfo,
-                                                     Error                aResult)
+                                                     otError              aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerSetResponse(AsCoapMessagePtr(aMessage),
                                                                              AsCoreTypePtr(aMessageInfo), aResult);
@@ -765,7 +757,7 @@ exit:
 void Commissioner::HandleLeaderPetitionResponse(void                *aContext,
                                                 otMessage           *aMessage,
                                                 const otMessageInfo *aMessageInfo,
-                                                Error                aResult)
+                                                otError              aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleLeaderPetitionResponse(AsCoapMessagePtr(aMessage),
                                                                         AsCoreTypePtr(aMessageInfo), aResult);
@@ -852,7 +844,7 @@ exit:
 void Commissioner::HandleLeaderKeepAliveResponse(void                *aContext,
                                                  otMessage           *aMessage,
                                                  const otMessageInfo *aMessageInfo,
-                                                 Error                aResult)
+                                                 otError              aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleLeaderKeepAliveResponse(AsCoapMessagePtr(aMessage),
                                                                          AsCoreTypePtr(aMessageInfo), aResult);

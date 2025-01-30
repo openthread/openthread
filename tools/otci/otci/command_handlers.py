@@ -303,10 +303,14 @@ class OtbrAdbCommandRunner(OTCommandHandler):
 
     from adb_shell.adb_device import AdbDevice
 
-    def __init__(self, adb: AdbDevice):
+    def __init__(self, adb: AdbDevice, adb_key: Optional[str] = None):
+        from adb_shell.auth.sign_pythonrsa import PythonRSASigner
+
         self.__adb = adb
         self.__line_read_callback = None
-        self.__adb.connect(rsa_keys=None, auth_timeout_s=0.1)
+        rsa_keys = None if adb_key is None else [PythonRSASigner.FromRSAKeyPath(adb_key)]
+
+        self.__adb.connect(rsa_keys=rsa_keys, auth_timeout_s=0.1)
 
     def execute_command(self, cmd: str, timeout: float) -> List[str]:
         sh_cmd = f'ot-ctl {cmd}'
@@ -342,14 +346,14 @@ class OtbrAdbCommandRunner(OTCommandHandler):
 
 class OtbrAdbTcpCommandRunner(OtbrAdbCommandRunner):
 
-    def __init__(self, host: str, port: int):
+    def __init__(self, host: str, port: int, adb_key: Optional[str] = None):
         from adb_shell.adb_device import AdbDeviceTcp
 
         self.__host = host
         self.__port = port
 
         adb = AdbDeviceTcp(host, port, default_transport_timeout_s=9.0)
-        super(OtbrAdbTcpCommandRunner, self).__init__(adb)
+        super(OtbrAdbTcpCommandRunner, self).__init__(adb, adb_key)
 
     def __repr__(self):
         return f'{self.__host}:{self.__port}'
@@ -357,13 +361,13 @@ class OtbrAdbTcpCommandRunner(OtbrAdbCommandRunner):
 
 class OtbrAdbUsbCommandRunner(OtbrAdbCommandRunner):
 
-    def __init__(self, serial: str):
+    def __init__(self, serial: str, adb_key: Optional[str] = None):
         from adb_shell.adb_device import AdbDeviceUsb
 
         self.__serial = serial
 
         adb = AdbDeviceUsb(serial, port_path=None, default_transport_timeout_s=9.0)
-        super(OtbrAdbUsbCommandRunner, self).__init__(adb)
+        super(OtbrAdbUsbCommandRunner, self).__init__(adb, adb_key)
 
     def __repr__(self):
         return f'USB:{self.__serial}'

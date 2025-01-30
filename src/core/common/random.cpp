@@ -52,7 +52,7 @@ Manager::Manager(void)
 
     VerifyOrExit(sInitCount == 0);
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     otPlatCryptoRandomInit();
     SuccessOrAssert(Random::Crypto::Fill(seed));
 #else
@@ -72,7 +72,7 @@ Manager::~Manager(void)
     sInitCount--;
     VerifyOrExit(sInitCount == 0);
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     otPlatCryptoRandomDeinit();
 #endif
 

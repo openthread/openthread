@@ -478,6 +478,34 @@ Disables callback from Border Agent for ephemeral key state changes.
 Done
 ```
 
+### ba ephemeralkey feature
+
+Displays if the Ephemeral Key feature is enabled. Note that this indicates whether the ephemeral key feature is ready to use, instead of whether an ephemeral key is active.
+
+```bash
+> ba ephemeralkey feature
+Enabled
+Done
+```
+
+### ba ephemeralkey feature enable
+
+Enables the Ephemeral Key feature.
+
+```bash
+> ba ephemeralkey feature enable
+Done
+```
+
+### ba ephemeralkey feature disable
+
+Disables the Ephemeral Key feature.
+
+```bash
+> ba ephemeralkey feature disable
+Done
+```
+
 ### ba counters
 
 Get the border agent counter values.

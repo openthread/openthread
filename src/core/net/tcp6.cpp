@@ -657,7 +657,7 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
         size_t          priorBacklog = endpoint->GetSendBufferBytes() - endpoint->GetInFlightBytes();
 
         ClearAllBytes(sig);
-        nextAction = tcp_input(ip6Header, tcpHeader, &aMessage, tp, nullptr, &sig);
+        nextAction = tcplp_input(ip6Header, tcpHeader, &aMessage, tp, nullptr, &sig);
         if (nextAction != RELOOKUP_REQUIRED)
         {
             ProcessSignals(*endpoint, priorHead, priorBacklog, sig);
@@ -673,7 +673,7 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
         struct tcpcb_listen *tpl = &listener->GetTcbListen();
 
         ClearAllBytes(sig);
-        nextAction = tcp_input(ip6Header, tcpHeader, &aMessage, nullptr, tpl, &sig);
+        nextAction = tcplp_input(ip6Header, tcpHeader, &aMessage, nullptr, tpl, &sig);
         OT_ASSERT(nextAction != RELOOKUP_REQUIRED);
         if (sig.accepted_connection != nullptr)
         {

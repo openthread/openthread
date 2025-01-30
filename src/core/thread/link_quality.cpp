@@ -130,7 +130,8 @@ void LqiAverager::Add(uint8_t aLqi)
 void LinkQualityInfo::Clear(void)
 {
     mRssAverager.Clear();
-    SetLinkQuality(kLinkQuality0);
+    SetLinkQualityIn(kLinkQuality0);
+    SetLinkQualityOut(kLinkQuality0);
     mLastRss = Radio::kInvalidRssi;
 
     mFrameErrorRate.Clear();
@@ -147,12 +148,12 @@ void LinkQualityInfo::AddRss(int8_t aRss)
 
     if (mRssAverager.HasAverage())
     {
-        oldLinkQuality = GetLinkQuality();
+        oldLinkQuality = GetLinkQualityIn();
     }
 
     SuccessOrExit(mRssAverager.Add(aRss));
 
-    SetLinkQuality(CalculateLinkQuality(GetLinkMargin(), oldLinkQuality));
+    SetLinkQualityIn(CalculateLinkQuality(GetLinkMargin(), oldLinkQuality));
 
 exit:
     return;
@@ -168,7 +169,7 @@ LinkQualityInfo::InfoString LinkQualityInfo::ToInfoString(void) const
     InfoString string;
 
     string.Append("aveRss:%s, lastRss:%d, linkQuality:%d", mRssAverager.ToString().AsCString(), GetLastRss(),
-                  GetLinkQuality());
+                  GetLinkQualityIn());
 
     return string;
 }

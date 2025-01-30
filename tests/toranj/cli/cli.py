@@ -525,6 +525,12 @@ class Node(object):
     def ba_get_port(self):
         return self._cli_single_output('ba port')
 
+    def ba_is_ephemeral_key_feature_enabled(self):
+        return self._cli_single_output('ba ephemeralkey feature')
+
+    def ba_set_ephemeral_key_feature_enabled(self, enable):
+        self._cli_no_output('ba ephemeralkey feature', 'enable' if enable else 'disable')
+
     def ba_is_ephemeral_key_active(self):
         return self._cli_single_output('ba ephemeralkey')
 

@@ -64,12 +64,17 @@ UdpExample::UdpExample(otInstance *aInstance, OutputImplementer &aOutputImplemen
  * udp bind -b :: 1234
  * Done
  * @endcode
+ * @code
+ * udp bind -h :: 1234
+ * Done
+ * @endcode
  * @cparam udp bind [@ca{netif}] @ca{ip} @ca{port}
  * - `netif`: The binding network interface, which is determined as follows:
- *   - No value (leaving out this parameter from the command): Thread network interface is used.
- *   - `-u`: Unspecified network interface, which means that the UDP/IPv6 stack determines which
- *   network interface to bind the socket to.
- *   - `-b`: Backbone network interface is used.
+ *   - No value (leaving out this parameter from the command): Thread stack network interface is used.
+ *   - `-u`: Unspecified network interface, which means that the Host UDP/IPv6 stack determines which
+ *   network interface to bind the socket to. Valid if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE is set.
+ *   - `-b`: Backbone network interface is used. Valid if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE is set.
+ *   - `-h`: Host Thread network interface is used. Valid if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE is set.
  * - `ip`: Unicast IPv6 address to bind to. If you wish to have the UDP/IPv6 stack assign the binding
  *   IPv6 address, or if you wish to bind to multicast IPv6 addresses, then you can use the following
  *   value to use the unspecified IPv6 address: `::`. Each example uses the unspecified IPv6 address.
@@ -83,7 +88,7 @@ template <> otError UdpExample::Process<Cmd("bind")>(Arg aArgs[])
 {
     otError           error;
     otSockAddr        sockaddr;
-    otNetifIdentifier netif = OT_NETIF_THREAD_HOST;
+    otNetifIdentifier netif = OT_NETIF_THREAD_INTERNAL;
 
     if (aArgs[0] == "-u")
     {
@@ -93,6 +98,11 @@ template <> otError UdpExample::Process<Cmd("bind")>(Arg aArgs[])
     else if (aArgs[0] == "-b")
     {
         netif = OT_NETIF_BACKBONE;
+        aArgs++;
+    }
+    else if (aArgs[0] == "-h")
+    {
+        netif = OT_NETIF_THREAD_HOST;
         aArgs++;
     }
 

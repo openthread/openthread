@@ -467,6 +467,20 @@ public:
     uint8_t GetIpProto(void) const { return mIp6Header.GetNextHeader(); }
 
     /**
+     * Returns the IPv6 Payload Length value.
+     *
+     * @returns The IPv6 Payload Length value.
+     */
+    uint8_t GetIpLength(void) const { return mIp6Header.GetPayloadLength(); }
+
+    /**
+     * Returns the IPv6 Hop Limit value.
+     *
+     * @returns The IPv6 Hop Limit value.
+     */
+    uint8_t GetIpHopLimit(void) const { return mIp6Header.GetHopLimit(); }
+
+    /**
      * Returns the 2-bit Explicit Congestion Notification (ECN) from Traffic Class field from IPv6 header.
      *
      * @returns The ECN value.
@@ -544,6 +558,13 @@ public:
      * @returns The source port number under UDP / TCP or zero.
      */
     uint16_t GetSourcePort(void) const;
+
+    /**
+     * Sets the source port number if the header is UDP or TCP, does nothing otherwise
+     *
+     * @param[in]  aSrcPort  The UDP / TCP source Port.
+     */
+    void SetSourcePort(uint16_t aSrcPort);
 
     /**
      * Returns the destination port number if header is UDP or TCP, or zero otherwise.

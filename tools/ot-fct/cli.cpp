@@ -88,7 +88,6 @@ otError Cli::GetNextDomain(int &aIterator, Power::Domain &aDomain)
         break;
     }
 
-exit:
     return error;
 }
 
@@ -123,8 +122,6 @@ otError Cli::ProcessRegionDomainTable(Utils::CmdLineParser::Arg aArgs[])
     otError error    = OT_ERROR_NONE;
     int     iterator = 0;
     char    value[kMaxValueSize];
-    char   *domain;
-    char   *psave;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
@@ -277,7 +274,7 @@ exit:
 void Cli::ProcessCommand(Utils::CmdLineParser::Arg aArgs[])
 {
     otError error = OT_ERROR_NOT_FOUND;
-    int     i;
+    size_t  i;
 
     for (i = 0; i < (sizeof(sCommands) / sizeof(sCommands[0])); i++)
     {
@@ -288,7 +285,6 @@ void Cli::ProcessCommand(Utils::CmdLineParser::Arg aArgs[])
         }
     }
 
-exit:
     AppendErrorResult(error);
 }
 

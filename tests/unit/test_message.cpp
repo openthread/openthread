@@ -39,12 +39,9 @@ namespace ot {
 
 void TestMessage(void)
 {
-    enum : uint16_t
-    {
-        kMaxSize    = (kBufferSize * 3 + 24),
-        kOffsetStep = 101,
-        kLengthStep = 21,
-    };
+    static constexpr uint16_t kMaxSize    = (kBufferSize * 3 + 24);
+    static constexpr uint16_t kOffsetStep = 101;
+    static constexpr uint16_t kLengthStep = 21;
 
     Instance    *instance;
     MessagePool *messagePool;

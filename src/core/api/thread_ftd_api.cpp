@@ -176,25 +176,7 @@ exit:
 
 otError otThreadBecomeRouter(otInstance *aInstance)
 {
-    Error error = kErrorInvalidState;
-
-    switch (AsCoreType(aInstance).Get<Mle::MleRouter>().GetRole())
-    {
-    case Mle::kRoleDisabled:
-    case Mle::kRoleDetached:
-        break;
-
-    case Mle::kRoleChild:
-        error = AsCoreType(aInstance).Get<Mle::MleRouter>().BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
-        break;
-
-    case Mle::kRoleRouter:
-    case Mle::kRoleLeader:
-        error = kErrorNone;
-        break;
-    }
-
-    return error;
+    return AsCoreType(aInstance).Get<Mle::MleRouter>().BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
 }
 
 otError otThreadBecomeLeader(otInstance *aInstance)

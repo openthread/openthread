@@ -119,7 +119,7 @@
  * Define to 1 to enable tracking the uptime of OpenThread instance.
  */
 #ifndef OPENTHREAD_CONFIG_UPTIME_ENABLE
-#define OPENTHREAD_CONFIG_UPTIME_ENABLE OPENTHREAD_FTD
+#define OPENTHREAD_CONFIG_UPTIME_ENABLE (OPENTHREAD_FTD || OPENTHREAD_MTD)
 #endif
 
 /**

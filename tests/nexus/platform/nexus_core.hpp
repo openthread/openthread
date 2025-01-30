@@ -45,6 +45,7 @@ class Core
 {
 public:
     Core(void);
+    ~Core(void);
 
     static Core &Get(void) { return *sCore; }
 
