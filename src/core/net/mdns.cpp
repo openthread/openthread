@@ -28,8 +28,9 @@
 
 #include "mdns.hpp"
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+#if ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE) || OPENTHREAD_MDNS
 
+#include "common/crc.hpp"
 #include "instance/instance.hpp"
 
 /**
@@ -117,13 +118,15 @@ Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex)
         mCacheTimer.Stop();
     }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     Get<Dnssd>().HandleMdnsCoreStateChange();
+#endif
 
 exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
 void Core::HandleInfraIfStateChanged(void)
 {
     IgnoreError(SetEnabled(Get<BorderRouter::InfraIf>().IsRunning(), Get<BorderRouter::InfraIf>().GetIfIndex()));
@@ -4368,25 +4371,25 @@ Core::TxMessageHistory::TxMessageHistory(Instance &aInstance)
 
 void Core::TxMessageHistory::Clear(void)
 {
-    mHashEntries.Clear();
+    mMsgEntries.Clear();
     mTimer.Stop();
 }
 
 void Core::TxMessageHistory::Add(const Message &aMessage)
 {
-    Hash       hash;
-    HashEntry *entry;
+    MsgInfo   info;
+    MsgEntry *entry;
 
-    CalculateHash(aMessage, hash);
+    info.InitFrom(aMessage);
 
-    entry = mHashEntries.FindMatching(hash);
+    entry = mMsgEntries.FindMatching(info);
 
     if (entry == nullptr)
     {
-        entry = HashEntry::Allocate();
+        entry = MsgEntry::Allocate();
         OT_ASSERT(entry != nullptr);
-        entry->mHash = hash;
-        mHashEntries.Push(*entry);
+        entry->mInfo = info;
+        mMsgEntries.Push(*entry);
     }
 
     entry->mExpireTime = TimerMilli::GetNow() + kExpireInterval;
@@ -4395,28 +4398,32 @@ void Core::TxMessageHistory::Add(const Message &aMessage)
 
 bool Core::TxMessageHistory::Contains(const Message &aMessage) const
 {
-    Hash hash;
+    MsgInfo info;
 
-    CalculateHash(aMessage, hash);
-    return mHashEntries.ContainsMatching(hash);
+    info.InitFrom(aMessage);
+
+    return mMsgEntries.ContainsMatching(info);
 }
 
-void Core::TxMessageHistory::CalculateHash(const Message &aMessage, Hash &aHash)
+void Core::TxMessageHistory::MsgInfo::InitFrom(const Message &aMessage)
 {
-    Crypto::Sha256 sha256;
+    OffsetRange offsetRange;
 
-    sha256.Start();
-    sha256.Update(aMessage, /* aOffset */ 0, aMessage.GetLength());
-    sha256.Finish(aHash);
+    offsetRange.InitFromMessageFullLength(aMessage);
+
+    Clear();
+    mMsgLength = aMessage.GetLength();
+    mCrc16     = CrcCalculator<uint16_t>(kCrc16AnsiPolynomial).Feed(aMessage, offsetRange);
+    mCrc32     = CrcCalculator<uint32_t>(kCrc32AnsiPolynomial).Feed(aMessage, offsetRange);
 }
 
 void Core::TxMessageHistory::HandleTimer(void)
 {
     NextFireTime nextTime;
 
-    mHashEntries.RemoveAndFreeAllMatching(ExpireChecker(nextTime.GetNow()));
+    mMsgEntries.RemoveAndFreeAllMatching(ExpireChecker(nextTime.GetNow()));
 
-    for (const HashEntry &entry : mHashEntries)
+    for (const MsgEntry &entry : mMsgEntries)
     {
         nextTime.UpdateIfEarlier(entry.mExpireTime);
     }
@@ -6648,6 +6655,6 @@ OT_TOOL_WEAK void otPlatMdnsSendUnicast(otInstance                  *aInstance,
     OT_UNUSED_VARIABLE(aAddress);
 }
 
-#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_MOCK_PLAT_APIS_ENABLE
+#endif // ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE) || OPENTHREAD_MDNS
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,34 +26,16 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-simulation.h"
+/**
+ * @file
+ *   This file includes compile-time configuration for "POSIX mDNS" platform example
+ */
 
-#include <openthread/platform/mdns_socket.h>
+#ifndef OPENTHREAD_CORE_POSIX_MDNS_CONFIG_H_
+#define OPENTHREAD_CORE_POSIX_MDNS_CONFIG_H_
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+#ifndef OPENTHREAD_CONFIG_PLATFORM_INFO
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION"
+#endif
 
-otError otPlatMdnsSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aEnable);
-    OT_UNUSED_VARIABLE(aInfraIfIndex);
-
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
-
-void otPlatMdnsSendMulticast(otInstance *aInstance, otMessage *aMessage, uint32_t aInfraIfIndex)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aInfraIfIndex);
-
-    otMessageFree(aMessage);
-}
-
-void otPlatMdnsSendUnicast(otInstance *aInstance, otMessage *aMessage, const otPlatMdnsAddressInfo *aAddress)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aAddress);
-    otMessageFree(aMessage);
-}
-
-#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+#endif // OPENTHREAD_CORE_POSIX_MDNS_CONFIG_H_
