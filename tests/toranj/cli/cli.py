@@ -676,7 +676,8 @@ class Node(object):
         return self._cli_single_output('srp server state', expected_outputs=['disabled', 'running', 'stopped'])
 
     def srp_server_get_addr_mode(self):
-        return self._cli_single_output('srp server addrmode', expected_outputs=['unicast', 'anycast'])
+        return self._cli_single_output('srp server addrmode',
+                                       expected_outputs=['unicast', 'anycast', 'unicast-force-add'])
 
     def srp_server_set_addr_mode(self, mode):
         self._cli_no_output('srp server addrmode', mode)
