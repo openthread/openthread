@@ -196,6 +196,47 @@ Error Server::AppendChildTable(Message &aMessage)
 exit:
     return error;
 }
+
+Error Server::AppendEnhancedRoute(Message &aMessage)
+{
+    Error                 error = kErrorNone;
+    Tlv                   tlv;
+    Mle::RouterIdSet      routerIdSet;
+    EnhancedRouteTlvEntry entry;
+
+    VerifyOrExit(Get<Mle::Mle>().IsRouterOrLeader());
+
+    Get<RouterTable>().GetRouterIdSet(routerIdSet);
+
+    tlv.SetType(Tlv::kEnhancedRoute);
+    tlv.SetLength(sizeof(Mle::RouterIdSet) + routerIdSet.GetNumberOfAllocatedIds() * sizeof(entry));
+
+    SuccessOrExit(error = aMessage.Append(tlv));
+    SuccessOrExit(error = aMessage.Append(routerIdSet));
+
+    for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+    {
+        if (!routerIdSet.Contains(routerId))
+        {
+            continue;
+        }
+
+        if (Get<Mle::Mle>().MatchesRouterId(routerId))
+        {
+            entry.InitAsSelf();
+        }
+        else
+        {
+            entry.InitFrom(*Get<RouterTable>().FindRouterById(routerId));
+        }
+
+        SuccessOrExit(error = aMessage.Append(entry));
+    }
+
+exit:
+    return error;
+}
+
 #endif // OPENTHREAD_FTD
 
 Error Server::AppendMacCounters(Message &aMessage)
@@ -367,6 +408,10 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         SuccessOrExit(error = tlv.AppendTo(aMessage));
         break;
     }
+
+    case Tlv::kEnhancedRoute:
+        error = AppendEnhancedRoute(aMessage);
+        break;
 
     case Tlv::kChildTable:
         error = AppendChildTable(aMessage);
@@ -1000,6 +1045,51 @@ static void ParseRoute(const RouteTlv &aRouteTlv, otNetworkDiagRoute &aNetworkDi
     aNetworkDiagRoute.mIdSequence = aRouteTlv.GetRouterIdSequence();
 }
 
+static Error ParseEnhancedRoute(const Message &aMessage, uint16_t aOffset, otNetworkDiagEnhRoute &aNetworkDiagEnhRoute)
+{
+    Error            error;
+    OffsetRange      offsetRange;
+    Tlv              tlv;
+    Mle::RouterIdSet routerIdSet;
+    uint8_t          index;
+
+    SuccessOrExit(error = aMessage.Read(aOffset, tlv));
+
+    VerifyOrExit(!tlv.IsExtended(), error = kErrorParse);
+    VerifyOrExit(tlv.GetType() == Tlv::kEnhancedRoute, error = kErrorParse);
+
+    aOffset += sizeof(tlv);
+    offsetRange.Init(aOffset, tlv.GetLength());
+
+    SuccessOrExit(error = aMessage.Read(offsetRange, routerIdSet));
+    offsetRange.AdvanceOffset(sizeof(routerIdSet));
+
+    index = 0;
+
+    for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+    {
+        EnhancedRouteTlvEntry entry;
+
+        if (!routerIdSet.Contains(routerId))
+        {
+            continue;
+        }
+
+        SuccessOrExit(error = aMessage.Read(offsetRange, entry));
+        offsetRange.AdvanceOffset(sizeof(entry));
+
+        aNetworkDiagEnhRoute.mRouteData[index].mRouterId = routerId;
+        entry.Parse(aNetworkDiagEnhRoute.mRouteData[index]);
+
+        index++;
+    }
+
+    aNetworkDiagEnhRoute.mRouteCount = index;
+
+exit:
+    return error;
+}
+
 static inline void ParseMacCounters(const MacCountersTlv &aMacCountersTlv, otNetworkDiagMacCounters &aMacCounters)
 {
     aMacCounters.mIfInUnknownProtos  = aMacCountersTlv.GetIfInUnknownProtos();
@@ -1091,6 +1181,10 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             ParseRoute(routeTlv, aTlvInfo.mData.mRoute);
             break;
         }
+
+        case Tlv::kEnhancedRoute:
+            SuccessOrExit(error = ParseEnhancedRoute(aMessage, offset, aTlvInfo.mData.mEnhRoute));
+            break;
 
         case Tlv::kLeaderData:
         {
