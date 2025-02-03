@@ -1032,8 +1032,7 @@ private:
         Error SendTo(const Ip6::Address &aDestination);
 
     private:
-        Error AppendCompressedAddressEntry(uint8_t aContextId, const Ip6::Address &aAddress);
-        Error AppendAddressEntry(const Ip6::Address &aAddress);
+        Error AppendAddressRegistrationEntry(const Ip6::Address &aAddress);
         Error AppendDatasetTlv(MeshCoP::Dataset::Type aDatasetType);
     };
 
