@@ -47,9 +47,8 @@ RegisterLogModule("BorderAgent");
 
 BorderAgent::BorderAgent(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mState(kStateStopped)
+    , mIsRunning(false)
     , mDtlsTransport(aInstance, kNoLinkSecurity)
-    , mCoapDtlsSession(nullptr)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     , mIdInitialized(false)
 #endif
@@ -97,48 +96,43 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 
-Error BorderAgent::Start(uint16_t aUdpPort)
-{
-    Error error;
-    Pskc  pskc;
-
-    Get<KeyManager>().GetPskc(pskc);
-    error = Start(aUdpPort, pskc.m8, Pskc::kSize);
-    pskc.Clear();
-
-    return error;
-}
-
-Error BorderAgent::Start(uint16_t aUdpPort, const uint8_t *aPsk, uint8_t aPskLength)
+void BorderAgent::Start(void)
 {
     Error error = kErrorNone;
+    Pskc  pskc;
 
-    VerifyOrExit(mState == kStateStopped);
+    VerifyOrExit(!mIsRunning);
 
     mDtlsTransport.SetAcceptCallback(BorderAgent::HandleAcceptSession, this);
     mDtlsTransport.SetRemoveSessionCallback(BorderAgent::HandleRemoveSession, this);
 
     SuccessOrExit(error = mDtlsTransport.Open());
-    SuccessOrExit(error = mDtlsTransport.Bind(aUdpPort));
+    SuccessOrExit(error = mDtlsTransport.Bind(kUdpPort));
 
-    SuccessOrExit(error = mDtlsTransport.SetPsk(aPsk, aPskLength));
+    Get<KeyManager>().GetPskc(pskc);
+    SuccessOrExit(error = mDtlsTransport.SetPsk(pskc.m8, Pskc::kSize));
+    pskc.Clear();
 
-    mState = kStateStarted;
+    mIsRunning = true;
 
     LogInfo("Border Agent start listening on port %u", GetUdpPort());
 
 exit:
+    if (!mIsRunning)
+    {
+        mDtlsTransport.Close();
+    }
+
     LogWarnOnError(error, "start agent");
-    return error;
 }
 
 void BorderAgent::Stop(void)
 {
-    VerifyOrExit(mState != kStateStopped);
+    VerifyOrExit(mIsRunning);
 
     mDtlsTransport.Close();
+    mIsRunning = false;
 
-    mState = kStateStopped;
     LogInfo("Border Agent stopped");
 
 exit:
@@ -165,7 +159,7 @@ void BorderAgent::HandleNotifierEvents(Events aEvents)
     {
         Pskc pskc;
 
-        VerifyOrExit(mState != kStateStopped);
+        VerifyOrExit(mIsRunning);
 
         Get<KeyManager>().GetPskc(pskc);
 
@@ -188,17 +182,7 @@ SecureSession *BorderAgent::HandleAcceptSession(void *aContext, const Ip6::Messa
 
 BorderAgent::CoapDtlsSession *BorderAgent::HandleAcceptSession(void)
 {
-    CoapDtlsSession *session = nullptr;
-
-    VerifyOrExit(mCoapDtlsSession == nullptr);
-
-    session = CoapDtlsSession::Allocate(GetInstance(), mDtlsTransport);
-    VerifyOrExit(session != nullptr);
-
-    mCoapDtlsSession = session;
-
-exit:
-    return session;
+    return CoapDtlsSession::Allocate(GetInstance(), mDtlsTransport);
 }
 
 void BorderAgent::HandleRemoveSession(void *aContext, SecureSession &aSession)
@@ -212,7 +196,6 @@ void BorderAgent::HandleRemoveSession(SecureSession &aSession)
 
     coapSession.Cleanup();
     coapSession.Free();
-    mCoapDtlsSession = nullptr;
 }
 
 void BorderAgent::HandleSessionConnected(CoapDtlsSession &aSession)
@@ -227,7 +210,6 @@ void BorderAgent::HandleSessionConnected(CoapDtlsSession &aSession)
     else
 #endif
     {
-        mState = kStateConnected;
         mCounters.mPskcSecureSessionSuccesses++;
     }
 }
@@ -244,8 +226,6 @@ void BorderAgent::HandleSessionDisconnected(CoapDtlsSession &aSession, CoapDtlsS
     else
 #endif
     {
-        mState = kStateStarted;
-
         if (aEvent == CoapDtlsSession::kDisconnectedError)
         {
             mCounters.mPskcSecureSessionFailures++;
@@ -265,9 +245,26 @@ void BorderAgent::HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession)
     else
 #endif
     {
-        mState = kStateAccepted;
         mCounters.mPskcCommissionerPetitions++;
     }
+}
+
+BorderAgent::CoapDtlsSession *BorderAgent::FindActiveCommissionerSession(void)
+{
+    CoapDtlsSession *commissionerSession = nullptr;
+
+    for (SecureSession &session : mDtlsTransport.GetSessions())
+    {
+        CoapDtlsSession &coapSession = static_cast<CoapDtlsSession &>(session);
+
+        if (coapSession.IsActiveCommissioner())
+        {
+            commissionerSession = &coapSession;
+            break;
+        }
+    }
+
+    return commissionerSession;
 }
 
 Coap::Message::Code BorderAgent::CoapCodeFromError(Error aError)
@@ -298,23 +295,53 @@ template <> void BorderAgent::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, co
 
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    Coap::Message *message = nullptr;
-    Error          error   = kErrorNone;
+    Coap::Message   *message = nullptr;
+    Error            error   = kErrorNone;
+    CoapDtlsSession *session;
 
-    VerifyOrExit(mState != kStateStopped);
+    VerifyOrExit(mIsRunning);
 
     VerifyOrExit(aMessage.IsNonConfirmablePostRequest(), error = kErrorDrop);
 
-    VerifyOrExit(mCoapDtlsSession != nullptr);
+    session = FindActiveCommissionerSession();
+    VerifyOrExit(session != nullptr);
 
-    message = mCoapDtlsSession->NewPriorityNonConfirmablePostMessage(kUriRelayRx);
+    message = session->NewPriorityNonConfirmablePostMessage(kUriRelayRx);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = mCoapDtlsSession->ForwardToCommissioner(*message, aMessage));
+    SuccessOrExit(error = session->ForwardToCommissioner(*message, aMessage));
     LogInfo("Sent to commissioner on RelayRx (c/rx)");
 
 exit:
     FreeMessageOnError(message, error);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// BorderAgent::SessionIterator
+
+void BorderAgent::SessionIterator::Init(Instance &aInstance)
+{
+    SetSession(static_cast<CoapDtlsSession *>(aInstance.Get<BorderAgent>().mDtlsTransport.GetSessions().GetHead()));
+    SetInitTime(aInstance.Get<Uptime>().GetUptime());
+}
+
+Error BorderAgent::SessionIterator::GetNextSessionInfo(SessionInfo &aSessionInfo)
+{
+    Error            error   = kErrorNone;
+    CoapDtlsSession *session = GetSession();
+
+    VerifyOrExit(session != nullptr, error = kErrorNotFound);
+
+    SetSession(static_cast<CoapDtlsSession *>(session->GetNext()));
+
+    aSessionInfo.mPeerSockAddr.mAddress = session->GetMessageInfo().GetPeerAddr();
+    aSessionInfo.mPeerSockAddr.mPort    = session->GetMessageInfo().GetPeerPort();
+    aSessionInfo.mIsConnected           = session->IsConnected();
+    aSessionInfo.mIsCommissioner        = session->IsActiveCommissioner();
+    aSessionInfo.mLifetime              = GetInitTime() - session->GetAllocationTime();
+
+exit:
+    return error;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -614,6 +641,7 @@ BorderAgent::CoapDtlsSession::CoapDtlsSession(Instance &aInstance, Dtls::Transpo
     , mIsActiveCommissioner(false)
     , mTimer(aInstance, HandleTimer, this)
     , mUdpReceiver(HandleUdpReceive, this)
+    , mAllocationTime(aInstance.Get<Uptime>().GetUptime())
 {
     mCommissionerAloc.InitAsThreadOriginMeshLocal();
 
