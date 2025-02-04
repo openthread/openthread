@@ -1456,16 +1456,6 @@ class NodeImpl:
         self.send_command(cmd)
         return int(self._expect_command_output()[0])
 
-    def set_epskc(self, keystring: str, timeout=120000, port=0):
-        cmd = 'ba ephemeralkey set ' + keystring + ' ' + str(timeout) + ' ' + str(port)
-        self.send_command(cmd)
-        self._expect(r"(Done|Error .*)")
-
-    def clear_epskc(self):
-        cmd = 'ba ephemeralkey clear'
-        self.send_command(cmd)
-        self._expect_done()
-
     def get_border_agent_counters(self):
         cmd = 'ba counters'
         self.send_command(cmd)
@@ -1934,7 +1924,7 @@ class NodeImpl:
 
     def get_ephemeral_key_state(self):
         cmd = 'ba ephemeralkey'
-        states = [r'inactive', r'active']
+        states = [r'Disabled', r'Stopped', r'Started', r'Connected', r'Accepted']
         self.send_command(cmd)
         return self._expect_result(states)
 
