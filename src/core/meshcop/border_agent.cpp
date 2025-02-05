@@ -52,6 +52,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     , mIdInitialized(false)
 #endif
+    , mNotifyMeshCoPServiceChangedTask(aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     , mEphemeralKeyManager(aInstance)
 #endif
@@ -114,6 +115,7 @@ void BorderAgent::Start(void)
     pskc.Clear();
 
     mIsRunning = true;
+    PostNotifyMeshCoPServiceChangedTask();
 
     LogInfo("Border Agent start listening on port %u", GetUdpPort());
 
@@ -132,6 +134,7 @@ void BorderAgent::Stop(void)
 
     mDtlsTransport.Close();
     mIsRunning = false;
+    PostNotifyMeshCoPServiceChangedTask();
 
     LogInfo("Border Agent stopped");
 
@@ -140,6 +143,13 @@ exit:
 }
 
 uint16_t BorderAgent::GetUdpPort(void) const { return mDtlsTransport.GetUdpPort(); }
+
+void BorderAgent::SetMeshCoPServiceChangedCallback(MeshCoPServiceChangedCallback aCallback, void *aContext)
+{
+    mMeshCoPServiceChangedCallback.Set(aCallback, aContext);
+
+    mNotifyMeshCoPServiceChangedTask.Post();
+}
 
 void BorderAgent::HandleNotifierEvents(Events aEvents)
 {
@@ -167,6 +177,12 @@ void BorderAgent::HandleNotifierEvents(Events aEvents)
         // new pskc will be applied for next connection.
         SuccessOrExit(mDtlsTransport.SetPsk(pskc.m8, Pskc::kSize));
         pskc.Clear();
+    }
+
+    if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadExtPanIdChanged | kEventThreadNetworkNameChanged |
+                            kEventThreadBackboneRouterStateChanged | kEventActiveDatasetChanged))
+    {
+        PostNotifyMeshCoPServiceChangedTask();
     }
 
 exit:
@@ -314,6 +330,188 @@ template <> void BorderAgent::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, co
 
 exit:
     FreeMessageOnError(message, error);
+}
+
+void BorderAgent::NotifyMeshCoPServiceChanged(void)
+{
+    MeshCoPTxtEncoder meshCoPTxtEncoder(GetInstance());
+
+    VerifyOrExit(mMeshCoPServiceChangedCallback.IsSet());
+    SuccessOrAssert(meshCoPTxtEncoder.EncodeTxtData());
+
+    mMeshCoPServiceChangedCallback.Invoke(meshCoPTxtEncoder.GetTxtData(), meshCoPTxtEncoder.GetTxtDataLen());
+
+exit:
+    return;
+}
+
+void BorderAgent::PostNotifyMeshCoPServiceChangedTask(void)
+{
+    if (mMeshCoPServiceChangedCallback.IsSet())
+    {
+        mNotifyMeshCoPServiceChangedTask.Post();
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// BorderAgent::MeshCoPTxtEncoder
+
+Error BorderAgent::MeshCoPTxtEncoder::AppendTxtEntry(const char *aKey, const void *aValue, uint16_t aValueLength)
+{
+    Dns::TxtEntry txtEntry;
+
+    txtEntry.Init(aKey, reinterpret_cast<const uint8_t *>(aValue), aValueLength);
+    return txtEntry.AppendTo(mAppender);
+}
+
+template <> Error BorderAgent::MeshCoPTxtEncoder::AppendTxtEntry<NameData>(const char *aKey, const NameData &aObject)
+{
+    return AppendTxtEntry(aKey, aObject.GetBuffer(), aObject.GetLength());
+}
+
+Error BorderAgent::MeshCoPTxtEncoder::EncodeTxtData(void)
+{
+#if OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1
+    static const char kThreadVersionString[] = "1.1.1";
+#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_2
+    static const char kThreadVersionString[] = "1.2.0";
+#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_3
+    static const char kThreadVersionString[] = "1.3.0";
+#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_3_1
+    static const char kThreadVersionString[] = "1.3.1";
+#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_4
+    static const char kThreadVersionString[] = "1.4.0";
+#endif
+
+    Error error = kErrorNone;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+    Id id;
+#endif
+    StateBitmap state;
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+    if (Get<BorderAgent>().GetId(id) == kErrorNone)
+    {
+        SuccessOrExit(error = AppendTxtEntry("id", id));
+    }
+#endif
+    SuccessOrExit(error = AppendTxtEntry("nn", Get<NetworkNameManager>().GetNetworkName().GetAsData()));
+    SuccessOrExit(error = AppendTxtEntry("xp", Get<ExtendedPanIdManager>().GetExtPanId()));
+    SuccessOrExit(error = AppendTxtEntry("tv", NameData(kThreadVersionString, sizeof(kThreadVersionString) - 1)));
+    SuccessOrExit(error = AppendTxtEntry("xa", Get<Mac::Mac>().GetExtAddress()));
+
+    state = GetStateBitmap();
+    SuccessOrExit(error = AppendTxtEntry("sb", BigEndian::HostSwap32(state.ToUint32())));
+
+    if (state.mThreadIfStatus == kThreadIfStatusActive)
+    {
+        SuccessOrExit(error = AppendTxtEntry(
+                          "pt", BigEndian::HostSwap32(Get<Mle::MleRouter>().GetLeaderData().GetPartitionId())));
+        if (Get<MeshCoP::ActiveDatasetManager>().GetTimestamp().IsValid())
+        {
+            SuccessOrExit(error = AppendTxtEntry("at", Get<MeshCoP::ActiveDatasetManager>().GetTimestamp()));
+        }
+    }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    SuccessOrExit(error = AppendBbrTxtEntry(state));
+#endif
+#if OTBR_ENABLE_BORDER_ROUTING
+    SuccessOrExit(error = AppendOmrTxtEntry());
+#endif
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+Error BorderAgent::MeshCoPTxtEncoder::AppendBbrTxtEntry(StateBitmap aState)
+{
+    Error             error      = kErrorNone;
+    const DomainName &domainName = Get<MeshCoP::NetworkNameManager>().GetDomainName();
+
+    if (aState.mBbrIsActive)
+    {
+        BackboneRouter::Config bbrConfig;
+
+        Get<BackboneRouter::Local>().GetConfig(bbrConfig);
+        SuccessOrExit(error = AppendTxtEntry("sq", bbrConfig.mSequenceNumber));
+        SuccessOrExit(error = AppendTxtEntry("bb", BigEndian::HostSwap16(BackboneRouter::kBackboneUdpPort)));
+    }
+
+    error = AppendTxtEntry(
+        "dn", NameData(domainName.GetAsCString(), StringLength(domainName.GetAsCString(), sizeof(domainName))));
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+Error BorderAgent::MeshCoPTxtEncoder::AppendOmrTxtEntry(void)
+{
+    Error                                         error = kErrorNone;
+    Ip6::Prefix                                   prefix;
+    BorderRouter::RoutingManager::RoutePreference preference;
+
+    if ((error = Get<BorderRouter::RoutingManager>().GetFavoredOmrPrefix(prefix, preference)) == kErrorNone)
+    {
+        uint8_t omrData[Ip6::NetworkPrefix::kSize + 1];
+        omrData[0] = prefix.GetLength();
+        memcpy(omrData + 1, prefix.GetBytes(), prefix.GetBytesSize());
+
+        SuccessOrExit(error = AppendTxtEntry("omr", omrData));
+    }
+
+exit:
+    return error;
+}
+#endif
+
+BorderAgent::MeshCoPTxtEncoder::StateBitmap BorderAgent::MeshCoPTxtEncoder::GetStateBitmap(void)
+{
+    StateBitmap state;
+
+    state.mConnectionMode = kConnectionModePskc;
+    state.mAvailability   = kAvailabilityHigh;
+
+    switch (Get<Mle::MleRouter>().GetRole())
+    {
+    case Mle::DeviceRole::kRoleDisabled:
+        state.mThreadIfStatus = kThreadIfStatusNotInitialized;
+        state.mThreadRole     = kThreadRoleDisabledOrDetached;
+        break;
+    case Mle::DeviceRole::kRoleDetached:
+        state.mThreadIfStatus = kThreadIfStatusInitialized;
+        state.mThreadRole     = kThreadRoleDisabledOrDetached;
+        break;
+    case Mle::DeviceRole::kRoleChild:
+        state.mThreadIfStatus = kThreadIfStatusActive;
+        state.mThreadRole     = kThreadRoleChild;
+        break;
+    case Mle::DeviceRole::kRoleRouter:
+        state.mThreadIfStatus = kThreadIfStatusActive;
+        state.mThreadRole     = kThreadRoleRouter;
+        break;
+    case Mle::DeviceRole::kRoleLeader:
+        state.mThreadIfStatus = kThreadIfStatusActive;
+        state.mThreadRole     = kThreadRoleLeader;
+        break;
+    }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    state.mBbrIsActive = state.mThreadIfStatus == kThreadIfStatusActive &&
+                         Get<BackboneRouter::Local>().GetState() != BackboneRouter::Local::State::kStateDisabled;
+    state.mBbrIsPrimary = state.mThreadIfStatus == kThreadIfStatusActive &&
+                          Get<BackboneRouter::Local>().GetState() == BackboneRouter::Local::State::kStatePrimary;
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    state.mEpskcSupported =
+        Get<BorderAgent::EphemeralKeyManager>().GetState() != EphemeralKeyManager::State::kStateDisabled;
+#endif
+
+    return state;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

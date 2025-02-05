@@ -36,8 +36,13 @@
 namespace ot {
 namespace Nexus {
 
-using BorderAgent         = MeshCoP::BorderAgent;
-using EphemeralKeyManager = ot::MeshCoP::BorderAgent::EphemeralKeyManager;
+using ActiveDatasetManager = MeshCoP::ActiveDatasetManager;
+using BorderAgent          = MeshCoP::BorderAgent;
+using EphemeralKeyManager  = ot::MeshCoP::BorderAgent::EphemeralKeyManager;
+using ExtendedPanIdManager = MeshCoP::ExtendedPanIdManager;
+using NameData             = MeshCoP::NameData;
+using NetworkNameManager   = MeshCoP::NetworkNameManager;
+using TxtEntry             = Dns::TxtEntry;
 
 void TestBorderAgent(void)
 {
@@ -737,6 +742,160 @@ void TestBorderAgentEphemeralKey(void)
     VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcInvalidArgsErrors == 2);
 }
 
+class MeshCoPServiceTester
+{
+public:
+    MeshCoPServiceTester(BorderAgent &aBorderAgent)
+        : mBorderAgent(aBorderAgent)
+        , mIsRunning(false)
+        , mUdpPort(0)
+    {
+    }
+
+    void HandleMeshCoPServiceChanged(const uint8_t *aTxtData, uint16_t aLength)
+    {
+        mIsRunning = mBorderAgent.IsRunning();
+        mUdpPort   = mBorderAgent.GetUdpPort();
+
+        assert(aLength <= kMaxTxtDataLen);
+
+        memcpy(mTxtData, aTxtData, aLength);
+        mTxtDataLength = aLength;
+    }
+
+    bool FindTxtEntry(const char *aKey, TxtEntry &aTxtEntry)
+    {
+        bool               found = false;
+        TxtEntry::Iterator iter;
+
+        iter.Init(mTxtData, mTxtDataLength);
+        while (iter.GetNextEntry(aTxtEntry) == kErrorNone)
+        {
+            if (strcmp(aTxtEntry.mKey, aKey) == 0)
+            {
+                found = true;
+                break;
+            }
+        }
+
+        return found;
+    }
+
+    static constexpr uint16_t kMaxTxtDataLen = 128;
+
+    BorderAgent &mBorderAgent;
+    uint8_t      mTxtData[kMaxTxtDataLen];
+    uint16_t     mTxtDataLength;
+    bool         mIsRunning;
+    uint16_t     mUdpPort;
+};
+
+static void HandleMeshCoPServiceChanged(const uint8_t *aTxtData, uint16_t aLength, void *aContext)
+{
+    static_cast<MeshCoPServiceTester *>(aContext)->HandleMeshCoPServiceChanged(aTxtData, aLength);
+}
+
+template <typename ObjectType> bool CheckObjectSameAsTxtEntryData(const TxtEntry &aTxtEntry, const ObjectType &aObject)
+{
+    static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+    return aTxtEntry.mValueLength == sizeof(ObjectType) && memcmp(aTxtEntry.mValue, &aObject, sizeof(ObjectType)) == 0;
+}
+
+template <> bool CheckObjectSameAsTxtEntryData<NameData>(const TxtEntry &aTxtEntry, const NameData &aNameData)
+{
+    return aTxtEntry.mValueLength == aNameData.GetLength() &&
+           memcmp(aTxtEntry.mValue, aNameData.GetBuffer(), aNameData.GetLength()) == 0;
+}
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1
+static const char kThreadVersionString[] = "1.1.1";
+#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_2
+static const char kThreadVersionString[] = "1.2.0";
+#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_3
+static const char kThreadVersionString[] = "1.3.0";
+#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_3_1
+static const char kThreadVersionString[] = "1.3.1";
+#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_4
+static const char kThreadVersionString[] = "1.4.0";
+#endif
+
+void TestBorderAgentMeshCoPServiceChangedCallback(void)
+{
+    Core  nexus;
+    Node &node0 = nexus.CreateNode();
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("TestBorderAgentMeshCoPServiceChangedCallback");
+
+    nexus.AdvanceTime(0);
+    MeshCoPServiceTester meshCoPServiceTester(node0.Get<BorderAgent>());
+    TxtEntry             txtEntry;
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // 1. Set MeshCoP service change callback. Will get initial values.
+    Log("Set MeshCoP service change callback and check initial values");
+    node0.Get<BorderAgent>().SetMeshCoPServiceChangedCallback(HandleMeshCoPServiceChanged, &meshCoPServiceTester);
+    nexus.AdvanceTime(1);
+
+    // 1.1 Check the initial TXT entries
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("id", txtEntry));
+    BorderAgent::Id id;
+    VerifyOrQuit(node0.Get<BorderAgent>().GetId(id) == kErrorNone);
+    VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, id));
+#endif
+    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("nn", txtEntry));
+    VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<NetworkNameManager>().GetNetworkName().GetAsData()));
+    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("xp", txtEntry));
+    VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<ExtendedPanIdManager>().GetExtPanId()));
+    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("tv", txtEntry));
+    VerifyOrQuit(
+        CheckObjectSameAsTxtEntryData(txtEntry, NameData(kThreadVersionString, sizeof(kThreadVersionString) - 1)));
+    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("xa", txtEntry));
+    VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<Mac::Mac>().GetExtAddress()));
+    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("sb", txtEntry));
+
+    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("pt", txtEntry) == false);
+    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("at", txtEntry) == false);
+
+    // 1.2 Check the Border Agent state
+    VerifyOrQuit(meshCoPServiceTester.mIsRunning == false);
+    VerifyOrQuit(meshCoPServiceTester.mUdpPort == 0);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // 2. Join Thread network and check updated values and states.
+    Log("Join Thread network and check updated Txt data and states");
+    node0.Form();
+    nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
+
+    // 2.1 Check the initial TXT entries
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("id", txtEntry));
+    VerifyOrQuit(node0.Get<BorderAgent>().GetId(id) == kErrorNone);
+    VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, id));
+#endif
+    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("nn", txtEntry));
+    VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<NetworkNameManager>().GetNetworkName().GetAsData()));
+    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("xp", txtEntry));
+    VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<ExtendedPanIdManager>().GetExtPanId()));
+    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("tv", txtEntry));
+    VerifyOrQuit(
+        CheckObjectSameAsTxtEntryData(txtEntry, NameData(kThreadVersionString, sizeof(kThreadVersionString) - 1)));
+    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("xa", txtEntry));
+    VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<Mac::Mac>().GetExtAddress()));
+    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("sb", txtEntry));
+    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("pt", txtEntry));
+    VerifyOrQuit(CheckObjectSameAsTxtEntryData(
+        txtEntry, BigEndian::HostSwap32(node0.Get<Mle::MleRouter>().GetLeaderData().GetPartitionId())));
+    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("at", txtEntry));
+    VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<ActiveDatasetManager>().GetTimestamp()));
+
+    // 2.2 Check the Border Agent state
+    VerifyOrQuit(meshCoPServiceTester.mIsRunning == true);
+    VerifyOrQuit(meshCoPServiceTester.mUdpPort != 0);
+}
+
 } // namespace Nexus
 } // namespace ot
 
@@ -744,6 +903,7 @@ int main(void)
 {
     ot::Nexus::TestBorderAgent();
     ot::Nexus::TestBorderAgentEphemeralKey();
+    ot::Nexus::TestBorderAgentMeshCoPServiceChangedCallback();
     printf("All tests passed\n");
     return 0;
 }

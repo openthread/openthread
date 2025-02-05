@@ -144,6 +144,35 @@ bool otBorderAgentIsActive(otInstance *aInstance);
 uint16_t otBorderAgentGetUdpPort(otInstance *aInstance);
 
 /**
+ * This callback informs the application of the changes in the state of the MeshCoP service.
+ *
+ * In specific, the 'state' includes the MeshCoP TXT data originated from the Thread network and whether the
+ * Border Agent is Active (which can be obtained by `otBorderAgentIsActive`).
+ *
+ * @param[in] aTxtData  A pointer to the encoded MeshCoP TXT data originated from the Thread network.
+ * @param[in] aLength   The length of the encoded TXT data.
+ * @param[in] aContext  A pointer to application-specific context.
+ */
+typedef void (*otBorderAgentMeshCoPServiceChangedCallback)(const uint8_t *aTxtData, uint16_t aLength, void *aContext);
+
+/**
+ * Sets the callback function used by the Border Agent to notify of any changes to the state of the MeshCoP service.
+ *
+ * The callback is invoked when the 'Is Active' state of the Border Agent or the MeshCoP service TXT data values
+ * change. For example, it is invoked when the network name or the extended PAN ID changes and passes the updated
+ * encoded TXT data to the application layer.
+ *
+ * This callback is invoked once right after this API is called to provide initial states of the MeshCoP service.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aCallback  The callback to be invoked when there are any changes of the MeshCoP service.
+ * @param[in] aContext   A pointer to application-specific context.
+ */
+void otBorderAgentSetMeshCoPServiceChangedCallback(otInstance                                *aInstance,
+                                                   otBorderAgentMeshCoPServiceChangedCallback aCallback,
+                                                   void                                      *aContext);
+
+/**
  * Gets the randomly generated Border Agent ID.
  *
  * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE`.

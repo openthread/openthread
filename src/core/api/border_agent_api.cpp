@@ -76,6 +76,13 @@ otError otBorderAgentGetNextSessionInfo(otBorderAgentSessionIterator *aIterator,
     return AsCoreType(aIterator).GetNextSessionInfo(*aSessionInfo);
 }
 
+void otBorderAgentSetMeshCoPServiceChangedCallback(otInstance                                *aInstance,
+                                                   otBorderAgentMeshCoPServiceChangedCallback aCallback,
+                                                   void                                      *aContext)
+{
+    AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().SetMeshCoPServiceChangedCallback(aCallback, aContext);
+}
+
 const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance)
 {
     return &AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetCounters();

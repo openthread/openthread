@@ -2301,6 +2301,9 @@ void RoutingManager::OmrPrefixManager::SetFavordPrefix(const OmrPrefix &aOmrPref
 
     if (oldFavoredPrefix != mFavoredPrefix)
     {
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+        Get<MeshCoP::BorderAgent>().PostNotifyMeshCoPServiceChangedTask();
+#endif
         LogInfo("Favored OMR prefix: %s -> %s", FavoredToString(oldFavoredPrefix).AsCString(),
                 FavoredToString(mFavoredPrefix).AsCString());
     }
