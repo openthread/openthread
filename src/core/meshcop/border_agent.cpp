@@ -623,6 +623,13 @@ BorderAgent::CoapDtlsSession::CoapDtlsSession(Instance &aInstance, Dtls::Transpo
 
 void BorderAgent::CoapDtlsSession::Cleanup(void)
 {
+    while (!mForwardContexts.IsEmpty())
+    {
+        ForwardContext *forwardContext = mForwardContexts.Pop();
+
+        IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleCoapResponse, forwardContext));
+    }
+
     mTimer.Stop();
     IgnoreError(Get<Ip6::Udp>().RemoveReceiver(mUdpReceiver));
     Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
@@ -755,7 +762,7 @@ Error BorderAgent::CoapDtlsSession::ForwardToLeader(const Coap::Message    &aMes
     // will own it. We take back ownership from `HandleCoapResponse()`
     // callback.
 
-    forwardContext.Release();
+    mForwardContexts.Push(*forwardContext.Release());
 
     LogInfo("Forwarded request to leader on %s", PathForUri(aUri));
 
@@ -789,6 +796,8 @@ void BorderAgent::CoapDtlsSession::HandleCoapResponse(const ForwardContext &aFor
 {
     Coap::Message *message = nullptr;
     Error          error;
+
+    IgnoreError(mForwardContexts.Remove(aForwardContext));
 
     SuccessOrExit(error = aResult);
     VerifyOrExit((message = NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
