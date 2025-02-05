@@ -1212,6 +1212,17 @@ public:
     Error AppendTo(Message &aMessage) const;
 
     /**
+     * Encodes and appends the `TxtEntry` to an Appender object.
+     *
+     * @param[in] aAppender  The appender to append to.
+     *
+     * @retval kErrorNone          Entry was appended successfully to @p aAppender.
+     * @retval kErrorInvalidArgs   The `TxTEntry` info is not valid.
+     * @retval kErrorNoBufs        Insufficient available space in @p aAppender.
+     */
+    Error AppendTo(Appender &aAppender) const;
+
+    /**
      * Appends an array of `TxtEntry` items to a message.
      *
      * @param[in] aEntries     A pointer to array of `TxtEntry` items.
@@ -1238,7 +1249,6 @@ public:
     static Error AppendEntries(const TxtEntry *aEntries, uint16_t aNumEntries, MutableData<kWithUint16Length> &aData);
 
 private:
-    Error        AppendTo(Appender &aAppender) const;
     static Error AppendEntries(const TxtEntry *aEntries, uint16_t aNumEntries, Appender &aAppender);
 
     static constexpr uint8_t kMaxKeyValueEncodedSize = 255;
