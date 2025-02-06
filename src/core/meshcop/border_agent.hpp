@@ -42,6 +42,7 @@
 
 #include "common/as_core_type.hpp"
 #include "common/heap_allocatable.hpp"
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
@@ -311,7 +312,9 @@ private:
         void  Cleanup(void);
 
     private:
-        class ForwardContext : public Heap::Allocatable<ForwardContext>, private ot::NonCopyable
+        class ForwardContext : public ot::LinkedListEntry<ForwardContext>,
+                               public Heap::Allocatable<ForwardContext>,
+                               private ot::NonCopyable
         {
             friend class Heap::Allocatable<ForwardContext>;
 
@@ -319,6 +322,7 @@ private:
             Error ToHeader(Coap::Message &aMessage, uint8_t aCode) const;
 
             CoapDtlsSession &mSession;
+            ForwardContext  *mNext;
             uint16_t         mMessageId;
             bool             mPetition : 1;
             bool             mSeparate : 1;
@@ -358,6 +362,7 @@ private:
         void        HandleTimer(void);
 
         bool                       mIsActiveCommissioner;
+        LinkedList<ForwardContext> mForwardContexts;
         TimerMilliContext          mTimer;
         Ip6::Udp::Receiver         mUdpReceiver;
         Ip6::Netif::UnicastAddress mCommissionerAloc;
