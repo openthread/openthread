@@ -480,7 +480,7 @@ template <> otError TcpExample::Process<Cmd("send")>(Arg aArgs[])
 {
     static constexpr uint16_t kBufferSizeForHexData = 128;
 
-    otError error;
+    otError  error;
     uint16_t dataLen;
     uint8_t *data;
     uint8_t  buf[kBufferSizeForHexData];
@@ -494,13 +494,13 @@ template <> otError TcpExample::Process<Cmd("send")>(Arg aArgs[])
         // Binary hex data payload
         dataLen = sizeof(buf);
         data = &buf[0];
-        SuccessOrExit(error  = ot::Utils::CmdLineParser::ParseAsHexString(aArgs[1].GetCString(), dataLen, buf));
+        SuccessOrExit(error = aArgs[1].ParseAsHexString(dataLen, buf));
     }
     else
     {
         VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        data = reinterpret_cast<unsigned char *>(aArgs[0].GetCString());
         dataLen = aArgs[0].GetLength();
+        data = reinterpret_cast<uint8_t *>(aArgs[0].GetCString());
     }
 
     if (mUseCircularSendBuffer)
