@@ -493,14 +493,14 @@ template <> otError TcpExample::Process<Cmd("send")>(Arg aArgs[])
     {
         // Binary hex data payload
         dataLen = sizeof(buf);
-        data = &buf[0];
+        data    = &buf[0];
         SuccessOrExit(error = aArgs[1].ParseAsHexString(dataLen, buf));
     }
     else
     {
         VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
         dataLen = aArgs[0].GetLength();
-        data = reinterpret_cast<uint8_t *>(aArgs[0].GetCString());
+        data    = reinterpret_cast<uint8_t *>(aArgs[0].GetCString());
     }
 
     if (mUseCircularSendBuffer)
@@ -522,8 +522,7 @@ template <> otError TcpExample::Process<Cmd("send")>(Arg aArgs[])
         {
             size_t written;
 
-            SuccessOrExit(error = otTcpCircularSendBufferWrite(&mEndpoint, &mSendBuffer, data,
-                                                               dataLen, &written, 0));
+            SuccessOrExit(error = otTcpCircularSendBufferWrite(&mEndpoint, &mSendBuffer, data, dataLen, &written, 0));
         }
     }
     else
