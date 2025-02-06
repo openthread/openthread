@@ -463,29 +463,52 @@ exit:
  * tcp send hello
  * Done
  * @endcode
- * @cparam tcp send @ca{message}
+ * @code
+ * tcp send -x 68656c6c6f
+ * Done
+ * @endcode
+ * @cparam tcp send [@ca{type}] @ca{message}
  * The `message` parameter contains the message you want to send to the
  * remote TCP endpoint.
+ * If `type` is `-x`:
+ * Binary data in hexadecimal representation is given in the `message` parameter.
  * @par
  * Sends data over the TCP connection associated with the example TCP endpoint
  * that is provided with the `tcp` CLI. @moreinfo{@tcp}.
  */
 template <> otError TcpExample::Process<Cmd("send")>(Arg aArgs[])
 {
+    static constexpr uint16_t kBufferSizeForHexData = 128;
+
     otError error;
+    uint16_t dataLen;
+    uint8_t *data;
+    uint8_t  buf[kBufferSizeForHexData];
 
     VerifyOrExit(mInitialized, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(mBenchmarkBytesTotal == 0, error = OT_ERROR_BUSY);
     VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    if (aArgs[0] == "-x" && !aArgs[1].IsEmpty())
+    {
+        // Binary hex data payload
+        dataLen = sizeof(buf);
+        data = &buf[0];
+        SuccessOrExit(error  = ot::Utils::CmdLineParser::ParseAsHexString(aArgs[1].GetCString(), dataLen, buf));
+    }
+    else
+    {
+        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        data = reinterpret_cast<unsigned char *>(aArgs[0].GetCString());
+        dataLen = aArgs[0].GetLength();
+    }
 
     if (mUseCircularSendBuffer)
     {
 #if OPENTHREAD_CONFIG_TLS_ENABLE
         if (mUseTls)
         {
-            int rv = mbedtls_ssl_write(&mSslContext, reinterpret_cast<unsigned char *>(aArgs[0].GetCString()),
-                                       aArgs[0].GetLength());
+            int rv = mbedtls_ssl_write(&mSslContext, data, dataLen);
 
             if (rv < 0 && rv != MBEDTLS_ERR_SSL_WANT_WRITE && rv != MBEDTLS_ERR_SSL_WANT_READ)
             {
@@ -499,8 +522,8 @@ template <> otError TcpExample::Process<Cmd("send")>(Arg aArgs[])
         {
             size_t written;
 
-            SuccessOrExit(error = otTcpCircularSendBufferWrite(&mEndpoint, &mSendBuffer, aArgs[0].GetCString(),
-                                                               aArgs[0].GetLength(), &written, 0));
+            SuccessOrExit(error = otTcpCircularSendBufferWrite(&mEndpoint, &mSendBuffer, data,
+                                                               dataLen, &written, 0));
         }
     }
     else
@@ -509,8 +532,8 @@ template <> otError TcpExample::Process<Cmd("send")>(Arg aArgs[])
 
         mSendLink.mNext   = nullptr;
         mSendLink.mData   = mSendBufferBytes;
-        mSendLink.mLength = OT_MIN(aArgs[0].GetLength(), sizeof(mSendBufferBytes));
-        memcpy(mSendBufferBytes, aArgs[0].GetCString(), mSendLink.mLength);
+        mSendLink.mLength = OT_MIN(dataLen, sizeof(mSendBufferBytes));
+        memcpy(mSendBufferBytes, data, mSendLink.mLength);
 
         SuccessOrExit(error = otTcpSendByReference(&mEndpoint, &mSendLink, 0));
         mSendBusy = true;
