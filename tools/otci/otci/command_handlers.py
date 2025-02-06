@@ -330,7 +330,12 @@ class OtbrAdbCommandRunner(OTCommandHandler):
         return self.shell(cmd, timeout=timeout)
 
     def shell(self, cmd: str, timeout: float) -> List[str]:
-        raw_out = self.__adb.shell(cmd, transport_timeout_s=timeout, read_timeout_s=timeout, timeout_s=timeout)
+        from adb_shell.exceptions import UsbReadFailedError, AdbTimeoutError
+
+        try:
+            raw_out = self.__adb.shell(cmd, transport_timeout_s=timeout, read_timeout_s=timeout, timeout_s=timeout)
+        except (UsbReadFailedError, AdbTimeoutError):
+            raise ExpectLineTimeoutError(cmd)
 
         # Normalize ADB shell output for consistent line splitting.
         #   The ADB client may perform automatic newline conversion, potentially replace the '\n' with '\r\n'.
