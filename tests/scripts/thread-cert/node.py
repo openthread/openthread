@@ -4040,6 +4040,8 @@ class LinuxHost():
         for line in self.bash(f'cat {host_name_file}', encoding='raw_unicode_escape'):
             elements = line.split()
             fullname = f'{host_name}.local.'
+            if 'No Such Record' in line:
+                continue
             if fullname not in elements:
                 continue
             if 'Add' not in elements:
