@@ -122,6 +122,9 @@ class OTCI(object):
             self.log('info', '> %s', cmd)
 
         output = self.__otcmd.execute_command(cmd, timeout)
+        # remove the last element if the last element is an empty string
+        if output and output[-1] == '':
+            output = output[:-1]
 
         if not silent:
             for line in output:
