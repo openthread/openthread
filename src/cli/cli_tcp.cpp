@@ -470,8 +470,8 @@ exit:
  * @cparam tcp send [@ca{type}] @ca{message}
  * The `message` parameter contains the message you want to send to the
  * remote TCP endpoint.
- * If `type` is `-x`:
- * Binary data in hexadecimal representation is given in the `message` parameter.
+ * If `type` is `-x`, then
+ * binary data in hexadecimal representation is given in the `message` parameter.
  * @par
  * Sends data over the TCP connection associated with the example TCP endpoint
  * that is provided with the `tcp` CLI. @moreinfo{@tcp}.
