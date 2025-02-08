@@ -71,7 +71,7 @@ public:
      */
     static uint32_t NonCryptoGetUint32(void);
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
      * Fills a given buffer with cryptographically secure random bytes.
      *
@@ -189,7 +189,7 @@ uint32_t AddJitter(uint32_t aValue, uint16_t aJitter);
 
 } // namespace NonCrypto
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 namespace Crypto {
 
@@ -222,7 +222,7 @@ template <typename ObjectType> Error Fill(ObjectType &aObject)
 
 } // namespace Crypto
 
-#endif // !OPENTHREAD_RADIO
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 } // namespace Random
 } // namespace ot

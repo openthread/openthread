@@ -106,6 +106,13 @@ public:
     uint8_t GetLength(void) const { return static_cast<uint8_t>(StringLength(m8, kMaxLength + 1)); }
 
     /**
+     * Gets the PSKd as a byte array.
+     *
+     * @returns The PSKd as a byte array.
+     */
+    const uint8_t *GetBytes(void) const { return reinterpret_cast<const uint8_t *>(m8); }
+
+    /**
      * Overloads operator `==` to evaluate whether or not two PSKds are equal.
      *
      * @param[in]  aOther  The other PSKd to compare with.
@@ -509,6 +516,18 @@ Error GeneratePskc(const char          *aPassPhrase,
  * @param[out]  aJoinerId  The Joiner ID.
  */
 void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
+/**
+ * Generates a message dump log for certification test.
+ *
+ * @param[in] aText     The title text to include in the log.
+ * @param[in] aMessage  The message to dump the content of.
+ */
+void LogCertMessage(const char *aText, const Coap::Message &aMessage);
+
+#endif
 
 } // namespace MeshCoP
 

@@ -46,7 +46,7 @@
  * reassembly buffer. I have kept the original code as a comment below this
  * function, for reference.
  *
- * Looking at the usage of this function in tcp_input, this just has to set
+ * Looking at the usage of this function in tcplp_input, this just has to set
  * *tlenp to 0 if the received segment is already completely buffered; it does
  * not need to update it if only part of the segment is trimmed off.
  */

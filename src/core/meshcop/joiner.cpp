@@ -137,7 +137,9 @@ Error Joiner::Start(const char      *aPskd,
     Get<Mac::Mac>().SetExtAddress(randomAddress);
     Get<Mle::MleRouter>().UpdateLinkLocalAddress();
 
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(kJoinerUdpPort));
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Open());
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Bind(kJoinerUdpPort));
+    Get<Tmf::SecureAgent>().SetConnectCallback(HandleSecureCoapClientConnect, this);
     Get<Tmf::SecureAgent>().SetPsk(joinerPskd);
 
     for (JoinerRouter &router : mJoinerRouters)
@@ -154,6 +156,7 @@ Error Joiner::Start(const char      *aPskd,
     }
     else
     {
+        SetIdFromIeeeEui64();
         SteeringData::CalculateHashBitIndexes(mId, filterIndexes);
     }
 
@@ -201,7 +204,7 @@ void Joiner::Finish(Error aError)
         OT_FALL_THROUGH;
 
     case kStateDiscover:
-        Get<Tmf::SecureAgent>().Stop();
+        Get<Tmf::SecureAgent>().Close();
         break;
     }
 
@@ -358,7 +361,7 @@ Error Joiner::Connect(JoinerRouter &aRouter)
 
     sockAddr.GetAddress().SetToLinkLocalAddress(aRouter.mExtAddr);
 
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Connect(sockAddr, Joiner::HandleSecureCoapClientConnect, this));
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Connect(sockAddr));
 
     SetState(kStateConnect);
 
@@ -367,16 +370,16 @@ exit:
     return error;
 }
 
-void Joiner::HandleSecureCoapClientConnect(Dtls::ConnectEvent aEvent, void *aContext)
+void Joiner::HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent, void *aContext)
 {
     static_cast<Joiner *>(aContext)->HandleSecureCoapClientConnect(aEvent);
 }
 
-void Joiner::HandleSecureCoapClientConnect(Dtls::ConnectEvent aEvent)
+void Joiner::HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent)
 {
     VerifyOrExit(mState == kStateConnect);
 
-    if (aEvent == Dtls::kConnected)
+    if (aEvent == Dtls::Session::kConnected)
     {
         SetState(kStateConnected);
         SendJoinerFinalize();
@@ -468,7 +471,7 @@ exit:
 void Joiner::HandleJoinerFinalizeResponse(void                *aContext,
                                           otMessage           *aMessage,
                                           const otMessageInfo *aMessageInfo,
-                                          Error                aResult)
+                                          otError              aResult)
 {
     static_cast<Joiner *>(aContext)->HandleJoinerFinalizeResponse(AsCoapMessagePtr(aMessage), &AsCoreType(aMessageInfo),
                                                                   aResult);
@@ -610,23 +613,6 @@ const char *Joiner::StateToString(State aState)
 
     return kStateStrings[aState];
 }
-
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-void Joiner::LogCertMessage(const char *aText, const Coap::Message &aMessage) const
-{
-    OT_UNUSED_VARIABLE(aText);
-
-    uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
-
-    VerifyOrExit(aMessage.GetLength() <= sizeof(buf));
-    aMessage.ReadBytes(aMessage.GetOffset(), buf, aMessage.GetLength() - aMessage.GetOffset());
-
-    DumpCert(aText, buf, aMessage.GetLength() - aMessage.GetOffset());
-
-exit:
-    return;
-}
-#endif
 
 // LCOV_EXCL_STOP
 

@@ -254,20 +254,20 @@ This command requires `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE`.
 
 The following formats are available: :
 
-- `netdata publish dnssrp anycast <seq-num>` to publish "DNS/SRP Service Anycast Address" with a given sequence number.
-- `netdata publish dnssrp unicast <address> <port>` to publish "DNS/SRP Service Unicast Address" with given address and port number info. The address/port info is included in Service TLV data.
-- `netdata publish dnssrp unicast <port>` to publish "DNS/SRP Service Unicast Address" with given port number and the device's mesh-local EID for the address. The address and port info is included in Server TLV data.
+- `netdata publish dnssrp anycast <seq-num> [<version>]` to publish "DNS/SRP Service Anycast Address" with a given sequence number and version.
+- `netdata publish dnssrp unicast <address> <port> [<version>]` to publish "DNS/SRP Service Unicast Address" with given address, port number and version info. The address/port/version info is included in Service TLV data.
+- `netdata publish dnssrp unicast <port> [<version>]` to publish "DNS/SRP Service Unicast Address" with given port number, version, and the device's mesh-local EID for the address. The address/port/version info is included in Server TLV data.
 
 A new call to `netdata publish dnssrp [anycast|unicast] [...]` command will remove and replace any previous "DNS/SRP Service" entry that was being published (from earlier `netdata publish dnssrp [...]` commands).
 
 ```bash
-> netdata publish dnssrp anycast 1
+> netdata publish dnssrp anycast 1 2
 Done
 
-> netdata publish dnssrp unicast fd00::1234 51525
+> netdata publish dnssrp unicast fd00::1234 51525 1
 Done
 
-> netdata publish dnssrp unicast 50152
+> netdata publish dnssrp unicast 50152 2
 Done
 ```
 

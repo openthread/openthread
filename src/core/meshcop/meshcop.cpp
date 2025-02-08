@@ -34,7 +34,7 @@
 
 #include "meshcop.hpp"
 
-#include "common/crc16.hpp"
+#include "common/crc.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -244,17 +244,8 @@ bool SteeringData::Contains(const HashBitIndexes &aIndexes) const
 
 void SteeringData::CalculateHashBitIndexes(const Mac::ExtAddress &aJoinerId, HashBitIndexes &aIndexes)
 {
-    Crc16 ccitt(Crc16::kCcitt);
-    Crc16 ansi(Crc16::kAnsi);
-
-    for (uint8_t b : aJoinerId.m8)
-    {
-        ccitt.Update(b);
-        ansi.Update(b);
-    }
-
-    aIndexes.mIndex[0] = ccitt.Get();
-    aIndexes.mIndex[1] = ansi.Get();
+    aIndexes.mIndex[0] = CrcCalculator<uint16_t>(kCrc16CcittPolynomial).Feed(aJoinerId);
+    aIndexes.mIndex[1] = CrcCalculator<uint16_t>(kCrc16AnsiPolynomial).Feed(aJoinerId);
 }
 
 void SteeringData::CalculateHashBitIndexes(const JoinerDiscerner &aDiscerner, HashBitIndexes &aIndexes)
@@ -336,6 +327,26 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
+void LogCertMessage(const char *aText, const Coap::Message &aMessage)
+{
+    OT_UNUSED_VARIABLE(aText);
+
+    uint8_t  buf[kBufferSize];
+    uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
+
+    VerifyOrExit(length <= sizeof(buf));
+    aMessage.ReadBytes(aMessage.GetOffset(), buf, length);
+
+    DumpCert(aText, buf, length);
+
+exit:
+    return;
+}
+
+#endif
 
 } // namespace MeshCoP
 } // namespace ot

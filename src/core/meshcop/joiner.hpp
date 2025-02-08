@@ -59,6 +59,10 @@ namespace ot {
 
 namespace MeshCoP {
 
+#if !OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
+#error "Joiner feature requires `OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE`"
+#endif
+
 class Joiner : public InstanceLocator, private NonCopyable
 {
     friend class Tmf::Agent;
@@ -189,13 +193,13 @@ private:
     static void HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult, void *aContext);
     void        HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult);
 
-    static void HandleSecureCoapClientConnect(Dtls::ConnectEvent aEvent, void *aContext);
-    void        HandleSecureCoapClientConnect(Dtls::ConnectEvent aEvent);
+    static void HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent, void *aContext);
+    void        HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent);
 
     static void HandleJoinerFinalizeResponse(void                *aContext,
                                              otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
-                                             Error                aResult);
+                                             otError              aResult);
     void HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -218,10 +222,6 @@ private:
     void  FreeJoinerFinalizeMessage(void);
     void  SendJoinerFinalize(void);
     void  SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo);
-
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    void LogCertMessage(const char *aText, const Coap::Message &aMessage) const;
-#endif
 
     using JoinerTimer = TimerMilliIn<Joiner, &Joiner::HandleTimer>;
 

@@ -1032,8 +1032,7 @@ private:
         Error SendTo(const Ip6::Address &aDestination);
 
     private:
-        Error AppendCompressedAddressEntry(uint8_t aContextId, const Ip6::Address &aAddress);
-        Error AppendAddressEntry(const Ip6::Address &aAddress);
+        Error AppendAddressRegistrationEntry(const Ip6::Address &aAddress);
         Error AppendDatasetTlv(MeshCoP::Dataset::Type aDatasetType);
     };
 
@@ -1139,8 +1138,11 @@ private:
         void ScheduleChildUpdateRequestToParent(uint16_t aDelay);
 #if OPENTHREAD_FTD
         void ScheduleParentResponse(const ParentResponseInfo &aInfo, uint16_t aDelay);
+        void ScheduleAdvertisement(const Ip6::Address &aDestination, uint16_t aDelay);
         void ScheduleMulticastDataResponse(uint16_t aDelay);
         void ScheduleLinkRequest(const Router &aRouter, uint16_t aDelay);
+        void RemoveScheduledLinkRequest(const Router &aRouter);
+        bool HasAnyScheduledLinkRequest(const Router &aRouter) const;
         void ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint16_t aDelay);
         void ScheduleDiscoveryResponse(const Ip6::Address          &aDestination,
                                        const DiscoveryResponseInfo &aInfo,
@@ -1380,6 +1382,10 @@ private:
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     ServiceAloc *FindInServiceAlocs(uint16_t aAloc16);
     void         UpdateServiceAlocs(void);
+#endif
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    void CheckTrelPeerAddrOnSecureMleRx(const Message &aMessage);
 #endif
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

@@ -130,6 +130,15 @@ bool Dataset::IsTlvValid(const Tlv &aTlv)
 
     switch (aTlv.GetType())
     {
+    case Tlv::kActiveTimestamp:
+        minLength = sizeof(ActiveTimestampTlv::ValueType);
+        break;
+    case Tlv::kPendingTimestamp:
+        minLength = sizeof(PendingTimestampTlv::ValueType);
+        break;
+    case Tlv::kDelayTimer:
+        minLength = sizeof(DelayTimerTlv::UintValueType);
+        break;
     case Tlv::kPanId:
         minLength = sizeof(PanIdTlv::UintValueType);
         break;

@@ -30,6 +30,7 @@
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 
+#include "common/crc.hpp"
 #include "instance/instance.hpp"
 
 /**
@@ -4276,7 +4277,7 @@ void Core::MultiPacketRxMessages::HandleTimer(void)
     NextFireTime           nextTime;
     OwningList<RxMsgEntry> expiredEntries;
 
-    mRxMsgEntries.RemoveAllMatching(ExpireChecker(nextTime.GetNow()), expiredEntries);
+    mRxMsgEntries.RemoveAllMatching(expiredEntries, ExpireChecker(nextTime.GetNow()));
 
     for (RxMsgEntry &expiredEntry : expiredEntries)
     {
@@ -4368,25 +4369,25 @@ Core::TxMessageHistory::TxMessageHistory(Instance &aInstance)
 
 void Core::TxMessageHistory::Clear(void)
 {
-    mHashEntries.Clear();
+    mMsgEntries.Clear();
     mTimer.Stop();
 }
 
 void Core::TxMessageHistory::Add(const Message &aMessage)
 {
-    Hash       hash;
-    HashEntry *entry;
+    MsgInfo   info;
+    MsgEntry *entry;
 
-    CalculateHash(aMessage, hash);
+    info.InitFrom(aMessage);
 
-    entry = mHashEntries.FindMatching(hash);
+    entry = mMsgEntries.FindMatching(info);
 
     if (entry == nullptr)
     {
-        entry = HashEntry::Allocate();
+        entry = MsgEntry::Allocate();
         OT_ASSERT(entry != nullptr);
-        entry->mHash = hash;
-        mHashEntries.Push(*entry);
+        entry->mInfo = info;
+        mMsgEntries.Push(*entry);
     }
 
     entry->mExpireTime = TimerMilli::GetNow() + kExpireInterval;
@@ -4395,28 +4396,32 @@ void Core::TxMessageHistory::Add(const Message &aMessage)
 
 bool Core::TxMessageHistory::Contains(const Message &aMessage) const
 {
-    Hash hash;
+    MsgInfo info;
 
-    CalculateHash(aMessage, hash);
-    return mHashEntries.ContainsMatching(hash);
+    info.InitFrom(aMessage);
+
+    return mMsgEntries.ContainsMatching(info);
 }
 
-void Core::TxMessageHistory::CalculateHash(const Message &aMessage, Hash &aHash)
+void Core::TxMessageHistory::MsgInfo::InitFrom(const Message &aMessage)
 {
-    Crypto::Sha256 sha256;
+    OffsetRange offsetRange;
 
-    sha256.Start();
-    sha256.Update(aMessage, /* aOffset */ 0, aMessage.GetLength());
-    sha256.Finish(aHash);
+    offsetRange.InitFromMessageFullLength(aMessage);
+
+    Clear();
+    mMsgLength = aMessage.GetLength();
+    mCrc16     = CrcCalculator<uint16_t>(kCrc16AnsiPolynomial).Feed(aMessage, offsetRange);
+    mCrc32     = CrcCalculator<uint32_t>(kCrc32AnsiPolynomial).Feed(aMessage, offsetRange);
 }
 
 void Core::TxMessageHistory::HandleTimer(void)
 {
     NextFireTime nextTime;
 
-    mHashEntries.RemoveAndFreeAllMatching(ExpireChecker(nextTime.GetNow()));
+    mMsgEntries.RemoveAndFreeAllMatching(ExpireChecker(nextTime.GetNow()));
 
-    for (const HashEntry &entry : mHashEntries)
+    for (const MsgEntry &entry : mMsgEntries)
     {
         nextTime.UpdateIfEarlier(entry.mExpireTime);
     }
@@ -5445,7 +5450,7 @@ void Core::BrowseCache::ProcessExpiredRecords(TimeMilli aNow)
 {
     OwningList<PtrEntry> expiredEntries;
 
-    mPtrEntries.RemoveAllMatching(ExpireChecker(aNow), expiredEntries);
+    mPtrEntries.RemoveAllMatching(expiredEntries, ExpireChecker(aNow));
 
     for (PtrEntry &exiredEntry : expiredEntries)
     {

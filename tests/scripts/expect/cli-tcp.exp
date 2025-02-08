@@ -80,6 +80,13 @@ expect_line "Done"
 
 switch_node 1
 expect "TCP: Received 5 bytes: world"
+send "tcp send -x 546573740d0a4865780d0a\n"
+expect_line "Done"
+
+switch_node 2
+expect "TCP: Received 11 bytes: Test\r\nHex\r\n"
+
+switch_node 1
 send "tcp sendend\n"
 expect_line "Done"
 send "tcp send more\n"

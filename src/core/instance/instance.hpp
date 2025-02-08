@@ -79,6 +79,7 @@
 #include "common/notifier.hpp"
 #include "common/settings.hpp"
 #include "crypto/mbedtls.hpp"
+#include "crypto/storage.hpp"
 #include "mac/mac.hpp"
 #include "mac/wakeup_tx_scheduler.hpp"
 #include "meshcop/border_agent.hpp"
@@ -441,6 +442,23 @@ private:
     void AfterInit(void);
 #endif
 
+    //-----------------------------------------------------------------------------------------------------------------
+    // `static` variables
+
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+    static LogLevel sLogLevel;
+#endif
+
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    static Utils::Heap *sHeap;
+#endif
+
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    static bool sDnsNameCompressionEnabled;
+#endif
+
+    //-----------------------------------------------------------------------------------------------------------------
+
     // Order of variables (their initialization in `Instance`)
     // is important.
     //
@@ -456,11 +474,8 @@ private:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // Random::Manager is initialized before other objects. Note that it
     // requires MbedTls which itself may use Heap.
-#if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-    static Utils::Heap *sHeap;
-#endif
     Crypto::MbedTls mMbedTls;
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+#endif
 
     Random::Manager mRandomManager;
 
@@ -487,6 +502,10 @@ private:
     // DNS-SD (mDNS) platform is initialized early to
     // allow other modules to use it.
     Dnssd mDnssd;
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    Crypto::Storage::KeyRefManager mCryptoStorageKeyRefManager;
 #endif
 
     Ip6::Ip6    mIp6;
@@ -715,10 +734,6 @@ private:
     Mac::LinkRaw mLinkRaw;
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
-    static LogLevel sLogLevel;
-#endif
-
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     Extension::ExtensionBase &mExtension;
 #endif
@@ -731,10 +746,6 @@ private:
 #endif
 
     bool mIsInitialized;
-
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
-    static bool sDnsNameCompressionEnabled;
-#endif
 
     uint32_t mId;
 };
@@ -768,6 +779,10 @@ template <> inline Settings &Instance::Get(void) { return mSettings; }
 template <> inline SettingsDriver &Instance::Get(void) { return mSettingsDriver; }
 
 template <> inline MeshForwarder &Instance::Get(void) { return mMeshForwarder; }
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+template <> inline Crypto::Storage::KeyRefManager &Instance::Get(void) { return mCryptoStorageKeyRefManager; }
+#endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 template <> inline RadioSelector &Instance::Get(void) { return mRadioSelector; }
@@ -1007,6 +1022,13 @@ template <> inline MeshCoP::DatasetUpdater &Instance::Get(void) { return mDatase
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 template <> inline MeshCoP::BorderAgent &Instance::Get(void) { return mBorderAgent; }
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+template <> inline MeshCoP::BorderAgent::EphemeralKeyManager &Instance::Get(void)
+{
+    return mBorderAgent.GetEphemeralKeyManager();
+}
 #endif
 
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE

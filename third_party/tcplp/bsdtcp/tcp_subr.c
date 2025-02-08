@@ -179,7 +179,7 @@ tcp_discardcb(struct tcpcb *tp)
  * needed for TCP.
  */
 struct tcpcb *
-tcp_close(struct tcpcb *tp)
+tcp_close_tcb(struct tcpcb *tp)
 {
 	/* samkumar: Eliminate the TFO pending counter. */
 	/*
@@ -353,11 +353,11 @@ tcp_drop(struct tcpcb *tp, int errnum)
 {
 	if (TCPS_HAVERCVDSYN(tp->t_state)) {
 		tcp_state_change(tp, TCPS_CLOSED);
-		(void) tcp_output(tp);
+		(void) tcplp_output(tp);
 	}
 	if (errnum == ETIMEDOUT && tp->t_softerror)
 		errnum = tp->t_softerror;
-	tp = tcp_close(tp);
+	tp = tcp_close_tcb(tp);
 	tcplp_sys_connection_lost(tp, errnum);
 	return tp;
 }

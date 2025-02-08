@@ -91,6 +91,9 @@ Instance::Instance(void)
     // allow other modules to use it.
     , mDnssd(*this)
 #endif
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    , mCryptoStorageKeyRefManager(*this)
+#endif
     , mIp6(*this)
     , mThreadNetif(*this)
     , mTmfAgent(*this)
@@ -276,6 +279,14 @@ Instance::Instance(void)
     , mIsInitialized(false)
     , mId(Random::NonCrypto::GetUint32())
 {
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+    mCryptoStorageKeyRefManager.SetKeyRefExtraOffset(Crypto::Storage::KeyRefManager::kKeyRefExtraOffset * GetIdx(this));
+#else
+#error "MULTIPLE_INSTANCE (without static allocation) is used with PLATFORM_KEY_REFERENCES_ENABLE " \
+       "The `KeyRef` values will be shared across different `Instance` objects"
+#endif
+#endif
 }
 
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
@@ -340,9 +351,7 @@ Instance &Instance::Get(uint8_t aIdx)
 
 uint8_t Instance::GetIdx(Instance *aInstance)
 {
-    return static_cast<uint8_t>(
-        (reinterpret_cast<uint8_t *>(aInstance) - reinterpret_cast<uint8_t *>(gMultiInstanceRaw)) /
-        INSTANCE_SIZE_ALIGNED);
+    return static_cast<uint8_t>((reinterpret_cast<uint64_t *>(aInstance) - gMultiInstanceRaw) / INSTANCE_SIZE_ALIGNED);
 }
 
 #endif // #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE

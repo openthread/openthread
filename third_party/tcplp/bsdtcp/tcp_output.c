@@ -97,7 +97,7 @@ tcp_setpersist(struct tcpcb *tp)
  * Tcp output routine: figure out what should be sent and send it.
  */
 int
-tcp_output(struct tcpcb *tp)
+tcplp_output(struct tcpcb *tp)
 {
 	/*
 	 * samkumar: The biggest change in this function is in how outgoing
@@ -181,7 +181,7 @@ again:
 	 * to send out new data (when sendalot is 1), bypass this function.
 	 * If we retransmit in fast recovery mode, decrement snd_cwnd, since
 	 * we're replacing a (future) new transmission with a retransmission
-	 * now, and we previously incremented snd_cwnd in tcp_input().
+	 * now, and we previously incremented snd_cwnd in tcplp_input().
 	 */
 	/*
 	 * Still in sack recovery , reset rxmit flag to zero.
@@ -647,7 +647,7 @@ dontupdate:
 	    ((tp->t_flags & TF_SENTFIN) == 0 || tp->snd_nxt == tp->snd_una))
 		goto send;
 	/*
-	 * In SACK, it is possible for tcp_output to fail to send a segment
+	 * In SACK, it is possible for tcplp_output to fail to send a segment
 	 * after the retransmission timer has been turned off.  Make sure
 	 * that the retransmission timer is set.
 	 */
@@ -1048,9 +1048,9 @@ send:
 	}
 
 	/*
-	 * samkumar: Make tcp_output reply with ECE flag in the SYN-ACK for
+	 * samkumar: Make tcplp_output reply with ECE flag in the SYN-ACK for
 	 * ECN-enabled connections. The existing code in FreeBSD didn't have to do
-	 * this, because it didn't use tcp_output to send the SYN-ACK; it
+	 * this, because it didn't use tcplp_output to send the SYN-ACK; it
 	 * constructed the SYN-ACK segment manually. Yet another consequnce of
 	 * removing the SYN cache...
 	 */
@@ -1282,7 +1282,7 @@ timer:
 			 * 3) A -> B: ACK for #2, 0 len packet
 			 *
 			 * In this case, A will not activate the persist timer,
-			 * because it chose to send a packet. Unless tcp_output
+			 * because it chose to send a packet. Unless tcplp_output
 			 * is called for some other reason (delayed ack timer,
 			 * another input packet from B, socket syscall), A will
 			 * not send zero window probes.

@@ -212,7 +212,7 @@ tcp_twstart(struct tcpcb *tp)
 			error = in_localip(inp->inp_faddr);
 #endif
 		if (error) {
-			tp = tcp_close(tp);
+			tp = tcp_close_tcb(tp);
 			if (tp != NULL)
 				INP_WUNLOCK(inp);
 			return;
@@ -364,7 +364,7 @@ tcp_twcheck(struct tcpcb* tp, struct tcphdr *th, int tlen)
 		 * do it as below since TCPlp represents TIME-WAIT connects as
 		 * struct tcpcb's.
 		 */
-		tcp_close(tp);
+		tcp_close_tcb(tp);
 		tcplp_sys_connection_lost(tp, CONN_LOST_NORMAL);
 		return (1);
 	}

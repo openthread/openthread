@@ -66,6 +66,7 @@ otRadioCaps RadioSpinel::sRadioCaps = OT_RADIO_CAPS_NONE;
 RadioSpinel::RadioSpinel(void)
     : Logger("RadioSpinel")
     , mInstance(nullptr)
+    , mCallbacks()
     , mCmdTidsInUse(0)
     , mCmdNextTid(1)
     , mTxRadioTid(0)
@@ -90,6 +91,7 @@ RadioSpinel::RadioSpinel(void)
     , mSrcMatchShortEntryCount(0)
     , mSrcMatchExtEntryCount(0)
     , mSrcMatchEnabled(false)
+    , mRcpRestorationEnabled(true)
     , mMacKeySet(false)
     , mCcaEnergyDetectThresholdSet(false)
     , mTransmitPowerSet(false)
@@ -107,6 +109,7 @@ RadioSpinel::RadioSpinel(void)
     , mTxRadioEndUs(UINT64_MAX)
     , mRadioTimeRecalcStart(UINT64_MAX)
     , mRadioTimeOffset(UINT64_MAX)
+    , mMetrics(mCallbacks)
 #if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
     , mVendorRestorePropertiesCallback(nullptr)
     , mVendorRestorePropertiesContext(nullptr)
@@ -119,7 +122,6 @@ RadioSpinel::RadioSpinel(void)
     , mTimeSyncOn(false)
     , mSpinelDriver(nullptr)
 {
-    memset(&mRadioSpinelMetrics, 0, sizeof(mRadioSpinelMetrics));
     memset(&mCallbacks, 0, sizeof(mCallbacks));
 }
 
@@ -168,6 +170,8 @@ void RadioSpinel::Init(bool          aSkipRcpVersionCheck,
     mRxRadioFrame.mPsdu  = mRxPsdu;
     mTxRadioFrame.mPsdu  = mTxPsdu;
     mAckRadioFrame.mPsdu = mAckPsdu;
+
+    mMetrics.Init();
 
 exit:
     SuccessOrDie(error);
@@ -1582,10 +1586,8 @@ void RadioSpinel::HandleTransmitDone(uint32_t          aCommand,
         error = SpinelStatusToOtError(status);
     }
 
-    static_cast<Mac::TxFrame *>(mTransmitFrame)->SetIsHeaderUpdated(headerUpdated);
-
-    if ((sRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) && headerUpdated &&
-        static_cast<Mac::TxFrame *>(mTransmitFrame)->GetSecurityEnabled())
+    if ((sRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) && (!mTransmitFrame->mInfo.mTxInfo.mIsHeaderUpdated) &&
+        headerUpdated && static_cast<Mac::TxFrame *>(mTransmitFrame)->GetSecurityEnabled())
     {
         uint8_t  keyId;
         uint32_t frameCounter;
@@ -1601,6 +1603,8 @@ void RadioSpinel::HandleTransmitDone(uint32_t          aCommand,
         mMacFrameCounterSet = true;
 #endif
     }
+
+    static_cast<Mac::TxFrame *>(mTransmitFrame)->SetIsHeaderUpdated(headerUpdated);
 
 exit:
     // A parse error indicates an RCP misbehavior, so recover the RCP immediately.
@@ -2004,7 +2008,7 @@ void RadioSpinel::HandleRcpUnexpectedReset(spinel_status_t aStatus)
 {
     OT_UNUSED_VARIABLE(aStatus);
 
-    mRadioSpinelMetrics.mRcpUnexpectedResetCount++;
+    mMetrics.IncrementRcpUnexpectedResetCount();
     LogCrit("Unexpected RCP reset: %s", spinel_status_to_cstr(aStatus));
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
@@ -2018,7 +2022,7 @@ void RadioSpinel::HandleRcpUnexpectedReset(spinel_status_t aStatus)
 
 void RadioSpinel::HandleRcpTimeout(void)
 {
-    mRadioSpinelMetrics.mRcpTimeoutCount++;
+    mMetrics.IncrementRcpTimeoutCount();
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mRcpFailure = kRcpFailureTimeout;
@@ -2039,6 +2043,8 @@ void RadioSpinel::RecoverFromRcpFailure(void)
     State             recoveringState  = mState;
     bool              skipReset        = false;
 
+    VerifyOrExit(mRcpRestorationEnabled);
+
     if (mRcpFailure == kRcpFailureNone)
     {
         ExitNow();
@@ -2052,7 +2058,7 @@ void RadioSpinel::RecoverFromRcpFailure(void)
 
     LogWarn("RCP failure detected");
 
-    ++mRadioSpinelMetrics.mRcpRestorationCount;
+    mMetrics.IncrementRcpRestorationCount();
     ++mRcpFailureCount;
     if (mRcpFailureCount > kMaxFailureCount)
     {
@@ -2452,6 +2458,61 @@ void RadioSpinel::HandleCompatibilityError(void)
     }
 #endif
     DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+}
+
+void RadioSpinel::MetricsTracker::Init(void) { RestoreMetrics(); }
+
+void RadioSpinel::MetricsTracker::RestoreMetrics(void)
+{
+    VerifyOrExit((mCallbacks.mSaveRadioSpinelMetrics != nullptr) && (mCallbacks.mRestoreRadioSpinelMetrics != nullptr));
+
+    if (mCallbacks.mRestoreRadioSpinelMetrics(mMetrics, mCallbacks.mRadioSpinelMetricsContext) != OT_ERROR_NONE)
+    {
+        memset(&mMetrics, 0, sizeof(mMetrics));
+        mCallbacks.mSaveRadioSpinelMetrics(mMetrics, mCallbacks.mRadioSpinelMetricsContext);
+    }
+
+exit:
+    return;
+}
+
+void RadioSpinel::MetricsTracker::SaveMetrics(void)
+{
+    VerifyOrExit(mCallbacks.mSaveRadioSpinelMetrics != nullptr);
+    mCallbacks.mSaveRadioSpinelMetrics(mMetrics, mCallbacks.mRadioSpinelMetricsContext);
+
+exit:
+    return;
+}
+
+void RadioSpinel::MetricsTracker::IncrementCount(MetricType aType)
+{
+    RestoreMetrics();
+
+    switch (aType)
+    {
+    case kTypeTimeoutCount:
+        mMetrics.mRcpTimeoutCount++;
+        break;
+
+    case kTypeUnexpectResetCount:
+        mMetrics.mRcpUnexpectedResetCount++;
+        break;
+
+    case kTypeRestorationCount:
+        mMetrics.mRcpRestorationCount++;
+        break;
+
+    case kTypeSpinelParseErrorCount:
+        mMetrics.mSpinelParseErrorCount++;
+        break;
+
+    default:
+        OT_ASSERT(false);
+        break;
+    }
+
+    SaveMetrics();
 }
 
 } // namespace Spinel

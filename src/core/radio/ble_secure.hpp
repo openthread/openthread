@@ -48,6 +48,10 @@ namespace ot {
 
 namespace Ble {
 
+#if !OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
+#error "BLE TCAT feature requires `OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE`"
+#endif
+
 class BleSecure : public InstanceLocator, public MeshCoP::Tls::Extension, private NonCopyable
 {
 public:
@@ -267,7 +271,7 @@ public:
     /**
      * @brief Gets the Install Code Verify Status during the current session.
      *
-     * @return TRUE The install code was correctly verfied.
+     * @return TRUE The install code was correctly verified.
      * @return FALSE The install code was not verified.
      */
     bool GetInstallCodeVerifyStatus(void) const { return mTcatAgent.GetInstallCodeVerifyStatus(); }
