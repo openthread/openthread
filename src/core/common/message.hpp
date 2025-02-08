@@ -69,6 +69,8 @@ struct otMessage
 
 namespace ot {
 
+template <typename UintType> class CrcCalculator;
+
 namespace Crypto {
 
 class AesCcm;
@@ -272,6 +274,8 @@ static_assert(sizeof(Buffer) >= kBufferSize,
 class Message : public otMessage, public Buffer, public GetProvider<Message>
 {
     friend class Checksum;
+    friend class CrcCalculator<uint16_t>;
+    friend class CrcCalculator<uint32_t>;
     friend class Crypto::HmacSha256;
     friend class Crypto::Sha256;
     friend class Crypto::AesCcm;

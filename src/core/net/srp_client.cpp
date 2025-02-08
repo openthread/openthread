@@ -1110,7 +1110,7 @@ Error Client::PrepareUpdateMessage(MsgInfo &aInfo)
     aInfo.mRecordCount      = 0;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    aInfo.mKeyInfo.SetKeyRef(kSrpEcdsaKeyRef);
+    aInfo.mKeyInfo.SetKeyRef(Get<Crypto::Storage::KeyRefManager>().KeyRefFor(Crypto::Storage::KeyRefManager::kEcdsa));
 #endif
 
     SuccessOrExit(error = ReadOrGenerateKey(aInfo.mKeyInfo));
@@ -1959,7 +1959,7 @@ void Client::HandleUpdateDone(void)
 
 void Client::GetRemovedServices(LinkedList<Service> &aRemovedServices)
 {
-    mServices.RemoveAllMatching(kRemoved, aRemovedServices);
+    mServices.RemoveAllMatching(aRemovedServices, kRemoved);
 }
 
 Error Client::ReadResourceRecord(const Message &aMessage, uint16_t &aOffset, Dns::ResourceRecord &aRecord)
@@ -2412,6 +2412,8 @@ Error Client::SelectUnicastEntry(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aIn
 
     while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, aType, unicastInfo) == kErrorNone)
     {
+        bool preferNewEntry;
+
         if (mAutoStart.HasSelectedServer() && (GetServerAddress() == unicastInfo.mSockAddr))
         {
             aInfo = unicastInfo;
@@ -2431,10 +2433,17 @@ Error Client::SelectUnicastEntry(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aIn
             ExitNow();
         }
 #endif
+        // Prefer the server with higher version number, if equal
+        // then pick the one with numerically smaller IPv6 address.
 
-        // Prefer the numerically lowest server address
+        preferNewEntry = (error == kErrorNotFound) || (unicastInfo.mVersion > aInfo.mVersion);
 
-        if ((error == kErrorNotFound) || (unicastInfo.mSockAddr.GetAddress() < aInfo.mSockAddr.GetAddress()))
+        if (!preferNewEntry && (unicastInfo.mVersion == aInfo.mVersion))
+        {
+            preferNewEntry = (unicastInfo.mSockAddr.GetAddress() < aInfo.mSockAddr.GetAddress());
+        }
+
+        if (preferNewEntry)
         {
             aInfo = unicastInfo;
             error = kErrorNone;

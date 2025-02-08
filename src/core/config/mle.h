@@ -226,9 +226,35 @@
  * @def OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS
  *
  * Specifies the desired number of router links that a REED / FED attempts to maintain.
+ *
+ * This is default value used on an FTD child. This parameter can also be changed at run-time using the public APIs
+ * `otThreadGetChildRouterLinks/otThreadSetChildRouterLinks()`.
  */
 #ifndef OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS
 #define OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS 3
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MLE_EXTRA_CHILD_ROUTER_LINKS_GRADUAL
+ *
+ * Specifies the extra router links in addition to those specified by `otThreadSetChildRouterLinks()` that an FTD child
+ * can try to establish gradually over a longer span of time.
+ *
+ * A child device communicates through its parent but can establish links with other neighboring routers so that it can
+ * receive multicast messages (forwarded MPL) from other routers, thus improving multicast reliability.
+ *
+ * An FTD child tries to establish links with the first `CHILD_ROUTER_LINK` routers as quickly as possible
+ * (sending MLE Link Request to initiate link upon receiving advertisements from a neighboring router).
+ *
+ * After that, the FTD child uses the "gradual router link establishment" mechanism to establish router links with
+ * `OPENTHREAD_CONFIG_MLE_EXTRA_CHILD_ROUTER_LINKS_GRADUAL` additional routers. This is done slowly and over a longer
+ * span of time.
+ *
+ * This parameter can be set to zero to disable "gradual router link establishment" fully. Alternatively, it can be set
+ * to the maximum router count of 32 to allow the FTD child to establish links with all neighboring routers.
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_EXTRA_CHILD_ROUTER_LINKS_GRADUAL
+#define OPENTHREAD_CONFIG_MLE_EXTRA_CHILD_ROUTER_LINKS_GRADUAL 32
 #endif
 
 /**

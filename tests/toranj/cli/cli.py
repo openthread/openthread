@@ -525,14 +525,20 @@ class Node(object):
     def ba_get_port(self):
         return self._cli_single_output('ba port')
 
-    def ba_is_ephemeral_key_active(self):
+    def ba_ephemeral_key_get_state(self):
         return self._cli_single_output('ba ephemeralkey')
 
-    def ba_set_ephemeral_key(self, keystring, timeout=None, port=None):
-        self._cli_no_output('ba ephemeralkey set', keystring, timeout, port)
+    def ba_ephemeral_key_set_enabled(self, enable):
+        self._cli_no_output('ba ephemeralkey', 'enable' if enable else 'disable')
 
-    def ba_clear_ephemeral_key(self):
-        self._cli_no_output('ba ephemeralkey clear')
+    def ba_ephemeral_key_start(self, keystring, timeout=None, port=None):
+        self._cli_no_output('ba ephemeralkey start', keystring, timeout, port)
+
+    def ba_ephemeral_key_stop(self):
+        self._cli_no_output('ba ephemeralkey stop')
+
+    def ba_ephemeral_key_get_port(self):
+        return self._cli_single_output('ba ephemeralkey port')
 
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # UDP
@@ -843,6 +849,25 @@ class Node(object):
 
     def br_count_peers(self):
         return self._cli_single_output('br peers count')
+
+    #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # trel
+
+    def trel_get_peers(self):
+        peers = self.cli('trel peers ')
+        return Node.parse_table(peers)
+
+    def trel_test_get_sock_addr(self):
+        return self._cli_single_output('treltest sockaddr')
+
+    def trel_test_change_sock_addr(self):
+        return self._cli_no_output('treltest changesockaddr')
+
+    def trel_test_change_sock_port(self):
+        return self._cli_no_output('treltest changesockport')
+
+    def trel_test_get_notify_addr_counter(self):
+        return self._cli_single_output('treltest notifyaddrcounter')
 
     # ------------------------------------------------------------------------------------------------------------------
     # Helper methods

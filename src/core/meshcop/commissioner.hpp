@@ -63,6 +63,10 @@ namespace ot {
 
 namespace MeshCoP {
 
+#if !OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
+#error "Commissioner feature requires `OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE`"
+#endif
+
 class Commissioner : public InstanceLocator, private NonCopyable
 {
     friend class Tmf::Agent;
@@ -392,30 +396,30 @@ private:
     static void HandleMgmtCommissionerSetResponse(void                *aContext,
                                                   otMessage           *aMessage,
                                                   const otMessageInfo *aMessageInfo,
-                                                  Error                aResult);
+                                                  otError              aResult);
     void        HandleMgmtCommissionerSetResponse(Coap::Message          *aMessage,
                                                   const Ip6::MessageInfo *aMessageInfo,
                                                   Error                   aResult);
     static void HandleMgmtCommissionerGetResponse(void                *aContext,
                                                   otMessage           *aMessage,
                                                   const otMessageInfo *aMessageInfo,
-                                                  Error                aResult);
+                                                  otError              aResult);
     void        HandleMgmtCommissionerGetResponse(Coap::Message          *aMessage,
                                                   const Ip6::MessageInfo *aMessageInfo,
                                                   Error                   aResult);
     static void HandleLeaderPetitionResponse(void                *aContext,
                                              otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
-                                             Error                aResult);
-    void HandleLeaderPetitionResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
+                                             otError              aResult);
+    void HandleLeaderPetitionResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
     static void HandleLeaderKeepAliveResponse(void                *aContext,
                                               otMessage           *aMessage,
                                               const otMessageInfo *aMessageInfo,
                                               Error                aResult);
     void HandleLeaderKeepAliveResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
-    static void HandleSecureAgentConnectEvent(Dtls::ConnectEvent aEvent, void *aContext);
-    void        HandleSecureAgentConnectEvent(Dtls::ConnectEvent aEvent);
+    static void HandleSecureAgentConnectEvent(Dtls::Session::ConnectEvent aEvent, void *aContext);
+    void        HandleSecureAgentConnectEvent(Dtls::Session::ConnectEvent aEvent);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

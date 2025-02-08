@@ -362,6 +362,14 @@ public:
      */
     void FillConnectivityTlv(ConnectivityTlv &aTlv);
 
+    /**
+     * Schedule tx of MLE Advertisement message (unicast) to the given neighboring router after a random delay.
+     *
+     * @param[in] aRouter  The router to send the Advertisement to.
+     *
+     */
+    void ScheduleUnicastAdvertisementTo(const Router &aRouter);
+
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     /**
      * Sets steering data out of band
@@ -494,7 +502,9 @@ private:
     static constexpr uint32_t kAdvIntervalMaxLogRoutes = 5000;
 #endif
 
-    static constexpr uint32_t kMaxNeighborAge                = 100000; // Max neighbor age (in msec)
+    static constexpr uint32_t kMaxUnicastAdvertisementDelay  = 1000;   // Max random delay for unciast Adv tx
+    static constexpr uint32_t kMaxNeighborAge                = 100000; // Max neighbor age on router (in msec)
+    static constexpr uint32_t kMaxNeighborAgeOnChild         = 150000; // Max neighbor age on FTD child (in msec)
     static constexpr uint32_t kMaxLeaderToRouterTimeout      = 90000;  // (in msec)
     static constexpr uint8_t  kMinDowngradeNeighbors         = 7;
     static constexpr uint8_t  kNetworkIdTimeout              = 120; // (in sec)
@@ -516,6 +526,16 @@ private:
     static constexpr uint8_t kPartitionMergeMinMargin = OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN;
     static constexpr uint8_t kChildRouterLinks        = OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS;
     static constexpr uint8_t kMaxChildIpAddresses     = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD;
+
+    // Constants for gradual router link establishment (on FTD child)
+    struct GradualChildRouterLink
+    {
+        static constexpr uint8_t  kExtraChildRouterLinks   = OPENTHREAD_CONFIG_MLE_EXTRA_CHILD_ROUTER_LINKS_GRADUAL;
+        static constexpr uint32_t kWaitDurationAfterAttach = 300;   // in seconds (5 minutes)
+        static constexpr uint32_t kMinLinkRequestDelay     = 1500;  // in msec
+        static constexpr uint32_t kMaxLinkRequestDelay     = 10000; // in msec
+        static constexpr uint32_t kProbabilityPercentage   = 5;     // in percent
+    };
 
     static constexpr uint8_t kMinCriticalChildrenCount = 6;
 
@@ -595,6 +615,7 @@ private:
     void     HandleDataRequest(RxInfo &aRxInfo);
     void     HandleNetworkDataUpdateRouter(void);
     void     HandleDiscoveryRequest(RxInfo &aRxInfo);
+    void     EstablishRouterLinkOnFtdChild(Router &aRouter, RxInfo &aRxInfo, uint8_t aLinkMargin);
     Error    ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo);
     Error    ReadAndProcessRouteTlvOnFtdChild(RxInfo &aRxInfo, uint8_t aParentId);
     void     StopAdvertiseTrickleTimer(void);
@@ -605,7 +626,8 @@ private:
                                         const Router           *aRouter,
                                         const Ip6::MessageInfo &aMessageInfo);
     void     SendAddressRelease(void);
-    void     SendAdvertisement(void);
+    void     SendMulticastAdvertisement(void);
+    void     SendAdvertisement(const Ip6::Address &aDestination);
     void     SendLinkRequest(Router *aRouter);
     Error    SendLinkAccept(const LinkAcceptInfo &aInfo);
     void     SendParentResponse(const ParentResponseInfo &aInfo);
@@ -649,7 +671,7 @@ private:
     static void HandleAddressSolicitResponse(void                *aContext,
                                              otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
-                                             Error                aResult);
+                                             otError              aResult);
 
     //------------------------------------------------------------------------------------------------------------------
     // Variables

@@ -56,7 +56,10 @@ namespace Trel {
 
 class Link;
 
-extern "C" void otPlatTrelHandleReceived(otInstance *aInstance, uint8_t *aBuffer, uint16_t aLength);
+extern "C" void otPlatTrelHandleReceived(otInstance       *aInstance,
+                                         uint8_t          *aBuffer,
+                                         uint16_t          aLength,
+                                         const otSockAddr *aSenderAddr);
 extern "C" void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
 
 /**
@@ -70,7 +73,10 @@ typedef otTrelCounters Counters;
 class Interface : public InstanceLocator
 {
     friend class Link;
-    friend void otPlatTrelHandleReceived(otInstance *aInstance, uint8_t *aBuffer, uint16_t aLength);
+    friend void otPlatTrelHandleReceived(otInstance       *aInstance,
+                                         uint8_t          *aBuffer,
+                                         uint16_t          aLength,
+                                         const otSockAddr *aSenderAddr);
     friend void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
 
 public:
@@ -103,9 +109,16 @@ public:
         /**
          * Returns the IPv6 socket address of the discovered TREL peer.
          *
-         * @returns The IPv6 socket address of the TREP peer.
+         * @returns The IPv6 socket address of the TREL peer.
          */
         const Ip6::SockAddr &GetSockAddr(void) const { return static_cast<const Ip6::SockAddr &>(mSockAddr); }
+
+        /**
+         * Set the IPv6 socket address of the discovered TREL peer.
+         *
+         * @param[in] aSockAddr   The IPv6 socket address.
+         */
+        void SetSockAddr(const Ip6::SockAddr &aSockAddr) { mSockAddr = aSockAddr; }
 
         /**
          * Indicates whether the peer matches a given Extended Address.
@@ -139,7 +152,6 @@ public:
 
         void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
         void SetExtPanId(const MeshCoP::ExtendedPanId &aExtPanId) { mExtPanId = aExtPanId; }
-        void SetSockAddr(const Ip6::SockAddr &aSockAddr) { mSockAddr = aSockAddr; }
         void Log(const char *aAction) const;
     };
 
@@ -244,6 +256,24 @@ public:
      */
     uint16_t GetUdpPort(void) const { return mUdpPort; }
 
+    /**
+     * Finds the TREL peer associated with a given Extended Address.
+     *
+     * @param[in] aExtAddress  The extended address.
+     *
+     * @returns The peer associated with @ aExtAddress, or `nullptr` if not found.
+     */
+    Peer *FindPeer(const Mac::ExtAddress &aExtAddress);
+
+    /**
+     * Notifies platform that a TREL packet is received from a peer using a different socket address than the one
+     * reported earlier.
+     *
+     * @param[in] aPeerSockAddr   The previously reported peer sock addr.
+     * @param[in] aRxSockAddr     The address of received packet from the same peer.
+     */
+    void NotifyPeerSocketAddressDifference(const Ip6::SockAddr &aPeerSockAddr, const Ip6::SockAddr &aRxSockAddr);
+
 private:
 #if OPENTHREAD_CONFIG_TREL_PEER_TABLE_SIZE != 0
     static constexpr uint16_t kPeerTableSize = OPENTHREAD_CONFIG_TREL_PEER_TABLE_SIZE;
@@ -265,7 +295,7 @@ private:
     Error Send(const Packet &aPacket, bool aIsDiscovery = false);
 
     // Callbacks from `otPlatTrel`.
-    void HandleReceived(uint8_t *aBuffer, uint16_t aLength);
+    void HandleReceived(uint8_t *aBuffer, uint16_t aLength, const Ip6::SockAddr &aSenderAddr);
     void HandleDiscoveredPeerInfo(const Peer::Info &aInfo);
 
     void  RegisterService(void);

@@ -238,7 +238,7 @@ Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
     Error error = kErrorNone;
 
     VerifyOrExit(!IsDisabled(), error = kErrorInvalidState);
-    VerifyOrExit(!IsRouter(), error = kErrorNone);
+    VerifyOrExit(!IsRouterOrLeader(), error = kErrorNone);
     VerifyOrExit(IsRouterEligible(), error = kErrorNotCapable);
 
     LogInfo("Attempt to become router");
@@ -486,7 +486,7 @@ void MleRouter::HandleAdvertiseTrickleTimer(void)
 {
     VerifyOrExit(IsRouterEligible(), mAdvertiseTrickleTimer.Stop());
 
-    SendAdvertisement();
+    SendMulticastAdvertisement();
 
 exit:
     return;
@@ -534,11 +534,27 @@ exit:
     return;
 }
 
-void MleRouter::SendAdvertisement(void)
+void MleRouter::SendMulticastAdvertisement(void)
 {
-    Error        error = kErrorNone;
     Ip6::Address destination;
-    TxMessage   *message = nullptr;
+
+    destination.SetToLinkLocalAllNodesMulticast();
+    SendAdvertisement(destination);
+}
+
+void MleRouter::ScheduleUnicastAdvertisementTo(const Router &aRouter)
+{
+    Ip6::Address destination;
+
+    destination.SetToLinkLocalAddress(aRouter.GetExtAddress());
+    mDelayedSender.ScheduleAdvertisement(destination,
+                                         Random::NonCrypto::GetUint32InRange(0, kMaxUnicastAdvertisementDelay));
+}
+
+void MleRouter::SendAdvertisement(const Ip6::Address &aDestination)
+{
+    Error      error   = kErrorNone;
+    TxMessage *message = nullptr;
 
     // Suppress MLE Advertisements when trying to attach to a better
     // partition. Without this, a candidate parent might incorrectly
@@ -574,10 +590,9 @@ void MleRouter::SendAdvertisement(void)
         OT_ASSERT(false);
     }
 
-    destination.SetToLinkLocalAllNodesMulticast();
-    SuccessOrExit(error = message->SendTo(destination));
+    SuccessOrExit(error = message->SendTo(aDestination));
 
-    Log(kMessageSend, kTypeAdvertisement, destination);
+    Log(kMessageSend, kTypeAdvertisement, aDestination);
 
 exit:
     FreeMessageOnError(message, error);
@@ -707,7 +722,6 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
         {
             neighbor = mRouterTable.FindRouterByRloc16(sourceAddress);
             VerifyOrExit(neighbor != nullptr, error = kErrorParse);
-            VerifyOrExit(!neighbor->IsStateLinkRequest(), error = kErrorAlready);
 
             if (!neighbor->IsStateValid())
             {
@@ -1042,6 +1056,8 @@ void MleRouter::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageTyp
 
     mNeighborTable.Signal(NeighborTable::kRouterAdded, *router);
 
+    mDelayedSender.RemoveScheduledLinkRequest(*router);
+
     if (shouldUpdateRoutes)
     {
         mRouterTable.UpdateRoutes(routeTlv, routerId);
@@ -1297,15 +1313,7 @@ Error MleRouter::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddre
             router = mRouterTable.FindRouterById(routerId);
             VerifyOrExit(router != nullptr);
 
-            if (!router->IsStateValid() && !router->IsStateLinkRequest() &&
-                (mRouterTable.GetNeighborCount(kLinkQuality1) < mChildRouterLinks))
-            {
-                InitNeighbor(*router, aRxInfo);
-                router->SetState(Neighbor::kStateLinkRequest);
-                delay = Random::NonCrypto::GetUint32InRange(kMinLinkRequestDelayOnChild, kMaxLinkRequestDelayOnChild);
-                mDelayedSender.ScheduleLinkRequest(*router, delay);
-                ExitNow(error = kErrorNoRoute);
-            }
+            EstablishRouterLinkOnFtdChild(*router, aRxInfo, linkMargin);
         }
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
@@ -1369,6 +1377,68 @@ exit:
     }
 
     return error;
+}
+
+void MleRouter::EstablishRouterLinkOnFtdChild(Router &aRouter, RxInfo &aRxInfo, uint8_t aLinkMargin)
+{
+    // Decide on an FTD child whether to establish a link with a
+    // router upon receiving an advertisement from it.
+
+    uint8_t  neighborCount;
+    uint32_t minDelay;
+    uint32_t maxDelay;
+
+    VerifyOrExit(!aRouter.IsStateValid() && !aRouter.IsStateLinkRequest());
+
+    // The first `mChildRouterLinks` are established quickly. After that,
+    // the "gradual router link establishment" mechanism is used, which
+    // allows `kExtraChildRouterLinks` additional router links to be
+    // established, but it is done slowly and over a longer span of time.
+    //
+    // Gradual router link establishment conditions:
+    // - The maximum `neighborCount` limit is not yet reached.
+    // - We see Link Quality 2 or better.
+    // - Always skipped in the first 5 minutes
+    //   (`kWaitDurationAfterAttach`) after the device attaches.
+    // - The child randomly decides whether to perform/skip this (with a 5%
+    //   probability, `kProbabilityPercentage`).
+    // - If the child decides to send Link Request, a longer random delay
+    //   window is used, [1.5-10] seconds.
+    //
+    // Even in a dense network, if the advertisement is received by 500 FTD
+    // children with a 5% selection probability, on average, 25 nodes will
+    // try to send a Link Request, which will be randomly spread over a
+    // [1.5-10] second window.
+    //
+    // With a 5% probability, on average, it takes 20 trials (20 advertisement
+    // receptions for an FTD child to send a Link Request). Advertisements
+    // are, on average, ~32 seconds apart, so, on average, a child will try
+    // to establish a link in `20 * 32 = 640` seconds (~10 minutes).
+
+    neighborCount = mRouterTable.GetNeighborCount(kLinkQuality1);
+
+    if (neighborCount < mChildRouterLinks)
+    {
+        minDelay = kMinLinkRequestDelayOnChild;
+        maxDelay = kMaxLinkRequestDelayOnChild;
+    }
+    else
+    {
+        VerifyOrExit(neighborCount < mChildRouterLinks + GradualChildRouterLink::kExtraChildRouterLinks);
+        VerifyOrExit(LinkQualityForLinkMargin(aLinkMargin) >= kLinkQuality2);
+        VerifyOrExit(GetCurrentAttachDuration() > GradualChildRouterLink::kWaitDurationAfterAttach);
+        VerifyOrExit(Random::NonCrypto::GetUint8InRange(0, 100) < GradualChildRouterLink::kProbabilityPercentage);
+
+        minDelay = GradualChildRouterLink::kMinLinkRequestDelay;
+        maxDelay = GradualChildRouterLink::kMaxLinkRequestDelay;
+    }
+
+    InitNeighbor(aRouter, aRxInfo);
+    aRouter.SetState(Neighbor::kStateLinkRequest);
+    mDelayedSender.ScheduleLinkRequest(aRouter, Random::NonCrypto::GetUint32InRange(minDelay, maxDelay));
+
+exit:
+    return;
 }
 
 void MleRouter::HandleParentRequest(RxInfo &aRxInfo)
@@ -1549,7 +1619,7 @@ void MleRouter::HandleTimeTick(void)
 
             if (!mAdvertiseTrickleTimer.IsRunning())
             {
-                SendAdvertisement();
+                SendMulticastAdvertisement();
 
                 mAdvertiseTrickleTimer.Start(TrickleTimer::kModePlainTimer, kReedAdvIntervalMin, kReedAdvIntervalMax);
             }
@@ -1650,32 +1720,6 @@ void MleRouter::HandleTimeTick(void)
 
         age = TimerMilli::GetNow() - router.GetLastHeard();
 
-        if (router.IsStateValid() && (age >= kMaxNeighborAge))
-        {
-            bool sendLinkRequest = true;
-
-            // Once router age expires, we send Link Request every
-            // time tick (second), up to `kMaxTxCount`. Each rx is
-            // randomly delayed (one second window). After the last
-            // attempt, we wait for the "Link Accept" timeout
-            // (~3 seconds), before the router is removed.
-
-            if (!router.IsWaitingForLinkAccept())
-            {
-                LogInfo("No Adv from router 0x%04x - sending Link Request", router.GetRloc16());
-            }
-            else
-            {
-                sendLinkRequest = (age < kMaxNeighborAge + kMaxTxCount * TimeMilli::kOneSecondInMsec);
-            }
-
-            if (sendLinkRequest)
-            {
-                mDelayedSender.ScheduleLinkRequest(
-                    router, Random::NonCrypto::GetUint32InRange(0, kMaxLinkRequestDelayOnRouter));
-            }
-        }
-
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
         router.DecrementParentReselectTimeout();
 
@@ -1684,6 +1728,53 @@ void MleRouter::HandleTimeTick(void)
             router.SetSelectableAsParent(false);
         }
 #endif
+        if (router.IsStateValid())
+        {
+            // Neighbor router age and link recovery
+            //
+            // If the device is an FTD child and has more than
+            // `mChildRouterLinks` neighbors, it uses a longer age,
+            // `kMaxNeighborAgeOnChild`, and removes the neighboring
+            // router upon expiration without trying to re-establish
+            // its link with it.
+            //
+            // Otherwise, if the device itself is a router, or it is an
+            // FTD child with `mChildRouterLinks` or fewer neighbors,
+            // it uses a shorter `kMaxNeighborAge`. Upon expiration, it
+            // tries to re-establish its link with the neighboring router.
+
+            if (IsChild() && (mRouterTable.GetNeighborCount(kLinkQuality1) > mChildRouterLinks))
+            {
+                if (age >= kMaxNeighborAgeOnChild)
+                {
+                    LogInfo("No Adv from router 0x%04x - removing router", router.GetRloc16());
+                    mDelayedSender.RemoveScheduledLinkRequest(router);
+                    RemoveNeighbor(router);
+                    continue;
+                }
+            }
+            else if (age >= kMaxNeighborAge)
+            {
+                // We send a Link Request every time tick (second), up to
+                // max attempts. Each transmission is randomly delayed
+                // (one-second window). After the last attempt, we wait for
+                // the "Link Accept" timeout (~3 seconds) before removing the
+                // neighboring router.
+
+                if (!mDelayedSender.HasAnyScheduledLinkRequest(router) && !router.IsWaitingForLinkAccept())
+                {
+                    LogInfo("No Adv from router 0x%04x - sending Link Request", router.GetRloc16());
+                    router.SetLinkRequestAttemptsToMax();
+                }
+
+                if (router.HasRemainingLinkRequestAttempts())
+                {
+                    router.DecrementLinkRequestAttempts();
+                    mDelayedSender.ScheduleLinkRequest(
+                        router, Random::NonCrypto::GetUint32InRange(0, kMaxLinkRequestDelayOnRouter));
+                }
+            }
+        }
 
         if (router.IsWaitingForLinkAccept() && (router.DecrementLinkAcceptTimeout() == 0))
         {
@@ -3304,7 +3395,7 @@ exit:
 void MleRouter::HandleAddressSolicitResponse(void                *aContext,
                                              otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
-                                             Error                aResult)
+                                             otError              aResult)
 {
     static_cast<MleRouter *>(aContext)->HandleAddressSolicitResponse(AsCoapMessagePtr(aMessage),
                                                                      AsCoreTypePtr(aMessageInfo), aResult);
@@ -3409,7 +3500,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message          *aMessage,
     // up the dissemination of the new Router ID to other routers.
     // This can also help with quicker link establishment with our
     // former parent and other routers.
-    SendAdvertisement();
+    SendMulticastAdvertisement();
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateChildIdRequest))
     {

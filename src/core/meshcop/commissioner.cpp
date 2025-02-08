@@ -112,14 +112,14 @@ exit:
     return;
 }
 
-void Commissioner::HandleSecureAgentConnectEvent(Dtls::ConnectEvent aEvent, void *aContext)
+void Commissioner::HandleSecureAgentConnectEvent(Dtls::Session::ConnectEvent aEvent, void *aContext)
 {
     static_cast<Commissioner *>(aContext)->HandleSecureAgentConnectEvent(aEvent);
 }
 
-void Commissioner::HandleSecureAgentConnectEvent(Dtls::ConnectEvent aEvent)
+void Commissioner::HandleSecureAgentConnectEvent(Dtls::Session::ConnectEvent aEvent)
 {
-    bool isConnected = (aEvent == Dtls::kConnected);
+    bool isConnected = (aEvent == Dtls::Session::kConnected);
     if (!isConnected)
     {
         mJoinerSessionTimer.Stop();
@@ -268,12 +268,10 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = kErrorInvalidState);
     VerifyOrExit(mState == kStateDisabled, error = kErrorAlready);
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    Get<BorderAgent>().Stop();
-#endif
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Open());
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Bind(SendRelayTransmit, this));
 
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(SendRelayTransmit, this));
-    Get<Tmf::SecureAgent>().SetConnectEventCallback(&Commissioner::HandleSecureAgentConnectEvent, this);
+    Get<Tmf::SecureAgent>().SetConnectCallback(HandleSecureAgentConnectEvent, this);
 
     mStateCallback.Set(aStateCallback, aCallbackContext);
     mJoinerCallback.Set(aJoinerCallback, aCallbackContext);
@@ -287,7 +285,7 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
 exit:
     if ((error != kErrorNone) && (error != kErrorAlready))
     {
-        Get<Tmf::SecureAgent>().Stop();
+        Get<Tmf::SecureAgent>().Close();
         LogWarnOnError(error, "start commissioner");
     }
 
@@ -302,7 +300,7 @@ Error Commissioner::Stop(ResignMode aResignMode)
     VerifyOrExit(mState != kStateDisabled, error = kErrorAlready);
 
     mJoinerSessionTimer.Stop();
-    Get<Tmf::SecureAgent>().Stop();
+    Get<Tmf::SecureAgent>().Close();
 
     if (mState == kStateActive)
     {
@@ -323,10 +321,6 @@ Error Commissioner::Stop(ResignMode aResignMode)
     {
         SendKeepAlive();
     }
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    Get<BorderAgent>().Start();
-#endif
 
 exit:
     if (error != kErrorAlready)
@@ -639,7 +633,7 @@ exit:
 void Commissioner::HandleMgmtCommissionerGetResponse(void                *aContext,
                                                      otMessage           *aMessage,
                                                      const otMessageInfo *aMessageInfo,
-                                                     Error                aResult)
+                                                     otError              aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerGetResponse(AsCoapMessagePtr(aMessage),
                                                                              AsCoreTypePtr(aMessageInfo), aResult);
@@ -710,7 +704,7 @@ exit:
 void Commissioner::HandleMgmtCommissionerSetResponse(void                *aContext,
                                                      otMessage           *aMessage,
                                                      const otMessageInfo *aMessageInfo,
-                                                     Error                aResult)
+                                                     otError              aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerSetResponse(AsCoapMessagePtr(aMessage),
                                                                              AsCoreTypePtr(aMessageInfo), aResult);
@@ -763,7 +757,7 @@ exit:
 void Commissioner::HandleLeaderPetitionResponse(void                *aContext,
                                                 otMessage           *aMessage,
                                                 const otMessageInfo *aMessageInfo,
-                                                Error                aResult)
+                                                otError              aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleLeaderPetitionResponse(AsCoapMessagePtr(aMessage),
                                                                         AsCoreTypePtr(aMessageInfo), aResult);
@@ -850,7 +844,7 @@ exit:
 void Commissioner::HandleLeaderKeepAliveResponse(void                *aContext,
                                                  otMessage           *aMessage,
                                                  const otMessageInfo *aMessageInfo,
-                                                 Error                aResult)
+                                                 otError              aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleLeaderKeepAliveResponse(AsCoapMessagePtr(aMessage),
                                                                          AsCoreTypePtr(aMessageInfo), aResult);
@@ -942,7 +936,7 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
     joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);
     joinerMessageInfo.SetPeerPort(mJoinerPort);
 
-    Get<Tmf::SecureAgent>().HandleUdpReceive(aMessage, joinerMessageInfo);
+    Get<Tmf::SecureAgent>().HandleReceive(aMessage, joinerMessageInfo);
 
 exit:
     return;
@@ -1003,13 +997,7 @@ void Commissioner::HandleTmf<kUriJoinerFinalize>(Coap::Message &aMessage, const 
     }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    if (aMessage.GetLength() <= OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE)
-    {
-        uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
-
-        aMessage.ReadBytes(aMessage.GetOffset(), buf, aMessage.GetLength() - aMessage.GetOffset());
-        DumpCert("[THCI] direction=recv | type=JOIN_FIN.req |", buf, aMessage.GetLength() - aMessage.GetOffset());
-    }
+    LogCertMessage("[THCI] direction=recv | type=JOIN_FIN.req |", aMessage);
 #endif
 
     SendJoinFinalizeResponse(aMessage, state);
@@ -1020,9 +1008,8 @@ exit:
 
 void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, StateTlv::State aState)
 {
-    Error            error = kErrorNone;
-    Ip6::MessageInfo joinerMessageInfo;
-    Coap::Message   *message;
+    Error          error = kErrorNone;
+    Coap::Message *message;
 
     message = Get<Tmf::SecureAgent>().NewPriorityResponseMessage(aRequest);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
@@ -1032,19 +1019,11 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
 
-    joinerMessageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocalEid());
-    joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);
-    joinerMessageInfo.SetPeerPort(mJoinerPort);
-
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
-
-    VerifyOrExit(message->GetLength() <= sizeof(buf));
-    message->ReadBytes(message->GetOffset(), buf, message->GetLength() - message->GetOffset());
-    DumpCert("[THCI] direction=send | type=JOIN_FIN.rsp |", buf, message->GetLength() - message->GetOffset());
+    LogCertMessage("[THCI] direction=send | type=JOIN_FIN.rsp |", *message);
 #endif
 
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().SendMessage(*message, joinerMessageInfo));
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().SendMessage(*message));
 
     SignalJoinerEvent(kJoinerEventFinalize, mActiveJoiner);
 

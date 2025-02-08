@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2024, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,63 +26,68 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes definitions for CRC16 computations.
- */
+#ifndef OT_POSIX_PLATFORM_TMP_STORAGE_HPP_
+#define OT_POSIX_PLATFORM_TMP_STORAGE_HPP_
 
-#ifndef CRC16_HPP_
-#define CRC16_HPP_
+#include "openthread-posix-config.h"
+#include "platform-posix.h"
 
-#include "openthread-core-config.h"
+#include "settings_file.hpp"
 
-#include <stdint.h>
-
+#if OPENTHREAD_POSIX_CONFIG_TMP_STORAGE_ENABLE
 namespace ot {
+namespace Posix {
 
-/**
- * Implements CRC16 computations.
- */
-class Crc16
+class TmpStorage
 {
 public:
-    enum Polynomial : uint16_t
+    TmpStorage(void)
+        : mStorageFile()
     {
-        kCcitt = 0x1021, ///< CRC16_CCITT
-        kAnsi  = 0x8005, ///< CRC16-ANSI
-    };
+    }
 
     /**
-     * Initializes the object.
-     *
-     * @param[in]  aPolynomial  The polynomial value.
+     * Performs the initialization for the temporary storage.
      */
-    explicit Crc16(Polynomial aPolynomial);
+    void Init(void);
 
     /**
-     * Initializes the CRC16 computation.
+     * Performs the de-initialization for the temporary storage.
      */
-    void Init(void) { mCrc = 0; }
-
-    /*c*
-     * Feeds a byte value into the CRC16 computation.
-     *
-     * @param[in]  aByte  The byte value.
-     */
-    void Update(uint8_t aByte);
+    void Deinit(void);
 
     /**
-     * Gets the current CRC16 value.
+     * Saves the radio spinel metrics to the temporary storage.
      *
-     * @returns The current CRC16 value.
+     * @param[in]  aMetrics   A reference to the radio spinel metrics.
      */
-    uint16_t Get(void) const { return mCrc; }
+    void SaveRadioSpinelMetrics(const otRadioSpinelMetrics &aMetrics);
+
+    /**
+     * Restores the radio spinel metrics from the temporary storage.
+     *
+     * @param[out]  aMetrics   A reference to the radio spinel metrics.
+     *
+     * @retval OT_ERROR_NONE        The radio spinel metrics was found and fetched successfully.
+     * @retval OT_ERROR_NOT_FOUND   The radio spinel metrics was not found in the setting store.
+     */
+    otError RestoreRadioSpinelMetrics(otRadioSpinelMetrics &aMetrics);
 
 private:
-    uint16_t mPolynomial;
-    uint16_t mCrc;
+    enum
+    {
+        kKeyBootTime           = 1,
+        kKeyRadioSpinelMetrics = 2,
+    };
+
+    otError SettingsFileInit(void);
+    time_t  GetBootTime(void);
+    bool    BootTimeMatch(time_t aBootTimeA, time_t aBootTimeB);
+
+    SettingsFile mStorageFile;
 };
 
+} // namespace Posix
 } // namespace ot
-
-#endif // CRC16_HPP_
+#endif // OPENTHREAD_POSIX_CONFIG_TMP_STORAGE_ENABLE
+#endif // OT_POSIX_PLATFORM_TMP_STORAGE_HPP_

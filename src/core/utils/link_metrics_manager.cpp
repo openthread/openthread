@@ -151,7 +151,7 @@ void LinkMetricsManager::UpdateLinkMetricsStates(void)
 {
     LinkedList<Subject> staleSubjects;
 
-    mSubjectList.RemoveAllMatching(*this, staleSubjects);
+    mSubjectList.RemoveAllMatching(staleSubjects, *this);
 
     while (!staleSubjects.IsEmpty())
     {

@@ -45,6 +45,8 @@ Core::Core(void)
     mNextAlarmTime = mNow.GetDistantFuture();
 }
 
+Core::~Core(void) { sCore = nullptr; }
+
 Node &Core::CreateNode(void)
 {
     Node *node;

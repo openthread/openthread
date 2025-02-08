@@ -108,16 +108,13 @@ Error ParseAsUint32(const char *aString, uint32_t &aUint32) { return ParseUint<u
 
 Error ParseAsUint64(const char *aString, uint64_t &aUint64)
 {
+    static constexpr uint64_t kMaxHexBeforeOverflow = (0xffffffffffffffffULL / 16);
+    static constexpr uint64_t kMaxDecBeforeOverflow = (0xffffffffffffffffULL / 10);
+
     Error       error = kErrorNone;
     uint64_t    value = 0;
     const char *cur   = aString;
     bool        isHex = false;
-
-    enum : uint64_t
-    {
-        kMaxHexBeforeOverflow = (0xffffffffffffffffULL / 16),
-        kMaxDecBeforeOverflow = (0xffffffffffffffffULL / 10),
-    };
 
     VerifyOrExit(aString != nullptr, error = kErrorInvalidArgs);
 

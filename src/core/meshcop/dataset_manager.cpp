@@ -498,7 +498,7 @@ exit:
 void DatasetManager::HandleMgmtSetResponse(void                *aContext,
                                            otMessage           *aMessage,
                                            const otMessageInfo *aMessageInfo,
-                                           Error                aError)
+                                           otError              aError)
 {
     static_cast<DatasetManager *>(aContext)->HandleMgmtSetResponse(AsCoapMessagePtr(aMessage),
                                                                    AsCoreTypePtr(aMessageInfo), aError);
@@ -755,13 +755,13 @@ void DatasetManager::TlvList::Add(uint8_t aTlvType)
 const DatasetManager::SecurelyStoredTlv DatasetManager::kSecurelyStoredTlvs[] = {
     {
         Tlv::kNetworkKey,
-        Crypto::Storage::kActiveDatasetNetworkKeyRef,
-        Crypto::Storage::kPendingDatasetNetworkKeyRef,
+        KeyRefManager::kActiveDatasetNetworkKey,
+        KeyRefManager::kPendingDatasetNetworkKey,
     },
     {
         Tlv::kPskc,
-        Crypto::Storage::kActiveDatasetPskcRef,
-        Crypto::Storage::kPendingDatasetPskcRef,
+        KeyRefManager::kActiveDatasetPskc,
+        KeyRefManager::kPendingDatasetPskc,
     },
 };
 
@@ -769,7 +769,7 @@ void DatasetManager::DestroySecurelyStoredKeys(void) const
 {
     for (const SecurelyStoredTlv &entry : kSecurelyStoredTlvs)
     {
-        Crypto::Storage::DestroyKey(entry.GetKeyRef(mType));
+        Crypto::Storage::DestroyKey(Get<KeyRefManager>().KeyRefFor(entry.GetKeyRefType(mType)));
     }
 }
 
@@ -777,7 +777,9 @@ void DatasetManager::MoveKeysToSecureStorage(Dataset &aDataset) const
 {
     for (const SecurelyStoredTlv &entry : kSecurelyStoredTlvs)
     {
-        SaveTlvInSecureStorageAndClearValue(aDataset, entry.mTlvType, entry.GetKeyRef(mType));
+        KeyRef keyRef = Get<KeyRefManager>().KeyRefFor(entry.GetKeyRefType(mType));
+
+        SaveTlvInSecureStorageAndClearValue(aDataset, entry.mTlvType, keyRef);
     }
 }
 
@@ -792,7 +794,9 @@ void DatasetManager::EmplaceSecurelyStoredKeys(Dataset &aDataset) const
 
     for (const SecurelyStoredTlv &entry : kSecurelyStoredTlvs)
     {
-        if (ReadTlvFromSecureStorage(aDataset, entry.mTlvType, entry.GetKeyRef(mType)) != kErrorNone)
+        KeyRef keyRef = Get<KeyRefManager>().KeyRefFor(entry.GetKeyRefType(mType));
+
+        if (ReadTlvFromSecureStorage(aDataset, entry.mTlvType, keyRef) != kErrorNone)
         {
             moveKeys = true;
         }

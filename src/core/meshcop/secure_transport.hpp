@@ -74,12 +74,15 @@
 #include <openthread/coap_secure.h>
 
 #include "common/callback.hpp"
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
+#include "common/non_copyable.hpp"
 #include "common/random.hpp"
 #include "common/timer.hpp"
 #include "crypto/sha256.hpp"
+#include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "net/socket.hpp"
 #include "net/udp6.hpp"
@@ -88,11 +91,25 @@ namespace ot {
 
 namespace MeshCoP {
 
+class SecureTransport;
+class Dtls;
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+class Tls;
+#endif
+
 /**
- * Represents a secure transport, used as base class for `Dtls` and `Tls`.
+ * Represents a secure session.
  */
-class SecureTransport : public InstanceLocator
+class SecureSession : private LinkedListEntry<SecureSession>, private NonCopyable
 {
+    friend class LinkedListEntry<SecureSession>;
+    friend class LinkedList<SecureSession>;
+    friend class SecureTransport;
+    friend class Dtls;
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    friend class Tls;
+#endif
+
 public:
     typedef otCoapSecureConnectEvent ConnectEvent; ///< A connect event.
 
@@ -102,12 +119,10 @@ public:
     static constexpr ConnectEvent kDisconnectedMaxAttempts = OT_COAP_SECURE_DISCONNECTED_MAX_ATTEMPTS;
     static constexpr ConnectEvent kDisconnectedError       = OT_COAP_SECURE_DISCONNECTED_ERROR;
 
-    static constexpr uint8_t kPskMaxLength = 32; ///< Maximum PSK length.
-
     /**
-     * Function pointer which is called reporting a connection event (when connection established or disconnected)
+     * Function pointer which is called reporting a session connection event.
      */
-    typedef otHandleCoapSecureClientConnect ConnectedHandler;
+    typedef otHandleCoapSecureClientConnect ConnectHandler;
 
     /**
      * Pointer is called when data is received from the session.
@@ -119,7 +134,180 @@ public:
     typedef void (*ReceiveHandler)(void *aContext, uint8_t *aBuf, uint16_t aLength);
 
     /**
-     * Pointer is called when secure CoAP server want to send encrypted message.
+     * Sets the connection event callback.
+     *
+     * @param[in]  aConnectHandler   A pointer to a function that is called when connected or disconnected.
+     * @param[in]  aContext          A pointer to arbitrary context information.
+     */
+    void SetConnectCallback(ConnectHandler aConnectHandler, void *aContext)
+    {
+        mConnectedCallback.Set(aConnectHandler, aContext);
+    }
+
+    /**
+     * Sets the receive callback.
+     *
+     * @param[in]  aReceiveHandler      A pointer to a function that is called to receive payload.
+     * @param[in]  aContext             A pointer to arbitrary context information.
+     */
+    void SetReceiveCallback(ReceiveHandler aReceiveHandler, void *aContext)
+    {
+        mReceiveCallback.Set(aReceiveHandler, aContext);
+    }
+
+    /**
+     * Establishes a secure session (as client).
+     *
+     * On success, ownership of the session is passed to the associated secure transport (`GetTransport()`).
+     * The transport will then manage the session. Once the session is disconnected and removed from the transport, the
+     * secure transport signals this using the `RemoveSessionCallback` callback, where ownership is
+     * released.
+     *
+     * @param[in]  aSockAddr       The server address to connect to.
+     *
+     * @retval kErrorNone          Successfully started session establishment
+     * @retval kErrorInvalidState  Transport is not ready.
+     * @retval kErrorNoBufs        Has reached max number of allowed connection attempts.
+     */
+    Error Connect(const Ip6::SockAddr &aSockAddr);
+
+    /**
+     * Disconnects the session.
+     */
+    void Disconnect(void) { Disconnect(kDisconnectedLocalClosed); }
+
+    /**
+     * Sends message to the secure session.
+     *
+     * When successful (returning `kErrorNone`), this method takes over the ownership of @p aMessage and will free
+     * it after transmission. Otherwise, the caller keeps the ownership of @p aMessage.
+     *
+     * @param[in]  aMessage   A message to send.
+     *
+     * @retval kErrorNone     Successfully sent the message.
+     * @retval kErrorNoBufs   @p aMessage is too long.
+     */
+    Error Send(Message &aMessage);
+
+    /**
+     * Returns the session's peer address.
+     *
+     * @return The session's message info.
+     */
+    const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
+
+    /**
+     * Indicates whether or not the session is active (connected, connecting, or disconnecting).
+     *
+     * @retval TRUE  If session is active.
+     * @retval FALSE If session is not active.
+     */
+    bool IsConnectionActive(void) const { return (mState != kStateDisconnected); }
+
+    /**
+     * Indicates whether or not the session is connected.
+     *
+     * @retval TRUE   The session is connected.
+     * @retval FALSE  The session is not connected.
+     */
+    bool IsConnected(void) const { return (mState == kStateConnected); }
+
+    /**
+     * Gets the `SecureTransport` used by this session.
+     *
+     * @return The `SecureTransport` instance associated with this session.
+     */
+    SecureTransport &GetTransport(void) { return mTransport; }
+
+protected:
+    explicit SecureSession(SecureTransport &aTransport);
+
+    bool IsSessionInUse(void) const { return (mNext != this); }
+
+private:
+    static constexpr uint32_t kGuardTimeNewConnectionMilli = 2000;
+    static constexpr uint16_t kMaxContentLen               = OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN;
+
+#if !OPENTHREAD_CONFIG_TLS_API_ENABLE
+    static constexpr uint16_t kApplicationDataMaxLength = 1152;
+#else
+    static constexpr uint16_t         kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH;
+#endif
+
+    enum State : uint8_t
+    {
+        kStateDisconnected,
+        kStateInitializing,
+        kStateConnecting,
+        kStateConnected,
+        kStateDisconnecting,
+    };
+
+    void  Init(void);
+    bool  IsDisconnected(void) const { return mState == kStateDisconnected; }
+    bool  IsInitializing(void) const { return mState == kStateInitializing; }
+    bool  IsConnecting(void) const { return mState == kStateConnecting; }
+    bool  IsDisconnecting(void) const { return mState == kStateDisconnecting; }
+    bool  IsConnectingOrConnected(void) const { return mState == kStateConnecting || mState == kStateConnected; }
+    void  MarkAsNotUsed(void) { mNext = this; }
+    void  SetState(State aState);
+    bool  Matches(const Ip6::MessageInfo &aInfo) const { return mMessageInfo.HasSamePeerAddrAndPort(aInfo); }
+    bool  Matches(State aState) const { return (mState == aState); }
+    void  Accept(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void  HandleTransportReceive(Message &aMessage);
+    Error Setup(void);
+    void  Disconnect(ConnectEvent aEvent);
+    void  HandleTimer(TimeMilli aNow);
+    void  Process(void);
+    void  FreeMbedtls(void);
+
+    static int  HandleMbedtlsGetTimer(void *aContext);
+    int         HandleMbedtlsGetTimer(void);
+    static void HandleMbedtlsSetTimer(void *aContext, uint32_t aIntermediate, uint32_t aFinish);
+    void        HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish);
+    static int  HandleMbedtlsReceive(void *aContext, unsigned char *aBuf, size_t aLength);
+    int         HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength);
+    static int  HandleMbedtlsTransmit(void *aContext, const unsigned char *aBuf, size_t aLength);
+    int         HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength);
+
+    static bool IsMbedtlsHandshakeOver(mbedtls_ssl_context *aSslContext);
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    static const char *StateToString(State aState);
+#endif
+
+    bool                     mTimerSet : 1;
+    bool                     mIsServer : 1;
+    State                    mState;
+    Message::SubType         mMessageSubType;
+    ConnectEvent             mConnectEvent;
+    TimeMilli                mTimerIntermediate;
+    TimeMilli                mTimerFinish;
+    SecureSession           *mNext;
+    SecureTransport         &mTransport;
+    Message                 *mReceiveMessage;
+    Ip6::MessageInfo         mMessageInfo;
+    Callback<ConnectHandler> mConnectedCallback;
+    Callback<ReceiveHandler> mReceiveCallback;
+    mbedtls_ssl_config       mConf;
+    mbedtls_ssl_context      mSsl;
+#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
+    mbedtls_ssl_cookie_ctx mCookieCtx;
+#endif
+};
+
+/**
+ * Represents a secure transport, used as base class for `Dtls` and `Tls`.
+ */
+class SecureTransport : private NonCopyable
+{
+    friend class SecureSession;
+
+public:
+    static constexpr uint8_t kPskMaxLength = 32; ///< Maximum PSK length.
+
+    /**
+     * Pointer is called to send encrypted message.
      *
      * @param[in]  aContext      A pointer to arbitrary context information.
      * @param[in]  aMessage      A reference to the message to send.
@@ -134,6 +322,30 @@ public:
      * @param[in] aContext    A pointer to arbitrary context information.
      */
     typedef void (*AutoCloseCallback)(void *aContext);
+
+    /**
+     * Callback to accept a new session connection request, providing the secure session to use.
+     *
+     * This method returns a pointer to a new `SecureSession` to use for the new session. The `SecureTransport` takes
+     * over the ownership of the given `SecureSession`. Once the session is disconnected and removed from the transport,
+     * the secure transport signals this using the `RemoveSessionCallback` callback, where ownership is released.
+     *
+     * `nullptr` can be returned to reject the new session connection request.
+     *
+     * @param[in] aContex       A pointer to arbitrary context information.
+     * @param[in] aMessageInfo  The message info from the new session connection request message.
+     *
+     * @returns A pointer to `SecureSession` to use for new session or `nullptr` if new connection is rejected.
+     */
+    typedef SecureSession *(*AcceptCallback)(void *aContext, const Ip6::MessageInfo &aMessageInfo);
+
+    /**
+     * Callback to signal a session is removed, releasing the ownership of the session (by `SecureTransport`).
+     *
+     * @param[in] aContex       A pointer to arbitrary context information.
+     * @param[in] aSesssion     The session being removed.
+     */
+    typedef void (*RemoveSessionCallback)(void *aContext, SecureSession &aSesssion);
 
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
     /**
@@ -150,6 +362,7 @@ public:
     class Extension
     {
         friend SecureTransport;
+        friend SecureSession;
 
     public:
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
@@ -222,6 +435,19 @@ public:
 #endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 
 #if defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
+        /**
+         * Returns the DER encoded peer x509 certificate.
+         *
+         * @param[out]  aPeerCert        A pointer to the DER encoded certificate buffer.
+         * @param[out]  aCertLength      The length of the DER encoded peer certificate.
+         * @param[in]   aCertBufferSize  The buffer size of aPeerCert.
+         *
+         * @retval kErrorInvalidState   Not connected yet.
+         * @retval kErrorNone           Successfully get the peer certificate.
+         * @retval kErrorNoBufs         Can't allocate memory for certificate.
+         */
+        Error GetPeerCertificateDer(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
+
         /**
          * Returns an attribute value identified by its OID from the subject
          * of the peer x509 certificate. The peer OID is provided in binary format.
@@ -347,7 +573,7 @@ public:
         };
 #endif
 
-        int   SetApplicationSecureKeys(void);
+        int   SetApplicationSecureKeys(mbedtls_ssl_config &aConfig);
         Error GetThreadAttributeFromCertificate(const mbedtls_x509_crt *aCert,
                                                 int                     aThreadOidDescriptor,
                                                 uint8_t                *aAttributeBuffer,
@@ -364,16 +590,12 @@ public:
 #endif // OPENTHREAD_CONFIG_TLS_API_ENABLE
 
     /**
-     * Opens the socket.
-     *
-     * @param[in]  aReceiveHandler      A pointer to a function that is called to receive payload.
-     * @param[in]  aConnectedHandler    A pointer to a function that is called when connected or disconnected.
-     * @param[in]  aContext             A pointer to arbitrary context information.
+     * Opens the transport.
      *
      * @retval kErrorNone     Successfully opened the socket.
      * @retval kErrorAlready  The connection is already open.
      */
-    Error Open(ReceiveHandler aReceiveHandler, ConnectedHandler aConnectedHandler, void *aContext);
+    Error Open(void);
 
     /**
      * Sets the maximum number of allowed connection requests before socket is automatically closed.
@@ -391,6 +613,25 @@ public:
      * @retval kErrorInvalidState  Socket is not closed.
      */
     Error SetMaxConnectionAttempts(uint16_t aMaxAttempts, AutoCloseCallback aCallback, void *aContext);
+
+    /**
+     * Sets the `AcceptCallback` used to accept new session connection requests.
+     *
+     * @param[in] aCallback   The `AcceptCallback`.
+     * @param[in] aConext     A pointer to arbitrary context to use with `AcceptCallback`.
+     */
+    void SetAcceptCallback(AcceptCallback aCallback, void *aContext) { mAcceptCallback.Set(aCallback, aContext); }
+
+    /**
+     * Sets the `RemoveSessionCallback` used to signal when a session is removed.
+     *
+     * @param[in] aCallback   The `RemoveSessionCallback`.
+     * @param[in] aConext     A pointer to arbitrary context to use with `RemoveSessionCallback`.
+     */
+    void SetRemoveSessionCallback(RemoveSessionCallback aCallback, void *aContext)
+    {
+        mRemoveSessionCallback.Set(aCallback, aContext);
+    }
 
     /**
      * Binds this DTLS to a UDP port.
@@ -423,47 +664,12 @@ public:
     Error Bind(TransportCallback aCallback, void *aContext);
 
     /**
-     * Establishes a secure session.
+     * Indicates whether or not the secure transpose socket is closed.
      *
-     * For CoAP Secure API do first:
-     * Set X509 Pk and Cert for use DTLS mode ECDHE ECDSA with AES 128 CCM 8 or
-     * set PreShared Key for use DTLS mode PSK with AES 128 CCM 8.
-     *
-     * @param[in]  aSockAddr               A reference to the remote sockaddr.
-     *
-     * @retval kErrorNone          Successfully started handshake.
-     * @retval kErrorInvalidState  The socket is not open.
+     * @retval TRUE   The secure transport socket closed.
+     * @retval FALSE  The secure transport socket is not closed.
      */
-    Error Connect(const Ip6::SockAddr &aSockAddr);
-
-    /**
-     * Indicates whether or not the session is active.
-     *
-     * @retval TRUE  If session is active.
-     * @retval FALSE If session is not active.
-     */
-    bool IsConnectionActive(void) const { return mState >= kStateConnecting; }
-
-    /**
-     * Indicates whether or not the session is connected.
-     *
-     * @retval TRUE   The session is connected.
-     * @retval FALSE  The session is not connected.
-     */
-    bool IsConnected(void) const { return mState == kStateConnected; }
-
-    /**
-     * Indicates whether or not the session is closed.
-     *
-     * @retval TRUE   The session is closed.
-     * @retval FALSE  The session is not closed.
-     */
-    bool IsClosed(void) const { return mState == kStateClosed; }
-
-    /**
-     * Disconnects the session.
-     */
-    void Disconnect(void) { Disconnect(kDisconnectedLocalClosed); }
+    bool IsClosed(void) const { return !mIsOpen; }
 
     /**
      * Closes the socket.
@@ -481,24 +687,11 @@ public:
     Error SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
     /**
-     * Sends message to the secure session.
+     * Sets the PSK.
      *
-     * When successful (returning `kErrorNone`), this method takes over the ownership of @p aMessage and will free it
-     * after transmission. Otherwise, the caller keeps the ownership of @p aMessage.
-     *
-     * @param[in]  aMessage   A message to send.
-     *
-     * @retval kErrorNone     Successfully sent the message.
-     * @retval kErrorNoBufs   @p aMessage is too long.
+     * @param[in]  aPskd  A Joiner PSKd.
      */
-    Error Send(Message &aMessage);
-
-    /**
-     * Returns the session's peer address.
-     *
-     * @return session's message info.
-     */
-    const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
+    void SetPsk(const JoinerPskd &aPskd);
 
     /**
      * Checks and handles a received message provided to the SecureTransport object. If checks based on
@@ -509,6 +702,13 @@ public:
      */
     void HandleReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    /**
+     * Get the list of sessions associated with the `SecureTransport`.
+     *
+     * @returns The list of associated sessions.
+     */
+    LinkedList<SecureSession> &GetSessions(void) { return mSessions; }
+
 protected:
     SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, bool aDatagramTransport);
 
@@ -517,25 +717,8 @@ protected:
 #endif
 
 private:
-    static constexpr uint16_t kMaxContentLen                   = OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN;
-    static constexpr uint32_t kGuardTimeNewConnectionMilli     = 2000;
-    static constexpr size_t   kSecureTransportKeyBlockSize     = 40;
-    static constexpr size_t   kSecureTransportRandomBufferSize = 32;
-#if !OPENTHREAD_CONFIG_TLS_API_ENABLE
-    static constexpr uint16_t kApplicationDataMaxLength = 1152;
-#else
-    static constexpr uint16_t         kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH;
-#endif
-
-    enum State : uint8_t
-    {
-        kStateClosed,       // UDP socket is closed.
-        kStateOpen,         // UDP socket is open.
-        kStateInitializing, // The service is initializing.
-        kStateConnecting,   // The service is establishing a connection.
-        kStateConnected,    // The service has a connection established.
-        kStateCloseNotify,  // The service is closing a connection.
-    };
+    static constexpr size_t kSecureTransportKeyBlockSize     = 40;
+    static constexpr size_t kSecureTransportRandomBufferSize = 32;
 
     enum CipherSuite : uint8_t
     {
@@ -550,34 +733,16 @@ private:
         kUnspecifiedCipherSuite,
     };
 
-    bool IsStateClosed(void) const { return mState == kStateClosed; }
-    bool IsStateOpen(void) const { return mState == kStateOpen; }
-    bool IsStateInitializing(void) const { return mState == kStateInitializing; }
-    bool IsStateConnecting(void) const { return mState == kStateConnecting; }
-    bool IsStateConnected(void) const { return mState == kStateConnected; }
-    bool IsStateCloseNotify(void) const { return mState == kStateCloseNotify; }
-    bool IsStateConnectingOrConnected(void) const { return mState == kStateConnecting || mState == kStateConnected; }
-    void SetState(State aState);
-
-    void  FreeMbedtls(void);
-    Error Setup(bool aClient);
-
-    static bool IsMbedtlsHandshakeOver(mbedtls_ssl_context *aSslContext);
+    void RemoveDisconnectedSessions(void);
+    void DecremenetRemainingConnectionAttempts(void);
+    bool HasNoRemainingConnectionAttempts(void) const;
+    int  Transmit(const unsigned char    *aBuf,
+                  size_t                  aLength,
+                  const Ip6::MessageInfo &aMessageInfo,
+                  Message::SubType        aMessageSubType);
 
     static void HandleMbedtlsDebug(void *aContext, int aLevel, const char *aFile, int aLine, const char *aStr);
     void        HandleMbedtlsDebug(int aLevel, const char *aFile, int aLine, const char *aStr);
-
-    static int HandleMbedtlsGetTimer(void *aContext);
-    int        HandleMbedtlsGetTimer(void);
-
-    static void HandleMbedtlsSetTimer(void *aContext, uint32_t aIntermediate, uint32_t aFinish);
-    void        HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish);
-
-    static int HandleMbedtlsReceive(void *aContext, unsigned char *aBuf, size_t aLength);
-    int        HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength);
-
-    static int HandleMbedtlsTransmit(void *aContext, const unsigned char *aBuf, size_t aLength);
-    int        HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength);
 
 #ifdef MBEDTLS_SSL_EXPORT_KEYS
 #if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
@@ -614,15 +779,10 @@ private:
 #endif // (MBEDTLS_VERSION_NUMBER >= 0x03000000)
 #endif // MBEDTLS_SSL_EXPORT_KEYS
 
+    static void HandleUpdateTask(Tasklet &aTasklet);
+    void        HandleUpdateTask(void);
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-
-    void Process(void);
-    void Disconnect(ConnectEvent aEvent);
-
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-    static const char *StateToString(State aState);
-#endif
 
     using TransportSocket = Ip6::Udp::SocketIn<SecureTransport, &SecureTransport::HandleReceive>;
 
@@ -642,86 +802,88 @@ private:
 
     static const int kCipherSuites[][2];
 
-    bool                        mLayerTwoSecurity : 1;
-    bool                        mDatagramTransport : 1;
-    bool                        mTimerSet : 1;
-    bool                        mVerifyPeerCertificate : 1;
-    State                       mState;
-    CipherSuite                 mCipherSuite;
-    Message::SubType            mMessageSubType;
-    ConnectEvent                mConnectEvent;
-    uint8_t                     mPskLength;
-    uint16_t                    mMaxConnectionAttempts;
-    uint16_t                    mRemainingConnectionAttempts;
-    Message                    *mReceiveMessage;
-    Ip6::MessageInfo            mMessageInfo;
-    TransportSocket             mSocket;
-    uint8_t                     mPsk[kPskMaxLength];
-    TimeMilli                   mTimerIntermediate;
-    TimeMilli                   mTimerFinish;
-    TimerMilliContext           mTimer;
-    Callback<AutoCloseCallback> mAutoCloseCallback;
-    Callback<ConnectedHandler>  mConnectedCallback;
-    Callback<ReceiveHandler>    mReceiveCallback;
-    Callback<TransportCallback> mTransportCallback;
-    mbedtls_ssl_context         mSsl;
-    mbedtls_ssl_config          mConf;
-#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
-    mbedtls_ssl_cookie_ctx mCookieCtx;
-#endif
+    bool                            mLayerTwoSecurity : 1;
+    bool                            mDatagramTransport : 1;
+    bool                            mIsOpen : 1;
+    bool                            mIsClosing : 1;
+    bool                            mVerifyPeerCertificate : 1;
+    CipherSuite                     mCipherSuite;
+    uint8_t                         mPskLength;
+    uint16_t                        mMaxConnectionAttempts;
+    uint16_t                        mRemainingConnectionAttempts;
+    LinkedList<SecureSession>       mSessions;
+    TransportSocket                 mSocket;
+    uint8_t                         mPsk[kPskMaxLength];
+    TimerMilliContext               mTimer;
+    TaskletContext                  mUpdateTask;
+    Callback<AutoCloseCallback>     mAutoCloseCallback;
+    Callback<AcceptCallback>        mAcceptCallback;
+    Callback<RemoveSessionCallback> mRemoveSessionCallback;
+    Callback<TransportCallback>     mTransportCallback;
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
     Extension *mExtension;
 #endif
 };
 
 /**
- * Represents a DTLS instance.
+ * Defines DTLS `Transport` and `Session`.
  */
-class Dtls : public SecureTransport
+class Dtls
 {
 public:
+    class Session;
+
     /**
-     * Initializes the `Dtls` object.
-     *
-     * @param[in]  aInstance            A reference to the OpenThread instance.
-     * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
+     * Represents a DTLS transport.
      */
-    Dtls(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity)
-        : SecureTransport(aInstance, aLayerTwoSecurity, /* aDatagramTransport */ true)
+    class Transport : public SecureTransport
     {
-    }
-};
+        friend class Session;
 
-#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+    public:
+        /**
+         * Initializes the `Dtls::Transport` object.
+         *
+         * @param[in]  aInstance            A reference to the OpenThread instance.
+         * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
+         */
+        Transport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity)
+            : SecureTransport(aInstance, aLayerTwoSecurity, /* aDatagramTransport */ true)
+        {
+        }
+    };
 
-/**
- * Represents an extended DTLS instance providing `Dtls::Extension` APIs.
- */
-class DtlsExtended : public Dtls
-{
-public:
     /**
-     * Initializes the `DtlsExtended` object.
-     *
-     * @param[in]  aInstance            A reference to the OpenThread instance.
-     * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
-     * @param[in]  aExtension           An extension providing additional configuration methods.
+     * Represents a DTLS session.
      */
-    DtlsExtended(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, Extension &aExtension)
-        : Dtls(aInstance, aLayerTwoSecurity)
+    class Session : public SecureSession
     {
-        SetExtension(aExtension);
-    }
-};
+    public:
+        /**
+         * Initializes the `Dtls::Session` object.
+         *
+         * @param[in] aTransport  The DTLS transport to use for this session.
+         */
+        Session(Transport &aTransport)
+            : SecureSession(aTransport)
+        {
+        }
 
-#endif
+        /**
+         * Returns the DTLS transport used by this session.
+         *
+         * @returns The DTLS transport associated with this session.
+         */
+        Transport &GetTransport(void) { return static_cast<Transport &>(SecureSession::GetTransport()); }
+    };
+};
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
 /**
  * Represents a TLS instance.
  */
-class Tls : public SecureTransport
+class Tls : public SecureTransport, public SecureSession
 {
 public:
     /**
@@ -733,9 +895,15 @@ public:
      */
     Tls(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, Extension &aExtension)
         : SecureTransport(aInstance, aLayerTwoSecurity, /* aDatagramTransport */ false)
+        , SecureSession(*static_cast<SecureTransport *>(this))
     {
         SetExtension(aExtension);
+        SetAcceptCallback(&HandleAccept, this);
     }
+
+private:
+    static SecureSession *HandleAccept(void *aContext, const Ip6::MessageInfo &aMessageInfo);
+    SecureSession        *HandleAccept(void);
 };
 
 #endif

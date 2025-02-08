@@ -80,15 +80,17 @@ Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
     Mac::TxFrame      *frame = nullptr;
     Mac::Address       target;
     Mac::Address       source;
-    uint32_t           radioTxUs;
+    uint32_t           radioTxDelay;
     uint32_t           rendezvousTimeUs;
+    TimeMicro          nowUs = TimerMicro::GetNow();
     Mac::ConnectionIe *connectionIe;
 
     VerifyOrExit(mIsRunning);
 
     target.SetExtended(mWedAddress);
     source.SetExtended(Get<Mac::Mac>().GetExtAddress());
-    radioTxUs = static_cast<uint32_t>(Get<Radio>().GetNow()) + (mTxTimeUs - TimerMicro::GetNow());
+    VerifyOrExit(mTxTimeUs >= nowUs);
+    radioTxDelay = mTxTimeUs - nowUs;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     frame = &aTxFrames.GetTxFrame(Mac::kRadioTypeIeee802154);
@@ -97,8 +99,8 @@ Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
 #endif
 
     VerifyOrExit(frame->GenerateWakeupFrame(Get<Mac::Mac>().GetPanId(), target, source) == kErrorNone, frame = nullptr);
-    frame->SetTxDelayBaseTime(0);
-    frame->SetTxDelay(radioTxUs);
+    frame->SetTxDelayBaseTime(static_cast<uint32_t>(Get<Radio>().GetNow()));
+    frame->SetTxDelay(radioTxDelay);
     frame->SetCsmaCaEnabled(kWakeupFrameTxCca);
     frame->SetMaxCsmaBackoffs(0);
     frame->SetMaxFrameRetries(0);
