@@ -120,7 +120,7 @@
 /**
  * @def OPENTHREAD_CONFIG_WAKEUP_FRAME_TX_CCA_ENABLE
  *
- * Define 1 to perform CCA before transmitting wake-up frame.
+ * Define to 1 to perform CCA before transmitting wake-up frame.
  */
 #ifndef OPENTHREAD_CONFIG_WAKEUP_FRAME_TX_CCA_ENABLE
 #define OPENTHREAD_CONFIG_WAKEUP_FRAME_TX_CCA_ENABLE 1
