@@ -240,12 +240,20 @@ private:
     void Output(const char *aFormat, ...);
     void ResetTxPacket(void);
     void OutputStats(void);
+    void UpdateTxStats(Error aError);
 
     static bool IsChannelValid(uint8_t aChannel);
 
     static const struct Command sCommands[];
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD || (OPENTHREAD_RADIO && OPENTHREAD_RADIO_CLI)
+    enum TxCmd : uint8_t
+    {
+        kTxCmdNone,
+        kTxCmdRepeat,
+        kTxCmdSend,
+    };
+
     Stats mStats;
 
     otRadioFrame *mTxPacket;
@@ -254,10 +262,10 @@ private:
     uint8_t       mChannel;
     int8_t        mTxPower;
     uint8_t       mTxLen;
+    TxCmd         mCurTxCmd;
     bool          mIsHeaderUpdated : 1;
     bool          mIsTxPacketSet : 1;
     bool          mIsAsyncSend : 1;
-    bool          mRepeatActive : 1;
     bool          mDiagSendOn : 1;
     bool          mIsSleepOn : 1;
 #endif

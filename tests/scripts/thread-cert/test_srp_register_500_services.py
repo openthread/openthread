@@ -119,7 +119,7 @@ class SrpRegister500Services(thread_cert.TestCase):
         for router in routers():
             router.srp_server_set_enabled(False)
             router.start()
-            self.simulator.go(config.ROUTER_STARTUP_DELAY)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
 
         for router in routers():
             self.assertEqual(router.get_state(), 'router')
@@ -127,7 +127,7 @@ class SrpRegister500Services(thread_cert.TestCase):
         for fed in feds():
             fed.srp_server_set_enabled(False)
             fed.start()
-            self.simulator.go(3)
+        self.simulator.go(3)
 
         for fed in feds():
             self.assertEqual(fed.get_state(), 'child')
