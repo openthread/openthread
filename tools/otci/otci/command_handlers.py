@@ -330,8 +330,15 @@ class OtbrAdbCommandRunner(OTCommandHandler):
         return self.shell(cmd, timeout=timeout)
 
     def shell(self, cmd: str, timeout: float) -> List[str]:
-        return self.__adb.shell(cmd, transport_timeout_s=timeout, read_timeout_s=timeout,
-                                timeout_s=timeout).splitlines()
+        raw_out = self.__adb.shell(cmd, transport_timeout_s=timeout, read_timeout_s=timeout, timeout_s=timeout)
+
+        # Normalize ADB shell output for consistent line splitting.
+        #   The ADB client may perform automatic newline conversion, potentially replace the '\n' with '\r\n'.
+        #   In some scenarios, this can result in sequences like '\r\r\n'. This line replaces '\r\r\n' with
+        #   standard CRLF '\r\n' to mitigate issues with line-based processing and `splitlines()`.
+        out = raw_out.replace('\r\r\n', '\r\n')
+
+        return out.splitlines()
 
     def close(self):
         self.__adb.close()
