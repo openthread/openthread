@@ -559,7 +559,7 @@ Error Diags::TransmitPacket(void)
 
     if (mIsTxPacketSet)
     {
-        // The `mInfo.mTxInfo.mIsHeaderUpdated` and 'mInfo.mTxInfo.mIsSecurityProcessed' fields may be updated by
+        // The `mInfo.mTxInfo.mIsHeaderUpdated` and `mInfo.mTxInfo.mIsSecurityProcessed` fields may be updated by
         // the radio driver after the frame is sent. Here sets these fields field before transmitting the frame.
         mTxPacket->mInfo.mTxInfo.mIsHeaderUpdated     = mIsHeaderUpdated;
         mTxPacket->mInfo.mTxInfo.mIsSecurityProcessed = mIsSecurityProcessed;
