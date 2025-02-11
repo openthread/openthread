@@ -19,11 +19,12 @@ Nexus is a test framework for OpenThread testing.
 To build Nexus test cases, the `build.sh` script can be used:
 
 ```bash
-./tests/nexus/build.sh
+mkdir nexus_test
+top_builddir=nexus_test ./tests/nexus/build.sh
 ```
 
 Afterwards, each test can be run directly:
 
 ```bash
-./tests/nexus/nexus_form_join
+./nexus_test/tests/nexus/nexus_form_join
 ```
