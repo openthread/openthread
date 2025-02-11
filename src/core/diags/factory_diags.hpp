@@ -255,6 +255,7 @@ private:
     int8_t        mTxPower;
     uint8_t       mTxLen;
     bool          mIsHeaderUpdated : 1;
+    bool          mIsSecurityProcessed : 1;
     bool          mIsTxPacketSet : 1;
     bool          mIsAsyncSend : 1;
     bool          mRepeatActive : 1;
