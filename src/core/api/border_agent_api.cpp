@@ -56,12 +56,24 @@ otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId)
 
 bool otBorderAgentIsActive(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().IsActive();
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().IsRunning();
 }
 
 uint16_t otBorderAgentGetUdpPort(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetUdpPort();
+}
+
+void otBorderAgentInitSessionIterator(otInstance *aInstance, otBorderAgentSessionIterator *aIterator)
+{
+    AsCoreType(aIterator).Init(AsCoreType(aInstance));
+}
+
+otError otBorderAgentGetNextSessionInfo(otBorderAgentSessionIterator *aIterator, otBorderAgentSessionInfo *aSessionInfo)
+{
+    AssertPointerIsNotNull(aSessionInfo);
+
+    return AsCoreType(aIterator).GetNextSessionInfo(*aSessionInfo);
 }
 
 const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance)
