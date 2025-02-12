@@ -4034,7 +4034,7 @@ void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState
     // manager will refuse to request the prefix.
     // TODO: Either update the comment for the state callback or add a random delay when notifing the upper layer for
     // state change.
-    mStateCallback.InvokeIfSet(static_cast<otBorderRoutingDhcp6PdState>(newState));
+    mStateCallback.InvokeIfSet(MapEnum(newState));
 
 exit:
     return;

@@ -1640,6 +1640,7 @@ template <> void RoutingManager::RxRaTracker::Entry<RoutingManager::RxRaTracker:
 } // namespace BorderRouter
 
 DefineMapEnum(otBorderRoutingState, BorderRouter::RoutingManager::State);
+DefineMapEnum(otBorderRoutingDhcp6PdState, BorderRouter::RoutingManager::Dhcp6PdState);
 
 } // namespace ot
 
