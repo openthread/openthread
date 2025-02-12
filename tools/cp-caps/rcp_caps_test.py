@@ -880,11 +880,14 @@ class RcpCaps(object):
 
     def __radio_receive_task(self, receiver: OTCI, number: int, result_queue: queue):
         try:
+            receiver.set_execute_command_retry(0)
             result = receiver.diag_radio_receive_number(number)
         except ExpectLineTimeoutError:
             pass
         else:
             result_queue.put(result)
+        finally:
+            receiver.set_execute_command_retry(OTCI.DEFAULT_EXEC_COMMAND_RETRY)
 
     def __test_diag_frame(self):
         frame = self.Frame(name='diag frame 00010203040506070809', tx_frame='00010203040506070809', dst_address='-')
