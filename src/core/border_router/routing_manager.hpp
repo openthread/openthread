@@ -1497,7 +1497,7 @@ private:
         };
 
         void Process(const InfraIf::Icmp6Packet *aRaPacket, const PrefixTableEntry *aPrefixTableEntry);
-        bool ProcessPdPrefix(PdPrefix &aPrefix, PdPrefix &aFavoredPrefix);
+        void ProcessPdPrefix(PdPrefix &aPrefix, PdPrefix &aFavoredPrefix);
         void EvaluateStateChange(State aOldState);
         void WithdrawPrefix(void);
         void StartStop(bool aStart);
