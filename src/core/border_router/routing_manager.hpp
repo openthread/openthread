@@ -1470,7 +1470,7 @@ private:
         void               Start(void) { StartStop(/* aStart= */ true); }
         void               Stop(void) { StartStop(/* aStart= */ false); }
         bool               IsRunning(void) const { return GetState() == kDhcp6PdStateRunning; }
-        bool               HasPrefix(void) const { return IsValidOmrPrefix(mPrefix.GetPrefix()); }
+        bool               HasPrefix(void) const { return !mPrefix.IsEmpty(); }
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix.GetPrefix(); }
         State              GetState(void) const;
 
