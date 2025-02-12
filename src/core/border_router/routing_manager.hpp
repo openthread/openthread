@@ -1471,12 +1471,11 @@ private:
         explicit PdPrefixManager(Instance &aInstance);
 
         void               SetEnabled(bool aEnabled);
-        void               Start(void) { StartStop(/* aStart= */ true); }
-        void               Stop(void) { StartStop(/* aStart= */ false); }
-        bool               IsRunning(void) const { return GetState() == kDhcp6PdStateRunning; }
+        void               Start(void) { Evaluate(); }
+        void               Stop(void) { Evaluate(); }
         bool               HasPrefix(void) const { return !mPrefix.IsEmpty(); }
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix.GetPrefix(); }
-        State              GetState(void) const;
+        State              GetState(void) const { return mState; }
 
         void  ProcessRa(const uint8_t *aRouterAdvert, uint16_t aLength);
         void  ProcessPrefix(const PrefixTableEntry &aPrefixTableEntry);
@@ -1496,22 +1495,18 @@ private:
             bool IsFavoredOver(const PdPrefix &aOther) const;
         };
 
+        void UpdateState(void);
+        void SetState(State aState);
         void Process(const InfraIf::Icmp6Packet *aRaPacket, const PrefixTableEntry *aPrefixTableEntry);
         void ProcessPdPrefix(PdPrefix &aPrefix, PdPrefix &aFavoredPrefix);
-        void EvaluateStateChange(State aOldState);
         void WithdrawPrefix(void);
-        void StartStop(bool aStart);
-        void PauseResume(bool aPause);
 
         static const char *StateToString(State aState);
 
         using PrefixTimer   = TimerMilliIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerTimer>;
         using StateCallback = Callback<PdCallback>;
 
-        bool mEnabled;   // Whether PdPrefixManager is enabled. (guards the overall PdPrefixManager functions)
-        bool mIsStarted; // Whether PdPrefixManager is started. (monitoring prefixes)
-        bool mIsPaused;  // Whether PdPrefixManager is paused. (when there is another BR advertising another prefix)
-
+        State         mState;
         uint32_t      mNumPlatformPioProcessed;
         uint32_t      mNumPlatformRaReceived;
         TimeMilli     mLastPlatformRaTime;
