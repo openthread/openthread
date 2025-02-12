@@ -1487,17 +1487,17 @@ private:
         void  Evaluate(void);
 
     private:
-        class PrefixEntry : public OnLinkPrefix
+        class PdPrefix : public OnLinkPrefix
         {
         public:
-            PrefixEntry(void) { Clear(); }
+            PdPrefix(void) { Clear(); }
             bool IsEmpty(void) const { return (GetPrefix().GetLength() == 0); }
             bool IsValidPdPrefix(void) const;
-            bool IsFavoredOver(const PrefixEntry &aOther) const;
+            bool IsFavoredOver(const PdPrefix &aOther) const;
         };
 
         void Process(const InfraIf::Icmp6Packet *aRaPacket, const PrefixTableEntry *aPrefixTableEntry);
-        bool ProcessPrefixEntry(PrefixEntry &aEntry, PrefixEntry &aFavoredEntry);
+        bool ProcessPdPrefix(PdPrefix &aPrefix, PdPrefix &aFavoredPrefix);
         void EvaluateStateChange(State aOldState);
         void WithdrawPrefix(void);
         void StartStop(bool aStart);
@@ -1517,7 +1517,7 @@ private:
         TimeMilli     mLastPlatformRaTime;
         StateCallback mStateCallback;
         PrefixTimer   mTimer;
-        PrefixEntry   mPrefix;
+        PdPrefix      mPrefix;
     };
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE

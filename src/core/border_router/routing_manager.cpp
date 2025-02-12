@@ -4115,10 +4115,10 @@ void RoutingManager::PdPrefixManager::Process(const InfraIf::Icmp6Packet *aRaPac
     // an RA message or directly set. Requires either `aRaPacket` or
     // `aPrefixTableEntry` to be non-null.
 
-    bool        currentPrefixUpdated = false;
-    Error       error                = kErrorNone;
-    PrefixEntry favoredEntry;
-    PrefixEntry entry;
+    bool     currentPrefixUpdated = false;
+    Error    error                = kErrorNone;
+    PdPrefix favoredPrefix;
+    PdPrefix prefix;
 
     VerifyOrExit(mEnabled, error = kErrorInvalidState);
 
@@ -4136,8 +4136,8 @@ void RoutingManager::PdPrefixManager::Process(const InfraIf::Icmp6Packet *aRaPac
             }
 
             mNumPlatformPioProcessed++;
-            entry.SetFrom(static_cast<const PrefixInfoOption &>(option));
-            currentPrefixUpdated |= ProcessPrefixEntry(entry, favoredEntry);
+            prefix.SetFrom(static_cast<const PrefixInfoOption &>(option));
+            currentPrefixUpdated |= ProcessPdPrefix(prefix, favoredPrefix);
         }
 
         mNumPlatformRaReceived++;
@@ -4145,8 +4145,8 @@ void RoutingManager::PdPrefixManager::Process(const InfraIf::Icmp6Packet *aRaPac
     }
     else // aPrefixTableEntry != nullptr
     {
-        entry.SetFrom(*aPrefixTableEntry);
-        currentPrefixUpdated = ProcessPrefixEntry(entry, favoredEntry);
+        prefix.SetFrom(*aPrefixTableEntry);
+        currentPrefixUpdated = ProcessPdPrefix(prefix, favoredPrefix);
     }
 
     if (currentPrefixUpdated && mPrefix.IsDeprecated())
@@ -4156,9 +4156,9 @@ void RoutingManager::PdPrefixManager::Process(const InfraIf::Icmp6Packet *aRaPac
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
     }
 
-    if (favoredEntry.IsFavoredOver(mPrefix))
+    if (favoredPrefix.IsFavoredOver(mPrefix))
     {
-        mPrefix              = favoredEntry;
+        mPrefix              = favoredPrefix;
         currentPrefixUpdated = true;
         LogInfo("DHCPv6 PD prefix set to %s", mPrefix.GetPrefix().ToString().AsCString());
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
@@ -4178,45 +4178,45 @@ exit:
     OT_UNUSED_VARIABLE(error);
 }
 
-bool RoutingManager::PdPrefixManager::ProcessPrefixEntry(PrefixEntry &aEntry, PrefixEntry &aFavoredEntry)
+bool RoutingManager::PdPrefixManager::ProcessPdPrefix(PdPrefix &aPrefix, PdPrefix &aFavoredPrefix)
 {
     bool currentPrefixUpdated = false;
 
-    if (!aEntry.IsValidPdPrefix())
+    if (!aPrefix.IsValidPdPrefix())
     {
-        LogWarn("Ignore invalid DHCPv6 PD prefix %s", aEntry.GetPrefix().ToString().AsCString());
+        LogWarn("Ignore invalid DHCPv6 PD prefix %s", aPrefix.GetPrefix().ToString().AsCString());
         ExitNow();
     }
 
-    aEntry.GetPrefix().Tidy();
-    aEntry.GetPrefix().SetLength(kOmrPrefixLength);
+    aPrefix.GetPrefix().Tidy();
+    aPrefix.GetPrefix().SetLength(kOmrPrefixLength);
 
     // Check if there is an update to the current prefix. The valid or
     // preferred lifetime may have changed.
 
-    if (HasPrefix() && (mPrefix.GetPrefix() == aEntry.GetPrefix()))
+    if (HasPrefix() && (mPrefix.GetPrefix() == aPrefix.GetPrefix()))
     {
         currentPrefixUpdated = true;
-        mPrefix              = aEntry;
+        mPrefix              = aPrefix;
     }
 
-    VerifyOrExit(!aEntry.IsDeprecated());
+    VerifyOrExit(!aPrefix.IsDeprecated());
 
     // Some platforms may delegate multiple prefixes. We'll select the
     // smallest one, as GUA prefixes (`2000::/3`) are inherently
     // smaller than ULA prefixes (`fc00::/7`). This rule prefers GUA
     // prefixes over ULA.
 
-    if (aEntry.IsFavoredOver(aFavoredEntry))
+    if (aPrefix.IsFavoredOver(aFavoredPrefix))
     {
-        aFavoredEntry = aEntry;
+        aFavoredPrefix = aPrefix;
     }
 
 exit:
     return currentPrefixUpdated;
 }
 
-bool RoutingManager::PdPrefixManager::PrefixEntry::IsValidPdPrefix(void) const
+bool RoutingManager::PdPrefixManager::PdPrefix::IsValidPdPrefix(void) const
 {
     // We should accept ULA prefix since it could be used by the internet infrastructure like NAT64.
 
@@ -4224,7 +4224,7 @@ bool RoutingManager::PdPrefixManager::PrefixEntry::IsValidPdPrefix(void) const
            !GetPrefix().IsMulticast();
 }
 
-bool RoutingManager::PdPrefixManager::PrefixEntry::IsFavoredOver(const PrefixEntry &aOther) const
+bool RoutingManager::PdPrefixManager::PdPrefix::IsFavoredOver(const PdPrefix &aOther) const
 {
     bool isFavored;
 
