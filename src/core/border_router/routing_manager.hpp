@@ -1094,12 +1094,13 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    class FavoredOmrPrefix : public OmrPrefix
+    class FavoredOmrPrefix : public OmrPrefix, public Unequatable<FavoredOmrPrefix>
     {
         friend class OmrPrefixManager;
 
     public:
         bool IsInfrastructureDerived(void) const;
+        bool operator==(const FavoredOmrPrefix &aOther) const;
 
     private:
         void SetFrom(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
@@ -1129,11 +1130,14 @@ private:
 
         typedef String<kInfoStringSize> InfoString;
 
-        void       DetermineFavoredPrefix(void);
+        void       SetFavordPrefix(const OmrPrefix &aOmrPrefix);
+        void       ClearFavoredPrefix(void) { SetFavordPrefix(OmrPrefix()); }
+        void       DetermineFavoredPrefixInNetData(FavoredOmrPrefix &aFavoredPrefix);
         Error      AddLocalToNetData(void);
         Error      AddOrUpdateLocalInNetData(void);
         void       RemoveLocalFromNetData(void);
         InfoString LocalToString(void) const;
+        InfoString FavoredToString(const FavoredOmrPrefix &aFavoredPrefix) const;
 
         OmrPrefix        mLocalPrefix;
         Ip6::Prefix      mGeneratedPrefix;
