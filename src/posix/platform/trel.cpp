@@ -181,6 +181,11 @@ static void PrepareSocket(uint16_t &aUdpPort)
     val = val | O_NONBLOCK;
     VerifyOrDie(fcntl(sSocket, F_SETFL, val) == 0, OT_EXIT_ERROR_ERRNO);
 
+#if defined(IPV6_ADDR_PREFERENCES) && defined(IPV6_PREFER_SRC_PUBLIC)
+    val = IPV6_PREFER_SRC_PUBLIC;
+    setsockopt(sSocket, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &val, sizeof(val));
+#endif
+
     // Bind the socket.
 
     memset(&sockAddr, 0, sizeof(sockAddr));
