@@ -2221,6 +2221,12 @@ bool RoutingManager::FavoredOmrPrefix::IsInfrastructureDerived(void) const
     return !IsEmpty() && (mPreference >= NetworkData::kRoutePreferenceMedium);
 }
 
+bool RoutingManager::FavoredOmrPrefix::operator==(const FavoredOmrPrefix &aOther) const
+{
+    return (mPreference == aOther.mPreference) && (mIsDomainPrefix == aOther.mIsDomainPrefix) &&
+           (mPrefix == aOther.mPrefix);
+}
+
 void RoutingManager::FavoredOmrPrefix::SetFrom(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig)
 {
     mPrefix         = aOnMeshPrefixConfig.GetPrefix();
@@ -2273,22 +2279,41 @@ void RoutingManager::OmrPrefixManager::Init(const Ip6::Prefix &aBrUlaPrefix)
     LogInfo("Generated local OMR prefix: %s", mGeneratedPrefix.ToString().AsCString());
 }
 
-void RoutingManager::OmrPrefixManager::Start(void) { DetermineFavoredPrefix(); }
+void RoutingManager::OmrPrefixManager::Start(void)
+{
+    FavoredOmrPrefix favoredPrefix;
+
+    DetermineFavoredPrefixInNetData(favoredPrefix);
+    SetFavordPrefix(favoredPrefix);
+}
 
 void RoutingManager::OmrPrefixManager::Stop(void)
 {
     RemoveLocalFromNetData();
-    mFavoredPrefix.Clear();
+    ClearFavoredPrefix();
 }
 
-void RoutingManager::OmrPrefixManager::DetermineFavoredPrefix(void)
+void RoutingManager::OmrPrefixManager::SetFavordPrefix(const OmrPrefix &aOmrPrefix)
+{
+    FavoredOmrPrefix oldFavoredPrefix = mFavoredPrefix;
+
+    mFavoredPrefix.SetFrom(aOmrPrefix);
+
+    if (oldFavoredPrefix != mFavoredPrefix)
+    {
+        LogInfo("Favored OMR prefix: %s -> %s", FavoredToString(oldFavoredPrefix).AsCString(),
+                FavoredToString(mFavoredPrefix).AsCString());
+    }
+}
+
+void RoutingManager::OmrPrefixManager::DetermineFavoredPrefixInNetData(FavoredOmrPrefix &aFavoredPrefix)
 {
     // Determine the favored OMR prefix present in Network Data.
 
     NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
     NetworkData::OnMeshPrefixConfig prefixConfig;
 
-    mFavoredPrefix.Clear();
+    aFavoredPrefix.Clear();
 
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
     {
@@ -2297,18 +2322,20 @@ void RoutingManager::OmrPrefixManager::DetermineFavoredPrefix(void)
             continue;
         }
 
-        if (mFavoredPrefix.IsEmpty() || !mFavoredPrefix.IsFavoredOver(prefixConfig))
+        if (aFavoredPrefix.IsEmpty() || !aFavoredPrefix.IsFavoredOver(prefixConfig))
         {
-            mFavoredPrefix.SetFrom(prefixConfig);
+            aFavoredPrefix.SetFrom(prefixConfig);
         }
     }
 }
 
 void RoutingManager::OmrPrefixManager::Evaluate(void)
 {
+    FavoredOmrPrefix favoredPrefix;
+
     OT_ASSERT(Get<RoutingManager>().IsRunning());
 
-    DetermineFavoredPrefix();
+    DetermineFavoredPrefixInNetData(favoredPrefix);
 
     // Determine the local prefix and remove outdated prefix published by us.
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
@@ -2335,33 +2362,22 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
     }
 
     // Decide if we need to add or remove our local OMR prefix.
-    if (mFavoredPrefix.IsEmpty() || mFavoredPrefix.GetPreference() < mLocalPrefix.GetPreference())
+
+    if (favoredPrefix.IsEmpty() || favoredPrefix.GetPreference() < mLocalPrefix.GetPreference())
     {
-        if (mFavoredPrefix.IsEmpty())
-        {
-            LogInfo("No favored OMR prefix found in Thread network.");
-        }
-        else
-        {
-            LogInfo("Replacing favored OMR prefix %s with higher preference local prefix %s.",
-                    mFavoredPrefix.GetPrefix().ToString().AsCString(), mLocalPrefix.GetPrefix().ToString().AsCString());
-        }
-
-        // The `mFavoredPrefix` remains empty if we fail to publish
-        // the local OMR prefix.
         SuccessOrExit(AddLocalToNetData());
-
-        mFavoredPrefix.SetFrom(mLocalPrefix);
+        SetFavordPrefix(mLocalPrefix);
+        ExitNow();
     }
-    else if (mFavoredPrefix.GetPrefix() == mLocalPrefix.GetPrefix())
+
+    SetFavordPrefix(favoredPrefix);
+
+    if (favoredPrefix.GetPrefix() == mLocalPrefix.GetPrefix())
     {
         IgnoreError(AddLocalToNetData());
     }
     else if (mIsLocalAddedInNetData)
     {
-        LogInfo("There is already a favored OMR prefix %s in the Thread network",
-                mFavoredPrefix.GetPrefix().ToString().AsCString());
-
         RemoveLocalFromNetData();
     }
 
@@ -2474,6 +2490,36 @@ RoutingManager::OmrPrefixManager::InfoString RoutingManager::OmrPrefixManager::L
 
     string.Append("local OMR prefix %s (def-route:%s)", mLocalPrefix.GetPrefix().ToString().AsCString(),
                   ToYesNo(mDefaultRoute));
+    return string;
+}
+
+RoutingManager::OmrPrefixManager::InfoString RoutingManager::OmrPrefixManager::FavoredToString(
+    const FavoredOmrPrefix &aFavoredPrefix) const
+{
+    InfoString string;
+
+    if (aFavoredPrefix.IsEmpty())
+    {
+        string.Append("(none)");
+    }
+    else
+    {
+        string.Append("%s (prf:%s", aFavoredPrefix.GetPrefix().ToString().AsCString(),
+                      RoutePreferenceToString(aFavoredPrefix.GetPreference()));
+
+        if (aFavoredPrefix.IsDomainPrefix())
+        {
+            string.Append(", domain");
+        }
+
+        if (aFavoredPrefix.GetPrefix() == mLocalPrefix.GetPrefix())
+        {
+            string.Append(", local");
+        }
+
+        string.Append(")");
+    }
+
     return string;
 }
 
@@ -3961,9 +4007,7 @@ RoutingManager::PdPrefixManager::State RoutingManager::PdPrefixManager::GetState
 void RoutingManager::PdPrefixManager::Evaluate(void)
 {
     const FavoredOmrPrefix &favoredPrefix = Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix();
-
-    bool shouldPause = !favoredPrefix.IsEmpty() && favoredPrefix.GetPrefix() != mPrefix.GetPrefix() &&
-                       favoredPrefix.GetPreference() >= kPdRoutePreference;
+    bool shouldPause = favoredPrefix.IsInfrastructureDerived() && (favoredPrefix.GetPrefix() != mPrefix.GetPrefix());
 
     PauseResume(/* aPause */ shouldPause);
 }
@@ -3990,7 +4034,7 @@ void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState
     // manager will refuse to request the prefix.
     // TODO: Either update the comment for the state callback or add a random delay when notifing the upper layer for
     // state change.
-    mStateCallback.InvokeIfSet(static_cast<otBorderRoutingDhcp6PdState>(newState));
+    mStateCallback.InvokeIfSet(MapEnum(newState));
 
 exit:
     return;
@@ -4071,10 +4115,10 @@ void RoutingManager::PdPrefixManager::Process(const InfraIf::Icmp6Packet *aRaPac
     // an RA message or directly set. Requires either `aRaPacket` or
     // `aPrefixTableEntry` to be non-null.
 
-    bool        currentPrefixUpdated = false;
-    Error       error                = kErrorNone;
-    PrefixEntry favoredEntry;
-    PrefixEntry entry;
+    bool     currentPrefixUpdated = false;
+    Error    error                = kErrorNone;
+    PdPrefix favoredPrefix;
+    PdPrefix prefix;
 
     VerifyOrExit(mEnabled, error = kErrorInvalidState);
 
@@ -4092,8 +4136,8 @@ void RoutingManager::PdPrefixManager::Process(const InfraIf::Icmp6Packet *aRaPac
             }
 
             mNumPlatformPioProcessed++;
-            entry.SetFrom(static_cast<const PrefixInfoOption &>(option));
-            currentPrefixUpdated |= ProcessPrefixEntry(entry, favoredEntry);
+            prefix.SetFrom(static_cast<const PrefixInfoOption &>(option));
+            currentPrefixUpdated |= ProcessPdPrefix(prefix, favoredPrefix);
         }
 
         mNumPlatformRaReceived++;
@@ -4101,8 +4145,8 @@ void RoutingManager::PdPrefixManager::Process(const InfraIf::Icmp6Packet *aRaPac
     }
     else // aPrefixTableEntry != nullptr
     {
-        entry.SetFrom(*aPrefixTableEntry);
-        currentPrefixUpdated = ProcessPrefixEntry(entry, favoredEntry);
+        prefix.SetFrom(*aPrefixTableEntry);
+        currentPrefixUpdated = ProcessPdPrefix(prefix, favoredPrefix);
     }
 
     if (currentPrefixUpdated && mPrefix.IsDeprecated())
@@ -4112,9 +4156,9 @@ void RoutingManager::PdPrefixManager::Process(const InfraIf::Icmp6Packet *aRaPac
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
     }
 
-    if (favoredEntry.IsFavoredOver(mPrefix))
+    if (favoredPrefix.IsFavoredOver(mPrefix))
     {
-        mPrefix              = favoredEntry;
+        mPrefix              = favoredPrefix;
         currentPrefixUpdated = true;
         LogInfo("DHCPv6 PD prefix set to %s", mPrefix.GetPrefix().ToString().AsCString());
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
@@ -4134,45 +4178,45 @@ exit:
     OT_UNUSED_VARIABLE(error);
 }
 
-bool RoutingManager::PdPrefixManager::ProcessPrefixEntry(PrefixEntry &aEntry, PrefixEntry &aFavoredEntry)
+bool RoutingManager::PdPrefixManager::ProcessPdPrefix(PdPrefix &aPrefix, PdPrefix &aFavoredPrefix)
 {
     bool currentPrefixUpdated = false;
 
-    if (!aEntry.IsValidPdPrefix())
+    if (!aPrefix.IsValidPdPrefix())
     {
-        LogWarn("Ignore invalid DHCPv6 PD prefix %s", aEntry.GetPrefix().ToString().AsCString());
+        LogWarn("Ignore invalid DHCPv6 PD prefix %s", aPrefix.GetPrefix().ToString().AsCString());
         ExitNow();
     }
 
-    aEntry.GetPrefix().Tidy();
-    aEntry.GetPrefix().SetLength(kOmrPrefixLength);
+    aPrefix.GetPrefix().Tidy();
+    aPrefix.GetPrefix().SetLength(kOmrPrefixLength);
 
     // Check if there is an update to the current prefix. The valid or
     // preferred lifetime may have changed.
 
-    if (HasPrefix() && (mPrefix.GetPrefix() == aEntry.GetPrefix()))
+    if (HasPrefix() && (mPrefix.GetPrefix() == aPrefix.GetPrefix()))
     {
         currentPrefixUpdated = true;
-        mPrefix              = aEntry;
+        mPrefix              = aPrefix;
     }
 
-    VerifyOrExit(!aEntry.IsDeprecated());
+    VerifyOrExit(!aPrefix.IsDeprecated());
 
     // Some platforms may delegate multiple prefixes. We'll select the
     // smallest one, as GUA prefixes (`2000::/3`) are inherently
     // smaller than ULA prefixes (`fc00::/7`). This rule prefers GUA
     // prefixes over ULA.
 
-    if (aEntry.IsFavoredOver(aFavoredEntry))
+    if (aPrefix.IsFavoredOver(aFavoredPrefix))
     {
-        aFavoredEntry = aEntry;
+        aFavoredPrefix = aPrefix;
     }
 
 exit:
     return currentPrefixUpdated;
 }
 
-bool RoutingManager::PdPrefixManager::PrefixEntry::IsValidPdPrefix(void) const
+bool RoutingManager::PdPrefixManager::PdPrefix::IsValidPdPrefix(void) const
 {
     // We should accept ULA prefix since it could be used by the internet infrastructure like NAT64.
 
@@ -4180,7 +4224,7 @@ bool RoutingManager::PdPrefixManager::PrefixEntry::IsValidPdPrefix(void) const
            !GetPrefix().IsMulticast();
 }
 
-bool RoutingManager::PdPrefixManager::PrefixEntry::IsFavoredOver(const PrefixEntry &aOther) const
+bool RoutingManager::PdPrefixManager::PdPrefix::IsFavoredOver(const PdPrefix &aOther) const
 {
     bool isFavored;
 

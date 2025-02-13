@@ -1094,12 +1094,13 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    class FavoredOmrPrefix : public OmrPrefix
+    class FavoredOmrPrefix : public OmrPrefix, public Unequatable<FavoredOmrPrefix>
     {
         friend class OmrPrefixManager;
 
     public:
         bool IsInfrastructureDerived(void) const;
+        bool operator==(const FavoredOmrPrefix &aOther) const;
 
     private:
         void SetFrom(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
@@ -1129,11 +1130,14 @@ private:
 
         typedef String<kInfoStringSize> InfoString;
 
-        void       DetermineFavoredPrefix(void);
+        void       SetFavordPrefix(const OmrPrefix &aOmrPrefix);
+        void       ClearFavoredPrefix(void) { SetFavordPrefix(OmrPrefix()); }
+        void       DetermineFavoredPrefixInNetData(FavoredOmrPrefix &aFavoredPrefix);
         Error      AddLocalToNetData(void);
         Error      AddOrUpdateLocalInNetData(void);
         void       RemoveLocalFromNetData(void);
         InfoString LocalToString(void) const;
+        InfoString FavoredToString(const FavoredOmrPrefix &aFavoredPrefix) const;
 
         OmrPrefix        mLocalPrefix;
         Ip6::Prefix      mGeneratedPrefix;
@@ -1470,7 +1474,7 @@ private:
         void               Start(void) { StartStop(/* aStart= */ true); }
         void               Stop(void) { StartStop(/* aStart= */ false); }
         bool               IsRunning(void) const { return GetState() == kDhcp6PdStateRunning; }
-        bool               HasPrefix(void) const { return IsValidOmrPrefix(mPrefix.GetPrefix()); }
+        bool               HasPrefix(void) const { return !mPrefix.IsEmpty(); }
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix.GetPrefix(); }
         State              GetState(void) const;
 
@@ -1483,17 +1487,17 @@ private:
         void  Evaluate(void);
 
     private:
-        class PrefixEntry : public OnLinkPrefix
+        class PdPrefix : public OnLinkPrefix
         {
         public:
-            PrefixEntry(void) { Clear(); }
+            PdPrefix(void) { Clear(); }
             bool IsEmpty(void) const { return (GetPrefix().GetLength() == 0); }
             bool IsValidPdPrefix(void) const;
-            bool IsFavoredOver(const PrefixEntry &aOther) const;
+            bool IsFavoredOver(const PdPrefix &aOther) const;
         };
 
         void Process(const InfraIf::Icmp6Packet *aRaPacket, const PrefixTableEntry *aPrefixTableEntry);
-        bool ProcessPrefixEntry(PrefixEntry &aEntry, PrefixEntry &aFavoredEntry);
+        bool ProcessPdPrefix(PdPrefix &aPrefix, PdPrefix &aFavoredPrefix);
         void EvaluateStateChange(State aOldState);
         void WithdrawPrefix(void);
         void StartStop(bool aStart);
@@ -1513,7 +1517,7 @@ private:
         TimeMilli     mLastPlatformRaTime;
         StateCallback mStateCallback;
         PrefixTimer   mTimer;
-        PrefixEntry   mPrefix;
+        PdPrefix      mPrefix;
     };
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
@@ -1636,6 +1640,7 @@ template <> void RoutingManager::RxRaTracker::Entry<RoutingManager::RxRaTracker:
 } // namespace BorderRouter
 
 DefineMapEnum(otBorderRoutingState, BorderRouter::RoutingManager::State);
+DefineMapEnum(otBorderRoutingDhcp6PdState, BorderRouter::RoutingManager::Dhcp6PdState);
 
 } // namespace ot
 

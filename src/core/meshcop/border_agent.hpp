@@ -50,6 +50,7 @@
 #include "common/tasklet.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/secure_transport.hpp"
+#include "net/socket.hpp"
 #include "net/udp6.hpp"
 #include "thread/tmf.hpp"
 #include "thread/uri_paths.hpp"
@@ -62,6 +63,10 @@ namespace MeshCoP {
 #error "Border Agent feature requires `OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE`"
 #endif
 
+#if !OPENTHREAD_CONFIG_UPTIME_ENABLE
+#error "Border Agent feature requires `OPENTHREAD_CONFIG_UPTIME_ENABLE`"
+#endif
+
 class BorderAgent : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
@@ -70,16 +75,38 @@ class BorderAgent : public InstanceLocator, private NonCopyable
     class CoapDtlsSession;
 
 public:
-    typedef otBorderAgentId       Id;       ///< Border Agent ID.
-    typedef otBorderAgentCounters Counters; ///< Border Agent Counters.
+    typedef otBorderAgentId          Id;          ///< Border Agent ID.
+    typedef otBorderAgentCounters    Counters;    ///< Border Agent Counters.
+    typedef otBorderAgentSessionInfo SessionInfo; ///< A session info.
 
-    enum State : uint8_t
+    /**
+     * Represents an iterator for secure sessions.
+     */
+    class SessionIterator : public otBorderAgentSessionIterator
     {
-        kStateDisabled  = OT_BORDER_AGENT_STATE_DISABLED,  ///< Ephemeral key feature is disabled.
-        kStateStopped   = OT_BORDER_AGENT_STATE_STOPPED,   ///< Enabled, but the ephemeral key is not set and started.
-        kStateStarted   = OT_BORDER_AGENT_STATE_STARTED,   ///< Ephemeral key is set and listening to accept connection
-        kStateConnected = OT_BORDER_AGENT_STATE_CONNECTED, ///< Session connected with candidate, not full commissioner
-        kStateAccepted  = OT_BORDER_AGENT_STATE_ACCEPTED,  ///< Session connected and accepted as full commissioner.
+    public:
+        /**
+         * Initializes the `SessionIterator`.
+         *
+         * @param[in] aInstance  The OpenThread instance.
+         */
+        void Init(Instance &aInstance);
+
+        /**
+         * Retrieves the next session information.
+         *
+         * @param[out] aSessionInfo     A `SessionInfo` to populate.
+         *
+         * @retval kErrorNone        Successfully retrieved the next session. @p aSessionInfo is updated.
+         * @retval kErrorNotFound    No more sessions are available. The end of the list has been reached.
+         */
+        Error GetNextSessionInfo(SessionInfo &aSessionInfo);
+
+    private:
+        CoapDtlsSession *GetSession(void) const { return static_cast<CoapDtlsSession *>(mPtr); }
+        void             SetSession(CoapDtlsSession *aSession) { mPtr = aSession; }
+        uint64_t         GetInitTime(void) const { return mData; }
+        void             SetInitTime(uint64_t aInitTime) { mData = aInitTime; }
     };
 
     /**
@@ -127,19 +154,12 @@ public:
     uint16_t GetUdpPort(void) const;
 
     /**
-     * Gets the state of the Border Agent service.
+     * Indicates whether the Border Agent service is running.
      *
-     * @returns The state of the Border Agent service.
+     * @retval TRUE  Border Agent service is running.
+     * @retval FALSE Border Agent service is not running.
      */
-    State GetState(void) const { return mState; }
-
-    /**
-     * Indicates whether the Border Agent service is active.
-     *
-     * @retval TRUE  Border Agent service is active.
-     * @retval FALSE Border Agent service is not active.
-     */
-    bool IsActive(void) const { return (mState != kStateDisabled) && (mState != kStateStopped); }
+    bool IsRunning(void) const { return mIsRunning; }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     /**
@@ -156,6 +176,18 @@ public:
         static constexpr uint32_t kMaxTimeout     = OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_TIMEOUT;     ///< Max timeout.
 
         typedef otBorderAgentEphemeralKeyCallback CallbackHandler; ///< Callback function pointer.
+
+        /**
+         * Represents the state of the `EphemeralKeyManager`.
+         */
+        enum State : uint8_t
+        {
+            kStateDisabled  = OT_BORDER_AGENT_STATE_DISABLED,  ///< Ephemeral key feature is disabled.
+            kStateStopped   = OT_BORDER_AGENT_STATE_STOPPED,   ///< Enabled, but the key is not set and started.
+            kStateStarted   = OT_BORDER_AGENT_STATE_STARTED,   ///< Key is set and listening to accept connection.
+            kStateConnected = OT_BORDER_AGENT_STATE_CONNECTED, ///< Session connected, not full commissioner.
+            kStateAccepted  = OT_BORDER_AGENT_STATE_ACCEPTED,  ///< Session connected and accepted as full commissioner.
+        };
 
         /**
          * Enables/disables Ephemeral Key Manager.
@@ -308,8 +340,10 @@ private:
         friend Heap::Allocatable<CoapDtlsSession>;
 
     public:
-        Error ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
-        void  Cleanup(void);
+        Error    ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
+        void     Cleanup(void);
+        bool     IsActiveCommissioner(void) const { return mIsActiveCommissioner; }
+        uint64_t GetAllocationTime(void) const { return mAllocationTime; }
 
     private:
         class ForwardContext : public ot::LinkedListEntry<ForwardContext>,
@@ -366,13 +400,12 @@ private:
         TimerMilliContext          mTimer;
         Ip6::Udp::Receiver         mUdpReceiver;
         Ip6::Netif::UnicastAddress mCommissionerAloc;
+        uint64_t                   mAllocationTime;
     };
 
-    void  Start(void) { IgnoreError(Start(kUdpPort)); }
-    Error Start(uint16_t aUdpPort);
-    Error Start(uint16_t aUdpPort, const uint8_t *aPsk, uint8_t aPskLength);
-    void  Stop(void);
-    void  HandleNotifierEvents(Events aEvents);
+    void Start(void);
+    void Stop(void);
+    void HandleNotifierEvents(Events aEvents);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -380,6 +413,7 @@ private:
     CoapDtlsSession      *HandleAcceptSession(void);
     static void           HandleRemoveSession(void *aContext, SecureSession &aSession);
     void                  HandleRemoveSession(SecureSession &aSession);
+    CoapDtlsSession      *FindActiveCommissionerSession(void);
 
     void HandleSessionConnected(CoapDtlsSession &aSession);
     void HandleSessionDisconnected(CoapDtlsSession &aSession, CoapDtlsSession::ConnectEvent aEvent);
@@ -387,9 +421,8 @@ private:
 
     static Coap::Message::Code CoapCodeFromError(Error aError);
 
-    State            mState;
-    Dtls::Transport  mDtlsTransport;
-    CoapDtlsSession *mCoapDtlsSession;
+    bool            mIsRunning;
+    Dtls::Transport mDtlsTransport;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     Id   mId;
     bool mIdInitialized;
@@ -405,7 +438,11 @@ DeclareTmfHandler(BorderAgent, kUriRelayRx);
 } // namespace MeshCoP
 
 DefineCoreType(otBorderAgentId, MeshCoP::BorderAgent::Id);
-DefineMapEnum(otBorderAgentEphemeralKeyState, MeshCoP::BorderAgent::State);
+DefineCoreType(otBorderAgentSessionIterator, MeshCoP::BorderAgent::SessionIterator);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+DefineMapEnum(otBorderAgentEphemeralKeyState, MeshCoP::BorderAgent::EphemeralKeyManager::State);
+#endif
 
 } // namespace ot
 

@@ -475,6 +475,37 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
     {
         OutputLine("%s", otBorderAgentIsActive(GetInstancePtr()) ? "Active" : "Inactive");
     }
+    /**
+     * @cli ba sessions
+     * @code
+     * ba sessions
+     * [fe80:0:0:0:cc79:2a29:d311:1aea]:9202 connected:yes commissioner:no lifetime:1860
+     * Done
+     * @endcode
+     * @par
+     * Prints the list of Border Agent's sessions. Information per session:
+     * * Peer socket address (IPv6 address and port).
+     * * Whether or not the session is connected.
+     * * Whether or not the session is accepted as full commissioner.
+     * * Session lifetime in milliseconds (calculated from the time the session was first established).
+     */
+    else if (aArgs[0] == "sessions")
+    {
+        otBorderAgentSessionIterator iterator;
+        otBorderAgentSessionInfo     info;
+        char                         sockAddrString[OT_IP6_SOCK_ADDR_STRING_SIZE];
+        Uint64StringBuffer           lifetimeString;
+
+        otBorderAgentInitSessionIterator(GetInstancePtr(), &iterator);
+
+        while (otBorderAgentGetNextSessionInfo(&iterator, &info) == OT_ERROR_NONE)
+        {
+            otIp6SockAddrToString(&info.mPeerSockAddr, sockAddrString, sizeof(sockAddrString));
+
+            OutputLine("%s connected:%s commissioner:%s lifetime:%s", sockAddrString, info.mIsConnected ? "yes" : "no",
+                       info.mIsCommissioner ? "yes" : "no", Uint64ToString(info.mLifetime, lifetimeString));
+        }
+    }
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     /**
      * @cli ba id (get,set)

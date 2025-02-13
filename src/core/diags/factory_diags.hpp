@@ -264,6 +264,7 @@ private:
     uint8_t       mTxLen;
     TxCmd         mCurTxCmd;
     bool          mIsHeaderUpdated : 1;
+    bool          mIsSecurityProcessed : 1;
     bool          mIsTxPacketSet : 1;
     bool          mIsAsyncSend : 1;
     bool          mDiagSendOn : 1;

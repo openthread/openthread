@@ -36,6 +36,7 @@
 #define OPENTHREAD_BORDER_AGENT_H_
 
 #include <openthread/instance.h>
+#include <openthread/ip6.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -89,13 +90,32 @@ typedef struct otBorderAgentCounters
 } otBorderAgentCounters;
 
 /**
- * Gets the counters of the Thread Border Agent.
+ * Represents information about a Border Agent session.
  *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * This structure is populated by `otBorderAgentGetNextSessionInfo()` during iteration over the list of sessions using
+ * an `otBorderAgentSessionIterator`.
  *
- * @returns A pointer to the Border Agent counters.
+ * To ensure consistent `mLifetime` calculations, the iterator's initialization time is stored within the iterator,
+ * and each session's `mLifetime` is calculated relative to this time.
  */
-const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance);
+typedef struct otBorderAgentSessionInfo
+{
+    otSockAddr mPeerSockAddr;   ///< Socket address (IPv6 address and port number) of session peer.
+    bool       mIsConnected;    ///< Indicates whether the session is connected.
+    bool       mIsCommissioner; ///< Indicates whether the session is accepted as full commissioner.
+    uint64_t   mLifetime;       ///< Milliseconds since the session was first established.
+} otBorderAgentSessionInfo;
+
+/**
+ * Represents an iterator for Border Agent sessions.
+ *
+ * The caller MUST NOT access or update the fields in this struct. It is intended for OpenThread internal use only.
+ */
+typedef struct otBorderAgentSessionIterator
+{
+    void    *mPtr;
+    uint64_t mData;
+} otBorderAgentSessionIterator;
 
 /**
  * Indicates whether or not the Border Agent service is active and running.
@@ -160,6 +180,38 @@ otError otBorderAgentGetId(otInstance *aInstance, otBorderAgentId *aId);
  * @sa otBorderAgentGetId
  */
 otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId);
+
+/**
+ * Initializes a session iterator.
+ *
+ * An iterator MUST be initialized before being used in `otBorderAgentGetNextSessionInfo()`. A previously initialized
+ * iterator can be re-initialized to start from the beginning of the session list.
+ *
+ * @param[in] aInstance   A pointer to an OpenThread instance.
+ * @param[in] aIterator   The iterator to initialize.
+ */
+void otBorderAgentInitSessionIterator(otInstance *aInstance, otBorderAgentSessionIterator *aIterator);
+
+/**
+ * Retrieves the next Border Agent session information.
+ *
+ * @param[in]  aIterator      The iterator to use.
+ * @param[out] aSessionInfo   A pointer to an `otBorderAgentSessionInfo` to populate.
+ *
+ * @retval OT_ERROR_NONE        Successfully retrieved the next session info.
+ * @retval OT_ERROR_NOT_FOUND   No more sessions are available. The end of the list has been reached.
+ */
+otError otBorderAgentGetNextSessionInfo(otBorderAgentSessionIterator *aIterator,
+                                        otBorderAgentSessionInfo     *aSessionInfo);
+
+/**
+ * Gets the counters of the Thread Border Agent.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the Border Agent counters.
+ */
+const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance);
 
 /*--------------------------------------------------------------------------------------------------------------------
  * Border Agent Ephemeral Key feature */

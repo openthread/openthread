@@ -119,7 +119,7 @@ class MdnsRestart(thread_cert.TestCase):
         br1.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
         br2.srp_server_set_enabled(True)
         br2.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
-        self.simulator.go(3)
+        self.simulator.go(10)
         self.assertEqual(br1.srp_server_get_state(), 'running')
         self.assertEqual(br2.srp_server_get_state(), 'running')
 

@@ -420,6 +420,7 @@ void platformRadioInit(void)
 #else
     sTransmitFrame.mInfo.mTxInfo.mIeInfo = NULL;
 #endif
+    sAckFrame.mInfo.mTxInfo.mIeInfo = NULL;
 
     for (size_t i = 0; i <= kMaxChannel - kMinChannel; i++)
     {
