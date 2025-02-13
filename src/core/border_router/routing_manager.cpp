@@ -4115,8 +4115,7 @@ void RoutingManager::PdPrefixManager::Process(const InfraIf::Icmp6Packet *aRaPac
     // an RA message or directly set. Requires either `aRaPacket` or
     // `aPrefixTableEntry` to be non-null.
 
-    bool     currentPrefixUpdated = false;
-    Error    error                = kErrorNone;
+    Error    error = kErrorNone;
     PdPrefix favoredPrefix;
     PdPrefix prefix;
 
@@ -4137,7 +4136,7 @@ void RoutingManager::PdPrefixManager::Process(const InfraIf::Icmp6Packet *aRaPac
 
             mNumPlatformPioProcessed++;
             prefix.SetFrom(static_cast<const PrefixInfoOption &>(option));
-            currentPrefixUpdated |= ProcessPdPrefix(prefix, favoredPrefix);
+            ProcessPdPrefix(prefix, favoredPrefix);
         }
 
         mNumPlatformRaReceived++;
@@ -4146,10 +4145,10 @@ void RoutingManager::PdPrefixManager::Process(const InfraIf::Icmp6Packet *aRaPac
     else // aPrefixTableEntry != nullptr
     {
         prefix.SetFrom(*aPrefixTableEntry);
-        currentPrefixUpdated = ProcessPdPrefix(prefix, favoredPrefix);
+        ProcessPdPrefix(prefix, favoredPrefix);
     }
 
-    if (currentPrefixUpdated && mPrefix.IsDeprecated())
+    if (HasPrefix() && mPrefix.IsDeprecated())
     {
         LogInfo("DHCPv6 PD prefix %s is deprecated", mPrefix.GetPrefix().ToString().AsCString());
         mPrefix.Clear();
@@ -4158,8 +4157,7 @@ void RoutingManager::PdPrefixManager::Process(const InfraIf::Icmp6Packet *aRaPac
 
     if (favoredPrefix.IsFavoredOver(mPrefix))
     {
-        mPrefix              = favoredPrefix;
-        currentPrefixUpdated = true;
+        mPrefix = favoredPrefix;
         LogInfo("DHCPv6 PD prefix set to %s", mPrefix.GetPrefix().ToString().AsCString());
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
     }
@@ -4178,10 +4176,8 @@ exit:
     OT_UNUSED_VARIABLE(error);
 }
 
-bool RoutingManager::PdPrefixManager::ProcessPdPrefix(PdPrefix &aPrefix, PdPrefix &aFavoredPrefix)
+void RoutingManager::PdPrefixManager::ProcessPdPrefix(PdPrefix &aPrefix, PdPrefix &aFavoredPrefix)
 {
-    bool currentPrefixUpdated = false;
-
     if (!aPrefix.IsValidPdPrefix())
     {
         LogWarn("Ignore invalid DHCPv6 PD prefix %s", aPrefix.GetPrefix().ToString().AsCString());
@@ -4196,8 +4192,7 @@ bool RoutingManager::PdPrefixManager::ProcessPdPrefix(PdPrefix &aPrefix, PdPrefi
 
     if (HasPrefix() && (mPrefix.GetPrefix() == aPrefix.GetPrefix()))
     {
-        currentPrefixUpdated = true;
-        mPrefix              = aPrefix;
+        mPrefix = aPrefix;
     }
 
     VerifyOrExit(!aPrefix.IsDeprecated());
@@ -4213,7 +4208,7 @@ bool RoutingManager::PdPrefixManager::ProcessPdPrefix(PdPrefix &aPrefix, PdPrefi
     }
 
 exit:
-    return currentPrefixUpdated;
+    return;
 }
 
 bool RoutingManager::PdPrefixManager::PdPrefix::IsValidPdPrefix(void) const
