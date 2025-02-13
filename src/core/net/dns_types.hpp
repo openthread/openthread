@@ -606,15 +606,15 @@ public:
      * @p aFirstLabel can be `nullptr` if not needed. But if non-null, it is treated as a single label and can itself
      * include dot `.` character.
      *
-     * The @p aLabels MUST NOT be `nullptr` and MUST follow  "<label1>.<label2>.<label3>", i.e., a sequence of one or
-     * more labels separated by dot '.' char, and it MUST NOT end with dot `.`.
+     * The @p aLabels can be `nullptr`. If it is provided it MUST follow  "<label1>.<label2>.<label3>", i.e., a
+     * sequence of one or more labels separated by dot '.' char, and it MUST NOT end with dot `.`.
      *
      * @p aDomain MUST NOT be `nullptr` and MUST have at least one label and MUST always end with a dot `.` character.
      *
      * If the above conditions are not satisfied, the behavior of this method is undefined.
      *
      * @param[in] aFirstLabel     A first label to check. Can be `nullptr`.
-     * @param[in] aLabels         A string of dot separated labels, MUST NOT end with dot.
+     * @param[in] aLabels         A string of dot separated labels, MUST NOT end with dot. Can be `nullptr`
      * @param[in] aDomain         Domain name. MUST end with dot.
      *
      * @retval TRUE   The name matches the given components.
