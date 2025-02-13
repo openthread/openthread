@@ -228,6 +228,20 @@ otError otMdnsStopIp4AddressResolver(otInstance *aInstance, const otMdnsAddressR
     return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StopIp4AddressResolver(*aResolver);
 }
 
+otError otMdnsStartRecordQuerier(otInstance *aInstance, const otMdnsRecordQuerier *aQuerier)
+{
+    AssertPointerIsNotNull(aQuerier);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StartRecordQuerier(*aQuerier);
+}
+
+otError otMdnsStopRecordQuerier(otInstance *aInstance, const otMdnsRecordQuerier *aQuerier)
+{
+    AssertPointerIsNotNull(aQuerier);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StopRecordQuerier(*aQuerier);
+}
+
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
 otError otMdnsGetNextBrowser(otInstance      *aInstance,
@@ -288,6 +302,18 @@ otError otMdnsGetNextIp4AddressResolver(otInstance            *aInstance,
     AssertPointerIsNotNull(aInfo);
 
     return AsCoreType(aInstance).Get<Dns::Multicast::Core>().GetNextIp4AddressResolver(*aIterator, *aResolver, *aInfo);
+}
+
+otError otMdnsGetNextRecordQuerier(otInstance          *aInstance,
+                                   otMdnsIterator      *aIterator,
+                                   otMdnsRecordQuerier *aQuerier,
+                                   otMdnsCacheInfo     *aInfo)
+{
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aQuerier);
+    AssertPointerIsNotNull(aInfo);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().GetNextRecordQuerier(*aIterator, *aQuerier, *aInfo);
 }
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
