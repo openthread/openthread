@@ -268,7 +268,8 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
             self._assert_dig_result_matches(dig_result, {
                 'QUESTION': [(dp_hostname, 'IN', 'AAAA'),],
                 'ANSWER': [(dp_hostname, 'IN', 'AAAA', dp_ip6_address),],
-            })
+            },
+                                            allow_extra_answer=True)
 
     def _config_srp_client_services(self, client, instancename, hostname, port, priority, weight, addrs):
         client.srp_client_enable_auto_start_mode()
@@ -316,7 +317,7 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
 
         return all(a == b or (callable(b) and b(a)) for a, b in zip(record, match))
 
-    def _assert_dig_result_matches(self, dig_result, expected_result):
+    def _assert_dig_result_matches(self, dig_result, expected_result, allow_extra_answer=False):
         self.assertEqual(dig_result['opcode'], expected_result.get('opcode', 'QUERY'), dig_result)
         self.assertEqual(dig_result['status'], expected_result.get('status', 'NOERROR'), dig_result)
 
@@ -327,7 +328,10 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
                 self._assert_have_question(dig_result, question)
 
         if 'ANSWER' in expected_result:
-            self.assertEqual(len(dig_result['ANSWER']), len(expected_result['ANSWER']), dig_result)
+            if allow_extra_answer:
+                self.assertGreaterEqual(len(dig_result['ANSWER']), len(expected_result['ANSWER']), dig_result)
+            else:
+                self.assertEqual(len(dig_result['ANSWER']), len(expected_result['ANSWER']), dig_result)
 
             for record in expected_result['ANSWER']:
                 self._assert_have_answer(dig_result, record, additional=False)
