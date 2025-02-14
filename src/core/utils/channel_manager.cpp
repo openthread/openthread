@@ -289,6 +289,7 @@ bool ChannelManager::ShouldAttemptChannelChange(void)
 }
 
 #if OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 Error ChannelManager::RequestNetworkChannelSelect(bool aSkipQualityCheck)
 {
     Error error = kErrorNone;
@@ -304,6 +305,7 @@ exit:
     }
     return error;
 }
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
@@ -412,19 +414,17 @@ exit:
     return;
 }
 
-#if OPENTHREAD_FTD
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE)
 void ChannelManager::SetAutoNetworkChannelSelectionEnabled(bool aEnabled)
 {
-#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     if (aEnabled != mAutoSelectEnabled)
     {
         mAutoSelectEnabled = aEnabled;
         IgnoreError(RequestNetworkChannelSelect(false));
         StartAutoSelectTimer();
     }
-#endif
 }
-#endif
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
 void ChannelManager::SetAutoCslChannelSelectionEnabled(bool aEnabled)
@@ -438,6 +438,7 @@ void ChannelManager::SetAutoCslChannelSelectionEnabled(bool aEnabled)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 Error ChannelManager::SetAutoChannelSelectionInterval(uint32_t aInterval)
 {
     Error    error        = kErrorNone;
@@ -464,6 +465,7 @@ Error ChannelManager::SetAutoChannelSelectionInterval(uint32_t aInterval)
 exit:
     return error;
 }
+#endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 void ChannelManager::SetSupportedChannels(uint32_t aChannelMask)
 {

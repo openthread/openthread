@@ -130,7 +130,7 @@ public:
     Error SetDelay(uint16_t aDelay);
 #endif // OPENTHREAD_FTD
 
-#if OPENTHREAD_FTD
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE)
     /**
      * Requests that `ChannelManager` checks and selects a new network channel and starts a network channel change.
      *
@@ -160,7 +160,7 @@ public:
      * @retval kErrorInvalidState      Thread is not enabled or not enough data to select new channel.
      */
     Error RequestNetworkChannelSelect(bool aSkipQualityCheck);
-#endif // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
     /**
@@ -191,7 +191,7 @@ public:
     Error RequestCslChannelSelect(bool aSkipQualityCheck);
 #endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
 
-#if OPENTHREAD_FTD
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE)
     /**
      * Enables/disables the auto-channel-selection functionality.
      *
@@ -208,7 +208,7 @@ public:
      * @returns TRUE if enabled, FALSE if disabled.
      */
     bool GetAutoNetworkChannelSelectionEnabled(void) const { return mAutoSelectEnabled; }
-#endif
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
     /**
@@ -229,6 +229,7 @@ public:
     bool GetAutoCslChannelSelectionEnabled(void) const { return mAutoSelectCslEnabled; }
 #endif
 
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     /**
      * Sets the period interval (in seconds) used by auto-channel-selection functionality.
      *
@@ -245,6 +246,7 @@ public:
      * @returns The interval (in seconds).
      */
     uint32_t GetAutoChannelSelectionInterval(void) const { return mAutoSelectInterval; }
+#endif
 
     /**
      * Gets the supported channel mask.
