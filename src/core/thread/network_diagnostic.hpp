@@ -52,6 +52,10 @@ namespace Utils {
 class MeshDiag;
 }
 
+namespace MeshCoP {
+class TcatAgent;
+}
+
 namespace NetworkDiagnostic {
 
 /**
@@ -71,6 +75,7 @@ class Client;
 class Server : public InstanceLocator, private NonCopyable
 {
     friend class Tmf::Agent;
+    friend class MeshCoP::TcatAgent;
     friend class Client;
 
 public:
@@ -191,6 +196,10 @@ private:
     Error AppendRequestedTlvs(const Message &aRequest, Message &aResponse);
     void  PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const;
 
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    Error AppendRequestedTlvsForTcat(const Message &aRequest, Message &aResponse, OffsetRange &aOffsetRange);
+#endif
+
 #if OPENTHREAD_MTD
     void SendAnswer(const Ip6::Address &aDestination, const Message &aRequest);
 #elif OPENTHREAD_FTD
@@ -201,10 +210,17 @@ private:
     void        PrepareAndSendAnswers(const Ip6::Address &aDestination, const Message &aRequest);
     void        SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestination);
     Error       AppendChildTable(Message &aMessage);
-    Error       AppendChildTableAsChildTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo);
-    Error       AppendRouterNeighborTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo);
-    Error       AppendChildTableIp6AddressList(Coap::Message *&aAnswer, AnswerInfo &aInfo);
-    Error       AppendChildIp6AddressListTlv(Coap::Message &aAnswer, const Child &aChild);
+
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    Error       AppendChildTableAsChildTlvs(Message &aMessage);
+    Error       AppendRouterNeighborTlvs(Message &aMessage);
+    Error       AppendChildTableIp6AddressList(Message &aMessage);
+#endif
+
+    Error AppendChildTableAsChildTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo);
+    Error AppendRouterNeighborTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo);
+    Error AppendChildTableIp6AddressList(Coap::Message *&aAnswer, AnswerInfo &aInfo);
+    Error AppendChildIp6AddressListTlv(Message &aAnswer, const Child &aChild);
 
     static void HandleAnswerResponse(void                *aContext,
                                      otMessage           *aMessage,
