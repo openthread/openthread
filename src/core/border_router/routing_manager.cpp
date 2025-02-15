@@ -3946,9 +3946,7 @@ exit:
 
 RoutingManager::PdPrefixManager::PdPrefixManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mEnabled(false)
-    , mIsStarted(false)
-    , mIsPaused(false)
+    , mState(kDhcp6PdStateDisabled)
     , mNumPlatformPioProcessed(0)
     , mNumPlatformRaReceived(0)
     , mLastPlatformRaTime(0)
@@ -3958,83 +3956,68 @@ RoutingManager::PdPrefixManager::PdPrefixManager(Instance &aInstance)
 
 void RoutingManager::PdPrefixManager::SetEnabled(bool aEnabled)
 {
-    State oldState = GetState();
-
-    VerifyOrExit(mEnabled != aEnabled);
-    mEnabled = aEnabled;
-    EvaluateStateChange(oldState);
-
-exit:
-    return;
-}
-
-void RoutingManager::PdPrefixManager::StartStop(bool aStart)
-{
-    State oldState = GetState();
-
-    VerifyOrExit(aStart != mIsStarted);
-    mIsStarted = aStart;
-    EvaluateStateChange(oldState);
-
-exit:
-    return;
-}
-
-void RoutingManager::PdPrefixManager::PauseResume(bool aPause)
-{
-    State oldState = GetState();
-
-    VerifyOrExit(aPause != mIsPaused);
-    mIsPaused = aPause;
-    EvaluateStateChange(oldState);
-
-exit:
-    return;
-}
-
-RoutingManager::PdPrefixManager::State RoutingManager::PdPrefixManager::GetState(void) const
-{
-    State state = kDhcp6PdStateDisabled;
-
-    if (mEnabled)
+    if (aEnabled)
     {
-        state = mIsStarted ? (mIsPaused ? kDhcp6PdStateIdle : kDhcp6PdStateRunning) : kDhcp6PdStateStopped;
+        VerifyOrExit(mState == kDhcp6PdStateDisabled);
+        UpdateState();
+    }
+    else
+    {
+        SetState(kDhcp6PdStateDisabled);
     }
 
-    return state;
+exit:
+    return;
 }
 
 void RoutingManager::PdPrefixManager::Evaluate(void)
 {
-    const FavoredOmrPrefix &favoredPrefix = Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix();
-    bool shouldPause = favoredPrefix.IsInfrastructureDerived() && (favoredPrefix.GetPrefix() != mPrefix.GetPrefix());
+    VerifyOrExit(mState != kDhcp6PdStateDisabled);
+    UpdateState();
 
-    PauseResume(/* aPause */ shouldPause);
+exit:
+    return;
 }
 
-void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState)
+void RoutingManager::PdPrefixManager::UpdateState(void)
 {
-    State newState = GetState();
-
-    VerifyOrExit(aOldState != newState);
-    LogInfo("PdPrefixManager: %s -> %s", StateToString(aOldState), StateToString(newState));
-
-    switch (newState)
+    if (!Get<RoutingManager>().IsRunning())
     {
-    case kDhcp6PdStateDisabled:
-    case kDhcp6PdStateStopped:
-    case kDhcp6PdStateIdle:
+        SetState(kDhcp6PdStateStopped);
+    }
+    else
+    {
+        const FavoredOmrPrefix &favoredOmrPrefix = Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix();
+
+        // We request a PD prefix (enter `kDhcp6PdStateRunning`),
+        // unless we see a favored infrastructure-derived OMR prefix
+        // which differs from our prefix. In this case, we can
+        // withdraw our prefix and enter `kDhcp6PdStateIdle`.
+
+        if (favoredOmrPrefix.IsInfrastructureDerived() && (favoredOmrPrefix.GetPrefix() != mPrefix.GetPrefix()))
+        {
+            SetState(kDhcp6PdStateIdle);
+        }
+        else
+        {
+            SetState(kDhcp6PdStateRunning);
+        }
+    }
+}
+
+void RoutingManager::PdPrefixManager::SetState(State aState)
+{
+    VerifyOrExit(aState != mState);
+
+    LogInfo("PdPrefixManager: %s -> %s", StateToString(mState), StateToString(aState));
+    mState = aState;
+
+    if (mState != kDhcp6PdStateRunning)
+    {
         WithdrawPrefix();
-        break;
-    case kDhcp6PdStateRunning:
-        break;
     }
 
-    // When the prefix is replaced, there will be a short period when the old prefix is still in the netdata, and PD
-    // manager will refuse to request the prefix.
-    // TODO: Either update the comment for the state callback or add a random delay when notifing the upper layer for
-    // state change.
-    mStateCallback.InvokeIfSet(MapEnum(newState));
+    mStateCallback.InvokeIfSet(MapEnum(mState));
 
 exit:
     return;
@@ -4044,7 +4027,7 @@ Error RoutingManager::PdPrefixManager::GetPrefixInfo(PrefixTableEntry &aInfo) co
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsRunning() && HasPrefix(), error = kErrorNotFound);
+    VerifyOrExit(HasPrefix(), error = kErrorNotFound);
 
     aInfo.mPrefix              = mPrefix.GetPrefix();
     aInfo.mValidLifetime       = mPrefix.GetValidLifetime();
@@ -4059,7 +4042,7 @@ Error RoutingManager::PdPrefixManager::GetProcessedRaInfo(PdProcessedRaInfo &aPd
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsRunning() && HasPrefix(), error = kErrorNotFound);
+    VerifyOrExit(HasPrefix(), error = kErrorNotFound);
 
     aPdProcessedRaInfo.mNumPlatformRaReceived   = mNumPlatformRaReceived;
     aPdProcessedRaInfo.mNumPlatformPioProcessed = mNumPlatformPioProcessed;
@@ -4119,7 +4102,7 @@ void RoutingManager::PdPrefixManager::Process(const InfraIf::Icmp6Packet *aRaPac
     PdPrefix favoredPrefix;
     PdPrefix prefix;
 
-    VerifyOrExit(mEnabled, error = kErrorInvalidState);
+    VerifyOrExit(mState != kDhcp6PdStateDisabled, error = kErrorInvalidState);
 
     if (aRaPacket != nullptr)
     {
