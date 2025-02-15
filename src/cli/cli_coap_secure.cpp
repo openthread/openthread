@@ -943,7 +943,7 @@ void CoapSecure::HandleResponse(otMessage *aMessage, const otMessageInfo *aMessa
     {
         OutputLine("coaps receive response error %d: %s", aError, otThreadErrorToString(aError));
     }
-    else
+    else if((aMessageInfo != nullptr) && (aMessage != nullptr))
     {
         OutputFormat("coaps response from ");
         OutputIp6Address(aMessageInfo->mPeerAddr);
@@ -962,6 +962,9 @@ void CoapSecure::DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessa
 {
     otError    error           = OT_ERROR_NONE;
     otMessage *responseMessage = nullptr;
+    
+    VerifyOrExit(aMessage != nullptr, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aMessageInfo != nullptr, error = OT_ERROR_INVALID_ARGS);
 
     if ((otCoapMessageGetType(aMessage) == OT_COAP_TYPE_CONFIRMABLE) ||
         (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET))
