@@ -310,6 +310,8 @@ exit:
 
 void SpiInterface::TriggerReset(void)
 {
+    VerifyOrExit(SpinelInterface::HardwareReset() == OT_ERROR_NOT_IMPLEMENTED);
+
     // Set Reset pin to low level.
     SetGpioValue(mResetGpioValueFd, 0);
 
@@ -319,6 +321,9 @@ void SpiInterface::TriggerReset(void)
     SetGpioValue(mResetGpioValueFd, 1);
 
     LogNote("Triggered hardware reset");
+
+exit:
+    return;
 }
 
 uint8_t *SpiInterface::GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t aAlignAllowance, uint16_t &aSkipLength)
