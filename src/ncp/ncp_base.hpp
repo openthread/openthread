@@ -878,6 +878,15 @@ protected:
 
     otPlatDnssdState mDnssdState;
 #endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+    static void HandleBackboneRouterMulticastListenerEvent(void                                  *aContext,
+                                                           otBackboneRouterMulticastListenerEvent aEvent,
+                                                           const otIp6Address                    *aAddress);
+    void        HandleBackboneRouterMulticastListenerEvent(otBackboneRouterMulticastListenerEvent aEvent,
+                                                           const otIp6Address                    *aAddress);
+#endif
+
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE

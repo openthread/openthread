@@ -1666,6 +1666,64 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_BACKBONE_ROUTER_STATE>(void)
+{
+    otBackboneRouterState state = otBackboneRouterGetState(mInstance);
+
+    return mEncoder.WriteUint8(static_cast<uint8_t>(state));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_BACKBONE_ROUTER_ENABLE>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enable));
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+    if (enable)
+    {
+        otBackboneRouterSetMulticastListenerCallback(mInstance, HandleBackboneRouterMulticastListenerEvent, this);
+    }
+    else
+    {
+        otBackboneRouterSetMulticastListenerCallback(mInstance, nullptr, nullptr);
+    }
+#endif
+    otBackboneRouterSetEnabled(mInstance, enable);
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+void NcpBase::HandleBackboneRouterMulticastListenerEvent(void                                  *aContext,
+                                                         otBackboneRouterMulticastListenerEvent aEvent,
+                                                         const otIp6Address                    *aAddress)
+{
+    static_cast<NcpBase *>(aContext)->HandleBackboneRouterMulticastListenerEvent(aEvent, aAddress);
+}
+
+void NcpBase::HandleBackboneRouterMulticastListenerEvent(otBackboneRouterMulticastListenerEvent aEvent,
+                                                         const otIp6Address                    *aAddress)
+{
+    uint8_t          header = SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID;
+    spinel_command_t cmd    = aEvent == OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ADDED ? SPINEL_CMD_PROP_VALUE_INSERTED
+                                                                                    : SPINEL_CMD_PROP_VALUE_REMOVED;
+    VerifyOrExit(aAddress != nullptr);
+
+    SuccessOrExit(mEncoder.BeginFrame(header, cmd));
+    SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_BACKBONE_ROUTER_MULTICAST_LISTENER));
+    SuccessOrExit(mEncoder.WriteIp6Address(*aAddress));
+    SuccessOrExit(mEncoder.EndFrame());
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+
 } // namespace Ncp
 } // namespace ot
 
