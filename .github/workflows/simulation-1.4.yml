@@ -55,6 +55,7 @@ jobs:
       COVERAGE: 1
       THREAD_VERSION: 1.4
       VIRTUAL_TIME: 1
+      OT_VT_USE_UNIX_SOCKET: 1
       INTER_OP: 1
       INTER_OP_BBR: 1
       CC: ${{ matrix.compiler.c }}
@@ -124,6 +125,7 @@ jobs:
     env:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 1
+      OT_VT_USE_UNIX_SOCKET: 1
       COVERAGE: 1
       PACKET_VERIFICATION: 1
       THREAD_VERSION: 1.4
@@ -201,6 +203,7 @@ jobs:
     env:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 1
+      OT_VT_USE_UNIX_SOCKET: 1
       PACKET_VERIFICATION: 1
       THREAD_VERSION: 1.4
       INTER_OP_BBR: 1
@@ -257,6 +260,7 @@ jobs:
       COVERAGE: 1
       THREAD_VERSION: 1.4
       VIRTUAL_TIME: 1
+      OT_VT_USE_UNIX_SOCKET: 1
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
@@ -355,6 +359,7 @@ jobs:
       OT_NODE_TYPE: rcp
       USE_MTD: 1
       VIRTUAL_TIME: 1
+      OT_VT_USE_UNIX_SOCKET: 1
       INTER_OP: 1
     steps:
     - name: Harden Runner
