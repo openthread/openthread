@@ -280,6 +280,14 @@ BorderAgent::CoapDtlsSession *BorderAgent::FindActiveCommissionerSession(void)
         }
     }
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    if ((mEphemeralKeyManager.mCoapDtlsSession != nullptr) &&
+        mEphemeralKeyManager.mCoapDtlsSession->IsActiveCommissioner())
+    {
+        commissionerSession = mEphemeralKeyManager.mCoapDtlsSession;
+    }
+#endif
+
     return commissionerSession;
 }
 
