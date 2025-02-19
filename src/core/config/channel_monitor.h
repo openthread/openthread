@@ -57,7 +57,8 @@
  *
  * Define to 0 to require the Channel Monitor to be manually started.
  *
- * By default, the Channel Monitor will start automatically when the interface is brought up.
+ * If enabled, the Channel Monitor will start and stop automatically when the Thread network interface is brought up
+ * and down.
  *
  * Applicable only if Channel Monitoring feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is set).
  */

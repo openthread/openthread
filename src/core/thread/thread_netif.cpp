@@ -96,7 +96,7 @@ void ThreadNetif::Down(void)
 
     mIsUp = false;
     Get<MeshForwarder>().Stop();
-#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MONITOR_AUTO_START_ENABLE
     IgnoreError(Get<Utils::ChannelMonitor>().Stop());
 #endif
     Get<Notifier>().Signal(kEventThreadNetifStateChanged);
