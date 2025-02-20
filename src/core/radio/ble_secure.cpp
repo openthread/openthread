@@ -27,6 +27,7 @@
  */
 
 #include "ble_secure.hpp"
+#include "common/error.hpp"
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
@@ -161,7 +162,24 @@ void BleSecure::Disconnect(void)
         IgnoreReturnValue(otPlatBleGapDisconnect(&GetInstance()));
     }
 
+    // Update advertisement
+    IgnoreReturnValue(NotifyAdvertisementChanged());
+
     mConnectCallback.InvokeIfSet(&GetInstance(), false, false);
+}
+
+Error BleSecure::NotifyAdvertisementChanged(void)
+{
+    Error    error             = kErrorNone;
+    uint16_t advertisementLen  = 0;
+    uint8_t *advertisementData = nullptr;
+
+    SuccessOrExit(error = otPlatBleGetAdvertisementBuffer(&GetInstance(), &advertisementData));
+    SuccessOrExit(error = mTcatAgent.GetAdvertisementData(advertisementLen, advertisementData));
+    SuccessOrExit(error = otPlatBleGapAdvUpdateData(&GetInstance(), advertisementData, advertisementLen));
+
+exit:
+    return error;
 }
 
 void BleSecure::SetPsk(const MeshCoP::JoinerPskd &aPskd)
@@ -360,7 +378,7 @@ void BleSecure::HandleTlsReceive(uint8_t *aBuf, uint16_t aLength)
     if (!mTlvMode)
     {
         SuccessOrExit(mReceivedMessage->AppendBytes(aBuf, aLength));
-        mReceiveCallback.InvokeIfSet(&GetInstance(), mReceivedMessage, 0, OT_TCAT_APPLICATION_PROTOCOL_NONE, "");
+        mReceiveCallback.InvokeIfSet(&GetInstance(), mReceivedMessage, 0);
         IgnoreReturnValue(mReceivedMessage->SetLength(0));
     }
     else
@@ -444,8 +462,7 @@ void BleSecure::HandleTlsReceive(uint8_t *aBuf, uint16_t aLength)
             else
             {
                 mReceivedMessage->SetOffset((uint16_t)offset);
-                mReceiveCallback.InvokeIfSet(&GetInstance(), mReceivedMessage, (int32_t)offset,
-                                             OT_TCAT_APPLICATION_PROTOCOL_NONE, "");
+                mReceiveCallback.InvokeIfSet(&GetInstance(), mReceivedMessage, (int32_t)offset);
             }
 
             SuccessOrExit(mReceivedMessage->SetLength(0)); // also sets the offset to 0

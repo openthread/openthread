@@ -178,13 +178,6 @@ bool otBleSecureIsTcatEnabled(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Ble::BleSecure>().IsTcatEnabled();
 }
-
-bool otBleSecureIsCommandClassAuthorized(otInstance *aInstance, otTcatCommandClass aCommandClass)
-{
-    return AsCoreType(aInstance).Get<Ble::BleSecure>().IsCommandClassAuthorized(
-        static_cast<Ble::BleSecure::CommandClass>(aCommandClass));
-}
-
 otError otBleSecureSendMessage(otInstance *aInstance, otMessage *aMessage)
 {
     return AsCoreType(aInstance).Get<Ble::BleSecure>().SendMessage(AsCoreType(aMessage));
