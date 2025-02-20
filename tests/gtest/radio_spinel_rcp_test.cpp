@@ -371,3 +371,122 @@ TEST(RadioSpinelTransmit, shouldSkipCsmaBackoffWhenCsmaCaIsEnabledAndMaxBackoffs
 
     platform.GoInMs(1000);
 }
+
+TEST(RadioSpinelSrcMatch, shouldBeAbleToEnableRadioSrcMatch)
+{
+    FakeCoprocessorPlatform platform;
+
+    platform.SrcMatchEnable(false);
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.EnableSrcMatch(true), kErrorNone);
+    ASSERT_EQ(platform.SrcMatchIsEnabled(), true);
+}
+
+TEST(RadioSpinelSrcMatch, shouldBeAbleToDisableRadioSrcMatch)
+{
+    FakeCoprocessorPlatform platform;
+
+    platform.SrcMatchEnable(true);
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.EnableSrcMatch(false), kErrorNone);
+    ASSERT_EQ(platform.SrcMatchIsEnabled(), false);
+}
+
+TEST(RadioSpinelSrcMatch, shouldBeAbleToAddRadioSrcMatchShortEntry)
+{
+    constexpr uint16_t      kTestShortAddr = 0x1234;
+    FakeCoprocessorPlatform platform;
+
+    platform.SrcMatchEnable(true);
+
+    ASSERT_EQ(platform.SrcMatchHasShortEntry(kTestShortAddr), 0);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.AddSrcMatchShortEntry(kTestShortAddr), kErrorNone);
+
+    ASSERT_EQ(platform.SrcMatchHasShortEntry(kTestShortAddr), 1);
+}
+
+TEST(RadioSpinelSrcMatch, shouldBeAbleToClearRadioSrcMatchShortEntry)
+{
+    constexpr uint16_t      kTestShortAddr = 0x1234;
+    FakeCoprocessorPlatform platform;
+
+    platform.SrcMatchEnable(true);
+    platform.SrcMatchAddShortEntry(kTestShortAddr);
+
+    ASSERT_EQ(platform.SrcMatchHasShortEntry(kTestShortAddr), 1);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.ClearSrcMatchShortEntry(kTestShortAddr), kErrorNone);
+
+    ASSERT_EQ(platform.SrcMatchHasShortEntry(kTestShortAddr), 0);
+}
+
+TEST(RadioSpinelSrcMatch, shouldBeAbleToAddRadioSrcMatchExtEntry)
+{
+    constexpr otExtAddress  kTestExtAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+    constexpr otExtAddress  kTestExtAddrReversed{0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11};
+    FakeCoprocessorPlatform platform;
+
+    platform.SrcMatchEnable(true);
+    platform.SrcMatchClearExtEntries();
+
+    ASSERT_EQ(platform.SrcMatchHasExtEntry(kTestExtAddr), 0);
+    ASSERT_EQ(platform.SrcMatchHasExtEntry(kTestExtAddrReversed), 0);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.AddSrcMatchExtEntry(kTestExtAddr), kErrorNone);
+
+    ASSERT_EQ(platform.SrcMatchHasExtEntry(kTestExtAddr), 0);
+    ASSERT_EQ(platform.SrcMatchHasExtEntry(kTestExtAddrReversed), 1);
+}
+
+TEST(RadioSpinelSrcMatch, shouldBeAbleToClearRadioSrcMatchExtEntry)
+{
+    constexpr otExtAddress  kTestExtAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+    constexpr otExtAddress  kTestExtAddrReversed{0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11};
+    FakeCoprocessorPlatform platform;
+
+    platform.SrcMatchEnable(true);
+    platform.SrcMatchAddExtEntry(kTestExtAddrReversed);
+
+    ASSERT_EQ(platform.SrcMatchHasExtEntry(kTestExtAddrReversed), 1);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.ClearSrcMatchExtEntry(kTestExtAddr), kErrorNone);
+
+    ASSERT_EQ(platform.SrcMatchHasExtEntry(kTestExtAddrReversed), 0);
+}
+
+TEST(RadioSpinelSrcMatch, shouldBeAbleToClearAllRadioSrcMatchShortEntres)
+{
+    constexpr uint16_t      kTestShortAddr = 0x1234;
+    FakeCoprocessorPlatform platform;
+
+    platform.SrcMatchEnable(true);
+    platform.SrcMatchAddShortEntry(kTestShortAddr);
+
+    ASSERT_EQ(platform.SrcMatchHasShortEntry(kTestShortAddr), 1);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.ClearSrcMatchShortEntries(), kErrorNone);
+
+    ASSERT_EQ(platform.SrcMatchCountShortEntries(), 0);
+}
+
+TEST(RadioSpinelSrcMatch, shouldBeAbleToClearAllRadioSrcMatchExtEntres)
+{
+    constexpr otExtAddress  kTestExtAddrReversed{0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11};
+    FakeCoprocessorPlatform platform;
+
+    platform.SrcMatchEnable(true);
+    platform.SrcMatchAddExtEntry(kTestExtAddrReversed);
+
+    ASSERT_EQ(platform.SrcMatchHasExtEntry(kTestExtAddrReversed), 1);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.ClearSrcMatchExtEntries(), kErrorNone);
+
+    ASSERT_EQ(platform.SrcMatchCountExtEntries(), 0);
+}
