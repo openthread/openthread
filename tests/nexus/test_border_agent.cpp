@@ -808,18 +808,6 @@ template <> bool CheckObjectSameAsTxtEntryData<NameData>(const TxtEntry &aTxtEnt
            memcmp(aTxtEntry.mValue, aNameData.GetBuffer(), aNameData.GetLength()) == 0;
 }
 
-#if OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1
-static const char kThreadVersionString[] = "1.1.1";
-#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_2
-static const char kThreadVersionString[] = "1.2.0";
-#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_3
-static const char kThreadVersionString[] = "1.3.0";
-#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_3_1
-static const char kThreadVersionString[] = "1.3.1";
-#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_4
-static const char kThreadVersionString[] = "1.4.0";
-#endif
-
 void TestBorderAgentMeshCoPServiceChangedCallback(void)
 {
     Core  nexus;
@@ -850,8 +838,7 @@ void TestBorderAgentMeshCoPServiceChangedCallback(void)
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("xp", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<ExtendedPanIdManager>().GetExtPanId()));
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("tv", txtEntry));
-    VerifyOrQuit(
-        CheckObjectSameAsTxtEntryData(txtEntry, NameData(kThreadVersionString, sizeof(kThreadVersionString) - 1)));
+    VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, NameData(kThreadVersionString, strlen(kThreadVersionString))));
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("xa", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<Mac::Mac>().GetExtAddress()));
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("sb", txtEntry));
@@ -880,8 +867,7 @@ void TestBorderAgentMeshCoPServiceChangedCallback(void)
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("xp", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<ExtendedPanIdManager>().GetExtPanId()));
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("tv", txtEntry));
-    VerifyOrQuit(
-        CheckObjectSameAsTxtEntryData(txtEntry, NameData(kThreadVersionString, sizeof(kThreadVersionString) - 1)));
+    VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, NameData(kThreadVersionString, strlen(kThreadVersionString))));
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("xa", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<Mac::Mac>().GetExtAddress()));
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("sb", txtEntry));
