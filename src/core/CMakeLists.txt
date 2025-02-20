@@ -250,6 +250,7 @@ set(COMMON_SOURCES
     thread/time_sync_service.cpp
     thread/tmf.cpp
     thread/uri_paths.cpp
+    thread/version.cpp
     utils/channel_manager.cpp
     utils/channel_monitor.cpp
     utils/flash.cpp
