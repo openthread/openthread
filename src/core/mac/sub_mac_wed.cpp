@@ -79,8 +79,8 @@ void SubMac::HandleWedTimer(void)
 
     if (mState != kStateDisabled)
     {
-        IgnoreError(
-            Get<Radio>().ReceiveAt(mWakeupChannel, static_cast<uint32_t>(mWedSampleTimeRadio), mWakeupListenDuration));
+        IgnoreError(Get<RadioController>().ReceiveAt(mWakeupChannel, static_cast<uint32_t>(mWedSampleTimeRadio),
+                                                     mWakeupListenDuration));
     }
 }
 

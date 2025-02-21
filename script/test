@@ -474,11 +474,15 @@ do_expect()
         else
             test_patterns=(-name 'posix-*.exp' -o -name 'cli-*.exp')
             if [[ ${THREAD_VERSION} != "1.1" ]]; then
-                test_patterns+=(-o -name 'v1_2-*.exp')
+                # the RCP architecture doesn't support the CSL Receiver, the csl test is excluded.
+                test_patterns+=(-o -name 'v1_2-*.exp' -not -name 'v1_2-cli-csl.exp')
             fi
         fi
     else
         test_patterns=(-name 'cli-*.exp' -o -name 'simulation-*.exp' -o -name 'cli_non_rcp-*.exp')
+        if [[ ${THREAD_VERSION} != "1.1" ]]; then
+            test_patterns+=(-o -name 'v1_2-cli-csl.exp')
+        fi
     fi
 
     if [[ $# != 0 ]]; then
