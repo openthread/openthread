@@ -472,7 +472,7 @@ public:
      *
      * @param[in]  aTimeout  The Timeout value in seconds.
      */
-    void SetTimeout(uint32_t aTimeout);
+    void SetTimeout(uint32_t aTimeout) { SetTimeout(aTimeout, kSendChildUpdateToParent); }
 
     /**
      * Returns the RLOC16 assigned to the Thread interface.
@@ -904,6 +904,12 @@ private:
         kNoSecurity  = 255, // Security suite value indicating that MLE message is secured.
     };
 
+    enum TimeoutAction : uint8_t // Used as input in `SetTimeout()` to determine whether or not to update the parent.
+    {
+        kSendChildUpdateToParent,
+        kDoNotSendChildUpdateToParent,
+    };
+
     enum MessageAction : uint8_t
     {
         kMessageSend,
@@ -1330,6 +1336,7 @@ private:
     void       SetStateChild(uint16_t aRloc16);
     void       SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLeaderRouterId);
     void       SetLeaderData(const LeaderData &aLeaderData);
+    void       SetTimeout(uint32_t aTimeout, TimeoutAction aAction);
     void       InformPreviousChannel(void);
     bool       IsAnnounceAttach(void) const { return mAlternatePanId != Mac::kPanIdBroadcast; }
     void       ScheduleMessageTransmissionTimer(void);
