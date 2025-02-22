@@ -36,6 +36,7 @@
 #define OPENTHREAD_BORDER_AGENT_H_
 
 #include <openthread/instance.h>
+#include <openthread/ip6.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -89,13 +90,32 @@ typedef struct otBorderAgentCounters
 } otBorderAgentCounters;
 
 /**
- * Gets the counters of the Thread Border Agent.
+ * Represents information about a Border Agent session.
  *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * This structure is populated by `otBorderAgentGetNextSessionInfo()` during iteration over the list of sessions using
+ * an `otBorderAgentSessionIterator`.
  *
- * @returns A pointer to the Border Agent counters.
+ * To ensure consistent `mLifetime` calculations, the iterator's initialization time is stored within the iterator,
+ * and each session's `mLifetime` is calculated relative to this time.
  */
-const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance);
+typedef struct otBorderAgentSessionInfo
+{
+    otSockAddr mPeerSockAddr;   ///< Socket address (IPv6 address and port number) of session peer.
+    bool       mIsConnected;    ///< Indicates whether the session is connected.
+    bool       mIsCommissioner; ///< Indicates whether the session is accepted as full commissioner.
+    uint64_t   mLifetime;       ///< Milliseconds since the session was first established.
+} otBorderAgentSessionInfo;
+
+/**
+ * Represents an iterator for Border Agent sessions.
+ *
+ * The caller MUST NOT access or update the fields in this struct. It is intended for OpenThread internal use only.
+ */
+typedef struct otBorderAgentSessionIterator
+{
+    void    *mPtr;
+    uint64_t mData;
+} otBorderAgentSessionIterator;
 
 /**
  * Indicates whether or not the Border Agent service is active and running.
@@ -122,6 +142,35 @@ bool otBorderAgentIsActive(otInstance *aInstance);
  * @returns UDP port of the Border Agent.
  */
 uint16_t otBorderAgentGetUdpPort(otInstance *aInstance);
+
+/**
+ * This callback informs the application of the changes in the state of the MeshCoP service.
+ *
+ * In specific, the 'state' includes the MeshCoP TXT data originated from the Thread network and whether the
+ * Border Agent is Active (which can be obtained by `otBorderAgentIsActive`).
+ *
+ * @param[in] aTxtData  A pointer to the encoded MeshCoP TXT data originated from the Thread network.
+ * @param[in] aLength   The length of the encoded TXT data.
+ * @param[in] aContext  A pointer to application-specific context.
+ */
+typedef void (*otBorderAgentMeshCoPServiceChangedCallback)(const uint8_t *aTxtData, uint16_t aLength, void *aContext);
+
+/**
+ * Sets the callback function used by the Border Agent to notify of any changes to the state of the MeshCoP service.
+ *
+ * The callback is invoked when the 'Is Active' state of the Border Agent or the MeshCoP service TXT data values
+ * change. For example, it is invoked when the network name or the extended PAN ID changes and passes the updated
+ * encoded TXT data to the application layer.
+ *
+ * This callback is invoked once right after this API is called to provide initial states of the MeshCoP service.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aCallback  The callback to be invoked when there are any changes of the MeshCoP service.
+ * @param[in] aContext   A pointer to application-specific context.
+ */
+void otBorderAgentSetMeshCoPServiceChangedCallback(otInstance                                *aInstance,
+                                                   otBorderAgentMeshCoPServiceChangedCallback aCallback,
+                                                   void                                      *aContext);
 
 /**
  * Gets the randomly generated Border Agent ID.
@@ -160,6 +209,38 @@ otError otBorderAgentGetId(otInstance *aInstance, otBorderAgentId *aId);
  * @sa otBorderAgentGetId
  */
 otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId);
+
+/**
+ * Initializes a session iterator.
+ *
+ * An iterator MUST be initialized before being used in `otBorderAgentGetNextSessionInfo()`. A previously initialized
+ * iterator can be re-initialized to start from the beginning of the session list.
+ *
+ * @param[in] aInstance   A pointer to an OpenThread instance.
+ * @param[in] aIterator   The iterator to initialize.
+ */
+void otBorderAgentInitSessionIterator(otInstance *aInstance, otBorderAgentSessionIterator *aIterator);
+
+/**
+ * Retrieves the next Border Agent session information.
+ *
+ * @param[in]  aIterator      The iterator to use.
+ * @param[out] aSessionInfo   A pointer to an `otBorderAgentSessionInfo` to populate.
+ *
+ * @retval OT_ERROR_NONE        Successfully retrieved the next session info.
+ * @retval OT_ERROR_NOT_FOUND   No more sessions are available. The end of the list has been reached.
+ */
+otError otBorderAgentGetNextSessionInfo(otBorderAgentSessionIterator *aIterator,
+                                        otBorderAgentSessionInfo     *aSessionInfo);
+
+/**
+ * Gets the counters of the Thread Border Agent.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the Border Agent counters.
+ */
+const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance);
 
 /*--------------------------------------------------------------------------------------------------------------------
  * Border Agent Ephemeral Key feature */

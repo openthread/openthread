@@ -59,12 +59,17 @@ namespace ot {
 class Time : public Unequatable<Time>
 {
 public:
-    static constexpr uint32_t kOneSecondInMsec = 1000u;                 ///< One second interval in msec.
-    static constexpr uint32_t kOneMinuteInMsec = kOneSecondInMsec * 60; ///< One minute interval in msec.
-    static constexpr uint32_t kOneHourInMsec   = kOneMinuteInMsec * 60; ///< One hour interval in msec.
-    static constexpr uint32_t kOneDayInMsec    = kOneHourInMsec * 24;   ///< One day interval in msec.
-    static constexpr uint32_t kOneMsecInUsec   = 1000u;                 ///< One millisecond in microseconds.
-    static constexpr uint32_t kOneSecondInUsec = 1000000u;              ///< One second interval in microseconds.
+    static constexpr uint32_t kOneMinuteInSec = 60;                   ///< One minute interval in sec.
+    static constexpr uint32_t kOneHourInSec   = 60 * kOneMinuteInSec; ///< One hour interval in sec.
+    static constexpr uint32_t kOneDayInSec    = 24 * kOneHourInSec;   ///< One day interval in sec.
+
+    static constexpr uint32_t kOneSecondInMsec = 1000u;                              ///< One second interval in msec.
+    static constexpr uint32_t kOneMinuteInMsec = kOneMinuteInSec * kOneSecondInMsec; ///< One minute interval in msec.
+    static constexpr uint32_t kOneHourInMsec   = kOneHourInSec * kOneSecondInMsec;   ///< One hour interval in msec.
+    static constexpr uint32_t kOneDayInMsec    = kOneDayInSec * kOneSecondInMsec;    ///< One day interval in msec.
+
+    static constexpr uint32_t kOneMsecInUsec   = 1000u;    ///< One millisecond in microseconds.
+    static constexpr uint32_t kOneSecondInUsec = 1000000u; ///< One second interval in microseconds.
 
     /**
      * This constant defines a maximum time duration ensured to be longer than any other duration.

@@ -53,6 +53,20 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MONITOR_AUTO_START_ENABLE
+ *
+ * Define to 0 to require the Channel Monitor to be manually started.
+ *
+ * If enabled, the Channel Monitor will start and stop automatically when the Thread network interface is brought up
+ * and down.
+ *
+ * Applicable only if Channel Monitoring feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is set).
+ */
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MONITOR_AUTO_START_ENABLE
+#define OPENTHREAD_CONFIG_CHANNEL_MONITOR_AUTO_START_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_INTERVAL
  *
  * The sample interval in milliseconds used by Channel Monitoring feature.

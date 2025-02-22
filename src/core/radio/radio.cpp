@@ -104,6 +104,15 @@ Error Radio::AddSrcMatchExtEntry(const Mac::ExtAddress &aExtAddress)
     address.Set(aExtAddress.m8, Mac::ExtAddress::kReverseByteOrder);
     return otPlatRadioAddSrcMatchExtEntry(GetInstancePtr(), &address);
 }
+
+Error Radio::ClearSrcMatchExtEntry(const Mac::ExtAddress &aExtAddress)
+{
+    Mac::ExtAddress address;
+
+    address.Set(aExtAddress.m8, Mac::ExtAddress::kReverseByteOrder);
+    return otPlatRadioClearSrcMatchExtEntry(GetInstancePtr(), &address);
+}
+
 Error Radio::Transmit(Mac::TxFrame &aFrame)
 {
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE

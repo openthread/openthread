@@ -211,6 +211,7 @@ Diags::Diags(Instance &aInstance)
 void Diags::ResetTxPacket(void)
 {
     mIsHeaderUpdated                               = false;
+    mIsSecurityProcessed                           = false;
     mTxPacket->mInfo.mTxInfo.mTxDelayBaseTime      = 0;
     mTxPacket->mInfo.mTxInfo.mTxDelay              = 0;
     mTxPacket->mInfo.mTxInfo.mMaxCsmaBackoffs      = 0;
@@ -221,7 +222,6 @@ void Diags::ResetTxPacket(void)
     mTxPacket->mInfo.mTxInfo.mIsARetx              = false;
     mTxPacket->mInfo.mTxInfo.mCsmaCaEnabled        = false;
     mTxPacket->mInfo.mTxInfo.mCslPresent           = false;
-    mTxPacket->mInfo.mTxInfo.mIsSecurityProcessed  = false;
 }
 
 Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
@@ -312,7 +312,6 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
 
     ResetTxPacket();
     mTxPacket->mInfo.mTxInfo.mCsmaCaEnabled        = csmaCaEnabled;
-    mTxPacket->mInfo.mTxInfo.mIsSecurityProcessed  = securityProcessed;
     mTxPacket->mInfo.mTxInfo.mTxPower              = txPower;
     mTxPacket->mInfo.mTxInfo.mTxDelayBaseTime      = txDelayBaseTime;
     mTxPacket->mInfo.mTxInfo.mTxDelay              = txDelay;
@@ -321,6 +320,7 @@ Error Diags::ProcessFrame(uint8_t aArgsLength, char *aArgs[])
     mTxPacket->mInfo.mTxInfo.mRxChannelAfterTxDone = rxChannelAfterTxDone;
     mTxPacket->mLength                             = size;
     mIsHeaderUpdated                               = isHeaderUpdated;
+    mIsSecurityProcessed                           = securityProcessed;
     mIsTxPacketSet                                 = true;
 
 exit:
@@ -561,9 +561,10 @@ Error Diags::TransmitPacket(void)
 
     if (mIsTxPacketSet)
     {
-        // The `mInfo.mTxInfo.mIsHeaderUpdated` field may be updated by the radio driver after the frame is sent,
-        // set the `mInfo.mTxInfo.mIsHeaderUpdated` field before transmitting the frame.
-        mTxPacket->mInfo.mTxInfo.mIsHeaderUpdated = mIsHeaderUpdated;
+        // The `mInfo.mTxInfo.mIsHeaderUpdated` and `mInfo.mTxInfo.mIsSecurityProcessed` fields may be updated by
+        // the radio driver after the frame is sent. Here sets these fields field before transmitting the frame.
+        mTxPacket->mInfo.mTxInfo.mIsHeaderUpdated     = mIsHeaderUpdated;
+        mTxPacket->mInfo.mTxInfo.mIsSecurityProcessed = mIsSecurityProcessed;
     }
     else
     {

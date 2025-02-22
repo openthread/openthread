@@ -791,16 +791,23 @@ exit:
     return;
 }
 
-void Mle::SetTimeout(uint32_t aTimeout)
+void Mle::SetTimeout(uint32_t aTimeout, TimeoutAction aAction)
 {
-    // Determine `kMinTimeout` based on other parameters
+    // Determine `kMinTimeout` based on other parameters. `kMaxTimeout`
+    // is set (per spec) to minimum Delay Timer value for a Pending
+    // Operational Dataset when updating the Network Key which is 8
+    // hours.
+
     static constexpr uint32_t kMinPollPeriod       = OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD;
     static constexpr uint32_t kRetxPollPeriod      = OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD;
     static constexpr uint32_t kMinTimeoutDataPoll  = kMinPollPeriod + kFailedChildTransmissions * kRetxPollPeriod;
     static constexpr uint32_t kMinTimeoutKeepAlive = (kMaxChildKeepAliveAttempts + 1) * kUnicastRetxDelay;
     static constexpr uint32_t kMinTimeout          = Time::MsecToSec(OT_MAX(kMinTimeoutKeepAlive, kMinTimeoutDataPoll));
+    static constexpr uint32_t kMaxTimeout          = (8 * Time::kOneHourInSec);
 
-    aTimeout = Max(aTimeout, kMinTimeout);
+    static_assert(kMinTimeout <= kMaxTimeout, "Min timeout MUST be less than Max timeout");
+
+    aTimeout = Clamp(aTimeout, kMinTimeout, kMaxTimeout);
 
     VerifyOrExit(mTimeout != aTimeout);
 
@@ -808,7 +815,7 @@ void Mle::SetTimeout(uint32_t aTimeout)
 
     Get<DataPollSender>().RecalculatePollPeriod();
 
-    if (IsChild())
+    if (IsChild() && (aAction == kSendChildUpdateToParent))
     {
         IgnoreError(SendChildUpdateRequestToParent());
     }
@@ -3578,7 +3585,7 @@ void Mle::HandleChildUpdateResponseOnChild(RxInfo &aRxInfo)
             }
             else
             {
-                mTimeout = timeout;
+                SetTimeout(timeout, kDoNotSendChildUpdateToParent);
             }
             break;
         case kErrorNotFound:

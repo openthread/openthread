@@ -387,6 +387,21 @@ Active
 Done
 ```
 
+### ba sessions
+
+Prints the list of Border Agent's sessions. Information per session:
+
+- Peer socket address (IPv6 address and port).
+- Whether or not the session is connected.
+- Whether or not the session is accepted as full commissioner.
+- Session lifetime in milliseconds (calculated from the time the session was first established).
+
+```bash
+ba sessions
+[fe80:0:0:0:cc79:2a29:d311:1aea]:9202 connected:yes commissioner:no lifetime:1860
+Done
+```
+
 ### ba ephemeralkey
 
 Print the Border Agent's Ephemeral Key Manager state.

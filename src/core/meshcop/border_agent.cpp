@@ -47,12 +47,12 @@ RegisterLogModule("BorderAgent");
 
 BorderAgent::BorderAgent(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mState(kStateStopped)
+    , mIsRunning(false)
     , mDtlsTransport(aInstance, kNoLinkSecurity)
-    , mCoapDtlsSession(nullptr)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     , mIdInitialized(false)
 #endif
+    , mNotifyMeshCoPServiceChangedTask(aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     , mEphemeralKeyManager(aInstance)
 #endif
@@ -97,48 +97,45 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 
-Error BorderAgent::Start(uint16_t aUdpPort)
-{
-    Error error;
-    Pskc  pskc;
-
-    Get<KeyManager>().GetPskc(pskc);
-    error = Start(aUdpPort, pskc.m8, Pskc::kSize);
-    pskc.Clear();
-
-    return error;
-}
-
-Error BorderAgent::Start(uint16_t aUdpPort, const uint8_t *aPsk, uint8_t aPskLength)
+void BorderAgent::Start(void)
 {
     Error error = kErrorNone;
+    Pskc  pskc;
 
-    VerifyOrExit(mState == kStateStopped);
+    VerifyOrExit(!mIsRunning);
 
     mDtlsTransport.SetAcceptCallback(BorderAgent::HandleAcceptSession, this);
     mDtlsTransport.SetRemoveSessionCallback(BorderAgent::HandleRemoveSession, this);
 
     SuccessOrExit(error = mDtlsTransport.Open());
-    SuccessOrExit(error = mDtlsTransport.Bind(aUdpPort));
+    SuccessOrExit(error = mDtlsTransport.Bind(kUdpPort));
 
-    SuccessOrExit(error = mDtlsTransport.SetPsk(aPsk, aPskLength));
+    Get<KeyManager>().GetPskc(pskc);
+    SuccessOrExit(error = mDtlsTransport.SetPsk(pskc.m8, Pskc::kSize));
+    pskc.Clear();
 
-    mState = kStateStarted;
+    mIsRunning = true;
+    PostNotifyMeshCoPServiceChangedTask();
 
     LogInfo("Border Agent start listening on port %u", GetUdpPort());
 
 exit:
+    if (!mIsRunning)
+    {
+        mDtlsTransport.Close();
+    }
+
     LogWarnOnError(error, "start agent");
-    return error;
 }
 
 void BorderAgent::Stop(void)
 {
-    VerifyOrExit(mState != kStateStopped);
+    VerifyOrExit(mIsRunning);
 
     mDtlsTransport.Close();
+    mIsRunning = false;
+    PostNotifyMeshCoPServiceChangedTask();
 
-    mState = kStateStopped;
     LogInfo("Border Agent stopped");
 
 exit:
@@ -146,6 +143,13 @@ exit:
 }
 
 uint16_t BorderAgent::GetUdpPort(void) const { return mDtlsTransport.GetUdpPort(); }
+
+void BorderAgent::SetMeshCoPServiceChangedCallback(MeshCoPServiceChangedCallback aCallback, void *aContext)
+{
+    mMeshCoPServiceChangedCallback.Set(aCallback, aContext);
+
+    mNotifyMeshCoPServiceChangedTask.Post();
+}
 
 void BorderAgent::HandleNotifierEvents(Events aEvents)
 {
@@ -165,7 +169,7 @@ void BorderAgent::HandleNotifierEvents(Events aEvents)
     {
         Pskc pskc;
 
-        VerifyOrExit(mState != kStateStopped);
+        VerifyOrExit(mIsRunning);
 
         Get<KeyManager>().GetPskc(pskc);
 
@@ -173,6 +177,12 @@ void BorderAgent::HandleNotifierEvents(Events aEvents)
         // new pskc will be applied for next connection.
         SuccessOrExit(mDtlsTransport.SetPsk(pskc.m8, Pskc::kSize));
         pskc.Clear();
+    }
+
+    if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadExtPanIdChanged | kEventThreadNetworkNameChanged |
+                            kEventThreadBackboneRouterStateChanged | kEventActiveDatasetChanged))
+    {
+        PostNotifyMeshCoPServiceChangedTask();
     }
 
 exit:
@@ -188,17 +198,7 @@ SecureSession *BorderAgent::HandleAcceptSession(void *aContext, const Ip6::Messa
 
 BorderAgent::CoapDtlsSession *BorderAgent::HandleAcceptSession(void)
 {
-    CoapDtlsSession *session = nullptr;
-
-    VerifyOrExit(mCoapDtlsSession == nullptr);
-
-    session = CoapDtlsSession::Allocate(GetInstance(), mDtlsTransport);
-    VerifyOrExit(session != nullptr);
-
-    mCoapDtlsSession = session;
-
-exit:
-    return session;
+    return CoapDtlsSession::Allocate(GetInstance(), mDtlsTransport);
 }
 
 void BorderAgent::HandleRemoveSession(void *aContext, SecureSession &aSession)
@@ -212,7 +212,6 @@ void BorderAgent::HandleRemoveSession(SecureSession &aSession)
 
     coapSession.Cleanup();
     coapSession.Free();
-    mCoapDtlsSession = nullptr;
 }
 
 void BorderAgent::HandleSessionConnected(CoapDtlsSession &aSession)
@@ -227,7 +226,6 @@ void BorderAgent::HandleSessionConnected(CoapDtlsSession &aSession)
     else
 #endif
     {
-        mState = kStateConnected;
         mCounters.mPskcSecureSessionSuccesses++;
     }
 }
@@ -244,8 +242,6 @@ void BorderAgent::HandleSessionDisconnected(CoapDtlsSession &aSession, CoapDtlsS
     else
 #endif
     {
-        mState = kStateStarted;
-
         if (aEvent == CoapDtlsSession::kDisconnectedError)
         {
             mCounters.mPskcSecureSessionFailures++;
@@ -265,9 +261,34 @@ void BorderAgent::HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession)
     else
 #endif
     {
-        mState = kStateAccepted;
         mCounters.mPskcCommissionerPetitions++;
     }
+}
+
+BorderAgent::CoapDtlsSession *BorderAgent::FindActiveCommissionerSession(void)
+{
+    CoapDtlsSession *commissionerSession = nullptr;
+
+    for (SecureSession &session : mDtlsTransport.GetSessions())
+    {
+        CoapDtlsSession &coapSession = static_cast<CoapDtlsSession &>(session);
+
+        if (coapSession.IsActiveCommissioner())
+        {
+            commissionerSession = &coapSession;
+            break;
+        }
+    }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    if ((mEphemeralKeyManager.mCoapDtlsSession != nullptr) &&
+        mEphemeralKeyManager.mCoapDtlsSession->IsActiveCommissioner())
+    {
+        commissionerSession = mEphemeralKeyManager.mCoapDtlsSession;
+    }
+#endif
+
+    return commissionerSession;
 }
 
 Coap::Message::Code BorderAgent::CoapCodeFromError(Error aError)
@@ -298,23 +319,235 @@ template <> void BorderAgent::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, co
 
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    Coap::Message *message = nullptr;
-    Error          error   = kErrorNone;
+    Coap::Message   *message = nullptr;
+    Error            error   = kErrorNone;
+    CoapDtlsSession *session;
 
-    VerifyOrExit(mState != kStateStopped);
+    VerifyOrExit(mIsRunning);
 
     VerifyOrExit(aMessage.IsNonConfirmablePostRequest(), error = kErrorDrop);
 
-    VerifyOrExit(mCoapDtlsSession != nullptr);
+    session = FindActiveCommissionerSession();
+    VerifyOrExit(session != nullptr);
 
-    message = mCoapDtlsSession->NewPriorityNonConfirmablePostMessage(kUriRelayRx);
+    message = session->NewPriorityNonConfirmablePostMessage(kUriRelayRx);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = mCoapDtlsSession->ForwardToCommissioner(*message, aMessage));
+    SuccessOrExit(error = session->ForwardToCommissioner(*message, aMessage));
     LogInfo("Sent to commissioner on RelayRx (c/rx)");
 
 exit:
     FreeMessageOnError(message, error);
+}
+
+void BorderAgent::NotifyMeshCoPServiceChanged(void)
+{
+    MeshCoPTxtEncoder meshCoPTxtEncoder(GetInstance());
+
+    VerifyOrExit(mMeshCoPServiceChangedCallback.IsSet());
+    SuccessOrAssert(meshCoPTxtEncoder.EncodeTxtData());
+
+    mMeshCoPServiceChangedCallback.Invoke(meshCoPTxtEncoder.GetTxtData(), meshCoPTxtEncoder.GetTxtDataLen());
+
+exit:
+    return;
+}
+
+void BorderAgent::PostNotifyMeshCoPServiceChangedTask(void)
+{
+    if (mMeshCoPServiceChangedCallback.IsSet())
+    {
+        mNotifyMeshCoPServiceChangedTask.Post();
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// BorderAgent::MeshCoPTxtEncoder
+
+Error BorderAgent::MeshCoPTxtEncoder::AppendTxtEntry(const char *aKey, const void *aValue, uint16_t aValueLength)
+{
+    Dns::TxtEntry txtEntry;
+
+    txtEntry.Init(aKey, reinterpret_cast<const uint8_t *>(aValue), aValueLength);
+    return txtEntry.AppendTo(mAppender);
+}
+
+template <> Error BorderAgent::MeshCoPTxtEncoder::AppendTxtEntry<NameData>(const char *aKey, const NameData &aObject)
+{
+    return AppendTxtEntry(aKey, aObject.GetBuffer(), aObject.GetLength());
+}
+
+Error BorderAgent::MeshCoPTxtEncoder::EncodeTxtData(void)
+{
+#if OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1
+    static const char kThreadVersionString[] = "1.1.1";
+#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_2
+    static const char kThreadVersionString[] = "1.2.0";
+#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_3
+    static const char kThreadVersionString[] = "1.3.0";
+#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_3_1
+    static const char kThreadVersionString[] = "1.3.1";
+#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_4
+    static const char kThreadVersionString[] = "1.4.0";
+#endif
+
+    Error error = kErrorNone;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+    Id id;
+#endif
+    StateBitmap state;
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+    if (Get<BorderAgent>().GetId(id) == kErrorNone)
+    {
+        SuccessOrExit(error = AppendTxtEntry("id", id));
+    }
+#endif
+    SuccessOrExit(error = AppendTxtEntry("nn", Get<NetworkNameManager>().GetNetworkName().GetAsData()));
+    SuccessOrExit(error = AppendTxtEntry("xp", Get<ExtendedPanIdManager>().GetExtPanId()));
+    SuccessOrExit(error = AppendTxtEntry("tv", NameData(kThreadVersionString, sizeof(kThreadVersionString) - 1)));
+    SuccessOrExit(error = AppendTxtEntry("xa", Get<Mac::Mac>().GetExtAddress()));
+
+    state = GetStateBitmap();
+    SuccessOrExit(error = AppendTxtEntry("sb", BigEndian::HostSwap32(state.ToUint32())));
+
+    if (state.mThreadIfStatus == kThreadIfStatusActive)
+    {
+        SuccessOrExit(error = AppendTxtEntry(
+                          "pt", BigEndian::HostSwap32(Get<Mle::MleRouter>().GetLeaderData().GetPartitionId())));
+        if (Get<MeshCoP::ActiveDatasetManager>().GetTimestamp().IsValid())
+        {
+            SuccessOrExit(error = AppendTxtEntry("at", Get<MeshCoP::ActiveDatasetManager>().GetTimestamp()));
+        }
+    }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    SuccessOrExit(error = AppendBbrTxtEntry(state));
+#endif
+#if OTBR_ENABLE_BORDER_ROUTING
+    SuccessOrExit(error = AppendOmrTxtEntry());
+#endif
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+Error BorderAgent::MeshCoPTxtEncoder::AppendBbrTxtEntry(StateBitmap aState)
+{
+    Error             error      = kErrorNone;
+    const DomainName &domainName = Get<MeshCoP::NetworkNameManager>().GetDomainName();
+
+    if (aState.mBbrIsActive)
+    {
+        BackboneRouter::Config bbrConfig;
+
+        Get<BackboneRouter::Local>().GetConfig(bbrConfig);
+        SuccessOrExit(error = AppendTxtEntry("sq", bbrConfig.mSequenceNumber));
+        SuccessOrExit(error = AppendTxtEntry("bb", BigEndian::HostSwap16(BackboneRouter::kBackboneUdpPort)));
+    }
+
+    error = AppendTxtEntry(
+        "dn", NameData(domainName.GetAsCString(), StringLength(domainName.GetAsCString(), sizeof(domainName))));
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+Error BorderAgent::MeshCoPTxtEncoder::AppendOmrTxtEntry(void)
+{
+    Error                                         error = kErrorNone;
+    Ip6::Prefix                                   prefix;
+    BorderRouter::RoutingManager::RoutePreference preference;
+
+    if ((error = Get<BorderRouter::RoutingManager>().GetFavoredOmrPrefix(prefix, preference)) == kErrorNone)
+    {
+        uint8_t omrData[Ip6::NetworkPrefix::kSize + 1];
+        omrData[0] = prefix.GetLength();
+        memcpy(omrData + 1, prefix.GetBytes(), prefix.GetBytesSize());
+
+        SuccessOrExit(error = AppendTxtEntry("omr", omrData));
+    }
+
+exit:
+    return error;
+}
+#endif
+
+BorderAgent::MeshCoPTxtEncoder::StateBitmap BorderAgent::MeshCoPTxtEncoder::GetStateBitmap(void)
+{
+    StateBitmap state;
+
+    state.mConnectionMode = kConnectionModePskc;
+    state.mAvailability   = kAvailabilityHigh;
+
+    switch (Get<Mle::MleRouter>().GetRole())
+    {
+    case Mle::DeviceRole::kRoleDisabled:
+        state.mThreadIfStatus = kThreadIfStatusNotInitialized;
+        state.mThreadRole     = kThreadRoleDisabledOrDetached;
+        break;
+    case Mle::DeviceRole::kRoleDetached:
+        state.mThreadIfStatus = kThreadIfStatusInitialized;
+        state.mThreadRole     = kThreadRoleDisabledOrDetached;
+        break;
+    case Mle::DeviceRole::kRoleChild:
+        state.mThreadIfStatus = kThreadIfStatusActive;
+        state.mThreadRole     = kThreadRoleChild;
+        break;
+    case Mle::DeviceRole::kRoleRouter:
+        state.mThreadIfStatus = kThreadIfStatusActive;
+        state.mThreadRole     = kThreadRoleRouter;
+        break;
+    case Mle::DeviceRole::kRoleLeader:
+        state.mThreadIfStatus = kThreadIfStatusActive;
+        state.mThreadRole     = kThreadRoleLeader;
+        break;
+    }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    state.mBbrIsActive = state.mThreadIfStatus == kThreadIfStatusActive &&
+                         Get<BackboneRouter::Local>().GetState() != BackboneRouter::Local::State::kStateDisabled;
+    state.mBbrIsPrimary = state.mThreadIfStatus == kThreadIfStatusActive &&
+                          Get<BackboneRouter::Local>().GetState() == BackboneRouter::Local::State::kStatePrimary;
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    state.mEpskcSupported =
+        Get<BorderAgent::EphemeralKeyManager>().GetState() != EphemeralKeyManager::State::kStateDisabled;
+#endif
+
+    return state;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// BorderAgent::SessionIterator
+
+void BorderAgent::SessionIterator::Init(Instance &aInstance)
+{
+    SetSession(static_cast<CoapDtlsSession *>(aInstance.Get<BorderAgent>().mDtlsTransport.GetSessions().GetHead()));
+    SetInitTime(aInstance.Get<Uptime>().GetUptime());
+}
+
+Error BorderAgent::SessionIterator::GetNextSessionInfo(SessionInfo &aSessionInfo)
+{
+    Error            error   = kErrorNone;
+    CoapDtlsSession *session = GetSession();
+
+    VerifyOrExit(session != nullptr, error = kErrorNotFound);
+
+    SetSession(static_cast<CoapDtlsSession *>(session->GetNext()));
+
+    aSessionInfo.mPeerSockAddr.mAddress = session->GetMessageInfo().GetPeerAddr();
+    aSessionInfo.mPeerSockAddr.mPort    = session->GetMessageInfo().GetPeerPort();
+    aSessionInfo.mIsConnected           = session->IsConnected();
+    aSessionInfo.mIsCommissioner        = session->IsActiveCommissioner();
+    aSessionInfo.mLifetime              = GetInitTime() - session->GetAllocationTime();
+
+exit:
+    return error;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -614,6 +847,7 @@ BorderAgent::CoapDtlsSession::CoapDtlsSession(Instance &aInstance, Dtls::Transpo
     , mIsActiveCommissioner(false)
     , mTimer(aInstance, HandleTimer, this)
     , mUdpReceiver(HandleUdpReceive, this)
+    , mAllocationTime(aInstance.Get<Uptime>().GetUptime())
 {
     mCommissionerAloc.InitAsThreadOriginMeshLocal();
 
