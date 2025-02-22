@@ -363,6 +363,8 @@ private:
     static constexpr uint8_t kTypeMask   = 0x7f << kTypeOffset;
     static constexpr uint8_t kStableMask = 1 << 0;
 
+    static bool IsTlvValid(const NetworkDataTlv *aTlv);
+
     uint8_t mType;
     uint8_t mLength;
 } OT_TOOL_PACKED_END;
@@ -1118,6 +1120,14 @@ public:
         mFlags         = ((aContextId << kContextIdOffset) & kContextIdMask);
         mContextLength = aContextLength;
     }
+
+    /**
+     * Indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     */
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(NetworkDataTlv); }
 
     /**
      * Indicates whether or not the Compress flag is set.

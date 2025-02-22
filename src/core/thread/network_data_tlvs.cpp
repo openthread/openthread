@@ -39,13 +39,40 @@ namespace NetworkData {
 //---------------------------------------------------------------------------------------------------------------------
 // NetworkDataTlv
 
+bool NetworkDataTlv::IsTlvValid(const NetworkDataTlv *aTlv)
+{
+    bool isValid = true;
+
+    switch (aTlv->GetType())
+    {
+    case kTypePrefix:
+        isValid = As<PrefixTlv>(aTlv)->IsValid();
+        break;
+    case kTypeContext:
+        isValid = As<ContextTlv>(aTlv)->IsValid();
+        break;
+    case kTypeService:
+        isValid = As<ServiceTlv>(aTlv)->IsValid();
+        break;
+    case kTypeServer:
+        isValid = As<ServerTlv>(aTlv)->IsValid();
+        break;
+    case kTypeHasRoute:
+    case kTypeBorderRouter:
+    case kTypeCommissioningData:
+        break;
+    }
+
+    return isValid;
+}
+
 const NetworkDataTlv *NetworkDataTlv::Find(const NetworkDataTlv *aStart, const NetworkDataTlv *aEnd, Type aType)
 {
     const NetworkDataTlv *tlv;
 
     for (tlv = aStart; (tlv + 1 <= aEnd) && (tlv->GetNext() <= aEnd); tlv = tlv->GetNext())
     {
-        if (tlv->GetType() == aType)
+        if ((tlv->GetType() == aType) && IsTlvValid(tlv))
         {
             ExitNow();
         }
@@ -66,7 +93,7 @@ const NetworkDataTlv *NetworkDataTlv::Find(const NetworkDataTlv *aStart,
 
     for (tlv = aStart; (tlv + 1 <= aEnd) && (tlv->GetNext() <= aEnd); tlv = tlv->GetNext())
     {
-        if ((tlv->GetType() == aType) && (tlv->IsStable() == aStable))
+        if ((tlv->GetType() == aType) && (tlv->IsStable() == aStable) && IsTlvValid(tlv))
         {
             ExitNow();
         }
