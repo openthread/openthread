@@ -27,7 +27,6 @@
 #
 
 cmake_minimum_required(VERSION 3.14)
-project(openthread-gtest)
 
 # GoogleTest requires at least C++14
 set(CMAKE_CXX_STANDARD 14)
@@ -51,38 +50,61 @@ target_link_libraries(ot-fake-platform
     ot-config
 )
 
-add_library(ot-fake-ftd INTERFACE)
-target_link_libraries(ot-fake-ftd INTERFACE
-    openthread-ftd
-    ot-fake-platform
-)
+if(OT_PLATFORM STREQUAL "simulation")
+    add_library(ot-fake-ftd INTERFACE)
+    target_link_libraries(ot-fake-ftd INTERFACE
+        openthread-ftd
+        ot-fake-platform
+    )
 
-add_executable(ot-ftd-gtest
-    dataset_test.cpp
-)
-target_link_libraries(ot-ftd-gtest
-    ot-fake-ftd
-    GTest::gmock_main
-)
-gtest_discover_tests(ot-ftd-gtest)
+    add_executable(ot-ftd-gtest
+        dataset_test.cpp
+    )
+    target_link_libraries(ot-ftd-gtest
+        ot-fake-ftd
+        GTest::gmock_main
+    )
+    gtest_discover_tests(ot-ftd-gtest)
 
-add_library(ot-fake-rcp
-    fake_coprocessor_platform.cpp
-)
-target_link_libraries(ot-fake-rcp
-    openthread-hdlc
-    openthread-rcp
-    openthread-radio-spinel
-    openthread-radio
-    ot-fake-platform
-)
+    add_library(ot-fake-rcp
+        fake_coprocessor_platform.cpp
+    )
+    target_link_libraries(ot-fake-rcp
+        openthread-hdlc
+        openthread-rcp
+        openthread-radio-spinel
+        openthread-radio
+        ot-fake-platform
+    )
 
-add_executable(ot-radio-spinel-rcp-gtest
-    radio_spinel_rcp_test.cpp
-)
-target_link_libraries(ot-radio-spinel-rcp-gtest
-    ot-fake-rcp
-    GTest::gmock_main
-)
+    add_executable(ot-radio-spinel-rcp-gtest
+        radio_spinel_rcp_test.cpp
+    )
+    target_link_libraries(ot-radio-spinel-rcp-gtest
+        ot-fake-rcp
+        GTest::gmock_main
+    )
 
-gtest_discover_tests(ot-radio-spinel-rcp-gtest)
+    gtest_discover_tests(ot-radio-spinel-rcp-gtest)
+elseif(OT_PLATFORM STREQUAL "posix")
+    add_executable(ot-posix-spi-interface-gtest
+        spi_interface_test.cpp
+        ${PROJECT_SOURCE_DIR}/src/posix/platform/spi_interface.cpp
+    )
+
+    target_include_directories(ot-posix-spi-interface-gtest
+        PUBLIC
+            ${PROJECT_SOURCE_DIR}/src/posix/platform/include
+    )
+
+    target_link_libraries(ot-posix-spi-interface-gtest
+        ot-posix-config
+        openthread-ftd
+        openthread-url
+        openthread-platform
+        ot-fake-platform
+        GTest::gmock_main
+    )
+
+    gtest_discover_tests(ot-posix-spi-interface-gtest)
+endif()
