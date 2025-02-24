@@ -199,6 +199,7 @@ set(COMMON_SOURCES
     radio/ble_secure.cpp
     radio/radio.cpp
     radio/radio_callbacks.cpp
+    radio/radio_controller.cpp
     radio/radio_platform.cpp
     radio/trel_interface.cpp
     radio/trel_link.cpp
@@ -300,6 +301,7 @@ set(RADIO_COMMON_SOURCES
     mac/sub_mac_wed.cpp
     radio/radio.cpp
     radio/radio_callbacks.cpp
+    radio/radio_controller.cpp
     radio/radio_platform.cpp
     thread/link_quality.cpp
     utils/parse_cmdline.cpp

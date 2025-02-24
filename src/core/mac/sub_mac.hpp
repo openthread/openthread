@@ -46,6 +46,7 @@
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "radio/radio.hpp"
+#include "radio/radio_controller.hpp"
 
 namespace ot {
 
@@ -105,6 +106,9 @@ class SubMac : public InstanceLocator, private NonCopyable
 {
     friend class Radio::Callbacks;
     friend class LinkRaw;
+#if OPENTHREAD_CONFIG_RADIO_CONTROLLER_ENABLE
+    friend class RadioController::Callbacks;
+#endif
 
 public:
     /**
@@ -556,9 +560,6 @@ private:
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kStateCslTransmit, // CSL transmission.
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        kStateCslSample, // CSL receive.
-#endif
     };
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
@@ -628,6 +629,13 @@ private:
 
     void               SetState(State aState);
     static const char *StateToString(State aState);
+
+    Error RadioEnable(void);
+    Error RadioDisable(void);
+    Error RadioTransmit(TxFrame &aFrame);
+    Error RadioEnergyScan(uint8_t aScanChannel, uint16_t aScanDuration);
+    Error RadioSleep(bool aShouldHandleSleep = true);
+    Error RadioReceive(uint8_t aChannel);
 
     using SubMacTimer =
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE

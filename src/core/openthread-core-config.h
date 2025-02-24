@@ -101,6 +101,7 @@
 #include "config/ping_sender.h"
 #include "config/platform.h"
 #include "config/power_calibration.h"
+#include "config/radio.h"
 #include "config/radio_link.h"
 #include "config/secure_transport.h"
 #include "config/sntp_client.h"
