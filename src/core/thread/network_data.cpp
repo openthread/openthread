@@ -150,6 +150,10 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
 
     Error               error = kErrorNotFound;
     NetworkDataIterator iterator(aIterator);
+    bool                shouldIterateOverPrefixTlvs;
+
+    shouldIterateOverPrefixTlvs = ((aConfig.mOnMeshPrefix != nullptr) || (aConfig.mExternalRoute != nullptr) ||
+                                   (aConfig.mLowpanContext != nullptr));
 
     for (const NetworkDataTlv *cur;
          cur = iterator.GetTlv(mTlvs), (cur + 1 <= GetTlvsEnd()) && (cur->GetNext() <= GetTlvsEnd());
@@ -160,14 +164,13 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypePrefix:
-            if ((aConfig.mOnMeshPrefix != nullptr) || (aConfig.mExternalRoute != nullptr) ||
-                (aConfig.mLowpanContext != nullptr))
+            if (shouldIterateOverPrefixTlvs && As<PrefixTlv>(cur)->IsValid())
             {
                 subTlvs = As<PrefixTlv>(cur)->GetSubTlvs();
             }
             break;
         case NetworkDataTlv::kTypeService:
-            if (aConfig.mService != nullptr)
+            if ((aConfig.mService != nullptr) && As<ServiceTlv>(cur)->IsValid())
             {
                 subTlvs = As<ServiceTlv>(cur)->GetSubTlvs();
             }
@@ -249,7 +252,7 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
                 {
                     const ContextTlv *contextTlv = As<ContextTlv>(subCur);
 
-                    if (aConfig.mLowpanContext == nullptr)
+                    if ((aConfig.mLowpanContext == nullptr) || !contextTlv->IsValid())
                     {
                         continue;
                     }
@@ -285,7 +288,7 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
                 {
                     const ServerTlv *server = As<ServerTlv>(subCur);
 
-                    if (!iterator.IsNewEntry())
+                    if (!iterator.IsNewEntry() || !server->IsValid())
                     {
                         continue;
                     }
