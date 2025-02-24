@@ -522,7 +522,7 @@ tcp_usr_abort(struct tcpcb* tp)
 	if (tp->t_state != TCP6S_TIME_WAIT &&
 		tp->t_state != TCP6S_CLOSED) {
 		tcp_drop(tp, ECONNABORTED);
-	} else if (tp->t_state == TCPS_TIME_WAIT) { // samkumar: I added this clause
+	} else if (tp->t_state == TCP6S_TIME_WAIT) { // samkumar: I added this clause
 		tp = tcp_close_tcb(tp);
 		tcplp_sys_connection_lost(tp, CONN_LOST_NORMAL);
 	}
