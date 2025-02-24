@@ -32,6 +32,7 @@
 #include "openthread-core-config.h"
 
 #include <map>
+#include <set>
 #include <vector>
 
 #include <inttypes.h>
@@ -42,6 +43,8 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
+
+bool operator<(const otExtAddress &aLeft, const otExtAddress &aRight);
 
 namespace ot {
 
@@ -108,6 +111,22 @@ public:
 
     virtual uint64_t GetEui64() const { return 0; }
 
+    virtual void SrcMatchEnable(bool aEnabled) { mSrcMatchEnabled = aEnabled; }
+    virtual bool SrcMatchIsEnabled() const { return mSrcMatchEnabled; }
+    virtual void SrcMatchAddShortEntry(uint16_t aShortAddr) { mSrcMatchShortAddrs.insert(aShortAddr); }
+    virtual void SrcMatchClearShortEntry(uint16_t aShortAddr) { mSrcMatchShortAddrs.erase(aShortAddr); }
+    virtual bool SrcMatchHasShortEntry(uint16_t aShortAddr) const { return mSrcMatchShortAddrs.count(aShortAddr) != 0; }
+    virtual void SrcMatchAddExtEntry(const otExtAddress &aExtAddr) { mSrcMatchExtAddrs.insert(aExtAddr); }
+    virtual void SrcMatchClearExtEntry(const otExtAddress &aExtAddr) { mSrcMatchExtAddrs.erase(aExtAddr); }
+    virtual bool SrcMatchHasExtEntry(const otExtAddress &aExtAddr) const
+    {
+        return mSrcMatchExtAddrs.count(aExtAddr) != 0;
+    }
+    virtual void   SrcMatchClearShortEntries(void) { mSrcMatchShortAddrs.clear(); }
+    virtual size_t SrcMatchCountShortEntries(void) const { return mSrcMatchShortAddrs.size(); }
+    virtual void   SrcMatchClearExtEntries(void) { mSrcMatchExtAddrs.clear(); }
+    virtual size_t SrcMatchCountExtEntries(void) const { return mSrcMatchExtAddrs.size(); }
+
 protected:
     void ProcessSchedules(uint64_t &aTimeout);
 
@@ -139,6 +158,10 @@ protected:
     uint8_t mFlash[kFlashSwapSize * kFlashSwapNum];
 
     std::map<uint32_t, std::vector<std::vector<uint8_t>>> mSettings;
+
+    bool                   mSrcMatchEnabled = false;
+    std::set<uint16_t>     mSrcMatchShortAddrs;
+    std::set<otExtAddress> mSrcMatchExtAddrs;
 };
 
 template <> inline void FakePlatform::HandleSchedule<&FakePlatform::mMilliAlarmStart>()

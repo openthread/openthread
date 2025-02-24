@@ -51,6 +51,11 @@
 
 using namespace ot;
 
+bool operator<(const otExtAddress &aLeft, const otExtAddress &aRight)
+{
+    return memcmp(&aLeft, &aRight, sizeof(aLeft)) < 0;
+}
+
 namespace ot {
 
 FakePlatform *FakePlatform::sPlatform = nullptr;
@@ -396,19 +401,38 @@ otRadioCaps otPlatRadioGetCaps(otInstance *) { return OT_RADIO_CAPS_NONE; }
 
 bool otPlatRadioGetPromiscuous(otInstance *) { return false; }
 
-void otPlatRadioEnableSrcMatch(otInstance *, bool) {}
+void otPlatRadioEnableSrcMatch(otInstance *, bool aEnabled)
+{
+    FakePlatform::CurrentPlatform().SrcMatchEnable(aEnabled);
+}
 
-otError otPlatRadioAddSrcMatchShortEntry(otInstance *, uint16_t) { return OT_ERROR_NONE; }
+otError otPlatRadioAddSrcMatchShortEntry(otInstance *, uint16_t aShortAddr)
+{
+    FakePlatform::CurrentPlatform().SrcMatchAddShortEntry(aShortAddr);
+    return OT_ERROR_NONE;
+}
 
-otError otPlatRadioAddSrcMatchExtEntry(otInstance *, const otExtAddress *) { return OT_ERROR_NONE; }
+otError otPlatRadioAddSrcMatchExtEntry(otInstance *, const otExtAddress *aExtAddr)
+{
+    FakePlatform::CurrentPlatform().SrcMatchAddExtEntry(*aExtAddr);
+    return OT_ERROR_NONE;
+}
 
-otError otPlatRadioClearSrcMatchShortEntry(otInstance *, uint16_t) { return OT_ERROR_NONE; }
+otError otPlatRadioClearSrcMatchShortEntry(otInstance *, uint16_t aShortAddr)
+{
+    FakePlatform::CurrentPlatform().SrcMatchClearShortEntry(aShortAddr);
+    return OT_ERROR_NONE;
+}
 
-otError otPlatRadioClearSrcMatchExtEntry(otInstance *, const otExtAddress *) { return OT_ERROR_NONE; }
+otError otPlatRadioClearSrcMatchExtEntry(otInstance *, const otExtAddress *aExtAddr)
+{
+    FakePlatform::CurrentPlatform().SrcMatchClearExtEntry(*aExtAddr);
+    return OT_ERROR_NONE;
+}
 
-void otPlatRadioClearSrcMatchShortEntries(otInstance *) {}
+void otPlatRadioClearSrcMatchShortEntries(otInstance *) { FakePlatform::CurrentPlatform().SrcMatchClearShortEntries(); }
 
-void otPlatRadioClearSrcMatchExtEntries(otInstance *) {}
+void otPlatRadioClearSrcMatchExtEntries(otInstance *) { FakePlatform::CurrentPlatform().SrcMatchClearExtEntries(); }
 
 otError otPlatRadioEnergyScan(otInstance *, uint8_t, uint16_t) { return OT_ERROR_NOT_IMPLEMENTED; }
 

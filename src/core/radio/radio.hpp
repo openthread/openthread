@@ -1021,11 +1021,6 @@ inline Error Radio::ClearSrcMatchShortEntry(Mac::ShortAddress aShortAddress)
     return otPlatRadioClearSrcMatchShortEntry(GetInstancePtr(), aShortAddress);
 }
 
-inline Error Radio::ClearSrcMatchExtEntry(const Mac::ExtAddress &aExtAddress)
-{
-    return otPlatRadioClearSrcMatchExtEntry(GetInstancePtr(), &aExtAddress);
-}
-
 inline void Radio::ClearSrcMatchShortEntries(void) { otPlatRadioClearSrcMatchShortEntries(GetInstancePtr()); }
 
 inline void Radio::ClearSrcMatchExtEntries(void) { otPlatRadioClearSrcMatchExtEntries(GetInstancePtr()); }
