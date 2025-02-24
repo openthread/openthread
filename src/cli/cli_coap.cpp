@@ -1074,7 +1074,7 @@ void Coap::HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo
     {
         OutputLine("coap receive response error %d: %s", aError, otThreadErrorToString(aError));
     }
-    else if ((aMessageInfo != nullptr) && (aMessage != nullptr))
+    else
     {
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         otCoapOptionIterator iterator;
