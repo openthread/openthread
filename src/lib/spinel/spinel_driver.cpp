@@ -52,6 +52,10 @@ SpinelDriver::SpinelDriver(void)
     , mSpinelVersionMajor(-1)
     , mSpinelVersionMinor(-1)
     , mIsCoprocessorReady(false)
+#if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+    , mCoprocessorResetFailureCallback(nullptr)
+    , mCoprocessorResetFailureContext(nullptr)
+#endif
 {
     memset(mVersion, 0, sizeof(mVersion));
 
@@ -119,6 +123,15 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+void SpinelDriver::SetCoprocessorResetFailureCallback(otSpinelDriverCoprocessorResetFailureCallback aCallback,
+                                                      void                                         *aContext)
+{
+    mCoprocessorResetFailureCallback = aCallback;
+    mCoprocessorResetFailureContext  = aContext;
+}
+#endif
+
 void SpinelDriver::ResetCoprocessor(bool aSoftwareReset)
 {
     bool hardwareReset;
@@ -129,7 +142,8 @@ void SpinelDriver::ResetCoprocessor(bool aSoftwareReset)
     VerifyOrExit(!mIsCoprocessorReady, resetDone = true);
 #endif
 
-    mWaitingKey = SPINEL_PROP_LAST_STATUS;
+    mIsCoprocessorReady = false;
+    mWaitingKey         = SPINEL_PROP_LAST_STATUS;
 
     if (aSoftwareReset && (SendReset(SPINEL_RESET_STACK) == OT_ERROR_NONE) && (WaitResponse() == OT_ERROR_NONE))
     {
@@ -143,23 +157,20 @@ void SpinelDriver::ResetCoprocessor(bool aSoftwareReset)
     if (hardwareReset)
     {
         SuccessOrExit(WaitResponse());
-    }
-
-    resetDone = true;
-
-    if (hardwareReset)
-    {
+        resetDone = true;
         LogInfo("Hardware reset co-processor successfully");
-    }
-    else
-    {
-        LogInfo("co-processor self reset successfully");
     }
 
 exit:
     if (!resetDone)
     {
         LogCrit("Failed to reset co-processor!");
+#if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+        if (mCoprocessorResetFailureCallback)
+        {
+            mCoprocessorResetFailureCallback(mCoprocessorResetFailureContext);
+        }
+#endif
         DieNow(OT_EXIT_FAILURE);
     }
 }
