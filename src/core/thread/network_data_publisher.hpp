@@ -188,6 +188,12 @@ public:
      */
     void UnpublishDnsSrpService(void) { mDnsSrpServiceEntry.Unpublish(); }
 
+    /** Implements `otNetDataSetDnsSrpServiceMaxDelayToAdd()`. */
+    void SetDnsSrpServiceMaxDelayToAdd(uint32_t aMaxDelayMillis)
+    {
+        mDnsSrpServiceEntry.SetMaxDelayToAdd(aMaxDelayMillis);
+    }
+
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -341,6 +347,7 @@ private:
 
         Entry(void)
             : mState(kNoEntry)
+            , mMaxDelayToAdd(kMaxDelayToAdd)
         {
         }
 
@@ -355,6 +362,7 @@ private:
 
     public:
         bool IsAdded(void) const { return (mState == kAdded); }
+        void SetMaxDelayToAdd(uint32_t aMaxDelayMillis) { mMaxDelayToAdd = aMaxDelayMillis; }
 
     private:
         void               Add(void);
@@ -364,6 +372,7 @@ private:
 
         TimeMilli mUpdateTime;
         State     mState;
+        uint32_t  mMaxDelayToAdd;
     };
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
