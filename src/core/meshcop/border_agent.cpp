@@ -379,18 +379,6 @@ template <> Error BorderAgent::MeshCoPTxtEncoder::AppendTxtEntry<NameData>(const
 
 Error BorderAgent::MeshCoPTxtEncoder::EncodeTxtData(void)
 {
-#if OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1
-    static const char kThreadVersionString[] = "1.1.1";
-#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_2
-    static const char kThreadVersionString[] = "1.2.0";
-#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_3
-    static const char kThreadVersionString[] = "1.3.0";
-#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_3_1
-    static const char kThreadVersionString[] = "1.3.1";
-#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_4
-    static const char kThreadVersionString[] = "1.4.0";
-#endif
-
     Error error = kErrorNone;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     Id id;
@@ -405,7 +393,7 @@ Error BorderAgent::MeshCoPTxtEncoder::EncodeTxtData(void)
 #endif
     SuccessOrExit(error = AppendTxtEntry("nn", Get<NetworkNameManager>().GetNetworkName().GetAsData()));
     SuccessOrExit(error = AppendTxtEntry("xp", Get<ExtendedPanIdManager>().GetExtPanId()));
-    SuccessOrExit(error = AppendTxtEntry("tv", NameData(kThreadVersionString, sizeof(kThreadVersionString) - 1)));
+    SuccessOrExit(error = AppendTxtEntry("tv", NameData(kThreadVersionString, strlen(kThreadVersionString))));
     SuccessOrExit(error = AppendTxtEntry("xa", Get<Mac::Mac>().GetExtAddress()));
 
     state = GetStateBitmap();

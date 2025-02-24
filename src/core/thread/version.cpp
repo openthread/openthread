@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022, The OpenThread Authors.
+ *  Copyright (c) 2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,29 +28,26 @@
 
 /**
  * @file
- *   This file includes definitions for Thread Version.
+ *   This file implements Thread Version.
  */
 
-#ifndef VERSION_HPP_
-#define VERSION_HPP_
-
-#include "openthread-core-config.h"
-
-#include <stdint.h>
+#include "version.hpp"
 
 namespace ot {
 
-constexpr uint16_t kThreadVersion = OPENTHREAD_CONFIG_THREAD_VERSION; ///< Thread Version of this device.
-
-constexpr uint16_t kThreadVersion1p1 = OT_THREAD_VERSION_1_1; ///< Thread Version 1.1
-constexpr uint16_t kThreadVersion1p2 = OT_THREAD_VERSION_1_2; ///< Thread Version 1.2
-constexpr uint16_t kThreadVersion1p3 = OT_THREAD_VERSION_1_3; ///< Thread Version 1.3
+#if OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1
+const char kThreadVersionString[] = "1.1.1";
+#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_2
+const char kThreadVersionString[] = "1.2.0";
+#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_3
+const char kThreadVersionString[] = "1.3.0";
+#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_3_1
 // Support projects on legacy "1.3.1" version, which is now "1.4"
-constexpr uint16_t kThreadVersion1p3p1 = OT_THREAD_VERSION_1_3_1; ///< Thread Version 1.3.1
-constexpr uint16_t kThreadVersion1p4   = OT_THREAD_VERSION_1_4;   ///< Thread Version 1.4
-
-extern const char kThreadVersionString[]; ///< Thread version as human-readable string.
+const char kThreadVersionString[] = "1.4.0";
+#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_4
+const char kThreadVersionString[] = "1.4.0";
+#else
+#error "The `OPENTHREAD_CONFIG_THREAD_VERSION` is not valid or supported"
+#endif
 
 } // namespace ot
-
-#endif // VERSION_HPP_
