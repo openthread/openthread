@@ -63,7 +63,8 @@ jobs:
         cache: pip
     - name: Bootstrap
       run: |
-        sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
+        sudo apt-get --no-install-recommends install -y expect ninja-build lcov
+        sudo bash script/install_socat
         pip install bleak 'cryptography==43.0.0'
     - name: Run RCP Mode
       run: |
@@ -98,7 +99,8 @@ jobs:
       run: |
         sudo apt-get update
         echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
-        sudo apt-get install --no-install-recommends -y bind9-host ntp socat
+        sudo apt-get install --no-install-recommends -y bind9-host ntp
+        sudo bash script/install_socat
         sudo systemctl restart ntp
         sudo socat 'UDP6-LISTEN:53,fork,reuseaddr,bind=[::1]' UDP:127.0.0.53:53 &
         socat 'TCP6-LISTEN:2000,fork,reuseaddr' TCP:127.0.0.53:53 &
@@ -198,7 +200,8 @@ jobs:
     - name: Bootstrap
       run: |
         sudo apt-get update
-        sudo apt-get --no-install-recommends install -y socat expect lcov libreadline-dev net-tools ninja-build
+        sudo apt-get --no-install-recommends install -y expect lcov libreadline-dev net-tools ninja-build
+        sudo bash script/install_socat
         cd /tmp
         wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
         tar xvf bsd-licensed.tar.gz
@@ -258,7 +261,8 @@ jobs:
         rm -f /usr/local/bin/python3-config
         rm -f /usr/local/bin/python3.11-config
         brew update
-        brew install ninja socat
+        brew install ninja
+        sudo bash script/install_socat
     - name: Build
       run: |
         script/check-posix-pty build
@@ -279,7 +283,8 @@ jobs:
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
-        sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
+        sudo apt-get --no-install-recommends install -y expect ninja-build lcov
+        sudo bash script/install_socat
         sudo python3 -m pip install git+https://github.com/openthread/pyspinel
     - name: Build
       run: |
