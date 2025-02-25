@@ -586,13 +586,6 @@ void Mac::UpdateIdleMode(void)
 
     if (shouldSleep)
     {
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (IsCslEnabled())
-        {
-            mLinks.CslSample();
-            ExitNow();
-        }
-#endif
         mLinks.Sleep();
         LogDebg("Idle mode: Radio sleeping");
     }

@@ -484,22 +484,6 @@ public:
 #endif
         return retval;
     }
-
-    /**
-     * Transitions all radios link to CSL sample state, given that a non-zero CSL period is configured.
-     *
-     * CSL sample state is only applicable and used for 15.4 radio link. Other link are transitioned to sleep state
-     * when CSL period is non-zero.
-     */
-    void CslSample(void)
-    {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-        mSubMac.CslSample();
-#endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-        mTrel.Sleep();
-#endif
-    }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE

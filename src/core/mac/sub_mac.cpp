@@ -240,6 +240,24 @@ Error SubMac::Sleep(void)
 {
     Error error = kErrorNone;
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (IsCslEnabled())
+    {
+        CslSample();
+    }
+    else
+#endif
+    {
+        error = RadioSleep();
+    }
+
+    return error;
+}
+
+Error SubMac::RadioSleep(void)
+{
+    Error error = kErrorNone;
+
     VerifyOrExit(ShouldHandleTransitionToSleep());
 
     error = Get<Radio>().Sleep();
