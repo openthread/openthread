@@ -536,6 +536,13 @@ bool otPlatBleSupportsMultiRadio(otInstance *) { return false; }
 
 otError otPlatBleGapAdvSetData(otInstance *, uint8_t *, uint16_t) { return OT_ERROR_NONE; }
 
+OT_TOOL_WEAK otError otPlatRadioAddCalibratedPower(otInstance *, uint8_t, int16_t, const uint8_t *, uint16_t)
+{
+    return OT_ERROR_NONE;
+}
+
+OT_TOOL_WEAK otError otPlatRadioClearCalibratedPowers(otInstance *) { return OT_ERROR_NONE; }
+
 void otPlatSettingsInit(otInstance *, const uint16_t *, uint16_t) {}
 
 void otPlatSettingsDeinit(otInstance *) {}
