@@ -142,7 +142,7 @@ void Server::Enable(void)
 
     // Request publishing of "DNS/SRP Address Service" entry in the
     // Thread Network Data based of `mAddressMode`. Then wait for
-    // callback `HandleNetDataPublisherEntryChange()` from the
+    // callback `HandleNetDataPublisherEvent()` from the
     // `Publisher` to start the SRP server.
 
     switch (mAddressMode)
