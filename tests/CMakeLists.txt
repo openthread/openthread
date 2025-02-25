@@ -27,9 +27,12 @@
 #
 
 option(OT_BUILD_GTEST "enable gtest")
+option(OT_BUILD_UTEST "enable unit test" ON)
 
 if(OT_FTD AND BUILD_TESTING AND (NOT OT_PLATFORM STREQUAL "nexus"))
-    add_subdirectory(unit)
+    if(OT_BUILD_UTEST)
+        add_subdirectory(unit)
+    endif()
     if(OT_BUILD_GTEST)
         add_subdirectory(gtest)
     endif()
