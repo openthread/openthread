@@ -110,6 +110,12 @@ void TestNumUtils(void)
     u32 = 0xfff0000;
     VerifyOrQuit(ClampToUint16(u32) == 0xffff);
 
+    VerifyOrQuit(IsValueInRange<uint8_t>(5, 5, 10));
+    VerifyOrQuit(IsValueInRange<uint8_t>(7, 5, 10));
+    VerifyOrQuit(IsValueInRange<uint8_t>(10, 5, 10));
+    VerifyOrQuit(!IsValueInRange<uint8_t>(4, 5, 10));
+    VerifyOrQuit(!IsValueInRange<uint8_t>(11, 5, 10));
+
     VerifyOrQuit(ThreeWayCompare<uint8_t>(2, 2) == 0);
     VerifyOrQuit(ThreeWayCompare<uint8_t>(2, 1) > 0);
     VerifyOrQuit(ThreeWayCompare<uint8_t>(1, 2) < 0);

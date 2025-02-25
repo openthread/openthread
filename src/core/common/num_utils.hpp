@@ -149,6 +149,25 @@ template <typename IntType> int8_t ClampToInt8(IntType aValue)
 }
 
 /**
+ * This template function checks whether a given value is in a given closed range [min, max].
+ *
+ * Uses `operator<=` to compare the values. The behavior is undefined if the value of @p aMin is greater than @p aMax.
+ *
+ * @tparam Type   The value type.
+ *
+ * @param[in] aValue   The value to check
+ * @param[in] aMin     The minimum value.
+ * @param[in] aMax     The maximum value.
+ *
+ * @retval TRUE  If @p aValue is within `[aMin, aMax]` (inclusive).
+ * @retval FALSE If @p aValue is not within `[aMin, aMax]` (inclusive).
+ */
+template <typename Type> Type IsValueInRange(Type aValue, Type aMin, Type aMax)
+{
+    return (aMin <= aValue) && (aValue <= aMax);
+}
+
+/**
  * This template function performs a three-way comparison between two values.
  *
  * @tparam Type   The value type.
