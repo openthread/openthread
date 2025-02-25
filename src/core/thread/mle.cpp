@@ -349,6 +349,10 @@ void Mle::SetRole(DeviceRole aRole)
         mInitiallyAttachedAsSleepy = !GetDeviceMode().IsRxOnWhenIdle();
     }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    Get<Mac::Mac>().SetCslCapable(IsCslSupported() && !IsRxOnWhenIdle());
+#endif
+
 exit:
     return;
 }
@@ -721,9 +725,6 @@ void Mle::SetStateDetached(void)
     Get<MleRouter>().ClearAlternateRloc16();
     Get<MleRouter>().HandleDetachStart();
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    Get<Mac::Mac>().UpdateCsl();
-#endif
 }
 
 void Mle::SetStateChild(uint16_t aRloc16)
@@ -769,10 +770,6 @@ void Mle::SetStateChild(uint16_t aRloc16)
     }
 
     mPreviousParentRloc = mParent.GetRloc16();
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    Get<Mac::Mac>().UpdateCsl();
-#endif
 }
 
 void Mle::InformPreviousChannel(void)
@@ -1098,6 +1095,8 @@ void Mle::SetCslTimeout(uint32_t aTimeout)
 exit:
     return;
 }
+
+bool Mle::IsCslSupported(void) const { return IsChild() && GetParent().IsThreadVersion1p2OrHigher(); }
 #endif
 
 void Mle::InitNeighbor(Neighbor &aNeighbor, const RxInfo &aRxInfo)
