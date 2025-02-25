@@ -77,6 +77,11 @@ void otNetDataUnpublishDnsSrpService(otInstance *aInstance)
     AsCoreType(aInstance).Get<NetworkData::Publisher>().UnpublishDnsSrpService();
 }
 
+void otNetDataSetDnsSrpServiceMaxDelayToAdd(otInstance *aInstance, uint32_t aMaxDelayMillis)
+{
+    return AsCoreType(aInstance).Get<NetworkData::Publisher>().SetDnsSrpServiceMaxDelayToAdd(aMaxDelayMillis);
+}
+
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
