@@ -752,15 +752,11 @@ public:
     {
     }
 
-    void HandleMeshCoPServiceChanged(const uint8_t *aTxtData, uint16_t aLength)
+    void HandleMeshCoPServiceChanged(void)
     {
         mIsRunning = mBorderAgent.IsRunning();
         mUdpPort   = mBorderAgent.GetUdpPort();
-
-        assert(aLength <= kMaxTxtDataLen);
-
-        memcpy(mTxtData, aTxtData, aLength);
-        mTxtDataLength = aLength;
+        SuccessOrQuit(mBorderAgent.GetMeshCoPServiceTxtData(mTxtData));
     }
 
     bool FindTxtEntry(const char *aKey, TxtEntry &aTxtEntry)
@@ -768,7 +764,7 @@ public:
         bool               found = false;
         TxtEntry::Iterator iter;
 
-        iter.Init(mTxtData, mTxtDataLength);
+        iter.Init(mTxtData.mData, mTxtData.mLength);
         while (iter.GetNextEntry(aTxtEntry) == kErrorNone)
         {
             if (strcmp(aTxtEntry.mKey, aKey) == 0)
@@ -781,18 +777,15 @@ public:
         return found;
     }
 
-    static constexpr uint16_t kMaxTxtDataLen = 128;
-
-    BorderAgent &mBorderAgent;
-    uint8_t      mTxtData[kMaxTxtDataLen];
-    uint16_t     mTxtDataLength;
-    bool         mIsRunning;
-    uint16_t     mUdpPort;
+    BorderAgent                       &mBorderAgent;
+    otBorderAgentMeshCoPServiceTxtData mTxtData;
+    bool                               mIsRunning;
+    uint16_t                           mUdpPort;
 };
 
-static void HandleMeshCoPServiceChanged(const uint8_t *aTxtData, uint16_t aLength, void *aContext)
+static void HandleMeshCoPServiceChanged(void *aContext)
 {
-    static_cast<MeshCoPServiceTester *>(aContext)->HandleMeshCoPServiceChanged(aTxtData, aLength);
+    static_cast<MeshCoPServiceTester *>(aContext)->HandleMeshCoPServiceChanged();
 }
 
 template <typename ObjectType> bool CheckObjectSameAsTxtEntryData(const TxtEntry &aTxtEntry, const ObjectType &aObject)

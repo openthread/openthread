@@ -117,6 +117,17 @@ typedef struct otBorderAgentSessionIterator
     uint64_t mData;
 } otBorderAgentSessionIterator;
 
+#define OT_BORDER_AGENT_MESHCOP_SERVICE_TXT_DATA_MAX_LENGTH 128
+
+/**
+ * Represents the Border Agent MeshCoP Service TXT data.
+ */
+typedef struct otBorderAgentMeshCoPServiceTxtData
+{
+    uint8_t  mData[OT_BORDER_AGENT_MESHCOP_SERVICE_TXT_DATA_MAX_LENGTH];
+    uint16_t mLength;
+} otBorderAgentMeshCoPServiceTxtData;
+
 /**
  * Indicates whether or not the Border Agent service is active and running.
  *
@@ -149,11 +160,9 @@ uint16_t otBorderAgentGetUdpPort(otInstance *aInstance);
  * In specific, the 'state' includes the MeshCoP TXT data originated from the Thread network and whether the
  * Border Agent is Active (which can be obtained by `otBorderAgentIsActive`).
  *
- * @param[in] aTxtData  A pointer to the encoded MeshCoP TXT data originated from the Thread network.
- * @param[in] aLength   The length of the encoded TXT data.
  * @param[in] aContext  A pointer to application-specific context.
  */
-typedef void (*otBorderAgentMeshCoPServiceChangedCallback)(const uint8_t *aTxtData, uint16_t aLength, void *aContext);
+typedef void (*otBorderAgentMeshCoPServiceChangedCallback)(void *aContext);
 
 /**
  * Sets the callback function used by the Border Agent to notify of any changes to the state of the MeshCoP service.
@@ -171,6 +180,17 @@ typedef void (*otBorderAgentMeshCoPServiceChangedCallback)(const uint8_t *aTxtDa
 void otBorderAgentSetMeshCoPServiceChangedCallback(otInstance                                *aInstance,
                                                    otBorderAgentMeshCoPServiceChangedCallback aCallback,
                                                    void                                      *aContext);
+
+/**
+ * Gets the MeshCoP service TXT data.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[out] aTxtData   A pointer to a MeshCoP Service TXT data struct to get the data.
+ *
+ * @retval OT_ERROR_NONE      If successfully retrieved the Border Agent MeshCoP Service TXT data.
+ * @retval OT_ERROR_NO_BUFS   If the buffer in @p aTxtData doesn't have enough size.
+ */
+otError otBorderAgentGetMeshCoPServiceTxtData(otInstance *aInstance, otBorderAgentMeshCoPServiceTxtData *aTxtData);
 
 /**
  * Gets the randomly generated Border Agent ID.
