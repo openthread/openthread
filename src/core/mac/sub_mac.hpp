@@ -518,6 +518,9 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
     void LogReceived(RxFrame *aFrame);
 #endif
+    void HandleCslReceiveAt(uint32_t aTimeAhead, uint32_t aTimeAfter);
+    void HandleCslReceiveOrSleep(uint32_t aTimeAhead, uint32_t aTimeAfter);
+    void LogCslWindow(uint32_t aWinStart, uint32_t aWinDuration);
 #endif
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     void        WedInit(void);
