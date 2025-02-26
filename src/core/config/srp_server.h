@@ -121,6 +121,24 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+ *
+ * The Fast Start Mode is designed for scenarios where a device, often a mobile device, needs to act as a provisional
+ * SRP server (e.g., functioning as a temporary Border Router). The SRP server function is enabled only if no other
+ * Border Routers (BRs) are already providing the SRP service within the Thread network. A common use case is a mobile
+ * device joining a Thread network where it may be the first, or only, BR.  Importantly, Fast Start Mode allows the
+ * device to quickly start its SRP server functionality upon joining the network, allowing other Thread devices to
+ * quickly connect and register their services without the typical delays associated with standard Border Router
+ * initialization (and SRP server startup).
+ *
+ * The Fast Start Mode can be enabled using `otSrpServerEnableFastStartMode()`. More details about behavior and
+ * restrictions are provided in the documentation of this API.
+ */
+#ifndef OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+#define OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE 0
+#endif
+
+/**
  * @}
  */
 
