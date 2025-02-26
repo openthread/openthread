@@ -89,6 +89,9 @@ Server::Server(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     , mAutoEnable(false)
 #endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+    , mFastStartMode(false)
+#endif
 {
     IgnoreError(SetDomain(kDefaultDomain));
 }
@@ -123,6 +126,9 @@ void Server::SetEnabled(bool aEnabled)
 {
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     mAutoEnable = false;
+#endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+    mFastStartMode = false;
 #endif
 
     if (aEnabled)
@@ -209,6 +215,101 @@ exit:
     return;
 }
 #endif
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+Error Server::EnableFastStartMode(void)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!mFastStartMode);
+
+    VerifyOrExit(!Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
+    VerifyOrExit(mState == kStateDisabled, error = kErrorInvalidState);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    VerifyOrExit(!mAutoEnable, error = kErrorInvalidState);
+#endif
+
+    mFastStartMode = true;
+    LogInfo("FastStartMode enabled");
+
+exit:
+    return error;
+}
+
+void Server::HandleNotifierEvents(Events aEvents)
+{
+    VerifyOrExit(mFastStartMode);
+
+    if (mState == kStateDisabled)
+    {
+        VerifyOrExit(aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadNetdataChanged));
+        VerifyOrExit(Get<Mle::Mle>().IsAttached());
+
+        if (!NetDataContainsOtherSrpServers())
+        {
+            LogInfo("FastStartMode - No SRP server in NetData");
+
+            mPrevAddressMode = mAddressMode;
+            IgnoreError(SetAddressMode(kAddressModeUnicastForceAdd));
+            Enable();
+        }
+    }
+    else
+    {
+        VerifyOrExit(aEvents.Contains(kEventThreadNetdataChanged));
+
+        if (NetDataContainsOtherSrpServers())
+        {
+            LogInfo("FastStartMode - New SRP server entry in NetData");
+
+            Disable();
+            IgnoreError(SetAddressMode(mPrevAddressMode));
+        }
+    }
+
+exit:
+    return;
+}
+
+bool Server::NetDataContainsOtherSrpServers(void) const
+{
+    bool                                    contains = false;
+    NetworkData::Service::DnsSrpAnycastInfo anycastInfo;
+    NetworkData::Service::DnsSrpUnicastInfo unicastInfo;
+    NetworkData::Service::Manager::Iterator iterator;
+
+    if (Get<NetworkData::Service::Manager>().FindPreferredDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
+    {
+        contains = true;
+        ExitNow();
+    }
+
+    iterator.Reset();
+
+    if (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(
+            iterator, NetworkData::Service::kAddrInServiceData, unicastInfo) == kErrorNone)
+    {
+        contains = true;
+        ExitNow();
+    }
+
+    iterator.Reset();
+
+    while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(
+               iterator, NetworkData::Service::kAddrInServerData, unicastInfo) == kErrorNone)
+    {
+        if (!Get<Mle::Mle>().HasRloc16(unicastInfo.mRloc16))
+        {
+            contains = true;
+            ExitNow();
+        }
+    }
+
+exit:
+    return contains;
+}
+
+#endif // OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
 
 Server::TtlConfig::TtlConfig(void)
 {
