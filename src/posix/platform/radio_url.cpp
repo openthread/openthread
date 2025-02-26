@@ -49,12 +49,9 @@ const char *otSysGetRadioUrlHelpString(void)
     "Parameters:\n"                                                                                            \
     "    gpio-int-device[=gpio-device-path]\n"                                                                 \
     "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"       \
-    "                                  `I̅N̅T̅` pin. If not specified, `SPI` interface will fall back to\n" \
-    "                                  polling, which is inefficient.\n"                                       \
+    "                                  `I̅N̅T̅` pin.\n"                                                     \
     "    gpio-int-line[=line-offset]\n"                                                                        \
     "                                  The offset index of `I̅N̅T̅` pin for the associated GPIO device.\n"  \
-    "                                  If not specified, `SPI` interface will fall back to polling,\n"         \
-    "                                  which is inefficient.\n"                                                \
     "    gpio-reset-dev[=gpio-device-path]\n"                                                                  \
     "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"       \
     "                                  `R̅E̅S̅` pin.\n"                                                     \

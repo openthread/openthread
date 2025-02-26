@@ -201,7 +201,6 @@ private:
     {
         kMsecPerSec              = 1000,
         kUsecPerMsec             = 1000,
-        kSpiPollPeriodUs         = kMsecPerSec * kUsecPerMsec / 30,
         kSecPerDay               = 60 * 60 * 24,
         kResetHoldOnUsec         = 10 * kUsecPerMsec,
         kImmediateRetryTimeoutUs = 1 * kUsecPerMsec,

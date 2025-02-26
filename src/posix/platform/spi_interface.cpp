@@ -150,16 +150,7 @@ otError SpiInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContex
     mSpiSmallPacketSize = spiSmallPacketSize;
     mSpiAlignAllowance  = spiAlignAllowance;
 
-    if (spiGpioIntDevice != nullptr)
-    {
-        // If the interrupt pin is not set, SPI interface will use polling mode.
-        InitIntPin(spiGpioIntDevice, spiGpioIntLine);
-    }
-    else
-    {
-        LogNote("SPI interface enters polling mode.");
-    }
-
+    InitIntPin(spiGpioIntDevice, spiGpioIntLine);
     InitResetPin(spiGpioResetDevice, spiGpioResetLine);
     InitSpiDev(mRadioUrl.GetPath(), spiMode, spiSpeed);
 
@@ -606,16 +597,12 @@ exit:
     return error;
 }
 
-bool SpiInterface::CheckInterrupt(void)
-{
-    return (mIntGpioValueFd >= 0) ? (GetGpioValue(mIntGpioValueFd) == kGpioIntAssertState) : true;
-}
+bool SpiInterface::CheckInterrupt(void) { return (GetGpioValue(mIntGpioValueFd) == kGpioIntAssertState); }
 
 void SpiInterface::UpdateFdSet(void *aMainloopContext)
 {
-    struct timeval        timeout        = {kSecPerDay, 0};
-    struct timeval        pollingTimeout = {0, kSpiPollPeriodUs};
-    otSysMainloopContext *context        = reinterpret_cast<otSysMainloopContext *>(aMainloopContext);
+    struct timeval        timeout = {kSecPerDay, 0};
+    otSysMainloopContext *context = reinterpret_cast<otSysMainloopContext *>(aMainloopContext);
 
     assert(context != nullptr);
 
@@ -626,31 +613,23 @@ void SpiInterface::UpdateFdSet(void *aMainloopContext)
         timeout.tv_usec = 0;
     }
 
-    if (mIntGpioValueFd >= 0)
+    if (context->mMaxFd < mIntGpioValueFd)
     {
-        if (context->mMaxFd < mIntGpioValueFd)
-        {
-            context->mMaxFd = mIntGpioValueFd;
-        }
-
-        if (CheckInterrupt())
-        {
-            // Interrupt pin is asserted, set the timeout to be 0.
-            timeout.tv_sec  = 0;
-            timeout.tv_usec = 0;
-            LogDebg("UpdateFdSet(): Interrupt.");
-        }
-        else
-        {
-            // The interrupt pin was not asserted, so we wait for the interrupt pin to be asserted by adding it to the
-            // read set.
-            FD_SET(mIntGpioValueFd, &context->mReadFdSet);
-        }
+        context->mMaxFd = mIntGpioValueFd;
     }
-    else if (timercmp(&pollingTimeout, &timeout, <))
+
+    if (CheckInterrupt())
     {
-        // In this case we don't have an interrupt, so we revert to SPI polling.
-        timeout = pollingTimeout;
+        // Interrupt pin is asserted, set the timeout to be 0.
+        timeout.tv_sec  = 0;
+        timeout.tv_usec = 0;
+        LogDebg("UpdateFdSet(): Interrupt.");
+    }
+    else
+    {
+        // The interrupt pin was not asserted, so we wait for the interrupt pin to be asserted by adding it to the
+        // read set.
+        FD_SET(mIntGpioValueFd, &context->mReadFdSet);
     }
 
     if (mSpiTxRefusedCount)
