@@ -107,7 +107,7 @@ exit:
     return;
 }
 
-bool SubMac::UpdateCsl(uint16_t aPeriod, uint8_t aChannel, otShortAddress aShortAddr, const otExtAddress *aExtAddr)
+bool SubMac::UpdateCsl(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr)
 {
     bool diffPeriod  = aPeriod != mCslPeriod;
     bool diffChannel = aChannel != mCslChannel;

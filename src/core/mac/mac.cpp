@@ -2429,7 +2429,7 @@ void Mac::UpdateCsl(void)
     uint8_t  channel = GetCslChannel() ? GetCslChannel() : mRadioChannel;
 
     if (mLinks.UpdateCsl(period, channel, Get<Mle::Mle>().GetParent().GetRloc16(),
-                         &Get<Mle::Mle>().GetParent().GetExtAddress()))
+                         Get<Mle::Mle>().GetParent().GetExtAddress()))
     {
         if (Get<Mle::Mle>().IsChild())
         {

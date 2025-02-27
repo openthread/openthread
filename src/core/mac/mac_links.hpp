@@ -471,7 +471,7 @@ public:
      * @retval  TRUE if CSL Period or CSL Channel changed.
      * @retval  FALSE if CSL Period and CSL Channel did not change.
      */
-    bool UpdateCsl(uint16_t aPeriod, uint8_t aChannel, otShortAddress aShortAddr, const otExtAddress *aExtAddr)
+    bool UpdateCsl(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr)
     {
         bool retval = false;
 
