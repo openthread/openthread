@@ -111,8 +111,11 @@ bool Name::Matches(const char *aFirstLabel, const char *aLabels, const char *aDo
             VerifyOrExit(matches);
         }
 
-        matches = CompareAndSkipLabels(namePtr, aLabels, kLabelSeparatorChar);
-        VerifyOrExit(matches);
+        if (aLabels != nullptr)
+        {
+            matches = CompareAndSkipLabels(namePtr, aLabels, kLabelSeparatorChar);
+            VerifyOrExit(matches);
+        }
 
         matches = CompareAndSkipLabels(namePtr, aDomain, kNullChar);
     }
@@ -125,7 +128,11 @@ bool Name::Matches(const char *aFirstLabel, const char *aLabels, const char *aDo
             SuccessOrExit(CompareLabel(*mMessage, offset, aFirstLabel));
         }
 
-        SuccessOrExit(CompareMultipleLabels(*mMessage, offset, aLabels));
+        if (aLabels != nullptr)
+        {
+            SuccessOrExit(CompareMultipleLabels(*mMessage, offset, aLabels));
+        }
+
         SuccessOrExit(CompareName(*mMessage, offset, aDomain));
         matches = true;
     }
