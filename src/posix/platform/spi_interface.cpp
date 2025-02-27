@@ -127,13 +127,7 @@ otError SpiInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContex
 
     spiGpioIntDevice   = mRadioUrl.GetValue("gpio-int-device");
     spiGpioResetDevice = mRadioUrl.GetValue("gpio-reset-device");
-    if (!spiGpioIntDevice || !spiGpioResetDevice)
-    {
-        DieNow(OT_EXIT_INVALID_ARGUMENTS);
-    }
 
-    SuccessOrDie(mRadioUrl.ParseUint8("gpio-int-line", spiGpioIntLine));
-    SuccessOrDie(mRadioUrl.ParseUint8("gpio-reset-line", spiGpioResetLine));
     VerifyOrDie(mRadioUrl.ParseUint8("spi-mode", spiMode) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie(mRadioUrl.ParseUint32("spi-speed", spiSpeed) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie(mRadioUrl.ParseUint32("spi-reset-delay", spiResetDelay) != OT_ERROR_INVALID_ARGS,
@@ -153,6 +147,7 @@ otError SpiInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContex
     if (spiGpioIntDevice != nullptr)
     {
         // If the interrupt pin is not set, SPI interface will use polling mode.
+        SuccessOrDie(mRadioUrl.ParseUint8("gpio-int-line", spiGpioIntLine));
         InitIntPin(spiGpioIntDevice, spiGpioIntLine);
     }
     else
@@ -160,7 +155,16 @@ otError SpiInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContex
         LogNote("SPI interface enters polling mode.");
     }
 
-    InitResetPin(spiGpioResetDevice, spiGpioResetLine);
+    if (spiGpioResetDevice != nullptr)
+    {
+        SuccessOrDie(mRadioUrl.ParseUint8("gpio-reset-line", spiGpioResetLine));
+        InitResetPin(spiGpioResetDevice, spiGpioResetLine);
+    }
+    else
+    {
+        LogNote("GPIO reset device is not given.");
+    }
+
     InitSpiDev(mRadioUrl.GetPath(), spiMode, spiSpeed);
 
     mReceiveFrameCallback = aCallback;
@@ -310,6 +314,8 @@ exit:
 
 void SpiInterface::TriggerReset(void)
 {
+    VerifyOrDie(mResetGpioValueFd >= 0, OT_EXIT_RCP_RESET_REQUIRED);
+
     // Set Reset pin to low level.
     SetGpioValue(mResetGpioValueFd, 0);
 
