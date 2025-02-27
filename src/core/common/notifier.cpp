@@ -151,6 +151,10 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     Get<Srp::Client>().HandleNotifierEvents(events);
 #endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+    Get<Srp::Server>().HandleNotifierEvents(events);
+#endif
+
 #if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
     // The `NetworkData::Publisher` is notified last (e.g., after SRP
     // client) to allow other modules to request changes to what is
