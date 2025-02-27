@@ -1092,6 +1092,8 @@ void tcplp_sys_on_state_change(struct tcpcb *aTcb, int aNewState)
     if (aNewState == TCP6S_CLOSED)
     {
         /* Re-initialize the TCB. */
+        uint32_t ntraversed;
+        lbuf_pop(&aTcb->sendbuf, lbuf_used_space(&aTcb->sendbuf), &ntraversed);
         cbuf_pop(&aTcb->recvbuf, cbuf_used_space(&aTcb->recvbuf));
         aTcb->accepted_from = nullptr;
         initialize_tcb(aTcb);
