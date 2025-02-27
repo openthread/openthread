@@ -159,8 +159,9 @@ public:
      */
     enum AddressMode : uint8_t
     {
-        kAddressModeUnicast = OT_SRP_SERVER_ADDRESS_MODE_UNICAST, ///< Unicast address mode.
-        kAddressModeAnycast = OT_SRP_SERVER_ADDRESS_MODE_ANYCAST, ///< Anycast address mode.
+        kAddressModeUnicast         = OT_SRP_SERVER_ADDRESS_MODE_UNICAST,          ///< Unicast mode with publisher.
+        kAddressModeAnycast         = OT_SRP_SERVER_ADDRESS_MODE_ANYCAST,          ///< Anycast mode with publisher.
+        kAddressModeUnicastForceAdd = OT_SRP_SERVER_ADDRESS_MODE_UNICAST_FORCE_ADD ///< Unicast - force add.
     };
 
     class Host;

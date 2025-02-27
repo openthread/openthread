@@ -144,6 +144,9 @@ void Server::Enable(void)
     // Thread Network Data based of `mAddressMode`. Then wait for
     // callback `HandleNetDataPublisherEvent()` from the
     // `Publisher` to start the SRP server.
+    //
+    // For `kAddressModeUnicastForceAdd`, directly add the entry
+    // in the Network Data and start.
 
     switch (mAddressMode)
     {
@@ -156,6 +159,14 @@ void Server::Enable(void)
         mPort = kAnycastAddressModePort;
         Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(mAnycastSequenceNumber, kSrpVersion);
         break;
+
+    case kAddressModeUnicastForceAdd:
+        SelectPort();
+        SuccessOrExit(Get<NetworkData::Service::Manager>().AddDnsSrpUnicastServiceWithAddrInServerData(
+            Get<Mle::Mle>().GetMeshLocalEid(), mPort, kSrpVersion));
+        Get<NetworkData::Notifier>().HandleServerDataUpdated();
+        Start();
+        break;
     }
 
 exit:
@@ -165,7 +176,20 @@ exit:
 void Server::Disable(void)
 {
     VerifyOrExit(mState != kStateDisabled);
-    Get<NetworkData::Publisher>().UnpublishDnsSrpService();
+
+    switch (mAddressMode)
+    {
+    case kAddressModeUnicast:
+    case kAddressModeAnycast:
+        Get<NetworkData::Publisher>().UnpublishDnsSrpService();
+        break;
+
+    case kAddressModeUnicastForceAdd:
+        IgnoreError(Get<NetworkData::Service::Manager>().RemoveDnsSrpUnicastServiceWithAddrInServerData());
+        Get<NetworkData::Notifier>().HandleServerDataUpdated();
+        break;
+    }
+
     Stop();
     mState = kStateDisabled;
 
@@ -551,7 +575,8 @@ void Server::CommitSrpUpdate(Error                    aError,
     }
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
-    if (!mHasRegisteredAnyService && (mAddressMode == kAddressModeUnicast))
+    if (!mHasRegisteredAnyService &&
+        ((mAddressMode == kAddressModeUnicast) || (mAddressMode == kAddressModeUnicastForceAdd)))
     {
         Settings::SrpServerInfo info;
 
@@ -1714,8 +1739,9 @@ void Server::HandleOutstandingUpdatesTimer(void)
 const char *Server::AddressModeToString(AddressMode aMode)
 {
     static const char *const kAddressModeStrings[] = {
-        "unicast", // (0) kAddressModeUnicast
-        "anycast", // (1) kAddressModeAnycast
+        "unicast",           // (0) kAddressModeUnicast
+        "anycast",           // (1) kAddressModeAnycast
+        "unicast-force-add", // (2) kAddressModeUnicastForceAdd
     };
 
     struct EnumCheck
@@ -1723,6 +1749,7 @@ const char *Server::AddressModeToString(AddressMode aMode)
         InitEnumValidatorCounter();
         ValidateNextEnum(kAddressModeUnicast);
         ValidateNextEnum(kAddressModeAnycast);
+        ValidateNextEnum(kAddressModeUnicastForceAdd);
     };
 
     return kAddressModeStrings[aMode];
