@@ -151,6 +151,13 @@ void BorderAgent::SetMeshCoPServiceChangedCallback(MeshCoPServiceChangedCallback
     mNotifyMeshCoPServiceChangedTask.Post();
 }
 
+Error BorderAgent::GetMeshCoPServiceTxtData(MeshCoPServiceTxtData &aTxtData) const
+{
+    MeshCoPTxtEncoder meshCoPTxtEncoder(GetInstance(), aTxtData);
+
+    return meshCoPTxtEncoder.EncodeTxtData();
+}
+
 void BorderAgent::HandleNotifierEvents(Events aEvents)
 {
     if (aEvents.Contains(kEventThreadRoleChanged))
@@ -340,18 +347,7 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-void BorderAgent::NotifyMeshCoPServiceChanged(void)
-{
-    MeshCoPTxtEncoder meshCoPTxtEncoder(GetInstance());
-
-    VerifyOrExit(mMeshCoPServiceChangedCallback.IsSet());
-    SuccessOrAssert(meshCoPTxtEncoder.EncodeTxtData());
-
-    mMeshCoPServiceChangedCallback.Invoke(meshCoPTxtEncoder.GetTxtData(), meshCoPTxtEncoder.GetTxtDataLen());
-
-exit:
-    return;
-}
+void BorderAgent::NotifyMeshCoPServiceChanged(void) { mMeshCoPServiceChangedCallback.InvokeIfSet(); }
 
 void BorderAgent::PostNotifyMeshCoPServiceChangedTask(void)
 {
@@ -415,6 +411,7 @@ Error BorderAgent::MeshCoPTxtEncoder::EncodeTxtData(void)
 #if OTBR_ENABLE_BORDER_ROUTING
     SuccessOrExit(error = AppendOmrTxtEntry());
 #endif
+    mTxtData.mLength = mAppender.GetAppendedLength();
 
 exit:
     return error;
