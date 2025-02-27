@@ -64,9 +64,9 @@ namespace Utils {
  * Channel Monitoring will periodically monitor all channels to help determine the cleaner channels (channels
  * with less interference).
  *
- * When Channel Monitoring is active, every `kSampleInterval`, a zero-duration Energy Scan is performed on every
- * channel collecting a single RSSI  sample per channel. The RSSI samples are compared with a pre-specified RSSI
- * threshold `kRssiThreshold`. As an indicator of channel quality, the `ChannelMonitor` maintains and provides the
+ * When Channel Monitoring is active, every `kSampleInterval`, an `kScanDuration`-duration Energy Scan
+ * is performed on every channel. The RSSI samples are compared with a pre-specified RSSI threshold 
+ * `kRssiThreshold`. As an indicator of channel quality, the `ChannelMonitor` maintains and provides the
  * average rate/percentage of RSSI samples that are above the threshold within (approximately) a specified sample
  * window (referred to as "channel occupancy").
  */
@@ -90,6 +90,10 @@ public:
      */
     static constexpr uint32_t kSampleWindow = OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_WINDOW;
 
+    /**
+     * The duration to request when conducting an Energy Scan.
+     */
+    static constexpr uint32_t kScanDuration = OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENERGY_SCAN_DURATION;
     /**
      * Initializes the object.
      *

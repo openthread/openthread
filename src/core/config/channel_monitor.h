@@ -71,8 +71,8 @@
  *
  * The sample interval in milliseconds used by Channel Monitoring feature.
 
- * When enabled, a zero-duration Energy Scan is performed, collecting a single RSSI sample per channel during each
- * interval.
+ * When enabled, an Energy Scan is performed during each interval with a duration defined by
+ * `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENERGY_SCAN_DURATION`.
  *
  * Applicable only if Channel Monitoring feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is set).
  */
@@ -110,6 +110,17 @@
 #define OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_WINDOW 960
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENERGY_SCAN_DURATION
+ *
+ * The scan duration to use when performing an Energy Scan while monitoring channels. When set to 0, collect a
+ * single RSSI sample per channel.
+ *
+ * Applicable only if Channel Monitoring feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is set).
+ */
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENERGY_SCAN_DURATION
+#define OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENERGY_SCAN_DURATION 0
+#endif
 /**
  * @}
  */

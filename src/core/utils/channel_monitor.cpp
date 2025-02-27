@@ -113,7 +113,7 @@ exit:
 
 void ChannelMonitor::HandleTimer(void)
 {
-    IgnoreError(Get<Mac::Mac>().EnergyScan(mScanChannelMasks[mChannelMaskIndex], 0,
+    IgnoreError(Get<Mac::Mac>().EnergyScan(mScanChannelMasks[mChannelMaskIndex], kScanDuration,
                                            &ChannelMonitor::HandleEnergyScanResult, this));
 
     mTimer.StartAt(mTimer.GetFireTime(), Random::NonCrypto::AddJitter(kTimerInterval, kMaxJitterInterval));
