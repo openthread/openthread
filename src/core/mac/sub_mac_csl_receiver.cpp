@@ -138,17 +138,24 @@ void SubMac::HandleCslTimer(Timer &aTimer) { aTimer.Get<SubMac>().HandleCslTimer
 
 void SubMac::HandleCslTimer(void)
 {
+    uint32_t timeAhead, timeAfter;
+
+    GetCslWindowEdges(timeAhead, timeAfter);
+
+    // The handler works in different ways when the radio supports receive-timing and doesn't.
+    if (RadioSupportsReceiveTiming())
+    {
+        HandleCslReceiveAt(timeAhead, timeAfter);
+    }
+    else
+    {
+        HandleCslReceiveOrSleep(timeAhead, timeAfter);
+    }
+}
+
+void SubMac::HandleCslReceiveAt(uint32_t aTimeAhead, uint32_t aTimeAfter)
+{
     /*
-     * CSL sample timing diagram
-     *    |<---------------------------------Sample--------------------------------->|<--------Sleep--------->|
-     *    |                                                                          |                        |
-     *    |<--Ahead-->|<--UnCert-->|<--Drift-->|<--Drift-->|<--UnCert-->|<--MinWin-->|                        |
-     *    |           |            |           |           |            |            |                        |
-     * ---|-----------|------------|-----------|-----------|------------|------------|----------//------------|---
-     * -timeAhead                           CslPhase                             +timeAfter             -timeAhead
-     *
-     * The handler works in different ways when the radio supports receive-timing and doesn't.
-     *
      * When the radio supports receive-timing:
      *   The handler will be called once per CSL period. When the handler is called, it will set the timer to
      *   fire at the next CSL sample time and call `Radio::ReceiveAt` to start sampling for the current CSL period.
@@ -161,7 +168,32 @@ void SubMac::HandleCslTimer(void)
      *       ^                                                    ^
      *       x-|------------|-------------------------------------x-|------------|---------------------------------------|
      *            sample                   sleep                        sample                    sleep
-     *
+     */
+    uint32_t periodUs = mCslPeriod * kUsPerTenSymbols;
+    uint32_t winStart;
+    uint32_t winDuration;
+
+    mCslTimer.FireAt(mCslSampleTime - aTimeAhead + periodUs);
+    aTimeAhead -= kCslReceiveTimeAhead;
+    winStart    = mCslSampleTime.GetValue() - aTimeAhead;
+    winDuration = aTimeAhead + aTimeAfter;
+    mCslSampleTime += periodUs;
+
+    Get<Radio>().UpdateCslSampleTime(mCslSampleTime.GetValue());
+
+    // Schedule reception window for any state except RX - so that CSL RX Window has lower priority
+    // than scanning or RX after the data poll.
+    if ((mState != kStateDisabled) && (mState != kStateReceive))
+    {
+        IgnoreError(Get<Radio>().ReceiveAt(mCslChannel, winStart, winDuration));
+    }
+
+    LogCslWindow(winStart, winDuration);
+}
+
+void SubMac::HandleCslReceiveOrSleep(uint32_t aTimeAhead, uint32_t aTimeAfter)
+{
+    /*
      * When the radio doesn't support receive-timing:
      *   The handler will be called twice per CSL period: at the beginning of sample and sleep. When the handler is
      *   called, it will explicitly change the radio state due to the current state by calling `Radio::Receive` or
@@ -172,15 +204,11 @@ void SubMac::HandleCslTimer(void)
      *       |------------|---------------------------------------|------------|---------------------------------------|
      *          sample                   sleep                        sample                    sleep
      */
-    uint32_t periodUs = mCslPeriod * kUsPerTenSymbols;
-    uint32_t timeAhead, timeAfter, winStart, winDuration;
-
-    GetCslWindowEdges(timeAhead, timeAfter);
 
     if (mIsCslSampling)
     {
         mIsCslSampling = false;
-        mCslTimer.FireAt(mCslSampleTime - timeAhead);
+        mCslTimer.FireAt(mCslSampleTime - aTimeAhead);
         if (mState == kStateCslSample)
         {
 #if !OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
@@ -191,41 +219,38 @@ void SubMac::HandleCslTimer(void)
     }
     else
     {
-        if (RadioSupportsReceiveTiming())
-        {
-            mCslTimer.FireAt(mCslSampleTime - timeAhead + periodUs);
-            timeAhead -= kCslReceiveTimeAhead;
-            winStart = mCslSampleTime.GetValue() - timeAhead;
-        }
-        else
-        {
-            mCslTimer.FireAt(mCslSampleTime + timeAfter);
-            mIsCslSampling = true;
-            winStart       = ot::TimerMicro::GetNow().GetValue();
-        }
+        uint32_t periodUs = mCslPeriod * kUsPerTenSymbols;
+        uint32_t winStart;
+        uint32_t winDuration;
 
-        winDuration = timeAhead + timeAfter;
+        mCslTimer.FireAt(mCslSampleTime + aTimeAfter);
+        mIsCslSampling = true;
+        winStart       = TimerMicro::GetNow().GetValue();
+        winDuration    = aTimeAhead + aTimeAfter;
         mCslSampleTime += periodUs;
 
         Get<Radio>().UpdateCslSampleTime(mCslSampleTime.GetValue());
-
-        // Schedule reception window for any state except RX - so that CSL RX Window has lower priority
-        // than scanning or RX after the data poll.
-        if (RadioSupportsReceiveTiming() && (mState != kStateDisabled) && (mState != kStateReceive))
-        {
-            IgnoreError(Get<Radio>().ReceiveAt(mCslChannel, winStart, winDuration));
-        }
-        else if (mState == kStateCslSample)
+        if (mState == kStateCslSample)
         {
             IgnoreError(Get<Radio>().Receive(mCslChannel));
         }
 
-        LogDebg("CSL window start %lu, duration %lu", ToUlong(winStart), ToUlong(winDuration));
+        LogCslWindow(winStart, winDuration);
     }
 }
 
 void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
 {
+    /*
+     * CSL sample timing diagram
+     *    |<---------------------------------Sample--------------------------------->|<--------Sleep--------->|
+     *    |                                                                          |                        |
+     *    |<--Ahead-->|<--UnCert-->|<--Drift-->|<--Drift-->|<--UnCert-->|<--MinWin-->|                        |
+     *    |           |            |           |           |            |            |                        |
+     * ---|-----------|------------|-----------|-----------|------------|------------|----------//------------|---
+     * -timeAhead                           CslPhase                             +timeAfter             -timeAhead
+     *
+     */
     uint32_t semiPeriod = mCslPeriod * kUsPerTenSymbols / 2;
     uint32_t curTime, elapsed, semiWindow;
 
@@ -253,6 +278,15 @@ uint32_t SubMac::GetLocalTime(void)
 
     return now;
 }
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
+void SubMac::LogCslWindow(uint32_t aWinStart, uint32_t aWinDuration)
+{
+    LogDebg("CSL window start %lu, duration %lu", ToUlong(aWinStart), ToUlong(aWinDuration));
+}
+#else
+void SubMac::LogCslWindow(uint32_t, uint32_t) {}
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
 void SubMac::LogReceived(RxFrame *aFrame)
