@@ -126,6 +126,15 @@ public:
     Time operator+(uint32_t aDuration) const { return Time(mValue + aDuration); }
 
     /**
+     * Returns a new `Time` which is ahead of this `Time` object by a given `Time`.
+     *
+     * @param[in]   aOther  A `Time` instance to subtract from.
+     *
+     * @returns A new `Time` which is behind this object by @aOther.
+     */
+    Time operator+(const Time &aOther) const { return Time(mValue + aOther.mValue); }
+
+    /**
      * Returns a new `Time` which is behind this `Time` object by a given duration.
      *
      * @param[in]   aDuration  A duration.

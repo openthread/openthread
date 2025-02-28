@@ -126,6 +126,11 @@ bool SubMac::UpdateCsl(uint16_t aPeriod, uint8_t aChannel, otShortAddress aShort
     if (mCslPeriod > 0)
     {
         mCslSampleTime = TimeMicro(static_cast<uint32_t>(Get<Radio>().GetNow()));
+
+        // The radio time and CslTimer may use different time sources, an offset is stored to calculate the CslTimer
+        // time from `mCslSampleTime` when the CslTimer starts.
+        mCslTimeOffset = TimeMicro(TimerMicro::GetNow() - mCslSampleTime);
+
         mIsCslSampling = false;
         HandleCslTimer();
     }
@@ -180,7 +185,7 @@ void SubMac::HandleCslTimer(void)
     if (mIsCslSampling)
     {
         mIsCslSampling = false;
-        mCslTimer.FireAt(mCslSampleTime - timeAhead);
+        mCslTimer.FireAt(mCslSampleTime + mCslTimeOffset - timeAhead);
         if (mState == kStateCslSample)
         {
 #if !OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
@@ -193,13 +198,13 @@ void SubMac::HandleCslTimer(void)
     {
         if (RadioSupportsReceiveTiming())
         {
-            mCslTimer.FireAt(mCslSampleTime - timeAhead + periodUs);
+            mCslTimer.FireAt(mCslSampleTime + mCslTimeOffset - timeAhead + periodUs);
             timeAhead -= kCslReceiveTimeAhead;
             winStart = mCslSampleTime.GetValue() - timeAhead;
         }
         else
         {
-            mCslTimer.FireAt(mCslSampleTime + timeAfter);
+            mCslTimer.FireAt(mCslSampleTime + mCslTimeOffset + timeAfter);
             mIsCslSampling = true;
             winStart       = ot::TimerMicro::GetNow().GetValue();
         }

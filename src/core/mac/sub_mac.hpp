@@ -670,6 +670,7 @@ private:
     uint16_t    mCslPeerShort;      // The CSL peer short address.
     TimeMicro   mCslSampleTime;     // The CSL sample time of the current period relative to the local radio clock.
     TimeMicro   mCslLastSync;       // The timestamp of the last successful CSL synchronization.
+    TimeMicro   mCslTimeOffset;     // The time offset between the radio time and the Micro timer time.
     CslAccuracy mCslParentAccuracy; // The parent's CSL accuracy (clock accuracy and uncertainty).
     TimerMicro  mCslTimer;
 #endif
