@@ -33,6 +33,7 @@ auto
 disable
 domain
 enable
+faststart
 help
 host
 lease
@@ -126,6 +127,29 @@ Enable the SRP server.
 
 ```bash
 > srp server enable
+Done
+```
+
+### faststart
+
+Usage: `srp server faststart [enable]`
+
+This command requires that `OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE` be enabled.
+
+Enables the "Fast Start Mode" on the SRP server.
+
+The Fast Start Mode is designed for scenarios where a device, often a mobile device, needs to act as a provisional SRP server (e.g., functioning as a temporary Border Router). The SRP server function is enabled only if no other Border Routers (BRs) are already providing the SRP service within the Thread network. Importantly, Fast Start Mode allows the device to quickly start its SRP server functionality upon joining the network, allowing other Thread devices to quickly connect and register their services without the typical delays associated with standard Border Router initialization (and SRP server startup).
+
+The Fast Start Mode can be enabled when the device is in the detached or disabled state, the SRP server is currently disabled, and "auto-enable mode" is not in use.
+
+After successfully enabling Fast Start Mode, it can be disabled by a direct command to enable/disable the SRP server, using `srp server [enable/disable]`.
+
+```bash
+> srp server faststart enable
+Done
+
+> srp server faststart
+Enabled
 Done
 ```
 

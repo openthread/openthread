@@ -90,6 +90,18 @@ bool otSrpServerIsAutoEnableMode(otInstance *aInstance)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+otError otSrpServerEnableFastStartMode(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Srp::Server>().EnableFastStartMode();
+}
+
+bool otSrpServerIsFastStartmodeEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Srp::Server>().IsFastStartModeEnabled();
+}
+#endif
+
 void otSrpServerGetTtlConfig(otInstance *aInstance, otSrpServerTtlConfig *aTtlConfig)
 {
     AsCoreType(aInstance).Get<Srp::Server>().GetTtlConfig(AsCoreType(aTtlConfig));

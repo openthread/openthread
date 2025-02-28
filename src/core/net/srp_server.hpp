@@ -109,6 +109,7 @@ class AdvertisingProxy;
  */
 class Server : public InstanceLocator, private NonCopyable
 {
+    friend class ot::Notifier;
     friend class NetworkData::Publisher;
     friend class UpdateMetadata;
     friend class Service;
@@ -762,6 +763,34 @@ public:
     bool IsAutoEnableMode(void) const { return mAutoEnable; }
 #endif
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+    /**
+     * Enables the "Fast Start Mode" on the SRP server.
+     *
+     * The Fast Start Mode is designed for scenarios where a device, often a mobile device, needs to act as a
+     * provisional SRP server (e.g., functioning as a temporary Border Router). The SRP server function is enabled only
+     * if no other Border Routers (BRs) are already providing the SRP service within the Thread network. A common use
+     * case is a mobile device joining a Thread network where it may be the first, or only, BR.  Importantly, Fast
+     * Start Mode allows the device to quickly start its SRP server functionality upon joining the network, allowing
+     * other Thread devices to quickly connect and register their services without the typical delays associated with
+     * standard Border Router initialization (and SRP server startup).
+     *
+     * Please refer to `otSrpServerEnableFastStartMode()` for more details.
+     *
+     * @retval kErrorNone           Fast Start Mode was successfully enabled.
+     * @retval kErrorInvalidState   Cannot enable Fast Start Mode (e.g., already attached or server already enabled).
+     */
+    Error EnableFastStartMode(void);
+
+    /**
+     * Indicates whether the Fast Start Mode is enabled or disabled.
+     *
+     * @retval TRUE   The fast-start mode is enabled.
+     * @retval FALSE  The fast-start mode is disabled.
+     */
+    bool IsFastStartModeEnabled(void) const { return mFastStartMode; }
+#endif
+
     /**
      * Returns the TTL configuration.
      *
@@ -919,6 +948,11 @@ private:
     Error HandleDnssdServerUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+    void HandleNotifierEvents(Events aEvents);
+    bool NetDataContainsOtherSrpServers(void) const;
+#endif
+
     void HandleNetDataPublisherEvent(NetworkData::Publisher::Event aEvent);
 
     ServiceUpdateId AllocateServiceUpdateId(void) { return mServiceUpdateId++; }
@@ -1012,6 +1046,11 @@ private:
     bool            mHasRegisteredAnyService : 1;
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     bool mAutoEnable : 1;
+#endif
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+    bool        mFastStartMode : 1;
+    AddressMode mPrevAddressMode;
 #endif
 
     otSrpServerResponseCounters mResponseCounters;
