@@ -117,7 +117,7 @@ void NcpBase::HandleParentResponseInfo(const otThreadParentResponseInfo &aInfo)
 exit:
     return;
 }
-#endif
+#endif // OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
 
 void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aEntry)
 {
@@ -189,6 +189,21 @@ exit:
         mUpdateChangedPropsTask.Post();
     }
 }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+
+void NcpBase::HandleBorderAgentMeshCoPServiceChanged(void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleBorderAgentMeshCoPServiceChanged();
+}
+
+void NcpBase::HandleBorderAgentMeshCoPServiceChanged(void)
+{
+    mChangedPropsSet.AddProperty(SPINEL_PROP_BORDER_AGENT_MESHCOP_SERVICE_STATE);
+    mUpdateChangedPropsTask.Post();
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Handlers
@@ -1632,6 +1647,24 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_BORDER_AGENT_MESHCOP_SERVICE_STATE>(void)
+{
+    otError                            error = OT_ERROR_NONE;
+    otBorderAgentMeshCoPServiceTxtData txtData;
+
+    SuccessOrExit(error = otBorderAgentGetMeshCoPServiceTxtData(mInstance, &txtData));
+    SuccessOrExit(error = mEncoder.WriteBool(otBorderAgentIsActive(mInstance)));
+    SuccessOrExit(error = mEncoder.WriteUint16(otBorderAgentGetUdpPort(mInstance)));
+    SuccessOrExit(error = mEncoder.WriteData(txtData.mData, txtData.mLength));
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 } // namespace Ncp
 } // namespace ot
