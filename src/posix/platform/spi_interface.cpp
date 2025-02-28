@@ -128,6 +128,8 @@ otError SpiInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContex
     spiGpioIntDevice   = mRadioUrl.GetValue("gpio-int-device");
     spiGpioResetDevice = mRadioUrl.GetValue("gpio-reset-device");
 
+    VerifyOrDie(spiGpioIntDevice, OT_EXIT_INVALID_ARGUMENTS);
+    SuccessOrDie(mRadioUrl.ParseUint8("gpio-int-line", spiGpioIntLine));
     VerifyOrDie(mRadioUrl.ParseUint8("spi-mode", spiMode) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie(mRadioUrl.ParseUint32("spi-speed", spiSpeed) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie(mRadioUrl.ParseUint32("spi-reset-delay", spiResetDelay) != OT_ERROR_INVALID_ARGS,
