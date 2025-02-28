@@ -52,7 +52,7 @@ const char *otSysGetRadioUrlHelpString(void)
     "                                  `I̅N̅T̅` pin.\n"                                                     \
     "    gpio-int-line[=line-offset]\n"                                                                        \
     "                                  The offset index of `I̅N̅T̅` pin for the associated GPIO device.\n"  \
-    "    gpio-reset-dev[=gpio-device-path]\n"                                                                  \
+    "    gpio-reset-device[=gpio-device-path]\n"                                                               \
     "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"       \
     "                                  `R̅E̅S̅` pin.\n"                                                     \
     "    gpio-reset-line[=line-offset]"                                                                        \
