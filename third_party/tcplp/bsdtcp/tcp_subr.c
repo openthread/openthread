@@ -91,6 +91,16 @@ tcp_state_change(struct tcpcb *tp, int newstate)
 #endif
 }
 
+/*
+ * Similar to tcp_state_change, but does not call tcplp_sys_on_state_change because it initializes tcpcb.
+ */
+void
+tcp_state_change_no_init(struct tcpcb *tp, int newstate)
+{
+	tcplp_sys_log("Socket %p: %s --> %s", tp, tcpstates[tp->t_state], tcpstates[newstate]);
+	tp->t_state = newstate;
+}
+
  /* samkumar: Based on tcp_newtcb in tcp_subr.c, and tcp_usr_attach in tcp_usrreq.c. */
 void initialize_tcb(struct tcpcb* tp) {
 	uint32_t ticks = tcplp_sys_get_ticks();
@@ -352,7 +362,7 @@ struct tcpcb *
 tcp_drop(struct tcpcb *tp, int errnum)
 {
 	if (TCPS_HAVERCVDSYN(tp->t_state)) {
-		tcp_state_change(tp, TCPS_CLOSED);
+		tcp_state_change_no_init(tp, TCP6S_CLOSED);
 		(void) tcplp_output(tp);
 	}
 	if (errnum == ETIMEDOUT && tp->t_softerror)
