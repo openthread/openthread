@@ -88,6 +88,10 @@ enum
      */
     OT_EXIT_INVALID_STATE = 7,
 
+    /**
+     * RCP chip reset is not able to be done by OT
+     */
+    OT_EXIT_RCP_RESET_REQUIRED = 8,
 };
 
 /**
