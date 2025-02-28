@@ -937,6 +937,25 @@ struct DnsMessage : public Allocatable<DnsMessage>, public LinkedListEntry<DnsMe
 
         VerifyOrQuit(mQuestions.Contains(ResourceRecord::kTypeAaaa, fullName));
     }
+
+    void ValidateAsQueryFor(const Core::RecordQuerier &aQuerier) const
+    {
+        DnsNameString fullName;
+
+        VerifyOrQuit(mHeader.GetType() == Header::kTypeQuery);
+        VerifyOrQuit(!mHeader.IsTruncationFlagSet());
+
+        if (aQuerier.mNextLabels == nullptr)
+        {
+            fullName.Append("%s.local.", aQuerier.mFirstLabel);
+        }
+        else
+        {
+            fullName.Append("%s.%s.local.", aQuerier.mFirstLabel, aQuerier.mNextLabels);
+        }
+
+        VerifyOrQuit(mQuestions.Contains(aQuerier.mRecordType, fullName));
+    }
 };
 
 struct RegCallback
@@ -1355,6 +1374,59 @@ static void SendHostAddrResponse(const char *aHostName,
     otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
 }
 
+struct RecordData
+{
+    const uint8_t *mData;
+    uint16_t       mLength;
+    uint32_t       mTtl;
+};
+
+static void SendRecordResponse(const char       *aName,
+                               uint16_t          aRecordType,
+                               bool              aCacheFlush,
+                               uint16_t          aNumRecords,
+                               const RecordData *aRecords)
+{
+    Message          *message;
+    Header            header;
+    ResourceRecord    rr;
+    Core::AddressInfo senderAddrInfo;
+
+    message = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
+    VerifyOrQuit(message != nullptr);
+
+    header.Clear();
+    header.SetType(Header::kTypeResponse);
+    header.SetAnswerCount(aNumRecords);
+
+    SuccessOrQuit(message->Append(header));
+
+    for (uint16_t index = 0; index < aNumRecords; index++)
+    {
+        SuccessOrQuit(Name::AppendName(aName, *message));
+
+        rr.Init(aRecordType);
+
+        if (aCacheFlush)
+        {
+            rr.SetClass(rr.GetClass() | kClassCacheFlushFlag);
+        }
+
+        rr.SetTtl(aRecords[index].mTtl);
+        rr.SetLength(aRecords[index].mLength);
+        SuccessOrQuit(message->Append(rr));
+        SuccessOrQuit(message->AppendBytes(aRecords[index].mData, aRecords[index].mLength));
+    }
+
+    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    senderAddrInfo.mPort         = kMdnsPort;
+    senderAddrInfo.mInfraIfIndex = 0;
+
+    Log("Sending record %u response for %s, num-records %u", aRecordType, aName, aNumRecords);
+
+    otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
+}
+
 static void SendResponseWithEmptyKey(const char *aName, Section aSection)
 {
     Message          *message;
@@ -1674,6 +1746,7 @@ Core *InitTest(void)
 
 static const uint8_t kKey1[]         = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77};
 static const uint8_t kKey2[]         = {0x12, 0x34, 0x56};
+static const uint8_t kKey3[]         = {0xaa, 0xbb, 0xcc, 0xdd};
 static const uint8_t kTxtData1[]     = {3, 'a', '=', '1', 0};
 static const uint8_t kTxtData2[]     = {1, 'b', 0};
 static const uint8_t kEmptyTxtData[] = {0};
@@ -4848,10 +4921,29 @@ struct AddrCallback : public Allocatable<AddrCallback>, public LinkedListEntry<A
     uint16_t      mNumAddrs;
 };
 
+struct RecordCallback : public Allocatable<RecordCallback>, public LinkedListEntry<RecordCallback>
+{
+    static constexpr uint16_t kMaxRecordDataLength = 256;
+
+    template <uint16_t kSize> bool MatchesData(const uint8_t (&aData)[kSize]) const
+    {
+        return (mRecordDataLength == kSize) && (memcmp(mRecordData, aData, kSize) == 0);
+    }
+
+    RecordCallback *mNext;
+    DnsName         mFirstLabel;
+    DnsName         mNextLabels;
+    uint16_t        mRecordType;
+    uint8_t         mRecordData[kMaxRecordDataLength];
+    uint16_t        mRecordDataLength;
+    uint32_t        mTtl;
+};
+
 OwningList<BrowseCallback> sBrowseCallbacks;
 OwningList<SrvCallback>    sSrvCallbacks;
 OwningList<TxtCallback>    sTxtCallbacks;
 OwningList<AddrCallback>   sAddrCallbacks;
+OwningList<RecordCallback> sRecordCallbacks;
 
 void HandleBrowseResult(otInstance *aInstance, const otMdnsBrowseResult *aResult)
 {
@@ -5005,6 +5097,41 @@ void HandleAddrResultAlternate(otInstance *aInstance, const otMdnsAddressResult 
 {
     Log("Alternate addr callback is called");
     HandleAddrResult(aInstance, aResult);
+}
+
+void HandleRecordResult(otInstance *aInstance, const otMdnsRecordResult *aResult)
+{
+    RecordCallback *entry;
+
+    VerifyOrQuit(aInstance == sInstance);
+    VerifyOrQuit(aResult != nullptr);
+    VerifyOrQuit(aResult->mFirstLabel != nullptr);
+    VerifyOrQuit(aResult->mRecordData != nullptr);
+    VerifyOrQuit(aResult->mInfraIfIndex == kInfraIfIndex);
+
+    VerifyOrQuit(aResult->mRecordDataLength <= RecordCallback::kMaxRecordDataLength);
+
+    Log("Record callback: %s %s type:%u -> rlen:%u ttl:%lu", aResult->mFirstLabel,
+        (aResult->mNextLabels != nullptr) ? aResult->mNextLabels : "(null)", aResult->mRecordType,
+        aResult->mRecordDataLength, ToUlong(aResult->mTtl));
+
+    entry = RecordCallback::Allocate();
+    VerifyOrQuit(entry != nullptr);
+
+    entry->mFirstLabel.CopyFrom(aResult->mFirstLabel);
+    entry->mNextLabels.CopyFrom(aResult->mNextLabels);
+    entry->mRecordType       = aResult->mRecordType;
+    entry->mRecordDataLength = aResult->mRecordDataLength;
+    memcpy(entry->mRecordData, aResult->mRecordData, aResult->mRecordDataLength);
+    entry->mTtl = aResult->mTtl;
+
+    sRecordCallbacks.PushAfterTail(*entry);
+}
+
+void HandleRecordResultAlternate(otInstance *aInstance, const otMdnsRecordResult *aResult)
+{
+    Log("Alternate record callback is called");
+    HandleRecordResult(aInstance, aResult);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -6745,6 +6872,462 @@ void TestIp6AddrResolver(void)
     testFreeInstance(sInstance);
 }
 
+void TestRecordQuerier(void)
+{
+    static constexpr uint8_t kMaxResponseRecords = 4;
+
+    Core                 *mdns = InitTest();
+    Core::RecordQuerier   querier;
+    Core::RecordQuerier   querier2;
+    Core::Iterator       *iterator;
+    Core::CacheInfo       cacheInfo;
+    const DnsMessage     *dnsMsg;
+    const RecordCallback *recordCallback;
+    uint16_t              heapAllocations;
+    RecordData            records[kMaxResponseRecords];
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("TestRecordQuerier");
+
+    AdvanceTime(1);
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start a record querier. Validate initial queries.");
+
+    ClearAllBytes(querier);
+
+    querier.mFirstLabel   = "mysrv";
+    querier.mNextLabels   = "_srv._udp";
+    querier.mRecordType   = ResourceRecord::kTypeKey;
+    querier.mInfraIfIndex = kInfraIfIndex;
+    querier.mCallback     = HandleRecordResult;
+
+    sDnsMessages.Clear();
+    SuccessOrQuit(mdns->StartRecordQuerier(querier));
+
+    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    {
+        sDnsMessages.Clear();
+
+        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(querier);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    sDnsMessages.Clear();
+
+    AdvanceTime(20 * 1000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response. Validate callback result.");
+
+    records[0].mData   = kKey1;
+    records[0].mLength = sizeof(kKey1);
+    records[0].mTtl    = 120;
+
+    sRecordCallbacks.Clear();
+    SendRecordResponse("mysrv._srv._udp.local.", ResourceRecord::kTypeKey, /* aCacheFlush */ false, 1, records);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sRecordCallbacks.IsEmpty());
+    recordCallback = sRecordCallbacks.GetHead();
+    VerifyOrQuit(recordCallback->mFirstLabel.Matches("mysrv"));
+    VerifyOrQuit(recordCallback->mNextLabels.Matches("_srv._udp"));
+    VerifyOrQuit(recordCallback->mRecordType == ResourceRecord::kTypeKey);
+    VerifyOrQuit(recordCallback->MatchesData(kKey1));
+    VerifyOrQuit(recordCallback->mTtl == 120);
+    VerifyOrQuit(recordCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a second response (without cache-flush). Validate callback result.");
+
+    records[0].mData   = kKey2;
+    records[0].mLength = sizeof(kKey2);
+    records[0].mTtl    = 120;
+
+    sRecordCallbacks.Clear();
+    SendRecordResponse("mysrv._srv._udp.local.", ResourceRecord::kTypeKey, /* aCacheFlush */ false, 1, records);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sRecordCallbacks.IsEmpty());
+    recordCallback = sRecordCallbacks.GetHead();
+    VerifyOrQuit(recordCallback->mFirstLabel.Matches("mysrv"));
+    VerifyOrQuit(recordCallback->mNextLabels.Matches("_srv._udp"));
+    VerifyOrQuit(recordCallback->mRecordType == ResourceRecord::kTypeKey);
+    VerifyOrQuit(recordCallback->MatchesData(kKey2));
+    VerifyOrQuit(recordCallback->mTtl == 120);
+    VerifyOrQuit(recordCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start another record querier for the same name and record type with different callback.");
+
+    ClearAllBytes(querier2);
+
+    querier2.mFirstLabel   = "mysrv";
+    querier2.mNextLabels   = "_srv._udp";
+    querier2.mRecordType   = ResourceRecord::kTypeKey;
+    querier2.mInfraIfIndex = kInfraIfIndex;
+    querier2.mCallback     = HandleRecordResultAlternate;
+
+    sRecordCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StartRecordQuerier(querier2));
+
+    AdvanceTime(1);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Validate callback result from cache for the new querier");
+
+    VerifyOrQuit(!sRecordCallbacks.IsEmpty());
+    recordCallback = sRecordCallbacks.GetHead();
+
+    for (uint8_t num = 2; num > 0; num--)
+    {
+        VerifyOrQuit(recordCallback->mFirstLabel.Matches("mysrv"));
+        VerifyOrQuit(recordCallback->mNextLabels.Matches("_srv._udp"));
+        VerifyOrQuit(recordCallback->mRecordType == ResourceRecord::kTypeKey);
+        VerifyOrQuit(recordCallback->MatchesData(kKey2) || recordCallback->MatchesData(kKey1));
+        VerifyOrQuit(recordCallback->mTtl == 120);
+        recordCallback = recordCallback->GetNext();
+    }
+
+    VerifyOrQuit(recordCallback == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop the second querier.");
+
+    SuccessOrQuit(mdns->StopRecordQuerier(querier2));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response (without cache-flush) with one previous record and a new record.");
+
+    records[0].mData   = kKey1;
+    records[0].mLength = sizeof(kKey1);
+    records[0].mTtl    = 120;
+
+    records[1].mData   = kKey3;
+    records[1].mLength = sizeof(kKey3);
+    records[1].mTtl    = 120;
+
+    sRecordCallbacks.Clear();
+    SendRecordResponse("mysrv._srv._udp.local.", ResourceRecord::kTypeKey, /* aCacheFlush */ false, 2, records);
+
+    AdvanceTime(1);
+
+    // Only key3 (which is new) should be reported.
+
+    VerifyOrQuit(!sRecordCallbacks.IsEmpty());
+    recordCallback = sRecordCallbacks.GetHead();
+    VerifyOrQuit(recordCallback->mFirstLabel.Matches("mysrv"));
+    VerifyOrQuit(recordCallback->mNextLabels.Matches("_srv._udp"));
+    VerifyOrQuit(recordCallback->mRecordType == ResourceRecord::kTypeKey);
+    VerifyOrQuit(recordCallback->MatchesData(kKey3));
+    VerifyOrQuit(recordCallback->mTtl == 120);
+    VerifyOrQuit(recordCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    AdvanceTime(5000);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response (with cache-flush) with only one record, `key3`.");
+
+    records[0].mData   = kKey3;
+    records[0].mLength = sizeof(kKey3);
+    records[0].mTtl    = 120;
+
+    sRecordCallbacks.Clear();
+    SendRecordResponse("mysrv._srv._udp.local.", ResourceRecord::kTypeKey, /* aCacheFlush */ true, 1, records);
+
+    AdvanceTime(1);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Validate callback result indicating the two other two keys are removed.");
+
+    VerifyOrQuit(!sRecordCallbacks.IsEmpty());
+    recordCallback = sRecordCallbacks.GetHead();
+
+    for (uint8_t num = 2; num > 0; num--)
+    {
+        VerifyOrQuit(recordCallback->mFirstLabel.Matches("mysrv"));
+        VerifyOrQuit(recordCallback->mNextLabels.Matches("_srv._udp"));
+        VerifyOrQuit(recordCallback->mRecordType == ResourceRecord::kTypeKey);
+        VerifyOrQuit(recordCallback->MatchesData(kKey1) || recordCallback->MatchesData(kKey2));
+        VerifyOrQuit(recordCallback->mTtl == 0);
+        recordCallback = recordCallback->GetNext();
+    }
+
+    VerifyOrQuit(recordCallback == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    AdvanceTime(500);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response removing key3 and other keys.");
+
+    records[0].mData   = kKey1;
+    records[0].mLength = sizeof(kKey1);
+    records[0].mTtl    = 0;
+
+    records[1].mData   = kKey2;
+    records[1].mLength = sizeof(kKey2);
+    records[1].mTtl    = 0;
+
+    records[2].mData   = kKey3;
+    records[2].mLength = sizeof(kKey3);
+    records[2].mTtl    = 0;
+
+    sRecordCallbacks.Clear();
+    SendRecordResponse("mysrv._srv._udp.local.", ResourceRecord::kTypeKey, /* aCacheFlush */ false, 3, records);
+
+    AdvanceTime(1);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Validate callback result indicating key3 is now removed.");
+
+    VerifyOrQuit(!sRecordCallbacks.IsEmpty());
+    recordCallback = sRecordCallbacks.GetHead();
+    VerifyOrQuit(recordCallback->mFirstLabel.Matches("mysrv"));
+    VerifyOrQuit(recordCallback->mNextLabels.Matches("_srv._udp"));
+    VerifyOrQuit(recordCallback->mRecordType == ResourceRecord::kTypeKey);
+    VerifyOrQuit(recordCallback->MatchesData(kKey3));
+    VerifyOrQuit(recordCallback->mTtl == 0);
+    VerifyOrQuit(recordCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response adding two keys");
+
+    records[0].mData   = kKey1;
+    records[0].mLength = sizeof(kKey1);
+    records[0].mTtl    = 500;
+
+    records[1].mData   = kKey2;
+    records[1].mLength = sizeof(kKey2);
+    records[1].mTtl    = 500;
+
+    sRecordCallbacks.Clear();
+    SendRecordResponse("mysrv._srv._udp.local.", ResourceRecord::kTypeKey, /* aCacheFlush */ true, 2, records);
+
+    AdvanceTime(1);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Validate callback results");
+
+    VerifyOrQuit(!sRecordCallbacks.IsEmpty());
+    recordCallback = sRecordCallbacks.GetHead();
+
+    for (uint8_t num = 2; num > 0; num--)
+    {
+        VerifyOrQuit(recordCallback->mFirstLabel.Matches("mysrv"));
+        VerifyOrQuit(recordCallback->mNextLabels.Matches("_srv._udp"));
+        VerifyOrQuit(recordCallback->mRecordType == ResourceRecord::kTypeKey);
+        VerifyOrQuit(recordCallback->MatchesData(kKey1) || recordCallback->MatchesData(kKey2));
+        VerifyOrQuit(recordCallback->mTtl == 500);
+        recordCallback = recordCallback->GetNext();
+    }
+
+    VerifyOrQuit(recordCallback == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    AdvanceTime(5000);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response changing the TTL for key1");
+
+    records[0].mData   = kKey1;
+    records[0].mLength = sizeof(kKey1);
+    records[0].mTtl    = 120;
+
+    sRecordCallbacks.Clear();
+    SendRecordResponse("mysrv._srv._udp.local.", ResourceRecord::kTypeKey, /* aCacheFlush */ false, 1, records);
+
+    AdvanceTime(1);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Validate callback results indicating key1 TTL change");
+
+    VerifyOrQuit(!sRecordCallbacks.IsEmpty());
+    recordCallback = sRecordCallbacks.GetHead();
+    VerifyOrQuit(recordCallback->mFirstLabel.Matches("mysrv"));
+    VerifyOrQuit(recordCallback->mNextLabels.Matches("_srv._udp"));
+    VerifyOrQuit(recordCallback->mRecordType == ResourceRecord::kTypeKey);
+    VerifyOrQuit(recordCallback->MatchesData(kKey1));
+    VerifyOrQuit(recordCallback->mTtl == 120);
+    VerifyOrQuit(recordCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    sRecordCallbacks.Clear();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check query is sent at 80 percentage of TTL and then respond to it.");
+
+    // First query should be sent at 80-82% of TTL of 120 second (96.0-98.4 sec).
+    // We wait for 100 second. Note that 5 seconds already passed in the
+    // previous step.
+
+    AdvanceTime(96 * 1000 - 1);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    AdvanceTime(4 * 1000 + 1);
+
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(querier);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+    sDnsMessages.Clear();
+    VerifyOrQuit(sRecordCallbacks.IsEmpty());
+
+    AdvanceTime(10);
+
+    SendRecordResponse("mysrv._srv._udp.local.", ResourceRecord::kTypeKey, /* aCacheFlush */ false, 1, records);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check queries are sent at 80, 85, 90, 95 percentages of TTL.");
+
+    for (uint8_t queryCount = 0; queryCount < kNumRefreshQueries; queryCount++)
+    {
+        if (queryCount == 0)
+        {
+            // First query is expected in 80-82% of TTL, so
+            // 80% of 120 = 96.0, 82% of 120 = 98.4
+
+            AdvanceTime(96 * 1000 - 1);
+        }
+        else
+        {
+            // Next query should happen within 3%-5% of TTL
+            // from previous query. We wait 3% of TTL here.
+            AdvanceTime(3600 - 1);
+        }
+
+        VerifyOrQuit(sDnsMessages.IsEmpty());
+
+        // Wait for 2% of TTL of 120 which is 2.4 sec.
+
+        AdvanceTime(2400 + 1);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(querier);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+        sDnsMessages.Clear();
+        VerifyOrQuit(sRecordCallbacks.IsEmpty());
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check TTL timeout and callback result.");
+
+    AdvanceTime(6 * 1000);
+
+    VerifyOrQuit(!sRecordCallbacks.IsEmpty());
+    recordCallback = sRecordCallbacks.GetHead();
+    VerifyOrQuit(recordCallback->mFirstLabel.Matches("mysrv"));
+    VerifyOrQuit(recordCallback->mNextLabels.Matches("_srv._udp"));
+    VerifyOrQuit(recordCallback->mRecordType == ResourceRecord::kTypeKey);
+    VerifyOrQuit(recordCallback->MatchesData(kKey1));
+    VerifyOrQuit(recordCallback->mTtl == 0);
+    VerifyOrQuit(recordCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check the list of `RecordQueier` entries and the cache-info");
+
+    iterator = mdns->AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+
+    SuccessOrQuit(mdns->GetNextRecordQuerier(*iterator, querier2, cacheInfo));
+    VerifyOrQuit(querier2.mRecordType == ResourceRecord::kTypeKey);
+    VerifyOrQuit(StringMatch(querier2.mFirstLabel, "mysrv", kStringCaseInsensitiveMatch));
+    VerifyOrQuit(StringMatch(querier2.mNextLabels, "_srv._udp", kStringCaseInsensitiveMatch));
+
+    VerifyOrQuit(cacheInfo.mIsActive);
+    VerifyOrQuit(cacheInfo.mHasCachedResults);
+
+    VerifyOrQuit(mdns->GetNextRecordQuerier(*iterator, querier2, cacheInfo) == kErrorNotFound);
+
+    mdns->FreeIterator(*iterator);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop the record querier");
+
+    SuccessOrQuit(mdns->StopRecordQuerier(querier));
+
+    sDnsMessages.Clear();
+
+    AdvanceTime(10);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check the list of `RecordQueier` entries and cache-info after stop (no longer active)");
+
+    iterator = mdns->AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+
+    SuccessOrQuit(mdns->GetNextRecordQuerier(*iterator, querier2, cacheInfo));
+    VerifyOrQuit(querier2.mRecordType == ResourceRecord::kTypeKey);
+    VerifyOrQuit(StringMatch(querier2.mFirstLabel, "mysrv", kStringCaseInsensitiveMatch));
+    VerifyOrQuit(StringMatch(querier2.mNextLabels, "_srv._udp", kStringCaseInsensitiveMatch));
+
+    VerifyOrQuit(!cacheInfo.mIsActive);
+    VerifyOrQuit(cacheInfo.mHasCachedResults);
+
+    VerifyOrQuit(mdns->GetNextRecordQuerier(*iterator, querier2, cacheInfo) == kErrorNotFound);
+
+    mdns->FreeIterator(*iterator);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check the `RecordQuerier` is correctly removed after 'remove timeout' of 7 minutes");
+
+    AdvanceTime(7 * 60 * 1000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    iterator = mdns->AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+
+    VerifyOrQuit(mdns->GetNextRecordQuerier(*iterator, querier2, cacheInfo) == kErrorNotFound);
+
+    mdns->FreeIterator(*iterator);
+
+#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of test");
+
+    testFreeInstance(sInstance);
+}
+
 void TestPassiveCache(void)
 {
     static const char *const kSubTypes[] = {"_sub1", "_xyzw"};
@@ -7286,6 +7869,7 @@ int main(void)
     ot::Dns::Multicast::TestSrvResolver();
     ot::Dns::Multicast::TestTxtResolver();
     ot::Dns::Multicast::TestIp6AddrResolver();
+    ot::Dns::Multicast::TestRecordQuerier();
     ot::Dns::Multicast::TestPassiveCache();
     ot::Dns::Multicast::TestLegacyUnicastResponse();
 

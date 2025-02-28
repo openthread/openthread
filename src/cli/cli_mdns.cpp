@@ -879,6 +879,64 @@ void Mdns::HandleIp4AddressResult(otInstance *aInstance, const otMdnsAddressResu
     Interpreter::GetInterpreter().mMdns.HandleAddressResult(*aResult, kIp4Address);
 }
 
+template <> otError Mdns::Process<Cmd("recordquerier")>(Arg aArgs[])
+{
+    // mdns recordquerier start|stop <record-type> <first-label> [<next-labels>]
+
+    otError             error;
+    otMdnsRecordQuerier querier;
+    bool                isStart;
+
+    ClearAllBytes(querier);
+
+    SuccessOrExit(error = ParseStartOrStop(aArgs[0], isStart));
+
+    SuccessOrExit(error = aArgs[1].ParseAsUint16(querier.mRecordType));
+
+    VerifyOrExit(!aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    querier.mFirstLabel = aArgs[2].GetCString();
+
+    if (!aArgs[3].IsEmpty())
+    {
+        querier.mNextLabels = aArgs[3].GetCString();
+        VerifyOrExit(aArgs[4].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    }
+
+    querier.mInfraIfIndex = mInfraIfIndex;
+    querier.mCallback     = HandleRecordResult;
+
+    if (isStart)
+    {
+        error = otMdnsStartRecordQuerier(GetInstancePtr(), &querier);
+    }
+    else
+    {
+        error = otMdnsStopRecordQuerier(GetInstancePtr(), &querier);
+    }
+
+exit:
+    return error;
+}
+
+void Mdns::HandleRecordResult(otInstance *aInstance, const otMdnsRecordResult *aResult)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    Interpreter::GetInterpreter().mMdns.HandleRecordResult(*aResult);
+}
+
+void Mdns::HandleRecordResult(const otMdnsRecordResult &aResult)
+{
+    OutputLine("mDNS result for record %u and name %s %s", aResult.mRecordType, aResult.mFirstLabel,
+               aResult.mNextLabels == nullptr ? "" : aResult.mNextLabels);
+
+    OutputFormat(kIndentSize, "data: ");
+    OutputBytesLine(aResult.mRecordData, aResult.mRecordDataLength);
+
+    OutputLine(kIndentSize, "ttl: %lu", ToUlong(aResult.mTtl));
+    OutputLine(kIndentSize, "if-index: %lu", ToUlong(aResult.mInfraIfIndex));
+}
+
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
 template <> otError Mdns::Process<Cmd("browsers")>(Arg aArgs[])
@@ -1083,6 +1141,46 @@ exit:
     return error;
 }
 
+template <> otError Mdns::Process<Cmd("recordqueriers")>(Arg aArgs[])
+{
+    // mdns recordqueriers
+
+    otError             error;
+    otMdnsIterator     *iterator = nullptr;
+    otMdnsCacheInfo     info;
+    otMdnsRecordQuerier querier;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    iterator = otMdnsAllocateIterator(GetInstancePtr());
+    VerifyOrExit(iterator != nullptr, error = OT_ERROR_NO_BUFS);
+
+    while (true)
+    {
+        error = otMdnsGetNextRecordQuerier(GetInstancePtr(), iterator, &querier, &info);
+
+        if (error == OT_ERROR_NOT_FOUND)
+        {
+            error = OT_ERROR_NONE;
+            ExitNow();
+        }
+
+        SuccessOrExit(error);
+
+        OutputLine("Record querier for type %u and name %s %s", querier.mRecordType, querier.mFirstLabel,
+                   querier.mNextLabels == nullptr ? "" : querier.mNextLabels);
+        OutputCacheInfo(info);
+    }
+
+exit:
+    if (iterator != nullptr)
+    {
+        otMdnsFreeIterator(GetInstancePtr(), iterator);
+    }
+
+    return error;
+}
+
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
 otError Mdns::Process(Arg aArgs[])
@@ -1110,6 +1208,10 @@ otError Mdns::Process(Arg aArgs[])
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
         CmdEntry("ip6resolvers"),
         CmdEntry("keys"),
+#endif
+        CmdEntry("recordquerier"),
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+        CmdEntry("recordqueriers"),
 #endif
         CmdEntry("register"),
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
