@@ -1207,6 +1207,74 @@ void TestSrpClientDelayedResponse(void)
 
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
+void TestSrpServerAddressModeForceAdd(void)
+{
+    Srp::Server *srpServer;
+    Srp::Client *srpClient;
+    uint16_t     heapAllocations;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestSrpServerAddressModeForceAdd");
+
+    InitTest();
+
+    srpServer = &sInstance->Get<Srp::Server>();
+    srpClient = &sInstance->Get<Srp::Client>();
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Set address mode to `kAddressModeUnicastForceAdd`.
+
+    SuccessOrQuit(srpServer->SetAddressMode(Srp::Server::kAddressModeUnicastForceAdd));
+    VerifyOrQuit(srpServer->GetAddressMode() == Srp::Server::kAddressModeUnicastForceAdd);
+
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateDisabled);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP server, ensure it starts quickly.
+
+    srpServer->SetEnabled(true);
+    VerifyOrQuit(srpServer->GetState() != Srp::Server::kStateDisabled);
+
+    AdvanceTime(0);
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP client and validate that it discovers server.
+
+    srpClient->SetCallback(HandleSrpClientCallback, sInstance);
+
+    srpClient->EnableAutoStartMode(nullptr, nullptr);
+    VerifyOrQuit(srpClient->IsAutoStartModeEnabled());
+
+    AdvanceTime(2000);
+    VerifyOrQuit(srpClient->IsRunning());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Disable SRP server. Validate that the NetData entry is removed and
+    // client detects this.
+
+    Log("Disabling SRP server");
+
+    srpServer->SetEnabled(false);
+    AdvanceTime(1);
+
+    VerifyOrQuit(!srpClient->IsRunning());
+
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Finalize OT instance and validate all heap allocations are freed.
+
+    Log("Finalizing OT instance");
+    FinalizeTest();
+
+    VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
+
+    Log("End of TestSrpServerAddressModeForceAdd");
+}
+
 #endif // ENABLE_SRP_TEST
 
 } // namespace ot
@@ -1223,6 +1291,7 @@ int main(void)
     ot::TestUpdateLeaseShortVariant();
     ot::TestSrpClientDelayedResponse();
 #endif
+    ot::TestSrpServerAddressModeForceAdd();
 
     printf("All tests passed\n");
 #else
