@@ -386,14 +386,7 @@ public:
      * @retval  TRUE if CSL Period or CSL Channel changed.
      * @retval  FALSE if CSL Period and CSL Channel did not change.
      */
-    bool UpdateCsl(uint16_t aPeriod, uint8_t aChannel, otShortAddress aShortAddr, const otExtAddress *aExtAddr);
-
-    /**
-     * Lets `SubMac` start CSL sample mode given a configured non-zero CSL period.
-     *
-     * `SubMac` would switch the radio state between `Receive` and `Sleep` according the CSL timer.
-     */
-    void CslSample(void);
+    bool UpdateCsl(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr);
 
     /**
      * Returns parent CSL accuracy (clock accuracy and uncertainty).
@@ -509,12 +502,14 @@ public:
 private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     void        CslInit(void);
+    void        CslSample(void);
     void        UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame);
     void        UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
     static void HandleCslTimer(Timer &aTimer);
     void        HandleCslTimer(void);
     void        GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
     uint32_t    GetLocalTime(void);
+    bool        IsCslEnabled(void) const { return mCslPeriod > 0; }
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
     void LogReceived(RxFrame *aFrame);
 #endif
@@ -625,6 +620,8 @@ private:
     void SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame);
     void HandleEnergyScanDone(int8_t aMaxRssi);
     void HandleTimer(void);
+
+    Error RadioSleep(void);
 
     void               SetState(State aState);
     static const char *StateToString(State aState);

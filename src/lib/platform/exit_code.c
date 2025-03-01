@@ -75,6 +75,14 @@ const char *otExitCodeToString(uint8_t aExitCode)
 #endif
         break;
 
+    case OT_EXIT_INVALID_STATE:
+        retval = "InvalidState";
+        break;
+
+    case OT_EXIT_RCP_RESET_REQUIRED:
+        retval = "RcpResetRequired";
+        break;
+
     default:
         assert(false);
         retval = "UnknownExitCode";

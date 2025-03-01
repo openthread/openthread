@@ -185,7 +185,7 @@ void AdvanceTime(uint32_t aDuration)
     sNow = time;
 }
 
-void InitTest(void)
+void InitTest(bool aStartThread = true)
 {
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Initialize OT instance.
@@ -208,15 +208,18 @@ void InitTest(void)
     otDatasetConvertToTlvs(&dataset, &datasetTlvs);
     SuccessOrQuit(otDatasetSetActiveTlvs(sInstance, &datasetTlvs));
 
-    SuccessOrQuit(otIp6SetEnabled(sInstance, true));
-    SuccessOrQuit(otThreadSetEnabled(sInstance, true));
+    if (aStartThread)
+    {
+        SuccessOrQuit(otIp6SetEnabled(sInstance, true));
+        SuccessOrQuit(otThreadSetEnabled(sInstance, true));
 
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Ensure device starts as leader.
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Ensure device starts as leader.
 
-    AdvanceTime(10000);
+        AdvanceTime(10000);
 
-    VerifyOrQuit(otThreadGetDeviceRole(sInstance) == OT_DEVICE_ROLE_LEADER);
+        VerifyOrQuit(otThreadGetDeviceRole(sInstance) == OT_DEVICE_ROLE_LEADER);
+    }
 }
 
 void FinalizeTest(void)
@@ -1207,6 +1210,174 @@ void TestSrpClientDelayedResponse(void)
 
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
+void TestSrpServerAddressModeForceAdd(void)
+{
+    Srp::Server *srpServer;
+    Srp::Client *srpClient;
+    uint16_t     heapAllocations;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestSrpServerAddressModeForceAdd");
+
+    InitTest();
+
+    srpServer = &sInstance->Get<Srp::Server>();
+    srpClient = &sInstance->Get<Srp::Client>();
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Set address mode to `kAddressModeUnicastForceAdd`.
+
+    SuccessOrQuit(srpServer->SetAddressMode(Srp::Server::kAddressModeUnicastForceAdd));
+    VerifyOrQuit(srpServer->GetAddressMode() == Srp::Server::kAddressModeUnicastForceAdd);
+
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateDisabled);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP server, ensure it starts quickly.
+
+    srpServer->SetEnabled(true);
+    VerifyOrQuit(srpServer->GetState() != Srp::Server::kStateDisabled);
+
+    AdvanceTime(0);
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP client and validate that it discovers server.
+
+    srpClient->SetCallback(HandleSrpClientCallback, sInstance);
+
+    srpClient->EnableAutoStartMode(nullptr, nullptr);
+    VerifyOrQuit(srpClient->IsAutoStartModeEnabled());
+
+    AdvanceTime(2000);
+    VerifyOrQuit(srpClient->IsRunning());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Disable SRP server. Validate that the NetData entry is removed and
+    // client detects this.
+
+    Log("Disabling SRP server");
+
+    srpServer->SetEnabled(false);
+    AdvanceTime(1);
+
+    VerifyOrQuit(!srpClient->IsRunning());
+
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Finalize OT instance and validate all heap allocations are freed.
+
+    Log("Finalizing OT instance");
+    FinalizeTest();
+
+    VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
+
+    Log("End of TestSrpServerAddressModeForceAdd");
+}
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+
+void TestSrpServerFastStartMode(void)
+{
+    Srp::Server          *srpServer;
+    otExternalRouteConfig route;
+    Ip6::Address          address;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestSrpServerFastStartMode");
+
+    InitTest(/* aStartThread */ false);
+
+    srpServer = &sInstance->Get<Srp::Server>();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Configure SRP server to use the "Fast Start Mode"/
+
+    SuccessOrQuit(srpServer->EnableFastStartMode());
+    VerifyOrQuit(srpServer->IsFastStartModeEnabled());
+
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateDisabled);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Bring the IPv6 interface up and start Thread operation.
+
+    SuccessOrQuit(otIp6SetEnabled(sInstance, true));
+    SuccessOrQuit(otThreadSetEnabled(sInstance, true));
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Ensure that as soon as device attaches, the SRP server is started.
+
+    while (otThreadGetDeviceRole(sInstance) == OT_DEVICE_ROLE_DETACHED)
+    {
+        AdvanceTime(100);
+    }
+
+    VerifyOrQuit(otThreadGetDeviceRole(sInstance) == OT_DEVICE_ROLE_LEADER);
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+    VerifyOrQuit(srpServer->GetAddressMode() == Srp::Server::kAddressModeUnicastForceAdd);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Add new entries in Network Data to trigger an "NetDataChanged" event
+    // and ensure that the SRP server continues to run.
+
+    AdvanceTime(10 * 1000);
+
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+
+    ClearAllBytes(route);
+    route.mStable = true;
+
+    SuccessOrQuit(otBorderRouterAddRoute(sInstance, &route));
+    SuccessOrQuit(otBorderRouterRegister(sInstance));
+
+    AdvanceTime(1 * 1000);
+
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Publish an "DNS/SRP" entry in Network Data and ensure that this is
+    // correctly detected by the "Fast Start Mode" and triggers SRP server to be
+    // disabled.
+
+    SuccessOrQuit(address.FromString("fd00::1"));
+    otNetDataPublishDnsSrpServiceUnicast(sInstance, &address, /* aPort */ 1234, 0);
+
+    AdvanceTime(10 * 1000);
+    VerifyOrQuit(otNetDataIsDnsSrpServiceAdded(sInstance));
+
+    VerifyOrQuit(srpServer->IsFastStartModeEnabled());
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateDisabled);
+
+    // Ensure the original AddressMode is restored on SRP server
+
+    VerifyOrQuit(srpServer->GetAddressMode() == Srp::Server::kAddressModeUnicast);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Unpublish the "DNS/SRP" entry in Network Data and check that
+    // the "Fast Start Mode" causes the SRP server to start again.
+
+    otNetDataUnpublishDnsSrpService(sInstance);
+
+    AdvanceTime(25 * 1000);
+    VerifyOrQuit(!otNetDataIsDnsSrpServiceAdded(sInstance));
+
+    VerifyOrQuit(srpServer->IsFastStartModeEnabled());
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Finalize OT instance and validate all heap allocations are freed.
+
+    Log("Finalizing OT instance");
+    FinalizeTest();
+
+    Log("End of TestSrpServerFastStartMode");
+}
+
+#endif // OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+
 #endif // ENABLE_SRP_TEST
 
 } // namespace ot
@@ -1222,6 +1393,10 @@ int main(void)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     ot::TestUpdateLeaseShortVariant();
     ot::TestSrpClientDelayedResponse();
+#endif
+    ot::TestSrpServerAddressModeForceAdd();
+#if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+    ot::TestSrpServerFastStartMode();
 #endif
 
     printf("All tests passed\n");

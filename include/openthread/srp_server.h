@@ -84,11 +84,17 @@ typedef enum
  *
  * Address mode specifies how the address and port number are determined by the SRP server and how this info is
  * published in the Thread Network Data.
+ *
+ * @warning Using the `OT_SRP_SERVER_ADDRESS_MODE_UNICAST_FORCE_ADD` option will make the implementation
+ * non-compliant with the Thread specification. This option is intended for testing and specific use-cases.
+ * When selected, the SRP server, upon being enabled, will bypass the Network Data publisher and always add the
+ * "SRP/DNS unicast" entry directly to the Network Data, regardless of how many other similar entries are present.
  */
 typedef enum otSrpServerAddressMode
 {
-    OT_SRP_SERVER_ADDRESS_MODE_UNICAST = 0, ///< Unicast address mode.
-    OT_SRP_SERVER_ADDRESS_MODE_ANYCAST = 1, ///< Anycast address mode.
+    OT_SRP_SERVER_ADDRESS_MODE_UNICAST           = 0, ///< Unicast address mode. Use Network Data publisher.
+    OT_SRP_SERVER_ADDRESS_MODE_ANYCAST           = 1, ///< Anycast address mode. Use Network Data publisher
+    OT_SRP_SERVER_ADDRESS_MODE_UNICAST_FORCE_ADD = 2, ///< Unicast address mode. Immediately force add to Network Data.
 } otSrpServerAddressMode;
 
 /**
@@ -265,6 +271,57 @@ void otSrpServerSetAutoEnableMode(otInstance *aInstance, bool aEnabled);
  * @retval FALSE  The auto-enable mode is disabled.
  */
 bool otSrpServerIsAutoEnableMode(otInstance *aInstance);
+
+/**
+ * Enables the "Fast Start Mode" on the SRP server.
+ *
+ * Requires the `OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE` feature to be enabled.
+ *
+ * The Fast Start Mode is designed for scenarios where a device, often a mobile device, needs to act as a provisional
+ * SRP server (e.g., functioning as a temporary Border Router). The SRP server function is enabled only if no other
+ * Border Routers (BRs) are already providing the SRP service within the Thread network. A common use case is a mobile
+ * device joining a Thread network where it may be the first, or only, BR.  Importantly, Fast Start Mode allows the
+ * device to quickly start its SRP server functionality upon joining the network, allowing other Thread devices to
+ * quickly connect and register their services without the typical delays associated with standard Border Router
+ * initialization (and SRP server startup).
+ *
+ * When Fast Start Mode is enabled, the SRP server manages when to start or stop based on the presence of other BRs,
+ * following this process:
+ * - Upon initial attachment to the Thread network, the device immediately inspects the received Network Data for any
+ *   existing "SRP/DNS" entries. These entries indicate the presence of other active BRs providing SRP server service:
+ *   - If no "SRP/DNS" entries from other BRs are found, the device immediately enables its own SRP server. This
+ *     activation uses `OT_SRP_SERVER_ADDRESS_MODE_UNICAST_FORCE_ADD`, which bypasses the usual delay associated with
+ *     the standard Network Data publisher, directly adding its own "SRP/DNS unicast" entry to the Network Data.
+ *   - If "SRP/DNS" entries from other BRs are detected, the device will not enable its SRP server, deferring to the
+ *     existing ones.
+ * - After starting its SRP server in Fast Start Mode, the device continuously monitors the Network Data. If, at any
+ *   point, new "SRP/DNS" entries appear (indicating that another BR has become active), the device automatically
+ *   disables its own SRP server functionality, relinquishing the role to the newly available BR.
+ *
+ * The Fast Start Mode can be enabled when the device is in the detached or disabled state, the SRP server is currently
+ * disabled, and "auto-enable mode" is not in use (i.e., `otSrpServerIsAutoEnableMode()` returns `false`).
+ *
+ * After successfully enabling Fast Start Mode, it can be disabled by a direct call to `otSrpServerSetEnabled()`,
+ * explicitly enabling or disabling the SRP server function.
+ *
+ * @param[in] aInstance             A pointer to the OpenThread instance.
+ *
+ * @retval OT_ERROR_NONE            Fast Start Mode was successfully enabled.
+ * @retval OT_ERROR_INVALID_STATE   Cannot enable Fast Start Mode (e.g., already attached or server already enabled).
+ */
+otError otSrpServerEnableFastStartMode(otInstance *aInstance);
+
+/**
+ * Indicates whether the Fast Start Mode is enabled or disabled.
+ *
+ * Requires `OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE` feature to be enabled.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   The fast-start mode is enabled.
+ * @retval FALSE  The fast-start mode is disabled.
+ */
+bool otSrpServerIsFastStartmodeEnabled(otInstance *aInstance);
 
 /**
  * Returns SRP server TTL configuration.

@@ -471,7 +471,7 @@ public:
      * @retval  TRUE if CSL Period or CSL Channel changed.
      * @retval  FALSE if CSL Period and CSL Channel did not change.
      */
-    bool UpdateCsl(uint16_t aPeriod, uint8_t aChannel, otShortAddress aShortAddr, const otExtAddress *aExtAddr)
+    bool UpdateCsl(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr)
     {
         bool retval = false;
 
@@ -483,22 +483,6 @@ public:
         retval = mSubMac.UpdateCsl(aPeriod, aChannel, aShortAddr, aExtAddr);
 #endif
         return retval;
-    }
-
-    /**
-     * Transitions all radios link to CSL sample state, given that a non-zero CSL period is configured.
-     *
-     * CSL sample state is only applicable and used for 15.4 radio link. Other link are transitioned to sleep state
-     * when CSL period is non-zero.
-     */
-    void CslSample(void)
-    {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-        mSubMac.CslSample();
-#endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-        mTrel.Sleep();
-#endif
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 

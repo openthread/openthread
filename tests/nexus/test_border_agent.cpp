@@ -752,15 +752,11 @@ public:
     {
     }
 
-    void HandleMeshCoPServiceChanged(const uint8_t *aTxtData, uint16_t aLength)
+    void HandleMeshCoPServiceChanged(void)
     {
         mIsRunning = mBorderAgent.IsRunning();
         mUdpPort   = mBorderAgent.GetUdpPort();
-
-        assert(aLength <= kMaxTxtDataLen);
-
-        memcpy(mTxtData, aTxtData, aLength);
-        mTxtDataLength = aLength;
+        SuccessOrQuit(mBorderAgent.GetMeshCoPServiceTxtData(mTxtData));
     }
 
     bool FindTxtEntry(const char *aKey, TxtEntry &aTxtEntry)
@@ -768,7 +764,7 @@ public:
         bool               found = false;
         TxtEntry::Iterator iter;
 
-        iter.Init(mTxtData, mTxtDataLength);
+        iter.Init(mTxtData.mData, mTxtData.mLength);
         while (iter.GetNextEntry(aTxtEntry) == kErrorNone)
         {
             if (strcmp(aTxtEntry.mKey, aKey) == 0)
@@ -781,18 +777,15 @@ public:
         return found;
     }
 
-    static constexpr uint16_t kMaxTxtDataLen = 128;
-
-    BorderAgent &mBorderAgent;
-    uint8_t      mTxtData[kMaxTxtDataLen];
-    uint16_t     mTxtDataLength;
-    bool         mIsRunning;
-    uint16_t     mUdpPort;
+    BorderAgent                       &mBorderAgent;
+    otBorderAgentMeshCoPServiceTxtData mTxtData;
+    bool                               mIsRunning;
+    uint16_t                           mUdpPort;
 };
 
-static void HandleMeshCoPServiceChanged(const uint8_t *aTxtData, uint16_t aLength, void *aContext)
+static void HandleMeshCoPServiceChanged(void *aContext)
 {
-    static_cast<MeshCoPServiceTester *>(aContext)->HandleMeshCoPServiceChanged(aTxtData, aLength);
+    static_cast<MeshCoPServiceTester *>(aContext)->HandleMeshCoPServiceChanged();
 }
 
 template <typename ObjectType> bool CheckObjectSameAsTxtEntryData(const TxtEntry &aTxtEntry, const ObjectType &aObject)
@@ -807,18 +800,6 @@ template <> bool CheckObjectSameAsTxtEntryData<NameData>(const TxtEntry &aTxtEnt
     return aTxtEntry.mValueLength == aNameData.GetLength() &&
            memcmp(aTxtEntry.mValue, aNameData.GetBuffer(), aNameData.GetLength()) == 0;
 }
-
-#if OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1
-static const char kThreadVersionString[] = "1.1.1";
-#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_2
-static const char kThreadVersionString[] = "1.2.0";
-#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_3
-static const char kThreadVersionString[] = "1.3.0";
-#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_3_1
-static const char kThreadVersionString[] = "1.3.1";
-#elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_4
-static const char kThreadVersionString[] = "1.4.0";
-#endif
 
 void TestBorderAgentMeshCoPServiceChangedCallback(void)
 {
@@ -850,8 +831,7 @@ void TestBorderAgentMeshCoPServiceChangedCallback(void)
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("xp", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<ExtendedPanIdManager>().GetExtPanId()));
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("tv", txtEntry));
-    VerifyOrQuit(
-        CheckObjectSameAsTxtEntryData(txtEntry, NameData(kThreadVersionString, sizeof(kThreadVersionString) - 1)));
+    VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, NameData(kThreadVersionString, strlen(kThreadVersionString))));
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("xa", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<Mac::Mac>().GetExtAddress()));
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("sb", txtEntry));
@@ -880,8 +860,7 @@ void TestBorderAgentMeshCoPServiceChangedCallback(void)
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("xp", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<ExtendedPanIdManager>().GetExtPanId()));
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("tv", txtEntry));
-    VerifyOrQuit(
-        CheckObjectSameAsTxtEntryData(txtEntry, NameData(kThreadVersionString, sizeof(kThreadVersionString) - 1)));
+    VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, NameData(kThreadVersionString, strlen(kThreadVersionString))));
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("xa", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<Mac::Mac>().GetExtAddress()));
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("sb", txtEntry));

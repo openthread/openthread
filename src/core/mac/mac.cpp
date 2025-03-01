@@ -586,13 +586,6 @@ void Mac::UpdateIdleMode(void)
 
     if (shouldSleep)
     {
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (IsCslEnabled())
-        {
-            mLinks.CslSample();
-            ExitNow();
-        }
-#endif
         mLinks.Sleep();
         LogDebg("Idle mode: Radio sleeping");
     }
@@ -2436,7 +2429,7 @@ void Mac::UpdateCsl(void)
     uint8_t  channel = GetCslChannel() ? GetCslChannel() : mRadioChannel;
 
     if (mLinks.UpdateCsl(period, channel, Get<Mle::Mle>().GetParent().GetRloc16(),
-                         &Get<Mle::Mle>().GetParent().GetExtAddress()))
+                         Get<Mle::Mle>().GetParent().GetExtAddress()))
     {
         if (Get<Mle::Mle>().IsChild())
         {

@@ -89,6 +89,9 @@ Server::Server(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     , mAutoEnable(false)
 #endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+    , mFastStartMode(false)
+#endif
 {
     IgnoreError(SetDomain(kDefaultDomain));
 }
@@ -124,6 +127,9 @@ void Server::SetEnabled(bool aEnabled)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     mAutoEnable = false;
 #endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+    mFastStartMode = false;
+#endif
 
     if (aEnabled)
     {
@@ -142,8 +148,11 @@ void Server::Enable(void)
 
     // Request publishing of "DNS/SRP Address Service" entry in the
     // Thread Network Data based of `mAddressMode`. Then wait for
-    // callback `HandleNetDataPublisherEntryChange()` from the
+    // callback `HandleNetDataPublisherEvent()` from the
     // `Publisher` to start the SRP server.
+    //
+    // For `kAddressModeUnicastForceAdd`, directly add the entry
+    // in the Network Data and start.
 
     switch (mAddressMode)
     {
@@ -156,6 +165,14 @@ void Server::Enable(void)
         mPort = kAnycastAddressModePort;
         Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(mAnycastSequenceNumber, kSrpVersion);
         break;
+
+    case kAddressModeUnicastForceAdd:
+        SelectPort();
+        SuccessOrExit(Get<NetworkData::Service::Manager>().AddDnsSrpUnicastServiceWithAddrInServerData(
+            Get<Mle::Mle>().GetMeshLocalEid(), mPort, kSrpVersion));
+        Get<NetworkData::Notifier>().HandleServerDataUpdated();
+        Start();
+        break;
     }
 
 exit:
@@ -165,7 +182,20 @@ exit:
 void Server::Disable(void)
 {
     VerifyOrExit(mState != kStateDisabled);
-    Get<NetworkData::Publisher>().UnpublishDnsSrpService();
+
+    switch (mAddressMode)
+    {
+    case kAddressModeUnicast:
+    case kAddressModeAnycast:
+        Get<NetworkData::Publisher>().UnpublishDnsSrpService();
+        break;
+
+    case kAddressModeUnicastForceAdd:
+        IgnoreError(Get<NetworkData::Service::Manager>().RemoveDnsSrpUnicastServiceWithAddrInServerData());
+        Get<NetworkData::Notifier>().HandleServerDataUpdated();
+        break;
+    }
+
     Stop();
     mState = kStateDisabled;
 
@@ -185,6 +215,101 @@ exit:
     return;
 }
 #endif
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+Error Server::EnableFastStartMode(void)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!mFastStartMode);
+
+    VerifyOrExit(!Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
+    VerifyOrExit(mState == kStateDisabled, error = kErrorInvalidState);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    VerifyOrExit(!mAutoEnable, error = kErrorInvalidState);
+#endif
+
+    mFastStartMode = true;
+    LogInfo("FastStartMode enabled");
+
+exit:
+    return error;
+}
+
+void Server::HandleNotifierEvents(Events aEvents)
+{
+    VerifyOrExit(mFastStartMode);
+
+    if (mState == kStateDisabled)
+    {
+        VerifyOrExit(aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadNetdataChanged));
+        VerifyOrExit(Get<Mle::Mle>().IsAttached());
+
+        if (!NetDataContainsOtherSrpServers())
+        {
+            LogInfo("FastStartMode - No SRP server in NetData");
+
+            mPrevAddressMode = mAddressMode;
+            IgnoreError(SetAddressMode(kAddressModeUnicastForceAdd));
+            Enable();
+        }
+    }
+    else
+    {
+        VerifyOrExit(aEvents.Contains(kEventThreadNetdataChanged));
+
+        if (NetDataContainsOtherSrpServers())
+        {
+            LogInfo("FastStartMode - New SRP server entry in NetData");
+
+            Disable();
+            IgnoreError(SetAddressMode(mPrevAddressMode));
+        }
+    }
+
+exit:
+    return;
+}
+
+bool Server::NetDataContainsOtherSrpServers(void) const
+{
+    bool                                    contains = false;
+    NetworkData::Service::DnsSrpAnycastInfo anycastInfo;
+    NetworkData::Service::DnsSrpUnicastInfo unicastInfo;
+    NetworkData::Service::Manager::Iterator iterator;
+
+    if (Get<NetworkData::Service::Manager>().FindPreferredDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
+    {
+        contains = true;
+        ExitNow();
+    }
+
+    iterator.Reset();
+
+    if (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(
+            iterator, NetworkData::Service::kAddrInServiceData, unicastInfo) == kErrorNone)
+    {
+        contains = true;
+        ExitNow();
+    }
+
+    iterator.Reset();
+
+    while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(
+               iterator, NetworkData::Service::kAddrInServerData, unicastInfo) == kErrorNone)
+    {
+        if (!Get<Mle::Mle>().HasRloc16(unicastInfo.mRloc16))
+        {
+            contains = true;
+            ExitNow();
+        }
+    }
+
+exit:
+    return contains;
+}
+
+#endif // OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
 
 Server::TtlConfig::TtlConfig(void)
 {
@@ -551,7 +676,8 @@ void Server::CommitSrpUpdate(Error                    aError,
     }
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
-    if (!mHasRegisteredAnyService && (mAddressMode == kAddressModeUnicast))
+    if (!mHasRegisteredAnyService &&
+        ((mAddressMode == kAddressModeUnicast) || (mAddressMode == kAddressModeUnicastForceAdd)))
     {
         Settings::SrpServerInfo info;
 
@@ -1714,8 +1840,9 @@ void Server::HandleOutstandingUpdatesTimer(void)
 const char *Server::AddressModeToString(AddressMode aMode)
 {
     static const char *const kAddressModeStrings[] = {
-        "unicast", // (0) kAddressModeUnicast
-        "anycast", // (1) kAddressModeAnycast
+        "unicast",           // (0) kAddressModeUnicast
+        "anycast",           // (1) kAddressModeAnycast
+        "unicast-force-add", // (2) kAddressModeUnicastForceAdd
     };
 
     struct EnumCheck
@@ -1723,6 +1850,7 @@ const char *Server::AddressModeToString(AddressMode aMode)
         InitEnumValidatorCounter();
         ValidateNextEnum(kAddressModeUnicast);
         ValidateNextEnum(kAddressModeAnycast);
+        ValidateNextEnum(kAddressModeUnicastForceAdd);
     };
 
     return kAddressModeStrings[aMode];

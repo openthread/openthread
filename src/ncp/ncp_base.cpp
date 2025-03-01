@@ -35,6 +35,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
+#include <openthread/border_agent.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #include <openthread/link.h>
@@ -366,6 +367,9 @@ NcpBase::NcpBase(Instance *aInstance)
 #endif
 #if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
     otThreadRegisterParentResponseCallback(mInstance, &NcpBase::HandleParentResponseInfo, static_cast<void *>(this));
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    otBorderAgentSetMeshCoPServiceChangedCallback(mInstance, HandleBorderAgentMeshCoPServiceChanged, this);
 #endif
 #endif // OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE

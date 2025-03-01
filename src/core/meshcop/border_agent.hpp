@@ -184,6 +184,18 @@ public:
      */
     void SetMeshCoPServiceChangedCallback(MeshCoPServiceChangedCallback aCallback, void *aContext);
 
+    typedef otBorderAgentMeshCoPServiceTxtData MeshCoPServiceTxtData;
+
+    /**
+     * Gets the MeshCoP service TXT data.
+     *
+     * @param[out] aTxtData   A reference to a MeshCoP Service TXT data struct to get the data.
+     *
+     * @retval kErrorNone     If successfully retrieved the Border Agent MeshCoP Service TXT data.
+     * @retval kErrorNoBufs   If the buffer in @p aTxtData doesn't have enough size.
+     */
+    Error GetMeshCoPServiceTxtData(MeshCoPServiceTxtData &aTxtData) const;
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     /**
      * Manages the ephemeral key use by Border Agent.
@@ -429,9 +441,10 @@ private:
     class MeshCoPTxtEncoder : public InstanceLocator
     {
     public:
-        explicit MeshCoPTxtEncoder(Instance &aInstance)
+        MeshCoPTxtEncoder(Instance &aInstance, MeshCoPServiceTxtData &aTxtData)
             : InstanceLocator(aInstance)
-            , mAppender(mTxtDataBuffer, sizeof(mTxtDataBuffer))
+            , mTxtData(aTxtData)
+            , mAppender(mTxtData.mData, sizeof(mTxtData.mData))
         {
         }
 
@@ -503,10 +516,6 @@ private:
 
         Error EncodeTxtData(void);
 
-        uint8_t *GetTxtData(void) { return mTxtDataBuffer; }
-
-        uint16_t GetTxtDataLen(void) { return mAppender.GetAppendedLength(); }
-
     private:
         Error AppendTxtEntry(const char *aKey, const void *aValue, uint16_t aValueLength);
 
@@ -527,9 +536,8 @@ private:
 
         StateBitmap GetStateBitmap(void);
 
-        static constexpr uint16_t kMaxTxtDataLen = 128;
-        uint8_t                   mTxtDataBuffer[kMaxTxtDataLen];
-        Appender                  mAppender;
+        MeshCoPServiceTxtData &mTxtData;
+        Appender               mAppender;
     };
 
     void Start(void);
