@@ -96,7 +96,7 @@ otError otSrpServerEnableFastStartMode(otInstance *aInstance)
     return AsCoreType(aInstance).Get<Srp::Server>().EnableFastStartMode();
 }
 
-bool otSrpServerIsFastStartmodeEnabled(otInstance *aInstance)
+bool otSrpServerIsFastStartModeEnabled(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Srp::Server>().IsFastStartModeEnabled();
 }
