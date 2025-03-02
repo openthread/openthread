@@ -501,7 +501,6 @@ public:
 private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     void        CslInit(void);
-    void        CslSample(void);
     void        UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame);
     void        UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
     static void HandleCslTimer(Timer &aTimer);
@@ -520,6 +519,8 @@ private:
     void        WedInit(void);
     static void HandleWedTimer(Timer &aTimer);
     void        HandleWedTimer(void);
+    void        HandleWedReceiveAt(void);
+    void        HandleWedReceiveOrSleep(void);
 #endif
 
     static constexpr uint8_t  kCsmaMinBe         = 3;                  // macMinBE (IEEE 802.15.4-2006).
@@ -553,8 +554,9 @@ private:
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kStateCslTransmit, // CSL transmission.
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        kStateCslSample, // CSL receive.
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        kStateRadioSample, // Mac layer has requested the SubMac to enter sleep state, but the SubMac is in the periodic
+                           // sample state.
 #endif
     };
 
@@ -628,6 +630,12 @@ private:
     void               SetState(State aState);
     static const char *StateToString(State aState);
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    bool IsRadioSampleEnabled(void) const;
+    void UpdateRadioSampleState(void);
+    void RadioSample(void);
+#endif
+
     using SubMacTimer =
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
         TimerMicroIn<SubMac, &SubMac::HandleTimer>;
@@ -664,8 +672,8 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     uint16_t mCslPeriod;             // The CSL sample period, in units of 10 symbols (160 microseconds).
     uint8_t  mCslChannel : 7;        // The CSL sample channel.
-    bool     mIsCslSampling : 1;     // Indicates that the radio is receiving in CSL state for platforms not supporting
-                                     // delayed reception.
+    bool     mIsCslSampling : 1;     // Indicates that the current time is in CSL sample window
+                                     // for platforms not supporting `Radio::ReceiveAt()`.
     uint16_t    mCslPeerShort;       // The CSL peer short address.
     uint32_t    mCslSampleTimeRadio; // The CSL sample time of the current period based on radio time (lower 32-bit).
     TimeMicro   mCslSampleTimeLocal; // The CSL sample time of the current period based on local time.
@@ -675,6 +683,9 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    bool mIsWedSampling : 1;          // Indicates that the current time is in WED's sample window
+                                      // for platforms not supporting `Radio::ReceiveAt()`.
+    bool       mIsWedEnabled : 1;     // Indicates if the WED is enabled.
     uint32_t   mWakeupListenInterval; // The wake-up listen interval, in microseconds.
     uint32_t   mWakeupListenDuration; // The wake-up listen duration, in microseconds.
     uint8_t    mWakeupChannel;        // The wake-up sample channel.
