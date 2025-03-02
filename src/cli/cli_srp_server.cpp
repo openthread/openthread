@@ -197,7 +197,7 @@ template <> otError SrpServer::Process<Cmd("domain")>(Arg aArgs[])
  * @par
  * This command requires that `OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE` be enabled.
  * @moreinfo{@srp}.
- * @sa otSrpServerIsFastStartmodeEnabled
+ * @sa otSrpServerIsFastStartModeEnabled
  * @sa otSrpServerEnableFastStartMode
  */
 template <> otError SrpServer::Process<Cmd("faststart")>(Arg aArgs[])
@@ -206,7 +206,7 @@ template <> otError SrpServer::Process<Cmd("faststart")>(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        OutputEnabledDisabledStatus(otSrpServerIsFastStartmodeEnabled(GetInstancePtr()));
+        OutputEnabledDisabledStatus(otSrpServerIsFastStartModeEnabled(GetInstancePtr()));
     }
     else if (aArgs[0] == "enable")
     {

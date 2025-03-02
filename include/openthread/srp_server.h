@@ -321,7 +321,7 @@ otError otSrpServerEnableFastStartMode(otInstance *aInstance);
  * @retval TRUE   The fast-start mode is enabled.
  * @retval FALSE  The fast-start mode is disabled.
  */
-bool otSrpServerIsFastStartmodeEnabled(otInstance *aInstance);
+bool otSrpServerIsFastStartModeEnabled(otInstance *aInstance);
 
 /**
  * Returns SRP server TTL configuration.
