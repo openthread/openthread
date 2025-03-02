@@ -91,7 +91,7 @@ void SubMac::CslSample(void)
     VerifyOrExit(!mRadioFilterEnabled, IgnoreError(Get<Radio>().Sleep()));
 #endif
 
-    SetState(kStateCslSample);
+    SetState(kStateRadioSample);
 
     if (mIsCslSampling && !RadioSupportsReceiveTiming())
     {
@@ -129,6 +129,13 @@ bool SubMac::UpdateCsl(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAd
         mIsCslSampling = false;
         HandleCslTimer();
     }
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    else if ((mState == kStateRadioSample) && (!RadioSupportsReceiveTiming()))
+    {
+        // Give WED a chance to enter receive state.
+        RequestSleep(kRequesterCsl);
+    }
+#endif
 
 exit:
     return retval;
@@ -181,10 +188,10 @@ void SubMac::HandleCslTimer(void)
     {
         mIsCslSampling = false;
         mCslTimer.FireAt(mCslSampleTime - timeAhead);
-        if (mState == kStateCslSample)
+        if (mState == kStateRadioSample)
         {
 #if !OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
-            IgnoreError(Get<Radio>().Sleep()); // Don't actually sleep for debugging
+            RequestSleep(kRequesterCsl); // Don't actually sleep for debugging
 #endif
             LogDebg("CSL sleep %lu", ToUlong(mCslTimer.GetNow().GetValue()));
         }
@@ -215,9 +222,9 @@ void SubMac::HandleCslTimer(void)
         {
             IgnoreError(Get<Radio>().ReceiveAt(mCslChannel, winStart, winDuration));
         }
-        else if (mState == kStateCslSample)
+        else if (mState == kStateRadioSample)
         {
-            IgnoreError(Get<Radio>().Receive(mCslChannel));
+            RequestReceive(kRequesterCsl);
         }
 
         LogDebg("CSL window start %lu, duration %lu", ToUlong(winStart), ToUlong(winDuration));
@@ -273,7 +280,7 @@ void SubMac::LogReceived(RxFrame *aFrame)
             mIsCslSampling ? "CslSample" : "CslSleep",
             ToUlong(static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp)));
 
-    VerifyOrExit(mState == kStateCslSample);
+    VerifyOrExit(mState == kStateRadioSample);
 
     GetCslWindowEdges(ahead, after);
     ahead -= kMinReceiveOnAhead + kCslReceiveTimeAhead;
