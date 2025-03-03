@@ -560,12 +560,14 @@ void BorderAgent::EphemeralKeyManager::SetEnabled(bool aEnabled)
     {
         VerifyOrExit(mState == kStateDisabled);
         SetState(kStateStopped);
+        Get<BorderAgent>().PostNotifyMeshCoPServiceChangedTask();
     }
     else
     {
         VerifyOrExit(mState != kStateDisabled);
         Stop();
         SetState(kStateDisabled);
+        Get<BorderAgent>().PostNotifyMeshCoPServiceChangedTask();
     }
 
 exit:
