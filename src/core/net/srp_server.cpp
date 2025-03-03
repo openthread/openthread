@@ -128,7 +128,7 @@ void Server::SetEnabled(bool aEnabled)
     mAutoEnable = false;
 #endif
 #if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
-    mFastStartMode = false;
+    DisableFastStartMode();
 #endif
 
     if (aEnabled)
@@ -144,6 +144,15 @@ void Server::SetEnabled(bool aEnabled)
 void Server::Enable(void)
 {
     VerifyOrExit(mState == kStateDisabled);
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+    if (mFastStartMode)
+    {
+        mPrevAddressMode = mAddressMode;
+        IgnoreError(SetAddressMode(kAddressModeUnicastForceAdd));
+    }
+#endif
+
     mState = kStateStopped;
 
     // Request publishing of "DNS/SRP Address Service" entry in the
@@ -199,6 +208,13 @@ void Server::Disable(void)
     Stop();
     mState = kStateDisabled;
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+    if (mFastStartMode)
+    {
+        IgnoreError(SetAddressMode(mPrevAddressMode));
+    }
+#endif
+
 exit:
     return;
 }
@@ -206,6 +222,10 @@ exit:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 void Server::SetAutoEnableMode(bool aEnabled)
 {
+#if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+    DisableFastStartMode();
+#endif
+
     VerifyOrExit(mAutoEnable != aEnabled);
     mAutoEnable = aEnabled;
 
@@ -236,6 +256,18 @@ exit:
     return error;
 }
 
+void Server::DisableFastStartMode(void)
+{
+    VerifyOrExit(mFastStartMode);
+
+    Disable();
+    mFastStartMode = false;
+    LogInfo("FastStartMode disabled");
+
+exit:
+    return;
+}
+
 void Server::HandleNotifierEvents(Events aEvents)
 {
     VerifyOrExit(mFastStartMode);
@@ -248,9 +280,6 @@ void Server::HandleNotifierEvents(Events aEvents)
         if (!NetDataContainsOtherSrpServers())
         {
             LogInfo("FastStartMode - No SRP server in NetData");
-
-            mPrevAddressMode = mAddressMode;
-            IgnoreError(SetAddressMode(kAddressModeUnicastForceAdd));
             Enable();
         }
     }
@@ -261,9 +290,7 @@ void Server::HandleNotifierEvents(Events aEvents)
         if (NetDataContainsOtherSrpServers())
         {
             LogInfo("FastStartMode - New SRP server entry in NetData");
-
             Disable();
-            IgnoreError(SetAddressMode(mPrevAddressMode));
         }
     }
 
