@@ -224,7 +224,7 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
     frame->SetTxDelay(txDelay);
     frame->SetTxDelayBaseTime(
         static_cast<uint32_t>(mCslTxNeighbor->GetLastRxTimestamp())); // Only LSB part of the time is required.
-    frame->SetCsmaCaEnabled(false);
+    frame->SetCsmaCaEnabled(true);
 
 exit:
     return frame;
