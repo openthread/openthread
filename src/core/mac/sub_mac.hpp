@@ -518,6 +518,8 @@ private:
     void        WedInit(void);
     static void HandleWedTimer(Timer &aTimer);
     void        HandleWedTimer(void);
+    void        HandleWedReceiveAt(void);
+    void        HandleWedReceiveOrSleep(void);
 #endif
 
     static constexpr uint8_t  kCsmaMinBe         = 3;                  // macMinBE (IEEE 802.15.4-2006).
@@ -551,8 +553,9 @@ private:
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kStateCslTransmit, // CSL transmission.
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        kStateCslSample, // CSL receive.
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        kStateRadioSample, // Mac layer has requested the SubMac to enter sleep state, but the SubMac is in the periodic
+                           // sample state.
 #endif
     };
 
@@ -564,6 +567,11 @@ private:
     // CSL/wake-up listening receivers would wake up `kCslReceiveTimeAhead` earlier
     // than expected sample window. The value is in usec.
     static constexpr uint32_t kCslReceiveTimeAhead = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
+
+    enum Requester : uint8_t{
+        kRequesterCsl, // The CSL receiver requester.
+        kRequesterWed, // The Wake-up listener requester.
+    };
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
@@ -626,6 +634,14 @@ private:
     void               SetState(State aState);
     static const char *StateToString(State aState);
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    void RequestReceive(Requester aRequester);
+    void RequestSleep(Requester aRequester);
+    bool RequestSample(void);
+    void RadioSample(void);
+    bool IsRadioSampleEnabled(void) const;
+#endif
+
     using SubMacTimer =
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
         TimerMicroIn<SubMac, &SubMac::HandleTimer>;
@@ -672,6 +688,9 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    bool mIsWedSampling : 1;      // Indicates that the radio is requested to enter WED receive state for platforms not
+                                  // supporting delayed reception.
+    bool       mIsWedEnabled : 1; // Indicates if the WED is enabled.
     uint32_t   mWakeupListenInterval; // The wake-up listen interval, in microseconds.
     uint32_t   mWakeupListenDuration; // The wake-up listen duration, in microseconds.
     uint8_t    mWakeupChannel;        // The wake-up sample channel.
