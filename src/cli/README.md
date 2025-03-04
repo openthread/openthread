@@ -120,6 +120,7 @@ Done
 - [sntp](#sntp-query-sntp-server-ip-sntp-server-port)
 - [state](#state)
 - [srp](README_SRP.md)
+- [targetpower](#targetpower-channel-targetpower)
 - [tcat](README_TCAT.md)
 - [tcp](README_TCP.md)
 - [test](#test-tmforiginfilter-enabledisable)
@@ -3806,6 +3807,18 @@ Try to switch to state `detached`, `child`, `router`.
 
 ```bash
 > state detached
+Done
+```
+
+### targetpower \<channel\> \<targetpower\>
+
+Set the target power.
+
+- `channel` : Thread channel.
+- `targetpower` : The target power in the unit of 0.01dBm.
+
+```bash
+> targetpower 12 1000
 Done
 ```
 

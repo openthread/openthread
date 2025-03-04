@@ -6699,6 +6699,35 @@ exit:
 }
 
 /**
+ * @cli targetpower (set)
+ * @code
+ * targetpower 12 2000
+ * Done
+ * @endcode
+ * @cparam targetpower @ca{channel} @ca{targetpower}
+ * @par
+ * Sets the target power in the unit of 0.01 dBm.
+ * @sa otPlatRadioSetChannelTargetPower
+ */
+template <> otError Interpreter::Process<Cmd("targetpower")>(Arg aArgs[])
+{
+    otError  error = OT_ERROR_NONE;
+    uint8_t  channel;
+    int16_t  targetPower;
+    uint32_t channelMask;
+
+    SuccessOrExit(error = aArgs[0].ParseAsUint8(channel));
+    channelMask = otLinkGetSupportedChannelMask(GetInstancePtr());
+    VerifyOrExit((1 << channel) & channelMask, error = OT_ERROR_INVALID_ARGS);
+    SuccessOrExit(error = aArgs[1].ParseAsInt16(targetPower));
+
+    error = otPlatRadioSetChannelTargetPower(GetInstancePtr(), channel, targetPower);
+
+exit:
+    return error;
+}
+
+/**
  * @cli debug
  * @par
  * Executes a series of CLI commands to gather information about the device and thread network. This is intended for
@@ -8338,6 +8367,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("srp"),
 #endif
         CmdEntry("state"),
+        CmdEntry("targetpower"),
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
         CmdEntry("tcat"),
 #endif

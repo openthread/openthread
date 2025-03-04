@@ -123,6 +123,15 @@ send "txpower\n"
 expect -- "-10 dBm"
 expect_line "Done"
 
+send "targetpower 12 1000\n"
+expect_line "Done"
+
+send "targetpower 12 -1000\n"
+expect_line "Done"
+
+send "targetpower 10 1000\n"
+expect_line "Error 7: InvalidArgs"
+
 send "thread version\n"
 expect_line "Done"
 
