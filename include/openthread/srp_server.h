@@ -301,8 +301,12 @@ bool otSrpServerIsAutoEnableMode(otInstance *aInstance);
  * The Fast Start Mode can be enabled when the device is in the detached or disabled state, the SRP server is currently
  * disabled, and "auto-enable mode" is not in use (i.e., `otSrpServerIsAutoEnableMode()` returns `false`).
  *
- * After successfully enabling Fast Start Mode, it can be disabled by a direct call to `otSrpServerSetEnabled()`,
- * explicitly enabling or disabling the SRP server function.
+ * After successfully enabling Fast Start Mode, it can be disabled either by a call to `otSrpServerSetEnabled()`,
+ * explicitly enabling or disabling the SRP server, or by a call to `otSrpServerSetAutoEnableMode()`, enabling or
+ * disabling the auto-enable mode. If the Fast Start Mode (while active) enables the SRP server, upon disabling
+ * Fast Start Mode (regardless of how it is done), the SRP server will also be stopped, and the use of the
+ * `OT_SRP_SERVER_ADDRESS_MODE_UNICAST_FORCE_ADD` address mode will be stopped, and the address mode will be
+ * automatically reverted back to its previous setting before Fast Start Mode was enabled.
  *
  * @param[in] aInstance             A pointer to the OpenThread instance.
  *
