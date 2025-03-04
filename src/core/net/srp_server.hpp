@@ -949,6 +949,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+    void DisableFastStartMode(void);
     void HandleNotifierEvents(Events aEvents);
     bool NetDataContainsOtherSrpServers(void) const;
 #endif

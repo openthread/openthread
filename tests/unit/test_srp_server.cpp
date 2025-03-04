@@ -1368,6 +1368,22 @@ void TestSrpServerFastStartMode(void)
     VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start auto-enable mode and ensure "fast start mode" is turned
+    // off and the original AddressMode is restored on the SRP server.
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    srpServer->SetAutoEnableMode(true);
+
+    VerifyOrQuit(!srpServer->IsFastStartModeEnabled());
+    VerifyOrQuit(srpServer->IsAutoEnableMode());
+
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateDisabled);
+    VerifyOrQuit(srpServer->GetAddressMode() == Srp::Server::kAddressModeUnicast);
+
+    VerifyOrQuit(srpServer->EnableFastStartMode() == kErrorInvalidState);
+#endif
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Finalize OT instance and validate all heap allocations are freed.
 
     Log("Finalizing OT instance");
