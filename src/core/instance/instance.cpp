@@ -405,6 +405,10 @@ void Instance::AfterInit(void)
     Get<Trel::Link>().AfterInit();
 #endif
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    Get<Dns::Multicast::Core>().AfterInstanceInit();
+#endif
+
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION

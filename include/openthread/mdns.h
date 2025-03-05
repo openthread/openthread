@@ -204,6 +204,29 @@ bool otMdnsIsQuestionUnicastAllowed(otInstance *aInstance);
 void otMdnsSetConflictCallback(otInstance *aInstance, otMdnsConflictCallback aCallback);
 
 /**
+ * Gets the local host name.
+ *
+ * @param[in] aInstance     The OpenThread instance.
+ *
+ * @returns The local host name.
+ */
+const char *otMdnsGetLocalHostName(otInstance *aInstance);
+
+/**
+ * Sets the local host name.
+ *
+ * The local host name can be set only when the mDNS module is disabled. If not set the mDNS module itself will
+ * auto-generate the local host name.
+ *
+ * @param[in] aInstance   The OpenThread instance.
+ * @param[in] aName       The local host name to use, can be to `NULL` to allow the mDNS module to choose the name.
+ *
+ * @retval OT_ERROR_NONE            The local host name was successfully set.
+ * @retval OT_ERROR_INVALID_STATE   mDNS module is already enabled.
+ */
+otError otMdnsSetLocalHostName(otInstance *aInstance, const char *aName);
+
+/**
  * Registers or updates a host on mDNS.
  *
  * The fields in @p aHost follow these rules:
