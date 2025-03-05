@@ -109,9 +109,10 @@ private:
     {
         otPlatDnsUpstreamQuery *mThreadTxn;
         int                     mUdpFd;
+        sa_family_t             mFamily;
     };
 
-    static int CreateUdpSocket(void);
+    static int CreateUdpSocket(sa_family_t aFamily);
 
     Transaction *GetTransaction(int aFd);
     Transaction *GetTransaction(otPlatDnsUpstreamQuery *aThreadTxn);
@@ -123,10 +124,10 @@ private:
     void TryRefreshDnsServerList(void);
     void LoadDnsServerListFromConf(void);
 
-    bool      mIsResolvConfEnabled    = true;
-    int       mUpstreamDnsServerCount = 0;
-    in_addr_t mUpstreamDnsServerList[kMaxUpstreamServerCount];
-    uint64_t  mUpstreamDnsServerListFreshness = 0;
+    bool         mIsResolvConfEnabled    = true;
+    int          mUpstreamDnsServerCount = 0;
+    otIp6Address mUpstreamDnsServerList[kMaxUpstreamServerCount];
+    uint64_t     mUpstreamDnsServerListFreshness = 0;
 
     Transaction mUpstreamTransaction[kMaxUpstreamTransactionCount];
 };

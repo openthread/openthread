@@ -86,6 +86,7 @@ void Resolver::LoadDnsServerListFromConf(void)
 {
     std::string   line;
     std::ifstream fp;
+    otIp6Address  ip6Address;
 
     VerifyOrExit(mIsResolvConfEnabled);
 
@@ -97,12 +98,19 @@ void Resolver::LoadDnsServerListFromConf(void)
     {
         if (line.find(kNameserverItem, 0) == 0)
         {
-            in_addr_t addr;
-
-            if (inet_pton(AF_INET, &line.c_str()[sizeof(kNameserverItem)], &addr) == 1)
+            if (inet_pton(AF_INET, &line.c_str()[sizeof(kNameserverItem)], &ip6Address.mFields.m32[3]) == 1)
+            {
+                ip6Address.mFields.m32[0] = 0;
+                ip6Address.mFields.m32[1] = 0;
+                ip6Address.mFields.m32[2] = htonl(0xffff);
+                LogInfo("Got nameserver #%d: %s", mUpstreamDnsServerCount, &line.c_str()[sizeof(kNameserverItem)]);
+                mUpstreamDnsServerList[mUpstreamDnsServerCount] = ip6Address;
+                mUpstreamDnsServerCount++;
+            }
+            else if (inet_pton(AF_INET6, &line.c_str()[sizeof(kNameserverItem)], &ip6Address) == 1)
             {
                 LogInfo("Got nameserver #%d: %s", mUpstreamDnsServerCount, &line.c_str()[sizeof(kNameserverItem)]);
-                mUpstreamDnsServerList[mUpstreamDnsServerCount] = addr;
+                mUpstreamDnsServerList[mUpstreamDnsServerCount] = ip6Address;
                 mUpstreamDnsServerCount++;
             }
         }
@@ -120,10 +128,12 @@ exit:
 
 void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 {
-    char        packet[kMaxDnsMessageSize];
-    otError     error  = OT_ERROR_NONE;
-    uint16_t    length = otMessageGetLength(aQuery);
-    sockaddr_in serverAddr;
+    char         packet[kMaxDnsMessageSize];
+    otError      error  = OT_ERROR_NONE;
+    uint16_t     length = otMessageGetLength(aQuery);
+    otIp4Address ip4Addr;
+    sockaddr    *serverAddr;
+    socklen_t    serverAddrLen;
 
     Transaction *txn = nullptr;
 
@@ -135,21 +145,43 @@ void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 
     TryRefreshDnsServerList();
 
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port   = htons(53);
     for (int i = 0; i < mUpstreamDnsServerCount; i++)
     {
-        serverAddr.sin_addr.s_addr = mUpstreamDnsServerList[i];
-        VerifyOrExit(
-            sendto(txn->mUdpFd, packet, length, MSG_DONTWAIT, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) > 0,
-            error = OT_ERROR_NO_ROUTE);
+        if (otIp4FromIp4MappedIp6Address(&mUpstreamDnsServerList[i], &ip4Addr) == OT_ERROR_NONE)
+        {
+            sockaddr_in serverAddr4;
+            memcpy(&serverAddr4.sin_addr.s_addr, &ip4Addr, sizeof(otIp4Address));
+
+            serverAddr4.sin_family = AF_INET;
+            serverAddr4.sin_port   = htons(53);
+            serverAddr             = reinterpret_cast<sockaddr *>(&serverAddr4);
+            serverAddrLen          = sizeof(serverAddr4);
+        }
+        else
+        {
+            sockaddr_in6 serverAddr6;
+            memcpy(&serverAddr6.sin6_addr, &mUpstreamDnsServerList[i], sizeof(otIp6Address));
+
+            serverAddr6.sin6_family = AF_INET6;
+            serverAddr6.sin6_port   = htons(53);
+            serverAddr              = reinterpret_cast<sockaddr *>(&serverAddr6);
+            serverAddrLen           = sizeof(serverAddr6);
+        }
+
+        VerifyOrExit(sendto(txn->mUdpFd, packet, length, MSG_DONTWAIT, serverAddr, serverAddrLen) > 0,
+                     error = OT_ERROR_NO_ROUTE);
     }
     LogInfo("Forwarded DNS query %p to %d server(s).", static_cast<void *>(aTxn), mUpstreamDnsServerCount);
 
 exit:
     if (error != OT_ERROR_NONE)
     {
-        LogCrit("Failed to forward DNS query %p to server: %d", static_cast<void *>(aTxn), error);
+        LogCrit("Failed to forward DNS query %p to server: %s", static_cast<void *>(aTxn),
+                otThreadErrorToString(error));
+        if (txn != nullptr)
+        {
+            CloseTransaction(txn);
+        }
     }
     return;
 }
@@ -170,12 +202,13 @@ Resolver::Transaction *Resolver::AllocateTransaction(otPlatDnsUpstreamQuery *aTh
 {
     int          fdOrError = 0;
     Transaction *ret       = nullptr;
+    sa_family_t  family    = AF_INET6;
 
     for (Transaction &txn : mUpstreamTransaction)
     {
         if (txn.mThreadTxn == nullptr)
         {
-            fdOrError = CreateUdpSocket();
+            fdOrError = CreateUdpSocket(family);
             if (fdOrError < 0)
             {
                 LogInfo("Failed to create socket for upstream resolver: %d", fdOrError);
@@ -302,23 +335,18 @@ void Resolver::SetUpstreamDnsServers(const otIp6Address *aUpstreamDnsServers, in
 
     for (int i = 0; i < aNumServers && i < kMaxUpstreamServerCount; ++i)
     {
-        otIp4Address ip4Address;
-
-        // TODO: support DNS servers with IPv6 addresses
-        if (otIp4FromIp4MappedIp6Address(&aUpstreamDnsServers[i], &ip4Address) == OT_ERROR_NONE)
-        {
-            mUpstreamDnsServerList[mUpstreamDnsServerCount] = ip4Address.mFields.m32;
-            mUpstreamDnsServerCount++;
-        }
+        mUpstreamDnsServerList[mUpstreamDnsServerCount] = aUpstreamDnsServers[i];
+        mUpstreamDnsServerCount++;
     }
+    LogInfo("Set upstream DNS server list, count: %d", mUpstreamDnsServerCount);
 }
 
-int Resolver::CreateUdpSocket(void)
+int Resolver::CreateUdpSocket(sa_family_t aFamily)
 {
     int fd = -1;
 
     VerifyOrExit(otSysGetInfraNetifName() != nullptr, LogDebg("No infra network interface available"));
-    fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    fd = socket(aFamily, SOCK_DGRAM, IPPROTO_UDP);
     VerifyOrExit(fd >= 0, LogDebg("Failed to create the UDP socket: %s", strerror(errno)));
 #if OPENTHREAD_POSIX_CONFIG_UPSTREAM_DNS_BIND_TO_INFRA_NETIF
     if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, otSysGetInfraNetifName(), strlen(otSysGetInfraNetifName())) < 0)
