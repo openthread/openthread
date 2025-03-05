@@ -6717,8 +6717,11 @@ template <> otError Interpreter::Process<Cmd("targetpower")>(Arg aArgs[])
     uint32_t channelMask;
 
     SuccessOrExit(error = aArgs[0].ParseAsUint8(channel));
+    VerifyOrExit(channel < BitSizeOf(channelMask), error = OT_ERROR_INVALID_ARGS);
+
     channelMask = otLinkGetSupportedChannelMask(GetInstancePtr());
     VerifyOrExit((1 << channel) & channelMask, error = OT_ERROR_INVALID_ARGS);
+
     SuccessOrExit(error = aArgs[1].ParseAsInt16(targetPower));
 
     error = otPlatRadioSetChannelTargetPower(GetInstancePtr(), channel, targetPower);
