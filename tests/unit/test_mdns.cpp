@@ -245,7 +245,8 @@ struct DnsRecord : public Allocatable<DnsRecord>, public LinkedListEntry<DnsReco
     {
         RecordData(void) { memset(this, 0, sizeof(*this)); }
 
-        Ip6::Address                 mIp6Address; // For AAAAA (or A)
+        Ip6::Address                 mIp6Address; // For AAAAA
+        Ip4::Address                 mIp4Address; // For A
         SrvData                      mSrv;        // For SRV
         Array<uint8_t, kMaxDataSize> mData;       // For TXT or KEY
         DnsName                      mPtrName;    // For PTR
@@ -285,6 +286,12 @@ struct DnsRecord : public Allocatable<DnsRecord>, public LinkedListEntry<DnsReco
 
         switch (mType)
         {
+        case ResourceRecord::kTypeA:
+            VerifyOrQuit(record.GetLength() == sizeof(Ip4::Address));
+            SuccessOrQuit(aMessage.Read(offset, mData.mIp4Address));
+            logStr.Append(" %s", mData.mIp4Address.ToString().AsCString());
+            break;
+
         case ResourceRecord::kTypeAaaa:
             VerifyOrQuit(record.GetLength() == sizeof(Ip6::Address));
             SuccessOrQuit(aMessage.Read(offset, mData.mIp6Address));
@@ -402,6 +409,31 @@ struct DnsRecords : public OwningList<DnsRecord>
         {
             if (record.Matches(aFullName.AsCString()) && (record.mType == ResourceRecord::kTypeAaaa) &&
                 (record.mData.mIp6Address == aAddress))
+            {
+                VerifyOrExit(record.mClass == ResourceRecord::kClassInternet);
+                VerifyOrExit(record.mCacheFlush == aCacheFlush);
+                VerifyOrExit(record.MatchesTtl(aTtlCheckMode, aTtl));
+                contains = true;
+                ExitNow();
+            }
+        }
+
+    exit:
+        return contains;
+    }
+
+    bool ContainsA(const DnsNameString &aFullName,
+                   const Ip4::Address  &aAddress,
+                   bool                 aCacheFlush,
+                   TtlCheckMode         aTtlCheckMode,
+                   uint32_t             aTtl = 0) const
+    {
+        bool contains = false;
+
+        for (const DnsRecord &record : *this)
+        {
+            if (record.Matches(aFullName.AsCString()) && (record.mType == ResourceRecord::kTypeA) &&
+                (record.mData.mIp4Address == aAddress))
             {
                 VerifyOrExit(record.mClass == ResourceRecord::kClassInternet);
                 VerifyOrExit(record.mCacheFlush == aCacheFlush);
@@ -556,7 +588,7 @@ struct DnsRecords : public OwningList<DnsRecord>
     }
 };
 
-// Bit-flags used in `Validate()` with a `Service`
+// Bit-flags used in `Validate()` with a `Service` or `LocalHost`
 // to specify which records should be checked in the announce
 // message.
 
@@ -566,6 +598,8 @@ static constexpr uint8_t kCheckSrv         = (1 << 0);
 static constexpr uint8_t kCheckTxt         = (1 << 1);
 static constexpr uint8_t kCheckPtr         = (1 << 2);
 static constexpr uint8_t kCheckServicesPtr = (1 << 3);
+static constexpr uint8_t kCheckAaaa        = (1 << 4);
+static constexpr uint8_t kCheckA           = (1 << 5);
 
 enum GoodBye : bool // Used to indicate "goodbye" records (with zero TTL)
 {
@@ -579,6 +613,16 @@ enum DnsMessageType : uint8_t
     kMulticastResponse,
     kUnicastResponse,
     kLegacyUnicastResponse,
+};
+
+struct LocalHost
+{
+    static constexpr uint32_t kTtl      = 120;
+    static constexpr uint16_t kMaxAddrs = 16;
+
+    char                           mName[Name::kMaxNameSize];
+    Array<Ip6::Address, kMaxAddrs> mIp6Addrs;
+    Array<Ip4::Address, kMaxAddrs> mIp4Addrs;
 };
 
 struct DnsMessage : public Allocatable<DnsMessage>, public LinkedListEntry<DnsMessage>
@@ -743,6 +787,27 @@ struct DnsMessage : public Allocatable<DnsMessage>, public LinkedListEntry<DnsMe
         }
     }
 
+    void ValidateAsProbeFor(const LocalHost &aLocalHost, bool aUnicastResponse) const
+    {
+        DnsNameString fullName;
+
+        VerifyOrQuit(mHeader.GetType() == Header::kTypeQuery);
+        VerifyOrQuit(!mHeader.IsTruncationFlagSet());
+
+        fullName.Append("%s.local.", aLocalHost.mName);
+        VerifyOrQuit(mQuestions.Contains(fullName, aUnicastResponse));
+
+        for (const Ip6::Address &ip6Addr : aLocalHost.mIp6Addrs)
+        {
+            VerifyOrQuit(mAuthRecords.ContainsAaaa(fullName, ip6Addr, !kCacheFlush, kNonZeroTtl, LocalHost::kTtl));
+        }
+
+        for (const Ip4::Address &ip4Addr : aLocalHost.mIp4Addrs)
+        {
+            VerifyOrQuit(mAuthRecords.ContainsA(fullName, ip4Addr, !kCacheFlush, kNonZeroTtl, LocalHost::kTtl));
+        }
+    }
+
     void ValidateAsProbeFor(const Core::Service &aService, bool aUnicastResponse) const
     {
         DnsNameString serviceName;
@@ -776,8 +841,7 @@ struct DnsMessage : public Allocatable<DnsMessage>, public LinkedListEntry<DnsMe
     {
         DnsNameString fullName;
         TtlCheckMode  ttlCheck;
-
-        bool cacheFlushSet = (mType == kLegacyUnicastResponse) ? !kCacheFlush : kCacheFlush;
+        bool          cacheFlushSet = (mType == kLegacyUnicastResponse) ? !kCacheFlush : kCacheFlush;
 
         ttlCheck = DetermineTtlCheckMode(mType, aIsGoodBye);
 
@@ -794,6 +858,49 @@ struct DnsMessage : public Allocatable<DnsMessage>, public LinkedListEntry<DnsMe
         if (!aIsGoodBye && (aSection == kInAnswerSection))
         {
             VerifyOrQuit(mAdditionalRecords.ContainsNsec(fullName, ResourceRecord::kTypeAaaa));
+        }
+    }
+
+    void Validate(const LocalHost   &aLocalHost,
+                  Section            aSection,
+                  AnnounceCheckFlags aCheckFlags,
+                  GoodBye            aIsGoodBye = kNotGoodBye) const
+    {
+        DnsNameString fullName;
+        TtlCheckMode  ttlCheck;
+        bool          cacheFlushSet = (mType == kLegacyUnicastResponse) ? !kCacheFlush : kCacheFlush;
+
+        ttlCheck = DetermineTtlCheckMode(mType, aIsGoodBye);
+
+        VerifyOrQuit(mHeader.GetType() == Header::kTypeResponse);
+
+        fullName.Append("%s.local.", aLocalHost.mName);
+
+        if (aCheckFlags & kCheckAaaa)
+        {
+            for (const Ip6::Address &ip6Addr : aLocalHost.mIp6Addrs)
+            {
+                VerifyOrQuit(
+                    RecordsFor(aSection).ContainsAaaa(fullName, ip6Addr, cacheFlushSet, ttlCheck, LocalHost::kTtl));
+            }
+        }
+
+        if (aCheckFlags & kCheckA)
+        {
+            for (const Ip4::Address &ip4Addr : aLocalHost.mIp4Addrs)
+            {
+                VerifyOrQuit(
+                    RecordsFor(aSection).ContainsA(fullName, ip4Addr, cacheFlushSet, ttlCheck, LocalHost::kTtl));
+            }
+        }
+
+        if (!aIsGoodBye && (aSection == kInAnswerSection))
+        {
+            bool shouldSeeAaaa = (aLocalHost.mIp6Addrs.GetLength() != 0);
+            bool shouldSeeA    = (aLocalHost.mIp4Addrs.GetLength() != 0);
+
+            VerifyOrQuit(mAdditionalRecords.ContainsNsec(fullName, ResourceRecord::kTypeAaaa) == shouldSeeAaaa);
+            VerifyOrQuit(mAdditionalRecords.ContainsNsec(fullName, ResourceRecord::kTypeA) == shouldSeeA);
         }
     }
 
@@ -2044,6 +2151,370 @@ void TestHostReg(void)
 
     AdvanceTime(15000);
     VerifyOrQuit(sRegCallbacks[5].mWasCalled);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of test");
+
+    testFreeInstance(sInstance);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void TestLocalHost(void)
+{
+    Core             *mdns = InitTest();
+    LocalHost         localHost;
+    Ip6::Address      ip6Address;
+    Ip4::Address      ip4Address;
+    const DnsMessage *dnsMsg;
+    uint16_t          heapAllocations;
+    DnsNameString     hostFullName;
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("TestLocalHost");
+
+    AdvanceTime(1);
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    SuccessOrQuit(StringCopy(localHost.mName, mdns->GetLocalHostName()));
+    Log("Local host name is \"%s\"", localHost.mName);
+
+    hostFullName.Append("%s.local.", localHost.mName);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Add an IP6 address and IP4 address for local host, check probes and announcements");
+
+    SuccessOrQuit(ip6Address.FromString("fd00:cafe::1"));
+    SuccessOrQuit(localHost.mIp6Addrs.PushBack(ip6Address));
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
+
+    SuccessOrQuit(ip4Address.FromString("200.1.5.6"));
+    SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
+    ip6Address.SetToIp4Mapped(ip4Address);
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
+
+    AdvanceTime(4);
+
+    sDnsMessages.Clear();
+
+    for (uint8_t probeCount = 0; probeCount < 3; probeCount++)
+    {
+        sDnsMessages.Clear();
+
+        AdvanceTime(250);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 2, /* Addnl */ 0);
+        dnsMsg->ValidateAsProbeFor(localHost, /* aUnicastRequest */ (probeCount == 0));
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    for (uint8_t anncCount = 0; anncCount < kNumAnnounces; anncCount++)
+    {
+        sDnsMessages.Clear();
+
+        AdvanceTime((anncCount == 0) ? 250 : (1U << (anncCount - 1)) * 1000);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 2, /* Auth */ 0, /* Addnl */ 1);
+        dnsMsg->Validate(localHost, kInAnswerSection, kCheckAaaa | kCheckA);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a query for AAAA record and validate the response");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQuery(hostFullName.AsCString(), ResourceRecord::kTypeAaaa);
+
+    AdvanceTime(1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 1);
+    dnsMsg->Validate(localHost, kInAnswerSection, kCheckAaaa);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a query for A record and validate the response");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQuery(hostFullName.AsCString(), ResourceRecord::kTypeA);
+
+    AdvanceTime(1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 1);
+    dnsMsg->Validate(localHost, kInAnswerSection, kCheckA);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a query for ANY record and validate the response");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQuery(hostFullName.AsCString(), ResourceRecord::kTypeAny);
+
+    AdvanceTime(1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 2, /* Auth */ 0, /* Addnl */ 1);
+    dnsMsg->Validate(localHost, kInAnswerSection, kCheckAaaa | kCheckA);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a query for non-existing record and validate the response with NSEC");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQuery(hostFullName.AsCString(), ResourceRecord::kTypeKey);
+
+    AdvanceTime(1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+    VerifyOrQuit(dnsMsg != nullptr);
+    dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 1);
+    VerifyOrQuit(dnsMsg->mAdditionalRecords.ContainsNsec(hostFullName, ResourceRecord::kTypeAaaa));
+    VerifyOrQuit(dnsMsg->mAdditionalRecords.ContainsNsec(hostFullName, ResourceRecord::kTypeA));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Signal a new host IPv6 address is added and validate new announcements");
+
+    SuccessOrQuit(ip6Address.FromString("fd00:cafe::22"));
+    SuccessOrQuit(localHost.mIp6Addrs.PushBack(ip6Address));
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
+
+    sDnsMessages.Clear();
+
+    AdvanceTime(5);
+
+    for (uint8_t anncCount = 0; anncCount < kNumAnnounces; anncCount++)
+    {
+        AdvanceTime((anncCount == 0) ? 0 : (1U << (anncCount - 1)) * 1000);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 2, /* Auth */ 0, /* Addnl */ 1);
+        dnsMsg->Validate(localHost, kInAnswerSection, kCheckAaaa);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+        sDnsMessages.Clear();
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Signal new host IPv6 addresses added and removed");
+
+    SuccessOrQuit(ip6Address.FromString("fd00:cafe::22"));
+    localHost.mIp6Addrs.Remove(ip6Address);
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ false, kInfraIfIndex);
+
+    // Add and then remove the same address quickly
+    // It should not be included in the announcements.
+
+    SuccessOrQuit(ip6Address.FromString("fd00:cafe::333"));
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
+    AdvanceTime(1);
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ false, kInfraIfIndex);
+
+    SuccessOrQuit(ip6Address.FromString("fd00:cafe::4444"));
+    SuccessOrQuit(localHost.mIp6Addrs.PushBack(ip6Address));
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
+
+    Log("Validate the announcements");
+
+    sDnsMessages.Clear();
+
+    AdvanceTime(4);
+
+    for (uint8_t anncCount = 0; anncCount < kNumAnnounces; anncCount++)
+    {
+        AdvanceTime((anncCount == 0) ? 0 : (1U << (anncCount - 1)) * 1000);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 2, /* Auth */ 0, /* Addnl */ 1);
+        dnsMsg->Validate(localHost, kInAnswerSection, kCheckAaaa);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+        sDnsMessages.Clear();
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Signal three new host IPv4 addresses added");
+
+    SuccessOrQuit(ip4Address.FromString("200.1.5.7"));
+    SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
+    ip6Address.SetToIp4Mapped(ip4Address);
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
+
+    SuccessOrQuit(ip4Address.FromString("200.1.2.100"));
+    SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
+    ip6Address.SetToIp4Mapped(ip4Address);
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
+
+    SuccessOrQuit(ip4Address.FromString("200.1.4.0"));
+    SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
+    ip6Address.SetToIp4Mapped(ip4Address);
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
+
+    Log("Validate the announcements");
+
+    sDnsMessages.Clear();
+
+    AdvanceTime(5);
+
+    for (uint8_t anncCount = 0; anncCount < kNumAnnounces; anncCount++)
+    {
+        AdvanceTime((anncCount == 0) ? 0 : (1U << (anncCount - 1)) * 1000);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 4, /* Auth */ 0, /* Addnl */ 1);
+        dnsMsg->Validate(localHost, kInAnswerSection, kCheckA);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+        sDnsMessages.Clear();
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Signal all host IPv4 addresses are removed, validate goodbye announcements");
+
+    for (const Ip4::Address &ip4Addr : localHost.mIp4Addrs)
+    {
+        ip6Address.SetToIp4Mapped(ip4Addr);
+        otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ false, kInfraIfIndex);
+    }
+
+    localHost.mIp4Addrs.Clear();
+
+    sDnsMessages.Clear();
+
+    AdvanceTime(5);
+
+    for (uint8_t anncCount = 0; anncCount < kNumAnnounces; anncCount++)
+    {
+        AdvanceTime((anncCount == 0) ? 0 : (1U << (anncCount - 1)) * 1000);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 4, /* Auth */ 0, /* Addnl */ 1);
+        dnsMsg->Validate(localHost, kInAnswerSection, kCheckA, kGoodBye);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+        sDnsMessages.Clear();
+    }
+
+    AdvanceTime(10 * 1000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Signal removal of an IPv6 host address which was not added earlier");
+
+    SuccessOrQuit(ip6Address.FromString("fd00:cafe::beef"));
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ false, kInfraIfIndex);
+
+    Log("Validate that there are no announcements");
+
+    sDnsMessages.Clear();
+
+    AdvanceTime(10 * 1000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Signal remove and re-add of the same host IPv6 address quickly");
+
+    ip6Address = localHost.mIp6Addrs[0];
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ false, kInfraIfIndex);
+    AdvanceTime(1);
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
+
+    Log("Validate that there are no announcements");
+
+    sDnsMessages.Clear();
+
+    AdvanceTime(10 * 1000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Validate `SetLocalHostName()`");
+
+    VerifyOrQuit(mdns->SetLocalHostName("itsme") == kErrorInvalidState);
+
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+
+    SuccessOrQuit(mdns->SetLocalHostName("itsme"));
+    VerifyOrQuit(StringMatch(mdns->GetLocalHostName(), "itsme"));
+
+    localHost.mIp4Addrs.Clear();
+    localHost.mIp6Addrs.Clear();
+
+    SuccessOrQuit(StringCopy(localHost.mName, mdns->GetLocalHostName()));
+    Log("Local host name is \"%s\"", localHost.mName);
+
+    hostFullName.Append("%s.local.", localHost.mName);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Re-enable mDNS module, add 4 new host IPv6 address and validate probe and announcements");
+
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    SuccessOrQuit(ip6Address.FromString("fd00:beef::a"));
+    SuccessOrQuit(localHost.mIp6Addrs.PushBack(ip6Address));
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
+
+    SuccessOrQuit(ip6Address.FromString("fd00:beef::b"));
+    SuccessOrQuit(localHost.mIp6Addrs.PushBack(ip6Address));
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
+
+    SuccessOrQuit(ip6Address.FromString("fd00:beef::c"));
+    SuccessOrQuit(localHost.mIp6Addrs.PushBack(ip6Address));
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
+
+    SuccessOrQuit(ip6Address.FromString("fd00:beef::d"));
+    SuccessOrQuit(localHost.mIp6Addrs.PushBack(ip6Address));
+    otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
+
+    AdvanceTime(4);
+
+    sDnsMessages.Clear();
+
+    for (uint8_t probeCount = 0; probeCount < 3; probeCount++)
+    {
+        sDnsMessages.Clear();
+
+        AdvanceTime(250);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 4, /* Addnl */ 0);
+        dnsMsg->ValidateAsProbeFor(localHost, /* aUnicastRequest */ (probeCount == 0));
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    for (uint8_t anncCount = 0; anncCount < kNumAnnounces; anncCount++)
+    {
+        sDnsMessages.Clear();
+
+        AdvanceTime((anncCount == 0) ? 250 : (1U << (anncCount - 1)) * 1000);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 4, /* Auth */ 0, /* Addnl */ 1);
+        dnsMsg->Validate(localHost, kInAnswerSection, kCheckAaaa | kCheckA);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    AdvanceTime(1000);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
 
@@ -8182,6 +8653,7 @@ int main(void)
 {
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
     ot::Dns::Multicast::TestHostReg();
+    ot::Dns::Multicast::TestLocalHost();
     ot::Dns::Multicast::TestKeyReg();
     ot::Dns::Multicast::TestServiceReg();
     ot::Dns::Multicast::TestUnregisterBeforeProbeFinished();
