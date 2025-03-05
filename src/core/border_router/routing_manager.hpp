@@ -109,6 +109,8 @@ public:
     typedef otBorderRoutingPrefixTableIterator    PrefixTableIterator; ///< Prefix Table Iterator.
     typedef otBorderRoutingPrefixTableEntry       PrefixTableEntry;    ///< Prefix Table Entry.
     typedef otBorderRoutingRouterEntry            RouterEntry;         ///< Router Entry.
+    typedef otBorderRoutingRdnssAddrEntry         RdnssAddrEntry;      ///< RDNSS Address Entry.
+    typedef otBorderRoutingRdnssAddrCallback      RdnssAddrCallback;   ///< RDNS Address changed callback.
     typedef otBorderRoutingPeerBorderRouterEntry  PeerBrEntry;         ///< Peer Border Router Entry.
     typedef otPdProcessedRaInfo                   PdProcessedRaInfo;   ///< Data of PdProcessedRaInfo.
     typedef otBorderRoutingRequestDhcp6PdCallback PdCallback;          ///< DHCPv6 PD callback.
@@ -472,6 +474,35 @@ public:
         return mRxRaTracker.GetNextRouter(aIterator, aEntry);
     }
 
+    /**
+     * Iterates over the discovered Recursive DNS Server (RDNSS) address entries.
+     *
+     * @param[in,out] aIterator    An iterator.
+     * @param[out]    aEntry       A reference to the entry to populate.
+     *
+     * @retval kErrorNone         Iterated to the next address entry, @p aEntry and @p aIterator are updated.
+     * @retval kErrorNotFound     No more entries in the table.
+     * @retval kErrorInvalidArgs  The @p aIterator is not valid (e.g. used to iterate over other entry types).
+     */
+    Error GetNextRdnssAddrEntry(PrefixTableIterator &aIterator, RdnssAddrEntry &aEntry)
+    {
+        return mRxRaTracker.GetNextRdnssAddr(aIterator, aEntry);
+    }
+
+    /**
+     * Sets the callback to be notified of changes to discovered Recursive DNS Server (RDNSS) address entries.
+     *
+     * A subsequent call to this method, replaces a previously set callback.
+     *
+     * @param[in] aCallback   The callback function pointer. Can be `nullptr` if no callback is required.
+     * @param[in] aConext     An arbitrary context information (used when invoking the callback).
+     *
+     */
+    void SetRdnssAddrCallback(RdnssAddrCallback aCallback, void *aContext)
+    {
+        mRxRaTracker.SetRdnssCallback(aCallback, aContext);
+    }
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 
     /**
@@ -642,16 +673,17 @@ private:
     //------------------------------------------------------------------------------------------------------------------
     // Typedefs
 
-    using Option                = Ip6::Nd::Option;
-    using PrefixInfoOption      = Ip6::Nd::PrefixInfoOption;
-    using RouteInfoOption       = Ip6::Nd::RouteInfoOption;
-    using RaFlagsExtOption      = Ip6::Nd::RaFlagsExtOption;
-    using RouterAdvert          = Ip6::Nd::RouterAdvert;
-    using NeighborAdvertMessage = Ip6::Nd::NeighborAdvertMessage;
-    using TxMessage             = Ip6::Nd::TxMessage;
-    using NeighborSolicitHeader = Ip6::Nd::NeighborSolicitHeader;
-    using RouterSolicitHeader   = Ip6::Nd::RouterSolicitHeader;
-    using LinkLayerAddress      = InfraIf::LinkLayerAddress;
+    using Option                   = Ip6::Nd::Option;
+    using PrefixInfoOption         = Ip6::Nd::PrefixInfoOption;
+    using RouteInfoOption          = Ip6::Nd::RouteInfoOption;
+    using RaFlagsExtOption         = Ip6::Nd::RaFlagsExtOption;
+    using RecursiveDnsServerOption = Ip6::Nd::RecursiveDnsServerOption;
+    using RouterAdvert             = Ip6::Nd::RouterAdvert;
+    using NeighborAdvertMessage    = Ip6::Nd::NeighborAdvertMessage;
+    using TxMessage                = Ip6::Nd::TxMessage;
+    using NeighborSolicitHeader    = Ip6::Nd::NeighborSolicitHeader;
+    using RouterSolicitHeader      = Ip6::Nd::RouterSolicitHeader;
+    using LinkLayerAddress         = InfraIf::LinkLayerAddress;
 
     //------------------------------------------------------------------------------------------------------------------
     // Enumerations
@@ -680,18 +712,18 @@ private:
     //------------------------------------------------------------------------------------------------------------------
     // Nested types
 
+    struct ExpirationChecker
+    {
+        explicit ExpirationChecker(TimeMilli aNow) { mNow = aNow; }
+        TimeMilli mNow;
+    };
+
     class LifetimedPrefix
     {
         // Represents an IPv6 prefix with its valid lifetime. Used as
         // base class for `OnLinkPrefix` or `RoutePrefix`.
 
     public:
-        struct ExpirationChecker
-        {
-            explicit ExpirationChecker(TimeMilli aNow) { mNow = aNow; }
-            TimeMilli mNow;
-        };
-
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
         Ip6::Prefix       &GetPrefix(void) { return mPrefix; }
         const TimeMilli   &GetLastUpdateTime(void) const { return mLastUpdateTime; }
@@ -759,6 +791,28 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    class RdnssAddress
+    {
+    public:
+        void                SetFrom(const RecursiveDnsServerOption &aRdnss, uint8_t aAddressIndex);
+        const Ip6::Address &GetAddress(void) const { return mAddress; }
+        const TimeMilli    &GetLastUpdateTime(void) const { return mLastUpdateTime; }
+        uint32_t            GetLifetime(void) const { return mLifetime; }
+        TimeMilli           GetExpireTime(void) const;
+        void                ClearLifetime(void) { mLifetime = 0; }
+        void                CopyInfoTo(RdnssAddrEntry &aEntry, TimeMilli aNow) const;
+
+        bool Matches(const Ip6::Address &aAddress) const { return (mAddress == aAddress); }
+        bool Matches(const ExpirationChecker &aChecker) const { return (GetExpireTime() <= aChecker.mNow); }
+
+    private:
+        Ip6::Address mAddress;
+        uint32_t     mLifetime;
+        TimeMilli    mLastUpdateTime;
+    };
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 
     class RxRaTracker;
@@ -805,9 +859,11 @@ private:
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     void HandleRxRaTrackerSignalTask(void) { mRxRaTracker.HandleSignalTask(); }
+    void HandleRxRaTrackerRdnssAddrTask(void) { mRxRaTracker.HandleRdnssAddrTask(); }
     void HandleRxRaTrackerExpirationTimer(void) { mRxRaTracker.HandleExpirationTimer(); }
     void HandleRxRaTrackerStaleTimer(void) { mRxRaTracker.HandleStaleTimer(); }
     void HandleRxRaTrackerRouterTimer(void) { mRxRaTracker.HandleRouterTimer(); }
+    void HandleRxRaTrackerRdnssAddrTimer(void) { mRxRaTracker.HandleRdnssAddrTimer(); }
 
     class RxRaTracker : public InstanceLocator
     {
@@ -831,6 +887,8 @@ private:
         void Start(void);
         void Stop(void);
 
+        void SetRdnssCallback(RdnssAddrCallback aCallback, void *aContext) { mRdnssCallback.Set(aCallback, aContext); }
+
         void ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaMessage,
                                         const Ip6::Address            &aSrcAddress,
                                         RouterAdvOrigin                aRaOrigin);
@@ -853,6 +911,7 @@ private:
         void  InitIterator(PrefixTableIterator &aIterator) const;
         Error GetNextEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const;
         Error GetNextRouter(PrefixTableIterator &aIterator, RouterEntry &aEntry) const;
+        Error GetNextRdnssAddr(PrefixTableIterator &aIterator, RdnssAddrEntry &aEntry) const;
 
         // Callbacks notifying of changes
         void RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold);
@@ -861,9 +920,11 @@ private:
 
         // Tasklet or timer callbacks
         void HandleSignalTask(void);
+        void HandleRdnssAddrTask(void);
         void HandleExpirationTimer(void);
         void HandleStaleTimer(void);
         void HandleRouterTimer(void);
+        void HandleRdnssAddrTimer(void);
 
     private:
         //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
@@ -906,7 +967,9 @@ private:
 
             static_assert(kMaxNsProbes < 255, "kMaxNsProbes MUST not be 255");
 
-            typedef LifetimedPrefix::ExpirationChecker EmptyChecker;
+            struct EmptyChecker
+            {
+            };
 
             bool IsReachable(void) const { return mNsProbeCount <= kMaxNsProbes; }
             bool ShouldCheckReachability(void) const;
@@ -919,6 +982,7 @@ private:
 
             using OnLinkPrefixList = OwningList<Entry<OnLinkPrefix>>;
             using RoutePrefixList  = OwningList<Entry<RoutePrefix>>;
+            using RdnssAddressList = OwningList<Entry<RdnssAddress>>;
 
             // `mDiscoverTime` tracks the initial discovery time of
             // this router. To accommodate longer durations, the
@@ -933,6 +997,7 @@ private:
             Ip6::Address     mAddress;
             OnLinkPrefixList mOnLinkPrefixes;
             RoutePrefixList  mRoutePrefixes;
+            RdnssAddressList mRdnssAddresses;
             uint32_t         mDiscoverTime;
             TimeMilli        mLastUpdateTime;
             TimeMilli        mTimeoutTime;
@@ -954,6 +1019,7 @@ private:
                 kUnspecified,
                 kRouterIterator,
                 kPrefixIterator,
+                kRdnssAddrIterator,
                 kPeerBrIterator,
             };
 
@@ -966,15 +1032,16 @@ private:
             void                 Init(const Entry<Router> *aRoutersHead, uint32_t aUptime);
             Error                AdvanceToNextRouter(Type aType);
             Error                AdvanceToNextEntry(void);
+            Error                AdvanceToNextRdnssAddrEntry(void);
             uint32_t             GetInitUptime(void) const { return mData0; }
             TimeMilli            GetInitTime(void) const { return TimeMilli(mData1); }
             Type                 GetType(void) const { return static_cast<Type>(mData2); }
             const Entry<Router> *GetRouter(void) const { return static_cast<const Entry<Router> *>(mPtr1); }
             EntryType            GetEntryType(void) const { return static_cast<EntryType>(mData3); }
 
-            template <class PrefixType> const Entry<PrefixType> *GetEntry(void) const
+            template <typename ObjectType> const Entry<ObjectType> *GetEntry(void) const
             {
-                return static_cast<const Entry<PrefixType> *>(mPtr2);
+                return static_cast<const Entry<ObjectType> *>(mPtr2);
             }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
@@ -1007,11 +1074,12 @@ private:
             SharedEntry       *GetNext(void) { return mNext; }
             const SharedEntry *GetNext(void) const { return mNext; }
 
-            template <class PrefixType> Entry<PrefixType> &GetEntry(void);
+            template <class Type> Entry<Type> &GetEntry(void);
 
             SharedEntry        *mNext;
             Entry<OnLinkPrefix> mOnLinkEntry;
             Entry<RoutePrefix>  mRouteEntry;
+            Entry<RdnssAddress> mRdnssAddrEntry;
         };
 #endif
 
@@ -1039,6 +1107,7 @@ private:
         void ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter, RouterAdvOrigin aRaOrigin);
         void ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
         void ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
+        void ProcessRecursiveDnsServerOption(const RecursiveDnsServerOption &aRdnss, Router &aRouter);
         void Evaluate(void);
         void DetermineStaleTimeFor(const OnLinkPrefix &aPrefix, NextFireTime &aStaleTime);
         void DetermineStaleTimeFor(const RoutePrefix &aPrefix, NextFireTime &aStaleTime);
@@ -1050,17 +1119,23 @@ private:
 #endif
 
         using SignalTask      = TaskletIn<RoutingManager, &RoutingManager::HandleRxRaTrackerSignalTask>;
+        using RdnssAddrTask   = TaskletIn<RoutingManager, &RoutingManager::HandleRxRaTrackerRdnssAddrTask>;
         using ExpirationTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleRxRaTrackerExpirationTimer>;
         using StaleTimer      = TimerMilliIn<RoutingManager, &RoutingManager::HandleRxRaTrackerStaleTimer>;
         using RouterTimer     = TimerMilliIn<RoutingManager, &RoutingManager::HandleRxRaTrackerRouterTimer>;
+        using RdnssAddrTimer  = TimerMilliIn<RoutingManager, &RoutingManager::HandleRxRaTrackerRdnssAddrTimer>;
         using RouterList      = OwningList<Entry<Router>>;
+        using RdnssCallback   = Callback<RdnssAddrCallback>;
 
         DecisionFactors      mDecisionFactors;
         RouterList           mRouters;
         ExpirationTimer      mExpirationTimer;
         StaleTimer           mStaleTimer;
         RouterTimer          mRouterTimer;
+        RdnssAddrTimer       mRdnssAddrTimer;
         SignalTask           mSignalTask;
+        RdnssAddrTask        mRdnssAddrTask;
+        RdnssCallback        mRdnssCallback;
         RouterAdvert::Header mLocalRaHeader;
         TimeMilli            mLocalRaHeaderUpdateTime;
 
@@ -1551,6 +1626,7 @@ private:
     static void LogRaHeader(const RouterAdvert::Header &aRaHeader);
     static void LogPrefixInfoOption(const Ip6::Prefix &aPrefix, uint32_t aValidLifetime, uint32_t aPreferredLifetime);
     static void LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime, RoutePreference aPreference);
+    static void LogRecursiveDnsServerOption(const Ip6::Address &aAddress, uint32_t aLifetime);
 
     static const char *RouterAdvOriginToString(RouterAdvOrigin aRaOrigin);
 
@@ -1620,6 +1696,13 @@ inline RoutingManager::RxRaTracker::Entry<RoutingManager::RoutePrefix>
     &RoutingManager::RxRaTracker::SharedEntry::GetEntry(void)
 {
     return mRouteEntry;
+}
+
+template <>
+inline RoutingManager::RxRaTracker::Entry<RoutingManager::RdnssAddress>
+    &RoutingManager::RxRaTracker::SharedEntry::GetEntry(void)
+{
+    return mRdnssAddrEntry;
 }
 
 // Declare template (full) specializations for `Router` type.

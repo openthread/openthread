@@ -526,6 +526,51 @@ exit:
     return error;
 }
 
+/**
+ * @cli br rdnsstable
+ * @code
+ * br rdnsstable
+ * fd00:1234:5678::1, lifetime:500, ms-since-rx:29526, router:ff02:0:0:0:0:0:0:1 (M:0 O:0 S:1)
+ * fd00:aaaa::2, lifetime:500, ms-since-rx:107, router:ff02:0:0:0:0:0:0:1 (M:0 O:0 S:1)
+ * Done
+ * @endcode
+ * @par
+ * Get the discovered Recursive DNS Server (RDNSS) address table by Border Routing Manager on the infrastructure link.
+ * Info per entry:
+ * - IPv6 address
+ * - Lifetime in seconds
+ * - Milliseconds since last received Router Advertisement containing this address
+ * - The router IPv6 address which advertised this prefix
+ * - Flags in received Router Advertisement header:
+ *   - M: Managed Address Config flag
+ *   - O: Other Config flag
+ *   - S: SNAC Router flag
+ * @sa otBorderRoutingGetNextRdnssAddrEntry
+ */
+template <> otError Br::Process<Cmd("rdnsstable")>(Arg aArgs[])
+{
+    otError                            error = OT_ERROR_NONE;
+    otBorderRoutingPrefixTableIterator iterator;
+    otBorderRoutingRdnssAddrEntry      entry;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    otBorderRoutingPrefixTableInitIterator(GetInstancePtr(), &iterator);
+
+    while (otBorderRoutingGetNextRdnssAddrEntry(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
+    {
+        char string[OT_IP6_ADDRESS_STRING_SIZE];
+
+        otIp6AddressToString(&entry.mAddress, string, sizeof(string));
+        OutputFormat("%s, lifetime:%lu, ms-since-rx:%lu, router:", string, ToUlong(entry.mLifetime),
+                     ToUlong(entry.mMsecSinceLastUpdate));
+        OutputRouterInfo(entry.mRouter, kShortVersion);
+    }
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 template <> otError Br::Process<Cmd("pd")>(Arg aArgs[])
 {
@@ -890,6 +935,7 @@ otError Br::Process(Arg aArgs[])
 #endif
         CmdEntry("prefixtable"),
         CmdEntry("raoptions"),
+        CmdEntry("rdnsstable"),
         CmdEntry("rioprf"),
         CmdEntry("routeprf"),
         CmdEntry("routers"),
