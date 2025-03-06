@@ -421,7 +421,7 @@ uint16_t otLinkGetCcaFailureRate(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 bool otLinkIsCslEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().IsCslEnabled(); }
 
-bool otLinkIsCslSupported(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().IsCslSupported(); }
+bool otLinkIsCslSupported(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mle::Mle>().IsCslSupported(); }
 
 uint8_t otLinkGetCslChannel(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().GetCslChannel(); }
 
