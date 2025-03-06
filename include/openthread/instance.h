@@ -115,6 +115,18 @@ otInstance *otInstanceInitSingle(void);
 otInstance *otInstanceInitMultiple(uint8_t aIdx);
 
 /**
+ * Gets the index of the OpenThread instance when multiple instance is in use.
+ *
+ * This function is available when both `OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE` and
+ * `OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE` are enabled.
+ *
+ * @param[in] aInstance The reference of the OpenThread instance to get index.
+ *
+ * @returns The index of the OpenThread instance.
+ */
+uint8_t otInstanceGetIdx(otInstance *aInstance);
+
+/**
  * Gets the instance identifier.
  *
  * The instance identifier is set to a random value when the instance is constructed, and then its value will not
