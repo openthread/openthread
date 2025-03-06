@@ -171,6 +171,17 @@ uint8_t RouteInfoOption::OptionLengthForPrefix(uint8_t aPrefixLength)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+// RecursiveDNSServer
+
+void RecursiveDNSServer::Init(void)
+{
+    Clear();
+    SetType(kTypeRaFlagsExtension);
+
+    OT_UNUSED_VARIABLE(mReserved);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 // RaFlagsExtOption
 
 void RaFlagsExtOption::Init(void)

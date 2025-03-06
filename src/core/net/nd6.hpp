@@ -78,11 +78,12 @@ class Option
 public:
     enum Type : uint8_t
     {
-        kSourceLinkLayerAddr  = 1,  ///< Source Link Layer Address Option.
-        kTargetLinkLayerAddr  = 2,  ///< Target Link Layer Address Option.
-        kTypePrefixInfo       = 3,  ///< Prefix Information Option.
-        kTypeRouteInfo        = 24, ///< Route Information Option.
-        kTypeRaFlagsExtension = 26, ///< RA Flags Extension Option.
+        kSourceLinkLayerAddr    = 1,  ///< Source Link Layer Address Option.
+        kTargetLinkLayerAddr    = 2,  ///< Target Link Layer Address Option.
+        kTypePrefixInfo         = 3,  ///< Prefix Information Option.
+        kTypeRouteInfo          = 24, ///< Route Information Option.
+        kTypeRecursiveDNSServer = 25, ///< Recursive DNS Server Option.
+        kTypeRaFlagsExtension   = 26, ///< RA Flags Extension Option.
     };
 
     static constexpr uint16_t kLengthUnit = 8; ///< The unit of length in octets.
@@ -444,6 +445,79 @@ private:
 } OT_TOOL_PACKED_END;
 
 static_assert(sizeof(RouteInfoOption) == 8, "invalid RouteInfoOption structure");
+
+/**
+ * Represents an Recursive DNS Server Option.
+ *
+ * See RFC-5175 [https://tools.ietf.org/html/rfc5175]
+ */
+OT_TOOL_PACKED_BEGIN
+class RecursiveDNSServer : public Option, private Clearable<RecursiveDNSServer>
+{
+    friend class Clearable<RecursiveDNSServer>;
+
+public:
+    static constexpr Type kType = kTypeRecursiveDNSServer; ///< RA Recursive DNS Server Option type.
+
+    /**
+     * See section 5,1 of RFC 8106 for definition of this option. [https://tools.ietf.org/html/rfc8106#section-5.1]
+     */
+    void Init(void);
+
+    /**
+     * Tells whether this option is valid.
+     *
+     * @returns  A boolean indicates whether this option is valid.
+     */
+    bool IsValid(void) const { return GetSize() >= sizeof(*this); }
+
+    /**
+     * Gets the lifetime of the DNS server in seconds.
+     *
+     * @returns The lifetime in seconds.
+     */
+    uint32_t GetLifetime(void) const { return BigEndian::HostSwap32(mLifetime); }
+
+    /**
+     * Gets the number of DNS server addresses in the option.
+     *
+     * @returns The number of DNS server addresses.
+     */
+    uint8_t GetNumAddresses(void) const { return (GetLength() > 1) ? (GetLength() - 1) / 2 : 0; }
+
+    /**
+     * Gets a pointer to the start of the DNS server addresses.
+     *
+     * @returns A pointer to the start of the DNS server addresses.
+     */
+    const Address *GetAddresses(void) const
+    {
+        return reinterpret_cast<const Address *>(reinterpret_cast<const uint8_t *>(this) + sizeof(*this));
+    }
+
+    RecursiveDNSServer(void) = delete;
+
+private:
+    // RA Recursive DNS Server Option
+    //
+    //   0                   1                   2                   3
+    //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |     Type      |     Length    |           Reserved            |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |                           Lifetime                            |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |                                                               |
+    //  :            Addresses of IPv6 Recursive DNS Servers            :
+    //  |                                                               |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               .
+
+    uint16_t mReserved; // The reserved field.
+    uint32_t mLifetime; // The lifetime in seconds.
+    // Followed by Address array (variable length)
+} OT_TOOL_PACKED_END;
+
+static_assert(sizeof(RecursiveDNSServer) == 8, "invalid RecursiveDNSServer structure");
 
 /**
  * Represents an RA Flags Extension Option.
