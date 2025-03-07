@@ -109,7 +109,6 @@ private:
     {
         otPlatDnsUpstreamQuery *mThreadTxn;
         int                     mUdpFd;
-        sa_family_t             mFamily;
     };
 
     static int CreateUdpSocket(sa_family_t aFamily);

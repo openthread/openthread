@@ -86,6 +86,7 @@ void Resolver::LoadDnsServerListFromConf(void)
 {
     std::string   line;
     std::ifstream fp;
+    otIp4Address  ip4Address;
     otIp6Address  ip6Address;
 
     VerifyOrExit(mIsResolvConfEnabled);
@@ -98,16 +99,15 @@ void Resolver::LoadDnsServerListFromConf(void)
     {
         if (line.find(kNameserverItem, 0) == 0)
         {
-            if (inet_pton(AF_INET, &line.c_str()[sizeof(kNameserverItem)], &ip6Address.mFields.m32[3]) == 1)
+            const char *addressString = &line.c_str()[sizeof(kNameserverItem)];
+            if (inet_pton(AF_INET, addressString, &ip4Address) == 1)
             {
-                ip6Address.mFields.m32[0] = 0;
-                ip6Address.mFields.m32[1] = 0;
-                ip6Address.mFields.m32[2] = htonl(0xffff);
+                otIp4ToIp4MappedIp6Address(&ip4Address, &ip6Address);
                 LogInfo("Got nameserver #%d: %s", mUpstreamDnsServerCount, &line.c_str()[sizeof(kNameserverItem)]);
                 mUpstreamDnsServerList[mUpstreamDnsServerCount] = ip6Address;
                 mUpstreamDnsServerCount++;
             }
-            else if (inet_pton(AF_INET6, &line.c_str()[sizeof(kNameserverItem)], &ip6Address) == 1)
+            else if (inet_pton(AF_INET6, &addressString, &ip6Address) == 1)
             {
                 LogInfo("Got nameserver #%d: %s", mUpstreamDnsServerCount, &line.c_str()[sizeof(kNameserverItem)]);
                 mUpstreamDnsServerList[mUpstreamDnsServerCount] = ip6Address;
@@ -132,6 +132,8 @@ void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
     otError      error  = OT_ERROR_NONE;
     uint16_t     length = otMessageGetLength(aQuery);
     otIp4Address ip4Addr;
+    sockaddr_in  serverAddr4;
+    sockaddr_in6 serverAddr6;
     sockaddr    *serverAddr;
     socklen_t    serverAddrLen;
 
@@ -149,7 +151,6 @@ void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
     {
         if (otIp4FromIp4MappedIp6Address(&mUpstreamDnsServerList[i], &ip4Addr) == OT_ERROR_NONE)
         {
-            sockaddr_in serverAddr4;
             memcpy(&serverAddr4.sin_addr.s_addr, &ip4Addr, sizeof(otIp4Address));
 
             serverAddr4.sin_family = AF_INET;
@@ -159,7 +160,6 @@ void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
         }
         else
         {
-            sockaddr_in6 serverAddr6;
             memcpy(&serverAddr6.sin6_addr, &mUpstreamDnsServerList[i], sizeof(otIp6Address));
 
             serverAddr6.sin6_family = AF_INET6;
@@ -331,13 +331,9 @@ void Resolver::Process(const otSysMainloopContext &aContext)
 
 void Resolver::SetUpstreamDnsServers(const otIp6Address *aUpstreamDnsServers, int aNumServers)
 {
-    mUpstreamDnsServerCount = 0;
+    mUpstreamDnsServerCount = OT_MIN(aNumServers, static_cast<int>(kMaxUpstreamServerCount));
+    memcpy(mUpstreamDnsServerList, aUpstreamDnsServers, mUpstreamDnsServerCount * sizeof(otIp6Address));
 
-    for (int i = 0; i < aNumServers && i < kMaxUpstreamServerCount; ++i)
-    {
-        mUpstreamDnsServerList[mUpstreamDnsServerCount] = aUpstreamDnsServers[i];
-        mUpstreamDnsServerCount++;
-    }
     LogInfo("Set upstream DNS server list, count: %d", mUpstreamDnsServerCount);
 }
 
