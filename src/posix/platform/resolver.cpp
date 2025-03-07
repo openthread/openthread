@@ -107,7 +107,7 @@ void Resolver::LoadDnsServerListFromConf(void)
                 mUpstreamDnsServerList[mUpstreamDnsServerCount] = ip6Address;
                 mUpstreamDnsServerCount++;
             }
-            else if (inet_pton(AF_INET6, &addressString, &ip6Address) == 1)
+            else if (inet_pton(AF_INET6, addressString, &ip6Address) == 1)
             {
                 LogInfo("Got nameserver #%d: %s", mUpstreamDnsServerCount, &line.c_str()[sizeof(kNameserverItem)]);
                 mUpstreamDnsServerList[mUpstreamDnsServerCount] = ip6Address;
@@ -134,8 +134,6 @@ void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
     otIp4Address ip4Addr;
     sockaddr_in  serverAddr4;
     sockaddr_in6 serverAddr6;
-    sockaddr    *serverAddr;
-    socklen_t    serverAddrLen;
 
     Transaction *txn = nullptr;
 
@@ -149,6 +147,9 @@ void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 
     for (int i = 0; i < mUpstreamDnsServerCount; i++)
     {
+        sockaddr *serverAddr;
+        socklen_t serverAddrLen;
+
         if (otIp4FromIp4MappedIp6Address(&mUpstreamDnsServerList[i], &ip4Addr) == OT_ERROR_NONE)
         {
             memcpy(&serverAddr4.sin_addr.s_addr, &ip4Addr, sizeof(otIp4Address));
@@ -176,7 +177,7 @@ void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        LogCrit("Failed to forward DNS query %p to server: %s", static_cast<void *>(aTxn),
+        LogWarn("Failed to forward DNS query %p to server: %s", static_cast<void *>(aTxn),
                 otThreadErrorToString(error));
         if (txn != nullptr)
         {
@@ -202,13 +203,12 @@ Resolver::Transaction *Resolver::AllocateTransaction(otPlatDnsUpstreamQuery *aTh
 {
     int          fdOrError = 0;
     Transaction *ret       = nullptr;
-    sa_family_t  family    = AF_INET6;
 
     for (Transaction &txn : mUpstreamTransaction)
     {
         if (txn.mThreadTxn == nullptr)
         {
-            fdOrError = CreateUdpSocket(family);
+            fdOrError = CreateUdpSocket(AF_INET6);
             if (fdOrError < 0)
             {
                 LogInfo("Failed to create socket for upstream resolver: %d", fdOrError);
