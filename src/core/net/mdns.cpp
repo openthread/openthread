@@ -115,6 +115,7 @@ Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex)
         mTxtCacheList.Clear();
         mIp6AddrCacheList.Clear();
         mIp4AddrCacheList.Clear();
+        mRecordCacheList.Clear();
         mCacheTimer.Stop();
     }
 
@@ -241,6 +242,11 @@ Error Core::GetNextIp6AddressResolver(Iterator &aIterator, AddressResolver &aRes
 Error Core::GetNextIp4AddressResolver(Iterator &aIterator, AddressResolver &aResolver, CacheInfo &aInfo) const
 {
     return static_cast<EntryIterator &>(aIterator).GetNextIp4AddressResolver(aResolver, aInfo);
+}
+
+Error Core::GetNextRecordQuerier(Iterator &aIterator, RecordQuerier &aQuerier, CacheInfo &aInfo) const
+{
+    return static_cast<EntryIterator &>(aIterator).GetNextRecordQuerier(aQuerier, aInfo);
 }
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
@@ -4092,6 +4098,16 @@ void Core::RxMessage::ProcessResponse(void)
             addrCache.CommitNewResponseEntries();
         }
     }
+
+    if (!Get<Core>().mRecordCacheList.IsEmpty())
+    {
+        IterateOnAllRecordsInResponse(&RxMessage::ProcessOtherRecord);
+
+        for (RecordCache &recordCache : Get<Core>().mRecordCacheList)
+        {
+            recordCache.CommitNewResponseEntries();
+        }
+    }
 }
 
 void Core::RxMessage::IterateOnAllRecordsInResponse(RecordProcessor aRecordProcessor)
@@ -4220,6 +4236,19 @@ void Core::RxMessage::ProcessARecord(const Name &aName, const ResourceRecord &aR
     VerifyOrExit(ip4AddrCache != nullptr);
 
     ip4AddrCache->ProcessResponseRecord(*mMessagePtr, aRecordOffset);
+
+exit:
+    return;
+}
+
+void Core::RxMessage::ProcessOtherRecord(const Name &aName, const ResourceRecord &aRecord, uint16_t aRecordOffset)
+{
+    RecordCache *recordCache;
+
+    recordCache = Get<Core>().mRecordCacheList.FindMatching(aName, aRecord.GetType());
+    VerifyOrExit(recordCache != nullptr);
+
+    recordCache->ProcessResponseRecord(*mMessagePtr, aRecord, aRecordOffset);
 
 exit:
     return;
@@ -4429,6 +4458,9 @@ void Core::TxMessageHistory::HandleTimer(void)
     mTimer.FireAtIfEarlier(nextTime);
 }
 
+//---------------------------------------------------------------------------------------------------------------------
+// Core
+
 template <typename CacheType, typename BrowserResolverType>
 Error Core::Start(const BrowserResolverType &aBrowserOrResolver)
 {
@@ -4489,6 +4521,28 @@ Error Core::StartIp6AddressResolver(const AddressResolver &aResolver)
     return Start<Ip6AddrCache, AddressResolver>(aResolver);
 }
 
+Error Core::StartRecordQuerier(const RecordQuerier &aQuerier)
+{
+    Error error;
+
+    switch (aQuerier.mRecordType)
+    {
+    case ResourceRecord::kTypePtr:
+    case ResourceRecord::kTypeSrv:
+    case ResourceRecord::kTypeTxt:
+    case ResourceRecord::kTypeAaaa:
+    case ResourceRecord::kTypeA:
+        error = kErrorInvalidArgs;
+        break;
+
+    default:
+        error = Start<RecordCache, RecordQuerier>(aQuerier);
+        break;
+    }
+
+    return error;
+}
+
 Error Core::StopIp6AddressResolver(const AddressResolver &aResolver)
 {
     return Stop<Ip6AddrCache, AddressResolver>(aResolver);
@@ -4503,6 +4557,8 @@ Error Core::StopIp4AddressResolver(const AddressResolver &aResolver)
 {
     return Stop<Ip4AddrCache, AddressResolver>(aResolver);
 }
+
+Error Core::StopRecordQuerier(const RecordQuerier &aQuerier) { return Stop<RecordCache, RecordQuerier>(aQuerier); }
 
 void Core::AddPassiveSrvTxtCache(const char *aServiceInstance, const char *aServiceType)
 {
@@ -4548,6 +4604,7 @@ void Core::HandleCacheTimer(void)
     mTxtCacheList.RemoveAndFreeAllMatching(expireChecker);
     mIp6AddrCacheList.RemoveAndFreeAllMatching(expireChecker);
     mIp4AddrCacheList.RemoveAndFreeAllMatching(expireChecker);
+    mRecordCacheList.RemoveAndFreeAllMatching(expireChecker);
 
     // Process cache types in a specific order to optimize name
     // compression when constructing query messages.
@@ -4575,6 +4632,11 @@ void Core::HandleCacheTimer(void)
     for (Ip4AddrCache &addrCache : mIp4AddrCacheList)
     {
         addrCache.HandleTimer(context);
+    }
+
+    for (RecordCache &recordCache : mRecordCacheList)
+    {
+        recordCache.HandleTimer(context);
     }
 
     context.mQueryMessage.Send();
@@ -4611,6 +4673,11 @@ void Core::HandleCacheTask(void)
     for (Ip4AddrCache &addrCache : mIp4AddrCacheList)
     {
         addrCache.ClearEmptyCallbacks();
+    }
+
+    for (RecordCache &recordCache : mRecordCacheList)
+    {
+        recordCache.ClearEmptyCallbacks();
     }
 }
 
@@ -4678,6 +4745,14 @@ void Core::ResultCallback::Invoke(Instance &aInstance, const AddressResult &aRes
     if (mSharedCallback.mAddress != nullptr)
     {
         mSharedCallback.mAddress(&aInstance, &aResult);
+    }
+}
+
+void Core::ResultCallback::Invoke(Instance &aInstance, const RecordResult &aResult) const
+{
+    if (mSharedCallback.mRecord != nullptr)
+    {
+        mSharedCallback.mRecord(&aInstance, &aResult);
     }
 }
 
@@ -4915,6 +4990,7 @@ Error Core::CacheEntry::Add(const ResultCallback &aCallback)
         switch (mType)
         {
         case kBrowseCache:
+        case kRecordCache:
             shouldStart = true;
             break;
         case kSrvCache:
@@ -4953,6 +5029,9 @@ Error Core::CacheEntry::Add(const ResultCallback &aCallback)
     case kIp6AddrCache:
     case kIp4AddrCache:
         As<AddrCache>().ReportResultsTo(*callback);
+        break;
+    case kRecordCache:
+        As<RecordCache>().ReportResultsTo(*callback);
         break;
     }
 
@@ -5010,6 +5089,9 @@ void Core::CacheEntry::HandleTimer(CacheContext &aContext)
         // compress offset since the host name would not be used
         // in any other query question.
         break;
+
+    case kRecordCache:
+        break;
     }
 
     VerifyOrExit(HasFireTime());
@@ -5042,6 +5124,9 @@ void Core::CacheEntry::HandleTimer(CacheContext &aContext)
     case kIp4AddrCache:
         As<AddrCache>().ProcessExpiredRecords(aContext.GetNow());
         break;
+    case kRecordCache:
+        As<RecordCache>().ProcessExpiredRecords(aContext.GetNow());
+        break;
     }
 
     DetermineNextFireTime();
@@ -5068,6 +5153,9 @@ Core::ResultCallback *Core::CacheEntry::FindCallbackMatching(const ResultCallbac
     case kIp6AddrCache:
     case kIp4AddrCache:
         callback = mCallbacks.FindMatching(aCallback.mSharedCallback.mAddress);
+        break;
+    case kRecordCache:
+        callback = mCallbacks.FindMatching(aCallback.mSharedCallback.mRecord);
         break;
     }
 
@@ -5107,6 +5195,9 @@ void Core::CacheEntry::DetermineNextFireTime(void)
     case kIp4AddrCache:
         As<AddrCache>().DetermineRecordFireTime();
         break;
+    case kRecordCache:
+        As<RecordCache>().DetermineRecordFireTime();
+        break;
     }
 }
 
@@ -5139,6 +5230,9 @@ void Core::CacheEntry::PrepareQuery(CacheContext &aContext)
         case kIp4AddrCache:
             As<Ip4AddrCache>().PrepareAQuestion(query);
             break;
+        case kRecordCache:
+            As<RecordCache>().PrepareQueryQuestion(query);
+            break;
         }
 
         query.CheckSizeLimitToPrepareAgain(prepareAgain);
@@ -5169,6 +5263,8 @@ void Core::CacheEntry::PrepareQuery(CacheContext &aContext)
     case kIp4AddrCache:
         As<AddrCache>().UpdateRecordStateAfterQuery(aContext.GetNow());
         break;
+    case kRecordCache:
+        As<RecordCache>().UpdateRecordStateAfterQuery(aContext.GetNow());
     }
 }
 
@@ -6405,6 +6501,311 @@ exit:
 void Core::Ip4AddrCache::PrepareAQuestion(TxMessage &aQuery) { PrepareQueryQuestion(aQuery, ResourceRecord::kTypeA); }
 
 //---------------------------------------------------------------------------------------------------------------------
+// Core::RecordCache
+
+Error Core::RecordCache::Init(Instance &aInstance, const RecordQuerier &aQuerier)
+{
+    Error error;
+
+    CacheEntry::Init(aInstance, kRecordCache);
+
+    mNext        = nullptr;
+    mShouldFlush = false;
+    SuccessOrExit(error = mFirstLabel.Set(aQuerier.mFirstLabel));
+    SuccessOrExit(error = mNextLabels.Set(aQuerier.mNextLabels));
+    mRecordType = aQuerier.mRecordType;
+
+exit:
+    return error;
+}
+
+bool Core::RecordCache::Matches(const Name &aFullName, uint16_t aRecordType) const
+{
+    return (mRecordType == aRecordType) &&
+           aFullName.Matches(mFirstLabel.AsCString(), mNextLabels.AsCString(), kLocalDomain);
+}
+
+bool Core::RecordCache::Matches(const RecordQuerier &aQuerier) const
+{
+    bool matches = false;
+
+    VerifyOrExit(mRecordType == aQuerier.mRecordType);
+
+    VerifyOrExit(NameMatch(mFirstLabel, aQuerier.mFirstLabel));
+
+    if (mNextLabels.IsNull())
+    {
+        VerifyOrExit(aQuerier.mNextLabels == nullptr);
+    }
+    else
+    {
+        VerifyOrExit(NameMatch(mNextLabels, aQuerier.mNextLabels));
+    }
+
+    matches = true;
+
+exit:
+    return matches;
+}
+
+bool Core::RecordCache::Matches(const ExpireChecker &aExpireChecker) const { return ShouldDelete(aExpireChecker.mNow); }
+
+Error Core::RecordCache::Add(const RecordQuerier &aQuerier)
+{
+    return CacheEntry::Add(ResultCallback(aQuerier.mCallback));
+}
+
+void Core::RecordCache::Remove(const RecordQuerier &aQuerier)
+{
+    return CacheEntry::Remove(ResultCallback(aQuerier.mCallback));
+}
+
+void Core::RecordCache::PrepareQueryQuestion(TxMessage &aQuery)
+{
+    Question question;
+
+    question.SetType(mRecordType);
+    question.SetClass(ResourceRecord::kClassInternet);
+
+    AppendNameTo(aQuery, kQuestionSection);
+    SuccessOrAssert(aQuery.SelectMessageFor(kQuestionSection).Append(question));
+
+    aQuery.IncrementRecordCount(kQuestionSection);
+}
+
+void Core::RecordCache::AppendNameTo(TxMessage &aTxMessage, Section aSection)
+{
+    uint16_t      compressOffset = kUnspecifiedOffset;
+    AppendOutcome outcome;
+
+    outcome = aTxMessage.AppendLabel(aSection, mFirstLabel.AsCString(), compressOffset);
+    VerifyOrExit(outcome != kAppendedFullNameAsCompressed);
+
+    if (!mNextLabels.IsNull())
+    {
+        compressOffset = kUnspecifiedOffset;
+        outcome        = aTxMessage.AppendMultipleLabels(aSection, mNextLabels.AsCString(), compressOffset);
+        VerifyOrExit(outcome != kAppendedFullNameAsCompressed);
+    }
+
+    aTxMessage.AppendDomainName(aSection);
+
+exit:
+    return;
+}
+
+void Core::RecordCache::UpdateRecordStateAfterQuery(TimeMilli aNow)
+{
+    for (RecordDataEntry &entry : mCommittedEntries)
+    {
+        entry.mRecord.UpdateStateAfterQuery(aNow);
+    }
+}
+
+void Core::RecordCache::ProcessResponseRecord(const Message        &aMessage,
+                                              const ResourceRecord &aRecord,
+                                              uint16_t              aRecordOffset)
+{
+    // Name and record type in `aMessage` are already matched.
+
+    // Adds a new record data to `mNewEntries` list. This called as
+    // the records in a received response are processed one by one.
+    // Once all records are processed `CommitNewResponseEntries()` is
+    // called to update the list.
+
+    Heap::Data       data;
+    RecordDataEntry *entry;
+
+    SuccessOrExit(data.SetFrom(aMessage, aRecordOffset + sizeof(ResourceRecord), aRecord.GetLength()));
+
+    if (aRecord.GetClass() & kClassCacheFlushFlag)
+    {
+        mShouldFlush = true;
+    }
+
+    // Check for duplicates in the same response.
+
+    entry = mNewEntries.FindMatching(data);
+
+    if (entry == nullptr)
+    {
+        entry = RecordDataEntry::Allocate(data);
+        OT_ASSERT(entry != nullptr);
+        mNewEntries.Push(*entry);
+    }
+
+    entry->mRecord.RefreshTtl(aRecord.GetTtl());
+
+exit:
+    return;
+}
+
+void Core::RecordCache::CommitNewResponseEntries(void)
+{
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Invoke callbacks if there is any change.
+
+    // If we need to flush, check any entry in the previously
+    // `mCommittedEntries` that does not appear in the new list
+    // and signal their removal.
+
+    if (mShouldFlush)
+    {
+        for (RecordDataEntry &exitingEntry : mCommittedEntries)
+        {
+            if (!mNewEntries.ContainsMatching(exitingEntry.mData))
+            {
+                exitingEntry.mRecord.RefreshTtl(0);
+                PrepareResultAndInvokeCallbacks(exitingEntry);
+            }
+        }
+    }
+
+    // Signal addition of any new entries or if there is any
+    // change to an existing entry (TTL value changed).
+
+    for (const RecordDataEntry &newEntry : mNewEntries)
+    {
+        RecordDataEntry *exitingEntry = mCommittedEntries.FindMatching(newEntry.mData);
+        bool             shouldSignal = false;
+
+        if (exitingEntry == nullptr)
+        {
+            shouldSignal = (newEntry.GetTtl() > 0);
+        }
+        else
+        {
+            shouldSignal = (exitingEntry->GetTtl() != newEntry.GetTtl());
+        }
+
+        if (shouldSignal)
+        {
+            PrepareResultAndInvokeCallbacks(newEntry);
+        }
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Now merge the new entries into the `mCommittedEntries` list.
+
+    if (mShouldFlush)
+    {
+        mCommittedEntries.Clear();
+        StopInitialQueries();
+        mShouldFlush = false;
+    }
+
+    while (!mNewEntries.IsEmpty())
+    {
+        OwnedPtr<RecordDataEntry> newEntry = mNewEntries.Pop();
+        RecordDataEntry          *entry;
+
+        entry = mCommittedEntries.FindMatching(newEntry->mData);
+
+        if (entry != nullptr)
+        {
+            entry->mRecord.RefreshTtl(newEntry->GetTtl());
+        }
+        else
+        {
+            mCommittedEntries.Push(*newEntry.Release());
+        }
+    }
+
+    mCommittedEntries.RemoveAndFreeAllMatching(EmptyChecker());
+
+    DetermineNextFireTime();
+    ScheduleTimer();
+}
+
+void Core::RecordCache::DetermineRecordFireTime(void)
+{
+    for (RecordDataEntry &entry : mCommittedEntries)
+    {
+        entry.mRecord.UpdateQueryAndFireTimeOn(*this);
+    }
+}
+
+void Core::RecordCache::ProcessExpiredRecords(TimeMilli aNow)
+{
+    OwningList<RecordDataEntry> expiredEntries;
+
+    mCommittedEntries.RemoveAllMatching(expiredEntries, ExpireChecker(aNow));
+
+    for (RecordDataEntry &entry : expiredEntries)
+    {
+        entry.mRecord.RefreshTtl(0);
+        PrepareResultAndInvokeCallbacks(entry);
+    }
+}
+
+void Core::RecordCache::ReportResultsTo(ResultCallback &aCallback) const
+{
+    for (const RecordDataEntry &entry : mCommittedEntries)
+    {
+        RecordResult result;
+
+        PreareResultFor(entry, result);
+        aCallback.Invoke(GetInstance(), result);
+    }
+}
+
+void Core::RecordCache::PreareResultFor(const RecordDataEntry &aEntry, RecordResult &aResult) const
+{
+    ClearAllBytes(aResult);
+    aResult.mFirstLabel       = mFirstLabel.AsCString();
+    aResult.mNextLabels       = mNextLabels.AsCString();
+    aResult.mRecordType       = mRecordType;
+    aResult.mRecordData       = aEntry.mData.GetBytes();
+    aResult.mRecordDataLength = aEntry.mData.GetLength();
+    aResult.mTtl              = aEntry.mRecord.GetTtl();
+    aResult.mInfraIfIndex     = Get<Core>().mInfraIfIndex;
+}
+
+void Core::RecordCache::PrepareResultAndInvokeCallbacks(const RecordDataEntry &aEntry)
+{
+    RecordResult result;
+
+    PreareResultFor(aEntry, result);
+    InvokeCallbacks(result);
+}
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
+void Core::RecordCache::CopyInfoTo(RecordQuerier &aQuerier, CacheInfo &aInfo) const
+{
+    aQuerier.mFirstLabel    = mFirstLabel.AsCString();
+    aQuerier.mNextLabels    = mNextLabels.AsCString();
+    aQuerier.mRecordType    = mRecordType;
+    aQuerier.mInfraIfIndex  = Get<Core>().mInfraIfIndex;
+    aQuerier.mCallback      = nullptr;
+    aInfo.mIsActive         = IsActive();
+    aInfo.mHasCachedResults = !mCommittedEntries.IsEmpty();
+}
+
+#endif
+
+//---------------------------------------------------------------------------------------------------------------------
+// Core::RecordCache::RecordDataEntry
+
+Core::RecordCache::RecordDataEntry::RecordDataEntry(Heap::Data &aData)
+    : mNext(nullptr)
+    , mData(static_cast<Heap::Data &&>(aData))
+{
+}
+
+bool Core::RecordCache::RecordDataEntry::Matches(const ExpireChecker &aExpireChecker) const
+{
+    return mRecord.ShouldExpire(aExpireChecker.mNow);
+}
+
+bool Core::RecordCache::RecordDataEntry::Matches(EmptyChecker aChecker) const
+{
+    OT_UNUSED_VARIABLE(aChecker);
+
+    return !mRecord.IsPresent();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 // Core::Iterator
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
@@ -6613,6 +7014,29 @@ Error Core::EntryIterator::GetNextIp4AddressResolver(AddressResolver &aResolver,
 
     mIp4AddrCache->CopyInfoTo(aResolver, aInfo);
     mIp4AddrCache = mIp4AddrCache->GetNext();
+
+exit:
+    return error;
+}
+
+Error Core::EntryIterator::GetNextRecordQuerier(RecordQuerier &aQuerier, CacheInfo &aInfo)
+{
+    Error error = kErrorNone;
+
+    if (mType == kUnspecified)
+    {
+        mRecordCache = Get<Core>().mRecordCacheList.GetHead();
+        mType        = kRecordQuerier;
+    }
+    else
+    {
+        VerifyOrExit(mType == kRecordQuerier, error = kErrorInvalidArgs);
+    }
+
+    VerifyOrExit(mRecordCache != nullptr, error = kErrorNotFound);
+
+    mRecordCache->CopyInfoTo(aQuerier, aInfo);
+    mRecordCache = mRecordCache->GetNext();
 
 exit:
     return error;
