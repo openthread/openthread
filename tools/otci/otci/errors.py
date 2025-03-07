@@ -47,12 +47,10 @@ class CommandError(OTCIError):
     """OTCI failed to execute a command."""
 
     __COMMAND_OUTPUT_ERROR_PATTERN = re.compile(r'Error (\d+): (.*)')
-    OT_ERROR_FAILED = 1
 
     def __init__(self, cmd: str, output: List[str]):
         self.__output = output
 
-        print(output)
         for line in output:
             m = self.__COMMAND_OUTPUT_ERROR_PATTERN.match(line)
             if not m:

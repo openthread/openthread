@@ -257,7 +257,8 @@ class OTCI(object):
         The default arguments are consistent with
             https://github.com/openthread/openthread/blob/main/src/core/utils/ping_sender.hpp.
 
-        :param ip: The target IPv6 address to ping.
+        :param dst: The target IPv6 address to ping.
+        :param src: The source IPv6 address of the echo request.
         :param size: The number of data bytes in the payload. Default is 8.
         :param count: The number of ICMPv6 Echo Requests to be sent. Default is 1.
         :param interval: The interval between two consecutive ICMPv6 Echo Requests in seconds. The value may have
@@ -1669,6 +1670,7 @@ class OTCI(object):
     def commissioner_mgmt_get(self,
                               named_tlvs: Optional[Tuple[str, ...]] = None,
                               hex_tlvs: Optional[Tuple[int, ...]] = None) -> str:
+        """Send a MGMT_GET request."""
         if not named_tlvs and not hex_tlvs:
             return ""
 
@@ -2151,6 +2153,7 @@ class OTCI(object):
         self.execute_command('macfilter addr clear')
 
     def set_allowlist(self, allowlist: Optional[Collection[Union[str, Tuple[str, int]]]]):
+        """Add addresses to the allowlist"""
         self.clear_allowlist()
 
         if allowlist is None:
@@ -2173,6 +2176,7 @@ class OTCI(object):
     clear_denylist = clear_allowlist
 
     def set_denylist(self, denylist: Optional[Collection[Union[str, Tuple[str, int]]]]):
+        """Add addresses to the denylist"""
         self.clear_denylist()
 
         if denylist is None:
