@@ -97,6 +97,7 @@ void Resolver::LoadDnsServerListFromConf(void)
 
     while (fp.good() && std::getline(fp, line) && mUpstreamDnsServerCount < kMaxUpstreamServerCount)
     {
+        // Skip the lines that don't start with "nameserver"
         if (line.find(kNameserverItem, 0))
         {
             continue;
