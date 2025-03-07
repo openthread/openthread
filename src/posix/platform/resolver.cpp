@@ -97,22 +97,25 @@ void Resolver::LoadDnsServerListFromConf(void)
 
     while (fp.good() && std::getline(fp, line) && mUpstreamDnsServerCount < kMaxUpstreamServerCount)
     {
-        if (line.find(kNameserverItem, 0) == 0)
+        if (line.find(kNameserverItem, 0))
         {
-            const char *addressString = &line.c_str()[sizeof(kNameserverItem)];
-            if (inet_pton(AF_INET, addressString, &ip4Address) == 1)
-            {
-                otIp4ToIp4MappedIp6Address(&ip4Address, &ip6Address);
-                LogInfo("Got nameserver #%d: %s", mUpstreamDnsServerCount, &line.c_str()[sizeof(kNameserverItem)]);
-                mUpstreamDnsServerList[mUpstreamDnsServerCount] = ip6Address;
-                mUpstreamDnsServerCount++;
-            }
-            else if (inet_pton(AF_INET6, addressString, &ip6Address) == 1)
-            {
-                LogInfo("Got nameserver #%d: %s", mUpstreamDnsServerCount, &line.c_str()[sizeof(kNameserverItem)]);
-                mUpstreamDnsServerList[mUpstreamDnsServerCount] = ip6Address;
-                mUpstreamDnsServerCount++;
-            }
+            continue;
+        }
+
+        const char *addressString = &line.c_str()[sizeof(kNameserverItem)];
+
+        if (inet_pton(AF_INET, addressString, &ip4Address) == 1)
+        {
+            otIp4ToIp4MappedIp6Address(&ip4Address, &ip6Address);
+            LogInfo("Got nameserver #%d: %s", mUpstreamDnsServerCount, addressString);
+            mUpstreamDnsServerList[mUpstreamDnsServerCount] = ip6Address;
+            mUpstreamDnsServerCount++;
+        }
+        else if (inet_pton(AF_INET6, addressString, &ip6Address) == 1)
+        {
+            LogInfo("Got nameserver #%d: %s", mUpstreamDnsServerCount, addressString);
+            mUpstreamDnsServerList[mUpstreamDnsServerCount] = ip6Address;
+            mUpstreamDnsServerCount++;
         }
     }
 
