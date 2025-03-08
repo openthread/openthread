@@ -342,7 +342,7 @@ public:
      */
     void OutputEnabledDisabledStatus(bool aEnabled);
 
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_MDNS
 
     /**
      * Outputs an IPv6 address to the CLI console.
@@ -432,7 +432,7 @@ public:
      */
     static const char *PercentageToString(uint16_t aValue, PercentageStringBuffer &aBuffer);
 
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_MDNS
 
     /**
      * Outputs a table header to the CLI console.
