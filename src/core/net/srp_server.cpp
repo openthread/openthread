@@ -325,7 +325,8 @@ bool Server::NetDataContainsOtherSrpServers(void) const
     while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(
                iterator, NetworkData::Service::kAddrInServerData, unicastInfo) == kErrorNone)
     {
-        if (!Get<Mle::Mle>().HasRloc16(unicastInfo.mRloc16))
+        if (!Get<Mle::Mle>().HasRloc16(unicastInfo.mRloc16) &&
+            Get<Mle::Mle>().GetMeshLocalEid() != unicastInfo.mSockAddr.GetAddress())
         {
             contains = true;
             ExitNow();
