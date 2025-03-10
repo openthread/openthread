@@ -154,12 +154,6 @@ jobs:
             nat64: 0
             description: ""
           - otbr_mdns: "avahi"
-            otbr_trel: 1
-            cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
-            packet_verification: 2
-            nat64: 0
-            description: ""
-          - otbr_mdns: "avahi"
             otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
             packet_verification: 1
