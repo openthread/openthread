@@ -671,6 +671,30 @@ void otSrpClientSetServiceKeyRecordEnabled(otInstance *aInstance, bool aEnabled)
 bool otSrpClientIsServiceKeyRecordEnabled(otInstance *aInstance);
 
 /**
+ * Enables/Disables use of SRP coder to send coded SRP update message.
+ *
+ * Requires `OPENTHREAD_CONFIG_SRP_CODER_ENABLE` feature. This function, as of now, is intended for testing only.
+ *
+ * @param[in] aInstance    A pointer to the OpenThread instance.
+ * @param[in] aEnable      TRUE to enable, FALSE to disable use of SRP coder.
+ *
+ */
+void otSrpClientSetMessageCoderEnabled(otInstance *aInstance, bool aEnable);
+
+/**
+ * Indicates whether the use of SRP coder to send coded SRP update message is enabled or disabled.
+ *
+ * Requires `OPENTHREAD_CONFIG_SRP_CODER_ENABLE` feature.
+ *
+ * @param[in] aInstance    A pointer to the OpenThread instance.
+ *
+ * @retval   TRUE   If the use of SRP coder is enabled.
+ * @retval   FALSE  If the use of SRP coder is disabled
+ *
+ */
+bool otSrpClientIsMessageCoderEnabled(otInstance *aInstance);
+
+/**
  * @}
  */
 
