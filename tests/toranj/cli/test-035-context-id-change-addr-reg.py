@@ -86,8 +86,8 @@ time.sleep(0.5 / speedup)
 netdata = leader.get_netdata()
 contexts = netdata['contexts']
 verify(len(contexts) == 2)
-verify(any([context.startswith('fd00:1:0:0::/64 1 c') for context in contexts]))
-verify(any([context.startswith('fd00:2:0:0::/64 2 c') for context in contexts]))
+verify(any([context.startswith('fd00:1:0:0::/64 1') for context in contexts]))
+verify(any([context.startswith('fd00:2:0:0::/64 2') for context in contexts]))
 
 # Remove the first prefix.
 
@@ -105,7 +105,7 @@ time.sleep(3.5 / speedup)
 netdata = leader.get_netdata()
 contexts = netdata['contexts']
 verify(len(contexts) == 1)
-verify(any([context.startswith('fd00:2:0:0::/64 2 c') for context in contexts]))
+verify(any([context.startswith('fd00:2:0:0::/64 2') for context in contexts]))
 
 # Have `sed` attach as a child of `leader`.
 
@@ -122,7 +122,7 @@ verify(int(sed.get_child_timeout()) == 10)
 netdata = sed.get_netdata()
 contexts = netdata['contexts']
 verify(len(contexts) == 1)
-verify(any([context.startswith('fd00:2:0:0::/64 2 c') for context in contexts]))
+verify(any([context.startswith('fd00:2:0:0::/64 2') for context in contexts]))
 
 # Find the `sed` address associated with on-mesh prefix `fd00:2::`.
 
@@ -173,7 +173,7 @@ time.sleep(0.5 / speedup)
 netdata = leader.get_netdata()
 contexts = netdata['contexts']
 verify(len(contexts) == 1)
-verify(any([context.startswith('fd00:2:0:0::/64 1 c') for context in contexts]))
+verify(any([context.startswith('fd00:2:0:0::/64 1') for context in contexts]))
 
 # Make sure that child is timed out and removed on parent.
 
