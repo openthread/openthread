@@ -240,10 +240,10 @@ Error SubMac::Sleep(void)
 {
     Error error = kErrorNone;
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (IsCslEnabled())
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    if (IsRadioSampleEnabled())
     {
-        CslSample();
+        RadioSample();
     }
     else
 #endif
@@ -343,8 +343,8 @@ Error SubMac::Send(void)
 #endif
     case kStateSleep:
     case kStateReceive:
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    case kStateCslSample:
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    case kStateRadioSample:
 #endif
         break;
 
@@ -721,8 +721,8 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
 
     case kStateReceive:
     case kStateSleep:
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    case kStateCslSample:
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    case kStateRadioSample:
 #endif
         break;
     }
@@ -1029,6 +1029,154 @@ void SubMac::StartTimerAt(Time aStartTime, uint32_t aDelayUs)
 #endif
 }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+void SubMac::RadioSample(void)
+{
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+    VerifyOrExit(!mRadioFilterEnabled, IgnoreError(Get<Radio>().Sleep()));
+#endif
+
+    SetState(kStateRadioSample);
+
+    if (RadioSupportsReceiveTiming() || !RequestSample())
+    {
+#if !OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
+        IgnoreError(Get<Radio>().Sleep()); // Don't actually sleep for debugging
+#endif
+    }
+
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+exit:
+#endif
+    return;
+}
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+//----------------------------------------------------------------------------------------------------------------------
+// CSL receiver and WED listener case
+
+bool SubMac::IsRadioSampleEnabled(void) const { return IsCslEnabled() || mIsWedEnabled; }
+
+/*
+ * The radio state (receive/sleep) is determined by the request from both CSL and WED:
+ * <1> If both CSL and WED request to enter sleep state, the radio is set to sleep state.
+ * <2> If either CSL or WED requests to enter the receive state and the other requests to enter sleep state, the radio
+ *     is set to receive state using the channel that is requested to enter the receive state.
+ * <3> If both CSL and WED request to enter the receive state, the radio is set to the receive state using the CSL
+ *     channel.
+ *
+ * The diagram below illustrates how to set the radio state based on the request of WED and CSL.
+ *
+ * CSL   ------========------------========------------========------------========---
+ *             ^       ^
+ *             |       |
+ *             | RequestSleep(Csl)
+ *     RequestReceive(Csl)
+ *
+ * WED   -----------++++++++----------------++++++++----------------++++++++----------
+ *                  ^       ^
+ *                  |       |
+ *                  | RequestSleep(Wed)
+ *         RequestReceive(Wed)
+ *
+ * Radio ------========+++++-------========-++++++++---========-----+++++++========---
+ *             ^       ^    ^
+ *             |       |    |
+ *             |       | Radio::Sleep()
+ *             |  Radio::Receive(WedCh)
+ *      Radio::Receive(CslCh)
+ */
+void SubMac::RequestSleep(Requester aRequester)
+{
+    if (IsCslEnabled() && mIsWedEnabled)
+    {
+        if ((aRequester == kRequesterCsl) && mIsWedSampling)
+        {
+            IgnoreError(Get<Radio>().Receive(mWakeupChannel));
+        }
+        else if ((aRequester == kRequesterWed) && mIsCslSampling)
+        {
+            // When the CSL is in the receive state and the WED enters the sleep state, the radio should have entered
+            // receive state using CSL channel. Do nothing here.
+        }
+        else
+        {
+            IgnoreError(Get<Radio>().Sleep());
+        }
+    }
+    else
+    {
+        IgnoreError(Get<Radio>().Sleep());
+    }
+}
+
+void SubMac::RequestReceive(Requester aRequester)
+{
+    if (aRequester == kRequesterCsl)
+    {
+        IgnoreError(Get<Radio>().Receive(mCslChannel));
+    }
+    else if ((aRequester == kRequesterWed) && ((IsCslEnabled() && !mIsCslSampling) || !IsCslEnabled()))
+    {
+        IgnoreError(Get<Radio>().Receive(mWakeupChannel));
+    }
+}
+
+bool SubMac::RequestSample(void)
+{
+    bool ret = false;
+
+    if (mIsCslSampling && IsCslEnabled())
+    {
+        IgnoreError(Get<Radio>().Receive(mCslChannel));
+        ret = true;
+    }
+    else if (mIsWedSampling && mIsWedEnabled)
+    {
+        IgnoreError(Get<Radio>().Receive(mWakeupChannel));
+        ret = true;
+    }
+
+    return ret;
+}
+
+#elif OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+//----------------------------------------------------------------------------------------------------------------------
+// CSL receiver only case
+
+bool SubMac::IsRadioSampleEnabled(void) const { return IsCslEnabled(); }
+void SubMac::RequestSleep(Requester) { IgnoreError(Get<Radio>().Sleep()); }
+void SubMac::RequestReceive(Requester) { IgnoreError(Get<Radio>().Receive(mCslChannel)); }
+
+bool SubMac::RequestSample(void)
+{
+    if (mIsCslSampling)
+    {
+        IgnoreError(Get<Radio>().Receive(mCslChannel));
+    }
+
+    return mIsCslSampling;
+}
+#elif OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+//----------------------------------------------------------------------------------------------------------------------
+// WED listener only case
+
+bool SubMac::IsRadioSampleEnabled(void) const { return mIsWedEnabled; }
+void SubMac::RequestSleep(Requester) { IgnoreError(Get<Radio>().Sleep()); }
+void SubMac::RequestReceive(Requester) { IgnoreError(Get<Radio>().Receive(mWakeupChannel)); }
+
+bool SubMac::RequestSample(void)
+{
+    if (mIsWedSampling)
+    {
+        IgnoreError(Get<Radio>().Receive(mWakeupChannel));
+    }
+
+    return mIsWedSampling;
+}
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
 // LCOV_EXCL_START
 
 const char *SubMac::StateToString(State aState)
@@ -1046,8 +1194,8 @@ const char *SubMac::StateToString(State aState)
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         "CslTransmit", // (7) kStateCslTransmit
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        "CslSample", // (8) kStateCslSample
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        "RadioSample", // (8) kStateRadioSample
 #endif
     };
 
@@ -1067,8 +1215,8 @@ const char *SubMac::StateToString(State aState)
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         ValidateNextEnum(kStateCslTransmit);
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        ValidateNextEnum(kStateCslSample);
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        ValidateNextEnum(kStateRadioSample);
 #endif
     };
 
