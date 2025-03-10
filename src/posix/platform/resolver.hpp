@@ -99,7 +99,7 @@ public:
      *                                 IPv6 address or an IPv4-mapped IPv6 address.
      * @param[in] aNumServers          The number of upstream DNS servers.
      */
-    void SetUpstreamDnsServers(const otIp6Address *aUpstreamDnsServers, int aNumServers);
+    void SetUpstreamDnsServers(const otIp6Address *aUpstreamDnsServers, uint32_t aNumServers);
 
 private:
     static constexpr uint64_t kDnsServerListNullCacheTimeoutMs = 1 * 60 * 1000;  // 1 minute
@@ -108,7 +108,8 @@ private:
     struct Transaction
     {
         otPlatDnsUpstreamQuery *mThreadTxn;
-        int                     mUdpFd;
+        int                     mUdpFd4;
+        int                     mUdpFd6;
     };
 
     static int CreateUdpSocket(sa_family_t aFamily);
@@ -117,14 +118,13 @@ private:
     Transaction *GetTransaction(otPlatDnsUpstreamQuery *aThreadTxn);
     Transaction *AllocateTransaction(otPlatDnsUpstreamQuery *aThreadTxn);
 
-    void ForwardResponse(Transaction *aTxn);
+    void ForwardResponse(otPlatDnsUpstreamQuery *aThreadTxn, int aFd);
     void CloseTransaction(Transaction *aTxn);
-    void FinishTransaction(int aFd);
     void TryRefreshDnsServerList(void);
     void LoadDnsServerListFromConf(void);
 
     bool         mIsResolvConfEnabled    = true;
-    int          mUpstreamDnsServerCount = 0;
+    uint32_t     mUpstreamDnsServerCount = 0;
     otIp6Address mUpstreamDnsServerList[kMaxUpstreamServerCount];
     uint64_t     mUpstreamDnsServerListFreshness = 0;
 
