@@ -99,7 +99,7 @@ public:
      *                                 IPv6 address or an IPv4-mapped IPv6 address.
      * @param[in] aNumServers          The number of upstream DNS servers.
      */
-    void SetUpstreamDnsServers(const otIp6Address *aUpstreamDnsServers, int aNumServers);
+    void SetUpstreamDnsServers(const otIp6Address *aUpstreamDnsServers, uint32_t aNumServers);
 
 private:
     static constexpr uint64_t kDnsServerListNullCacheTimeoutMs = 1 * 60 * 1000;  // 1 minute
@@ -124,7 +124,7 @@ private:
     void LoadDnsServerListFromConf(void);
 
     bool         mIsResolvConfEnabled    = true;
-    int          mUpstreamDnsServerCount = 0;
+    uint32_t     mUpstreamDnsServerCount = 0;
     otIp6Address mUpstreamDnsServerList[kMaxUpstreamServerCount];
     uint64_t     mUpstreamDnsServerListFreshness = 0;
 

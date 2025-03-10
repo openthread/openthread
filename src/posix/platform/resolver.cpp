@@ -97,27 +97,26 @@ void Resolver::LoadDnsServerListFromConf(void)
 
     while (fp.good() && std::getline(fp, line) && mUpstreamDnsServerCount < kMaxUpstreamServerCount)
     {
+        const char *addressString = &line.c_str()[sizeof(kNameserverItem)];
+
         // Skip the lines that don't start with "nameserver"
         if (line.find(kNameserverItem, 0))
         {
             continue;
         }
 
-        const char *addressString = &line.c_str()[sizeof(kNameserverItem)];
-
         if (inet_pton(AF_INET, addressString, &ip4Address) == 1)
         {
             otIp4ToIp4MappedIp6Address(&ip4Address, &ip6Address);
-            LogInfo("Got nameserver #%d: %s", mUpstreamDnsServerCount, addressString);
-            mUpstreamDnsServerList[mUpstreamDnsServerCount] = ip6Address;
-            mUpstreamDnsServerCount++;
         }
-        else if (inet_pton(AF_INET6, addressString, &ip6Address) == 1)
+        else if (inet_pton(AF_INET6, addressString, &ip6Address) != 1)
         {
-            LogInfo("Got nameserver #%d: %s", mUpstreamDnsServerCount, addressString);
-            mUpstreamDnsServerList[mUpstreamDnsServerCount] = ip6Address;
-            mUpstreamDnsServerCount++;
+            continue;
         }
+
+        LogInfo("Got nameserver #%u: %s", mUpstreamDnsServerCount, addressString);
+        mUpstreamDnsServerList[mUpstreamDnsServerCount] = ip6Address;
+        mUpstreamDnsServerCount++;
     }
 
     if (mUpstreamDnsServerCount == 0)
@@ -149,7 +148,7 @@ void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 
     TryRefreshDnsServerList();
 
-    for (int i = 0; i < mUpstreamDnsServerCount; i++)
+    for (uint32_t i = 0; i < mUpstreamDnsServerCount; i++)
     {
         sockaddr *serverAddr;
         socklen_t serverAddrLen;
@@ -333,9 +332,9 @@ void Resolver::Process(const otSysMainloopContext &aContext)
     }
 }
 
-void Resolver::SetUpstreamDnsServers(const otIp6Address *aUpstreamDnsServers, int aNumServers)
+void Resolver::SetUpstreamDnsServers(const otIp6Address *aUpstreamDnsServers, uint32_t aNumServers)
 {
-    mUpstreamDnsServerCount = OT_MIN(aNumServers, static_cast<int>(kMaxUpstreamServerCount));
+    mUpstreamDnsServerCount = OT_MIN(aNumServers, static_cast<uint32_t>(kMaxUpstreamServerCount));
     memcpy(mUpstreamDnsServerList, aUpstreamDnsServers, mUpstreamDnsServerCount * sizeof(otIp6Address));
 
     LogInfo("Set upstream DNS server list, count: %d", mUpstreamDnsServerCount);
