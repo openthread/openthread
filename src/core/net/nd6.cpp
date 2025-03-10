@@ -183,6 +183,24 @@ void RaFlagsExtOption::Init(void)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+// RouteInfoOption
+
+void RecursiveDnsServerOption::Init(void)
+{
+    OT_UNUSED_VARIABLE(mReserved);
+
+    Clear();
+    SetType(kTypeRecursiveDnsServer);
+}
+
+uint8_t RecursiveDnsServerOption::OptionLengthFor(uint8_t aNumAddresses)
+{
+    uint16_t size = sizeof(RecursiveDnsServerOption) + aNumAddresses * sizeof(Address);
+
+    return ClampToUint8(DivideAndRoundUp(size, kLengthUnit));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 // RouterAdver::Header
 
 void RouterAdvert::Header::SetToDefault(void)
@@ -309,6 +327,26 @@ Error RouterAdvert::TxMessage::AppendRouteInfoOption(const Prefix   &aPrefix,
     rio->SetRouteLifetime(aRouteLifetime);
     rio->SetPreference(aPreference);
     rio->SetPrefix(aPrefix);
+
+exit:
+    return error;
+}
+
+Error RouterAdvert::TxMessage::AppendRecursiveDnsServerOption(const Address *aAddresses,
+                                                              uint8_t        aNumAddresses,
+                                                              uint32_t       aLifetime)
+{
+    Error                     error = kErrorNone;
+    RecursiveDnsServerOption *rdnss;
+    uint8_t                   optionLength = RecursiveDnsServerOption::OptionLengthFor(aNumAddresses);
+
+    rdnss = static_cast<RecursiveDnsServerOption *>(AppendOption(Option::kLengthUnit * optionLength));
+    VerifyOrExit(rdnss != nullptr, error = kErrorNoBufs);
+
+    rdnss->Init();
+    rdnss->SetLength(optionLength);
+    rdnss->SetLifetime(aLifetime);
+    memcpy(rdnss->GetAddresses(), aAddresses, aNumAddresses * sizeof(Address));
 
 exit:
     return error;
