@@ -293,6 +293,13 @@ public:
      */
     static const char *EcnToString(Ecn aEcn);
 
+    /**
+     * Indicates whether the address is on the thread link or not.
+     *
+     * @returns TRUE if the address is on the thread link, FALSE otherwise.
+     */
+    bool IsOnLink(const Address &aAddress) const;
+
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
 
     typedef otBorderRoutingCounters BrCounters; ///< Border Routing counters.
@@ -376,7 +383,6 @@ private:
                   OwnedPtr<Message> &aMessagePtr,
                   uint8_t            aIpProto,
                   Message::Ownership aMessageOwnership);
-    bool  IsOnLink(const Address &aAddress) const;
     Error RouteLookup(const Address &aSource, const Address &aDestination) const;
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
     void UpdateBorderRoutingCounters(const Header &aHeader, uint16_t aMessageLength, bool aIsInbound);
