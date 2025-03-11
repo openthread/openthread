@@ -393,6 +393,8 @@ Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &a
     Error           error = kErrorNone;
     Neighbor       *neighbor;
 
+    mMeshDest = Mle::kInvalidRloc16;
+
     if (aMessage.GetOffset() > 0)
     {
         mMeshDest = aMessage.GetMeshDest();
@@ -400,6 +402,7 @@ Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &a
     else if (mle.IsRoutingLocator(aIp6Header.GetDestination()))
     {
         uint16_t rloc16 = aIp6Header.GetDestination().GetIid().GetLocator();
+
         VerifyOrExit(Mle::IsRouterIdValid(Mle::RouterIdFromRloc16(rloc16)), error = kErrorDrop);
         mMeshDest = rloc16;
     }
@@ -436,8 +439,8 @@ Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &a
     }
     else
     {
-        IgnoreError(
-            Get<NetworkData::Leader>().RouteLookup(aIp6Header.GetSource(), aIp6Header.GetDestination(), mMeshDest));
+        SuccessOrExit(error = Get<NetworkData::Leader>().RouteLookup(aIp6Header.GetSource(),
+                                                                     aIp6Header.GetDestination(), mMeshDest));
     }
 
     VerifyOrExit(mMeshDest != Mle::kInvalidRloc16, error = kErrorDrop);
