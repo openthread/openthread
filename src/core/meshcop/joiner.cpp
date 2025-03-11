@@ -137,7 +137,7 @@ Error Joiner::Start(const char      *aPskd,
     Get<Mac::Mac>().SetExtAddress(randomAddress);
     Get<Mle::MleRouter>().UpdateLinkLocalAddress();
 
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Open());
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Open(Ip6::NetifIdentifier::kNetifThreadInternal));
     SuccessOrExit(error = Get<Tmf::SecureAgent>().Bind(kJoinerUdpPort));
     Get<Tmf::SecureAgent>().SetConnectCallback(HandleSecureCoapClientConnect, this);
     Get<Tmf::SecureAgent>().SetPsk(joinerPskd);

@@ -676,13 +676,13 @@ SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwo
     OT_UNUSED_VARIABLE(mVerifyPeerCertificate);
 }
 
-Error SecureTransport::Open(void)
+Error SecureTransport::Open(Ip6::NetifIdentifier aNetifIdentifier)
 {
     Error error;
 
     VerifyOrExit(!mIsOpen, error = kErrorAlready);
 
-    SuccessOrExit(error = mSocket.Open(Ip6::kNetifUnspecified));
+    SuccessOrExit(error = mSocket.Open(aNetifIdentifier));
     mIsOpen                      = true;
     mRemainingConnectionAttempts = mMaxConnectionAttempts;
 
