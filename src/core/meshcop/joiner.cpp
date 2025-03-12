@@ -249,7 +249,7 @@ void Joiner::HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult)
 {
     VerifyOrExit(mState == kStateDiscover);
 
-    if (aResult != nullptr && aResult->mJoinerUdpPort > 0)
+    if (aResult != nullptr)
     {
         SaveDiscoveredJoinerRouter(*aResult);
     }
@@ -270,8 +270,10 @@ void Joiner::SaveDiscoveredJoinerRouter(const Mle::DiscoverScanner::ScanResult &
 {
     uint8_t       priority;
     bool          doesAllowAny;
-    JoinerRouter *end = GetArrayEnd(mJoinerRouters);
+    JoinerRouter *end;
     JoinerRouter *entry;
+
+    VerifyOrExit(aResult.mJoinerUdpPort > 0);
 
     doesAllowAny = AsCoreType(&aResult.mSteeringData).PermitsAllJoiners();
 
@@ -283,6 +285,8 @@ void Joiner::SaveDiscoveredJoinerRouter(const Mle::DiscoverScanner::ScanResult &
 
     // We keep the list sorted based on priority. Find the place to
     // add the new result.
+
+    end = GetArrayEnd(mJoinerRouters);
 
     for (entry = &mJoinerRouters[0]; entry < end; entry++)
     {
