@@ -2426,7 +2426,7 @@ exit:
 void Mac::UpdateCsl(void)
 {
     uint16_t period  = IsCslEnabled() ? GetCslPeriod() : 0;
-    uint8_t  channel = GetCslChannel() ? GetCslChannel() : mRadioChannel;
+    uint8_t  channel = GetCslChannel() ? GetCslChannel() : mPanChannel;
 
     if (mLinks.UpdateCsl(period, channel, Get<Mle::Mle>().GetParent().GetRloc16(),
                          Get<Mle::Mle>().GetParent().GetExtAddress()))
