@@ -238,6 +238,14 @@ void Notifier::HandleNotifierEvents(Events aEvents)
     }
 #endif
 
+    if (aEvents.ContainsAny(kEventThreadRoleChanged))
+    {
+        if (Get<Mle::MleRouter>().GetRole() == Mle::kRoleLeader)
+        {
+            mWaitingForResponse = false;
+        }
+    }
+
     if (aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadRoleChanged | kEventThreadChildRemoved))
     {
         SynchronizeServerData();
