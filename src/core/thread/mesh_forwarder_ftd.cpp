@@ -433,7 +433,7 @@ Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &a
     {
         mMeshDest = neighbor->GetRloc16();
     }
-    else if (Get<NetworkData::Leader>().IsOnMesh(aIp6Header.GetDestination()))
+    else if (Get<Ip6::Ip6>().IsOnLink(aIp6Header.GetDestination()))
     {
         SuccessOrExit(error = Get<AddressResolver>().Resolve(aIp6Header.GetDestination(), mMeshDest));
     }
