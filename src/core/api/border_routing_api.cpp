@@ -190,6 +190,23 @@ otError otBorderRoutingGetNextRouterEntry(otInstance                         *aI
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextRouterEntry(*aIterator, *aEntry);
 }
 
+otError otBorderRoutingGetNextRdnssAddrEntry(otInstance                         *aInstance,
+                                             otBorderRoutingPrefixTableIterator *aIterator,
+                                             otBorderRoutingRdnssAddrEntry      *aEntry)
+{
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aEntry);
+
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextRdnssAddrEntry(*aIterator, *aEntry);
+}
+
+void otBorderRoutingSetRdnssAddrCallback(otInstance                      *aInstance,
+                                         otBorderRoutingRdnssAddrCallback aCallback,
+                                         void                            *aContext)
+{
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetRdnssAddrCallback(aCallback, aContext);
+}
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 
 otError otBorderRoutingGetNextPeerBrEntry(otInstance                           *aInstance,

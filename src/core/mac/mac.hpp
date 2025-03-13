@@ -581,9 +581,12 @@ public:
     void SetCslChannel(uint8_t aChannel);
 
     /**
-     * Centralizes CSL state switching conditions evaluating, configuring SubMac accordingly.
+     * Sets whether the MLE layer is capable of starting CSL.
+     *
+     * @retval TRUE   If MLE layer is capable of starting CSL.
+     * @retval FALSE  If MLE layer is not capable of starting CSL.
      */
-    void UpdateCsl(void);
+    void SetCslCapable(bool aIsCslCapable);
 
     /**
      * Gets the CSL period.
@@ -624,23 +627,7 @@ public:
      * @retval TRUE   If CSL is enabled.
      * @retval FALSE  If CSL is not enabled.
      */
-    bool IsCslEnabled(void) const;
-
-    /**
-     * Indicates whether Link is capable of starting CSL.
-     *
-     * @retval TRUE   If Link is capable of starting CSL.
-     * @retval FALSE  If link is not capable of starting CSL.
-     */
-    bool IsCslCapable(void) const;
-
-    /**
-     * Indicates whether the device is connected to a parent which supports CSL.
-     *
-     * @retval TRUE   If parent supports CSL.
-     * @retval FALSE  If parent does not support CSL.
-     */
-    bool IsCslSupported(void) const;
+    bool IsCslEnabled(void) const { return mIsCslEnabled; }
 
     /**
      * Returns parent CSL accuracy (clock accuracy and uncertainty).
@@ -870,6 +857,10 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     void ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr);
 #endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    void UpdateCslParameters(void);
+    void UpdateCslState(void);
+#endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     void ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor);
 #endif
@@ -917,6 +908,8 @@ private:
     TimeMilli mCslTxFireTime;
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    bool mIsCslEnabled : 1;
+    bool mIsCslCapable : 1;
     // When Mac::mCslChannel is 0, it indicates that CSL channel has not been specified by the upper layer.
     uint8_t  mCslChannel;
     uint16_t mCslPeriod;

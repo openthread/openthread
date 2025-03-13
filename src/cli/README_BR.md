@@ -39,6 +39,7 @@ pd
 peers
 prefixtable
 raoptions
+rdnsstable
 rioprf
 routeprf
 routers
@@ -311,6 +312,30 @@ Clear any previously set additional options to append at the end of emitted Rout
 
 ```bash
 > br raoptions clear
+Done
+```
+
+### rdnsstable
+
+Usage: `br rdnsstable`
+
+Get the discovered Recursive DNS Server (RDNSS) address table by Border Routing Manager on the infrastructure link.
+
+Info per entry:
+
+- IPv6 address
+- Lifetime in seconds
+- Milliseconds since last received Router Advertisement containing this address
+- The router IPv6 address which advertised this prefix
+- Flags in received Router Advertisement header:
+  - M: Managed Address Config flag
+  - O: Other Config flag
+  - S: SNAC Router flag
+
+```bash
+> br rdnsstable
+fd00:1234:5678::1, lifetime:500, ms-since-rx:29526, router:ff02:0:0:0:0:0:0:1 (M:0 O:0 S:1)
+fd00:aaaa::2, lifetime:500, ms-since-rx:107, router:ff02:0:0:0:0:0:0:1 (M:0 O:0 S:1)
 Done
 ```
 

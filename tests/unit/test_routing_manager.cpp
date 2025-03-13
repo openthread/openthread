@@ -612,6 +612,22 @@ void LogRouterAdvert(const Icmp6Packet &aPacket)
             break;
         }
 
+        case Ip6::Nd::Option::kTypeRecursiveDnsServer:
+        {
+            const Ip6::Nd::RecursiveDnsServerOption &rdnss =
+                static_cast<const Ip6::Nd::RecursiveDnsServerOption &>(option);
+
+            VerifyOrQuit(rdnss.IsValid());
+
+            for (uint8_t index = 0; index < rdnss.GetNumAddresses(); index++)
+            {
+                Log("     RDNSS - %s, lifetime:%u", rdnss.GetAddressAt(index).ToString().AsCString(),
+                    rdnss.GetLifetime());
+            }
+
+            break;
+        }
+
         default:
             VerifyOrQuit(false, "Bad option type in RA msg");
         }
@@ -847,11 +863,32 @@ struct RaFlags : public Clearable<RaFlags>
     bool mSnacRouterFlag;
 };
 
+struct Rdnss
+{
+    template <uint16_t kNumAddrs> static Rdnss Create(uint32_t aLifetime, const Ip6::Address (&aAddresses)[kNumAddrs])
+    {
+        return Rdnss(aLifetime, aAddresses, kNumAddrs);
+    }
+
+    Rdnss(uint32_t aLifetime, const Ip6::Address *aAddresses, uint8_t aNumAddresses)
+        : mLifetime(aLifetime)
+        , mAddresses(aAddresses)
+        , mNumAddresses(aNumAddresses)
+    {
+    }
+
+    uint32_t            mLifetime;
+    const Ip6::Address *mAddresses;
+    uint8_t             mNumAddresses;
+};
+
 void BuildRouterAdvert(Ip6::Nd::RouterAdvert::TxMessage &aRaMsg,
                        const Pio                        *aPios,
                        uint16_t                          aNumPios,
                        const Rio                        *aRios,
                        uint16_t                          aNumRios,
+                       const Rdnss                      *aRdnsses,
+                       uint16_t                          aNumRdnsses,
                        const DefaultRoute               &aDefaultRoute,
                        const RaFlags                    &aRaFlags)
 {
@@ -886,6 +923,12 @@ void BuildRouterAdvert(Ip6::Nd::RouterAdvert::TxMessage &aRaMsg,
     {
         SuccessOrQuit(aRaMsg.AppendRouteInfoOption(aRios->mPrefix, aRios->mValidLifetime, aRios->mPreference));
     }
+
+    for (; aNumRdnsses > 0; aRdnsses++, aNumRdnsses--)
+    {
+        SuccessOrQuit(
+            aRaMsg.AppendRecursiveDnsServerOption(aRdnsses->mAddresses, aRdnsses->mNumAddresses, aRdnsses->mLifetime));
+    }
 }
 
 void SendRouterAdvert(const Ip6::Address &aRouterAddress,
@@ -893,13 +936,15 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
                       uint16_t            aNumPios,
                       const Rio          *aRios,
                       uint16_t            aNumRios,
+                      const Rdnss        *aRdnsses,
+                      uint16_t            aNumRdnsses,
                       const DefaultRoute &aDefaultRoute,
                       const RaFlags      &aRaFlags)
 {
     Ip6::Nd::RouterAdvert::TxMessage raMsg;
     Icmp6Packet                      packet;
 
-    BuildRouterAdvert(raMsg, aPios, aNumPios, aRios, aNumRios, aDefaultRoute, aRaFlags);
+    BuildRouterAdvert(raMsg, aPios, aNumPios, aRios, aNumRios, aRdnsses, aNumRdnsses, aDefaultRoute, aRaFlags);
     raMsg.GetAsPacket(packet);
 
     SendRouterAdvert(aRouterAddress, packet);
@@ -914,7 +959,7 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
                       const DefaultRoute &aDefaultRoute = DefaultRoute(0, NetworkData::kRoutePreferenceMedium),
                       const RaFlags      &aRaFlags      = RaFlags())
 {
-    SendRouterAdvert(aRouterAddress, aPios, kNumPios, aRios, kNumRios, aDefaultRoute, aRaFlags);
+    SendRouterAdvert(aRouterAddress, aPios, kNumPios, aRios, kNumRios, nullptr, 0, aDefaultRoute, aRaFlags);
 }
 
 template <uint16_t kNumPios>
@@ -923,7 +968,7 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
                       const DefaultRoute &aDefaultRoute = DefaultRoute(0, NetworkData::kRoutePreferenceMedium),
                       const RaFlags      &aRaFlags      = RaFlags())
 {
-    SendRouterAdvert(aRouterAddress, aPios, kNumPios, nullptr, 0, aDefaultRoute, aRaFlags);
+    SendRouterAdvert(aRouterAddress, aPios, kNumPios, nullptr, 0, nullptr, 0, aDefaultRoute, aRaFlags);
 }
 
 template <uint16_t kNumRios>
@@ -932,20 +977,33 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
                       const DefaultRoute &aDefaultRoute = DefaultRoute(0, NetworkData::kRoutePreferenceMedium),
                       const RaFlags      &aRaFlags      = RaFlags())
 {
-    SendRouterAdvert(aRouterAddress, nullptr, 0, aRios, kNumRios, aDefaultRoute, aRaFlags);
+    SendRouterAdvert(aRouterAddress, nullptr, 0, aRios, kNumRios, nullptr, 0, aDefaultRoute, aRaFlags);
+}
+
+void SendRouterAdvert(const Ip6::Address &aRouterAddress, const Rdnss &aRdnss)
+{
+    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, &aRdnss, 1,
+                     DefaultRoute(0, NetworkData::kRoutePreferenceMedium), RaFlags());
+}
+
+template <uint16_t kNumRdnsses>
+void SendRouterAdvert(const Ip6::Address &aRouterAddress, const Rdnss (&aRdnsses)[kNumRdnsses])
+{
+    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, aRdnsses, kNumRdnsses,
+                     DefaultRoute(0, NetworkData::kRoutePreferenceMedium), RaFlags());
 }
 
 void SendRouterAdvert(const Ip6::Address &aRouterAddress,
                       const DefaultRoute &aDefaultRoute,
                       const RaFlags      &aRaFlags = RaFlags())
 {
-    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, aDefaultRoute, aRaFlags);
+    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, nullptr, 0, aDefaultRoute, aRaFlags);
 }
 
 void SendRouterAdvert(const Ip6::Address &aRouterAddress, const RaFlags &aRaFlags)
 {
-    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, DefaultRoute(0, NetworkData::kRoutePreferenceMedium),
-                     aRaFlags);
+    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, nullptr, 0,
+                     DefaultRoute(0, NetworkData::kRoutePreferenceMedium), aRaFlags);
 }
 
 template <uint16_t kNumPios> void SendRouterAdvertToBorderRoutingProcessIcmp6Ra(const Pio (&aPios)[kNumPios])
@@ -953,8 +1011,8 @@ template <uint16_t kNumPios> void SendRouterAdvertToBorderRoutingProcessIcmp6Ra(
     Ip6::Nd::RouterAdvert::TxMessage raMsg;
     Icmp6Packet                      packet;
 
-    BuildRouterAdvert(raMsg, aPios, kNumPios, nullptr, 0, DefaultRoute(0, NetworkData::kRoutePreferenceMedium),
-                      RaFlags());
+    BuildRouterAdvert(raMsg, aPios, kNumPios, nullptr, 0, nullptr, 0,
+                      DefaultRoute(0, NetworkData::kRoutePreferenceMedium), RaFlags());
     raMsg.GetAsPacket(packet);
 
     otPlatBorderRoutingProcessIcmp6Ra(sInstance, packet.GetBytes(), packet.GetLength());
@@ -1079,6 +1137,66 @@ void VerifyPrefixTable(const OnLinkPrefix *aOnLinkPrefixes,
 }
 
 void VerifyPrefixTableIsEmpty(void) { VerifyPrefixTable(nullptr, 0, nullptr, 0); }
+
+struct RdnssAddress
+{
+    RdnssAddress(const Ip6::Address &aAddress, uint32_t aLifetime, const Ip6::Address &aRouterAddress)
+        : mAddress(aAddress)
+        , mLifetime(aLifetime)
+        , mRouterAddress(aRouterAddress)
+    {
+    }
+
+    const Ip6::Address &mAddress;
+    uint32_t            mLifetime;
+    const Ip6::Address &mRouterAddress;
+};
+
+template <uint16_t kNumAddrs> void VerifyRdnssAddressTable(const RdnssAddress (&aRdnssAddresses)[kNumAddrs])
+{
+    VerifyRdnssAddressTable(aRdnssAddresses, kNumAddrs);
+}
+
+void VerifyRdnssAddressTable(const RdnssAddress *aRdnssAddresses, uint16_t aNumAddrs)
+{
+    BorderRouter::RoutingManager::PrefixTableIterator iter;
+    BorderRouter::RoutingManager::RdnssAddrEntry      entry;
+    uint16_t                                          count = 0;
+
+    Log("VerifyRdnssAddressTable()");
+
+    sInstance->Get<BorderRouter::RoutingManager>().InitPrefixTableIterator(iter);
+
+    while (sInstance->Get<BorderRouter::RoutingManager>().GetNextRdnssAddrEntry(iter, entry) == kErrorNone)
+    {
+        bool didFind = false;
+
+        Log("   address:%s, lifetime:%u, router:%s, age:%u", AsCoreType(&entry.mAddress).ToString().AsCString(),
+            entry.mLifetime, AsCoreType(&entry.mRouter.mAddress).ToString().AsCString(),
+            entry.mMsecSinceLastUpdate / 1000);
+
+        count++;
+
+        for (uint16_t index = 0; index < aNumAddrs; index++)
+        {
+            const RdnssAddress &rndssAddress = aRdnssAddresses[index];
+
+            if ((rndssAddress.mAddress == AsCoreType(&entry.mAddress)) &&
+                (AsCoreType(&entry.mRouter.mAddress) == rndssAddress.mRouterAddress))
+            {
+                VerifyOrQuit(entry.mLifetime == rndssAddress.mLifetime);
+                didFind = true;
+                break;
+            }
+        }
+
+        VerifyOrQuit(didFind);
+    }
+
+    VerifyOrQuit(count == aNumAddrs);
+}
+
+void VerifyRdnssAddressTableIsEmpty(void) { VerifyRdnssAddressTable(nullptr, 0); }
 
 struct InfraRouter
 {
@@ -4347,6 +4465,246 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
+static void HandleRdnssChanged(void *aContext)
+{
+    VerifyOrQuit(aContext != nullptr);
+    *static_cast<bool *>(aContext) = true;
+}
+
+void TestRdnss(void)
+{
+    Ip6::Address rdnssAddr1     = AddressFromString("fd77::1");
+    Ip6::Address rdnssAddr2     = AddressFromString("fd77::2");
+    Ip6::Address rdnssAddr3     = AddressFromString("fd77::3");
+    Ip6::Address rdnssAddr4     = AddressFromString("fd77::4");
+    Ip6::Address routerAddressA = AddressFromString("fd00::aaaa");
+    Ip6::Address routerAddressB = AddressFromString("fd00::bbbb");
+    Ip6::Prefix  localOnLink;
+    Ip6::Prefix  localOmr;
+    bool         rdnssCallbackCalled = false;
+
+    uint16_t heapAllocations;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestRdnss");
+
+    InitTest();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start Routing Manager. Check emitted RS and RA messages.
+
+    sRsEmitted   = false;
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+
+    Log("Local on-link prefix is %s", localOnLink.ToString().AsCString());
+    Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
+
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(30000);
+
+    VerifyOrQuit(sRsEmitted);
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    Log("Received RA was validated");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Set the RDNSS callback on Routing Manager
+
+    rdnssCallbackCalled = false;
+    sInstance->Get<BorderRouter::RoutingManager>().SetRdnssAddrCallback(HandleRdnssChanged, &rdnssCallbackCalled);
+
+    VerifyOrQuit(!rdnssCallbackCalled);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check Network Data to include the local OMR and ULA prefix.
+
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send RA from router A advertising an RDNS address. Ensure
+    // that the RDNSS callback is called and new advertised address
+    // is present in the RDNSS table.
+
+    VerifyRdnssAddressTableIsEmpty();
+
+    rdnssCallbackCalled = false;
+    SendRouterAdvert(routerAddressA, {Rdnss::Create(300, {rdnssAddr1})});
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(rdnssCallbackCalled);
+    VerifyRdnssAddressTable({RdnssAddress(rdnssAddr1, 300, routerAddressA)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send same RA again from router A, ensure there is no callback
+    // as there is no change in table.
+
+    rdnssCallbackCalled = false;
+
+    AdvanceTime(15 * 1000);
+    VerifyOrQuit(!rdnssCallbackCalled);
+    VerifyRdnssAddressTable({RdnssAddress(rdnssAddr1, 300, routerAddressA)});
+
+    SendRouterAdvert(routerAddressA, {Rdnss::Create(300, {rdnssAddr1})});
+    AdvanceTime(1);
+
+    VerifyOrQuit(!rdnssCallbackCalled);
+    VerifyRdnssAddressTable({RdnssAddress(rdnssAddr1, 300, routerAddressA)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send an RA from router A, now adding a different RDNSS address.
+    // Ensure callback is invoked and we see the new address in the
+    // table.
+
+    rdnssCallbackCalled = false;
+
+    SendRouterAdvert(routerAddressA, {Rdnss::Create(600, {rdnssAddr2})});
+    AdvanceTime(1);
+
+    VerifyOrQuit(rdnssCallbackCalled);
+    VerifyRdnssAddressTable(
+        {RdnssAddress(rdnssAddr1, 300, routerAddressA), RdnssAddress(rdnssAddr2, 600, routerAddressA)});
+
+    AdvanceTime(20 * 1000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send RA from router B, adding a new different RDNSS address.
+    // Ensure callback is invoked and validate RDNSS address table.
+
+    rdnssCallbackCalled = false;
+
+    SendRouterAdvert(routerAddressB, {Rdnss::Create(0xffffffff, {rdnssAddr3})});
+    AdvanceTime(1);
+
+    VerifyOrQuit(rdnssCallbackCalled);
+    VerifyRdnssAddressTable({RdnssAddress(rdnssAddr1, 300, routerAddressA),
+                             RdnssAddress(rdnssAddr2, 600, routerAddressA),
+                             RdnssAddress(rdnssAddr3, 0xffffffff, routerAddressB)});
+
+    AdvanceTime(10 * 1000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send an RA from router A with two RDNSS options changing the
+    // lifetimes of the two addresses. Ensure the callback is not invoked
+    // (since there are no changes to the address table), but we should
+    // see the new lifetimes reflected in the RDNSS address table.
+
+    rdnssCallbackCalled = false;
+
+    SendRouterAdvert(routerAddressA, {Rdnss::Create(400, {rdnssAddr2}), Rdnss::Create(800, {rdnssAddr1})});
+    AdvanceTime(1);
+
+    VerifyOrQuit(!rdnssCallbackCalled);
+    VerifyRdnssAddressTable({RdnssAddress(rdnssAddr1, 800, routerAddressA),
+                             RdnssAddress(rdnssAddr2, 400, routerAddressA),
+                             RdnssAddress(rdnssAddr3, 0xffffffff, routerAddressB)});
+
+    AdvanceTime(30 * 1000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send RA from router B, removing a previous RDNSS address
+    // and one that it never advertised. Ensure callback is
+    // invoked and validate RDNSS address table is updated
+    // correctly.
+
+    rdnssCallbackCalled = false;
+
+    SendRouterAdvert(routerAddressB, {Rdnss::Create(0, {rdnssAddr3, rdnssAddr4, rdnssAddr3})});
+    AdvanceTime(1);
+
+    VerifyOrQuit(rdnssCallbackCalled);
+    VerifyRdnssAddressTable(
+        {RdnssAddress(rdnssAddr1, 800, routerAddressA), RdnssAddress(rdnssAddr2, 400, routerAddressA)});
+
+    AdvanceTime(30 * 1000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send RA from router A, advertising a short lifetime.
+
+    rdnssCallbackCalled = false;
+
+    SendRouterAdvert(routerAddressA, {Rdnss::Create(32, {rdnssAddr1, rdnssAddr2})});
+    AdvanceTime(1);
+
+    VerifyOrQuit(!rdnssCallbackCalled);
+    VerifyRdnssAddressTable(
+        {RdnssAddress(rdnssAddr1, 32, routerAddressA), RdnssAddress(rdnssAddr2, 32, routerAddressA)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Wait for the expiration time (based on lifetime) and ensure
+    // callback is invoked and the addresses are removed from
+    // the table.
+
+    AdvanceTime(32 * 1000 - 10);
+
+    VerifyOrQuit(!rdnssCallbackCalled);
+
+    AdvanceTime(15);
+    VerifyOrQuit(rdnssCallbackCalled);
+    VerifyRdnssAddressTableIsEmpty();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send an RA from router B, adding an RDNSS address with infinite
+    // lifetime.
+
+    rdnssCallbackCalled = false;
+
+    SendRouterAdvert(routerAddressB, {Rdnss::Create(0xffffffff, {rdnssAddr3})});
+    AdvanceTime(1);
+
+    VerifyOrQuit(rdnssCallbackCalled);
+    VerifyRdnssAddressTable({RdnssAddress(rdnssAddr3, 0xffffffff, routerAddressB)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Disallow responding to NS message.
+
+    // Wait for longer than "reachable" timeout to ensure the router B
+    // is fully removed (deemed unreachable). Validate that its
+    // RNDSS address is also removed and RDNSS callback is invoked.
+
+    rdnssCallbackCalled = false;
+    sRespondToNs        = false;
+
+    AdvanceTime(250 * 1000);
+
+    VerifyOrQuit(rdnssCallbackCalled);
+    VerifyRdnssAddressTableIsEmpty();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send an RA from router A with one RDNNS address. Validate
+    // that it is removed when `RoutingManager` is stopped.
+
+    rdnssCallbackCalled = false;
+    SendRouterAdvert(routerAddressA, {Rdnss::Create(300, {rdnssAddr1})});
+    AdvanceTime(1);
+
+    VerifyOrQuit(rdnssCallbackCalled);
+    VerifyRdnssAddressTable({RdnssAddress(rdnssAddr1, 300, routerAddressA)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+
+    VerifyRdnssAddressTableIsEmpty();
+
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    Log("End of TestRdnss");
+
+    FinalizeTest();
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 } // namespace ot
@@ -4381,6 +4739,7 @@ int main(void)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
     ot::TestBorderRoutingProcessPlatfromGeneratedNd();
 #endif
+    ot::TestRdnss();
 
     printf("All tests passed\n");
 #else

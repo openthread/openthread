@@ -730,6 +730,13 @@ public:
      */
     uint64_t CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const;
 
+    /**
+     * Indicates whether the device is connected to a parent which supports CSL.
+     *
+     * @retval TRUE   If parent supports CSL.
+     * @retval FALSE  If parent does not support CSL.
+     */
+    bool IsCslSupported(void) const;
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE

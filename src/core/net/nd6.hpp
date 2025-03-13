@@ -78,11 +78,12 @@ class Option
 public:
     enum Type : uint8_t
     {
-        kSourceLinkLayerAddr  = 1,  ///< Source Link Layer Address Option.
-        kTargetLinkLayerAddr  = 2,  ///< Target Link Layer Address Option.
-        kTypePrefixInfo       = 3,  ///< Prefix Information Option.
-        kTypeRouteInfo        = 24, ///< Route Information Option.
-        kTypeRaFlagsExtension = 26, ///< RA Flags Extension Option.
+        kSourceLinkLayerAddr    = 1,  ///< Source Link Layer Address Option.
+        kTargetLinkLayerAddr    = 2,  ///< Target Link Layer Address Option.
+        kTypePrefixInfo         = 3,  ///< Prefix Information Option.
+        kTypeRouteInfo          = 24, ///< Route Information Option.
+        kTypeRecursiveDnsServer = 25, ///< Recursive DNS Server (RDNSS) Option.
+        kTypeRaFlagsExtension   = 26, ///< RA Flags Extension Option.
     };
 
     static constexpr uint16_t kLengthUnit = 8; ///< The unit of length in octets.
@@ -489,6 +490,116 @@ private:
 static_assert(sizeof(RaFlagsExtOption) == 8, "invalid RaFlagsExtOption structure");
 
 /**
+ * Represents the Recursive DNS Server (RDNSS) Option.
+ *
+ * See section 5.1 of RFC 8106 [https://datatracker.ietf.org/doc/html/rfc8106#section-5.1].
+ */
+OT_TOOL_PACKED_BEGIN
+class RecursiveDnsServerOption : public Option, private Clearable<RecursiveDnsServerOption>
+{
+    friend class Clearable<RecursiveDnsServerOption>;
+
+public:
+    static constexpr uint16_t kMinSize = kLengthUnit;             ///< Minimum size (in bytes) of a RDNSS Option.
+    static constexpr Type     kType    = kTypeRecursiveDnsServer; ///< Route Information Option Type.
+
+    /**
+     * Initializes the option setting the type and clearing (setting to zero) all other fields.
+     */
+    void Init(void);
+
+    /**
+     * Tells whether this option is valid.
+     *
+     * @returns  A boolean indicates whether this option is valid.
+     */
+    bool IsValid(void) const { return (GetLength() > 0); }
+
+    /**
+     * Sets the Lifetime field.
+     *
+     * @param[in]  aLifetime  The lifetime in seconds.
+     */
+    void SetLifetime(uint32_t aLifetime) { mLifetime = BigEndian::HostSwap32(aLifetime); }
+
+    /**
+     * Gets the Lifetime fields
+     *
+     * @returns  The Lifetime in seconds.
+     */
+    uint32_t GetLifetime(void) const { return BigEndian::HostSwap32(mLifetime); }
+
+    /**
+     * Gets the numbers of IPv6 addresses.
+     *
+     * @returns Number of IPv6 addresses.
+     */
+    uint8_t GetNumAddresses(void) const { return IsValid() ? (GetLength() - 1) / 2 : 0; }
+
+    /**
+     * Returns a pointer to array of IPv6 addresses of DNS server.
+     *
+     * @returns A pointer to the array of IPv6 addresses.
+     */
+    const Address *GetAddresses(void) const
+    {
+        return reinterpret_cast<const Address *>(reinterpret_cast<const uint8_t *>(this) + sizeof(*this));
+    }
+
+    /**
+     * Returns a pointer to array of IPv6 addresses of DNS server.
+     *
+     * @returns A pointer to the array of IPv6 addresses.
+     */
+    Address *GetAddresses(void) { return AsNonConst(AsConst(this)->GetAddresses()); }
+
+    /**
+     * Returns the IPv6 address at a given index.
+     *
+     * Caller MUST ensure that @p aIndex is valid and smaller than `GetNumberOfAddresses()`. Otherwise the behavior
+     * of this method is undefined.
+     *
+     * @param[in] aIndex   The index.
+     *
+     * @returns The IPv6 address at @p aIndex.
+     */
+    const Address &GetAddressAt(uint8_t aIndex) const { return GetAddresses()[aIndex]; }
+
+    /**
+     * Calculates the option length for a given number of IPv6 addresses.
+     *
+     * @param[in] aNumAddresses   Number of IPv6 addresses
+     *
+     * @returns The option length (in unit of 8 octets) for @p aNumAddresses.
+     */
+    static uint8_t OptionLengthFor(uint8_t aNumAddresses);
+
+    RecursiveDnsServerOption(void) = delete;
+
+private:
+    // RDNSS Option
+    //
+    //   0                   1                   2                   3
+    //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |     Type      |     Length    |           Reserved            |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |                           Lifetime                            |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |                                                               |
+    //  :            Addresses of IPv6 Recursive DNS Servers            :
+    //  |                                                               |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+    uint16_t mReserved;
+    uint32_t mLifetime;
+    // Followed by IPv6 Addresses of DNS servers (variable length).
+
+} OT_TOOL_PACKED_END;
+
+static_assert(sizeof(RecursiveDnsServerOption) == 8, "invalid RecursiveDnsServerOption structure");
+
+/**
  * Defines the ND6 Tx Message.
  */
 class TxMessage
@@ -810,6 +921,18 @@ public:
          * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
          */
         Error AppendRouteInfoOption(const Prefix &aPrefix, uint32_t aRouteLifetime, RoutePreference aPreference);
+
+        /**
+         * Append a Recursive DNS Server Option to the RA message.
+         *
+         * @param[in] aAddresses     A pointer to an array of IPv6 addresses.
+         * @param[in] aNumAddresses  Number of addresses in @p aAddresses array.
+         * @param[in] aLifetime      The lifetime in seconds.
+         *
+         * @retval kErrorNone    Option is appended successfully.
+         * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
+         */
+        Error AppendRecursiveDnsServerOption(const Address *aAddresses, uint8_t aNumAddresses, uint32_t aLifetime);
 
         /**
          * Indicates whether or not the received RA message contains any options.
