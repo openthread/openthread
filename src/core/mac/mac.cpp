@@ -83,6 +83,8 @@ Mac::Mac(Instance &aInstance)
 #endif
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    , mIsCslEnabled(false)
+    , mIsCslCapable(false)
     , mCslChannel(0)
     , mCslPeriod(0)
 #endif
@@ -423,6 +425,9 @@ exit:
 Error Mac::SetPanChannel(uint8_t aChannel)
 {
     Error error = kErrorNone;
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    bool isPanChannelChanged = (mPanChannel != aChannel);
+#endif
 
     VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
 
@@ -435,7 +440,10 @@ Error Mac::SetPanChannel(uint8_t aChannel)
     mRadioChannel = mPanChannel;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    UpdateCsl();
+    if ((mCslChannel == 0) && isPanChannelChanged)
+    {
+        UpdateCslParameters();
+    }
 #endif
 
     UpdateIdleMode();
@@ -2423,36 +2431,32 @@ exit:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-void Mac::UpdateCsl(void)
+void Mac::SetCslCapable(bool aIsCslCapable)
 {
-    uint16_t period  = IsCslEnabled() ? GetCslPeriod() : 0;
-    uint8_t  channel = GetCslChannel() ? GetCslChannel() : mPanChannel;
+    VerifyOrExit(mIsCslCapable != aIsCslCapable);
+    mIsCslCapable = aIsCslCapable;
+    UpdateCslState();
 
-    if (mLinks.UpdateCsl(period, channel, Get<Mle::Mle>().GetParent().GetRloc16(),
-                         Get<Mle::Mle>().GetParent().GetExtAddress()))
-    {
-        if (Get<Mle::Mle>().IsChild())
-        {
-            Get<DataPollSender>().RecalculatePollPeriod();
-
-            if (period != 0)
-            {
-                Get<Mle::Mle>().ScheduleChildUpdateRequest();
-            }
-        }
-
-        UpdateIdleMode();
-    }
+exit:
+    return;
 }
 
 void Mac::SetCslChannel(uint8_t aChannel)
 {
+    VerifyOrExit(mCslChannel != aChannel);
     mCslChannel = aChannel;
-    UpdateCsl();
+    UpdateCslParameters();
+
+exit:
+    return;
 }
 
 void Mac::SetCslPeriod(uint16_t aPeriod)
 {
+    bool shouldUpdateCslState;
+
+    VerifyOrExit(mCslPeriod != aPeriod);
+
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     if (IsWakeupListenEnabled() && aPeriod != 0)
     {
@@ -2461,8 +2465,70 @@ void Mac::SetCslPeriod(uint16_t aPeriod)
     }
 #endif
 
-    mCslPeriod = aPeriod;
-    UpdateCsl();
+    // A CSL period value of 0 means that the CSL is disabled.
+    shouldUpdateCslState = ((mCslPeriod == 0) != (aPeriod == 0));
+    mCslPeriod           = aPeriod;
+
+    if (shouldUpdateCslState)
+    {
+        UpdateCslState();
+    }
+    else
+    {
+        UpdateCslParameters();
+    }
+
+exit:
+    return;
+}
+
+void Mac::UpdateCslState(void)
+{
+    // This method will enable/disable CSL when the CSL state (enabled/disabled) is changed. Otherwise, nothing to do.
+    bool isCslEnabled = mIsCslCapable && (mCslPeriod > 0);
+
+    VerifyOrExit(mIsCslEnabled != isCslEnabled);
+
+    mIsCslEnabled = isCslEnabled;
+
+    if (mIsCslEnabled)
+    {
+        UpdateCslParameters();
+        // Request the Mac to enter sleep state.
+        UpdateIdleMode();
+    }
+    else
+    {
+        // The platform API `otPlatRadioEnableCsl()` description says that disable CSL by setting the CSL period to 0.
+        // However, this description does not say whether the parameter `aExtAddr` can be set to nullptr or how to set
+        // the `aExtAddr` when the CSL is disabled. Here, an empty ExtAddress is set to meet the API requirement.
+        ExtAddress extAddress;
+
+        extAddress.Fill(0);
+        mLinks.SetCslParams(0, 0, kShortAddrInvalid, extAddress);
+    }
+
+    LogInfo("CSL receiver is %s", mIsCslEnabled ? "enabled" : "disabled");
+
+exit:
+    return;
+}
+
+void Mac::UpdateCslParameters(void)
+{
+    // This method will set all CSL parameters when the CSL is enabled. Otherwise, nothing to do.
+    uint8_t cslChannel;
+
+    VerifyOrExit(mIsCslEnabled);
+
+    cslChannel = GetCslChannel() ? GetCslChannel() : mPanChannel;
+    mLinks.SetCslParams(GetCslPeriod(), cslChannel, Get<Mle::Mle>().GetParent().GetRloc16(),
+                        Get<Mle::Mle>().GetParent().GetExtAddress());
+    Get<DataPollSender>().RecalculatePollPeriod();
+    Get<Mle::Mle>().ScheduleChildUpdateRequest();
+
+exit:
+    return;
 }
 
 uint32_t Mac::GetCslPeriodInMsec(void) const
@@ -2473,15 +2539,6 @@ uint32_t Mac::GetCslPeriodInMsec(void) const
 uint32_t Mac::CslPeriodToUsec(uint16_t aPeriodInTenSymbols)
 {
     return static_cast<uint32_t>(aPeriodInTenSymbols) * kUsPerTenSymbols;
-}
-
-bool Mac::IsCslEnabled(void) const { return !Get<Mle::Mle>().IsRxOnWhenIdle() && IsCslCapable(); }
-
-bool Mac::IsCslCapable(void) const { return (GetCslPeriod() > 0) && IsCslSupported(); }
-
-bool Mac::IsCslSupported(void) const
-{
-    return Get<Mle::MleRouter>().IsChild() && Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported();
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
