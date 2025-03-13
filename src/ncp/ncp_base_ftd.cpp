@@ -1327,6 +1327,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHANNEL_MANAGER_CHANNEL_SELECT>(void)
 {
     return mEncoder.WriteBool(false);
@@ -1377,7 +1378,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CHANNEL_MANAGER_AUTO_
 exit:
     return error;
 }
-
+#endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
