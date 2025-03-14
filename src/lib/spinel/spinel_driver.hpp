@@ -215,6 +215,27 @@ public:
      */
     spinel_iid_t GetIid(void) { return mIid; }
 
+#if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+    /**
+     * A callback type for handling Co-processor reset failure of spinel driver.
+     *
+     * @param[in] aContext  A pointer to the user context.
+     */
+    typedef void (*otSpinelDriverCoprocessorResetFailureCallback)(void *aContext);
+
+    /**
+     * Registers a callback to handle Co-processor reset failure of Spinel driver.
+     *
+     * This function is used to register a callback to handle Co-processor reset failure.
+     * When the Spinel driver fails to reset the Co-processor through both software and
+     * hardware resets, the user can handle the error through the callback(such as OTA).
+     *
+     * @param[in] aCallback The callback.
+     * @param[in] aContext  A pointer to the user context.
+     */
+    void SetCoprocessorResetFailureCallback(otSpinelDriverCoprocessorResetFailureCallback aCallback, void *aContext);
+#endif
+
 private:
     static constexpr uint16_t kMaxSpinelFrame    = SPINEL_FRAME_MAX_SIZE;
     static constexpr uint16_t kVersionStringSize = 128;
@@ -314,6 +335,11 @@ private:
     char mVersion[kVersionStringSize];
 
     Array<unsigned int, kCapsBufferSize> mCoprocessorCaps;
+
+#if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+    otSpinelDriverCoprocessorResetFailureCallback mCoprocessorResetFailureCallback;
+    void                                         *mCoprocessorResetFailureContext;
+#endif
 };
 
 } // namespace Spinel
