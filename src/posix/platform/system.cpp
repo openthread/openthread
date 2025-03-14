@@ -237,6 +237,10 @@ void platformSetUp(otPlatformConfig *aPlatformConfig)
     platformNetifSetUp();
 #endif
 
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    platformResolverSetUp();
+#endif
+
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     ot::Posix::Udp::Get().SetUp();
 #endif
