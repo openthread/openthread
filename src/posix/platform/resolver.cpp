@@ -30,6 +30,7 @@
 
 #include "platform-posix.h"
 
+#include <openthread/border_routing.h>
 #include <openthread/logging.h>
 #include <openthread/message.h>
 #include <openthread/nat64.h>
@@ -39,6 +40,7 @@
 #include <openthread/platform/time.h>
 
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 
 #include <arpa/inet.h>
 #include <arpa/nameser.h>
@@ -48,6 +50,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <fstream>
 #include <string>
 
@@ -69,6 +72,15 @@ void Resolver::Init(void)
 {
     memset(mUpstreamTransaction, 0, sizeof(mUpstreamTransaction));
     LoadDnsServerListFromConf();
+}
+
+void Resolver::Setup(void)
+{
+    OT_ASSERT(gInstance != nullptr);
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    otBorderRoutingSetRdnssAddrCallback(gInstance, &Resolver::BorderRoutingRdnssCallback, this);
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 }
 
 void Resolver::TryRefreshDnsServerList(void)
@@ -129,14 +141,99 @@ exit:
     return;
 }
 
-void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+void Resolver::BorderRoutingRdnssCallback(void *aResolver)
 {
-    char         packet[kMaxDnsMessageSize];
-    otError      error  = OT_ERROR_NONE;
-    uint16_t     length = otMessageGetLength(aQuery);
+    static_cast<Resolver *>(aResolver)->BorderRoutingRdnssCallback();
+}
+
+void Resolver::BorderRoutingRdnssCallback(void)
+{
+    otBorderRoutingPrefixTableIterator iterator;
+    otBorderRoutingRdnssAddrEntry      entry;
+    otBorderRoutingRdnssAddrEntry      rdnssEntries[kMaxRecursiveServerCount + 1];
+    otIp6Address                       rdnssServers[kMaxRecursiveServerCount];
+    uint32_t                           numEntries = 0;
+
+    otBorderRoutingPrefixTableInitIterator(gInstance, &iterator);
+
+    while (otBorderRoutingGetNextRdnssAddrEntry(gInstance, &iterator, &entry) == OT_ERROR_NONE)
+    {
+        uint32_t i = 0;
+
+        // Check if the entry address is already in the list.
+        for (; i < numEntries; ++i)
+        {
+            if (otIp6IsAddressEqual(&entry.mAddress, &rdnssEntries[i].mAddress))
+            {
+                rdnssEntries[i].mLifetime = OT_MAX(rdnssEntries[i].mLifetime, entry.mLifetime);
+
+                break;
+            }
+        }
+
+        // If the address is not a duplicate, add the entry to the entry list.
+        if (i == numEntries)
+        {
+            rdnssEntries[numEntries++] = entry;
+
+            std::sort(rdnssEntries, rdnssEntries + numEntries,
+                      [](const otBorderRoutingRdnssAddrEntry &a, const otBorderRoutingRdnssAddrEntry &b) {
+                          return a.mLifetime > b.mLifetime;
+                      });
+
+            numEntries = OT_MIN(numEntries, kMaxRecursiveServerCount);
+        }
+    }
+
+    for (uint32_t i = 0; i < numEntries; i++)
+    {
+        rdnssServers[i] = rdnssEntries[i].mAddress;
+    }
+
+    SetRecursiveDnsServerList(rdnssServers, numEntries);
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+otError Resolver::SendQueryToServer(Transaction        *aTxn,
+                                    const otIp6Address &aServerAddress,
+                                    const char         *aPacket,
+                                    uint16_t            aLength)
+{
     otIp4Address ip4Addr;
     sockaddr_in  serverAddr4;
     sockaddr_in6 serverAddr6;
+
+    if (otIp4FromIp4MappedIp6Address(&aServerAddress, &ip4Addr) == OT_ERROR_NONE)
+    {
+        memcpy(&serverAddr4.sin_addr.s_addr, &ip4Addr, sizeof(otIp4Address));
+        serverAddr4.sin_family = AF_INET;
+        serverAddr4.sin_port   = htons(53);
+
+        VerifyOrExit(sendto(aTxn->mUdpFd4, aPacket, aLength, MSG_DONTWAIT, reinterpret_cast<sockaddr *>(&serverAddr4),
+                            sizeof(serverAddr4)) > 0);
+    }
+    else
+    {
+        memcpy(&serverAddr6.sin6_addr, &aServerAddress, sizeof(otIp6Address));
+        serverAddr6.sin6_family = AF_INET6;
+        serverAddr6.sin6_port   = htons(53);
+
+        VerifyOrExit(sendto(aTxn->mUdpFd6, aPacket, aLength, MSG_DONTWAIT, reinterpret_cast<sockaddr *>(&serverAddr6),
+                            sizeof(serverAddr6)) > 0);
+    }
+
+    return OT_ERROR_NONE;
+
+exit:
+    return OT_ERROR_NO_ROUTE;
+}
+
+void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
+{
+    char     packet[kMaxDnsMessageSize];
+    otError  error  = OT_ERROR_NONE;
+    uint16_t length = otMessageGetLength(aQuery);
 
     Transaction *txn = nullptr;
 
@@ -147,32 +244,18 @@ void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
     VerifyOrExit(txn != nullptr, error = OT_ERROR_NO_BUFS);
     TryRefreshDnsServerList();
 
+    for (uint32_t i = 0; i < mRecursiveDnsServerCount; i++)
+    {
+        SuccessOrExit(error = SendQueryToServer(txn, mRecursiveDnsServerList[i], packet, length));
+    }
+
     for (uint32_t i = 0; i < mUpstreamDnsServerCount; i++)
     {
-        if (otIp4FromIp4MappedIp6Address(&mUpstreamDnsServerList[i], &ip4Addr) == OT_ERROR_NONE)
-        {
-            memcpy(&serverAddr4.sin_addr.s_addr, &ip4Addr, sizeof(otIp4Address));
-
-            serverAddr4.sin_family = AF_INET;
-            serverAddr4.sin_port   = htons(53);
-
-            VerifyOrExit(sendto(txn->mUdpFd4, packet, length, MSG_DONTWAIT, reinterpret_cast<sockaddr *>(&serverAddr4),
-                                sizeof(serverAddr4)) > 0,
-                         error = OT_ERROR_NO_ROUTE);
-        }
-        else
-        {
-            memcpy(&serverAddr6.sin6_addr, &mUpstreamDnsServerList[i], sizeof(otIp6Address));
-
-            serverAddr6.sin6_family = AF_INET6;
-            serverAddr6.sin6_port   = htons(53);
-
-            VerifyOrExit(sendto(txn->mUdpFd6, packet, length, MSG_DONTWAIT, reinterpret_cast<sockaddr *>(&serverAddr6),
-                                sizeof(serverAddr6)) > 0,
-                         error = OT_ERROR_NO_ROUTE);
-        }
+        SuccessOrExit(error = SendQueryToServer(txn, mUpstreamDnsServerList[i], packet, length));
     }
-    LogInfo("Forwarded DNS query %p to %d server(s).", static_cast<void *>(aTxn), mUpstreamDnsServerCount);
+
+    LogInfo("Forwarded DNS query %p to %d server(s).", static_cast<void *>(aTxn),
+            mRecursiveDnsServerCount + mUpstreamDnsServerCount);
 
 exit:
     if (error != OT_ERROR_NONE)
@@ -184,7 +267,6 @@ exit:
             CloseTransaction(txn);
         }
     }
-    return;
 }
 
 void Resolver::Cancel(otPlatDnsUpstreamQuery *aTxn)
@@ -263,22 +345,6 @@ exit:
     {
         otMessageFree(message);
     }
-}
-
-Resolver::Transaction *Resolver::GetTransaction(int aFd)
-{
-    Transaction *ret = nullptr;
-
-    for (Transaction &txn : mUpstreamTransaction)
-    {
-        if (txn.mThreadTxn != nullptr && (txn.mUdpFd4 == aFd || txn.mUdpFd6 == aFd))
-        {
-            ret = &txn;
-            break;
-        }
-    }
-
-    return ret;
 }
 
 Resolver::Transaction *Resolver::GetTransaction(otPlatDnsUpstreamQuery *aThreadTxn)
@@ -364,6 +430,14 @@ void Resolver::SetUpstreamDnsServers(const otIp6Address *aUpstreamDnsServers, ui
     LogInfo("Set upstream DNS server list, count: %d", mUpstreamDnsServerCount);
 }
 
+void Resolver::SetRecursiveDnsServerList(const otIp6Address *aRecursiveDnsServers, uint32_t aNumServers)
+{
+    mRecursiveDnsServerCount = OT_MIN(aNumServers, static_cast<uint32_t>(kMaxRecursiveServerCount));
+    memcpy(mUpstreamDnsServerList, aRecursiveDnsServers, mRecursiveDnsServerCount * sizeof(otIp6Address));
+
+    LogInfo("Set recursive DNS server list, count: %d", mRecursiveDnsServerCount);
+}
+
 int Resolver::CreateUdpSocket(sa_family_t aFamily)
 {
     int fd = -1;
@@ -391,6 +465,8 @@ exit:
 void platformResolverProcess(const otSysMainloopContext *aContext) { gResolver.Process(*aContext); }
 
 void platformResolverUpdateFdSet(otSysMainloopContext *aContext) { gResolver.UpdateFdSet(*aContext); }
+
+void platformResolverSetUp(void) { gResolver.Setup(); }
 
 void platformResolverInit(void) { gResolver.Init(); }
 

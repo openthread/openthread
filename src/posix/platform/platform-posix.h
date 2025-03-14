@@ -422,6 +422,15 @@ void platformSpinelManagerUpdateFdSet(otSysMainloopContext *aContext);
 void platformResolverInit(void);
 
 /**
+ * Sets up platform resolver.
+ *
+ * @note This function is called after OpenThread instance is created.
+ *
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ */
+void platformResolverSetUp(void);
+
+/**
  * Updates the file descriptor sets with file descriptors used by the resolver.
  *
  * @param[in]   aContext    A pointer to the mainloop context.
