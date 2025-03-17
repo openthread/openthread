@@ -144,8 +144,8 @@ def check_tlv_request_tlv(command_msg, check_type, tlv_id):
 
     elif check_type == CheckType.NOT_CONTAIN:
         if tlv_request_tlv is not None:
-            assert (any(tlv_id == tlv for tlv in tlv_request_tlv.tlvs) is
-                    False), "Error: The msg contains TLV Request TLV ID: {}".format(tlv_id)
+            assert (any(tlv_id == tlv for tlv in tlv_request_tlv.tlvs)
+                    is False), "Error: The msg contains TLV Request TLV ID: {}".format(tlv_id)
 
     elif check_type == CheckType.OPTIONAL:
         if tlv_request_tlv is not None:

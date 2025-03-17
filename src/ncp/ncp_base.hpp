@@ -654,6 +654,9 @@ protected:
     void        HandleDiagOutput(const char *aFormat, va_list aArguments);
 #endif
 
+    static int HandleCliOutput(void *aContext, const char *aFormat, va_list aArguments);
+    int        HandleCliOutput(const char *aFormat, va_list aArguments);
+
 #if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
     /**
      * Defines a vendor "command handler" hook to process vendor-specific spinel commands.
