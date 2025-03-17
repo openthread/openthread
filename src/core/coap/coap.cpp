@@ -505,7 +505,10 @@ void CoapBase::HandleRetransmissionTimer(void)
         nextTime.UpdateIfEarlier(metadata.mNextTimerShot);
     }
 
-    mRetransmissionTimer.FireAt(nextTime);
+    if (nextTime.IsSet())
+    {
+        mRetransmissionTimer.FireAt(nextTime);
+    }
 }
 
 void CoapBase::FinalizeCoapTransaction(Message                &aRequest,
