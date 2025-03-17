@@ -435,6 +435,13 @@ void platformResolverUpdateFdSet(otSysMainloopContext *aContext);
  */
 void platformResolverProcess(const otSysMainloopContext *aContext);
 
+/**
+ * The callback for coprocessor reset failure.
+ *
+ * @param[in]  aContext  A pointer to the mainloop context.
+ */
+void platformCoprocessorResetFailed(void *aContext);
+
 #ifdef __cplusplus
 }
 #endif

@@ -73,6 +73,10 @@ Radio::Radio(void)
 {
 }
 
+#if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+OT_TOOL_WEAK void platformCoprocessorResetFailed(void *) {}
+#endif
+
 void Radio::Init(const char *aUrl)
 {
     bool resetRadio;
@@ -106,6 +110,10 @@ void Radio::Init(const char *aUrl)
 
     resetRadio             = !mRadioUrl.HasParam("no-reset");
     skipCompatibilityCheck = mRadioUrl.HasParam("skip-rcp-compatibility-check");
+
+#if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+    GetSpinelDriver().SetCoprocessorResetFailureCallback(platformCoprocessorResetFailed, this);
+#endif
 
     mRadioSpinel.SetCallbacks(callbacks);
     mRadioSpinel.Init(skipCompatibilityCheck, resetRadio, &GetSpinelDriver(),
