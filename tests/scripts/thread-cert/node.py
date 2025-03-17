@@ -4138,6 +4138,29 @@ EOF
         self.bash('service radvd start')
         self.bash('service radvd status')  # Make sure radvd service is running
 
+    def start_rdnss_radvd_service(self, rdnss):
+        self.bash("""cat >/etc/radvd.conf <<EOF
+interface eth0
+{
+    AdvSendAdvert on;
+
+    AdvReachableTime 20;
+    AdvRetransTimer 20;
+    AdvDefaultLifetime 180;
+    MinRtrAdvInterval 120;
+    MaxRtrAdvInterval 180;
+    AdvDefaultPreference low;
+                  
+    RDNSS %s
+    {
+        AdvRDNSSLifetime 1800;
+    };
+};
+EOF
+""" % (rdnss,))
+        self.bash('service radvd start')
+        self.bash('service radvd status')  # Make sure radvd service is running
+
     def stop_radvd_service(self):
         self.bash('service radvd stop')
 

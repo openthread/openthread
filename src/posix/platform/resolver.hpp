@@ -146,7 +146,7 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     static void BorderRoutingRdnssCallback(void *aResolver);
     void        BorderRoutingRdnssCallback(void);
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif
 
     bool         mIsResolvConfEnabled    = true;
     uint32_t     mUpstreamDnsServerCount = 0;
