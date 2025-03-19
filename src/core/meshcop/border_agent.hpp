@@ -66,10 +66,6 @@ namespace MeshCoP {
 #error "Border Agent feature requires `OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE`"
 #endif
 
-#if !OPENTHREAD_CONFIG_UPTIME_ENABLE
-#error "Border Agent feature requires `OPENTHREAD_CONFIG_UPTIME_ENABLE`"
-#endif
-
 class BorderAgent : public InstanceLocator, private NonCopyable
 {
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

@@ -410,7 +410,6 @@ otError Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLen
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
 /**
  * @cli attachtime
  * @code
@@ -419,7 +418,7 @@ otError Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLen
  * Done
  * @endcode
  * @par
- * Prints the current attach time (duration since device was last attached). Requires `OPENTHREAD_CONFIG_UPTIME_ENABLE`.
+ * Prints the current attach time (duration since device was last attached).
  * Duration is formatted as `{hh}:{mm}:{ss}` for hours, minutes, and seconds if it is less than one day. If the
  * duration is longer than one day, the format is `{dd}d.{hh}:{mm}:{ss}`.
  */
@@ -436,7 +435,6 @@ template <> otError Interpreter::Process<Cmd("attachtime")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 template <> otError Interpreter::Process<Cmd("history")>(Arg aArgs[]) { return mHistory.Process(aArgs); }
@@ -2459,6 +2457,12 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
                 const char                    *mName;
             };
 
+            struct MleTimeCounterName
+            {
+                const uint64_t otMleCounters::*mValuePtr;
+                const char                    *mName;
+            };
+
             static const MleCounterName kCounterNames[] = {
                 {&otMleCounters::mDisabledRole, "Role Disabled"},
                 {&otMleCounters::mDetachedRole, "Role Detached"},
@@ -2472,36 +2476,27 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
                 {&otMleCounters::mParentChanges, "Parent Changes"},
             };
 
+            static const MleTimeCounterName kTimeCounterNames[] = {
+                {&otMleCounters::mDisabledTime, "Disabled"}, {&otMleCounters::mDetachedTime, "Detached"},
+                {&otMleCounters::mChildTime, "Child"},       {&otMleCounters::mRouterTime, "Router"},
+                {&otMleCounters::mLeaderTime, "Leader"},
+            };
+
             const otMleCounters *mleCounters = otThreadGetMleCounters(GetInstancePtr());
 
             for (const MleCounterName &counter : kCounterNames)
             {
                 OutputLine("%s: %u", counter.mName, mleCounters->*counter.mValuePtr);
             }
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+
+            for (const MleTimeCounterName &counter : kTimeCounterNames)
             {
-                struct MleTimeCounterName
-                {
-                    const uint64_t otMleCounters::*mValuePtr;
-                    const char                    *mName;
-                };
-
-                static const MleTimeCounterName kTimeCounterNames[] = {
-                    {&otMleCounters::mDisabledTime, "Disabled"}, {&otMleCounters::mDetachedTime, "Detached"},
-                    {&otMleCounters::mChildTime, "Child"},       {&otMleCounters::mRouterTime, "Router"},
-                    {&otMleCounters::mLeaderTime, "Leader"},
-                };
-
-                for (const MleTimeCounterName &counter : kTimeCounterNames)
-                {
-                    OutputFormat("Time %s Milli: ", counter.mName);
-                    OutputUint64Line(mleCounters->*counter.mValuePtr);
-                }
-
-                OutputFormat("Time Tracked Milli: ");
-                OutputUint64Line(mleCounters->mTrackedTime);
+                OutputFormat("Time %s Milli: ", counter.mName);
+                OutputUint64Line(mleCounters->*counter.mValuePtr);
             }
-#endif
+
+            OutputFormat("Time Tracked Milli: ");
+            OutputUint64Line(mleCounters->mTrackedTime);
         }
         /**
          * @cli counters mle reset
@@ -4570,7 +4565,6 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
             OutputLine("| %5lu |", ToUlong(neighborInfo.mAge));
         }
     }
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
     /**
      * @cli neighbor conntime
      * @code
@@ -4649,7 +4643,6 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
             }
         }
     }
-#endif
     else
     {
         error = OT_ERROR_INVALID_ARGS;
@@ -8149,9 +8142,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 
     static constexpr Command kCommands[] = {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
         CmdEntry("attachtime"),
-#endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
         CmdEntry("ba"),
 #endif

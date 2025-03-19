@@ -597,14 +597,12 @@ public:
      */
     const Mle::TxChallenge &GetChallenge(void) const { return mValidPending.mPending.mChallenge; }
 
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
     /**
      * Returns the connection time (in seconds) of the neighbor (seconds since entering `kStateValid`).
      *
      * @returns The connection time (in seconds), zero if device is not currently in `kStateValid`.
      */
     uint32_t GetConnectionTime(void) const;
-#endif
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
@@ -762,9 +760,7 @@ private:
     // and this neighbor is the Subject.
     LinkMetrics::Metrics mEnhAckProbingMetrics;
 #endif
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
     uint32_t mConnectionStart;
-#endif
 };
 
 DefineCoreType(otNeighborInfo, Neighbor::Info);
