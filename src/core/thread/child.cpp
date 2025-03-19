@@ -68,9 +68,7 @@ void Child::Info::SetFrom(const Child &aChild)
 #else
     mIsCslSynced = false;
 #endif
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
     mConnectionTime = aChild.GetConnectionTime();
-#endif
 }
 
 //---------------------------------------------------------------------------------------------------------------------

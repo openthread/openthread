@@ -143,8 +143,6 @@ Done
 
 Prints the attach time (duration since device was last attached).
 
-Requires `OPENTHREAD_CONFIG_UPTIME_ENABLE`.
-
 Duration is formatted as `{hh}:{mm}:{ss}` for hours, minutes, and seconds if it is less than one day. If the duration is longer than one day, the format is `{dd}d.{hh}:{mm}:{ss}`.
 
 ```bash
@@ -1103,7 +1101,6 @@ Get the counter value.
 
 Note:
 
-- `OPENTHREAD_CONFIG_UPTIME_ENABLE` is required for MLE role time tracking in `counters mle`
 - `OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE` is required for `counters br`
 
 ```bash
