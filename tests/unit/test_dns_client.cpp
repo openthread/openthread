@@ -542,6 +542,133 @@ exit:
     return;
 }
 
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+static constexpr uint16_t kMaxRecords = 16;
+
+struct QueryRecordInfo
+{
+    struct Record : public Dns::Client::RecordInfo
+    {
+        static constexpr uint16_t kMaxRecordDataSize = 200;
+
+        void Init(void)
+        {
+            ClearAllBytes(*this);
+            mNameBuffer     = mName;
+            mNameBufferSize = sizeof(mName);
+            mDataBuffer     = mData;
+            mDataBufferSize = sizeof(mData);
+        }
+
+        uint8_t mData[kMaxRecordDataSize];
+        char    mName[Dns::Name::kMaxNameSize];
+    };
+
+    void Reset(void) { memset(this, 0, sizeof(*this)); };
+
+    uint16_t mCallbackCount;
+    Error    mError;
+    char     mQueryName[Dns::Name::kMaxNameSize];
+    Record   mRecords[kMaxRecords];
+    uint16_t mNumRecords;
+};
+
+static QueryRecordInfo sQueryRecordInfo;
+
+void RecordCallback(otError aError, const otDnsRecordResponse *aResponse, void *aContext)
+{
+    static constexpr uint16_t kMaxStringSize = 400;
+
+    const Dns::Client::RecordResponse &response = AsCoreType(aResponse);
+
+    Log("RecordCallback");
+    Log("   Error: %s", ErrorToString(aError));
+
+    VerifyOrQuit(aContext == sInstance);
+
+    sQueryRecordInfo.mCallbackCount++;
+    sQueryRecordInfo.mError      = aError;
+    sQueryRecordInfo.mNumRecords = 0;
+
+    SuccessOrExit(aError);
+
+    SuccessOrQuit(response.GetQueryName(sQueryRecordInfo.mQueryName, sizeof(sQueryRecordInfo.mQueryName)));
+    Log("   QueryName: %s", sQueryRecordInfo.mQueryName);
+
+    for (uint8_t index = 0; index < kMaxRecords; index++)
+    {
+        Error    error;
+        uint32_t ttl;
+
+        sQueryRecordInfo.mRecords[index].Init();
+
+        error = response.GetRecordInfo(index, sQueryRecordInfo.mRecords[index]);
+
+        if (error == kErrorNotFound)
+        {
+            sQueryRecordInfo.mNumRecords = index;
+            break;
+        }
+
+        SuccessOrQuit(error);
+    }
+
+    Log("   NumRecords: %u", sQueryRecordInfo.mNumRecords);
+
+    for (uint16_t index = 0; index < sQueryRecordInfo.mNumRecords; index++)
+    {
+        const QueryRecordInfo::Record &record = sQueryRecordInfo.mRecords[index];
+        String<kMaxStringSize>         string;
+        uint16_t                       rrType;
+
+        string.AppendHexBytes(record.mDataBuffer, record.mDataBufferSize);
+        rrType = record.mRecordType;
+
+        Log("   Record %u", index);
+        Log("      Name: %s", record.mNameBuffer);
+        Log("      Type: %u (%s)", rrType, Dns::ResourceRecord::TypeToString(rrType).AsCString());
+        Log("      Data: %s", string.AsCString());
+    }
+
+exit:
+    return;
+}
+
+void ValidateSrvRecordData(const QueryRecordInfo::Record &aRecord, const char *aFullHostName)
+{
+    // Validate that the read SRV record data contains
+    // the uncompressed host name.
+
+    Message *data   = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
+    uint16_t offset = sizeof(Dns::SrvRecord) - sizeof(Dns::ResourceRecord);
+
+    VerifyOrQuit(data != nullptr);
+    SuccessOrQuit(data->AppendBytes(aRecord.mDataBuffer, aRecord.mRecordLength));
+
+    SuccessOrQuit(Dns::Name::CompareName(*data, offset, aFullHostName));
+    VerifyOrQuit(offset == data->GetLength());
+
+    data->Free();
+}
+
+void ValidatePtrRecordData(const QueryRecordInfo::Record &aRecord, const char *aFullInstanceName)
+{
+    // Validate that the read PTR record data contains
+    // the uncompressed service instance name.
+
+    Message *data   = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
+    uint16_t offset = 0;
+
+    VerifyOrQuit(data != nullptr);
+    SuccessOrQuit(data->AppendBytes(aRecord.mDataBuffer, aRecord.mRecordLength));
+
+    SuccessOrQuit(Dns::Name::CompareName(*data, offset, aFullInstanceName));
+    VerifyOrQuit(offset == data->GetLength());
+
+    data->Free();
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 
 void TestDnsClient(void)
@@ -694,6 +821,160 @@ void TestDnsClient(void)
     AdvanceTime(100);
     VerifyOrQuit(sAddressInfo.mCallbackCount == 1);
     VerifyOrQuit(sAddressInfo.mError != kErrorNone);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `QueryRecord()` for host name
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord(%s) for KEY RR", kHostFullName);
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeKey, kHostName, "default.service.arpa.",
+                                         RecordCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 1);
+
+    VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, kHostFullName));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypeKey);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength == sizeof(Dns::Ecdsa256KeyRecord));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl > 0);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sizeof(Dns::Ecdsa256KeyRecord));
+    VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord(%s) for misc RR", kHostFullName);
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeCname, kHostName, "default.service.arpa.",
+                                         RecordCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 0);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `QueryRecord()` for service instance name and KEY record
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord(%s) for KEY RR", kInstance1FullName);
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeKey, kInstance1Label, kService1FullName,
+                                         RecordCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 1);
+
+    VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, kInstance1FullName));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypeKey);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength == sizeof(Dns::Ecdsa256KeyRecord));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl > 0);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sizeof(Dns::Ecdsa256KeyRecord));
+    VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord(%s) for misc RR", kInstance1FullName);
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeCname, kInstance1Label, kService1FullName,
+                                         RecordCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 0);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `QueryRecord()` for service instance name and SRV record
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord(%s) for SRV record", kInstance1FullName);
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeSrv, kInstance1Label, kService1FullName,
+                                         RecordCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 4);
+
+    VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, kInstance1FullName));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypeSrv);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength > 0);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl > 0);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sQueryRecordInfo.mRecords[0].mRecordLength);
+    VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+
+    ValidateSrvRecordData(sQueryRecordInfo.mRecords[0], kHostFullName);
+
+    // Validate the records in additional data (TXT and two AAAA).
+
+    for (uint8_t index = 1; index < 4; index++)
+    {
+        const QueryRecordInfo::Record &record = sQueryRecordInfo.mRecords[index];
+
+        VerifyOrQuit(record.mRecordLength > 0);
+        VerifyOrQuit(record.mTtl > 0);
+        VerifyOrQuit(record.mDataBufferSize == record.mRecordLength);
+        VerifyOrQuit(MapEnum(record.mSection) == Dns::Client::RecordInfo::kSectionAdditional);
+
+        switch (record.mRecordType)
+        {
+        case Dns::ResourceRecord::kTypeTxt:
+            VerifyOrQuit(!strcmp(record.mNameBuffer, kInstance1FullName));
+            break;
+        case Dns::ResourceRecord::kTypeAaaa:
+            VerifyOrQuit(!strcmp(record.mNameBuffer, kHostFullName));
+            VerifyOrQuit(record.mRecordLength == sizeof(Ip6::Address));
+            break;
+        default:
+            VerifyOrQuit(false);
+            break;
+        }
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `QueryRecord()` for PTR record
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord(%s) for PTR record", kService1FullName);
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypePtr, "_srv", "_udp.default.service.arpa.",
+                                         RecordCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 5);
+
+    VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, kService1FullName));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypePtr);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength > 0);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl > 0);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sQueryRecordInfo.mRecords[0].mRecordLength);
+    VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+
+    ValidatePtrRecordData(sQueryRecordInfo.mRecords[0], kInstance1FullName);
+
+    // Validate the records in additional data (SRV, TXT and two AAAA).
+
+    for (uint8_t index = 1; index < 5; index++)
+    {
+        const QueryRecordInfo::Record &record = sQueryRecordInfo.mRecords[index];
+
+        VerifyOrQuit(record.mRecordLength > 0);
+        VerifyOrQuit(record.mTtl > 0);
+        VerifyOrQuit(record.mDataBufferSize == record.mRecordLength);
+        VerifyOrQuit(MapEnum(record.mSection) == Dns::Client::RecordInfo::kSectionAdditional);
+
+        switch (record.mRecordType)
+        {
+        case Dns::ResourceRecord::kTypeSrv:
+            VerifyOrQuit(!strcmp(record.mNameBuffer, kInstance1FullName));
+            ValidateSrvRecordData(record, kHostFullName);
+            break;
+        case Dns::ResourceRecord::kTypeTxt:
+            VerifyOrQuit(!strcmp(record.mNameBuffer, kInstance1FullName));
+            break;
+        case Dns::ResourceRecord::kTypeAaaa:
+            VerifyOrQuit(!strcmp(record.mNameBuffer, kHostFullName));
+            VerifyOrQuit(record.mRecordLength == sizeof(Ip6::Address));
+            break;
+        default:
+            VerifyOrQuit(false);
+            break;
+        }
+    }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Validate DNS Client `Browse()`

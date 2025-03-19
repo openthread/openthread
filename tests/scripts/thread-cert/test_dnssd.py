@@ -209,6 +209,54 @@ class TestDnssd(thread_cert.TestCase):
         service_instance = client1.dns_resolve_service('ins4', f'{SERVICE}.{DOMAIN}'.upper(), server.get_mleid(), 53)
         self._assert_service_instance_equal(service_instance, instance4_verify_info)
 
+        #---------------------------------------------------------------
+        # Query for KEY record for `ins1` service name
+
+        records = client1.dns_query(25, 'ins1', f'{SERVICE}.{DOMAIN}'.upper(), server.get_mleid(), 53)
+        self.assertEqual(len(records), 1)
+        record = records[0]
+        self.assertEqual(int(record['RecordType']), 25)
+        self.assertEqual(int(record['RecordLength']), 78)
+        self.assertTrue(int(record['TTL']) > 0)
+        self.assertEqual(record['Section'], 'answer')
+        self.assertEqual(record['Name'].lower(), 'ins1._ipps._tcp.default.service.arpa.')
+        self.assertIn('RecordData', record)
+
+        #---------------------------------------------------------------
+        # Query for SRV record for `ins1` service name
+
+        records = client1.dns_query(33, 'ins1', f'{SERVICE}.{DOMAIN}'.upper(), server.get_mleid(), 53)
+        self.assertEqual(len(records), 4)
+
+        # SRV record in answer section
+        record = records[0]
+        self.assertEqual(int(record['RecordType']), 33)
+        self.assertTrue(int(record['RecordLength']) > 0)
+        self.assertTrue(int(record['TTL']) > 0)
+        self.assertEqual(record['Section'], 'answer')
+        self.assertEqual(record['Name'].lower(), 'ins1._ipps._tcp.default.service.arpa.')
+        self.assertIn('RecordData', record)
+
+        # Other records TXT and A in additional section
+        for record in records[1:]:
+            self.assertTrue(int(record['RecordLength']) > 0)
+            self.assertIn('RecordData', record)
+            self.assertTrue(int(record['TTL']) > 0)
+            self.assertEqual(record['Section'], 'additional')
+            rrtype = int(record['RecordType'])
+            self.assertIn(rrtype, [16, 28])  # TXT and AAAA
+            if rrtype == 16:
+                self.assertEqual(record['Name'].lower(), 'ins1._ipps._tcp.default.service.arpa.')
+                self.assertEqual(record['RecordData'], '[00]')
+            else:
+                self.assertEqual(record['Name'].lower(), 'host1.default.service.arpa.')
+
+        #---------------------------------------------------------------
+        # Query for non-existing A record for `ins1` service name
+
+        records = client1.dns_query(1, 'ins1', f'{SERVICE}.{DOMAIN}'.upper(), server.get_mleid(), 53)
+        self.assertEqual(len(records), 0)
+
     def _assert_service_instance_equal(self, instance, info):
         self.assertEqual(instance['host'].lower(), info['host'].lower(), instance)
         for f in ('port', 'priority', 'weight', 'txt_data'):
