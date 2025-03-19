@@ -3581,6 +3581,52 @@ class NodeImpl:
             index = index + (5 if result[ins] else 1)
         return result
 
+    def dns_query(self, rrtype, first_label, next_labels, server=None, port=53):
+        """
+        Send a DNS query for a given record type and name.
+
+        Output is an array of records (as dictionary) with string keys and values.
+        [
+           {'RecordType': '25',
+           'RecordLength': '78',
+           'TTL': '7105',
+           'Section': 'answer',
+           'Name': 'ins1._IPPS._TCP.DEFAULT.SERVICE.ARPA.',
+           'RecordData': '[001900010000a0610...d45d3]'
+           }
+        ]
+        """
+        cmd = f'dns query {rrtype} {first_label} {next_labels}'
+        if server is not None:
+            cmd += f' {server} {port}'
+
+        self.send_command(cmd)
+        self.simulator.go(10)
+        output = self._expect_command_output()
+
+        # Example output:
+        # DNS query response for ins1._IPPS._TCP.DEFAULT.SERVICE.ARPA.
+        # 0)
+        #   RecordType:25, RecordLength:78, TTL:7105, Section:answer
+        #   Name:ins1._IPPS._TCP.DEFAULT.SERVICE.ARPA.
+        #   RecordData:[00190001000...cdb]
+        # Done
+
+        result = []
+        index = 1  # Skip first line
+        while (index < len(output)):
+            if (index > len(output) - 4):
+                break
+            record = {}
+            for line in output[index + 1:index + 4]:
+                for item in line.strip().split(','):
+                    k, v = item.split(':')
+                    record[k.strip()] = v.strip()
+            result.append(record)
+            index += 4
+
+        return result
+
     def set_mliid(self, mliid: str):
         cmd = f'mliid {mliid}'
         self.send_command(cmd)

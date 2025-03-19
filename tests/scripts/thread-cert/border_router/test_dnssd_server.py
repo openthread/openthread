@@ -196,11 +196,6 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
             })
 
         # check some invalid queries
-        for qtype in ['CNAME']:
-            dig_result = digger.dns_dig(server_addr, host1_full_name, qtype)
-            self._assert_dig_result_matches(dig_result, {
-                'status': 'NOTIMP',
-            })
 
         for service_name in WRONG_SERVICE_NAMES:
             dig_result = digger.dns_dig(server_addr, service_name, 'PTR')

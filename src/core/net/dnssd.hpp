@@ -93,12 +93,14 @@ public:
     typedef otPlatDnssdBrowseCallback   BrowseCallback;   ///< Browser callback.
     typedef otPlatDnssdSrvCallback      SrvCallback;      ///< SRV callback.
     typedef otPlatDnssdTxtCallback      TxtCallback;      ///< TXT callback.
-    typedef otPlatDnssdAddressCallback  AddressCallback;  ///< Address callback
+    typedef otPlatDnssdAddressCallback  AddressCallback;  ///< Address callback.
+    typedef otPlatDnssdRecordCallback   RecordCallback;   ///< Record callback.
     typedef otPlatDnssdBrowseResult     BrowseResult;     ///< Browser result.
     typedef otPlatDnssdSrvResult        SrvResult;        ///< SRV result.
     typedef otPlatDnssdTxtResult        TxtResult;        ///< TXT result.
     typedef otPlatDnssdAddressResult    AddressResult;    ///< Address result.
     typedef otPlatDnssdAddressAndTtl    AddressAndTtl;    ///< Address and TTL.
+    typedef otPlatDnssdRecordResult     RecordResult;     ///< Record result.
 
     class Host : public otPlatDnssdHost, public Clearable<Host> ///< Host information.
     {
@@ -125,6 +127,10 @@ public:
     };
 
     class AddressResolver : public otPlatDnssdAddressResolver, public Clearable<AddressResolver> ///< Address resolver.
+    {
+    };
+
+    class RecordQuerier : public otPlatDnssdRecordQuerier, public Clearable<RecordQuerier> ///< Record querier.
     {
     };
 
@@ -380,6 +386,26 @@ public:
      * @param[in] aResolver    The resolver to stop.
      */
     void StopIp4AddressResolver(const AddressResolver &aResolver);
+
+    /**
+     * Starts a record querier.
+     *
+     * Refer to the documentation for `otPlatDnssdStartRecordQuerier()` for a more detailed description of the
+     * behavior of this method.
+     *
+     * @param[in] aQuerier    The querier to be started.
+     */
+    void StartRecordQuerier(const RecordQuerier &aQuerier);
+
+    /**
+     * Stops a record querier.
+     *
+     * Refer to the documentation for `otPlatDnssdStopRecordQuerier()` for a more detailed description of the
+     * behavior of this method.
+     *
+     * @param[in] aQuerier    The querier to stop.
+     */
+    void StopRecordQuerier(const RecordQuerier &aQuerier);
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
     /**

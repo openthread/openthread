@@ -473,6 +473,50 @@ exit:
     return;
 }
 
+void Dnssd::StartRecordQuerier(const RecordQuerier &aQuerier)
+{
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    {
+        IgnoreError(Get<Dns::Multicast::Core>().StartRecordQuerier(aQuerier));
+        ExitNow();
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdStartRecordQuerier(&GetInstance(), &aQuerier);
+#endif
+
+exit:
+    return;
+}
+
+void Dnssd::StopRecordQuerier(const RecordQuerier &aQuerier)
+{
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    {
+        IgnoreError(Get<Dns::Multicast::Core>().StopRecordQuerier(aQuerier));
+        ExitNow();
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdStopRecordQuerier(&GetInstance(), &aQuerier);
+#endif
+
+exit:
+    return;
+}
+
 void Dnssd::HandleStateChange(void)
 {
 #if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE

@@ -540,6 +540,40 @@ typedef struct otPlatDnssdAddressResolver
 } otPlatDnssdAddressResolver;
 
 /**
+ * Represents a record query result.
+ */
+typedef struct otPlatDnssdRecordResult
+{
+    const char    *mFirstLabel;       ///< The first label of the name to be queried.
+    const char    *mNextLabels;       ///< The rest of the name labels. Does not include domain name. Can be NULL.
+    uint16_t       mRecordType;       ///< The record type.
+    const uint8_t *mRecordData;       ///< The record data bytes.
+    uint16_t       mRecordDataLength; ///< Number of bytes in record data.
+    uint32_t       mTtl;              ///< TTL in seconds. Zero TTL indicates removal the data.
+    uint32_t       mInfraIfIndex;     ///< The infrastructure network interface index.
+} otPlatDnssdRecordResult;
+
+/**
+ * Represents the callback function used to report a record querier result.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aResult      The record querier result.
+ */
+typedef void (*otPlatDnssdRecordCallback)(otInstance *aInstance, const otPlatDnssdRecordResult *aResult);
+
+/**
+ * Represents a record querier.
+ */
+typedef struct otPlatDnssdRecordQuerier
+{
+    const char               *mFirstLabel;   ///< The first label of the name to be queried. MUST NOT be NULL.
+    const char               *mNextLabels;   ///< The rest of name labels, excluding domain name. Can be NULL.
+    uint16_t                  mRecordType;   ///< The record type to query.
+    uint32_t                  mInfraIfIndex; ///< The infrastructure network interface index.
+    otPlatDnssdRecordCallback mCallback;     ///< The callback to report result.
+} otPlatDnssdRecordQuerier;
+
+/**
  * Starts a service browser.
  *
  * Initiates a continuous search for the specified `mServiceType` in @p aBrowser. For sub-type services,
@@ -717,6 +751,46 @@ void otPlatDnssdStartIp4AddressResolver(otInstance *aInstance, const otPlatDnssd
  * @param[in] aResolver    The resolver to stop.
  */
 void otPlatDnssdStopIp4AddressResolver(otInstance *aInstance, const otPlatDnssdAddressResolver *aResolver);
+
+/**
+ * Starts a record querier.
+ *
+ * Initiates a continuous query for a given `mRecordType` as specified in @p aQuerier. The queried name is specified
+ * by the combination of `mFirstLabel` and `mNextLabels` (optional rest of the labels) in @p aQuerier. The
+ * `mFirstLabel` is always non-NULL but `mNextLabels` can be `NULL` if there are no other labels. The `mNextLabels
+ * does not include the domain name. The reason for a separate first label is to allow it to include a dot `.`
+ * character (as allowed for service instance labels).
+ *
+ * Discovered results should be reported through the `mCallback` function in @p aQuerier, providing the raw record
+ * data bytes. A removed record data is indicated with a TTL value of zero. The callback may be invoked immediately
+ * with cached information (if available) and potentially before this function returns. When cached results are used,
+ * the reported TTL value should reflect the original TTL from the last received response.
+ *
+ * Multiple querier instances can be started for the same name, provided they use different callback functions.
+ *
+ * OpenThread will only use a record querier for types other than PTR, SRV, TXT, A, and AAAA. For those, specific
+ * browsers or resolvers are used. The platform implementation, therefore, can choose to restrict its implementation.
+ *
+ * The @p aQuerier and all its contained information (strings) are only valid during this call. The platform MUST save
+ * a copy of the information if it wants to retain the information after returning from this function.
+ *
+ * @param[in] aInstance   The OpenThread instance.
+ * @param[in] aQuerier    The record querier to be started.
+ */
+void otPlatDnssdStartRecordQuerier(otInstance *aInstance, const otPlatDnssdRecordQuerier *aQuerier);
+
+/**
+ * Stops a record querier.
+ *
+ * No action is performed if no matching querier with the same name, record type and callback is currently active.
+ *
+ * The @p aQuerier and all its contained information (strings) are only valid during this call. The platform MUST save
+ * a copy of the information if it wants to retain the information after returning from this function.
+ *
+ * @param[in] aInstance   The OpenThread instance.
+ * @param[in] aQuerier    The record querier to be stopped.
+ */
+void otPlatDnssdStopRecordQuerier(otInstance *aInstance, const otPlatDnssdRecordQuerier *aQuerier);
 
 /**
  * @}
