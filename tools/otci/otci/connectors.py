@@ -30,7 +30,7 @@ import logging
 import subprocess
 import time
 from abc import abstractmethod, ABC
-from typing import Optional
+from typing import Any, Optional
 
 
 class OtCliHandler(ABC):
@@ -72,7 +72,7 @@ class Simulator(ABC):
 class OtCliPopen(OtCliHandler):
     """Connector for OT CLI process (a Popen instance)."""
 
-    def __init__(self, proc: subprocess.Popen, nodeid: int, simulator: Simulator):
+    def __init__(self, proc: subprocess.Popen[Any], nodeid: int, simulator: Optional[Simulator]):
         self.__otcli_proc = proc
         self.__nodeid = nodeid
         self.__simulator = simulator
@@ -108,7 +108,7 @@ class OtCliPopen(OtCliHandler):
 class OtCliSim(OtCliPopen):
     """Connector for OT CLI Simulation instances."""
 
-    def __init__(self, executable: str, nodeid: int, simulator: Simulator):
+    def __init__(self, executable: str, nodeid: int, simulator: Optional[Simulator]):
         logging.info('%s: executable=%s', self.__class__.__name__, executable)
 
         proc = subprocess.Popen(args=[executable, str(nodeid)],
@@ -123,7 +123,7 @@ class OtCliSim(OtCliPopen):
 class OtNcpSim(OtCliPopen):
     """Connector for OT NCP Simulation instances."""
 
-    def __init__(self, executable: str, nodeid: int, simulator: Simulator):
+    def __init__(self, executable: str, nodeid: int, simulator: Optional[Simulator]):
         logging.info('%s: executable=%s', self.__class__.__name__, executable)
 
         proc = subprocess.Popen(args=f'spinel-cli.py -p "{executable}" -n {nodeid} 2>&1',
@@ -144,6 +144,7 @@ class OtCliSerial(OtCliHandler):
 
         import serial
         self.__serial = serial.Serial(self.__dev, self.__baudrate, timeout=0.1, exclusive=True)
+        self.writeline('\r\n')
         self.__linebuffer = b''
 
     def __repr__(self):
@@ -164,7 +165,7 @@ class OtCliSerial(OtCliHandler):
         return None
 
     def writeline(self, s: str):
-        self.__serial.write((s + '\n').encode('utf-8'))
+        self.__serial.write((s + '\r\n').encode('utf-8'))
 
     def wait(self, duration: float):
         time.sleep(duration)
