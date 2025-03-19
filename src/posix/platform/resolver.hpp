@@ -148,7 +148,7 @@ private:
     void        BorderRoutingRdnssCallback(void);
 #endif
 
-    bool         mIsResolvConfEnabled    = true;
+    bool         mIsResolvConfEnabled    = OPENTHREAD_POSIX_CONFIG_RESOLV_CONF_ENABLED_INIT;
     uint32_t     mUpstreamDnsServerCount = 0;
     otIp6Address mUpstreamDnsServerList[kMaxUpstreamServerCount];
     uint64_t     mUpstreamDnsServerListFreshness = 0;

@@ -27,10 +27,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 import functools
-from typing import Union, Collection, Any, Pattern
+from typing import Any, Callable, Collection, Generator, Pattern, Union
 
 
-def match_line(line: str, expect_line: Union[str, Pattern, Collection[Any]]) -> bool:
+def match_line(line: str, expect_line: Union[str, Pattern[Any], Collection[Any]]) -> bool:
     """Checks if a line is expected (matched by one of the given patterns)."""
     if isinstance(expect_line, Pattern):
         match = expect_line.match(line) is not None
@@ -42,12 +42,12 @@ def match_line(line: str, expect_line: Union[str, Pattern, Collection[Any]]) -> 
     return match
 
 
-def cached(func):
+def cached(func: Callable[[Any], Any]):
     """Decorator cached makes the function to cache its result and return it in duplicate calls."""
-    prop_name = '__cached_' + func.__name__
+    prop_name = str('__cached_' + func.__name__)
 
     @functools.wraps(func)
-    def _cached_func(self):
+    def _cached_func(self: Any):
         try:
             return getattr(self, prop_name)
         except AttributeError:
@@ -58,6 +58,16 @@ def cached(func):
     return _cached_func
 
 
-def constant_property(func):
+def constant_property(func: Callable[[Any], Any]) -> property:
     """A constant property is a property that only evaluated once."""
     return property(cached(func))
+
+
+def bits_set(number: int) -> Generator[int, int, None]:
+    """Find all occurrences of a pattern in a string."""
+    idx = 0
+    while number != 0:
+        if number & 1:
+            yield idx
+        else:
+            number >>= 1
