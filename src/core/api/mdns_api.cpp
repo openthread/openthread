@@ -61,6 +61,16 @@ void otMdnsSetConflictCallback(otInstance *aInstance, otMdnsConflictCallback aCa
     AsCoreType(aInstance).Get<Dns::Multicast::Core>().SetConflictCallback(aCallback);
 }
 
+const char *otMdnsGetLocalHostName(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().GetLocalHostName();
+}
+
+otError otMdnsSetLocalHostName(otInstance *aInstance, const char *aName)
+{
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().SetLocalHostName(aName);
+}
+
 otError otMdnsRegisterHost(otInstance            *aInstance,
                            const otMdnsHost      *aHost,
                            otMdnsRequestId        aRequestId,
