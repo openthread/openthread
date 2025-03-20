@@ -7,6 +7,7 @@ Usage : `srp client [command] ...`
 - [help](#help)
 - [autostart](#autostart)
 - [callback](#callback)
+- [coder](#coder)
 - [host](#host)
 - [keyleaseinterval](#keyleaseinterval)
 - [leaseinterval](#leaseinterval)
@@ -29,6 +30,7 @@ Print SRP client help menu.
 > srp client help
 autostart
 callback
+coder
 help
 host
 keyleaseinterval
@@ -125,6 +127,31 @@ Host info:
 Service list:
 Removed service list:
     instance:"ins1", name:"_test1._udp", state:Removed, port:777, priority:0, weight:0
+```
+
+### coder
+
+Usage `srp client coder [enable|disable]`
+
+Enable/Disable use of SRP coder by SRP client.
+
+This command requires `OPENTHREAD_CONFIG_SRP_CODER_ENABLE` feature to be enabled. This command, as of now, is intended for testing only.
+
+```bash
+> srp client coder
+Disabled
+Done
+```
+
+Set coder mode
+
+```bash
+> srp client coder enable
+Done
+
+> srp client coder
+Enabled
+Done
 ```
 
 ### host
