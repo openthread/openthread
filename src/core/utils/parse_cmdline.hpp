@@ -42,6 +42,8 @@
 #include <openthread/ip6.h>
 #include <openthread/nat64.h>
 
+#include "common/error.hpp"
+
 namespace ot {
 namespace Utils {
 namespace CmdLineParser {
@@ -66,7 +68,7 @@ namespace CmdLineParser {
  * @retval kErrorNone         The string was parsed successfully.
  * @retval kErrorInvalidArgs  The string does not contain valid number (e.g., value out of range).
  */
-otError ParseAsUint8(const char *aString, uint8_t &aUint8);
+Error ParseAsUint8(const char *aString, uint8_t &aUint8);
 
 /**
  * Parses a string as a `uint16_t` value.
@@ -79,7 +81,7 @@ otError ParseAsUint8(const char *aString, uint8_t &aUint8);
  * @retval kErrorNone         The string was parsed successfully.
  * @retval kErrorInvalidArgs  The string does not contain valid number (e.g., value out of range).
  */
-otError ParseAsUint16(const char *aString, uint16_t &aUint16);
+Error ParseAsUint16(const char *aString, uint16_t &aUint16);
 
 /**
  * Parses a string as a `uint32_t` value.
@@ -92,7 +94,7 @@ otError ParseAsUint16(const char *aString, uint16_t &aUint16);
  * @retval kErrorNone         The string was parsed successfully.
  * @retval kErrorInvalidArgs  The string does not contain valid number (e.g., value out of range).
  */
-otError ParseAsUint32(const char *aString, uint32_t &aUint32);
+Error ParseAsUint32(const char *aString, uint32_t &aUint32);
 
 /**
  * Parses a string as a `uint64_t` value.
@@ -105,7 +107,7 @@ otError ParseAsUint32(const char *aString, uint32_t &aUint32);
  * @retval kErrorNone         The string was parsed successfully.
  * @retval kErrorInvalidArgs  The string does not contain valid number (e.g., value out of range).
  */
-otError ParseAsUint64(const char *aString, uint64_t &aUint64);
+Error ParseAsUint64(const char *aString, uint64_t &aUint64);
 
 /**
  * Parses a string as a `int8_t` value.
@@ -119,7 +121,7 @@ otError ParseAsUint64(const char *aString, uint64_t &aUint64);
  * @retval kErrorNone         The string was parsed successfully.
  * @retval kErrorInvalidArgs  The string does not contain valid number (e.g., value out of range).
  */
-otError ParseAsInt8(const char *aString, int8_t &aInt8);
+Error ParseAsInt8(const char *aString, int8_t &aInt8);
 
 /**
  * Parses a string as a `int16_t` value.
@@ -133,7 +135,7 @@ otError ParseAsInt8(const char *aString, int8_t &aInt8);
  * @retval kErrorNone         The string was parsed successfully.
  * @retval kErrorInvalidArgs  The string does not contain valid number (e.g., value out of range).
  */
-otError ParseAsInt16(const char *aString, int16_t &aInt16);
+Error ParseAsInt16(const char *aString, int16_t &aInt16);
 
 /**
  * Parses a string as a `int32_t` value.
@@ -147,7 +149,7 @@ otError ParseAsInt16(const char *aString, int16_t &aInt16);
  * @retval kErrorNone         The string was parsed successfully.
  * @retval kErrorInvalidArgs  The string does not contain valid number (e.g., value out of range).
  */
-otError ParseAsInt32(const char *aString, int32_t &aInt32);
+Error ParseAsInt32(const char *aString, int32_t &aInt32);
 
 /**
  * Parses a string as a `bool` value.
@@ -160,7 +162,7 @@ otError ParseAsInt32(const char *aString, int32_t &aInt32);
  * @retval kErrorNone         The string was parsed successfully.
  * @retval kErrorInvalidArgs  The string does not contain valid number.
  */
-otError ParseAsBool(const char *aString, bool &aBool);
+Error ParseAsBool(const char *aString, bool &aBool);
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 /**
@@ -173,7 +175,7 @@ otError ParseAsBool(const char *aString, bool &aBool);
  * @retval kErrorNone         The string was parsed successfully.
  * @retval kErrorInvalidArgs  The string does not contain valid IPv6 address.
  */
-otError ParseAsIp6Address(const char *aString, otIp6Address &aAddress);
+Error ParseAsIp6Address(const char *aString, otIp6Address &aAddress);
 
 /**
  * Parses a string as an IPv4 address.
@@ -184,7 +186,7 @@ otError ParseAsIp6Address(const char *aString, otIp6Address &aAddress);
  * @retval kErrorNone         The string was parsed successfully.
  * @retval kErrorInvalidArgs  The string does not contain valid IPv4 address.
  */
-otError ParseAsIp4Address(const char *aString, otIp4Address &aAddress);
+Error ParseAsIp4Address(const char *aString, otIp4Address &aAddress);
 
 /**
  * Parses a string as an IPv6 prefix.
@@ -197,7 +199,7 @@ otError ParseAsIp4Address(const char *aString, otIp4Address &aAddress);
  * @retval kErrorNone         The string was parsed successfully.
  * @retval kErrorInvalidArgs  The string does not contain a valid IPv6 prefix.
  */
-otError ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix);
+Error ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix);
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 /**
@@ -217,7 +219,7 @@ otError ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix);
  * @retval kErrorNone         The string was parsed successfully.
  * @retval kErrorInvalidArgs  The string does not contain valid hex bytes and/or not @p aSize bytes.
  */
-otError ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize);
+Error ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize);
 
 /**
  * This template function parses a hex string into a a given fixed size array.
@@ -237,7 +239,7 @@ otError ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize);
  * @retval kErrorNone         The string was parsed successfully.
  * @retval kErrorInvalidArgs  The string does not contain valid hex bytes and/or not @p aSize bytes.
  */
-template <uint16_t kBufferSize> static otError ParseAsHexString(const char *aString, uint8_t (&aBuffer)[kBufferSize])
+template <uint16_t kBufferSize> static Error ParseAsHexString(const char *aString, uint8_t (&aBuffer)[kBufferSize])
 {
     return ParseAsHexString(aString, aBuffer, kBufferSize);
 }
@@ -258,7 +260,7 @@ template <uint16_t kBufferSize> static otError ParseAsHexString(const char *aStr
  * @retval kErrorNone        The string was parsed successfully.
  * @retval kErrorInvalidArgs The string does not contain valid format or too many bytes.
  */
-otError ParseAsHexString(const char *aString, uint16_t &aSize, uint8_t *aBuffer);
+Error ParseAsHexString(const char *aString, uint16_t &aSize, uint8_t *aBuffer);
 
 /**
  * Parses a segment of a hex string up to a given size.
@@ -281,7 +283,7 @@ otError ParseAsHexString(const char *aString, uint16_t &aSize, uint8_t *aBuffer)
  *                           to be parsed.
  * @retval kErrorInvalidArgs The string does not contain valid format hex digits.
  */
-otError ParseAsHexStringSegment(const char *&aString, uint16_t &aSize, uint8_t *aBuffer);
+Error ParseAsHexStringSegment(const char *&aString, uint16_t &aSize, uint8_t *aBuffer);
 
 /**
  * Represents a single argument from an argument list.
@@ -363,7 +365,7 @@ public:
      * @retval kErrorNone         The argument was parsed successfully.
      * @retval kErrorInvalidArgs  The argument is empty or does not contain valid number (e.g., value out of range).
      */
-    otError ParseAsUint8(uint8_t &aUint8) const { return CmdLineParser::ParseAsUint8(mString, aUint8); }
+    Error ParseAsUint8(uint8_t &aUint8) const { return CmdLineParser::ParseAsUint8(mString, aUint8); }
 
     /**
      * Parses the argument as a `uint16_t` value.
@@ -375,7 +377,7 @@ public:
      * @retval kErrorNone         The argument was parsed successfully.
      * @retval kErrorInvalidArgs  The argument is empty or does not contain valid number (e.g., value out of range).
      */
-    otError ParseAsUint16(uint16_t &aUint16) const { return CmdLineParser::ParseAsUint16(mString, aUint16); }
+    Error ParseAsUint16(uint16_t &aUint16) const { return CmdLineParser::ParseAsUint16(mString, aUint16); }
 
     /**
      * Parses the argument as a `uint32_t` value.
@@ -387,7 +389,7 @@ public:
      * @retval kErrorNone         The argument was parsed successfully.
      * @retval kErrorInvalidArgs  The argument is empty or does not contain valid number (e.g., value out of range).
      */
-    otError ParseAsUint32(uint32_t &aUint32) const { return CmdLineParser::ParseAsUint32(mString, aUint32); }
+    Error ParseAsUint32(uint32_t &aUint32) const { return CmdLineParser::ParseAsUint32(mString, aUint32); }
 
     /**
      * Parses the argument as a `uint64_t` value.
@@ -399,7 +401,7 @@ public:
      * @retval kErrorNone         The argument was parsed successfully.
      * @retval kErrorInvalidArgs  The argument is empty or does not contain valid number (e.g., value out of range).
      */
-    otError ParseAsUint64(uint64_t &aUint64) const { return CmdLineParser::ParseAsUint64(mString, aUint64); }
+    Error ParseAsUint64(uint64_t &aUint64) const { return CmdLineParser::ParseAsUint64(mString, aUint64); }
 
     /**
      * Parses the argument as a `int8_t` value.
@@ -412,7 +414,7 @@ public:
      * @retval kErrorNone         The argument was parsed successfully.
      * @retval kErrorInvalidArgs  The argument is empty or does not contain valid number (e.g., value out of range).
      */
-    otError ParseAsInt8(int8_t &aInt8) const { return CmdLineParser::ParseAsInt8(mString, aInt8); }
+    Error ParseAsInt8(int8_t &aInt8) const { return CmdLineParser::ParseAsInt8(mString, aInt8); }
 
     /**
      * Parses the argument as a `int16_t` value.
@@ -425,7 +427,7 @@ public:
      * @retval kErrorNone         The argument was parsed successfully.
      * @retval kErrorInvalidArgs  The argument is empty or does not contain valid number (e.g., value out of range).
      */
-    otError ParseAsInt16(int16_t &aInt16) const { return CmdLineParser::ParseAsInt16(mString, aInt16); }
+    Error ParseAsInt16(int16_t &aInt16) const { return CmdLineParser::ParseAsInt16(mString, aInt16); }
 
     /**
      * Parses the argument as a `int32_t` value.
@@ -438,7 +440,7 @@ public:
      * @retval kErrorNone         The argument was parsed successfully.
      * @retval kErrorInvalidArgs  The argument is empty or does not contain valid number (e.g., value out of range).
      */
-    otError ParseAsInt32(int32_t &aInt32) const { return CmdLineParser::ParseAsInt32(mString, aInt32); }
+    Error ParseAsInt32(int32_t &aInt32) const { return CmdLineParser::ParseAsInt32(mString, aInt32); }
 
     /**
      * Parses the argument as a `bool` value.
@@ -450,7 +452,7 @@ public:
      * @retval kErrorNone         The argument was parsed successfully.
      * @retval kErrorInvalidArgs  The argument is empty or does not contain valid number.
      */
-    otError ParseAsBool(bool &aBool) const { return CmdLineParser::ParseAsBool(mString, aBool); }
+    Error ParseAsBool(bool &aBool) const { return CmdLineParser::ParseAsBool(mString, aBool); }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
@@ -461,7 +463,7 @@ public:
      * @retval kErrorNone         The argument was parsed successfully.
      * @retval kErrorInvalidArgs  The argument is empty or does not contain valid IPv6 address.
      */
-    otError ParseAsIp6Address(otIp6Address &aAddress) const
+    Error ParseAsIp6Address(otIp6Address &aAddress) const
     {
         return CmdLineParser::ParseAsIp6Address(mString, aAddress);
     }
@@ -474,7 +476,7 @@ public:
      * @retval kErrorNone         The argument was parsed successfully.
      * @retval kErrorInvalidArgs  The argument is empty or does not contain valid IPv4 address.
      */
-    otError ParseAsIp4Address(otIp4Address &aAddress) const
+    Error ParseAsIp4Address(otIp4Address &aAddress) const
     {
         return CmdLineParser::ParseAsIp4Address(mString, aAddress);
     }
@@ -489,7 +491,7 @@ public:
      * @retval kErrorNone         The argument was parsed successfully.
      * @retval kErrorInvalidArgs  The argument is empty or does not contain a valid IPv6 prefix.
      */
-    otError ParseAsIp6Prefix(otIp6Prefix &aPrefix) const { return CmdLineParser::ParseAsIp6Prefix(mString, aPrefix); }
+    Error ParseAsIp6Prefix(otIp6Prefix &aPrefix) const { return CmdLineParser::ParseAsIp6Prefix(mString, aPrefix); }
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
@@ -503,7 +505,7 @@ public:
      * @retval kErrorNone         The argument was parsed successfully.
      * @retval kErrorInvalidArgs  The argument is empty or does not contain a valid value.
      */
-    template <typename Type> otError ParseAs(Type &aValue) const;
+    template <typename Type> Error ParseAs(Type &aValue) const;
 
     /**
      * Parses the argument as a hex string into a byte array of fixed expected size.
@@ -518,7 +520,7 @@ public:
      * @retval kErrorNone         The argument was parsed successfully.
      * @retval kErrorInvalidArgs  The argument is empty or does not contain valid hex bytes and/or not @p aSize bytes.
      */
-    otError ParseAsHexString(uint8_t *aBuffer, uint16_t aSize) const
+    Error ParseAsHexString(uint8_t *aBuffer, uint16_t aSize) const
     {
         return CmdLineParser::ParseAsHexString(mString, aBuffer, aSize);
     }
@@ -537,7 +539,7 @@ public:
      * @retval kErrorNone         The argument was parsed successfully.
      * @retval kErrorInvalidArgs  The argument is empty or does not contain valid hex bytes and/or not @p aSize bytes.
      */
-    template <uint16_t kBufferSize> otError ParseAsHexString(uint8_t (&aBuffer)[kBufferSize])
+    template <uint16_t kBufferSize> Error ParseAsHexString(uint8_t (&aBuffer)[kBufferSize])
     {
         return ParseAsHexString(aBuffer, kBufferSize);
     }
@@ -554,7 +556,7 @@ public:
      * @retval kErrorNone        The argument was parsed successfully.
      * @retval kErrorInvalidArgs The argument does not contain valid format or too many bytes.
      */
-    otError ParseAsHexString(uint16_t &aSize, uint8_t *aBuffer)
+    Error ParseAsHexString(uint16_t &aSize, uint8_t *aBuffer)
     {
         return CmdLineParser::ParseAsHexString(mString, aSize, aBuffer);
     }
@@ -605,9 +607,9 @@ private:
  * @retval OT_ERROR_NONE          The command line parsed successfully and @p aArgs array is populated.
  * @retval OT_ERROR_INVALID_ARGS  Too many arguments in @p aCommandString and could not fit in @p aArgs array.
  */
-otError ParseCmd(char *aCommandString, Arg aArgs[], uint8_t aArgsMaxLength);
+Error ParseCmd(char *aCommandString, Arg aArgs[], uint8_t aArgsMaxLength);
 
-template <uint8_t kLength> inline otError ParseCmd(char *aCommandString, Arg (&aArgs)[kLength])
+template <uint8_t kLength> inline Error ParseCmd(char *aCommandString, Arg (&aArgs)[kLength])
 {
     return ParseCmd(aCommandString, aArgs, kLength);
 }
@@ -615,32 +617,32 @@ template <uint8_t kLength> inline otError ParseCmd(char *aCommandString, Arg (&a
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Specializations of `Arg::ParseAs<Type>()` method.
 
-template <> inline otError Arg::ParseAs(uint8_t &aValue) const { return ParseAsUint8(aValue); }
+template <> inline Error Arg::ParseAs(uint8_t &aValue) const { return ParseAsUint8(aValue); }
 
-template <> inline otError Arg::ParseAs(uint16_t &aValue) const { return ParseAsUint16(aValue); }
+template <> inline Error Arg::ParseAs(uint16_t &aValue) const { return ParseAsUint16(aValue); }
 
-template <> inline otError Arg::ParseAs(uint32_t &aValue) const { return ParseAsUint32(aValue); }
+template <> inline Error Arg::ParseAs(uint32_t &aValue) const { return ParseAsUint32(aValue); }
 
-template <> inline otError Arg::ParseAs(uint64_t &aValue) const { return ParseAsUint64(aValue); }
+template <> inline Error Arg::ParseAs(uint64_t &aValue) const { return ParseAsUint64(aValue); }
 
-template <> inline otError Arg::ParseAs(bool &aValue) const { return ParseAsBool(aValue); }
+template <> inline Error Arg::ParseAs(bool &aValue) const { return ParseAsBool(aValue); }
 
-template <> inline otError Arg::ParseAs(int8_t &aValue) const { return ParseAsInt8(aValue); }
+template <> inline Error Arg::ParseAs(int8_t &aValue) const { return ParseAsInt8(aValue); }
 
-template <> inline otError Arg::ParseAs(int16_t &aValue) const { return ParseAsInt16(aValue); }
+template <> inline Error Arg::ParseAs(int16_t &aValue) const { return ParseAsInt16(aValue); }
 
-template <> inline otError Arg::ParseAs(int32_t &aValue) const { return ParseAsInt32(aValue); }
+template <> inline Error Arg::ParseAs(int32_t &aValue) const { return ParseAsInt32(aValue); }
 
-template <> inline otError Arg::ParseAs(const char *&aValue) const
+template <> inline Error Arg::ParseAs(const char *&aValue) const
 {
-    return IsEmpty() ? OT_ERROR_INVALID_ARGS : (aValue = GetCString(), OT_ERROR_NONE);
+    return IsEmpty() ? kErrorInvalidArgs : (aValue = GetCString(), kErrorNone);
 }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
-template <> inline otError Arg::ParseAs(otIp6Address &aValue) const { return ParseAsIp6Address(aValue); }
+template <> inline Error Arg::ParseAs(otIp6Address &aValue) const { return ParseAsIp6Address(aValue); }
 
-template <> inline otError Arg::ParseAs(otIp6Prefix &aValue) const { return ParseAsIp6Prefix(aValue); }
+template <> inline Error Arg::ParseAs(otIp6Prefix &aValue) const { return ParseAsIp6Prefix(aValue); }
 
 #endif
 
