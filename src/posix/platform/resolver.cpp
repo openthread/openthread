@@ -182,15 +182,26 @@ void Resolver::BorderRoutingRdnssCallback(void)
 
             std::sort(rdnssEntries, rdnssEntries + numEntries,
                       [](const otBorderRoutingRdnssAddrEntry &a, const otBorderRoutingRdnssAddrEntry &b) {
+                          bool result = false;
+
                           if (a.mLifetime != b.mLifetime)
                           {
-                              return a.mLifetime > b.mLifetime;
+                              result = a.mLifetime > b.mLifetime;
                           }
                           else
                           {
                               // If lifetimes are equal, prefer the one with the larger numeric values
-                              return memcmp(&a, &b, sizeof(otIp6Address)) > 0;
+                              for (uint8_t j = 0; j < sizeof(otIp6Address); j++)
+                              {
+                                  if (a.mAddress.mFields.m8[j] != b.mAddress.mFields.m8[j])
+                                  {
+                                      result = a.mAddress.mFields.m8[j] > b.mAddress.mFields.m8[j];
+                                      break;
+                                  }
+                              }
                           }
+
+                          return result;
                       });
 
             numEntries = OT_MIN(numEntries, kMaxRecursiveServerCount);
@@ -243,11 +254,10 @@ exit:
 
 void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 {
-    char     packet[kMaxDnsMessageSize];
-    otError  error  = OT_ERROR_NONE;
-    uint16_t length = otMessageGetLength(aQuery);
-
-    Transaction *txn = nullptr;
+    char         packet[kMaxDnsMessageSize];
+    otError      error  = OT_ERROR_NONE;
+    uint16_t     length = otMessageGetLength(aQuery);
+    Transaction *txn    = nullptr;
 
     VerifyOrExit(length <= kMaxDnsMessageSize, error = OT_ERROR_NO_BUFS);
     VerifyOrExit(otMessageRead(aQuery, 0, &packet, sizeof(packet)) == length, error = OT_ERROR_NO_BUFS);

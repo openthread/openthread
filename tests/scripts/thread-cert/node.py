@@ -4139,6 +4139,12 @@ EOF
         self.bash('service radvd status')  # Make sure radvd service is running
 
     def start_rdnss_radvd_service(self, rdnss):
+        """
+        Start radvd service to advertise RDNSS.
+
+        Args:
+            rdnss (str): The IPv6 address of the recursive DNS server to advertise.
+        """
         self.bash("""cat >/etc/radvd.conf <<EOF
 interface eth0
 {
@@ -4159,7 +4165,6 @@ interface eth0
 EOF
 """ % (rdnss,))
         self.bash('service radvd start')
-        self.bash('service radvd status')  # Make sure radvd service is running
 
     def stop_radvd_service(self):
         self.bash('service radvd stop')
