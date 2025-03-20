@@ -4084,6 +4084,15 @@ class LinuxHost():
                 service['addresses'] = addresses
         return service or None
 
+    def _start_radvd_and_verify(self):
+        self.bash('service radvd start')
+
+        output = self.bash('service radvd status')
+        for line in output:
+            if "running" in line:
+                return
+        raise Exception("Failed to start radvd service")
+
     def start_radvd_service(self, prefix, slaac):
         self.bash("""cat >/etc/radvd.conf <<EOF
 interface eth0
@@ -4108,8 +4117,7 @@ interface eth0
 };
 EOF
 """ % (prefix, 'on' if slaac else 'off'))
-        self.bash('service radvd start')
-        self.bash('service radvd status')  # Make sure radvd service is running
+        self._start_radvd_and_verify()
 
     def start_pd_radvd_service(self, prefix):
         self.bash("""cat >/etc/radvd.conf <<EOF
@@ -4135,8 +4143,7 @@ interface wpan0
 };
 EOF
 """ % (prefix,))
-        self.bash('service radvd start')
-        self.bash('service radvd status')  # Make sure radvd service is running
+        self._start_radvd_and_verify()
 
     def stop_radvd_service(self):
         self.bash('service radvd stop')
