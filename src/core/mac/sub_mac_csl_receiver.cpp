@@ -108,7 +108,7 @@ exit:
     return;
 }
 
-bool SubMac::UpdateCsl(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr)
+void SubMac::SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr)
 {
     bool diffPeriod  = aPeriod != mCslPeriod;
     bool diffChannel = aChannel != mCslChannel;
@@ -133,7 +133,7 @@ bool SubMac::UpdateCsl(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAd
     }
 
 exit:
-    return retval;
+    return;
 }
 
 void SubMac::HandleCslTimer(Timer &aTimer) { aTimer.Get<SubMac>().HandleCslTimer(); }

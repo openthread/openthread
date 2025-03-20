@@ -33,6 +33,8 @@ import os
 import subprocess
 import unittest
 
+from typing import cast, Dict
+
 import otci
 from otci import OTCI
 from otci.errors import CommandError
@@ -60,9 +62,9 @@ class TestOTCI(unittest.TestCase):
             self.skipTest('not for virtual device')
 
         if os.getenv('OTBR_SSH'):
-            node = otci.connect_otbr_ssh(os.getenv('OTBR_SSH'))
+            node = otci.connect_otbr_ssh(os.getenv('OTBR_SSH', ''))
         elif os.getenv('OT_CLI_SERIAL'):
-            node = otci.connect_cli_serial(os.getenv('OT_CLI_SERIAL'))
+            node = otci.connect_cli_serial(os.getenv('OT_CLI_SERIAL', ''))
         else:
             self.fail("Please set OT_CLI_SERIAL or OTBR_SSH to test the real device.")
 
@@ -85,10 +87,10 @@ class TestOTCI(unittest.TestCase):
             sim = None
 
         if os.getenv('OT_CLI'):
-            executable = os.getenv('OT_CLI')
+            executable = os.getenv('OT_CLI', '')
             connector = otci.connect_cli_sim
         elif os.getenv('OT_NCP'):
-            executable = os.getenv('OT_NCP')
+            executable = os.getenv('OT_NCP', '')
             connector = otci.connect_ncp_sim
         else:
             self.fail("Please set OT_CLI to test virtual device")
@@ -109,7 +111,7 @@ class TestOTCI(unittest.TestCase):
 
         self._test_otci_multi_nodes(node1, node2, node3, node4)
 
-    def _test_otci_single_node(self, leader):
+    def _test_otci_single_node(self, leader: OTCI):
         logging.info('leader version: %r', leader.version)
         logging.info('leader thread version: %r', leader.thread_version)
         logging.info('API version: %r', leader.api_version)
@@ -305,7 +307,7 @@ class TestOTCI(unittest.TestCase):
         leader.wait(1)
         leader.coap_stop()
 
-        for netif in (NetifIdentifier.THERAD, NetifIdentifier.UNSPECIFIED, NetifIdentifier.BACKBONE):
+        for netif in (NetifIdentifier.THREAD, NetifIdentifier.UNSPECIFIED, NetifIdentifier.BACKBONE):
             leader.udp_open()
             leader.udp_bind("::", 1234, netif=netif)
             leader.udp_send(leader.get_ipaddr_rloc(), 1234, text='hello')
@@ -507,7 +509,7 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual([], server.srp_server_get_hosts())
         self.assertEqual([], server.srp_server_get_services())
 
-    def _test_otci_example(self, node1, node2):
+    def _test_otci_example(self, node1: OTCI, node2: OTCI):
         node1.dataset_init_buffer()
         node1.dataset_set_buffer(network_name='test',
                                  network_key='00112233445566778899aabbccddeeff',
@@ -534,7 +536,7 @@ class TestOTCI(unittest.TestCase):
         node2.wait(10)
         assert node2.get_state() == "router"
 
-    def _test_otci_multi_nodes(self, leader, commissioner, child1, child2):
+    def _test_otci_multi_nodes(self, leader: OTCI, commissioner: OTCI, child1: OTCI, child2: OTCI):
         self.assertFalse(leader.get_ifconfig_state())
 
         # ifconfig up
@@ -589,15 +591,15 @@ class TestOTCI(unittest.TestCase):
             statistics = commissioner.ping(dst_ip, size=10, count=10, interval=2, hoplimit=3)
             self.assertEqual(statistics['transmitted_packets'], 10)
             self.assertEqual(statistics['received_packets'], 10)
-            self.assertAlmostEqual(statistics['packet_loss'], 0.0, delta=1e-9)
-            rtt = statistics['round_trip_time']
+            self.assertAlmostEqual(cast(float, statistics['packet_loss']), 0.0, delta=1e-9)
+            rtt: Dict[str, float] = cast(Dict[str, float], statistics['round_trip_time'])
             self.assertTrue(rtt['min'] - 1e-9 <= rtt['avg'] <= rtt['max'] + 1e-9)
             commissioner.wait(1)
 
-        self.assertEqual('disabled', commissioner.get_commissioiner_state())
+        self.assertEqual('disabled', commissioner.get_commissioner_state())
         commissioner.commissioner_start()
         commissioner.wait(5)
-        self.assertEqual('active', commissioner.get_commissioiner_state())
+        self.assertEqual('active', commissioner.get_commissioner_state())
 
         logging.info('commissioner.get_network_id_timeout() = %d', commissioner.get_network_id_timeout())
         commissioner.set_network_id_timeout(60)
@@ -706,7 +708,7 @@ class TestOTCI(unittest.TestCase):
         statistics = commissioner.ping("ff02::1", size=1, count=10, interval=1, hoplimit=255)
         self.assertEqual(statistics['transmitted_packets'], 10)
         self.assertEqual(statistics['received_packets'], 20)
-        rtt = statistics['round_trip_time']
+        rtt: Dict[str, float] = cast(Dict[str, float], statistics['round_trip_time'])
         self.assertTrue(rtt['min'] - 1e-9 <= rtt['avg'] <= rtt['max'] + 1e-9)
 
         # Shutdown
@@ -718,7 +720,7 @@ class TestOTCI(unittest.TestCase):
         leader.close()
 
 
-def _setup_default_network(node):
+def _setup_default_network(node: OTCI):
     node.dataset_clear_buffer()
     node.dataset_set_buffer(
         active_timestamp=1,

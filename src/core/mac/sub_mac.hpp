@@ -295,9 +295,11 @@ public:
     Error Disable(void);
 
     /**
-     * Transitions the radio to Sleep.
+     * Request radio to transition to sleep state.
      *
-     * @retval kErrorNone          Successfully transitioned to Sleep.
+     * The `SubMac` layer may enter `Receive()` state when the CSL receiver is enabled.
+     *
+     * @retval kErrorNone          Successfully transitioned to Sleep or the radio is handled by the CSL receiver.
      * @retval kErrorBusy          The radio was transmitting.
      * @retval kErrorInvalidState  The radio was disabled.
      */
@@ -376,17 +378,14 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
-     * Configures CSL parameters in 'SubMac'.
+     * Sets CSL parameters in 'SubMac'.
      *
-     * @param[in]  aPeriod    The CSL period (in unit of 10 symbols).
+     * @param[in]  aPeriod    The CSL period (in unit of 10 symbols), 0 for disabling CSL receiver.
      * @param[in]  aChannel   The CSL channel.
      * @param[in]  aShortAddr The short source address of CSL receiver's peer.
      * @param[in]  aExtAddr   The extended source address of CSL receiver's peer.
-     *
-     * @retval  TRUE if CSL Period or CSL Channel changed.
-     * @retval  FALSE if CSL Period and CSL Channel did not change.
      */
-    bool UpdateCsl(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr);
+    void SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr);
 
     /**
      * Returns parent CSL accuracy (clock accuracy and uncertainty).

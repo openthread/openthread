@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024, The OpenThread Authors.
+ *  Copyright (c) 2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,16 +28,12 @@
 
 #include <stdio.h>
 
-#include <openthread/border_routing.h>
-
 #include "test_platform.h"
 #include "test_util.h"
 #include "common/code_utils.hpp"
 #include "lib/spinel/spinel_buffer.hpp"
 #include "lib/spinel/spinel_encoder.hpp"
 #include "ncp/ncp_base.hpp"
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 namespace ot {
 
@@ -63,33 +59,41 @@ exit:
     return error;
 }
 
-void TestNcpCliIp6Enable(void)
+void TestNcpCliCommand(void)
 {
     Instance    *instance = static_cast<Instance *>(testInitInstance());
     Ncp::NcpBase ncpBase(instance);
 
-    uint8_t        recvBuf[kMaxSpinelBufferSize];
-    uint16_t       recvLen;
-    constexpr char cliCommand[] = "ifconfig up";
+    uint8_t  recvBuf[kMaxSpinelBufferSize];
+    uint16_t recvLen;
 
-    VerifyOrQuit(otBorderRoutingGetState(instance) == OT_BORDER_ROUTING_STATE_UNINITIALIZED);
+    {
+        // Test IPv6 interface bring up
+        constexpr char cliCommand[] = "ifconfig up";
 
-    SuccessOrQuit(GenerateSpinelCliCommandFrame(cliCommand, recvBuf, recvLen));
-    ncpBase.HandleReceive(recvBuf, recvLen);
-    VerifyOrQuit(otIp6IsEnabled(instance) == true);
+        SuccessOrQuit(GenerateSpinelCliCommandFrame(cliCommand, recvBuf, recvLen));
+        ncpBase.HandleReceive(recvBuf, recvLen);
+        VerifyOrQuit(otIp6IsEnabled(instance) == true);
+    }
 
-    printf("Test Ncp Cli Ip6Enable passed.\n");
+    {
+        // Test Thread network name set
+        constexpr char cliCommand[] = "networkname Test";
+
+        SuccessOrQuit(GenerateSpinelCliCommandFrame(cliCommand, recvBuf, recvLen));
+        ncpBase.HandleReceive(recvBuf, recvLen);
+        VerifyOrQuit(strcmp(otThreadGetNetworkName(instance), "Test") == 0);
+    }
+
+    printf("Test Ncp Cli Command passed.\n");
 }
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-
 int main(void)
 {
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    ot::TestNcpCliIp6Enable();
-#endif
+    ot::TestNcpCliCommand();
+
     printf("All tests passed\n");
     return 0;
 }

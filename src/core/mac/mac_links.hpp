@@ -461,28 +461,22 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
-     * Configures CSL parameters in all radios.
+     * Sets CSL parameters in all radios.
      *
      * @param[in]  aPeriod    The CSL period.
      * @param[in]  aChannel   The CSL channel.
      * @param[in]  aShortAddr The short source address of CSL receiver's peer.
      * @param[in]  aExtAddr   The extended source address of CSL receiver's peer.
-     *
-     * @retval  TRUE if CSL Period or CSL Channel changed.
-     * @retval  FALSE if CSL Period and CSL Channel did not change.
      */
-    bool UpdateCsl(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr)
+    void SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShortAddr, const ExtAddress &aExtAddr)
     {
-        bool retval = false;
-
         OT_UNUSED_VARIABLE(aPeriod);
         OT_UNUSED_VARIABLE(aChannel);
         OT_UNUSED_VARIABLE(aShortAddr);
         OT_UNUSED_VARIABLE(aExtAddr);
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-        retval = mSubMac.UpdateCsl(aPeriod, aChannel, aShortAddr, aExtAddr);
+        mSubMac.SetCslParams(aPeriod, aChannel, aShortAddr, aExtAddr);
 #endif
-        return retval;
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 

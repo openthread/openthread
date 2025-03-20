@@ -821,6 +821,7 @@ private:
     Message *InitMessage(Message *aMessage, Type aType, Uri aUri);
     Message *InitResponse(Message *aMessage, const Message &aRequest);
 
+    void        ScheduleRetransmissionTimer(void);
     static void HandleRetransmissionTimer(Timer &aTimer);
     void        HandleRetransmissionTimer(void);
 

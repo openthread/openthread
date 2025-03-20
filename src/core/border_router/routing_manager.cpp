@@ -885,6 +885,11 @@ void RoutingManager::LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLi
             RoutePreferenceToString(aPreference));
 }
 
+void RoutingManager::LogRecursiveDnsServerOption(const Ip6::Address &aAddress, uint32_t aLifetime)
+{
+    LogInfo("- RDNSS %s (lifetime:%lu)", aAddress.ToString().AsCString(), ToUlong(aLifetime));
+}
+
 const char *RoutingManager::RouterAdvOriginToString(RouterAdvOrigin aRaOrigin)
 {
     static const char *const kOriginStrings[] = {
@@ -909,6 +914,7 @@ const char *RoutingManager::RouterAdvOriginToString(RouterAdvOrigin aRaOrigin)
 void RoutingManager::LogRaHeader(const RouterAdvert::Header &) {}
 void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix &, uint32_t, uint32_t) {}
 void RoutingManager::LogRouteInfoOption(const Ip6::Prefix &, uint32_t, RoutePreference) {}
+void RoutingManager::LogRecursiveDnsServerOption(const Ip6::Address &, uint32_t) {}
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
@@ -1047,6 +1053,28 @@ void RoutingManager::RoutePrefix::CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli
 }
 
 //---------------------------------------------------------------------------------------------------------------------
+// RdnssAddress
+
+void RoutingManager::RdnssAddress::SetFrom(const RecursiveDnsServerOption &aRdnss, uint8_t aAddressIndex)
+{
+    mAddress        = aRdnss.GetAddressAt(aAddressIndex);
+    mLifetime       = aRdnss.GetLifetime();
+    mLastUpdateTime = TimerMilli::GetNow();
+}
+
+TimeMilli RoutingManager::RdnssAddress::GetExpireTime(void) const
+{
+    return RoutingManager::CalculateExpirationTime(mLastUpdateTime, mLifetime);
+}
+
+void RoutingManager::RdnssAddress::CopyInfoTo(RdnssAddrEntry &aEntry, TimeMilli aNow) const
+{
+    aEntry.mAddress             = GetAddress();
+    aEntry.mMsecSinceLastUpdate = aNow - GetLastUpdateTime();
+    aEntry.mLifetime            = GetLifetime();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 // NetDataPeerBrTracker
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
@@ -1139,7 +1167,9 @@ RoutingManager::RxRaTracker::RxRaTracker(Instance &aInstance)
     , mExpirationTimer(aInstance)
     , mStaleTimer(aInstance)
     , mRouterTimer(aInstance)
+    , mRdnssAddrTimer(aInstance)
     , mSignalTask(aInstance)
+    , mRdnssAddrTask(aInstance)
 {
     mLocalRaHeader.Clear();
 }
@@ -1155,6 +1185,7 @@ void RoutingManager::RxRaTracker::Stop(void)
     mExpirationTimer.Stop();
     mStaleTimer.Stop();
     mRouterTimer.Stop();
+    mRdnssAddrTimer.Stop();
 }
 
 void RoutingManager::RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaMessage,
@@ -1205,6 +1236,10 @@ void RoutingManager::RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert:
 
         case Option::kTypeRouteInfo:
             ProcessRouteInfoOption(static_cast<const RouteInfoOption &>(option), *router);
+            break;
+
+        case Option::kTypeRecursiveDnsServer:
+            ProcessRecursiveDnsServerOption(static_cast<const RecursiveDnsServerOption &>(option), *router);
             break;
 
         default:
@@ -1410,6 +1445,58 @@ exit:
     return;
 }
 
+void RoutingManager::RxRaTracker::ProcessRecursiveDnsServerOption(const RecursiveDnsServerOption &aRdnss,
+                                                                  Router                         &aRouter)
+{
+    Entry<RdnssAddress> *entry;
+    bool                 didChange = false;
+    uint32_t             lifetime;
+
+    VerifyOrExit(aRdnss.IsValid());
+
+    lifetime = aRdnss.GetLifetime();
+
+    for (uint8_t index = 0; index < aRdnss.GetNumAddresses(); index++)
+    {
+        const Ip6::Address &address = aRdnss.GetAddressAt(index);
+
+        LogRecursiveDnsServerOption(address, lifetime);
+
+        if (lifetime == 0)
+        {
+            didChange |= (aRouter.mRdnssAddresses.RemoveAndFreeAllMatching(address));
+            continue;
+        }
+
+        entry = aRouter.mRdnssAddresses.FindMatching(address);
+
+        if (entry != nullptr)
+        {
+            entry->SetFrom(aRdnss, index);
+        }
+        else
+        {
+            entry = AllocateEntry<RdnssAddress>();
+
+            if (entry == nullptr)
+            {
+                LogWarn("Discovered too many entries, ignore RDNSS address %s", address.ToString().AsCString());
+                ExitNow();
+            }
+
+            entry->SetFrom(aRdnss, index);
+            aRouter.mRdnssAddresses.Push(*entry);
+            didChange = true;
+        }
+    }
+
+exit:
+    if (didChange)
+    {
+        mRdnssAddrTask.Post();
+    }
+}
+
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
 
 template <>
@@ -1425,18 +1512,17 @@ exit:
     return router;
 }
 
-template <class PrefixType>
-RoutingManager::RxRaTracker::Entry<PrefixType> *RoutingManager::RxRaTracker::AllocateEntry(void)
+template <class Type> RoutingManager::RxRaTracker::Entry<Type> *RoutingManager::RxRaTracker::AllocateEntry(void)
 {
-    static_assert(TypeTraits::IsSame<PrefixType, OnLinkPrefix>::kValue ||
-                      TypeTraits::IsSame<PrefixType, RoutePrefix>::kValue,
-                  "PrefixType MSUT be either RoutePrefix or OnLinkPrefix");
+    static_assert(TypeTraits::IsSame<Type, OnLinkPrefix>::kValue || TypeTraits::IsSame<Type, RoutePrefix>::kValue ||
+                      TypeTraits::IsSame<Type, RdnssAddress>::kValue,
+                  "Type MSUT be either RoutePrefix, OnLinkPrefix, or RdnssAddress");
 
-    Entry<PrefixType> *entry       = nullptr;
-    SharedEntry       *sharedEntry = mEntryPool.Allocate();
+    Entry<Type> *entry       = nullptr;
+    SharedEntry *sharedEntry = mEntryPool.Allocate();
 
     VerifyOrExit(sharedEntry != nullptr);
-    entry = &sharedEntry->GetEntry<PrefixType>();
+    entry = &sharedEntry->GetEntry<Type>();
     entry->Init(GetInstance());
 
 exit:
@@ -1447,14 +1533,15 @@ template <> void RoutingManager::RxRaTracker::Entry<RoutingManager::RxRaTracker:
 {
     mOnLinkPrefixes.Free();
     mRoutePrefixes.Free();
+    mRdnssAddresses.Free();
     Get<RoutingManager>().mRxRaTracker.mRouterPool.Free(*this);
 }
 
-template <class PrefixType> void RoutingManager::RxRaTracker::Entry<PrefixType>::Free(void)
+template <class Type> void RoutingManager::RxRaTracker::Entry<Type>::Free(void)
 {
-    static_assert(TypeTraits::IsSame<PrefixType, OnLinkPrefix>::kValue ||
-                      TypeTraits::IsSame<PrefixType, RoutePrefix>::kValue,
-                  "PrefixType MSUT be either RoutePrefix or OnLinkPrefix");
+    static_assert(TypeTraits::IsSame<Type, OnLinkPrefix>::kValue || TypeTraits::IsSame<Type, RoutePrefix>::kValue ||
+                      TypeTraits::IsSame<Type, RdnssAddress>::kValue,
+                  "Type MSUT be either RoutePrefix, OnLinkPrefix, or RdnssAddress");
 
     Get<RoutingManager>().mRxRaTracker.mEntryPool.Free(*reinterpret_cast<SharedEntry *>(this));
 }
@@ -1551,6 +1638,14 @@ void RoutingManager::RxRaTracker::RemoveOrDeprecateOldEntries(TimeMilli aTimeThr
                 entry.ClearValidLifetime();
             }
         }
+
+        for (RdnssAddress &entry : router.mRdnssAddresses)
+        {
+            if (entry.GetLastUpdateTime() <= aTimeThreshold)
+            {
+                entry.ClearLifetime();
+            }
+        }
     }
 
     if (mLocalRaHeader.IsValid() && (mLocalRaHeaderUpdateTime <= aTimeThreshold))
@@ -1568,12 +1663,29 @@ void RoutingManager::RxRaTracker::Evaluate(void)
     NextFireTime    routerTimeoutTime(now);
     NextFireTime    entryExpireTime(now);
     NextFireTime    staleTime(now);
+    NextFireTime    rdnsssAddrExpireTime(now);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Remove expired prefix entries in routers and then remove any
-    // router that has no prefix entries or flags.
+    // Remove expired entries associated with each router
 
-    mRouters.RemoveAndFreeAllMatching(Router::EmptyChecker(now));
+    for (Router &router : mRouters)
+    {
+        ExpirationChecker expirationChecker(now);
+
+        router.mOnLinkPrefixes.RemoveAndFreeAllMatching(expirationChecker);
+        router.mRoutePrefixes.RemoveAndFreeAllMatching(expirationChecker);
+
+        if (router.mRdnssAddresses.RemoveAndFreeAllMatching(expirationChecker))
+        {
+            mRdnssAddrTask.Post();
+        }
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove any router entry that no longer has any valid on-link
+    // or route prefixes, RDNSS addresses, or other relevant flags set.
+
+    mRouters.RemoveAndFreeAllMatching(Router::EmptyChecker());
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Determine decision factors (favored on-link prefix, has any
@@ -1649,6 +1761,11 @@ void RoutingManager::RxRaTracker::Evaluate(void)
                 DetermineStaleTimeFor(entry, staleTime);
             }
         }
+
+        for (const RdnssAddress &entry : router.mRdnssAddresses)
+        {
+            rdnsssAddrExpireTime.UpdateIfEarlier(entry.GetExpireTime());
+        }
     }
 
     if (mLocalRaHeader.IsValid())
@@ -1666,6 +1783,7 @@ void RoutingManager::RxRaTracker::Evaluate(void)
     mRouterTimer.FireAt(routerTimeoutTime);
     mExpirationTimer.FireAt(entryExpireTime);
     mStaleTimer.FireAt(staleTime);
+    mRdnssAddrTimer.FireAt(rdnsssAddrExpireTime);
 }
 
 void RoutingManager::RxRaTracker::DetermineStaleTimeFor(const OnLinkPrefix &aPrefix, NextFireTime &aStaleTime)
@@ -1742,6 +1860,8 @@ void RoutingManager::RxRaTracker::HandleExpirationTimer(void) { Evaluate(); }
 
 void RoutingManager::RxRaTracker::HandleSignalTask(void) { Get<RoutingManager>().HandleRaPrefixTableChanged(); }
 
+void RoutingManager::RxRaTracker::HandleRdnssAddrTask(void) { mRdnssCallback.InvokeIfSet(); }
+
 void RoutingManager::RxRaTracker::ProcessNeighborAdvertMessage(const NeighborAdvertMessage &aNaMessage)
 {
     Router *router;
@@ -1800,11 +1920,18 @@ void RoutingManager::RxRaTracker::HandleRouterTimer(void)
             {
                 entry.ClearValidLifetime();
             }
+
+            for (RdnssAddress &entry : router.mRdnssAddresses)
+            {
+                entry.ClearLifetime();
+            }
         }
     }
 
     Evaluate();
 }
+
+void RoutingManager::RxRaTracker::HandleRdnssAddrTimer(void) { Evaluate(); }
 
 void RoutingManager::RxRaTracker::SendNeighborSolicitToRouter(const Router &aRouter)
 {
@@ -1935,6 +2062,22 @@ exit:
     return error;
 }
 
+Error RoutingManager::RxRaTracker::GetNextRdnssAddr(PrefixTableIterator &aIterator, RdnssAddrEntry &aEntry) const
+{
+    Error     error    = kErrorNone;
+    Iterator &iterator = static_cast<Iterator &>(aIterator);
+
+    ClearAllBytes(aEntry);
+
+    SuccessOrExit(error = iterator.AdvanceToNextRdnssAddrEntry());
+
+    iterator.GetRouter()->CopyInfoTo(aEntry.mRouter, iterator.GetInitTime(), iterator.GetInitUptime());
+    iterator.GetEntry<RdnssAddress>()->CopyInfoTo(aEntry, iterator.GetInitTime());
+
+exit:
+    return error;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // RxRaTracker::Iterator
 
@@ -2029,6 +2172,28 @@ exit:
     return error;
 }
 
+Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextRdnssAddrEntry(void)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(GetRouter() != nullptr, error = kErrorNotFound);
+
+    if (HasEntry())
+    {
+        VerifyOrExit(GetType() == kRdnssAddrIterator, error = kErrorInvalidArgs);
+        SetEntry(GetEntry<RdnssAddress>()->GetNext());
+    }
+
+    while (!HasEntry())
+    {
+        SuccessOrExit(error = AdvanceToNextRouter(kRdnssAddrIterator));
+        SetEntry(GetRouter()->mRdnssAddresses.GetHead());
+    }
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 
 Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextPeerBr(const PeerBr *aPeerBrsHead)
@@ -2099,26 +2264,22 @@ exit:
 
 bool RoutingManager::RxRaTracker::Router::Matches(const EmptyChecker &aChecker)
 {
-    // First removes all expired on-link or router prefixes. Then
-    // checks whether or not the router has any useful info.
+    OT_UNUSED_VARIABLE(aChecker);
 
     bool hasFlags = false;
 
-    mOnLinkPrefixes.RemoveAndFreeAllMatching(aChecker);
-    mRoutePrefixes.RemoveAndFreeAllMatching(aChecker);
-
     // Router can be removed if it does not advertise M or O flags and
-    // also does not have any advertised prefix entries (RIO/PIO). If
-    // the router already failed to respond to max NS probe attempts,
-    // we consider it as offline and therefore do not consider its
-    // flags anymore.
+    // also does not have any advertised prefix entries (RIO/PIO) or
+    // RDNSS address entries. If the router already failed to respond
+    // to max NS probe attempts, we consider it as offline and
+    // therefore do not consider its flags anymore.
 
     if (IsReachable())
     {
         hasFlags = (mManagedAddressConfigFlag || mOtherConfigFlag);
     }
 
-    return !hasFlags && mOnLinkPrefixes.IsEmpty() && mRoutePrefixes.IsEmpty();
+    return !hasFlags && mOnLinkPrefixes.IsEmpty() && mRoutePrefixes.IsEmpty() && mRdnssAddresses.IsEmpty();
 }
 
 bool RoutingManager::RxRaTracker::Router::IsPeerBr(void) const

@@ -128,6 +128,20 @@ typedef struct otBorderRoutingPrefixTableEntry
 } otBorderRoutingPrefixTableEntry;
 
 /**
+ * Represents a discovered Recursive DNS Server (RDNSS) address entry.
+ *
+ * Address entries are discovered by processing the RDNSS options within received Router Advertisement messages from
+ * routers on infrastructure link.
+ */
+typedef struct otBorderRoutingRdnssAddrEntry
+{
+    otBorderRoutingRouterEntry mRouter;              ///< Information about the router advertising this address.
+    otIp6Address               mAddress;             ///< The DNS Server IPv6 address.
+    uint32_t                   mMsecSinceLastUpdate; ///< Milliseconds since last update of this address.
+    uint32_t                   mLifetime;            ///< Lifetime of the address (in seconds).
+} otBorderRoutingRdnssAddrEntry;
+
+/**
  * Represents information about a peer Border Router found in the Network Data.
  */
 typedef struct otBorderRoutingPeerBorderRouterEntry
@@ -455,7 +469,6 @@ void otBorderRoutingPrefixTableInitIterator(otInstance *aInstance, otBorderRouti
 otError otBorderRoutingGetNextPrefixTableEntry(otInstance                         *aInstance,
                                                otBorderRoutingPrefixTableIterator *aIterator,
                                                otBorderRoutingPrefixTableEntry    *aEntry);
-
 /**
  * Iterates over the discovered router entries on the infrastructure link.
  *
@@ -519,6 +532,62 @@ otError otBorderRoutingGetNextPeerBrEntry(otInstance                           *
  * @returns The number of peer BRs.
  */
 uint16_t otBorderRoutingCountPeerBrs(otInstance *aInstance, uint32_t *aMinAge);
+
+/**
+ * Iterates over the Recursive DNS Server (RDNSS) address entries.
+ *
+ * Address entries are discovered by processing the RDNSS options within received Router Advertisement messages from
+ * routers on infrastructure link.
+ *
+ * Address entries associated with the same discovered router on an infrastructure link are guaranteed to be grouped
+ * together (retrieved back-to-back).
+ *
+ * @param[in]     aInstance    The OpenThread instance.
+ * @param[in,out] aIterator    A pointer to the iterator.
+ * @param[out]    aEntry       A pointer to the entry to populate.
+ *
+ * @retval OT_ERROR_NONE          Iterated to the next address entry, @p aEntry and @p aIterator are updated.
+ * @retval OT_ERROR_NOT_FOUND     No more entries in the table.
+ * @retval OT_ERROR_INVALID_ARSG  The iterator is invalid (used to iterate over other entry types, e.g. prefix).
+ */
+otError otBorderRoutingGetNextRdnssAddrEntry(otInstance                         *aInstance,
+                                             otBorderRoutingPrefixTableIterator *aIterator,
+                                             otBorderRoutingRdnssAddrEntry      *aEntry);
+
+/**
+ * Callback function pointer to notify of changes to discovered Recursive DNS Server (RDNSS) address entries.
+ *
+ * Address entries are discovered by processing the RDNSS options within received Router Advertisement messages from
+ * routers on infrastructure link.
+ *
+ * The `otBorderRoutingGetNextRdnssAddrEntry()` function can be used to iterate over the discovered RDNSS address
+ * entries.
+ *
+ * This callback is invoked when any of the following changes occur to the address entries associated with a discovered
+ * router:
+ * - A new RDNSS address is advertised by the router.
+ * - A previously discovered address is removed due to the router advertising it with a zero lifetime.
+ * - A previously discovered address has aged out (its lifetime expired without being re-advertised).
+ * - We determine that the router that advertised the address is now unreachable, and therefore all its associated
+ *   entries are removed.
+ *
+ * @param[in] aContext  A pointer to arbitrary context information.
+ */
+typedef void (*otBorderRoutingRdnssAddrCallback)(void *aContext);
+
+/**
+ * Sets the callback to be notified of changes to discovered Recursive DNS Server (RDNSS) address entries.
+ *
+ * A subsequent call to this function, replaces a previously set callback.
+ *
+ * @param[in] aInstance   The OpenThread instance.
+ * @param[in] aCallback   The callback function pointer. Can be `NULL` if no callback is required.
+ * @param[in] aConext     An arbitrary context information (used when invoking the callback).
+ *
+ */
+void otBorderRoutingSetRdnssAddrCallback(otInstance                      *aInstance,
+                                         otBorderRoutingRdnssAddrCallback aCallback,
+                                         void                            *aContext);
 
 /**
  * Enables / Disables DHCPv6 Prefix Delegation.

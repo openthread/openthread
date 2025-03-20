@@ -448,6 +448,31 @@ exit:
     return error;
 }
 
+void CoapBase::ScheduleRetransmissionTimer(void)
+{
+    NextFireTime nextTime;
+    Metadata     metadata;
+
+    for (const Message &message : mPendingRequests)
+    {
+        metadata.ReadFrom(message);
+
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+        if (message.IsRequest() && metadata.mObserve && metadata.mAcknowledged)
+        {
+            // This is an RFC7641 subscription which is already acknowledged.
+            // We do not time it out, so skip it when determining the next
+            // fire time.
+            continue;
+        }
+#endif
+
+        nextTime.UpdateIfEarlier(metadata.mNextTimerShot);
+    }
+
+    mRetransmissionTimer.FireAt(nextTime);
+}
+
 void CoapBase::HandleRetransmissionTimer(Timer &aTimer)
 {
     static_cast<Coap *>(static_cast<TimerMilliContext &>(aTimer).GetContext())->HandleRetransmissionTimer();
@@ -455,7 +480,7 @@ void CoapBase::HandleRetransmissionTimer(Timer &aTimer)
 
 void CoapBase::HandleRetransmissionTimer(void)
 {
-    NextFireTime     nextTime;
+    TimeMilli        now = TimerMilli::GetNow();
     Metadata         metadata;
     Ip6::MessageInfo messageInfo;
 
@@ -463,7 +488,7 @@ void CoapBase::HandleRetransmissionTimer(void)
     {
         metadata.ReadFrom(message);
 
-        if (nextTime.GetNow() >= metadata.mNextTimerShot)
+        if (now >= metadata.mNextTimerShot)
         {
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
             if (message.IsRequest() && metadata.mObserve && metadata.mAcknowledged)
@@ -483,7 +508,7 @@ void CoapBase::HandleRetransmissionTimer(void)
             // Increment retransmission counter and timer.
             metadata.mRetransmissionsRemaining--;
             metadata.mRetransmissionTimeout *= 2;
-            metadata.mNextTimerShot = nextTime.GetNow() + metadata.mRetransmissionTimeout;
+            metadata.mNextTimerShot = now + metadata.mRetransmissionTimeout;
             metadata.UpdateIn(message);
 
             // Retransmit
@@ -501,11 +526,9 @@ void CoapBase::HandleRetransmissionTimer(void)
                 SendCopy(message, messageInfo);
             }
         }
-
-        nextTime.UpdateIfEarlier(metadata.mNextTimerShot);
     }
 
-    mRetransmissionTimer.FireAt(nextTime);
+    ScheduleRetransmissionTimer();
 }
 
 void CoapBase::FinalizeCoapTransaction(Message                &aRequest,
@@ -550,9 +573,8 @@ Message *CoapBase::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopy
 
     SuccessOrExit(error = aMetadata.AppendTo(*messageCopy));
 
-    mRetransmissionTimer.FireAtIfEarlier(aMetadata.mNextTimerShot);
-
     mPendingRequests.Enqueue(*messageCopy);
+    ScheduleRetransmissionTimer();
 
 exit:
     FreeAndNullMessageOnError(messageCopy, error);
@@ -561,17 +583,8 @@ exit:
 
 void CoapBase::DequeueMessage(Message &aMessage)
 {
-    mPendingRequests.Dequeue(aMessage);
-
-    if (mRetransmissionTimer.IsRunning() && (mPendingRequests.GetHead() == nullptr))
-    {
-        mRetransmissionTimer.Stop();
-    }
-
-    aMessage.Free();
-
-    // No need to worry that the earliest pending message was removed -
-    // the timer would just shoot earlier and then it'd be setup again.
+    mPendingRequests.DequeueAndFree(aMessage);
+    ScheduleRetransmissionTimer();
 }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
