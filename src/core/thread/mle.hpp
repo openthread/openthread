@@ -605,14 +605,12 @@ public:
      */
     void ResetCounters(void);
 
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
     /**
      * Determines the current attach duration (number of seconds since the device last attached).
      *
      * @returns Current attach duration in seconds.
      */
     uint32_t GetCurrentAttachDuration(void) const;
-#endif
 
 #if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
     /**
@@ -1389,9 +1387,7 @@ private:
     void InformPreviousParent(void);
 #endif
 
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
     void UpdateRoleTimeCounters(DeviceRole aRole);
-#endif
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     ServiceAloc *FindInServiceAlocs(uint16_t aAloc16);
@@ -1500,10 +1496,8 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     uint32_t mCslTimeout;
 #endif
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
     uint32_t mLastAttachTime;
     uint64_t mLastUpdatedTimestamp;
-#endif
     uint64_t mAlternateTimestamp;
 
     LeaderData      mLeaderData;
