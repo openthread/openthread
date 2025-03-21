@@ -4145,6 +4145,28 @@ EOF
 """ % (prefix,))
         self._start_radvd_and_verify()
 
+    def start_rdnss_radvd_service(self, dns_server_address):
+        self.bash(f"""cat >/etc/radvd.conf <<EOF
+interface eth0
+{{
+    AdvSendAdvert on;
+
+    AdvReachableTime 20;
+    AdvRetransTimer 20;
+    AdvDefaultLifetime 180;
+    MinRtrAdvInterval 120;
+    MaxRtrAdvInterval 180;
+    AdvDefaultPreference low;
+
+    RDNSS {dns_server_address}
+    {{
+        AdvRDNSSLifetime 1800;
+    }};
+}};
+EOF
+""")
+        self._start_radvd_and_verify()
+
     def stop_radvd_service(self):
         self.bash('service radvd stop')
 
