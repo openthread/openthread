@@ -43,7 +43,8 @@ $ git submodule update --init
 $ ./script/bootstrap
 $ ./script/build nrf52840 UART_trans -DOT_DIAGNOSTIC=ON -DOT_CSL_RECEIVER=ON -DOT_LINK_METRICS_INITIATOR=ON -DOT_LINK_METRICS_SUBJECT=ON -DOT_WAKEUP_COORDINATOR=ON
 $ arm-none-eabi-objcopy -O ihex build/bin/ot-cli-ftd ot-cli-ftd.hex
-$ nrfjprog -f nrf52 --chiperase --program ot-cli-ftd.hex --reset
+$ nrfutil device program --firmware ot-cli-ftd.hex --options chip_erase_mode=ERASE_ALL
+$ nrfutil device reset --reset-kind=RESET_PIN
 ```
 
 ## Test Commands

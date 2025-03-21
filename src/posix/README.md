@@ -118,8 +118,11 @@ To build and program the device with RCP application, complete the following ste
    b. nRF52840 Development Kit
 
    ```sh
-   # Program the image using the nrfjprog utility.
-   nrfjprog -f nrf52 --chiperase --program build/bin/ot-rcp.hex --reset
+   # Program the image using the nrfutil utility.
+   nrfutil device program --firmware build/bin/ot-rcp.hex --options chip_erase_mode=ERASE_ALL
+
+   # Reset the development kit using the nrfutil utility.
+   nrfutil device reset --reset-kind=RESET_PIN
    ```
 
    Disable the Mass Storage feature on the device, so that it does not interfere with the core RCP functionalities:
