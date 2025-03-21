@@ -36,6 +36,7 @@
 #include <stdlib.h>
 
 #include <openthread/border_agent.h>
+#include <openthread/cli.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #include <openthread/link.h>
@@ -353,6 +354,7 @@ NcpBase::NcpBase(Instance *aInstance)
     IgnoreError(otSetStateChangedCallback(mInstance, &NcpBase::HandleStateChanged, this));
     otIp6SetReceiveCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
     otIp6SetReceiveFilterEnabled(mInstance, true);
+    otCliInit(mInstance, &NcpBase::HandleCliOutput, this);
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     otNetworkTimeSyncSetCallback(mInstance, &NcpBase::HandleTimeSyncUpdate, this);
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

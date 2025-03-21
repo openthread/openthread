@@ -49,6 +49,7 @@ target_link_libraries(openthread-ncp-ftd
         openthread-ftd
     PRIVATE
         ${OT_MBEDTLS}
+        openthread-cli-ftd
         openthread-hdlc
         openthread-spinel-ncp
         ot-config-ftd
