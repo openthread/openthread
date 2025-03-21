@@ -205,6 +205,7 @@ private:
     Error       AppendRouterNeighborTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo);
     Error       AppendChildTableIp6AddressList(Coap::Message *&aAnswer, AnswerInfo &aInfo);
     Error       AppendChildIp6AddressListTlv(Coap::Message &aAnswer, const Child &aChild);
+    Error       AppendEnhancedRoute(Message &aMessage);
 
     static void HandleAnswerResponse(void                *aContext,
                                      otMessage           *aMessage,
