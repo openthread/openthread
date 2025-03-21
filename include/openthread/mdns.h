@@ -617,7 +617,7 @@ otError otMdnsStartBrowser(otInstance *aInstance, const otMdnsBrowser *aBrowser)
  * @retval OT_ERROR_NONE           Browser stopped successfully.
  * @retval OT_ERROR_INVALID_STATE  mDNS module is not enabled.
  */
-otError otMdnsStopBrowser(otInstance *aInstance, const otMdnsBrowser *aBroswer);
+otError otMdnsStopBrowser(otInstance *aInstance, const otMdnsBrowser *aBrowser);
 
 /**
  * Starts an SRV record resolver.
