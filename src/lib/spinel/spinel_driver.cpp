@@ -52,6 +52,10 @@ SpinelDriver::SpinelDriver(void)
     , mSpinelVersionMajor(-1)
     , mSpinelVersionMinor(-1)
     , mIsCoprocessorReady(false)
+#if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+    , mCoprocessorResetFailureCallback(nullptr)
+    , mCoprocessorResetFailureContext(nullptr)
+#endif
 {
     memset(mVersion, 0, sizeof(mVersion));
 
@@ -119,6 +123,15 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+void SpinelDriver::SetCoprocessorResetFailureCallback(otSpinelDriverCoprocessorResetFailureCallback aCallback,
+                                                      void                                         *aContext)
+{
+    mCoprocessorResetFailureCallback = aCallback;
+    mCoprocessorResetFailureContext  = aContext;
+}
+#endif
+
 void SpinelDriver::ResetCoprocessor(bool aSoftwareReset)
 {
     bool hardwareReset;
@@ -129,7 +142,13 @@ void SpinelDriver::ResetCoprocessor(bool aSoftwareReset)
     VerifyOrExit(!mIsCoprocessorReady, resetDone = true);
 #endif
 
-    mWaitingKey = SPINEL_PROP_LAST_STATUS;
+    // Before resetting the co-processor, mIsCoprocessorReady must be set to false.
+    // Otherwise, in some cases, the host may misinterpret the reset result.
+    // For example, if mIsCoprocessorReady is true when calling ResetCoprocessor,
+    // and the reset fails but the co-processor sends some invalid data, `WaitResponse`
+    // may mistakenly return OT_ERROR_NONE, causing the host to believe the reset succeeded.
+    mIsCoprocessorReady = false;
+    mWaitingKey         = SPINEL_PROP_LAST_STATUS;
 
     if (aSoftwareReset && (SendReset(SPINEL_RESET_STACK) == OT_ERROR_NONE) && (WaitResponse() == OT_ERROR_NONE))
     {
@@ -160,6 +179,12 @@ exit:
     if (!resetDone)
     {
         LogCrit("Failed to reset co-processor!");
+#if OPENTHREAD_SPINEL_CONFIG_COPROCESSOR_RESET_FAILURE_CALLBACK_ENABLE
+        if (mCoprocessorResetFailureCallback)
+        {
+            mCoprocessorResetFailureCallback(mCoprocessorResetFailureContext);
+        }
+#endif
         DieNow(OT_EXIT_FAILURE);
     }
 }
