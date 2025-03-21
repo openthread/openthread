@@ -1561,6 +1561,28 @@ Service instance label is provided first, followed by the service name (note tha
 
 The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
 
+### dns query \<record-type\> \<first-label\> \<next-labels\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+
+Requires `OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE` and `OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE`.
+
+Sends a DNS query for a given record type and DNS name. DNS name is provided as a first label, followed by the next labels which are dot '.' separated. Note that the first label can itself contain the dot '.' character.
+
+The `record-type` is a numerical value corresponding to the DNS RRType values.
+
+The parameters after `next-labels` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
+
+If record type is `PTR` (12), `CNAME` (5), `DNAME` (39), `NS` (2), or `SRV` (33), the record data in the received response contains a DNS name which may use DNS name compression. For these specific record types, the record data is first decompressed such that it contains the full uncompressed DNS name. This decompressed data is then provided in the output. For all other record types, the record data is read and provided as it appears in the received response message.
+
+```bash
+> dns query 25 myhost default.service.arpa.
+DNS query response for myhost.default.service.arpa.
+0)
+    RecordType:25, RecordLength: 32, TTL:7108, Section:answer
+    Name:myhost.default.service.arpa.
+    RecordData:[001900010000e02d00440201030d4983605c0406803deb2d672cc42224773977]
+Done
+```
+
 ### dns server upstream \[enable|disable\]
 
 Enable/Disable the upstream DNS feature. If no argument is provided, it prints whether the upstream DNS feature is enabled.
