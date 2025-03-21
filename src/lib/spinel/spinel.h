@@ -4898,6 +4898,40 @@ enum
 
     SPINEL_PROP_BORDER_AGENT__END = 0x970,
 
+    SPINEL_PROP_BACKBONE_ROUTER__BEGIN = 0x970,
+
+    /// Backbone Router State
+    /**
+     * Format: `C` - Unsolicited notifications only
+     *
+     * `C`: The Backbone Router state. The value is the same as `otBackboneRouterState`.
+     *
+     * This property is used to notify the host the state of the Backbone Router.
+     */
+    SPINEL_PROP_BACKBONE_ROUTER_STATE = SPINEL_PROP_BACKBONE_ROUTER__BEGIN + 1,
+
+    /// Enablement/Disablement of Backbone Router function.
+    /**
+     * Format: `b` - Write-Only
+     *
+     * `b`: Whether to enable or disable the Backbone Router function.
+     *
+     * Host uses this property to enable or disable the Backbone Router function on NCP.
+     */
+    SPINEL_PROP_BACKBONE_ROUTER_ENABLE = SPINEL_PROP_BACKBONE_ROUTER__BEGIN + 2,
+
+    /// BackBone Router Multicast Listener.
+    /**
+     * Format: `6` - Inserted/Removed
+     *
+     * `6`: The multicast address that is subscribed by a multicast listener.
+     *
+     * NCP uses this property to subscribe or unsubscribe a multicast listener on the host.
+     */
+    SPINEL_PROP_BACKBONE_ROUTER_MULTICAST_LISTENER = SPINEL_PROP_BACKBONE_ROUTER__BEGIN + 3,
+
+    SPINEL_PROP_BACKBONE_ROUTER__END = 0x990,
+
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,
 
     SPINEL_PROP_NEST_STREAM_MFG = SPINEL_PROP_NEST__BEGIN + 0,
