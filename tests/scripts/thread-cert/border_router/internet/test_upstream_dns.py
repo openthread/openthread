@@ -109,39 +109,28 @@ class UpstreamDns(thread_cert.TestCase):
         self.simulator.go(10)
         router.srp_client_enable_auto_start_mode()
 
-        # verify the server can forward the DNS query to upstream server.
-        self._verify_upstream_dns(br, router, dns_server_1)
-        self._verify_recursive_dns(br, router, dns_server_2)
-
-    def _verify_upstream_dns(self, br, ed, dns_server):
         br.dns_upstream_query_state = True
         self.assertTrue(br.dns_upstream_query_state)
 
-        # Update BR's /etc/resolv.conf and force BR to reload it
-        dns_server_addr = dns_server.get_ether_addrs(ipv4=True, ipv6=False)[0]
-        br.bash(shlex.join(['echo', 'nameserver ' + dns_server_addr]) + ' > /etc/resolv.conf')
+        # Update BR's /etc/resolv.conf with the address of DNS server 1 and force BR to reload it
+        dns_server_addr_1 = dns_server_1.get_ether_addrs(ipv4=True, ipv6=False)[0]
+        br.bash(shlex.join(['echo', 'nameserver ' + dns_server_addr_1]) + ' > /etc/resolv.conf')
         br.stop_otbr_service()
         br.start_otbr_service()
 
-        self.simulator.go(10)
-        resolved_names = ed.dns_resolve(TEST_DOMAIN_1)
-        self.assertEqual(len(resolved_names), len(TEST_DOMAIN_IP6_ADDRESSES_1))
-        for record in resolved_names:
-            self.assertIn(ipaddress.IPv6Address(record[0]).compressed, TEST_DOMAIN_IP6_ADDRESSES_1)
-
-    def _verify_recursive_dns(self, br, ed, dns_server):
-        br.dns_upstream_query_state = True
-        self.assertTrue(br.dns_upstream_query_state)
-
-        # Publish RDNSS through RA
-        dns_server_addr = dns_server.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]
-        br.start_rdnss_radvd_service(dns_server_addr)
+        # Publish RDNSS with the address of DNS server 2 through RA
+        dns_server_addr_2 = dns_server_2.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]
+        br.start_rdnss_radvd_service(dns_server_addr_2)
 
         self.simulator.go(10)
-        resolved_names = ed.dns_resolve(TEST_DOMAIN_2)
-        self.assertEqual(len(resolved_names), len(TEST_DOMAIN_IP6_ADDRESSES_2))
-        for record in resolved_names:
-            self.assertIn(ipaddress.IPv6Address(record[0]).compressed, TEST_DOMAIN_IP6_ADDRESSES_2)
+        # verify the server can forward the DNS query to the two upstream servers.
+        resolved_addresses_1 = set(
+            ipaddress.IPv6Address(record[0]).compressed for record in router.dns_resolve(TEST_DOMAIN_1))
+        self.assertEqual(resolved_addresses_1, TEST_DOMAIN_IP6_ADDRESSES_1)
+
+        resolved_addresses_2 = set(
+            ipaddress.IPv6Address(record[0]).compressed for record in router.dns_resolve(TEST_DOMAIN_2))
+        self.assertEqual(resolved_addresses_2, TEST_DOMAIN_IP6_ADDRESSES_2)
 
     def _start_dns_server(self, dns_server, test_domain, test_domain_ip6_addresses):
         test_domain_bind_conf = f'''

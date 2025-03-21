@@ -4145,16 +4145,10 @@ EOF
 """ % (prefix,))
         self._start_radvd_and_verify()
 
-    def start_rdnss_radvd_service(self, rdnss):
-        """
-        Start radvd service to advertise RDNSS.
-
-        Args:
-            rdnss (str): The IPv6 address of the recursive DNS server to advertise.
-        """
-        self.bash("""cat >/etc/radvd.conf <<EOF
+    def start_rdnss_radvd_service(self, dns_server_address):
+        self.bash(f"""cat >/etc/radvd.conf <<EOF
 interface eth0
-{
+{{
     AdvSendAdvert on;
 
     AdvReachableTime 20;
@@ -4163,15 +4157,15 @@ interface eth0
     MinRtrAdvInterval 120;
     MaxRtrAdvInterval 180;
     AdvDefaultPreference low;
-                  
-    RDNSS %s
-    {
+
+    RDNSS {dns_server_address}
+    {{
         AdvRDNSSLifetime 1800;
-    };
-};
+    }};
+}};
 EOF
-""" % (rdnss,))
-        self.bash('service radvd start')
+""")
+        self._start_radvd_and_verify()
 
     def stop_radvd_service(self):
         self.bash('service radvd stop')
