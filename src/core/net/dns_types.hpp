@@ -45,6 +45,7 @@
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
 #include "common/message.hpp"
+#include "common/string.hpp"
 #include "crypto/ecdsa.hpp"
 #include "net/ip4_types.hpp"
 #include "net/ip6_address.hpp"
@@ -1267,8 +1268,8 @@ public:
     // Resource Record Types.
     static constexpr uint16_t kTypeZero  = 0;   ///< Zero as special indicator for the SIG RR (SIG(0) from RFC 2931).
     static constexpr uint16_t kTypeA     = 1;   ///< Address record (IPv4).
-    static constexpr uint16_t kTypeSoa   = 6;   ///< Start of (zone of) authority.
     static constexpr uint16_t kTypeCname = 5;   ///< CNAME record.
+    static constexpr uint16_t kTypeSoa   = 6;   ///< Start of (zone of) authority.
     static constexpr uint16_t kTypePtr   = 12;  ///< PTR record.
     static constexpr uint16_t kTypeTxt   = 16;  ///< TXT record.
     static constexpr uint16_t kTypeSig   = 24;  ///< SIG record.
@@ -1283,6 +1284,10 @@ public:
     static constexpr uint16_t kClassInternet = 1;   ///< Class code Internet (IN).
     static constexpr uint16_t kClassNone     = 254; ///< Class code None (NONE) - RFC 2136.
     static constexpr uint16_t kClassAny      = 255; ///< Class code Any (ANY).
+
+    static constexpr uint16_t kTypeStringSize = 17; ///< Size of `TypeInfoString`.
+
+    typedef String<kTypeStringSize> TypeInfoString; /// A string to represent a resource record type (human-readable).
 
     /**
      * Initializes the resource record by setting its type and class.
@@ -1491,6 +1496,15 @@ public:
     {
         return ReadRecord(aMessage, aOffset, RecordType::kType, aRecord, sizeof(RecordType));
     }
+
+    /**
+     * Returns a human-readable string representation of a given resource record type.
+     *
+     * @param[in] aRecordType  The resource record type to convert.
+     *
+     * @returns human-readable string representation of a given resource record type.
+     */
+    static TypeInfoString TypeToString(uint16_t aRecordType);
 
 protected:
     Error ReadName(const Message &aMessage,

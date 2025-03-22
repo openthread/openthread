@@ -856,6 +856,20 @@ void otPlatDnssdStopIp4AddressResolver(otInstance *aInstance, const otPlatDnssdA
     }
 }
 
+void otPlatDnssdStartRecordQuerier(otInstance *aInstance, const otPlatDnssdRecordQuerier *aQuerier)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aQuerier);
+    // TOWRITE
+}
+
+void otPlatDnssdStopRecordQuerier(otInstance *aInstance, const otPlatDnssdRecordQuerier *aQuerier)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aQuerier);
+    // TOWRITE
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 
 void TestProxyBasic(void)
