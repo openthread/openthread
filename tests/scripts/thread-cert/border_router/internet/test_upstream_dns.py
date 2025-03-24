@@ -39,29 +39,23 @@ import shlex
 # a record resolved by BIND9 server.
 #
 # Topology:
-#    ----------------(eth)--------------------
-#           |                 |
-#          BR (Leader)      DNS SERVER
+#    ----------------(eth)----------------------------------
+#           |                 |                  |
+#        BR (Leader)     DNS SERVER 1       DNS SERVER 2
 #           |
 #        ROUTER
 #
 
 BR = 1
 ROUTER = 2
-DNS_SERVER = 3
+DNS_SERVER_1 = 3
+DNS_SERVER_2 = 4
 
-TEST_DOMAIN = 'test.domain'
-TEST_DOMAIN_IP6_ADDRESSES = {'2001:db8::1'}
+TEST_DOMAIN_1 = 'test.domain.resolv'
+TEST_DOMAIN_IP6_ADDRESSES_1 = {'2001:db8::1'}
 
-TEST_DOMAIN_BIND_CONF = f'''
-zone "{TEST_DOMAIN}" {{ type master; file "/etc/bind/db.test.domain"; }};
-'''
-
-TEST_DOMAIN_BIND_ZONE = f'''
-$TTL 24h
-@ IN SOA {TEST_DOMAIN} test.{TEST_DOMAIN}. ( 20230330 86400 300 604800 3600 )
-@ IN NS {TEST_DOMAIN}.
-''' + '\n'.join(f'@ IN AAAA {addr}' for addr in TEST_DOMAIN_IP6_ADDRESSES)
+TEST_DOMAIN_2 = 'test.domain.rdnss'
+TEST_DOMAIN_IP6_ADDRESSES_2 = {'2001:db8::2'}
 
 
 class UpstreamDns(thread_cert.TestCase):
@@ -77,8 +71,12 @@ class UpstreamDns(thread_cert.TestCase):
             'name': 'Router',
             'version': '1.4',
         },
-        DNS_SERVER: {
-            'name': 'DNS Server',
+        DNS_SERVER_1: {
+            'name': 'DNS Server 1',
+            'is_host': True
+        },
+        DNS_SERVER_2: {
+            'name': 'DNS Server 2',
             'is_host': True
         },
     }
@@ -86,18 +84,14 @@ class UpstreamDns(thread_cert.TestCase):
     def test(self):
         br = self.nodes[BR]
         router = self.nodes[ROUTER]
-        dns_server = self.nodes[DNS_SERVER]
+        dns_server_1 = self.nodes[DNS_SERVER_1]
+        dns_server_2 = self.nodes[DNS_SERVER_2]
 
-        self._start_dns_server(dns_server)
-        dns_server_addr = dns_server.get_ether_addrs(ipv4=True, ipv6=False)[0]
+        self._start_dns_server(dns_server_1, TEST_DOMAIN_1, TEST_DOMAIN_IP6_ADDRESSES_1)
+        self._start_dns_server(dns_server_2, TEST_DOMAIN_2, TEST_DOMAIN_IP6_ADDRESSES_2)
 
         # Disable the bind9 service on the BR otherwise bind9 may respond to Thread devices' DNS queries
         br.bash('service bind9 stop')
-
-        # Update BR's /etc/resolv.conf and force BR to reload it
-        br.bash(shlex.join(['echo', 'nameserver ' + dns_server_addr]) + ' > /etc/resolv.conf')
-        br.stop_otbr_service()
-        br.start_otbr_service()
 
         br.start()
         self.simulator.go(config.LEADER_STARTUP_DELAY)
@@ -115,26 +109,45 @@ class UpstreamDns(thread_cert.TestCase):
         self.simulator.go(10)
         router.srp_client_enable_auto_start_mode()
 
-        # verify the server can forward the DNS query to upstream server.
-        self._verify_upstream_dns(br, router)
-
-    def _verify_upstream_dns(self, br, ed):
-        upstream_dns_enabled = br.dns_upstream_query_state
-        if not upstream_dns_enabled:
-            br.dns_upstream_query_state = True
+        br.dns_upstream_query_state = True
         self.assertTrue(br.dns_upstream_query_state)
 
-        resolved_names = ed.dns_resolve(TEST_DOMAIN)
-        self.assertEqual(len(resolved_names), len(TEST_DOMAIN_IP6_ADDRESSES))
-        for record in resolved_names:
-            self.assertIn(ipaddress.IPv6Address(record[0]).compressed, TEST_DOMAIN_IP6_ADDRESSES)
+        # Update BR's /etc/resolv.conf with the address of DNS server 1 and force BR to reload it
+        dns_server_addr_1 = dns_server_1.get_ether_addrs(ipv4=True, ipv6=False)[0]
+        br.bash(shlex.join(['echo', 'nameserver ' + dns_server_addr_1]) + ' > /etc/resolv.conf')
+        br.stop_otbr_service()
+        br.start_otbr_service()
 
-    def _start_dns_server(self, dns_server):
+        # Publish RDNSS with the address of DNS server 2 through RA
+        dns_server_addr_2 = dns_server_2.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]
+        br.start_rdnss_radvd_service(dns_server_addr_2)
+
+        self.simulator.go(10)
+        # verify the server can forward the DNS query to the two upstream servers.
+        resolved_addresses_1 = set(
+            ipaddress.IPv6Address(record[0]).compressed for record in router.dns_resolve(TEST_DOMAIN_1))
+        self.assertEqual(resolved_addresses_1, TEST_DOMAIN_IP6_ADDRESSES_1)
+
+        resolved_addresses_2 = set(
+            ipaddress.IPv6Address(record[0]).compressed for record in router.dns_resolve(TEST_DOMAIN_2))
+        self.assertEqual(resolved_addresses_2, TEST_DOMAIN_IP6_ADDRESSES_2)
+
+    def _start_dns_server(self, dns_server, test_domain, test_domain_ip6_addresses):
+        test_domain_bind_conf = f'''
+zone "{test_domain}" {{ type master; file "/etc/bind/db.test.domain"; }};
+'''
+
+        test_domain_bind_zone = f'''
+$TTL 24h
+@ IN SOA {test_domain} test.{test_domain}. ( 20230330 86400 300 604800 3600 )
+@ IN NS {test_domain}.
+''' + '\n'.join(f'@ IN AAAA {addr}' for addr in test_domain_ip6_addresses)
+
         dns_server.start(start_radvd=False)
         dns_server.bash('service bind9 stop')
 
-        dns_server.bash(shlex.join(['echo', TEST_DOMAIN_BIND_CONF]) + ' >> /etc/bind/named.conf.local')
-        dns_server.bash(shlex.join(['echo', TEST_DOMAIN_BIND_ZONE]) + ' >> /etc/bind/db.test.domain')
+        dns_server.bash(shlex.join(['echo', test_domain_bind_conf]) + ' >> /etc/bind/named.conf.local')
+        dns_server.bash(shlex.join(['echo', test_domain_bind_zone]) + ' >> /etc/bind/db.test.domain')
 
         dns_server.bash('service bind9 start')
 
