@@ -2977,21 +2977,20 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_ALL_IP_COUNTERS>
     return OT_ERROR_NONE;
 }
 
+#if OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_CLI>(void)
 {
     otError     error  = OT_ERROR_NONE;
     const char *string = nullptr;
-    size_t      length = 0;
 
     SuccessOrExit(error = mDecoder.ReadUtf8(string));
-    length = strlen(string);
-    VerifyOrExit(length < OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH, error = OT_ERROR_INVALID_COMMAND);
 
     otCliInputLine(const_cast<char *>(string));
 
 exit:
     return error;
 }
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
@@ -4589,6 +4588,7 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 
+#if OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE
 int NcpBase::HandleCliOutput(void *aContext, const char *aFormat, va_list aArguments)
 {
     return static_cast<NcpBase *>(aContext)->HandleCliOutput(aFormat, aArguments);
@@ -4609,6 +4609,7 @@ int NcpBase::HandleCliOutput(const char *aFormat, va_list aArguments)
 exit:
     return rval;
 }
+#endif
 
 // ----------------------------------------------------------------------------
 // MARK: Pcap frame handling

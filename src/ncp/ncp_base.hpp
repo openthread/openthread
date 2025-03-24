@@ -654,8 +654,10 @@ protected:
     void        HandleDiagOutput(const char *aFormat, va_list aArguments);
 #endif
 
+#if OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE
     static int HandleCliOutput(void *aContext, const char *aFormat, va_list aArguments);
     int        HandleCliOutput(const char *aFormat, va_list aArguments);
+#endif
 
 #if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
     /**

@@ -35,6 +35,8 @@
 #include "lib/spinel/spinel_encoder.hpp"
 #include "ncp/ncp_base.hpp"
 
+#if OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE
+
 namespace ot {
 
 constexpr uint16_t kMaxSpinelBufferSize = 2048;
@@ -90,10 +92,13 @@ void TestNcpCliCommand(void)
 
 } // namespace ot
 
+#endif // OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE
+
 int main(void)
 {
+#if OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE
     ot::TestNcpCliCommand();
-
+#endif
     printf("All tests passed\n");
     return 0;
 }

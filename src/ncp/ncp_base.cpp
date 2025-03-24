@@ -354,7 +354,9 @@ NcpBase::NcpBase(Instance *aInstance)
     IgnoreError(otSetStateChangedCallback(mInstance, &NcpBase::HandleStateChanged, this));
     otIp6SetReceiveCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
     otIp6SetReceiveFilterEnabled(mInstance, true);
+#if OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE
     otCliInit(mInstance, &NcpBase::HandleCliOutput, this);
+#endif
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     otNetworkTimeSyncSetCallback(mInstance, &NcpBase::HandleTimeSyncUpdate, this);
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

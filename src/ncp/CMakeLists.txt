@@ -63,6 +63,13 @@ else()
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE=0")
 endif()
 
+option(OT_NCP_CLI_STREAM "enable NCP CLI stream ")
+if (OT_NCP_CLI_STREAM)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE=1")
+else()
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE=0")
+endif()
+
 set(COMMON_NCP_SOURCES
     ${COMMON_SOURCES}
     ncp_base_ftd.cpp
