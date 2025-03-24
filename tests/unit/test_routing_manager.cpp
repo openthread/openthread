@@ -709,7 +709,7 @@ Ip6::Address AddressFromString(const char *aString)
     return address;
 }
 
-void VerifyOmrPrefixInNetData(const Ip6::Prefix &aOmrPrefix, bool aDefaultRoute)
+void VerifyOmrPrefixInNetData(const Ip6::Prefix &aOmrPrefix, bool aDefaultRoute, RoutePreference *aPreference = nullptr)
 {
     otNetworkDataIterator           iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     NetworkData::OnMeshPrefixConfig prefixConfig;
@@ -723,6 +723,11 @@ void VerifyOmrPrefixInNetData(const Ip6::Prefix &aOmrPrefix, bool aDefaultRoute)
     VerifyOrQuit(prefixConfig.mPreferred == true);
     VerifyOrQuit(prefixConfig.mOnMesh == true);
     VerifyOrQuit(prefixConfig.mDefaultRoute == aDefaultRoute);
+
+    if (aPreference != nullptr)
+    {
+        VerifyOrQuit(prefixConfig.mPreference == *aPreference);
+    }
 
     VerifyOrQuit(otNetDataGetNextOnMeshPrefix(sInstance, &iterator, &prefixConfig) == kErrorNotFound);
 }
@@ -1622,6 +1627,274 @@ void TestOmrSelection(void)
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
     Log("End of TestOmrSelection");
+    FinalizeTest();
+}
+
+void TestOmrConfig(void)
+{
+    using OmrConfig = BorderRouter::RoutingManager::OmrConfig;
+
+    static constexpr OmrConfig kOmrConfigAuto     = BorderRouter::RoutingManager::kOmrConfigAuto;
+    static constexpr OmrConfig kOmrConfigCustom   = BorderRouter::RoutingManager::kOmrConfigCustom;
+    static constexpr OmrConfig kOmrConfigDisabled = BorderRouter::RoutingManager::kOmrConfigDisabled;
+
+    Ip6::Prefix     localOmr;
+    RoutePreference preference;
+    Ip6::Prefix     prefix;
+    Ip6::Prefix     customPrefix = PrefixFromString("2000:0000:1111:4444::", 64);
+    uint16_t        heapAllocations;
+    OmrConfig       omrConfig;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestOmrConfig");
+
+    InitTest();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start Routing Manager. Check emitted RS and RA messages.
+
+    sRsEmitted   = false;
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+
+    omrConfig = sInstance->Get<BorderRouter::RoutingManager>().GetOmrConfig(nullptr, nullptr);
+    VerifyOrQuit(omrConfig == kOmrConfigAuto);
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+
+    Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
+
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(30000);
+
+    VerifyOrQuit(sRsEmitted);
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    VerifyOrQuit(sExpectedRios[0].mLifetime == kRioValidLifetime);
+    VerifyOrQuit(sExpectedRios[0].mPreference == NetworkData::kRoutePreferenceMedium);
+
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Update OMR config to disable it
+
+    preference = NetworkData::kRoutePreferenceMedium;
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetOmrConfig(kOmrConfigDisabled, nullptr, preference));
+
+    omrConfig = sInstance->Get<BorderRouter::RoutingManager>().GetOmrConfig(nullptr, nullptr);
+    VerifyOrQuit(omrConfig == kOmrConfigDisabled);
+
+    AdvanceTime(100);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Make sure BR emits RA with the new OMR prefix now, and deprecates the old OMR prefix.
+
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(20 * 1000);
+
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    VerifyOrQuit(sExpectedRios[0].mLifetime <= kRioDeprecatingLifetime);
+    VerifyOrQuit(sExpectedRios[0].mPreference == NetworkData::kRoutePreferenceLow);
+
+    // Check Network Data. We should now see no OMR prefix in the Network Data.
+
+    VerifyNoOmrPrefixInNetData();
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetFavoredOmrPrefix(prefix, preference));
+    VerifyOrQuit(prefix.GetLength() == 0);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Update OMR config back `kOmrConfigAuto` mode.
+
+    preference = NetworkData::kRoutePreferenceMedium;
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetOmrConfig(kOmrConfigAuto, nullptr, preference));
+
+    omrConfig = sInstance->Get<BorderRouter::RoutingManager>().GetOmrConfig(nullptr, nullptr);
+    VerifyOrQuit(omrConfig == kOmrConfigAuto);
+
+    AdvanceTime(100);
+
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(30 * 1000);
+
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    VerifyOrQuit(sExpectedRios[0].mLifetime == kRioValidLifetime);
+    VerifyOrQuit(sExpectedRios[0].mPreference == NetworkData::kRoutePreferenceMedium);
+
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Update OMR config to `kOmrConfigCustom` mode to use a custom prefix
+
+    preference = NetworkData::kRoutePreferenceMedium;
+    SuccessOrQuit(
+        sInstance->Get<BorderRouter::RoutingManager>().SetOmrConfig(kOmrConfigCustom, &customPrefix, preference));
+
+    omrConfig = sInstance->Get<BorderRouter::RoutingManager>().GetOmrConfig(&prefix, &preference);
+    VerifyOrQuit(omrConfig == kOmrConfigCustom);
+    VerifyOrQuit(prefix == customPrefix);
+    VerifyOrQuit(preference == NetworkData::kRoutePreferenceMedium);
+
+    AdvanceTime(100);
+
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(customPrefix);
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(60 * 1000);
+
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    VerifyOrQuit(sExpectedRios[0].mLifetime == kRioValidLifetime);
+    VerifyOrQuit(sExpectedRios[0].mPreference == NetworkData::kRoutePreferenceMedium);
+    VerifyOrQuit(sExpectedRios[1].mLifetime <= kRioDeprecatingLifetime);
+    VerifyOrQuit(sExpectedRios[1].mPreference == NetworkData::kRoutePreferenceLow);
+
+    VerifyOmrPrefixInNetData(customPrefix, /* aDefaultRoute */ false, &preference);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Update the custom prefix preference value to high.
+
+    preference = NetworkData::kRoutePreferenceHigh;
+    SuccessOrQuit(
+        sInstance->Get<BorderRouter::RoutingManager>().SetOmrConfig(kOmrConfigCustom, &customPrefix, preference));
+
+    omrConfig = sInstance->Get<BorderRouter::RoutingManager>().GetOmrConfig(&prefix, &preference);
+    VerifyOrQuit(omrConfig == kOmrConfigCustom);
+    VerifyOrQuit(prefix == customPrefix);
+    VerifyOrQuit(preference == NetworkData::kRoutePreferenceHigh);
+
+    AdvanceTime(100);
+
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(customPrefix);
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(60 * 1000);
+
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    VerifyOrQuit(sExpectedRios[0].mLifetime == kRioValidLifetime);
+    VerifyOrQuit(sExpectedRios[0].mPreference == NetworkData::kRoutePreferenceMedium);
+    VerifyOrQuit(sExpectedRios[1].mLifetime <= kRioDeprecatingLifetime);
+    VerifyOrQuit(sExpectedRios[1].mPreference == NetworkData::kRoutePreferenceLow);
+
+    VerifyOmrPrefixInNetData(customPrefix, /* aDefaultRoute */ false, &preference);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Wait for previous local OMR to be fully deprecated and validate that is no
+    // longer seen in the emitted RA.
+
+    AdvanceTime(350 * 1000);
+
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Add(customPrefix);
+
+    AdvanceTime(200 * 1000);
+
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    VerifyOmrPrefixInNetData(customPrefix, /* aDefaultRoute */ false, &preference);
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetFavoredOmrPrefix(prefix, preference));
+    VerifyOrQuit(prefix == customPrefix);
+    VerifyOrQuit(preference == NetworkData::kRoutePreferenceHigh);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Switch back to `kOmrConfigDiable` mode. Check that custom prefix is
+    // removed from Network Data and we see it deprecating in emitted RAs.
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetOmrConfig(kOmrConfigDisabled, nullptr, preference));
+
+    omrConfig = sInstance->Get<BorderRouter::RoutingManager>().GetOmrConfig(nullptr, nullptr);
+    VerifyOrQuit(omrConfig == kOmrConfigDisabled);
+
+    AdvanceTime(100);
+
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(customPrefix);
+
+    AdvanceTime(60 * 1000);
+
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    VerifyOrQuit(sExpectedRios[0].mLifetime <= kRioDeprecatingLifetime);
+    VerifyOrQuit(sExpectedRios[0].mPreference == NetworkData::kRoutePreferenceLow);
+
+    VerifyNoOmrPrefixInNetData();
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetFavoredOmrPrefix(prefix, preference));
+    VerifyOrQuit(prefix.GetLength() == 0);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Switch back to `kOmrConfigAuto` mode.
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetOmrConfig(kOmrConfigAuto, nullptr, preference));
+
+    omrConfig = sInstance->Get<BorderRouter::RoutingManager>().GetOmrConfig(nullptr, nullptr);
+    VerifyOrQuit(omrConfig == kOmrConfigAuto);
+
+    AdvanceTime(100);
+
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+    sExpectedRios.Add(customPrefix);
+
+    AdvanceTime(60 * 1000);
+
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    VerifyOrQuit(sExpectedRios[0].mLifetime == kRioValidLifetime);
+    VerifyOrQuit(sExpectedRios[0].mPreference == NetworkData::kRoutePreferenceMedium);
+    VerifyOrQuit(sExpectedRios[1].mLifetime <= kRioDeprecatingLifetime);
+    VerifyOrQuit(sExpectedRios[1].mPreference == NetworkData::kRoutePreferenceLow);
+
+    preference = NetworkData::kRoutePreferenceLow;
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false, &preference);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetFavoredOmrPrefix(prefix, preference));
+    VerifyOrQuit(prefix == localOmr);
+    VerifyOrQuit(preference == NetworkData::kRoutePreferenceLow);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    Log("End of TestOmrConfig");
     FinalizeTest();
 }
 
@@ -4714,6 +4987,7 @@ int main(void)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     ot::TestSamePrefixesFromMultipleRouters();
     ot::TestOmrSelection();
+    ot::TestOmrConfig();
     ot::TestDefaultRoute();
     ot::TestAdvNonUlaRoute();
     ot::TestFavoredOnLinkPrefix();

@@ -161,6 +161,19 @@ typedef struct otPdProcessedRaInfo
 } otPdProcessedRaInfo;
 
 /**
+ * Represents the configuration options related to the OMR prefix.
+ *
+ * This is used in `otBorderRoutingSetOmrConfig()` to offer manual administration options to explicitly configure
+ * the OMR prefix or to disable it.
+ */
+typedef enum
+{
+    OT_BORDER_ROUTING_OMR_CONFIG_AUTO,     ///< BR auto-generates the local OMR prefix.
+    OT_BORDER_ROUTING_OMR_CONFIG_CUSTOM,   ///< BR uses a given custom OMR prefix.
+    OT_BORDER_ROUTING_OMR_CONFIG_DISABLED, ///< BR does not add local/PD OMR prefix in Network Data.
+} otBorderRoutingOmrConfig;
+
+/**
  * Represents the state of Border Routing Manager.
  */
 typedef enum
@@ -225,6 +238,56 @@ otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled);
  * @returns The current state of Border Routing Manager.
  */
 otBorderRoutingState otBorderRoutingGetState(otInstance *aInstance);
+
+/**
+ * Configures the OMR prefix handling in the Border Routing Manager.
+ *
+ * This function offers manual administration options to explicitly configure the OMR prefix or to disable it.
+ *
+ * By default, `OT_BORDER_ROUTING_OMR_CONFIG_AUTO` is used. In this mode, the Border Routing Manager automatically
+ * selects and manages the OMR prefix. This can involve auto-generating a local prefix or utilizing a prefix obtained
+ * through DHCPv6 PD (Prefix Delegation), if the feature is enabled.
+ *
+ * The `OT_BORDER_ROUTING_OMR_CONFIG_CUSTOM` option enables the use of a user-specified OMR prefix. When this option
+ * is selected, the @p aOmrPrefix and @p aPreference parameters are used to define the custom OMR prefix and its
+ * associated preference. These parameters are ignored for other configuration modes, and @p aOmrPrefix can be `NULL`.
+ *
+ * The `OT_BORDER_ROUTING_OMR_CONFIG_DISABLED` option disables the Border Routing Manager's management of the OMR
+ * prefix. The Routing Manager module itself will not add any local or DHCPv6 PD OMR prefixes to the Network Data.
+ *
+ * @param[in] aInstance      A pointer to the OpenThread instance.
+ * @param[in] aConfig        The desired OMR configuration.
+ * @param[in] aOmrPrefix     A pointer to the custom OMR prefix. Required only when @p aConfig is
+ *                           `OT_BORDER_ROUTING_OMR_CONFIG_CUSTOM`. Otherwise, it can be `NULL`.
+ * @param[in] aPreference    The preference associated with the custom OMR prefix.
+ *
+ * @retval OT_ERROR_NONE           The OMR configuration was successfully set to @p aConfig.
+ * @retval OT_ERROR_INVALID_ARGS   The provided custom OMR prefix (@p aOmrPrefix) is invalid.
+ */
+otError otBorderRoutingSetOmrConfig(otInstance              *aInstance,
+                                    otBorderRoutingOmrConfig aConfig,
+                                    const otIp6Prefix       *aOmrPrefix,
+                                    otRoutePreference        aPreference);
+
+/**
+ * Gets the current OMR prefix configuration mode.
+ *
+ * This function retrieves the current OMR configuration and, if a custom OMR prefix is configured, the custom prefix
+ * and its associated preference.
+ *
+ * If the caller does not require the custom OMR prefix and preference, the @p aOmrPrefix and @p aPreference parameters
+ * can be set to `NULL`.
+ *
+ * @param[in]  aInstance      A pointer to the OpenThread instance.
+ * @param[out] aOmrPrefix     A pointer to an `otIp6Prefix` to return the custom OMR prefix, if the configuration is
+ *                            `OT_BORDER_ROUTING_OMR_CONFIG_CUSTOM`.
+ * @param[out] aPreference    A pointer to return the preference associated with the custom OMR prefix.
+ *
+ * @return The current OMR prefix configuration mode.
+ */
+otBorderRoutingOmrConfig otBorderRoutingGetOmrConfig(otInstance        *aInstance,
+                                                     otIp6Prefix       *aOmrPrefix,
+                                                     otRoutePreference *aPreference);
 
 /**
  * Gets the current preference used when advertising Route Info Options (RIO) in Router Advertisement

@@ -136,6 +136,16 @@ public:
     };
 
     /**
+     * Represents the admin configuration options related to the OMR prefix.
+     */
+    enum OmrConfig : uint8_t
+    {
+        kOmrConfigAuto     = OT_BORDER_ROUTING_OMR_CONFIG_AUTO,     ///< BR auto-generates the local OMR prefix.
+        kOmrConfigCustom   = OT_BORDER_ROUTING_OMR_CONFIG_CUSTOM,   ///< BR uses a given custom OMR prefix.
+        kOmrConfigDisabled = OT_BORDER_ROUTING_OMR_CONFIG_DISABLED, ///< BR does not add local/PD OMR prefix in NetData.
+    };
+
+    /**
      * This enumeration represents the states of DHCPv6 PD in `RoutingManager`.
      */
     enum Dhcp6PdState : uint8_t
@@ -208,6 +218,39 @@ public:
      * gets attached) and/or the infra interface state gets changed, the Routing Manager may be started again.
      */
     void RequestStop(void) { Stop(); }
+
+    /**
+     * Configures the OMR prefix handling in the Border Routing Manager.
+     *
+     * @param[in] aConfig        The desired OMR configuration.
+     * @param[in] aOmrPrefix     A pointer to the custom OMR prefix. Required only when @p aConfig is
+     *                           `kOmrConfigCustom`. Otherwise, it can be `nullptr`.
+     * @param[in] aPreference    The preference associated with the custom OMR prefix.
+     *
+     * @retval kErrorNone          The OMR configuration was successfully set to @p aConfig.
+     * @retval kErrorInvalidArgs   The provided custom OMR prefix (@p aOmrPrefix) is invalid.
+     */
+    Error SetOmrConfig(OmrConfig aConfig, const Ip6::Prefix *aOmrPrefix, RoutePreference aPreference)
+    {
+        return mOmrPrefixManager.SetConfig(aConfig, aOmrPrefix, aPreference);
+    }
+
+    /**
+     * Gets the current OMR prefix configuration mode.
+     *
+     * If the caller does not require the custom OMR prefix and preference, the @p aOmrPrefix and @p aPreference
+     * parameters can be set to `nullptr`.
+     *
+     * @param[out] aOmrPrefix     A pointer to an `otIp6Prefix` to return the custom OMR prefix, if the configuration
+     *                            is `kOmrConfigCustom`.
+     * @param[out] aPreference    A pointer to return the preference associated with the custom OMR prefix.
+     *
+     * @return The current OMR prefix configuration mode.
+     */
+    OmrConfig GetOmrConfig(Ip6::Prefix *aPrefix, RoutePreference *aPreference) const
+    {
+        return mOmrPrefixManager.GetConfig(aPrefix, aPreference);
+    }
 
     /**
      * Gets the current preference used when advertising Route Info Options (RIO) in Router Advertisement
@@ -1145,7 +1188,7 @@ private:
 
     class OmrPrefixManager;
 
-    class OmrPrefix : public Clearable<OmrPrefix>
+    class OmrPrefix : public Clearable<OmrPrefix>, public Equatable<OmrPrefix>
     {
         friend class OmrPrefixManager;
 
@@ -1165,13 +1208,12 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    class FavoredOmrPrefix : public OmrPrefix, public Unequatable<FavoredOmrPrefix>
+    class FavoredOmrPrefix : public OmrPrefix
     {
         friend class OmrPrefixManager;
 
     public:
         bool IsInfrastructureDerived(void) const;
-        bool operator==(const FavoredOmrPrefix &aOther) const;
 
     private:
         void SetFrom(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
@@ -1189,6 +1231,9 @@ private:
         void                    Init(const Ip6::Prefix &aBrUlaPrefix);
         void                    Start(void);
         void                    Stop(void);
+        bool                    IsInitalEvaluationDone(void) const;
+        OmrConfig               GetConfig(Ip6::Prefix *aPrefix, RoutePreference *aPreference) const;
+        Error                   SetConfig(OmrConfig aConfig, const Ip6::Prefix *aPrefix, RoutePreference aPreference);
         void                    Evaluate(void);
         void                    UpdateDefaultRouteFlag(bool aDefaultRoute);
         bool                    ShouldAdvertiseLocalAsRio(void) const;
@@ -1204,13 +1249,18 @@ private:
         void       SetFavordPrefix(const OmrPrefix &aOmrPrefix);
         void       ClearFavoredPrefix(void) { SetFavordPrefix(OmrPrefix()); }
         void       DetermineFavoredPrefixInNetData(FavoredOmrPrefix &aFavoredPrefix);
+        void       UpdateLocalPrefix(void);
         Error      AddLocalToNetData(void);
         Error      AddOrUpdateLocalInNetData(void);
         void       RemoveLocalFromNetData(void);
         InfoString LocalToString(void) const;
         InfoString FavoredToString(const FavoredOmrPrefix &aFavoredPrefix) const;
 
+        static const char *OmrConfigToString(OmrConfig aConfig);
+
+        OmrConfig        mConfig;
         OmrPrefix        mLocalPrefix;
+        OmrPrefix        mCustomPrefix;
         Ip6::Prefix      mGeneratedPrefix;
         FavoredOmrPrefix mFavoredPrefix;
         bool             mIsLocalAddedInNetData;
@@ -1714,6 +1764,7 @@ template <> void RoutingManager::RxRaTracker::Entry<RoutingManager::RxRaTracker:
 } // namespace BorderRouter
 
 DefineMapEnum(otBorderRoutingState, BorderRouter::RoutingManager::State);
+DefineMapEnum(otBorderRoutingOmrConfig, BorderRouter::RoutingManager::OmrConfig);
 DefineMapEnum(otBorderRoutingDhcp6PdState, BorderRouter::RoutingManager::Dhcp6PdState);
 
 } // namespace ot

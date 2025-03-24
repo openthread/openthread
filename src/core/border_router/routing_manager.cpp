@@ -494,8 +494,7 @@ bool RoutingManager::IsInitialPolicyEvaluationDone(void) const
     // the emitted Router Advert message on infrastructure side
     // and published in the Thread Network Data.
 
-    return mIsRunning && !mOmrPrefixManager.GetFavoredPrefix().IsEmpty() &&
-           mOnLinkPrefixManager.IsInitalEvaluationDone();
+    return mIsRunning && mOmrPrefixManager.IsInitalEvaluationDone() && mOnLinkPrefixManager.IsInitalEvaluationDone();
 }
 
 void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
@@ -2382,12 +2381,6 @@ bool RoutingManager::FavoredOmrPrefix::IsInfrastructureDerived(void) const
     return !IsEmpty() && (mPreference >= NetworkData::kRoutePreferenceMedium);
 }
 
-bool RoutingManager::FavoredOmrPrefix::operator==(const FavoredOmrPrefix &aOther) const
-{
-    return (mPreference == aOther.mPreference) && (mIsDomainPrefix == aOther.mIsDomainPrefix) &&
-           (mPrefix == aOther.mPrefix);
-}
-
 void RoutingManager::FavoredOmrPrefix::SetFrom(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig)
 {
     mPrefix         = aOnMeshPrefixConfig.GetPrefix();
@@ -2426,6 +2419,7 @@ bool RoutingManager::FavoredOmrPrefix::IsFavoredOver(const NetworkData::OnMeshPr
 
 RoutingManager::OmrPrefixManager::OmrPrefixManager(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mConfig(kOmrConfigAuto)
     , mIsLocalAddedInNetData(false)
     , mDefaultRoute(false)
 {
@@ -2452,6 +2446,69 @@ void RoutingManager::OmrPrefixManager::Stop(void)
 {
     RemoveLocalFromNetData();
     ClearFavoredPrefix();
+}
+
+bool RoutingManager::OmrPrefixManager::IsInitalEvaluationDone(void) const
+{
+    // This method indicates whether or not we are done with the
+    // initial policy evaluation of the OMR prefix, i.e., either
+    // we have discovered a favored OMR  prefix (added by us or another BR)
+    // or if `OmrConfig` is set to disable OMR prefix management.
+
+    return !mFavoredPrefix.IsEmpty() || (mConfig == kOmrConfigDisabled);
+}
+
+RoutingManager::OmrConfig RoutingManager::OmrPrefixManager::GetConfig(Ip6::Prefix     *aPrefix,
+                                                                      RoutePreference *aPreference) const
+{
+    if (mConfig == kOmrConfigCustom)
+    {
+        if (aPrefix != nullptr)
+        {
+            *aPrefix = mCustomPrefix.GetPrefix();
+        }
+
+        if (aPreference != nullptr)
+        {
+            *aPreference = mCustomPrefix.GetPreference();
+        }
+    }
+
+    return mConfig;
+}
+
+Error RoutingManager::OmrPrefixManager::SetConfig(OmrConfig          aConfig,
+                                                  const Ip6::Prefix *aPrefix,
+                                                  RoutePreference    aPreference)
+{
+    Error     error = kErrorNone;
+    OmrPrefix customPrefix;
+
+    if (aConfig == kOmrConfigCustom)
+    {
+        VerifyOrExit((aPrefix != nullptr) && IsValidOmrPrefix(*aPrefix), error = kErrorInvalidArgs);
+
+        customPrefix.mPrefix     = *aPrefix;
+        customPrefix.mPreference = aPreference;
+    }
+
+    VerifyOrExit((aConfig != mConfig) || (customPrefix != mCustomPrefix));
+
+    LogInfo("OMR config: %s -> %s", OmrConfigToString(mConfig), OmrConfigToString(aConfig));
+
+    if (aConfig == kOmrConfigCustom)
+    {
+        LogInfo("OMR custom prefix set to %s (prf:%s)", customPrefix.GetPrefix().ToString().AsCString(),
+                RoutePreferenceToString(customPrefix.GetPreference()));
+    }
+
+    mConfig       = aConfig;
+    mCustomPrefix = customPrefix;
+
+    Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
+
+exit:
+    return error;
 }
 
 void RoutingManager::OmrPrefixManager::SetFavordPrefix(const OmrPrefix &aOmrPrefix)
@@ -2493,6 +2550,60 @@ void RoutingManager::OmrPrefixManager::DetermineFavoredPrefixInNetData(FavoredOm
     }
 }
 
+void RoutingManager::OmrPrefixManager::UpdateLocalPrefix(void)
+{
+    // Determine the local prefix and remove any outdated previous
+    // local prefix which may have been added in the Network Data.
+
+    switch (mConfig)
+    {
+    case kOmrConfigAuto:
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+        if (Get<RoutingManager>().mPdPrefixManager.HasPrefix())
+        {
+            if (mLocalPrefix.GetPrefix() != Get<RoutingManager>().mPdPrefixManager.GetPrefix())
+            {
+                RemoveLocalFromNetData();
+                mLocalPrefix.mPrefix         = Get<RoutingManager>().mPdPrefixManager.GetPrefix();
+                mLocalPrefix.mPreference     = PdPrefixManager::kPdRoutePreference;
+                mLocalPrefix.mIsDomainPrefix = false;
+                LogInfo("Setting local OMR prefix to PD prefix: %s", mLocalPrefix.GetPrefix().ToString().AsCString());
+            }
+        }
+        else
+#endif
+            if (mLocalPrefix.GetPrefix() != mGeneratedPrefix)
+        {
+            RemoveLocalFromNetData();
+            mLocalPrefix.mPrefix         = mGeneratedPrefix;
+            mLocalPrefix.mPreference     = RoutePreference::kRoutePreferenceLow;
+            mLocalPrefix.mIsDomainPrefix = false;
+            LogInfo("Setting local OMR prefix to generated prefix: %s",
+                    mLocalPrefix.GetPrefix().ToString().AsCString());
+        }
+
+        break;
+
+    case kOmrConfigCustom:
+        if (mLocalPrefix != mCustomPrefix)
+        {
+            RemoveLocalFromNetData();
+            mLocalPrefix = mCustomPrefix;
+            LogInfo("Setting local OMR prefix to custom prefix: %s", mLocalPrefix.GetPrefix().ToString().AsCString());
+        }
+
+        break;
+
+    case kOmrConfigDisabled:
+        if (!mLocalPrefix.IsEmpty())
+        {
+            RemoveLocalFromNetData();
+            mLocalPrefix.Clear();
+        }
+        break;
+    }
+}
+
 void RoutingManager::OmrPrefixManager::Evaluate(void)
 {
     FavoredOmrPrefix favoredPrefix;
@@ -2501,31 +2612,15 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
 
     DetermineFavoredPrefixInNetData(favoredPrefix);
 
-    // Determine the local prefix and remove outdated prefix published by us.
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-    if (Get<RoutingManager>().mPdPrefixManager.HasPrefix())
-    {
-        if (mLocalPrefix.GetPrefix() != Get<RoutingManager>().mPdPrefixManager.GetPrefix())
-        {
-            RemoveLocalFromNetData();
-            mLocalPrefix.mPrefix         = Get<RoutingManager>().mPdPrefixManager.GetPrefix();
-            mLocalPrefix.mPreference     = PdPrefixManager::kPdRoutePreference;
-            mLocalPrefix.mIsDomainPrefix = false;
-            LogInfo("Setting local OMR prefix to PD prefix: %s", mLocalPrefix.GetPrefix().ToString().AsCString());
-        }
-    }
-    else
-#endif
-        if (mLocalPrefix.GetPrefix() != mGeneratedPrefix)
-    {
-        RemoveLocalFromNetData();
-        mLocalPrefix.mPrefix         = mGeneratedPrefix;
-        mLocalPrefix.mPreference     = RoutePreference::kRoutePreferenceLow;
-        mLocalPrefix.mIsDomainPrefix = false;
-        LogInfo("Setting local OMR prefix to generated prefix: %s", mLocalPrefix.GetPrefix().ToString().AsCString());
-    }
+    UpdateLocalPrefix();
 
     // Decide if we need to add or remove our local OMR prefix.
+
+    if (mLocalPrefix.IsEmpty())
+    {
+        SetFavordPrefix(favoredPrefix);
+        ExitNow();
+    }
 
     if (favoredPrefix.IsEmpty() || favoredPrefix.GetPreference() < mLocalPrefix.GetPreference())
     {
@@ -2624,7 +2719,6 @@ void RoutingManager::OmrPrefixManager::RemoveLocalFromNetData(void)
     if (error != kErrorNone)
     {
         LogWarn("Failed to remove %s from Thread Network Data: %s", LocalToString().AsCString(), ErrorToString(error));
-        ExitNow();
     }
 
     mIsLocalAddedInNetData = false;
@@ -2685,6 +2779,25 @@ RoutingManager::OmrPrefixManager::InfoString RoutingManager::OmrPrefixManager::F
     }
 
     return string;
+}
+
+const char *RoutingManager::OmrPrefixManager::OmrConfigToString(OmrConfig aConfig)
+{
+    static const char *const kConfigStrings[] = {
+        "auto",     // (0) kOmrConfigAuto
+        "custom",   // (1) kOmrConfigCustom
+        "disabled", // (2) kOmrConfigDisabled
+    };
+
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kOmrConfigAuto);
+        ValidateNextEnum(kOmrConfigCustom);
+        ValidateNextEnum(kOmrConfigDisabled);
+    };
+
+    return kConfigStrings[aConfig];
 }
 
 //---------------------------------------------------------------------------------------------------------------------
