@@ -27,6 +27,7 @@
  */
 
 // Disable OpenThread's own new implementation to avoid duplicate definition
+#include "openthread/platform/radio.h"
 #define OT_INCLUDE_COMMON_NEW_HPP_
 #include "test_platform.h"
 
@@ -170,7 +171,14 @@ OT_TOOL_WEAK otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *) { return n
 
 OT_TOOL_WEAK int8_t otPlatRadioGetRssi(otInstance *) { return 0; }
 
-OT_TOOL_WEAK otRadioCaps otPlatRadioGetCaps(otInstance *) { return OT_RADIO_CAPS_NONE; }
+OT_TOOL_WEAK otRadioCaps otPlatRadioGetCaps(otInstance *)
+{
+    return
+#if !OPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE
+        OT_RADIO_CAPS_CSMA_BACKOFF |
+#endif
+        OT_RADIO_CAPS_NONE;
+}
 
 OT_TOOL_WEAK bool otPlatRadioGetPromiscuous(otInstance *) { return false; }
 

@@ -35,6 +35,7 @@
 
 #include <stdio.h>
 
+#include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
 #include "common/code_utils.hpp"
@@ -59,6 +60,10 @@ SubMac::SubMac(Instance &aInstance)
     , mWedTimer(aInstance, SubMac::HandleWedTimer)
 #endif
 {
+#if !OPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE
+    OT_ASSERT(mRadioCaps & OT_RADIO_CAPS_CSMA_BACKOFF);
+#endif
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mCslParentAccuracy.Init();
 #endif

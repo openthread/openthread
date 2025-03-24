@@ -45,6 +45,7 @@
 #include <openthread/platform/entropy.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/misc.h>
+#include <openthread/platform/radio.h>
 #include <openthread/platform/toolchain.h>
 #include <openthread/platform/trel.h>
 #include <openthread/platform/udp.h>
@@ -397,7 +398,14 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *) { return FakePlatform::
 
 int8_t otPlatRadioGetRssi(otInstance *) { return 0; }
 
-otRadioCaps otPlatRadioGetCaps(otInstance *) { return OT_RADIO_CAPS_NONE; }
+otRadioCaps otPlatRadioGetCaps(otInstance *)
+{
+    return
+#if !OPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE
+        OT_RADIO_CAPS_CSMA_BACKOFF |
+#endif
+        OT_RADIO_CAPS_NONE;
+}
 
 bool otPlatRadioGetPromiscuous(otInstance *) { return false; }
 

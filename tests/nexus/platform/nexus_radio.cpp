@@ -42,7 +42,7 @@ extern "C" {
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return OT_RADIO_CAPS_NONE;
+    return OT_RADIO_CAPS_CSMA_BACKOFF;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
