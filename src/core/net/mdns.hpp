@@ -1660,16 +1660,18 @@ private:
         template <typename ResultType> void InvokeCallbacks(const ResultType &aResult);
 
     private:
-        static constexpr uint32_t kMinIntervalBetweenQueries = 1000; // In msec
-        static constexpr uint32_t kNonActiveDeleteTimeout    = 7 * Time::kOneMinuteInMsec;
+        static constexpr uint32_t kMinIntervalBetweenQueries          = 1000; // In msec
+        static constexpr uint32_t kNonActiveDeleteTimeout             = 7 * Time::kOneMinuteInMsec;
+        static constexpr uint32_t kNonActiveDeleteTimeoutForAnyRecord = 1 * Time::kOneSecondInMsec;
 
         typedef OwningList<ResultCallback> CallbackList;
 
-        void SetIsActive(bool aIsActive);
-        bool ShouldQuery(TimeMilli aNow);
-        void PrepareQuery(CacheContext &aContext);
-        void ProcessExpiredRecords(TimeMilli aNow);
-        void DetermineNextInitialQueryTime(void);
+        void     SetIsActive(bool aIsActive);
+        uint32_t DetermineDeleteTimeout(void) const;
+        bool     ShouldQuery(TimeMilli aNow);
+        void     PrepareQuery(CacheContext &aContext);
+        void     ProcessExpiredRecords(TimeMilli aNow);
+        void     DetermineNextInitialQueryTime(void);
 
         ResultCallback *FindCallbackMatching(const ResultCallback &aCallback);
 
@@ -1974,17 +1976,34 @@ private:
 #endif
 
     private:
-        struct RecordDataEntry : public LinkedListEntry<RecordDataEntry>, public Heap::Allocatable<RecordDataEntry>
+        struct NewRecordEntry : public LinkedListEntry<NewRecordEntry>, public Heap::Allocatable<NewRecordEntry>
         {
-            explicit RecordDataEntry(Heap::Data &aData);
-            bool     Matches(const Heap::Data &aData) const { return (mData == aData); }
+            NewRecordEntry(const ResourceRecord &aRecord, Heap::Data &aData);
+
+            bool Matches(uint16_t aType) const;
+            bool Matches(uint16_t aType, const Heap::Data &aData) const;
+
+            NewRecordEntry *mNext;
+            bool            mCacheFlush;
+            uint16_t        mType;
+            uint32_t        mTtl;
+            Heap::Data      mData;
+        };
+
+        struct RecordEntry : public LinkedListEntry<RecordEntry>, public Heap::Allocatable<RecordEntry>
+        {
+            explicit RecordEntry(NewRecordEntry &aNewEntry);
+
+            bool     Matches(uint16_t aType) const;
+            bool     Matches(uint16_t aType, const Heap::Data &aData) const;
             bool     Matches(const ExpireChecker &aExpireChecker) const;
             bool     Matches(EmptyChecker aChecker) const;
             uint32_t GetTtl(void) const { return mRecord.GetTtl(); }
 
-            RecordDataEntry *mNext;
-            Heap::Data       mData;
-            CacheRecordInfo  mRecord;
+            RecordEntry    *mNext;
+            uint16_t        mType;
+            Heap::Data      mData;
+            CacheRecordInfo mRecord;
         };
 
         // Called by base class `CacheEntry`
@@ -1995,17 +2014,19 @@ private:
         void ReportResultsTo(ResultCallback &aCallback) const;
 
         Error Init(Instance &aInstance, const RecordQuerier &aQuerier);
+        void  CommitNewEntriesForType(uint16_t aRecordType);
         void  AppendNameTo(TxMessage &aTxMessage, Section aSection);
-        void  PreareResultFor(const RecordDataEntry &aEntry, RecordResult &aResult) const;
-        void  PrepareResultAndInvokeCallbacks(const RecordDataEntry &aEntry);
+        void  PreareResultFor(uint16_t aType, const Heap::Data &aData, uint32_t aTtl, RecordResult &aResult) const;
+        void  PrepareResultAndInvokeCallbacks(const NewRecordEntry &aNewEntry);
+        void  PrepareResultAndInvokeCallbacks(const RecordEntry &aEntry);
+        void  PrepareResultAndInvokeCallbacks(uint16_t aType, const Heap::Data &aData, uint32_t aTtl);
 
-        RecordCache                *mNext;
-        Heap::String                mFirstLabel;
-        Heap::String                mNextLabels;
-        uint16_t                    mRecordType;
-        OwningList<RecordDataEntry> mCommittedEntries;
-        OwningList<RecordDataEntry> mNewEntries;
-        bool                        mShouldFlush;
+        RecordCache               *mNext;
+        Heap::String               mFirstLabel;
+        Heap::String               mNextLabels;
+        uint16_t                   mRecordType;
+        OwningList<NewRecordEntry> mNewEntries;
+        OwningList<RecordEntry>    mCommittedEntries;
     };
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

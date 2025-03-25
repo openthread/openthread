@@ -4243,15 +4243,18 @@ exit:
 
 void Core::RxMessage::ProcessOtherRecord(const Name &aName, const ResourceRecord &aRecord, uint16_t aRecordOffset)
 {
-    RecordCache *recordCache;
+    // Unlike other `Process{Specific}Record()` methods where
+    // we know for sure that we can have only one match, for
+    // `RecordQuerier` we may have multiple matches, due to
+    // the possibility of using `ANY` for record type.
 
-    recordCache = Get<Core>().mRecordCacheList.FindMatching(aName, aRecord.GetType());
-    VerifyOrExit(recordCache != nullptr);
-
-    recordCache->ProcessResponseRecord(*mMessagePtr, aRecord, aRecordOffset);
-
-exit:
-    return;
+    for (RecordCache &recordCache : Get<Core>().mRecordCacheList)
+    {
+        if (recordCache.Matches(aName, aRecord.GetType()))
+        {
+            recordCache.ProcessResponseRecord(*mMessagePtr, aRecord, aRecordOffset);
+        }
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -4911,17 +4914,29 @@ void Core::CacheEntry::SetIsActive(bool aIsActive)
     // considered "active" when associated with at least one
     // resolver/browser. "Passive" entries (without a resolver/browser)
     // continue to process mDNS responses for updates but will not send
-    // queries. Passive entries are deleted after `kNonActiveDeleteTimeout`
-    // if no resolver/browser is added.
+    // queries. Passive entries are deleted after the "delete timeout"
+    // if no resolver/browser/querier is added.
 
     mIsActive = aIsActive;
 
     if (!mIsActive)
     {
         mQueryPending = false;
-        mDeleteTime   = TimerMilli::GetNow() + kNonActiveDeleteTimeout;
+        mDeleteTime   = TimerMilli::GetNow() + DetermineDeleteTimeout();
         SetFireTime(mDeleteTime);
     }
+}
+
+uint32_t Core::CacheEntry::DetermineDeleteTimeout(void) const
+{
+    uint32_t timeout = kNonActiveDeleteTimeout;
+
+    if ((mType == kRecordCache) && (As<RecordCache>().mRecordType == ResourceRecord::kTypeAny))
+    {
+        timeout = kNonActiveDeleteTimeoutForAnyRecord;
+    }
+
+    return timeout;
 }
 
 bool Core::CacheEntry::ShouldDelete(TimeMilli aNow) const { return !mIsActive && (mDeleteTime <= aNow); }
@@ -6509,8 +6524,7 @@ Error Core::RecordCache::Init(Instance &aInstance, const RecordQuerier &aQuerier
 
     CacheEntry::Init(aInstance, kRecordCache);
 
-    mNext        = nullptr;
-    mShouldFlush = false;
+    mNext = nullptr;
     SuccessOrExit(error = mFirstLabel.Set(aQuerier.mFirstLabel));
     SuccessOrExit(error = mNextLabels.Set(aQuerier.mNextLabels));
     mRecordType = aQuerier.mRecordType;
@@ -6521,7 +6535,7 @@ exit:
 
 bool Core::RecordCache::Matches(const Name &aFullName, uint16_t aRecordType) const
 {
-    return (mRecordType == aRecordType) &&
+    return QuestionMatches(mRecordType, aRecordType) &&
            aFullName.Matches(mFirstLabel.AsCString(), mNextLabels.AsCString(), kLocalDomain);
 }
 
@@ -6529,7 +6543,7 @@ bool Core::RecordCache::Matches(const RecordQuerier &aQuerier) const
 {
     bool matches = false;
 
-    VerifyOrExit(mRecordType == aQuerier.mRecordType);
+    VerifyOrExit(aQuerier.mRecordType == mRecordType);
 
     VerifyOrExit(NameMatch(mFirstLabel, aQuerier.mFirstLabel));
 
@@ -6596,7 +6610,7 @@ exit:
 
 void Core::RecordCache::UpdateRecordStateAfterQuery(TimeMilli aNow)
 {
-    for (RecordDataEntry &entry : mCommittedEntries)
+    for (RecordEntry &entry : mCommittedEntries)
     {
         entry.mRecord.UpdateStateAfterQuery(aNow);
     }
@@ -6613,35 +6627,74 @@ void Core::RecordCache::ProcessResponseRecord(const Message        &aMessage,
     // Once all records are processed `CommitNewResponseEntries()` is
     // called to update the list.
 
-    Heap::Data       data;
-    RecordDataEntry *entry;
+    Heap::Data      data;
+    NewRecordEntry *entry;
 
-    SuccessOrExit(data.SetFrom(aMessage, aRecordOffset + sizeof(ResourceRecord), aRecord.GetLength()));
+    SuccessOrAssert(data.SetFrom(aMessage, aRecordOffset + sizeof(ResourceRecord), aRecord.GetLength()));
 
-    if (aRecord.GetClass() & kClassCacheFlushFlag)
+    // Check for duplicates in the same response. If there
+    // are exact duplicates, we remember the last one in the
+    // response message.
+
+    entry = mNewEntries.FindMatching(aRecord.GetType(), data);
+
+    if (entry != nullptr)
     {
-        mShouldFlush = true;
+        entry->mCacheFlush = (aRecord.GetClass() & kClassCacheFlushFlag);
+        entry->mTtl        = aRecord.GetTtl();
     }
-
-    // Check for duplicates in the same response.
-
-    entry = mNewEntries.FindMatching(data);
-
-    if (entry == nullptr)
+    else
     {
-        entry = RecordDataEntry::Allocate(data);
+        entry = NewRecordEntry::Allocate(aRecord, data);
         OT_ASSERT(entry != nullptr);
+
         mNewEntries.Push(*entry);
     }
-
-    entry->mRecord.RefreshTtl(aRecord.GetTtl());
-
-exit:
-    return;
 }
 
 void Core::RecordCache::CommitNewResponseEntries(void)
 {
+    // If `RecordQuerier` is used for record type ANY, multiple new
+    // records with different types may be included in the received
+    // response. We process and commit all the new records matching
+    // the same type, together.
+
+    while (!mNewEntries.IsEmpty())
+    {
+        uint16_t recordType = mNewEntries.GetHead()->mType;
+
+        CommitNewEntriesForType(recordType);
+    }
+
+    mCommittedEntries.RemoveAndFreeAllMatching(EmptyChecker());
+
+    DetermineNextFireTime();
+    ScheduleTimer();
+}
+
+void Core::RecordCache::CommitNewEntriesForType(uint16_t aRecordType)
+{
+    bool                       shouldFlush = false;
+    OwningList<NewRecordEntry> newMatchingEntries;
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Filter and remove all new entries that match `aRecordType`.
+
+    mNewEntries.RemoveAllMatching(newMatchingEntries, aRecordType);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Determine whether we should flush cache for previously
+    // committed records of `aRecordType`.
+
+    for (const NewRecordEntry &newEntry : newMatchingEntries)
+    {
+        if (newEntry.mCacheFlush)
+        {
+            shouldFlush = true;
+            break;
+        }
+    }
+
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Invoke callbacks if there is any change.
 
@@ -6649,14 +6702,19 @@ void Core::RecordCache::CommitNewResponseEntries(void)
     // `mCommittedEntries` that does not appear in the new list
     // and signal their removal.
 
-    if (mShouldFlush)
+    if (shouldFlush)
     {
-        for (RecordDataEntry &exitingEntry : mCommittedEntries)
+        for (RecordEntry &entry : mCommittedEntries)
         {
-            if (!mNewEntries.ContainsMatching(exitingEntry.mData))
+            if (!entry.Matches(aRecordType))
             {
-                exitingEntry.mRecord.RefreshTtl(0);
-                PrepareResultAndInvokeCallbacks(exitingEntry);
+                continue;
+            }
+
+            if (!newMatchingEntries.ContainsMatching(entry.mType, entry.mData))
+            {
+                entry.mRecord.RefreshTtl(0);
+                PrepareResultAndInvokeCallbacks(entry);
             }
         }
     }
@@ -6664,18 +6722,18 @@ void Core::RecordCache::CommitNewResponseEntries(void)
     // Signal addition of any new entries or if there is any
     // change to an existing entry (TTL value changed).
 
-    for (const RecordDataEntry &newEntry : mNewEntries)
+    for (const NewRecordEntry &newEntry : newMatchingEntries)
     {
-        RecordDataEntry *exitingEntry = mCommittedEntries.FindMatching(newEntry.mData);
-        bool             shouldSignal = false;
+        RecordEntry *entry        = mCommittedEntries.FindMatching(newEntry.mType, newEntry.mData);
+        bool         shouldSignal = false;
 
-        if (exitingEntry == nullptr)
+        if (entry == nullptr)
         {
-            shouldSignal = (newEntry.GetTtl() > 0);
+            shouldSignal = (newEntry.mTtl > 0);
         }
         else
         {
-            shouldSignal = (exitingEntry->GetTtl() != newEntry.GetTtl());
+            shouldSignal = (entry->GetTtl() != newEntry.mTtl);
         }
 
         if (shouldSignal)
@@ -6687,39 +6745,40 @@ void Core::RecordCache::CommitNewResponseEntries(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Now merge the new entries into the `mCommittedEntries` list.
 
-    if (mShouldFlush)
+    if (shouldFlush)
     {
-        mCommittedEntries.Clear();
-        StopInitialQueries();
-        mShouldFlush = false;
+        mCommittedEntries.RemoveAndFreeAllMatching(aRecordType);
+
+        if (mRecordType != ResourceRecord::kTypeAny)
+        {
+            StopInitialQueries();
+        }
     }
 
-    while (!mNewEntries.IsEmpty())
+    while (!newMatchingEntries.IsEmpty())
     {
-        OwnedPtr<RecordDataEntry> newEntry = mNewEntries.Pop();
-        RecordDataEntry          *entry;
+        OwnedPtr<NewRecordEntry> newEntry = newMatchingEntries.Pop();
+        RecordEntry             *entry;
 
-        entry = mCommittedEntries.FindMatching(newEntry->mData);
+        entry = mCommittedEntries.FindMatching(newEntry->mType, newEntry->mData);
 
         if (entry != nullptr)
         {
-            entry->mRecord.RefreshTtl(newEntry->GetTtl());
+            entry->mRecord.RefreshTtl(newEntry->mTtl);
         }
         else
         {
-            mCommittedEntries.Push(*newEntry.Release());
+            entry = RecordEntry::Allocate(*newEntry);
+            OT_ASSERT(entry != nullptr);
+
+            mCommittedEntries.Push(*entry);
         }
     }
-
-    mCommittedEntries.RemoveAndFreeAllMatching(EmptyChecker());
-
-    DetermineNextFireTime();
-    ScheduleTimer();
 }
 
 void Core::RecordCache::DetermineRecordFireTime(void)
 {
-    for (RecordDataEntry &entry : mCommittedEntries)
+    for (RecordEntry &entry : mCommittedEntries)
     {
         entry.mRecord.UpdateQueryAndFireTimeOn(*this);
     }
@@ -6727,11 +6786,11 @@ void Core::RecordCache::DetermineRecordFireTime(void)
 
 void Core::RecordCache::ProcessExpiredRecords(TimeMilli aNow)
 {
-    OwningList<RecordDataEntry> expiredEntries;
+    OwningList<RecordEntry> expiredEntries;
 
     mCommittedEntries.RemoveAllMatching(expiredEntries, ExpireChecker(aNow));
 
-    for (RecordDataEntry &entry : expiredEntries)
+    for (RecordEntry &entry : expiredEntries)
     {
         entry.mRecord.RefreshTtl(0);
         PrepareResultAndInvokeCallbacks(entry);
@@ -6740,32 +6799,45 @@ void Core::RecordCache::ProcessExpiredRecords(TimeMilli aNow)
 
 void Core::RecordCache::ReportResultsTo(ResultCallback &aCallback) const
 {
-    for (const RecordDataEntry &entry : mCommittedEntries)
+    for (const RecordEntry &entry : mCommittedEntries)
     {
         RecordResult result;
 
-        PreareResultFor(entry, result);
+        PreareResultFor(entry.mType, entry.mData, entry.GetTtl(), result);
         aCallback.Invoke(GetInstance(), result);
     }
 }
 
-void Core::RecordCache::PreareResultFor(const RecordDataEntry &aEntry, RecordResult &aResult) const
+void Core::RecordCache::PreareResultFor(uint16_t          aType,
+                                        const Heap::Data &aData,
+                                        uint32_t          aTtl,
+                                        RecordResult     &aResult) const
 {
     ClearAllBytes(aResult);
     aResult.mFirstLabel       = mFirstLabel.AsCString();
     aResult.mNextLabels       = mNextLabels.AsCString();
-    aResult.mRecordType       = mRecordType;
-    aResult.mRecordData       = aEntry.mData.GetBytes();
-    aResult.mRecordDataLength = aEntry.mData.GetLength();
-    aResult.mTtl              = aEntry.mRecord.GetTtl();
+    aResult.mRecordType       = aType;
+    aResult.mRecordData       = aData.GetBytes();
+    aResult.mRecordDataLength = aData.GetLength();
+    aResult.mTtl              = aTtl;
     aResult.mInfraIfIndex     = Get<Core>().mInfraIfIndex;
 }
 
-void Core::RecordCache::PrepareResultAndInvokeCallbacks(const RecordDataEntry &aEntry)
+void Core::RecordCache::PrepareResultAndInvokeCallbacks(const RecordEntry &aEntry)
+{
+    PrepareResultAndInvokeCallbacks(aEntry.mType, aEntry.mData, aEntry.GetTtl());
+}
+
+void Core::RecordCache::PrepareResultAndInvokeCallbacks(const NewRecordEntry &aNewEntry)
+{
+    PrepareResultAndInvokeCallbacks(aNewEntry.mType, aNewEntry.mData, aNewEntry.mTtl);
+}
+
+void Core::RecordCache::PrepareResultAndInvokeCallbacks(uint16_t aType, const Heap::Data &aData, uint32_t aTtl)
 {
     RecordResult result;
 
-    PreareResultFor(aEntry, result);
+    PreareResultFor(aType, aData, aTtl, result);
     InvokeCallbacks(result);
 }
 
@@ -6785,20 +6857,48 @@ void Core::RecordCache::CopyInfoTo(RecordQuerier &aQuerier, CacheInfo &aInfo) co
 #endif
 
 //---------------------------------------------------------------------------------------------------------------------
-// Core::RecordCache::RecordDataEntry
+// Core::RecordCache::NewRecordEntry
 
-Core::RecordCache::RecordDataEntry::RecordDataEntry(Heap::Data &aData)
+Core::RecordCache::NewRecordEntry::NewRecordEntry(const ResourceRecord &aRecord, Heap::Data &aData)
     : mNext(nullptr)
+    , mCacheFlush(aRecord.GetClass() & kClassCacheFlushFlag)
+    , mType(aRecord.GetType())
+    , mTtl(aRecord.GetTtl())
     , mData(static_cast<Heap::Data &&>(aData))
 {
 }
 
-bool Core::RecordCache::RecordDataEntry::Matches(const ExpireChecker &aExpireChecker) const
+bool Core::RecordCache::NewRecordEntry::Matches(uint16_t aType) const { return (mType == aType); }
+
+bool Core::RecordCache::NewRecordEntry::Matches(uint16_t aType, const Heap::Data &aData) const
+{
+    return (mType == aType) && (aData == mData);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Core::RecordCache::RecordEntry
+
+Core::RecordCache::RecordEntry::RecordEntry(NewRecordEntry &aNewEntry)
+    : mNext(nullptr)
+    , mType(aNewEntry.mType)
+    , mData(static_cast<Heap::Data &&>(aNewEntry.mData))
+{
+    mRecord.RefreshTtl(aNewEntry.mTtl);
+}
+
+bool Core::RecordCache::RecordEntry::Matches(uint16_t aType) const { return (mType == aType); }
+
+bool Core::RecordCache::RecordEntry::Matches(uint16_t aType, const Heap::Data &aData) const
+{
+    return (mType == aType) && (mData == aData);
+}
+
+bool Core::RecordCache::RecordEntry::Matches(const ExpireChecker &aExpireChecker) const
 {
     return mRecord.ShouldExpire(aExpireChecker.mNow);
 }
 
-bool Core::RecordCache::RecordDataEntry::Matches(EmptyChecker aChecker) const
+bool Core::RecordCache::RecordEntry::Matches(EmptyChecker aChecker) const
 {
     OT_UNUSED_VARIABLE(aChecker);
 
