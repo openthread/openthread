@@ -1561,6 +1561,14 @@ Service instance label is provided first, followed by the service name (note tha
 
 The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
 
+### dns query \<record-type\> \<first-label\> \<next-labels\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+
+Requires `OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE` and `OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE`.
+
+Sends a DNS query for a given record type and DNS name. DNS name is provided as a first label, followed by the next labels which are dot '.' separated. Note that the first label can itself contain the dot '.' character.
+
+The parameters after `next-labels` are optional. Any unspecified (or zero) value for these optional parameters is eplaced by the value from the current default config (`dns config`).
+
 ### dns server upstream \[enable|disable\]
 
 Enable/Disable the upstream DNS feature. If no argument is provided, it prints whether the upstream DNS feature is enabled.
