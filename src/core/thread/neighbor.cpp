@@ -42,23 +42,19 @@ void Neighbor::SetState(State aState)
     VerifyOrExit(mState != aState);
     mState = static_cast<uint8_t>(aState);
 
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
     if (mState == kStateValid)
     {
         mConnectionStart = Uptime::MsecToSec(Get<Uptime>().GetUptime());
     }
-#endif
 
 exit:
     return;
 }
 
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
 uint32_t Neighbor::GetConnectionTime(void) const
 {
     return IsStateValid() ? Uptime::MsecToSec(Get<Uptime>().GetUptime()) - mConnectionStart : 0;
 }
-#endif
 
 bool Neighbor::AddressMatcher::Matches(const Neighbor &aNeighbor) const
 {
@@ -101,9 +97,7 @@ void Neighbor::Info::SetFrom(const Neighbor &aNeighbor)
     mFullThreadDevice = aNeighbor.IsFullThreadDevice();
     mFullNetworkData  = (aNeighbor.GetNetworkDataType() == NetworkData::kFullSet);
     mVersion          = aNeighbor.GetVersion();
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
-    mConnectionTime = aNeighbor.GetConnectionTime();
-#endif
+    mConnectionTime   = aNeighbor.GetConnectionTime();
 }
 
 void Neighbor::Init(Instance &aInstance)

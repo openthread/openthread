@@ -178,11 +178,6 @@ typedef struct otMleCounters
     uint16_t mBetterPartitionAttachAttempts; ///< Number of attempts to attach to a better partition.
     uint16_t mBetterParentAttachAttempts;    ///< Number of attempts to attach to find a better parent (parent search).
 
-    /**
-     * Role time tracking.
-     *
-     * When uptime feature is enabled (OPENTHREAD_CONFIG_UPTIME_ENABLE = 1) time spent in each MLE role is tracked.
-     */
     uint64_t mDisabledTime; ///< Number of milliseconds device has been in OT_DEVICE_ROLE_DISABLED role.
     uint64_t mDetachedTime; ///< Number of milliseconds device has been in OT_DEVICE_ROLE_DETACHED role.
     uint64_t mChildTime;    ///< Number of milliseconds device has been in OT_DEVICE_ROLE_CHILD role.
@@ -933,8 +928,6 @@ void otThreadResetMleCounters(otInstance *aInstance);
 
 /**
  * Gets the current attach duration (number of seconds since the device last attached).
- *
- * Requires the `OPENTHREAD_CONFIG_UPTIME_ENABLE` feature.
  *
  * If the device is not currently attached, zero will be returned.
  *
