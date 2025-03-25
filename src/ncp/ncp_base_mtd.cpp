@@ -41,6 +41,7 @@
 #include <openthread/channel_monitor.h>
 #endif
 #include <openthread/child_supervision.h>
+#include <openthread/cli.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
@@ -68,6 +69,7 @@
 #include <openthread/trel.h>
 #endif
 
+#include "cli/cli_config.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/string.hpp"
@@ -2975,6 +2977,21 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_ALL_IP_COUNTERS>
     return OT_ERROR_NONE;
 }
 
+#if OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_CLI>(void)
+{
+    otError     error  = OT_ERROR_NONE;
+    const char *string = nullptr;
+
+    SuccessOrExit(error = mDecoder.ReadUtf8(string));
+
+    otCliInputLine(const_cast<char *>(string));
+
+exit:
+    return error;
+}
+#endif
+
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_ALLOWLIST>(void)
@@ -4570,6 +4587,29 @@ exit:
     }
 }
 #endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
+
+#if OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE
+int NcpBase::HandleCliOutput(void *aContext, const char *aFormat, va_list aArguments)
+{
+    return static_cast<NcpBase *>(aContext)->HandleCliOutput(aFormat, aArguments);
+}
+
+int NcpBase::HandleCliOutput(const char *aFormat, va_list aArguments)
+{
+    uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
+    char    output[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH];
+    int     rval;
+
+    VerifyOrExit((rval = vsnprintf(output, sizeof(output), aFormat, aArguments)) > 0);
+
+    SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_STREAM_CLI));
+    SuccessOrExit(mEncoder.WriteUtf8(output));
+    SuccessOrExit(mEncoder.EndFrame());
+
+exit:
+    return rval;
+}
+#endif
 
 // ----------------------------------------------------------------------------
 // MARK: Pcap frame handling

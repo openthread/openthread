@@ -3561,6 +3561,21 @@ enum
      */
     SPINEL_PROP_STREAM_LOG = SPINEL_PROP_STREAM__BEGIN + 4,
 
+    /// CLI Stream
+    /** Format: `U` - Set (Host to NCP) and Unsolicited Notifications (NCP to Host)
+     *
+     * This streaming property provides a bidirectional channel for interacting with the NCP's
+     * command-line interface (CLI).
+     *
+     * The host can send CLI commands to the NCP by setting this property. The NCP will then
+     * execute the commands. The NCP will send the output of the executed command (if any) back to
+     * the host via unsolicited notifications of this same property.
+     *
+     * Both the input command string (from host) and the output string (from NCP) are
+     * zero-terminated UTF-8 encoded strings.
+     */
+    SPINEL_PROP_STREAM_CLI = SPINEL_PROP_STREAM__BEGIN + 5,
+
     SPINEL_PROP_STREAM__END = 0x80,
 
     SPINEL_PROP_STREAM_EXT__BEGIN = 0x1700,

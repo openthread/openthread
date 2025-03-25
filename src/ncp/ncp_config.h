@@ -186,6 +186,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE
+ *
+ * Define to 1 to enable the NCP CLI Stream feature.
+ *
+ * When enabled, the NCP will support sending and receiving CLI input/output
+ * data over a dedicated Spinel stream (using `SPINEL_PROP_STREAM_CLI`). This
+ * allows the host to interact with the OpenThread CLI running on the NCP.
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE
+#define OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
  *
  * TODO: complete.

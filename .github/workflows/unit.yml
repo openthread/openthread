@@ -88,7 +88,7 @@ jobs:
       run: cd build/simulation && ninja test
     - name: Build NCP Simulation
       run: ./script/cmake-build simulation -DOT_BUILD_GTEST=OFF -DOT_MTD=OFF -DOT_RCP=OFF -DOT_APP_CLI=OFF -DOT_APP_RCP=OFF \
-               -DOT_BORDER_ROUTING=ON -DOT_NCP_INFRA_IF=ON -DOT_SRP_SERVER=ON -DOT_NCP_DNSSD=ON -DOT_PLATFORM_DNSSD=ON
+               -DOT_BORDER_ROUTING=ON -DOT_NCP_INFRA_IF=ON -DOT_SRP_SERVER=ON -DOT_NCP_DNSSD=ON -DOT_PLATFORM_DNSSD=ON -DOT_NCP_CLI_STREAM=ON
     - name: Test NCP Simulation
       run: cd build/simulation && ninja test
     - name: Build POSIX
