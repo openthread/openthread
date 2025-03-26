@@ -51,6 +51,7 @@ const char Server::kVendorAppUrl[]    = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_UR
 
 Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mNonPreferredChannels(0)
 {
     static_assert(sizeof(kVendorName) <= sizeof(VendorNameTlv::StringType), "VENDOR_NAME is too long");
     static_assert(sizeof(kVendorModel) <= sizeof(VendorModelTlv::StringType), "VENDOR_MODEL is too long");
@@ -384,6 +385,15 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         tlv.SetLength(length);
         error = tlv.AppendTo(aMessage);
 
+        break;
+    }
+
+    case Tlv::kNonPreferredChannels:
+    {
+        MeshCoP::ChannelMaskTlv::Value value;
+
+        MeshCoP::ChannelMaskTlv::PrepareValue(value, mNonPreferredChannels, /* aIncludeZeroPageMasks */ true);
+        error = Tlv::AppendTlv(aMessage, Tlv::kNonPreferredChannels, value.mData, value.mLength);
         break;
     }
 
@@ -884,6 +894,10 @@ template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Message &aMessage,
             Get<Mle::Mle>().ResetCounters();
             break;
 
+        case Tlv::kNonPreferredChannels:
+            mNonPreferredChannelsResetCallback.InvokeIfSet();
+            break;
+
         default:
             break;
         }
@@ -1110,9 +1124,8 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
     while (offset < aMessage.GetLength())
     {
-        bool     skipTlv = false;
-        uint16_t valueOffset;
-        uint16_t tlvLength;
+        bool        skipTlv = false;
+        OffsetRange valueOffsetRange;
         union
         {
             Tlv         tlv;
@@ -1124,13 +1137,11 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
         if (tlv.IsExtended())
         {
             SuccessOrExit(error = aMessage.Read(offset, extTlv));
-            valueOffset = offset + sizeof(ExtendedTlv);
-            tlvLength   = extTlv.GetLength();
+            valueOffsetRange.Init(offset + sizeof(ExtendedTlv), extTlv.GetLength());
         }
         else
         {
-            valueOffset = offset + sizeof(Tlv);
-            tlvLength   = tlv.GetLength();
+            valueOffsetRange.Init(offset + sizeof(Tlv), tlv.GetLength());
         }
 
         VerifyOrExit(offset + tlv.GetSize() <= aMessage.GetLength(), error = kErrorParse);
@@ -1201,9 +1212,9 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             static_assert(sizeof(aTlvInfo.mData.mNetworkData.m8) >= NetworkData::NetworkData::kMaxSize,
                           "NetworkData array in `otNetworkDiagTlv` is too small");
 
-            VerifyOrExit(tlvLength <= NetworkData::NetworkData::kMaxSize, error = kErrorParse);
-            aTlvInfo.mData.mNetworkData.mCount = static_cast<uint8_t>(tlvLength);
-            aMessage.ReadBytes(valueOffset, aTlvInfo.mData.mNetworkData.m8, tlvLength);
+            VerifyOrExit(valueOffsetRange.GetLength() <= NetworkData::NetworkData::kMaxSize, error = kErrorParse);
+            aTlvInfo.mData.mNetworkData.mCount = static_cast<uint8_t>(valueOffsetRange.GetLength());
+            aMessage.ReadBytes(valueOffsetRange, aTlvInfo.mData.mNetworkData.m8);
             break;
 
         case Tlv::kIp6AddressList:
@@ -1212,7 +1223,7 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             Ip6::Address *addrEntry      = AsCoreTypePtr(&aTlvInfo.mData.mIp6AddrList.mList[0]);
             uint8_t      &addrCount      = aTlvInfo.mData.mIp6AddrList.mCount;
 
-            VerifyOrExit((tlvLength % Ip6::Address::kSize) == 0, error = kErrorParse);
+            VerifyOrExit((valueOffsetRange.GetLength() % Ip6::Address::kSize) == 0, error = kErrorParse);
 
             // `TlvInfo` has a fixed array for IPv6 addresses. If there
             // are more addresses in the message, we read and return as
@@ -1220,13 +1231,12 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
             addrCount = 0;
 
-            while ((tlvLength > 0) && (addrCount < addrListLength))
+            while (!valueOffsetRange.IsEmpty() && (addrCount < addrListLength))
             {
-                SuccessOrExit(error = aMessage.Read(valueOffset, *addrEntry));
+                SuccessOrExit(error = aMessage.Read(valueOffsetRange, *addrEntry));
                 addrCount++;
                 addrEntry++;
-                valueOffset += Ip6::Address::kSize;
-                tlvLength -= Ip6::Address::kSize;
+                valueOffsetRange.AdvanceOffset(Ip6::Address::kSize);
             }
 
             break;
@@ -1266,7 +1276,7 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             ChildInfo *childInfo       = &aTlvInfo.mData.mChildTable.mTable[0];
             uint8_t   &childCount      = aTlvInfo.mData.mChildTable.mCount;
 
-            VerifyOrExit((tlvLength % sizeof(ChildTableEntry)) == 0, error = kErrorParse);
+            VerifyOrExit((valueOffsetRange.GetLength() % sizeof(ChildTableEntry)) == 0, error = kErrorParse);
 
             // `TlvInfo` has a fixed array Child Table entries. If there
             // are more entries in the message, we read and return as
@@ -1274,11 +1284,11 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
             childCount = 0;
 
-            while ((tlvLength > 0) && (childCount < childInfoLength))
+            while (!valueOffsetRange.IsEmpty() && (childCount < childInfoLength))
             {
                 ChildTableEntry entry;
 
-                SuccessOrExit(error = aMessage.Read(valueOffset, entry));
+                SuccessOrExit(error = aMessage.Read(valueOffsetRange, entry));
 
                 childInfo->mTimeout     = entry.GetTimeout();
                 childInfo->mLinkQuality = entry.GetLinkQuality();
@@ -1287,17 +1297,17 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
                 childCount++;
                 childInfo++;
-                tlvLength -= sizeof(ChildTableEntry);
-                valueOffset += sizeof(ChildTableEntry);
+                valueOffsetRange.AdvanceOffset(sizeof(ChildTableEntry));
             }
 
             break;
         }
 
         case Tlv::kChannelPages:
-            aTlvInfo.mData.mChannelPages.mCount =
-                static_cast<uint8_t>(Min(tlvLength, GetArrayLength(aTlvInfo.mData.mChannelPages.m8)));
-            aMessage.ReadBytes(valueOffset, aTlvInfo.mData.mChannelPages.m8, aTlvInfo.mData.mChannelPages.mCount);
+            aTlvInfo.mData.mChannelPages.mCount = static_cast<uint8_t>(
+                Min(valueOffsetRange.GetLength(), GetArrayLength(aTlvInfo.mData.mChannelPages.m8)));
+            aMessage.ReadBytes(valueOffsetRange.GetOffset(), aTlvInfo.mData.mChannelPages.m8,
+                               aTlvInfo.mData.mChannelPages.mCount);
             break;
 
         case Tlv::kMaxChildTimeout:
@@ -1331,6 +1341,11 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
         case Tlv::kThreadStackVersion:
             SuccessOrExit(error =
                               Tlv::Read<ThreadStackVersionTlv>(aMessage, offset, aTlvInfo.mData.mThreadStackVersion));
+            break;
+
+        case Tlv::kNonPreferredChannels:
+            SuccessOrExit(error = MeshCoP::ChannelMaskTlv::ParseValue(aMessage, valueOffsetRange,
+                                                                      aTlvInfo.mData.mNonPreferredChannels));
             break;
 
         default:

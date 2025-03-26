@@ -152,7 +152,10 @@ typedef struct otSecurityPolicy
 } otSecurityPolicy;
 
 /**
- * Represents Channel Mask.
+ * Represents a Channel Mask.
+ *
+ * The least significant bit (LSB), also referred to as bit 0, corresponds to channel number 0, and so on.
+ *
  */
 typedef uint32_t otChannelMask;
 
