@@ -75,11 +75,41 @@ class Server : public InstanceLocator, private NonCopyable
 
 public:
     /**
+     * Callback function pointer to notify a reset request for `kNonPreferredChannels` TLV value.
+     */
+    typedef otThreadNonPreferredChannelsResetCallback NonPreferredChannelsResetCallback;
+
+    /**
      * Initializes the Server.
      *
      * @param[in] aInstance   The OpenThread instance.
      */
     explicit Server(Instance &aInstance);
+
+    /**
+     * Sets the non-preferred channels value for `kNonPreferredChannels` TLV.
+     *
+     * @param[in] aChannelMask   A channel mask for non-preferred channels.
+     */
+    void SetNonPreferredChannels(uint32_t aChannelMask) { mNonPreferredChannels = aChannelMask; }
+
+    /**
+     * Gets the non-preferred channel mask value for `kNonPreferredChannels` TLV.
+     *
+     * @returns The non-preferred channels as a channel mask.
+     */
+    uint32_t GetNonPreferredChannels(void) const { return mNonPreferredChannels; }
+
+    /**
+     * Sets the callback to notify when a Diagnostic Reset request is received for `kNonPreferredChannels` TLV value.
+     *
+     * @param[in] aCallback   The callback function pointer.
+     * @param[in] aContext    An arbitrary context used with @p aCallback.
+     */
+    void SetNonPreferredChannelsResetCallback(NonPreferredChannelsResetCallback aCallback, void *aContext)
+    {
+        mNonPreferredChannelsResetCallback.Set(aCallback, aContext);
+    }
 
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
     /**
@@ -229,6 +259,8 @@ private:
 #if OPENTHREAD_FTD
     Coap::MessageQueue mAnswerQueue;
 #endif
+    uint32_t                                    mNonPreferredChannels;
+    Callback<NonPreferredChannelsResetCallback> mNonPreferredChannelsResetCallback;
 };
 
 DeclareTmfHandler(Server, kUriDiagnosticGetRequest);
