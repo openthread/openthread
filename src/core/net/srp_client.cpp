@@ -356,8 +356,10 @@ Client::Client(Instance &aInstance)
     , mUseShortLeaseOption(false)
 #endif
 #if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
-    , mUseMessageCoder(kDefaultUseMessageCoder)
+    , mMessageCoderEnabled(kDefaultMessageCoderEnable)
+    , mSkipCoderDueToRepeatedFailures(false)
 #endif
+    , mRegistrationFailureCount(0)
     , mNextMessageId(0)
     , mResponseMessageId(0)
     , mAutoHostAddressCount(0)
@@ -419,6 +421,12 @@ Error Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
             aServerSockAddr.ToString().AsCString());
 
     Resume();
+
+    ResetRegistrationFailureCount();
+
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    mSkipCoderDueToRepeatedFailures = false;
+#endif
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     if (aRequester == kRequesterAuto)
@@ -887,6 +895,7 @@ void Client::ClearHostAndServices(void)
 
     mTxFailureRetryCount = 0;
     ResetRetryWaitInterval();
+    ResetRegistrationFailureCount();
 
     mServices.Clear();
     mHostInfo.Clear();
@@ -978,6 +987,37 @@ void Client::InvokeCallback(Error aError, const HostInfo &aHostInfo, const Servi
     mCallback.InvokeIfSet(aError, &aHostInfo, mServices.GetHead(), aRemovedServices);
 }
 
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+bool Client::ShouldUseMessageCoder(void) const
+{
+    bool shouldUseCoder = false;
+
+    // We use message coder if it is explicitly enabled, the selected
+    // server version (learned from Network Data) indicates its
+    // support for decoder, and `mSkipCoderDueToRepeatedFailures`
+    // is not set.
+    //
+    // `mSkipCoderDueToRepeatedFailures` is set after consecutive
+    // registration failures with the server. It acts as a fallback
+    // safeguard, in case there is any issue with server's decoder
+    // implementation.
+
+    VerifyOrExit(mMessageCoderEnabled);
+
+    if (mAutoStart.HasSelectedServer())
+    {
+        VerifyOrExit(mAutoStart.GetServerVersion() >= kMinServerVersionForCoder);
+    }
+
+    VerifyOrExit(!mSkipCoderDueToRepeatedFailures);
+
+    shouldUseCoder = true;
+
+exit:
+    return shouldUseCoder;
+}
+#endif // OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+
 void Client::SendUpdate(void)
 {
     static const ItemState kNewStateOnMessageTx[]{
@@ -1003,7 +1043,7 @@ void Client::SendUpdate(void)
     VerifyOrExit(info.mMessage != nullptr, error = kErrorNoBufs);
 
 #if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
-    if (mUseMessageCoder)
+    if (ShouldUseMessageCoder())
     {
         SuccessOrExit(error = info.mCodedMsg.AllocateMessage(mSocket));
     }
@@ -1857,6 +1897,22 @@ void Client::UpdateRecordLengthInMessage(Dns::ResourceRecord &aRecord, uint16_t 
     aMessage.Write(aOffset, aRecord);
 }
 
+void Client::IncrementRegistrationFailureCount(void)
+{
+    VerifyOrExit(mRegistrationFailureCount < NumericLimits<uint8_t>::kMax);
+    mRegistrationFailureCount++;
+
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    if (mRegistrationFailureCount >= kTotalFailureCountToSkipCoder)
+    {
+        mSkipCoderDueToRepeatedFailures = true;
+    }
+#endif
+
+exit:
+    return;
+}
+
 void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
@@ -1936,6 +1992,28 @@ void Client::ProcessResponse(Message &aMessage)
         GrowRetryWaitInterval();
         SetState(kStateToRetry);
         InvokeCallback(error);
+
+        IncrementRegistrationFailureCount();
+
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+        // We skip message coder use for this server after repeated
+        // `kResponseFormatError` failures. This safeguards against
+        // potential server decoder implementation issues that may
+        // prevent it from decoding of coded SRP messages (despite
+        // the Network Data entry indicating coder support by the
+        // server).
+        //
+        // `IncrementRegistrationFailureCount()` performs a similar
+        // check with a higher failure threshold, skipping the coder
+        // use after repeated failures regardless of the error
+        // reason.
+
+        if ((header.GetResponseCode() == Dns::Header::kResponseFormatError) &&
+            (mRegistrationFailureCount >= kFormatErrorFailureCountToSkipCoder))
+        {
+            mSkipCoderDueToRepeatedFailures = true;
+        }
+#endif
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
         if ((error == kErrorDuplicated) || (error == kErrorSecurity))
@@ -2057,6 +2135,8 @@ void Client::HandleUpdateDone(void)
     }
 
     ResetRetryWaitInterval();
+    ResetRegistrationFailureCount();
+
     SetState(kStateUpdated);
 
     GetRemovedServices(removedServices);
@@ -2296,6 +2376,7 @@ void Client::HandleTimer(void)
 
     case kStateUpdating:
         mSingleServiceMode = false;
+        IncrementRegistrationFailureCount();
         LogRetryWaitInterval();
         LogInfo("Timed out, no response");
         GrowRetryWaitInterval();
@@ -2400,6 +2481,7 @@ void Client::ProcessAutoStart(void)
     if (SelectUnicastEntry(NetworkData::Service::kAddrInServiceData, unicastInfo) == kErrorNone)
     {
         mAutoStart.SetState(AutoStart::kSelectedUnicastPreferred);
+        mAutoStart.SetServerVersion(unicastInfo.mVersion);
         serverSockAddr = unicastInfo.mSockAddr;
     }
     else if (Get<NetworkData::Service::Manager>().FindPreferredDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
@@ -2421,10 +2503,12 @@ void Client::ProcessAutoStart(void)
         }
 
         mAutoStart.SetState(AutoStart::kSelectedAnycast);
+        mAutoStart.SetServerVersion(anycastInfo.mVersion);
     }
     else if (SelectUnicastEntry(NetworkData::Service::kAddrInServerData, unicastInfo) == kErrorNone)
     {
         mAutoStart.SetState(AutoStart::kSelectedUnicast);
+        mAutoStart.SetServerVersion(unicastInfo.mVersion);
         serverSockAddr = unicastInfo.mSockAddr;
     }
 
@@ -2617,6 +2701,7 @@ void Client::SelectNextServer(bool aDisallowSwitchOnRegisteredHost)
             if (selectNext)
             {
                 serverSockAddr = unicastInfo.mSockAddr;
+                mAutoStart.SetServerVersion(unicastInfo.mVersion);
                 ExitNow();
             }
 

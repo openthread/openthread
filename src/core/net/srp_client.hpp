@@ -667,7 +667,7 @@ public:
      * @param[in] aEnable  TRUE to enable, FALSE to disable use of SRP coder.
      *
      */
-    void SetMessageCoderEnabled(bool aEnable) { mUseMessageCoder = aEnable; }
+    void SetMessageCoderEnabled(bool aEnable) { mMessageCoderEnabled = aEnable; }
 
     /**
      * Indicates whether the use of SRP coder to send coded SRP update message is enabled or disabled.
@@ -676,7 +676,7 @@ public:
      * @retval   FALSE  If the use of SRP coder is disabled
      *
      */
-    bool IsMessageCoderEnabled(void) const { return mUseMessageCoder; }
+    bool IsMessageCoderEnabled(void) const { return mMessageCoderEnabled; }
 
 #endif // OPENTHREAD_CONFIG_SRP_CODER_ENABLE
 
@@ -780,7 +780,10 @@ private:
     static constexpr uint16_t kUdpPayloadSize = Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
 
 #if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
-    static constexpr bool kDefaultUseMessageCoder = OPENTHREAD_CONFIG_SRP_CODER_USE_BY_CLIENT_ENABLE;
+    static constexpr bool    kDefaultMessageCoderEnable          = OPENTHREAD_CONFIG_SRP_CODER_USE_BY_CLIENT_ENABLE;
+    static constexpr uint8_t kMinServerVersionForCoder           = 1;
+    static constexpr uint8_t kFormatErrorFailureCountToSkipCoder = 2;
+    static constexpr uint8_t kTotalFailureCountToSkipCoder       = 5;
 #endif
     // -------------------------------
     // Lease related constants
@@ -982,6 +985,8 @@ private:
         bool    HasSelectedServer(void) const;
         State   GetState(void) const { return mState; }
         void    SetState(State aState);
+        uint8_t GetServerVersion(void) const { return mServerVersion; }
+        void    SetServerVersion(uint8_t aVersion) { mServerVersion = aVersion; }
         uint8_t GetAnycastSeqNum(void) const { return mAnycastSeqNum; }
         void    SetAnycastSeqNum(uint8_t aAnycastSeqNum) { mAnycastSeqNum = aAnycastSeqNum; }
         void    SetCallback(AutoStartCallback aCallback, void *aContext) { mCallback.Set(aCallback, aContext); }
@@ -1006,6 +1011,7 @@ private:
 
         Callback<AutoStartCallback> mCallback;
         State                       mState;
+        uint8_t                     mServerVersion;
         uint8_t                     mAnycastSeqNum;
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
         uint8_t mTimeoutFailureCount; // Number of no-response timeout failures with the currently selected server.
@@ -1060,6 +1066,8 @@ private:
     Error        AppendSignature(MsgInfo &aInfo);
     void         UpdateRecordLengthInMessage(Dns::ResourceRecord &aRecord, uint16_t aOffset, Message &aMessage) const;
     void         HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void         ResetRegistrationFailureCount(void) { mRegistrationFailureCount = 0; }
+    void         IncrementRegistrationFailureCount(void);
     void         ProcessResponse(Message &aMessage);
     bool         IsResponseMessageIdValid(uint16_t aId) const;
     void         HandleUpdateDone(void);
@@ -1083,7 +1091,9 @@ private:
     void SelectNextServer(bool aDisallowSwitchOnRegisteredHost);
 #endif
 #endif
-
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    bool ShouldUseMessageCoder(void) const;
+#endif
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *StateToString(State aState);
     void               LogRetryWaitInterval(void) const;
@@ -1111,9 +1121,11 @@ private:
     bool mUseShortLeaseOption : 1;
 #endif
 #if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
-    bool mUseMessageCoder : 1;
+    bool mMessageCoderEnabled : 1;
+    bool mSkipCoderDueToRepeatedFailures : 1;
 #endif
 
+    uint8_t  mRegistrationFailureCount;
     uint16_t mNextMessageId;
     uint16_t mResponseMessageId;
     uint16_t mAutoHostAddressCount;

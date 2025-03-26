@@ -862,7 +862,11 @@ public:
     void HandleServiceUpdateResult(ServiceUpdateId aId, Error aError);
 
 private:
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    static constexpr uint8_t kSrpVersion = 1;
+#else
     static constexpr uint8_t kSrpVersion = 0;
+#endif
 
     static constexpr uint16_t kUdpPayloadSize = Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
 
