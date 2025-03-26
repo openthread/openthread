@@ -173,6 +173,32 @@ void NetworkData::OutputService(const otServiceConfig &aConfig)
     OutputLine(" %04x %u", aConfig.mServerConfig.mRloc16, aConfig.mServiceId);
 }
 
+void NetworkData::OutputContext(const otLowpanContextInfo &aConfig)
+{
+    FlagsString flagsString;
+    char       *flagsPtr = &flagsString[0];
+
+    if (aConfig.mStable)
+    {
+        *flagsPtr++ = 's';
+    }
+
+    if (aConfig.mCompressFlag)
+    {
+        *flagsPtr++ = 'c';
+    }
+
+    if (flagsPtr == &flagsString[0])
+    {
+        *flagsPtr++ = '-';
+    }
+
+    *flagsPtr = '\0';
+
+    OutputIp6Prefix(aConfig.mPrefix);
+    OutputLine(" %u %s", aConfig.mContextId, flagsString);
+}
+
 /**
  * @cli netdata length
  * @code
@@ -639,8 +665,7 @@ void NetworkData::OutputNetworkData(bool aLocal, uint16_t aRloc16)
 
     while (otNetDataGetNextLowpanContextInfo(GetInstancePtr(), &iterator, &context) == OT_ERROR_NONE)
     {
-        OutputIp6Prefix(context.mPrefix);
-        OutputLine(" %u %c", context.mContextId, context.mCompressFlag ? 'c' : '-');
+        OutputContext(context);
     }
 
     otNetDataGetCommissioningDataset(GetInstancePtr(), &dataset);
@@ -742,7 +767,7 @@ exit:
  * 44970 5d c000 s 4000 0
  * 44970 01 9a04b000000e10 s 4000 1
  * Contexts:
- * fd00:dead:beef:cafe::/64 1 c
+ * fd00:dead:beef:cafe::/64 1 sc
  * Commissioning:
  * 1248 dc00 9988 00000000000120000000000000000000 e
  * Done
@@ -759,6 +784,7 @@ exit:
  * Routes:
  * Services:
  * Done
+ * @endcode
  * @cparam netdata show [@ca{-x}|@ca{rloc16}]
  * *   The optional `-x` argument gets Network Data as hex-encoded TLVs.
  * *   The optional `rloc16` argument gets all prefix/route/service entries associated with a given RLOC16.
@@ -802,7 +828,10 @@ exit:
  * 6LoWPAN Context IDs are listed under `Contexts` header:
  * * The prefix
  * * Context ID
- * * Compress flag (`c` if marked or `-` otherwise).
+ * * Flags
+ *   * s: Stable flag
+ *   * c: Compress flag
+ *   * -: If there are no flags
  * @par
  * Commissioning Dataset information is printed under `Commissioning` header:
  * * Session ID if present in Dataset or `-` otherwise

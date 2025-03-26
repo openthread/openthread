@@ -380,7 +380,11 @@ Service entries are listed under `Services` header:
 
 - The prefix
 - Context ID
-- Compress flag (`c` if marked or `-` otherwise).
+- Flags:
+  - s: Stable flag
+  - c: Compress flag
+
+When there are no other flags, `-` will be used.
 
 Commissioning Dataset information is printed under `Commissioning` header:
 
@@ -403,7 +407,7 @@ fd00:4567:0:0::/64 s med 8000
 Services:
 44970 5d fddead00beef00007bad0069ce45948504d2 s a000 0
 Contexts:
-fd00:dead:beef:cafe::/64 1 c
+fd00:dead:beef:cafe::/64 1 sc
 Commissioning:
 1248 dc00 9988 00000000000120000000000000000000 e
 Done

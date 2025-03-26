@@ -107,13 +107,18 @@ def check_netdata_1():
 
 verify_within(check_netdata_1, 5)
 
+
+def parse_context_flags(context):
+    return context.split()[-1]
+
+
 contexts = netdata['contexts']
 verify(len(contexts) == 3)
 verify(any([context.startswith('fd00:1:0:0::/64') for context in contexts]))
 verify(any([context.startswith('fd00:2:0:0::/64') for context in contexts]))
 verify(any([context.startswith('fd00:3:0:0::/64') for context in contexts]))
 for context in contexts:
-    verify(context.endswith('c'))
+    verify('c' in parse_context_flags(context))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Remove prefix on `r3`. Validate that Context compress flag
@@ -140,9 +145,9 @@ verify(any([context.startswith('fd00:2:0:0::/64') for context in contexts]))
 verify(any([context.startswith('fd00:3:0:0::/64') for context in contexts]))
 for context in contexts:
     if context.startswith('fd00:1:0:0::/64') or context.startswith('fd00:2:0:0::/64'):
-        verify(context.endswith('c'))
+        verify('c' in parse_context_flags(context))
     else:
-        verify(context.endswith('-'))
+        verify('c' not in parse_context_flags(context))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Validate that the prefix context is removed within reuse delay
@@ -200,7 +205,7 @@ verify(any([context.startswith('fd00:2:0:0::/64') for context in contexts]))
 verify(any([context.startswith('fd00:3:0:0::/64') for context in contexts]))
 verify(any([context.startswith('fd00:4:0:0::/64') for context in contexts]))
 for context in contexts:
-    verify(context.endswith('c'))
+    verify('c' in parse_context_flags(context))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Remove prefixes on `r1` and `r2` and re-add them back quickly both
@@ -236,9 +241,9 @@ verify(any([context.startswith('fd00:3:0:0::/64') for context in contexts]))
 verify(any([context.startswith('fd00:4:0:0::/64') for context in contexts]))
 for context in contexts:
     if context.startswith('fd00:1:0:0::/64') or context.startswith('fd00:2:0:0::/64'):
-        verify(context.endswith('-'))
+        verify('c' not in parse_context_flags(context))
     else:
-        verify(context.endswith('c'))
+        verify('c' in parse_context_flags(context))
 
 # Re-add both prefixes (now from `r2`) before CID remove delay time
 # is expired.
@@ -264,7 +269,7 @@ verify(any([context.startswith('fd00:2:0:0::/64') for context in contexts]))
 verify(any([context.startswith('fd00:3:0:0::/64') for context in contexts]))
 verify(any([context.startswith('fd00:4:0:0::/64') for context in contexts]))
 for context in contexts:
-    verify(context.endswith('c'))
+    verify('c' in parse_context_flags(context))
     if context.startswith('fd00:1:0:0::/64'):
         verify(int(context.split()[1]) == cid1)
     elif context.startswith('fd00:2:0:0::/64'):
@@ -305,9 +310,9 @@ verify(any([context.startswith('fd00:3:0:0::/64') for context in contexts]))
 verify(any([context.startswith('fd00:4:0:0::/64') for context in contexts]))
 for context in contexts:
     if context.startswith('fd00:3:0:0::/64') or context.startswith('fd00:4:0:0::/64'):
-        verify(context.endswith('-'))
+        verify('c' not in parse_context_flags(context))
     else:
-        verify(context.endswith('c'))
+        verify('c' in parse_context_flags(context))
 
 # Add first one removed as route and add a new prefix.
 
@@ -333,7 +338,7 @@ verify(any([context.startswith('fd00:2:0:0::/64') for context in contexts]))
 verify(any([context.startswith('fd00:5:0:0::/64') for context in contexts]))
 
 for context in contexts:
-    verify(context.endswith('c'))
+    verify('c' in parse_context_flags(context))
     if context.startswith('fd00:5:0:0::/64'):
         verify(not int(context.split()[1]) in [cid3, cid4])
 
@@ -363,7 +368,7 @@ verify_within(check_netdata_9, 5)
 contexts = netdata['contexts']
 verify(len(contexts) == 1)
 verify(contexts[0].startswith('fd00:5:0:0::/64'))
-verify(contexts[0].endswith('c'))
+verify('c' in parse_context_flags(context))
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

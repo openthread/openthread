@@ -258,6 +258,7 @@ void LowpanContextInfo::SetFrom(const PrefixTlv &aPrefixTlv, const ContextTlv &a
 {
     mContextId    = aContextTlv.GetContextId();
     mCompressFlag = aContextTlv.IsCompress();
+    mStable       = aContextTlv.IsStable();
     aPrefixTlv.CopyPrefixTo(GetPrefix());
     GetPrefix().SetLength(aContextTlv.GetContextLength());
 }

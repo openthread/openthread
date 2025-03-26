@@ -129,6 +129,7 @@ private:
     otError GetNextRoute(otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig, bool aLocal);
     otError GetNextService(otNetworkDataIterator *aIterator, otServiceConfig *aConfig, bool aLocal);
 
+    void    OutputContext(const otLowpanContextInfo &aConfig);
     otError OutputBinary(bool aLocal);
     void    OutputNetworkData(bool aLocal, uint16_t aRloc16);
 
