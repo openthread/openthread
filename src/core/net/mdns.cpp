@@ -55,6 +55,14 @@ extern "C" void otPlatMdnsHandleReceive(otInstance                  *aInstance,
     AsCoreType(aInstance).Get<Core>().HandleMessage(AsCoreType(aMessage), aIsUnicast, AsCoreType(aAddress));
 }
 
+extern "C" void otPlatMdnsHandleHostAddressEvent(otInstance         *aInstance,
+                                                 const otIp6Address *aAddress,
+                                                 bool                aAdded,
+                                                 uint32_t            aInfraIfIndex)
+{
+    AsCoreType(aInstance).Get<Core>().HandleHostAddressEvent(AsCoreType(aAddress), aAdded, aInfraIfIndex);
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 // Core
 
@@ -70,6 +78,7 @@ Core::Core(Instance &aInstance)
     , mIsQuestionUnicastAllowed(kDefaultQuAllowed)
     , mMaxMessageSize(kMaxMessageSize)
     , mInfraIfIndex(0)
+    , mLocalHost(aInstance)
     , mMultiPacketRxMessages(aInstance)
     , mNextProbeTxTime(TimerMilli::GetNow() - 1)
     , mEntryTimer(aInstance)
@@ -80,6 +89,19 @@ Core::Core(Instance &aInstance)
     , mCacheTimer(aInstance)
     , mCacheTask(aInstance)
 {
+}
+
+void Core::AfterInstanceInit(void)
+{
+    // This is called immediately after the OpenThread `Instance` is
+    // initialized (i.e., after all constructors are called and saved
+    // information from `Settings` is restored). This call triggers
+    // the generation of the local host name, which is derived from
+    // the device's extended MAC address. This ensures that the MAC
+    // address is restored from the non-volatile settings, and the
+    // generated name remains consistent across device reboots.
+
+    mLocalHost.GenerateName();
 }
 
 Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex)
@@ -99,10 +121,8 @@ Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex)
     else
     {
         LogInfo("Disabling");
-    }
 
-    if (!mIsEnabled)
-    {
+        mLocalHost.ClearAddresses();
         mHostEntries.Clear();
         mServiceEntries.Clear();
         mServiceTypes.Clear();
@@ -258,6 +278,12 @@ void Core::InvokeConflictCallback(const char *aName, const char *aServiceType)
         mConflictCallback(&GetInstance(), aName, aServiceType);
     }
 }
+
+void Core::HandleHostAddressEvent(const Ip6::Address &aAddress, bool aAdded, uint32_t aInfraIfIndex)
+{
+    mLocalHost.HandleAddressEvent(aAddress, aAdded, aInfraIfIndex);
+}
+
 void Core::HandleMessage(Message &aMessage, bool aIsUnicast, const AddressInfo &aSenderAddress)
 {
     OwnedPtr<Message>   messagePtr(&aMessage);
@@ -538,6 +564,11 @@ bool Core::AddressArray::Matches(const Ip6::Address *aAddresses, uint16_t aNumAd
 
 exit:
     return matches;
+}
+
+bool Core::AddressArray::Matches(const AddressArray &aOther) const
+{
+    return Matches(aOther.AsCArray(), aOther.GetLength());
 }
 
 void Core::AddressArray::SetFrom(const Ip6::Address *aAddresses, uint16_t aNumAddresses)
@@ -1198,7 +1229,7 @@ bool Core::Entry::ShouldAnswerNsec(TimeMilli aNow) const
     return mMulticastNsecPending && (GetNsecAnswerTime() <= aNow);
 }
 
-void Core::Entry::AnswerNonProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, uint16_t aRecordsLength)
+void Core::Entry::AnswerNonProbe(const AnswerInfo &aInfo, RecordAndTypeArray &aRecordAndTypes)
 {
     // Schedule answers for all matching records in `aRecords` array
     // to a given non-probe question.
@@ -1206,9 +1237,9 @@ void Core::Entry::AnswerNonProbe(const AnswerInfo &aInfo, RecordAndType *aRecord
     bool allEmptyOrZeroTtl = true;
     bool answerNsec        = true;
 
-    for (uint16_t index = 0; index < aRecordsLength; index++)
+    for (RecordAndType &recordAndType : aRecordAndTypes)
     {
-        RecordInfo &record = aRecords[index].mRecord;
+        RecordInfo &record = *recordAndType.mRecord;
 
         if (!record.CanAnswer())
         {
@@ -1218,7 +1249,7 @@ void Core::Entry::AnswerNonProbe(const AnswerInfo &aInfo, RecordAndType *aRecord
 
         allEmptyOrZeroTtl = false;
 
-        if (QuestionMatches(aInfo.mQuestionRrType, aRecords[index].mType))
+        if (QuestionMatches(aInfo.mQuestionRrType, recordAndType.mType))
         {
             answerNsec = false;
             record.ScheduleAnswer(aInfo);
@@ -1235,7 +1266,7 @@ void Core::Entry::AnswerNonProbe(const AnswerInfo &aInfo, RecordAndType *aRecord
     }
 }
 
-void Core::Entry::AnswerProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, uint16_t aRecordsLength)
+void Core::Entry::AnswerProbe(const AnswerInfo &aInfo, RecordAndTypeArray &aRecordAndTypes)
 {
     bool       allEmptyOrZeroTtl = true;
     bool       shouldDelay       = false;
@@ -1246,9 +1277,9 @@ void Core::Entry::AnswerProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, 
 
     OT_ASSERT(info.mIsProbe);
 
-    for (uint16_t index = 0; index < aRecordsLength; index++)
+    for (RecordAndType &recordAndType : aRecordAndTypes)
     {
-        RecordInfo &record = aRecords[index].mRecord;
+        RecordInfo &record = *recordAndType.mRecord;
         TimeMilli   lastMulticastTime;
 
         if (!record.CanAnswer())
@@ -1294,9 +1325,9 @@ void Core::Entry::AnswerProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, 
         info.mAnswerDelay = 0;
     }
 
-    for (uint16_t index = 0; index < aRecordsLength; index++)
+    for (RecordAndType &recordAndType : aRecordAndTypes)
     {
-        aRecords[index].mRecord.ScheduleAnswer(info);
+        recordAndType.mRecord->ScheduleAnswer(info);
     }
 
 exit:
@@ -1470,6 +1501,180 @@ exit:
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+// Core::Entry::RecordAndTypeArray
+
+void Core::Entry::RecordAndTypeArray::Add(RecordInfo &aRecord, uint16_t aType)
+{
+    RecordAndType *entry = PushBack();
+
+    OT_ASSERT(entry != nullptr);
+    entry->mRecord = &aRecord;
+    entry->mType   = aType;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Core::LocalHost
+
+Core::LocalHost::LocalHost(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mEventTimer(aInstance)
+{
+    GenerateName();
+}
+
+Error Core::LocalHost::SetName(const char *aName)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!Get<Core>().mIsEnabled, error = kErrorInvalidState);
+
+    if (aName == nullptr)
+    {
+        GenerateName();
+    }
+    else
+    {
+        SuccessOrAssert(mName.Set(aName));
+    }
+
+exit:
+    return error;
+}
+
+void Core::LocalHost::GenerateName(void)
+{
+    Name::LabelBuffer name;
+    StringWriter      writer(name, sizeof(name));
+
+    writer.Append("ot%s", Get<Mac::Mac>().GetExtAddress().ToString().AsCString());
+
+    SuccessOrAssert(mName.Set(name));
+}
+
+void Core::LocalHost::ClearAddresses(void)
+{
+    mIp4Addresses.Free();
+    mIp6Addresses.Free();
+    mAddrEvents.Clear();
+    mEventTimer.Stop();
+}
+
+void Core::LocalHost::HandleAddressEvent(const Ip6::Address &aAddress, bool aAdded, uint32_t aInfraIfIndex)
+{
+    AddrEvent *addrEvent;
+
+    VerifyOrExit(Get<Core>().mIsEnabled);
+    VerifyOrExit(aInfraIfIndex == Get<Core>().mInfraIfIndex);
+
+    LogInfo("Host address %s event: %s", aAddress.ToString().AsCString(), aAdded ? "added" : "removed");
+
+    addrEvent = AddrEvent::Allocate(aAddress, aAdded);
+    OT_ASSERT(addrEvent != nullptr);
+
+    // Before we add the new event, we remove any previous events in the
+    // list that match the same address. This way we always track the
+    // latest event for each address. This handles the case where
+    // a "removed" address event is quickly followed by an "added" event
+    // for the same address.
+    //
+    // The events are processed after a short guard delay time
+    // `kGuardTimeToProcessAddrEvents`. This ensures multiple changes
+    // to be grouped and announced together.
+
+    mAddrEvents.RemoveAndFreeAllMatching(aAddress);
+    mAddrEvents.Push(*addrEvent);
+
+    if (!mEventTimer.IsRunning())
+    {
+        mEventTimer.Start(kGuardTimeToProcessAddrEvents);
+    }
+
+exit:
+    return;
+}
+
+void Core::LocalHost::HandleEventTimer(void)
+{
+    // Process all saved `AddrEvents` and update IPv4 and IPv6
+    // address lists.
+
+    static const AddrType kAddrTypes[] = {kIp4AddrType, kIp6AddrType};
+
+    VerifyOrExit(Get<Core>().mIsEnabled);
+
+    for (AddrType addrType : kAddrTypes)
+    {
+        AddressArray &addresses = (addrType == kIp4AddrType) ? mIp4Addresses : mIp6Addresses;
+        AddressArray  oldAddresses;
+
+        oldAddresses.TakeFrom(static_cast<AddressArray &&>(addresses));
+        addresses.Clear();
+
+        // First, add existing addresses (from old list) that did not
+        // change (there is no "removed" event).
+
+        for (const Ip6::Address &address : oldAddresses)
+        {
+            const AddrEvent *addrEvent = mAddrEvents.FindMatching(address);
+
+            if ((addrEvent == nullptr) || addrEvent->mAdded)
+            {
+                SuccessOrAssert(addresses.PushBack(address));
+            }
+        }
+
+        // Next, add any new addresses for which we got an "added"
+        // event.
+
+        for (const AddrEvent &addrEvent : mAddrEvents)
+        {
+            if (!addrEvent.Matches(addrType))
+            {
+                continue;
+            }
+
+            if (addrEvent.mAdded && !addresses.Contains(addrEvent.mAddress))
+            {
+                SuccessOrAssert(addresses.PushBack(addrEvent.mAddress));
+            }
+        }
+    }
+
+    IgnoreError(Get<Core>().Register<HostEntry>(*this, /* aRequestId */ 0, /* aCallback */ nullptr));
+
+exit:
+    mAddrEvents.Clear();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Core::LocalHost::AddrEvent
+
+Core::LocalHost::AddrEvent::AddrEvent(const Ip6::Address &aAddress, bool aAdded)
+    : mNext(nullptr)
+    , mAddress(aAddress)
+    , mAdded(aAdded)
+{
+}
+
+bool Core::LocalHost::AddrEvent::Matches(AddrType aType) const
+{
+    bool matches = false;
+    bool isIp4   = mAddress.IsIp4Mapped();
+
+    switch (aType)
+    {
+    case kIp4AddrType:
+        matches = isIp4;
+        break;
+    case kIp6AddrType:
+        matches = !isIp4;
+        break;
+    }
+
+    return matches;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 // Core::HostEntry
 
 Core::HostEntry::HostEntry(void)
@@ -1492,11 +1697,24 @@ bool Core::HostEntry::Matches(const Name &aName) const
 
 bool Core::HostEntry::Matches(const Host &aHost) const { return NameMatch(mName, aHost.mHostName); }
 
+bool Core::HostEntry::Matches(const LocalHost &aLocalHost) const { return NameMatch(mName, aLocalHost.GetName()); }
+
 bool Core::HostEntry::Matches(const Key &aKey) const { return !IsKeyForService(aKey) && NameMatch(mName, aKey.mName); }
 
 bool Core::HostEntry::Matches(const Heap::String &aName) const { return NameMatch(mName, aName); }
 
-bool Core::HostEntry::IsEmpty(void) const { return !mAddrRecord.IsPresent() && !mKeyRecord.IsPresent(); }
+bool Core::HostEntry::IsEmpty(void) const
+{
+    bool isEmpty = false;
+
+    VerifyOrExit(!mKeyRecord.IsPresent() && !mIp6AddrRecord.IsPresent());
+    VerifyOrExit((mIp4AddrRecord == nullptr) || !mIp4AddrRecord->IsPresent());
+
+    isEmpty = true;
+
+exit:
+    return isEmpty;
+}
 
 void Core::HostEntry::Register(const Host &aHost, const Callback &aCallback)
 {
@@ -1525,14 +1743,54 @@ void Core::HostEntry::Register(const Host &aHost, const Callback &aCallback)
         ExitNow();
     }
 
-    mAddrRecord.UpdateTtl(DetermineTtl(aHost.mTtl, kDefaultTtl));
-    mAddrRecord.UpdateProperty(mAddresses, AsCoreTypePtr(aHost.mAddresses), aHost.mAddressesLength);
+    mIp6AddrRecord.UpdateTtl(DetermineTtl(aHost.mTtl, kDefaultTtl));
+    mIp6AddrRecord.UpdateAddresses(aHost);
 
     DetermineNextFireTime();
     ScheduleTimer();
 
 exit:
     return;
+}
+
+void Core::HostEntry::Register(const LocalHost &aLocalHost, const Callback &aCallback)
+{
+    SetCallback(aCallback);
+
+    if (aLocalHost.GetIp6Addresses().IsEmpty())
+    {
+        if (mIp6AddrRecord.IsPresent())
+        {
+            mIp6AddrRecord.UpdateTtl(0);
+        }
+    }
+    else
+    {
+        mIp6AddrRecord.UpdateTtl(kDefaultTtl);
+        mIp6AddrRecord.UpdateAddresses(aLocalHost.GetIp6Addresses());
+    }
+
+    if (aLocalHost.GetIp4Addresses().IsEmpty())
+    {
+        if ((mIp4AddrRecord != nullptr) && mIp4AddrRecord->IsPresent())
+        {
+            mIp4AddrRecord->UpdateTtl(0);
+        }
+    }
+    else
+    {
+        if (mIp4AddrRecord == nullptr)
+        {
+            mIp4AddrRecord.Reset(AddrRecord::Allocate());
+            OT_ASSERT(mIp4AddrRecord != nullptr);
+        }
+
+        mIp4AddrRecord->UpdateTtl(kDefaultTtl);
+        mIp4AddrRecord->UpdateAddresses(aLocalHost.GetIp4Addresses());
+    }
+
+    DetermineNextFireTime();
+    ScheduleTimer();
 }
 
 void Core::HostEntry::Register(const Key &aKey, const Callback &aCallback)
@@ -1547,14 +1805,14 @@ void Core::HostEntry::Unregister(const Host &aHost)
 {
     OT_UNUSED_VARIABLE(aHost);
 
-    VerifyOrExit(mAddrRecord.IsPresent());
+    VerifyOrExit(mIp6AddrRecord.IsPresent());
 
     ClearCallback();
 
     switch (GetState())
     {
     case kRegistered:
-        mAddrRecord.UpdateTtl(0);
+        mIp6AddrRecord.UpdateTtl(0);
         DetermineNextFireTime();
         ScheduleTimer();
         break;
@@ -1585,8 +1843,12 @@ void Core::HostEntry::Unregister(const Key &aKey)
 
 void Core::HostEntry::ClearHost(void)
 {
-    mAddrRecord.Clear();
-    mAddresses.Free();
+    mIp6AddrRecord.Clear();
+
+    if (mIp4AddrRecord != nullptr)
+    {
+        mIp4AddrRecord->Clear();
+    }
 }
 
 void Core::HostEntry::ScheduleToRemoveIfEmpty(void)
@@ -1612,20 +1874,25 @@ exit:
 
 void Core::HostEntry::AnswerQuestion(const AnswerInfo &aInfo)
 {
-    RecordAndType records[] = {
-        {mAddrRecord, ResourceRecord::kTypeAaaa},
-        {mKeyRecord, ResourceRecord::kTypeKey},
-    };
+    RecordAndTypeArray recordAndTypes;
 
     VerifyOrExit(GetState() == kRegistered);
 
+    recordAndTypes.Add(mIp6AddrRecord, ResourceRecord::kTypeAaaa);
+    recordAndTypes.Add(mKeyRecord, ResourceRecord::kTypeKey);
+
+    if (mIp4AddrRecord != nullptr)
+    {
+        recordAndTypes.Add(*mIp4AddrRecord, ResourceRecord::kTypeA);
+    }
+
     if (aInfo.mIsProbe)
     {
-        AnswerProbe(aInfo, records, GetArrayLength(records));
+        AnswerProbe(aInfo, recordAndTypes);
     }
     else
     {
-        AnswerNonProbe(aInfo, records, GetArrayLength(records));
+        AnswerNonProbe(aInfo, recordAndTypes);
     }
 
     DetermineNextFireTime();
@@ -1644,7 +1911,12 @@ void Core::HostEntry::ClearAppendState(void)
 
     Entry::ClearAppendState();
 
-    mAddrRecord.MarkAsNotAppended();
+    mIp6AddrRecord.MarkAsNotAppended();
+
+    if (mIp4AddrRecord != nullptr)
+    {
+        mIp4AddrRecord->MarkAsNotAppended();
+    }
 
     mNameOffset = kUnspecifiedOffset;
 }
@@ -1660,7 +1932,8 @@ void Core::HostEntry::PrepareProbe(TxMessage &aProbe)
         AppendNameTo(aProbe, kQuestionSection);
         AppendQuestionTo(aProbe);
 
-        AppendAddressRecordsTo(aProbe, kAuthoritySection);
+        AppendIp6AddressRecordsTo(aProbe, kAuthoritySection);
+        AppendIp4AddressRecordsTo(aProbe, kAuthoritySection);
         AppendKeyRecordTo(aProbe, kAuthoritySection);
 
         aProbe.CheckSizeLimitToPrepareAgain(prepareAgain);
@@ -1670,7 +1943,13 @@ void Core::HostEntry::PrepareProbe(TxMessage &aProbe)
 
 void Core::HostEntry::StartAnnouncing(void)
 {
-    mAddrRecord.StartAnnouncing();
+    mIp6AddrRecord.StartAnnouncing();
+
+    if (mIp4AddrRecord != nullptr)
+    {
+        mIp4AddrRecord->StartAnnouncing();
+    }
+
     mKeyRecord.StartAnnouncing();
 }
 
@@ -1695,9 +1974,15 @@ void Core::HostEntry::PrepareResponseRecords(EntryContext &aContext)
     bool       appendNsec = false;
     TxMessage &response   = aContext.mResponseMessage;
 
-    if (mAddrRecord.ShouldAppendTo(aContext))
+    if (mIp6AddrRecord.ShouldAppendTo(aContext))
     {
-        AppendAddressRecordsTo(response, kAnswerSection);
+        AppendIp6AddressRecordsTo(response, kAnswerSection);
+        appendNsec = true;
+    }
+
+    if ((mIp4AddrRecord != nullptr) && mIp4AddrRecord->ShouldAppendTo(aContext))
+    {
+        AppendIp4AddressRecordsTo(response, kAnswerSection);
         appendNsec = true;
     }
 
@@ -1718,7 +2003,12 @@ void Core::HostEntry::UpdateRecordsState(const TxMessage &aResponse)
     // Updates state after a response is prepared.
 
     Entry::UpdateRecordsState(aResponse);
-    mAddrRecord.UpdateStateAfterAnswer(aResponse);
+    mIp6AddrRecord.UpdateStateAfterAnswer(aResponse);
+
+    if (mIp4AddrRecord != nullptr)
+    {
+        mIp4AddrRecord->UpdateStateAfterAnswer(aResponse);
+    }
 
     if (IsEmpty())
     {
@@ -1731,7 +2021,12 @@ void Core::HostEntry::DetermineNextFireTime(void)
     VerifyOrExit(GetState() == kRegistered);
 
     Entry::DetermineNextFireTime();
-    mAddrRecord.UpdateFireTimeOn(*this);
+    mIp6AddrRecord.UpdateFireTimeOn(*this);
+
+    if (mIp4AddrRecord != nullptr)
+    {
+        mIp4AddrRecord->UpdateFireTimeOn(*this);
+    }
 
 exit:
     return;
@@ -1742,33 +2037,72 @@ void Core::HostEntry::DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) con
     VerifyOrExit(GetState() == kRegistered);
 
     Entry::DetermineNextAggrTxTime(aNextAggrTxTime);
-    mAddrRecord.DetermineNextAggrTxTime(aNextAggrTxTime);
+    mIp6AddrRecord.DetermineNextAggrTxTime(aNextAggrTxTime);
+
+    if (mIp4AddrRecord != nullptr)
+    {
+        mIp4AddrRecord->DetermineNextAggrTxTime(aNextAggrTxTime);
+    }
 
 exit:
     return;
 }
 
-void Core::HostEntry::AppendAddressRecordsTo(TxMessage &aTxMessage, Section aSection)
+void Core::HostEntry::AppendIp6AddressRecordsTo(TxMessage &aTxMessage, Section aSection)
+{
+    AppendAddressRecordsTo(aTxMessage, aSection, mIp6AddrRecord, /* aIp6 */ true);
+}
+
+void Core::HostEntry::AppendIp4AddressRecordsTo(TxMessage &aTxMessage, Section aSection)
+{
+    if (mIp4AddrRecord != nullptr)
+    {
+        AppendAddressRecordsTo(aTxMessage, aSection, *mIp4AddrRecord, /* aIp6 */ false);
+    }
+}
+
+void Core::HostEntry::AppendAddressRecordsTo(TxMessage  &aTxMessage,
+                                             Section     aSection,
+                                             AddrRecord &aAddrRecord,
+                                             bool        aIp6)
 {
     Message *message;
     bool     isLegacyUnicast = (aTxMessage.GetType() == TxMessage::kLegacyUnicastResponse);
 
-    VerifyOrExit(mAddrRecord.CanAppend());
-    mAddrRecord.MarkAsAppended(aTxMessage, aSection);
+    VerifyOrExit(aAddrRecord.CanAppend());
+    aAddrRecord.MarkAsAppended(aTxMessage, aSection);
 
     message = &aTxMessage.SelectMessageFor(aSection);
 
-    for (const Ip6::Address &address : mAddresses)
+    for (const Ip6::Address &address : aAddrRecord.mAddresses)
     {
-        AaaaRecord aaaaRecord;
-
-        aaaaRecord.Init();
-        aaaaRecord.SetAddress(address);
-        aaaaRecord.SetTtl(mAddrRecord.GetTtl(isLegacyUnicast));
-        UpdateCacheFlushFlagIn(aaaaRecord, aSection, isLegacyUnicast);
-
         AppendNameTo(aTxMessage, aSection);
-        SuccessOrAssert(message->Append(aaaaRecord));
+
+        if (aIp6)
+        {
+            AaaaRecord aaaaRecord;
+
+            aaaaRecord.Init();
+            aaaaRecord.SetAddress(address);
+            aaaaRecord.SetTtl(aAddrRecord.GetTtl(isLegacyUnicast));
+            UpdateCacheFlushFlagIn(aaaaRecord, aSection, isLegacyUnicast);
+
+            SuccessOrAssert(message->Append(aaaaRecord));
+        }
+        else
+        {
+            Ip4::Address ip4Address;
+            ARecord      aRecord;
+
+            SuccessOrAssert(ip4Address.ExtractFromIp4MappedIp6Address(address));
+
+            aRecord.Init();
+            aRecord.SetAddress(ip4Address);
+            aRecord.SetTtl(aAddrRecord.GetTtl(isLegacyUnicast));
+            UpdateCacheFlushFlagIn(aRecord, aSection, isLegacyUnicast);
+
+            SuccessOrAssert(message->Append(aRecord));
+        }
 
         aTxMessage.IncrementRecordCount(aSection);
     }
@@ -1786,9 +2120,14 @@ void Core::HostEntry::AppendNsecRecordTo(TxMessage &aTxMessage, Section aSection
 {
     TypeArray types;
 
-    if (mAddrRecord.IsPresent() && (mAddrRecord.GetTtl() > 0))
+    if (mIp6AddrRecord.IsPresent() && (mIp6AddrRecord.GetTtl() > 0))
     {
         types.Add(ResourceRecord::kTypeAaaa);
+    }
+
+    if ((mIp4AddrRecord != nullptr) && mIp4AddrRecord->IsPresent() && (mIp4AddrRecord->GetTtl() > 0))
+    {
+        types.Add(ResourceRecord::kTypeA);
     }
 
     if (mKeyRecord.IsPresent() && (mKeyRecord.GetTtl() > 0))
@@ -1820,18 +2159,28 @@ exit:
     return;
 }
 
+void Core::HostEntry::MarkToAppendAddrRecordsInAdditionalData(void)
+{
+    mIp6AddrRecord.MarkToAppendInAdditionalData();
+
+    if (mIp4AddrRecord != nullptr)
+    {
+        mIp4AddrRecord->MarkToAppendInAdditionalData();
+    }
+}
+
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
 Error Core::HostEntry::CopyInfoTo(Host &aHost, EntryState &aState) const
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(mAddrRecord.IsPresent(), error = kErrorNotFound);
+    VerifyOrExit(mIp6AddrRecord.IsPresent(), error = kErrorNotFound);
 
     aHost.mHostName        = mName.AsCString();
-    aHost.mAddresses       = mAddresses.AsCArray();
-    aHost.mAddressesLength = mAddresses.GetLength();
-    aHost.mTtl             = mAddrRecord.GetTtl();
+    aHost.mAddresses       = mIp6AddrRecord.mAddresses.AsCArray();
+    aHost.mAddressesLength = mIp6AddrRecord.mAddresses.GetLength();
+    aHost.mTtl             = mIp6AddrRecord.GetTtl();
     aHost.mInfraIfIndex    = Get<Core>().mInfraIfIndex;
     aState                 = static_cast<EntryState>(GetState());
 
@@ -1853,6 +2202,25 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
+//----------------------------------------------------------------------------------------------------------------------
+// Core::HostEntry::AddrRecord
+
+void Core::HostEntry::AddrRecord::Clear(void)
+{
+    RecordInfo::Clear();
+    mAddresses.Free();
+}
+
+void Core::HostEntry::AddrRecord::UpdateAddresses(const Host &aHost)
+{
+    UpdateProperty(mAddresses, AsCoreTypePtr(aHost.mAddresses), aHost.mAddressesLength);
+}
+
+void Core::HostEntry::AddrRecord::UpdateAddresses(const AddressArray &aAddresses)
+{
+    UpdateProperty(mAddresses, aAddresses.AsCArray(), aAddresses.GetLength());
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 // Core::ServiceEntry
@@ -2103,21 +2471,21 @@ exit:
 
 void Core::ServiceEntry::AnswerServiceNameQuestion(const AnswerInfo &aInfo)
 {
-    RecordAndType records[] = {
-        {mSrvRecord, ResourceRecord::kTypeSrv},
-        {mTxtRecord, ResourceRecord::kTypeTxt},
-        {mKeyRecord, ResourceRecord::kTypeKey},
-    };
+    RecordAndTypeArray recordAndTypes;
 
     VerifyOrExit(GetState() == kRegistered);
 
+    recordAndTypes.Add(mSrvRecord, ResourceRecord::kTypeSrv);
+    recordAndTypes.Add(mTxtRecord, ResourceRecord::kTypeTxt);
+    recordAndTypes.Add(mKeyRecord, ResourceRecord::kTypeKey);
+
     if (aInfo.mIsProbe)
     {
-        AnswerProbe(aInfo, records, GetArrayLength(records));
+        AnswerProbe(aInfo, recordAndTypes);
     }
     else
     {
-        AnswerNonProbe(aInfo, records, GetArrayLength(records));
+        AnswerNonProbe(aInfo, recordAndTypes);
     }
 
     DetermineNextFireTime();
@@ -2313,7 +2681,7 @@ void Core::ServiceEntry::PrepareResponseRecords(EntryContext &aContext)
 
         if (hostEntry != nullptr)
         {
-            hostEntry->mAddrRecord.MarkToAppendInAdditionalData();
+            hostEntry->MarkToAppendAddrRecordsInAdditionalData();
         }
     }
 
@@ -2324,7 +2692,7 @@ void Core::ServiceEntry::PrepareResponseRecords(EntryContext &aContext)
 
         if ((mSrvRecord.GetTtl() > 0) && (hostEntry != nullptr))
         {
-            hostEntry->mAddrRecord.MarkToAppendInAdditionalData();
+            hostEntry->MarkToAppendAddrRecordsInAdditionalData();
         }
     }
 
@@ -2352,9 +2720,17 @@ void Core::ServiceEntry::PrepareResponseRecords(EntryContext &aContext)
         AppendTxtRecordTo(response, kAdditionalDataSection);
     }
 
-    if ((hostEntry != nullptr) && (hostEntry->mAddrRecord.ShouldAppendInAdditionalDataSection()))
+    if (hostEntry != nullptr)
     {
-        hostEntry->AppendAddressRecordsTo(response, kAdditionalDataSection);
+        if (hostEntry->mIp6AddrRecord.ShouldAppendInAdditionalDataSection())
+        {
+            hostEntry->AppendIp6AddressRecordsTo(response, kAdditionalDataSection);
+        }
+
+        if ((hostEntry->mIp4AddrRecord != nullptr) && hostEntry->mIp4AddrRecord->ShouldAppendInAdditionalDataSection())
+        {
+            hostEntry->AppendIp4AddressRecordsTo(response, kAdditionalDataSection);
+        }
     }
 
     if (appendNsec || ShouldAnswerNsec(aContext.GetNow()))
@@ -2427,6 +2803,8 @@ void Core::ServiceEntry::DiscoverOffsetsAndHost(HostEntry *&aHostEntry)
     // Discovers the `HostEntry` associated with this `ServiceEntry`
     // and name compression offsets from the previously appended
     // entries.
+
+    // TODO: Need to handle name matching host name
 
     aHostEntry = Get<Core>().mHostEntries.FindMatching(mHostName);
 
@@ -3709,7 +4087,7 @@ void Core::RxMessage::ProcessQuestion(Question &aQuestion)
         ExitNow();
     }
 
-    // Check if question name matches a `HostEntry` or a `ServiceEntry`
+    // Check if question name matches a `HostEntry` or a `ServiceEntry`.
 
     aQuestion.mEntry = Get<Core>().mHostEntries.FindMatching(name);
 
