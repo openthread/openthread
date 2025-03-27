@@ -44,17 +44,20 @@ RegisterLogModule("SubMac");
 
 void SubMac::WedInit(void)
 {
+    mIsWedSampling        = false;
+    mIsWedEnabled         = false;
     mWakeupListenInterval = 0;
     mWedTimer.Stop();
 }
 
 void SubMac::UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aDuration, uint8_t aChannel)
 {
-    VerifyOrExit(RadioSupportsReceiveTiming());
-
     mWakeupListenInterval = aInterval;
     mWakeupListenDuration = aDuration;
     mWakeupChannel        = aChannel;
+    mIsWedSampling        = false;
+    mIsWedEnabled         = aEnable;
+
     mWedTimer.Stop();
 
     if (aEnable)
@@ -64,14 +67,27 @@ void SubMac::UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aD
 
         HandleWedTimer();
     }
-
-exit:
-    return;
+    else if (!RadioSupportsReceiveTiming())
+    {
+        UpdateRadioSampleState();
+    }
 }
 
 void SubMac::HandleWedTimer(Timer &aTimer) { aTimer.Get<SubMac>().HandleWedTimer(); }
 
 void SubMac::HandleWedTimer(void)
+{
+    if (RadioSupportsReceiveTiming())
+    {
+        HandleWedReceiveAt();
+    }
+    else
+    {
+        HandleWedReceiveOrSleep();
+    }
+}
+
+void SubMac::HandleWedReceiveAt(void)
 {
     mWedSampleTime += mWakeupListenInterval;
     mWedSampleTimeRadio += mWakeupListenInterval;
@@ -84,6 +100,26 @@ void SubMac::HandleWedTimer(void)
     }
 }
 
+void SubMac::HandleWedReceiveOrSleep(void)
+{
+    TimeMilli fireTime;
+
+    mIsWedSampling = !mIsWedSampling;
+
+    if (mIsWedSampling)
+    {
+        fireTime = mWedSampleTime + mWakeupListenDuration + kMinReceiveOnAfter;
+    }
+    else
+    {
+        mWedSampleTime += mWakeupListenInterval;
+        fireTime = mWedSampleTime - kMinReceiveOnAhead;
+    }
+
+    mWedTimer.FireAt(fireTime);
+
+    UpdateRadioSampleState();
+}
 } // namespace Mac
 } // namespace ot
 
