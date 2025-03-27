@@ -895,7 +895,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel);
 otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t aStart, uint32_t aDuration);
 
 /**
- * The radio driver calls this method to notify OpenThread of a received frame.
+ * The radio driver calls this function to notify OpenThread of a received frame.
  *
  * @param[in]  aInstance The OpenThread instance structure.
  * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
@@ -906,7 +906,7 @@ otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t a
 extern void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
- * The radio driver calls this method to notify OpenThread diagnostics module of a received frame.
+ * The radio driver calls this function to notify OpenThread diagnostics module of a received frame.
  *
  * Is used when diagnostics is enabled.
  *
@@ -950,7 +950,7 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame);
 
 /**
- * The radio driver calls this method to notify OpenThread that the transmission has started.
+ * The radio driver calls this function to notify OpenThread that the transmission has started.
  *
  * @note  This function should be called by the same thread that executes all of the other OpenThread code. It should
  *        not be called by ISR or any other task.
@@ -978,7 +978,7 @@ extern void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame);
 extern void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
 
 /**
- * The radio driver calls this method to notify OpenThread diagnostics module that the transmission has completed.
+ * The radio driver calls this function to notify OpenThread diagnostics module that the transmission has completed.
  *
  * Is used when diagnostics is enabled.
  *
@@ -991,11 +991,14 @@ extern void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRad
 extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
- * Get the most recent RSSI measurement.
+ * Return a recent RSSI measurement when the radio is in receive state.
  *
- * @param[in] aInstance  The OpenThread instance structure.
+ * If the radio is not in receive state, then `OT_RADIO_RSSI_INVALID` MUST be returned. If the radio is in receive
+ * state, then a single RSSI measurement is taken on the current receive channel and returned.
  *
- * @returns The RSSI in dBm when it is valid.  127 when RSSI is invalid.
+ * @param[in] aInstance The OpenThread instance structure.
+ *
+ * @returns The RSSI in dBm when it is valid. `OT_RADIO_RSSI_INVALID` when RSSI is invalid.
  */
 int8_t otPlatRadioGetRssi(otInstance *aInstance);
 
@@ -1015,7 +1018,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance);
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration);
 
 /**
- * The radio driver calls this method to notify OpenThread that the energy scan is complete.
+ * The radio driver calls this function to notify OpenThread that the energy scan is complete.
  *
  * Is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability.
  *
@@ -1025,7 +1028,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 extern void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
 
 /**
- * The radio driver calls this method to notify OpenThread that the spinel bus latency has been changed.
+ * The radio driver calls this function to notify OpenThread that the spinel bus latency has been changed.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  */
@@ -1166,10 +1169,15 @@ otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCo
 /**
  * Enable or disable CSL receiver.
  *
+ * Regarding @p aExtAddr, this function assumes big-endian byte order. Note that this differs from
+ * `otPlatRadioSetExtendedAddress()`, `otPlatRadioAddSrcMatchExtEntry()`, and `otPlatRadioClearSrcMatchExtEntry()`,
+ * which use little-endian byte order for the Extended MAC address.
+ *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aCslPeriod    CSL period, 0 for disabling CSL. CSL period is in unit of 10 symbols.
  * @param[in]  aShortAddr    The short source address of CSL receiver's peer.
- * @param[in]  aExtAddr      The extended source address of CSL receiver's peer.
+ * @param[in]  aExtAddr      The extended source address of CSL receiver's peer. The @p aExtAddr assumes big-endian
+ *                           byte order.
  *
  * @note Platforms should use CSL peer addresses to include CSL IE when generating enhanced acks.
  *
@@ -1301,15 +1309,20 @@ otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode);
  * Enable/disable or update Enhanced-ACK Based Probing in radio for a specific Initiator.
  *
  * After Enhanced-ACK Based Probing is configured by a specific Probing Initiator, the Enhanced-ACK sent to that
- * node should include Vendor-Specific IE containing Link Metrics data. This method informs the radio to start/stop to
+ * node should include Vendor-Specific IE containing Link Metrics data. This function informs the radio to start/stop to
  * collect Link Metrics data and include Vendor-Specific IE that containing the data in Enhanced-ACK sent to that
  * Probing Initiator.
+ *
+ * Regarding @p aExtAddress, this function assumes big-endian byte order. Note that this differs from
+ * `otPlatRadioSetExtendedAddress()`, `otPlatRadioAddSrcMatchExtEntry()`, and `otPlatRadioClearSrcMatchExtEntry()`,
+ * which use little-endian byte order for the Extended MAC address.
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aLinkMetrics  This parameter specifies what metrics to query. Per spec 4.11.3.4.4.6, at most 2 metrics
  *                           can be specified. The probing would be disabled if @p `aLinkMetrics` is bitwise 0.
  * @param[in]  aShortAddress The short address of the Probing Initiator.
- * @param[in]  aExtAddress   The extended source address of the Probing Initiator. @p aExtAddr MUST NOT be `NULL`.
+ * @param[in]  aExtAddress   The extended source address of the Probing Initiator. @p aExtAddress MUST NOT be `NULL`.
+ *                           The @p aExtAddress assumes big-endian byte order.
  *
  * @retval  OT_ERROR_NONE            Successfully configured the Enhanced-ACK Based Probing.
  * @retval  OT_ERROR_INVALID_ARGS    @p aExtAddress is `NULL`.
