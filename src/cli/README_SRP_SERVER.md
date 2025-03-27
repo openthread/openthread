@@ -37,6 +37,7 @@ faststart
 help
 host
 lease
+port
 seqnum
 service
 state
@@ -189,6 +190,18 @@ Set LEASE and KEY-LEASE values.
 
 ```bash
 > srp server lease 1800 7200 86400 1209600
+Done
+```
+
+### port
+
+Usage: `srp server port`
+
+Get the port number the SRP server is listening to. If the server is not running, `0` will be returned.
+
+```bash
+> srp server port
+53536
 Done
 ```
 
