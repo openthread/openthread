@@ -29,6 +29,8 @@
 #ifndef SPINEL_DRIVER_HPP_
 #define SPINEL_DRIVER_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/instance.h>
 
 #include "lib/spinel/coprocessor_type.h"
