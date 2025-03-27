@@ -1714,7 +1714,29 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
 Error Server::ProcessMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    return ProcessMessage(aMessage, TimerMilli::GetNow(), mTtlConfig, mLeaseConfig, &aMessageInfo);
+    Message *message = &aMessage;
+    Error    error;
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    OwnedPtr<Message> decodedMsg;
+
+    if (Get<Coder>().IsEncoded(aMessage))
+    {
+        LogInfo("Received an encoded SRP message from %s", aMessageInfo.GetPeerAddr().ToString().AsCString());
+
+        decodedMsg.Reset(Get<MessagePool>().Allocate(Message::kTypeIp6));
+        VerifyOrExit(decodedMsg != nullptr, error = kErrorNoBufs);
+
+        SuccessOrExit(error = Get<Coder>().Decode(aMessage, *decodedMsg));
+        message = decodedMsg.Get();
+
+        LogInfo("Successfully decoded the SRP message");
+    }
+#endif
+
+    ExitNow(error = ProcessMessage(*message, TimerMilli::GetNow(), mTtlConfig, mLeaseConfig, &aMessageInfo));
+
+exit:
+    return error;
 }
 
 Error Server::ProcessMessage(Message                &aMessage,
