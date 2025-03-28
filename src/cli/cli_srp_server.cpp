@@ -544,6 +544,18 @@ exit:
 }
 
 /**
+ * @cli srp server port (get)
+ * @code
+ * srp server port
+ * 53536
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otSrpServerGetPort
+ */
+template <> otError SrpServer::Process<Cmd("port")>(Arg aArgs[]) { return ProcessGet(aArgs, otSrpServerGetPort); }
+
+/**
  * @cli srp server seqnum (get,set)
  * @code
  * srp server seqnum 20
@@ -587,6 +599,7 @@ otError SrpServer::Process(Arg aArgs[])
 #endif
         CmdEntry("host"),
         CmdEntry("lease"),
+        CmdEntry("port"),
         CmdEntry("seqnum"),
         CmdEntry("service"),
         CmdEntry("state"),
