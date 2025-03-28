@@ -40,6 +40,10 @@
 
 namespace ot {
 
+#if (OPENTHREAD_FTD + OPENTHREAD_MTD + OPENTHREAD_RADIO) != 1
+#error "Exactly one of {OPENTHREAD_FTD, OPENTHREAD_MTD, OPENTHREAD_RADIO} MUST be set"
+#endif
+
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 // Define the raw storage used for OpenThread instance (in single-instance case).
