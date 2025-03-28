@@ -3297,8 +3297,6 @@ exit:
 
 template <> otError Interpreter::Process<Cmd("instanceid")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_INVALID_ARGS;
-
     /**
      * @cli instanceid
      * @code
@@ -3309,13 +3307,7 @@ template <> otError Interpreter::Process<Cmd("instanceid")>(Arg aArgs[])
      * @par api_copy
      * #otInstanceGetId
      */
-    if (aArgs[0].IsEmpty())
-    {
-        OutputLine("%lu", ToUlong(otInstanceGetId(GetInstancePtr())));
-        error = OT_ERROR_NONE;
-    }
-
-    return error;
+    return ProcessGet(aArgs, otInstanceGetId);
 }
 
 template <> otError Interpreter::Process<Cmd("ipaddr")>(Arg aArgs[])
@@ -4080,8 +4072,6 @@ template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
     }
     else
     {
-        otPskcRef pskcRef;
-
         /**
          * @cli pskcref (set)
          * @code
@@ -4092,19 +4082,9 @@ template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
          * @par api_copy
          * #otThreadSetPskcRef
          */
-        if (aArgs[1].IsEmpty())
-        {
-            SuccessOrExit(error = aArgs[0].ParseAsUint32(pskcRef));
-        }
-        else
-        {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
-        }
-
-        error = otThreadSetPskcRef(GetInstancePtr(), pskcRef);
+        error = ProcessSet(aArgs, otThreadSetPskcRef);
     }
 
-exit:
     return error;
 }
 #endif
@@ -4877,13 +4857,9 @@ template <> otError Interpreter::Process<Cmd("networkkeyref")>(Arg aArgs[])
     }
     else
     {
-        otNetworkKeyRef keyRef;
-
-        SuccessOrExit(error = aArgs[0].ParseAsUint32(keyRef));
-        SuccessOrExit(error = otThreadSetNetworkKeyRef(GetInstancePtr(), keyRef));
+        error = ProcessSet(aArgs, otThreadSetNetworkKeyRef);
     }
 
-exit:
     return error;
 }
 #endif
