@@ -202,7 +202,7 @@ Error ParseAsBool(const char *aString, bool &aBool)
 exit:
     return error;
 }
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_MDNS
 
 Error ParseAsIp6Address(const char *aString, otIp6Address &aAddress)
 {
@@ -218,7 +218,7 @@ Error ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix)
 {
     return (aString != nullptr) ? otIp6PrefixFromString(aString, &aPrefix) : kErrorInvalidArgs;
 }
-#endif // #if OPENTHREAD_FTD || OPENTHREAD_MTD
+#endif // #if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_MDNS
 
 enum HexStringParseMode
 {

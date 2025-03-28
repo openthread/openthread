@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024, The OpenThread Authors.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,34 +26,41 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-simulation.h"
+#ifndef OT_POSIX_MDNS_PLATFORM_H_
+#define OT_POSIX_MDNS_PLATFORM_H_
 
-#include <openthread/platform/mdns_socket.h>
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <poll.h>
+#include <signal.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <unistd.h>
 
-otError otPlatMdnsSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aEnable);
-    OT_UNUSED_VARIABLE(aInfraIfIndex);
+#include <openthread-core-config.h>
+#include <openthread/instance.h>
 
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
+void platformAlarmInit(uint32_t aSpeedUpFactor);
+void platformAlarmUpdateTimeout(struct timeval *aTimeout);
+void platformAlarmProcess(otInstance *aInstance);
 
-void otPlatMdnsSendMulticast(otInstance *aInstance, otMessage *aMessage, uint32_t aInfraIfIndex)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aInfraIfIndex);
+void platformLoggingSetFileName(const char *aName);
+void platformLoggingInit(const char *aName);
+void platformLoggingDeinit(void);
 
-    otMessageFree(aMessage);
-}
+void platformMdnsSocketUpdateFdSet(fd_set *aReadFdSet, int *aMaxFd);
+void platformMdnsSocketProcess(otInstance *aInstance, const fd_set *aReadFdSet);
 
-void otPlatMdnsSendUnicast(otInstance *aInstance, otMessage *aMessage, const otPlatMdnsAddressInfo *aAddress)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aAddress);
-    otMessageFree(aMessage);
-}
+void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd);
+void platformUartProcess(void);
 
-#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+#endif // OT_POSIX_MDNS_PLATFORM_H_

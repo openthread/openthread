@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2025, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,41 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_FTD OR OT_MTD OR OT_RCP)
-    include(full.cmake)
+add_executable(ot-cli-mdns
+    cli_uart.cpp
+    main.c
+)
+
+target_include_directories(ot-cli-mdns PRIVATE ${COMMON_INCLUDES})
+
+if(NOT DEFINED OT_PLATFORM_LIB_MDNS)
+    set(OT_PLATFORM_LIB_MDNS ${OT_PLATFORM_LIB})
 endif()
+
+target_compile_definitions(ot-cli-mdns PRIVATE
+    OPENTHREAD_FTD=0
+    OPENTHREAD_MTD=0
+    OPENTHREAD_RADIO=0
+    OPENTHREAD_MDNS=1
+)
+
+target_link_libraries(ot-cli-mdns PRIVATE
+    openthread-cli-mdns
+    ${OT_PLATFORM_LIB_MDNS}
+    openthread-mdns
+    ${OT_PLATFORM_LIB_MDNS}
+    openthread-cli-mdns
+    ot-config-mdns
+    ot-config
+)
+
+if(OT_LINKER_MAP)
+    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+        target_link_libraries(ot-cli-mdns PRIVATE -Wl,-map,ot-cli-mdns.map)
+    else()
+        target_link_libraries(ot-cli-mdns PRIVATE -Wl,-Map=ot-cli-mdns.map)
+    endif()
+endif()
+
+install(TARGETS ot-cli-mdns
+    DESTINATION bin)

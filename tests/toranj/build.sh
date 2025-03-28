@@ -48,6 +48,7 @@ display_usage()
     echo "        posix-15.4      : Build OpenThread POSIX - 15.4 radio"
     echo "        posix-trel      : Build OpenThread POSIX - TREL radio "
     echo "        posix-15.4+trel : Build OpenThread POSIX - multi radio (15.4+TREL)"
+    echo "        mdns            : Build OpenThread mDNS library (standalone)"
     echo ""
     echo "Options:"
     echo "        -c/--enable-coverage      Enable code coverage"
@@ -114,6 +115,7 @@ case ${build_config} in
         cd "${top_builddir}" || die "cd failed"
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=ON -DOT_APP_RCP=OFF \
+            -DOT_FTD=ON -DOT_MTD=ON -DOT_RCP=OFF -DOT_MDNS_LIB=OFF \
             -DOT_OPERATIONAL_DATASET_AUTO_INIT=ON -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_BORDER_ROUTING=OFF \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
@@ -128,6 +130,7 @@ case ${build_config} in
         cd "${top_builddir}" || die "cd failed"
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=ON -DOT_APP_RCP=OFF \
+            -DOT_FTD=ON -DOT_MTD=ON -DOT_RCP=OFF -DOT_MDNS_LIB=OFF \
             -DOT_15_4=ON -DOT_TREL=OFF -DOT_OPERATIONAL_DATASET_AUTO_INIT=ON \
             -DOT_BORDER_ROUTING=OFF \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
@@ -144,6 +147,7 @@ case ${build_config} in
         cd "${top_builddir}" || die "cd failed"
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=ON -DOT_APP_RCP=OFF \
+            -DOT_FTD=ON -DOT_MTD=ON -DOT_RCP=OFF -DOT_MDNS_LIB=OFF \
             -DOT_15_4=OFF -DOT_TREL=ON -DOT_OPERATIONAL_DATASET_AUTO_INIT=ON \
             -DOT_BORDER_ROUTING=OFF \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
@@ -160,6 +164,7 @@ case ${build_config} in
         cd "${top_builddir}" || die "cd failed"
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=ON -DOT_APP_RCP=OFF \
+            -DOT_FTD=ON -DOT_MTD=ON -DOT_RCP=OFF -DOT_MDNS_LIB=OFF \
             -DOT_15_4=ON -DOT_TREL=ON -DOT_OPERATIONAL_DATASET_AUTO_INIT=ON \
             -DOT_BORDER_ROUTING=OFF \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
@@ -176,6 +181,7 @@ case ${build_config} in
         cd "${top_builddir}" || die "cd failed"
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=ON -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
+            -DOT_FTD=ON -DOT_MTD=ON -DOT_RCP=OFF -DOT_MDNS_LIB=OFF \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
@@ -189,6 +195,7 @@ case ${build_config} in
         cd "${top_builddir}" || die "cd failed"
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=ON -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
+            -DOT_FTD=ON -DOT_MTD=ON -DOT_RCP=OFF -DOT_MDNS_LIB=OFF \
             -DOT_15_4=ON -DOT_TREL=OFF \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
@@ -204,6 +211,7 @@ case ${build_config} in
         cd "${top_builddir}" || die "cd failed"
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=ON -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
+            -DOT_FTD=ON -DOT_MTD=ON -DOT_RCP=OFF -DOT_MDNS_LIB=OFF \
             -DOT_15_4=OFF -DOT_TREL=ON \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
@@ -219,6 +227,7 @@ case ${build_config} in
         cd "${top_builddir}" || die "cd failed"
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=ON -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
+            -DOT_FTD=ON -DOT_MTD=ON -DOT_RCP=OFF -DOT_MDNS_LIB=OFF \
             -DOT_15_4=ON -DOT_TREL=ON \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
@@ -234,6 +243,7 @@ case ${build_config} in
         cd "${top_builddir}" || die "cd failed"
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_APP_RCP=ON \
+            -DOT_FTD=OFF -DOT_MTD=OFF -DOT_RCP=ON -DOT_MDNS_LIB=OFF \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
@@ -297,13 +307,28 @@ case ${build_config} in
 
     all | cmake)
         echo "===================================================================================================="
-        echo "Building OpenThread (NCP/CLI for FTD/MTD/RCP mode) with simulation platform using cmake"
+        echo "Building OpenThread (NCP/CLI for FTD/MTD/RCP/mDNS mode) with simulation platform using cmake"
         echo "===================================================================================================="
         cd "${top_builddir}" || die "cd failed"
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=ON -DOT_APP_NCP=ON -DOT_APP_RCP=ON \
+            -DOT_FTD=ON -DOT_MTD=ON -DOT_RCP=ON -DOT_MDNS_LIB=ON \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
+            "${top_srcdir}" || die
+        ninja || die
+        ;;
+
+    mdns)
+        echo "===================================================================================================="
+        echo "Building OpenThread mDNS only with CLI and example posix platform using cmake"
+        echo "===================================================================================================="
+        cd "${top_builddir}" || die "cd failed"
+        cmake -GNinja -DOT_PLATFORM=posix_mdns -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
+            -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=ON -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
+            -DOT_FTD=OFF -DOT_MTD=OFF -DOT_RCP=OFF -DOT_MDNS_LIB=ON \
+            -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
+            -DOT_PROJECT_CONFIG=../examples/config/ot-core-config-mdns.h \
             "${top_srcdir}" || die
         ninja || die
         ;;
