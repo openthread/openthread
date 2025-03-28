@@ -1336,9 +1336,7 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 
 void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 {
-#if OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
-    OT_UNUSED_VARIABLE(aExtAddress);
-#else
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
     uint32_t       frameCounter = 0;
     uint8_t        securityLevel;
     uint8_t        nonce[Crypto::AesCcm::kNonceSize];
@@ -1364,7 +1362,9 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 
 exit:
     return;
-#endif // OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
+#else
+    OT_UNUSED_VARIABLE(aExtAddress);
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
 }
 
 void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
@@ -1512,12 +1512,7 @@ exit:
 
 Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey)
 {
-#if OPENTHREAD_RADIO
-    OT_UNUSED_VARIABLE(aExtAddress);
-    OT_UNUSED_VARIABLE(aMacKey);
-
-    return kErrorNone;
-#else
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     Error          error        = kErrorSecurity;
     uint32_t       frameCounter = 0;
     uint8_t        securityLevel;
@@ -1555,7 +1550,12 @@ Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMate
 
 exit:
     return error;
-#endif // OPENTHREAD_RADIO
+#else
+    OT_UNUSED_VARIABLE(aExtAddress);
+    OT_UNUSED_VARIABLE(aMacKey);
+
+    return kErrorNone;
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 }
 
 // LCOV_EXCL_START
