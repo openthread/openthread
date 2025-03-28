@@ -95,6 +95,7 @@ public:
         kQueryId             = OT_NETWORK_DIAGNOSTIC_TLV_QUERY_ID,
         kMleCounters         = OT_NETWORK_DIAGNOSTIC_TLV_MLE_COUNTERS,
         kVendorAppUrl        = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_APP_URL,
+        kEnhancedRoute       = OT_NETWORK_DIAGNOSTIC_TLV_ENHANCED_ROUTE,
     };
 
     /**
@@ -953,6 +954,59 @@ private:
 } OT_TOOL_PACKED_END;
 
 #endif // OPENTHREAD_FTD
+
+/**
+ * Represents an Enhanced Route TLV Entry
+ */
+OT_TOOL_PACKED_BEGIN
+class EnhancedRouteTlvEntry
+{
+public:
+    typedef otNetworkDiagEnhRouteData ParseInfo; ///< Parse entry info
+
+    /**
+     * Initializes the entry as self (associated with device itself).
+     */
+    void InitAsSelf(void) { SetRouteData(kSelfFlag); }
+
+    /**
+     * Initializes the entry from given `router`.
+     *
+     * @param[in] aRouter  Router entry to use for initialization.
+     */
+    void InitFrom(const Router &aRouter);
+
+    /**
+     * Parses the entry and populate the information in given `ParseInfo` struct.
+     *
+     * @parma[out] aParseInfo   The `ParseInfo` structure to populate.
+     */
+    void Parse(ParseInfo &aParseInfo) const;
+
+private:
+    // Format:
+    //
+    //  15  14  13   12  11  10  9   8   7   6   5   4   3   2   1   0
+    // +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    // | S | L | LQOut | LQIn  |     NextHop (6-bit)   | NHCost(4 bits)|
+    // +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+
+    static constexpr uint16_t kSelfFlag             = 1 << 15;
+    static constexpr uint16_t kLinkFlag             = 1 << 14;
+    static constexpr uint8_t  kLinkQualityOutOffset = 12;
+    static constexpr uint8_t  kLinkQualityInOffset  = 10;
+    static constexpr uint8_t  kNextHopOffset        = 4;
+    static constexpr uint8_t  kNextHopCostOffset    = 0;
+
+    static constexpr uint16_t kLinkQualityMask = 0x3;
+    static constexpr uint16_t kNextHopMask     = 0x3f;
+    static constexpr uint16_t kCostMask        = 0xf;
+
+    uint16_t GetRouteData(void) const { return BigEndian::HostSwap16(mRouteData); }
+    void     SetRouteData(uint16_t aRouteData) { mRouteData = BigEndian::HostSwap16(aRouteData); }
+
+    uint16_t mRouteData;
+} OT_TOOL_PACKED_END;
 
 /**
  * Implements Answer TLV generation and parsing.

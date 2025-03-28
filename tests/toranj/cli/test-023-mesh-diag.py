@@ -160,6 +160,50 @@ verify(len([line for line in neightable if line.startswith('rloc16')]) == 2)
 neightable = r3.cli('meshdiag routerneighbortable', r1_rloc)
 verify(len([line for line in neightable if line.startswith('rloc16')]) == 1)
 
+# Validate network diagnostics enhanced route TLV
+
+r1_router_id = int(r1_rloc / 1024)
+r2_router_id = int(r2_rloc / 1024)
+r3_router_id = int(r3_rloc / 1024)
+
+enh_routes = r1.cli('networkdiagnostic get', r3.get_rloc_ip_addr(), 37)
+
+verify(enh_routes[1] == 'EnhRoute:')
+verify(len(enh_routes) == 5)
+
+for line in enh_routes[2:]:
+    line = line.strip()
+    verify(line.startswith('- RouterId:'))
+    rid = int(line[11:].split()[0])
+    if (rid == r1_router_id):
+        verify('HasLink:no' in line)
+        verify(f'NextHop:{r2_router_id}' in line)
+    elif (rid == r2_router_id):
+        verify('HasLink:yes' in line)
+        verify('NextHop:na' in line)
+    elif (rid == r3_router_id):
+        verify('The queried device' in line)
+    else:
+        verify(False)
+
+enh_routes = r3.cli('networkdiagnostic get', r2.get_rloc_ip_addr(), 37)
+
+verify(enh_routes[1] == 'EnhRoute:')
+verify(len(enh_routes) == 5)
+
+for line in enh_routes[2:]:
+    line = line.strip()
+    verify(line.startswith('- RouterId:'))
+    rid = int(line[11:].split()[0])
+    if (rid == r1_router_id):
+        verify('HasLink:yes' in line)
+    elif (rid == r2_router_id):
+        verify('The queried device' in line)
+    elif (rid == r3_router_id):
+        verify('HasLink:yes' in line)
+    else:
+        verify(False)
+
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 

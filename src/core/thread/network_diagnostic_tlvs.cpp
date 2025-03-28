@@ -38,6 +38,35 @@
 namespace ot {
 namespace NetworkDiagnostic {
 
+void EnhancedRouteTlvEntry::InitFrom(const Router &aRouter)
+{
+    uint16_t data = 0;
+
+    if (aRouter.IsStateValid())
+    {
+        data |= kLinkFlag;
+        data |= (static_cast<uint16_t>(aRouter.GetLinkQualityOut()) << kLinkQualityOutOffset);
+        data |= (static_cast<uint16_t>(aRouter.GetLinkQualityIn()) << kLinkQualityInOffset);
+    }
+
+    data |= ((static_cast<uint16_t>(aRouter.GetNextHop()) & kNextHopMask) << kNextHopOffset);
+    data |= ((static_cast<uint16_t>(aRouter.GetCost()) & kCostMask) << kNextHopCostOffset);
+
+    SetRouteData(data);
+}
+
+void EnhancedRouteTlvEntry::Parse(ParseInfo &aParseInfo) const
+{
+    uint16_t data = GetRouteData();
+
+    aParseInfo.mIsSelf         = (data & kSelfFlag);
+    aParseInfo.mHasLink        = (data & kLinkFlag);
+    aParseInfo.mLinkQualityOut = static_cast<uint8_t>((data >> kLinkQualityOutOffset) & kLinkQualityMask);
+    aParseInfo.mLinkQualityIn  = static_cast<uint8_t>((data >> kLinkQualityInOffset) & kLinkQualityMask);
+    aParseInfo.mNextHop        = static_cast<uint8_t>((data >> kNextHopOffset) & kNextHopMask);
+    aParseInfo.mNextHopCost    = static_cast<uint8_t>((data >> kNextHopCostOffset) & kCostMask);
+}
+
 #if OPENTHREAD_FTD
 
 void ChildTlv::InitFrom(const Child &aChild)
