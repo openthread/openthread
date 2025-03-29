@@ -1035,6 +1035,9 @@ void SecureTransport::HandleMbedtlsDebug(int aLevel, const char *aFile, int aLin
         break;
 
     case 4:
+        logLevel = kLogLevelDebg;
+        break;
+
     default:
         break;
     }
