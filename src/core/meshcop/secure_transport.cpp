@@ -1022,24 +1022,30 @@ void SecureTransport::HandleMbedtlsDebug(int aLevel, const char *aFile, int aLin
 
     switch (aLevel)
     {
+    case 0:
     case 1:
-        logLevel = kLogLevelCrit;
+        LogCrit("[%u] %s", mSocket.GetSockName().mPort, aStr);
         break;
 
     case 2:
-        logLevel = kLogLevelWarn;
+        LogWarn("[%u] %s", mSocket.GetSockName().mPort, aStr);
         break;
 
     case 3:
-        logLevel = kLogLevelInfo;
+        LogNote("[%u] %s", mSocket.GetSockName().mPort, aStr);
         break;
 
     case 4:
+        LogInfo("[%u] %s", mSocket.GetSockName().mPort, aStr);
+        break;
+
+    case 5:
+        LogDebg("[%u] %s", mSocket.GetSockName().mPort, aStr);
+        break;
+
     default:
         break;
     }
-
-    LogAt(logLevel, "[%u] %s", mSocket.GetSockName().mPort, aStr);
 
     OT_UNUSED_VARIABLE(aStr);
     OT_UNUSED_VARIABLE(aFile);
