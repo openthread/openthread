@@ -140,18 +140,24 @@ Error ChannelMaskTlv::ReadChannelMask(uint32_t &aChannelMask) const
 Error ChannelMaskTlv::FindIn(const Message &aMessage, uint32_t &aChannelMask)
 {
     Error       error;
-    EntriesData entriesData;
     OffsetRange offsetRange;
 
-    entriesData.Clear();
-    entriesData.mMessage = &aMessage;
-
     SuccessOrExit(error = FindTlvValueOffsetRange(aMessage, Tlv::kChannelMask, offsetRange));
-    entriesData.mOffsetRange = offsetRange;
-    error                    = entriesData.Parse(aChannelMask);
+    error = ParseValue(aMessage, offsetRange, aChannelMask);
 
 exit:
     return error;
+}
+
+Error ChannelMaskTlv::ParseValue(const Message &aMessage, const OffsetRange &aOffsetRange, uint32_t &aChannelMask)
+{
+    EntriesData entriesData;
+
+    entriesData.Clear();
+    entriesData.mMessage     = &aMessage;
+    entriesData.mOffsetRange = aOffsetRange;
+
+    return entriesData.Parse(aChannelMask);
 }
 
 Error ChannelMaskTlv::EntriesData::Parse(uint32_t &aChannelMask)
@@ -217,7 +223,7 @@ exit:
     return error;
 }
 
-void ChannelMaskTlv::PrepareValue(Value &aValue, uint32_t aChannelMask)
+void ChannelMaskTlv::PrepareValue(Value &aValue, uint32_t aChannelMask, bool aIncludeZeroPageMasks)
 {
     Entry *entry = reinterpret_cast<Entry *>(aValue.mData);
 
@@ -227,7 +233,7 @@ void ChannelMaskTlv::PrepareValue(Value &aValue, uint32_t aChannelMask)
     {
         uint32_t mask = (Radio::ChannelMaskForPage(page) & aChannelMask);
 
-        if (mask != 0)
+        if ((mask != 0) || aIncludeZeroPageMasks)
         {
             entry->SetChannelPage(page);
             entry->SetMaskLength(kMaskLength);

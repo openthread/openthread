@@ -70,6 +70,7 @@ VENDOR_SW_VERSION_TLV = 27
 THREAD_STACK_VERSION_TLV = 28
 MLE_COUNTERS_TLV = 34
 VENDOR_APP_URL = 35
+NON_PREFERRED_CHANNELS_TLV = 36
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Check setting vendor name, model, ans sw version
@@ -192,8 +193,41 @@ for line in result[1:]:
         verify(False)
 
 result = r2.cli('networkdiagnostic get', r1_rloc, MLE_COUNTERS_TLV)
-print(len(result) >= 1)
 verify(result[1].startswith("MLE Counters:"))
+
+# Test Non-preferred Channels TLV
+
+
+def verify_non_preferred_channels_query_result(mask):
+    r1.cli('networkdiagnostic nonpreferredchannels', mask)
+    result = r1.cli('networkdiagnostic nonpreferredchannels')
+    verify(len(result) == 1)
+    verify(int(result[0], 16) == mask)
+
+
+result = r1.cli('networkdiagnostic nonpreferredchannels')
+verify(len(result) == 1)
+verify(int(result[0], 16) == 0)
+
+verify_non_preferred_channels_query_result(0)
+
+mask = 1 << 26  # channel 26
+
+r1.cli('networkdiagnostic nonpreferredchannels', mask)
+result = r1.cli('networkdiagnostic nonpreferredchannels')
+verify(len(result) == 1)
+verify(int(result[0], 16) == mask)
+
+verify_non_preferred_channels_query_result(mask)
+
+mask = 0
+
+r1.cli('networkdiagnostic nonpreferredchannels', mask)
+result = r1.cli('networkdiagnostic nonpreferredchannels')
+verify(len(result) == 1)
+verify(int(result[0], 16) == mask)
+
+verify_non_preferred_channels_query_result(mask)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
