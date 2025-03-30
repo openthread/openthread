@@ -2321,7 +2321,7 @@ void TestLocalHost(void)
     localHost.mIp6Addrs.Remove(ip6Address);
     otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ false, kInfraIfIndex);
 
-    // Add and then remove the same address quickly
+    // Add then remove the same address quickly
     // It should not be included in the announcements.
 
     SuccessOrQuit(ip6Address.FromString("fd00:cafe::333"));
@@ -2383,6 +2383,121 @@ void TestLocalHost(void)
         dnsMsg = sDnsMessages.GetHead();
         dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 4, /* Auth */ 0, /* Addnl */ 1);
         dnsMsg->Validate(localHost, kInAnswerSection, kCheckA);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+        sDnsMessages.Clear();
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Signal removal of all host addresses and add them all back");
+
+    otPlatMdnsHandleHostAddressRemoveAll(sInstance, kInfraIfIndex);
+
+    for (Ip6::Address &ip6Addr : localHost.mIp6Addrs)
+    {
+        otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Addr, /* aAdded */ true, kInfraIfIndex);
+    }
+
+    for (Ip4::Address &ip4Addr : localHost.mIp4Addrs)
+    {
+        ip6Address.SetToIp4Mapped(ip4Addr);
+        otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
+    }
+
+    Log("Validate that there are no announcements");
+
+    sDnsMessages.Clear();
+
+    AdvanceTime(10 * 1000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Signal removal of all addr, add them all back with one extra IPv6 and one extra IPv4 addr");
+
+    otPlatMdnsHandleHostAddressRemoveAll(sInstance, kInfraIfIndex);
+
+    SuccessOrQuit(ip6Address.FromString("fd00:cafe::5555"));
+    SuccessOrQuit(localHost.mIp6Addrs.PushBack(ip6Address));
+
+    for (Ip6::Address &ip6Addr : localHost.mIp6Addrs)
+    {
+        otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Addr, /* aAdded */ true, kInfraIfIndex);
+    }
+
+    SuccessOrQuit(ip4Address.FromString("200.0.64.13"));
+    SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
+
+    for (Ip4::Address &ip4Addr : localHost.mIp4Addrs)
+    {
+        ip6Address.SetToIp4Mapped(ip4Addr);
+        otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
+    }
+
+    Log("Validate the announcements");
+
+    sDnsMessages.Clear();
+
+    AdvanceTime(5);
+
+    for (uint8_t anncCount = 0; anncCount < kNumAnnounces; anncCount++)
+    {
+        AdvanceTime((anncCount == 0) ? 0 : (1U << (anncCount - 1)) * 1000);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 8, /* Auth */ 0, /* Addnl */ 1);
+        dnsMsg->Validate(localHost, kInAnswerSection, kCheckAaaa | kCheckA);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+        sDnsMessages.Clear();
+    }
+
+    AdvanceTime(10 * 1000);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Signal removal of all addresses and add some back");
+
+    otPlatMdnsHandleHostAddressRemoveAll(sInstance, kInfraIfIndex);
+
+    for (Ip6::Address &ip6Addr : localHost.mIp6Addrs)
+    {
+        otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Addr, /* aAdded */ true, kInfraIfIndex);
+    }
+
+    Log("Before previous events are processed, signal removal of all addresses again");
+    Log("And add them all back without the recently added extra IPv6 and IPv4 addresses");
+
+    AdvanceTime(1);
+
+    otPlatMdnsHandleHostAddressRemoveAll(sInstance, kInfraIfIndex);
+    otPlatMdnsHandleHostAddressRemoveAll(sInstance, kInfraIfIndex);
+
+    localHost.mIp6Addrs.PopBack();
+    localHost.mIp4Addrs.PopBack();
+
+    for (Ip6::Address &ip6Addr : localHost.mIp6Addrs)
+    {
+        otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Addr, /* aAdded */ true, kInfraIfIndex);
+    }
+
+    for (Ip4::Address &ip4Addr : localHost.mIp4Addrs)
+    {
+        ip6Address.SetToIp4Mapped(ip4Addr);
+        otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
+    }
+
+    Log("Validate the announcements");
+
+    sDnsMessages.Clear();
+
+    AdvanceTime(5);
+
+    for (uint8_t anncCount = 0; anncCount < kNumAnnounces; anncCount++)
+    {
+        AdvanceTime((anncCount == 0) ? 0 : (1U << (anncCount - 1)) * 1000);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 6, /* Auth */ 0, /* Addnl */ 1);
+        dnsMsg->Validate(localHost, kInAnswerSection, kCheckAaaa | kCheckA);
         VerifyOrQuit(dnsMsg->GetNext() == nullptr);
         sDnsMessages.Clear();
     }
