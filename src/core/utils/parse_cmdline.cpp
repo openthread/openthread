@@ -48,7 +48,7 @@ static bool IsSeparator(char aChar) { return (aChar == ' ') || (aChar == '\t') |
 
 static bool IsEscapable(char aChar) { return IsSeparator(aChar) || (aChar == '\\'); }
 
-Error ParseCmd(char *aCommandString, Arg aArgs[], uint8_t aArgsMaxLength)
+otError ParseCmd(char *aCommandString, Arg aArgs[], uint8_t aArgsMaxLength)
 {
     Error   error = kErrorNone;
     uint8_t index = 0;
@@ -86,7 +86,7 @@ Error ParseCmd(char *aCommandString, Arg aArgs[], uint8_t aArgsMaxLength)
     return error;
 }
 
-template <typename UintType> Error ParseUint(const char *aString, UintType &aUint)
+template <typename UintType> otError ParseUint(const char *aString, UintType &aUint)
 {
     Error    error;
     uint64_t value;
@@ -100,13 +100,13 @@ exit:
     return error;
 }
 
-Error ParseAsUint8(const char *aString, uint8_t &aUint8) { return ParseUint<uint8_t>(aString, aUint8); }
+otError ParseAsUint8(const char *aString, uint8_t &aUint8) { return ParseUint<uint8_t>(aString, aUint8); }
 
-Error ParseAsUint16(const char *aString, uint16_t &aUint16) { return ParseUint<uint16_t>(aString, aUint16); }
+otError ParseAsUint16(const char *aString, uint16_t &aUint16) { return ParseUint<uint16_t>(aString, aUint16); }
 
-Error ParseAsUint32(const char *aString, uint32_t &aUint32) { return ParseUint<uint32_t>(aString, aUint32); }
+otError ParseAsUint32(const char *aString, uint32_t &aUint32) { return ParseUint<uint32_t>(aString, aUint32); }
 
-Error ParseAsUint64(const char *aString, uint64_t &aUint64)
+otError ParseAsUint64(const char *aString, uint64_t &aUint64)
 {
     static constexpr uint64_t kMaxHexBeforeOverflow = (0xffffffffffffffffULL / 16);
     static constexpr uint64_t kMaxDecBeforeOverflow = (0xffffffffffffffffULL / 10);
@@ -144,7 +144,7 @@ exit:
     return error;
 }
 
-template <typename IntType> Error ParseInt(const char *aString, IntType &aInt)
+template <typename IntType> otError ParseInt(const char *aString, IntType &aInt)
 {
     Error   error;
     int32_t value;
@@ -159,11 +159,11 @@ exit:
     return error;
 }
 
-Error ParseAsInt8(const char *aString, int8_t &aInt8) { return ParseInt<int8_t>(aString, aInt8); }
+otError ParseAsInt8(const char *aString, int8_t &aInt8) { return ParseInt<int8_t>(aString, aInt8); }
 
-Error ParseAsInt16(const char *aString, int16_t &aInt16) { return ParseInt<int16_t>(aString, aInt16); }
+otError ParseAsInt16(const char *aString, int16_t &aInt16) { return ParseInt<int16_t>(aString, aInt16); }
 
-Error ParseAsInt32(const char *aString, int32_t &aInt32)
+otError ParseAsInt32(const char *aString, int32_t &aInt32)
 {
     Error    error;
     uint64_t value;
@@ -191,7 +191,7 @@ exit:
     return error;
 }
 
-Error ParseAsBool(const char *aString, bool &aBool)
+otError ParseAsBool(const char *aString, bool &aBool)
 {
     Error    error;
     uint32_t value;
@@ -204,17 +204,17 @@ exit:
 }
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
-Error ParseAsIp6Address(const char *aString, otIp6Address &aAddress)
+otError ParseAsIp6Address(const char *aString, otIp6Address &aAddress)
 {
     return (aString != nullptr) ? otIp6AddressFromString(aString, &aAddress) : kErrorInvalidArgs;
 }
 
-Error ParseAsIp4Address(const char *aString, otIp4Address &aAddress)
+otError ParseAsIp4Address(const char *aString, otIp4Address &aAddress)
 {
     return (aString != nullptr) ? otIp4AddressFromString(aString, &aAddress) : kErrorInvalidArgs;
 }
 
-Error ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix)
+otError ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix)
 {
     return (aString != nullptr) ? otIp6PrefixFromString(aString, &aPrefix) : kErrorInvalidArgs;
 }
@@ -227,7 +227,7 @@ enum HexStringParseMode
     kModeAllowPartial, // Allow parsing of partial segments.
 };
 
-static Error ParseHexString(const char *&aString, uint16_t &aSize, uint8_t *aBuffer, HexStringParseMode aMode)
+static otError ParseHexString(const char *&aString, uint16_t &aSize, uint8_t *aBuffer, HexStringParseMode aMode)
 {
     Error  error      = kErrorNone;
     size_t parsedSize = 0;
@@ -294,17 +294,17 @@ exit:
     return error;
 }
 
-Error ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize)
+otError ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize)
 {
     return ParseHexString(aString, aSize, aBuffer, kModeExactSize);
 }
 
-Error ParseAsHexString(const char *aString, uint16_t &aSize, uint8_t *aBuffer)
+otError ParseAsHexString(const char *aString, uint16_t &aSize, uint8_t *aBuffer)
 {
     return ParseHexString(aString, aSize, aBuffer, kModeUpToSize);
 }
 
-Error ParseAsHexStringSegment(const char *&aString, uint16_t &aSize, uint8_t *aBuffer)
+otError ParseAsHexStringSegment(const char *&aString, uint16_t &aSize, uint8_t *aBuffer)
 {
     return ParseHexString(aString, aSize, aBuffer, kModeAllowPartial);
 }
