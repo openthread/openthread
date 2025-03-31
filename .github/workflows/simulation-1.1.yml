@@ -52,6 +52,7 @@ jobs:
       REFERENCE_DEVICE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
+      OT_VT_USE_UNIX_SOCKET: 1
       MULTIPLY: 3
     steps:
     - name: Harden Runner
@@ -106,6 +107,7 @@ jobs:
       REFERENCE_DEVICE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
+      OT_VT_USE_UNIX_SOCKET: 1
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
@@ -160,6 +162,7 @@ jobs:
       THREAD_VERSION: 1.1
       USE_MTD: 1
       VIRTUAL_TIME: 1
+      OT_VT_USE_UNIX_SOCKET: 1
       MESSAGE_USE_HEAP: ${{ matrix.message_use_heap }}
     steps:
     - name: Harden Runner
@@ -209,6 +212,7 @@ jobs:
       REFERENCE_DEVICE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
+      OT_VT_USE_UNIX_SOCKET: 1
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
@@ -354,6 +358,7 @@ jobs:
       COVERAGE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
+      OT_VT_USE_UNIX_SOCKET: 1
       CXXFLAGS: "-DOPENTHREAD_CONFIG_LOG_PREPEND_UPTIME=0"
     steps:
     - name: Harden Runner
