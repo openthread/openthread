@@ -1264,17 +1264,8 @@ class NodeImpl:
                 return service
 
     def get_srp_server_port(self):
-        """Returns the SRP server UDP port by parsing
-           the SRP Server Data in Network Data.
-        """
-
-        for service in self.get_services():
-            # 0x5d is used to indicate SRP/DNS unicast entry
-            if int(service[1], 16) == 0x5d:
-                # The SRP server data contains IPv6 address (16 bytes)
-                # followed by UDP port number (two bytes) and then
-                # the version field (one byte)
-                return int(service[2][2 * 16:2 * 16 + 4], 16)
+        self.send_command('srp server port')
+        return int(self._expect_result(r'\d+'))
 
     def srp_client_start(self, server_address, server_port):
         self.send_command(f'srp client start {server_address} {server_port}')
