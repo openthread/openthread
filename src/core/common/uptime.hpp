@@ -102,6 +102,13 @@ public:
     static void UptimeToString(uint64_t aUptime, StringWriter &aWriter, bool aIncludeMsec);
 
     /**
+     * Returns the current device uptime in seconds.
+     *
+     * @returns The uptime in seconds.
+     */
+    uint32_t GetUptimeInSeconds(void) const;
+
+    /**
      * Converts a given uptime as number of milliseconds to number of seconds.
      *
      * @param[in] aUptimeInMilliseconds    Uptime in milliseconds (as `uint64_t`).

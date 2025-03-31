@@ -256,7 +256,7 @@ void Mle::ResetCounters(void)
 
 uint32_t Mle::GetCurrentAttachDuration(void) const
 {
-    return IsAttached() ? Uptime::MsecToSec(Get<Uptime>().GetUptime()) - mLastAttachTime : 0;
+    return IsAttached() ? Get<Uptime>().GetUptimeInSeconds() - mLastAttachTime : 0;
 }
 
 void Mle::UpdateRoleTimeCounters(DeviceRole aRole)
@@ -298,7 +298,7 @@ void Mle::SetRole(DeviceRole aRole)
 
     if ((oldRole == kRoleDetached) && IsAttached())
     {
-        mLastAttachTime = Uptime::MsecToSec(Get<Uptime>().GetUptime());
+        mLastAttachTime = Get<Uptime>().GetUptimeInSeconds();
     }
 
     UpdateRoleTimeCounters(oldRole);

@@ -85,6 +85,8 @@ void Uptime::GetUptime(char *aBuffer, uint16_t aSize) const
     UptimeToString(GetUptime(), writer, /* aIncludeMsec */ true);
 }
 
+uint32_t Uptime::GetUptimeInSeconds(void) const { return MsecToSec(GetUptime()); }
+
 void Uptime::HandleTimer(void)
 {
     if (mTimer.GetFireTime() == mStartTime)
