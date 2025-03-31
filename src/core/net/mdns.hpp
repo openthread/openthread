@@ -77,15 +77,27 @@ extern "C" void otPlatMdnsHandleReceive(otInstance                  *aInstance,
                                         bool                         aIsUnicast,
                                         const otPlatMdnsAddressInfo *aAddress);
 
+extern "C" void otPlatMdnsHandleHostAddressEvent(otInstance         *aInstance,
+                                                 const otIp6Address *aAddress,
+                                                 bool                aAdded,
+                                                 uint32_t            aInfraIfIndex);
+
 /**
  * Implements Multicast DNS (mDNS) core.
  */
 class Core : public InstanceLocator, private NonCopyable
 {
+    friend class ot::Instance;
+
     friend void otPlatMdnsHandleReceive(otInstance                  *aInstance,
                                         otMessage                   *aMessage,
                                         bool                         aIsUnicast,
                                         const otPlatMdnsAddressInfo *aAddress);
+
+    friend void otPlatMdnsHandleHostAddressEvent(otInstance         *aInstance,
+                                                 const otIp6Address *aAddress,
+                                                 bool                aAdded,
+                                                 uint32_t            aInfraIfIndex);
 
 public:
     /**
@@ -164,6 +176,26 @@ public:
      * @retval FALSE  The mDNS module is disabled.
      */
     bool IsEnabled(void) const { return mIsEnabled; }
+
+    /**
+     * Gets the local host name.
+     *
+     * @returns The local host name.
+     */
+    const char *GetLocalHostName(void) { return mLocalHost.GetName(); }
+
+    /**
+     * Sets the local host name.
+     *
+     * The local host name can be set only when the mDNS module is disabled. If not set the mDNS module itself will
+     * generate the local host name.
+     *
+     * @param[in] aName   The local host name to use, can be to `nullptr` to allow the mDNS module to choose the name.
+     *
+     * @retval kErrorNone           The local host name was successfully set.
+     * @retval kErrorInvalidState   mDNS module is already enabled.
+     */
+    Error SetLocalHostName(const char *aName) { return mLocalHost.SetName(aName); }
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
     /**
@@ -817,6 +849,12 @@ private:
         kAppendedLabels,
     };
 
+    enum AddrType : uint8_t
+    {
+        kIp4AddrType,
+        kIp6AddrType,
+    };
+
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Forward declarations
 
@@ -897,7 +935,9 @@ private:
     class AddressArray : public Heap::Array<Ip6::Address>
     {
     public:
+        bool IsEmpty(void) const { return (GetLength() == 0); }
         bool Matches(const Ip6::Address *aAddresses, uint16_t aNumAddresses) const;
+        bool Matches(const AddressArray &aOther) const;
         void SetFrom(const Ip6::Address *aAddresses, uint16_t aNumAddresses);
     };
 
@@ -1031,8 +1071,13 @@ private:
 
         struct RecordAndType
         {
-            RecordInfo &mRecord;
+            RecordInfo *mRecord;
             uint16_t    mType;
+        };
+
+        struct RecordAndTypeArray : public Array<RecordAndType, kTypeArraySize>
+        {
+            void Add(RecordInfo &aRecord, uint16_t aType);
         };
 
         typedef void (*NameAppender)(Entry &aEntry, TxMessage &aTxMessage, Section aSection);
@@ -1056,8 +1101,8 @@ private:
         void DetermineNextFireTime(void);
         void DetermineNextAggrTxTime(NextFireTime &aNextAggrTxTime) const;
         void ScheduleTimer(void);
-        void AnswerProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, uint16_t aRecordsLength);
-        void AnswerNonProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, uint16_t aRecordsLength);
+        void AnswerProbe(const AnswerInfo &aInfo, RecordAndTypeArray &aRecordAndTypes);
+        void AnswerNonProbe(const AnswerInfo &aInfo, RecordAndTypeArray &aRecordAndTypes);
         void ScheduleNsecAnswer(const AnswerInfo &aInfo);
 
         template <typename EntryType> void HandleTimer(EntryContext &aContext);
@@ -1086,6 +1131,47 @@ private:
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    void HandleLocalHostEventTimer(void) { mLocalHost.HandleEventTimer(); }
+
+    class LocalHost : public InstanceLocator
+    {
+    public:
+        explicit LocalHost(Instance &aInstance);
+
+        const char         *GetName(void) const { return mName.AsCString(); }
+        Error               SetName(const char *aName);
+        void                GenerateName(void);
+        const AddressArray &GetIp4Addresses(void) const { return mIp4Addresses; }
+        const AddressArray &GetIp6Addresses(void) const { return mIp6Addresses; }
+        void                HandleAddressEvent(const Ip6::Address &aAddress, bool aAdded, uint32_t aInfraIfIndex);
+        void                HandleEventTimer(void);
+        void                ClearAddresses(void);
+
+    private:
+        static constexpr uint32_t kGuardTimeToProcessAddrEvents = 4; // msec
+
+        struct AddrEvent : public LinkedListEntry<AddrEvent>, public Heap::Allocatable<AddrEvent>
+        {
+            AddrEvent(const Ip6::Address &aAddress, bool aAdded);
+            bool Matches(const Ip6::Address &aAddress) const { return mAddress == aAddress; }
+            bool Matches(AddrType aType) const;
+
+            AddrEvent   *mNext;
+            Ip6::Address mAddress;
+            bool         mAdded;
+        };
+
+        using EventTimer = TimerMilliIn<Core, &Core::HandleLocalHostEventTimer>;
+
+        Heap::String          mName;
+        AddressArray          mIp4Addresses;
+        AddressArray          mIp6Addresses;
+        OwningList<AddrEvent> mAddrEvents;
+        EventTimer            mEventTimer;
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     class HostEntry : public Entry, public LinkedListEntry<HostEntry>, public Heap::Allocatable<HostEntry>
     {
         friend class LinkedListEntry<HostEntry>;
@@ -1095,15 +1181,18 @@ private:
     public:
         HostEntry(void);
         Error Init(Instance &aInstance, const Host &aHost) { return Init(aInstance, aHost.mHostName); }
+        Error Init(Instance &aInstance, const LocalHost &aLocalHost) { return Init(aInstance, aLocalHost.GetName()); }
         Error Init(Instance &aInstance, const Key &aKey) { return Init(aInstance, aKey.mName); }
         bool  IsEmpty(void) const;
         bool  Matches(const Name &aName) const;
         bool  Matches(const Host &aHost) const;
+        bool  Matches(const LocalHost &aLocalHost) const;
         bool  Matches(const Key &aKey) const;
         bool  Matches(const Heap::String &aName) const;
         bool  Matches(State aState) const { return GetState() == aState; }
         bool  Matches(const HostEntry &aEntry) const { return (this == &aEntry); }
         void  Register(const Host &aHost, const Callback &aCallback);
+        void  Register(const LocalHost &aLocalHost, const Callback &aCallback);
         void  Register(const Key &aKey, const Callback &aCallback);
         void  Unregister(const Host &aHost);
         void  Unregister(const Key &aKey);
@@ -1119,6 +1208,15 @@ private:
 #endif
 
     private:
+        struct AddrRecord : public RecordInfo, public Heap::Allocatable<AddrRecord>
+        {
+            void Clear(void);
+            void UpdateAddresses(const Host &aHost);
+            void UpdateAddresses(const AddressArray &aAddresses);
+
+            AddressArray mAddresses;
+        };
+
         Error Init(Instance &aInstance, const char *aName);
         void  ClearHost(void);
         void  ScheduleToRemoveIfEmpty(void);
@@ -1127,18 +1225,21 @@ private:
         void  PrepareResponseRecords(EntryContext &aContext);
         void  UpdateRecordsState(const TxMessage &aResponse);
         void  DetermineNextFireTime(void);
-        void  AppendAddressRecordsTo(TxMessage &aTxMessage, Section aSection);
+        void  AppendIp6AddressRecordsTo(TxMessage &aTxMessage, Section aSection);
+        void  AppendIp4AddressRecordsTo(TxMessage &aTxMessage, Section aSection);
+        void  AppendAddressRecordsTo(TxMessage &aTxMessage, Section aSection, AddrRecord &aAddrRecord, bool aIp6);
         void  AppendKeyRecordTo(TxMessage &aTxMessage, Section aSection);
         void  AppendNsecRecordTo(TxMessage &aTxMessage, Section aSection);
         void  AppendNameTo(TxMessage &aTxMessage, Section aSection);
+        void  MarkToAppendAddrRecordsInAdditionalData(void);
 
         static void AppendEntryName(Entry &aEntry, TxMessage &aTxMessage, Section aSection);
 
-        HostEntry   *mNext;
-        Heap::String mName;
-        RecordInfo   mAddrRecord;
-        AddressArray mAddresses;
-        uint16_t     mNameOffset;
+        HostEntry           *mNext;
+        Heap::String         mName;
+        AddrRecord           mIp6AddrRecord;
+        OwnedPtr<AddrRecord> mIp4AddrRecord;
+        uint16_t             mNameOffset;
     };
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2101,6 +2202,8 @@ private:
     template <typename CacheType, typename BrowserResolverType>
     Error Stop(const BrowserResolverType &aBrowserOrResolver);
 
+    void      AfterInstanceInit(void);
+    void      HandleHostAddressEvent(const Ip6::Address &aAddress, bool aAdded, uint32_t aInfraIfIndex);
     void      InvokeConflictCallback(const char *aName, const char *aServiceType);
     void      HandleMessage(Message &aMessage, bool aIsUnicast, const AddressInfo &aSenderAddress);
     void      AddPassiveSrvTxtCache(const char *aServiceInstance, const char *aServiceType);
@@ -2140,6 +2243,7 @@ private:
     bool                     mIsQuestionUnicastAllowed;
     uint16_t                 mMaxMessageSize;
     uint32_t                 mInfraIfIndex;
+    LocalHost                mLocalHost;
     OwningList<HostEntry>    mHostEntries;
     OwningList<ServiceEntry> mServiceEntries;
     OwningList<ServiceType>  mServiceTypes;

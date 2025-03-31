@@ -86,6 +86,11 @@ template <> otError Mdns::Process<Cmd("unicastquestion")>(Arg aArgs[])
     return ProcessEnableDisable(aArgs, otMdnsIsQuestionUnicastAllowed, otMdnsSetQuestionUnicastAllowed);
 }
 
+template <> otError Mdns::Process<Cmd("localhostname")>(Arg aArgs[])
+{
+    return ProcessGetSet(aArgs, otMdnsGetLocalHostName, otMdnsSetLocalHostName);
+}
+
 void Mdns::OutputHost(const otMdnsHost &aHost)
 {
     OutputLine("Host %s", aHost.mHostName);
@@ -1209,6 +1214,7 @@ otError Mdns::Process(Arg aArgs[])
         CmdEntry("ip6resolvers"),
         CmdEntry("keys"),
 #endif
+        CmdEntry("localhostname"),
         CmdEntry("recordquerier"),
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
         CmdEntry("recordqueriers"),
