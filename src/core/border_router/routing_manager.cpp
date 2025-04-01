@@ -1084,7 +1084,7 @@ RoutingManager::NetDataPeerBrTracker::NetDataPeerBrTracker(Instance &aInstance)
 
 uint16_t RoutingManager::NetDataPeerBrTracker::CountPeerBrs(uint32_t &aMinAge) const
 {
-    uint32_t uptime = Uptime::MsecToSec(Get<Uptime>().GetUptime());
+    uint32_t uptime = Get<Uptime>().GetUptimeInSeconds();
     uint16_t count  = 0;
 
     aMinAge = NumericLimits<uint16_t>::kMax;
@@ -1147,7 +1147,7 @@ void RoutingManager::NetDataPeerBrTracker::HandleNotifierEvents(Events aEvents)
         VerifyOrExit(newEntry != nullptr, LogWarn("Failed to allocate `PeerBr` entry"));
 
         newEntry->mRloc16       = rloc16;
-        newEntry->mDiscoverTime = Uptime::MsecToSec(Get<Uptime>().GetUptime());
+        newEntry->mDiscoverTime = Get<Uptime>().GetUptimeInSeconds();
 
         mPeerBrs.Push(*newEntry);
     }
@@ -1211,7 +1211,7 @@ void RoutingManager::RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert:
 
         router = newEntry;
         router->Clear();
-        router->mDiscoverTime = Uptime::MsecToSec(Get<Uptime>().GetUptime());
+        router->mDiscoverTime = Get<Uptime>().GetUptimeInSeconds();
         router->mAddress      = aSrcAddress;
 
         mRouters.Push(*newEntry);
@@ -2019,7 +2019,7 @@ exit:
 
 void RoutingManager::RxRaTracker::InitIterator(PrefixTableIterator &aIterator) const
 {
-    static_cast<Iterator &>(aIterator).Init(mRouters.GetHead(), Uptime::MsecToSec(Get<Uptime>().GetUptime()));
+    static_cast<Iterator &>(aIterator).Init(mRouters.GetHead(), Get<Uptime>().GetUptimeInSeconds());
 }
 
 Error RoutingManager::RxRaTracker::GetNextEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const
