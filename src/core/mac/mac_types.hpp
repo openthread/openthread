@@ -50,6 +50,13 @@
 #include "crypto/storage.hpp"
 
 namespace ot {
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+namespace Ip6 {
+class InterfaceIdentifier;
+}
+#endif
+
 namespace Mac {
 
 /**
@@ -115,6 +122,13 @@ public:
      * Generates a random IEEE 802.15.4 Extended Address.
      */
     void GenerateRandom(void);
+
+    /**
+     * Sets the Extended Address from a given IPv6 Address Interface Identifier.
+     *
+     * @param[in] aIid   The IPv6 Interface Identifier to convert to Extended Address.
+     */
+    void SetFromIid(const Ip6::InterfaceIdentifier &aIid);
 #endif
 
     /**
@@ -355,6 +369,15 @@ public:
         mShared.mExtAddress.Set(aBuffer, aByteOrder);
         mType = kTypeExtended;
     }
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    /**
+     * Sets the address as an Extended Address from a given IPv6 Address Interface Identifier.
+     *
+     * @param[in] aIid   The IPv6 Interface Identifier to convert to Extended Address.
+     */
+    void SetExtendedFromIid(const Ip6::InterfaceIdentifier &aIid);
+#endif
 
     /**
      * Indicates whether or not the address is a Short Broadcast Address.

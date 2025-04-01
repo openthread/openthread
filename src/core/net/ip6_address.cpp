@@ -256,18 +256,6 @@ void InterfaceIdentifier::SetFromExtAddress(const Mac::ExtAddress &aExtAddress)
     addr.CopyTo(mFields.m8);
 }
 
-void InterfaceIdentifier::ConvertToExtAddress(Mac::ExtAddress &aExtAddress) const
-{
-    aExtAddress.Set(mFields.m8);
-    aExtAddress.ToggleLocal();
-}
-
-void InterfaceIdentifier::ConvertToMacAddress(Mac::Address &aMacAddress) const
-{
-    aMacAddress.SetExtended(mFields.m8);
-    aMacAddress.GetExtended().ToggleLocal();
-}
-
 void InterfaceIdentifier::SetToLocator(uint16_t aLocator)
 {
     // Locator IID pattern `0000:00ff:fe00:xxxx`

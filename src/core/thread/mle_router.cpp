@@ -707,7 +707,7 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
         ExitNow(error = kErrorParse);
     }
 
-    aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(info.mExtAddress);
+    info.mExtAddress.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
 
     info.mLinkMargin = Get<Mac::Mac>().ComputeLinkMargin(aRxInfo.mMessage.GetAverageRss());
 
@@ -1472,7 +1472,7 @@ void MleRouter::HandleParentRequest(RxInfo &aRxInfo)
     // the network (because Leader would reject any further address solicit).
     // ==> Verified below when checking the scan mask.
 
-    aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(info.mChildExtAddress);
+    info.mChildExtAddress.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadVersionTlv(version));
 
@@ -2105,7 +2105,7 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
 
     VerifyOrExit(IsAttached(), error = kErrorInvalidState);
 
-    aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
+    extAddr.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
 
     child = mChildTable.FindChild(extAddr, Child::kInStateAnyExceptInvalid);
     VerifyOrExit(child != nullptr, error = kErrorAlready);
@@ -2278,7 +2278,7 @@ void MleRouter::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
 
     tlvList.Add(Tlv::kSourceAddress);
 
-    aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
+    extAddr.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
     child = mChildTable.FindChild(extAddr, Child::kInStateAnyExceptInvalid);
 
     if (child == nullptr)
@@ -2790,7 +2790,7 @@ void MleRouter::HandleDiscoveryRequest(RxInfo &aRxInfo)
         {
             otThreadDiscoveryRequestInfo info;
 
-            aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(AsCoreType(&info.mExtAddress));
+            AsCoreType(&info.mExtAddress).SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
             info.mVersion  = discoveryRequestTlv.GetVersion();
             info.mIsJoiner = discoveryRequestTlv.IsJoiner();
 

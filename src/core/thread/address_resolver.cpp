@@ -804,7 +804,7 @@ void AddressResolver::HandleTmf<kUriAddressError>(Coap::Message &aMessage, const
     }
 
 #if OPENTHREAD_FTD
-    meshLocalIid.ConvertToExtAddress(extAddr);
+    extAddr.SetFromIid(meshLocalIid);
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
