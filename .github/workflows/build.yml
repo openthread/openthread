@@ -210,7 +210,7 @@ jobs:
         path: third_party/mbedtls/repo
     - name: Build
       run: |
-        ./script/test build
+        OT_OPTIONS='-DCMAKE_POLICY_VERSION_MINIMUM=3.5' ./script/test build
 
   arm-gcc:
     name: arm-gcc-${{ matrix.gcc_ver }}
