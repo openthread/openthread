@@ -54,6 +54,34 @@ otBorderRoutingState otBorderRoutingGetState(otInstance *aInstance)
     return MapEnum(AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetState());
 }
 
+otError otBorderRoutingSetOmrConfig(otInstance              *aInstance,
+                                    otBorderRoutingOmrConfig aConfig,
+                                    const otIp6Prefix       *aOmrPrefix,
+                                    otRoutePreference        aPreference)
+{
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetOmrConfig(
+        MapEnum(aConfig), AsCoreTypePtr(aOmrPrefix),
+        static_cast<BorderRouter::RoutingManager::RoutePreference>(aPreference));
+}
+
+otBorderRoutingOmrConfig otBorderRoutingGetOmrConfig(otInstance        *aInstance,
+                                                     otIp6Prefix       *aOmrPrefix,
+                                                     otRoutePreference *aPreference)
+{
+    BorderRouter::RoutingManager::RoutePreference preference;
+    BorderRouter::RoutingManager::OmrConfig       omrConfig;
+
+    omrConfig =
+        AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOmrConfig(AsCoreTypePtr(aOmrPrefix), &preference);
+
+    if (aPreference != nullptr)
+    {
+        *aPreference = static_cast<otRoutePreference>(preference);
+    }
+
+    return MapEnum(omrConfig);
+}
+
 otRoutePreference otBorderRoutingGetRouteInfoOptionPreference(otInstance *aInstance)
 {
     return static_cast<otRoutePreference>(

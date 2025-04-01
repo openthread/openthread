@@ -174,6 +174,114 @@ exit:
     return error;
 }
 
+template <> otError Br::Process<Cmd("omrconfig")>(Arg aArgs[])
+{
+    otError                  error = OT_ERROR_NONE;
+    otIp6Prefix              customPrefix;
+    otRoutePreference        preference;
+    otBorderRoutingOmrConfig omrConfig;
+
+    /**
+     * @cli br omrconfig
+     * @code
+     * br omrconfig
+     * auto
+     * Done
+     * @endcode
+     * @code
+     * br omrconfig
+     * custom (fd00:0:0:0::/64, prf:med)
+     * Done
+     * @endcode
+     * @par
+     * Outputs current OMR prefix configuration mode.
+     * @sa otBorderRoutingGetOmrConfig
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        omrConfig = otBorderRoutingGetOmrConfig(GetInstancePtr(), &customPrefix, &preference);
+
+        switch (omrConfig)
+        {
+        case OT_BORDER_ROUTING_OMR_CONFIG_AUTO:
+            OutputLine("auto");
+            break;
+        case OT_BORDER_ROUTING_OMR_CONFIG_CUSTOM:
+            OutputFormat("custom (");
+            OutputIp6Prefix(customPrefix);
+            OutputLine(", prf:%s)", PreferenceToString(preference));
+            break;
+        case OT_BORDER_ROUTING_OMR_CONFIG_DISABLED:
+            OutputLine("disabled");
+            break;
+        }
+    }
+    else
+    {
+        ClearAllBytes(customPrefix);
+        preference = OT_ROUTE_PREFERENCE_MED;
+
+        /**
+         * @cli br omrconfig auto
+         * @code
+         * br omrconfig auto
+         * Done
+         * @endcode
+         * @par
+         * Sets OMR prefix configuration mode to `auto` In this mode, the Border Routing Manager automatically
+         * selects and manages the OMR prefix.
+         */
+        if (aArgs[0] == "auto")
+        {
+            omrConfig = OT_BORDER_ROUTING_OMR_CONFIG_AUTO;
+            VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        }
+        /**
+         * @cli br omrconfig custom
+         * @code
+         * br omrconfig custom fd00::/64 med
+         * Done
+         * @endcode
+         * @cparam br omrconfig custom @ca{prefix} [@ca{high}|@ca{med}|@ca{low}]
+         * @par
+         * Sets OMR prefix configuration mode to `custom`. In this mode, a custom OMR prefix and its associated
+         * preference are used.
+         */
+        else if (aArgs[0] == "custom")
+        {
+            omrConfig = OT_BORDER_ROUTING_OMR_CONFIG_CUSTOM;
+
+            SuccessOrExit(error = aArgs[1].ParseAsIp6Prefix(customPrefix));
+            SuccessOrExit(error = Interpreter::ParsePreference(aArgs[2], preference));
+            VerifyOrExit(aArgs[3].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        }
+        /**
+         * @cli br omrconfig disable
+         * @code
+         * br omrconfig disable
+         * Done
+         * @endcode
+         * @cparam br omrconfig disable
+         * @par
+         * Sets OMR prefix configuration mode to `disable` which prevents the Border Routing Manager from adding any
+         * local or DHCPv6 PD OMR prefixes to the Network Data.
+         */
+        else if (aArgs[0] == "disable")
+        {
+            omrConfig = OT_BORDER_ROUTING_OMR_CONFIG_DISABLED;
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+
+        error = otBorderRoutingSetOmrConfig(GetInstancePtr(), omrConfig, &customPrefix, preference);
+    }
+
+exit:
+    return error;
+}
+
 /**
  * @cli br omrprefix
  * @code
@@ -925,6 +1033,7 @@ otError Br::Process(Arg aArgs[])
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         CmdEntry("nat64prefix"),
 #endif
+        CmdEntry("omrconfig"),
         CmdEntry("omrprefix"),
         CmdEntry("onlinkprefix"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE

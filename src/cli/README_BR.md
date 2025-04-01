@@ -33,6 +33,7 @@ Print BR command help menu.
 counters
 disable
 enable
+omrconfig
 omrprefix
 onlinkprefix
 pd
@@ -114,6 +115,63 @@ RA TxFailed: 0
 RS Rx: 0
 RS TxSuccess: 2
 RS TxFailed: 0
+Done
+```
+
+### omrconfig
+
+Usage: `br omrconfig`
+
+Get the current OMR prefix configuration mode.
+
+The possible modes are:
+
+- `auto`: BR auto-generates the local OMR prefix.
+- `custom`: BR uses a given custom OMR prefix with its associated preference.
+- `disabled`: BR does not add local/PD OMR prefix in Network Data.
+
+```bash
+> br omrconfig
+auto
+Done
+```
+
+Usage: `br omrconfig auto`
+
+Set the current OMR prefix configuration mode to `auto`.
+
+```
+> br omrconfig auto
+Done
+
+> br omrconfig
+auto
+Done
+```
+
+Usage: `br omrconfig custom <prefix> [high|med|low]`
+
+Set the current OMR prefix configuration mode to `custom`
+
+```
+> br omrconfig custom fd00::/64 med
+Done
+
+> br omrconfig
+custom (fd00:0:0:0::/64, prf:med)
+Done
+```
+
+Usage: `br omrconfig disable`
+
+Set the current OMR prefix configuration mode to `disabled`
+
+```
+> br omrconfig disable
+Done
+
+> br omrconfig
+disabled
 Done
 ```
 
