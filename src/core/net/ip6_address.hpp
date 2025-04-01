@@ -409,20 +409,6 @@ public:
     void SetFromExtAddress(const Mac::ExtAddress &aExtAddress);
 
     /**
-     * Converts the Interface Identifier to an IEEE 802.15.4 Extended Address.
-     *
-     * @param[out]  aExtAddress  A reference to an Extended Address where the converted address is placed.
-     */
-    void ConvertToExtAddress(Mac::ExtAddress &aExtAddress) const;
-
-    /**
-     * Converts the Interface Identifier to an IEEE 802.15.4 MAC Address.
-     *
-     * @param[out]  aMacAddress  A reference to a MAC Address where the converted address is placed.
-     */
-    void ConvertToMacAddress(Mac::Address &aMacAddress) const;
-
-    /**
      * Sets the Interface Identifier to Routing/Anycast Locator pattern `0000:00ff:fe00:xxxx` with a given
      * locator (RLOC16 or ALOC16) value.
      *

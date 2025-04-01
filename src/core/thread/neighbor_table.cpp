@@ -138,7 +138,7 @@ Neighbor *NeighborTable::FindNeighbor(const Ip6::Address &aIp6Address, Neighbor:
 
     if (aIp6Address.IsLinkLocalUnicast())
     {
-        aIp6Address.GetIid().ConvertToMacAddress(macAddress);
+        macAddress.SetExtendedFromIid(aIp6Address.GetIid());
     }
 
     if (Get<Mle::Mle>().IsRoutingLocator(aIp6Address))

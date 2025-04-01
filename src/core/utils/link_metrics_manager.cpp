@@ -214,7 +214,7 @@ void LinkMetricsManager::HandleMgmtResponse(const otIp6Address *aAddress, otLink
     Subject        *subject;
     Neighbor       *neighbor;
 
-    AsCoreType(aAddress).GetIid().ConvertToExtAddress(extAddress);
+    extAddress.SetFromIid(AsCoreType(aAddress).GetIid());
     neighbor = Get<NeighborTable>().FindNeighbor(extAddress);
     VerifyOrExit(neighbor != nullptr);
 

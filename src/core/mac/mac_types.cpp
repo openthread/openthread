@@ -38,6 +38,9 @@
 #include "common/code_utils.hpp"
 #include "common/random.hpp"
 #include "common/string.hpp"
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#include "net/ip6_address.hpp"
+#endif
 
 namespace ot {
 namespace Mac {
@@ -55,12 +58,20 @@ PanId GenerateRandomPanId(void)
 }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
+
 void ExtAddress::GenerateRandom(void)
 {
     IgnoreError(Random::Crypto::Fill(*this));
     SetGroup(false);
     SetLocal(true);
 }
+
+void ExtAddress::SetFromIid(const Ip6::InterfaceIdentifier &aIid)
+{
+    Set(aIid.GetBytes());
+    ToggleLocal();
+}
+
 #endif
 
 bool ExtAddress::operator==(const ExtAddress &aOther) const { return (memcmp(m8, aOther.m8, sizeof(m8)) == 0); }
@@ -91,6 +102,14 @@ void ExtAddress::CopyAddress(uint8_t *aDst, const uint8_t *aSrc, CopyByteOrder a
         break;
     }
 }
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+void Address::SetExtendedFromIid(const Ip6::InterfaceIdentifier &aIid)
+{
+    mShared.mExtAddress.SetFromIid(aIid);
+    mType = kTypeExtended;
+}
+#endif
 
 bool Address::operator==(const Address &aOther) const
 {

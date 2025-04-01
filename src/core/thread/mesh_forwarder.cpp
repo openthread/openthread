@@ -700,7 +700,7 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 
 void MeshForwarder::GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr)
 {
-    aIp6Addr.GetIid().ConvertToMacAddress(aMacAddr);
+    aMacAddr.SetExtendedFromIid(aIp6Addr.GetIid());
 
     if (aMacAddr.GetExtended() != Get<Mac::Mac>().GetExtAddress())
     {
@@ -720,7 +720,7 @@ void MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::
     }
     else
     {
-        aIp6Addr.GetIid().ConvertToMacAddress(aMacAddr);
+        aMacAddr.SetExtendedFromIid(aIp6Addr.GetIid());
     }
 }
 

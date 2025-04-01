@@ -386,7 +386,7 @@ Error Initiator::FindNeighbor(const Ip6::Address &aDestination, Neighbor *&aNeig
     aNeighbor = nullptr;
 
     VerifyOrExit(aDestination.IsLinkLocalUnicast());
-    aDestination.GetIid().ConvertToMacAddress(macAddress);
+    macAddress.SetExtendedFromIid(aDestination.GetIid());
 
     aNeighbor = Get<NeighborTable>().FindNeighbor(macAddress);
     VerifyOrExit(aNeighbor != nullptr);

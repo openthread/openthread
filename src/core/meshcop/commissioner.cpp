@@ -99,7 +99,7 @@ void Commissioner::SignalJoinerEvent(JoinerEvent aEvent, const Joiner *aJoiner) 
     }
     else if (aJoiner == mActiveJoiner)
     {
-        mJoinerIid.ConvertToExtAddress(joinerId);
+        joinerId.SetFromIid(mJoinerIid);
     }
     else
     {
@@ -900,7 +900,7 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
         Joiner         *joiner;
 
         mJoinerIid = joinerIid;
-        mJoinerIid.ConvertToExtAddress(receivedId);
+        receivedId.SetFromIid(mJoinerIid);
 
         joiner = FindBestMatchingJoinerEntry(receivedId);
         VerifyOrExit(joiner != nullptr);
