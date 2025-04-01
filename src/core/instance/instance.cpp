@@ -504,8 +504,8 @@ void Instance::GetBufferInfo(BufferInfo &aInfo)
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
-    GetApplicationCoap().GetRequestMessages().GetInfo(aInfo.mApplicationCoapQueue);
-    GetApplicationCoap().GetCachedResponses().GetInfo(aInfo.mApplicationCoapQueue);
+    Get<Coap::ApplicationCoap>().GetRequestMessages().GetInfo(aInfo.mApplicationCoapQueue);
+    Get<Coap::ApplicationCoap>().GetCachedResponses().GetInfo(aInfo.mApplicationCoapQueue);
 #endif
 }
 

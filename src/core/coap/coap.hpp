@@ -937,6 +937,25 @@ private:
     Error        Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 };
 
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
+/**
+ * Represents an Application CoAP.
+ */
+class ApplicationCoap : public Coap
+{
+public:
+    /**
+     * Initializes the object.
+     *
+     * @param[in] aInstance      A reference to the OpenThread instance.
+     */
+    explicit ApplicationCoap(Instance &aInstance)
+        : Coap(aInstance)
+    {
+    }
+};
+#endif
+
 } // namespace Coap
 
 DefineCoreType(otCoapTxParameters, Coap::TxParameters);

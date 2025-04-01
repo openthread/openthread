@@ -354,24 +354,6 @@ public:
     static Utils::Heap &GetHeap(void);
 #endif
 
-#if OPENTHREAD_CONFIG_COAP_API_ENABLE
-    /**
-     * Returns a reference to application COAP object.
-     *
-     * @returns A reference to the application COAP object.
-     */
-    Coap::Coap &GetApplicationCoap(void) { return mApplicationCoap; }
-#endif
-
-#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-    /**
-     * Returns a reference to application COAP Secure object.
-     *
-     * @returns A reference to the application COAP Secure object.
-     */
-    Coap::ApplicationCoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
-#endif
-
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     /**
      * Enables/disables the "DNS name compressions" mode.
@@ -672,7 +654,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
-    Coap::Coap mApplicationCoap;
+    Coap::ApplicationCoap mApplicationCoap;
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
@@ -1103,6 +1085,14 @@ template <> inline Srp::Server &Instance::Get(void) { return mSrpServer; }
 template <> inline Srp::AdvertisingProxy &Instance::Get(void) { return mSrpAdvertisingProxy; }
 #endif
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
+template <> inline Coap::ApplicationCoap &Instance::Get(void) { return mApplicationCoap; }
+#endif
+
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+template <> inline Coap::ApplicationCoapSecure &Instance::Get(void) { return mApplicationCoapSecure; }
+#endif
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 template <> inline Ble::BleSecure &Instance::Get(void) { return mApplicationBleSecure; }

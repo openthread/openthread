@@ -43,8 +43,8 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort)
 {
     otError error;
 
-    SuccessOrExit(error = AsCoreType(aInstance).GetApplicationCoapSecure().Open());
-    error = AsCoreType(aInstance).GetApplicationCoapSecure().Bind(aPort);
+    SuccessOrExit(error = AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().Open());
+    error = AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().Bind(aPort);
 
 exit:
     return error;
@@ -58,8 +58,8 @@ otError otCoapSecureStartWithMaxConnAttempts(otInstance                  *aInsta
 {
     Error error = kErrorAlready;
 
-    SuccessOrExit(
-        AsCoreType(aInstance).GetApplicationCoapSecure().SetMaxConnectionAttempts(aMaxAttempts, aCallback, aContext));
+    SuccessOrExit(AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SetMaxConnectionAttempts(
+        aMaxAttempts, aCallback, aContext));
     error = otCoapSecureStart(aInstance, aPort);
 
 exit:
@@ -73,16 +73,16 @@ void otCoapSecureSetCertificate(otInstance    *aInstance,
                                 const uint8_t *aPrivateKey,
                                 uint32_t       aPrivateKeyLength)
 {
-    AsCoreType(aInstance).GetApplicationCoapSecure().SetCertificate(aX509Cert, aX509Length, aPrivateKey,
-                                                                    aPrivateKeyLength);
+    AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SetCertificate(aX509Cert, aX509Length, aPrivateKey,
+                                                                            aPrivateKeyLength);
 }
 
 void otCoapSecureSetCaCertificateChain(otInstance    *aInstance,
                                        const uint8_t *aX509CaCertificateChain,
                                        uint32_t       aX509CaCertChainLength)
 {
-    AsCoreType(aInstance).GetApplicationCoapSecure().SetCaCertificateChain(aX509CaCertificateChain,
-                                                                           aX509CaCertChainLength);
+    AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SetCaCertificateChain(aX509CaCertificateChain,
+                                                                                   aX509CaCertChainLength);
 }
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
@@ -96,7 +96,8 @@ void otCoapSecureSetPsk(otInstance    *aInstance,
     AssertPointerIsNotNull(aPsk);
     AssertPointerIsNotNull(aPskIdentity);
 
-    AsCoreType(aInstance).GetApplicationCoapSecure().SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
+    AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SetPreSharedKey(aPsk, aPskLength, aPskIdentity,
+                                                                             aPskIdLength);
 }
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
@@ -108,14 +109,14 @@ otError otCoapSecureGetPeerCertificateBase64(otInstance    *aInstance,
 {
     AssertPointerIsNotNull(aPeerCert);
 
-    return AsCoreType(aInstance).GetApplicationCoapSecure().GetPeerCertificateBase64(aPeerCert, aCertLength,
-                                                                                     aCertBufferSize);
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().GetPeerCertificateBase64(aPeerCert, aCertLength,
+                                                                                             aCertBufferSize);
 }
 #endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 
 void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertificate)
 {
-    AsCoreType(aInstance).GetApplicationCoapSecure().SetSslAuthMode(aVerifyPeerCertificate);
+    AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SetSslAuthMode(aVerifyPeerCertificate);
 }
 
 otError otCoapSecureConnect(otInstance                     *aInstance,
@@ -123,26 +124,32 @@ otError otCoapSecureConnect(otInstance                     *aInstance,
                             otHandleCoapSecureClientConnect aHandler,
                             void                           *aContext)
 {
-    AsCoreType(aInstance).GetApplicationCoapSecure().SetConnectCallback(aHandler, aContext);
+    AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SetConnectCallback(aHandler, aContext);
 
-    return AsCoreType(aInstance).GetApplicationCoapSecure().Connect(AsCoreType(aSockAddr));
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().Connect(AsCoreType(aSockAddr));
 }
 
-void otCoapSecureDisconnect(otInstance *aInstance) { AsCoreType(aInstance).GetApplicationCoapSecure().Disconnect(); }
+void otCoapSecureDisconnect(otInstance *aInstance)
+{
+    AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().Disconnect();
+}
 
 bool otCoapSecureIsConnected(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).GetApplicationCoapSecure().IsConnected();
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().IsConnected();
 }
 
 bool otCoapSecureIsConnectionActive(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).GetApplicationCoapSecure().IsConnectionActive();
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().IsConnectionActive();
 }
 
-bool otCoapSecureIsClosed(otInstance *aInstance) { return AsCoreType(aInstance).GetApplicationCoapSecure().IsClosed(); }
+bool otCoapSecureIsClosed(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().IsClosed();
+}
 
-void otCoapSecureStop(otInstance *aInstance) { AsCoreType(aInstance).GetApplicationCoapSecure().Close(); }
+void otCoapSecureStop(otInstance *aInstance) { AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().Close(); }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 otError otCoapSecureSendRequestBlockWise(otInstance                 *aInstance,
@@ -152,8 +159,8 @@ otError otCoapSecureSendRequestBlockWise(otInstance                 *aInstance,
                                          otCoapBlockwiseTransmitHook aTransmitHook,
                                          otCoapBlockwiseReceiveHook  aReceiveHook)
 {
-    return AsCoreType(aInstance).GetApplicationCoapSecure().SendMessage(AsCoapMessage(aMessage), aHandler, aContext,
-                                                                        aTransmitHook, aReceiveHook);
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessage(AsCoapMessage(aMessage), aHandler,
+                                                                                aContext, aTransmitHook, aReceiveHook);
 }
 #endif
 
@@ -162,41 +169,42 @@ otError otCoapSecureSendRequest(otInstance           *aInstance,
                                 otCoapResponseHandler aHandler,
                                 void                 *aContext)
 {
-    return AsCoreType(aInstance).GetApplicationCoapSecure().SendMessage(AsCoapMessage(aMessage), aHandler, aContext);
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessage(AsCoapMessage(aMessage), aHandler,
+                                                                                aContext);
 }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 void otCoapSecureAddBlockWiseResource(otInstance *aInstance, otCoapBlockwiseResource *aResource)
 {
-    AsCoreType(aInstance).GetApplicationCoapSecure().AddBlockWiseResource(AsCoreType(aResource));
+    AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().AddBlockWiseResource(AsCoreType(aResource));
 }
 
 void otCoapSecureRemoveBlockWiseResource(otInstance *aInstance, otCoapBlockwiseResource *aResource)
 {
-    AsCoreType(aInstance).GetApplicationCoapSecure().RemoveBlockWiseResource(AsCoreType(aResource));
+    AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().RemoveBlockWiseResource(AsCoreType(aResource));
 }
 #endif
 
 void otCoapSecureAddResource(otInstance *aInstance, otCoapResource *aResource)
 {
-    AsCoreType(aInstance).GetApplicationCoapSecure().AddResource(AsCoreType(aResource));
+    AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().AddResource(AsCoreType(aResource));
 }
 
 void otCoapSecureRemoveResource(otInstance *aInstance, otCoapResource *aResource)
 {
-    AsCoreType(aInstance).GetApplicationCoapSecure().RemoveResource(AsCoreType(aResource));
+    AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().RemoveResource(AsCoreType(aResource));
 }
 
 void otCoapSecureSetClientConnectEventCallback(otInstance                     *aInstance,
                                                otHandleCoapSecureClientConnect aHandler,
                                                void                           *aContext)
 {
-    AsCoreType(aInstance).GetApplicationCoapSecure().SetConnectCallback(aHandler, aContext);
+    AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SetConnectCallback(aHandler, aContext);
 }
 
 void otCoapSecureSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext)
 {
-    AsCoreType(aInstance).GetApplicationCoapSecure().SetDefaultHandler(aHandler, aContext);
+    AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SetDefaultHandler(aHandler, aContext);
 }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
@@ -208,8 +216,8 @@ otError otCoapSecureSendResponseBlockWise(otInstance                 *aInstance,
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    return AsCoreType(aInstance).GetApplicationCoapSecure().SendMessage(AsCoapMessage(aMessage), nullptr, aContext,
-                                                                        aTransmitHook);
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessage(AsCoapMessage(aMessage), nullptr,
+                                                                                aContext, aTransmitHook);
 }
 #endif
 
@@ -217,7 +225,7 @@ otError otCoapSecureSendResponse(otInstance *aInstance, otMessage *aMessage, con
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    return AsCoreType(aInstance).GetApplicationCoapSecure().SendMessage(AsCoapMessage(aMessage));
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessage(AsCoapMessage(aMessage));
 }
 
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
