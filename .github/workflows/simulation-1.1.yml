@@ -323,13 +323,14 @@ jobs:
       run: |
         cd /tmp/ot-commissioner
         script/bootstrap.sh
-        cmake -GNinja                           \
-              -DCMAKE_CXX_STANDARD=11           \
-              -DCMAKE_CXX_STANDARD_REQUIRED=ON  \
-              -DCMAKE_BUILD_TYPE=Release        \
-              -DCMAKE_INSTALL_PREFIX=/usr/local \
-              -DOT_COMM_COVERAGE=ON             \
-              -DOT_COMM_CCM=OFF                 \
+        cmake -GNinja                            \
+              -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+              -DCMAKE_CXX_STANDARD=11            \
+              -DCMAKE_CXX_STANDARD_REQUIRED=ON   \
+              -DCMAKE_BUILD_TYPE=Release         \
+              -DCMAKE_INSTALL_PREFIX=/usr/local  \
+              -DOT_COMM_COVERAGE=ON              \
+              -DOT_COMM_CCM=OFF                  \
               -S . -B build
         cmake --build build
         sudo cmake --install build
