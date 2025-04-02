@@ -356,6 +356,11 @@ private:
 
     void  EnqueueDatagram(Message &aMessage);
     void  HandleSendQueue(void);
+    void  DetermineAction(const Message &aMessage,
+                          const Header  &aHeader,
+                          bool          &aForwardThread,
+                          bool          &aForwardHost,
+                          bool          &aReceive) const;
     Error PassToHost(OwnedPtr<Message> &aMessagePtr,
                      const Header      &aHeader,
                      uint8_t            aIpProto,
