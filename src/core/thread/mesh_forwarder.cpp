@@ -632,9 +632,13 @@ Error MeshForwarder::UpdateIp6Route(Message &aMessage)
 
     if (mle.IsDisabled() || mle.IsDetached())
     {
-        if (ip6Header.GetDestination().IsLinkLocalUnicastOrMulticast())
+        if (ip6Header.GetDestination().IsLinkLocalMulticast())
         {
-            GetMacDestinationAddress(ip6Header.GetDestination(), mMacAddrs.mDestination);
+            mMacAddrs.mDestination.SetShort(Mac::kShortAddrBroadcast);
+        }
+        else if (ip6Header.GetDestination().IsLinkLocalUnicast())
+        {
+            mMacAddrs.mDestination.SetExtendedFromIid(ip6Header.GetDestination().GetIid());
         }
         else
         {
@@ -661,7 +665,7 @@ Error MeshForwarder::UpdateIp6Route(Message &aMessage)
     }
     else if (ip6Header.GetDestination().IsLinkLocalUnicast())
     {
-        GetMacDestinationAddress(ip6Header.GetDestination(), mMacAddrs.mDestination);
+        mMacAddrs.mDestination.SetExtendedFromIid(ip6Header.GetDestination().GetIid());
     }
     else if (mle.IsMinimalEndDevice())
     {
@@ -705,22 +709,6 @@ void MeshForwarder::GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Addre
     if (aMacAddr.GetExtended() != Get<Mac::Mac>().GetExtAddress())
     {
         aMacAddr.SetShort(Get<Mac::Mac>().GetShortAddress());
-    }
-}
-
-void MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr)
-{
-    if (aIp6Addr.IsMulticast())
-    {
-        aMacAddr.SetShort(Mac::kShortAddrBroadcast);
-    }
-    else if (Get<Mle::MleRouter>().IsRoutingLocator(aIp6Addr))
-    {
-        aMacAddr.SetShort(aIp6Addr.GetIid().GetLocator());
-    }
-    else
-    {
-        aMacAddr.SetExtendedFromIid(aIp6Addr.GetIid());
     }
 }
 
