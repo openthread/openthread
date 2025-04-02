@@ -388,7 +388,6 @@ private:
                   OwnedPtr<Message> &aMessagePtr,
                   uint8_t            aIpProto,
                   Message::Ownership aMessageOwnership);
-    Error RouteLookup(const Address &aSource, const Address &aDestination) const;
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
     void UpdateBorderRoutingCounters(const Header &aHeader, uint16_t aMessageLength, bool aIsInbound);
 #endif
