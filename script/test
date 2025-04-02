@@ -414,7 +414,7 @@ do_build_otbr_docker()
             third_party/openthread/repo
         rm -rf .git
 
-        docker build -t "${otbr_docker_image}" -f etc/docker/Dockerfile . \
+        docker build -t "${otbr_docker_image}" -f etc/docker/test/Dockerfile . \
             "${docker_build_args[@]}" \
             --build-arg OTBR_OPTIONS="${otbr_options[*]}"
     )
