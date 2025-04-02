@@ -112,3 +112,20 @@ otError otThreadSetVendorAppUrl(otInstance *aInstance, const char *aVendorAppUrl
     return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorAppUrl(aVendorAppUrl);
 }
 #endif
+
+void otThreadSetNonPreferredChannels(otInstance *aInstance, otChannelMask aChannelMask)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetNonPreferredChannels(aChannelMask);
+}
+
+otChannelMask otThreadGetNonPreferredChannels(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetNonPreferredChannels();
+}
+
+void otThreadSetNonPreferredChannelsResetCallback(otInstance                               *aInstance,
+                                                  otThreadNonPreferredChannelsResetCallback aCallback,
+                                                  void                                     *aContext)
+{
+    AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetNonPreferredChannelsResetCallback(aCallback, aContext);
+}

@@ -7468,6 +7468,46 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
     uint8_t      tlvTypes[kMaxTlvs];
     uint8_t      count = 0;
 
+    if (aArgs[0] == "nonpreferredchannels")
+    {
+        /**
+         * @cli networkdiagnostic nonpreferredchannels
+         * @code
+         * networkdiagnostic nonpreferredchannels
+         * 0x4000000
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otThreadGetNonPreferredChannels
+         */
+        if (aArgs[1].IsEmpty())
+        {
+            OutputLine("0x%lx", ToUlong(otThreadGetNonPreferredChannels(GetInstancePtr())));
+        }
+        /**
+         * @cli networkdiagnostic nonpreferredchannels (set)
+         * @code
+         * networkdiagnostic nonpreferredchannels 0x4000000
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otThreadSetNonPreferredChannels
+         * @cparam networkdiagnostic nonprfchannelmas @ca{mask}
+         */
+        else
+        {
+            otChannelMask mask;
+
+            SuccessOrExit(error = aArgs[1].ParseAsUint32(mask));
+            VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+            otThreadSetNonPreferredChannels(GetInstancePtr(), mask);
+        }
+
+        ExitNow();
+    }
+
+    // Process args for `get` and `reset` commands.
+
     SuccessOrExit(error = aArgs[1].ParseAsIp6Address(address));
 
     for (Arg *arg = &aArgs[2]; !arg->IsEmpty(); arg++)
@@ -7708,6 +7748,9 @@ void Interpreter::HandleDiagnosticGetResponse(otError                 aError,
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION:
             OutputLine("Thread Stack Version: %s", diagTlv.mData.mThreadStackVersion);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_NON_PREFERRED_CHANNELS:
+            OutputLine("Non-preferred Channels Mask: 0x%lx", ToUlong(diagTlv.mData.mNonPreferredChannels));
             break;
         default:
             break;

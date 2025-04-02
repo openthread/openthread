@@ -641,12 +641,30 @@ public:
     static Error FindIn(const Message &aMessage, uint32_t &aChannelMask);
 
     /**
+     * Parses and validates the TLV value and returns the combined channel mask for all supported channel pages
+     * included in the TLV.
+     *
+     * The Channel Mask TLV value entries for each channel page are parsed one by one and `aChannelMask` is updated
+     * to return the combined mask for all channel pages that are supported by radio. Note that @p aOffsetRange
+     * corresponds to offset range where the TLV value resides within @p aMessage (not the full TLV).
+     *
+     * @param[in]  aMessage       The message to read the TLV value from.
+     * @param[in]  aOffsetRange   The offset range for the TLV value.
+     * @param[out] aChannelMask   A reference to return the channel mask.
+     *
+     * @retval kErrorNone       Successfully parsed the TLV value, @p aChannelMask is updated.
+     * @retval kErrorParse      Failed to parse the TLV value.
+     */
+    static Error ParseValue(const Message &aMessage, const OffsetRange &aOffsetRange, uint32_t &aChannelMask);
+
+    /**
      * Prepares Channel Mask TLV value for appending/writing.
      *
-     * @param[out] aValue        A reference to `Value` structure to populate.
-     * @param[in]  aChannelMask  The combined channel mask for all supported channel pages.
+     * @param[out] aValue                A reference to `Value` structure to populate.
+     * @param[in]  aChannelMask          The combined channel mask for all supported channel pages.
+     * @param[in]  aIncludeZeroPageMasks Determine whether to include or skip a zero mask for a supported channel page.
      */
-    static void PrepareValue(Value &aValue, uint32_t aChannelMask);
+    static void PrepareValue(Value &aValue, uint32_t aChannelMask, bool aIncludeZeroPageMasks = false);
 
     /**
      * Prepares a Channel Mask TLV value and appends the TLV to a given message.

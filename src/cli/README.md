@@ -2864,10 +2864,23 @@ Done
 
 ### networkdiagnostic reset \<addr\> \<type\> ..
 
-Send network diagnostic request to reset \<addr\>'s tlv of \<type\>s. Currently only `MAC Counters`(9) is supported.
+Send network diagnostic request to reset \<addr\>'s tlv of \<type\>s. Currently `MAC Counters`(9) is supported.
 
 ```bash
 > diagnostic reset fd00:db8::ff:fe00:0 9
+Done
+```
+
+### networkdiagnostic nonpreferredchannels
+
+Get or set the non-preferred channels value as a channel mask. This is used to respond to a Network Diagnostics Get request for the corresponding TLV. The channel mask is a 32-bit unsigned integer value where the least significant bit (LSB), also referred to as bit 0, corresponds to channel number 0, and so on.
+
+```bash
+> networkdiagnostic nonpreferredchannels 0x4000000
+Done
+
+> networkdiagnostic nonpreferredchannels
+0x4000000
 Done
 ```
 
