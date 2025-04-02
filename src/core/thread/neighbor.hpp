@@ -779,6 +779,9 @@ class CslNeighbor : public Neighbor
                     public CslTxScheduler::NeighborInfo
 #endif
 {
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    friend class CslNeighborTable;
+#endif
 };
 
 } // namespace ot
