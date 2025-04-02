@@ -586,7 +586,7 @@ void MeshForwarder::HandleMesh(RxInfo &aRxInfo)
     aRxInfo.mMacAddrs.mSource.SetShort(meshHeader.GetSource());
     aRxInfo.mMacAddrs.mDestination.SetShort(meshHeader.GetDestination());
 
-    UpdateRoutes(aRxInfo);
+    UpdateEidRlocCacheAndStaleChild(aRxInfo);
 
     if (Get<Mle::Mle>().HasRloc16(aRxInfo.GetDstAddr().GetShort()) ||
         Get<ChildTable>().HasMinimalChild(aRxInfo.GetDstAddr().GetShort()))
@@ -669,7 +669,7 @@ exit:
     return;
 }
 
-void MeshForwarder::UpdateRoutes(RxInfo &aRxInfo)
+void MeshForwarder::UpdateEidRlocCacheAndStaleChild(RxInfo &aRxInfo)
 {
     Neighbor *neighbor;
 
@@ -687,6 +687,9 @@ void MeshForwarder::UpdateRoutes(RxInfo &aRxInfo)
         Get<AddressResolver>().UpdateSnoopedCacheEntry(
             aRxInfo.mIp6Headers.GetSourceAddress(), aRxInfo.GetSrcAddr().GetShort(), aRxInfo.GetDstAddr().GetShort());
     }
+
+    // Detect if a former child has moved to a new parent by
+    // inspecting the received message.
 
     neighbor = Get<NeighborTable>().FindNeighbor(aRxInfo.mIp6Headers.GetSourceAddress());
     VerifyOrExit(neighbor != nullptr && !neighbor->IsFullThreadDevice());
