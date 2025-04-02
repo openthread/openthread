@@ -1071,6 +1071,75 @@ exit:
     return error;
 }
 
+void Ip6::DetermineAction(const Message &aMessage,
+                          const Header  &aHeader,
+                          bool          &aForwardThread,
+                          bool          &aForwardHost,
+                          bool          &aReceive) const
+{
+    // Determine `aForwardThread`, `aForwardHost` and `aReceive`
+    // based on the destination address and message origin.
+
+    aForwardThread = false;
+    aForwardHost   = false;
+    aReceive       = false;
+
+    if (aHeader.GetDestination().IsMulticast())
+    {
+        // Destination is multicast
+
+        aForwardThread = !aMessage.IsOriginThreadNetif();
+
+#if OPENTHREAD_FTD
+        if (aMessage.IsOriginThreadNetif() && aHeader.GetDestination().IsMulticastLargerThanRealmLocal() &&
+            Get<ChildTable>().HasSleepyChildWithAddress(aHeader.GetDestination()))
+        {
+            aForwardThread = true;
+        }
+#endif
+
+        // Always forward multicast packets to host network stack
+        aForwardHost = true;
+
+        if ((aMessage.IsOriginThreadNetif() || aMessage.GetMulticastLoop()) &&
+            Get<ThreadNetif>().IsMulticastSubscribed(aHeader.GetDestination()))
+        {
+            aReceive = true;
+        }
+    }
+    else
+    {
+        // Destination is unicast
+
+        if (Get<ThreadNetif>().HasUnicastAddress(aHeader.GetDestination()))
+        {
+            aReceive = true;
+        }
+        else if (!aMessage.IsOriginThreadNetif() || !aHeader.GetDestination().IsLinkLocalUnicast())
+        {
+            if (aHeader.GetDestination().IsLinkLocalUnicast())
+            {
+                aForwardThread = true;
+            }
+            else if (IsOnLink(aHeader.GetDestination()))
+            {
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
+                aForwardThread = (!aMessage.IsLoopbackToHostAllowed() ||
+                                  !Get<BackboneRouter::Manager>().ShouldForwardDuaToBackbone(aHeader.GetDestination()));
+#else
+                aForwardThread = true;
+#endif
+            }
+            else if (RouteLookup(aHeader.GetSource(), aHeader.GetDestination()) == kErrorNone)
+            {
+                aForwardThread = true;
+            }
+
+            aForwardHost = !aForwardThread;
+        }
+    }
+}
+
 Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
 {
     Error   error;
@@ -1080,10 +1149,6 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
     bool    forwardHost;
     uint8_t nextHeader;
 
-    receive       = false;
-    forwardThread = false;
-    forwardHost   = false;
-
     SuccessOrExit(error = header.ParseFrom(*aMessagePtr));
 
     if (!aMessagePtr->IsOriginHostTrusted())
@@ -1091,63 +1156,7 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
         VerifyOrExit(!header.GetSource().IsLoopback() && !header.GetDestination().IsLoopback(), error = kErrorDrop);
     }
 
-    // Determine `forwardThread`, `forwardHost` and `receive`
-    // based on the destination address.
-
-    if (header.GetDestination().IsMulticast())
-    {
-        // Destination is multicast
-
-        forwardThread = !aMessagePtr->IsOriginThreadNetif();
-
-#if OPENTHREAD_FTD
-        if (aMessagePtr->IsOriginThreadNetif() && header.GetDestination().IsMulticastLargerThanRealmLocal() &&
-            Get<ChildTable>().HasSleepyChildWithAddress(header.GetDestination()))
-        {
-            forwardThread = true;
-        }
-#endif
-
-        // Always forward multicast packets to host network stack
-        forwardHost = true;
-
-        if ((aMessagePtr->IsOriginThreadNetif() || aMessagePtr->GetMulticastLoop()) &&
-            Get<ThreadNetif>().IsMulticastSubscribed(header.GetDestination()))
-        {
-            receive = true;
-        }
-    }
-    else
-    {
-        // Destination is unicast
-
-        if (Get<ThreadNetif>().HasUnicastAddress(header.GetDestination()))
-        {
-            receive = true;
-        }
-        else if (!aMessagePtr->IsOriginThreadNetif() || !header.GetDestination().IsLinkLocalUnicast())
-        {
-            if (header.GetDestination().IsLinkLocalUnicast())
-            {
-                forwardThread = true;
-            }
-            else if (IsOnLink(header.GetDestination()))
-            {
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-                forwardThread = (!aMessagePtr->IsLoopbackToHostAllowed() ||
-                                 !Get<BackboneRouter::Manager>().ShouldForwardDuaToBackbone(header.GetDestination()));
-#else
-                forwardThread = true;
-#endif
-            }
-            else if (RouteLookup(header.GetSource(), header.GetDestination()) == kErrorNone)
-            {
-                forwardThread = true;
-            }
-
-            forwardHost = !forwardThread;
-        }
-    }
+    DetermineAction(*aMessagePtr, header, forwardThread, forwardHost, receive);
 
     aMessagePtr->SetOffset(sizeof(header));
 
