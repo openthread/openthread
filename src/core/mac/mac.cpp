@@ -38,6 +38,7 @@
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "instance/instance.hpp"
+#include "mac/mac_header_ie.hpp"
 #include "utils/static_counter.hpp"
 
 namespace ot {
@@ -2419,7 +2420,7 @@ uint8_t Mac::GetTimeIeOffset(const Frame &aFrame)
     const uint8_t *base   = aFrame.GetPsdu();
     const uint8_t *cur    = nullptr;
 
-    cur = reinterpret_cast<const uint8_t *>(aFrame.GetTimeIe());
+    cur = reinterpret_cast<const uint8_t *>(aFrame.GetHeaderIeContent<TimeIe>());
     VerifyOrExit(cur != nullptr);
 
     cur += sizeof(VendorIeHeader);
@@ -2551,7 +2552,7 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
 
     VerifyOrExit(aFrame.IsVersion2015() && aFrame.GetSecurityEnabled());
 
-    csl = aFrame.GetCslIe();
+    csl = aFrame.GetHeaderIeContent<CslIe>();
     VerifyOrExit(csl != nullptr);
 
 #if OPENTHREAD_FTD
@@ -2586,16 +2587,16 @@ exit:
 void Mac::ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor)
 {
     constexpr uint8_t kEnhAckProbingIeMaxLen = 2;
+    const uint8_t    *data;
+    uint8_t           dataLen;
 
-    const HeaderIe *enhAckProbingIe =
-        reinterpret_cast<const HeaderIe *>(aFrame.GetThreadIe(ThreadIe::kEnhAckProbingIe));
-    const uint8_t *data =
-        reinterpret_cast<const uint8_t *>(enhAckProbingIe) + sizeof(HeaderIe) + sizeof(VendorIeHeader);
-    uint8_t dataLen = 0;
+    const HeaderIe *header = aFrame.GetHeaderIe<EnhAckProbingIe>();
 
-    VerifyOrExit(enhAckProbingIe != nullptr);
+    VerifyOrExit(header != nullptr);
 
-    dataLen = enhAckProbingIe->GetLength() - sizeof(VendorIeHeader);
+    data = header->GetContent<EnhAckProbingIe>()->GetData();
+
+    dataLen = header->GetLength() - sizeof(ThreadIe);
     VerifyOrExit(dataLen <= kEnhAckProbingIeMaxLen);
 
     Get<LinkMetrics::Initiator>().ProcessEnhAckIeData(data, dataLen, aNeighbor);
@@ -2704,13 +2705,13 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
     uint8_t             retryCount;
 
     VerifyOrExit(mWakeupListenEnabled && aFrame.IsWakeupFrame());
-    connectionIe  = aFrame.GetConnectionIe();
+    connectionIe  = aFrame.GetHeaderIeContent<ConnectionIe>();
     retryInterval = connectionIe->GetRetryInterval();
     retryCount    = connectionIe->GetRetryCount();
     VerifyOrExit(retryInterval > 0 && retryCount > 0, error = kErrorInvalidArgs);
 
     radioNowUs    = otPlatRadioGetNow(&GetInstance());
-    rvTimeUs      = aFrame.GetRendezvousTimeIe()->GetRendezvousTime() * kUsPerTenSymbols;
+    rvTimeUs      = aFrame.GetHeaderIeContent<RendezvousTimeIe>()->GetRendezvousTime() * kUsPerTenSymbols;
     rvTimestampUs = aFrame.GetTimestamp() + kRadioHeaderPhrDuration + aFrame.GetLength() * kOctetDuration + rvTimeUs;
 
     if (rvTimestampUs > radioNowUs + kCslRequestAhead)

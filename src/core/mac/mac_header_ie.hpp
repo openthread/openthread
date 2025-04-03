@@ -36,8 +36,12 @@
 
 #include "openthread-core-config.h"
 
+#include <type_traits>
+
 #include "common/as_core_type.hpp"
+#include "common/const_cast.hpp"
 #include "common/encoding.hpp"
+#include "common/new.hpp"
 #include "common/numeric_limits.hpp"
 #include "mac/mac_types.hpp"
 
@@ -57,6 +61,18 @@ OT_TOOL_PACKED_BEGIN
 class HeaderIe
 {
 public:
+    enum Id : uint16_t
+    {
+        kVendorSpecific = 0,
+        kCsl            = 0x1a,
+        kRendezvousTime = 0x1d,
+    };
+
+    template <uint8_t aId> struct Trait
+    {
+        static constexpr uint8_t kHeaderIeId = aId;
+    };
+
     /**
      * Initializes the Header IE.
      */
@@ -102,6 +118,32 @@ public:
      */
     void SetLength(uint8_t aLength) { mFields.m8[0] = (mFields.m8[0] & ~kLengthMask) | (aLength & kLengthMask); }
 
+    /**
+     * Initializes the Header IE to the given Header IE Content.
+     *
+     * @tparam[in]  ContentType   The type of the Header IE Content.
+     */
+    template <typename ContentType> ContentType *Init(void) { return Init<ContentType>(sizeof(ContentType)); }
+
+    /**
+     * Initializes the Header IE to the given Header IE Content.
+     *
+     * @tparam[in]  ContentType   The type of the Header IE Content.
+     * @param[in]   aLen  The IE content length.
+     */
+    template <typename ContentType> ContentType *Init(uint8_t aLen)
+    {
+        static_assert(std::is_standard_layout<ContentType>::value, "ContentType is not standard layout");
+        Init(ContentType::kHeaderIeId, aLen);
+        return new (this + 1) ContentType();
+    }
+
+    template <typename ContentType> const ContentType *GetContent(void) const
+    {
+        static_assert(std::is_standard_layout<ContentType>::value, "ContentType is not standard layout");
+        return reinterpret_cast<const ContentType *>(this + 1);
+    }
+
 private:
     // Header IE format:
     //
@@ -128,12 +170,9 @@ private:
  * Implements CSL IE data structure.
  */
 OT_TOOL_PACKED_BEGIN
-class CslIe
+class CslIe : public HeaderIe::Trait<HeaderIe::Id::kCsl>
 {
 public:
-    static constexpr uint8_t kHeaderIeId    = 0x1a;
-    static constexpr uint8_t kIeContentSize = sizeof(uint16_t) * 2;
-
     /**
      * Returns the CSL Period.
      *
@@ -186,8 +225,14 @@ OT_TOOL_PACKED_BEGIN
 class VendorIeHeader
 {
 public:
-    static constexpr uint8_t kHeaderIeId    = 0x00;
-    static constexpr uint8_t kIeContentSize = sizeof(uint8_t) * 4;
+    static constexpr uint16_t kHeaderIeId = HeaderIe::kVendorSpecific;
+
+    template <uint32_t aOui> struct Trait : HeaderIe::Trait<kHeaderIeId>
+    {
+        static constexpr uint32_t kVendorOui = aOui;
+    };
+
+    explicit VendorIeHeader(uint32_t aVendorOui) { SetVendorOui(aVendorOui); }
 
     /**
      * Returns the Vendor OUI.
@@ -202,6 +247,36 @@ public:
      * @param[in]  aVendorOui  A Vendor OUI.
      */
     void SetVendorOui(uint32_t aVendorOui) { LittleEndian::WriteUint24(aVendorOui, mOui); }
+
+    const uint8_t *GetInfo(void) const { return reinterpret_cast<const uint8_t *>(this + 1); }
+
+private:
+    static constexpr uint8_t kOuiSize = 3;
+
+    uint8_t mOui[kOuiSize];
+} OT_TOOL_PACKED_END;
+
+OT_TOOL_PACKED_BEGIN
+class NestIeHeader
+{
+public:
+    static constexpr uint32_t kVendorOui = 0x18b430;
+
+    enum SubType : uint8_t
+    {
+        kTime = 0x01,
+    };
+
+    template <uint8_t aSubType> struct Trait : VendorIeHeader::Trait<kVendorOui>
+    {
+        static constexpr uint8_t kSubType = aSubType;
+    };
+
+    explicit NestIeHeader(uint8_t aSubType)
+        : mVendorIeHeader(kVendorOui)
+        , mSubType(aSubType)
+    {
+    }
 
     /**
      * Returns the Vendor IE sub-type.
@@ -218,10 +293,8 @@ public:
     void SetSubType(uint8_t aSubType) { mSubType = aSubType; }
 
 private:
-    static constexpr uint8_t kOuiSize = 3;
-
-    uint8_t mOui[kOuiSize];
-    uint8_t mSubType;
+    VendorIeHeader mVendorIeHeader;
+    uint8_t        mSubType;
 } OT_TOOL_PACKED_END;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -229,21 +302,15 @@ private:
  * Implements Time Header IE generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
-class TimeIe : public VendorIeHeader
+class TimeIe : public NestIeHeader::Trait<NestIeHeader::SubType::kTime>
 {
 public:
-    static constexpr uint32_t kVendorOuiNest = 0x18b430;
-    static constexpr uint8_t  kVendorIeTime  = 0x01;
-    static constexpr uint8_t  kHeaderIeId    = VendorIeHeader::kHeaderIeId;
-    static constexpr uint8_t  kIeContentSize = VendorIeHeader::kIeContentSize + sizeof(uint8_t) + sizeof(uint64_t);
-
     /**
      * Initializes the time IE.
      */
-    void Init(void)
+    TimeIe(void)
+        : mNestIeHeader(kSubType)
     {
-        SetVendorOui(kVendorOuiNest);
-        SetSubType(kVendorIeTime);
     }
 
     /**
@@ -275,18 +342,72 @@ public:
     void SetTime(uint64_t aTime) { mTime = LittleEndian::HostSwap64(aTime); }
 
 private:
-    uint8_t  mSequence;
-    uint64_t mTime;
+    NestIeHeader mNestIeHeader;
+    uint8_t      mSequence;
+    uint64_t     mTime;
 } OT_TOOL_PACKED_END;
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
+OT_TOOL_PACKED_BEGIN
 class ThreadIe
 {
 public:
-    static constexpr uint8_t  kHeaderIeId               = VendorIeHeader::kHeaderIeId;
-    static constexpr uint8_t  kIeContentSize            = VendorIeHeader::kIeContentSize;
-    static constexpr uint32_t kVendorOuiThreadCompanyId = 0xeab89b;
-    static constexpr uint8_t  kEnhAckProbingIe          = 0x00;
+    static constexpr uint32_t kVendorOui = 0xeab89b;
+
+    enum SubType : uint8_t
+    {
+        kEnhAckProbing, // 0x00
+        kConnection,    // 0x01
+    };
+
+    template <uint8_t aSubType> struct Trait : VendorIeHeader::Trait<kVendorOui>
+    {
+        static constexpr uint8_t kSubType = aSubType;
+    };
+
+    /**
+     * Returns the Vendor IE sub-type.
+     *
+     * @returns The Vendor IE sub-type.
+     *
+     */
+    uint8_t GetSubType(void) const { return mSubType; }
+
+    /**
+     * Sets the Vendor IE sub-type.
+     *
+     * @param[in]  aSubType  The Vendor IE sub-type.
+     *
+     */
+
+    void SetSubType(uint8_t aSubType) { mSubType = aSubType; }
+
+    explicit ThreadIe(uint8_t aSubType)
+        : mVendorIeHeader(kVendorOui)
+        , mSubType(aSubType)
+    {
+    }
+
+private:
+    VendorIeHeader mVendorIeHeader;
+    uint8_t        mSubType;
+} OT_TOOL_PACKED_END;
+
+OT_TOOL_PACKED_BEGIN
+class EnhAckProbingIe : public ThreadIe::Trait<ThreadIe::SubType::kEnhAckProbing>
+{
+public:
+    EnhAckProbingIe(void)
+        : mThreadIe(kSubType)
+    {
+    }
+
+    uint8_t *GetData() { return AsNonConst(AsConst(this)->GetData()); }
+
+    const uint8_t *GetData() const { return reinterpret_cast<const uint8_t *>(this + 1); }
+
+private:
+    ThreadIe mThreadIe;
 };
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
@@ -298,12 +419,9 @@ public:
  * not included in this class.
  */
 OT_TOOL_PACKED_BEGIN
-class RendezvousTimeIe
+class RendezvousTimeIe : public HeaderIe::Trait<HeaderIe::Id::kRendezvousTime>
 {
 public:
-    static constexpr uint8_t kHeaderIeId    = 0x1d;
-    static constexpr uint8_t kIeContentSize = sizeof(uint16_t);
-
     /**
      * This method returns the Rendezvous Time.
      *
@@ -326,20 +444,15 @@ private:
  * Implements Connection IE data structure.
  */
 OT_TOOL_PACKED_BEGIN
-class ConnectionIe : public VendorIeHeader
+class ConnectionIe : public ThreadIe::Trait<ThreadIe::SubType::kConnection>
 {
 public:
-    static constexpr uint8_t kHeaderIeId      = ThreadIe::kHeaderIeId;
-    static constexpr uint8_t kIeContentSize   = ThreadIe::kIeContentSize + sizeof(uint8_t);
-    static constexpr uint8_t kThreadIeSubtype = 0x01;
-
     /**
      * Initializes the Connection IE.
      */
-    void Init(void)
+    ConnectionIe(void)
+        : mThreadIe(kSubType)
     {
-        SetVendorOui(ThreadIe::kVendorOuiThreadCompanyId);
-        SetSubType(kThreadIeSubtype);
         mConnectionWindow = 0;
     }
 
@@ -388,7 +501,8 @@ private:
     static constexpr uint8_t kRetryIntervalMask   = 0x3 << kRetryIntervalOffset;
     static constexpr uint8_t kRetryCountMask      = 0xf;
 
-    uint8_t mConnectionWindow;
+    ThreadIe mThreadIe;
+    uint8_t  mConnectionWindow;
 } OT_TOOL_PACKED_END;
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 

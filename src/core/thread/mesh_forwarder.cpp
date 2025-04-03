@@ -79,7 +79,7 @@ void ThreadLinkInfo::SetFrom(const Mac::RxFrame &aFrame)
     mRss     = aFrame.GetRssi();
     mLqi     = aFrame.GetLqi();
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (aFrame.GetTimeIe() != nullptr)
+    if (aFrame.GetHeaderIeContent<Mac::TimeIe>() != nullptr)
     {
         mNetworkTimeOffset = aFrame.ComputeNetworkTimeOffset();
         mTimeSyncSeq       = aFrame.ReadTimeSyncSeq();

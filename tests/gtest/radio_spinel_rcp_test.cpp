@@ -29,6 +29,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#define OT_INCLUDE_COMMON_NEW_HPP_
+
 #include <openthread/platform/radio.h>
 
 #include "common/error.hpp"

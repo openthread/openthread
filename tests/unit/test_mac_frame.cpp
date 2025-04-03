@@ -761,7 +761,7 @@ void TestMacFrameAckGeneration(void)
 
     SuccessOrQuit(ackFrame.GenerateEnhAck(receivedFrame, false, ie_data, sizeof(ie_data)));
 
-    csl = reinterpret_cast<Mac::CslIe *>(ackFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) + sizeof(Mac::HeaderIe));
+    csl = ackFrame.GetHeaderIeContent<Mac::CslIe>();
     VerifyOrQuit(ackFrame.mLength == 25);
     VerifyOrQuit(ackFrame.GetType() == Mac::Frame::kTypeAck);
     VerifyOrQuit(ackFrame.GetSecurityEnabled());
@@ -776,7 +776,7 @@ void TestMacFrameAckGeneration(void)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     ackFrame.SetCslIe(123, 456);
-    csl = reinterpret_cast<Mac::CslIe *>(ackFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) + sizeof(Mac::HeaderIe));
+    csl = ackFrame.GetHeaderIeContent<Mac::CslIe>();
     VerifyOrQuit(csl->GetPeriod() == 123 && csl->GetPhase() == 456);
 #endif
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -839,8 +839,8 @@ void TestMacWakeupFrameGeneration(void)
     // Validate that the frame satisfies the wake-up frame definition
     VerifyOrQuit(txFrame.GetType() == Mac::Frame::kTypeMultipurpose);
     VerifyOrQuit(!txFrame.GetAckRequest());
-    VerifyOrQuit(txFrame.GetRendezvousTimeIe() != nullptr);
-    VerifyOrQuit(txFrame.GetConnectionIe() != nullptr);
+    VerifyOrQuit(txFrame.GetHeaderIeContent<Mac::RendezvousTimeIe>() != nullptr);
+    VerifyOrQuit(txFrame.GetHeaderIeContent<Mac::ConnectionIe>() != nullptr);
     VerifyOrQuit(txFrame.GetPayloadLength() == 0);
     SuccessOrQuit(txFrame.GetSrcAddr(addr));
     VerifyOrQuit(CompareAddresses(src, addr));
@@ -851,12 +851,12 @@ void TestMacWakeupFrameGeneration(void)
     txFrame.SetFrameCounter(0xfcfcfcfc);
     txFrame.SetKeySource(kKeySource);
     txFrame.SetKeyId(0x1d);
-    txFrame.GetRendezvousTimeIe()->SetRendezvousTime(0xabcd);
-    connectionIe = txFrame.GetConnectionIe();
+    txFrame.GetHeaderIeContent<Mac::RendezvousTimeIe>()->SetRendezvousTime(0xabcd);
+    connectionIe = txFrame.GetHeaderIeContent<Mac::ConnectionIe>();
     connectionIe->SetRetryInterval(1);
     connectionIe->SetRetryCount(12);
 
-    VerifyOrQuit(txFrame.GetRendezvousTimeIe()->GetRendezvousTime() == 0xabcd);
+    VerifyOrQuit(txFrame.GetHeaderIeContent<Mac::RendezvousTimeIe>()->GetRendezvousTime() == 0xabcd);
     VerifyOrQuit(connectionIe->GetRetryInterval() == 1);
     VerifyOrQuit(connectionIe->GetRetryCount() == 12);
     VerifyOrQuit(txFrame.GetLength() == sizeof(kWakeupPsdu) + txFrame.GetFooterLength());
