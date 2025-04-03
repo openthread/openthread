@@ -486,9 +486,11 @@ private:
     };
 #endif
 
-    void     SendIcmpErrorIfDstUnreach(const Message &aMessage, const Mac::Addresses &aMacAddrs);
-    Error    CheckReachability(RxInfo &aRxInfo);
-    Error    CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header);
+#if OPENTHREAD_FTD
+    bool  IsReachable(uint16_t aMeshDest, const Ip6::Header &aIp6Header) const;
+    void  CheckReachabilityToSendIcmpError(const Message &aMessage, const Mac::Addresses &aMacAddrs);
+    Error CheckReachabilityToSendIcmpError(RxInfo &aRxInfo);
+#endif
     void     UpdateEidRlocCacheAndStaleChild(RxInfo &aRxInfo);
     Error    FrameToMessage(RxInfo &aRxInfo, uint16_t aDatagramSize, Message *&aMessage);
     void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);

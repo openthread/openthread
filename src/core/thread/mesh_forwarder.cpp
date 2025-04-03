@@ -1487,7 +1487,7 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
         VerifyOrExit(Get<Ip6::Filter>().Accept(*message), error = kErrorDrop);
 
 #if OPENTHREAD_FTD
-        SendIcmpErrorIfDstUnreach(*message, aRxInfo.mMacAddrs);
+        CheckReachabilityToSendIcmpError(*message, aRxInfo.mMacAddrs);
 #endif
 
         // Allow re-assembly of only one message at a time on a SED by clearing
@@ -1645,7 +1645,7 @@ void MeshForwarder::HandleLowpanHc(RxInfo &aRxInfo)
     VerifyOrExit(Get<Ip6::Filter>().Accept(*message), error = kErrorDrop);
 
 #if OPENTHREAD_FTD
-    SendIcmpErrorIfDstUnreach(*message, aRxInfo.mMacAddrs);
+    CheckReachabilityToSendIcmpError(*message, aRxInfo.mMacAddrs);
 #endif
 
 exit:
