@@ -1196,9 +1196,9 @@ CSL period is shown in microseconds.
 
 ```bash
 > csl
-Channel: 11
-Period: 160000us
-Timeout: 1000s
+channel: 11
+period: 160000us
+timeout: 1000s
 Done
 ```
 
