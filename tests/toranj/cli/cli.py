@@ -851,6 +851,9 @@ class Node(object):
     def br_count_peers(self):
         return self._cli_single_output('br peers count')
 
+    def br_get_multiail(self):
+        return self._cli_single_output('br multiail')
+
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # trel
 
