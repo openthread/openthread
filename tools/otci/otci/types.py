@@ -127,6 +127,22 @@ class Ip6Prefix(ipaddress.IPv6Network):
         return super().__hash__()
 
 
+class Ip4Addr(ipaddress.IPv4Address):
+    """Represents an IPv4 address."""
+
+    def __eq__(self, other):
+        if isinstance(other, str):
+            other = ipaddress.IPv4Address(other)
+
+        return super().__eq__(other)
+
+    def __repr__(self):
+        return self.compressed
+
+    def __hash__(self):
+        return super().__hash__()
+
+
 SecurityPolicy = namedtuple('SecurityPolicy', ['rotation_time', 'flags'])
 """Represents a Security Policy configuration."""
 

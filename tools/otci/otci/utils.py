@@ -69,5 +69,5 @@ def bits_set(number: int) -> Generator[int, int, None]:
     while number != 0:
         if number & 1:
             yield idx
-        else:
-            number >>= 1
+        number >>= 1
+        idx += 1
