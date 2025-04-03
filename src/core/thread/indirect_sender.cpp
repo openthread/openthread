@@ -371,7 +371,7 @@ uint16_t IndirectSender::PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, M
 
     if (ip6Header.GetDestination().IsLinkLocalUnicast())
     {
-        Get<MeshForwarder>().GetMacDestinationAddress(ip6Header.GetDestination(), macAddrs.mDestination);
+        macAddrs.mDestination.SetExtendedFromIid(ip6Header.GetDestination().GetIid());
     }
     else
     {
