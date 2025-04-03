@@ -208,6 +208,7 @@ if [ "$TORANJ_CLI" = 1 ]; then
     run cli/test-502-multi-br-leader-failure-recovery.py
     run cli/test-503-peer-tbr-discovery.py
     run cli/test-504-br-icmp-unreach-err.py
+    run cli/test-505-multi-ail-detection.py
     run cli/test-601-channel-manager-channel-change.py
     # Skip the "channel-select" test on a TREL only radio link, since it
     # requires energy scan which is not supported in this case.
