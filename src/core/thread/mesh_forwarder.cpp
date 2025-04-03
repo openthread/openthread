@@ -1472,7 +1472,7 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
         uint16_t datagramSize = fragmentHeader.GetDatagramSize();
 
 #if OPENTHREAD_FTD
-        UpdateRoutes(aRxInfo);
+        UpdateEidRlocCacheAndStaleChild(aRxInfo);
 #endif
 
         SuccessOrExit(error = FrameToMessage(aRxInfo, datagramSize, message));
@@ -1635,7 +1635,7 @@ void MeshForwarder::HandleLowpanHc(RxInfo &aRxInfo)
     Message *message = nullptr;
 
 #if OPENTHREAD_FTD
-    UpdateRoutes(aRxInfo);
+    UpdateEidRlocCacheAndStaleChild(aRxInfo);
 #endif
 
     SuccessOrExit(error = FrameToMessage(aRxInfo, 0, message));

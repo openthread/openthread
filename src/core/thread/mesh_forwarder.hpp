@@ -489,7 +489,7 @@ private:
     void     SendIcmpErrorIfDstUnreach(const Message &aMessage, const Mac::Addresses &aMacAddrs);
     Error    CheckReachability(RxInfo &aRxInfo);
     Error    CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header);
-    void     UpdateRoutes(RxInfo &aRxInfo);
+    void     UpdateEidRlocCacheAndStaleChild(RxInfo &aRxInfo);
     Error    FrameToMessage(RxInfo &aRxInfo, uint16_t aDatagramSize, Message *&aMessage);
     void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *PrepareNextDirectTransmission(void);
