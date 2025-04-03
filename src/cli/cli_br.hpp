@@ -93,6 +93,11 @@ private:
 
     otError ParsePrefixTypeArgs(Arg aArgs[], PrefixType &aFlags);
     void    OutputRouterInfo(const otBorderRoutingRouterEntry &aEntry, RouterOutputMode aMode);
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    static void HandleMultiAilDetected(bool aDetected, void *aContext);
+    void        HandleMultiAilDetected(bool aDetected);
+#endif
 };
 
 } // namespace Cli

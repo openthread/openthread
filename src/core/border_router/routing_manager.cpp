@@ -60,6 +60,9 @@ RoutingManager::RoutingManager(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
     , mNetDataPeerBrTracker(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    , mMultiAilDetector(aInstance)
+#endif
     , mRxRaTracker(aInstance)
     , mRoutePublisher(aInstance)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
@@ -309,6 +312,9 @@ void RoutingManager::Start(void)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         mNat64PrefixManager.Start();
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+        mMultiAilDetector.Start();
+#endif
     }
 }
 
@@ -323,6 +329,9 @@ void RoutingManager::Stop(void)
 #endif
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     mNat64PrefixManager.Stop();
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    mMultiAilDetector.Stop();
 #endif
 
     SendRouterAdvertisement(kInvalidateAllPrevPrefixes);
@@ -762,6 +771,9 @@ void RoutingManager::HandleRaPrefixTableChanged(void)
 
     mOnLinkPrefixManager.HandleRaPrefixTableChanged();
     mRoutePublisher.Evaluate();
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    mMultiAilDetector.Evaluate();
+#endif
 
 exit:
     return;
@@ -1077,6 +1089,7 @@ void RoutingManager::RdnssAddress::CopyInfoTo(RdnssAddrEntry &aEntry, TimeMilli 
 // NetDataPeerBrTracker
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+
 RoutingManager::NetDataPeerBrTracker::NetDataPeerBrTracker(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
@@ -1152,11 +1165,96 @@ void RoutingManager::NetDataPeerBrTracker::HandleNotifierEvents(Events aEvents)
         mPeerBrs.Push(*newEntry);
     }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    Get<RoutingManager>().mMultiAilDetector.Evaluate();
+#endif
+
 exit:
     return;
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+
+//---------------------------------------------------------------------------------------------------------------------
+// MultiAilDetector
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+
+RoutingManager::MultiAilDetector::MultiAilDetector(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mDetected(false)
+    , mNetDataPeerBrCount(0)
+    , mRxRaTrackerPeerBrCount(0)
+    , mTimer(aInstance)
+{
+}
+
+void RoutingManager::MultiAilDetector::Stop(void)
+{
+    mTimer.Stop();
+    mDetected               = false;
+    mNetDataPeerBrCount     = 0;
+    mRxRaTrackerPeerBrCount = 0;
+}
+
+void RoutingManager::MultiAilDetector::Evaluate(void)
+{
+    uint16_t count;
+    uint32_t minAge;
+    bool     detected;
+
+    VerifyOrExit(Get<RoutingManager>().IsRunning());
+
+    count = Get<RoutingManager>().mNetDataPeerBrTracker.CountPeerBrs(minAge);
+
+    if (count != mNetDataPeerBrCount)
+    {
+        LogInfo("Peer BR count from netdata: %u -> %u", mNetDataPeerBrCount, count);
+        mNetDataPeerBrCount = count;
+    }
+
+    count = Get<RoutingManager>().mRxRaTracker.CountPeerBrs();
+
+    if (count != mRxRaTrackerPeerBrCount)
+    {
+        LogInfo("Peer BR count from RaTracker: %u -> %u", mRxRaTrackerPeerBrCount, count);
+        mRxRaTrackerPeerBrCount = count;
+    }
+
+    detected = (mNetDataPeerBrCount > mRxRaTrackerPeerBrCount);
+
+    if (detected == mDetected)
+    {
+        mTimer.Stop();
+    }
+    else if (!mTimer.IsRunning())
+    {
+        mTimer.Start(detected ? kDetectTime : kClearTime);
+    }
+
+exit:
+    return;
+}
+
+void RoutingManager::MultiAilDetector::HandleTimer(void)
+{
+    if (!mDetected)
+    {
+        LogNote("BRs on multi AIL detected - BRs are likely connected to different infra-links");
+        LogInfo("More peer BRs in netdata vs from rx RAs for past %lu seconds", ToUlong(Time::MsecToSec(kDetectTime)));
+        LogInfo("NetData Peer BR count: %u, RaTracker Peer BR count: %u", mNetDataPeerBrCount, mRxRaTrackerPeerBrCount);
+        mDetected = true;
+    }
+    else
+    {
+        LogNote("BRs on multi AIL detection cleared");
+        mDetected = false;
+    }
+
+    mCallback.InvokeIfSet(mDetected);
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 // RxRaTracker
@@ -2077,6 +2175,22 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+uint16_t RoutingManager::RxRaTracker::CountPeerBrs(void) const
+{
+    uint16_t count = 0;
+
+    for (const Router &router : mRouters)
+    {
+        if (!router.mIsLocalDevice && router.IsPeerBr())
+        {
+            count++;
+        }
+    }
+
+    return count;
+}
+#endif
 //---------------------------------------------------------------------------------------------------------------------
 // RxRaTracker::Iterator
 
