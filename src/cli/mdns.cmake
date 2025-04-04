@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2025, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,33 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_FTD OR OT_MTD OR OT_RCP)
-    include(full.cmake)
+add_library(openthread-cli-mdns)
+
+target_compile_definitions(openthread-cli-mdns
+    PRIVATE
+        OPENTHREAD_FTD=0
+        OPENTHREAD_MTD=0
+        OPENTHREAD_RADIO=0
+        OPENTHREAD_MDNS=1
+)
+
+target_compile_options(openthread-cli-mdns PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_include_directories(openthread-cli-mdns PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
+
+target_sources(openthread-cli-mdns PRIVATE ${MDNS_COMMON_SOURCES})
+
+target_link_libraries(openthread-cli-mdns
+    PUBLIC
+        openthread-mdns
+    PRIVATE
+        ${OT_MBEDTLS}
+        ot-config-mdns
+        ot-config
+)
+
+if(OT_CLI_VENDOR_TARGET)
+    target_link_libraries(openthread-cli-mdns PRIVATE ${OT_CLI_VENDOR_TARGET})
 endif()
