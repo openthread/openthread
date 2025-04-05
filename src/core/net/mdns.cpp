@@ -63,6 +63,11 @@ extern "C" void otPlatMdnsHandleHostAddressEvent(otInstance         *aInstance,
     AsCoreType(aInstance).Get<Core>().HandleHostAddressEvent(AsCoreType(aAddress), aAdded, aInfraIfIndex);
 }
 
+extern "C" void otPlatMdnsHandleHostAddressRemoveAll(otInstance *aInstance, uint32_t aInfraIfIndex)
+{
+    AsCoreType(aInstance).Get<Core>().HandleHostAddressRemoveAll(aInfraIfIndex);
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 // Core
 
@@ -283,6 +288,8 @@ void Core::HandleHostAddressEvent(const Ip6::Address &aAddress, bool aAdded, uin
 {
     mLocalHost.HandleAddressEvent(aAddress, aAdded, aInfraIfIndex);
 }
+
+void Core::HandleHostAddressRemoveAll(uint32_t aInfraIfIndex) { mLocalHost.HandleAddressRemoveAll(aInfraIfIndex); }
 
 void Core::HandleMessage(Message &aMessage, bool aIsUnicast, const AddressInfo &aSenderAddress)
 {
@@ -1587,6 +1594,30 @@ void Core::LocalHost::HandleAddressEvent(const Ip6::Address &aAddress, bool aAdd
     if (!mEventTimer.IsRunning())
     {
         mEventTimer.Start(kGuardTimeToProcessAddrEvents);
+    }
+
+exit:
+    return;
+}
+
+void Core::LocalHost::HandleAddressRemoveAll(uint32_t aInfraIfIndex)
+{
+    VerifyOrExit(Get<Core>().mIsEnabled);
+    VerifyOrExit(aInfraIfIndex == Get<Core>().mInfraIfIndex);
+
+    mAddrEvents.Clear();
+    mEventTimer.Stop();
+
+    LogInfo("Host address event: remove all");
+
+    for (const Ip6::Address &address : mIp4Addresses)
+    {
+        HandleAddressEvent(address, /* aAdded */ false, aInfraIfIndex);
+    }
+
+    for (const Ip6::Address &address : mIp6Addresses)
+    {
+        HandleAddressEvent(address, /* aAdded */ false, aInfraIfIndex);
     }
 
 exit:
