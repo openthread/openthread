@@ -1,0 +1,98 @@
+#!/usr/bin/expect -f
+#
+#  Copyright (c) 2025, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+source "tests/scripts/expect/_common.exp"
+source "tests/scripts/expect/_multinode.exp"
+
+spawn_node 2 "cli"
+spawn_node 1 "cli"
+setup_leader
+setup_node 2
+
+switch_node 1
+
+spawn_tcat_client_for_node 1
+
+send "diagnostic_tlvs extaddr\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t10"
+expect -re {\tVALUE:\t0x0008([0-9a-fA-F]{16})}
+
+send "diagnostic_tlvs macaddr\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t4"
+expect -re {\tVALUE:\t0x0102([0-9a-fA-F]{4})}
+
+send "diagnostic_tlvs mode timeout connectivity\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t15"
+expect -re {\tVALUE:\t0x0201([0-9a-fA-F]{2})040a([0-9a-fA-F]{20})}
+
+send "diagnostic_tlvs route64 leaderdata\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t22"
+expect -re {\tVALUE:\t0x050a([0-9a-fA-F]{20})0608([0-9a-fA-F]{16})}
+
+send "diagnostic_tlvs ipaddr\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect -re {\tLEN:\t([0-9]{2,3})}
+expect -re {\tVALUE:\t0x08([0-9a-fA-F]{33,197})}
+
+send "diagnostic_tlvs mlecounters\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t68"
+expect -re {\tVALUE:\t0x2242([0-9a-fA-F]{132})}
+
+send "diagnostic_tlvs channelpages maxchildtimeout eui64 vendorname vendormodel vendorswversion vendorappurl\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t27"
+expect_line "\tVALUE:\t0x1101001304000000f0170818b430000000000119001a001b002300"
+
+send "diagnostic_tlvs childtable\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t5"
+expect -re {\tVALUE:\t0x1003([0-9a-fA-F]{6})}
+
+send "diagnostic_tlvs child\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t47"
+expect -re {\tVALUE:\t0x1d2b([0-9a-fA-F]{86})1d00}
+
+send "diagnostic_tlvs childipv6list routerneighbor\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect -re {\tLEN:\t([0-9]{2})}
+expect -re {\tVALUE:\t0x1e([0-9a-fA-F]{6,69})1e001f00}
+
+dispose_tcat_client 1
+
+switch_node 1
+send "tcat stop\n"
+expect_line "Done"
+
+dispose_all

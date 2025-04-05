@@ -340,6 +340,11 @@ private:
     Error HandleSingleTlv(const Message &aIncomingMessage, Message &aOutgoingMessage);
     Error HandleSetActiveOperationalDataset(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength);
     Error HandleGetActiveOperationalDataset(Message &aOutgoingMessage, bool &aResponse);
+    Error HandleGetDiagnosticTlvs(const Message &aIncomingMessage,
+                                  Message       &aOutgoingMessage,
+                                  uint16_t       aOffset,
+                                  uint16_t       aLength,
+                                  bool          &response);
     Error HandleDecomission(void);
     Error HandlePing(const Message &aIncomingMessage,
                      Message       &aOutgoingMessage,
@@ -383,6 +388,7 @@ private:
     static constexpr uint16_t kTcatMaxDeviceIdSize       = OT_TCAT_MAX_DEVICEID_SIZE;
     static constexpr uint16_t kInstallCodeMaxSize        = 255;
     static constexpr uint16_t kCommissionerCertMaxLength = 1024;
+    static constexpr uint16_t kBufferReserve             = 2048 / (kBufferSize - sizeof(otMessageBuffer)) + 1;
 
     JoinerPskd                       mJoinerPskd;
     const VendorInfo                *mVendorInfo;
