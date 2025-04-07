@@ -166,6 +166,17 @@ otError otMdnsGetNextKey(otInstance *aInstance, otMdnsIterator *aIterator, otMdn
     return AsCoreType(aInstance).Get<Dns::Multicast::Core>().GetNextKey(*aIterator, *aKey, *aState);
 }
 
+otError otMdnsGetNextLocalHostAddress(otInstance             *aInstance,
+                                      otMdnsIterator         *aIterator,
+                                      otMdnsLocalHostAddress *aAddress)
+
+{
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aAddress);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().GetNextLocalHostAddress(*aIterator, *aAddress);
+}
+
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
 otError otMdnsStartBrowser(otInstance *aInstance, const otMdnsBrowser *aBroswer)

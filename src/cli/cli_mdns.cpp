@@ -605,6 +605,51 @@ exit:
     return error;
 }
 
+template <> otError Mdns::Process<Cmd("localhostaddrs")>(Arg aArgs[])
+{
+    otError                error    = OT_ERROR_NONE;
+    otMdnsIterator        *iterator = nullptr;
+    otMdnsLocalHostAddress addr;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    iterator = otMdnsAllocateIterator(GetInstancePtr());
+    VerifyOrExit(iterator != nullptr, error = OT_ERROR_NO_BUFS);
+
+    while (true)
+    {
+        error = otMdnsGetNextLocalHostAddress(GetInstancePtr(), iterator, &addr);
+
+        if (error == OT_ERROR_NOT_FOUND)
+        {
+            error = OT_ERROR_NONE;
+            ExitNow();
+        }
+
+        SuccessOrExit(error);
+
+        if (addr.mIsIp6)
+        {
+            OutputIp6AddressLine(addr.mAddress.mIp6);
+        }
+        else
+        {
+            char ip4AddressString[OT_IP4_ADDRESS_STRING_SIZE];
+
+            otIp4AddressToString(&addr.mAddress.mIp4, ip4AddressString, sizeof(ip4AddressString));
+            OutputLine("%s", ip4AddressString);
+        }
+    }
+
+exit:
+    if (iterator != nullptr)
+    {
+        otMdnsFreeIterator(GetInstancePtr(), iterator);
+    }
+
+    return error;
+}
+
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
 otError Mdns::ParseStartOrStop(const Arg &aArg, bool &aIsStart)
@@ -1213,6 +1258,9 @@ otError Mdns::Process(Arg aArgs[])
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
         CmdEntry("ip6resolvers"),
         CmdEntry("keys"),
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+        CmdEntry("localhostaddrs"),
 #endif
         CmdEntry("localhostname"),
         CmdEntry("recordquerier"),

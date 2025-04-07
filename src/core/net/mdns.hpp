@@ -118,6 +118,7 @@ public:
     typedef otMdnsHost             Host;             ///< Host information.
     typedef otMdnsService          Service;          ///< Service information.
     typedef otMdnsKey              Key;              ///< Key information.
+    typedef otMdnsLocalHostAddress LocalHostAddress; ///< Local host address information.
     typedef otMdnsBrowser          Browser;          ///< Browser.
     typedef otMdnsBrowseCallback   BrowseCallback;   ///< Browser callback.
     typedef otMdnsBrowseResult     BrowseResult;     ///< Browser result.
@@ -668,6 +669,7 @@ public:
      * structure (like `mServiceType`) remain valid until the next call to any OpenThread stack's public or platform
      * API/callback.
      *
+     * @param[in]  aIterator   The iterator to use.
      * @param[out] aService    A `Service` to return the information about the next service entry.
      * @param[out] aState      An `EntryState` to return the entry state.
      *
@@ -683,6 +685,7 @@ public:
      * On success, @p aKey is populated with information about the next key. Pointers within the `Key` structure
      * (like `mName`) remain valid until the next call to any OpenThread stack's public or platform API/callback.
      *
+     * @param[in]  aIterator   The iterator to use.
      * @param[out] aKey        A `Key` to return the information about the next key entry.
      * @param[out] aState      An `EntryState` to return the entry state.
      *
@@ -691,6 +694,18 @@ public:
      * @retval kErrorInvalidArg   @p aIterator is not valid.
      */
     Error GetNextKey(Iterator &aIterator, Key &aKey, EntryState &aState) const;
+
+    /**
+     * Iterates over the local host IPv6 and IPv4 addresses.
+     *
+     * @param[in]   aIterator      The iterator to use.
+     * @param[out]  aAddress       A `LocalHostAddress` to output the next address entry.
+     *
+     * @retval kErrorNone           The @p aAddress and @p aIterator are updated successfully.
+     * @retval kErrorNotFound       Reached the end of the list.
+     * @retval kErrorInvalidArgs    Iterator is not valid.
+     */
+    Error GetNextLocalHostAddress(Iterator &aIterator, LocalHostAddress &aAddress);
 
     /**
      * Iterates over browsers.
@@ -2148,6 +2163,7 @@ private:
         Error GetNextHost(Host &aHost, EntryState &aState);
         Error GetNextService(Service &aService, EntryState &aState);
         Error GetNextKey(Key &aKey, EntryState &aState);
+        Error GetNextLocalHostAddress(LocalHostAddress &aAddress);
         Error GetNextBrowser(Browser &aBrowser, CacheInfo &aInfo);
         Error GetNextSrvResolver(SrvResolver &aResolver, CacheInfo &aInfo);
         Error GetNextTxtResolver(TxtResolver &aResolver, CacheInfo &aInfo);
@@ -2165,6 +2181,7 @@ private:
             kService,
             kHostKey,
             kServiceKey,
+            kLocalHostAddress,
             kBrowser,
             kSrvResolver,
             kTxtResolver,
@@ -2181,6 +2198,7 @@ private:
         {
             const HostEntry    *mHostEntry;
             const ServiceEntry *mServiceEntry;
+            uint16_t            mLocalHostAddrIndex;
             const BrowseCache  *mBrowseCache;
             const SrvCache     *mSrvCache;
             const TxtCache     *mTxtCache;
