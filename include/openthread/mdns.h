@@ -40,6 +40,7 @@
 #include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/nat64.h>
 #include <openthread/platform/dnssd.h>
 
 #ifdef __cplusplus
@@ -140,6 +141,20 @@ typedef enum otMdnsEntryState
     OT_MDNS_ENTRY_STATE_CONFLICT,   ///< Name conflict was detected.
     OT_MDNS_ENTRY_STATE_REMOVING,   ///< Entry is being removed (sending "goodbye" announcements).
 } otMdnsEntryState;
+
+/**
+ * Represents a local host IPv4 or IPv6 address entry.
+ */
+typedef struct otMdnsLocalHostAddress
+{
+    bool     mIsIp6;        ///< Indicates whether the address is IPv6 (`true`) or IPv4 (`false`).
+    uint32_t mInfraIfIndex; ///< The infrastructure network interface index.
+    union
+    {
+        otIp6Address mIp6; ///< The IPv6 address (valid when `mIsIp6` is true).
+        otIp4Address mIp4; ///< The IPv4 address (valid when `mIsIp6` is false).
+    } mAddress;            ///< The address.
+} otMdnsLocalHostAddress;
 
 /**
  * Enables or disables the mDNS module.
@@ -496,6 +511,27 @@ otError otMdnsGetNextService(otInstance       *aInstance,
  * @retval OT_ERROR_INVALID_ARG  Iterator is not valid.
  */
 otError otMdnsGetNextKey(otInstance *aInstance, otMdnsIterator *aIterator, otMdnsKey *aKey, otMdnsEntryState *aState);
+
+/**
+ * Iterates over the local host IPv6 and IPv4 addresses tracked by OpenThread mDNS module.
+ *
+ * Requires `OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE`.
+ *
+ * The platform layer is responsible for monitoring and reporting all host IPv4 and IPv6 addresses to the OpenThread
+ * mDNS module, which then tracks the full address list (see `otPlatMdnsHandleHostAddressEvent()`). This function
+ * allows iteration through this tracked list, primarily intended for information and debugging purposes.
+ *
+ * @param[in]   aInstance           The OpenThread instance.
+ * @param[out]  aIterator           Pointer to the iterator to use.
+ * @param[out]  aAddress            Pointer to an `otMdnsLocalHostAddress` to output the next address entry.
+ *
+ * @retval OT_ERROR_NONE            The @p aAddress, and @p aIterator are updated successfully.
+ * @retval OT_ERROR_NOT_FOUND       Reached the end of the list.
+ * @retval OT_ERROR_INVALID_ARGS    Iterator is not valid.
+ */
+otError otMdnsGetNextLocalHostAddress(otInstance             *aInstance,
+                                      otMdnsIterator         *aIterator,
+                                      otMdnsLocalHostAddress *aAddress);
 
 /**
  * Represents a service browser.
