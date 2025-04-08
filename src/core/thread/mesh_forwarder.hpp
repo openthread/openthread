@@ -251,18 +251,18 @@ public:
     Error EvictMessage(Message::Priority aPriority);
 
     /**
-     * Returns a reference to the send queue.
+     * Retrieves information about the send queue and the reassembly queue.
      *
-     * @returns  A reference to the send queue.
-     */
-    const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
-
-    /**
-     * Returns a reference to the reassembly queue.
+     * Provides details such as the number of messages and data buffers currently utilized by the priority send queue
+     * and the message reassembly queue.
      *
-     * @returns  A reference to the reassembly queue.
+     * @param[out] aSendQueueInfo         A `PriorityQueue::Info` to populate with info about the send queue.
+     * @param[out] aReassemblyQueueInfo   A `MessageQueue::Info` to populate with info about the reassembly queue.
      */
-    const MessageQueue &GetReassemblyQueue(void) const { return mReassemblyList; }
+    void GetQueueInfo(PriorityQueue::Info &aSendQueueInfo, MessageQueue::Info &aReassemblyQueueInfo) const
+    {
+        mSendQueue.GetInfo(aSendQueueInfo), mReassemblyList.GetInfo(aReassemblyQueueInfo);
+    }
 
     /**
      * Returns a reference to the IP level counters.
