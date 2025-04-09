@@ -720,18 +720,14 @@ public:
     void SetInterceptor(Interceptor aInterceptor, void *aContext) { mInterceptor.Set(aInterceptor, aContext); }
 
     /**
-     * Returns a reference to the request message list.
+     * Retrieves aggregated information about the CoAP request and cached response message queues.
      *
-     * @returns A reference to the request message list.
-     */
-    const MessageQueue &GetRequestMessages(void) const { return mPendingRequests; }
-
-    /**
-     * Returns a reference to the cached response list.
+     * Provides combined statistics, such as the total number of messages and data buffers currently used across all
+     * queues associated with CoAP requests and cached responses within this CoAP instance.
      *
-     * @returns A reference to the cached response list.
+     * @param[out] aQueueInfo     A `MessageQueue::Info` to populate with info about the queues.
      */
-    const MessageQueue &GetCachedResponses(void) const { return mResponsesQueue.GetResponses(); }
+    void GetRequestAndCachedResponsesQueueInfo(MessageQueue::Info &aQueueInfo) const;
 
 protected:
     /**

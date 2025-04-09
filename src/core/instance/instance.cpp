@@ -489,27 +489,23 @@ void Instance::GetBufferInfo(BufferInfo &aInfo)
     aInfo.mFreeBuffers    = Get<MessagePool>().GetFreeBufferCount();
     aInfo.mMaxUsedBuffers = Get<MessagePool>().GetMaxUsedBufferCount();
 
-    Get<MeshForwarder>().GetSendQueue().GetInfo(aInfo.m6loSendQueue);
-    Get<MeshForwarder>().GetReassemblyQueue().GetInfo(aInfo.m6loReassemblyQueue);
-    Get<Ip6::Ip6>().GetSendQueue().GetInfo(aInfo.mIp6Queue);
+    Get<MeshForwarder>().GetQueueInfo(aInfo.m6loSendQueue, aInfo.m6loReassemblyQueue);
+    Get<Ip6::Ip6>().GetSendQueueInfo(aInfo.mIp6Queue);
 
 #if OPENTHREAD_FTD
-    Get<Ip6::Mpl>().GetBufferedMessageSet().GetInfo(aInfo.mMplQueue);
+    Get<Ip6::Mpl>().GetBufferedMessageSetInfo(aInfo.mMplQueue);
 #endif
 
-    Get<Mle::MleRouter>().GetMessageQueue().GetInfo(aInfo.mMleQueue);
+    Get<Mle::MleRouter>().GetMessageQueueInfo(aInfo.mMleQueue);
 
-    Get<Tmf::Agent>().GetRequestMessages().GetInfo(aInfo.mCoapQueue);
-    Get<Tmf::Agent>().GetCachedResponses().GetInfo(aInfo.mCoapQueue);
+    Get<Tmf::Agent>().GetRequestAndCachedResponsesQueueInfo(aInfo.mCoapQueue);
 
 #if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
-    Get<Tmf::SecureAgent>().GetRequestMessages().GetInfo(aInfo.mCoapSecureQueue);
-    Get<Tmf::SecureAgent>().GetCachedResponses().GetInfo(aInfo.mCoapSecureQueue);
+    Get<Tmf::SecureAgent>().GetRequestAndCachedResponsesQueueInfo(aInfo.mCoapSecureQueue);
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
-    Get<Coap::ApplicationCoap>().GetRequestMessages().GetInfo(aInfo.mApplicationCoapQueue);
-    Get<Coap::ApplicationCoap>().GetCachedResponses().GetInfo(aInfo.mApplicationCoapQueue);
+    Get<Coap::ApplicationCoap>().GetRequestAndCachedResponsesQueueInfo(aInfo.mApplicationCoapQueue);
 #endif
 }
 

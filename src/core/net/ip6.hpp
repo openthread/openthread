@@ -269,11 +269,11 @@ public:
     const Address *SelectSourceAddress(const Address &aDestination) const;
 
     /**
-     * Returns a reference to the send queue.
+     * Retrieves information about the IPv6 send queue.
      *
-     * @returns A reference to the send queue.
+     * @param[out] aQueueInfo     A `PriorityQueue::Info` to populate with info about the send queue.
      */
-    const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
+    void GetSendQueueInfo(PriorityQueue::Info &aQueueInfo) const { mSendQueue.GetInfo(aQueueInfo); }
 
     /**
      * Converts an IP protocol number to a string.

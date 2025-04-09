@@ -564,6 +564,15 @@ Error CoapBase::AbortTransaction(ResponseHandler aHandler, void *aContext)
     return error;
 }
 
+void CoapBase::GetRequestAndCachedResponsesQueueInfo(MessageQueue::Info &aQueueInfo) const
+{
+    MessageQueue::Info info;
+
+    mPendingRequests.GetInfo(aQueueInfo);
+    mResponsesQueue.GetResponses().GetInfo(info);
+    MessageQueue::AddQueueInfos(aQueueInfo, info);
+}
+
 Message *CoapBase::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength, const Metadata &aMetadata)
 {
     Error    error       = kErrorNone;

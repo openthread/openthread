@@ -1643,14 +1643,20 @@ public:
     /**
      * Gets the information about number of messages and buffers in the queue.
      *
-     * Updates `aInfo` and adds number of message/buffers in the message queue to the corresponding member
-     * variable in `aInfo`. The caller needs to make sure `aInfo` is initialized before calling this method (e.g.,
-     * clearing `aInfo`). Same `aInfo` can be passed in multiple calls of `GetInfo(aInfo)` on different queues to add
-     * up the number of messages/buffers on different queues.
-     *
-     * @param[out] aInfo  A reference to `Info` structure to update.ni
+     * @param[out] aInfo  A reference to `Info` structure to update.
      */
     void GetInfo(Info &aInfo) const;
+
+    /**
+     * Adds the queue statistics from one queue `Info` to another.
+     *
+     * Aggregates queue information by adding the counts (e.g., number of messages, buffers, total bytes) from
+     * @p aOther to the corresponding counts in @p aInfo.
+     *
+     * @param[in,out] aInfo    A queue `Info` to update.
+     * @param[in]     aOther   A queue `Info` to add to @p aInfo.
+     */
+    static void AddQueueInfos(Info &aInfo, const Info &aOther);
 
     // The following methods are intended to support range-based `for`
     // loop iteration over the queue entries and should not be used

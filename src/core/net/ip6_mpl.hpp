@@ -189,11 +189,11 @@ public:
 
 #if OPENTHREAD_FTD
     /**
-     * Returns a reference to the buffered message set.
+     * Retrieves information about the message queue containing buffered message set.
      *
-     * @returns A reference to the buffered message set.
+     * @param[out] aQueueInfo    A `MessageQueue::Info` to populate with info about the queue.
      */
-    const MessageQueue &GetBufferedMessageSet(void) const { return mBufferedMessageSet; }
+    void GetBufferedMessageSetInfo(MessageQueue::Info &aQueueInfo) { mBufferedMessageSet.GetInfo(aQueueInfo); }
 #endif
 
 private:

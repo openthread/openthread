@@ -587,11 +587,11 @@ public:
     const LeaderData &GetLeaderData(void);
 
     /**
-     * Returns a reference to the send queue.
+     * Retrieves information about the MLE message queue used for delayed messages.
      *
-     * @returns A reference to the send queue.
+     * @param[out] aQueueInfo     A `MessageQueue::Info` to populate with info about the MLE queue.
      */
-    const MessageQueue &GetMessageQueue(void) const { return mDelayedSender.GetQueue(); }
+    void GetMessageQueueInfo(MessageQueue::Info &aQueryInfo) const { mDelayedSender.GetQueueInfo(aQueryInfo); }
 
     /**
      * Gets the MLE counters.
@@ -1161,8 +1161,8 @@ private:
 #endif
         void RemoveScheduledChildUpdateRequestToParent(void);
 
-        void                HandleTimer(void);
-        const MessageQueue &GetQueue(void) const { return mSchedules; }
+        void HandleTimer(void);
+        void GetQueueInfo(MessageQueue::Info &aQueueInfo) const { mSchedules.GetInfo(aQueueInfo); }
 
     private:
         typedef Message Schedule;

@@ -944,12 +944,21 @@ Message::ConstIterator MessageQueue::begin(void) const { return Message::ConstIt
 
 void MessageQueue::GetInfo(Info &aInfo) const
 {
+    ClearAllBytes(aInfo);
+
     for (const Message &message : *this)
     {
         aInfo.mNumMessages++;
         aInfo.mNumBuffers += message.GetBufferCount();
         aInfo.mTotalBytes += message.GetLength();
     }
+}
+
+void MessageQueue::AddQueueInfos(Info &aInfo, const Info &aOther)
+{
+    aInfo.mNumMessages += aOther.mNumMessages;
+    aInfo.mNumBuffers += aOther.mNumBuffers;
+    aInfo.mTotalBytes += aOther.mTotalBytes;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -1093,6 +1102,8 @@ Message::ConstIterator PriorityQueue::begin(void) const { return Message::ConstI
 
 void PriorityQueue::GetInfo(Info &aInfo) const
 {
+    ClearAllBytes(aInfo);
+
     for (const Message &message : *this)
     {
         aInfo.mNumMessages++;
