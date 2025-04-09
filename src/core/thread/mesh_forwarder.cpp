@@ -90,6 +90,30 @@ void ThreadLinkInfo::SetFrom(const Mac::RxFrame &aFrame)
 #endif
 }
 
+void MeshForwarder::Counters::UpdateOnTxDone(const Message &aMessage, bool aTxSuccess)
+{
+    if (aMessage.GetType() == Message::kTypeIp6)
+    {
+        aTxSuccess ? mTxSuccess++ : mTxFailure++;
+    }
+}
+
+void MeshForwarder::Counters::UpdateOnRx(const Message &aMessage)
+{
+    if (aMessage.GetType() == Message::kTypeIp6)
+    {
+        mRxSuccess++;
+    }
+}
+
+void MeshForwarder::Counters::UpdateOnDrop(const Message &aMessage)
+{
+    if (aMessage.GetType() == Message::kTypeIp6)
+    {
+        mRxFailure++;
+    }
+}
+
 MeshForwarder::MeshForwarder(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mMessageNextOffset(0)
@@ -111,8 +135,6 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mDataPollSender(aInstance)
 {
     mFragTag = Random::NonCrypto::GetUint16();
-
-    ResetCounters();
 
 #if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
     mTxQueueStats.Clear();
@@ -1303,10 +1325,7 @@ void MeshForwarder::FinalizeMessageDirectTx(Message &aMessage, Error aError)
         aMessage.SetTxSuccess(false);
     }
 
-    if (aMessage.GetType() == Message::kTypeIp6)
-    {
-        aMessage.GetTxSuccess() ? mIpCounters.mTxSuccess++ : mIpCounters.mTxFailure++;
-    }
+    mCounters.UpdateOnTxDone(aMessage, aMessage.GetTxSuccess());
 
     if (aMessage.IsMleCommand(Mle::kCommandDiscoveryRequest))
     {
@@ -1561,12 +1580,7 @@ void MeshForwarder::ClearReassemblyList(void)
     for (Message &message : mReassemblyList)
     {
         LogMessage(kMessageReassemblyDrop, message, kErrorNoFrameReceived);
-
-        if (message.GetType() == Message::kTypeIp6)
-        {
-            mIpCounters.mRxFailure++;
-        }
-
+        mCounters.UpdateOnDrop(message);
         mReassemblyList.DequeueAndFree(message);
     }
 }
@@ -1596,12 +1610,7 @@ bool MeshForwarder::UpdateReassemblyList(void)
         if (now - message.GetTimestamp() >= TimeMilli::SecToMsec(kReassemblyTimeout))
         {
             LogMessage(kMessageReassemblyDrop, message, kErrorReassemblyTimeout);
-
-            if (message.GetType() == Message::kTypeIp6)
-            {
-                mIpCounters.mRxFailure++;
-            }
-
+            mCounters.UpdateOnDrop(message);
             mReassemblyList.DequeueAndFree(message);
         }
     }
@@ -1669,10 +1678,7 @@ Error MeshForwarder::HandleDatagram(Message &aMessage, const Mac::Address &aMacS
 
     LogMessage(kMessageReceive, aMessage, kErrorNone, &aMacSource);
 
-    if (aMessage.GetType() == Message::kTypeIp6)
-    {
-        mIpCounters.mRxSuccess++;
-    }
+    mCounters.UpdateOnRx(aMessage);
 
     aMessage.SetLoopbackToHostAllowed(true);
     aMessage.SetOrigin(Message::kOriginThreadNetif);

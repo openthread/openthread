@@ -164,6 +164,22 @@ class MeshForwarder : public InstanceLocator, private NonCopyable
 
 public:
     /**
+     * Represents the IPv6 message counters, tracking the number IPv6 message TX and RX that succeeded or failed.
+     */
+    class Counters : public otIpCounters, public Clearable<Counters>
+    {
+        friend class MeshForwarder;
+        friend class IndirectSender;
+
+    private:
+        Counters(void) { Clear(); }
+
+        void UpdateOnTxDone(const Message &aMessage, bool aTxSuccess);
+        void UpdateOnRx(const Message &aMessage);
+        void UpdateOnDrop(const Message &aMessage);
+    };
+
+    /**
      * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
@@ -269,12 +285,12 @@ public:
      *
      * @returns A reference to the IP level counters.
      */
-    const otIpCounters &GetCounters(void) const { return mIpCounters; }
+    const Counters &GetCounters(void) const { return mCounters; }
 
     /**
      * Resets the IP level counters.
      */
-    void ResetCounters(void) { ClearAllBytes(mIpCounters); }
+    void ResetCounters(void) { mCounters.Clear(); }
 
 #if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
     /**
@@ -642,7 +658,7 @@ private:
 
     TxTask mScheduleTransmissionTask;
 
-    otIpCounters mIpCounters;
+    Counters mCounters;
 
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     IndirectSender mIndirectSender;
