@@ -1036,6 +1036,101 @@ exit:
     return error;
 }
 
+Error ResourceRecord::DecompressRecordData(const Message &aMessage, uint16_t aOffset, OwnedPtr<Message> &aDataMsg)
+{
+    // Reads the `ResourceRecord` header to identify the record type
+    // and uses a predefined recipe to parse the record data.
+
+    struct DataRecipe
+    {
+        int Compare(uint16_t aRecordType) const { return (aRecordType - mRecordType); }
+
+        constexpr static bool AreInOrder(const DataRecipe &aFirst, const DataRecipe &aSecond)
+        {
+            return (aFirst.mRecordType < aSecond.mRecordType);
+        }
+
+        uint16_t mRecordType;        // The record type.
+        uint8_t  mNumPrefixBytes;    // Number of bytes in RDATA before the first name.
+        uint8_t  mNumNames;          // Number of DNS names embedded in the RDATA.
+        uint16_t mMinNumSuffixBytes; // Minimum number of expected bytes in RDATA after the last name.
+    };
+
+    static constexpr DataRecipe kRecipes[] = {
+        {kTypeNs, 0, 1, 0},
+        {kTypeCname, 0, 1, 0},
+        {kTypeSoa, 0, 2, 5 * sizeof(uint32_t)}, // mname, rname, followed by five 32-bit values.
+        {kTypePtr, 0, 1, 0},
+        {kTypeMx, sizeof(uint16_t), 1, 0},    // `preference` 16-bit field, exchange name [RFC 1035]
+        {kTypeRp, 0, 2, 0},                   /// `mbox-dname` `txt-dname` [RFC 1183]
+        {kTypeAfsdb, sizeof(uint16_t), 1, 0}, // `sub-type` 16-bit field, host name [RFC 1183]
+        {kTypeRt, sizeof(uint16_t), 1, 0},    // `preference` 16-bit field, host name [RFC 1183]
+        {kTypePx, sizeof(uint16_t), 2, 0},    // `preference` 16-bit field, two names [RFC 2163]
+        {kTypeSrv, sizeof(SrvRecord) - sizeof(ResourceRecord), 1, 0},
+        {kTypeKx, sizeof(uint16_t), 1, 0}, // `preference` 16-bit field, name [RFC 2230]
+        {kTypeDname, 0, 1, 0},
+        {kTypeNsec, 0, 1, NsecRecord::TypeBitMap::kMinSize},
+    };
+
+    static_assert(BinarySearch::IsSorted(kRecipes), "kRecipes is not sorted");
+
+    Error             error;
+    ResourceRecord    record;
+    const DataRecipe *recipe;
+    uint16_t          startOffset;
+    uint16_t          remainingLength;
+
+    SuccessOrExit(error = record.ReadFrom(aMessage, aOffset));
+    aOffset += sizeof(ResourceRecord);
+
+    recipe = BinarySearch::Find(record.GetType(), kRecipes);
+
+    if (recipe == nullptr)
+    {
+        aDataMsg.Free();
+        error = kErrorNone;
+        ExitNow();
+    }
+
+    aDataMsg.Reset(aMessage.Get<MessagePool>().Allocate(Message::kTypeOther));
+    VerifyOrExit(!aDataMsg.IsNull(), error = kErrorNoBufs);
+
+    startOffset = aOffset;
+
+    // Check and copy the prefix bytes in the record data.
+
+    VerifyOrExit(record.GetLength() >= recipe->mNumPrefixBytes, error = kErrorParse);
+    SuccessOrExit(error = aDataMsg->AppendBytesFromMessage(aMessage, aOffset, recipe->mNumPrefixBytes));
+    aOffset += recipe->mNumPrefixBytes;
+
+    // Read and decompress embedded DNS names in the record data.
+
+    for (uint8_t numNames = 0; numNames < recipe->mNumNames; numNames++)
+    {
+        Name name(aMessage, aOffset);
+
+        // ParseName() updates `aOffset` to point to the byte after
+        // the end of name field.
+
+        SuccessOrExit(error = Name::ParseName(aMessage, aOffset));
+        SuccessOrExit(error = name.AppendTo(*aDataMsg));
+    }
+
+    // Determine the remaining length after the names in the record
+    // data. Ensure we have at least `mMinNumSuffixBytes` and copy
+    // them into `aDataMsg`.
+
+    VerifyOrExit(aOffset - startOffset <= record.GetLength(), error = kErrorParse);
+    remainingLength = record.GetLength() - (aOffset - startOffset);
+
+    VerifyOrExit(remainingLength >= recipe->mMinNumSuffixBytes, error = kErrorParse);
+
+    SuccessOrExit(error = aDataMsg->AppendBytesFromMessage(aMessage, aOffset, remainingLength));
+
+exit:
+    return error;
+}
+
 void TxtEntry::Iterator::Init(const uint8_t *aTxtData, uint16_t aTxtDataLength)
 {
     SetTxtData(aTxtData);

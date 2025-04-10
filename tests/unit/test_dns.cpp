@@ -1122,7 +1122,7 @@ void TestHeaderAndResourceRecords(void)
         kHeaderOffset    = 0,
         kQuestionCount   = 1,
         kAnswerCount     = 2,
-        kAdditionalCount = 5,
+        kAdditionalCount = 6,
         kTtl             = 7200,
         kTxtTtl          = 7300,
         kSrvPort         = 1234,
@@ -1146,30 +1146,34 @@ void TestHeaderAndResourceRecords(void)
     const char *kInstanceLabels[] = {kInstance1Label, kInstance2Label};
     const char *kInstanceNames[]  = {kInstance1Name, kInstance2Name};
 
-    Instance           *instance;
-    MessagePool        *messagePool;
-    Message            *message;
-    Dns::Header         header;
-    uint16_t            messageId;
-    uint16_t            headerOffset;
-    uint16_t            offset;
-    uint16_t            numRecords;
-    uint16_t            len;
-    uint16_t            serviceNameOffset;
-    uint16_t            hostNameOffset;
-    uint16_t            answerSectionOffset;
-    uint16_t            additionalSectionOffset;
-    uint16_t            index;
-    Dns::PtrRecord      ptrRecord;
-    Dns::SrvRecord      srvRecord;
-    Dns::TxtRecord      txtRecord;
-    Dns::AaaaRecord     aaaaRecord;
-    Dns::ResourceRecord record;
-    Ip6::Address        hostAddress;
-
-    Dns::Name::LabelBuffer label;
-    Dns::Name::Buffer      name;
-    uint8_t                buffer[kMaxSize];
+    Instance                   *instance;
+    MessagePool                *messagePool;
+    Message                    *message;
+    Dns::Header                 header;
+    uint16_t                    messageId;
+    uint16_t                    headerOffset;
+    uint16_t                    offset;
+    uint16_t                    numRecords;
+    uint16_t                    len;
+    uint16_t                    serviceNameOffset;
+    uint16_t                    hostNameOffset;
+    uint16_t                    answerSectionOffset;
+    uint16_t                    additionalSectionOffset;
+    uint16_t                    index;
+    Dns::PtrRecord              ptrRecord;
+    Dns::SrvRecord              srvRecord;
+    Dns::TxtRecord              txtRecord;
+    Dns::AaaaRecord             aaaaRecord;
+    Dns::NsecRecord             nsecRecord;
+    Dns::NsecRecord::TypeBitMap nsecBitmap;
+    Dns::ResourceRecord         record;
+    Ip6::Address                hostAddress;
+    Dns::Name::LabelBuffer      label;
+    Dns::Name::Buffer           name;
+    uint8_t                     buffer[kMaxSize];
+    uint8_t                    *bytes;
+    OwnedPtr<Message>           dataMsg;
+    uint16_t                    dataOffset;
 
     printf("================================================================\n");
     printf("TestHeaderAndResourceRecords()\n");
@@ -1259,6 +1263,19 @@ void TestHeaderAndResourceRecords(void)
     aaaaRecord.SetAddress(hostAddress);
     SuccessOrQuit(message->Append(aaaaRecord));
 
+    nsecRecord.Init();
+    nsecRecord.SetTtl(kTtl);
+    nsecBitmap.Clear();
+    nsecBitmap.AddType(Dns::ResourceRecord::kTypeAaaa);
+
+    SuccessOrQuit(Dns::Name::AppendPointerLabel(hostNameOffset, *message));
+    offset = message->GetLength();
+    SuccessOrQuit(message->Append(nsecRecord));
+    SuccessOrQuit(Dns::Name::AppendPointerLabel(hostNameOffset, *message));
+    SuccessOrQuit(message->AppendBytes(&nsecBitmap, nsecBitmap.GetSize()));
+    nsecRecord.SetLength(message->GetLength() - offset - sizeof(Dns::ResourceRecord));
+    message->Write(offset, nsecRecord);
+
     // Dump the entire message
 
     VerifyOrQuit(message->GetLength() < kMaxSize, "Message is too long");
@@ -1301,6 +1318,13 @@ void TestHeaderAndResourceRecords(void)
     for (const char *instanceLabel : kInstanceLabels)
     {
         SuccessOrQuit(Dns::Name::CompareName(*message, offset, kServiceName));
+
+        SuccessOrQuit(Dns::ResourceRecord::DecompressRecordData(*message, offset, dataMsg));
+        VerifyOrQuit(dataMsg != nullptr);
+        dataOffset = 0;
+        VerifyOrQuit(Dns::Name::CompareName(*dataMsg, dataOffset, kServiceName));
+        VerifyOrQuit(dataOffset == dataMsg->GetLength());
+
         SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, ptrRecord));
         VerifyOrQuit(ptrRecord.GetTtl() == kTtl, "Read PTR is incorrect");
 
@@ -1374,6 +1398,7 @@ void TestHeaderAndResourceRecords(void)
 
         // SRV record
         SuccessOrQuit(Dns::Name::CompareName(*message, offset, instanceName));
+        savedOffset = offset;
         SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, srvRecord));
         VerifyOrQuit(srvRecord.GetTtl() == kTtl);
         VerifyOrQuit(srvRecord.GetPort() == kSrvPort);
@@ -1384,8 +1409,24 @@ void TestHeaderAndResourceRecords(void)
         printf("    \"%s\" SRV %u %d %d %d %d \"%s\"\n", instanceName, srvRecord.GetTtl(), srvRecord.GetLength(),
                srvRecord.GetPort(), srvRecord.GetWeight(), srvRecord.GetPriority(), name);
 
+        // SRV record again using `DecompressRecordData()`
+        dataMsg.Free();
+        SuccessOrQuit(Dns::ResourceRecord::DecompressRecordData(*message, savedOffset, dataMsg));
+        VerifyOrQuit(dataMsg != nullptr);
+        dataOffset = 0;
+        len        = sizeof(Dns::SrvRecord) - sizeof(Dns::ResourceRecord);
+        bytes      = reinterpret_cast<uint8_t *>(&srvRecord);
+        bytes += sizeof(Dns::ResourceRecord);
+        VerifyOrQuit(dataMsg->CompareBytes(dataOffset, bytes, len));
+        dataOffset += len;
+        SuccessOrQuit(Dns::Name::CompareName(*dataMsg, dataOffset, kHostName));
+        VerifyOrQuit(dataOffset == dataMsg->GetLength());
+
         // TXT record
         SuccessOrQuit(Dns::Name::CompareName(*message, offset, instanceName));
+        dataMsg.Free();
+        SuccessOrQuit(Dns::ResourceRecord::DecompressRecordData(*message, offset, dataMsg));
+        VerifyOrQuit(dataMsg == nullptr);
         SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, txtRecord));
         VerifyOrQuit(txtRecord.GetTtl() == kTxtTtl);
         savedOffset = offset;
@@ -1405,12 +1446,33 @@ void TestHeaderAndResourceRecords(void)
         VerifyOrQuit(savedOffset == offset);
     }
 
+    // AAAA record
     SuccessOrQuit(Dns::Name::CompareName(*message, offset, kHostName));
+    dataMsg.Free();
+    SuccessOrQuit(Dns::ResourceRecord::DecompressRecordData(*message, offset, dataMsg));
+    VerifyOrQuit(dataMsg == nullptr);
     SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, aaaaRecord));
     VerifyOrQuit(aaaaRecord.GetTtl() == kTtl);
     VerifyOrQuit(aaaaRecord.GetAddress() == hostAddress);
     printf("    \"%s\" AAAA %u %d \"%s\"\n", kHostName, aaaaRecord.GetTtl(), aaaaRecord.GetLength(),
            aaaaRecord.GetAddress().ToString().AsCString());
+
+    // NSEC record
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, kHostName));
+    dataMsg.Free();
+    SuccessOrQuit(Dns::ResourceRecord::DecompressRecordData(*message, offset, dataMsg));
+    VerifyOrQuit(dataMsg != nullptr);
+    dataOffset = 0;
+    SuccessOrQuit(Dns::Name::CompareName(*dataMsg, dataOffset, kHostName));
+    VerifyOrQuit(dataMsg->CompareBytes(dataOffset, &nsecBitmap, nsecBitmap.GetSize()));
+    dataOffset += nsecBitmap.GetSize();
+    VerifyOrQuit(dataOffset == dataMsg->GetLength());
+    SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, record));
+    VerifyOrQuit(record.GetType() == Dns::ResourceRecord::kTypeNsec);
+    VerifyOrQuit(nsecBitmap.ContainsType(Dns::ResourceRecord::kTypeAaaa));
+    printf("    \"%s\" NSEC %u %d bitmap-size:%d\n", kHostName, record.GetTtl(), record.GetLength(),
+           nsecBitmap.GetSize());
+    offset += record.GetLength();
 
     VerifyOrQuit(offset == message->GetLength(), "offset is incorrect after additional section parse");
 
@@ -1451,6 +1513,12 @@ void TestHeaderAndResourceRecords(void)
     SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, record));
     VerifyOrQuit(record.GetType() == Dns::ResourceRecord::kTypeAaaa);
     offset += record.GetLength();
+
+    SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, Dns::Name(kHostName)));
+    SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, record));
+    VerifyOrQuit(record.GetType() == Dns::ResourceRecord::kTypeNsec);
+    offset += record.GetLength();
+
     VerifyOrQuit(offset == message->GetLength(), "offset is incorrect after additional section parse");
 
     printf("Use FindRecord() to search for specific records:\n");
