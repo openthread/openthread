@@ -257,6 +257,22 @@ uint16_t otBorderRoutingCountPeerBrs(otInstance *aInstance, uint32_t *aMinAge)
 
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+
+bool otBorderRoutingIsMultiAilDetected(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().IsMultiAilDetected();
+}
+
+void otBorderRoutingSetMultiAilCallback(otInstance                     *aInstance,
+                                        otBorderRoutingMultiAilCallback aCallback,
+                                        void                           *aContext)
+{
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetMultiAilCallback(aCallback, aContext);
+}
+
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
 void otBorderRoutingDhcp6PdSetEnabled(otInstance *aInstance, bool aEnabled)
