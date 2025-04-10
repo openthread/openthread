@@ -257,31 +257,49 @@ public:
 
 #endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    /**
+     * Adds a message for indirect transmission to a WED neighbor.
+     *
+     * @param[in] aMessage  The message to add.
+     * @param[in] aNeighbor    The neighbor for indirect transmission.
+     */
+    void AddMessageForEnhCslNeighbor(Message &aMessage, CslNeighbor &aCslNeighbor);
+#endif
+
 private:
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     // Callbacks from `CslTxScheduler`
     Error PrepareFrameForCslNeighbor(Mac::TxFrame &aFrame, FrameContext &aContext, CslNeighbor &aCslNeighbor);
-    void  HandleSentFrameToCslNeighbor(const Mac::TxFrame &aFrame,
-                                       const FrameContext &aContext,
-                                       Error               aError,
-                                       CslNeighbor        &aCslNeighbor);
 #endif
 
+    uint16_t PrepareDataFrame(Mac::TxFrame &aFrame, CslNeighbor &aNeighbor, Message &aMessage);
+    void     HandleSentFrameToCslNeighbor(const Mac::TxFrame &aFrame,
+                                          const FrameContext &aContext,
+                                          Error               aError,
+                                          CslNeighbor        &aNeighbor);
+    void     UpdateIndirectMessage(CslNeighbor &aNeighbor);
+
 #if OPENTHREAD_FTD
+    bool IsChild(const Neighbor &aNeighbor) const;
+
     // Callbacks from `DataPollHandler`
     Error PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
-    void  HandleSentFrameToChild(const Mac::TxFrame &aFrame, const FrameContext &aContext, Error aError, Child &aChild);
     void  HandleFrameChangeDone(Child &aChild);
 
-    void     UpdateIndirectMessage(Child &aChild);
     void     RequestMessageUpdate(Child &aChild);
-    uint16_t PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, Message &aMessage);
+    uint16_t PrepareDataFrameForSleepyChild(Mac::TxFrame &aFrame, Child &aChild, Message &aMessage);
     void     PrepareEmptyFrame(Mac::TxFrame &aFrame, Child &aChild, bool aAckRequest);
     void     ClearMessagesForRemovedChildren(void);
 
     static bool AcceptAnyMessage(const Message &aMessage);
     static bool AcceptSupervisionMessage(const Message &aMessage);
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    Error    PrepareFrameForEnhCslNeighbor(Mac::TxFrame &aFrame, FrameContext &aContext, CslNeighbor &aNeighbor);
+    Message *FindQueuedMessageForWedNeighbor(CslNeighbor &aNeighbor);
+#endif
 
     bool mEnabled;
 #if OPENTHREAD_FTD

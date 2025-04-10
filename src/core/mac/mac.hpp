@@ -97,6 +97,7 @@ constexpr uint16_t kMinCslIePeriod = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD;
 
 constexpr uint32_t kDefaultWedListenInterval = OPENTHREAD_CONFIG_WED_LISTEN_INTERVAL;
 constexpr uint32_t kDefaultWedListenDuration = OPENTHREAD_CONFIG_WED_LISTEN_DURATION;
+constexpr uint16_t kDefaultWakeupInterval    = OPENTHREAD_CONFIG_MAC_CSL_WAKEUP_INTERVAL;
 
 /**
  * Defines the function pointer called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
