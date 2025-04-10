@@ -83,11 +83,11 @@ public:
      */
     enum CommandClass
     {
-        kGeneral            = OT_TCAT_COMMAND_CLASS_GENERAL,         ///< TCAT commands related to general operations
-        kCommissioning      = OT_TCAT_COMMAND_CLASS_COMMISSIONING,   ///< TCAT commands related to commissioning
-        kExtraction         = OT_TCAT_COMMAND_CLASS_EXTRACTION,      ///< TCAT commands related to key extraction
-        kTlvDecommissioning = OT_TCAT_COMMAND_CLASS_DECOMMISSIONING, ///< TCAT commands related to de-commissioning
-        kApplication        = OT_TCAT_COMMAND_CLASS_APPLICATION,     ///< TCAT commands related to application layer
+        kGeneral         = OT_TCAT_COMMAND_CLASS_GENERAL,         ///< TCAT commands related to general operations
+        kCommissioning   = OT_TCAT_COMMAND_CLASS_COMMISSIONING,   ///< TCAT commands related to commissioning
+        kExtraction      = OT_TCAT_COMMAND_CLASS_EXTRACTION,      ///< TCAT commands related to key extraction
+        kDecommissioning = OT_TCAT_COMMAND_CLASS_DECOMMISSIONING, ///< TCAT commands related to de-commissioning
+        kApplication     = OT_TCAT_COMMAND_CLASS_APPLICATION,     ///< TCAT commands related to application layer
         kInvalid ///< TCAT command belongs to reserved pool or is invalid
     };
 
@@ -109,8 +109,9 @@ public:
         kPskdFlag          = 1 << 1, ///< Access requires proof-of-possession of the device's PSKd
         kNetworkNameFlag   = 1 << 2, ///< Access requires matching network name
         kExtendedPanIdFlag = 1 << 3, ///< Access requires matching XPANID
-        kThreadDomainFlag  = 1 << 4, ///< Access requires matching XPANID
+        kThreadDomainFlag  = 1 << 4, ///< Access requires matching Thread Domain Name
         kPskcFlag          = 1 << 5, ///< Access requires proof-of-possession of the device's PSKc
+        kMaxFlag           = 1 << 6, ///< Maximum value of access flags
     };
 
     /**
@@ -183,10 +184,14 @@ public:
         kTlvDecommission = 96, ///< TCAT decommission request TLV
 
         // Command Class Application
-        kTlvSelectApplicationLayerUdp = 128, ///< TCAT select UDP protocol application layer request TLV
-        kTlvSelectApplicationLayerTcp = 129, ///< TCAT select TCP protocol application layer request TLV
-        kTlvSendApplicationData       = 130, ///< TCAT send application data TLV
-        kTlvSendVendorSpecificData    = 159, ///< TCAT send vendor specific command or data TLV
+        kTlvGetApplicationLayers   = 128, ///< TCAT get application layers request TLV
+        kTlvSendApplicationData1   = 129, ///< TCAT send application data 1 TLV
+        kTlvSendApplicationData2   = 130, ///< TCAT send application data 2 TLV
+        kTlvSendApplicationData3   = 131, ///< TCAT send application data 3 TLV
+        kTlvSendApplicationData4   = 132, ///< TCAT send application data 4 TLV
+        kTlvServiceNameUdp         = 137, ///< TCAT service name UDP sub-TLV (not used as a command)
+        kTlvServiceNameTcp         = 138, ///< TCAT service name TCP sub-TLV (not used as a command)
+        kTlvSendVendorSpecificData = 159, ///< TCAT send vendor specific command or data TLV
 
         // Command Class CCM
         kTlvSetLDevIdOperationalCert = 160, ///< TCAT LDevID operational certificate TLV
@@ -208,6 +213,8 @@ public:
         kStatusUndefined    = OT_TCAT_STATUS_UNDEFINED,     ///< The requested value, data or service is not defined
                                                             ///< (currently) or not present
         kStatusHashError = OT_TCAT_STATUS_HASH_ERROR, ///< The hash value presented by the commissioner was incorrect
+        kStatusInvalidState =
+            OT_TCAT_STATUS_INVALID_STATE, ///< The TCAT device is in invalid state to exectute the command
         kStatusUnauthorized =
             OT_TCAT_STATUS_UNAUTHORIZED, ///< Sender does not have sufficient authorization for the given command
     };
@@ -219,8 +226,16 @@ public:
     {
         kApplicationProtocolNone =
             OT_TCAT_APPLICATION_PROTOCOL_NONE, ///< Message which has been sent without activating the TCAT agent
-        kApplicationProtocolUdp = OT_TCAT_APPLICATION_PROTOCOL_STATUS, ///< Message directed to a UDP service
-        kApplicationProtocolTcp = OT_TCAT_APPLICATION_PROTOCOL_TCP,    ///< Message directed to a TCP service
+        kApplicationProtocolStatus = OT_TCAT_APPLICATION_PROTOCOL_STATUS, ///< Message directed to any application
+                                                                          ///< indicating a response with status value
+        kApplicationProtocolResponse = OT_TCAT_APPLICATION_PROTOCOL_RESPONSE, ///< Message directed to any application
+                                                                              ///< indicating a response with payload
+        kApplicationProtocol1 = OT_TCAT_APPLICATION_PROTOCOL_1,               ///< Message directed to application 1
+        kApplicationProtocol2 = OT_TCAT_APPLICATION_PROTOCOL_2,               ///< Message directed to application 2
+        kApplicationProtocol3 = OT_TCAT_APPLICATION_PROTOCOL_3,               ///< Message directed to application 3
+        kApplicationProtocol4 = OT_TCAT_APPLICATION_PROTOCOL_4,               ///< Message directed to application 4
+        kApplicationProtocolVendor =
+            OT_TCAT_APPLICATION_PROTOCOL_VENDOR, ///< Message directed to a vendor specific application
     };
 
     /**
@@ -332,6 +347,7 @@ public:
      * @retval FALSE The install code was not verified.
      */
     bool GetInstallCodeVerifyStatus(void) const { return mInstallCodeVerified; }
+    void NotifyApplicationResponseSent(void) { mApplicationResponseSent = true; }
 
 private:
     Error Connected(MeshCoP::Tls::Extension &aTls);
@@ -360,7 +376,13 @@ private:
                                 uint16_t       aLength,
                                 bool          &aResponse);
     Error HandleStartThreadInterface(void);
+    Error HandleStopThreadInterface(void);
     Error HandleGetCommissionerCertificate(Message &aOutgoingMessage, bool &aResponse);
+    Error HandleGetApplicationLayers(Message &aOutgoingMessage, bool &aResponse);
+    Error HandlerApplicationData(const Message          &aIncomingMessage,
+                                 uint16_t                aOffset,
+                                 TcatApplicationProtocol aApplicationProtocol,
+                                 bool                   &aResponse);
 
     Error VerifyHash(const Message &aIncomingMessage,
                      uint16_t       aOffset,
@@ -369,12 +391,10 @@ private:
                      size_t         aBufLen);
     void  CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBufLen, Crypto::HmacSha256::Hash &aHash);
 
-    bool CheckCommandClassAuthorizationFlags(CommandClassFlags aCommissionerCommandClassFlags,
-                                             CommandClassFlags aDeviceCommandClassFlags,
-                                             Dataset          *aDataset) const;
-
-    bool         CanProcessTlv(uint8_t aTlvType) const;
-    CommandClass GetCommandClass(uint8_t aTlvType) const;
+    bool    CheckCommandClassAuthorizationFlags(CommandClassFlags aCommissionerCommandClassFlags,
+                                                CommandClassFlags aDeviceCommandClassFlags,
+                                                Dataset          *aDataset) const;
+    uint8_t CheckAuthorizationRequirements(CommandClassFlags aFlagsChecked, Dataset::Info *aDatasetInfo) const;
 
     static constexpr uint16_t kJoinerUdpPort             = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
     static constexpr uint16_t kPingPayloadMaxLength      = 512;
@@ -383,6 +403,8 @@ private:
     static constexpr uint16_t kTcatMaxDeviceIdSize       = OT_TCAT_MAX_DEVICEID_SIZE;
     static constexpr uint16_t kInstallCodeMaxSize        = 255;
     static constexpr uint16_t kCommissionerCertMaxLength = 1024;
+    static constexpr uint8_t  kServiceNameMaxLenght      = OT_TCAT_SERVICE_NAME_MAX_LENGTH;
+    static constexpr uint8_t  kApplicationLayerMaxCount  = OT_TCAT_APPLICATION_LAYER_MAX_COUNT;
 
     JoinerPskd                       mJoinerPskd;
     const VendorInfo                *mVendorInfo;
@@ -390,11 +412,9 @@ private:
     Callback<AppDataReceiveCallback> mAppDataReceiveCallback;
     CertificateAuthorizationField    mCommissionerAuthorizationField;
     CertificateAuthorizationField    mDeviceAuthorizationField;
-    TcatApplicationProtocol          mCurrentApplicationProtocol;
     NetworkName                      mCommissionerNetworkName;
     NetworkName                      mCommissionerDomainName;
     ExtendedPanId                    mCommissionerExtendedPanId;
-    char                             mCurrentServiceName[OT_TCAT_MAX_SERVICE_NAME_LENGTH + 1];
     State                            mState;
     bool                             mCommissionerHasNetworkName : 1;
     bool                             mCommissionerHasDomainName : 1;
@@ -403,6 +423,8 @@ private:
     bool                             mPskdVerified : 1;
     bool                             mPskcVerified : 1;
     bool                             mInstallCodeVerified : 1;
+    bool                             mIsCommissioned : 1;
+    bool                             mApplicationResponseSent : 1;
 
     friend class Ble::BleSecure;
 };
@@ -423,9 +445,9 @@ typedef UintTlvInfo<MeshCoP::TcatAgent::kTlvResponseWithStatus, uint8_t> Respons
 struct DeviceTypeAndStatus
 {
     uint8_t mRsv : 1;
-    bool    mMultiradioSupport : 1;
-    bool    mStoresActiveOpertonalDataset : 1;
-    bool    mIsCommisionned : 1;
+    bool    mMultiRadioSupport : 1;
+    bool    mStoresActiveOperationalDataset : 1;
+    bool    mIsCommissioned : 1;
     bool    mThreadNetworkActive : 1;
     bool    mIsBorderRouter : 1;
     bool    mRxOnWhenIdle : 1;

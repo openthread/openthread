@@ -106,7 +106,7 @@ class HelloCommand(BleCommand):
         return 'Send round trip "Hello world!" message.'
 
     def prepare_data(self, args, context):
-        return TLV(TcatTLVType.APPLICATION.value, bytes('Hello world!', 'ascii')).to_bytes()
+        return TLV(TcatTLVType.VENDOR_APPLICATION.value, bytes('Hello world!', 'ascii')).to_bytes()
 
 
 class CommissionCommand(BleCommand):
