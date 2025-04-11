@@ -647,6 +647,139 @@ otError otDnsServiceResponseGetHostAddress(const otDnsServiceResponse *aResponse
                                            uint32_t                   *aTtl);
 
 /**
+ * An opaque representation of a response to a query for an arbitrary record type.
+ *
+ * Pointers to instance of this type are provided from callback `otDnsRecordCallback`.
+ */
+typedef struct otDnsRecordResponse otDnsRecordResponse;
+
+/**
+ * Pointer is called when a DNS response is received for a DNS query to an arbitrary record type.
+ *
+ * Within this callback the user can use `otDnsRecordResponseGet{Item}()` functions along with the @p aResponse
+ * pointer to get more info about the response.
+ *
+ * The @p aResponse pointer can only be used within this callback and after returning from this function it will not
+ * stay valid, so the user MUST NOT retain the @p aResponse pointer for later use.
+ *
+ * @param[in]  aError     The result of the DNS transaction.
+ * @param[in]  aResponse  A pointer to the response (it is always non-NULL).
+ * @param[in]  aContext   A pointer to application-specific context.
+ *
+ * The @p aError can have the following:
+ *
+ *  - OT_ERROR_NONE              A response was received successfully.
+ *  - OT_ERROR_ABORT             A DNS transaction was aborted by the stack.
+ *  - OT_ERROR_RESPONSE_TIMEOUT  No DNS response has been received within timeout.
+ *
+ */
+typedef void (*otDnsRecordCallback)(otError aError, const otDnsRecordResponse *aResponse, void *aContext);
+
+/**
+ * Represents a section in a DNS query/response message.
+ */
+typedef enum
+{
+    OT_DNS_SECTION_ANSWER,     ///< Answer section.
+    OT_DNS_SECTION_AUTHORITY,  ///< Authority section.
+    OT_DNS_SECTION_ADDITIONAL, ///< Additional section.
+} otDnsRecordSection;
+
+/**
+ * Represents info for a record in an `otDnsRecordResponse`.
+ *
+ * This struct is used as input to `otDnsRecordResponseGetRecordInfo()`.
+ */
+typedef struct otDnsRecordInfo
+{
+    char              *mNameBuffer;     ///< Buffer to output the name (MUST NOT be NULL).
+    uint16_t           mNameBufferSize; ///< Size of `mNameBuffer`.
+    uint16_t           mRecordType;     ///< The record type.
+    uint16_t           mRecordLength;   ///< The record data length (in bytes).
+    uint32_t           mTtl;            ///< Record TTL (in seconds).
+    uint8_t           *mDataBuffer;     ///< Buffer to output the data (Can be NULL if data not needed).
+    uint16_t           mDataBufferSize; ///< On input, size of `mDataBuffer`. On output number of bytes written.
+    otDnsRecordSection mSection;        ///< Indicates the section of the record.
+} otDnsRecordInfo;
+
+/**
+ * Sends a DNS query for a given record type and name.
+ *
+ * Requires `OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE`.
+ *
+ * The @p aConfig can be NULL. In this case the default config (from `otDnsClientGetDefaultConfig()`) will be used as
+ * the config for this query. In a non-NULL @p aConfig, some of the fields can be left unspecified (value zero). The
+ * unspecified fields are then replaced by the values from the default config.
+ *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ * @param[in]  aRecordType      The resource record type to query.
+ * @param[in]  aFirstLabel      The first label of the name to be queried (can be NULL if not needed).
+ * @param[in]  aNextLabels      The next labels of the name to be queried (MUST NOT be NULL).
+ * @param[in]  aCallback        A function pointer that shall be called on response reception or time-out.
+ * @param[in]  aContext         A pointer to arbitrary context information used when @p aCallback is invoked.
+ * @param[in]  aConfig          A pointer to the config to use for this query.
+ *
+ * @retval OT_ERROR_NONE          Query sent successfully. @p aCallback will be invoked to report the outcome.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer to prepare and send query.
+ * @retval OT_ERROR_INVALID_STATE Cannot send query since Thread interface is not up.
+ */
+otError otDnsClientQueryRecord(otInstance             *aInstance,
+                               uint16_t                aRecordType,
+                               const char             *aFirstLabel,
+                               const char             *aNextLabels,
+                               otDnsRecordCallback     aCallback,
+                               void                   *aContext,
+                               const otDnsQueryConfig *aConfig);
+
+/**
+ * Gets the query name associated with a record query DNS response.
+ *
+ * MUST only be used from `otDnsRecordCallback`.
+ *
+ * @param[in]  aResponse         A pointer to the response.
+ * @param[out] aNameBuffer       A buffer to char array to output the full query name (MUST NOT be NULL).
+ * @param[in]  aNameBufferSize   The size of @p aNameBuffer.
+ *
+ * @retval OT_ERROR_NONE     The full query name was read successfully.
+ * @retval OT_ERROR_NO_BUFS  The name does not fit in @p aNameBuffer.
+ */
+otError otDnsRecordResponseGetQueryName(const otDnsRecordResponse *aResponse,
+                                        char                      *aNameBuffer,
+                                        uint16_t                   aNameBufferSize);
+
+/**
+ * Reads the records from a DNS query response.
+ *
+ * MUST only be used from `otDnsRecordCallback`.
+ *
+ * The response may include multiple records. @p aIndex can be used to iterate through the list. Index zero gets the
+ * first record and so on. When we reach the end of the list, `OT_ERROR_NOT_FOUND` is returned.
+ *
+ * Upon successful retrieval (`OT_ERROR_NONE`):
+ * - `mRecordLength` is set to the actual length of the record's data.
+ * - The data is copied into `mDataBuffer` (if not `NULL`) up to its capacity specified by `mDataBufferSize`.
+ * - `mDataBufferSize` is then updated to reflect the number of bytes actually written into `mDataBuffer`.
+ *
+ * If the retrieved record type is PTR (12), CNAME (5), DNAME (39), NS (2), or SRV (33), the record data in the
+ * received response contains a DNS name which may use DNS name compression. For these specific record types, the
+ * record data is first decompressed such that it contains the full uncompressed DNS name. This decompressed data is
+ * then provided in `mDataBuffer`, and `mRecordDataLength` will indicate the length of this decompressed data. For all
+ * other record types, the record data is read and provided as it appears in the received response message.
+ *
+ * @param[in]  aResponse       A pointer to the response.
+ * @param[in]  aIndex          The record index to retrieve.
+ * @param[out] aRecordInfo     A pointer to a `otDnsRecordInfo` to populate with read record info.
+ *
+ * @retval OT_ERROR_NONE       The record was read successfully.
+ * @retval OT_ERROR_NOT_FOUND  No record in @p aResponse at @p aIndex.
+ * @retval OT_ERROR_PARSE      Could not parse the records in the @p aResponse.
+ * @retval OT_ERROR_NO_BUFS    The record name does not fit in the provided `mNameBufferSize` in @p aRecordInfo, or
+ *                             failed to allocate buffer to decompress a compressed DNS name (PTR, SRV, CNAME).
+ */
+otError otDnsRecordResponseGetRecordInfo(const otDnsRecordResponse *aResponse,
+                                         uint16_t                   aIndex,
+                                         otDnsRecordInfo           *aRecordInfo);
+/**
  * @}
  */
 

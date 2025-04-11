@@ -1027,6 +1027,31 @@ exit:
     return error;
 }
 
+ResourceRecord::TypeInfoString ResourceRecord::TypeToString(uint16_t aRecordType)
+{
+    static constexpr Stringify::Entry kRecordTypeTable[] = {
+        {kTypeA, "A"},     {kTypeCname, "CNAME"}, {kTypeSoa, "SOA"},   {kTypePtr, "PTR"},
+        {kTypeTxt, "TXT"}, {kTypeSig, "SIG"},     {kTypeKey, "KEY"},   {kTypeAaaa, "AAAA"},
+        {kTypeSrv, "SRV"}, {kTypeOpt, "OPT"},     {kTypeNsec, "NSEC"}, {kTypeAny, "ANY"},
+    };
+
+    static_assert(Stringify::IsSorted(kRecordTypeTable), "kRecordTypeTable is not sorted");
+
+    TypeInfoString string;
+    const char    *lookupResult = Stringify::Lookup(aRecordType, kRecordTypeTable, nullptr);
+
+    if (lookupResult != nullptr)
+    {
+        string.Append("%s", lookupResult);
+    }
+    else
+    {
+        string.Append("RR:%u", aRecordType);
+    }
+
+    return string;
+}
+
 void TxtEntry::Iterator::Init(const uint8_t *aTxtData, uint16_t aTxtDataLength)
 {
     SetTxtData(aTxtData);
