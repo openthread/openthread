@@ -85,6 +85,15 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+ *
+ * Define to 1 to enable support for a query of arbitrary DNS record type.
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+#define OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
  *
  * Set to 1 for DNS client to automatically set and update the server IPv6 address in the default config (when it is
