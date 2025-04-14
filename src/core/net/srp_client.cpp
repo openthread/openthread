@@ -1400,7 +1400,7 @@ Error Client::AppendServiceInstruction(Service &aService, MsgInfo &aInfo)
     SuccessOrExit(error = Dns::Name::AppendLabel(aService.GetInstanceName(), *aInfo.mMessage));
     SuccessOrExit(error = Dns::Name::AppendPointerLabel(serviceNameOffset, *aInfo.mMessage));
 
-    UpdateRecordLengthInMessage(rr, offset, *aInfo.mMessage);
+    Dns::ResourceRecord::UpdateRecordLengthInMessage(*aInfo.mMessage, offset);
     aInfo.mRecordCount++;
 
     if (aService.HasSubType() && !removing)
@@ -1430,7 +1430,7 @@ Error Client::AppendServiceInstruction(Service &aService, MsgInfo &aInfo)
             SuccessOrExit(error = aInfo.mMessage->Append(rr));
 
             SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, *aInfo.mMessage));
-            UpdateRecordLengthInMessage(rr, offset, *aInfo.mMessage);
+            Dns::ResourceRecord::UpdateRecordLengthInMessage(*aInfo.mMessage, offset);
             aInfo.mRecordCount++;
         }
     }
@@ -1457,7 +1457,7 @@ Error Client::AppendServiceInstruction(Service &aService, MsgInfo &aInfo)
     offset = aInfo.mMessage->GetLength();
     SuccessOrExit(error = aInfo.mMessage->Append(srv));
     SuccessOrExit(error = AppendHostName(aInfo));
-    UpdateRecordLengthInMessage(srv, offset, *aInfo.mMessage);
+    Dns::ResourceRecord::UpdateRecordLengthInMessage(*aInfo.mMessage, offset);
     aInfo.mRecordCount++;
 
     // TXT RR
@@ -1468,7 +1468,7 @@ Error Client::AppendServiceInstruction(Service &aService, MsgInfo &aInfo)
     SuccessOrExit(error = aInfo.mMessage->Append(rr));
     SuccessOrExit(
         error = Dns::TxtEntry::AppendEntries(aService.GetTxtEntries(), aService.GetNumTxtEntries(), *aInfo.mMessage));
-    UpdateRecordLengthInMessage(rr, offset, *aInfo.mMessage);
+    Dns::ResourceRecord::UpdateRecordLengthInMessage(*aInfo.mMessage, offset);
     aInfo.mRecordCount++;
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -1733,22 +1733,10 @@ Error Client::AppendSignature(MsgInfo &aInfo)
     SuccessOrExit(error = aInfo.mMessage->Append(sig));
     SuccessOrExit(error = AppendHostName(aInfo));
     SuccessOrExit(error = aInfo.mMessage->Append(signature));
-    UpdateRecordLengthInMessage(sig, offset, *aInfo.mMessage);
+    Dns::ResourceRecord::UpdateRecordLengthInMessage(*aInfo.mMessage, offset);
 
 exit:
     return error;
-}
-
-void Client::UpdateRecordLengthInMessage(Dns::ResourceRecord &aRecord, uint16_t aOffset, Message &aMessage) const
-{
-    // This method is used to calculate an RR DATA length and update
-    // (rewrite) it in a message. This should be called immediately
-    // after all the fields in the record are written in the message.
-    // `aOffset` gives the offset in the message to the start of the
-    // record.
-
-    aRecord.SetLength(aMessage.GetLength() - aOffset - sizeof(Dns::ResourceRecord));
-    aMessage.Write(aOffset, aRecord);
 }
 
 void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

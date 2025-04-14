@@ -2223,7 +2223,6 @@ private:
     static void     UpdateCacheFlushFlagIn(ResourceRecord &aResourceRecord,
                                            Section         aSection,
                                            bool            aIsLegacyUnicast = false);
-    static void     UpdateRecordLengthInMessage(ResourceRecord &aRecord, Message &aMessage, uint16_t aOffset);
     static void     UpdateCompressOffset(uint16_t &aOffset, uint16_t aNewOffse);
     static bool     QuestionMatches(uint16_t aQuestionRrType, uint16_t aRrType);
     static bool     RrClassIsInternetOrAny(uint16_t aRrClass);

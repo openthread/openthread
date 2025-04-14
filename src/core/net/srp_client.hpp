@@ -1028,7 +1028,6 @@ private:
     Error        AppendAaaaRecord(const Ip6::Address &aAddress, MsgInfo &aInfo) const;
     Error        AppendUpdateLeaseOptRecord(MsgInfo &aInfo);
     Error        AppendSignature(MsgInfo &aInfo);
-    void         UpdateRecordLengthInMessage(Dns::ResourceRecord &aRecord, uint16_t aOffset, Message &aMessage) const;
     void         HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void         ProcessResponse(Message &aMessage);
     bool         IsResponseMessageIdValid(uint16_t aId) const;
