@@ -79,97 +79,112 @@ class SrpRemoveHost(thread_cert.TestCase):
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(client.get_state(), 'router')
 
-        server.srp_server_set_enabled(True)
-        client.srp_client_enable_auto_start_mode()
-        self.simulator.go(15)
-
         #-------------------------------------------------------------------------------------
-        # Register a single service and verify that it worked.
+        # Perform test steps twice, with and without SRP coder
+        # use enabled on client.
 
-        client.srp_client_set_host_name('host')
-        client.srp_client_set_host_address('2001::1')
-        client.srp_client_add_service('ins', '_srv._udp', 1977)
-        self.simulator.go(2)
+        for client_coder_enable in [False, True]:
+            print('-' * 80)
+            client.srp_client_set_coder_enable(client_coder_enable)
 
-        client_services = client.srp_client_get_services()
-        self.assertEqual(len(client_services), 1)
-        client_service = client_services[0]
-        self.assertEqual(client_service['instance'], 'ins')
-        self.assertEqual(client_service['name'], '_srv._udp')
-        self.assertEqual(int(client_service['port']), 1977)
-        self.assertEqual(int(client_service['priority']), 0)
-        self.assertEqual(int(client_service['weight']), 0)
-        self.assertEqual(client_service['state'], 'Registered')
+            server.srp_server_set_enabled(True)
+            client.srp_client_enable_auto_start_mode()
+            self.simulator.go(15)
 
-        server_hosts = server.srp_server_get_hosts()
-        self.assertEqual(len(server_hosts), 1)
-        server_host = server_hosts[0]
-        self.assertEqual(server_host['fullname'], 'host.default.service.arpa.')
-        self.assertEqual(server_host['deleted'], 'false')
-        self.assertEqual(len(server_host['addresses']), 1)
-        self.assertIn('2001:0:0:0:0:0:0:1', server_host['addresses'])
+            #-------------------------------------------------------------------------------------
+            # Register a single service and verify that it worked.
 
-        server_services = server.srp_server_get_services()
-        self.assertEqual(len(server_services), 1)
-        server_service = server_services[0]
-        self.assertEqual(server_service['fullname'], 'ins._srv._udp.default.service.arpa.')
-        self.assertEqual(server_service['instance'], 'ins')
-        self.assertEqual(server_service['name'], '_srv._udp')
-        self.assertEqual(server_service['deleted'], 'false')
-        self.assertEqual(int(server_service['port']), 1977)
-        self.assertEqual(int(server_service['priority']), 0)
-        self.assertEqual(int(server_service['weight']), 0)
-        self.assertEqual(server_service['host'], 'host')
+            client.srp_client_set_host_name('host')
+            client.srp_client_set_host_address('2001::1')
+            client.srp_client_add_service('ins', '_srv._udp', 1977)
+            self.simulator.go(2)
 
-        #-------------------------------------------------------------------------------------
-        # Clear the info on client, and verify that it is still present on server.
+            client_services = client.srp_client_get_services()
+            self.assertEqual(len(client_services), 1)
+            client_service = client_services[0]
+            self.assertEqual(client_service['instance'], 'ins')
+            self.assertEqual(client_service['name'], '_srv._udp')
+            self.assertEqual(int(client_service['port']), 1977)
+            self.assertEqual(int(client_service['priority']), 0)
+            self.assertEqual(int(client_service['weight']), 0)
+            self.assertEqual(client_service['state'], 'Registered')
 
-        client.srp_client_clear_host()
-        self.simulator.go(2)
+            server_hosts = server.srp_server_get_hosts()
+            self.assertEqual(len(server_hosts), 1)
+            server_host = server_hosts[0]
+            self.assertEqual(server_host['fullname'], 'host.default.service.arpa.')
+            self.assertEqual(server_host['deleted'], 'false')
+            self.assertEqual(len(server_host['addresses']), 1)
+            self.assertIn('2001:0:0:0:0:0:0:1', server_host['addresses'])
 
-        client_services = client.srp_client_get_services()
-        self.assertEqual(len(client_services), 0)
-        self.assertIsNone(client.srp_client_get_host_name())
-        self.assertIsNone(client.srp_client_get_host_address())
+            server_services = server.srp_server_get_services()
+            self.assertEqual(len(server_services), 1)
+            server_service = server_services[0]
+            self.assertEqual(server_service['fullname'], 'ins._srv._udp.default.service.arpa.')
+            self.assertEqual(server_service['instance'], 'ins')
+            self.assertEqual(server_service['name'], '_srv._udp')
+            self.assertEqual(server_service['deleted'], 'false')
+            self.assertEqual(int(server_service['port']), 1977)
+            self.assertEqual(int(server_service['priority']), 0)
+            self.assertEqual(int(server_service['weight']), 0)
+            self.assertEqual(server_service['host'], 'host')
 
-        server_services = server.srp_server_get_services()
-        self.assertEqual(len(server_services), 1)
+            #-------------------------------------------------------------------------------------
+            # Clear the info on client, and verify that it is still present on server.
 
-        #-------------------------------------------------------------------------------------
-        # Now set the host name and request "host remove" requiring that client updates server
-        # even if host is not yet registered. Verify that client updates the server by checking
-        # that the host and service entries are marked as "deleted" on the server (i.e. deleted
-        # by the name (and associated key) are retained).
+            client.srp_client_clear_host()
+            self.simulator.go(2)
 
-        client.srp_client_set_host_name('host')
-        client.srp_client_remove_host(send_unreg_to_server=True)
-        self.simulator.go(2)
+            client_services = client.srp_client_get_services()
+            self.assertEqual(len(client_services), 0)
+            self.assertIsNone(client.srp_client_get_host_name())
+            self.assertIsNone(client.srp_client_get_host_address())
 
-        self.assertIsNone(client.srp_client_get_host_name())
+            server_services = server.srp_server_get_services()
+            self.assertEqual(len(server_services), 1)
 
-        server_hosts = server.srp_server_get_hosts()
-        self.assertEqual(len(server_hosts), 1)
-        server_host = server_hosts[0]
-        self.assertEqual(server_host['fullname'], 'host.default.service.arpa.')
-        self.assertEqual(server_host['deleted'], 'true')
+            #-------------------------------------------------------------------------------------
+            # Now set the host name and request "host remove" requiring that client updates server
+            # even if host is not yet registered. Verify that client updates the server by checking
+            # that the host and service entries are marked as "deleted" on the server (i.e. deleted
+            # by the name (and associated key) are retained).
 
-        server_services = server.srp_server_get_services()
-        self.assertEqual(len(server_services), 1)
-        server_service = server_services[0]
-        self.assertEqual(server_service['fullname'], 'ins._srv._udp.default.service.arpa.')
-        self.assertEqual(server_service['deleted'], 'true')
+            client.srp_client_set_host_name('host')
+            client.srp_client_remove_host(send_unreg_to_server=True)
+            self.simulator.go(2)
 
-        #-------------------------------------------------------------------------------------
-        # Again request "host remove" but this time request `remove_key`. Verify that entries
-        # on the server are fully removed .
+            self.assertIsNone(client.srp_client_get_host_name())
 
-        client.srp_client_set_host_name('host')
-        client.srp_client_remove_host(remove_key=True, send_unreg_to_server=True)
-        self.simulator.go(2)
+            server_hosts = server.srp_server_get_hosts()
+            self.assertEqual(len(server_hosts), 1)
+            server_host = server_hosts[0]
+            self.assertEqual(server_host['fullname'], 'host.default.service.arpa.')
+            self.assertEqual(server_host['deleted'], 'true')
 
-        self.assertIsNone(client.srp_client_get_host_name())
-        self.assertEqual(len(server.srp_server_get_services()), 0)
-        self.assertEqual(len(server.srp_server_get_hosts()), 0)
+            server_services = server.srp_server_get_services()
+            self.assertEqual(len(server_services), 1)
+            server_service = server_services[0]
+            self.assertEqual(server_service['fullname'], 'ins._srv._udp.default.service.arpa.')
+            self.assertEqual(server_service['deleted'], 'true')
+
+            #-------------------------------------------------------------------------------------
+            # Again request "host remove" but this time request `remove_key`. Verify that entries
+            # on the server are fully removed .
+
+            client.srp_client_set_host_name('host')
+            client.srp_client_remove_host(remove_key=True, send_unreg_to_server=True)
+            self.simulator.go(2)
+
+            self.assertIsNone(client.srp_client_get_host_name())
+            self.assertEqual(len(server.srp_server_get_services()), 0)
+            self.assertEqual(len(server.srp_server_get_hosts()), 0)
+
+            #-------------------------------------------------------------------------------------
+            # Stop client and server and clear previous configs.
+
+            client.srp_client_clear_host()
+            client.srp_client_stop()
+            server.srp_server_set_enabled(False)
 
 
 if __name__ == '__main__':

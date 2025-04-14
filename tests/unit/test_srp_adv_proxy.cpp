@@ -640,6 +640,30 @@ void PrepareService2(Srp::Client::Service &aService)
 
 //----------------------------------------------------------------------------------------------------------------------
 
+enum SrpCoderMode : bool
+{
+    kDoNotUseSrpCoderOnClient = false,
+    kUseSrpCoderOnClient      = true,
+};
+
+void ApplySrpCoderMode(Srp::Client &aSrpClient, SrpCoderMode aCoderMode)
+{
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    aSrpClient.SetMessageCoderEnabled(aCoderMode);
+    VerifyOrQuit(aSrpClient.IsMessageCoderEnabled() == aCoderMode);
+#else
+    OT_UNUSED_VARIABLE(aSrpClient);
+    OT_UNUSED_VARIABLE(aCoderMode);
+#endif
+}
+
+const char *CoderModeToString(SrpCoderMode aCoderMode)
+{
+    return (aCoderMode == kUseSrpCoderOnClient) ? "UseCoderOnClient" : "DoNotUseCoderOnClient";
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
 typedef Dnssd::RequestId      RequestId;
 typedef Dnssd::RequestIdRange RequestIdRange;
 
@@ -770,7 +794,7 @@ void TestDnssdRequestIdRange(void)
     Log("End of TestDnssdRequestIdRange");
 }
 
-void TestSrpAdvProxy(void)
+void TestSrpAdvProxy(SrpCoderMode aCoderMode)
 {
     NetworkData::OnMeshPrefixConfig prefixConfig;
     Srp::Server                    *srpServer;
@@ -782,7 +806,7 @@ void TestSrpAdvProxy(void)
     uint16_t                        heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
-    Log("TestSrpAdvProxy");
+    Log("TestSrpAdvProxy(%s)", CoderModeToString(aCoderMode));
 
     InitTest();
 
@@ -845,6 +869,8 @@ void TestSrpAdvProxy(void)
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Start SRP client");
+
+    ApplySrpCoderMode(*srpClient, aCoderMode);
 
     srpClient->SetCallback(HandleSrpClientCallback, sInstance);
     srpClient->SetLeaseInterval(180);
@@ -1139,10 +1165,10 @@ void TestSrpAdvProxy(void)
 
     VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
 
-    Log("End of TestSrpAdvProxy");
+    Log("End of TestSrpAdvProxy(%s)", CoderModeToString(aCoderMode));
 }
 
-void TestSrpAdvProxyDnssdStateChange(void)
+void TestSrpAdvProxyDnssdStateChange(SrpCoderMode aCoderMode)
 {
     NetworkData::OnMeshPrefixConfig prefixConfig;
     Srp::Server                    *srpServer;
@@ -1154,7 +1180,7 @@ void TestSrpAdvProxyDnssdStateChange(void)
     uint16_t                        heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
-    Log("TestSrpAdvProxyDnssdStateChange");
+    Log("TestSrpAdvProxyDnssdStateChange(%s)", CoderModeToString(aCoderMode));
 
     InitTest();
 
@@ -1219,6 +1245,8 @@ void TestSrpAdvProxyDnssdStateChange(void)
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Start SRP client");
+
+    ApplySrpCoderMode(*srpClient, aCoderMode);
 
     srpClient->SetCallback(HandleSrpClientCallback, sInstance);
     srpClient->SetLeaseInterval(180);
@@ -1443,10 +1471,10 @@ void TestSrpAdvProxyDnssdStateChange(void)
 
     VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
 
-    Log("End of TestSrpAdvProxyDnssdStateChange");
+    Log("End of TestSrpAdvProxyDnssdStateChange(%s)", CoderModeToString(aCoderMode));
 }
 
-void TestSrpAdvProxyDelayedCallback(void)
+void TestSrpAdvProxyDelayedCallback(SrpCoderMode aCoderMode)
 {
     NetworkData::OnMeshPrefixConfig prefixConfig;
     Srp::Server                    *srpServer;
@@ -1459,7 +1487,7 @@ void TestSrpAdvProxyDelayedCallback(void)
     const DnssdRequest             *request;
 
     Log("--------------------------------------------------------------------------------------------");
-    Log("TestSrpAdvProxyDelayedCallback");
+    Log("TestSrpAdvProxyDelayedCallback(%s)", CoderModeToString(aCoderMode));
 
     InitTest();
 
@@ -1523,6 +1551,7 @@ void TestSrpAdvProxyDelayedCallback(void)
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Start SRP client");
 
+    ApplySrpCoderMode(*srpClient, aCoderMode);
     srpClient->SetCallback(HandleSrpClientCallback, sInstance);
     srpClient->SetLeaseInterval(180);
 
@@ -1727,10 +1756,10 @@ void TestSrpAdvProxyDelayedCallback(void)
 
     VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
 
-    Log("End of TestSrpAdvProxyDelayedCallback");
+    Log("End of TestSrpAdvProxyDelayedCallback(%s)", CoderModeToString(aCoderMode));
 }
 
-void TestSrpAdvProxyReplacedEntries(void)
+void TestSrpAdvProxyReplacedEntries(SrpCoderMode aCoderMode)
 {
     NetworkData::OnMeshPrefixConfig prefixConfig;
     Srp::Server                    *srpServer;
@@ -1744,7 +1773,7 @@ void TestSrpAdvProxyReplacedEntries(void)
     uint16_t                        numServices;
 
     Log("--------------------------------------------------------------------------------------------");
-    Log("TestSrpAdvProxyReplacedEntries");
+    Log("TestSrpAdvProxyReplacedEntries(%s)", CoderModeToString(aCoderMode));
 
     InitTest();
 
@@ -1818,6 +1847,7 @@ void TestSrpAdvProxyReplacedEntries(void)
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Start SRP client");
 
+    ApplySrpCoderMode(*srpClient, aCoderMode);
     srpClient->SetCallback(HandleSrpClientCallback, sInstance);
 
     srpClient->EnableAutoStartMode(nullptr, nullptr);
@@ -2220,10 +2250,10 @@ void TestSrpAdvProxyReplacedEntries(void)
 
     VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
 
-    Log("End of TestSrpAdvProxyReplacedEntries");
+    Log("End of TestSrpAdvProxyReplacedEntries(%s)", CoderModeToString(aCoderMode));
 }
 
-void TestSrpAdvProxyHostWithOffMeshRoutableAddress(void)
+void TestSrpAdvProxyHostWithOffMeshRoutableAddress(SrpCoderMode aCoderMode)
 {
     NetworkData::OnMeshPrefixConfig prefixConfig;
     Srp::Server                    *srpServer;
@@ -2236,7 +2266,7 @@ void TestSrpAdvProxyHostWithOffMeshRoutableAddress(void)
     const DnssdRequest             *request;
 
     Log("--------------------------------------------------------------------------------------------");
-    Log("TestSrpAdvProxyHostWithOffMeshRoutableAddress");
+    Log("TestSrpAdvProxyHostWithOffMeshRoutableAddress(%s)", CoderModeToString(aCoderMode));
 
     InitTest();
 
@@ -2284,6 +2314,7 @@ void TestSrpAdvProxyHostWithOffMeshRoutableAddress(void)
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Start SRP client");
 
+    ApplySrpCoderMode(*srpClient, aCoderMode);
     srpClient->SetCallback(HandleSrpClientCallback, sInstance);
     srpClient->SetLeaseInterval(400);
 
@@ -2367,10 +2398,10 @@ void TestSrpAdvProxyHostWithOffMeshRoutableAddress(void)
 
     VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
 
-    Log("End of TestSrpAdvProxyHostWithOffMeshRoutableAddress");
+    Log("End of TestSrpAdvProxyHostWithOffMeshRoutableAddress(%s)", CoderModeToString(aCoderMode));
 }
 
-void TestSrpAdvProxyRemoveBeforeCommitted(void)
+void TestSrpAdvProxyRemoveBeforeCommitted(SrpCoderMode aCoderMode)
 {
     NetworkData::OnMeshPrefixConfig prefixConfig;
     Srp::Server                    *srpServer;
@@ -2383,7 +2414,7 @@ void TestSrpAdvProxyRemoveBeforeCommitted(void)
     const DnssdRequest             *request;
 
     Log("--------------------------------------------------------------------------------------------");
-    Log("TestSrpAdvProxyRemoveBeforeCommitted");
+    Log("TestSrpAdvProxyRemoveBeforeCommitted(%s)", CoderModeToString(aCoderMode));
 
     InitTest();
 
@@ -2447,6 +2478,7 @@ void TestSrpAdvProxyRemoveBeforeCommitted(void)
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Start SRP client");
 
+    ApplySrpCoderMode(*srpClient, aCoderMode);
     srpClient->SetCallback(HandleSrpClientCallback, sInstance);
 
     srpClient->EnableAutoStartMode(nullptr, nullptr);
@@ -2571,10 +2603,10 @@ void TestSrpAdvProxyRemoveBeforeCommitted(void)
 
     VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
 
-    Log("End of TestSrpAdvProxyRemoveBeforeCommitted");
+    Log("End of TestSrpAdvProxyRemoveBeforeCommitted(%s)", CoderModeToString(aCoderMode));
 }
 
-void TestSrpAdvProxyFullyRemoveBeforeCommitted(void)
+void TestSrpAdvProxyFullyRemoveBeforeCommitted(SrpCoderMode aCoderMode)
 {
     NetworkData::OnMeshPrefixConfig prefixConfig;
     Srp::Server                    *srpServer;
@@ -2587,7 +2619,7 @@ void TestSrpAdvProxyFullyRemoveBeforeCommitted(void)
     const DnssdRequest             *request;
 
     Log("--------------------------------------------------------------------------------------------");
-    Log("TestSrpAdvProxyFullyRemoveBeforeCommitted");
+    Log("TestSrpAdvProxyFullyRemoveBeforeCommitted(%s)", CoderModeToString(aCoderMode));
 
     InitTest();
 
@@ -2651,6 +2683,7 @@ void TestSrpAdvProxyFullyRemoveBeforeCommitted(void)
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Start SRP client");
 
+    ApplySrpCoderMode(*srpClient, aCoderMode);
     srpClient->SetCallback(HandleSrpClientCallback, sInstance);
 
     srpClient->EnableAutoStartMode(nullptr, nullptr);
@@ -2759,7 +2792,7 @@ void TestSrpAdvProxyFullyRemoveBeforeCommitted(void)
 
     VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
 
-    Log("End of TestSrpAdvProxyFullyRemoveBeforeCommitted");
+    Log("End of TestSrpAdvProxyFullyRemoveBeforeCommitted(%s)", CoderModeToString(aCoderMode));
 }
 
 #endif // ENABLE_ADV_PROXY_TEST
@@ -2768,13 +2801,23 @@ int main(void)
 {
 #if ENABLE_ADV_PROXY_TEST
     TestDnssdRequestIdRange();
-    TestSrpAdvProxy();
-    TestSrpAdvProxyDnssdStateChange();
-    TestSrpAdvProxyDelayedCallback();
-    TestSrpAdvProxyReplacedEntries();
-    TestSrpAdvProxyHostWithOffMeshRoutableAddress();
-    TestSrpAdvProxyRemoveBeforeCommitted();
-    TestSrpAdvProxyFullyRemoveBeforeCommitted();
+    TestSrpAdvProxy(kDoNotUseSrpCoderOnClient);
+    TestSrpAdvProxyDnssdStateChange(kDoNotUseSrpCoderOnClient);
+    TestSrpAdvProxyDelayedCallback(kDoNotUseSrpCoderOnClient);
+    TestSrpAdvProxyReplacedEntries(kDoNotUseSrpCoderOnClient);
+    TestSrpAdvProxyHostWithOffMeshRoutableAddress(kDoNotUseSrpCoderOnClient);
+    TestSrpAdvProxyRemoveBeforeCommitted(kDoNotUseSrpCoderOnClient);
+    TestSrpAdvProxyFullyRemoveBeforeCommitted(kDoNotUseSrpCoderOnClient);
+
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    TestSrpAdvProxy(kUseSrpCoderOnClient);
+    TestSrpAdvProxyDnssdStateChange(kUseSrpCoderOnClient);
+    TestSrpAdvProxyDelayedCallback(kUseSrpCoderOnClient);
+    TestSrpAdvProxyReplacedEntries(kUseSrpCoderOnClient);
+    TestSrpAdvProxyHostWithOffMeshRoutableAddress(kUseSrpCoderOnClient);
+    TestSrpAdvProxyRemoveBeforeCommitted(kUseSrpCoderOnClient);
+    TestSrpAdvProxyFullyRemoveBeforeCommitted(kUseSrpCoderOnClient);
+#endif
 
     printf("All tests passed\n");
 #else

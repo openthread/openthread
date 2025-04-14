@@ -118,6 +118,7 @@ source_set("openthread") {
     "sntp.h",
     "srp_client.h",
     "srp_client_buffers.h",
+    "srp_coder.h",
     "srp_server.h",
     "tasklet.h",
     "tcat.h",

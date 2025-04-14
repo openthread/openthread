@@ -77,228 +77,246 @@ class SrpNameConflicts(thread_cert.TestCase):
         client_1 = self.nodes[CLIENT1]
         client_2 = self.nodes[CLIENT2]
 
-        #
-        # 0. Start the server & client devices.
-        #
+        for client_coder_enable in [False, True]:
+            print('-' * 80)
+            client_1.srp_client_set_coder_enable(client_coder_enable)
+            client_2.srp_client_set_coder_enable(client_coder_enable)
 
-        server.srp_server_set_enabled(True)
-        server.start()
-        self.simulator.go(config.LEADER_STARTUP_DELAY)
-        self.assertEqual(server.get_state(), 'leader')
-        self.simulator.go(5)
+            #
+            # 0. Start the server & client devices.
+            #
 
-        client_1.srp_server_set_enabled(False)
-        client_1.start()
-        self.simulator.go(config.ROUTER_STARTUP_DELAY)
-        self.assertEqual(client_1.get_state(), 'router')
+            server.srp_server_set_enabled(True)
+            server.start()
+            self.simulator.go(config.LEADER_STARTUP_DELAY)
+            self.assertEqual(server.get_state(), 'leader')
+            self.simulator.go(5)
 
-        client_2.srp_server_set_enabled(False)
-        client_2.start()
-        self.simulator.go(config.ROUTER_STARTUP_DELAY)
-        self.assertEqual(client_2.get_state(), 'router')
+            client_1.srp_server_set_enabled(False)
+            client_1.start()
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
+            self.assertEqual(client_1.get_state(), 'router')
 
-        #
-        # 1. Register a single service and verify that it works.
-        #
+            client_2.srp_server_set_enabled(False)
+            client_2.start()
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
+            self.assertEqual(client_2.get_state(), 'router')
 
-        self.assertEqual(client_1.srp_client_get_auto_start_mode(), 'Enabled')
+            #
+            # 1. Register a single service and verify that it works.
+            #
 
-        client_1.srp_client_set_host_name('my-host-1')
-        client_1.srp_client_set_host_address('2001::1')
-        client_1.srp_client_add_service('my-service-1', '_ipps._tcp', 12345)
-        self.simulator.go(2)
+            client_1.srp_client_enable_auto_start_mode()
+            self.assertEqual(client_1.srp_client_get_auto_start_mode(), 'Enabled')
 
-        # Verify that the client possesses correct service resources.
-        client_1_service = client_1.srp_client_get_services()[0]
-        self.assertEqual(client_1_service['instance'], 'my-service-1')
-        self.assertEqual(client_1_service['name'], '_ipps._tcp')
-        self.assertEqual(int(client_1_service['port']), 12345)
-        self.assertEqual(int(client_1_service['priority']), 0)
-        self.assertEqual(int(client_1_service['weight']), 0)
+            client_1.srp_client_set_host_name('my-host-1')
+            client_1.srp_client_set_host_address('2001::1')
+            client_1.srp_client_add_service('my-service-1', '_ipps._tcp', 12345)
+            self.simulator.go(2)
 
-        # Verify that the client receives a SUCCESS response for the server.
-        self.assertEqual(client_1_service['state'], 'Registered')
+            # Verify that the client possesses correct service resources.
+            client_1_service = client_1.srp_client_get_services()[0]
+            self.assertEqual(client_1_service['instance'], 'my-service-1')
+            self.assertEqual(client_1_service['name'], '_ipps._tcp')
+            self.assertEqual(int(client_1_service['port']), 12345)
+            self.assertEqual(int(client_1_service['priority']), 0)
+            self.assertEqual(int(client_1_service['weight']), 0)
 
-        # Verify that the server accepts the SRP registration and stored
-        # the same service resources.
-        server_service = server.srp_server_get_services()[0]
-        self.assertEqual(server_service['deleted'], 'false')
-        self.assertEqual(server_service['instance'], client_1_service['instance'])
-        self.assertEqual(server_service['name'], client_1_service['name'])
-        self.assertEqual(int(server_service['port']), int(client_1_service['port']))
-        self.assertEqual(int(server_service['priority']), int(client_1_service['priority']))
-        self.assertEqual(int(server_service['weight']), int(client_1_service['weight']))
-        self.assertEqual(server_service['host'], 'my-host-1')
+            # Verify that the client receives a SUCCESS response for the server.
+            self.assertEqual(client_1_service['state'], 'Registered')
 
-        server_host = server.srp_server_get_hosts()[0]
-        self.assertEqual(server_host['deleted'], 'false')
-        self.assertEqual(server_host['fullname'], server_service['host_fullname'])
-        self.assertEqual(len(server_host['addresses']), 1)
-        self.assertEqual(ipaddress.ip_address(server_host['addresses'][0]), ipaddress.ip_address('2001::1'))
+            # Verify that the server accepts the SRP registration and stored
+            # the same service resources.
+            server_service = server.srp_server_get_services()[0]
+            self.assertEqual(server_service['deleted'], 'false')
+            self.assertEqual(server_service['instance'], client_1_service['instance'])
+            self.assertEqual(server_service['name'], client_1_service['name'])
+            self.assertEqual(int(server_service['port']), int(client_1_service['port']))
+            self.assertEqual(int(server_service['priority']), int(client_1_service['priority']))
+            self.assertEqual(int(server_service['weight']), int(client_1_service['weight']))
+            self.assertEqual(server_service['host'], 'my-host-1')
 
-        #
-        # 2. Register with the same host name from the second client and it should fail.
-        #
+            server_host = server.srp_server_get_hosts()[0]
+            self.assertEqual(server_host['deleted'], 'false')
+            self.assertEqual(server_host['fullname'], server_service['host_fullname'])
+            self.assertEqual(len(server_host['addresses']), 1)
+            self.assertEqual(ipaddress.ip_address(server_host['addresses'][0]), ipaddress.ip_address('2001::1'))
 
-        self.assertEqual(client_2.srp_client_get_auto_start_mode(), 'Enabled')
+            #
+            # 2. Register with the same host name from the second client and it should fail.
+            #
 
-        client_2.srp_client_set_host_name('my-host-1')
-        client_2.srp_client_set_host_address('2001::2')
-        client_2.srp_client_add_service('my-service-2', '_ipps._tcp', 12345)
-        self.simulator.go(2)
+            client_2.srp_client_enable_auto_start_mode()
+            self.assertEqual(client_2.srp_client_get_auto_start_mode(), 'Enabled')
 
-        # It is expected that the registration will be rejected.
-        client_2_service = client_2.srp_client_get_services()[0]
-        self.assertNotEqual(client_2_service['state'], 'Registered')
-        self.assertNotEqual(client_2.srp_client_get_host_state(), 'Registered')
+            client_2.srp_client_set_host_name('my-host-1')
+            client_2.srp_client_set_host_address('2001::2')
+            client_2.srp_client_add_service('my-service-2', '_ipps._tcp', 12345)
+            self.simulator.go(2)
 
-        self.assertEqual(len(server.srp_server_get_services()), 1)
-        self.assertEqual(len(server.srp_server_get_hosts()), 1)
+            # It is expected that the registration will be rejected.
+            client_2_service = client_2.srp_client_get_services()[0]
+            self.assertNotEqual(client_2_service['state'], 'Registered')
+            self.assertNotEqual(client_2.srp_client_get_host_state(), 'Registered')
 
-        client_2.srp_client_clear_host()
-        client_2.srp_client_stop()
+            self.assertEqual(len(server.srp_server_get_services()), 1)
+            self.assertEqual(len(server.srp_server_get_hosts()), 1)
 
-        #
-        # 3. Register with the same service name from the second client and it should fail.
-        #
+            client_2.srp_client_clear_host()
+            client_2.srp_client_stop()
 
-        client_2.srp_client_enable_auto_start_mode()
-        client_2.srp_client_set_host_name('my-host-2')
-        client_2.srp_client_set_host_address('2001::2')
-        client_2.srp_client_add_service('my-service-1', '_ipps._tcp', 12345)
-        self.simulator.go(2)
+            #
+            # 3. Register with the same service name from the second client and it should fail.
+            #
 
-        # It is expected that the registration will be rejected.
-        client_2_service = client_2.srp_client_get_services()[0]
-        self.assertNotEqual(client_2_service['state'], 'Registered')
-        self.assertNotEqual(client_2.srp_client_get_host_state(), 'Registered')
+            client_2.srp_client_enable_auto_start_mode()
+            client_2.srp_client_set_host_name('my-host-2')
+            client_2.srp_client_set_host_address('2001::2')
+            client_2.srp_client_add_service('my-service-1', '_ipps._tcp', 12345)
+            self.simulator.go(2)
 
-        self.assertEqual(len(server.srp_server_get_services()), 1)
-        self.assertEqual(len(server.srp_server_get_hosts()), 1)
+            # It is expected that the registration will be rejected.
+            client_2_service = client_2.srp_client_get_services()[0]
+            self.assertNotEqual(client_2_service['state'], 'Registered')
+            self.assertNotEqual(client_2.srp_client_get_host_state(), 'Registered')
 
-        client_2.srp_client_clear_host()
-        client_2.srp_client_stop()
+            self.assertEqual(len(server.srp_server_get_services()), 1)
+            self.assertEqual(len(server.srp_server_get_hosts()), 1)
 
-        #
-        # 4. Register the same service instance label with a different service name
-        # from the second client and it should pass.
-        #
+            client_2.srp_client_clear_host()
+            client_2.srp_client_stop()
 
-        client_2.srp_client_enable_auto_start_mode()
-        client_2.srp_client_set_host_name('my-host-2')
-        client_2.srp_client_set_host_address('2001::2')
-        client_2.srp_client_add_service('my-service-1', '_ipps2._tcp', 12345)
-        self.simulator.go(2)
+            #
+            # 4. Register the same service instance label with a different service name
+            # from the second client and it should pass.
+            #
 
-        # It is expected that the registration will be accepted.
-        client_2_service = client_2.srp_client_get_services()[0]
-        self.assertEqual(client_2_service['state'], 'Registered')
-        self.assertEqual(client_2.srp_client_get_host_state(), 'Registered')
+            client_2.srp_client_enable_auto_start_mode()
+            client_2.srp_client_set_host_name('my-host-2')
+            client_2.srp_client_set_host_address('2001::2')
+            client_2.srp_client_add_service('my-service-1', '_ipps2._tcp', 12345)
+            self.simulator.go(2)
 
-        self.assertEqual(len(server.srp_server_get_services()), 2)
-        self.assertEqual(len(server.srp_server_get_hosts()), 2)
-        self.assertEqual(server.srp_server_get_host('my-host-2')['deleted'], 'false')
-        self.assertEqual(server.srp_server_get_service('my-service-1', '_ipps2._tcp')['deleted'], 'false')
+            # It is expected that the registration will be accepted.
+            client_2_service = client_2.srp_client_get_services()[0]
+            self.assertEqual(client_2_service['state'], 'Registered')
+            self.assertEqual(client_2.srp_client_get_host_state(), 'Registered')
 
-        # Remove the host and all services registered on the SRP server.
-        client_2.srp_client_remove_host(remove_key=True)
-        self.simulator.go(2)
+            self.assertEqual(len(server.srp_server_get_services()), 2)
+            self.assertEqual(len(server.srp_server_get_hosts()), 2)
+            self.assertEqual(server.srp_server_get_host('my-host-2')['deleted'], 'false')
+            self.assertEqual(server.srp_server_get_service('my-service-1', '_ipps2._tcp')['deleted'], 'false')
 
-        client_2.srp_client_clear_host()
-        client_2.srp_client_stop()
+            # Remove the host and all services registered on the SRP server.
+            client_2.srp_client_remove_host(remove_key=True)
+            self.simulator.go(2)
 
-        #
-        # 5. Register with different host & service instance name, it should succeed.
-        #
+            client_2.srp_client_clear_host()
+            client_2.srp_client_stop()
 
-        client_2.srp_client_enable_auto_start_mode()
-        client_2.srp_client_set_host_name('my-host-2')
-        client_2.srp_client_set_host_address('2001::2')
-        client_2.srp_client_add_service('my-service-2', '_ipps._tcp', 12345)
-        self.simulator.go(2)
+            #
+            # 5. Register with different host & service instance name, it should succeed.
+            #
 
-        # It is expected that the registration will be accepted.
-        client_2_service = client_2.srp_client_get_services()[0]
-        self.assertEqual(client_2_service['state'], 'Registered')
-        self.assertEqual(client_2.srp_client_get_host_state(), 'Registered')
+            client_2.srp_client_enable_auto_start_mode()
+            client_2.srp_client_set_host_name('my-host-2')
+            client_2.srp_client_set_host_address('2001::2')
+            client_2.srp_client_add_service('my-service-2', '_ipps._tcp', 12345)
+            self.simulator.go(2)
 
-        self.assertEqual(len(server.srp_server_get_services()), 2)
-        self.assertEqual(len(server.srp_server_get_hosts()), 2)
-        self.assertEqual(server.srp_server_get_host('my-host-2')['deleted'], 'false')
-        self.assertEqual(server.srp_server_get_service('my-service-2', '_ipps._tcp')['deleted'], 'false')
+            # It is expected that the registration will be accepted.
+            client_2_service = client_2.srp_client_get_services()[0]
+            self.assertEqual(client_2_service['state'], 'Registered')
+            self.assertEqual(client_2.srp_client_get_host_state(), 'Registered')
 
-        # Remove the host and all services registered on the SRP server.
-        client_2.srp_client_remove_host(remove_key=True)
-        self.simulator.go(2)
+            self.assertEqual(len(server.srp_server_get_services()), 2)
+            self.assertEqual(len(server.srp_server_get_hosts()), 2)
+            self.assertEqual(server.srp_server_get_host('my-host-2')['deleted'], 'false')
+            self.assertEqual(server.srp_server_get_service('my-service-2', '_ipps._tcp')['deleted'], 'false')
 
-        client_2.srp_client_clear_host()
-        client_2.srp_client_stop()
+            # Remove the host and all services registered on the SRP server.
+            client_2.srp_client_remove_host(remove_key=True)
+            self.simulator.go(2)
 
-        #
-        # 6. Register with the same service instance full name before its KEY LEASE expires,
-        #    it is expected to fail.
-        #
+            client_2.srp_client_clear_host()
+            client_2.srp_client_stop()
 
-        # Remove the service instance from SRP server but retains its name.
-        client_1.srp_client_remove_service('my-service-1', '_ipps._tcp')
-        self.simulator.go(2)
+            #
+            # 6. Register with the same service instance full name before its KEY LEASE expires,
+            #    it is expected to fail.
+            #
 
-        client_2.srp_client_enable_auto_start_mode()
-        client_2.srp_client_set_host_name('my-host-2')
-        client_2.srp_client_set_host_address('2001::2')
-        client_2.srp_client_add_service('my-service-1', '_ipps._tcp', 12345)
-        self.simulator.go(2)
+            # Remove the service instance from SRP server but retains its name.
+            client_1.srp_client_remove_service('my-service-1', '_ipps._tcp')
+            self.simulator.go(2)
 
-        # It is expected that the registration will be rejected.
-        client_2_service = client_2.srp_client_get_services()[0]
-        self.assertNotEqual(client_2_service['state'], 'Registered')
-        self.assertNotEqual(client_2.srp_client_get_host_state(), 'Registered')
+            client_2.srp_client_enable_auto_start_mode()
+            client_2.srp_client_set_host_name('my-host-2')
+            client_2.srp_client_set_host_address('2001::2')
+            client_2.srp_client_add_service('my-service-1', '_ipps._tcp', 12345)
+            self.simulator.go(2)
 
-        # The service 'my-service-1' is removed but its name is retained.
-        # This is why we can see the service record on the SRP server.
-        self.assertEqual(len(server.srp_server_get_services()), 1)
-        self.assertEqual(len(server.srp_server_get_hosts()), 1)
-        self.assertEqual(server.srp_server_get_host('my-host-1')['deleted'], 'false')
-        self.assertEqual(server.srp_server_get_service('my-service-1', '_ipps._tcp')['deleted'], 'true')
+            # It is expected that the registration will be rejected.
+            client_2_service = client_2.srp_client_get_services()[0]
+            self.assertNotEqual(client_2_service['state'], 'Registered')
+            self.assertNotEqual(client_2.srp_client_get_host_state(), 'Registered')
 
-        client_2.srp_client_clear_host()
-        client_2.srp_client_stop()
+            # The service 'my-service-1' is removed but its name is retained.
+            # This is why we can see the service record on the SRP server.
+            self.assertEqual(len(server.srp_server_get_services()), 1)
+            self.assertEqual(len(server.srp_server_get_hosts()), 1)
+            self.assertEqual(server.srp_server_get_host('my-host-1')['deleted'], 'false')
+            self.assertEqual(server.srp_server_get_service('my-service-1', '_ipps._tcp')['deleted'], 'true')
 
-        #
-        # 7. The service instance name can be re-used by another client when
-        #    the service has been permanently removed (the KEY resource is
-        #    removed) from the host.
-        #
+            client_2.srp_client_clear_host()
+            client_2.srp_client_stop()
 
-        # Client 1 adds back the service, it should success.
-        client_1.srp_client_add_service('my-service-1', '_ipps._tcp', 12345)
-        self.simulator.go(2)
-        self.assertEqual(len(server.srp_server_get_services()), 1)
-        self.assertEqual(len(server.srp_server_get_hosts()), 1)
-        self.assertEqual(server.srp_server_get_host('my-host-1')['deleted'], 'false')
-        self.assertEqual(server.srp_server_get_service('my-service-1', '_ipps._tcp')['deleted'], 'false')
+            #
+            # 7. The service instance name can be re-used by another client when
+            #    the service has been permanently removed (the KEY resource is
+            #    removed) from the host.
+            #
 
-        # Permanently removes the service instance.
-        client_1.srp_client_remove_host(remove_key=True)
-        self.simulator.go(2)
-        self.assertEqual(len(server.srp_server_get_services()), 0)
-        self.assertEqual(len(server.srp_server_get_hosts()), 0)
+            # Client 1 adds back the service, it should success.
+            client_1.srp_client_add_service('my-service-1', '_ipps._tcp', 12345)
+            self.simulator.go(2)
+            self.assertEqual(len(server.srp_server_get_services()), 1)
+            self.assertEqual(len(server.srp_server_get_hosts()), 1)
+            self.assertEqual(server.srp_server_get_host('my-host-1')['deleted'], 'false')
+            self.assertEqual(server.srp_server_get_service('my-service-1', '_ipps._tcp')['deleted'], 'false')
 
-        # Client 2 registers the same host & service instance name with Client 1.
-        client_2.srp_client_stop()
-        client_2.srp_client_enable_auto_start_mode()
-        client_2.srp_client_clear_host()
-        client_2.srp_client_set_host_name('my-host-1')
-        client_2.srp_client_set_host_address('2001::2')
-        client_2.srp_client_add_service('my-service-1', '_ipps._tcp', 12345)
-        self.simulator.go(2)
+            # Permanently removes the service instance.
+            client_1.srp_client_remove_host(remove_key=True)
+            self.simulator.go(2)
+            self.assertEqual(len(server.srp_server_get_services()), 0)
+            self.assertEqual(len(server.srp_server_get_hosts()), 0)
 
-        # It is expected that client 2 will success because those names has been
-        # released by client 1.
-        self.assertEqual(len(server.srp_server_get_services()), 1)
-        self.assertEqual(len(server.srp_server_get_hosts()), 1)
-        self.assertEqual(server.srp_server_get_host('my-host-1')['deleted'], 'false')
-        self.assertEqual(server.srp_server_get_service('my-service-1', '_ipps._tcp')['deleted'], 'false')
+            # Client 2 registers the same host & service instance name with Client 1.
+            client_2.srp_client_stop()
+            client_2.srp_client_enable_auto_start_mode()
+            client_2.srp_client_clear_host()
+            client_2.srp_client_set_host_name('my-host-1')
+            client_2.srp_client_set_host_address('2001::2')
+            client_2.srp_client_add_service('my-service-1', '_ipps._tcp', 12345)
+            self.simulator.go(2)
+
+            # It is expected that client 2 will success because those names has been
+            # released by client 1.
+            self.assertEqual(len(server.srp_server_get_services()), 1)
+            self.assertEqual(len(server.srp_server_get_hosts()), 1)
+            self.assertEqual(server.srp_server_get_host('my-host-1')['deleted'], 'false')
+            self.assertEqual(server.srp_server_get_service('my-service-1', '_ipps._tcp')['deleted'], 'false')
+
+            #
+            # 8. Stop client and server and clear previous host and services
+            #    to prepare for next iteration of the test.
+
+            client_1.srp_client_clear_host()
+            client_1.srp_client_stop()
+            client_2.srp_client_clear_host()
+            client_2.srp_client_stop()
+            server.srp_server_set_enabled(False)
+            self.simulator.go(15)
 
 
 if __name__ == '__main__':

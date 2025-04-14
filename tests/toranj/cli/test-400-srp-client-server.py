@@ -57,86 +57,97 @@ verify(server.get_state() == 'leader')
 client.join(server)
 verify(client.get_state() == 'router')
 
-# Check initial state of SRP client and server
-verify(server.srp_server_get_state() == 'disabled')
-verify(server.srp_server_get_addr_mode() == 'unicast')
-verify(client.srp_client_get_state() == 'Disabled')
+# Perform test steps twice, with and without SRP coder
+# use enabled on client.
 
-# Start server and client and register single service
-server.srp_server_enable()
+for client_coder_enable in [False, True]:
+    print('-' * 80)
+    client.srp_client_set_coder_enable(client_coder_enable)
 
-client.srp_client_enable_auto_start_mode()
-verify(client.srp_client_get_auto_start_mode() == 'Enabled')
-client.srp_client_set_host_name('host')
-client.srp_client_set_host_address('fd00::cafe')
-client.srp_client_add_service('ins', '_test._udp', 777, 2, 1)
+    # Check initial state of SRP client and server
+    verify(server.srp_server_get_state() == 'disabled')
+    verify(server.srp_server_get_addr_mode() == 'unicast')
+    verify(client.srp_client_get_state() == 'Disabled')
 
+    # Start server and client and register single service
+    server.srp_server_enable()
 
-def check_server_has_service():
-    verify(len(server.srp_server_get_hosts()) > 0)
+    client.srp_client_enable_auto_start_mode()
+    verify(client.srp_client_get_auto_start_mode() == 'Enabled')
+    client.srp_client_set_host_name('host')
+    client.srp_client_set_host_address('fd00::cafe')
+    client.srp_client_add_service('ins', '_test._udp', 777, 2, 1)
 
+    def check_server_has_service():
+        verify(len(server.srp_server_get_hosts()) > 0)
 
-verify_within(check_server_has_service, WAIT_TIME)
+    verify_within(check_server_has_service, WAIT_TIME)
 
-# Check state and service/host info on client and server
+    # Check state and service/host info on client and server
 
-verify(client.srp_client_get_auto_start_mode() == 'Enabled')
-verify(client.srp_client_get_state() == 'Enabled')
-verify(client.srp_client_get_server_address() == server.get_mleid_ip_addr())
+    verify(client.srp_client_get_auto_start_mode() == 'Enabled')
+    verify(client.srp_client_get_state() == 'Enabled')
+    verify(client.srp_client_get_server_address() == server.get_mleid_ip_addr())
 
-verify(client.srp_client_get_host_state() == 'Registered')
-verify(client.srp_client_get_host_name() == 'host')
-addresses = client.srp_client_get_host_address()
-verify(len(addresses) == 1)
-verify(addresses[0] == 'fd00:0:0:0:0:0:0:cafe')
+    verify(client.srp_client_get_host_state() == 'Registered')
+    verify(client.srp_client_get_host_name() == 'host')
+    addresses = client.srp_client_get_host_address()
+    verify(len(addresses) == 1)
+    verify(addresses[0] == 'fd00:0:0:0:0:0:0:cafe')
 
-services = client.srp_client_get_services()
-verify(len(services) == 1)
-service = services[0]
-verify(service['instance'] == 'ins')
-verify(service['name'] == '_test._udp')
-verify(service['state'] == 'Registered')
-verify(service['port'] == '777')
-verify(service['priority'] == '2')
-verify(service['weight'] == '1')
+    services = client.srp_client_get_services()
+    verify(len(services) == 1)
+    service = services[0]
+    verify(service['instance'] == 'ins')
+    verify(service['name'] == '_test._udp')
+    verify(service['state'] == 'Registered')
+    verify(service['port'] == '777')
+    verify(service['priority'] == '2')
+    verify(service['weight'] == '1')
 
-verify(server.srp_server_get_state() == 'running')
+    verify(server.srp_server_get_state() == 'running')
 
-hosts = server.srp_server_get_hosts()
-verify(len(hosts) == 1)
-host = hosts[0]
-verify(host['name'] == 'host')
-verify(host['deleted'] == 'false')
-verify(host['addresses'] == ['fd00:0:0:0:0:0:0:cafe'])
+    hosts = server.srp_server_get_hosts()
+    verify(len(hosts) == 1)
+    host = hosts[0]
+    verify(host['name'] == 'host')
+    verify(host['deleted'] == 'false')
+    verify(host['addresses'] == ['fd00:0:0:0:0:0:0:cafe'])
 
-services = server.srp_server_get_services()
-verify(len(services) == 1)
-service = services[0]
-verify(service['instance'] == 'ins')
-verify(service['name'] == '_test._udp')
-verify(service['deleted'] == 'false')
-verify(service['subtypes'] == '(null)')
-verify(service['port'] == '777')
-verify(service['priority'] == '2')
-verify(service['weight'] == '1')
-verify(service['host'] == 'host')
-verify(service['addresses'] == ['fd00:0:0:0:0:0:0:cafe'])
+    services = server.srp_server_get_services()
+    verify(len(services) == 1)
+    service = services[0]
+    verify(service['instance'] == 'ins')
+    verify(service['name'] == '_test._udp')
+    verify(service['deleted'] == 'false')
+    verify(service['subtypes'] == '(null)')
+    verify(service['port'] == '777')
+    verify(service['priority'] == '2')
+    verify(service['weight'] == '1')
+    verify(service['host'] == 'host')
+    verify(service['addresses'] == ['fd00:0:0:0:0:0:0:cafe'])
 
-# Check the client address is added in EID cache table (snoop).
+    # Check the client address is added in EID cache table (snoop).
 
-cache_table = server.get_eidcache()
-client_rloc = int(client.get_rloc16(), 16)
-found_entry = False
+    cache_table = server.get_eidcache()
+    client_rloc = int(client.get_rloc16(), 16)
+    found_entry = False
 
-for entry in cache_table:
-    fields = entry.strip().split(' ')
-    if (fields[0] == 'fd00:0:0:0:0:0:0:cafe'):
-        verify(int(fields[1], 16) == client_rloc)
-        verify(fields[2] == 'snoop')
-        found_entry = True
-        break
+    for entry in cache_table:
+        fields = entry.strip().split(' ')
+        if (fields[0] == 'fd00:0:0:0:0:0:0:cafe'):
+            verify(int(fields[1], 16) == client_rloc)
+            verify(fields[2] == 'snoop')
+            found_entry = True
+            break
 
-verify(found_entry)
+    verify(found_entry)
+
+    # Stop client and server and clear previous configs.
+
+    client.srp_client_clear_host()
+    client.srp_client_stop()
+    server.srp_server_disable()
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

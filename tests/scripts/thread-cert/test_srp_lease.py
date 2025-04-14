@@ -72,120 +72,141 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         server = self.nodes[SERVER]
         client = self.nodes[CLIENT]
 
-        #
-        # 0. Start the server and client devices.
-        #
+        # Perform test steps twice, with and without SRP coder
+        # use enabled on client.
 
-        server.srp_server_set_enabled(True)
-        server.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
-        server.start()
-        self.simulator.go(config.LEADER_STARTUP_DELAY)
-        self.assertEqual(server.get_state(), 'leader')
-        self.simulator.go(5)
+        for client_coder_enable in [False, True]:
+            print('-' * 80)
+            client.srp_client_set_coder_enable(client_coder_enable)
 
-        client.start()
-        self.simulator.go(config.ROUTER_STARTUP_DELAY)
-        self.assertEqual(client.get_state(), 'router')
+            #
+            # 0. Start the server and client devices.
+            #
 
-        #
-        # 1. Register a single service and verify that it works.
-        #
+            server.srp_server_set_enabled(True)
+            server.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
+            server.start()
+            self.simulator.go(config.LEADER_STARTUP_DELAY)
+            self.assertEqual(server.get_state(), 'leader')
+            self.simulator.go(5)
 
-        self.assertEqual(client.srp_client_get_auto_start_mode(), 'Enabled')
+            client.start()
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
+            self.assertEqual(client.get_state(), 'router')
 
-        client.srp_client_set_host_name('my-host')
-        client.srp_client_set_host_address('2001::1')
-        client.srp_client_add_service('my-service', '_ipps._tcp', 12345)
-        self.simulator.go(2)
+            #
+            # 1. Register a single service and verify that it works.
+            #
 
-        self.check_host_and_service(server, client)
+            client.srp_client_enable_auto_start_mode()
+            self.assertEqual(client.srp_client_get_auto_start_mode(), 'Enabled')
 
-        #
-        # 2. Stop the client and wait for the service instance LEASE to expire.
-        #
+            client.srp_client_set_host_name('my-host')
+            client.srp_client_set_host_address('2001::1')
+            client.srp_client_add_service('my-service', '_ipps._tcp', 12345)
+            self.simulator.go(6)
 
-        client.srp_client_stop()
-        self.simulator.go(LEASE + 1)
+            self.check_host_and_service(server, client)
 
-        # The SRP server should remove the host and service but retain their names
-        # since the the KEY LEASE hasn't expired yet.
-        self.assertEqual(server.srp_server_get_host('my-host')['deleted'], 'true')
-        self.assertEqual(server.srp_server_get_service('my-service', '_ipps._tcp')['deleted'], 'true')
+            #
+            # 2. Stop the client and wait for the service instance LEASE to expire.
+            #
 
-        # Start the client again, the same service should be successfully registered.
-        client.srp_client_enable_auto_start_mode()
-        self.simulator.go(15)
+            client.srp_client_stop()
 
-        self.check_host_and_service(server, client)
+            client_services = client.srp_client_get_services()
+            print(client_services)
 
-        #
-        # 3. Stop the client and wait for the KEY LEASE to expire.
-        #    The host and service instance should be fully removed by the SRP server.
-        #
+            self.simulator.go(LEASE + 1)
 
-        client.srp_client_stop()
-        self.simulator.go(KEY_LEASE + 1)
+            # The SRP server should remove the host and service but retain their names
+            # since the the KEY LEASE hasn't expired yet.
+            self.assertEqual(server.srp_server_get_host('my-host')['deleted'], 'true')
+            self.assertEqual(server.srp_server_get_service('my-service', '_ipps._tcp')['deleted'], 'true')
 
-        # The host and service are expected to be fully removed.
-        self.assertEqual(len(server.srp_server_get_hosts()), 0)
-        self.assertEqual(len(server.srp_server_get_services()), 0)
+            # Start the client again, the same service should be successfully registered.
+            client.srp_client_enable_auto_start_mode()
+            self.simulator.go(6)
 
-        # Start the client again, the same service should be successfully registered.
-        client.srp_client_enable_auto_start_mode()
-        self.simulator.go(15)
+            self.check_host_and_service(server, client)
 
-        self.check_host_and_service(server, client)
+            #
+            # 3. Stop the client and wait for the KEY LEASE to expire.
+            #    The host and service instance should be fully removed by the SRP server.
+            #
 
-        #
-        # 4. Clear the first service, lengthen the lease time and register a second service.
-        #    Verify that the lease time of the first service is not affected by new SRP
-        #    registrations.
-        #
+            client.srp_client_stop()
+            self.simulator.go(KEY_LEASE + 1)
 
-        client.srp_client_clear_service('my-service', '_ipps._tcp')
-        server.srp_server_set_lease_range(50 * LEASE, 50 * LEASE, 50 * KEY_LEASE, 50 * KEY_LEASE)
-        client.srp_client_add_service('my-service2', '_ipps._tcp', 12345)
+            # The host and service are expected to be fully removed.
+            self.assertEqual(len(server.srp_server_get_hosts()), 0)
+            self.assertEqual(len(server.srp_server_get_services()), 0)
 
-        # Wait for the first service to expire.
-        self.simulator.go(LEASE + 2)
-        self.assertEqual(server.srp_server_get_service('my-service', '_ipps._tcp')['deleted'], 'true')
+            # Start the client again, the same service should be successfully registered.
+            client.srp_client_enable_auto_start_mode()
+            self.simulator.go(6)
 
-        # Wait for the first service to be fully removed.
-        self.simulator.go(KEY_LEASE - LEASE + 2)
-        self.assertEqual(len(server.srp_server_get_services()), 1)
-        self.assertEqual(len(server.srp_server_get_hosts()), 1)
+            self.check_host_and_service(server, client)
 
-        #
-        # 5. Clear the second service, shorten the lease time and register a third service.
-        #    Verify that the lease time of the second service is not affected by new SRP
-        #    registrations.
-        #
+            #
+            # 4. Clear the first service, lengthen the lease time and register a second service.
+            #    Verify that the lease time of the first service is not affected by new SRP
+            #    registrations.
+            #
 
-        client.srp_client_clear_service('my-service2', '_ipps._tcp')
-        server.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
-        client.srp_client_add_service('my-service3', '_ipps._tcp', 12345)
+            client.srp_client_clear_service('my-service', '_ipps._tcp')
+            server.srp_server_set_lease_range(50 * LEASE, 50 * LEASE, 50 * KEY_LEASE, 50 * KEY_LEASE)
+            client.srp_client_add_service('my-service2', '_ipps._tcp', 12345)
 
-        # The second service has lease time of 50 * LEASE and should not expire.
-        self.simulator.go(LEASE + 2)
-        self.assertEqual(server.srp_server_get_service('my-service2', '_ipps._tcp')['deleted'], 'false')
+            # Wait for the first service to expire.
+            self.simulator.go(LEASE + 2)
+            self.assertEqual(server.srp_server_get_service('my-service', '_ipps._tcp')['deleted'], 'true')
 
-        # The second service has key-lease time of 50 * KEY_LEASE and should not expire.
-        self.simulator.go(KEY_LEASE - LEASE + 2)
-        self.assertEqual(len(server.srp_server_get_services()), 2)
-        self.assertEqual(len(server.srp_server_get_hosts()), 1)
+            # Wait for the first service to be fully removed.
+            self.simulator.go(KEY_LEASE - LEASE + 2)
+            self.assertEqual(len(server.srp_server_get_services()), 1)
+            self.assertEqual(len(server.srp_server_get_hosts()), 1)
 
-        #
-        # 6. Clear the third service. The host and services should expire in lease time.
-        #    Verify that the second service and the third service are removed when their host
-        #    expires.
-        #
-        client.srp_client_clear_service('my-service3', '_ipps._tcp')
-        self.simulator.go(LEASE + 2)
-        self.assertEqual(len(server.srp_server_get_services()), 2)
-        self.assertEqual(server.srp_server_get_service('my-service2', '_ipps._tcp')['deleted'], 'true')
-        self.assertEqual(server.srp_server_get_service('my-service3', '_ipps._tcp')['deleted'], 'true')
-        self.assertEqual(len(server.srp_server_get_hosts()), 1)
-        self.assertEqual(server.srp_server_get_host('my-host')['deleted'], 'true')
+            #
+            # 5. Clear the second service, shorten the lease time and register a third service.
+            #    Verify that the lease time of the second service is not affected by new SRP
+            #    registrations.
+            #
+
+            client.srp_client_clear_service('my-service2', '_ipps._tcp')
+            server.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
+            client.srp_client_add_service('my-service3', '_ipps._tcp', 12345)
+
+            # The second service has lease time of 50 * LEASE and should not expire.
+            self.simulator.go(LEASE + 2)
+            self.assertEqual(server.srp_server_get_service('my-service2', '_ipps._tcp')['deleted'], 'false')
+
+            # The second service has key-lease time of 50 * KEY_LEASE and should not expire.
+            self.simulator.go(KEY_LEASE - LEASE + 2)
+            self.assertEqual(len(server.srp_server_get_services()), 2)
+            self.assertEqual(len(server.srp_server_get_hosts()), 1)
+
+            #
+            # 6. Clear the third service. The host and services should expire in lease time.
+            #    Verify that the second service and the third service are removed when their host
+            #    expires.
+            #
+            client.srp_client_clear_service('my-service3', '_ipps._tcp')
+            self.simulator.go(LEASE + 2)
+            self.assertEqual(len(server.srp_server_get_services()), 2)
+            self.assertEqual(server.srp_server_get_service('my-service2', '_ipps._tcp')['deleted'], 'true')
+            self.assertEqual(server.srp_server_get_service('my-service3', '_ipps._tcp')['deleted'], 'true')
+            self.assertEqual(len(server.srp_server_get_hosts()), 1)
+            self.assertEqual(server.srp_server_get_host('my-host')['deleted'], 'true')
+
+            #
+            # 7. Stop client and server and clear previous configs.
+            #
+
+            client.srp_client_clear_host()
+            client.srp_client_stop()
+            server.srp_server_set_enabled(False)
+            self.simulator.go(15)
 
     def check_host_and_service(self, server, client):
         """Check that we have properly registered host and service instance.
@@ -204,7 +225,7 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         self.assertEqual(int(client_service['weight']), 0)
 
         # Verify that the client received a SUCCESS response for the server.
-        self.assertEqual(client_service['state'], 'Registered')
+        self.assertIn(client_service['state'], ['Registered', 'Refreshing'])
 
         # Wait for a KEY LEASE period to make sure that the client has refreshed
         # the host and service instance.

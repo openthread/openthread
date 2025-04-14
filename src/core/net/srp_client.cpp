@@ -355,6 +355,11 @@ Client::Client(Instance &aInstance)
     , mServiceKeyRecordEnabled(false)
     , mUseShortLeaseOption(false)
 #endif
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    , mMessageCoderEnabled(kDefaultMessageCoderEnable)
+    , mSkipCoderDueToRepeatedFailures(false)
+#endif
+    , mRegistrationFailureCount(0)
     , mNextMessageId(0)
     , mResponseMessageId(0)
     , mAutoHostAddressCount(0)
@@ -416,6 +421,12 @@ Error Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
             aServerSockAddr.ToString().AsCString());
 
     Resume();
+
+    ResetRegistrationFailureCount();
+
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    mSkipCoderDueToRepeatedFailures = false;
+#endif
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     if (aRequester == kRequesterAuto)
@@ -884,6 +895,7 @@ void Client::ClearHostAndServices(void)
 
     mTxFailureRetryCount = 0;
     ResetRetryWaitInterval();
+    ResetRegistrationFailureCount();
 
     mServices.Clear();
     mHostInfo.Clear();
@@ -975,6 +987,37 @@ void Client::InvokeCallback(Error aError, const HostInfo &aHostInfo, const Servi
     mCallback.InvokeIfSet(aError, &aHostInfo, mServices.GetHead(), aRemovedServices);
 }
 
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+bool Client::ShouldUseMessageCoder(void) const
+{
+    bool shouldUseCoder = false;
+
+    // We use message coder if it is explicitly enabled, the selected
+    // server version (learned from Network Data) indicates its
+    // support for decoder, and `mSkipCoderDueToRepeatedFailures`
+    // is not set.
+    //
+    // `mSkipCoderDueToRepeatedFailures` is set after consecutive
+    // registration failures with the server. It acts as a fallback
+    // safeguard, in case there is any issue with server's decoder
+    // implementation.
+
+    VerifyOrExit(mMessageCoderEnabled);
+
+    if (mAutoStart.HasSelectedServer())
+    {
+        VerifyOrExit(mAutoStart.GetServerVersion() >= kMinServerVersionForCoder);
+    }
+
+    VerifyOrExit(!mSkipCoderDueToRepeatedFailures);
+
+    shouldUseCoder = true;
+
+exit:
+    return shouldUseCoder;
+}
+#endif // OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+
 void Client::SendUpdate(void)
 {
     static const ItemState kNewStateOnMessageTx[]{
@@ -993,29 +1036,69 @@ void Client::SendUpdate(void)
     uint32_t length;
     bool     anyChanged;
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Allocate message
+
     info.mMessage.Reset(mSocket.NewMessage());
     VerifyOrExit(info.mMessage != nullptr, error = kErrorNoBufs);
 
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    if (ShouldUseMessageCoder())
+    {
+        SuccessOrExit(error = info.mCodedMsg.AllocateMessage(mSocket));
+    }
+#endif
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Prepare SRP Update
+
     SuccessOrExit(error = PrepareUpdateMessage(info));
 
-    length = info.mMessage->GetLength() + sizeof(Ip6::Udp::Header) + sizeof(Ip6::Header);
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check message length. If it exceeds the IPv6 datagram
+    // size, re-prepare the message using "single service mode".
 
-    if (length >= Ip6::kMaxDatagramLength)
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    if (info.mCodedMsg.HasMessage())
+    {
+        length = info.mCodedMsg.GetMessage()->GetLength();
+    }
+    else
+#endif
+    {
+        length = info.mMessage->GetLength();
+    }
+
+    if (length >= Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header) - sizeof(Ip6::Header))
     {
         LogInfo("Msg len %lu is larger than MTU, enabling single service mode", ToUlong(length));
         mSingleServiceMode = true;
-        IgnoreError(info.mMessage->SetLength(0));
         SuccessOrExit(error = PrepareUpdateMessage(info));
     }
 
-    SuccessOrExit(error = mSocket.SendTo(*info.mMessage, Ip6::MessageInfo()));
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send the SRP Update message
 
-    // Ownership of the message is transferred to the socket upon a
-    // successful `SendTo()` call.
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    if (info.mCodedMsg.HasMessage())
+    {
+        SuccessOrExit(error = info.mCodedMsg.SendMessage(mSocket));
+    }
+    else
+#endif
+    {
+        SuccessOrExit(error = mSocket.SendTo(*info.mMessage, Ip6::MessageInfo()));
 
-    info.mMessage.Release();
+        // Ownership of the message is transferred to the socket upon a
+        // successful `SendTo()` call.
 
-    LogInfo("Send update, msg-id:0x%x", mNextMessageId);
+        info.mMessage.Release();
+    }
+
+    LogInfo("Send msg, msg-id:0x%x", mNextMessageId);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Update states
 
     // State changes:
     //   kToAdd     -> kAdding
@@ -1105,9 +1188,14 @@ Error Client::PrepareUpdateMessage(MsgInfo &aInfo)
     Error             error = kErrorNone;
     Dns::UpdateHeader header;
 
+    IgnoreError(aInfo.mMessage->SetLength(0));
     aInfo.mDomainNameOffset = MsgInfo::kUnknownOffset;
     aInfo.mHostNameOffset   = MsgInfo::kUnknownOffset;
     aInfo.mRecordCount      = 0;
+
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    aInfo.mCodedMsg.Init();
+#endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     aInfo.mKeyInfo.SetKeyRef(Get<Crypto::Storage::KeyRefManager>().KeyRefFor(Crypto::Storage::KeyRefManager::kEcdsa));
@@ -1136,6 +1224,11 @@ Error Client::PrepareUpdateMessage(MsgInfo &aInfo)
     aInfo.mDomainNameOffset = aInfo.mMessage->GetLength();
     SuccessOrExit(error = Dns::Name::AppendName(mDomainName, *aInfo.mMessage));
     SuccessOrExit(error = aInfo.mMessage->Append(Dns::Zone()));
+
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    SuccessOrExit(
+        error = aInfo.mCodedMsg.EncodeHeaderBlock(mNextMessageId, mDomainName, DetermineTtl(), mHostInfo.GetName()));
+#endif
 
     // Prepare Update section
 
@@ -1435,6 +1528,10 @@ Error Client::AppendServiceInstruction(Service &aService, MsgInfo &aInfo)
         }
     }
 
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    SuccessOrExit(error = aInfo.mCodedMsg.EncodeServiceBlock(aService, removing));
+#endif
+
     //----------------------------------
     // Service Description Instruction
 
@@ -1478,6 +1575,10 @@ Error Client::AppendServiceInstruction(Service &aService, MsgInfo &aInfo)
         // is added here under `REFERENCE_DEVICE` config and is intended
         // for testing only.
 
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+        VerifyOrExit(!aInfo.mCodedMsg.HasMessage());
+#endif
+
         SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, *aInfo.mMessage));
         SuccessOrExit(error = AppendKeyRecord(aInfo));
     }
@@ -1499,6 +1600,14 @@ Error Client::AppendHostDescriptionInstruction(MsgInfo &aInfo)
     SuccessOrExit(error = AppendHostName(aInfo));
     SuccessOrExit(error = AppendDeleteAllRrsets(aInfo));
     aInfo.mRecordCount++;
+
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    {
+        bool hasAnyAddress = mHostInfo.IsAutoAddressEnabled() || (mHostInfo.GetNumAddresses() != 0);
+
+        SuccessOrExit(error = aInfo.mCodedMsg.EncodeHostDispatch(hasAnyAddress));
+    }
+#endif
 
     // AAAA RRs
 
@@ -1532,12 +1641,37 @@ Error Client::AppendHostDescriptionInstruction(MsgInfo &aInfo)
             mlEid.mSrpRegistered = true;
             mAutoHostAddressCount++;
         }
+
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+        {
+            uint16_t addrCount = mAutoHostAddressCount;
+
+            for (Ip6::Netif::UnicastAddress &unicastAddress : Get<ThreadNetif>().GetUnicastAddresses())
+            {
+                if (unicastAddress.mSrpRegistered)
+                {
+                    addrCount--;
+                    SuccessOrExit(error = aInfo.mCodedMsg.EncodeHostAddress(unicastAddress.GetAddress(),
+                                                                            /* aHasMore */ (addrCount > 0)));
+                }
+            }
+        }
+#endif
     }
     else
     {
-        for (uint8_t index = 0; index < mHostInfo.GetNumAddresses(); index++)
+        uint8_t numAddresses = mHostInfo.GetNumAddresses();
+
+        for (uint8_t index = 0; index < numAddresses; index++)
         {
-            SuccessOrExit(error = AppendAaaaRecord(mHostInfo.GetAddress(index), aInfo));
+            const Ip6::Address &address = mHostInfo.GetAddress(index);
+
+            SuccessOrExit(error = AppendAaaaRecord(address, aInfo));
+
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+            error = aInfo.mCodedMsg.EncodeHostAddress(address, /* aHasMore */ (index + 1 < numAddresses));
+            SuccessOrExit(error);
+#endif
         }
     }
 
@@ -1585,6 +1719,10 @@ Error Client::AppendKeyRecord(MsgInfo &aInfo) const
     SuccessOrExit(error = aInfo.mKeyInfo.GetPublicKey(publicKey));
     SuccessOrExit(error = aInfo.mMessage->Append(publicKey));
     aInfo.mRecordCount++;
+
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    SuccessOrExit(error = aInfo.mCodedMsg.EncodeHostKey(publicKey));
+#endif
 
 exit:
     return error;
@@ -1651,7 +1789,11 @@ Error Client::AppendUpdateLeaseOptRecord(MsgInfo &aInfo)
     optRecord.SetDnsSecurityFlag();
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    if (mUseShortLeaseOption && !aInfo.mCodedMsg.HasMessage())
+#else
     if (mUseShortLeaseOption)
+#endif
     {
         LogInfo("Test mode - appending short variant of Lease Option");
         mKeyLease = mLease;
@@ -1735,6 +1877,10 @@ Error Client::AppendSignature(MsgInfo &aInfo)
     SuccessOrExit(error = aInfo.mMessage->Append(signature));
     UpdateRecordLengthInMessage(sig, offset, *aInfo.mMessage);
 
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    SuccessOrExit(error = aInfo.mCodedMsg.EncodeFooterBlock(mLease, mKeyLease, signature));
+#endif
+
 exit:
     return error;
 }
@@ -1749,6 +1895,22 @@ void Client::UpdateRecordLengthInMessage(Dns::ResourceRecord &aRecord, uint16_t 
 
     aRecord.SetLength(aMessage.GetLength() - aOffset - sizeof(Dns::ResourceRecord));
     aMessage.Write(aOffset, aRecord);
+}
+
+void Client::IncrementRegistrationFailureCount(void)
+{
+    VerifyOrExit(mRegistrationFailureCount < NumericLimits<uint8_t>::kMax);
+    mRegistrationFailureCount++;
+
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    if (mRegistrationFailureCount >= kTotalFailureCountToSkipCoder)
+    {
+        mSkipCoderDueToRepeatedFailures = true;
+    }
+#endif
+
+exit:
+    return;
 }
 
 void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -1830,6 +1992,28 @@ void Client::ProcessResponse(Message &aMessage)
         GrowRetryWaitInterval();
         SetState(kStateToRetry);
         InvokeCallback(error);
+
+        IncrementRegistrationFailureCount();
+
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+        // We skip message coder use for this server after repeated
+        // `kResponseFormatError` failures. This safeguards against
+        // potential server decoder implementation issues that may
+        // prevent it from decoding of coded SRP messages (despite
+        // the Network Data entry indicating coder support by the
+        // server).
+        //
+        // `IncrementRegistrationFailureCount()` performs a similar
+        // check with a higher failure threshold, skipping the coder
+        // use after repeated failures regardless of the error
+        // reason.
+
+        if ((header.GetResponseCode() == Dns::Header::kResponseFormatError) &&
+            (mRegistrationFailureCount >= kFormatErrorFailureCountToSkipCoder))
+        {
+            mSkipCoderDueToRepeatedFailures = true;
+        }
+#endif
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
         if ((error == kErrorDuplicated) || (error == kErrorSecurity))
@@ -1951,6 +2135,8 @@ void Client::HandleUpdateDone(void)
     }
 
     ResetRetryWaitInterval();
+    ResetRegistrationFailureCount();
+
     SetState(kStateUpdated);
 
     GetRemovedServices(removedServices);
@@ -2190,6 +2376,7 @@ void Client::HandleTimer(void)
 
     case kStateUpdating:
         mSingleServiceMode = false;
+        IncrementRegistrationFailureCount();
         LogRetryWaitInterval();
         LogInfo("Timed out, no response");
         GrowRetryWaitInterval();
@@ -2294,6 +2481,7 @@ void Client::ProcessAutoStart(void)
     if (SelectUnicastEntry(NetworkData::Service::kAddrInServiceData, unicastInfo) == kErrorNone)
     {
         mAutoStart.SetState(AutoStart::kSelectedUnicastPreferred);
+        mAutoStart.SetServerVersion(unicastInfo.mVersion);
         serverSockAddr = unicastInfo.mSockAddr;
     }
     else if (Get<NetworkData::Service::Manager>().FindPreferredDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
@@ -2315,10 +2503,12 @@ void Client::ProcessAutoStart(void)
         }
 
         mAutoStart.SetState(AutoStart::kSelectedAnycast);
+        mAutoStart.SetServerVersion(anycastInfo.mVersion);
     }
     else if (SelectUnicastEntry(NetworkData::Service::kAddrInServerData, unicastInfo) == kErrorNone)
     {
         mAutoStart.SetState(AutoStart::kSelectedUnicast);
+        mAutoStart.SetServerVersion(unicastInfo.mVersion);
         serverSockAddr = unicastInfo.mSockAddr;
     }
 
@@ -2511,6 +2701,7 @@ void Client::SelectNextServer(bool aDisallowSwitchOnRegisteredHost)
             if (selectNext)
             {
                 serverSockAddr = unicastInfo.mSockAddr;
+                mAutoStart.SetServerVersion(unicastInfo.mVersion);
                 ExitNow();
             }
 

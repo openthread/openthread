@@ -179,6 +179,45 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+
+/**
+ * @cli srp client coder (get,enable,disable)
+ * @code
+ * srp client coder enable
+ * Done
+ * @endcode
+ * @code
+ * srp client coder
+ * Enabled
+ * Done
+ * @endcode
+ * @cparam srp client coder [@ca{enable}|@ca{disable}]
+ * @par
+ * Gets or enables/disables use of SRP coder by SRP client.
+ * @moreinfo{@srp}.
+ * @sa otSrpClientSetMessageCoderEnabled
+ */
+template <> otError SrpClient::Process<Cmd("coder")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputEnabledDisabledStatus(otSrpClientIsMessageCoderEnabled(GetInstancePtr()));
+        ExitNow();
+    }
+
+    SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
+    otSrpClientSetMessageCoderEnabled(GetInstancePtr(), enable);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+
 template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -982,9 +1021,20 @@ otError SrpClient::Process(Arg aArgs[])
     }
 
     static constexpr Command kCommands[] = {
-        CmdEntry("autostart"),     CmdEntry("callback"), CmdEntry("host"),    CmdEntry("keyleaseinterval"),
-        CmdEntry("leaseinterval"), CmdEntry("server"),   CmdEntry("service"), CmdEntry("start"),
-        CmdEntry("state"),         CmdEntry("stop"),     CmdEntry("ttl"),
+        CmdEntry("autostart"),
+        CmdEntry("callback"),
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+        CmdEntry("coder"),
+#endif
+        CmdEntry("host"),
+        CmdEntry("keyleaseinterval"),
+        CmdEntry("leaseinterval"),
+        CmdEntry("server"),
+        CmdEntry("service"),
+        CmdEntry("start"),
+        CmdEntry("state"),
+        CmdEntry("stop"),
+        CmdEntry("ttl"),
     };
 
     static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");

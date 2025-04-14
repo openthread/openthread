@@ -861,8 +861,35 @@ public:
      */
     void HandleServiceUpdateResult(ServiceUpdateId aId, Error aError);
 
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE && OPENTHREAD_CONFIG_SRP_CODER_TEST_API_ENABLE
+    /**
+     * Represents different test modes for use in `SetTestMode()`.
+     */
+    enum TestMode : uint8_t{
+        kTestModeDisabled,           ///< Test mode is disabled (normal operation).
+        kTestModeRejectCodedMessage, ///< Send `FormatError` for a SRP coded message (even when supported)
+        kTestModeIgnoreCodedMessage, ///< Ignore a SRP coded message (even when supported).
+    };
+
+    /**
+     * Sets the test mode for the SRP Server.
+     *
+     * The test mode is intended for testing SRP client behavior by forcing the SRP server to act in specific ways.
+     * For example, the server can be configured to reject or ignore coded messages even if SRP coder support is
+     * enabled. This allows for testing and validating client fallback mechanisms, such as switching to using uncoded
+     * messages after repeated failures with coded messages.
+     *
+     * @param[in] aTestMode The new test mode.
+     */
+    void SetTestMode(TestMode aTestMode) { mTestMode = aTestMode; }
+#endif
+
 private:
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE
+    static constexpr uint8_t kSrpVersion = 1;
+#else
     static constexpr uint8_t kSrpVersion = 0;
+#endif
 
     static constexpr uint16_t kUdpPayloadSize = Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
 
@@ -997,6 +1024,9 @@ private:
     void        HandleUpdate(Host &aHost, const MessageMetadata &aMetadata);
     void        RemoveHost(Host *aHost, RetainName aRetainName);
     bool        HasNameConflictsWith(Host &aHost) const;
+    void        SendResponse(const Message              &aRequest,
+                             Dns::UpdateHeader::Response aResponseCode,
+                             const Ip6::MessageInfo     &aMessageInfo);
     void        SendResponse(const Dns::UpdateHeader    &aHeader,
                              Dns::UpdateHeader::Response aResponseCode,
                              const Ip6::MessageInfo     &aMessageInfo);
@@ -1055,6 +1085,10 @@ private:
 #endif
 
     otSrpServerResponseCounters mResponseCounters;
+
+#if OPENTHREAD_CONFIG_SRP_CODER_ENABLE && OPENTHREAD_CONFIG_SRP_CODER_TEST_API_ENABLE
+    TestMode mTestMode;
+#endif
 };
 
 } // namespace Srp
