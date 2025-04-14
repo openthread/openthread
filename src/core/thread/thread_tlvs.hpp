@@ -41,7 +41,6 @@
 #include "common/tlvs.hpp"
 #include "meshcop/network_name.hpp"
 #include "net/ip6_address.hpp"
-#include "thread/mle.hpp"
 #include "thread/mle_types.hpp"
 
 namespace ot {

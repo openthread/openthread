@@ -182,8 +182,8 @@ void SupervisionListener::UpdateOnReceive(const Mac::Address &aSourceAddress, bo
 {
     // If listener is enabled and device is a child and it received a secure frame from its parent, restart the timer.
 
-    VerifyOrExit(mTimer.IsRunning() && aIsSecure && Get<Mle::MleRouter>().IsChild() &&
-                 (Get<NeighborTable>().FindNeighbor(aSourceAddress) == &Get<Mle::MleRouter>().GetParent()));
+    VerifyOrExit(mTimer.IsRunning() && aIsSecure && Get<Mle::Mle>().IsChild() &&
+                 (Get<NeighborTable>().FindNeighbor(aSourceAddress) == &Get<Mle::Mle>().GetParent()));
 
     RestartTimer();
 
@@ -193,7 +193,7 @@ exit:
 
 void SupervisionListener::RestartTimer(void)
 {
-    if ((mTimeout != 0) && !Get<Mle::MleRouter>().IsDisabled() && !Get<MeshForwarder>().GetRxOnWhenIdle())
+    if ((mTimeout != 0) && !Get<Mle::Mle>().IsDisabled() && !Get<MeshForwarder>().GetRxOnWhenIdle())
     {
         mTimer.Start(Time::SecToMsec(mTimeout));
     }
@@ -205,7 +205,7 @@ void SupervisionListener::RestartTimer(void)
 
 void SupervisionListener::HandleTimer(void)
 {
-    VerifyOrExit(Get<Mle::MleRouter>().IsChild() && !Get<MeshForwarder>().GetRxOnWhenIdle());
+    VerifyOrExit(Get<Mle::Mle>().IsChild() && !Get<MeshForwarder>().GetRxOnWhenIdle());
 
     LogWarn("Supervision timeout. No frame from parent in %u sec", mTimeout);
     mCounter++;

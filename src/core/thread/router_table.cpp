@@ -175,7 +175,7 @@ Router *RouterTable::Allocate(uint8_t aRouterId)
 
     mRouterIdSequence++;
     mRouterIdSequenceLastUpdated = TimerMilli::GetNow();
-    Get<Mle::MleRouter>().ResetAdvertiseInterval();
+    Get<Mle::Mle>().ResetAdvertiseInterval();
 
     LogNote("Allocate router id %d", aRouterId);
 
@@ -190,7 +190,7 @@ Error RouterTable::Release(uint8_t aRouterId)
 
     OT_ASSERT(aRouterId <= Mle::kMaxRouterId);
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsLeader(), error = kErrorInvalidState);
+    VerifyOrExit(Get<Mle::Mle>().IsLeader(), error = kErrorInvalidState);
 
     router = FindRouterById(aRouterId);
     VerifyOrExit(router != nullptr, error = kErrorNotFound);
@@ -211,7 +211,7 @@ Error RouterTable::Release(uint8_t aRouterId)
     Get<AddressResolver>().RemoveEntriesForRouterId(aRouterId);
     Get<NetworkData::Leader>().RemoveBorderRouter(Mle::Rloc16FromRouterId(aRouterId),
                                                   NetworkData::Leader::kMatchModeRouterId);
-    Get<Mle::MleRouter>().ResetAdvertiseInterval();
+    Get<Mle::Mle>().ResetAdvertiseInterval();
 
     LogNote("Release router id %d", aRouterId);
 
@@ -237,14 +237,14 @@ void RouterTable::RemoveRouterLink(Router &aRouter)
 
             if (GetLinkCost(router) >= Mle::kMaxRouteCost)
             {
-                Get<Mle::MleRouter>().ResetAdvertiseInterval();
+                Get<Mle::Mle>().ResetAdvertiseInterval();
             }
         }
     }
 
     if (aRouter.GetNextHop() == Mle::kInvalidRouterId)
     {
-        Get<Mle::MleRouter>().ResetAdvertiseInterval();
+        Get<Mle::Mle>().ResetAdvertiseInterval();
 
         // Clear all EID-to-RLOC entries associated with the router.
         Get<AddressResolver>().RemoveEntriesForRouterId(aRouter.GetRouterId());
@@ -328,7 +328,7 @@ exit:
     return error;
 }
 
-const Router *RouterTable::GetLeader(void) const { return FindRouterById(Get<Mle::MleRouter>().GetLeaderId()); }
+const Router *RouterTable::GetLeader(void) const { return FindRouterById(Get<Mle::Mle>().GetLeaderId()); }
 
 uint32_t RouterTable::GetLeaderAge(void) const
 {
@@ -411,7 +411,7 @@ void RouterTable::GetNextHopAndPathCost(uint16_t aDestRloc16, uint16_t &aNextHop
     router  = FindRouterById(Mle::RouterIdFromRloc16(aDestRloc16));
     nextHop = (router != nullptr) ? FindNextHopOf(*router) : nullptr;
 
-    if (Get<Mle::MleRouter>().IsChild())
+    if (Get<Mle::Mle>().IsChild())
     {
         const Router &parent = Get<Mle::Mle>().GetParent();
         bool          destIsParentOrItsChild;
@@ -544,7 +544,7 @@ void RouterTable::UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::Router
         }
     }
 
-    Get<Mle::MleRouter>().ResetAdvertiseInterval();
+    Get<Mle::Mle>().ResetAdvertiseInterval();
 
 exit:
     return;
@@ -613,7 +613,7 @@ void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighbor
             if (neighbor->IsStateValid() && (aRouteTlv.GetLinkQualityOut(index) == kLinkQuality0) &&
                 (neighbor->GetTwoWayLinkQuality() >= kLinkQuality2))
             {
-                Get<Mle::MleRouter>().ScheduleUnicastAdvertisementTo(*neighbor);
+                Get<Mle::Mle>().ScheduleUnicastAdvertisementTo(*neighbor);
             }
         }
 
@@ -684,7 +684,7 @@ void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighbor
 
         if (newCostFinite != oldCostFinite)
         {
-            Get<Mle::MleRouter>().ResetAdvertiseInterval();
+            Get<Mle::Mle>().ResetAdvertiseInterval();
             break;
         }
     }
@@ -817,7 +817,7 @@ void RouterTable::HandleTimeTick(void)
 {
     mRouterIdMap.HandleTimeTick();
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
+    VerifyOrExit(Get<Mle::Mle>().IsLeader());
 
     // Update router id sequence
     if (GetLeaderAge() >= kRouterIdSequencePeriod)
@@ -890,7 +890,7 @@ void RouterTable::HandleTableChanged(void)
     Get<Utils::HistoryTracker>().RecordRouterTableChange();
 #endif
 
-    Get<Mle::MleRouter>().UpdateAdvertiseInterval();
+    Get<Mle::Mle>().UpdateAdvertiseInterval();
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

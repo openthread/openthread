@@ -162,7 +162,7 @@ void BorderAgent::HandleNotifierEvents(Events aEvents)
 {
     if (aEvents.Contains(kEventThreadRoleChanged))
     {
-        if (Get<Mle::MleRouter>().IsAttached())
+        if (Get<Mle::Mle>().IsAttached())
         {
             Start();
         }
@@ -397,8 +397,8 @@ Error BorderAgent::MeshCoPTxtEncoder::EncodeTxtData(void)
 
     if (state.mThreadIfStatus == kThreadIfStatusActive)
     {
-        SuccessOrExit(error = AppendTxtEntry(
-                          "pt", BigEndian::HostSwap32(Get<Mle::MleRouter>().GetLeaderData().GetPartitionId())));
+        SuccessOrExit(
+            error = AppendTxtEntry("pt", BigEndian::HostSwap32(Get<Mle::Mle>().GetLeaderData().GetPartitionId())));
         if (Get<MeshCoP::ActiveDatasetManager>().GetTimestamp().IsValid())
         {
             SuccessOrExit(error = AppendTxtEntry("at", Get<MeshCoP::ActiveDatasetManager>().GetTimestamp()));
@@ -468,7 +468,7 @@ BorderAgent::MeshCoPTxtEncoder::StateBitmap BorderAgent::MeshCoPTxtEncoder::GetS
     state.mConnectionMode = kConnectionModePskc;
     state.mAvailability   = kAvailabilityHigh;
 
-    switch (Get<Mle::MleRouter>().GetRole())
+    switch (Get<Mle::Mle>().GetRole())
     {
     case Mle::DeviceRole::kRoleDisabled:
         state.mThreadIfStatus = kThreadIfStatusNotInitialized;

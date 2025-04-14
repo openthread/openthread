@@ -866,7 +866,7 @@ void TestBorderAgentMeshCoPServiceChangedCallback(void)
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("sb", txtEntry));
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("pt", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(
-        txtEntry, BigEndian::HostSwap32(node0.Get<Mle::MleRouter>().GetLeaderData().GetPartitionId())));
+        txtEntry, BigEndian::HostSwap32(node0.Get<Mle::Mle>().GetLeaderData().GetPartitionId())));
     VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("at", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<ActiveDatasetManager>().GetTimestamp()));
 

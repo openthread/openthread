@@ -146,7 +146,7 @@ Instance::Instance(void)
     , mLowpan(*this)
     , mMac(*this)
     , mMeshForwarder(*this)
-    , mMleRouter(*this)
+    , mMle(*this)
     , mDiscoverScanner(*this)
     , mAddressResolver(*this)
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -403,7 +403,7 @@ void Instance::AfterInit(void)
     // Restore datasets and network information
 
     Get<Settings>().Init();
-    Get<Mle::MleRouter>().Restore();
+    Get<Mle::Mle>().Restore();
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     Get<Trel::Link>().AfterInit();
@@ -470,7 +470,7 @@ Error Instance::ErasePersistentInfo(void)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
+    VerifyOrExit(Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
     Get<Settings>().Wipe();
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     Get<KeyManager>().DestroyTemporaryKeys();
@@ -496,7 +496,7 @@ void Instance::GetBufferInfo(BufferInfo &aInfo)
     Get<Ip6::Mpl>().GetBufferedMessageSetInfo(aInfo.mMplQueue);
 #endif
 
-    Get<Mle::MleRouter>().GetMessageQueueInfo(aInfo.mMleQueue);
+    Get<Mle::Mle>().GetMessageQueueInfo(aInfo.mMleQueue);
 
     Get<Tmf::Agent>().GetRequestAndCachedResponsesQueueInfo(aInfo.mCoapQueue);
 

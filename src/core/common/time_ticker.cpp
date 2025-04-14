@@ -74,9 +74,9 @@ void TimeTicker::HandleTimer(void)
     }
 
 #if OPENTHREAD_FTD
-    if (mReceivers & Mask(kMleRouter))
+    if (mReceivers & Mask(kMle))
     {
-        Get<Mle::MleRouter>().HandleTimeTick();
+        Get<Mle::Mle>().HandleTimeTick();
     }
 
     if (mReceivers & Mask(kAddressResolver))

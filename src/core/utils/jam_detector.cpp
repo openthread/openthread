@@ -96,7 +96,7 @@ void JamDetector::CheckState(void)
 {
     VerifyOrExit(mEnabled);
 
-    switch (Get<Mle::MleRouter>().GetRole())
+    switch (Get<Mle::Mle>().GetRole())
     {
     case Mle::kRoleDisabled:
         VerifyOrExit(mTimer.IsRunning());

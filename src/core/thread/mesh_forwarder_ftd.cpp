@@ -389,9 +389,9 @@ exit:
 
 Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &aMessage)
 {
-    Mle::MleRouter &mle   = Get<Mle::MleRouter>();
-    Error           error = kErrorNone;
-    Neighbor       *neighbor;
+    Mle::Mle &mle   = Get<Mle::Mle>();
+    Error     error = kErrorNone;
+    Neighbor *neighbor;
 
     mMeshDest = Mle::kInvalidRloc16;
 
@@ -663,7 +663,7 @@ void MeshForwarder::ResolveRoutingLoops(uint16_t aSourceRloc16, uint16_t aDestRl
     VerifyOrExit(router != nullptr);
 
     router->SetNextHopToInvalid();
-    Get<Mle::MleRouter>().ResetAdvertiseInterval();
+    Get<Mle::Mle>().ResetAdvertiseInterval();
 
 exit:
     return;
@@ -696,7 +696,7 @@ void MeshForwarder::UpdateEidRlocCacheAndStaleChild(RxInfo &aRxInfo)
 
     if (!Get<Mle::Mle>().HasMatchingRouterIdWith(aRxInfo.GetSrcAddr().GetShort()))
     {
-        Get<Mle::MleRouter>().RemoveNeighbor(*neighbor);
+        Get<Mle::Mle>().RemoveNeighbor(*neighbor);
     }
 
 exit:

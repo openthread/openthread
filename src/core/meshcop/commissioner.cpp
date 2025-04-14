@@ -265,7 +265,7 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = kErrorInvalidState);
+    VerifyOrExit(Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
     VerifyOrExit(mState == kStateDisabled, error = kErrorAlready);
 
     SuccessOrExit(error = Get<Tmf::SecureAgent>().Open());
@@ -932,7 +932,7 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
     aMessage.SetOffset(offsetRange.GetOffset());
     SuccessOrExit(error = aMessage.SetLength(offsetRange.GetEndOffset()));
 
-    joinerMessageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocalEid());
+    joinerMessageInfo.SetPeerAddr(Get<Mle::Mle>().GetMeshLocalEid());
     joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);
     joinerMessageInfo.SetPeerPort(mJoinerPort);
 
