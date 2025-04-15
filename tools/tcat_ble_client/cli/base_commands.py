@@ -107,7 +107,102 @@ class HelloCommand(BleCommand):
         return 'Send round trip "Hello world!" message.'
 
     def prepare_data(self, args, context):
-        return TLV(TcatTLVType.APPLICATION.value, bytes('Hello world!', 'ascii')).to_bytes()
+        return TLV(TcatTLVType.VENDOR_APPLICATION.value, bytes('Hello world!', 'ascii')).to_bytes()
+
+
+class GetApplicationLayersCommand(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Getting application layers....'
+
+    def get_help_string(self) -> str:
+        return 'Get supported application layer service names from device.'
+
+    def prepare_data(self, args, context):
+        return TLV(TcatTLVType.GET_APPLICATION_LAYERS.value, bytes()).to_bytes()
+
+    def process_response(self, tlv_response, context):
+        if tlv_response.type == TcatTLVType.RESPONSE_W_PAYLOAD.value:
+            payload = tlv_response.value
+            i = 0
+            print('Service names:')
+            while payload:
+                tlv_application = TLV.from_bytes(payload)
+                payload = payload[2 + len(tlv_application.value):]
+                i += 1
+                if (tlv_application.type == TcatTLVType.SERVICE_NAME_UDP.value):
+                    print(f"\tApplication {i} is UDP service: {tlv_application.value.decode('ascii')}")
+                elif (tlv_application.type == TcatTLVType.SERVICE_NAME_TCP.value):
+                    print(f"\tApplication {i} is TCP service: {tlv_application.value.decode('ascii')}")
+                else:
+                    print('\tUnknown service type.')
+        else:
+            print('Dataset extraction error.')
+
+
+class SendApplicationData1(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Sending data to application layer 1....'
+
+    def get_help_string(self) -> str:
+        return 'Send hex encoded data to application layer 1.'
+
+    def prepare_data(self, args, context):
+        payload = bytes.fromhex(args[0])
+        return TLV(TcatTLVType.APPLICATION_DATA_1.value, payload).to_bytes()
+
+
+class SendApplicationData2(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Sending data to application layer 2....'
+
+    def get_help_string(self) -> str:
+        return 'Send hex encoded data to application layer 2.'
+
+    def prepare_data(self, args, context):
+        payload = bytes.fromhex(args[0])
+        return TLV(TcatTLVType.APPLICATION_DATA_2.value, payload).to_bytes()
+
+
+class SendApplicationData3(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Sending data to application layer 3....'
+
+    def get_help_string(self) -> str:
+        return 'Send hex encoded data to application layer 3.'
+
+    def prepare_data(self, args, context):
+        payload = bytes.fromhex(args[0])
+        return TLV(TcatTLVType.APPLICATION_DATA_3.value, payload).to_bytes()
+
+
+class SendApplicationData4(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Sending data to application layer 4....'
+
+    def get_help_string(self) -> str:
+        return 'Send hex encoded data to application layer 4.'
+
+    def prepare_data(self, args, context):
+        payload = bytes.fromhex(args[0])
+        return TLV(TcatTLVType.APPLICATION_DATA_4.value, payload).to_bytes()
+
+
+class SendVendorData(BleCommand):
+
+    def get_log_string(self) -> str:
+        return 'Sending data to vendor specific application layer....'
+
+    def get_help_string(self) -> str:
+        return 'Send hex encoded data to vendor specific application layer.'
+
+    def prepare_data(self, args, context):
+        payload = bytes.fromhex(args[0])
+        return TLV(TcatTLVType.VENDOR_APPLICATION.value, payload).to_bytes()
 
 
 class CommissionCommand(BleCommand):
