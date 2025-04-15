@@ -22,6 +22,8 @@ from abc import ABC, abstractmethod
 from tlv.dataset_tlv import MeshcopTlvType
 from tlv.tlv import TLV
 
+MASK_48_BITS = 0xFFFFFFFFFFFF
+
 
 class DatasetEntry(ABC):
 
@@ -66,13 +68,13 @@ class ActiveTimestamp(DatasetEntry):
     def set(self, args: List[str]):
         if len(args) == 0:
             raise ValueError('No argument for ActiveTimestamp')
-        self._seconds = int(args[0])
+        self.seconds = int(args[0])
 
     def set_from_tlv(self, tlv: TLV):
         (value,) = struct.unpack('>Q', tlv.value)
         self.ubit = value & 0x1
         self.ticks = (value >> 1) & 0x7FFF
-        self.seconds = (value >> 16) & 0xFFFF
+        self.seconds = (value >> 16) & MASK_48_BITS
 
     def to_tlv(self):
         value = (self.seconds << 16) | (self.ticks << 1) | self.ubit
@@ -92,7 +94,7 @@ class PendingTimestamp(DatasetEntry):
     def set(self, args: List[str]):
         if len(args) == 0:
             raise ValueError('No argument for PendingTimestamp')
-        self._seconds = int(args[0])
+        self.seconds = int(args[0])
 
     def set_from_tlv(self, tlv: TLV):
         (value,) = struct.unpack('>Q', tlv.value)
@@ -476,6 +478,30 @@ class ChannelMaskEntry(DatasetEntry):
         return TLV.from_bytes(tlv)
 
 
+class WakeupChannel(DatasetEntry):
+
+    def __init__(self):
+        super().__init__(MeshcopTlvType.WAKEUP_CHANNEL)
+        self.length = 3  # spec defined
+        self.channel_page = 0
+        self.channel = 0
+
+    def set(self, args: List[str]):
+        if len(args) == 0:
+            raise ValueError('No argument for WakeupChannel')
+        channel = int(args[0])
+        self.channel = channel
+
+    def set_from_tlv(self, tlv: TLV):
+        self.channel = int.from_bytes(tlv.value[1:3], byteorder='big')
+        self.channel_page = tlv.value[0]
+
+    def to_tlv(self):
+        tlv = struct.pack('>BBB', self.type.value, self.length, self.channel_page)
+        tlv += struct.pack('>H', self.channel)
+        return TLV.from_bytes(tlv)
+
+
 ENTRY_CLASSES = {
     MeshcopTlvType.ACTIVETIMESTAMP: ActiveTimestamp,
     MeshcopTlvType.PENDINGTIMESTAMP: PendingTimestamp,
@@ -488,7 +514,8 @@ ENTRY_CLASSES = {
     MeshcopTlvType.CHANNEL: Channel,
     MeshcopTlvType.PSKC: Pskc,
     MeshcopTlvType.SECURITYPOLICY: SecurityPolicy,
-    MeshcopTlvType.CHANNELMASK: ChannelMask
+    MeshcopTlvType.CHANNELMASK: ChannelMask,
+    MeshcopTlvType.WAKEUP_CHANNEL: WakeupChannel
 }
 
 
