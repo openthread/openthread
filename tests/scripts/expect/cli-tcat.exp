@@ -39,7 +39,7 @@ expect_line "\tVALUE:\t0x06"
 
 send "get_dataset\n"
 expect_line "\tTYPE:\tRESPONSE_W_STATUS"
-expect_line "\tVALUE:\t0x04"
+expect_line "\tVALUE:\t0x06"
 
 send "get_comm_cert\n"
 expect_line "\tTYPE:\tRESPONSE_W_STATUS"
@@ -93,6 +93,36 @@ send "provisioning_url\n"
 expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
 expect_line "\tLEN:\t9"
 expect_line "\tVALUE:\t0x64756d6d795f75726c"
+
+send "get_apps\n"
+expect_line "\tApplication 1 is UDP service: echo"
+expect_line "\tApplication 2 is TCP service: discard"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t15"
+expect_line "\tVALUE:\t0x89046563686f8a0764697363617264"
+
+send "appdata1 1122334455667788\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t8"
+expect_line "\tVALUE:\t0x1122334455667788"
+
+send "appdata2 1122334455667788\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x00"
+
+send "appdata3 1122334455667788\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x01"
+
+send "appdata4 1122334455667788\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x01"
+
+send "vendor_data 74657874\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t4"
+expect_line "\tVALUE:\t0x74657874"
+
 
 dispose_tcat_client 1
 

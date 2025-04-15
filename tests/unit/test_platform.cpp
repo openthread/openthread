@@ -858,6 +858,14 @@ otError otPlatBleGapAdvSetData(otInstance *aInstance, uint8_t *aAdvertisementDat
     return OT_ERROR_NONE;
 }
 
+otError otPlatBleGapAdvUpdateData(otInstance *aInstance, uint8_t *aAdvertisementData, uint16_t aAdvertisementLen)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aAdvertisementData);
+    OT_UNUSED_VARIABLE(aAdvertisementLen);
+    return OT_ERROR_NONE;
+}
+
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
 #if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
