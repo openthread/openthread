@@ -406,15 +406,20 @@ otError otBleSecureSend(otInstance *aInstance, uint8_t *aBuf, uint16_t aLength);
 /**
  * Sends a secure BLE data packet containing a TCAT Send Application Data TLV.
  *
- * @param[in]  aInstance       A pointer to an OpenThread instance.
- * @param[in]  aBuf            A pointer to the data to send as the Value of the TCAT Send Application Data TLV.
- * @param[in]  aLength         A number indicating the length of the data buffer.
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aApplicationProtocol  An application protocol the data is directed to.
+ * @param[in]  aBuf                  A pointer to the data to send as the Value of the TCAT Send Application Data TLV.
+ * @param[in]  aLength               A number indicating the length of the data buffer.
  *
- * @retval OT_ERROR_NONE           Successfully sent data.
- * @retval OT_ERROR_NO_BUFS        Failed to allocate buffer memory.
- * @retval OT_ERROR_INVALID_STATE  TLS connection was not initialized.
+ * @retval OT_ERROR_NONE             Successfully sent data.
+ * @retval OT_ERROR_NO_BUFS          Failed to allocate buffer memory.
+ * @retval OT_ERROR_INVALID_STATE    TLS connection was not initialized.
+ * @retval OT_ERROR_REJECTED         Application protocol is response with data or status but no response is pending.
  */
-otError otBleSecureSendApplicationTlv(otInstance *aInstance, uint8_t *aBuf, uint16_t aLength);
+otError otBleSecureSendApplicationTlv(otInstance               *aInstance,
+                                      otTcatApplicationProtocol aApplicationProtocol,
+                                      uint8_t                  *aBuf,
+                                      uint16_t                  aLength);
 
 /**
  * Flushes the send buffer.
