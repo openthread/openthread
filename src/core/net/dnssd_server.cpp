@@ -50,6 +50,10 @@ const char Server::kSubLabel[]          = "_sub";
 const char *Server::kBlockedDomains[] = {"ipv4only.arpa."};
 #endif
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+const char Server::kSoaRnameLabel[] = "postmaster";
+#endif
+
 Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance, *this)
@@ -423,19 +427,19 @@ Error Server::Response::ParseQueryName(void)
         uint8_t           labelLength = sizeof(label);
         uint16_t          comapreOffset;
 
-        SuccessOrExit(error = Name::ReadLabel(*mMessage, offset, label, labelLength));
-
-        if (mQuestions.IsFor(kRrTypePtr) && StringMatch(label, kSubLabel, kStringCaseInsensitiveMatch))
-        {
-            mOffsets.mServiceName = offset;
-        }
-
         comapreOffset = offset;
 
         if (Name::CompareName(*mMessage, comapreOffset, kDefaultDomainName) == kErrorNone)
         {
             mOffsets.mDomainName = offset;
             ExitNow();
+        }
+
+        SuccessOrExit(error = Name::ReadLabel(*mMessage, offset, label, labelLength));
+
+        if (mQuestions.IsFor(kRrTypePtr) && StringMatch(label, kSubLabel, kStringCaseInsensitiveMatch))
+        {
+            mOffsets.mServiceName = offset;
         }
     }
 
@@ -448,6 +452,11 @@ exit:
 void Server::Response::ReadQueryName(Name::Buffer &aName) const { Server::ReadQueryName(*mMessage, aName); }
 
 bool Server::Response::QueryNameMatches(const char *aName) const { return Server::QueryNameMatches(*mMessage, aName); }
+
+bool Server::Response::QueryNameIsForDomain(const char *aDomainName) const
+{
+    return Server::QueryNameIsForDomain(*mMessage, aDomainName);
+}
 
 Error Server::Response::AppendQueryName(void) { return Name::AppendPointerLabel(sizeof(Header), *mMessage); }
 
@@ -660,6 +669,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+
 Error Server::Response::AppendKeyRecord(const Srp::Server::Host &aHost)
 {
     Ecdsa256KeyRecord keyRecord;
@@ -676,7 +686,49 @@ Error Server::Response::AppendKeyRecord(const Srp::Server::Host &aHost)
 
     return AppendGenericRecord(Ecdsa256KeyRecord::kType, &keyRecord, sizeof(keyRecord), ttl);
 }
-#endif
+
+Error Server::Response::AppendSoaRecord(void)
+{
+    const uint32_t kFields[] = {
+        kSoaSerial, kSoaRefresh, kSoaRetry, kSoaExpire, kSoaMinimum,
+    };
+
+    Error             error;
+    ResourceRecord    record;
+    uint16_t          offset;
+    Name::LabelBuffer label;
+    StringWriter      writer(label, sizeof(label));
+
+    record.Init(kRrTypeSoa);
+    record.SetTtl(kSoaTtl);
+
+    SuccessOrExit(error = Name::AppendPointerLabel(mOffsets.mDomainName, *mMessage));
+
+    offset = mMessage->GetLength();
+    SuccessOrExit(error = mMessage->Append(record));
+
+    // MNAME: Generate the name using device's Extended Address
+    writer.Append("ot%s", Get<Mac::Mac>().GetExtAddress().ToString().AsCString());
+    SuccessOrExit(error = Name::AppendLabel(label, *mMessage));
+    SuccessOrExit(error = Name::AppendPointerLabel(mOffsets.mDomainName, *mMessage));
+
+    // RNAME: Use constant "postmaster.<domain>"
+    SuccessOrExit(error = Name::AppendLabel(kSoaRnameLabel, *mMessage));
+    SuccessOrExit(error = Name::AppendPointerLabel(mOffsets.mDomainName, *mMessage));
+
+    for (uint32_t fieldValue : kFields)
+    {
+        SuccessOrExit(error = mMessage->Append<uint32_t>(BigEndian::HostSwap32(fieldValue)));
+    }
+
+    UpdateRecordLength(record, offset);
+    IncResourceRecordCount();
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
 Error Server::Response::AppendGenericRecord(uint16_t aRrType, const void *aData, uint16_t aDataLength, uint32_t aTtl)
 {
@@ -747,6 +799,17 @@ Error Server::Response::ResolveBySrp(void)
     bool                        found          = false;
 
     mSection = kAnswerSection;
+
+    if (mQuestions.IsFor(kRrTypeSoa) && QueryNameIsForDomain(kDefaultDomainName))
+    {
+        if (!QueryNameMatches(kDefaultDomainName))
+        {
+            mSection = kAdditionalDataSection;
+        }
+
+        error = AppendSoaRecord();
+        ExitNow();
+    }
 
     for (const Srp::Server::Host &host : Get<Srp::Server>().GetHosts())
     {
@@ -1036,6 +1099,14 @@ bool Server::QueryNameMatches(const Message &aQuery, const char *aName)
     uint16_t offset = sizeof(Header);
 
     return (Name::CompareName(aQuery, offset, aName) == kErrorNone);
+}
+
+bool Server::QueryNameIsForDomain(const Message &aQuery, const char *aDomainName)
+{
+    Name::Buffer name;
+
+    ReadQueryName(aQuery, name);
+    return Name::IsSubDomainOf(name, aDomainName);
 }
 
 void Server::ReadQueryInstanceName(const ProxyQuery &aQuery, const ProxyQueryInfo &aInfo, Name::Buffer &aName)

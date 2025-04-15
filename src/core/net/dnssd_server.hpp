@@ -320,6 +320,14 @@ private:
     static constexpr uint16_t kRrTypeAaaa  = ResourceRecord::kTypeAaaa;
     static constexpr uint16_t kRrTypeSrv   = ResourceRecord::kTypeSrv;
 
+    // Recommended values for SOA record (RFC-8766 section 6.1).
+    static constexpr uint32_t kSoaSerial  = 0;
+    static constexpr uint32_t kSoaRefresh = 7200;
+    static constexpr uint32_t kSoaRetry   = 3600;
+    static constexpr uint32_t kSoaExpire  = 86400;
+    static constexpr uint32_t kSoaMinimum = 10;
+    static constexpr uint32_t kSoaTtl     = 7200;
+
     typedef Header::Response ResponseCode;
 
     typedef Message      ProxyQuery;
@@ -410,6 +418,7 @@ private:
         Error ParseQueryName(void);
         void  ReadQueryName(Name::Buffer &aName) const;
         bool  QueryNameMatches(const char *aName) const;
+        bool  QueryNameIsForDomain(const char *aDomainName) const;
         Error AppendQueryName(void);
         Error AppendPtrRecord(const char *aInstanceLabel, uint32_t aTtl);
         Error AppendSrvRecord(const ServiceInstanceInfo &aInstanceInfo);
@@ -439,6 +448,7 @@ private:
         Error AppendTxtRecord(const Srp::Server::Service &aService);
         Error AppendHostAddresses(const Srp::Server::Host &aHost);
         Error AppendKeyRecord(const Srp::Server::Host &aHost);
+        Error AppendSoaRecord(void);
 #endif
 #if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
         Error AppendPtrRecord(const ProxyResult &aResult);
@@ -548,6 +558,7 @@ private:
 
     static void  ReadQueryName(const Message &aQuery, Name::Buffer &aName);
     static bool  QueryNameMatches(const Message &aQuery, const char *aName);
+    static bool  QueryNameIsForDomain(const Message &aQuery, const char *aDomainName);
     static void  ReadQueryInstanceName(const ProxyQuery &aQuery, const ProxyQueryInfo &aInfo, Name::Buffer &aName);
     static void  ReadQueryInstanceName(const ProxyQuery     &aQuery,
                                        const ProxyQueryInfo &aInfo,
@@ -592,6 +603,9 @@ private:
     static const char kSubLabel[];
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     static const char *kBlockedDomains[];
+#endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    static const char kSoaRnameLabel[];
 #endif
 
     ServerSocket mSocket;

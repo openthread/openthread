@@ -550,7 +550,7 @@ struct QueryRecordInfo
 {
     struct Record : public Dns::Client::RecordInfo
     {
-        static constexpr uint16_t kMaxRecordDataSize = 200;
+        static constexpr uint16_t kMaxRecordDataSize = 500;
 
         void Init(void)
         {
@@ -1610,6 +1610,152 @@ void TestDnssdServerProxyCallback(void)
     Log("End of TestDnssdServerProxyCallback");
 }
 
+void TestDnssdSoaResponse(void)
+{
+    static constexpr uint32_t kSoaSerial  = 0;
+    static constexpr uint32_t kSoaRefresh = 7200;
+    static constexpr uint32_t kSoaRetry   = 3600;
+    static constexpr uint32_t kSoaExpire  = 86400;
+    static constexpr uint32_t kSoaMinimum = 10;
+
+    Srp::Server      *srpServer;
+    Srp::Client      *srpClient;
+    Dns::Client      *dnsClient;
+    Message          *message;
+    uint16_t          offset;
+    Dns::Name::Buffer name;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestDnssdSoaResponse");
+
+    InitTest();
+
+    srpServer = &sInstance->Get<Srp::Server>();
+    srpClient = &sInstance->Get<Srp::Client>();
+    dnsClient = &sInstance->Get<Dns::Client>();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP server.
+
+    SuccessOrQuit(srpServer->SetAddressMode(Srp::Server::kAddressModeUnicast));
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateDisabled);
+
+    srpServer->SetEnabled(true);
+    VerifyOrQuit(srpServer->GetState() != Srp::Server::kStateDisabled);
+
+    AdvanceTime(10000);
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP client.
+
+    srpClient->EnableAutoStartMode(nullptr, nullptr);
+    VerifyOrQuit(srpClient->IsAutoStartModeEnabled());
+
+    AdvanceTime(2000);
+    VerifyOrQuit(srpClient->IsRunning());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    for (uint8_t iter = 0; iter < 2; iter++)
+    {
+        sQueryRecordInfo.Reset();
+
+        // First iteration: Query for `default.service.arpa.` directly, and
+        // validate that we see the SOA response in the Answer section.
+        // Second iteration: Query for `myhost.default.service.arpa.`, which
+        // should result in no answer but the SOA record in the Additional
+        // section.
+
+        if (iter == 0)
+        {
+            Log("QueryRecord(%s) for SOA RR", "default.service.arpa.");
+            SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeSoa, "default", "service.arpa.",
+                                                 RecordCallback, sInstance));
+        }
+        else
+        {
+            Log("QueryRecord(%s) for SOA RR", "myhost.default.service.arpa.");
+            SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeSoa, "myhost", "default.service.arpa.",
+                                                 RecordCallback, sInstance));
+        }
+
+        AdvanceTime(100);
+        VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+        SuccessOrQuit(sQueryRecordInfo.mError);
+        VerifyOrQuit(sQueryRecordInfo.mNumRecords == 1);
+
+        if (iter == 0)
+        {
+            VerifyOrQuit(!strcmp(sQueryRecordInfo.mQueryName, "default.service.arpa."));
+            VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+        }
+        else
+        {
+            VerifyOrQuit(!strcmp(sQueryRecordInfo.mQueryName, "myhost.default.service.arpa."));
+            VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAdditional);
+        }
+
+        VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, "default.service.arpa."));
+        VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl == 7200);
+
+        message = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
+        VerifyOrQuit(message != nullptr);
+
+        VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength == sQueryRecordInfo.mRecords[0].mDataBufferSize);
+        SuccessOrQuit(message->AppendBytes(sQueryRecordInfo.mRecords[0].mDataBuffer,
+                                           sQueryRecordInfo.mRecords[0].mDataBufferSize));
+
+        // Validate the SOA record data.
+
+        offset = 0;
+
+        // MNAME field:
+        SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
+        SuccessOrQuit(Dns::Name::StripName(name, "default.service.arpa."));
+        VerifyOrQuit(StringStartsWith(name, "ot"));
+
+        // RNAME: must be "postmater.default.service.arpa."
+        SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
+        SuccessOrQuit(Dns::Name::StripName(name, "default.service.arpa."));
+        VerifyOrQuit(StringMatch(name, "postmaster"));
+
+        // SERIAL
+        VerifyOrQuit(message->Compare<uint32_t>(offset, BigEndian::HostSwap32(kSoaSerial)));
+        offset += sizeof(uint32_t);
+
+        // REFRESH
+        VerifyOrQuit(message->Compare<uint32_t>(offset, BigEndian::HostSwap32(kSoaRefresh)));
+        offset += sizeof(uint32_t);
+
+        // RETRY
+        VerifyOrQuit(message->Compare<uint32_t>(offset, BigEndian::HostSwap32(kSoaRetry)));
+        offset += sizeof(uint32_t);
+
+        // EXPIRE
+        VerifyOrQuit(message->Compare<uint32_t>(offset, BigEndian::HostSwap32(kSoaExpire)));
+        offset += sizeof(uint32_t);
+
+        // MINIMUM
+        VerifyOrQuit(message->Compare<uint32_t>(offset, BigEndian::HostSwap32(kSoaMinimum)));
+        offset += sizeof(uint32_t);
+
+        VerifyOrQuit(offset == message->GetLength());
+
+        message->Free();
+
+        AdvanceTime(1000);
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Finalize OT instance and validate all heap allocations are freed.
+
+    Log("Finalizing OT instance");
+    FinalizeTest();
+
+    Log("End of TestDnssdSoaResponse");
+}
+
 #endif // ENABLE_DNS_TEST
 
 int main(void)
@@ -1617,6 +1763,7 @@ int main(void)
 #if ENABLE_DNS_TEST
     TestDnsClient();
     TestDnssdServerProxyCallback();
+    TestDnssdSoaResponse();
     printf("All tests passed\n");
 #else
     printf("DNS_CLIENT or DSNSSD_SERVER feature is not enabled\n");
