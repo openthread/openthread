@@ -69,8 +69,12 @@ public:
      *
      * @param[in] aTxn   A pointer to the OpenThread upstream DNS query transaction.
      * @param[in] aQuery A pointer to a message for the payload of the DNS query.
+     *
+     * @retval  OT_ERROR_NO_BUFS            No more DNS query can be supported.
+     * @retval  OT_ERROR_NO_ROUTE           No reachable upstream DNS server error.
+     * @retval  OT_ERROR_NONE               The query is successfully sent to upstream DNS server(s).
      */
-    void Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery);
+    otError Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery);
 
     /**
      * Cancels a upstream DNS query transaction.

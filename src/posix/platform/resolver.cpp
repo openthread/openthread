@@ -136,7 +136,7 @@ void Resolver::LoadDnsServerListFromConf(void)
 
     if (mUpstreamDnsServerCount == 0)
     {
-        LogCrit("No domain name servers found in %s, default to 127.0.0.1", kResolvConfFullPath);
+        LogCrit("No domain name servers found in %s", kResolvConfFullPath);
     }
 
     mUpstreamDnsServerListFreshness = otPlatTimeGet();
@@ -235,7 +235,7 @@ otError Resolver::SendQueryToServer(Transaction        *aTxn,
 
         VerifyOrExit(sendto(aTxn->mUdpFd4, aPacket, aLength, MSG_DONTWAIT, reinterpret_cast<sockaddr *>(&serverAddr4),
                             sizeof(serverAddr4)) > 0,
-                     error = OT_ERROR_NO_ROUTE);
+                     error = OT_ERROR_FAILED);
     }
     else
     {
@@ -245,19 +245,20 @@ otError Resolver::SendQueryToServer(Transaction        *aTxn,
 
         VerifyOrExit(sendto(aTxn->mUdpFd6, aPacket, aLength, MSG_DONTWAIT, reinterpret_cast<sockaddr *>(&serverAddr6),
                             sizeof(serverAddr6)) > 0,
-                     error = OT_ERROR_NO_ROUTE);
+                     error = OT_ERROR_FAILED);
     }
 
 exit:
     return error;
 }
 
-void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
+otError Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 {
     char         packet[kMaxDnsMessageSize];
-    otError      error  = OT_ERROR_NONE;
-    uint16_t     length = otMessageGetLength(aQuery);
-    Transaction *txn    = nullptr;
+    otError      error       = OT_ERROR_NONE;
+    uint16_t     length      = otMessageGetLength(aQuery);
+    uint32_t     serverCount = 0;
+    Transaction *txn         = nullptr;
 
     VerifyOrExit(length <= kMaxDnsMessageSize, error = OT_ERROR_NO_BUFS);
     VerifyOrExit(otMessageRead(aQuery, 0, &packet, sizeof(packet)) == length, error = OT_ERROR_NO_BUFS);
@@ -268,33 +269,43 @@ void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 
     for (uint32_t i = 0; i < mRecursiveDnsServerCount; i++)
     {
-        SuccessOrExit(error = SendQueryToServer(txn, mRecursiveDnsServerList[i], packet, length));
+        if (SendQueryToServer(txn, mRecursiveDnsServerList[i], packet, length) != OT_ERROR_NONE)
+        {
+            serverCount++;
 
-        LogInfo("Forwarded DNS query %p to %s", static_cast<void *>(aTxn),
-                Ip6AddressString(&mRecursiveDnsServerList[i]).AsCString());
+            LogInfo("Forwarded DNS query %p to %s", static_cast<void *>(aTxn),
+                    Ip6AddressString(&mRecursiveDnsServerList[i]).AsCString());
+        }
     }
 
     for (uint32_t i = 0; i < mUpstreamDnsServerCount; i++)
     {
-        SuccessOrExit(error = SendQueryToServer(txn, mUpstreamDnsServerList[i], packet, length));
+        if (SendQueryToServer(txn, mUpstreamDnsServerList[i], packet, length) != OT_ERROR_NONE)
+        {
+            serverCount++;
 
-        LogInfo("Forwarded DNS query %p to %s", static_cast<void *>(aTxn),
-                Ip6AddressString(&mUpstreamDnsServerList[i]).AsCString());
+            LogInfo("Forwarded DNS query %p to %s", static_cast<void *>(aTxn),
+                    Ip6AddressString(&mUpstreamDnsServerList[i]).AsCString());
+        }
     }
 
-    LogInfo("Forwarded DNS query %p to %d server(s).", static_cast<void *>(aTxn),
-            mRecursiveDnsServerCount + mUpstreamDnsServerCount);
+    VerifyOrExit(serverCount > 0, error = OT_ERROR_NO_ROUTE);
+
+    LogInfo("Forwarded DNS query %p to %d server(s).", static_cast<void *>(aTxn), serverCount);
 
 exit:
     if (error != OT_ERROR_NONE)
     {
         LogWarn("Failed to forward DNS query %p to server: %s", static_cast<void *>(aTxn),
                 otThreadErrorToString(error));
+
         if (txn != nullptr)
         {
             CloseTransaction(txn);
         }
     }
+
+    return error;
 }
 
 void Resolver::Cancel(otPlatDnsUpstreamQuery *aTxn)
@@ -498,11 +509,11 @@ void platformResolverSetUp(void) { gResolver.Setup(); }
 
 void platformResolverInit(void) { gResolver.Init(); }
 
-void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
+otError otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    gResolver.Query(aTxn, aQuery);
+    return gResolver.Query(aTxn, aQuery);
 }
 
 void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn)
