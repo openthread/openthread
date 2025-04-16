@@ -37,6 +37,7 @@ target_compile_definitions(openthread-cli-ftd
 
 target_compile_options(openthread-cli-ftd PRIVATE
     ${OT_CFLAGS}
+    -Wundef
 )
 
 target_include_directories(openthread-cli-ftd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})

@@ -38,6 +38,7 @@ target_compile_definitions(openthread-cli-radio
 
 target_compile_options(openthread-cli-radio PRIVATE
     ${OT_CFLAGS}
+    -Wundef
 )
 
 target_include_directories(openthread-cli-radio PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
