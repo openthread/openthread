@@ -412,7 +412,6 @@ private:
         Error AppendHostAddresses(AddrType aAddrType, const Ip6::Address *aAddrs, uint16_t aAddrsLength, uint32_t aTtl);
         Error AppendAaaaRecord(const Ip6::Address &aAddress, uint32_t aTtl);
         Error AppendARecord(const Ip6::Address &aAddress, uint32_t aTtl);
-        void  UpdateRecordLength(ResourceRecord &aRecord, uint16_t aOffset);
         void  IncResourceRecordCount(void);
         void  Send(const Ip6::MessageInfo &aMessageInfo);
         void  Answer(const HostInfo &aHostInfo, const Ip6::MessageInfo &aMessageInfo);

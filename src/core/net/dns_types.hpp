@@ -1378,6 +1378,18 @@ public:
     uint32_t GetSize(void) const { return sizeof(ResourceRecord) + GetLength(); }
 
     /**
+     * Updates the record length in a message.
+     *
+     * This method should be called after all the record data fields are appended to the message. It uses the current
+     * message length along with @p aOffset to determine the record length and then updates it within the @p aMessage.
+     * The @p aOffset should point to to the start of the `ResourceRecord` in @p aMessage.
+     *
+     * @param[in] aMessage   The message to update.
+     * @param[in] aOffset    The offset to the start of `ResourceRecord` in @p aMessage.
+     */
+    static void UpdateRecordLengthInMessage(Message &aMessage, uint16_t aOffset);
+
+    /**
      * Parses and skips over a given number of resource records in a message from a given offset.
      *
      * @param[in]     aMessage     The message from which to parse/read the resource records. `aMessage.GetOffset()`

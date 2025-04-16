@@ -502,7 +502,7 @@ Error Server::Response::AppendPtrRecord(const char *aInstanceLabel, uint32_t aTt
     SuccessOrExit(error = Name::AppendLabel(aInstanceLabel, *mMessage));
     SuccessOrExit(error = Name::AppendPointerLabel(mOffsets.mServiceName, *mMessage));
 
-    UpdateRecordLength(ptrRecord, recordOffset);
+    ResourceRecord::UpdateRecordLengthInMessage(*mMessage, recordOffset);
 
     IncResourceRecordCount();
 
@@ -554,7 +554,7 @@ Error Server::Response::AppendSrvRecord(const char *aHostName,
     SuccessOrExit(error = Name::AppendMultipleLabels(hostLabels, *mMessage));
     SuccessOrExit(error = Name::AppendPointerLabel(mOffsets.mDomainName, *mMessage));
 
-    UpdateRecordLength(srvRecord, recordOffset);
+    ResourceRecord::UpdateRecordLengthInMessage(*mMessage, recordOffset);
 
     IncResourceRecordCount();
 
@@ -690,18 +690,6 @@ Error Server::Response::AppendTxtRecord(const void *aTxtData, uint16_t aTxtLengt
 
 exit:
     return error;
-}
-
-void Server::Response::UpdateRecordLength(ResourceRecord &aRecord, uint16_t aOffset)
-{
-    // Calculates RR DATA length and updates and re-writes it in the
-    // response message. This should be called immediately
-    // after all the fields in the record are written in the message.
-    // `aOffset` gives the offset in the message to the start of the
-    // record.
-
-    aRecord.SetLength(mMessage->GetLength() - aOffset - sizeof(Dns::ResourceRecord));
-    mMessage->Write(aOffset, aRecord);
 }
 
 void Server::Response::IncResourceRecordCount(void)
