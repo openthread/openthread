@@ -961,7 +961,9 @@ Error Server::ResolveByUpstream(const Request &aRequest)
     txn = AllocateUpstreamQueryTransaction(*aRequest.mMessageInfo);
     VerifyOrExit(txn != nullptr, error = kErrorNoBufs);
 
-    otPlatDnsStartUpstreamQuery(&GetInstance(), txn, aRequest.mMessage);
+    error = otPlatDnsStartUpstreamQuery(&GetInstance(), txn, aRequest.mMessage);
+    VerifyOrExit(error == kErrorNone);
+
     mCounters.mUpstreamDnsCounters.mQueries++;
 
 exit:
@@ -2263,11 +2265,13 @@ bool Server::IsProxyAddressValid(const Ip6::Address &aAddress)
 } // namespace ot
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_MOCK_PLAT_APIS_ENABLE
-void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
+otError otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aTxn);
     OT_UNUSED_VARIABLE(aQuery);
+
+    return OT_ERROR_NONE;
 }
 
 void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn)
