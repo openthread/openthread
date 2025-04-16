@@ -117,7 +117,29 @@ typedef struct otBorderAgentSessionIterator
     uint64_t mData;
 } otBorderAgentSessionIterator;
 
-#define OT_BORDER_AGENT_MESHCOP_SERVICE_TXT_DATA_MAX_LENGTH 128
+/**
+ * Maximum length of the OT core generated MeshCoP Service TXT data.
+ *
+ * Each field has the format:
+ * | Length (1 byte) | "Keyname=" | Data |
+ *
+ * Fields:
+ * Border Agent Id (id)                 - 4 + 16 = 20 bytes
+ * Network Name (nn)                    - 4 + 16 = 20 bytes
+ * ExtendedPanId (xp)                   - 4 + 8 = 12 bytes
+ * THread Version (tv)                  - 4 + 5 = 9 bytes
+ * Extended Address (xa)                - 4 + 8 = 12 bytes
+ * State Bitmap (sb)                    - 4 + 4 = 8 bytes
+ * Partition Id (pt)                    - 4 + 4 = 8 bytes
+ * Active Timestamp (at)                - 4 + 8 = 12 bytes
+ * Backbone Router Sequence Number (sq) - 4 + 1 = 5 bytes
+ * Backbone Router Udp Port (bb)        - 4 + 2 = 6 bytes
+ * Backbone Router Domain Name (dn)     - 4 + 16 = 20 bytes
+ * On-Mesh Routable Prefix (omr)        - 5 + 9 = 14 bytes
+ *
+ * Maximum possible data length: 146 bytes
+ */
+#define OT_BORDER_AGENT_MESHCOP_SERVICE_TXT_DATA_MAX_LENGTH 256
 
 /**
  * Represents the Border Agent MeshCoP Service TXT data.

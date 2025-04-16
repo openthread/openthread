@@ -408,7 +408,7 @@ Error BorderAgent::MeshCoPTxtEncoder::EncodeTxtData(void)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     SuccessOrExit(error = AppendBbrTxtEntry(state));
 #endif
-#if OTBR_ENABLE_BORDER_ROUTING
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     SuccessOrExit(error = AppendOmrTxtEntry());
 #endif
     mTxtData.mLength = mAppender.GetAppendedLength();
@@ -447,7 +447,8 @@ Error BorderAgent::MeshCoPTxtEncoder::AppendOmrTxtEntry(void)
     Ip6::Prefix                                   prefix;
     BorderRouter::RoutingManager::RoutePreference preference;
 
-    if ((error = Get<BorderRouter::RoutingManager>().GetFavoredOmrPrefix(prefix, preference)) == kErrorNone)
+    if (Get<BorderRouter::RoutingManager>().GetFavoredOmrPrefix(prefix, preference) == kErrorNone &&
+        prefix.GetLength() > 0)
     {
         uint8_t omrData[Ip6::NetworkPrefix::kSize + 1];
         omrData[0] = prefix.GetLength();
