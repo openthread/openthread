@@ -311,6 +311,13 @@ Error SecureSession::Setup(void)
         VerifyOrExit(rval == 0);
     }
 
+#if defined(MBEDTLS_X509_CRT_PARSE_C)
+    if (!mIsServer)
+    {
+        mbedtls_ssl_set_hostname(&mSsl, nullptr);
+    }
+#endif
+
     mReceiveMessage = nullptr;
     mMessageSubType = Message::kSubTypeNone;
 
