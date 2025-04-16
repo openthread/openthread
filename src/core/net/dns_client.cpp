@@ -374,6 +374,100 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+
+Error Client::Response::ReadRecordInfo(uint16_t aIndex, RecordInfo &aRecordInfo) const
+{
+    Error          error;
+    uint16_t       offset;
+    ResourceRecord record;
+    Message       *decompressedData = nullptr;
+
+    if (aIndex < mAnswerRecordCount)
+    {
+        aRecordInfo.mSection = MapEnum(RecordInfo::kSectionAnswer);
+    }
+    else if (aIndex < mAnswerRecordCount + mAuthorityRecordCount)
+    {
+        aRecordInfo.mSection = MapEnum(RecordInfo::kSectionAuthority);
+    }
+    else if (aIndex < mAnswerRecordCount + mAuthorityRecordCount + mAdditionalRecordCount)
+    {
+        aRecordInfo.mSection = MapEnum(RecordInfo::kSectionAdditional);
+    }
+    else
+    {
+        ExitNow(error = kErrorNotFound);
+    }
+
+    offset = mAnswerOffset;
+    SuccessOrExit(error = ResourceRecord::ParseRecords(*mMessage, offset, aIndex));
+
+    SuccessOrExit(error = Name::ReadName(*mMessage, offset, aRecordInfo.mNameBuffer, aRecordInfo.mNameBufferSize));
+
+    SuccessOrExit(error = mMessage->Read(offset, record));
+    VerifyOrExit(offset + record.GetSize() <= mMessage->GetLength(), error = kErrorParse);
+    offset += sizeof(record);
+
+    aRecordInfo.mRecordType = record.GetType();
+    aRecordInfo.mTtl        = record.GetTtl();
+
+    // We may need to translate the record data for PTR, CNAME, DNAME, NS
+    // and SRV record since the data format contains a DNS name which
+    // may use compression.
+
+    switch (record.GetType())
+    {
+    case ResourceRecord::kTypePtr:
+    case ResourceRecord::kTypeCname:
+    case ResourceRecord::kTypeDname:
+    case ResourceRecord::kTypeNs:
+    case ResourceRecord::kTypeSrv:
+        decompressedData = mMessage->Get<MessagePool>().Allocate(Message::kTypeOther);
+        VerifyOrExit(decompressedData != nullptr, error = kErrorNoBufs);
+
+        if (record.GetType() == ResourceRecord::kTypeSrv)
+        {
+            uint16_t srvMinLength = sizeof(SrvRecord) - sizeof(ResourceRecord);
+
+            VerifyOrExit(record.GetLength() > srvMinLength, error = kErrorParse);
+            SuccessOrExit(error = decompressedData->AppendBytesFromMessage(*mMessage, offset, srvMinLength));
+            offset += srvMinLength;
+        }
+
+        SuccessOrExit(error = Name(*mMessage, offset).AppendTo(*decompressedData));
+        break;
+
+    default:
+        break;
+    }
+
+    aRecordInfo.mRecordLength = (decompressedData != nullptr) ? decompressedData->GetLength() : record.GetLength();
+
+    if (aRecordInfo.mDataBuffer == nullptr)
+    {
+        aRecordInfo.mDataBufferSize = 0;
+        ExitNow();
+    }
+
+    aRecordInfo.mDataBufferSize = Min(aRecordInfo.mRecordLength, aRecordInfo.mDataBufferSize);
+
+    if (decompressedData != nullptr)
+    {
+        decompressedData->ReadBytes(0, aRecordInfo.mDataBuffer, aRecordInfo.mDataBufferSize);
+    }
+    else
+    {
+        mMessage->ReadBytes(offset, aRecordInfo.mDataBuffer, aRecordInfo.mDataBufferSize);
+    }
+
+exit:
+    FreeMessage(decompressedData);
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+
 void Client::Response::PopulateFrom(const Message &aMessage)
 {
     // Populate `Response` with info from `aMessage`.
@@ -394,11 +488,13 @@ void Client::Response::PopulateFrom(const Message &aMessage)
 
     mAnswerOffset = offset;
     IgnoreError(ResourceRecord::ParseRecords(aMessage, offset, header.GetAnswerCount()));
+    mAuthorityOffset = offset;
     IgnoreError(ResourceRecord::ParseRecords(aMessage, offset, header.GetAuthorityRecordCount()));
     mAdditionalOffset = offset;
     IgnoreError(ResourceRecord::ParseRecords(aMessage, offset, header.GetAdditionalRecordCount()));
 
     mAnswerRecordCount     = header.GetAnswerCount();
+    mAuthorityRecordCount  = header.GetAuthorityRecordCount();
     mAdditionalRecordCount = header.GetAdditionalRecordCount();
 }
 
@@ -691,42 +787,6 @@ Error Client::ServiceResponse::GetHostAddress(const char   *aHostName,
 //---------------------------------------------------------------------------------------------------------------------
 // Client
 
-const uint16_t Client::kIp6AddressQueryRecordTypes[] = {ResourceRecord::kTypeAaaa};
-#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-const uint16_t Client::kIp4AddressQueryRecordTypes[] = {ResourceRecord::kTypeA};
-#endif
-#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-const uint16_t Client::kBrowseQueryRecordTypes[]  = {ResourceRecord::kTypePtr};
-const uint16_t Client::kServiceQueryRecordTypes[] = {ResourceRecord::kTypeSrv, ResourceRecord::kTypeTxt};
-#endif
-
-const uint8_t Client::kQuestionCount[] = {
-    /* kIp6AddressQuery -> */ GetArrayLength(kIp6AddressQueryRecordTypes), // AAAA record
-#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-    /* kIp4AddressQuery -> */ GetArrayLength(kIp4AddressQueryRecordTypes), // A record
-#endif
-#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    /* kBrowseQuery        -> */ GetArrayLength(kBrowseQueryRecordTypes),  // PTR record
-    /* kServiceQuerySrvTxt -> */ GetArrayLength(kServiceQueryRecordTypes), // SRV and TXT records
-    /* kServiceQuerySrv    -> */ 1,                                        // SRV record only
-    /* kServiceQueryTxt    -> */ 1,                                        // TXT record only
-#endif
-};
-
-const uint16_t *const Client::kQuestionRecordTypes[] = {
-    /* kIp6AddressQuery -> */ kIp6AddressQueryRecordTypes,
-#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-    /* kIp4AddressQuery -> */ kIp4AddressQueryRecordTypes,
-#endif
-#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    /* kBrowseQuery  -> */ kBrowseQueryRecordTypes,
-    /* kServiceQuerySrvTxt -> */ kServiceQueryRecordTypes,
-    /* kServiceQuerySrv    -> */ &kServiceQueryRecordTypes[0],
-    /* kServiceQueryTxt    -> */ &kServiceQueryRecordTypes[1],
-
-#endif
-};
-
 Client::Client(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance, *this)
@@ -972,6 +1032,28 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+Error Client::QueryRecord(uint16_t           aRecordType,
+                          const char        *aFirstLabel,
+                          const char        *aNextLabels,
+                          RecordCallback     aCallback,
+                          void              *aContext,
+                          const QueryConfig *aConfig)
+{
+    QueryInfo info;
+
+    info.Clear();
+    info.mQueryType  = kRecordQuery;
+    info.mRecordType = aRecordType;
+    info.mConfig.SetFrom(aConfig, mDefaultConfig);
+    info.mCallback.mRecordCallback = aCallback;
+    info.mCallbackContext          = aContext;
+
+    return StartQuery(info, aFirstLabel, aNextLabels);
+}
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+
 Error Client::StartQuery(QueryInfo &aInfo, const char *aLabel, const char *aName, QueryType aSecondType)
 {
     // The `aLabel` can be `nullptr` and then `aName` provides the
@@ -1117,7 +1199,14 @@ Error Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
         header.SetRecursionDesiredFlag();
     }
 
-    header.SetQuestionCount(kQuestionCount[aInfo.mQueryType]);
+    header.SetQuestionCount(1);
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    if (aInfo.mQueryType == kServiceQuerySrvTxt)
+    {
+        header.SetQuestionCount(2);
+    }
+#endif
 
     message = mSocket.NewMessage();
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
@@ -1126,11 +1215,16 @@ Error Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
 
     // Prepare the question section.
 
-    for (uint8_t num = 0; num < kQuestionCount[aInfo.mQueryType]; num++)
+    SuccessOrExit(error = AppendNameFromQuery(aQuery, *message));
+    SuccessOrExit(error = message->Append(Question(DetermineQuestionRecordType(aInfo))));
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    if (aInfo.mQueryType == kServiceQuerySrvTxt)
     {
         SuccessOrExit(error = AppendNameFromQuery(aQuery, *message));
-        SuccessOrExit(error = message->Append(Question(kQuestionRecordTypes[aInfo.mQueryType][num])));
+        SuccessOrExit(error = message->Append(Question(ResourceRecord::kTypeTxt)));
     }
+#endif
 
     length = message->GetLength() - message->GetOffset();
 
@@ -1204,6 +1298,53 @@ exit:
     return error;
 }
 
+uint16_t Client::DetermineQuestionRecordType(const QueryInfo &aInfo) const
+{
+    // Determine the first record type to include in Question
+    // section based on the `mQueryType`.
+
+    uint8_t recordType = 0;
+
+    switch (aInfo.mQueryType)
+    {
+    case kIp6AddressQuery:
+        recordType = ResourceRecord::kTypeAaaa;
+        break;
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+    case kIp4AddressQuery:
+        recordType = ResourceRecord::kTypeA;
+        break;
+#endif
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    case kBrowseQuery:
+        recordType = ResourceRecord::kTypePtr;
+        break;
+
+    case kServiceQuerySrv:
+    case kServiceQuerySrvTxt:
+        recordType = ResourceRecord::kTypeSrv;
+        break;
+
+    case kServiceQueryTxt:
+        recordType = ResourceRecord::kTypeTxt;
+        break;
+#endif
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+    case kRecordQuery:
+        recordType = aInfo.mRecordType;
+        break;
+#endif
+
+    case kNoQuery:
+        break;
+    }
+
+    return recordType;
+}
+
 Error Client::AppendNameFromQuery(const Query &aQuery, Message &aMessage)
 {
     // The name is encoded and included after the `Info` in `aQuery`
@@ -1257,6 +1398,14 @@ void Client::FinalizeQuery(Response &aResponse, Error aError)
         if (callback.mServiceCallback != nullptr)
         {
             callback.mServiceCallback(aError, &aResponse, context);
+        }
+        break;
+#endif
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+    case kRecordQuery:
+        if (callback.mRecordCallback != nullptr)
+        {
+            callback.mRecordCallback(aError, &aResponse, context);
         }
         break;
 #endif
@@ -1359,6 +1508,7 @@ Error Client::ParseResponse(const Message &aResponseMessage, Query *&aQuery, Err
 {
     Error     error  = kErrorNone;
     uint16_t  offset = aResponseMessage.GetOffset();
+    uint16_t  questionCount;
     Header    header;
     QueryInfo info;
     Name      queryName;
@@ -1379,9 +1529,18 @@ Error Client::ParseResponse(const Message &aResponseMessage, Query *&aQuery, Err
 
     // Check the Question Section
 
-    if (header.GetQuestionCount() == kQuestionCount[info.mQueryType])
+    questionCount = 1;
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    if (info.mQueryType == kServiceQuerySrvTxt)
     {
-        for (uint8_t num = 0; num < kQuestionCount[info.mQueryType]; num++)
+        questionCount = 2;
+    }
+#endif
+
+    if (header.GetQuestionCount() == questionCount)
+    {
+        for (uint16_t num = 0; num < questionCount; num++)
         {
             SuccessOrExit(error = Name::CompareName(aResponseMessage, offset, queryName));
             offset += sizeof(Question);
@@ -1403,10 +1562,12 @@ Error Client::ParseResponse(const Message &aResponseMessage, Query *&aQuery, Err
 
     aResponseError = Header::ResponseCodeToError(header.GetResponseCode());
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
     if ((aResponseError == kErrorNone) && (info.mQueryType == kServiceQuerySrvTxt))
     {
         RecordServerAsCapableOfMultiQuestions(info.mConfig.GetServerSockAddr().GetAddress());
     }
+#endif
 
 exit:
     return error;
@@ -1808,7 +1969,7 @@ Error Client::ReadFromLinkBuffer(const otLinkedBuffer *&aLinkedBuffer,
     //    `aOffset` and `aLinkedBuffer` are updated.
     // - `kErrorNotFound` is not enough bytes available to read
     //    from `aLinkedBuffer`.
-    // - `kErrorNotBufs` if cannot grow `aMessage` to append bytes.
+    // - `kErrorNoBufs` if cannot grow `aMessage` to append bytes.
 
     Error error = kErrorNone;
 

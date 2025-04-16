@@ -158,7 +158,7 @@ void BleSecure::Disconnect(void)
     if (mBleState == kConnected)
     {
         mBleState = kAdvertising;
-        IgnoreReturnValue(otPlatBleGapDisconnect(&GetInstance()));
+        IgnoreError(otPlatBleGapDisconnect(&GetInstance()));
     }
 
     mConnectCallback.InvokeIfSet(&GetInstance(), false, false);
@@ -186,8 +186,8 @@ Error BleSecure::SendMessage(ot::Message &aMessage)
     SuccessOrExit(error = mSendMessage->AppendBytesFromMessage(aMessage, 0, aMessage.GetLength()));
     SuccessOrExit(error = Flush());
 
-exit:
     aMessage.Free();
+exit:
     return error;
 }
 
@@ -234,17 +234,45 @@ exit:
 
 Error BleSecure::Flush(void)
 {
-    Error error = kErrorNone;
+    Error        error   = kErrorNone;
+    ot::Message *message = nullptr;
+    uint16_t     length;
 
+    VerifyOrExit(mSendMessage != nullptr);
     VerifyOrExit(IsConnected(), error = kErrorInvalidState);
-    VerifyOrExit(mSendMessage->GetLength() != 0, error = kErrorNone);
+    length = mSendMessage->GetLength();
 
+    // Split send buffer in chunks which can later be processed by mTls.Send(..)
+    while (length > kTlsDataMaxSize)
+    {
+        VerifyOrExit((message = Get<MessagePool>().Allocate(Message::kTypeBle, 0)) != nullptr, error = kErrorNoBufs);
+        SuccessOrExit(error = message->AppendBytesFromMessage(*mSendMessage, 0, kTlsDataMaxSize));
+
+        // We accept an expensive copy operation in favor of optimal buffer usage for long messages
+        mSendMessage->WriteBytesFromMessage(0, *mSendMessage, kTlsDataMaxSize, length - kTlsDataMaxSize);
+        length -= kTlsDataMaxSize;
+
+        // Should never fail since we are decreasing the length of the message
+        SuccessOrAssert(error = mSendMessage->SetLength(length));
+        mTransmitQueue.Enqueue(*message);
+        mTransmitTask.Post();
+        message = nullptr;
+    }
+
+    VerifyOrExit(length != 0, error = kErrorNone);
     mTransmitQueue.Enqueue(*mSendMessage);
     mTransmitTask.Post();
-
     mSendMessage = nullptr;
 
 exit:
+    FreeMessage(message);
+
+    if (mSendMessage != nullptr)
+    {
+        mSendMessage->Free();
+        mSendMessage = nullptr;
+    }
+
     return error;
 }
 
@@ -275,7 +303,7 @@ void BleSecure::HandleBleConnected(uint16_t aConnectionId)
 
     mBleState = kConnected;
 
-    IgnoreReturnValue(otPlatBleGattMtuGet(&GetInstance(), &mMtuSize));
+    IgnoreError(otPlatBleGattMtuGet(&GetInstance(), &mMtuSize));
 
     mConnectCallback.InvokeIfSet(&GetInstance(), IsConnected(), true);
 }
@@ -335,6 +363,8 @@ void BleSecure::HandleTlsConnectEvent(MeshCoP::Tls::ConnectEvent aEvent)
     {
         FreeMessage(mReceivedMessage);
         mReceivedMessage = nullptr;
+        FreeMessage(mSendMessage);
+        mSendMessage = nullptr;
 
         if (mTcatAgent.IsEnabled())
         {
@@ -361,7 +391,7 @@ void BleSecure::HandleTlsReceive(uint8_t *aBuf, uint16_t aLength)
     {
         SuccessOrExit(mReceivedMessage->AppendBytes(aBuf, aLength));
         mReceiveCallback.InvokeIfSet(&GetInstance(), mReceivedMessage, 0, OT_TCAT_APPLICATION_PROTOCOL_NONE, "");
-        IgnoreReturnValue(mReceivedMessage->SetLength(0));
+        IgnoreError(mReceivedMessage->SetLength(0));
     }
     else
     {
@@ -388,7 +418,7 @@ void BleSecure::HandleTlsReceive(uint8_t *aBuf, uint16_t aLength)
                 }
             }
 
-            IgnoreReturnValue(mReceivedMessage->Read(0, tlv));
+            IgnoreError(mReceivedMessage->Read(0, tlv));
 
             if (tlv.IsExtended())
             {
@@ -400,7 +430,7 @@ void BleSecure::HandleTlsReceive(uint8_t *aBuf, uint16_t aLength)
                     continue;
                 }
 
-                IgnoreReturnValue(mReceivedMessage->Read(0, extTlv));
+                IgnoreError(mReceivedMessage->Read(0, extTlv));
                 requiredBytes = extTlv.GetSize();
                 offset        = sizeof(extTlv);
             }
@@ -419,17 +449,18 @@ void BleSecure::HandleTlsReceive(uint8_t *aBuf, uint16_t aLength)
 
             if (mTcatAgent.IsEnabled())
             {
-                ot::Message *message;
-                Error        error = kErrorNone;
+                Error error = kErrorNone;
 
-                message = Get<MessagePool>().Allocate(Message::kTypeBle);
-                VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+                IgnoreError(Flush());
 
-                error = mTcatAgent.HandleSingleTlv(*mReceivedMessage, *message);
-                if (message->GetLength() != 0)
+                if (mSendMessage == nullptr)
                 {
-                    IgnoreReturnValue(SendMessage(*message));
+                    mSendMessage = Get<MessagePool>().Allocate(Message::kTypeBle);
+                    VerifyOrExit(mSendMessage != nullptr, error = kErrorNoBufs);
                 }
+
+                error = mTcatAgent.HandleSingleTlv(*mReceivedMessage, *mSendMessage);
+                IgnoreError(Flush());
 
                 if (error == kErrorAbort)
                 {
@@ -507,7 +538,7 @@ Error BleSecure::HandleTransport(ot::Message &aMessage)
             packet.mLength = kPacketBufferSize;
         }
 
-        IgnoreReturnValue(aMessage.Read(offset, mPacketBuffer, packet.mLength));
+        IgnoreError(aMessage.Read(offset, mPacketBuffer, packet.mLength));
         packet.mValue = mPacketBuffer;
         packet.mPower = OT_BLE_DEFAULT_POWER;
 
@@ -530,7 +561,7 @@ void otPlatBleGattServerOnWriteRequest(otInstance *aInstance, uint16_t aHandle, 
     OT_UNUSED_VARIABLE(aHandle); // Only a single handle is expected for RX
 
     VerifyOrExit(aPacket != nullptr);
-    IgnoreReturnValue(AsCoreType(aInstance).Get<Ble::BleSecure>().HandleBleReceive(aPacket->mValue, aPacket->mLength));
+    IgnoreError(AsCoreType(aInstance).Get<Ble::BleSecure>().HandleBleReceive(aPacket->mValue, aPacket->mLength));
 exit:
     return;
 }
@@ -547,7 +578,7 @@ void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnectionId)
 
 void otPlatBleGattOnMtuUpdate(otInstance *aInstance, uint16_t aMtu)
 {
-    IgnoreReturnValue(AsCoreType(aInstance).Get<Ble::BleSecure>().HandleBleMtuUpdate(aMtu));
+    IgnoreError(AsCoreType(aInstance).Get<Ble::BleSecure>().HandleBleMtuUpdate(aMtu));
 }
 
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE

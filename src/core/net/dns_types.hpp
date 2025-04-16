@@ -1267,6 +1267,7 @@ public:
     // Resource Record Types.
     static constexpr uint16_t kTypeZero  = 0;   ///< Zero as special indicator for the SIG RR (SIG(0) from RFC 2931).
     static constexpr uint16_t kTypeA     = 1;   ///< Address record (IPv4).
+    static constexpr uint16_t kTypeNs    = 2;   ///< NS record (an authoritative name server).
     static constexpr uint16_t kTypeSoa   = 6;   ///< Start of (zone of) authority.
     static constexpr uint16_t kTypeCname = 5;   ///< CNAME record.
     static constexpr uint16_t kTypePtr   = 12;  ///< PTR record.
@@ -1275,6 +1276,7 @@ public:
     static constexpr uint16_t kTypeKey   = 25;  ///< KEY record.
     static constexpr uint16_t kTypeAaaa  = 28;  ///< IPv6 address record.
     static constexpr uint16_t kTypeSrv   = 33;  ///< SRV locator record.
+    static constexpr uint16_t kTypeDname = 39;  ///< DNAME record.
     static constexpr uint16_t kTypeOpt   = 41;  ///< Option record.
     static constexpr uint16_t kTypeNsec  = 47;  ///< NSEC record.
     static constexpr uint16_t kTypeAny   = 255; ///< ANY record.

@@ -32,7 +32,8 @@ from ble.ble_stream_secure import BleStreamSecure
 from cli.base_commands import (DisconnectCommand, HelpCommand, HelloCommand, CommissionCommand, DecommissionCommand,
                                ExtractDatasetCommand, GetCommissionerCertificate, GetDeviceIdCommand, GetPskdHash,
                                GetExtPanIDCommand, GetNetworkNameCommand, GetProvisioningUrlCommand, PingCommand,
-                               GetRandomNumberChallenge, ThreadStateCommand, ScanCommand, PresentHash)
+                               GetRandomNumberChallenge, ThreadStateCommand, ScanCommand, PresentHash,
+                               DiagnosticTlvsCommand)
 from .tlv_commands import TlvCommand
 from cli.dataset_commands import (DatasetCommand)
 from dataset.dataset import ThreadDataset
@@ -65,6 +66,7 @@ class CLI:
             'peer_pskd_hash': GetPskdHash(),
             'tlv': TlvCommand(),
             'get_comm_cert': GetCommissionerCertificate(),
+            'diagnostic_tlvs': DiagnosticTlvsCommand()
         }
         self._context = {
             'ble_sstream': ble_sstream,
