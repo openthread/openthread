@@ -35,6 +35,28 @@ namespace ot {
 namespace Posix {
 
 /**
+ * Represents socket block/non-block options.
+ */
+enum SocketBlockOption : uint8_t
+{
+    kSocketBlock,
+    kSocketNonBlock,
+};
+
+/**
+ * Creates a socket with SOCK_CLOEXEC flag set.
+ *
+ * @param[in]   aDomain       The communication domain.
+ * @param[in]   aType         The semantics of communication.
+ * @param[in]   aProtocol     The protocol to use.
+ * @param[in]   aBlockOption  Whether to add nonblock flags.
+ *
+ * @returns The file descriptor of the created socket, or -1 if fails to create the socket.
+ * @retval  -1  Failed to create socket.
+ */
+int SocketWithCloseExec(int aDomain, int aType, int aProtocol, SocketBlockOption aBlockOption);
+
+/**
  * Formats a system command to execute.
  *
  * @param[in] aFormat  A pointer to the format string.

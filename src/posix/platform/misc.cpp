@@ -95,29 +95,3 @@ otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)
 
     return gPlatMcuPowerState;
 }
-
-int SocketWithCloseExec(int aDomain, int aType, int aProtocol, SocketBlockOption aBlockOption)
-{
-    int rval = 0;
-    int fd   = -1;
-
-#ifdef __APPLE__
-    VerifyOrExit((fd = socket(aDomain, aType, aProtocol)) != -1, perror("socket(SOCK_CLOEXEC)"));
-
-    VerifyOrExit((rval = fcntl(fd, F_GETFD, 0)) != -1, perror("fcntl(F_GETFD)"));
-    rval |= aBlockOption == kSocketNonBlock ? O_NONBLOCK | FD_CLOEXEC : FD_CLOEXEC;
-    VerifyOrExit((rval = fcntl(fd, F_SETFD, rval)) != -1, perror("fcntl(F_SETFD)"));
-#else
-    aType |= aBlockOption == kSocketNonBlock ? SOCK_CLOEXEC | SOCK_NONBLOCK : SOCK_CLOEXEC;
-    VerifyOrExit((fd = socket(aDomain, aType, aProtocol)) != -1, perror("socket(SOCK_CLOEXEC)"));
-#endif
-
-exit:
-    if (rval == -1)
-    {
-        VerifyOrDie(close(fd) == 0, OT_EXIT_ERROR_ERRNO);
-        fd = -1;
-    }
-
-    return fd;
-}

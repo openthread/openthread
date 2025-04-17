@@ -57,10 +57,11 @@
 #include <openthread/border_router.h>
 #include <openthread/platform/infra_if.h>
 
+#include "infra_if.hpp"
+#include "utils.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "lib/platform/exit_code.h"
-#include "posix/platform/infra_if.hpp"
 
 bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
 {

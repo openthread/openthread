@@ -154,6 +154,7 @@ extern int
 #include "ip6_utils.hpp"
 #include "logger.hpp"
 #include "resolver.hpp"
+#include "utils.hpp"
 #include "common/code_utils.hpp"
 
 unsigned int gNetifIndex = 0;
@@ -1874,7 +1875,7 @@ static void mldListenerInit(void)
 {
     struct ipv6_mreq mreq6;
 
-    sMLDMonitorFd = SocketWithCloseExec(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, kSocketNonBlock);
+    sMLDMonitorFd = ot::Posix::SocketWithCloseExec(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, ot::Posix::kSocketNonBlock);
     VerifyOrDie(sMLDMonitorFd != -1, OT_EXIT_FAILURE);
 
     mreq6.ipv6mr_interface = gNetifIndex;
@@ -2067,7 +2068,7 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     struct sockaddr_ctl addr;
     struct ctl_info     info;
 
-    sTunFd = SocketWithCloseExec(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL, kSocketNonBlock);
+    sTunFd = ot::Posix::SocketWithCloseExec(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL, ot::Posix::kSocketNonBlock);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     memset(&info, 0, sizeof(info));
@@ -2146,9 +2147,9 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
 static void platformConfigureNetLink(void)
 {
 #ifdef __linux__
-    sNetlinkFd = SocketWithCloseExec(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE, kSocketNonBlock);
+    sNetlinkFd = ot::Posix::SocketWithCloseExec(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE, ot::Posix::kSocketNonBlock);
 #elif defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
-    sNetlinkFd = SocketWithCloseExec(PF_ROUTE, SOCK_RAW, 0, kSocketNonBlock);
+    sNetlinkFd = ot::Posix::SocketWithCloseExec(PF_ROUTE, SOCK_RAW, 0, ot::Posix::kSocketNonBlock);
 #else
 #error "!! Unknown platform !!"
 #endif
@@ -2219,7 +2220,7 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
     (void)LogNote;
     (void)LogDebg;
 
-    sIpFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketNonBlock);
+    sIpFd = ot::Posix::SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, ot::Posix::kSocketNonBlock);
     VerifyOrDie(sIpFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     platformConfigureNetLink();

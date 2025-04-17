@@ -58,6 +58,7 @@
 #include "posix/platform/ip6_utils.hpp"
 #include "posix/platform/mainloop.hpp"
 #include "posix/platform/udp.hpp"
+#include "posix/platform/utils.hpp"
 
 using namespace ot::Posix::Ip6Utils;
 
@@ -222,7 +223,7 @@ otError otPlatUdpSocket(otUdpSocket *aUdpSocket)
 
     assert(aUdpSocket->mHandle == nullptr);
 
-    fd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_UDP, kSocketNonBlock);
+    fd = ot::Posix::SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_UDP, ot::Posix::kSocketNonBlock);
     VerifyOrExit(fd >= 0, error = OT_ERROR_FAILED);
 
     aUdpSocket->mHandle = FdToHandle(fd);

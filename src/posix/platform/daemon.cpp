@@ -47,6 +47,7 @@
 #include "cli/cli_config.h"
 #include "common/code_utils.hpp"
 #include "posix/platform/platform-posix.h"
+#include "posix/platform/utils.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
 
