@@ -37,6 +37,7 @@ target_compile_definitions(openthread-ncp-ftd PRIVATE
 
 target_compile_options(openthread-ncp-ftd PRIVATE
     ${OT_CFLAGS}
+    -Wundef
 )
 
 target_include_directories(openthread-ncp-ftd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})

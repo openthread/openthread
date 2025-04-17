@@ -207,4 +207,13 @@
 #define OPENTHREAD_ENABLE_NCP_VENDOR_HOOK 0
 #endif
 
+/**
+ * @def OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+ *
+ * Define to 1 to enable NCP spinel encrypter.
+ */
+#ifndef OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+#define OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER 0
+#endif
+
 #endif // CONFIG_NCP_H_

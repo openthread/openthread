@@ -36,6 +36,7 @@ target_compile_definitions(openthread-ftd PRIVATE
 
 target_compile_options(openthread-ftd PRIVATE
     ${OT_CFLAGS}
+    -Wundef
 )
 
 target_include_directories(openthread-ftd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
