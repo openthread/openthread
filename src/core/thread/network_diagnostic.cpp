@@ -99,7 +99,7 @@ void Server::PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::Me
 
     if (aDestination.IsLinkLocalUnicastOrMulticast())
     {
-        aMessageInfo.SetSockAddr(Get<Mle::MleRouter>().GetLinkLocalAddress());
+        aMessageInfo.SetSockAddr(Get<Mle::Mle>().GetLinkLocalAddress());
     }
     else
     {
@@ -152,7 +152,7 @@ Error Server::AppendChildTable(Message &aMessage)
     Error    error = kErrorNone;
     uint16_t count;
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsRouterOrLeader());
+    VerifyOrExit(Get<Mle::Mle>().IsRouterOrLeader());
 
     count = Min(Get<ChildTable>().GetNumChildren(Child::kInStateValid), kMaxChildEntries);
 
@@ -400,11 +400,11 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         break;
 
     case Tlv::kAddress16:
-        error = Tlv::Append<Address16Tlv>(aMessage, Get<Mle::MleRouter>().GetRloc16());
+        error = Tlv::Append<Address16Tlv>(aMessage, Get<Mle::Mle>().GetRloc16());
         break;
 
     case Tlv::kMode:
-        error = Tlv::Append<ModeTlv>(aMessage, Get<Mle::MleRouter>().GetDeviceMode().Get());
+        error = Tlv::Append<ModeTlv>(aMessage, Get<Mle::Mle>().GetDeviceMode().Get());
         break;
 
     case Tlv::kEui64:
@@ -421,8 +421,8 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         break;
 
     case Tlv::kTimeout:
-        VerifyOrExit(!Get<Mle::MleRouter>().IsRxOnWhenIdle());
-        error = Tlv::Append<TimeoutTlv>(aMessage, Get<Mle::MleRouter>().GetTimeout());
+        VerifyOrExit(!Get<Mle::Mle>().IsRxOnWhenIdle());
+        error = Tlv::Append<TimeoutTlv>(aMessage, Get<Mle::Mle>().GetTimeout());
         break;
 
     case Tlv::kLeaderData:
@@ -430,7 +430,7 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         LeaderDataTlv tlv;
 
         tlv.Init();
-        tlv.Set(Get<Mle::MleRouter>().GetLeaderData());
+        tlv.Set(Get<Mle::Mle>().GetLeaderData());
         error = tlv.AppendTo(aMessage);
         break;
     }
@@ -511,7 +511,7 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         ConnectivityTlv tlv;
 
         tlv.Init();
-        Get<Mle::MleRouter>().FillConnectivityTlv(tlv);
+        Get<Mle::Mle>().FillConnectivityTlv(tlv);
         error = tlv.AppendTo(aMessage);
         break;
     }
@@ -538,7 +538,7 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
     {
         uint32_t maxTimeout;
 
-        SuccessOrExit(Get<Mle::MleRouter>().GetMaxChildTimeout(maxTimeout));
+        SuccessOrExit(Get<Mle::Mle>().GetMaxChildTimeout(maxTimeout));
         error = Tlv::Append<MaxChildTimeoutTlv>(aMessage, maxTimeout);
         break;
     }

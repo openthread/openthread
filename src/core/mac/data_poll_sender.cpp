@@ -57,16 +57,16 @@ DataPollSender::DataPollSender(Instance &aInstance)
 
 const Neighbor &DataPollSender::GetParent(void) const
 {
-    const Neighbor &parentCandidate = Get<Mle::MleRouter>().GetParentCandidate();
+    const Neighbor &parentCandidate = Get<Mle::Mle>().GetParentCandidate();
 
-    return parentCandidate.IsStateValid() ? parentCandidate : Get<Mle::MleRouter>().GetParent();
+    return parentCandidate.IsStateValid() ? parentCandidate : Get<Mle::Mle>().GetParent();
 }
 
 void DataPollSender::StartPolling(void)
 {
     VerifyOrExit(!mEnabled);
 
-    OT_ASSERT(!Get<Mle::MleRouter>().IsRxOnWhenIdle());
+    OT_ASSERT(!Get<Mle::Mle>().IsRxOnWhenIdle());
 
     mEnabled = true;
     ScheduleNextPoll(kRecalculatePollPeriod);
@@ -136,7 +136,7 @@ Error DataPollSender::GetPollDestinationAddress(Mac::Address &aDest) const
 
     // Use extended address attaching to a new parent (i.e. parent is the parent candidate).
     if ((Get<Mac::Mac>().GetShortAddress() == Mac::kShortAddrInvalid) ||
-        (&parent == &Get<Mle::MleRouter>().GetParentCandidate()))
+        (&parent == &Get<Mle::Mle>().GetParentCandidate()))
     {
         aDest.SetExtended(parent.GetExtAddress());
     }
@@ -206,7 +206,7 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
     if (GetParent().IsStateInvalid())
     {
         StopPolling();
-        IgnoreError(Get<Mle::MleRouter>().BecomeDetached());
+        IgnoreError(Get<Mle::Mle>().BecomeDetached());
         ExitNow();
     }
 
@@ -328,7 +328,7 @@ void DataPollSender::ProcessTxDone(const Mac::TxFrame &aFrame, const Mac::RxFram
     bool sendDataPoll = false;
 
     VerifyOrExit(mEnabled);
-    VerifyOrExit(Get<Mle::MleRouter>().GetParent().IsEnhancedKeepAliveSupported());
+    VerifyOrExit(Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported());
     VerifyOrExit(aFrame.GetSecurityEnabled());
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -522,12 +522,12 @@ uint32_t DataPollSender::GetDefaultPollPeriod(void) const
     uint32_t pollAhead = static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
     uint32_t period;
 
-    period = Time::SecToMsec(Min(Get<Mle::MleRouter>().GetTimeout(), Time::MsecToSec(TimerMilli::kMaxDelay)));
+    period = Time::SecToMsec(Min(Get<Mle::Mle>().GetTimeout(), Time::MsecToSec(TimerMilli::kMaxDelay)));
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_MAC_CSL_AUTO_SYNC_ENABLE
     if (Get<Mac::Mac>().IsCslEnabled())
     {
-        period    = Min(period, Time::SecToMsec(Get<Mle::MleRouter>().GetCslTimeout()));
+        period    = Min(period, Time::SecToMsec(Get<Mle::Mle>().GetCslTimeout()));
         pollAhead = static_cast<uint32_t>(kRetxPollPeriod);
     }
 #endif

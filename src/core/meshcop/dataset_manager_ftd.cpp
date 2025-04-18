@@ -98,7 +98,7 @@ Error DatasetManager::ProcessSetOrReplaceRequest(MgmtCommand          aCommand,
     }
 
     if ((dataset.Read<MeshLocalPrefixTlv>(meshLocalPrefix) == kErrorNone) &&
-        (meshLocalPrefix != Get<Mle::MleRouter>().GetMeshLocalPrefix()))
+        (meshLocalPrefix != Get<Mle::Mle>().GetMeshLocalPrefix()))
     {
         aInfo.mAffectsConnectivity = true;
     }
@@ -262,7 +262,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
     Error   error = kErrorNone;
     Dataset dataset;
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = kErrorInvalidState);
+    VerifyOrExit(Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
     VerifyOrExit(!mLocalTimestamp.IsValid(), error = kErrorAlready);
 
     IgnoreError(Read(dataset));
@@ -306,7 +306,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
 
     if (!dataset.Contains<MeshLocalPrefixTlv>())
     {
-        IgnoreError(dataset.Write<MeshLocalPrefixTlv>(Get<Mle::MleRouter>().GetMeshLocalPrefix()));
+        IgnoreError(dataset.Write<MeshLocalPrefixTlv>(Get<Mle::Mle>().GetMeshLocalPrefix()));
     }
 
     if (!dataset.Contains<NetworkKeyTlv>())
