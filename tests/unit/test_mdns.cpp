@@ -2164,6 +2164,69 @@ void TestHostReg(void)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+void ValidateLocalHostAddresses(Core &aMdns, const LocalHost &aLocalHost)
+{
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
+    Core::Iterator                           *iterator;
+    Array<Ip6::Address, LocalHost::kMaxAddrs> ip6Addrs;
+    Array<Ip4::Address, LocalHost::kMaxAddrs> ip4Addrs;
+
+    iterator = aMdns.AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+
+    Log("Verifying local host addresses (%u IPv6 and %u IPv4 addresses)", aLocalHost.mIp6Addrs.GetLength(),
+        aLocalHost.mIp4Addrs.GetLength());
+
+    while (true)
+    {
+        Error                  error;
+        Core::LocalHostAddress addr;
+
+        error = aMdns.GetNextLocalHostAddress(*iterator, addr);
+
+        if (error == kErrorNotFound)
+        {
+            break;
+        }
+
+        SuccessOrQuit(error);
+
+        VerifyOrQuit(addr.mInfraIfIndex == kInfraIfIndex);
+
+        if (addr.mIsIp6)
+        {
+            SuccessOrQuit(ip6Addrs.PushBack(AsCoreType(&addr.mAddress.mIp6)));
+            Log("   %s", ip6Addrs.Back()->ToString().AsCString());
+        }
+        else
+        {
+            SuccessOrQuit(ip4Addrs.PushBack(AsCoreType(&addr.mAddress.mIp4)));
+            Log("   %s", ip4Addrs.Back()->ToString().AsCString());
+        }
+    }
+
+    aMdns.FreeIterator(*iterator);
+
+    VerifyOrQuit(ip6Addrs.GetLength() == aLocalHost.mIp6Addrs.GetLength());
+
+    for (const Ip6::Address &ip6Addr : ip6Addrs)
+    {
+        VerifyOrQuit(aLocalHost.mIp6Addrs.Contains(ip6Addr));
+    }
+
+    VerifyOrQuit(ip4Addrs.GetLength() == aLocalHost.mIp4Addrs.GetLength());
+
+    for (const Ip4::Address &ip4Addr : ip4Addrs)
+    {
+        VerifyOrQuit(aLocalHost.mIp4Addrs.Contains(ip4Addr));
+    }
+#else
+    OT_UNUSED_VARIABLE(aMdns);
+    OT_UNUSED_VARIABLE(aLocalHost);
+#endif
+}
+
 void TestLocalHost(void)
 {
     Core             *mdns = InitTest();
@@ -2187,6 +2250,8 @@ void TestLocalHost(void)
     Log("Local host name is \"%s\"", localHost.mName);
 
     hostFullName.Append("%s.local.", localHost.mName);
+
+    ValidateLocalHostAddresses(*mdns, localHost);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     Log("Add an IP6 address and IP4 address for local host, check probes and announcements");
@@ -2229,6 +2294,8 @@ void TestLocalHost(void)
         dnsMsg->Validate(localHost, kInAnswerSection, kCheckAaaa | kCheckA);
         VerifyOrQuit(dnsMsg->GetNext() == nullptr);
     }
+
+    ValidateLocalHostAddresses(*mdns, localHost);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     Log("Send a query for AAAA record and validate the response");
@@ -2314,6 +2381,8 @@ void TestLocalHost(void)
         sDnsMessages.Clear();
     }
 
+    ValidateLocalHostAddresses(*mdns, localHost);
+
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     Log("Signal new host IPv6 addresses added and removed");
 
@@ -2351,6 +2420,8 @@ void TestLocalHost(void)
         sDnsMessages.Clear();
     }
 
+    ValidateLocalHostAddresses(*mdns, localHost);
+
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     Log("Signal three new host IPv4 addresses added");
 
@@ -2386,6 +2457,8 @@ void TestLocalHost(void)
         VerifyOrQuit(dnsMsg->GetNext() == nullptr);
         sDnsMessages.Clear();
     }
+
+    ValidateLocalHostAddresses(*mdns, localHost);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     Log("Signal removal of all host addresses and add them all back");
@@ -2532,6 +2605,8 @@ void TestLocalHost(void)
     AdvanceTime(10 * 1000);
     VerifyOrQuit(sDnsMessages.IsEmpty());
 
+    ValidateLocalHostAddresses(*mdns, localHost);
+
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     Log("Signal removal of an IPv6 host address which was not added earlier");
 
@@ -2544,6 +2619,8 @@ void TestLocalHost(void)
 
     AdvanceTime(10 * 1000);
     VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    ValidateLocalHostAddresses(*mdns, localHost);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     Log("Signal remove and re-add of the same host IPv6 address quickly");
@@ -2559,6 +2636,8 @@ void TestLocalHost(void)
 
     AdvanceTime(10 * 1000);
     VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    ValidateLocalHostAddresses(*mdns, localHost);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     Log("Validate `SetLocalHostName()`");
@@ -2628,6 +2707,8 @@ void TestLocalHost(void)
         dnsMsg->Validate(localHost, kInAnswerSection, kCheckAaaa | kCheckA);
         VerifyOrQuit(dnsMsg->GetNext() == nullptr);
     }
+
+    ValidateLocalHostAddresses(*mdns, localHost);
 
     AdvanceTime(1000);
 

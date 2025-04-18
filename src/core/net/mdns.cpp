@@ -244,6 +244,11 @@ Error Core::GetNextKey(Iterator &aIterator, Key &aKey, EntryState &aState) const
     return static_cast<EntryIterator &>(aIterator).GetNextKey(aKey, aState);
 }
 
+Error Core::GetNextLocalHostAddress(Iterator &aIterator, LocalHostAddress &aAddress)
+{
+    return static_cast<EntryIterator &>(aIterator).GetNextLocalHostAddress(aAddress);
+}
+
 Error Core::GetNextBrowser(Iterator &aIterator, Browser &aBrowser, CacheInfo &aInfo) const
 {
     return static_cast<EntryIterator &>(aIterator).GetNextBrowser(aBrowser, aInfo);
@@ -7397,6 +7402,50 @@ Error Core::EntryIterator::GetNextKey(Key &aKey, EntryState &aState)
         error         = mServiceEntry->CopyInfoTo(aKey, aState);
         mServiceEntry = mServiceEntry->GetNext();
     }
+
+exit:
+    return error;
+}
+
+Error Core::EntryIterator::GetNextLocalHostAddress(LocalHostAddress &aAddress)
+{
+    Error        error = kErrorNone;
+    uint16_t     index;
+    Ip4::Address ip4Addr;
+
+    if (mType == kUnspecified)
+    {
+        mLocalHostAddrIndex = 0;
+        mType               = kLocalHostAddress;
+    }
+    else
+    {
+        VerifyOrExit(mType == kLocalHostAddress, error = kErrorInvalidArgs);
+    }
+
+    ClearAllBytes(aAddress);
+
+    index = mLocalHostAddrIndex;
+
+    if (index < Get<Core>().mLocalHost.GetIp6Addresses().GetLength())
+    {
+        aAddress.mIsIp6        = true;
+        aAddress.mAddress.mIp6 = Get<Core>().mLocalHost.GetIp6Addresses()[index];
+    }
+    else
+    {
+        index -= Get<Core>().mLocalHost.GetIp6Addresses().GetLength();
+
+        VerifyOrExit(index < Get<Core>().mLocalHost.GetIp4Addresses().GetLength(), error = kErrorNotFound);
+
+        IgnoreError(ip4Addr.ExtractFromIp4MappedIp6Address(Get<Core>().mLocalHost.GetIp4Addresses()[index]));
+
+        aAddress.mIsIp6        = false;
+        aAddress.mAddress.mIp4 = ip4Addr;
+    }
+
+    aAddress.mInfraIfIndex = Get<Core>().mInfraIfIndex;
+    mLocalHostAddrIndex++;
 
 exit:
     return error;
