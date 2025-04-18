@@ -760,11 +760,11 @@ otError otDnsRecordResponseGetQueryName(const otDnsRecordResponse *aResponse,
  * - The data is copied into `mDataBuffer` (if not `NULL`) up to its capacity specified by `mDataBufferSize`.
  * - `mDataBufferSize` is then updated to reflect the number of bytes actually written into `mDataBuffer`.
  *
- * If the retrieved record type is PTR (12), CNAME (5), DNAME (39), NS (2), or SRV (33), the record data in the
- * received response contains a DNS name which may use DNS name compression. For these specific record types, the
- * record data is first decompressed such that it contains the full uncompressed DNS name. This decompressed data is
- * then provided in `mDataBuffer`, and `mRecordDataLength` will indicate the length of this decompressed data. For all
- * other record types, the record data is read and provided as it appears in the received response message.
+ * If the retrieved record type is NS, CNAME, SOA, PTR, MX, RP, AFSDB, RT, PX, SRV, KX, DNAME, or NSEC, the record
+ * data in the received response contains a DNS name which may use DNS name compression. For these specific record
+ * types, the record data is first decompressed such that it contains the full uncompressed DNS name. This decompressed
+ * data is then provided in `mDataBuffer`, and `mRecordDataLength` will indicate the length of this decompressed data.
+ * For all other record types, the record data is read and provided as it appears in the received response message.
  *
  * @param[in]  aResponse       A pointer to the response.
  * @param[in]  aIndex          The record index to retrieve.
@@ -774,7 +774,7 @@ otError otDnsRecordResponseGetQueryName(const otDnsRecordResponse *aResponse,
  * @retval OT_ERROR_NOT_FOUND  No record in @p aResponse at @p aIndex.
  * @retval OT_ERROR_PARSE      Could not parse the records in the @p aResponse.
  * @retval OT_ERROR_NO_BUFS    The record name does not fit in the provided `mNameBufferSize` in @p aRecordInfo, or
- *                             failed to allocate buffer to decompress a compressed DNS name (PTR, SRV, CNAME).
+ *                             failed to allocate buffer to decompress a compressed DNS name.
  */
 otError otDnsRecordResponseGetRecordInfo(const otDnsRecordResponse *aResponse,
                                          uint16_t                   aIndex,

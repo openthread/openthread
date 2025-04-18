@@ -378,10 +378,10 @@ exit:
 
 Error Client::Response::ReadRecordInfo(uint16_t aIndex, RecordInfo &aRecordInfo) const
 {
-    Error          error;
-    uint16_t       offset;
-    ResourceRecord record;
-    Message       *decompressedData = nullptr;
+    Error             error;
+    uint16_t          offset;
+    ResourceRecord    record;
+    OwnedPtr<Message> decompressedData;
 
     if (aIndex < mAnswerRecordCount)
     {
@@ -406,43 +406,12 @@ Error Client::Response::ReadRecordInfo(uint16_t aIndex, RecordInfo &aRecordInfo)
     SuccessOrExit(error = Name::ReadName(*mMessage, offset, aRecordInfo.mNameBuffer, aRecordInfo.mNameBufferSize));
 
     SuccessOrExit(error = mMessage->Read(offset, record));
-    VerifyOrExit(offset + record.GetSize() <= mMessage->GetLength(), error = kErrorParse);
-    offset += sizeof(record);
 
-    aRecordInfo.mRecordType = record.GetType();
-    aRecordInfo.mTtl        = record.GetTtl();
+    SuccessOrExit(error = ResourceRecord::DecompressRecordData(*mMessage, offset, decompressedData));
 
-    // We may need to translate the record data for PTR, CNAME, DNAME, NS
-    // and SRV record since the data format contains a DNS name which
-    // may use compression.
-
-    switch (record.GetType())
-    {
-    case ResourceRecord::kTypePtr:
-    case ResourceRecord::kTypeCname:
-    case ResourceRecord::kTypeDname:
-    case ResourceRecord::kTypeNs:
-    case ResourceRecord::kTypeSrv:
-        decompressedData = mMessage->Get<MessagePool>().Allocate(Message::kTypeOther);
-        VerifyOrExit(decompressedData != nullptr, error = kErrorNoBufs);
-
-        if (record.GetType() == ResourceRecord::kTypeSrv)
-        {
-            uint16_t srvMinLength = sizeof(SrvRecord) - sizeof(ResourceRecord);
-
-            VerifyOrExit(record.GetLength() > srvMinLength, error = kErrorParse);
-            SuccessOrExit(error = decompressedData->AppendBytesFromMessage(*mMessage, offset, srvMinLength));
-            offset += srvMinLength;
-        }
-
-        SuccessOrExit(error = Name(*mMessage, offset).AppendTo(*decompressedData));
-        break;
-
-    default:
-        break;
-    }
-
+    aRecordInfo.mRecordType   = record.GetType();
     aRecordInfo.mRecordLength = (decompressedData != nullptr) ? decompressedData->GetLength() : record.GetLength();
+    aRecordInfo.mTtl          = record.GetTtl();
 
     if (aRecordInfo.mDataBuffer == nullptr)
     {
@@ -458,11 +427,10 @@ Error Client::Response::ReadRecordInfo(uint16_t aIndex, RecordInfo &aRecordInfo)
     }
     else
     {
-        mMessage->ReadBytes(offset, aRecordInfo.mDataBuffer, aRecordInfo.mDataBufferSize);
+        mMessage->ReadBytes(offset + sizeof(ResourceRecord), aRecordInfo.mDataBuffer, aRecordInfo.mDataBufferSize);
     }
 
 exit:
-    FreeMessage(decompressedData);
     return error;
 }
 
