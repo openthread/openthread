@@ -612,36 +612,17 @@ typedef otPlatDnssdAddressResult otMdnsAddressResult;
 /**
  * Represents a record query result.
  */
-typedef struct otMdnsRecordResult
-{
-    const char    *mFirstLabel;       ///< The first label of the name to be queried.
-    const char    *mNextLabels;       ///< The rest of the name labels. Does not include domain name. Can be NULL.
-    uint16_t       mRecordType;       ///< The record type.
-    const uint8_t *mRecordData;       ///< The record data bytes.
-    uint16_t       mRecordDataLength; ///< Number of bytes in record data.
-    uint32_t       mTtl;              ///< TTL in seconds. Zero TTL indicates removal the data.
-    uint32_t       mInfraIfIndex;     ///< The infrastructure network interface index.
-} otMdnsRecordResult;
+typedef otPlatDnssdRecordResult otMdnsRecordResult;
 
 /**
  * Represents the callback function used to report a record querier result.
- *
- * @param[in] aInstance    The OpenThread instance.
- * @param[in] aResult      The record querier result.
  */
-typedef void (*otMdnsRecordCallback)(otInstance *aInstance, const otMdnsRecordResult *aResult);
+typedef otPlatDnssdRecordCallback otMdnsRecordCallback;
 
 /**
  * Represents a record querier.
  */
-typedef struct otMdnsRecordQuerier
-{
-    const char          *mFirstLabel;   ///< The first label of the name to be queried. MUST NOT be NULL.
-    const char          *mNextLabels;   ///< The rest of name labels, excluding domain name. Can be NULL.
-    uint16_t             mRecordType;   ///< The record type to query.
-    uint32_t             mInfraIfIndex; ///< The infrastructure network interface index.
-    otMdnsRecordCallback mCallback;     ///< The callback to report result.
-} otMdnsRecordQuerier;
+typedef otPlatDnssdRecordQuerier otMdnsRecordQuerier;
 
 /**
  * Starts a service browser.
