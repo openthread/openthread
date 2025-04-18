@@ -76,6 +76,23 @@ static void microTimerHandler(int aSignal, siginfo_t *aSignalInfo, void *aUserCo
 #define OT_POSIX_CLOCK_ID CLOCK_MONOTONIC
 #endif
 
+static bool IsExpired(uint32_t aTime, uint32_t aNow)
+{
+    // Determine whether or not `aTime` is before or same as `aNow`.
+
+    uint32_t diff = aNow - aTime;
+
+    return (diff & (1U << 31)) == 0;
+}
+
+static uint32_t CalculateDuration(uint32_t aTime, uint32_t aNow)
+{
+    // Return the time duration from `aNow` to `aTime` if `aTime` is
+    // after `aNow`, otherwise return zero.
+
+    return IsExpired(aTime, aNow) ? 0 : aTime - aNow;
+}
+
 #if !OPENTHREAD_POSIX_VIRTUAL_TIME
 uint64_t otPlatTimeGet(void)
 {
@@ -128,7 +145,7 @@ void platformAlarmInit(uint32_t aSpeedUpFactor, int aRealTimeSignal)
     }
 }
 
-uint32_t otPlatAlarmMilliGetNow(void) { return (uint32_t)(platformAlarmGetNow() / OT_US_PER_MS); }
+uint32_t otPlatAlarmMilliGetNow(void) { return static_cast<uint32_t>(platformAlarmGetNow() / OT_US_PER_MS); }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
@@ -197,39 +214,46 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
 
 void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 {
-    int64_t  remaining = INT32_MAX;
+    uint64_t remaining = INT32_MAX;
     uint64_t now       = platformAlarmGetNow();
 
     assert(aTimeout != nullptr);
 
     if (sIsMsRunning)
     {
-        remaining = (int32_t)(sMsAlarm - (uint32_t)(now / OT_US_PER_MS));
-        VerifyOrExit(remaining > 0);
-        remaining *= OT_US_PER_MS;
-        remaining -= (now % OT_US_PER_MS);
+        uint32_t nowMs        = static_cast<uint32_t>(now / OT_US_PER_MS);
+        uint32_t leftoverUsec = static_cast<uint32_t>(now % OT_US_PER_MS);
+
+        remaining = CalculateDuration(sMsAlarm, nowMs);
+
+        if (remaining > 0)
+        {
+            remaining *= OT_US_PER_MS;
+            remaining -= leftoverUsec;
+        }
     }
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-    if (sIsUsRunning)
+    if (sIsUsRunning && (remaining > 0))
     {
-        int32_t usRemaining = (int32_t)(sUsAlarm - (uint32_t)now);
+        uint32_t usRemaining = CalculateDuration(sUsAlarm, static_cast<uint32_t>(now));
 
         if (usRemaining < remaining)
         {
             remaining = usRemaining;
         }
     }
-#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+#endif
 
-exit:
-    if (remaining <= 0)
+    if (remaining == 0)
     {
         aTimeout->tv_sec  = 0;
         aTimeout->tv_usec = 0;
     }
     else
     {
+        uint64_t timeout;
+
         remaining /= sSpeedUpFactor;
 
         if (remaining == 0)
@@ -237,7 +261,9 @@ exit:
             remaining = 1;
         }
 
-        if (remaining < static_cast<int64_t>(aTimeout->tv_sec) * OT_US_PER_S + static_cast<int64_t>(aTimeout->tv_usec))
+        timeout = static_cast<uint64_t>(aTimeout->tv_sec) * OT_US_PER_S + static_cast<uint64_t>(aTimeout->tv_usec);
+
+        if (remaining < timeout)
         {
             aTimeout->tv_sec  = static_cast<time_t>(remaining / OT_US_PER_S);
             aTimeout->tv_usec = static_cast<suseconds_t>(remaining % OT_US_PER_S);
@@ -247,42 +273,29 @@ exit:
 
 void platformAlarmProcess(otInstance *aInstance)
 {
-    int32_t remaining;
-
-    if (sIsMsRunning)
+    if (sIsMsRunning && IsExpired(sMsAlarm, otPlatAlarmMilliGetNow()))
     {
-        remaining = (int32_t)(sMsAlarm - otPlatAlarmMilliGetNow());
-
-        if (remaining <= 0)
-        {
-            sIsMsRunning = false;
+        sIsMsRunning = false;
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-
-            if (otPlatDiagModeGet())
-            {
-                otPlatDiagAlarmFired(aInstance);
-            }
-            else
+        if (otPlatDiagModeGet())
+        {
+            otPlatDiagAlarmFired(aInstance);
+        }
+        else
 #endif
-            {
-                otPlatAlarmMilliFired(aInstance);
-            }
+        {
+            otPlatAlarmMilliFired(aInstance);
         }
     }
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
-    if (sIsUsRunning)
+    if (sIsUsRunning && IsExpired(sUsAlarm, otPlatAlarmMicroGetNow()))
     {
-        remaining = (int32_t)(sUsAlarm - otPlatAlarmMicroGetNow());
+        sIsUsRunning = false;
 
-        if (remaining <= 0)
-        {
-            sIsUsRunning = false;
-
-            otPlatAlarmMicroFired(aInstance);
-        }
+        otPlatAlarmMicroFired(aInstance);
     }
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
