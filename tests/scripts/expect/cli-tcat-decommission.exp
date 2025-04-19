@@ -31,7 +31,19 @@ source "tests/scripts/expect/_common.exp"
 
 spawn_node 1 "cli"
 
-spawn_tcat_client_for_node 1
+spawn_tcat_client_for_node 1 tools/tcat_ble_client/auth-cert/CommCert2
+
+send "commission\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x10"
+
+send "random_challenge\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t8"
+
+send "present_hash pskd JJJJJJ\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x00"
 
 send "commission\n"
 expect_line "\tTYPE:\tRESPONSE_W_STATUS"
@@ -40,6 +52,41 @@ expect_line "\tVALUE:\t0x00"
 send "thread start\n"
 expect_line "\tTYPE:\tRESPONSE_W_STATUS"
 expect_line "\tVALUE:\t0x00"
+
+dispose_tcat_client 1
+
+switch_node 1
+send "tcat stop\n"
+expect_line "Done"
+
+spawn_tcat_client_for_node 1
+
+send "commission\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x08"
+
+send "get_dataset\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t106"
+
+send "decommission\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+
+dispose_tcat_client 1
+
+switch_node 1
+send "tcat stop\n"
+expect_line "Done"
+
+spawn_tcat_client_for_node 1
+
+send "commission\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x00"
+
+send "get_dataset\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t106"
 
 send "decommission\n"
 expect_line "\tTYPE:\tRESPONSE_W_STATUS"

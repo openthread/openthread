@@ -33,7 +33,8 @@ from cli.base_commands import (DisconnectCommand, HelpCommand, HelloCommand, Com
                                ExtractDatasetCommand, GetCommissionerCertificate, GetDeviceIdCommand, GetPskdHash,
                                GetExtPanIDCommand, GetNetworkNameCommand, GetProvisioningUrlCommand, PingCommand,
                                GetRandomNumberChallenge, ThreadStateCommand, ScanCommand, PresentHash,
-                               DiagnosticTlvsCommand)
+                               DiagnosticTlvsCommand, GetApplicationLayersCommand, SendVendorApplicationData,
+                               SendApplicationData1, SendApplicationData2, SendApplicationData3, SendApplicationData4)
 from .tlv_commands import TlvCommand
 from cli.dataset_commands import (DatasetCommand)
 from dataset.dataset import ThreadDataset
@@ -49,6 +50,12 @@ class CLI:
         self._commands = {
             'help': HelpCommand(),
             'hello': HelloCommand(),
+            'get_applications': GetApplicationLayersCommand(),
+            'application1': SendApplicationData1(),
+            'application2': SendApplicationData2(),
+            'application3': SendApplicationData3(),
+            'application4': SendApplicationData4(),
+            'vendor_application': SendVendorApplicationData(),
             'commission': CommissionCommand(),
             'decommission': DecommissionCommand(),
             'disconnect': DisconnectCommand(),
