@@ -7025,15 +7025,30 @@ void Core::RecordCache::ProcessResponseRecord(const Message        &aMessage,
 {
     // Name and record type in `aMessage` are already matched.
 
-    // Adds a new record data to `mNewEntries` list. This called as
-    // the records in a received response are processed one by one.
-    // Once all records are processed `CommitNewResponseEntries()` is
-    // called to update the list.
+    // First, checks if the record data needs to be decompressed
+    // (the record data format can contain one or more compressed DNS
+    // names). This check applies to records: NS, CNAME, SOA, PTR,
+    // MX, RP, AFSDB, RT, PX, SRV, KX, DNAME, and NSEC.
+    //
+    // Then, adds the new record data to the `mNewEntries` list. This
+    // step occurs as the records in a received response are
+    // processed one by one. Once all records are processed,
+    // `CommitNewResponseEntries()` is called to update the list.
 
-    Heap::Data      data;
-    NewRecordEntry *entry;
+    OwnedPtr<Message> dataMsg;
+    Heap::Data        data;
+    NewRecordEntry   *entry;
 
-    SuccessOrAssert(data.SetFrom(aMessage, aRecordOffset + sizeof(ResourceRecord), aRecord.GetLength()));
+    SuccessOrExit(ResourceRecord::DecompressRecordData(aMessage, aRecordOffset, dataMsg));
+
+    if (dataMsg != nullptr)
+    {
+        SuccessOrAssert(data.SetFrom(*dataMsg));
+    }
+    else
+    {
+        SuccessOrAssert(data.SetFrom(aMessage, aRecordOffset + sizeof(ResourceRecord), aRecord.GetLength()));
+    }
 
     // Check for duplicates in the same response. If there
     // are exact duplicates, we remember the last one in the
@@ -7053,6 +7068,9 @@ void Core::RecordCache::ProcessResponseRecord(const Message        &aMessage,
 
         mNewEntries.Push(*entry);
     }
+
+exit:
+    return;
 }
 
 void Core::RecordCache::CommitNewResponseEntries(void)
