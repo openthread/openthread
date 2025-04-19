@@ -33,6 +33,7 @@ Print BR command help menu.
 counters
 disable
 enable
+multiail
 omrconfig
 omrprefix
 onlinkprefix
@@ -116,6 +117,47 @@ RS Rx: 0
 RS TxSuccess: 2
 RS TxFailed: 0
 Done
+```
+
+### multiail
+
+Usage : `br multiail`
+
+Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE`.
+
+Get the current detected state regarding multiple Adjacent Infrastructure Links (AILs) indicating whether the Routing Manager currently believes that Border Routers (BRs) on the Thread mesh may be connected to different AILs.
+
+The detection mechanism operates as follows: The Routing Manager monitors the number of peer BRs listed in the Thread Network Data (see `br peers`) and compares this count with the number of peer BRs discovered by processing received Router Advertisement (RA) messages on its connected AIL. If the count derived from Network Data consistently exceeds the count derived from RAs for a detection duration of 10 minutes, it concludes that BRs are likely connected to different AILs. To clear the state a shorter window of 1 minute is used.
+
+The detection window of 10 minutes helps to avoid false positives due to transient changes. The Routing Manager uses 200 seconds for reachability checks of peer BRs (sending Neighbor Solicitation). Stale Network Data entries are also expected to age out within a few minutes. So a 10-minute detection time accommodates both cases.
+
+While generally effective, this detection mechanism may get less reliable in scenarios with a large number of BRs, particularly exceeding ten. This is related to the "Network Data Publisher" mechanism, where BRs might refrain from publishing their external route information in the Network Data to conserve its limited size, potentially skewing the Network Data BR count.
+
+```bash
+> br multiail
+not detected
+Done
+
+> br multiail
+detected
+Done
+```
+
+Usage: `br multiail callback enable|disable`
+
+Enable or disable callback to be notified of changes in the multi-AIL detection state.
+
+```bash
+> br multiail callback enable
+Done
+
+BR multi AIL callback: detected
+
+> br multiail
+detected
+Done
+
+BR multi AIL callback: cleared
 ```
 
 ### omrconfig
