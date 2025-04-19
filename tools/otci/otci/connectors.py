@@ -138,12 +138,12 @@ class OtNcpSim(OtCliPopen):
 class OtCliSerial(OtCliHandler):
     """Connector for OT CLI SOC devices via Serial."""
 
-    def __init__(self, dev: str, baudrate: int):
+    def __init__(self, dev: str, baudrate: int, timeout: float = 0.1):
         self.__dev = dev
         self.__baudrate = baudrate
 
         import serial
-        self.__serial = serial.Serial(self.__dev, self.__baudrate, timeout=0.1, exclusive=True)
+        self.__serial = serial.Serial(self.__dev, self.__baudrate, timeout=timeout, exclusive=True)
         self.writeline('\r\n')
         self.__linebuffer = b''
 
