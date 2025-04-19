@@ -57,15 +57,6 @@
 #include "lib/url/url.hpp"
 
 /**
- * @def OPENTHREAD_POSIX_VIRTUAL_TIME
- *
- * This setting configures whether to use virtual time.
- */
-#ifndef OPENTHREAD_POSIX_VIRTUAL_TIME
-#define OPENTHREAD_POSIX_VIRTUAL_TIME 0
-#endif
-
-/**
  * This is the socket name used by daemon mode.
  */
 #define OPENTHREAD_POSIX_DAEMON_SOCKET_NAME OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME ".sock"

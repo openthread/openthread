@@ -256,6 +256,15 @@
 #define OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME "wpan0"
 #endif
 
+/**
+ * @def OPENTHREAD_POSIX_VIRTUAL_TIME
+ *
+ * This setting configures whether to use virtual time.
+ */
+#ifndef OPENTHREAD_POSIX_VIRTUAL_TIME
+#define OPENTHREAD_POSIX_VIRTUAL_TIME 0
+#endif
+
 #ifdef __APPLE__
 
 /**
@@ -278,17 +287,6 @@
 #endif
 
 #endif // __APPLE__
-
-//---------------------------------------------------------------------------------------------------------------------
-// Removed or renamed POSIX specific configs.
-
-#ifdef OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME
-#error "OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME was removed (no longer applicable with TREL over DNS-SD)."
-#endif
-
-#ifdef OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
-#error "OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET was removed (no longer applicable with TREL over DNS-SD)."
-#endif
 
 /**
  * @def OPENTHREAD_POSIX_CONFIG_TREL_UDP_PORT
@@ -442,6 +440,17 @@
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_RESOLV_CONF_ENABLED_INIT
 #define OPENTHREAD_POSIX_CONFIG_RESOLV_CONF_ENABLED_INIT (!OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE)
+#endif
+
+//---------------------------------------------------------------------------------------------------------------------
+// Removed or renamed POSIX specific configs.
+
+#ifdef OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME
+#error "OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME was removed (no longer applicable with TREL over DNS-SD)."
+#endif
+
+#ifdef OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
+#error "OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET was removed (no longer applicable with TREL over DNS-SD)."
 #endif
 
 #endif // OPENTHREAD_PLATFORM_POSIX_CONFIG_H_
