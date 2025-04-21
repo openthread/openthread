@@ -84,26 +84,30 @@ class OTCommandHandler(ABC):
     def shell(self, cmd: str, timeout: float) -> List[str]:
         raise NotImplementedError("shell command is not supported on %s" % self.__class__.__name__)
 
+    @classmethod
+    def set_filter(cls, filter: re.Pattern[str]):
+        return
+
 
 class OtCliCommandRunner(OTCommandHandler):
     __PATTERN_COMMAND_DONE_OR_ERROR = re.compile(
         r'(Done|Error|Error \d+:.*|.*: command not found)$')  # "Error" for spinel-cli.py
 
-    __PATTERN_LOG_LINE = re.compile(r'((\[(NONE|CRIT|WARN|NOTE|INFO|DEBG)\])'
+    __pattern_log_line = re.compile(r'((\[(NONE|CRIT|WARN|NOTE|INFO|DEBG)\])'
                                     r'|(-.*-+: )'  # e.g. -CLI-----:
                                     r'|(\[[DINWC\-]\] (?=[\w\-]{14}:)\w+-*:)'  # e.g. [I] Mac-----------:
                                     r')')
     """regex used to filter logs"""
 
-    assert __PATTERN_LOG_LINE.match('[I] ChannelMonitor: debug log')
-    assert __PATTERN_LOG_LINE.match('[I] Mac-----------: info log')
-    assert __PATTERN_LOG_LINE.match('[N] MeshForwarder-: note    log')
-    assert __PATTERN_LOG_LINE.match('[W] Notifier------: warn log')
-    assert __PATTERN_LOG_LINE.match('[C] Mle-----------: critical log')
-    assert __PATTERN_LOG_LINE.match('[-] Settings------: none log')
-    assert not __PATTERN_LOG_LINE.match('[-] Settings-----: none log')  # not enough `-` after module name
+    assert __pattern_log_line.match('[I] ChannelMonitor: debug log')
+    assert __pattern_log_line.match('[I] Mac-----------: info log')
+    assert __pattern_log_line.match('[N] MeshForwarder-: note    log')
+    assert __pattern_log_line.match('[W] Notifier------: warn log')
+    assert __pattern_log_line.match('[C] Mle-----------: critical log')
+    assert __pattern_log_line.match('[-] Settings------: none log')
+    assert not __pattern_log_line.match('[-] Settings-----: none log')  # not enough `-` after module name
 
-    __ASYNC_COMMANDS = {'scan', 'ping', 'discover'}
+    __ASYNC_COMMANDS = {'scan', 'ping', 'discover', 'networkdiagnostic get'}
 
     def __init__(self, otcli: OtCliHandler, is_spinel_cli: bool = False):
         self.__otcli: OtCliHandler = otcli
@@ -134,7 +138,8 @@ class OtCliCommandRunner(OTCommandHandler):
 
         output = self.__expect_line(timeout,
                                     OtCliCommandRunner.__PATTERN_COMMAND_DONE_OR_ERROR,
-                                    asynchronous=cmd.split()[0] in OtCliCommandRunner.__ASYNC_COMMANDS)
+                                    asynchronous=any(cmd.startswith(x) for x in OtCliCommandRunner.__ASYNC_COMMANDS))
+
         return output
 
     def execute_platform_command(self, cmd: str, timeout: float = 10) -> List[str]:
@@ -161,6 +166,18 @@ class OtCliCommandRunner(OTCommandHandler):
 
     def set_line_read_callback(self, callback: Optional[Callable[[str], Any]]):
         self.__line_read_callback = callback
+
+    @classmethod
+    def set_filter(cls, filter: re.Pattern[str]):
+        """Set a different filter for the read routine that still matches the original filter"""
+        assert filter.match('[I] ChannelMonitor: debug log')
+        assert filter.match('[I] Mac-----------: info log')
+        assert filter.match('[N] MeshForwarder-: note    log')
+        assert filter.match('[W] Notifier------: warn log')
+        assert filter.match('[C] Mle-----------: critical log')
+        assert filter.match('[-] Settings------: none log')
+        assert not filter.match('[-] Settings-----: none log')  # not enough `-` after module name
+        cls.__pattern_log_line = filter
 
     #
     # Private methods
@@ -216,6 +233,8 @@ class OtCliCommandRunner(OTCommandHandler):
             if line is None:
                 break
 
+            line = line.rstrip()
+
             if line.startswith('> '):
                 line = line[2:]
 
@@ -224,8 +243,9 @@ class OtCliCommandRunner(OTCommandHandler):
 
             logging.debug('%s: %s', self.__otcli, line)
 
-            if not OtCliCommandRunner.__PATTERN_LOG_LINE.match(line):
-                logging.info('%s: %s', self.__otcli, line)
+            if not OtCliCommandRunner.__pattern_log_line.match(line):
+                if line:
+                    logging.info('%s: %s', self.__otcli, line)
                 self.__pending_lines.put(line)
 
 

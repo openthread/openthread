@@ -131,6 +131,15 @@ class TestOTCI(unittest.TestCase):
         self.assertFalse(leader.get_router_eligible())
         leader.enable_router_eligible()
 
+        leader.set_mesh_local_prefix('fd00:dba::/64')
+        self.assertEqual('fd00:dba::/64', leader.get_mesh_local_prefix())
+        leader.set_mesh_local_prefix(TEST_MESH_LOCAL_PREFIX + '/64')
+        leader.set_ml_iid('b1a5ed57a71571c5')
+        leader.set_dua_iid('ad4a011dad4a011d')
+        self.assertEqual('ad4a011dad4a011d', leader.get_dua_iid())
+        leader.clear_dua_iid()
+        self.assertEqual('', leader.get_dua_iid())
+
         self.assertFalse(leader.get_ifconfig_state())
         # ifconfig up
         leader.ifconfig_up()
@@ -198,6 +207,15 @@ class TestOTCI(unittest.TestCase):
         leader.set_allowlist([leader.get_extaddr()])
         leader.disable_allowlist()
 
+        leader.enable_denylist()
+        leader.add_denylist(leader.get_extaddr())
+        leader.remove_denylist(leader.get_extaddr())
+        leader.set_denylist([leader.get_extaddr()])
+        leader.disable_denylist()
+
+        leader.enable_ccm()
+        leader.disable_ccm()
+
         self.assertEqual([], leader.backbone_router_get_multicast_listeners())
 
         leader.add_ipmaddr('ff04::1')
@@ -255,7 +273,11 @@ class TestOTCI(unittest.TestCase):
 
         logging.info("CSL config: %r", leader.get_csl_config())
         leader.config_csl(channel=13, period=16000, timeout=200)
-        logging.info("CSL config: %r", leader.get_csl_config())
+        cfg = leader.get_csl_config()
+        logging.info("CSL config: %r", cfg)
+        self.assertEqual(13, cfg['channel'])
+        self.assertEqual(16000, cfg['period'])
+        self.assertEqual(200, cfg['timeout'])
 
         logging.info("EID-to-RLOC cache: %r", leader.get_eidcache())
 
@@ -331,6 +353,16 @@ class TestOTCI(unittest.TestCase):
         logging.info('dataset active -x: %r', leader.get_dataset_bytes('active'))
         logging.info('dataset pending -x: %r', leader.get_dataset_bytes('pending'))
 
+        leader.set_vendor_name('OpenThread')
+        self.assertEqual('OpenThread', leader.get_vendor_name())
+        leader.set_vendor_model('some_model')
+        self.assertEqual('some_model', leader.get_vendor_model())
+        leader.set_vendor_sw_version('1.0.0')
+        self.assertEqual('1.0.0', leader.get_vendor_sw_version())
+
+        leader.set_minimal_delay_timer(1)
+        self.assertEqual(1, leader.get_minimal_delay_timer())
+
         # Test SRP server & client
         self._test_otci_srp(leader, leader)
 
@@ -355,7 +387,10 @@ class TestOTCI(unittest.TestCase):
                 'server': (server.get_ipaddr_rloc(), 53),
                 'response_timeout': 10000,
                 'max_tx_attempts': 4,
-                'recursion_desired': False
+                'recursion_desired': False,
+                'service_mode': 'srv_txt_opt',
+                'transport_protocol': 'udp',
+                'nat64_mode': True
             }, client.dns_get_config())
 
         self.assertTrue(client.dns_get_compression())
@@ -378,6 +413,11 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual('example2.com.', server.srp_server_get_domain())
         server.srp_server_set_domain('default.service.arpa.')
         self.assertEqual('default.service.arpa.', server.srp_server_get_domain())
+
+        server.srp_server_set_sequence_number(0x55)
+        self.assertEqual(0x55, server.srp_server_get_sequence_number())
+        server.srp_server_set_addressmode('unicast')
+        self.assertEqual('unicast', server.srp_server_get_addressmode())
 
         default_leases = server.srp_server_get_lease()
         self.assertEqual(default_leases, (30, 97200, 30, 680400))
@@ -508,6 +548,7 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual('Removed', client.srp_client_get_host()['state'])
         self.assertEqual([], server.srp_server_get_hosts())
         self.assertEqual([], server.srp_server_get_services())
+        client.srp_client_clear_host()
 
     def _test_otci_example(self, node1: OTCI, node2: OTCI):
         node1.dataset_init_buffer()
@@ -600,6 +641,8 @@ class TestOTCI(unittest.TestCase):
         commissioner.commissioner_start()
         commissioner.wait(5)
         self.assertEqual('active', commissioner.get_commissioner_state())
+
+        logging.info('commissioner.commissioner_get_session_id() = %d', commissioner.get_commissioner_session_id())
 
         logging.info('commissioner.get_network_id_timeout() = %d', commissioner.get_network_id_timeout())
         commissioner.set_network_id_timeout(60)
@@ -711,7 +754,27 @@ class TestOTCI(unittest.TestCase):
         rtt: Dict[str, float] = cast(Dict[str, float], statistics['round_trip_time'])
         self.assertTrue(rtt['min'] - 1e-9 <= rtt['avg'] <= rtt['max'] + 1e-9)
 
+        ed_report = commissioner.commissioner_energy_scan(3 << commissioner.get_channel(), 4, 32, 1000,
+                                                          child1.get_ipaddr_rloc())
+        comm_chan = commissioner.get_channel()
+        self.assertEqual({comm_chan: [-30, -30, -30, -30], comm_chan + 1: [-30, -30, -30, -30]}, ed_report)
+
+        commissioner.commissioner_announce(TEST_CHANNEL_MASK, 1, 32, child1.get_ipaddr_rloc())
+
+        conflicts = commissioner.commissioner_panid_query(TEST_PANID, TEST_CHANNEL_MASK, child1.get_ipaddr_rloc())
+        self.assertEqual([22], conflicts)
+
+        parent = child1.get_parent()
+        self.assertEqual(parent['extaddr'], commissioner.get_extaddr())
+        self.assertEqual(parent['rloc16'], commissioner.get_rloc16())
+
+        diags = commissioner.get_network_diagnostics(child1.get_ipaddr_rloc(), [0, 1])
+        self.assertEqual({'Ext Address': f'{child1.get_extaddr()}', 'Rloc16': str(child1.get_rloc16())}, diags)
+        diags = commissioner.get_network_diagnostics_bytes(child2.get_ipaddr_rloc(), [0, 1])
+        self.assertEqual('0008' + child2.get_extaddr() + '0102' + f'{child2.get_rloc16():04x}', diags)
+
         # Shutdown
+        commissioner.commissioner_stop()
         leader.thread_stop()
         logging.info("node state: %s", leader.get_state())
         leader.ifconfig_down()
