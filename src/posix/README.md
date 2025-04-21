@@ -139,7 +139,7 @@ To build and program the device with RCP application, complete the following ste
 #### Run
 
 ```sh
-./build/posix/src/posix/ot-cli 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
+./build/posix/src/posix/ot-cli 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=460800'
 ```
 
 ## Daemon Mode
@@ -152,7 +152,7 @@ OpenThread Posix Daemon mode uses a unix socket as input and output, so that Ope
 # Daemon with simulation
 ./build/posix/src/posix/ot-daemon 'spinel+hdlc+forkpty://build/simulation/examples/apps/ncp/ot-rcp?forkpty-arg=1'
 # Daemon with real device
-./build/posix/src/posix/ot-daemon 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
+./build/posix/src/posix/ot-daemon 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=460800'
 # Built-in controller
 ./build/posix/src/posix/ot-ctl
 ```

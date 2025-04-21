@@ -465,7 +465,7 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
         const char    *value;
         speed_t        speed;
         uint8_t        stopBit  = 1;
-        uint32_t       baudrate = 115200;
+        uint32_t       baudrate = 460800;
 
         VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0);
 
