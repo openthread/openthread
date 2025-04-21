@@ -45,6 +45,7 @@
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
 #include "common/message.hpp"
+#include "common/owned_ptr.hpp"
 #include "crypto/ecdsa.hpp"
 #include "net/ip4_types.hpp"
 #include "net/ip6_address.hpp"
@@ -1268,14 +1269,20 @@ public:
     static constexpr uint16_t kTypeZero  = 0;   ///< Zero as special indicator for the SIG RR (SIG(0) from RFC 2931).
     static constexpr uint16_t kTypeA     = 1;   ///< Address record (IPv4).
     static constexpr uint16_t kTypeNs    = 2;   ///< NS record (an authoritative name server).
-    static constexpr uint16_t kTypeSoa   = 6;   ///< Start of (zone of) authority.
     static constexpr uint16_t kTypeCname = 5;   ///< CNAME record.
+    static constexpr uint16_t kTypeSoa   = 6;   ///< SOA record (start of (zone of) authority).
     static constexpr uint16_t kTypePtr   = 12;  ///< PTR record.
+    static constexpr uint16_t kTypeMx    = 15;  ///< MAX record (mail exchange).
     static constexpr uint16_t kTypeTxt   = 16;  ///< TXT record.
+    static constexpr uint16_t kTypeRp    = 17;  ///< RP record (Responsible Person).
+    static constexpr uint16_t kTypeAfsdb = 18;  ///< AFSDB record (AFS Data Base location).
+    static constexpr uint16_t kTypeRt    = 21;  ///< RT record (Route Through).
     static constexpr uint16_t kTypeSig   = 24;  ///< SIG record.
     static constexpr uint16_t kTypeKey   = 25;  ///< KEY record.
+    static constexpr uint16_t kTypePx    = 26;  ///< PX record (X.400 mail mapping information).
     static constexpr uint16_t kTypeAaaa  = 28;  ///< IPv6 address record.
     static constexpr uint16_t kTypeSrv   = 33;  ///< SRV locator record.
+    static constexpr uint16_t kTypeKx    = 36;  ///< KX record (Key Exchanger).
     static constexpr uint16_t kTypeDname = 39;  ///< DNAME record.
     static constexpr uint16_t kTypeOpt   = 41;  ///< Option record.
     static constexpr uint16_t kTypeNsec  = 47;  ///< NSEC record.
@@ -1505,6 +1512,38 @@ public:
     {
         return ReadRecord(aMessage, aOffset, RecordType::kType, aRecord, sizeof(RecordType));
     }
+
+    /**
+     * Parses and decompresses record data for specific record types where the record data format can contain one or
+     * more compressed DNS names.
+     *
+     * The following record types are handled: NS, CNAME, SOA, PTR, MX, RP, AFSDB, RT, PX, SRV, KX, DNAME, and NSEC.
+     *
+     * If the record type is not in the list above, this method returns `kErrorNone`, with @p aDataMsg remaining
+     * as `nullptr`.
+     *
+     * If the record type is in the above list (requires decompression) and is processed successfully, a new message
+     * is allocated where the decompressed record data is placed. The allocated message is returned via @p aDataMsg
+     * (its ownership is passed to the caller as indicated by the use of `OwnedPtr`). The allocated message contains
+     * the decompressed record data. Importantly it does not include the `ResourceRecord` header.
+     *
+     * When decompressing the record data, this method ensures any embedded DNS names are well-formed and parsable.
+     * It also verifies the record data meets the expected data format (e.g., minimum length based on the record type).
+     * Any additional bytes beyond the expected record data format are also copied to `aDataMsg`. No deep semantic
+     * validation of the record data content is performed.
+     *
+     * @param[in]  aMessage    The message to read from. `aMessage.GetOffset()` MUST point to the start of DNS header
+     *                         (this is used to handle compressed names).
+     * @param[in]  aOffset     The offset in @p aMessage pointing to the byte after the record name and the start of
+     *                         `ResourceRecord` fields.
+     * @param[out] aDataMsg    A reference to an `OwnedPtr<Message>` to output the allocated message containing the
+     *                         decompressed record data. On input, it should be set to `nullptr`.
+     *
+     * @retval kErrorNone       The record type did not require decompression, or decompression was successful.
+     * @retval kErrorNoBufs     Failed to allocate a buffer to return the decompressed data.
+     * @retval kErrorParse      The record data format is invalid.
+     */
+    static Error DecompressRecordData(const Message &aMessage, uint16_t aOffset, OwnedPtr<Message> &aDataMsg);
 
 protected:
     Error ReadName(const Message &aMessage,

@@ -836,10 +836,16 @@ otError otMdnsStopIp4AddressResolver(otInstance *aInstance, const otMdnsAddressR
  * MUST NOT include the domain name. The reason for a separate first label is to allow it to include a dot `.`
  * character (as allowed for service instance labels).
  *
- * Discovered results are reported through the `mCallback` function in @p aQuerier, providing the raw record
- * data bytes. A removed record data is indicated with a TTL value of zero. The callback may be invoked immediately
- * with cached information (if available) and potentially before this function returns. When cached results are used,
- * the reported TTL value will reflect the original TTL from the last received response.
+ * Discovered results are reported through the `mCallback` function in @p aQuerier, providing the record data bytes
+ * (RDATA). For NS, CNAME, SOA, PTR, MX, RP, AFSDB, RT, PX, SRV, KX, DNAME, and NSEC record types, the RDATA format
+ * contains one or more DNS names (which may use DNS name compression). For the above list, the reported record data
+ * bytes via @p mCallback will be decompressed to contain the full DNS name(s). For all other record types, the record
+ * data bytes are provided exactly as they appear in the received mDNS response. This aligns the implementation with
+ * RFC 6762 (section 18.14) regarding the use of name compression.
+ *
+ * A removed record data is indicated with a TTL value of zero. The callback may be invoked immediately with cached
+ * information (if available) and potentially before this function returns. When cached results are used, the reported
+ * TTL value will reflect the original TTL from the last received response.
  *
  * Multiple querier instances can be started for the same name, provided they use different callback functions.
  *
