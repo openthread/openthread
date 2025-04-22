@@ -1089,13 +1089,9 @@ void tcplp_sys_connection_lost(struct tcpcb *aTcb, uint8_t aErrNum)
 
 void tcplp_sys_on_state_change(struct tcpcb *aTcb, int aNewState)
 {
-    if (aNewState == TCP6S_CLOSED)
-    {
-        /* Re-initialize the TCB. */
-        cbuf_pop(&aTcb->recvbuf, cbuf_used_space(&aTcb->recvbuf));
-        aTcb->accepted_from = nullptr;
-        initialize_tcb(aTcb);
-    }
+    OT_UNUSED_VARIABLE(aTcb);
+    OT_UNUSED_VARIABLE(aNewState);
+
     /* Any adaptive changes to the sleep interval would go here. */
 }
 
