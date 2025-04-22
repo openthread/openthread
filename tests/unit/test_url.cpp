@@ -36,13 +36,13 @@ namespace Url {
 
 void TestSimple(void)
 {
-    char url[] = "spinel:///dev/ttyUSB0?baudrate=115200";
+    char url[] = "spinel:///dev/ttyUSB0?baudrate=460800";
     Url  args;
 
     VerifyOrQuit(!args.Init(url));
 
     VerifyOrQuit(!strcmp(args.GetPath(), "/dev/ttyUSB0"));
-    VerifyOrQuit(!strcmp(args.GetValue("baudrate"), "115200"));
+    VerifyOrQuit(!strcmp(args.GetValue("baudrate"), "460800"));
     VerifyOrQuit(args.GetValue("not-exists") == nullptr);
     VerifyOrQuit(args.GetValue("last-value-wrong-position", url) == nullptr);
     VerifyOrQuit(args.GetValue("last-value-before-url", url - 1) == nullptr);
@@ -67,7 +67,7 @@ void TestSimpleNoQueryString(void)
 
 void TestEmptyValue(void)
 {
-    char        url[] = "spinel:///dev/ttyUSB0?rtscts&baudrate=115200&verbose&verbose&verbose";
+    char        url[] = "spinel:///dev/ttyUSB0?rtscts&baudrate=460800&verbose&verbose&verbose";
     Url         args;
     const char *arg = nullptr;
 
@@ -85,12 +85,12 @@ void TestEmptyValue(void)
 
 void TestMultipleProtocols(void)
 {
-    char url[] = "spinel+spi:///dev/ttyUSB0?baudrate=115200";
+    char url[] = "spinel+spi:///dev/ttyUSB0?baudrate=460800";
     Url  args;
 
     VerifyOrQuit(!args.Init(url));
     VerifyOrQuit(!strcmp(args.GetPath(), "/dev/ttyUSB0"));
-    VerifyOrQuit(!strcmp(args.GetValue("baudrate"), "115200"));
+    VerifyOrQuit(!strcmp(args.GetValue("baudrate"), "460800"));
 
     printf("PASS %s\r\n", __func__);
 }
