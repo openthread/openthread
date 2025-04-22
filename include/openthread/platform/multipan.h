@@ -115,7 +115,7 @@ extern void otPlatMultipanSwitchoverDone(otInstance *aInstance, bool aSuccess);
  *
  * @param[in] aIid  The IID of the interface.
  *
- * @retval  Instance pointer if aIid is has an instance assigned, nullptr otherwise.
+ * @retval  Instance pointer if aIid is has an instance assigned, NULL otherwise.
  */
 otInstance *otPlatMultipanIidToInstance(uint8_t aIid);
 

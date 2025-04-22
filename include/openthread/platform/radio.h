@@ -1193,7 +1193,7 @@ otError otPlatRadioEnableCsl(otInstance         *aInstance,
 /**
  * Reset CSL receiver in the platform.
  *
- * @note Defaults to `otPlatRadioEnableCsl(aInstance,0, Mac::kShortAddrInvalid, nullptr);`
+ * @note Defaults to `otPlatRadioEnableCsl(aInstance,0, Mac::kShortAddrInvalid, NULL);`
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  *
@@ -1298,7 +1298,7 @@ otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode);
  * @param[in]  aInstance    The OpenThread instance structure.
  * @param[out] aRegionCode  The radio region.
  *
- * @retval  OT_ERROR_INVALID_ARGS     @p aRegionCode is nullptr.
+ * @retval  OT_ERROR_INVALID_ARGS     @p aRegionCode is NULL.
  * @retval  OT_ERROR_FAILED           Other platform specific errors.
  * @retval  OT_ERROR_NONE             Successfully got region code.
  * @retval  OT_ERROR_NOT_IMPLEMENTED  The feature is not implemented.

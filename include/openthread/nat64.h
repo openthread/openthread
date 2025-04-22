@@ -446,7 +446,7 @@ void otIp4ToIp4MappedIp6Address(const otIp4Address *aIp4Address, otIp6Address *a
  * truncated but the outputted string is always null-terminated.
  *
  * @param[in]  aAddress  A pointer to an IPv4 address (MUST NOT be NULL).
- * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be `nullptr`).
+ * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
  * @param[in]  aSize     The size of @p aBuffer (in bytes).
  */
 void otIp4AddressToString(const otIp4Address *aAddress, char *aBuffer, uint16_t aSize);
@@ -474,7 +474,7 @@ otError otIp4CidrFromString(const char *aString, otIp4Cidr *aCidr);
  * truncated but the outputted string is always null-terminated.
  *
  * @param[in]  aCidr     A pointer to an IPv4 CIDR (MUST NOT be NULL).
- * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be `nullptr`).
+ * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
  * @param[in]  aSize     The size of @p aBuffer (in bytes).
  */
 void otIp4CidrToString(const otIp4Cidr *aCidr, char *aBuffer, uint16_t aSize);
