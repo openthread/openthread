@@ -84,6 +84,23 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+ *
+ * Define to 1 to enable Routing Manager multiple Adjacent Infrastructure Links (AILs) detection feature.
+ *
+ * The detection mechanism operates as follows: The Routing Manager monitors the number of peer BRs listed in the
+ * Thread Network Data (see `otBorderRoutingCountPeerBrs()`) and compares this count with the number of peer BRs
+ * discovered by processing received Router Advertisement (RA) messages on its connected AIL. If the count derived from
+ * Network Data consistently exceeds the count derived from RAs for a detection duration of 10 minutes, it concludes
+ * that BRs are likely connected to different AILs. To clear state a shorter window of 1 minute is used.
+ *
+ * See `otBorderRoutingIsMultiAilDetected()` for more details.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABILITY_CHECK_ICMP6_ERROR_ENABLE
  *
  * Define to 1 to allow Routing Manager to check for reachability of messages being forwarded by the BR and determine

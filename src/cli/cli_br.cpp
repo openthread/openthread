@@ -143,6 +143,70 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+
+template <> otError Br::Process<Cmd("multiail")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli br multiail
+     * @code
+     * br multiail
+     * not detected
+     * @endcode
+     * @par api_copy
+     * #otBorderRoutingIsMultiAilDetected
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine("%sdetected", otBorderRoutingIsMultiAilDetected(GetInstancePtr()) ? "" : "not ");
+    }
+    /**
+     * @cli br multiail callback
+     * @code
+     * br multiail callback enable
+     * Done
+     * @endcode
+     * @cparam br multiail callback @ca{enable|disable}
+     * @par api_copy
+     * #otBorderRoutingSetMultiAilCallback
+     */
+    else if (aArgs[0] == "callback")
+    {
+        bool                            enable;
+        otBorderRoutingMultiAilCallback callback = nullptr;
+
+        SuccessOrExit(error = ParseEnableOrDisable(aArgs[1], enable));
+
+        if (enable)
+        {
+            callback = &HandleMultiAilDetected;
+        }
+
+        otBorderRoutingSetMultiAilCallback(GetInstancePtr(), callback, this);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+exit:
+    return error;
+}
+
+void Br::HandleMultiAilDetected(bool aDetected, void *aContext)
+{
+    static_cast<Br *>(aContext)->HandleMultiAilDetected(aDetected);
+}
+
+void Br::HandleMultiAilDetected(bool aDetected)
+{
+    OutputLine("BR multi AIL callback: %s", aDetected ? "detected" : "cleared");
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+
 otError Br::ParsePrefixTypeArgs(Arg aArgs[], PrefixType &aFlags)
 {
     otError error = OT_ERROR_NONE;
@@ -1030,6 +1094,9 @@ otError Br::Process(Arg aArgs[])
         CmdEntry("disable"),
         CmdEntry("enable"),
         CmdEntry("init"),
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+        CmdEntry("multiail"),
+#endif
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         CmdEntry("nat64prefix"),
 #endif
