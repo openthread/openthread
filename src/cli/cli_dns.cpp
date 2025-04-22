@@ -573,28 +573,29 @@ void Dns::HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *a
 
 void Dns::HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse)
 {
+    otError      error;
     char         hostName[OT_DNS_MAX_NAME_SIZE];
     otIp6Address address;
     uint32_t     ttl;
+    uint16_t     index = 0;
 
-    IgnoreError(otDnsAddressResponseGetHostName(aResponse, hostName, sizeof(hostName)));
-
+    SuccessOrExit(error = otDnsAddressResponseGetHostName(aResponse, hostName, sizeof(hostName)));
     OutputFormat("DNS response for %s - ", hostName);
 
-    if (aError == OT_ERROR_NONE)
-    {
-        uint16_t index = 0;
+    error = aError;
+    SuccessOrExit(error);
 
-        while (otDnsAddressResponseGetAddress(aResponse, index, &address, &ttl) == OT_ERROR_NONE)
-        {
-            OutputIp6Address(address);
-            OutputFormat(" TTL:%lu ", ToUlong(ttl));
-            index++;
-        }
+    while (otDnsAddressResponseGetAddress(aResponse, index, &address, &ttl) == OT_ERROR_NONE)
+    {
+        OutputIp6Address(address);
+        OutputFormat(" TTL:%lu ", ToUlong(ttl));
+        index++;
     }
 
     OutputNewLine();
-    OutputResult(aError);
+
+exit:
+    OutputResult(error);
 }
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
@@ -630,39 +631,39 @@ void Dns::HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aRe
 
 void Dns::HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse)
 {
+    Error            error;
     char             name[OT_DNS_MAX_NAME_SIZE];
     char             label[OT_DNS_MAX_LABEL_SIZE];
     uint8_t          txtBuffer[kMaxTxtDataSize];
     otDnsServiceInfo serviceInfo;
+    uint16_t         index = 0;
 
-    IgnoreError(otDnsBrowseResponseGetServiceName(aResponse, name, sizeof(name)));
-
+    SuccessOrExit(error = otDnsBrowseResponseGetServiceName(aResponse, name, sizeof(name)));
     OutputLine("DNS browse response for %s", name);
 
-    if (aError == OT_ERROR_NONE)
+    error = aError;
+    SuccessOrExit(error);
+
+    while (otDnsBrowseResponseGetServiceInstance(aResponse, index, label, sizeof(label)) == OT_ERROR_NONE)
     {
-        uint16_t index = 0;
+        OutputLine("%s", label);
+        index++;
 
-        while (otDnsBrowseResponseGetServiceInstance(aResponse, index, label, sizeof(label)) == OT_ERROR_NONE)
+        serviceInfo.mHostNameBuffer     = name;
+        serviceInfo.mHostNameBufferSize = sizeof(name);
+        serviceInfo.mTxtData            = txtBuffer;
+        serviceInfo.mTxtDataSize        = sizeof(txtBuffer);
+
+        if (otDnsBrowseResponseGetServiceInfo(aResponse, label, &serviceInfo) == OT_ERROR_NONE)
         {
-            OutputLine("%s", label);
-            index++;
-
-            serviceInfo.mHostNameBuffer     = name;
-            serviceInfo.mHostNameBufferSize = sizeof(name);
-            serviceInfo.mTxtData            = txtBuffer;
-            serviceInfo.mTxtDataSize        = sizeof(txtBuffer);
-
-            if (otDnsBrowseResponseGetServiceInfo(aResponse, label, &serviceInfo) == OT_ERROR_NONE)
-            {
-                OutputDnsServiceInfo(kIndentSize, serviceInfo);
-            }
-
-            OutputNewLine();
+            OutputDnsServiceInfo(kIndentSize, serviceInfo);
         }
+
+        OutputNewLine();
     }
 
-    OutputResult(aError);
+exit:
+    OutputResult(error);
 }
 
 void Dns::HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *aResponse, void *aContext)
@@ -672,30 +673,31 @@ void Dns::HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *a
 
 void Dns::HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *aResponse)
 {
+    otError          error;
     char             name[OT_DNS_MAX_NAME_SIZE];
     char             label[OT_DNS_MAX_LABEL_SIZE];
     uint8_t          txtBuffer[kMaxTxtDataSize];
     otDnsServiceInfo serviceInfo;
 
-    IgnoreError(otDnsServiceResponseGetServiceName(aResponse, label, sizeof(label), name, sizeof(name)));
-
+    SuccessOrExit(error = otDnsServiceResponseGetServiceName(aResponse, label, sizeof(label), name, sizeof(name)));
     OutputLine("DNS service resolution response for %s for service %s", label, name);
 
-    if (aError == OT_ERROR_NONE)
-    {
-        serviceInfo.mHostNameBuffer     = name;
-        serviceInfo.mHostNameBufferSize = sizeof(name);
-        serviceInfo.mTxtData            = txtBuffer;
-        serviceInfo.mTxtDataSize        = sizeof(txtBuffer);
+    error = aError;
+    SuccessOrExit(error);
 
-        if (otDnsServiceResponseGetServiceInfo(aResponse, &serviceInfo) == OT_ERROR_NONE)
-        {
-            OutputDnsServiceInfo(/* aIndentSize */ 0, serviceInfo);
-            OutputNewLine();
-        }
+    serviceInfo.mHostNameBuffer     = name;
+    serviceInfo.mHostNameBufferSize = sizeof(name);
+    serviceInfo.mTxtData            = txtBuffer;
+    serviceInfo.mTxtDataSize        = sizeof(txtBuffer);
+
+    if (otDnsServiceResponseGetServiceInfo(aResponse, &serviceInfo) == OT_ERROR_NONE)
+    {
+        OutputDnsServiceInfo(/* aIndentSize */ 0, serviceInfo);
+        OutputNewLine();
     }
 
-    OutputResult(aError);
+exit:
+    OutputResult(error);
 }
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
@@ -708,15 +710,16 @@ void Dns::HandleDnsRecordResponse(otError aError, const otDnsRecordResponse *aRe
 
 void Dns::HandleDnsRecordResponse(otError aError, const otDnsRecordResponse *aResponse)
 {
+    otError         error;
     char            name[OT_DNS_MAX_NAME_SIZE];
     uint8_t         data[kMaxRrDataSize];
     otDnsRecordInfo recordInfo;
 
-    IgnoreError(otDnsRecordResponseGetQueryName(aResponse, name, sizeof(name)));
-
+    SuccessOrExit(error = otDnsRecordResponseGetQueryName(aResponse, name, sizeof(name)));
     OutputLine("DNS query response for %s ", name);
 
-    SuccessOrExit(aError);
+    error = aError;
+    SuccessOrExit(error);
 
     for (uint16_t index = 0;; index++)
     {
@@ -724,17 +727,17 @@ void Dns::HandleDnsRecordResponse(otError aError, const otDnsRecordResponse *aRe
         recordInfo.mNameBuffer     = name;
         recordInfo.mNameBufferSize = sizeof(name);
         recordInfo.mDataBuffer     = data;
-        recordInfo.mDataBufferSize = sizeof(name);
+        recordInfo.mDataBufferSize = sizeof(data);
 
-        aError = otDnsRecordResponseGetRecordInfo(aResponse, index, &recordInfo);
+        error = otDnsRecordResponseGetRecordInfo(aResponse, index, &recordInfo);
 
-        if (aError == OT_ERROR_NOT_FOUND)
+        if (error == OT_ERROR_NOT_FOUND)
         {
-            aError = OT_ERROR_NONE;
+            error = OT_ERROR_NONE;
             ExitNow();
         }
 
-        SuccessOrExit(aError);
+        SuccessOrExit(error);
 
         OutputLine("%u)", index);
         OutputLine(kIndentSize, "RecordType:%u, RecordLength:%u, TTL:%lu, Section:%s", recordInfo.mRecordType,
@@ -752,7 +755,7 @@ void Dns::HandleDnsRecordResponse(otError aError, const otDnsRecordResponse *aRe
     }
 
 exit:
-    OutputResult(aError);
+    OutputResult(error);
 }
 
 const char *Dns::RecordSectionToString(otDnsRecordSection aSection)
