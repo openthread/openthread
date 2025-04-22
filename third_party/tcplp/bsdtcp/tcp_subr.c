@@ -169,8 +169,6 @@ static void reinitialize_tcb(struct tcpcb* tp)
 void
 tcp_discardcb(struct tcpcb *tp)
 {
-	reinitialize_tcb(tp);
-
 	tcp_cancel_timers(tp);
 
 	/* Allow the CC algorithm to clean up after itself. */
@@ -178,6 +176,8 @@ tcp_discardcb(struct tcpcb *tp)
 		CC_ALGO(tp)->cb_destroy(tp->ccv);
 
 	tcp_free_sackholes(tp);
+
+	reinitialize_tcb(tp);
 }
 
 
