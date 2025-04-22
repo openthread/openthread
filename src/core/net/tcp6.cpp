@@ -1089,6 +1089,9 @@ void tcplp_sys_connection_lost(struct tcpcb *aTcb, uint8_t aErrNum)
 
 void tcplp_sys_on_state_change(struct tcpcb *aTcb, int aNewState)
 {
+    OT_UNUSED_VARIABLE(aTcb);
+    OT_UNUSED_VARIABLE(aNewState);
+
     /* Any adaptive changes to the sleep interval would go here. */
 }
 
