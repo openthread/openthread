@@ -42,6 +42,8 @@
 #include <sys/select.h>
 #include <unistd.h>
 
+#include "utils.hpp"
+
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
 
 static const int kMaxNetworkSize = 33;      ///< Well-known ID used by a simulated radio supporting promiscuous mode.
@@ -83,7 +85,7 @@ void virtualTimeInit(uint16_t aNodeId)
     sockaddr.sin_port        = htons(kBasePort + sPortOffset + aNodeId);
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
-    sSockFd = SocketWithCloseExec(AF_INET, SOCK_DGRAM, IPPROTO_UDP, kSocketBlock);
+    sSockFd = ot::Posix::SocketWithCloseExec(AF_INET, SOCK_DGRAM, IPPROTO_UDP, ot::Posix::kSocketBlock);
 
     if (sSockFd == -1)
     {

@@ -343,20 +343,6 @@ void platformTrelUpdateFdSet(otSysMainloopContext *aContext);
 void platformTrelProcess(otInstance *aInstance, const otSysMainloopContext *aContext);
 
 /**
- * Creates a socket with SOCK_CLOEXEC flag set.
- *
- * @param[in]   aDomain       The communication domain.
- * @param[in]   aType         The semantics of communication.
- * @param[in]   aProtocol     The protocol to use.
- * @param[in]   aBlockOption  Whether to add nonblock flags.
- *
- * @returns The file descriptor of the created socket.
- *
- * @retval  -1  Failed to create socket.
- */
-int SocketWithCloseExec(int aDomain, int aType, int aProtocol, SocketBlockOption aBlockOption);
-
-/**
  * The name of Thread network interface.
  */
 extern char gNetifName[IFNAMSIZ];
