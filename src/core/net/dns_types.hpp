@@ -42,6 +42,7 @@
 #include "common/appender.hpp"
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
+#include "common/data.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
 #include "common/message.hpp"
@@ -1551,6 +1552,35 @@ public:
     static Error DecompressRecordData(const Message &aMessage, uint16_t aOffset, OwnedPtr<Message> &aDataMsg);
 
     /**
+     * Translates embedded DNS names in record data (if needed) and appends the translated data to a given message.
+     *
+     * For records with type NS, CNAME, SOA, PTR, MX, RP, AFSDB, RT, PX, SRV, KX, DNAME, or NSEC, the record data
+     * includes one or more embedded DNS names. For these record types, if the embedded DNS name uses the given
+     * @p aOriginalDomain, it is replaced with the translated domain name before appending it to @p aMessage.
+     * Otherwise, the name is appended as it appears in the record data. This is intended for use by the Discovery
+     * Proxy where the RDATA from mDNS will use the `.local.` domain name, which then needs to be translated to the
+     * Thread network domain name (`default.service.arpa.`).
+     *
+     * For other record types, the record data @p aData is appended as is.
+     *
+     * @param[in] aMessage                  The message to append the (translated) record data to.
+     * @param[in] aRecordType               The record type.
+     * @param[in] aData                     The record data (to translate and append).
+     * @param[in] aOriginalDomain           The original domain name.
+     * @param[in] aTranslatedDomainOffset   The offset of the translated domain name in @p aMessage.
+     *
+     * @retval kErrorNone     The (translated) record data was successfully appended to @p aMessage.
+     * @retval kErrorNoBufs   Failed to allocate new buffers.
+     * @retval kErrorParse    The given @p aData format is not valid.
+     *
+     */
+    static Error AppendTranslatedRecordDataTo(Message                       &aMessage,
+                                              uint16_t                       aRecordType,
+                                              const Data<kWithUint16Length> &aData,
+                                              const char                    *aOriginalDomain,
+                                              uint16_t                       aTranslatedDomainOffset);
+
+    /**
      * Returns a human-readable string representation of a given resource record type.
      *
      * @param[in] aRecordType  The resource record type to convert.
@@ -1571,6 +1601,21 @@ protected:
 private:
     static constexpr uint16_t kType = kTypeAny; // This is intended for used by `ReadRecord<RecordType>()` only.
 
+    struct DataRecipe // RDATA recipe for record types that contain one or more embedded DNS names
+    {
+        int Compare(uint16_t aRecordType) const { return (aRecordType - mRecordType); }
+
+        constexpr static bool AreInOrder(const DataRecipe &aFirst, const DataRecipe &aSecond)
+        {
+            return (aFirst.mRecordType < aSecond.mRecordType);
+        }
+
+        uint16_t mRecordType;        // The record type.
+        uint8_t  mNumPrefixBytes;    // Number of bytes in RDATA before the first name.
+        uint8_t  mNumNames;          // Number of DNS names embedded in the RDATA.
+        uint16_t mMinNumSuffixBytes; // Minimum number of expected bytes in RDATA after the last name.
+    };
+
     static Error FindRecord(const Message  &aMessage,
                             uint16_t       &aOffset,
                             uint16_t        aNumRecords,
@@ -1585,6 +1630,8 @@ private:
                             uint16_t        aType,
                             ResourceRecord &aRecord,
                             uint16_t        aMinRecordSize);
+
+    static const DataRecipe *FindDataRecipeFor(uint16_t aRecordType);
 
     Error CheckRecord(const Message &aMessage, uint16_t aOffset) const;
     Error ReadFrom(const Message &aMessage, uint16_t aOffset);
