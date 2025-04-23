@@ -311,20 +311,19 @@ private:
     static constexpr uint32_t kQueryTimeout                 = OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT;
     static constexpr uint16_t kMaxConcurrentUpstreamQueries = 32;
 
+    static constexpr uint16_t kRrTypeA     = ResourceRecord::kTypeA;
+    static constexpr uint16_t kRrTypeSoa   = ResourceRecord::kTypeSoa;
+    static constexpr uint16_t kRrTypeCname = ResourceRecord::kTypeCname;
+    static constexpr uint16_t kRrTypePtr   = ResourceRecord::kTypePtr;
+    static constexpr uint16_t kRrTypeTxt   = ResourceRecord::kTypeTxt;
+    static constexpr uint16_t kRrTypeKey   = ResourceRecord::kTypeKey;
+    static constexpr uint16_t kRrTypeAaaa  = ResourceRecord::kTypeAaaa;
+    static constexpr uint16_t kRrTypeSrv   = ResourceRecord::kTypeSrv;
+
     typedef Header::Response ResponseCode;
 
     typedef Message      ProxyQuery;
     typedef MessageQueue ProxyQueryList;
-
-    enum QueryType : uint8_t
-    {
-        kPtrQuery,
-        kSrvQuery,
-        kTxtQuery,
-        kSrvTxtQuery,
-        kAaaaQuery,
-        kAQuery,
-    };
 
     enum Section : uint8_t
     {
@@ -346,9 +345,21 @@ private:
         kResolvingSrv,
         kResolvingTxt,
         kResolvingIp6Address,
-        kResolvingIp4Address
+        kResolvingIp4Address,
+        kQueryingRecord,
     };
 #endif
+
+    struct Questions
+    {
+        Questions(void) { mFirstRrType = 0, mSecondRrType = 0; }
+
+        bool    IsFor(uint16_t aRrType) const { return (mFirstRrType == aRrType) || (mSecondRrType == aRrType); }
+        Section SectionFor(uint16_t aRrType) const { return IsFor(aRrType) ? kAnswerSection : kAdditionalDataSection; }
+
+        uint16_t mFirstRrType;
+        uint16_t mSecondRrType;
+    };
 
     struct Request
     {
@@ -357,7 +368,7 @@ private:
         const Message          *mMessage;
         const Ip6::MessageInfo *mMessageInfo;
         Header                  mHeader;
-        QueryType               mType;
+        Questions               mQuestions;
     };
 
     struct ProxyQueryInfo;
@@ -377,11 +388,13 @@ private:
         explicit ProxyResult(const Dnssd::SrvResult &aSrvResult) { mSrvResult = &aSrvResult; }
         explicit ProxyResult(const Dnssd::TxtResult &aTxtResult) { mTxtResult = &aTxtResult; }
         explicit ProxyResult(const Dnssd::AddressResult &aAddressResult) { mAddressResult = &aAddressResult; }
+        explicit ProxyResult(const Dnssd::RecordResult &aRecordResult) { mRecordResult = &aRecordResult; }
 
         const Dnssd::BrowseResult  *mBrowseResult;
         const Dnssd::SrvResult     *mSrvResult;
         const Dnssd::TxtResult     *mTxtResult;
         const Dnssd::AddressResult *mAddressResult;
+        const Dnssd::RecordResult  *mRecordResult;
     };
 #endif
 
@@ -407,6 +420,7 @@ private:
                               uint16_t    aPort);
         Error AppendTxtRecord(const ServiceInstanceInfo &aInstanceInfo);
         Error AppendTxtRecord(const void *aTxtData, uint16_t aTxtLength, uint32_t aTtl);
+        Error AppendGenericRecord(uint16_t aRrType, const void *aData, uint16_t aDataLength, uint32_t aTtl);
         Error AppendHostAddresses(AddrType aAddrType, const HostInfo &aHostInfo);
         Error AppendHostAddresses(const ServiceInstanceInfo &aInstanceInfo);
         Error AppendHostAddresses(AddrType aAddrType, const Ip6::Address *aAddrs, uint16_t aAddrsLength, uint32_t aTtl);
@@ -423,6 +437,7 @@ private:
         Error AppendSrvRecord(const Srp::Server::Service &aService);
         Error AppendTxtRecord(const Srp::Server::Service &aService);
         Error AppendHostAddresses(const Srp::Server::Host &aHost);
+        Error AppendKeyRecord(const Srp::Server::Host &aHost);
 #endif
 #if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
         Error AppendPtrRecord(const ProxyResult &aResult);
@@ -430,23 +445,23 @@ private:
         Error AppendTxtRecord(const ProxyResult &aResult);
         Error AppendHostIp6Addresses(const ProxyResult &aResult);
         Error AppendHostIp4Addresses(const ProxyResult &aResult);
+        Error AppendGenericRecord(const ProxyResult &aResult);
 #endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-        void               Log(void) const;
-        static const char *QueryTypeToString(QueryType aType);
+        void Log(void) const;
 #endif
 
         OwnedPtr<Message> mMessage;
         Header            mHeader;
-        QueryType         mType;
+        Questions         mQuestions;
         Section           mSection;
         NameOffsets       mOffsets;
     };
 
     struct ProxyQueryInfo : Message::FooterData<ProxyQueryInfo>
     {
-        QueryType        mType;
+        Questions        mQuestions;
         Ip6::MessageInfo mMessageInfo;
         TimeMilli        mExpireTime;
         NameOffsets      mOffsets;
@@ -481,11 +496,12 @@ private:
 
         void Perform(ProxyAction aAction, ProxyQuery &aQuery, ProxyQueryInfo &aInfo);
         void ReadNameFor(ProxyAction aAction, ProxyQuery &aQuery, ProxyQueryInfo &aInfo, Name::Buffer &aName) const;
-        bool HasActive(ProxyAction aAction, const Name::Buffer &aName) const;
+        bool HasActive(ProxyAction aAction, const Name::Buffer &aName, uint16_t aQuerierRrType) const;
         bool QueryMatches(const ProxyQuery     &aQuery,
                           const ProxyQueryInfo &aInfo,
                           ProxyAction           aAction,
-                          const Name::Buffer   &aName) const;
+                          const Name::Buffer   &aName,
+                          uint16_t              aQuerierRrType) const;
         void UpdateProxy(Command               aCommand,
                          ProxyAction           aAction,
                          const ProxyQuery     &aQuery,
@@ -496,24 +512,27 @@ private:
         void StartOrStopTxtResolver(Command aCommand, const ProxyQuery &aQuery, const ProxyQueryInfo &aInfo);
         void StartOrStopIp6Resolver(Command aCommand, Name::Buffer &aHostName);
         void StartOrStopIp4Resolver(Command aCommand, Name::Buffer &aHostName);
+        void StartOrStopRecordQuerier(Command aCommand, const ProxyQuery &aQuery, const ProxyQueryInfo &aInfo);
 
         static void HandleBrowseResult(otInstance *aInstance, const otPlatDnssdBrowseResult *aResult);
         static void HandleSrvResult(otInstance *aInstance, const otPlatDnssdSrvResult *aResult);
         static void HandleTxtResult(otInstance *aInstance, const otPlatDnssdTxtResult *aResult);
         static void HandleIp6AddressResult(otInstance *aInstance, const otPlatDnssdAddressResult *aResult);
         static void HandleIp4AddressResult(otInstance *aInstance, const otPlatDnssdAddressResult *aResult);
+        static void HandleRecordResult(otInstance *aInstance, const otPlatDnssdRecordResult *aResult);
 
         void HandleBrowseResult(const Dnssd::BrowseResult &aResult);
         void HandleSrvResult(const Dnssd::SrvResult &aResult);
         void HandleTxtResult(const Dnssd::TxtResult &aResult);
         void HandleIp6AddressResult(const Dnssd::AddressResult &aResult);
         void HandleIp4AddressResult(const Dnssd::AddressResult &aResult);
+        void HandleRecordResult(const Dnssd::RecordResult &aResult);
         void HandleResult(ProxyAction         aAction,
                           const Name::Buffer &aName,
                           ResponseAppender    aAppender,
                           const ProxyResult  &aResult);
 
-        static bool IsActionForAdditionalSection(ProxyAction aAction, QueryType aQueryType);
+        static bool IsActionForAdditionalSection(ProxyAction aAction, const Questions &aQuestions);
 
         bool mIsRunning;
     };
@@ -539,6 +558,7 @@ private:
     static Error StripDomainName(const char *aFullName, Name::Buffer &aLabels);
     static Error StripDomainName(Name::Buffer &aName);
     static void  ConstructFullName(const char *aLabels, Name::Buffer &aFullName);
+    static void  ConstructFullName(const char *aFirstLabel, const char *aNextLabels, Name::Buffer &aFullName);
     static void  ConstructFullInstanceName(const char   *aInstanceLabel,
                                            const char   *aServiceType,
                                            Name::Buffer &aFullName);

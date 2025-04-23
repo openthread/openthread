@@ -487,6 +487,99 @@ exit:
     return;
 }
 
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+static constexpr uint16_t kMaxRecordDataSize = 128;
+static constexpr uint16_t kMaxRecords        = 4;
+
+struct QueryRecordInfo
+{
+    struct Record : public Dns::Client::RecordInfo
+    {
+        void Init(void)
+        {
+            ClearAllBytes(*this);
+            mNameBuffer     = mName;
+            mNameBufferSize = sizeof(mName);
+            mDataBuffer     = mData;
+            mDataBufferSize = sizeof(mData);
+        }
+
+        uint8_t mData[kMaxRecordDataSize];
+        char    mName[Dns::Name::kMaxNameSize];
+    };
+
+    void Reset(void) { memset(this, 0, sizeof(*this)); };
+
+    uint16_t mCallbackCount;
+    Error    mError;
+    char     mQueryName[Dns::Name::kMaxNameSize];
+    Record   mRecords[kMaxRecords];
+    uint16_t mNumRecords;
+};
+
+static QueryRecordInfo sQueryRecordInfo;
+
+void RecordCallback(otError aError, const otDnsRecordResponse *aResponse, void *aContext)
+{
+    static constexpr uint16_t kMaxStringSize = 400;
+
+    const Dns::Client::RecordResponse &response = AsCoreType(aResponse);
+
+    Log("RecordCallback");
+    Log("   Error: %s", ErrorToString(aError));
+
+    VerifyOrQuit(aContext == sInstance);
+
+    sQueryRecordInfo.mCallbackCount++;
+    sQueryRecordInfo.mError      = aError;
+    sQueryRecordInfo.mNumRecords = 0;
+
+    SuccessOrExit(aError);
+
+    SuccessOrQuit(response.GetQueryName(sQueryRecordInfo.mQueryName, sizeof(sQueryRecordInfo.mQueryName)));
+    Log("   QueryName: %s", sQueryRecordInfo.mQueryName);
+
+    for (uint8_t index = 0; index < kMaxRecords; index++)
+    {
+        Error    error;
+        uint32_t ttl;
+
+        sQueryRecordInfo.mRecords[index].Init();
+
+        error = response.GetRecordInfo(index, sQueryRecordInfo.mRecords[index]);
+
+        if (error == kErrorNotFound)
+        {
+            sQueryRecordInfo.mNumRecords = index;
+            break;
+        }
+
+        SuccessOrQuit(error);
+    }
+
+    Log("   NumRecords: %u", sQueryRecordInfo.mNumRecords);
+
+    for (uint16_t index = 0; index < sQueryRecordInfo.mNumRecords; index++)
+    {
+        const QueryRecordInfo::Record &record = sQueryRecordInfo.mRecords[index];
+        String<kMaxStringSize>         string;
+        uint16_t                       rrType;
+
+        string.AppendHexBytes(record.mDataBuffer, record.mDataBufferSize);
+        rrType = record.mRecordType;
+
+        Log("   Record %u", index);
+        Log("      Name: %s", record.mNameBuffer);
+        Log("      Type: %u (%s)", rrType, Dns::ResourceRecord::TypeToString(rrType).AsCString());
+        Log("      TTL: %lu", ToUlong(record.mTtl));
+        Log("      Data: %s", string.AsCString());
+    }
+
+exit:
+    return;
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 // otPlatDnssd APIs
 
@@ -582,6 +675,28 @@ struct IpAddrResolverInfo : public Clearable<IpAddrResolverInfo>
     otPlatDnssdAddressCallback mCallback;
 };
 
+struct RecordQuerierInfo : public Clearable<RecordQuerierInfo>
+{
+    bool NameMatches(const char *aFirsLabel, const char *aNextLabels) const
+    {
+        return !strcmp(mFirstLabel, aFirsLabel) && !strcmp(mNextLabels, aNextLabels == nullptr ? "" : aNextLabels);
+    }
+
+    void UpdateFrom(const otPlatDnssdRecordQuerier *aQuerier)
+    {
+        mCallCount++;
+        CopyString(mFirstLabel, aQuerier->mFirstLabel);
+        CopyString(mNextLabels, aQuerier->mNextLabels);
+        mCallback = aQuerier->mCallback;
+    }
+
+    uint16_t                  mCallCount;
+    char                      mFirstLabel[Dns::Name::kMaxLabelSize];
+    char                      mNextLabels[Dns::Name::kMaxNameSize];
+    uint16_t                  mRecordType;
+    otPlatDnssdRecordCallback mCallback;
+};
+
 struct InvokeOnStart : public Clearable<InvokeOnStart>
 {
     // When not null, these entries are used to invoke callback
@@ -593,6 +708,7 @@ struct InvokeOnStart : public Clearable<InvokeOnStart>
     const otPlatDnssdTxtResult     *mTxtResult;
     const otPlatDnssdAddressResult *mIp6AddrResult;
     const otPlatDnssdAddressResult *mIp4AddrResult;
+    const otPlatDnssdRecordResult  *mRecordResult;
 };
 
 static BrowserInfo        sStartBrowserInfo;
@@ -605,6 +721,8 @@ static IpAddrResolverInfo sStartIp6AddrResolverInfo;
 static IpAddrResolverInfo sStopIp6AddrResolverInfo;
 static IpAddrResolverInfo sStartIp4AddrResolverInfo;
 static IpAddrResolverInfo sStopIp4AddrResolverInfo;
+static RecordQuerierInfo  sStartRecordQuerierInfo;
+static RecordQuerierInfo  sStopRecordQuerierInfo;
 
 static InvokeOnStart sInvokeOnStart;
 
@@ -620,6 +738,8 @@ void ResetPlatDnssdApiInfo(void)
     sStopIp6AddrResolverInfo.Clear();
     sStartIp4AddrResolverInfo.Clear();
     sStopIp4AddrResolverInfo.Clear();
+    sStartRecordQuerierInfo.Clear();
+    sStopRecordQuerierInfo.Clear();
     sInvokeOnStart.Clear();
 }
 
@@ -690,6 +810,26 @@ void InvokeIp4AddrResolverCallback(const otPlatDnssdAddressCallback aCallback, c
         Log("    address[%u]     : %s", index, AsCoreType(&aResult.mAddresses[index].mAddress).ToString().AsCString());
         Log("    ttl[%u]         : %u", index, aResult.mAddresses[index].mTtl);
     }
+
+    aCallback(sInstance, &aResult);
+}
+
+void InvokeRecordQuerierCallback(const otPlatDnssdRecordCallback aCallback, const otPlatDnssdRecordResult &aResult)
+{
+    static constexpr uint16_t kMaxDataStringSize = 400;
+
+    String<kMaxDataStringSize> string;
+
+    string.AppendHexBytes(aResult.mRecordData, aResult.mRecordDataLength);
+
+    Log("Invoking record callback");
+    Log("    firstLabel     : %s", aResult.mFirstLabel);
+    Log("    nextLabels     : %s", StringNullCheck(aResult.mNextLabels));
+    Log("    recordType     : %s", Dns::ResourceRecord::TypeToString(aResult.mRecordType).AsCString());
+    Log("    ttl            : %u", aResult.mTtl);
+    Log("    if-index       : %u", aResult.mInfraIfIndex);
+    Log("    dataLength     : %u", aResult.mRecordDataLength);
+    Log("    data           : %s", string.AsCString());
 
     aCallback(sInstance, &aResult);
 }
@@ -856,6 +996,42 @@ void otPlatDnssdStopIp4AddressResolver(otInstance *aInstance, const otPlatDnssdA
     }
 }
 
+void otPlatDnssdStartRecordQuerier(otInstance *aInstance, const otPlatDnssdRecordQuerier *aQuerier)
+{
+    VerifyOrQuit(aQuerier != nullptr);
+
+    Log("otPlatDnssdStartRecordQuerier(%s, %s, %s)", aQuerier->mFirstLabel, StringNullCheck(aQuerier->mNextLabels),
+        Dns::ResourceRecord::TypeToString(aQuerier->mRecordType).AsCString());
+
+    VerifyOrQuit(aInstance == sInstance);
+    VerifyOrQuit(aQuerier->mInfraIfIndex == kInfraIfIndex);
+
+    sStartRecordQuerierInfo.UpdateFrom(aQuerier);
+
+    if (sInvokeOnStart.mRecordResult != nullptr)
+    {
+        InvokeRecordQuerierCallback(aQuerier->mCallback, *sInvokeOnStart.mRecordResult);
+    }
+}
+
+void otPlatDnssdStopRecordQuerier(otInstance *aInstance, const otPlatDnssdRecordQuerier *aQuerier)
+{
+    VerifyOrQuit(aQuerier != nullptr);
+
+    Log("otPlatDnssdStopRecordQuerier(\"%s, %s, %s\")", aQuerier->mFirstLabel, StringNullCheck(aQuerier->mNextLabels),
+        Dns::ResourceRecord::TypeToString(aQuerier->mRecordType).AsCString());
+
+    VerifyOrQuit(aInstance == sInstance);
+    VerifyOrQuit(aQuerier->mInfraIfIndex == kInfraIfIndex);
+
+    sStopRecordQuerierInfo.UpdateFrom(aQuerier);
+
+    if (sInvokeOnStart.mRecordResult != nullptr)
+    {
+        InvokeRecordQuerierCallback(aQuerier->mCallback, *sInvokeOnStart.mRecordResult);
+    }
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 
 void TestProxyBasic(void)
@@ -863,6 +1039,7 @@ void TestProxyBasic(void)
     static constexpr uint32_t kTtl = 300;
 
     const uint8_t kTxtData[] = {3, 'A', '=', '1', 0};
+    const uint8_t kKeyData[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99};
 
     Srp::Server                     *srpServer;
     Srp::Client                     *srpClient;
@@ -874,6 +1051,7 @@ void TestProxyBasic(void)
     Dnssd::AddressResult             ip6AddrrResult;
     Dnssd::AddressResult             ip4AddrrResult;
     Dnssd::AddressAndTtl             addressAndTtl;
+    Dnssd::RecordResult              recordResult;
     NetworkData::ExternalRouteConfig routeConfig;
     Ip6::Address                     address;
 
@@ -942,6 +1120,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartBrowserInfo.ServiceTypeMatches("_avenger._udp"));
 
@@ -970,6 +1150,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopBrowserInfo.ServiceTypeMatches("_avenger._udp"));
     VerifyOrQuit(sStopBrowserInfo.mCallback == sStartBrowserInfo.mCallback);
@@ -1001,6 +1183,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopSrvResolverInfo.ServiceTypeMatches("_avenger._udp"));
     VerifyOrQuit(sStopSrvResolverInfo.ServiceInstanceMatches("hulk"));
@@ -1035,6 +1219,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopTxtResolverInfo.ServiceTypeMatches("_avenger._udp"));
     VerifyOrQuit(sStopTxtResolverInfo.ServiceInstanceMatches("hulk"));
@@ -1069,6 +1255,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopIp6AddrResolverInfo.HostNameMatches("compound"));
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallback == sStartIp6AddrResolverInfo.mCallback);
@@ -1114,6 +1302,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartSrvResolverInfo.ServiceTypeMatches("_avenger._udp"));
     VerifyOrQuit(sStartSrvResolverInfo.ServiceInstanceMatches("iron.man"));
@@ -1144,6 +1334,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 0);
 
@@ -1170,6 +1362,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 0);
 
@@ -1204,6 +1398,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 0);
 
@@ -1233,6 +1429,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopIp6AddrResolverInfo.HostNameMatches("starktower"));
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallback == sStartIp6AddrResolverInfo.mCallback);
@@ -1273,6 +1471,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartIp6AddrResolverInfo.HostNameMatches("earth"));
 
@@ -1304,6 +1504,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopIp6AddrResolverInfo.HostNameMatches("earth"));
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallback == sStartIp6AddrResolverInfo.mCallback);
@@ -1339,6 +1541,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartIp4AddrResolverInfo.HostNameMatches("shield"));
 
@@ -1370,6 +1574,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 1);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopIp4AddrResolverInfo.HostNameMatches("shield"));
     VerifyOrQuit(sStopIp4AddrResolverInfo.mCallback == sStartIp4AddrResolverInfo.mCallback);
@@ -1395,6 +1601,162 @@ void TestProxyBasic(void)
     VerifyOrQuit(sResolveAddressInfo.mTtl == kTtl);
 
     VerifyOrQuit(sResolveAddressInfo.mHostAddresses[0] == address);
+
+    Log("--------------------------------------------------------------------------------------------");
+
+    ResetPlatDnssdApiInfo();
+    sQueryRecordInfo.Reset();
+
+    Log("QueryRecord()");
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeKey, "shield", "default.service.arpa.",
+                                         RecordCallback, sInstance));
+    AdvanceTime(10);
+
+    // Check that a record querier is started
+
+    VerifyOrQuit(sStartBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStopBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStartSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 1);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
+
+    VerifyOrQuit(sStartRecordQuerierInfo.NameMatches("shield", nullptr));
+
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 0);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Invoke Record Querier callback");
+
+    recordResult.mFirstLabel       = "shield";
+    recordResult.mNextLabels       = nullptr;
+    recordResult.mRecordType       = Dns::ResourceRecord::kTypeKey;
+    recordResult.mRecordData       = kKeyData;
+    recordResult.mRecordDataLength = sizeof(kKeyData);
+    recordResult.mTtl              = kTtl;
+    recordResult.mInfraIfIndex     = kInfraIfIndex;
+
+    InvokeRecordQuerierCallback(sStartRecordQuerierInfo.mCallback, recordResult);
+
+    AdvanceTime(10);
+
+    // Check that the record querier is stopped
+
+    VerifyOrQuit(sStartBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStopBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStartSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 1);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 1);
+
+    VerifyOrQuit(sStopRecordQuerierInfo.NameMatches("shield", nullptr));
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallback == sStartRecordQuerierInfo.mCallback);
+
+    // Check that response is sent to client and validate it
+
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+
+    VerifyOrQuit(!strcmp(sQueryRecordInfo.mQueryName, "shield.default.service.arpa."));
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 1);
+
+    VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, "shield.default.service.arpa."));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypeKey);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength == sizeof(kKeyData));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl == kTtl);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sizeof(kKeyData));
+    VerifyOrQuit(!memcmp(sQueryRecordInfo.mRecords[0].mDataBuffer, kKeyData, sizeof(kKeyData)));
+    VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+
+    Log("--------------------------------------------------------------------------------------------");
+
+    ResetPlatDnssdApiInfo();
+    sQueryRecordInfo.Reset();
+
+    Log("QueryRecord()");
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeKey, "iron.man",
+                                         "_avenger._udp.default.service.arpa.", RecordCallback, sInstance));
+    AdvanceTime(10);
+
+    // Check that a record querier is started
+
+    VerifyOrQuit(sStartBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStopBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStartSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 1);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
+
+    VerifyOrQuit(sStartRecordQuerierInfo.NameMatches("iron.man", "_avenger._udp"));
+
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 0);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Invoke Record Querier callback");
+
+    recordResult.mFirstLabel       = "iron.man";
+    recordResult.mNextLabels       = "_avenger._udp";
+    recordResult.mRecordType       = Dns::ResourceRecord::kTypeKey;
+    recordResult.mRecordData       = kKeyData;
+    recordResult.mRecordDataLength = sizeof(kKeyData);
+    recordResult.mTtl              = kTtl;
+    recordResult.mInfraIfIndex     = kInfraIfIndex;
+
+    InvokeRecordQuerierCallback(sStartRecordQuerierInfo.mCallback, recordResult);
+
+    AdvanceTime(10);
+
+    // Check that the record querier is stopped
+
+    VerifyOrQuit(sStartBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStopBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStartSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 1);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 1);
+
+    VerifyOrQuit(sStopRecordQuerierInfo.NameMatches("iron.man", "_avenger._udp"));
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallback == sStartRecordQuerierInfo.mCallback);
+
+    // Check that response is sent to client and validate it
+
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+
+    VerifyOrQuit(!strcmp(sQueryRecordInfo.mQueryName, "iron.man._avenger._udp.default.service.arpa."));
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 1);
+
+    VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, "iron.man._avenger._udp.default.service.arpa."));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypeKey);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength == sizeof(kKeyData));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl == kTtl);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sizeof(kKeyData));
+    VerifyOrQuit(!memcmp(sQueryRecordInfo.mRecords[0].mDataBuffer, kKeyData, sizeof(kKeyData)));
+    VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Stop DNS-SD server");
@@ -1480,6 +1842,8 @@ void TestProxySubtypeBrowse(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartBrowserInfo.ServiceTypeMatches("_avenger._udp"));
     VerifyOrQuit(sStartBrowserInfo.SubTypeMatches("_god"));
@@ -1509,6 +1873,8 @@ void TestProxySubtypeBrowse(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopBrowserInfo.ServiceTypeMatches("_avenger._udp"));
     VerifyOrQuit(sStopBrowserInfo.SubTypeMatches("_god"));
@@ -1544,6 +1910,8 @@ void TestProxySubtypeBrowse(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopSrvResolverInfo.ServiceTypeMatches("_avenger._udp"));
     VerifyOrQuit(sStopSrvResolverInfo.ServiceInstanceMatches("thor"));
@@ -1575,6 +1943,8 @@ void TestProxySubtypeBrowse(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopTxtResolverInfo.ServiceTypeMatches("_avenger._udp"));
     VerifyOrQuit(sStopTxtResolverInfo.ServiceInstanceMatches("thor"));
@@ -1607,6 +1977,8 @@ void TestProxySubtypeBrowse(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 1);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopIp6AddrResolverInfo.HostNameMatches("asgard"));
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallback == sStartIp6AddrResolverInfo.mCallback);
@@ -1716,6 +2088,8 @@ void TestProxyTimeout(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartBrowserInfo.ServiceTypeMatches("_game._ps5"));
 
@@ -1754,6 +2128,8 @@ void TestProxyTimeout(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartBrowserInfo.ServiceTypeMatches("_avenger._udp"));
 
@@ -1780,6 +2156,8 @@ void TestProxyTimeout(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopBrowserInfo.ServiceTypeMatches("_avenger._udp"));
 
@@ -1806,6 +2184,8 @@ void TestProxyTimeout(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopBrowserInfo.ServiceTypeMatches("_avenger._udp"));
 
@@ -1834,6 +2214,8 @@ void TestProxyTimeout(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartBrowserInfo.ServiceTypeMatches("_avenger._udp"));
 
@@ -1850,6 +2232,8 @@ void TestProxyTimeout(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartBrowserInfo.ServiceTypeMatches("_game._udp"));
 
@@ -1867,6 +2251,8 @@ void TestProxyTimeout(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartSrvResolverInfo.ServiceTypeMatches("_avenger._udp"));
     VerifyOrQuit(sStartSrvResolverInfo.ServiceInstanceMatches("wanda"));
@@ -1884,8 +2270,29 @@ void TestProxyTimeout(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartIp6AddrResolverInfo.HostNameMatches("earth"));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("QueryRecord()");
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeKey, "iron.man",
+                                         "_avenger._udp.default.service.arpa.", RecordCallback, sInstance));
+    AdvanceTime(10);
+
+    VerifyOrQuit(sStartBrowserInfo.mCallCount == 2);
+    VerifyOrQuit(sStopBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStartSrvResolverInfo.mCallCount == 1);
+    VerifyOrQuit(sStopSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 1);
+    VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 1);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
+
+    VerifyOrQuit(sStartRecordQuerierInfo.NameMatches("iron.man", "_avenger._udp"));
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Wait for timeout for all requests");
@@ -1911,10 +2318,13 @@ void TestProxyTimeout(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 1);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 1);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 1);
 
     VerifyOrQuit(sStopSrvResolverInfo.ServiceTypeMatches("_avenger._udp"));
     VerifyOrQuit(sStopSrvResolverInfo.ServiceInstanceMatches("wanda"));
     VerifyOrQuit(sStopIp6AddrResolverInfo.HostNameMatches("earth"));
+    VerifyOrQuit(sStopRecordQuerierInfo.NameMatches("iron.man", "_avenger._udp"));
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Stop DNS-SD server");
@@ -2634,6 +3044,7 @@ void TestProxyInvokeCallbackFromStartApi(void)
     static constexpr uint32_t kTtl = 300;
 
     const uint8_t kTxtData[] = {3, 'A', '=', '1', 0};
+    const uint8_t kKeyData[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99};
 
     Srp::Server                   *srpServer;
     Srp::Client                   *srpClient;
@@ -2644,6 +3055,7 @@ void TestProxyInvokeCallbackFromStartApi(void)
     Dnssd::TxtResult               txtResult;
     Dnssd::AddressResult           ip6AddrrResult;
     Dnssd::AddressAndTtl           addressAndTtl[2];
+    Dnssd::RecordResult            recordResult;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestProxyInvokeCallbackFromStartApi");
@@ -2687,6 +3099,7 @@ void TestProxyInvokeCallbackFromStartApi(void)
     sInvokeOnStart.mSrvResult     = &srvResult;
     sInvokeOnStart.mTxtResult     = &txtResult;
     sInvokeOnStart.mIp6AddrResult = &ip6AddrrResult;
+    sInvokeOnStart.mRecordResult  = &recordResult;
 
     browseResult.mServiceType     = "_guardian._glaxy";
     browseResult.mSubTypeLabel    = nullptr;
@@ -2718,6 +3131,14 @@ void TestProxyInvokeCallbackFromStartApi(void)
     ip6AddrrResult.mAddresses       = addressAndTtl;
     ip6AddrrResult.mAddressesLength = 2;
 
+    recordResult.mFirstLabel       = "drax";
+    recordResult.mNextLabels       = "_guardian._glaxy";
+    recordResult.mRecordType       = Dns::ResourceRecord::kTypeKey;
+    recordResult.mRecordData       = kKeyData;
+    recordResult.mRecordDataLength = sizeof(kKeyData);
+    recordResult.mTtl              = kTtl;
+    recordResult.mInfraIfIndex     = kInfraIfIndex;
+
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     sBrowseInfo.Reset();
 
@@ -2736,6 +3157,8 @@ void TestProxyInvokeCallbackFromStartApi(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 1);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartBrowserInfo.ServiceTypeMatches("_guardian._glaxy"));
     VerifyOrQuit(sStopBrowserInfo.ServiceTypeMatches("_guardian._glaxy"));
@@ -2786,6 +3209,8 @@ void TestProxyInvokeCallbackFromStartApi(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 2);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 2);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 2);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartSrvResolverInfo.ServiceTypeMatches("_guardian._glaxy"));
     VerifyOrQuit(sStartSrvResolverInfo.ServiceInstanceMatches("mantis"));
@@ -2836,6 +3261,8 @@ void TestProxyInvokeCallbackFromStartApi(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 2);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 3);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 3);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 0);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartIp6AddrResolverInfo.HostNameMatches("nova"));
     VerifyOrQuit(sStopIp6AddrResolverInfo.HostNameMatches("nova"));
@@ -2853,6 +3280,46 @@ void TestProxyInvokeCallbackFromStartApi(void)
         VerifyOrQuit(sResolveAddressInfo.mHostAddresses[index] == AsCoreType(&addressAndTtl[0].mAddress) ||
                      sResolveAddressInfo.mHostAddresses[index] == AsCoreType(&addressAndTtl[1].mAddress));
     }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sQueryRecordInfo.Reset();
+    Log("QueryRecord()");
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeKey, "drax",
+                                         "_guardian._glaxy.default.service.arpa.", RecordCallback, sInstance));
+    AdvanceTime(10);
+
+    // Check that the record querier is started and then stopped
+
+    VerifyOrQuit(sStartBrowserInfo.mCallCount == 1);
+    VerifyOrQuit(sStopBrowserInfo.mCallCount == 1);
+    VerifyOrQuit(sStartSrvResolverInfo.mCallCount == 2);
+    VerifyOrQuit(sStopSrvResolverInfo.mCallCount == 2);
+    VerifyOrQuit(sStartTxtResolverInfo.mCallCount == 2);
+    VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 2);
+    VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 3);
+    VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 3);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 1);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 1);
+
+    VerifyOrQuit(sStartRecordQuerierInfo.NameMatches("drax", "_guardian._glaxy"));
+    VerifyOrQuit(sStopRecordQuerierInfo.NameMatches("drax", "_guardian._glaxy"));
+
+    // Validate the query record response on client
+
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+
+    VerifyOrQuit(!strcmp(sQueryRecordInfo.mQueryName, "drax._guardian._glaxy.default.service.arpa."));
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 1);
+
+    VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, "drax._guardian._glaxy.default.service.arpa."));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypeKey);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength == sizeof(kKeyData));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl == kTtl);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sizeof(kKeyData));
+    VerifyOrQuit(!memcmp(sQueryRecordInfo.mRecords[0].mDataBuffer, kKeyData, sizeof(kKeyData)));
+    VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Stop DNS-SD server");

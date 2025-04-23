@@ -46,6 +46,7 @@
 #include "common/equatable.hpp"
 #include "common/message.hpp"
 #include "common/owned_ptr.hpp"
+#include "common/string.hpp"
 #include "crypto/ecdsa.hpp"
 #include "net/ip4_types.hpp"
 #include "net/ip6_address.hpp"
@@ -1293,6 +1294,10 @@ public:
     static constexpr uint16_t kClassNone     = 254; ///< Class code None (NONE) - RFC 2136.
     static constexpr uint16_t kClassAny      = 255; ///< Class code Any (ANY).
 
+    static constexpr uint16_t kTypeStringSize = 17; ///< Size of `TypeInfoString`.
+
+    typedef String<kTypeStringSize> TypeInfoString; /// A string to represent a resource record type (human-readable).
+
     /**
      * Initializes the resource record by setting its type and class.
      *
@@ -1544,6 +1549,15 @@ public:
      * @retval kErrorParse      The record data format is invalid.
      */
     static Error DecompressRecordData(const Message &aMessage, uint16_t aOffset, OwnedPtr<Message> &aDataMsg);
+
+    /**
+     * Returns a human-readable string representation of a given resource record type.
+     *
+     * @param[in] aRecordType  The resource record type to convert.
+     *
+     * @returns human-readable string representation of a given resource record type.
+     */
+    static TypeInfoString TypeToString(uint16_t aRecordType);
 
 protected:
     Error ReadName(const Message &aMessage,
