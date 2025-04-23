@@ -328,7 +328,7 @@ typedef enum
  *
  * @param[in] aContext  The user context pointer.
  * @param[in] aEvent    The ND Proxy event.
- * @param[in] aDua      The Domain Unicast Address of the ND Proxy, or `nullptr` if @p aEvent is
+ * @param[in] aDua      The Domain Unicast Address of the ND Proxy, or NULL if @p aEvent is
  *                      `OT_BACKBONE_ROUTER_NDPROXY_CLEARED`.
  */
 typedef void (*otBackboneRouterNdProxyCallback)(void                        *aContext,
@@ -385,7 +385,7 @@ typedef enum
  *
  * @param[in] aContext       The user context pointer.
  * @param[in] aEvent         The Domain Prefix event.
- * @param[in] aDomainPrefix  The new Domain Prefix if added or changed, nullptr otherwise.
+ * @param[in] aDomainPrefix  The new Domain Prefix if added or changed, NULL otherwise.
  */
 typedef void (*otBackboneRouterDomainPrefixCallback)(void                             *aContext,
                                                      otBackboneRouterDomainPrefixEvent aEvent,

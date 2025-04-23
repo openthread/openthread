@@ -87,11 +87,11 @@ void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery 
  * The transaction will be released, so the platform must not call on the same transaction twice. This function passes
  * the ownership of `aResponse` to OpenThread stack.
  *
- * Platform can pass a nullptr to close a transaction without a response.
+ * Platform can pass NULL to close a transaction without a response.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aTxn       A pointer to the opaque DNS query transaction object.
- * @param[in] aResponse  A message buffer of the DNS response payload or `nullptr` to close a transaction without a
+ * @param[in] aResponse  A message buffer of the DNS response payload or NULL to close a transaction without a
  *                       response.
  */
 extern void otPlatDnsUpstreamQueryDone(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, otMessage *aResponse);

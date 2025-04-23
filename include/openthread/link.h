@@ -1102,7 +1102,7 @@ otError otLinkSetRegion(otInstance *aInstance, uint16_t aRegionCode);
  * @param[out] aRegionCode  The radio region code. The `aRegionCode >> 8` is first ascii char
  *                          and the `aRegionCode & 0xff` is the second ascii char.
  *
- * @retval  OT_ERROR_INVALID_ARGS     @p aRegionCode is nullptr.
+ * @retval  OT_ERROR_INVALID_ARGS     @p aRegionCode is NULL.
  * @retval  OT_ERROR_FAILED           Other platform specific errors.
  * @retval  OT_ERROR_NONE             Successfully got region code.
  * @retval  OT_ERROR_NOT_IMPLEMENTED  The feature is not implemented.
