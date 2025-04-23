@@ -101,6 +101,7 @@ endif()
 target_link_libraries(ot-test-platform-ftd
     PRIVATE
         ot-config
+        mbedtls
         ${OT_MBEDTLS}
 )
 

@@ -40,7 +40,11 @@
 #include <openthread/platform/logging.h>
 #include <openthread/platform/memory.h>
 
-#define MBEDTLS_PLATFORM_SNPRINTF_MACRO snprintf
+// ==============================================================================
+// mbedTLS legacy/PSA configuration
+// ==============================================================================
+
+#if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
 
 #define MBEDTLS_AES_C
 #if (MBEDTLS_VERSION_NUMBER >= 0x03050000)
@@ -66,19 +70,46 @@
 #define MBEDTLS_ENTROPY_C
 #define MBEDTLS_HAVE_ASM
 #define MBEDTLS_HMAC_DRBG_C
-#define MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED
 #define MBEDTLS_MD_C
-#define MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
-#define MBEDTLS_NO_PLATFORM_ENTROPY
-#define MBEDTLS_OID_C
-#define MBEDTLS_PK_C
-#define MBEDTLS_PK_PARSE_C
-#define MBEDTLS_PLATFORM_C
-#define MBEDTLS_PLATFORM_MEMORY
-#define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
 #define MBEDTLS_SHA224_C
 #define MBEDTLS_SHA256_C
 #define MBEDTLS_SHA256_SMALLER
+
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_TLS_ENABLE
+#define MBEDTLS_BASE64_C
+#define MBEDTLS_ECDH_C
+#define MBEDTLS_ECDSA_C
+#endif
+
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+#define MBEDTLS_GCM_C
+#endif
+
+#if OPENTHREAD_CONFIG_ECDSA_ENABLE
+#define MBEDTLS_BASE64_C
+#define MBEDTLS_ECDH_C
+#define MBEDTLS_ECDSA_C
+#if OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
+#define MBEDTLS_ECDSA_DETERMINISTIC
+#endif
+#endif
+
+#elif OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
+
+#define MBEDTLS_USE_PSA_CRYPTO
+
+#define MBEDTLS_PSA_CRYPTO_C
+#define MBEDTLS_PSA_CRYPTO_CLIENT
+#define MBEDTLS_PSA_CRYPTO_STORAGE_C
+#define MBEDTLS_PSA_CRYPTO_CONFIG
+#define MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+
+#endif
+
+// ==============================================================================
+// SSL configuration
+// ==============================================================================
+
 #define MBEDTLS_SSL_CLI_C
 #define MBEDTLS_SSL_DTLS_ANTI_REPLAY
 #define MBEDTLS_SSL_DTLS_HELLO_VERIFY
@@ -93,51 +124,18 @@
 #define MBEDTLS_SSL_SRV_C
 #endif
 
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+#define MBEDTLS_SSL_KEEP_PEER_CERTIFICATE
+#endif
+
+#define MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED
+
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_TLS_ENABLE
 #define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-#endif
-
-#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-#define MBEDTLS_SSL_KEEP_PEER_CERTIFICATE
-#define MBEDTLS_GCM_C
-#endif
-
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-#define MBEDTLS_BASE64_C
-#define MBEDTLS_ECDH_C
-#define MBEDTLS_ECDSA_C
-#define MBEDTLS_PEM_PARSE_C
-#define MBEDTLS_X509_USE_C
-#define MBEDTLS_X509_CRT_PARSE_C
-#endif
-
-#if OPENTHREAD_CONFIG_ECDSA_ENABLE
-#define MBEDTLS_BASE64_C
-#define MBEDTLS_ECDH_C
-#define MBEDTLS_ECDSA_C
-#if OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
-#define MBEDTLS_ECDSA_DETERMINISTIC
-#endif
-#define MBEDTLS_PEM_PARSE_C
-#define MBEDTLS_PK_WRITE_C
-#endif
-
-#define MBEDTLS_MPI_WINDOW_SIZE            1 /**< Maximum windows size used. */
-#define MBEDTLS_MPI_MAX_SIZE              32 /**< Maximum number of bytes for usable MPIs. */
-#define MBEDTLS_ECP_MAX_BITS             256 /**< Maximum bit size of groups */
-#define MBEDTLS_ECP_WINDOW_SIZE            2 /**< Maximum window size used */
-#define MBEDTLS_ECP_FIXED_POINT_OPTIM      0 /**< Enable fixed-point speed-up */
-#define MBEDTLS_ENTROPY_MAX_SOURCES        1 /**< Maximum number of sources supported */
-
-#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-#define MBEDTLS_PLATFORM_STD_CALLOC      otPlatCAlloc /**< Default allocator to use, can be undefined */
-#define MBEDTLS_PLATFORM_STD_FREE        otPlatFree /**< Default free to use, can be undefined */
-#else
-#define MBEDTLS_MEMORY_BUFFER_ALLOC_C
 #endif
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
@@ -151,6 +149,63 @@
 #define MBEDTLS_SSL_IN_CONTENT_LEN       MBEDTLS_SSL_MAX_CONTENT_LEN
 #define MBEDTLS_SSL_OUT_CONTENT_LEN      MBEDTLS_SSL_MAX_CONTENT_LEN
 #define MBEDTLS_SSL_CIPHERSUITES         MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8
+
+// ==============================================================================
+// x509 & PK configuration
+// ==============================================================================
+
+#define MBEDTLS_OID_C
+#define MBEDTLS_PK_C
+#define MBEDTLS_PK_PARSE_C
+
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_TLS_ENABLE
+#define MBEDTLS_BASE64_C
+#define MBEDTLS_PEM_PARSE_C
+#define MBEDTLS_X509_USE_C
+#define MBEDTLS_X509_CRT_PARSE_C
+#endif
+
+#if OPENTHREAD_CONFIG_ECDSA_ENABLE
+#define MBEDTLS_PEM_PARSE_C
+#define MBEDTLS_PK_WRITE_C
+#endif
+
+// ==============================================================================
+// MPI configuration
+// ==============================================================================
+
+#define MBEDTLS_MPI_WINDOW_SIZE            1 /**< Maximum windows size used. */
+#define MBEDTLS_MPI_MAX_SIZE              32 /**< Maximum number of bytes for usable MPIs. */
+
+// ==============================================================================
+// ECP configuration
+// ==============================================================================
+
+#if (MBEDTLS_VERSION_NUMBER < 0x03000000)
+#define MBEDTLS_ECP_MAX_BITS             256 /**< Maximum bit size of groups */
+#endif
+#define MBEDTLS_ECP_WINDOW_SIZE            2 /**< Maximum window size used */
+#define MBEDTLS_ECP_FIXED_POINT_OPTIM      0 /**< Enable fixed-point speed-up */
+
+// ==============================================================================
+// Platform configuration
+// ==============================================================================
+
+#define MBEDTLS_PLATFORM_SNPRINTF_MACRO snprintf
+
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+#define MBEDTLS_PLATFORM_STD_CALLOC      otPlatCAlloc /**< Default allocator to use, can be undefined */
+#define MBEDTLS_PLATFORM_STD_FREE        otPlatFree /**< Default free to use, can be undefined */
+#else
+#define MBEDTLS_MEMORY_BUFFER_ALLOC_C
+#endif
+
+#define MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
+#define MBEDTLS_NO_PLATFORM_ENTROPY
+#define MBEDTLS_PLATFORM_C
+#define MBEDTLS_PLATFORM_MEMORY
+#define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
+#define MBEDTLS_ENTROPY_MAX_SOURCES 1
 
 // Spans multiple lines to avoid being processed by unifdef
 #if defined(\
