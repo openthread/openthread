@@ -58,6 +58,8 @@ LinkRaw::LinkRaw(Instance &aInstance)
     , mSubMac(aInstance.Get<SubMac>())
 #endif
 {
+    otPlatCryptoInit();
+
     Init();
 }
 
