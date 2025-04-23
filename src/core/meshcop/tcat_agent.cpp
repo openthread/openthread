@@ -903,12 +903,31 @@ void TcatAgent::CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBuf
     Crypto::Key             cryptoKey;
     Crypto::HmacSha256      hmac;
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    Crypto::Storage::KeyRef keyRef;
+    Error                   error;
+
+    error = Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeHmac, Crypto::Storage::kKeyAlgorithmHmacSha256,
+                                       Crypto::Storage::kUsageSignHash, Crypto::Storage::kTypeVolatile,
+                                       reinterpret_cast<const uint8_t *>(aBuf), aBufLen);
+    SuccessOrExit(error);
+
+    cryptoKey.SetAsKeyRef(keyRef);
+#else
     cryptoKey.Set(reinterpret_cast<const uint8_t *>(aBuf), static_cast<uint16_t>(aBufLen));
+#endif
 
     hmac.Start(cryptoKey);
     hmac.Update(aChallenge);
     hmac.Update(rawKey.p, static_cast<uint16_t>(rawKey.len));
     hmac.Finish(aHash);
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    Crypto::Storage::DestroyKey(keyRef);
+
+exit:
+    return;
+#endif
 }
 
 Error TcatAgent::HandleStartThreadInterface(void)
