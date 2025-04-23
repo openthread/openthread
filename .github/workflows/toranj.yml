@@ -180,9 +180,6 @@ jobs:
         ./tests/toranj/build.sh --log-level CRIT all
         git clean -dfx
         ./tests/toranj/build.sh --log-level NONE all
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - -
-        git clean -dfx
-        ./tests/toranj/build.sh --enable-plat-key-ref all
 
   toranj-macos:
     name: toranj-macos
