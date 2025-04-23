@@ -34,7 +34,7 @@
 #ifndef CONFIG_PLATFORM_H_
 #define CONFIG_PLATFORM_H_
 
-#include "config/srp_server.h"
+#include "config/crypto.h"
 
 /**
  * @addtogroup config-platform
@@ -154,9 +154,13 @@
  * @def OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
  *
  * Define to 1 if you want to enable key ref usage support as defined by platform.
+ *
+ * This config is enabled by default for PSA Crypto backend.
+ *
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-#define OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE 0
+#define OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE \
+    (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 #endif
 
 /**
