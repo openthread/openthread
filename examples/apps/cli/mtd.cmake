@@ -41,9 +41,9 @@ target_link_libraries(ot-cli-mtd PRIVATE
     openthread-cli-mtd
     ${OT_PLATFORM_LIB_MTD}
     openthread-mtd
-    ${OT_PLATFORM_LIB_MTD}
     openthread-cli-mtd
     ${OT_MBEDTLS}
+    ${OT_PLATFORM_LIB_MTD}
     ot-config-mtd
     ot-config
 )

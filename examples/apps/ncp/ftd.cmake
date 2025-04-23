@@ -41,9 +41,9 @@ target_link_libraries(ot-ncp-ftd PRIVATE
     openthread-ncp-ftd
     ${OT_PLATFORM_LIB_FTD}
     openthread-ftd
-    ${OT_PLATFORM_LIB_FTD}
     openthread-ncp-ftd
     ${OT_MBEDTLS}
+    ${OT_PLATFORM_LIB_FTD}
     ot-config-ftd
     ot-config
 )

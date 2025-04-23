@@ -117,10 +117,11 @@ set(COMMON_LIBS
     ot-test-platform-ftd
     openthread-ftd
     ot-test-platform-ftd
-    ${OT_MBEDTLS}
     ot-config
     openthread-ftd
     openthread-url
+    ${OT_MBEDTLS}
+    openthread-native-its-ram
 )
 
 set(COMMON_LIBS_RCP

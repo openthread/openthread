@@ -41,9 +41,9 @@ target_link_libraries(ot-ncp-mtd PRIVATE
     openthread-ncp-mtd
     ${OT_PLATFORM_LIB_MTD}
     openthread-mtd
-    ${OT_PLATFORM_LIB_MTD}
     openthread-ncp-mtd
     ${OT_MBEDTLS}
+    ${OT_PLATFORM_LIB_MTD}
     ot-config-mtd
     ot-config
 )
