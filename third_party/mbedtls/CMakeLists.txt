@@ -140,4 +140,5 @@ target_include_directories(mbedcrypto
     PRIVATE
         ${OT_PUBLIC_INCLUDES}
         $<TARGET_PROPERTY:ot-config,INTERFACE_INCLUDE_DIRECTORIES>
+        native_its/include
 )

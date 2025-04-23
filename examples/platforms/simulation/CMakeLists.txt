@@ -103,9 +103,10 @@ endif()
 
 target_link_libraries(openthread-simulation PRIVATE
     openthread-platform
+    mbedtls
+    openthread-native-its-file
     ot-simulation-config
     ot-config
-    mbedtls
 )
 
 target_compile_options(openthread-simulation PRIVATE

@@ -64,6 +64,11 @@ static bool sUseUnixSocket = false;
 int    gArgumentsCount = 0;
 char **gArguments      = NULL;
 
+#if OPENTHREAD_PSA_CRYPTO_NATIVE_ITS_FILE && (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
+static char        sNativeItsFileNamePrefix[256];
+extern const char *gItsFileNamePrefix;
+#endif
+
 uint64_t sNow = 0; // microseconds
 int      sSockFd;
 uint16_t sPortBase = 9000;
@@ -272,6 +277,12 @@ void otSysInit(int argc, char *argv[])
     {
         DieNow(OT_EXIT_FAILURE);
     }
+
+#if OPENTHREAD_PSA_CRYPTO_NATIVE_ITS_FILE && (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
+    snprintf(sNativeItsFileNamePrefix, sizeof(sNativeItsFileNamePrefix), "%s/%s_%d_",
+             OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, getenv("PORT_OFFSET") ? getenv("PORT_OFFSET") : "0", gNodeId);
+    gItsFileNamePrefix = sNativeItsFileNamePrefix;
+#endif
 
     socket_init();
 

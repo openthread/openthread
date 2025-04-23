@@ -64,6 +64,11 @@ extern otRadioCaps gRadioCaps;
 
 static volatile bool gTerminate = false;
 
+#if OPENTHREAD_PSA_CRYPTO_NATIVE_ITS_FILE && (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
+static char        sNativeItsFileNamePrefix[256];
+extern const char *gItsFileNamePrefix;
+#endif
+
 static void handleSignal(int aSignal)
 {
     OT_UNUSED_VARIABLE(aSignal);
@@ -195,6 +200,12 @@ void otSysInit(int aArgCount, char *aArgVector[])
 
     signal(SIGTERM, &handleSignal);
     signal(SIGHUP, &handleSignal);
+
+#if OPENTHREAD_PSA_CRYPTO_NATIVE_ITS_FILE && (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
+    snprintf(sNativeItsFileNamePrefix, sizeof(sNativeItsFileNamePrefix), "%s/%s_%d_",
+             OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, getenv("PORT_OFFSET") ? getenv("PORT_OFFSET") : "0", gNodeId);
+    gItsFileNamePrefix = sNativeItsFileNamePrefix;
+#endif
 
     platformLoggingInit(basename(aArgVector[0]));
     platformAlarmInit(speedUpFactor);

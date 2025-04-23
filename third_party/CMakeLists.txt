@@ -28,6 +28,7 @@
 
 if(NOT OT_EXTERNAL_MBEDTLS)
     add_subdirectory(mbedtls)
+    add_subdirectory(mbedtls/native_its)
 endif()
 
 add_subdirectory(tcplp)
