@@ -123,7 +123,7 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         # ensure NAT64 is enabled here.
         br.nat64_set_enabled(True)
         self.simulator.go(config.LEADER_STARTUP_DELAY)
-        br.bash("service bind9 stop")
+        br.bash("service bind9 stop || true")
         self.simulator.go(330)
         self.assertEqual('leader', br.get_state())
 

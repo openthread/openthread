@@ -91,7 +91,7 @@ class UpstreamDns(thread_cert.TestCase):
         self._start_dns_server(dns_server_2, TEST_DOMAIN_2, TEST_DOMAIN_IP6_ADDRESSES_2)
 
         # Disable the bind9 service on the BR otherwise bind9 may respond to Thread devices' DNS queries
-        br.bash('service bind9 stop')
+        br.bash('service bind9 stop || true')
 
         br.start()
         self.simulator.go(config.LEADER_STARTUP_DELAY)
@@ -144,7 +144,7 @@ $TTL 24h
 ''' + '\n'.join(f'@ IN AAAA {addr}' for addr in test_domain_ip6_addresses)
 
         dns_server.start(start_radvd=False)
-        dns_server.bash('service bind9 stop')
+        dns_server.bash('service bind9 stop || true')
 
         dns_server.bash(shlex.join(['echo', test_domain_bind_conf]) + ' >> /etc/bind/named.conf.local')
         dns_server.bash(shlex.join(['echo', test_domain_bind_zone]) + ' >> /etc/bind/db.test.domain')

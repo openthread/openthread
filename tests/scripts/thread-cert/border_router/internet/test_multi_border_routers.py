@@ -100,7 +100,7 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         # ensure NAT64 is enabled here.
         br1.nat64_set_enabled(True)
         self.simulator.go(config.LEADER_STARTUP_DELAY)
-        br1.bash("service bind9 stop")
+        br1.bash("service bind9 stop || true")
         self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
         self.assertEqual('leader', br1.get_state())
 
@@ -167,7 +167,7 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         # Case 3. Re-enables BR2 with a local prefix and it will not add
         #         its local nat64 prefix to Network Data.
         #
-        br2.bash("service bind9 stop")
+        br2.bash("service bind9 stop || true")
         self.simulator.go(5)
         br2.nat64_set_enabled(True)
 
