@@ -665,18 +665,22 @@ void Mle::HandleLinkRequest(RxInfo &aRxInfo)
     case kErrorNone:
         if (IsRouterRloc16(sourceAddress))
         {
-            neighbor = mRouterTable.FindRouterByRloc16(sourceAddress);
-            VerifyOrExit(neighbor != nullptr, error = kErrorParse);
+            Router *router = mRouterTable.FindRouterByRloc16(sourceAddress);
 
-            if (!neighbor->IsStateValid())
+            VerifyOrExit(router != nullptr, error = kErrorParse);
+
+            if (!router->IsStateValid())
             {
-                InitNeighbor(*neighbor, aRxInfo);
-                neighbor->SetState(Neighbor::kStateLinkRequest);
+                InitNeighbor(*router, aRxInfo);
+                router->SetState(Neighbor::kStateLinkRequest);
+                router->ClearLinkAcceptTimeout();
             }
             else
             {
-                VerifyOrExit(neighbor->GetExtAddress() == info.mExtAddress);
+                VerifyOrExit(router->GetExtAddress() == info.mExtAddress);
             }
+
+            neighbor = router;
         }
 
         break;
@@ -1303,6 +1307,7 @@ Error Mle::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, co
     {
         InitNeighbor(*router, aRxInfo);
         router->SetState(Neighbor::kStateLinkRequest);
+        router->ClearLinkAcceptTimeout();
         delay = Random::NonCrypto::GetUint32InRange(0, kMaxLinkRequestDelayOnRouter);
         mDelayedSender.ScheduleLinkRequest(*router, delay);
         ExitNow(error = kErrorNoRoute);
@@ -1377,6 +1382,7 @@ void Mle::EstablishRouterLinkOnFtdChild(Router &aRouter, RxInfo &aRxInfo, uint8_
 
     InitNeighbor(aRouter, aRxInfo);
     aRouter.SetState(Neighbor::kStateLinkRequest);
+    aRouter.ClearLinkAcceptTimeout();
     mDelayedSender.ScheduleLinkRequest(aRouter, Random::NonCrypto::GetUint32InRange(minDelay, maxDelay));
 
 exit:
@@ -1718,11 +1724,17 @@ void Mle::HandleTimeTick(void)
             }
         }
 
+        if (router.IsStateLinkRequest() && !mDelayedSender.HasAnyScheduledLinkRequest(router) &&
+            !router.IsWaitingForLinkAccept())
+        {
+            LogInfo("Router 0x%04x - Failed to schedule/send Link Request", router.GetRloc16());
+            RemoveNeighbor(router);
+        }
+
         if (router.IsWaitingForLinkAccept() && (router.DecrementLinkAcceptTimeout() == 0))
         {
             LogInfo("Router 0x%04x - Link Accept timeout expired", router.GetRloc16());
             RemoveNeighbor(router);
-            continue;
         }
 
         if (IsLeader() && (mRouterTable.FindNextHopOf(router) == nullptr) &&
