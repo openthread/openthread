@@ -319,6 +319,7 @@ private:
     static constexpr uint16_t kRrTypeKey   = ResourceRecord::kTypeKey;
     static constexpr uint16_t kRrTypeAaaa  = ResourceRecord::kTypeAaaa;
     static constexpr uint16_t kRrTypeSrv   = ResourceRecord::kTypeSrv;
+    static constexpr uint16_t kRrTypeAny   = ResourceRecord::kTypeAny;
 
     typedef Header::Response ResponseCode;
 
@@ -356,8 +357,8 @@ private:
     {
         Questions(void) { mFirstRrType = 0, mSecondRrType = 0; }
 
-        bool    IsFor(uint16_t aRrType) const { return (mFirstRrType == aRrType) || (mSecondRrType == aRrType); }
-        Section SectionFor(uint16_t aRrType) const { return IsFor(aRrType) ? kAnswerSection : kAdditionalDataSection; }
+        bool    IsFor(uint16_t aRrType) const;
+        Section SectionFor(uint16_t aRrType) const;
 
         uint16_t mFirstRrType;
         uint16_t mSecondRrType;
@@ -403,6 +404,8 @@ private:
     class Response : public InstanceLocator, private NonCopyable
     {
     public:
+        static constexpr uint16_t kQueryNameOffset = sizeof(Header);
+
         explicit Response(Instance &aInstance);
         ResponseCode AddQuestionsFrom(const Request &aRequest);
 
@@ -435,6 +438,8 @@ private:
         Error ExtractServiceInstanceLabel(const char *aInstanceName, Name::LabelBuffer &aLabel);
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
         Error ResolveBySrp(void);
+        Error ResolveUsingSrpHost(const Srp::Server::Host &aHost);
+        Error ResolveUsingSrpService(const Srp::Server::Service &aService);
         bool  QueryNameMatchesService(const Srp::Server::Service &aService) const;
         Error AppendPtrRecord(const Srp::Server::Service &aService);
         Error AppendSrvRecord(const Srp::Server::Service &aService);
@@ -497,6 +502,12 @@ private:
             kStop,
         };
 
+        enum RrTypeMatchMode : uint8_t
+        {
+            kRequireExactMatch,     // Require record type to match exactly.
+            kPermitAnyOrExactMatch, // Permit ANY record type in addition to exact match.
+        };
+
         typedef Error (Response::*ResponseAppender)(const ProxyResult &aResult);
 
         void Perform(ProxyAction aAction, ProxyQuery &aQuery, ProxyQueryInfo &aInfo);
@@ -506,7 +517,8 @@ private:
                           const ProxyQueryInfo &aInfo,
                           ProxyAction           aAction,
                           const Name::Buffer   &aName,
-                          uint16_t              aQuerierRrType) const;
+                          uint16_t              aQuerierRrType,
+                          RrTypeMatchMode       aRrTypeMatchMode) const;
         void UpdateProxy(Command               aCommand,
                          ProxyAction           aAction,
                          const ProxyQuery     &aQuery,
