@@ -157,16 +157,12 @@ void Server::ProcessQuery(Request &aRequest)
     Response     response(GetInstance());
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-    if (mEnableUpstreamQuery && ShouldForwardToUpstream(aRequest))
+    if (ShouldForwardToUpstream(aRequest))
     {
-        Error error = ResolveByUpstream(aRequest);
-
-        if (error == kErrorNone)
+        if (ResolveByUpstream(aRequest) == kErrorNone)
         {
             ExitNow();
         }
-
-        LogWarnOnError(error, "forwarding to upstream");
 
         rcode = Header::kResponseServerFailure;
 
@@ -206,6 +202,10 @@ void Server::ProcessQuery(Request &aRequest)
         ExitNow();
     }
 #endif
+
+    // `ResolveByProxy` may take ownership of `response.mMessage` and
+    // setting it to `nullptr`. In such a case, the `response.Send()`
+    // call will effectively do nothing.
 
     ResolveByProxy(response, *aRequest.mMessageInfo);
 
@@ -386,8 +386,9 @@ exit:
 
 Error Server::Response::ParseQueryName(void)
 {
-    // Parses and validates the query name and updates
-    // the name compression offsets.
+    // Parses the query name, determines name compression
+    // offsets, and validates that the query name is for
+    // `kDefaultDomainName` ("default.service.arpa.").
 
     Error        error = kErrorNone;
     Name::Buffer name;
@@ -865,11 +866,13 @@ exit:
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-bool Server::ShouldForwardToUpstream(const Request &aRequest)
+bool Server::ShouldForwardToUpstream(const Request &aRequest) const
 {
     bool         shouldForward = false;
     uint16_t     readOffset;
     Name::Buffer name;
+
+    VerifyOrExit(mEnableUpstreamQuery);
 
     VerifyOrExit(aRequest.mHeader.IsRecursionDesiredFlagSet());
     readOffset = sizeof(Header);
@@ -949,6 +952,7 @@ Error Server::ResolveByUpstream(const Request &aRequest)
     mCounters.mUpstreamDnsCounters.mQueries++;
 
 exit:
+    LogWarnOnError(error, "forward to upstream");
     return error;
 }
 #endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE

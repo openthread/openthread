@@ -573,7 +573,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-    static bool               ShouldForwardToUpstream(const Request &aRequest);
+    bool                      ShouldForwardToUpstream(const Request &aRequest) const;
     UpstreamQueryTransaction *AllocateUpstreamQueryTransaction(const Ip6::MessageInfo &aMessageInfo);
     void                      ResetUpstreamQueryTransaction(UpstreamQueryTransaction &aTxn, Error aError);
     Error                     ResolveByUpstream(const Request &aRequest);
