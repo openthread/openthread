@@ -59,6 +59,7 @@
 #include "mac/mac_types.hpp"
 #include "thread/child_mask.hpp"
 #include "thread/link_quality.hpp"
+#include "thread/thread_link_info.hpp"
 
 /**
  * Represents an opaque (and empty) type for an OpenThread message buffer.
@@ -147,7 +148,6 @@ class Message;
 class MessagePool;
 class MessageQueue;
 class PriorityQueue;
-class ThreadLinkInfo;
 
 /**
  * Represents the link security mode indicating whether to use MAC (layer two) security.

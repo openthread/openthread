@@ -703,6 +703,8 @@ openthread_core_files = [
   "thread/router_table.hpp",
   "thread/src_match_controller.cpp",
   "thread/src_match_controller.hpp",
+  "thread/thread_link_info.cpp",
+  "thread/thread_link_info.hpp",
   "thread/thread_netif.cpp",
   "thread/thread_netif.hpp",
   "thread/thread_tlvs.hpp",

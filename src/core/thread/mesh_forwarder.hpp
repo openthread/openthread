@@ -55,6 +55,7 @@
 #include "thread/indirect_sender.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/network_data_leader.hpp"
+#include "thread/thread_link_info.hpp"
 
 namespace ot {
 
@@ -74,80 +75,6 @@ class HistoryTracker;
  *
  * @{
  */
-
-/**
- * Represents link-specific information for messages received from the Thread radio.
- */
-class ThreadLinkInfo : public otThreadLinkInfo, public Clearable<ThreadLinkInfo>
-{
-public:
-    /**
-     * Returns the IEEE 802.15.4 Source PAN ID.
-     *
-     * @returns The IEEE 802.15.4 Source PAN ID.
-     */
-    Mac::PanId GetPanId(void) const { return mPanId; }
-
-    /**
-     * Returns the IEEE 802.15.4 Channel.
-     *
-     * @returns The IEEE 802.15.4 Channel.
-     */
-    uint8_t GetChannel(void) const { return mChannel; }
-
-    /**
-     * Returns whether the Destination PAN ID is broadcast.
-     *
-     * @retval TRUE   If Destination PAN ID is broadcast.
-     * @retval FALSE  If Destination PAN ID is not broadcast.
-     */
-    bool IsDstPanIdBroadcast(void) const { return mIsDstPanIdBroadcast; }
-
-    /**
-     * Indicates whether or not link security is enabled.
-     *
-     * @retval TRUE   If link security is enabled.
-     * @retval FALSE  If link security is not enabled.
-     */
-    bool IsLinkSecurityEnabled(void) const { return mLinkSecurity; }
-
-    /**
-     * Returns the Received Signal Strength (RSS) in dBm.
-     *
-     * @returns The Received Signal Strength (RSS) in dBm.
-     */
-    int8_t GetRss(void) const { return mRss; }
-
-    /**
-     * Returns the frame/radio Link Quality Indicator (LQI) value.
-     *
-     * @returns The Link Quality Indicator value.
-     */
-    uint8_t GetLqi(void) const { return mLqi; }
-
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    /**
-     * Returns the Time Sync Sequence.
-     *
-     * @returns The Time Sync Sequence.
-     */
-    uint8_t GetTimeSyncSeq(void) const { return mTimeSyncSeq; }
-
-    /**
-     * Returns the time offset to the Thread network time (in microseconds).
-     *
-     * @returns The time offset to the Thread network time (in microseconds).
-     */
-    int64_t GetNetworkTimeOffset(void) const { return mNetworkTimeOffset; }
-#endif
-
-    /**
-     * Sets the `ThreadLinkInfo` from a given received frame.
-     *
-     * @param[in] aFrame  A received frame.
-     */
-    void SetFrom(const Mac::RxFrame &aFrame);
-};
 
 /**
  * Implements mesh forwarding within Thread.
@@ -678,8 +605,6 @@ private:
 /**
  * @}
  */
-
-DefineCoreType(otThreadLinkInfo, ThreadLinkInfo);
 
 } // namespace ot
 
