@@ -83,6 +83,7 @@ source_set("openthread") {
     "netdata_publisher.h",
     "netdiag.h",
     "network_time.h",
+    "p2p.h",
     "ping_sender.h",
     "platform/alarm-micro.h",
     "platform/alarm-milli.h",
