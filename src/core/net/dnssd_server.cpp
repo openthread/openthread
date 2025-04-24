@@ -451,6 +451,15 @@ bool Server::Response::QueryNameMatches(const char *aName) const { return Server
 
 Error Server::Response::AppendQueryName(void) { return Name::AppendPointerLabel(sizeof(Header), *mMessage); }
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+Error Server::Response::AppendPtrRecord(const Srp::Server::Service &aService)
+{
+    uint32_t ttl = TimeMilli::MsecToSec(aService.GetExpireTime() - TimerMilli::GetNow());
+
+    return AppendPtrRecord(aService.GetInstanceLabel(), ttl);
+}
+#endif
+
 Error Server::Response::AppendPtrRecord(const char *aInstanceLabel, uint32_t aTtl)
 {
     Error     error;
@@ -530,6 +539,11 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+Error Server::Response::AppendHostAddresses(const Srp::Server::Service &aService)
+{
+    return AppendHostAddresses(aService.GetHost());
+}
+
 Error Server::Response::AppendHostAddresses(const Srp::Server::Host &aHost)
 {
     const Ip6::Address *addrs;
@@ -697,6 +711,41 @@ exit:
     return error;
 }
 
+template <typename ServiceType> Error Server::Response::AppendServiceRecords(const ServiceType &aService)
+{
+    static const Section kSections[] = {kAnswerSection, kAdditionalDataSection};
+
+    // Append SRV and TXT records along with associated host AAAA addresses
+    // in the proper sections.
+
+    Error error = kErrorNone;
+
+    for (Section section : kSections)
+    {
+        mSection = section;
+
+        if (mSection == kAdditionalDataSection)
+        {
+            VerifyOrExit(!(Get<Server>().mTestMode & kTestModeEmptyAdditionalSection));
+        }
+
+        if (mSection == mQuestions.SectionFor(kRrTypeSrv))
+        {
+            SuccessOrExit(error = AppendSrvRecord(aService));
+        }
+
+        if (mSection == mQuestions.SectionFor(kRrTypeTxt))
+        {
+            SuccessOrExit(error = AppendTxtRecord(aService));
+        }
+    }
+
+    error = AppendHostAddresses(aService);
+
+exit:
+    return error;
+}
+
 void Server::Response::IncResourceRecordCount(void)
 {
     switch (mSection)
@@ -728,8 +777,6 @@ void Server::Response::Log(void) const
 
 Error Server::Response::ResolveBySrp(void)
 {
-    static const Section kSections[] = {kAnswerSection, kAdditionalDataSection};
-
     Error                       error          = kErrorNone;
     const Srp::Server::Service *matchedService = nullptr;
     bool                        found          = false;
@@ -771,9 +818,7 @@ Error Server::Response::ResolveBySrp(void)
             {
                 if (QueryNameMatchesService(service))
                 {
-                    uint32_t ttl = TimeMilli::MsecToSec(service.GetExpireTime() - TimerMilli::GetNow());
-
-                    SuccessOrExit(error = AppendPtrRecord(service.GetInstanceLabel(), ttl));
+                    SuccessOrExit(error = AppendPtrRecord(service));
                     matchedService = &service;
                 }
             }
@@ -814,30 +859,7 @@ Error Server::Response::ResolveBySrp(void)
         VerifyOrExit(mQuestions.IsFor(kRrTypeSrv) || mQuestions.IsFor(kRrTypeTxt));
     }
 
-    // Append SRV and TXT records along with associated host AAAA addresses
-    // in the proper sections.
-
-    for (Section section : kSections)
-    {
-        mSection = section;
-
-        if (mSection == kAdditionalDataSection)
-        {
-            VerifyOrExit(!(Get<Server>().mTestMode & kTestModeEmptyAdditionalSection));
-        }
-
-        if (mSection == mQuestions.SectionFor(kRrTypeSrv))
-        {
-            SuccessOrExit(error = AppendSrvRecord(*matchedService));
-        }
-
-        if (mSection == mQuestions.SectionFor(kRrTypeTxt))
-        {
-            SuccessOrExit(error = AppendTxtRecord(*matchedService));
-        }
-    }
-
-    SuccessOrExit(error = AppendHostAddresses(matchedService->GetHost()));
+    error = AppendServiceRecords(*matchedService);
 
 exit:
     return error;
@@ -1164,8 +1186,6 @@ void Server::Response::InitFrom(ProxyQuery &aQuery, const ProxyQueryInfo &aInfo)
 
 void Server::Response::Answer(const ServiceInstanceInfo &aInstanceInfo, const Ip6::MessageInfo &aMessageInfo)
 {
-    static const Section kSections[] = {kAnswerSection, kAdditionalDataSection};
-
     Error error = kErrorNone;
 
     if (mQuestions.IsFor(kRrTypePtr))
@@ -1177,27 +1197,7 @@ void Server::Response::Answer(const ServiceInstanceInfo &aInstanceInfo, const Ip
         SuccessOrExit(error = AppendPtrRecord(instanceLabel, aInstanceInfo.mTtl));
     }
 
-    for (Section section : kSections)
-    {
-        mSection = section;
-
-        if (mSection == kAdditionalDataSection)
-        {
-            VerifyOrExit(!(Get<Server>().mTestMode & kTestModeEmptyAdditionalSection));
-        }
-
-        if (mSection == mQuestions.SectionFor(kRrTypeSrv))
-        {
-            SuccessOrExit(error = AppendSrvRecord(aInstanceInfo));
-        }
-
-        if (mSection == mQuestions.SectionFor(kRrTypeTxt))
-        {
-            SuccessOrExit(error = AppendTxtRecord(aInstanceInfo));
-        }
-    }
-
-    error = AppendHostAddresses(aInstanceInfo);
+    error = AppendServiceRecords(aInstanceInfo);
 
 exit:
     if (error != kErrorNone)
