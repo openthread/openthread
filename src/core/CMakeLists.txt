@@ -246,6 +246,7 @@ set(COMMON_SOURCES
     thread/router.cpp
     thread/router_table.cpp
     thread/src_match_controller.cpp
+    thread/thread_link_info.cpp
     thread/thread_netif.cpp
     thread/time_sync_service.cpp
     thread/tmf.cpp
