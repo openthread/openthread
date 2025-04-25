@@ -2332,7 +2332,8 @@ exit:
 
 void Core::ServiceEntry::Register(const Service &aService, const Callback &aCallback)
 {
-    uint32_t ttl = DetermineTtl(aService.mTtl, kDefaultTtl);
+    const char *hostName;
+    uint32_t    ttl = DetermineTtl(aService.mTtl, kDefaultTtl);
 
     if (GetState() == kRemoving)
     {
@@ -2377,8 +2378,10 @@ void Core::ServiceEntry::Register(const Service &aService, const Callback &aCall
 
     // Register SRV record info.
 
+    hostName = (aService.mHostName != nullptr) ? aService.mHostName : Get<Core>().mLocalHost.GetName();
+
     mSrvRecord.UpdateTtl(ttl);
-    mSrvRecord.UpdateProperty(mHostName, aService.mHostName);
+    mSrvRecord.UpdateProperty(mHostName, hostName);
     mSrvRecord.UpdateProperty(mPriority, aService.mPriority);
     mSrvRecord.UpdateProperty(mWeight, aService.mWeight);
     mSrvRecord.UpdateProperty(mPort, aService.mPort);

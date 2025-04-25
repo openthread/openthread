@@ -301,7 +301,8 @@ public:
      *   contain dot `.` character which is allowed in a service instance label.
      * - The `mServiceType` specifies the service type (e.g., "_tst._udp"). It is treated as multiple dot `.` separated
      *   labels. It MUST NOT contain the domain name.
-     * - The `mHostName` field specifies the host name of the service. MUST NOT contain the domain name.
+     * - The `mHostName` field specifies the host name of the service if it is not `nullptr`. Otherwise, if it is
+     *   `nullptr`, it indicates that this service is for the local host (this device itself).
      * - The `mSubTypeLabels` is an array of strings representing sub-types associated with the service. Each array
      *   entry is a sub-type label. The `mSubTypeLabels can be `nullptr` if there are no sub-types. Otherwise, the
      *   array length is specified by `mSubTypeLabelsLength`.
