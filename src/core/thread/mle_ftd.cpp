@@ -1729,12 +1729,14 @@ void Mle::HandleTimeTick(void)
         {
             LogInfo("Router 0x%04x - Failed to schedule/send Link Request", router.GetRloc16());
             RemoveNeighbor(router);
+            continue;
         }
 
         if (router.IsWaitingForLinkAccept() && (router.DecrementLinkAcceptTimeout() == 0))
         {
             LogInfo("Router 0x%04x - Link Accept timeout expired", router.GetRloc16());
             RemoveNeighbor(router);
+            continue;
         }
 
         if (IsLeader() && (mRouterTable.FindNextHopOf(router) == nullptr) &&
