@@ -57,6 +57,15 @@ bool otBorderAgentIsActive(otInstance *aInstance)
     return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().IsRunning();
 }
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+otError otBorderAgentSetMeshCoPServiceBaseName(otInstance *aInstance, const char *aBaseName)
+{
+    AssertPointerIsNotNull(aBaseName);
+
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().SetServiceBaseName(aBaseName);
+}
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 otError otBorderAgentGetId(otInstance *aInstance, otBorderAgentId *aId)
 {
