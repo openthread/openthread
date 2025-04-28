@@ -108,6 +108,10 @@ static bool StateMatchesFilter(Child::State aState, Child::StateFilter aFilter)
     case Child::kInStateAny:
         rval = true;
         break;
+
+    case Child::kInStateLinkRequest:
+        rval = false;
+        break;
     }
 
     return rval;
