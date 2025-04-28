@@ -152,6 +152,10 @@ public:
     Neighbor *FindNeighbor(const Mac::Address   &aMacAddress,
                            Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    Neighbor *FindPeer(const Neighbor::AddressMatcher &aMatcher);
+#endif
+
 #if OPENTHREAD_FTD
 
     /**

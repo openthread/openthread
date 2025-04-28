@@ -404,5 +404,18 @@ bool KeyMaterial::operator==(const KeyMaterial &aOther) const
 #endif
 }
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+void WakeupAddress::SetExtAddress(const ExtAddress &aExtAddress)
+{
+    aExtAddress.CopyTo(mShared.mExtAddress.m8);
+    mType = MapEnum(kTypeExtAddress);
+}
+
+bool WakeupAddress::IsWakeupId(void) const { return mType == MapEnum(kTypeWakeupId); }
+
+bool WakeupAddress::IsGroupWakeupId(void) const { return mType == MapEnum(kTypeGroupWakeupId); }
+
+bool WakeupAddress::IsExtAddress(void) const { return mType == MapEnum(kTypeExtAddress); }
+#endif
 } // namespace Mac
 } // namespace ot
