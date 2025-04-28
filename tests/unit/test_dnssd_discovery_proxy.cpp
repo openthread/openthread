@@ -1041,6 +1041,20 @@ void TestProxyBasic(void)
     const uint8_t kTxtData[] = {3, 'A', '=', '1', 0};
     const uint8_t kKeyData[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99};
 
+    const uint8_t kCnameData[] = {
+        10, 'p', 'r', 'o', 't', 'e', 'c', 't', 'o', 'r', 's', /* protectors */
+        5,  'l', 'o', 'c', 'a', 'l',                          /* local */
+        0,
+    };
+
+    const uint8_t kTranslatedCnameData[] = {
+        10, 'p', 'r', 'o', 't', 'e', 'c', 't', 'o', 'r', 's', /* protectors */
+        7,  'd', 'e', 'f', 'a', 'u', 'l', 't',                /* default */
+        7,  's', 'e', 'r', 'v', 'i', 'c', 'e',                /* service */
+        4,  'a', 'r', 'p', 'a',                               /* arpa */
+        0,
+    };
+
     Srp::Server                     *srpServer;
     Srp::Client                     *srpClient;
     Dns::Client                     *dnsClient;
@@ -1756,6 +1770,85 @@ void TestProxyBasic(void)
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl == kTtl);
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sizeof(kKeyData));
     VerifyOrQuit(!memcmp(sQueryRecordInfo.mRecords[0].mDataBuffer, kKeyData, sizeof(kKeyData)));
+    VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+
+    Log("--------------------------------------------------------------------------------------------");
+
+    ResetPlatDnssdApiInfo();
+    sQueryRecordInfo.Reset();
+
+    Log("QueryRecord() for CNAME that requires RDATA translation");
+    SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeCname, "avengers", "default.service.arpa.",
+                                         RecordCallback, sInstance));
+    AdvanceTime(10);
+
+    // Check that a record querier is started
+
+    VerifyOrQuit(sStartBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStopBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStartSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 1);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 0);
+
+    VerifyOrQuit(sStartRecordQuerierInfo.NameMatches("avengers", nullptr));
+
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 0);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Invoke Record Querier callback");
+
+    recordResult.mFirstLabel       = "avengers";
+    recordResult.mNextLabels       = nullptr;
+    recordResult.mRecordType       = Dns::ResourceRecord::kTypeCname;
+    recordResult.mRecordData       = kCnameData;
+    recordResult.mRecordDataLength = sizeof(kCnameData);
+    recordResult.mTtl              = kTtl;
+    recordResult.mInfraIfIndex     = kInfraIfIndex;
+
+    InvokeRecordQuerierCallback(sStartRecordQuerierInfo.mCallback, recordResult);
+
+    AdvanceTime(10);
+
+    // Check that the record querier is stopped
+
+    VerifyOrQuit(sStartBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStopBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStartSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartRecordQuerierInfo.mCallCount == 1);
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallCount == 1);
+
+    VerifyOrQuit(sStopRecordQuerierInfo.NameMatches("avengers", nullptr));
+    VerifyOrQuit(sStopRecordQuerierInfo.mCallback == sStartRecordQuerierInfo.mCallback);
+
+    // Check that response is sent to client and validate
+    // that the CNAME RDATA is correctly translated.
+
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+
+    VerifyOrQuit(!strcmp(sQueryRecordInfo.mQueryName, "avengers.default.service.arpa."));
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 1);
+
+    VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, "avengers.default.service.arpa."));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypeCname);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength == sizeof(kTranslatedCnameData));
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl == kTtl);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sizeof(kTranslatedCnameData));
+    VerifyOrQuit(!memcmp(sQueryRecordInfo.mRecords[0].mDataBuffer, kTranslatedCnameData, sizeof(kTranslatedCnameData)));
     VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");

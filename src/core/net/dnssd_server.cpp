@@ -45,6 +45,7 @@ RegisterLogModule("DnssdServer");
 
 const char Server::kDefaultDomainName[] = "default.service.arpa.";
 const char Server::kSubLabel[]          = "_sub";
+const char Server::kMdnsDomainName[]    = "local.";
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
 const char *Server::kBlockedDomains[] = {"ipv4only.arpa."};
@@ -678,6 +679,7 @@ exit:
 Error Server::Response::AppendKeyRecord(const Srp::Server::Host &aHost)
 {
     Ecdsa256KeyRecord keyRecord;
+    RecordData        keyData;
     uint32_t          ttl;
 
     keyRecord.Init();
@@ -686,25 +688,31 @@ Error Server::Response::AppendKeyRecord(const Srp::Server::Host &aHost)
     keyRecord.SetAlgorithm(KeyRecord::kAlgorithmEcdsaP256Sha256);
     keyRecord.SetLength(sizeof(Ecdsa256KeyRecord) - sizeof(ResourceRecord));
     keyRecord.SetKey(aHost.GetKey());
+    keyData.InitFrom(keyRecord);
 
     ttl = TimeMilli::MsecToSec(aHost.GetExpireTime() - TimerMilli::GetNow());
 
-    return AppendGenericRecord(Ecdsa256KeyRecord::kType, &keyRecord, sizeof(keyRecord), ttl);
+    return AppendGenericRecord(Ecdsa256KeyRecord::kType, keyData, ttl);
 }
 #endif
 
-Error Server::Response::AppendGenericRecord(uint16_t aRrType, const void *aData, uint16_t aDataLength, uint32_t aTtl)
+Error Server::Response::AppendGenericRecord(uint16_t aRrType, const RecordData &aData, uint32_t aTtl)
 {
     Error          error = kErrorNone;
     ResourceRecord record;
+    uint16_t       recordOffset;
 
     record.Init(aRrType);
     record.SetTtl(aTtl);
-    record.SetLength(aDataLength);
 
     SuccessOrExit(error = Name::AppendPointerLabel(mOffsets.mHostName, *mMessage));
+
+    recordOffset = mMessage->GetLength();
     SuccessOrExit(error = mMessage->Append(record));
-    SuccessOrExit(error = mMessage->AppendBytes(aData, aDataLength));
+
+    SuccessOrExit(error = ResourceRecord::AppendTranslatedRecordDataTo(*mMessage, aRrType, aData, kMdnsDomainName,
+                                                                       mOffsets.mDomainName));
+    ResourceRecord::UpdateRecordLengthInMessage(*mMessage, recordOffset);
 
     IncResourceRecordCount();
 
@@ -2322,10 +2330,13 @@ exit:
 Error Server::Response::AppendGenericRecord(const ProxyResult &aResult)
 {
     const Dnssd::RecordResult *result = aResult.mRecordResult;
+    RecordData                 data;
 
     mSection = kAnswerSection;
 
-    return AppendGenericRecord(result->mRecordType, result->mRecordData, result->mRecordDataLength, result->mTtl);
+    data.Init(result->mRecordData, result->mRecordDataLength);
+
+    return AppendGenericRecord(result->mRecordType, data, result->mTtl);
 }
 
 bool Server::IsProxyAddressValid(const Ip6::Address &aAddress)

@@ -1036,26 +1036,8 @@ exit:
     return error;
 }
 
-Error ResourceRecord::DecompressRecordData(const Message &aMessage, uint16_t aOffset, OwnedPtr<Message> &aDataMsg)
+const ResourceRecord::DataRecipe *ResourceRecord::FindDataRecipeFor(uint16_t aRecordType)
 {
-    // Reads the `ResourceRecord` header to identify the record type
-    // and uses a predefined recipe to parse the record data.
-
-    struct DataRecipe
-    {
-        int Compare(uint16_t aRecordType) const { return (aRecordType - mRecordType); }
-
-        constexpr static bool AreInOrder(const DataRecipe &aFirst, const DataRecipe &aSecond)
-        {
-            return (aFirst.mRecordType < aSecond.mRecordType);
-        }
-
-        uint16_t mRecordType;        // The record type.
-        uint8_t  mNumPrefixBytes;    // Number of bytes in RDATA before the first name.
-        uint8_t  mNumNames;          // Number of DNS names embedded in the RDATA.
-        uint16_t mMinNumSuffixBytes; // Minimum number of expected bytes in RDATA after the last name.
-    };
-
     static constexpr DataRecipe kRecipes[] = {
         {kTypeNs, 0, 1, 0},
         {kTypeCname, 0, 1, 0},
@@ -1074,6 +1056,14 @@ Error ResourceRecord::DecompressRecordData(const Message &aMessage, uint16_t aOf
 
     static_assert(BinarySearch::IsSorted(kRecipes), "kRecipes is not sorted");
 
+    return BinarySearch::Find(aRecordType, kRecipes);
+}
+
+Error ResourceRecord::DecompressRecordData(const Message &aMessage, uint16_t aOffset, OwnedPtr<Message> &aDataMsg)
+{
+    // Reads the `ResourceRecord` header to identify the record type
+    // and uses a predefined recipe to parse the record data.
+
     Error             error;
     ResourceRecord    record;
     const DataRecipe *recipe;
@@ -1083,7 +1073,7 @@ Error ResourceRecord::DecompressRecordData(const Message &aMessage, uint16_t aOf
     SuccessOrExit(error = record.ReadFrom(aMessage, aOffset));
     aOffset += sizeof(ResourceRecord);
 
-    recipe = BinarySearch::Find(record.GetType(), kRecipes);
+    recipe = FindDataRecipeFor(record.GetType());
 
     if (recipe == nullptr)
     {
@@ -1126,6 +1116,89 @@ Error ResourceRecord::DecompressRecordData(const Message &aMessage, uint16_t aOf
     VerifyOrExit(remainingLength >= recipe->mMinNumSuffixBytes, error = kErrorParse);
 
     SuccessOrExit(error = aDataMsg->AppendBytesFromMessage(aMessage, aOffset, remainingLength));
+
+exit:
+    return error;
+}
+
+Error ResourceRecord::AppendTranslatedRecordDataTo(Message                       &aMessage,
+                                                   uint16_t                       aRecordType,
+                                                   const Data<kWithUint16Length> &aData,
+                                                   const char                    *aOriginalDomain,
+                                                   uint16_t                       aTranslatedDomainOffset)
+{
+    Error             error  = kErrorNone;
+    const DataRecipe *recipe = FindDataRecipeFor(aRecordType);
+    OwnedPtr<Message> dataMsg;
+    uint16_t          offset;
+    uint16_t          remainingLength;
+
+    if (recipe == nullptr)
+    {
+        error = aMessage.AppendData(aData);
+        ExitNow();
+    }
+
+    dataMsg.Reset(aMessage.Get<MessagePool>().Allocate(Message::kTypeOther));
+    VerifyOrExit(dataMsg != nullptr, error = kErrorNoBufs);
+    SuccessOrExit(error = dataMsg->AppendData(aData));
+
+    // Append the prefix bytes in the record data.
+
+    offset = 0;
+    SuccessOrExit(error = aMessage.AppendBytesFromMessage(*dataMsg, offset, recipe->mNumPrefixBytes));
+    offset += recipe->mNumPrefixBytes;
+
+    // Translate and append the embedded DNS names
+
+    for (uint8_t numNames = 0; numNames < recipe->mNumNames; numNames++)
+    {
+        Name::LabelBuffer label;
+        uint8_t           labelLength;
+        uint16_t          labelOffset;
+
+        // Read labels one by one and append them to `aMessage`.
+        // First, check if the remaining labels match the original
+        // domain name and if so, append the translated domain name
+        // (as a compressed pointer label) instead.
+
+        labelOffset = offset;
+
+        while (true)
+        {
+            uint16_t compareOffset = labelOffset;
+
+            if (Name::CompareName(*dataMsg, compareOffset, aOriginalDomain) == kErrorNone)
+            {
+                SuccessOrExit(error = Name::AppendPointerLabel(aTranslatedDomainOffset, aMessage));
+                break;
+            }
+
+            labelLength = sizeof(label);
+            error       = Name::ReadLabel(*dataMsg, labelOffset, label, labelLength);
+
+            if (error == kErrorNotFound)
+            {
+                // Reached end of the label
+                break;
+            }
+
+            SuccessOrExit(error);
+
+            SuccessOrExit(error = Name::AppendLabel(label, aMessage));
+        }
+
+        // Parse name and update `offset` to the end of name field.
+        SuccessOrExit(error = Name::ParseName(*dataMsg, offset));
+    }
+
+    // Append the extra bytes after the name(s).
+
+    VerifyOrExit(offset <= dataMsg->GetLength(), error = kErrorParse);
+    remainingLength = dataMsg->GetLength() - offset;
+
+    VerifyOrExit(remainingLength >= recipe->mMinNumSuffixBytes, error = kErrorParse);
+    SuccessOrExit(error = aMessage.AppendBytesFromMessage(*dataMsg, offset, remainingLength));
 
 exit:
     return error;

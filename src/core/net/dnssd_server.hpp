@@ -350,6 +350,8 @@ private:
     };
 #endif
 
+    typedef Data<kWithUint16Length> RecordData;
+
     struct Questions
     {
         Questions(void) { mFirstRrType = 0, mSecondRrType = 0; }
@@ -420,7 +422,7 @@ private:
                               uint16_t    aPort);
         Error AppendTxtRecord(const ServiceInstanceInfo &aInstanceInfo);
         Error AppendTxtRecord(const void *aTxtData, uint16_t aTxtLength, uint32_t aTtl);
-        Error AppendGenericRecord(uint16_t aRrType, const void *aData, uint16_t aDataLength, uint32_t aTtl);
+        Error AppendGenericRecord(uint16_t aRrType, const RecordData &aData, uint32_t aTtl);
         Error AppendHostAddresses(AddrType aAddrType, const HostInfo &aHostInfo);
         Error AppendHostAddresses(const ServiceInstanceInfo &aInstanceInfo);
         Error AppendHostAddresses(AddrType aAddrType, const Ip6::Address *aAddrs, uint16_t aAddrsLength, uint32_t aTtl);
@@ -592,6 +594,7 @@ private:
 
     static const char kDefaultDomainName[];
     static const char kSubLabel[];
+    static const char kMdnsDomainName[];
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     static const char *kBlockedDomains[];
 #endif
