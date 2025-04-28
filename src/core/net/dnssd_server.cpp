@@ -290,6 +290,21 @@ exit:
     return;
 }
 
+bool Server::Questions::IsFor(uint16_t aRrType) const
+{
+    // Check if any of questions is for `aRrType`.
+
+    return (mFirstRrType == aRrType) || (mSecondRrType == aRrType);
+}
+
+Server::Section Server::Questions::SectionFor(uint16_t aRrType) const
+{
+    // Determine section to append `aRrType` record based on the
+    // query questions.
+
+    return (IsFor(aRrType) || IsFor(kRrTypeAny)) ? kAnswerSection : kAdditionalDataSection;
+}
+
 Server::ResponseCode Server::Request::ParseQuestions(uint8_t aTestMode, bool &aShouldRespond)
 {
     // Parse header and questions from a `Request` query message and
@@ -349,7 +364,7 @@ Server::ResponseCode Server::Response::AddQuestionsFrom(const Request &aRequest)
     // service instance names with dot characters in the instance
     // label, are appended correctly.
 
-    SuccessOrExit(Name(*aRequest.mMessage, sizeof(Header)).AppendTo(*mMessage));
+    SuccessOrExit(Name(*aRequest.mMessage, kQueryNameOffset).AppendTo(*mMessage));
 
     // Check the name to include the correct domain name and determine
     // the domain name offset (for DNS name compression).
@@ -398,26 +413,17 @@ Error Server::Response::ParseQueryName(void)
     offset = sizeof(Header);
     SuccessOrExit(error = Name::ReadName(*mMessage, offset, name));
 
-    if (mQuestions.IsFor(kRrTypePtr))
-    {
-        // `mOffsets.mServiceName` may be updated as we read labels and if we
-        // determine that the query name is a sub-type service.
-        mOffsets.mServiceName = sizeof(Header);
-    }
-    else if (mQuestions.IsFor(kRrTypeSrv) || mQuestions.IsFor(kRrTypeTxt))
-    {
-        mOffsets.mInstanceName = sizeof(Header);
-    }
-    else
-    {
-        mOffsets.mHostName = sizeof(Header);
-    }
+    // `mOffsets.mServiceName` may be updated as we read labels and if we
+    // determine that the query name is a sub-type service.
+    mOffsets.mServiceName  = kQueryNameOffset;
+    mOffsets.mInstanceName = kQueryNameOffset;
+    mOffsets.mHostName     = kQueryNameOffset;
 
     // Read the query name labels one by one to check if the name is
     // service sub-type and also check that it is sub-domain of the
     // default domain name and determine its offset
 
-    offset = sizeof(Header);
+    offset = kQueryNameOffset;
 
     while (true)
     {
@@ -427,7 +433,8 @@ Error Server::Response::ParseQueryName(void)
 
         SuccessOrExit(error = Name::ReadLabel(*mMessage, offset, label, labelLength));
 
-        if (mQuestions.IsFor(kRrTypePtr) && StringMatch(label, kSubLabel, kStringCaseInsensitiveMatch))
+        if ((mQuestions.IsFor(kRrTypePtr) || mQuestions.IsFor(kRrTypeAny)) &&
+            StringMatch(label, kSubLabel, kStringCaseInsensitiveMatch))
         {
             mOffsets.mServiceName = offset;
         }
@@ -451,7 +458,7 @@ void Server::Response::ReadQueryName(Name::Buffer &aName) const { Server::ReadQu
 
 bool Server::Response::QueryNameMatches(const char *aName) const { return Server::QueryNameMatches(*mMessage, aName); }
 
-Error Server::Response::AppendQueryName(void) { return Name::AppendPointerLabel(sizeof(Header), *mMessage); }
+Error Server::Response::AppendQueryName(void) { return Name::AppendPointerLabel(kQueryNameOffset, *mMessage); }
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 Error Server::Response::AppendPtrRecord(const Srp::Server::Service &aService)
@@ -514,6 +521,7 @@ Error Server::Response::AppendSrvRecord(const char *aHostName,
     SrvRecord    srvRecord;
     uint16_t     recordOffset;
     Name::Buffer hostLabels;
+    uint16_t     nameOffset;
 
     SuccessOrExit(error = Name::ExtractLabels(aHostName, kDefaultDomainName, hostLabels));
 
@@ -523,7 +531,8 @@ Error Server::Response::AppendSrvRecord(const char *aHostName,
     srvRecord.SetWeight(aWeight);
     srvRecord.SetPort(aPort);
 
-    SuccessOrExit(error = Name::AppendPointerLabel(mOffsets.mInstanceName, *mMessage));
+    nameOffset = mQuestions.IsFor(kRrTypeAny) ? kQueryNameOffset : mOffsets.mInstanceName;
+    SuccessOrExit(error = Name::AppendPointerLabel(nameOffset, *mMessage));
 
     recordOffset = mMessage->GetLength();
     SuccessOrExit(error = mMessage->Append(srvRecord));
@@ -601,6 +610,7 @@ Error Server::Response::AppendAaaaRecord(const Ip6::Address &aAddress, uint32_t 
 {
     Error      error = kErrorNone;
     AaaaRecord aaaaRecord;
+    uint16_t   nameOffset;
 
     VerifyOrExit(!aAddress.IsIp4Mapped());
 
@@ -608,7 +618,8 @@ Error Server::Response::AppendAaaaRecord(const Ip6::Address &aAddress, uint32_t 
     aaaaRecord.SetTtl(aTtl);
     aaaaRecord.SetAddress(aAddress);
 
-    SuccessOrExit(error = Name::AppendPointerLabel(mOffsets.mHostName, *mMessage));
+    nameOffset = mQuestions.IsFor(kRrTypeAny) ? kQueryNameOffset : mOffsets.mHostName;
+    SuccessOrExit(error = Name::AppendPointerLabel(nameOffset, *mMessage));
     SuccessOrExit(error = mMessage->Append(aaaaRecord));
     IncResourceRecordCount();
 
@@ -621,6 +632,7 @@ Error Server::Response::AppendARecord(const Ip6::Address &aAddress, uint32_t aTt
     Error        error = kErrorNone;
     ARecord      aRecord;
     Ip4::Address ip4Address;
+    uint16_t     nameOffset;
 
     SuccessOrExit(ip4Address.ExtractFromIp4MappedIp6Address(aAddress));
 
@@ -628,7 +640,8 @@ Error Server::Response::AppendARecord(const Ip6::Address &aAddress, uint32_t aTt
     aRecord.SetTtl(aTtl);
     aRecord.SetAddress(ip4Address);
 
-    SuccessOrExit(error = Name::AppendPointerLabel(mOffsets.mHostName, *mMessage));
+    nameOffset = mQuestions.IsFor(kRrTypeAny) ? kQueryNameOffset : mOffsets.mHostName;
+    SuccessOrExit(error = Name::AppendPointerLabel(nameOffset, *mMessage));
     SuccessOrExit(error = mMessage->Append(aRecord));
     IncResourceRecordCount();
 
@@ -653,6 +666,7 @@ Error Server::Response::AppendTxtRecord(const void *aTxtData, uint16_t aTxtLengt
 {
     Error     error = kErrorNone;
     TxtRecord txtRecord;
+    uint16_t  nameOffset;
     uint8_t   emptyTxt = 0;
 
     if (aTxtLength == 0)
@@ -665,7 +679,8 @@ Error Server::Response::AppendTxtRecord(const void *aTxtData, uint16_t aTxtLengt
     txtRecord.SetTtl(aTtl);
     txtRecord.SetLength(aTxtLength);
 
-    SuccessOrExit(error = Name::AppendPointerLabel(mOffsets.mInstanceName, *mMessage));
+    nameOffset = mQuestions.IsFor(kRrTypeAny) ? kQueryNameOffset : mOffsets.mInstanceName;
+    SuccessOrExit(error = Name::AppendPointerLabel(nameOffset, *mMessage));
     SuccessOrExit(error = mMessage->Append(txtRecord));
     SuccessOrExit(error = mMessage->AppendBytes(aTxtData, aTxtLength));
 
@@ -705,7 +720,7 @@ Error Server::Response::AppendGenericRecord(uint16_t aRrType, const RecordData &
     record.Init(aRrType);
     record.SetTtl(aTtl);
 
-    SuccessOrExit(error = Name::AppendPointerLabel(mOffsets.mHostName, *mMessage));
+    SuccessOrExit(error = Name::AppendPointerLabel(kQueryNameOffset, *mMessage));
 
     recordOffset = mMessage->GetLength();
     SuccessOrExit(error = mMessage->Append(record));
@@ -735,6 +750,7 @@ template <typename ServiceType> Error Server::Response::AppendServiceRecords(con
 
         if (mSection == kAdditionalDataSection)
         {
+            VerifyOrExit(!mQuestions.IsFor(kRrTypeAny));
             VerifyOrExit(!(Get<Server>().mTestMode & kTestModeEmptyAdditionalSection));
         }
 
@@ -788,7 +804,6 @@ Error Server::Response::ResolveBySrp(void)
 {
     Error                       error          = kErrorNone;
     const Srp::Server::Service *matchedService = nullptr;
-    bool                        found          = false;
 
     mSection = kAnswerSection;
 
@@ -801,18 +816,7 @@ Error Server::Response::ResolveBySrp(void)
 
         if (QueryNameMatches(host.GetFullName()))
         {
-            if (mQuestions.IsFor(kRrTypeAaaa) || mQuestions.IsFor(kRrTypeA))
-            {
-                mSection = mQuestions.SectionFor(kRrTypeAaaa);
-                SuccessOrExit(error = AppendHostAddresses(host));
-            }
-
-            if (mQuestions.IsFor(kRrTypeKey))
-            {
-                mSection = kAnswerSection;
-                SuccessOrExit(error = AppendKeyRecord(host));
-            }
-
+            error = ResolveUsingSrpHost(host);
             ExitNow();
         }
 
@@ -823,52 +827,74 @@ Error Server::Response::ResolveBySrp(void)
                 continue;
             }
 
-            if (mQuestions.IsFor(kRrTypePtr))
+            if (QueryNameMatches(service.GetInstanceName()))
             {
-                if (QueryNameMatchesService(service))
-                {
-                    SuccessOrExit(error = AppendPtrRecord(service));
-                    matchedService = &service;
-                }
+                error = ResolveUsingSrpService(service);
+                ExitNow();
             }
-            else if (QueryNameMatches(service.GetInstanceName()))
-            {
-                matchedService = &service;
-                found          = true;
-                break;
-            }
-        }
 
-        if (found)
-        {
-            break;
+            if ((mQuestions.IsFor(kRrTypePtr) || mQuestions.IsFor(kRrTypeAny)) && QueryNameMatchesService(service))
+            {
+                SuccessOrExit(error = AppendPtrRecord(service));
+                matchedService = &service;
+            }
         }
     }
 
     VerifyOrExit(matchedService != nullptr, error = kErrorNotFound);
 
-    if (mQuestions.IsFor(kRrTypePtr))
-    {
-        // Skip adding additional records, when answering a
-        // PTR query with more than one answer. This is the
-        // recommended behavior to keep the size of the
-        // response small.
+    // We append SRV/TXT/AAAA records in additional section for a PTR
+    // query when there is only a single matched service. This is the
+    // recommended behavior to keep the size of the response small.
 
-        VerifyOrExit(mHeader.GetAnswerCount() == 1);
-    }
-    else
+    if (mQuestions.IsFor(kRrTypePtr) && (mHeader.GetAnswerCount() == 1))
     {
-        if (mQuestions.IsFor(kRrTypeKey))
-        {
-            mSection = kAnswerSection;
-            error    = AppendKeyRecord(matchedService->GetHost());
-            ExitNow();
-        }
-
-        VerifyOrExit(mQuestions.IsFor(kRrTypeSrv) || mQuestions.IsFor(kRrTypeTxt));
+        error = AppendServiceRecords(*matchedService);
     }
 
-    error = AppendServiceRecords(*matchedService);
+exit:
+    return error;
+}
+
+Error Server::Response::ResolveUsingSrpHost(const Srp::Server::Host &aHost)
+{
+    // The query name is already checked to match the `aHost` name.
+
+    Error error = kErrorNone;
+
+    if (mQuestions.IsFor(kRrTypeAaaa) || mQuestions.IsFor(kRrTypeA) || mQuestions.IsFor(kRrTypeAny))
+    {
+        mSection = mQuestions.SectionFor(kRrTypeAaaa);
+        SuccessOrExit(error = AppendHostAddresses(aHost));
+    }
+
+    if (mQuestions.IsFor(kRrTypeKey) || mQuestions.IsFor(kRrTypeAny))
+    {
+        mSection = kAnswerSection;
+        SuccessOrExit(error = AppendKeyRecord(aHost));
+    }
+
+exit:
+    return error;
+}
+
+Error Server::Response::ResolveUsingSrpService(const Srp::Server::Service &aService)
+{
+    // The query name is already checked to match the
+    // `aService` instance name.
+
+    Error error = kErrorNone;
+
+    if (mQuestions.IsFor(kRrTypeKey) || mQuestions.IsFor(kRrTypeAny))
+    {
+        mSection = kAnswerSection;
+        SuccessOrExit(error = AppendKeyRecord(aService.GetHost()));
+    }
+
+    if (mQuestions.IsFor(kRrTypeSrv) || mQuestions.IsFor(kRrTypeTxt) || mQuestions.IsFor(kRrTypeAny))
+    {
+        SuccessOrExit(error = AppendServiceRecords(aService));
+    }
 
 exit:
     return error;
@@ -1573,6 +1599,7 @@ void Server::DiscoveryProxy::ReadNameFor(ProxyAction     aAction,
     case kNoAction:
         break;
     case kBrowsing:
+    case kQueryingRecord:
         ReadQueryName(aQuery, aName);
         break;
     case kResolvingSrv:
@@ -1581,7 +1608,6 @@ void Server::DiscoveryProxy::ReadNameFor(ProxyAction     aAction,
         break;
     case kResolvingIp6Address:
     case kResolvingIp4Address:
-    case kQueryingRecord:
         ReadQueryHostName(aQuery, aInfo, aName);
         break;
     }
@@ -1819,7 +1845,7 @@ void Server::DiscoveryProxy::StartOrStopRecordQuerier(Command               aCom
     Dnssd::RecordQuerier querier;
     Name::LabelBuffer    firstLabel;
     Name::Buffer         nextLabels;
-    uint16_t             offset      = aInfo.mOffsets.mHostName;
+    uint16_t             offset      = sizeof(Header);
     uint8_t              labelLength = sizeof(firstLabel);
 
     IgnoreError(Dns::Name::ReadLabel(aQuery, offset, firstLabel, labelLength));
@@ -1847,12 +1873,14 @@ bool Server::DiscoveryProxy::QueryMatches(const ProxyQuery     &aQuery,
                                           const ProxyQueryInfo &aInfo,
                                           ProxyAction           aAction,
                                           const Name::Buffer   &aName,
-                                          uint16_t              aQuerierRrType) const
+                                          uint16_t              aQuerierRrType,
+                                          RrTypeMatchMode       aRrTypeMatchMode) const
 {
     // Check whether `aQuery` is performing `aAction` and
-    // its name matches `aName`. The `aQuerierRrType` is only
-    // used when the action is `kQueryingRecord` to indicate
-    // which record is being queried.
+    // its name matches `aName`. The `aQuerierRrType` and
+    // `aRrTypeMatchMode` are only used when the action is
+    // `kQueryingRecord` to indicate queried record type and
+    // how to determine a match.
 
     bool matches = false;
 
@@ -1860,12 +1888,22 @@ bool Server::DiscoveryProxy::QueryMatches(const ProxyQuery     &aQuery,
 
     if (aAction == kQueryingRecord)
     {
-        VerifyOrExit(aInfo.mQuestions.IsFor(aQuerierRrType));
+        switch (aRrTypeMatchMode)
+        {
+        case kRequireExactMatch:
+            VerifyOrExit(aInfo.mQuestions.IsFor(aQuerierRrType));
+            break;
+
+        case kPermitAnyOrExactMatch:
+            VerifyOrExit(aInfo.mQuestions.IsFor(aQuerierRrType) || aInfo.mQuestions.IsFor(kRrTypeAny));
+            break;
+        }
     }
 
     switch (aAction)
     {
     case kBrowsing:
+    case kQueryingRecord:
         VerifyOrExit(QueryNameMatches(aQuery, aName));
         break;
     case kResolvingSrv:
@@ -1874,7 +1912,6 @@ bool Server::DiscoveryProxy::QueryMatches(const ProxyQuery     &aQuery,
         break;
     case kResolvingIp6Address:
     case kResolvingIp4Address:
-    case kQueryingRecord:
         VerifyOrExit(QueryHostNameMatches(aQuery, aInfo, aName));
         break;
     case kNoAction:
@@ -1902,7 +1939,7 @@ bool Server::DiscoveryProxy::HasActive(ProxyAction aAction, const Name::Buffer &
 
         info.ReadFrom(query);
 
-        if (QueryMatches(query, info, aAction, aName, aQuerierRrType))
+        if (QueryMatches(query, info, aAction, aName, aQuerierRrType, kRequireExactMatch))
         {
             has = true;
             break;
@@ -2105,7 +2142,7 @@ void Server::DiscoveryProxy::HandleResult(ProxyAction         aAction,
 
         info.ReadFrom(query);
 
-        if (!QueryMatches(query, info, aAction, aName, querierRrType))
+        if (!QueryMatches(query, info, aAction, aName, querierRrType, kPermitAnyOrExactMatch))
         {
             continue;
         }
