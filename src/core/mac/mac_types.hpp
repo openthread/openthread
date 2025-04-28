@@ -41,6 +41,7 @@
 
 #include <openthread/link.h>
 #include <openthread/thread.h>
+#include <openthread/unstable/link.h>
 
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
@@ -51,7 +52,7 @@
 
 namespace ot {
 
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 namespace Ip6 {
 class InterfaceIdentifier;
 }
@@ -117,7 +118,7 @@ public:
      */
     void Fill(uint8_t aByte) { memset(this, aByte, sizeof(*this)); }
 
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     /**
      * Generates a random IEEE 802.15.4 Extended Address.
      */
@@ -959,6 +960,87 @@ private:
     uint8_t mUncertainty;
 };
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+/**
+ * Represents a wake-up address.
+ */
+OT_TOOL_PACKED_BEGIN
+class WakeupAddress : public otWakeupAddress
+{
+public:
+    /**
+     * Type represents the wake-up address types.
+     */
+    enum Type : uint8_t
+    {
+        kTypeWakeupId      = OT_WAKEUP_ADDRESS_TYPE_WAKEUP_ID,       ///< Wake-up Identifier.
+        kTypeGroupWakeupId = OT_WAKEUP_ADDRESS_TYPE_GROUP_WAKEUP_ID, ///< Group wake-up Identifier.
+        kTypeExtAddress    = OT_WAKEUP_ADDRESS_TYPE_EXT_ADDRESS,     ///< Extended Address.
+    };
+
+    /**
+     * Sets the wake-up address with an Extended Address.
+     *
+     * The type is also updated to indicate that the wake-up address is Extended Address.
+     *
+     * @param[in]  aExtAddress  An Extended Address.
+     */
+    void SetExtAddress(const ExtAddress &aExtAddress);
+
+    /**
+     * Gets the wake-up address as an Extended Address.
+     *
+     * MUST be used only if the wake-up address type is Extended Address.
+     *
+     * @returns A constant reference to the Extended Address.
+     */
+    const ExtAddress &GetExtAddress(void) const { return *static_cast<const ExtAddress *>(&mShared.mExtAddress); }
+
+    /**
+     * Gets the wake-up address as an Extended Address.
+     *
+     * MUST be used only if the wake-up address type is Extended Address.
+     *
+     * @returns A reference to the Extended Address.
+     */
+    ExtAddress &GetExtAddress(void) { return *static_cast<ExtAddress *>(&mShared.mExtAddress); }
+
+    /**
+     * Indicates whether the wake-up address is a Wake-up Identifier or not.
+     *
+     * @returns TRUE if the wake-up address is a Wake-up Identifier, FALSE otherwise.
+     */
+    bool IsWakeupId(void) const;
+
+    /**
+     * Indicates whether the wake-up address is a Group Wake-up Identifier or not.
+     *
+     * @returns TRUE if the wake-up address is a Group Wake-up Identifier, FALSE otherwise.
+     */
+    bool IsGroupWakeupId(void) const;
+
+    /**
+     * Indicates whether the wake-up address is an Extended Address or not.
+     *
+     * @returns TRUE if the wake-up address is an Extended Address, FALSE otherwise.
+     */
+    bool IsExtAddress(void) const;
+} OT_TOOL_PACKED_END;
+#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+/**
+ * Represents the information of the received wake-up frame.
+ */
+struct WakeupInfo
+{
+    ExtAddress mExtAddress;        ///< The extended address of the Wake-up Coordinator.
+    uint32_t   mAttachDelayMs;     ///< The delay before linking to the peer.
+    uint8_t    mRetryInterval : 2; ///< The interval of the periodic connection windows.
+    uint8_t    mRetryCount : 4;    ///< The maximum number of retries the action by the Wake-up Listener.
+};
+#endif
+
 /**
  * @}
  */
@@ -967,6 +1049,10 @@ private:
 
 DefineCoreType(otExtAddress, Mac::ExtAddress);
 DefineCoreType(otMacKey, Mac::Key);
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+DefineCoreType(otWakeupAddress, Mac::WakeupAddress);
+DefineMapEnum(otWakeupAddressType, Mac::WakeupAddress::Type);
+#endif
 
 } // namespace ot
 

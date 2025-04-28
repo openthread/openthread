@@ -37,8 +37,10 @@
 #include "openthread-core-config.h"
 
 #include <openthread/thread_ftd.h>
+#include <openthread/unstable/p2p.h>
 
 #include "coap/coap_message.hpp"
+#include "common/as_core_type.hpp"
 #include "common/callback.hpp"
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
@@ -67,6 +69,8 @@
 #include "thread/mle_types.hpp"
 #include "thread/neighbor_table.hpp"
 #include "thread/network_data_types.hpp"
+#include "thread/peer.hpp"
+#include "thread/peer_table.hpp"
 #include "thread/router.hpp"
 #include "thread/router_table.hpp"
 #include "thread/thread_tlvs.hpp"
@@ -131,7 +135,9 @@ class Mle : public InstanceLocator, private NonCopyable
 public:
     typedef otDetachGracefullyCallback DetachCallback; ///< Callback to signal end of graceful detach.
 
-    typedef otWakeupCallback WakeupCallback; ///< Callback to communicate the result of waking a Wake-up End Device
+    typedef otWakeupCallback    WakeupCallback; ///< Callback to communicate the result of waking a Wake-up End Device
+    typedef otP2pLinkedCallback P2pLinkedCallback; ///< Callback to inform the result of establishing P2P links.
+    typedef otP2pEventCallback  P2pEventCallback;  ///< Callback to signal events of the P2P link.
 
     /**
      * Initializes the MLE object.
@@ -1170,6 +1176,46 @@ public:
 
 #endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    /**
+     * Attempts to establish P2P links with peers.
+     *
+     * If the @p aP2pRequest indicates a group identifier, this method establishes multiple P2P links with peers.
+     * Otherwise, it establishes at most one P2P link.
+     *
+     * @param[in] aP2pRequest  A constant reference to P2P request.
+     * @param[in] aCallback    A pointer to function that is called when the P2P link succeeds or fails.
+     * @param[in] aContext     A pointer to callback application-specific context.
+     *
+     * @retval kErrorNone          Successfully started to establish P2P links.
+     * @retval kErrorBusy          Establishing a P2P link in progress.
+     * @retval kErrorInvalidState  Device was disabled or not fully configured.
+     * @retval kErrorNoBufs        Insufficient buffer space to establish a P2P link.
+     */
+    Error P2pLink(const P2pRequest &aP2pRequest, P2pLinkedCallback aCallback, void *aContext);
+#endif
+
+    /**
+     * Sets the callback function to notify event changes of P2P links.
+     *
+     * A subsequent call to this function will replace any previously set callback.
+     *
+     * @param[in] aCallback  The callback function pointer.
+     * @param[in] aContext   A pointer to callback application-specific context.
+     */
+    void P2pSetEventCallback(P2pEventCallback aCallback, void *aContext);
+#endif // OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    /**
+     * Notifies MLE that a wake-up frame was received successfully.
+     *
+     * @param[in]  aWakeupInfo  A reference to the wake-up frame information.
+     */
+    void HandleWakeupFrame(const Mac::WakeupInfo &aWakeupInfo);
+#endif
+
 private:
     //------------------------------------------------------------------------------------------------------------------
     // Constants
@@ -1303,6 +1349,12 @@ private:
 
 #endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    static constexpr uint16_t kWakeupMaxDuration         = OPENTHREAD_CONFIG_WAKEUP_MAX_DURATION;
+    static constexpr uint16_t kWakeupTxInterval          = OPENTHREAD_CONFIG_WAKEUP_TX_INTERVAL;
+    static constexpr uint32_t kEstablishP2pLinkTimeoutUs = 500000;
+#endif
+
     //------------------------------------------------------------------------------------------------------------------
     // Enumerations
 
@@ -1419,11 +1471,13 @@ private:
         kTypeChildUpdateRequestOfChild,
         kTypeChildUpdateResponseOfChild,
         kTypeChildUpdateResponseOfUnknownChild,
+        kTypeLinkReject,
+        kTypeParentRequest,
+#endif
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
         kTypeLinkAccept,
         kTypeLinkAcceptAndRequest,
-        kTypeLinkReject,
         kTypeLinkRequest,
-        kTypeParentRequest,
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         kTypeLinkMetricsManagementRequest,
@@ -1441,6 +1495,15 @@ private:
         kWedAttaching,
         kWedAttached,
         kWedDetaching,
+    };
+#endif
+
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    enum P2pState : uint8_t{
+        kP2pStateIdle,
+        kP2pStateWakingUp,
+        kP2pStateLinkRequesting,
+        kP2pStateLinkAccepting,
     };
 #endif
 
@@ -1585,7 +1648,9 @@ private:
         Mac::ExtAddress mChildExtAddress; // The child extended address.
         RxChallenge     mRxChallenge;     // The challenge from the Parent Request.
     };
+#endif
 
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     struct LinkAcceptInfo
     {
         Mac::ExtAddress mExtAddress;       // The neighbor/router extended address.
@@ -1593,7 +1658,9 @@ private:
         RxChallenge     mRxChallenge;      // The challenge in Link Request.
         uint8_t         mLinkMargin;       // Link margin of the received Link Request.
     };
+#endif
 
+#if OPENTHREAD_FTD
     struct DiscoveryResponseInfo
     {
         Mac::PanId mPanId;
@@ -1617,6 +1684,9 @@ private:
 
         void ScheduleDataRequest(const Ip6::Address &aDestination, uint16_t aDelay);
         void ScheduleChildUpdateRequestToParent(uint16_t aDelay);
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+        void ScheduleLinkRequest(const Mac::ExtAddress &aExtAddress, uint32_t aDelay);
+#endif
 #if OPENTHREAD_FTD
         void ScheduleParentResponse(const ParentResponseInfo &aInfo, uint16_t aDelay);
         void ScheduleAdvertisement(const Ip6::Address &aDestination, uint16_t aDelay);
@@ -2104,6 +2174,25 @@ private:
                                              otError              aResult);
 #endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    void  HandleP2pLinkRequest(RxInfo &aRxInfo);
+    Error SendP2pLinkAcceptAndRequest(const LinkAcceptInfo &aInfo);
+    void  HandleP2pLinkAccept(RxInfo &aRxInfo);
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    void  HandleP2pWakeup(const Mac::WakeupInfo &aWakeupInfo);
+    void  SendP2pLinkRequest(const Mac::ExtAddress &aExtAddress);
+    void  HandleP2pLinkAcceptAndRequest(RxInfo &aRxInfo);
+    Error SendP2pLinkAccept(const LinkAcceptInfo &aInfo);
+#endif
+    Error SendP2pLinkAcceptVariant(const LinkAcceptInfo &aInfo, bool aIsLinkAcceptorRequest);
+    void  HandleP2pLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType);
+    void  HandleP2pLinkTimer(void);
+    void  SetWakeupListenerEnabled(void);
+    void  ClearPeersInLinkRequestState(void);
+#endif
+
     //------------------------------------------------------------------------------------------------------------------
     // Variables
 
@@ -2112,6 +2201,9 @@ private:
     using MleSocket   = Ip6::Udp::SocketIn<Mle, &Mle::HandleUdpReceive>;
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
     using WedAttachTimer = TimerMicroIn<Mle, &Mle::HandleWedAttachTimer>;
+#endif
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    using P2pLinkTimer = TimerMicroIn<Mle, &Mle::HandleP2pLinkTimer>;
 #endif
 
     static const otMeshLocalPrefix kMeshLocalPrefixInit;
@@ -2227,9 +2319,18 @@ private:
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     MeshCoP::SteeringData mSteeringData;
 #endif
-    Callback<otThreadDiscoveryRequestCallback> mDiscoveryRequestCallback;
 
+    Callback<otThreadDiscoveryRequestCallback> mDiscoveryRequestCallback;
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    P2pState                    mP2pState;
+    PeerTable                   mP2pPeerTable;
+    P2pLinkTimer                mP2pLinkTimer;
+    Callback<P2pLinkedCallback> mP2pLinkedCallback;
+    Callback<P2pEventCallback>  mP2pEventCallback;
+    bool                        mP2pLinkEstablished;
+#endif
 };
 
 #if OPENTHREAD_FTD

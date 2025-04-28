@@ -780,6 +780,10 @@ template <> inline ChildTable &Instance::Get(void) { return mMle.mChildTable; }
 template <> inline RouterTable &Instance::Get(void) { return mMle.mRouterTable; }
 #endif
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+template <> inline PeerTable &Instance::Get(void) { return mMle.mP2pPeerTable; }
+#endif
+
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 template <> inline WakeupTxScheduler &Instance::Get(void) { return mMle.mWakeupTxScheduler; }
 #endif

@@ -51,19 +51,21 @@ WakeupTxScheduler::WakeupTxScheduler(Instance &aInstance)
     UpdateFrameRequestAhead();
 }
 
-Error WakeupTxScheduler::WakeUp(const Mac::ExtAddress &aWedAddress, uint16_t aIntervalUs, uint16_t aDurationMs)
+Error WakeupTxScheduler::WakeUp(const Mac::WakeupAddress &aWakeupAddress, uint16_t aIntervalUs, uint16_t aDurationMs)
 {
     Error error = kErrorNone;
 
+    // TODO: Add support for wake-up identifiers.
+    VerifyOrExit(aWakeupAddress.IsExtAddress(), error = kErrorInvalidArgs);
     VerifyOrExit(!mIsRunning, error = kErrorInvalidState);
 
-    mWedAddress  = aWedAddress;
-    mTxTimeUs    = TimerMicro::GetNow() + mTxRequestAheadTimeUs;
-    mTxEndTimeUs = mTxTimeUs + aDurationMs * Time::kOneMsecInUsec + aIntervalUs;
-    mIntervalUs  = aIntervalUs;
-    mIsRunning   = true;
+    mWakeupAddress = aWakeupAddress;
+    mTxTimeUs      = TimerMicro::GetNow() + mTxRequestAheadTimeUs;
+    mTxEndTimeUs   = mTxTimeUs + aDurationMs * Time::kOneMsecInUsec + aIntervalUs;
+    mIntervalUs    = aIntervalUs;
+    mIsRunning     = true;
 
-    LogInfo("Started wake-up sequence to %s", aWedAddress.ToString().AsCString());
+    LogInfo("Started wake-up sequence to %s", aWakeupAddress.GetExtAddress().ToString().AsCString());
 
     ScheduleTimer();
 
@@ -87,7 +89,7 @@ Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
 
     VerifyOrExit(mIsRunning);
 
-    target.SetExtended(mWedAddress);
+    target.SetExtended(mWakeupAddress.GetExtAddress());
     source.SetExtended(Get<Mac::Mac>().GetExtAddress());
     VerifyOrExit(mTxTimeUs >= nowUs);
     radioTxDelay = mTxTimeUs - nowUs;

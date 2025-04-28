@@ -65,6 +65,15 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_MAX_PEERS
+ *
+ * The maximum number of P2P peers.
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_MAX_PEERS
+#define OPENTHREAD_CONFIG_MLE_MAX_PEERS 10
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT
  *
  * The default child timeout value (in seconds).
