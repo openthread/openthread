@@ -742,21 +742,25 @@ void TestBorderAgentEphemeralKey(void)
     VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcInvalidArgsErrors == 2);
 }
 
-class MeshCoPServiceTester
+//----------------------------------------------------------------------------------------------------------------------
+
+class TxtDataTester
 {
 public:
-    MeshCoPServiceTester(BorderAgent &aBorderAgent)
+    TxtDataTester(BorderAgent &aBorderAgent)
         : mBorderAgent(aBorderAgent)
         , mIsRunning(false)
         , mUdpPort(0)
     {
     }
 
-    void HandleMeshCoPServiceChanged(void)
+    static void HandleServiceChanged(void *aContext) { static_cast<TxtDataTester *>(aContext)->HandleServiceChanged(); }
+
+    void HandleServiceChanged(void)
     {
         mIsRunning = mBorderAgent.IsRunning();
         mUdpPort   = mBorderAgent.GetUdpPort();
-        SuccessOrQuit(mBorderAgent.GetMeshCoPServiceTxtData(mTxtData));
+        SuccessOrQuit(mBorderAgent.PrepareServiceTxtData(mTxtData));
     }
 
     bool FindTxtEntry(const char *aKey, TxtEntry &aTxtEntry)
@@ -777,16 +781,11 @@ public:
         return found;
     }
 
-    BorderAgent                       &mBorderAgent;
-    otBorderAgentMeshCoPServiceTxtData mTxtData;
-    bool                               mIsRunning;
-    uint16_t                           mUdpPort;
+    BorderAgent                &mBorderAgent;
+    BorderAgent::ServiceTxtData mTxtData;
+    bool                        mIsRunning;
+    uint16_t                    mUdpPort;
 };
-
-static void HandleMeshCoPServiceChanged(void *aContext)
-{
-    static_cast<MeshCoPServiceTester *>(aContext)->HandleMeshCoPServiceChanged();
-}
 
 template <typename ObjectType> bool CheckObjectSameAsTxtEntryData(const TxtEntry &aTxtEntry, const ObjectType &aObject)
 {
@@ -801,47 +800,47 @@ template <> bool CheckObjectSameAsTxtEntryData<NameData>(const TxtEntry &aTxtEnt
            memcmp(aTxtEntry.mValue, aNameData.GetBuffer(), aNameData.GetLength()) == 0;
 }
 
-void TestBorderAgentMeshCoPServiceChangedCallback(void)
+void TestBorderAgentTxtDataCallback(void)
 {
     Core  nexus;
     Node &node0 = nexus.CreateNode();
 
     Log("------------------------------------------------------------------------------------------------------");
-    Log("TestBorderAgentMeshCoPServiceChangedCallback");
+    Log("TestBorderAgentTxtDataCallback");
 
     nexus.AdvanceTime(0);
-    MeshCoPServiceTester meshCoPServiceTester(node0.Get<BorderAgent>());
-    TxtEntry             txtEntry;
+    TxtDataTester txtDataTester(node0.Get<BorderAgent>());
+    TxtEntry      txtEntry;
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // 1. Set MeshCoP service change callback. Will get initial values.
     Log("Set MeshCoP service change callback and check initial values");
-    node0.Get<BorderAgent>().SetMeshCoPServiceChangedCallback(HandleMeshCoPServiceChanged, &meshCoPServiceTester);
+    node0.Get<BorderAgent>().SetServiceChangedCallback(TxtDataTester::HandleServiceChanged, &txtDataTester);
     nexus.AdvanceTime(1);
 
     // 1.1 Check the initial TXT entries
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
-    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("id", txtEntry));
+    VerifyOrQuit(txtDataTester.FindTxtEntry("id", txtEntry));
     BorderAgent::Id id;
     VerifyOrQuit(node0.Get<BorderAgent>().GetId(id) == kErrorNone);
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, id));
 #endif
-    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("nn", txtEntry));
+    VerifyOrQuit(txtDataTester.FindTxtEntry("nn", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<NetworkNameManager>().GetNetworkName().GetAsData()));
-    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("xp", txtEntry));
+    VerifyOrQuit(txtDataTester.FindTxtEntry("xp", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<ExtendedPanIdManager>().GetExtPanId()));
-    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("tv", txtEntry));
+    VerifyOrQuit(txtDataTester.FindTxtEntry("tv", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, NameData(kThreadVersionString, strlen(kThreadVersionString))));
-    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("xa", txtEntry));
+    VerifyOrQuit(txtDataTester.FindTxtEntry("xa", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<Mac::Mac>().GetExtAddress()));
-    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("sb", txtEntry));
+    VerifyOrQuit(txtDataTester.FindTxtEntry("sb", txtEntry));
 
-    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("pt", txtEntry) == false);
-    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("at", txtEntry) == false);
+    VerifyOrQuit(txtDataTester.FindTxtEntry("pt", txtEntry) == false);
+    VerifyOrQuit(txtDataTester.FindTxtEntry("at", txtEntry) == false);
 
     // 1.2 Check the Border Agent state
-    VerifyOrQuit(meshCoPServiceTester.mIsRunning == false);
-    VerifyOrQuit(meshCoPServiceTester.mUdpPort == 0);
+    VerifyOrQuit(txtDataTester.mIsRunning == false);
+    VerifyOrQuit(txtDataTester.mUdpPort == 0);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // 2. Join Thread network and check updated values and states.
@@ -851,28 +850,28 @@ void TestBorderAgentMeshCoPServiceChangedCallback(void)
 
     // 2.1 Check the initial TXT entries
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
-    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("id", txtEntry));
+    VerifyOrQuit(txtDataTester.FindTxtEntry("id", txtEntry));
     VerifyOrQuit(node0.Get<BorderAgent>().GetId(id) == kErrorNone);
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, id));
 #endif
-    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("nn", txtEntry));
+    VerifyOrQuit(txtDataTester.FindTxtEntry("nn", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<NetworkNameManager>().GetNetworkName().GetAsData()));
-    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("xp", txtEntry));
+    VerifyOrQuit(txtDataTester.FindTxtEntry("xp", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<ExtendedPanIdManager>().GetExtPanId()));
-    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("tv", txtEntry));
+    VerifyOrQuit(txtDataTester.FindTxtEntry("tv", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, NameData(kThreadVersionString, strlen(kThreadVersionString))));
-    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("xa", txtEntry));
+    VerifyOrQuit(txtDataTester.FindTxtEntry("xa", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<Mac::Mac>().GetExtAddress()));
-    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("sb", txtEntry));
-    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("pt", txtEntry));
+    VerifyOrQuit(txtDataTester.FindTxtEntry("sb", txtEntry));
+    VerifyOrQuit(txtDataTester.FindTxtEntry("pt", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(
         txtEntry, BigEndian::HostSwap32(node0.Get<Mle::Mle>().GetLeaderData().GetPartitionId())));
-    VerifyOrQuit(meshCoPServiceTester.FindTxtEntry("at", txtEntry));
+    VerifyOrQuit(txtDataTester.FindTxtEntry("at", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<ActiveDatasetManager>().GetTimestamp()));
 
     // 2.2 Check the Border Agent state
-    VerifyOrQuit(meshCoPServiceTester.mIsRunning == true);
-    VerifyOrQuit(meshCoPServiceTester.mUdpPort != 0);
+    VerifyOrQuit(txtDataTester.mIsRunning == true);
+    VerifyOrQuit(txtDataTester.mUdpPort != 0);
 }
 
 } // namespace Nexus
@@ -882,7 +881,7 @@ int main(void)
 {
     ot::Nexus::TestBorderAgent();
     ot::Nexus::TestBorderAgentEphemeralKey();
-    ot::Nexus::TestBorderAgentMeshCoPServiceChangedCallback();
+    ot::Nexus::TestBorderAgentTxtDataCallback();
     printf("All tests passed\n");
     return 0;
 }

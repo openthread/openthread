@@ -52,7 +52,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     , mIdInitialized(false)
 #endif
-    , mNotifyMeshCoPServiceChangedTask(aInstance)
+    , mServiceTask(aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     , mEphemeralKeyManager(aInstance)
 #endif
@@ -115,7 +115,7 @@ void BorderAgent::Start(void)
     pskc.Clear();
 
     mIsRunning = true;
-    PostNotifyMeshCoPServiceChangedTask();
+    PostServiceTask();
 
     LogInfo("Border Agent start listening on port %u", GetUdpPort());
 
@@ -134,7 +134,7 @@ void BorderAgent::Stop(void)
 
     mDtlsTransport.Close();
     mIsRunning = false;
-    PostNotifyMeshCoPServiceChangedTask();
+    PostServiceTask();
 
     LogInfo("Border Agent stopped");
 
@@ -144,18 +144,18 @@ exit:
 
 uint16_t BorderAgent::GetUdpPort(void) const { return mDtlsTransport.GetUdpPort(); }
 
-void BorderAgent::SetMeshCoPServiceChangedCallback(MeshCoPServiceChangedCallback aCallback, void *aContext)
+void BorderAgent::SetServiceChangedCallback(ServiceChangedCallback aCallback, void *aContext)
 {
-    mMeshCoPServiceChangedCallback.Set(aCallback, aContext);
+    mServiceChangedCallback.Set(aCallback, aContext);
 
-    mNotifyMeshCoPServiceChangedTask.Post();
+    PostServiceTask();
 }
 
-Error BorderAgent::GetMeshCoPServiceTxtData(MeshCoPServiceTxtData &aTxtData) const
+Error BorderAgent::PrepareServiceTxtData(ServiceTxtData &aTxtData) const
 {
-    MeshCoPTxtEncoder meshCoPTxtEncoder(GetInstance(), aTxtData);
+    TxtEncoder encoder(GetInstance(), aTxtData);
 
-    return meshCoPTxtEncoder.EncodeTxtData();
+    return encoder.EncodeTxtData();
 }
 
 void BorderAgent::HandleNotifierEvents(Events aEvents)
@@ -175,7 +175,7 @@ void BorderAgent::HandleNotifierEvents(Events aEvents)
     if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadExtPanIdChanged | kEventThreadNetworkNameChanged |
                             kEventThreadBackboneRouterStateChanged | kEventActiveDatasetChanged))
     {
-        PostNotifyMeshCoPServiceChangedTask();
+        PostServiceTask();
     }
 
     if (aEvents.ContainsAny(kEventPskcChanged))
@@ -347,20 +347,20 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-void BorderAgent::NotifyMeshCoPServiceChanged(void) { mMeshCoPServiceChangedCallback.InvokeIfSet(); }
+void BorderAgent::HandleServiceTask(void) { mServiceChangedCallback.InvokeIfSet(); }
 
-void BorderAgent::PostNotifyMeshCoPServiceChangedTask(void)
+void BorderAgent::PostServiceTask(void)
 {
-    if (mMeshCoPServiceChangedCallback.IsSet())
+    if (mServiceChangedCallback.IsSet())
     {
-        mNotifyMeshCoPServiceChangedTask.Post();
+        mServiceTask.Post();
     }
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// BorderAgent::MeshCoPTxtEncoder
+// BorderAgent::TxtEncoder
 
-Error BorderAgent::MeshCoPTxtEncoder::AppendTxtEntry(const char *aKey, const void *aValue, uint16_t aValueLength)
+Error BorderAgent::TxtEncoder::AppendTxtEntry(const char *aKey, const void *aValue, uint16_t aValueLength)
 {
     Dns::TxtEntry txtEntry;
 
@@ -368,12 +368,12 @@ Error BorderAgent::MeshCoPTxtEncoder::AppendTxtEntry(const char *aKey, const voi
     return txtEntry.AppendTo(mAppender);
 }
 
-template <> Error BorderAgent::MeshCoPTxtEncoder::AppendTxtEntry<NameData>(const char *aKey, const NameData &aObject)
+template <> Error BorderAgent::TxtEncoder::AppendTxtEntry<NameData>(const char *aKey, const NameData &aObject)
 {
     return AppendTxtEntry(aKey, aObject.GetBuffer(), aObject.GetLength());
 }
 
-Error BorderAgent::MeshCoPTxtEncoder::EncodeTxtData(void)
+Error BorderAgent::TxtEncoder::EncodeTxtData(void)
 {
     Error error = kErrorNone;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
@@ -418,7 +418,7 @@ exit:
 }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-Error BorderAgent::MeshCoPTxtEncoder::AppendBbrTxtEntry(StateBitmap aState)
+Error BorderAgent::TxtEncoder::AppendBbrTxtEntry(StateBitmap aState)
 {
     Error             error      = kErrorNone;
     const DomainName &domainName = Get<MeshCoP::NetworkNameManager>().GetDomainName();
@@ -441,7 +441,7 @@ exit:
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-Error BorderAgent::MeshCoPTxtEncoder::AppendOmrTxtEntry(void)
+Error BorderAgent::TxtEncoder::AppendOmrTxtEntry(void)
 {
     Error                                         error = kErrorNone;
     Ip6::Prefix                                   prefix;
@@ -462,7 +462,7 @@ exit:
 }
 #endif
 
-BorderAgent::MeshCoPTxtEncoder::StateBitmap BorderAgent::MeshCoPTxtEncoder::GetStateBitmap(void)
+BorderAgent::TxtEncoder::StateBitmap BorderAgent::TxtEncoder::GetStateBitmap(void)
 {
     StateBitmap state;
 
@@ -561,14 +561,14 @@ void BorderAgent::EphemeralKeyManager::SetEnabled(bool aEnabled)
     {
         VerifyOrExit(mState == kStateDisabled);
         SetState(kStateStopped);
-        Get<BorderAgent>().PostNotifyMeshCoPServiceChangedTask();
+        Get<BorderAgent>().PostServiceTask();
     }
     else
     {
         VerifyOrExit(mState != kStateDisabled);
         Stop();
         SetState(kStateDisabled);
-        Get<BorderAgent>().PostNotifyMeshCoPServiceChangedTask();
+        Get<BorderAgent>().PostServiceTask();
     }
 
 exit:
