@@ -751,6 +751,7 @@ public:
         : mBorderAgent(aBorderAgent)
         , mIsRunning(false)
         , mUdpPort(0)
+        , mCallbackInvoked(false)
     {
     }
 
@@ -761,6 +762,7 @@ public:
         mIsRunning = mBorderAgent.IsRunning();
         mUdpPort   = mBorderAgent.GetUdpPort();
         SuccessOrQuit(mBorderAgent.PrepareServiceTxtData(mTxtData));
+        mCallbackInvoked = true;
     }
 
     bool FindTxtEntry(const char *aKey, TxtEntry &aTxtEntry)
@@ -785,6 +787,7 @@ public:
     BorderAgent::ServiceTxtData mTxtData;
     bool                        mIsRunning;
     uint16_t                    mUdpPort;
+    bool                        mCallbackInvoked;
 };
 
 template <typename ObjectType> bool CheckObjectSameAsTxtEntryData(const TxtEntry &aTxtEntry, const ObjectType &aObject)
@@ -802,15 +805,19 @@ template <> bool CheckObjectSameAsTxtEntryData<NameData>(const TxtEntry &aTxtEnt
 
 void TestBorderAgentTxtDataCallback(void)
 {
-    Core  nexus;
-    Node &node0 = nexus.CreateNode();
+    Core          nexus;
+    Node         &node0 = nexus.CreateNode();
+    TxtDataTester txtDataTester(node0.Get<BorderAgent>());
+    TxtEntry      txtEntry;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+    BorderAgent::Id id;
+    BorderAgent::Id newId;
+#endif
 
     Log("------------------------------------------------------------------------------------------------------");
     Log("TestBorderAgentTxtDataCallback");
 
     nexus.AdvanceTime(0);
-    TxtDataTester txtDataTester(node0.Get<BorderAgent>());
-    TxtEntry      txtEntry;
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // 1. Set MeshCoP service change callback. Will get initial values.
@@ -819,9 +826,9 @@ void TestBorderAgentTxtDataCallback(void)
     nexus.AdvanceTime(1);
 
     // 1.1 Check the initial TXT entries
+    VerifyOrQuit(txtDataTester.mCallbackInvoked);
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     VerifyOrQuit(txtDataTester.FindTxtEntry("id", txtEntry));
-    BorderAgent::Id id;
     VerifyOrQuit(node0.Get<BorderAgent>().GetId(id) == kErrorNone);
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, id));
 #endif
@@ -844,11 +851,13 @@ void TestBorderAgentTxtDataCallback(void)
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // 2. Join Thread network and check updated values and states.
+    txtDataTester.mCallbackInvoked = false;
     Log("Join Thread network and check updated Txt data and states");
     node0.Form();
     nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
 
     // 2.1 Check the initial TXT entries
+    VerifyOrQuit(txtDataTester.mCallbackInvoked);
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     VerifyOrQuit(txtDataTester.FindTxtEntry("id", txtEntry));
     VerifyOrQuit(node0.Get<BorderAgent>().GetId(id) == kErrorNone);
@@ -872,6 +881,33 @@ void TestBorderAgentTxtDataCallback(void)
     // 2.2 Check the Border Agent state
     VerifyOrQuit(txtDataTester.mIsRunning == true);
     VerifyOrQuit(txtDataTester.mUdpPort != 0);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+    Log("Change the Border Agent ID and validate that TXT data changed and callback is invoked");
+
+    newId.GenerateRandom();
+    VerifyOrQuit(newId != id);
+
+    txtDataTester.mCallbackInvoked = false;
+    SuccessOrQuit(node0.Get<BorderAgent>().SetId(newId));
+
+    nexus.AdvanceTime(1);
+
+    VerifyOrQuit(txtDataTester.mCallbackInvoked);
+    VerifyOrQuit(txtDataTester.FindTxtEntry("id", txtEntry));
+    VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, newId));
+
+    // Validate that setting the ID to the same value as before is
+    // correctly detected and does not trigger the callback.
+
+    txtDataTester.mCallbackInvoked = false;
+    SuccessOrQuit(node0.Get<BorderAgent>().SetId(newId));
+    nexus.AdvanceTime(1);
+    VerifyOrQuit(!txtDataTester.mCallbackInvoked);
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 }
 
 } // namespace Nexus

@@ -73,7 +73,7 @@ Error BorderAgent::GetId(Id &aId)
 
     if (Get<Settings>().Read<Settings::BorderAgentId>(mId) != kErrorNone)
     {
-        Random::NonCrypto::Fill(mId);
+        mId.GenerateRandom();
         SuccessOrExit(error = Get<Settings>().Save<Settings::BorderAgentId>(mId));
     }
 
@@ -88,9 +88,15 @@ Error BorderAgent::SetId(const Id &aId)
 {
     Error error = kErrorNone;
 
+    if (mIdInitialized)
+    {
+        VerifyOrExit(aId != mId);
+    }
+
     SuccessOrExit(error = Get<Settings>().Save<Settings::BorderAgentId>(aId));
     mId            = aId;
     mIdInitialized = true;
+    PostServiceTask();
 
 exit:
     return error;
