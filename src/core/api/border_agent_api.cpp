@@ -80,12 +80,12 @@ void otBorderAgentSetMeshCoPServiceChangedCallback(otInstance                   
                                                    otBorderAgentMeshCoPServiceChangedCallback aCallback,
                                                    void                                      *aContext)
 {
-    AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().SetMeshCoPServiceChangedCallback(aCallback, aContext);
+    AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().SetServiceChangedCallback(aCallback, aContext);
 }
 
 otError otBorderAgentGetMeshCoPServiceTxtData(otInstance *aInstance, otBorderAgentMeshCoPServiceTxtData *aTxtData)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetMeshCoPServiceTxtData(*aTxtData);
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().PrepareServiceTxtData(*aTxtData);
 }
 
 const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance)

@@ -77,9 +77,11 @@ class BorderAgent : public InstanceLocator, private NonCopyable
     class CoapDtlsSession;
 
 public:
-    typedef otBorderAgentId          Id;          ///< Border Agent ID.
-    typedef otBorderAgentCounters    Counters;    ///< Border Agent Counters.
-    typedef otBorderAgentSessionInfo SessionInfo; ///< A session info.
+    typedef otBorderAgentId                            Id;                     ///< Border Agent ID.
+    typedef otBorderAgentCounters                      Counters;               ///< Border Agent Counters.
+    typedef otBorderAgentSessionInfo                   SessionInfo;            ///< A session info.
+    typedef otBorderAgentMeshCoPServiceChangedCallback ServiceChangedCallback; ///< Service changed callback.
+    typedef otBorderAgentMeshCoPServiceTxtData         ServiceTxtData;         ///< Service TXT data.
 
     /**
      * Represents an iterator for secure sessions.
@@ -163,8 +165,6 @@ public:
      */
     bool IsRunning(void) const { return mIsRunning; }
 
-    typedef otBorderAgentMeshCoPServiceChangedCallback MeshCoPServiceChangedCallback;
-
     /**
      * Sets the callback function used by the Border Agent to notify any changes on the MeshCoP service TXT values.
      *
@@ -178,19 +178,17 @@ public:
      * @param[in] aCallback  The callback to invoke when there are any changes of the MeshCoP service.
      * @param[in] aContext   A pointer to application-specific context.
      */
-    void SetMeshCoPServiceChangedCallback(MeshCoPServiceChangedCallback aCallback, void *aContext);
-
-    typedef otBorderAgentMeshCoPServiceTxtData MeshCoPServiceTxtData;
+    void SetServiceChangedCallback(ServiceChangedCallback aCallback, void *aContext);
 
     /**
-     * Gets the MeshCoP service TXT data.
+     * Prepares the MeshCoP service TXT data.
      *
      * @param[out] aTxtData   A reference to a MeshCoP Service TXT data struct to get the data.
      *
      * @retval kErrorNone     If successfully retrieved the Border Agent MeshCoP Service TXT data.
      * @retval kErrorNoBufs   If the buffer in @p aTxtData doesn't have enough size.
      */
-    Error GetMeshCoPServiceTxtData(MeshCoPServiceTxtData &aTxtData) const;
+    Error PrepareServiceTxtData(ServiceTxtData &aTxtData) const;
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     /**
@@ -434,10 +432,10 @@ private:
         uint64_t                   mAllocationTime;
     };
 
-    class MeshCoPTxtEncoder : public InstanceLocator
+    class TxtEncoder : public InstanceLocator
     {
     public:
-        MeshCoPTxtEncoder(Instance &aInstance, MeshCoPServiceTxtData &aTxtData)
+        TxtEncoder(Instance &aInstance, ServiceTxtData &aTxtData)
             : InstanceLocator(aInstance)
             , mTxtData(aTxtData)
             , mAppender(mTxtData.mData, sizeof(mTxtData.mData))
@@ -532,8 +530,8 @@ private:
 
         StateBitmap GetStateBitmap(void);
 
-        MeshCoPServiceTxtData &mTxtData;
-        Appender               mAppender;
+        ServiceTxtData &mTxtData;
+        Appender        mAppender;
     };
 
     void Start(void);
@@ -554,10 +552,14 @@ private:
 
     static Coap::Message::Code CoapCodeFromError(Error aError);
 
-    void PostNotifyMeshCoPServiceChangedTask(void);
-    void NotifyMeshCoPServiceChanged(void);
+    void PostServiceTask(void);
+    void HandleServiceTask(void);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    // Callback from `RoutingManager`
+    void HandleFavoredOmrPrefixChanged(void) { PostServiceTask(); }
+#endif
 
-    using NotifyMeshCoPServiceChangedTask = TaskletIn<BorderAgent, &BorderAgent::NotifyMeshCoPServiceChanged>;
+    using ServiceTask = TaskletIn<BorderAgent, &BorderAgent::HandleServiceTask>;
 
     bool            mIsRunning;
     Dtls::Transport mDtlsTransport;
@@ -565,8 +567,8 @@ private:
     Id   mId;
     bool mIdInitialized;
 #endif
-    Callback<MeshCoPServiceChangedCallback> mMeshCoPServiceChangedCallback;
-    NotifyMeshCoPServiceChangedTask         mNotifyMeshCoPServiceChangedTask;
+    Callback<ServiceChangedCallback> mServiceChangedCallback;
+    ServiceTask                      mServiceTask;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     EphemeralKeyManager mEphemeralKeyManager;
 #endif
