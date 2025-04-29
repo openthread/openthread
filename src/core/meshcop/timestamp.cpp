@@ -92,7 +92,7 @@ void Timestamp::SetSeconds(uint64_t aSeconds)
 
 void Timestamp::SetTicks(uint16_t aTicks)
 {
-    SetTicksAndAuthFlag((GetTicksAndAuthFlag() & ~kTicksMask) | ((aTicks << kTicksOffset) & kTicksMask));
+    SetTicksAndAuthFlag(UpdateBits<uint16_t, kTicksMask>(GetTicksAndAuthFlag(), aTicks));
 }
 
 void Timestamp::SetAuthoritative(bool aAuthoritative)

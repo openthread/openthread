@@ -135,7 +135,7 @@ public:
      */
     bool ContainsChannel(uint8_t aChannel) const
     {
-        return (aChannel < BitSizeOf(mMask)) ? ((1UL << aChannel) & mMask) != 0 : false;
+        return (aChannel < BitSizeOf(mMask)) ? GetBit(mMask, aChannel) : false;
     }
 
     /**
@@ -147,7 +147,7 @@ public:
     {
         if (aChannel < BitSizeOf(mMask))
         {
-            mMask |= (1UL << aChannel);
+            SetBit<uint32_t>(mMask, aChannel);
         }
     }
 
@@ -160,7 +160,7 @@ public:
     {
         if (aChannel < BitSizeOf(mMask))
         {
-            mMask &= ~(1UL << aChannel);
+            ClearBit<uint32_t>(mMask, aChannel);
         }
     }
 
