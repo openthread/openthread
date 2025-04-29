@@ -49,6 +49,7 @@
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/owned_ptr.hpp"
+#include "common/random.hpp"
 #include "common/tasklet.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/secure_transport.hpp"
@@ -77,7 +78,6 @@ class BorderAgent : public InstanceLocator, private NonCopyable
     class CoapDtlsSession;
 
 public:
-    typedef otBorderAgentId                            Id;                     ///< Border Agent ID.
     typedef otBorderAgentCounters                      Counters;               ///< Border Agent Counters.
     typedef otBorderAgentSessionInfo                   SessionInfo;            ///< A session info.
     typedef otBorderAgentMeshCoPServiceChangedCallback ServiceChangedCallback; ///< Service changed callback.
@@ -122,6 +122,21 @@ public:
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     /**
+     *  Represents a Border Agent Identifier.
+     */
+    struct Id : public otBorderAgentId, public Clearable<Id>, public Equatable<Id>
+    {
+        static constexpr uint16_t kLength = OT_BORDER_AGENT_ID_LENGTH; ///< The ID length (number of bytes).
+
+        /**
+         * Generates a random ID.
+         */
+        void GenerateRandom(void) { Random::NonCrypto::Fill(mId); }
+    };
+
+    static_assert(sizeof(Id) == Id::kLength, "sizeof(Id) is not valid");
+
+    /**
      * Gets the randomly generated Border Agent ID.
      *
      * The ID is saved in persistent storage and survives reboots. The typical use case of the ID is to
@@ -142,7 +157,7 @@ public:
      * to set the ID only once after factory reset. If the ID has never been set by calling this
      * method, a random ID will be generated and returned when `GetId()` is called.
      *
-     * @param[out] aId  specifies the Border Agent ID.
+     * @param[in] aId   The Border Agent ID.
      *
      * @retval kErrorNone  If successfully set the Border Agent ID.
      * @retval ...         If failed to set the Border Agent ID.
