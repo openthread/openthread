@@ -409,26 +409,24 @@ template <> Error BorderAgent::TxtEncoder::AppendTxtEntry<NameData>(const char *
 Error BorderAgent::TxtEncoder::EncodeTxtData(void)
 {
     Error error = kErrorNone;
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
-    Id id;
-#endif
-    StateBitmap state;
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
-    if (Get<BorderAgent>().GetId(id) == kErrorNone)
     {
-        SuccessOrExit(error = AppendTxtEntry("id", id));
+        Id id;
+
+        if (Get<BorderAgent>().GetId(id) == kErrorNone)
+        {
+            SuccessOrExit(error = AppendTxtEntry("id", id));
+        }
     }
 #endif
     SuccessOrExit(error = AppendTxtEntry("nn", Get<NetworkNameManager>().GetNetworkName().GetAsData()));
     SuccessOrExit(error = AppendTxtEntry("xp", Get<ExtendedPanIdManager>().GetExtPanId()));
     SuccessOrExit(error = AppendTxtEntry("tv", NameData(kThreadVersionString, strlen(kThreadVersionString))));
     SuccessOrExit(error = AppendTxtEntry("xa", Get<Mac::Mac>().GetExtAddress()));
+    SuccessOrExit(error = AppendTxtEntry("sb", BigEndian::HostSwap32(DetermineStateBitmap())));
 
-    state = GetStateBitmap();
-    SuccessOrExit(error = AppendTxtEntry("sb", BigEndian::HostSwap32(state.ToUint32())));
-
-    if (state.mThreadIfStatus == kThreadIfStatusActive)
+    if (Get<Mle::Mle>().IsAttached())
     {
         SuccessOrExit(
             error = AppendTxtEntry("pt", BigEndian::HostSwap32(Get<Mle::Mle>().GetLeaderData().GetPartitionId())));
@@ -439,11 +437,13 @@ Error BorderAgent::TxtEncoder::EncodeTxtData(void)
     }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    SuccessOrExit(error = AppendBbrTxtEntry(state));
+    SuccessOrExit(error = AppendBbrTxtEntry());
 #endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     SuccessOrExit(error = AppendOmrTxtEntry());
 #endif
+
     mTxtData.mLength = mAppender.GetAppendedLength();
 
 exit:
@@ -451,12 +451,12 @@ exit:
 }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-Error BorderAgent::TxtEncoder::AppendBbrTxtEntry(StateBitmap aState)
+Error BorderAgent::TxtEncoder::AppendBbrTxtEntry(void)
 {
     Error             error      = kErrorNone;
     const DomainName &domainName = Get<MeshCoP::NetworkNameManager>().GetDomainName();
 
-    if (aState.mBbrIsActive)
+    if (Get<Mle::Mle>().IsAttached() && Get<BackboneRouter::Local>().IsEnabled())
     {
         BackboneRouter::Config bbrConfig;
 
@@ -484,6 +484,7 @@ Error BorderAgent::TxtEncoder::AppendOmrTxtEntry(void)
         prefix.GetLength() > 0)
     {
         uint8_t omrData[Ip6::NetworkPrefix::kSize + 1];
+
         omrData[0] = prefix.GetLength();
         memcpy(omrData + 1, prefix.GetBytes(), prefix.GetBytesSize());
 
@@ -495,50 +496,48 @@ exit:
 }
 #endif
 
-BorderAgent::TxtEncoder::StateBitmap BorderAgent::TxtEncoder::GetStateBitmap(void)
+uint32_t BorderAgent::TxtEncoder::DetermineStateBitmap(void)
 {
-    StateBitmap state;
+    uint32_t bitmap = 0;
 
-    state.mConnectionMode = Get<BorderAgent>().IsRunning() ? kConnectionModePskc : kConnectionModeDisabled;
-    state.mAvailability   = kAvailabilityHigh;
+    bitmap |= (Get<BorderAgent>().IsRunning() ? kConnectionModePskc : kConnectionModeDisabled);
+    bitmap |= kAvailabilityHigh;
 
     switch (Get<Mle::Mle>().GetRole())
     {
     case Mle::DeviceRole::kRoleDisabled:
-        state.mThreadIfStatus = kThreadIfStatusNotInitialized;
-        state.mThreadRole     = kThreadRoleDisabledOrDetached;
+        bitmap |= (kThreadIfStatusNotInitialized | kThreadRoleDisabledOrDetached);
         break;
     case Mle::DeviceRole::kRoleDetached:
-        state.mThreadIfStatus = kThreadIfStatusInitialized;
-        state.mThreadRole     = kThreadRoleDisabledOrDetached;
+        bitmap |= (kThreadIfStatusInitialized | kThreadRoleDisabledOrDetached);
         break;
     case Mle::DeviceRole::kRoleChild:
-        state.mThreadIfStatus = kThreadIfStatusActive;
-        state.mThreadRole     = kThreadRoleChild;
+        bitmap |= (kThreadIfStatusActive | kThreadRoleChild);
         break;
     case Mle::DeviceRole::kRoleRouter:
-        state.mThreadIfStatus = kThreadIfStatusActive;
-        state.mThreadRole     = kThreadRoleRouter;
+        bitmap |= (kThreadIfStatusActive | kThreadRoleRouter);
         break;
     case Mle::DeviceRole::kRoleLeader:
-        state.mThreadIfStatus = kThreadIfStatusActive;
-        state.mThreadRole     = kThreadRoleLeader;
+        bitmap |= (kThreadIfStatusActive | kThreadRoleLeader);
         break;
     }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    state.mBbrIsActive = state.mThreadIfStatus == kThreadIfStatusActive &&
-                         Get<BackboneRouter::Local>().GetState() != BackboneRouter::Local::State::kStateDisabled;
-    state.mBbrIsPrimary = state.mThreadIfStatus == kThreadIfStatusActive &&
-                          Get<BackboneRouter::Local>().GetState() == BackboneRouter::Local::State::kStatePrimary;
+    if (Get<Mle::Mle>().IsAttached())
+    {
+        bitmap |= (Get<BackboneRouter::Local>().IsEnabled() ? kFlagBbrIsActive : 0);
+        bitmap |= (Get<BackboneRouter::Local>().IsPrimary() ? kFlagBbrIsPrimary : 0);
+    }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    state.mEpskcSupported =
-        Get<BorderAgent::EphemeralKeyManager>().GetState() != EphemeralKeyManager::State::kStateDisabled;
+    if (Get<BorderAgent::EphemeralKeyManager>().GetState() != EphemeralKeyManager::kStateDisabled)
+    {
+        bitmap |= kFlagEpskcSupported;
+    }
 #endif
 
-    return state;
+    return bitmap;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
