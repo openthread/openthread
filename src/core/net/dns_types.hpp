@@ -117,18 +117,14 @@ public:
      *
      * @returns The type of the message.
      */
-    Type GetType(void) const { return static_cast<Type>((mFlags[0] & kQrFlagMask) >> kQrFlagOffset); }
+    Type GetType(void) const { return static_cast<Type>(ReadBits<uint8_t, kQrFlagMask>(mFlags[0])); }
 
     /**
      * Sets the type of the message.
      *
      * @param[in]  aType The type of the message.
      */
-    void SetType(Type aType)
-    {
-        mFlags[0] &= ~kQrFlagMask;
-        mFlags[0] |= static_cast<uint8_t>(aType) << kQrFlagOffset;
-    }
+    void SetType(Type aType) { WriteBits<uint8_t, kQrFlagMask>(mFlags[0], static_cast<uint8_t>(aType)); }
 
     /**
      * Defines types of query.
@@ -148,18 +144,14 @@ public:
      *
      * @returns The type of the query.
      */
-    QueryType GetQueryType(void) const { return static_cast<QueryType>((mFlags[0] & kOpCodeMask) >> kOpCodeOffset); }
+    QueryType GetQueryType(void) const { return static_cast<QueryType>(ReadBits<uint8_t, kOpCodeMask>(mFlags[0])); }
 
     /**
      * Sets the type of the query.
      *
      * @param[in]  aType The type of the query.
      */
-    void SetQueryType(QueryType aType)
-    {
-        mFlags[0] &= ~kOpCodeMask;
-        mFlags[0] |= static_cast<uint8_t>(aType) << kOpCodeOffset;
-    }
+    void SetQueryType(QueryType aType) { WriteBits<uint8_t, kOpCodeMask>(mFlags[0], static_cast<uint8_t>(aType)); }
 
     /**
      * Specifies in response message if the responding name server is an
@@ -167,34 +159,34 @@ public:
      *
      * @returns True if Authoritative Answer flag (AA) is set in the header, false otherwise.
      */
-    bool IsAuthoritativeAnswerFlagSet(void) const { return (mFlags[0] & kAaFlagMask) == kAaFlagMask; }
+    bool IsAuthoritativeAnswerFlagSet(void) const { return GetBit<uint8_t>(mFlags[0], kAaFlagOffset); }
 
     /**
      * Clears the Authoritative Answer flag (AA) in the header.
      */
-    void ClearAuthoritativeAnswerFlag(void) { mFlags[0] &= ~kAaFlagMask; }
+    void ClearAuthoritativeAnswerFlag(void) { ClearBit<uint8_t>(mFlags[0], kAaFlagOffset); }
 
     /**
      * Sets the Authoritative Answer flag (AA) in the header.
      */
-    void SetAuthoritativeAnswerFlag(void) { mFlags[0] |= kAaFlagMask; }
+    void SetAuthoritativeAnswerFlag(void) { SetBit<uint8_t>(mFlags[0], kAaFlagOffset); }
 
     /**
      * Specifies if message is truncated.
      *
      * @returns True if Truncation flag (TC) is set in the header, false otherwise.
      */
-    bool IsTruncationFlagSet(void) const { return (mFlags[0] & kTcFlagMask) == kTcFlagMask; }
+    bool IsTruncationFlagSet(void) const { return GetBit<uint8_t>(mFlags[0], kTcFlagOffset); }
 
     /**
      * Clears the Truncation flag (TC) in the header.
      */
-    void ClearTruncationFlag(void) { mFlags[0] &= ~kTcFlagMask; }
+    void ClearTruncationFlag(void) { ClearBit<uint8_t>(mFlags[0], kTcFlagOffset); }
 
     /**
      * Sets the Truncation flag (TC) in the header.
      */
-    void SetTruncationFlag(void) { mFlags[0] |= kTcFlagMask; }
+    void SetTruncationFlag(void) { SetBit<uint8_t>(mFlags[0], kTcFlagOffset); }
 
     /**
      * Specifies if resolver wants to direct the name server to pursue
@@ -202,34 +194,34 @@ public:
      *
      * @returns True if Recursion Desired flag (RD) is set in the header, false otherwise.
      */
-    bool IsRecursionDesiredFlagSet(void) const { return (mFlags[0] & kRdFlagMask) == kRdFlagMask; }
+    bool IsRecursionDesiredFlagSet(void) const { return GetBit<uint8_t>(mFlags[0], kRdFlagOffset); }
 
     /**
      * Clears the Recursion Desired flag (RD) in the header.
      */
-    void ClearRecursionDesiredFlag(void) { mFlags[0] &= ~kRdFlagMask; }
+    void ClearRecursionDesiredFlag(void) { ClearBit<uint8_t>(mFlags[0], kRdFlagOffset); }
 
     /**
      * Sets the Recursion Desired flag (RD) in the header.
      */
-    void SetRecursionDesiredFlag(void) { mFlags[0] |= kRdFlagMask; }
+    void SetRecursionDesiredFlag(void) { SetBit<uint8_t>(mFlags[0], kRdFlagOffset); }
 
     /**
      * Denotes whether recursive query support is available in the name server.
      *
      * @returns True if Recursion Available flag (RA) is set in the header, false otherwise.
      */
-    bool IsRecursionAvailableFlagSet(void) const { return (mFlags[1] & kRaFlagMask) == kRaFlagMask; }
+    bool IsRecursionAvailableFlagSet(void) const { return GetBit<uint8_t>(mFlags[1], kRaFlagOffset); }
 
     /**
      * Clears the Recursion Available flag (RA) in the header.
      */
-    void ClearRecursionAvailableFlag(void) { mFlags[1] &= ~kRaFlagMask; }
+    void ClearRecursionAvailableFlag(void) { ClearBit<uint8_t>(mFlags[1], kRaFlagOffset); }
 
     /**
      * Sets the Recursion Available flag (RA) in the header.
      */
-    void SetRecursionAvailableFlag(void) { mFlags[1] |= kRaFlagMask; }
+    void SetRecursionAvailableFlag(void) { SetBit<uint8_t>(mFlags[1], kRaFlagOffset); }
 
     /**
      * Defines response codes.
@@ -258,7 +250,7 @@ public:
      *
      * @returns The response code from the header.
      */
-    Response GetResponseCode(void) const { return static_cast<Response>((mFlags[1] & kRCodeMask) >> kRCodeOffset); }
+    Response GetResponseCode(void) const { return static_cast<Response>(ReadBits<uint8_t, kRCodeMask>(mFlags[1])); }
 
     /**
      * Sets the response code.
@@ -267,8 +259,7 @@ public:
      */
     void SetResponseCode(Response aResponse)
     {
-        mFlags[1] &= ~kRCodeMask;
-        mFlags[1] |= static_cast<uint8_t>(aResponse) << kRCodeOffset;
+        WriteBits<uint8_t, kRCodeMask>(mFlags[1], static_cast<uint8_t>(aResponse));
     }
 
     /**
@@ -358,13 +349,9 @@ private:
     static constexpr uint8_t kOpCodeOffset = 3;                     // OpCode field offset.
     static constexpr uint8_t kOpCodeMask   = 0x0f << kOpCodeOffset; // OpCode field mask.
     static constexpr uint8_t kAaFlagOffset = 2;                     // AA Flag offset.
-    static constexpr uint8_t kAaFlagMask   = 0x01 << kAaFlagOffset; // AA Flag mask.
     static constexpr uint8_t kTcFlagOffset = 1;                     // TC Flag offset.
-    static constexpr uint8_t kTcFlagMask   = 0x01 << kTcFlagOffset; // TC Flag mask.
     static constexpr uint8_t kRdFlagOffset = 0;                     // RD Flag offset.
-    static constexpr uint8_t kRdFlagMask   = 0x01 << kRdFlagOffset; // RD Flag mask.
     static constexpr uint8_t kRaFlagOffset = 7;                     // RA Flag offset.
-    static constexpr uint8_t kRaFlagMask   = 0x01 << kRaFlagOffset; // RA Flag mask.
     static constexpr uint8_t kRCodeOffset  = 0;                     // RCODE field offset.
     static constexpr uint8_t kRCodeMask    = 0x0f << kRCodeOffset;  // RCODE field mask.
 

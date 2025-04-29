@@ -138,8 +138,7 @@ public:
      */
     uint8_t GetTrafficClass(void) const
     {
-        return static_cast<uint8_t>((BigEndian::HostSwap16(mVerTcFlow.m16[0]) & kTrafficClassMask) >>
-                                    kTrafficClassOffset);
+        return static_cast<uint8_t>(ReadBits<uint16_t, kTrafficClassMask>(BigEndian::HostSwap16(mVerTcFlow.m16[0])));
     }
 
     /**
@@ -149,9 +148,8 @@ public:
      */
     void SetTrafficClass(uint8_t aTc)
     {
-        mVerTcFlow.m16[0] =
-            BigEndian::HostSwap16((BigEndian::HostSwap16(mVerTcFlow.m16[0]) & ~kTrafficClassMask) |
-                                  ((static_cast<uint16_t>(aTc) << kTrafficClassOffset) & kTrafficClassMask));
+        mVerTcFlow.m16[0] = BigEndian::HostSwap16(UpdateBits<uint16_t, kTrafficClassMask>(
+            BigEndian::HostSwap16(mVerTcFlow.m16[0]), static_cast<uint16_t>(aTc)));
     }
 
     /**
@@ -161,7 +159,7 @@ public:
      */
     uint8_t GetDscp(void) const
     {
-        return static_cast<uint8_t>((BigEndian::HostSwap16(mVerTcFlow.m16[0]) & kDscpMask) >> kDscpOffset);
+        return static_cast<uint8_t>(ReadBits<uint16_t, kDscpMask>(BigEndian::HostSwap16(mVerTcFlow.m16[0])));
     }
 
     /**
@@ -171,8 +169,8 @@ public:
      */
     void SetDscp(uint8_t aDscp)
     {
-        mVerTcFlow.m16[0] = BigEndian::HostSwap16((BigEndian::HostSwap16(mVerTcFlow.m16[0]) & ~kDscpMask) |
-                                                  ((static_cast<uint16_t>(aDscp) << kDscpOffset) & kDscpMask));
+        mVerTcFlow.m16[0] = BigEndian::HostSwap16(
+            UpdateBits<uint16_t, kDscpMask>(BigEndian::HostSwap16(mVerTcFlow.m16[0]), static_cast<uint16_t>(aDscp)));
     }
 
     /**
@@ -180,14 +178,14 @@ public:
      *
      * @returns The ECN value.
      */
-    Ecn GetEcn(void) const { return static_cast<Ecn>((mVerTcFlow.m8[1] & kEcnMask) >> kEcnOffset); }
+    Ecn GetEcn(void) const { return static_cast<Ecn>(ReadBits<uint8_t, kEcnMask>(mVerTcFlow.m8[1])); }
 
     /**
      * Sets the 2-bit Explicit Congestion Notification (ECN) in IPv6 header..
      *
      * @param[in]  aEcn  The ECN value.
      */
-    void SetEcn(Ecn aEcn) { mVerTcFlow.m8[1] = (mVerTcFlow.m8[1] & ~kEcnMask) | ((aEcn << kEcnOffset) & kEcnMask); }
+    void SetEcn(Ecn aEcn) { WriteBits<uint8_t, kEcnMask>(mVerTcFlow.m8[1], aEcn); }
 
     /**
      * Gets the 20-bit Flow field.
@@ -204,7 +202,7 @@ public:
     void SetFlow(uint32_t aFlow)
     {
         mVerTcFlow.m32 =
-            BigEndian::HostSwap32((BigEndian::HostSwap32(mVerTcFlow.m32) & ~kFlowMask) | (aFlow & kFlowMask));
+            BigEndian::HostSwap32(UpdateBits<uint32_t, kFlowMask>(BigEndian::HostSwap32(mVerTcFlow.m32), aFlow));
     }
 
     /**
@@ -582,7 +580,7 @@ public:
      *
      * @returns The Fragment Offset value.
      */
-    uint16_t GetOffset(void) const { return (BigEndian::HostSwap16(mOffsetMore) & kOffsetMask) >> kOffsetOffset; }
+    uint16_t GetOffset(void) const { return ReadBits<uint16_t, kOffsetMask>(BigEndian::HostSwap16(mOffsetMore)); }
 
     /**
      * Sets the Fragment Offset value.
@@ -592,8 +590,8 @@ public:
     void SetOffset(uint16_t aOffset)
     {
         uint16_t tmp = BigEndian::HostSwap16(mOffsetMore);
-        tmp          = (tmp & ~kOffsetMask) | ((aOffset << kOffsetOffset) & kOffsetMask);
-        mOffsetMore  = BigEndian::HostSwap16(tmp);
+        WriteBits<uint16_t, kOffsetMask>(tmp, aOffset);
+        mOffsetMore = BigEndian::HostSwap16(tmp);
     }
 
     /**

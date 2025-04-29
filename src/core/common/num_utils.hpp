@@ -241,7 +241,7 @@ inline unsigned long ToUlong(uint32_t aUint32) { return static_cast<unsigned lon
 /**
  * Counts the number of `1` bits in the binary representation of a given unsigned int bit-mask value.
  *
- * @tparam UintType   The unsigned int type (MUST be `uint8_t`, uint16_t`, uint32_t`, or `uint64_t`).
+ * @tparam UintType   The unsigned int type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
  *
  * @param[in] aMask   A bit mask.
  *
@@ -262,6 +262,165 @@ template <typename UintType> uint8_t CountBitsInMask(UintType aMask)
     }
 
     return count;
+}
+
+/**
+ * Sets the specified bit of the given integer to 1.
+ *
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
+ *
+ * @param[in,out]  aBits       The integer to set the bit.
+ * @param[in]      aBitOffset  The bit offset to set.
+ */
+template <typename UintType> void SetBit(UintType &aBits, uint8_t aBitOffset)
+{
+    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
+                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
+                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+
+    aBits = aBits | (static_cast<UintType>(1) << aBitOffset);
+}
+
+/**
+ * Clears the specified bit of the given integer.
+ *
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
+ *
+ * @param[in,out]  aBits       The integer to clear the bit.
+ * @param[in]      aBitOffset  The bit offset to clear.
+ */
+template <typename UintType> void ClearBit(UintType &aBits, uint8_t aBitOffset)
+{
+    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
+                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
+                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+
+    aBits = aBits & (~(static_cast<UintType>(1) << aBitOffset));
+}
+
+/**
+ * Gets the value of the specified bit of the given integer.
+ *
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
+ *
+ * @param[in] aBits      The integer to get the bit.
+ * @param[in] aBitOffset The bit offset to get.
+ *
+ * @returns The value of the specified bit.
+ */
+template <typename UintType> bool GetBit(UintType aBits, uint8_t aBitOffset)
+{
+    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
+                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
+                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+
+    return (aBits & (static_cast<UintType>(1) << aBitOffset)) != 0;
+}
+
+/**
+ * Writes the specified bit of the given integer to the given value (0 or 1).
+ *
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
+ *
+ * @param[in,out]  aBits      The integer to write the bit.
+ * @param[in]      aBitOffset The bit offset to write.
+ * @param[in]      aValue     The value to write.
+ */
+template <typename UintType> void WriteBit(UintType &aBits, uint8_t aBitOffset, bool aValue)
+{
+    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
+                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
+                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+
+    if (aValue)
+    {
+        SetBit<UintType>(aBits, aBitOffset);
+    }
+    else
+    {
+        ClearBit<UintType>(aBits, aBitOffset);
+    }
+}
+
+/**
+ * Gets the offset of the lowest non-zero bit in the given mask.
+ *
+ * @tparam UintType  The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
+ *
+ * @param[in] aMask  The mask (MUST not be 0) to calculate the offset of the lowest non-zero bit.
+ *
+ * @returns The the offset of the lowest non-zero bit in the mask.
+ */
+template <typename UintType> inline constexpr uint8_t BitOffsetOfMask(UintType aMask)
+{
+    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
+                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
+                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+
+    return (aMask & 0x1) ? 0 : (1 + BitOffsetOfMask<UintType>(aMask >> 1));
+}
+
+/**
+ * Writes the specified bits of the given integer to the given value.
+ *
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
+ * @tparam kMask      The bit mask (MUST not be 0) to write. The @p kMask must be provided in a shifted form.
+ * @tparam kOffset    The bit offset to write. The default @p kOffset is computed from the given @p kMask.
+ *
+ * @param[in,out]  aBits   The integer to write the bits.
+ * @param[in]      aValue  The value to write.
+ */
+template <typename UintType, UintType kMask, UintType kOffset = BitOffsetOfMask(kMask)>
+void WriteBits(UintType &aBits, UintType aValue)
+{
+    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
+                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
+                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+
+    aBits = ((aBits & ~kMask) | ((aValue << kOffset) & kMask));
+}
+
+/**
+ * Writes the specified bits of the given integer to the given value and returns the updated integer.
+ *
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
+ * @tparam kMask      The bit mask (MUST not be 0) to write. The @p kMask must be provided in a shifted form.
+ * @tparam kOffset    The bit offset to write. The default @p kOffset is computed from the given @p kMask.
+ *
+ * @param[in] aBits   The integer to write the bits.
+ * @param[in] aValue  The value to write.
+ *
+ * @returns The updated integer.
+ */
+template <typename UintType, UintType kMask, UintType kOffset = BitOffsetOfMask(kMask)>
+UintType UpdateBits(UintType aBits, UintType aValue)
+{
+    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
+                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
+                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+
+    return ((aBits & ~kMask) | ((aValue << kOffset) & kMask));
+}
+
+/**
+ * Read the value of the specified bits of the given integer.
+ *
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
+ * @tparam kMask      The bit mask (MUST not be 0) to write. The @p kMask must be provided in a shifted form.
+ * @tparam kOffset    The bit offset to write. The default @p kOffset is computed from the given @p kMask.
+ *
+ * @param[in] aBits   The number to read the bits.
+ *
+ * @returns The value of the specified bits.
+ */
+template <typename UintType, UintType kMask, UintType kOffset = BitOffsetOfMask(kMask)>
+UintType ReadBits(UintType aBits)
+{
+    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
+                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
+                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+
+    return (aBits & kMask) >> kOffset;
 }
 
 } // namespace ot

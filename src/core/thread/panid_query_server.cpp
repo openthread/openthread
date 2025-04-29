@@ -84,7 +84,7 @@ void PanIdQueryServer::HandleScanResult(Mac::ActiveScanResult *aScanResult)
     {
         if (aScanResult->mPanId == mPanId)
         {
-            mChannelMask |= 1 << aScanResult->mChannel;
+            SetBit<uint32_t>(mChannelMask, aScanResult->mChannel);
         }
     }
     else if (mChannelMask != 0)
