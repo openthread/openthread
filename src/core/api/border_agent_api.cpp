@@ -42,6 +42,21 @@
 
 using namespace ot;
 
+void otBorderAgentSetEnabled(otInstance *aInstance, bool aEnabled)
+{
+    AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().SetEnabled(aEnabled);
+}
+
+bool otBorderAgentIsEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().IsEnabled();
+}
+
+bool otBorderAgentIsActive(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().IsRunning();
+}
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 otError otBorderAgentGetId(otInstance *aInstance, otBorderAgentId *aId)
 {
@@ -53,11 +68,6 @@ otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId)
     return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().SetId(AsCoreType(aId));
 }
 #endif
-
-bool otBorderAgentIsActive(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().IsRunning();
-}
 
 uint16_t otBorderAgentGetUdpPort(otInstance *aInstance)
 {

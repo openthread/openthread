@@ -85,6 +85,18 @@ void TestBorderAgent(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Check Border Agent initial state");
 
+    VerifyOrQuit(node0.Get<BorderAgent>().IsEnabled());
+    VerifyOrQuit(node0.Get<BorderAgent>().IsRunning());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Check disabling and re-enabling of Border Agent");
+
+    node0.Get<BorderAgent>().SetEnabled(false);
+    VerifyOrQuit(!node0.Get<BorderAgent>().IsEnabled());
+    VerifyOrQuit(!node0.Get<BorderAgent>().IsRunning());
+
+    node0.Get<BorderAgent>().SetEnabled(true);
+    VerifyOrQuit(node0.Get<BorderAgent>().IsEnabled());
     VerifyOrQuit(node0.Get<BorderAgent>().IsRunning());
 
     SuccessOrQuit(node0.Get<Ip6::Filter>().AddUnsecurePort(node0.Get<BorderAgent>().GetUdpPort()));

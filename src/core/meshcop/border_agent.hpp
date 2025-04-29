@@ -120,6 +120,38 @@ public:
      */
     explicit BorderAgent(Instance &aInstance);
 
+    /**
+     * Enables or disables the Border Agent service.
+     *
+     * By default, the Border Agent service is enabled. This method allows us to explicitly control its state. This can
+     * be useful in scenarios such as:
+     * - The code wishes to delay the start of the Border Agent service (and its mDNS advertisement of the
+     *   `_meshcop._udp` service on the infrastructure link). This allows time to prepare or determine vendor-specific
+     *   TXT data entries for inclusion.
+     * - Unit tests or test scripts might disable the Border Agent service to prevent it from interfering with specific
+     *   test steps. For example, tests validating mDNS or DNS-SD functionality may disable the Border Agent to prevent
+     *   its  registration of the MeshCoP service.
+     *
+     * @param[in] aEnabled  Whether to enable or disable.
+     */
+    void SetEnabled(bool aEnabled);
+
+    /**
+     * Indicated whether or not the Border Agent is enabled.
+     *
+     * @retval TRUE   The Border Agent is enabled.
+     * @retval FALSE  The Border Agent is disabled.
+     */
+    bool IsEnabled(void) const { return mEnabled; }
+
+    /**
+     * Indicates whether the Border Agent service is enabled and running.
+     *
+     * @retval TRUE  Border Agent service is running.
+     * @retval FALSE Border Agent service is not running.
+     */
+    bool IsRunning(void) const { return mIsRunning; }
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     /**
      *  Represents a Border Agent Identifier.
@@ -171,14 +203,6 @@ public:
      * @returns  UDP port number.
      */
     uint16_t GetUdpPort(void) const;
-
-    /**
-     * Indicates whether the Border Agent service is running.
-     *
-     * @retval TRUE  Border Agent service is running.
-     * @retval FALSE Border Agent service is not running.
-     */
-    bool IsRunning(void) const { return mIsRunning; }
 
     /**
      * Sets the callback function used by the Border Agent to notify any changes on the MeshCoP service TXT values.
@@ -549,6 +573,7 @@ private:
         Appender        mAppender;
     };
 
+    void UpdateState(void);
     void Start(void);
     void Stop(void);
     void HandleNotifierEvents(Events aEvents);
@@ -576,6 +601,7 @@ private:
 
     using ServiceTask = TaskletIn<BorderAgent, &BorderAgent::HandleServiceTask>;
 
+    bool            mEnabled;
     bool            mIsRunning;
     Dtls::Transport mDtlsTransport;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
