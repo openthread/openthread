@@ -472,7 +472,7 @@ BorderAgent::TxtEncoder::StateBitmap BorderAgent::TxtEncoder::GetStateBitmap(voi
 {
     StateBitmap state;
 
-    state.mConnectionMode = kConnectionModePskc;
+    state.mConnectionMode = Get<BorderAgent>().IsRunning() ? kConnectionModePskc : kConnectionModeDisabled;
     state.mAvailability   = kAvailabilityHigh;
 
     switch (Get<Mle::Mle>().GetRole())

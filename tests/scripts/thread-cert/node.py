@@ -1913,6 +1913,11 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def get_ba_state(self):
+        states = [r'Disabled', r'Inactive', r'Active']
+        self.send_command('ba state')
+        return self._expect_result(states)
+
     def get_ephemeral_key_state(self):
         cmd = 'ba ephemeralkey'
         states = [r'Disabled', r'Stopped', r'Started', r'Connected', r'Accepted']

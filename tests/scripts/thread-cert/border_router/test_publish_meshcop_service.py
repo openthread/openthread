@@ -209,7 +209,10 @@ class PublishMeshCopService(thread_cert.TestCase):
         sb_data = service_data['txt']['sb'].encode('raw_unicode_escape')
         state_bitmap = int.from_bytes(sb_data, byteorder='big')
         logging.info(bin(state_bitmap))
-        self.assertEqual((state_bitmap & 7), 1)  # connection mode = PskC
+        if br.get_ba_state() == 'Active':
+            self.assertEqual((state_bitmap & 7), 1)  # connection mode = PskC
+        else:
+            self.assertEqual((state_bitmap & 7), 0)  # connection mode = Disabled
         sb_thread_interface_status = state_bitmap >> 3 & 3
         sb_thread_role = state_bitmap >> 9 & 3
         device_role = br.get_state()
