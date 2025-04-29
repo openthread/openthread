@@ -481,7 +481,8 @@ struct DnsRecords : public OwningList<DnsRecord>
         bool          contains = false;
         DnsNameString hostName;
 
-        hostName.Append("%s.local.", aService.mHostName);
+        hostName.Append("%s.local.",
+                        aService.mHostName != nullptr ? aService.mHostName : sInstance->Get<Core>().GetLocalHostName());
 
         for (const DnsRecord &record : *this)
         {
@@ -3140,6 +3141,28 @@ void TestServiceReg(void)
         dnsMsg = sDnsMessages.GetHead();
         dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 2, /* Auth */ 0, /* Addnl */ 1);
         dnsMsg->Validate(service, kInAnswerSection, kCheckSrv | kCheckTxt);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+        sDnsMessages.Clear();
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Update service host name to use local host and validate new announcements of SRV record");
+
+    service.mHostName = nullptr;
+
+    sRegCallbacks[1].Reset();
+    sDnsMessages.Clear();
+    SuccessOrQuit(mdns->RegisterService(service, 1, HandleSuccessCallback));
+
+    for (uint8_t anncCount = 0; anncCount < kNumAnnounces; anncCount++)
+    {
+        AdvanceTime((anncCount == 0) ? 0 : (1U << (anncCount - 1)) * 1000);
+        VerifyOrQuit(sRegCallbacks[1].mWasCalled);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 1);
+        dnsMsg->Validate(service, kInAnswerSection, kCheckSrv);
         VerifyOrQuit(dnsMsg->GetNext() == nullptr);
         sDnsMessages.Clear();
     }
