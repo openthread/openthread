@@ -314,6 +314,30 @@ typedef struct otMacCounters
 } otMacCounters;
 
 /**
+ * Defines constants about wake-up address types.
+ */
+enum
+{
+    OT_WAKEUP_ADDRESS_TYPE_ID          = 0, ///< Wake-up Identifier.
+    OT_WAKEUP_ADDRESS_TYPE_GROUP_ID    = 1, ///< Group wake-up Identifier.
+    OT_WAKEUP_ADDRESS_TYPE_EXT_ADDRESS = 2, ///< Extended Address.
+};
+
+/**
+ * Represents whether to use Wake-up Identifier or Extended Address to wake up the peer.
+ */
+typedef struct otWakeupAddress
+{
+    union
+    {
+        uint64_t     mWakeupId;   ///< Wake-up identifier of the peer.
+        otExtAddress mExtAddress; ///< IEEE 802.15.4 Extended Address of the peer.
+    } mShared;
+
+    uint8_t mWakeupAddressType : 2; ///< Indicates the wake-up address type (see `OT_WAKEUP_ADDRESS_TYPE_*`).
+} otWakeupAddress;
+
+/**
  * Represents a received IEEE 802.15.4 Beacon.
  */
 typedef struct otActiveScanResult
