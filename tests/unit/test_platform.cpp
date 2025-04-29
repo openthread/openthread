@@ -40,6 +40,10 @@
 #include <openthread/platform/ble.h>
 #endif
 
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
+#include <psa/crypto.h>
+#endif
+
 enum
 {
     FLASH_SWAP_SIZE = 2048,
@@ -227,6 +231,36 @@ OT_TOOL_WEAK otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 exit:
     return error;
 }
+
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA) && defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+/**
+ * When OpenThread is compiled with the PSA Crypto backend using Mbed TLS 3.x, there is no
+ * API to configure a dedicated non-default entropy source. It is documented that a future version of
+ * Mbed TLS (likely 4.x) will include a PSA interface for configuring entropy sources.
+ *
+ * For now, we need to define the external RNG. Since the implementation of `otPlatEntropyGet` already
+ * uses CSPRNG, we will call it here as well.
+ */
+extern "C" psa_status_t mbedtls_psa_external_get_random(mbedtls_psa_external_random_context_t *context,
+                                                        uint8_t                               *output,
+                                                        size_t                                 output_size,
+                                                        size_t                                *output_length)
+{
+    OT_UNUSED_VARIABLE(context);
+
+    otError      error;
+    psa_status_t status = PSA_ERROR_GENERIC_ERROR;
+
+    error = otPlatEntropyGet(output, (uint16_t)output_size);
+    if (error == OT_ERROR_NONE)
+    {
+        *output_length = output_size;
+        status         = PSA_SUCCESS;
+    }
+
+    return status;
+}
+#endif
 
 static void DiagOutput(const char *aFormat, ...)
 {
@@ -488,91 +522,6 @@ OT_TOOL_WEAK otError otPlatInfraIfSendIcmp6Nd(uint32_t, const otIp6Address *, co
 
 OT_TOOL_WEAK otError otPlatInfraIfDiscoverNat64Prefix(uint32_t) { return OT_ERROR_FAILED; }
 #endif
-
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-
-otError otPlatCryptoImportKey(otCryptoKeyRef      *aKeyRef,
-                              otCryptoKeyType      aKeyType,
-                              otCryptoKeyAlgorithm aKeyAlgorithm,
-                              int                  aKeyUsage,
-                              otCryptoKeyStorage   aKeyPersistence,
-                              const uint8_t       *aKey,
-                              size_t               aKeyLen)
-{
-    OT_UNUSED_VARIABLE(aKeyRef);
-    OT_UNUSED_VARIABLE(aKeyType);
-    OT_UNUSED_VARIABLE(aKeyAlgorithm);
-    OT_UNUSED_VARIABLE(aKeyUsage);
-    OT_UNUSED_VARIABLE(aKeyPersistence);
-    OT_UNUSED_VARIABLE(aKey);
-    OT_UNUSED_VARIABLE(aKeyLen);
-
-    return OT_ERROR_NONE;
-}
-
-otError otPlatCryptoExportKey(otCryptoKeyRef aKeyRef, uint8_t *aBuffer, size_t aBufferLen, size_t *aKeyLen)
-{
-    OT_UNUSED_VARIABLE(aKeyRef);
-    OT_UNUSED_VARIABLE(aBuffer);
-    OT_UNUSED_VARIABLE(aBufferLen);
-
-    *aKeyLen = 0;
-
-    return OT_ERROR_NONE;
-}
-
-otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyRef)
-{
-    OT_UNUSED_VARIABLE(aKeyRef);
-
-    return OT_ERROR_NONE;
-}
-
-bool otPlatCryptoHasKey(otCryptoKeyRef aKeyRef)
-{
-    OT_UNUSED_VARIABLE(aKeyRef);
-
-    return false;
-}
-
-otError otPlatCryptoEcdsaGenerateAndImportKey(otCryptoKeyRef aKeyRef)
-{
-    OT_UNUSED_VARIABLE(aKeyRef);
-
-    return OT_ERROR_NONE;
-}
-
-otError otPlatCryptoEcdsaExportPublicKey(otCryptoKeyRef aKeyRef, otPlatCryptoEcdsaPublicKey *aPublicKey)
-{
-    OT_UNUSED_VARIABLE(aKeyRef);
-    OT_UNUSED_VARIABLE(aPublicKey);
-
-    return OT_ERROR_NONE;
-}
-
-otError otPlatCryptoEcdsaSignUsingKeyRef(otCryptoKeyRef                aKeyRef,
-                                         const otPlatCryptoSha256Hash *aHash,
-                                         otPlatCryptoEcdsaSignature   *aSignature)
-{
-    OT_UNUSED_VARIABLE(aKeyRef);
-    OT_UNUSED_VARIABLE(aHash);
-    OT_UNUSED_VARIABLE(aSignature);
-
-    return OT_ERROR_NONE;
-}
-
-otError otPlatCryptoEcdsaVerifyUsingKeyRef(otCryptoKeyRef                    aKeyRef,
-                                           const otPlatCryptoSha256Hash     *aHash,
-                                           const otPlatCryptoEcdsaSignature *aSignature)
-{
-    OT_UNUSED_VARIABLE(aKeyRef);
-    OT_UNUSED_VARIABLE(aHash);
-    OT_UNUSED_VARIABLE(aSignature);
-
-    return OT_ERROR_NONE;
-}
-
-#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
 otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
 {

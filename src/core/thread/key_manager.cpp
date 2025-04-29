@@ -313,7 +313,17 @@ void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aKey) const
     Crypto::Key        cryptoKey;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    cryptoKey.SetAsKeyRef(mNetworkKeyRef);
+    Crypto::Storage::KeyRef keyRef;
+    NetworkKey              networkKey;
+
+    GetNetworkKey(networkKey);
+
+    // Create temporary key to perform derive operation.
+    SuccessOrAssert(Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeDerive,
+                                               Crypto::Storage::kKeyAlgorithmHkdfSha256, Crypto::Storage::kUsageDerive,
+                                               Crypto::Storage::kTypeVolatile, networkKey.m8, NetworkKey::kSize));
+
+    cryptoKey.SetAsKeyRef(keyRef);
 #else
     cryptoKey.Set(mNetworkKey.m8, NetworkKey::kSize);
 #endif
@@ -323,6 +333,10 @@ void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aKey) const
 
     hkdf.Extract(salt, sizeof(salt), cryptoKey);
     hkdf.Expand(kTrelInfoString, sizeof(kTrelInfoString), aKey.m8, Mac::Key::kSize);
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    Crypto::Storage::DestroyKey(keyRef);
+#endif
 }
 #endif
 

@@ -27,8 +27,10 @@
 #
 
 set(OT_MBEDTLS_DEFAULT_CONFIG_FILE \"openthread-mbedtls-config.h\")
+set(OT_PSA_CRYPTO_DEFAULT_CONFIG_FILE \"openthread-psa-crypto-config.h\")
 
 set(OT_MBEDTLS_CONFIG_FILE "" CACHE STRING "The mbedTLS config file")
+set(OT_PSA_CRYPTO_CONFIG_FILE "" CACHE STRING "The PSA Crypto config file")
 
 set(ENABLE_TESTING OFF CACHE BOOL "Disable mbedtls test" FORCE)
 set(ENABLE_PROGRAMS OFF CACHE BOOL "Disable mbetls program" FORCE)
@@ -41,6 +43,8 @@ if(UNIFDEF_EXE)
     set(UNIFDEF_VERSION ${CMAKE_MATCH_1})
 endif()
 find_program(SED_EXE sed)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-but-set-variable")
 
 string(REPLACE "-Wconversion" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 string(REPLACE "-Wconversion" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -63,15 +67,29 @@ if(UNIFDEFALL_EXE AND SED_EXE AND UNIFDEF_VERSION VERSION_GREATER_EQUAL 2.10)
         COMMAND_EXPAND_LISTS
     )
 
-    add_custom_target(openthread-mbedtls-config
-        DEPENDS openthread-mbedtls-config.h)
+    add_custom_command(OUTPUT openthread-psa-crypto-config.h
+        COMMAND ${UNIFDEFALL_EXE}
+            "'-D$<JOIN:$<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>,';'-D>'"
+            "-I$<JOIN:$<TARGET_PROPERTY:ot-config,INTERFACE_INCLUDE_DIRECTORIES>,;-I>"
+            "-I$<JOIN:${OT_PUBLIC_INCLUDES},;-I>"
+            "-I${CMAKE_CURRENT_SOURCE_DIR}/repo/include"
+            "${CMAKE_CURRENT_SOURCE_DIR}/psa-crypto-config.h" |
+            ${SED_EXE} '/openthread-core-config\.h/d' >
+            openthread-psa-crypto-config.h
+        MAIN_DEPENDENCY psa-crypto-config.h
+        COMMAND_EXPAND_LISTS
+    )
 
-    add_dependencies(ot-config openthread-mbedtls-config)
-    add_dependencies(mbedtls openthread-mbedtls-config)
-    add_dependencies(mbedx509 openthread-mbedtls-config)
-    add_dependencies(mbedcrypto openthread-mbedtls-config)
+    add_custom_target(openthread-mbedtls-config
+        DEPENDS openthread-mbedtls-config.h openthread-psa-crypto-config.h)
+
+    add_dependencies(ot-config openthread-mbedtls-config openthread-psa-crypto-config)
+    add_dependencies(mbedtls openthread-mbedtls-config openthread-psa-crypto-config)
+    add_dependencies(mbedx509 openthread-mbedtls-config openthread-psa-crypto-config)
+    add_dependencies(mbedcrypto openthread-mbedtls-config openthread-psa-crypto-config)
 else()
     configure_file(mbedtls-config.h openthread-mbedtls-config.h COPYONLY)
+    configure_file(psa-crypto-config.h openthread-psa-crypto-config.h COPYONLY)
 endif()
 
 target_include_directories(ot-config SYSTEM
@@ -82,6 +100,7 @@ target_include_directories(ot-config SYSTEM
 target_compile_definitions(mbedtls
     PUBLIC
         "MBEDTLS_CONFIG_FILE=$<IF:$<BOOL:${OT_MBEDTLS_CONFIG_FILE}>,${OT_MBEDTLS_CONFIG_FILE},${OT_MBEDTLS_DEFAULT_CONFIG_FILE}>"
+        "MBEDTLS_PSA_CRYPTO_CONFIG_FILE=$<IF:$<BOOL:${OT_PSA_CRYPTO_CONFIG_FILE}>,${OT_PSA_CRYPTO_CONFIG_FILE},${OT_PSA_CRYPTO_DEFAULT_CONFIG_FILE}>"
     PRIVATE
         $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>
 )
@@ -96,6 +115,7 @@ target_include_directories(mbedtls
 target_compile_definitions(mbedx509
     PUBLIC
         "MBEDTLS_CONFIG_FILE=$<IF:$<BOOL:${OT_MBEDTLS_CONFIG_FILE}>,${OT_MBEDTLS_CONFIG_FILE},${OT_MBEDTLS_DEFAULT_CONFIG_FILE}>"
+        "MBEDTLS_PSA_CRYPTO_CONFIG_FILE=$<IF:$<BOOL:${OT_PSA_CRYPTO_CONFIG_FILE}>,${OT_PSA_CRYPTO_CONFIG_FILE},${OT_PSA_CRYPTO_DEFAULT_CONFIG_FILE}>"
     PRIVATE
         $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>
 )
@@ -110,6 +130,7 @@ target_include_directories(mbedx509
 target_compile_definitions(mbedcrypto
     PUBLIC
         "MBEDTLS_CONFIG_FILE=$<IF:$<BOOL:${OT_MBEDTLS_CONFIG_FILE}>,${OT_MBEDTLS_CONFIG_FILE},${OT_MBEDTLS_DEFAULT_CONFIG_FILE}>"
+        "MBEDTLS_PSA_CRYPTO_CONFIG_FILE=$<IF:$<BOOL:${OT_PSA_CRYPTO_CONFIG_FILE}>,${OT_PSA_CRYPTO_CONFIG_FILE},${OT_PSA_CRYPTO_DEFAULT_CONFIG_FILE}>"
     PRIVATE
         $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>
 )
@@ -119,4 +140,5 @@ target_include_directories(mbedcrypto
     PRIVATE
         ${OT_PUBLIC_INCLUDES}
         $<TARGET_PROPERTY:ot-config,INTERFACE_INCLUDE_DIRECTORIES>
+        native_its/include
 )

@@ -101,6 +101,7 @@ endif()
 target_link_libraries(ot-test-platform-ftd
     PRIVATE
         ot-config
+        mbedtls
         ${OT_MBEDTLS}
 )
 
@@ -116,10 +117,11 @@ set(COMMON_LIBS
     ot-test-platform-ftd
     openthread-ftd
     ot-test-platform-ftd
-    ${OT_MBEDTLS}
     ot-config
     openthread-ftd
     openthread-url
+    ${OT_MBEDTLS}
+    openthread-native-its-ram
 )
 
 set(COMMON_LIBS_RCP
