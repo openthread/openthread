@@ -817,10 +817,26 @@ template <> bool CheckObjectSameAsTxtEntryData<NameData>(const TxtEntry &aTxtEnt
 
 void TestBorderAgentTxtDataCallback(void)
 {
+    // State bitmap masks and field values
+    static constexpr uint32_t kMaskConnectionMode           = 7 << 0;
+    static constexpr uint32_t kConnectionModeDisabled       = 0 << 0;
+    static constexpr uint32_t kConnectionModePskc           = 1 << 0;
+    static constexpr uint32_t kMaskThreadIfStatus           = 3 << 3;
+    static constexpr uint32_t kThreadIfStatusNotInitialized = 0 << 3;
+    static constexpr uint32_t kThreadIfStatusInitialized    = 1 << 3;
+    static constexpr uint32_t kThreadIfStatusActive         = 2 << 3;
+    static constexpr uint32_t kMaskThreadRole               = 3 << 9;
+    static constexpr uint32_t kThreadRoleDisabledOrDetached = 0 << 9;
+    static constexpr uint32_t kThreadRoleChild              = 1 << 9;
+    static constexpr uint32_t kThreadRoleRouter             = 2 << 9;
+    static constexpr uint32_t kThreadRoleLeader             = 3 << 9;
+    static constexpr uint32_t kFlagEpskcSupported           = 1 << 11;
+
     Core          nexus;
     Node         &node0 = nexus.CreateNode();
     TxtDataTester txtDataTester(node0.Get<BorderAgent>());
     TxtEntry      txtEntry;
+    uint32_t      stateBitmap;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     BorderAgent::Id id;
     BorderAgent::Id newId;
@@ -852,7 +868,14 @@ void TestBorderAgentTxtDataCallback(void)
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, NameData(kThreadVersionString, strlen(kThreadVersionString))));
     VerifyOrQuit(txtDataTester.FindTxtEntry("xa", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<Mac::Mac>().GetExtAddress()));
+
     VerifyOrQuit(txtDataTester.FindTxtEntry("sb", txtEntry));
+    VerifyOrQuit(txtEntry.mValueLength == sizeof(uint32_t));
+    stateBitmap = BigEndian::ReadUint32(txtEntry.mValue);
+    VerifyOrQuit((stateBitmap & kMaskConnectionMode) == kConnectionModeDisabled);
+    VerifyOrQuit((stateBitmap & kMaskThreadIfStatus) == kThreadIfStatusNotInitialized);
+    VerifyOrQuit((stateBitmap & kMaskThreadRole) == kThreadRoleDisabledOrDetached);
+    VerifyOrQuit(stateBitmap & kFlagEpskcSupported);
 
     VerifyOrQuit(txtDataTester.FindTxtEntry("pt", txtEntry) == false);
     VerifyOrQuit(txtDataTester.FindTxtEntry("at", txtEntry) == false);
@@ -883,12 +906,19 @@ void TestBorderAgentTxtDataCallback(void)
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, NameData(kThreadVersionString, strlen(kThreadVersionString))));
     VerifyOrQuit(txtDataTester.FindTxtEntry("xa", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<Mac::Mac>().GetExtAddress()));
-    VerifyOrQuit(txtDataTester.FindTxtEntry("sb", txtEntry));
     VerifyOrQuit(txtDataTester.FindTxtEntry("pt", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(
         txtEntry, BigEndian::HostSwap32(node0.Get<Mle::Mle>().GetLeaderData().GetPartitionId())));
     VerifyOrQuit(txtDataTester.FindTxtEntry("at", txtEntry));
     VerifyOrQuit(CheckObjectSameAsTxtEntryData(txtEntry, node0.Get<ActiveDatasetManager>().GetTimestamp()));
+
+    VerifyOrQuit(txtDataTester.FindTxtEntry("sb", txtEntry));
+    VerifyOrQuit(txtEntry.mValueLength == sizeof(uint32_t));
+    stateBitmap = BigEndian::ReadUint32(txtEntry.mValue);
+    VerifyOrQuit((stateBitmap & kMaskConnectionMode) == kConnectionModePskc);
+    VerifyOrQuit((stateBitmap & kMaskThreadIfStatus) == kThreadIfStatusActive);
+    VerifyOrQuit((stateBitmap & kMaskThreadRole) == kThreadRoleLeader);
+    VerifyOrQuit(stateBitmap & kFlagEpskcSupported);
 
     // 2.2 Check the Border Agent state
     VerifyOrQuit(txtDataTester.mIsRunning == true);
@@ -920,6 +950,41 @@ void TestBorderAgentTxtDataCallback(void)
     VerifyOrQuit(!txtDataTester.mCallbackInvoked);
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Disable EphemeralKeyManager and validate that TXT data state bitmap indicates this");
+
+    txtDataTester.mCallbackInvoked = false;
+    node0.Get<EphemeralKeyManager>().SetEnabled(false);
+    VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateDisabled);
+
+    nexus.AdvanceTime(1);
+    VerifyOrQuit(txtDataTester.mCallbackInvoked);
+
+    VerifyOrQuit(txtDataTester.FindTxtEntry("sb", txtEntry));
+    VerifyOrQuit(txtEntry.mValueLength == sizeof(uint32_t));
+    stateBitmap = BigEndian::ReadUint32(txtEntry.mValue);
+    VerifyOrQuit((stateBitmap & kMaskConnectionMode) == kConnectionModePskc);
+    VerifyOrQuit((stateBitmap & kMaskThreadIfStatus) == kThreadIfStatusActive);
+    VerifyOrQuit((stateBitmap & kMaskThreadRole) == kThreadRoleLeader);
+    VerifyOrQuit(!(stateBitmap & kFlagEpskcSupported));
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Disable the MLE operation and validate the TXT data state bitmap");
+
+    txtDataTester.mCallbackInvoked = false;
+    SuccessOrQuit(node0.Get<Mle::Mle>().Disable());
+
+    nexus.AdvanceTime(1);
+    VerifyOrQuit(txtDataTester.mCallbackInvoked);
+
+    VerifyOrQuit(txtDataTester.FindTxtEntry("sb", txtEntry));
+    VerifyOrQuit(txtEntry.mValueLength == sizeof(uint32_t));
+    stateBitmap = BigEndian::ReadUint32(txtEntry.mValue);
+    VerifyOrQuit((stateBitmap & kMaskConnectionMode) == kConnectionModeDisabled);
+    VerifyOrQuit((stateBitmap & kMaskThreadIfStatus) == kThreadIfStatusNotInitialized);
+    VerifyOrQuit((stateBitmap & kMaskThreadRole) == kThreadRoleDisabledOrDetached);
+    VerifyOrQuit(!(stateBitmap & kFlagEpskcSupported));
 }
 
 } // namespace Nexus
