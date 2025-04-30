@@ -446,6 +446,23 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
     otError error = OT_ERROR_NONE;
 
     /**
+     * @cli ba (enable, disable)
+     * @code
+     * ba enable
+     * Done
+     * @endcode
+     * @code
+     * ba disable
+     * Done
+     * @endcode
+     * @cparam ba  @ca{enable|disable}
+     * @par api_copy
+     * #otBorderAgentSetEnabled
+     */
+    if (ProcessEnableDisable(aArgs, otBorderAgentSetEnabled) == OT_ERROR_NONE)
+    {
+    }
+    /**
      * @cli ba port
      * @code
      * ba port
@@ -455,7 +472,7 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
      * @par api_copy
      * #otBorderAgentGetUdpPort
      */
-    if (aArgs[0] == "port")
+    else if (aArgs[0] == "port")
     {
         OutputLine("%u", otBorderAgentGetUdpPort(GetInstancePtr()));
     }
@@ -466,12 +483,24 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
      * Active
      * Done
      * @endcode
-     * @par api_copy
-     * #otBorderAgentIsActive
+     * @par
+     * Prints the current state of the Border Agent service. Possible states are:
+     * - `Disabled`: Border Agent service is disabled.
+     * - `Inactive`: Border Agent service is enabled but not yet active.
+     * - `Active`: Border Agent service is enabled and active. External commissioner can connect and establish secure
+     *   DTLS sessions with the Border Agent using PSKc
+     * @sa #otBorderAgentIsActive
      */
     else if (aArgs[0] == "state")
     {
-        OutputLine("%s", otBorderAgentIsActive(GetInstancePtr()) ? "Active" : "Inactive");
+        if (!otBorderAgentIsEnabled(GetInstancePtr()))
+        {
+            OutputLine("Disabled");
+        }
+        else
+        {
+            OutputLine("%s", otBorderAgentIsActive(GetInstancePtr()) ? "Active" : "Inactive");
+        }
     }
     /**
      * @cli ba sessions

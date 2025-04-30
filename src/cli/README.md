@@ -361,6 +361,29 @@ Done
 
 Show current Border Agent information.
 
+### ba enable
+
+Enables Border Agent service.
+
+By default, the Border Agent service is enabled. The `ba enable` and `ba disable` allow user to explicitly control its state. This can be useful in scenarios such as:
+
+- The user wishes to delay the start of the Border Agent service (and its mDNS advertisement of the `_meshcop._udp` service on the infrastructure link). This allows time to prepare or determine vendor-specific TXT data entries for inclusion.
+- Unit tests or test scripts might disable the Border Agent service to prevent it from interfering with specific test steps. For example, tests validating mDNS or DNS-SD functionality may disable the Border Agent to prevent its registration of the MeshCoP service.
+
+```
+> ba enable
+Done
+```
+
+### ba disable
+
+Disables Border Agent service.
+
+```
+> ba disable
+Done
+```
+
 ### ba port
 
 Print Border Agent's service port.
@@ -377,8 +400,9 @@ Print Border Agent's state.
 
 Possible states are
 
-- `Active`: Border Agent is active.
-- `Inactive`: Border Agent is not active.
+- `Disabled`: Border Agent service is disabled.
+- `Inactive`: Border Agent service is enabled but not yet active.
+- `Active`: Border Agent service is enabled and active. External commissioner can connect and establish secure DTLS sessions with the Border Agent using PSKc
 
 ```bash
 > ba state

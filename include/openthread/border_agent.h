@@ -151,7 +151,35 @@ typedef struct otBorderAgentMeshCoPServiceTxtData
 } otBorderAgentMeshCoPServiceTxtData;
 
 /**
- * Indicates whether or not the Border Agent service is active and running.
+ * Enables or disables the Border Agent service on the device.
+ *
+ * By default, the Border Agent service is enabled when the `OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE` feature is used.
+ * This function allows higher-layer code to explicitly control its state. This can be useful in scenarios such as:
+ *
+ * - The higher-layer code wishes to delay the start of the Border Agent service (and its mDNS advertisement of the
+ *  `_meshcop._udp` service on the infrastructure link). This allows time to prepare or determine vendor-specific TXT
+ *   data entries for inclusion.
+ * - Unit tests or test scripts might disable the Border Agent service to prevent it from interfering with specific
+ *   test steps. For example, tests validating mDNS or DNS-SD functionality may disable the Border Agent to prevent its
+ *   registration of the MeshCoP service.
+ *
+ * @param[in] aInstance  The OpenThread instance.
+ * @param[in] aEnabled   A boolean to indicate whether to to enable (TRUE), or disable (FALSE).
+ */
+void otBorderAgentSetEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * Indicates whether or not the Border Agent service is enabled.
+ *
+ * @param[in] aInstance  The OpenThread instance.
+ *
+ * @retval TRUE   The Border Agent service is enabled.
+ * @retval FALSE  The Border Agent service is disabled.
+ */
+bool otBorderAgentIsEnabled(otInstance *aInstance);
+
+/**
+ * Indicates whether or not the Border Agent service is enabled and also active.
  *
  * While the Border Agent is active, external commissioner candidates can try to connect to and establish secure DTLS
  * sessions with the Border Agent using PSKc. A connected commissioner can then petition to become a full commissioner.

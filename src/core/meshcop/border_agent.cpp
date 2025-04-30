@@ -47,6 +47,7 @@ RegisterLogModule("BorderAgent");
 
 BorderAgent::BorderAgent(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mEnabled(true)
     , mIsRunning(false)
     , mDtlsTransport(aInstance, kNoLinkSecurity)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
@@ -102,6 +103,29 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+
+void BorderAgent::SetEnabled(bool aEnabled)
+{
+    VerifyOrExit(mEnabled != aEnabled);
+    mEnabled = aEnabled;
+    LogInfo("%sabling Border Agent", mEnabled ? "En" : "Dis");
+    UpdateState();
+
+exit:
+    return;
+}
+
+void BorderAgent::UpdateState(void)
+{
+    if (mEnabled && Get<Mle::Mle>().IsAttached())
+    {
+        Start();
+    }
+    else
+    {
+        Stop();
+    }
+}
 
 void BorderAgent::Start(void)
 {
@@ -168,15 +192,10 @@ void BorderAgent::HandleNotifierEvents(Events aEvents)
 {
     if (aEvents.Contains(kEventThreadRoleChanged))
     {
-        if (Get<Mle::Mle>().IsAttached())
-        {
-            Start();
-        }
-        else
-        {
-            Stop();
-        }
+        UpdateState();
     }
+
+    VerifyOrExit(mEnabled);
 
     if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadExtPanIdChanged | kEventThreadNetworkNameChanged |
                             kEventThreadBackboneRouterStateChanged | kEventActiveDatasetChanged))
@@ -353,11 +372,19 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-void BorderAgent::HandleServiceTask(void) { mServiceChangedCallback.InvokeIfSet(); }
+void BorderAgent::HandleServiceTask(void)
+{
+    VerifyOrExit(mEnabled);
+
+    mServiceChangedCallback.InvokeIfSet();
+
+exit:
+    return;
+}
 
 void BorderAgent::PostServiceTask(void)
 {
-    if (mServiceChangedCallback.IsSet())
+    if (mEnabled && mServiceChangedCallback.IsSet())
     {
         mServiceTask.Post();
     }
