@@ -481,75 +481,53 @@ private:
         {
         }
 
-        enum : uint8_t
-        {
-            kConnectionModeDisabled = 0,
-            kConnectionModePskc     = 1,
-            kConnectionModePskd     = 2,
-            kConnectionModeVendor   = 3,
-            kConnectionModeX509     = 4,
-        };
-
-        enum : uint8_t
-        {
-            kThreadIfStatusNotInitialized = 0,
-            kThreadIfStatusInitialized    = 1,
-            kThreadIfStatusActive         = 2,
-        };
-
-        enum : uint8_t
-        {
-            kThreadRoleDisabledOrDetached = 0,
-            kThreadRoleChild              = 1,
-            kThreadRoleRouter             = 2,
-            kThreadRoleLeader             = 3,
-        };
-
-        enum : uint8_t
-        {
-            kAvailabilityInfrequent = 0,
-            kAvailabilityHigh       = 1,
-        };
-
-        struct StateBitmap
-        {
-            uint32_t mConnectionMode : 3;
-            uint32_t mThreadIfStatus : 2;
-            uint32_t mAvailability : 2;
-            uint32_t mBbrIsActive : 1;
-            uint32_t mBbrIsPrimary : 1;
-            uint32_t mThreadRole : 2;
-            uint32_t mEpskcSupported : 1;
-
-            StateBitmap(void)
-                : mConnectionMode(0)
-                , mThreadIfStatus(0)
-                , mAvailability(0)
-                , mBbrIsActive(0)
-                , mBbrIsPrimary(0)
-                , mThreadRole(kThreadRoleDisabledOrDetached)
-                , mEpskcSupported(0)
-            {
-            }
-
-            uint32_t ToUint32(void) const
-            {
-                uint32_t bitmap = 0;
-
-                bitmap |= mConnectionMode << 0;
-                bitmap |= mThreadIfStatus << 3;
-                bitmap |= mAvailability << 5;
-                bitmap |= mBbrIsActive << 7;
-                bitmap |= mBbrIsPrimary << 8;
-                bitmap |= mThreadRole << 9;
-                bitmap |= mEpskcSupported << 11;
-                return bitmap;
-            }
-        };
-
         Error EncodeTxtData(void);
 
     private:
+        // --- State Bitmap ConnectionMode ---
+        static constexpr uint8_t  kOffsetConnectionMode   = 0;
+        static constexpr uint32_t kMaskConnectionMode     = 7 << kOffsetConnectionMode;
+        static constexpr uint32_t kConnectionModeDisabled = 0 << kOffsetConnectionMode;
+        static constexpr uint32_t kConnectionModePskc     = 1 << kOffsetConnectionMode;
+        static constexpr uint32_t kConnectionModePskd     = 2 << kOffsetConnectionMode;
+        static constexpr uint32_t kConnectionModeVendor   = 3 << kOffsetConnectionMode;
+        static constexpr uint32_t kConnectionModeX509     = 4 << kOffsetConnectionMode;
+
+        // --- State Bitmap ThreadIfStatus ---
+        static constexpr uint8_t  kOffsetThreadIfStatus         = 3;
+        static constexpr uint32_t kMaskThreadIfStatus           = 3 << kOffsetThreadIfStatus;
+        static constexpr uint32_t kThreadIfStatusNotInitialized = 0 << kOffsetThreadIfStatus;
+        static constexpr uint32_t kThreadIfStatusInitialized    = 1 << kOffsetThreadIfStatus;
+        static constexpr uint32_t kThreadIfStatusActive         = 2 << kOffsetThreadIfStatus;
+
+        // --- State Bitmap Availability ---
+        static constexpr uint8_t  kOffsetAvailability     = 5;
+        static constexpr uint32_t kMaskAvailability       = 3 << kOffsetAvailability;
+        static constexpr uint32_t kAvailabilityInfrequent = 0 << kOffsetAvailability;
+        static constexpr uint32_t kAvailabilityHigh       = 1 << kOffsetAvailability;
+
+        // --- State Bitmap BbrIsActive ---
+        static constexpr uint8_t  kOffsetBbrIsActive = 7;
+        static constexpr uint32_t kFlagBbrIsActive   = 1 << kOffsetBbrIsActive;
+
+        // --- State Bitmap BbrIsPrimary ---
+        static constexpr uint8_t  kOffsetBbrIsPrimary = 8;
+        static constexpr uint32_t kFlagBbrIsPrimary   = 1 << kOffsetBbrIsPrimary;
+
+        // --- State Bitmap ThreadRole ---
+        static constexpr uint8_t  kOffsetThreadRole             = 9;
+        static constexpr uint32_t kMaskThreadRole               = 3 << kOffsetThreadRole;
+        static constexpr uint32_t kThreadRoleDisabledOrDetached = 0 << kOffsetThreadRole;
+        static constexpr uint32_t kThreadRoleChild              = 1 << kOffsetThreadRole;
+        static constexpr uint32_t kThreadRoleRouter             = 2 << kOffsetThreadRole;
+        static constexpr uint32_t kThreadRoleLeader             = 3 << kOffsetThreadRole;
+
+        // --- State Bitmap EpskcSupported ---
+        static constexpr uint8_t  kOffsetEpskcSupported = 11;
+        static constexpr uint32_t kFlagEpskcSupported   = 1 << kOffsetEpskcSupported;
+
+        uint32_t DetermineStateBitmap(void);
+
         Error AppendTxtEntry(const char *aKey, const void *aValue, uint16_t aValueLength);
 
         template <typename ObjectType> Error AppendTxtEntry(const char *aKey, const ObjectType &aObject)
@@ -561,13 +539,11 @@ private:
         }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-        Error AppendBbrTxtEntry(StateBitmap aState);
+        Error AppendBbrTxtEntry(void);
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
         Error AppendOmrTxtEntry(void);
 #endif
-
-        StateBitmap GetStateBitmap(void);
 
         ServiceTxtData &mTxtData;
         Appender        mAppender;
