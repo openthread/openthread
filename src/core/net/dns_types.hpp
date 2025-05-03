@@ -48,6 +48,7 @@
 #include "common/message.hpp"
 #include "common/owned_ptr.hpp"
 #include "common/string.hpp"
+#include "common/type_traits.hpp"
 #include "crypto/ecdsa.hpp"
 #include "net/ip4_types.hpp"
 #include "net/ip6_address.hpp"
@@ -1256,6 +1257,138 @@ private:
 
     static constexpr uint8_t kMaxKeyValueEncodedSize = 255;
     static constexpr char    kKeyValueSeparator      = '=';
+};
+
+/**
+ * Represents a TXT data encoder.
+ */
+class TxtDataEncoder
+{
+public:
+    /**
+     * Maximum string length supported by `AppendStringEntry()`.
+     */
+    static constexpr uint16_t kMaxStringEntryLength = 256;
+
+    /**
+     * Initializes the `TxtDataEncoder` to append to a `Message`.
+     *
+     * New TXT data entries are appended to the end of @p aMessage, growing its length.
+     *
+     * @param[in] aMessage   The message to append to.
+     */
+    explicit TxtDataEncoder(Message &aMessage)
+        : mAppender(aMessage)
+    {
+    }
+
+    /**
+     * Initializes the `TxtDataEncoder` to append in a given a buffer
+     *
+     * New TXT data entries are appended in the buffer starting from @p aBuffer up to is size @p aSize. The encoder
+     * does not allow content to be appended beyond the size of the buffer.
+     *
+     * @param[in] aBuffer  A pointer to start of buffer.
+     * @param[in] aSize    The maximum size of @p aBuffer (number of available bytes in buffer).
+     */
+    TxtDataEncoder(uint8_t *aBuffer, uint16_t aSize)
+        : mAppender(aBuffer, aSize)
+    {
+    }
+
+    /**
+     * Returns the number of bytes in the TXT data container.
+     *
+     * When `TxtDataEncoder` uses a byte buffer container, this will return the number of encoded bytes in the buffer.
+     * When `TxtDataEncoder` uses a `Message`, this will return the message's current length, which includes any
+     * previously appended bytes in the message.
+     *
+     * @returns The number of bytes in the provided TXT data container.
+     */
+    uint16_t GetLength(void) const { return mAppender.GetAppendedLength(); }
+
+    /**
+     * Appends a TXT entry for a given key and given value as a byte array.
+     *
+     * @param[in] aKey     The TXT entry key string
+     * @param[in] aBuffer  A pointer to buffer containing the TXT entry value.
+     * @param[in] aLength  Number of bytes in @p aBuffer.
+     *
+     * @retval kErrorNone    Successfully appended the TXT entry.
+     * @retval kErrorNoBufs  Insufficient available buffers to append the entry.
+     */
+    Error AppendBytesEntry(const char *aKey, const void *aBuffer, uint16_t aLength);
+
+    /**
+     * Appends a TXT entry for a given key and a given object as the entry's value.
+     *
+     * @tparam    ObjectType   The value object type.
+
+     * @param[in] aKey      The TXT entry key string
+     * @param[in] aObject   A reference to the value object.
+     *
+     * @retval kErrorNone    Successfully appended the TXT entry.
+     * @retval kErrorNoBufs  Insufficient available buffers to append the entry.
+     */
+    template <typename ObjectType> Error AppendEntry(const char *aKey, const ObjectType &aObject)
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        return AppendBytesEntry(aKey, &aObject, sizeof(ObjectType));
+    }
+
+    /**
+     * Appends a TXT entry for a given key and a given string for entry's value.
+     *
+     * The string length of @p aStringValues should not exceed `kMaxStringEntryLength`, otherwise `kErrorInvalidAgrs`
+     * is returned.
+     *
+     * @param[in] aKey           The TXT entry key string
+     * @param[in] aStringValue   The value string.
+     *
+     * @retval kErrorNone         Successfully appended the TXT entry.
+     * @retval kErrorNoBufs       Insufficient available buffers to append the entry.
+     * @retval kErrorInvalidArgs  The @p aStringValue is too long.
+     */
+    Error AppendStringEntry(const char *aKey, const char *aStringValue);
+
+    /**
+     * Appends a TXT entry for a given key and a given unsigned integral value using big-endian encoding.
+     *
+     * @tparam    UintType   The unsigned int type (`uint16_t` or `uint32_t`).
+     *
+     * @param[in] aKey           The TXT entry key string
+     * @param[in] aUintValue     The unsigned integer value.
+     *
+     * @retval kErrorNone         Successfully appended the TXT entry.
+     * @retval kErrorNoBufs       Insufficient available buffers to append the entry.
+     */
+    template <typename UintType> Error AppendBigEndianUintEntry(const char *aKey, UintType aUintValue)
+    {
+        static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
+                          TypeTraits::IsSame<UintType, uint32_t>::kValue ||
+                          TypeTraits::IsSame<UintType, uint64_t>::kValue,
+                      "UintType must be uint8/uint16/uint32/uint64");
+
+        return AppendEntry<UintType>(aKey, BigEndian::HostSwap<UintType>(aUintValue));
+    }
+
+    /**
+     * Appends a TXT entry for a given key and a given `NameData` as value.
+     *
+     * @param[in] aKey           The TXT entry key string
+     * @param[in] aNameData      The value as `NameData`
+     *
+     * @retval kErrorNone         Successfully appended the TXT entry.
+     * @retval kErrorNoBufs       Insufficient available buffers to append the entry.
+     */
+    Error AppendNameEntry(const char *aKey, const MeshCoP::NameData &aNameData)
+    {
+        return AppendBytesEntry(aKey, aNameData.GetBuffer(), aNameData.GetLength());
+    }
+
+private:
+    Appender mAppender;
 };
 
 /**

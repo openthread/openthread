@@ -1390,6 +1390,24 @@ exit:
     return error;
 }
 
+Error TxtDataEncoder::AppendBytesEntry(const char *aKey, const void *aBuffer, uint16_t aLength)
+{
+    return TxtEntry(aKey, reinterpret_cast<const uint8_t *>(aBuffer), aLength).AppendTo(mAppender);
+}
+
+Error TxtDataEncoder::AppendStringEntry(const char *aKey, const char *aStringValue)
+{
+    Error    error;
+    uint16_t length = StringLength(aStringValue, kMaxStringEntryLength + 1);
+
+    VerifyOrExit(length <= kMaxStringEntryLength, error = kErrorInvalidArgs);
+
+    error = AppendBytesEntry(aKey, aStringValue, length);
+
+exit:
+    return error;
+}
+
 bool AaaaRecord::IsValid(void) const
 {
     return GetType() == Dns::ResourceRecord::kTypeAaaa && GetSize() == sizeof(*this);

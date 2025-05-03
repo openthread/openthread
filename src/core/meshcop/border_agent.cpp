@@ -181,13 +181,6 @@ void BorderAgent::SetServiceChangedCallback(ServiceChangedCallback aCallback, vo
     PostServiceTask();
 }
 
-Error BorderAgent::PrepareServiceTxtData(ServiceTxtData &aTxtData) const
-{
-    TxtEncoder encoder(GetInstance(), aTxtData);
-
-    return encoder.EncodeTxtData();
-}
-
 void BorderAgent::HandleNotifierEvents(Events aEvents)
 {
     if (aEvents.Contains(kEventThreadRoleChanged))
@@ -390,150 +383,113 @@ void BorderAgent::PostServiceTask(void)
     }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-// BorderAgent::TxtEncoder
-
-Error BorderAgent::TxtEncoder::AppendTxtEntry(const char *aKey, const void *aValue, uint16_t aValueLength)
+Error BorderAgent::PrepareServiceTxtData(ServiceTxtData &aTxtData)
 {
-    Dns::TxtEntry txtEntry;
-
-    txtEntry.Init(aKey, reinterpret_cast<const uint8_t *>(aValue), aValueLength);
-    return txtEntry.AppendTo(mAppender);
-}
-
-template <> Error BorderAgent::TxtEncoder::AppendTxtEntry<NameData>(const char *aKey, const NameData &aObject)
-{
-    return AppendTxtEntry(aKey, aObject.GetBuffer(), aObject.GetLength());
-}
-
-Error BorderAgent::TxtEncoder::EncodeTxtData(void)
-{
-    Error error = kErrorNone;
+    Error               error = kErrorNone;
+    Dns::TxtDataEncoder encoder(aTxtData.mData, sizeof(aTxtData.mData));
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     {
         Id id;
 
-        if (Get<BorderAgent>().GetId(id) == kErrorNone)
+        if (GetId(id) == kErrorNone)
         {
-            SuccessOrExit(error = AppendTxtEntry("id", id));
+            SuccessOrExit(error = encoder.AppendEntry("id", id));
         }
     }
 #endif
-    SuccessOrExit(error = AppendTxtEntry("nn", Get<NetworkNameManager>().GetNetworkName().GetAsData()));
-    SuccessOrExit(error = AppendTxtEntry("xp", Get<ExtendedPanIdManager>().GetExtPanId()));
-    SuccessOrExit(error = AppendTxtEntry("tv", NameData(kThreadVersionString, strlen(kThreadVersionString))));
-    SuccessOrExit(error = AppendTxtEntry("xa", Get<Mac::Mac>().GetExtAddress()));
-    SuccessOrExit(error = AppendTxtEntry("sb", BigEndian::HostSwap32(DetermineStateBitmap())));
+    SuccessOrExit(error = encoder.AppendNameEntry("nn", Get<NetworkNameManager>().GetNetworkName().GetAsData()));
+    SuccessOrExit(error = encoder.AppendEntry("xp", Get<ExtendedPanIdManager>().GetExtPanId()));
+    SuccessOrExit(error = encoder.AppendStringEntry("tv", kThreadVersionString));
+    SuccessOrExit(error = encoder.AppendEntry("xa", Get<Mac::Mac>().GetExtAddress()));
+    SuccessOrExit(error = encoder.AppendBigEndianUintEntry("sb", DetermineStateBitmap()));
 
     if (Get<Mle::Mle>().IsAttached())
     {
-        SuccessOrExit(
-            error = AppendTxtEntry("pt", BigEndian::HostSwap32(Get<Mle::Mle>().GetLeaderData().GetPartitionId())));
+        SuccessOrExit(error = encoder.AppendBigEndianUintEntry("pt", Get<Mle::Mle>().GetLeaderData().GetPartitionId()));
+
         if (Get<MeshCoP::ActiveDatasetManager>().GetTimestamp().IsValid())
         {
-            SuccessOrExit(error = AppendTxtEntry("at", Get<MeshCoP::ActiveDatasetManager>().GetTimestamp()));
+            SuccessOrExit(error = encoder.AppendEntry("at", Get<MeshCoP::ActiveDatasetManager>().GetTimestamp()));
         }
     }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    SuccessOrExit(error = AppendBbrTxtEntry());
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    SuccessOrExit(error = AppendOmrTxtEntry());
-#endif
-
-    mTxtData.mLength = mAppender.GetAppendedLength();
-
-exit:
-    return error;
-}
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-Error BorderAgent::TxtEncoder::AppendBbrTxtEntry(void)
-{
-    Error             error      = kErrorNone;
-    const DomainName &domainName = Get<MeshCoP::NetworkNameManager>().GetDomainName();
-
     if (Get<Mle::Mle>().IsAttached() && Get<BackboneRouter::Local>().IsEnabled())
     {
         BackboneRouter::Config bbrConfig;
 
         Get<BackboneRouter::Local>().GetConfig(bbrConfig);
-        SuccessOrExit(error = AppendTxtEntry("sq", bbrConfig.mSequenceNumber));
-        SuccessOrExit(error = AppendTxtEntry("bb", BigEndian::HostSwap16(BackboneRouter::kBackboneUdpPort)));
+        SuccessOrExit(error = encoder.AppendEntry("sq", bbrConfig.mSequenceNumber));
+        SuccessOrExit(error = encoder.AppendBigEndianUintEntry("bb", BackboneRouter::kBackboneUdpPort));
     }
 
-    error = AppendTxtEntry(
-        "dn", NameData(domainName.GetAsCString(), StringLength(domainName.GetAsCString(), sizeof(domainName))));
-
-exit:
-    return error;
-}
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-Error BorderAgent::TxtEncoder::AppendOmrTxtEntry(void)
-{
-    Error                                         error = kErrorNone;
-    Ip6::Prefix                                   prefix;
-    BorderRouter::RoutingManager::RoutePreference preference;
-
-    if (Get<BorderRouter::RoutingManager>().GetFavoredOmrPrefix(prefix, preference) == kErrorNone &&
-        prefix.GetLength() > 0)
-    {
-        uint8_t omrData[Ip6::NetworkPrefix::kSize + 1];
-
-        omrData[0] = prefix.GetLength();
-        memcpy(omrData + 1, prefix.GetBytes(), prefix.GetBytesSize());
-
-        SuccessOrExit(error = AppendTxtEntry("omr", omrData));
-    }
-
-exit:
-    return error;
-}
+    SuccessOrExit(error =
+                      encoder.AppendNameEntry("dn", Get<MeshCoP::NetworkNameManager>().GetDomainName().GetAsData()));
 #endif
 
-uint32_t BorderAgent::TxtEncoder::DetermineStateBitmap(void)
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    {
+        Ip6::Prefix                                   prefix;
+        BorderRouter::RoutingManager::RoutePreference preference;
+
+        if (Get<BorderRouter::RoutingManager>().GetFavoredOmrPrefix(prefix, preference) == kErrorNone &&
+            prefix.GetLength() > 0)
+        {
+            uint8_t omrData[Ip6::NetworkPrefix::kSize + 1];
+
+            omrData[0] = prefix.GetLength();
+            memcpy(omrData + 1, prefix.GetBytes(), prefix.GetBytesSize());
+
+            SuccessOrExit(error = encoder.AppendEntry("omr", omrData));
+        }
+    }
+#endif
+
+    aTxtData.mLength = encoder.GetLength();
+
+exit:
+    return error;
+}
+
+uint32_t BorderAgent::DetermineStateBitmap(void) const
 {
     uint32_t bitmap = 0;
 
-    bitmap |= (Get<BorderAgent>().IsRunning() ? kConnectionModePskc : kConnectionModeDisabled);
-    bitmap |= kAvailabilityHigh;
+    bitmap |= (IsRunning() ? StateBitmap::kConnectionModePskc : StateBitmap::kConnectionModeDisabled);
+    bitmap |= StateBitmap::kAvailabilityHigh;
 
     switch (Get<Mle::Mle>().GetRole())
     {
     case Mle::DeviceRole::kRoleDisabled:
-        bitmap |= (kThreadIfStatusNotInitialized | kThreadRoleDisabledOrDetached);
+        bitmap |= (StateBitmap::kThreadIfStatusNotInitialized | StateBitmap::kThreadRoleDisabledOrDetached);
         break;
     case Mle::DeviceRole::kRoleDetached:
-        bitmap |= (kThreadIfStatusInitialized | kThreadRoleDisabledOrDetached);
+        bitmap |= (StateBitmap::kThreadIfStatusInitialized | StateBitmap::kThreadRoleDisabledOrDetached);
         break;
     case Mle::DeviceRole::kRoleChild:
-        bitmap |= (kThreadIfStatusActive | kThreadRoleChild);
+        bitmap |= (StateBitmap::kThreadIfStatusActive | StateBitmap::kThreadRoleChild);
         break;
     case Mle::DeviceRole::kRoleRouter:
-        bitmap |= (kThreadIfStatusActive | kThreadRoleRouter);
+        bitmap |= (StateBitmap::kThreadIfStatusActive | StateBitmap::kThreadRoleRouter);
         break;
     case Mle::DeviceRole::kRoleLeader:
-        bitmap |= (kThreadIfStatusActive | kThreadRoleLeader);
+        bitmap |= (StateBitmap::kThreadIfStatusActive | StateBitmap::kThreadRoleLeader);
         break;
     }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     if (Get<Mle::Mle>().IsAttached())
     {
-        bitmap |= (Get<BackboneRouter::Local>().IsEnabled() ? kFlagBbrIsActive : 0);
-        bitmap |= (Get<BackboneRouter::Local>().IsPrimary() ? kFlagBbrIsPrimary : 0);
+        bitmap |= (Get<BackboneRouter::Local>().IsEnabled() ? StateBitmap::kFlagBbrIsActive : 0);
+        bitmap |= (Get<BackboneRouter::Local>().IsPrimary() ? StateBitmap::kFlagBbrIsPrimary : 0);
     }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    if (Get<BorderAgent::EphemeralKeyManager>().GetState() != EphemeralKeyManager::kStateDisabled)
+    if (mEphemeralKeyManager.GetState() != EphemeralKeyManager::kStateDisabled)
     {
-        bitmap |= kFlagEpskcSupported;
+        bitmap |= StateBitmap::kFlagEpskcSupported;
     }
 #endif
 
