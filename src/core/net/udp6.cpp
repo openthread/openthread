@@ -46,7 +46,14 @@ bool Udp::SocketHandle::Matches(const MessageInfo &aMessageInfo) const
     bool matches = false;
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    VerifyOrExit(IsBackbone() == aMessageInfo.IsHostInterface());
+    if (aMessageInfo.IsHostInterface())
+    {
+        VerifyOrExit(IsBackbone() || (GetNetifId() == kNetifUnspecified));
+    }
+    else
+    {
+        VerifyOrExit(!IsBackbone());
+    }
 #endif
 
     VerifyOrExit(GetSockName().mPort == aMessageInfo.GetSockPort());
