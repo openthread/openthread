@@ -65,18 +65,19 @@ extern "C" {
  * The socket is also bound to network interface(s) on which TREL is to be supported. The socket and the chosen port
  * should stay valid while TREL is enabled.
  *
- * 2) Platform layer MUST initiate an ongoing DNS-SD browse on the service name "_trel._udp" within the local browsing
- * domain to discover other devices supporting TREL. The ongoing browse will produce two different types of events:
- * "add" events and "remove" events.  When the browse is started, it should produce an "add" event for every TREL peer
- * currently present on the network.  Whenever a TREL peer goes offline, a "remove" event should be produced. "remove"
- * events are not guaranteed, however. When a TREL service instance is discovered, a new ongoing DNS-SD query for an
- * AAAA record should be started on the hostname indicated in the SRV record of the discovered instance. If multiple
- * host IPv6 addressees are discovered for a peer, one with highest scope among all addresses MUST be reported (if
- * there are multiple address at same scope, one must be selected randomly).
- *
- * TREL platform MUST signal back the discovered peer info using `otPlatTrelHandleDiscoveredPeerInfo()` callback. This
- * callback MUST be invoked when a new peer is discovered, when there is a change in an existing entry (e.g., new
- * TXT record or new port number or new IPv6 address), or when the peer is removed.
+ * 2) If `OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE` is enabled, the OpenThread core TREL implementation itself will
+ * handle mDNS (DNS-SD) TREL service registration and peer discovery. Otherwise the platform layer MUST initiate an
+ * ongoing DNS-SD browse on the service name "_trel._udp" within the local browsing domain to discover other devices
+ * supporting TREL. The ongoing browse will produce two different types of events: "add" events and "remove" events.
+ * When the browse is started, it should produce an "add" event for every TREL peer currently present on the network.
+ * Whenever a TREL peer goes offline, a "remove" event should be produced. "remove" events are not guaranteed, however.
+ * When a TREL service instance is discovered, a new ongoing DNS-SD query for an AAAA record should be started on the
+ * hostname indicated in the SRV record of the discovered instance. If multiple host IPv6 addressees are discovered for
+ * a peer, one with highest scope among all addresses MUST be reported (if there are multiple address at same scope,
+ * one must be selected randomly). TREL platform MUST signal back the discovered peer info using
+ * `otPlatTrelHandleDiscoveredPeerInfo()` callback. This callback MUST be invoked when a new peer is discovered, when
+ * there is a change in an existing entry (e.g., new TXT record or new port number or new IPv6 address), or when the
+ * peer is removed.
  *
  * @param[in]  aInstance  The OpenThread instance.
  * @param[out] aUdpPort   A pointer to return the selected port number by platform layer.
@@ -127,6 +128,8 @@ typedef struct otPlatTrelPeerInfo
 /**
  * This is a callback function from platform layer to report a discovered TREL peer info.
  *
+ * This is only applicable when `OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE` is disabled.
+ *
  * @note The @p aInfo structure and its content (e.g., the `mTxtData` buffer) does not need to persist after returning
  * from this call. OpenThread code will make a copy of all the info it needs.
  *
@@ -138,6 +141,8 @@ extern void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPl
 /**
  * Notifies platform that a TREL packet is received from a peer using a different socket address than the one reported
  * earlier from `otPlatTrelHandleDiscoveredPeerInfo()`.
+ *
+ * This is only applicable when `OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE` is disabled.
  *
  * Ideally the platform underlying DNS-SD should detect changes to advertised port and addresses by peers, however,
  * there are situations where this is not detected reliably. This function signals to the platform layer than we
@@ -154,6 +159,8 @@ void otPlatTrelNotifyPeerSocketAddressDifference(otInstance       *aInstance,
 
 /**
  * Registers a new service to be advertised using DNS-SD [RFC6763].
+ *
+ * This is only applicable when `OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE` is disabled.
  *
  * The service name is "_trel._udp". The platform should use its own hostname, which when combined with the service
  * name and the local DNS-SD domain name will produce the full service instance name, for example

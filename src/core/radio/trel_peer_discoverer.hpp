@@ -43,7 +43,21 @@
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
+#include "net/dns_types.hpp"
+#include "net/dnssd.hpp"
 #include "radio/trel_peer.hpp"
+
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+
+#if !(OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE || OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE)
+#error "OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE requires either the native mDNS or platform DNS-SD APIs"
+#endif
+
+#if !OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE
+#error "OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE requires OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE"
+#endif
+
+#endif
 
 namespace ot {
 namespace Trel {
@@ -58,7 +72,12 @@ extern "C" void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const 
 class PeerDiscoverer : public InstanceLocator
 {
     friend class Link;
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+    friend class ot::Dnssd;
+    friend class Peer;
+#else
     friend void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
+#endif
 
 public:
     /**
@@ -74,12 +93,12 @@ public:
     /**
      * Notifies that device's Extended MAC Address has changed.
      */
-    void HandleExtAddressChange(void) { PostRegisterServiceTask(); }
+    void HandleExtAddressChange(void) { PostServiceTask(); }
 
     /**
      * Notifies that device's Extended PAN Identifier has changed.
      */
-    void HandleExtPanIdChange(void) { PostRegisterServiceTask(); }
+    void HandleExtPanIdChange(void) { PostServiceTask(); }
 
     /**
      * Notifies that a TREL packet is received from a peer using a different socket address than the one reported
@@ -90,8 +109,24 @@ public:
      */
     void NotifyPeerSocketAddressDifference(const Ip6::SockAddr &aPeerSockAddr, const Ip6::SockAddr &aRxSockAddr);
 
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+    /**
+     * Returns the TREL service name (service instance label) used by the device itself when advertising TREL service.
+     *
+     * @returns The TREL service name.
+     */
+    const char *GetServiceName(void) { return mServiceName.GetName(); }
+#endif
+
 private:
     static constexpr uint32_t kRemoveDelay = 7 * Time::kOneSecondInMsec;
+
+    enum State : uint8_t
+    {
+        kStateStopped,      // Stopped.
+        kStatePendingDnssd, // Started but waiting for `Dnssd` to be ready.
+        kStateRunning,      // Started and `Dnssd` is also ready.
+    };
 
     class TxtData
     {
@@ -133,22 +168,121 @@ private:
         uint8_t mBuffer[kMaxSize];
     };
 
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+
+    class ServiceName : public InstanceLocator
+    {
+        // Tracks the service name (instance label) to use when
+        // registering TREL mDNS service
+
+    public:
+        explicit ServiceName(Instance &aInstance);
+
+        const char *GetName(void);
+        void        GenerateName(void);
+
+    private:
+        static const char kNamePrefix[];
+
+        Dns::Name::LabelBuffer mName;
+        uint8_t                mSuffixIndex;
+    };
+
+    class Browser : public Dnssd::Browser
+    {
+    public:
+        Browser(void);
+    };
+
+    class SrvResolver : public Dnssd::SrvResolver
+    {
+    public:
+        explicit SrvResolver(const Peer &aPeer);
+    };
+
+    class TxtResolver : public Dnssd::TxtResolver
+    {
+    public:
+        explicit TxtResolver(const Peer &aPeer);
+    };
+
+    class AddressResolver : public Dnssd::AddressResolver
+    {
+    public:
+        explicit AddressResolver(const Peer &aPeer);
+    };
+
+    struct AddrAndTtl : public Clearable<AddrAndTtl>
+    {
+        void SetFrom(const Dnssd::AddressAndTtl &aAddrAndTtl);
+        bool IsFavoredOver(const Dnssd::AddressAndTtl &aAddrAndTtl) const;
+        bool IsEmpty(void) const { return mTtl == 0; }
+
+        Ip6::Address mAddress;
+        uint32_t     mTtl;
+    };
+
+#endif // OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+
+#if !OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
     struct PeerInfo : public otPlatTrelPeerInfo
     {
         bool                 IsRemoved(void) const { return mRemoved; }
         const Ip6::SockAddr &GetSockAddr(void) const { return AsCoreType(&mSockAddr); }
     };
+#endif
 
     explicit PeerDiscoverer(Instance &aInstance);
+    ~PeerDiscoverer(void);
 
-    void HandleDiscoveredPeerInfo(const PeerInfo &aInfo);
-    void PostRegisterServiceTask(void);
+    bool IsRunning(void) const { return mState == kStateRunning; }
+    void PostServiceTask(void);
+    void HandleServiceTask(void);
     void RegisterService(void);
 
-    using RegisterServiceTask = TaskletIn<PeerDiscoverer, &PeerDiscoverer::RegisterService>;
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+    // Callback from `Dnssd`
+    void HandleDnssdPlatformStateChange(void);
+    // Callback from `Peer` class.
+    void HandlePeerRemoval(Peer &aPeer);
 
-    bool                mIsRunning;
-    RegisterServiceTask mRegisterServiceTask;
+    void RegisterService(uint16_t aPort, const TxtData &aTxtData);
+    void UnregisterService(void);
+    void HandleRegisterDone(Error aError);
+    void HandleBrowseResult(const Dnssd::BrowseResult &aResult);
+    void StartServiceResolvers(Peer &aPeer);
+    void StopServiceResolvers(Peer &aPeer);
+    void HandleSrvResult(const Dnssd::SrvResult &aResult);
+    void HandleTxtResult(const Dnssd::TxtResult &aResult);
+    void ProcessPeerTxtData(const Dnssd::TxtResult &aResult, Peer &aPeer);
+    void StartHostAddressResolver(Peer &aPeer);
+    void StopHostAddressResolver(Peer &aPeer);
+    void HandleAddressResult(const Dnssd::AddressResult &aResult);
+    void UpdatePeerAddresses(Peer &aPeer, const Peer::AddressArray &aSortedAddresses);
+    void UpdatePeerState(Peer &aPeer);
+
+    static void HandleRegisterDone(otInstance *aInstance, Dnssd::RequestId aRequestId, otError aError);
+    static void HandleBrowseResult(otInstance *aInstance, const otPlatDnssdBrowseResult *aResult);
+    static void HandleSrvResult(otInstance *aInstance, const otPlatDnssdSrvResult *aResult);
+    static void HandleTxtResult(otInstance *aInstance, const otPlatDnssdTxtResult *aResult);
+    static void HandleAddressResult(otInstance *aInstance, const otPlatDnssdAddressResult *aResult);
+
+#else
+    void        HandleDiscoveredPeerInfo(const PeerInfo &aInfo);
+#endif
+
+    using ServiceTask = TaskletIn<PeerDiscoverer, &PeerDiscoverer::HandleServiceTask>;
+
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+    static const char kTrelServiceType[];
+#endif
+
+    State       mState;
+    ServiceTask mServiceTask;
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+    ServiceName mServiceName;
+    bool        mBrowsing;
+#endif
 };
 
 } // namespace Trel

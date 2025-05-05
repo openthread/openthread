@@ -44,12 +44,25 @@
  */
 
 /**
+ * @def OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+ *
+ * Define as 1 to have the OpenThread core TREL implementation directly manage mDNS (DNS-SD) service registration
+ * and peer discovery (browse and service/address resolution of TREL service for TREL peer discovery).
+ *
+ * When this feature is disabled, the mDNS (DNS-SD) functions are delegated to the platform layer. More details are
+ * provided in the `platform/trel.h` API documentation.
+ */
+#ifndef OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+#define OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE
  *
  * Define as 1 to allow TREL modules to use heap allocated objects (e.g. for the TREL peer table).
  */
 #ifndef OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE
-#define OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE 0
+#define OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
 #endif
 
 /**
