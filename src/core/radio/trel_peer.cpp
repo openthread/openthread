@@ -52,11 +52,23 @@ void Peer::Init(Instance &aInstance)
     AsCoreType(&mExtPanId).Clear();
     AsCoreType(&mSockAddr).Clear();
 
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+    mPort                     = 0;
+    mExtAddressSet            = false;
+    mResolvingService         = false;
+    mResolvingHost            = false;
+    mTxtDataValidated         = false;
+    mSockAddrUpdatedBasedOnRx = false;
+    mState                    = kStateResolving;
+#else
     mState = kStateValid;
+#endif
 }
 
 void Peer::Free(void)
 {
+    SignalPeerRemoval();
+
     Log(kDeleted);
 
 #if OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE
@@ -65,6 +77,19 @@ void Peer::Free(void)
     this->~Peer();
     Get<PeerTable>().mPool.Free(*this);
 #endif
+}
+
+void Peer::UpdateSockAddrBasedOnRx(const Ip6::SockAddr &aSockAddr)
+{
+    VerifyOrExit(GetSockAddr() != aSockAddr);
+
+    SetSockAddr(aSockAddr);
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+    mSockAddrUpdatedBasedOnRx = true;
+#endif
+
+exit:
+    return;
 }
 
 void Peer::ScheduleToRemoveAfter(uint32_t aDelay)
@@ -79,8 +104,33 @@ void Peer::ScheduleToRemoveAfter(uint32_t aDelay)
     Log(kRemoving);
     LogInfo("   after %u msec", aDelay);
 
+    SignalPeerRemoval();
+
 exit:
     return;
+}
+
+void Peer::SetExtAddress(const Mac::ExtAddress &aExtAddress)
+{
+    mExtAddress = aExtAddress;
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+    mExtAddressSet = true;
+#endif
+}
+
+bool Peer::Matches(const Mac::ExtAddress &aExtAddress) const
+{
+    bool matches = false;
+
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+    VerifyOrExit(mExtAddressSet);
+#endif
+
+    VerifyOrExit(GetExtAddress() == aExtAddress);
+    matches = true;
+
+exit:
+    return matches;
 }
 
 bool Peer::Matches(const NonNeighborMatcher &aMatcher) const
@@ -101,6 +151,48 @@ bool Peer::Matches(const NonNeighborMatcher &aMatcher) const
 exit:
     return matches;
 }
+
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+
+void Peer::SignalPeerRemoval(void)
+{
+    // Signal to `PeerDiscoverer` that peer is removed and/or about to be
+    // freed. The `PeerDiscoverer` will then stop any active resolvers
+    // associated with this peer.
+
+    Get<PeerDiscoverer>().HandlePeerRemoval(*this);
+}
+
+void Peer::SetPort(uint16_t aPort)
+{
+    VerifyOrExit(mPort != aPort);
+
+    mPort = aPort;
+
+    if (mPort != 0)
+    {
+        AsCoreType(&mSockAddr).SetPort(mPort);
+    }
+
+exit:
+    return;
+}
+
+bool Peer::Matches(const ServiceNameMatcher &aMatcher) const { return NameMatch(mServiceName, aMatcher.mServiceName); }
+
+bool Peer::Matches(const HostNameMatcher &aMatcher) const
+{
+    return mResolvingHost && NameMatch(mHostName, aMatcher.mHostName);
+}
+
+bool Peer::NameMatch(const Heap::String &aHeapString, const char *aName)
+{
+    // Compares a DNS name given as a `Heap::String` with a
+    // `aName` C string.
+    return !aHeapString.IsNull() && StringMatch(aHeapString.AsCString(), aName, kStringCaseInsensitiveMatch);
+}
+
+#endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
@@ -136,6 +228,29 @@ const char *Peer::ActionToString(Action aAction)
 }
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+
+//---------------------------------------------------------------------------------------------------------------------
+// Peer::AddressArray
+
+void Peer::AddressArray::CloneFrom(const AddressArray &aOtherArray)
+{
+    Free();
+
+    VerifyOrExit(!aOtherArray.IsEmpty());
+    SuccessOrAssert(ReserveCapacity(aOtherArray.GetLength()));
+
+    for (const Ip6::Address &addr : aOtherArray)
+    {
+        SuccessOrAssert(PushBack(addr));
+    }
+
+exit:
+    return;
+}
+
+#endif
 
 //---------------------------------------------------------------------------------------------------------------------
 // PeerTable
