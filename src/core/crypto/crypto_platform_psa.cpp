@@ -40,6 +40,7 @@
 #include <openthread/instance.h>
 #include <openthread/platform/crypto.h>
 #include <openthread/platform/entropy.h>
+#include <openthread/platform/memory.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -200,7 +201,10 @@ exit:
     return error;
 }
 
-OT_TOOL_WEAK void otPlatCryptoInit(void) { psa_crypto_init(); }
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+OT_TOOL_WEAK void *otPlatCryptoCAlloc(size_t aNum, size_t aSize) { return otPlatCAlloc(aNum, aSize); }
+OT_TOOL_WEAK void  otPlatCryptoFree(void *aPtr) { otPlatFree(aPtr); }
+#endif
 
 OT_TOOL_WEAK otError otPlatCryptoImportKey(otCryptoKeyRef      *aKeyRef,
                                            otCryptoKeyType      aKeyType,

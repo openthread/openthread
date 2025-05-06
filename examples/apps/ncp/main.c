@@ -62,8 +62,7 @@ extern void otAppNcpInitMulti(otInstance **aInstances, uint8_t count);
 
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 OT_TOOL_WEAK void *otPlatCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
-
-OT_TOOL_WEAK void otPlatFree(void *aPtr) { free(aPtr); }
+OT_TOOL_WEAK void  otPlatFree(void *aPtr) { free(aPtr); }
 #endif
 
 int main(int argc, char *argv[])

@@ -216,11 +216,6 @@ typedef struct otPlatCryptoEcdsaSignature otPlatCryptoEcdsaSignature;
 #define OT_CRYPTO_PBDKF2_MAX_SALT_SIZE 30
 
 /**
- * Initialize the Crypto module.
- */
-void otPlatCryptoInit(void);
-
-/**
  * Import a key into PSA ITS.
  *
  * @param[in,out] aKeyRef           Pointer to the key ref to be used for crypto operations.
@@ -290,6 +285,33 @@ otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyRef);
  * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
  */
 bool otPlatCryptoHasKey(otCryptoKeyRef aKeyRef);
+
+/**
+ * Dynamically allocates new memory for Crypto subsystem. On platforms that support it, should just redirect to calloc.
+ * For those that don't support calloc, should support the same functionality:
+ *
+ *   "The calloc() function contiguously allocates enough space for count objects that are size bytes of
+ *   memory each and returns a pointer to the allocated memory. The allocated memory is filled with bytes
+ *   of value zero."
+ *
+ * Is required for OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE.
+ *
+ * @param[in] aNum   The number of blocks to allocate
+ * @param[in] aSize  The size of each block to allocate
+ *
+ * @retval void*  The pointer to the front of the memory allocated
+ * @retval NULL   Failed to allocate the memory requested.
+ */
+void *otPlatCryptoCAlloc(size_t aNum, size_t aSize);
+
+/**
+ * Frees memory that was dynamically allocated by otPlatCryptoCAlloc.
+ *
+ * Is required for OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE.
+ *
+ * @param[in] aPtr  A pointer the memory blocks to free. The pointer may be NULL.
+ */
+void otPlatCryptoFree(void *aPtr);
 
 /**
  * Initialize the HMAC operation.

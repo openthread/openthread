@@ -55,6 +55,10 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/toolchain.h>
 
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
+#include <psa/crypto.h>
+#endif
+
 #include "simul_utils.h"
 
 uint32_t gNodeId = 1;
@@ -201,10 +205,13 @@ void otSysInit(int aArgCount, char *aArgVector[])
     signal(SIGTERM, &handleSignal);
     signal(SIGHUP, &handleSignal);
 
-#if OPENTHREAD_PSA_CRYPTO_NATIVE_ITS_FILE && (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
+    psa_crypto_init();
+#if OPENTHREAD_PSA_CRYPTO_NATIVE_ITS_FILE
     snprintf(sNativeItsFileNamePrefix, sizeof(sNativeItsFileNamePrefix), "%s/%s_%d_",
              OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, getenv("PORT_OFFSET") ? getenv("PORT_OFFSET") : "0", gNodeId);
     gItsFileNamePrefix = sNativeItsFileNamePrefix;
+#endif
 #endif
 
     platformLoggingInit(basename(aArgVector[0]));

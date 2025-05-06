@@ -47,6 +47,7 @@
 #include <openthread/instance.h>
 #include <openthread/platform/crypto.h>
 #include <openthread/platform/entropy.h>
+#include <openthread/platform/memory.h>
 #include <openthread/platform/time.h>
 
 #include "common/code_utils.hpp"
@@ -78,10 +79,10 @@ static constexpr uint16_t kEntropyMinThreshold = 16;
 #endif
 #endif
 
-OT_TOOL_WEAK void otPlatCryptoInit(void)
-{
-    // Intentionally empty.
-}
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+OT_TOOL_WEAK void *otPlatCryptoCAlloc(size_t aNum, size_t aSize) { return otPlatCAlloc(aNum, aSize); }
+OT_TOOL_WEAK void  otPlatCryptoFree(void *aPtr) { otPlatFree(aPtr); }
+#endif
 
 // AES  Implementation
 OT_TOOL_WEAK otError otPlatCryptoAesInit(otCryptoContext *aContext)
