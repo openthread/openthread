@@ -165,8 +165,6 @@ private:
     static constexpr uint32_t kAckWaitWindow   = 750; // (in msec)
     static constexpr uint16_t kFcfFramePending = 1 << 4;
 
-    typedef Interface::Peer Peer;
-
     enum State : uint8_t
     {
         kStateDisabled,
