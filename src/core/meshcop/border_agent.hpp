@@ -227,7 +227,7 @@ public:
      * @retval kErrorNone     If successfully retrieved the Border Agent MeshCoP Service TXT data.
      * @retval kErrorNoBufs   If the buffer in @p aTxtData doesn't have enough size.
      */
-    Error PrepareServiceTxtData(ServiceTxtData &aTxtData) const;
+    Error PrepareServiceTxtData(ServiceTxtData &aTxtData);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     /**
@@ -471,19 +471,8 @@ private:
         uint64_t                   mAllocationTime;
     };
 
-    class TxtEncoder : public InstanceLocator
+    struct StateBitmap
     {
-    public:
-        TxtEncoder(Instance &aInstance, ServiceTxtData &aTxtData)
-            : InstanceLocator(aInstance)
-            , mTxtData(aTxtData)
-            , mAppender(mTxtData.mData, sizeof(mTxtData.mData))
-        {
-        }
-
-        Error EncodeTxtData(void);
-
-    private:
         // --- State Bitmap ConnectionMode ---
         static constexpr uint8_t  kOffsetConnectionMode   = 0;
         static constexpr uint32_t kMaskConnectionMode     = 7 << kOffsetConnectionMode;
@@ -525,28 +514,6 @@ private:
         // --- State Bitmap EpskcSupported ---
         static constexpr uint8_t  kOffsetEpskcSupported = 11;
         static constexpr uint32_t kFlagEpskcSupported   = 1 << kOffsetEpskcSupported;
-
-        uint32_t DetermineStateBitmap(void);
-
-        Error AppendTxtEntry(const char *aKey, const void *aValue, uint16_t aValueLength);
-
-        template <typename ObjectType> Error AppendTxtEntry(const char *aKey, const ObjectType &aObject)
-        {
-            static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
-            static_assert(!TypeTraits::IsSame<ObjectType, NameData>::kValue, "ObjectType must not be `NameData`");
-
-            return AppendTxtEntry(aKey, &aObject, sizeof(ObjectType));
-        }
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-        Error AppendBbrTxtEntry(void);
-#endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-        Error AppendOmrTxtEntry(void);
-#endif
-
-        ServiceTxtData &mTxtData;
-        Appender        mAppender;
     };
 
     void UpdateState(void);
@@ -567,6 +534,8 @@ private:
     void HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession);
 
     static Coap::Message::Code CoapCodeFromError(Error aError);
+
+    uint32_t DetermineStateBitmap(void) const;
 
     void PostServiceTask(void);
     void HandleServiceTask(void);
