@@ -41,8 +41,9 @@
 #include <openthread/trel.h>
 #include <openthread/platform/trel.h>
 
-#include "common/array.hpp"
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/pool.hpp"
 #include "common/tasklet.hpp"
 #include "common/time.hpp"
 #include "mac/mac_types.hpp"
@@ -83,9 +84,10 @@ public:
     /**
      * Represents information about a discovered TREL peer.
      */
-    class Peer : public otTrelPeer
+    class Peer : public otTrelPeer, public LinkedListEntry<Peer>
     {
         friend class Interface;
+        friend class LinkedListEntry<Peer>;
         friend void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
 
     public:
@@ -153,6 +155,8 @@ public:
         void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
         void SetExtPanId(const MeshCoP::ExtendedPanId &aExtPanId) { mExtPanId = aExtPanId; }
         void Log(const char *aAction) const;
+
+        Peer *mNext;
     };
 
     /**
@@ -198,7 +202,7 @@ public:
      *
      * @param[in] aIterator   The iterator to initialize.
      */
-    void InitIterator(PeerIterator &aIterator) const { aIterator = 0; }
+    void InitIterator(PeerIterator &aIterator) const { aIterator = mPeerList.GetHead(); }
 
     /**
      * Iterates over the peer table entries.
@@ -214,7 +218,7 @@ public:
      *
      * @returns  The number of TREL peers.
      */
-    uint16_t GetNumberOfPeers(void) const { return mPeerTable.GetLength(); }
+    uint16_t GetNumberOfPeers(void) const;
 
     /**
      * Sets the filter mode (enables/disables filtering).
@@ -276,15 +280,13 @@ public:
 
 private:
 #if OPENTHREAD_CONFIG_TREL_PEER_TABLE_SIZE != 0
-    static constexpr uint16_t kPeerTableSize = OPENTHREAD_CONFIG_TREL_PEER_TABLE_SIZE;
+    static constexpr uint16_t kPeerPoolSize = OPENTHREAD_CONFIG_TREL_PEER_TABLE_SIZE;
 #else
-    static constexpr uint16_t kPeerTableExtraEntries = 32;
-    static constexpr uint16_t kPeerTableSize         = Mle::kMaxRouters + Mle::kMaxChildren + kPeerTableExtraEntries;
+    static constexpr uint16_t kExtraEntries = 32;
+    static constexpr uint16_t kPeerPoolSize = Mle::kMaxRouters + Mle::kMaxChildren + kExtraEntries;
 #endif
     static const char kTxtRecordExtAddressKey[];
     static const char kTxtRecordExtPanIdKey[];
-
-    typedef Array<Peer, kPeerTableSize, uint16_t> PeerTable;
 
     explicit Interface(Instance &aInstance);
 
@@ -304,16 +306,18 @@ private:
                                MeshCoP::ExtendedPanId &aExtPanId) const;
     Peer *GetNewPeerEntry(void);
     void  RemovePeerEntry(Peer &aEntry);
+    void  ClearPeerList(void);
 
     using RegisterServiceTask = TaskletIn<Interface, &Interface::RegisterService>;
 
-    bool                mInitialized : 1;
-    bool                mEnabled : 1;
-    bool                mFiltered : 1;
-    RegisterServiceTask mRegisterServiceTask;
-    uint16_t            mUdpPort;
-    Packet              mRxPacket;
-    PeerTable           mPeerTable;
+    bool                      mInitialized : 1;
+    bool                      mEnabled : 1;
+    bool                      mFiltered : 1;
+    RegisterServiceTask       mRegisterServiceTask;
+    uint16_t                  mUdpPort;
+    Packet                    mRxPacket;
+    LinkedList<Peer>          mPeerList;
+    Pool<Peer, kPeerPoolSize> mPeerPool;
 };
 
 } // namespace Trel
