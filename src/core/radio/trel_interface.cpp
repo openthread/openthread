@@ -102,17 +102,20 @@ void Interface::Disable(void)
     VerifyOrExit(mInitialized);
 
     otPlatTrelDisable(&GetInstance());
-    mPeerTable.Clear();
+    ClearPeerList();
     LogDebg("Disabled interface");
 
 exit:
     return;
 }
 
-Interface::Peer *Interface::FindPeer(const Mac::ExtAddress &aExtAddress)
+void Interface::ClearPeerList(void)
 {
-    return mPeerTable.FindMatching(aExtAddress);
+    mPeerList.Clear();
+    mPeerPool.FreeAll();
 }
+
+Interface::Peer *Interface::FindPeer(const Mac::ExtAddress &aExtAddress) { return mPeerList.FindMatching(aExtAddress); }
 
 void Interface::NotifyPeerSocketAddressDifference(const Ip6::SockAddr &aPeerSockAddr, const Ip6::SockAddr &aRxSockAddr)
 {
@@ -205,7 +208,7 @@ void Interface::HandleDiscoveredPeerInfo(const Peer::Info &aInfo)
     // different Extended MAC address. This ensures that we do not
     // keep stale entries in the peer table.
 
-    entry = mPeerTable.FindMatching(aInfo.GetSockAddr());
+    entry = mPeerList.FindMatching(aInfo.GetSockAddr());
 
     if ((entry != nullptr) && !entry->Matches(extAddress))
     {
@@ -215,7 +218,7 @@ void Interface::HandleDiscoveredPeerInfo(const Peer::Info &aInfo)
 
     if (entry == nullptr)
     {
-        entry = mPeerTable.FindMatching(extAddress);
+        entry = mPeerList.FindMatching(extAddress);
     }
 
     if (entry == nullptr)
@@ -297,10 +300,15 @@ Interface::Peer *Interface::GetNewPeerEntry(void)
 {
     Peer *peerEntry;
 
-    peerEntry = mPeerTable.PushBack();
-    VerifyOrExit(peerEntry == nullptr);
+    peerEntry = mPeerPool.Allocate();
 
-    for (Peer &entry : mPeerTable)
+    if (peerEntry != nullptr)
+    {
+        mPeerList.Push(*peerEntry);
+        ExitNow();
+    }
+
+    for (Peer &entry : mPeerList)
     {
         if (entry.GetExtPanId() != Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId())
         {
@@ -308,7 +316,7 @@ Interface::Peer *Interface::GetNewPeerEntry(void)
         }
     }
 
-    for (Peer &entry : mPeerTable)
+    for (Peer &entry : mPeerList)
     {
         // We skip over any existing entry in neighbor table (even if the
         // entry is in invalid state).
@@ -336,15 +344,10 @@ void Interface::RemovePeerEntry(Peer &aEntry)
 {
     aEntry.Log("Removing");
 
-    // Replace the entry being removed with the last entry (if not the
-    // last one already) and then pop the last entry from array.
-
-    if (&aEntry != mPeerTable.Back())
+    if (mPeerList.Remove(aEntry) == kErrorNone)
     {
-        aEntry = *mPeerTable.Back();
+        mPeerPool.Free(aEntry);
     }
-
-    mPeerTable.PopBack();
 }
 
 const Counters *Interface::GetCounters(void) const { return otPlatTrelGetCounters(&GetInstance()); }
@@ -362,7 +365,7 @@ Error Interface::Send(const Packet &aPacket, bool aIsDiscovery)
     switch (aPacket.GetHeader().GetType())
     {
     case Header::kTypeBroadcast:
-        for (Peer &entry : mPeerTable)
+        for (Peer &entry : mPeerList)
         {
             if (!aIsDiscovery && (entry.GetExtPanId() != Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()))
             {
@@ -375,7 +378,7 @@ Error Interface::Send(const Packet &aPacket, bool aIsDiscovery)
 
     case Header::kTypeUnicast:
     case Header::kTypeAck:
-        peerEntry = mPeerTable.FindMatching(aPacket.GetHeader().GetDestination());
+        peerEntry = mPeerList.FindMatching(aPacket.GetHeader().GetDestination());
         VerifyOrExit(peerEntry != nullptr, error = kErrorAbort);
         otPlatTrelSend(&GetInstance(), aPacket.GetBuffer(), aPacket.GetLength(), &peerEntry->mSockAddr);
         break;
@@ -414,14 +417,26 @@ exit:
 
 const Interface::Peer *Interface::GetNextPeer(PeerIterator &aIterator) const
 {
-    const Peer *entry = mPeerTable.At(aIterator);
+    const Peer *entry = static_cast<const Peer *>(aIterator);
 
-    if (entry != nullptr)
+    VerifyOrExit(entry != nullptr);
+    aIterator = entry->GetNext();
+
+exit:
+    return entry;
+}
+
+uint16_t Interface::GetNumberOfPeers(void) const
+{
+    uint16_t count = 0;
+
+    for (const Peer &peer : mPeerList)
     {
-        aIterator++;
+        OT_UNUSED_VARIABLE(peer);
+        count++;
     }
 
-    return entry;
+    return count;
 }
 
 void Interface::Peer::Log(const char *aAction) const
