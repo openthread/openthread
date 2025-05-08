@@ -203,6 +203,7 @@ set(COMMON_SOURCES
     radio/trel_interface.cpp
     radio/trel_link.cpp
     radio/trel_packet.cpp
+    radio/trel_peer.cpp
     thread/address_resolver.cpp
     thread/announce_begin_server.cpp
     thread/announce_sender.cpp
