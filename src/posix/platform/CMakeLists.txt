@@ -174,7 +174,6 @@ target_link_libraries(openthread-posix
         ot-posix-config
         $<$<NOT:$<BOOL:${OT_ANDROID_NDK}>>:util>
         $<$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>:rt>
-        $<$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>:anl>
 )
 
 target_compile_definitions(openthread-posix
