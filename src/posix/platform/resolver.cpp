@@ -97,6 +97,13 @@ void Resolver::TryRefreshDnsServerList(void)
     }
 }
 
+bool Resolver::IsUpstreamQueryAvailable(void)
+{
+    TryRefreshDnsServerList();
+
+    return (mUpstreamDnsServerCount + mRecursiveDnsServerCount > 0);
+}
+
 void Resolver::LoadDnsServerListFromConf(void)
 {
     std::string   line;
@@ -497,6 +504,13 @@ void platformResolverUpdateFdSet(otSysMainloopContext *aContext) { gResolver.Upd
 void platformResolverSetUp(void) { gResolver.Setup(); }
 
 void platformResolverInit(void) { gResolver.Init(); }
+
+bool otPlatDnsIsUpstreamQueryAvailable(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return gResolver.IsUpstreamQueryAvailable();
+}
 
 void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 {
