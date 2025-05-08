@@ -161,19 +161,6 @@ public:
                         const uint8_t      *aBuffer,
                         uint16_t            aBufferLength);
 
-#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
-    /**
-     * Sends an asynchronous address lookup for the well-known host name "ipv4only.arpa"
-     * to discover the NAT64 prefix.
-     *
-     * @param[in]  aInfraIfIndex  The index of the infrastructure interface the address look-up is sent to.
-     *
-     * @retval  OT_ERROR_NONE    Successfully request address look-up.
-     * @retval  OT_ERROR_FAILED  Failed to request address look-up.
-     */
-    otError DiscoverNat64Prefix(uint32_t aInfraIfIndex);
-#endif
-
     /**
      * Gets the infrastructure network interface name.
      *
@@ -228,12 +215,6 @@ private:
 
 #ifdef __linux__
     void ReceiveNetLinkMessage(void);
-#endif
-
-#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
-#ifdef __linux__
-    static void DiscoverNat64PrefixDone(union sigval sv);
-#endif // #ifdef __linux__
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

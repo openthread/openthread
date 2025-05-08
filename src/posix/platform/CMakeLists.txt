@@ -174,15 +174,8 @@ target_link_libraries(openthread-posix
         ot-posix-config
         $<$<NOT:$<BOOL:${OT_ANDROID_NDK}>>:util>
         $<$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>:rt>
+        $<$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>:anl>
 )
-
-option(OT_TARGET_OPENWRT "enable openthread posix for OpenWRT" OFF)
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND NOT OT_TARGET_OPENWRT)
-    target_compile_definitions(ot-posix-config
-        INTERFACE "OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE=1"
-    )
-    target_link_libraries(openthread-posix PRIVATE anl)
-endif()
 
 target_compile_definitions(openthread-posix
     PUBLIC
