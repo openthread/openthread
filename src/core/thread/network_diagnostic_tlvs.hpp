@@ -495,7 +495,7 @@ public:
      *
      * @returns The Timeout value.
      */
-    uint8_t GetTimeout(void) const { return (GetTimeoutChildId() & kTimeoutMask) >> kTimeoutOffset; }
+    uint8_t GetTimeout(void) const { return ReadBits<uint16_t, kTimeoutMask>(GetTimeoutChildId()); }
 
     /**
      * Sets the Timeout value.
@@ -504,7 +504,7 @@ public:
      */
     void SetTimeout(uint8_t aTimeout)
     {
-        SetTimeoutChildId((GetTimeoutChildId() & ~kTimeoutMask) | ((aTimeout << kTimeoutOffset) & kTimeoutMask));
+        SetTimeoutChildId(UpdateBits<uint16_t, kTimeoutMask>(GetTimeoutChildId(), aTimeout));
     }
 
     /**
@@ -514,7 +514,7 @@ public:
      */
     LinkQuality GetLinkQuality(void) const
     {
-        return static_cast<LinkQuality>((GetTimeoutChildId() & kLqiMask) >> kLqiOffset);
+        return static_cast<LinkQuality>(ReadBits<uint16_t, kLqiMask>(GetTimeoutChildId()));
     }
 
     /**
@@ -524,7 +524,7 @@ public:
      */
     void SetLinkQuality(LinkQuality aLinkQuality)
     {
-        SetTimeoutChildId((GetTimeoutChildId() & ~kLqiMask) | ((aLinkQuality << kLqiOffset) & kLqiMask));
+        SetTimeoutChildId(UpdateBits<uint16_t, kLqiMask>(GetTimeoutChildId(), aLinkQuality));
     }
 
     /**
@@ -532,7 +532,7 @@ public:
      *
      * @returns The Child ID value.
      */
-    uint16_t GetChildId(void) const { return (GetTimeoutChildId() & kChildIdMask) >> kChildIdOffset; }
+    uint16_t GetChildId(void) const { return ReadBits<uint16_t, kChildIdMask>(GetTimeoutChildId()); }
 
     /**
      * Sets the Child ID value.
@@ -541,7 +541,7 @@ public:
      */
     void SetChildId(uint16_t aChildId)
     {
-        SetTimeoutChildId((GetTimeoutChildId() & ~kChildIdMask) | ((aChildId << kChildIdOffset) & kChildIdMask));
+        SetTimeoutChildId(UpdateBits<uint16_t, kChildIdMask>(GetTimeoutChildId(), aChildId));
     }
 
     /**
