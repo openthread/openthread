@@ -72,6 +72,7 @@
 #include <fcntl.h>
 #include <ifaddrs.h>
 #ifdef __linux__
+#include <linux/if_addr.h>
 #include <linux/if_link.h>
 #include <linux/if_tun.h>
 #include <linux/netlink.h>
@@ -433,6 +434,7 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
 {
     OT_UNUSED_VARIABLE(aInstance);
 
+    static constexpr uint8_t kLinkLocalScope = 2;
     struct
     {
         struct nlmsghdr  nh;
@@ -456,7 +458,7 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
 
     AddRtAttr(&req.nh, sizeof(req), IFA_LOCAL, aAddressInfo.mAddress, sizeof(*aAddressInfo.mAddress));
 
-    if (!aAddressInfo.mPreferred || aAddressInfo.mMeshLocal)
+    if (!aAddressInfo.mPreferred || aAddressInfo.mMeshLocal || aAddressInfo.mScope == kLinkLocalScope)
     {
         struct ifa_cacheinfo cacheinfo;
 
@@ -479,12 +481,22 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
     else
 #endif
     {
-#if OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC > 0
-        static constexpr uint8_t kLinkLocalScope = 2;
+        uint32_t route_metric = 0;
+        OT_UNUSED_VARIABLE(route_metric);
 
-        if (aAddressInfo.mScope > kLinkLocalScope)
+        if (aAddressInfo.mScope == kLinkLocalScope)
         {
-            AddRtAttrUint32(&req.nh, sizeof(req), IFA_RT_PRIORITY, OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC);
+            route_metric = OPENTHREAD_POSIX_CONFIG_NETIF_LINK_LOCAL_ROUTE_METRIC;
+        }
+        else if (aAddressInfo.mScope > kLinkLocalScope)
+        {
+            route_metric = OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC;
+        }
+
+#if OPENTHREAD_POSIX_CONFIG_NETIF_LINK_LOCAL_ROUTE_METRIC || OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC
+        if (route_metric > 0)
+        {
+            AddRtAttrUint32(&req.nh, sizeof(req), IFA_RT_PRIORITY, route_metric);
         }
 #endif
     }
