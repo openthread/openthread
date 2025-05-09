@@ -44,13 +44,22 @@
  */
 
 /**
+ * @def OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE
+ *
+ * Define as 1 to allow TREL modules to use heap allocated objects (e.g. for the TREL peer table).
+ */
+#ifndef OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE
+#define OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_TREL_PEER_TABLE_SIZE
  *
- * Specifies the capacity of TREL peer table. Only non-zero value
- * will be directly used for setting the TREL peer table capacity.
- * Zero value lets the size to be determined by the OT stack itself
- * which is derived based on other configurations such as a child
- * table size, neighbor table size, etc.
+ * Specifies the capacity of TREL peer table. Only non-zero value will be directly used for setting the TREL peer table
+ * capacity. Zero value lets the size to be determined by the OT stack itself which is derived based on other
+ * configurations such as a child table size, neighbor table size, etc.
+ *
+ * Applicable when `OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE` is not used.
  */
 #ifndef OPENTHREAD_CONFIG_TREL_PEER_TABLE_SIZE
 #define OPENTHREAD_CONFIG_TREL_PEER_TABLE_SIZE (0)
