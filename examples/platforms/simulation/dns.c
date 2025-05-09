@@ -32,6 +32,13 @@
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
 
+bool otPlatDnsIsUpstreamQueryAvailable(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return true;
+}
+
 void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 {
     OT_UNUSED_VARIABLE(aInstance);
