@@ -502,6 +502,22 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
             OutputLine("%s", otBorderAgentIsActive(GetInstancePtr()) ? "Active" : "Inactive");
         }
     }
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    /**
+     * @cli ba servicebasename
+     * @code
+     * ba servicebasename OpenThreadBorderAgent
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderAgentSetMeshCoPServiceBaseName
+     */
+    else if (aArgs[0] == "servicebasename")
+    {
+        VerifyOrExit(!aArgs[1].IsEmpty() && aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        error = otBorderAgentSetMeshCoPServiceBaseName(GetInstancePtr(), aArgs[1].GetCString());
+    }
+#endif
     /**
      * @cli ba sessions
      * @code

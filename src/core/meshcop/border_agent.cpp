@@ -45,6 +45,11 @@ RegisterLogModule("BorderAgent");
 //----------------------------------------------------------------------------------------------------------------------
 // `BorderAgent`
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+const char BorderAgent::kServiceType[]            = "_meshcop._udp";
+const char BorderAgent::kDefaultBaseServiceName[] = OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME;
+#endif
+
 BorderAgent::BorderAgent(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(true)
@@ -59,6 +64,14 @@ BorderAgent::BorderAgent(Instance &aInstance)
 #endif
 {
     ClearAllBytes(mCounters);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    ClearAllBytes(mServiceName);
+    PostServiceTask();
+
+    static_assert(sizeof(kDefaultBaseServiceName) - 1 <= kBaseServiceNameMaxLen,
+                  "OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME is too long");
+#endif
 }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
@@ -110,6 +123,13 @@ void BorderAgent::SetEnabled(bool aEnabled)
     mEnabled = aEnabled;
     LogInfo("%sabling Border Agent", mEnabled ? "En" : "Dis");
     UpdateState();
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    if (!mEnabled)
+    {
+        UnregisterService();
+    }
+#endif
 
 exit:
     return;
@@ -365,23 +385,112 @@ exit:
     FreeMessageOnError(message, error);
 }
 
+void BorderAgent::PostServiceTask(void)
+{
+    VerifyOrExit(mEnabled);
+
+#if !OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    VerifyOrExit(mServiceChangedCallback.IsSet());
+#endif
+
+    mServiceTask.Post();
+
+exit:
+    return;
+}
+
 void BorderAgent::HandleServiceTask(void)
 {
     VerifyOrExit(mEnabled);
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    RegisterService();
+#endif
     mServiceChangedCallback.InvokeIfSet();
 
 exit:
     return;
 }
 
-void BorderAgent::PostServiceTask(void)
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+
+Error BorderAgent::SetServiceBaseName(const char *aBaseName)
 {
-    if (mEnabled && mServiceChangedCallback.IsSet())
-    {
-        mServiceTask.Post();
-    }
+    Error                  error = kErrorNone;
+    Dns::Name::LabelBuffer newName;
+
+    VerifyOrExit(StringLength(aBaseName, kBaseServiceNameMaxLen + 1) <= kBaseServiceNameMaxLen,
+                 error = kErrorInvalidArgs);
+
+    ConstrcutServiceName(aBaseName, newName);
+
+    VerifyOrExit(!StringMatch(newName, mServiceName));
+
+    UnregisterService();
+    IgnoreError(StringCopy(mServiceName, newName));
+    RegisterService();
+
+exit:
+    return error;
 }
+
+const char *BorderAgent::GetServiceName(void)
+{
+    if (IsServiceNameEmpty())
+    {
+        ConstrcutServiceName(kDefaultBaseServiceName, mServiceName);
+    }
+
+    return mServiceName;
+}
+
+void BorderAgent::ConstrcutServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer)
+{
+    StringWriter writer(aNameBuffer, sizeof(Dns::Name::LabelBuffer));
+
+    writer.Append("%.*s%s", kBaseServiceNameMaxLen, aBaseName, Get<Mac::Mac>().GetExtAddress().ToString().AsCString());
+}
+
+void BorderAgent::RegisterService(void)
+{
+    ServiceTxtData txtData;
+    Dnssd::Service service;
+
+    VerifyOrExit(Get<Dnssd>().IsReady());
+
+    SuccessOrAssert(PrepareServiceTxtData(txtData));
+
+    service.Clear();
+    service.mServiceInstance = GetServiceName();
+    service.mServiceType     = kServiceType;
+    service.mPort            = IsRunning() ? GetUdpPort() : kDummyUdpPort;
+    service.mTxtData         = txtData.mData;
+    service.mTxtDataLength   = txtData.mLength;
+
+    Get<Dnssd>().RegisterService(service, /* aRequestId */ 0, /* aCallback */ nullptr);
+
+exit:
+    return;
+}
+
+void BorderAgent::UnregisterService(void)
+{
+    Dnssd::Service service;
+
+    VerifyOrExit(Get<Dnssd>().IsReady());
+    VerifyOrExit(!IsServiceNameEmpty());
+
+    service.Clear();
+    service.mServiceInstance = GetServiceName();
+    service.mServiceType     = kServiceType;
+
+    Get<Dnssd>().UnregisterService(service, /* aRequestId */ 0, /* aCallback */ nullptr);
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
 
 Error BorderAgent::PrepareServiceTxtData(ServiceTxtData &aTxtData)
 {
@@ -529,6 +638,10 @@ exit:
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+const char BorderAgent::EphemeralKeyManager::kServiceType[] = "_meshcop-e._udp";
+#endif
+
 BorderAgent::EphemeralKeyManager::EphemeralKeyManager(Instance &aInstance)
     : InstanceLocator(aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_FEATURE_ENABLED_BY_DEFAULT
@@ -659,10 +772,19 @@ exit:
 
 void BorderAgent::EphemeralKeyManager::SetState(State aState)
 {
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    bool isServiceRegistered = ShouldRegisterService();
+#endif
+
     VerifyOrExit(mState != aState);
     LogInfo("Ephemeral key - state: %s -> %s", StateToString(mState), StateToString(aState));
     mState = aState;
     mCallbackTask.Post();
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    VerifyOrExit(isServiceRegistered != ShouldRegisterService());
+    RegisterOrUnregisterService();
+#endif
 
 exit:
     return;
@@ -760,6 +882,53 @@ void BorderAgent::EphemeralKeyManager::HandleTransportClosed(void)
     Stop(kReasonMaxFailedAttempts);
     ;
 }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+
+bool BorderAgent::EphemeralKeyManager::ShouldRegisterService(void) const
+{
+    bool shouldRegister = false;
+
+    switch (mState)
+    {
+    case kStateDisabled:
+    case kStateStopped:
+        break;
+    case kStateStarted:
+    case kStateConnected:
+    case kStateAccepted:
+        shouldRegister = true;
+        break;
+    }
+
+    return shouldRegister;
+}
+
+void BorderAgent::EphemeralKeyManager::RegisterOrUnregisterService(void)
+{
+    Dnssd::Service service;
+
+    VerifyOrExit(Get<Dnssd>().IsReady());
+
+    service.Clear();
+    service.mServiceInstance = Get<BorderAgent>().GetServiceName();
+    service.mServiceType     = kServiceType;
+    service.mPort            = GetUdpPort();
+
+    if (ShouldRegisterService())
+    {
+        Get<Dnssd>().RegisterService(service, /* aRequestId */ 0, /* aCallback */ nullptr);
+    }
+    else
+    {
+        Get<Dnssd>().UnregisterService(service, /* aRequestId */ 0, /* aCallback */ nullptr);
+    }
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
 
 const char *BorderAgent::EphemeralKeyManager::StateToString(State aState)
 {

@@ -1849,6 +1849,14 @@ Core *InitTest(void)
 
     VerifyOrQuit(sInstance != nullptr);
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    // Disable the Border Agent to prevent its attempt to
+    // register the `_meshcop._udp` service from
+    // interfering with this test.
+
+    sInstance->Get<MeshCoP::BorderAgent>().SetEnabled(false);
+#endif
+
     return &sInstance->Get<Core>();
 }
 

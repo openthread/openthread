@@ -410,6 +410,21 @@ Active
 Done
 ```
 
+### ba servicebasename \<name\>
+
+Sets the base name to construct the service instance name used when advertising the mDNS `_meshcop._udp` service by the Border Agent.
+
+Requires the `OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE` feature.
+
+The name can also be configured using the `OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME` configuration option (which is the recommended way to specify this name). This CLI command (and its corresponding API) is provided for projects where the name needs to be set after device initialization and at run-time.
+
+Per the Thread specification, the service instance should be a user-friendly name identifying the device model or product. A recommended format is "<VendorName> <ProductName>". To construct the full name and ensure name uniqueness, the OpenThread Border Agent module will append the Extended Address of the device (as 16-character hex digits) to the given base name. Note that the same name will be used for the ephemeral key service `_meshcop-e._udp` when the ephemeral key feature is enabled and used.
+
+```bash
+ba servicebasename OpenThreadBorderAgent
+Done
+```
+
 ### ba sessions
 
 Prints the list of Border Agent's sessions. Information per session:

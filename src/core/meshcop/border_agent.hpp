@@ -49,11 +49,11 @@
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/owned_ptr.hpp"
-#include "common/random.hpp"
 #include "common/tasklet.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/secure_transport.hpp"
 #include "net/dns_types.hpp"
+#include "net/dnssd.hpp"
 #include "net/socket.hpp"
 #include "net/udp6.hpp"
 #include "thread/tmf.hpp"
@@ -67,10 +67,25 @@ namespace MeshCoP {
 #error "Border Agent feature requires `OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE`"
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+
+#if !(OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE || OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE)
+#error "OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE requires either the native mDNS or platform DNS-SD APIs"
+#endif
+
+#if !OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+#error "OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE requires OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE"
+#endif
+
+#endif
+
 class BorderAgent : public InstanceLocator, private NonCopyable
 {
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     friend class ot::BorderRouter::RoutingManager;
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    friend ot::Dnssd;
 #endif
     friend class ot::Notifier;
     friend class Tmf::Agent;
@@ -229,6 +244,19 @@ public:
      */
     Error PrepareServiceTxtData(ServiceTxtData &aTxtData);
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    /**
+     * Sets the base name to construct the service instance name used when advertising the mDNS `_meshcop._udp` service
+     * by the Border Agent.
+     *
+     * @param[in] aBaseName  The base name to use (MUST not be NULL).
+     *
+     * @retval kErrorNone          The name was set successfully.
+     * @retval kErrorInvalidArgs   The name is too long or invalid.
+     */
+    Error SetServiceBaseName(const char *aBaseName);
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     /**
      * Manages the ephemeral key use by Border Agent.
@@ -359,6 +387,10 @@ public:
         void HandleSessionConnected(void);
         void HandleSessionDisconnected(SecureSession::ConnectEvent aEvent);
         void HandleCommissionerPetitionAccepted(void);
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+        bool ShouldRegisterService(void) const;
+        void RegisterOrUnregisterService(void);
+#endif
 
         // Session or Transport callbacks
         static SecureSession *HandleAcceptSession(void *aContext, const Ip6::MessageInfo &aMessageInfo);
@@ -370,6 +402,10 @@ public:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
         static const char *StopReasonToString(StopReason aReason);
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+        static const char kServiceType[];
 #endif
 
         using TimeoutTimer = TimerMilliIn<EphemeralKeyManager, &EphemeralKeyManager::HandleTimer>;
@@ -402,6 +438,11 @@ public:
 private:
     static constexpr uint16_t kUdpPort          = OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT;
     static constexpr uint32_t kKeepAliveTimeout = 50 * 1000; // Timeout to reject a commissioner (in msec)
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    static constexpr uint16_t kDummyUdpPort          = 49152;
+    static constexpr uint8_t  kBaseServiceNameMaxLen = OT_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME_MAX_LENGTH;
+#endif
 
     class CoapDtlsSession : public Coap::SecureSession, public Heap::Allocatable<CoapDtlsSession>
     {
@@ -544,7 +585,21 @@ private:
     void HandleFavoredOmrPrefixChanged(void) { PostServiceTask(); }
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    const char *GetServiceName(void);
+    bool        IsServiceNameEmpty(void) const { return mServiceName[0] == kNullChar; }
+    void        ConstrcutServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer);
+    void        RegisterService(void);
+    void        UnregisterService(void);
+    void        HandleDnssdPlatformStateChange(void) { PostServiceTask(); }
+#endif
+
     using ServiceTask = TaskletIn<BorderAgent, &BorderAgent::HandleServiceTask>;
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    static const char kServiceType[];
+    static const char kDefaultBaseServiceName[];
+#endif
 
     bool            mEnabled;
     bool            mIsRunning;
@@ -557,6 +612,9 @@ private:
     ServiceTask                      mServiceTask;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     EphemeralKeyManager mEphemeralKeyManager;
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    Dns::Name::LabelBuffer mServiceName;
 #endif
     Counters mCounters;
 };
