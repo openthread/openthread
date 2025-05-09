@@ -101,7 +101,7 @@ bool Resolver::IsUpstreamQueryAvailable(void)
 {
     TryRefreshDnsServerList();
 
-    return (mUpstreamDnsServerCount + mRecursiveDnsServerCount > 0);
+    return mUpstreamDnsServerCount + mRecursiveDnsServerCount > 0;
 }
 
 void Resolver::LoadDnsServerListFromConf(void)
