@@ -312,6 +312,7 @@ private:
     static constexpr uint16_t kMaxConcurrentUpstreamQueries = 32;
 
     static constexpr uint16_t kRrTypeA     = ResourceRecord::kTypeA;
+    static constexpr uint16_t kRrTypeNs    = ResourceRecord::kTypeNs;
     static constexpr uint16_t kRrTypeSoa   = ResourceRecord::kTypeSoa;
     static constexpr uint16_t kRrTypeCname = ResourceRecord::kTypeCname;
     static constexpr uint16_t kRrTypePtr   = ResourceRecord::kTypePtr;
@@ -320,6 +321,16 @@ private:
     static constexpr uint16_t kRrTypeAaaa  = ResourceRecord::kTypeAaaa;
     static constexpr uint16_t kRrTypeSrv   = ResourceRecord::kTypeSrv;
     static constexpr uint16_t kRrTypeAny   = ResourceRecord::kTypeAny;
+
+    // Recommended values for SOA record (RFC-8766 section 6.1).
+    static constexpr uint32_t kSoaSerial     = 0;
+    static constexpr uint32_t kSoaRefresh    = 7200;
+    static constexpr uint32_t kSoaRetry      = 3600;
+    static constexpr uint32_t kSoaExpire     = 86400;
+    static constexpr uint32_t kSoaMinimum    = 10;
+    static constexpr uint32_t kSoaTtl        = 7200;
+    static constexpr uint32_t kNsTtl         = 7200;
+    static constexpr uint32_t kServerAaaaTtl = 3600;
 
     typedef Header::Response ResponseCode;
 
@@ -412,9 +423,11 @@ private:
         Error AllocateAndInitFrom(const Request &aRequest);
         void  InitFrom(ProxyQuery &aQuery, const ProxyQueryInfo &aInfo);
         void  SetResponseCode(ResponseCode aResponseCode) { mHeader.SetResponseCode(aResponseCode); }
+        bool  IsEmpty(void) const;
         Error ParseQueryName(void);
         void  ReadQueryName(Name::Buffer &aName) const;
         bool  QueryNameMatches(const char *aName) const;
+        bool  QueryNameIsForDomain(const char *aDomainName) const;
         Error AppendQueryName(void);
         Error AppendPtrRecord(const char *aInstanceLabel, uint32_t aTtl);
         Error AppendSrvRecord(const ServiceInstanceInfo &aInstanceInfo);
@@ -455,6 +468,11 @@ private:
         Error AppendHostIp6Addresses(const ProxyResult &aResult);
         Error AppendHostIp4Addresses(const ProxyResult &aResult);
         Error AppendGenericRecord(const ProxyResult &aResult);
+#endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE || OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+        Error ResolveSoaOrNsQuery(void);
+        Error AppendSoaRecord(void);
+        Error AppendNsRecord(void);
 #endif
         template <typename ServiceType> Error AppendServiceRecords(const ServiceType &aService);
 
@@ -564,6 +582,7 @@ private:
 
     static void  ReadQueryName(const Message &aQuery, Name::Buffer &aName);
     static bool  QueryNameMatches(const Message &aQuery, const char *aName);
+    static bool  QueryNameIsForDomain(const Message &aQuery, const char *aDomainName);
     static void  ReadQueryInstanceName(const ProxyQuery &aQuery, const ProxyQueryInfo &aInfo, Name::Buffer &aName);
     static void  ReadQueryInstanceName(const ProxyQuery     &aQuery,
                                        const ProxyQueryInfo &aInfo,
@@ -596,6 +615,10 @@ private:
     Error                     ResolveByUpstream(const Request &aRequest);
 #endif
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE || OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+    void ConstructSoaServerName(void);
+#endif
+
     void HandleTimer(void);
     void ResetTimer(void);
 
@@ -610,6 +633,9 @@ private:
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     static const char *kBlockedDomains[];
 #endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE || OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+    static const char kSoaRnameLabel[];
+#endif
 
     ServerSocket mSocket;
 
@@ -619,6 +645,10 @@ private:
 
 #if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
     DiscoveryProxy mDiscoveryProxy;
+#endif
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE || OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+    Name::LabelBuffer mSoaServerName;
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
