@@ -46,16 +46,14 @@
 #include "common/pool.hpp"
 #include "common/tasklet.hpp"
 #include "common/time.hpp"
-#include "mac/mac_types.hpp"
-#include "net/ip6_address.hpp"
-#include "net/socket.hpp"
 #include "radio/trel_packet.hpp"
-#include "thread/mle_types.hpp"
+#include "radio/trel_peer.hpp"
 
 namespace ot {
 namespace Trel {
 
 class Link;
+class Interface;
 
 extern "C" void otPlatTrelHandleReceived(otInstance       *aInstance,
                                          uint8_t          *aBuffer,
@@ -81,84 +79,6 @@ class Interface : public InstanceLocator
     friend void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
 
 public:
-    /**
-     * Represents information about a discovered TREL peer.
-     */
-    class Peer : public otTrelPeer, public LinkedListEntry<Peer>
-    {
-        friend class Interface;
-        friend class LinkedListEntry<Peer>;
-        friend void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
-
-    public:
-        /**
-         * Returns the Extended MAC Address of the discovered TREL peer.
-         *
-         * @returns The Extended MAC Address of the TREL peer.
-         */
-        const Mac::ExtAddress &GetExtAddress(void) const { return static_cast<const Mac::ExtAddress &>(mExtAddress); }
-
-        /**
-         * Returns the Extended PAN Identifier of the discovered TREL peer.
-         *
-         * @returns The Extended PAN Identifier of the TREL peer.
-         */
-        const MeshCoP::ExtendedPanId &GetExtPanId(void) const
-        {
-            return static_cast<const MeshCoP::ExtendedPanId &>(mExtPanId);
-        }
-
-        /**
-         * Returns the IPv6 socket address of the discovered TREL peer.
-         *
-         * @returns The IPv6 socket address of the TREL peer.
-         */
-        const Ip6::SockAddr &GetSockAddr(void) const { return static_cast<const Ip6::SockAddr &>(mSockAddr); }
-
-        /**
-         * Set the IPv6 socket address of the discovered TREL peer.
-         *
-         * @param[in] aSockAddr   The IPv6 socket address.
-         */
-        void SetSockAddr(const Ip6::SockAddr &aSockAddr) { mSockAddr = aSockAddr; }
-
-        /**
-         * Indicates whether the peer matches a given Extended Address.
-         *
-         * @param[in] aExtAddress   A Extended Address to match with.
-         *
-         * @retval TRUE if the peer matches @p aExtAddress.
-         * @retval FALSE if the peer does not match @p aExtAddress.
-         */
-        bool Matches(const Mac::ExtAddress &aExtAddress) const { return GetExtAddress() == aExtAddress; }
-
-        /**
-         * Indicates whether the peer matches a given Socket Address.
-         *
-         * @param[in] aSockAddr   A Socket Address to match with.
-         *
-         * @retval TRUE if the peer matches @p aSockAddr.
-         * @retval FALSE if the peer does not match @p aSockAddr.
-         */
-        bool Matches(const Ip6::SockAddr &aSockAddr) const { return GetSockAddr() == aSockAddr; }
-
-    private:
-        class Info : public otPlatTrelPeerInfo
-        {
-        public:
-            bool                 IsRemoved(void) const { return mRemoved; }
-            const uint8_t       *GetTxtData(void) const { return mTxtData; }
-            uint16_t             GetTxtLength(void) const { return mTxtLength; }
-            const Ip6::SockAddr &GetSockAddr(void) const { return static_cast<const Ip6::SockAddr &>(mSockAddr); }
-        };
-
-        void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
-        void SetExtPanId(const MeshCoP::ExtendedPanId &aExtPanId) { mExtPanId = aExtPanId; }
-        void Log(const char *aAction) const;
-
-        Peer *mNext;
-    };
-
     /**
      * Represents an iterator for iterating over TREL peer table entries.
      */
@@ -288,6 +208,13 @@ private:
     static const char kTxtRecordExtAddressKey[];
     static const char kTxtRecordExtPanIdKey[];
 
+    struct PeerInfo : public otPlatTrelPeerInfo
+    {
+        bool                 IsRemoved(void) const { return mRemoved; }
+        const Ip6::SockAddr &GetSockAddr(void) const { return AsCoreType(&mSockAddr); }
+        Error                ParseTxtData(Mac::ExtAddress &aExtAddress, MeshCoP::ExtendedPanId &aExtPanId) const;
+    };
+
     explicit Interface(Instance &aInstance);
 
     // Methods used by `Trel::Link`.
@@ -298,12 +225,9 @@ private:
 
     // Callbacks from `otPlatTrel`.
     void HandleReceived(uint8_t *aBuffer, uint16_t aLength, const Ip6::SockAddr &aSenderAddr);
-    void HandleDiscoveredPeerInfo(const Peer::Info &aInfo);
+    void HandleDiscoveredPeerInfo(const PeerInfo &aInfo);
 
     void  RegisterService(void);
-    Error ParsePeerInfoTxtData(const Peer::Info       &aInfo,
-                               Mac::ExtAddress        &aExtAddress,
-                               MeshCoP::ExtendedPanId &aExtPanId) const;
     Peer *GetNewPeerEntry(void);
     void  RemovePeerEntry(Peer &aEntry);
     void  ClearPeerList(void);

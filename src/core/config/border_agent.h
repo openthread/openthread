@@ -90,6 +90,38 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+ *
+ * Define to 1 to enable Border Agent to manage registering/updating of the mDNS MeshCoP service(s) on the
+ * infrastructure link
+ *
+ * This includes the ephemeral key service when the `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE` is enabled.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE \
+    (OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE || OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME
+ *
+ * Specifies the base name to construct the service instance name used when advertising the mDNS `_meshcop._udp`
+ * service by the Border Agent.
+ *
+ * Applicable when the `OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE` feature is enabled.
+ *
+ * The name can also be configured using the `otBorderAgentSetMeshCoPServiceBaseName()` API at run-time.
+ *
+ * Per the Thread specification, the service instance should be a user-friendly name identifying the device model or
+ * product. A recommended format is "<VendorName> <ProductName>".
+ *
+ * The name MUST have a length less than or equal to `OT_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME_MAX_LENGTH` (47 chars).
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME
+#define OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME "OpenThread BR (unspecified vendor) "
+#endif
+
+/**
  * @}
  */
 

@@ -425,11 +425,11 @@ void DuaManager::PerformNextRegistration(void)
     Tmf::MessageInfo messageInfo(GetInstance());
     Ip6::Address     dua;
 
-    VerifyOrExit(mle.IsAttached(), error = kErrorInvalidState);
-    VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = kErrorInvalidState);
+    VerifyOrExit(mle.IsAttached());
+    VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary());
 
     // Only allow one outgoing DUA.req
-    VerifyOrExit(!mIsDuaPending, error = kErrorBusy);
+    VerifyOrExit(!mIsDuaPending);
 
     // Only send DUA.req when necessary
 #if OPENTHREAD_CONFIG_DUA_ENABLE
@@ -437,10 +437,10 @@ void DuaManager::PerformNextRegistration(void)
     if (!mle.IsRouterOrLeader() && mle.IsExpectedToBecomeRouterSoon())
     {
         UpdateRegistrationDelay(mle.GetRouterRoleTransitionTimeout() + kNewRouterRegistrationDelay + 1);
-        ExitNow(error = kErrorInvalidState);
+        ExitNow();
     }
 #endif
-    VerifyOrExit(mle.IsFullThreadDevice() || mle.GetParent().IsThreadVersion1p1(), error = kErrorInvalidState);
+    VerifyOrExit(mle.IsFullThreadDevice() || mle.GetParent().IsThreadVersion1p1());
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
     {
@@ -453,7 +453,7 @@ void DuaManager::PerformNextRegistration(void)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
         needReg = needReg || (!mChildDuaMask.IsEmpty() && mChildDuaMask != mChildDuaRegisteredMask);
 #endif
-        VerifyOrExit(needReg, error = kErrorNotFound);
+        VerifyOrExit(needReg);
     }
 
     // Prepare DUA.req
