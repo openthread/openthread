@@ -102,20 +102,12 @@ void Interface::Disable(void)
     VerifyOrExit(mInitialized);
 
     otPlatTrelDisable(&GetInstance());
-    ClearPeerList();
+    Get<PeerTable>().Clear();
     LogDebg("Disabled interface");
 
 exit:
     return;
 }
-
-void Interface::ClearPeerList(void)
-{
-    mPeerList.Clear();
-    mPeerPool.FreeAll();
-}
-
-Peer *Interface::FindPeer(const Mac::ExtAddress &aExtAddress) { return mPeerList.FindMatching(aExtAddress); }
 
 void Interface::NotifyPeerSocketAddressDifference(const Ip6::SockAddr &aPeerSockAddr, const Ip6::SockAddr &aRxSockAddr)
 {
@@ -183,7 +175,7 @@ exit:
 
 void Interface::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
 {
-    Peer                  *entry;
+    Peer                  *peer;
     Mac::ExtAddress        extAddress;
     MeshCoP::ExtendedPanId extPanId;
     bool                   isNew = false;
@@ -196,9 +188,7 @@ void Interface::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
 
     if (aInfo.IsRemoved())
     {
-        entry = FindPeer(extAddress);
-        VerifyOrExit(entry != nullptr);
-        RemovePeerEntry(*entry);
+        Get<PeerTable>().RemoveAndFreeAllMatching(extAddress);
         ExitNow();
     }
 
@@ -208,37 +198,37 @@ void Interface::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
     // different Extended MAC address. This ensures that we do not
     // keep stale entries in the peer table.
 
-    entry = mPeerList.FindMatching(aInfo.GetSockAddr());
+    peer = Get<PeerTable>().FindMatching(aInfo.GetSockAddr());
 
-    if ((entry != nullptr) && !entry->Matches(extAddress))
+    if ((peer != nullptr) && !peer->Matches(extAddress))
     {
-        RemovePeerEntry(*entry);
-        entry = nullptr;
+        Get<PeerTable>().RemoveMatching(aInfo.GetSockAddr());
+        peer = nullptr;
     }
 
-    if (entry == nullptr)
+    if (peer == nullptr)
     {
-        entry = mPeerList.FindMatching(extAddress);
+        peer = Get<PeerTable>().FindMatching(extAddress);
     }
 
-    if (entry == nullptr)
+    if (peer == nullptr)
     {
-        entry = GetNewPeerEntry();
-        VerifyOrExit(entry != nullptr);
+        peer = Get<PeerTable>().AllocateAndAddNewPeer();
+        VerifyOrExit(peer != nullptr);
 
-        entry->SetExtAddress(extAddress);
+        peer->SetExtAddress(extAddress);
         isNew = true;
     }
 
     if (!isNew)
     {
-        VerifyOrExit((entry->GetExtPanId() != extPanId) || (entry->GetSockAddr() != aInfo.GetSockAddr()));
+        VerifyOrExit((peer->GetExtPanId() != extPanId) || (peer->GetSockAddr() != aInfo.GetSockAddr()));
     }
 
-    entry->SetExtPanId(extPanId);
-    entry->SetSockAddr(aInfo.GetSockAddr());
+    peer->SetExtPanId(extPanId);
+    peer->SetSockAddr(aInfo.GetSockAddr());
 
-    entry->Log(isNew ? Peer::kAdded : Peer::kUpdated);
+    peer->Log(isNew ? Peer::kAdded : Peer::kUpdated);
 
 exit:
     return;
@@ -294,60 +284,6 @@ exit:
     return error;
 }
 
-Peer *Interface::GetNewPeerEntry(void)
-{
-    Peer *peerEntry;
-
-    peerEntry = mPeerPool.Allocate();
-
-    if (peerEntry != nullptr)
-    {
-        mPeerList.Push(*peerEntry);
-        ExitNow();
-    }
-
-    for (Peer &entry : mPeerList)
-    {
-        if (entry.GetExtPanId() != Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId())
-        {
-            ExitNow(peerEntry = &entry);
-        }
-    }
-
-    for (Peer &entry : mPeerList)
-    {
-        // We skip over any existing entry in neighbor table (even if the
-        // entry is in invalid state).
-
-        if (Get<NeighborTable>().FindNeighbor(entry.GetExtAddress(), Neighbor::kInStateAny) != nullptr)
-        {
-            continue;
-        }
-
-#if OPENTHREAD_FTD
-        if (Get<NeighborTable>().FindRxOnlyNeighborRouter(entry.GetExtAddress()) != nullptr)
-        {
-            continue;
-        }
-#endif
-
-        ExitNow(peerEntry = &entry);
-    }
-
-exit:
-    return peerEntry;
-}
-
-void Interface::RemovePeerEntry(Peer &aEntry)
-{
-    aEntry.Log(Peer::kRemoving);
-
-    if (mPeerList.Remove(aEntry) == kErrorNone)
-    {
-        mPeerPool.Free(aEntry);
-    }
-}
-
 const Counters *Interface::GetCounters(void) const { return otPlatTrelGetCounters(&GetInstance()); }
 
 void Interface::ResetCounters(void) { otPlatTrelResetCounters(&GetInstance()); }
@@ -363,20 +299,20 @@ Error Interface::Send(const Packet &aPacket, bool aIsDiscovery)
     switch (aPacket.GetHeader().GetType())
     {
     case Header::kTypeBroadcast:
-        for (Peer &entry : mPeerList)
+        for (const Peer &peer : Get<PeerTable>())
         {
-            if (!aIsDiscovery && (entry.GetExtPanId() != Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()))
+            if (!aIsDiscovery && (peer.GetExtPanId() != Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()))
             {
                 continue;
             }
 
-            otPlatTrelSend(&GetInstance(), aPacket.GetBuffer(), aPacket.GetLength(), &entry.mSockAddr);
+            otPlatTrelSend(&GetInstance(), aPacket.GetBuffer(), aPacket.GetLength(), &peer.mSockAddr);
         }
         break;
 
     case Header::kTypeUnicast:
     case Header::kTypeAck:
-        peerEntry = mPeerList.FindMatching(aPacket.GetHeader().GetDestination());
+        peerEntry = Get<PeerTable>().FindMatching(aPacket.GetHeader().GetDestination());
         VerifyOrExit(peerEntry != nullptr, error = kErrorAbort);
         otPlatTrelSend(&GetInstance(), aPacket.GetBuffer(), aPacket.GetLength(), &peerEntry->mSockAddr);
         break;
@@ -411,30 +347,6 @@ void Interface::HandleReceived(uint8_t *aBuffer, uint16_t aLength, const Ip6::So
 
 exit:
     return;
-}
-
-const Peer *Interface::GetNextPeer(PeerIterator &aIterator) const
-{
-    const Peer *entry = static_cast<const Peer *>(aIterator);
-
-    VerifyOrExit(entry != nullptr);
-    aIterator = entry->GetNext();
-
-exit:
-    return entry;
-}
-
-uint16_t Interface::GetNumberOfPeers(void) const
-{
-    uint16_t count = 0;
-
-    for (const Peer &peer : mPeerList)
-    {
-        OT_UNUSED_VARIABLE(peer);
-        count++;
-    }
-
-    return count;
 }
 
 } // namespace Trel

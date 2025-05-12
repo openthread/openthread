@@ -50,6 +50,7 @@ Link::Link(Instance &aInstance)
     , mTxTasklet(aInstance)
     , mTimer(aInstance)
     , mInterface(aInstance)
+    , mPeerTable(aInstance)
 {
     ClearAllBytes(mTxFrame);
     ClearAllBytes(mRxFrame);
@@ -343,7 +344,7 @@ void Link::ProcessReceivedPacket(Packet &aPacket, const Ip6::SockAddr &aSockAddr
     VerifyOrExit(aPacket.GetHeader().GetSource() != Get<Mac::Mac>().GetExtAddress());
 
     mRxPacketSenderAddr = aSockAddr;
-    mRxPacketPeer       = Get<Interface>().FindPeer(aPacket.GetHeader().GetSource());
+    mRxPacketPeer       = Get<PeerTable>().FindMatching(aPacket.GetHeader().GetSource());
 
     if (type != Header::kTypeBroadcast)
     {

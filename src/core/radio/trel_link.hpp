@@ -47,6 +47,7 @@
 #include "mac/mac_types.hpp"
 #include "radio/trel_interface.hpp"
 #include "radio/trel_packet.hpp"
+#include "radio/trel_peer.hpp"
 
 namespace ot {
 
@@ -199,6 +200,7 @@ private:
     TxTasklet     mTxTasklet;
     TimeoutTimer  mTimer;
     Interface     mInterface;
+    PeerTable     mPeerTable;
     Ip6::SockAddr mRxPacketSenderAddr;
     Peer         *mRxPacketPeer;
     Mac::RxFrame  mRxFrame;
