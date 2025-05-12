@@ -115,7 +115,7 @@ void Interface::ClearPeerList(void)
     mPeerPool.FreeAll();
 }
 
-Interface::Peer *Interface::FindPeer(const Mac::ExtAddress &aExtAddress) { return mPeerList.FindMatching(aExtAddress); }
+Peer *Interface::FindPeer(const Mac::ExtAddress &aExtAddress) { return mPeerList.FindMatching(aExtAddress); }
 
 void Interface::NotifyPeerSocketAddressDifference(const Ip6::SockAddr &aPeerSockAddr, const Ip6::SockAddr &aRxSockAddr)
 {
@@ -175,13 +175,13 @@ extern "C" void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const 
     Instance &instance = AsCoreType(aInstance);
 
     VerifyOrExit(instance.IsInitialized());
-    instance.Get<Interface>().HandleDiscoveredPeerInfo(*static_cast<const Interface::Peer::Info *>(aInfo));
+    instance.Get<Interface>().HandleDiscoveredPeerInfo(*static_cast<const Interface::PeerInfo *>(aInfo));
 
 exit:
     return;
 }
 
-void Interface::HandleDiscoveredPeerInfo(const Peer::Info &aInfo)
+void Interface::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
 {
     Peer                  *entry;
     Mac::ExtAddress        extAddress;
@@ -190,7 +190,7 @@ void Interface::HandleDiscoveredPeerInfo(const Peer::Info &aInfo)
 
     VerifyOrExit(mInitialized && mEnabled);
 
-    SuccessOrExit(ParsePeerInfoTxtData(aInfo, extAddress, extPanId));
+    SuccessOrExit(aInfo.ParseTxtData(extAddress, extPanId));
 
     VerifyOrExit(extAddress != Get<Mac::Mac>().GetExtAddress());
 
@@ -238,15 +238,13 @@ void Interface::HandleDiscoveredPeerInfo(const Peer::Info &aInfo)
     entry->SetExtPanId(extPanId);
     entry->SetSockAddr(aInfo.GetSockAddr());
 
-    entry->Log(isNew ? "Added" : "Updated");
+    entry->Log(isNew ? Peer::kAdded : Peer::kUpdated);
 
 exit:
     return;
 }
 
-Error Interface::ParsePeerInfoTxtData(const Peer::Info       &aInfo,
-                                      Mac::ExtAddress        &aExtAddress,
-                                      MeshCoP::ExtendedPanId &aExtPanId) const
+Error Interface::PeerInfo::ParseTxtData(Mac::ExtAddress &aExtAddress, MeshCoP::ExtendedPanId &aExtPanId) const
 {
     Error                   error;
     Dns::TxtEntry           entry;
@@ -256,7 +254,7 @@ Error Interface::ParsePeerInfoTxtData(const Peer::Info       &aInfo,
 
     aExtPanId.Clear();
 
-    iterator.Init(aInfo.GetTxtData(), aInfo.GetTxtLength());
+    iterator.Init(mTxtData, mTxtLength);
 
     while ((error = iterator.GetNextEntry(entry)) == kErrorNone)
     {
@@ -296,7 +294,7 @@ exit:
     return error;
 }
 
-Interface::Peer *Interface::GetNewPeerEntry(void)
+Peer *Interface::GetNewPeerEntry(void)
 {
     Peer *peerEntry;
 
@@ -342,7 +340,7 @@ exit:
 
 void Interface::RemovePeerEntry(Peer &aEntry)
 {
-    aEntry.Log("Removing");
+    aEntry.Log(Peer::kRemoving);
 
     if (mPeerList.Remove(aEntry) == kErrorNone)
     {
@@ -415,7 +413,7 @@ exit:
     return;
 }
 
-const Interface::Peer *Interface::GetNextPeer(PeerIterator &aIterator) const
+const Peer *Interface::GetNextPeer(PeerIterator &aIterator) const
 {
     const Peer *entry = static_cast<const Peer *>(aIterator);
 
@@ -437,14 +435,6 @@ uint16_t Interface::GetNumberOfPeers(void) const
     }
 
     return count;
-}
-
-void Interface::Peer::Log(const char *aAction) const
-{
-    OT_UNUSED_VARIABLE(aAction);
-
-    LogInfo("%s peer mac:%s, xpan:%s, %s", aAction, GetExtAddress().ToString().AsCString(),
-            GetExtPanId().ToString().AsCString(), GetSockAddr().ToString().AsCString());
 }
 
 } // namespace Trel

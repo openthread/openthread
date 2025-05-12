@@ -543,6 +543,13 @@ void InitTest(void)
     SuccessOrQuit(otIp6SetEnabled(sInstance, true));
     SuccessOrQuit(otThreadSetEnabled(sInstance, true));
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    // Disable the Border Agent to prevent its attempt to
+    // register the `_meshcop._udp` service from
+    // interfering with this test.
+    sInstance->Get<MeshCoP::BorderAgent>().SetEnabled(false);
+#endif
+
     // Configure the `Dnssd` module to use `otPlatDnssd` APIs.
 
     sInstance->Get<Dnssd>().SetUseNativeMdns(false);

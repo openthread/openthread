@@ -35,6 +35,7 @@
 #ifndef OPENTHREAD_BORDER_AGENT_H_
 #define OPENTHREAD_BORDER_AGENT_H_
 
+#include <openthread/dns.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 
@@ -241,6 +242,41 @@ void otBorderAgentSetMeshCoPServiceChangedCallback(otInstance                   
  * @retval OT_ERROR_NO_BUFS   If the buffer in @p aTxtData doesn't have enough size.
  */
 otError otBorderAgentGetMeshCoPServiceTxtData(otInstance *aInstance, otBorderAgentMeshCoPServiceTxtData *aTxtData);
+
+/**
+ * Maximum string length of base name used in `otBorderAgentSetMeshCoPServiceBaseName()`.
+ *
+ * The full DNS label is constructed by appending the Extended Address of the device (as 16-character hex digits) to
+ * the given base name.
+ */
+#define OT_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME_MAX_LENGTH (OT_DNS_MAX_LABEL_SIZE - 17)
+
+/**
+ * Sets the base name to construct the service instance name used when advertising the mDNS `_meshcop._udp` service by
+ * the Border Agent.
+ *
+ * Requires the `OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE` feature.
+ *
+ * The name can also be configured using the `OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME` configuration
+ * option (which is the recommended way to specify this name). This API is provided for projects where the name needs
+ * to be set after device initialization and at run-time.
+ *
+ * Per the Thread specification, the service instance should be a user-friendly name identifying the device model or
+ * product. A recommended format is "<VendorName> <ProductName>".
+ *
+ * To construct the full name and ensure name uniqueness, the OpenThread Border Agent module will append the Extended
+ * Address of the device (as 16-character hex digits) to the given base name.
+ *
+ * Note that the same name will be used for the ephemeral key service `_meshcop-e._udp` when the ephemeral key feature
+ * is enabled and used.
+ *
+ * @param[in] aInstance  The OpenThread instance.
+ * @param[in] aBaseName  The base name to use (MUST not be NULL).
+ *
+ * @retval OT_ERROR_NONE          The name was set successfully.
+ * @retval OT_ERROR_INVALID_ARGS  The name is too long or invalid.
+ */
+otError otBorderAgentSetMeshCoPServiceBaseName(otInstance *aInstance, const char *aBaseName);
 
 /**
  * Gets the randomly generated Border Agent ID.

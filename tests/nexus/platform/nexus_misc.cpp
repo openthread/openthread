@@ -105,6 +105,36 @@ exit:
 }
 
 //---------------------------------------------------------------------------------------------------------------------
+// otPlatMdns
+
+OT_TOOL_WEAK otError otPlatMdnsSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+
+    return kErrorNone;
+}
+
+OT_TOOL_WEAK void otPlatMdnsSendMulticast(otInstance *aInstance, otMessage *aMessage, uint32_t aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+
+    AsCoreType(aMessage).Free();
+}
+
+OT_TOOL_WEAK void otPlatMdnsSendUnicast(otInstance                  *aInstance,
+                                        otMessage                   *aMessage,
+                                        const otPlatMdnsAddressInfo *aAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aAddress);
+
+    AsCoreType(aMessage).Free();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 // Misc
 
 otError           otPlatDiagProcess(otInstance *, uint8_t, char *[]) { return kErrorNotImplemented; }

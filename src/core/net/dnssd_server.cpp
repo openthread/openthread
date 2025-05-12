@@ -1004,7 +1004,7 @@ Error Server::ResolveByUpstream(const Request &aRequest)
     txn = AllocateUpstreamQueryTransaction(*aRequest.mMessageInfo);
     VerifyOrExit(txn != nullptr, error = kErrorNoBufs);
 
-    VerifyOrExit(otPlatDnsIsUpstreamQueryAvailable(&GetInstance()), error = kErrorNoRoute);
+    VerifyOrExit(otPlatDnsIsUpstreamQueryAvailable(&GetInstance()), error = kErrorInvalidState);
 
     otPlatDnsStartUpstreamQuery(&GetInstance(), txn, aRequest.mMessage);
     mCounters.mUpstreamDnsCounters.mQueries++;
