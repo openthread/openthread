@@ -619,6 +619,8 @@ openthread_core_files = [
   "radio/trel_packet.hpp",
   "radio/trel_peer.cpp",
   "radio/trel_peer.hpp",
+  "radio/trel_peer_discoverer.cpp",
+  "radio/trel_peer_discoverer.hpp",
   "thread/address_resolver.cpp",
   "thread/address_resolver.hpp",
   "thread/announce_begin_server.cpp",

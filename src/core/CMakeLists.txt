@@ -204,6 +204,7 @@ set(COMMON_SOURCES
     radio/trel_link.cpp
     radio/trel_packet.cpp
     radio/trel_peer.cpp
+    radio/trel_peer_discoverer.cpp
     thread/address_resolver.cpp
     thread/announce_begin_server.cpp
     thread/announce_sender.cpp
