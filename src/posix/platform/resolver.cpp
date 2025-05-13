@@ -255,9 +255,10 @@ exit:
 void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 {
     char         packet[kMaxDnsMessageSize];
-    otError      error  = OT_ERROR_NONE;
-    uint16_t     length = otMessageGetLength(aQuery);
-    Transaction *txn    = nullptr;
+    otError      error       = OT_ERROR_NONE;
+    uint16_t     length      = otMessageGetLength(aQuery);
+    uint32_t     serverCount = 0;
+    Transaction *txn         = nullptr;
 
     VerifyOrExit(length <= kMaxDnsMessageSize, error = OT_ERROR_NO_BUFS);
     VerifyOrExit(otMessageRead(aQuery, 0, &packet, sizeof(packet)) == length, error = OT_ERROR_NO_BUFS);
@@ -268,22 +269,29 @@ void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 
     for (uint32_t i = 0; i < mRecursiveDnsServerCount; i++)
     {
-        SuccessOrExit(error = SendQueryToServer(txn, mRecursiveDnsServerList[i], packet, length));
+        if (SendQueryToServer(txn, mRecursiveDnsServerList[i], packet, length) == OT_ERROR_NONE)
+        {
+            serverCount++;
 
-        LogInfo("Forwarded DNS query %p to %s", static_cast<void *>(aTxn),
-                Ip6AddressString(&mRecursiveDnsServerList[i]).AsCString());
+            LogInfo("Forwarded DNS query %p to %s", static_cast<void *>(aTxn),
+                    Ip6AddressString(&mRecursiveDnsServerList[i]).AsCString());
+        }
     }
 
     for (uint32_t i = 0; i < mUpstreamDnsServerCount; i++)
     {
-        SuccessOrExit(error = SendQueryToServer(txn, mUpstreamDnsServerList[i], packet, length));
+        if (SendQueryToServer(txn, mUpstreamDnsServerList[i], packet, length) == OT_ERROR_NONE)
+        {
+            serverCount++;
 
-        LogInfo("Forwarded DNS query %p to %s", static_cast<void *>(aTxn),
-                Ip6AddressString(&mUpstreamDnsServerList[i]).AsCString());
+            LogInfo("Forwarded DNS query %p to %s", static_cast<void *>(aTxn),
+                    Ip6AddressString(&mUpstreamDnsServerList[i]).AsCString());
+        }
     }
 
-    LogInfo("Forwarded DNS query %p to %d server(s).", static_cast<void *>(aTxn),
-            mRecursiveDnsServerCount + mUpstreamDnsServerCount);
+    VerifyOrExit(serverCount > 0, error = OT_ERROR_NO_ROUTE);
+
+    LogInfo("Forwarded DNS query %p to %d server(s).", static_cast<void *>(aTxn), serverCount);
 
 exit:
     if (error != OT_ERROR_NONE)
