@@ -648,7 +648,10 @@ DeclareTmfHandler(BorderAgent, kUriRelayRx);
 
 } // namespace MeshCoP
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 DefineCoreType(otBorderAgentId, MeshCoP::BorderAgent::Id);
+#endif
+
 DefineCoreType(otBorderAgentSessionIterator, MeshCoP::BorderAgent::SessionIterator);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
