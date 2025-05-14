@@ -41,9 +41,6 @@ namespace Trel {
 
 RegisterLogModule("TrelDiscoverer");
 
-const char PeerDiscoverer::kTxtRecordExtAddressKey[] = "xa";
-const char PeerDiscoverer::kTxtRecordExtPanIdKey[]   = "xp";
-
 PeerDiscoverer::PeerDiscoverer(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mIsRunning(false)
@@ -89,30 +86,17 @@ void PeerDiscoverer::PostRegisterServiceTask(void)
 
 void PeerDiscoverer::RegisterService(void)
 {
-    // TXT data consists of two entries: the length fields, the
-    // "key" string, "=" char, and binary representation of the MAC
-    // or Extended PAN ID values.
-    static constexpr uint8_t kTxtDataSize =
-        /* ExtAddr  */ sizeof(uint8_t) + sizeof(kTxtRecordExtAddressKey) - 1 + sizeof(char) + sizeof(Mac::ExtAddress) +
-        /* ExtPanId */ sizeof(uint8_t) + sizeof(kTxtRecordExtPanIdKey) - 1 + sizeof(char) +
-        sizeof(MeshCoP::ExtendedPanId);
-
-    uint8_t             txtData[kTxtDataSize];
-    Dns::TxtDataEncoder encoder(txtData, sizeof(txtData));
-    uint16_t            port;
+    TxtDataEncoder txtData(GetInstance());
+    uint16_t       port;
 
     VerifyOrExit(mIsRunning);
 
     port = Get<Interface>().GetUdpPort();
 
-    SuccessOrAssert(encoder.AppendEntry(kTxtRecordExtAddressKey, Get<Mac::Mac>().GetExtAddress()));
-    SuccessOrAssert(encoder.AppendEntry(kTxtRecordExtPanIdKey, Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
+    txtData.Encode();
 
-    LogInfo("Registering DNS-SD service: port:%u, txt:\"%s=%s, %s=%s\"", port, kTxtRecordExtAddressKey,
-            Get<Mac::Mac>().GetExtAddress().ToString().AsCString(), kTxtRecordExtPanIdKey,
-            Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId().ToString().AsCString());
-
-    otPlatTrelRegisterService(&GetInstance(), port, txtData, static_cast<uint8_t>(encoder.GetLength()));
+    LogInfo("Registering DNS-SD service: port:%u", port);
+    otPlatTrelRegisterService(&GetInstance(), port, txtData.GetBytes(), static_cast<uint8_t>(txtData.GetLength()));
 
 exit:
     return;
@@ -131,20 +115,21 @@ exit:
 
 void PeerDiscoverer::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
 {
-    Peer                  *peer;
-    Mac::ExtAddress        extAddress;
-    MeshCoP::ExtendedPanId extPanId;
-    bool                   isNew = false;
+    Peer         *peer;
+    TxtData       txtData;
+    TxtData::Info txtInfo;
+    bool          isNew = false;
 
     VerifyOrExit(mIsRunning);
 
-    SuccessOrExit(aInfo.ParseTxtData(extAddress, extPanId));
+    txtData.Init(aInfo.mTxtData, aInfo.mTxtLength);
+    SuccessOrExit(txtData.Decode(txtInfo));
 
-    VerifyOrExit(extAddress != Get<Mac::Mac>().GetExtAddress());
+    VerifyOrExit(txtInfo.mExtAddress != Get<Mac::Mac>().GetExtAddress());
 
     if (aInfo.IsRemoved())
     {
-        Get<PeerTable>().RemoveAndFreeAllMatching(extAddress);
+        Get<PeerTable>().RemoveAndFreeAllMatching(txtInfo.mExtAddress);
         ExitNow();
     }
 
@@ -156,7 +141,7 @@ void PeerDiscoverer::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
 
     peer = Get<PeerTable>().FindMatching(aInfo.GetSockAddr());
 
-    if ((peer != nullptr) && !peer->Matches(extAddress))
+    if ((peer != nullptr) && !peer->Matches(txtInfo.mExtAddress))
     {
         Get<PeerTable>().RemoveMatching(aInfo.GetSockAddr());
         peer = nullptr;
@@ -164,7 +149,7 @@ void PeerDiscoverer::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
 
     if (peer == nullptr)
     {
-        peer = Get<PeerTable>().FindMatching(extAddress);
+        peer = Get<PeerTable>().FindMatching(txtInfo.mExtAddress);
     }
 
     if (peer == nullptr)
@@ -172,16 +157,16 @@ void PeerDiscoverer::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
         peer = Get<PeerTable>().AllocateAndAddNewPeer();
         VerifyOrExit(peer != nullptr);
 
-        peer->SetExtAddress(extAddress);
+        peer->SetExtAddress(txtInfo.mExtAddress);
         isNew = true;
     }
 
     if (!isNew)
     {
-        VerifyOrExit((peer->GetExtPanId() != extPanId) || (peer->GetSockAddr() != aInfo.GetSockAddr()));
+        VerifyOrExit((peer->GetExtPanId() != txtInfo.mExtPanId) || (peer->GetSockAddr() != aInfo.GetSockAddr()));
     }
 
-    peer->SetExtPanId(extPanId);
+    peer->SetExtPanId(txtInfo.mExtPanId);
     peer->SetSockAddr(aInfo.GetSockAddr());
 
     peer->Log(isNew ? Peer::kAdded : Peer::kUpdated);
@@ -190,7 +175,19 @@ exit:
     return;
 }
 
-Error PeerDiscoverer::PeerInfo::ParseTxtData(Mac::ExtAddress &aExtAddress, MeshCoP::ExtendedPanId &aExtPanId) const
+//----------------------------------------------------------------------------------------------------------------------
+// PeerDiscoverer::TxtData
+
+const char PeerDiscoverer::TxtData::kExtAddressKey[] = "xa";
+const char PeerDiscoverer::TxtData::kExtPanIdKey[]   = "xp";
+
+void PeerDiscoverer::TxtData::Init(const uint8_t *aData, uint16_t aLength)
+{
+    mData   = aData;
+    mLength = aLength;
+}
+
+Error PeerDiscoverer::TxtData::Decode(Info &aInfo)
 {
     Error                   error;
     Dns::TxtEntry           entry;
@@ -198,9 +195,9 @@ Error PeerDiscoverer::PeerInfo::ParseTxtData(Mac::ExtAddress &aExtAddress, MeshC
     bool                    parsedExtAddress = false;
     bool                    parsedExtPanId   = false;
 
-    aExtPanId.Clear();
+    aInfo.Clear();
 
-    iterator.Init(mTxtData, mTxtLength);
+    iterator.Init(mData, mLength);
 
     while ((error = iterator.GetNextEntry(entry)) == kErrorNone)
     {
@@ -213,18 +210,18 @@ Error PeerDiscoverer::PeerInfo::ParseTxtData(Mac::ExtAddress &aExtAddress, MeshC
             continue;
         }
 
-        if (StringMatch(entry.mKey, kTxtRecordExtAddressKey))
+        if (StringMatch(entry.mKey, kExtAddressKey))
         {
             VerifyOrExit(!parsedExtAddress, error = kErrorParse);
             VerifyOrExit(entry.mValueLength >= sizeof(Mac::ExtAddress), error = kErrorParse);
-            aExtAddress.Set(entry.mValue);
+            aInfo.mExtAddress.Set(entry.mValue);
             parsedExtAddress = true;
         }
-        else if (StringMatch(entry.mKey, kTxtRecordExtPanIdKey))
+        else if (StringMatch(entry.mKey, kExtPanIdKey))
         {
             VerifyOrExit(!parsedExtPanId, error = kErrorParse);
             VerifyOrExit(entry.mValueLength >= sizeof(MeshCoP::ExtendedPanId), error = kErrorParse);
-            memcpy(aExtPanId.m8, entry.mValue, sizeof(MeshCoP::ExtendedPanId));
+            memcpy(aInfo.mExtPanId.m8, entry.mValue, sizeof(MeshCoP::ExtendedPanId));
             parsedExtPanId = true;
         }
 
@@ -238,6 +235,25 @@ Error PeerDiscoverer::PeerInfo::ParseTxtData(Mac::ExtAddress &aExtAddress, MeshC
 
 exit:
     return error;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// PeerDiscoverer::TxtDataEncoder
+
+PeerDiscoverer::TxtDataEncoder::TxtDataEncoder(Instance &aInstance)
+    : InstanceLocator(aInstance)
+{
+}
+
+void PeerDiscoverer::TxtDataEncoder::Encode(void)
+{
+    Dns::TxtDataEncoder encoder(mBuffer, sizeof(mBuffer));
+
+    SuccessOrAssert(encoder.AppendEntry(kExtAddressKey, Get<Mac::Mac>().GetExtAddress()));
+    SuccessOrAssert(encoder.AppendEntry(kExtPanIdKey, Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
+
+    mData   = mBuffer;
+    mLength = encoder.GetLength();
 }
 
 } // namespace Trel

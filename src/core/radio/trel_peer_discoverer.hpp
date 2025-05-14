@@ -40,6 +40,7 @@
 
 #include <openthread/platform/trel.h>
 
+#include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
 #include "radio/trel_peer.hpp"
@@ -90,14 +91,50 @@ public:
     void NotifyPeerSocketAddressDifference(const Ip6::SockAddr &aPeerSockAddr, const Ip6::SockAddr &aRxSockAddr);
 
 private:
-    static const char kTxtRecordExtAddressKey[];
-    static const char kTxtRecordExtPanIdKey[];
+    class TxtData
+    {
+    public:
+        struct Info : public Clearable<Info>
+        {
+            Mac::ExtAddress        mExtAddress;
+            MeshCoP::ExtendedPanId mExtPanId;
+        };
+
+        void           Init(const uint8_t *aData, uint16_t aLength);
+        const uint8_t *GetBytes(void) const { return mData; }
+        uint16_t       GetLength(void) const { return mLength; }
+        Error          Decode(Info &aInfo);
+
+    protected:
+        static const char kExtAddressKey[]; // "xa"
+        static const char kExtPanIdKey[];   // "xp"
+
+        const uint8_t *mData;
+        uint16_t       mLength;
+    };
+
+    class TxtDataEncoder : public InstanceLocator, public TxtData
+    {
+    public:
+        explicit TxtDataEncoder(Instance &aInstance);
+        void Encode(void);
+
+    private:
+        // TXT data consists of two entries: `xa` for extended address
+        // and `xp` for extended PAN ID. Each entry starts with one
+        // byte for length, then the two-character key, followed by
+        // an `=` character, and then the value. This adds up to
+        // (4 + 8 [value]) = 12 bytes total per entry. The value of
+        // 32 accommodates these two entries and more.
+        static constexpr uint8_t kMaxSize = 32;
+
+        uint8_t mBuffer[kMaxSize];
+    };
 
     struct PeerInfo : public otPlatTrelPeerInfo
     {
         bool                 IsRemoved(void) const { return mRemoved; }
         const Ip6::SockAddr &GetSockAddr(void) const { return AsCoreType(&mSockAddr); }
-        Error                ParseTxtData(Mac::ExtAddress &aExtAddress, MeshCoP::ExtendedPanId &aExtPanId) const;
     };
 
     explicit PeerDiscoverer(Instance &aInstance);
