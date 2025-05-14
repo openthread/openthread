@@ -35,9 +35,7 @@
  *   The functions in this module require the build-time feature `OPENTHREAD_CONFIG_BLE_TCAT_ENABLE=1`.
  *
  *  @note
- *   To enable cipher suite DTLS_PSK_WITH_AES_128_CCM_8, MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
- *    must be enabled in mbedtls-config.h
- *   To enable cipher suite DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
+ *   To enable the required cipher suite TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
  *    MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED must be enabled in mbedtls-config.h.
  */
 
@@ -95,7 +93,7 @@ typedef enum otTcatStatusCode
 } otTcatStatusCode;
 
 /**
- * Represents TCAT application protocol.
+ * Represents TCAT application protocol choices.
  */
 typedef enum otTcatApplicationProtocol
 {
@@ -126,16 +124,16 @@ typedef enum otTcatCommandClass
 } otTcatCommandClass;
 
 /**
- * Represents Advertised Device ID type. (used during TCAT advertisement)
+ * Represents Advertised Device ID type. (Used during TCAT advertisement)
  */
 typedef enum otTcatAdvertisedDeviceIdType
 {
-    OT_TCAT_DEVICE_ID_EMPTY         = 0, ///< Vendor device ID type not set
-    OT_TCAT_DEVICE_ID_OUI24         = 1, ///< Vendor device ID type IEEE OUI-24
-    OT_TCAT_DEVICE_ID_OUI36         = 2, ///< Vendor device ID type IEEE OUI-36
-    OT_TCAT_DEVICE_ID_DISCRIMINATOR = 3, ///< Vendor device ID type Device Discriminator
-    OT_TCAT_DEVICE_ID_IANAPEN       = 4, ///< Vendor device ID type IANA PEN
-    OT_TCAT_DEVICE_ID_MAX           = 5, ///< Vendor device ID type size
+    OT_TCAT_DEVICE_ID_EMPTY         = 0, ///< Advertised device ID type not set
+    OT_TCAT_DEVICE_ID_OUI24         = 1, ///< Advertised device ID type IEEE OUI-24
+    OT_TCAT_DEVICE_ID_OUI36         = 2, ///< Advertised device ID type IEEE OUI-36
+    OT_TCAT_DEVICE_ID_DISCRIMINATOR = 3, ///< Advertised device ID type Device Discriminator
+    OT_TCAT_DEVICE_ID_IANAPEN       = 4, ///< Advertised device ID type IANA PEN
+    OT_TCAT_DEVICE_ID_MAX           = 5, ///< Advertised device ID max number of types
 } otTcatAdvertisedDeviceIdType;
 
 typedef struct otTcatAdvertisedDeviceId
@@ -202,7 +200,7 @@ typedef void (*otHandleTcatApplicationDataReceive)(otInstance               *aIn
                                                    void                     *aContext);
 
 /**
- * Pointer to call to notify the completion of a join operation.
+ * Pointer to call to notify the completion of a join operation of a TCAT Commissioner.
  *
  * @param[in]  aError           OT_ERROR_NONE if the join process succeeded.
  *                              OT_ERROR_SECURITY if the join process failed due to security credentials.

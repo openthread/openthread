@@ -232,7 +232,8 @@ Instance::Instance(void)
     , mApplicationCoapSecure(*this, kWithLinkSecurity)
 #endif
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-    , mApplicationBleSecure(*this)
+    , mBleSecure(*this)
+    , mTcatAgent(*this)
 #endif
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     , mPingSender(*this)
