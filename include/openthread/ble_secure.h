@@ -88,12 +88,13 @@ typedef void (*otHandleBleSecureConnect)(otInstance *aInstance,
  *
  * When TCAT has been started, the TCAT agent automatically responds with status OT_TCAT_STATUS_UNSUPPORTED
  * if no response has been generated or no handler is defined. The application may generate a response to
- * incoming TCAT application data or vendor-specific data by calling `otBleSecureSendApplicationTlv`.
+ * incoming TCAT application data or vendor-specific data by calling #otBleSecureSendApplicationTlv.
  */
 typedef otHandleTcatApplicationDataReceive otHandleBleSecureReceive;
 
 /**
  * Starts the BLE Secure service.
+ *
  * When TLV mode is active, the function @p aReceiveHandler will be called once a complete TLV was received and the
  * message offset points to the TLV value.
  *
@@ -102,11 +103,12 @@ typedef otHandleTcatApplicationDataReceive otHandleBleSecureReceive;
  *                              state changes.
  * @param[in]  aReceiveHandler  A pointer to a function that will be called once data has been received
  *                              over the TLS connection.
- * @param[in]  aTlvMode         A boolean value indicating if line mode shall be activated.
+ * @param[in]  aTlvMode         A boolean value indicating if TLV mode (TRUE) shall be activated, or
+ *                              line mode (FALSE).
  * @param[in]  aContext         A pointer to arbitrary context information. May be NULL if not used.
  *
  * @retval OT_ERROR_NONE        Successfully started the BLE Secure server.
- * @retval OT_ERROR_ALREADY     The service was stated already.
+ * @retval OT_ERROR_ALREADY     The service was started already.
  */
 otError otBleSecureStart(otInstance              *aInstance,
                          otHandleBleSecureConnect aConnectHandler,
@@ -115,13 +117,16 @@ otError otBleSecureStart(otInstance              *aInstance,
                          void                    *aContext);
 
 /**
- * Sets TCAT vendor info
+ * Sets TCAT vendor info.
+ *
+ * The vendor info is used for advertising in TCAT Advertisements, as well as for responding
+ * to particular TCAT commands that supply vendor info to the TCAT Commissioner.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aVendorInfo       A pointer to the Vendor Information (must remain valid after the method call.
+ * @param[in]  aVendorInfo       A pointer to the Vendor Information (MUST remain valid after the method call).
  *
- * @retval OT_ERROR_NONE         Successfully set value.
- * @retval OT_ERROR_INVALID_ARGS Value not set.
+ * @retval OT_ERROR_NONE         Successfully set vendor info.
+ * @retval OT_ERROR_INVALID_ARGS Vendor info could not be set.
  */
 otError otBleSecureSetTcatVendorInfo(otInstance *aInstance, const otTcatVendorInfo *aVendorInfo);
 
@@ -129,20 +134,40 @@ otError otBleSecureSetTcatVendorInfo(otInstance *aInstance, const otTcatVendorIn
  * Enables the TCAT protocol over BLE Secure.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aHandler          A pointer to a function that is called when the join operation completes.
+ * @param[in]  aHandler          A pointer to a function that is called when a TCAT Commissioner connects.
  *
- * @retval OT_ERROR_NONE              Successfully started the BLE Secure Joiner role.
- * @retval OT_ERROR_INVALID_ARGS      @p aElevationPsk or @p aVendorInfo is invalid.
- * @retval OT_ERROR_INVALID_STATE     The BLE function has not been started or line mode is not selected.
+ * @retval OT_ERROR_NONE           Successfully started TCAT over BLE Secure.
+ * @retval OT_ERROR_INVALID_ARGS   Vendor info is invalid, see #otBleSecureSetTcatVendorInfo.
+ * @retval OT_ERROR_INVALID_STATE  The BLE function is not started yet or TLV mode is not selected.
  */
 otError otBleSecureTcatStart(otInstance *aInstance, otHandleTcatJoin aHandler);
 
 /**
  * Stops the BLE Secure server.
  *
+ * If the TCAT agent is active, it is also stopped and any ongoing connection is forcibly ended.
+ *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  */
 void otBleSecureStop(otInstance *aInstance);
+
+/**
+ * Sets the TCAT agent over BLE Secure into active or standby state.
+ *
+ * In standby state, no BLE advertisements are sent and TCAT Commissioners can't connect.
+ * TCAT can be automatically enabled via a TMF message while in standby.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aActive     If TRUE, attempts to set TCAT agent to Active state.
+ *                         If FALSE, attempts to set TCAT agent to standby (inactive) state.
+ * @param[in]  aDelayMs    Delay in ms before activating TCAT agent. If 0, activate immediately.
+ * @param[in]  aDurationMs Duration in ms of the activation of the TCAT agent. If 0, activate indefinitely.
+ *
+ * @retval OT_ERROR_NONE              Successfully set the TCAT state as requested.
+ * @retval OT_ERROR_INVALID_STATE     TCAT is not yet started, or not in a state from which it can
+ *                                    transition to the desired state.
+ */
+otError otBleSecureSetTcatAgentState(otInstance *aInstance, bool aActive, uint32_t aDelayMs, uint32_t aDurationMs);
 
 /**
  * Sets the Pre-Shared Key (PSK) and cipher suite
@@ -295,8 +320,9 @@ otError otBleSecureGetThreadAttributeFromOwnCertificate(otInstance *aInstance,
 void otBleSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertificate);
 
 /**
- * Sets the local device's X509 certificate with corresponding private key for
- * TLS session with TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8.
+ * Sets the local device's X509 certificate and corresponding private key.
+ *
+ * For a TLS session with cipher suite TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256.
  *
  * @note Requires `MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED=1`.
  *
@@ -314,9 +340,9 @@ void otBleSecureSetCertificate(otInstance    *aInstance,
 
 /**
  * Sets the trusted top level CAs. It is needed for validating the
- * certificate of the peer.
+ * certificate of the peer via TLS.
  *
- * TLS mode "ECDHE ECDSA with AES 128 CCM 8" for secure BLE.
+ * For a TLS session with cipher suite TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256.
  *
  * @note Requires `MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED=1`.
  *
@@ -331,14 +357,14 @@ void otBleSecureSetCaCertificateChain(otInstance    *aInstance,
 /**
  * Initializes TLS session with a peer using an already open BLE connection.
  *
- * @param[in]  aInstance               A pointer to an OpenThread instance.
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  * @retval OT_ERROR_NONE  Successfully started TLS connection.
  */
 otError otBleSecureConnect(otInstance *aInstance);
 
 /**
- * Stops the BLE and TLS connection.
+ * Stops the BLE and TLS connections.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  */
@@ -365,20 +391,20 @@ bool otBleSecureIsConnectionActive(otInstance *aInstance);
 bool otBleSecureIsConnected(otInstance *aInstance);
 
 /**
- * Indicates whether or not the TCAT agent is enabled.
+ * Indicates whether or not the TCAT agent is started over BLE secure.
  *
- * @retval TRUE   The TCAT agent is enabled.
- * @retval FALSE  The TCAT agent is not enabled.
+ * @retval TRUE   The TCAT agent is started, communicating over BLE secure.
+ * @retval FALSE  The TCAT agent is disabled on BLE secure.
  */
-bool otBleSecureIsTcatEnabled(otInstance *aInstance);
+bool otBleSecureIsTcatAgentStarted(otInstance *aInstance);
 
 /**
- * Indicates whether or not a TCAT command class is authorized.
+ * Indicates whether or not a TCAT command class is authorized for the current TCAT Commissioner.
  *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aCommandClass  A command class to check.
  *
- * @retval TRUE   The command class is authorized.
+ * @retval TRUE   The command class is authorized for the current (if any) TCAT Commissioner.
  * @retval FALSE  The command class is not authorized.
  */
 bool otBleSecureIsCommandClassAuthorized(otInstance *aInstance, otTcatCommandClass aCommandClass);
@@ -413,7 +439,7 @@ otError otBleSecureSendMessage(otInstance *aInstance, otMessage *aMessage);
 otError otBleSecureSend(otInstance *aInstance, uint8_t *aBuf, uint16_t aLength);
 
 /**
- * Sends a secure BLE data packet containing application data directed to the application layer @p  aApplicationProtocol
+ * Sends a secure BLE data packet containing application data directed to the application layer @p aApplicationProtocol
  * or a response to the latest received application data packet.
  *
  * Only a single response can be sent while executing the `otHandleBleSecureReceive` handler. If no (further) response
