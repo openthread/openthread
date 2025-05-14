@@ -51,6 +51,7 @@ Link::Link(Instance &aInstance)
     , mTimer(aInstance)
     , mInterface(aInstance)
     , mPeerTable(aInstance)
+    , mPeerDiscoverer(aInstance)
 {
     ClearAllBytes(mTxFrame);
     ClearAllBytes(mRxFrame);
@@ -409,7 +410,7 @@ void Link::CheckPeerAddrOnRxSuccess(PeerSockAddrUpdateMode aMode)
         mRxPacketPeer->SetSockAddr(mRxPacketSenderAddr);
     }
 
-    Get<Interface>().NotifyPeerSocketAddressDifference(prevSockAddr, mRxPacketSenderAddr);
+    mPeerDiscoverer.NotifyPeerSocketAddressDifference(prevSockAddr, mRxPacketSenderAddr);
 
 exit:
     mRxPacketPeer = nullptr;
@@ -496,7 +497,7 @@ void Link::HandleNotifierEvents(Events aEvents)
 {
     if (aEvents.Contains(kEventThreadExtPanIdChanged))
     {
-        mInterface.HandleExtPanIdChange();
+        mPeerDiscoverer.HandleExtPanIdChange();
     }
 }
 

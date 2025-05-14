@@ -59,8 +59,8 @@ class NeighborTable;
 
 namespace Trel {
 
-class Interface;
 class PeerTable;
+class PeerDiscoverer;
 
 /**
  * Represents a discovered TREL peer.
@@ -74,8 +74,8 @@ class Peer : public InstanceLocatorInit,
              private NonCopyable
 
 {
-    friend class Interface;
     friend class PeerTable;
+    friend class PeerDiscoverer;
     friend class OwnedPtr<Peer>;
     friend class OwningList<Peer>;
     friend class LinkedList<Peer>;
