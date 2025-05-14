@@ -181,9 +181,9 @@ void TestTcat(void)
     VerifyOrQuit(otBleSecureConnect(instance) == kErrorInvalidState);
 
     // Validate Tcat state changes after stopping BLE secure
-    VerifyOrQuit(otBleSecureIsTcatEnabled(instance));
+    VerifyOrQuit(otBleSecureIsTcatAgentStarted(instance));
     otBleSecureStop(instance);
-    VerifyOrQuit(!otBleSecureIsTcatEnabled(instance));
+    VerifyOrQuit(!otBleSecureIsTcatAgentStarted(instance));
 
     testFreeInstance(instance);
 }
