@@ -109,14 +109,17 @@
  * @param[in]  aCondition  A Boolean expression to be evaluated.
  * @param[in]  aAction     An optional expression or block to execute when the assertion fails.
  */
-#define VerifyOrExit(...)                 \
-    do                                    \
-    {                                     \
-        if (!(OT_FIRST_ARG(__VA_ARGS__))) \
-        {                                 \
-            OT_SECOND_ARG(__VA_ARGS__);   \
-            goto exit;                    \
-        }                                 \
+#define VerifyOrExit(...)               \
+    do                                  \
+    {                                   \
+        if (OT_FIRST_ARG(__VA_ARGS__))  \
+        {                               \
+        }                               \
+        else                            \
+        {                               \
+            OT_SECOND_ARG(__VA_ARGS__); \
+            goto exit;                  \
+        }                               \
     } while (false)
 
 /**
