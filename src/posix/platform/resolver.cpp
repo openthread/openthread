@@ -291,7 +291,7 @@ void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 
     VerifyOrExit(serverCount > 0, error = OT_ERROR_NO_ROUTE);
 
-    LogInfo("Forwarded DNS query %p to %d server(s).", static_cast<void *>(aTxn), serverCount);
+    LogInfo("Forwarded DNS query %p to %u server(s).", static_cast<void *>(aTxn), serverCount);
 
 exit:
     if (error != OT_ERROR_NONE)
