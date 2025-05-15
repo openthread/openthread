@@ -620,6 +620,7 @@ private:
 
     using ServiceTask = TaskletIn<BorderAgent, &BorderAgent::HandleServiceTask>;
 
+    static const char kTxtDataRecordVersion[];
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     static const char kServiceType[];
     static const char kDefaultBaseServiceName[];

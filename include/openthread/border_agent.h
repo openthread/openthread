@@ -126,6 +126,7 @@ typedef struct otBorderAgentSessionIterator
  *
  * Fields:
  * Border Agent Id (id)                 - 4 + 16 = 20 bytes
+ * Version of TXT record format (rv)    - 4 + 1  = 5 bytes
  * Network Name (nn)                    - 4 + 16 = 20 bytes
  * ExtendedPanId (xp)                   - 4 + 8 = 12 bytes
  * Thread Version (tv)                  - 4 + 5 = 9 bytes
@@ -138,7 +139,7 @@ typedef struct otBorderAgentSessionIterator
  * Backbone Router Domain Name (dn)     - 4 + 16 = 20 bytes
  * On-Mesh Routable Prefix (omr)        - 5 + 9 = 14 bytes
  *
- * Maximum possible data length: 146 bytes
+ * Maximum possible data length: 151 bytes
  */
 #define OT_BORDER_AGENT_MESHCOP_SERVICE_TXT_DATA_MAX_LENGTH 256
 

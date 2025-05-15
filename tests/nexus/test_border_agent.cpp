@@ -897,6 +897,7 @@ void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode)
 
     SuccessOrQuit(aNode.Get<BorderAgent>().GetId(id));
     aTxtData.ValidateKey("id", id);
+    aTxtData.ValidateKey("rv", "1");
     aTxtData.ValidateKey("nn", aNode.Get<NetworkNameManager>().GetNetworkName().GetAsCString());
     aTxtData.ValidateKey("xp", aNode.Get<ExtendedPanIdManager>().GetExtPanId());
     aTxtData.ValidateKey("tv", kThreadVersionString);
