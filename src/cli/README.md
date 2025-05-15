@@ -3835,7 +3835,7 @@ Return state of current state.
 
 ```bash
 > state
-offline, disabled, detached, child, router or leader
+disabled, detached, child, router or leader
 Done
 ```
 
