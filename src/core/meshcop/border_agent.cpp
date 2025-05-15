@@ -45,6 +45,7 @@ RegisterLogModule("BorderAgent");
 //----------------------------------------------------------------------------------------------------------------------
 // `BorderAgent`
 
+const char BorderAgent::kTxtDataRecordVersion[] = "1";
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
 const char BorderAgent::kServiceType[]            = "_meshcop._udp";
 const char BorderAgent::kDefaultBaseServiceName[] = OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME;
@@ -542,6 +543,7 @@ Error BorderAgent::PrepareServiceTxtData(uint8_t *aBuffer, uint16_t aBufferSize,
         }
     }
 #endif
+    SuccessOrExit(error = encoder.AppendStringEntry("rv", kTxtDataRecordVersion));
     SuccessOrExit(error = encoder.AppendNameEntry("nn", Get<NetworkNameManager>().GetNetworkName().GetAsData()));
     SuccessOrExit(error = encoder.AppendEntry("xp", Get<ExtendedPanIdManager>().GetExtPanId()));
     SuccessOrExit(error = encoder.AppendStringEntry("tv", kThreadVersionString));
