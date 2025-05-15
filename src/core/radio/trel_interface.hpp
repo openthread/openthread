@@ -41,26 +41,19 @@
 #include <openthread/trel.h>
 #include <openthread/platform/trel.h>
 
-#include "common/linked_list.hpp"
 #include "common/locator.hpp"
-#include "common/pool.hpp"
-#include "common/tasklet.hpp"
-#include "common/time.hpp"
+#include "net/socket.hpp"
 #include "radio/trel_packet.hpp"
-#include "radio/trel_peer.hpp"
 
 namespace ot {
 namespace Trel {
 
 class Link;
-class Interface;
 
 extern "C" void otPlatTrelHandleReceived(otInstance       *aInstance,
                                          uint8_t          *aBuffer,
                                          uint16_t          aLength,
                                          const otSockAddr *aSenderAddr);
-extern "C" void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
-
 /**
  * Represents a group of TREL counters.
  */
@@ -76,14 +69,8 @@ class Interface : public InstanceLocator
                                          uint8_t          *aBuffer,
                                          uint16_t          aLength,
                                          const otSockAddr *aSenderAddr);
-    friend void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
 
 public:
-    /**
-     * Represents an iterator for iterating over TREL peer table entries.
-     */
-    typedef otTrelPeerIterator PeerIterator;
-
     /**
      * Enables or disables the TREL interface.
      *
@@ -116,29 +103,6 @@ public:
      * @retval FALSE if the TREL interface is disabled.
      */
     bool IsEnabled(void) const { return mEnabled; }
-
-    /**
-     * Initializes a peer table iterator.
-     *
-     * @param[in] aIterator   The iterator to initialize.
-     */
-    void InitIterator(PeerIterator &aIterator) const { aIterator = mPeerList.GetHead(); }
-
-    /**
-     * Iterates over the peer table entries.
-     *
-     * @param[in] aIterator   The iterator. MUST be initialized.
-     *
-     * @returns A pointer to the next `Peer` entry or `nullptr` if no more entries in the table.
-     */
-    const Peer *GetNextPeer(PeerIterator &aIterator) const;
-
-    /**
-     * Returns the number of TREL peers.
-     *
-     * @returns  The number of TREL peers.
-     */
-    uint16_t GetNumberOfPeers(void) const;
 
     /**
      * Sets the filter mode (enables/disables filtering).
@@ -180,68 +144,21 @@ public:
      */
     uint16_t GetUdpPort(void) const { return mUdpPort; }
 
-    /**
-     * Finds the TREL peer associated with a given Extended Address.
-     *
-     * @param[in] aExtAddress  The extended address.
-     *
-     * @returns The peer associated with @ aExtAddress, or `nullptr` if not found.
-     */
-    Peer *FindPeer(const Mac::ExtAddress &aExtAddress);
-
-    /**
-     * Notifies platform that a TREL packet is received from a peer using a different socket address than the one
-     * reported earlier.
-     *
-     * @param[in] aPeerSockAddr   The previously reported peer sock addr.
-     * @param[in] aRxSockAddr     The address of received packet from the same peer.
-     */
-    void NotifyPeerSocketAddressDifference(const Ip6::SockAddr &aPeerSockAddr, const Ip6::SockAddr &aRxSockAddr);
-
 private:
-#if OPENTHREAD_CONFIG_TREL_PEER_TABLE_SIZE != 0
-    static constexpr uint16_t kPeerPoolSize = OPENTHREAD_CONFIG_TREL_PEER_TABLE_SIZE;
-#else
-    static constexpr uint16_t kExtraEntries = 32;
-    static constexpr uint16_t kPeerPoolSize = Mle::kMaxRouters + Mle::kMaxChildren + kExtraEntries;
-#endif
-    static const char kTxtRecordExtAddressKey[];
-    static const char kTxtRecordExtPanIdKey[];
-
-    struct PeerInfo : public otPlatTrelPeerInfo
-    {
-        bool                 IsRemoved(void) const { return mRemoved; }
-        const Ip6::SockAddr &GetSockAddr(void) const { return AsCoreType(&mSockAddr); }
-        Error                ParseTxtData(Mac::ExtAddress &aExtAddress, MeshCoP::ExtendedPanId &aExtPanId) const;
-    };
-
     explicit Interface(Instance &aInstance);
 
     // Methods used by `Trel::Link`.
     void  Init(void);
-    void  HandleExtAddressChange(void);
-    void  HandleExtPanIdChange(void);
     Error Send(const Packet &aPacket, bool aIsDiscovery = false);
 
     // Callbacks from `otPlatTrel`.
     void HandleReceived(uint8_t *aBuffer, uint16_t aLength, const Ip6::SockAddr &aSenderAddr);
-    void HandleDiscoveredPeerInfo(const PeerInfo &aInfo);
 
-    void  RegisterService(void);
-    Peer *GetNewPeerEntry(void);
-    void  RemovePeerEntry(Peer &aEntry);
-    void  ClearPeerList(void);
-
-    using RegisterServiceTask = TaskletIn<Interface, &Interface::RegisterService>;
-
-    bool                      mInitialized : 1;
-    bool                      mEnabled : 1;
-    bool                      mFiltered : 1;
-    RegisterServiceTask       mRegisterServiceTask;
-    uint16_t                  mUdpPort;
-    Packet                    mRxPacket;
-    LinkedList<Peer>          mPeerList;
-    Pool<Peer, kPeerPoolSize> mPeerPool;
+    bool     mInitialized : 1;
+    bool     mEnabled : 1;
+    bool     mFiltered : 1;
+    uint16_t mUdpPort;
+    Packet   mRxPacket;
 };
 
 } // namespace Trel

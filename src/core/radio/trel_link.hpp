@@ -47,6 +47,8 @@
 #include "mac/mac_types.hpp"
 #include "radio/trel_interface.hpp"
 #include "radio/trel_packet.hpp"
+#include "radio/trel_peer.hpp"
+#include "radio/trel_peer_discoverer.hpp"
 
 namespace ot {
 
@@ -104,7 +106,7 @@ public:
      * Notifies TREL radio link that device's extended MAC address has changed for it to update any
      * internal address/state.
      */
-    void HandleExtAddressChange(void) { mInterface.HandleExtAddressChange(); }
+    void HandleExtAddressChange(void) { mPeerDiscoverer.HandleExtAddressChange(); }
 
     /**
      * Enables the TREL radio link.
@@ -192,20 +194,22 @@ private:
     using TxTasklet    = TaskletIn<Link, &Link::HandleTxTasklet>;
     using TimeoutTimer = TimerMilliIn<Link, &Link::HandleTimer>;
 
-    State         mState;
-    uint8_t       mRxChannel;
-    Mac::PanId    mPanId;
-    uint32_t      mTxPacketNumber;
-    TxTasklet     mTxTasklet;
-    TimeoutTimer  mTimer;
-    Interface     mInterface;
-    Ip6::SockAddr mRxPacketSenderAddr;
-    Peer         *mRxPacketPeer;
-    Mac::RxFrame  mRxFrame;
-    Mac::TxFrame  mTxFrame;
-    uint8_t       mTxPacketBuffer[kMaxHeaderSize + kMtuSize];
-    uint8_t       mAckPacketBuffer[kMaxHeaderSize];
-    uint8_t       mAckFrameBuffer[k154AckFrameSize];
+    State          mState;
+    uint8_t        mRxChannel;
+    Mac::PanId     mPanId;
+    uint32_t       mTxPacketNumber;
+    TxTasklet      mTxTasklet;
+    TimeoutTimer   mTimer;
+    Interface      mInterface;
+    PeerTable      mPeerTable;
+    PeerDiscoverer mPeerDiscoverer;
+    Ip6::SockAddr  mRxPacketSenderAddr;
+    Peer          *mRxPacketPeer;
+    Mac::RxFrame   mRxFrame;
+    Mac::TxFrame   mTxFrame;
+    uint8_t        mTxPacketBuffer[kMaxHeaderSize + kMtuSize];
+    uint8_t        mAckPacketBuffer[kMaxHeaderSize];
+    uint8_t        mAckFrameBuffer[k154AckFrameSize];
 };
 
 /**

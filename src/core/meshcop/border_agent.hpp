@@ -44,6 +44,7 @@
 #include "common/appender.hpp"
 #include "common/as_core_type.hpp"
 #include "common/heap_allocatable.hpp"
+#include "common/heap_data.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -255,6 +256,27 @@ public:
      * @retval kErrorInvalidArgs   The name is too long or invalid.
      */
     Error SetServiceBaseName(const char *aBaseName);
+
+    /**
+     * Sets the vendor extra TXT data to be included when the Border Agent advertises the mDNS `_meshcop._udp` service.
+     *
+     * The provided @p aVendorData bytes are appended as they appear in the buffer to the end of the TXT data generated
+     * by the Border Agent itself, and are then included in the advertised mDNS `_meshcop._udp` service.
+     *
+     * This method itself does not perform any validation of the format of the provided @p aVendorData. Therefore, the
+     * caller MUST ensure it is formatted properly. Per the Thread specification, vendor-specific Key-Value TXT data
+     * pairs use TXT keys starting with 'v'. For example, `vn` for vendor name.
+     *
+     * The `BorderAgent` will create and retain its own copy of the bytes in @p aVendorData. So, the buffer passed to
+     * this method does not need to persist beyond the scope of the call.
+     *
+     * The vendor TXT data can be set at any time while the Border Agent is in any state. If there is a change from the
+     * previously set value, it will trigger an update of the registered mDNS service to advertise the new TXT data.
+     *
+     * @param[in] aVendorData        A pointer to the buffer containing the vendor TXT data.
+     * @param[in] aVendorDataLength  The length of @p aVendorData in bytes.
+     */
+    void SetVendorTxtData(const uint8_t *aVendorData, uint16_t aVendorDataLength);
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
@@ -438,6 +460,7 @@ public:
 private:
     static constexpr uint16_t kUdpPort          = OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT;
     static constexpr uint32_t kKeepAliveTimeout = 50 * 1000; // Timeout to reject a commissioner (in msec)
+    static constexpr uint16_t kTxtDataMaxSize   = OT_BORDER_AGENT_MESHCOP_SERVICE_TXT_DATA_MAX_LENGTH;
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     static constexpr uint16_t kDummyUdpPort          = 49152;
@@ -576,6 +599,7 @@ private:
 
     static Coap::Message::Code CoapCodeFromError(Error aError);
 
+    Error    PrepareServiceTxtData(uint8_t *aBuffer, uint16_t aBufferSize, uint16_t &aLength);
     uint32_t DetermineStateBitmap(void) const;
 
     void PostServiceTask(void);
@@ -615,6 +639,7 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     Dns::Name::LabelBuffer mServiceName;
+    Heap::Data             mVendorTxtData;
 #endif
     Counters mCounters;
 };

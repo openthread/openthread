@@ -39,7 +39,50 @@
 namespace ot {
 namespace Trel {
 
-RegisterLogModule("TrelInterface");
+RegisterLogModule("TrelPeerTable");
+
+//---------------------------------------------------------------------------------------------------------------------
+// Peer
+
+void Peer::Init(Instance &aInstance)
+{
+    InstanceLocatorInit::Init(aInstance);
+
+    AsCoreType(&mExtAddress).Clear();
+    AsCoreType(&mExtPanId).Clear();
+    AsCoreType(&mSockAddr).Clear();
+}
+
+void Peer::Free(void)
+{
+    Log(kRemoving);
+
+#if OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE
+    Heap::Allocatable<Peer>::Free();
+#else
+    this->~Peer();
+    Get<PeerTable>().mPool.Free(*this);
+#endif
+}
+
+bool Peer::Matches(const NonNeighborMatcher &aMatcher) const
+{
+    // Matches only if the peer is not a neighbor. This is used when
+    // evicting a peer to make room for a new one, where we search
+    // for and remove a non-neighbor from the list.
+
+    bool matches = false;
+
+    VerifyOrExit(aMatcher.mNeighborTable.FindNeighbor(GetExtAddress(), Neighbor::kInStateAny) == nullptr);
+#if OPENTHREAD_FTD
+    VerifyOrExit(aMatcher.mNeighborTable.FindRxOnlyNeighborRouter(GetExtAddress()) == nullptr);
+#endif
+
+    matches = true;
+
+exit:
+    return matches;
+}
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
@@ -55,6 +98,7 @@ const char *Peer::ActionToString(Action aAction)
         "Added",    // (0) kAdded
         "Updated",  // (1) kUpdated
         "Removing", // (2) kRemoving
+        "Evicting", // (3) kEvicting
     };
 
     struct EnumCheck
@@ -63,12 +107,105 @@ const char *Peer::ActionToString(Action aAction)
         ValidateNextEnum(kAdded);
         ValidateNextEnum(kUpdated);
         ValidateNextEnum(kRemoving);
+        ValidateNextEnum(kEvicting);
     };
 
     return kActionStrings[aAction];
 }
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+
+//---------------------------------------------------------------------------------------------------------------------
+// PeerTable
+
+PeerTable::PeerTable(Instance &aInstance)
+    : InstanceLocator(aInstance)
+{
+}
+
+Peer *PeerTable::AllocatePeer(void)
+{
+    Peer *newPeer;
+
+#if OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE
+    newPeer = Peer::Allocate();
+#else
+    newPeer = mPool.Allocate();
+#endif
+
+    return newPeer;
+}
+
+Peer *PeerTable::AllocateAndAddNewPeer(void)
+{
+    Peer *newPeer = nullptr;
+
+    do
+    {
+        newPeer = AllocatePeer();
+
+        if (newPeer != nullptr)
+        {
+            break;
+        }
+    } while (EvictPeer() == kErrorNone);
+
+    VerifyOrExit(newPeer != nullptr);
+
+    newPeer->Init(GetInstance());
+    Push(*newPeer);
+
+exit:
+    return newPeer;
+}
+
+Error PeerTable::EvictPeer(void)
+{
+    Error          error = kErrorNotFound;
+    OwnedPtr<Peer> peerToEvict;
+
+    // We first try to evict a peer belonging to a different PAN.
+    // If not found, we evict a non-neighbor peer.
+
+    peerToEvict = RemoveMatching(Peer::OtherExtPanIdMatcher(Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
+
+    if (peerToEvict == nullptr)
+    {
+        peerToEvict = RemoveMatching(Peer::NonNeighborMatcher(Get<NeighborTable>()));
+    }
+
+    VerifyOrExit(peerToEvict != nullptr);
+
+    peerToEvict->Log(Peer::kEvicting);
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+const Peer *PeerTable::GetNextPeer(PeerIterator &aIterator) const
+{
+    const Peer *entry = static_cast<const Peer *>(aIterator);
+
+    VerifyOrExit(entry != nullptr);
+    aIterator = entry->GetNext();
+
+exit:
+    return entry;
+}
+
+uint16_t PeerTable::GetNumberOfPeers(void) const
+{
+    uint16_t count = 0;
+
+    for (const Peer &peer : *this)
+    {
+        OT_UNUSED_VARIABLE(peer);
+        count++;
+    }
+
+    return count;
+}
 
 } // namespace Trel
 } // namespace ot
