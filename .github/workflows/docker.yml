@@ -76,7 +76,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
         with:
           images: |
             ${{ env.DOCKERHUB_REPO }}
@@ -94,7 +94,7 @@ jobs:
       - name: Build and push by digest
         if: success()
         id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
         with:
           file: etc/docker/environment/Dockerfile
           platforms: ${{ matrix.platform }}
@@ -130,7 +130,7 @@ jobs:
           egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
       - name: Download digests
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           path: ${{ runner.temp }}/digests
           pattern: digests-*
@@ -147,7 +147,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 #	v5.7.0
         with:
           images: |
             ${{ env.DOCKERHUB_REPO }}
