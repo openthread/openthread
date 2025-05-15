@@ -1,4 +1,4 @@
-[![OpenThread][ot-logo]][ot-repo] [![Build][ot-gh-action-build-svg]][ot-gh-action-build] [![Simulation][ot-gh-action-simulation-svg]][ot-gh-action-simulation] [![Docker][ot-gh-action-docker-svg]][ot-gh-action-docker] [![Coverage Status][ot-codecov-svg]][ot-codecov]
+[![OpenThread][ot-logo]][ot-repo] [![Build][ot-gh-action-build-svg]][ot-gh-action-build] [![Simulation][ot-gh-action-simulation-svg]][ot-gh-action-simulation] [![Docker][ot-gh-action-docker-svg]][ot-gh-action-docker] [![Coverage Status][ot-codecov-svg]][ot-codecov] [![Ask DeepWiki][deep-wiki-svg]][deep-wiki]
 
 ---
 
@@ -24,6 +24,8 @@ More information about Thread can be found at [threadgroup.org](http://threadgro
 [ot-gh-action-docker-svg]: https://github.com/openthread/openthread/workflows/Docker/badge.svg?branch=main&event=push
 [ot-codecov]: https://codecov.io/gh/openthread/openthread
 [ot-codecov-svg]: https://codecov.io/gh/openthread/openthread/branch/main/graph/badge.svg
+[deep-wiki]: https://deepwiki.com/openthread/openthread
+[deep-wiki-svg]: https://deepwiki.com/badge.svg
 
 # Who supports OpenThread?
 
