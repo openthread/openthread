@@ -50,17 +50,17 @@ bool otTrelIsEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<T
 
 void otTrelInitPeerIterator(otInstance *aInstance, otTrelPeerIterator *aIterator)
 {
-    AsCoreType(aInstance).Get<Trel::Interface>().InitIterator(*aIterator);
+    AsCoreType(aInstance).Get<Trel::PeerTable>().InitIterator(*aIterator);
 }
 
 const otTrelPeer *otTrelGetNextPeer(otInstance *aInstance, otTrelPeerIterator *aIterator)
 {
-    return AsCoreType(aInstance).Get<Trel::Interface>().GetNextPeer(*aIterator);
+    return AsCoreType(aInstance).Get<Trel::PeerTable>().GetNextPeer(*aIterator);
 }
 
 uint16_t otTrelGetNumberOfPeers(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Trel::Interface>().GetNumberOfPeers();
+    return AsCoreType(aInstance).Get<Trel::PeerTable>().GetNumberOfPeers();
 }
 
 void otTrelSetFilterEnabled(otInstance *aInstance, bool aEnable)

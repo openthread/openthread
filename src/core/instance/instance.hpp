@@ -799,6 +799,10 @@ template <> inline Mac::SubMac &Instance::Get(void) { return mMac.mLinks.mSubMac
 template <> inline Trel::Link &Instance::Get(void) { return mMac.mLinks.mTrel; }
 
 template <> inline Trel::Interface &Instance::Get(void) { return mMac.mLinks.mTrel.mInterface; }
+
+template <> inline Trel::PeerTable &Instance::Get(void) { return mMac.mLinks.mTrel.mPeerTable; }
+
+template <> inline Trel::PeerDiscoverer &Instance::Get(void) { return mMac.mLinks.mTrel.mPeerDiscoverer; }
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE

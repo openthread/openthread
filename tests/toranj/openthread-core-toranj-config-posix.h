@@ -66,7 +66,12 @@
 
 #define OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE 1
 
-// Disabled explicitly on posix `toranj` to validate the build with this config
+// The following two features (`USE_HEAP`) are disabled explicitly on posix `toranj`
+// to validate the build with these config. The `toranj` build under simulation
+// platform covers the opposite configs (allows `USE_HEAP`).
+
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE 0
+
+#define OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE 0
 
 #endif /* OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_ */
