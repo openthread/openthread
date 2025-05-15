@@ -39,6 +39,9 @@
 #include <stdint.h>
 #include <string.h>
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+#include <openthread/p2p.h>
+#endif
 #include <openthread/thread.h>
 #if OPENTHREAD_FTD
 #include <openthread/thread_ftd.h>
@@ -703,6 +706,26 @@ inline bool IsChildRloc16(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) 
  */
 const char *RoleToString(DeviceRole aRole);
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+/**
+ * Represents a P2P request.
+ */
+OT_TOOL_PACKED_BEGIN
+class P2pRequest : public otP2pRequest
+{
+public:
+    /**
+     * Gets the wake-up address.
+     *
+     * @returns The wake-up address.
+     */
+    const Mac::WakeupAddress &GetWakeupAddress(void) const
+    {
+        return *static_cast<const Mac::WakeupAddress *>(&mWakeupAddress);
+    }
+} OT_TOOL_PACKED_END;
+#endif // OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+
 /**
  * @}
  */
@@ -714,6 +737,9 @@ DefineMapEnum(otDeviceRole, Mle::DeviceRole);
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 DefineCoreType(otDeviceProperties, Mle::DeviceProperties);
 DefineMapEnum(otPowerSupply, Mle::DeviceProperties::PowerSupply);
+#endif
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+DefineCoreType(otP2pRequest, Mle::P2pRequest);
 #endif
 
 } // namespace ot

@@ -1,0 +1,189 @@
+#!/usr/bin/expect -f
+
+source "tests/scripts/expect/_common.exp"
+source "tests/scripts/expect/_multinode.exp"
+
+set WL1 1
+set WL2 2
+set WC1 3
+set WC2 4
+set WL1_EXT_ADDRESS "deadbeefcafe0001"
+set WL2_EXT_ADDRESS "deadbeefcafe0002"
+set WC1_EXT_ADDRESS "deadbeefcafe0003"
+set WC2_EXT_ADDRESS "deadbeefcafe0004"
+
+
+send_user "\n\n>>> Setup WL1\n"
+spawn_node $WL1
+
+setup_default_network
+
+send "mode rdn\n"
+expect_line "Done"
+
+send "extaddr $WL1_EXT_ADDRESS\n"
+expect_line "Done"
+
+send "wakeup channel 11\n"
+expect_line "Done"
+
+send "routerupgradethreshold 0\n"
+expect_line "Done"
+
+send "ifconfig up\n"
+expect_line "Done"
+
+send "thread start\n"
+expect_line "Done"
+
+send "wakeup listen enable\n"
+expect_line "Done"
+
+set wl1_link_local_addr [get_ipaddr linklocal]
+
+
+send_user "\n\n>>> Setup WL2\n"
+spawn_node $WL2
+
+setup_default_network
+
+send "mode rdn\n"
+expect_line "Done"
+
+send "extaddr $WL2_EXT_ADDRESS\n"
+expect_line "Done"
+
+send "wakeup channel 11\n"
+expect_line "Done"
+
+send "routerupgradethreshold 0\n"
+expect_line "Done"
+
+send "ifconfig up\n"
+expect_line "Done"
+
+send "thread start\n"
+expect_line "Done"
+
+send "wakeup listen enable\n"
+expect_line "Done"
+
+set wl2_link_local_addr [get_ipaddr linklocal]
+
+
+send_user "\n\n>>> Setup WC1\n"
+spawn_node $WC1
+setup_default_network
+
+send "mode rdn\n"
+expect_line "Done"
+
+send "extaddr $WC1_EXT_ADDRESS\n"
+expect_line "Done"
+
+send "wakeup channel 11\n"
+expect_line "Done"
+
+send "routerupgradethreshold 0\n"
+expect_line "Done"
+
+send "ifconfig up\n"
+expect_line "Done"
+
+send "thread start\n"
+expect_line "Done"
+
+set wc1_link_local_addr [get_ipaddr linklocal]
+
+
+send_user "\n\n>>> Setup WC2\n"
+spawn_node $WC2
+setup_default_network
+
+send "mode rdn\n"
+expect_line "Done"
+
+send "extaddr $WC2_EXT_ADDRESS\n"
+expect_line "Done"
+
+send "wakeup channel 11\n"
+expect_line "Done"
+
+send "routerupgradethreshold 0\n"
+expect_line "Done"
+
+send "ifconfig up\n"
+expect_line "Done"
+
+send "thread start\n"
+expect_line "Done"
+
+set wc2_link_local_addr [get_ipaddr linklocal]
+
+
+send_user "\n\n>>> WC1 establishes a P2P link with WL1\n"
+switch_node $WC1
+send "p2p link extaddr $WL1_EXT_ADDRESS\n"
+expect_line "Done"
+
+send_user "\n\n>>> WC1 pings WL1\n"
+send "ping $wl1_link_local_addr 20 5\n"
+for {set i 1} {$i <= 5} {incr i} {
+    expect "28 bytes from $wl1_link_local_addr: icmp_seq=$i"
+}
+
+sleep 1
+
+
+send_user "\n\n>>> WC1 establishes a P2P link with WL2\n"
+send "p2p link extaddr $WL2_EXT_ADDRESS\n"
+expect_line "Done"
+
+sleep 1
+
+send_user "\n\n>>> WC1 pings WL2\n"
+send "ping $wl2_link_local_addr 20 5\n"
+for {set i 6} {$i <= 10} {incr i} {
+    expect "28 bytes from $wl2_link_local_addr: icmp_seq=$i"
+}
+
+
+send_user "\n\n>>> WC2 establishes a P2P link with WL1\n"
+switch_node $WC2
+send "p2p link extaddr $WL1_EXT_ADDRESS\n"
+expect_line "Done"
+
+sleep 1
+
+send_user "\n\n>>> WC2 pings WL1\n"
+send "ping $wl1_link_local_addr 20 5\n"
+for {set i 1} {$i <= 5} {incr i} {
+    expect "28 bytes from $wl1_link_local_addr: icmp_seq=$i"
+}
+
+
+send_user "\n\n>>> WL1 pings WC1\n"
+switch_node $WL1
+
+send "ping $wc1_link_local_addr 20 5\n"
+for {set i 1} {$i <= 5} {incr i} {
+    expect "28 bytes from $wc1_link_local_addr: icmp_seq=$i"
+}
+
+
+send_user "\n\n>>> WL1 pings WC2\n"
+send "ping $wc2_link_local_addr 20 5\n"
+for {set i 6} {$i <= 10} {incr i} {
+    expect "28 bytes from $wc2_link_local_addr: icmp_seq=$i"
+}
+
+
+send_user "\n\n>>> WL2 pings WC1\n"
+switch_node $WL2
+
+send "ping $wc1_link_local_addr 20 5\n"
+for {set i 1} {$i <= 5} {incr i} {
+    expect "28 bytes from $wc1_link_local_addr: icmp_seq=$i"
+}
+
+dispose_all

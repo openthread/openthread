@@ -8045,6 +8045,61 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+template <> otError Interpreter::Process<Cmd("p2p")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0] == "link")
+    {
+        uint16_t     length;
+        otP2pRequest p2pRequest;
+
+        /**
+         * @cli link extaddr dead00beef00cafe
+         * @code
+         * link extaddr dead00beef00cafe
+         * Done
+         * @endcode
+         * @cparam link extaddr @ca{extended-address}
+         * @par
+         * `OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE` and `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` are required.
+         * @par
+         * Wakes up the Wake-up Listener identified by the extended address and establishes a peer-to-peer link with the
+         * peer.
+         */
+        if (aArgs[1] == "extaddr")
+        {
+            length = OT_EXT_ADDRESS_SIZE;
+            SuccessOrExit(error = aArgs[2].ParseAsHexString(length, p2pRequest.mWakeupAddress.mShared.mExtAddress.m8));
+            VerifyOrExit(length == OT_EXT_ADDRESS_SIZE, error = OT_ERROR_INVALID_ARGS);
+            p2pRequest.mWakeupAddress.mType = OT_WAKEUP_ADDRESS_TYPE_EXT_ADDRESS;
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+
+        SuccessOrExit(error = otP2pLink(GetInstancePtr(), &p2pRequest, HandleP2pLinkedResult, this));
+        error = OT_ERROR_PENDING;
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+exit:
+    return error;
+}
+
+void Interpreter::HandleP2pLinkedResult(otError aError, void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleP2pLinkedResult(aError);
+}
+
+void Interpreter::HandleP2pLinkedResult(otError aError) { OutputResult(aError); }
+#endif //  OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
 {
@@ -8396,6 +8451,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
 #if OPENTHREAD_FTD
         CmdEntry("nexthop"),
+#endif
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+        CmdEntry("p2p"),
 #endif
         CmdEntry("panid"),
         CmdEntry("parent"),
