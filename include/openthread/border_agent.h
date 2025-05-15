@@ -268,7 +268,7 @@ otError otBorderAgentGetMeshCoPServiceTxtData(otInstance *aInstance, otBorderAge
  * to be set after device initialization and at run-time.
  *
  * Per the Thread specification, the service instance should be a user-friendly name identifying the device model or
- * product. A recommended format is "<VendorName> <ProductName>".
+ * product. A recommended format is "VendorName ProductName".
  *
  * To construct the full name and ensure name uniqueness, the OpenThread Border Agent module will append the Extended
  * Address of the device (as 16-character hex digits) to the given base name.
