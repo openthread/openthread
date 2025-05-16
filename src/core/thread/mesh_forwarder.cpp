@@ -1878,7 +1878,6 @@ void MeshForwarder::LogMessage(MessageAction       aAction,
         break;
 
     case kMessageDrop:
-    case kMessageReassemblyDrop:
     case kMessageEvict:
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
     case kMessageQueueMgmtDrop:
@@ -1887,6 +1886,8 @@ void MeshForwarder::LogMessage(MessageAction       aAction,
     case kMessageFullQueueDrop:
 #endif
         logLevel = kLogLevelNote;
+        break;
+    default:
         break;
     }
 
@@ -1914,28 +1915,21 @@ exit:
 
 void MeshForwarder::LogFrame(const char *aActionText, const Mac::Frame &aFrame, Error aError)
 {
-    if (aError != kErrorNone)
-    {
-        LogNote("%s, aError:%s, %s", aActionText, ErrorToString(aError), aFrame.ToInfoString().AsCString());
-    }
-    else
-    {
-        LogInfo("%s, %s", aActionText, aFrame.ToInfoString().AsCString());
-    }
+    LogInfo("%s, %s, %s", aActionText, ErrorToString(aError), aFrame.ToInfoString().AsCString());
 }
 
 void MeshForwarder::LogFragmentFrameDrop(Error                         aError,
                                          const RxInfo                 &aRxInfo,
                                          const Lowpan::FragmentHeader &aFragmentHeader)
 {
-    LogNote("Dropping rx frag frame, error:%s, %s, tag:%d, offset:%d, dglen:%d", ErrorToString(aError),
+    LogInfo("Dropping rx frag frame, error:%s, %s, tag:%d, offset:%d, dglen:%d", ErrorToString(aError),
             aRxInfo.ToString().AsCString(), aFragmentHeader.GetDatagramTag(), aFragmentHeader.GetDatagramOffset(),
             aFragmentHeader.GetDatagramSize());
 }
 
 void MeshForwarder::LogLowpanHcFrameDrop(Error aError, const RxInfo &aRxInfo)
 {
-    LogNote("Dropping rx lowpan HC frame, error:%s, %s", ErrorToString(aError), aRxInfo.ToString().AsCString());
+    LogInfo("Dropping rx lowpan HC frame, error:%s, %s", ErrorToString(aError), aRxInfo.ToString().AsCString());
 }
 
 MeshForwarder::RxInfo::InfoString MeshForwarder::RxInfo::ToString(void) const
