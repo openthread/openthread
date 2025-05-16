@@ -51,11 +51,13 @@ void Peer::Init(Instance &aInstance)
     AsCoreType(&mExtAddress).Clear();
     AsCoreType(&mExtPanId).Clear();
     AsCoreType(&mSockAddr).Clear();
+
+    mState = kStateValid;
 }
 
 void Peer::Free(void)
 {
-    Log(kRemoving);
+    Log(kDeleted);
 
 #if OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE
     Heap::Allocatable<Peer>::Free();
@@ -63,6 +65,20 @@ void Peer::Free(void)
     this->~Peer();
     Get<PeerTable>().mPool.Free(*this);
 #endif
+}
+
+void Peer::RemoveAfter(uint32_t aDelay)
+{
+    VerifyOrExit(IsStateValid());
+
+    mRemoveTime = TimerMilli::GetNow() + aDelay;
+    SetState(kStateRemoving);
+
+    Log(kRemoving);
+    LogInfo("   after %u msec", aDelay);
+
+exit:
+    return;
 }
 
 bool Peer::Matches(const NonNeighborMatcher &aMatcher) const
@@ -96,17 +112,21 @@ const char *Peer::ActionToString(Action aAction)
 {
     static const char *const kActionStrings[] = {
         "Added",    // (0) kAdded
+        "ReAdded", //  (1) kReAdded,
         "Updated",  // (1) kUpdated
         "Removing", // (2) kRemoving
-        "Evicting", // (3) kEvicting
+        "Deleted",  // (3) kDeleted
+        "Evicting", // (4) kEvicting
     };
 
     struct EnumCheck
     {
         InitEnumValidatorCounter();
         ValidateNextEnum(kAdded);
+        ValidateNextEnum(kReAdded);
         ValidateNextEnum(kUpdated);
         ValidateNextEnum(kRemoving);
+        ValidateNextEnum(kDeleted);
         ValidateNextEnum(kEvicting);
     };
 
@@ -120,6 +140,7 @@ const char *Peer::ActionToString(Action aAction)
 
 PeerTable::PeerTable(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mTimer(aInstance)
 {
 }
 
@@ -181,6 +202,24 @@ Error PeerTable::EvictPeer(void)
 
 exit:
     return error;
+}
+
+void PeerTable::HandleTimer(void)
+{
+    TimeMilli    now = TimerMilli::GetNow();
+    NextFireTime nextFireTime(now);
+
+    RemoveAndFreeAllMatching(Peer::ExpireChecker(now));
+
+    for (const Peer &peer : *this)
+    {
+        if (peer.IsStateRemoving())
+        {
+            nextFireTime.UpdateIfEarlier(peer.mRemoveTime);
+        }
+    }
+
+    mTimer.FireAtIfEarlier(nextFireTime);
 }
 
 const Peer *PeerTable::GetNextPeer(PeerIterator &aIterator) const
