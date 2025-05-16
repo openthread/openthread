@@ -4162,7 +4162,7 @@ void Mle::LogError(MessageAction aAction, MessageType aType, Error aError)
 {
     if (aError != kErrorNone)
     {
-        if (aAction == kMessageReceive && (aError == kErrorDrop || aError == kErrorNoRoute))
+        if (aAction == kMessageReceive && (aError == kErrorDrop || aError == kErrorNoRoute || aError == kErrorAlready))
         {
             LogInfo("Failed to %s %s%s: %s", "process", MessageTypeToString(aType),
                     MessageTypeActionToSuffixString(aType, aAction), ErrorToString(aError));
