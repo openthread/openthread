@@ -52,6 +52,7 @@
 #include "meshcop/extended_panid.hpp"
 #include "net/socket.hpp"
 #include "thread/mle_types.hpp"
+#include "common/timer.hpp"
 
 namespace ot {
 
@@ -130,13 +131,24 @@ public:
      */
     bool Matches(const Ip6::SockAddr &aSockAddr) const { return GetSockAddr() == aSockAddr; }
 
+    // TODO
+    void RemoveAfter(uint32_t aDelay);
+
 private:
+    enum State : uint8_t
+    {
+        kStateValid,
+        kStateRemoving,
+    };
+
     enum Action : uint8_t
     {
-        kAdded,
-        kUpdated,
-        kRemoving,
-        kEvicting,
+        kAdded,    // Added a new peer.
+        kReAdded,  // Re-added a peer (discovered again) that was scheduled for removal.
+        kUpdated,  // Updated an existing peer.
+        kRemoving, // Scheduling a peer to be removed after delay.
+        kDeleted,  // Fully removing and deleting the peer from the table.
+        kEvicting, // Evicting the peer to make space for new one.
     };
 
     struct OtherExtPanIdMatcher // Matches if Ext PAN ID is different.
@@ -159,12 +171,25 @@ private:
         NeighborTable &mNeighborTable;
     };
 
+    struct ExpireChecker // Matches if the peer is in `kStateRemoving` scheduled removal and already expired.
+    {
+        explicit ExpireChecker(TimeMilli aNow)
+            : mNow(aNow)
+        {}
+
+        TimeMilli mNow;
+    };
+
     void Init(Instance &aInstance);
     void Free(void);
+    void SetState(State aState) { mState = aState; }
+    bool IsStateValid(void) const { return mState == kStateValid; }
+    bool IsStateRemoving(void) const { return mState == kStateRemoving; }
     void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
     void SetExtPanId(const MeshCoP::ExtendedPanId &aExtPanId) { mExtPanId = aExtPanId; }
     bool Matches(const OtherExtPanIdMatcher &aMatcher) const { return GetExtPanId() != aMatcher.mExtPanId; }
     bool Matches(const NonNeighborMatcher &aMatcher) const;
+    bool Matches(const ExpireChecker &aChecker) const { return IsStateRemoving() && (aChecker.mNow >= mRemoveTime); }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     void               Log(Action aAction) const;
@@ -173,7 +198,9 @@ private:
     void Log(Action) const {}
 #endif
 
-    Peer *mNext;
+    Peer *    mNext;
+    State     mState;
+    TimeMilli mRemoveTime;
 };
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -248,7 +275,11 @@ private:
 
     Peer *AllocatePeer(void);
     Error EvictPeer(void);
+    void  HandleTimer(void);
 
+    using PeerTimer = TimerMilliIn<PeerTable, &PeerTable::HandleTimer>;
+
+    PeerTimer mTimer;
 #if !OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE
     Pool<Peer, PoolSize> mPool;
 #endif
