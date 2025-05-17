@@ -238,8 +238,9 @@ void FinalizeTest(void)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-static const char kHostName[]     = "elden";
-static const char kHostFullName[] = "elden.default.service.arpa.";
+static const char kHostName[]        = "elden";
+static const char kHostFullName[]    = "elden.default.service.arpa.";
+static const char kNonExistingName[] = "noname.nodomain.";
 
 static const char kService1Name[]      = "_srv._udp";
 static const char kService1FullName[]  = "_srv._udp.default.service.arpa.";
@@ -803,6 +804,16 @@ void TestDnsClient(void)
     {
         VerifyOrQuit(addresses.Contains(sAddressInfo.mHostAddresses[index]));
     }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `ResolveAddress()` for an invalid (non-existing) name
+
+    sAddressInfo.Reset();
+    Log("ResolveAddress(%s)", kNonExistingName);
+    SuccessOrQuit(dnsClient->ResolveAddress(kNonExistingName, AddressCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sAddressInfo.mCallbackCount == 1);
+    VerifyOrQuit(sAddressInfo.mError == kErrorNotFound);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Validate DNS Client `ResolveIp4Address()`

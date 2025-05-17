@@ -366,11 +366,6 @@ Server::ResponseCode Server::Response::AddQuestionsFrom(const Request &aRequest)
 
     SuccessOrExit(Name(*aRequest.mMessage, kQueryNameOffset).AppendTo(*mMessage));
 
-    // Check the name to include the correct domain name and determine
-    // the domain name offset (for DNS name compression).
-
-    VerifyOrExit(ParseQueryName() == kErrorNone, rcode = Header::kResponseNameError);
-
     mHeader.SetQuestionCount(aRequest.mHeader.GetQuestionCount());
 
     offset = sizeof(Header);
@@ -394,9 +389,22 @@ Server::ResponseCode Server::Response::AddQuestionsFrom(const Request &aRequest)
         SuccessOrExit(mMessage->Append(question));
     }
 
-    rcode = Header::kResponseSuccess;
+    // Check the name to include the correct domain name and determine
+    // the domain name offset (for DNS name compression).
+
+    rcode = (ParseQueryName() == kErrorNone) ? Header::kResponseSuccess : Header::kResponseNameError;
 
 exit:
+    if (rcode == Header::kResponseServerFailure)
+    {
+        // If we fail to add questions to the response message
+        // (no buffer), we clear the question count in the header and
+        // just include the header in the message.
+
+        mHeader.SetQuestionCount(0);
+        IgnoreError(mMessage->SetLength(sizeof(Header)));
+    }
+
     return rcode;
 }
 
