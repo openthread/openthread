@@ -1580,17 +1580,17 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
         if (aArgs[1].IsEmpty())
         {
             OutputLine("channel: %u", otChannelManagerGetRequestedChannel(GetInstancePtr()));
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
             OutputLine("auto: %d", otChannelManagerGetAutoChannelSelectionEnabled(GetInstancePtr()));
 #endif
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
             OutputLine("autocsl: %u", otChannelManagerGetAutoCslChannelSelectionEnabled(GetInstancePtr()));
 #endif
 
-#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE)
             if (otChannelManagerGetAutoChannelSelectionEnabled(GetInstancePtr()) ||
                 otChannelManagerGetAutoCslChannelSelectionEnabled(GetInstancePtr()))
-#elif OPENTHREAD_FTD
+#elif OPENTHREAD_FTD && OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
             if (otChannelManagerGetAutoChannelSelectionEnabled(GetInstancePtr()))
 #elif OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
             if (otChannelManagerGetAutoCslChannelSelectionEnabled(GetInstancePtr()))
@@ -1601,7 +1601,9 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
 #if OPENTHREAD_FTD
                 OutputLine("delay: %u", otChannelManagerGetDelay(GetInstancePtr()));
 #endif
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
                 OutputLine("interval: %lu", ToUlong(otChannelManagerGetAutoChannelSelectionInterval(GetInstancePtr())));
+#endif
                 OutputLine("cca threshold: 0x%04x", otChannelManagerGetCcaFailureRateThreshold(GetInstancePtr()));
                 OutputLine("supported: %s", supportedMask.ToString().AsCString());
                 OutputLine("favored: %s", favoredMask.ToString().AsCString());
@@ -1649,7 +1651,6 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
             SuccessOrExit(error = aArgs[2].ParseAsBool(enable));
             error = otChannelManagerRequestChannelSelect(GetInstancePtr(), enable);
         }
-#endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
         /**
          * @cli channel manager auto
          * @code
@@ -1673,6 +1674,7 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
             SuccessOrExit(error = aArgs[2].ParseAsBool(enable));
             otChannelManagerSetAutoChannelSelectionEnabled(GetInstancePtr(), enable);
         }
+#endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #endif // OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
         /**
@@ -1717,6 +1719,7 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
             error = ProcessGetSet(aArgs + 2, otChannelManagerGetDelay, otChannelManagerSetDelay);
         }
 #endif
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
         /**
          * @cli channel manager interval
          * @code
@@ -1736,6 +1739,7 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
         {
             error = ProcessSet(aArgs + 2, otChannelManagerSetAutoChannelSelectionInterval);
         }
+#endif
         /**
          * @cli channel manager supported
          * @code
