@@ -134,7 +134,7 @@ private:
         uint8_t GetFlags(void) const { return mFlags; }
         void    SetFlags(uint8_t aFlags) { mFlags = aFlags; }
 
-        Mode GetMode(void) const { return static_cast<Mode>((mFlags & kModeMask) >> kModeOffset); }
+        Mode GetMode(void) const { return static_cast<Mode>(ReadBits<uint8_t, kModeMask>(mFlags)); }
 
         uint8_t GetStratum(void) const { return mStratum; }
         void    SetStratum(uint8_t aStratum) { mStratum = aStratum; }

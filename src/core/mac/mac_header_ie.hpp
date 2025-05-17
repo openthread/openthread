@@ -75,32 +75,28 @@ public:
      *
      * @returns the IE Element Id.
      */
-    uint16_t GetId(void) const { return (LittleEndian::HostSwap16(mFields.m16) & kIdMask) >> kIdOffset; }
+    uint16_t GetId(void) const { return ReadBitsLittleEndian<uint16_t, kIdMask>(mFields.m16); }
 
     /**
      * Sets the IE Element Id.
      *
      * @param[in]  aId  The IE Element Id.
      */
-    void SetId(uint16_t aId)
-    {
-        mFields.m16 = LittleEndian::HostSwap16((LittleEndian::HostSwap16(mFields.m16) & ~kIdMask) |
-                                               ((aId << kIdOffset) & kIdMask));
-    }
+    void SetId(uint16_t aId) { mFields.m16 = UpdateBitsLittleEndian<uint16_t, kIdMask>(mFields.m16, aId); }
 
     /**
      * Returns the IE content length.
      *
      * @returns the IE content length.
      */
-    uint8_t GetLength(void) const { return mFields.m8[0] & kLengthMask; }
+    uint8_t GetLength(void) const { return ReadBits<uint8_t, kLengthMask>(mFields.m8[0]); }
 
     /**
      * Sets the IE content length.
      *
      * @param[in]  aLength  The IE content length.
      */
-    void SetLength(uint8_t aLength) { mFields.m8[0] = (mFields.m8[0] & ~kLengthMask) | (aLength & kLengthMask); }
+    void SetLength(uint8_t aLength) { WriteBits<uint8_t, kLengthMask>(mFields.m8[0], aLength); }
 
 private:
     // Header IE format:
@@ -351,7 +347,7 @@ public:
      *
      * @returns the Retry Interval in the units of Wake-up Intervals (7.5ms by default).
      */
-    uint8_t GetRetryInterval(void) const { return (mConnectionWindow & kRetryIntervalMask) >> kRetryIntervalOffset; }
+    uint8_t GetRetryInterval(void) const { return ReadBits<uint8_t, kRetryIntervalMask>(mConnectionWindow); }
 
     /**
      * Sets the Retry Interval.
@@ -360,7 +356,7 @@ public:
      */
     void SetRetryInterval(uint8_t aRetryInterval)
     {
-        mConnectionWindow = (aRetryInterval << kRetryIntervalOffset) | (mConnectionWindow & ~kRetryIntervalMask);
+        WriteBits<uint8_t, kRetryIntervalMask>(mConnectionWindow, aRetryInterval);
     }
 
     /**
@@ -371,17 +367,14 @@ public:
      *
      * @returns the Retry Count.
      */
-    uint8_t GetRetryCount(void) const { return mConnectionWindow & kRetryCountMask; }
+    uint8_t GetRetryCount(void) const { return ReadBits<uint8_t, kRetryCountMask>(mConnectionWindow); }
 
     /**
      * Sets the Retry Count
      *
      * @param[in]  aRetryCount  The Retry Count.
      */
-    void SetRetryCount(uint8_t aRetryCount)
-    {
-        mConnectionWindow = aRetryCount | (mConnectionWindow & ~kRetryCountMask);
-    }
+    void SetRetryCount(uint8_t aRetryCount) { WriteBits<uint8_t, kRetryCountMask>(mConnectionWindow, aRetryCount); }
 
 private:
     static constexpr uint8_t kRetryIntervalOffset = 4;

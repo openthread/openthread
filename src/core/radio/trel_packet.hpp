@@ -92,14 +92,14 @@ public:
      *
      * @returns TRUE if the version field is valid, FALSE otherwise.
      */
-    bool IsVersionValid(void) const { return (mControl & kVersionMask) == kVersion; }
+    bool IsVersionValid(void) const { return ReadBits<uint8_t, kVersionMask>(mControl) == kVersion; }
 
     /**
      * Gets the packet type.
      *
      * @returns The packet type.
      */
-    Type GetType(void) const { return static_cast<Type>(mControl & kTypeMask); }
+    Type GetType(void) const { return static_cast<Type>(ReadBits<uint8_t, kTypeMask>(mControl)); }
 
     /**
      * Gets the header length based on its type.
