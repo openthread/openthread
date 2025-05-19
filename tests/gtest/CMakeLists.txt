@@ -28,6 +28,7 @@
 
 cmake_minimum_required(VERSION 3.14)
 project(openthread-gtest)
+set(OPENTHREAD_DIR ${PROJECT_SOURCE_DIR}/../../)
 
 find_package(GTest CONFIG REQUIRED COMPONENTS GTest GMock Main)
 
@@ -83,3 +84,27 @@ target_link_libraries(ot-radio-spinel-rcp-gtest
 )
 
 gtest_discover_tests(ot-radio-spinel-rcp-gtest)
+
+# ---------------------------
+# posix-platform tests
+
+add_executable(ot-posix-spi-interface-gtest
+    spi_interface_test.cpp
+    ${OPENTHREAD_DIR}/src/posix/platform/spi_interface.cpp
+)
+
+target_include_directories(ot-posix-spi-interface-gtest
+    PUBLIC
+        ${OPENTHREAD_DIR}/src/posix/platform/include
+)
+
+target_link_libraries(ot-posix-spi-interface-gtest
+    ot-posix-config
+    openthread-ftd
+    openthread-url
+    openthread-platform
+    ot-fake-platform
+    GTest::gmock_main
+)
+
+gtest_discover_tests(ot-posix-spi-interface-gtest)
