@@ -1233,6 +1233,8 @@ Get the CSL configuration.
 
 CSL period is shown in microseconds.
 
+`OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` is required.
+
 ```bash
 > csl
 channel: 11
@@ -1245,6 +1247,8 @@ Done
 
 Set CSL channel.
 
+`OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` is required.
+
 ```bash
 > csl channel 20
 Done
@@ -1256,6 +1260,8 @@ Set CSL period in microseconds. Disable CSL by setting this parameter to `0`.
 
 The CSL period MUST be a multiple 160 microseconds which is 802.15.4 "ten symbols time".
 
+`OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` is required.
+
 ```bash
 > csl period 30000000
 Done
@@ -1265,8 +1271,34 @@ Done
 
 Set the CSL timeout in seconds.
 
+`OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` is required.
+
 ```bash
 > csl timeout 10
+Done
+```
+
+### csl accuracy
+
+Gets the CSL Accuracy in units of PPM.
+
+`OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` or `OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE` is required.
+
+```bash
+> csl accuracy
+20
+Done
+```
+
+### csl uncertainty
+
+Gets the CSL Uncertainty in units of 10 us.
+
+`OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` or `OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE` is required.
+
+```bash
+> csl uncertainty
+10
 Done
 ```
 
