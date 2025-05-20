@@ -113,7 +113,7 @@
  * The name can also be configured using the `otBorderAgentSetMeshCoPServiceBaseName()` API at run-time.
  *
  * Per the Thread specification, the service instance should be a user-friendly name identifying the device model or
- * product. A recommended format is "<VendorName> <ProductName>".
+ * product. A recommended format is "VendorName ProductName".
  *
  * The name MUST have a length less than or equal to `OT_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME_MAX_LENGTH` (47 chars).
  */

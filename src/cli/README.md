@@ -418,7 +418,7 @@ Requires the `OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE` feature.
 
 The name can also be configured using the `OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME` configuration option (which is the recommended way to specify this name). This CLI command (and its corresponding API) is provided for projects where the name needs to be set after device initialization and at run-time.
 
-Per the Thread specification, the service instance should be a user-friendly name identifying the device model or product. A recommended format is "<VendorName> <ProductName>". To construct the full name and ensure name uniqueness, the OpenThread Border Agent module will append the Extended Address of the device (as 16-character hex digits) to the given base name. Note that the same name will be used for the ephemeral key service `_meshcop-e._udp` when the ephemeral key feature is enabled and used.
+Per the Thread specification, the service instance should be a user-friendly name identifying the device model or product. A recommended format is "VendorName ProductName". To construct the full name and ensure name uniqueness, the OpenThread Border Agent module will append the Extended Address of the device (as 16-character hex digits) to the given base name. Note that the same name will be used for the ephemeral key service `_meshcop-e._udp` when the ephemeral key feature is enabled and used.
 
 ```bash
 ba servicebasename OpenThreadBorderAgent
@@ -1233,6 +1233,8 @@ Get the CSL configuration.
 
 CSL period is shown in microseconds.
 
+`OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` is required.
+
 ```bash
 > csl
 channel: 11
@@ -1245,6 +1247,8 @@ Done
 
 Set CSL channel.
 
+`OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` is required.
+
 ```bash
 > csl channel 20
 Done
@@ -1256,6 +1260,8 @@ Set CSL period in microseconds. Disable CSL by setting this parameter to `0`.
 
 The CSL period MUST be a multiple 160 microseconds which is 802.15.4 "ten symbols time".
 
+`OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` is required.
+
 ```bash
 > csl period 30000000
 Done
@@ -1265,8 +1271,34 @@ Done
 
 Set the CSL timeout in seconds.
 
+`OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` is required.
+
 ```bash
 > csl timeout 10
+Done
+```
+
+### csl accuracy
+
+Gets the CSL Accuracy in units of PPM.
+
+`OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` or `OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE` is required.
+
+```bash
+> csl accuracy
+20
+Done
+```
+
+### csl uncertainty
+
+Gets the CSL Uncertainty in units of 10 us.
+
+`OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` or `OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE` is required.
+
+```bash
+> csl uncertainty
+10
 Done
 ```
 
@@ -3835,7 +3867,7 @@ Return state of current state.
 
 ```bash
 > state
-offline, disabled, detached, child, router or leader
+disabled, detached, child, router or leader
 Done
 ```
 

@@ -126,6 +126,7 @@ typedef struct otBorderAgentSessionIterator
  *
  * Fields:
  * Border Agent Id (id)                 - 4 + 16 = 20 bytes
+ * Version of TXT record format (rv)    - 4 + 1  = 5 bytes
  * Network Name (nn)                    - 4 + 16 = 20 bytes
  * ExtendedPanId (xp)                   - 4 + 8 = 12 bytes
  * Thread Version (tv)                  - 4 + 5 = 9 bytes
@@ -138,7 +139,7 @@ typedef struct otBorderAgentSessionIterator
  * Backbone Router Domain Name (dn)     - 4 + 16 = 20 bytes
  * On-Mesh Routable Prefix (omr)        - 5 + 9 = 14 bytes
  *
- * Maximum possible data length: 146 bytes
+ * Maximum possible data length: 151 bytes
  */
 #define OT_BORDER_AGENT_MESHCOP_SERVICE_TXT_DATA_MAX_LENGTH 256
 
@@ -268,7 +269,7 @@ otError otBorderAgentGetMeshCoPServiceTxtData(otInstance *aInstance, otBorderAge
  * to be set after device initialization and at run-time.
  *
  * Per the Thread specification, the service instance should be a user-friendly name identifying the device model or
- * product. A recommended format is "<VendorName> <ProductName>".
+ * product. A recommended format is "VendorName ProductName".
  *
  * To construct the full name and ensure name uniqueness, the OpenThread Border Agent module will append the Extended
  * Address of the device (as 16-character hex digits) to the given base name.

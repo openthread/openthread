@@ -2627,28 +2627,64 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
     return error;
 }
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
     /**
+     * @cli csl accuracy
+     * @code
+     * csl accuracy
+     * 20
+     * Done
+     * @endcode
+     * @par
+     * Gets the CSL Accuracy in units of PPM.
+     * @par
+     * `OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` or `OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE` is required.
+     * @sa otPlatRadioGetCslAccuracy
+     */
+    if (aArgs[0] == "accuracy")
+    {
+        OutputLine("%u", otPlatRadioGetCslAccuracy(GetInstancePtr()));
+    }
+    /**
+     * @cli csl uncertainty
+     * @code
+     * csl uncertainty
+     * 10
+     * Done
+     * @endcode
+     * @par
+     * Gets the CSL Uncertainty in units of 10 us.
+     * @par
+     * `OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` or `OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE` is required.
+     * @sa otPlatRadioGetCslUncertainty
+     */
+    else if (aArgs[0] == "uncertainty")
+    {
+        OutputLine("%u", otPlatRadioGetCslUncertainty(GetInstancePtr()));
+    }
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    /**
      * @cli csl
      * @code
      * csl
-     * Channel: 11
-     * Period: 160000us
-     * Timeout: 1000s
+     * channel: 11
+     * period: 160000us
+     * timeout: 1000s
      * Done
      * @endcode
      * @par
      * Gets the CSL configuration.
+     * @par
+     * `OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` is required.
      * @sa otLinkGetCslChannel
-     * @sa otLinkGetCslPeriod
      * @sa otLinkGetCslPeriod
      * @sa otLinkGetCslTimeout
      */
-    if (aArgs[0].IsEmpty())
+    else if (aArgs[0].IsEmpty())
     {
         OutputLine("channel: %u", otLinkGetCslChannel(GetInstancePtr()));
         OutputLine("period: %luus", ToUlong(otLinkGetCslPeriod(GetInstancePtr())));
@@ -2663,6 +2699,8 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
      * @cparam csl channel @ca{channel}
      * @par api_copy
      * #otLinkSetCslChannel
+     * @par
+     * `OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` is required.
      */
     else if (aArgs[0] == "channel")
     {
@@ -2677,6 +2715,8 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
      * @cparam csl period @ca{period}
      * @par api_copy
      * #otLinkSetCslPeriod
+     * @par
+     * `OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` is required.
      */
     else if (aArgs[0] == "period")
     {
@@ -2691,11 +2731,14 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
      * @cparam csl timeout @ca{timeout}
      * @par api_copy
      * #otLinkSetCslTimeout
+     * @par
+     * `OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` is required.
      */
     else if (aArgs[0] == "timeout")
     {
         error = ProcessSet(aArgs + 1, otLinkSetCslTimeout);
     }
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     else
     {
         error = OT_ERROR_INVALID_ARGS;
@@ -2703,7 +2746,7 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
 
     return error;
 }
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 #if OPENTHREAD_FTD
 template <> otError Interpreter::Process<Cmd("delaytimermin")>(Arg aArgs[])
@@ -8282,7 +8325,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("contextreusedelay"),
 #endif
         CmdEntry("counters"),
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         CmdEntry("csl"),
 #endif
         CmdEntry("dataset"),

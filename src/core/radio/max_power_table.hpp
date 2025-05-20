@@ -68,7 +68,7 @@ public:
         {
             if (mPowerTable[i - Radio::kChannelMin] != OT_RADIO_POWER_INVALID)
             {
-                channelMask |= (1 << i);
+                SetBit<uint32_t>(channelMask, i);
             }
         }
 

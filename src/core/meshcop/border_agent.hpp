@@ -620,6 +620,7 @@ private:
 
     using ServiceTask = TaskletIn<BorderAgent, &BorderAgent::HandleServiceTask>;
 
+    static const char kTxtDataRecordVersion[];
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     static const char kServiceType[];
     static const char kDefaultBaseServiceName[];
@@ -648,7 +649,10 @@ DeclareTmfHandler(BorderAgent, kUriRelayRx);
 
 } // namespace MeshCoP
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 DefineCoreType(otBorderAgentId, MeshCoP::BorderAgent::Id);
+#endif
+
 DefineCoreType(otBorderAgentSessionIterator, MeshCoP::BorderAgent::SessionIterator);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE

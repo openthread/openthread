@@ -119,30 +119,26 @@ public:
      *
      * @returns The type of the message.
      */
-    Type GetType(void) const { return static_cast<Type>((mFlags[0] & kQrFlagMask) >> kQrFlagOffset); }
+    Type GetType(void) const { return static_cast<Type>(ReadBits<uint8_t, kQrFlagMask>(mFlags[0])); }
 
     /**
      * Sets the type of the message.
      *
      * @param[in]  aType The type of the message.
      */
-    void SetType(Type aType)
-    {
-        mFlags[0] &= ~kQrFlagMask;
-        mFlags[0] |= static_cast<uint8_t>(aType) << kQrFlagOffset;
-    }
+    void SetType(Type aType) { WriteBits<uint8_t, kQrFlagMask>(mFlags[0], static_cast<uint8_t>(aType)); }
 
     /**
-     * Defines types of query.
+     * Defines types of query (OpCode).
      */
     enum QueryType : uint8_t
     {
-        kQueryTypeStandard = 0,
-        kQueryTypeInverse  = 1,
-        kQueryTypeStatus   = 2,
-        kQueryTypeNotify   = 4,
-        kQueryTypeUpdate   = 5,
-        kQueryTypeDso      = 6,
+        kQueryTypeStandard = 0, ///< Query
+        kQueryTypeInverse  = 1, ///< IQuery
+        kQueryTypeStatus   = 2, ///< Status
+        kQueryTypeNotify   = 4, ///< Notify
+        kQueryTypeUpdate   = 5, ///< Update
+        kQueryTypeDso      = 6, ///< DNS Stateful Operations
     };
 
     /**
@@ -150,18 +146,14 @@ public:
      *
      * @returns The type of the query.
      */
-    QueryType GetQueryType(void) const { return static_cast<QueryType>((mFlags[0] & kOpCodeMask) >> kOpCodeOffset); }
+    QueryType GetQueryType(void) const { return static_cast<QueryType>(ReadBits<uint8_t, kOpCodeMask>(mFlags[0])); }
 
     /**
      * Sets the type of the query.
      *
      * @param[in]  aType The type of the query.
      */
-    void SetQueryType(QueryType aType)
-    {
-        mFlags[0] &= ~kOpCodeMask;
-        mFlags[0] |= static_cast<uint8_t>(aType) << kOpCodeOffset;
-    }
+    void SetQueryType(QueryType aType) { WriteBits<uint8_t, kOpCodeMask>(mFlags[0], static_cast<uint8_t>(aType)); }
 
     /**
      * Specifies in response message if the responding name server is an
@@ -169,34 +161,34 @@ public:
      *
      * @returns True if Authoritative Answer flag (AA) is set in the header, false otherwise.
      */
-    bool IsAuthoritativeAnswerFlagSet(void) const { return (mFlags[0] & kAaFlagMask) == kAaFlagMask; }
+    bool IsAuthoritativeAnswerFlagSet(void) const { return GetBit<uint8_t>(mFlags[0], kAaFlagOffset); }
 
     /**
      * Clears the Authoritative Answer flag (AA) in the header.
      */
-    void ClearAuthoritativeAnswerFlag(void) { mFlags[0] &= ~kAaFlagMask; }
+    void ClearAuthoritativeAnswerFlag(void) { ClearBit<uint8_t>(mFlags[0], kAaFlagOffset); }
 
     /**
      * Sets the Authoritative Answer flag (AA) in the header.
      */
-    void SetAuthoritativeAnswerFlag(void) { mFlags[0] |= kAaFlagMask; }
+    void SetAuthoritativeAnswerFlag(void) { SetBit<uint8_t>(mFlags[0], kAaFlagOffset); }
 
     /**
      * Specifies if message is truncated.
      *
      * @returns True if Truncation flag (TC) is set in the header, false otherwise.
      */
-    bool IsTruncationFlagSet(void) const { return (mFlags[0] & kTcFlagMask) == kTcFlagMask; }
+    bool IsTruncationFlagSet(void) const { return GetBit<uint8_t>(mFlags[0], kTcFlagOffset); }
 
     /**
      * Clears the Truncation flag (TC) in the header.
      */
-    void ClearTruncationFlag(void) { mFlags[0] &= ~kTcFlagMask; }
+    void ClearTruncationFlag(void) { ClearBit<uint8_t>(mFlags[0], kTcFlagOffset); }
 
     /**
      * Sets the Truncation flag (TC) in the header.
      */
-    void SetTruncationFlag(void) { mFlags[0] |= kTcFlagMask; }
+    void SetTruncationFlag(void) { SetBit<uint8_t>(mFlags[0], kTcFlagOffset); }
 
     /**
      * Specifies if resolver wants to direct the name server to pursue
@@ -204,55 +196,55 @@ public:
      *
      * @returns True if Recursion Desired flag (RD) is set in the header, false otherwise.
      */
-    bool IsRecursionDesiredFlagSet(void) const { return (mFlags[0] & kRdFlagMask) == kRdFlagMask; }
+    bool IsRecursionDesiredFlagSet(void) const { return GetBit<uint8_t>(mFlags[0], kRdFlagOffset); }
 
     /**
      * Clears the Recursion Desired flag (RD) in the header.
      */
-    void ClearRecursionDesiredFlag(void) { mFlags[0] &= ~kRdFlagMask; }
+    void ClearRecursionDesiredFlag(void) { ClearBit<uint8_t>(mFlags[0], kRdFlagOffset); }
 
     /**
      * Sets the Recursion Desired flag (RD) in the header.
      */
-    void SetRecursionDesiredFlag(void) { mFlags[0] |= kRdFlagMask; }
+    void SetRecursionDesiredFlag(void) { SetBit<uint8_t>(mFlags[0], kRdFlagOffset); }
 
     /**
      * Denotes whether recursive query support is available in the name server.
      *
      * @returns True if Recursion Available flag (RA) is set in the header, false otherwise.
      */
-    bool IsRecursionAvailableFlagSet(void) const { return (mFlags[1] & kRaFlagMask) == kRaFlagMask; }
+    bool IsRecursionAvailableFlagSet(void) const { return GetBit<uint8_t>(mFlags[1], kRaFlagOffset); }
 
     /**
      * Clears the Recursion Available flag (RA) in the header.
      */
-    void ClearRecursionAvailableFlag(void) { mFlags[1] &= ~kRaFlagMask; }
+    void ClearRecursionAvailableFlag(void) { ClearBit<uint8_t>(mFlags[1], kRaFlagOffset); }
 
     /**
      * Sets the Recursion Available flag (RA) in the header.
      */
-    void SetRecursionAvailableFlag(void) { mFlags[1] |= kRaFlagMask; }
+    void SetRecursionAvailableFlag(void) { SetBit<uint8_t>(mFlags[1], kRaFlagOffset); }
 
     /**
-     * Defines response codes.
+     * Defines response codes (RCODEs).
      */
     enum Response : uint8_t
     {
-        kResponseSuccess         = 0,  ///< Success (no error condition).
-        kResponseFormatError     = 1,  ///< Server unable to interpret request due to format error.
-        kResponseServerFailure   = 2,  ///< Server encountered an internal failure.
-        kResponseNameError       = 3,  ///< Name that ought to exist, does not exists.
-        kResponseNotImplemented  = 4,  ///< Server does not support the query type (OpCode).
-        kResponseRefused         = 5,  ///< Server refused to perform operation for policy or security reasons.
-        kResponseNameExists      = 6,  ///< Some name that ought not to exist, does exist.
-        kResponseRecordExists    = 7,  ///< Some RRset that ought not to exist, does exist.
-        kResponseRecordNotExists = 8,  ///< Some RRset that ought to exist, does not exist.
-        kResponseNotAuth         = 9,  ///< Service is not authoritative for zone.
-        kResponseNotZone         = 10, ///< A name is not in the zone.
-        kDsoTypeNotImplemented   = 11, ///< DSO TLV TYPE is not implemented.
-        kResponseBadName         = 20, ///< Bad name.
-        kResponseBadAlg          = 21, ///< Bad algorithm.
-        kResponseBadTruncation   = 22, ///< Bad truncation.
+        kResponseSuccess         = 0,  ///< Success (no error condition, NoError).
+        kResponseFormatError     = 1,  ///< Server unable to interpret request due to format error (FormErr).
+        kResponseServerFailure   = 2,  ///< Server encountered an internal failure (ServFail).
+        kResponseNameError       = 3,  ///< Name that ought to exist, does not exist (NXDomain).
+        kResponseNotImplemented  = 4,  ///< Server does not support the query type or OpCode (NotImp).
+        kResponseRefused         = 5,  ///< Server refused to perform operation for policy/security reasons (Refused).
+        kResponseNameExists      = 6,  ///< Some name that ought not to exist, does exist (YXDomain).
+        kResponseRecordExists    = 7,  ///< Some RRset that ought not to exist, does exist (YXRRSet).
+        kResponseRecordNotExists = 8,  ///< Some RRset that ought to exist, does not exist (NXRRSet).
+        kResponseNotAuth         = 9,  ///< Service is not authoritative for zone (NotAuth).
+        kResponseNotZone         = 10, ///< A name is not in the zone (NotZone).
+        kDsoTypeNotImplemented   = 11, ///< DSO TLV TYPE is not implemented (DSOTYPENI).
+        kResponseBadName         = 20, ///< Bad name (BADNAME).
+        kResponseBadAlg          = 21, ///< Bad algorithm (BADALG).
+        kResponseBadTruncation   = 22, ///< Bad truncation (BADTRUNC).
     };
 
     /**
@@ -260,7 +252,7 @@ public:
      *
      * @returns The response code from the header.
      */
-    Response GetResponseCode(void) const { return static_cast<Response>((mFlags[1] & kRCodeMask) >> kRCodeOffset); }
+    Response GetResponseCode(void) const { return static_cast<Response>(ReadBits<uint8_t, kRCodeMask>(mFlags[1])); }
 
     /**
      * Sets the response code.
@@ -269,8 +261,7 @@ public:
      */
     void SetResponseCode(Response aResponse)
     {
-        mFlags[1] &= ~kRCodeMask;
-        mFlags[1] |= static_cast<uint8_t>(aResponse) << kRCodeOffset;
+        WriteBits<uint8_t, kRCodeMask>(mFlags[1], static_cast<uint8_t>(aResponse));
     }
 
     /**
@@ -360,13 +351,9 @@ private:
     static constexpr uint8_t kOpCodeOffset = 3;                     // OpCode field offset.
     static constexpr uint8_t kOpCodeMask   = 0x0f << kOpCodeOffset; // OpCode field mask.
     static constexpr uint8_t kAaFlagOffset = 2;                     // AA Flag offset.
-    static constexpr uint8_t kAaFlagMask   = 0x01 << kAaFlagOffset; // AA Flag mask.
     static constexpr uint8_t kTcFlagOffset = 1;                     // TC Flag offset.
-    static constexpr uint8_t kTcFlagMask   = 0x01 << kTcFlagOffset; // TC Flag mask.
     static constexpr uint8_t kRdFlagOffset = 0;                     // RD Flag offset.
-    static constexpr uint8_t kRdFlagMask   = 0x01 << kRdFlagOffset; // RD Flag mask.
     static constexpr uint8_t kRaFlagOffset = 7;                     // RA Flag offset.
-    static constexpr uint8_t kRaFlagMask   = 0x01 << kRaFlagOffset; // RA Flag mask.
     static constexpr uint8_t kRCodeOffset  = 0;                     // RCODE field offset.
     static constexpr uint8_t kRCodeMask    = 0x0f << kRCodeOffset;  // RCODE field mask.
 
@@ -1400,14 +1387,14 @@ class ResourceRecord
     friend class OptRecord;
 
 public:
-    // Resource Record Types.
+    // Resource Record Types (RRTypes).
     static constexpr uint16_t kTypeZero  = 0;   ///< Zero as special indicator for the SIG RR (SIG(0) from RFC 2931).
-    static constexpr uint16_t kTypeA     = 1;   ///< Address record (IPv4).
+    static constexpr uint16_t kTypeA     = 1;   ///< IPv4 address record (A).
     static constexpr uint16_t kTypeNs    = 2;   ///< NS record (an authoritative name server).
     static constexpr uint16_t kTypeCname = 5;   ///< CNAME record.
     static constexpr uint16_t kTypeSoa   = 6;   ///< SOA record (start of (zone of) authority).
     static constexpr uint16_t kTypePtr   = 12;  ///< PTR record.
-    static constexpr uint16_t kTypeMx    = 15;  ///< MAX record (mail exchange).
+    static constexpr uint16_t kTypeMx    = 15;  ///< MX record (mail exchange).
     static constexpr uint16_t kTypeTxt   = 16;  ///< TXT record.
     static constexpr uint16_t kTypeRp    = 17;  ///< RP record (Responsible Person).
     static constexpr uint16_t kTypeAfsdb = 18;  ///< AFSDB record (AFS Data Base location).
@@ -1415,15 +1402,15 @@ public:
     static constexpr uint16_t kTypeSig   = 24;  ///< SIG record.
     static constexpr uint16_t kTypeKey   = 25;  ///< KEY record.
     static constexpr uint16_t kTypePx    = 26;  ///< PX record (X.400 mail mapping information).
-    static constexpr uint16_t kTypeAaaa  = 28;  ///< IPv6 address record.
+    static constexpr uint16_t kTypeAaaa  = 28;  ///< IPv6 address (AAAA) record.
     static constexpr uint16_t kTypeSrv   = 33;  ///< SRV locator record.
     static constexpr uint16_t kTypeKx    = 36;  ///< KX record (Key Exchanger).
     static constexpr uint16_t kTypeDname = 39;  ///< DNAME record.
-    static constexpr uint16_t kTypeOpt   = 41;  ///< Option record.
+    static constexpr uint16_t kTypeOpt   = 41;  ///< Option (OPT) record.
     static constexpr uint16_t kTypeNsec  = 47;  ///< NSEC record.
-    static constexpr uint16_t kTypeAny   = 255; ///< ANY record.
+    static constexpr uint16_t kTypeAny   = 255; ///< ANY (*) record.
 
-    // Resource Record Class Codes.
+    // Resource Record Class Codes (CLASS).
     static constexpr uint16_t kClassInternet = 1;   ///< Class code Internet (IN).
     static constexpr uint16_t kClassNone     = 254; ///< Class code None (NONE) - RFC 2136.
     static constexpr uint16_t kClassAny      = 255; ///< Class code Any (ANY).
