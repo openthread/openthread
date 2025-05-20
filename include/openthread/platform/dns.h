@@ -59,7 +59,7 @@ typedef struct otPlatDnsUpstreamQuery otPlatDnsUpstreamQuery;
 /**
  * Indicates whether upstream DNS query functionality is available on the platform.
  *
- * This function allows the platform to inform the OpenThread stack if, for example, no upstream DNS server is
+ * This function allows the platform to inform the OpenThread stack if no upstream DNS server is
  * available.
  *
  * This function is used to optimize query handling. If this function returns `false` (e.g., no upstream DNS server is
