@@ -33,6 +33,13 @@ add_executable(ot-cli-radio
 
 target_include_directories(ot-cli-radio PRIVATE ${COMMON_INCLUDES})
 
+target_compile_definitions(ot-cli-radio
+    PRIVATE
+        OPENTHREAD_FTD=0
+        OPENTHREAD_MTD=0
+        OPENTHREAD_RADIO=1
+)
+
 if(NOT DEFINED OT_PLATFORM_LIB_RCP)
     set(OT_PLATFORM_LIB_RCP ${OT_PLATFORM_LIB})
 endif()
