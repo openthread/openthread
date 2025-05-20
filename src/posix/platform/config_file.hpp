@@ -51,6 +51,20 @@ public:
     explicit ConfigFile(const char *aFilePath);
 
     /**
+     * Sets the configuration file path.
+     *
+     * @param[in]  aFilePath  A pointer to the null-terminated file path.
+     */
+    void SetFilePath(const char *aFilePath);
+
+    /**
+     * Gets the configuration file path.
+     *
+     * @returns A pointer to the null-terminated file path.
+     */
+    const char *GetFilePath(void) const { return mFilePath; }
+
+    /**
      * Gets a configuration from the configuration file.
      *
      * @param[in]      aKey          The key string associated with the requested configuration.
