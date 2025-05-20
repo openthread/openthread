@@ -91,6 +91,8 @@ public:
     void NotifyPeerSocketAddressDifference(const Ip6::SockAddr &aPeerSockAddr, const Ip6::SockAddr &aRxSockAddr);
 
 private:
+    static constexpr uint32_t kRemoveDelay = 7 * Time::kOneSecondInMsec;
+
     class TxtData
     {
     public:

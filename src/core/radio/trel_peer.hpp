@@ -48,6 +48,7 @@
 #include "common/non_copyable.hpp"
 #include "common/owning_list.hpp"
 #include "common/pool.hpp"
+#include "common/timer.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/extended_panid.hpp"
 #include "net/socket.hpp"
@@ -110,33 +111,21 @@ public:
      */
     void SetSockAddr(const Ip6::SockAddr &aSockAddr) { mSockAddr = aSockAddr; }
 
-    /**
-     * Indicates whether the peer matches a given Extended Address.
-     *
-     * @param[in] aExtAddress   A Extended Address to match with.
-     *
-     * @retval TRUE if the peer matches @p aExtAddress.
-     * @retval FALSE if the peer does not match @p aExtAddress.
-     */
-    bool Matches(const Mac::ExtAddress &aExtAddress) const { return GetExtAddress() == aExtAddress; }
-
-    /**
-     * Indicates whether the peer matches a given Socket Address.
-     *
-     * @param[in] aSockAddr   A Socket Address to match with.
-     *
-     * @retval TRUE if the peer matches @p aSockAddr.
-     * @retval FALSE if the peer does not match @p aSockAddr.
-     */
-    bool Matches(const Ip6::SockAddr &aSockAddr) const { return GetSockAddr() == aSockAddr; }
-
 private:
+    enum State : uint8_t
+    {
+        kStateValid,
+        kStateRemoving,
+    };
+
     enum Action : uint8_t
     {
-        kAdded,
-        kUpdated,
-        kRemoving,
-        kEvicting,
+        kAdded,    // Added a new peer.
+        kReAdded,  // Re-added a peer (discovered again) that was scheduled for removal.
+        kUpdated,  // Updated an existing peer.
+        kRemoving, // Scheduling a peer to be removed after delay.
+        kDeleted,  // Fully removing and deleting the peer from the table.
+        kEvicting, // Evicting the peer to make space for new one.
     };
 
     struct OtherExtPanIdMatcher // Matches if Ext PAN ID is different.
@@ -159,12 +148,30 @@ private:
         NeighborTable &mNeighborTable;
     };
 
+    struct ExpireChecker // Matches if the peer is in `kStateRemoving` and already expired.
+    {
+        explicit ExpireChecker(TimeMilli aNow)
+            : mNow(aNow)
+        {
+        }
+
+        TimeMilli mNow;
+    };
+
     void Init(Instance &aInstance);
     void Free(void);
+    void SetState(State aState) { mState = aState; }
+    bool IsStateValid(void) const { return mState == kStateValid; }
+    bool IsStateRemoving(void) const { return mState == kStateRemoving; }
     void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
     void SetExtPanId(const MeshCoP::ExtendedPanId &aExtPanId) { mExtPanId = aExtPanId; }
+    void ScheduleToRemoveAfter(uint32_t aDelay);
+    bool Matches(const Mac::ExtAddress &aExtAddress) const { return GetExtAddress() == aExtAddress; }
+    bool Matches(const Ip6::SockAddr &aSockAddr) const { return GetSockAddr() == aSockAddr; }
+    bool Matches(State aState) const { return mState == aState; }
     bool Matches(const OtherExtPanIdMatcher &aMatcher) const { return GetExtPanId() != aMatcher.mExtPanId; }
     bool Matches(const NonNeighborMatcher &aMatcher) const;
+    bool Matches(const ExpireChecker &aChecker) const { return IsStateRemoving() && (aChecker.mNow >= mRemoveTime); }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     void               Log(Action aAction) const;
@@ -173,7 +180,9 @@ private:
     void Log(Action) const {}
 #endif
 
-    Peer *mNext;
+    Peer     *mNext;
+    State     mState;
+    TimeMilli mRemoveTime;
 };
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -248,7 +257,11 @@ private:
 
     Peer *AllocatePeer(void);
     Error EvictPeer(void);
+    void  HandleTimer(void);
 
+    using PeerTimer = TimerMilliIn<PeerTable, &PeerTable::HandleTimer>;
+
+    PeerTimer mTimer;
 #if !OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE
     Pool<Peer, PoolSize> mPool;
 #endif

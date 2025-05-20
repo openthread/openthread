@@ -51,11 +51,13 @@ void Peer::Init(Instance &aInstance)
     AsCoreType(&mExtAddress).Clear();
     AsCoreType(&mExtPanId).Clear();
     AsCoreType(&mSockAddr).Clear();
+
+    mState = kStateValid;
 }
 
 void Peer::Free(void)
 {
-    Log(kRemoving);
+    Log(kDeleted);
 
 #if OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE
     Heap::Allocatable<Peer>::Free();
@@ -63,6 +65,22 @@ void Peer::Free(void)
     this->~Peer();
     Get<PeerTable>().mPool.Free(*this);
 #endif
+}
+
+void Peer::ScheduleToRemoveAfter(uint32_t aDelay)
+{
+    VerifyOrExit(IsStateValid());
+
+    mRemoveTime = TimerMilli::GetNow() + aDelay;
+    SetState(kStateRemoving);
+
+    Get<PeerTable>().mTimer.FireAtIfEarlier(mRemoveTime);
+
+    Log(kRemoving);
+    LogInfo("   after %u msec", aDelay);
+
+exit:
+    return;
 }
 
 bool Peer::Matches(const NonNeighborMatcher &aMatcher) const
@@ -96,17 +114,21 @@ const char *Peer::ActionToString(Action aAction)
 {
     static const char *const kActionStrings[] = {
         "Added",    // (0) kAdded
-        "Updated",  // (1) kUpdated
-        "Removing", // (2) kRemoving
-        "Evicting", // (3) kEvicting
+        "Re-added", // (1) kReAdded,
+        "Updated",  // (2) kUpdated
+        "Removing", // (3) kRemoving
+        "Deleted",  // (4) kDeleted
+        "Evicting", // (5) kEvicting
     };
 
     struct EnumCheck
     {
         InitEnumValidatorCounter();
         ValidateNextEnum(kAdded);
+        ValidateNextEnum(kReAdded);
         ValidateNextEnum(kUpdated);
         ValidateNextEnum(kRemoving);
+        ValidateNextEnum(kDeleted);
         ValidateNextEnum(kEvicting);
     };
 
@@ -120,6 +142,7 @@ const char *Peer::ActionToString(Action aAction)
 
 PeerTable::PeerTable(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mTimer(aInstance)
 {
 }
 
@@ -164,10 +187,16 @@ Error PeerTable::EvictPeer(void)
     Error          error = kErrorNotFound;
     OwnedPtr<Peer> peerToEvict;
 
-    // We first try to evict a peer belonging to a different PAN.
-    // If not found, we evict a non-neighbor peer.
+    // We first try to evict a peer already scheduled to be removed.
+    // Then try to evict a peer belonging to a different PAN. If not
+    // found, we evict a non-neighbor peer.
 
-    peerToEvict = RemoveMatching(Peer::OtherExtPanIdMatcher(Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
+    peerToEvict = RemoveMatching(Peer::kStateRemoving);
+
+    if (peerToEvict == nullptr)
+    {
+        peerToEvict = RemoveMatching(Peer::OtherExtPanIdMatcher(Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
+    }
 
     if (peerToEvict == nullptr)
     {
@@ -183,11 +212,36 @@ exit:
     return error;
 }
 
+void PeerTable::HandleTimer(void)
+{
+    TimeMilli    now = TimerMilli::GetNow();
+    NextFireTime nextFireTime(now);
+
+    RemoveAndFreeAllMatching(Peer::ExpireChecker(now));
+
+    for (const Peer &peer : *this)
+    {
+        if (peer.IsStateRemoving())
+        {
+            nextFireTime.UpdateIfEarlier(peer.mRemoveTime);
+        }
+    }
+
+    mTimer.FireAtIfEarlier(nextFireTime);
+}
+
 const Peer *PeerTable::GetNextPeer(PeerIterator &aIterator) const
 {
     const Peer *entry = static_cast<const Peer *>(aIterator);
 
     VerifyOrExit(entry != nullptr);
+
+    while (!entry->IsStateValid())
+    {
+        entry = entry->GetNext();
+        VerifyOrExit(entry != nullptr);
+    }
+
     aIterator = entry->GetNext();
 
 exit:
@@ -200,8 +254,10 @@ uint16_t PeerTable::GetNumberOfPeers(void) const
 
     for (const Peer &peer : *this)
     {
-        OT_UNUSED_VARIABLE(peer);
-        count++;
+        if (peer.IsStateValid())
+        {
+            count++;
+        }
     }
 
     return count;

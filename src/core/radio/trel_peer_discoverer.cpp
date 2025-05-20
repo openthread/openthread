@@ -118,7 +118,8 @@ void PeerDiscoverer::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
     Peer         *peer;
     TxtData       txtData;
     TxtData::Info txtInfo;
-    bool          isNew = false;
+    Peer::Action  action    = Peer::kUpdated;
+    bool          shouldLog = true;
 
     VerifyOrExit(mIsRunning);
 
@@ -129,7 +130,9 @@ void PeerDiscoverer::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
 
     if (aInfo.IsRemoved())
     {
-        Get<PeerTable>().RemoveAndFreeAllMatching(txtInfo.mExtAddress);
+        peer = Get<PeerTable>().FindMatching(txtInfo.mExtAddress);
+        VerifyOrExit(peer != nullptr);
+        peer->ScheduleToRemoveAfter(kRemoveDelay);
         ExitNow();
     }
 
@@ -158,18 +161,26 @@ void PeerDiscoverer::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
         VerifyOrExit(peer != nullptr);
 
         peer->SetExtAddress(txtInfo.mExtAddress);
-        isNew = true;
+        action = Peer::kAdded;
     }
-
-    if (!isNew)
+    else if (!peer->IsStateValid())
     {
-        VerifyOrExit((peer->GetExtPanId() != txtInfo.mExtPanId) || (peer->GetSockAddr() != aInfo.GetSockAddr()));
+        action = Peer::kReAdded;
+    }
+    else
+    {
+        shouldLog = (peer->GetExtPanId() != txtInfo.mExtPanId) || (peer->GetSockAddr() != aInfo.GetSockAddr());
+        action    = Peer::kUpdated;
     }
 
+    peer->SetState(Peer::kStateValid);
     peer->SetExtPanId(txtInfo.mExtPanId);
     peer->SetSockAddr(aInfo.GetSockAddr());
 
-    peer->Log(isNew ? Peer::kAdded : Peer::kUpdated);
+    if (shouldLog)
+    {
+        peer->Log(action);
+    }
 
 exit:
     return;
