@@ -68,7 +68,7 @@ public:
      * Indicates whether an upstream DNS server is available for queries.
      *
      * @retval TRUE   An upstream DNS server is available.
-     * @retval FALSE  No upstream DNS server is currently available.
+     * @retval FALSE  An upstream DNS server is not available.
      */
     bool IsUpstreamQueryAvailable(void);
 
