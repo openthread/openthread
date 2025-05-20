@@ -33,6 +33,13 @@ add_executable(ot-cli-mtd
 
 target_include_directories(ot-cli-mtd PRIVATE ${COMMON_INCLUDES})
 
+target_compile_definitions(ot-cli-mtd
+    PRIVATE
+        OPENTHREAD_FTD=0
+        OPENTHREAD_MTD=1
+        OPENTHREAD_RADIO=0
+)
+
 if(NOT DEFINED OT_PLATFORM_LIB_MTD)
     set(OT_PLATFORM_LIB_MTD ${OT_PLATFORM_LIB})
 endif()
