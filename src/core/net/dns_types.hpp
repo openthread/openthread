@@ -1352,10 +1352,8 @@ public:
      */
     template <typename UintType> Error AppendBigEndianUintEntry(const char *aKey, UintType aUintValue)
     {
-        static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
-                          TypeTraits::IsSame<UintType, uint32_t>::kValue ||
-                          TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                      "UintType must be uint8/uint16/uint32/uint64");
+        static_assert(TypeTraits::IsUint<UintType>::kValue,
+                      "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
         return AppendEntry<UintType>(aKey, BigEndian::HostSwap<UintType>(aUintValue));
     }

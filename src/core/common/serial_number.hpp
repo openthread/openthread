@@ -62,10 +62,8 @@ public:
      */
     template <typename UintType> static bool IsLess(UintType aFirst, UintType aSecond)
     {
-        static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
-                          TypeTraits::IsSame<UintType, uint32_t>::kValue ||
-                          TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                      "UintType MUST be an 8, 16, 32, or 64 bit `uint` type");
+        static_assert(TypeTraits::IsUint<UintType>::kValue,
+                      "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
         static constexpr UintType kNegativeMask = (NumericLimits<UintType>::kMax >> 1) + 1;
 

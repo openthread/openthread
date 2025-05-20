@@ -79,7 +79,69 @@ template <typename Type> struct IsPointer<volatile Type *> : public TrueValue
 {
 };
 
-template <typename Type> struct IsPointer<const volatile Type *> : TrueValue
+template <typename Type> struct IsPointer<const volatile Type *> : public TrueValue
+{
+};
+
+/**
+ * Indicates whether or not a given template `Type` is an unsigned integer type (`uint8_t`, `uint16_t`, `uint32_t`, or
+ * `uint64_t`).
+ *
+ * The `constexpr` expression `IsUint<Type>::kValue` would be `true` when the `Type` is an unsigned int, otherwise it
+ * would be `false`.
+ *
+ * @tparam Type    A type to check if is an unsigned integer type.
+ */
+template <typename Type> struct IsUint : public FalseValue
+{
+};
+
+// Template specializations of the `IsUint<Type>`
+
+template <> struct IsUint<uint8_t> : public TrueValue
+{
+};
+
+template <> struct IsUint<uint16_t> : public TrueValue
+{
+};
+
+template <> struct IsUint<uint32_t> : public TrueValue
+{
+};
+
+template <> struct IsUint<uint64_t> : public TrueValue
+{
+};
+
+/**
+ * Indicates whether or not a given template `Type` is a signed integer type (`int8_t`, `int16_t`, `int32_t`, or
+ * `int64_t`).
+ *
+ * The `constexpr` expression `IsInt<Type>::kValue` would be `true` when the `Type` is a signed int, otherwise it
+ * would be `false`.
+ *
+ * @tparam Type    A type to check if is a signed integer type.
+ */
+template <typename Type> struct IsInt : public FalseValue
+{
+};
+
+// Template specializations of the `IsInt<Type>`
+
+template <> struct IsInt<int8_t> : public TrueValue
+{
+};
+
+template <> struct IsInt<int16_t> : public TrueValue
+{
+};
+
+template <> struct IsInt<int32_t> : public TrueValue
+{
+};
+
+template <> struct IsInt<int64_t> : public TrueValue
 {
 };
 
