@@ -193,7 +193,9 @@ class PublishMeshCopService(thread_cert.TestCase):
         br1.set_active_dataset(**dataset)
         self.simulator.go(10)
 
-        self.assertEqual(len(host.browse_mdns_services('_meshcop._udp')), 2)
+        browse_result = host.browse_mdns_services('_meshcop._udp')
+        print(browse_result)
+        self.assertEqual(len(browse_result), 2, browse_result)
         self.check_meshcop_service(br1, host)
         self.check_meshcop_service(br2, host)
 
