@@ -57,6 +57,23 @@ extern "C" {
 typedef struct otPlatDnsUpstreamQuery otPlatDnsUpstreamQuery;
 
 /**
+ * Indicates whether upstream DNS query functionality is available on the platform.
+ *
+ * This function allows the platform to inform the OpenThread stack if no upstream DNS server is
+ * available.
+ *
+ * This function is used to optimize query handling. If this function returns `false` (e.g., no upstream DNS server is
+ * currently available), one can avoid attempting an upstream resolution (which would likely time out) and instead
+ * immediately send an appropriate negative response (e.g., `SERVFAIL`) to the DNS client.
+ *
+ * @param[in] aInstance  The OpenThread instance.
+ *
+ * @retval TRUE   Upstream DNS query functionality is available.
+ * @retval FALSE  Upstream DNS query functionality is not available.
+ */
+bool otPlatDnsIsUpstreamQueryAvailable(otInstance *aInstance);
+
+/**
  * Starts an upstream query transaction.
  *
  * - In success case (and errors represented by DNS protocol messages), the platform is expected to call

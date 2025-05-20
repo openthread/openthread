@@ -65,6 +65,14 @@ public:
     void Setup(void);
 
     /**
+     * Indicates whether an upstream DNS server is available for queries.
+     *
+     * @retval TRUE   An upstream DNS server is available.
+     * @retval FALSE  An upstream DNS server is not available.
+     */
+    bool IsUpstreamQueryAvailable(void);
+
+    /**
      * Sends the query to the upstream.
      *
      * @param[in] aTxn   A pointer to the OpenThread upstream DNS query transaction.
