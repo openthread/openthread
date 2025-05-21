@@ -616,25 +616,27 @@ otError Dataset::Print(otOperationalDatasetTlvs &aDatasetTlvs, bool aNonsensitiv
         {"Security Policy", "securitypolicy"},
     };
 
-    otError              error;
-    otOperationalDataset dataset;
-    const ComponentTitle* titleArrayPtr = nullptr;
-    size_t titleArraySize = 0;
+    otError               error;
+    otOperationalDataset  dataset;
+    const ComponentTitle *titleArrayPtr  = nullptr;
+    size_t                titleArraySize = 0;
 
     SuccessOrExit(error = otDatasetParseTlvs(&aDatasetTlvs, &dataset));
 
     if (aNonsensitiveOnly)
     {
-        titleArrayPtr = kNonsensitiveTitles;
-        titleArraySize = sizeof(kNonsensitiveTitles)/sizeof(kNonsensitiveTitles[0]);
-    } else {
-        titleArrayPtr = kTitles;
-        titleArraySize = sizeof(kTitles)/sizeof(kTitles[0]);
+        titleArrayPtr  = kNonsensitiveTitles;
+        titleArraySize = sizeof(kNonsensitiveTitles) / sizeof(kNonsensitiveTitles[0]);
+    }
+    else
+    {
+        titleArrayPtr  = kTitles;
+        titleArraySize = sizeof(kTitles) / sizeof(kTitles[0]);
     }
 
     for (size_t i = 0; i < titleArraySize; ++i)
     {
-        const ComponentTitle& title = titleArrayPtr[i];
+        const ComponentTitle  &title  = titleArrayPtr[i];
         const ComponentMapper *mapper = LookupMapper(title.mName);
 
         if (dataset.mComponents.*mapper->mIsPresentPtr)
