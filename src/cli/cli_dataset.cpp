@@ -622,6 +622,47 @@ exit:
     return error;
 }
 
+otError Dataset::PrintNonsensitive(otOperationalDatasetTlvs &aDatasetTlvs)
+{
+    struct ComponentTitle
+    {
+        const char *mTitle; // Title to output.
+        const char *mName;  // To use with `LookupMapper()`.
+    };
+
+    static const ComponentTitle kTitles[] = {
+        {"Pending Timestamp", "pendingtimestamp"},
+        {"Active Timestamp", "activetimestamp"},
+        {"Channel", "channel"},
+        {"Channel Mask", "channelmask"},
+        {"Delay", "delay"},
+        {"Ext PAN ID", "extpanid"},
+        {"Mesh Local Prefix", "meshlocalprefix"},
+        {"Network Name", "networkname"},
+        {"PAN ID", "panid"},
+        {"Security Policy", "securitypolicy"},
+    };
+
+    otError              error;
+    otOperationalDataset dataset;
+
+    SuccessOrExit(error = otDatasetParseTlvs(&aDatasetTlvs, &dataset));
+
+    for (const ComponentTitle &title : kTitles)
+    {
+        const ComponentMapper *mapper = LookupMapper(title.mName);
+
+        if (dataset.mComponents.*mapper->mIsPresentPtr)
+        {
+            OutputFormat("%s: ", title.mTitle);
+            (this->*mapper->mOutput)(dataset);
+        }
+    }
+
+exit:
+    return error;
+}
+
 /**
  * @cli dataset init (active,new,pending,tlvs)
  * @code
@@ -688,8 +729,22 @@ exit:
  * 0e08000000000001000000030000103506000...3023d82c841eff0e68db86f35740c030000ff
  * Done
  * @endcode
+ * @code
+ * dataset active -nonsensitive
+ * Active Timestamp: 1
+ * Channel: 13
+ * Channel Mask: 0x07fff800
+ * Ext PAN ID: d63e8e3e495ebbc3
+ * Mesh Local Prefix: fd3d:b50b:f96d:722d::/64
+ * Network Name: OpenThread-8f28
+ * PAN ID: 0x8f28
+ * Security Policy: 0, onrcb
+ * Done
+ * @endcode
  * @cparam dataset active [-x]
  * The optional `-x` argument prints the Active Operational %Dataset values as hex-encoded TLVs.
+ * @cparam dataset active [-nonsensitive]
+ * The optional `-nonsensitive` argument prints the Active Operational dataset excluding the network key and PSKc fields.
  * @par api_copy
  * #otDatasetGetActive
  * @par
@@ -709,6 +764,10 @@ template <> otError Dataset::Process<Cmd("active")>(Arg aArgs[])
     else if (aArgs[0] == "-x")
     {
         OutputBytesLine(dataset.mTlvs, dataset.mLength);
+    }
+    else if (aArgs[0] == "-nonsensitive")
+    {
+        error = PrintNonsensitive(dataset);
     }
     else
     {
@@ -733,6 +792,10 @@ template <> otError Dataset::Process<Cmd("pending")>(Arg aArgs[])
     else if (aArgs[0] == "-x")
     {
         OutputBytesLine(datasetTlvs.mTlvs, datasetTlvs.mLength);
+    }
+    else if (aArgs[0] == "-nonsensitive")
+    {
+        error = PrintNonsensitive(dataset);
     }
     else
     {
