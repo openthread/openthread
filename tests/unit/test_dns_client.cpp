@@ -551,7 +551,7 @@ struct QueryRecordInfo
 {
     struct Record : public Dns::Client::RecordInfo
     {
-        static constexpr uint16_t kMaxRecordDataSize = 200;
+        static constexpr uint16_t kMaxRecordDataSize = 500;
 
         void Init(void)
         {
@@ -668,6 +668,94 @@ void ValidatePtrRecordData(const QueryRecordInfo::Record &aRecord, const char *a
     VerifyOrQuit(offset == data->GetLength());
 
     data->Free();
+}
+
+void ValidateSoaRecordData(const QueryRecordInfo::Record &aRecord, const char *aServerName)
+{
+    static constexpr uint32_t kSoaSerial  = 0;
+    static constexpr uint32_t kSoaRefresh = 7200;
+    static constexpr uint32_t kSoaRetry   = 3600;
+    static constexpr uint32_t kSoaExpire  = 86400;
+    static constexpr uint32_t kSoaMinimum = 10;
+
+    uint16_t          offset;
+    Message          *message;
+    Dns::Name::Buffer name;
+
+    VerifyOrQuit(StringMatch(aRecord.mNameBuffer, "default.service.arpa."));
+    VerifyOrQuit(aRecord.mRecordType == Dns::ResourceRecord::kTypeSoa);
+    VerifyOrQuit(aRecord.mTtl == 7200);
+
+    message = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
+    VerifyOrQuit(message != nullptr);
+
+    VerifyOrQuit(aRecord.mRecordLength == aRecord.mDataBufferSize);
+    SuccessOrQuit(message->AppendBytes(aRecord.mDataBuffer, aRecord.mDataBufferSize));
+
+    // Validate the SOA record data.
+
+    offset = 0;
+
+    // MNAME field:
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
+    VerifyOrQuit(StringMatch(name, aServerName, kStringCaseInsensitiveMatch));
+
+    // RNAME: must be "postmaster.default.service.arpa."
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
+    SuccessOrQuit(Dns::Name::StripName(name, "default.service.arpa."));
+    VerifyOrQuit(StringMatch(name, "postmaster"));
+
+    // SERIAL
+    VerifyOrQuit(message->Compare<uint32_t>(offset, BigEndian::HostSwap32(kSoaSerial)));
+    offset += sizeof(uint32_t);
+
+    // REFRESH
+    VerifyOrQuit(message->Compare<uint32_t>(offset, BigEndian::HostSwap32(kSoaRefresh)));
+    offset += sizeof(uint32_t);
+
+    // RETRY
+    VerifyOrQuit(message->Compare<uint32_t>(offset, BigEndian::HostSwap32(kSoaRetry)));
+    offset += sizeof(uint32_t);
+
+    // EXPIRE
+    VerifyOrQuit(message->Compare<uint32_t>(offset, BigEndian::HostSwap32(kSoaExpire)));
+    offset += sizeof(uint32_t);
+
+    // MINIMUM
+    VerifyOrQuit(message->Compare<uint32_t>(offset, BigEndian::HostSwap32(kSoaMinimum)));
+    offset += sizeof(uint32_t);
+
+    VerifyOrQuit(offset == message->GetLength());
+
+    message->Free();
+}
+
+void ValidateNsRecordData(const QueryRecordInfo::Record &aRecord, const char *aServerName)
+{
+    uint16_t          offset;
+    Message          *message;
+    Dns::Name::Buffer name;
+
+    VerifyOrQuit(StringMatch(aRecord.mNameBuffer, "default.service.arpa."));
+    VerifyOrQuit(aRecord.mRecordType == Dns::ResourceRecord::kTypeNs);
+    VerifyOrQuit(aRecord.mTtl == 7200);
+
+    message = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
+    VerifyOrQuit(message != nullptr);
+
+    VerifyOrQuit(aRecord.mRecordLength == aRecord.mDataBufferSize);
+    SuccessOrQuit(message->AppendBytes(aRecord.mDataBuffer, aRecord.mDataBufferSize));
+
+    // Validate the NS data
+
+    offset = 0;
+
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
+    VerifyOrQuit(StringMatch(name, aServerName, kStringCaseInsensitiveMatch));
+
+    VerifyOrQuit(offset == message->GetLength());
+
+    message->Free();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1734,6 +1822,195 @@ void TestDnssdServerProxyCallback(void)
     Log("End of TestDnssdServerProxyCallback");
 }
 
+void TestDnssdSoaNsResponse(void)
+{
+    Srp::Server      *srpServer;
+    Srp::Client      *srpClient;
+    Dns::Client      *dnsClient;
+    Dns::Name::Buffer serverName;
+    StringWriter      writer(serverName, sizeof(serverName));
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestDnssdSoaNsResponse");
+
+    InitTest();
+
+    srpServer = &sInstance->Get<Srp::Server>();
+    srpClient = &sInstance->Get<Srp::Client>();
+    dnsClient = &sInstance->Get<Dns::Client>();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP server.
+
+    SuccessOrQuit(srpServer->SetAddressMode(Srp::Server::kAddressModeUnicast));
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateDisabled);
+
+    srpServer->SetEnabled(true);
+    VerifyOrQuit(srpServer->GetState() != Srp::Server::kStateDisabled);
+
+    AdvanceTime(10000);
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP client.
+
+    srpClient->EnableAutoStartMode(nullptr, nullptr);
+    VerifyOrQuit(srpClient->IsAutoStartModeEnabled());
+
+    AdvanceTime(2000);
+    VerifyOrQuit(srpClient->IsRunning());
+
+    writer.Append("otDNS%s.default.service.arpa.", sInstance->Get<Mac::Mac>().GetExtAddress().ToString().AsCString());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("SOA Query");
+
+    for (uint8_t iter = 0; iter < 2; iter++)
+    {
+        sQueryRecordInfo.Reset();
+
+        // First iteration: Query for `default.service.arpa.` directly, and
+        // validate that we see the SOA record in the Answer section.
+        // Second iteration: Query for `myhost.default.service.arpa.`, and
+        // validate that we see the SOA record in the Authority section.
+
+        if (iter == 0)
+        {
+            Log("QueryRecord(%s) for SOA RR", "default.service.arpa.");
+            SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeSoa, "default", "service.arpa.",
+                                                 RecordCallback, sInstance));
+        }
+        else
+        {
+            Log("QueryRecord(%s) for SOA RR", "myhost.default.service.arpa.");
+            SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeSoa, "myhost", "default.service.arpa.",
+                                                 RecordCallback, sInstance));
+        }
+
+        AdvanceTime(100);
+        VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+        SuccessOrQuit(sQueryRecordInfo.mError);
+        VerifyOrQuit(sQueryRecordInfo.mNumRecords == 1);
+
+        if (iter == 0)
+        {
+            VerifyOrQuit(StringMatch(sQueryRecordInfo.mQueryName, "default.service.arpa."));
+            VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+        }
+        else
+        {
+            VerifyOrQuit(StringMatch(sQueryRecordInfo.mQueryName, "myhost.default.service.arpa."));
+            VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAuthority);
+        }
+
+        ValidateSoaRecordData(sQueryRecordInfo.mRecords[0], serverName);
+
+        AdvanceTime(1000);
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("NS Query");
+
+    for (uint8_t iter = 0; iter < 2; iter++)
+    {
+        sQueryRecordInfo.Reset();
+
+        // First iteration: Query for `default.service.arpa.` directly and
+        // validate that we see the NS response in the Answer section. Second
+        // iteration: Query for `myhost.default.service.arpa.` and validate
+        // that we see the SOA record instead in the Authority section in
+        // the response.
+
+        if (iter == 0)
+        {
+            Log("QueryRecord(%s) for NS RR", "default.service.arpa.");
+            SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeNs, "default", "service.arpa.",
+                                                 RecordCallback, sInstance));
+        }
+        else
+        {
+            Log("QueryRecord(%s) for NS RR", "myhost.default.service.arpa.");
+            SuccessOrQuit(dnsClient->QueryRecord(Dns::ResourceRecord::kTypeNs, "myhost", "default.service.arpa.",
+                                                 RecordCallback, sInstance));
+        }
+
+        AdvanceTime(100);
+        VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+        SuccessOrQuit(sQueryRecordInfo.mError);
+        VerifyOrQuit(sQueryRecordInfo.mNumRecords == 1);
+
+        if (iter == 0)
+        {
+            VerifyOrQuit(StringMatch(sQueryRecordInfo.mQueryName, "default.service.arpa."));
+            VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+            ValidateNsRecordData(sQueryRecordInfo.mRecords[0], serverName);
+        }
+        else
+        {
+            VerifyOrQuit(StringMatch(sQueryRecordInfo.mQueryName, "myhost.default.service.arpa."));
+            VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAuthority);
+            ValidateSoaRecordData(sQueryRecordInfo.mRecords[0], serverName);
+        }
+
+        AdvanceTime(1000);
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sQueryRecordInfo.Reset();
+
+    Log("QueryRecord(%s) for ANY RR", "default.service.arpa.");
+    SuccessOrQuit(
+        dnsClient->QueryRecord(Dns::ResourceRecord::kTypeAny, "default", "service.arpa.", RecordCallback, sInstance));
+
+    AdvanceTime(100);
+    VerifyOrQuit(sQueryRecordInfo.mCallbackCount == 1);
+    SuccessOrQuit(sQueryRecordInfo.mError);
+    VerifyOrQuit(sQueryRecordInfo.mNumRecords == 2);
+
+    VerifyOrQuit(StringMatch(sQueryRecordInfo.mQueryName, "default.service.arpa."));
+
+    for (uint8_t index = 0; index < 2; index++)
+    {
+        QueryRecordInfo::Record &record = sQueryRecordInfo.mRecords[index];
+
+        VerifyOrQuit(MapEnum(record.mSection) == Dns::Client::RecordInfo::kSectionAnswer);
+
+        switch (record.mRecordType)
+        {
+        case Dns::ResourceRecord::kTypeSoa:
+            ValidateSoaRecordData(record, serverName);
+            break;
+        case Dns::ResourceRecord::kTypeNs:
+            ValidateNsRecordData(record, serverName);
+            break;
+        default:
+            VerifyOrQuit(false);
+            break;
+        }
+
+        AdvanceTime(1000);
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sAddressInfo.Reset();
+    Log("ResolveAddress(%s)", serverName);
+    SuccessOrQuit(dnsClient->ResolveAddress(serverName, AddressCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sAddressInfo.mCallbackCount >= 1);
+    SuccessOrQuit(sAddressInfo.mError);
+    VerifyOrQuit(sAddressInfo.mHostAddresses[0] == sInstance->Get<Mle::Mle>().GetMeshLocalEid());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Finalize OT instance and validate all heap allocations are freed.
+
+    Log("Finalizing OT instance");
+    FinalizeTest();
+
+    Log("End of TestDnssdSoaNsResponse");
+}
+
 #endif // ENABLE_DNS_TEST
 
 int main(void)
@@ -1741,6 +2018,7 @@ int main(void)
 #if ENABLE_DNS_TEST
     TestDnsClient();
     TestDnssdServerProxyCallback();
+    TestDnssdSoaNsResponse();
     printf("All tests passed\n");
 #else
     printf("DNS_CLIENT or DSNSSD_SERVER feature is not enabled\n");
