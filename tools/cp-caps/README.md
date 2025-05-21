@@ -46,6 +46,7 @@ It is recommended to use a Python virtual environment to manage project dependen
 ### Creation
 
 Create a virtual environment named `.venv` in the project directory:
+
 ```bash
 $ cd openthread
 $ python3 -m venv .venv
