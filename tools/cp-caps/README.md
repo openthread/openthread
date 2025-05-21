@@ -20,6 +20,25 @@ This test is used for testing RCP capabilities.
 - DUT : The device under test.
 - Reference Device : The device that supports all tested features.
 
+### Reference Device
+
+The [nRF52840DK][ot-nrf528xx-nrf52840] is set as the reference device by default. Testers can also select the other Thread device as the reference device.
+
+[ot-nrf528xx-nrf52840]: https://github.com/openthread/ot-nrf528xx/blob/main/src/nrf52840/README.md
+
+Quick guide to setting up the nRF52840DK:
+
+```bash
+$ git clone git@github.com:openthread/ot-nrf528xx.git
+$ cd ot-nrf528xx/
+$ git submodule update --init
+$ ./script/bootstrap
+$ ./script/build nrf52840 UART_trans -DOT_DIAGNOSTIC=ON -DOT_CSL_RECEIVER=ON -DOT_LINK_METRICS_INITIATOR=ON -DOT_LINK_METRICS_SUBJECT=ON -DOT_WAKEUP_COORDINATOR=ON
+$ arm-none-eabi-objcopy -O ihex build/bin/ot-cli-ftd ot-cli-ftd.hex
+$ nrfutil device program --firmware ot-cli-ftd.hex --options chip_erase_mode=ERASE_ALL
+$ nrfutil device reset --reset-kind=RESET_PIN
+```
+
 ## Python Virtual Environment Setup
 
 It is recommended to use a Python virtual environment to manage project dependencies and avoid conflicts with system-wide packages.
@@ -56,25 +75,6 @@ When you are finished working in the virtual environment, you can deactivate it 
 
 ```bash
 $ deactivate
-```
-
-### Reference Device
-
-The [nRF52840DK][ot-nrf528xx-nrf52840] is set as the reference device by default. Testers can also select the other Thread device as the reference device.
-
-[ot-nrf528xx-nrf52840]: https://github.com/openthread/ot-nrf528xx/blob/main/src/nrf52840/README.md
-
-Quick guide to setting up the nRF52840DK:
-
-```bash
-$ git clone git@github.com:openthread/ot-nrf528xx.git
-$ cd ot-nrf528xx/
-$ git submodule update --init
-$ ./script/bootstrap
-$ ./script/build nrf52840 UART_trans -DOT_DIAGNOSTIC=ON -DOT_CSL_RECEIVER=ON -DOT_LINK_METRICS_INITIATOR=ON -DOT_LINK_METRICS_SUBJECT=ON -DOT_WAKEUP_COORDINATOR=ON
-$ arm-none-eabi-objcopy -O ihex build/bin/ot-cli-ftd ot-cli-ftd.hex
-$ nrfutil device program --firmware ot-cli-ftd.hex --options chip_erase_mode=ERASE_ALL
-$ nrfutil device reset --reset-kind=RESET_PIN
 ```
 
 ## Test Commands
