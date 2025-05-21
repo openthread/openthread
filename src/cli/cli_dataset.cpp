@@ -578,7 +578,7 @@ exit:
     return error;
 }
 
-otError Dataset::Print(otOperationalDatasetTlvs &aDatasetTlvs)
+otError Dataset::Print(otOperationalDatasetTlvs &aDatasetTlvs, bool aNonsensitiveOnly)
 {
     struct ComponentTitle
     {
@@ -602,38 +602,11 @@ otError Dataset::Print(otOperationalDatasetTlvs &aDatasetTlvs)
         {"Security Policy", "securitypolicy"},
     };
 
-    otError              error;
-    otOperationalDataset dataset;
-
-    SuccessOrExit(error = otDatasetParseTlvs(&aDatasetTlvs, &dataset));
-
-    for (const ComponentTitle &title : kTitles)
-    {
-        const ComponentMapper *mapper = LookupMapper(title.mName);
-
-        if (dataset.mComponents.*mapper->mIsPresentPtr)
-        {
-            OutputFormat("%s: ", title.mTitle);
-            (this->*mapper->mOutput)(dataset);
-        }
-    }
-
-exit:
-    return error;
-}
-
-otError Dataset::PrintNonsensitive(otOperationalDatasetTlvs &aDatasetTlvs)
-{
-    struct ComponentTitle
-    {
-        const char *mTitle; // Title to output.
-        const char *mName;  // To use with `LookupMapper()`.
-    };
-
-    static const ComponentTitle kTitles[] = {
+    static const ComponentTitle kNonsensitiveTitles[] = {
         {"Pending Timestamp", "pendingtimestamp"},
         {"Active Timestamp", "activetimestamp"},
         {"Channel", "channel"},
+        {"Wake-up Channel", "wakeupchannel"},
         {"Channel Mask", "channelmask"},
         {"Delay", "delay"},
         {"Ext PAN ID", "extpanid"},
@@ -645,11 +618,23 @@ otError Dataset::PrintNonsensitive(otOperationalDatasetTlvs &aDatasetTlvs)
 
     otError              error;
     otOperationalDataset dataset;
+    const ComponentTitle* titleArrayPtr = nullptr;
+    size_t titleArraySize = 0;
 
     SuccessOrExit(error = otDatasetParseTlvs(&aDatasetTlvs, &dataset));
 
-    for (const ComponentTitle &title : kTitles)
+    if (aNonsensitiveOnly)
     {
+        titleArrayPtr = kNonsensitiveTitles;
+        titleArraySize = sizeof(kNonsensitiveTitles)/sizeof(kNonsensitiveTitles[0]);
+    } else {
+        titleArrayPtr = kTitles;
+        titleArraySize = sizeof(kTitles)/sizeof(kTitles[0]);
+    }
+
+    for (size_t i = 0; i < titleArraySize; ++i)
+    {
+        const ComponentTitle& title = titleArrayPtr[i];
         const ComponentMapper *mapper = LookupMapper(title.mName);
 
         if (dataset.mComponents.*mapper->mIsPresentPtr)
@@ -760,7 +745,7 @@ template <> otError Dataset::Process<Cmd("active")>(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        error = Print(dataset);
+        error = Print(dataset, false);
     }
     else if (aArgs[0] == "-x")
     {
@@ -768,7 +753,7 @@ template <> otError Dataset::Process<Cmd("active")>(Arg aArgs[])
     }
     else if (aArgs[0] == "-nonsensitive")
     {
-        error = PrintNonsensitive(dataset);
+        error = Print(dataset, true);
     }
     else
     {
@@ -788,7 +773,7 @@ template <> otError Dataset::Process<Cmd("pending")>(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        error = Print(datasetTlvs);
+        error = Print(datasetTlvs, false);
     }
     else if (aArgs[0] == "-x")
     {
@@ -796,7 +781,7 @@ template <> otError Dataset::Process<Cmd("pending")>(Arg aArgs[])
     }
     else if (aArgs[0] == "-nonsensitive")
     {
-        error = PrintNonsensitive(datasetTlvs);
+        error = Print(datasetTlvs, true);
     }
     else
     {
@@ -1347,7 +1332,7 @@ otError Dataset::Process(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        ExitNow(error = Print(sDatasetTlvs));
+        ExitNow(error = Print(sDatasetTlvs, false));
     }
 
     /**
