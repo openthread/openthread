@@ -795,7 +795,7 @@ template <> otError Dataset::Process<Cmd("pending")>(Arg aArgs[])
     }
     else if (aArgs[0] == "-nonsensitive")
     {
-        error = PrintNonsensitive(dataset);
+        error = PrintNonsensitive(datasetTlvs);
     }
     else
     {
