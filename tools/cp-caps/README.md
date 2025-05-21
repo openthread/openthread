@@ -20,12 +20,42 @@ This test is used for testing RCP capabilities.
 - DUT : The device under test.
 - Reference Device : The device that supports all tested features.
 
-### Python Dependences
+## Python Virtual Environment Setup
 
-Before running the test script on PC, testers should install dependences first.
+It is recommended to use a Python virtual environment to manage project dependencies and avoid conflicts with system-wide packages.
+
+### Creation
+
+Create a virtual environment named `.venv` in the project directory:
+```bash
+$ cd openthread
+$ python3 -m venv .venv
+```
+
+### Activation
+
+Activate the virtual environment using the following command:
+
+```bash
+$ source .venv/bin/activate
+```
+
+After activation, your shell prompt should indicate that you are working within the virtual environment.
+
+### Dependency Installation
+
+Once the virtual environment is activated, install the required dependencies using `pip`:
 
 ```bash
 $ pip3 install -r ./tools/cp-caps/requirements.txt ./tools/otci
+```
+
+### Deactivation
+
+When you are finished working in the virtual environment, you can deactivate it by running the following command. This will return you to your system's global Python environment.
+
+```bash
+$ deactivate
 ```
 
 ### Reference Device
