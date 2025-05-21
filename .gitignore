@@ -46,7 +46,7 @@ cmake-build-*/**
 __pycache__
 
 # Python environments
-.venv/
+.venv
 venv/
 
 # Unit test files
