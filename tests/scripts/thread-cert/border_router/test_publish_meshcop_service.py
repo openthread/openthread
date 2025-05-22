@@ -191,9 +191,16 @@ class PublishMeshCopService(thread_cert.TestCase):
         }
 
         br1.set_active_dataset(**dataset)
-        self.simulator.go(10)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
 
-        self.assertEqual(len(host.browse_mdns_services('_meshcop._udp')), 2)
+        # Since `br1` is factory reset, the Border Agent and other
+        # functions are not given the chance to stop properly and
+        # remove previously registered mDNS services. This can result
+        # in stale entries remaining in the mDNS cache, leading to
+        # more services appearing in `browse` results. Therefore, we
+        # use `assertGreaterEqual()` here.
+
+        self.assertGreaterEqual(len(host.browse_mdns_services('_meshcop._udp')), 2)
         self.check_meshcop_service(br1, host)
         self.check_meshcop_service(br2, host)
 
