@@ -84,6 +84,7 @@ void otPlatFree(void *aPtr) { free(aPtr); }
 
 otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     Error  error = OT_ERROR_NONE;
     FILE  *file  = nullptr;
     size_t readLength;
@@ -102,6 +103,14 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 
 exit:
     return error;
+#else
+    for (uint16_t length = 0; length < aOutputLength; length++)
+    {
+        aOutput[length] = (uint8_t)rand();
+    }
+
+    return OT_ERROR_NONE;
+#endif
 }
 
 //---------------------------------------------------------------------------------------------------------------------
