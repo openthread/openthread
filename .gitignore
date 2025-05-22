@@ -45,6 +45,10 @@ cmake-build-*/**
 # Python bytecodes
 __pycache__
 
+# Python environments
+.venv
+venv/
+
 # Unit test files
 CTestTestfile.cmake
 ot-test-*
