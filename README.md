@@ -1,4 +1,4 @@
-[![OpenThread][ot-logo]][ot-repo] [![Build][ot-gh-action-build-svg]][ot-gh-action-build] [![Simulation][ot-gh-action-simulation-svg]][ot-gh-action-simulation] [![Docker][ot-gh-action-docker-svg]][ot-gh-action-docker] [![Coverage Status][ot-codecov-svg]][ot-codecov] [![Ask DeepWiki][deep-wiki-svg]][deep-wiki]
+[![OpenThread][ot-logo]][ot-repo] [![Ask DeepWiki][deep-wiki-svg]][deep-wiki]
 
 ---
 
@@ -16,14 +16,6 @@ More information about Thread can be found at [threadgroup.org](http://threadgro
 
 [ot-repo]: https://github.com/openthread/openthread
 [ot-logo]: https://github.com/openthread/openthread/raw/main/doc/images/openthread_logo.png
-[ot-gh-action-build]: https://github.com/openthread/openthread/actions?query=workflow%3ABuild+branch%3Amain+event%3Apush
-[ot-gh-action-build-svg]: https://github.com/openthread/openthread/workflows/Build/badge.svg?branch=main&event=push
-[ot-gh-action-simulation]: https://github.com/openthread/openthread/actions?query=workflow%3ASimulation+branch%3Amain+event%3Apush
-[ot-gh-action-simulation-svg]: https://github.com/openthread/openthread/workflows/Simulation/badge.svg?branch=main&event=push
-[ot-gh-action-docker]: https://github.com/openthread/openthread/actions?query=workflow%3ADocker+branch%3Amain+event%3Apush
-[ot-gh-action-docker-svg]: https://github.com/openthread/openthread/workflows/Docker/badge.svg?branch=main&event=push
-[ot-codecov]: https://codecov.io/gh/openthread/openthread
-[ot-codecov-svg]: https://codecov.io/gh/openthread/openthread/branch/main/graph/badge.svg
 [deep-wiki]: https://deepwiki.com/openthread/openthread
 [deep-wiki-svg]: https://deepwiki.com/badge.svg
 
