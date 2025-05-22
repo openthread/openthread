@@ -171,7 +171,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -s  --time-speed factor       Time speed up factor.\n"
             "    -v  --verbose                 Also log to stderr.\n",
             aProgramName);
-#ifdef __linux__
+#ifdef SIGRTMIN
     fprintf(aStream,
             "        --real-time-signal        (Linux only) The real-time signal number for microsecond timer.\n"
             "                                  Use +N for relative value to SIGRTMIN, and use N for absolute value.\n");
@@ -189,7 +189,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     aConfig->mPlatformConfig.mSpeedUpFactor       = 1;
     aConfig->mLogLevel                            = OT_LOG_LEVEL_CRIT;
     aConfig->mPlatformConfig.mInterfaceName       = OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME;
-#ifdef __linux__
+#ifdef SIGRTMIN
     aConfig->mPlatformConfig.mRealTimeSignal = SIGRTMIN;
 #endif
 
@@ -244,7 +244,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case OT_POSIX_OPT_RADIO_VERSION:
             aConfig->mPrintRadioVersion = true;
             break;
-#ifdef __linux__
+#ifdef SIGRTMIN
         case OT_POSIX_OPT_REAL_TIME_SIGNAL:
             if (optarg[0] == '+')
             {
@@ -255,7 +255,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
                 aConfig->mPlatformConfig.mRealTimeSignal = atoi(optarg);
             }
             break;
-#endif // __linux__
+#endif
         case '?':
             PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
             break;
