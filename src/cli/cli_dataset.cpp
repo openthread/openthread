@@ -610,11 +610,14 @@ otError Dataset::Print(otOperationalDatasetTlvs &aDatasetTlvs, bool aNonsensitiv
 
     for (const ComponentTitle &title : kTitles)
     {
+        const ComponentMapper *mapper;
+
         if (aNonsensitiveOnly && title.mIsSensitive)
         {
             continue;
         }
-        const ComponentMapper *mapper = LookupMapper(title.mName);
+
+        mapper = LookupMapper(title.mName);
 
         if (dataset.mComponents.*mapper->mIsPresentPtr)
         {
