@@ -582,61 +582,38 @@ otError Dataset::Print(otOperationalDatasetTlvs &aDatasetTlvs, bool aNonsensitiv
 {
     struct ComponentTitle
     {
-        const char *mTitle; // Title to output.
-        const char *mName;  // To use with `LookupMapper()`.
+        const char *mTitle;     // Title to output.
+        const char *mName;      // To use with `LookupMapper()`.
+        const bool  mSensitive; // Whether the field is sensitive.
     };
 
     static const ComponentTitle kTitles[] = {
-        {"Pending Timestamp", "pendingtimestamp"},
-        {"Active Timestamp", "activetimestamp"},
-        {"Channel", "channel"},
-        {"Wake-up Channel", "wakeupchannel"},
-        {"Channel Mask", "channelmask"},
-        {"Delay", "delay"},
-        {"Ext PAN ID", "extpanid"},
-        {"Mesh Local Prefix", "meshlocalprefix"},
-        {"Network Key", "networkkey"},
-        {"Network Name", "networkname"},
-        {"PAN ID", "panid"},
-        {"PSKc", "pskc"},
-        {"Security Policy", "securitypolicy"},
+        {"Pending Timestamp", "pendingtimestamp", false},
+        {"Active Timestamp", "activetimestamp", false},
+        {"Channel", "channel", false},
+        {"Wake-up Channel", "wakeupchannel", false},
+        {"Channel Mask", "channelmask", false},
+        {"Delay", "delay", false},
+        {"Ext PAN ID", "extpanid", false},
+        {"Mesh Local Prefix", "meshlocalprefix", false},
+        {"Network Key", "networkkey", true},
+        {"Network Name", "networkname", false},
+        {"PAN ID", "panid", false},
+        {"PSKc", "pskc", true},
+        {"Security Policy", "securitypolicy", false},
     };
 
-    static const ComponentTitle kNonsensitiveTitles[] = {
-        {"Pending Timestamp", "pendingtimestamp"},
-        {"Active Timestamp", "activetimestamp"},
-        {"Channel", "channel"},
-        {"Wake-up Channel", "wakeupchannel"},
-        {"Channel Mask", "channelmask"},
-        {"Delay", "delay"},
-        {"Ext PAN ID", "extpanid"},
-        {"Mesh Local Prefix", "meshlocalprefix"},
-        {"Network Name", "networkname"},
-        {"PAN ID", "panid"},
-        {"Security Policy", "securitypolicy"},
-    };
-
-    otError               error;
-    otOperationalDataset  dataset;
-    const ComponentTitle *titleArrayPtr  = nullptr;
-    size_t                titleArraySize = 0;
+    otError              error;
+    otOperationalDataset dataset;
 
     SuccessOrExit(error = otDatasetParseTlvs(&aDatasetTlvs, &dataset));
 
-    if (aNonsensitiveOnly)
+    for (const ComponentTitle &title : kTitles)
     {
-        titleArrayPtr  = kNonsensitiveTitles;
-        titleArraySize = sizeof(kNonsensitiveTitles) / sizeof(kNonsensitiveTitles[0]);
-    }
-    else
-    {
-        titleArrayPtr  = kTitles;
-        titleArraySize = sizeof(kTitles) / sizeof(kTitles[0]);
-    }
-
-    for (size_t i = 0; i < titleArraySize; ++i)
-    {
-        const ComponentTitle  &title  = titleArrayPtr[i];
+        if (aNonsensitiveOnly && title.mSensitive)
+        {
+            continue;
+        }
         const ComponentMapper *mapper = LookupMapper(title.mName);
 
         if (dataset.mComponents.*mapper->mIsPresentPtr)
