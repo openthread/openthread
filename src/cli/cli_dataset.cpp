@@ -582,9 +582,9 @@ otError Dataset::Print(otOperationalDatasetTlvs &aDatasetTlvs, bool aNonsensitiv
 {
     struct ComponentTitle
     {
-        const char *mTitle;     // Title to output.
-        const char *mName;      // To use with `LookupMapper()`.
-        const bool  mSensitive; // Whether the field is sensitive.
+        const char *mTitle;       // Title to output.
+        const char *mName;        // To use with `LookupMapper()`.
+        const bool  mIsSensitive; // Whether the field is sensitive.
     };
 
     static const ComponentTitle kTitles[] = {
@@ -610,7 +610,7 @@ otError Dataset::Print(otOperationalDatasetTlvs &aDatasetTlvs, bool aNonsensitiv
 
     for (const ComponentTitle &title : kTitles)
     {
-        if (aNonsensitiveOnly && title.mSensitive)
+        if (aNonsensitiveOnly && title.mIsSensitive)
         {
             continue;
         }
