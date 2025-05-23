@@ -346,7 +346,7 @@ Done
 
 ### active
 
-Usage: `dataset active [-x|nonsensitive]`
+Usage: `dataset active [-x|ns]`
 
 Print Active Operational Dataset in human-readable form.
 
@@ -369,7 +369,7 @@ Done
 Print Active Operational Dataset nonsensitive fields in human-readable form.
 
 ```bash
-> dataset active -nonsensitive
+> dataset active -ns
 Active Timestamp: 1
 Channel: 15
 Wake-up Channel: 16
@@ -636,7 +636,7 @@ Done
 
 ### pending
 
-Usage: `dataset pending [-x|nonsensitive]`
+Usage: `dataset pending [-x|ns]`
 
 Print Pending Operational Dataset in human-readable form.
 
@@ -660,7 +660,7 @@ Done
 Print Pending Operational Dataset nonsensitive fields in human-readable form.
 
 ```bash
-> dataset pending -nonsensitive
+> dataset pending -ns
 Pending Timestamp: 2
 Active Timestamp: 1
 Channel: 26
