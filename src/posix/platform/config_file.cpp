@@ -43,10 +43,7 @@
 namespace ot {
 namespace Posix {
 
-ConfigFile::ConfigFile(const char *aFilePath)
-{
-    SetFilePath(aFilePath);
-}
+ConfigFile::ConfigFile(const char *aFilePath) { SetFilePath(aFilePath); }
 
 void ConfigFile::SetFilePath(const char *aFilePath)
 {
