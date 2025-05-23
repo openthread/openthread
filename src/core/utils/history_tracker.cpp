@@ -425,6 +425,19 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+void HistoryTracker::RecordEpskcEvent(EpskcEvent aEvent)
+{
+    EpskcEvent *entry = mEpskcEventHistory.AddNewEntry();
+
+    VerifyOrExit(entry != nullptr);
+    *entry = aEvent;
+
+exit:
+    return;
+}
+#endif
+
 void HistoryTracker::HandleNotifierEvents(Events aEvents)
 {
     if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadRlocAdded | kEventThreadRlocRemoved |
@@ -451,7 +464,9 @@ void HistoryTracker::HandleTimer(void)
     mNeighborHistory.UpdateAgedEntries();
     mOnMeshPrefixHistory.UpdateAgedEntries();
     mExternalRouteHistory.UpdateAgedEntries();
-
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    mEpskcEventHistory.UpdateAgedEntries();
+#endif
     mTimer.Start(kAgeCheckPeriod);
 }
 

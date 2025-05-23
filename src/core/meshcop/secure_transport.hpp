@@ -118,6 +118,7 @@ public:
     static constexpr ConnectEvent kDisconnectedLocalClosed = OT_COAP_SECURE_DISCONNECTED_LOCAL_CLOSED;
     static constexpr ConnectEvent kDisconnectedMaxAttempts = OT_COAP_SECURE_DISCONNECTED_MAX_ATTEMPTS;
     static constexpr ConnectEvent kDisconnectedError       = OT_COAP_SECURE_DISCONNECTED_ERROR;
+    static constexpr ConnectEvent kDisconnectedTimeout     = OT_COAP_SECURE_DISCONNECTED_TIMEOUT;
 
     /**
      * Function pointer which is called reporting a session connection event.
@@ -175,6 +176,11 @@ public:
      * Disconnects the session.
      */
     void Disconnect(void) { Disconnect(kDisconnectedLocalClosed); }
+
+    /**
+     * Disconnects the session due to timeout.
+     */
+    void DisconnectTimeout(void) { Disconnect(kDisconnectedTimeout); }
 
     /**
      * Sends message to the secure session.
