@@ -597,9 +597,7 @@ template <typename UintType> void Core::RecordInfo::UpdateProperty(UintType &aPr
     // are similar overloads for `Heap::Data` and `Heap::String` and
     // `AddressArray` property types below.
 
-    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
-                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
     if (!mIsPresent || (aProperty != aValue))
     {

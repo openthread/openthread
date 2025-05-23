@@ -798,9 +798,7 @@ public:
 template <uint8_t kTlvTypeValue, typename UintType> class UintTlvInfo : public TlvInfo<kTlvTypeValue>
 {
 public:
-    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
-                      TypeTraits::IsSame<UintType, uint32_t>::kValue,
-                  "UintTlv must be used used with unsigned int value type");
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
     typedef UintType UintValueType; ///< The TLV Value unsigned int type.
 };
@@ -818,12 +816,8 @@ template <uint8_t kTlvTypeValue, typename TlvValueType> class SimpleTlvInfo : pu
 {
 public:
     static_assert(!TypeTraits::IsPointer<TlvValueType>::kValue, "TlvValueType must not be a pointer");
-    static_assert(!TypeTraits::IsSame<TlvValueType, uint8_t>::kValue, "SimpleTlv must not use int value type");
-    static_assert(!TypeTraits::IsSame<TlvValueType, uint16_t>::kValue, "SimpleTlv must not use int value type");
-    static_assert(!TypeTraits::IsSame<TlvValueType, uint32_t>::kValue, "SimpleTlv must not use int value type");
-    static_assert(!TypeTraits::IsSame<TlvValueType, int8_t>::kValue, "SimpleTlv must not use int value type");
-    static_assert(!TypeTraits::IsSame<TlvValueType, int16_t>::kValue, "SimpleTlv must not use int value type");
-    static_assert(!TypeTraits::IsSame<TlvValueType, int32_t>::kValue, "SimpleTlv must not use int value type");
+    static_assert(!TypeTraits::IsUint<TlvValueType>::kValue, "SimpleTlv must not use int value type");
+    static_assert(!TypeTraits::IsInt<TlvValueType>::kValue, "SimpleTlv must not use int value type");
 
     typedef TlvValueType ValueType; ///< The TLV Value type.
 };

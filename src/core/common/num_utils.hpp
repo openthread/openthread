@@ -101,9 +101,7 @@ template <typename Type> Type Clamp(Type aValue, Type aMin, Type aMax)
  */
 template <typename UintType> uint8_t ClampToUint8(UintType aValue)
 {
-    static_assert(TypeTraits::IsSame<UintType, uint16_t>::kValue || TypeTraits::IsSame<UintType, uint32_t>::kValue ||
-                      TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                  "UintType must be `uint16_t, `uint32_t`, or `uint64_t`");
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
     return static_cast<uint8_t>(Min(aValue, static_cast<UintType>(NumericLimits<uint8_t>::kMax)));
 }
@@ -141,9 +139,7 @@ template <typename UintType> uint16_t ClampToUint16(UintType aValue)
  */
 template <typename IntType> int8_t ClampToInt8(IntType aValue)
 {
-    static_assert(TypeTraits::IsSame<IntType, int16_t>::kValue || TypeTraits::IsSame<IntType, int32_t>::kValue ||
-                      TypeTraits::IsSame<IntType, int64_t>::kValue,
-                  "IntType must be `int16_t, `int32_t`, or `int64_t`");
+    static_assert(TypeTraits::IsInt<IntType>::kValue, "IntType must be a signed int (8, 16, 32, 64 bit len)");
 
     return static_cast<int8_t>(Clamp(aValue, static_cast<IntType>(NumericLimits<int8_t>::kMin),
                                      static_cast<IntType>(NumericLimits<int8_t>::kMax)));
@@ -250,9 +246,7 @@ inline unsigned long ToUlong(uint32_t aUint32) { return static_cast<unsigned lon
  */
 template <typename UintType> uint8_t CountBitsInMask(UintType aMask)
 {
-    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
-                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
     uint8_t count = 0;
 
@@ -276,9 +270,7 @@ template <typename UintType> uint8_t CountBitsInMask(UintType aMask)
  */
 template <typename UintType> void SetBit(UintType &aBits, uint8_t aBitOffset)
 {
-    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
-                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
     aBits = aBits | (static_cast<UintType>(1) << aBitOffset);
 }
@@ -294,9 +286,7 @@ template <typename UintType> void SetBit(UintType &aBits, uint8_t aBitOffset)
  */
 template <typename UintType> void ClearBit(UintType &aBits, uint8_t aBitOffset)
 {
-    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
-                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
     aBits = aBits & (~(static_cast<UintType>(1) << aBitOffset));
 }
@@ -314,9 +304,7 @@ template <typename UintType> void ClearBit(UintType &aBits, uint8_t aBitOffset)
  */
 template <typename UintType> bool GetBit(UintType aBits, uint8_t aBitOffset)
 {
-    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
-                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
     return (aBits & (static_cast<UintType>(1) << aBitOffset)) != 0;
 }
@@ -333,9 +321,7 @@ template <typename UintType> bool GetBit(UintType aBits, uint8_t aBitOffset)
  */
 template <typename UintType> void WriteBit(UintType &aBits, uint8_t aBitOffset, bool aValue)
 {
-    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
-                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
     if (aValue)
     {
@@ -358,9 +344,7 @@ template <typename UintType> void WriteBit(UintType &aBits, uint8_t aBitOffset, 
  */
 template <typename UintType> inline constexpr uint8_t BitOffsetOfMask(UintType aMask)
 {
-    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
-                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
     return (aMask & 0x1) ? 0 : (1 + BitOffsetOfMask<UintType>(aMask >> 1));
 }
@@ -378,9 +362,7 @@ template <typename UintType> inline constexpr uint8_t BitOffsetOfMask(UintType a
 template <typename UintType, UintType kMask, UintType kOffset = BitOffsetOfMask(kMask)>
 void WriteBits(UintType &aBits, UintType aValue)
 {
-    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
-                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
     aBits = ((aBits & ~kMask) | ((aValue << kOffset) & kMask));
 }
@@ -400,9 +382,7 @@ void WriteBits(UintType &aBits, UintType aValue)
 template <typename UintType, UintType kMask, UintType kOffset = BitOffsetOfMask(kMask)>
 UintType UpdateBits(UintType aBits, UintType aValue)
 {
-    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
-                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
     return ((aBits & ~kMask) | ((aValue << kOffset) & kMask));
 }
@@ -421,9 +401,7 @@ UintType UpdateBits(UintType aBits, UintType aValue)
 template <typename UintType, UintType kMask, UintType kOffset = BitOffsetOfMask(kMask)>
 UintType ReadBits(UintType aBits)
 {
-    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
-                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
     return (aBits & kMask) >> kOffset;
 }
@@ -432,7 +410,7 @@ UintType ReadBits(UintType aBits)
  * Writes the specified bits of the given integer stored in little-endian format to the given value and returns the
  * updated integer stored in little-endian format.
  *
- * @tparam UintType   The value type (MUST be `uint16_t`, `uint32_t`, or `uint64_t`).
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
  * @tparam kMask      The bit mask (MUST not be 0) to write. The @p kMask must be provided in a shifted form.
  * @tparam kOffset    The bit offset to write. The default @p kOffset is computed from the given @p kMask.
  *
@@ -444,9 +422,7 @@ UintType ReadBits(UintType aBits)
 template <typename UintType, UintType kMask, UintType kOffset = BitOffsetOfMask(kMask)>
 UintType UpdateBitsLittleEndian(UintType aBits, UintType aValue)
 {
-    static_assert(TypeTraits::IsSame<UintType, uint16_t>::kValue || TypeTraits::IsSame<UintType, uint32_t>::kValue ||
-                      TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                  "UintType must be `uint16_t`, `uint32_t`, or `uint64_t`");
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
     return LittleEndian::HostSwap<UintType>((LittleEndian::HostSwap<UintType>(aBits) & ~kMask) |
                                             ((aValue << kOffset) & kMask));
@@ -456,7 +432,7 @@ UintType UpdateBitsLittleEndian(UintType aBits, UintType aValue)
  * Writes the specified bits of the given integer stored in big-endian format to the given value and returns the updated
  * integer stored in big-endian format.
  *
- * @tparam UintType   The value type (MUST be `uint16_t`, `uint32_t`, or `uint64_t`).
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
  * @tparam kMask      The bit mask (MUST not be 0) to write. The @p kMask must be provided in a shifted form.
  * @tparam kOffset    The bit offset to write. The default @p kOffset is computed from the given @p kMask.
  *
@@ -468,9 +444,7 @@ UintType UpdateBitsLittleEndian(UintType aBits, UintType aValue)
 template <typename UintType, UintType kMask, UintType kOffset = BitOffsetOfMask(kMask)>
 UintType UpdateBitsBigEndian(UintType aBits, UintType aValue)
 {
-    static_assert(TypeTraits::IsSame<UintType, uint16_t>::kValue || TypeTraits::IsSame<UintType, uint32_t>::kValue ||
-                      TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                  "UintType must be `uint16_t`, `uint32_t`, or `uint64_t`");
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
     return BigEndian::HostSwap<UintType>((BigEndian::HostSwap<UintType>(aBits) & ~kMask) |
                                          ((aValue << kOffset) & kMask));
@@ -479,7 +453,7 @@ UintType UpdateBitsBigEndian(UintType aBits, UintType aValue)
 /**
  * Read the value of the specified bits of the given integer stored in little-endian format.
  *
- * @tparam UintType   The value type (MUST be `uint16_t`, `uint32_t`, or `uint64_t`).
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
  * @tparam kMask      The bit mask (MUST not be 0) to write. The @p kMask must be provided in a shifted form.
  * @tparam kOffset    The bit offset to write. The default @p kOffset is computed from the given @p kMask.
  *
@@ -490,9 +464,7 @@ UintType UpdateBitsBigEndian(UintType aBits, UintType aValue)
 template <typename UintType, UintType kMask, UintType kOffset = BitOffsetOfMask(kMask)>
 UintType ReadBitsLittleEndian(UintType aBits)
 {
-    static_assert(TypeTraits::IsSame<UintType, uint16_t>::kValue || TypeTraits::IsSame<UintType, uint32_t>::kValue ||
-                      TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                  "UintType must be `uint16_t`, `uint32_t`, or `uint64_t`");
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
     return (LittleEndian::HostSwap<UintType>(aBits) & kMask) >> kOffset;
 }
@@ -500,7 +472,7 @@ UintType ReadBitsLittleEndian(UintType aBits)
 /**
  * Read the value of the specified bits of the given integer stored in big-endian format.
  *
- * @tparam UintType   The value type (MUST be `uint16_t`, `uint32_t`, or `uint64_t`).
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
  * @tparam kMask      The bit mask (MUST not be 0) to write. The @p kMask must be provided in a shifted form.
  * @tparam kOffset    The bit offset to write. The default @p kOffset is computed from the given @p kMask.
  *
@@ -511,9 +483,7 @@ UintType ReadBitsLittleEndian(UintType aBits)
 template <typename UintType, UintType kMask, UintType kOffset = BitOffsetOfMask(kMask)>
 UintType ReadBitsBigEndian(UintType aBits)
 {
-    static_assert(TypeTraits::IsSame<UintType, uint16_t>::kValue || TypeTraits::IsSame<UintType, uint32_t>::kValue ||
-                      TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                  "UintType must be `uint16_t`, `uint32_t`, or `uint64_t`");
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
     return (BigEndian::HostSwap<UintType>(aBits) & kMask) >> kOffset;
 }
