@@ -346,7 +346,7 @@ Done
 
 ### active
 
-Usage: `dataset active [-x|ns]`
+Usage: `dataset active [-x|-ns]`
 
 Print Active Operational Dataset in human-readable form.
 
