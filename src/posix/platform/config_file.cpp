@@ -52,7 +52,7 @@ void ConfigFile::SetFilePath(const char *aFilePath)
 {
     assert(aFilePath != nullptr);
     VerifyOrDie(strlen(aFilePath) + strlen(kSwapSuffix) < kFilePathMaxSize, OT_EXIT_FAILURE);
-    mFilePath = aFilePath;
+    strncpy(mFilePath, aFilePath, kFilePathMaxSize - 1);
 }
 
 bool ConfigFile::HasKey(const char *aKey) const

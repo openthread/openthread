@@ -127,7 +127,7 @@ private:
 
     void Strip(char *aString) const;
 
-    const char *mFilePath;
+    char mFilePath[kFilePathMaxSize];
 };
 
 } // namespace Posix
