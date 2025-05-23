@@ -20,14 +20,6 @@ This test is used for testing RCP capabilities.
 - DUT : The device under test.
 - Reference Device : The device that supports all tested features.
 
-### Python Dependences
-
-Before running the test script on PC, testers should install dependences first.
-
-```bash
-$ pip3 install -r ./tools/cp-caps/requirements.txt ./tools/otci
-```
-
 ### Reference Device
 
 The [nRF52840DK][ot-nrf528xx-nrf52840] is set as the reference device by default. Testers can also select the other Thread device as the reference device.
@@ -45,6 +37,45 @@ $ ./script/build nrf52840 UART_trans -DOT_DIAGNOSTIC=ON -DOT_CSL_RECEIVER=ON -DO
 $ arm-none-eabi-objcopy -O ihex build/bin/ot-cli-ftd ot-cli-ftd.hex
 $ nrfutil device program --firmware ot-cli-ftd.hex --options chip_erase_mode=ERASE_ALL
 $ nrfutil device reset --reset-kind=RESET_PIN
+```
+
+## Python Virtual Environment Setup
+
+It is recommended to use a Python virtual environment to manage project dependencies and avoid conflicts with system-wide packages.
+
+### Creation
+
+Create a virtual environment named `.venv` in the project directory:
+
+```bash
+$ cd openthread
+$ python3 -m venv .venv
+```
+
+### Activation
+
+Activate the virtual environment using the following command:
+
+```bash
+$ source .venv/bin/activate
+```
+
+After activation, your shell prompt should indicate that you are working within the virtual environment.
+
+### Dependency Installation
+
+Once the virtual environment is activated, install the required dependencies using `pip`:
+
+```bash
+$ pip3 install -r ./tools/cp-caps/requirements.txt ./tools/otci
+```
+
+### Deactivation
+
+When you are finished working in the virtual environment, you can deactivate it by running the following command. This will return you to your system's global Python environment.
+
+```bash
+$ deactivate
 ```
 
 ## Test Commands
