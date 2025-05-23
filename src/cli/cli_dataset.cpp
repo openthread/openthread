@@ -584,7 +584,7 @@ otError Dataset::Print(otOperationalDatasetTlvs &aDatasetTlvs, bool aNonsensitiv
     {
         const char *mTitle;       // Title to output.
         const char *mName;        // To use with `LookupMapper()`.
-        const bool  mIsSensitive; // Whether the field is sensitive.
+        bool        mIsSensitive; // Whether the field is sensitive.
     };
 
     static const ComponentTitle kTitles[] = {
@@ -697,7 +697,7 @@ exit:
  * Done
  * @endcode
  * @code
- * dataset active -nonsensitive
+ * dataset active -ns
  * Active Timestamp: 1
  * Channel: 13
  * Channel Mask: 0x07fff800
@@ -710,9 +710,9 @@ exit:
  * @endcode
  * @cparam dataset active [-x]
  * The optional `-x` argument prints the Active Operational %Dataset values as hex-encoded TLVs.
- * @cparam dataset active [-nonsensitive]
- * The optional `-nonsensitive` argument prints the Active Operational dataset excluding the network key and PSKc
- * fields.
+ * @cparam dataset active [-ns]
+ * The optional `-ns` argument prints the Active Operational dataset nonsensitive fields, i.e., excluding the network
+ * key and PSKc fields.
  * @par api_copy
  * #otDatasetGetActive
  * @par
@@ -727,15 +727,15 @@ template <> otError Dataset::Process<Cmd("active")>(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        error = Print(dataset, false);
+        error = Print(dataset, /* aNonsensitiveOnly */ false);
     }
     else if (aArgs[0] == "-x")
     {
         OutputBytesLine(dataset.mTlvs, dataset.mLength);
     }
-    else if (aArgs[0] == "-nonsensitive")
+    else if (aArgs[0] == "-ns")
     {
-        error = Print(dataset, true);
+        error = Print(dataset, /* aNonsensitiveOnly */ true);
     }
     else
     {
@@ -755,15 +755,15 @@ template <> otError Dataset::Process<Cmd("pending")>(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        error = Print(datasetTlvs, false);
+        error = Print(datasetTlvs, /* aNonsensitiveOnly */ false);
     }
     else if (aArgs[0] == "-x")
     {
         OutputBytesLine(datasetTlvs.mTlvs, datasetTlvs.mLength);
     }
-    else if (aArgs[0] == "-nonsensitive")
+    else if (aArgs[0] == "-ns")
     {
-        error = Print(datasetTlvs, true);
+        error = Print(datasetTlvs, /* aNonsensitiveOnly */ true);
     }
     else
     {
@@ -1314,7 +1314,7 @@ otError Dataset::Process(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        ExitNow(error = Print(sDatasetTlvs, false));
+        ExitNow(error = Print(sDatasetTlvs, /* aNonsensitiveOnly */ false));
     }
 
     /**
