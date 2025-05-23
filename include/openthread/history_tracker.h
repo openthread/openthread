@@ -236,6 +236,26 @@ typedef struct otHistoryTrackerExternalRouteInfo
 } otHistoryTrackerExternalRouteInfo;
 
 /**
+ * Represents events during the Border Agent's ePSKc journey.
+ */
+typedef enum
+{
+    OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_ACTIVATED,                   ///< ePSKc mode is activated.
+    OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_CONNECTED,                   ///< Secure session is connected.
+    OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_PETITIONED,                  ///< Commissioner petition is received.
+    OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_RETRIEVED_ACTIVE_DATASET,    ///< Active dataset is retrieved.
+    OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_RETRIEVED_PENDING_DATASET,   ///< Pending dataset is retrieved.
+    OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_KEEP_ALIVE,                  ///< Keep alive message is received.
+    OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_LOCAL_CLOSE,     ///< Deactivated by a call to the API.
+    OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_REMOTE_CLOSE,    ///< Disconnected by the peer.
+    OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_SESSION_ERROR,   ///< Disconnected due to some error.
+    OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_SESSION_TIMEOUT, ///< Disconnected due to timeout.
+    OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_MAX_ATTEMPTS,    ///< Max allowed attempts reached.
+    OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_EPSKC_TIMEOUT,   ///< ePSKc mode timed out.
+    OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_UNKNOWN,         ///< Deactivated for an unknown reason.
+} otHistoryTrackerBorderAgentEpskcEvent;
+
+/**
  * Initializes an `otHistoryTrackerIterator`.
  *
  * An iterator MUST be initialized before it is used.
@@ -393,6 +413,23 @@ const otHistoryTrackerOnMeshPrefixInfo *otHistoryTrackerIterateOnMeshPrefixHisto
  * @returns The `otHistoryTrackerExternalRouteInfo` entry or `NULL` if no more entries in the list.
  */
 const otHistoryTrackerExternalRouteInfo *otHistoryTrackerIterateExternalRouteHistory(
+    otInstance               *aInstance,
+    otHistoryTrackerIterator *aIterator,
+    uint32_t                 *aEntryAge);
+
+/**
+ * Iterates over the entries in the Border Agent ePSKc history list.
+ *
+ * @param[in]     aInstance  A pointer to the OpenThread instance.
+ * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
+ * @param[out]    aEntryAge  A pointer to a variable to output the entry's age. MUST NOT be NULL.
+ *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+ *                           @p aIterator initialization time. It is set to `OT_HISTORY_TRACKER_MAX_AGE` for entries
+ *                           older than max age.
+ *
+ * @returns The `otHistoryTrackerBorderAgentEpskcEvent` entry or `NULL` if no more entries in the list.
+ */
+const otHistoryTrackerBorderAgentEpskcEvent *otHistoryTrackerIterateBorderAgentEpskcEventHistory(
     otInstance               *aInstance,
     otHistoryTrackerIterator *aIterator,
     uint32_t                 *aEntryAge);

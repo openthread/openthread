@@ -76,6 +76,7 @@ typedef enum otCoapSecureConnectEvent
     OT_COAP_SECURE_DISCONNECTED_LOCAL_CLOSED, ///< Disconnected locally
     OT_COAP_SECURE_DISCONNECTED_MAX_ATTEMPTS, ///< Disconnected due to reaching the max connection attempts
     OT_COAP_SECURE_DISCONNECTED_ERROR,        ///< Disconnected due to an error
+    OT_COAP_SECURE_DISCONNECTED_TIMEOUT,      ///< Disconnected locally due to session timeout
 } otCoapSecureConnectEvent;
 
 /**

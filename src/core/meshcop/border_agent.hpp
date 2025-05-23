@@ -39,6 +39,7 @@
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 #include <openthread/border_agent.h>
+#include <openthread/history_tracker.h>
 
 #include "border_router/routing_manager.hpp"
 #include "common/appender.hpp"
@@ -389,20 +390,21 @@ public:
 
         static_assert(kMaxKeyLength <= Dtls::Transport::kPskMaxLength, "Max e-key len is larger than max PSK len");
 
-        enum StopReason : uint8_t
+        enum DeactivationReason : uint8_t
         {
             kReasonLocalDisconnect,
             kReasonPeerDisconnect,
             kReasonSessionError,
+            kReasonSessionTimeout,
             kReasonMaxFailedAttempts,
-            kReasonTimeout,
+            kReasonEpskcTimeout,
             kReasonUnknown,
         };
 
         explicit EphemeralKeyManager(Instance &aInstance);
 
         void SetState(State aState);
-        void Stop(StopReason aReason);
+        void Stop(DeactivationReason aReason);
         void HandleTimer(void);
         void HandleTask(void);
         bool OwnsSession(CoapDtlsSession &aSession) const { return mCoapDtlsSession == &aSession; }
@@ -423,7 +425,7 @@ public:
         void                  HandleTransportClosed(void);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-        static const char *StopReasonToString(StopReason aReason);
+        static const char *DeactivationReasonToString(DeactivationReason aReason);
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
