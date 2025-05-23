@@ -1192,7 +1192,14 @@ Error Mle::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, co
 #endif
         )
         {
-            Attach(kBetterPartition);
+            // To avoid flooding of parent requests and parent dropping the request as duplicated (especially when
+            // neighbor belonging to different partition has the trickle timer reset), limit the better partition attach
+            // attempts
+            if ((TimerMilli::GetNow() - aRxInfo.mNeighbor->GetLastHeard()) >
+                (kParentRequestRouterTimeout - kParentRequestDuplicateMargin))
+            {
+                Attach(kBetterPartition);
+            }
         }
 
         ExitNow(error = kErrorDrop);
