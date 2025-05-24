@@ -195,9 +195,12 @@ otError otBleSecureSend(otInstance *aInstance, uint8_t *aBuf, uint16_t aLength)
     return AsCoreType(aInstance).Get<Ble::BleSecure>().Send(aBuf, aLength);
 }
 
-otError otBleSecureSendApplicationTlv(otInstance *aInstance, uint8_t *aBuf, uint16_t aLength)
+otError otBleSecureSendApplicationTlv(otInstance               *aInstance,
+                                      otTcatApplicationProtocol aApplicationProtocol,
+                                      uint8_t                  *aBuf,
+                                      uint16_t                  aLength)
 {
-    return AsCoreType(aInstance).Get<Ble::BleSecure>().SendApplicationTlv(aBuf, aLength);
+    return AsCoreType(aInstance).Get<Ble::BleSecure>().SendApplicationTlv(MapEnum(aApplicationProtocol), aBuf, aLength);
 }
 
 otError otBleSecureFlush(otInstance *aInstance) { return AsCoreType(aInstance).Get<Ble::BleSecure>().Flush(); }
