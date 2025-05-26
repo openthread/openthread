@@ -750,7 +750,7 @@ void Ip6::UpdateReassemblyList(void)
     {
         if (now - message.GetTimestamp() >= TimeMilli::SecToMsec(kReassemblyTimeout))
         {
-            LogNote("Reassembly timeout.");
+            LogInfo("Reassembly timeout.");
             SendIcmpError(message, Icmp::Header::kTypeTimeExceeded, Icmp::Header::kCodeFragmReasTimeEx);
 
             mReassemblyList.DequeueAndFree(message);
@@ -1150,7 +1150,7 @@ void Ip6::DetermineAction(const Message &aMessage,
     if (Get<NetworkData::Leader>().RouteLookup(aHeader.GetSource(), aHeader.GetDestination(), rloc16) != kErrorNone)
     {
         // No route in mesh, forward to host (as a last resort).
-        LogNote("Failed to find valid route for: %s", aHeader.GetDestination().ToString().AsCString());
+        LogInfo("Failed to find valid route for: %s", aHeader.GetDestination().ToString().AsCString());
         aForwardHost = true;
         ExitNow();
     }
@@ -1275,7 +1275,7 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
 
                 if (udpHeader.GetDestinationPort() == Tmf::kUdpPort)
                 {
-                    LogNote("Dropping TMF message from untrusted origin");
+                    LogInfo("Dropping TMF message from untrusted origin");
                     ExitNow(error = kErrorDrop);
                 }
             }
