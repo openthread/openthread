@@ -170,6 +170,20 @@ void Radio::ProcessRadioUrl(const RadioUrl &aRadioUrl)
         mRadioSpinel.SetBusLatency(busLatency);
     }
 
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+    if (aRadioUrl.HasParam("product-config-file"))
+    {
+        const char *configFile = aRadioUrl.GetValue("product-config-file");
+        SuccessOrDie(sConfig.SetProductConfigFile(configFile));
+    }
+
+    if (aRadioUrl.HasParam("factory-config-file"))
+    {
+        const char *configFile = aRadioUrl.GetValue("factory-config-file");
+        SuccessOrDie(sConfig.SetFactoryConfigFile(configFile));
+    }
+#endif // OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+
     ProcessMaxPowerTable(aRadioUrl);
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE

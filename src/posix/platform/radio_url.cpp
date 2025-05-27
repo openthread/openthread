@@ -130,6 +130,14 @@ const char *otSysGetRadioUrlHelpString(void)
            "                                  Upto three IIDs can be provided with each IID separated by ',' \n"
            "                                  e.g. iid-list=1,2,3 \n"
 #endif
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+           "    product-config-file[=path]    Specify a custom path to the openthread.conf product configuration\n"
+           "                                  file.\n"
+           "                                  If not specified, the default path set at build time is used.\n"
+           "    factory-config-file[=path]    Specify a custom path to the openthread.conf factory configuration\n"
+           "                                  file.\n"
+           "                                  If not specified, the default path set at build time is used.\n"
+#endif // OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
         ;
 }
 
