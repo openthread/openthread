@@ -81,7 +81,7 @@ const char *ErrorToString(Error aError)
         "Rejected",                   // (37) kErrorRejected
     };
 
-    return aError < GetArrayLength(kErrorStrings) ? kErrorStrings[aError] : "UnknownErrorType";
+    return static_cast<size_t>(aError) < GetArrayLength(kErrorStrings) ? kErrorStrings[aError] : "UnknownErrorType";
 }
 
 } // namespace ot
