@@ -636,7 +636,7 @@ Done
 
 ### pending
 
-Usage: `dataset pending [-x|ns]`
+Usage: `dataset pending [-x|-ns]`
 
 Print Pending Operational Dataset in human-readable form.
 
