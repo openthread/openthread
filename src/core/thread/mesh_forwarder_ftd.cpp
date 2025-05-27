@@ -832,7 +832,7 @@ void MeshForwarder::GetForwardFramePriority(RxInfo &aRxInfo, Message::Priority &
 exit:
     if (error != kErrorNone)
     {
-        LogNote("Failed to get forwarded frame priority, error:%s, %s", ErrorToString(error),
+        LogInfo("Failed to get forwarded frame priority, error:%s, %s", ErrorToString(error),
                 aRxInfo.ToString().AsCString());
     }
     else if (isFragment)
