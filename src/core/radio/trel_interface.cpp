@@ -110,7 +110,7 @@ const Counters *Interface::GetCounters(void) const { return otPlatTrelGetCounter
 
 void Interface::ResetCounters(void) { otPlatTrelResetCounters(&GetInstance()); }
 
-Error Interface::Send(const Packet &aPacket, bool aIsDiscovery)
+Error Interface::Send(Packet &aPacket, bool aIsDiscovery)
 {
     Error error = kErrorNone;
     Peer *peerEntry;
@@ -123,12 +123,28 @@ Error Interface::Send(const Packet &aPacket, bool aIsDiscovery)
     case Header::kTypeBroadcast:
         for (const Peer &peer : Get<PeerTable>())
         {
+            uint16_t        originalPacketNumber = aPacket.GetHeader().GetPacketNumber();
+            Header::AckMode originalAckMode      = aPacket.GetHeader().GetAckMode();
+            Neighbor       *neighbor;
+
             if (!aIsDiscovery && (peer.GetExtPanId() != Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()))
             {
                 continue;
             }
 
+            neighbor = Get<NeighborTable>().FindNeighbor(peer.GetExtAddress(), Neighbor::kInStateAnyExceptInvalid);
+
+            if (neighbor != nullptr)
+            {
+                aPacket.GetHeader().SetAckMode(Header::kAckRequested);
+                aPacket.GetHeader().SetPacketNumber(neighbor->mTrelTxPacketNumber++);
+                neighbor->mTrelCurrentPendingAcks++;
+            }
+
             otPlatTrelSend(&GetInstance(), aPacket.GetBuffer(), aPacket.GetLength(), &peer.mSockAddr);
+
+            aPacket.GetHeader().SetPacketNumber(originalPacketNumber);
+            aPacket.GetHeader().SetAckMode(originalAckMode);
         }
         break;
 

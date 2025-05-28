@@ -220,6 +220,7 @@ private:
 class NeighborInfo
 {
     friend class Link;
+    friend class Interface;
 
 private:
     uint32_t GetPendingTrelAckCount(void) const { return (mTrelPreviousPendingAcks + mTrelCurrentPendingAcks); }
