@@ -143,10 +143,13 @@ const char *Leader::DomainPrefixEventToString(DomainPrefixEvent aEvent)
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-void Leader::Update(void)
+void Leader::HandleNotifierEvents(Events aEvents)
 {
-    UpdateBackboneRouterPrimary();
-    UpdateDomainPrefixConfig();
+    if (aEvents.Contains(kEventThreadNetdataChanged))
+    {
+        UpdateBackboneRouterPrimary();
+        UpdateDomainPrefixConfig();
+    }
 }
 
 void Leader::UpdateBackboneRouterPrimary(void)

@@ -1222,23 +1222,8 @@ void Mle::HandleNotifierEvents(Events aEvents)
             }
         }
 
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-        Get<BackboneRouter::Leader>().Update();
-#endif
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
         UpdateServiceAlocs();
-#endif
-
-#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
-        IgnoreError(Get<Dhcp6::Server>().UpdateService());
-#endif
-
-#if OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE
-        Get<NeighborDiscovery::Agent>().UpdateService();
-#endif
-
-#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
-        Get<Dhcp6::Client>().UpdateAddresses();
 #endif
     }
 

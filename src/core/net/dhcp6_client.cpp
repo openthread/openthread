@@ -57,6 +57,14 @@ bool Client::MatchNetifAddressWithPrefix(const Ip6::Netif::UnicastAddress &aNeti
     return aNetifAddress.HasPrefix(aIp6Prefix);
 }
 
+void Client::HandleNotifierEvents(Events aEvents)
+{
+    if (aEvents.Contains(kEventThreadNetdataChanged))
+    {
+        UpdateAddresses();
+    }
+}
+
 void Client::UpdateAddresses(void)
 {
     bool                            found          = false;
