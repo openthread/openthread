@@ -52,6 +52,14 @@ Client::Client(Instance &aInstance)
     ClearAllBytes(mIdentityAssociations);
 }
 
+void Client::HandleNotifierEvents(Events aEvents)
+{
+    if (aEvents.Contains(kEventThreadNetdataChanged))
+    {
+        UpdateAddresses();
+    }
+}
+
 void Client::UpdateAddresses(void)
 {
     bool                            found          = false;
