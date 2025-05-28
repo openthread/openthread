@@ -52,11 +52,6 @@ Client::Client(Instance &aInstance)
     ClearAllBytes(mIdentityAssociations);
 }
 
-bool Client::MatchNetifAddressWithPrefix(const Ip6::Netif::UnicastAddress &aNetifAddress, const Ip6::Prefix &aIp6Prefix)
-{
-    return aNetifAddress.HasPrefix(aIp6Prefix);
-}
-
 void Client::UpdateAddresses(void)
 {
     bool                            found          = false;
@@ -82,7 +77,7 @@ void Client::UpdateAddresses(void)
                 continue;
             }
 
-            if (MatchNetifAddressWithPrefix(idAssociation.mNetifAddress, config.GetPrefix()))
+            if (idAssociation.mNetifAddress.HasPrefix(config.GetPrefix()))
             {
                 found = true;
                 break;
@@ -121,7 +116,7 @@ void Client::UpdateAddresses(void)
                     idAssociation = &ia;
                 }
             }
-            else if (MatchNetifAddressWithPrefix(ia.mNetifAddress, config.GetPrefix()))
+            else if (ia.mNetifAddress.HasPrefix(config.GetPrefix()))
             {
                 found         = true;
                 idAssociation = &ia;

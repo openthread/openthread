@@ -81,6 +81,7 @@ public:
     void UpdateAddresses(void);
 
 private:
+    static constexpr uint16_t kNumPrefixes      = OPENTHREAD_CONFIG_DHCP6_CLIENT_NUM_PREFIXES;
     static constexpr uint32_t kTrickleTimerImin = 1;
     static constexpr uint32_t kTrickleTimerImax = 120;
 
@@ -104,13 +105,7 @@ private:
     void Start(void);
     void Stop(void);
 
-    static bool MatchNetifAddressWithPrefix(const Ip6::Netif::UnicastAddress &aNetifAddress,
-                                            const Ip6::Prefix                &aIp6Prefix);
-
     void Solicit(uint16_t aRloc16);
-
-    void AddIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6Prefix);
-    void RemoveIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6Prefix);
 
     bool ProcessNextIdentityAssociation(void);
 
@@ -136,13 +131,11 @@ private:
 
     using ClientSocket = Ip6::Udp::SocketIn<Client, &Client::HandleUdpReceive>;
 
-    ClientSocket mSocket;
-    TrickleTimer mTrickleTimer;
-
-    TransactionId mTransactionId;
-    TimeMilli     mStartTime;
-
-    IdentityAssociation  mIdentityAssociations[OPENTHREAD_CONFIG_DHCP6_CLIENT_NUM_PREFIXES];
+    ClientSocket         mSocket;
+    TrickleTimer         mTrickleTimer;
+    TransactionId        mTransactionId;
+    TimeMilli            mStartTime;
+    IdentityAssociation  mIdentityAssociations[kNumPrefixes];
     IdentityAssociation *mIdentityAssociationCurrent;
 };
 
