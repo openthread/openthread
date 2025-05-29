@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2025, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -28,105 +28,55 @@
 
 set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
+    ${PROJECT_SOURCE_DIR}/tests/nexus
 )
 
 set(COMMON_COMPILE_OPTIONS
     -DOPENTHREAD_FTD=1
     -DOPENTHREAD_MTD=0
     -DOPENTHREAD_RADIO=0
-    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1
-)
-
-set(COMMON_SOURCES
-    fuzzer_platform.cpp
 )
 
 set(COMMON_LIBS
     openthread-ftd
+    ot-nexus-platform
     ${OT_MBEDTLS}
     $ENV{LIB_FUZZING_ENGINE}
     ot-config
 )
 
-add_executable(ot-cli-received-fuzzer
-    cli_received.cpp
-    ${COMMON_SOURCES}
-)
+#----------------------------------------------------------------------------------------------------------------------
 
-target_compile_options(ot-cli-received-fuzzer
-    PRIVATE
-        ${COMMON_COMPILE_OPTIONS}
-)
+macro(ot_nexus_test name)
 
-target_include_directories(ot-cli-received-fuzzer
-    PRIVATE
-        ${COMMON_INCLUDES}
-)
+    # Macro to add an OpenThread nexus test.
+    #
+    #   Nexus test name will be `nexus_{name}`. Test source file of
+    #   `test_{name}.cpp` is used. Optional extra arguments can be
+    #   passed to provide additional source files.
 
-target_link_libraries(ot-cli-received-fuzzer
-    PRIVATE
-        openthread-cli-ftd
-        ${COMMON_LIBS}
-)
+    add_executable(${name}-fuzzer
+        ${name}.cpp ${ARGN}
+    )
 
-add_executable(ot-ip6-send-fuzzer
-    ip6_send.cpp
-    ${COMMON_SOURCES}
-)
-
-target_compile_options(ot-ip6-send-fuzzer
-    PRIVATE
-        ${COMMON_COMPILE_OPTIONS}
-)
-
-target_include_directories(ot-ip6-send-fuzzer
+    target_include_directories(${name}-fuzzer
     PRIVATE
         ${COMMON_INCLUDES}
-)
+    )
 
-target_link_libraries(ot-ip6-send-fuzzer
+    target_link_libraries(${name}-fuzzer
     PRIVATE
         ${COMMON_LIBS}
-)
+    )
 
-add_executable(ot-radio-receive-done-fuzzer
-    radio_receive_done.cpp
-    ${COMMON_SOURCES}
-)
-
-target_compile_options(ot-radio-receive-done-fuzzer
+    target_compile_options(${name}-fuzzer
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
-)
+    )
+endmacro()
 
-target_include_directories(ot-radio-receive-done-fuzzer
-    PRIVATE
-        ${COMMON_INCLUDES}
-)
+#----------------------------------------------------------------------------------------------------------------------
 
-target_link_libraries(ot-radio-receive-done-fuzzer
-    PRIVATE
-        ${COMMON_LIBS}
-)
-
-add_executable(ot-ncp-hdlc-received-fuzzer
-    ncp_hdlc_received.cpp
-    ${COMMON_SOURCES}
-)
-
-target_compile_options(ot-ncp-hdlc-received-fuzzer
-    PRIVATE
-        ${COMMON_COMPILE_OPTIONS}
-)
-
-target_include_directories(ot-ncp-hdlc-received-fuzzer
-    PRIVATE
-        ${COMMON_INCLUDES}
-)
-
-target_link_libraries(ot-ncp-hdlc-received-fuzzer
-    PRIVATE
-        openthread-ncp-ftd
-        ${COMMON_LIBS}
-)
+ot_nexus_test(radio-one-node)
