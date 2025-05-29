@@ -46,7 +46,7 @@
 #include "common/trickle_timer.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_types.hpp"
-#include "net/dhcp6.hpp"
+#include "net/dhcp6_types.hpp"
 #include "net/netif.hpp"
 #include "net/udp6.hpp"
 
@@ -110,19 +110,16 @@ private:
     Error AppendHeader(Message &aMessage);
     Error AppendClientIdOption(Message &aMessage);
     Error AppendIaNaOption(Message &aMessage, uint16_t aRloc16);
-    Error AppendIaAddressOption(Message &aMessage, uint16_t aRloc16);
     Error AppendElapsedTimeOption(Message &aMessage);
-    Error AppendRapidCommitOption(Message &aMessage);
+    Error AppendRapidCommitOption(Message &aMessage) { return RapidCommitOption::AppendTo(aMessage); }
 
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void     ProcessReply(Message &aMessage);
-    uint16_t FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Option::Code aCode);
-    Error    ProcessServerIdOption(Message &aMessage, uint16_t aOffset);
-    Error    ProcessClientIdOption(Message &aMessage, uint16_t aOffset);
-    Error    ProcessIaNaOption(Message &aMessage, uint16_t aOffset);
-    Error    ProcessStatusCodeOption(Message &aMessage, uint16_t aOffset);
-    Error    ProcessIaAddressOption(Message &aMessage, uint16_t aOffset);
+    void  ProcessReply(const Message &aMessage);
+    Error ProcessServerIdOption(const Message &aMessage);
+    Error ProcessClientIdOption(const Message &aMessage);
+    Error ProcessIaNaOption(const Message &aMessage);
+    Error ProcessIaAddressOption(const IaAddressOption &aOption);
 
     void HandleNotifierEvents(Events aEvents);
     void UpdateAddresses(void);
