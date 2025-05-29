@@ -411,6 +411,7 @@ public:
         void HandleSessionConnected(void);
         void HandleSessionDisconnected(SecureSession::ConnectEvent aEvent);
         void HandleCommissionerPetitionAccepted(void);
+        void UpdateCountersAndRecordEvent(DeactivationReason aReason);
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
         bool ShouldRegisterService(void) const;
         void RegisterOrUnregisterService(void);

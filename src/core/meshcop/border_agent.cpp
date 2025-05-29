@@ -768,10 +768,6 @@ void BorderAgent::EphemeralKeyManager::Stop(void) { Stop(kReasonLocalDisconnect)
 
 void BorderAgent::EphemeralKeyManager::Stop(DeactivationReason aReason)
 {
-#ifdef OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Utils::HistoryTracker::EpskcEvent event = Utils::HistoryTracker::kEpskcDeactivatedUnknown;
-#endif
-
     switch (mState)
     {
     case kStateStarted:
@@ -789,58 +785,63 @@ void BorderAgent::EphemeralKeyManager::Stop(DeactivationReason aReason)
     mTimer.Stop();
     mDtlsTransport.Close();
 
-    switch (aReason)
+    UpdateCountersAndRecordEvent(aReason);
+
+exit:
+    return;
+}
+
+void BorderAgent::EphemeralKeyManager::UpdateCountersAndRecordEvent(DeactivationReason aReason)
+{
+    struct ReasonToCounterEventEntry
     {
-    case kReasonLocalDisconnect:
-        Get<BorderAgent>().mCounters.mEpskcDeactivationClears++;
-#ifdef OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        event = Utils::HistoryTracker::kEpskcDeactivatedLocalClose;
+        DeactivationReason mReason;
+        uint8_t            mEvent; // Raw values of `Utils::HistoryTracker::Epskc` enum.
+        uint32_t Counters::*mCounterPtr;
+    };
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+#define ReasonEntry(kReason, kCounter, kEvent)                       \
+    {                                                                \
+        kReason, Utils::HistoryTracker::kEvent, &Counters::kCounter, \
+    }
+#else
+#define ReasonEntry(kReason, kCounter, kEvent) \
+    {                                          \
+        kReason, 0, &Counters::kCounter        \
+    }
 #endif
-        break;
-    case kReasonSessionTimeout:
-        Get<BorderAgent>().mCounters.mEpskcDeactivationClears++;
-#ifdef OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        event = Utils::HistoryTracker::kEpskcDeactivatedSessionTimeout;
+
+    static const ReasonToCounterEventEntry kReasonToCounterEventEntries[] = {
+        ReasonEntry(kReasonLocalDisconnect, mEpskcDeactivationClears, kEpskcDeactivatedLocalClose),
+        ReasonEntry(kReasonSessionTimeout, mEpskcDeactivationClears, kEpskcDeactivatedSessionTimeout),
+        ReasonEntry(kReasonPeerDisconnect, mEpskcDeactivationDisconnects, kEpskcDeactivatedRemoteClose),
+        ReasonEntry(kReasonSessionError, mEpskcStartSecureSessionErrors, kEpskcDeactivatedSessionError),
+        ReasonEntry(kReasonMaxFailedAttempts, mEpskcDeactivationMaxAttempts, kEpskcDeactivatedMaxAttempts),
+        ReasonEntry(kReasonEpskcTimeout, mEpskcDeactivationTimeouts, kEpskcDeactivatedEpskcTimeout),
+    };
+
+#undef ReasonEntry
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Utils::HistoryTracker::EpskcEvent event = Utils::HistoryTracker::kEpskcDeactivatedUnknown;
 #endif
-        break;
-    case kReasonPeerDisconnect:
-        Get<BorderAgent>().mCounters.mEpskcDeactivationDisconnects++;
-#ifdef OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        event = Utils::HistoryTracker::kEpskcDeactivatedRemoteClose;
+
+    for (const ReasonToCounterEventEntry &entry : kReasonToCounterEventEntries)
+    {
+        if (aReason == entry.mReason)
+        {
+            (Get<BorderAgent>().mCounters.*(entry.mCounterPtr))++;
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+            event = static_cast<Utils::HistoryTracker::EpskcEvent>(entry.mEvent);
 #endif
-        break;
-    case kReasonSessionError:
-        Get<BorderAgent>().mCounters.mEpskcStartSecureSessionErrors++;
-#ifdef OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        event = Utils::HistoryTracker::kEpskcDeactivatedSessionError;
-#endif
-        break;
-    case kReasonMaxFailedAttempts:
-        Get<BorderAgent>().mCounters.mEpskcDeactivationMaxAttempts++;
-#ifdef OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        event = Utils::HistoryTracker::kEpskcDeactivatedMaxAttempts;
-#endif
-        break;
-    case kReasonEpskcTimeout:
-        Get<BorderAgent>().mCounters.mEpskcDeactivationTimeouts++;
-#ifdef OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        event = Utils::HistoryTracker::kEpskcDeactivatedEpskcTimeout;
-#endif
-        break;
-    case kReasonUnknown:
-    default:
-#ifdef OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        event = Utils::HistoryTracker::kEpskcDeactivatedUnknown;
-#endif
-        break;
+            break;
+        }
     }
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     Get<Utils::HistoryTracker>().RecordEpskcEvent(event);
 #endif
-
-exit:
-    return;
 }
 
 void BorderAgent::EphemeralKeyManager::SetState(State aState)
