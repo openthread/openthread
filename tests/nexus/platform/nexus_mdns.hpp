@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024, The OpenThread Authors.
+ *  Copyright (c) 2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,71 +26,45 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_NEXUS_CORE_HPP_
-#define OT_NEXUS_CORE_HPP_
+#ifndef OT_NEXUS_MDNS_HPP_
+#define OT_NEXUS_MDNS_HPP_
 
-#include "common/owning_list.hpp"
 #include "instance/instance.hpp"
-
-#include "nexus_alarm.hpp"
-#include "nexus_radio.hpp"
-#include "nexus_utils.hpp"
 
 namespace ot {
 namespace Nexus {
 
-class Node;
-
-class Core
+class Mdns
 {
 public:
-    Core(void);
-    ~Core(void);
+    static constexpr uint16_t kUdpPort      = 5353;
+    static constexpr uint32_t kInfraIfIndex = 1;
 
-    static Core &Get(void) { return *sCore; }
+    using AddressInfo = otPlatMdnsAddressInfo;
 
-    Node             &CreateNode(void);
-    LinkedList<Node> &GetNodes(void) { return mNodes; }
-
-    TimeMilli GetNow(void) { return mNow; }
-    void      AdvanceTime(uint32_t aDuration);
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Used by platform implementation
-
-    void  SetActiveNode(Node *aNode) { mActiveNode = aNode; }
-    Node *GetActiveNode(void) { return mActiveNode; }
-
-    void UpdateNextAlarmTime(const Alarm &aAlarm);
-    void MarkPendingAction(void) { mPendingAction = true; }
-
-private:
-    static constexpr int8_t kDefaultRxRssi = -20;
-
-    enum AckMode : uint8_t
+    struct PendingTx : public Heap::Allocatable<PendingTx>, public LinkedListEntry<PendingTx>
     {
-        kNoAck,
-        kSendAckNoFramePending,
-        kSendAckFramePending,
+        PendingTx        *mNext;
+        OwnedPtr<Message> mMessage;
+        bool              mIsUnicast;
+        AddressInfo       mAddress;
     };
 
-    void Process(Node &aNode);
-    void ProcessRadio(Node &aNode);
-    void ProcessMdns(Node &aNode);
+    Mdns(void);
+    Error SetListeningEnabled(Instance &aInstance, bool aEnable, uint32_t aInfraIfIndex);
+    void  SendMulticast(Message &aMessage, uint32_t aInfraIfIndex);
+    void  SendUnicast(Message &aMessage, const AddressInfo &aAddress);
 
-    static Core *sCore;
+    void SignalIfAddresses(Instance &aInstance);
+    void Receive(Instance &aInstance, const PendingTx &aPendingTx, const AddressInfo &aSenderAddress);
+    void GetAddress(AddressInfo &aAddress) const;
 
-    OwningList<Node> mNodes;
-    uint16_t         mCurNodeId;
-    bool             mPendingAction;
-    TimeMilli        mNow;
-    TimeMilli        mNextAlarmTime;
-    Node            *mActiveNode;
+    bool                      mEnabled;
+    Heap::Array<Ip6::Address> mIfAddresses;
+    OwningList<PendingTx>     mPendingTxList;
 };
-
-void Log(const char *aFormat, ...);
 
 } // namespace Nexus
 } // namespace ot
 
-#endif // OT_NEXUS_CORE_HPP_
+#endif // OT_NEXUS_MDNS_HPP_

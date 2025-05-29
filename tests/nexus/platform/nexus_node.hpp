@@ -33,6 +33,7 @@
 
 #include "nexus_alarm.hpp"
 #include "nexus_core.hpp"
+#include "nexus_mdns.hpp"
 #include "nexus_radio.hpp"
 #include "nexus_settings.hpp"
 #include "nexus_utils.hpp"
@@ -79,6 +80,7 @@ public:
     Node    *mNext;
     Radio    mRadio;
     Alarm    mAlarm;
+    Mdns     mMdns;
     Settings mSettings;
     bool     mPendingTasklet;
 

@@ -1058,6 +1058,81 @@ void TestBorderAgentTxtDataCallback(void)
 
 //----------------------------------------------------------------------------------------------------------------------
 
+static constexpr uint32_t kInfraIfIndex   = 1;
+static constexpr uint16_t kMaxEntries     = 5;
+static constexpr uint16_t kMaxTxtDataSize = 128;
+
+typedef Dns::Name::Buffer DnsName;
+
+struct BrowseOutcome
+{
+    DnsName  mServiceInstance;
+    uint32_t mTtl;
+};
+
+struct SrvOutcome
+{
+    DnsName  mHostName;
+    uint16_t mPort;
+    uint32_t mTtl;
+};
+
+struct TxtOutcome
+{
+    uint8_t  mTxtData[kMaxTxtDataSize];
+    uint16_t mTxtDataLength;
+    uint32_t mTtl;
+};
+
+static Array<BrowseOutcome, kMaxEntries> sBrowseOutcomes;
+static Array<SrvOutcome, kMaxEntries>    sSrvOutcomes;
+static Array<TxtOutcome, kMaxEntries>    sTxtOutcomes;
+
+void HandleBrowseCallback(otInstance *aInstance, const Dns::Multicast::Core::BrowseResult *aResult)
+{
+    BrowseOutcome *outcome;
+
+    VerifyOrQuit(aInstance != nullptr);
+    VerifyOrQuit(aResult->mInfraIfIndex == kInfraIfIndex);
+
+    outcome = sBrowseOutcomes.PushBack();
+    VerifyOrQuit(outcome != nullptr);
+
+    SuccessOrQuit(StringCopy(outcome->mServiceInstance, aResult->mServiceInstance));
+    outcome->mTtl = aResult->mTtl;
+}
+
+void HandleSrvCallback(otInstance *aInstance, const Dns::Multicast::Core::SrvResult *aResult)
+{
+    SrvOutcome *outcome;
+
+    VerifyOrQuit(aInstance != nullptr);
+    VerifyOrQuit(aResult->mInfraIfIndex == kInfraIfIndex);
+
+    outcome = sSrvOutcomes.PushBack();
+    VerifyOrQuit(outcome != nullptr);
+
+    SuccessOrQuit(StringCopy(outcome->mHostName, aResult->mHostName));
+    outcome->mPort = aResult->mPort;
+    outcome->mTtl  = aResult->mTtl;
+}
+
+void HandleTxtCallback(otInstance *aInstance, const Dns::Multicast::Core::TxtResult *aResult)
+{
+    TxtOutcome *outcome;
+
+    VerifyOrQuit(aInstance != nullptr);
+    VerifyOrQuit(aResult->mInfraIfIndex == kInfraIfIndex);
+
+    outcome = sTxtOutcomes.PushBack();
+    VerifyOrQuit(outcome != nullptr);
+
+    VerifyOrQuit(aResult->mTxtDataLength < kMaxTxtDataSize);
+    memcpy(outcome->mTxtData, aResult->mTxtData, aResult->mTxtDataLength);
+    outcome->mTxtDataLength = aResult->mTxtDataLength;
+    outcome->mTtl           = aResult->mTtl;
+}
+
 void ValidateRegisteredServiceData(Dns::Multicast::Core::Service &aService, Node &aNode)
 {
     TxtData txtData;
@@ -1066,33 +1141,43 @@ void ValidateRegisteredServiceData(Dns::Multicast::Core::Service &aService, Node
     ValidateMeshCoPTxtData(txtData, aNode);
 }
 
-void TestBorderAgentServiceRegisteration(void)
+void TestBorderAgentServiceRegistration(void)
 {
     static const char    kDefaultServiceBaseName[] = OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME;
     static const char    kEphemeralKey[]           = "nexus1234";
     static const uint8_t kVendorTxtData[]          = {8, 'v', 'n', '=', 'n', 'e', 'x', 'u', 's'};
 
-    static constexpr uint32_t kUdpPort      = 49155;
-    static constexpr uint32_t kInfraIfIndex = 1;
+    static constexpr uint32_t kUdpPort = 49155;
 
-    Core                             nexus;
-    Node                            &node0 = nexus.CreateNode();
-    Dns::Multicast::Core::Iterator  *iterator;
-    Dns::Multicast::Core::Service    service;
-    Dns::Multicast::Core::EntryState entryState;
-    uint16_t                         txtDataLengthWithNoVendorData;
+    Core                              nexus;
+    Node                             &node0 = nexus.CreateNode();
+    Node                             &node1 = nexus.CreateNode();
+    Dns::Multicast::Core::Iterator   *iterator;
+    Dns::Multicast::Core::Service     service;
+    Dns::Multicast::Core::EntryState  entryState;
+    Dns::Multicast::Core::Browser     browser;
+    Dns::Multicast::Core::SrvResolver srvResolver;
+    Dns::Multicast::Core::TxtResolver txtResolver;
+    TxtData                           txtData;
+    uint16_t                          txtDataLengthWithNoVendorData;
 
     Log("------------------------------------------------------------------------------------------------------");
-    Log("TestBorderAgentServiceRegisteration");
+    Log("TestBorderAgentServiceRegistration");
 
     nexus.AdvanceTime(0);
 
     node0.Form();
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Disable Border Agent function on node1
+    node1.Get<MeshCoP::BorderAgent>().SetEnabled(false);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Enable mDNS
     SuccessOrQuit(node0.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
     VerifyOrQuit(node0.Get<Dns::Multicast::Core>().IsEnabled());
+    SuccessOrQuit(node1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    VerifyOrQuit(node1.Get<Dns::Multicast::Core>().IsEnabled());
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1133,7 +1218,52 @@ void TestBorderAgentServiceRegisteration(void)
     node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    Log("Enable ans start ephemeral key");
+    Log("Validate that the service can be resolved on other nodes");
+
+    ClearAllBytes(browser);
+    browser.mServiceType  = "_meshcop._udp";
+    browser.mInfraIfIndex = kInfraIfIndex;
+    browser.mCallback     = HandleBrowseCallback;
+    SuccessOrQuit(node1.Get<Dns::Multicast::Core>().StartBrowser(browser));
+
+    nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
+
+    VerifyOrQuit(sBrowseOutcomes.GetLength() == 1);
+    VerifyOrQuit(StringStartsWith(sBrowseOutcomes[0].mServiceInstance, kDefaultServiceBaseName));
+    VerifyOrQuit(sBrowseOutcomes[0].mTtl > 0);
+
+    ClearAllBytes(srvResolver);
+    srvResolver.mServiceInstance = sBrowseOutcomes[0].mServiceInstance;
+    srvResolver.mServiceType     = browser.mServiceType;
+    srvResolver.mInfraIfIndex    = kInfraIfIndex;
+    srvResolver.mCallback        = HandleSrvCallback;
+    SuccessOrQuit(node1.Get<Dns::Multicast::Core>().StartSrvResolver(srvResolver));
+
+    ClearAllBytes(txtResolver);
+    txtResolver.mServiceInstance = sBrowseOutcomes[0].mServiceInstance;
+    txtResolver.mServiceType     = browser.mServiceType;
+    txtResolver.mInfraIfIndex    = kInfraIfIndex;
+    txtResolver.mCallback        = HandleTxtCallback;
+    SuccessOrQuit(node1.Get<Dns::Multicast::Core>().StartTxtResolver(txtResolver));
+
+    nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
+
+    VerifyOrQuit(sSrvOutcomes.GetLength() == 1);
+    VerifyOrQuit(StringStartsWith(sSrvOutcomes[0].mHostName, "ot"));
+    VerifyOrQuit(sSrvOutcomes[0].mTtl > 0);
+    VerifyOrQuit(sSrvOutcomes[0].mPort == node0.Get<MeshCoP::BorderAgent>().GetUdpPort());
+
+    VerifyOrQuit(sTxtOutcomes.GetLength() == 1);
+    VerifyOrQuit(sTxtOutcomes[0].mTtl > 0);
+    txtData.Init(sTxtOutcomes[0].mTxtData, sTxtOutcomes[0].mTxtDataLength);
+    ValidateMeshCoPTxtData(txtData, node0);
+
+    sBrowseOutcomes.Clear();
+    sSrvOutcomes.Clear();
+    sTxtOutcomes.Clear();
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Enable and start ephemeral key");
 
     node0.Get<EphemeralKeyManager>().SetEnabled(true);
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStopped);
@@ -1191,6 +1321,10 @@ void TestBorderAgentServiceRegisteration(void)
     VerifyOrQuit(node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
 
     node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+
+    VerifyOrQuit(sBrowseOutcomes.GetLength() == 0);
+    VerifyOrQuit(sSrvOutcomes.GetLength() == 0);
+    VerifyOrQuit(sTxtOutcomes.GetLength() == 0);
 
     Log("Wait for the ephemeral key to expire and validate the registered service is removed");
 
@@ -1253,6 +1387,27 @@ void TestBorderAgentServiceRegisteration(void)
 
     node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
 
+    // Check browser/resolver outcome on node1
+
+    VerifyOrQuit(sSrvOutcomes.GetLength() == 1);
+    VerifyOrQuit(sSrvOutcomes[0].mTtl == 0);
+    SuccessOrQuit(node1.Get<Dns::Multicast::Core>().StopSrvResolver(srvResolver));
+
+    VerifyOrQuit(sTxtOutcomes.GetLength() == 1);
+    VerifyOrQuit(sTxtOutcomes[0].mTtl == 0);
+    SuccessOrQuit(node1.Get<Dns::Multicast::Core>().StopTxtResolver(txtResolver));
+
+    VerifyOrQuit(sBrowseOutcomes.GetLength() == 2);
+    VerifyOrQuit(sBrowseOutcomes[0].mTtl == 0);
+    VerifyOrQuit(StringStartsWith(sBrowseOutcomes[0].mServiceInstance, kDefaultServiceBaseName));
+
+    VerifyOrQuit(sBrowseOutcomes[1].mTtl > 0);
+    VerifyOrQuit(StringStartsWith(sBrowseOutcomes[1].mServiceInstance, "OpenThreadAgent"));
+
+    sBrowseOutcomes.Clear();
+    sSrvOutcomes.Clear();
+    sTxtOutcomes.Clear();
+
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Disable Border Agent and validate that registered service is removed");
 
@@ -1267,6 +1422,12 @@ void TestBorderAgentServiceRegisteration(void)
     VerifyOrQuit(node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
 
     node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+
+    VerifyOrQuit(sBrowseOutcomes.GetLength() == 1);
+    VerifyOrQuit(sBrowseOutcomes[0].mTtl == 0);
+    VerifyOrQuit(StringStartsWith(sBrowseOutcomes[0].mServiceInstance, "OpenThreadAgent"));
+
+    sBrowseOutcomes.Clear();
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Re-enable Border Agent and validate that service is registered again");
@@ -1301,6 +1462,12 @@ void TestBorderAgentServiceRegisteration(void)
     VerifyOrQuit(node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
 
     node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+
+    VerifyOrQuit(sBrowseOutcomes.GetLength() == 1);
+    VerifyOrQuit(sBrowseOutcomes[0].mTtl > 0);
+    VerifyOrQuit(StringStartsWith(sBrowseOutcomes[0].mServiceInstance, "OpenThreadAgent"));
+
+    sBrowseOutcomes.Clear();
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Set vendor TXT data and validate that it is included in the registered mDNS service");
@@ -1381,7 +1548,7 @@ int main(void)
     ot::Nexus::TestBorderAgent();
     ot::Nexus::TestBorderAgentEphemeralKey();
     ot::Nexus::TestBorderAgentTxtDataCallback();
-    ot::Nexus::TestBorderAgentServiceRegisteration();
+    ot::Nexus::TestBorderAgentServiceRegistration();
     printf("All tests passed\n");
     return 0;
 }

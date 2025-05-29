@@ -100,6 +100,7 @@ void Core::Process(Node &aNode)
     otTaskletsProcess(&aNode.GetInstance());
 
     ProcessRadio(aNode);
+    ProcessMdns(aNode);
 
     if (aNode.mAlarm.ShouldTrigger(mNow))
     {
@@ -201,6 +202,23 @@ void Core::ProcessRadio(Node &aNode)
 
 exit:
     return;
+}
+
+void Core::ProcessMdns(Node &aNode)
+{
+    Mdns::AddressInfo senderAddress;
+
+    aNode.mMdns.GetAddress(senderAddress);
+
+    for (Mdns::PendingTx &pendingTx : aNode.mMdns.mPendingTxList)
+    {
+        for (Node &rxNode : mNodes)
+        {
+            rxNode.mMdns.Receive(rxNode.GetInstance(), pendingTx, senderAddress);
+        }
+    }
+
+    aNode.mMdns.mPendingTxList.Free();
 }
 
 } // namespace Nexus
