@@ -86,7 +86,7 @@ class HistoryTracker : public InstanceLocator, private NonCopyable
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     friend class ot::MeshCoP::BorderAgent;
     friend class ot::MeshCoP::BorderAgent::EphemeralKeyManager;
-#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+#endif
 
 public:
     /**
@@ -141,7 +141,7 @@ public:
     typedef otHistoryTrackerOnMeshPrefixInfo     OnMeshPrefixInfo;     ///< Network Data on mesh prefix info.
     typedef otHistoryTrackerExternalRouteInfo    ExternalRouteInfo;    ///< Network Data external route info
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    typedef otHistoryTrackerBorderAgentEpskcEvent EpskcEvent;
+    typedef otHistoryTrackerBorderAgentEpskcEvent EpskcEvent; ///< Border Agent ePSKc Event.
 #endif
 
     /**
@@ -258,10 +258,6 @@ public:
     }
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    void RecordEpskcEvent(EpskcEvent aEvent);
-#endif
-
     /**
      * Converts a given entry age to a human-readable string.
      *
@@ -322,40 +318,25 @@ private:
     static constexpr NetDataEvent kNetDataEntryRemoved = OT_HISTORY_TRACKER_NET_DATA_ENTRY_REMOVED;
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    static constexpr EpskcEvent kEpskcActivated =
-        OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_ACTIVATED; ///< Ephemeral key is activated.
-    static constexpr EpskcEvent kEpskcConnected =
-        OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_CONNECTED; ///< Session connected, not full commissioner.
-    static constexpr EpskcEvent kEpskcPetitioned =
-        OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_PETITIONED; ///< Commissioner candidate petitions.
-    static constexpr EpskcEvent kEpskcRetrievedActiveDataset =
-        OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_RETRIEVED_ACTIVE_DATASET; ///< Retrieved Active Dataset.
-    static constexpr EpskcEvent kEpskcRetrievedPendingDataset =
-        OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_RETRIEVED_PENDING_DATASET; ///< Retrieved Pending Dataset.
-    static constexpr EpskcEvent kEpskcKeepAlive =
-        OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_KEEP_ALIVE; ///< The keep alive message is received.
-    static constexpr EpskcEvent kEpskcDeactivatedLocalClose =
-        OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_LOCAL_CLOSE; ///< The ePSKc mode is deactivated by a
-                                                                             ///< call to the API.
-    static constexpr EpskcEvent kEpskcDeactivatedRemoteClose =
-        OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_REMOTE_CLOSE; ///< The secure session is disconnected by
-                                                                              ///< the peer.
-    static constexpr EpskcEvent kEpskcDeactivatedSessionError =
-        OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_SESSION_ERROR; ///< The ePSKc mode is deactivated due to
-                                                                               ///< an error.
-    static constexpr EpskcEvent kEpskcDeactivatedSessionTimeout =
-        OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_SESSION_TIMEOUT; ///< The ePSKc mode is deactivated due
-                                                                                 ///< to timeout.
-    static constexpr EpskcEvent kEpskcDeactivatedMaxAttempts =
-        OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_MAX_ATTEMPTS; ///< The ePSKc mode is deactivated due to
-                                                                              ///< max failed attempts.
-    static constexpr EpskcEvent kEpskcDeactivatedEpskcTimeout =
-        OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_EPSKC_TIMEOUT; ///< The ePSKc mode is deactivated due to
-                                                                               ///< timeout.
-    static constexpr EpskcEvent kEpskcDeactivatedUnknown =
-        OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_UNKNOWN; ///< The ePSKc mode is deactivated for an
-                                                                         ///< unknown reason.
-#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+#define DefineEpskcEvent(aName, aPublicEnumName) \
+    static constexpr EpskcEvent kEpskc##aName = OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_##aPublicEnumName
+
+    DefineEpskcEvent(Activated, ACTIVATED);
+    DefineEpskcEvent(Connected, CONNECTED);
+    DefineEpskcEvent(Petitioned, PETITIONED);
+    DefineEpskcEvent(RetrievedActiveDataset, RETRIEVED_ACTIVE_DATASET);
+    DefineEpskcEvent(RetrievedPendingDataset, RETRIEVED_PENDING_DATASET);
+    DefineEpskcEvent(KeepAlive, KEEP_ALIVE);
+    DefineEpskcEvent(DeactivatedLocalClose, DEACTIVATED_LOCAL_CLOSE);
+    DefineEpskcEvent(DeactivatedRemoteClose, DEACTIVATED_REMOTE_CLOSE);
+    DefineEpskcEvent(DeactivatedSessionError, DEACTIVATED_SESSION_ERROR);
+    DefineEpskcEvent(DeactivatedSessionTimeout, DEACTIVATED_SESSION_TIMEOUT);
+    DefineEpskcEvent(DeactivatedMaxAttempts, DEACTIVATED_MAX_ATTEMPTS);
+    DefineEpskcEvent(DeactivatedEpskcTimeout, DEACTIVATED_EPSKC_TIMEOUT);
+    DefineEpskcEvent(DeactivatedUnknown, DEACTIVATED_UNKNOWN);
+
+#undef DefineEpskcEvent
+#endif
 
     class Timestamp
     {
@@ -464,6 +445,9 @@ private:
     void RecordNetworkDataChange(void);
     void RecordOnMeshPrefixEvent(NetDataEvent aEvent, const NetworkData::OnMeshPrefixConfig &aPrefix);
     void RecordExternalRouteEvent(NetDataEvent aEvent, const NetworkData::ExternalRouteConfig &aRoute);
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    void RecordEpskcEvent(EpskcEvent aEvent);
 #endif
 
     using TrackerTimer = TimerMilliIn<HistoryTracker, &HistoryTracker::HandleTimer>;
