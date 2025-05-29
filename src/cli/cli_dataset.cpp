@@ -709,8 +709,8 @@ exit:
  * Done
  * @endcode
  * @cparam dataset active [-x|-ns]
- * * The optional `-x` argument prints the Active Operational %Dataset values as hex-encoded TLVs.
- * * The optional `-ns` argument prints the Active Operational dataset nonsensitive fields, i.e., excluding the network
+ * * The optional `-x` argument prints the Active Operational Dataset values as hex-encoded TLVs.
+ * * The optional `-ns` argument prints the Active Operational Dataset nonsensitive fields, i.e., excluding the network
  * key and PSKc fields.
  * @par api_copy
  * #otDatasetGetActive
