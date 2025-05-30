@@ -149,7 +149,7 @@ private:
 
     // Methods used by `Trel::Link`.
     void  Init(void);
-    Error Send(const Packet &aPacket, bool aIsDiscovery = false);
+    Error Send(Packet &aPacket, bool aIsDiscovery = false);
 
     // Callbacks from `otPlatTrel`.
     void HandleReceived(uint8_t *aBuffer, uint16_t aLength, const Ip6::SockAddr &aSenderAddr);
