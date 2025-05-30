@@ -163,6 +163,7 @@ Error Tcp::Endpoint::Connect(const SockAddr &aSockName, uint32_t aFlags)
         struct sockaddr_in6 sin6p;
 
         tp.t_flags &= ~TF_FASTOPEN;
+        memset(&sin6p, 0, sizeof(sin6p));
         memcpy(&sin6p.sin6_addr, &aSockName.mAddress, sizeof(sin6p.sin6_addr));
         sin6p.sin6_port = BigEndian::HostSwap16(aSockName.mPort);
         error           = BsdErrorToOtError(tcp6_usr_connect(&tp, &sin6p));
@@ -193,6 +194,7 @@ Error Tcp::Endpoint::SendByReference(otLinkedBuffer &aBuffer, uint32_t aFlags)
 
     if (IS_FASTOPEN(tp.t_flags))
     {
+        memset(&sin6p, 0, sizeof(sin6p));
         memcpy(&sin6p.sin6_addr, &tp.faddr, sizeof(sin6p.sin6_addr));
         sin6p.sin6_port = tp.fport;
         name            = &sin6p;
@@ -221,6 +223,7 @@ Error Tcp::Endpoint::SendByExtension(size_t aNumBytes, uint32_t aFlags)
 
     if (IS_FASTOPEN(tp.t_flags))
     {
+        memset(&sin6p, 0, sizeof(sin6p));
         memcpy(&sin6p.sin6_addr, &tp.faddr, sizeof(sin6p.sin6_addr));
         sin6p.sin6_port = tp.fport;
         name            = &sin6p;

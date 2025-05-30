@@ -463,7 +463,7 @@ otError otPlatUdpJoinMulticastGroup(otUdpSocket        *aUdpSocket,
                                     const otIp6Address *aAddress)
 {
     otError          error = OT_ERROR_NONE;
-    struct ipv6_mreq mreq;
+    struct ipv6_mreq mreq  = {};
     int              fd;
 
     VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
@@ -474,6 +474,7 @@ otError otPlatUdpJoinMulticastGroup(otUdpSocket        *aUdpSocket,
     switch (aNetifIdentifier)
     {
     case OT_NETIF_UNSPECIFIED:
+        mreq.ipv6mr_interface = 0;
         break;
     case OT_NETIF_THREAD_HOST:
         mreq.ipv6mr_interface = gNetifIndex;
@@ -506,7 +507,7 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket        *aUdpSocket,
                                      const otIp6Address *aAddress)
 {
     otError          error = OT_ERROR_NONE;
-    struct ipv6_mreq mreq;
+    struct ipv6_mreq mreq  = {};
     int              fd;
 
     VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
@@ -517,6 +518,7 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket        *aUdpSocket,
     switch (aNetifIdentifier)
     {
     case OT_NETIF_UNSPECIFIED:
+        mreq.ipv6mr_interface = 0;
         break;
     case OT_NETIF_THREAD_HOST:
         mreq.ipv6mr_interface = gNetifIndex;
