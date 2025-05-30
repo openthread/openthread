@@ -249,6 +249,11 @@ otError Resolver::SendQueryToServer(Transaction        *aTxn,
         memcpy(&serverAddr6.sin6_addr, &aServerAddress, sizeof(otIp6Address));
         serverAddr6.sin6_family = AF_INET6;
         serverAddr6.sin6_port   = htons(53);
+        if (IsIp6AddressLinkLocal(aServerAddress))
+        {
+            // Network interface index is required for link local destinations
+            serverAddr6.sin6_scope_id = otSysGetInfraNetifIndex();
+        }
 
         VerifyOrExit(sendto(aTxn->mUdpFd6, aPacket, aLength, MSG_DONTWAIT, reinterpret_cast<sockaddr *>(&serverAddr6),
                             sizeof(serverAddr6)) > 0,
