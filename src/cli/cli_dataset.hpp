@@ -124,7 +124,7 @@ private:
 
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
-    otError Print(otOperationalDatasetTlvs &aDatasetTlvs);
+    otError Print(otOperationalDatasetTlvs &aDatasetTlvs, bool aNonsensitiveOnly);
 
 #if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
     otError     ProcessUpdater(Arg aArgs[]);
