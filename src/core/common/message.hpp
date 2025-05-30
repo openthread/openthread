@@ -1569,7 +1569,7 @@ private:
 /**
  * Implements a message queue.
  */
-class MessageQueue : public otMessageQueue
+class MessageQueue : public otMessageQueue, private NonCopyable
 {
     friend class Message;
     friend class PriorityQueue;
@@ -1591,6 +1591,13 @@ public:
      * Initializes the message queue.
      */
     MessageQueue(void) { SetTail(nullptr); }
+
+#if OPENTHREAD_PLATFORM_NEXUS
+    /**
+     * Destructor of `MessageQueue`.
+     */
+    ~MessageQueue(void) { DequeueAndFreeAll(); }
+#endif
 
     /**
      * Returns a pointer to the first message.
@@ -1678,7 +1685,7 @@ private:
 /**
  * Implements a priority queue.
  */
-class PriorityQueue : private Clearable<PriorityQueue>
+class PriorityQueue : private Clearable<PriorityQueue>, private NonCopyable
 {
     friend class Message;
     friend class MessageQueue;
@@ -1692,6 +1699,13 @@ public:
      * Initializes the priority queue.
      */
     PriorityQueue(void) { Clear(); }
+
+#if OPENTHREAD_PLATFORM_NEXUS
+    /**
+     * Destructor of `PriorityQueue`.
+     */
+    ~PriorityQueue(void) { DequeueAndFreeAll(); }
+#endif
 
     /**
      * Returns a pointer to the first message.
