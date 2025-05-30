@@ -231,8 +231,8 @@ otError Resolver::SendQueryToServer(Transaction        *aTxn,
 {
     otError      error = OT_ERROR_NONE;
     otIp4Address ip4Addr;
-    sockaddr_in  serverAddr4;
-    sockaddr_in6 serverAddr6;
+    sockaddr_in  serverAddr4 = {};
+    sockaddr_in6 serverAddr6 = {};
 
     if (otIp4FromIp4MappedIp6Address(&aServerAddress, &ip4Addr) == OT_ERROR_NONE)
     {
