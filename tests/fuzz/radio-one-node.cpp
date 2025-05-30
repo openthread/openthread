@@ -107,6 +107,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     Log("Fuzz");
 
     fdp.ConsumeData(&error, sizeof(error));
+    VerifyOrExit((OT_ERROR_NONE <= error) && (error < OT_NUM_ERRORS));
+
     fdp.ConsumeData(&frame, sizeof(frame));
 
     frame.mLength = fdp.RemainingBytes();
