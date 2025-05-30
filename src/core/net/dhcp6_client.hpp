@@ -110,21 +110,21 @@ private:
     bool ProcessNextIdentityAssociation(void);
 
     Error AppendHeader(Message &aMessage);
-    Error AppendClientIdentifier(Message &aMessage);
-    Error AppendIaNa(Message &aMessage, uint16_t aRloc16);
-    Error AppendIaAddress(Message &aMessage, uint16_t aRloc16);
-    Error AppendElapsedTime(Message &aMessage);
-    Error AppendRapidCommit(Message &aMessage);
+    Error AppendClientIdOption(Message &aMessage);
+    Error AppendIaNaOption(Message &aMessage, uint16_t aRloc16);
+    Error AppendIaAddressOption(Message &aMessage, uint16_t aRloc16);
+    Error AppendElapsedTimeOption(Message &aMessage);
+    Error AppendRapidCommitOption(Message &aMessage);
 
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void     ProcessReply(Message &aMessage);
-    uint16_t FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Code aCode);
-    Error    ProcessServerIdentifier(Message &aMessage, uint16_t aOffset);
-    Error    ProcessClientIdentifier(Message &aMessage, uint16_t aOffset);
-    Error    ProcessIaNa(Message &aMessage, uint16_t aOffset);
-    Error    ProcessStatusCode(Message &aMessage, uint16_t aOffset);
-    Error    ProcessIaAddress(Message &aMessage, uint16_t aOffset);
+    uint16_t FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Option::Code aCode);
+    Error    ProcessServerIdOption(Message &aMessage, uint16_t aOffset);
+    Error    ProcessClientIdOption(Message &aMessage, uint16_t aOffset);
+    Error    ProcessIaNaOption(Message &aMessage, uint16_t aOffset);
+    Error    ProcessStatusCodeOption(Message &aMessage, uint16_t aOffset);
+    Error    ProcessIaAddressOption(Message &aMessage, uint16_t aOffset);
 
     static void HandleTrickleTimer(TrickleTimer &aTrickleTimer);
     void        HandleTrickleTimer(void);

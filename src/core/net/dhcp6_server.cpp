@@ -175,8 +175,7 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     SuccessOrExit(aMessage.Read(aMessage.GetOffset(), header));
     aMessage.MoveOffset(sizeof(header));
 
-    // discard if not solicit type
-    VerifyOrExit((header.GetType() == kTypeSolicit));
+    VerifyOrExit((header.GetMsgType() == kMsgTypeSolicit));
 
     ProcessSolicit(aMessage, aMessageInfo.GetPeerAddr(), header.GetTransactionId());
 
@@ -186,31 +185,31 @@ exit:
 
 void Server::ProcessSolicit(Message &aMessage, const Ip6::Address &aDst, const TransactionId &aTransactionId)
 {
-    IaNa             iana;
-    ClientIdentifier clientIdentifier;
-    uint16_t         optionOffset;
-    uint16_t         offset = aMessage.GetOffset();
-    uint16_t         length = aMessage.GetLength() - aMessage.GetOffset();
+    IaNaOption     iana;
+    ClientIdOption clientIdentifier;
+    uint16_t       optionOffset;
+    uint16_t       offset = aMessage.GetOffset();
+    uint16_t       length = aMessage.GetLength() - aMessage.GetOffset();
 
     // Client Identifier (discard if not present)
-    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionClientIdentifier)) > 0);
-    SuccessOrExit(ProcessClientIdentifier(aMessage, optionOffset, clientIdentifier));
+    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, Option::kClientId)) > 0);
+    SuccessOrExit(ProcessClientIdOption(aMessage, optionOffset, clientIdentifier));
 
     // Server Identifier (assuming Rapid Commit, discard if present)
-    VerifyOrExit(FindOption(aMessage, offset, length, kOptionServerIdentifier) == 0);
+    VerifyOrExit(FindOption(aMessage, offset, length, Option::kServerId) == 0);
 
     // Rapid Commit (assuming Rapid Commit, discard if not present)
-    VerifyOrExit(FindOption(aMessage, offset, length, kOptionRapidCommit) > 0);
+    VerifyOrExit(FindOption(aMessage, offset, length, Option::kRapidCommit) > 0);
 
     // Elapsed Time if present
-    if ((optionOffset = FindOption(aMessage, offset, length, kOptionElapsedTime)) > 0)
+    if ((optionOffset = FindOption(aMessage, offset, length, Option::kElapsedTime)) > 0)
     {
-        SuccessOrExit(ProcessElapsedTime(aMessage, optionOffset));
+        SuccessOrExit(ProcessElapsedTimeOption(aMessage, optionOffset));
     }
 
     // IA_NA (discard if not present)
-    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionIaNa)) > 0);
-    SuccessOrExit(ProcessIaNa(aMessage, optionOffset, iana));
+    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, Option::kIaNa)) > 0);
+    SuccessOrExit(ProcessIaNaOption(aMessage, optionOffset, iana));
 
     SuccessOrExit(SendReply(aDst, aTransactionId, clientIdentifier, iana));
 
@@ -218,7 +217,7 @@ exit:
     return;
 }
 
-uint16_t Server::FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Code aCode)
+uint16_t Server::FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Option::Code aCode)
 {
     uint16_t end  = aOffset + aLength;
     uint16_t rval = 0;
@@ -240,23 +239,23 @@ uint16_t Server::FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLengt
 exit:
     return rval;
 }
-Error Server::ProcessClientIdentifier(Message &aMessage, uint16_t aOffset, ClientIdentifier &aClientId)
+Error Server::ProcessClientIdOption(Message &aMessage, uint16_t aOffset, ClientIdOption &aClientIdOption)
 {
     Error error = kErrorNone;
 
-    SuccessOrExit(error = aMessage.Read(aOffset, aClientId));
-    VerifyOrExit((aClientId.GetLength() == sizeof(aClientId) - sizeof(Option)) &&
-                     (aClientId.GetDuidType() == kDuidLinkLayerAddress) &&
-                     (aClientId.GetDuidHardwareType() == kHardwareTypeEui64),
+    SuccessOrExit(error = aMessage.Read(aOffset, aClientIdOption));
+    VerifyOrExit((aClientIdOption.GetLength() == sizeof(aClientIdOption) - sizeof(Option)) &&
+                     (aClientIdOption.GetDuidType() == kDuidLinkLayerAddress) &&
+                     (aClientIdOption.GetDuidHardwareType() == kHardwareTypeEui64),
                  error = kErrorParse);
 exit:
     return error;
 }
 
-Error Server::ProcessElapsedTime(Message &aMessage, uint16_t aOffset)
+Error Server::ProcessElapsedTimeOption(Message &aMessage, uint16_t aOffset)
 {
-    Error       error = kErrorNone;
-    ElapsedTime option;
+    Error             error = kErrorNone;
+    ElapsedTimeOption option;
 
     SuccessOrExit(error = aMessage.Read(aOffset, option));
     VerifyOrExit(option.GetLength() == sizeof(option) - sizeof(Option), error = kErrorParse);
@@ -264,16 +263,16 @@ exit:
     return error;
 }
 
-Error Server::ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &aIaNa)
+Error Server::ProcessIaNaOption(Message &aMessage, uint16_t aOffset, IaNaOption &aIaNaOption)
 {
     Error    error = kErrorNone;
     uint16_t optionOffset;
     uint16_t length;
 
-    SuccessOrExit(error = aMessage.Read(aOffset, aIaNa));
+    SuccessOrExit(error = aMessage.Read(aOffset, aIaNaOption));
 
-    aOffset += sizeof(aIaNa);
-    length = aIaNa.GetLength() + sizeof(Option) - sizeof(IaNa);
+    aOffset += sizeof(aIaNaOption);
+    length = aIaNaOption.GetLength() + sizeof(Option) - sizeof(IaNaOption);
 
     VerifyOrExit(length <= aMessage.GetLength() - aOffset, error = kErrorParse);
 
@@ -281,21 +280,21 @@ Error Server::ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &aIaNa)
 
     while (length > 0)
     {
-        VerifyOrExit((optionOffset = FindOption(aMessage, aOffset, length, kOptionIaAddress)) > 0);
-        SuccessOrExit(error = ProcessIaAddress(aMessage, optionOffset));
+        VerifyOrExit((optionOffset = FindOption(aMessage, aOffset, length, Option::kIaAddress)) > 0);
+        SuccessOrExit(error = ProcessIaAddressOption(aMessage, optionOffset));
 
-        length -= ((optionOffset - aOffset) + sizeof(IaAddress));
-        aOffset = optionOffset + sizeof(IaAddress);
+        length -= ((optionOffset - aOffset) + sizeof(IaAddressOption));
+        aOffset = optionOffset + sizeof(IaAddressOption);
     }
 
 exit:
     return error;
 }
 
-Error Server::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
+Error Server::ProcessIaAddressOption(Message &aMessage, uint16_t aOffset)
 {
-    Error     error = kErrorNone;
-    IaAddress option;
+    Error           error = kErrorNone;
+    IaAddressOption option;
 
     SuccessOrExit(error = aMessage.Read(aOffset, option));
     VerifyOrExit(option.GetLength() == sizeof(option) - sizeof(Option), error = kErrorParse);
@@ -316,8 +315,8 @@ exit:
 
 Error Server::SendReply(const Ip6::Address  &aDst,
                         const TransactionId &aTransactionId,
-                        ClientIdentifier    &aClientId,
-                        IaNa                &aIaNa)
+                        ClientIdOption      &aClientIdOption,
+                        IaNaOption          &aIaNaOption)
 {
     Error            error = kErrorNone;
     Ip6::MessageInfo messageInfo;
@@ -325,12 +324,12 @@ Error Server::SendReply(const Ip6::Address  &aDst,
 
     VerifyOrExit((message = mSocket.NewMessage()) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = AppendHeader(*message, aTransactionId));
-    SuccessOrExit(error = AppendServerIdentifier(*message));
-    SuccessOrExit(error = AppendClientIdentifier(*message, aClientId));
-    SuccessOrExit(error = AppendIaNa(*message, aIaNa));
-    SuccessOrExit(error = AppendStatusCode(*message, kStatusSuccess));
-    SuccessOrExit(error = AppendIaAddress(*message, aClientId));
-    SuccessOrExit(error = AppendRapidCommit(*message));
+    SuccessOrExit(error = AppendServerIdOption(*message));
+    SuccessOrExit(error = AppendClientIdOption(*message, aClientIdOption));
+    SuccessOrExit(error = AppendIaNaOption(*message, aIaNaOption));
+    SuccessOrExit(error = AppendStatusCodeOption(*message, StatusCodeOption::kSuccess));
+    SuccessOrExit(error = AppendIaAddressOption(*message, aClientIdOption));
+    SuccessOrExit(error = AppendRapidCommitOption(*message));
 
     messageInfo.SetPeerAddr(aDst);
     messageInfo.SetPeerPort(kDhcpClientPort);
@@ -346,21 +345,21 @@ Error Server::AppendHeader(Message &aMessage, const TransactionId &aTransactionI
     Header header;
 
     header.Clear();
-    header.SetType(kTypeReply);
+    header.SetMsgType(kMsgTypeReply);
     header.SetTransactionId(aTransactionId);
     return aMessage.Append(header);
 }
 
-Error Server::AppendClientIdentifier(Message &aMessage, ClientIdentifier &aClientId)
+Error Server::AppendClientIdOption(Message &aMessage, ClientIdOption &aClientIdOption)
 {
-    return aMessage.Append(aClientId);
+    return aMessage.Append(aClientIdOption);
 }
 
-Error Server::AppendServerIdentifier(Message &aMessage)
+Error Server::AppendServerIdOption(Message &aMessage)
 {
-    Error            error = kErrorNone;
-    ServerIdentifier option;
-    Mac::ExtAddress  eui64;
+    Error           error = kErrorNone;
+    ServerIdOption  option;
+    Mac::ExtAddress eui64;
 
     Get<Radio>().GetIeeeEui64(eui64);
 
@@ -374,7 +373,7 @@ exit:
     return error;
 }
 
-Error Server::AppendIaNa(Message &aMessage, IaNa &aIaNa)
+Error Server::AppendIaNaOption(Message &aMessage, IaNaOption &aIaNaOption)
 {
     Error    error  = kErrorNone;
     uint16_t length = 0;
@@ -385,36 +384,36 @@ Error Server::AppendIaNa(Message &aMessage, IaNa &aIaNa)
         {
             if (mPrefixAgentsMask & (1 << i))
             {
-                length += sizeof(IaAddress);
+                length += sizeof(IaAddressOption);
             }
         }
     }
     else
     {
-        length += sizeof(IaAddress) * mPrefixAgentsCount;
+        length += sizeof(IaAddressOption) * mPrefixAgentsCount;
     }
 
-    length += sizeof(IaNa) + sizeof(StatusCode) - sizeof(Option);
+    length += sizeof(IaNaOption) + sizeof(StatusCodeOption) - sizeof(Option);
 
-    aIaNa.SetLength(length);
-    aIaNa.SetT1(IaNa::kDefaultT1);
-    aIaNa.SetT2(IaNa::kDefaultT2);
-    SuccessOrExit(error = aMessage.Append(aIaNa));
+    aIaNaOption.SetLength(length);
+    aIaNaOption.SetT1(IaNaOption::kDefaultT1);
+    aIaNaOption.SetT2(IaNaOption::kDefaultT2);
+    SuccessOrExit(error = aMessage.Append(aIaNaOption));
 
 exit:
     return error;
 }
 
-Error Server::AppendStatusCode(Message &aMessage, Status aStatusCode)
+Error Server::AppendStatusCodeOption(Message &aMessage, StatusCodeOption::Status aStatusCode)
 {
-    StatusCode option;
+    StatusCodeOption option;
 
     option.Init();
     option.SetStatusCode(aStatusCode);
     return aMessage.Append(option);
 }
 
-Error Server::AppendIaAddress(Message &aMessage, ClientIdentifier &aClientId)
+Error Server::AppendIaAddressOption(Message &aMessage, ClientIdOption &aClientIdOption)
 {
     Error error = kErrorNone;
 
@@ -425,7 +424,8 @@ Error Server::AppendIaAddress(Message &aMessage, ClientIdentifier &aClientId)
         {
             if (mPrefixAgentsMask & (1 << i))
             {
-                SuccessOrExit(error = AddIaAddress(aMessage, mPrefixAgents[i].GetPrefixAsAddress(), aClientId));
+                SuccessOrExit(error =
+                                  AddIaAddressOption(aMessage, mPrefixAgents[i].GetPrefixAsAddress(), aClientIdOption));
             }
         }
     }
@@ -436,7 +436,7 @@ Error Server::AppendIaAddress(Message &aMessage, ClientIdentifier &aClientId)
         {
             if (prefixAgent.IsValid())
             {
-                SuccessOrExit(error = AddIaAddress(aMessage, prefixAgent.GetPrefixAsAddress(), aClientId));
+                SuccessOrExit(error = AddIaAddressOption(aMessage, prefixAgent.GetPrefixAsAddress(), aClientIdOption));
             }
         }
     }
@@ -445,25 +445,25 @@ exit:
     return error;
 }
 
-Error Server::AddIaAddress(Message &aMessage, const Ip6::Address &aPrefix, ClientIdentifier &aClientId)
+Error Server::AddIaAddressOption(Message &aMessage, const Ip6::Address &aPrefix, ClientIdOption &aClientIdOption)
 {
-    Error     error = kErrorNone;
-    IaAddress option;
+    Error           error = kErrorNone;
+    IaAddressOption option;
 
     option.Init();
     option.GetAddress().SetPrefix(aPrefix.mFields.m8, OT_IP6_PREFIX_BITSIZE);
-    option.GetAddress().GetIid().SetFromExtAddress(aClientId.GetDuidLinkLayerAddress());
-    option.SetPreferredLifetime(IaAddress::kDefaultPreferredLifetime);
-    option.SetValidLifetime(IaAddress::kDefaultValidLifetime);
+    option.GetAddress().GetIid().SetFromExtAddress(aClientIdOption.GetDuidLinkLayerAddress());
+    option.SetPreferredLifetime(IaAddressOption::kDefaultPreferredLifetime);
+    option.SetValidLifetime(IaAddressOption::kDefaultValidLifetime);
     SuccessOrExit(error = aMessage.Append(option));
 
 exit:
     return error;
 }
 
-Error Server::AppendRapidCommit(Message &aMessage)
+Error Server::AppendRapidCommitOption(Message &aMessage)
 {
-    RapidCommit option;
+    RapidCommitOption option;
 
     option.Init();
     return aMessage.Append(option);

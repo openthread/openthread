@@ -171,28 +171,28 @@ private:
     void AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context &aContext);
 
     Error AppendHeader(Message &aMessage, const TransactionId &aTransactionId);
-    Error AppendClientIdentifier(Message &aMessage, ClientIdentifier &aClientId);
-    Error AppendServerIdentifier(Message &aMessage);
-    Error AppendIaNa(Message &aMessage, IaNa &aIaNa);
-    Error AppendStatusCode(Message &aMessage, Status aStatusCode);
-    Error AppendIaAddress(Message &aMessage, ClientIdentifier &aClientId);
-    Error AppendRapidCommit(Message &aMessage);
+    Error AppendClientIdOption(Message &aMessage, ClientIdOption &aClientIdOption);
+    Error AppendServerIdOption(Message &aMessage);
+    Error AppendIaNaOption(Message &aMessage, IaNaOption &aIaNaOption);
+    Error AppendStatusCodeOption(Message &aMessage, StatusCodeOption::Status aStatusCode);
+    Error AppendIaAddressOption(Message &aMessage, ClientIdOption &aClientIdOption);
+    Error AppendRapidCommitOption(Message &aMessage);
     Error AppendVendorSpecificInformation(Message &aMessage);
 
-    Error AddIaAddress(Message &aMessage, const Ip6::Address &aPrefix, ClientIdentifier &aClientId);
+    Error AddIaAddressOption(Message &aMessage, const Ip6::Address &aPrefix, ClientIdOption &aClientIdOption);
     void  HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void  ProcessSolicit(Message &aMessage, const Ip6::Address &aDst, const TransactionId &aTransactionId);
 
-    uint16_t FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Code aCode);
-    Error    ProcessClientIdentifier(Message &aMessage, uint16_t aOffset, ClientIdentifier &aClientId);
-    Error    ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &aIaNa);
-    Error    ProcessIaAddress(Message &aMessage, uint16_t aOffset);
-    Error    ProcessElapsedTime(Message &aMessage, uint16_t aOffset);
+    uint16_t FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Option::Code aCode);
+    Error    ProcessClientIdOption(Message &aMessage, uint16_t aOffset, ClientIdOption &aClientIdOption);
+    Error    ProcessIaNaOption(Message &aMessage, uint16_t aOffset, IaNaOption &aIaNaOption);
+    Error    ProcessIaAddressOption(Message &aMessage, uint16_t aOffset);
+    Error    ProcessElapsedTimeOption(Message &aMessage, uint16_t aOffset);
 
     Error SendReply(const Ip6::Address  &aDst,
                     const TransactionId &aTransactionId,
-                    ClientIdentifier    &aClientId,
-                    IaNa                &aIaNa);
+                    ClientIdOption      &aClientIdOption,
+                    IaNaOption          &aIaNaOption);
 
     using ServerSocket = Ip6::Udp::SocketIn<Server, &Server::HandleUdpReceive>;
 
