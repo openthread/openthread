@@ -43,11 +43,14 @@
 namespace ot {
 namespace Posix {
 
-ConfigFile::ConfigFile(const char *aFilePath)
-    : mFilePath(aFilePath)
+ConfigFile::ConfigFile(const char *aFilePath) { SetFilePath(aFilePath); }
+
+void ConfigFile::SetFilePath(const char *aFilePath)
 {
-    assert(mFilePath != nullptr);
-    VerifyOrDie(strlen(mFilePath) + strlen(kSwapSuffix) < kFilePathMaxSize, OT_EXIT_FAILURE);
+    assert(aFilePath != nullptr);
+    VerifyOrDie(strlen(aFilePath) + strlen(kSwapSuffix) < kFilePathMaxSize, OT_EXIT_FAILURE);
+    strncpy(mFilePath, aFilePath, kFilePathMaxSize - 1);
+    mFilePath[kFilePathMaxSize - 1] = '\0';
 }
 
 bool ConfigFile::HasKey(const char *aKey) const

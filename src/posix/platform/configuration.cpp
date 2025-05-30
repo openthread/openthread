@@ -54,6 +54,38 @@ const char Configuration::kKeySupportedChannelMask[] = "supported_channel_mask";
 const char Configuration::kKeyPreferredChannelMask[] = "preferred_channel_mask";
 const char Configuration::kCommaDelimiter[]          = ",";
 
+otError Configuration::SetFactoryConfigFile(const char *aFilePath)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aFilePath != nullptr, error = OT_ERROR_INVALID_ARGS);
+    mFactoryConfigFile.SetFilePath(aFilePath);
+    LogInfo("Factory configuration file path set to: %s", mFactoryConfigFile.GetFilePath());
+
+exit:
+    if (error == OT_ERROR_INVALID_ARGS)
+    {
+        LogCrit("Failed to set factory config file: %s", otThreadErrorToString(error));
+    }
+    return error;
+}
+
+otError Configuration::SetProductConfigFile(const char *aFilePath)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aFilePath != nullptr, error = OT_ERROR_INVALID_ARGS);
+    mProductConfigFile.SetFilePath(aFilePath);
+    LogInfo("Product configuration file path set to: %s", mProductConfigFile.GetFilePath());
+
+exit:
+    if (error == OT_ERROR_INVALID_ARGS)
+    {
+        LogCrit("Failed to set product config file: %s", otThreadErrorToString(error));
+    }
+    return error;
+}
+
 otError Configuration::SetRegion(uint16_t aRegionCode)
 {
     otError       error = OT_ERROR_NONE;

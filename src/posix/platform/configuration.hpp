@@ -67,6 +67,28 @@ public:
     }
 
     /**
+     * @brief Sets the path for the factory configuration file.
+     *
+     * @param[in] aFilePath  A null-terminated C string representing the new path to the
+     *                       factory configuration file. This parameter MUST NOT be `nullptr`.
+     *
+     * @retval OT_ERROR_NONE           The factory configuration file path was successfully updated.
+     * @retval OT_ERROR_INVALID_ARGS   If @p aFilePath is `nullptr`.
+     */
+    otError SetFactoryConfigFile(const char *aFilePath);
+
+    /**
+     * @brief Sets the path for the product configuration file.
+     *
+     * @param[in] aFilePath  A null-terminated C string representing the new path to the
+     *                       product configuration file. This parameter MUST NOT be `nullptr`.
+     *
+     * @retval OT_ERROR_NONE           The product configuration file path was successfully updated.
+     * @retval OT_ERROR_INVALID_ARGS   If @p aFilePath is `nullptr`.
+     */
+    otError SetProductConfigFile(const char *aFilePath);
+
+    /**
      * Set the region code.
      *
      * The radio region format is the 2-bytes ascii representation of the
