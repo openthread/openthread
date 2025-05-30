@@ -31,8 +31,8 @@
  *   This file includes definitions for DHCPv6 Service.
  */
 
-#ifndef DHCP6_HPP_
-#define DHCP6_HPP_
+#ifndef DHCP6_TYPES_HPP_
+#define DHCP6_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -41,6 +41,7 @@
 #include "common/clearable.hpp"
 #include "common/debug.hpp"
 #include "common/equatable.hpp"
+#include "common/message.hpp"
 #include "common/random.hpp"
 #include "mac/mac_types.hpp"
 
@@ -204,6 +205,57 @@ public:
      * @param[in]  aLength  The length of DHCPv6 option.
      */
     void SetLength(uint16_t aLength) { mLength = BigEndian::HostSwap16(aLength); }
+
+    /**
+     * Returns the total size of DHCPv6 option in bytes.
+     *
+     * @returns The size of option in bytes (which includes the Code and Length fields).
+     */
+    uint32_t GetSize(void) const { return GetLength() + sizeof(Option); }
+
+    /**
+     * Finds the first DHCPv6 option with a given code in a message.
+     *
+     * This method searches the message starting from `aMessage.GetOffset()` to the end.
+     *
+     * @param[in]  aMessage            The message to search.
+     * @param[in]  aCode               The option code to find.
+     * @param[out] aOptionOffsetRange  On success, is updated to contain the offset range of the found option.
+     *
+     * @retval kErrorNone      The option was found successfully.
+     * @retval kErrorNotFound  The option was not found in the message.
+     * @retval kErrorParse     The message is malformed and cannot be parsed.
+     */
+    static Error FindOption(const Message &aMessage, Code aCode, OffsetRange &aOptionOffsetRange);
+
+    /**
+     * Finds the first DHCPv6 option with a given code within a specified range of a message.
+     *
+     * @param[in]  aMessage            The message to search.
+     * @param[in]  aMsgOffsetRange     The specific range within `aMessage` to search.
+     * @param[in]  aCode               The option code to find.
+     * @param[out] aOptionOffsetRange  On success, is updated to contain the offset range of the found option.
+     *
+     * @retval kErrorNone      The option was found successfully.
+     * @retval kErrorNotFound  The option was not found in the given message range.
+     * @retval kErrorParse     The message is malformed and cannot be parsed.
+     */
+    static Error FindOption(const Message     &aMessage,
+                            const OffsetRange &aMsgOffsetRange,
+                            Code               aCode,
+                            OffsetRange       &aOptionOffsetRange);
+
+    /**
+     * Updates the Option length in a message.
+     *
+     * This method should be called after all option contents are appended to the message. It uses the current
+     * message length along with @p aOffset to determine the option length and then updates it within the @p aMessage.
+     * The @p aOffset should point to to the start of the option in @p aMessage.
+     *
+     * @param[in] aMessage   The message to update.
+     * @param[in] aOffset    The offset to the start of `Option` in @p aMessage.
+     */
+    static void UpdateOptionLengthInMessage(Message &aMessage, uint16_t aOffset);
 
 private:
     uint16_t mCode;
@@ -560,22 +612,68 @@ public:
      */
     void SetStatusCode(Status aStatus) { mStatus = BigEndian::HostSwap16(aStatus); }
 
+    /**
+     * Reads the status code from a DHCPv6 message.
+     *
+     * This method searches the message (starting from `aMessage.GetOffset()` to the end) for a Status Code option. Per
+     * RFC 8415, the absence of a Status Code option implies success. Therefore, if no Status Code option is found,
+     * this method returns `kSuccess`.
+     *
+     * @param[in] aMessage The message to read the status code from.
+     *
+     * @returns The status code from the first found Status Code option, or `kSuccess` if none is found.
+     */
+    static Status ReadStatusFrom(const Message &aMessage);
+
+    /**
+     * Reads the status code from a specified range within a DHCPv-6 message.
+     *
+     * This method searches for a Status Code option only within the given `aMsgOffsetRange`. If no Status Code
+     * option is found within the range, it is considered a success, and `kSuccess` is returned.
+     *
+     * @param[in] aMessage         The message to read the status code from.
+     * @param[in] aMsgOffsetRange  The specific range within `aMessage` to search.
+     *
+     * @returns The status code from the first found Status Code option within the range, or `kSuccess` if none is
+     *          found.
+     */
+    static Status ReadStatusFrom(const Message &aMessage, const OffsetRange &aMsgOffsetRange);
+
 private:
     uint16_t mStatus;
 } OT_TOOL_PACKED_END;
 
 /**
- * Represents an Rapid Commit DHCPv6 option.
+ * Implements Rapid Commit DHCPv6 Option generation and parsing.
  */
-OT_TOOL_PACKED_BEGIN
-class RapidCommitOption : public Option
+class RapidCommitOption
 {
 public:
-    /**
-     * Initializes the DHCPv6 Option.
+    static constexpr uint16_t kCode = Option::kRapidCommit; ///< Rapid Commit Option code.
+
+    /*
+     * Searches in a given message for Rapid Commit Option.
+     *
+     * @param[in] aMessage   The message to search in.
+     *
+     * @retval kErrorNone       The option was found successfully.
+     * @retval kErrorNotFound   Did not find the option in @p aMessage.
+     * @retval kErrorParse      Failed to parse the options in @p aMessage (invalid format).
      */
-    void Init(void) { SetCode(kRapidCommit), SetLength(sizeof(*this) - sizeof(Option)); }
-} OT_TOOL_PACKED_END;
+    static Error FindIn(const Message &aMessage);
+
+    /**
+     * Append a Rapid Commit Option to a message.
+     *
+     * The Rapid Commit Option contains no data fields (zero length).
+     *
+     * @param[in,out] aMessage   The message to append to.
+     *
+     * @retval kErrorNone    Successfully appended the option.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
+     */
+    static Error AppendTo(Message &aMessage);
+};
 
 /**
  * @}
@@ -586,4 +684,4 @@ public:
 
 #endif // #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
-#endif // DHCP6_HPP_
+#endif // DHCP6_TYPES_HPP_

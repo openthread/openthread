@@ -43,7 +43,7 @@
 #include "common/notifier.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_types.hpp"
-#include "net/dhcp6.hpp"
+#include "net/dhcp6_types.hpp"
 #include "net/udp6.hpp"
 #include "thread/network_data_leader.hpp"
 
@@ -163,37 +163,30 @@ private:
 
     static constexpr uint16_t kNumPrefixes = OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES;
 
-    void HandleNotifierEvents(Events aEvents);
-    void UpdateService(void);
-
-    void Start(void);
-    void Stop(void);
-
-    void AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context &aContext);
-
+    void  HandleNotifierEvents(Events aEvents);
+    void  UpdateService(void);
+    void  Start(void);
+    void  Stop(void);
+    void  AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context &aContext);
     Error AppendHeader(Message &aMessage, const TransactionId &aTransactionId);
-    Error AppendClientIdOption(Message &aMessage, ClientIdOption &aClientIdOption);
+    Error AppendClientIdOption(Message &aMessage, const ClientIdOption &aClientIdOption);
     Error AppendServerIdOption(Message &aMessage);
-    Error AppendIaNaOption(Message &aMessage, IaNaOption &aIaNaOption);
+    Error AppendIaNaOption(Message &aMessage, uint32_t aIaid, const Mac::ExtAddress &aClientAddress);
     Error AppendStatusCodeOption(Message &aMessage, StatusCodeOption::Status aStatusCode);
-    Error AppendIaAddressOption(Message &aMessage, ClientIdOption &aClientIdOption);
-    Error AppendRapidCommitOption(Message &aMessage);
+    Error AppendIaAddressOptions(Message &aMessage, const Mac::ExtAddress &aClientAddress);
+    Error AppendRapidCommitOption(Message &aMessage) { return RapidCommitOption::AppendTo(aMessage); }
     Error AppendVendorSpecificInformation(Message &aMessage);
-
-    Error AddIaAddressOption(Message &aMessage, const Ip6::Address &aPrefix, ClientIdOption &aClientIdOption);
+    Error AppendIaAddressOption(Message &aMessage, const Ip6::Address &aPrefix, const Mac::ExtAddress &aClientAddress);
     void  HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void  ProcessSolicit(Message &aMessage, const Ip6::Address &aDst, const TransactionId &aTransactionId);
-
-    uint16_t FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Option::Code aCode);
-    Error    ProcessClientIdOption(Message &aMessage, uint16_t aOffset, ClientIdOption &aClientIdOption);
-    Error    ProcessIaNaOption(Message &aMessage, uint16_t aOffset, IaNaOption &aIaNaOption);
-    Error    ProcessIaAddressOption(Message &aMessage, uint16_t aOffset);
-    Error    ProcessElapsedTimeOption(Message &aMessage, uint16_t aOffset);
-
-    Error SendReply(const Ip6::Address  &aDst,
-                    const TransactionId &aTransactionId,
-                    ClientIdOption      &aClientIdOption,
-                    IaNaOption          &aIaNaOption);
+    Error ProcessClientIdOption(const Message &aMessage, ClientIdOption &aClientIdOption);
+    Error ProcessIaNaOption(const Message &aMessage, uint32_t &aIaid);
+    void  ProcessIaAddressOption(const IaAddressOption &aAddressOption);
+    Error ProcessElapsedTimeOption(const Message &aMessage);
+    Error SendReply(const Ip6::Address   &aDst,
+                    const TransactionId  &aTransactionId,
+                    const ClientIdOption &aClientIdOption,
+                    uint32_t              aIaid);
 
     using ServerSocket = Ip6::Udp::SocketIn<Server, &Server::HandleUdpReceive>;
 

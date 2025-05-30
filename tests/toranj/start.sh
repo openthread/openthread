@@ -201,6 +201,7 @@ if [ "$TORANJ_CLI" = 1 ]; then
     run cli/test-033-alt-short-addr-role-transition.py
     run cli/test-034-fed-parent-search.py
     run cli/test-035-context-id-change-addr-reg.py
+    run cli/test-036-dhcp-prefix-netdata.py
     run cli/test-400-srp-client-server.py
     run cli/test-401-srp-server-address-cache-snoop.py
     run cli/test-500-two-brs-two-networks.py
