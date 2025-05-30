@@ -40,6 +40,7 @@
 
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/notifier.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_types.hpp"
 #include "net/dhcp6.hpp"
@@ -64,6 +65,8 @@ namespace Dhcp6 {
 
 class Server : public InstanceLocator, private NonCopyable
 {
+    friend class ot::Notifier;
+
 public:
     /**
      * Initializes the object.
@@ -71,11 +74,6 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      */
     explicit Server(Instance &aInstance);
-
-    /**
-     * Updates DHCP Agents and DHCP ALOCs.
-     */
-    Error UpdateService(void);
 
 private:
     class PrefixAgent
@@ -164,6 +162,9 @@ private:
     };
 
     static constexpr uint16_t kNumPrefixes = OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES;
+
+    void HandleNotifierEvents(Events aEvents);
+    void UpdateService(void);
 
     void Start(void);
     void Stop(void);

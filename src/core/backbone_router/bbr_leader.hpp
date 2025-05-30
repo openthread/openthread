@@ -47,6 +47,7 @@
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/non_copyable.hpp"
+#include "common/notifier.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
@@ -83,6 +84,8 @@ enum DomainPrefixEvent : uint8_t
  */
 class Leader : public InstanceLocator, private NonCopyable
 {
+    friend class ot::Notifier;
+
 public:
     // Primary Backbone Router Service state or state change.
     enum State : uint8_t
@@ -107,11 +110,6 @@ public:
      * Resets the cached Primary Backbone Router.
      */
     void Reset(void);
-
-    /**
-     * Updates the cached Primary Backbone Router if any when new network data is available.
-     */
-    void Update(void);
 
     /**
      * Gets the Primary Backbone Router in the Thread Network.
@@ -177,6 +175,7 @@ public:
     bool IsDomainUnicast(const Ip6::Address &aAddress) const;
 
 private:
+    void HandleNotifierEvents(Events aEvents);
     void UpdateBackboneRouterPrimary(void);
     void UpdateDomainPrefixConfig(void);
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

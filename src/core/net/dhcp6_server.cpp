@@ -51,7 +51,15 @@ Server::Server(Instance &aInstance)
     ClearAllBytes(mPrefixAgents);
 }
 
-Error Server::UpdateService(void)
+void Server::HandleNotifierEvents(Events aEvents)
+{
+    if (aEvents.Contains(kEventThreadNetdataChanged))
+    {
+        UpdateService();
+    }
+}
+
+void Server::UpdateService(void)
 {
     Error                           error  = kErrorNone;
     uint16_t                        rloc16 = Get<Mle::Mle>().GetRloc16();
@@ -122,8 +130,6 @@ Error Server::UpdateService(void)
     {
         Stop();
     }
-
-    return error;
 }
 
 void Server::Start(void)

@@ -41,6 +41,7 @@
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
+#include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "common/trickle_timer.hpp"
 #include "mac/mac.hpp"
@@ -67,6 +68,8 @@ namespace Dhcp6 {
  */
 class Client : public InstanceLocator, private NonCopyable
 {
+    friend class ot::Notifier;
+
 public:
     /**
      * Initializes the object.
@@ -74,11 +77,6 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      */
     explicit Client(Instance &aInstance);
-
-    /**
-     * Update addresses that shall be automatically created using DHCP.
-     */
-    void UpdateAddresses(void);
 
 private:
     static constexpr uint16_t kNumPrefixes      = OPENTHREAD_CONFIG_DHCP6_CLIENT_NUM_PREFIXES;
@@ -125,6 +123,9 @@ private:
     Error    ProcessIaNaOption(Message &aMessage, uint16_t aOffset);
     Error    ProcessStatusCodeOption(Message &aMessage, uint16_t aOffset);
     Error    ProcessIaAddressOption(Message &aMessage, uint16_t aOffset);
+
+    void HandleNotifierEvents(Events aEvents);
+    void UpdateAddresses(void);
 
     static void HandleTrickleTimer(TrickleTimer &aTrickleTimer);
     void        HandleTrickleTimer(void);

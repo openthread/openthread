@@ -40,6 +40,14 @@
 namespace ot {
 namespace NeighborDiscovery {
 
+void Agent::HandleNotifierEvents(Events aEvents)
+{
+    if (aEvents.Contains(kEventThreadNetdataChanged))
+    {
+        UpdateService();
+    }
+}
+
 void Agent::UpdateService(void)
 {
     Error                           error;
