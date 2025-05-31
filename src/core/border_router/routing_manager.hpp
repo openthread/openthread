@@ -1709,8 +1709,8 @@ private:
 
         void UpdateState(void);
         void SetState(State aState);
-        void Process(const InfraIf::Icmp6Packet *aRaPacket, const PrefixTableEntry *aPrefixTableEntry);
-        void ProcessPdPrefix(PdPrefix &aPrefix, PdPrefix &aFavoredPrefix);
+        void EvaluateCandidatePrefix(PdPrefix &aPrefix, PdPrefix &aFavoredPrefix);
+        void ApplyFavoredPrefix(const PdPrefix &aFavoredPrefix);
         void WithdrawPrefix(void);
 
         static const char *StateToString(State aState);
