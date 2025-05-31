@@ -129,6 +129,19 @@ const otHistoryTrackerExternalRouteInfo *otHistoryTrackerIterateExternalRouteHis
                                                                                           *aEntryAge);
 }
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+const otHistoryTrackerBorderAgentEpskcEvent *otHistoryTrackerIterateBorderAgentEpskcEventHistory(
+    otInstance               *aInstance,
+    otHistoryTrackerIterator *aIterator,
+    uint32_t                 *aEntryAge)
+{
+    AssertPointerIsNotNull(aEntryAge);
+
+    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateEpskcEventHistory(AsCoreType(aIterator),
+                                                                                       *aEntryAge);
+}
+#endif
+
 void otHistoryTrackerEntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize)
 {
     Utils::HistoryTracker::EntryAgeToString(aEntryAge, aBuffer, aSize);
