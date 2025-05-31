@@ -212,6 +212,9 @@ jobs:
       run: |
         ./tests/nexus/build.sh
         ninja test
+        git clean -dfx
+        ./tests/nexus/build.sh trel
+        ./tests/nexus/nexus_trel
 
   upload-coverage:
     needs:

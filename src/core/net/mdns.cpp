@@ -114,10 +114,11 @@ Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex)
     Error error = kErrorNone;
 
     VerifyOrExit(aEnable != mIsEnabled, error = kErrorAlready);
-    SuccessOrExit(error = otPlatMdnsSetListeningEnabled(&GetInstance(), aEnable, aInfraIfIndex));
 
     mIsEnabled    = aEnable;
     mInfraIfIndex = aInfraIfIndex;
+
+    SuccessOrExit(error = otPlatMdnsSetListeningEnabled(&GetInstance(), aEnable, aInfraIfIndex));
 
     if (mIsEnabled)
     {

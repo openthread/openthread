@@ -36,6 +36,7 @@
 #include "nexus_mdns.hpp"
 #include "nexus_radio.hpp"
 #include "nexus_settings.hpp"
+#include "nexus_trel.hpp"
 #include "nexus_utils.hpp"
 
 namespace ot {
@@ -58,6 +59,9 @@ public:
     void Join(Node &aNode, JoinMode aJoinMode = kAsFtd);
     void AllowList(Node &aNode);
     void UnallowList(Node &aNode);
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    void GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const;
+#endif
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -82,7 +86,10 @@ public:
     Alarm    mAlarm;
     Mdns     mMdns;
     Settings mSettings;
-    bool     mPendingTasklet;
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    Trel mTrel;
+#endif
+    bool mPendingTasklet;
 
 private:
     Node(void) = default;

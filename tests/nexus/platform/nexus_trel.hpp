@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024, The OpenThread Authors.
+ *  Copyright (c) 2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,75 +26,47 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_NEXUS_CORE_HPP_
-#define OT_NEXUS_CORE_HPP_
+#ifndef OT_NEXUS_TREL_HPP_
+#define OT_NEXUS_TREL_HPP_
 
-#include "common/owning_list.hpp"
 #include "instance/instance.hpp"
 
-#include "nexus_alarm.hpp"
-#include "nexus_radio.hpp"
-#include "nexus_utils.hpp"
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 namespace ot {
 namespace Nexus {
 
-class Node;
-
-class Core
+struct Trel
 {
-public:
-    Core(void);
-    ~Core(void);
+    static constexpr uint16_t kUdpPortStart = 49152;
 
-    static Core &Get(void) { return *sCore; }
+    typedef otPlatTrelCounters Counters;
 
-    Node             &CreateNode(void);
-    LinkedList<Node> &GetNodes(void) { return mNodes; }
+    Trel(void);
+    void Enable(uint16_t &aUdpPort);
+    void Disable(void);
+    void Send(const uint8_t *aUdpPayload, uint16_t aUdpPayloadLen, const Ip6::SockAddr &aDestSockAddr);
+    void ResetCounters(void) { ClearAllBytes(mCounters); }
+    void Receive(Instance &aInstance, Heap::Data &aPayloadData, const Ip6::SockAddr &aSenderAddr);
 
-    TimeMilli GetNow(void) { return mNow; }
-    void      AdvanceTime(uint32_t aDuration);
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Used by platform implementation
-
-    void  SetActiveNode(Node *aNode) { mActiveNode = aNode; }
-    Node *GetActiveNode(void) { return mActiveNode; }
-
-    void UpdateNextAlarmTime(const Alarm &aAlarm);
-    void MarkPendingAction(void) { mPendingAction = true; }
-
-private:
-    static constexpr int8_t kDefaultRxRssi = -20;
-
-    enum AckMode : uint8_t
+    struct PendingTx : public Heap::Allocatable<PendingTx>, public LinkedListEntry<PendingTx>
     {
-        kNoAck,
-        kSendAckNoFramePending,
-        kSendAckFramePending,
+        PendingTx    *mNext;
+        Heap::Data    mPayloadData;
+        Ip6::SockAddr mDestSockAddr;
     };
 
-    void Process(Node &aNode);
-    void ProcessRadio(Node &aNode);
-    void ProcessMdns(Node &aNode);
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    void ProcessTrel(Node &aNode);
-#endif
+    static uint16_t sLastUsedUdpPort;
 
-    static Core *sCore;
-    static bool  sInUse;
-
-    OwningList<Node> mNodes;
-    uint16_t         mCurNodeId;
-    bool             mPendingAction;
-    TimeMilli        mNow;
-    TimeMilli        mNextAlarmTime;
-    Node            *mActiveNode;
+    bool                  mEnabled;
+    uint16_t              mUdpPort;
+    OwningList<PendingTx> mPendingTxList;
+    Counters              mCounters;
 };
-
-void Log(const char *aFormat, ...);
 
 } // namespace Nexus
 } // namespace ot
 
-#endif // OT_NEXUS_CORE_HPP_
+#endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+
+#endif // OT_NEXUS_TREL_HPP_
