@@ -96,6 +96,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     node.GetInstance().SetLogLevel(kLogLevelInfo);
 
+    node.GetInstance().Get<Srp::Server>().SetAutoEnableMode(true);
+    node.GetInstance().Get<BorderRouter::RoutingManager>().SetDhcp6PdEnabled(true);
+    node.GetInstance().Get<BorderRouter::RoutingManager>().SetNat64PrefixManagerEnabled(true);
+    node.GetInstance().Get<Nat64::Translator>().SetEnabled(true);
+
     Log("---------------------------------------------------------------------------------------");
     Log("Form network");
 
