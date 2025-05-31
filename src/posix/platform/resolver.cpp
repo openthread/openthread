@@ -143,7 +143,7 @@ void Resolver::LoadDnsServerListFromConf(void)
 
     if (mUpstreamDnsServerCount == 0)
     {
-        LogCrit("No domain name servers found in %s, default to 127.0.0.1", kResolvConfFullPath);
+        LogCrit("No domain name servers found in %s", kResolvConfFullPath);
     }
 
     mUpstreamDnsServerListFreshness = otPlatTimeGet();
