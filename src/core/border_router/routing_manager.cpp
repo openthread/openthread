@@ -4465,44 +4465,27 @@ void RoutingManager::PdPrefixManager::ProcessRa(const uint8_t *aRouterAdvert, co
     // software entities like dnsmasq, radvd, or systemd-networkd, is
     // part of the DHCPv6 prefix delegation process for distributing
     // prefixes to interfaces.
+    //
+    // Each PIO in the RA is evaluated as a candidate PD prefix. After
+    // all candidates are evaluated, the most favored one is applied to
+    // update the current PD prefix if necessary.
 
     InfraIf::Icmp6Packet packet;
 
     packet.Init(aRouterAdvert, aLength);
-    Process(&packet, nullptr);
-}
 
-void RoutingManager::PdPrefixManager::ProcessPrefix(const PrefixTableEntry &aPrefixTableEntry)
-{
-    // Processes a prefix delegated by a DHCPv6 Prefix Delegation
-    // (PD) server.  Similar to `ProcessRa()`, but sets the prefix
-    // directly instead of parsing an RA message. Calling this method
-    // again with new values can update the prefix's lifetime.
+    VerifyOrExit(mState != kDhcp6PdStateDisabled);
 
-    Process(nullptr, &aPrefixTableEntry);
-}
-
-void RoutingManager::PdPrefixManager::Process(const InfraIf::Icmp6Packet *aRaPacket,
-                                              const PrefixTableEntry     *aPrefixTableEntry)
-{
-    // Processes DHCPv6 Prefix Delegation (PD) prefixes, either from
-    // an RA message or directly set. Requires either `aRaPacket` or
-    // `aPrefixTableEntry` to be non-null.
-
-    Error    error = kErrorNone;
-    PdPrefix favoredPrefix;
-    PdPrefix prefix;
-
-    VerifyOrExit(mState != kDhcp6PdStateDisabled, error = kErrorInvalidState);
-
-    if (aRaPacket != nullptr)
     {
-        RouterAdvert::RxMessage raMsg = RouterAdvert::RxMessage(*aRaPacket);
+        RouterAdvert::RxMessage raMsg = RouterAdvert::RxMessage(packet);
+        PdPrefix                favoredPrefix;
 
-        VerifyOrExit(raMsg.IsValid(), error = kErrorParse);
+        VerifyOrExit(raMsg.IsValid());
 
         for (const Option &option : raMsg)
         {
+            PdPrefix prefix;
+
             if (option.GetType() != Option::kTypePrefixInfo || !static_cast<const PrefixInfoOption &>(option).IsValid())
             {
                 continue;
@@ -4510,28 +4493,54 @@ void RoutingManager::PdPrefixManager::Process(const InfraIf::Icmp6Packet *aRaPac
 
             mNumPlatformPioProcessed++;
             prefix.SetFrom(static_cast<const PrefixInfoOption &>(option));
-            ProcessPdPrefix(prefix, favoredPrefix);
+            EvaluateCandidatePrefix(prefix, favoredPrefix);
         }
 
         mNumPlatformRaReceived++;
         mLastPlatformRaTime = TimerMilli::GetNow();
+
+        ApplyFavoredPrefix(favoredPrefix);
     }
-    else // aPrefixTableEntry != nullptr
-    {
-        prefix.SetFrom(*aPrefixTableEntry);
-        ProcessPdPrefix(prefix, favoredPrefix);
-    }
+
+exit:
+    return;
+}
+
+void RoutingManager::PdPrefixManager::ProcessPrefix(const PrefixTableEntry &aPrefixTableEntry)
+{
+    // Processes a prefix delegated by a DHCPv6 Prefix Delegation
+    // (PD) server.  Similar to `ProcessRa()`, but sets the prefix
+    // directly instead of parsing an RA message. Calling this method
+    // again with new values can refresh the prefix (renew its lifetime)
+    // or update the prefix's lifetime.
+
+    PdPrefix favoredPrefix;
+    PdPrefix prefix;
+
+    VerifyOrExit(mState != kDhcp6PdStateDisabled);
+
+    prefix.SetFrom(aPrefixTableEntry);
+    EvaluateCandidatePrefix(prefix, favoredPrefix);
+    ApplyFavoredPrefix(favoredPrefix);
+
+exit:
+    return;
+}
+
+void RoutingManager::PdPrefixManager::ApplyFavoredPrefix(const PdPrefix &aFavoredPrefix)
+{
+    // Applies the most favored prefix from a batch of candidates to
+    // update the PD prefix.
 
     if (HasPrefix() && mPrefix.IsDeprecated())
     {
         LogInfo("DHCPv6 PD prefix %s is deprecated", mPrefix.GetPrefix().ToString().AsCString());
-        mPrefix.Clear();
-        Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
+        WithdrawPrefix();
     }
 
-    if (favoredPrefix.IsFavoredOver(mPrefix))
+    if (aFavoredPrefix.IsFavoredOver(mPrefix))
     {
-        mPrefix = favoredPrefix;
+        mPrefix = aFavoredPrefix;
         LogInfo("DHCPv6 PD prefix set to %s", mPrefix.GetPrefix().ToString().AsCString());
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
     }
@@ -4544,14 +4553,13 @@ void RoutingManager::PdPrefixManager::Process(const InfraIf::Icmp6Packet *aRaPac
     {
         mTimer.Stop();
     }
-
-exit:
-    LogWarnOnError(error, "process DHCPv6 delegated prefix");
-    OT_UNUSED_VARIABLE(error);
 }
 
-void RoutingManager::PdPrefixManager::ProcessPdPrefix(PdPrefix &aPrefix, PdPrefix &aFavoredPrefix)
+void RoutingManager::PdPrefixManager::EvaluateCandidatePrefix(PdPrefix &aPrefix, PdPrefix &aFavoredPrefix)
 {
+    //  Evaluates a single candidate prefix and tracks the most favored
+    // one seen so far.
+
     if (!aPrefix.IsValidPdPrefix())
     {
         LogWarn("Ignore invalid DHCPv6 PD prefix %s", aPrefix.GetPrefix().ToString().AsCString());
@@ -4561,8 +4569,8 @@ void RoutingManager::PdPrefixManager::ProcessPdPrefix(PdPrefix &aPrefix, PdPrefi
     aPrefix.GetPrefix().Tidy();
     aPrefix.GetPrefix().SetLength(kOmrPrefixLength);
 
-    // Check if there is an update to the current prefix. The valid or
-    // preferred lifetime may have changed.
+    // Check if `aPrefix` matches the current `mPrefix`. Update it to
+    // refresh and/or update its lifetime.
 
     if (HasPrefix() && (mPrefix.GetPrefix() == aPrefix.GetPrefix()))
     {
