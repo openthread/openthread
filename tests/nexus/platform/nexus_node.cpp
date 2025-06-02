@@ -83,5 +83,13 @@ void Node::AllowList(Node &aNode)
 
 void Node::UnallowList(Node &aNode) { Get<Mac::Filter>().RemoveAddress(aNode.Get<Mac::Mac>().GetExtAddress()); }
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+void Node::GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const
+{
+    aSockAddr.SetAddress(mMdns.mIfAddresses[0]);
+    aSockAddr.SetPort(mTrel.mUdpPort);
+}
+#endif
+
 } // namespace Nexus
 } // namespace ot

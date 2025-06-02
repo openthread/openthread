@@ -47,6 +47,7 @@ add_library(ot-nexus-platform
     platform/nexus_node.cpp
     platform/nexus_radio.cpp
     platform/nexus_settings.cpp
+    platform/nexus_trel.cpp
 )
 
 target_include_directories(ot-nexus-platform
@@ -113,3 +114,4 @@ ot_nexus_test(border_agent)
 ot_nexus_test(dtls)
 ot_nexus_test(form_join)
 ot_nexus_test(large_network)
+ot_nexus_test(trel)

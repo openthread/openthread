@@ -407,7 +407,7 @@ void Link::CheckPeerAddrOnRxSuccess(PeerSockAddrUpdateMode aMode)
     if (aMode == kAllowPeerSockAddrUpdate)
     {
         LogNote("Updating the peer sock-addr to the newly received");
-        mRxPacketPeer->SetSockAddr(mRxPacketSenderAddr);
+        mRxPacketPeer->UpdateSockAddrBasedOnRx(mRxPacketSenderAddr);
     }
 
     mPeerDiscoverer.NotifyPeerSocketAddressDifference(prevSockAddr, mRxPacketSenderAddr);

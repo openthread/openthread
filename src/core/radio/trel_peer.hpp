@@ -43,6 +43,9 @@
 
 #include "common/as_core_type.hpp"
 #include "common/heap_allocatable.hpp"
+#include "common/heap_array.hpp"
+#include "common/heap_data.hpp"
+#include "common/heap_string.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/non_copyable.hpp"
@@ -84,6 +87,14 @@ class Peer : public InstanceLocatorInit,
 
 public:
     /**
+     * Indicates whether the `Peer` is in valid state.
+     *
+     * @returns TRUE    If the `peer` is in valid state.
+     * @returns FALSE   If the `Peer` is not in valid state (e.g., still being resolved or scheduled for removal).
+     */
+    bool IsStateValid(void) const { return mState == kStateValid; }
+
+    /**
      * Returns the Extended MAC Address of the discovered TREL peer.
      *
      * @returns The Extended MAC Address of the TREL peer.
@@ -105,17 +116,45 @@ public:
     const Ip6::SockAddr &GetSockAddr(void) const { return AsCoreType(&mSockAddr); }
 
     /**
-     * Set the IPv6 socket address of the discovered TREL peer.
+     * Updates the IPv6 socket address of the discovered TREL peer based on a received message from peer.
      *
-     * @param[in] aSockAddr   The IPv6 socket address.
+     * @param[in] aSockAddr   The IPv6 socket address discovered based on received message from the peer
      */
-    void SetSockAddr(const Ip6::SockAddr &aSockAddr) { mSockAddr = aSockAddr; }
+    void UpdateSockAddrBasedOnRx(const Ip6::SockAddr &aSockAddr);
+
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+
+    /**
+     * Returns the TREL peer service name (service instance label).
+     *
+     * @returns The peer service name, or `nullptr` if not yet known.
+     */
+    const char *GetServiceName(void) const { return mServiceName.AsCString(); }
+
+    /**
+     * Returns the host name of the discovered TREL peer.
+     *
+     * @returns The host name as a null-terminated C string, or `nullptr` if not yet known.
+     */
+    const char *GetHostName(void) const { return mHostName.AsCString(); }
+
+    /**
+     * Returns the list of discovered IPv6 host addresses for the TREL peer.
+     *
+     * The array is sorted to place preferred addresses at the top of the list.
+     *
+     * @returns An array of IPv6 addresses.
+     */
+    const Heap::Array<Ip6::Address> &GetHostAddresses(void) const { return mHostAddresses; }
+
+#endif // OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
 
 private:
     enum State : uint8_t
     {
         kStateValid,
         kStateRemoving,
+        kStateResolving,
     };
 
     enum Action : uint8_t
@@ -158,24 +197,68 @@ private:
         TimeMilli mNow;
     };
 
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+    struct ServiceNameMatcher
+    {
+        explicit ServiceNameMatcher(const char *SrerviceName)
+            : mServiceName(SrerviceName)
+        {
+        }
+
+        const char *mServiceName;
+    };
+
+    struct HostNameMatcher
+    {
+        explicit HostNameMatcher(const char *aHostName)
+            : mHostName(aHostName)
+        {
+        }
+
+        const char *mHostName;
+    };
+
+    class AddressArray : public Heap::Array<Ip6::Address>
+    {
+    public:
+        bool IsEmpty(void) const { return (GetLength() == 0); }
+        void CloneFrom(const AddressArray &aOtherArray);
+    };
+
+#endif
+
     void Init(Instance &aInstance);
     void Free(void);
     void SetState(State aState) { mState = aState; }
-    bool IsStateValid(void) const { return mState == kStateValid; }
     bool IsStateRemoving(void) const { return mState == kStateRemoving; }
-    void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
+    bool IsStateResolving(void) const { return mState == kStateResolving; }
+    void SetExtAddress(const Mac::ExtAddress &aExtAddress);
     void SetExtPanId(const MeshCoP::ExtendedPanId &aExtPanId) { mExtPanId = aExtPanId; }
+    void SetSockAddr(const Ip6::SockAddr &aSockAddr) { mSockAddr = aSockAddr; }
     void ScheduleToRemoveAfter(uint32_t aDelay);
-    bool Matches(const Mac::ExtAddress &aExtAddress) const { return GetExtAddress() == aExtAddress; }
+    bool Matches(const Mac::ExtAddress &aExtAddress) const;
     bool Matches(const Ip6::SockAddr &aSockAddr) const { return GetSockAddr() == aSockAddr; }
     bool Matches(State aState) const { return mState == aState; }
+    bool Matches(const Peer &aPeer) const { return this == &aPeer; }
     bool Matches(const OtherExtPanIdMatcher &aMatcher) const { return GetExtPanId() != aMatcher.mExtPanId; }
     bool Matches(const NonNeighborMatcher &aMatcher) const;
     bool Matches(const ExpireChecker &aChecker) const { return IsStateRemoving() && (aChecker.mNow >= mRemoveTime); }
 
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+    void SetPort(uint16_t aPort);
+    bool Matches(const ServiceNameMatcher &aMatcher) const;
+    bool Matches(const HostNameMatcher &aMatcher) const;
+    void SignalPeerRemoval(void);
+
+    static bool NameMatch(const Heap::String &aHeapString, const char *aName);
+#else
+    void SignalPeerRemoval(void) {}
+#endif
+
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     void               Log(Action aAction) const;
     static const char *ActionToString(Action aAction);
+    static const char *StateToString(State aState);
 #else
     void Log(Action) const {}
 #endif
@@ -183,6 +266,17 @@ private:
     Peer     *mNext;
     State     mState;
     TimeMilli mRemoveTime;
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+    bool         mExtAddressSet : 1;
+    bool         mResolvingService : 1;
+    bool         mResolvingHost : 1;
+    bool         mTxtDataValidated : 1;
+    bool         mSockAddrUpdatedBasedOnRx : 1;
+    uint16_t     mPort;
+    Heap::String mServiceName;
+    Heap::String mHostName;
+    AddressArray mHostAddresses;
+#endif
 };
 
 //---------------------------------------------------------------------------------------------------------------------

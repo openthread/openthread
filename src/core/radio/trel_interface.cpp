@@ -127,6 +127,11 @@ Error Interface::Send(Packet &aPacket, bool aIsDiscovery)
             Header::AckMode originalAckMode      = aPacket.GetHeader().GetAckMode();
             Neighbor       *neighbor;
 
+            if (!peer.IsStateValid())
+            {
+                continue;
+            }
+
             if (!aIsDiscovery && (peer.GetExtPanId() != Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()))
             {
                 continue;
@@ -151,7 +156,7 @@ Error Interface::Send(Packet &aPacket, bool aIsDiscovery)
     case Header::kTypeUnicast:
     case Header::kTypeAck:
         peerEntry = Get<PeerTable>().FindMatching(aPacket.GetHeader().GetDestination());
-        VerifyOrExit(peerEntry != nullptr, error = kErrorAbort);
+        VerifyOrExit((peerEntry != nullptr) && peerEntry->IsStateValid(), error = kErrorAbort);
         otPlatTrelSend(&GetInstance(), aPacket.GetBuffer(), aPacket.GetLength(), &peerEntry->mSockAddr);
         break;
     }

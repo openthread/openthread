@@ -530,6 +530,10 @@ void Dnssd::HandleStateChange(void)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     Get<MeshCoP::BorderAgent>().HandleDnssdPlatformStateChange();
 #endif
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE && OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+    Get<Trel::PeerDiscoverer>().HandleDnssdPlatformStateChange();
+#endif
 }
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
