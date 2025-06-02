@@ -1318,12 +1318,11 @@ private:
 
     enum AttachState : uint8_t
     {
-        kAttachStateIdle,            // Not currently searching for a parent.
-        kAttachStateProcessAnnounce, // Waiting to process a received Announce (to switch channel/pan-id).
-        kAttachStateStart,           // Starting to look for a parent.
-        kAttachStateParentRequest,   // Send Parent Request (current number tracked by `mParentRequestCounter`).
-        kAttachStateAnnounce,        // Send Announce messages
-        kAttachStateChildIdRequest,  // Sending a Child ID Request message.
+        kAttachStateIdle,           // Not currently searching for a parent.
+        kAttachStateStart,          // Starting to look for a parent.
+        kAttachStateParentRequest,  // Send Parent Request (current number tracked by `mParentRequestCounter`).
+        kAttachStateAnnounce,       // Send Announce messages
+        kAttachStateChildIdRequest, // Sending a Child ID Request message.
     };
 
     enum ReattachState : uint8_t
@@ -1733,6 +1732,63 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    void HandleAnnounceHandlerTimer(void) { mAnnounceHandler.HandleTimer(); }
+
+    class AnnounceHandler : public InstanceLocator
+    {
+        // Handles received Announce messages with a newer timestamp on
+        // a different channel and/or PAN ID. It may delay processing
+        // to collect and handle subsequent Announce messages.
+        //
+        // This class also manages an 'announce attach' process, where
+        // the device tries to attach using the parameters (channel and
+        // PAN ID) from a processed Announce message.
+        //
+        // If the 'announce attach' is successful, this class handles
+        // sending an Announce on the old channel to inform other
+        // devices. This is done immediately after attaching as a child
+        // or after an attempt to transition to the router role is
+        // complete (whether successful or not).
+        //
+        // If the 'announce attach' fails, the class ensures the channel
+        // and PAN ID are restored to their original values.
+
+    public:
+        explicit AnnounceHandler(Instance &aInstance);
+
+        void Stop(void);
+        void HandleAnnounce(RxInfo &aRxInfo);
+        bool IsAnnounceAttaching(void) const { return mState == kStateAnnounceAttaching; }
+        void HandleAnnounceAttachSuccess(void);
+        void HandleAnnounceAttachFailure(void);
+#if OPENTHREAD_FTD
+        void HandleRouterRoleTransitionAttemptDone(void) { InformPreviousChannel(); }
+#endif
+        void HandleTimer(void);
+
+    private:
+        enum State : uint8_t
+        {
+            kStateIdle,
+            kStateToAnnounceAttach,
+            kStateAnnounceAttaching,
+            kStateToInformPreviousChannel,
+        };
+
+        void StartAnnounceAttach(void);
+        void InformPreviousChannel(void);
+
+        using AnnouceTimer = TimerMilliIn<Mle, &Mle::HandleAnnounceHandlerTimer>;
+
+        State        mState;
+        uint8_t      mAlternateChannel;
+        uint16_t     mAlternatePanId;
+        uint64_t     mAlternateTimestamp;
+        AnnouceTimer mTimer;
+    };
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     void HandleParentSearchTimer(void) { mParentSearch.HandleTimer(); }
 
@@ -1865,7 +1921,6 @@ private:
     void       SetLeaderData(const LeaderData &aLeaderData);
     void       SetTimeout(uint32_t aTimeout, TimeoutAction aAction);
     void       InformPreviousChannel(void);
-    bool       IsAnnounceAttach(void) const { return mAlternatePanId != Mac::kPanIdBroadcast; }
     void       ScheduleMessageTransmissionTimer(void);
     void       HandleAttachTimer(void);
     void       HandleMessageTransmissionTimer(void);
@@ -1878,9 +1933,7 @@ private:
     void       HandleChildUpdateResponseOnChild(RxInfo &aRxInfo);
     void       HandleDataResponse(RxInfo &aRxInfo);
     void       HandleParentResponse(RxInfo &aRxInfo);
-    void       HandleAnnounce(RxInfo &aRxInfo);
     Error      HandleLeaderData(RxInfo &aRxInfo);
-    void       ProcessAnnounce(void);
     bool       HasUnregisteredAddress(void);
     uint32_t   GetAttachStartDelay(void) const;
     void       SendParentRequest(ParentRequestType aType);
@@ -2084,12 +2137,10 @@ private:
     uint8_t  mChildUpdateAttempts;
     uint8_t  mDataRequestAttempts;
     uint8_t  mAnnounceChannel;
-    uint8_t  mAlternateChannel;
     uint16_t mRloc16;
     uint16_t mPreviousParentRloc;
     uint16_t mAttachCounter;
     uint16_t mAnnounceDelay;
-    uint16_t mAlternatePanId;
     uint32_t mStoreFrameCounterAhead;
     uint32_t mTimeout;
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -2097,7 +2148,6 @@ private:
 #endif
     uint32_t mLastAttachTime;
     uint64_t mLastUpdatedTimestamp;
-    uint64_t mAlternateTimestamp;
 
     LeaderData      mLeaderData;
     Parent          mParent;
@@ -2107,6 +2157,7 @@ private:
     ParentCandidate mParentCandidate;
     MleSocket       mSocket;
     Counters        mCounters;
+    AnnounceHandler mAnnounceHandler;
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     ParentSearch mParentSearch;
 #endif

@@ -343,7 +343,7 @@ void Mle::HandleChildStart(AttachMode aMode)
         // decision to become router is determined based on the new
         // partition's status.
 
-        if (IsAnnounceAttach() && HasChildren())
+        if (mAnnounceHandler.IsAnnounceAttaching() && HasChildren())
         {
             RemoveChildren();
         }
@@ -1562,7 +1562,7 @@ void Mle::HandleTimeTick(void)
             }
             else
             {
-                InformPreviousChannel();
+                mAnnounceHandler.HandleRouterRoleTransitionAttemptDone();
             }
 
             if (!mAdvertiseTrickleTimer.IsRunning())
@@ -3460,7 +3460,7 @@ void Mle::HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::Messa
     }
 
 exit:
-    InformPreviousChannel();
+    mAnnounceHandler.HandleRouterRoleTransitionAttemptDone();
 }
 
 Error Mle::SetChildRouterLinks(uint8_t aChildRouterLinks)
