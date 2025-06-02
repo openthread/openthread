@@ -366,7 +366,7 @@ Security Policy: 672 onrc 0
 Done
 ```
 
-Print Active Operational Dataset nonsensitive fields in human-readable form.
+Print Active Operational Dataset in human-readable form and redact the sensitive values.
 
 ```bash
 > dataset active -ns
@@ -376,8 +376,10 @@ Wake-up Channel: 16
 Channel Mask: 0x07fff800
 Ext PAN ID: 39758ec8144b07fb
 Mesh Local Prefix: fdf1:f1ad:d079:7dc0::/64
+Network Key: [Redacted]
 Network Name: OpenThread-5938
 PAN ID: 0x5938
+PSKc: [Redacted]
 Security Policy: 672 onrc 0
 Done
 ```
@@ -657,7 +659,7 @@ Security Policy: 672 onrc 0
 Done
 ```
 
-Print Pending Operational Dataset nonsensitive fields in human-readable form.
+Print Pending Operational Dataset in human-readable form and redact the sensitive values.
 
 ```bash
 > dataset pending -ns
@@ -668,8 +670,10 @@ Channel Mask: 0x07fff800
 Delay: 58706
 Ext PAN ID: a74182f4d3f4de41
 Mesh Local Prefix: fd46:c1b9:e159:5574::/64
+Network Key: [Redacted]
 Network Name: OpenThread-bff8
 PAN ID: 0xbff8
+PSKc: [Redacted]
 Security Policy: 672 onrc 0
 Done
 ```
