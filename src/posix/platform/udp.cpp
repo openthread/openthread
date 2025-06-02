@@ -474,7 +474,7 @@ otError otPlatUdpJoinMulticastGroup(otUdpSocket        *aUdpSocket,
     switch (aNetifIdentifier)
     {
     case OT_NETIF_UNSPECIFIED:
-        mreq.ipv6mr_interface = 0;
+        mreq.ipv6mr_interface = 0; // Explicitly set to 0 to clarify intention.
         break;
     case OT_NETIF_THREAD_HOST:
         mreq.ipv6mr_interface = gNetifIndex;
@@ -518,7 +518,7 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket        *aUdpSocket,
     switch (aNetifIdentifier)
     {
     case OT_NETIF_UNSPECIFIED:
-        mreq.ipv6mr_interface = 0;
+        mreq.ipv6mr_interface = 0; // Explicitly set to 0 to clarify intention.
         break;
     case OT_NETIF_THREAD_HOST:
         mreq.ipv6mr_interface = gNetifIndex;
