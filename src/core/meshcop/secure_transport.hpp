@@ -221,6 +221,7 @@ public:
 
 protected:
     explicit SecureSession(SecureTransport &aTransport);
+    ~SecureSession(void) { FreeMbedtls(); }
 
     bool IsSessionInUse(void) const { return (mNext != this); }
 
