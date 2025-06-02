@@ -612,17 +612,18 @@ otError Dataset::Print(otOperationalDatasetTlvs &aDatasetTlvs, bool aNonsensitiv
     {
         const ComponentMapper *mapper;
 
-        if (aNonsensitiveOnly && title.mIsSensitive)
-        {
-            continue;
-        }
-
         mapper = LookupMapper(title.mName);
 
         if (dataset.mComponents.*mapper->mIsPresentPtr)
         {
             OutputFormat("%s: ", title.mTitle);
-            (this->*mapper->mOutput)(dataset);
+            if (aNonsensitiveOnly && title.mIsSensitive)
+            {
+                OutputLine("[Redacted]");
+            } else
+            {
+                (this->*mapper->mOutput)(dataset);
+            }
         }
     }
 
@@ -710,8 +711,8 @@ exit:
  * @endcode
  * @cparam dataset active [-x|-ns]
  * * The optional `-x` argument prints the Active Operational Dataset values as hex-encoded TLVs.
- * * The optional `-ns` argument prints the Active Operational Dataset nonsensitive fields, i.e., excluding the network
- * key and PSKc fields.
+ * * The optional `-ns` argument prints the Active Operational Dataset values and redact the sensitive values, including
+ * the network key and PSKc fields.
  * @par api_copy
  * #otDatasetGetActive
  * @par
