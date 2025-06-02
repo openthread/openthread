@@ -620,7 +620,8 @@ otError Dataset::Print(otOperationalDatasetTlvs &aDatasetTlvs, bool aNonsensitiv
             if (aNonsensitiveOnly && title.mIsSensitive)
             {
                 OutputLine("[Redacted]");
-            } else
+            }
+            else
             {
                 (this->*mapper->mOutput)(dataset);
             }
