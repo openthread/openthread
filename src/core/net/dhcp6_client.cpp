@@ -305,17 +305,11 @@ Error Client::AppendElapsedTimeOption(Message &aMessage)
 
 Error Client::AppendClientIdOption(Message &aMessage)
 {
-    ClientIdOption  option;
     Mac::ExtAddress eui64;
 
     Get<Radio>().GetIeeeEui64(eui64);
 
-    option.Init();
-    option.SetDuidType(kDuidLinkLayerAddress);
-    option.SetDuidHardwareType(kHardwareTypeEui64);
-    option.SetDuidLinkLayerAddress(eui64);
-
-    return aMessage.Append(option);
+    return ClientIdOption::AppendWithEui64Duid(aMessage, eui64);
 }
 
 Error Client::AppendIaNaOption(Message &aMessage, uint16_t aRloc16)
@@ -392,41 +386,18 @@ exit:
 
 Error Client::ProcessServerIdOption(const Message &aMessage)
 {
-    Error          error;
-    OffsetRange    offsetRange;
-    ServerIdOption option;
+    OffsetRange duidOffsetRange;
 
-    SuccessOrExit(error = Option::FindOption(aMessage, Option::kServerId, offsetRange));
-    SuccessOrExit(error = aMessage.Read(offsetRange, option));
-
-    VerifyOrExit(((option.GetDuidType() == kDuidLinkLayerAddressPlusTime) &&
-                  (option.GetDuidHardwareType() == kHardwareTypeEthernet)) ||
-                     ((option.GetLength() == (sizeof(option) - sizeof(Option))) &&
-                      (option.GetDuidType() == kDuidLinkLayerAddress) &&
-                      (option.GetDuidHardwareType() == kHardwareTypeEui64)),
-                 error = kErrorParse);
-exit:
-    return error;
+    return ServerIdOption::ReadDuid(aMessage, duidOffsetRange);
 }
 
 Error Client::ProcessClientIdOption(const Message &aMessage)
 {
-    Error           error;
-    OffsetRange     offsetRange;
-    ClientIdOption  option;
     Mac::ExtAddress eui64;
 
     Get<Radio>().GetIeeeEui64(eui64);
 
-    SuccessOrExit(error = Option::FindOption(aMessage, Option::kClientId, offsetRange));
-    SuccessOrExit(error = aMessage.Read(offsetRange, option));
-
-    VerifyOrExit(option.GetDuidType() == kDuidLinkLayerAddress, error = kErrorParse);
-    VerifyOrExit(option.GetDuidHardwareType() == kHardwareTypeEui64, error = kErrorParse);
-    VerifyOrExit(option.GetDuidLinkLayerAddress() == eui64, error = kErrorParse);
-
-exit:
-    return error;
+    return ClientIdOption::MatchesEui64Duid(aMessage, eui64);
 }
 
 Error Client::ProcessIaNaOption(const Message &aMessage)

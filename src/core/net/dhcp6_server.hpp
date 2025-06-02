@@ -169,7 +169,7 @@ private:
     void  Stop(void);
     void  AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context &aContext);
     Error AppendHeader(Message &aMessage, const TransactionId &aTransactionId);
-    Error AppendClientIdOption(Message &aMessage, const ClientIdOption &aClientIdOption);
+    Error AppendClientIdOption(Message &aMessage, const Mac::ExtAddress &aClientAddress);
     Error AppendServerIdOption(Message &aMessage);
     Error AppendIaNaOption(Message &aMessage, uint32_t aIaid, const Mac::ExtAddress &aClientAddress);
     Error AppendStatusCodeOption(Message &aMessage, StatusCodeOption::Status aStatusCode);
@@ -183,10 +183,10 @@ private:
     Error ProcessIaNaOption(const Message &aMessage, uint32_t &aIaid);
     void  ProcessIaAddressOption(const IaAddressOption &aAddressOption);
     Error ProcessElapsedTimeOption(const Message &aMessage);
-    Error SendReply(const Ip6::Address   &aDst,
-                    const TransactionId  &aTransactionId,
-                    const ClientIdOption &aClientIdOption,
-                    uint32_t              aIaid);
+    Error SendReply(const Ip6::Address    &aDst,
+                    const TransactionId   &aTransactionId,
+                    const Mac::ExtAddress &aClientAddress,
+                    uint32_t               aIaid);
 
     using ServerSocket = Ip6::Udp::SocketIn<Server, &Server::HandleUdpReceive>;
 
