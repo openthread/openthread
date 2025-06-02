@@ -170,6 +170,7 @@ set(COMMON_SOURCES
     net/checksum.cpp
     net/dhcp6_client.cpp
     net/dhcp6_server.cpp
+    net/dhcp6_types.cpp
     net/dns_client.cpp
     net/dns_dso.cpp
     net/dns_platform.cpp
