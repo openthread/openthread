@@ -705,8 +705,10 @@ exit:
  * Channel Mask: 0x07fff800
  * Ext PAN ID: d63e8e3e495ebbc3
  * Mesh Local Prefix: fd3d:b50b:f96d:722d::/64
+ * Network Key: [Redacted]
  * Network Name: OpenThread-8f28
  * PAN ID: 0x8f28
+ * PSKc: [Redacted]
  * Security Policy: 0, onrcb
  * Done
  * @endcode
