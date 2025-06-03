@@ -86,25 +86,28 @@ otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMes
     struct msghdr       msg;
     struct cmsghdr     *cmsg;
     ssize_t             rval;
-    otError             error   = OT_ERROR_NONE;
-    uint32_t            ifIndex = aMessageInfo.mIsHostInterface ?
-#if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
-                                                     ot::Posix::InfraNetif::Get().GetNetifIndex()
-                                                     : gNetifIndex;
-#else
-                                                     0
-                                                     : gNetifIndex;
-#endif
+    otError             error = OT_ERROR_NONE;
 
     memset(&peerAddr, 0, sizeof(peerAddr));
     peerAddr.sin6_port   = htons(aMessageInfo.mPeerPort);
     peerAddr.sin6_family = AF_INET6;
     CopyIp6AddressTo(aMessageInfo.mPeerAddr, &peerAddr.sin6_addr);
 
+    // sin6_scope_id must be set >0 only for link-local, for other scopes it remains 0.
     if (IsIp6AddressLinkLocal(aMessageInfo.mPeerAddr))
     {
-        // sin6_scope_id must be set for link local destinations, otherwise remains 0
-        peerAddr.sin6_scope_id = ifIndex;
+        if (aMessageInfo.mIsHostInterface)
+        {
+#if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
+            peerAddr.sin6_scope_id = ot::Posix::InfraNetif::Get().GetNetifIndex();
+#else
+            // remains 0 if we cannot determine a host ifIndex
+#endif
+        }
+        else
+        {
+            peerAddr.sin6_scope_id = gNetifIndex;
+        }
     }
 
     memset(control, 0, sizeof(control));
@@ -142,8 +145,8 @@ otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMes
         cmsg->cmsg_type  = IPV6_PKTINFO;
         cmsg->cmsg_len   = CMSG_LEN(sizeof(pktinfo));
 
-        // link-local requires ifIndex to be set
-        pktinfo.ipi6_ifindex = IsIp6AddressLinkLocal(aMessageInfo.mPeerAddr) ? ifIndex : 0;
+        // link-local requires ifindex to be >0, 0 is allowed for other scopes
+        pktinfo.ipi6_ifindex = peerAddr.sin6_scope_id;
 
         CopyIp6AddressTo(aMessageInfo.mSockAddr, &pktinfo.ipi6_addr);
         memcpy(CMSG_DATA(cmsg), &pktinfo, sizeof(pktinfo));
