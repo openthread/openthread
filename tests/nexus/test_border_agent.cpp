@@ -38,7 +38,10 @@ namespace Nexus {
 
 using ActiveDatasetManager = MeshCoP::ActiveDatasetManager;
 using BorderAgent          = MeshCoP::BorderAgent;
-using EphemeralKeyManager  = ot::MeshCoP::BorderAgent::EphemeralKeyManager;
+using EphemeralKeyManager  = MeshCoP::BorderAgent::EphemeralKeyManager;
+using HistoryTracker       = Utils::HistoryTracker;
+using EpskcEvent           = HistoryTracker::EpskcEvent;
+using Iterator             = HistoryTracker::Iterator;
 using ExtendedPanIdManager = MeshCoP::ExtendedPanIdManager;
 using NameData             = MeshCoP::NameData;
 using NetworkNameManager   = MeshCoP::NetworkNameManager;
@@ -752,6 +755,357 @@ void TestBorderAgentEphemeralKey(void)
                  kErrorInvalidArgs);
     VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcActivations == 6);
     VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcInvalidArgsErrors == 2);
+}
+
+EpskcEvent GetNewestEpskcEvent(Node &aNode)
+{
+    const EpskcEvent *epskcEvent = nullptr;
+    Iterator          iter;
+    uint32_t          age;
+    iter.Init();
+
+    epskcEvent = aNode.Get<HistoryTracker>().IterateEpskcEventHistory(iter, age);
+
+    VerifyOrQuit(epskcEvent != nullptr);
+    return *epskcEvent;
+}
+
+void TestHistoryTrackerBorderAgentEpskcEvent(void)
+{
+    static const char kEphemeralKey[] = "nexus1234";
+
+    static constexpr uint16_t kEphemeralKeySize = sizeof(kEphemeralKey) - 1;
+    static constexpr uint16_t kUdpPort          = 49155;
+
+    Core           nexus;
+    Node          &node0 = nexus.CreateNode();
+    Node          &node1 = nexus.CreateNode();
+    Ip6::SockAddr  sockAddr;
+    Coap::Message *message;
+    EpskcEvent     epskcEvent;
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("TestHistoryTrackerBorderAgentEpskcEvent");
+
+    nexus.AdvanceTime(0);
+
+    // Form the topology:
+    // - node0 leader acting as Border Agent.
+    // - node1 acting as candidate
+
+    node0.Form();
+    nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node0.Get<Mle::Mle>().IsLeader());
+    sockAddr.SetAddress(node0.Get<Mle::Mle>().GetLinkLocalAddress());
+    sockAddr.SetPort(kUdpPort);
+
+    SuccessOrQuit(node1.Get<Mac::Mac>().SetPanChannel(node0.Get<Mac::Mac>().GetPanChannel()));
+    node1.Get<Mac::Mac>().SetPanId(node0.Get<Mac::Mac>().GetPanId());
+    node1.Get<ThreadNetif>().Up();
+
+    // Enable the Ephemeral Key feature.
+    node0.Get<EphemeralKeyManager>().SetEnabled(true);
+    VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStopped);
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("  Check Ephemeral Key Journey 1: Epskc Mode is activated, then deactivated");
+
+    SuccessOrQuit(node0.Get<EphemeralKeyManager>().Start(kEphemeralKey, /* aTimeout */ 0, kUdpPort));
+    VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStarted);
+
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_ACTIVATED);
+
+    node0.Get<EphemeralKeyManager>().Stop();
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_LOCAL_CLOSE);
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("  Check Ephemeral Key Journey 2: Epskc Mode is activated, then deactivated after max failed connection "
+        "attempts");
+
+    SuccessOrQuit(node0.Get<EphemeralKeyManager>().Start(kEphemeralKey, /* aTimeout */ 0, kUdpPort));
+    VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStarted);
+    SuccessOrQuit(node0.Get<Ip6::Filter>().AddUnsecurePort(kUdpPort));
+
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_ACTIVATED);
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(
+        node1.Get<Tmf::SecureAgent>().SetPsk(reinterpret_cast<const uint8_t *>(kEphemeralKey), kEphemeralKeySize - 2));
+
+    for (uint8_t numAttempts = 1; numAttempts < 10; numAttempts++)
+    {
+        Log("  Attempt %u to connect with the wrong key", numAttempts);
+
+        SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
+
+        nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+
+        VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
+        VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStarted);
+    }
+
+    Log("  Attempt 10 (final attempt) to connect with the wrong key, check that ephemeral key use is stopped");
+
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
+    nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+
+    VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
+    VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStopped);
+
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_MAX_ATTEMPTS);
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("  Check Ephemeral Key Journey 3: The session is connected successfully, then disconnected by API");
+
+    SuccessOrQuit(node0.Get<EphemeralKeyManager>().Start(kEphemeralKey, /* aTimeout */ 0, kUdpPort));
+    VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStarted);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_ACTIVATED);
+
+    SuccessOrQuit(
+        node1.Get<Tmf::SecureAgent>().SetPsk(reinterpret_cast<const uint8_t *>(kEphemeralKey), kEphemeralKeySize));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
+    nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node1.Get<Tmf::SecureAgent>().IsConnected());
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_CONNECTED);
+
+    node0.Get<EphemeralKeyManager>().Stop();
+    nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_LOCAL_CLOSE);
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("  Check Ephemeral Key Journey 4: The session is connected successfully. And the candidate petitioned as an "
+        "active commissioner. The session is disconnected by the remote.");
+
+    SuccessOrQuit(node0.Get<EphemeralKeyManager>().Start(kEphemeralKey, /* aTimeout */ 0, kUdpPort));
+    VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStarted);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_ACTIVATED);
+
+    VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
+
+    nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node1.Get<Tmf::SecureAgent>().IsConnected());
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_CONNECTED);
+
+    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerPetition);
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
+
+    nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_PETITIONED);
+
+    node1.Get<Tmf::SecureAgent>().Disconnect();
+    nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_REMOTE_CLOSE);
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("  Check Ephemeral Key Journey 5: The session is connected successfully. And the active dataset is fetched. "
+        "The session is disconnected by the remote.");
+
+    SuccessOrQuit(node0.Get<EphemeralKeyManager>().Start(kEphemeralKey, /* aTimeout */ 0, kUdpPort));
+    VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStarted);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_ACTIVATED);
+
+    VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
+
+    nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node1.Get<Tmf::SecureAgent>().IsConnected());
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_CONNECTED);
+
+    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerPetition);
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
+
+    nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_PETITIONED);
+
+    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriActiveGet);
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
+
+    nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_RETRIEVED_ACTIVE_DATASET);
+
+    node1.Get<Tmf::SecureAgent>().Disconnect();
+    nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_REMOTE_CLOSE);
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("  Check Ephemeral Key Journey 6: The session is connected successfully. And the pending dataset is fetched. "
+        "The session is disconnected by the remote.");
+
+    SuccessOrQuit(node0.Get<EphemeralKeyManager>().Start(kEphemeralKey, /* aTimeout */ 0, kUdpPort));
+    VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStarted);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_ACTIVATED);
+
+    VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
+
+    nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node1.Get<Tmf::SecureAgent>().IsConnected());
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_CONNECTED);
+
+    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerPetition);
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
+
+    nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_PETITIONED);
+
+    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriActiveGet);
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
+
+    nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_RETRIEVED_ACTIVE_DATASET);
+
+    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriPendingGet);
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
+
+    nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_RETRIEVED_PENDING_DATASET);
+
+    node1.Get<Tmf::SecureAgent>().Disconnect();
+    nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_REMOTE_CLOSE);
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("  Check Ephemeral Key Journey 7: The session is connected successfully. And the pending dataset is fetched. "
+        "The session is due to session timeout.");
+    SuccessOrQuit(node0.Get<EphemeralKeyManager>().Start(kEphemeralKey, /* aTimeout */ 0, kUdpPort));
+    VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStarted);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_ACTIVATED);
+
+    VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
+
+    nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node1.Get<Tmf::SecureAgent>().IsConnected());
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_CONNECTED);
+
+    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerPetition);
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
+
+    nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_PETITIONED);
+
+    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriActiveGet);
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
+
+    nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_RETRIEVED_ACTIVE_DATASET);
+
+    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriPendingGet);
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
+
+    nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_RETRIEVED_PENDING_DATASET);
+
+    static constexpr uint32_t kKeepAliveTimeout = 50 * 1000; // Timeout to reject a commissioner (in msec)
+    nexus.AdvanceTime(kKeepAliveTimeout);                    // Wait for the session timeout
+    VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_SESSION_TIMEOUT);
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("  Check Ephemeral Key Journey 8: The session is connected successfully. The epskc mode is deactivated due to "
+        "timeout.");
+    SuccessOrQuit(node0.Get<EphemeralKeyManager>().Start(kEphemeralKey, /* aTimeout */ 0, kUdpPort));
+    VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStarted);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_ACTIVATED);
+
+    VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
+
+    nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node1.Get<Tmf::SecureAgent>().IsConnected());
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_CONNECTED);
+
+    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerPetition);
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
+    nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_PETITIONED);
+
+    // Send a KeepAlive message every 30s until ePSKc mode timed out
+    for (uint8_t i = 0; i < EphemeralKeyManager::kDefaultTimeout / (30 * Time::kOneSecondInMsec) - 1; i++)
+    {
+        if (!node1.Get<Tmf::SecureAgent>().IsConnected())
+        {
+            break;
+        }
+        message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerKeepAlive);
+        VerifyOrQuit(message != nullptr);
+        SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
+        SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
+        SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
+        nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
+
+        epskcEvent = GetNewestEpskcEvent(node0);
+        VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_KEEP_ALIVE);
+    }
+
+    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerKeepAlive);
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
+    SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
+
+    VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStopped);
+    epskcEvent = GetNewestEpskcEvent(node0);
+    VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_EPSKC_TIMEOUT);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1547,6 +1901,7 @@ int main(void)
 {
     ot::Nexus::TestBorderAgent();
     ot::Nexus::TestBorderAgentEphemeralKey();
+    ot::Nexus::TestHistoryTrackerBorderAgentEpskcEvent();
     ot::Nexus::TestBorderAgentTxtDataCallback();
     ot::Nexus::TestBorderAgentServiceRegistration();
     printf("All tests passed\n");

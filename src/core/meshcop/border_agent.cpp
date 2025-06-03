@@ -746,6 +746,9 @@ exit:
     {
     case kErrorNone:
         Get<BorderAgent>().mCounters.mEpskcActivations++;
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        Get<Utils::HistoryTracker>().RecordEpskcEvent(Utils::HistoryTracker::kEpskcActivated);
+#endif
         break;
     case kErrorInvalidState:
         Get<BorderAgent>().mCounters.mEpskcInvalidBaStateErrors++;
@@ -763,7 +766,7 @@ exit:
 
 void BorderAgent::EphemeralKeyManager::Stop(void) { Stop(kReasonLocalDisconnect); }
 
-void BorderAgent::EphemeralKeyManager::Stop(StopReason aReason)
+void BorderAgent::EphemeralKeyManager::Stop(DeactivationReason aReason)
 {
     switch (mState)
     {
@@ -776,35 +779,69 @@ void BorderAgent::EphemeralKeyManager::Stop(StopReason aReason)
         ExitNow();
     }
 
-    LogInfo("Stopping ephemeral key use - reason: %s", StopReasonToString(aReason));
+    LogInfo("Stopping ephemeral key use - reason: %s", DeactivationReasonToString(aReason));
     SetState(kStateStopped);
 
     mTimer.Stop();
     mDtlsTransport.Close();
 
-    switch (aReason)
-    {
-    case kReasonLocalDisconnect:
-        Get<BorderAgent>().mCounters.mEpskcDeactivationClears++;
-        break;
-    case kReasonPeerDisconnect:
-        Get<BorderAgent>().mCounters.mEpskcDeactivationDisconnects++;
-        break;
-    case kReasonSessionError:
-        Get<BorderAgent>().mCounters.mEpskcStartSecureSessionErrors++;
-        break;
-    case kReasonMaxFailedAttempts:
-        Get<BorderAgent>().mCounters.mEpskcDeactivationMaxAttempts++;
-        break;
-    case kReasonTimeout:
-        Get<BorderAgent>().mCounters.mEpskcDeactivationTimeouts++;
-        break;
-    case kReasonUnknown:
-        break;
-    }
+    UpdateCountersAndRecordEvent(aReason);
 
 exit:
     return;
+}
+
+void BorderAgent::EphemeralKeyManager::UpdateCountersAndRecordEvent(DeactivationReason aReason)
+{
+    struct ReasonToCounterEventEntry
+    {
+        DeactivationReason mReason;
+        uint8_t            mEvent; // Raw values of `Utils::HistoryTracker::Epskc` enum.
+        uint32_t Counters::*mCounterPtr;
+    };
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+#define ReasonEntry(kReason, kCounter, kEvent)                       \
+    {                                                                \
+        kReason, Utils::HistoryTracker::kEvent, &Counters::kCounter, \
+    }
+#else
+#define ReasonEntry(kReason, kCounter, kEvent) \
+    {                                          \
+        kReason, 0, &Counters::kCounter        \
+    }
+#endif
+
+    static const ReasonToCounterEventEntry kReasonToCounterEventEntries[] = {
+        ReasonEntry(kReasonLocalDisconnect, mEpskcDeactivationClears, kEpskcDeactivatedLocalClose),
+        ReasonEntry(kReasonSessionTimeout, mEpskcDeactivationClears, kEpskcDeactivatedSessionTimeout),
+        ReasonEntry(kReasonPeerDisconnect, mEpskcDeactivationDisconnects, kEpskcDeactivatedRemoteClose),
+        ReasonEntry(kReasonSessionError, mEpskcStartSecureSessionErrors, kEpskcDeactivatedSessionError),
+        ReasonEntry(kReasonMaxFailedAttempts, mEpskcDeactivationMaxAttempts, kEpskcDeactivatedMaxAttempts),
+        ReasonEntry(kReasonEpskcTimeout, mEpskcDeactivationTimeouts, kEpskcDeactivatedEpskcTimeout),
+    };
+
+#undef ReasonEntry
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Utils::HistoryTracker::EpskcEvent event = Utils::HistoryTracker::kEpskcDeactivatedUnknown;
+#endif
+
+    for (const ReasonToCounterEventEntry &entry : kReasonToCounterEventEntries)
+    {
+        if (aReason == entry.mReason)
+        {
+            (Get<BorderAgent>().mCounters.*(entry.mCounterPtr))++;
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+            event = static_cast<Utils::HistoryTracker::EpskcEvent>(entry.mEvent);
+#endif
+            break;
+        }
+    }
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordEpskcEvent(event);
+#endif
 }
 
 void BorderAgent::EphemeralKeyManager::SetState(State aState)
@@ -868,14 +905,16 @@ void BorderAgent::EphemeralKeyManager::HandleSessionConnected(void)
 {
     SetState(kStateConnected);
     Get<BorderAgent>().mCounters.mEpskcSecureSessionSuccesses++;
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordEpskcEvent(Utils::HistoryTracker::kEpskcConnected);
+#endif
 }
 
 void BorderAgent::EphemeralKeyManager::HandleSessionDisconnected(SecureSession::ConnectEvent aEvent)
 {
-    StopReason reason = kReasonUnknown;
+    DeactivationReason reason = kReasonUnknown;
 
     // The ephemeral key can be used once
-
     VerifyOrExit((mState == kStateConnected) || (mState == kStateAccepted));
 
     switch (aEvent)
@@ -888,6 +927,9 @@ void BorderAgent::EphemeralKeyManager::HandleSessionDisconnected(SecureSession::
         break;
     case SecureSession::kDisconnectedMaxAttempts:
         reason = kReasonMaxFailedAttempts;
+        break;
+    case SecureSession::kDisconnectedTimeout:
+        reason = kReasonSessionTimeout;
         break;
     default:
         break;
@@ -903,9 +945,12 @@ void BorderAgent::EphemeralKeyManager::HandleCommissionerPetitionAccepted(void)
 {
     SetState(kStateAccepted);
     Get<BorderAgent>().mCounters.mEpskcCommissionerPetitions++;
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordEpskcEvent(Utils::HistoryTracker::kEpskcPetitioned);
+#endif
 }
 
-void BorderAgent::EphemeralKeyManager::HandleTimer(void) { Stop(kReasonTimeout); }
+void BorderAgent::EphemeralKeyManager::HandleTimer(void) { Stop(kReasonEpskcTimeout); }
 
 void BorderAgent::EphemeralKeyManager::HandleTask(void) { mCallback.InvokeIfSet(); }
 
@@ -992,15 +1037,16 @@ const char *BorderAgent::EphemeralKeyManager::StateToString(State aState)
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-const char *BorderAgent::EphemeralKeyManager::StopReasonToString(StopReason aReason)
+const char *BorderAgent::EphemeralKeyManager::DeactivationReasonToString(DeactivationReason aReason)
 {
     static const char *const kReasonStrings[] = {
         "LocalDisconnect",   // (0) kReasonLocalDisconnect
         "PeerDisconnect",    // (1) kReasonPeerDisconnect
         "SessionError",      // (2) kReasonSessionError
-        "MaxFailedAttempts", // (3) kReasonMaxFailedAttempts
-        "Timeout",           // (4) kReasonTimeout
-        "Unknown",           // (5) kReasonUnknown
+        "SessionTimeout",    // (3) kReasonSessionTimeout
+        "MaxFailedAttempts", // (4) kReasonMaxFailedAttempts
+        "EpskcTimeout",      // (5) kReasonTimeout
+        "Unknown",           // (6) kReasonUnknown
     };
 
     struct EnumCheck
@@ -1009,8 +1055,9 @@ const char *BorderAgent::EphemeralKeyManager::StopReasonToString(StopReason aRea
         ValidateNextEnum(kReasonLocalDisconnect);
         ValidateNextEnum(kReasonPeerDisconnect);
         ValidateNextEnum(kReasonSessionError);
+        ValidateNextEnum(kReasonSessionTimeout);
         ValidateNextEnum(kReasonMaxFailedAttempts);
-        ValidateNextEnum(kReasonTimeout);
+        ValidateNextEnum(kReasonEpskcTimeout);
         ValidateNextEnum(kReasonUnknown);
     };
 
@@ -1124,6 +1171,12 @@ void BorderAgent::CoapDtlsSession::HandleTmfCommissionerKeepAlive(Coap::Message 
     VerifyOrExit(mIsActiveCommissioner);
     SuccessOrExit(ForwardToLeader(aMessage, aMessageInfo, kUriLeaderKeepAlive));
     mTimer.Start(kKeepAliveTimeout);
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    if (Get<EphemeralKeyManager>().OwnsSession(*this))
+    {
+        Get<Utils::HistoryTracker>().RecordEpskcEvent(Utils::HistoryTracker::kEpskcKeepAlive);
+    }
+#endif
 
 exit:
     return;
@@ -1454,11 +1507,23 @@ void BorderAgent::CoapDtlsSession::HandleTmfDatasetGet(Coap::Message &aMessage, 
     case kUriActiveGet:
         response = Get<ActiveDatasetManager>().ProcessGetRequest(aMessage, DatasetManager::kIgnoreSecurityPolicyFlags);
         Get<BorderAgent>().mCounters.mMgmtActiveGets++;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        if (Get<EphemeralKeyManager>().OwnsSession(*this))
+        {
+            Get<Utils::HistoryTracker>().RecordEpskcEvent(Utils::HistoryTracker::kEpskcRetrievedActiveDataset);
+        }
+#endif
         break;
 
     case kUriPendingGet:
         response = Get<PendingDatasetManager>().ProcessGetRequest(aMessage, DatasetManager::kIgnoreSecurityPolicyFlags);
         Get<BorderAgent>().mCounters.mMgmtPendingGets++;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        if (Get<EphemeralKeyManager>().OwnsSession(*this))
+        {
+            Get<Utils::HistoryTracker>().RecordEpskcEvent(Utils::HistoryTracker::kEpskcRetrievedPendingDataset);
+        }
+#endif
         break;
 
     case kUriCommissionerGet:
@@ -1490,7 +1555,7 @@ void BorderAgent::CoapDtlsSession::HandleTimer(void)
     if (IsConnected())
     {
         LogInfo("Session timed out - disconnecting");
-        Disconnect();
+        DisconnectTimeout();
     }
 }
 
