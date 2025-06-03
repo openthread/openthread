@@ -96,6 +96,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     node.GetInstance().SetLogLevel(kLogLevelInfo);
 
+    node.GetInstance().Get<BorderRouter::RoutingManager>().Init(/* aInfraIfIndex */ 1, /* aInfraIfIsRunning */ true);
+    node.GetInstance().Get<BorderRouter::RoutingManager>().SetEnabled(true);
     node.GetInstance().Get<Srp::Server>().SetAutoEnableMode(true);
     node.GetInstance().Get<BorderRouter::RoutingManager>().SetDhcp6PdEnabled(true);
     node.GetInstance().Get<BorderRouter::RoutingManager>().SetNat64PrefixManagerEnabled(true);
@@ -105,8 +107,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     Log("Form network");
 
     node.Form();
-    nexus.AdvanceTime(13 * 1000);
+    nexus.AdvanceTime(60 * 1000);
     VerifyOrQuit(node.Get<Mle::Mle>().IsLeader());
+    VerifyOrQuit(node.Get<Srp::Server>().GetState() == Srp::Server::kStateRunning);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Fuzz");
