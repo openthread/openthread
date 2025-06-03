@@ -33,8 +33,6 @@
 
 #include "dhcp6_types.hpp"
 
-#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
-
 namespace ot {
 namespace Dhcp6 {
 
@@ -229,13 +227,31 @@ exit:
     return error;
 }
 
+Error IdOption::Append(Option::Code aCode, Message &aMessage, const void *aDuid, uint16_t aDuidLength)
+{
+    return Option::AppendOption(aMessage, aCode, aDuid, aDuidLength);
+}
+
 Error IdOption::AppendEui64(Option::Code aCode, Message &aMessage, const Mac::ExtAddress &aExtAddress)
 {
     Eui64Duid eui64Duid;
 
     eui64Duid.Init(aExtAddress);
 
-    return Option::AppendOption(aMessage, aCode, &eui64Duid, sizeof(eui64Duid));
+    return Append(aCode, aMessage, &eui64Duid, sizeof(eui64Duid));
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// ElapsedTimeOption
+
+Error ElapsedTimeOption::AppendTo(Message &aMessage, uint16_t aElapsedTime)
+{
+    ElapsedTimeOption elapsedTimeOption;
+
+    elapsedTimeOption.Init();
+    elapsedTimeOption.SetElapsedTime(aElapsedTime);
+
+    return aMessage.Append(elapsedTimeOption);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -281,7 +297,22 @@ Error RapidCommitOption::AppendTo(Message &aMessage)
     return Option::AppendOption(aMessage, Option::kRapidCommit, /* aData */ nullptr, 0);
 }
 
+//---------------------------------------------------------------------------------------------------------------------
+// IaPrefixOption
+
+void IaPrefixOption::GetPrefix(Ip6::Prefix &aPrefix) const
+{
+    uint8_t length = Min(GetPrefixLength(), Ip6::Prefix::kMaxLength);
+
+    aPrefix.Set(mPrefix.mFields.m8, length);
+    aPrefix.Tidy();
+}
+
+void IaPrefixOption::SetPrefix(const Ip6::Prefix &aPrefix)
+{
+    mPrefix       = AsCoreType(&aPrefix.mPrefix);
+    mPrefixLength = aPrefix.mLength;
+}
+
 } // namespace Dhcp6
 } // namespace ot
-
-#endif // #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE

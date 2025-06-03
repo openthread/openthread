@@ -41,6 +41,7 @@
 #include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/message.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -182,6 +183,66 @@ extern void otPlatInfraIfDiscoverNat64PrefixDone(otInstance        *aInstance,
 otError otPlatGetInfraIfLinkLayerAddress(otInstance                    *aInstance,
                                          uint32_t                       aIfIndex,
                                          otPlatInfraIfLinkLayerAddress *aInfraIfLinkLayerAddress);
+
+//---------------------------------------------------------------------------------------------------------------------
+// DHCPv6 Prefix Delegation platform APIs (`OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE`)
+
+/**
+ * Enables or disables listening for DHCPv6 Prefix Delegation (PD) messages on client.
+ *
+ * This function is only used when `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE` is enabled.
+ *
+ * When enabled, the platform must open a UDP socket on the specified infrastructure interface, binding to the DHCPv6
+ * client port 546 to receive messages from DHCPv6 servers.
+ *
+ * @param[in] aInstance      The OpenThread instance.
+ * @param[in] aEnable        A boolean to enable (`true`) or disable (`false`) listening.
+ * @param[in] aInfraIfIndex  The index of the infrastructure interface to operate on.
+ *
+ */
+void otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex);
+
+/**
+ * Sends a DHCPv6 message to a unicast or multicast destination address.
+ *
+ * This function is only used when `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE` is enabled.
+ *
+ * The platform is responsible for constructing a UDP datagram with the given DHCPv6 message as its payload. The
+ * datagram must be sent from the DHCPv6 client port (546) to the server port (547) on the specified infrastructure
+ * interface. The destination IPv6 address can be a unicast address or the multicast `All_DHCP_Relay_Agents_and_Servers`
+ * address (`ff02::1:2`).
+ *
+ * This function passes the ownership of @p aMessage to the platform layer. Platform MUST then free the message
+ * when no longer needed.
+ *
+ * @param[in] aInstance      The OpenThread instance.
+ * @param[in] aMessage       An `otMessage` containing the DHCPv6 payload. Ownership is passed to the platform layer.
+ * @param[in] aDestAddress   The IPv6 multicast or unicast destination address.
+ * @param[in] aInfraIfIndex  The index of the infrastructure interface from which to send the message.
+ */
+void otPlatInfraIfDhcp6PdClientSend(otInstance   *aInstance,
+                                    otMessage    *aMessage,
+                                    otIp6Address *aDestAddress,
+                                    uint32_t      aInfraIfIndex);
+
+/**
+ * Callback from the platform to notify the OpenThread stack of a received DHCPv6 message.
+ *
+ * This function is provided when `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE` is enabled.
+ *
+ * The platform calls this function whenever a DHCPv6 message is received on the client port (546) while listening on
+ * this port is enabled (refer to `otPlatInfraIfDhcp6PdClientSetListeningEnabled()`).
+ *
+ * The platform is responsible for allocating the `otMessage` to pass the received UDP payload. Ownership of the
+ * @p aMessage is passed to the OpenThread stack (which will free it once no longer needed).
+
+ * @param[in] aInstance      The OpenThread instance.
+ * @param[in] aMessage       The `otMessage` containing the received DHCPv6 payload. Ownership is passed to OT stack.
+ * @param[in] aInfraIfIndex  The index of the infrastructure interface from which the message was received..
+ */
+extern void otPlatInfraIfDhcp6PdClientHandleReceived(otInstance *aInstance,
+                                                     otMessage  *aMessage,
+                                                     uint32_t    aInfraIfIndex);
 
 /**
  * @}

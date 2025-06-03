@@ -374,6 +374,8 @@ openthread_core_files = [
   "backbone_router/multicast_listeners_table.hpp",
   "backbone_router/ndproxy_table.cpp",
   "backbone_router/ndproxy_table.hpp",
+  "border_router/dhcp6_pd_client.cpp",
+  "border_router/dhcp6_pd_client.hpp",
   "border_router/infra_if.cpp",
   "border_router/infra_if.hpp",
   "border_router/routing_manager.cpp",
