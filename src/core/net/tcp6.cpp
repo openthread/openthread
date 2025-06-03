@@ -223,7 +223,7 @@ Error Tcp::Endpoint::SendByExtension(size_t aNumBytes, uint32_t aFlags)
 
     if (IS_FASTOPEN(tp.t_flags))
     {
-        memset(&sin6p, 0, sizeof(sin6p));
+        ClearAllBytes(sin6p);
         memcpy(&sin6p.sin6_addr, &tp.faddr, sizeof(sin6p.sin6_addr));
         sin6p.sin6_port = tp.fport;
         name            = &sin6p;
