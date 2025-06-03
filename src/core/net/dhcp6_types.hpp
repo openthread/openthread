@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
-
 #include "common/clearable.hpp"
 #include "common/debug.hpp"
 #include "common/equatable.hpp"
@@ -157,7 +155,7 @@ public:
         kIaNa                      = 3,  ///< Identity Association for Non-temporary Addresses Option.
         kIaTa                      = 4,  ///< Identity Association for Temporary Addresses Option.
         kIaAddress                 = 5,  ///< Identity Association Address Option.
-        kRequestOption             = 6,  ///< Option Request Option.
+        kOptionRequest             = 6,  ///< Option Request Option.
         kPreference                = 7,  ///< Preference Option.
         kElapsedTime               = 8,  ///< Elapsed Time Option.
         kRelayMessage              = 9,  ///< Relay Message Option.
@@ -176,6 +174,7 @@ public:
         kLeaseQuery                = 44, ///< Lease Query Option.
         kClientData                = 45, ///< Client Data Option.
         kClientLastTransactionTime = 46, ///< Client Last Transaction Time Option.
+        kSolMaxRt                  = 82, ///< SOL_MAX_RT Option (Max Solicit timeout value).
     };
 
     /**
@@ -439,6 +438,7 @@ protected:
     static Error Read(Option::Code aCode, const Message &aMessage, OffsetRange &aDuidOffsetRange);
     static Error ReadEui64(Option::Code aCode, const Message &aMessage, Mac::ExtAddress &aExtAddress);
     static Error MatchesEui64(Option::Code aCode, const Message &aMessage, const Mac::ExtAddress &aExtAddress);
+    static Error Append(Option::Code aCode, Message &aMessage, const void *aDuid, uint16_t aDuidLength);
     static Error AppendEui64(Option::Code aCode, Message &aMessage, const Mac::ExtAddress &aExtAddress);
 };
 
@@ -537,6 +537,21 @@ public:
     static Error ReadAsEui64Duid(const Message &aMessage, Mac::ExtAddress &aExtAddress)
     {
         return IdOption::ReadEui64(Option::kServerId, aMessage, aExtAddress);
+    }
+
+    /**
+     * Appends a Server Identifier option to a DHCPv6 message with a given raw DUID.
+     *
+     * @param[in,out] aMessage      The message to which to append the Server ID option.
+     * @param[in]     aDuid         A pointer to a buffer containing the DUID bytes.
+     * @param[in]     aDuidLength   The DUID length in bytes.
+     *
+     * @retval kErrorNone     Successfully appended the Server ID option.
+     * @retval kErrorNoBufs   Insufficient available buffers to grow the message.
+     */
+    static Error AppendWithDuid(Message &aMessage, const void *aDuid, uint16_t aDuidLength)
+    {
+        return IdOption::Append(Option::kServerId, aMessage, aDuid, aDuidLength);
     }
 
     /**
@@ -693,6 +708,36 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
+ * Represents a Preference DHCPv6 Option.
+ */
+OT_TOOL_PACKED_BEGIN
+class PreferenceOption : public Option
+{
+public:
+    /**
+     * Initializes the DHCPv6 Option.
+     */
+    void Init(void) { SetCode(kPreference), SetLength(sizeof(*this) - sizeof(Option)); }
+
+    /**
+     * Returns the preference value.
+     *
+     * @returns The preference value. Higher value is preferred.
+     */
+    uint16_t GetPreference(void) const { return mPreference; }
+
+    /**
+     * Sets the preference.
+     *
+     * @param[in] aPreference  The preference value.
+     */
+    void SetPreference(uint16_t aPreference) { mPreference = aPreference; }
+
+private:
+    uint8_t mPreference;
+} OT_TOOL_PACKED_END;
+
+/**
  * Represents an Elapsed Time DHCPv6 Option.
  */
 OT_TOOL_PACKED_BEGIN
@@ -705,18 +750,29 @@ public:
     void Init(void) { SetCode(kElapsedTime), SetLength(sizeof(*this) - sizeof(Option)); }
 
     /**
-     * Returns the elapsed time since solicit starts.
+     * Returns the elapsed time.
      *
-     * @returns The elapsed time since solicit starts.
+     * @returns The elapsed time (in unit of hundredths of a second).
      */
     uint16_t GetElapsedTime(void) const { return BigEndian::HostSwap16(mElapsedTime); }
 
     /**
-     * Sets the elapsed time since solicit starts.
+     * Sets the elapsed time.
      *
-     * @param[in] aElapsedTime The elapsed time since solicit starts.
+     * @param[in] aElapsedTime  The elapsed time (in unit of hundredths of a second).
      */
     void SetElapsedTime(uint16_t aElapsedTime) { mElapsedTime = BigEndian::HostSwap16(aElapsedTime); }
+
+    /**
+     * Append an Elapsed Time Option to a message.
+     *
+     * @param[in,out] aMessage       The message to append to.
+     * @param[in]     aElapsedTime   The elapsed time (in unit of hundredths of a second).
+     *
+     * @retval kErrorNone    Successfully appended the option.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
+     */
+    static Error AppendTo(Message &aMessage, uint16_t aElapsedTime);
 
 private:
     uint16_t mElapsedTime;
@@ -830,12 +886,206 @@ public:
 };
 
 /**
+ * Represents an Identity Association for Prefix Delegation Option.
+ */
+OT_TOOL_PACKED_BEGIN
+class IaPdOption : public Option
+{
+public:
+    /**
+     * Initializes the DHCPv6 Option.
+     */
+    void Init(void) { SetCode(kIaPd), SetLength(sizeof(*this) - sizeof(Option)); }
+
+    /**
+     * Returns IAID.
+     *
+     * @returns The IAID.
+     */
+    uint32_t GetIaid(void) const { return BigEndian::HostSwap32(mIaid); }
+
+    /**
+     * Sets the IAID.
+     *
+     * @param[in]  aIaid  The IAID.
+     */
+    void SetIaid(uint32_t aIaid) { mIaid = BigEndian::HostSwap32(aIaid); }
+
+    /**
+     * Returns T1.
+     *
+     * @returns The value of T1.
+     */
+    uint32_t GetT1(void) const { return BigEndian::HostSwap32(mT1); }
+
+    /**
+     * Sets the value of T1.
+     *
+     * @param[in]  aT1  The value of T1.
+     */
+    void SetT1(uint32_t aT1) { mT1 = BigEndian::HostSwap32(aT1); }
+
+    /**
+     * Returns T2.
+     *
+     * @returns The value of T2.
+     */
+    uint32_t GetT2(void) const { return BigEndian::HostSwap32(mT2); }
+
+    /**
+     * Sets the value of T2.
+     *
+     * @param[in]  aT2  The value of T2.
+     */
+    void SetT2(uint32_t aT2) { mT2 = BigEndian::HostSwap32(aT2); }
+
+private:
+    uint32_t mIaid;
+    uint32_t mT1;
+    uint32_t mT2;
+    // Followed by sub-options
+} OT_TOOL_PACKED_END;
+
+/**
+ * Represents an Identity Association Prefix Option.
+ */
+OT_TOOL_PACKED_BEGIN
+class IaPrefixOption : public Option
+{
+public:
+    /**
+     * Initializes the DHCPv6 Option.
+     */
+    void Init(void) { SetCode(kIaPrefix), SetLength(sizeof(*this) - sizeof(Option)); }
+
+    /**
+     * Returns the preferred lifetime of the IPv6 address.
+     *
+     * @returns The preferred lifetime of the IPv6 address.
+     */
+    uint32_t GetPreferredLifetime(void) const { return BigEndian::HostSwap32(mPreferredLifetime); }
+
+    /**
+     * Sets the preferred lifetime of the IPv6 address.
+     *
+     * @param[in]  aPreferredLifetime  The preferred lifetime of the IPv6 address.
+     */
+    void SetPreferredLifetime(uint32_t aPreferredLifetime)
+    {
+        mPreferredLifetime = BigEndian::HostSwap32(aPreferredLifetime);
+    }
+
+    /**
+     * Returns the valid lifetime of the IPv6 address.
+     *
+     * @returns The valid lifetime of the IPv6 address.
+     */
+    uint32_t GetValidLifetime(void) const { return BigEndian::HostSwap32(mValidLifetime); }
+
+    /**
+     * Sets the valid lifetime of the IPv6 address.
+     *
+     * @param[in]  aValidLifetime  The valid lifetime of the IPv6 address.
+     */
+    void SetValidLifetime(uint32_t aValidLifetime) { mValidLifetime = BigEndian::HostSwap32(aValidLifetime); }
+
+    /**
+     * Returns the prefix length in bits.
+     *
+     * @returns The prefix length in bits.
+     */
+    uint8_t GetPrefixLength(void) const { return mPrefixLength; }
+
+    /**
+     * Reads the prefix and its length from the option.
+     *
+     * @param[out] aPrefix  A reference to an `Ip6::Prefix` to return the prefix and its length.
+     */
+    void GetPrefix(Ip6::Prefix &aPrefix) const;
+
+    /**
+     * Sets the prefix and its length in the option.
+     *
+     * @param[in] aPrefix  An IPv6 prefix.
+     */
+    void SetPrefix(const Ip6::Prefix &aPrefix);
+
+private:
+    uint32_t     mPreferredLifetime;
+    uint32_t     mValidLifetime;
+    uint8_t      mPrefixLength;
+    Ip6::Address mPrefix;
+    // Can be followed by sub-options.
+} OT_TOOL_PACKED_END;
+
+/**
+ * Represents a Server Unicast Option.
+ */
+OT_TOOL_PACKED_BEGIN
+class ServerUnicastOption : public Option
+{
+public:
+    /**
+     * Initializes the DHCPv6 Option.
+     */
+    void Init(void) { SetCode(kServerUnicast), SetLength(sizeof(*this) - sizeof(Option)); }
+
+    /**
+     * Returns the server IPv6 address.
+     *
+     * @returns the server IPv6 address.
+     */
+    const Ip6::Address &GetServerAddress(void) const { return mServerAddress; }
+
+    /**
+     * Sets the server IPv6 address.
+     *
+     * @param[in] aServerAddress  The server IPv6 address.
+     */
+    void SetServerAddress(const Ip6::Address &aServerAddress) { mServerAddress = aServerAddress; }
+
+private:
+    Ip6::Address mServerAddress;
+} OT_TOOL_PACKED_END;
+
+/**
+ * Represents an SOL_MAX_RT Option (Max Solicit timeout value).
+ */
+OT_TOOL_PACKED_BEGIN
+class SolMaxRtOption : public Option
+{
+public:
+    static constexpr uint32_t kMinSolMaxRt = 60;    ///< Minimum SOL_MAX_RT value.
+    static constexpr uint32_t kMaxSolMaxRt = 86400; ///< Maximum SOL_MAX_RT value.
+
+    /**
+     * Initializes the DHCPv6 Option.
+     */
+    void Init(void) { SetCode(kSolMaxRt), SetLength(sizeof(*this) - sizeof(Option)); }
+
+    /**
+     * Returns the SOL_MAX_RT value.
+     *
+     * @returns The SOL_MAX_RT value (in seconds).
+     */
+    uint16_t GetSolMaxRt(void) const { return BigEndian::HostSwap32(mSolMaxRt); }
+
+    /**
+     * Sets the SOL_MAX_RT.
+     *
+     * @param[in] aSolMaxRt  The SOL_MAX_RT value (in seconds).
+     */
+    void SetSolMaxRt(uint32_t aSolMaxRt) { mSolMaxRt = BigEndian::HostSwap32(aSolMaxRt); }
+
+private:
+    uint32_t mSolMaxRt;
+} OT_TOOL_PACKED_END;
+
+/**
  * @}
  */
 
 } // namespace Dhcp6
 } // namespace ot
-
-#endif // #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
 #endif // DHCP6_TYPES_HPP_

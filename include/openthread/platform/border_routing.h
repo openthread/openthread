@@ -45,39 +45,53 @@ extern "C" {
 #endif
 
 /**
- * Handles ICMP6 RA messages received on the Thread interface on the platform.
+ * Callback from the platform to report DHCPv6 Prefix Delegation (PD) prefixes.
  *
- * The `aMessage` should point to a buffer of a valid ICMPv6 message (without IP headers) with router advertisement as
- * the value of type field of the message.
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` and `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE` to
+ * be enabled, while `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE` should be disabled.
  *
- * When DHCPv6 PD is disabled, the message will be dropped silently.
+ * When `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE` is enabled, the OpenThread stack's native DHCPv6
+ * PD client will be used. Otherwise, the platform layer is expected to interact with DHCPv6 servers to acquire
+ * and provide the delegated prefix(es) using this callback or `otPlatBorderRoutingProcessDhcp6PdPrefix()`.
  *
- * Note: RA messages will not be forwarded into Thread networks, while for many platforms, RA messages is the way of
- * distributing a prefix and other infomations to the downstream network. The typical usecase of this function is to
- * handle the router advertisement messages sent by the platform as a result of DHCPv6 Prefix Delegation.
+ * In this function, an ICMPv6 Router Advertisement (received on the platform's Thread interface) is passed to the
+ * OpenThread stack. This RA message is intended as a mechanism to distribute DHCPv6 PD prefixes to a Thread Border
+ * Router. Each Prefix Information Option (PIO) in the RA is evaluated as a candidate DHCPv6 PD prefix.
  *
- * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE`.
+ * This function can be called again to renew/refresh the lifetimes of PD prefixes or to signal their deprecation
+ * (by setting a zero "preferred lifetime") or removal (by setting a zero "valid lifetime").
+ *
+ * Important note: it is not expected that the RA message will contain all currently valid PD prefixes. The OT stack
+ * will parse the RA and process all included PIOs as PD prefix candidates. Any previously reported PD prefix (from an
+ * earlier call to this function or `otPlatBorderRoutingProcessDhcp6PdPrefix()`) that does not appear in the new RA
+ * remains unchanged (i.e., it will be assumed valid until its previously indicated lifetime expires).
+ *
+ * The `aMessage` should point to a buffer containing the ICMPv6 message payload (excluding the IP headers but
+ * including the ICMPv6 header) with "Router Advertisement" (code 134) as the value of the `Type` field in the ICMPv6
+ * header.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
- * @param[in] aMessage  A pointer to an ICMPv6 RouterAdvertisement message.
- * @param[in] aLength   The length of ICMPv6 RouterAdvertisement message.
+ * @param[in] aMessage  A pointer to an ICMPv6 Router Advertisement message.
+ * @param[in] aLength   The length of the ICMPv6 Router Advertisement message.
  */
 extern void otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength);
 
 /**
- * Process a prefix received from the DHCPv6 PD Server. The prefix is received on
- * the DHCPv6 PD client callback and provided to the Routing Manager via this
- * API.
+ * Callback to report a single DHCPv6 Prefix Delegation (PD) prefix.
  *
- * The prefix lifetime can be updated by calling the function again with updated time values.
- * If the preferred lifetime of the prefix is set to 0, the prefix becomes deprecated.
- * When this function is called multiple times, the smallest prefix is preferred as this rule allows
- * choosing a GUA instead of a ULA.
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` and `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE` to
+ * be enabled, while `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE` should be disabled.
  *
- * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE`.
+ * When `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE` is enabled, the OpenThread stack's native DHCPv6
+ * PD client will be used. Otherwise, the platform layer is expected to interact with DHCPv6 servers to acquire
+ * and provide the delegated prefix(es) using this callback or `otPlatBorderRoutingProcessIcmp6Ra()`.
  *
- * @param[in] aInstance   A pointer to an OpenThread instance.
- * @param[in] aPrefixInfo A pointer to the prefix information structure
+ * This function can be called again to renew/refresh the lifetimes of PD prefixes or to signal their deprecation
+ * (by setting a zero "preferred lifetime") or removal (by setting a zero "valid lifetime").  This function may be
+ * called multiple times to provide different PD prefixes.
+ *
+ * @param[in] aInstance     A pointer to an OpenThread instance.
+ * @param[in] aPrefixInfo   A pointer to the prefix information structure.
  */
 extern void otPlatBorderRoutingProcessDhcp6PdPrefix(otInstance                            *aInstance,
                                                     const otBorderRoutingPrefixTableEntry *aPrefixInfo);

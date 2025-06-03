@@ -73,6 +73,7 @@
 #include "backbone_router/bbr_leader.hpp"
 #include "backbone_router/bbr_local.hpp"
 #include "backbone_router/bbr_manager.hpp"
+#include "border_router/dhcp6_pd_client.hpp"
 #include "border_router/routing_manager.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/code_utils.hpp"
@@ -702,6 +703,9 @@ private:
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     BorderRouter::RoutingManager mRoutingManager;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+    BorderRouter::Dhcp6PdClient mDhcp6PdClient;
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
@@ -1069,8 +1073,10 @@ template <> inline Utils::Otns &Instance::Get(void) { return mOtns; }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 template <> inline BorderRouter::RoutingManager &Instance::Get(void) { return mRoutingManager; }
-
-template <> inline BorderRouter::InfraIf &Instance::Get(void) { return mRoutingManager.mInfraIf; }
+template <> inline BorderRouter::InfraIf        &Instance::Get(void) { return mRoutingManager.mInfraIf; }
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+template <> inline BorderRouter::Dhcp6PdClient &Instance::Get(void) { return mDhcp6PdClient; }
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
