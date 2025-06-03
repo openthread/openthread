@@ -55,6 +55,7 @@
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
+#include "posix/platform/infra_if.hpp"
 #include "posix/platform/ip6_utils.hpp"
 #include "posix/platform/mainloop.hpp"
 #include "posix/platform/udp.hpp"
@@ -92,10 +93,21 @@ otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMes
     peerAddr.sin6_family = AF_INET6;
     CopyIp6AddressTo(aMessageInfo.mPeerAddr, &peerAddr.sin6_addr);
 
-    if (IsIp6AddressLinkLocal(aMessageInfo.mPeerAddr) && !aMessageInfo.mIsHostInterface)
+    // sin6_scope_id must be set >0 only for link-local, for other scopes it remains 0.
+    if (IsIp6AddressLinkLocal(aMessageInfo.mPeerAddr))
     {
-        // sin6_scope_id only works for link local destinations
-        peerAddr.sin6_scope_id = gNetifIndex;
+        if (aMessageInfo.mIsHostInterface)
+        {
+#if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
+            peerAddr.sin6_scope_id = ot::Posix::InfraNetif::Get().GetNetifIndex();
+#else
+            // remains 0 if we cannot determine a host ifIndex
+#endif
+        }
+        else
+        {
+            peerAddr.sin6_scope_id = gNetifIndex;
+        }
     }
 
     memset(control, 0, sizeof(control));
@@ -133,7 +145,8 @@ otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMes
         cmsg->cmsg_type  = IPV6_PKTINFO;
         cmsg->cmsg_len   = CMSG_LEN(sizeof(pktinfo));
 
-        pktinfo.ipi6_ifindex = aMessageInfo.mIsHostInterface ? 0 : gNetifIndex;
+        // link-local requires ifindex to be >0, 0 is allowed for other scopes
+        pktinfo.ipi6_ifindex = peerAddr.sin6_scope_id;
 
         CopyIp6AddressTo(aMessageInfo.mSockAddr, &pktinfo.ipi6_addr);
         memcpy(CMSG_DATA(cmsg), &pktinfo, sizeof(pktinfo));
@@ -144,7 +157,7 @@ otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMes
 #ifdef __APPLE__
     msg.msg_controllen = static_cast<socklen_t>(controlLength);
 #else
-    msg.msg_controllen           = controlLength;
+    msg.msg_controllen = controlLength;
 #endif
 
     rval = sendmsg(aFd, &msg, 0);
@@ -302,7 +315,7 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
 #else  // __NetBSD__ || __FreeBSD__ || __APPLE__
         unsigned int netifIndex = 0;
         VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_BOUND_IF, &netifIndex, sizeof(netifIndex)) == 0,
-                               error = OT_ERROR_FAILED);
+                     error = OT_ERROR_FAILED);
 #endif // __linux__
         break;
     }
@@ -313,7 +326,7 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
                      error = OT_ERROR_FAILED);
 #else  // __NetBSD__ || __FreeBSD__ || __APPLE__
         VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_BOUND_IF, &gNetifIndex, sizeof(gNetifIndex)) == 0,
-                               error = OT_ERROR_FAILED);
+                     error = OT_ERROR_FAILED);
 #endif // __linux__
         break;
     }
@@ -382,8 +395,8 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
 
         if (getsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &netifName, &len) != 0)
         {
-                      ot::Posix::Udp::LogWarn("Failed to read socket bound device: %s", strerror(errno));
-                      len = 0;
+            ot::Posix::Udp::LogWarn("Failed to read socket bound device: %s", strerror(errno));
+            len = 0;
         }
 
         // There is a bug in linux that connecting to AF_UNSPEC does not disconnect.
@@ -394,11 +407,11 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
 
         if (len > 0 && netifName[0] != '\0')
         {
-                      fd = FdFromHandle(aUdpSocket->mHandle);
-                      VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &netifName, len) == 0, {
-                          ot::Posix::Udp::LogWarn("Failed to bind to device: %s", strerror(errno));
-                          error = OT_ERROR_FAILED;
-                      });
+            fd = FdFromHandle(aUdpSocket->mHandle);
+            VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &netifName, len) == 0, {
+                ot::Posix::Udp::LogWarn("Failed to bind to device: %s", strerror(errno));
+                error = OT_ERROR_FAILED;
+            });
         }
 
         ExitNow();

@@ -47,7 +47,7 @@ typedef struct utilsSocket
     union
     {
         struct sockaddr_in  mSockAddr4; ///< The IPv4 group sock address.
-        struct sockaddr_in6 mSockAddr6; ///< The IPv4 group sock address.
+        struct sockaddr_in6 mSockAddr6; ///< The IPv6 group sock address.
     } mGroupAddr;                       ///< The group sock address for simulating radio.
 } utilsSocket;
 
