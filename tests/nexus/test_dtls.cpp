@@ -71,6 +71,9 @@ const char *ConnectEventToString(Dtls::Session::ConnectEvent aEvent)
     case Dtls::Session::kDisconnectedError:
         str = "kDisconnectedError";
         break;
+    case Dtls::Session::kDisconnectedTimeout:
+        str = "kDisconnectedTimeout";
+        break;
     }
 
     return str;
