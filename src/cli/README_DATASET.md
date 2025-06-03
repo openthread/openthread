@@ -346,7 +346,7 @@ Done
 
 ### active
 
-Usage: `dataset active [-x]`
+Usage: `dataset active [-x|-ns]`
 
 Print Active Operational Dataset in human-readable form.
 
@@ -362,6 +362,24 @@ Network Key: f366cec7a446bab978d90d27abe38f23
 Network Name: OpenThread-5938
 PAN ID: 0x5938
 PSKc: 3ca67c969efb0d0c74a4d8ee923b576c
+Security Policy: 672 onrc 0
+Done
+```
+
+Print Active Operational Dataset in human-readable form and redact the sensitive values.
+
+```bash
+> dataset active -ns
+Active Timestamp: 1
+Channel: 15
+Wake-up Channel: 16
+Channel Mask: 0x07fff800
+Ext PAN ID: 39758ec8144b07fb
+Mesh Local Prefix: fdf1:f1ad:d079:7dc0::/64
+Network Key: [Redacted]
+Network Name: OpenThread-5938
+PAN ID: 0x5938
+PSKc: [Redacted]
 Security Policy: 672 onrc 0
 Done
 ```
@@ -620,7 +638,7 @@ Done
 
 ### pending
 
-Usage: `dataset pending [-x]`
+Usage: `dataset pending [-x|-ns]`
 
 Print Pending Operational Dataset in human-readable form.
 
@@ -637,6 +655,25 @@ Network Key: ed916e454d96fd00184f10a6f5c9e1d3
 Network Name: OpenThread-bff8
 PAN ID: 0xbff8
 PSKc: 264f78414adc683191863d968f72d1b7
+Security Policy: 672 onrc 0
+Done
+```
+
+Print Pending Operational Dataset in human-readable form and redact the sensitive values.
+
+```bash
+> dataset pending -ns
+Pending Timestamp: 2
+Active Timestamp: 1
+Channel: 26
+Channel Mask: 0x07fff800
+Delay: 58706
+Ext PAN ID: a74182f4d3f4de41
+Mesh Local Prefix: fd46:c1b9:e159:5574::/64
+Network Key: [Redacted]
+Network Name: OpenThread-bff8
+PAN ID: 0xbff8
+PSKc: [Redacted]
 Security Policy: 672 onrc 0
 Done
 ```
