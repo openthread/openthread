@@ -67,21 +67,19 @@ Mle::Mle(Instance &aInstance)
     , mChildUpdateAttempts(0)
     , mDataRequestAttempts(0)
     , mAnnounceChannel(0)
-    , mAlternateChannel(0)
     , mRloc16(kInvalidRloc16)
     , mPreviousParentRloc(kInvalidRloc16)
     , mAttachCounter(0)
     , mAnnounceDelay(kAnnounceTimeout)
-    , mAlternatePanId(Mac::kPanIdBroadcast)
     , mStoreFrameCounterAhead(kDefaultStoreFrameCounterAhead)
     , mTimeout(kDefaultChildTimeout)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mCslTimeout(kDefaultCslTimeout)
 #endif
-    , mAlternateTimestamp(0)
     , mNeighborTable(aInstance)
     , mDelayedSender(aInstance)
     , mSocket(aInstance, *this)
+    , mAnnounceHandler(aInstance)
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     , mParentSearch(aInstance)
 #endif
@@ -270,6 +268,7 @@ void Mle::Stop(StopMode aMode)
     VerifyOrExit(!IsDisabled());
 
     mDelayedSender.Stop();
+    mAnnounceHandler.Stop();
     Get<KeyManager>().Stop();
     SetStateDetached();
     Get<ThreadNetif>().UnsubscribeMulticast(mRealmLocalAllThreadNodes);
@@ -793,8 +792,10 @@ void Mle::SetStateChild(uint16_t aRloc16)
     }
 #endif
 
-    // send announce after attached if needed
-    InformPreviousChannel();
+    if (mAnnounceHandler.IsAnnounceAttaching())
+    {
+        mAnnounceHandler.HandleAnnounceAttachSuccess();
+    }
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     mParentSearch.UpdateState();
@@ -812,16 +813,31 @@ void Mle::SetStateChild(uint16_t aRloc16)
     mPreviousParentRloc = mParent.GetRloc16();
 }
 
-void Mle::InformPreviousChannel(void)
+void Mle::AnnounceHandler::HandleAnnounceAttachSuccess(void)
 {
-    VerifyOrExit(mAlternatePanId != Mac::kPanIdBroadcast);
-    VerifyOrExit(IsChild() || IsRouter());
+    // Clear state and send announce on previous channel.
+
+    VerifyOrExit(mState == kStateAnnounceAttaching);
+    mState = kStateToInformPreviousChannel;
 
 #if OPENTHREAD_FTD
-    VerifyOrExit(!IsFullThreadDevice() || IsRouter() || !IsRouterRoleTransitionPending());
+    if (Get<Mle>().IsFullThreadDevice() && !Get<Mle>().IsRouter() && Get<Mle>().IsRouterRoleTransitionPending())
+    {
+        ExitNow();
+    }
 #endif
 
-    mAlternatePanId = Mac::kPanIdBroadcast;
+    InformPreviousChannel();
+
+exit:
+    return;
+}
+
+void Mle::AnnounceHandler::InformPreviousChannel(void)
+{
+    VerifyOrExit(mState == kStateToInformPreviousChannel);
+
+    mState = kStateIdle;
     Get<AnnounceBeginServer>().SendAnnounce(1 << mAlternateChannel);
 
 exit:
@@ -1504,10 +1520,6 @@ void Mle::HandleAttachTimer(void)
         mAttachCounter = 0;
         break;
 
-    case kAttachStateProcessAnnounce:
-        ProcessAnnounce();
-        break;
-
     case kAttachStateStart:
         LogNote("Attach attempt %d, %s %s", mAttachCounter, AttachModeToString(mAttachMode),
                 ReattachStateToString(mReattachState));
@@ -1640,11 +1652,9 @@ uint32_t Mle::Reattach(void)
     case kSelectedParent:
         if (!IsChild())
         {
-            if (mAlternatePanId != Mac::kPanIdBroadcast)
+            if (mAnnounceHandler.IsAnnounceAttaching())
             {
-                IgnoreError(Get<Mac::Mac>().SetPanChannel(mAlternateChannel));
-                Get<Mac::Mac>().SetPanId(mAlternatePanId);
-                mAlternatePanId = Mac::kPanIdBroadcast;
+                mAnnounceHandler.HandleAnnounceAttachFailure();
                 IgnoreError(BecomeDetached());
             }
 #if OPENTHREAD_FTD
@@ -2559,7 +2569,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         break;
 
     case kCommandAnnounce:
-        HandleAnnounce(rxInfo);
+        mAnnounceHandler.HandleAnnounce(rxInfo);
         break;
 
     case kCommandChildUpdateRequest:
@@ -3678,7 +3688,7 @@ exit:
     LogProcessError(kTypeChildUpdateResponseAsChild, error);
 }
 
-void Mle::HandleAnnounce(RxInfo &aRxInfo)
+void Mle::AnnounceHandler::HandleAnnounce(RxInfo &aRxInfo)
 {
     Error              error = kErrorNone;
     ChannelTlvValue    channelTlvValue;
@@ -3711,10 +3721,10 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
             VerifyOrExit(!channelAndPanIdMatch);
         }
 
-        SendAnnounce(channel);
+        Get<Mle>().SendAnnounce(channel);
 
 #if OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE
-        SendAnnounce(channel, aRxInfo.mMessageInfo.GetPeerAddr());
+        Get<Mle>().SendAnnounce(channel, aRxInfo.mMessageInfo.GetPeerAddr());
 #endif
     }
     else if (timestampCompare > 0)
@@ -3723,7 +3733,7 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
         // channel and pan-id match the values from the received MLE
         // Announce message.
 
-        if (IsDetached())
+        if (Get<Mle>().IsDetached())
         {
             VerifyOrExit(!channelAndPanIdMatch);
         }
@@ -3746,7 +3756,7 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
             }
         }
 
-        if (mAttachState == kAttachStateProcessAnnounce)
+        if (mState == kStateToAnnounceAttach)
         {
             VerifyOrExit(mAlternateTimestamp < timestamp.GetSeconds());
         }
@@ -3754,9 +3764,8 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
         mAlternateTimestamp = timestamp.GetSeconds();
         mAlternateChannel   = channel;
         mAlternatePanId     = panId;
-        SetAttachState(kAttachStateProcessAnnounce);
-        mAttachTimer.Start(kAnnounceProcessTimeout);
-        mAttachCounter = 0;
+        mState              = kStateToAnnounceAttach;
+        mTimer.Start(kAnnounceProcessTimeout);
 
         LogNote("Delay processing Announce - channel %d, panid 0x%02x", channel, panId);
     }
@@ -3854,16 +3863,16 @@ exit:
 }
 #endif
 
-void Mle::ProcessAnnounce(void)
+void Mle::AnnounceHandler::StartAnnounceAttach(void)
 {
     uint8_t  newChannel = mAlternateChannel;
     uint16_t newPanId   = mAlternatePanId;
 
-    OT_ASSERT(mAttachState == kAttachStateProcessAnnounce);
+    VerifyOrExit(mState == kStateToAnnounceAttach);
 
-    LogNote("Processing Announce - channel %d, panid 0x%02x", newChannel, newPanId);
+    LogNote("Starting Announce attach - channel %d, panid 0x%02x", newChannel, newPanId);
 
-    Stop(kKeepNetworkDatasets);
+    Get<Mle>().Stop(kKeepNetworkDatasets);
 
     // Save the current/previous channel and pan-id
     mAlternateChannel   = Get<Mac::Mac>().GetPanChannel();
@@ -3873,7 +3882,11 @@ void Mle::ProcessAnnounce(void)
     IgnoreError(Get<Mac::Mac>().SetPanChannel(newChannel));
     Get<Mac::Mac>().SetPanId(newPanId);
 
-    IgnoreError(Start(kAnnounceAttach));
+    mState = kStateAnnounceAttaching;
+    IgnoreError(Get<Mle>().Start(kAnnounceAttach));
+
+exit:
+    return;
 }
 
 uint16_t Mle::GetParentRloc16(void) const { return (mParent.IsStateValid() ? mParent.GetRloc16() : kInvalidRloc16); }
@@ -4341,19 +4354,17 @@ const char *Mle::AttachModeToString(AttachMode aMode)
 const char *Mle::AttachStateToString(AttachState aState)
 {
     static const char *const kAttachStateStrings[] = {
-        "Idle",            // (0) kAttachStateIdle
-        "ProcessAnnounce", // (1) kAttachStateProcessAnnounce
-        "Start",           // (2) kAttachStateStart
-        "ParentReq",       // (3) kAttachStateParent
-        "Announce",        // (4) kAttachStateAnnounce
-        "ChildIdReq",      // (5) kAttachStateChildIdRequest
+        "Idle",       // (0) kAttachStateIdle
+        "Start",      // (1) kAttachStateStart
+        "ParentReq",  // (2) kAttachStateParent
+        "Announce",   // (3) kAttachStateAnnounce
+        "ChildIdReq", // (4) kAttachStateChildIdRequest
     };
 
     struct EnumCheck
     {
         InitEnumValidatorCounter();
         ValidateNextEnum(kAttachStateIdle);
-        ValidateNextEnum(kAttachStateProcessAnnounce);
         ValidateNextEnum(kAttachStateStart);
         ValidateNextEnum(kAttachStateParentRequest);
         ValidateNextEnum(kAttachStateAnnounce);
@@ -5593,6 +5604,35 @@ void Mle::ParentCandidate::CopyTo(Parent &aParent) const
 
     aParent = *candidateAsParent;
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// AnnounceHanlder
+
+Mle::AnnounceHandler::AnnounceHandler(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mState(kStateIdle)
+    , mTimer(aInstance)
+{
+}
+
+void Mle::AnnounceHandler::Stop(void)
+{
+    mTimer.Stop();
+    mState = kStateIdle;
+}
+
+void Mle::AnnounceHandler::HandleAnnounceAttachFailure(void)
+{
+    VerifyOrExit(mState == kStateAnnounceAttaching);
+    mState = kStateIdle;
+    IgnoreError(Get<Mac::Mac>().SetPanChannel(mAlternateChannel));
+    Get<Mac::Mac>().SetPanId(mAlternatePanId);
+
+exit:
+    return;
+}
+
+void Mle::AnnounceHandler::HandleTimer(void) { StartAnnounceAttach(); }
 
 } // namespace Mle
 } // namespace ot
