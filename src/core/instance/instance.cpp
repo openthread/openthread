@@ -263,6 +263,9 @@ Instance::Instance(void)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     , mRoutingManager(*this)
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+    , mDhcp6PdClient(*this)
+#endif
 #endif
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     , mNat64Translator(*this)

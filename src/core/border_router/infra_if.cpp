@@ -172,6 +172,36 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+
+void InfraIf::SetDhcp6ListeningEnabled(bool aEnable)
+{
+    otPlatInfraIfDhcp6PdClientSetListeningEnabled(&GetInstance(), aEnable, mIfIndex);
+}
+
+void InfraIf::SendDhcp6(Message &aMessage, Ip6::Address &aDestAddress)
+{
+    otPlatInfraIfDhcp6PdClientSend(&GetInstance(), &aMessage, &aDestAddress, mIfIndex);
+}
+
+void InfraIf::HandleDhcp6Received(Message &aMessage, uint32_t aInfraIfIndex)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mInitialized && mIsRunning, error = kErrorInvalidState);
+    VerifyOrExit(aInfraIfIndex == mIfIndex, error = kErrorDrop);
+
+    Get<Dhcp6PdClient>().HandleReceived(aMessage);
+
+exit:
+    if (error != kErrorNone)
+    {
+        LogDebg("Dropped DHCPv6 message: %s", ErrorToString(error));
+    }
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+
 InfraIf::InfoString InfraIf::ToString(void) const
 {
     InfoString string;
@@ -205,6 +235,15 @@ extern "C" void otPlatInfraIfDiscoverNat64PrefixDone(otInstance        *aInstanc
 {
     AsCoreType(aInstance).Get<InfraIf>().DiscoverNat64PrefixDone(aInfraIfIndex, AsCoreType(aIp6Prefix));
 }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+extern "C" void otPlatInfraIfDhcp6PdClientHandleReceived(otInstance *aInstance,
+                                                         otMessage  *aMessage,
+                                                         uint32_t    aInfraIfIndex)
+{
+    AsCoreType(aInstance).Get<InfraIf>().HandleDhcp6Received(AsCoreType(aMessage), aInfraIfIndex);
+}
+#endif
 
 } // namespace BorderRouter
 } // namespace ot
