@@ -98,6 +98,94 @@ void Option::UpdateOptionLengthInMessage(Message &aMessage, uint16_t aOffset)
     aMessage.Write(aOffset, option);
 }
 
+Error Option::AppendOption(Message &aMessage, Code aCode, const void *aData, uint16_t aDataLength)
+{
+    Error  error;
+    Option option;
+
+    option.SetCode(aCode);
+    option.SetLength(aDataLength);
+
+    SuccessOrExit(error = aMessage.Append(option));
+    VerifyOrExit(aDataLength != 0);
+    error = aMessage.AppendBytes(aData, aDataLength);
+
+exit:
+    return error;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Eui64Duid
+
+void Eui64Duid::Init(const Mac::ExtAddress &aExtAddress)
+{
+    SetType(Duid::kTypeLinkLayerAddress);
+    SetHardwareType(Duid::kHardwareTypeEui64);
+    mLinkLayerAddress = aExtAddress;
+}
+
+bool Eui64Duid::IsValid(void) const
+{
+    return (GetType() == Duid::kTypeLinkLayerAddress) && (GetHardwareType() == Duid::kHardwareTypeEui64);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// IdOption
+
+Error IdOption::Read(Option::Code aCode, const Message &aMessage, OffsetRange &aDuidOffsetRange)
+{
+    Error       error;
+    OffsetRange optionOffsetRange;
+
+    SuccessOrExit(error = Option::FindOption(aMessage, aCode, optionOffsetRange));
+    optionOffsetRange.AdvanceOffset(sizeof(Option));
+
+    VerifyOrExit(optionOffsetRange.GetLength() >= Duid::kMinSize, error = kErrorParse);
+
+    aDuidOffsetRange = optionOffsetRange;
+    aDuidOffsetRange.ShrinkLength(Duid::kMaxSize);
+
+exit:
+    return error;
+}
+
+Error IdOption::ReadEui64(Option::Code aCode, const Message &aMessage, Mac::ExtAddress &aExtAddress)
+{
+    Error       error;
+    OffsetRange duidOffsetRange;
+    Eui64Duid   eui64Duid;
+
+    SuccessOrExit(error = Read(aCode, aMessage, duidOffsetRange));
+    SuccessOrExit(error = aMessage.Read(duidOffsetRange, eui64Duid));
+    VerifyOrExit(eui64Duid.IsValid(), error = kErrorParse);
+
+    aExtAddress = eui64Duid.GetLinkLayerAddress();
+
+exit:
+    return error;
+}
+
+Error IdOption::MatchesEui64(Option::Code aCode, const Message &aMessage, const Mac::ExtAddress &aExtAddress)
+{
+    Error           error;
+    Mac::ExtAddress extAddress;
+
+    SuccessOrExit(error = ReadEui64(aCode, aMessage, extAddress));
+    VerifyOrExit(extAddress == aExtAddress, error = kErrorNotFound);
+
+exit:
+    return error;
+}
+
+Error IdOption::AppendEui64(Option::Code aCode, Message &aMessage, const Mac::ExtAddress &aExtAddress)
+{
+    Eui64Duid eui64Duid;
+
+    eui64Duid.Init(aExtAddress);
+
+    return Option::AppendOption(aMessage, aCode, &eui64Duid, sizeof(eui64Duid));
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // StatusCodeOption
 
@@ -138,12 +226,7 @@ Error RapidCommitOption::FindIn(const Message &aMessage)
 
 Error RapidCommitOption::AppendTo(Message &aMessage)
 {
-    Option option;
-
-    option.SetCode(Option::kRapidCommit);
-    option.SetLength(0);
-
-    return aMessage.Append(option);
+    return Option::AppendOption(aMessage, Option::kRapidCommit, /* aData */ nullptr, 0);
 }
 
 } // namespace Dhcp6

@@ -191,11 +191,11 @@ exit:
 
 void Server::ProcessSolicit(Message &aMessage, const Ip6::Address &aDst, const TransactionId &aTransactionId)
 {
-    uint32_t       iaid;
-    ClientIdOption clientIdOption;
-    OffsetRange    offsetRange;
+    uint32_t        iaid;
+    Mac::ExtAddress clientAddress;
+    OffsetRange     offsetRange;
 
-    SuccessOrExit(ProcessClientIdOption(aMessage, clientIdOption));
+    SuccessOrExit(ClientIdOption::ReadAsEui64Duid(aMessage, clientAddress));
 
     // Server Identifier (assuming Rapid Commit, discard if present)
     VerifyOrExit(Option::FindOption(aMessage, Option::kServerId, offsetRange) == kErrorNotFound);
@@ -209,23 +209,10 @@ void Server::ProcessSolicit(Message &aMessage, const Ip6::Address &aDst, const T
     // IA_NA (discard if not present)
     SuccessOrExit(ProcessIaNaOption(aMessage, iaid));
 
-    SuccessOrExit(SendReply(aDst, aTransactionId, clientIdOption, iaid));
+    SuccessOrExit(SendReply(aDst, aTransactionId, clientAddress, iaid));
 
 exit:
     return;
-}
-
-Error Server::ProcessClientIdOption(const Message &aMessage, ClientIdOption &aClientIdOption)
-{
-    Error       error = kErrorNone;
-    OffsetRange offsetRange;
-
-    SuccessOrExit(error = Option::FindOption(aMessage, Option::kClientId, offsetRange));
-    SuccessOrExit(error = aMessage.Read(offsetRange, aClientIdOption));
-    VerifyOrExit(aClientIdOption.GetDuidType() == kDuidLinkLayerAddress, error = kErrorParse);
-    VerifyOrExit(aClientIdOption.GetDuidHardwareType() == kHardwareTypeEui64, error = kErrorParse);
-exit:
-    return error;
 }
 
 Error Server::ProcessElapsedTimeOption(const Message &aMessage)
@@ -306,10 +293,10 @@ void Server::ProcessIaAddressOption(const IaAddressOption &aAddressOption)
     }
 }
 
-Error Server::SendReply(const Ip6::Address   &aDst,
-                        const TransactionId  &aTransactionId,
-                        const ClientIdOption &aClientIdOption,
-                        uint32_t              aIaid)
+Error Server::SendReply(const Ip6::Address    &aDst,
+                        const TransactionId   &aTransactionId,
+                        const Mac::ExtAddress &aClientAddress,
+                        uint32_t               aIaid)
 {
     Error            error = kErrorNone;
     Ip6::MessageInfo messageInfo;
@@ -318,8 +305,8 @@ Error Server::SendReply(const Ip6::Address   &aDst,
     VerifyOrExit((message = mSocket.NewMessage()) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = AppendHeader(*message, aTransactionId));
     SuccessOrExit(error = AppendServerIdOption(*message));
-    SuccessOrExit(error = AppendClientIdOption(*message, aClientIdOption));
-    SuccessOrExit(error = AppendIaNaOption(*message, aIaid, aClientIdOption.GetDuidLinkLayerAddress()));
+    SuccessOrExit(error = AppendClientIdOption(*message, aClientAddress));
+    SuccessOrExit(error = AppendIaNaOption(*message, aIaid, aClientAddress));
     SuccessOrExit(error = AppendRapidCommitOption(*message));
 
     messageInfo.SetPeerAddr(aDst);
@@ -341,27 +328,18 @@ Error Server::AppendHeader(Message &aMessage, const TransactionId &aTransactionI
     return aMessage.Append(header);
 }
 
-Error Server::AppendClientIdOption(Message &aMessage, const ClientIdOption &aClientIdOption)
+Error Server::AppendClientIdOption(Message &aMessage, const Mac::ExtAddress &aClientAddress)
 {
-    return aMessage.Append(aClientIdOption);
+    return ClientIdOption::AppendWithEui64Duid(aMessage, aClientAddress);
 }
 
 Error Server::AppendServerIdOption(Message &aMessage)
 {
-    Error           error = kErrorNone;
-    ServerIdOption  option;
     Mac::ExtAddress eui64;
 
     Get<Radio>().GetIeeeEui64(eui64);
 
-    option.Init();
-    option.SetDuidType(kDuidLinkLayerAddress);
-    option.SetDuidHardwareType(kHardwareTypeEui64);
-    option.SetDuidLinkLayerAddress(eui64);
-    SuccessOrExit(error = aMessage.Append(option));
-
-exit:
-    return error;
+    return ServerIdOption::AppendWithEui64Duid(aMessage, eui64);
 }
 
 Error Server::AppendIaNaOption(Message &aMessage, uint32_t aIaid, const Mac::ExtAddress &aClientAddress)

@@ -257,150 +257,224 @@ public:
      */
     static void UpdateOptionLengthInMessage(Message &aMessage, uint16_t aOffset);
 
+    /**
+     * Appends a DHCPv6 Option with a given code and data to a message.
+     *
+     * @param[in,out]  aMessage            The message to append to.
+     * @param[in]      aCode               The option code to append.
+     * @param[in]      aData               A pointer to buffer containing the option data to append.
+     * @param[in]      aDataLength         The length of @p aData (in bytes).
+     *
+     * @retval kErrorNone     Successfully appended the Option to the message.
+     * @retval kErrorNoBufs   Insufficient available buffers to grow the message.
+     */
+    static Error AppendOption(Message &aMessage, Code aCode, const void *aData, uint16_t aDataLength);
+
 private:
     uint16_t mCode;
     uint16_t mLength;
 } OT_TOOL_PACKED_END;
 
 /**
- * DHCPv6 Unique Identifier (DUID) Type.
+ * Defines constants and types for DHCPv6 DUID (DHCP Unique Identifier).
  */
-enum DuidType : uint16_t
+class Duid
 {
-    kDuidLinkLayerAddressPlusTime = 1, ///< Link-layer address plus time (DUID-LLT).
-    kDuidEnterpriseNumber         = 2, ///< Vendor-assigned unique ID based on Enterprise Number (DUID-EN).
-    kDuidLinkLayerAddress         = 3, ///< Link-layer address (DUID-LL).
-    kDuidUniversallyUniqueId      = 4, ///< Universally Unique Identifier (DUID-UUID).
+public:
+    static constexpr uint16_t kMinSize = sizeof(uint16_t) + 1;   ///< Minimum size of DUID in bytes.
+    static constexpr uint16_t kMaxSize = sizeof(uint16_t) + 128; ///< Maximum size of DUID in bytes.
+
+    /**
+     * DHCPv6 Unique Identifier (DUID) Type.
+     */
+    enum Type : uint16_t
+    {
+        kTypeLinkLayerAddressPlusTime = 1, ///< Link-layer address plus time (DUID-LLT).
+        kTypeVendorAssigned           = 2, ///< Vendor-assigned unique ID based on Enterprise Number (DUID-EN).
+        kTypeLinkLayerAddress         = 3, ///< Link-layer address (DUID-LL).
+        kTypeUniversallyUniqueId      = 4, ///< Universally Unique Identifier (DUID-UUID).
+    };
+
+    /**
+     * DHCPv6 Unique Identifier (DUID) Hardware Type.
+     */
+    enum HardwareType : uint16_t
+    {
+        kHardwareTypeEthernet = 1,  ///< Ethernet HW Type.
+        kHardwareTypeEui64    = 27, ///< EUI64 HW Type.
+    };
+
+private:
+    Duid(void) = delete;
 };
 
 /**
- * DHCPv6 Unique Identifier (DUID) Hardware Type.
+ * Represents a DHCPv6 DUID based on EUI64 Link-layer address (DUID-LL).
  */
-enum HardwareType : uint16_t
+OT_TOOL_PACKED_BEGIN
+class Eui64Duid
 {
-    kHardwareTypeEthernet = 1,  ///< Ethernet HW Type.
-    kHardwareTypeEui64    = 27, ///< EUI64 HW Type.
+public:
+    /**
+     * Initializes the DUID-LL from a given Extended Address.
+     *
+     * @param[in] aExtAddress   The Extended Address.
+     */
+    void Init(const Mac::ExtAddress &aExtAddress);
+
+    /**
+     * Indicates whether or not the DUID-LL is valid, i.e. using the correct DUID type (`kTypeLinkLayerAddress`) and
+     * Hardware Type `kHardwareTypeEui64`.
+     *
+     * @returns TRUE   The DUID is valid.
+     * @returns FALSE  The DUID is not valid.
+     */
+    bool IsValid(void) const;
+
+    /**
+     * Gets the Link-layer address.
+     *
+     * @returns The Link-layer address.
+     */
+    const Mac::ExtAddress &GetLinkLayerAddress(void) const { return mLinkLayerAddress; }
+
+private:
+    uint16_t GetType(void) const { return BigEndian::HostSwap16(mDuidType); }
+    void     SetType(Duid::Type aDuidType) { mDuidType = BigEndian::HostSwap16(aDuidType); }
+    uint16_t GetHardwareType(void) const { return BigEndian::HostSwap16(mHardwareType); }
+    void     SetHardwareType(uint16_t aHardwareType) { mHardwareType = BigEndian::HostSwap16(aHardwareType); }
+
+    uint16_t        mDuidType;
+    uint16_t        mHardwareType;
+    Mac::ExtAddress mLinkLayerAddress;
+} OT_TOOL_PACKED_END;
+
+/**
+ *  Implements parsing and generation of Client/Server Identifier Options.
+ */
+class IdOption
+{
+protected:
+    IdOption(void) = delete;
+    static Error Read(Option::Code aCode, const Message &aMessage, OffsetRange &aDuidOffsetRange);
+    static Error ReadEui64(Option::Code aCode, const Message &aMessage, Mac::ExtAddress &aExtAddress);
+    static Error MatchesEui64(Option::Code aCode, const Message &aMessage, const Mac::ExtAddress &aExtAddress);
+    static Error AppendEui64(Option::Code aCode, Message &aMessage, const Mac::ExtAddress &aExtAddress);
 };
 
 /**
- * Represents a Client Identifier Option.
+ * Implements Client Identifier Option generation and parsing.
  */
-OT_TOOL_PACKED_BEGIN
-class ClientIdOption : public Option
+class ClientIdOption : private IdOption
 {
 public:
     /**
-     * Initializes the DHCPv6 Option.
+     * Searches and reads the Client ID option from a DHCPv6 message, validating that it is a DUID based on an
+     * EUI-64 Link-Layer address (DUID-LL).
+     *
+     * @param[in]  aMessage     The message to search and read the Client ID option from.
+     * @param[out] aExtAddress  A reference to populate with the EUI-64 link-layer address on a successful read.
+     *
+     * @retval kErrorNone      Successfully read the Client ID as a DUID-LL. @p aExtAddress is updated.
+     * @retval kErrorNotFound  The Client ID option was not found in the message.
+     * @retval kErrorParse     The message is malformed, or the option was found but is not a valid DUID-LL format.
      */
-    void Init(void) { SetCode(kClientId), SetLength(sizeof(*this) - sizeof(Option)); }
+    static Error ReadAsEui64Duid(const Message &aMessage, Mac::ExtAddress &aExtAddress)
+    {
+        return IdOption::ReadEui64(Option::kClientId, aMessage, aExtAddress);
+    }
 
     /**
-     * Returns the client DUID Type.
+     * Appends a Client Identifier option to a DHCPv6 message.
      *
-     * @returns The client DUID Type.
+     * The appended option uses the EUI-64 Link-Layer address (DUID-LL) format.
+     *
+     * @param[in,out] aMessage      The message to which to append the Client ID option.
+     * @param[in]     aExtAddress   The EUI-64 address to use for creating the DUID.
+     *
+     * @retval kErrorNone     Successfully appended the Client ID option.
+     * @retval kErrorNoBufs   Insufficient available buffers to grow the message.
      */
-    DuidType GetDuidType(void) const { return static_cast<DuidType>(BigEndian::HostSwap16(mDuidType)); }
+    static Error AppendWithEui64Duid(Message &aMessage, const Mac::ExtAddress &aExtAddress)
+    {
+        return IdOption::AppendEui64(Option::kClientId, aMessage, aExtAddress);
+    }
 
     /**
-     * Sets the client DUID Type.
+     * Checks if the Client Identifier option in a DHCPv6 message matches a given EUI-64 address.
      *
-     * @param[in]  aDuidType  The client DUID Type.
-     */
-    void SetDuidType(DuidType aDuidType) { mDuidType = BigEndian::HostSwap16(static_cast<uint16_t>(aDuidType)); }
-
-    /**
-     * Returns the client DUID HardwareType.
+     * This method searches for the Client ID option, verifies it is a DUID-LL, and checks if its EUI-64 value
+     * matches the given extended address.
      *
-     * @returns The client DUID HardwareType.
-     */
-    uint16_t GetDuidHardwareType(void) const { return BigEndian::HostSwap16(mDuidHardwareType); }
-
-    /**
-     * Sets the client DUID HardwareType.
+     * @param[in] aMessage     The message containing the Client ID option to check.
+     * @param[in] aExtAddress  The EUI-64 address to compare against.
      *
-     * @param[in]  aHardwareType  The client DUID HardwareType.
+     * @retval kErrorNone      The Client ID option was found, is a valid DUID-LL, and matches @p aExtAddress.
+     * @retval kErrorNotFound  The Client ID option was not found or did not match the EUI-64 address.
+     * @retval kErrorParse     The message is malformed, or the option was found but is not a valid DUID-LL format.
      */
-    void SetDuidHardwareType(uint16_t aHardwareType) { mDuidHardwareType = BigEndian::HostSwap16(aHardwareType); }
-
-    /**
-     * Returns the client link-layer address.
-     *
-     * @returns The link-layer address.
-     */
-    const Mac::ExtAddress &GetDuidLinkLayerAddress(void) const { return mDuidLinkLayerAddress; }
-
-    /**
-     * Sets the client LinkLayerAddress.
-     *
-     * @param[in]  aAddress  The client LinkLayerAddress.
-     */
-    void SetDuidLinkLayerAddress(const Mac::ExtAddress &aAddress) { mDuidLinkLayerAddress = aAddress; }
-
-private:
-    uint16_t        mDuidType;
-    uint16_t        mDuidHardwareType;
-    Mac::ExtAddress mDuidLinkLayerAddress;
-} OT_TOOL_PACKED_END;
+    static Error MatchesEui64Duid(const Message &aMessage, const Mac::ExtAddress &aExtAddress)
+    {
+        return IdOption::MatchesEui64(Option::kClientId, aMessage, aExtAddress);
+    }
+};
 
 /**
- * Represents a Server Identifier Option.
+ * Implements Server Identifier Option generation and parsing.
  */
-OT_TOOL_PACKED_BEGIN
-class ServerIdOption : public Option
+class ServerIdOption : private IdOption
 {
 public:
     /**
-     * Initializes the DHCPv6 Option.
+     * Searches and reads the raw DUID from the Server Identifier option in a DHCPv6 message.
+     *
+     * This method does not interpret the DUID type. It validates that DUID has the expected minimum DUID size. It
+     * returns the `OffsetRange` corresponding to DUID in the message.
+     *
+     * @param[in]  aMessage          The message to search and read the Server ID option from.
+     * @param[out] aDuidOffsetRange  On success, is updated to return the offset range of the Server DUID.
+     *
+     * @retval kErrorNone      Successfully read the Server ID option. @p aDuidOffsetRange is updated.
+     * @retval kErrorNotFound  The Server ID option was not found in the message.
+     * @retval kErrorParse     The message is malformed and cannot be parsed.
      */
-    void Init(void) { SetCode(kServerId), SetLength(sizeof(*this) - sizeof(Option)); }
+    static Error ReadDuid(const Message &aMessage, OffsetRange &aDuidOffsetRange)
+    {
+        return IdOption::Read(Option::kServerId, aMessage, aDuidOffsetRange);
+    }
 
     /**
-     * Returns the server DUID Type.
+     * Searches and reads the Server ID option, validating that it is a DUID based on an EUI-64 Link-Layer address
+     * (DUID-LL).
      *
-     * @returns The server DUID Type.
+     * @param[in]  aMessage     The message to search and read the Server ID option from.
+     * @param[out] aExtAddress  A reference to populate with the EUI-64 link-layer address on a successful read.
+     *
+     * @retval kErrorNone      Successfully read the Server ID as a DUID-LL. @p aExtAddress is updated.
+     * @retval kErrorNotFound  The Server ID option was not found in the message.
+     * @retval kErrorParse     The message is malformed, or the option was found but is not a valid DUID-LL format.
      */
-    DuidType GetDuidType(void) const { return static_cast<DuidType>(BigEndian::HostSwap16(mDuidType)); }
+    static Error ReadAsEui64Duid(const Message &aMessage, Mac::ExtAddress &aExtAddress)
+    {
+        return IdOption::ReadEui64(Option::kServerId, aMessage, aExtAddress);
+    }
 
     /**
-     * Sets the server DUID Type.
+     * Appends a Server Identifier option to a DHCPv6 message.
      *
-     * @param[in]  aDuidType  The server DUID Type.
-     */
-    void SetDuidType(DuidType aDuidType) { mDuidType = BigEndian::HostSwap16(static_cast<uint16_t>(aDuidType)); }
-
-    /**
-     * Returns the server DUID HardwareType.
+     * The appended option uses the DUID based on an EUI-64 Link-Layer address (DUID-LL) format.
      *
-     * @returns The server DUID HardwareType.
-     */
-    uint16_t GetDuidHardwareType(void) const { return BigEndian::HostSwap16(mDuidHardwareType); }
-
-    /**
-     * Sets the server DUID Hardware Type.
+     * @param[in,out] aMessage      The message to which to append the Server ID option.
+     * @param[in]     aExtAddress   The EUI-64 address to use for creating the DUID.
      *
-     * @param[in]  aHardwareType  The server DUID HardwareType.
+     * @retval kErrorNone     Successfully appended the Server ID option.
+     * @retval kErrorNoBufs   Insufficient available buffers to grow the message.
      */
-    void SetDuidHardwareType(uint16_t aHardwareType) { mDuidHardwareType = BigEndian::HostSwap16(aHardwareType); }
-
-    /**
-     * Returns the server link-layer address.
-     *
-     * @returns The link-layer address.
-     */
-    const Mac::ExtAddress &GetDuidLinkLayerAddress(void) const { return mDuidLinkLayerAddress; }
-
-    /**
-     * Sets the server link-layer address.
-     *
-     * @param[in]  aAddress  The server link-layer address.
-     */
-    void SetDuidLinkLayerAddress(const Mac::ExtAddress &aAddress) { mDuidLinkLayerAddress = aAddress; }
-
-private:
-    uint16_t        mDuidType;
-    uint16_t        mDuidHardwareType;
-    Mac::ExtAddress mDuidLinkLayerAddress;
-} OT_TOOL_PACKED_END;
+    static Error AppendWithEui64Duid(Message &aMessage, const Mac::ExtAddress &aExtAddress)
+    {
+        return IdOption::AppendEui64(Option::kServerId, aMessage, aExtAddress);
+    }
+};
 
 /**
  * Represents an Identity Association for Non-temporary Address DHCPv6 Option.
