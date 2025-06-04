@@ -1337,8 +1337,8 @@ private:
 
         typedef String<kInfoStringSize> InfoString;
 
-        void       SetFavordPrefix(const OmrPrefix &aOmrPrefix);
-        void       ClearFavoredPrefix(void) { SetFavordPrefix(OmrPrefix()); }
+        void       SetFavoredPrefix(const OmrPrefix &aOmrPrefix);
+        void       ClearFavoredPrefix(void) { SetFavoredPrefix(OmrPrefix()); }
         void       DetermineFavoredPrefixInNetData(FavoredOmrPrefix &aFavoredPrefix);
         void       UpdateLocalPrefix(void);
         Error      AddLocalToNetData(void);
