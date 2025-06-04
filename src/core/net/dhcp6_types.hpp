@@ -179,6 +179,86 @@ public:
     };
 
     /**
+     * Represents an iterator for searching for and iterating over DHCPv6 options with a specific code within a message.
+     */
+    class Iterator : private Clearable<Iterator>
+    {
+        friend class Clearable<Iterator>;
+
+    public:
+        /**
+         * This is an iterator constructor that initializes the iterator to a cleared (invalid) state.
+         *
+         * An iterator in this state must be initialized using one of the `Init()` methods before use.
+         */
+        Iterator(void) { Clear(); }
+
+        /**
+         * Initializes the iterator and finds the first matching option within an entire message.
+         *
+         * The search is performed from `aMessage.GetOffset()` to the end of the message.
+         *
+         * @param[in] aMessage  The message to search in.
+         * @param[in] aCode     The option code to search for.
+         */
+        void Init(const Message &aMessage, Code aCode);
+
+        /**
+         * Initializes the iterator and finds the first matching option within a specific range of a message.
+         *
+         * @param[in] aMessage          The message to search in.
+         * @param[in] aMsgOffsetRange   The specific range within @p aMessage to search.
+         * @param[in] aCode             The option code to search for.
+         */
+        void Init(const Message &aMessage, const OffsetRange &aMsgOffsetRange, Code aCode);
+
+        /**
+         * Indicates whether the iteration is complete.
+         *
+         * The iteration is considered done when all matching options have been iterated through, or if an error
+         * occurred during iteration. The `GetError()` method can be used to get the error status.
+         *
+         * Particularly, `IsDone() && GetError() == kErrorNone` indicates a successful end of the iteration (i.e., no
+         * more matching options were found).
+         *
+         * @returns `true` if the iteration is complete, `false` otherwise.
+         */
+        bool IsDone(void) const { return mIsDone; }
+
+        /**
+         * Advances the iterator to the next matching option.
+         */
+        void Advance(void);
+
+        /**
+         * Gets the offset range of the current option matched by the iterator.
+         *
+         * The returned offset range refers to the matched option in the message when the iterator is not done
+         * (`IsDone()` is `false`). Otherwise, an empty offset range is returned.
+         *
+         * @returns The `OffsetRange` of the current option.
+         */
+        const OffsetRange &GetOptionOffsetRange(void) const { return mOptionOffsetRange; }
+
+        /**
+         * Gets any error that occurred during the iteration.
+         *
+         * @retval kErrorNone           Successfully iterated over options (so far).
+         * @retval kErrorParse          The options in the message were malformed and failed to parse.
+         * @retval kErrorInvalidState   The iterator was not initialized.
+         */
+        Error GetError(void) const { return mError; }
+
+    private:
+        const Message *mMessage;
+        OffsetRange    mMsgOffsetRange;
+        OffsetRange    mOptionOffsetRange;
+        Code           mCode;
+        Error          mError;
+        bool           mIsDone;
+    };
+
+    /**
      * Returns the DHCPv6 option code.
      *
      * @returns The DHCPv6 option code.

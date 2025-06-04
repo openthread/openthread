@@ -115,6 +115,58 @@ exit:
 }
 
 //---------------------------------------------------------------------------------------------------------------------
+// Option::Iterator
+
+void Option::Iterator::Init(const Message &aMessage, Code aCode)
+{
+    OffsetRange msgOffsetRange;
+
+    msgOffsetRange.InitFromMessageOffsetToEnd(aMessage);
+    Init(aMessage, msgOffsetRange, aCode);
+}
+
+void Option::Iterator::Init(const Message &aMessage, const OffsetRange &aMsgOffsetRange, Code aCode)
+{
+    mMessage        = &aMessage;
+    mCode           = aCode;
+    mMsgOffsetRange = aMsgOffsetRange;
+    mError          = kErrorNone;
+    mIsDone         = false;
+    Advance();
+}
+
+void Option::Iterator::Advance(void)
+{
+    VerifyOrExit(!mIsDone);
+
+    if (mMessage == nullptr)
+    {
+        mError  = kErrorInvalidState;
+        mIsDone = true;
+        ExitNow();
+    }
+
+    mError = Option::FindOption(*mMessage, mMsgOffsetRange, mCode, mOptionOffsetRange);
+
+    if (mError == kErrorNone)
+    {
+        // Update `mMsgOffsetRange` to start after the current option,
+        // preparing the iterator for the next call to `Advance()`.
+
+        mMsgOffsetRange.InitFromRange(mOptionOffsetRange.GetEndOffset(), mMsgOffsetRange.GetEndOffset());
+        ExitNow();
+    }
+
+    mOptionOffsetRange.Clear();
+
+    mError  = (mError == kErrorNotFound) ? kErrorNone : mError;
+    mIsDone = true;
+
+exit:
+    return;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 // Eui64Duid
 
 void Eui64Duid::Init(const Mac::ExtAddress &aExtAddress)
