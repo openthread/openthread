@@ -1020,10 +1020,9 @@ Message *CoapBase::FindRelatedRequest(const Message          &aResponse,
     {
         aMetadata.ReadFrom(message);
 
-        if (((aMetadata.mDestinationAddress == aMessageInfo.GetPeerAddr()) ||
-             aMetadata.mDestinationAddress.IsMulticast() ||
-             aMetadata.mDestinationAddress.GetIid().IsAnycastLocator()) &&
-            (aMetadata.mDestinationPort == aMessageInfo.GetPeerPort()))
+        if (((aMetadata.mDestinationAddress == aMessageInfo.GetPeerAddr() &&
+              aMetadata.mDestinationPort == aMessageInfo.GetPeerPort()) ||
+             aMetadata.mDestinationAddress.IsMulticast() || aMetadata.mDestinationAddress.GetIid().IsAnycastLocator()))
         {
             switch (aResponse.GetType())
             {
