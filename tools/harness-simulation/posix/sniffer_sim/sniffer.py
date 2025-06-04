@@ -115,7 +115,7 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
 
         # Start the sniffer main loop thread
         self._thread = threading.Thread(target=self._sniffer_main_loop)
-        self._thread.setDaemon(True)
+        self._thread.daemon = True
         self._transport.open()
         self._thread_alive.set()
         self._thread.start()
