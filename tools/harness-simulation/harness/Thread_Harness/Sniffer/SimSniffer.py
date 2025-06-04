@@ -261,7 +261,7 @@ class SimSniffer(ISniffer):
             raise RuntimeError('startSniffer error: %s' % sniffer_pb2.Status.Name(response.status))
 
         self._thread = threading.Thread(target=self._file_sync_main_loop)
-        self._thread.setDaemon(True)
+        self._thread.daemon = True
         self._thread.start()
 
         self.is_active = True
