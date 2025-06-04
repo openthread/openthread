@@ -721,6 +721,7 @@ public:
 
 protected:
     SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, bool aDatagramTransport);
+    ~SecureTransport(void) { Close(); }
 
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
     void SetExtension(Extension &aExtension) { mExtension = &aExtension; }
