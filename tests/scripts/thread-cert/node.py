@@ -1376,7 +1376,7 @@ class NodeImpl:
     def srp_client_get_lease_interval(self) -> int:
         cmd = 'srp client leaseinterval'
         self.send_command(cmd)
-        return int(self._expect_result('\d+'))
+        return int(self._expect_result(r'\d+'))
 
     def srp_client_set_key_lease_interval(self, leaseinterval: int):
         cmd = f'srp client keyleaseinterval {leaseinterval}'
@@ -1386,7 +1386,7 @@ class NodeImpl:
     def srp_client_get_key_lease_interval(self) -> int:
         cmd = 'srp client keyleaseinterval'
         self.send_command(cmd)
-        return int(self._expect_result('\d+'))
+        return int(self._expect_result(r'\d+'))
 
     def srp_client_set_ttl(self, ttl: int):
         cmd = f'srp client ttl {ttl}'
@@ -1396,7 +1396,7 @@ class NodeImpl:
     def srp_client_get_ttl(self) -> int:
         cmd = 'srp client ttl'
         self.send_command(cmd)
-        return int(self._expect_result('\d+'))
+        return int(self._expect_result(r'\d+'))
 
     #
     # TREL utilities
@@ -1613,7 +1613,7 @@ class NodeImpl:
         self.send_command(cmd)
 
         table = {}
-        for line in self._expect_results("\S+ \d+"):
+        for line in self._expect_results(r"\S+ \d+"):
             line = line.split()
             assert len(line) == 2, line
             ip = IPv6Address(line[0])
