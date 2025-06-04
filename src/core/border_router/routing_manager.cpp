@@ -2553,7 +2553,7 @@ void RoutingManager::OmrPrefixManager::Start(void)
     FavoredOmrPrefix favoredPrefix;
 
     DetermineFavoredPrefixInNetData(favoredPrefix);
-    SetFavordPrefix(favoredPrefix);
+    SetFavoredPrefix(favoredPrefix);
 }
 
 void RoutingManager::OmrPrefixManager::Stop(void)
@@ -2625,7 +2625,7 @@ exit:
     return error;
 }
 
-void RoutingManager::OmrPrefixManager::SetFavordPrefix(const OmrPrefix &aOmrPrefix)
+void RoutingManager::OmrPrefixManager::SetFavoredPrefix(const OmrPrefix &aOmrPrefix)
 {
     FavoredOmrPrefix oldFavoredPrefix = mFavoredPrefix;
 
@@ -2732,18 +2732,18 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
 
     if (mLocalPrefix.IsEmpty())
     {
-        SetFavordPrefix(favoredPrefix);
+        SetFavoredPrefix(favoredPrefix);
         ExitNow();
     }
 
     if (favoredPrefix.IsEmpty() || favoredPrefix.GetPreference() < mLocalPrefix.GetPreference())
     {
         SuccessOrExit(AddLocalToNetData());
-        SetFavordPrefix(mLocalPrefix);
+        SetFavoredPrefix(mLocalPrefix);
         ExitNow();
     }
 
-    SetFavordPrefix(favoredPrefix);
+    SetFavoredPrefix(favoredPrefix);
 
     if (favoredPrefix.GetPrefix() == mLocalPrefix.GetPrefix())
     {
