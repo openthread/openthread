@@ -922,11 +922,11 @@ class NodeImpl:
         assert len(payload) == payload_len
         return (direction, type, payload)
 
-    def send_command(self, cmd, go=True, expect_command_echo=True):
+    def send_command(self, cmd, go=True, expect_command_echo=True, maybeoff=False):
         print("%d: %s" % (self.nodeid, cmd))
         self.pexpect.send(cmd + '\n')
         if go:
-            self.simulator.go(0, nodeid=self.nodeid)
+            self.simulator.go(0, nodeid=self.nodeid, maybeoff=maybeoff)
         sys.stdout.flush()
 
         if expect_command_echo:
@@ -2659,7 +2659,7 @@ class NodeImpl:
         self._reset('factoryreset')
 
     def _reset(self, cmd):
-        self.send_command(cmd, expect_command_echo=False)
+        self.send_command(cmd, expect_command_echo=False, maybeoff=True)
         time.sleep(self.RESET_DELAY)
         # Send a "version" command and drain the CLI output after reset
         self.send_command('version', expect_command_echo=False)

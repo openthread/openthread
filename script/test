@@ -89,6 +89,9 @@ readonly TREL
 LOCAL_OTBR_DIR=${LOCAL_OTBR_DIR:-""}
 readonly LOCAL_OTBR_DIR
 
+: "${OT_VT_USE_UNIX_SOCKET:=0}"
+export OT_VT_USE_UNIX_SOCKET
+
 build_simulation()
 {
     local version="$1"
