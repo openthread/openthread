@@ -402,9 +402,10 @@ Error Client::ProcessClientIdOption(const Message &aMessage)
 
 Error Client::ProcessIaNaOption(const Message &aMessage)
 {
-    Error       error = kErrorNone;
-    OffsetRange offsetRange;
-    IaNaOption  option;
+    Error            error = kErrorNone;
+    OffsetRange      offsetRange;
+    IaNaOption       option;
+    Option::Iterator iterator;
 
     SuccessOrExit(error = Option::FindOption(aMessage, Option::kIaNa, offsetRange));
     SuccessOrExit(error = aMessage.Read(offsetRange, option));
@@ -416,27 +417,15 @@ Error Client::ProcessIaNaOption(const Message &aMessage)
     VerifyOrExit(StatusCodeOption::ReadStatusFrom(aMessage, offsetRange) == StatusCodeOption::kSuccess,
                  error = kErrorFailed);
 
-    while (!offsetRange.IsEmpty())
+    for (iterator.Init(aMessage, offsetRange, Option::kIaAddress); !iterator.IsDone(); iterator.Advance())
     {
-        OffsetRange     subOffsetRange;
         IaAddressOption addressOption;
 
-        error = Option::FindOption(aMessage, offsetRange, Option::kIaAddress, subOffsetRange);
-
-        if (error == kErrorNotFound)
-        {
-            error = kErrorNone;
-            ExitNow();
-        }
-
-        SuccessOrExit(error);
-
-        SuccessOrExit(error = aMessage.Read(subOffsetRange, addressOption));
+        SuccessOrExit(error = aMessage.Read(iterator.GetOptionOffsetRange(), addressOption));
         SuccessOrExit(error = ProcessIaAddressOption(addressOption));
-
-        // Update `offsetRange` to after the parsed `IaAddressOption`
-        offsetRange.InitFromRange(subOffsetRange.GetEndOffset(), offsetRange.GetEndOffset());
     }
+
+    error = iterator.GetError();
 
 exit:
     return error;
