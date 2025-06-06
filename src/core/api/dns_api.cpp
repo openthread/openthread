@@ -74,7 +74,7 @@ void otDnsSetNameCompressionEnabled(bool aEnabled) { Instance::SetDnsNameCompres
 bool otDnsIsNameCompressionEnabled(void) { return Instance::IsDnsNameCompressionEnabled(); }
 #endif
 
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 const otDnsQueryConfig *otDnsClientGetDefaultConfig(otInstance *aInstance)
 {
@@ -287,4 +287,4 @@ otError otDnsRecordResponseGetRecordInfo(const otDnsRecordResponse *aResponse,
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
 
-#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+#endif // (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE

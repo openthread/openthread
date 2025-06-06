@@ -72,6 +72,7 @@ public:
     static constexpr uint8_t kSize   = OT_IP6_PREFIX_SIZE;   ///< Size in bytes.
     static constexpr uint8_t kLength = kSize * kBitsPerByte; ///< Length of Network Prefix in bits.
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     /**
      * Generates and sets the Network Prefix to a crypto-secure random Unique Local Address (ULA) based
      * on the pattern `fdxx:xxxx:xxxx:` (RFC 4193).
@@ -80,6 +81,7 @@ public:
      * @retval kErrorFailed   Failed to generate random ULA Network Prefix.
      */
     Error GenerateRandomUla(void);
+#endif
 
 } OT_TOOL_PACKED_END;
 
@@ -358,6 +360,22 @@ public:
     bool IsUnspecified(void) const;
 
     /**
+     * Gets the Interface Identifier as a pointer to a byte array.
+     *
+     * @returns A pointer to a byte array (of size `kSize`) containing the Interface Identifier.
+     */
+    const uint8_t *GetBytes(void) const { return mFields.m8; }
+
+    /**
+     * Sets the Interface Identifier from a given byte array.
+     *
+     * @param[in] aBuffer    Pointer to an array containing the Interface Identifier. `kSize` bytes from the buffer
+     *                       are copied to form the Interface Identifier.
+     */
+    void SetBytes(const uint8_t *aBuffer);
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    /**
      * Indicates whether or not the Interface Identifier is reserved (RFC 5453).
      *
      * @retval true  If the Interface Identifier is reserved.
@@ -385,21 +403,6 @@ public:
      * Generates and sets the Interface Identifier to a crypto-secure random byte sequence.
      */
     void GenerateRandom(void);
-
-    /**
-     * Gets the Interface Identifier as a pointer to a byte array.
-     *
-     * @returns A pointer to a byte array (of size `kSize`) containing the Interface Identifier.
-     */
-    const uint8_t *GetBytes(void) const { return mFields.m8; }
-
-    /**
-     * Sets the Interface Identifier from a given byte array.
-     *
-     * @param[in] aBuffer    Pointer to an array containing the Interface Identifier. `kSize` bytes from the buffer
-     *                       are copied to form the Interface Identifier.
-     */
-    void SetBytes(const uint8_t *aBuffer);
 
     /**
      * Sets the Interface Identifier from a given IEEE 802.15.4 Extended Address.
@@ -476,6 +479,8 @@ public:
      * @param[in]  aLocator   RLOC16 or ALOC16.
      */
     void SetLocator(uint16_t aLocator) { mFields.m16[3] = BigEndian::HostSwap16(aLocator); }
+
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     /**
      * Applies a prefix to IID.
@@ -581,6 +586,7 @@ public:
      */
     bool IsLinkLocalUnicast(void) const;
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     /**
      * Sets the IPv6 address to a Link-Local address with Interface Identifier generated from a given
      * MAC Extended Address.
@@ -588,6 +594,7 @@ public:
      * @param[in]  aExtAddress  A MAC Extended Address (used to generate the IID).
      */
     void SetToLinkLocalAddress(const Mac::ExtAddress &aExtAddress);
+#endif
 
     /**
      * Sets the IPv6 address to a Link-Local address with a given Interface Identifier.
@@ -621,6 +628,23 @@ public:
     bool IsLinkLocalUnicastOrMulticast(void) const;
 
     /**
+     * Indicates whether or not the IPv6 address is a realm-local multicast address.
+     *
+     * @retval TRUE   If the IPv6 address is a realm-local multicast address.
+     * @retval FALSE  If the IPv6 address scope is not a realm-local multicast address.
+     */
+    bool IsRealmLocalMulticast(void) const;
+
+    /**
+     * Indicates whether or not the IPv6 address is multicast larger than realm local.
+     *
+     * @retval TRUE   If the IPv6 address is multicast larger than realm local.
+     * @retval FALSE  If the IPv6 address is not multicast or the scope is not larger than realm local.
+     */
+    bool IsMulticastLargerThanRealmLocal(void) const;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    /**
      * Indicates whether or not the IPv6 address is a link-local all nodes multicast address (ff02::01).
      *
      * @retval TRUE   If the IPv6 address is a link-local all nodes multicast address.
@@ -645,14 +669,6 @@ public:
      * Sets the IPv6 address to the link-local all routers multicast address (ff02::02).
      */
     void SetToLinkLocalAllRoutersMulticast(void);
-
-    /**
-     * Indicates whether or not the IPv6 address is a realm-local multicast address.
-     *
-     * @retval TRUE   If the IPv6 address is a realm-local multicast address.
-     * @retval FALSE  If the IPv6 address scope is not a realm-local multicast address.
-     */
-    bool IsRealmLocalMulticast(void) const;
 
     /**
      * Indicates whether or not the IPv6 address is a realm-local all nodes multicast address (ff03::01).
@@ -694,14 +710,6 @@ public:
     void SetToRealmLocalAllMplForwarders(void);
 
     /**
-     * Indicates whether or not the IPv6 address is multicast larger than realm local.
-     *
-     * @retval TRUE   If the IPv6 address is multicast larger than realm local.
-     * @retval FALSE  If the IPv6 address is not multicast or the scope is not larger than realm local.
-     */
-    bool IsMulticastLargerThanRealmLocal(void) const;
-
-    /**
      * Sets the IPv6 address to a Routing Locator (RLOC) IPv6 address with a given Network Prefix and
      * RLOC16 value.
      *
@@ -724,6 +732,7 @@ public:
     {
         SetToLocator(aNetworkPrefix, aAloc16);
     }
+#endif // OPENTRHEAD_FTD || OPENTHREAD_MTD
 
     /**
      * Indicates whether or not the IPv6 address follows the IPv4-mapped format.
@@ -947,15 +956,18 @@ private:
     static constexpr uint8_t kMulticastNetworkPrefixLengthOffset = 3; // Prefix-Based Multicast Address (RFC3306)
     static constexpr uint8_t kMulticastNetworkPrefixOffset       = 4; // Prefix-Based Multicast Address (RFC3306)
 
-    void SetToLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aLocator);
     void ToString(StringWriter &aWriter) const;
     void AppendHexWords(StringWriter &aWriter, uint8_t aLength) const;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    void SetToLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aLocator);
 
     static const Address &GetLinkLocalAllNodesMulticast(void);
     static const Address &GetLinkLocalAllRoutersMulticast(void);
     static const Address &GetRealmLocalAllNodesMulticast(void);
     static const Address &GetRealmLocalAllRoutersMulticast(void);
     static const Address &GetRealmLocalAllMplForwarders(void);
+#endif
 
     static void CopyBits(uint8_t *aDst, const uint8_t *aSrc, uint8_t aNumBits);
 
