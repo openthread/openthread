@@ -90,14 +90,14 @@ class Cert_5_1_05_RouterAddressTimeout(thread_cert.TestCase):
         self._setUpRouter1()
         self.simulator.go(200)
         self.nodes[ROUTER1].start()
-        self.simulator.go(15)
+        self.simulator.go(config.ROUTER_RESTORE_DELAY)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ROUTER1].reset()
         self._setUpRouter1()
         self.simulator.go(300)
         self.nodes[ROUTER1].start()
-        self.simulator.go(15)
+        self.simulator.go(config.ROUTER_RESTORE_DELAY)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
     def verify(self, pv):
