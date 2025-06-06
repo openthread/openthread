@@ -128,7 +128,7 @@ class OtCliCommandRunner(OTCommandHandler):
         self.__otcli.writeline(cmd)
 
         if cmd in ('reset', 'factoryreset'):
-            self.wait(3)
+            self.wait(3, maybeoff=True)
             self.__otcli.writeline('extaddr')
             self.wait(1)
             return []
@@ -145,8 +145,8 @@ class OtCliCommandRunner(OTCommandHandler):
     def execute_platform_command(self, cmd: str, timeout: float = 10) -> List[str]:
         raise NotImplementedError(f'Platform command is not supported on {self.__class__.__name__}')
 
-    def wait(self, duration: float) -> List[str]:
-        self.__otcli.wait(duration)
+    def wait(self, duration: float, maybeoff=False) -> List[str]:
+        self.__otcli.wait(duration, maybeoff=maybeoff)
 
         output: List[str] = []
         try:

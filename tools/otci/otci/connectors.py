@@ -48,7 +48,7 @@ class OtCliHandler(ABC):
         """
 
     @abstractmethod
-    def wait(self, duration: float) -> None:
+    def wait(self, duration: float, **kwargs) -> None:
         """Method wait should wait for a given duration.
 
         A normal implementation should just call `time.sleep(duration)`. This is intended for proceeding Virtual Time
@@ -64,7 +64,7 @@ class Simulator(ABC):
     """This abstract class defines interfaces for a Virtual Time Simulator."""
 
     @abstractmethod
-    def go(self, duration: float):
+    def go(self, duration: float, **kwargs):
         """Proceed the simulator for a given duration (in seconds)."""
         pass
 
@@ -89,10 +89,13 @@ class OtCliPopen(OtCliHandler):
         self.__otcli_proc.stdin.write(s + '\n')
         self.__otcli_proc.stdin.flush()
 
-    def wait(self, duration: float):
+    def wait(self, duration: float, **kwargs):
         if self.__simulator is not None:
+            if kwargs.get('maybeoff', False):
+                kwargs['nodeid'] = self.__nodeid
+
             # Virtual time simulation
-            self.__simulator.go(duration)
+            self.__simulator.go(duration, **kwargs)
         else:
             # Real time simulation
             time.sleep(duration)
@@ -167,7 +170,7 @@ class OtCliSerial(OtCliHandler):
     def writeline(self, s: str):
         self.__serial.write((s + '\r\n').encode('utf-8'))
 
-    def wait(self, duration: float):
+    def wait(self, duration: float, **kwargs):
         time.sleep(duration)
 
     def close(self):
