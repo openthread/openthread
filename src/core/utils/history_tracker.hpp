@@ -410,6 +410,7 @@ private:
         Entry       *AddNewEntry(void) { return nullptr; }
         void         AddNewEntry(const Entry &) {}
         const Entry *Iterate(Iterator &, uint32_t &) const { return nullptr; }
+        void         UpdateAgedEntries(void) {}
         void         RemoveAgedEntries(void) {}
     };
 
