@@ -39,6 +39,7 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <openthread/error.h>

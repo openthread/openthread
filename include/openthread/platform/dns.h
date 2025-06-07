@@ -35,6 +35,8 @@
 #ifndef OPENTHREAD_PLATFORM_DNS_H_
 #define OPENTHREAD_PLATFORM_DNS_H_
 
+#include <stdbool.h>
+
 #include <openthread/instance.h>
 #include <openthread/message.h>
 

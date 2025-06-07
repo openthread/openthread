@@ -63,13 +63,14 @@ jobs:
     - name: Bootstrap
       run: |
         sudo apt-get update
-        sudo apt-get --no-install-recommends install -y clang-format-14 clang-tidy-14 shellcheck
+        sudo apt-get --no-install-recommends install -y clang-format-14 clang-tidy-14 shellcheck iwyu
         python3 -m pip install yapf==0.31.0
         sudo snap install shfmt
         npm install prettier@2.0.4
     - name: Check
       run: |
         script/make-pretty check
+        script/check-iwyu-public-header
 
   markdown-lint-check:
     runs-on: ubuntu-22.04

@@ -35,6 +35,10 @@
 #ifndef OPENTHREAD_DIAG_H_
 #define OPENTHREAD_DIAG_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/platform/diag.h>
 

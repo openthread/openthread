@@ -35,6 +35,12 @@
 #ifndef OPENTHREAD_NETDATA_PUBLISHER_H_
 #define OPENTHREAD_NETDATA_PUBLISHER_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
+#include <openthread/ip6.h>
 #include <openthread/netdata.h>
 
 #ifdef __cplusplus

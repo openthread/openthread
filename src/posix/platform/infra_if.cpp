@@ -55,6 +55,7 @@
 #endif
 
 #include <openthread/border_router.h>
+#include <openthread/border_routing.h>
 #include <openthread/platform/infra_if.h>
 
 #include "infra_if.hpp"

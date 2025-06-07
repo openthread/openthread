@@ -35,6 +35,8 @@
 #ifndef OPENTHREAD_NETWORK_TIME_H_
 #define OPENTHREAD_NETWORK_TIME_H_
 
+#include <stdint.h>
+
 #include <openthread/error.h>
 #include <openthread/instance.h>
 

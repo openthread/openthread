@@ -35,6 +35,11 @@
 #ifndef OPENTHREAD_SERVER_H_
 #define OPENTHREAD_SERVER_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/netdata.h>
 
 #ifdef __cplusplus

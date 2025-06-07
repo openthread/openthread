@@ -35,6 +35,9 @@
 #ifndef OPENTHREAD_PLATFORM_UDP_H_
 #define OPENTHREAD_PLATFORM_UDP_H_
 
+#include <openthread/error.h>
+#include <openthread/ip6.h>
+#include <openthread/message.h>
 #include <openthread/udp.h>
 
 #ifdef __cplusplus

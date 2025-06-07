@@ -35,6 +35,11 @@
 #ifndef OPENTHREAD_LINK_RAW_H_
 #define OPENTHREAD_LINK_RAW_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus

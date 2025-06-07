@@ -37,6 +37,7 @@
 
 #include <openthread/ip6.h>
 #include <openthread/ncp.h>
+#include <openthread/platform/radio.h>
 
 #include "spinel.h"
 

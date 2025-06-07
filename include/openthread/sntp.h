@@ -37,6 +37,8 @@
 
 #include <stdint.h>
 
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
 
 #ifdef __cplusplus

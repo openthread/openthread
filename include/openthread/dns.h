@@ -35,10 +35,10 @@
 #ifndef OPENTHREAD_DNS_H_
 #define OPENTHREAD_DNS_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <openthread/error.h>
-#include <openthread/instance.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -38,7 +38,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <openthread/error.h>
 #include <openthread/platform/crypto.h>
 
 #ifdef __cplusplus

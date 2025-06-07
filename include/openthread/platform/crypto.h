@@ -35,10 +35,12 @@
 #ifndef OPENTHREAD_PLATFORM_CRYPTO_H_
 #define OPENTHREAD_PLATFORM_CRYPTO_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
 #include <openthread/error.h>
+#include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {

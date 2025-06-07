@@ -48,6 +48,8 @@ install_packages_pretty_format()
 
     # add shfmt for shell pretty
     command -v shfmt || sudo apt-get install shfmt || echo 'WARNING: could not install shfmt, which is useful if you plan to contribute shell scripts to the OpenThread project.'
+
+    sudo apt-get --no-install-recommends install -y iwyu || echo 'WARNING: iwyu, which is useful to ensure applying the IWYU rules.'
 }
 
 install_packages_apt()
@@ -122,6 +124,8 @@ install_packages_brew()
 
     # add yapf for pretty
     python3 -m pip install yapf || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
+
+    brew install include-what-you-use || echo 'WARNING: iwyu, which is useful to ensure applying the IWYU rules.'
 }
 
 install_packages_source()

@@ -36,7 +36,12 @@
 #ifndef OPENTHREAD_BACKBONE_ROUTER_FTD_H_
 #define OPENTHREAD_BACKBONE_ROUTER_FTD_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <openthread/backbone_router.h>
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/netdata.h>
 

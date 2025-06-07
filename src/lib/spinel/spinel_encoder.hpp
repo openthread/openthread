@@ -38,6 +38,7 @@
 #include <openthread/ip6.h>
 #include <openthread/message.h>
 #include <openthread/ncp.h>
+#include <openthread/platform/radio.h>
 
 #include "spinel.h"
 #include "spinel_buffer.hpp"

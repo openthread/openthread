@@ -35,6 +35,10 @@
 #ifndef OPENTHREAD_JAM_DETECTION_H_
 #define OPENTHREAD_JAM_DETECTION_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
 #include <openthread/instance.h>
 
 #ifdef __cplusplus

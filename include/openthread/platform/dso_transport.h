@@ -35,9 +35,8 @@
 #ifndef OPENTHREAD_PLATFORM_DSO_TRANSPORT_H_
 #define OPENTHREAD_PLATFORM_DSO_TRANSPORT_H_
 
-#include <stdint.h>
+#include <stdbool.h>
 
-#include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/message.h>

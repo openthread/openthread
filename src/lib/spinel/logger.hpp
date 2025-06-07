@@ -29,6 +29,8 @@
 #ifndef SPINEL_LOGGER_HPP_
 #define SPINEL_LOGGER_HPP_
 
+#include <stdint.h>
+
 #include <openthread/error.h>
 #include <openthread/platform/toolchain.h>
 

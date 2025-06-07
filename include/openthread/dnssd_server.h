@@ -35,10 +35,11 @@
 #ifndef OPENTHREAD_DNSSD_SERVER_H_
 #define OPENTHREAD_DNSSD_SERVER_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <openthread/dns.h>
-#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
 
 #ifdef __cplusplus

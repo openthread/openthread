@@ -35,6 +35,8 @@
 #ifndef OPENTHREAD_TASKLET_H_
 #define OPENTHREAD_TASKLET_H_
 
+#include <stdbool.h>
+
 #include <openthread/instance.h>
 
 #ifdef __cplusplus

@@ -45,6 +45,9 @@
 #define OPENTHREAD_TCAT_H_
 
 #include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/message.h>
 
 #ifdef __cplusplus

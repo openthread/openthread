@@ -35,7 +35,10 @@
 #ifndef OPENTHREAD_DNS_CLIENT_H_
 #define OPENTHREAD_DNS_CLIENT_H_
 
-#include <openthread/dns.h>
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 
