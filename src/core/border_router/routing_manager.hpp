@@ -58,6 +58,7 @@
 #include <openthread/border_routing.h>
 #include <openthread/nat64.h>
 #include <openthread/netdata.h>
+#include <openthread/platform/border_routing.h>
 
 #include "border_router/infra_if.hpp"
 #include "common/array.hpp"
@@ -84,10 +85,6 @@
 namespace ot {
 namespace BorderRouter {
 
-extern "C" void otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength);
-extern "C" void otPlatBorderRoutingProcessDhcp6PdPrefix(otInstance                            *aInstance,
-                                                        const otBorderRoutingPrefixTableEntry *aPrefixInfo);
-
 /**
  * Implements bi-directional routing between Thread and Infrastructure networks.
  *
@@ -99,12 +96,6 @@ class RoutingManager : public InstanceLocator
     friend class ot::Notifier;
     friend class ot::Instance;
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-    friend void otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength);
-    friend void otPlatBorderRoutingProcessDhcp6PdPrefix(otInstance                            *aInstance,
-                                                        const otBorderRoutingPrefixTableEntry *aPrefixInfo);
-#endif
-
 public:
     typedef NetworkData::RoutePreference          RoutePreference;     ///< Route preference (high, medium, low).
     typedef otBorderRoutingPrefixTableIterator    PrefixTableIterator; ///< Prefix Table Iterator.
@@ -113,8 +104,9 @@ public:
     typedef otBorderRoutingRdnssAddrEntry         RdnssAddrEntry;      ///< RDNSS Address Entry.
     typedef otBorderRoutingRdnssAddrCallback      RdnssAddrCallback;   ///< RDNS Address changed callback.
     typedef otBorderRoutingPeerBorderRouterEntry  PeerBrEntry;         ///< Peer Border Router Entry.
-    typedef otPdProcessedRaInfo                   PdProcessedRaInfo;   ///< Data of PdProcessedRaInfo.
-    typedef otBorderRoutingRequestDhcp6PdCallback PdCallback;          ///< DHCPv6 PD callback.
+    typedef otBorderRoutingPrefixTableEntry       Dhcp6PdPrefix;       ///< DHCPv6 PD prefix.
+    typedef otPdProcessedRaInfo                   Dhcp6PdCounters;     ///< DHCPv6 PD counters.
+    typedef otBorderRoutingRequestDhcp6PdCallback Dhcp6PdCallback;     ///< DHCPv6 PD callback.
     typedef otBorderRoutingMultiAilCallback       MultiAilCallback;    ///< Multi AIL detection callback.
 
     /**
@@ -639,32 +631,52 @@ public:
      * @param[in] aCallback  A pointer to a callback function
      * @param[in] aContext   A pointer to arbitrary context information.
      */
-    void SetRequestDhcp6PdCallback(PdCallback aCallback, void *aContext)
+    void SetDhcp6PdCallback(Dhcp6PdCallback aCallback, void *aContext)
     {
         mPdPrefixManager.SetStateCallback(aCallback, aContext);
     }
 
     /**
+     * Processes a delegated DHCPv6-PD prefix.
+     *
+     * Can be called again with a different prefix to report multiple delegated prefixes. Subsequent call for same
+     * prefix will renew or update the delegated prefix lifetimes.
+     *
+     * @param[in] aPrefix  The delegated DHCPv6-PD prefix.
+     */
+    void ProcessDhcp6PdPrefix(const Dhcp6PdPrefix &aPrefix) { mPdPrefixManager.ProcessPrefix(aPrefix); }
+
+    /**
+     * Processes delegated DHCPv6-PD prefixes from a Router Advertisement.
+     *
+     * @param[in] aRaPacket    The Router Advertisement packet.
+     */
+    void ProcessDhcp6PdPrefixesFromRa(const InfraIf::Icmp6Packet &aRaPacket)
+    {
+        mPdPrefixManager.ProcessPrefixesFromRa(aRaPacket);
+    }
+
+    /**
      * Returns the DHCPv6-PD based off-mesh-routable (OMR) prefix.
      *
-     * @param[out] aPrefixInfo      A reference to where the prefix info will be output to.
+     * @param[out] aPrefix          A reference to return the DHCPv6 prefix.
      *
      * @retval kErrorNone           Successfully retrieved the OMR prefix.
      * @retval kErrorNotFound       There are no valid PD prefix on this BR.
      * @retval kErrorInvalidState   The Border Routing Manager is not initialized yet.
      */
-    Error GetPdOmrPrefix(PrefixTableEntry &aPrefixInfo) const;
+    Error GetDhcp6PdOmrPrefix(Dhcp6PdPrefix &aPrefix) const;
 
     /**
      * Returns platform generated RA message processed counters and information.
      *
-     * @param[out] aPdProcessedRaInfo  A reference to where the PD processed RA info will be output to.
+     * @param[out] aCounters  A reference to return DHCPv6-PD counters.
      *
      * @retval kErrorNone           Successfully retrieved the Info.
-     * @retval kErrorNotFound       There are no valid RA process info on this BR.
+     * @retval kErrorNotFound       There is no valid delegated PD prefix.
      * @retval kErrorInvalidState   The Border Routing Manager is not initialized yet.
      */
-    Error GetPdProcessedRaInfo(PdProcessedRaInfo &aPdProcessedRaInfo);
+    Error GetDhcp6PdCounters(Dhcp6PdCounters &aCounters);
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
@@ -1689,12 +1701,12 @@ private:
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix.GetPrefix(); }
         State              GetState(void) const { return mState; }
 
-        void  ProcessRa(const uint8_t *aRouterAdvert, uint16_t aLength);
-        void  ProcessPrefix(const PrefixTableEntry &aPrefixTableEntry);
-        Error GetPrefixInfo(PrefixTableEntry &aInfo) const;
-        Error GetProcessedRaInfo(PdProcessedRaInfo &aPdProcessedRaInfo) const;
+        void  ProcessPrefixesFromRa(const InfraIf::Icmp6Packet &aRaPacket);
+        void  ProcessPrefix(const Dhcp6PdPrefix &aPrefix);
+        Error GetPrefix(Dhcp6PdPrefix &aPrefix) const;
+        Error GetCounters(Dhcp6PdCounters &aCounters) const;
         void  HandleTimer(void) { WithdrawPrefix(); }
-        void  SetStateCallback(PdCallback aCallback, void *aContext) { mStateCallback.Set(aCallback, aContext); }
+        void  SetStateCallback(Dhcp6PdCallback aCallback, void *aContext) { mStateCallback.Set(aCallback, aContext); }
         void  Evaluate(void);
 
     private:
@@ -1716,7 +1728,7 @@ private:
         static const char *StateToString(State aState);
 
         using PrefixTimer   = TimerMilliIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerTimer>;
-        using StateCallback = Callback<PdCallback>;
+        using StateCallback = Callback<Dhcp6PdCallback>;
 
         State         mState;
         uint32_t      mNumPlatformPioProcessed;
