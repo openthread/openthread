@@ -1013,6 +1013,16 @@ void otCoapRemoveBlockWiseResource(otInstance *aInstance, otCoapBlockwiseResourc
 void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext);
 
 /**
+ * Sets a fallback handler for CoAP responses not matching any active/pending request.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aHandler   A function pointer that shall be called as a fallback for responses without matching CoAP
+ *                       request.
+ * @param[in] aContext   A pointer to arbitrary context information. May be NULL if not used.
+ */
+void otCoapSetResponseFallback(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext);
+
+/**
  * Sends a CoAP response from the server with custom transmission parameters.
  *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
