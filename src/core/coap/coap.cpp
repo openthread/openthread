@@ -209,6 +209,12 @@ Error CoapBase::SendMessage(Message                &aMessage,
     bool     moreBlocks           = false;
 #endif
 
+    // fire and forget (mAckTimeout=0) is only allowed for Non-confirmable (NON) messages
+    if (aTxParameters.mAckTimeout == 0)
+    {
+        VerifyOrExit(aMessage.IsNonConfirmable(), error = kErrorInvalidArgs);
+    }
+
     switch (aMessage.GetType())
     {
     case kTypeAck:
@@ -1630,8 +1636,13 @@ bool TxParameters::IsValid(void) const
 {
     bool rval = false;
 
-    if ((mAckRandomFactorDenominator > 0) && (mAckRandomFactorNumerator >= mAckRandomFactorDenominator) &&
-        (mAckTimeout >= OT_COAP_MIN_ACK_TIMEOUT) && (mMaxRetransmit <= OT_COAP_MAX_RETRANSMIT))
+    // support fire and forget requests
+    if (mAckTimeout == 0)
+    {
+        rval = true;
+    }
+    else if ((mAckRandomFactorDenominator > 0) && (mAckRandomFactorNumerator >= mAckRandomFactorDenominator) &&
+             (mAckTimeout >= OT_COAP_MIN_ACK_TIMEOUT) && (mMaxRetransmit <= OT_COAP_MAX_RETRANSMIT))
     {
         // Calculate exchange lifetime step by step and verify no overflow.
         uint32_t tmp = Multiply(mAckTimeout, (1U << (mMaxRetransmit + 1)) - 1);
