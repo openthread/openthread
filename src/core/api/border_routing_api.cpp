@@ -131,14 +131,14 @@ otError otBorderRoutingGetPdOmrPrefix(otInstance *aInstance, otBorderRoutingPref
 {
     AssertPointerIsNotNull(aPrefixInfo);
 
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetPdOmrPrefix(*aPrefixInfo);
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetDhcp6PdOmrPrefix(*aPrefixInfo);
 }
 
 otError otBorderRoutingGetPdProcessedRaInfo(otInstance *aInstance, otPdProcessedRaInfo *aPdProcessedRaInfo)
 {
     AssertPointerIsNotNull(aPdProcessedRaInfo);
 
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetPdProcessedRaInfo(*aPdProcessedRaInfo);
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetDhcp6PdCounters(*aPdProcessedRaInfo);
 }
 #endif
 
@@ -289,7 +289,7 @@ void otBorderRoutingDhcp6PdSetRequestCallback(otInstance                        
                                               otBorderRoutingRequestDhcp6PdCallback aCallback,
                                               void                                 *aContext)
 {
-    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetRequestDhcp6PdCallback(aCallback, aContext);
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetDhcp6PdCallback(aCallback, aContext);
 }
 
 #endif
