@@ -407,6 +407,13 @@ public:
      */
     void SetDefaultHandler(RequestHandler aHandler, void *aContext) { mDefaultHandler.Set(aHandler, aContext); }
 
+    /* Sets a fallback handler for CoAP responses not matching any active/pending request.
+     *
+     * @param[in]  aHandler   A function pointer that shall be called as a fallback for isolated responses.
+     * @param[in]  aContext   A pointer to arbitrary context information. May be `nullptr` if not used.
+     */
+    void SetResponseFallback(RequestHandler aHandler, void *aContext) { mResponseFallback.Set(aHandler, aContext); }
+
     /**
      * Allocates a new message with a CoAP header.
      *
@@ -878,6 +885,7 @@ private:
     ResponsesQueue        mResponsesQueue;
 
     Callback<RequestHandler> mDefaultHandler;
+    Callback<RequestHandler> mResponseFallback;
 
     ResourceHandler mResourceHandler;
 
