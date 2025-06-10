@@ -44,6 +44,7 @@
  */
 
 #include "config/border_routing.h"
+#include "config/dnssd_server.h"
 #include "config/misc.h"
 
 /**
@@ -88,7 +89,7 @@
  * Define as 1 to enable IPv6 Fragmentation support.
  */
 #ifndef OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
-#define OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE 0
+#define OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 #endif
 
 /**
