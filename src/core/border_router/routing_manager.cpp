@@ -1184,7 +1184,7 @@ RoutingManager::MultiAilDetector::MultiAilDetector(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mDetected(false)
     , mNetDataPeerBrCount(0)
-    , mRxRaTrackerPeerBrCount(0)
+    , mRxRaTrackerReachablePeerBrCount(0)
     , mTimer(aInstance)
 {
 }
@@ -1192,9 +1192,9 @@ RoutingManager::MultiAilDetector::MultiAilDetector(Instance &aInstance)
 void RoutingManager::MultiAilDetector::Stop(void)
 {
     mTimer.Stop();
-    mDetected               = false;
-    mNetDataPeerBrCount     = 0;
-    mRxRaTrackerPeerBrCount = 0;
+    mDetected                        = false;
+    mNetDataPeerBrCount              = 0;
+    mRxRaTrackerReachablePeerBrCount = 0;
 }
 
 void RoutingManager::MultiAilDetector::Evaluate(void)
@@ -1213,15 +1213,15 @@ void RoutingManager::MultiAilDetector::Evaluate(void)
         mNetDataPeerBrCount = count;
     }
 
-    count = Get<RoutingManager>().mRxRaTracker.CountPeerBrs();
+    count = Get<RoutingManager>().mRxRaTracker.CountReachablePeerBrs();
 
-    if (count != mRxRaTrackerPeerBrCount)
+    if (count != mRxRaTrackerReachablePeerBrCount)
     {
-        LogInfo("Peer BR count from RaTracker: %u -> %u", mRxRaTrackerPeerBrCount, count);
-        mRxRaTrackerPeerBrCount = count;
+        LogInfo("Reachable Peer BR count from RaTracker: %u -> %u", mRxRaTrackerReachablePeerBrCount, count);
+        mRxRaTrackerReachablePeerBrCount = count;
     }
 
-    detected = (mNetDataPeerBrCount > mRxRaTrackerPeerBrCount);
+    detected = (mNetDataPeerBrCount > mRxRaTrackerReachablePeerBrCount);
 
     if (detected == mDetected)
     {
@@ -1242,7 +1242,8 @@ void RoutingManager::MultiAilDetector::HandleTimer(void)
     {
         LogNote("BRs on multi AIL detected - BRs are likely connected to different infra-links");
         LogInfo("More peer BRs in netdata vs from rx RAs for past %lu seconds", ToUlong(Time::MsecToSec(kDetectTime)));
-        LogInfo("NetData Peer BR count: %u, RaTracker Peer BR count: %u", mNetDataPeerBrCount, mRxRaTrackerPeerBrCount);
+        LogInfo("NetData Peer BR count: %u, RaTracker reachable Peer BR count: %u", mNetDataPeerBrCount,
+                mRxRaTrackerReachablePeerBrCount);
         mDetected = true;
     }
     else
@@ -2022,6 +2023,14 @@ void RoutingManager::RxRaTracker::HandleRouterTimer(void)
             {
                 entry.ClearLifetime();
             }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+            // When a Peer BR becomes unreachable, post a task that will do multi-ail evaluation.
+            if (router.IsPeerBr())
+            {
+                mSignalTask.Post();
+            }
+#endif
         }
     }
 
@@ -2176,13 +2185,13 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-uint16_t RoutingManager::RxRaTracker::CountPeerBrs(void) const
+uint16_t RoutingManager::RxRaTracker::CountReachablePeerBrs(void) const
 {
     uint16_t count = 0;
 
     for (const Router &router : mRouters)
     {
-        if (!router.mIsLocalDevice && router.IsPeerBr())
+        if (!router.mIsLocalDevice && router.IsPeerBr() && router.IsReachable())
         {
             count++;
         }

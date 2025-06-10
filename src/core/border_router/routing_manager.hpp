@@ -987,7 +987,7 @@ private:
 
         bool           mDetected;
         uint16_t       mNetDataPeerBrCount;
-        uint16_t       mRxRaTrackerPeerBrCount;
+        uint16_t       mRxRaTrackerReachablePeerBrCount;
         DetectTimer    mTimer;
         DetectCallback mCallback;
     };
@@ -1052,7 +1052,7 @@ private:
         Error GetNextRdnssAddr(PrefixTableIterator &aIterator, RdnssAddrEntry &aEntry) const;
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-        uint16_t CountPeerBrs(void) const;
+        uint16_t CountReachablePeerBrs(void) const;
 #endif
 
         // Callbacks notifying of changes
