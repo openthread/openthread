@@ -36,9 +36,12 @@
 #define OPENTHREAD_NCP_H_
 
 #include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
 
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/platform/logging.h>
-#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {

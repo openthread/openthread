@@ -35,6 +35,10 @@
 #ifndef OPENTHREAD_CHANNEL_MONITOR_H_
 #define OPENTHREAD_CHANNEL_MONITOR_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
 #include <openthread/instance.h>
 
 #ifdef __cplusplus

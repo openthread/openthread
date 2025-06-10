@@ -35,6 +35,10 @@
 #ifndef OPENTHREAD_TCP_EXT_H_
 #define OPENTHREAD_TCP_EXT_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
 #include <openthread/tcp.h>
 
 #ifdef __cplusplus

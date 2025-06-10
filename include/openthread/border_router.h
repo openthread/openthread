@@ -35,7 +35,11 @@
 #ifndef OPENTHREAD_BORDER_ROUTER_H_
 #define OPENTHREAD_BORDER_ROUTER_H_
 
-#include <openthread/border_routing.h>
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/netdata.h>
 

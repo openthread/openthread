@@ -35,9 +35,16 @@
 #ifndef OPENTHREAD_NETDIAG_H_
 #define OPENTHREAD_NETDIAG_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <openthread/dataset.h>
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/message.h>
 #include <openthread/thread.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {

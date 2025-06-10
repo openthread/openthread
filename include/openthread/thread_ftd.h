@@ -35,9 +35,15 @@
 #ifndef OPENTHREAD_THREAD_FTD_H_
 #define OPENTHREAD_THREAD_FTD_H_
 
-#include <openthread/link.h>
-#include <openthread/message.h>
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/dataset.h>
+#include <openthread/error.h>
+#include <openthread/instance.h>
+#include <openthread/ip6.h>
 #include <openthread/thread.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {

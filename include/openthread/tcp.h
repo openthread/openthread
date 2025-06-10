@@ -35,6 +35,12 @@
 #ifndef OPENTHREAD_TCP_H_
 #define OPENTHREAD_TCP_H_
 
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
 
 #ifdef __cplusplus
@@ -64,7 +70,6 @@ typedef struct otLinkedBuffer
     size_t                 mLength; ///< Length of this linked buffer (number of bytes).
 } otLinkedBuffer;
 
-struct otTcpEndpoint;
 typedef struct otTcpEndpoint otTcpEndpoint;
 
 /**
@@ -554,7 +559,6 @@ otError otTcpAbort(otTcpEndpoint *aEndpoint);
  */
 otError otTcpEndpointDeinitialize(otTcpEndpoint *aEndpoint);
 
-struct otTcpListener;
 typedef struct otTcpListener otTcpListener;
 
 /**

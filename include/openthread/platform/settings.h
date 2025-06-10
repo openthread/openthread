@@ -35,6 +35,9 @@
 #ifndef OPENTHREAD_PLATFORM_SETTINGS_H_
 #define OPENTHREAD_PLATFORM_SETTINGS_H_
 
+#include <stdint.h>
+
+#include <openthread/error.h>
 #include <openthread/instance.h>
 
 #ifdef __cplusplus

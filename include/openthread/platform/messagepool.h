@@ -35,9 +35,10 @@
 #ifndef OPENTHREAD_PLATFORM_MESSAGEPOOL_H_
 #define OPENTHREAD_PLATFORM_MESSAGEPOOL_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
-#include <openthread/message.h>
+#include <openthread/instance.h>
 
 /**
  * @addtogroup plat-messagepool

@@ -34,6 +34,8 @@
 #ifndef OT_TYPE_TRAITS_HPP_
 #define OT_TYPE_TRAITS_HPP_
 
+#include <stdint.h>
+
 namespace ot {
 namespace TypeTraits {
 

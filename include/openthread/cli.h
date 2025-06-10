@@ -38,6 +38,7 @@
 #include <stdarg.h>
 #include <stdint.h>
 
+#include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/platform/logging.h>
 

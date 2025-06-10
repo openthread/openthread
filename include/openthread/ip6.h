@@ -35,8 +35,13 @@
 #ifndef OPENTHREAD_IP6_H_
 #define OPENTHREAD_IP6_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/message.h>
-#include <openthread/platform/radio.h>
+#include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {

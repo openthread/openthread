@@ -44,7 +44,12 @@
 #ifndef OPENTHREAD_BLE_SECURE_H_
 #define OPENTHREAD_BLE_SECURE_H_
 
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/message.h>
 #include <openthread/tcat.h>
 

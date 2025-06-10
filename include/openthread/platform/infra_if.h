@@ -35,6 +35,7 @@
 #ifndef OPENTHREAD_PLATFORM_INFRA_IF_H_
 #define OPENTHREAD_PLATFORM_INFRA_IF_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <openthread/error.h>

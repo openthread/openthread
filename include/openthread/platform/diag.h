@@ -35,10 +35,12 @@
 #ifndef OPENTHREAD_PLATFORM_DIAG_H_
 #define OPENTHREAD_PLATFORM_DIAG_H_
 
-#include <stddef.h>
+#include <stdarg.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus

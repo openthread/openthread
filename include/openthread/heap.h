@@ -35,7 +35,7 @@
 #ifndef OPENTHREAD_HEAP_H_
 #define OPENTHREAD_HEAP_H_
 
-#include <openthread/instance.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {

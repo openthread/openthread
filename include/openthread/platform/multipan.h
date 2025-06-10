@@ -46,6 +46,7 @@
 #ifndef OPENTHREAD_PLATFORM_MULTIPAN_H_
 #define OPENTHREAD_PLATFORM_MULTIPAN_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <openthread/error.h>

@@ -35,7 +35,10 @@
 #ifndef OPENTHREAD_DATASET_UPDATER_H_
 #define OPENTHREAD_DATASET_UPDATER_H_
 
+#include <stdbool.h>
+
 #include <openthread/dataset.h>
+#include <openthread/error.h>
 #include <openthread/instance.h>
 
 #ifdef __cplusplus

@@ -57,7 +57,6 @@
 #define OPENTHREAD_PLATFORM_TOOLCHAIN_H_
 
 #include <stdbool.h>
-#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

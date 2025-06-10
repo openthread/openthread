@@ -35,7 +35,11 @@
 #ifndef OPENTHREAD_SRP_CLIENT_BUFFERS_H_
 #define OPENTHREAD_SRP_CLIENT_BUFFERS_H_
 
+#include <stdint.h>
+
 #include <openthread/dns.h>
+#include <openthread/instance.h>
+#include <openthread/ip6.h>
 #include <openthread/srp_client.h>
 
 #ifdef __cplusplus

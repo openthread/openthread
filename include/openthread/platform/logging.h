@@ -35,9 +35,6 @@
 #ifndef OPENTHREAD_PLATFORM_LOGGING_H_
 #define OPENTHREAD_PLATFORM_LOGGING_H_
 
-#include <stdarg.h>
-#include <stdint.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

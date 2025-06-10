@@ -35,6 +35,11 @@
 #ifndef OPENTHREAD_UDP_H_
 #define OPENTHREAD_UDP_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/message.h>
 

@@ -35,8 +35,14 @@
 #ifndef OPENTHREAD_MESH_DIAG_H_
 #define OPENTHREAD_MESH_DIAG_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/ip6.h>
 #include <openthread/thread.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {

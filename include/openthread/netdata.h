@@ -35,8 +35,14 @@
 #ifndef OPENTHREAD_NETDATA_H_
 #define OPENTHREAD_NETDATA_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <openthread/commissioner.h>
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {

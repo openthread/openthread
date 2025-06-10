@@ -29,6 +29,8 @@
 #ifndef OT_POSIX_PLATFORM_UTILS_HPP_
 #define OT_POSIX_PLATFORM_UTILS_HPP_
 
+#include <stdint.h>
+
 #include <openthread/error.h>
 
 namespace ot {

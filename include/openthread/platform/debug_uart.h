@@ -29,8 +29,10 @@
 #ifndef OPENTHREAD_PLATFORM_DEBUG_UART_H_
 #define OPENTHREAD_PLATFORM_DEBUG_UART_H_
 
+#include <stdarg.h>
+#include <stdint.h>
+
 #include <openthread/error.h>
-#include <openthread/platform/logging.h>
 
 /**
  * @file

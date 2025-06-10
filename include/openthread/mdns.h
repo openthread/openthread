@@ -35,6 +35,7 @@
 #ifndef OPENTHREAD_MULTICAST_DNS_H_
 #define OPENTHREAD_MULTICAST_DNS_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <openthread/error.h>

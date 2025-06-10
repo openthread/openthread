@@ -35,8 +35,11 @@
 #ifndef OPENTHREAD_MESSAGE_H_
 #define OPENTHREAD_MESSAGE_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
 #include <openthread/instance.h>
-#include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {

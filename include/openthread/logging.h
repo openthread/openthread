@@ -35,8 +35,12 @@
 #ifndef OPENTHREAD_LOGGING_H_
 #define OPENTHREAD_LOGGING_H_
 
+#include <stdarg.h>
+#include <stdint.h>
+
 #include <openthread/error.h>
 #include <openthread/platform/logging.h>
+#include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {

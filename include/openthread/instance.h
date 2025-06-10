@@ -35,11 +35,11 @@
 #ifndef OPENTHREAD_INSTANCE_H_
 #define OPENTHREAD_INSTANCE_H_
 
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #include <openthread/error.h>
-#include <openthread/platform/logging.h>
-#include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,7 +52,7 @@ extern "C" {
  *
  * @note This number versions both OpenThread platform and user APIs.
  */
-#define OPENTHREAD_API_VERSION (511)
+#define OPENTHREAD_API_VERSION (512)
 
 /**
  * @addtogroup api-instance

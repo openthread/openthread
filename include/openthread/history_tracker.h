@@ -27,10 +27,15 @@
 #ifndef OPENTHREAD_HISTORY_TRACKER_H_
 #define OPENTHREAD_HISTORY_TRACKER_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/message.h>
 #include <openthread/netdata.h>
 #include <openthread/thread.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {

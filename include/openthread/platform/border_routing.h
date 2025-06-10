@@ -37,7 +37,7 @@
 
 #include <stdint.h>
 
-#include <openthread/error.h>
+#include <openthread/border_routing.h>
 #include <openthread/instance.h>
 
 #ifdef __cplusplus
