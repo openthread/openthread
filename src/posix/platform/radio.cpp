@@ -154,6 +154,21 @@ void Radio::ProcessRadioUrl(const RadioUrl &aRadioUrl)
         SuccessOrDie(mRadioSpinel.SetCcaEnergyDetectThreshold(value));
     }
 
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+    // config files should be parsed before the region parameter
+    if (aRadioUrl.HasParam("product-config-file"))
+    {
+        const char *configFile = aRadioUrl.GetValue("product-config-file");
+        SuccessOrDie(sConfig.SetProductConfigFile(configFile));
+    }
+
+    if (aRadioUrl.HasParam("factory-config-file"))
+    {
+        const char *configFile = aRadioUrl.GetValue("factory-config-file");
+        SuccessOrDie(sConfig.SetFactoryConfigFile(configFile));
+    }
+#endif // OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+
     if ((region = aRadioUrl.GetValue("region")) != nullptr)
     {
         uint16_t regionCode;
@@ -169,20 +184,6 @@ void Radio::ProcessRadioUrl(const RadioUrl &aRadioUrl)
         SuccessOrDie(aRadioUrl.ParseUint32("bus-latency", busLatency));
         mRadioSpinel.SetBusLatency(busLatency);
     }
-
-#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
-    if (aRadioUrl.HasParam("product-config-file"))
-    {
-        const char *configFile = aRadioUrl.GetValue("product-config-file");
-        SuccessOrDie(sConfig.SetProductConfigFile(configFile));
-    }
-
-    if (aRadioUrl.HasParam("factory-config-file"))
-    {
-        const char *configFile = aRadioUrl.GetValue("factory-config-file");
-        SuccessOrDie(sConfig.SetFactoryConfigFile(configFile));
-    }
-#endif // OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
 
     ProcessMaxPowerTable(aRadioUrl);
 
