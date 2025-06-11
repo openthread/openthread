@@ -734,15 +734,6 @@ public:
      */
     bool GetUseShortLeaseOption(void) const { return mUseShortLeaseOption; }
 
-    /**
-     * Set the next DNS message ID for client to use.
-     *
-     * This is intended for testing only.
-     *
-     * @pram[in] aMessageId  A message ID.
-     */
-    void SetNextMessageId(uint16_t aMessageId) { mNextMessageId = aMessageId; }
-
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
 private:
@@ -903,6 +894,13 @@ private:
         kForServicesAppendedInMessage,
     };
 
+    // Used in `AppendSignature()`
+    enum SignatureAppendMode : uint8_t
+    {
+        kAppendEmptySignature,
+        kOverwriteWithNewSignature,
+    };
+
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     typedef Crypto::Ecdsa::P256::KeyPairAsRef KeyInfo;
 #else
@@ -995,6 +993,7 @@ private:
         uint16_t          mDomainNameOffset;
         uint16_t          mHostNameOffset;
         uint16_t          mRecordCount;
+        uint16_t          mSigRecordOffset;
         KeyInfo           mKeyInfo;
     };
 
@@ -1017,6 +1016,7 @@ private:
     void         HandleHostInfoOrServiceChange(void);
     void         SendUpdate(void);
     Error        PrepareUpdateMessage(MsgInfo &aInfo);
+    Error        UpdateIdAndSignatureInUpdateMessage(MsgInfo &aInfo);
     Error        ReadOrGenerateKey(KeyInfo &aKeyInfo);
     Error        AppendServiceInstructions(MsgInfo &aInfo);
     bool         CanAppendService(const Service &aService);
@@ -1027,10 +1027,10 @@ private:
     Error        AppendHostName(MsgInfo &aInfo, bool aDoNotCompress = false) const;
     Error        AppendAaaaRecord(const Ip6::Address &aAddress, MsgInfo &aInfo) const;
     Error        AppendUpdateLeaseOptRecord(MsgInfo &aInfo);
-    Error        AppendSignature(MsgInfo &aInfo);
+    Error        AppendSignature(MsgInfo &aInfo, SignatureAppendMode aMode);
     void         HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void         ProcessResponse(Message &aMessage);
-    bool         IsResponseMessageIdValid(uint16_t aId) const;
+    void         SelectNewMessageId(void);
     void         HandleUpdateDone(void);
     void         GetRemovedServices(LinkedList<Service> &aRemovedServices);
     static Error ReadResourceRecord(const Message &aMessage, uint16_t &aOffset, Dns::ResourceRecord &aRecord);
@@ -1080,8 +1080,7 @@ private:
     bool mUseShortLeaseOption : 1;
 #endif
 
-    uint16_t mNextMessageId;
-    uint16_t mResponseMessageId;
+    uint16_t mCurMessageId;
     uint16_t mAutoHostAddressCount;
     uint32_t mRetryWaitInterval;
 

@@ -1063,7 +1063,7 @@ void TestSrpClientDelayedResponse(void)
 
     srpClient = &sInstance->Get<Srp::Client>();
 
-    for (uint8_t testIter = 0; testIter < 3; testIter++)
+    for (uint8_t testIter = 0; testIter < 2; testIter++)
     {
         Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
         Log("testIter = %u", testIter);
@@ -1074,6 +1074,7 @@ void TestSrpClientDelayedResponse(void)
         Ip6::Udp::Socket  udpSocket(*sInstance, HandleServerUdpReceive, nullptr);
         Ip6::SockAddr     serverSockAddr;
         uint16_t          firstMsgId;
+        uint16_t          secondMsgId;
         Message          *response;
         Dns::UpdateHeader header;
 
@@ -1081,24 +1082,6 @@ void TestSrpClientDelayedResponse(void)
 
         SuccessOrQuit(udpSocket.Open(Ip6::kNetifThreadInternal));
         SuccessOrQuit(udpSocket.Bind(kServerPort));
-
-        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        // Manually start the client with a message ID based on `testIter`
-        // We use zero in the first iteration, `0xffff` in the second
-        // iteration to test wrapping of 16-bit message ID.
-
-        switch (testIter)
-        {
-        case 0:
-            srpClient->SetNextMessageId(0);
-            break;
-        case 1:
-            srpClient->SetNextMessageId(0xffff);
-            break;
-        case 2:
-            srpClient->SetNextMessageId(0xaaaa);
-            break;
-        }
 
         serverSockAddr.SetAddress(sInstance->Get<Mle::Mle>().GetMeshLocalRloc());
         serverSockAddr.SetPort(kServerPort);
@@ -1120,35 +1103,43 @@ void TestSrpClientDelayedResponse(void)
         AdvanceTime(1 * 1000);
 
         VerifyOrQuit(sServerRxCount == 1);
-        firstMsgId = sServerLastMsgId;
+        firstMsgId     = sServerLastMsgId;
+        sServerRxCount = 0;
+
+        if (testIter == 1)
+        {
+            // In the second test iteration, register a second
+            // service. Ensure that client uses a new ID for new
+            // updated SRP message (containing both services).
+
+            AdvanceTime(5 * 1000);
+
+            PrepareService2(service2);
+            SuccessOrQuit(srpClient->AddService(service2));
+
+            AdvanceTime(20 * 1000);
+            VerifyOrQuit(sServerRxCount > 1);
+            VerifyOrQuit(sServerLastMsgId != firstMsgId);
+            secondMsgId    = sServerLastMsgId;
+            sServerRxCount = 0;
+        }
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Wait for longer to allow client to retry a bunch of times.
+        // Ensure the same ID is used for retries.
+
+        AdvanceTime(60 * 1000);
+        VerifyOrQuit(sServerRxCount > 1);
 
         switch (testIter)
         {
         case 0:
-            VerifyOrQuit(firstMsgId == 0);
+            VerifyOrQuit(sServerLastMsgId == firstMsgId);
             break;
         case 1:
-            VerifyOrQuit(firstMsgId == 0xffff);
-            break;
-        case 2:
-            VerifyOrQuit(firstMsgId == 0xaaaa);
+            VerifyOrQuit(sServerLastMsgId == secondMsgId);
             break;
         }
-
-        if (testIter == 2)
-        {
-            AdvanceTime(2 * 1000);
-
-            PrepareService2(service2);
-            SuccessOrQuit(srpClient->AddService(service2));
-        }
-
-        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        // Wait for longer to allow client to retry a bunch of times
-
-        AdvanceTime(20 * 1000);
-        VerifyOrQuit(sServerRxCount > 1);
-        VerifyOrQuit(sServerLastMsgId != firstMsgId);
 
         VerifyOrQuit(srpClient->GetHostInfo().GetState() != Srp::Client::kRegistered);
         VerifyOrQuit(service1.GetState() != Srp::Client::kRegistered);
@@ -1171,20 +1162,19 @@ void TestSrpClientDelayedResponse(void)
         AdvanceTime(10);
 
         //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        // In the first two iterations, we ensure that client
-        // did successfully accept the response with older message ID.
-        // This should not be the case in the third iteration due to
-        // changes to client services after first UPdate message was
-        // sent by client.
+        // In the first test iteration, we ensure that client did
+        // successfully accept the response with first message ID.
+        // This should not be the case in the second iteration due to
+        // changes to client services after the first Update message
+        // was sent by client.
 
         switch (testIter)
         {
         case 0:
-        case 1:
             VerifyOrQuit(srpClient->GetHostInfo().GetState() == Srp::Client::kRegistered);
             VerifyOrQuit(service1.GetState() == Srp::Client::kRegistered);
             break;
-        case 2:
+        case 1:
             VerifyOrQuit(srpClient->GetHostInfo().GetState() != Srp::Client::kRegistered);
             VerifyOrQuit(service1.GetState() != Srp::Client::kRegistered);
             break;
