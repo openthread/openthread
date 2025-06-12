@@ -3091,6 +3091,17 @@ nexthop 0x8001
 Done
 ```
 
+### p2p link extaddr \<extaddress\>
+
+Wakes up the peer identified by the extended address and establishes a peer-to-peer link with the peer.
+
+`OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE` and `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` are required.
+
+```bash
+> p2p link extaddr dead00beef00cafe
+Done
+```
+
 ### panid
 
 Get the IEEE 802.15.4 PAN ID value.
