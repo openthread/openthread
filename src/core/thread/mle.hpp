@@ -988,6 +988,13 @@ private:
 #endif
     };
 
+    enum ChildRestoreState : uint8_t
+    {
+        kIdle,
+        kSingleChildUpdateRequestBackoff,
+        kListenForPreviousParentBackoff,
+    };
+
     //------------------------------------------------------------------------------------------------------------------
     // Nested types
 
@@ -1456,9 +1463,9 @@ private:
     Ip6::Netif::MulticastAddress mLinkLocalAllThreadNodes;
     Ip6::Netif::MulticastAddress mRealmLocalAllThreadNodes;
 
-    ResetTimer      mResetTimer;      ///< timer to delay children/routers from sending messages
-	bool            mAwaitingRestore;
-    bool            mDeterminingLeader;
+    ResetTimer        mResetTimer;      ///< timer to delay children/routers from sending messages
+    ChildRestoreState mChildRestoreState;
+    bool              isRestoringRouter;
 };
 
 } // namespace Mle

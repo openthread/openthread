@@ -332,7 +332,6 @@ void MleRouter::HandleDetachStart(void)
 {
     mRouterTable.ClearNeighbors();
     StopLeader();
-    Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMleRouter);
 }
 
 void MleRouter::HandleChildStart(AttachMode aMode)
@@ -1578,14 +1577,11 @@ void MleRouter::HandleTimeTick(void)
         if ((mRouterTable.GetActiveRouterCount() > 0) && (mRouterTable.GetLeaderAge() >= mNetworkIdTimeout))
         {
             LogInfo("Leader age timeout");
+            Attach(kSamePartition);
 
-            if (mRole == kRoleRouter)
+            if (mRole == kRoleChild)
             {
-                BecomeLeader();
-            }
-            else if (mRole == kRoleChild)
-            {
-                // leader is gone, disable router role ... for now? 2 minutes
+                // leader is gone, disable router role - 2 minutes
                 mDisallowRouterRoleTimeout = 120;
                 LogInfo("mDisallowRouterRoleTimeout set from ID timeout");
             }
@@ -1654,11 +1650,7 @@ void MleRouter::HandleTimeTick(void)
         }
         else if (IsRouterOrLeader() && child.IsStateRestored())
         {
-            if (!mDeterminingLeader)
-            {
-                LogDebg("After determining leader");
-                IgnoreError(SendChildUpdateRequest(child));
-            }
+            IgnoreError(SendChildUpdateRequest(child));
         }
     }
 
@@ -1711,10 +1703,7 @@ void MleRouter::HandleTimeTick(void)
 
     mRouterTable.HandleTimeTick();
 
-    if (!mDeterminingLeader)
-    {
-        SynchronizeChildNetworkData();
-    }
+    SynchronizeChildNetworkData();
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (IsRouterOrLeader())
@@ -2222,8 +2211,6 @@ void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
     // middle of the attach process (in `kStateParentRequest` or
     // `kStateChildIdRequest`).
 
-    VerifyOrExit(child->IsStateValid());
-
     oldMode = child->GetDeviceMode();
     child->SetDeviceMode(mode);
 
@@ -2360,9 +2347,17 @@ void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
         Get<IndirectSender>().HandleChildModeChange(*child, oldMode);
     }
 
-    if (childDidChange)
+    if (child->IsStateRestoring())
     {
-        IgnoreError(mChildTable.StoreChild(*child));
+        SetChildStateToValid(*child);
+        child->SetKeySequence(aRxInfo.mKeySequence);
+    }
+    else if (child->IsStateValid())
+    {
+        if (childDidChange)
+        {
+            IgnoreError(mChildTable.StoreChild(*child));
+        }
     }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -2600,10 +2595,7 @@ void MleRouter::HandleNetworkDataUpdateRouter(void)
     delay = IsLeader() ? 0 : Random::NonCrypto::GetUint16InRange(0, kUnsolicitedDataResponseJitter);
     SendDataResponse(destination, tlvList, delay);
 
-    if (!mDeterminingLeader)
-    {
-        SynchronizeChildNetworkData();
-    }
+    SynchronizeChildNetworkData();
 
 exit:
     return;
