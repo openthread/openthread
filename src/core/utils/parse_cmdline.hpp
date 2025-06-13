@@ -162,7 +162,7 @@ otError ParseAsInt32(const char *aString, int32_t &aInt32);
  */
 otError ParseAsBool(const char *aString, bool &aBool);
 
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_MDNS
 /**
  * Parses a string as an IPv6 address.
  *
@@ -198,7 +198,7 @@ otError ParseAsIp4Address(const char *aString, otIp4Address &aAddress);
  * @retval kErrorInvalidArgs  The string does not contain a valid IPv6 prefix.
  */
 otError ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix);
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_MDNS
 
 /**
  * Parses a hex string into a byte array of fixed expected size.
@@ -452,7 +452,7 @@ public:
      */
     otError ParseAsBool(bool &aBool) const { return CmdLineParser::ParseAsBool(mString, aBool); }
 
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_MDNS
     /**
      * Parses the argument as an IPv6 address.
      *
@@ -491,7 +491,7 @@ public:
      */
     otError ParseAsIp6Prefix(otIp6Prefix &aPrefix) const { return CmdLineParser::ParseAsIp6Prefix(mString, aPrefix); }
 
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_MDNS
 
     /**
      * Parses the argument as a specified value type.
@@ -636,7 +636,7 @@ template <> inline otError Arg::ParseAs(const char *&aValue) const
     return IsEmpty() ? OT_ERROR_INVALID_ARGS : (aValue = GetCString(), OT_ERROR_NONE);
 }
 
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_MDNS
 
 template <> inline otError Arg::ParseAs(otIp6Address &aValue) const { return ParseAsIp6Address(aValue); }
 
