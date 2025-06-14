@@ -1036,6 +1036,9 @@ private:
         bool ContainsDefaultOrNonUlaRoutePrefix(void) const { return mDecisionFactors.mHasNonUlaRoute; }
         bool ContainsNonUlaOnLinkPrefix(void) const { return mDecisionFactors.mHasNonUlaOnLink; }
         bool ContainsUlaOnLinkPrefix(void) const { return mDecisionFactors.mHasUlaOnLink; }
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+        uint16_t GetReachablePeerBrCount(void) const { return mDecisionFactors.mReachablePeerBrCount; }
+#endif
 
         const Ip6::Prefix &GetFavoredOnLinkPrefix(void) const { return mDecisionFactors.mFavoredOnLinkPrefix; }
         void               SetHeaderFlagsOn(RouterAdvert::Header &aHeader) const;
@@ -1050,10 +1053,6 @@ private:
         Error GetNextEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const;
         Error GetNextRouter(PrefixTableIterator &aIterator, RouterEntry &aEntry) const;
         Error GetNextRdnssAddr(PrefixTableIterator &aIterator, RdnssAddrEntry &aEntry) const;
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-        uint16_t CountReachablePeerBrs(void) const;
-#endif
 
         // Callbacks notifying of changes
         void RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold);
@@ -1242,6 +1241,9 @@ private:
             bool        mHasUlaOnLink : 1;
             bool        mHeaderManagedAddressConfigFlag : 1;
             bool        mHeaderOtherConfigFlag : 1;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+            uint16_t mReachablePeerBrCount;
+#endif
         };
 
         //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
@@ -1254,6 +1256,9 @@ private:
         void DetermineStaleTimeFor(const OnLinkPrefix &aPrefix, NextFireTime &aStaleTime);
         void DetermineStaleTimeFor(const RoutePrefix &aPrefix, NextFireTime &aStaleTime);
         void SendNeighborSolicitToRouter(const Router &aRouter);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+        uint16_t CountReachablePeerBrs(void) const;
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
         template <class Type> Entry<Type> *AllocateEntry(void) { return Entry<Type>::Allocate(); }
 #else
