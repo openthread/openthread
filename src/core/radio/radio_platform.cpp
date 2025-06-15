@@ -386,3 +386,20 @@ extern "C" OT_TOOL_WEAK void otPlatRadioSetRxOnWhenIdle(otInstance *aInstance, b
 }
 
 OT_TOOL_WEAK otError otPlatRadioSetChannelTargetPower(otInstance *, uint8_t, int16_t) { return kErrorNotImplemented; }
+
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+extern "C" OT_TOOL_WEAK otError otPlatRadioStartAutoPoll(otInstance   *aInstance,
+                                                         otRadioFrame *aFrame,
+                                                         uint32_t      aStartTime,
+                                                         uint32_t      aPollPeriod)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aStartTime);
+    OT_UNUSED_VARIABLE(aPollPeriod);
+
+    return kErrorNotImplemented;
+}
+
+extern "C" OT_TOOL_WEAK void otPlatRadioStopAutoPoll(otInstance *aInstance) { OT_UNUSED_VARIABLE(aInstance); }
+#endif

@@ -137,6 +137,8 @@ enum
     OT_RADIO_CAPS_RX_ON_WHEN_IDLE      = 1 << 8,  ///< Radio supports RxOnWhenIdle handling.
     OT_RADIO_CAPS_TRANSMIT_FRAME_POWER = 1 << 9,  ///< Radio supports setting per-frame transmit power.
     OT_RADIO_CAPS_ALT_SHORT_ADDR       = 1 << 10, ///< Radio supports setting alternate short address.
+    OT_RADIO_CAPS_AUTO_DATA_POLL =
+        1 << 11, ///< Radio supports performing automatic data poll trasnmission with CSMA and Ack timeout.
 };
 
 #define OT_PANID_BROADCAST 0xffff ///< IEEE 802.15.4 Broadcast PAN ID
@@ -1437,6 +1439,73 @@ extern otError otPlatRadioGetRawPowerSetting(otInstance *aInstance,
                                              uint8_t     aChannel,
                                              uint8_t    *aRawPowerSetting,
                                              uint16_t   *aRawPowerSettingLength);
+
+/**
+ * Start Data Poll Offload using an initial frame, start timestamp and periodicity.
+ *
+ * @note This API is an optional radio platform API. It's up to the platform layer to implement it when
+ * it supports data poll offloading. For platforms that have a dedicated core for the radio layer, an
+ * improvement of the power consumption can be achieved by using this API. Only the low power radio core
+ * needs waking up for sending the periodic data poll frames. In this way the main application core
+ * can remain in sleep until there is data received that needs processing.
+ *
+ * The MAC layer submits the IEEE 802.15.4 data poll template frame, and the radio layer must take
+ * care of incrementing the sequence number. This feature requires handling of the MAC security at radio
+ * layer so the frame counter will be managed by the radio platform the same way as for normal data
+ * frames. The radio layer must also support ACK timeout handling and MAC Retransmissions for the feature
+ * to work. Upon entering this mode, the radio layer will continue to send  data poll frames at regular
+ * intervals until:
+ *   1. An ACK with FP = 1 is received. The automatic poll will stop, and the radio layer must call
+ *      otPlatRadioTxDone() with the last data poll frame and its corresponding ACK frame (if any) in
+ *      the same way it does for a single non-offloaded MAC data request frame.
+ *      The radio layer has the possibility to enter RX mode and receive the frame automatically and
+ *      delay the data confirm indication until the entire frame is received. After it invokes the 
+ *      otPlatRadioTxDone() callback it will also invoke the otPlatRadioReceiveDone() indication to 
+ *      notify of the received frame. When the upper layer processes the data confirm indication with 
+ *      FP = 1 it will request the radio to enter RX mode. The radio layer can gracefully handle the request 
+ *      by knowing it was already received the frame, return success and then invoke the 
+ *      otPlatRadioReceiveDone() callback. The main benefit of this optimization is the improved low power 
+ *      performance as the radio layer cand do more of the work without waking up the main core.
+ *   2. A transmit error that occurs when the radio layer doesn't support MAC layer retries, or all retries
+ *      are exhausted by the radio layer. The automatic poll will stop, and the radio layer will send a
+ *      data confirm indication in the same way as described above -> the returned TX frame should be
+ *      updated with the last frame sent by the radio poll mechanism.
+ *   3. The upper layer calls otPlatRadioStopAutoPoll(). In this case the radio poll is stopped by the
+ *      by the otPlatRadioStopAutoPoll API and the expected behavior is described by this function.
+ *   4. The number of offloaded polls reaches 255. If the number is higher than 255 there is no way
+ *      for the MAC layer to correctly calculate what is the current value of the sequence number.
+ * 
+ * The caller must form the IEEE 802.15.4 frame in the buffer provided by `otPlatRadioGetTransmitBuffer()`
+ * before requesting transmission.  The channel and transmit power are also included in the otRadioFrame 
+ * structure.
+ *
+ * @param[in]  aInstance      The OpenThread instance structure.
+ * @param[in]  aFrame         IEEE 802.15.4 data poll template frame.
+ * @param[in]  aStartTime     The start time of the initial IEEE 802.15.4 data poll frame.
+ * @param[in]  aPollPeriod    Periodicity of the IEEE 802.15.4 data poll frame.
+ *
+ */
+otError otPlatRadioStartAutoPoll(otInstance   *aInstance,
+                                 otRadioFrame *aFrame,
+                                 uint32_t      aStartTime,
+                                 uint32_t      aPollPeriod);
+
+/**
+ * Stop Data Poll Offload
+ *
+ * @note This API is an optional radio platform API. It's up to the platform layer to implement it when
+ * it supports data poll offloading.
+ *
+ * When this function is called, the automatic radio poll operation must stop, and the radio layer must invoke the
+ * data confirm indication with NO ERROR status to the upper layer in the same way it does for a single
+ * non-offloaded MAC data request frame. The returned TX frame should be updated with the last frame sent by
+ * the radio poll mechanism and the corresponding ACK. In the rare case that a stop request overlaps a
+ * received ACK with FP = 1 the expected behavior is the same as from point 1 of the start radio poll API.
+ *
+ * @param[in]  aInstance      The OpenThread instance structure.
+ *
+ */
+void otPlatRadioStopAutoPoll(otInstance *aInstance);
 
 /**
  * @}

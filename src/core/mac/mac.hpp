@@ -235,6 +235,23 @@ public:
      */
     Error RequestDataPollTransmission(void);
 
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    /**
+     * Request trasnmission of data poll (MAC Data Request) frames automatically by the
+     * radio layer.
+     *
+     * @retval kErrorNone          Automatic Data poll transmission request is scheduled successfully.
+     * @retval kErrorInvalidState  The MAC layer is not enabled.
+     */
+    Error StartRadioAutoPoll(TimeMilli aStartTime, uint32_t aPollPeriod);
+
+    /**
+     * Request termination of automatic data poll transmission by the radio layer.
+     *
+     */
+    void StopRadioAutoPoll();
+#endif
+
     /**
      * Returns a reference to the IEEE 802.15.4 Extended Address.
      *
@@ -448,6 +465,17 @@ public:
      * Requests.
      */
     bool IsInTransmitState(void) const;
+
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    /**
+     * Returns if the MAC layer is in radio poll state.
+     *
+     * The MAC layer is in radio poll transmit state when the data poll operation has been delegated to the radio layer.
+     * During this state, the MAC layer does nothing and will exit the state only when an ACK with FP = 1 is received, a
+     * TX error occurs or the MAC layer is requested to perform a direct frame transmission.
+     */
+    bool IsInRadioPollState(void) const { return (mOperation == kOperationRadioAutoPoll); }
+#endif
 
     /**
      * Registers a callback to provide received raw IEEE 802.15.4 frames.
@@ -789,6 +817,9 @@ private:
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
         kOperationTransmitWakeup,
 #endif
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+        kOperationRadioAutoPoll,
+#endif
     };
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
@@ -837,6 +868,9 @@ private:
     void     UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame &aRxFrame);
     bool     HandleMacCommand(RxFrame &aFrame);
     void     HandleTimer(void);
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    void BeginRadioAutoPoll();
+#endif
 
     void  Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration);
     Error UpdateScanChannel(void);
@@ -949,6 +983,11 @@ private:
 #endif
 
     KeyMaterial mMode2KeyMaterial;
+
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    TimeMilli mAutoPollStartTime;
+    uint32_t  mAutoPollPeriod;
+#endif
 };
 
 /**

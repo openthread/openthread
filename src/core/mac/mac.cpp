@@ -211,6 +211,9 @@ bool Mac::IsInTransmitState(void) const
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
     case kOperationTransmitWakeup:
 #endif
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    case kOperationRadioAutoPoll:
+#endif
         retval = true;
         break;
 
@@ -562,6 +565,47 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+Error Mac::StartRadioAutoPoll(TimeMilli aStartTime, uint32_t aPollPeriod)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
+
+    mAutoPollStartTime = aStartTime;
+    mAutoPollPeriod    = aPollPeriod;
+
+    // If the operation is pending exit. If this function is called again before
+    // the operation was started the start time, and the poll period can be updated.
+    VerifyOrExit(!IsPending(kOperationRadioAutoPoll));
+
+    // If the operation has already started and a new call is made to update the
+    // poll period and the start time, calling StartOperation with kOperationRadioAutoPoll
+    // will set kOperationRadioAutoPoll to pending and cancel the current one in the radio.
+    // The radio will send the Data confirm indication to update the frame counter and
+    // sequence number and after the operation is finished a new radio poll operation
+    // will start with the updated values.
+    // In case the radio poll operation is not active, the MAC will handle the operation
+    // as it does for any other type.
+    StartOperation(kOperationRadioAutoPoll);
+
+exit:
+    return error;
+}
+
+void Mac::StopRadioAutoPoll()
+{
+    if (IsInRadioPollState())
+    {
+        mLinks.GetSubMac().StopRadioAutoPoll();
+    }
+    else
+    {
+        ClearPending(kOperationRadioAutoPoll);
+    }
+}
+#endif
+
 void Mac::UpdateIdleMode(void)
 {
     bool shouldSleep = !mRxOnWhenIdle && !mPromiscuous;
@@ -632,6 +676,16 @@ void Mac::StartOperation(Operation aOperation)
     {
         mOperationTask.Post();
     }
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    else if (mOperation == kOperationRadioAutoPoll)
+    {
+        // The radio poll is a special type of operation that may continue indefinitely
+        // unless explicitly stopped. Therefore, we need to stop the radio poll and wait
+        // for the data confirmation of the last poll sent before transitioning to the
+        // next pending operation.
+        mLinks.GetSubMac().StopRadioAutoPoll();
+    }
+#endif
 }
 
 void Mac::PerformNextOperation(void)
@@ -701,7 +755,12 @@ void Mac::PerformNextOperation(void)
             mShouldTxPollBeforeData = true;
         }
     }
-
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    else if (IsPending(kOperationRadioAutoPoll))
+    {
+        mOperation = kOperationRadioAutoPoll;
+    }
+#endif
     if (mOperation != kOperationIdle)
     {
         ClearPending(mOperation);
@@ -738,7 +797,11 @@ void Mac::PerformNextOperation(void)
 #endif
         BeginTransmit();
         break;
-
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    case kOperationRadioAutoPoll:
+        BeginRadioAutoPoll();
+        break;
+#endif
     case kOperationWaitingForData:
         mLinks.Receive(mRadioChannel);
         mTimer.Start(kDataPollTimeout);
@@ -1167,6 +1230,46 @@ exit:
     }
 }
 
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+void Mac::BeginRadioAutoPoll()
+{
+    TxFrame  *frame    = nullptr;
+    TxFrames &txFrames = mLinks.GetTxFrames();
+    Address   dstAddr;
+
+    // Radio poll can only work over 802.15.4 radio link, we are only using the
+    // mTxFrame802154 frame
+    txFrames.Clear();
+    frame = Get<DataPollSender>().PrepareDataRequest(txFrames);
+    VerifyOrExit(frame != nullptr);
+    frame->SetChannel(mRadioChannel);
+    frame->SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
+    frame->SetMaxFrameRetries(mMaxFrameRetriesDirect);
+    // Do not increment sequence number when using the radio poll to simply nb of
+    // offloaded polls computation. The sequence number will be recalculated to
+    // correct value once the radio poll state ends.
+    frame->SetSequence(mDataSequence);
+
+    // No need to process transmit security, for 15.4 radio link, the AES CCM*
+    // and frame security counter (under MAC key ID mode 1 used by data poll frame)
+    // are managed by `SubMac` or `Radio` modules.
+    mLinks.GetSubMac().StartRadioAutoPoll(mAutoPollStartTime, mAutoPollPeriod);
+
+exit:
+    if (frame == nullptr)
+    {
+        // If the frame could not be prepared and the tx is being
+        // aborted, we set the frame length to zero to mark it as empty.
+        // The empty frame helps differentiate between an aborted tx due
+        // to OpenThread itself not being able to prepare the frame, versus
+        // the radio platform aborting the tx operation.
+        frame = &txFrames.GetBroadcastTxFrame();
+        frame->SetLength(0);
+        HandleTransmitDone(*frame, nullptr, kErrorAbort);
+    }
+}
+#endif
+
 void Mac::RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel)
 {
     if (!aCcaSuccess)
@@ -1292,6 +1395,9 @@ exit:
 void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 {
     bool ackRequested = aFrame.GetAckRequest();
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    int32_t nbOfOffloadedPolls = 0;
+#endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     if (!aFrame.IsEmpty()
@@ -1430,7 +1536,22 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         PerformNextOperation();
         break;
 
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    case kOperationRadioAutoPoll:
+        // calculate the number of polls taking into account wrap-around and including
+        // the endpoints
+        nbOfOffloadedPolls = (aFrame.GetSequence() - mDataSequence + 256) % 256 + 1;
+        mDataSequence += nbOfOffloadedPolls;
+
+        mCounters.mTxDataPoll += nbOfOffloadedPolls;
+        // mTxTotal was all ready updated once in RecordFrameTransmitStatus
+        mCounters.mTxTotal += nbOfOffloadedPolls - 1;
+
+        // fall through
+        OT_FALL_THROUGH;
+#endif
     case kOperationTransmitPoll:
+
         OT_ASSERT(aFrame.IsEmpty() || ackRequested);
 
         if ((aError == kErrorNone) && (aAckFrame != nullptr))
@@ -1445,9 +1566,14 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
             LogInfo("Sent data poll, fp:%s", ToYesNo(framePending));
         }
 
-        mCounters.mTxDataPoll++;
         FinishOperation();
+
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+        Get<DataPollSender>().HandlePollSent(aFrame, aError, nbOfOffloadedPolls);
+#else
+        mCounters.mTxDataPoll++;
         Get<DataPollSender>().HandlePollSent(aFrame, aError);
+#endif
         PerformNextOperation();
         break;
 
