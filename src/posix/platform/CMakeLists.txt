@@ -129,6 +129,7 @@ add_library(openthread-posix
     configuration.cpp
     config_file.cpp
     daemon.cpp
+    dhcp6_pd_socket.cpp
     entropy.cpp
     firewall.cpp
     hdlc_interface.cpp

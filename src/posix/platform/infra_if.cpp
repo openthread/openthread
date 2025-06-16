@@ -414,6 +414,10 @@ void InfraNetif::Init(void)
 #ifdef __linux__
     mNetLinkSocket = CreateNetLinkSocket();
 #endif
+
+#if OT_POSIX_CONFIG_DHCP6_PD_SOCKET_ENABLE
+    mDhcp6PdSocket.Init();
+#endif
 }
 
 void InfraNetif::SetInfraNetif(const char *aIfName, int aIcmp6Socket)
@@ -473,6 +477,10 @@ void InfraNetif::SetUp(void)
     mMulticastRoutingManager.SetUp();
 #endif
 
+#if OT_POSIX_CONFIG_DHCP6_PD_SOCKET_ENABLE
+    mDhcp6PdSocket.SetUp();
+#endif
+
     Mainloop::Manager::Get().Add(*this);
 
     ExitNow(); // To silence unused `exit` label warning.
@@ -487,6 +495,10 @@ void InfraNetif::TearDown(void)
     IgnoreError(otBorderRoutingSetEnabled(gInstance, false));
 #endif
 
+#if OT_POSIX_CONFIG_DHCP6_PD_SOCKET_ENABLE
+    mDhcp6PdSocket.TearDown();
+#endif
+
 #if OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     mMulticastRoutingManager.TearDown();
 #endif
@@ -496,6 +508,10 @@ void InfraNetif::TearDown(void)
 
 void InfraNetif::Deinit(void)
 {
+#if OT_POSIX_CONFIG_DHCP6_PD_SOCKET_ENABLE
+    mDhcp6PdSocket.Deinit();
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     if (mInfraIfIcmp6Socket != -1)
     {
@@ -518,6 +534,10 @@ void InfraNetif::Deinit(void)
 
 void InfraNetif::Update(Mainloop::Context &aContext)
 {
+#if OT_POSIX_CONFIG_DHCP6_PD_SOCKET_ENABLE
+    mDhcp6PdSocket.Update(aContext);
+#endif
+
 #ifdef __linux__
     VerifyOrExit(mNetLinkSocket != -1);
 #endif
@@ -682,6 +702,10 @@ void InfraNetif::SetInfraNetifIcmp6SocketForBorderRouting(int aIcmp6Socket)
 
 void InfraNetif::Process(const Mainloop::Context &aContext)
 {
+#if OT_POSIX_CONFIG_DHCP6_PD_SOCKET_ENABLE
+    mDhcp6PdSocket.Process(aContext);
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     VerifyOrExit(mInfraIfIcmp6Socket != -1);
 #endif
