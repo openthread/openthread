@@ -345,6 +345,9 @@ void MdnsSocket::ClearTxQueue(void)
 
 void MdnsSocket::SendQueuedMessages(MsgType aMsgType)
 {
+    otMessage *message;
+    otMessage *nextMessage;
+
     switch (aMsgType)
     {
     case kIp6Msg:
@@ -355,8 +358,7 @@ void MdnsSocket::SendQueuedMessages(MsgType aMsgType)
         break;
     }
 
-    for (otMessage *message = otMessageQueueGetHead(&mTxQueue); message != NULL;
-         message            = otMessageQueueGetNext(&mTxQueue, message))
+    for (message = otMessageQueueGetHead(&mTxQueue); message != NULL; message = nextMessage)
     {
         bool                isTxPending = false;
         uint16_t            length;
@@ -366,6 +368,8 @@ void MdnsSocket::SendQueuedMessages(MsgType aMsgType)
         uint8_t             buffer[kMaxMessageLength];
         struct sockaddr_in6 addr6;
         struct sockaddr_in  addr;
+
+        nextMessage = otMessageQueueGetNext(&mTxQueue, message);
 
         length = otMessageGetLength(message);
 
