@@ -310,12 +310,6 @@ void virtualTimeRadioProcess(otInstance *aInstance, const struct VirtualTimeEven
  */
 void virtualTimeSpinelProcess(otInstance *aInstance, const struct VirtualTimeEvent *aEvent);
 
-enum SocketBlockOption
-{
-    kSocketBlock,
-    kSocketNonBlock,
-};
-
 /**
  * Initializes platform TREL UDP6 driver.
  *
