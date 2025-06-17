@@ -52,7 +52,6 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/new.hpp"
-#include "config/crypto.h"
 #include "crypto/ecdsa.hpp"
 #include "crypto/hmac_sha256.hpp"
 #include "crypto/storage.hpp"
