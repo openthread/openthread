@@ -813,37 +813,6 @@ void Mle::SetStateChild(uint16_t aRloc16)
     mPreviousParentRloc = mParent.GetRloc16();
 }
 
-void Mle::AnnounceHandler::HandleAnnounceAttachSuccess(void)
-{
-    // Clear state and send announce on previous channel.
-
-    VerifyOrExit(mState == kStateAnnounceAttaching);
-    mState = kStateToInformPreviousChannel;
-
-#if OPENTHREAD_FTD
-    if (Get<Mle>().IsFullThreadDevice() && !Get<Mle>().IsRouter() && Get<Mle>().IsRouterRoleTransitionPending())
-    {
-        ExitNow();
-    }
-#endif
-
-    InformPreviousChannel();
-
-exit:
-    return;
-}
-
-void Mle::AnnounceHandler::InformPreviousChannel(void)
-{
-    VerifyOrExit(mState == kStateToInformPreviousChannel);
-
-    mState = kStateIdle;
-    Get<AnnounceBeginServer>().SendAnnounce(1 << mAlternateChannel);
-
-exit:
-    return;
-}
-
 void Mle::SetTimeout(uint32_t aTimeout, TimeoutAction aAction)
 {
     // Determine `kMinTimeout` based on other parameters. `kMaxTimeout`
@@ -3688,103 +3657,6 @@ exit:
     LogProcessError(kTypeChildUpdateResponseAsChild, error);
 }
 
-void Mle::AnnounceHandler::HandleAnnounce(RxInfo &aRxInfo)
-{
-    Error              error = kErrorNone;
-    ChannelTlvValue    channelTlvValue;
-    MeshCoP::Timestamp timestamp;
-    MeshCoP::Timestamp pendingActiveTimestamp;
-    uint8_t            channel;
-    uint16_t           panId;
-    bool               isFromOrphan;
-    bool               channelAndPanIdMatch;
-    int                timestampCompare;
-
-    Log(kMessageReceive, kTypeAnnounce, aRxInfo.mMessageInfo.GetPeerAddr());
-
-    SuccessOrExit(error = Tlv::Find<ChannelTlv>(aRxInfo.mMessage, channelTlvValue));
-    channel = static_cast<uint8_t>(channelTlvValue.GetChannel());
-
-    SuccessOrExit(error = Tlv::Find<ActiveTimestampTlv>(aRxInfo.mMessage, timestamp));
-    SuccessOrExit(error = Tlv::Find<PanIdTlv>(aRxInfo.mMessage, panId));
-
-    aRxInfo.mClass = RxInfo::kPeerMessage;
-
-    isFromOrphan         = timestamp.IsOrphanAnnounce();
-    timestampCompare     = MeshCoP::Timestamp::Compare(timestamp, Get<MeshCoP::ActiveDatasetManager>().GetTimestamp());
-    channelAndPanIdMatch = (channel == Get<Mac::Mac>().GetPanChannel()) && (panId == Get<Mac::Mac>().GetPanId());
-
-    if (isFromOrphan || (timestampCompare < 0))
-    {
-        if (isFromOrphan)
-        {
-            VerifyOrExit(!channelAndPanIdMatch);
-        }
-
-        Get<Mle>().SendAnnounce(channel);
-
-#if OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE
-        Get<Mle>().SendAnnounce(channel, aRxInfo.mMessageInfo.GetPeerAddr());
-#endif
-    }
-    else if (timestampCompare > 0)
-    {
-        // No action is required if device is detached, and current
-        // channel and pan-id match the values from the received MLE
-        // Announce message.
-
-        if (Get<Mle>().IsDetached())
-        {
-            VerifyOrExit(!channelAndPanIdMatch);
-        }
-
-        if (Get<MeshCoP::PendingDatasetManager>().ReadActiveTimestamp(pendingActiveTimestamp) == kErrorNone)
-        {
-            // Ignore the Announce and take no action, if a pending
-            // dataset exists with an equal or more recent timestamp,
-            // and it will be applied soon.
-
-            if (pendingActiveTimestamp >= timestamp)
-            {
-                uint32_t remainingDelay;
-
-                if ((Get<MeshCoP::PendingDatasetManager>().ReadRemainingDelay(remainingDelay) == kErrorNone) &&
-                    (remainingDelay < kAnnounceBackoffForPendingDataset))
-                {
-                    ExitNow();
-                }
-            }
-        }
-
-        if (mState == kStateToAnnounceAttach)
-        {
-            VerifyOrExit(mAlternateTimestamp < timestamp.GetSeconds());
-        }
-
-        mAlternateTimestamp = timestamp.GetSeconds();
-        mAlternateChannel   = channel;
-        mAlternatePanId     = panId;
-        mState              = kStateToAnnounceAttach;
-        mTimer.Start(kAnnounceProcessTimeout);
-
-        LogNote("Delay processing Announce - channel %d, panid 0x%02x", channel, panId);
-    }
-    else
-    {
-        // Timestamps are equal.
-
-#if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
-        // Notify `AnnounceSender` of the received Announce
-        // message so it can update its state to determine
-        // whether to send Announce or not.
-        Get<AnnounceSender>().UpdateOnReceivedAnnounce();
-#endif
-    }
-
-exit:
-    LogProcessError(kTypeAnnounce, error);
-}
-
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 void Mle::HandleLinkMetricsManagementRequest(RxInfo &aRxInfo)
 {
@@ -3862,32 +3734,6 @@ exit:
     LogProcessError(kTypeLinkProbe, error);
 }
 #endif
-
-void Mle::AnnounceHandler::StartAnnounceAttach(void)
-{
-    uint8_t  newChannel = mAlternateChannel;
-    uint16_t newPanId   = mAlternatePanId;
-
-    VerifyOrExit(mState == kStateToAnnounceAttach);
-
-    LogNote("Starting Announce attach - channel %d, panid 0x%02x", newChannel, newPanId);
-
-    Get<Mle>().Stop(kKeepNetworkDatasets);
-
-    // Save the current/previous channel and pan-id
-    mAlternateChannel   = Get<Mac::Mac>().GetPanChannel();
-    mAlternatePanId     = Get<Mac::Mac>().GetPanId();
-    mAlternateTimestamp = 0;
-
-    IgnoreError(Get<Mac::Mac>().SetPanChannel(newChannel));
-    Get<Mac::Mac>().SetPanId(newPanId);
-
-    mState = kStateAnnounceAttaching;
-    IgnoreError(Get<Mle>().Start(kAnnounceAttach));
-
-exit:
-    return;
-}
 
 uint16_t Mle::GetParentRloc16(void) const { return (mParent.IsStateValid() ? mParent.GetRloc16() : kInvalidRloc16); }
 
@@ -5619,6 +5465,160 @@ void Mle::AnnounceHandler::Stop(void)
 {
     mTimer.Stop();
     mState = kStateIdle;
+}
+
+void Mle::AnnounceHandler::HandleAnnounce(RxInfo &aRxInfo)
+{
+    Error              error = kErrorNone;
+    ChannelTlvValue    channelTlvValue;
+    MeshCoP::Timestamp timestamp;
+    MeshCoP::Timestamp pendingActiveTimestamp;
+    uint8_t            channel;
+    uint16_t           panId;
+    bool               isFromOrphan;
+    bool               channelAndPanIdMatch;
+    int                timestampCompare;
+
+    Log(kMessageReceive, kTypeAnnounce, aRxInfo.mMessageInfo.GetPeerAddr());
+
+    SuccessOrExit(error = Tlv::Find<ChannelTlv>(aRxInfo.mMessage, channelTlvValue));
+    channel = static_cast<uint8_t>(channelTlvValue.GetChannel());
+
+    SuccessOrExit(error = Tlv::Find<ActiveTimestampTlv>(aRxInfo.mMessage, timestamp));
+    SuccessOrExit(error = Tlv::Find<PanIdTlv>(aRxInfo.mMessage, panId));
+
+    aRxInfo.mClass = RxInfo::kPeerMessage;
+
+    isFromOrphan         = timestamp.IsOrphanAnnounce();
+    timestampCompare     = MeshCoP::Timestamp::Compare(timestamp, Get<MeshCoP::ActiveDatasetManager>().GetTimestamp());
+    channelAndPanIdMatch = (channel == Get<Mac::Mac>().GetPanChannel()) && (panId == Get<Mac::Mac>().GetPanId());
+
+    if (isFromOrphan || (timestampCompare < 0))
+    {
+        if (isFromOrphan)
+        {
+            VerifyOrExit(!channelAndPanIdMatch);
+        }
+
+        Get<Mle>().SendAnnounce(channel);
+
+#if OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE
+        Get<Mle>().SendAnnounce(channel, aRxInfo.mMessageInfo.GetPeerAddr());
+#endif
+    }
+    else if (timestampCompare > 0)
+    {
+        // No action is required if device is detached, and current
+        // channel and pan-id match the values from the received MLE
+        // Announce message.
+
+        if (Get<Mle>().IsDetached())
+        {
+            VerifyOrExit(!channelAndPanIdMatch);
+        }
+
+        if (Get<MeshCoP::PendingDatasetManager>().ReadActiveTimestamp(pendingActiveTimestamp) == kErrorNone)
+        {
+            // Ignore the Announce and take no action, if a pending
+            // dataset exists with an equal or more recent timestamp,
+            // and it will be applied soon.
+
+            if (pendingActiveTimestamp >= timestamp)
+            {
+                uint32_t remainingDelay;
+
+                if ((Get<MeshCoP::PendingDatasetManager>().ReadRemainingDelay(remainingDelay) == kErrorNone) &&
+                    (remainingDelay < kAnnounceBackoffForPendingDataset))
+                {
+                    ExitNow();
+                }
+            }
+        }
+
+        if (mState == kStateToAnnounceAttach)
+        {
+            VerifyOrExit(mAlternateTimestamp < timestamp.GetSeconds());
+        }
+
+        mAlternateTimestamp = timestamp.GetSeconds();
+        mAlternateChannel   = channel;
+        mAlternatePanId     = panId;
+        mState              = kStateToAnnounceAttach;
+        mTimer.Start(kAnnounceProcessTimeout);
+
+        LogNote("Delay processing Announce - channel %d, panid 0x%02x", channel, panId);
+    }
+    else
+    {
+        // Timestamps are equal.
+
+#if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
+        // Notify `AnnounceSender` of the received Announce
+        // message so it can update its state to determine
+        // whether to send Announce or not.
+        Get<AnnounceSender>().UpdateOnReceivedAnnounce();
+#endif
+    }
+
+exit:
+    LogProcessError(kTypeAnnounce, error);
+}
+
+void Mle::AnnounceHandler::StartAnnounceAttach(void)
+{
+    uint8_t  newChannel = mAlternateChannel;
+    uint16_t newPanId   = mAlternatePanId;
+
+    VerifyOrExit(mState == kStateToAnnounceAttach);
+
+    LogNote("Starting Announce attach - channel %d, panid 0x%02x", newChannel, newPanId);
+
+    Get<Mle>().Stop(kKeepNetworkDatasets);
+
+    // Save the current/previous channel and pan-id
+    mAlternateChannel   = Get<Mac::Mac>().GetPanChannel();
+    mAlternatePanId     = Get<Mac::Mac>().GetPanId();
+    mAlternateTimestamp = 0;
+
+    IgnoreError(Get<Mac::Mac>().SetPanChannel(newChannel));
+    Get<Mac::Mac>().SetPanId(newPanId);
+
+    mState = kStateAnnounceAttaching;
+    IgnoreError(Get<Mle>().Start(kAnnounceAttach));
+
+exit:
+    return;
+}
+
+void Mle::AnnounceHandler::HandleAnnounceAttachSuccess(void)
+{
+    // Clear state and send announce on previous channel.
+
+    VerifyOrExit(mState == kStateAnnounceAttaching);
+    mState = kStateToInformPreviousChannel;
+
+#if OPENTHREAD_FTD
+    if (Get<Mle>().IsFullThreadDevice() && !Get<Mle>().IsRouter() && Get<Mle>().IsRouterRoleTransitionPending())
+    {
+        ExitNow();
+    }
+#endif
+
+    InformPreviousChannel();
+
+exit:
+    return;
+}
+
+void Mle::AnnounceHandler::InformPreviousChannel(void)
+{
+    VerifyOrExit(mState == kStateToInformPreviousChannel);
+
+    mState = kStateIdle;
+    Get<AnnounceBeginServer>().SendAnnounce(1 << mAlternateChannel);
+
+exit:
+    return;
 }
 
 void Mle::AnnounceHandler::HandleAnnounceAttachFailure(void)
