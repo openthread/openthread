@@ -1400,8 +1400,6 @@ void RoutingManager::RxRaTracker::ProcessRaHeader(const RouterAdvert::Header &aR
     prefix.Clear();
     entry = aRouter.mRoutePrefixes.FindMatching(prefix);
 
-    LogInfo("- RA Header - default route - lifetime:%u", aRaHeader.GetRouterLifetime());
-
     if (entry == nullptr)
     {
         VerifyOrExit(aRaHeader.GetRouterLifetime() != 0);
