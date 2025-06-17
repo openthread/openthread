@@ -198,6 +198,18 @@
 #endif
 
 /**
+ *
+ * @def OPENTHREAD_CONFIG_TX_CALLBACK_API_ENABLE
+ *
+ * Define as 1 to enable the IPv6 message TX callback.
+ *
+ * When enabled, allows for registering a callback that is called when sending an IPv6 message succeeds or fails.
+ */
+#ifndef OPENTHREAD_CONFIG_TX_CALLBACK_API_ENABLE
+#define OPENTHREAD_CONFIG_TX_CALLBACK_API_ENABLE 0
+#endif
+
+/**
  * @}
  */
 

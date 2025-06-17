@@ -284,3 +284,10 @@ void otIp6ResetBorderRoutingCounters(otInstance *aInstance)
     AsCoreType(aInstance).Get<Ip6::Ip6>().ResetBorderRoutingCounters();
 }
 #endif
+
+#if OPENTHREAD_CONFIG_TX_CALLBACK_API_ENABLE
+void otIp6RegisterTxCallback(otInstance *aInstance, otIp6TxCallback aCallback, void *aContext)
+{
+    return AsCoreType(aInstance).Get<MeshForwarder>().RegisterIp6TxCallback(aCallback, aContext);
+}
+#endif

@@ -1277,6 +1277,13 @@ void MeshForwarder::FinalizeMessageDirectTx(Message &aMessage, Error aError)
 
     mCounters.UpdateOnTxDone(aMessage, aMessage.GetTxSuccess());
 
+#if OPENTHREAD_CONFIG_TX_CALLBACK_API_ENABLE
+    if (aMessage.GetType() == Message::kTypeIp6)
+    {
+        mIp6TxCallback.InvokeIfSet(&aMessage, aError);
+    }
+#endif
+
     if (aMessage.IsMleCommand(Mle::kCommandDiscoveryRequest))
     {
         // Note that `HandleDiscoveryRequestFrameTxDone()` may update
