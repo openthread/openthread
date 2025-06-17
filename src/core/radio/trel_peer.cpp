@@ -100,7 +100,7 @@ void Peer::ScheduleToRemoveAfter(uint32_t aDelay)
     mRemoveTime = TimerMilli::GetNow() + aDelay;
 
     Log(kRemoving);
-    LogInfo("    after %u msec", aDelay);
+    LogInfo("    after %lu msec", ToUlong(aDelay));
 
     SetState(kStateRemoving);
 
