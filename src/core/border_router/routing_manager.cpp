@@ -1213,7 +1213,7 @@ void RoutingManager::MultiAilDetector::Evaluate(void)
         mNetDataPeerBrCount = count;
     }
 
-    count = Get<RoutingManager>().mRxRaTracker.CountReachablePeerBrs();
+    count = Get<RoutingManager>().mRxRaTracker.GetReachablePeerBrCount();
 
     if (count != mRxRaTrackerReachablePeerBrCount)
     {
@@ -1812,6 +1812,10 @@ void RoutingManager::RxRaTracker::Evaluate(void)
         }
     }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    mDecisionFactors.mReachablePeerBrCount = CountReachablePeerBrs();
+#endif
+
     if (oldFactors != mDecisionFactors)
     {
         mSignalTask.Post();
@@ -2021,14 +2025,6 @@ void RoutingManager::RxRaTracker::HandleRouterTimer(void)
             {
                 entry.ClearLifetime();
             }
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-            // When a Peer BR becomes unreachable, post a task that will do multi-ail evaluation.
-            if (router.IsPeerBr())
-            {
-                mSignalTask.Post();
-            }
-#endif
         }
     }
 
@@ -2182,7 +2178,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
 uint16_t RoutingManager::RxRaTracker::CountReachablePeerBrs(void) const
 {
     uint16_t count = 0;
@@ -2198,6 +2194,7 @@ uint16_t RoutingManager::RxRaTracker::CountReachablePeerBrs(void) const
     return count;
 }
 #endif
+
 //---------------------------------------------------------------------------------------------------------------------
 // RxRaTracker::Iterator
 
