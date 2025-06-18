@@ -4407,9 +4407,22 @@ void RoutingManager::PdPrefixManager::SetState(State aState)
     LogInfo("PdPrefixManager: %s -> %s", StateToString(mState), StateToString(aState));
     mState = aState;
 
-    if (mState != kDhcp6PdStateRunning)
+    switch (mState)
     {
+    case kDhcp6PdStateRunning:
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+        Get<Dhcp6PdClient>().Start();
+#endif
+        break;
+
+    case kDhcp6PdStateDisabled:
+    case kDhcp6PdStateStopped:
+    case kDhcp6PdStateIdle:
         WithdrawPrefix();
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+        Get<Dhcp6PdClient>().Stop();
+#endif
+        break;
     }
 
     mStateCallback.InvokeIfSet(MapEnum(mState));
@@ -4649,6 +4662,8 @@ const char *RoutingManager::PdPrefixManager::StateToString(State aState)
     return kStateStrings[aState];
 }
 
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+
 extern "C" void otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength)
 {
     InfraIf::Icmp6Packet raMessage;
@@ -4665,6 +4680,9 @@ extern "C" void otPlatBorderRoutingProcessDhcp6PdPrefix(otInstance              
 
     AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().ProcessDhcp6PdPrefix(*aPrefixInfo);
 }
+
+#endif // !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
 } // namespace BorderRouter
