@@ -190,6 +190,9 @@ public:
 protected:
     struct Metadata
     {
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+        Instance *mInstance;
+#endif
         bool mDirectTx : 1;            // Whether a direct transmission is required.
         bool mLinkSecurity : 1;        // Whether link security is enabled.
         bool mInPriorityQ : 1;         // Whether the message is queued in normal or priority queue.
@@ -227,13 +230,12 @@ protected:
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         int64_t mNetworkTimeOffset; // The time offset to the Thread network time, in microseconds.
 #endif
-        TimeMilli    mTimestamp;   // The message timestamp.
-        Message     *mNext;        // Next message in a doubly linked list.
-        Message     *mPrev;        // Previous message in a doubly linked list.
-        MessagePool *mMessagePool; // Message pool for this message.
-        void        *mQueue;       // The queue where message is queued (if any). Queue type from `mInPriorityQ`.
-        RssAverager  mRssAverager; // The averager maintaining the received signal strength (RSS) average.
-        LqiAverager  mLqiAverager; // The averager maintaining the Link quality indicator (LQI) average.
+        TimeMilli   mTimestamp;   // The message timestamp.
+        Message    *mNext;        // Next message in a doubly linked list.
+        Message    *mPrev;        // Previous message in a doubly linked list.
+        void       *mQueue;       // The queue where message is queued (if any). Queue type from `mInPriorityQ`.
+        RssAverager mRssAverager; // The averager maintaining the received signal strength (RSS) average.
+        LqiAverager mLqiAverager; // The averager maintaining the Link quality indicator (LQI) average.
 #if OPENTHREAD_FTD
         ChildMask mChildMask; // ChildMask to indicate which sleepy children need to receive this.
 #endif
@@ -479,7 +481,11 @@ public:
      *
      * @returns A reference to the `Instance`.
      */
-    Instance &GetInstance(void) const;
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    Instance &GetInstance(void) const { return *GetMetadata().mInstance; }
+#else
+    Instance &GetInstance(void) const { return GetSingleInstance(); }
+#endif
 
     /**
      * Frees this message buffer.
@@ -1546,9 +1552,6 @@ private:
         AsConst(this)->GetNextChunk(aLength, static_cast<Chunk &>(aChunk));
     }
 
-    MessagePool *GetMessagePool(void) const { return GetMetadata().mMessagePool; }
-    void         SetMessagePool(MessagePool *aMessagePool) { GetMetadata().mMessagePool = aMessagePool; }
-
     bool IsInAQueue(void) const { return (GetMetadata().mQueue != nullptr); }
     void SetMessageQueue(MessageQueue *aMessageQueue);
     void SetPriorityQueue(PriorityQueue *aPriorityQueue);
@@ -1915,8 +1918,6 @@ private:
     uint16_t mNumAllocated;
     uint16_t mMaxAllocated;
 };
-
-inline Instance &Message::GetInstance(void) const { return GetMessagePool()->GetInstance(); }
 
 /**
  * @}

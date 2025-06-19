@@ -66,7 +66,10 @@ Message *MessagePool::Allocate(Message::Type aType, uint16_t aReserveHeader, con
     VerifyOrExit((message = static_cast<Message *>(NewBuffer(aSettings.GetPriority()))) != nullptr);
 
     ClearAllBytes(*message);
-    message->SetMessagePool(this);
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    message->GetMetadata().mInstance = &GetInstance();
+#endif
     message->SetType(aType);
     message->SetReserved(aReserveHeader);
     message->SetLinkSecurityEnabled(aSettings.IsLinkSecurityEnabled());
@@ -229,7 +232,7 @@ Error Message::ResizeMessage(uint16_t aLength)
     {
         if (curBuffer->GetNextBuffer() == nullptr)
         {
-            curBuffer->SetNextBuffer(GetMessagePool()->NewBuffer(GetPriority()));
+            curBuffer->SetNextBuffer(Get<MessagePool>().NewBuffer(GetPriority()));
             VerifyOrExit(curBuffer->GetNextBuffer() != nullptr, error = kErrorNoBufs);
         }
 
@@ -241,13 +244,13 @@ Error Message::ResizeMessage(uint16_t aLength)
     curBuffer  = curBuffer->GetNextBuffer();
     lastBuffer->SetNextBuffer(nullptr);
 
-    GetMessagePool()->FreeBuffers(curBuffer);
+    Get<MessagePool>().FreeBuffers(curBuffer);
 
 exit:
     return error;
 }
 
-void Message::Free(void) { GetMessagePool()->Free(this); }
+void Message::Free(void) { Get<MessagePool>().Free(this); }
 
 Message *Message::GetNext(void) const
 {
@@ -421,7 +424,7 @@ Error Message::PrependBytes(const void *aBuf, uint16_t aLength)
 
     while (aLength > GetReserved())
     {
-        VerifyOrExit((newBuffer = GetMessagePool()->NewBuffer(GetPriority())) != nullptr, error = kErrorNoBufs);
+        VerifyOrExit((newBuffer = Get<MessagePool>().NewBuffer(GetPriority())) != nullptr, error = kErrorNoBufs);
 
         newBuffer->SetNextBuffer(GetNextBuffer());
         SetNextBuffer(newBuffer);
@@ -769,7 +772,7 @@ Message *Message::Clone(uint16_t aLength) const
     uint16_t offset;
 
     aLength     = Min(GetLength(), aLength);
-    messageCopy = GetMessagePool()->Allocate(GetType(), GetReserved(), settings);
+    messageCopy = Get<MessagePool>().Allocate(GetType(), GetReserved(), settings);
     VerifyOrExit(messageCopy != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = messageCopy->AppendBytesFromMessage(*this, 0, aLength));
 
