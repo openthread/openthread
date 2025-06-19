@@ -57,7 +57,16 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFra
     }
 #endif
 
-    instance.Get<Radio::Callbacks>().HandleReceiveDone(rxFrame, aError);
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+    if (instance.Get<Radio>().GetDiagMode())
+    {
+        instance.Get<Radio::Callbacks>().HandleDiagsReceiveDone(rxFrame, aError);
+    }
+    else
+#endif
+    {
+        instance.Get<Radio::Callbacks>().HandleReceiveDone(rxFrame, aError);
+    }
 
 exit:
     return;
@@ -97,8 +106,26 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
     txFrame.SetRadioType(Mac::kRadioTypeIeee802154);
 #endif
 
-    instance.Get<Radio::Callbacks>().HandleTransmitDone(txFrame, ackFrame, aError);
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+    if (instance.Get<Radio>().GetDiagMode())
+    {
+#if OPENTHREAD_RADIO
+        uint8_t channel = txFrame.mInfo.mTxInfo.mRxChannelAfterTxDone;
 
+        if (channel != aFrame->mChannel)
+        {
+            OT_ASSERT((otPlatRadioGetSupportedChannelMask(aInstance) & (1UL << channel)) != 0);
+            IgnoreError(otPlatRadioReceive(aInstance, channel));
+        }
+#endif
+
+        instance.Get<Radio::Callbacks>().HandleDiagsTransmitDone(txFrame, aError);
+    }
+    else
+#endif
+    {
+        instance.Get<Radio::Callbacks>().HandleTransmitDone(txFrame, ackFrame, aError);
+    }
 exit:
     return;
 }
@@ -159,7 +186,6 @@ extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame 
     AsCoreType(aInstance).Get<Radio::Callbacks>().HandleDiagsTransmitDone(txFrame, aError);
 }
 #endif
-
 #else // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
 extern "C" void otPlatRadioReceiveDone(otInstance *, otRadioFrame *, otError) {}
@@ -171,12 +197,6 @@ extern "C" void otPlatRadioTxDone(otInstance *, otRadioFrame *, otRadioFrame *, 
 extern "C" void otPlatRadioEnergyScanDone(otInstance *, int8_t) {}
 
 extern "C" void otPlatRadioBusLatencyChanged(otInstance *) {}
-
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-extern "C" void otPlatDiagRadioReceiveDone(otInstance *, otRadioFrame *, otError) {}
-
-extern "C" void otPlatDiagRadioTransmitDone(otInstance *, otRadioFrame *, otError) {}
-#endif
 
 #endif // // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
