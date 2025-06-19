@@ -223,6 +223,7 @@ void Dhcp6PdClient::SendMessage(void)
     case kStateStopped:
     case kStateToSolicit:
     case kStateToRenew:
+    default:
         ExitNow();
     }
 
