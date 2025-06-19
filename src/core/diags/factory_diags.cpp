@@ -154,7 +154,7 @@ Error Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    otPlatDiagModeSet(true);
+    Get<Radio>().SetDiagMode(true);
 
     return kErrorNone;
 }
@@ -164,7 +164,7 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    otPlatDiagModeSet(false);
+    Get<Radio>().SetDiagMode(false);
 
     return kErrorNone;
 }
@@ -500,7 +500,7 @@ Error Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[])
     otPlatAlarmMilliStop(&GetInstance());
     SuccessOrExit(error = Get<Radio>().Receive(mChannel));
     SuccessOrExit(error = Get<Radio>().SetTransmitPower(mTxPower));
-    otPlatDiagModeSet(true);
+    Get<Radio>().SetDiagMode(true);
     mStats.Clear();
 
 exit:
@@ -547,7 +547,7 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgs);
 
     otPlatAlarmMilliStop(&GetInstance());
-    otPlatDiagModeSet(false);
+    Get<Radio>().SetDiagMode(false);
     Get<Radio>().SetPromiscuous(false);
     Get<Mac::SubMac>().SetRxOnWhenIdle(false);
 
@@ -1195,11 +1195,11 @@ Error Diags::ProcessCmd(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        Output("diagnostics mode is %s\r\n", otPlatDiagModeGet() ? "enabled" : "disabled");
+        Output("diagnostics mode is %s\r\n", IsEnabled() ? "enabled" : "disabled");
         ExitNow();
     }
 
-    if (!otPlatDiagModeGet() && !StringMatch(aArgs[0], "start"))
+    if (!IsEnabled() && !StringMatch(aArgs[0], "start"))
     {
         Output("diagnostics mode is disabled\r\n");
         ExitNow(error = kErrorInvalidState);
@@ -1249,7 +1249,7 @@ void Diags::Output(const char *aFormat, ...)
     va_end(args);
 }
 
-bool Diags::IsEnabled(void) { return otPlatDiagModeGet(); }
+bool Diags::IsEnabled(void) { return Get<Radio>().GetDiagMode(); }
 
 } // namespace FactoryDiags
 } // namespace ot

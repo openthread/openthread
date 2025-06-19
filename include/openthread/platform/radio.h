@@ -908,19 +908,6 @@ otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t a
 extern void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
- * The radio driver calls this function to notify OpenThread diagnostics module of a received frame.
- *
- * Is used when diagnostics is enabled.
- *
- * @param[in]  aInstance The OpenThread instance structure.
- * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
- * @param[in]  aError    OT_ERROR_NONE when successfully received a frame,
- *                       OT_ERROR_ABORT when reception was aborted and a frame was not received,
- *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.
- */
-extern void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
-
-/**
  * Get the radio transmit frame buffer.
  *
  * OpenThread forms the IEEE 802.15.4 frame in this buffer then calls `otPlatRadioTransmit()` to request transmission.
@@ -978,19 +965,6 @@ extern void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame);
  *                        OT_ERROR_ABORT when transmission was aborted for other reasons.
  */
 extern void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
-
-/**
- * The radio driver calls this function to notify OpenThread diagnostics module that the transmission has completed.
- *
- * Is used when diagnostics is enabled.
- *
- * @param[in]  aInstance      The OpenThread instance structure.
- * @param[in]  aFrame         A pointer to the frame that was transmitted.
- * @param[in]  aError         OT_ERROR_NONE when the frame was transmitted,
- *                            OT_ERROR_CHANNEL_ACCESS_FAILURE tx could not take place due to activity on the channel,
- *                            OT_ERROR_ABORT when transmission was aborted for other reasons.
- */
-extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
  * Return a recent RSSI measurement when the radio is in receive state.

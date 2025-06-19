@@ -38,6 +38,7 @@
 
 #include <openthread/radio_stats.h>
 #include <openthread/platform/crypto.h>
+#include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
@@ -847,6 +848,22 @@ public:
      */
     uint32_t GetBusLatency(void);
 
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+    /**
+     * Enables/disables the factory diagnostics mode.
+     *
+     * @param[in]  aMode  TRUE to enable diagnostics mode, FALSE otherwise.
+     */
+    void SetDiagMode(bool aMode);
+
+    /**
+     * Gets the current diagnostic mode of the radio.
+     *
+     * @returns TRUE if factory diagnostics mode is enabled, FALSE otherwise.
+     */
+    bool GetDiagMode(void);
+#endif
+
 private:
     otInstance *GetInstancePtr(void) const { return reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance()); }
 
@@ -1029,6 +1046,10 @@ inline uint32_t Radio::GetBusSpeed(void) { return otPlatRadioGetBusSpeed(GetInst
 
 inline uint32_t Radio::GetBusLatency(void) { return otPlatRadioGetBusLatency(GetInstancePtr()); }
 
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+inline void Radio::SetDiagMode(bool aMode) { otPlatDiagModeSet(aMode); }
+inline bool Radio::GetDiagMode(void) { return otPlatDiagModeGet(); }
+#endif
 #else //----------------------------------------------------------------------------------------------------------------
 
 inline otRadioCaps Radio::GetCaps(void)
@@ -1133,6 +1154,10 @@ inline uint32_t Radio::GetBusSpeed(void) { return 0; }
 
 inline uint32_t Radio::GetBusLatency(void) { return 0; }
 
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+inline void Radio::SetDiagMode(bool) {}
+inline bool Radio::GetDiagMode(void) { return false; }
+#endif
 #endif // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
 } // namespace ot
