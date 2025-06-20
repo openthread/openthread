@@ -57,17 +57,17 @@ class SrpNameConflicts(thread_cert.TestCase):
     TOPOLOGY = {
         SERVER: {
             'name': 'SRP_SERVER',
-            'networkkey': '00112233445566778899aabbccddeeff',
+            'network_key': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
         CLIENT1: {
             'name': 'SRP_CLIENT1',
-            'networkkey': '00112233445566778899aabbccddeeff',
+            'network_key': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
         CLIENT2: {
             'name': 'SRP_CLIENT2',
-            'networkkey': '00112233445566778899aabbccddeeff',
+            'network_key': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
     }

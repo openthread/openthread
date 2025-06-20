@@ -82,7 +82,7 @@ class TestOTCI(unittest.TestCase):
         import simulator
 
         if VIRTUAL_TIME:
-            sim = simulator.VirtualTime(use_message_factory=False)
+            sim = simulator.VirtualTime()
         else:
             sim = None
 

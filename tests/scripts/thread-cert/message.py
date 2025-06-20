@@ -556,8 +556,9 @@ class MessagesSet(object):
 
 class MessageFactory:
 
-    def __init__(self, lowpan_parser):
+    def __init__(self, lowpan_parser, keys):
         self._lowpan_parser = lowpan_parser
+        self._keys = keys
 
     def _add_device_descriptors(self, message):
         for tlv in message.mle.command.tlvs:
@@ -570,7 +571,7 @@ class MessageFactory:
 
     def _parse_mac_frame(self, data):
         mac_frame = mac802154.MacFrame()
-        mac_frame.parse(data)
+        mac_frame.parse(data, self._keys)
         return mac_frame
 
     def set_lowpan_context(self, cid, prefix):
