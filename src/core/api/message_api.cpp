@@ -37,6 +37,8 @@
 
 using namespace ot;
 
+otInstance *otMessageGetInstance(const otMessage *aMessage) { return &AsCoreType(aMessage).GetInstance(); }
+
 void otMessageFree(otMessage *aMessage) { AsCoreType(aMessage).Free(); }
 
 uint16_t otMessageGetLength(const otMessage *aMessage) { return AsCoreType(aMessage).GetLength(); }
@@ -90,6 +92,11 @@ int8_t otMessageGetRss(const otMessage *aMessage) { return AsCoreType(aMessage).
 otError otMessageGetThreadLinkInfo(const otMessage *aMessage, otThreadLinkInfo *aLinkInfo)
 {
     return AsCoreType(aMessage).GetLinkInfo(AsCoreType(aLinkInfo));
+}
+
+void otMessageRegisterTxCallback(otMessage *aMessage, otMessageTxCallback aCallback, void *aContext)
+{
+    AsCoreType(aMessage).RegisterTxCallback(aCallback, aContext);
 }
 
 otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
