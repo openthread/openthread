@@ -75,6 +75,7 @@ Message *MessagePool::Allocate(Message::Type aType, uint16_t aReserveHeader, con
     message->SetLinkSecurityEnabled(aSettings.IsLinkSecurityEnabled());
     message->SetLoopbackToHostAllowed(OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS);
     message->SetOrigin(Message::kOriginHostTrusted);
+    message->MarkAsNotInAQueue();
 
     SuccessOrExit(error = message->SetPriority(aSettings.GetPriority()));
     SuccessOrExit(error = message->SetLength(0));
@@ -98,7 +99,7 @@ Message *MessagePool::Allocate(Message::Type aType, uint16_t aReserveHeader)
 
 void MessagePool::Free(Message *aMessage)
 {
-    OT_ASSERT(aMessage->Next() == nullptr && aMessage->Prev() == nullptr);
+    OT_ASSERT(!aMessage->IsInAQueue());
 
     FreeBuffers(static_cast<Buffer *>(aMessage));
 }
@@ -258,30 +259,6 @@ void Message::Free(void)
 
     InvokeTxCallback(kErrorDrop);
     Get<MessagePool>().Free(this);
-}
-
-Message *Message::GetNext(void) const
-{
-    Message *next;
-    Message *tail;
-
-    if (GetMetadata().mInPriorityQ)
-    {
-        PriorityQueue *priorityQueue = GetPriorityQueue();
-        VerifyOrExit(priorityQueue != nullptr, next = nullptr);
-        tail = priorityQueue->GetTail();
-    }
-    else
-    {
-        MessageQueue *messageQueue = GetMessageQueue();
-        VerifyOrExit(messageQueue != nullptr, next = nullptr);
-        tail = messageQueue->GetTail();
-    }
-
-    next = (this == tail) ? nullptr : Next();
-
-exit:
-    return next;
 }
 
 Error Message::SetLength(uint16_t aLength)
@@ -871,16 +848,18 @@ bool Message::IsTimeSync(void) const
 #endif
 }
 
-void Message::SetMessageQueue(MessageQueue *aMessageQueue)
+void Message::MarkAsNotInAQueue(void)
 {
-    GetMetadata().mQueue       = aMessageQueue;
-    GetMetadata().mInPriorityQ = false;
-}
+    // To indicate that a message is no longer in a queue, we set
+    // its 'mPrev' pointer to point back to itself. This state is
+    // unique and won't occur if the message is part of a queue. We
+    // also set 'mNext' to 'nullptr' so that 'GetNext()' correctly
+    // returns 'nullptr' for a dequeued message.
 
-void Message::SetPriorityQueue(PriorityQueue *aPriorityQueue)
-{
-    GetMetadata().mQueue       = aPriorityQueue;
-    GetMetadata().mInPriorityQ = aPriorityQueue != nullptr;
+    Next() = nullptr;
+    Prev() = this;
+
+    GetMetadata().mInPriorityQ = false;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -889,56 +868,61 @@ void Message::SetPriorityQueue(PriorityQueue *aPriorityQueue)
 void MessageQueue::Enqueue(Message &aMessage, QueuePosition aPosition)
 {
     OT_ASSERT(!aMessage.IsInAQueue());
-    OT_ASSERT((aMessage.Next() == nullptr) && (aMessage.Prev() == nullptr));
 
-    aMessage.SetMessageQueue(this);
+    aMessage.GetMetadata().mInPriorityQ = false;
 
-    if (GetTail() == nullptr)
+    if (GetHead() == nullptr)
     {
-        aMessage.Next() = &aMessage;
-        aMessage.Prev() = &aMessage;
+        aMessage.Next() = nullptr;
+        aMessage.Prev() = nullptr;
 
+        SetHead(&aMessage);
         SetTail(&aMessage);
     }
     else
     {
-        Message *head = GetTail()->Next();
-
-        aMessage.Next() = head;
-        aMessage.Prev() = GetTail();
-
-        head->Prev()      = &aMessage;
-        GetTail()->Next() = &aMessage;
-
-        if (aPosition == kQueuePositionTail)
+        switch (aPosition)
         {
+        case kQueuePositionHead:
+            aMessage.Next()   = GetHead();
+            aMessage.Prev()   = nullptr;
+            GetHead()->Prev() = &aMessage;
+            SetHead(&aMessage);
+            break;
+
+        case kQueuePositionTail:
+            aMessage.Next()   = nullptr;
+            aMessage.Prev()   = GetTail();
+            GetTail()->Next() = &aMessage;
             SetTail(&aMessage);
+            break;
         }
     }
 }
 
 void MessageQueue::Dequeue(Message &aMessage)
 {
-    OT_ASSERT(aMessage.GetMessageQueue() == this);
-    OT_ASSERT((aMessage.Next() != nullptr) && (aMessage.Prev() != nullptr));
+    if (&aMessage == GetHead())
+    {
+        SetHead(aMessage.Next());
+    }
 
     if (&aMessage == GetTail())
     {
-        SetTail(GetTail()->Prev());
-
-        if (&aMessage == GetTail())
-        {
-            SetTail(nullptr);
-        }
+        SetTail(aMessage.Prev());
     }
 
-    aMessage.Prev()->Next() = aMessage.Next();
-    aMessage.Next()->Prev() = aMessage.Prev();
+    if (aMessage.Prev() != nullptr)
+    {
+        aMessage.Prev()->Next() = aMessage.Next();
+    }
 
-    aMessage.Prev() = nullptr;
-    aMessage.Next() = nullptr;
+    if (aMessage.Next() != nullptr)
+    {
+        aMessage.Next()->Prev() = aMessage.Prev();
+    }
 
-    aMessage.SetMessageQueue(nullptr);
+    aMessage.MarkAsNotInAQueue();
 }
 
 void MessageQueue::DequeueAndFree(Message &aMessage)
@@ -983,86 +967,109 @@ void MessageQueue::AddQueueInfos(Info &aInfo, const Info &aOther)
 //---------------------------------------------------------------------------------------------------------------------
 // PriorityQueue
 
-const Message *PriorityQueue::FindFirstNonNullTail(Message::Priority aStartPriorityLevel) const
+const Message *PriorityQueue::FindTailForPriorityOrHigher(uint8_t aPriority) const
 {
-    // Find the first non-`nullptr` tail starting from the given priority
-    // level and moving forward (wrapping from priority value
-    // `kNumPriorities` -1 back to 0).
+    // This method finds the tail (last message entry in the list)
+    // that has priority level that is greater than or equal to
+    // `aPriority` and currently has messages in the queue.
+    //
+    // The `PriorityQueue` uses the `mTails` array to store pointers
+    // to the last message for each priority level. If a specific
+    // priority level has no messages, its corresponding `mTails`
+    // entry will be `nullptr`.
+    //
+    // The method iterates from `aPriority` upwards through higher
+    // priority levels, returning the first non-null tail pointer it
+    // encounters.
+    //
+    // The returned `Message` pointer indicates where a new message
+    // with `aPriority` should be inserted: it should be placed
+    // immediately after this returned message. If `nullptr` is
+    // returned, it means the new message will be the first of its
+    // priority level (or any higher priority) in the queue, and
+    // should be placed at the head.
 
     const Message *tail = nullptr;
-    uint8_t        priority;
 
-    priority = static_cast<uint8_t>(aStartPriorityLevel);
-
-    do
+    for (uint8_t priority = aPriority; priority < Message::kNumPriorities; priority++)
     {
-        if (mTails[priority] != nullptr)
+        tail = mTails[priority];
+
+        if (tail != nullptr)
         {
-            tail = mTails[priority];
             break;
         }
-
-        priority = PrevPriority(priority);
-    } while (priority != aStartPriorityLevel);
+    }
 
     return tail;
 }
 
-const Message *PriorityQueue::GetHead(void) const
-{
-    return Message::NextOf(FindFirstNonNullTail(Message::kPriorityLow));
-}
-
 const Message *PriorityQueue::GetHeadForPriority(Message::Priority aPriority) const
 {
-    const Message *head;
-    const Message *previousTail;
+    const Message *head     = nullptr;
+    uint8_t        priority = static_cast<uint8_t>(aPriority);
 
-    if (mTails[aPriority] != nullptr)
+    if (mTails[priority] == nullptr)
     {
-        previousTail = FindFirstNonNullTail(static_cast<Message::Priority>(PrevPriority(aPriority)));
-
-        OT_ASSERT(previousTail != nullptr);
-
-        head = previousTail->Next();
+        head = nullptr;
+    }
+    else if (mHead->GetPriority() == aPriority)
+    {
+        head = mHead;
     }
     else
     {
-        head = nullptr;
+        const Message *previousTail = FindTailForPriorityOrHigher(priority + 1);
+
+        OT_ASSERT(previousTail != nullptr);
+        head = previousTail->Next();
     }
 
     return head;
 }
 
-const Message *PriorityQueue::GetTail(void) const { return FindFirstNonNullTail(Message::kPriorityLow); }
+const Message *PriorityQueue::GetTail(void) const { return FindTailForPriorityOrHigher(Message::kPriorityLow); }
 
 void PriorityQueue::Enqueue(Message &aMessage)
 {
-    Message::Priority priority;
-    Message          *tail;
-    Message          *next;
+    uint8_t priority;
 
     OT_ASSERT(!aMessage.IsInAQueue());
 
-    aMessage.SetPriorityQueue(this);
+    aMessage.GetMetadata().mInPriorityQ = true;
 
     priority = aMessage.GetPriority();
 
-    tail = FindFirstNonNullTail(priority);
+    // We insert the new `aMessage` immediately after the message
+    // returned by `FindTailForPriorityOrHigher()`.
+    //
+    // If `FindTailForPriorityOrHigher()` returns `nullptr`, it means
+    // `aMessage` has the highest priority of all existing messages
+    // or is the first message in the queue, so we add it at the head
+    // and update `mHead` accordingly.
+    //
+    // We first set the `Prev` and `Next` pointers within `aMessage`
+    // itself. Afterward, we update the `Next()` pointer of the
+    // preceding message (if any) and the `Prev()` pointer of the
+    // succeeding message (if any) to point back to the newly
+    // inserted `aMessage`, maintaining the linked list.
 
-    if (tail != nullptr)
+    aMessage.Prev() = FindTailForPriorityOrHigher(priority);
+
+    if (aMessage.Prev() == nullptr)
     {
-        next = tail->Next();
-
-        aMessage.Next() = next;
-        aMessage.Prev() = tail;
-        next->Prev()    = &aMessage;
-        tail->Next()    = &aMessage;
+        aMessage.Next() = mHead;
+        mHead           = &aMessage;
     }
     else
     {
-        aMessage.Next() = &aMessage;
-        aMessage.Prev() = &aMessage;
+        aMessage.Next()         = aMessage.Prev()->Next();
+        aMessage.Prev()->Next() = &aMessage;
+    }
+
+    if (aMessage.Next() != nullptr)
+    {
+        aMessage.Next()->Prev() = &aMessage;
     }
 
     mTails[priority] = &aMessage;
@@ -1071,32 +1078,44 @@ void PriorityQueue::Enqueue(Message &aMessage)
 void PriorityQueue::Dequeue(Message &aMessage)
 {
     Message::Priority priority;
-    Message          *tail;
 
-    OT_ASSERT(aMessage.GetPriorityQueue() == this);
+    OT_ASSERT(aMessage.IsInAPriorityQueue());
 
     priority = aMessage.GetPriority();
 
-    tail = mTails[priority];
+    // If `aMessage` is the current tail for its priority, update
+    // `mTails[priority]`. The new tail becomes the preceding
+    // message entry. If the preceding message has a different
+    // (higher) priority, or if there's no preceding message, it
+    // means `aMessage` was the last of its priority, and the
+    // `mTails[priority]` is set to `nullptr`.
 
-    if (&aMessage == tail)
+    if (&aMessage == mTails[priority])
     {
-        tail = tail->Prev();
+        mTails[priority] = aMessage.Prev();
 
-        if ((&aMessage == tail) || (tail->GetPriority() != priority))
+        if ((mTails[priority] != nullptr) && (mTails[priority]->GetPriority() != priority))
         {
-            tail = nullptr;
+            mTails[priority] = nullptr;
         }
-
-        mTails[priority] = tail;
     }
 
-    aMessage.Next()->Prev() = aMessage.Prev();
-    aMessage.Prev()->Next() = aMessage.Next();
-    aMessage.Next()         = nullptr;
-    aMessage.Prev()         = nullptr;
+    if (&aMessage == mHead)
+    {
+        mHead = aMessage.Next();
+    }
 
-    aMessage.SetPriorityQueue(nullptr);
+    if (aMessage.Next() != nullptr)
+    {
+        aMessage.Next()->Prev() = aMessage.Prev();
+    }
+
+    if (aMessage.Prev() != nullptr)
+    {
+        aMessage.Prev()->Next() = aMessage.Next();
+    }
+
+    aMessage.MarkAsNotInAQueue();
 }
 
 void PriorityQueue::DequeueAndFree(Message &aMessage)

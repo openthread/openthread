@@ -400,7 +400,8 @@ int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint
  */
 typedef struct
 {
-    void *mData; ///< Opaque data used by the implementation.
+    void *mData;  ///< Opaque data used by the implementation.
+    void *mData2; ///< Opaque data used by the implementation.
 } otMessageQueue;
 
 /**

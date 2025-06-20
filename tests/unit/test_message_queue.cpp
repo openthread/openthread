@@ -133,6 +133,46 @@ void TestMessageQueue(void)
     messageQueue.Dequeue(*messages[0]);
     VerifyMessageQueueContent(messageQueue, 0);
 
+    // Enqueue 2 messages and remove them in the same order added.
+    messageQueue.Enqueue(*messages[0]);
+    VerifyMessageQueueContent(messageQueue, 1, messages[0]);
+    messageQueue.Enqueue(*messages[1]);
+    VerifyMessageQueueContent(messageQueue, 2, messages[0], messages[1]);
+    messageQueue.Dequeue(*messages[0]);
+    VerifyMessageQueueContent(messageQueue, 1, messages[1]);
+    messageQueue.Dequeue(*messages[1]);
+    VerifyMessageQueueContent(messageQueue, 0);
+
+    // Enqueue 2 messages and remove them in reverse order added.
+    messageQueue.Enqueue(*messages[0]);
+    VerifyMessageQueueContent(messageQueue, 1, messages[0]);
+    messageQueue.Enqueue(*messages[1]);
+    VerifyMessageQueueContent(messageQueue, 2, messages[0], messages[1]);
+    messageQueue.Dequeue(*messages[1]);
+    VerifyMessageQueueContent(messageQueue, 1, messages[0]);
+    messageQueue.Dequeue(*messages[0]);
+    VerifyMessageQueueContent(messageQueue, 0);
+
+    // Enqueue 2 messages at the head and remove them in the same order added.
+    messageQueue.Enqueue(*messages[0], MessageQueue::kQueuePositionHead);
+    VerifyMessageQueueContent(messageQueue, 1, messages[0]);
+    messageQueue.Enqueue(*messages[1], MessageQueue::kQueuePositionHead);
+    VerifyMessageQueueContent(messageQueue, 2, messages[1], messages[0]);
+    messageQueue.Dequeue(*messages[0]);
+    VerifyMessageQueueContent(messageQueue, 1, messages[1]);
+    messageQueue.Dequeue(*messages[1]);
+    VerifyMessageQueueContent(messageQueue, 0);
+
+    // Enqueue 2 messages at the head and remove them in the reverse order added.
+    messageQueue.Enqueue(*messages[0], MessageQueue::kQueuePositionHead);
+    VerifyMessageQueueContent(messageQueue, 1, messages[0]);
+    messageQueue.Enqueue(*messages[1], MessageQueue::kQueuePositionHead);
+    VerifyMessageQueueContent(messageQueue, 2, messages[1], messages[0]);
+    messageQueue.Dequeue(*messages[1]);
+    VerifyMessageQueueContent(messageQueue, 1, messages[0]);
+    messageQueue.Dequeue(*messages[0]);
+    VerifyMessageQueueContent(messageQueue, 0);
+
     // Enqueue 5 messages
     messageQueue.Enqueue(*messages[0]);
     VerifyMessageQueueContent(messageQueue, 1, messages[0]);
@@ -333,8 +373,6 @@ void TestMessageQueueOtApis(void)
 
     message = otMessageQueueGetNext(&queue2, messages[0]);
     VerifyOrQuit(message == messages[1], "otMessageQueueGetNext() failed");
-    message = otMessageQueueGetNext(&queue, messages[0]);
-    VerifyOrQuit(message == nullptr, "otMessageQueueGetNext() did not return nullptr for message not in  the queue.");
 
     // Remove all element and make sure queue is empty
     otMessageQueueDequeue(&queue, messages[2]);
