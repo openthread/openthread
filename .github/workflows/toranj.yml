@@ -167,6 +167,8 @@ jobs:
         ./tests/toranj/build.sh posix-trel
         git clean -dfx
         ./tests/toranj/build.sh --enable-plat-key-ref all
+        # Validate mDNS only posix example
+        ./tests/toranj/build.sh mdns
 
   toranj-macos:
     name: toranj-macos
