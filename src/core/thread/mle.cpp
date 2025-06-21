@@ -231,7 +231,8 @@ Error Mle::Start(StartMode aMode)
 
     if (aMode == kNormalAttach)
     {
-        mReattachState = kReattachStart;
+        mReattachState =
+            (Get<MeshCoP::ActiveDatasetManager>().Restore() == kErrorNone) ? kReattachActive : kReattachStop;
     }
 
     if ((aMode == kAnnounceAttach) || (GetRloc16() == kInvalidRloc16))
@@ -629,18 +630,6 @@ void Mle::Attach(AttachMode aMode)
     if (!IsDetached())
     {
         mAttachCounter = 0;
-    }
-
-    if (mReattachState == kReattachStart)
-    {
-        if (Get<MeshCoP::ActiveDatasetManager>().Restore() == kErrorNone)
-        {
-            mReattachState = kReattachActive;
-        }
-        else
-        {
-            mReattachState = kReattachStop;
-        }
     }
 
     mParentCandidate.Clear();
@@ -4224,7 +4213,6 @@ const char *Mle::ReattachStateToString(ReattachState aState)
 {
     static const char *const kReattachStateStrings[] = {
         "",                                 // (0) kReattachStop
-        "reattaching",                      // (1) kReattachStart
         "reattaching with Active Dataset",  // (2) kReattachActive
         "reattaching with Pending Dataset", // (3) kReattachPending
     };
@@ -4233,7 +4221,6 @@ const char *Mle::ReattachStateToString(ReattachState aState)
     {
         InitEnumValidatorCounter();
         ValidateNextEnum(kReattachStop);
-        ValidateNextEnum(kReattachStart);
         ValidateNextEnum(kReattachActive);
         ValidateNextEnum(kReattachPending);
     };

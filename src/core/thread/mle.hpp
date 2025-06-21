@@ -1328,7 +1328,6 @@ private:
     enum ReattachState : uint8_t
     {
         kReattachStop,    // Reattach process is disabled or finished
-        kReattachStart,   // Start reattach process
         kReattachActive,  // Reattach using stored Active Dataset
         kReattachPending, // Reattach using stored Pending Dataset
     };
