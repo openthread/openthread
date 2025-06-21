@@ -57,6 +57,15 @@ extern uint64_t gInstanceRaw[];
  * @{
  */
 
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+/**
+ * Gets the single OpenThread instance.
+ *
+ * @returns The single OpenThread instance.
+ */
+inline Instance &GetSingleInstance(void) { return *reinterpret_cast<Instance *>(&gInstanceRaw); }
+#endif
+
 /**
  * Implements `Get<Type>()` method for different `Type` objects belonging to the OpenThread
  * instance.
@@ -110,7 +119,7 @@ public:
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     Instance &GetInstance(void) const { return *mInstance; }
 #else
-    Instance &GetInstance(void) const { return *reinterpret_cast<Instance *>(&gInstanceRaw); }
+    Instance &GetInstance(void) const { return GetSingleInstance(); }
 #endif
 
 protected:
