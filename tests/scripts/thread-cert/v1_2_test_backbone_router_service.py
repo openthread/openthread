@@ -202,8 +202,15 @@ class TestBackboneRouterService(thread_cert.TestCase):
         messages = self.simulator.get_messages_sent_by(BBR_1)
         messages.next_coap_message('0.02', '/a/sd', True)
         self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(), 'Secondary')
+
         # Verify Sequence number increases when become Secondary from Primary.
-        self.assertEqual(self.nodes[BBR_1].get_backbone_router()['seqno'], BBR_1_SEQNO + 1)
+        if (BBR_1_SEQNO == 126) or (BBR_1_SEQNO == 127):
+            next_seqno = 0
+        elif (BBR_1_SEQNO == 254) or (BBR_1_SEQNO == 255):
+            next_seqno = 128
+        else:
+            next_seqno = BBR_1_SEQNO + 1
+        self.assertEqual(self.nodes[BBR_1].get_backbone_router()['seqno'], next_seqno)
 
         # 4a) Check communication via DUA.
         bbr2_dua = self.nodes[BBR_2].get_addr(config.DOMAIN_PREFIX)
