@@ -165,7 +165,7 @@ class MacFrame:
 
     IEEE802154_VERSION_2015 = 0x02
 
-    def parse(self, data):
+    def parse(self, data, keys=None):
         """Parse a MAC 802.15.4 frame
 
         Format of MAC 802.15.4 Frame:
@@ -346,8 +346,20 @@ class MacFrame:
             else:
                 message_info.source_mac_address = src_address.mac_address
 
-            sec_obj = CryptoEngine(MacCryptoMaterialCreator(config.DEFAULT_NETWORK_KEY))
-            self.payload = MacPayload(bytearray(open_payload) + sec_obj.decrypt(private_payload, mic, message_info))
+            descrypt_exc = None
+            for key in (keys or [bytes.fromhex(config.DEFAULT_NETWORK_KEY)]):
+                sec_obj = CryptoEngine(MacCryptoMaterialCreator(key))
+                try:
+                    self.payload = MacPayload(
+                        bytearray(open_payload) + sec_obj.decrypt(private_payload, mic, message_info))
+                except ValueError as exc:
+                    descrypt_exc = exc
+                else:
+                    descrypt_exc = None
+                    break
+
+            if descrypt_exc:
+                raise ValueError("Unable to decrypt MAC payload") from descrypt_exc
 
         else:
             self.payload = MacPayload(payload)

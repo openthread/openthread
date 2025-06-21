@@ -59,22 +59,22 @@ class SrpAutoStartMode(thread_cert.TestCase):
     TOPOLOGY = {
         CLIENT: {
             'name': 'SRP_CLIENT',
-            'networkkey': '00112233445566778899aabbccddeeff',
+            'network_key': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
         SERVER1: {
             'name': 'SRP_SERVER1',
-            'networkkey': '00112233445566778899aabbccddeeff',
+            'network_key': '00112233445566778899aabbccddeeff',
             'mode': 'rn',
         },
         SERVER2: {
             'name': 'SRP_SERVER2',
-            'networkkey': '00112233445566778899aabbccddeeff',
+            'network_key': '00112233445566778899aabbccddeeff',
             'mode': 'rn',
         },
         SERVER3: {
             'name': 'SRP_SERVER3',
-            'networkkey': '00112233445566778899aabbccddeeff',
+            'network_key': '00112233445566778899aabbccddeeff',
             'mode': 'rn',
         },
     }

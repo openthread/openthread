@@ -93,9 +93,9 @@ class BaseSimulator(object):
 
 class RealTime(BaseSimulator):
 
-    def __init__(self, use_message_factory=True):
+    def __init__(self, message_factory=None):
         super(RealTime, self).__init__()
-        self._sniffer = config.create_default_thread_sniffer(use_message_factory=use_message_factory)
+        self._sniffer = config.create_default_thread_sniffer(message_factory)
         self._sniffer.start()
 
     def set_lowpan_context(self, cid, prefix):
@@ -158,7 +158,7 @@ class VirtualTime(BaseSimulator):
 
     _message_factory = None
 
-    def __init__(self, use_message_factory=True):
+    def __init__(self, message_factory=None):
         super().__init__()
 
         self.port = self.BASE_PORT + (self.PORT_OFFSET * (self.MAX_NODES + 1))
@@ -203,10 +203,7 @@ class VirtualTime(BaseSimulator):
         self.current_nodeid = None
         self._pause_time = 0
 
-        if use_message_factory:
-            self._message_factory = config.create_default_thread_message_factory()
-        else:
-            self._message_factory = None
+        self._message_factory = message_factory
 
     def __del__(self):
         if self.sock:
