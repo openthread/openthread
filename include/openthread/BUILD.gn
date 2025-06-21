@@ -127,6 +127,8 @@ source_set("openthread") {
     "thread_ftd.h",
     "trel.h",
     "udp.h",
+    "unstable/link.h",
+    "unstable/p2p.h",
     "verhoeff_checksum.h",
   ]
 
