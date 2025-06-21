@@ -355,8 +355,7 @@ Client::Client(Instance &aInstance)
     , mServiceKeyRecordEnabled(false)
     , mUseShortLeaseOption(false)
 #endif
-    , mNextMessageId(0)
-    , mResponseMessageId(0)
+    , mCurMessageId(0)
     , mAutoHostAddressCount(0)
     , mRetryWaitInterval(kMinRetryWaitInterval)
     , mTtl(0)
@@ -468,7 +467,6 @@ void Client::Stop(Requester aRequester, StopMode aMode)
 
     mShouldRemoveKeyLease = false;
     mTxFailureRetryCount  = 0;
-    mResponseMessageId    = mNextMessageId;
 
     if (aMode == kResetRetryInterval)
     {
@@ -1004,18 +1002,10 @@ void Client::SendUpdate(void)
     {
         LogInfo("Msg len %lu is larger than MTU, enabling single service mode", ToUlong(length));
         mSingleServiceMode = true;
+        SelectNewMessageId();
         IgnoreError(info.mMessage->SetLength(0));
         SuccessOrExit(error = PrepareUpdateMessage(info));
     }
-
-    SuccessOrExit(error = mSocket.SendTo(*info.mMessage, Ip6::MessageInfo()));
-
-    // Ownership of the message is transferred to the socket upon a
-    // successful `SendTo()` call.
-
-    info.mMessage.Release();
-
-    LogInfo("Send update, msg-id:0x%x", mNextMessageId);
 
     // State changes:
     //   kToAdd     -> kAdding
@@ -1024,26 +1014,21 @@ void Client::SendUpdate(void)
 
     anyChanged = ChangeHostAndServiceStates(kNewStateOnMessageTx, kForServicesAppendedInMessage);
 
-    // `mNextMessageId` tracks the message ID used in the prepared
-    // update message. It is incremented after a successful
-    // `mSocket.SendTo()` call. If unsuccessful, the same ID can be
-    // reused for the next update.
-    //
-    // Acceptable response message IDs fall within the range starting
-    // at `mResponseMessageId ` and ending before `mNextMessageId`.
-    //
-    // `anyChanged` tracks if any host or service states have changed.
-    // If not, the prepared message is identical to the last one with
-    // the same hosts/services, allowing us to accept earlier message
-    // IDs. If changes occur, `mResponseMessageId ` is updated to
-    // ensure only responses to the latest message are accepted.
-
     if (anyChanged)
     {
-        mResponseMessageId = mNextMessageId;
+        SelectNewMessageId();
     }
 
-    mNextMessageId++;
+    SuccessOrExit(error = UpdateIdAndSignatureInUpdateMessage(info));
+
+    SuccessOrExit(error = mSocket.SendTo(*info.mMessage, Ip6::MessageInfo()));
+
+    // Ownership of the message is transferred to the socket upon a
+    // successful `SendTo()` call.
+
+    info.mMessage.Release();
+
+    LogInfo("Send update, msg-id:0x%x", mCurMessageId);
 
     // Remember the update message tx time to use later to determine the
     // lease renew time.
@@ -1115,7 +1100,7 @@ Error Client::PrepareUpdateMessage(MsgInfo &aInfo)
 
     SuccessOrExit(error = ReadOrGenerateKey(aInfo.mKeyInfo));
 
-    header.SetMessageId(mNextMessageId);
+    header.SetMessageId(mCurMessageId);
 
     // SRP Update (DNS Update) message must have exactly one record in
     // Zone section, no records in Prerequisite Section, can have
@@ -1148,7 +1133,24 @@ Error Client::PrepareUpdateMessage(MsgInfo &aInfo)
     // Prepare Additional Data section
 
     SuccessOrExit(error = AppendUpdateLeaseOptRecord(aInfo));
-    SuccessOrExit(error = AppendSignature(aInfo));
+    SuccessOrExit(error = AppendSignature(aInfo, kAppendEmptySignature));
+
+exit:
+    return error;
+}
+
+Error Client::UpdateIdAndSignatureInUpdateMessage(MsgInfo &aInfo)
+{
+    constexpr uint16_t kHeaderOffset = 0;
+
+    Error             error;
+    Dns::UpdateHeader header;
+
+    IgnoreError(aInfo.mMessage->Read(kHeaderOffset, header));
+    header.SetMessageId(mCurMessageId);
+    aInfo.mMessage->Write(kHeaderOffset, header);
+
+    SuccessOrExit(error = AppendSignature(aInfo, kOverwriteWithNewSignature));
 
     header.SetAdditionalRecordCount(2); // Lease OPT and SIG RRs
     aInfo.mMessage->Write(kHeaderOffset, header);
@@ -1674,7 +1676,7 @@ exit:
     return error;
 }
 
-Error Client::AppendSignature(MsgInfo &aInfo)
+Error Client::AppendSignature(MsgInfo &aInfo, SignatureAppendMode aMode)
 {
     Error                          error;
     Dns::SigRecord                 sig;
@@ -1694,37 +1696,49 @@ Error Client::AppendSignature(MsgInfo &aInfo)
     sig.Init(Dns::ResourceRecord::kClassAny);
     sig.SetAlgorithm(Dns::KeyRecord::kAlgorithmEcdsaP256Sha256);
 
-    // Append the SIG RR with full uncompressed form of the host name
-    // as the signer's name. This is used for SIG(0) calculation only.
-    // It will be overwritten with host name compressed.
+    switch (aMode)
+    {
+    case kAppendEmptySignature:
+        aInfo.mSigRecordOffset = aInfo.mMessage->GetLength();
+        break;
 
-    offset = aInfo.mMessage->GetLength();
-    SuccessOrExit(error = aInfo.mMessage->Append(sig));
-    SuccessOrExit(error = AppendHostName(aInfo, /* aDoNotCompress */ true));
+    case kOverwriteWithNewSignature:
+        // Revert back to the start of signature record.
+        IgnoreError(aInfo.mMessage->SetLength(aInfo.mSigRecordOffset));
 
-    // Calculate signature (RFC 2931): Calculated over "data" which is
-    // concatenation of (1) the SIG RR RDATA wire format (including
-    // the canonical form of the signer's name), entirely omitting the
-    // signature subfield, (2) DNS query message, including DNS header
-    // but not UDP/IP header before the header RR counts have been
-    // adjusted for the inclusion of SIG(0).
+        // Append the SIG RR with full uncompressed form of the host name
+        // as the signer's name. This is used for SIG(0) calculation only.
+        // It will be overwritten with host name compressed.
 
-    sha256.Start();
+        offset = aInfo.mMessage->GetLength();
+        SuccessOrExit(error = aInfo.mMessage->Append(sig));
+        SuccessOrExit(error = AppendHostName(aInfo, /* aDoNotCompress */ true));
 
-    // (1) SIG RR RDATA wire format
-    len = aInfo.mMessage->GetLength() - offset - sizeof(Dns::ResourceRecord);
-    sha256.Update(*aInfo.mMessage, offset + sizeof(Dns::ResourceRecord), len);
+        // Calculate signature (RFC 2931): Calculated over "data" which is
+        // concatenation of (1) the SIG RR RDATA wire format (including
+        // the canonical form of the signer's name), entirely omitting the
+        // signature subfield, (2) DNS query message, including DNS header
+        // but not UDP/IP header before the header RR counts have been
+        // adjusted for the inclusion of SIG(0).
 
-    // (2) Message from DNS header before SIG
-    sha256.Update(*aInfo.mMessage, 0, offset);
+        sha256.Start();
 
-    sha256.Finish(hash);
-    SuccessOrExit(error = aInfo.mKeyInfo.Sign(hash, signature));
+        // (1) SIG RR RDATA wire format
+        len = aInfo.mMessage->GetLength() - offset - sizeof(Dns::ResourceRecord);
+        sha256.Update(*aInfo.mMessage, offset + sizeof(Dns::ResourceRecord), len);
 
-    // Move back in message and append SIG RR now with compressed host
-    // name (as signer's name) along with the calculated signature.
+        // (2) Message from DNS header before SIG
+        sha256.Update(*aInfo.mMessage, 0, offset);
 
-    IgnoreError(aInfo.mMessage->SetLength(offset));
+        sha256.Finish(hash);
+        SuccessOrExit(error = aInfo.mKeyInfo.Sign(hash, signature));
+
+        // Move back in message and append SIG RR now with compressed host
+        // name (as signer's name) along with the calculated signature.
+
+        IgnoreError(aInfo.mMessage->SetLength(offset));
+        break;
+    }
 
     // SIG(0) uses owner name of root (single zero byte).
     SuccessOrExit(error = Dns::Name::AppendTerminator(*aInfo.mMessage));
@@ -1782,8 +1796,7 @@ void Client::ProcessResponse(Message &aMessage)
     VerifyOrExit(header.GetType() == Dns::Header::kTypeResponse, error = kErrorParse);
     VerifyOrExit(header.GetQueryType() == Dns::Header::kQueryTypeUpdate, error = kErrorParse);
 
-    VerifyOrExit(IsResponseMessageIdValid(header.GetMessageId()), error = kErrorDrop);
-    mResponseMessageId = header.GetMessageId() + 1;
+    VerifyOrExit(header.GetMessageId() == mCurMessageId, error = kErrorDrop);
 
     if (!Get<Mle::Mle>().IsRxOnWhenIdle())
     {
@@ -1921,11 +1934,14 @@ exit:
     }
 }
 
-bool Client::IsResponseMessageIdValid(uint16_t aId) const
+void Client::SelectNewMessageId(void)
 {
-    // Semantically equivalent to `(aId >= mResponseMessageId) && (aId < mNextMessageId)`
+    uint16_t oldId = mCurMessageId;
 
-    return !SerialNumber::IsLess(aId, mResponseMessageId) && SerialNumber::IsLess(aId, mNextMessageId);
+    do
+    {
+        mCurMessageId = Random::NonCrypto::GetUint16();
+    } while (oldId == mCurMessageId);
 }
 
 void Client::HandleUpdateDone(void)
