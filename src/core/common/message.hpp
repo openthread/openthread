@@ -919,6 +919,22 @@ public:
     bool CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength, ByteMatcher aMatcher = nullptr) const;
 
     /**
+     * Compares the bytes in the message from a given offset range with a given byte array.
+     *
+     * If there are fewer bytes available in the message than @p aOffsetRange, the comparison is treated as failure
+     * (returns FALSE).
+     *
+     * @param[in]  aOffsetRange  The offset range in the message to read from for the comparison.
+     * @param[in]  aBuf       A pointer to a data buffer to compare with the bytes from message.
+     * @param[in]  aMatcher   A `ByteMatcher` function pointer to match the bytes. If `nullptr` then bytes are directly
+     *                        compared.
+     *
+     * @returns TRUE if there are enough bytes available in @p aMessage and they match the bytes from @p aBuf,
+     *          FALSE otherwise.
+     */
+    bool CompareBytes(const OffsetRange &aOffsetRange, const void *aBuf, ByteMatcher aMatcher = nullptr) const;
+
+    /**
      * Compares the bytes in the message at a given offset with bytes read from another message.
      *
      * If either message has fewer bytes available than the requested @p aLength, the comparison is treated as failure

@@ -187,13 +187,35 @@
 /**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
  *
- * Specifies whether to support handling platform generated ND messages.
+ * Define to 1 to enable the Border Routing Manager's DHCPv6 Prefix Delegation feature.
  *
- * The desired use case is the prefix will be allocated by other software on the interface, and they will advertise the
- * assigned prefix to the thread interface via router advertisement messages.
+ * When enabled, the Routing Manager will track and use delegated DHCPv6 prefix(es) for use as an OMR
+ * (Off-Mesh-Routable) prefix within the Thread network.
+ *
+ * The configuration `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE` (which enables the OpenThread native
+ * DHCPv6 PD client) controls how the PD prefixes are acquired:
+ *
+ * - If the built-in OpenThread DHCPv6 PD client is disabled, the platform will be responsible for acquiring the PD
+ *   prefix. The platform layer is expected to interact with DHCPv6 servers and provide the delegated PD prefix(es)
+ *   through platform APIs such as `otPlatBorderRoutingProcessIcmp6Ra()` or `otPlatBorderRoutingProcessDhcp6PdPrefix()`
+ *   (refer to `include/platform/border_routing.h` for a more detailed description of these APIs).
+ *
+ * - If the built-in OpenThread DHCPv6 PD client is enabled, the functionality is implemented and provided by the
+ *   OpenThread core itself, which acts as a DHCPv6 client and interacts with DHCPv6 servers directly.
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+ *
+ * Define to 1 to enable the Border Router's built-in OpenThread DHCPv6 Prefix Delegation (PD) client feature.
+ *
+ * See `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE` for how this is used.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE 0
 #endif
 
 /**

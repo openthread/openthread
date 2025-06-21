@@ -214,6 +214,28 @@ otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex)
     return OT_ERROR_NONE;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+
+void otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+}
+
+void otPlatInfraIfDhcp6PdClientSend(otInstance   *aInstance,
+                                    otMessage    *aMessage,
+                                    otIp6Address *aDestAddress,
+                                    uint32_t      aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aDestAddress);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+    otMessageFree(aMessage);
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+
 //---------------------------------------------------------------------------------------------------------------------
 // platformInfraIf
 

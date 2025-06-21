@@ -43,6 +43,7 @@
 #include "common/data.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
+#include "common/message.hpp"
 #include "common/string.hpp"
 #include "net/ip6.hpp"
 
@@ -115,6 +116,18 @@ public:
     void SetIfIndex(uint32_t aIfIndex) { mIfIndex = aIfIndex; }
 
     /**
+     * Handles infrastructure interface state changes.
+     *
+     * @param[in]  aIfIndex         The infrastructure interface index.
+     * @param[in]  aIsRunning       A boolean that indicates whether the infrastructure interface is running.
+     *
+     * @retval  kErrorNone          Successfully updated the infra interface status.
+     * @retval  kErrorInvalidState  The `InfraIf` is not initialized.
+     * @retval  kErrorInvalidArgs   The @p IfIndex does not match the interface index of `InfraIf`.
+     */
+    Error HandleStateChanged(uint32_t aIfIndex, bool aIsRunning);
+
+    /**
      * Gets the infrastructure interface link-layer address.
      *
      * @param[out]  aLinkLayerAddress     A reference to return the interface link-layer address.
@@ -176,17 +189,34 @@ public:
      */
     void DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPrefix);
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+
     /**
-     * Handles infrastructure interface state changes.
+     * Enables or disables listening for DHCPv6 Prefix Delegation (PD) messages on client (on DHCPv6 client port 546).
      *
-     * @param[in]  aIfIndex         The infrastructure interface index.
-     * @param[in]  aIsRunning       A boolean that indicates whether the infrastructure interface is running.
-     *
-     * @retval  kErrorNone          Successfully updated the infra interface status.
-     * @retval  kErrorInvalidState  The `InfraIf` is not initialized.
-     * @retval  kErrorInvalidArgs   The @p IfIndex does not match the interface index of `InfraIf`.
+     * @param[in] aEnable        A boolean to enable (`true`) or disable (`false`) listening.
      */
-    Error HandleStateChanged(uint32_t aIfIndex, bool aIsRunning);
+    void SetDhcp6ListeningEnabled(bool aEnable);
+
+    /**
+     * Sends a DHCPv6 message to a unicast or multicast destination address.
+     *
+     * The message must be sent from the DHCPv6 client UDP port 546 to the server port 547.
+     *
+     * @param[in] aMessage       The `Message` containing the DHCPv6 payload. Ownership is transferred.
+     * @param[in] aDestAddress   The IPv6 destination address.
+     */
+    void SendDhcp6(Message &aMessage, Ip6::Address &aDestAddress);
+
+    /**
+     * Handle a received DHCPv6 message (on port 546).
+     *
+     * @param[in] aMessage       The received `Message` containing DHCPv6 payload. Ownership is transferred.
+     * @param[in] aInfraIfIndex  The index of the infrastructure interface from which the message is received.
+     */
+    void HandleDhcp6Received(Message &aMessage, uint32_t aInfraIfIndex);
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 
     /**
      * Converts the `InfraIf` to a human-readable string.

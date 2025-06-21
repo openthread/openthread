@@ -679,6 +679,11 @@ exit:
     return (bytesToCompare == 0);
 }
 
+bool Message::CompareBytes(const OffsetRange &aOffsetRange, const void *aBuf, ByteMatcher aMatcher) const
+{
+    return CompareBytes(aOffsetRange.GetOffset(), aBuf, aOffsetRange.GetLength(), aMatcher);
+}
+
 bool Message::CompareBytes(uint16_t       aOffset,
                            const Message &aOtherMessage,
                            uint16_t       aOtherOffset,
