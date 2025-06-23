@@ -135,44 +135,11 @@ void VerifyPriorityQueueContent(PriorityQueue &aPriorityQueue, int aExpectedLeng
     VerifyOrQuit(message == nullptr, "`for` loop iteration resulted in fewer entries than expected");
 }
 
-// This function verifies the content of the message queue to match the passed in messages
-void VerifyMsgQueueContent(MessageQueue &aMessageQueue, int aExpectedLength, ...)
-{
-    va_list  args;
-    Message *message;
-    Message *msgArg;
-
-    va_start(args, aExpectedLength);
-
-    if (aExpectedLength == 0)
-    {
-        message = aMessageQueue.GetHead();
-        VerifyOrQuit(message == nullptr, "is not empty when expected len is zero.");
-    }
-    else
-    {
-        for (message = aMessageQueue.GetHead(); message != nullptr; message = message->GetNext())
-        {
-            VerifyOrQuit(aExpectedLength != 0, "contains more entries than expected");
-
-            msgArg = va_arg(args, Message *);
-            VerifyOrQuit(msgArg == message, "content does not match what is expected.");
-
-            aExpectedLength--;
-        }
-
-        VerifyOrQuit(aExpectedLength == 0, "contains less entries than expected");
-    }
-
-    va_end(args);
-}
-
 void TestPriorityQueue(void)
 {
     Instance     *instance;
     MessagePool  *messagePool;
     PriorityQueue queue;
-    MessageQueue  messageQueue;
     Message      *msgNet[kNumTestMessages];
     Message      *msgHigh[kNumTestMessages];
     Message      *msgNor[kNumTestMessages];
@@ -264,7 +231,7 @@ void TestPriorityQueue(void)
     queue.Dequeue(*msgHigh[3]);
     VerifyPriorityQueueContent(queue, 0);
 
-    // Change the priority of an already queued message and check the order change in the queue.
+    // Validate that priority of an already queued message in a priority queue cannot change
     queue.Enqueue(*msgNor[0]);
     VerifyPriorityQueueContent(queue, 1, msgNor[0]);
     queue.Enqueue(*msgHigh[0]);
@@ -272,54 +239,19 @@ void TestPriorityQueue(void)
     queue.Enqueue(*msgLow[0]);
     VerifyPriorityQueueContent(queue, 3, msgHigh[0], msgNor[0], msgLow[0]);
 
-    SuccessOrQuit(msgNor[0]->SetPriority(Message::kPriorityNet));
-    VerifyPriorityQueueContent(queue, 3, msgNor[0], msgHigh[0], msgLow[0]);
-    SuccessOrQuit(msgLow[0]->SetPriority(Message::kPriorityLow));
-    VerifyPriorityQueueContent(queue, 3, msgNor[0], msgHigh[0], msgLow[0]);
-    SuccessOrQuit(msgLow[0]->SetPriority(Message::kPriorityNormal));
-    VerifyPriorityQueueContent(queue, 3, msgNor[0], msgHigh[0], msgLow[0]);
-    SuccessOrQuit(msgLow[0]->SetPriority(Message::kPriorityHigh));
-    VerifyPriorityQueueContent(queue, 3, msgNor[0], msgHigh[0], msgLow[0]);
-    SuccessOrQuit(msgLow[0]->SetPriority(Message::kPriorityNet));
-    VerifyPriorityQueueContent(queue, 3, msgNor[0], msgLow[0], msgHigh[0]);
-    SuccessOrQuit(msgNor[0]->SetPriority(Message::kPriorityNormal));
-    SuccessOrQuit(msgLow[0]->SetPriority(Message::kPriorityLow));
+    VerifyOrQuit(msgNor[0]->SetPriority(Message::kPriorityNet) == kErrorInvalidState);
+    VerifyOrQuit(msgLow[0]->SetPriority(Message::kPriorityLow) == kErrorInvalidState);
+    VerifyOrQuit(msgLow[0]->SetPriority(Message::kPriorityNormal) == kErrorInvalidState);
+    VerifyOrQuit(msgHigh[0]->SetPriority(Message::kPriorityNormal) == kErrorInvalidState);
     VerifyPriorityQueueContent(queue, 3, msgHigh[0], msgNor[0], msgLow[0]);
 
-    messageQueue.Enqueue(*msgNor[1]);
-    messageQueue.Enqueue(*msgHigh[1]);
-    messageQueue.Enqueue(*msgNet[1]);
-    VerifyMsgQueueContent(messageQueue, 3, msgNor[1], msgHigh[1], msgNet[1]);
-
-    // Change priority of message and check for not in messageQueue.
-    SuccessOrQuit(msgNor[1]->SetPriority(Message::kPriorityNet));
-    VerifyMsgQueueContent(messageQueue, 3, msgNor[1], msgHigh[1], msgNet[1]);
-
-    SuccessOrQuit(msgLow[0]->SetPriority(Message::kPriorityHigh));
-    VerifyPriorityQueueContent(queue, 3, msgHigh[0], msgLow[0], msgNor[0]);
-    VerifyMsgQueueContent(messageQueue, 3, msgNor[1], msgHigh[1], msgNet[1]);
-
-    // Remove messages from the two queues
+    // Remove messages from the queue
     queue.Dequeue(*msgHigh[0]);
-    VerifyPriorityQueueContent(queue, 2, msgLow[0], msgNor[0]);
-    VerifyMsgQueueContent(messageQueue, 3, msgNor[1], msgHigh[1], msgNet[1]);
-
-    messageQueue.Dequeue(*msgNet[1]);
-    VerifyPriorityQueueContent(queue, 2, msgLow[0], msgNor[0]);
-    VerifyMsgQueueContent(messageQueue, 2, msgNor[1], msgHigh[1]);
-
-    messageQueue.Dequeue(*msgHigh[1]);
-    VerifyPriorityQueueContent(queue, 2, msgLow[0], msgNor[0]);
-    VerifyMsgQueueContent(messageQueue, 1, msgNor[1]);
-
+    VerifyPriorityQueueContent(queue, 2, msgNor[0], msgLow[0]);
     queue.Dequeue(*msgLow[0]);
     VerifyPriorityQueueContent(queue, 1, msgNor[0]);
-    VerifyMsgQueueContent(messageQueue, 1, msgNor[1]);
-
     queue.Dequeue(*msgNor[0]);
     VerifyPriorityQueueContent(queue, 0);
-    messageQueue.Dequeue(*msgNor[1]);
-    VerifyMsgQueueContent(messageQueue, 0);
 
     for (Message *message : msgNor)
     {

@@ -328,30 +328,16 @@ bool Message::IsMleCommand(Mle::Command aMleCommand) const
 
 Error Message::SetPriority(Priority aPriority)
 {
-    Error          error    = kErrorNone;
-    uint8_t        priority = static_cast<uint8_t>(aPriority);
-    PriorityQueue *priorityQueue;
+    Error   error    = kErrorNone;
+    uint8_t priority = static_cast<uint8_t>(aPriority);
 
     static_assert(kNumPriorities <= 4, "`Metadata::mPriority` as a 2-bit field cannot fit all `Priority` values");
 
     VerifyOrExit(priority < kNumPriorities, error = kErrorInvalidArgs);
 
-    VerifyOrExit(IsInAQueue(), GetMetadata().mPriority = priority);
-    VerifyOrExit(GetMetadata().mPriority != priority);
-
-    priorityQueue = GetPriorityQueue();
-
-    if (priorityQueue != nullptr)
-    {
-        priorityQueue->Dequeue(*this);
-    }
+    VerifyOrExit(!IsInAPriorityQueue(), error = kErrorInvalidState);
 
     GetMetadata().mPriority = priority;
-
-    if (priorityQueue != nullptr)
-    {
-        priorityQueue->Enqueue(*this);
-    }
 
 exit:
     return error;
@@ -869,7 +855,7 @@ void Message::SetMessageQueue(MessageQueue *aMessageQueue)
 void Message::SetPriorityQueue(PriorityQueue *aPriorityQueue)
 {
     GetMetadata().mQueue       = aPriorityQueue;
-    GetMetadata().mInPriorityQ = true;
+    GetMetadata().mInPriorityQ = aPriorityQueue != nullptr;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
