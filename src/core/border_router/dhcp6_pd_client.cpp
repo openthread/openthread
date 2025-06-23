@@ -198,9 +198,9 @@ void Dhcp6PdClient::SendMessage(void)
 {
     static const uint16_t kRequestedOptions[] = {BigEndian::HostSwap16(Option::kSolMaxRt)};
 
+    MsgType           msgType = kMsgTypeNone;
     OwnedPtr<Message> message;
     Header            header;
-    MsgType           msgType;
     Ip6::Address      dstAddr;
 
     switch (mState)
@@ -225,6 +225,8 @@ void Dhcp6PdClient::SendMessage(void)
     case kStateToRenew:
         ExitNow();
     }
+
+    VerifyOrExit(msgType != kMsgTypeNone);
 
     if (!mRetxTracker.ShouldRetx())
     {
