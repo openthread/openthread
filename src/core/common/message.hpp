@@ -633,13 +633,15 @@ public:
 
     /**
      * Sets the messages priority.
-     * If the message is already queued in a priority queue, changing the priority ensures to
-     * update the message in the associated queue.
+     *
+     * If the message is already enqueued in a priority queue, the priority cannot be changed and `kErrorInvalidState`
+     * is returned.
      *
      * @param[in]  aPriority  The message priority level.
      *
      * @retval kErrorNone          Successfully set the priority for the message.
      * @retval kErrorInvalidArgs   Priority level is not invalid.
+     * @retval kErrorInvalidState  Message is already queued in a priority queue.
      */
     Error SetPriority(Priority aPriority);
 
@@ -1569,6 +1571,8 @@ private:
     }
 
     bool IsInAQueue(void) const { return (GetMetadata().mQueue != nullptr); }
+    bool IsInAPriorityQueue(void) const { return GetMetadata().mInPriorityQ; }
+
     void SetMessageQueue(MessageQueue *aMessageQueue);
     void SetPriorityQueue(PriorityQueue *aPriorityQueue);
 
