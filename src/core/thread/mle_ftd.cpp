@@ -394,7 +394,7 @@ void Mle::SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStart
     SetAttachState(kAttachStateIdle);
     mAttachCounter = 0;
     mAttachTimer.Stop();
-    mMessageTransmissionTimer.Stop();
+    mRetxTracker.Stop();
     StopAdvertiseTrickleTimer();
     ResetAdvertiseInterval();
 
