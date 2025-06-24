@@ -63,6 +63,7 @@ constexpr uint16_t kDhcpServerPort = 547; ///< DHCP Server port number.
  */
 enum MsgType : uint8_t
 {
+    kMsgTypeNone               = 0,  ///< Unused message type (reserved).
     kMsgTypeSolicit            = 1,  ///< Solicit message (client sends to locate servers).
     kMsgTypeAdvertise          = 2,  ///< Advertise message (server sends to indicate it is available).
     kMsgTypeRequest            = 3,  ///< Request message (client sends to request config parameters).
