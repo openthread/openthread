@@ -350,7 +350,6 @@ Client::Client(Instance &aInstance)
     , mState(kStateStopped)
     , mTxFailureRetryCount(0)
     , mShouldRemoveKeyLease(false)
-    , mSingleServiceMode(false)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mServiceKeyRecordEnabled(false)
     , mUseShortLeaseOption(false)
@@ -453,8 +452,6 @@ void Client::Stop(Requester aRequester, StopMode aMode)
 
     VerifyOrExit(GetState() != kStateStopped);
 
-    mSingleServiceMode = false;
-
     // State changes:
     //   kAdding     -> kToRefresh
     //   kRefreshing -> kToRefresh
@@ -516,8 +513,6 @@ void Client::Pause(void)
         /* (6) kRegistered -> */ kRegistered,
         /* (7) kRemoved    -> */ kRemoved,
     };
-
-    mSingleServiceMode = false;
 
     // State changes:
     //   kAdding     -> kToRefresh
@@ -986,6 +981,17 @@ void Client::SendUpdate(void)
         /* (7) kRemoved    -> */ kRemoved,
     };
 
+    static const ItemState kNewStateOnSingleServiceMode[]{
+        /* (0) kToAdd      -> */ kToAdd,
+        /* (1) kAdding     -> */ kToRefresh,
+        /* (2) kToRefresh  -> */ kToRefresh,
+        /* (3) kRefreshing -> */ kToRefresh,
+        /* (4) kToRemove   -> */ kToRemove,
+        /* (5) kRemoving   -> */ kToRemove,
+        /* (6) kRegistered -> */ kRegistered,
+        /* (7) kRemoved    -> */ kRemoved,
+    };
+
     Error    error = kErrorNone;
     MsgInfo  info;
     uint32_t length;
@@ -994,6 +1000,7 @@ void Client::SendUpdate(void)
     info.mMessage.Reset(mSocket.NewMessage());
     VerifyOrExit(info.mMessage != nullptr, error = kErrorNoBufs);
 
+    info.mSingleServiceMode = false;
     SuccessOrExit(error = PrepareUpdateMessage(info));
 
     length = info.mMessage->GetLength() + sizeof(Ip6::Udp::Header) + sizeof(Ip6::Header);
@@ -1001,9 +1008,17 @@ void Client::SendUpdate(void)
     if (length >= Ip6::kMaxDatagramLength)
     {
         LogInfo("Msg len %lu is larger than MTU, enabling single service mode", ToUlong(length));
-        mSingleServiceMode = true;
-        SelectNewMessageId();
+
+        info.mSingleServiceMode = true;
         IgnoreError(info.mMessage->SetLength(0));
+
+        // State changes:
+        //   kAdding     -> kToRefresh
+        //   kRefreshing -> kToRefresh
+        //   kRemoving   -> kToRemove
+
+        ChangeHostAndServiceStates(kNewStateOnSingleServiceMode, kForServicesAppendedInMessage);
+
         SuccessOrExit(error = PrepareUpdateMessage(info));
     }
 
@@ -1055,8 +1070,6 @@ exit:
         // growing on each failure).
 
         LogInfo("Failed to send update: %s", ErrorToString(error));
-
-        mSingleServiceMode = false;
 
         SetState(kStateToRetry);
 
@@ -1282,7 +1295,7 @@ Error Client::AppendServiceInstructions(MsgInfo &aInfo)
         {
             SuccessOrExit(error = AppendServiceInstruction(service, aInfo));
 
-            if (mSingleServiceMode)
+            if (aInfo.mSingleServiceMode)
             {
                 // In "single service mode", we allow only one service
                 // to be appended in the message.
@@ -1291,7 +1304,7 @@ Error Client::AppendServiceInstructions(MsgInfo &aInfo)
         }
     }
 
-    if (!mSingleServiceMode)
+    if (!aInfo.mSingleServiceMode)
     {
         for (Service &service : mServices)
         {
@@ -2193,7 +2206,6 @@ void Client::HandleTimer(void)
         break;
 
     case kStateUpdating:
-        mSingleServiceMode = false;
         LogRetryWaitInterval();
         LogInfo("Timed out, no response");
         GrowRetryWaitInterval();
