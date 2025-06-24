@@ -1288,6 +1288,8 @@ void MeshForwarder::FinalizeMessageDirectTx(Message &aMessage, Error aError)
         Get<Mle::Mle>().HandleChildIdRequestTxDone(aMessage);
     }
 
+    aMessage.InvokeTxCallback(aError);
+
 exit:
     return;
 }

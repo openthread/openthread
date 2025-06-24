@@ -166,6 +166,8 @@ class Buffer : public otMessageBuffer, public LinkedListEntry<Buffer>
     friend class Message;
 
 public:
+    typedef otMessageTxCallback TxCallback; ///< Message TX callback.
+
     /**
      * Returns a pointer to the next message buffer.
      *
@@ -234,6 +236,8 @@ protected:
         Message    *mNext;        // Next message in a doubly linked list.
         Message    *mPrev;        // Previous message in a doubly linked list.
         void       *mQueue;       // The queue where message is queued (if any). Queue type from `mInPriorityQ`.
+        TxCallback  mTxCallback;  // The callback to inform message TX success or failure.
+        void       *mTxContext;   // The arbitrary context associated with `mTxCallback`.
         RssAverager mRssAverager; // The averager maintaining the received signal strength (RSS) average.
         LqiAverager mLqiAverager; // The averager maintaining the Link quality indicator (LQI) average.
 #if OPENTHREAD_FTD
@@ -653,6 +657,35 @@ public:
      * @returns A string representation of @p aPriority.
      */
     static const char *PriorityToString(Priority aPriority);
+
+    /**
+     * Registers a callback to be notified of a message's transmission outcome.
+     *
+     * The registered `TxCallback` provides notification of the transmission status of the message from this device to
+     * an immediate neighbor (one hop). It doesn't indicate delivery to the final multi-hop destination.
+     *
+     * For unicast messages, `kErrorNone` callback error signifies successful delivery and MAC acknowledgment for all
+     * fragments of the message to an immediate neighbor, irrespective of whether direct or indirect TX is used. For
+     * multicast messages, `kErrorNone` indicates successful broadcast of all fragments. Note that no MAC-level ack
+     * is expected for broadcast frame transmissions.
+     *
+     * Only one callback can be registered per `Message`. Subsequent calls replace any existing callback. If the
+     * message is never actually sent, the callback will still be invoked when the message is freed, with `kErrorDrop`
+     * as the error.
+     *
+     * @param[in] aCallback   The `TxCallback` function to register with the message.
+     * @param[in] aContext    An arbitrary context that will be passed when @p aCallback is invoked.
+     */
+    void RegisterTxCallback(TxCallback aCallback, void *aContext);
+
+    /**
+     * Invokes the registered `TxCallback` on the `Message` with the given error status.
+     *
+     * The `TxCallback` is a one-time callback, meaning it's automatically cleared once it's invoked.
+     *
+     * @param[in] aError The error to report.
+     */
+    void InvokeTxCallback(Error aError);
 
     /**
      * Prepends bytes to the front of the message.
