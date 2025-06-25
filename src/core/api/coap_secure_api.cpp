@@ -41,13 +41,7 @@ using namespace ot;
 
 otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort)
 {
-    otError error;
-
-    SuccessOrExit(error = AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().Open());
-    error = AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().Bind(aPort);
-
-exit:
-    return error;
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().Bind(aPort);
 }
 
 otError otCoapSecureStartWithMaxConnAttempts(otInstance                  *aInstance,

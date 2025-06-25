@@ -683,20 +683,6 @@ SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwo
     OT_UNUSED_VARIABLE(mVerifyPeerCertificate);
 }
 
-Error SecureTransport::Open(Ip6::NetifIdentifier aNetifIdentifier)
-{
-    Error error;
-
-    VerifyOrExit(!mIsOpen, error = kErrorAlready);
-
-    SuccessOrExit(error = mSocket.Open(aNetifIdentifier));
-    mIsOpen                      = true;
-    mRemainingConnectionAttempts = mMaxConnectionAttempts;
-
-exit:
-    return error;
-}
-
 Error SecureTransport::SetMaxConnectionAttempts(uint16_t aMaxAttempts, AutoCloseCallback aCallback, void *aContext)
 {
     Error error = kErrorNone;
@@ -740,16 +726,17 @@ exit:
     return;
 }
 
-Error SecureTransport::Bind(uint16_t aPort)
+Error SecureTransport::Bind(uint16_t aPort, Ip6::NetifIdentifier aNetifIdentifier)
 {
     Error error;
 
-    VerifyOrExit(mIsOpen, error = kErrorInvalidState);
-    VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
+    VerifyOrExit(!mIsOpen, error = kErrorInvalidState);
 
-    VerifyOrExit(mSessions.IsEmpty(), error = kErrorInvalidState);
+    SuccessOrExit(error = mSocket.Open(aNetifIdentifier));
+    SuccessOrExit(error = mSocket.Bind(aPort));
 
-    error = mSocket.Bind(aPort);
+    mRemainingConnectionAttempts = mMaxConnectionAttempts;
+    mIsOpen                      = true;
 
 exit:
     return error;
@@ -759,13 +746,12 @@ Error SecureTransport::Bind(TransportCallback aCallback, void *aContext)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(mIsOpen, error = kErrorInvalidState);
-    VerifyOrExit(!mSocket.IsBound(), error = kErrorAlready);
-    VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
-
-    VerifyOrExit(mSessions.IsEmpty(), error = kErrorInvalidState);
+    VerifyOrExit(!mIsOpen, error = kErrorInvalidState);
 
     mTransportCallback.Set(aCallback, aContext);
+
+    mRemainingConnectionAttempts = mMaxConnectionAttempts;
+    mIsOpen                      = true;
 
 exit:
     return error;

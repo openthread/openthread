@@ -158,7 +158,6 @@ void BorderAgent::Start(void)
     mDtlsTransport.SetAcceptCallback(BorderAgent::HandleAcceptSession, this);
     mDtlsTransport.SetRemoveSessionCallback(BorderAgent::HandleRemoveSession, this);
 
-    SuccessOrExit(error = mDtlsTransport.Open());
     SuccessOrExit(error = mDtlsTransport.Bind(kUdpPort));
 
     Get<KeyManager>().GetPskc(pskc);
@@ -728,7 +727,6 @@ Error BorderAgent::EphemeralKeyManager::Start(const char *aKeyString, uint32_t a
     mDtlsTransport.SetAcceptCallback(EphemeralKeyManager::HandleAcceptSession, this);
     mDtlsTransport.SetRemoveSessionCallback(EphemeralKeyManager::HandleRemoveSession, this);
 
-    SuccessOrExit(error = mDtlsTransport.Open());
     SuccessOrExit(error = mDtlsTransport.Bind(aUdpPort));
 
     SuccessOrExit(

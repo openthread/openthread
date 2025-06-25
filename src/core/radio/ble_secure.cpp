@@ -81,7 +81,6 @@ Error BleSecure::Start(ConnectCallback aConnectHandler, ReceiveCallback aReceive
     SuccessOrExit(error = otPlatBleGapAdvSetData(&GetInstance(), advertisementData, advertisementLen));
     SuccessOrExit(error = otPlatBleGapAdvStart(&GetInstance(), OT_BLE_ADV_INTERVAL_DEFAULT));
 
-    SuccessOrExit(error = mTls.Open());
     mTls.SetReceiveCallback(HandleTlsReceive, this);
     mTls.SetConnectCallback(HandleTlsConnectEvent, this);
     SuccessOrExit(error = mTls.Bind(HandleTransport, this));

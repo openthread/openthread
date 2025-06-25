@@ -597,17 +597,6 @@ public:
 #endif // OPENTHREAD_CONFIG_TLS_API_ENABLE
 
     /**
-     * Opens the transport.
-     *
-     * @param[in] aNetifIdentifier A network interface identifier. If not explicitly provided, kNetifUnspecified will
-     *                             be used by default.
-     *
-     * @retval kErrorNone     Successfully opened the socket.
-     * @retval kErrorAlready  The connection is already open.
-     */
-    Error Open(Ip6::NetifIdentifier aNetifIdentifier = Ip6::NetifIdentifier::kNetifUnspecified);
-
-    /**
      * Sets the maximum number of allowed connection requests before socket is automatically closed.
      *
      * This method can be called when socket is closed. Otherwise `kErrorInvalidSatet` is returned.
@@ -646,13 +635,16 @@ public:
     /**
      * Binds this DTLS to a UDP port.
      *
-     * @param[in]  aPort              The port to bind.
+     * @param[in]  aPort                The port to bind.
+     * @param[in]   aNetifIdentifier    A network interface identifier. If not explicitly provided, kNetifUnspecified
+     * will be used by default.
+     *
      *
      * @retval kErrorNone           Successfully bound the socket.
      * @retval kErrorInvalidState   The socket is not open.
      * @retval kErrorAlready        Already bound.
      */
-    Error Bind(uint16_t aPort);
+    Error Bind(uint16_t aPort, Ip6::NetifIdentifier aNetifIdentifier = Ip6::NetifIdentifier::kNetifUnspecified);
 
     /**
      * Gets the UDP port of this session.

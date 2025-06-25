@@ -268,7 +268,6 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
     VerifyOrExit(Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
     VerifyOrExit(mState == kStateDisabled, error = kErrorAlready);
 
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Open());
     SuccessOrExit(error = Get<Tmf::SecureAgent>().Bind(SendRelayTransmit, this));
 
     Get<Tmf::SecureAgent>().SetConnectCallback(HandleSecureAgentConnectEvent, this);
