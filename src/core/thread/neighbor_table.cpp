@@ -91,6 +91,13 @@ Neighbor *NeighborTable::FindNeighbor(const Neighbor::AddressMatcher &aMatcher)
         neighbor = FindParent(aMatcher);
     }
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    if (neighbor == nullptr)
+    {
+        neighbor = FindPeer(aMatcher);
+    }
+#endif
+
     return neighbor;
 }
 
@@ -114,6 +121,13 @@ Neighbor *NeighborTable::FindNeighbor(const Mac::Address &aMacAddress, Neighbor:
 {
     return FindNeighbor(Neighbor::AddressMatcher(aMacAddress, aFilter));
 }
+
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+Neighbor *NeighborTable::FindPeer(const Neighbor::AddressMatcher &aMatcher)
+{
+    return Get<PeerTable>().FindPeer(aMatcher);
+}
+#endif
 
 #if OPENTHREAD_FTD
 

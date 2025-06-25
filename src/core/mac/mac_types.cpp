@@ -404,5 +404,12 @@ bool KeyMaterial::operator==(const KeyMaterial &aOther) const
 #endif
 }
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+void WakeupAddress::SetExtAddress(const ExtAddress &aExtAddress)
+{
+    aExtAddress.CopyTo(mShared.mExtAddress.m8);
+    mIsExtAddress = true;
+}
+#endif
 } // namespace Mac
 } // namespace ot
