@@ -235,7 +235,6 @@ protected:
         TimeMilli   mTimestamp;   // The message timestamp.
         Message    *mNext;        // Next message in a doubly linked list.
         Message    *mPrev;        // Previous message in a doubly linked list.
-        void       *mQueue;       // The queue where message is queued (if any). Queue type from `mInPriorityQ`.
         TxCallback  mTxCallback;  // The callback to inform message TX success or failure.
         void       *mTxContext;   // The arbitrary context associated with `mTxCallback`.
         RssAverager mRssAverager; // The averager maintaining the received signal strength (RSS) average.
@@ -501,7 +500,7 @@ public:
      *
      * @returns A pointer to the next message in the list or `nullptr` if at the end of the list.
      */
-    Message *GetNext(void) const;
+    Message *GetNext(void) const { return Next(); }
 
     /**
      * Returns the number of bytes in the message.
@@ -1426,26 +1425,6 @@ public:
     void UpdateLinkInfoFrom(const ThreadLinkInfo &aLinkInfo);
 
     /**
-     * Returns a pointer to the message queue (if any) where this message is queued.
-     *
-     * @returns A pointer to the message queue or `nullptr` if not in any message queue.
-     */
-    MessageQueue *GetMessageQueue(void) const
-    {
-        return !GetMetadata().mInPriorityQ ? static_cast<MessageQueue *>(GetMetadata().mQueue) : nullptr;
-    }
-
-    /**
-     * Returns a pointer to the priority message queue (if any) where this message is queued.
-     *
-     * @returns A pointer to the priority queue or `nullptr` if not in any priority queue.
-     */
-    PriorityQueue *GetPriorityQueue(void) const
-    {
-        return GetMetadata().mInPriorityQ ? static_cast<PriorityQueue *>(GetMetadata().mQueue) : nullptr;
-    }
-
-    /**
      * Indicates whether or not the message is also used for time sync purpose.
      *
      * When OPENTHREAD_CONFIG_TIME_SYNC_ENABLE is 0, this method always return false.
@@ -1603,11 +1582,9 @@ private:
         AsConst(this)->GetNextChunk(aLength, static_cast<Chunk &>(aChunk));
     }
 
-    bool IsInAQueue(void) const { return (GetMetadata().mQueue != nullptr); }
+    void MarkAsNotInAQueue(void);
+    bool IsInAQueue(void) const { return (Prev() != this); }
     bool IsInAPriorityQueue(void) const { return GetMetadata().mInPriorityQ; }
-
-    void SetMessageQueue(MessageQueue *aMessageQueue);
-    void SetPriorityQueue(PriorityQueue *aPriorityQueue);
 
     void SetRssAverager(const RssAverager &aRssAverager) { GetMetadata().mRssAverager = aRssAverager; }
     void SetLqiAverager(const LqiAverager &aLqiAverager) { GetMetadata().mLqiAverager = aLqiAverager; }
@@ -1615,6 +1592,7 @@ private:
     Message       *&Next(void) { return GetMetadata().mNext; }
     Message *const &Next(void) const { return GetMetadata().mNext; }
     Message       *&Prev(void) { return GetMetadata().mPrev; }
+    Message *const &Prev(void) const { return GetMetadata().mPrev; }
 
     static Message       *NextOf(Message *aMessage) { return (aMessage != nullptr) ? aMessage->Next() : nullptr; }
     static const Message *NextOf(const Message *aMessage) { return (aMessage != nullptr) ? aMessage->Next() : nullptr; }
@@ -1625,7 +1603,7 @@ private:
 /**
  * Implements a message queue.
  */
-class MessageQueue : public otMessageQueue, private NonCopyable
+class MessageQueue : public otMessageQueue, public Clearable<MessageQueue>, private NonCopyable
 {
     friend class Message;
     friend class PriorityQueue;
@@ -1646,7 +1624,7 @@ public:
     /**
      * Initializes the message queue.
      */
-    MessageQueue(void) { SetTail(nullptr); }
+    MessageQueue(void) { Clear(); }
 
 #if OPENTHREAD_PLATFORM_NEXUS
     /**
@@ -1660,14 +1638,14 @@ public:
      *
      * @returns A pointer to the first message.
      */
-    Message *GetHead(void) { return Message::NextOf(GetTail()); }
+    Message *GetHead(void) { return static_cast<Message *>(mData); }
 
     /**
      * Returns a pointer to the first message.
      *
      * @returns A pointer to the first message.
      */
-    const Message *GetHead(void) const { return Message::NextOf(GetTail()); }
+    const Message *GetHead(void) const { return static_cast<const Message *>(mData); }
 
     /**
      * Adds a message to the end of the list.
@@ -1733,9 +1711,10 @@ public:
     Message::ConstIterator end(void) const { return Message::ConstIterator(); }
 
 private:
-    Message       *GetTail(void) { return static_cast<Message *>(mData); }
-    const Message *GetTail(void) const { return static_cast<const Message *>(mData); }
-    void           SetTail(Message *aMessage) { mData = aMessage; }
+    void           SetHead(Message *aMessage) { mData = aMessage; }
+    Message       *GetTail(void) { return static_cast<Message *>(mData2); }
+    const Message *GetTail(void) const { return static_cast<const Message *>(mData2); }
+    void           SetTail(Message *aMessage) { mData2 = aMessage; }
 };
 
 /**
@@ -1768,14 +1747,14 @@ public:
      *
      * @returns A pointer to the first message.
      */
-    Message *GetHead(void) { return AsNonConst(AsConst(this)->GetHead()); }
+    Message *GetHead(void) { return mHead; }
 
     /**
      * Returns a pointer to the first message.
      *
      * @returns A pointer to the first message.
      */
-    const Message *GetHead(void) const;
+    const Message *GetHead(void) const { return mHead; }
 
     /**
      * Returns a pointer to the first message for a given priority level.
@@ -1864,18 +1843,14 @@ public:
     Message::ConstIterator end(void) const { return Message::ConstIterator(); }
 
 private:
-    uint8_t PrevPriority(uint8_t aPriority) const
+    const Message *FindTailForPriorityOrHigher(uint8_t aPriority) const;
+
+    Message *FindTailForPriorityOrHigher(uint8_t aPriority)
     {
-        return (aPriority == Message::kNumPriorities - 1) ? 0 : (aPriority + 1);
+        return AsNonConst(AsConst(this)->FindTailForPriorityOrHigher(aPriority));
     }
 
-    const Message *FindFirstNonNullTail(Message::Priority aStartPriorityLevel) const;
-
-    Message *FindFirstNonNullTail(Message::Priority aStartPriorityLevel)
-    {
-        return AsNonConst(AsConst(this)->FindFirstNonNullTail(aStartPriorityLevel));
-    }
-
+    Message *mHead;
     Message *mTails[Message::kNumPriorities]; // Tail pointers associated with different priority levels.
 };
 

@@ -122,12 +122,7 @@ int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint
     return aLength;
 }
 
-void otMessageQueueInit(otMessageQueue *aQueue)
-{
-    AssertPointerIsNotNull(aQueue);
-
-    aQueue->mData = nullptr;
-}
+void otMessageQueueInit(otMessageQueue *aQueue) { AsCoreType(aQueue).Clear(); }
 
 void otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage)
 {
@@ -148,11 +143,11 @@ otMessage *otMessageQueueGetHead(otMessageQueue *aQueue) { return AsCoreType(aQu
 
 otMessage *otMessageQueueGetNext(otMessageQueue *aQueue, const otMessage *aMessage)
 {
+    OT_UNUSED_VARIABLE(aQueue);
+
     Message *next;
 
     VerifyOrExit(aMessage != nullptr, next = nullptr);
-
-    VerifyOrExit(AsCoreType(aMessage).GetMessageQueue() == aQueue, next = nullptr);
     next = AsCoreType(aMessage).GetNext();
 
 exit:
