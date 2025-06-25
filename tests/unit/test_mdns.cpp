@@ -4525,7 +4525,7 @@ void TestQuery(void)
     VerifyOrQuit(dnsMsg != nullptr);
     VerifyOrQuit(dnsMsg->GetNext() == nullptr);
 
-    // Response should include `service3` only since anwer TTL
+    // Response should include `service3` only since answer TTL
     // is less than half of registered TTL
 
     dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 4);

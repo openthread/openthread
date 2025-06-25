@@ -164,7 +164,7 @@ void FakePlatform::ProcessSchedules(uint64_t &aTimeout)
 
     if (alarm == &guard)
     {
-        // nonthing scheduled within this period.
+        // nothing scheduled within this period.
     }
     else if (alarm == &mReceiveAtEnd)
     {
