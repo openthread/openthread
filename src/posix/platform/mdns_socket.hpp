@@ -125,17 +125,6 @@ private:
         uint16_t     mIp4Port;
     };
 
-    bool           mEnabled;
-    uint32_t       mInfraIfIndex;
-    int            mFd4;
-    int            mFd6;
-    uint32_t       mPendingIp6Tx;
-    uint32_t       mPendingIp4Tx;
-    otMessageQueue mTxQueue;
-    otIp6Address   mMulticastIp6Address;
-    otIp4Address   mMulticastIp4Address;
-    otInstance    *mInstance;
-
     otError Enable(uint32_t aInfraIfIndex);
     void    Disable(uint32_t aInfraIfIndex);
     void    ClearTxQueue(void);
@@ -163,6 +152,17 @@ private:
                                         const void *aValue,
                                         uint32_t    aValueLength,
                                         const char *aOptionName);
+
+    bool           mEnabled;
+    uint32_t       mInfraIfIndex;
+    int            mFd4;
+    int            mFd6;
+    uint32_t       mPendingIp6Tx;
+    uint32_t       mPendingIp4Tx;
+    otMessageQueue mTxQueue;
+    otIp6Address   mMulticastIp6Address;
+    otIp4Address   mMulticastIp4Address;
+    otInstance    *mInstance;
 };
 
 } // namespace Posix
