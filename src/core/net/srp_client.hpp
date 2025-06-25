@@ -990,6 +990,7 @@ private:
         static constexpr uint16_t kUnknownOffset = 0;
 
         OwnedPtr<Message> mMessage;
+        bool              mSingleServiceMode;
         uint16_t          mDomainNameOffset;
         uint16_t          mHostNameOffset;
         uint16_t          mRecordCount;
@@ -1074,7 +1075,6 @@ private:
     State   mState;
     uint8_t mTxFailureRetryCount : 4;
     bool    mShouldRemoveKeyLease : 1;
-    bool    mSingleServiceMode : 1;
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     bool mServiceKeyRecordEnabled : 1;
     bool mUseShortLeaseOption : 1;

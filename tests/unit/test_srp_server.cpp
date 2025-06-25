@@ -1030,6 +1030,7 @@ void TestUpdateLeaseShortVariant(void)
 static uint16_t         sServerRxCount;
 static Ip6::MessageInfo sServerMsgInfo;
 static uint16_t         sServerLastMsgId;
+static uint16_t         sServerLastMsgLength;
 
 void HandleServerUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
@@ -1041,11 +1042,12 @@ void HandleServerUdpReceive(void *aContext, otMessage *aMessage, const otMessage
 
     SuccessOrQuit(AsCoreType(aMessage).Read(0, header));
 
-    sServerMsgInfo   = AsCoreType(aMessageInfo);
-    sServerLastMsgId = header.GetMessageId();
+    sServerMsgInfo       = AsCoreType(aMessageInfo);
+    sServerLastMsgId     = header.GetMessageId();
+    sServerLastMsgLength = AsCoreType(aMessage).GetLength();
     sServerRxCount++;
 
-    Log("HandleServerUdpReceive(), message-id: 0x%x", header.GetMessageId());
+    Log("HandleServerUdpReceive(), message-id:0x%x, message-len:%u", sServerLastMsgId, sServerLastMsgLength);
 }
 
 void TestSrpClientDelayedResponse(void)
@@ -1196,6 +1198,229 @@ void TestSrpClientDelayedResponse(void)
     FinalizeTest();
 
     Log("End of TestSrpClientDelayedResponse");
+}
+
+void TestSrpClientSingleServiceMode(void)
+{
+    static constexpr uint16_t kNumServices = 5;
+    static constexpr uint16_t kServerPort  = 53535;
+
+    static const char *kSubLabels[] = {"_longsubtypelebel11111", "_longsubtypelebel2222222", nullptr};
+
+    Srp::Client           *srpClient;
+    Srp::Client::Service   services[kNumServices];
+    Dns::Name::LabelBuffer serviceInstnaces[kNumServices];
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestSrpClientSingleServiceMode");
+
+    InitTest();
+
+    srpClient = &sInstance->Get<Srp::Client>();
+
+    {
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Prepare a socket to act as SRP server.
+
+        Ip6::Udp::Socket  udpSocket(*sInstance, HandleServerUdpReceive, nullptr);
+        Ip6::SockAddr     serverSockAddr;
+        uint16_t          firstMsgId;
+        uint16_t          secondMsgId;
+        uint16_t          firstMsgLength;
+        uint16_t          numServices;
+        Message          *response;
+        Dns::UpdateHeader header;
+
+        sServerRxCount = 0;
+
+        SuccessOrQuit(udpSocket.Open(Ip6::kNetifThreadInternal));
+        SuccessOrQuit(udpSocket.Bind(kServerPort));
+
+        serverSockAddr.SetAddress(sInstance->Get<Mle::Mle>().GetMeshLocalRloc());
+        serverSockAddr.SetPort(kServerPort);
+        SuccessOrQuit(srpClient->Start(serverSockAddr));
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Prepare five services with long service names and multiple sub-types.
+
+        for (uint16_t i = 0; i < GetArrayLength(services); i++)
+        {
+            StringWriter writer(serviceInstnaces[i], sizeof(Dns::Name::LabelBuffer));
+
+            writer.Append("IncrediblyLongServiceInstanceName-001122334455667788-%02X", i);
+
+            ClearAllBytes(services[i]);
+            services[i].mName          = "_longsrvname._udp";
+            services[i].mInstanceName  = serviceInstnaces[i];
+            services[i].mSubTypeLabels = kSubLabels;
+            services[i].mTxtEntries    = nullptr;
+            services[i].mNumTxtEntries = 0;
+            services[i].mPort          = 5536 + i;
+        }
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Register four services (they should still fit in an IPv6 MTU).
+
+        SuccessOrQuit(srpClient->SetHostName("SuperLongHostNameAABBCCDDEEFF001122334455667788990123457889"));
+        SuccessOrQuit(srpClient->EnableAutoHostAddress());
+
+        SuccessOrQuit(srpClient->AddService(services[0]));
+        SuccessOrQuit(srpClient->AddService(services[1]));
+        SuccessOrQuit(srpClient->AddService(services[2]));
+        SuccessOrQuit(srpClient->AddService(services[3]));
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Wait for a short time for the server to receive the SRP
+        // update from the client. Verify that the message is smaller
+        // than the IPv6 MTU and includes all services.
+
+        AdvanceTime(1 * 1000);
+
+        VerifyOrQuit(sServerRxCount == 1);
+        firstMsgId     = sServerLastMsgId;
+        firstMsgLength = sServerLastMsgLength;
+        sServerRxCount = 0;
+
+        VerifyOrQuit(services[0].GetState() == Srp::Client::kAdding);
+        VerifyOrQuit(services[1].GetState() == Srp::Client::kAdding);
+        VerifyOrQuit(services[2].GetState() == Srp::Client::kAdding);
+        VerifyOrQuit(services[3].GetState() == Srp::Client::kAdding);
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Wait longer to allow the client to retry multiple times, and
+        // ensure the same ID is used for all retries.
+
+        AdvanceTime(60 * 1000);
+        VerifyOrQuit(sServerRxCount > 1);
+        VerifyOrQuit(sServerLastMsgId == firstMsgId);
+
+        VerifyOrQuit(services[0].GetState() == Srp::Client::kAdding);
+        VerifyOrQuit(services[1].GetState() == Srp::Client::kAdding);
+        VerifyOrQuit(services[2].GetState() == Srp::Client::kAdding);
+        VerifyOrQuit(services[3].GetState() == Srp::Client::kAdding);
+
+        sServerRxCount = 0;
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Register a fifth service, causing the SRP update to exceed
+        // the MTU limit. The client should now enter "single service
+        // mode" and register services one by one.
+
+        SuccessOrQuit(srpClient->AddService(services[4]));
+
+        AdvanceTime(60 * 1000);
+        VerifyOrQuit(sServerRxCount > 1);
+        VerifyOrQuit(sServerLastMsgId != firstMsgId);
+        VerifyOrQuit(sServerLastMsgLength < firstMsgLength);
+
+        secondMsgId = sServerLastMsgId;
+
+        // Check that only one service is included in the message.
+
+        numServices = 0;
+
+        for (const Srp::Client::Service &service : services)
+        {
+            switch (service.GetState())
+            {
+            case Srp::Client::kToAdd:
+            case Srp::Client::kToRefresh:
+                break;
+
+            case Srp::Client::kAdding:
+            case Srp::Client::kRefreshing:
+                numServices++;
+                break;
+
+            default:
+                VerifyOrQuit(false);
+            }
+        }
+
+        VerifyOrQuit(numServices == 1);
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Now send a response from server accepting the registration.
+
+        response = udpSocket.NewMessage();
+        VerifyOrQuit(response != nullptr);
+
+        Log("Sending response with msg-id: 0x%x", secondMsgId);
+
+        header.SetMessageId(secondMsgId);
+        header.SetType(Dns::UpdateHeader::kTypeResponse);
+        header.SetResponseCode(Dns::UpdateHeader::kResponseSuccess);
+        SuccessOrQuit(response->Append(header));
+        SuccessOrQuit(udpSocket.SendTo(*response, sServerMsgInfo));
+
+        sServerRxCount = 0;
+        AdvanceTime(10);
+
+        // Check that exactly one service is successfully
+        // registered.
+
+        numServices = 0;
+
+        for (const Srp::Client::Service &service : services)
+        {
+            switch (service.GetState())
+            {
+            case Srp::Client::kToAdd:
+            case Srp::Client::kToRefresh:
+            case Srp::Client::kAdding:
+            case Srp::Client::kRefreshing:
+                break;
+            case Srp::Client::kRegistered:
+                numServices++;
+                break;
+
+            default:
+                VerifyOrQuit(false);
+            }
+        }
+
+        VerifyOrQuit(numServices == 1);
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Wait for the client to register the remaining services and
+        // validate that it used a new message ID.
+
+        AdvanceTime(60 * 1000);
+
+        VerifyOrQuit(sServerRxCount > 1);
+        VerifyOrQuit(sServerLastMsgId != secondMsgId);
+
+        // Check that all remaining services are included in
+        // the message.
+
+        numServices = 0;
+
+        for (const Srp::Client::Service &service : services)
+        {
+            switch (service.GetState())
+            {
+            case Srp::Client::kAdding:
+            case Srp::Client::kRefreshing:
+                break;
+            case Srp::Client::kRegistered:
+                numServices++;
+                break;
+
+            default:
+                VerifyOrQuit(false);
+            }
+        }
+
+        VerifyOrQuit(numServices == 1);
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Finalize OT instance
+
+    Log("Finalizing OT instance");
+    FinalizeTest();
+
+    Log("End of TestSrpClientSingleServiceMode");
 }
 
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -1399,6 +1624,7 @@ int main(void)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     ot::TestUpdateLeaseShortVariant();
     ot::TestSrpClientDelayedResponse();
+    ot::TestSrpClientSingleServiceMode();
 #endif
     ot::TestSrpServerAddressModeForceAdd();
 #if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
