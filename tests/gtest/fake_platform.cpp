@@ -607,5 +607,10 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket *, otNetifIdentifier, const otI
 {
     return OT_ERROR_NOT_IMPLEMENTED;
 }
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+void otPlatOtnsStatus(const char *aStatus) { OT_UNUSED_VARIABLE(aStatus); }
+#endif
+
 void otPlatAssertFail(const char *, int) {}
 } // extern "C"
