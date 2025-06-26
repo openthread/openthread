@@ -32,6 +32,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <ifaddrs.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -40,6 +41,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include <openthread/platform/time.h>
 
 #include "ip6_utils.hpp"
 #include "platform-posix.h"
@@ -149,6 +152,10 @@ void MdnsSocket::Update(otSysMainloopContext &aContext)
         aContext.mMaxFd = mFd4;
     }
 
+#if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC)
+    UpdateTimeout(aContext.mTimeout);
+#endif
+
 exit:
     return;
 }
@@ -176,6 +183,10 @@ void MdnsSocket::Process(const otSysMainloopContext &aContext)
     {
         ReceiveMessage(kIp4Msg);
     }
+
+#if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC)
+    ProcessTimeout();
+#endif
 
 exit:
     return;
@@ -214,6 +225,8 @@ otError MdnsSocket::Enable(uint32_t aInfraIfIndex)
     mEnabled      = true;
     mInfraIfIndex = aInfraIfIndex;
 
+    StartAddressMonitoring();
+
     LogInfo("Enabled");
 
 exit:
@@ -236,6 +249,8 @@ void MdnsSocket::Disable(uint32_t aInfraIfIndex)
     CloseIp6Socket();
 
     mEnabled = false;
+
+    StopAddressMonitoring();
 
     LogInfo("Disabled");
 }
@@ -489,6 +504,89 @@ exit:
         otMessageFree(message);
     }
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// Monitoring address on infra netif
+
+#if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC)
+
+void MdnsSocket::ReportInfraIfAddresses(void)
+{
+    struct ifaddrs *ifAddrs = nullptr;
+
+    mNextReportTime = otPlatTimeGet() + kAddrMonitorPeriod * OT_US_PER_MS;
+
+    if (getifaddrs(&ifAddrs) < 0)
+    {
+        LogWarn("Failed to get netif addresses: %s", strerror(errno));
+        ExitNow();
+    }
+
+    otPlatMdnsHandleHostAddressRemoveAll(mInstance, mInfraIfIndex);
+
+    for (struct ifaddrs *addr = ifAddrs; addr != nullptr; addr = addr->ifa_next)
+    {
+        otIp6Address ip6Addr;
+        otIp4Address ip4Addr;
+
+        if ((addr->ifa_addr == nullptr) || (if_nametoindex(addr->ifa_name) != mInfraIfIndex))
+        {
+            continue;
+        }
+
+        if (addr->ifa_addr->sa_family == AF_INET6)
+        {
+            ReadIp6AddressFrom(&reinterpret_cast<sockaddr_in6 *>(addr->ifa_addr)->sin6_addr, ip6Addr);
+        }
+        else if (addr->ifa_addr->sa_family == AF_INET)
+        {
+            memcpy(&ip4Addr, &reinterpret_cast<sockaddr_in *>(addr->ifa_addr)->sin_addr.s_addr, sizeof(otIp4Address));
+            otIp4ToIp4MappedIp6Address(&ip4Addr, &ip6Addr);
+        }
+        else
+        {
+            continue;
+        }
+
+        otPlatMdnsHandleHostAddressEvent(mInstance, &ip6Addr, /* aAdded */ true, mInfraIfIndex);
+    }
+
+exit:
+    if (ifAddrs != nullptr)
+    {
+        freeifaddrs(ifAddrs);
+    }
+}
+
+void MdnsSocket::UpdateTimeout(struct timeval &aTimeout)
+{
+    uint64_t now       = otPlatTimeGet();
+    uint64_t remaining = 1;
+    uint64_t timeout;
+
+    if (mNextReportTime > now)
+    {
+        remaining = mNextReportTime - now;
+    }
+
+    timeout = static_cast<uint64_t>(aTimeout.tv_sec) * OT_US_PER_S + static_cast<uint64_t>(aTimeout.tv_usec);
+
+    if (remaining < timeout)
+    {
+        aTimeout.tv_sec  = static_cast<time_t>(remaining / OT_US_PER_S);
+        aTimeout.tv_usec = static_cast<suseconds_t>(remaining % OT_US_PER_S);
+    }
+}
+
+void MdnsSocket::ProcessTimeout(void)
+{
+    if (mNextReportTime <= otPlatTimeGet())
+    {
+        ReportInfraIfAddresses();
+    }
+}
+
+#endif // (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC)
 
 //---------------------------------------------------------------------------------------------------------------------
 // Socket helpers

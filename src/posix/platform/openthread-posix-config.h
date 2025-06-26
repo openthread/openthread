@@ -454,6 +454,32 @@
 #define OPENTHREAD_POSIX_CONFIG_RESOLV_CONF_ENABLED_INIT (!OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE)
 #endif
 
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR
+ *
+ * Specifies the behavior of `MdnsSocket` and how it implements monitoring and reporting of infra-interface IPv4 and
+ * IPv6 addresses.
+ *
+ * The valid values for this config, `OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR_*`, are defined in
+ *  `posix/platform/mdns_socket.h`.
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR
+#define OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR_PERIOD
+ *
+ * Specifies the duration in milliseconds (ms) for the periodic check used by the `MdnsSocket` implementation to
+ * monitor and report the infra-interface IPv4 and IPv6 addresses.
+ *
+ * This is applicable only when `OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR` is set to
+ * `OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR_PERIODIC`.
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR_PERIOD
+#define OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR_PERIOD (5000)
+#endif
+
 //---------------------------------------------------------------------------------------------------------------------
 // Removed or renamed POSIX specific configs.
 

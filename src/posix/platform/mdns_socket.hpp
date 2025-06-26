@@ -43,6 +43,15 @@
 namespace ot {
 namespace Posix {
 
+#define OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC 1
+#define OT_POSIX_MDNS_ADDR_MONITOR_NETLINK 2
+
+#if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_NETLINK)
+#error "The `OT_POSIX_MDNS_ADDR_MONITOR_NETLINK` is not supported yet"
+#elif (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR != OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC)
+#error "The `OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR` is not valid. MUST be one of `OT_POSIX_MDNS_ADDR_MONITOR_*`"
+#endif
+
 /**
  * Implements platform mDNS socket APIs.
  */
@@ -106,8 +115,9 @@ public:
     void    SendUnicast(otMessage *aMessage, const otPlatMdnsAddressInfo *aAddress);
 
 private:
-    static constexpr uint16_t kMaxMessageLength = 2000;
-    static constexpr uint16_t kMdnsPort         = 5353;
+    static constexpr uint16_t kMaxMessageLength  = 2000;
+    static constexpr uint16_t kMdnsPort          = 5353;
+    static constexpr uint64_t kAddrMonitorPeriod = OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR_PERIOD;
 
     enum MsgType : uint8_t
     {
@@ -130,6 +140,14 @@ private:
     void    ClearTxQueue(void);
     void    SendQueuedMessages(MsgType aMsgType);
     void    ReceiveMessage(MsgType aMsgType);
+
+#if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC)
+    void StartAddressMonitoring(void) { ReportInfraIfAddresses(); }
+    void StopAddressMonitoring(void) {}
+    void ReportInfraIfAddresses(void);
+    void UpdateTimeout(struct timeval &aTimeout);
+    void ProcessTimeout(void);
+#endif
 
     otError OpenIp4Socket(uint32_t aInfraIfIndex);
     otError JoinOrLeaveIp4MulticastGroup(bool aJoin, uint32_t aInfraIfIndex);
@@ -163,6 +181,9 @@ private:
     otIp6Address   mMulticastIp6Address;
     otIp4Address   mMulticastIp4Address;
     otInstance    *mInstance;
+#if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC)
+    uint64_t mNextReportTime;
+#endif
 };
 
 } // namespace Posix
