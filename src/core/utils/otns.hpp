@@ -46,6 +46,7 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
+#include "common/string.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6_address.hpp"
@@ -78,14 +79,14 @@ public:
      *
      * @param[in]  aShortAddress  The new short address.
      */
-    static void EmitShortAddress(uint16_t aShortAddress);
+    void EmitShortAddress(uint16_t aShortAddress) const;
 
     /**
      * Emits radio extended address to OTNS when changed.
      *
      * @param[in]  aExtAddress  The new extended address.
      */
-    static void EmitExtendedAddress(const Mac::ExtAddress &aExtAddress);
+    void EmitExtendedAddress(const Mac::ExtAddress &aExtAddress) const;
 
     /**
      * Emits ping request information to OTNS when sending.
@@ -95,10 +96,10 @@ public:
      * @param[in]  aTimestamp    The timestamp of the ping request.
      * @param[in]  aHopLimit     The hop limit of the ping request.
      */
-    static void EmitPingRequest(const Ip6::Address &aPeerAddress,
-                                uint16_t            aPingLength,
-                                uint32_t            aTimestamp,
-                                uint8_t             aHopLimit);
+    void EmitPingRequest(const Ip6::Address &aPeerAddress,
+                         uint16_t            aPingLength,
+                         uint32_t            aTimestamp,
+                         uint8_t             aHopLimit) const;
 
     /**
      * Emits ping reply information to OTNS when received.
@@ -108,10 +109,10 @@ public:
      * @param[in]  aTimestamp    The timestamp of the ping reply.
      * @param[in]  aHopLimit     The hop limit of the ping reply.
      */
-    static void EmitPingReply(const Ip6::Address &aPeerAddress,
-                              uint16_t            aPingLength,
-                              uint32_t            aTimestamp,
-                              uint8_t             aHopLimit);
+    void EmitPingReply(const Ip6::Address &aPeerAddress,
+                       uint16_t            aPingLength,
+                       uint32_t            aTimestamp,
+                       uint8_t             aHopLimit) const;
 
     /**
      * Emits a neighbor table event to OTNS when a neighbor is added or removed.
@@ -119,21 +120,21 @@ public:
      * @param[in]  aEvent     The event type.
      * @param[in]  aNeighbor  The neighbor that is added or removed.
      */
-    static void EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeighbor);
+    void EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeighbor) const;
 
     /**
      * Emits a transmit event to OTNS.
      *
      * @param[in]  aFrame  The frame of the transmission.
      */
-    static void EmitTransmit(const Mac::TxFrame &aFrame);
+    void EmitTransmit(const Mac::TxFrame &aFrame) const;
 
     /**
      * Emits the device mode to OTNS.
      *
      * @param[in] aMode The device mode.
      */
-    static void EmitDeviceMode(Mle::DeviceMode aMode);
+    void EmitDeviceMode(Mle::DeviceMode aMode) const;
 
     /**
      * Emits the sending COAP message info to OTNS.
@@ -141,7 +142,7 @@ public:
      * @param[in] aMessage      The sending COAP message.
      * @param[in] aMessageInfo  The message info.
      */
-    static void EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
 
     /**
      * Emits the COAP message sending failure to OTNS.
@@ -150,7 +151,7 @@ public:
      * @param[in] aMessage      The COAP message failed to send.
      * @param[in] aMessageInfo  The message info.
      */
-    static void EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
 
     /**
      * Emits the received COAP message info to OTNS.
@@ -158,11 +159,21 @@ public:
      * @param[in] aMessage      The received COAP message.
      * @param[in] aMessageInfo  The message info.
      */
-    static void EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
 
 private:
-    static void EmitStatus(const char *aFmt, ...);
-    void        HandleNotifierEvents(Events aEvents);
+    static constexpr uint16_t kStatusStringLength = 128;
+
+    using StatusString = String<kStatusStringLength>;
+
+    void EmitStatus(const StatusString &aString) const;
+    void EmitStatus(const char *aFmt, ...) const;
+    void EmitCoapStatus(const char             *aAction,
+                        const Coap::Message    &aMessage,
+                        const Ip6::MessageInfo &aMessageInfo,
+                        Error                  *aError = nullptr) const;
+
+    void HandleNotifierEvents(Events aEvents) const;
 };
 
 } // namespace Utils

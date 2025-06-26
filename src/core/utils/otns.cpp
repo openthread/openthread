@@ -42,13 +42,12 @@ namespace Utils {
 
 RegisterLogModule("Otns");
 
-const int kMaxStatusStringLength = 128;
+void Otns::EmitShortAddress(uint16_t aShortAddress) const { EmitStatus("rloc16=%d", aShortAddress); }
 
-void Otns::EmitShortAddress(uint16_t aShortAddress) { EmitStatus("rloc16=%d", aShortAddress); }
-
-void Otns::EmitExtendedAddress(const Mac::ExtAddress &aExtAddress)
+void Otns::EmitExtendedAddress(const Mac::ExtAddress &aExtAddress) const
 {
     Mac::ExtAddress revExtAddress;
+
     revExtAddress.Set(aExtAddress.m8, Mac::ExtAddress::kReverseByteOrder);
     EmitStatus("extaddr=%s", revExtAddress.ToString().AsCString());
 }
@@ -56,35 +55,36 @@ void Otns::EmitExtendedAddress(const Mac::ExtAddress &aExtAddress)
 void Otns::EmitPingRequest(const Ip6::Address &aPeerAddress,
                            uint16_t            aPingLength,
                            uint32_t            aTimestamp,
-                           uint8_t             aHopLimit)
+                           uint8_t             aHopLimit) const
 {
     OT_UNUSED_VARIABLE(aHopLimit);
-    EmitStatus("ping_request=%s,%d,%lu", aPeerAddress.ToString().AsCString(), aPingLength, aTimestamp);
+    EmitStatus("ping_request=%s,%d,%lu", aPeerAddress.ToString().AsCString(), aPingLength, ToUlong(aTimestamp));
 }
 
-void Otns::EmitPingReply(const Ip6::Address &aPeerAddress, uint16_t aPingLength, uint32_t aTimestamp, uint8_t aHopLimit)
+void Otns::EmitPingReply(const Ip6::Address &aPeerAddress,
+                         uint16_t            aPingLength,
+                         uint32_t            aTimestamp,
+                         uint8_t             aHopLimit) const
 {
-    EmitStatus("ping_reply=%s,%u,%lu,%d", aPeerAddress.ToString().AsCString(), aPingLength, aTimestamp, aHopLimit);
+    EmitStatus("ping_reply=%s,%u,%lu,%d", aPeerAddress.ToString().AsCString(), aPingLength, ToUlong(aTimestamp),
+               aHopLimit);
 }
 
-void Otns::EmitStatus(const char *aFmt, ...)
+void Otns::EmitStatus(const char *aFmt, ...) const
 {
-    char statusStr[kMaxStatusStringLength + 1];
-    int  n;
+    StatusString string;
+    va_list      args;
 
-    va_list ap;
-    va_start(ap, aFmt);
+    va_start(args, aFmt);
+    string.AppendVarArgs(aFmt, args);
+    va_end(args);
 
-    n = vsnprintf(statusStr, sizeof(statusStr), aFmt, ap);
-    OT_UNUSED_VARIABLE(n);
-    OT_ASSERT(n >= 0);
-
-    va_end(ap);
-
-    otPlatOtnsStatus(statusStr);
+    EmitStatus(string);
 }
 
-void Otns::HandleNotifierEvents(Events aEvents)
+void Otns::EmitStatus(const StatusString &aString) const { otPlatOtnsStatus(aString.AsCString()); }
+
+void Otns::HandleNotifierEvents(Events aEvents) const
 {
     if (aEvents.Contains(kEventThreadRoleChanged))
     {
@@ -93,7 +93,7 @@ void Otns::HandleNotifierEvents(Events aEvents)
 
     if (aEvents.Contains(kEventThreadPartitionIdChanged))
     {
-        EmitStatus("parid=%x", Get<Mle::Mle>().GetLeaderData().GetPartitionId());
+        EmitStatus("parid=%lx", ToUlong(Get<Mle::Mle>().GetLeaderData().GetPartitionId()));
     }
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
@@ -104,54 +104,78 @@ void Otns::HandleNotifierEvents(Events aEvents)
 #endif
 }
 
-void Otns::EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeighbor)
+void Otns::EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeighbor) const
 {
+    StatusString string;
+
     switch (aEvent)
     {
     case NeighborTable::kRouterAdded:
-        EmitStatus("router_added=%s", aNeighbor.GetExtAddress().ToString().AsCString());
+        string.Append("router_added");
         break;
     case NeighborTable::kRouterRemoved:
-        EmitStatus("router_removed=%s", aNeighbor.GetExtAddress().ToString().AsCString());
+        string.Append("router_removed");
         break;
     case NeighborTable::kChildAdded:
-        EmitStatus("child_added=%s", aNeighbor.GetExtAddress().ToString().AsCString());
+        string.Append("child_added");
         break;
     case NeighborTable::kChildRemoved:
-        EmitStatus("child_removed=%s", aNeighbor.GetExtAddress().ToString().AsCString());
+        string.Append("child_removed");
         break;
     case NeighborTable::kChildModeChanged:
-        break;
+        ExitNow();
     }
+
+    string.Append("=%s", aNeighbor.GetExtAddress().ToString().AsCString());
+    EmitStatus(string);
+
+exit:
+    return;
 }
 
-void Otns::EmitTransmit(const Mac::TxFrame &aFrame)
+void Otns::EmitTransmit(const Mac::TxFrame &aFrame) const
 {
+    StatusString string;
     Mac::Address dst;
-    uint16_t     frameControlField = aFrame.GetFrameControlField();
-    uint8_t      channel           = aFrame.GetChannel();
-    uint8_t      sequence          = aFrame.GetSequence();
 
     IgnoreError(aFrame.GetDstAddr(dst));
 
+    string.Append("transmit=%d,%04x,%d", aFrame.GetChannel(), aFrame.GetFrameControlField(), aFrame.GetSequence());
+
     if (dst.IsShort())
     {
-        EmitStatus("transmit=%d,%04x,%d,%04x", channel, frameControlField, sequence, dst.GetShort());
+        string.Append(",%04x", dst.GetShort());
     }
     else if (dst.IsExtended())
     {
-        EmitStatus("transmit=%d,%04x,%d,%s", channel, frameControlField, sequence, dst.ToString().AsCString());
+        string.Append(",%s", dst.ToString().AsCString());
     }
-    else
-    {
-        EmitStatus("transmit=%d,%04x,%d", channel, frameControlField, sequence);
-    }
+
+    EmitStatus(string);
 }
 
-void Otns::EmitDeviceMode(Mle::DeviceMode aMode)
+void Otns::EmitDeviceMode(Mle::DeviceMode aMode) const
 {
-    EmitStatus("mode=%s%s%s", aMode.IsRxOnWhenIdle() ? "r" : "", aMode.IsFullThreadDevice() ? "d" : "",
-               (aMode.GetNetworkDataType() == NetworkData::kFullSet) ? "n" : "");
+    StatusString string;
+
+    string.Append("mode=");
+
+    if (aMode.IsRxOnWhenIdle())
+    {
+        string.Append("r");
+    }
+
+    if (aMode.IsFullThreadDevice())
+    {
+        string.Append("d");
+    }
+
+    if (aMode.GetNetworkDataType() == NetworkData::kFullSet)
+    {
+        string.Append("m");
+    }
+
+    EmitStatus(string);
 }
 
 void Otns::EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -182,6 +206,7 @@ exit:
 }
 
 void Otns::EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+
 {
     char  uriPath[Coap::Message::kMaxReceivedUriPath + 1];
     Error error = kErrorNone;
@@ -191,6 +216,7 @@ void Otns::EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6:
     EmitStatus("coap=send_error,%d,%d,%d,%s,%s,%d,%s", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(),
                uriPath, aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort(),
                ErrorToString(aError));
+
 exit:
     LogWarnOnError(error, "EmitCoapSendFailure");
 }

@@ -77,17 +77,6 @@
 #endif
 
 /**
- * Check OTNS configurations
- */
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-
-#if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
-#error "OTNS requires virtual time simulations"
-#endif
-
-#endif // OPENTHREAD_CONFIG_OTNS_ENABLE
-
-/**
  * @def OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE
  *
  * This setting configures the maximum network size in simulation.
