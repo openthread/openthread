@@ -34,7 +34,7 @@ Border Router and service information may be stable or temporary. Stable Thread 
 2. Commit new dataset to the Active Operational Dataset in non-volatile storage.
 
    ```bash
-   dataset commit active
+   > dataset commit active
    Done
    ```
 
@@ -186,7 +186,7 @@ The "net data full" callback is invoked whenever:
 - The device is acting as a BR and new entries cannot be added to its local Network Data.
 - The device is acting as a BR and tries to register its local Network Data entries with the leader, but determines that its local entries will not fit.
 
-```
+```bash
 > netdata full
 no
 Done
@@ -200,7 +200,7 @@ Reset the flag tracking whether "net data full" callback was invoked.
 
 This command requires `OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL`.
 
-```
+```bash
 > netdata full reset
 Done
 ```
@@ -252,7 +252,7 @@ Publish DNS/SRP service entry.
 
 This command requires `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE`.
 
-The following formats are available: :
+The following formats are available:
 
 - `netdata publish dnssrp anycast <seq-num> [<version>]` to publish "DNS/SRP Service Anycast Address" with a given sequence number and version.
 - `netdata publish dnssrp unicast <address> <port> [<version>]` to publish "DNS/SRP Service Unicast Address" with given address, port number and version info. The address/port/version info is included in Service TLV data.
