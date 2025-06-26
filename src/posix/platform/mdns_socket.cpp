@@ -41,11 +41,15 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#ifdef __linux__
+#include <linux/rtnetlink.h>
+#endif
 
 #include <openthread/platform/time.h>
 
 #include "ip6_utils.hpp"
 #include "platform-posix.h"
+#include "utils.hpp"
 #include "common/code_utils.hpp"
 
 extern "C" otError otPlatMdnsSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
@@ -100,6 +104,10 @@ void MdnsSocket::Init(void)
     mMulticastIp4Address.mFields.m8[3] = 251;
 
     memset(&mTxQueue, 0, sizeof(mTxQueue));
+
+#if OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_NETLINK
+    mNetlinkFd = -1;
+#endif
 }
 
 void MdnsSocket::SetUp(void)
@@ -154,6 +162,8 @@ void MdnsSocket::Update(otSysMainloopContext &aContext)
 
 #if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC)
     UpdateTimeout(aContext.mTimeout);
+#elif (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_NETLINK)
+    UpdateNetlink(aContext);
 #endif
 
 exit:
@@ -186,6 +196,8 @@ void MdnsSocket::Process(const otSysMainloopContext &aContext)
 
 #if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC)
     ProcessTimeout();
+#elif (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_NETLINK)
+    ProcessNetlink(aContext);
 #endif
 
 exit:
@@ -508,13 +520,13 @@ exit:
 //---------------------------------------------------------------------------------------------------------------------
 // Monitoring address on infra netif
 
-#if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC)
-
 void MdnsSocket::ReportInfraIfAddresses(void)
 {
     struct ifaddrs *ifAddrs = nullptr;
 
+#if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC)
     mNextReportTime = otPlatTimeGet() + kAddrMonitorPeriod * OT_US_PER_MS;
+#endif
 
     if (getifaddrs(&ifAddrs) < 0)
     {
@@ -558,6 +570,12 @@ exit:
     }
 }
 
+#if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC)
+
+void MdnsSocket::StartAddressMonitoring(void) { ReportInfraIfAddresses(); }
+
+void MdnsSocket::StopAddressMonitoring(void) {}
+
 void MdnsSocket::UpdateTimeout(struct timeval &aTimeout)
 {
     uint64_t now       = otPlatTimeGet();
@@ -587,6 +605,165 @@ void MdnsSocket::ProcessTimeout(void)
 }
 
 #endif // (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC)
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+#if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_NETLINK)
+
+void MdnsSocket::StartAddressMonitoring(void)
+{
+    int                rval;
+    struct sockaddr_nl addr;
+
+    mNetlinkFd = SocketWithCloseExec(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE, kSocketBlock);
+    VerifyOrDie(mNetlinkFd >= 0, OT_EXIT_ERROR_ERRNO);
+
+    memset(&addr, 0, sizeof(addr));
+    addr.nl_family = AF_NETLINK;
+    addr.nl_groups = RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR;
+
+    rval = bind(mNetlinkFd, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr));
+    VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
+
+    ReportInfraIfAddresses();
+}
+
+void MdnsSocket::StopAddressMonitoring(void)
+{
+    if (mNetlinkFd >= 0)
+    {
+        close(mNetlinkFd);
+    }
+
+    mNetlinkFd = -1;
+}
+
+void MdnsSocket::UpdateNetlink(otSysMainloopContext &aContext) const
+{
+    VerifyOrExit(mNetlinkFd >= 0);
+
+    FD_SET(mNetlinkFd, &aContext.mReadFdSet);
+
+    if (aContext.mMaxFd < mNetlinkFd)
+    {
+        aContext.mMaxFd = mNetlinkFd;
+    }
+
+exit:
+    return;
+}
+
+void MdnsSocket::ProcessNetlink(const otSysMainloopContext &aContext) const
+{
+    static const size_t kBufSize = 8192;
+
+    union NetlinkMessage
+    {
+        struct nlmsghdr mHeader;
+        uint8_t         mBuffer[kBufSize];
+    };
+
+    NetlinkMessage rcvMsg;
+    ssize_t        rval;
+    size_t         len;
+
+    VerifyOrExit(mNetlinkFd >= 0);
+
+    VerifyOrExit(FD_ISSET(mNetlinkFd, &aContext.mReadFdSet));
+
+    rval = recv(mNetlinkFd, rcvMsg.mBuffer, sizeof(rcvMsg.mBuffer), 0);
+
+    if (rval < 0)
+    {
+        LogCrit("Failed to receive netlink message: %s", strerror(errno));
+        ExitNow();
+    }
+
+    VerifyOrExit(static_cast<size_t>(rval) <= sizeof(rcvMsg.mBuffer));
+
+    len = static_cast<size_t>(rval);
+
+    VerifyOrExit(len >= sizeof(nlmsghdr));
+
+    for (struct nlmsghdr *msg = &rcvMsg.mHeader; NLMSG_OK(msg, len); msg = NLMSG_NEXT(msg, len))
+    {
+        switch (msg->nlmsg_type)
+        {
+        case RTM_NEWADDR:
+        case RTM_DELADDR:
+            ProcessNetlinkAddrEvent(msg);
+            break;
+        case NLMSG_ERROR:
+            LogWarn("netlink error:%d", reinterpret_cast<struct nlmsgerr *>(NLMSG_DATA(msg))->error);
+            break;
+        case NLMSG_DONE:
+            ExitNow();
+        }
+    }
+
+exit:
+    return;
+}
+
+void MdnsSocket::ProcessNetlinkAddrEvent(void *aNetlinkMsg) const
+{
+    struct nlmsghdr  *msg     = static_cast<struct nlmsghdr *>(aNetlinkMsg);
+    struct ifaddrmsg *addrmsg = reinterpret_cast<struct ifaddrmsg *>(NLMSG_DATA(msg));
+    bool              added   = (msg->nlmsg_type == RTM_NEWADDR);
+    size_t            len;
+    struct rtattr    *rta;
+    otIp6Address      ip6Addr;
+    otIp4Address      ip4Addr;
+
+    VerifyOrExit(addrmsg->ifa_index == mInfraIfIndex);
+
+    switch (addrmsg->ifa_family)
+    {
+    case AF_INET6:
+    case AF_INET:
+        break;
+    default:
+        ExitNow();
+    }
+
+    len = IFA_PAYLOAD(msg);
+
+    for (rta = reinterpret_cast<struct rtattr *>(IFA_RTA(addrmsg)); RTA_OK(rta, len); rta = RTA_NEXT(rta, len))
+    {
+        switch (rta->rta_type)
+        {
+        case IFA_ADDRESS:
+        case IFA_LOCAL:
+            if (addrmsg->ifa_family == AF_INET6)
+            {
+                if (RTA_PAYLOAD(rta) < sizeof(otIp6Address))
+                {
+                    continue;
+                }
+
+                ReadIp6AddressFrom(RTA_DATA(rta), ip6Addr);
+            }
+            else
+            {
+                if (RTA_PAYLOAD(rta) < sizeof(otIp4Address))
+                {
+                    continue;
+                }
+
+                memcpy(&ip4Addr, RTA_DATA(rta), sizeof(otIp4Address));
+                otIp4ToIp4MappedIp6Address(&ip4Addr, &ip6Addr);
+            }
+
+            otPlatMdnsHandleHostAddressEvent(mInstance, &ip6Addr, added, mInfraIfIndex);
+            break;
+        }
+    }
+
+exit:
+    return;
+}
+
+#endif //  (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_NETLINK)
 
 //---------------------------------------------------------------------------------------------------------------------
 // Socket helpers
