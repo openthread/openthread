@@ -353,6 +353,18 @@ typedef void (*otCoapResponseHandler)(void                *aContext,
 typedef void (*otCoapRequestHandler)(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
+ * Pointer is called as a fallback if a response did not match a stored CoAP request.
+ *
+ * @param[in]  aContext      A pointer to arbitrary context information.
+ * @param[in]  aMessage      A pointer to the message.
+ * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage.
+ *
+ * @retval  TRUE   The fallback handled the response.
+ * @retval  FALSE  OpenThread takes default actions for response.
+ */
+typedef bool (*otCoapResponseFallback)(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
+/**
  * Pointer is called when a CoAP message with a block-wise transfer option is received.
  *
  * Is available when OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE configuration
@@ -1016,11 +1028,11 @@ void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandle
  * Sets a fallback handler for CoAP responses not matching any active/pending request.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
- * @param[in] aHandler   A function pointer that shall be called as a fallback for responses without matching CoAP
- *                       request.
+ * @param[in] aHandler   A function pointer that shall be called as a fallback for responses without matching
+ *                       active/pending CoAP requests.
  * @param[in] aContext   A pointer to arbitrary context information. May be NULL if not used.
  */
-void otCoapSetResponseFallback(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext);
+void otCoapSetResponseFallback(otInstance *aInstance, otCoapResponseFallback aHandler, void *aContext);
 
 /**
  * Sends a CoAP response from the server with custom transmission parameters.

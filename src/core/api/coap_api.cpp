@@ -287,7 +287,7 @@ void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandle
     AsCoreType(aInstance).Get<Coap::ApplicationCoap>().SetDefaultHandler(aHandler, aContext);
 }
 
-void otCoapSetResponseFallback(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext)
+void otCoapSetResponseFallback(otInstance *aInstance, otCoapResponseFallback aHandler, void *aContext)
 {
     AsCoreType(aInstance).Get<Coap::ApplicationCoap>().SetResponseFallback(aHandler, aContext);
 }

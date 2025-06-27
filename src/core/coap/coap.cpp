@@ -1293,11 +1293,7 @@ exit:
 
     if (error == kErrorNone && request == nullptr)
     {
-        if (mResponseFallback.IsSet())
-        {
-            mResponseFallback.Invoke(&aMessage, &aMessageInfo);
-        }
-        else if (aMessage.IsConfirmable() || aMessage.IsNonConfirmable())
+        if (!InvokeResponseFallback(aMessage, aMessageInfo) && aMessage.RequireResetOnError())
         {
             // Successfully parsed a header but no matching request was
             // found - reject the message by sending reset.
