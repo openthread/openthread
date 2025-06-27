@@ -1566,7 +1566,7 @@ void Core::LocalHost::HandleAddressEvent(const Ip6::Address &aAddress, bool aAdd
     VerifyOrExit(Get<Core>().mIsEnabled);
     VerifyOrExit(aInfraIfIndex == Get<Core>().mInfraIfIndex);
 
-    LogInfo("Host address %s event: %s", aAddress.ToString().AsCString(), aAdded ? "added" : "removed");
+    LogDebg("Host address %s event: %s", aAddress.ToString().AsCString(), aAdded ? "add" : "remove");
 
     addrEvent = AddrEvent::Allocate(aAddress, aAdded);
     OT_ASSERT(addrEvent != nullptr);
@@ -1601,7 +1601,7 @@ void Core::LocalHost::HandleAddressRemoveAll(uint32_t aInfraIfIndex)
     mAddrEvents.Clear();
     mEventTimer.Stop();
 
-    LogInfo("Host address event: remove all");
+    LogDebg("Host address event: remove all");
 
     for (const Ip6::Address &address : mIp4Addresses)
     {
@@ -1645,6 +1645,10 @@ void Core::LocalHost::HandleEventTimer(void)
             {
                 SuccessOrAssert(addresses.PushBack(address));
             }
+            else
+            {
+                LogAddressChange(/* aAdded */ false, addrType, address);
+            }
         }
 
         // Next, add any new addresses for which we got an "added"
@@ -1660,6 +1664,7 @@ void Core::LocalHost::HandleEventTimer(void)
             if (addrEvent.mAdded && !addresses.Contains(addrEvent.mAddress))
             {
                 SuccessOrAssert(addresses.PushBack(addrEvent.mAddress));
+                LogAddressChange(/* aAdded */ true, addrType, addrEvent.mAddress);
             }
         }
     }
@@ -1669,6 +1674,23 @@ void Core::LocalHost::HandleEventTimer(void)
 exit:
     mAddrEvents.Clear();
 }
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+void Core::LocalHost::LogAddressChange(bool aAdded, AddrType aAddrType, const Ip6::Address &aAddress) const
+{
+    Ip4::Address ip4Address;
+
+    if (aAddrType == kIp4AddrType)
+    {
+        SuccessOrAssert(ip4Address.ExtractFromIp4MappedIp6Address(aAddress));
+    }
+
+    LogInfo("%s host address %s", aAdded ? "Adding" : "Removing",
+            aAddrType == kIp4AddrType ? ip4Address.ToString().AsCString() : aAddress.ToString().AsCString());
+}
+#else
+void Core::LocalHost::LogAddressChange(bool, AddrType, const Ip6::Address &) const {}
+#endif
 
 //----------------------------------------------------------------------------------------------------------------------
 // Core::LocalHost::AddrEvent
