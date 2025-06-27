@@ -173,6 +173,12 @@ private:
                         const Ip6::MessageInfo &aMessageInfo,
                         Error                  *aError = nullptr) const;
 
+    void CheckCoapStatus(const StatusString &aString, const char             *aAction,
+                          const Coap::Message    &aMessage,
+                          const Ip6::MessageInfo &aMessageInfo,
+                          Error                  *aError = nullptr) const;
+
+
     void HandleNotifierEvents(Events aEvents) const;
 };
 

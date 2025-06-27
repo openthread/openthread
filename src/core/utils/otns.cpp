@@ -178,48 +178,106 @@ void Otns::EmitDeviceMode(Mle::DeviceMode aMode) const
     EmitStatus(string);
 }
 
-void Otns::EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Otns::CheckCoapStatus(const StatusString &aString, const char             *aAction,
+                          const Coap::Message    &aMessage,
+                          const Ip6::MessageInfo &aMessageInfo,
+                          Error                  *aError) const
 {
+    Error        error;
+    char         uriPath[Coap::Message::kMaxReceivedUriPath + 1];
+    StatusString string;
+
+    SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
+
+    string.Append("coap=%s,%d,%d,%d,%s,%s,%d", aAction, aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(),
+                  uriPath, aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
+
+    if (aError != nullptr)
+    {
+        string.Append(",%s", ErrorToString(*aError));
+    }
+
+    OT_ASSERT(StringMatch(aString.AsCString(), string.AsCString()));
+
+    //EmitStatus(string);
+
+exit:
+    LogWarnOnError(error, "EmitCoapStatus");
+}
+
+
+void Otns::EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+{
+    StatusString string;
     char  uriPath[Coap::Message::kMaxReceivedUriPath + 1];
     Error error;
 
     SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 
-    EmitStatus("coap=send,%d,%d,%d,%s,%s,%d", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(), uriPath,
+    string.Append("coap=send,%d,%d,%d,%s,%s,%d", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(), uriPath,
                aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
+    EmitStatus(string);
+
+    CheckCoapStatus(string, "send", aMessage, aMessageInfo);
 
 exit:
     LogWarnOnError(error, "EmitCoapSend");
 }
 
-void Otns::EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Otns::EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
+    StatusString string;
     char  uriPath[Coap::Message::kMaxReceivedUriPath + 1];
     Error error = kErrorNone;
 
     SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 
-    EmitStatus("coap=recv,%d,%d,%d,%s,%s,%d", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(), uriPath,
+    string.Append("coap=recv,%d,%d,%d,%s,%s,%d", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(), uriPath,
                aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
+    CheckCoapStatus(string, "recv", aMessage, aMessageInfo);
+    EmitStatus(string);
+
 exit:
     LogWarnOnError(error, "EmitCoapReceive");
 }
 
-void Otns::EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-
+void Otns::EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
+    StatusString string;
     char  uriPath[Coap::Message::kMaxReceivedUriPath + 1];
     Error error = kErrorNone;
 
     SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 
-    EmitStatus("coap=send_error,%d,%d,%d,%s,%s,%d,%s", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(),
+    string.Append("coap=send_error,%d,%d,%d,%s,%s,%d,%s", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(),
                uriPath, aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort(),
                ErrorToString(aError));
+
+    CheckCoapStatus(string, "send_error", aMessage, aMessageInfo, &aError);
+    EmitStatus(string);
 
 exit:
     LogWarnOnError(error, "EmitCoapSendFailure");
 }
+
+/*
+
+void Otns::EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+{
+    EmitCoapStatus("send", aMessage, aMessageInfo);
+}
+
+void Otns::EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+{
+    EmitStatus("recv", aMessage, aMessageInfo);
+}
+
+void Otns::EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+{
+    EmitStatus("send_error", aMessage, aMessageInfo, &aError);
+}
+*/
+
 
 } // namespace Utils
 } // namespace ot
