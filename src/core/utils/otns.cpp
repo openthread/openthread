@@ -33,7 +33,7 @@
 
 #include "otns.hpp"
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO) && OPENTHREAD_CONFIG_OTNS_ENABLE
 
 #include "instance/instance.hpp"
 
@@ -53,20 +53,6 @@ void Otns::EmitExtendedAddress(const Mac::ExtAddress &aExtAddress)
     EmitStatus("extaddr=%s", revExtAddress.ToString().AsCString());
 }
 
-void Otns::EmitPingRequest(const Ip6::Address &aPeerAddress,
-                           uint16_t            aPingLength,
-                           uint32_t            aTimestamp,
-                           uint8_t             aHopLimit)
-{
-    OT_UNUSED_VARIABLE(aHopLimit);
-    EmitStatus("ping_request=%s,%d,%lu", aPeerAddress.ToString().AsCString(), aPingLength, aTimestamp);
-}
-
-void Otns::EmitPingReply(const Ip6::Address &aPeerAddress, uint16_t aPingLength, uint32_t aTimestamp, uint8_t aHopLimit)
-{
-    EmitStatus("ping_reply=%s,%u,%lu,%d", aPeerAddress.ToString().AsCString(), aPingLength, aTimestamp, aHopLimit);
-}
-
 void Otns::EmitStatus(const char *aFmt, ...)
 {
     char statusStr[kMaxStatusStringLength + 1];
@@ -82,6 +68,44 @@ void Otns::EmitStatus(const char *aFmt, ...)
     va_end(ap);
 
     otPlatOtnsStatus(statusStr);
+}
+
+void Otns::EmitTransmit(const Mac::TxFrame &aFrame)
+{
+    Mac::Address dst;
+    uint16_t     frameControlField = aFrame.GetFrameControlField();
+    uint8_t      channel           = aFrame.GetChannel();
+    uint8_t      sequence          = aFrame.GetSequence();
+
+    IgnoreError(aFrame.GetDstAddr(dst));
+
+    if (dst.IsShort())
+    {
+        EmitStatus("transmit=%d,%04x,%d,%04x", channel, frameControlField, sequence, dst.GetShort());
+    }
+    else if (dst.IsExtended())
+    {
+        EmitStatus("transmit=%d,%04x,%d,%s", channel, frameControlField, sequence, dst.ToString().AsCString());
+    }
+    else
+    {
+        EmitStatus("transmit=%d,%04x,%d", channel, frameControlField, sequence);
+    }
+}
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+void Otns::EmitPingRequest(const Ip6::Address &aPeerAddress,
+                           uint16_t            aPingLength,
+                           uint32_t            aTimestamp,
+                           uint8_t             aHopLimit)
+{
+    OT_UNUSED_VARIABLE(aHopLimit);
+    EmitStatus("ping_request=%s,%d,%lu", aPeerAddress.ToString().AsCString(), aPingLength, aTimestamp);
+}
+
+void Otns::EmitPingReply(const Ip6::Address &aPeerAddress, uint16_t aPingLength, uint32_t aTimestamp, uint8_t aHopLimit)
+{
+    EmitStatus("ping_reply=%s,%u,%lu,%d", aPeerAddress.ToString().AsCString(), aPingLength, aTimestamp, aHopLimit);
 }
 
 void Otns::HandleNotifierEvents(Events aEvents)
@@ -122,29 +146,6 @@ void Otns::EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeig
         break;
     case NeighborTable::kChildModeChanged:
         break;
-    }
-}
-
-void Otns::EmitTransmit(const Mac::TxFrame &aFrame)
-{
-    Mac::Address dst;
-    uint16_t     frameControlField = aFrame.GetFrameControlField();
-    uint8_t      channel           = aFrame.GetChannel();
-    uint8_t      sequence          = aFrame.GetSequence();
-
-    IgnoreError(aFrame.GetDstAddr(dst));
-
-    if (dst.IsShort())
-    {
-        EmitStatus("transmit=%d,%04x,%d,%04x", channel, frameControlField, sequence, dst.GetShort());
-    }
-    else if (dst.IsExtended())
-    {
-        EmitStatus("transmit=%d,%04x,%d,%s", channel, frameControlField, sequence, dst.ToString().AsCString());
-    }
-    else
-    {
-        EmitStatus("transmit=%d,%04x,%d", channel, frameControlField, sequence);
     }
 }
 
@@ -194,8 +195,9 @@ void Otns::EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6:
 exit:
     LogWarnOnError(error, "EmitCoapSendFailure");
 }
+#endif  //  OPENTHREAD_FTD || OPENTHREAD_MTD
 
 } // namespace Utils
 } // namespace ot
 
-#endif // (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#endif // (OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO) && OPENTHREAD_CONFIG_OTNS_ENABLE

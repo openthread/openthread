@@ -36,21 +36,23 @@
 
 #include "openthread-core-config.h"
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO) && OPENTHREAD_CONFIG_OTNS_ENABLE
 
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
 #include <openthread/platform/otns.h>
-
-#include "coap/coap_message.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
-#include "common/notifier.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#include "coap/coap_message.hpp"
+#include "common/notifier.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/neighbor.hpp"
 #include "thread/neighbor_table.hpp"
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 namespace ot {
 namespace Utils {
@@ -60,7 +62,9 @@ namespace Utils {
  */
 class Otns : public InstanceLocator, private NonCopyable
 {
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     friend class ot::Notifier;
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 public:
     /**
@@ -87,6 +91,14 @@ public:
      */
     static void EmitExtendedAddress(const Mac::ExtAddress &aExtAddress);
 
+    /**
+     * Emits a transmit event to OTNS.
+     *
+     * @param[in]  aFrame  The frame of the transmission.
+     */
+    static void EmitTransmit(const Mac::TxFrame &aFrame);
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     /**
      * Emits ping request information to OTNS when sending.
      *
@@ -122,13 +134,6 @@ public:
     static void EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeighbor);
 
     /**
-     * Emits a transmit event to OTNS.
-     *
-     * @param[in]  aFrame  The frame of the transmission.
-     */
-    static void EmitTransmit(const Mac::TxFrame &aFrame);
-
-    /**
      * Emits the device mode to OTNS.
      *
      * @param[in] aMode The device mode.
@@ -159,15 +164,17 @@ public:
      * @param[in] aMessageInfo  The message info.
      */
     static void EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 private:
     static void EmitStatus(const char *aFmt, ...);
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     void        HandleNotifierEvents(Events aEvents);
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 };
 
 } // namespace Utils
 } // namespace ot
 
-#endif //(OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#endif // (OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO) && OPENTHREAD_CONFIG_OTNS_ENABLE
 
 #endif // UTILS_OTNS_HPP_
