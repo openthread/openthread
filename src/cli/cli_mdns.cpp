@@ -61,10 +61,13 @@ exit:
 
 template <> otError Mdns::Process<Cmd("disable")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
+    uint32_t infraIfIndex;
 
-    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    error = otMdnsSetEnabled(GetInstancePtr(), false, /* aInfraIfIndex */ 0);
+    SuccessOrExit(error = aArgs[0].ParseAsUint32(infraIfIndex));
+    VerifyOrExit(mInfraIfIndex == infraIfIndex, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    error = otMdnsSetEnabled(GetInstancePtr(), false, infraIfIndex);
 
 exit:
     return error;
