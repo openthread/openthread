@@ -122,3 +122,7 @@ void otPlatAssertFail(const char *aFilename, int aLineNumber)
     assert(false);
     exit(1);
 }
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE && !OPENTHREAD_SIMULATION_VIRTUAL_TIME
+void otPlatOtnsStatus(const char *aStatus) { OT_UNUSED_VARIABLE(aStatus); }
+#endif
