@@ -100,14 +100,14 @@ public:
      *
      * @param[in,out]   aContext    A reference to the mainloop context.
      */
-    void Update(otSysMainloopContext &aContext) override;
+    void Update(Mainloop::Context &aContext) override;
 
     /**
      * Performs `MdnsSocket` processing.
      *
      * @param[in]   aContext   A reference to the mainloop context.
      */
-    void Process(const otSysMainloopContext &aContext) override;
+    void Process(const Mainloop::Context &aContext) override;
 
     // otPlatMdns APIs
     otError SetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex);
@@ -145,7 +145,7 @@ private:
     void StartAddressMonitoring(void) { ReportInfraIfAddresses(); }
     void StopAddressMonitoring(void) {}
     void ReportInfraIfAddresses(void);
-    void UpdateTimeout(struct timeval &aTimeout);
+    void UpdateTimeout(Mainloop::Context &aContext);
     void ProcessTimeout(void);
 #endif
 

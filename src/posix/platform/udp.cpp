@@ -565,7 +565,7 @@ namespace Posix {
 
 const char Udp::kLogModuleName[] = "Udp";
 
-void Udp::Update(otSysMainloopContext &aContext)
+void Udp::Update(Mainloop::Context &aContext)
 {
     VerifyOrExit(gNetifIndex != 0);
 
@@ -579,12 +579,7 @@ void Udp::Update(otSysMainloopContext &aContext)
         }
 
         fd = FdFromHandle(socket->mHandle);
-        FD_SET(fd, &aContext.mReadFdSet);
-
-        if (aContext.mMaxFd < fd)
-        {
-            aContext.mMaxFd = fd;
-        }
+        Mainloop::AddToReadFdSet(fd, aContext);
     }
 
 exit:
@@ -626,7 +621,7 @@ Udp &Udp::Get(void)
     return sInstance;
 }
 
-void Udp::Process(const otSysMainloopContext &aContext)
+void Udp::Process(const Mainloop::Context &aContext)
 {
     otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
 
@@ -634,7 +629,7 @@ void Udp::Process(const otSysMainloopContext &aContext)
     {
         int fd = FdFromHandle(socket->mHandle);
 
-        if (fd > 0 && FD_ISSET(fd, &aContext.mReadFdSet))
+        if (fd > 0 && Mainloop::IsFdReadable(fd, aContext))
         {
             otMessageInfo messageInfo;
             otMessage    *message = nullptr;

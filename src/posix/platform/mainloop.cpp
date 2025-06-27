@@ -30,11 +30,50 @@
 
 #include <assert.h>
 
+#include <openthread/platform/time.h>
+
 #include "common/code_utils.hpp"
 
 namespace ot {
 namespace Posix {
 namespace Mainloop {
+
+//---------------------------------------------------------------------------------------------------------------------
+
+static void AddFd(int aFd, Context &aContext, fd_set &aFdSet)
+{
+    VerifyOrExit(aFd >= 0);
+
+    FD_SET(aFd, &aFdSet);
+    aContext.mMaxFd = OT_MAX(aContext.mMaxFd, aFd);
+
+exit:
+    return;
+}
+
+void AddToReadFdSet(int aFd, Context &aContext) { AddFd(aFd, aContext, aContext.mReadFdSet); }
+void AddToWriteFdSet(int aFd, Context &aContext) { AddFd(aFd, aContext, aContext.mWriteFdSet); }
+void AddToErrorFdSet(int aFd, Context &aContext) { AddFd(aFd, aContext, aContext.mErrorFdSet); }
+
+uint64_t GetTimeout(const Context &aContext)
+{
+    return static_cast<uint64_t>(aContext.mTimeout.tv_sec) * OT_US_PER_S +
+           static_cast<uint64_t>(aContext.mTimeout.tv_usec);
+}
+
+void SetTimeoutIfEarlier(uint64_t aTimeout, Context &aContext)
+{
+    VerifyOrExit(aTimeout < GetTimeout(aContext));
+
+    aContext.mTimeout.tv_sec  = static_cast<time_t>(aTimeout / OT_US_PER_S);
+    aContext.mTimeout.tv_usec = static_cast<suseconds_t>(aTimeout % OT_US_PER_S);
+
+exit:
+    return;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Manager
 
 void Manager::Add(Source &aSource)
 {
@@ -58,7 +97,7 @@ void Manager::Remove(Source &aSource)
     aSource.mNext = nullptr;
 }
 
-void Manager::Update(otSysMainloopContext &aContext)
+void Manager::Update(Context &aContext)
 {
     for (Source *source = mSources; source != nullptr; source = source->mNext)
     {
@@ -66,7 +105,7 @@ void Manager::Update(otSysMainloopContext &aContext)
     }
 }
 
-void Manager::Process(const otSysMainloopContext &aContext)
+void Manager::Process(const Context &aContext)
 {
     for (Source *source = mSources; source != nullptr; source = source->mNext)
     {
