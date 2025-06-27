@@ -47,8 +47,8 @@ public:
 
     void SetUp(void);
     void TearDown(void);
-    void Update(otSysMainloopContext &aContext) override;
-    void Process(const otSysMainloopContext &aContext) override;
+    void Update(Mainloop::Context &aContext) override;
+    void Process(const Mainloop::Context &aContext) override;
     int  OutputFormatV(const char *aFormat, va_list aArguments);
 
 private:

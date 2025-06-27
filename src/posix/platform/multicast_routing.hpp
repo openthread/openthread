@@ -64,8 +64,8 @@ public:
     bool IsEnabled(void) const { return mMulticastRouterSock >= 0; }
     void SetUp(void);
     void TearDown(void);
-    void Update(otSysMainloopContext &aContext) override;
-    void Process(const otSysMainloopContext &aContext) override;
+    void Update(Mainloop::Context &aContext) override;
+    void Process(const Mainloop::Context &aContext) override;
     void HandleStateChange(otInstance *aInstance, otChangedFlags aFlags);
 
 private:

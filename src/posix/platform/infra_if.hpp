@@ -64,14 +64,14 @@ public:
      *
      * @param[in,out]   aContext    A reference to the mainloop context.
      */
-    void Update(otSysMainloopContext &aContext) override;
+    void Update(Mainloop::Context &aContext) override;
 
     /**
      * Performs infrastructure network interface processing.
      *
      * @param[in]   aContext   A reference to the mainloop context.
      */
-    void Process(const otSysMainloopContext &aContext) override;
+    void Process(const Mainloop::Context &aContext) override;
 
     /**
      * Initializes the infrastructure network interface.
