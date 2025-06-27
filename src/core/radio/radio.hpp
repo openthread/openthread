@@ -734,6 +734,26 @@ public:
     }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    /**
+     * Start Automatic Data Poll transmission using an initial frame counter and periodicity.
+     *
+     * @param[in] aFrame       A reference to the frame to be transmitted.
+     * @param[in] aStartTime   Timestamp for the first poll
+     * @param[in] aPollPeriod  Periodicity of the IEEE 802.15.4 data poll frame
+     *
+     * @retval kErrorNone            Successfully enabled automatic Data Poll transmission
+     * @retval kErrorNotImplemented  Radio driver doesn't support automatic Data Poll transmission.
+     */
+    Error StartAutoPoll(Mac::TxFrame &aFrame, TimeMilli aStartTime, uint32_t aPollPeriod);
+
+    /**
+     * Stop Automatic Data Poll transmission
+     *
+     */
+    void StopAutoPoll();
+#endif
+
     /**
      * Checks if a given channel is valid as a CSL channel.
      *
@@ -1028,6 +1048,17 @@ inline void Radio::ClearSrcMatchExtEntries(void) { otPlatRadioClearSrcMatchExtEn
 inline uint32_t Radio::GetBusSpeed(void) { return otPlatRadioGetBusSpeed(GetInstancePtr()); }
 
 inline uint32_t Radio::GetBusLatency(void) { return otPlatRadioGetBusLatency(GetInstancePtr()); }
+
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+
+inline Error Radio::StartAutoPoll(Mac::TxFrame &aFrame, TimeMilli aStartTime, uint32_t aPollPeriod)
+{
+    return otPlatRadioStartAutoPoll(GetInstancePtr(), &aFrame, aStartTime.GetValue(), aPollPeriod);
+}
+
+inline void Radio::StopAutoPoll() { otPlatRadioStopAutoPoll(GetInstancePtr()); }
+
+#endif
 
 #else //----------------------------------------------------------------------------------------------------------------
 
