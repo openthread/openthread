@@ -1182,6 +1182,8 @@ private:
             bool         mAdded;
         };
 
+        void LogAddressChange(bool aAdded, AddrType aAddrType, const Ip6::Address &aAddress) const;
+
         using EventTimer = TimerMilliIn<Core, &Core::HandleLocalHostEventTimer>;
 
         Heap::String          mName;
