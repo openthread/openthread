@@ -188,6 +188,7 @@ const struct Diags::Command Diags::sCommands[] = {
     {"stats", &Diags::ProcessStats},
     {"stop", &Diags::ProcessStop},
     {"stream", &Diags::ProcessStream},
+    {"sweep", &Diags::ProcessSweep},
 };
 
 Diags::Diags(Instance &aInstance)
@@ -202,6 +203,8 @@ Diags::Diags(Instance &aInstance)
     , mIsTxPacketSet(false)
     , mIsAsyncSend(false)
     , mDiagSendOn(false)
+    , mIsSleepOn(false)
+    , mIsAsyncSweep(false)
     , mOutputCallback(nullptr)
     , mOutputContext(nullptr)
 {
@@ -554,6 +557,49 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[])
     return kErrorNone;
 }
 
+Error Diags::ProcessSweep(uint8_t aArgsLength, char *aArgs[])
+{
+    Error   error = kErrorNone;
+    uint8_t txLength;
+
+    VerifyOrExit(aArgsLength >= 1, error = kErrorInvalidArgs);
+    VerifyOrExit(mCurTxCmd == kTxCmdNone, error = kErrorInvalidState);
+
+    if (StringMatch(aArgs[0], "async"))
+    {
+        aArgs++;
+        aArgsLength--;
+        VerifyOrExit(aArgsLength >= 1, error = kErrorInvalidArgs);
+        mIsAsyncSweep = true;
+    }
+    else
+    {
+        mIsAsyncSweep = false;
+    }
+
+    SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(aArgs[0], txLength));
+
+    VerifyOrExit(txLength <= OT_RADIO_FRAME_MAX_SIZE, error = kErrorInvalidArgs);
+    VerifyOrExit(txLength >= OT_RADIO_FRAME_MIN_SIZE, error = kErrorInvalidArgs);
+
+    mTxLen         = txLength;
+    mIsTxPacketSet = false;
+
+    mChannel = Radio::kChannelMin;
+    otPlatDiagChannelSet(mChannel);
+
+    SuccessOrExit(error = TransmitPacket());
+    mCurTxCmd = kTxCmdSweep;
+
+    if (!mIsAsyncSweep)
+    {
+        error = kErrorPending;
+    }
+
+exit:
+    return error;
+}
+
 Error Diags::TransmitPacket(void)
 {
     Error error         = kErrorNone;
@@ -878,9 +924,28 @@ void Diags::TransmitDone(Error aError)
     }
 
     UpdateTxStats(aError);
-    VerifyOrExit((mCurTxCmd == kTxCmdSend) && (mTxPackets > 0));
+    VerifyOrExit(((mCurTxCmd == kTxCmdSend) && (mTxPackets > 0)) || (mCurTxCmd == kTxCmdSweep));
 
-    if (mTxPackets > 1)
+    if (mCurTxCmd == kTxCmdSweep)
+    {
+        if (IsChannelValid(mChannel + 1))
+        {
+            mChannel += 1;
+            otPlatDiagChannelSet(mChannel);
+
+            IgnoreError(TransmitPacket());
+        }
+        else
+        {
+            mCurTxCmd = kTxCmdNone;
+
+            if (!mIsAsyncSweep)
+            {
+                Output("OT_ERROR_NONE");
+            }
+        }
+    }
+    else if (mTxPackets > 1)
     {
         mTxPackets--;
         IgnoreError(TransmitPacket());
