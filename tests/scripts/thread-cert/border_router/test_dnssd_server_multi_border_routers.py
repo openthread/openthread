@@ -137,9 +137,9 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
         self.simulator.go(5)
 
         # start BR2 late to ensure it doesn't have mDNS cache
-        br2.start_mdns_service()
         br2.start_otbr_service()
         br2.start()
+        br2.start_mdns_service()
 
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         br2.dns_upstream_query_state = False
