@@ -1281,20 +1281,30 @@ class MleMessageSecured(MleMessage):
 
 class MleMessageFactory:
 
-    def __init__(self, aux_sec_hdr_factory, mle_command_factory, crypto_engine):
+    def __init__(self, aux_sec_hdr_factory, mle_command_factory, crypto_engines):
         self._aux_sec_hdr_factory = aux_sec_hdr_factory
         self._mle_command_factory = mle_command_factory
-        self._crypto_engine = crypto_engine
+        self._crypto_engines = crypto_engines
 
     def _create_mle_secured_message(self, data, message_info):
         aux_sec_hdr = self._aux_sec_hdr_factory.parse(data, message_info)
 
         enc_data_length = len(data.getvalue())
 
-        enc_data = bytearray(data.read(enc_data_length - data.tell() - self._crypto_engine.mic_length))
-        mic = bytearray(data.read())
+        raw = data.read(enc_data_length - data.tell())
 
-        dec_data = self._crypto_engine.decrypt(enc_data, mic, message_info)
+        error = None
+        for crypto_engine in self._crypto_engines:
+            enc_data = bytearray(raw[0:-crypto_engine.mic_length])
+            mic = bytearray(raw[-crypto_engine.mic_length:])
+
+            try:
+                dec_data = crypto_engine.decrypt(enc_data, mic, message_info)
+                break
+            except ValueError as e:
+                error = e
+        else:
+            raise ValueError("Failed to parse MLE message") from error
 
         command = self._mle_command_factory.parse(io.BytesIO(dec_data), message_info)
 

@@ -183,7 +183,7 @@ class PublishMeshCopService(thread_cert.TestCase):
             'channel_mask': config.CHANNEL_MASK,
             'extended_panid': config.EXTENDED_PANID,
             'mesh_local_prefix': config.MESH_LOCAL_PREFIX.split('/')[0],
-            'network_key': binascii.hexlify(config.DEFAULT_NETWORK_KEY).decode(),
+            'network_key': config.DEFAULT_NETWORK_KEY,
             'network_name': 'ot-br-1-3',
             'panid': config.PANID,
             'pskc': config.PSKC,

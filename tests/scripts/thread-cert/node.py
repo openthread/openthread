@@ -1737,6 +1737,7 @@ class NodeImpl:
         cmd = 'networkkey %s' % networkkey
         self.send_command(cmd)
         self._expect_done()
+        self.simulator.add_network_key(network_key)
 
     def get_key_sequence_counter(self):
         self.send_command('keysequence counter')
@@ -2728,6 +2729,7 @@ class NodeImpl:
             cmd = 'dataset networkkey %s' % network_key
             self.send_command(cmd, go=False)
             self._expect_done()
+            self.simulator.add_network_key(network_key)
 
         if network_name is not None:
             cmd = 'dataset networkname %s' % network_name
@@ -2863,6 +2865,7 @@ class NodeImpl:
 
         if network_key is not None:
             cmd += 'networkkey %s ' % network_key
+            self.simulator.add_network_key(network_key)
 
         if mesh_local is not None:
             cmd += 'localprefix %s ' % mesh_local
@@ -2940,6 +2943,7 @@ class NodeImpl:
 
         if network_key is not None:
             cmd += 'networkkey %s ' % network_key
+            self.simulator.add_network_key(network_key)
 
         if mesh_local is not None:
             cmd += 'localprefix %s ' % mesh_local
