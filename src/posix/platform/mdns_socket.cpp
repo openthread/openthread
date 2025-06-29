@@ -125,61 +125,51 @@ void MdnsSocket::Deinit(void)
     CloseIp6Socket();
 }
 
-void MdnsSocket::Update(otSysMainloopContext &aContext)
+void MdnsSocket::Update(Mainloop::Context &aContext)
 {
     VerifyOrExit(mEnabled);
 
-    FD_SET(mFd6, &aContext.mReadFdSet);
-    FD_SET(mFd4, &aContext.mReadFdSet);
+    Mainloop::AddToReadFdSet(mFd6, aContext);
+    Mainloop::AddToReadFdSet(mFd4, aContext);
 
     if (mPendingIp6Tx > 0)
     {
-        FD_SET(mFd6, &aContext.mWriteFdSet);
+        Mainloop::AddToWriteFdSet(mFd6, aContext);
     }
 
     if (mPendingIp4Tx > 0)
     {
-        FD_SET(mFd4, &aContext.mWriteFdSet);
-    }
-
-    if (aContext.mMaxFd < mFd6)
-    {
-        aContext.mMaxFd = mFd6;
-    }
-
-    if (aContext.mMaxFd < mFd4)
-    {
-        aContext.mMaxFd = mFd4;
+        Mainloop::AddToWriteFdSet(mFd4, aContext);
     }
 
 #if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC)
-    UpdateTimeout(aContext.mTimeout);
+    UpdateTimeout(aContext);
 #endif
 
 exit:
     return;
 }
 
-void MdnsSocket::Process(const otSysMainloopContext &aContext)
+void MdnsSocket::Process(const Mainloop::Context &aContext)
 {
     VerifyOrExit(mEnabled);
 
-    if (FD_ISSET(mFd6, &aContext.mWriteFdSet))
+    if (Mainloop::IsFdWritable(mFd6, aContext))
     {
         SendQueuedMessages(kIp6Msg);
     }
 
-    if (FD_ISSET(mFd4, &aContext.mWriteFdSet))
+    if (Mainloop::IsFdWritable(mFd4, aContext))
     {
         SendQueuedMessages(kIp4Msg);
     }
 
-    if (FD_ISSET(mFd6, &aContext.mReadFdSet))
+    if (Mainloop::IsFdReadable(mFd6, aContext))
     {
         ReceiveMessage(kIp6Msg);
     }
 
-    if (FD_ISSET(mFd4, &aContext.mReadFdSet))
+    if (Mainloop::IsFdReadable(mFd4, aContext))
     {
         ReceiveMessage(kIp4Msg);
     }
@@ -558,24 +548,17 @@ exit:
     }
 }
 
-void MdnsSocket::UpdateTimeout(struct timeval &aTimeout)
+void MdnsSocket::UpdateTimeout(Mainloop::Context &aContext)
 {
     uint64_t now       = otPlatTimeGet();
     uint64_t remaining = 1;
-    uint64_t timeout;
 
     if (mNextReportTime > now)
     {
         remaining = mNextReportTime - now;
     }
 
-    timeout = static_cast<uint64_t>(aTimeout.tv_sec) * OT_US_PER_S + static_cast<uint64_t>(aTimeout.tv_usec);
-
-    if (remaining < timeout)
-    {
-        aTimeout.tv_sec  = static_cast<time_t>(remaining / OT_US_PER_S);
-        aTimeout.tv_usec = static_cast<suseconds_t>(remaining % OT_US_PER_S);
-    }
+    Mainloop::SetTimeoutIfEarlier(remaining, aContext);
 }
 
 void MdnsSocket::ProcessTimeout(void)

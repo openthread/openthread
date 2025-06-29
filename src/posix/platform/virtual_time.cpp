@@ -43,6 +43,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include "mainloop.hpp"
 #include "utils.hpp"
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
@@ -220,22 +221,15 @@ void virtualTimeSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength
     virtualTimeSendEvent(&event, offsetof(struct VirtualTimeEvent, mData) + event.mDataLength);
 }
 
-void virtualTimeUpdateFdSet(otSysMainloopContext *aContext)
-{
-    FD_SET(sSockFd, &aContext->mReadFdSet);
-    if (aContext->mMaxFd < sSockFd)
-    {
-        aContext->mMaxFd = sSockFd;
-    }
-}
+void virtualTimeUpdateFdSet(Mainloop::Context *aContext) { Mainloop::AddToReadFdSet(sSockFd, *aContext); }
 
-void virtualTimeProcess(otInstance *aInstance, const otSysMainloopContext *aContext)
+void virtualTimeProcess(otInstance *aInstance, const Mainloop::Context *aContext)
 {
     struct VirtualTimeEvent event;
 
     memset(&event, 0, sizeof(event));
 
-    if (FD_ISSET(sSockFd, &aContext->mReadFdSet))
+    if (Mainloop::IsFdReadable(sSockFd, *aContext))
     {
         virtualTimeReceiveEvent(&event);
     }
