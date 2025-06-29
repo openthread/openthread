@@ -35,7 +35,7 @@
 
 #include "instance/instance.hpp"
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_MDNS
 
 #if OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE && OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
 #error "OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE conflicts with OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT."
@@ -153,7 +153,11 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
     }
 }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 Error MessagePool::ReclaimBuffers(Message::Priority aPriority) { return Get<MeshForwarder>().EvictMessage(aPriority); }
+#elif OPENTHREAD_MDNS
+Error MessagePool::ReclaimBuffers(Message::Priority) { return kErrorNotFound; }
+#endif
 
 uint16_t MessagePool::GetFreeBufferCount(void) const
 {
@@ -781,8 +785,10 @@ Message *Message::Clone(uint16_t aLength) const
     messageCopy->SetMeshDest(GetMeshDest());
     messageCopy->SetPanId(GetPanId());
     messageCopy->SetChannel(GetChannel());
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     messageCopy->SetRssAverager(GetRssAverager());
     messageCopy->SetLqiAverager(GetLqiAverager());
+#endif
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     messageCopy->SetTimeSync(IsTimeSync());
 #endif
@@ -791,6 +797,8 @@ exit:
     FreeAndNullMessageOnError(messageCopy, error);
     return messageCopy;
 }
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 
 Error Message::GetLinkInfo(ThreadLinkInfo &aLinkInfo) const
 {
@@ -838,6 +846,8 @@ void Message::UpdateLinkInfoFrom(const ThreadLinkInfo &aLinkInfo)
     SetRadioType(static_cast<Mac::RadioType>(aLinkInfo.mRadioType));
 #endif
 }
+
+#endif //  OPENTHREAD_MTD || OPENTHREAD_FTD
 
 bool Message::IsTimeSync(void) const
 {
@@ -1151,4 +1161,5 @@ void PriorityQueue::GetInfo(Info &aInfo) const
 }
 
 } // namespace ot
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_MDNS

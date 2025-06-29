@@ -64,6 +64,7 @@
 #include "instance/extension.hpp"
 #include "mac/link_raw.hpp"
 #include "radio/radio.hpp"
+#include "utils/heap.hpp"
 #include "utils/otns.hpp"
 #include "utils/power_calibration.hpp"
 #include "utils/static_counter.hpp"
@@ -101,7 +102,6 @@
 #include "net/dnssd_server.hpp"
 #include "net/ip6.hpp"
 #include "net/ip6_filter.hpp"
-#include "net/mdns.hpp"
 #include "net/nat64_translator.hpp"
 #include "net/nd_agent.hpp"
 #include "net/netif.hpp"
@@ -136,7 +136,6 @@
 #include "thread/tmf.hpp"
 #include "utils/channel_manager.hpp"
 #include "utils/channel_monitor.hpp"
-#include "utils/heap.hpp"
 #include "utils/history_tracker.hpp"
 #include "utils/jam_detector.hpp"
 #include "utils/link_metrics_manager.hpp"
@@ -145,6 +144,10 @@
 #include "utils/slaac_address.hpp"
 #include "utils/srp_client_buffers.hpp"
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_MDNS
+#include "net/mdns.hpp"
+#endif
 
 /**
  * @addtogroup core-instance
@@ -271,6 +274,8 @@ public:
      */
     bool IsInitialized(void) const { return mIsInitialized; }
 
+#if !OPENTHREAD_MDNS
+
     /**
      * Triggers a platform reset.
      *
@@ -296,6 +301,8 @@ public:
      */
     void ResetRadioStack(void);
 #endif
+
+#endif // !OPENTHREAD_MDNS
 
     /**
      * Returns the active log level.
@@ -329,21 +336,7 @@ public:
      */
     void Finalize(void);
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
-    /**
-     * Deletes all the settings stored in non-volatile memory, and then triggers a platform reset.
-     */
-    void FactoryReset(void);
-
-    /**
-     * Erases all the OpenThread persistent info (network settings) stored in non-volatile memory.
-     *
-     * Erase is successful/allowed only if the device is in `disabled` state/role.
-     *
-     * @retval kErrorNone          All persistent info/state was erased successfully.
-     * @retval kErrorInvalidState  Device is not in `disabled` state/role.
-     */
-    Error ErasePersistentInfo(void);
+#if OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_MDNS
 
 #if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     /**
@@ -373,6 +366,42 @@ public:
      * @returns TRUE if the "DNS name compressions" mode is enabled, FALSE otherwise.
      */
     static bool IsDnsNameCompressionEnabled(void) { return sDnsNameCompressionEnabled; }
+#endif
+
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_MDNS
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    /**
+     * Deletes all the settings stored in non-volatile memory, and then triggers a platform reset.
+     */
+    void FactoryReset(void);
+
+    /**
+     * Erases all the OpenThread persistent info (network settings) stored in non-volatile memory.
+     *
+     * Erase is successful/allowed only if the device is in `disabled` state/role.
+     *
+     * @retval kErrorNone          All persistent info/state was erased successfully.
+     * @retval kErrorInvalidState  Device is not in `disabled` state/role.
+     */
+    Error ErasePersistentInfo(void);
+
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
+    /**
+     * Returns a reference to application COAP object.
+     *
+     * @returns A reference to the application COAP object.
+     */
+    Coap::Coap &GetApplicationCoap(void) { return mApplicationCoap; }
+#endif
+
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+    /**
+     * Returns a reference to application COAP Secure object.
+     *
+     * @returns A reference to the application COAP Secure object.
+     */
+    Coap::ApplicationCoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
 #endif
 
     /**
@@ -431,11 +460,11 @@ private:
     static LogLevel sLogLevel;
 #endif
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_MDNS) && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     static Utils::Heap *sHeap;
 #endif
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_MDNS) && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     static bool sDnsNameCompressionEnabled;
 #endif
 
@@ -452,33 +481,40 @@ private:
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     TimerMicro::Scheduler mTimerMicroScheduler;
 #endif
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    Uptime mUptime;
+#endif
+
+    // Random::Manager is initialized before other objects. Note
+    // that it requires MbedTls which itself may use `Heap`.
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    // Random::Manager is initialized before other objects. Note that it
-    // requires MbedTls which itself may use Heap.
     Crypto::MbedTls mMbedTls;
 #endif
 
     Random::Manager mRandomManager;
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_RADIO
     // Radio is initialized before other member variables
     // (particularly, SubMac and Mac) to allow them to use its methods
     // from their constructor.
     Radio mRadio;
-
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
-    Uptime mUptime;
 #endif
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
-    // Notifier, TimeTicker, Settings, and MessagePool are initialized
+    // MessagePool, Notifier, TimeTicker, and Settings are initialized
     // before other member variables since other classes/objects from
     // their constructor may use them.
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_MDNS
+    MessagePool mMessagePool;
+#endif
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD // -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- -
+
     Notifier       mNotifier;
     TimeTicker     mTimeTicker;
     Settings       mSettings;
     SettingsDriver mSettingsDriver;
-    MessagePool    mMessagePool;
 
 #if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE || OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
     // DNS-SD platform and mDNS are initialized early to
@@ -712,9 +748,9 @@ private:
     Nat64::Translator mNat64Translator;
 #endif
 
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - --
 
-#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+#if OPENTHREAD_RADIO || ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_LINK_RAW_ENABLE)
     Mac::LinkRaw mLinkRaw;
 #endif
 
@@ -722,11 +758,20 @@ private:
     Extension::ExtensionBase &mExtension;
 #endif
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO
+
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     FactoryDiags::Diags mDiags;
 #endif
+
 #if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
     Utils::PowerCalibration mPowerCalibration;
+#endif
+
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO
+
+#if OPENTHREAD_MDNS
+    Dns::Multicast::Core mMdnsCore;
 #endif
 
     bool mIsInitialized;
@@ -737,9 +782,12 @@ private:
 DefineCoreType(otInstance, Instance);
 DefineCoreType(otBufferInfo, Instance::BufferInfo);
 
+//----------------------------------------------------------------------------------------------------------------------
 // Specializations of the `Get<Type>()` method.
 
 template <> inline Instance &Instance::Get(void) { return *this; }
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO
 
 template <> inline Radio &Instance::Get(void) { return mRadio; }
 
@@ -749,11 +797,18 @@ template <> inline Radio::Callbacks &Instance::Get(void) { return mRadio.mCallba
 template <> inline Radio::Statistics &Instance::Get(void) { return mRadio.mStatistics; }
 #endif
 
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO
+
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
 template <> inline Uptime &Instance::Get(void) { return mUptime; }
 #endif
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_MDNS
+template <> inline MessagePool &Instance::Get(void) { return mMessagePool; }
+#endif
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD // -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- -
+
 template <> inline Notifier &Instance::Get(void) { return mNotifier; }
 
 template <> inline TimeTicker &Instance::Get(void) { return mTimeTicker; }
@@ -936,10 +991,6 @@ template <> inline Dns::ServiceDiscovery::Server &Instance::Get(void) { return m
 template <> inline Dns::Dso &Instance::Get(void) { return mDnsDso; }
 #endif
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
-template <> inline Dns::Multicast::Core &Instance::Get(void) { return mMdnsCore; }
-#endif
-
 template <> inline NetworkDiagnostic::Server &Instance::Get(void) { return mNetworkDiagnosticServer; }
 
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
@@ -1018,8 +1069,6 @@ template <> inline MeshCoP::BorderAgent::EphemeralKeyManager &Instance::Get(void
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 template <> inline AnnounceSender &Instance::Get(void) { return mAnnounceSender; }
 #endif
-
-template <> inline MessagePool &Instance::Get(void) { return mMessagePool; }
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
@@ -1102,16 +1151,17 @@ template <> inline Coap::ApplicationCoapSecure &Instance::Get(void) { return mAp
 template <> inline Ble::BleSecure &Instance::Get(void) { return mApplicationBleSecure; }
 #endif
 
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - --
 
-#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+#if OPENTHREAD_RADIO || ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_LINK_RAW_ENABLE)
+
 template <> inline Mac::LinkRaw &Instance::Get(void) { return mLinkRaw; }
 
 #if OPENTHREAD_RADIO
 template <> inline Mac::SubMac &Instance::Get(void) { return mLinkRaw.mSubMac; }
 #endif
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+#endif // OPENTHREAD_RADIO || ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_LINK_RAW_ENABLE)
 
 template <> inline Tasklet::Scheduler &Instance::Get(void) { return mTaskletScheduler; }
 
@@ -1125,12 +1175,20 @@ template <> inline TimerMicro::Scheduler &Instance::Get(void) { return mTimerMic
 template <> inline Extension::ExtensionBase &Instance::Get(void) { return mExtension; }
 #endif
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO
+
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 template <> inline FactoryDiags::Diags &Instance::Get(void) { return mDiags; }
 #endif
 
 #if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 template <> inline Utils::PowerCalibration &Instance::Get(void) { return mPowerCalibration; }
+#endif
+
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO
+
+#if ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE) || OPENTHREAD_MDNS
+template <> inline Dns::Multicast::Core &Instance::Get(void) { return mMdnsCore; }
 #endif
 
 //---------------------------------------------------------------------------------------------------------------------
