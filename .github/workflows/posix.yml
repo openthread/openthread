@@ -81,7 +81,7 @@ jobs:
           CRASHED=$(./script/test check_crash | tail -1)
           [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
           echo "CRASHED_RCP=$CRASHED" >> $GITHUB_ENV
-    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       if: ${{ failure() && env.CRASHED_RCP == '1' }}
       with:
         name: core-expect-rcp
@@ -90,7 +90,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: cov-expects-linux-1
         path: tmp/coverage.info
@@ -115,13 +115,13 @@ jobs:
           CRASHED=$(./script/test check_crash | tail -1)
           [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
           echo "CRASHED_TUN=$CRASHED" >> $GITHUB_ENV
-    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       if: ${{ failure() && env.CRASHED_TUN == '1' }}
       with:
         name: core-expect-linux
         path: |
           ./ot-core-dump/*
-    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       if: ${{ failure() }}
       with:
         name: syslog-expect-linux
@@ -129,7 +129,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: cov-expects-linux-2
         path: tmp/coverage.info
@@ -167,7 +167,7 @@ jobs:
     - name: Run
       run: |
         MAX_JOBS=$(getconf _NPROCESSORS_ONLN) ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py ./tests/scripts/thread-cert/test_*.py
-    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       if: ${{ failure() }}
       with:
         name: thread-cert
@@ -175,7 +175,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: cov-thread-cert
         path: tmp/coverage.info
@@ -226,7 +226,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: cov-pty-linux-${{ matrix.OT_DAEMON }}
         path: tmp/coverage.info
@@ -296,7 +296,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: cov-rcp-stack-reset
         path: tmp/coverage.info

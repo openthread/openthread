@@ -87,12 +87,12 @@ jobs:
         export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
         echo "CI_ENV=${CI_ENV}"
         sudo -E ./script/test cert_suite ./tests/scripts/thread-cert/backbone/*.py || (sudo chmod a+r ot_testing/* && false)
-    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: cov-thread-1-3-backbone-docker
         path: /tmp/coverage/
         retention-days: 1
-    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       if: ${{ failure() }}
       with:
         name: thread-1-3-backbone-results
@@ -105,7 +105,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: cov-thread-1-3-backbone
         path: tmp/coverage.info
@@ -204,12 +204,12 @@ jobs:
         export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
         echo "CI_ENV=${CI_ENV}"
         sudo -E ./script/test cert_suite ${{ matrix.cert_scripts }} || (sudo chmod a+r ot_testing/* && false)
-    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: cov-br-docker-${{ matrix.description }}-${{ matrix.otbr_mdns }}-${{matrix.otbr_trel}}
         path: /tmp/coverage/
         retention-days: 1
-    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       if: ${{ failure() }}
       with:
         name: br-results-${{ matrix.description }}-${{ matrix.otbr_mdns }}-${{matrix.otbr_trel}}
@@ -222,7 +222,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: cov-br-${{ matrix.description }}-${{ matrix.otbr_mdns }}-${{matrix.otbr_trel}}
         path: tmp/coverage.info
