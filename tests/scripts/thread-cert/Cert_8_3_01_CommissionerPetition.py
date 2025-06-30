@@ -66,12 +66,12 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'name': 'LEADER',
-            'networkkey': '00112233445566778899aabbccddeeff',
+            'network_key': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
         COMMISSIONER: {
             'name': 'COMMISSIONER',
-            'networkkey': '00112233445566778899aabbccddeeff',
+            'network_key': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
     }

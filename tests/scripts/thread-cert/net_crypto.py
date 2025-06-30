@@ -46,6 +46,10 @@ class CryptoEngine:
         self._crypto_material_creator = crypto_material_creator
 
     @property
+    def key(self):
+        return self._crypto_material_creator.network_key
+
+    @property
     def mic_length(self):
         return self._crypto_material_creator.mic_length
 

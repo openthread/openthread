@@ -45,17 +45,17 @@ class Cert_8_2_02_JoinerRouter(thread_cert.TestCase):
     TOPOLOGY = {
         COMMISSIONER: {
             'name': 'COMMISSIONER',
-            'networkkey': '00112233445566778899aabbccddeeff',
+            'network_key': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
         JOINER_ROUTER: {
             'name': 'JOINER_ROUTER',
-            'networkkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
+            'network_key': 'deadbeefdeadbeefdeadbeefdeadbeef',
             'mode': 'rdn',
         },
         JOINER: {
             'name': 'JOINER',
-            'networkkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
+            'network_key': 'deadbeefdeadbeefdeadbeefdeadbeef',
             'mode': 'rdn',
         },
     }

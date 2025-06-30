@@ -116,7 +116,7 @@ class Cert_9_2_11_NetworkKey(thread_cert.TestCase):
             'name': 'ED',
             'channel': CHANNEL_INIT,
             'is_mtd': True,
-            'networkkey': KEY1,
+            'network_key': KEY1,
             'mode': 'rn',
             'panid': PANID_INIT,
             'allowlist': [ROUTER1]
@@ -125,7 +125,7 @@ class Cert_9_2_11_NetworkKey(thread_cert.TestCase):
             'name': 'SED',
             'channel': CHANNEL_INIT,
             'is_mtd': True,
-            'networkkey': KEY1,
+            'network_key': KEY1,
             'mode': '-',
             'panid': PANID_INIT,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
