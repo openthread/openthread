@@ -4145,6 +4145,7 @@ void RoutingManager::Nat64PrefixManager::Discover(void)
     else
     {
         LogWarn("Failed to discover infraif NAT64 prefix: %s", ErrorToString(error));
+        Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
 }
 
