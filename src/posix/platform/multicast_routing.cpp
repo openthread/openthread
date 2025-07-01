@@ -187,24 +187,23 @@ exit:
     return found;
 }
 
-void MulticastRoutingManager::Update(otSysMainloopContext &aContext)
+void MulticastRoutingManager::Update(Mainloop::Context &aContext)
 {
     VerifyOrExit(IsEnabled());
 
-    FD_SET(mMulticastRouterSock, &aContext.mReadFdSet);
-    aContext.mMaxFd = OT_MAX(aContext.mMaxFd, mMulticastRouterSock);
+    Mainloop::AddToReadFdSet(mMulticastRouterSock, aContext);
 
 exit:
     return;
 }
 
-void MulticastRoutingManager::Process(const otSysMainloopContext &aContext)
+void MulticastRoutingManager::Process(const Mainloop::Context &aContext)
 {
     VerifyOrExit(IsEnabled());
 
     ExpireMulticastForwardingCache();
 
-    if (FD_ISSET(mMulticastRouterSock, &aContext.mReadFdSet))
+    if (Mainloop::IsFdReadable(mMulticastRouterSock, aContext))
     {
         ProcessMulticastRouterMessages();
     }

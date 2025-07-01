@@ -154,6 +154,7 @@ extern int
 
 #include "ip6_utils.hpp"
 #include "logger.hpp"
+#include "mainloop.hpp"
 #include "resolver.hpp"
 #include "utils.hpp"
 #include "common/code_utils.hpp"
@@ -2331,7 +2332,7 @@ void platformNetifDeinit(void)
     gNetifIndex = 0;
 }
 
-void platformNetifUpdateFdSet(otSysMainloopContext *aContext)
+void platformNetifUpdateFdSet(ot::Posix::Mainloop::Context *aContext)
 {
     VerifyOrExit(gNetifIndex > 0);
 
@@ -2340,72 +2341,56 @@ void platformNetifUpdateFdSet(otSysMainloopContext *aContext)
     assert(sNetlinkFd >= 0);
     assert(sIpFd >= 0);
 
-    FD_SET(sTunFd, &aContext->mReadFdSet);
-    FD_SET(sTunFd, &aContext->mErrorFdSet);
-    FD_SET(sNetlinkFd, &aContext->mReadFdSet);
-    FD_SET(sNetlinkFd, &aContext->mErrorFdSet);
+    ot::Posix::Mainloop::AddToReadFdSet(sTunFd, *aContext);
+    ot::Posix::Mainloop::AddToErrorFdSet(sTunFd, *aContext);
+    ot::Posix::Mainloop::AddToReadFdSet(sNetlinkFd, *aContext);
+    ot::Posix::Mainloop::AddToErrorFdSet(sNetlinkFd, *aContext);
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    FD_SET(sMLDMonitorFd, &aContext->mReadFdSet);
-    FD_SET(sMLDMonitorFd, &aContext->mErrorFdSet);
+    ot::Posix::Mainloop::AddToReadFdSet(sMLDMonitorFd, *aContext);
+    ot::Posix::Mainloop::AddToErrorFdSet(sMLDMonitorFd, *aContext);
 #endif
 
-    if (sTunFd > aContext->mMaxFd)
-    {
-        aContext->mMaxFd = sTunFd;
-    }
-
-    if (sNetlinkFd > aContext->mMaxFd)
-    {
-        aContext->mMaxFd = sNetlinkFd;
-    }
-
-#if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    if (sMLDMonitorFd > aContext->mMaxFd)
-    {
-        aContext->mMaxFd = sMLDMonitorFd;
-    }
-#endif
 exit:
     return;
 }
 
-void platformNetifProcess(const otSysMainloopContext *aContext)
+void platformNetifProcess(const ot::Posix::Mainloop::Context *aContext)
 {
     assert(aContext != nullptr);
     VerifyOrExit(gNetifIndex > 0);
 
-    if (FD_ISSET(sTunFd, &aContext->mErrorFdSet))
+    if (ot::Posix::Mainloop::HasFdErrored(sTunFd, *aContext))
     {
         close(sTunFd);
         DieNow(OT_EXIT_FAILURE);
     }
 
-    if (FD_ISSET(sNetlinkFd, &aContext->mErrorFdSet))
+    if (ot::Posix::Mainloop::HasFdErrored(sNetlinkFd, *aContext))
     {
         close(sNetlinkFd);
         DieNow(OT_EXIT_FAILURE);
     }
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    if (FD_ISSET(sMLDMonitorFd, &aContext->mErrorFdSet))
+    if (ot::Posix::Mainloop::HasFdErrored(sMLDMonitorFd, *aContext))
     {
         close(sMLDMonitorFd);
         DieNow(OT_EXIT_FAILURE);
     }
 #endif
 
-    if (FD_ISSET(sTunFd, &aContext->mReadFdSet))
+    if (ot::Posix::Mainloop::IsFdReadable(sTunFd, *aContext))
     {
         processTransmit(gInstance);
     }
 
-    if (FD_ISSET(sNetlinkFd, &aContext->mReadFdSet))
+    if (ot::Posix::Mainloop::IsFdReadable(sNetlinkFd, *aContext))
     {
         processNetlinkEvent(gInstance);
     }
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    if (FD_ISSET(sMLDMonitorFd, &aContext->mReadFdSet))
+    if (ot::Posix::Mainloop::IsFdReadable(sMLDMonitorFd, *aContext))
     {
         processMLDEvent(gInstance);
     }

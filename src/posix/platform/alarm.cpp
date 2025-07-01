@@ -38,6 +38,7 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 
+#include "mainloop.hpp"
 #include "common/code_utils.hpp"
 
 static bool     sIsMsRunning = false;

@@ -516,7 +516,7 @@ void InfraNetif::Deinit(void)
     mInfraIfIndex   = 0;
 }
 
-void InfraNetif::Update(otSysMainloopContext &aContext)
+void InfraNetif::Update(Mainloop::Context &aContext)
 {
 #ifdef __linux__
     VerifyOrExit(mNetLinkSocket != -1);
@@ -525,13 +525,11 @@ void InfraNetif::Update(otSysMainloopContext &aContext)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     VerifyOrExit(mInfraIfIcmp6Socket != -1);
 
-    FD_SET(mInfraIfIcmp6Socket, &aContext.mReadFdSet);
-    aContext.mMaxFd = OT_MAX(aContext.mMaxFd, mInfraIfIcmp6Socket);
+    Mainloop::AddToReadFdSet(mInfraIfIcmp6Socket, aContext);
 #endif
 
 #ifdef __linux__
-    FD_SET(mNetLinkSocket, &aContext.mReadFdSet);
-    aContext.mMaxFd = OT_MAX(aContext.mMaxFd, mNetLinkSocket);
+    Mainloop::AddToReadFdSet(mNetLinkSocket, aContext);
 #endif
 
 exit:
@@ -682,7 +680,7 @@ void InfraNetif::SetInfraNetifIcmp6SocketForBorderRouting(int aIcmp6Socket)
 }
 #endif
 
-void InfraNetif::Process(const otSysMainloopContext &aContext)
+void InfraNetif::Process(const Mainloop::Context &aContext)
 {
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     VerifyOrExit(mInfraIfIcmp6Socket != -1);
@@ -693,14 +691,14 @@ void InfraNetif::Process(const otSysMainloopContext &aContext)
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    if (FD_ISSET(mInfraIfIcmp6Socket, &aContext.mReadFdSet))
+    if (Mainloop::IsFdReadable(mInfraIfIcmp6Socket, aContext))
     {
         ReceiveIcmp6Message();
     }
 #endif
 
 #ifdef __linux__
-    if (FD_ISSET(mNetLinkSocket, &aContext.mReadFdSet))
+    if (Mainloop::IsFdReadable(mNetLinkSocket, aContext))
     {
         ReceiveNetLinkMessage();
     }

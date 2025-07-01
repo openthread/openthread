@@ -114,14 +114,14 @@ public:
      *
      * @param[in,out]   aContext    A reference to the mainloop context.
      */
-    void Update(otSysMainloopContext &aContext) override;
+    void Update(Mainloop::Context &aContext) override;
 
     /**
      * Performs `MdnsSocket` processing.
      *
      * @param[in]   aContext   A reference to the mainloop context.
      */
-    void Process(const otSysMainloopContext &aContext) override;
+    void Process(const Mainloop::Context &aContext) override;
 
     // otPlatMdns APIs
     otError SetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex);
@@ -158,11 +158,11 @@ private:
     void    StopAddressMonitoring(void);
     void    ReportInfraIfAddresses(void);
 #if (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_PERIODIC)
-    void UpdateTimeout(struct timeval &aTimeout);
+    void UpdateTimeout(Mainloop::Context &aContext);
     void ProcessTimeout(void);
 #elif (OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR == OT_POSIX_MDNS_ADDR_MONITOR_NETLINK)
-    void UpdateNetlink(otSysMainloopContext &aContext) const;
-    void ProcessNetlink(const otSysMainloopContext &aContext) const;
+    void UpdateNetlink(Mainloop::Context &aContext) const;
+    void ProcessNetlink(const Mainloop::Context &aContext) const;
     void ProcessNetlinkAddrEvent(void *aNetlinkMsg) const;
 #endif
 
