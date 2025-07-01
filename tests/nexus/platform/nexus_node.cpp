@@ -32,6 +32,26 @@
 namespace ot {
 namespace Nexus {
 
+void Node::Reset(void)
+{
+    Instance *instance = &GetInstance();
+    uint32_t  id       = GetId();
+
+    mRadio.Reset();
+    mAlarm.Reset();
+    mMdns.Reset();
+    mPendingTasklet = false;
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    mTrel.Reset();
+#endif
+
+    instance->~Instance();
+
+    instance = new (instance) Instance();
+    instance->SetId(id);
+    instance->AfterInit();
+}
+
 void Node::Form(void)
 {
     MeshCoP::Dataset::Info datasetInfo;
