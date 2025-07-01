@@ -43,6 +43,7 @@ struct Trel
     typedef otPlatTrelCounters Counters;
 
     Trel(void);
+    void Reset(void);
     void Enable(uint16_t &aUdpPort);
     void Disable(void);
     void Send(const uint8_t *aUdpPayload, uint16_t aUdpPayloadLen, const Ip6::SockAddr &aDestSockAddr);

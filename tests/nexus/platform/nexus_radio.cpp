@@ -256,6 +256,15 @@ Radio::Radio(void)
 {
 }
 
+void Radio::Reset(void)
+{
+    mState           = kStateDisabled;
+    mPromiscuous     = false;
+    mSrcMatchEnabled = false;
+    mSrcMatchShortEntries.Clear();
+    mSrcMatchExtEntries.Clear();
+}
+
 bool Radio::CanReceiveOnChannel(uint8_t aChannel) const
 {
     bool canRx = false;

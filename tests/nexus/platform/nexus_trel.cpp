@@ -80,6 +80,13 @@ Trel::Trel(void)
     ClearAllBytes(mCounters);
 }
 
+void Trel::Reset(void)
+{
+    mEnabled = false;
+    ClearAllBytes(mCounters);
+    mPendingTxList.Free();
+}
+
 void Trel::Enable(uint16_t &aUdpPort)
 {
     mEnabled = true;
