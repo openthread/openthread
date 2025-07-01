@@ -1103,8 +1103,8 @@ void Ip6::DetermineAction(const Message &aMessage,
         }
 #endif
 
-        // Always forward multicast packets to host network stack
-        aForwardHost = true;
+        // Always forward multicast packets from thread to host network stack
+        aForwardHost = aMessage.IsOriginThreadNetif();
 
         // If subscribed to the multicast address, receive if it is from the
         // Thread netif or if multicast loop is allowed.
