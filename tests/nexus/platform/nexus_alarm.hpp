@@ -36,6 +36,11 @@ namespace Nexus {
 
 struct Alarm
 {
+    Alarm(void)
+        : mScheduled(false)
+    {
+    }
+
     bool ShouldTrigger(Time aNow) const { return mScheduled && (aNow >= mAlarmTime); }
 
     bool mScheduled;

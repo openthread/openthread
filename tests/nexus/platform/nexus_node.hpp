@@ -42,7 +42,26 @@
 namespace ot {
 namespace Nexus {
 
-class Node : public Heap::Allocatable<Node>, public LinkedListEntry<Node>, private Instance
+class Platform
+{
+public:
+    Radio    mRadio;
+    Alarm    mAlarm;
+    Mdns     mMdns;
+    Settings mSettings;
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    Trel mTrel;
+#endif
+    bool mPendingTasklet;
+
+protected:
+    Platform(void)
+        : mPendingTasklet(false)
+    {
+    }
+};
+
+class Node : public Platform, public Heap::Allocatable<Node>, public LinkedListEntry<Node>, private Instance
 {
     friend class Heap::Allocatable<Node>;
 
@@ -81,15 +100,16 @@ public:
 
     static Node &From(otInstance *aInstance) { return static_cast<Node &>(*aInstance); }
 
-    Node    *mNext;
-    Radio    mRadio;
-    Alarm    mAlarm;
-    Mdns     mMdns;
-    Settings mSettings;
+    using Platform::mAlarm;
+    using Platform::mMdns;
+    using Platform::mPendingTasklet;
+    using Platform::mRadio;
+    using Platform::mSettings;
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    Trel mTrel;
+    using Platform::mTrel;
 #endif
-    bool mPendingTasklet;
+
+    Node *mNext;
 
 private:
     Node(void) = default;
