@@ -174,6 +174,17 @@ public:
     Error Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning);
 
     /**
+     * Gets the interface index of the currently configured infrastructure interface.
+     *
+     * @param[out] aInfraIfIndex      A reference to output the interface index.
+     * @param[out] aInfraIfIsRunning  A reference to output whether the interface is running.
+     *
+     * @retval kErrorNone           Successfully retrieved the interface information.
+     * @retval kErrorInvalidState   The Border Routing Manager is not initialized.
+     */
+    Error GetInfraIfInfo(uint32_t &aInfraIfIndex, bool &aInfraIfIsRunning) const;
+
+    /**
      * Enables/disables the Border Routing Manager.
      *
      * @note  The Border Routing Manager is enabled by default.

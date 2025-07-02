@@ -116,6 +116,18 @@ exit:
     return error;
 }
 
+Error RoutingManager::GetInfraIfInfo(uint32_t &aInfraIfIndex, bool &aInfraIfIsRunning) const
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    aInfraIfIndex     = mInfraIf.GetIfIndex();
+    aInfraIfIsRunning = mInfraIf.IsRunning();
+
+exit:
+    return error;
+}
+
 Error RoutingManager::SetEnabled(bool aEnabled)
 {
     Error error = kErrorNone;
