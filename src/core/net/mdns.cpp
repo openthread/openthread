@@ -80,6 +80,7 @@ const char Core::kServicesDnssdLabels[] = "_services._dns-sd._udp";
 Core::Core(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mIsEnabled(false)
+    , mAutoEnable(kDefaultAutoEnable)
     , mIsQuestionUnicastAllowed(kDefaultQuAllowed)
     , mMaxMessageSize(kMaxMessageSize)
     , mInfraIfIndex(0)
@@ -109,9 +110,14 @@ void Core::AfterInstanceInit(void)
     mLocalHost.GenerateName();
 }
 
-Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex)
+Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex, Requester aRequester)
 {
     Error error = kErrorNone;
+
+    if (aRequester == kRequesterUser)
+    {
+        mAutoEnable = false;
+    }
 
     VerifyOrExit(aEnable != mIsEnabled, error = kErrorAlready);
 
@@ -122,11 +128,12 @@ Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex)
 
     if (mIsEnabled)
     {
-        LogInfo("Enabling on infra-if-index %lu", ToUlong(mInfraIfIndex));
+        LogInfo("%snabling on infra-if-index %lu", (aRequester == kRequesterAuto) ? "Auto-e" : "E",
+                ToUlong(mInfraIfIndex));
     }
     else
     {
-        LogInfo("Disabling");
+        LogInfo("%sisabling", (aRequester == kRequesterAuto) ? "Auto-d" : "D");
 
         mLocalHost.ClearAddresses();
         mHostEntries.Clear();
@@ -151,12 +158,45 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+void Core::SetAutoEnableMode(bool aEnable)
+{
+    VerifyOrExit(mAutoEnable != aEnable);
+
+    mAutoEnable = aEnable;
+
+    if (mAutoEnable)
+    {
+        if (!Get<BorderRouter::InfraIf>().IsRunning())
+        {
+            IgnoreError(SetEnabled(false, mInfraIfIndex, kRequesterAuto));
+            ExitNow();
+        }
+
+        if (IsEnabled())
+        {
+            VerifyOrExit(Get<BorderRouter::InfraIf>().GetIfIndex() != mInfraIfIndex);
+            IgnoreError(SetEnabled(false, mInfraIfIndex, kRequesterAuto));
+        }
+
+        IgnoreError(SetEnabled(true, Get<BorderRouter::InfraIf>().GetIfIndex(), kRequesterAuto));
+    }
+
+exit:
+    return;
+}
+
 void Core::HandleInfraIfStateChanged(void)
 {
-    IgnoreError(SetEnabled(Get<BorderRouter::InfraIf>().IsRunning(), Get<BorderRouter::InfraIf>().GetIfIndex()));
+    VerifyOrExit(mAutoEnable);
+    IgnoreError(SetEnabled(Get<BorderRouter::InfraIf>().IsRunning(), Get<BorderRouter::InfraIf>().GetIfIndex(),
+                           kRequesterAuto));
+exit:
+    return;
 }
-#endif
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 template <typename EntryType, typename ItemInfo>
 Error Core::Register(const ItemInfo &aItemInfo, RequestId aRequestId, RegisterCallback aCallback)

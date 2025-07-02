@@ -185,6 +185,39 @@ otError otMdnsSetEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfI
 bool otMdnsIsEnabled(otInstance *aInstance);
 
 /**
+ * Enables or disables the mDNS auto-enable mode.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE`.
+ *
+ * When this mode is enabled, the mDNS module uses the same infrastructure network interface as the Border Routing
+ * manager. The mDNS module is then automatically enabled or disabled based on the operational state of that interface
+ * (see `otBorderRoutingInit()` and `otPlatInfraIfStateChanged()`).
+ *
+ * It is recommended to use the auto-enable mode on Border Routers. The default state of this mode at initialization
+ * is controlled by the `OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF` configuration.
+ *
+ * The auto-enable mode can be disabled by a call to `otMdnsSetAutoEnableMode(false)` or by an explicit call to
+ * `otMdnsSetEnabled()`. Deactivating the auto-enable mode with `otMdnsSetAutoEnableMode(false)` will not change the
+ * current operational state of the mDNS module (e.g., if it is currently enabled, it remains enabled).
+ *
+ * @param[in] aInstance   The OpenThread instance.
+ * @param[in] aEnable     A boolean to enable or disable the auto-enable mode.
+ */
+void otMdnsSetAutoEnableMode(otInstance *aInstance, bool aEnable);
+
+/**
+ * Indicates whether the auto-enable mode is enabled or disabled.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE`.
+ *
+ * @param[in] aInstance   The OpenThread instance.
+ *
+ * @retval TRUE   The auto-enable mode is enabled.
+ * @retval FALSE  The auto-enable mode is disabled.
+ */
+bool otMdnsGetAutoEnableMode(otInstance *aInstance);
+
+/**
  * Sets whether the mDNS module is allowed to send questions requesting unicast responses referred to as "QU" questions.
  *
  * The "QU" questions request unicast responses, in contrast to "QM" questions which request multicast responses.
