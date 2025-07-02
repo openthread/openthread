@@ -674,6 +674,9 @@ class TestOTCI(unittest.TestCase):
         child1.wait(3)
         self.assertEqual('child', child1.get_state())
 
+        logging.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        logging.info("#### child1 stop")
+
         child1.thread_stop()
 
         child1.set_mode('n')
@@ -681,7 +684,14 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual(1000, child1.get_poll_period())
 
         child1.thread_start()
+        logging.info("#### child1 started")
+
         child1.wait(3)
+        logging.info("#### child1 state %s", child1.get_state())
+
+        child1.wait(1)
+        logging.info("####### child1 state %s", child1.get_state())
+
         self.assertEqual('child', child1.get_state())
 
         child2.ifconfig_up()
