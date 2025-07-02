@@ -1574,6 +1574,16 @@ exit:
     return haveNeighbor;
 }
 
+void MleRouter::ResetRouterDisallowed(void)
+{
+    mRouterRoleTransition.IncreaseTimeout(kChildResetOrLeaderLossUpgradeDelay);
+}
+
+void MleRouter::ResetRouterDisallowedOnInit(void)
+{
+    mRouterRoleTransition.IncreaseTimeout(kChildResetOrLeaderLossUpgradeDelay);
+}
+
 void MleRouter::HandleTimeTick(void)
 {
     bool roleTransitionTimeoutExpired = false;
@@ -1636,6 +1646,19 @@ void MleRouter::HandleTimeTick(void)
         {
             LogInfo("Leader age timeout");
             Attach(kSamePartition);
+
+            // These changes are related to leader death, remove for reset focused updates.
+            // Leader has gone missing, routers will all attempt to become a leader and merge partitions,
+            // while children will stay out of the way while it happens.
+            if (mRole == kRoleRouter)
+            {
+                // testing no change to router behavior
+            }
+            else if (mRole == kRoleChild)
+            {
+                // leader is gone, push out router role transition time
+                mRouterRoleTransition.IncreaseTimeout(kChildResetOrLeaderLossUpgradeDelay);
+            }
         }
 
         if (roleTransitionTimeoutExpired && mRouterTable.GetActiveRouterCount() > mRouterDowngradeThreshold)
@@ -2304,7 +2327,8 @@ void MleRouter::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
     // middle of the attach process (in `kStateParentRequest` or
     // `kStateChildIdRequest`).
 
-    VerifyOrExit(child->IsStateValid());
+    // For reset optimizations, parents must handle children that aren't in the valid state yet.
+    //VerifyOrExit(child->IsStateValid());
 
     oldMode = child->GetDeviceMode();
     child->SetDeviceMode(mode);
@@ -2443,9 +2467,18 @@ void MleRouter::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         Get<IndirectSender>().HandleChildModeChange(*child, oldMode);
     }
 
-    if (childDidChange)
+    // For reset, handling for children that are restoring
+    if (child->IsStateRestoring())
     {
-        IgnoreError(mChildTable.StoreChild(*child));
+        SetChildStateToValid(*child);
+        child->SetKeySequence(aRxInfo.mKeySequence);
+    }
+    else if (child->IsStateValid())
+    {
+        if (childDidChange)
+        {
+            IgnoreError(mChildTable.StoreChild(*child));
+        }
     }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -3980,12 +4013,14 @@ exit:
 MleRouter::RouterRoleTransition::RouterRoleTransition(void)
     : mTimeout(0)
     , mJitter(kRouterSelectionJitter)
+    , mHasBeenIncreased(false)
 {
 }
 
 void MleRouter::RouterRoleTransition::StartTimeout(void)
 {
     mTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mJitter);
+    mHasBeenIncreased = false;
 }
 
 bool MleRouter::RouterRoleTransition::HandleTimeTick(void)
@@ -3995,6 +4030,7 @@ bool MleRouter::RouterRoleTransition::HandleTimeTick(void)
     VerifyOrExit(mTimeout > 0);
     mTimeout--;
     expired = (mTimeout == 0);
+    mHasBeenIncreased = expired ? false : mHasBeenIncreased;
 
 exit:
     return expired;
@@ -4011,25 +4047,19 @@ MleRouter::RouterRoleRestorer::RouterRoleRestorer(Instance &aInstance)
 
 void MleRouter::RouterRoleRestorer::Start(DeviceRole aPreviousRole)
 {
-    // If the device was previously the leader or had more than
-    // `kMinCriticalChildrenCount` children, we use more link
-    // request attempts.
-
     mAttempts = 0;
 
     switch (aPreviousRole)
     {
     case kRoleRouter:
-        if (Get<MleRouter>().mChildTable.GetNumChildren(Child::kInStateValidOrRestoring) < kMinCriticalChildrenCount)
-        {
-            mAttempts = kMaxTxCount;
-            break;
-        }
-
-        OT_FALL_THROUGH;
+        mAttempts = kMaxTxCount;
+        break;
 
     case kRoleLeader:
-        mAttempts = kMaxCriticalTxCount;
+        // In order to optimize network reset behavior, leaders will
+        // give up trying to attach to an old partition sooner
+        // and help get the new partition started.
+        mAttempts = kMaxTxCount - 1;
         break;
 
     case kRoleChild:

@@ -92,6 +92,8 @@ Mle::Mle(Instance &aInstance)
     , mWedAttachState(kWedDetached)
     , mWedAttachTimer(aInstance)
 #endif
+    , mResetTimer(aInstance)
+    , mChildRestoreState(kIdle)
 {
     mParent.Init(aInstance);
     mParentCandidate.Init(aInstance);
@@ -121,6 +123,51 @@ Mle::Mle(Instance &aInstance)
 
     mMeshLocalPrefix.Clear();
     SetMeshLocalPrefix(AsCoreType(&kMeshLocalPrefixInit));
+}
+
+void Mle::HandleResetTimer()
+{
+    LogDebg("ResetTimer fired at %d", TimerMilli::GetNow());
+    mResetTimer.Stop();
+
+    switch(mChildRestoreState)
+    {
+        case kSingleChildUpdateRequestBackoff:
+        {
+            // This period was randomized between 0 and 5s of starting thread
+            // Next state is wait to hear from our previous parent
+            mChildRestoreState = kListenForPreviousParentBackoff;
+
+            // But we send a child update request now to try to optimize the single device
+            // reset case.
+            SendChildUpdateRequestToParent(kSingleTry);
+
+            // And setup the next time period
+            uint32_t timerValue = kChildResetMinTimeoutMS + Random::NonCrypto::GetUint32InRange(1, kChildResetTimeoutJitterMS);
+            LogDebg("TFR:ReTi SetPrevParBac tVal %d, now %d", timerValue, TimerMilli::GetNow());
+            mResetTimer.Start(timerValue);
+            break;
+        }
+
+        case kListenForPreviousParentBackoff:
+        {
+            // Stop awaiting a restore, give up and fallback to normal attachment
+            mChildRestoreState = kIdle;
+
+            // Never got advertisement
+            if (mPreviousRole == kRoleChild)
+            {
+                // Child failed to hear from parent, give up
+                LogDebg("Failed to hear advertisement from old parent, BecomeChild()");
+                BecomeChild();
+            }
+            break;
+        }
+
+        case kIdle:
+        default:
+            break;
+    }
 }
 
 Error Mle::Enable(void)
@@ -201,8 +248,12 @@ Error Mle::Start(StartMode aMode)
 #endif
     else
     {
-        mChildUpdateAttempts = 0;
-        IgnoreError(SendChildUpdateRequestToParent());
+        mChildRestoreState = kSingleChildUpdateRequestBackoff;
+
+        // Child attach optimization. 0-5s, send an update request to old parent
+        uint32_t timerValue = 0 + Random::NonCrypto::GetUint32InRange(1, 5000);
+        LogDebg("Mle::Start SetupResetTimer timerValue %d, now %d", timerValue, TimerMilli::GetNow());
+        mResetTimer.Start(timerValue);
     }
 
 exit:
@@ -392,6 +443,7 @@ void Mle::Restore(void)
     VerifyOrExit(networkInfo.GetVersion() == kThreadVersion);
 
     mLastSavedRole = static_cast<DeviceRole>(networkInfo.GetRole());
+    mPreviousRole = mLastSavedRole;
 
     switch (mLastSavedRole)
     {
@@ -444,6 +496,10 @@ void Mle::Restore(void)
         mParent.SetState(Neighbor::kStateRestored);
 
         mPreviousParentRloc = mParent.GetRloc16();
+
+        #if OPENTHREAD_FTD
+        Get<MleRouter>().ResetRouterDisallowedOnInit();
+        #endif
     }
 #if OPENTHREAD_FTD
     else
@@ -1624,9 +1680,20 @@ uint32_t Mle::Reattach(void)
                 IgnoreError(BecomeDetached());
             }
 #if OPENTHREAD_FTD
-            else if (IsFullThreadDevice() && Get<MleRouter>().BecomeLeader(/* aCheckWeight */ false) == kErrorNone)
+            else if (IsFullThreadDevice())
             {
-                // do nothing
+                // This change was being tested to avoid some children making new
+                // partitions too quickly, it's not clear right now if it is needed
+                // or not. Suspect that this could be reverted and related changes
+                // removed.
+                if (Get<MleRouter>().AllowedToBecomeLeader())
+                {
+                    Get<MleRouter>().BecomeLeader(/* aCheckWeight */ false);
+                }
+                else
+                {
+                    IgnoreError(BecomeDetached());
+                }
             }
 #endif
             else
@@ -1979,6 +2046,8 @@ Error Mle::SendChildUpdateRequestToParent(void) { return SendChildUpdateRequestT
 
 Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
 {
+    static const uint8_t kRestoringChildTlvs[] = {Tlv::kNetworkData};
+
     Error                   error = kErrorNone;
     Ip6::Address            destination;
     TxMessage              *message     = nullptr;
@@ -1991,7 +2060,7 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
         ExitNow();
     }
 
-    if (aMode != kAppendZeroTimeout)
+    if (aMode != kAppendZeroTimeout && aMode != kSingleTry)
     {
         // Enable MLE retransmissions on all Child Update Request
         // messages, except when actively detaching.
@@ -2038,6 +2107,11 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
     if (!IsFullThreadDevice())
     {
         SuccessOrExit(error = message->AppendAddressRegistrationTlv(addrRegMode));
+    }
+
+    if (mChildRestoreState != kIdle)
+    {
+        SuccessOrExit(error = message->AppendTlvRequestTlv(kRestoringChildTlvs));
     }
 
     destination.SetToLinkLocalAddress(mParent.GetExtAddress());
@@ -2740,8 +2814,35 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
     uint16_t   sourceAddress;
     LeaderData leaderData;
     uint16_t   delay;
+    Mac::ExtAddress macAddr;
 
-    VerifyOrExit(IsAttached());
+    if (!IsAttached())
+    {
+        if (kIdle != mChildRestoreState)
+        {
+            aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(macAddr);
+
+            // only worry about this if we are waiting to be restored after a reset
+            // check that the router ID matches, and that the rloc is not that of a child (REED advertising it exists)
+            if ((mPreviousRole == kRoleChild) && (RouterIdFromRloc16(GetRloc16()) == RouterIdFromRloc16(sourceAddress)) && IsRouterRloc16(sourceAddress))
+            {
+                if (macAddr != mParent.GetExtAddress())
+                {
+                    // the node with the same routerId has a different mac address. skip reset logic
+                    mChildRestoreState = kIdle;
+                    BecomeDetached();
+                    ExitNow();
+                }
+
+                // send a child update request to our parent
+                mChildUpdateAttempts = 0;
+                SendChildUpdateRequestToParent();
+                mChildRestoreState = kIdle;
+            }
+        }
+
+        ExitNow();
+    }
 
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
@@ -2861,6 +2962,18 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
     {
         if (IsChild())
         {
+            // here we go, something fundamental is changing, hold off from trying to upgrade
+            // This change was related to leader death, perhaps remove it for reset focused updates
+            #if OPENTHREAD_FTD
+            if(!Get<MleRouter>().IsRestoringRouterRole())
+            {
+                Get<MleRouter>().ResetRouterDisallowed();
+            }
+            else
+            {
+                LogDebg("TFR:RouterSkipDisallow");
+            }
+            #endif
             SetLeaderData(leaderData);
             mRetrieveNewNetworkData = true;
         }
@@ -3359,16 +3472,24 @@ exit:
 
 void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
 {
+    if (!IsAttached())
+    {
+        HandleChildUpdateRequestOnUnattached(aRxInfo);
+        ExitNow();
+    }
+
 #if OPENTHREAD_FTD
     if (IsRouterOrLeader())
     {
         Get<MleRouter>().HandleChildUpdateRequestOnParent(aRxInfo);
+        ExitNow();
     }
-    else
 #endif
-    {
-        HandleChildUpdateRequestOnChild(aRxInfo);
-    }
+
+    HandleChildUpdateRequestOnChild(aRxInfo);
+
+exit:
+    return;
 }
 
 void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
@@ -3478,6 +3599,41 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
 
 exit:
     LogProcessError(kTypeChildUpdateRequestAsChild, error);
+}
+
+void Mle::HandleChildUpdateRequestOnUnattached(RxInfo &aRxInfo)
+{
+    uint16_t        sourceAddress;
+    Mac::ExtAddress macAddr;
+
+    SuccessOrExit(Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
+    aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(macAddr);
+
+    // Wait for an advertisement from our next hop to the leader from before we were reset
+    if (kIdle != mChildRestoreState)
+    {
+        // only worry about this if we are waiting to be restored after a reset
+        // check that the router ID matches, and that the rloc is not that of a child (REED advertising it exists)
+        if ((mPreviousRole == kRoleChild) && (RouterIdFromRloc16(GetRloc16()) == RouterIdFromRloc16(sourceAddress)) && IsRouterRloc16(sourceAddress))
+        {
+            if (macAddr != mParent.GetExtAddress())
+            {
+                // the node with the same routerId has a different mac address. skip reset logic
+                mChildRestoreState = kIdle;
+                BecomeDetached();
+                ExitNow();
+            }
+
+            // send a child update request to our parent
+            mChildUpdateAttempts = 0;
+            SendChildUpdateRequestToParent();
+            mChildRestoreState = kIdle;
+            ExitNow();
+        }
+    }
+
+exit:
+    return;
 }
 
 void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)

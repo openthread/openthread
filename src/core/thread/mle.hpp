@@ -786,6 +786,10 @@ private:
     static constexpr uint8_t kMaxCriticalTxCount        = 6; // Max tx count for critical MLE message
     static constexpr uint8_t kMaxChildKeepAliveAttempts = 4; // Max keep alive attempts before reattach
 
+    // Still opportunity for refinement? These are working best so far...
+    static constexpr uint32_t kChildResetMinTimeoutMS    = 20000u;
+    static constexpr uint32_t kChildResetTimeoutJitterMS = 15000u;
+
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Attach backoff feature (CONFIG_ENABLE_ATTACH_BACKOFF) - Intervals are in milliseconds.
 
@@ -896,6 +900,7 @@ private:
         kNormalChildUpdateRequest, // Normal Child Update Request.
         kAppendChallengeTlv,       // Append Challenge TLV to Child Update Request even if currently attached.
         kAppendZeroTimeout,        // Use zero timeout when appending Timeout TLV (used for graceful detach).
+        kSingleTry
     };
 
     enum SecuritySuite : uint8_t
@@ -968,6 +973,13 @@ private:
         kWedDetaching,
     };
 #endif
+
+    enum ChildRestoreState : uint8_t
+    {
+        kIdle,
+        kSingleChildUpdateRequestBackoff,
+        kListenForPreviousParentBackoff,
+    };
 
     //------------------------------------------------------------------------------------------------------------------
     // Nested types
@@ -1341,12 +1353,14 @@ private:
     bool       IsAnnounceAttach(void) const { return mAlternatePanId != Mac::kPanIdBroadcast; }
     void       ScheduleMessageTransmissionTimer(void);
     void       HandleAttachTimer(void);
+    void       HandleResetTimer(void);
     void       HandleMessageTransmissionTimer(void);
     void       ProcessKeySequence(RxInfo &aRxInfo);
     void       HandleAdvertisement(RxInfo &aRxInfo);
     void       HandleChildIdResponse(RxInfo &aRxInfo);
     void       HandleChildUpdateRequest(RxInfo &aRxInfo);
     void       HandleChildUpdateRequestOnChild(RxInfo &aRxInfo);
+    void       HandleChildUpdateRequestOnUnattached(RxInfo &aRxInfo);
     void       HandleChildUpdateResponse(RxInfo &aRxInfo);
     void       HandleChildUpdateResponseOnChild(RxInfo &aRxInfo);
     void       HandleDataResponse(RxInfo &aRxInfo);
@@ -1458,6 +1472,7 @@ private:
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
     using WedAttachTimer = TimerMicroIn<Mle, &Mle::HandleWedAttachTimer>;
 #endif
+    using ResetTimer = TimerMilliIn<Mle, &Mle::HandleResetTimer>;
 
     static const otMeshLocalPrefix kMeshLocalPrefixInit;
 
@@ -1471,6 +1486,7 @@ private:
     bool mWaitingForDataResponse : 1;
 
     DeviceRole              mRole;
+    DeviceRole              mPreviousRole;
     DeviceRole              mLastSavedRole;
     DeviceMode              mDeviceMode;
     AttachState             mAttachState;
@@ -1532,6 +1548,9 @@ private:
     WedAttachTimer           mWedAttachTimer;
     Callback<WakeupCallback> mWakeupCallback;
 #endif
+
+    ResetTimer        mResetTimer;      ///< timer to delay children/routers from sending messages
+    ChildRestoreState mChildRestoreState;
 };
 
 } // namespace Mle

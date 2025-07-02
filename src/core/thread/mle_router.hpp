@@ -487,6 +487,18 @@ public:
 
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
+    bool AllowedToBecomeLeader(void) {
+        // This should likely go away, if the changes where it is used are not needed.
+        return !mRouterRoleTransition.HasBeenIncreased();
+    }
+
+    bool IsRestoringRouterRole(void)
+    {
+        // Currently only called now from a spot related to leader death,
+        // Should probably be removed along with that change.
+        return mRouterRoleRestorer.IsActive();
+    }
+
 private:
     //------------------------------------------------------------------------------------------------------------------
     // Constants
@@ -516,6 +528,8 @@ private:
     static constexpr uint8_t  kLeaderDowngradeExtraDelay     = 10;  // Extra delay to downgrade leader (in sec).
     static constexpr uint8_t  kDefaultLeaderWeight           = 64;
     static constexpr uint8_t  kAlternateRloc16Timeout        = 8; // Time to use alternate RLOC16 (in sec).
+
+    static constexpr uint8_t  kChildResetOrLeaderLossUpgradeDelay = 120;  // Extra delay to upgrade to router (in sec).
 
     // Threshold to accept a router upgrade request with reason
     // `kBorderRouterRequest` (number of BRs acting as router in
@@ -557,16 +571,21 @@ private:
 
         bool    IsPending(void) const { return (mTimeout != 0); }
         void    StartTimeout(void);
-        void    StopTimeout(void) { mTimeout = 0; }
-        void    IncreaseTimeout(uint8_t aIncrement) { mTimeout += aIncrement; }
+        void    StopTimeout(void) { mTimeout = 0; mHasBeenIncreased = false; }
+        void    IncreaseTimeout(uint8_t aIncrement) { 
+            if (!mHasBeenIncreased) {
+            mHasBeenIncreased = true; mTimeout += aIncrement; }
+        }
         uint8_t GetTimeout(void) const { return mTimeout; }
         bool    HandleTimeTick(void);
         uint8_t GetJitter(void) const { return mJitter; }
         void    SetJitter(uint8_t aJitter) { mJitter = aJitter; }
+        bool HasBeenIncreased(void) { return mHasBeenIncreased; }
 
     private:
         uint8_t mTimeout;
         uint8_t mJitter;
+        bool mHasBeenIncreased;
     };
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -618,6 +637,8 @@ private:
     void     EstablishRouterLinkOnFtdChild(Router &aRouter, RxInfo &aRxInfo, uint8_t aLinkMargin);
     Error    ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo);
     Error    ReadAndProcessRouteTlvOnFtdChild(RxInfo &aRxInfo, uint8_t aParentId);
+    void     ResetRouterDisallowed(void);
+    void     ResetRouterDisallowedOnInit(void);
     void     StopAdvertiseTrickleTimer(void);
     uint32_t DetermineAdvertiseIntervalMax(void) const;
     Error    SendAddressSolicit(ThreadStatusTlv::Status aStatus);
