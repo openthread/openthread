@@ -178,22 +178,14 @@ class OtbrDocker:
 
     def stop_mdns_service(self):
         self.send_command('mdns disable')
-        # The OT build may not include mdns, so ignore `InvalidCommand` errors.
-        try:
-            self._expect_result(r'Done')
-        except Exception as ex:
-            if 'InvalidCommand' not in str(ex):
-                raise
+        # OT build may not include mdns, so ignore `InvalidCommand` errors.
+        self._expect(r'Done|Error 35: InvalidCommand')
         self.bash('service avahi-daemon stop; service mdns stop; !(cat /proc/net/udp | grep -i :14E9)')
 
     def start_mdns_service(self):
         self.send_command('mdns enable')
-        # The OT build may not include mdns, so ignore `InvalidCommand` errors.
-        try:
-            self._expect_result(r'Done')
-        except Exception as ex:
-            if 'InvalidCommand' not in str(ex):
-                raise
+        # OT build may not include mdns, so ignore `InvalidCommand` errors.
+        self._expect(r'Done|Error 35: InvalidCommand')
         self.bash('service avahi-daemon start; service mdns start; cat /proc/net/udp | grep -i :14E9')
 
     def start_ot_ctl(self):
