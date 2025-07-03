@@ -1731,6 +1731,65 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    void HandleRetxTrackerTimer(void) { mRetxTracker.HandleTimer(); }
+
+    class RetxTracker : public InstanceLocator
+    {
+        // Manages retransmissions of Child Update Request and Data
+        // Request messages from a child to its parent. It also
+        // handles periodic Child Update transmissions, as a
+        // keep-alive on a rx-on (non-sleepy) child.
+
+    public:
+        explicit RetxTracker(Instance &aInstance);
+
+        void Stop(void);
+        void UpdateOnRoleChangeToChild(void);
+        void UpdateOnChildUpdateRequestTx(void);
+        void UpdateOnChildUpdateResponseRx(void);
+        void UpdateOnDataRequestTx(void);
+        void UpdateOnDataResponseRx(void);
+        bool IsWaitingForDataResponse(void) const { return mDataRequest.mState == kWaitingForResponse; }
+        void HandleTimer(void);
+
+    private:
+        static constexpr uint8_t  kMaxAttempts = kMaxChildKeepAliveAttempts;
+        static constexpr uint32_t kRetxDelay   = kUnicastRetxDelay; /// 1000 msec
+        static constexpr uint16_t kRetxJitter  = 5;
+
+        enum State : uint8_t
+        {
+            kIdle,               // No pending tx
+            kWaitingForResponse, // Message sent, waiting to receive response
+            kSendingKeepAlive,   // Only applicable for `mChildUpdate` - keep alive
+        };
+
+        struct RetryInfo
+        {
+            void  Reset(void);
+            void  IncrementAttempts(void);
+            void  SetNextTxTime(uint32_t aDelay, uint16_t aJitter);
+            void  Schedule(TimerMilli &aTimer) const;
+            bool  ShouldSend(TimeMilli aNow) const;
+            Error DetachIfMaxAttemptsReached(Mle &aMle) const;
+
+            State     mState;
+            uint8_t   mAttempts;
+            TimeMilli mNextTxTime;
+        };
+
+        using RetxTimer = TimerMilliIn<Mle, &Mle::HandleRetxTrackerTimer>;
+
+        void DetermineKeepAliveChildUpdateTxTime(void);
+        void ScheduleTimer(void);
+
+        RetryInfo mChildUpdate;
+        RetryInfo mDataRequest;
+        RetxTimer mTimer;
+    };
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     void HandleAnnounceHandlerTimer(void) { mAnnounceHandler.HandleTimer(); }
 
     class AnnounceHandler : public InstanceLocator
@@ -1905,6 +1964,7 @@ private:
     void       SetAttachState(AttachState aState);
     void       InitNeighbor(Neighbor &aNeighbor, const RxInfo &aRxInfo);
     void       ClearParentCandidate(void) { mParentCandidate.Clear(); }
+    Error      SendDataRequestToParent(void);
     Error      SendDataRequest(const Ip6::Address &aDestination);
     void       HandleNotifierEvents(Events aEvents);
     void       HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -1922,7 +1982,6 @@ private:
     void       InformPreviousChannel(void);
     void       ScheduleMessageTransmissionTimer(void);
     void       HandleAttachTimer(void);
-    void       HandleMessageTransmissionTimer(void);
     void       ProcessKeySequence(RxInfo &aRxInfo);
     void       HandleAdvertisement(RxInfo &aRxInfo);
     void       HandleChildIdResponse(RxInfo &aRxInfo);
@@ -2107,7 +2166,6 @@ private:
     // Variables
 
     using AttachTimer = TimerMilliIn<Mle, &Mle::HandleAttachTimer>;
-    using MsgTxTimer  = TimerMilliIn<Mle, &Mle::HandleMessageTransmissionTimer>;
     using MleSocket   = Ip6::Udp::SocketIn<Mle, &Mle::HandleUdpReceive>;
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
     using WedAttachTimer = TimerMicroIn<Mle, &Mle::HandleWedAttachTimer>;
@@ -2121,8 +2179,6 @@ private:
     bool mReceivedResponseFromParent : 1;
     bool mDetachingGracefully : 1;
     bool mInitiallyAttachedAsSleepy : 1;
-    bool mWaitingForChildUpdateResponse : 1;
-    bool mWaitingForDataResponse : 1;
 
     DeviceRole              mRole;
     DeviceRole              mLastSavedRole;
@@ -2133,8 +2189,6 @@ private:
     AddressRegistrationMode mAddressRegistrationMode;
 
     uint8_t  mParentRequestCounter;
-    uint8_t  mChildUpdateAttempts;
-    uint8_t  mDataRequestAttempts;
     uint8_t  mAnnounceChannel;
     uint16_t mRloc16;
     uint16_t mPreviousParentRloc;
@@ -2156,6 +2210,7 @@ private:
     ParentCandidate mParentCandidate;
     MleSocket       mSocket;
     Counters        mCounters;
+    RetxTracker     mRetxTracker;
     AnnounceHandler mAnnounceHandler;
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     ParentSearch mParentSearch;
@@ -2168,7 +2223,6 @@ private:
     Callback<otThreadParentResponseCallback> mParentResponseCallback;
 #endif
     AttachTimer                  mAttachTimer;
-    MsgTxTimer                   mMessageTransmissionTimer;
     Ip6::NetworkPrefix           mMeshLocalPrefix;
     Ip6::Netif::UnicastAddress   mLinkLocalAddress;
     Ip6::Netif::UnicastAddress   mMeshLocalEid;
