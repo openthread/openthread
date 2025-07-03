@@ -69,6 +69,30 @@ exit:
 }
 
 /**
+ * @cli br infraif
+ * @code
+ * br infraif
+ * if-index:2, is-running:yes
+ * Done
+ * @endcode
+ * @par
+ * Gets the interface index and running state of the configured infrastructure interface.
+ */
+template <> otError Br::Process<Cmd("infraif")>(Arg aArgs[])
+{
+    otError  error = OT_ERROR_NONE;
+    uint32_t ifIndex;
+    bool     isRunning;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    SuccessOrExit(error = otBorderRoutingGetInfraIfInfo(GetInstancePtr(), &ifIndex, &isRunning));
+    OutputLine("if-index:%lu, is-running:%s", ToUlong(ifIndex), isRunning ? "yes" : "no");
+
+exit:
+    return error;
+}
+
+/**
  * @cli br enable
  * @code
  * br enable
@@ -1093,6 +1117,7 @@ otError Br::Process(Arg aArgs[])
 #endif
         CmdEntry("disable"),
         CmdEntry("enable"),
+        CmdEntry("infraif"),
         CmdEntry("init"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
         CmdEntry("multiail"),

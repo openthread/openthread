@@ -222,6 +222,25 @@ typedef enum
 otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool aInfraIfIsRunning);
 
 /**
+ * Gets the interface index and running state of the configured infrastructure interface.
+ *
+ * @note The running state in @p aInfraIfIsRunning reflects the Border Routing Manager's perspective. This state is set
+ * when `otBorderRoutingInit()` is called and is subsequently updated by the platform signaling changes via
+ * `otPlatInfraIfStateChanged()`.
+ *
+ * @param[in]  aInstance          A pointer to an OpenThread instance.
+ * @param[out] aInfraIfIndex      A pointer to output the interface index. MUST NOT be NULL.
+ * @param[out] aInfraIfIsRunning  A pointer to output whether the interface is running. Can be NULL if not needed.
+ *
+ * @retval OT_ERROR_NONE           Successfully retrieved the interface information.
+ * @retval OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized.
+ *
+ * @sa otBorderRoutingInit
+ * @sa otPlatInfraIfStateChanged
+ */
+otError otBorderRoutingGetInfraIfInfo(otInstance *aInstance, uint32_t *aInfraIfIndex, bool *aInfraIfIsRunning);
+
+/**
  * Enables or disables the Border Routing Manager.
  *
  * @note  The Border Routing Manager is disabled by default.
