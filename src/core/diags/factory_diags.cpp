@@ -188,6 +188,7 @@ const struct Diags::Command Diags::sCommands[] = {
     {"stats", &Diags::ProcessStats},
     {"stop", &Diags::ProcessStop},
     {"stream", &Diags::ProcessStream},
+    {"sweep", &Diags::ProcessSweep},
 };
 
 Diags::Diags(Instance &aInstance)
@@ -554,6 +555,31 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[])
     return kErrorNone;
 }
 
+Error Diags::ProcessSweep(uint8_t aArgsLength, char *aArgs[])
+{
+    Error   error = kErrorNone;
+    uint8_t txLength;
+
+    VerifyOrExit(aArgsLength >= 1, error = kErrorInvalidArgs);
+    VerifyOrExit(mCurTxCmd == kTxCmdNone, error = kErrorInvalidState);
+
+    SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(aArgs[0], txLength));
+    mIsTxPacketSet = false;
+
+    VerifyOrExit(txLength <= OT_RADIO_FRAME_MAX_SIZE, error = kErrorInvalidArgs);
+    VerifyOrExit(txLength >= OT_RADIO_FRAME_MIN_SIZE, error = kErrorInvalidArgs);
+    mTxLen = txLength;
+
+    mChannel = 11;
+    otPlatDiagChannelSet(mChannel);
+
+    SuccessOrExit(error = TransmitPacket());
+    mCurTxCmd = kTxCmdSweep;
+
+exit:
+    return error;
+}
+
 Error Diags::TransmitPacket(void)
 {
     Error error         = kErrorNone;
@@ -878,9 +904,23 @@ void Diags::TransmitDone(Error aError)
     }
 
     UpdateTxStats(aError);
-    VerifyOrExit((mCurTxCmd == kTxCmdSend) && (mTxPackets > 0));
+    VerifyOrExit(((mCurTxCmd == kTxCmdSend) && (mTxPackets > 0)) || (mCurTxCmd == kTxCmdSweep));
 
-    if (mTxPackets > 1)
+    if (mCurTxCmd == kTxCmdSweep)
+    {
+        if (IsChannelValid(mChannel + 1))
+        {
+            mChannel += 1;
+            otPlatDiagChannelSet(mChannel);
+
+            IgnoreError(TransmitPacket());
+        }
+        else
+        {
+            mCurTxCmd = kTxCmdNone;
+        }
+    }
+    else if (mTxPackets > 1)
     {
         mTxPackets--;
         IgnoreError(TransmitPacket());
