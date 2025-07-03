@@ -312,6 +312,44 @@ set(RADIO_COMMON_SOURCES
     utils/power_calibration.cpp
 )
 
+set(MDNS_COMMON_SOURCES
+    api/dns_api.cpp
+    api/error_api.cpp
+    api/instance_api.cpp
+    api/ip6_api.cpp
+    api/logging_api.cpp
+    api/mdns_api.cpp
+    api/message_api.cpp
+    api/nat64_api.cpp
+    api/tasklet_api.cpp
+    common/appender.cpp
+    common/binary_search.cpp
+    common/crc.cpp
+    common/data.cpp
+    common/error.cpp
+    common/frame_builder.cpp
+    common/heap.cpp
+    common/heap_data.cpp
+    common/heap_string.cpp
+    common/log.cpp
+    common/message.cpp
+    common/offset_range.cpp
+    common/random.cpp
+    common/string.cpp
+    common/tasklet.cpp
+    common/timer.cpp
+    common/uptime.cpp
+    instance/instance.cpp
+    net/dns_types.cpp
+    net/ip4_types.cpp
+    net/ip6_address.cpp
+    net/ip6_headers.cpp
+    net/mdns.cpp
+    net/socket.cpp
+    utils/heap.cpp
+    utils/parse_cmdline.cpp
+)
+
 set(OT_VENDOR_EXTENSION "" CACHE STRING "specify a C++ source file built as part of OpenThread core library")
 if(OT_VENDOR_EXTENSION)
   target_compile_definitions(ot-config INTERFACE "OPENTHREAD_ENABLE_VENDOR_EXTENSION=1")
@@ -331,6 +369,10 @@ if(OT_RCP)
     if (OT_APP_CLI)
         include(radio_cli.cmake)
     endif()
+endif()
+
+if(OT_MDNS_LIB)
+    include(mdns.cmake)
 endif()
 
 set_property(SOURCE api/instance_api.cpp

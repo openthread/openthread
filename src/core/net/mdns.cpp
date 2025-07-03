@@ -28,7 +28,7 @@
 
 #include "mdns.hpp"
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+#if ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE) || OPENTHREAD_MDNS
 
 #include "common/crc.hpp"
 #include "instance/instance.hpp"
@@ -145,13 +145,15 @@ Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex)
         mCacheTimer.Stop();
     }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     Get<Dnssd>().HandleMdnsCoreStateChange();
+#endif
 
 exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
 void Core::HandleInfraIfStateChanged(void)
 {
     IgnoreError(SetEnabled(Get<BorderRouter::InfraIf>().IsRunning(), Get<BorderRouter::InfraIf>().GetIfIndex()));
@@ -1543,10 +1545,21 @@ exit:
 
 void Core::LocalHost::GenerateName(void)
 {
+    static constexpr uint8_t kNumHexBytes = 8;
+
     Name::LabelBuffer name;
     StringWriter      writer(name, sizeof(name));
+    uint8_t           bytes[kNumHexBytes];
 
-    writer.Append("ot%s", Get<Mac::Mac>().GetExtAddress().ToString().AsCString());
+#if OPENTHREAD_MDNS
+    Random::NonCrypto::FillBuffer(bytes, kNumHexBytes);
+#elif OPENTHREAD_FTD || OPENTHREAD_MTD
+    static_assert(kNumHexBytes == sizeof(Mac::ExtAddress), "kNumHexBytes is not equal to `Mex::ExtAddress` size");
+    Get<Mac::Mac>().GetExtAddress().CopyTo(bytes);
+#endif
+
+    writer.Append("ot");
+    writer.AppendHexBytes(bytes, kNumHexBytes);
 
     SuccessOrAssert(mName.Set(name));
 }
@@ -7666,6 +7679,6 @@ OT_TOOL_WEAK void otPlatMdnsSendUnicast(otInstance                  *aInstance,
     OT_UNUSED_VARIABLE(aAddress);
 }
 
-#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_MOCK_PLAT_APIS_ENABLE
+#endif // ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE) || OPENTHREAD_MDNS
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
