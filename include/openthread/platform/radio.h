@@ -910,6 +910,9 @@ extern void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, 
 /**
  * The radio driver calls this function to notify OpenThread diagnostics module of a received frame.
  *
+ * @note This function is deprecated and will be removed in the future. It is recommended to use the function
+ *       `otPlatRadioReceiveDone()`.
+ *
  * Is used when diagnostics is enabled.
  *
  * @param[in]  aInstance The OpenThread instance structure.
@@ -981,6 +984,9 @@ extern void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRad
 
 /**
  * The radio driver calls this function to notify OpenThread diagnostics module that the transmission has completed.
+ *
+ * @note This function is deprecated and will be removed in the future. It is recommended to use the function
+ *       `otPlatRadioTxDone()`.
  *
  * Is used when diagnostics is enabled.
  *
