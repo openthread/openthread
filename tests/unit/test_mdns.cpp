@@ -4703,7 +4703,7 @@ void TestMultiPacket(void)
 
     Log("Since message is marked as `truncated`, mDNS should wait at least 400 msec");
 
-    AdvanceTime(400);
+    AdvanceTime(399);
     VerifyOrQuit(sDnsMessages.IsEmpty());
 
     AdvanceTime(2000);
