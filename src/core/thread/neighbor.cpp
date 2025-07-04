@@ -164,6 +164,10 @@ bool Neighbor::MatchesFilter(StateFilter aFilter) const
         matches = !IsStateValidOrRestoring();
         break;
 
+    case kInStateLinkRequest:
+        matches = IsStateLinkRequest();
+        break;
+
     case kInStateAny:
         matches = true;
         break;
