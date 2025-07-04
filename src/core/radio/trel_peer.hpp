@@ -87,12 +87,21 @@ class Peer : public InstanceLocatorInit,
 
 public:
     /**
-     * Indicates whether the `Peer` is in valid state.
-     *
-     * @returns TRUE    If the `peer` is in valid state.
-     * @returns FALSE   If the `Peer` is not in valid state (e.g., still being resolved or scheduled for removal).
+     * Represents the DNS-SD (mDNS) service discovery state of the peer.
      */
-    bool IsStateValid(void) const { return mState == kStateValid; }
+    enum DnssdState : uint8_t
+    {
+        kDnssdResolved,  ///< Peer is resolved on DNS-SD (mDNS), i.e., service and host resolution are done.
+        kDnssdRemoved,   ///< DNS-SD (mDNS) has notified that the peer service registration is removed or timed out.
+        kDnssdResolving, ///< Ongoing service/host resolution for the peer service or host name.
+    };
+
+    /**
+     * Gets the current DNS-SD service discovery state of the peer.
+     *
+     * @returns The DNS-SD state.
+     */
+    DnssdState GetDnssdState(void) const { return mDnssdState; }
 
     /**
      * Returns the Extended MAC Address of the discovered TREL peer.
@@ -116,11 +125,36 @@ public:
     const Ip6::SockAddr &GetSockAddr(void) const { return AsCoreType(&mSockAddr); }
 
     /**
+     * Indicates whether or not the IPv6 socket address associated with the TREL peer is valid.
+     *
+     * During peer discovery (mDNS service and host resolution), the peer address may not yet be known and can be
+     * invalid (i.e., set to the unspecified IPv6 address `::`).
+     *
+     * @retval TRUE   If the peer socket address is valid.
+     * @retval FALSE  If the peer socket address is not valid.
+     */
+    bool HasValidSockAddr(void) const { return !GetSockAddr().GetAddress().IsUnspecified(); }
+
+    /**
      * Updates the IPv6 socket address of the discovered TREL peer based on a received message from peer.
      *
      * @param[in] aSockAddr   The IPv6 socket address discovered based on received message from the peer
      */
     void UpdateSockAddrBasedOnRx(const Ip6::SockAddr &aSockAddr);
+
+    /**
+     * Updates the last interaction time (rx or tx) of the TREL peer to now.
+     *
+     * This is called after sending (unicast/ack TREL packet excluding a broadcast tx) or receiving from the peer.
+     */
+    void UpdateLastInteractionTime(void);
+
+    /**
+     * Determine number of seconds since last interaction with the TREL peer.
+     *
+     * @returns Duration (in seconds) since last interaction with the peer.
+     */
+    uint32_t DetermineSecondsSinceLastInteraction(void) const;
 
 #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
 
@@ -150,19 +184,13 @@ public:
 #endif // OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
 
 private:
-    enum State : uint8_t
-    {
-        kStateValid,
-        kStateRemoving,
-        kStateResolving,
-    };
+    static constexpr uint32_t kExpirationDelay = 450; // (in second) - 7.5 minutes
 
     enum Action : uint8_t
     {
         kAdded,    // Added a new peer.
-        kReAdded,  // Re-added a peer (discovered again) that was scheduled for removal.
+        kReAdded,  // Re-added a peer (discovered again) after DNSSD removal.
         kUpdated,  // Updated an existing peer.
-        kRemoving, // Scheduling a peer to be removed after delay.
         kDeleted,  // Fully removing and deleting the peer from the table.
         kEvicting, // Evicting the peer to make space for new one.
     };
@@ -187,14 +215,14 @@ private:
         NeighborTable &mNeighborTable;
     };
 
-    struct ExpireChecker // Matches if the peer is in `kStateRemoving` and already expired.
+    struct ExpireChecker // Matches if the peer is in `kDnssdRemoved` and already expired.
     {
-        explicit ExpireChecker(TimeMilli aNow)
-            : mNow(aNow)
+        explicit ExpireChecker(uint32_t aUptimeNow)
+            : mUptimeNow(aUptimeNow)
         {
         }
 
-        TimeMilli mNow;
+        uint32_t mUptimeNow;
     };
 
 #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
@@ -227,22 +255,19 @@ private:
 
 #endif
 
-    void Init(Instance &aInstance);
-    void Free(void);
-    void SetState(State aState) { mState = aState; }
-    bool IsStateRemoving(void) const { return mState == kStateRemoving; }
-    bool IsStateResolving(void) const { return mState == kStateResolving; }
-    void SetExtAddress(const Mac::ExtAddress &aExtAddress);
-    void SetExtPanId(const MeshCoP::ExtendedPanId &aExtPanId) { mExtPanId = aExtPanId; }
-    void SetSockAddr(const Ip6::SockAddr &aSockAddr) { mSockAddr = aSockAddr; }
-    void ScheduleToRemoveAfter(uint32_t aDelay);
-    bool Matches(const Mac::ExtAddress &aExtAddress) const;
-    bool Matches(const Ip6::SockAddr &aSockAddr) const { return GetSockAddr() == aSockAddr; }
-    bool Matches(State aState) const { return mState == aState; }
-    bool Matches(const Peer &aPeer) const { return this == &aPeer; }
-    bool Matches(const OtherExtPanIdMatcher &aMatcher) const { return GetExtPanId() != aMatcher.mExtPanId; }
-    bool Matches(const NonNeighborMatcher &aMatcher) const;
-    bool Matches(const ExpireChecker &aChecker) const { return IsStateRemoving() && (aChecker.mNow >= mRemoveTime); }
+    void     Init(Instance &aInstance);
+    void     Free(void);
+    void     SetDnssdState(DnssdState aState);
+    void     SetExtAddress(const Mac::ExtAddress &aExtAddress);
+    void     SetExtPanId(const MeshCoP::ExtendedPanId &aExtPanId) { mExtPanId = aExtPanId; }
+    void     SetSockAddr(const Ip6::SockAddr &aSockAddr) { mSockAddr = aSockAddr; }
+    bool     Matches(const Mac::ExtAddress &aExtAddress) const;
+    bool     Matches(const Ip6::SockAddr &aSockAddr) const { return GetSockAddr() == aSockAddr; }
+    bool     Matches(const Peer &aPeer) const { return this == &aPeer; }
+    bool     Matches(const OtherExtPanIdMatcher &aMatcher) const { return GetExtPanId() != aMatcher.mExtPanId; }
+    bool     Matches(const NonNeighborMatcher &aMatcher) const;
+    bool     Matches(const ExpireChecker &aChecker) const;
+    uint32_t DetermineExpirationDelay(uint32_t aUptimeNow) const;
 
 #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
     void SetPort(uint16_t aPort);
@@ -258,14 +283,14 @@ private:
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     void               Log(Action aAction) const;
     static const char *ActionToString(Action aAction);
-    static const char *StateToString(State aState);
+    static const char *DnssdStateToString(DnssdState aState);
 #else
     void Log(Action) const {}
 #endif
 
-    Peer     *mNext;
-    State     mState;
-    TimeMilli mRemoveTime;
+    Peer      *mNext;
+    DnssdState mDnssdState;
+    uint32_t   mLastInteractionTime;
 #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
     bool         mExtAddressSet : 1;
     bool         mResolvingService : 1;
