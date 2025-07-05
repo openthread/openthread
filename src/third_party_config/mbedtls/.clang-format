@@ -1,0 +1,4 @@
+---
+BasedOnStyle: InheritParentConfig
+ColumnLimit: 0
+...
