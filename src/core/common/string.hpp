@@ -110,6 +110,18 @@ const char *StringFind(const char *aString, char aChar);
 const char *StringFind(const char *aString, const char *aSubString, StringMatchMode aMode = kStringExactMatch);
 
 /**
+ * Finds the last occurrence of a given sub-string in a null-terminated string.
+ *
+ * @param[in] aString     A pointer to the string.
+ * @param[in] aSubString  A sub-string to search for.
+ * @param[in] aMode       The string comparison mode, exact match or case insensitive match.
+ *
+ * @returns The pointer to last match of the @p aSubString in @p aString (using comparison @p aMode), or `nullptr` if
+ *          cannot be found.
+ */
+const char *StringRFind(const char *aString, const char *aSubString, StringMatchMode aMode = kStringExactMatch);
+
+/**
  * Checks whether a null-terminated string starts with a given prefix string.
  *
  * @param[in] aString         A pointer to the string.

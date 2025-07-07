@@ -138,6 +138,26 @@ exit:
     return ret;
 }
 
+const char *StringRFind(const char *aString, const char *aSubString, StringMatchMode aMode)
+{
+    const char *ret    = nullptr;
+    size_t      len    = strlen(aString);
+    size_t      subLen = strlen(aSubString);
+
+    VerifyOrExit(subLen <= len);
+
+    for (const char *s = aString + len - subLen; s >= aString; s--)
+    {
+        if (Match(s, aSubString, aMode) != kNoMatch)
+        {
+            ExitNow(ret = s);
+        }
+    }
+
+exit:
+    return ret;
+}
+
 bool StringStartsWith(const char *aString, const char *aPrefixString, StringMatchMode aMode)
 {
     return Match(aString, aPrefixString, aMode) != kNoMatch;
