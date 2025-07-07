@@ -225,29 +225,23 @@ Error Mle::Start(StartMode aMode)
 
     Get<KeyManager>().Start();
 
-    if (aMode == kNormalAttach)
+    switch (aMode)
     {
+    case kNormalAttach:
         mReattachState =
             (Get<MeshCoP::ActiveDatasetManager>().Restore() == kErrorNone) ? kReattachActive : kReattachStop;
+
+        if (RestorePrevRole() == kErrorNone)
+        {
+            ExitNow();
+        }
+        break;
+
+    case kAnnounceAttach:
+        break;
     }
 
-    if ((aMode == kAnnounceAttach) || (GetRloc16() == kInvalidRloc16))
-    {
-        Attach(kAnyPartition);
-    }
-#if OPENTHREAD_FTD
-    else if (IsRouterRloc16(GetRloc16()))
-    {
-        if (BecomeRouter(ThreadStatusTlv::kTooFewRouters) != kErrorNone)
-        {
-            Attach(kAnyPartition);
-        }
-    }
-#endif
-    else
-    {
-        IgnoreError(SendChildUpdateRequestToParent());
-    }
+    Attach(kAnyPartition);
 
 exit:
     return error;
@@ -284,6 +278,40 @@ exit:
         mDetachingGracefully = false;
         mDetachGracefullyCallback.InvokeAndClearIfSet();
     }
+}
+
+Error Mle::RestorePrevRole(void)
+{
+    // Restores the device to its previously saved role after MLE
+    // start.
+    //
+    // Returns `kErrorNone` if the restoration process begins
+    // successfully. An error is returned if:
+    // - No previous role was saved.
+    // - The saved role info is inconsistent (e.g., RLOC16 indicates a
+    //   router/leader, but `mLastSavedRole` doesn't match).
+    // - The last role is "Child," but no valid parent is available.
+
+    Error error = kErrorFailed;
+
+    VerifyOrExit(GetRloc16() != kInvalidRloc16);
+
+    if (IsRouterRloc16(GetRloc16()))
+    {
+#if OPENTHREAD_FTD
+        VerifyOrExit(mLastSavedRole == kRoleRouter || mLastSavedRole == kRoleLeader);
+        error = BecomeRouter(ThreadStatusTlv::kTooFewRouters);
+#endif
+        ExitNow();
+    }
+
+    VerifyOrExit(mLastSavedRole == kRoleChild);
+    VerifyOrExit(mParent.IsStateValidOrRestoring());
+    IgnoreError(SendChildUpdateRequestToParent());
+    error = kErrorNone;
+
+exit:
+    return error;
 }
 
 const Counters &Mle::GetCounters(void)
