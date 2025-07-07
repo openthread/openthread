@@ -60,6 +60,18 @@ Initializes the Border Routing Manager on given infrastructure interface.
 Done
 ```
 
+### infraif
+
+Usage: `br infraif`
+
+Get the interface index and running state of the configured infrastructure interface.
+
+```bash
+> br infraif
+if-index:2, is-running:yes
+Done
+```
+
 ### enable
 
 Usage: `br enable`
