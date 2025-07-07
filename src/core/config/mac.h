@@ -559,6 +559,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+ *
+ * This setting specifies whether the Poll Offload functionality is enabled
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+#define OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE 0
+#endif
+
+/**
  * @}
  */
 
