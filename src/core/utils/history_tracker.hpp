@@ -55,6 +55,7 @@
 #include "thread/mle_types.hpp"
 #include "thread/neighbor_table.hpp"
 #include "thread/network_data.hpp"
+#include "thread/network_data_service.hpp"
 #include "thread/router_table.hpp"
 
 namespace ot {
@@ -68,7 +69,8 @@ namespace Utils {
 
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA                       \
     ((OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_MESH_PREFIX_LIST_SIZE > 0) || \
-     (OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE > 0))
+     (OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE > 0) || \
+     (OPENTHREAD_CONFIG_HISTORY_TRACKER_DNSSRP_ADDR_LIST_SIZE > 0))
 
 /**
  * Implements History Tracker.
@@ -140,6 +142,7 @@ public:
     typedef otHistoryTrackerRouterInfo           RouterInfo;           ///< Router info.
     typedef otHistoryTrackerOnMeshPrefixInfo     OnMeshPrefixInfo;     ///< Network Data on mesh prefix info.
     typedef otHistoryTrackerExternalRouteInfo    ExternalRouteInfo;    ///< Network Data external route info
+    typedef otHistoryTrackerDnsSrpAddrInfo       DnsSrpAddrInfo;       ///< Network Data SRP/DNS address info.
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     typedef otHistoryTrackerBorderAgentEpskcEvent EpskcEvent; ///< Border Agent ePSKc Event.
 #endif
@@ -251,6 +254,11 @@ public:
         return mExternalRouteHistory.Iterate(aIterator, aEntryAge);
     }
 
+    const DnsSrpAddrInfo *IterateDnsSrpAddrHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mDnsSrpAddrHistory.Iterate(aIterator, aEntryAge);
+    }
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     const EpskcEvent *IterateEpskcEventHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
@@ -289,6 +297,7 @@ private:
     static constexpr uint16_t kRouterListSize        = OPENTHREAD_CONFIG_HISTORY_TRACKER_ROUTER_LIST_SIZE;
     static constexpr uint16_t kOnMeshPrefixListSize  = OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_MESH_PREFIX_LIST_SIZE;
     static constexpr uint16_t kExternalRouteListSize = OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE;
+    static constexpr uint16_t kDnsSrpAddrListSize    = OPENTHREAD_CONFIG_HISTORY_TRACKER_DNSSRP_ADDR_LIST_SIZE;
     static constexpr uint16_t kEpskcEventListSize    = OPENTHREAD_CONFIG_HISTORY_TRACKER_EPSKC_EVENT_SIZE;
 
     typedef otHistoryTrackerAddressEvent AddressEvent;
@@ -316,6 +325,14 @@ private:
 
     static constexpr NetDataEvent kNetDataEntryAdded   = OT_HISTORY_TRACKER_NET_DATA_ENTRY_ADDED;
     static constexpr NetDataEvent kNetDataEntryRemoved = OT_HISTORY_TRACKER_NET_DATA_ENTRY_REMOVED;
+
+    typedef otHistoryTrackerDnsSrpAddrType DnsSrpAddrType;
+
+    static constexpr DnsSrpAddrType kDnsSrpAddrTypeUnicastLocal = OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_UNICAST_LOCAL;
+    static constexpr DnsSrpAddrType kDnsSrpAddrTypeUnicastInfra = OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_UNICAST_INFRA;
+    static constexpr DnsSrpAddrType kDnsSrpAddrTypeAnycast      = OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_ANYCAST;
+
+    static constexpr uint16_t kAnycastServerPort = 53;
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 #define DefineEpskcEvent(aName, aPublicEnumName) \
@@ -446,6 +463,15 @@ private:
     void RecordNetworkDataChange(void);
     void RecordOnMeshPrefixEvent(NetDataEvent aEvent, const NetworkData::OnMeshPrefixConfig &aPrefix);
     void RecordExternalRouteEvent(NetDataEvent aEvent, const NetworkData::ExternalRouteConfig &aRoute);
+    void RecordDnsSrpAddrEvent(NetDataEvent                                   aEvent,
+                               const NetworkData::Service::DnsSrpUnicastInfo &aUnicastInfo,
+                               NetworkData::Service::DnsSrpUnicastType        aType);
+    void RecordDnsSrpAddrEvent(NetDataEvent aEvent, const NetworkData::Service::DnsSrpAnycastInfo &aAnycastInfo);
+    bool NetDataContainsDnsSrpUnicast(const NetworkData::NetworkData                &aNetworkData,
+                                      const NetworkData::Service::DnsSrpUnicastInfo &aUnicastInfo,
+                                      NetworkData::Service::DnsSrpUnicastType        aType) const;
+    bool NetDataContainsDnsSrpAnycast(const NetworkData::NetworkData                &aNetworkData,
+                                      const NetworkData::Service::DnsSrpAnycastInfo &aAnycastInfo) const;
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     void RecordEpskcEvent(EpskcEvent aEvent);
@@ -462,6 +488,7 @@ private:
     EntryList<RouterInfo, kRouterListSize>                  mRouterHistory;
     EntryList<OnMeshPrefixInfo, kOnMeshPrefixListSize>      mOnMeshPrefixHistory;
     EntryList<ExternalRouteInfo, kExternalRouteListSize>    mExternalRouteHistory;
+    EntryList<DnsSrpAddrInfo, kDnsSrpAddrListSize>          mDnsSrpAddrHistory;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     EntryList<EpskcEvent, kEpskcEventListSize> mEpskcEventHistory;
 #endif

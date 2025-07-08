@@ -181,6 +181,8 @@ Error Iterator::GetNextDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo)
     Error   error         = kErrorNone;
     uint8_t serviceNumber = Manager::kDnsSrpAnycastServiceNumber;
 
+    aInfo.Clear();
+
     do
     {
         ServiceData serviceData;
@@ -228,6 +230,8 @@ Error Manager::FindPreferredDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo) const
     Iterator          iterator(GetInstance());
     DnsSrpAnycastInfo info;
     DnsSrpAnycastInfo maxNumericalSeqNumInfo;
+
+    aInfo.Clear();
 
     // Determine the entry with largest seq number in two ways:
     // `aInfo` will track the largest using serial number arithmetic
@@ -320,6 +324,8 @@ Error Iterator::GetNextDnsSrpUnicastInfo(DnsSrpUnicastType aType, DnsSrpUnicastI
 {
     Error   error         = kErrorNone;
     uint8_t serviceNumber = Manager::kDnsSrpUnicastServiceNumber;
+
+    aInfo.Clear();
 
     do
     {

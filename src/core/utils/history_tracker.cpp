@@ -348,9 +348,18 @@ void HistoryTracker::RecordRouterTableChange(void)
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
 void HistoryTracker::RecordNetworkDataChange(void)
 {
-    NetworkData::Iterator            iterator;
-    NetworkData::OnMeshPrefixConfig  prefix;
-    NetworkData::ExternalRouteConfig route;
+    static const NetworkData::Service::DnsSrpUnicastType kDnsSrpUnicastTypes[] = {
+        NetworkData::Service::kAddrInServiceData,
+        NetworkData::Service::kAddrInServerData,
+    };
+
+    NetworkData::Iterator                   iterator;
+    NetworkData::OnMeshPrefixConfig         prefix;
+    NetworkData::ExternalRouteConfig        route;
+    NetworkData::Service::DnsSrpUnicastInfo unicastInfo;
+    NetworkData::Service::DnsSrpAnycastInfo anycastInfo;
+    NetworkData::Service::Iterator          newDataIterator(GetInstance(), Get<NetworkData::Leader>());
+    NetworkData::Service::Iterator          prvDataIterator(GetInstance(), mPreviousNetworkData);
 
     // On mesh prefix entries
 
@@ -396,6 +405,51 @@ void HistoryTracker::RecordNetworkDataChange(void)
         }
     }
 
+    // DNS/SRP Unicast/Anycast entries
+
+    for (NetworkData::Service::DnsSrpUnicastType type : kDnsSrpUnicastTypes)
+    {
+        prvDataIterator.Reset();
+
+        while (prvDataIterator.GetNextDnsSrpUnicastInfo(type, unicastInfo) == kErrorNone)
+        {
+            if (!NetDataContainsDnsSrpUnicast(Get<NetworkData::Leader>(), unicastInfo, type))
+            {
+                RecordDnsSrpAddrEvent(kNetDataEntryRemoved, unicastInfo, type);
+            }
+        }
+
+        newDataIterator.Reset();
+
+        while (newDataIterator.GetNextDnsSrpUnicastInfo(type, unicastInfo) == kErrorNone)
+        {
+            if (!NetDataContainsDnsSrpUnicast(mPreviousNetworkData, unicastInfo, type))
+            {
+                RecordDnsSrpAddrEvent(kNetDataEntryAdded, unicastInfo, type);
+            }
+        }
+    }
+
+    prvDataIterator.Reset();
+
+    while (prvDataIterator.GetNextDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
+    {
+        if (!NetDataContainsDnsSrpAnycast(Get<NetworkData::Leader>(), anycastInfo))
+        {
+            RecordDnsSrpAddrEvent(kNetDataEntryRemoved, anycastInfo);
+        }
+    }
+
+    newDataIterator.Reset();
+
+    while (newDataIterator.GetNextDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
+    {
+        if (!NetDataContainsDnsSrpAnycast(mPreviousNetworkData, anycastInfo))
+        {
+            RecordDnsSrpAddrEvent(kNetDataEntryAdded, anycastInfo);
+        }
+    }
+
     SuccessOrAssert(Get<NetworkData::Leader>().CopyNetworkData(NetworkData::kFullSet, mPreviousNetworkData));
 }
 
@@ -421,6 +475,93 @@ void HistoryTracker::RecordExternalRouteEvent(NetDataEvent aEvent, const Network
 
 exit:
     return;
+}
+
+void HistoryTracker::RecordDnsSrpAddrEvent(NetDataEvent                                   aEvent,
+                                           const NetworkData::Service::DnsSrpUnicastInfo &aUnicastInfo,
+                                           NetworkData::Service::DnsSrpUnicastType        aType)
+{
+    DnsSrpAddrInfo *entry = mDnsSrpAddrHistory.AddNewEntry();
+
+    VerifyOrExit(entry != nullptr);
+
+    entry->mAddress        = aUnicastInfo.mSockAddr.mAddress;
+    entry->mRloc16         = aUnicastInfo.mRloc16;
+    entry->mPort           = aUnicastInfo.mSockAddr.mPort;
+    entry->mSequenceNumber = 0;
+    entry->mVersion        = aUnicastInfo.mVersion;
+    entry->mEvent          = aEvent;
+
+    switch (aType)
+    {
+    case NetworkData::Service::kAddrInServerData:
+        entry->mType = kDnsSrpAddrTypeUnicastLocal;
+        break;
+    case NetworkData::Service::kAddrInServiceData:
+        entry->mType = kDnsSrpAddrTypeUnicastInfra;
+        break;
+    }
+
+exit:
+    return;
+}
+
+void HistoryTracker::RecordDnsSrpAddrEvent(NetDataEvent                                   aEvent,
+                                           const NetworkData::Service::DnsSrpAnycastInfo &aAnycastInfo)
+{
+    DnsSrpAddrInfo *entry = mDnsSrpAddrHistory.AddNewEntry();
+
+    VerifyOrExit(entry != nullptr);
+
+    entry->mAddress        = aAnycastInfo.mAnycastAddress;
+    entry->mRloc16         = aAnycastInfo.mRloc16;
+    entry->mPort           = kAnycastServerPort;
+    entry->mSequenceNumber = aAnycastInfo.mSequenceNumber;
+    entry->mVersion        = aAnycastInfo.mVersion;
+    entry->mEvent          = aEvent;
+    entry->mType           = kDnsSrpAddrTypeAnycast;
+
+exit:
+    return;
+}
+
+bool HistoryTracker::NetDataContainsDnsSrpUnicast(const NetworkData::NetworkData                &aNetworkData,
+                                                  const NetworkData::Service::DnsSrpUnicastInfo &aUnicastInfo,
+                                                  NetworkData::Service::DnsSrpUnicastType        aType) const
+{
+    bool                                    contains = false;
+    NetworkData::Service::Iterator          iterator(GetInstance(), aNetworkData);
+    NetworkData::Service::DnsSrpUnicastInfo unicastInfo;
+
+    while (iterator.GetNextDnsSrpUnicastInfo(aType, unicastInfo) == kErrorNone)
+    {
+        if (unicastInfo == aUnicastInfo)
+        {
+            contains = true;
+            break;
+        }
+    }
+
+    return contains;
+}
+
+bool HistoryTracker::NetDataContainsDnsSrpAnycast(const NetworkData::NetworkData                &aNetworkData,
+                                                  const NetworkData::Service::DnsSrpAnycastInfo &aAnycastInfo) const
+{
+    bool                                    contains = false;
+    NetworkData::Service::Iterator          iterator(GetInstance(), aNetworkData);
+    NetworkData::Service::DnsSrpAnycastInfo anycastInfo;
+
+    while (iterator.GetNextDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
+    {
+        if (anycastInfo == aAnycastInfo)
+        {
+            contains = true;
+            break;
+        }
+    }
+
+    return contains;
 }
 
 #endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
@@ -464,6 +605,7 @@ void HistoryTracker::HandleTimer(void)
     mNeighborHistory.UpdateAgedEntries();
     mOnMeshPrefixHistory.UpdateAgedEntries();
     mExternalRouteHistory.UpdateAgedEntries();
+    mDnsSrpAddrHistory.UpdateAgedEntries();
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     mEpskcEventHistory.UpdateAgedEntries();
 #endif
