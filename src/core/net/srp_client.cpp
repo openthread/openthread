@@ -2413,9 +2413,9 @@ exit:
 
 Error Client::SelectUnicastEntry(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo) const
 {
-    Error                                   error = kErrorNotFound;
-    DnsSrpUnicastInfo                       unicastInfo;
-    NetworkData::Service::Manager::Iterator iterator;
+    Error                          error = kErrorNotFound;
+    DnsSrpUnicastInfo              unicastInfo;
+    NetworkData::Service::Iterator iterator(GetInstance());
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
     Settings::SrpClientInfo savedInfo;
     bool                    hasSavedServerInfo = false;
@@ -2426,7 +2426,7 @@ Error Client::SelectUnicastEntry(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aIn
     }
 #endif
 
-    while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, aType, unicastInfo) == kErrorNone)
+    while (iterator.GetNextDnsSrpUnicastInfo(aType, unicastInfo) == kErrorNone)
     {
         bool preferNewEntry;
 
@@ -2519,10 +2519,10 @@ void Client::SelectNextServer(bool aDisallowSwitchOnRegisteredHost)
 
     do
     {
-        DnsSrpUnicastInfo                       unicastInfo;
-        NetworkData::Service::Manager::Iterator iterator;
+        DnsSrpUnicastInfo              unicastInfo;
+        NetworkData::Service::Iterator iterator(GetInstance());
 
-        while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo) == kErrorNone)
+        while (iterator.GetNextDnsSrpUnicastInfo(type, unicastInfo) == kErrorNone)
         {
             if (selectNext)
             {

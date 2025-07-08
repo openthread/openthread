@@ -82,43 +82,79 @@ struct DnsSrpUnicastInfo
     uint16_t      mRloc16;   ///< The BR RLOC16 adding the entry.
 };
 
+class Manager;
+
+/**
+ * Represents an iterator to iterate over service entries in a Network Data.
+ */
+class Iterator : public InstanceLocator, private NonCopyable
+{
+    friend class Manager;
+
+public:
+    /**
+     * Initializes the `Iterator` for iterating over service entries in the Leader Network Data
+     *
+     * @param[in] aInstance  The OpenThread instance.
+     */
+    explicit Iterator(Instance &aInstance);
+
+    /**
+     * Initializes the `Iterator` for iterating over service entries in a given Network Data.
+     *
+     * @param[in] aInstance     The OpenThread instance.
+     * @param[in] aNetworkData  The `NetworkData` to use with this iterator.
+     */
+    Iterator(Instance &aInstance, const NetworkData &aNetworkData);
+
+    /**
+     * Resets the `Iterator` to start over.
+     */
+    void Reset(void);
+
+    /**
+     * Gets the next DNS/SRP info from the Thread Network Data "DNS/SRP Service Anycast Address" entries.
+     *
+     * To start from the first entry, ensure the iterator is reset (e.g., by creating a new `Iterator` instance, or by
+     * calling `Reset()`).
+     *
+     * @param[out] aInfo        A reference to `DnsSrpAnycastInfo` to return the info.
+     *
+     * @retval kErrorNone       Successfully got the next info. @p aInfo is updated.
+     * @retval kErrorNotFound   No more matching entries in the Network Data.
+     */
+    Error GetNextDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo);
+
+    /**
+     * Gets the next DNS/SRP info from the Thread Network Data "DNS/SRP Service Unicast Address" entries.
+     *
+     * To start from the first entry, ensure the iterator is reset (e.g., by creating a new `Iterator` instance, or by
+     * calling `Reset()`).
+     *
+     * @param[in]  aType        The entry type, `kAddrInServiceData` or `kAddrInServerData`
+     * @param[out] aInfo        A reference to `DnsSrpUnicastInfo` to return the info.
+     *
+     * @retval kErrorNone       Successfully got the next info. @p aInfo is updated.
+     * @retval kErrorNotFound   No more matching entries in the Network Data.
+     */
+    Error GetNextDnsSrpUnicastInfo(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo);
+
+private:
+    Error AdvanceToNextServer(void);
+
+    const NetworkData &mNetworkData;
+    const ServiceTlv  *mServiceTlv;
+    const ServerTlv   *mServerSubTlv;
+};
+
 /**
  * Manages the Thread Service entries in Thread Network Data.
  */
 class Manager : public InstanceLocator, private NonCopyable
 {
+    friend class Iterator;
+
 public:
-    /**
-     * Represents an iterator used to iterate through Network Data Service entries.
-     */
-    class Iterator : public Clearable<Iterator>
-    {
-        friend class Manager;
-
-    public:
-        /**
-         * Initializes the iterator (as empty/clear).
-         */
-        Iterator(void)
-            : mServiceTlv(nullptr)
-            , mServerSubTlv(nullptr)
-        {
-        }
-
-        /**
-         * Resets the iterator to start from beginning.
-         */
-        void Reset(void)
-        {
-            mServiceTlv   = nullptr;
-            mServerSubTlv = nullptr;
-        }
-
-    private:
-        const ServiceTlv *mServiceTlv;
-        const ServerTlv  *mServerSubTlv;
-    };
-
     /**
      * Initializes the `Manager` object.
      *
@@ -260,20 +296,6 @@ public:
 #endif
 
     /**
-     * Gets the next DNS/SRP info from the Thread Network Data "DNS/SRP Service Anycast Address" entries.
-     *
-     * To get the first entry, @p aIterator should be cleared (e.g., a new instance of `Iterator` or calling `Clear()`
-     * method).
-     *
-     * @param[in,out] aIterator    A reference to an iterator.
-     * @param[out]    aInfo        A reference to `DnsSrpAnycastInfo` to return the info.
-     *
-     * @retval kErrorNone       Successfully got the next info. @p aInfo and @p aIterator are updated.
-     * @retval kErrorNotFound   No more matching entries in the Network Data.
-     */
-    Error GetNextDnsSrpAnycastInfo(Iterator &aIterator, DnsSrpAnycastInfo &aInfo) const;
-
-    /**
      * Finds the preferred DNS/SRP info among all the Thread Network Data "DNS/SRP Service Anycast Address"
      * entries.
      *
@@ -289,21 +311,6 @@ public:
      * @retval kErrorNotFound   No "DNS/SRP Service Anycast" entry in Network Data.
      */
     Error FindPreferredDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo) const;
-
-    /**
-     * Gets the next DNS/SRP info from the Thread Network Data "DNS/SRP Service Unicast Address" entries.
-     *
-     * To get the first entry @p aIterator should be cleared (e.g., a new instance of `Iterator` or calling `Clear()`
-     * method).
-     *
-     * @param[in,out] aIterator    A reference to an iterator.
-     * @param[in]     aType        The entry type, `kAddrInServiceData` or `kAddrInServerData`
-     * @param[out]    aInfo        A reference to `DnsSrpUnicastInfo` to return the info.
-     *
-     * @retval kErrorNone       Successfully got the next info. @p aInfo and @p aIterator are updated.
-     * @retval kErrorNotFound   No more matching entries in the Network Data.
-     */
-    Error GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo) const;
 
 private:
     static constexpr uint8_t kBackboneRouterServiceNumber = 0x01;
@@ -476,7 +483,6 @@ private:
 #endif
 
     Error GetServiceId(uint8_t aServiceNumber, uint8_t &aServiceId) const;
-    Error IterateToNextServer(Iterator &aIterator) const;
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     bool IsBackboneRouterPreferredTo(const ServerTlv     &aServerTlv,

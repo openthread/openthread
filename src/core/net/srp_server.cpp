@@ -303,7 +303,7 @@ bool Server::NetDataContainsOtherSrpServers(void) const
     bool                                    contains = false;
     NetworkData::Service::DnsSrpAnycastInfo anycastInfo;
     NetworkData::Service::DnsSrpUnicastInfo unicastInfo;
-    NetworkData::Service::Manager::Iterator iterator;
+    NetworkData::Service::Iterator          iterator(GetInstance());
 
     if (Get<NetworkData::Service::Manager>().FindPreferredDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
     {
@@ -313,8 +313,7 @@ bool Server::NetDataContainsOtherSrpServers(void) const
 
     iterator.Reset();
 
-    if (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(
-            iterator, NetworkData::Service::kAddrInServiceData, unicastInfo) == kErrorNone)
+    if (iterator.GetNextDnsSrpUnicastInfo(NetworkData::Service::kAddrInServiceData, unicastInfo) == kErrorNone)
     {
         contains = true;
         ExitNow();
@@ -322,8 +321,7 @@ bool Server::NetDataContainsOtherSrpServers(void) const
 
     iterator.Reset();
 
-    while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(
-               iterator, NetworkData::Service::kAddrInServerData, unicastInfo) == kErrorNone)
+    while (iterator.GetNextDnsSrpUnicastInfo(NetworkData::Service::kAddrInServerData, unicastInfo) == kErrorNone)
     {
         if (!Get<Mle::Mle>().HasRloc16(unicastInfo.mRloc16) &&
             Get<Mle::Mle>().GetMeshLocalEid() != unicastInfo.mSockAddr.GetAddress())

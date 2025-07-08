@@ -587,13 +587,13 @@ Error AddressResolver::ResolveUsingNetDataServices(const Ip6::Address &aEid, uin
     // if successful, otherwise returns `kErrorNotFound`.
 
     Error                                   error = kErrorNotFound;
-    NetworkData::Service::Manager::Iterator iterator;
+    NetworkData::Service::Iterator          iterator(GetInstance());
     NetworkData::Service::DnsSrpUnicastInfo unicastInfo;
     NetworkData::Service::DnsSrpUnicastType type = NetworkData::Service::kAddrInServerData;
 
     VerifyOrExit(Get<Mle::Mle>().GetDeviceMode().GetNetworkDataType() == NetworkData::kFullSet);
 
-    while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo) == kErrorNone)
+    while (iterator.GetNextDnsSrpUnicastInfo(type, unicastInfo) == kErrorNone)
     {
         if (aEid == unicastInfo.mSockAddr.GetAddress())
         {
