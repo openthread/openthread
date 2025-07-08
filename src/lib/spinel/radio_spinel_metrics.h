@@ -35,6 +35,8 @@
 #ifndef RADIO_SPINEL_METRICS_H_
 #define RADIO_SPINEL_METRICS_H_
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

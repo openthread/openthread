@@ -25,6 +25,8 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cstddef>
+
 /**
  * Allows to encrypt spinel frames sent between Application Processor (AP) and Network Co-Processor (NCP).
  */
