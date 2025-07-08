@@ -852,7 +852,7 @@ public:
      *
      * @returns The current estimated RCP time in microseconds.
      */
-    uint64_t GetNow(void);
+    uint64_t GetNow(void) const;
 
     /**
      * Returns the bus speed between the host and the radio.

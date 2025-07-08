@@ -1988,7 +1988,7 @@ exit:
     LogIfFail("Error calculating RCP time offset: %s", error);
 }
 
-uint64_t RadioSpinel::GetNow(void) { return (mIsTimeSynced) ? (otPlatTimeGet() + mRadioTimeOffset) : UINT64_MAX; }
+uint64_t RadioSpinel::GetNow(void) const { return (mIsTimeSynced) ? (otPlatTimeGet() + mRadioTimeOffset) : UINT64_MAX; }
 
 uint32_t RadioSpinel::GetBusSpeed(void) const { return GetSpinelDriver().GetSpinelInterface()->GetBusSpeed(); }
 

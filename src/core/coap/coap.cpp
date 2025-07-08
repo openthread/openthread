@@ -1247,7 +1247,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
             }
 #else  // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
             {
-                                  FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, kErrorNone);
+                FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, kErrorNone);
             }
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         }

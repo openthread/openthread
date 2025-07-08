@@ -38,7 +38,7 @@ install_packages_pretty_format()
     echo 'Installing pretty tools useful for code contributions...'
 
     # add clang-format and clang-tidy for pretty
-    sudo apt-get --no-install-recommends install -y clang-format-14 clang-tidy-14 || echo 'WARNING: could not install clang-format-14 and clang-tidy-14, which is useful if you plan to contribute C/C++ code to the OpenThread project.'
+    sudo apt-get --no-install-recommends install -y clang-format-16 clang-tidy-16 || echo 'WARNING: could not install clang-format-16 and clang-tidy-16, which is useful if you plan to contribute C/C++ code to the OpenThread project.'
 
     # add yapf for pretty
     python3 -m pip install yapf==0.31.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
@@ -113,14 +113,14 @@ install_packages_brew()
     echo 'Installing pretty tools useful for code contributions...'
 
     # add clang-format for pretty
-    CLANG_FORMAT_VERSION="clang-format version 14"
-    command -v clang-format-14 || (command -v clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
-        brew install llvm@14
-        sudo ln -s "$(brew --prefix llvm@14)/bin/clang-format" /usr/local/bin/clang-format-14
-        sudo ln -s "$(brew --prefix llvm@14)/bin/clang-tidy" /usr/local/bin/clang-tidy-14
-        sudo ln -s "$(brew --prefix llvm@14)/bin/clang-apply-replacements" /usr/local/bin/clang-apply-replacements-14
-        sudo ln -s "$(brew --prefix llvm@14)/bin/run-clang-tidy" /usr/local/bin/run-clang-tidy-14
-    } || echo 'WARNING: could not install llvm@14, which is useful if you plan to contribute C/C++ code to the OpenThread project.'
+    CLANG_FORMAT_VERSION="clang-format version 16"
+    command -v clang-format-16 || (command -v clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
+        brew install llvm@16
+        sudo ln -s "$(brew --prefix llvm@16)/bin/clang-format" /usr/local/bin/clang-format-16
+        sudo ln -s "$(brew --prefix llvm@16)/bin/clang-tidy" /usr/local/bin/clang-tidy-16
+        sudo ln -s "$(brew --prefix llvm@16)/bin/clang-apply-replacements" /usr/local/bin/clang-apply-replacements-16
+        sudo ln -s "$(brew --prefix llvm@16)/bin/run-clang-tidy" /usr/local/bin/run-clang-tidy-16
+    } || echo 'WARNING: could not install llvm@16, which is useful if you plan to contribute C/C++ code to the OpenThread project.'
 
     # add yapf for pretty
     python3 -m pip install yapf || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
