@@ -74,6 +74,7 @@ public:
         kAsSed,
     };
 
+    void Reset(void);
     void Form(void);
     void Join(Node &aNode, JoinMode aJoinMode = kAsFtd);
     void AllowList(Node &aNode);

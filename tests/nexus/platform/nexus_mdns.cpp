@@ -71,6 +71,12 @@ Mdns::Mdns(void)
     SuccessOrQuit(mIfAddresses.PushBack(address));
 }
 
+void Mdns::Reset(void)
+{
+    mEnabled = false;
+    mPendingTxList.Free();
+}
+
 Error Mdns::SetListeningEnabled(Instance &aInstance, bool aEnable, uint32_t aInfraIfIndex)
 {
     Error error = kErrorNone;
