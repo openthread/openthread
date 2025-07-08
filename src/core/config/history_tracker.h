@@ -161,6 +161,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_DNSSRP_ADDR_LIST_SIZE
+ *
+ * Specifies the maximum number of entries in Network Data DNS/SRP Address history list.
+ *
+ * Set to zero to prevent the History Tracker module from collecting this info.
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_DNSSRP_ADDR_LIST_SIZE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_DNSSRP_ADDR_LIST_SIZE 32
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_EPSKC_EVENT_SIZE
  *
  * Specifies the maximum number of entries in Border Agent ePSKc history list.
