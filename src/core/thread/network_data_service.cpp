@@ -39,6 +39,25 @@ namespace ot {
 namespace NetworkData {
 namespace Service {
 
+Iterator::Iterator(Instance &aInstance)
+    : Iterator(aInstance, aInstance.Get<Leader>())
+{
+}
+
+Iterator::Iterator(Instance &aInstance, const NetworkData &aNetworkData)
+    : InstanceLocator(aInstance)
+    , mNetworkData(aNetworkData)
+    , mServiceTlv(nullptr)
+    , mServerSubTlv(nullptr)
+{
+}
+
+void Iterator::Reset(void)
+{
+    mServiceTlv   = nullptr;
+    mServerSubTlv = nullptr;
+}
+
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 Error Manager::AddDnsSrpAnycastService(uint8_t aSequenceNumber, uint8_t aVersion)
@@ -99,11 +118,11 @@ void Manager::GetBackboneRouterPrimary(ot::BackboneRouter::Config &aConfig) cons
     while ((serviceTlv = Get<Leader>().FindNextThreadService(serviceTlv, serviceData,
                                                              NetworkData::kServicePrefixMatch)) != nullptr)
     {
-        Iterator iterator;
+        Iterator iterator(GetInstance());
 
         iterator.mServiceTlv = serviceTlv;
 
-        while (IterateToNextServer(iterator) == kErrorNone)
+        while (iterator.AdvanceToNextServer() == kErrorNone)
         {
             ServerData           data;
             const BbrServerData *serverData;
@@ -157,10 +176,10 @@ exit:
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-Error Manager::GetNextDnsSrpAnycastInfo(Iterator &aIterator, DnsSrpAnycastInfo &aInfo) const
+Error Iterator::GetNextDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo)
 {
     Error   error         = kErrorNone;
-    uint8_t serviceNumber = kDnsSrpAnycastServiceNumber;
+    uint8_t serviceNumber = Manager::kDnsSrpAnycastServiceNumber;
 
     do
     {
@@ -168,21 +187,20 @@ Error Manager::GetNextDnsSrpAnycastInfo(Iterator &aIterator, DnsSrpAnycastInfo &
 
         // Process the next Server sub-TLV in the current Service TLV.
 
-        if (IterateToNextServer(aIterator) == kErrorNone)
+        if (AdvanceToNextServer() == kErrorNone)
         {
-            uint8_t dataLength = aIterator.mServiceTlv->GetServiceDataLength();
+            uint8_t dataLength = mServiceTlv->GetServiceDataLength();
 
-            if (dataLength >= sizeof(DnsSrpAnycastServiceData))
+            if (dataLength >= sizeof(Manager::DnsSrpAnycastServiceData))
             {
-                const DnsSrpAnycastServiceData *anycastData =
-                    reinterpret_cast<const DnsSrpAnycastServiceData *>(aIterator.mServiceTlv->GetServiceData());
+                const Manager::DnsSrpAnycastServiceData *anycastData =
+                    reinterpret_cast<const Manager::DnsSrpAnycastServiceData *>(mServiceTlv->GetServiceData());
 
-                Get<Mle::Mle>().GetServiceAloc(aIterator.mServiceTlv->GetServiceId(), aInfo.mAnycastAddress);
+                Get<Mle::Mle>().GetServiceAloc(mServiceTlv->GetServiceId(), aInfo.mAnycastAddress);
                 aInfo.mSequenceNumber = anycastData->GetSequenceNumber();
-                aInfo.mRloc16         = aIterator.mServerSubTlv->GetServer16();
-                aInfo.mVersion        = (aIterator.mServerSubTlv->GetServerDataLength() >= sizeof(uint8_t))
-                                            ? *aIterator.mServerSubTlv->GetServerData()
-                                            : 0;
+                aInfo.mRloc16         = mServerSubTlv->GetServer16();
+                aInfo.mVersion =
+                    (mServerSubTlv->GetServerDataLength() >= sizeof(uint8_t)) ? *mServerSubTlv->GetServerData() : 0;
                 ExitNow();
             }
         }
@@ -190,14 +208,13 @@ Error Manager::GetNextDnsSrpAnycastInfo(Iterator &aIterator, DnsSrpAnycastInfo &
         // Find the next matching Service TLV.
 
         serviceData.InitFrom(serviceNumber);
-        aIterator.mServiceTlv =
-            Get<Leader>().FindNextThreadService(aIterator.mServiceTlv, serviceData, NetworkData::kServicePrefixMatch);
-        aIterator.mServerSubTlv = nullptr;
+        mServiceTlv   = mNetworkData.FindNextThreadService(mServiceTlv, serviceData, NetworkData::kServicePrefixMatch);
+        mServerSubTlv = nullptr;
 
         // If we have a valid Service TLV, restart the loop
         // to process its Server sub-TLVs.
 
-    } while (aIterator.mServiceTlv != nullptr);
+    } while (mServiceTlv != nullptr);
 
     error = kErrorNotFound;
 
@@ -208,7 +225,7 @@ exit:
 Error Manager::FindPreferredDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo) const
 {
     Error             error = kErrorNotFound;
-    Iterator          iterator;
+    Iterator          iterator(GetInstance());
     DnsSrpAnycastInfo info;
     DnsSrpAnycastInfo maxNumericalSeqNumInfo;
 
@@ -217,7 +234,7 @@ Error Manager::FindPreferredDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo) const
     // comparison, while `maxNumericalSeqNumInfo` tracks the largest
     // using normal numerical comparison.
 
-    while (GetNextDnsSrpAnycastInfo(iterator, info) == kErrorNone)
+    while (iterator.GetNextDnsSrpAnycastInfo(info) == kErrorNone)
     {
         if (error == kErrorNotFound)
         {
@@ -246,7 +263,7 @@ Error Manager::FindPreferredDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo) const
 
     iterator.Reset();
 
-    while (GetNextDnsSrpAnycastInfo(iterator, info) == kErrorNone)
+    while (iterator.GetNextDnsSrpAnycastInfo(info) == kErrorNone)
     {
         constexpr uint8_t kMidValue = (NumericLimits<uint8_t>::kMax / 2) + 1;
         uint8_t           seqNumber = info.mSequenceNumber;
@@ -272,7 +289,7 @@ Error Manager::FindPreferredDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo) const
 
     iterator.Reset();
 
-    while (GetNextDnsSrpAnycastInfo(iterator, info) == kErrorNone)
+    while (iterator.GetNextDnsSrpAnycastInfo(info) == kErrorNone)
     {
         if (info.mSequenceNumber == aInfo.mSequenceNumber)
         {
@@ -299,10 +316,10 @@ exit:
     return error;
 }
 
-Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo) const
+Error Iterator::GetNextDnsSrpUnicastInfo(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo)
 {
     Error   error         = kErrorNone;
-    uint8_t serviceNumber = kDnsSrpUnicastServiceNumber;
+    uint8_t serviceNumber = Manager::kDnsSrpUnicastServiceNumber;
 
     do
     {
@@ -310,13 +327,13 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicastType a
 
         // Process Server sub-TLVs in the current Service TLV.
 
-        while (IterateToNextServer(aIterator) == kErrorNone)
+        while (AdvanceToNextServer() == kErrorNone)
         {
-            aInfo.mRloc16 = aIterator.mServerSubTlv->GetServer16();
+            aInfo.mRloc16 = mServerSubTlv->GetServer16();
 
             if (aType == kAddrInServiceData)
             {
-                if (DnsSrpUnicast::ServiceData::ParseFrom(*aIterator.mServiceTlv, aInfo) == kErrorNone)
+                if (Manager::DnsSrpUnicast::ServiceData::ParseFrom(*mServiceTlv, aInfo) == kErrorNone)
                 {
                     ExitNow();
                 }
@@ -335,20 +352,20 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicastType a
             // (then we parse and return the info), or it can be
             // empty (then we skip over it).
 
-            if (DnsSrpUnicast::ServerData::ParseFrom(*aIterator.mServerSubTlv, aInfo) == kErrorNone)
+            if (Manager::DnsSrpUnicast::ServerData::ParseFrom(*mServerSubTlv, aInfo) == kErrorNone)
             {
                 ExitNow();
             }
 
-            if (aIterator.mServerSubTlv->GetServerDataLength() == sizeof(uint16_t))
+            if (mServerSubTlv->GetServerDataLength() == sizeof(uint16_t))
             {
                 // Handle the case where the server TLV data only
                 // contains a port number and use the RLOC as the
                 // IPv6 address.
 
                 aInfo.mSockAddr.GetAddress().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
-                                                                 aIterator.mServerSubTlv->GetServer16());
-                aInfo.mSockAddr.SetPort(BigEndian::ReadUint16(aIterator.mServerSubTlv->GetServerData()));
+                                                                 mServerSubTlv->GetServer16());
+                aInfo.mSockAddr.SetPort(BigEndian::ReadUint16(mServerSubTlv->GetServerData()));
                 aInfo.mVersion = 0;
                 ExitNow();
             }
@@ -357,14 +374,13 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicastType a
         // Find the next matching Service TLV.
 
         serviceData.InitFrom(serviceNumber);
-        aIterator.mServiceTlv =
-            Get<Leader>().FindNextThreadService(aIterator.mServiceTlv, serviceData, NetworkData::kServicePrefixMatch);
-        aIterator.mServerSubTlv = nullptr;
+        mServiceTlv   = mNetworkData.FindNextThreadService(mServiceTlv, serviceData, NetworkData::kServicePrefixMatch);
+        mServerSubTlv = nullptr;
 
         // If we have a valid Service TLV, restart the loop
         // to process its Server sub-TLVs.
 
-    } while (aIterator.mServiceTlv != nullptr);
+    } while (mServiceTlv != nullptr);
 
     error = kErrorNotFound;
 
@@ -372,18 +388,20 @@ exit:
     return error;
 }
 
-Error Manager::IterateToNextServer(Iterator &aIterator) const
+Error Iterator::AdvanceToNextServer(void)
 {
-    Error error = kErrorNotFound;
+    Error                 error = kErrorNotFound;
+    const NetworkDataTlv *start;
+    const NetworkDataTlv *end;
 
-    VerifyOrExit(aIterator.mServiceTlv != nullptr);
+    VerifyOrExit(mServiceTlv != nullptr);
 
-    aIterator.mServerSubTlv = NetworkDataTlv::Find<ServerTlv>(
-        /* aStart */ (aIterator.mServerSubTlv != nullptr) ? aIterator.mServerSubTlv->GetNext()
-                                                          : aIterator.mServiceTlv->GetSubTlvs(),
-        /* aEnd */ aIterator.mServiceTlv->GetNext());
+    start = (mServerSubTlv != nullptr) ? mServerSubTlv->GetNext() : mServiceTlv->GetSubTlvs();
+    end   = mServiceTlv->GetNext();
 
-    if (aIterator.mServerSubTlv != nullptr)
+    mServerSubTlv = NetworkDataTlv::Find<ServerTlv>(start, end);
+
+    if (mServerSubTlv != nullptr)
     {
         error = kErrorNone;
     }

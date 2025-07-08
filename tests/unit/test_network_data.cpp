@@ -735,7 +735,7 @@ void TestNetworkDataDsnSrpServices(void)
         const uint8_t kPreferredAnycastEntryIndex = 2;
 
         Service::Manager          &manager = instance->Get<Service::Manager>();
-        Service::Manager::Iterator iterator;
+        Service::Iterator          iterator(*instance);
         Service::DnsSrpAnycastInfo anycastInfo;
         Service::DnsSrpUnicastInfo unicastInfo;
         Service::DnsSrpUnicastType type;
@@ -766,7 +766,7 @@ void TestNetworkDataDsnSrpServices(void)
 
         for (const AnycastEntry &entry : kAnycastEntries)
         {
-            SuccessOrQuit(manager.GetNextDnsSrpAnycastInfo(iterator, anycastInfo));
+            SuccessOrQuit(iterator.GetNextDnsSrpAnycastInfo(anycastInfo));
 
             printf("\nanycastInfo { %s, seq:%d, rlco16:%04x, version:%u }",
                    anycastInfo.mAnycastAddress.ToString().AsCString(), anycastInfo.mSequenceNumber, anycastInfo.mRloc16,
@@ -775,7 +775,7 @@ void TestNetworkDataDsnSrpServices(void)
             VerifyOrQuit(entry.Matches(anycastInfo), "GetNextDnsSrpAnycastInfo() returned incorrect info");
         }
 
-        VerifyOrQuit(manager.GetNextDnsSrpAnycastInfo(iterator, anycastInfo) == kErrorNotFound,
+        VerifyOrQuit(iterator.GetNextDnsSrpAnycastInfo(anycastInfo) == kErrorNotFound,
                      "GetNextDnsSrpAnycastInfo() returned unexpected extra entry");
 
         // Find the preferred "DNS/SRP Anycast Service" entries in Network Data
@@ -791,37 +791,37 @@ void TestNetworkDataDsnSrpServices(void)
         printf("\n\n- - - - - - - - - - - - - - - - - - - -");
         printf("\nDNS/SRP Unicast Service entries (server data)\n");
 
-        iterator.Clear();
+        iterator.Reset();
         type = Service::kAddrInServerData;
 
         for (const UnicastEntry &entry : kUnicastEntriesFromServerData)
         {
-            SuccessOrQuit(manager.GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo));
+            SuccessOrQuit(iterator.GetNextDnsSrpUnicastInfo(type, unicastInfo));
             printf("\nunicastInfo { %s, rloc16:%04x }", unicastInfo.mSockAddr.ToString().AsCString(),
                    unicastInfo.mRloc16);
 
             VerifyOrQuit(entry.Matches(unicastInfo), "GetNextDnsSrpUnicastInfo() returned incorrect info");
         }
 
-        VerifyOrQuit(manager.GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo) == kErrorNotFound,
+        VerifyOrQuit(iterator.GetNextDnsSrpUnicastInfo(type, unicastInfo) == kErrorNotFound,
                      "GetNextDnsSrpUnicastInfo() returned unexpected extra entry");
 
         printf("\n\n- - - - - - - - - - - - - - - - - - - -");
         printf("\nDNS/SRP Unicast Service entries (service data)\n");
 
-        iterator.Clear();
+        iterator.Reset();
         type = Service::kAddrInServiceData;
 
         for (const UnicastEntry &entry : kUnicastEntriesFromServiceData)
         {
-            SuccessOrQuit(manager.GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo));
+            SuccessOrQuit(iterator.GetNextDnsSrpUnicastInfo(type, unicastInfo));
             printf("\nunicastInfo { %s, rloc16:%04x }", unicastInfo.mSockAddr.ToString().AsCString(),
                    unicastInfo.mRloc16);
 
             VerifyOrQuit(entry.Matches(unicastInfo), "GetNextDnsSrpUnicastInfo() returned incorrect info");
         }
 
-        VerifyOrQuit(manager.GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo) == kErrorNotFound,
+        VerifyOrQuit(iterator.GetNextDnsSrpUnicastInfo(type, unicastInfo) == kErrorNotFound,
                      "GetNextDnsSrpUnicastInfo() returned unexpected extra entry");
 
         printf("\n");
@@ -1036,7 +1036,7 @@ void TestNetworkDataDsnSrpAnycastSeqNumSelection(void)
 
     for (const TestInfo &test : kTests)
     {
-        Service::Manager::Iterator iterator;
+        Service::Iterator          iterator(*instance);
         Service::DnsSrpAnycastInfo anycastInfo;
 
         reinterpret_cast<TestLeader &>(instance->Get<Leader>()).Populate(test.mNetworkData, test.mNetworkDataLength);
@@ -1046,7 +1046,7 @@ void TestNetworkDataDsnSrpAnycastSeqNumSelection(void)
 
         for (uint8_t index = 0; index < test.mSeqNumbersLength; index++)
         {
-            SuccessOrQuit(manager.GetNextDnsSrpAnycastInfo(iterator, anycastInfo));
+            SuccessOrQuit(iterator.GetNextDnsSrpAnycastInfo(anycastInfo));
 
             printf("\n { %s, seq:%u, version:%u, rlco16:%04x }", anycastInfo.mAnycastAddress.ToString().AsCString(),
 
@@ -1056,7 +1056,7 @@ void TestNetworkDataDsnSrpAnycastSeqNumSelection(void)
             VerifyOrQuit(anycastInfo.mRloc16 == 0x5000 + index);
         }
 
-        VerifyOrQuit(manager.GetNextDnsSrpAnycastInfo(iterator, anycastInfo) == kErrorNotFound);
+        VerifyOrQuit(iterator.GetNextDnsSrpAnycastInfo(anycastInfo) == kErrorNotFound);
         SuccessOrQuit(manager.FindPreferredDnsSrpAnycastInfo(anycastInfo));
 
         printf("\n preferred -> seq:%u, version:%u ", anycastInfo.mSequenceNumber, anycastInfo.mVersion);

@@ -78,8 +78,9 @@ namespace ot {
 namespace NetworkData {
 
 namespace Service {
+class Iterator;
 class Manager;
-}
+} // namespace Service
 
 /**
  * @addtogroup core-netdata-core
@@ -109,6 +110,7 @@ class NetworkData : public InstanceLocator
     friend class Leader;
     friend class Publisher;
     friend class MutableNetworkData;
+    friend class Service::Iterator;
     friend class Service::Manager;
 
 public:
