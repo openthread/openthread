@@ -27,6 +27,7 @@
  */
 
 #include "ble_secure.hpp"
+#include "common/error.hpp"
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
@@ -161,7 +162,25 @@ void BleSecure::Disconnect(void)
         IgnoreError(otPlatBleGapDisconnect(&GetInstance()));
     }
 
+    // Update advertisement
+    IgnoreError(NotifyAdvertisementChanged());
+
     mConnectCallback.InvokeIfSet(&GetInstance(), false, false);
+}
+
+Error BleSecure::NotifyAdvertisementChanged(void)
+{
+    Error    error             = kErrorNone;
+    uint16_t advertisementLen  = 0;
+    uint8_t *advertisementData = nullptr;
+
+    VerifyOrExit(mBleState == kAdvertising);
+    SuccessOrExit(error = otPlatBleGetAdvertisementBuffer(&GetInstance(), &advertisementData));
+    SuccessOrExit(error = mTcatAgent.GetAdvertisementData(advertisementLen, advertisementData));
+    SuccessOrExit(error = otPlatBleGapAdvUpdateData(&GetInstance(), advertisementData, advertisementLen));
+
+exit:
+    return error;
 }
 
 void BleSecure::SetPsk(const MeshCoP::JoinerPskd &aPskd)
@@ -207,14 +226,22 @@ exit:
     return error;
 }
 
-Error BleSecure::SendApplicationTlv(uint8_t *aBuf, uint16_t aLength)
+Error BleSecure::SendApplicationTlv(MeshCoP::TcatAgent::TcatApplicationProtocol aTcatApplicationProtocol,
+                                    uint8_t                                    *aBuf,
+                                    uint16_t                                    aLength)
 {
     Error error = kErrorNone;
+
+    VerifyOrExit((aTcatApplicationProtocol != MeshCoP::TcatAgent::kApplicationProtocolStatus &&
+                  aTcatApplicationProtocol != MeshCoP::TcatAgent::kApplicationProtocolResponse) ||
+                     mTcatAgent.GetApplicationResponsePending(),
+                 error = kErrorRejected);
+
     if (aLength > Tlv::kBaseTlvMaxLength)
     {
         ot::ExtendedTlv tlv;
 
-        tlv.SetType(ot::MeshCoP::TcatAgent::kTlvSendApplicationData);
+        tlv.SetType(static_cast<uint8_t>(aTcatApplicationProtocol));
         tlv.SetLength(aLength);
         SuccessOrExit(error = Send(reinterpret_cast<uint8_t *>(&tlv), sizeof(tlv)));
     }
@@ -222,12 +249,19 @@ Error BleSecure::SendApplicationTlv(uint8_t *aBuf, uint16_t aLength)
     {
         ot::Tlv tlv;
 
-        tlv.SetType(ot::MeshCoP::TcatAgent::kTlvSendApplicationData);
+        tlv.SetType(static_cast<uint8_t>(aTcatApplicationProtocol));
         tlv.SetLength((uint8_t)aLength);
         SuccessOrExit(error = Send(reinterpret_cast<uint8_t *>(&tlv), sizeof(tlv)));
     }
 
-    error = Send(aBuf, aLength);
+    SuccessOrExit(error = Send(aBuf, aLength));
+
+    if (aTcatApplicationProtocol == MeshCoP::TcatAgent::kApplicationProtocolStatus ||
+        aTcatApplicationProtocol == MeshCoP::TcatAgent::kApplicationProtocolResponse)
+    {
+        mTcatAgent.NotifyApplicationResponseSent();
+    }
+
 exit:
     return error;
 }
@@ -390,7 +424,7 @@ void BleSecure::HandleTlsReceive(uint8_t *aBuf, uint16_t aLength)
     if (!mTlvMode)
     {
         SuccessOrExit(mReceivedMessage->AppendBytes(aBuf, aLength));
-        mReceiveCallback.InvokeIfSet(&GetInstance(), mReceivedMessage, 0, OT_TCAT_APPLICATION_PROTOCOL_NONE, "");
+        mReceiveCallback.InvokeIfSet(&GetInstance(), mReceivedMessage, 0, OT_TCAT_APPLICATION_PROTOCOL_NONE);
         IgnoreError(mReceivedMessage->SetLength(0));
     }
     else
@@ -476,7 +510,7 @@ void BleSecure::HandleTlsReceive(uint8_t *aBuf, uint16_t aLength)
             {
                 mReceivedMessage->SetOffset((uint16_t)offset);
                 mReceiveCallback.InvokeIfSet(&GetInstance(), mReceivedMessage, (int32_t)offset,
-                                             OT_TCAT_APPLICATION_PROTOCOL_NONE, "");
+                                             OT_TCAT_APPLICATION_PROTOCOL_NONE);
             }
 
             SuccessOrExit(mReceivedMessage->SetLength(0)); // also sets the offset to 0
