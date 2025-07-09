@@ -119,7 +119,7 @@ Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex, Requester aRequeste
         mAutoEnable = false;
     }
 
-    VerifyOrExit(aEnable != mIsEnabled, error = kErrorAlready);
+    VerifyOrExit(aEnable != mIsEnabled);
 
     mIsEnabled    = aEnable;
     mInfraIfIndex = aInfraIfIndex;

@@ -170,7 +170,7 @@ typedef struct otMdnsLocalHostAddress
  * @param[in] aInfraIfIndex  The network interface index for mDNS operation. Value is ignored when disabling
  *
  * @retval OT_ERROR_NONE     Enabled or disabled the mDNS module successfully.
- * @retval OT_ERROR_ALREADY  mDNS is already enabled on an enable request or is already disabled on a disable request.
+ * @retval OT_ERROR_FAILED   Failed to enable/disable mDNS.
  */
 otError otMdnsSetEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex);
 

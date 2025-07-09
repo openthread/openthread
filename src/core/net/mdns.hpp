@@ -175,7 +175,6 @@ public:
      * @param[in] aInfraIfIndex The network interface index for mDNS operation. Value is ignored when disabling.
      *
      * @retval kErrorNone     Enabled or disabled the mDNS module successfully.
-     * @retval kErrorAlready  mDNS is already enabled on an enable request, or is already disabled on a disable request.
      * @retval kErrorFailed   Failed to enable/disable mDNS.
      */
     Error SetEnabled(bool aEnable, uint32_t aInfraIfIndex)
