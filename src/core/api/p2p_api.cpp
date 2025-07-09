@@ -53,4 +53,12 @@ void otP2pSetEventCallback(otInstance *aInstance, otP2pEventCallback aCallback, 
 {
     AsCoreType(aInstance).Get<Mle::Mle>().P2pSetEventCallback(aCallback, aContext);
 }
+
+otError otP2pUnlink(otInstance             *aInstance,
+                    const otExtAddress     *aExtAddress,
+                    otP2pUnlinkDoneCallback aCallback,
+                    void                   *aContext)
+{
+    return AsCoreType(aInstance).Get<Mle::Mle>().P2pUnlink(AsCoreType(aExtAddress), aCallback, aContext);
+}
 #endif
