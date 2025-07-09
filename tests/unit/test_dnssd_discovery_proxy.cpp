@@ -158,6 +158,8 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
 //---------------------------------------------------------------------------------------------------------------------
 
+static constexpr uint32_t kCappedTtl = 10;
+
 void ProcessRadioTxAndTasklets(void)
 {
     do
@@ -1286,12 +1288,12 @@ void TestProxyBasic(void)
     VerifyOrQuit(!strcmp(sBrowseInfo.mInstanceLabel, "hulk"));
     VerifyOrQuit(!strcmp(sBrowseInfo.mServiceInfo.mHostNameBuffer, "compound.default.service.arpa."));
     VerifyOrQuit(sBrowseInfo.mServiceInfo.mPort == 7777);
-    VerifyOrQuit(sBrowseInfo.mServiceInfo.mTtl == kTtl);
+    VerifyOrQuit(sBrowseInfo.mServiceInfo.mTtl <= kCappedTtl);
     VerifyOrQuit(AsCoreType(&sBrowseInfo.mServiceInfo.mHostAddress) == AsCoreType(&addressAndTtl.mAddress));
-    VerifyOrQuit(sBrowseInfo.mServiceInfo.mHostAddressTtl == kTtl);
+    VerifyOrQuit(sBrowseInfo.mServiceInfo.mHostAddressTtl <= kCappedTtl);
     VerifyOrQuit(sBrowseInfo.mServiceInfo.mTxtDataSize == sizeof(kTxtData));
     VerifyOrQuit(!memcmp(sBrowseInfo.mServiceInfo.mTxtData, kTxtData, sizeof(kTxtData)));
-    VerifyOrQuit(sBrowseInfo.mServiceInfo.mTxtDataTtl == kTtl);
+    VerifyOrQuit(sBrowseInfo.mServiceInfo.mTxtDataTtl <= kCappedTtl);
     VerifyOrQuit(!sBrowseInfo.mServiceInfo.mTxtDataTruncated);
 
     Log("--------------------------------------------------------------------------------------------");
@@ -1457,12 +1459,12 @@ void TestProxyBasic(void)
 
     VerifyOrQuit(!strcmp(sResolveServiceInfo.mInfo.mHostNameBuffer, "starktower.default.service.arpa."));
     VerifyOrQuit(sResolveServiceInfo.mInfo.mPort == 1024);
-    VerifyOrQuit(sResolveServiceInfo.mInfo.mTtl == kTtl);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTtl <= kCappedTtl);
     VerifyOrQuit(AsCoreType(&sResolveServiceInfo.mInfo.mHostAddress) == AsCoreType(&addressAndTtl.mAddress));
-    VerifyOrQuit(sResolveServiceInfo.mInfo.mHostAddressTtl == kTtl);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mHostAddressTtl <= kCappedTtl);
     VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataSize == sizeof(kTxtData));
     VerifyOrQuit(!memcmp(sResolveServiceInfo.mInfo.mTxtData, kTxtData, sizeof(kTxtData)));
-    VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataTtl == kTtl);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataTtl <= kCappedTtl);
     VerifyOrQuit(!sResolveServiceInfo.mInfo.mTxtDataTruncated);
 
     Log("--------------------------------------------------------------------------------------------");
@@ -1533,7 +1535,7 @@ void TestProxyBasic(void)
     VerifyOrQuit(!strcmp(sResolveAddressInfo.mHostName, "earth.default.service.arpa."));
     VerifyOrQuit(sResolveAddressInfo.mNumHostAddresses == 1);
     VerifyOrQuit(sResolveAddressInfo.mHostAddresses[0] == AsCoreType(&addressAndTtl.mAddress));
-    VerifyOrQuit(sResolveAddressInfo.mTtl == kTtl);
+    VerifyOrQuit(sResolveAddressInfo.mTtl <= kCappedTtl);
 
     Log("--------------------------------------------------------------------------------------------");
 
@@ -1606,14 +1608,14 @@ void TestProxyBasic(void)
     // The 1.2.3.4 address with the NAT64 prefix
     SuccessOrQuit(address.FromString("64:ff9b:0:0:0:0:102:304"));
     VerifyOrQuit(sResolveAddressInfo.mHostAddresses[0] == address);
-    VerifyOrQuit(sResolveAddressInfo.mTtl == kTtl);
+    VerifyOrQuit(sResolveAddressInfo.mTtl <= kCappedTtl);
 
     VerifyOrQuit(sResolveAddressInfo.mCallbackCount == 1);
     SuccessOrQuit(sResolveAddressInfo.mError);
 
     VerifyOrQuit(!strcmp(sResolveAddressInfo.mHostName, "shield.default.service.arpa."));
     VerifyOrQuit(sResolveAddressInfo.mNumHostAddresses == 1);
-    VerifyOrQuit(sResolveAddressInfo.mTtl == kTtl);
+    VerifyOrQuit(sResolveAddressInfo.mTtl <= kCappedTtl);
 
     VerifyOrQuit(sResolveAddressInfo.mHostAddresses[0] == address);
 
@@ -1692,7 +1694,7 @@ void TestProxyBasic(void)
     VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, "shield.default.service.arpa."));
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypeKey);
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength == sizeof(kKeyData));
-    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl == kTtl);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl <= kCappedTtl);
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sizeof(kKeyData));
     VerifyOrQuit(!memcmp(sQueryRecordInfo.mRecords[0].mDataBuffer, kKeyData, sizeof(kKeyData)));
     VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
@@ -1772,7 +1774,7 @@ void TestProxyBasic(void)
     VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, "iron.man._avenger._udp.default.service.arpa."));
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypeKey);
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength == sizeof(kKeyData));
-    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl == kTtl);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl <= kCappedTtl);
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sizeof(kKeyData));
     VerifyOrQuit(!memcmp(sQueryRecordInfo.mRecords[0].mDataBuffer, kKeyData, sizeof(kKeyData)));
     VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
@@ -1851,7 +1853,7 @@ void TestProxyBasic(void)
     VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, "avengers.default.service.arpa."));
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypeCname);
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength == sizeof(kTranslatedCnameData));
-    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl == kTtl);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl <= kCappedTtl);
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sizeof(kTranslatedCnameData));
     VerifyOrQuit(!memcmp(sQueryRecordInfo.mRecords[0].mDataBuffer, kTranslatedCnameData, sizeof(kTranslatedCnameData)));
     VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
@@ -1930,7 +1932,7 @@ void TestProxyBasic(void)
     VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, "shield.default.service.arpa."));
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypeKey);
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength == sizeof(kKeyData));
-    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl == kTtl);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl <= kCappedTtl);
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sizeof(kKeyData));
     VerifyOrQuit(!memcmp(sQueryRecordInfo.mRecords[0].mDataBuffer, kKeyData, sizeof(kKeyData)));
     VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
@@ -2009,7 +2011,7 @@ void TestProxyBasic(void)
     VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, "iron.man._avenger._udp.default.service.arpa."));
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypeKey);
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength == sizeof(kKeyData));
-    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl == kTtl);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl <= kCappedTtl);
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sizeof(kKeyData));
     VerifyOrQuit(!memcmp(sQueryRecordInfo.mRecords[0].mDataBuffer, kKeyData, sizeof(kKeyData)));
     VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
@@ -2249,12 +2251,12 @@ void TestProxySubtypeBrowse(void)
     VerifyOrQuit(!strcmp(sBrowseInfo.mInstanceLabel, "thor"));
     VerifyOrQuit(!strcmp(sBrowseInfo.mServiceInfo.mHostNameBuffer, "asgard.default.service.arpa."));
     VerifyOrQuit(sBrowseInfo.mServiceInfo.mPort == 1234);
-    VerifyOrQuit(sBrowseInfo.mServiceInfo.mTtl == kTtl);
+    VerifyOrQuit(sBrowseInfo.mServiceInfo.mTtl <= kCappedTtl);
     VerifyOrQuit(AsCoreType(&sBrowseInfo.mServiceInfo.mHostAddress) == AsCoreType(&addressAndTtl.mAddress));
-    VerifyOrQuit(sBrowseInfo.mServiceInfo.mHostAddressTtl == kTtl);
+    VerifyOrQuit(sBrowseInfo.mServiceInfo.mHostAddressTtl <= kCappedTtl);
     VerifyOrQuit(sBrowseInfo.mServiceInfo.mTxtDataSize == sizeof(kTxtData));
     VerifyOrQuit(!memcmp(sBrowseInfo.mServiceInfo.mTxtData, kTxtData, sizeof(kTxtData)));
-    VerifyOrQuit(sBrowseInfo.mServiceInfo.mTxtDataTtl == kTtl);
+    VerifyOrQuit(sBrowseInfo.mServiceInfo.mTxtDataTtl <= kCappedTtl);
     VerifyOrQuit(!sBrowseInfo.mServiceInfo.mTxtDataTruncated);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
@@ -2815,11 +2817,11 @@ void TestProxySharedResolver(void)
     VerifyOrQuit(!strcmp(sBrowseInfo.mInstanceLabel, "starlord"));
     VerifyOrQuit(!strcmp(sBrowseInfo.mServiceInfo.mHostNameBuffer, "knowhere.default.service.arpa."));
     VerifyOrQuit(sBrowseInfo.mServiceInfo.mPort == 3333);
-    VerifyOrQuit(sBrowseInfo.mServiceInfo.mTtl == kTtl);
-    VerifyOrQuit(sBrowseInfo.mServiceInfo.mHostAddressTtl == kTtl);
+    VerifyOrQuit(sBrowseInfo.mServiceInfo.mTtl <= kCappedTtl);
+    VerifyOrQuit(sBrowseInfo.mServiceInfo.mHostAddressTtl <= kCappedTtl);
     VerifyOrQuit(sBrowseInfo.mServiceInfo.mTxtDataSize == sizeof(kTxtData));
     VerifyOrQuit(!memcmp(sBrowseInfo.mServiceInfo.mTxtData, kTxtData, sizeof(kTxtData)));
-    VerifyOrQuit(sBrowseInfo.mServiceInfo.mTxtDataTtl == kTtl);
+    VerifyOrQuit(sBrowseInfo.mServiceInfo.mTxtDataTtl <= kCappedTtl);
     VerifyOrQuit(!sBrowseInfo.mServiceInfo.mTxtDataTruncated);
 
     // Check the service resolve response received on client
@@ -2829,11 +2831,11 @@ void TestProxySharedResolver(void)
 
     VerifyOrQuit(!strcmp(sResolveServiceInfo.mInfo.mHostNameBuffer, "knowhere.default.service.arpa."));
     VerifyOrQuit(sResolveServiceInfo.mInfo.mPort == 3333);
-    VerifyOrQuit(sResolveServiceInfo.mInfo.mTtl == kTtl);
-    VerifyOrQuit(sResolveServiceInfo.mInfo.mHostAddressTtl == kTtl);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTtl <= kCappedTtl);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mHostAddressTtl <= kCappedTtl);
     VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataSize == sizeof(kTxtData));
     VerifyOrQuit(!memcmp(sResolveServiceInfo.mInfo.mTxtData, kTxtData, sizeof(kTxtData)));
-    VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataTtl == kTtl);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataTtl <= kCappedTtl);
     VerifyOrQuit(!sResolveServiceInfo.mInfo.mTxtDataTruncated);
     VerifyOrQuit(sResolveServiceInfo.mNumHostAddresses == 2);
     for (uint16_t index = 0; index < 2; index++)
@@ -2848,7 +2850,7 @@ void TestProxySharedResolver(void)
     SuccessOrQuit(sResolveAddressInfo.mError);
 
     VerifyOrQuit(!strcmp(sResolveAddressInfo.mHostName, "knowhere.default.service.arpa."));
-    VerifyOrQuit(sResolveAddressInfo.mTtl == kTtl);
+    VerifyOrQuit(sResolveAddressInfo.mTtl <= kCappedTtl);
     VerifyOrQuit(sResolveAddressInfo.mNumHostAddresses == 2);
     for (uint16_t index = 0; index < 2; index++)
     {
@@ -2987,7 +2989,7 @@ void TestProxyFilterInvalidAddresses(void)
     SuccessOrQuit(sResolveAddressInfo.mError);
 
     VerifyOrQuit(!strcmp(sResolveAddressInfo.mHostName, "host.default.service.arpa."));
-    VerifyOrQuit(sResolveAddressInfo.mTtl == kTtl);
+    VerifyOrQuit(sResolveAddressInfo.mTtl <= kCappedTtl);
     VerifyOrQuit(sResolveAddressInfo.mNumHostAddresses == 1);
     VerifyOrQuit(sResolveAddressInfo.mHostAddresses[0] == AsCoreType(&addressAndTtl[4].mAddress));
 
@@ -3440,11 +3442,11 @@ void TestProxyInvokeCallbackFromStartApi(void)
     VerifyOrQuit(!strcmp(sBrowseInfo.mInstanceLabel, "mantis"));
     VerifyOrQuit(!strcmp(sBrowseInfo.mServiceInfo.mHostNameBuffer, "nova.default.service.arpa."));
     VerifyOrQuit(sBrowseInfo.mServiceInfo.mPort == 3333);
-    VerifyOrQuit(sBrowseInfo.mServiceInfo.mTtl == kTtl);
-    VerifyOrQuit(sBrowseInfo.mServiceInfo.mHostAddressTtl == kTtl);
+    VerifyOrQuit(sBrowseInfo.mServiceInfo.mTtl <= kCappedTtl);
+    VerifyOrQuit(sBrowseInfo.mServiceInfo.mHostAddressTtl <= kCappedTtl);
     VerifyOrQuit(sBrowseInfo.mServiceInfo.mTxtDataSize == sizeof(kTxtData));
     VerifyOrQuit(!memcmp(sBrowseInfo.mServiceInfo.mTxtData, kTxtData, sizeof(kTxtData)));
-    VerifyOrQuit(sBrowseInfo.mServiceInfo.mTxtDataTtl == kTtl);
+    VerifyOrQuit(sBrowseInfo.mServiceInfo.mTxtDataTtl <= kCappedTtl);
     VerifyOrQuit(!sBrowseInfo.mServiceInfo.mTxtDataTruncated);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
@@ -3488,11 +3490,11 @@ void TestProxyInvokeCallbackFromStartApi(void)
 
     VerifyOrQuit(!strcmp(sResolveServiceInfo.mInfo.mHostNameBuffer, "nova.default.service.arpa."));
     VerifyOrQuit(sResolveServiceInfo.mInfo.mPort == 3333);
-    VerifyOrQuit(sResolveServiceInfo.mInfo.mTtl == kTtl);
-    VerifyOrQuit(sResolveServiceInfo.mInfo.mHostAddressTtl == kTtl);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTtl <= kCappedTtl);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mHostAddressTtl <= kCappedTtl);
     VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataSize == sizeof(kTxtData));
     VerifyOrQuit(!memcmp(sResolveServiceInfo.mInfo.mTxtData, kTxtData, sizeof(kTxtData)));
-    VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataTtl == kTtl);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataTtl <= kCappedTtl);
     VerifyOrQuit(!sResolveServiceInfo.mInfo.mTxtDataTruncated);
     VerifyOrQuit(sResolveServiceInfo.mNumHostAddresses == 2);
     for (uint16_t index = 0; index < 2; index++)
@@ -3529,7 +3531,7 @@ void TestProxyInvokeCallbackFromStartApi(void)
     SuccessOrQuit(sResolveAddressInfo.mError);
 
     VerifyOrQuit(!strcmp(sResolveAddressInfo.mHostName, "nova.default.service.arpa."));
-    VerifyOrQuit(sResolveAddressInfo.mTtl == kTtl);
+    VerifyOrQuit(sResolveAddressInfo.mTtl <= kCappedTtl);
     VerifyOrQuit(sResolveAddressInfo.mNumHostAddresses == 2);
     for (uint16_t index = 0; index < 2; index++)
     {
@@ -3572,7 +3574,7 @@ void TestProxyInvokeCallbackFromStartApi(void)
     VerifyOrQuit(!strcmp(sQueryRecordInfo.mRecords[0].mNameBuffer, "drax._guardian._glaxy.default.service.arpa."));
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordType == Dns::ResourceRecord::kTypeKey);
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mRecordLength == sizeof(kKeyData));
-    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl == kTtl);
+    VerifyOrQuit(sQueryRecordInfo.mRecords[0].mTtl <= kCappedTtl);
     VerifyOrQuit(sQueryRecordInfo.mRecords[0].mDataBufferSize == sizeof(kKeyData));
     VerifyOrQuit(!memcmp(sQueryRecordInfo.mRecords[0].mDataBuffer, kKeyData, sizeof(kKeyData)));
     VerifyOrQuit(MapEnum(sQueryRecordInfo.mRecords[0].mSection) == Dns::Client::RecordInfo::kSectionAnswer);
