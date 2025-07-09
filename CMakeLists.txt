@@ -92,8 +92,8 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     endif()
 
     set(OT_CFLAGS
-        $<$<COMPILE_LANGUAGE:C>:${OT_CFLAGS} -Wall -Wextra -Wshadow>
-        $<$<COMPILE_LANGUAGE:CXX>:${OT_CFLAGS} -Wall -Wextra -Wshadow -Wno-c++14-compat -fno-exceptions>
+        $<$<COMPILE_LANGUAGE:C>:${OT_CFLAGS} ${CMAKE_C_FLAGS} -Wall -Wextra -Wshadow>
+        $<$<COMPILE_LANGUAGE:CXX>:${OT_CFLAGS} ${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow -Wno-c++14-compat -fno-exceptions>
         $<$<CXX_COMPILER_ID:Clang>:-Wc99-extensions>
     )
 endif()
