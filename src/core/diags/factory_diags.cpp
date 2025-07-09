@@ -37,6 +37,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
@@ -882,6 +883,7 @@ void Diags::TransmitDone(Error aError)
 
     if (mTxPackets > 1)
     {
+        usleep(1);
         mTxPackets--;
         IgnoreError(TransmitPacket());
     }
