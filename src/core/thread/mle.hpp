@@ -1958,6 +1958,7 @@ private:
 
     Error      Start(StartMode aMode);
     void       Stop(StopMode aMode);
+    Error      RestorePrevRole(void);
     TxMessage *NewMleMessage(Command aCommand);
     void       SetRole(DeviceRole aRole);
     void       Attach(AttachMode aMode);
