@@ -327,25 +327,6 @@ public:
     static constexpr uint8_t kNumPriorities = 4; ///< Number of priority levels.
 
     /**
-     * Represents the message ownership model when a `Message` instance is passed to a method/function.
-     */
-    enum Ownership : uint8_t
-    {
-        /**
-         * This value indicates that the method/function receiving a `Message` instance should take custody of the
-         * message (e.g., the method should `Free()` the message if no longer needed).
-         */
-        kTakeCustody,
-
-        /**
-         * This value indicates that the method/function receiving a `Message` instance does not own the message (e.g.,
-         * it should not `Free()` or `Enqueue()` it in a queue). The receiving method/function should create a
-         * copy/clone of the message to keep (if/when needed).
-         */
-        kCopyToUse,
-    };
-
-    /**
      * Represents an IPv6 message origin.
      */
     enum Origin : uint8_t
