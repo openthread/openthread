@@ -216,7 +216,7 @@ exit:
     return error;
 }
 
-Error Mle::BecomeLeader(bool aCheckWeight)
+Error Mle::BecomeLeader(LeaderWeightCheck aMode)
 {
     Error    error = kErrorNone;
     Router  *router;
@@ -232,7 +232,7 @@ Error Mle::BecomeLeader(bool aCheckWeight)
     VerifyOrExit(!IsLeader(), error = kErrorNone);
     VerifyOrExit(IsRouterEligible(), error = kErrorNotCapable);
 
-    if (aCheckWeight && IsAttached())
+    if ((aMode == kCheckLeaderWeight) && IsAttached())
     {
         VerifyOrExit(mLeaderWeight > mLeaderData.GetWeighting(), error = kErrorNotCapable);
     }

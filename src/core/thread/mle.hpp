@@ -810,21 +810,26 @@ public:
     Error BecomeRouter(ThreadStatusTlv::Status aStatus);
 
     /**
-     * Becomes a leader and starts a new partition.
-     *
-     * If the device is already attached, this method can be used to attempt to take over as the leader, creating a new
-     * partition. For this to work, the local leader weight must be greater than the weight of the current leader. The
-     * @p aCheckWeight can be used to ensure that this check is performed.
-     *
-     * @param[in] aCheckWeight      Check that the local leader weight is larger than the weight of the current leader.
-     *
-     * @retval kErrorNone           Successfully become a Leader and started a new partition.
-     * @retval kErrorInvalidState   Thread is not enabled.
-     * @retval kErrorNotCapable     Device is not capable of becoming a leader (not router eligible), or
-     *                              @p aCheckWeight is true and cannot override the current leader due to its local
-     *                              leader weight being same or smaller than current leader's weight.
+     * Specifies the leader weight check behavior used in `BecomeLeader()`.
      */
-    Error BecomeLeader(bool aCheckWeight);
+    enum LeaderWeightCheck : uint8_t{
+        kCheckLeaderWeight,  ///< Enforces that the local leader weight is greater than the current leader's weight.
+        kIgnoreLeaderWeight, ///< Skips the leader weight check, attempting to become leader regardless.
+    };
+
+    /**
+     * Attempts to become the leader and start a new partition.
+     *
+     * If the device is already attached, this method can be used to take over the leader role.
+     *
+     * @param[in] aMode             Specifies whether to enforce or ignore the leader weight check.
+     *
+     * @retval kErrorNone           Successfully became leader and started a new partition.
+     * @retval kErrorInvalidState   The Thread interface is not enabled.
+     * @retval kErrorNotCapable     The device is not router-eligible, or the leader weight check is enabled and the
+     *                              local leader weight is less than or equal to the current leader's weight.
+     */
+    Error BecomeLeader(LeaderWeightCheck aMode);
 
 #if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
     /**
