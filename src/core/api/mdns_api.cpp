@@ -46,6 +46,18 @@ otError otMdnsSetEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfI
 
 bool otMdnsIsEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<Dns::Multicast::Core>().IsEnabled(); }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+void otMdnsSetAutoEnableMode(otInstance *aInstance, bool aEnable)
+{
+    AsCoreType(aInstance).Get<Dns::Multicast::Core>().SetAutoEnableMode(aEnable);
+}
+
+bool otMdnsGetAutoEnableMode(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().GetAutoEnableMode();
+}
+#endif
+
 void otMdnsSetQuestionUnicastAllowed(otInstance *aInstance, bool aAllow)
 {
     AsCoreType(aInstance).Get<Dns::Multicast::Core>().SetQuestionUnicastAllowed(aAllow);

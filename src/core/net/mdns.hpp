@@ -69,6 +69,11 @@ struct otMdnsIterator
 };
 
 namespace ot {
+
+namespace BorderRouter {
+class InfraIf;
+}
+
 namespace Dns {
 namespace Multicast {
 
@@ -90,6 +95,7 @@ extern "C" void otPlatMdnsHandleHostAddressRemoveAll(otInstance *aInstance, uint
 class Core : public InstanceLocator, private NonCopyable
 {
     friend class ot::Instance;
+    friend class ot::BorderRouter::InfraIf;
 
     friend void otPlatMdnsHandleReceive(otInstance                  *aInstance,
                                         otMessage                   *aMessage,
@@ -172,7 +178,10 @@ public:
      * @retval kErrorAlready  mDNS is already enabled on an enable request, or is already disabled on a disable request.
      * @retval kErrorFailed   Failed to enable/disable mDNS.
      */
-    Error SetEnabled(bool aEnable, uint32_t aInfraIfIndex);
+    Error SetEnabled(bool aEnable, uint32_t aInfraIfIndex)
+    {
+        return SetEnabled(aEnable, aInfraIfIndex, kRequesterUser);
+    }
 
     /**
      * Indicates whether or not mDNS module is enabled.
@@ -181,6 +190,35 @@ public:
      * @retval FALSE  The mDNS module is disabled.
      */
     bool IsEnabled(void) const { return mIsEnabled; }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    /**
+     * Enables or disables the mDNS auto-enable mode.
+     *
+     * When this mode is enabled, the mDNS module uses the same infrastructure network interface as the Border Routing
+     * manager. The mDNS module is then automatically enabled or disabled based on the operational state of that
+     * interface.
+     *
+     * It is recommended to use the auto-enable mode on Border Routers. The default state of this mode at
+     * initialization is controlled by the `OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF` configuration.
+     *
+     * The auto-enable mode can be disabled by a call to `SetAutoEnableMode(false)` or by an explicit call to
+     * `SetEnabled()`. Deactivating the auto-enable mode with `SetAutoEnableMode(false)` will not change the current
+     * operational state of the mDNS module (e.g., if it is currently enabled, it remains enabled).
+     *
+     * @param[in] aEnable    A boolean to enable or disable the auto-enable mode.
+     */
+    void SetAutoEnableMode(bool aEnable);
+
+    /**
+     * Indicates whether the auto-enable mode is enabled or disabled.
+     *
+     * @retval TRUE   The auto-enable mode is enabled.
+     * @retval FALSE  The auto-enable mode is disabled.
+     */
+    bool GetAutoEnableMode(void) const { return mAutoEnable; }
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
     /**
      * Gets the local host name.
@@ -201,13 +239,6 @@ public:
      * @retval kErrorInvalidState   mDNS module is already enabled.
      */
     Error SetLocalHostName(const char *aName) { return mLocalHost.SetName(aName); }
-
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
-    /**
-     * Notifies `AdvertisingProxy` that `InfraIf` state changed.
-     */
-    void HandleInfraIfStateChanged(void);
-#endif
 
     /**
      * Sets whether mDNS module is allowed to send questions requesting unicast responses referred to as "QU" questions.
@@ -815,7 +846,8 @@ private:
 
     static constexpr uint16_t kUdpPort = 5353;
 
-    static constexpr bool kDefaultQuAllowed = OPENTHREAD_CONFIG_MULTICAST_DNS_DEFAULT_QUESTION_UNICAST_ALLOWED;
+    static constexpr bool kDefaultAutoEnable = OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF;
+    static constexpr bool kDefaultQuAllowed  = OPENTHREAD_CONFIG_MULTICAST_DNS_DEFAULT_QUESTION_UNICAST_ALLOWED;
 
     static constexpr uint32_t kMaxMessageSize = 1200;
 
@@ -854,6 +886,12 @@ private:
     static constexpr uint8_t kNumSections = 4;
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    enum Requester : uint8_t // Used by `SetEnabled()`.
+    {
+        kRequesterUser,
+        kRequesterAuto,
+    };
 
     enum Section : uint8_t
     {
@@ -2229,6 +2267,8 @@ private:
     Error Stop(const BrowserResolverType &aBrowserOrResolver);
 
     void      AfterInstanceInit(void);
+    Error     SetEnabled(bool aEnable, uint32_t aInfraIfIndex, Requester aRequester);
+    void      HandleInfraIfStateChanged(void);
     void      HandleHostAddressEvent(const Ip6::Address &aAddress, bool aAdded, uint32_t aInfraIfIndex);
     void      HandleHostAddressRemoveAll(uint32_t aInfraIfIndex);
     void      InvokeConflictCallback(const char *aName, const char *aServiceType);
@@ -2266,6 +2306,7 @@ private:
     static const char kServicesDnssdLabels[]; // "_services._dns-sd._udp"
 
     bool                     mIsEnabled;
+    bool                     mAutoEnable;
     bool                     mIsQuestionUnicastAllowed;
     uint16_t                 mMaxMessageSize;
     uint32_t                 mInfraIfIndex;
