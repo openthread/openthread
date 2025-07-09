@@ -1598,58 +1598,70 @@ uint32_t Mle::Reattach(void)
 {
     uint32_t delay = 0;
 
-    if (mReattachState == kReattachActive)
+    // First, check `mReattachState`. If an attach attempt failed
+    // while using the Active Dataset, start a new attach cycle with
+    // the Pending Dataset (if available). If attaching with the
+    // Pending Dataset fails, switch back to the Active Dataset.
+
+    switch (mReattachState)
     {
+    case kReattachActive:
         if (Get<MeshCoP::PendingDatasetManager>().Restore() == kErrorNone)
         {
             IgnoreError(Get<MeshCoP::PendingDatasetManager>().ApplyConfiguration());
             mReattachState = kReattachPending;
             SetAttachState(kAttachStateStart);
             delay = 1 + Random::NonCrypto::GetUint32InRange(0, kAttachStartJitter);
+            ExitNow();
         }
-        else
-        {
-            mReattachState = kReattachStop;
-        }
-    }
-    else if (mReattachState == kReattachPending)
-    {
-        mReattachState = kReattachStop;
-        IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Restore());
-    }
 
-    VerifyOrExit(mReattachState == kReattachStop);
+        mReattachState = kReattachStop;
+        break;
+
+    case kReattachPending:
+        IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Restore());
+        mReattachState = kReattachStop;
+        break;
+
+    case kReattachStop:
+        break;
+    }
 
     switch (mAttachMode)
     {
     case kAnyPartition:
     case kBetterParent:
     case kSelectedParent:
-        if (!IsChild())
+        if (IsChild())
         {
-            if (mAnnounceHandler.IsAnnounceAttaching())
+            // If already attached (e.g., trying to find a better
+            // parent or partition), and attach fails, we revert to
+            // sleepy operation if needed and stop the attach process.
+
+            if (!IsRxOnWhenIdle())
             {
-                mAnnounceHandler.HandleAnnounceAttachFailure();
-                IgnoreError(BecomeDetached());
+                Get<DataPollSender>().SetAttachMode(false);
+                Get<MeshForwarder>().SetRxOnWhenIdle(false);
             }
-#if OPENTHREAD_FTD
-            else if (IsFullThreadDevice() && BecomeLeader(/* aCheckWeight */ false) == kErrorNone)
-            {
-                // do nothing
-            }
-#endif
-            else
-            {
-                IgnoreError(BecomeDetached());
-            }
-        }
-        else if (!IsRxOnWhenIdle())
-        {
-            // Return to sleepy operation
-            Get<DataPollSender>().SetAttachMode(false);
-            Get<MeshForwarder>().SetRxOnWhenIdle(false);
+
+            ExitNow();
         }
 
+        if (mAnnounceHandler.IsAnnounceAttaching())
+        {
+            mAnnounceHandler.HandleAnnounceAttachFailure();
+            IgnoreError(BecomeDetached());
+            ExitNow();
+        }
+
+#if OPENTHREAD_FTD
+        if (IsFullThreadDevice() && BecomeLeader(/* aCheckWeight */ false) == kErrorNone)
+        {
+            ExitNow();
+        }
+#endif
+
+        IgnoreError(BecomeDetached());
         break;
 
     case kSamePartition:
