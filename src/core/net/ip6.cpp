@@ -823,7 +823,7 @@ Error Ip6::HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
             break;
 
         case kProtoFragment:
-            IgnoreError(PassToHost(aMessagePtr, aHeader, aNextHeader, aReceive, Message::kCopyToUse));
+            IgnoreError(PassToHost(aMessagePtr, aHeader, aNextHeader, aReceive, kCopyMessageToUse));
             SuccessOrExit(error = HandleFragment(*aMessagePtr));
             break;
 
@@ -847,15 +847,15 @@ exit:
 
 Error Ip6::TakeOrCopyMessagePtr(OwnedPtr<Message> &aTargetPtr,
                                 OwnedPtr<Message> &aMessagePtr,
-                                Message::Ownership aMessageOwnership)
+                                MessageOwnership   aMessageOwnership)
 {
     switch (aMessageOwnership)
     {
-    case Message::kTakeCustody:
+    case kTakeMessageCustody:
         aTargetPtr = aMessagePtr.PassOwnership();
         break;
 
-    case Message::kCopyToUse:
+    case kCopyMessageToUse:
         aTargetPtr.Reset(aMessagePtr->Clone());
         break;
     }
@@ -866,7 +866,7 @@ Error Ip6::TakeOrCopyMessagePtr(OwnedPtr<Message> &aTargetPtr,
 Error Ip6::Receive(Header            &aIp6Header,
                    OwnedPtr<Message> &aMessagePtr,
                    uint8_t            aIpProto,
-                   Message::Ownership aMessageOwnership)
+                   MessageOwnership   aMessageOwnership)
 {
     Error             error = kErrorNone;
     OwnedPtr<Message> messagePtr;
@@ -921,7 +921,7 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
                       const Header      &aHeader,
                       uint8_t            aIpProto,
                       bool               aReceive,
-                      Message::Ownership aMessageOwnership)
+                      MessageOwnership   aMessageOwnership)
 {
     // This method passes the message to host by invoking the
     // registered IPv6 receive callback. When NAT64 is enabled, it
@@ -1208,7 +1208,7 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
         bool              multicastLoop = aMessagePtr->GetMulticastLoop();
 
         SuccessOrExit(error = TakeOrCopyMessagePtr(messagePtr, aMessagePtr,
-                                                   forwardThread ? Message::kCopyToUse : Message::kTakeCustody));
+                                                   forwardThread ? kCopyMessageToUse : kTakeMessageCustody));
         messagePtr->SetMulticastLoop(multicastLoop);
         messagePtr->RemoveHeader(messagePtr->GetOffset());
 
@@ -1223,12 +1223,12 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
     if ((forwardHost || receive) && !aIsReassembled)
     {
         error = PassToHost(aMessagePtr, header, nextHeader, receive,
-                           (receive || forwardThread) ? Message::kCopyToUse : Message::kTakeCustody);
+                           (receive || forwardThread) ? kCopyMessageToUse : kTakeMessageCustody);
     }
 
     if (receive)
     {
-        error = Receive(header, aMessagePtr, nextHeader, forwardThread ? Message::kCopyToUse : Message::kTakeCustody);
+        error = Receive(header, aMessagePtr, nextHeader, forwardThread ? kCopyMessageToUse : kTakeMessageCustody);
     }
 
     if (forwardThread)
