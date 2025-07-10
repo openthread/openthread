@@ -4140,7 +4140,7 @@ Core::RxMessage::ProcessOutcome Core::RxMessage::ProcessQuery(bool aShouldProces
 
     if (shouldDelay)
     {
-        delay = Random::NonCrypto::GetUint32InRange(kMinResponseDelay, kMaxResponseDelay);
+        delay = Random::NonCrypto::GetUint16InRange(kMinResponseDelay, kMaxResponseDelay);
     }
 
     for (const Question &question : mQuestions)

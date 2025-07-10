@@ -865,8 +865,8 @@ private:
     static constexpr uint32_t kMaxInitialQueryDelay     = 120; // msec
     static constexpr uint32_t kRandomDelayReuseInterval = 2;   // msec
 
-    static constexpr uint32_t kMinResponseDelay            = 20;  // msec
-    static constexpr uint32_t kMaxResponseDelay            = 120; // msec
+    static constexpr uint16_t kMinResponseDelay            = 20;  // msec
+    static constexpr uint16_t kMaxResponseDelay            = 120; // msec
     static constexpr uint32_t kResponseAggregationMaxDelay = 500; // msec
 
     static constexpr uint32_t kUnspecifiedTtl       = 0;
@@ -980,7 +980,7 @@ private:
         TimeMilli GetAnswerTime(void) const { return (mQueryRxTime + mAnswerDelay); }
 
         uint16_t  mQuestionRrType;
-        uint16_t  mAnswerDelay;
+        uint32_t  mAnswerDelay;
         TimeMilli mQueryRxTime;
         bool      mIsProbe;
         bool      mUnicastResponse;
@@ -1085,7 +1085,7 @@ private:
         uint8_t     mAnnounceCounter;
         AppendState mAppendState;
         Section     mAppendSection;
-        uint16_t    mAnswerDelay;
+        uint32_t    mAnswerDelay;
         uint32_t    mTtl;
         TimeMilli   mAnnounceTime;
         TimeMilli   mQueryRxTime;
@@ -1179,7 +1179,7 @@ private:
         bool       mUnicastNsecPending : 1;
         bool       mAppendedNsec : 1;
         bool       mBypassCallbackStateCheck : 1;
-        uint16_t   mNsecAnswerDelay;
+        uint32_t   mNsecAnswerDelay;
         TimeMilli  mNsecQueryRxTime;
         Heap::Data mKeyData;
         Callback   mCallback;

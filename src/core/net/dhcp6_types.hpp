@@ -725,14 +725,14 @@ public:
      *
      * @returns The preference value. Higher value is preferred.
      */
-    uint16_t GetPreference(void) const { return mPreference; }
+    uint8_t GetPreference(void) const { return mPreference; }
 
     /**
      * Sets the preference.
      *
      * @param[in] aPreference  The preference value.
      */
-    void SetPreference(uint16_t aPreference) { mPreference = aPreference; }
+    void SetPreference(uint8_t aPreference) { mPreference = aPreference; }
 
 private:
     uint8_t mPreference;
@@ -1069,7 +1069,7 @@ public:
      *
      * @returns The SOL_MAX_RT value (in seconds).
      */
-    uint16_t GetSolMaxRt(void) const { return BigEndian::HostSwap32(mSolMaxRt); }
+    uint32_t GetSolMaxRt(void) const { return BigEndian::HostSwap32(mSolMaxRt); }
 
     /**
      * Sets the SOL_MAX_RT.

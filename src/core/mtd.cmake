@@ -39,6 +39,10 @@ target_compile_options(openthread-mtd PRIVATE
     -Wundef
 )
 
+if("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+    target_compile_options(openthread-mtd PRIVATE -Wimplicit-int-conversion)
+endif()
+
 target_include_directories(openthread-mtd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
 target_sources(openthread-mtd PRIVATE ${COMMON_SOURCES})

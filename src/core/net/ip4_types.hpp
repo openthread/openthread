@@ -705,7 +705,7 @@ public:
      *
      * @returns The IPv4 header Total length value.
      */
-    uint8_t GetIpLength(void) const { return mIp4Header.GetTotalLength(); }
+    uint16_t GetIpLength(void) const { return mIp4Header.GetTotalLength(); }
 
     /**
      * Returns the IPv4 TTL value.
