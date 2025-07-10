@@ -394,7 +394,7 @@ Error Diags::ProcessRepeat(uint8_t aArgsLength, char *aArgs[])
     else
     {
         uint32_t txPeriod;
-        uint8_t  txLength;
+        uint16_t txLength;
 
         VerifyOrExit(aArgsLength >= 1, error = kErrorInvalidArgs);
         VerifyOrExit(mCurTxCmd == kTxCmdNone, error = kErrorInvalidState);
@@ -404,7 +404,7 @@ Error Diags::ProcessRepeat(uint8_t aArgsLength, char *aArgs[])
 
         if (aArgsLength >= 2)
         {
-            SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(aArgs[1], txLength));
+            SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint16(aArgs[1], txLength));
             mIsTxPacketSet = false;
         }
         else if (mIsTxPacketSet)
@@ -431,7 +431,7 @@ Error Diags::ProcessSend(uint8_t aArgsLength, char *aArgs[])
 {
     Error    error = kErrorNone;
     uint32_t txPackets;
-    uint8_t  txLength;
+    uint16_t txLength;
 
     VerifyOrExit(aArgsLength >= 1, error = kErrorInvalidArgs);
     VerifyOrExit(mCurTxCmd == kTxCmdNone, error = kErrorInvalidState);
@@ -453,7 +453,7 @@ Error Diags::ProcessSend(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength >= 2)
     {
-        SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(aArgs[1], txLength));
+        SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint16(aArgs[1], txLength));
         mIsTxPacketSet = false;
     }
     else if (mIsTxPacketSet)
@@ -612,9 +612,9 @@ Error Diags::TransmitPacket(void)
         ResetTxPacket();
         mTxPacket->mLength = mTxLen;
 
-        for (uint8_t i = 0; i < mTxLen; i++)
+        for (uint16_t i = 0; i < mTxLen; i++)
         {
-            mTxPacket->mPsdu[i] = i;
+            mTxPacket->mPsdu[i] = static_cast<uint8_t>(i & 0xff);
         }
     }
 

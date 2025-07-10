@@ -1304,7 +1304,7 @@ public:
      * @retval kErrorNone    Successfully appended the TXT entry.
      * @retval kErrorNoBufs  Insufficient available buffers to append the entry.
      */
-    Error AppendBytesEntry(const char *aKey, const void *aBuffer, uint16_t aLength);
+    Error AppendBytesEntry(const char *aKey, const void *aBuffer, uint8_t aLength);
 
     /**
      * Appends a TXT entry for a given key and a given object as the entry's value.

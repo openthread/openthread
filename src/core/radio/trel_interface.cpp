@@ -123,7 +123,7 @@ Error Interface::Send(Packet &aPacket, bool aIsDiscovery)
     case Header::kTypeBroadcast:
         for (const Peer &peer : Get<PeerTable>())
         {
-            uint16_t        originalPacketNumber = aPacket.GetHeader().GetPacketNumber();
+            uint32_t        originalPacketNumber = aPacket.GetHeader().GetPacketNumber();
             Header::AckMode originalAckMode      = aPacket.GetHeader().GetAckMode();
             Neighbor       *neighbor;
 
