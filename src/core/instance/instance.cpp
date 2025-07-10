@@ -430,10 +430,12 @@ void Instance::Finalize(void)
     mIsInitialized = false;
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    IgnoreError(otThreadSetEnabled(this, false));
-    IgnoreError(otIp6SetEnabled(this, false));
-    IgnoreError(otLinkSetEnabled(this, false));
-
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    Get<MeshCoP::BorderAgent>().SetEnabled(false);
+#endif
+    Get<Mle::Mle>().Stop();
+    Get<ThreadNetif>().Down();
+    Get<Mac::Mac>().SetEnabled(false);
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     Get<KeyManager>().DestroyTemporaryKeys();
 #endif
