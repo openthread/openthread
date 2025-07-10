@@ -492,8 +492,7 @@ void Mle::ScheduleUnicastAdvertisementTo(const Router &aRouter)
     Ip6::Address destination;
 
     destination.SetToLinkLocalAddress(aRouter.GetExtAddress());
-    mDelayedSender.ScheduleAdvertisement(destination,
-                                         Random::NonCrypto::GetUint32InRange(0, kMaxUnicastAdvertisementDelay));
+    mDelayedSender.ScheduleAdvertisement(destination, GenerateRandomDelay(kMaxUnicastAdvertisementDelay));
 }
 
 void Mle::SendAdvertisement(const Ip6::Address &aDestination)
@@ -725,7 +724,7 @@ void Mle::HandleLinkRequest(RxInfo &aRxInfo)
 
     if (aRxInfo.mMessageInfo.GetSockAddr().IsMulticast())
     {
-        mDelayedSender.ScheduleLinkAccept(info, 1 + Random::NonCrypto::GetUint16InRange(0, kMaxLinkAcceptDelay));
+        mDelayedSender.ScheduleLinkAccept(info, GenerateRandomDelay(kMaxLinkAcceptDelay));
     }
     else
     {
@@ -1308,7 +1307,7 @@ Error Mle::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, co
         InitNeighbor(*router, aRxInfo);
         router->SetState(Neighbor::kStateLinkRequest);
         router->ClearLinkAcceptTimeout();
-        delay = Random::NonCrypto::GetUint32InRange(0, kMaxLinkRequestDelayOnRouter);
+        delay = GenerateRandomDelay(kMaxLinkRequestDelayOnRouter);
         mDelayedSender.ScheduleLinkRequest(*router, delay);
         ExitNow(error = kErrorNoRoute);
     }
@@ -1465,9 +1464,8 @@ void Mle::HandleParentRequest(RxInfo &aRxInfo)
     aRxInfo.mClass = RxInfo::kPeerMessage;
     ProcessKeySequence(aRxInfo);
 
-    delay = 1 + Random::NonCrypto::GetUint16InRange(0, !ScanMaskTlv::IsEndDeviceFlagSet(scanMask)
-                                                           ? kParentResponseMaxDelayRouters
-                                                           : kParentResponseMaxDelayAll);
+    delay = GenerateRandomDelay(!ScanMaskTlv::IsEndDeviceFlagSet(scanMask) ? kParentResponseMaxDelayRouters
+                                                                           : kParentResponseMaxDelayAll);
     mDelayedSender.ScheduleParentResponse(info, delay);
 
 exit:
@@ -1703,8 +1701,7 @@ void Mle::HandleTimeTick(void)
                 if (router.HasRemainingLinkRequestAttempts())
                 {
                     router.DecrementLinkRequestAttempts();
-                    mDelayedSender.ScheduleLinkRequest(
-                        router, Random::NonCrypto::GetUint32InRange(0, kMaxLinkRequestDelayOnRouter));
+                    mDelayedSender.ScheduleLinkRequest(router, GenerateRandomDelay(kMaxLinkRequestDelayOnRouter));
                 }
             }
         }
@@ -2612,8 +2609,6 @@ exit:
 
 void Mle::HandleNetworkDataUpdateRouter(void)
 {
-    uint32_t delay;
-
     VerifyOrExit(IsRouterOrLeader());
 
     if (IsLeader())
@@ -2622,8 +2617,7 @@ void Mle::HandleNetworkDataUpdateRouter(void)
     }
     else
     {
-        delay = 1 + Random::NonCrypto::GetUint16InRange(0, kUnsolicitedDataResponseJitter);
-        mDelayedSender.ScheduleMulticastDataResponse(delay);
+        mDelayedSender.ScheduleMulticastDataResponse(GenerateRandomDelay(kUnsolicitedDataResponseJitter));
     }
 
     SynchronizeChildNetworkData();
@@ -2765,7 +2759,7 @@ void Mle::HandleDiscoveryRequest(RxInfo &aRxInfo)
 #endif
 
     mDelayedSender.ScheduleDiscoveryResponse(aRxInfo.mMessageInfo.GetPeerAddr(), responseInfo,
-                                             1 + Random::NonCrypto::GetUint16InRange(0, kDiscoveryMaxJitter));
+                                             GenerateRandomDelay(kDiscoveryMaxJitter));
 
 exit:
     LogProcessError(kTypeDiscoveryRequest, error);
