@@ -1453,6 +1453,14 @@ class NodeImpl:
         self.send_command(cmd)
         return int(self._expect_command_output()[0])
 
+    def enable_border_agent(self):
+        self.send_command('ba enable')
+        self._expect_done()
+
+    def disable_border_agent(self):
+        self.send_command('ba disable')
+        self._expect_done()
+
     def get_border_agent_counters(self):
         cmd = 'ba counters'
         self.send_command(cmd)
