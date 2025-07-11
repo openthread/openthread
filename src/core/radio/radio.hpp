@@ -1106,14 +1106,14 @@ inline Error Radio::ReceiveAt(uint8_t, uint32_t, uint32_t) { return kErrorNone; 
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-inline void Radio::UpdateCslSampleTime(uint32_t) {}
+inline void  Radio::UpdateCslSampleTime(uint32_t) {}
 
 inline Error Radio::EnableCsl(uint32_t, Mac::ShortAddress aShortAddr, const Mac::ExtAddress &)
 {
     return kErrorNotImplemented;
 }
 
-inline Error Radio::ResetCsl(void) { return kErrorNotImplemented; }
+inline Error    Radio::ResetCsl(void) { return kErrorNotImplemented; }
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || \

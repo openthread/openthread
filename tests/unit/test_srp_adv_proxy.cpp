@@ -611,9 +611,9 @@ void PrepareService1(Srp::Client::Service &aService)
     static const char          kTxtKey3[]       = "D";
     static const uint8_t       kTxtValue3[]     = {0};
     static const otDnsTxtEntry kTxtEntries[]    = {
-           {kTxtKey1, kTxtValue1, sizeof(kTxtValue1)},
-           {kTxtKey2, kTxtValue2, sizeof(kTxtValue2)},
-           {kTxtKey3, kTxtValue3, sizeof(kTxtValue3)},
+        {kTxtKey1, kTxtValue1, sizeof(kTxtValue1)},
+        {kTxtKey2, kTxtValue2, sizeof(kTxtValue2)},
+        {kTxtKey3, kTxtValue3, sizeof(kTxtValue3)},
     };
 
     memset(&aService, 0, sizeof(aService));

@@ -109,7 +109,7 @@ This will open up a text editor where you can specify which commits to squash.
 
 #### Coding Conventions and Style
 
-OpenThread uses and enforces the [OpenThread Coding Conventions and Style](STYLE_GUIDE.md) on all code, except for code located in [third_party](third_party). Use `script/make-pretty` and `script/make-pretty check` to automatically reformat code and check for code-style compliance, respectively. OpenThread currently requires [clang-format v14.0.0](https://releases.llvm.org/download.html#14.0.0) for C/C++ and [yapf v0.31.0](https://github.com/google/yapf) for Python.
+OpenThread uses and enforces the [OpenThread Coding Conventions and Style](STYLE_GUIDE.md) on all code, except for code located in [third_party](third_party). Use `script/make-pretty` and `script/make-pretty check` to automatically reformat code and check for code-style compliance, respectively. OpenThread currently requires [clang-format v16.0.0](https://releases.llvm.org/download.html#16.0.0) for C/C++ and [yapf v0.31.0](https://github.com/google/yapf) for Python.
 
 As part of the cleanup process, you should also run `script/make-pretty check` to ensure that your code passes the baseline code style checks.
 

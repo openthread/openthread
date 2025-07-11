@@ -946,12 +946,12 @@ exit:
 
 #else
 
-int SecureTransport::HandleMbedtlsExportKeys(void *aContext,
+int SecureTransport::HandleMbedtlsExportKeys(void                *aContext,
                                              const unsigned char *aMasterSecret,
                                              const unsigned char *aKeyBlock,
-                                             size_t aMacLength,
-                                             size_t aKeyLength,
-                                             size_t aIvLength)
+                                             size_t               aMacLength,
+                                             size_t               aKeyLength,
+                                             size_t               aIvLength)
 {
     return static_cast<SecureTransport *>(aContext)->HandleMbedtlsExportKeys(aMasterSecret, aKeyBlock, aMacLength,
                                                                              aKeyLength, aIvLength);
@@ -959,14 +959,14 @@ int SecureTransport::HandleMbedtlsExportKeys(void *aContext,
 
 int SecureTransport::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
                                              const unsigned char *aKeyBlock,
-                                             size_t aMacLength,
-                                             size_t aKeyLength,
-                                             size_t aIvLength)
+                                             size_t               aMacLength,
+                                             size_t               aKeyLength,
+                                             size_t               aIvLength)
 {
     OT_UNUSED_VARIABLE(aMasterSecret);
 
     Crypto::Sha256::Hash kek;
-    Crypto::Sha256 sha256;
+    Crypto::Sha256       sha256;
 
     VerifyOrExit(mCipherSuite == kEcjpakeWithAes128Ccm8);
 

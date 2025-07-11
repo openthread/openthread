@@ -63,7 +63,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo apt-get update
-        sudo apt-get --no-install-recommends install -y clang-format-14 clang-tidy-14 shellcheck iwyu
+        sudo apt-get --no-install-recommends install -y clang-format-16 clang-tidy-16 shellcheck iwyu
         python3 -m pip install yapf==0.31.0
         sudo snap install shfmt
         npm install prettier@2.0.4

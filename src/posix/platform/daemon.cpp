@@ -197,7 +197,7 @@ void Daemon::createListenSocketOrDie(void)
 void Daemon::createListenSocketOrDie(void)
 {
     struct sockaddr_un sockname;
-    int ret;
+    int                ret;
 
     class AllowAllGuard
     {
@@ -205,7 +205,7 @@ void Daemon::createListenSocketOrDie(void)
         AllowAllGuard(void)
         {
             const char *allowAll = getenv("OT_DAEMON_ALLOW_ALL");
-            mAllowAll = (allowAll != nullptr && strcmp("1", allowAll) == 0);
+            mAllowAll            = (allowAll != nullptr && strcmp("1", allowAll) == 0);
 
             if (mAllowAll)
             {
@@ -221,8 +221,8 @@ void Daemon::createListenSocketOrDie(void)
         }
 
     private:
-        bool mAllowAll = false;
-        mode_t mMode = 0;
+        bool   mAllowAll = false;
+        mode_t mMode     = 0;
     };
 
     mListenSocket = SocketWithCloseExec(AF_UNIX, SOCK_STREAM, 0, kSocketNonBlock);
