@@ -70,14 +70,14 @@ public:
     }
 
     /**
-     * Indicates whether or not the IPv6 datagram passes the filter.
+     * Applies the filter to an IPv6 datagram to determine if it should be dropped.
      *
      * @param[in]  aMessage  The IPv6 datagram to process.
      *
-     * @retval TRUE   Accept the IPv6 datagram.
-     * @retval FALSE  Reject the IPv6 datagram.
+     * @retval kErrorNone  The message is not filtered and should be accepted.
+     * @retval kErrorDrop  The message matches the filter criteria and should be dropped.
      */
-    bool Accept(Message &aMessage) const;
+    Error Apply(const Message &aMessage) const;
 
     /**
      * Adds a port to the allowed unsecured port list.
