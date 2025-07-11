@@ -1155,8 +1155,8 @@ inline uint32_t Radio::GetBusSpeed(void) { return 0; }
 inline uint32_t Radio::GetBusLatency(void) { return 0; }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-inline void Radio::SetDiagMode(bool) {}
-inline bool Radio::GetDiagMode(void) { return false; }
+inline void     Radio::SetDiagMode(bool) {}
+inline bool     Radio::GetDiagMode(void) { return false; }
 #endif
 #endif // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
