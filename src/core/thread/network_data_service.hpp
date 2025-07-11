@@ -39,7 +39,9 @@
 #include <openthread/netdata.h>
 
 #include "backbone_router/bbr_leader.hpp"
+#include "common/clearable.hpp"
 #include "common/encoding.hpp"
+#include "common/equatable.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/serial_number.hpp"
@@ -55,7 +57,7 @@ const uint32_t kThreadEnterpriseNumber = ServiceTlv::kThreadEnterpriseNumber; //
 /**
  * Represents information about an DNS/SRP server parsed from related Network Data service entries.
  */
-struct DnsSrpAnycastInfo
+struct DnsSrpAnycastInfo : public Clearable<DnsSrpAnycastInfo>, public Equatable<DnsSrpAnycastInfo>
 {
     Ip6::Address mAnycastAddress; ///< The anycast address associated with the DNS/SRP servers.
     uint8_t      mSequenceNumber; ///< Sequence number used to notify SRP client if they need to re-register.
@@ -75,7 +77,7 @@ enum DnsSrpUnicastType : uint8_t
 /**
  * Represents information about an DNS/SRP server parsed from related Network Data service entries.
  */
-struct DnsSrpUnicastInfo
+struct DnsSrpUnicastInfo : public Clearable<DnsSrpUnicastInfo>, public Equatable<DnsSrpUnicastInfo>
 {
     Ip6::SockAddr mSockAddr; ///< The socket address (IPv6 address and port) of the DNS/SRP server.
     uint8_t       mVersion;  ///< Version number.
