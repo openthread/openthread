@@ -119,8 +119,6 @@ public:
 #endif
 
 private:
-    static constexpr uint32_t kRemoveDelay = 7 * Time::kOneSecondInMsec;
-
     enum State : uint8_t
     {
         kStateStopped,      // Stopped.

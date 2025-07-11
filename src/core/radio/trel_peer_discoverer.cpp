@@ -184,7 +184,8 @@ void PeerDiscoverer::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
     {
         peer = Get<PeerTable>().FindMatching(txtInfo.mExtAddress);
         VerifyOrExit(peer != nullptr);
-        peer->ScheduleToRemoveAfter(kRemoveDelay);
+        peer->SetDnssdState(Peer::kDnssdRemoved);
+        peer->Log(Peer::kUpdated);
         ExitNow();
     }
 
@@ -215,7 +216,7 @@ void PeerDiscoverer::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
         peer->SetExtAddress(txtInfo.mExtAddress);
         action = Peer::kAdded;
     }
-    else if (!peer->IsStateValid())
+    else if (peer->GetDnssdState() == Peer::kDnssdRemoved)
     {
         action = Peer::kReAdded;
     }
@@ -225,7 +226,7 @@ void PeerDiscoverer::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
         action    = Peer::kUpdated;
     }
 
-    peer->SetState(Peer::kStateValid);
+    peer->SetDnssdState(Peer::kDnssdResolved);
     peer->SetExtPanId(txtInfo.mExtPanId);
     peer->SetSockAddr(aInfo.GetSockAddr());
 
@@ -341,7 +342,8 @@ void PeerDiscoverer::HandleBrowseResult(const Dnssd::BrowseResult &aResult)
         // Previously discovered service is now removed.
 
         VerifyOrExit(peer != nullptr);
-        peer->ScheduleToRemoveAfter(kRemoveDelay);
+        peer->SetDnssdState(Peer::kDnssdRemoved);
+        peer->Log(Peer::kUpdated);
     }
     else
     {
@@ -360,7 +362,7 @@ void PeerDiscoverer::HandleBrowseResult(const Dnssd::BrowseResult &aResult)
             action = Peer::kReAdded;
         }
 
-        peer->SetState(Peer::kStateResolving);
+        peer->SetDnssdState(Peer::kDnssdResolving);
         peer->Log(action);
 
         StartServiceResolvers(*peer);
@@ -473,7 +475,7 @@ void PeerDiscoverer::ProcessPeerTxtData(const Dnssd::TxtResult &aResult, Peer &a
     if (txtInfo.mExtAddress == Get<Mac::Mac>().GetExtAddress())
     {
         LogInfo("Peer %s is this device itself", aPeer.mServiceName.AsCString());
-        aPeer.ScheduleToRemoveAfter(0);
+        Get<PeerTable>().RemoveMatching(aPeer);
         ExitNow();
     }
 
@@ -608,7 +610,7 @@ void PeerDiscoverer::HandleAddressResult(const Dnssd::AddressResult &aResult)
 
     for (Peer &peer : Get<PeerTable>())
     {
-        if (peer.IsStateRemoving())
+        if (peer.GetDnssdState() == Peer::kDnssdRemoved)
         {
             continue;
         }
@@ -696,13 +698,13 @@ exit:
 
 void PeerDiscoverer::UpdatePeerState(Peer &aPeer)
 {
-    VerifyOrExit(aPeer.IsStateResolving());
+    VerifyOrExit(aPeer.GetDnssdState() == Peer::kDnssdResolving);
     VerifyOrExit(aPeer.mResolvingService && aPeer.mResolvingHost);
     VerifyOrExit(aPeer.mTxtDataValidated);
     VerifyOrExit(aPeer.mPort != 0);
     VerifyOrExit(aPeer.mHostAddresses.GetLength() > 0);
 
-    aPeer.SetState(Peer::kStateValid);
+    aPeer.SetDnssdState(Peer::kDnssdResolved);
     aPeer.Log(Peer::kUpdated);
 
 exit:

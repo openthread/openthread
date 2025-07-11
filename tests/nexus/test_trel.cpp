@@ -41,6 +41,10 @@ namespace Nexus {
 static constexpr uint32_t kInfraIfIndex   = 1;
 static constexpr uint16_t kMaxTxtDataSize = 128;
 
+static constexpr ot::Trel::Peer::DnssdState kDnssdResolved  = ot::Trel::Peer::kDnssdResolved;
+static constexpr ot::Trel::Peer::DnssdState kDnssdRemoved   = ot::Trel::Peer::kDnssdRemoved;
+static constexpr ot::Trel::Peer::DnssdState kDnssdResolving = ot::Trel::Peer::kDnssdResolving;
+
 void TestTrelBasic(void)
 {
     // Validate basic operations, forming a network and
@@ -120,7 +124,7 @@ void TestTrelBasic(void)
         {
             bool found = false;
 
-            VerifyOrQuit(peer.IsStateValid());
+            VerifyOrQuit(peer.GetDnssdState() == ot::Trel::Peer::kDnssdResolved);
             VerifyOrQuit(peer.GetExtPanId() == node.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
 
             for (Node &otherNode : nexus.GetNodes())
@@ -169,6 +173,7 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     Node                 &node1 = nexus.CreateNode();
     Node                 &node2 = nexus.CreateNode();
     const ot::Trel::Peer *peer;
+    uint32_t              inactiveDuration;
 
     Log("---------------------------------------------------------------------------------------");
     Log("TestTrelDelayedMdnsStartAndPeerRemovalDelay()");
@@ -213,7 +218,7 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     peer = node1.Get<ot::Trel::PeerTable>().GetHead();
     VerifyOrQuit(peer != nullptr);
 
-    VerifyOrQuit(peer->IsStateValid());
+    VerifyOrQuit(peer->GetDnssdState() == ot::Trel::Peer::kDnssdResolved);
     VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
     VerifyOrQuit(peer->GetServiceName() != nullptr);
@@ -231,7 +236,7 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     peer = node2.Get<ot::Trel::PeerTable>().GetHead();
     VerifyOrQuit(peer != nullptr);
 
-    VerifyOrQuit(peer->IsStateValid());
+    VerifyOrQuit(peer->GetDnssdState() == ot::Trel::Peer::kDnssdResolved);
     VerifyOrQuit(peer->GetExtPanId() == node1.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node1.Get<Mac::Mac>().GetExtAddress());
     VerifyOrQuit(peer->GetServiceName() != nullptr);
@@ -255,11 +260,10 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate that `PeerTable` is properly updated on `node1`");
 
-    // Check peer on `node1` is still present but not longer `IsStateValid()`.
     peer = node1.Get<ot::Trel::PeerTable>().GetHead();
     VerifyOrQuit(peer != nullptr);
 
-    VerifyOrQuit(!peer->IsStateValid());
+    VerifyOrQuit(peer->GetDnssdState() == ot::Trel::Peer::kDnssdRemoved);
     VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
     VerifyOrQuit(peer->GetServiceName() != nullptr);
@@ -284,7 +288,7 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     peer = node1.Get<ot::Trel::PeerTable>().GetHead();
     VerifyOrQuit(peer != nullptr);
 
-    VerifyOrQuit(peer->IsStateValid());
+    VerifyOrQuit(peer->GetDnssdState() == ot::Trel::Peer::kDnssdResolved);
     VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
     VerifyOrQuit(peer->GetServiceName() != nullptr);
@@ -302,7 +306,7 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     peer = node2.Get<ot::Trel::PeerTable>().GetHead();
     VerifyOrQuit(peer != nullptr);
 
-    VerifyOrQuit(peer->IsStateValid());
+    VerifyOrQuit(peer->GetDnssdState() == ot::Trel::Peer::kDnssdResolved);
     VerifyOrQuit(peer->GetExtPanId() == node1.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node1.Get<Mac::Mac>().GetExtAddress());
     VerifyOrQuit(peer->GetServiceName() != nullptr);
@@ -315,17 +319,48 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     VerifyOrQuit(peer->GetHostAddresses().GetLength() == 1);
     VerifyOrQuit(peer->GetHostAddresses()[0] == node1.mMdns.mIfAddresses[0]);
 
+    peer = node1.Get<ot::Trel::PeerTable>().GetHead();
+    VerifyOrQuit(peer != nullptr);
+
+    inactiveDuration = peer->DetermineSecondsSinceLastInteraction();
+    VerifyOrQuit(inactiveDuration > 0);
+    Log("- peer has been inactive for %lu seconds", ToUlong(inactiveDuration));
+
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    Log("Disable TREL Interface (and `PeerDiscoverer`) on `node2` again");
+    Log("Disable TREL Interface (and `PeerDiscoverer`) on `node2` again and signal its removal on mDNS");
 
     node2.Get<ot::Trel::Interface>().Disable();
+    VerifyOrQuit(node2.Get<ot::Trel::PeerTable>().IsEmpty());
 
-    Log("Wait for long enough for the `node2` peer to be fully deleted on `node1`");
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Check that peer entry for `node2` is properly switched to `kDnssdRemoved` state");
 
-    nexus.AdvanceTime(15 * 1000);
+    nexus.AdvanceTime(10 * 1000 + 500);
+
+    peer = node1.Get<ot::Trel::PeerTable>().GetHead();
+    VerifyOrQuit(peer != nullptr);
+
+    VerifyOrQuit(peer->GetDnssdState() == ot::Trel::Peer::kDnssdRemoved);
+    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
+    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mMdns.mIfAddresses[0]);
+
+    Log("Validate the `DetermineSecondsSinceLastInteraction()` is properly tracked");
+
+    VerifyOrQuit(peer->DetermineSecondsSinceLastInteraction() - inactiveDuration >= 10);
+
+    inactiveDuration = peer->DetermineSecondsSinceLastInteraction();
+    VerifyOrQuit(inactiveDuration > 0);
+    Log("- peer has been inactive for %lu seconds", ToUlong(inactiveDuration));
+
+    Log("Validate that peer is deleted from list after 450 second inactivity");
+
+    nexus.AdvanceTime((451 - inactiveDuration) * 1000);
 
     VerifyOrQuit(node1.Get<ot::Trel::PeerTable>().IsEmpty());
-    VerifyOrQuit(node2.Get<ot::Trel::PeerTable>().IsEmpty());
+
+    peer = node1.Get<ot::Trel::PeerTable>().GetHead();
+    VerifyOrQuit(peer == nullptr);
 }
 
 void TestServiceNameConflict(void)
@@ -395,7 +430,7 @@ void TestServiceNameConflict(void)
 
     for (const ot::Trel::Peer &peer : node2.Get<ot::Trel::PeerTable>())
     {
-        if (peer.IsStateValid())
+        if (peer.GetDnssdState() == ot::Trel::Peer::kDnssdResolved)
         {
             VerifyOrQuit(peer.GetExtPanId() == node1.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
             VerifyOrQuit(peer.GetExtAddress() == node1.Get<Mac::Mac>().GetExtAddress());
@@ -470,7 +505,7 @@ void TestHostAddressChange(void)
     peer = node1.Get<ot::Trel::PeerTable>().GetHead();
     VerifyOrQuit(peer != nullptr);
 
-    VerifyOrQuit(peer->IsStateValid());
+    VerifyOrQuit(peer->GetDnssdState() == kDnssdResolved);
     VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
 
@@ -511,7 +546,7 @@ void TestHostAddressChange(void)
     peer = node1.Get<ot::Trel::PeerTable>().GetHead();
     VerifyOrQuit(peer != nullptr);
 
-    VerifyOrQuit(peer->IsStateValid());
+    VerifyOrQuit(peer->GetDnssdState() == kDnssdResolved);
     VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
 
@@ -645,7 +680,7 @@ void TestMultiServiceSameHost(void)
     {
         bool found = false;
 
-        VerifyOrQuit(peer.IsStateValid());
+        VerifyOrQuit(peer.GetDnssdState() == kDnssdResolved);
         VerifyOrQuit(peer.GetServiceName() != nullptr);
         VerifyOrQuit(peer.GetHostName() != nullptr);
         VerifyOrQuit(StringStartsWith(peer.GetHostName(), "ot"));
@@ -677,13 +712,13 @@ void TestMultiServiceSameHost(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate peer table on `node`");
 
-    VerifyOrQuit(node.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 2);
+    VerifyOrQuit(node.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 3);
 
     for (const ot::Trel::Peer &peer : node.Get<ot::Trel::PeerTable>())
     {
         bool found = false;
 
-        if (!peer.IsStateValid())
+        if (peer.GetDnssdState() != kDnssdResolved)
         {
             continue;
         }
@@ -722,13 +757,13 @@ void TestMultiServiceSameHost(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate all peers get the updated list");
 
-    VerifyOrQuit(node.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 2);
+    VerifyOrQuit(node.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 3);
 
     for (const ot::Trel::Peer &peer : node.Get<ot::Trel::PeerTable>())
     {
         bool found = false;
 
-        if (!peer.IsStateValid())
+        if (peer.GetDnssdState() != kDnssdResolved)
         {
             continue;
         }

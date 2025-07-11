@@ -347,6 +347,11 @@ void Link::ProcessReceivedPacket(Packet &aPacket, const Ip6::SockAddr &aSockAddr
     mRxPacketSenderAddr = aSockAddr;
     mRxPacketPeer       = Get<PeerTable>().FindMatching(aPacket.GetHeader().GetSource());
 
+    if (mRxPacketPeer != nullptr)
+    {
+        mRxPacketPeer->UpdateLastInteractionTime();
+    }
+
     if (type != Header::kTypeBroadcast)
     {
         VerifyOrExit(aPacket.GetHeader().GetDestination() == Get<Mac::Mac>().GetExtAddress());
