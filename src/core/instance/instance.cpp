@@ -430,9 +430,6 @@ void Instance::Finalize(void)
     mIsInitialized = false;
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    Get<MeshCoP::BorderAgent>().SetEnabled(false);
-#endif
     Get<Mle::Mle>().Stop();
     Get<ThreadNetif>().Down();
     Get<Mac::Mac>().SetEnabled(false);
