@@ -2682,7 +2682,7 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
     Error      error = kErrorNone;
     uint16_t   sourceAddress;
     LeaderData leaderData;
-    uint16_t   delay;
+    uint32_t   delay;
 
     VerifyOrExit(IsAttached());
 
@@ -2909,7 +2909,7 @@ exit:
 
     if (dataRequest)
     {
-        uint16_t delay;
+        uint32_t delay;
 
         if (aRxInfo.mMessageInfo.GetSockAddr().IsMulticast())
         {
@@ -4346,7 +4346,7 @@ void Mle::DelayedSender::Stop(void)
     mSchedules.DequeueAndFreeAll();
 }
 
-void Mle::DelayedSender::ScheduleDataRequest(const Ip6::Address &aDestination, uint16_t aDelay)
+void Mle::DelayedSender::ScheduleDataRequest(const Ip6::Address &aDestination, uint32_t aDelay)
 {
     VerifyOrExit(!HasMatchingSchedule(kTypeDataRequest, aDestination));
     AddSchedule(kTypeDataRequest, aDestination, aDelay, nullptr, 0);
@@ -4355,7 +4355,7 @@ exit:
     return;
 }
 
-void Mle::DelayedSender::ScheduleChildUpdateRequestToParent(uint16_t aDelay)
+void Mle::DelayedSender::ScheduleChildUpdateRequestToParent(uint32_t aDelay)
 {
     Ip6::Address destination;
 
@@ -4377,7 +4377,7 @@ void Mle::DelayedSender::RemoveScheduledChildUpdateRequestToParent(void)
 
 #if OPENTHREAD_FTD
 
-void Mle::DelayedSender::ScheduleParentResponse(const ParentResponseInfo &aInfo, uint16_t aDelay)
+void Mle::DelayedSender::ScheduleParentResponse(const ParentResponseInfo &aInfo, uint32_t aDelay)
 {
     Ip6::Address destination;
 
@@ -4387,7 +4387,7 @@ void Mle::DelayedSender::ScheduleParentResponse(const ParentResponseInfo &aInfo,
     AddSchedule(kTypeParentResponse, destination, aDelay, &aInfo, sizeof(aInfo));
 }
 
-void Mle::DelayedSender::ScheduleAdvertisement(const Ip6::Address &aDestination, uint16_t aDelay)
+void Mle::DelayedSender::ScheduleAdvertisement(const Ip6::Address &aDestination, uint32_t aDelay)
 {
     VerifyOrExit(!HasMatchingSchedule(kTypeAdvertisement, aDestination));
     AddSchedule(kTypeAdvertisement, aDestination, aDelay, nullptr, 0);
@@ -4396,7 +4396,7 @@ exit:
     return;
 }
 
-void Mle::DelayedSender::ScheduleMulticastDataResponse(uint16_t aDelay)
+void Mle::DelayedSender::ScheduleMulticastDataResponse(uint32_t aDelay)
 {
     Ip6::Address destination;
 
@@ -4407,7 +4407,7 @@ void Mle::DelayedSender::ScheduleMulticastDataResponse(uint16_t aDelay)
     AddSchedule(kTypeDataResponse, destination, aDelay, nullptr, 0);
 }
 
-void Mle::DelayedSender::ScheduleLinkRequest(const Router &aRouter, uint16_t aDelay)
+void Mle::DelayedSender::ScheduleLinkRequest(const Router &aRouter, uint32_t aDelay)
 {
     Ip6::Address destination;
     uint16_t     routerRloc16;
@@ -4439,7 +4439,7 @@ bool Mle::DelayedSender::HasAnyScheduledLinkRequest(const Router &aRouter) const
     return HasMatchingSchedule(kTypeLinkRequest, destination);
 }
 
-void Mle::DelayedSender::ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint16_t aDelay)
+void Mle::DelayedSender::ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint32_t aDelay)
 {
     Ip6::Address destination;
 
@@ -4451,7 +4451,7 @@ void Mle::DelayedSender::ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint16_
 
 void Mle::DelayedSender::ScheduleDiscoveryResponse(const Ip6::Address          &aDestination,
                                                    const DiscoveryResponseInfo &aInfo,
-                                                   uint16_t                     aDelay)
+                                                   uint32_t                     aDelay)
 {
     AddSchedule(kTypeDiscoveryResponse, aDestination, aDelay, &aInfo, sizeof(aInfo));
 }
@@ -4460,7 +4460,7 @@ void Mle::DelayedSender::ScheduleDiscoveryResponse(const Ip6::Address          &
 
 void Mle::DelayedSender::AddSchedule(MessageType         aMessageType,
                                      const Ip6::Address &aDestination,
-                                     uint16_t            aDelay,
+                                     uint32_t            aDelay,
                                      const void         *aInfo,
                                      uint16_t            aInfoSize)
 {

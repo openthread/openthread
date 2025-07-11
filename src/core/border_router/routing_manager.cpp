@@ -1078,7 +1078,7 @@ void RoutingManager::RoutePrefix::CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli
 //---------------------------------------------------------------------------------------------------------------------
 // RdnssAddress
 
-void RoutingManager::RdnssAddress::SetFrom(const RecursiveDnsServerOption &aRdnss, uint8_t aAddressIndex)
+void RoutingManager::RdnssAddress::SetFrom(const RecursiveDnsServerOption &aRdnss, uint16_t aAddressIndex)
 {
     mAddress        = aRdnss.GetAddressAt(aAddressIndex);
     mLifetime       = aRdnss.GetLifetime();
@@ -1564,7 +1564,7 @@ void RoutingManager::RxRaTracker::ProcessRecursiveDnsServerOption(const Recursiv
 
     lifetime = aRdnss.GetLifetime();
 
-    for (uint8_t index = 0; index < aRdnss.GetNumAddresses(); index++)
+    for (uint16_t index = 0; index < aRdnss.GetNumAddresses(); index++)
     {
         const Ip6::Address &address = aRdnss.GetAddressAt(index);
 

@@ -619,7 +619,7 @@ void LogRouterAdvert(const Icmp6Packet &aPacket)
 
             VerifyOrQuit(rdnss.IsValid());
 
-            for (uint8_t index = 0; index < rdnss.GetNumAddresses(); index++)
+            for (uint16_t index = 0; index < rdnss.GetNumAddresses(); index++)
             {
                 Log("     RDNSS - %s, lifetime:%u", rdnss.GetAddressAt(index).ToString().AsCString(),
                     rdnss.GetLifetime());

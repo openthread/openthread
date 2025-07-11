@@ -495,7 +495,10 @@ public:
      *
      * @returns The Timeout value.
      */
-    uint8_t GetTimeout(void) const { return ReadBits<uint16_t, kTimeoutMask>(GetTimeoutChildId()); }
+    uint8_t GetTimeout(void) const
+    {
+        return static_cast<uint8_t>(ReadBits<uint16_t, kTimeoutMask>(GetTimeoutChildId()));
+    }
 
     /**
      * Sets the Timeout value.

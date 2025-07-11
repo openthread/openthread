@@ -1396,7 +1396,7 @@ void Mle::HandleParentRequest(RxInfo &aRxInfo)
     uint8_t            scanMask;
     Child             *child;
     DeviceMode         mode;
-    uint16_t           delay;
+    uint32_t           delay;
     ParentResponseInfo info;
 
     Log(kMessageReceive, kTypeParentRequest, aRxInfo.mMessageInfo.GetPeerAddr());
@@ -2627,7 +2627,7 @@ exit:
 
 void Mle::HandleNetworkDataUpdateRouter(void)
 {
-    uint16_t delay;
+    uint32_t delay;
 
     VerifyOrExit(IsRouterOrLeader());
 
