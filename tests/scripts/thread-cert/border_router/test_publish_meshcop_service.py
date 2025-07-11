@@ -179,6 +179,8 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.check_meshcop_service(br1, host)
         self.check_meshcop_service(br2, host)
 
+        br1.disable_border_agent()
+        self.simulator.go(5)
         br1.factory_reset()
 
         dataset = {
