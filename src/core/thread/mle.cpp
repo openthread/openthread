@@ -1655,7 +1655,7 @@ uint32_t Mle::Reattach(void)
         }
 
 #if OPENTHREAD_FTD
-        if (IsFullThreadDevice() && BecomeLeader(/* aCheckWeight */ false) == kErrorNone)
+        if (IsFullThreadDevice() && BecomeLeader(kIgnoreLeaderWeight) == kErrorNone)
         {
             ExitNow();
         }
