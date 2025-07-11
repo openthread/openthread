@@ -33,6 +33,7 @@ target_compile_definitions(openthread-rcp PRIVATE
     OPENTHREAD_MTD=0
     OPENTHREAD_RADIO=1
     OPENTHREAD_RADIO_CLI=0
+    OPENTHREAD_MDNS=0
 )
 
 if (OT_NCP_SPI)
