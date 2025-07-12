@@ -1619,19 +1619,19 @@ private:
 
         void Stop(void);
 
-        void ScheduleDataRequest(const Ip6::Address &aDestination, uint16_t aDelay);
-        void ScheduleChildUpdateRequestToParent(uint16_t aDelay);
+        void ScheduleDataRequest(const Ip6::Address &aDestination, uint32_t aDelay);
+        void ScheduleChildUpdateRequestToParent(uint32_t aDelay);
 #if OPENTHREAD_FTD
-        void ScheduleParentResponse(const ParentResponseInfo &aInfo, uint16_t aDelay);
-        void ScheduleAdvertisement(const Ip6::Address &aDestination, uint16_t aDelay);
-        void ScheduleMulticastDataResponse(uint16_t aDelay);
-        void ScheduleLinkRequest(const Router &aRouter, uint16_t aDelay);
+        void ScheduleParentResponse(const ParentResponseInfo &aInfo, uint32_t aDelay);
+        void ScheduleAdvertisement(const Ip6::Address &aDestination, uint32_t aDelay);
+        void ScheduleMulticastDataResponse(uint32_t aDelay);
+        void ScheduleLinkRequest(const Router &aRouter, uint32_t aDelay);
         void RemoveScheduledLinkRequest(const Router &aRouter);
         bool HasAnyScheduledLinkRequest(const Router &aRouter) const;
-        void ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint16_t aDelay);
+        void ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint32_t aDelay);
         void ScheduleDiscoveryResponse(const Ip6::Address          &aDestination,
                                        const DiscoveryResponseInfo &aInfo,
-                                       uint16_t                     aDelay);
+                                       uint32_t                     aDelay);
 #endif
         void RemoveScheduledChildUpdateRequestToParent(void);
 
@@ -1652,7 +1652,7 @@ private:
 
         void AddSchedule(MessageType         aMessageType,
                          const Ip6::Address &aDestination,
-                         uint16_t            aDelay,
+                         uint32_t            aDelay,
                          const void         *aInfo,
                          uint16_t            aInfoSize);
         void Execute(const Schedule &aSchedule);
