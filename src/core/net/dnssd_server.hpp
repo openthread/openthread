@@ -53,6 +53,7 @@
 #include "common/equatable.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
+#include "common/num_utils.hpp"
 #include "common/owned_ptr.hpp"
 #include "common/timer.hpp"
 #include "net/dns_types.hpp"
@@ -514,6 +515,8 @@ private:
         void Resolve(ProxyQuery &aQuery, ProxyQueryInfo &aInfo);
         void CancelAction(ProxyQuery &aQuery, ProxyQueryInfo &aInfo);
 
+        static uint32_t CapTtl(uint32_t aTtl) { return Min(aTtl, kMaxTtl); }
+
     private:
         enum Command : uint8_t
         {
@@ -569,6 +572,8 @@ private:
                           const ProxyResult  &aResult);
 
         static bool IsActionForAdditionalSection(ProxyAction aAction, const Questions &aQuestions);
+
+        static constexpr uint32_t kMaxTtl = 10; // RFC 8766 Section 5.5.1 and Section 5.6
 
         bool mIsRunning;
     };
