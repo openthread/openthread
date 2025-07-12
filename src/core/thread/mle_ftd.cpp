@@ -1401,28 +1401,11 @@ void Mle::HandleParentRequest(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeParentRequest, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(IsRouterEligible(), error = kErrorInvalidState);
+    VerifyOrExit(IsRouterEligible());
+    VerifyOrExit(!IsDetached() && !IsAttaching());
 
-    // A Router/REED MUST NOT send an MLE Parent Response if:
-
-    // 0. It is detached or attempting to another partition
-    VerifyOrExit(!IsDetached() && !IsAttaching(), error = kErrorDrop);
-
-    // 1. It has no available Child capacity (if Max Child Count minus
-    // Child Count would be equal to zero)
-    // ==> verified below when allocating a child entry
-
-    // 2. It is disconnected from its Partition (that is, it has not
-    // received an updated ID sequence number within LEADER_TIMEOUT
-    // seconds)
     VerifyOrExit(mRouterTable.GetLeaderAge() < mNetworkIdTimeout, error = kErrorDrop);
-
-    // 3. Its current routing path cost to the Leader is infinite.
     VerifyOrExit(mRouterTable.GetPathCostToLeader() < kMaxRouteCost, error = kErrorDrop);
-
-    // 4. It is a REED and there are already `kMaxRouters` active routers in
-    // the network (because Leader would reject any further address solicit).
-    // ==> Verified below when checking the scan mask.
 
     info.mChildExtAddress.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
 
@@ -1466,9 +1449,11 @@ void Mle::HandleParentRequest(RxInfo &aRxInfo)
             child->SetVersion(version);
         }
     }
-    else if (TimerMilli::GetNow() - child->GetLastHeard() < kParentRequestRouterTimeout - kParentRequestDuplicateMargin)
+    else
     {
-        ExitNow(error = kErrorDuplicated);
+        uint32_t durSinceLastHeard = TimerMilli::GetNow() - child->GetLastHeard();
+
+        VerifyOrExit(durSinceLastHeard >= kParentRequestDuplicateTimeout, error = kErrorDuplicated);
     }
 
     if (!child->IsStateValidOrRestoring())

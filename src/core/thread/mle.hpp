@@ -1182,7 +1182,7 @@ private:
     // All time intervals are in milliseconds
     static constexpr uint32_t kParentRequestRouterTimeout    = 750;  // Wait time after tx of Parent Req to routers
     static constexpr uint32_t kParentRequestReedTimeout      = 1250; // Wait timer after tx of Parent Req to REEDs
-    static constexpr uint32_t kParentRequestDuplicateMargin  = 50;   // Margin to detect duplicate received Parent Req
+    static constexpr uint32_t kParentRequestDuplicateTimeout = 700;  // Min time to detect duplicate Parent Req rx
     static constexpr uint32_t kChildIdResponseTimeout        = 1250; // Wait time to receive Child ID Response
     static constexpr uint32_t kAttachStartJitter             = 50;   // Max jitter time added to start of attach
     static constexpr uint32_t kAnnounceProcessTimeout        = 250;  // Delay after Announce rx before processing
