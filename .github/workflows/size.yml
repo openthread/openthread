@@ -32,7 +32,7 @@ on:
   push:
     branches-ignore:
       - 'dependabot/**'
-  pull_request:
+  pull_request_target:
     branches:
       - 'main'
 
@@ -41,11 +41,14 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
+  pull-requests: write
   contents: read
 
 jobs:
 
   size-report:
+    permissions:
+      pull-requests: write
     runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
@@ -56,8 +59,39 @@ jobs:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: Run
       env:
-        OT_BASE_BRANCH: "${{ github.base_ref }}"
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        PR_NUMBER: "${{ github.event.pull_request.number }}"
       run: |
         ./script/check-size
         cat /tmp/ot-size-report/report_pr >> $GITHUB_STEP_SUMMARY
+    - uses: actions/github-script@v7
+      name: Post Report
+      if: ${{ github.event_name == 'pull_request' }}
+      id: post-report
+      with:
+        script: |
+          const fs = require('fs')
+
+          const report = fs.readFileSync('/tmp/ot-size-report/report_pr', 'utf8');
+          const params = {
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report,
+          }
+
+          const response = await github.rest.issues.listComments({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+
+          const kMagicHeader = '<!-- Size Report of **OpenThread** -->'
+          const comment = response.data.find(comment => comment.body.startsWith(kMagicHeader))
+
+          if (comment) {
+            params.comment_id = comment.id;
+            await github.rest.issues.updateComment(params)
+          } else {
+            await github.rest.issues.createComment(params)
+          }
