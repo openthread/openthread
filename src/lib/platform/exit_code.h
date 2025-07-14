@@ -113,7 +113,10 @@ const char *otExitCodeToString(uint8_t aExitCode);
 #define VerifyOrDie(aCondition, aExitCode)                                                         \
     do                                                                                             \
     {                                                                                              \
-        if (!(aCondition))                                                                         \
+        if (aCondition)                                                                            \
+        {                                                                                          \
+        }                                                                                          \
+        else                                                                                       \
         {                                                                                          \
             const char *start = strrchr(__FILE__, '/');                                            \
             OT_UNUSED_VARIABLE(start);                                                             \

@@ -112,7 +112,7 @@ exit:
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
 void ChannelManager::ChangeCslChannel(uint8_t aChannel)
 {
-    if (!(!Get<Mle::Mle>().IsRxOnWhenIdle() && Get<Mac::Mac>().IsCslEnabled()))
+    if (Get<Mle::Mle>().IsRxOnWhenIdle() || !Get<Mac::Mac>().IsCslEnabled())
     {
         // cannot select or use other channel
         ExitNow();

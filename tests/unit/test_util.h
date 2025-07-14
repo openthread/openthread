@@ -66,7 +66,10 @@ extern "C" {
 #define VerifyOrQuit(...)                                                                                       \
     do                                                                                                          \
     {                                                                                                           \
-        if (!(OT_FIRST_ARG(__VA_ARGS__)))                                                                       \
+        if ((OT_FIRST_ARG(__VA_ARGS__)))                                                                        \
+        {                                                                                                       \
+        }                                                                                                       \
+        else                                                                                                    \
         {                                                                                                       \
             fprintf(stderr, "\nFAILED %s:%d - VerifyOrQuit(%s) " OT_SECOND_ARG(__VA_ARGS__) "\n", __FUNCTION__, \
                     __LINE__, _Stringize(OT_FIRST_ARG(__VA_ARGS__)));                                           \

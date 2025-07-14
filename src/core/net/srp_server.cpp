@@ -721,7 +721,7 @@ void Server::CommitSrpUpdate(Error                    aError,
 exit:
     if (aMessageInfo != nullptr)
     {
-        if (aError == kErrorNone && !(grantedLease == hostLease && grantedKeyLease == hostKeyLease))
+        if (aError == kErrorNone && (grantedLease != hostLease || grantedKeyLease != hostKeyLease))
         {
             SendResponse(aDnsHeader, grantedLease, grantedKeyLease, useShortLease, *aMessageInfo);
         }
