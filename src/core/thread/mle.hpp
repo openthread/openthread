@@ -642,15 +642,6 @@ public:
     void HandleChildIdRequestTxDone(Message &aMessage);
 
     /**
-     * Requests MLE layer to prepare and send a shorter version of Child ID Request message by only
-     * including the mesh-local IPv6 address in the Address Registration TLV.
-     *
-     * Should be called when a previous MLE Child ID Request message would require fragmentation at 6LoWPAN
-     * layer.
-     */
-    void RequestShorterChildIdRequest(void);
-
-    /**
      * Schedules a Child Update Request.
      */
     void ScheduleChildUpdateRequest(void);

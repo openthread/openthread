@@ -1751,15 +1751,6 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-void Mle::RequestShorterChildIdRequest(void)
-{
-    if (mAttachState == kAttachStateChildIdRequest)
-    {
-        mAddressRegistrationMode = kAppendMeshLocalOnly;
-        IgnoreError(SendChildIdRequest());
-    }
-}
-
 void Mle::HandleChildIdRequestTxDone(Message &aMessage)
 {
     if (aMessage.GetTxSuccess() && !IsRxOnWhenIdle())
@@ -1768,7 +1759,7 @@ void Mle::HandleChildIdRequestTxDone(Message &aMessage)
         Get<MeshForwarder>().SetRxOnWhenIdle(false);
     }
 
-    if (aMessage.IsLinkSecurityEnabled())
+    if (aMessage.IsLinkSecurityEnabled() && (mAttachState == kAttachStateChildIdRequest))
     {
         // If the Child ID Request requires fragmentation and therefore
         // link layer security, the frame transmission will be aborted.
@@ -1777,7 +1768,9 @@ void Mle::HandleChildIdRequestTxDone(Message &aMessage)
         // address in the Address Registration TLV).
 
         LogInfo("Requesting shorter `Child ID Request`");
-        RequestShorterChildIdRequest();
+
+        mAddressRegistrationMode = kAppendMeshLocalOnly;
+        IgnoreError(SendChildIdRequest());
     }
 }
 
