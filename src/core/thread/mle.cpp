@@ -1751,7 +1751,14 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-void Mle::HandleChildIdRequestTxDone(Message &aMessage)
+void Mle::HandleChildIdRequestTxDone(const otMessage *aMessage, otError aError, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aError);
+
+    static_cast<Mle *>(aContext)->HandleChildIdRequestTxDone(AsCoreType(aMessage));
+}
+
+void Mle::HandleChildIdRequestTxDone(const Message &aMessage)
 {
     if (aMessage.GetTxSuccess() && !IsRxOnWhenIdle())
     {
@@ -1825,6 +1832,8 @@ Error Mle::SendChildIdRequest(void)
     SuccessOrExit(error = message->AppendActiveAndPendingTimestampTlvs());
 
     mParentCandidate.SetState(Neighbor::kStateValid);
+
+    message->RegisterTxCallback(HandleChildIdRequestTxDone, this);
 
     destination.SetToLinkLocalAddress(mParentCandidate.GetExtAddress());
     SuccessOrExit(error = message->SendTo(destination));
