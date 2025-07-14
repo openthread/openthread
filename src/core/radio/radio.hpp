@@ -121,11 +121,16 @@ public:
     static constexpr uint8_t  kChannelMax        = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MAX;
 #endif
 
+    static constexpr uint8_t kFrameMinSize = OT_RADIO_FRAME_MIN_SIZE;
+    static constexpr uint8_t kFrameMaxSize = OT_RADIO_FRAME_MAX_SIZE;
+
     static const uint8_t kSupportedChannelPages[kNumChannelPages];
 
     static constexpr int8_t kInvalidRssi = OT_RADIO_RSSI_INVALID; ///< Invalid RSSI value.
 
     static constexpr int8_t kDefaultReceiveSensitivity = -110; ///< Default receive sensitivity (in dBm).
+
+    static constexpr int8_t kInvalidPower = OT_RADIO_POWER_INVALID;
 
     static_assert((OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT || OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT ||
                    OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT),

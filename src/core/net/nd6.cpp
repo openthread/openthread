@@ -183,7 +183,7 @@ void RaFlagsExtOption::Init(void)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// RouteInfoOption
+// RecursiveDnsServerOption
 
 void RecursiveDnsServerOption::Init(void)
 {
