@@ -1271,7 +1271,7 @@ uint16_t Client::DetermineQuestionRecordType(const QueryInfo &aInfo) const
     // Determine the first record type to include in Question
     // section based on the `mQueryType`.
 
-    uint8_t recordType = 0;
+    uint16_t recordType = 0;
 
     switch (aInfo.mQueryType)
     {

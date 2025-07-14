@@ -534,7 +534,7 @@ public:
      *
      * @returns Number of IPv6 addresses.
      */
-    uint8_t GetNumAddresses(void) const { return IsValid() ? (GetLength() - 1) / 2 : 0; }
+    uint16_t GetNumAddresses(void) const { return IsValid() ? (GetLength() - 1) / 2 : 0; }
 
     /**
      * Returns a pointer to array of IPv6 addresses of DNS server.
@@ -563,7 +563,7 @@ public:
      *
      * @returns The IPv6 address at @p aIndex.
      */
-    const Address &GetAddressAt(uint8_t aIndex) const { return GetAddresses()[aIndex]; }
+    const Address &GetAddressAt(uint16_t aIndex) const { return GetAddresses()[aIndex]; }
 
     /**
      * Calculates the option length for a given number of IPv6 addresses.

@@ -1390,7 +1390,7 @@ exit:
     return error;
 }
 
-Error TxtDataEncoder::AppendBytesEntry(const char *aKey, const void *aBuffer, uint16_t aLength)
+Error TxtDataEncoder::AppendBytesEntry(const char *aKey, const void *aBuffer, uint8_t aLength)
 {
     return TxtEntry(aKey, reinterpret_cast<const uint8_t *>(aBuffer), aLength).AppendTo(mAppender);
 }
@@ -1402,7 +1402,7 @@ Error TxtDataEncoder::AppendStringEntry(const char *aKey, const char *aStringVal
 
     VerifyOrExit(length <= kMaxStringEntryLength, error = kErrorInvalidArgs);
 
-    error = AppendBytesEntry(aKey, aStringValue, length);
+    error = AppendBytesEntry(aKey, aStringValue, static_cast<uint8_t>(length));
 
 exit:
     return error;

@@ -893,7 +893,7 @@ private:
     class RdnssAddress
     {
     public:
-        void                SetFrom(const RecursiveDnsServerOption &aRdnss, uint8_t aAddressIndex);
+        void                SetFrom(const RecursiveDnsServerOption &aRdnss, uint16_t aAddressIndex);
         const Ip6::Address &GetAddress(void) const { return mAddress; }
         const TimeMilli    &GetLastUpdateTime(void) const { return mLastUpdateTime; }
         uint32_t            GetLifetime(void) const { return mLifetime; }

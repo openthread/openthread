@@ -851,7 +851,10 @@ public:
      *
      * @returns The Revision value.
      */
-    uint8_t GetRevision(void) const { return ReadBitsBigEndian<uint16_t, kRevMask>(mBuildRevision); }
+    uint8_t GetRevision(void) const
+    {
+        return static_cast<uint8_t>(ReadBitsBigEndian<uint16_t, kRevMask>(mBuildRevision));
+    }
 
     /**
      * Sets the Revision value.

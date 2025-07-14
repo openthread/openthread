@@ -272,7 +272,7 @@ template <typename UintType> void SetBit(UintType &aBits, uint8_t aBitOffset)
 {
     static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
-    aBits = aBits | (static_cast<UintType>(1) << aBitOffset);
+    aBits = aBits | static_cast<UintType>(static_cast<UintType>(1) << aBitOffset);
 }
 
 /**

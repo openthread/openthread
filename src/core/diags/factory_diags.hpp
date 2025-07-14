@@ -264,7 +264,7 @@ private:
     uint32_t      mTxPackets;
     uint8_t       mChannel;
     int8_t        mTxPower;
-    uint8_t       mTxLen;
+    uint16_t      mTxLen;
     TxCmd         mCurTxCmd;
     bool          mIsHeaderUpdated : 1;
     bool          mIsSecurityProcessed : 1;

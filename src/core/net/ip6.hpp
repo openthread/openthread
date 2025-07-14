@@ -487,7 +487,7 @@ public:
      *
      * @returns The IPv6 Payload Length value.
      */
-    uint8_t GetIpLength(void) const { return mIp6Header.GetPayloadLength(); }
+    uint16_t GetIpLength(void) const { return mIp6Header.GetPayloadLength(); }
 
     /**
      * Returns the IPv6 Hop Limit value.

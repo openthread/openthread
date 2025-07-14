@@ -696,7 +696,7 @@ void Dhcp6PdClient::SaveServerDuidAndAddress(const Message &aMessage)
     Ip6::Address serverAddress;
 
     SuccessOrAssert(ServerIdOption::ReadDuid(aMessage, serverDuidOffsetRange));
-    mServerDuid.SetLength(serverDuidOffsetRange.GetLength());
+    mServerDuid.SetLength(static_cast<uint8_t>(serverDuidOffsetRange.GetLength()));
     aMessage.ReadBytes(serverDuidOffsetRange, mServerDuid.GetArrayBuffer());
 
     ProcessServerUnicastOption(aMessage, serverAddress);
