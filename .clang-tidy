@@ -20,8 +20,5 @@ Checks: >
   readability-redundant-member-init,
   readability-simplify-boolean-expr,
   readability-static-accessed-through-instance
-CheckOptions:
-  - key: readability-simplify-boolean-expr.SimplifyDeMorgan
-    value: false
 WarningsAsErrors: '*'
 HeaderFilterRegex: '(examples|include|src).*(?<!third_party.*repo)'
