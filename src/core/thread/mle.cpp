@@ -52,7 +52,6 @@ Mle::Mle(Instance &aInstance)
     , mRequestRouteTlv(false)
     , mHasRestored(false)
     , mReceivedResponseFromParent(false)
-    , mDetachingGracefully(false)
     , mInitiallyAttachedAsSleepy(false)
     , mRole(kRoleDisabled)
     , mLastSavedRole(kRoleDisabled)
@@ -75,6 +74,7 @@ Mle::Mle(Instance &aInstance)
     , mNeighborTable(aInstance)
     , mDelayedSender(aInstance)
     , mSocket(aInstance, *this)
+    , mDetacher(aInstance)
     , mRetxTracker(aInstance)
     , mAnnounceHandler(aInstance)
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
@@ -273,11 +273,7 @@ void Mle::Stop(StopMode aMode)
     SetRole(kRoleDisabled);
 
 exit:
-    if (mDetachingGracefully)
-    {
-        mDetachingGracefully = false;
-        mDetachGracefullyCallback.InvokeAndClearIfSet();
-    }
+    mDetacher.HandleStop();
 }
 
 Error Mle::RestorePrevRole(void)
@@ -1464,12 +1460,6 @@ void Mle::HandleAttachTimer(void)
     uint32_t          delay          = 0;
     bool              shouldAnnounce = true;
     ParentRequestType type;
-
-    if (mDetachingGracefully)
-    {
-        Stop();
-        ExitNow();
-    }
 
 #if OPENTHREAD_FTD
     if (IsDetached() && mRouterRoleRestorer.IsActive())
@@ -3510,14 +3500,8 @@ void Mle::HandleChildUpdateResponseOnChild(RxInfo &aRxInfo)
         switch (Tlv::Find<TimeoutTlv>(aRxInfo.mMessage, timeout))
         {
         case kErrorNone:
-            if (timeout == 0 && mDetachingGracefully)
-            {
-                Stop();
-            }
-            else
-            {
-                SetTimeout(timeout, kDoNotSendChildUpdateToParent);
-            }
+            SuccessOrExit(mDetacher.HandleChildUpdateResponse(timeout));
+            SetTimeout(timeout, kDoNotSendChildUpdateToParent);
             break;
         case kErrorNotFound:
             break;
@@ -4255,32 +4239,32 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 
-Error Mle::DetachGracefully(DetachCallback aCallback, void *aContext)
+Error Mle::Detacher::Detach(DetachCallback aCallback, void *aContext)
 {
     Error    error   = kErrorNone;
-    uint32_t timeout = kDetachGracefullyTimeout;
+    uint32_t timeout = kTimeout;
 
-    VerifyOrExit(!mDetachingGracefully, error = kErrorBusy);
+    VerifyOrExit(mState == kIdle, error = kErrorBusy);
 
-    mDetachGracefullyCallback.Set(aCallback, aContext);
+    mCallback.Set(aCallback, aContext);
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     Get<BorderRouter::RoutingManager>().RequestStop();
 #endif
 
-    switch (mRole)
+    switch (Get<Mle>().GetRole())
     {
     case kRoleLeader:
         break;
 
     case kRoleRouter:
 #if OPENTHREAD_FTD
-        SendAddressRelease();
+        Get<Mle>().SendAddressRelease();
 #endif
         break;
 
     case kRoleChild:
-        IgnoreError(SendChildUpdateRequestToParent(kAppendZeroTimeout));
+        IgnoreError(Get<Mle>().SendChildUpdateRequestToParent(kAppendZeroTimeout));
         break;
 
     case kRoleDisabled:
@@ -4293,8 +4277,8 @@ Error Mle::DetachGracefully(DetachCallback aCallback, void *aContext)
         break;
     }
 
-    mDetachingGracefully = true;
-    mAttachTimer.Start(timeout);
+    mState = kDetaching;
+    mTimer.Start(timeout);
 
 exit:
     return error;
@@ -5371,6 +5355,60 @@ void Mle::ParentCandidate::CopyTo(Parent &aParent) const
     const Parent *candidateAsParent = this;
 
     aParent = *candidateAsParent;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Detacher
+
+Mle::Detacher::Detacher(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mState(kIdle)
+    , mTimer(aInstance)
+{
+}
+
+void Mle::Detacher::HandleTimer(void)
+{
+    if (mState == kDetaching)
+    {
+        Get<Mle>().Stop();
+    }
+}
+
+Error Mle::Detacher::HandleChildUpdateResponse(uint32_t aTimeout)
+{
+    // Called while processing a "Child Update Response" from parent
+    //
+    // To gracefully detach as a child, we send a "Child Update
+    // Request" with zero timeout value to the parent. Receiving
+    // a "Child Update Response" confirms the parent has received the
+    // request, allowing the device to then stop its MLE operations.
+
+    // Returns `kErrorDetached` to signal that MLE is stopped and the
+    // incoming response should be ignored. Returns `kErrorNone` if
+    // the response should be processed (i.e., not detaching or if
+    // the conditions for MLE stop are not yet met).
+
+    Error error = kErrorNone;
+
+    VerifyOrExit(mState == kDetaching);
+    VerifyOrExit(aTimeout == 0);
+    Get<Mle>().Stop();
+    error = kErrorDetached;
+
+exit:
+    return error;
+}
+
+void Mle::Detacher::HandleStop(void)
+{
+    // Called upon `Mle::Stop()` after role change.
+
+    if (mState == kDetaching)
+    {
+        mState = kIdle;
+        mCallback.InvokeAndClearIfSet();
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
