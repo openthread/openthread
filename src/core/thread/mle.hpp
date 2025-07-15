@@ -1356,6 +1356,7 @@ private:
         kNormalChildUpdateRequest, // Normal Child Update Request.
         kAppendChallengeTlv,       // Append Challenge TLV to Child Update Request even if currently attached.
         kAppendZeroTimeout,        // Use zero timeout when appending Timeout TLV (used for graceful detach).
+        kToRestoreChildRole,       // To restore previous child role (upon restart), re-establishing link with parent.
     };
 
     enum SecuritySuite : uint8_t
@@ -1717,6 +1718,71 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    void HandleRoleRestorerTimer(void) { mPrevRoleRestorer.HandleTimer(); }
+
+    class PrevRoleRestorer : public InstanceLocator
+    {
+        // Attempts to restore the device's previously saved role
+        // (child/router/leader) after an MLE restart (e.g., after a
+        // device reboot).
+        //
+        // If the previous role was router/leader, it sends multicast
+        // Link Requests. If the role was child, it sends Child
+        // Update Requests to the parent. It manages message
+        // retransmissions and stops the restoration attempt if the
+        // maximum number of attempts is exhausted, setting the
+        // device to a detached state.
+        //
+        // To prevent synchronized transmissions when multiple devices
+        // reboot at once, it adds a random delay (up to 25 ms)
+        // before sending the first message.
+
+    public:
+        PrevRoleRestorer(Instance &aInstance);
+
+        Error Start(void);
+        void  Stop(void);
+        bool  IsRestoringChildRole(void) const { return mState == kRestoringChildRole; }
+        bool  IsRestoringRouterOrLeaderRole(void) const { return mState == kRestoringRouterOrLeaderRole; }
+        void  HandleTimer(void);
+
+#if OPENTHREAD_FTD
+        void               GenerateRandomChallenge(void) { mChallenge.GenerateRandom(); }
+        const TxChallenge &GetChallenge(void) const { return mChallenge; }
+#endif
+
+    private:
+        static constexpr uint32_t kMaxStartDelay                = 25;
+        static constexpr uint8_t  kMaxChildUpdatesToRestoreRole = kMaxChildKeepAliveAttempts;
+        static constexpr uint32_t kChildUpdateRetxDelay         = kUnicastRetxDelay; /// 1000 msec
+        static constexpr uint16_t kRetxJitter                   = 5;
+
+        enum State : uint8_t
+        {
+            kIdle,
+            kRestoringChildRole,
+            kRestoringRouterOrLeaderRole,
+        };
+
+        void SetState(State aState);
+        void SendChildUpdate(void);
+#if OPENTHREAD_FTD
+        void DetermineMaxLinkRequestAttempts(void);
+        void SendMulticastLinkRequest(void);
+#endif
+
+        using DelayTimer = TimerMilliIn<Mle, &Mle::HandleRoleRestorerTimer>;
+
+        State      mState;
+        uint8_t    mAttempts;
+        DelayTimer mTimer;
+#if OPENTHREAD_FTD
+        TxChallenge mChallenge;
+#endif
+    };
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     void HandleDetacherTimer(void) { mDetacher.HandleTimer(); }
 
     class Detacher : public InstanceLocator
@@ -1943,33 +2009,7 @@ private:
         uint8_t mJitter;
     };
 
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    class RouterRoleRestorer : public InstanceLocator
-    {
-        // Attempts to restore the router or leader role after an MLE
-        // restart(e.g., after a device reboot) by sending multicast
-        // Link Requests.
-
-    public:
-        RouterRoleRestorer(Instance &aInstance);
-
-        bool IsActive(void) const { return mAttempts > 0; }
-        void Start(DeviceRole aPreviousRole);
-        void Stop(void) { mAttempts = 0; }
-        void HandleTimer(void);
-
-        void               GenerateRandomChallenge(void) { mChallenge.GenerateRandom(); }
-        const TxChallenge &GetChallenge(void) const { return mChallenge; }
-
-    private:
-        void SendMulticastLinkRequest(void);
-
-        uint8_t     mAttempts;
-        TxChallenge mChallenge;
-    };
-
-#endif // OPENTHREAD_FTD
+#endif
 
     //------------------------------------------------------------------------------------------------------------------
     // Methods
@@ -2224,17 +2264,18 @@ private:
     uint32_t mLastAttachTime;
     uint64_t mLastUpdatedTimestamp;
 
-    LeaderData      mLeaderData;
-    Parent          mParent;
-    NeighborTable   mNeighborTable;
-    DelayedSender   mDelayedSender;
-    TxChallenge     mParentRequestChallenge;
-    ParentCandidate mParentCandidate;
-    MleSocket       mSocket;
-    Counters        mCounters;
-    Detacher        mDetacher;
-    RetxTracker     mRetxTracker;
-    AnnounceHandler mAnnounceHandler;
+    LeaderData       mLeaderData;
+    Parent           mParent;
+    NeighborTable    mNeighborTable;
+    DelayedSender    mDelayedSender;
+    TxChallenge      mParentRequestChallenge;
+    ParentCandidate  mParentCandidate;
+    MleSocket        mSocket;
+    Counters         mCounters;
+    PrevRoleRestorer mPrevRoleRestorer;
+    Detacher         mDetacher;
+    RetxTracker      mRetxTracker;
+    AnnounceHandler  mAnnounceHandler;
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     ParentSearch mParentSearch;
 #endif
@@ -2293,7 +2334,6 @@ private:
     TrickleTimer               mAdvertiseTrickleTimer;
     ChildTable                 mChildTable;
     RouterTable                mRouterTable;
-    RouterRoleRestorer         mRouterRoleRestorer;
     RouterRoleTransition       mRouterRoleTransition;
     Ip6::Netif::UnicastAddress mLeaderAloc;
 #if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
