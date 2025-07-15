@@ -507,15 +507,17 @@ bool Server::HasNameConflictsWith(Host &aHost) const
         ExitNow(hasConflicts = true);
     }
 
-    for (const Service &service : aHost.mServices)
+    for (const Host &host : mHosts)
     {
-        // Check on all hosts for a matching service with the same
-        // instance name and if found, verify that it has the same
-        // key.
-
-        for (const Host &host : mHosts)
+        if (aHost.mKey == host.mKey)
         {
-            if (host.HasService(service.GetInstanceName()) && (aHost.mKey != host.mKey))
+            continue;
+        }
+
+        // Verify that no allocated services have the same instance name.
+        for (const Service &service : aHost.mServices)
+        {
+            if (host.HasService(service.GetInstanceName()))
             {
                 LogWarn("Name conflict: service name %s has already been allocated", service.GetInstanceName());
                 ExitNow(hasConflicts = true);
