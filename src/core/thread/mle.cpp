@@ -2159,7 +2159,7 @@ Error Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, L
     tlv.SetType(Tlv::kLinkMetricsManagement);
     statusSubTlv.SetType(LinkMetrics::SubTlv::kStatus);
     statusSubTlv.SetLength(sizeof(aStatus));
-    tlv.SetLength(statusSubTlv.GetSize());
+    tlv.SetLength(static_cast<uint8_t>(statusSubTlv.GetSize()));
 
     SuccessOrExit(error = message->Append(tlv));
     SuccessOrExit(error = message->Append(statusSubTlv));
