@@ -5556,6 +5556,9 @@ void Mle::RetxTracker::UpdateOnDataResponseRx(void)
 void Mle::RetxTracker::ScheduleTimer(void)
 {
     mTimer.Stop();
+
+    VerifyOrExit(!Get<Mle>().IsDisabled());
+
     mChildUpdate.Schedule(mTimer);
 
     // We defer sending Data Request while awaiting a Child Update
@@ -5565,11 +5568,16 @@ void Mle::RetxTracker::ScheduleTimer(void)
     {
         mDataRequest.Schedule(mTimer);
     }
+
+exit:
+    return;
 }
 
 void Mle::RetxTracker::HandleTimer(void)
 {
     TimeMilli now = TimerMilli::GetNow();
+
+    VerifyOrExit(!Get<Mle>().IsDisabled());
 
     if (mChildUpdate.ShouldSend(now))
     {
