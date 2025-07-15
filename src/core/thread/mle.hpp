@@ -634,12 +634,6 @@ public:
         mParentResponseCallback.Set(aCallback, aContext);
     }
 #endif
-    /**
-     * Notifies MLE whether the Child ID Request message was transmitted successfully.
-     *
-     * @param[in]  aMessage  The transmitted message.
-     */
-    void HandleChildIdRequestTxDone(Message &aMessage);
 
     /**
      * Schedules a Child Update Request.
@@ -1993,6 +1987,7 @@ private:
     uint32_t   GetAttachStartDelay(void) const;
     void       SendParentRequest(ParentRequestType aType);
     Error      SendChildIdRequest(void);
+    void       HandleChildIdRequestTxDone(const Message &aMessage);
     Error      GetNextAnnounceChannel(uint8_t &aChannel) const;
     bool       HasMoreChannelsToAnnounce(void) const;
     bool       PrepareAnnounceState(void);
@@ -2012,6 +2007,8 @@ private:
                                       const Ip6::MessageInfo &aMessageInfo,
                                       uint16_t                aCmdOffset,
                                       const SecurityHeader   &aHeader);
+
+    static void HandleChildIdRequestTxDone(const otMessage *aMessage, otError aError, void *aContext);
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     void InformPreviousParent(void);

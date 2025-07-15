@@ -1283,10 +1283,6 @@ void MeshForwarder::FinalizeMessageDirectTx(Message &aMessage, Error aError)
         // `aMessage` and mark it again for direct transmission.
         Get<Mle::DiscoverScanner>().HandleDiscoveryRequestFrameTxDone(aMessage, aError);
     }
-    else if (aMessage.IsMleCommand(Mle::kCommandChildIdRequest))
-    {
-        Get<Mle::Mle>().HandleChildIdRequestTxDone(aMessage);
-    }
 
     aMessage.InvokeTxCallback(aError);
 
