@@ -53,9 +53,14 @@ jobs:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - name: Checkout Pull Request
+      if: ${{ github.event_name == 'pull_request_target' }}
+      run: |
+        git fetch origin pull/${{ github.event.pull_request.number }}/head
+        git checkout FETCH_HEAD
     - name: Run
       env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        PR_BODY: "${{ github.event.pull_request.body }}"
         PR_NUMBER: "${{ github.event.pull_request.number }}"
       run: |
         ./script/check-size

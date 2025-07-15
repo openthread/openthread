@@ -32,7 +32,7 @@ set -euo pipefail
 OT_TMP_DIR=/tmp/ot-size-report
 readonly OT_TMP_DIR
 
-OT_SHA_NEW=${GITHUB_SHA:-$(git rev-parse HEAD)}
+OT_SHA_NEW="$(git rev-parse HEAD)"
 readonly OT_SHA_NEW
 
 OT_SHA_OLD="${OT_SHA_OLD:-$(git cat-file -p "${OT_SHA_NEW}" | grep 'parent ' | head -n1 | cut -d' ' -f2)}"

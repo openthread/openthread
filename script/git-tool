@@ -54,6 +54,14 @@ get_pr_body()
 {
     local pr
 
+    if [[ -z ${PR_BODY+x} ]]; then
+        echo 'PR_BODY is not set' >&2
+    else
+        echo 'PR_BODY is set' >&2
+        echo "${PR_BODY}"
+        return 0
+    fi
+
     [[ ${GITHUB_ACTIONS+x} && ${GITHUB_REF-} =~ ^refs/pull/[0-9]+/merge ]] || {
         echo 'Not a pull request.' >&2
         return 0
