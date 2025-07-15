@@ -216,7 +216,7 @@ public:
      * @retval kErrorNone   Successfully started detaching.
      * @retval kErrorBusy   Detaching is already in progress.
      */
-    Error DetachGracefully(DetachCallback aCallback, void *aContext);
+    Error DetachGracefully(DetachCallback aCallback, void *aContext) { return mDetacher.Detach(aCallback, aContext); }
 
     /**
      * Indicates whether or not the Thread device is attached to a Thread network.
@@ -1182,7 +1182,6 @@ private:
     static constexpr uint32_t kMaxLinkAcceptDelay            = 1000; // Max delay to tx Link Accept for multicast Req
     static constexpr uint32_t kChildIdRequestTimeout         = 5000; // Max delay to rx a Child ID Req after Parent Res
     static constexpr uint32_t kLinkRequestTimeout            = 2000; // Max delay to rx a Link Accept
-    static constexpr uint32_t kDetachGracefullyTimeout       = 1000; // Timeout for graceful detach
     static constexpr uint32_t kUnicastRetxDelay              = 1000; // Base delay for MLE unicast retx
     static constexpr uint32_t kMulticastRetxDelay            = 5000; // Base delay for MLE multicast retx
     static constexpr uint32_t kMulticastRetxDelayMin         = kMulticastRetxDelay * 9 / 10;  // 0.9 * base delay
@@ -1721,6 +1720,38 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    void HandleDetacherTimer(void) { mDetacher.HandleTimer(); }
+
+    class Detacher : public InstanceLocator
+    {
+        // Manages graceful detach process.
+
+    public:
+        explicit Detacher(Instance &aInstance);
+
+        Error Detach(DetachCallback aCallback, void *aContext);
+        void  HandleTimer(void);
+        Error HandleChildUpdateResponse(uint32_t aTimeout);
+        void  HandleStop(void);
+
+    private:
+        static constexpr uint32_t kTimeout = 1000;
+
+        enum State : uint8_t
+        {
+            kIdle,
+            kDetaching,
+        };
+
+        using DetachTimer = TimerMilliIn<Mle, &Mle::HandleDetacherTimer>;
+
+        State                    mState;
+        Callback<DetachCallback> mCallback;
+        DetachTimer              mTimer;
+    };
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     void HandleRetxTrackerTimer(void) { mRetxTracker.HandleTimer(); }
 
     class RetxTracker : public InstanceLocator
@@ -2171,7 +2202,6 @@ private:
     bool mRequestRouteTlv : 1;
     bool mHasRestored : 1;
     bool mReceivedResponseFromParent : 1;
-    bool mDetachingGracefully : 1;
     bool mInitiallyAttachedAsSleepy : 1;
 
     DeviceRole              mRole;
@@ -2204,6 +2234,7 @@ private:
     ParentCandidate mParentCandidate;
     MleSocket       mSocket;
     Counters        mCounters;
+    Detacher        mDetacher;
     RetxTracker     mRetxTracker;
     AnnounceHandler mAnnounceHandler;
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
@@ -2212,7 +2243,6 @@ private:
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     ServiceAloc mServiceAlocs[kMaxServiceAlocs];
 #endif
-    Callback<DetachCallback> mDetachGracefullyCallback;
 #if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
     Callback<otThreadParentResponseCallback> mParentResponseCallback;
 #endif
