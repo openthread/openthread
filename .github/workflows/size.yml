@@ -56,7 +56,7 @@ jobs:
     - name: Checkout Pull Request
       if: ${{ github.event_name == 'pull_request_target' }}
       run: |
-        git fetch origin pull/${{ github.event.pull_request.number }}/head
+        git fetch origin pull/${{ github.event.pull_request.number }}/merge
         git checkout FETCH_HEAD
     - name: Run
       env:
