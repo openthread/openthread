@@ -1277,13 +1277,6 @@ void MeshForwarder::FinalizeMessageDirectTx(Message &aMessage, Error aError)
 
     mCounters.UpdateOnTxDone(aMessage, aMessage.GetTxSuccess());
 
-    if (aMessage.IsMleCommand(Mle::kCommandDiscoveryRequest))
-    {
-        // Note that `HandleDiscoveryRequestFrameTxDone()` may update
-        // `aMessage` and mark it again for direct transmission.
-        Get<Mle::DiscoverScanner>().HandleDiscoveryRequestFrameTxDone(aMessage, aError);
-    }
-
     aMessage.InvokeTxCallback(aError);
 
 exit:
