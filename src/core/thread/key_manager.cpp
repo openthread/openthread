@@ -473,7 +473,7 @@ void KeyManager::MacFrameCounterUsed(uint32_t aMacFrameCounter)
 
     if (mMacFrameCounters.Get154() >= mStoredMacFrameCounter)
     {
-        IgnoreError(Get<Mle::Mle>().Store());
+        Get<Mle::Mle>().Store();
     }
 
 exit:
@@ -490,7 +490,7 @@ void KeyManager::IncrementTrelMacFrameCounter(void)
 
     if (mMacFrameCounters.GetTrel() >= mStoredMacFrameCounter)
     {
-        IgnoreError(Get<Mle::Mle>().Store());
+        Get<Mle::Mle>().Store();
     }
 }
 #endif
@@ -501,7 +501,7 @@ void KeyManager::IncrementMleFrameCounter(void)
 
     if (mMleFrameCounter >= mStoredMleFrameCounter)
     {
-        IgnoreError(Get<Mle::Mle>().Store());
+        Get<Mle::Mle>().Store();
     }
 }
 

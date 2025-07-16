@@ -498,7 +498,7 @@ void Slaac::GetIidSecretKey(IidSecretKey &aKey) const
         IgnoreError(Random::Crypto::Fill(aKey));
     }
 
-    IgnoreError(Get<Settings>().Save<Settings::SlaacIidSecretKey>(aKey));
+    Get<Settings>().Save<Settings::SlaacIidSecretKey>(aKey);
 
     LogInfo("Generated and saved secret key");
 

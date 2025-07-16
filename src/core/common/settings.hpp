@@ -893,15 +893,12 @@ public:
      * @tparam EntryType              The settings entry type.
      *
      * @param[in] aEntry              The entry value to be saved.
-     *
-     * @retval kErrorNone             Successfully saved Network Info in settings.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      */
-    template <typename EntryType> Error Save(const EntryType &aEntry)
+    template <typename EntryType> void Save(const EntryType &aEntry)
     {
         EntryType prev;
 
-        return SaveEntry(EntryType::kKey, &aEntry, &prev, sizeof(EntryType));
+        SaveEntry(EntryType::kKey, &aEntry, &prev, sizeof(EntryType));
     }
 
     /**
@@ -918,15 +915,12 @@ public:
      * @tparam EntryType              The settings entry type.
      *
      * @param[in] aValue              The entry value to be saved.
-     *
-     * @retval kErrorNone             Successfully saved Network Info in settings.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      */
-    template <typename EntryType> Error Save(const typename EntryType::ValueType &aValue)
+    template <typename EntryType> void Save(const typename EntryType::ValueType &aValue)
     {
         typename EntryType::ValueType prev;
 
-        return SaveEntry(EntryType::kKey, &aValue, &prev, sizeof(typename EntryType::ValueType));
+        SaveEntry(EntryType::kKey, &aValue, &prev, sizeof(typename EntryType::ValueType));
     }
 
     /**
@@ -937,11 +931,8 @@ public:
      *  - It must provide a constant `EntryType::kKey` to specify the associated entry settings key.
      *
      * @tparam EntryType             The settings entry type.
-     *
-     * @retval kErrorNone            Successfully deleted the value.
-     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      */
-    template <typename EntryType> Error Delete(void) { return DeleteEntry(EntryType::kKey); }
+    template <typename EntryType> void Delete(void) { DeleteEntry(EntryType::kKey); }
 
 #if OPENTHREAD_FTD
     /**
@@ -960,11 +951,8 @@ public:
      * Deletes all Child Info entries from the settings.
      *
      * @note Child Info is a list-based settings property and can contain multiple entries.
-     *
-     * @retval kErrorNone            Successfully deleted the value.
-     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      */
-    Error DeleteAllChildInfo(void);
+    void DeleteAllChildInfo(void);
 
     /**
      * Enables range-based `for` loop iteration over all child info entries in the `Settings`.
@@ -1098,19 +1086,13 @@ public:
      * Removes an on-link prefix entry matching a given prefix.
      *
      * @param[in] aPrefix            The prefix to remove
-     *
-     * @retval kErrorNone            Successfully removed the matching entry in settings.
-     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      */
-    Error RemoveBrOnLinkPrefix(const Ip6::Prefix &aPrefix);
+    void RemoveBrOnLinkPrefix(const Ip6::Prefix &aPrefix);
 
     /**
      * Deletes all on-link prefix entries from the settings.
-     *
-     * @retval kErrorNone            Successfully deleted the entries.
-     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      */
-    Error DeleteAllBrOnLinkPrefixes(void);
+    void DeleteAllBrOnLinkPrefixes(void);
 
     /**
      * Retrieves an entry from on-link prefixes list at a given index.
@@ -1120,7 +1102,6 @@ public:
      *
      * @retval kErrorNone             Successfully read the value.
      * @retval kErrorNotFound         No corresponding value in the setting store.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      */
     Error ReadBrOnLinkPrefix(int aIndex, BrOnLinkPrefix &aBrOnLinkPrefix);
 
@@ -1144,8 +1125,8 @@ private:
     static Key KeyForDatasetType(MeshCoP::Dataset::Type aType);
 
     Error ReadEntry(Key aKey, void *aValue, uint16_t aMaxLength) const;
-    Error SaveEntry(Key aKey, const void *aValue, void *aPrev, uint16_t aLength);
-    Error DeleteEntry(Key aKey);
+    void  SaveEntry(Key aKey, const void *aValue, void *aPrev, uint16_t aLength);
+    void  DeleteEntry(Key aKey);
 
     static void Log(Action aAction, Error aError, Key aKey, const void *aValue = nullptr);
 

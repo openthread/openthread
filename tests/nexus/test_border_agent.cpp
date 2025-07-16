@@ -1249,7 +1249,7 @@ void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode)
     aTxtData.ValidateFormat();
     aTxtData.LogAllTxtEntries();
 
-    SuccessOrQuit(aNode.Get<BorderAgent>().GetId(id));
+    aNode.Get<BorderAgent>().GetId(id);
     aTxtData.ValidateKey("id", id);
     aTxtData.ValidateKey("rv", "1");
     aTxtData.ValidateKey("nn", aNode.Get<NetworkNameManager>().GetNetworkName().GetAsCString());
@@ -1375,7 +1375,7 @@ void TestBorderAgentTxtDataCallback(void)
     newId.GenerateRandom();
 
     callbackInvoked = false;
-    SuccessOrQuit(node0.Get<BorderAgent>().SetId(newId));
+    node0.Get<BorderAgent>().SetId(newId);
 
     nexus.AdvanceTime(1);
     ReadAndValidateMeshCoPTxtData(node0);
@@ -1384,7 +1384,7 @@ void TestBorderAgentTxtDataCallback(void)
     // correctly detected and does not trigger the callback.
 
     callbackInvoked = false;
-    SuccessOrQuit(node0.Get<BorderAgent>().SetId(newId));
+    node0.Get<BorderAgent>().SetId(newId);
     nexus.AdvanceTime(1);
     VerifyOrQuit(!callbackInvoked);
 

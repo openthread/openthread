@@ -252,7 +252,6 @@ Error Settings::ReadOperationalDataset(MeshCoP::Dataset::Type aType, MeshCoP::Da
     aDataset.SetLength(static_cast<uint8_t>(length));
 
 exit:
-    OT_ASSERT(error != kErrorNotImplemented);
     return error;
 }
 
@@ -262,7 +261,6 @@ void Settings::DeleteOperationalDataset(MeshCoP::Dataset::Type aType)
     Error error = Get<SettingsDriver>().Delete(key);
 
     Log(kActionDelete, error, key);
-    OT_ASSERT(error != kErrorNotImplemented);
 }
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
@@ -286,13 +284,11 @@ Error Settings::AddChildInfo(const ChildInfo &aChildInfo)
     return error;
 }
 
-Error Settings::DeleteAllChildInfo(void)
+void Settings::DeleteAllChildInfo(void)
 {
     Error error = Get<SettingsDriver>().Delete(kKeyChildInfo);
 
     Log(kActionDeleteAll, error, kKeyChildInfo);
-
-    return error;
 }
 
 Settings::ChildInfoIterator::ChildInfoIterator(Instance &aInstance)
@@ -373,26 +369,22 @@ exit:
     return error;
 }
 
-Error Settings::RemoveBrOnLinkPrefix(const Ip6::Prefix &aPrefix)
+void Settings::RemoveBrOnLinkPrefix(const Ip6::Prefix &aPrefix)
 {
-    Error          error = kErrorNotFound;
     BrOnLinkPrefix brPrefix;
 
     for (int index = 0; ReadBrOnLinkPrefix(index, brPrefix) == kErrorNone; index++)
     {
         if (brPrefix.GetPrefix() == aPrefix)
         {
-            SuccessOrExit(error = Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes, index));
+            IgnoreError(Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes, index));
             brPrefix.Log("Removed");
             break;
         }
     }
-
-exit:
-    return error;
 }
 
-Error Settings::DeleteAllBrOnLinkPrefixes(void) { return Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes); }
+void Settings::DeleteAllBrOnLinkPrefixes(void) { IgnoreError(Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes)); }
 
 Error Settings::ReadBrOnLinkPrefix(int aIndex, BrOnLinkPrefix &aBrOnLinkPrefix)
 {
@@ -424,7 +416,7 @@ Error Settings::ReadEntry(Key aKey, void *aValue, uint16_t aMaxLength) const
     return error;
 }
 
-Error Settings::SaveEntry(Key aKey, const void *aValue, void *aPrev, uint16_t aLength)
+void Settings::SaveEntry(Key aKey, const void *aValue, void *aPrev, uint16_t aLength)
 {
     Error    error      = kErrorNone;
     uint16_t readLength = aLength;
@@ -442,16 +434,14 @@ Error Settings::SaveEntry(Key aKey, const void *aValue, void *aPrev, uint16_t aL
 
     Log(action, error, aKey, aValue);
 
-    return error;
+    SuccessOrAssert(error);
 }
 
-Error Settings::DeleteEntry(Key aKey)
+void Settings::DeleteEntry(Key aKey)
 {
     Error error = Get<SettingsDriver>().Delete(aKey);
 
     Log(kActionDelete, error, aKey);
-
-    return error;
 }
 
 void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
