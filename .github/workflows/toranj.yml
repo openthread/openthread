@@ -72,7 +72,7 @@ jobs:
         cache: pip
     - name: Bootstrap
       env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
@@ -107,7 +107,7 @@ jobs:
         cache: pip
     - name: Bootstrap
       env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov
@@ -144,7 +144,7 @@ jobs:
         cache: pip
     - name: Bootstrap
       env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build
@@ -182,7 +182,7 @@ jobs:
         submodules: true
     - name: Bootstrap
       env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
         brew update
         brew install ninja
@@ -204,7 +204,7 @@ jobs:
         submodules: true
     - name: Bootstrap
       env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
         sudo apt-get update
         sudo apt-get --no-install-recommends install -y ninja-build lcov

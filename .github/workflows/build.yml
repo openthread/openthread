@@ -268,7 +268,7 @@ jobs:
         tar xf gcc-arm
     - name: Build
       env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
         export PATH=/tmp/${{ matrix.gcc_extract_dir }}/bin:$PATH
         script/check-arm-build
