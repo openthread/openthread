@@ -2001,6 +2001,7 @@ private:
     void       SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLeaderRouterId);
     void       SetLeaderData(const LeaderData &aLeaderData);
     void       SetTimeout(uint32_t aTimeout, TimeoutAction aAction);
+    uint32_t   GenerateRandomDelay(uint32_t aMaxDelay) const;
     void       InformPreviousChannel(void);
     void       ScheduleMessageTransmissionTimer(void);
     void       HandleAttachTimer(void);

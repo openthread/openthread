@@ -705,7 +705,7 @@ uint32_t Mle::GetAttachStartDelay(void) const
 
     if (mAttachCounter == 0)
     {
-        delay = 1 + Random::NonCrypto::GetUint32InRange(0, kParentRequestRouterTimeout);
+        delay = GenerateRandomDelay(kParentRequestRouterTimeout);
         ExitNow();
     }
 #if OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE
@@ -817,6 +817,13 @@ void Mle::SetStateChild(uint16_t aRloc16)
     }
 
     mPreviousParentRloc = mParent.GetRloc16();
+}
+
+uint32_t Mle::GenerateRandomDelay(uint32_t aMaxDelay) const
+{
+    // Generates a random delay within `[1, aMaxDelay]` (inclusive).
+
+    return 1 + Random::NonCrypto::GetUint32InRange(0, aMaxDelay);
 }
 
 void Mle::SetTimeout(uint32_t aTimeout, TimeoutAction aAction)
@@ -1605,7 +1612,7 @@ uint32_t Mle::Reattach(void)
             IgnoreError(Get<MeshCoP::PendingDatasetManager>().ApplyConfiguration());
             mReattachState = kReattachPending;
             SetAttachState(kAttachStateStart);
-            delay = 1 + Random::NonCrypto::GetUint32InRange(0, kAttachStartJitter);
+            delay = GenerateRandomDelay(kAttachStartJitter);
             ExitNow();
         }
 
@@ -2678,7 +2685,6 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
     Error      error = kErrorNone;
     uint16_t   sourceAddress;
     LeaderData leaderData;
-    uint32_t   delay;
 
     VerifyOrExit(IsAttached());
 
@@ -2727,8 +2733,8 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
 
     if (mRetrieveNewNetworkData || IsNetworkDataNewer(leaderData))
     {
-        delay = 1 + Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
-        mDelayedSender.ScheduleDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), delay);
+        mDelayedSender.ScheduleDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(),
+                                           GenerateRandomDelay(kMleMaxResponseDelay));
     }
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
@@ -2909,7 +2915,7 @@ exit:
 
         if (aRxInfo.mMessageInfo.GetSockAddr().IsMulticast())
         {
-            delay = 1 + Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
+            delay = GenerateRandomDelay(kMleMaxResponseDelay);
         }
         else
         {
