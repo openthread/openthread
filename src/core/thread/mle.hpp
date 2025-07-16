@@ -175,11 +175,8 @@ public:
 
     /**
      * Stores network information into non-volatile memory.
-     *
-     * @retval kErrorNone      Successfully store the network information.
-     * @retval kErrorNoBufs    Could not store the network information due to insufficient memory space.
      */
-    Error Store(void);
+    void Store(void);
 
     /**
      * Generates an MLE Announce message.

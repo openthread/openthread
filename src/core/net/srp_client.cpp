@@ -948,11 +948,11 @@ bool Client::ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStat
         case AutoStart::kSelectedUnicast:
             info.SetServerAddress(GetServerAddress().GetAddress());
             info.SetServerPort(GetServerAddress().GetPort());
-            IgnoreError(Get<Settings>().Save(info));
+            Get<Settings>().Save(info);
             break;
 
         case AutoStart::kSelectedAnycast:
-            IgnoreError(Get<Settings>().Delete<Settings::SrpClientInfo>());
+            Get<Settings>().Delete<Settings::SrpClientInfo>();
             break;
         }
     }
@@ -1187,7 +1187,7 @@ Error Client::ReadOrGenerateKey(KeyInfo &aKeyInfo)
         {
             SuccessOrExit(error = aKeyInfo.Generate());
         }
-        IgnoreError(Get<Settings>().Delete<Settings::SrpEcdsaKey>());
+        Get<Settings>().Delete<Settings::SrpEcdsaKey>();
     }
     else
     {
@@ -1214,7 +1214,7 @@ Error Client::ReadOrGenerateKey(KeyInfo &aKeyInfo)
     }
 
     SuccessOrExit(error = aKeyInfo.Generate());
-    IgnoreError(Get<Settings>().Save<Settings::SrpEcdsaKey>(aKeyInfo));
+    Get<Settings>().Save<Settings::SrpEcdsaKey>(aKeyInfo);
 
 exit:
     return error;
