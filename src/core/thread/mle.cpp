@@ -290,13 +290,17 @@ Error Mle::RestorePrevRole(void)
 
     Error error = kErrorFailed;
 
+    VerifyOrExit(IsDetached());
     VerifyOrExit(GetRloc16() != kInvalidRloc16);
 
     if (IsRouterRloc16(GetRloc16()))
     {
 #if OPENTHREAD_FTD
         VerifyOrExit(mLastSavedRole == kRoleRouter || mLastSavedRole == kRoleLeader);
-        error = BecomeRouter(ThreadStatusTlv::kTooFewRouters);
+        VerifyOrExit(IsRouterEligible());
+        Get<MeshForwarder>().SetRxOnWhenIdle(true);
+        mRouterRoleRestorer.Start(mLastSavedRole);
+        error = kErrorNone;
 #endif
         ExitNow();
     }

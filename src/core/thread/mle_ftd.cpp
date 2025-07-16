@@ -189,8 +189,21 @@ Error Mle::BecomeRouter(ThreadStatusTlv::Status aStatus)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(!IsDisabled(), error = kErrorInvalidState);
-    VerifyOrExit(!IsRouterOrLeader(), error = kErrorNone);
+    switch (mRole)
+    {
+    case kRoleChild:
+        break;
+
+    case kRoleDisabled:
+    case kRoleDetached:
+        error = kErrorInvalidState;
+        OT_FALL_THROUGH;
+
+    case kRoleRouter:
+    case kRoleLeader:
+        ExitNow();
+    }
+
     VerifyOrExit(IsRouterEligible(), error = kErrorNotCapable);
 
     LogInfo("Attempt to become router");
@@ -198,19 +211,7 @@ Error Mle::BecomeRouter(ThreadStatusTlv::Status aStatus)
     Get<MeshForwarder>().SetRxOnWhenIdle(true);
     mRouterRoleTransition.StopTimeout();
 
-    switch (mRole)
-    {
-    case kRoleDetached:
-        mRouterRoleRestorer.Start(mLastSavedRole);
-        break;
-
-    case kRoleChild:
-        SuccessOrExit(error = SendAddressSolicit(aStatus));
-        break;
-
-    default:
-        OT_ASSERT(false);
-    }
+    error = SendAddressSolicit(aStatus);
 
 exit:
     return error;
