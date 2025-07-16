@@ -42,6 +42,7 @@
 
 #include "core/common/non_copyable.hpp"
 
+#include "dhcp6_pd_socket.hpp"
 #include "logger.hpp"
 #include "mainloop.hpp"
 #include "multicast_routing.hpp"
@@ -182,6 +183,15 @@ public:
      */
     static InfraNetif &Get(void);
 
+#if OT_POSIX_CONFIG_DHCP6_PD_SOCKET_ENABLE
+    /**
+     * Gets the singleton `Dhcp6PdSocket` associated with `InfraNetif`.
+     *
+     * @returns The singleton `Dhcp6PdSocket`.
+     */
+    static Dhcp6PdSocket &GetDhcp6PdSocket(void) { return Get().mDhcp6PdSocket; }
+#endif
+
     /**
      * Creates a socket for sending/receiving ICMPv6 messages.
      *
@@ -209,6 +219,10 @@ private:
 #endif
 #if OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     MulticastRoutingManager mMulticastRoutingManager;
+#endif
+
+#if OT_POSIX_CONFIG_DHCP6_PD_SOCKET_ENABLE
+    Dhcp6PdSocket mDhcp6PdSocket;
 #endif
 
     bool HasLinkLocalAddress(void) const;
