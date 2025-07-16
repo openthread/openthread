@@ -4258,51 +4258,6 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 
-Error Mle::Detacher::Detach(DetachCallback aCallback, void *aContext)
-{
-    Error    error   = kErrorNone;
-    uint32_t timeout = kTimeout;
-
-    VerifyOrExit(mState == kIdle, error = kErrorBusy);
-
-    mCallback.Set(aCallback, aContext);
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    Get<BorderRouter::RoutingManager>().RequestStop();
-#endif
-
-    switch (Get<Mle>().GetRole())
-    {
-    case kRoleLeader:
-        break;
-
-    case kRoleRouter:
-#if OPENTHREAD_FTD
-        Get<Mle>().SendAddressRelease();
-#endif
-        break;
-
-    case kRoleChild:
-        IgnoreError(Get<Mle>().SendChildUpdateRequestToParent(kAppendZeroTimeout));
-        break;
-
-    case kRoleDisabled:
-    case kRoleDetached:
-        // If device is already detached or disabled, we start the timer
-        // with zero duration to stop and invoke the callback when the
-        // timer fires, so the operation finishes immediately and
-        // asynchronously.
-        timeout = 0;
-        break;
-    }
-
-    mState = kDetaching;
-    mTimer.Start(timeout);
-
-exit:
-    return error;
-}
-
 //---------------------------------------------------------------------------------------------------------------------
 // TlvList
 
@@ -5384,6 +5339,51 @@ Mle::Detacher::Detacher(Instance &aInstance)
     , mState(kIdle)
     , mTimer(aInstance)
 {
+}
+
+Error Mle::Detacher::Detach(DetachCallback aCallback, void *aContext)
+{
+    Error    error   = kErrorNone;
+    uint32_t timeout = kTimeout;
+
+    VerifyOrExit(mState == kIdle, error = kErrorBusy);
+
+    mCallback.Set(aCallback, aContext);
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    Get<BorderRouter::RoutingManager>().RequestStop();
+#endif
+
+    switch (Get<Mle>().GetRole())
+    {
+    case kRoleLeader:
+        break;
+
+    case kRoleRouter:
+#if OPENTHREAD_FTD
+        Get<Mle>().SendAddressRelease();
+#endif
+        break;
+
+    case kRoleChild:
+        IgnoreError(Get<Mle>().SendChildUpdateRequestToParent(kAppendZeroTimeout));
+        break;
+
+    case kRoleDisabled:
+    case kRoleDetached:
+        // If device is already detached or disabled, we start the timer
+        // with zero duration to stop and invoke the callback when the
+        // timer fires, so the operation finishes immediately and
+        // asynchronously.
+        timeout = 0;
+        break;
+    }
+
+    mState = kDetaching;
+    mTimer.Start(timeout);
+
+exit:
+    return error;
 }
 
 void Mle::Detacher::HandleTimer(void)
