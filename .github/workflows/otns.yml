@@ -46,7 +46,7 @@ env:
   VIRTUAL_TIME: 1
   VIRTUAL_TIME_UART: 1
   MAX_NETWORK_SIZE: 999
-  GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+  PR_BODY: "${{ github.event.pull_request.body }}"
 
 permissions:  # added using https://github.com/step-security/secure-workflows
   contents: read

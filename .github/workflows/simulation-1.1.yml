@@ -318,7 +318,7 @@ jobs:
         cache: pip
     - name: Bootstrap
       env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
         sudo apt-get update
         sudo apt-get install -y avahi-daemon avahi-utils lcov

@@ -67,7 +67,7 @@ jobs:
         submodules: true
     - name: Build OTBR Docker
       env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        PR_BODY: "${{ github.event.pull_request.body }}"
       run: |
         ./script/test build_otbr_docker
     - name: Bootstrap
@@ -183,7 +183,7 @@ jobs:
         echo "FIREWALL=0" >> $GITHUB_ENV
     - name: Build OTBR Docker
       env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        PR_BODY: "${{ github.event.pull_request.body }}"
         TREL: ${{ matrix.otbr_trel }}
       run: |
         ./script/test build_otbr_docker
