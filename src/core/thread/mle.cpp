@@ -832,7 +832,7 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
     mDeviceMode = aDeviceMode;
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Get<Utils::HistoryTracker>().RecordNetworkInfo();
+    Get<HistoryTracker::Local>().RecordNetworkInfo();
 #endif
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE

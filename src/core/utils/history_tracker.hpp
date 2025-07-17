@@ -59,8 +59,7 @@
 #include "thread/router_table.hpp"
 
 namespace ot {
-
-namespace Utils {
+namespace HistoryTracker {
 
 #ifdef OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
 #error "OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA should not be defined directly." \
@@ -72,10 +71,68 @@ namespace Utils {
      (OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE > 0) || \
      (OPENTHREAD_CONFIG_HISTORY_TRACKER_DNSSRP_ADDR_LIST_SIZE > 0))
 
+class Local;
+
 /**
- * Implements History Tracker.
+ * Represents an iterator to iterate through a history list.
  */
-class HistoryTracker : public InstanceLocator, private NonCopyable
+class Iterator : public otHistoryTrackerIterator
+{
+    friend class Local;
+
+public:
+    /**
+     * Initializes an `Iterator`
+     *
+     * An iterator MUST be initialized before it is used. An iterator can be initialized again to start from
+     * the beginning of the list.
+     */
+    void Init(void) { ResetEntryNumber(), SetInitTime(); }
+
+private:
+    uint16_t  GetEntryNumber(void) const { return mData16; }
+    void      ResetEntryNumber(void) { mData16 = 0; }
+    void      IncrementEntryNumber(void) { mData16++; }
+    TimeMilli GetInitTime(void) const { return TimeMilli(mData32); }
+    void      SetInitTime(void) { mData32 = TimerMilli::GetNow().GetValue(); }
+};
+
+typedef otHistoryTrackerNetworkInfo          NetworkInfo;          ///< Thread network info.
+typedef otHistoryTrackerUnicastAddressInfo   UnicastAddressInfo;   ///< Unicast IPv6 address info.
+typedef otHistoryTrackerMulticastAddressInfo MulticastAddressInfo; ///< Multicast IPv6 address info.
+typedef otHistoryTrackerMessageInfo          MessageInfo;          ///< RX/TX IPv6 message info.
+typedef otHistoryTrackerNeighborInfo         NeighborInfo;         ///< Neighbor info.
+typedef otHistoryTrackerRouterInfo           RouterInfo;           ///< Router info.
+typedef otHistoryTrackerOnMeshPrefixInfo     OnMeshPrefixInfo;     ///< Network Data on mesh prefix info.
+typedef otHistoryTrackerExternalRouteInfo    ExternalRouteInfo;    ///< Network Data external route info
+typedef otHistoryTrackerDnsSrpAddrInfo       DnsSrpAddrInfo;       ///< Network Data SRP/DNS address info.
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+typedef otHistoryTrackerBorderAgentEpskcEvent EpskcEvent; ///< Border Agent ePSKc Event.
+#endif
+
+/**
+ * This constant specifies the maximum age of entries which is 49 days (value in msec).
+ *
+ * Entries older than the max age will give this value as their age.
+ */
+static constexpr uint32_t kMaxAge = OT_HISTORY_TRACKER_MAX_AGE;
+
+/**
+ * This constant specifies the recommend string size to represent an entry age
+ */
+static constexpr uint16_t kEntryAgeStringSize = OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE;
+
+/**
+ * This constants specified no next hop.
+ *
+ * Used for `mNextHop` in `RouteInfo` structure.
+ */
+static constexpr uint8_t kNoNextHop = OT_HISTORY_TRACKER_NO_NEXT_HOP;
+
+/**
+ * Implements the local history tracker.
+ */
+class Local : public InstanceLocator, private NonCopyable
 {
     friend class ot::MeshForwarder;
     friend class ot::Notifier;
@@ -92,67 +149,11 @@ class HistoryTracker : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constant specifies the maximum age of entries which is 49 days (value in msec).
-     *
-     * Entries older than the max age will give this value as their age.
-     */
-    static constexpr uint32_t kMaxAge = OT_HISTORY_TRACKER_MAX_AGE;
-
-    /**
-     * This constant specifies the recommend string size to represent an entry age
-     */
-    static constexpr uint16_t kEntryAgeStringSize = OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE;
-
-    /**
-     * This constants specified no next hop.
-     *
-     * Used for `mNextHop` in `RouteInfo` structure.
-     */
-    static constexpr uint8_t kNoNextHop = OT_HISTORY_TRACKER_NO_NEXT_HOP;
-
-    /**
-     * Represents an iterator to iterate through a history list.
-     */
-    class Iterator : public otHistoryTrackerIterator
-    {
-        friend class HistoryTracker;
-
-    public:
-        /**
-         * Initializes an `Iterator`
-         *
-         * An iterator MUST be initialized before it is used. An iterator can be initialized again to start from
-         * the beginning of the list.
-         */
-        void Init(void) { ResetEntryNumber(), SetInitTime(); }
-
-    private:
-        uint16_t  GetEntryNumber(void) const { return mData16; }
-        void      ResetEntryNumber(void) { mData16 = 0; }
-        void      IncrementEntryNumber(void) { mData16++; }
-        TimeMilli GetInitTime(void) const { return TimeMilli(mData32); }
-        void      SetInitTime(void) { mData32 = TimerMilli::GetNow().GetValue(); }
-    };
-
-    typedef otHistoryTrackerNetworkInfo          NetworkInfo;          ///< Thread network info.
-    typedef otHistoryTrackerUnicastAddressInfo   UnicastAddressInfo;   ///< Unicast IPv6 address info.
-    typedef otHistoryTrackerMulticastAddressInfo MulticastAddressInfo; ///< Multicast IPv6 address info.
-    typedef otHistoryTrackerMessageInfo          MessageInfo;          ///< RX/TX IPv6 message info.
-    typedef otHistoryTrackerNeighborInfo         NeighborInfo;         ///< Neighbor info.
-    typedef otHistoryTrackerRouterInfo           RouterInfo;           ///< Router info.
-    typedef otHistoryTrackerOnMeshPrefixInfo     OnMeshPrefixInfo;     ///< Network Data on mesh prefix info.
-    typedef otHistoryTrackerExternalRouteInfo    ExternalRouteInfo;    ///< Network Data external route info
-    typedef otHistoryTrackerDnsSrpAddrInfo       DnsSrpAddrInfo;       ///< Network Data SRP/DNS address info.
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    typedef otHistoryTrackerBorderAgentEpskcEvent EpskcEvent; ///< Border Agent ePSKc Event.
-#endif
-
-    /**
-     * Initializes the `HistoryTracker`.
+     * Initializes the local tracker.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      */
-    explicit HistoryTracker(Instance &aInstance);
+    explicit Local(Instance &aInstance);
 
     /**
      * Iterates over the entries in the network info history list.
@@ -477,7 +478,7 @@ private:
     void RecordEpskcEvent(EpskcEvent aEvent);
 #endif
 
-    using TrackerTimer = TimerMilliIn<HistoryTracker, &HistoryTracker::HandleTimer>;
+    using TrackerTimer = TimerMilliIn<Local, &Local::HandleTimer>;
 
     EntryList<NetworkInfo, kNetInfoListSize>                mNetInfoHistory;
     EntryList<UnicastAddressInfo, kUnicastAddrListSize>     mUnicastAddressHistory;
@@ -513,15 +514,15 @@ private:
 #endif
 };
 
-} // namespace Utils
+} // namespace HistoryTracker
 
-DefineCoreType(otHistoryTrackerIterator, Utils::HistoryTracker::Iterator);
-DefineCoreType(otHistoryTrackerNetworkInfo, Utils::HistoryTracker::NetworkInfo);
-DefineCoreType(otHistoryTrackerMessageInfo, Utils::HistoryTracker::MessageInfo);
-DefineCoreType(otHistoryTrackerNeighborInfo, Utils::HistoryTracker::NeighborInfo);
-DefineCoreType(otHistoryTrackerRouterInfo, Utils::HistoryTracker::RouterInfo);
-DefineCoreType(otHistoryTrackerOnMeshPrefixInfo, Utils::HistoryTracker::OnMeshPrefixInfo);
-DefineCoreType(otHistoryTrackerExternalRouteInfo, Utils::HistoryTracker::ExternalRouteInfo);
+DefineCoreType(otHistoryTrackerIterator, HistoryTracker::Iterator);
+DefineCoreType(otHistoryTrackerNetworkInfo, HistoryTracker::NetworkInfo);
+DefineCoreType(otHistoryTrackerMessageInfo, HistoryTracker::MessageInfo);
+DefineCoreType(otHistoryTrackerNeighborInfo, HistoryTracker::NeighborInfo);
+DefineCoreType(otHistoryTrackerRouterInfo, HistoryTracker::RouterInfo);
+DefineCoreType(otHistoryTrackerOnMeshPrefixInfo, HistoryTracker::OnMeshPrefixInfo);
+DefineCoreType(otHistoryTrackerExternalRouteInfo, HistoryTracker::ExternalRouteInfo);
 
 } // namespace ot
 

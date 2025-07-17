@@ -1246,7 +1246,7 @@ void MeshForwarder::UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDes
 #endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Get<Utils::HistoryTracker>().RecordTxMessage(*mSendMessage, aMacDest);
+    Get<HistoryTracker::Local>().RecordTxMessage(*mSendMessage, aMacDest);
 #endif
 
     LogMessage(kMessageTransmit, *mSendMessage, txError, &aMacDest);
@@ -1614,7 +1614,7 @@ exit:
 Error MeshForwarder::HandleDatagram(Message &aMessage, const Mac::Address &aMacSource)
 {
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Get<Utils::HistoryTracker>().RecordRxMessage(aMessage, aMacSource);
+    Get<HistoryTracker::Local>().RecordRxMessage(aMessage, aMacSource);
 #endif
 
     LogMessage(kMessageReceive, aMessage, kErrorNone, &aMacSource);

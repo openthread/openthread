@@ -289,7 +289,7 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
         }
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        Get<Utils::HistoryTracker>().RecordNeighborEvent(aEvent, info);
+        Get<HistoryTracker::Local>().RecordNeighborEvent(aEvent, info);
 
         if (mCallback != nullptr)
 #endif
