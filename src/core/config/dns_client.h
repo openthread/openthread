@@ -136,7 +136,7 @@
  * Specifies the default wait time that DNS client waits for a response from server (in milliseconds).
  */
 #ifndef OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT
-#define OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT 6000
+#define OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT 7000
 #endif
 
 /**
