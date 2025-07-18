@@ -188,7 +188,7 @@ private:
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     Error GenerateDomainUnicastAddressIid(void);
-    Error Store(void);
+    void  Store(void);
 
     void AddDomainUnicastAddress(void);
     void RemoveDomainUnicastAddress(void);

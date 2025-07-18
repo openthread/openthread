@@ -74,12 +74,14 @@ void otBorderAgentSetVendorTxtData(otInstance *aInstance, const uint8_t *aVendor
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 otError otBorderAgentGetId(otInstance *aInstance, otBorderAgentId *aId)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetId(AsCoreType(aId));
+    AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetId(AsCoreType(aId));
+    return kErrorNone;
 }
 
 otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().SetId(AsCoreType(aId));
+    AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().SetId(AsCoreType(aId));
+    return kErrorNone;
 }
 #endif
 

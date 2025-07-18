@@ -297,7 +297,7 @@ void ChildTable::RefreshStoredChildren(void)
 {
     const Child *child = &mChildren[0];
 
-    SuccessOrExit(Get<Settings>().DeleteAllChildInfo());
+    Get<Settings>().DeleteAllChildInfo();
 
     for (uint16_t num = mMaxChildrenAllowed; num != 0; num--, child++)
     {

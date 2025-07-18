@@ -76,10 +76,8 @@ BorderAgent::BorderAgent(Instance &aInstance)
 }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
-Error BorderAgent::GetId(Id &aId)
+void BorderAgent::GetId(Id &aId)
 {
-    Error error = kErrorNone;
-
     if (mIdInitialized)
     {
         aId = mId;
@@ -89,32 +87,30 @@ Error BorderAgent::GetId(Id &aId)
     if (Get<Settings>().Read<Settings::BorderAgentId>(mId) != kErrorNone)
     {
         mId.GenerateRandom();
-        SuccessOrExit(error = Get<Settings>().Save<Settings::BorderAgentId>(mId));
+        Get<Settings>().Save<Settings::BorderAgentId>(mId);
     }
 
     mIdInitialized = true;
     aId            = mId;
 
 exit:
-    return error;
+    return;
 }
 
-Error BorderAgent::SetId(const Id &aId)
+void BorderAgent::SetId(const Id &aId)
 {
-    Error error = kErrorNone;
-
     if (mIdInitialized)
     {
         VerifyOrExit(aId != mId);
     }
 
-    SuccessOrExit(error = Get<Settings>().Save<Settings::BorderAgentId>(aId));
+    Get<Settings>().Save<Settings::BorderAgentId>(aId);
     mId            = aId;
     mIdInitialized = true;
     PostServiceTask();
 
 exit:
-    return error;
+    return;
 }
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 
@@ -537,10 +533,8 @@ Error BorderAgent::PrepareServiceTxtData(uint8_t *aBuffer, uint16_t aBufferSize,
     {
         Id id;
 
-        if (GetId(id) == kErrorNone)
-        {
-            SuccessOrExit(error = encoder.AppendEntry("id", id));
-        }
+        GetId(id);
+        SuccessOrExit(error = encoder.AppendEntry("id", id));
     }
 #endif
     SuccessOrExit(error = encoder.AppendStringEntry("rv", kTxtDataRecordVersion));
