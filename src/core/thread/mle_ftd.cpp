@@ -392,6 +392,8 @@ void Mle::SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStart
 
     SetRole(aRole);
 
+    mPrevRoleRestorer.Stop();
+
     SetAttachState(kAttachStateIdle);
     mAttachCounter = 0;
     mAttachTimer.Stop();
@@ -595,8 +597,8 @@ void Mle::SendLinkRequest(Router *aRouter)
 
     if (aRouter == nullptr)
     {
-        mRouterRoleRestorer.GenerateRandomChallenge();
-        SuccessOrExit(error = message->AppendChallengeTlv(mRouterRoleRestorer.GetChallenge()));
+        mPrevRoleRestorer.GenerateRandomChallenge();
+        SuccessOrExit(error = message->AppendChallengeTlv(mPrevRoleRestorer.GetChallenge()));
         destination.SetToLinkLocalAllRoutersMulticast();
     }
     else
@@ -866,10 +868,9 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
         break;
 
     case Neighbor::kStateInvalid:
-        VerifyOrExit(mRouterRoleRestorer.IsActive() && (response == mRouterRoleRestorer.GetChallenge()),
-                     error = kErrorSecurity);
-
-        OT_FALL_THROUGH;
+        VerifyOrExit(mPrevRoleRestorer.IsRestoringRouterOrLeaderRole(), error = kErrorSecurity);
+        VerifyOrExit(response == mPrevRoleRestorer.GetChallenge(), error = kErrorSecurity);
+        break;
 
     case Neighbor::kStateValid:
         break;
@@ -927,7 +928,6 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
             SetStateRouter(GetRloc16());
         }
 
-        mRouterRoleRestorer.Stop();
         mRetrieveNewNetworkData = true;
         IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr()));
         shouldUpdateRoutes = true;
@@ -3927,80 +3927,6 @@ bool Mle::RouterRoleTransition::HandleTimeTick(void)
 
 exit:
     return expired;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-// RouterRoleRestorer
-
-Mle::RouterRoleRestorer::RouterRoleRestorer(Instance &aInstance)
-    : InstanceLocator(aInstance)
-    , mAttempts(0)
-{
-}
-
-void Mle::RouterRoleRestorer::Start(DeviceRole aPreviousRole)
-{
-    // If the device was previously the leader or had more than
-    // `kMinCriticalChildrenCount` children, we use more link
-    // request attempts.
-
-    mAttempts = 0;
-
-    switch (aPreviousRole)
-    {
-    case kRoleRouter:
-        if (Get<Mle>().mChildTable.GetNumChildren(Child::kInStateValidOrRestoring) < kMinCriticalChildrenCount)
-        {
-            mAttempts = kMaxTxCount;
-            break;
-        }
-
-        OT_FALL_THROUGH;
-
-    case kRoleLeader:
-        mAttempts = kMaxCriticalTxCount;
-        break;
-
-    case kRoleChild:
-    case kRoleDetached:
-    case kRoleDisabled:
-        break;
-    }
-
-    SendMulticastLinkRequest();
-}
-
-void Mle::RouterRoleRestorer::HandleTimer(void)
-{
-    if (mAttempts > 0)
-    {
-        mAttempts--;
-    }
-
-    SendMulticastLinkRequest();
-}
-
-void Mle::RouterRoleRestorer::SendMulticastLinkRequest(void)
-{
-    uint32_t delay;
-
-    VerifyOrExit(Get<Mle>().IsDetached(), mAttempts = 0);
-
-    if (mAttempts == 0)
-    {
-        IgnoreError(Get<Mle>().BecomeDetached());
-        ExitNow();
-    }
-
-    Get<Mle>().SendLinkRequest(nullptr);
-
-    delay = (mAttempts == 1) ? kLinkRequestTimeout
-                             : Random::NonCrypto::GetUint32InRange(kMulticastRetxDelayMin, kMulticastRetxDelayMax);
-
-    Get<Mle>().mAttachTimer.Start(delay);
-
-exit:
-    return;
 }
 
 } // namespace Mle
