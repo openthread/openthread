@@ -502,6 +502,7 @@ public:
      * @returns A reference to host info structure.
      */
     const HostInfo &GetHostInfo(void) const { return mHostInfo; }
+    HostInfo       &GetHostInfo(void) { return mHostInfo; }
 
     /**
      * Sets the host name label.
@@ -938,7 +939,9 @@ private:
     };
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
-    class AutoStart : public Clearable<AutoStart>
+    void HandleAutoStartTimer(void) {}
+
+    class AutoStart : public InstanceLocator
     {
     public:
         enum State : uint8_t{
@@ -950,7 +953,8 @@ private:
             kSelectedUnicast,          // Has selected a unicast entry (address in server data).
         };
 
-        AutoStart(void);
+        explicit AutoStart(Instance &aInstance);
+
         bool    HasSelectedServer(void) const;
         State   GetState(void) const { return mState; }
         void    SetState(State aState);
@@ -958,8 +962,12 @@ private:
         void    SetAnycastSeqNum(uint8_t aAnycastSeqNum) { mAnycastSeqNum = aAnycastSeqNum; }
         void    SetCallback(AutoStartCallback aCallback, void *aContext) { mCallback.Set(aCallback, aContext); }
         void    InvokeCallback(const Ip6::SockAddr *aServerSockAddr) const;
+        void    ApplyAutoStartGuardOnAttach(void);
+        void    ProcessAutoStart(void);
+        bool    IsGuarded(void) { return mGuardTimer.IsRunning(); }
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+        void    SelectNextServer(bool aDisallowSwitchOnRegisteredHost);
         uint8_t GetTimeoutFailureCount(void) const { return mTimeoutFailureCount; }
         void    ResetTimeoutFailureCount(void) { mTimeoutFailureCount = 0; }
         void    IncrementTimeoutFailureCount(void)
@@ -974,7 +982,11 @@ private:
     private:
         static constexpr bool kDefaultMode = OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_DEFAULT_MODE;
 
+        Error SelectUnicastEntry(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo) const;
+
         static const char *StateToString(State aState);
+
+        using GuardTimer = TimerMilliIn<Client, &Client::HandleAutoStartTimer>;
 
         Callback<AutoStartCallback> mCallback;
         State                       mState;
@@ -982,6 +994,7 @@ private:
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
         uint8_t mTimeoutFailureCount; // Number of no-response timeout failures with the currently selected server.
 #endif
+        GuardTimer mGuardTimer;
     };
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
@@ -1011,6 +1024,7 @@ private:
     void         UpdateServiceStateToRemove(Service &aService);
     State        GetState(void) const { return mState; }
     void         SetState(State aState);
+    TxJitter    &GetTxJitter(void) { return mTxJitter; }
     bool         ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStateChangeMode aMode);
     void         InvokeCallback(Error aError) const;
     void         InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const;
@@ -1044,15 +1058,6 @@ private:
     uint32_t     DetermineTtl(void) const;
     bool         ShouldRenewEarly(const Service &aService) const;
     void         HandleTimer(void);
-#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
-    void  ApplyAutoStartGuardOnAttach(void);
-    void  ProcessAutoStart(void);
-    Error SelectUnicastEntry(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo) const;
-    void  HandleGuardTimer(void) {}
-#if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
-    void SelectNextServer(bool aDisallowSwitchOnRegisteredHost);
-#endif
-#endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *StateToString(State aState);
@@ -1067,10 +1072,6 @@ private:
 
     using DelayTimer   = TimerMilliIn<Client, &Client::HandleTimer>;
     using ClientSocket = Ip6::Udp::SocketIn<Client, &Client::HandleUdpReceive>;
-
-#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
-    using GuardTimer = TimerMilliIn<Client, &Client::HandleGuardTimer>;
-#endif
 
     State   mState;
     uint8_t mTxFailureRetryCount : 4;
@@ -1100,8 +1101,7 @@ private:
     LinkedList<Service>      mServices;
     DelayTimer               mTimer;
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
-    GuardTimer mGuardTimer;
-    AutoStart  mAutoStart;
+    AutoStart mAutoStart;
 #endif
 };
 
