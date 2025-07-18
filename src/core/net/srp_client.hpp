@@ -409,7 +409,7 @@ public:
      *
      * @returns TRUE if the SRP client is running, FALSE otherwise.
      */
-    bool IsRunning(void) const { return (mState != kStateStopped); }
+    bool IsRunning(void) const { return mClient.IsRunning(); }
 
     /**
      * Gets the socket address (IPv6 address and port number) of the SRP server which is being used by SRP
@@ -419,7 +419,7 @@ public:
      *
      * @returns The SRP server's socket address.
      */
-    const Ip6::SockAddr &GetServerAddress(void) const { return mSocket.GetPeerName(); }
+    const Ip6::SockAddr &GetServerAddress(void) const { return mClient.GetServerAddress(); }
 
     /**
      * Sets the callback used to notify caller of events/changes.
@@ -985,10 +985,70 @@ private:
     };
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
+    class ClientEntry : public InstanceLocator
+    {
+        // Manage the service registration process to an SRP Server.
+    public:
+        explicit ClientEntry(Instance &aInstance);
+
+        void      SetState(State aState);
+        State     GetState(void) const { return mState; }
+        bool      IsRunning(void) const { return (mState != kStateStopped); }
+        uint32_t  GetRetryWaitInterval(void) const { return mRetryWaitInterval; }
+        void      ResetRetryWaitInterval(void) { mRetryWaitInterval = kMinRetryWaitInterval; }
+        void      GrowRetryWaitInterval(void);
+        uint16_t  GetCurMessageId(void) const { return mCurMessageId; }
+        void      SelectNewMessageId(void);
+        TxJitter &GetTxJitter(void) { return mTxJitter; }
+        void      SetTxFailureRetryCount(uint8_t aCount) { mTxFailureRetryCount = aCount; }
+        uint8_t   GetTxFailureRetryCount(void) const { return mTxFailureRetryCount; }
+        void      IncrementTxFailureRetryCount(void) { mTxFailureRetryCount++; }
+        TimeMilli GetLeaseRenewTime(void) const { return mLeaseRenewTime; }
+        void      SetLeaseRenewTime(TimeMilli aTime) { mLeaseRenewTime = aTime; }
+        void      LeaseRenewTimeAdd(uint32_t aDelay) { mLeaseRenewTime += aDelay; }
+        void      SetLease(uint32_t aLease) { mLease = aLease; }
+        uint32_t  GetLease(void) const { return mLease; }
+        void      SetKeyLease(uint32_t aKeyLease) { mKeyLease = aKeyLease; }
+        uint32_t  GetKeyLease(void) const { return mKeyLease; }
+        TimeMilli GetTimerFireTime(void) const { return mTimerFireTime; }
+        bool      IsTimerRunning(void) const { return mIsTimerRunning; }
+        void      TimerStart(uint32_t aDelay);
+        void      TimerStop(void);
+        void      TimerFireAt(const NextFireTime &aNextFireTime);
+
+        void                 SetServerAddress(const Ip6::SockAddr &aSockAddr) { mServerSockAddr = aSockAddr; }
+        const Ip6::SockAddr &GetServerAddress(void) const { return mServerSockAddr; }
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+        void LogRetryWaitInterval(void) const;
+#else
+        void LogRetryWaitInterval(void) const {}
+#endif
+
+    private:
+        State         mState;
+        uint16_t      mCurMessageId;
+        uint32_t      mLease;
+        uint32_t      mKeyLease;
+        TxJitter      mTxJitter;
+        uint32_t      mRetryWaitInterval;
+        uint8_t       mTxFailureRetryCount : 4;
+        bool          mIsTimerRunning : 1;
+        TimeMilli     mTimerFireTime;
+        TimeMilli     mLeaseRenewTime;
+        Ip6::SockAddr mServerSockAddr;
+    };
+
     struct MsgInfo
     {
         static constexpr uint16_t kUnknownOffset = 0;
 
+        explicit MsgInfo(ClientEntry &aClient)
+            : mClient(aClient)
+        {
+        }
+
+        ClientEntry      &mClient;
         OwnedPtr<Message> mMessage;
         bool              mSingleServiceMode;
         uint16_t          mDomainNameOffset;
@@ -998,10 +1058,15 @@ private:
         KeyInfo           mKeyInfo;
     };
 
-    Error        Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester);
-    void         Stop(Requester aRequester, StopMode aMode);
-    void         Resume(void);
-    void         Pause(void);
+    Error Start(ClientEntry &aClient, const Ip6::SockAddr &aServerSockAddr, Requester aRequester);
+    Error Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
+    {
+        return Start(mClient, aServerSockAddr, aRequester);
+    }
+    void         Stop(ClientEntry &aClient, Requester aRequester, StopMode aMode);
+    void         Stop(Requester aRequester, StopMode aMode) { Stop(mClient, aRequester, aMode); }
+    void         Resume(ClientEntry &aClient);
+    void         Pause(ClientEntry &aClient);
     void         HandleNotifierEvents(Events aEvents);
     void         HandleRoleChanged(void);
     void         HandleUnicastAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::UnicastAddress &aAddress);
@@ -1009,41 +1074,39 @@ private:
     bool         ShouldHostAutoAddressRegister(const Ip6::Netif::UnicastAddress &aUnicastAddress) const;
     Error        UpdateHostInfoStateOnAddressChange(void);
     void         UpdateServiceStateToRemove(Service &aService);
-    State        GetState(void) const { return mState; }
-    void         SetState(State aState);
-    bool         ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStateChangeMode aMode);
     void         InvokeCallback(Error aError) const;
     void         InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const;
     void         HandleHostInfoOrServiceChange(void);
-    void         SendUpdate(void);
+    void         SendUpdate(ClientEntry &aClient);
     Error        PrepareUpdateMessage(MsgInfo &aInfo);
     Error        UpdateIdAndSignatureInUpdateMessage(MsgInfo &aInfo);
     Error        ReadOrGenerateKey(KeyInfo &aKeyInfo);
     Error        AppendServiceInstructions(MsgInfo &aInfo);
-    bool         CanAppendService(const Service &aService);
+    bool         CanAppendService(ClientEntry &aClient, const Service &aService);
     Error        AppendServiceInstruction(Service &aService, MsgInfo &aInfo);
     Error        AppendHostDescriptionInstruction(MsgInfo &aInfo);
     Error        AppendKeyRecord(MsgInfo &aInfo) const;
     Error        AppendDeleteAllRrsets(MsgInfo &aInfo) const;
     Error        AppendHostName(MsgInfo &aInfo, bool aDoNotCompress = false) const;
     Error        AppendAaaaRecord(const Ip6::Address &aAddress, MsgInfo &aInfo) const;
-    Error        AppendUpdateLeaseOptRecord(MsgInfo &aInfo);
+    Error        AppendUpdateLeaseOptRecord(MsgInfo &aInfo) const;
     Error        AppendSignature(MsgInfo &aInfo, SignatureAppendMode aMode);
     void         HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void         ProcessResponse(Message &aMessage);
-    void         SelectNewMessageId(void);
-    void         HandleUpdateDone(void);
+    void         ProcessResponse(ClientEntry &aClient, Message &aMessage);
+    void         HandleUpdateDone(ClientEntry &aClient);
     void         GetRemovedServices(LinkedList<Service> &aRemovedServices);
     static Error ReadResourceRecord(const Message &aMessage, uint16_t &aOffset, Dns::ResourceRecord &aRecord);
-    Error        ProcessOptRecord(const Message &aMessage, uint16_t aOffset, const Dns::OptRecord &aOptRecord);
-    void         UpdateState(void);
-    uint32_t     GetRetryWaitInterval(void) const { return mRetryWaitInterval; }
-    void         ResetRetryWaitInterval(void) { mRetryWaitInterval = kMinRetryWaitInterval; }
-    void         GrowRetryWaitInterval(void);
-    uint32_t     DetermineLeaseInterval(uint32_t aInterval, uint32_t aDefaultInterval) const;
-    uint32_t     DetermineTtl(void) const;
-    bool         ShouldRenewEarly(const Service &aService) const;
-    void         HandleTimer(void);
+    Error        ProcessOptRecord(ClientEntry          &aClient,
+                                  const Message        &aMessage,
+                                  uint16_t              aOffset,
+                                  const Dns::OptRecord &aOptRecord);
+    bool ChangeHostAndServiceStates(ClientEntry &aClient, const ItemState *aNewStates, ServiceStateChangeMode aMode);
+    void UpdateState(ClientEntry &aClient);
+    uint32_t DetermineLeaseInterval(uint32_t aInterval, uint32_t aDefaultInterval) const;
+    uint32_t DetermineTtl(MsgInfo &aInfo) const;
+    bool     ShouldRenewEarly(const Service &aService) const;
+    void     UpdateTimer(void);
+    void     HandleTimer(void);
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     void  ApplyAutoStartGuardOnAttach(void);
     void  ProcessAutoStart(void);
@@ -1056,9 +1119,6 @@ private:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *StateToString(State aState);
-    void               LogRetryWaitInterval(void) const;
-#else
-    void                                 LogRetryWaitInterval(void) const {}
 #endif
 
     static const char kDefaultDomainName[];
@@ -1072,25 +1132,16 @@ private:
     using GuardTimer = TimerMilliIn<Client, &Client::HandleGuardTimer>;
 #endif
 
-    State   mState;
-    uint8_t mTxFailureRetryCount : 4;
-    bool    mShouldRemoveKeyLease : 1;
+    bool mShouldRemoveKeyLease : 1;
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     bool mServiceKeyRecordEnabled : 1;
     bool mUseShortLeaseOption : 1;
 #endif
 
-    uint16_t mCurMessageId;
     uint16_t mAutoHostAddressCount;
-    uint32_t mRetryWaitInterval;
-
-    TimeMilli mLeaseRenewTime;
-    uint32_t  mTtl;
-    uint32_t  mLease;
-    uint32_t  mKeyLease;
-    uint32_t  mDefaultLease;
-    uint32_t  mDefaultKeyLease;
-    TxJitter  mTxJitter;
+    uint32_t mTtl;
+    uint32_t mDefaultLease;
+    uint32_t mDefaultKeyLease;
 
     ClientSocket mSocket;
 
@@ -1103,6 +1154,8 @@ private:
     GuardTimer mGuardTimer;
     AutoStart  mAutoStart;
 #endif
+
+    ClientEntry mClient;
 };
 
 } // namespace Srp
