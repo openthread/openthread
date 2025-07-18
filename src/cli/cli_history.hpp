@@ -100,6 +100,7 @@ private:
     static const char *MessagePriorityToString(uint8_t aPriority);
     static const char *RadioTypeToString(const otHistoryTrackerMessageInfo &aInfo);
     static const char *MessageTypeToString(const otHistoryTrackerMessageInfo &aInfo);
+    static const char *DnsSrpAddrTypeToString(otHistoryTrackerDnsSrpAddrType aType);
 };
 
 } // namespace Cli
