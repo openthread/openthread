@@ -270,10 +270,15 @@ const char *Client::TxJitter::ReasonToString(Reason aReason)
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
-Client::AutoStart::AutoStart(void)
+Client::AutoStart::AutoStart(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mState(kDefaultMode ? kFirstTimeSelecting : kDisabled)
+    , mAnycastSeqNum(0)
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+    , mTimeoutFailureCount(0)
+#endif
+    , mGuardTimer(aInstance)
 {
-    Clear();
-    mState = kDefaultMode ? kFirstTimeSelecting : kDisabled;
 }
 
 bool Client::AutoStart::HasSelectedServer(void) const
@@ -366,7 +371,7 @@ Client::Client(Instance &aInstance)
     , mDomainName(kDefaultDomainName)
     , mTimer(aInstance)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
-    , mGuardTimer(aInstance)
+    , mAutoStart(aInstance)
 #endif
 {
     // The `Client` implementation uses different constant array of
@@ -534,7 +539,7 @@ void Client::HandleNotifierEvents(Events aEvents)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     if (aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadMeshLocalAddrChanged))
     {
-        ProcessAutoStart();
+        mAutoStart.ProcessAutoStart();
     }
 #endif
 
@@ -551,7 +556,7 @@ void Client::HandleRoleChanged(void)
     if (Get<Mle::Mle>().IsAttached())
     {
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
-        ApplyAutoStartGuardOnAttach();
+        mAutoStart.ApplyAutoStartGuardOnAttach();
 #endif
 
         VerifyOrExit(GetState() == kStatePaused);
@@ -655,7 +660,7 @@ void Client::HandleUnicastAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip
     // address change occurs within this short window, we do not
     // apply a longer TX jitter, as this likely indicates a device
     // reboot.
-    VerifyOrExit(!mGuardTimer.IsRunning());
+    VerifyOrExit(!mAutoStart.IsGuarded());
 #endif
 
     mTxJitter.Request((aEvent == Ip6::Netif::kAddressAdded) ? TxJitter::kOnSlaacAddrAdd : TxJitter::kOnSlaacAddrRemove);
@@ -1862,7 +1867,7 @@ void Client::ProcessResponse(Message &aMessage)
             // running and auto-start is enabled and selected the
             // server.
 
-            SelectNextServer(/* aDisallowSwitchOnRegisteredHost */ true);
+            mAutoStart.SelectNextServer(/* aDisallowSwitchOnRegisteredHost */ true);
         }
 #endif
         ExitNow(error = kErrorNone);
@@ -2223,7 +2228,7 @@ void Client::HandleTimer(void)
 
         if (mAutoStart.GetTimeoutFailureCount() >= kMaxTimeoutFailuresToSwitchServer)
         {
-            SelectNextServer(kDisallowSwitchOnRegisteredHost);
+            mAutoStart.SelectNextServer(kDisallowSwitchOnRegisteredHost);
         }
 #endif
         break;
@@ -2243,19 +2248,19 @@ void Client::EnableAutoStartMode(AutoStartCallback aCallback, void *aContext)
     VerifyOrExit(mAutoStart.GetState() == AutoStart::kDisabled);
 
     mAutoStart.SetState(AutoStart::kFirstTimeSelecting);
-    ApplyAutoStartGuardOnAttach();
+    mAutoStart.ApplyAutoStartGuardOnAttach();
 
-    ProcessAutoStart();
+    mAutoStart.ProcessAutoStart();
 
 exit:
     return;
 }
 
-void Client::ApplyAutoStartGuardOnAttach(void)
+void Client::AutoStart::ApplyAutoStartGuardOnAttach(void)
 {
     VerifyOrExit(Get<Mle::Mle>().IsAttached());
-    VerifyOrExit(!IsRunning());
-    VerifyOrExit(mAutoStart.GetState() == AutoStart::kFirstTimeSelecting);
+    VerifyOrExit(!Get<Client>().IsRunning());
+    VerifyOrExit(GetState() == AutoStart::kFirstTimeSelecting);
 
     // The `mGuardTimer` tracks a guard interval after the attach
     // event while `AutoStart` has yet to select a server for the
@@ -2275,28 +2280,29 @@ exit:
     return;
 }
 
-void Client::ProcessAutoStart(void)
+void Client::AutoStart::ProcessAutoStart(void)
 {
     Ip6::SockAddr     serverSockAddr;
     DnsSrpAnycastInfo anycastInfo;
     DnsSrpUnicastInfo unicastInfo;
-    AutoStart::State  oldAutoStartState = mAutoStart.GetState();
+    AutoStart::State  oldAutoStartState = GetState();
     bool              shouldRestart     = false;
+    Client           &client            = Get<Client>();
 
     // If auto start mode is enabled, we check the Network Data entries
     // to discover and select the preferred SRP server to register with.
     // If we currently have a selected server, we ensure that it is
     // still present in the Network Data and is still the preferred one.
 
-    VerifyOrExit(mAutoStart.GetState() != AutoStart::kDisabled);
+    VerifyOrExit(GetState() != AutoStart::kDisabled);
 
     // If SRP client is running, we check to make sure that auto-start
     // did select the current server, and server was not specified by
     // user directly.
 
-    if (IsRunning())
+    if (client.IsRunning())
     {
-        VerifyOrExit(mAutoStart.HasSelectedServer());
+        VerifyOrExit(HasSelectedServer());
     }
 
     // There are three types of entries in Network Data:
@@ -2306,10 +2312,9 @@ void Client::ProcessAutoStart(void)
     // 3) Unicast entries with address info included in server data.
 
     serverSockAddr.Clear();
-
     if (SelectUnicastEntry(NetworkData::Service::kAddrInServiceData, unicastInfo) == kErrorNone)
     {
-        mAutoStart.SetState(AutoStart::kSelectedUnicastPreferred);
+        SetState(AutoStart::kSelectedUnicastPreferred);
         serverSockAddr = unicastInfo.mSockAddr;
     }
     else if (Get<NetworkData::Service::Manager>().FindPreferredDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
@@ -2323,32 +2328,31 @@ void Client::ProcessAutoStart(void)
         // number change, the client still needs to restart to
         // re-register its info.
 
-        if ((mAutoStart.GetState() != AutoStart::kSelectedAnycast) ||
-            (mAutoStart.GetAnycastSeqNum() != anycastInfo.mSequenceNumber))
+        if ((GetState() != AutoStart::kSelectedAnycast) || (GetAnycastSeqNum() != anycastInfo.mSequenceNumber))
         {
             shouldRestart = true;
-            mAutoStart.SetAnycastSeqNum(anycastInfo.mSequenceNumber);
+            SetAnycastSeqNum(anycastInfo.mSequenceNumber);
         }
 
-        mAutoStart.SetState(AutoStart::kSelectedAnycast);
+        SetState(AutoStart::kSelectedAnycast);
     }
     else if (SelectUnicastEntry(NetworkData::Service::kAddrInServerData, unicastInfo) == kErrorNone)
     {
-        mAutoStart.SetState(AutoStart::kSelectedUnicast);
+        SetState(AutoStart::kSelectedUnicast);
         serverSockAddr = unicastInfo.mSockAddr;
     }
 
-    if (IsRunning())
+    if (client.IsRunning())
     {
-        VerifyOrExit((GetServerAddress() != serverSockAddr) || shouldRestart);
-        Stop(kRequesterAuto, kResetRetryInterval);
+        VerifyOrExit((client.GetServerAddress() != serverSockAddr) || shouldRestart);
+        client.Stop(kRequesterAuto, kResetRetryInterval);
     }
 
     if (serverSockAddr.GetAddress().IsUnspecified())
     {
-        if (mAutoStart.HasSelectedServer())
+        if (HasSelectedServer())
         {
-            mAutoStart.SetState(AutoStart::kReselecting);
+            SetState(AutoStart::kReselecting);
         }
 
         ExitNow();
@@ -2384,43 +2388,44 @@ void Client::ProcessAutoStart(void)
 
         if (mGuardTimer.IsRunning())
         {
-            mTxJitter.Request(TxJitter::kOnDeviceReboot);
+            client.GetTxJitter().Request(TxJitter::kOnDeviceReboot);
         }
         else
         {
-            mTxJitter.Request(TxJitter::kOnServerStart);
+            client.GetTxJitter().Request(TxJitter::kOnServerStart);
         }
 
         break;
 
     case AutoStart::kReselecting:
         // Server is restarted (or possibly a new server started).
-        mTxJitter.Request(TxJitter::kOnServerRestart);
+        client.GetTxJitter().Request(TxJitter::kOnServerRestart);
         break;
 
     case AutoStart::kSelectedUnicastPreferred:
     case AutoStart::kSelectedAnycast:
     case AutoStart::kSelectedUnicast:
-        mTxJitter.Request(TxJitter::kOnServerSwitch);
+        client.GetTxJitter().Request(TxJitter::kOnServerSwitch);
         break;
     }
 
-    IgnoreError(Start(serverSockAddr, kRequesterAuto));
+    IgnoreError(client.Start(serverSockAddr, kRequesterAuto));
 
 exit:
     return;
 }
 
-Error Client::SelectUnicastEntry(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo) const
+Error Client::AutoStart::SelectUnicastEntry(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo) const
 {
     Error                          error = kErrorNotFound;
     DnsSrpUnicastInfo              unicastInfo;
     NetworkData::Service::Iterator iterator(GetInstance());
+    Client                        &client = Get<Client>();
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
     Settings::SrpClientInfo savedInfo;
     bool                    hasSavedServerInfo = false;
 
-    if (!IsRunning())
+    if (!client.IsRunning())
     {
         hasSavedServerInfo = (Get<Settings>().Read(savedInfo) == kErrorNone);
     }
@@ -2430,7 +2435,7 @@ Error Client::SelectUnicastEntry(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aIn
     {
         bool preferNewEntry;
 
-        if (mAutoStart.HasSelectedServer() && (GetServerAddress() == unicastInfo.mSockAddr))
+        if (HasSelectedServer() && (client.GetServerAddress() == unicastInfo.mSockAddr))
         {
             aInfo = unicastInfo;
             error = kErrorNone;
@@ -2471,7 +2476,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
-void Client::SelectNextServer(bool aDisallowSwitchOnRegisteredHost)
+void Client::AutoStart::SelectNextServer(bool aDisallowSwitchOnRegisteredHost)
 {
     // This method tries to find the next unicast server info entry in the
     // Network Data after the current one selected. If found, it
@@ -2481,15 +2486,16 @@ void Client::SelectNextServer(bool aDisallowSwitchOnRegisteredHost)
     Ip6::SockAddr     serverSockAddr;
     bool              selectNext = false;
     DnsSrpUnicastType type       = NetworkData::Service::kAddrInServiceData;
+    Client           &client     = Get<Client>();
 
     serverSockAddr.Clear();
 
     // Ensure that client is running, auto-start is enabled and
     // auto-start selected the server and it is a unicast entry.
 
-    VerifyOrExit(IsRunning());
+    VerifyOrExit(client.IsRunning());
 
-    switch (mAutoStart.GetState())
+    switch (GetState())
     {
     case AutoStart::kSelectedUnicastPreferred:
         type = NetworkData::Service::kAddrInServiceData;
@@ -2510,7 +2516,7 @@ void Client::SelectNextServer(bool aDisallowSwitchOnRegisteredHost)
     {
         // Ensure that host info is not yet registered (indicating that no
         // service has yet been registered either).
-        VerifyOrExit((mHostInfo.GetState() == kAdding) || (mHostInfo.GetState() == kToAdd));
+        VerifyOrExit((client.GetHostInfo().GetState() == kAdding) || (client.GetHostInfo().GetState() == kToAdd));
     }
 
     // We go through all entries to find the one matching the currently
@@ -2530,7 +2536,7 @@ void Client::SelectNextServer(bool aDisallowSwitchOnRegisteredHost)
                 ExitNow();
             }
 
-            if (GetServerAddress() == unicastInfo.mSockAddr)
+            if (client.GetServerAddress() == unicastInfo.mSockAddr)
             {
                 selectNext = true;
             }
@@ -2550,7 +2556,7 @@ void Client::SelectNextServer(bool aDisallowSwitchOnRegisteredHost)
     // tasklet). In such a case we keep `serverSockAddr` as empty.
 
 exit:
-    if (!serverSockAddr.GetAddress().IsUnspecified() && (GetServerAddress() != serverSockAddr))
+    if (!serverSockAddr.GetAddress().IsUnspecified() && (client.GetServerAddress() != serverSockAddr))
     {
         // We specifically update `mHostInfo` to `kToAdd` state. This
         // ensures that `Stop()` will keep it as kToAdd` and we detect
@@ -2558,9 +2564,9 @@ exit:
         // `SelectNextServer()` to happen again if the timeouts/failures
         // continue to happen with the new server.
 
-        mHostInfo.SetState(kToAdd);
-        Stop(kRequesterAuto, kKeepRetryInterval);
-        IgnoreError(Start(serverSockAddr, kRequesterAuto));
+        client.GetHostInfo().SetState(kToAdd);
+        client.Stop(kRequesterAuto, kKeepRetryInterval);
+        IgnoreError(client.Start(serverSockAddr, kRequesterAuto));
     }
 }
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
