@@ -126,6 +126,8 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
         SuccessOrExit(error = joinerAdvertisement.AppendTo(*message));
     }
 
+    message->RegisterTxCallback(HandleDiscoveryRequestFrameTxDone, this);
+
     destination.SetToLinkLocalAllRoutersMulticast();
 
     SuccessOrExit(error = message->SendTo(destination));
@@ -198,6 +200,15 @@ Mac::TxFrame *DiscoverScanner::PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame
     return frame;
 }
 
+void DiscoverScanner::HandleDiscoveryRequestFrameTxDone(const otMessage *aMessage, otError aError, void *aContext)
+{
+    // Since we prepared the discovery message originally, we can
+    // safely cast away the `const` from it.
+
+    static_cast<DiscoverScanner *>(aContext)->HandleDiscoveryRequestFrameTxDone(AsNonConst(AsCoreType(aMessage)),
+                                                                                aError);
+}
+
 void DiscoverScanner::HandleDiscoveryRequestFrameTxDone(Message &aMessage, Error aError)
 {
     switch (mState)
@@ -214,6 +225,7 @@ void DiscoverScanner::HandleDiscoveryRequestFrameTxDone(Message &aMessage, Error
             // while listening to receive Discovery Responses.
             aMessage.SetDirectTransmission();
             aMessage.SetTimestampToNow();
+            aMessage.RegisterTxCallback(HandleDiscoveryRequestFrameTxDone, this);
             Get<MeshForwarder>().PauseMessageTransmissions();
             mTimer.Start(kDefaultScanDuration);
             break;
