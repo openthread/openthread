@@ -43,3 +43,7 @@ endif()
 if(OT_RCP)
     include(radio.cmake)
 endif()
+
+if(OT_MDNS_LIB AND (OT_PLATFORM STREQUAL "posix_mdns"))
+    include(mdns.cmake)
+endif()

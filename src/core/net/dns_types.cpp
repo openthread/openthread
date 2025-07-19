@@ -38,10 +38,14 @@
 namespace ot {
 namespace Dns {
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+
 Error Header::SetRandomMessageId(void)
 {
     return Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&mMessageId), sizeof(mMessageId));
 }
+
+#endif
 
 Error Header::ResponseCodeToError(Response aResponse)
 {

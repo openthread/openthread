@@ -187,7 +187,7 @@ bool otMdnsIsEnabled(otInstance *aInstance);
 /**
  * Enables or disables the mDNS auto-enable mode.
  *
- * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE`.
+ * Requires `(OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE`
  *
  * When this mode is enabled, the mDNS module uses the same infrastructure network interface as the Border Routing
  * manager. The mDNS module is then automatically enabled or disabled based on the operational state of that interface
@@ -208,7 +208,7 @@ void otMdnsSetAutoEnableMode(otInstance *aInstance, bool aEnable);
 /**
  * Indicates whether the auto-enable mode is enabled or disabled.
  *
- * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE`.
+ * Requires `(OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE`.
  *
  * @param[in] aInstance   The OpenThread instance.
  *
@@ -692,7 +692,7 @@ otError otMdnsStartBrowser(otInstance *aInstance, const otMdnsBrowser *aBrowser)
  * @retval OT_ERROR_NONE           Browser stopped successfully.
  * @retval OT_ERROR_INVALID_STATE  mDNS module is not enabled.
  */
-otError otMdnsStopBrowser(otInstance *aInstance, const otMdnsBrowser *aBroswer);
+otError otMdnsStopBrowser(otInstance *aInstance, const otMdnsBrowser *aBrowser);
 
 /**
  * Starts an SRV record resolver.
