@@ -471,7 +471,7 @@ private:
     Uptime mUptime;
 #endif
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
     Utils::Otns mOtns;
 #endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -757,7 +757,7 @@ template <> inline Radio::Statistics &Instance::Get(void) { return mRadio.mStati
 template <> inline Uptime &Instance::Get(void) { return mUptime; }
 #endif
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
 template <> inline Utils::Otns &Instance::Get(void) { return mOtns; }
 #endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
