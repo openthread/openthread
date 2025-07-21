@@ -745,8 +745,6 @@ private:
         OPENTHREAD_CONFIG_SRP_CLIENT_MAX_TIMEOUT_FAILURES_TO_SWITCH_SERVER;
 #endif
 
-    static constexpr uint16_t kUdpPayloadSize = Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
-
     // -------------------------------
     // Lease related constants
 
@@ -985,65 +983,104 @@ private:
     };
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
-    struct MsgInfo
+    // SRP Update message encoding methods.
+    class Update : public InstanceLocator
     {
-        static constexpr uint16_t kUnknownOffset = 0;
+    public:
+        Update(Instance &aInstance);
+
+        Error    SetMessage(Message *aMessage);
+        Message &GetMessage(void) { return *mMessage; }
+        void     ClearMessage(void);
+        void     ReleaseMessage(void) { mMessage.Release(); }
+        uint16_t GetMessageLength(void) const;
+        void     SetSingleServiceMode(bool aEnabled) { mSingleServiceMode = aEnabled; }
+        bool     IsSingleServiceMode(void) const { return mSingleServiceMode; }
+        KeyInfo &GetKeyInfo(void) { return mKeyInfo; }
+        Error    AppendUpdateHeader(uint16_t aMessageId);
+        Error    AppendZoneSection(void);
+        Error    AppendServiceInstruction(Service &aService, uint32_t aTtl, bool aRemoving);
+        Error    AppendAaaaRecord(const Ip6::Address &aAddress, uint32_t aTtl);
+        Error    AppendKeyRecord(uint32_t aTtl);
+        Error    AppendDeleteAllRrsets(void);
+        Error    AppendHostName(bool aDoNotCompress = false);
+        Error    AppendUpdateLeaseOptRecord(uint32_t aLease, uint32_t aKeyLease);
+        Error    AppendSignature(SignatureAppendMode aMode);
+        Error    UpdateIdAndSignatureInUpdateMessage(uint16_t aMessageId);
+        void     UpdateRecordCountInUpdateHeader(void);
+
+    private:
+        static constexpr uint16_t kUdpPayloadSize = Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
+        static constexpr uint16_t kHeaderOffset   = 0;
+        static constexpr uint16_t kUnknownOffset  = 0;
 
         OwnedPtr<Message> mMessage;
-        bool              mSingleServiceMode;
         uint16_t          mDomainNameOffset;
         uint16_t          mHostNameOffset;
         uint16_t          mRecordCount;
         uint16_t          mSigRecordOffset;
         KeyInfo           mKeyInfo;
+        bool              mSingleServiceMode : 1;
     };
 
-    Error        Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester);
-    void         Stop(Requester aRequester, StopMode aMode);
-    void         Resume(void);
-    void         Pause(void);
-    void         HandleNotifierEvents(Events aEvents);
-    void         HandleRoleChanged(void);
-    void         HandleUnicastAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::UnicastAddress &aAddress);
-    bool         ShouldUpdateHostAutoAddresses(void) const;
-    bool         ShouldHostAutoAddressRegister(const Ip6::Netif::UnicastAddress &aUnicastAddress) const;
-    Error        UpdateHostInfoStateOnAddressChange(void);
-    void         UpdateServiceStateToRemove(Service &aService);
-    State        GetState(void) const { return mState; }
-    void         SetState(State aState);
-    bool         ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStateChangeMode aMode);
-    void         InvokeCallback(Error aError) const;
-    void         InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const;
-    void         HandleHostInfoOrServiceChange(void);
-    void         SendUpdate(void);
-    Error        PrepareUpdateMessage(MsgInfo &aInfo);
-    Error        UpdateIdAndSignatureInUpdateMessage(MsgInfo &aInfo);
-    Error        ReadOrGenerateKey(KeyInfo &aKeyInfo);
-    Error        AppendServiceInstructions(MsgInfo &aInfo);
-    bool         CanAppendService(const Service &aService);
-    Error        AppendServiceInstruction(Service &aService, MsgInfo &aInfo);
-    Error        AppendHostDescriptionInstruction(MsgInfo &aInfo);
-    Error        AppendKeyRecord(MsgInfo &aInfo) const;
-    Error        AppendDeleteAllRrsets(MsgInfo &aInfo) const;
-    Error        AppendHostName(MsgInfo &aInfo, bool aDoNotCompress = false) const;
-    Error        AppendAaaaRecord(const Ip6::Address &aAddress, MsgInfo &aInfo) const;
-    Error        AppendUpdateLeaseOptRecord(MsgInfo &aInfo);
-    Error        AppendSignature(MsgInfo &aInfo, SignatureAppendMode aMode);
-    void         HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void         ProcessResponse(Message &aMessage);
-    void         SelectNewMessageId(void);
-    void         HandleUpdateDone(void);
-    void         GetRemovedServices(LinkedList<Service> &aRemovedServices);
-    static Error ReadResourceRecord(const Message &aMessage, uint16_t &aOffset, Dns::ResourceRecord &aRecord);
-    Error        ProcessOptRecord(const Message &aMessage, uint16_t aOffset, const Dns::OptRecord &aOptRecord);
-    void         UpdateState(void);
-    uint32_t     GetRetryWaitInterval(void) const { return mRetryWaitInterval; }
-    void         ResetRetryWaitInterval(void) { mRetryWaitInterval = kMinRetryWaitInterval; }
-    void         GrowRetryWaitInterval(void);
-    uint32_t     DetermineLeaseInterval(uint32_t aInterval, uint32_t aDefaultInterval) const;
-    uint32_t     DetermineTtl(void) const;
-    bool         ShouldRenewEarly(const Service &aService) const;
-    void         HandleTimer(void);
+    // SRP Update Response message decoding methods.
+    class Response
+    {
+    public:
+        explicit Response(const Message &aMessage)
+            : mMessage(aMessage)
+            , mOffset(0)
+        {
+        }
+
+        Error ReadUpdateHeader(Dns::UpdateHeader &aHeader);
+        Error ProcessRecords(const Dns::UpdateHeader &aHeader, uint32_t &aLease, uint32_t &aKeyLease);
+
+    private:
+        Error SkipZoneRecord(void);
+        Error ReadResourceRecord(Dns::ResourceRecord &aRecord);
+        Error ReadOptRecord(uint16_t aOffset, const Dns::OptRecord &aOptRecord, uint32_t &aLease, uint32_t &aKeyLease);
+
+        const Message &mMessage;
+        uint16_t       mOffset;
+    };
+
+    Error    Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester);
+    void     Stop(Requester aRequester, StopMode aMode);
+    void     Resume(void);
+    void     Pause(void);
+    void     HandleNotifierEvents(Events aEvents);
+    void     HandleRoleChanged(void);
+    void     HandleUnicastAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::UnicastAddress &aAddress);
+    bool     ShouldUpdateHostAutoAddresses(void) const;
+    bool     ShouldHostAutoAddressRegister(const Ip6::Netif::UnicastAddress &aUnicastAddress) const;
+    Error    UpdateHostInfoStateOnAddressChange(void);
+    void     UpdateServiceStateToRemove(Service &aService);
+    State    GetState(void) const { return mState; }
+    void     SetState(State aState);
+    bool     ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStateChangeMode aMode);
+    void     InvokeCallback(Error aError) const;
+    void     InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const;
+    void     HandleHostInfoOrServiceChange(void);
+    void     SendUpdate(void);
+    Error    PrepareUpdateMessage(Update &aUpdate);
+    Error    ReadOrGenerateKey(KeyInfo &aKeyInfo);
+    Error    AppendServiceInstructions(Update &aUpdate);
+    bool     CanAppendService(const Service &aService);
+    Error    AppendHostDescriptionInstruction(Update &aUpdate);
+    void     HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void     ProcessResponse(Message &aMessage);
+    void     SelectNewMessageId(void);
+    void     HandleUpdateDone(void);
+    void     GetRemovedServices(LinkedList<Service> &aRemovedServices);
+    void     UpdateState(void);
+    uint32_t GetRetryWaitInterval(void) const { return mRetryWaitInterval; }
+    void     ResetRetryWaitInterval(void) { mRetryWaitInterval = kMinRetryWaitInterval; }
+    void     GrowRetryWaitInterval(void);
+    uint32_t DetermineLeaseInterval(uint32_t aInterval, uint32_t aDefaultInterval) const;
+    uint32_t DetermineTtl(void) const;
+    bool     ShouldRenewEarly(const Service &aService) const;
+    void     HandleTimer(void);
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     void  ApplyAutoStartGuardOnAttach(void);
     void  ProcessAutoStart(void);
