@@ -140,7 +140,7 @@ Error DuaManager::GenerateDomainUnicastAddressIid(void)
         if (dadCounter != mDadCounter)
         {
             mDadCounter = dadCounter;
-            IgnoreError(Store());
+            Store();
         }
 
         LogInfo("Generated DUA: %s", mDomainUnicastAddress.GetAddress().ToString().AsCString());
@@ -208,12 +208,12 @@ exit:
     return;
 }
 
-Error DuaManager::Store(void)
+void DuaManager::Store(void)
 {
     Settings::DadInfo dadInfo;
 
     dadInfo.SetDadCounter(mDadCounter);
-    return Get<Settings>().Save(dadInfo);
+    Get<Settings>().Save(dadInfo);
 }
 
 void DuaManager::AddDomainUnicastAddress(void)

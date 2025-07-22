@@ -711,7 +711,7 @@ void Server::CommitSrpUpdate(Error                    aError,
 
         mHasRegisteredAnyService = true;
         info.SetPort(GetSocket().mSockName.mPort);
-        IgnoreError(Get<Settings>().Save(info));
+        Get<Settings>().Save(info);
     }
 #endif
 

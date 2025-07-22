@@ -278,7 +278,7 @@ Error RoutingManager::LoadOrGenerateRandomBrUlaPrefix(void)
         mBrUlaPrefix.SetSubnetId(0);
         mBrUlaPrefix.SetLength(kBrUlaPrefixLength);
 
-        IgnoreError(Get<Settings>().Save<Settings::BrUlaPrefix>(mBrUlaPrefix));
+        Get<Settings>().Save<Settings::BrUlaPrefix>(mBrUlaPrefix);
         generated = true;
     }
 
@@ -3010,7 +3010,7 @@ void RoutingManager::OnLinkPrefixManager::Init(void)
         // We clear the entries in `Settings` and re-write the entries
         // from `mOldLocalPrefixes` array.
 
-        IgnoreError(Get<Settings>().DeleteAllBrOnLinkPrefixes());
+        Get<Settings>().DeleteAllBrOnLinkPrefixes();
 
         for (OldPrefix &oldPrefix : mOldLocalPrefixes)
         {
@@ -3387,7 +3387,7 @@ void RoutingManager::OnLinkPrefixManager::DeprecateOldPrefix(const Ip6::Prefix &
 
         removedPrefix = entry->mPrefix;
 
-        IgnoreError(Get<Settings>().RemoveBrOnLinkPrefix(removedPrefix));
+        Get<Settings>().RemoveBrOnLinkPrefix(removedPrefix);
     }
 
     entry->mPrefix     = aPrefix;
@@ -3424,7 +3424,7 @@ void RoutingManager::OnLinkPrefixManager::HandleTimer(void)
     case kDeprecating:
         if (nextExpireTime.GetNow() >= mExpireTime)
         {
-            IgnoreError(Get<Settings>().RemoveBrOnLinkPrefix(mLocalPrefix));
+            Get<Settings>().RemoveBrOnLinkPrefix(mLocalPrefix);
             SetState(kIdle);
         }
         else
@@ -3449,7 +3449,7 @@ void RoutingManager::OnLinkPrefixManager::HandleTimer(void)
     for (const Ip6::Prefix &prefix : expiredPrefixes)
     {
         LogInfo("Old local on-link prefix %s expired", prefix.ToString().AsCString());
-        IgnoreError(Get<Settings>().RemoveBrOnLinkPrefix(prefix));
+        Get<Settings>().RemoveBrOnLinkPrefix(prefix);
         mOldLocalPrefixes.RemoveMatching(prefix);
     }
 
