@@ -11,6 +11,7 @@ The number of entries recorded for each history list is configurable through a s
 Usage : `history [command] ...`
 
 - [help](#help)
+- [dnssrpaddr](#dnssrpaddr)
 - [ipaddr](#ipaddr)
 - [ipmaddr](#ipmaddr)
 - [neighbor](#neighbor)
@@ -63,6 +64,48 @@ rxtx
 tx
 Done
 >
+```
+
+### dnssrpaddr
+
+Usage `history dnssrpaddr [list] [<num-entries>]`
+
+Print the network data DNS/SRP address history. Each entry provides:
+
+- Event: Possible values are `Added` or `Removed`.
+- Address of DNS/SRP server.
+- Address type: `uni-local` unicast address local (address in server data) or `uni-infra` infrastructure server (addr in service data), or `anycast`.
+- Port: Server port number, only applicable when address type is unicast.
+- Sequence Number: Anycast sequence number, only applicable when address type is anycast.
+- Version number.
+- RLOC16 of the BR adding/removing this entry in Network Data.
+
+```bash
+> history dnssrpaddr
+| Age                  | Event   | Address                                 | Type      |Port/Seq| Ver | RLOC16 |
++----------------------+---------+-----------------------------------------+-----------+--------+-----+--------+
+|         00:00:07.150 | Added   | fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb | uni-local |   1234 |   0 | 0x0000 |
+|         00:00:09.351 | Removed | fd00:0:0:0:0:0:0:1234                   | uni-infra |  51525 |   1 | 0x0000 |
+|         00:00:28.479 | Added   | fd00:0:0:0:0:0:0:1234                   | uni-infra |  51525 |   1 | 0x0000 |
+|         00:00:30.133 | Removed | fd4f:59ae:348a:aa48:0:ff:fe00:fc10      |   anycast |      1 |   2 | 0x0000 |
+|         00:01:02.609 | Added   | fd4f:59ae:348a:aa48:0:ff:fe00:fc10      |   anycast |      1 |   2 | 0x0000 |
+|         00:01:03.574 | Removed | fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb | uni-local |  50152 |   2 | 0x0000 |
+|         00:01:33.631 | Added   | fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb | uni-local |  50152 |   2 | 0x0000 |
+Done
+```
+
+Print the history as a list.
+
+```bash
+> history dnssrpaddr list
+00:00:19.646 -> event:Added addr:fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb type:uni-local port:1234 ver:0 rloc16:0x0000
+00:00:21.847 -> event:Removed addr:fd00:0:0:0:0:0:0:1234 type:uni-infra port:51525 ver:1 rloc16:0x0000
+00:00:40.975 -> event:Added addr:fd00:0:0:0:0:0:0:1234 type:uni-infra port:51525 ver:1 rloc16:0x0000
+00:00:42.629 -> event:Removed addr:fd4f:59ae:348a:aa48:0:ff:fe00:fc10 type:anycast seqno:1 ver:2 rloc16:0x0000
+00:01:15.105 -> event:Added addr:fd4f:59ae:348a:aa48:0:ff:fe00:fc10 type:anycast seqno:1 ver:2 rloc16:0x0000
+00:01:16.070 -> event:Removed addr:fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb type:uni-local port:50152 ver:2 rloc16:0x0000
+00:01:46.127 -> event:Added addr:fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb type:uni-local port:50152 ver:2 rloc16:0x0000
+Done
 ```
 
 ### ipaddr
