@@ -87,6 +87,7 @@ void MulticastRoutingManager::TearDown(void)
 
     otBackboneRouterSetMulticastListenerCallback(gInstance, nullptr, nullptr);
     Mainloop::Manager::Get().Remove(*this);
+    FinalizeMulticastRouterSock();
 }
 
 void MulticastRoutingManager::HandleBackboneMulticastListenerEvent(void                                  *aContext,
