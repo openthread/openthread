@@ -83,6 +83,8 @@ enum Uri : uint8_t
     kUriDiagnosticGetRequest,   ///< Network Diagnostic Get Request ("d/dg")
     kUriDiagnosticGetQuery,     ///< Network Diagnostic Get Query ("d/dq")
     kUriDiagnosticReset,        ///< Network Diagnostic Reset ("d/dr")
+    kUriHistoryAnswer,          ///< History Answer ("h/an")
+    kUriHistoryQuery,           ///< History Query ("h/qy")
     kUriDuaRegistrationNotify,  ///< DUA Registration Notification ("n/dn")
     kUriDuaRegistrationRequest, ///< DUA Registration Request ("n/dr")
     kUriMlr,                    ///< Multicast Listener Registration ("n/mr")
