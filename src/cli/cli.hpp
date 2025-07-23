@@ -111,6 +111,7 @@ class Interpreter : public OutputImplementer, public Utils
     friend class Commissioner;
     friend class Dns;
     friend class Joiner;
+    friend class History;
     friend class LinkMetrics;
     friend class Mdns;
     friend class MeshDiag;

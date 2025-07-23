@@ -647,20 +647,12 @@ template <> otError History::Process<Cmd("netinfo")>(Arg aArgs[])
     otHistoryTrackerIterator           iterator;
     const otHistoryTrackerNetworkInfo *info;
     uint32_t                           entryAge;
-    char                               ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
-    char                               linkModeString[Interpreter::kLinkModeStringSize];
 
     SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
 
     if (!isList)
     {
-        // | Age                  | Role     | Mode | RLOC16 | Partition ID |
-        // +----------------------+----------+------+--------+--------------+
-
-        static const char *const kNetInfoTitles[]       = {"Age", "Role", "Mode", "RLOC16", "Partition ID"};
-        static const uint8_t     kNetInfoColumnWidths[] = {22, 10, 6, 8, 14};
-
-        OutputTableHeader(kNetInfoTitles, kNetInfoColumnWidths);
+        OutputNetInfoTableHeader();
     }
 
     otHistoryTrackerInitIterator(&iterator);
@@ -670,16 +662,35 @@ template <> otError History::Process<Cmd("netinfo")>(Arg aArgs[])
         info = otHistoryTrackerIterateNetInfoHistory(GetInstancePtr(), &iterator, &entryAge);
         VerifyOrExit(info != nullptr);
 
-        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
-
-        OutputLine(
-            isList ? "%s -> role:%s mode:%s rloc16:0x%04x partition-id:%lu" : "| %20s | %-8s | %-4s | 0x%04x | %12lu |",
-            ageString, otThreadDeviceRoleToString(info->mRole),
-            Interpreter::LinkModeToString(info->mMode, linkModeString), info->mRloc16, ToUlong(info->mPartitionId));
+        OutputNetInfoEntry(isList, *info, entryAge);
     }
 
 exit:
     return error;
+}
+
+void History::OutputNetInfoTableHeader(void)
+{
+    // | Age                  | Role     | Mode | RLOC16 | Partition ID |
+    // +----------------------+----------+------+--------+--------------+
+
+    static const char *const kNetInfoTitles[]       = {"Age", "Role", "Mode", "RLOC16", "Partition ID"};
+    static const uint8_t     kNetInfoColumnWidths[] = {22, 10, 6, 8, 14};
+
+    OutputTableHeader(kNetInfoTitles, kNetInfoColumnWidths);
+}
+
+void History::OutputNetInfoEntry(bool aIsList, const otHistoryTrackerNetworkInfo &aInfo, uint32_t aEntryAge)
+{
+    char ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char linkModeString[Interpreter::kLinkModeStringSize];
+
+    otHistoryTrackerEntryAgeToString(aEntryAge, ageString, sizeof(ageString));
+
+    OutputLine(aIsList ? "%s -> role:%s mode:%s rloc16:0x%04x partition-id:%lu"
+                       : "| %20s | %-8s | %-4s | 0x%04x | %12lu |",
+               ageString, otThreadDeviceRoleToString(aInfo.mRole),
+               Interpreter::LinkModeToString(aInfo.mMode, linkModeString), aInfo.mRloc16, ToUlong(aInfo.mPartitionId));
 }
 
 /**
@@ -1899,6 +1910,126 @@ const char *History::DnsSrpAddrTypeToString(otHistoryTrackerDnsSrpAddrType aType
     return Stringify(aType, kAddrTypeStrings, "--");
 }
 
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+
+otError History::ParseQueryArgs(Arg       aArgs[],
+                                bool     &aIsList,
+                                uint16_t &aRloc16,
+                                uint16_t &aNumEntries,
+                                uint32_t &aMaxEntryAge) const
+{
+    otError error = OT_ERROR_NONE;
+
+    if (*aArgs == "list")
+    {
+        aArgs++;
+        aIsList = true;
+    }
+    else
+    {
+        aIsList = false;
+    }
+
+    SuccessOrExit(error = aArgs->ParseAsUint16(aRloc16));
+    aArgs++;
+
+    if (aArgs->ParseAsUint16(aNumEntries) == OT_ERROR_NONE)
+    {
+        aArgs++;
+    }
+    else
+    {
+        aNumEntries = 0;
+    }
+
+    if (aArgs->ParseAsUint32(aMaxEntryAge) == OT_ERROR_NONE)
+    {
+        aArgs++;
+    }
+    else
+    {
+        aMaxEntryAge = 0;
+    }
+
+    error = aArgs[0].IsEmpty() ? OT_ERROR_NONE : OT_ERROR_INVALID_ARGS;
+
+exit:
+    return error;
+}
+
+template <> otError History::Process<Cmd("query")>(Arg aArgs[])
+{
+    otError  error = OT_ERROR_NONE;
+    uint16_t rloc16;
+    uint16_t maxEntries;
+    uint32_t maxEntryAge;
+
+    /**
+     * @cli history query netinfo
+     * @code
+     * history query netinfo 0xac00
+     * | Age                  | Role     | Mode | RLOC16 | Partition ID |
+     * +----------------------+----------+------+--------+--------------+
+     * |         00:00:36.786 | detached | rdn  | 0xac00 |    807291876 |
+     * |         00:00:43.966 | detached | rdn  | 0xfffe |            0 |
+     * Done
+     * @endcode
+     * @cparam history query netinfo [@ca{list}] @ca{rloc16} [@ca{num-entries}] [@ca{max-entry-age}]
+     * * Use the `list` option to display the output in list format. Otherwise, the output is shown in table format.
+     * * The `rloc16` indicates the RLOC16 of the device to query.
+     * * Use the `num-entries` option to limit the output to the number of most-recent entries specified. If this option
+     *   is not used or set to zero, all stored entries are shown in the output.
+     * * Use the `max-entry-age` option to limit maximum age of entries. If this option is not used or set to zero, all
+     *   stored entries are shown in the output.
+     * @par
+     * Queries the "netinfo" history entries from another device and outputs them in a table or list format. For details
+     * on the table format and its entries, please refer to the `history netinfo` command.
+     * @sa otHistoryTrackerQueryNetInfo
+     */
+    if (aArgs[0] == "netinfo")
+    {
+        SuccessOrExit(error = ParseQueryArgs(&aArgs[1], mQueryUseListFormat, rloc16, maxEntries, maxEntryAge));
+        SuccessOrExit(error = otHistoryTrackerQueryNetInfo(GetInstancePtr(), rloc16, maxEntries, maxEntryAge,
+                                                           HandleNetInfo, this));
+
+        if (!mQueryUseListFormat)
+        {
+            OutputNetInfoTableHeader();
+        }
+
+        error = OT_ERROR_PENDING;
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+exit:
+    return error;
+}
+
+void History::HandleNetInfo(otError                            aError,
+                            const otHistoryTrackerNetworkInfo *aNetworkInfo,
+                            uint32_t                           aEntryAge,
+                            void                              *aContext)
+{
+    static_cast<History *>(aContext)->HandleNetInfo(aError, aNetworkInfo, aEntryAge);
+}
+
+void History::HandleNetInfo(otError aError, const otHistoryTrackerNetworkInfo *aNetworkInfo, uint32_t aEntryAge)
+{
+    if (aNetworkInfo != nullptr)
+    {
+        OutputNetInfoEntry(mQueryUseListFormat, *aNetworkInfo, aEntryAge);
+    }
+
+    OutputResult(aError);
+}
+
+void History::OutputResult(otError aError) { Interpreter::GetInterpreter().OutputResult(aError); }
+
+#endif // #if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+
 otError History::Process(Arg aArgs[])
 {
 #define CmdEntry(aCommandString) {aCommandString, &History::Process<Cmd(aCommandString)>}
@@ -1915,8 +2046,12 @@ otError History::Process(Arg aArgs[])
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
         CmdEntry("omrprefix"),  CmdEntry("onlinkprefix"),
 #endif
-        CmdEntry("prefix"),     CmdEntry("route"),        CmdEntry("router"),
-        CmdEntry("rx"),         CmdEntry("rxtx"),         CmdEntry("tx"),
+        CmdEntry("prefix"),
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+        CmdEntry("query"),
+#endif
+        CmdEntry("route"),      CmdEntry("router"),       CmdEntry("rx"),
+        CmdEntry("rxtx"),       CmdEntry("tx"),
     };
 
 #undef CmdEntry
