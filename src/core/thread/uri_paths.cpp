@@ -90,9 +90,12 @@ static constexpr Entry kEntries[] = {
     {"d/dg"},  // (34) kUriDiagnosticGetRequest
     {"d/dq"},  // (35) kUriDiagnosticGetQuery
     {"d/dr"},  // (36) kUriDiagnosticReset
-    {"n/dn"},  // (37) kUriDuaRegistrationNotify
-    {"n/dr"},  // (38) kUriDuaRegistrationRequest
-    {"n/mr"},  // (39) kUriMlr
+    {"h/an"},  // (37) kUriHistoryAnswer
+    {"h/qy"},  // (38) kUriHistoryQuery
+    {"n/dn"},  // (39) kUriDuaRegistrationNotify
+    {"n/dr"},  // (40) kUriDuaRegistrationRequest
+    {"n/mr"},  // (41) kUriMlr
+
 };
 
 static_assert(BinarySearch::IsSorted(kEntries), "kEntries is not sorted");
@@ -137,6 +140,8 @@ struct UriEnumCheck
     ValidateNextEnum(kUriDiagnosticGetRequest);
     ValidateNextEnum(kUriDiagnosticGetQuery);
     ValidateNextEnum(kUriDiagnosticReset);
+    ValidateNextEnum(kUriHistoryAnswer);
+    ValidateNextEnum(kUriHistoryQuery);
     ValidateNextEnum(kUriDuaRegistrationNotify);
     ValidateNextEnum(kUriDuaRegistrationRequest);
     ValidateNextEnum(kUriMlr);
@@ -200,6 +205,8 @@ template <> const char *UriToString<kUriDiagnosticGetAnswer>(void) { return "Dia
 template <> const char *UriToString<kUriDiagnosticGetRequest>(void) { return "DiagGetRequest"; }
 template <> const char *UriToString<kUriDiagnosticGetQuery>(void) { return "DiagGetQuery"; }
 template <> const char *UriToString<kUriDiagnosticReset>(void) { return "DiagReset"; }
+template <> const char *UriToString<kUriHistoryAnswer>(void) { return "HistAnswer"; }
+template <> const char *UriToString<kUriHistoryQuery>(void) { return "HistQuery"; }
 template <> const char *UriToString<kUriDuaRegistrationNotify>(void) { return "DuaRegNotify"; }
 template <> const char *UriToString<kUriDuaRegistrationRequest>(void) { return "DuaRegRequest"; }
 template <> const char *UriToString<kUriMlr>(void) { return "Mlr"; }
