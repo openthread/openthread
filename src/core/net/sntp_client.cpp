@@ -54,7 +54,7 @@ Error Client::Start(void)
 {
     Error error;
 
-    SuccessOrExit(error = mSocket.Open(Ip6::kNetifUnspecified));
+    SuccessOrExit(error = mSocket.Open(Ip6::kNetifThreadInternal));
     SuccessOrExit(error = mSocket.Bind(0));
 
 exit:
