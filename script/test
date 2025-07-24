@@ -282,7 +282,7 @@ do_cert()
         rcp | rcp-cli | cli)
             export NODE_TYPE=sim
             ;;
-        rcp-ncp | ncp)
+        ncp)
             export NODE_TYPE=ncp-sim
             ;;
     esac
@@ -504,7 +504,6 @@ print_usage()
 ENVIRONMENTS:
     OT_NODE_TYPE    'cli' for CLI simulation, 'ncp' for NCP simulation.
                     'rcp' or 'rcp-cli' for CLI on POSIX platform.
-                    'rcp-ncp' for NCP on POSIX platform.
                     The default is 'cli'.
     OT_NATIVE_IP    1 to enable platform UDP and netif on POSIX platform. The default is 0.
     OT_BUILDDIR     The output directory for cmake build. By default the directory is './build'. For example,
