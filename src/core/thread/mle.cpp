@@ -74,6 +74,7 @@ Mle::Mle(Instance &aInstance)
     , mNeighborTable(aInstance)
     , mDelayedSender(aInstance)
     , mSocket(aInstance, *this)
+    , mPrevRoleRestorer(aInstance)
     , mDetacher(aInstance)
     , mRetxTracker(aInstance)
     , mAnnounceHandler(aInstance)
@@ -114,7 +115,6 @@ Mle::Mle(Instance &aInstance)
     , mAdvertiseTrickleTimer(aInstance, Mle::HandleAdvertiseTrickleTimer)
     , mChildTable(aInstance)
     , mRouterTable(aInstance)
-    , mRouterRoleRestorer(aInstance)
 #endif // OPENTHREAD_FTD
 {
     mParent.Init(aInstance);
@@ -231,7 +231,7 @@ Error Mle::Start(StartMode aMode)
         mReattachState =
             (Get<MeshCoP::ActiveDatasetManager>().Restore() == kErrorNone) ? kReattachActive : kReattachStop;
 
-        if (RestorePrevRole() == kErrorNone)
+        if (mPrevRoleRestorer.Start() == kErrorNone)
         {
             ExitNow();
         }
@@ -258,6 +258,7 @@ void Mle::Stop(StopMode aMode)
     VerifyOrExit(!IsDisabled());
 
     mDelayedSender.Stop();
+    mPrevRoleRestorer.Stop();
     mAnnounceHandler.Stop();
     Get<KeyManager>().Stop();
     SetStateDetached();
@@ -266,52 +267,10 @@ void Mle::Stop(StopMode aMode)
     Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocalRloc);
     Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocalEid);
 
-#if OPENTHREAD_FTD
-    mRouterRoleRestorer.Stop();
-#endif
-
     SetRole(kRoleDisabled);
 
 exit:
     mDetacher.HandleStop();
-}
-
-Error Mle::RestorePrevRole(void)
-{
-    // Restores the device to its previously saved role after MLE
-    // start.
-    //
-    // Returns `kErrorNone` if the restoration process begins
-    // successfully. An error is returned if:
-    // - No previous role was saved.
-    // - The saved role info is inconsistent (e.g., RLOC16 indicates a
-    //   router/leader, but `mLastSavedRole` doesn't match).
-    // - The last role is "Child," but no valid parent is available.
-
-    Error error = kErrorFailed;
-
-    VerifyOrExit(IsDetached());
-    VerifyOrExit(GetRloc16() != kInvalidRloc16);
-
-    if (IsRouterRloc16(GetRloc16()))
-    {
-#if OPENTHREAD_FTD
-        VerifyOrExit(mLastSavedRole == kRoleRouter || mLastSavedRole == kRoleLeader);
-        VerifyOrExit(IsRouterEligible());
-        Get<MeshForwarder>().SetRxOnWhenIdle(true);
-        mRouterRoleRestorer.Start(mLastSavedRole);
-        error = kErrorNone;
-#endif
-        ExitNow();
-    }
-
-    VerifyOrExit(mLastSavedRole == kRoleChild);
-    VerifyOrExit(mParent.IsStateValidOrRestoring());
-    IgnoreError(SendChildUpdateRequestToParent());
-    error = kErrorNone;
-
-exit:
-    return error;
 }
 
 const Counters &Mle::GetCounters(void)
@@ -789,6 +748,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
     mReattachState = kReattachStop;
     Get<Mac::Mac>().SetBeaconEnabled(false);
     mRetxTracker.UpdateOnRoleChangeToChild();
+    mPrevRoleRestorer.Stop();
 
 #if OPENTHREAD_FTD
     if (IsFullThreadDevice())
@@ -1471,14 +1431,6 @@ void Mle::HandleAttachTimer(void)
     bool              shouldAnnounce = true;
     ParentRequestType type;
 
-#if OPENTHREAD_FTD
-    if (IsDetached() && mRouterRoleRestorer.IsActive())
-    {
-        mRouterRoleRestorer.HandleTimer();
-        ExitNow();
-    }
-#endif
-
     // First, check if we are waiting to receive parent responses and
     // found an acceptable parent candidate.
 
@@ -1938,11 +1890,19 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
     mDelayedSender.RemoveScheduledChildUpdateRequestToParent();
 
     // Track Child Update retx, except when gracefully detaching
-    // i.e., sending Child Update with zero timeout.
+    // i.e., sending Child Update with zero timeout, or restoring
+    // previous child role (re-establishing link with parent).
 
-    if (aMode != kAppendZeroTimeout)
+    switch (aMode)
     {
+    case kNormalChildUpdateRequest:
+    case kAppendChallengeTlv:
         mRetxTracker.UpdateOnChildUpdateRequestTx();
+        break;
+
+    case kAppendZeroTimeout:
+    case kToRestoreChildRole:
+        break;
     }
 
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateRequest)) != nullptr, error = kErrorNoBufs);
@@ -5329,6 +5289,148 @@ void Mle::ParentCandidate::CopyTo(Parent &aParent) const
 
     aParent = *candidateAsParent;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+// PrevRoleRestorer
+
+Mle::PrevRoleRestorer::PrevRoleRestorer(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mState(kIdle)
+    , mAttempts(0)
+    , mTimer(aInstance)
+{
+}
+
+Error Mle::PrevRoleRestorer::Start(void)
+{
+    // Starts the process of restoring the device to its previously
+    // saved role after MLE  start.
+    //
+    // Returns `kErrorNone` if the restoration process begins
+    // successfully. An error is returned if:
+    // - No previous role was saved.
+    // - The saved role info is inconsistent (e.g., RLOC16 indicates a
+    //   router/leader, but `mLastSavedRole` doesn't match).
+
+    Error error = kErrorFailed;
+
+    mState    = kIdle;
+    mAttempts = 0;
+    VerifyOrExit(Get<Mle>().IsDetached());
+    VerifyOrExit(Get<Mle>().GetRloc16() != kInvalidRloc16);
+
+    if (IsRouterRloc16(Get<Mle>().GetRloc16()))
+    {
+#if OPENTHREAD_FTD
+        VerifyOrExit((Get<Mle>().mLastSavedRole == kRoleRouter) || (Get<Mle>().mLastSavedRole == kRoleLeader));
+        VerifyOrExit(Get<Mle>().IsRouterEligible());
+
+        Get<MeshForwarder>().SetRxOnWhenIdle(true);
+        SetState(kRestoringRouterOrLeaderRole);
+        DetermineMaxLinkRequestAttempts();
+        mTimer.Start(Get<Mle>().GenerateRandomDelay(kMaxStartDelay));
+        error = kErrorNone;
+#endif
+        ExitNow();
+    }
+
+    VerifyOrExit(Get<Mle>().mLastSavedRole == kRoleChild);
+    VerifyOrExit(Get<Mle>().mParent.IsStateValidOrRestoring());
+    SetState(kRestoringChildRole);
+    mAttempts = kMaxChildUpdatesToRestoreRole;
+    mTimer.Start(Get<Mle>().GenerateRandomDelay(kMaxStartDelay));
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+void Mle::PrevRoleRestorer::Stop(void)
+{
+    SetState(kIdle);
+    mTimer.Stop();
+}
+
+void Mle::PrevRoleRestorer::SetState(State aState)
+{
+    mState = aState;
+
+    if (mState != kIdle)
+    {
+        LogInfo("Attempting to restore prev role: %s", RoleToString(Get<Mle>().mLastSavedRole));
+    }
+}
+
+void Mle::PrevRoleRestorer::HandleTimer(void)
+{
+    VerifyOrExit(mState != kIdle);
+
+    if (!Get<Mle>().IsDetached())
+    {
+        Stop();
+        ExitNow();
+    }
+
+    if (mAttempts == 0)
+    {
+        LogInfo("Failed to restore prev role");
+        Stop();
+        IgnoreError(Get<Mle>().BecomeDetached());
+        ExitNow();
+    }
+
+    mAttempts--;
+
+#if OPENTHREAD_FTD
+    if (mState == kRestoringRouterOrLeaderRole)
+    {
+        SendMulticastLinkRequest();
+    }
+    else
+#endif
+    {
+        SendChildUpdate();
+    }
+
+exit:
+    return;
+}
+
+void Mle::PrevRoleRestorer::SendChildUpdate(void)
+{
+    mTimer.Start(Random::NonCrypto::AddJitter(kChildUpdateRetxDelay, kRetxJitter));
+
+    LogDebg("Sending Child Update Request to restore child role, remaining attempts: %u", mAttempts);
+    IgnoreError(Get<Mle>().SendChildUpdateRequestToParent(kToRestoreChildRole));
+}
+
+#if OPENTHREAD_FTD
+
+void Mle::PrevRoleRestorer::DetermineMaxLinkRequestAttempts(void)
+{
+    mAttempts = kMaxCriticalTxCount;
+
+    if ((Get<Mle>().mLastSavedRole == kRoleRouter) &&
+        (Get<Mle>().mChildTable.GetNumChildren(Child::kInStateValidOrRestoring) < kMinCriticalChildrenCount))
+    {
+        mAttempts = kMaxTxCount;
+    }
+}
+
+void Mle::PrevRoleRestorer::SendMulticastLinkRequest(void)
+{
+    uint32_t delay;
+
+    delay = (mAttempts == 0) ? kLinkRequestTimeout
+                             : Random::NonCrypto::GetUint32InRange(kMulticastRetxDelayMin, kMulticastRetxDelayMax);
+
+    mTimer.Start(delay);
+
+    LogDebg("Sending multicast Link Request to restore role, remaining attempts: %u", mAttempts);
+    Get<Mle>().SendLinkRequest(nullptr);
+}
+
+#endif // OPENTHREAD_FTD
 
 //---------------------------------------------------------------------------------------------------------------------
 // Detacher
