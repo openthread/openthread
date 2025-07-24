@@ -2594,6 +2594,27 @@ rloc16:0x7c00 ext-addr:4ed24fceec9bf6d3 ver:4
 Done
 ```
 
+### meshdiag responsetimeout [\<timeout-msec\>]
+
+Get or set the response timeout value (in milliseconds).
+
+The default response timeout value is specified by `OPENTHREAD_CONFIG_MESH_DIAG_RESPONSE_TIMEOUT` configuration.
+
+Changing the response timeout does not impact any ongoing query. The given timeout value will be clamped to stay between 50 milliseconds and 10 minutes.
+
+```bash
+> responsetimeout
+5000
+Done
+
+> responsetimeout 7000
+Done
+
+> responsetimeout
+7000
+Done
+```
+
 ### mliid \<iid\>
 
 Set the Mesh Local IID.
