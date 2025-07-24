@@ -52,8 +52,14 @@ MeshDiag::MeshDiag(Instance &aInstance)
     , mState(kStateIdle)
     , mExpectedQueryId(0)
     , mExpectedAnswerIndex(0)
+    , mResponseTimeout(kResponseTimeout)
     , mTimer(aInstance)
 {
+}
+
+void MeshDiag::SetResponseTimeout(uint32_t aTimeout)
+{
+    mResponseTimeout = Clamp(aTimeout, kMinResponseTimeout, kMaxResponseTimeout);
 }
 
 Error MeshDiag::DiscoverTopology(const DiscoverConfig &aConfig, DiscoverCallback aCallback, void *aContext)
@@ -101,7 +107,7 @@ Error MeshDiag::DiscoverTopology(const DiscoverConfig &aConfig, DiscoverCallback
 
     mDiscover.mCallback.Set(aCallback, aContext);
     mState = kStateDiscoverTopology;
-    mTimer.Start(kResponseTimeout);
+    mTimer.Start(mResponseTimeout);
 
 exit:
     return error;
@@ -178,7 +184,7 @@ Error MeshDiag::SendQuery(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsL
     mExpectedQueryId     = Get<Client>().GetLastQueryId();
     mExpectedAnswerIndex = 0;
 
-    mTimer.Start(kResponseTimeout);
+    mTimer.Start(mResponseTimeout);
 
 exit:
     return error;
