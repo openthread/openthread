@@ -49,6 +49,29 @@ MeshDiag::MeshDiag(otInstance *aInstance, OutputImplementer &aOutputImplementer)
 {
 }
 
+/** @cli responsetimeout
+ * @code
+ * responsetimeout
+ * 5000
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otMeshDiagGetResponseTimeout
+ */
+template <> otError MeshDiag::Process<Cmd("responsetimeout")>(Arg aArgs[])
+{
+    /** @cli responsetimeout (set)
+     * @code
+     * responsetimeout 7000
+     * Done
+     * @endcode
+     * @cparam responsetimeout @ca{timeout-msec}
+     * @par api_copy
+     * #otMeshDiagSetResponseTimeout
+     */
+    return ProcessGetSet(aArgs, otMeshDiagGetResponseTimeout, otMeshDiagSetResponseTimeout);
+}
+
 template <> otError MeshDiag::Process<Cmd("topology")>(Arg aArgs[])
 {
     /**
@@ -274,9 +297,7 @@ otError MeshDiag::Process(Arg aArgs[])
     }
 
     static constexpr Command kCommands[] = {
-        CmdEntry("childip6"),
-        CmdEntry("childtable"),
-        CmdEntry("routerneighbortable"),
+        CmdEntry("childip6"), CmdEntry("childtable"), CmdEntry("responsetimeout"), CmdEntry("routerneighbortable"),
         CmdEntry("topology"),
     };
 
