@@ -38,7 +38,7 @@
 #include <openthread/nat64.h>
 #include "cli/cli.hpp"
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
+#if OPENTHREAD_CLI_MDNS_ENABLE
 
 namespace ot {
 namespace Cli {
@@ -1334,4 +1334,4 @@ exit:
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
+#endif // OPENTHREAD_CLI_MDNS_ENABLE

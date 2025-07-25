@@ -41,12 +41,16 @@ namespace Ip6 {
 //---------------------------------------------------------------------------------------------------------------------
 // NetworkPrefix methods
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+
 Error NetworkPrefix::GenerateRandomUla(void)
 {
     m8[0] = 0xfd;
 
     return Random::Crypto::FillBuffer(&m8[1], kSize - 1);
 }
+
+#endif
 
 //---------------------------------------------------------------------------------------------------------------------
 // Prefix methods
@@ -223,6 +227,10 @@ void Prefix::ToString(StringWriter &aWriter) const
 
 bool InterfaceIdentifier::IsUnspecified(void) const { return (mFields.m32[0] == 0) && (mFields.m32[1] == 0); }
 
+void InterfaceIdentifier::SetBytes(const uint8_t *aBuffer) { memcpy(mFields.m8, aBuffer, kSize); }
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+
 bool InterfaceIdentifier::IsReserved(void) const
 {
     return IsSubnetRouterAnycast() || IsReservedSubnetAnycast() || IsAnycastLocator();
@@ -244,8 +252,6 @@ bool InterfaceIdentifier::IsReservedSubnetAnycast(void) const
 }
 
 void InterfaceIdentifier::GenerateRandom(void) { SuccessOrAssert(Random::Crypto::Fill(*this)); }
-
-void InterfaceIdentifier::SetBytes(const uint8_t *aBuffer) { memcpy(mFields.m8, aBuffer, kSize); }
 
 void InterfaceIdentifier::SetFromExtAddress(const Mac::ExtAddress &aExtAddress)
 {
@@ -288,6 +294,8 @@ bool InterfaceIdentifier::IsAnycastServiceLocator(void) const
     return (IsLocator() && (locator >= Mle::kAloc16ServiceStart) && (locator <= Mle::kAloc16ServiceEnd));
 }
 
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
 void InterfaceIdentifier::ApplyPrefix(const Prefix &aPrefix)
 {
     if (aPrefix.GetLength() > NetworkPrefix::kLength)
@@ -325,12 +333,14 @@ bool Address::IsLinkLocalUnicast(void) const
     return (mFields.m16[0] & BigEndian::HostSwap16(0xffc0)) == BigEndian::HostSwap16(0xfe80);
 }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 void Address::SetToLinkLocalAddress(const Mac::ExtAddress &aExtAddress)
 {
     mFields.m32[0] = BigEndian::HostSwap32(0xfe800000);
     mFields.m32[1] = 0;
     GetIid().SetFromExtAddress(aExtAddress);
 }
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 void Address::SetToLinkLocalAddress(const InterfaceIdentifier &aIid)
 {
@@ -343,6 +353,12 @@ bool Address::IsLinkLocalMulticast(void) const { return IsMulticast() && (GetSco
 
 bool Address::IsLinkLocalUnicastOrMulticast(void) const { return IsLinkLocalUnicast() || IsLinkLocalMulticast(); }
 
+bool Address::IsRealmLocalMulticast(void) const { return IsMulticast() && (GetScope() == kRealmLocalScope); }
+
+bool Address::IsMulticastLargerThanRealmLocal(void) const { return IsMulticast() && (GetScope() > kRealmLocalScope); }
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+
 bool Address::IsLinkLocalAllNodesMulticast(void) const { return (*this == GetLinkLocalAllNodesMulticast()); }
 
 void Address::SetToLinkLocalAllNodesMulticast(void) { *this = GetLinkLocalAllNodesMulticast(); }
@@ -350,10 +366,6 @@ void Address::SetToLinkLocalAllNodesMulticast(void) { *this = GetLinkLocalAllNod
 bool Address::IsLinkLocalAllRoutersMulticast(void) const { return (*this == GetLinkLocalAllRoutersMulticast()); }
 
 void Address::SetToLinkLocalAllRoutersMulticast(void) { *this = GetLinkLocalAllRoutersMulticast(); }
-
-bool Address::IsRealmLocalMulticast(void) const { return IsMulticast() && (GetScope() == kRealmLocalScope); }
-
-bool Address::IsMulticastLargerThanRealmLocal(void) const { return IsMulticast() && (GetScope() > kRealmLocalScope); }
 
 bool Address::IsRealmLocalAllNodesMulticast(void) const { return (*this == GetRealmLocalAllNodesMulticast()); }
 
@@ -366,6 +378,8 @@ void Address::SetToRealmLocalAllRoutersMulticast(void) { *this = GetRealmLocalAl
 bool Address::IsRealmLocalAllMplForwarders(void) const { return (*this == GetRealmLocalAllMplForwarders()); }
 
 void Address::SetToRealmLocalAllMplForwarders(void) { *this = GetRealmLocalAllMplForwarders(); }
+
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 bool Address::IsIp4Mapped(void) const
 {
@@ -423,11 +437,13 @@ void Address::SetMulticastNetworkPrefix(const uint8_t *aPrefix, uint8_t aPrefixL
     mFields.m8[kMulticastNetworkPrefixLengthOffset] = aPrefixLength;
 }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 void Address::SetToLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aLocator)
 {
     SetPrefix(aNetworkPrefix);
     GetIid().SetToLocator(aLocator);
 }
+#endif
 
 uint8_t Address::GetScope(void) const
 {
@@ -670,6 +686,8 @@ void Address::AppendHexWords(StringWriter &aWriter, uint8_t aLength) const
     }
 }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+
 const Address &Address::GetLinkLocalAllNodesMulticast(void)
 {
     return AsCoreType(&Netif::kLinkLocalAllNodesMulticastAddress.mAddress);
@@ -694,6 +712,8 @@ const Address &Address::GetRealmLocalAllMplForwarders(void)
 {
     return AsCoreType(&Netif::kRealmLocalAllMplForwardersMulticastAddress.mAddress);
 }
+
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 } // namespace Ip6
 } // namespace ot

@@ -37,6 +37,12 @@
 
 using namespace ot;
 
+otMessage *otMessageAllocate(otInstance *aInstance, const otMessageSettings *aSettings)
+{
+    return AsCoreType(aInstance).Get<MessagePool>().Allocate(Message::kTypeOther, 0,
+                                                             Message::Settings::From(aSettings));
+}
+
 otInstance *otMessageGetInstance(const otMessage *aMessage) { return &AsCoreType(aMessage).GetInstance(); }
 
 void otMessageFree(otMessage *aMessage) { AsCoreType(aMessage).Free(); }
@@ -87,12 +93,14 @@ void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled)
     }
 }
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 int8_t otMessageGetRss(const otMessage *aMessage) { return AsCoreType(aMessage).GetAverageRss(); }
 
 otError otMessageGetThreadLinkInfo(const otMessage *aMessage, otThreadLinkInfo *aLinkInfo)
 {
     return AsCoreType(aMessage).GetLinkInfo(AsCoreType(aLinkInfo));
 }
+#endif
 
 void otMessageRegisterTxCallback(otMessage *aMessage, otMessageTxCallback aCallback, void *aContext)
 {
