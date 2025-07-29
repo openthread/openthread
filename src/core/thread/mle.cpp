@@ -106,7 +106,6 @@ Mle::Mle(Instance &aInstance)
     , mMaxChildIpAddresses(0)
 #endif
     , mParentPriority(kParentPriorityUnspecified)
-    , mNextChildId(kMaxChildId)
     , mPreviousPartitionIdRouter(0)
     , mPreviousPartitionId(0)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
