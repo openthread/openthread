@@ -32,6 +32,7 @@ import time
 import unittest
 
 from autothreadharness.harness_case import HarnessCase
+from selenium.webdriver.common import by
 
 
 class Leader_5_5_1(HarnessCase):
@@ -41,7 +42,7 @@ class Leader_5_5_1(HarnessCase):
 
     def on_dialog(self, dialog, title):
         if title.startswith('User Input Required'):
-            body = dialog.find_element_by_id('cnfrmMsg').text
+            body = dialog.find_element(by.By.ID, 'cnfrmMsg').text
             match = re.search(r'(?<=Leader Timeout\[)\d+(?= Seconds\])', body)
             if match:
                 timeout = int(match.group(0)) / 2

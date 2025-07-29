@@ -30,6 +30,7 @@
 import unittest
 
 from autothreadharness.harness_case import HarnessCase
+from selenium.webdriver.common import by
 
 
 class Router_5_1_7(HarnessCase):
@@ -39,7 +40,7 @@ class Router_5_1_7(HarnessCase):
 
     def on_dialog(self, dialog, title):
         if title.startswith('Enter Router Max Child Count'):
-            inp = dialog.find_element_by_id('cnfrmInpText')
+            inp = dialog.find_element(by.By.ID, 'cnfrmInpText')
             inp.clear()
             inp.send_keys('5')
             return False

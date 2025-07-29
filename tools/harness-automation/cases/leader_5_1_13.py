@@ -28,6 +28,7 @@
 #
 
 from autothreadharness.harness_case import HarnessCase
+from selenium.webdriver.common import by
 import time
 import unittest
 
@@ -39,7 +40,7 @@ class Leader_5_1_13(HarnessCase):
 
     def on_dialog(self, dialog, title):
         if title.startswith('User Input Required'):
-            # body = dialog.find_element_by_id('cnfrmMsg').text
+            # body = dialog.find_element(by.By.ID, 'cnfrmMsg').text
             # if body.startswith('Reset Leader'):
             self.dut.stop()
             time.sleep(1)
