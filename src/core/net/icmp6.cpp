@@ -121,25 +121,25 @@ exit:
     return error;
 }
 
-Error Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
+Error Icmp::HandleMessage(RxMessage &aMessage)
 {
     Error  error = kErrorNone;
     Header icmp6Header;
 
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), icmp6Header));
 
-    SuccessOrExit(error = Checksum::VerifyMessageChecksum(aMessage, aMessageInfo, kProtoIcmp6));
+    SuccessOrExit(error = Checksum::VerifyMessageChecksum(aMessage, aMessage.GetInfo(), kProtoIcmp6));
 
     if (icmp6Header.GetType() == Header::kTypeEchoRequest)
     {
-        SuccessOrExit(error = HandleEchoRequest(aMessage, aMessageInfo));
+        SuccessOrExit(error = HandleEchoRequest(aMessage));
     }
 
     aMessage.MoveOffset(sizeof(icmp6Header));
 
     for (Handler &handler : mHandlers)
     {
-        handler.HandleReceiveMessage(aMessage, aMessageInfo, icmp6Header);
+        handler.HandleReceiveMessage(aMessage, aMessage.GetInfo(), icmp6Header);
     }
 
 exit:
@@ -172,7 +172,7 @@ bool Icmp::ShouldHandleEchoRequest(const Address &aAddress)
     return rval;
 }
 
-Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo)
+Error Icmp::HandleEchoRequest(const RxMessage &aRequestMessage)
 {
     Error       error = kErrorNone;
     Header      icmp6Header;
@@ -180,7 +180,7 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
     MessageInfo replyMessageInfo;
     uint16_t    dataOffset;
 
-    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo.GetSockAddr()));
+    VerifyOrExit(ShouldHandleEchoRequest(aRequestMessage.GetInfo().GetSockAddr()));
 
     LogInfo("Received Echo Request");
 
@@ -199,11 +199,11 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
     SuccessOrExit(error = replyMessage->AppendBytesFromMessage(aRequestMessage, dataOffset,
                                                                aRequestMessage.GetLength() - dataOffset));
 
-    replyMessageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
+    replyMessageInfo.SetPeerAddr(aRequestMessage.GetInfo().GetPeerAddr());
 
-    if (!aMessageInfo.GetSockAddr().IsMulticast())
+    if (!aRequestMessage.GetInfo().GetSockAddr().IsMulticast())
     {
-        replyMessageInfo.SetSockAddr(aMessageInfo.GetSockAddr());
+        replyMessageInfo.SetSockAddr(aRequestMessage.GetInfo().GetSockAddr());
     }
 
     SuccessOrExit(error = Get<Ip6>().SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6));

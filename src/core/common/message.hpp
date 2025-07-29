@@ -235,6 +235,7 @@ protected:
         TimeMilli   mTimestamp;   // The message timestamp.
         Message    *mNext;        // Next message in a doubly linked list.
         Message    *mPrev;        // Previous message in a doubly linked list.
+        void       *mInfo;        // Info associated with the message (typically an `Ip6::MessageInfo`).
         TxCallback  mTxCallback;  // The callback to inform message TX success or failure.
         void       *mTxContext;   // The arbitrary context associated with `mTxCallback`.
         RssAverager mRssAverager; // The averager maintaining the received signal strength (RSS) average.
@@ -1530,8 +1531,11 @@ protected:
         Message *mNext;
     };
 
-    uint16_t GetReserved(void) const { return GetMetadata().mReserved; }
-    void     SetReserved(uint16_t aReservedHeader) { GetMetadata().mReserved = aReservedHeader; }
+    uint16_t    GetReserved(void) const { return GetMetadata().mReserved; }
+    void        SetReserved(uint16_t aReservedHeader) { GetMetadata().mReserved = aReservedHeader; }
+    void       *GetInfo(void) { return GetMetadata().mInfo; }
+    const void *GetInfo(void) const { return GetMetadata().mInfo; }
+    void        SetInfo(void *aInfo) { GetMetadata().mInfo = aInfo; }
 
 private:
     class Chunk : public Data<kWithUint16Length>

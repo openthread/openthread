@@ -45,6 +45,7 @@
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_headers.hpp"
+#include "net/ip6_message.hpp"
 #include "net/socket.hpp"
 
 /*
@@ -609,12 +610,11 @@ public:
      *
      * @param[in]  aIp6Header    A reference to a structure containing the segment's IPv6 header.
      * @param[in]  aMessage      A reference to the message containing the TCP segment.
-     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      * @retval kErrorNone  Successfully processed the TCP segment.
      * @retval kErrorDrop  Dropped the TCP segment due to an invalid checksum.
      */
-    Error HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, MessageInfo &aMessageInfo);
+    Error HandleMessage(ot::Ip6::Header &aIp6Header, RxMessage &aMessage);
 
     /**
      * Automatically selects a local address and/or port for communication with the specified peer.

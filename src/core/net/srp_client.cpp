@@ -1766,12 +1766,7 @@ exit:
     return error;
 }
 
-void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
-    ProcessResponse(aMessage);
-}
+void Client::HandleUdpReceive(Ip6::RxMessage &aMessage) { ProcessResponse(aMessage); }
 
 void Client::ProcessResponse(Message &aMessage)
 {

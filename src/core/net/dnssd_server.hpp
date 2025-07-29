@@ -580,7 +580,7 @@ private:
 #endif
 
     bool IsRunning(void) const { return mSocket.IsBound(); }
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleUdpReceive(Ip6::RxMessage &aMessage);
     void ProcessQuery(Request &aRequest);
     void ResolveByProxy(Response &aResponse, const Ip6::MessageInfo &aMessageInfo);
     void RemoveQueryAndPrepareResponse(ProxyQuery &aQuery, ProxyQueryInfo &aInfo, Response &aResponse);

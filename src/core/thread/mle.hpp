@@ -2026,7 +2026,7 @@ private:
     Error      SendDataRequestToParent(void);
     Error      SendDataRequest(const Ip6::Address &aDestination);
     void       HandleNotifierEvents(Events aEvents);
-    void       HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void       HandleUdpReceive(Ip6::RxMessage &aMessage);
     void       ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
     Error      SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode);
     Error      SendChildUpdateResponse(const TlvList      &aTlvList,

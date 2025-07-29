@@ -1029,7 +1029,7 @@ private:
     Error        AppendAaaaRecord(const Ip6::Address &aAddress, MsgInfo &aInfo) const;
     Error        AppendUpdateLeaseOptRecord(MsgInfo &aInfo);
     Error        AppendSignature(MsgInfo &aInfo, SignatureAppendMode aMode);
-    void         HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void         HandleUdpReceive(Ip6::RxMessage &aMessage);
     void         ProcessResponse(Message &aMessage);
     void         SelectNewMessageId(void);
     void         HandleUpdateDone(void);

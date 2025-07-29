@@ -56,6 +56,7 @@
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_headers.hpp"
+#include "net/ip6_message.hpp"
 #include "net/ip6_mpl.hpp"
 #include "net/ip6_types.hpp"
 #include "net/netif.hpp"

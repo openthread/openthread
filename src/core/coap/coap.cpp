@@ -1725,10 +1725,7 @@ exit:
     return error;
 }
 
-void Coap::HandleUdpReceive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    Receive(AsCoapMessage(&aMessage), aMessageInfo);
-}
+void Coap::HandleUdpReceive(Ip6::RxMessage &aMessage) { Receive(AsCoapMessage(&aMessage), aMessage.GetInfo()); }
 
 Error Coap::Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {

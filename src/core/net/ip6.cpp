@@ -897,15 +897,15 @@ Error Ip6::Receive(Header            &aIp6Header,
     {
 #if OPENTHREAD_CONFIG_TCP_ENABLE
     case kProtoTcp:
-        error = mTcp.HandleMessage(aIp6Header, *messagePtr, messageInfo);
+        error = mTcp.HandleMessage(aIp6Header, RxMessage::From(*messagePtr, messageInfo));
         break;
 #endif
     case kProtoUdp:
-        error = mUdp.HandleMessage(*messagePtr, messageInfo);
+        error = mUdp.HandleMessage(RxMessage::From(*messagePtr, messageInfo));
         break;
 
     case kProtoIcmp6:
-        error = mIcmp.HandleMessage(*messagePtr, messageInfo);
+        error = mIcmp.HandleMessage(RxMessage::From(*messagePtr, messageInfo));
         break;
 
     default:

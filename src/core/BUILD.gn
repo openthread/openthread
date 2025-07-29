@@ -578,6 +578,7 @@ openthread_core_files = [
   "net/ip6_filter.hpp",
   "net/ip6_headers.cpp",
   "net/ip6_headers.hpp",
+  "net/ip6_message.hpp",
   "net/ip6_mpl.cpp",
   "net/ip6_mpl.hpp",
   "net/ip6_types.hpp",

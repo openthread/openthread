@@ -2258,10 +2258,10 @@ exit:
     return error;
 }
 
-void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Mle::HandleUdpReceive(Ip6::RxMessage &aMessage)
 {
     Error           error = kErrorNone;
-    RxInfo          rxInfo(aMessage, aMessageInfo);
+    RxInfo          rxInfo(aMessage, aMessage.GetInfo());
     uint8_t         securitySuite;
     SecurityHeader  header;
     uint32_t        keySequence;
@@ -2276,7 +2276,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     LogDebg("Receive MLE message");
 
     VerifyOrExit(aMessage.GetOrigin() == Message::kOriginThreadNetif);
-    VerifyOrExit(aMessageInfo.GetHopLimit() == kMleHopLimit, error = kErrorParse);
+    VerifyOrExit(aMessage.GetInfo().GetHopLimit() == kMleHopLimit, error = kErrorParse);
 
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), securitySuite));
     aMessage.MoveOffset(sizeof(securitySuite));
@@ -2315,13 +2315,13 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     keySequence  = header.GetKeyId();
     frameCounter = header.GetFrameCounter();
 
-    SuccessOrExit(
-        error = ProcessMessageSecurity(Crypto::AesCcm::kDecrypt, aMessage, aMessageInfo, aMessage.GetOffset(), header));
+    SuccessOrExit(error = ProcessMessageSecurity(Crypto::AesCcm::kDecrypt, aMessage, aMessage.GetInfo(),
+                                                 aMessage.GetOffset(), header));
 
     IgnoreError(aMessage.Read(aMessage.GetOffset(), command));
     aMessage.MoveOffset(sizeof(command));
 
-    extAddr.SetFromIid(aMessageInfo.GetPeerAddr().GetIid());
+    extAddr.SetFromIid(aMessage.GetInfo().GetPeerAddr().GetIid());
     neighbor = (command == kCommandChildIdResponse) ? mNeighborTable.FindParent(extAddr)
                                                     : mNeighborTable.FindNeighbor(extAddr);
 
@@ -2532,7 +2532,7 @@ exit:
     // We skip logging failures for broadcast MLE messages since it
     // can be common to receive such messages from adjacent Thread
     // networks.
-    if (!aMessageInfo.GetSockAddr().IsMulticast() || !aMessage.IsDstPanIdBroadcast())
+    if (!aMessage.GetInfo().GetSockAddr().IsMulticast() || !aMessage.IsDstPanIdBroadcast())
     {
         LogProcessError(kTypeGenericUdp, error);
     }

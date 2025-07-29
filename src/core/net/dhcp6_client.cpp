@@ -352,10 +352,8 @@ exit:
     return error;
 }
 
-void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Client::HandleUdpReceive(Ip6::RxMessage &aMessage)
 {
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Header header;
 
     SuccessOrExit(aMessage.Read(aMessage.GetOffset(), header));

@@ -177,7 +177,7 @@ private:
     Error AppendRapidCommitOption(Message &aMessage) { return RapidCommitOption::AppendTo(aMessage); }
     Error AppendVendorSpecificInformation(Message &aMessage);
     Error AppendIaAddressOption(Message &aMessage, const Ip6::Address &aPrefix, const Mac::ExtAddress &aClientAddress);
-    void  HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void  HandleUdpReceive(Ip6::RxMessage &aMessage);
     void  ProcessSolicit(Message &aMessage, const Ip6::Address &aDst, const TransactionId &aTransactionId);
     Error ProcessClientIdOption(const Message &aMessage, ClientIdOption &aClientIdOption);
     Error ProcessIaNaOption(const Message &aMessage, uint32_t &aIaid);

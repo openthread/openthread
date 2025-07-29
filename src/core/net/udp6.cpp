@@ -444,7 +444,7 @@ exit:
     return error;
 }
 
-Error Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
+Error Udp::HandleMessage(RxMessage &aMessage)
 {
     Error  error = kErrorNone;
     Header udpHeader;
@@ -452,19 +452,19 @@ Error Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), udpHeader));
 
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    SuccessOrExit(error = Checksum::VerifyMessageChecksum(aMessage, aMessageInfo, kProtoUdp));
+    SuccessOrExit(error = Checksum::VerifyMessageChecksum(aMessage, aMessage.GetInfo(), kProtoUdp));
 #endif
 
     aMessage.MoveOffset(sizeof(udpHeader));
-    aMessageInfo.mPeerPort = udpHeader.GetSourcePort();
-    aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
+    aMessage.GetInfo().mPeerPort = udpHeader.GetSourcePort();
+    aMessage.GetInfo().mSockPort = udpHeader.GetDestinationPort();
 
     for (Receiver &receiver : mReceivers)
     {
-        VerifyOrExit(!receiver.HandleMessage(aMessage, aMessageInfo));
+        VerifyOrExit(!receiver.HandleMessage(aMessage, aMessage.GetInfo()));
     }
 
-    HandlePayload(aMessage, aMessageInfo);
+    HandlePayload(aMessage, aMessage.GetInfo());
 
 exit:
     return error;

@@ -174,7 +174,7 @@ exit:
     OT_UNUSED_VARIABLE(error);
 }
 
-void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Server::HandleUdpReceive(Ip6::RxMessage &aMessage)
 {
     Header header;
 
@@ -183,7 +183,7 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
     VerifyOrExit((header.GetMsgType() == kMsgTypeSolicit));
 
-    ProcessSolicit(aMessage, aMessageInfo.GetPeerAddr(), header.GetTransactionId());
+    ProcessSolicit(aMessage, aMessage.GetInfo().GetPeerAddr(), header.GetTransactionId());
 
 exit:
     return;

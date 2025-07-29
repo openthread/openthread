@@ -611,7 +611,7 @@ exit:
     return matches;
 }
 
-Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, MessageInfo &aMessageInfo)
+Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, RxMessage &aMessage)
 {
     Error error = kErrorNotImplemented;
 
@@ -640,17 +640,17 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
     VerifyOrExit(headerSize >= sizeof(struct tcphdr) && headerSize <= sizeof(header) &&
                      static_cast<uint16_t>(headerSize) <= length,
                  error = kErrorParse);
-    SuccessOrExit(error = Checksum::VerifyMessageChecksum(aMessage, aMessageInfo, kProtoTcp));
+    SuccessOrExit(error = Checksum::VerifyMessageChecksum(aMessage, aMessage.GetInfo(), kProtoTcp));
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), &header[0], headerSize));
 
     ip6Header = reinterpret_cast<struct ip6_hdr *>(&aIp6Header);
     tcpHeader = reinterpret_cast<struct tcphdr *>(&header[0]);
     tcp_fields_to_host(tcpHeader);
 
-    aMessageInfo.mPeerPort = BigEndian::HostSwap16(tcpHeader->th_sport);
-    aMessageInfo.mSockPort = BigEndian::HostSwap16(tcpHeader->th_dport);
+    aMessage.GetInfo().mPeerPort = BigEndian::HostSwap16(tcpHeader->th_sport);
+    aMessage.GetInfo().mSockPort = BigEndian::HostSwap16(tcpHeader->th_dport);
 
-    endpoint = mEndpoints.FindMatching(aMessageInfo);
+    endpoint = mEndpoints.FindMatching(aMessage.GetInfo());
 
     if (endpoint != nullptr)
     {
@@ -669,7 +669,7 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
         /* If the matching socket was in the TIME-WAIT state, then we try passive sockets. */
     }
 
-    listener = mListeners.FindMatching(aMessageInfo);
+    listener = mListeners.FindMatching(aMessage.GetInfo());
 
     if (listener != nullptr)
     {

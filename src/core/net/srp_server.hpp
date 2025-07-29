@@ -945,7 +945,7 @@ private:
 
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
     void  HandleDnssdServerStateChange(void);
-    Error HandleDnssdServerUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error HandleDnssdServerUdpReceive(Ip6::RxMessage &aMessage);
 #endif
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
@@ -967,7 +967,7 @@ private:
                           const Ip6::MessageInfo  *aMessageInfo,
                           const TtlConfig         &aTtlConfig,
                           const LeaseConfig       &aLeaseConfig);
-    Error ProcessMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error ProcessMessage(Ip6::RxMessage &aMessage);
     Error ProcessMessage(Message                &aMessage,
                          TimeMilli               aRxTime,
                          const TtlConfig        &aTtlConfig,
@@ -1005,7 +1005,7 @@ private:
                              uint32_t                 aKeyLease,
                              bool                     mUseShortLeaseOption,
                              const Ip6::MessageInfo  &aMessageInfo);
-    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleUdpReceive(Ip6::RxMessage &aMessage);
     void        HandleLeaseTimer(void);
     static void HandleOutstandingUpdatesTimer(Timer &aTimer);
     void        HandleOutstandingUpdatesTimer(void);

@@ -45,6 +45,7 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "net/ip6_headers.hpp"
+#include "net/ip6_message.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -278,14 +279,13 @@ public:
     /**
      * Handles an ICMPv6 message.
      *
-     * @param[in]  aMessage      A reference to the ICMPv6 message.
-     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     * @param[in]  aMessage      A reference to the ICMPv6 `RxMessage`.
      *
      * @retval kErrorNone     Successfully processed the ICMPv6 message.
      * @retval kErrorNoBufs   Insufficient buffers available to generate the reply.
      * @retval kErrorDrop     The ICMPv6 message was invalid and dropped.
      */
-    Error HandleMessage(Message &aMessage, MessageInfo &aMessageInfo);
+    Error HandleMessage(RxMessage &aMessage);
 
     /**
      * Indicates whether or not ICMPv6 Echo processing is enabled.
@@ -320,7 +320,7 @@ public:
     uint16_t GetEchoSequence(void) const { return mEchoSequence; }
 
 private:
-    Error HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo);
+    Error HandleEchoRequest(const RxMessage &aRequestMessage);
 
     LinkedList<Handler> mHandlers;
 

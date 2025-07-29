@@ -939,7 +939,7 @@ private:
     static void GetQueryTypeAndCallback(const Query &aQuery, QueryType &aType, Callback &aCallback, void *&aContext);
     Error       AppendNameFromQuery(const Query &aQuery, Message &aMessage);
     Query      *FindQueryById(uint16_t aMessageId);
-    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMsgInfo);
+    void        HandleUdpReceive(Ip6::RxMessage &aMessage);
     void        ProcessResponse(const Message &aResponseMessage);
     Error       ParseResponse(const Message &aResponseMessage, Query *&aQuery, Error &aResponseError);
     bool        CanFinalizeQuery(Query &aQuery);

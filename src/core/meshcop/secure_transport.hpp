@@ -744,6 +744,7 @@ private:
         kUnspecifiedCipherSuite,
     };
 
+    void HandleReceive(Ip6::RxMessage &aMessage) { HandleReceive(aMessage, aMessage.GetInfo()); }
     void RemoveDisconnectedSessions(void);
     void DecremenetRemainingConnectionAttempts(void);
     bool HasNoRemainingConnectionAttempts(void) const;

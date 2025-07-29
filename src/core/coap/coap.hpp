@@ -922,7 +922,7 @@ public:
     Error Stop(void);
 
 protected:
-    void HandleUdpReceive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleUdpReceive(Ip6::RxMessage &aMessage);
 
     using CoapSocket = Ip6::Udp::SocketIn<Coap, &Coap::HandleUdpReceive>;
 

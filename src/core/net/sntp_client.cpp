@@ -256,10 +256,8 @@ void Client::HandleRetransmissionTimer(void)
     mRetransmissionTimer.FireAt(nextTime);
 }
 
-void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Client::HandleUdpReceive(Ip6::RxMessage &aMessage)
 {
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Error         error = kErrorNone;
     Header        responseHeader;
     QueryMetadata queryMetadata;

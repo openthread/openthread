@@ -257,7 +257,7 @@ private:
     void FinalizeSntpTransaction(Message &aQuery, const QueryMetadata &aQueryMetadata, uint64_t aTime, Error aResult);
 
     void HandleRetransmissionTimer(void);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleUdpReceive(Ip6::RxMessage &aMessage);
 
     using RetxTimer    = TimerMilliIn<Client, &Client::HandleRetransmissionTimer>;
     using ClientSocket = Ip6::Udp::SocketIn<Client, &Client::HandleUdpReceive>;

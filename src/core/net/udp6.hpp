@@ -46,11 +46,10 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "net/ip6_headers.hpp"
+#include "net/ip6_message.hpp"
 
 namespace ot {
 namespace Ip6 {
-
-class Udp;
 
 /**
  * @addtogroup core-udp
@@ -338,8 +337,7 @@ public:
      * @tparam Owner                The type of the owner of this socket.
      * @tparam HandleUdpReceivePtr  A pointer to a non-static member method of `Owner` to handle received messages.
      */
-    template <typename Owner, void (Owner::*HandleUdpReceivePtr)(Message &aMessage, const MessageInfo &aMessageInfo)>
-    class SocketIn : public Socket
+    template <typename Owner, void (Owner::*HandleUdpReceivePtr)(RxMessage &aMessage)> class SocketIn : public Socket
     {
     public:
         /**
@@ -356,7 +354,9 @@ public:
     private:
         static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
         {
-            (reinterpret_cast<Owner *>(aContext)->*HandleUdpReceivePtr)(AsCoreType(aMessage), AsCoreType(aMessageInfo));
+            OT_UNUSED_VARIABLE(aMessageInfo);
+
+            (reinterpret_cast<Owner *>(aContext)->*HandleUdpReceivePtr)(static_cast<RxMessage &>(AsCoreType(aMessage)));
         }
     };
 
@@ -606,13 +606,12 @@ public:
     /**
      * Handles a received UDP message.
      *
-     * @param[in]  aMessage      A reference to the UDP message to process.
-     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     * @param[in]  aMessage      A reference to the UDP `RxMessage` to process.
      *
      * @retval kErrorNone  Successfully processed the UDP message.
      * @retval kErrorDrop  Could not fully process the UDP message.
      */
-    Error HandleMessage(Message &aMessage, MessageInfo &aMessageInfo);
+    Error HandleMessage(RxMessage &aMessage);
 
     /**
      * Handles a received UDP message with offset set to the payload.
