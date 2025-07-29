@@ -116,39 +116,38 @@ void JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
 
 void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Error            error;
-    Coap::Message   *message = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    ExtendedTlv      tlv;
-    uint16_t         borderAgentRloc;
-    OffsetRange      offsetRange;
+    OwnedPtr<Coap::Message> message;
+    Tmf::MessageInfo        messageInfo(GetInstance());
+    ExtendedTlv             tlv;
+    uint16_t                borderAgentRloc;
+    OffsetRange             offsetRange;
 
     LogInfo("JoinerRouter::HandleUdpReceive");
 
-    SuccessOrExit(error = Get<NetworkData::Leader>().FindBorderAgentRloc(borderAgentRloc));
+    SuccessOrExit(Get<NetworkData::Leader>().FindBorderAgentRloc(borderAgentRloc));
 
-    message = Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(kUriRelayRx);
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+    message.Reset(Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(kUriRelayRx));
+    VerifyOrExit(message != nullptr);
 
-    SuccessOrExit(error = Tlv::Append<JoinerUdpPortTlv>(*message, aMessageInfo.GetPeerPort()));
-    SuccessOrExit(error = Tlv::Append<JoinerIidTlv>(*message, aMessageInfo.GetPeerAddr().GetIid()));
-    SuccessOrExit(error = Tlv::Append<JoinerRouterLocatorTlv>(*message, Get<Mle::Mle>().GetRloc16()));
+    SuccessOrExit(Tlv::Append<JoinerUdpPortTlv>(*message, aMessageInfo.GetPeerPort()));
+    SuccessOrExit(Tlv::Append<JoinerIidTlv>(*message, aMessageInfo.GetPeerAddr().GetIid()));
+    SuccessOrExit(Tlv::Append<JoinerRouterLocatorTlv>(*message, Get<Mle::Mle>().GetRloc16()));
 
     offsetRange.InitFromMessageOffsetToEnd(aMessage);
 
     tlv.SetType(Tlv::kJoinerDtlsEncapsulation);
     tlv.SetLength(offsetRange.GetLength());
-    SuccessOrExit(error = message->Append(tlv));
-    SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, offsetRange));
+    SuccessOrExit(message->Append(tlv));
+    SuccessOrExit(message->AppendBytesFromMessage(aMessage, offsetRange));
 
     messageInfo.SetSockAddrToRlocPeerAddrTo(borderAgentRloc);
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendOwnedMessage(message.PassOwnership(), messageInfo));
 
     LogInfo("Sent %s", UriToString<kUriRelayRx>());
 
 exit:
-    FreeMessageOnError(message, error);
+    return;
 }
 
 template <> void JoinerRouter::HandleTmf<kUriRelayTx>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -254,22 +253,21 @@ exit:
 
 Error JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo)
 {
-    Error          error = kErrorNone;
-    Coap::Message *message;
+    Error                   error = kErrorNone;
+    OwnedPtr<Coap::Message> message;
 
-    message = PrepareJoinerEntrustMessage();
+    message.Reset(PrepareJoinerEntrustMessage());
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     IgnoreError(Get<Tmf::Agent>().AbortTransaction(&JoinerRouter::HandleJoinerEntrustResponse, this));
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo,
-                                                        &JoinerRouter::HandleJoinerEntrustResponse, this));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendOwnedMessage(message.PassOwnership(), aMessageInfo,
+                                                             &JoinerRouter::HandleJoinerEntrustResponse, this));
 
-    LogInfo("Sent %s (len= %d)", UriToString<kUriJoinerEntrust>(), message->GetLength());
+    LogInfo("Sent %s", UriToString<kUriJoinerEntrust>());
     LogCert("[THCI] direction=send | type=JOIN_ENT.ntf");
 
 exit:
-    FreeMessageOnError(message, error);
     return error;
 }
 

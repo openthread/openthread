@@ -52,12 +52,14 @@ Error PanIdQueryClient::SendQuery(uint16_t                            aPanId,
                                   otCommissionerPanIdConflictCallback aCallback,
                                   void                               *aContext)
 {
-    Error            error = kErrorNone;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message   *message = nullptr;
+    Error                   error = kErrorNone;
+    Tmf::MessageInfo        messageInfo(GetInstance());
+    OwnedPtr<Coap::Message> message;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
+
+    message.Reset(Get<Tmf::Agent>().NewPriorityMessage());
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsPost(aAddress, kUriPanIdQuery));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -70,14 +72,13 @@ Error PanIdQueryClient::SendQuery(uint16_t                            aPanId,
     SuccessOrExit(error = Tlv::Append<MeshCoP::PanIdTlv>(*message, aPanId));
 
     messageInfo.SetSockAddrToRlocPeerAddrTo(aAddress);
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendOwnedMessage(message.PassOwnership(), messageInfo));
 
     LogInfo("Sent %s", UriToString<kUriPanIdQuery>());
 
     mCallback.Set(aCallback, aContext);
 
 exit:
-    FreeMessageOnError(message, error);
     return error;
 }
 

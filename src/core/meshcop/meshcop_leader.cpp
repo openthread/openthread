@@ -88,10 +88,10 @@ void Leader::SendPetitionResponse(const Coap::Message    &aRequest,
                                   const Ip6::MessageInfo &aMessageInfo,
                                   StateTlv::State         aState)
 {
-    Error          error = kErrorNone;
-    Coap::Message *message;
+    Error                   error = kErrorNone;
+    OwnedPtr<Coap::Message> message;
 
-    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    message.Reset(Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
@@ -106,12 +106,11 @@ void Leader::SendPetitionResponse(const Coap::Message    &aRequest,
         SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, mSessionId));
     }
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendOwnedMessage(message.PassOwnership(), aMessageInfo));
 
     LogInfo("Sent %s response", UriToString<kUriLeaderPetition>());
 
 exit:
-    FreeMessageOnError(message, error);
     LogWarnOnError(error, "send petition response");
 }
 
@@ -165,39 +164,37 @@ void Leader::SendKeepAliveResponse(const Coap::Message    &aRequest,
                                    const Ip6::MessageInfo &aMessageInfo,
                                    StateTlv::State         aState)
 {
-    Error          error = kErrorNone;
-    Coap::Message *message;
+    Error                   error = kErrorNone;
+    OwnedPtr<Coap::Message> message;
 
-    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    message.Reset(Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendOwnedMessage(message.PassOwnership(), aMessageInfo));
 
     LogInfo("Sent %s response", UriToString<kUriLeaderKeepAlive>());
 
 exit:
-    FreeMessageOnError(message, error);
     LogWarnOnError(error, "send keep alive response");
 }
 
 void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 {
-    Error            error = kErrorNone;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message   *message;
+    Error                   error = kErrorNone;
+    Tmf::MessageInfo        messageInfo(GetInstance());
+    OwnedPtr<Coap::Message> message;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriDatasetChanged);
+    message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriDatasetChanged));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     messageInfo.SetSockAddrToRlocPeerAddrTo(aAddress);
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendOwnedMessage(message.PassOwnership(), messageInfo));
 
     LogInfo("Sent %s", UriToString<kUriDatasetChanged>());
 
 exit:
-    FreeMessageOnError(message, error);
     LogWarnOnError(error, "send dataset changed");
 }
 

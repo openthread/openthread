@@ -54,12 +54,14 @@ Error EnergyScanClient::SendQuery(uint32_t                           aChannelMas
                                   otCommissionerEnergyReportCallback aCallback,
                                   void                              *aContext)
 {
-    Error            error = kErrorNone;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message   *message = nullptr;
+    Error                   error = kErrorNone;
+    Tmf::MessageInfo        messageInfo(GetInstance());
+    OwnedPtr<Coap::Message> message;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
+
+    message.Reset(Get<Tmf::Agent>().NewPriorityMessage());
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsPost(aAddress, kUriEnergyScan));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -74,14 +76,13 @@ Error EnergyScanClient::SendQuery(uint32_t                           aChannelMas
     SuccessOrExit(error = Tlv::Append<MeshCoP::ScanDurationTlv>(*message, aScanDuration));
 
     messageInfo.SetSockAddrToRlocPeerAddrTo(aAddress);
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendOwnedMessage(message.PassOwnership(), messageInfo));
 
     LogInfo("Sent %s", UriToString<kUriEnergyScan>());
 
     mCallback.Set(aCallback, aContext);
 
 exit:
-    FreeMessageOnError(message, error);
     return error;
 }
 

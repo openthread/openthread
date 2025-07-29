@@ -540,17 +540,16 @@ exit:
 
 void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo)
 {
-    Error            error = kErrorNone;
-    Coap::Message   *message;
-    Ip6::MessageInfo responseInfo(aRequestInfo);
+    OwnedPtr<Coap::Message> message;
+    Ip6::MessageInfo        responseInfo(aRequestInfo);
 
-    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+    message.Reset(Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest));
+    VerifyOrExit(message != nullptr);
 
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
     responseInfo.GetSockAddr().Clear();
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, responseInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendOwnedMessage(message.PassOwnership(), responseInfo));
 
     SetState(kStateJoined);
 
@@ -558,7 +557,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6:
     LogCert("[THCI] direction=send | type=JOIN_ENT.rsp");
 
 exit:
-    FreeMessageOnError(message, error);
+    return;
 }
 
 void Joiner::HandleTimer(void)

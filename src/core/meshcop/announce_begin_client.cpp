@@ -51,12 +51,14 @@ Error AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
                                        uint16_t            aPeriod,
                                        const Ip6::Address &aAddress)
 {
-    Error            error = kErrorNone;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message   *message = nullptr;
+    Error                   error = kErrorNone;
+    Tmf::MessageInfo        messageInfo(GetInstance());
+    OwnedPtr<Coap::Message> message;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
+
+    message.Reset(Get<Tmf::Agent>().NewPriorityMessage());
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsPost(aAddress, kUriAnnounceBegin));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -71,12 +73,11 @@ Error AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
 
     messageInfo.SetSockAddrToRlocPeerAddrTo(aAddress);
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendOwnedMessage(message.PassOwnership(), messageInfo));
 
     LogInfo("Sent %s", UriToString<kUriAnnounceBegin>());
 
 exit:
-    FreeMessageOnError(message, error);
     return error;
 }
 
