@@ -49,6 +49,10 @@ DataPollSender::DataPollSender(Instance &aInstance)
     , mEnabled(false)
     , mAttachMode(false)
     , mRetxMode(false)
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    ,mIsRadioPollRunning(false)
+    ,mDelayNextPollSchedule(false)
+#endif
     , mPollTimeoutCounter(0)
     , mPollTxFailureCounter(0)
     , mRemainingFastPolls(0)
@@ -77,14 +81,18 @@ exit:
 
 void DataPollSender::StopPolling(void)
 {
-    mTimer.Stop();
-    mAttachMode           = false;
-    mRetxMode             = false;
-    mPollTimeoutCounter   = 0;
-    mPollTxFailureCounter = 0;
-    mRemainingFastPolls   = 0;
-    mFastPollsUsers       = 0;
-    mEnabled              = false;
+    StopPollTimer();
+
+    mAttachMode            = false;
+    mRetxMode              = false;
+    mPollTimeoutCounter    = 0;
+    mPollTxFailureCounter  = 0;
+    mRemainingFastPolls    = 0;
+    mFastPollsUsers        = 0;
+    mEnabled               = false;
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    mDelayNextPollSchedule = false;
+#endif
 }
 
 Error DataPollSender::SendDataPoll(void)
@@ -96,7 +104,7 @@ Error DataPollSender::SendDataPoll(void)
 
     VerifyOrExit(GetParent().IsStateValidOrRestoring(), error = kErrorInvalidState);
 
-    mTimer.Stop();
+    StopPollTimer();
 
     SuccessOrExit(error = Get<Mac::Mac>().RequestDataPollTransmission());
 
@@ -190,7 +198,11 @@ uint32_t DataPollSender::GetKeepAlivePollPeriod(void) const
     return period;
 }
 
-void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError, uint32_t aNbOfPolls)
+#else
+void  DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
+#endif
 {
     Mac::Address macDest;
     bool         shouldRecalculatePollPeriod = false;
@@ -210,10 +222,34 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
         ExitNow();
     }
 
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+        // Update the start time with the number of offloaded polls
+        if (aNbOfPolls)
+        {
+            mTimerStartTime += aNbOfPolls * mPollPeriod;
+        }
+
+        // When the poll schedule delay flag is set it means that the poll offload has stopped
+        // and the start time has been updated. The next poll can be scheduled at this point 
+        // without any other state processing.
+        if (mDelayNextPollSchedule)
+        {
+            shouldRecalculatePollPeriod = true;
+            ExitNow();
+        }
+
+        // If the Radio Poll Offload is enabled and the last transaction completed with an error
+        // the radio poll offload flag is set to false, and the processing of the error will continue
+        // as before. 
+        if (mIsRadioPollRunning && (aError != kErrorNone))
+        {
+            mIsRadioPollRunning = false;
+        }
+#endif
+
     switch (aError)
     {
     case kErrorNone:
-
         if (mRemainingFastPolls != 0)
         {
             mRemainingFastPolls--;
@@ -232,6 +268,13 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
             shouldRecalculatePollPeriod = true;
         }
 
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+        if (mIsRadioPollRunning)
+        {
+            // If the poll offload is enabled, restart the offload with the recalculated start time
+            StartPollTimer(mTimerStartTime, mPollPeriod);
+        }
+#endif
         break;
 
     case kErrorChannelAccessFailure:
@@ -248,7 +291,7 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
                 aFrame.HasCslIe() ? kMaxCslPollRetxAttempts : kMaxPollRetxAttempts);
 #else
         LogInfo("Failed to send data poll, error:%s, retx:%d/%d", ErrorToString(aError), mPollTxFailureCounter,
-                kMaxPollRetxAttempts);
+                 kMaxPollRetxAttempts);
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -273,12 +316,12 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
         break;
     }
 
+exit:
+
     if (shouldRecalculatePollPeriod)
     {
         ScheduleNextPoll(kRecalculatePollPeriod);
     }
-
-exit:
     return;
 }
 
@@ -428,10 +471,10 @@ exit:
 
 void DataPollSender::ResetKeepAliveTimer(void)
 {
-    if (mTimer.IsRunning() && mPollPeriod == GetDefaultPollPeriod())
+    if (IsPollTimerRunning() && mPollPeriod == GetDefaultPollPeriod())
     {
         mTimerStartTime = TimerMilli::GetNow();
-        mTimer.StartAt(mTimerStartTime, mPollPeriod);
+        StartPollTimer(mTimerStartTime, mPollPeriod);
     }
 }
 
@@ -447,9 +490,9 @@ void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
 
     now = TimerMilli::GetNow();
 
-    if (mTimer.IsRunning())
+    if (IsPollTimerRunning())
     {
-        if (oldPeriod != mPollPeriod)
+        if (ShouldURestartTimer(oldPeriod))
         {
             // If poll interval did change and re-starting the timer from
             // last start time with new poll interval would fire quickly
@@ -462,11 +505,11 @@ void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
 
             if (mTimerStartTime + mPollPeriod < now + kMinPollPeriod)
             {
-                mTimer.StartAt(now, kMinPollPeriod);
+                StartPollTimer(now, kMinPollPeriod);
             }
             else
             {
-                mTimer.StartAt(mTimerStartTime, mPollPeriod);
+                StartPollTimer(mTimerStartTime, mPollPeriod);
             }
         }
         // Do nothing on the running poll timer if the poll interval doesn't change
@@ -474,9 +517,144 @@ void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
     else
     {
         mTimerStartTime = now;
-        mTimer.StartAt(mTimerStartTime, mPollPeriod);
+        StartPollTimer(mTimerStartTime, mPollPeriod);
     }
 }
+
+void DataPollSender::StartPollTimer(TimeMilli aStartTime, uint32_t aPollPeriod)
+{
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    if (ShouldUseDataPollOffload())
+    {
+        Error error = Get<Mac::Mac>().StartRadioAutoPoll(aStartTime, aPollPeriod);
+
+        switch (error)
+        {
+        case kErrorNone:
+            LogDebg("Started radio data poll");
+            mIsRadioPollRunning = true;
+            break;
+
+        case kErrorInvalidState:
+            LogWarn("Radio Data poll requested while MAC was not enabled!");
+            StopPolling();
+            break;
+
+        default:
+            LogWarn("Unexpected error %s requesting radio data poll", ErrorToString(error));
+            // Use normal poll in case of unexpected error.
+            mTimer.StartAt(aStartTime, aPollPeriod);
+            break;
+        }
+    }
+    else
+#endif
+    {
+        mTimer.StartAt(aStartTime, aPollPeriod);
+    }
+}
+
+void DataPollSender::StopPollTimer()
+{
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    if (mIsRadioPollRunning)
+    {
+        mIsRadioPollRunning = false;
+        Get<Mac::Mac>().StopRadioAutoPoll();
+    }
+    else
+#endif
+    {
+        mTimer.Stop();
+    }
+}
+
+bool DataPollSender::IsPollTimerRunning()
+{
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    if (mIsRadioPollRunning)
+    {
+        return true;
+    }
+    else
+#endif
+    {
+        return mTimer.IsRunning();
+    }
+}
+
+bool DataPollSender::ShouldURestartTimer(uint32_t  oldPeriod)
+{
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    bool bRestartTimer = false;
+
+    // In case the poll schedule delay flag is set we can restart the timer as
+    // start time was updated and we can properly calculate the when the next poll 
+    // needs to happen.
+    if (mDelayNextPollSchedule)
+    {
+        mDelayNextPollSchedule = false;
+        mIsRadioPollRunning = false;
+        bRestartTimer = true;
+    }
+    // Try to determine if we are switching from offloaded poll to the regular one or the 
+    // other way around when the poll period is the same.
+    else if ((oldPeriod != mPollPeriod) ||
+             (IsPollNumberSet() && mIsRadioPollRunning) ||
+             ((IsPollNumberSet() == false) && !mIsRadioPollRunning))
+    {
+        StopPollTimer();
+
+        if (Get<Mac::Mac>().IsInRadioPollState())
+        {
+            // In this case we need to delay the scheduling of the next poll until the start time is 
+            // updated with the correct valued based on the number of offloaded polls sent.
+            mPollPeriod            = oldPeriod;
+            mDelayNextPollSchedule = true;
+            mIsRadioPollRunning    = true;
+        }
+        else
+        {
+            bRestartTimer = true;
+        }
+    }
+
+    return bRestartTimer;
+#else
+    return (oldPeriod != mPollPeriod);
+#endif
+}
+
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+bool DataPollSender::ShouldUseDataPollOffload()
+{
+    bool bRetValue = false;
+
+    // 1. Radio supports MAC data poll offload
+    // 2. Node is attached to parent, during attach phase there is no significant gain in using poll offload
+    // 3. There is no fixed number of polls that need to be sent. This is checked by the IsPollNumberSet 
+    // method. This method will need to be updated to reflect any new state that contains a fixed number of
+    // polls.
+    if (Get<Mac::SubMac>().IsRadioAutoPollSupported() && Get<Mle::Mle>().IsChild() && !IsPollNumberSet())
+    {
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        // 4. When OPENTHREAD_CONFIG_MULTI_RADIO is enabled Parent is present on 15.4 link
+        bRetValue = Mac::kRadioTypeIeee802154 == Get<RadioSelector>().SelectPollFrameRadio(GetParent());
+#else
+        bRetValue = true;
+#endif
+    }
+
+    return bRetValue;
+}
+
+bool DataPollSender::IsPollNumberSet(void) const
+{
+    // This method should be updated if a new state is added to the data poll sender class that has a fixed number of
+    // polls to be sent.
+    return (mRemainingFastPolls != 0);
+}
+#endif
 
 uint32_t DataPollSender::CalculatePollPeriod(void) const
 {
@@ -513,7 +691,6 @@ uint32_t DataPollSender::CalculatePollPeriod(void) const
     {
         period = kMinPollPeriod;
     }
-
     return period;
 }
 
@@ -552,7 +729,7 @@ Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
     frame = &aTxFrames.GetTxFrame(radio);
 #else
     SuccessOrExit(GetPollDestinationAddress(frameInfo.mAddrs.mDestination));
-    frame = &aTxFrames.GetTxFrame();
+     frame = &aTxFrames.GetTxFrame();
 #endif
 
     if (frameInfo.mAddrs.mDestination.IsExtended())

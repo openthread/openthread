@@ -342,6 +342,40 @@ public:
      */
     Error Send(void);
 
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    /**
+     * Instructs the `Radio` layer to start automatic data poll transmission.
+     *
+     * The frame should be placed in `GetTransmitFrame()` frame.
+     *
+     * The `SubMac` layer handles frame retransmission when this radio caps is not supported.
+     * Transmit security, CSMA and Ack timeout should be handled by the radio layer.
+     *
+     * Any error will be communicated to the `MAC` layer in the HandleTransmitDone callback.
+     */
+    void StartRadioAutoPoll(TimeMilli aStartTime, uint32_t aPollPeriod);
+
+    /**
+     * Stops the automatic data poll transmission.
+     *
+     * After this call is invoked, the `Radio` layer should send a Data confirm indication to inform
+     * the `SubMac` and `Mac` layer of the last transmitted frame.
+     *
+     */
+    void StopRadioAutoPoll();
+
+    /**
+     * Returns TRUE if the `Radio` layer supports automatic data poll transmission.
+     *
+     * The `Radio` layer should support at minimum automatic poll, transmit security
+     * and ack timeout in order for this feature to work.
+     *
+     * @retval  TRUE if automatic data poll transmission is supported.
+     * @retval  FALSE if automatic data poll transmission is not supported.
+     */
+    bool IsRadioAutoPollSupported();
+#endif
+
     /**
      * Gets the number of transmit retries of last transmitted frame.
      *
@@ -540,6 +574,11 @@ private:
     static constexpr uint32_t kEnergyScanRssiSampleInterval = 1000; // RSSI sample interval for energy scan, in usec
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    static constexpr uint32_t kRadioPollErrorTimeout = 1000; // Timeout for triggering a timer event to handle radio
+                                                             // poll start error, in usec
+#endif
+
     enum State : uint8_t
     {
         kStateDisabled,    // Radio is disabled.
@@ -557,6 +596,9 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
         kStateRadioSample, // Mac layer has requested the SubMac to enter sleep state, but the SubMac is in the periodic
                            // sample state.
+#endif
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+        kStateRadioAutoPoll, // Radio is in automatic data poll state
 #endif
     };
 
@@ -600,6 +642,13 @@ private:
     bool RadioSupportsTransmitTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) != 0); }
     bool RadioSupportsReceiveTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_RECEIVE_TIMING) != 0); }
     bool RadioSupportsRxOnWhenIdle(void) const { return ((mRadioCaps & OT_RADIO_CAPS_RX_ON_WHEN_IDLE) != 0); }
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    bool RadioSupportsAutoDataPoll(void) const
+    {
+        return ((mRadioCaps & (OT_RADIO_CAPS_AUTO_DATA_POLL | OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES)) ==
+                (OT_RADIO_CAPS_AUTO_DATA_POLL | OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES));
+    }
+#endif
 
     bool ShouldHandleTransmitSecurity(void) const;
     bool ShouldHandleCsmaBackOff(void) const;

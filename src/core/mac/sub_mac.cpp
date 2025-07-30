@@ -348,6 +348,9 @@ Error SubMac::Send(void)
 #endif
         break;
 
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    case kStateRadioAutoPoll:
+#endif
     case kStateEnergyScan:
         ExitNow(error = kErrorInvalidState);
     }
@@ -533,6 +536,41 @@ exit:
     return;
 }
 
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+void SubMac::StartRadioAutoPoll(TimeMilli aStartTime, uint32_t aPollPeriod)
+{
+    Error error;
+
+    // Handle data confirm the same way as a normal TX but set the state to
+    // radio poll to handle timer event specifically for this case.
+    SetState(kStateRadioAutoPoll);
+    // Transmit security should be handled by the radio layer otherwise this method is not used
+    // but setting of the key ID is happens inside ProcessTransmitSecurity().
+    ProcessTransmitSecurity();
+
+    error = Get<Radio>().StartAutoPoll(mTransmitFrame, aStartTime, aPollPeriod);
+    if (error != kErrorNone)
+    {
+        // Should not have radio caps set and radio poll function not implemented
+        OT_ASSERT(error != kErrorNotImplemented);
+
+        // Start a timer with a small timeout to handle the error case in the context of
+        // the SubMac timer state machine.
+        StartTimer(kRadioPollErrorTimeout);
+    }
+}
+
+void SubMac::StopRadioAutoPoll()
+{
+    // The state will transition from transmit once data confirm is received after
+    // the radio stops the poll operation and sends a data confirm of the last
+    // poll sent.
+    Get<Radio>().StopAutoPoll();
+}
+
+bool SubMac::IsRadioAutoPollSupported() { return RadioSupportsAutoDataPoll(); }
+#endif
+
 void SubMac::HandleTransmitStarted(TxFrame &aFrame)
 {
     if (mPcapCallback.IsSet())
@@ -716,6 +754,9 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     case kStateDelayBeforeRetx:
 #endif
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    case kStateRadioAutoPoll:
+#endif
     case kStateEnergyScan:
         ExitNow(error = kErrorInvalidState);
 
@@ -806,6 +847,15 @@ void SubMac::HandleTimer(void)
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     case kStateDelayBeforeRetx:
         StartCsmaBackoff();
+        break;
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    case kStateRadioAutoPoll:
+        LogDebg("Radio poll did not start");
+        IgnoreError(Get<Radio>().Receive(mTransmitFrame.GetChannel()));
+        // Using abort error code to trigger a reschedule of the data poll operation
+        HandleTransmitDone(mTransmitFrame, nullptr, kErrorAbort);
         break;
 #endif
 

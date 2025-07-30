@@ -36,6 +36,10 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE && !OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+#error "MAC data poll offload feature requires `OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE`"
+#endif
+
 #include "common/code_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -130,8 +134,14 @@ public:
      *
      * @param[in] aFrame     The data poll frame.
      * @param[in] aError     Error status of a data poll message transmission.
+     * @param[in] aNbOfPolls The number of offloaded polls when OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+     *                       is enabled.
      */
-    void HandlePollSent(Mac::TxFrame &aFrame, Error aError);
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    void HandlePollSent(Mac::TxFrame &aFrame, Error aError, uint32_t aNbOfPolls);
+#else
+    void  HandlePollSent(Mac::TxFrame &aFrame, Error aError);
+#endif
 
     /**
      * Informs the data poll sender that a data poll timeout happened, i.e., when the ack in response to
@@ -255,6 +265,9 @@ private:
     static constexpr uint32_t kMaxExternalPeriod    = ((1 << 26) - 1); // ~18.6 hours.
 
     void            ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
+    void            StartPollTimer(TimeMilli aStartTime, uint32_t aPollPeriod);
+    void            StopPollTimer();
+    bool            IsPollTimerRunning();
     uint32_t        CalculatePollPeriod(void) const;
     const Neighbor &GetParent(void) const;
     void            HandlePollTimer(void) { IgnoreError(SendDataPoll()); }
@@ -262,6 +275,11 @@ private:
     Error GetPollDestinationAddress(Mac::Address &aDest, Mac::RadioType &aRadioType) const;
 #else
     Error GetPollDestinationAddress(Mac::Address &aDest) const;
+#endif
+    bool ShouldURestartTimer(uint32_t oldPeriod);
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    bool            IsPollNumberSet(void) const;
+    bool            ShouldUseDataPollOffload();
 #endif
 
     using PollTimer = TimerMilliIn<DataPollSender, &DataPollSender::HandlePollTimer>;
@@ -273,9 +291,14 @@ private:
 
     PollTimer mTimer;
 
-    bool    mEnabled : 1;              // Indicates whether data polling is enabled/started.
-    bool    mAttachMode : 1;           // Indicates whether in attach mode (to use attach poll period).
-    bool    mRetxMode : 1;             // Indicates whether last poll tx failed at mac/radio layer (poll retx mode).
+    bool mEnabled : 1;    // Indicates whether data polling is enabled/started.
+    bool mAttachMode : 1; // Indicates whether in attach mode (to use attach poll period).
+    bool mRetxMode : 1;   // Indicates whether last poll tx failed at mac/radio layer (poll retx mode).
+#if OPENTHREAD_CONFIG_MAC_DATA_POLL_OFFLOAD_ENABLE
+    bool mIsRadioPollRunning : 1; // Indicates whether the radio auto data poll is running.
+    bool mDelayNextPollSchedule : 1; // Indicates whether the scheduling of the next poll is delayed until the
+                                     // auto poll sequence is completed
+#endif
     uint8_t mPollTimeoutCounter : 4;   // Poll timeouts counter (0 to `kQuickPollsAfterTimeout`).
     uint8_t mPollTxFailureCounter : 4; // Poll tx failure counter (0 to `kMaxPollRetxAttempts`).
     uint8_t mRemainingFastPolls : 4;   // Number of remaining fast polls when in transient fast polling mode.
