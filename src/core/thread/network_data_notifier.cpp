@@ -154,7 +154,7 @@ Error Notifier::UpdateInconsistentData(void)
     // Don't send this Server Data Notification if the device is going
     // to upgrade to Router.
 
-    if (Get<Mle::Mle>().IsExpectedToBecomeRouterSoon())
+    if (Get<Mle::Mle>().WillBecomeRouterSoon())
     {
         ExitNow(error = kErrorInvalidState);
     }

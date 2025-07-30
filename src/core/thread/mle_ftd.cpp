@@ -3453,13 +3453,24 @@ exit:
     return error;
 }
 
-bool Mle::IsExpectedToBecomeRouterSoon(void) const
+bool Mle::WillBecomeRouterSoon(void) const
 {
     static constexpr uint8_t kMaxDelay = 10;
 
-    return IsRouterEligible() && IsChild() && !mAddressSolicitRejected &&
-           ((mRouterRoleTransition.IsPending() && mRouterRoleTransition.GetTimeout() <= kMaxDelay) ||
-            mAddressSolicitPending);
+    bool willBecomeRouter = false;
+
+    VerifyOrExit(IsRouterEligible() && IsChild());
+    VerifyOrExit(!mAddressSolicitRejected);
+
+    if (!mAddressSolicitPending)
+    {
+        VerifyOrExit(mRouterRoleTransition.IsPending() && mRouterRoleTransition.GetTimeout() <= kMaxDelay);
+    }
+
+    willBecomeRouter = true;
+
+exit:
+    return willBecomeRouter;
 }
 
 template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
