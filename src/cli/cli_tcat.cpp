@@ -32,7 +32,9 @@
 
 #include "cli/cli_tcat.hpp"
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 #include "common/error.hpp"
+#include "common/string.hpp"
 
 #include <openthread/ble_secure.h>
 
@@ -43,31 +45,60 @@
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
 
+#define CERT_SET_COUNT 2
+#define CERT_MAX_SIZE 1024
+#define KEY_MAX_SIZE 512
+
 // DeviceCert1 default identity for TCAT certification testing.
+// DeviceCert2 extra example.
 // WARNING: storage of private keys in code or program memory MUST NOT be used in production.
 // The below code is for testing purposes only. For production, secure key storage must be
 // used to store private keys.
-#define OT_CLI_TCAT_X509_CERT                                            \
-    "-----BEGIN CERTIFICATE-----\n"                                      \
-    "MIIB6TCCAZCgAwIBAgICNekwCgYIKoZIzj0EAwIwcTEmMCQGA1UEAwwdVGhyZWFk\n" \
-    "IENlcnRpZmljYXRpb24gRGV2aWNlQ0ExGTAXBgNVBAoMEFRocmVhZCBHcm91cCBJ\n" \
-    "bmMxEjAQBgNVBAcMCVNhbiBSYW1vbjELMAkGA1UECAwCQ0ExCzAJBgNVBAYTAlVT\n" \
-    "MCAXDTI0MDUwNzA5Mzk0NVoYDzI5OTkxMjMxMDkzOTQ1WjA8MSEwHwYDVQQDDBhU\n" \
-    "Q0FUIEV4YW1wbGUgRGV2aWNlQ2VydDExFzAVBgNVBAUTDjQ3MjMtOTgzMy0wMDAx\n" \
-    "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE11h/4vKZXVXv+1GDZo066spItloT\n" \
-    "dpCi0bux0jvpQSHLdQBIc+40zVCxMDRUvbX//vJKGsSJKOVUlCojQ2wIdqNLMEkw\n" \
-    "HwYDVR0jBBgwFoAUX6sbKWiIodS0MaiGYefnZlnt+BkwEAYJKwYBBAGC3yoCBAMC\n" \
-    "AQUwFAYJKwYBBAGC3yoDBAcEBSABAQEBMAoGCCqGSM49BAMCA0cAMEQCIHWu+Rd1\n" \
-    "VRlzrD8KbuyJcJFTXh2sQ9UIrFIA7+4e/GVcAiAVBdGqTxbt3TGkBBllpafAUB2/\n" \
-    "s0GJj7E33oblqy5eHQ==\n"                                             \
-    "-----END CERTIFICATE-----\n"
+static const char *const OT_CLI_TCAT_X509_CERT[CERT_SET_COUNT] = {R"(
+-----BEGIN CERTIFICATE-----
+MIIB6TCCAZCgAwIBAgICNekwCgYIKoZIzj0EAwIwcTEmMCQGA1UEAwwdVGhyZWFk
+IENlcnRpZmljYXRpb24gRGV2aWNlQ0ExGTAXBgNVBAoMEFRocmVhZCBHcm91cCBJ
+bmMxEjAQBgNVBAcMCVNhbiBSYW1vbjELMAkGA1UECAwCQ0ExCzAJBgNVBAYTAlVT
+MCAXDTI0MDUwNzA5Mzk0NVoYDzI5OTkxMjMxMDkzOTQ1WjA8MSEwHwYDVQQDDBhU
+Q0FUIEV4YW1wbGUgRGV2aWNlQ2VydDExFzAVBgNVBAUTDjQ3MjMtOTgzMy0wMDAx
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE11h/4vKZXVXv+1GDZo066spItloT
+dpCi0bux0jvpQSHLdQBIc+40zVCxMDRUvbX//vJKGsSJKOVUlCojQ2wIdqNLMEkw
+HwYDVR0jBBgwFoAUX6sbKWiIodS0MaiGYefnZlnt+BkwEAYJKwYBBAGC3yoCBAMC
+AQUwFAYJKwYBBAGC3yoDBAcEBSABAQEBMAoGCCqGSM49BAMCA0cAMEQCIHWu+Rd1
+VRlzrD8KbuyJcJFTXh2sQ9UIrFIA7+4e/GVcAiAVBdGqTxbt3TGkBBllpafAUB2/
+s0GJj7E33oblqy5eHQ==
+-----END CERTIFICATE-----
+)",
+                                                                  R"(
+-----BEGIN CERTIFICATE-----
+MIIB6TCCAZCgAwIBAgICNeowCgYIKoZIzj0EAwIwcTEmMCQGA1UEAwwdVGhyZWFk
+IENlcnRpZmljYXRpb24gRGV2aWNlQ0ExGTAXBgNVBAoMEFRocmVhZCBHcm91cCBJ
+bmMxEjAQBgNVBAcMCVNhbiBSYW1vbjELMAkGA1UECAwCQ0ExCzAJBgNVBAYTAlVT
+MCAXDTI0MDUwNzA5Mzk0NVoYDzI5OTkxMjMxMDkzOTQ1WjA8MSEwHwYDVQQDDBhU
+Q0FUIEV4YW1wbGUgRGV2aWNlQ2VydDIxFzAVBgNVBAUTDjQ3MjMtOTgzMy0wMDAy
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE30GMkqSBj3049NtK6G/MRTqcDxpm
+i1LxTpSxFIB7P9HVoVM7Cd9X6bBUp5FrSZI+KHtX2HKtXzmzsdJ3gxAmi6NLMEkw
+HwYDVR0jBBgwFoAUX6sbKWiIodS0MaiGYefnZlnt+BkwEAYJKwYBBAGC3yoCBAMC
+AQUwFAYJKwYBBAGC3yoDBAcEBSABAQEBMAoGCCqGSM49BAMCA0cAMEQCIAbZzVbC
+toNYgSWSgxRGzLRo1YJANqRC7yRtJNKTdQ1ZAiAlgGxEW2lkxCAGPUK1m9Wbb4kl
+7AhBhYlK6vZz/omTsQ==
+-----END CERTIFICATE-----
+)"};
 
-#define OT_CLI_TCAT_PRIV_KEY                                             \
-    "-----BEGIN EC PRIVATE KEY-----\n"                                   \
-    "MHcCAQEEIIqKM1QTlNaquV74W6Viz/ggXoLqlPOP6LagSyaFO3oUoAoGCCqGSM49\n" \
-    "AwEHoUQDQgAE11h/4vKZXVXv+1GDZo066spItloTdpCi0bux0jvpQSHLdQBIc+40\n" \
-    "zVCxMDRUvbX//vJKGsSJKOVUlCojQ2wIdg==\n"                             \
-    "-----END EC PRIVATE KEY-----\n"
+static const char *const OT_CLI_TCAT_PRIV_KEY[CERT_SET_COUNT] = {R"(
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIIqKM1QTlNaquV74W6Viz/ggXoLqlPOP6LagSyaFO3oUoAoGCCqGSM49
+AwEHoUQDQgAE11h/4vKZXVXv+1GDZo066spItloTdpCi0bux0jvpQSHLdQBIc+40
+zVCxMDRUvbX//vJKGsSJKOVUlCojQ2wIdg==
+-----END EC PRIVATE KEY----- 
+)",
+                                                                 R"(
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIP7Al8tJA3QgwD3yIuOSEmJkT3GlWmcHQ59JfhZOjSdUoAoGCCqGSM49
+AwEHoUQDQgAE30GMkqSBj3049NtK6G/MRTqcDxpmi1LxTpSxFIB7P9HVoVM7Cd9X
+6bBUp5FrSZI+KHtX2HKtXzmzsdJ3gxAmiw==
+-----END EC PRIVATE KEY----- 
+)"};
 
 #define OT_CLI_TCAT_TRUSTED_ROOT_CERTIFICATE                             \
     "-----BEGIN CERTIFICATE-----\n"                                      \
@@ -86,15 +117,16 @@
     "-----END CERTIFICATE-----\n"
 
 namespace ot {
-
 namespace Cli {
 
 otTcatAdvertisedDeviceId sAdvertisedDeviceIds[OT_TCAT_DEVICE_ID_MAX];
 otTcatGeneralDeviceId    sGeneralDeviceId;
 
-const char kPskdVendor[]    = "JJJJJJ";
-const char kInstallVendor[] = "InstallCode";
-const char kUrl[]           = "dummy_url";
+const char kPskdVendor[]              = "JJJJJJ";
+const char kInstallVendor[]           = "InstallCode";
+const char kUrl[]                     = "dummy_url";
+const char kApplicationServiceName1[] = "echo";
+const char kApplicationServiceName2[] = "discard";
 
 static bool IsDeviceIdSet(void)
 {
@@ -114,28 +146,24 @@ static void HandleBleSecureReceive(otInstance               *aInstance,
                                    const otMessage          *aMessage,
                                    int32_t                   aOffset,
                                    otTcatApplicationProtocol aTcatApplicationProtocol,
-                                   const char               *aServiceName,
                                    void                     *aContext)
 {
     OT_UNUSED_VARIABLE(aContext);
-    OT_UNUSED_VARIABLE(aTcatApplicationProtocol);
-    OT_UNUSED_VARIABLE(aServiceName);
 
-    static constexpr int     kTextMaxLen   = 100;
-    static constexpr uint8_t kBufPrefixLen = 5;
+    static constexpr int kTextMaxLen = 100;
 
-    uint16_t nLen;
-    uint8_t  buf[kTextMaxLen];
-
-    nLen =
-        otMessageRead(aMessage, static_cast<uint16_t>(aOffset), buf + kBufPrefixLen, sizeof(buf) - kBufPrefixLen - 1);
-
-    memcpy(buf, "RECV:", kBufPrefixLen);
-
-    buf[nLen + kBufPrefixLen] = 0;
-
-    IgnoreReturnValue(otBleSecureSendApplicationTlv(aInstance, buf, (uint16_t)strlen((char *)buf)));
-    IgnoreReturnValue(otBleSecureFlush(aInstance));
+    if (aTcatApplicationProtocol == OT_TCAT_APPLICATION_PROTOCOL_1 ||
+        aTcatApplicationProtocol == OT_TCAT_APPLICATION_PROTOCOL_VENDOR)
+    {
+        uint8_t  buf[kTextMaxLen];
+        uint16_t nLen = otMessageRead(aMessage, static_cast<uint16_t>(aOffset), buf, sizeof(buf));
+        IgnoreReturnValue(otBleSecureSendApplicationTlv(aInstance, OT_TCAT_APPLICATION_PROTOCOL_RESPONSE, buf, nLen));
+    }
+    else if (aTcatApplicationProtocol == OT_TCAT_APPLICATION_PROTOCOL_2)
+    {
+        uint8_t status = OT_TCAT_STATUS_SUCCESS;
+        IgnoreReturnValue(otBleSecureSendApplicationTlv(aInstance, OT_TCAT_APPLICATION_PROTOCOL_STATUS, &status, 1));
+    }
 }
 
 /**
@@ -231,6 +259,38 @@ exit:
 }
 
 /**
+ * @cli tcat certid
+ * @code
+ * tcat devid certid 0
+ * Done
+ * @endcode
+ * @cparam tcat certid [@ca{value}]
+ * * The `value` int value of the ID.
+ * @par
+ * Selects a predefined certificate.
+ */
+template <> otError Tcat::Process<Cmd("certid")>(Arg aArgs[])
+{
+    Error   error         = kErrorNone;
+    uint8_t certCandidate = 0;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine("%d", mSelectedCert);
+        ExitNow();
+    }
+
+    SuccessOrExit(error = aArgs[0].ParseAsUint8(certCandidate));
+
+    VerifyOrExit(certCandidate < CERT_SET_COUNT, error = kErrorInvalidArgs);
+
+    mSelectedCert = certCandidate;
+
+exit:
+    return error;
+}
+
+/**
  * @cli tcat devid
  * @code
  * tcat devid ianapen f378aabb
@@ -292,9 +352,12 @@ template <> otError Tcat::Process<Cmd("start")>(Arg aArgs[])
     otError error = OT_ERROR_NONE;
 
     ClearAllBytes(mVendorInfo);
-    mVendorInfo.mPskdString      = kPskdVendor;
-    mVendorInfo.mProvisioningUrl = kUrl;
-    mVendorInfo.mInstallCode     = kInstallVendor;
+    mVendorInfo.mPskdString                 = kPskdVendor;
+    mVendorInfo.mProvisioningUrl            = kUrl;
+    mVendorInfo.mInstallCode                = kInstallVendor;
+    mVendorInfo.mApplicationServiceName[0]  = kApplicationServiceName1;
+    mVendorInfo.mApplicationServiceName[1]  = kApplicationServiceName2;
+    mVendorInfo.mApplicationServiceIsTcp[1] = true;
 
     if (IsDeviceIdSet())
     {
@@ -306,9 +369,10 @@ template <> otError Tcat::Process<Cmd("start")>(Arg aArgs[])
         mVendorInfo.mGeneralDeviceId = &sGeneralDeviceId;
     }
 
-    otBleSecureSetCertificate(GetInstancePtr(), reinterpret_cast<const uint8_t *>(OT_CLI_TCAT_X509_CERT),
-                              sizeof(OT_CLI_TCAT_X509_CERT), reinterpret_cast<const uint8_t *>(OT_CLI_TCAT_PRIV_KEY),
-                              sizeof(OT_CLI_TCAT_PRIV_KEY));
+    otBleSecureSetCertificate(GetInstancePtr(), reinterpret_cast<const uint8_t *>(OT_CLI_TCAT_X509_CERT[mSelectedCert]),
+                              StringLength(OT_CLI_TCAT_X509_CERT[mSelectedCert], CERT_MAX_SIZE) + 1,
+                              reinterpret_cast<const uint8_t *>(OT_CLI_TCAT_PRIV_KEY[mSelectedCert]),
+                              StringLength(OT_CLI_TCAT_PRIV_KEY[mSelectedCert], KEY_MAX_SIZE) + 1);
 
     otBleSecureSetCaCertificateChain(GetInstancePtr(),
                                      reinterpret_cast<const uint8_t *>(OT_CLI_TCAT_TRUSTED_ROOT_CERTIFICATE),

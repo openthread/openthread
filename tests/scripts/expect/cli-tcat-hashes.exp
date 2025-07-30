@@ -31,11 +31,11 @@ source "tests/scripts/expect/_common.exp"
 
 spawn_node 1 "cli"
 
-spawn_tcat_client_for_node 1
+spawn_tcat_client_for_node 1 tools/tcat_ble_client/auth-cert/CommCert2
 
 send "commission\n"
 expect_line "\tTYPE:\tRESPONSE_W_STATUS"
-expect_line "\tVALUE:\t0x00"
+expect_line "\tVALUE:\t0x10"
 
 send "random_challenge\n"
 expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
@@ -46,13 +46,17 @@ expect_line "Requested hash is valid."
 expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
 expect_line "\tLEN:\t32"
 
+send "present_hash pskd AAAA\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x07"
+
 send "present_hash pskd JJJJJJ\n"
 expect_line "\tTYPE:\tRESPONSE_W_STATUS"
 expect_line "\tVALUE:\t0x00"
 
-send "present_hash pskd AAAA\n"
+send "commission\n"
 expect_line "\tTYPE:\tRESPONSE_W_STATUS"
-expect_line "\tVALUE:\t0x07"
+expect_line "\tVALUE:\t0x00"
 
 send "present_hash install InstallCode\n"
 expect_line "\tTYPE:\tRESPONSE_W_STATUS"
