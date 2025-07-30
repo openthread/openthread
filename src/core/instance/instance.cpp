@@ -247,7 +247,7 @@ Instance::Instance(void)
     , mMeshDiag(*this)
 #endif
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    , mHistoryTracker(*this)
+    , mHistoryTrackerLocal(*this)
 #endif
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
     , mLinkMetricsManager(*this)

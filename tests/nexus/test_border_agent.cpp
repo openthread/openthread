@@ -39,7 +39,6 @@ namespace Nexus {
 using ActiveDatasetManager = MeshCoP::ActiveDatasetManager;
 using BorderAgent          = MeshCoP::BorderAgent;
 using EphemeralKeyManager  = MeshCoP::BorderAgent::EphemeralKeyManager;
-using HistoryTracker       = Utils::HistoryTracker;
 using EpskcEvent           = HistoryTracker::EpskcEvent;
 using Iterator             = HistoryTracker::Iterator;
 using ExtendedPanIdManager = MeshCoP::ExtendedPanIdManager;
@@ -764,7 +763,7 @@ EpskcEvent GetNewestEpskcEvent(Node &aNode)
     uint32_t          age;
     iter.Init();
 
-    epskcEvent = aNode.Get<HistoryTracker>().IterateEpskcEventHistory(iter, age);
+    epskcEvent = aNode.Get<HistoryTracker::Local>().IterateEpskcEventHistory(iter, age);
 
     VerifyOrQuit(epskcEvent != nullptr);
     return *epskcEvent;

@@ -682,7 +682,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Utils::HistoryTracker mHistoryTracker;
+    HistoryTracker::Local mHistoryTrackerLocal;
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
@@ -993,7 +993,7 @@ template <> inline Utils::MeshDiag &Instance::Get(void) { return mMeshDiag; }
 #endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-template <> inline Utils::HistoryTracker &Instance::Get(void) { return mHistoryTracker; }
+template <> inline HistoryTracker::Local &Instance::Get(void) { return mHistoryTrackerLocal; }
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
