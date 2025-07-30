@@ -1399,7 +1399,6 @@ private:
         kTypeParentResponse,
 #if OPENTHREAD_FTD
         kTypeAddressRelease,
-        kTypeAddressReleaseReply,
         kTypeAddressReply,
         kTypeAddressSolicit,
         kTypeChildUpdateRequestOfChild,
@@ -2172,10 +2171,6 @@ private:
     void     StopAdvertiseTrickleTimer(void);
     uint32_t DetermineAdvertiseIntervalMax(void) const;
     Error    SendAddressSolicit(ThreadStatusTlv::Status aStatus);
-    void     SendAddressSolicitResponse(const Coap::Message    &aRequest,
-                                        ThreadStatusTlv::Status aResponseStatus,
-                                        const Router           *aRouter,
-                                        const Ip6::MessageInfo &aMessageInfo);
     void     SendAddressRelease(void);
     void     SendMulticastAdvertisement(void);
     void     SendAdvertisement(const Ip6::Address &aDestination);
@@ -2209,8 +2204,6 @@ private:
     void     HandleAdvertiseTrickleTimer(void);
     void     HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
     void     HandleTimeTick(void);
-
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     void SignalDuaAddressEvent(const Child &aChild, const Ip6::Address &aOldDua) const;
@@ -2345,11 +2338,6 @@ private:
 
 #endif // OPENTHREAD_FTD
 };
-
-#if OPENTHREAD_FTD
-DeclareTmfHandler(Mle, kUriAddressSolicit);
-DeclareTmfHandler(Mle, kUriAddressRelease);
-#endif
 
 } // namespace Mle
 

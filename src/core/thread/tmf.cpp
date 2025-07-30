@@ -127,8 +127,8 @@ bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::M
 #if OPENTHREAD_FTD
         Case(kUriAddressQuery, AddressResolver);
         Case(kUriAddressNotify, AddressResolver);
-        Case(kUriAddressSolicit, Mle::Mle);
-        Case(kUriAddressRelease, Mle::Mle);
+        Case(kUriAddressSolicit, RouterTable);
+        Case(kUriAddressRelease, RouterTable);
         Case(kUriActiveSet, MeshCoP::ActiveDatasetManager);
         Case(kUriActiveReplace, MeshCoP::ActiveDatasetManager);
         Case(kUriPendingSet, MeshCoP::PendingDatasetManager);

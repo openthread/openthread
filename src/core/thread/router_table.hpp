@@ -46,12 +46,14 @@
 #include "thread/mle_types.hpp"
 #include "thread/router.hpp"
 #include "thread/thread_tlvs.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
 class RouterTable : public InstanceLocator, private NonCopyable
 {
     friend class NeighborTable;
+    friend class Tmf::Agent;
 
 public:
     /**
@@ -457,6 +459,12 @@ private:
         uint8_t mIndexes[Mle::kMaxRouterId + 1];
     };
 
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void                     SendAddressSolicitResponse(const Coap::Message    &aRequest,
+                                                        ThreadStatusTlv::Status aResponseStatus,
+                                                        const Router           *aRouter,
+                                                        const Ip6::MessageInfo &aMessageInfo);
+
     using ChangedTask = TaskletIn<RouterTable, &RouterTable::HandleTableChanged>;
 
     Array<Router, Mle::kMaxRouters> mRouters;
@@ -469,6 +477,9 @@ private:
     uint8_t mMaxRouterId;
 #endif
 };
+
+DeclareTmfHandler(RouterTable, kUriAddressSolicit);
+DeclareTmfHandler(RouterTable, kUriAddressRelease);
 
 } // namespace ot
 

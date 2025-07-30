@@ -938,6 +938,191 @@ void RouterTable::LogRouteTable(void) const
 }
 #endif
 
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// TMF commands (on leader)
+
+template <>
+void RouterTable::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    Error                   error          = kErrorNone;
+    ThreadStatusTlv::Status responseStatus = ThreadStatusTlv::kNoAddressAvailable;
+    Router                 *router         = nullptr;
+    Mac::ExtAddress         extAddress;
+    uint16_t                rloc16;
+    uint8_t                 status;
+
+    VerifyOrExit(Get<Mle::Mle>().IsLeader(), error = kErrorInvalidState);
+
+    VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = kErrorParse);
+
+    LogInfo("Received %s from %s", UriToString<kUriAddressSolicit>(),
+            aMessageInfo.GetPeerAddr().ToString().AsCString());
+
+    SuccessOrExit(error = Tlv::Find<ThreadExtMacAddressTlv>(aMessage, extAddress));
+    SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(aMessage, status));
+
+    switch (Tlv::Find<ThreadRloc16Tlv>(aMessage, rloc16))
+    {
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        rloc16 = Mle::kInvalidRloc16;
+        break;
+    default:
+        ExitNow(error = kErrorParse);
+    }
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    {
+        uint16_t xtalAccuracy;
+
+        SuccessOrExit(Tlv::Find<Mle::XtalAccuracyTlv>(aMessage, xtalAccuracy));
+        VerifyOrExit(xtalAccuracy <= Get<TimeSync>().GetXtalThreshold());
+    }
+#endif
+
+    router = FindRouter(extAddress);
+
+    if (router != nullptr)
+    {
+        responseStatus = ThreadStatusTlv::kSuccess;
+        ExitNow();
+    }
+
+    switch (status)
+    {
+    case ThreadStatusTlv::kTooFewRouters:
+        VerifyOrExit(GetActiveRouterCount() < Get<Mle::Mle>().GetRouterUpgradeThreshold());
+        break;
+
+    case ThreadStatusTlv::kHaveChildIdRequest:
+    case ThreadStatusTlv::kParentPartitionChange:
+        break;
+
+    case ThreadStatusTlv::kBorderRouterRequest:
+        if ((GetActiveRouterCount() >= Get<Mle::Mle>().GetRouterUpgradeThreshold()) &&
+            (Get<NetworkData::Leader>().CountBorderRouters(NetworkData::kRouterRoleOnly) >=
+             Mle::kRouterUpgradeBorderRouterRequestThreshold))
+        {
+            LogInfo("Rejecting BR %s router role req - have %u BR routers", extAddress.ToString().AsCString(),
+                    Mle::kRouterUpgradeBorderRouterRequestThreshold);
+            ExitNow();
+        }
+        break;
+
+    default:
+        responseStatus = ThreadStatusTlv::kUnrecognizedStatus;
+        ExitNow();
+    }
+
+    if (rloc16 != Mle::kInvalidRloc16)
+    {
+        router = Allocate(Mle::RouterIdFromRloc16(rloc16));
+
+        if (router != nullptr)
+        {
+            LogInfo("Router ID %u requested and provided!", Mle::RouterIdFromRloc16(rloc16));
+        }
+    }
+
+    if (router == nullptr)
+    {
+        router = Allocate();
+        VerifyOrExit(router != nullptr);
+    }
+
+    router->SetExtAddress(extAddress);
+    responseStatus = ThreadStatusTlv::kSuccess;
+
+exit:
+    if (error == kErrorNone)
+    {
+        SendAddressSolicitResponse(aMessage, responseStatus, router, aMessageInfo);
+    }
+}
+
+void RouterTable::SendAddressSolicitResponse(const Coap::Message    &aRequest,
+                                             ThreadStatusTlv::Status aResponseStatus,
+                                             const Router           *aRouter,
+                                             const Ip6::MessageInfo &aMessageInfo)
+{
+    Coap::Message *message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+
+    VerifyOrExit(message != nullptr);
+
+    SuccessOrExit(Tlv::Append<ThreadStatusTlv>(*message, aResponseStatus));
+
+    if (aRouter != nullptr)
+    {
+        ThreadRouterMaskTlv routerMaskTlv;
+
+        SuccessOrExit(Tlv::Append<ThreadRloc16Tlv>(*message, aRouter->GetRloc16()));
+
+        routerMaskTlv.Init();
+        routerMaskTlv.SetIdSequence(GetRouterIdSequence());
+        GetRouterIdSet(routerMaskTlv.GetAssignedRouterIdMask());
+
+        SuccessOrExit(routerMaskTlv.AppendTo(*message));
+    }
+
+    SuccessOrExit(Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
+    message = nullptr;
+
+    LogInfo("Sent %s response", UriToString<kUriAddressSolicit>());
+
+    // If assigning a new RLOC16 (e.g., on promotion of a child to
+    // router role) we clear any address cache entries associated
+    // with the old RLOC16 unless the sender is a direct child. For
+    // direct children, we retain the cache entries to allow
+    // association with the promoted router's new RLOC16 upon
+    // receiving its Link Advertisement.
+
+    if ((aResponseStatus == ThreadStatusTlv::kSuccess) && (aRouter != nullptr))
+    {
+        uint16_t oldRloc16;
+
+        VerifyOrExit(Get<Mle::Mle>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
+        oldRloc16 = aMessageInfo.GetPeerAddr().GetIid().GetLocator();
+
+        VerifyOrExit(oldRloc16 != aRouter->GetRloc16());
+        VerifyOrExit(!Mle::RouterIdMatch(oldRloc16, Get<Mle::Mle>().GetRloc16()));
+        Get<AddressResolver>().RemoveEntriesForRloc16(oldRloc16);
+    }
+
+exit:
+    FreeMessage(message);
+}
+
+template <>
+void RouterTable::HandleTmf<kUriAddressRelease>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    uint16_t        rloc16;
+    Mac::ExtAddress extAddress;
+    uint8_t         routerId;
+    Router         *router;
+
+    VerifyOrExit(Get<Mle::Mle>().IsLeader());
+
+    VerifyOrExit(aMessage.IsConfirmablePostRequest());
+
+    SuccessOrExit(Tlv::Find<ThreadRloc16Tlv>(aMessage, rloc16));
+    SuccessOrExit(Tlv::Find<ThreadExtMacAddressTlv>(aMessage, extAddress));
+
+    LogInfo("Received AddrRelease from %s", aMessageInfo.GetPeerAddr().ToString().AsCString());
+
+    routerId = Mle::RouterIdFromRloc16(rloc16);
+    router   = FindRouterById(routerId);
+
+    VerifyOrExit((router != nullptr) && (router->GetExtAddress() == extAddress));
+
+    IgnoreError(Release(routerId));
+
+    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+
+exit:
+    return;
+}
+
 } // namespace ot
 
 #endif // OPENTHREAD_FTD
