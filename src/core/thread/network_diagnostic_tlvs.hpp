@@ -1044,7 +1044,7 @@ public:
 
 private:
     static constexpr uint16_t kIsLastFlag = 1 << 15;
-    static constexpr uint16_t kIndexMask  = 0x7f;
+    static constexpr uint16_t kIndexMask  = 0x7fff;
 
     uint16_t GetFlagsIndex(void) const { return BigEndian::HostSwap16(mFlagsIndex); }
     void     SetFlagsIndex(uint16_t aFlagsIndex) { mFlagsIndex = BigEndian::HostSwap16(aFlagsIndex); }
