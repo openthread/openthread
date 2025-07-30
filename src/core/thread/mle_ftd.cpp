@@ -2855,23 +2855,7 @@ Error Mle::SendChildIdResponse(Child &aChild)
 
     if ((aChild.GetRloc16() == 0) || !HasMatchingRouterIdWith(aChild.GetRloc16()))
     {
-        uint16_t rloc16;
-
-        // Pick next Child ID that is not being used
-        do
-        {
-            mNextChildId++;
-
-            if (mNextChildId > kMaxChildId)
-            {
-                mNextChildId = kMinChildId;
-            }
-
-            rloc16 = Get<Mac::Mac>().GetShortAddress() | mNextChildId;
-
-        } while (mChildTable.FindChild(rloc16, Child::kInStateAnyExceptInvalid) != nullptr);
-
-        aChild.SetRloc16(rloc16);
+        aChild.SetRloc16(mChildTable.AllocateNewChildRloc16());
     }
 
     SuccessOrExit(error = message->AppendAddress16Tlv(aChild.GetRloc16()));
