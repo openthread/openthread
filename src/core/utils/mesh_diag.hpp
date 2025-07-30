@@ -157,6 +157,24 @@ public:
     explicit MeshDiag(Instance &aInstance);
 
     /**
+     * Sets the response timeout value to use for any future queries.
+     *
+     * Changing the response timeout does not impact any ongoing query.
+     *
+     * The provided @p aTimeout value will be clamped to stay between 50 milliseconds and 10 minutes.
+     *
+     * @param[in] aTimeout   The timeout interval in milliseconds.
+     */
+    void SetResponseTimeout(uint32_t aTimeout);
+
+    /**
+     * Gets the response timeout value.
+     *
+     * @returns The response timeout interval in milliseconds.
+     */
+    uint32_t GetResponseTimeout(void) const { return mResponseTimeout; }
+
+    /**
      * Starts network topology discovery.
      *
      * @param[in] aConfig          The configuration to use for discovery (e.g., which items to discover).
@@ -226,7 +244,9 @@ public:
 private:
     typedef ot::NetworkDiagnostic::Tlv Tlv;
 
-    static constexpr uint32_t kResponseTimeout = OPENTHREAD_CONFIG_MESH_DIAG_RESPONSE_TIMEOUT;
+    static constexpr uint32_t kResponseTimeout    = OPENTHREAD_CONFIG_MESH_DIAG_RESPONSE_TIMEOUT;
+    static constexpr uint32_t kMinResponseTimeout = 50;
+    static constexpr uint32_t kMaxResponseTimeout = 10 * Time::kOneMinuteInMsec;
 
     enum State : uint8_t
     {
@@ -298,6 +318,7 @@ private:
     State        mState;
     uint16_t     mExpectedQueryId;
     uint16_t     mExpectedAnswerIndex;
+    uint32_t     mResponseTimeout;
     TimeoutTimer mTimer;
 
     union

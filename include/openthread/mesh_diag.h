@@ -388,6 +388,29 @@ otError otMeshDiagQueryRouterNeighborTable(otInstance                           
                                            void                                      *aContext);
 
 /**
+ * Sets the response timeout value to use for any future mesh diagnostic queries.
+ *
+ * The default response timeout value is specified by `OPENTHREAD_CONFIG_MESH_DIAG_RESPONSE_TIMEOUT` configuration.
+ *
+ * Changing the response timeout does not impact any ongoing query.
+ *
+ * The provided @p aTimeout value will be clamped to stay between 50 milliseconds and 10 minutes.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aTimeout   The timeout interval in milliseconds.
+ */
+void otMeshDiagSetResponseTimeout(otInstance *aInstance, uint32_t aTimeout);
+
+/**
+ * Gets the response timeout value.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The response timeout interval in milliseconds.
+ */
+uint32_t otMeshDiagGetResponseTimeout(otInstance *aInstance);
+
+/**
  * @}
  */
 
