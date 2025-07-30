@@ -543,7 +543,7 @@ private:
 #endif
     };
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Tmf::RxMessage &aMessage);
 
     void HandleTimer(void);
 

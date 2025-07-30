@@ -368,20 +368,18 @@ void ActiveDatasetManager::StartLeader(void) { IgnoreError(GenerateLocal()); }
 void ActiveDatasetManager::StartLeader(void) {}
 #endif // OPENTHREAD_CONFIG_OPERATIONAL_DATASET_AUTO_INIT
 
-template <>
-void ActiveDatasetManager::HandleTmf<kUriActiveSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void ActiveDatasetManager::HandleTmf<kUriActiveSet>(Tmf::RxMessage &aMessage)
 {
-    SuccessOrExit(DatasetManager::HandleSetOrReplace(kMgmtSet, aMessage, aMessageInfo));
+    SuccessOrExit(DatasetManager::HandleSetOrReplace(kMgmtSet, aMessage, aMessage.GetInfo()));
     IgnoreError(ApplyConfiguration());
 
 exit:
     return;
 }
 
-template <>
-void ActiveDatasetManager::HandleTmf<kUriActiveReplace>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void ActiveDatasetManager::HandleTmf<kUriActiveReplace>(Tmf::RxMessage &aMessage)
 {
-    SuccessOrExit(DatasetManager::HandleSetOrReplace(kMgmtReplace, aMessage, aMessageInfo));
+    SuccessOrExit(DatasetManager::HandleSetOrReplace(kMgmtReplace, aMessage, aMessage.GetInfo()));
     IgnoreError(ApplyConfiguration());
 
 exit:
@@ -393,10 +391,9 @@ exit:
 
 void PendingDatasetManager::StartLeader(void) { StartDelayTimer(); }
 
-template <>
-void PendingDatasetManager::HandleTmf<kUriPendingSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void PendingDatasetManager::HandleTmf<kUriPendingSet>(Tmf::RxMessage &aMessage)
 {
-    SuccessOrExit(DatasetManager::HandleSetOrReplace(kMgmtSet, aMessage, aMessageInfo));
+    SuccessOrExit(DatasetManager::HandleSetOrReplace(kMgmtSet, aMessage, aMessage.GetInfo()));
     StartDelayTimer();
 
 exit:

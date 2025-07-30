@@ -85,16 +85,15 @@ Agent::Agent(Instance &aInstance)
 
 Error Agent::Start(void) { return Coap::Start(kUdpPort, Ip6::kNetifThreadInternal); }
 
-template <> void Agent::HandleTmf<kUriRelayRx>(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Agent::HandleTmf<kUriRelayRx>(RxMessage &aMessage)
 {
     OT_UNUSED_VARIABLE(aMessage);
-    OT_UNUSED_VARIABLE(aMessageInfo);
 
 #if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE)
-    Get<MeshCoP::Commissioner>().HandleTmf<kUriRelayRx>(aMessage, aMessageInfo);
+    Get<MeshCoP::Commissioner>().HandleTmf<kUriRelayRx>(aMessage);
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    Get<MeshCoP::BorderAgent>().HandleTmf<kUriRelayRx>(aMessage, aMessageInfo);
+    Get<MeshCoP::BorderAgent>().HandleTmf<kUriRelayRx>(aMessage);
 #endif
 }
 
@@ -103,17 +102,17 @@ bool Agent::HandleResource(CoapBase               &aCoapBase,
                            Message                &aMessage,
                            const Ip6::MessageInfo &aMessageInfo)
 {
-    return static_cast<Agent &>(aCoapBase).HandleResource(aUriPath, aMessage, aMessageInfo);
+    return static_cast<Agent &>(aCoapBase).HandleResource(aUriPath, RxMessage::From(aMessage, aMessageInfo));
 }
 
-bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+bool Agent::HandleResource(const char *aUriPath, RxMessage &aMessage)
 {
     bool didHandle = true;
     Uri  uri       = UriFromPath(aUriPath);
 
-#define Case(kUri, Type)                                     \
-    case kUri:                                               \
-        Get<Type>().HandleTmf<kUri>(aMessage, aMessageInfo); \
+#define Case(kUri, Type)                       \
+    case kUri:                                 \
+        Get<Type>().HandleTmf<kUri>(aMessage); \
         break
 
     switch (uri)
@@ -302,17 +301,17 @@ bool SecureAgent::HandleResource(CoapBase               &aCoapBase,
                                  Message                &aMessage,
                                  const Ip6::MessageInfo &aMessageInfo)
 {
-    return static_cast<SecureAgent &>(aCoapBase).HandleResource(aUriPath, aMessage, aMessageInfo);
+    return static_cast<SecureAgent &>(aCoapBase).HandleResource(aUriPath, RxMessage::From(aMessage, aMessageInfo));
 }
 
-bool SecureAgent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+bool SecureAgent::HandleResource(const char *aUriPath, RxMessage &aMessage)
 {
     bool didHandle = false;
     Uri  uri       = UriFromPath(aUriPath);
 
     if (uri == kUriJoinerFinalize)
     {
-        Get<MeshCoP::Commissioner>().HandleTmf<kUriJoinerFinalize>(aMessage, aMessageInfo);
+        Get<MeshCoP::Commissioner>().HandleTmf<kUriJoinerFinalize>(aMessage);
         didHandle = true;
     }
 

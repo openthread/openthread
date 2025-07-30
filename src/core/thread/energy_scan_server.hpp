@@ -67,7 +67,7 @@ private:
     static constexpr uint32_t kScanDelay   = 1000; // SCAN_DELAY (milliseconds)
     static constexpr uint32_t kReportDelay = 500;  // Delay before sending a report (milliseconds)
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Tmf::RxMessage &aMessage);
 
     static void HandleScanResult(Mac::EnergyScanResult *aResult, void *aContext);
     void        HandleScanResult(Mac::EnergyScanResult *aResult);

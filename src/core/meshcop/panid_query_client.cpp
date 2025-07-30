@@ -81,8 +81,7 @@ exit:
     return error;
 }
 
-template <>
-void PanIdQueryClient::HandleTmf<kUriPanIdConflict>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void PanIdQueryClient::HandleTmf<kUriPanIdConflict>(Tmf::RxMessage &aMessage)
 {
     uint16_t panId;
     uint32_t mask;
@@ -97,7 +96,7 @@ void PanIdQueryClient::HandleTmf<kUriPanIdConflict>(Coap::Message &aMessage, con
 
     mCallback.InvokeIfSet(panId, mask);
 
-    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessage.GetInfo()));
 
     LogInfo("Sent %s response", UriToString<kUriPanIdConflict>());
 

@@ -109,8 +109,7 @@ exit:
 
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_SEND_RESPONSE
 
-template <>
-void AnycastLocator::HandleTmf<kUriAnycastLocate>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void AnycastLocator::HandleTmf<kUriAnycastLocate>(Tmf::RxMessage &aMessage)
 {
     Coap::Message *message = nullptr;
 
@@ -122,7 +121,7 @@ void AnycastLocator::HandleTmf<kUriAnycastLocate>(Coap::Message &aMessage, const
     SuccessOrExit(Tlv::Append<ThreadMeshLocalEidTlv>(*message, Get<Mle::Mle>().GetMeshLocalEid().GetIid()));
     SuccessOrExit(Tlv::Append<ThreadRloc16Tlv>(*message, Get<Mle::Mle>().GetRloc16()));
 
-    SuccessOrExit(Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendMessage(*message, aMessage.GetInfo()));
     message = nullptr;
 
 exit:

@@ -645,8 +645,7 @@ exit:
     return error;
 }
 
-template <>
-void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void AddressResolver::HandleTmf<kUriAddressNotify>(Tmf::RxMessage &aMessage)
 {
     Ip6::Address             target;
     Ip6::InterfaceIdentifier meshLocalIid;
@@ -674,7 +673,7 @@ void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Message &aMessage, cons
     }
 
     LogInfo("Received %s from 0x%04x for %s to 0x%04x", UriToString<kUriAddressNotify>(),
-            aMessageInfo.GetPeerAddr().GetIid().GetLocator(), target.ToString().AsCString(), rloc16);
+            aMessage.GetInfo().GetPeerAddr().GetIid().GetLocator(), target.ToString().AsCString(), rloc16);
 
     entry = FindCacheEntry(target, list, prev);
     VerifyOrExit(entry != nullptr);
@@ -705,7 +704,7 @@ void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Message &aMessage, cons
 
     LogCacheEntryChange(kEntryUpdated, kReasonReceivedNotification, *entry);
 
-    if (Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo) == kErrorNone)
+    if (Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessage.GetInfo()) == kErrorNone)
     {
         LogInfo("Sent %s ack", UriToString<kUriAddressNotify>());
     }
@@ -757,8 +756,7 @@ exit:
 
 #endif // OPENTHREAD_FTD
 
-template <>
-void AddressResolver::HandleTmf<kUriAddressError>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void AddressResolver::HandleTmf<kUriAddressError>(Tmf::RxMessage &aMessage)
 {
     Error                    error = kErrorNone;
     Ip6::Address             target;
@@ -772,9 +770,9 @@ void AddressResolver::HandleTmf<kUriAddressError>(Coap::Message &aMessage, const
 
     LogInfo("Received %s", UriToString<kUriAddressError>());
 
-    if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
+    if (aMessage.IsConfirmable() && !aMessage.GetInfo().GetSockAddr().IsMulticast())
     {
-        if (Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo) == kErrorNone)
+        if (Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessage.GetInfo()) == kErrorNone)
         {
             LogInfo("Sent %s ack", UriToString<kUriAddressError>());
         }
@@ -839,8 +837,7 @@ exit:
 
 #if OPENTHREAD_FTD
 
-template <>
-void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void AddressResolver::HandleTmf<kUriAddressQuery>(Tmf::RxMessage &aMessage)
 {
     Ip6::Address target;
     uint32_t     lastTransactionTime;
@@ -850,12 +847,12 @@ void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Message &aMessage, const
     SuccessOrExit(Tlv::Find<ThreadTargetTlv>(aMessage, target));
 
     LogInfo("Received %s from 0x%04x for target %s", UriToString<kUriAddressQuery>(),
-            aMessageInfo.GetPeerAddr().GetIid().GetLocator(), target.ToString().AsCString());
+            aMessage.GetInfo().GetPeerAddr().GetIid().GetLocator(), target.ToString().AsCString());
 
     if (Get<ThreadNetif>().HasUnicastAddress(target))
     {
         SendAddressQueryResponse(target, Get<Mle::Mle>().GetMeshLocalEid().GetIid(), nullptr,
-                                 aMessageInfo.GetPeerAddr());
+                                 aMessage.GetInfo().GetPeerAddr());
         ExitNow();
     }
 
@@ -869,7 +866,8 @@ void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Message &aMessage, const
         if (child.HasIp6Address(target))
         {
             lastTransactionTime = Time::MsecToSec(TimerMilli::GetNow() - child.GetLastHeard());
-            SendAddressQueryResponse(target, child.GetMeshLocalIid(), &lastTransactionTime, aMessageInfo.GetPeerAddr());
+            SendAddressQueryResponse(target, child.GetMeshLocalIid(), &lastTransactionTime,
+                                     aMessage.GetInfo().GetPeerAddr());
             ExitNow();
         }
     }
@@ -877,7 +875,7 @@ void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Message &aMessage, const
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     if (Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(target))
     {
-        uint16_t srcRloc16 = aMessageInfo.GetPeerAddr().GetIid().GetLocator();
+        uint16_t srcRloc16 = aMessage.GetInfo().GetPeerAddr().GetIid().GetLocator();
 
         LogInfo("Extending %s to %s for target %s rloc16=%04x", UriToString<kUriAddressQuery>(),
                 UriToString<kUriBackboneQuery>(), target.ToString().AsCString(), srcRloc16);

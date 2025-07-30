@@ -85,8 +85,7 @@ exit:
     return error;
 }
 
-template <>
-void EnergyScanClient::HandleTmf<kUriEnergyReport>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void EnergyScanClient::HandleTmf<kUriEnergyReport>(Tmf::RxMessage &aMessage)
 {
     uint32_t               mask;
     MeshCoP::EnergyListTlv energyListTlv;
@@ -101,7 +100,7 @@ void EnergyScanClient::HandleTmf<kUriEnergyReport>(Coap::Message &aMessage, cons
 
     mCallback.InvokeIfSet(mask, energyListTlv.GetEnergyList(), energyListTlv.GetEnergyListLength());
 
-    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessage.GetInfo()));
 
     LogInfo("Sent %s ack", UriToString<kUriEnergyReport>());
 

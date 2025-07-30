@@ -873,10 +873,8 @@ exit:
     return;
 }
 
-template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Commissioner::HandleTmf<kUriRelayRx>(Tmf::RxMessage &aMessage)
 {
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Error                    error;
     uint16_t                 joinerPort;
     Ip6::InterfaceIdentifier joinerIid;
@@ -952,15 +950,14 @@ void Commissioner::HandleJoinerSessionTimer(void)
     Get<Tmf::SecureAgent>().Disconnect();
 }
 
-template <>
-void Commissioner::HandleTmf<kUriDatasetChanged>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Commissioner::HandleTmf<kUriDatasetChanged>(Tmf::RxMessage &aMessage)
 {
     VerifyOrExit(mState == kStateActive);
     VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
     LogInfo("Received %s", UriToString<kUriDatasetChanged>());
 
-    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessage.GetInfo()));
 
     LogInfo("Sent %s ack", UriToString<kUriDatasetChanged>());
 
@@ -968,11 +965,8 @@ exit:
     return;
 }
 
-template <>
-void Commissioner::HandleTmf<kUriJoinerFinalize>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Commissioner::HandleTmf<kUriJoinerFinalize>(Tmf::RxMessage &aMessage)
 {
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     StateTlv::State                state = StateTlv::kAccept;
     ProvisioningUrlTlv::StringType provisioningUrl;
 

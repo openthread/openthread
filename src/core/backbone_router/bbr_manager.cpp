@@ -122,10 +122,10 @@ void Manager::HandleTimer(void)
 }
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-template <> void Manager::HandleTmf<kUriMlr>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Manager::HandleTmf<kUriMlr>(Tmf::RxMessage &aMessage)
 {
     VerifyOrExit(Get<Local>().IsEnabled());
-    HandleMulticastListenerRegistration(aMessage, aMessageInfo);
+    HandleMulticastListenerRegistration(aMessage, aMessage.GetInfo());
 
 exit:
     return;
@@ -343,11 +343,10 @@ exit:
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
 
-template <>
-void Manager::HandleTmf<kUriDuaRegistrationRequest>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Manager::HandleTmf<kUriDuaRegistrationRequest>(Tmf::RxMessage &aMessage)
 {
     VerifyOrExit(Get<Local>().IsEnabled());
-    HandleDuaRegistration(aMessage, aMessageInfo);
+    HandleDuaRegistration(aMessage, aMessage.GetInfo());
 
 exit:
     return;
@@ -535,14 +534,14 @@ exit:
     return error;
 }
 
-template <> void Manager::HandleTmf<kUriBackboneQuery>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Manager::HandleTmf<kUriBackboneQuery>(Tmf::RxMessage &aMessage)
 {
     Error                  error = kErrorNone;
     Ip6::Address           dua;
     uint16_t               rloc16 = Mle::kInvalidRloc16;
     NdProxyTable::NdProxy *ndProxy;
 
-    VerifyOrExit(aMessageInfo.IsHostInterface(), error = kErrorDrop);
+    VerifyOrExit(aMessage.GetInfo().IsHostInterface(), error = kErrorDrop);
 
     VerifyOrExit(Get<Local>().IsPrimary(), error = kErrorInvalidState);
     VerifyOrExit(aMessage.IsNonConfirmablePostRequest(), error = kErrorParse);
@@ -552,19 +551,19 @@ template <> void Manager::HandleTmf<kUriBackboneQuery>(Coap::Message &aMessage, 
     error = Tlv::Find<ThreadRloc16Tlv>(aMessage, rloc16);
     VerifyOrExit(error == kErrorNone || error == kErrorNotFound);
 
-    LogInfo("Received BB.qry from %s for %s (rloc16=%04x)", aMessageInfo.GetPeerAddr().ToString().AsCString(),
+    LogInfo("Received BB.qry from %s for %s (rloc16=%04x)", aMessage.GetInfo().GetPeerAddr().ToString().AsCString(),
             dua.ToString().AsCString(), rloc16);
 
     ndProxy = mNdProxyTable.ResolveDua(dua);
     VerifyOrExit(ndProxy != nullptr && !ndProxy->GetDadFlag(), error = kErrorNotFound);
 
-    error = SendBackboneAnswer(aMessageInfo, dua, rloc16, *ndProxy);
+    error = SendBackboneAnswer(aMessage.GetInfo(), dua, rloc16, *ndProxy);
 
 exit:
     LogInfo("HandleBackboneQuery: %s", ErrorToString(error));
 }
 
-template <> void Manager::HandleTmf<kUriBackboneAnswer>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Manager::HandleTmf<kUriBackboneAnswer>(Tmf::RxMessage &aMessage)
 {
     Error                    error = kErrorNone;
     bool                     proactive;
@@ -574,7 +573,7 @@ template <> void Manager::HandleTmf<kUriBackboneAnswer>(Coap::Message &aMessage,
     uint32_t                 timeSinceLastTransaction;
     uint16_t                 srcRloc16 = Mle::kInvalidRloc16;
 
-    VerifyOrExit(aMessageInfo.IsHostInterface(), error = kErrorDrop);
+    VerifyOrExit(aMessage.GetInfo().IsHostInterface(), error = kErrorDrop);
 
     VerifyOrExit(Get<Local>().IsPrimary(), error = kErrorInvalidState);
     VerifyOrExit(aMessage.IsPostRequest(), error = kErrorParse);
@@ -602,7 +601,7 @@ template <> void Manager::HandleTmf<kUriBackboneAnswer>(Coap::Message &aMessage,
         HandleExtendedBackboneAnswer(dua, meshLocalIid, timeSinceLastTransaction, srcRloc16);
     }
 
-    SuccessOrExit(error = mBackboneTmfAgent.SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(error = mBackboneTmfAgent.SendEmptyAck(aMessage, aMessage.GetInfo()));
 
 exit:
     LogInfo("HandleBackboneAnswer: %s", ErrorToString(error));

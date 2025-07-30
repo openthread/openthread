@@ -50,8 +50,7 @@ EnergyScanServer::EnergyScanServer(Instance &aInstance)
 {
 }
 
-template <>
-void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void EnergyScanServer::HandleTmf<kUriEnergyScan>(Tmf::RxMessage &aMessage)
 {
     uint8_t      count;
     uint16_t     period;
@@ -83,11 +82,11 @@ void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Message &aMessage, const 
     mScanDuration       = scanDuration;
     mTimer.Start(kScanDelay);
 
-    mCommissioner = aMessageInfo.GetPeerAddr();
+    mCommissioner = aMessage.GetInfo().GetPeerAddr();
 
-    if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
+    if (aMessage.IsConfirmable() && !aMessage.GetInfo().GetSockAddr().IsMulticast())
     {
-        SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+        SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessage.GetInfo()));
         LogInfo("Sent %s ack", UriToString<kUriEnergyScan>());
     }
 

@@ -508,7 +508,7 @@ exit:
     IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort));
 }
 
-template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Tmf::RxMessage &aMessage)
 {
     Error         error;
     Dataset::Info datasetInfo;
@@ -529,7 +529,7 @@ template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Message &aMessage, c
 
     LogInfo("Joiner successful!");
 
-    SendJoinerEntrustResponse(aMessage, aMessageInfo);
+    SendJoinerEntrustResponse(aMessage, aMessage.GetInfo());
 
     // Delay extended address configuration to allow DTLS wrap up.
     mTimer.Start(kConfigExtAddressDelay);

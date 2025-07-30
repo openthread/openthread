@@ -390,7 +390,7 @@ public:
 #endif
 
 private:
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Tmf::RxMessage &aRxMessage);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void) { DatasetManager::HandleTimer(); }
@@ -456,7 +456,7 @@ private:
     void        HandleTimer(void) { DatasetManager::HandleTimer(); }
 
     void                     HandleDelayTimer(void);
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Tmf::RxMessage &aMessage);
 
     using DelayTimer = TimerMilliIn<PendingDatasetManager, &PendingDatasetManager::HandleDelayTimer>;
 

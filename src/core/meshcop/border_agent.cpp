@@ -355,11 +355,9 @@ Coap::Message::Code BorderAgent::CoapCodeFromError(Error aError)
     return code;
 }
 
-template <> void BorderAgent::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void BorderAgent::HandleTmf<kUriRelayRx>(Tmf::RxMessage &aMessage)
 {
     // This is from TMF agent.
-
-    OT_UNUSED_VARIABLE(aMessageInfo);
 
     Coap::Message   *message = nullptr;
     Error            error   = kErrorNone;

@@ -50,10 +50,8 @@ Leader::Leader(Instance &aInstance)
 {
 }
 
-template <> void Leader::HandleTmf<kUriLeaderPetition>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Leader::HandleTmf<kUriLeaderPetition>(Tmf::RxMessage &aMessage)
 {
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     CommissioningData             data;
     CommissionerIdTlv::StringType commissionerId;
     StateTlv::State               state = StateTlv::kReject;
@@ -62,7 +60,7 @@ template <> void Leader::HandleTmf<kUriLeaderPetition>(Coap::Message &aMessage, 
 
     VerifyOrExit(Get<Mle::Mle>().IsLeader());
 
-    VerifyOrExit(Get<Mle::Mle>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
+    VerifyOrExit(Get<Mle::Mle>().IsRoutingLocator(aMessage.GetInfo().GetPeerAddr()));
 
     SuccessOrExit(Tlv::Find<CommissionerIdTlv>(aMessage, commissionerId));
 
@@ -72,7 +70,7 @@ template <> void Leader::HandleTmf<kUriLeaderPetition>(Coap::Message &aMessage, 
         ResignCommissioner();
     }
 
-    data.Init(aMessageInfo.GetPeerAddr().GetIid().GetLocator(), ++mSessionId);
+    data.Init(aMessage.GetInfo().GetPeerAddr().GetIid().GetLocator(), ++mSessionId);
     SuccessOrExit(Get<NetworkData::Leader>().SetCommissioningData(&data, data.GetLength()));
 
     IgnoreError(StringCopy(mCommissionerId, commissionerId));
@@ -81,7 +79,7 @@ template <> void Leader::HandleTmf<kUriLeaderPetition>(Coap::Message &aMessage, 
     mTimer.Start(Time::SecToMsec(kTimeoutLeaderPetition));
 
 exit:
-    SendPetitionResponse(aMessage, aMessageInfo, state);
+    SendPetitionResponse(aMessage, aMessage.GetInfo(), state);
 }
 
 void Leader::SendPetitionResponse(const Coap::Message    &aRequest,
@@ -115,7 +113,7 @@ exit:
     LogWarnOnError(error, "send petition response");
 }
 
-template <> void Leader::HandleTmf<kUriLeaderKeepAlive>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Leader::HandleTmf<kUriLeaderKeepAlive>(Tmf::RxMessage &aMessage)
 {
     uint8_t                state;
     uint16_t               sessionId;
@@ -143,7 +141,7 @@ template <> void Leader::HandleTmf<kUriLeaderKeepAlive>(Coap::Message &aMessage,
     }
     else
     {
-        uint16_t rloc = aMessageInfo.GetPeerAddr().GetIid().GetLocator();
+        uint16_t rloc = aMessage.GetInfo().GetPeerAddr().GetIid().GetLocator();
 
         if (borderAgentLocator->GetBorderAgentLocator() != rloc)
         {
@@ -155,7 +153,7 @@ template <> void Leader::HandleTmf<kUriLeaderKeepAlive>(Coap::Message &aMessage,
         mTimer.Start(Time::SecToMsec(kTimeoutLeaderPetition));
     }
 
-    SendKeepAliveResponse(aMessage, aMessageInfo, responseState);
+    SendKeepAliveResponse(aMessage, aMessage.GetInfo(), responseState);
 
 exit:
     return;

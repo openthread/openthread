@@ -219,7 +219,7 @@ void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)
     IncrementVersions(flags);
 }
 
-template <> void Leader::HandleTmf<kUriServerData>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Leader::HandleTmf<kUriServerData>(Tmf::RxMessage &aMessage)
 {
     ThreadNetworkDataTlv networkDataTlv;
     uint16_t             rloc16;
@@ -228,7 +228,7 @@ template <> void Leader::HandleTmf<kUriServerData>(Coap::Message &aMessage, cons
 
     LogInfo("Received %s", UriToString<kUriServerData>());
 
-    VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().IsRoutingLocator());
+    VerifyOrExit(aMessage.GetInfo().GetPeerAddr().GetIid().IsRoutingLocator());
 
     switch (Tlv::Find<ThreadRloc16Tlv>(aMessage, rloc16))
     {
@@ -248,11 +248,11 @@ template <> void Leader::HandleTmf<kUriServerData>(Coap::Message &aMessage, cons
         {
             NetworkData networkData(GetInstance(), networkDataTlv.GetTlvs(), networkDataTlv.GetLength());
 
-            RegisterNetworkData(aMessageInfo.GetPeerAddr().GetIid().GetLocator(), networkData);
+            RegisterNetworkData(aMessage.GetInfo().GetPeerAddr().GetIid().GetLocator(), networkData);
         }
     }
 
-    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessage.GetInfo()));
 
     LogInfo("Sent %s ack", UriToString<kUriServerData>());
 
@@ -260,7 +260,7 @@ exit:
     return;
 }
 
-template <> void Leader::HandleTmf<kUriCommissionerSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Leader::HandleTmf<kUriCommissionerSet>(Tmf::RxMessage &aMessage)
 {
     MeshCoP::StateTlv::State state = MeshCoP::StateTlv::kReject;
     uint16_t                 borderAgentRloc;
@@ -295,11 +295,11 @@ template <> void Leader::HandleTmf<kUriCommissionerSet>(Coap::Message &aMessage,
 exit:
     if (Get<Mle::Mle>().IsLeader())
     {
-        SendCommissioningSetResponse(aMessage, aMessageInfo, state);
+        SendCommissioningSetResponse(aMessage, aMessage.GetInfo(), state);
     }
 }
 
-template <> void Leader::HandleTmf<kUriCommissionerGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Leader::HandleTmf<kUriCommissionerGet>(Tmf::RxMessage &aMessage)
 {
     Error          error    = kErrorNone;
     Coap::Message *response = nullptr;
@@ -308,10 +308,10 @@ template <> void Leader::HandleTmf<kUriCommissionerGet>(Coap::Message &aMessage,
 
     response = ProcessCommissionerGetRequest(aMessage);
     VerifyOrExit(response != nullptr, error = kErrorParse);
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, aMessage.GetInfo()));
 
     LogInfo("Sent %s response to %s", UriToString<kUriCommissionerGet>(),
-            aMessageInfo.GetPeerAddr().ToString().AsCString());
+            aMessage.GetInfo().GetPeerAddr().ToString().AsCString());
 
 exit:
     LogWarnOnError(error, "send CommissionerGet response");

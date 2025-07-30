@@ -3462,7 +3462,7 @@ bool Mle::IsExpectedToBecomeRouterSoon(void) const
             mAddressSolicitPending);
 }
 
-template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Mle::HandleTmf<kUriAddressSolicit>(Tmf::RxMessage &aMessage)
 {
     Error                   error          = kErrorNone;
     ThreadStatusTlv::Status responseStatus = ThreadStatusTlv::kNoAddressAvailable;
@@ -3475,7 +3475,7 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, con
 
     VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = kErrorParse);
 
-    Log(kMessageReceive, kTypeAddressSolicit, aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeAddressSolicit, aMessage.GetInfo().GetPeerAddr());
 
     SuccessOrExit(error = Tlv::Find<ThreadExtMacAddressTlv>(aMessage, extAddress));
     SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(aMessage, status));
@@ -3556,7 +3556,7 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, con
 exit:
     if (error == kErrorNone)
     {
-        SendAddressSolicitResponse(aMessage, responseStatus, router, aMessageInfo);
+        SendAddressSolicitResponse(aMessage, responseStatus, router, aMessage.GetInfo());
     }
 }
 
@@ -3612,7 +3612,7 @@ exit:
     FreeMessage(message);
 }
 
-template <> void Mle::HandleTmf<kUriAddressRelease>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Mle::HandleTmf<kUriAddressRelease>(Tmf::RxMessage &aMessage)
 {
     uint16_t        rloc16;
     Mac::ExtAddress extAddress;
@@ -3623,7 +3623,7 @@ template <> void Mle::HandleTmf<kUriAddressRelease>(Coap::Message &aMessage, con
 
     VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
-    Log(kMessageReceive, kTypeAddressRelease, aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeAddressRelease, aMessage.GetInfo().GetPeerAddr());
 
     SuccessOrExit(Tlv::Find<ThreadRloc16Tlv>(aMessage, rloc16));
     SuccessOrExit(Tlv::Find<ThreadExtMacAddressTlv>(aMessage, extAddress));
@@ -3635,9 +3635,9 @@ template <> void Mle::HandleTmf<kUriAddressRelease>(Coap::Message &aMessage, con
 
     IgnoreError(mRouterTable.Release(routerId));
 
-    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessage.GetInfo()));
 
-    Log(kMessageSend, kTypeAddressReleaseReply, aMessageInfo.GetPeerAddr());
+    Log(kMessageSend, kTypeAddressReleaseReply, aMessage.GetInfo().GetPeerAddr());
 
 exit:
     return;

@@ -582,7 +582,7 @@ private:
     void Stop(void);
     void HandleNotifierEvents(Events aEvents);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Tmf::RxMessage &aMessage);
 
     static SecureSession *HandleAcceptSession(void *aContext, const Ip6::MessageInfo &aMessageInfo);
     CoapDtlsSession      *HandleAcceptSession(void);

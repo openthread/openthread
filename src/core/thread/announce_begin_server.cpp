@@ -52,8 +52,7 @@ void AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask, uint8_t aCount, ui
     AnnounceSenderBase::SendAnnounce(aCount);
 }
 
-template <>
-void AnnounceBeginServer::HandleTmf<kUriAnnounceBegin>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void AnnounceBeginServer::HandleTmf<kUriAnnounceBegin>(Tmf::RxMessage &aMessage)
 {
     uint32_t mask;
     uint8_t  count;
@@ -67,9 +66,9 @@ void AnnounceBeginServer::HandleTmf<kUriAnnounceBegin>(Coap::Message &aMessage, 
 
     SendAnnounce(mask, count, period);
 
-    if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
+    if (aMessage.IsConfirmable() && !aMessage.GetInfo().GetSockAddr().IsMulticast())
     {
-        SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+        SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessage.GetInfo()));
         LogInfo("Sent %s response", UriToString<kUriAnnounceBegin>());
     }
 

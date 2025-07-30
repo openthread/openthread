@@ -38,9 +38,15 @@
 
 #include "coap/coap.hpp"
 #include "coap/coap_secure.hpp"
+#include "common/const_cast.hpp"
 #include "common/locator.hpp"
 
 namespace ot {
+
+namespace BackboneRouter {
+class BackboneTmfAgent;
+}
+
 namespace Tmf {
 
 /**
@@ -48,17 +54,45 @@ namespace Tmf {
  *
  * The class `Type` MUST declare a template method of the following format:
  *
- *  template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+ *  template <Uri kUri> void HandleTmf(Tmf::RxMessage &aMessage)
  *
  * @param[in] Type      The `Type` in which the TMF handler is declared.
  * @param[in] kUri      The `Uri` which is handled.
  */
-#define DeclareTmfHandler(Type, kUri) \
-    template <> void Type::HandleTmf<kUri>(Coap::Message & aMessage, const Ip6::MessageInfo &aMessageInfo)
+#define DeclareTmfHandler(Type, kUri) template <> void Type::HandleTmf<kUri>(Tmf::RxMessage & aMessage)
 
 constexpr uint16_t kUdpPort = 61631; ///< TMF UDP Port
 
 typedef Coap::Message Message; ///< A TMF message.
+
+class Agent;
+class SecureAgent;
+
+class RxMessage : public Message
+{
+    friend class Agent;
+    friend class SecureAgent;
+    friend class ot::BackboneRouter::BackboneTmfAgent;
+
+public:
+    /**
+     * Gets the `MessageInfo` associated with this message.
+     *
+     * @returns  The associated `Ip6::MessageInfo`.
+     */
+    const Ip6::MessageInfo &GetInfo(void) const { return *static_cast<const Ip6::MessageInfo *>(Message::GetInfo()); }
+
+private:
+    void SetInfo(Ip6::MessageInfo &aMessageInfo) { Message::SetInfo(&aMessageInfo); }
+
+    static RxMessage &From(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+    {
+        RxMessage *rxMsg = static_cast<RxMessage *>(&aMessage);
+
+        rxMsg->SetInfo(AsNonConst(aMessageInfo));
+        return *rxMsg;
+    }
+};
 
 /**
  * Represents message information for a TMF message.
@@ -181,13 +215,13 @@ public:
     static Message::Priority DscpToPriority(uint8_t aDscp);
 
 private:
-    template <Uri kUri> void HandleTmf(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(RxMessage &aMessage);
 
     static bool HandleResource(CoapBase               &aCoapBase,
                                const char             *aUriPath,
                                Message                &aMessage,
                                const Ip6::MessageInfo &aMessageInfo);
-    bool        HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    bool        HandleResource(const char *aUriPath, RxMessage &aMessage);
 
     static Error Filter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 };
@@ -216,7 +250,7 @@ private:
                                const char             *aUriPath,
                                Message                &aMessage,
                                const Ip6::MessageInfo &aMessageInfo);
-    bool        HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    bool        HandleResource(const char *aUriPath, RxMessage &aMessage);
 #endif
 };
 

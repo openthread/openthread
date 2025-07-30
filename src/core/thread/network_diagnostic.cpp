@@ -553,24 +553,23 @@ exit:
     return error;
 }
 
-template <>
-void Server::HandleTmf<kUriDiagnosticGetQuery>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Server::HandleTmf<kUriDiagnosticGetQuery>(Tmf::RxMessage &aMessage)
 {
     VerifyOrExit(aMessage.IsPostRequest());
 
     LogInfo("Received %s from %s", UriToString<kUriDiagnosticGetQuery>(),
-            aMessageInfo.GetPeerAddr().ToString().AsCString());
+            aMessage.GetInfo().GetPeerAddr().ToString().AsCString());
 
     // DIAG_GET.qry may be sent as a confirmable request.
     if (aMessage.IsConfirmable())
     {
-        IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+        IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessage.GetInfo()));
     }
 
 #if OPENTHREAD_MTD
-    SendAnswer(aMessageInfo.GetPeerAddr(), aMessage);
+    SendAnswer(aMessage.GetInfo().GetPeerAddr(), aMessage);
 #elif OPENTHREAD_FTD
-    PrepareAndSendAnswers(aMessageInfo.GetPeerAddr(), aMessage);
+    PrepareAndSendAnswers(aMessage.GetInfo().GetPeerAddr(), aMessage);
 #endif
 
 exit:
@@ -948,8 +947,7 @@ exit:
 
 #endif // OPENTHREAD_FTD
 
-template <>
-void Server::HandleTmf<kUriDiagnosticGetRequest>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Server::HandleTmf<kUriDiagnosticGetRequest>(Tmf::RxMessage &aMessage)
 {
     Error          error    = kErrorNone;
     Coap::Message *response = nullptr;
@@ -957,20 +955,20 @@ void Server::HandleTmf<kUriDiagnosticGetRequest>(Coap::Message &aMessage, const 
     VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = kErrorDrop);
 
     LogInfo("Received %s from %s", UriToString<kUriDiagnosticGetRequest>(),
-            aMessageInfo.GetPeerAddr().ToString().AsCString());
+            aMessage.GetInfo().GetPeerAddr().ToString().AsCString());
 
     response = Get<Tmf::Agent>().NewResponseMessage(aMessage);
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     IgnoreError(response->SetPriority(aMessage.GetPriority()));
     SuccessOrExit(error = AppendRequestedTlvs(aMessage, *response));
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, aMessage.GetInfo()));
 
 exit:
     FreeMessageOnError(response, error);
 }
 
-template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Server::HandleTmf<kUriDiagnosticReset>(Tmf::RxMessage &aMessage)
 {
     uint16_t offset = 0;
     uint8_t  type;
@@ -979,7 +977,7 @@ template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Message &aMessage,
     VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
     LogInfo("Received %s from %s", UriToString<kUriDiagnosticReset>(),
-            aMessageInfo.GetPeerAddr().ToString().AsCString());
+            aMessage.GetInfo().GetPeerAddr().ToString().AsCString());
 
     SuccessOrExit(aMessage.Read(aMessage.GetOffset(), tlv));
 
@@ -1010,7 +1008,7 @@ template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Message &aMessage,
         }
     }
 
-    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessage.GetInfo()));
 
 exit:
     return;
@@ -1119,23 +1117,22 @@ exit:
     mGetCallback.InvokeIfSet(aResult, aMessage, aMessageInfo);
 }
 
-template <>
-void Client::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Client::HandleTmf<kUriDiagnosticGetAnswer>(Tmf::RxMessage &aMessage)
 {
     VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
     LogInfo("Received %s from %s", ot::UriToString<kUriDiagnosticGetAnswer>(),
-            aMessageInfo.GetPeerAddr().ToString().AsCString());
+            aMessage.GetInfo().GetPeerAddr().ToString().AsCString());
 
 #if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
     // Let the `MeshDiag` process the message first.
-    if (!Get<Utils::MeshDiag>().HandleDiagnosticGetAnswer(aMessage, aMessageInfo))
+    if (!Get<Utils::MeshDiag>().HandleDiagnosticGetAnswer(aMessage, aMessage.GetInfo()))
 #endif
     {
-        mGetCallback.InvokeIfSet(kErrorNone, &aMessage, &aMessageInfo);
+        mGetCallback.InvokeIfSet(kErrorNone, &aMessage, &aMessage.GetInfo());
     }
 
-    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessage.GetInfo()));
 
 exit:
     return;

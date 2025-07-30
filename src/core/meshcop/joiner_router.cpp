@@ -151,10 +151,8 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-template <> void JoinerRouter::HandleTmf<kUriRelayTx>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void JoinerRouter::HandleTmf<kUriRelayTx>(Tmf::RxMessage &aMessage)
 {
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Error                    error;
     uint16_t                 joinerPort;
     Ip6::InterfaceIdentifier joinerIid;

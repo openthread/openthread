@@ -67,22 +67,20 @@ bool BackboneTmfAgent::HandleResource(CoapBase               &aCoapBase,
                                       ot::Coap::Message      &aMessage,
                                       const Ip6::MessageInfo &aMessageInfo)
 {
-    return static_cast<BackboneTmfAgent &>(aCoapBase).HandleResource(aUriPath, aMessage, aMessageInfo);
+    return static_cast<BackboneTmfAgent &>(aCoapBase).HandleResource(aUriPath,
+                                                                     Tmf::RxMessage::From(aMessage, aMessageInfo));
 }
 
-bool BackboneTmfAgent::HandleResource(const char             *aUriPath,
-                                      ot::Coap::Message      &aMessage,
-                                      const Ip6::MessageInfo &aMessageInfo)
+bool BackboneTmfAgent::HandleResource(const char *aUriPath, Tmf::RxMessage &aMessage)
 {
     OT_UNUSED_VARIABLE(aMessage);
-    OT_UNUSED_VARIABLE(aMessageInfo);
 
     bool didHandle = true;
     Uri  uri       = UriFromPath(aUriPath);
 
-#define Case(kUri, Type)                                     \
-    case kUri:                                               \
-        Get<Type>().HandleTmf<kUri>(aMessage, aMessageInfo); \
+#define Case(kUri, Type)                       \
+    case kUri:                                 \
+        Get<Type>().HandleTmf<kUri>(aMessage); \
         break
 
     switch (uri)

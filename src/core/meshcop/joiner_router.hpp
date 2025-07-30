@@ -96,7 +96,7 @@ private:
 
     void HandleUdpReceive(Ip6::RxMessage &aMessage);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Tmf::RxMessage &aMessage);
 
     static void HandleJoinerEntrustResponse(void                *aContext,
                                             otMessage           *aMessage,

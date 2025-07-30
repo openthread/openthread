@@ -878,10 +878,9 @@ exit:
     return isValid;
 }
 
-template <>
-void ActiveDatasetManager::HandleTmf<kUriActiveGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void ActiveDatasetManager::HandleTmf<kUriActiveGet>(Tmf::RxMessage &aMessage)
 {
-    DatasetManager::HandleGet(aMessage, aMessageInfo);
+    DatasetManager::HandleGet(aMessage, aMessage.GetInfo());
 }
 
 void ActiveDatasetManager::HandleTimer(Timer &aTimer) { aTimer.Get<ActiveDatasetManager>().HandleTimer(); }
@@ -999,10 +998,9 @@ exit:
     Clear();
 }
 
-template <>
-void PendingDatasetManager::HandleTmf<kUriPendingGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void PendingDatasetManager::HandleTmf<kUriPendingGet>(Tmf::RxMessage &aMessage)
 {
-    DatasetManager::HandleGet(aMessage, aMessageInfo);
+    DatasetManager::HandleGet(aMessage, aMessage.GetInfo());
 }
 
 void PendingDatasetManager::HandleTimer(Timer &aTimer) { aTimer.Get<PendingDatasetManager>().HandleTimer(); }

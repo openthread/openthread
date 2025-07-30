@@ -90,12 +90,12 @@ public:
     void UnsubscribeMulticast(const Ip6::Address &aAddress);
 
 private:
-    static bool HandleResource(CoapBase               &aCoapBase,
-                               const char             *aUriPath,
-                               ot::Coap::Message      &aMessage,
-                               const Ip6::MessageInfo &aMessageInfo);
-    bool        HandleResource(const char *aUriPath, ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void        LogError(const char *aText, const Ip6::Address &aAddress, Error aError) const;
+    static bool  HandleResource(CoapBase               &aCoapBase,
+                                const char             *aUriPath,
+                                ot::Coap::Message      &aMessage,
+                                const Ip6::MessageInfo &aMessageInfo);
+    bool         HandleResource(const char *aUriPath, Tmf::RxMessage &aMessage);
+    void         LogError(const char *aText, const Ip6::Address &aAddress, Error aError) const;
     static Error Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 };
 

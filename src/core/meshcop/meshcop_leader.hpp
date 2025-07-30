@@ -115,7 +115,7 @@ private:
 
     void HandleTimer(void);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Tmf::RxMessage &aMessage);
 
     void SendPetitionResponse(const Coap::Message    &aRequest,
                               const Ip6::MessageInfo &aMessageInfo,
