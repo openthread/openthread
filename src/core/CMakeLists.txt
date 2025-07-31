@@ -54,6 +54,7 @@ set(COMMON_SOURCES
     api/dns_api.cpp
     api/dns_server_api.cpp
     api/error_api.cpp
+    api/ext_network_diagnostic_api.cpp
     api/heap_api.cpp
     api/history_tracker_api.cpp
     api/icmp6_api.cpp
@@ -235,6 +236,8 @@ set(COMMON_SOURCES
     thread/discover_scanner.cpp
     thread/dua_manager.cpp
     thread/energy_scan_server.cpp
+    thread/ext_network_diagnostic.cpp
+    thread/ext_network_diagnostic_types.cpp
     thread/indirect_sender.cpp
     thread/key_manager.cpp
     thread/link_metrics.cpp
