@@ -1070,6 +1070,86 @@ exit:
     return error;
 }
 
+/**
+ * @cli br rio
+ * @code
+ * br rio
+ * fd00:1234:5678::/64 prf:med
+ * fd00:abcd::/64 prf:low
+ * Done
+ * @endcode
+ * @par
+ * Gets the list of Route Information Options (RIO) that will be advertised in Router Advertisement messages.
+ * Each line shows a prefix and its associated preference.
+ */
+template <> otError Br::Process<Cmd("rio")>(Arg aArgs[])
+{
+    otError                            error = OT_ERROR_NONE;
+    otBorderRoutingPrefixTableIterator iterator;
+    otIp6Prefix                        prefix;
+    otRoutePreference                  preference;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    // Initialize iterator
+    iterator.mPtr1 = nullptr;
+    iterator.mPtr2 = nullptr;
+    iterator.mData0 = 0;
+    iterator.mData1 = 0;
+    iterator.mData2 = 0;
+    iterator.mData3 = 0;
+
+    while (otBorderRoutingGetNextAdvertisedRio(GetInstancePtr(), &iterator, &prefix, &preference) == OT_ERROR_NONE)
+    {
+        OutputIp6Prefix(prefix);
+        OutputLine(" prf:%s", PreferenceToString(preference));
+    }
+
+exit:
+    return error;
+}
+
+/**
+ * @cli br ra
+ * @code
+ * br ra
+ * enabled
+ * Done
+ * @endcode
+ * @code
+ * br ra enable
+ * Done
+ * @endcode
+ * @code
+ * br ra disable
+ * Done
+ * @endcode
+ * @cparam br ra [@ca{enable}|@ca{disable}]
+ * @par
+ * Gets or sets the Router Advertisement sending state.
+ * @sa otBorderRoutingSetRouterAdvertisementEnabled
+ * @sa otBorderRoutingIsRouterAdvertisementEnabled
+ */
+template <> otError Br::Process<Cmd("ra")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine("%s", otBorderRoutingIsRouterAdvertisementEnabled(GetInstancePtr()) ? "enabled" : "disabled");
+    }
+    else
+    {
+        bool enabled;
+
+        SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enabled));
+        otBorderRoutingSetRouterAdvertisementEnabled(GetInstancePtr(), enabled);
+    }
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
 
 /**
@@ -1117,7 +1197,6 @@ otError Br::Process(Arg aArgs[])
 #endif
         CmdEntry("disable"),
         CmdEntry("enable"),
-        CmdEntry("infraif"),
         CmdEntry("init"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
         CmdEntry("multiail"),
@@ -1135,8 +1214,10 @@ otError Br::Process(Arg aArgs[])
         CmdEntry("peers"),
 #endif
         CmdEntry("prefixtable"),
+        CmdEntry("ra"),
         CmdEntry("raoptions"),
         CmdEntry("rdnsstable"),
+        CmdEntry("rio"),
         CmdEntry("rioprf"),
         CmdEntry("routeprf"),
         CmdEntry("routers"),

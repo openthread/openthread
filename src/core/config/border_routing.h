@@ -49,7 +49,7 @@
  * Define to 1 to enable Border Routing Manager feature.
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE 0
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE 1
 #endif
 
 /**
