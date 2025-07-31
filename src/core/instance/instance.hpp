@@ -130,6 +130,7 @@
 #include "thread/discover_scanner.hpp"
 #include "thread/dua_manager.hpp"
 #include "thread/energy_scan_server.hpp"
+#include "thread/ext_network_diagnostic.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/link_metrics.hpp"
 #include "thread/link_quality.hpp"
@@ -706,6 +707,13 @@ private:
 
     VendorInfo mVendorInfo;
 
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+    ExtNetworkDiagnostic::Server mExtNetworkDiagnosticServer;
+#endif
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_CLIENT_ENABLE
+    ExtNetworkDiagnostic::Client mExtNetworkDiagnosticClient;
+#endif
+
     NetworkDiagnostic::Server mNetworkDiagnosticServer;
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
     NetworkDiagnostic::Client mNetworkDiagnosticClient;
@@ -1119,6 +1127,13 @@ template <> inline Dns::Dso &Instance::Get(void) { return mDnsDso; }
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 template <> inline Dns::Multicast::Core &Instance::Get(void) { return mMdnsCore; }
+#endif
+
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+template <> inline ExtNetworkDiagnostic::Server &Instance::Get(void) { return mExtNetworkDiagnosticServer; }
+#endif
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_CLIENT_ENABLE
+template <> inline ExtNetworkDiagnostic::Client &Instance::Get(void) { return mExtNetworkDiagnosticClient; }
 #endif
 
 template <> inline VendorInfo &Instance::Get(void) { return mVendorInfo; }

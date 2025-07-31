@@ -51,55 +51,59 @@ struct Entry
     int Compare(const char *aPath) const { return strcmp(aPath, mPath); }
 };
 
-#define UriEntryMapList(_)                                        \
-    _("a/ae", kUriAddressError, "AddrError")                      \
-    _("a/an", kUriAddressNotify, "AddrNotify")                    \
-    _("a/aq", kUriAddressQuery, "AddrQuery")                      \
-    _("a/ar", kUriAddressRelease, "AddrRelease")                  \
-    _("a/as", kUriAddressSolicit, "AddrSolicit")                  \
-    _("a/sd", kUriServerData, "ServerData")                       \
-    _("a/yl", kUriAnycastLocate, "AnycastLocate")                 \
-    _("b/ba", kUriBackboneAnswer, "BbAnswer")                     \
-    _("b/bmr", kUriBackboneMlr, "BbMlr")                          \
-    _("b/bq", kUriBackboneQuery, "BbQuery")                       \
-    _("c/ab", kUriAnnounceBegin, "AnnounceBegin")                 \
-    _("c/ag", kUriActiveGet, "ActiveGet")                         \
-    _("c/ar", kUriActiveReplace, "ActiveReplace")                 \
-    _("c/as", kUriActiveSet, "ActiveSet")                         \
-    _("c/ca", kUriCommissionerKeepAlive, "CommrKeepAlive")        \
-    _("c/cg", kUriCommissionerGet, "CommrGet")                    \
-    _("c/cp", kUriCommissionerPetition, "CommrPetition")          \
-    _("c/cs", kUriCommissionerSet, "CommrSet")                    \
-    _("c/dc", kUriDatasetChanged, "DatasetChanged")               \
-    _("c/er", kUriEnergyReport, "EnergyReport")                   \
-    _("c/es", kUriEnergyScan, "EnergyScan")                       \
-    _("c/je", kUriJoinerEntrust, "JoinerEntrust")                 \
-    _("c/jf", kUriJoinerFinalize, "JoinerFinalize")               \
-    _("c/la", kUriLeaderKeepAlive, "LeaderKeepAlive")             \
-    _("c/lp", kUriLeaderPetition, "LeaderPetition")               \
-    _("c/nj", kUriEnrollerJoinerAccept, "EnrollerJoinerAccept")   \
-    _("c/nk", kUriEnrollerKeepAlive, "EnrollerKeepAlive")         \
-    _("c/nl", kUriEnrollerJoinerRelease, "EnrollerJoinerRelease") \
-    _("c/nr", kUriEnrollerRegister, "EnrollerRegister")           \
-    _("c/ns", kUriEnrollerReportState, "EnrollerReportState")     \
-    _("c/pc", kUriPanIdConflict, "PanIdConflict")                 \
-    _("c/pg", kUriPendingGet, "PendingGet")                       \
-    _("c/pq", kUriPanIdQuery, "PanIdQuery")                       \
-    _("c/ps", kUriPendingSet, "PendingSet")                       \
-    _("c/rx", kUriRelayRx, "RelayRx")                             \
-    _("c/te", kUriTcatEnable, "TcatEnable")                       \
-    _("c/tx", kUriRelayTx, "RelayTx")                             \
-    _("c/ur", kUriProxyRx, "ProxyRx")                             \
-    _("c/ut", kUriProxyTx, "ProxyTx")                             \
-    _("d/da", kUriDiagnosticGetAnswer, "DiagGetAnswer")           \
-    _("d/dg", kUriDiagnosticGetRequest, "DiagGetRequest")         \
-    _("d/dq", kUriDiagnosticGetQuery, "DiagGetQuery")             \
-    _("d/dr", kUriDiagnosticReset, "DiagReset")                   \
-    _("h/an", kUriHistoryAnswer, "HistAnswer")                    \
-    _("h/qy", kUriHistoryQuery, "HistQuery")                      \
-    _("n/dn", kUriDuaRegistrationNotify, "DuaRegNotify")          \
-    _("n/dr", kUriDuaRegistrationRequest, "DuaRegRequest")        \
-    _("n/mr", kUriMlr, "Mlr")
+#define UriEntryMapList(_)                                            \
+    _("a/ae", kUriAddressError, "AddrError")                          \
+    _("a/an", kUriAddressNotify, "AddrNotify")                        \
+    _("a/aq", kUriAddressQuery, "AddrQuery")                          \
+    _("a/ar", kUriAddressRelease, "AddrRelease")                      \
+    _("a/as", kUriAddressSolicit, "AddrSolicit")                      \
+    _("a/sd", kUriServerData, "ServerData")                           \
+    _("a/yl", kUriAnycastLocate, "AnycastLocate")                     \
+    _("b/ba", kUriBackboneAnswer, "BbAnswer")                         \
+    _("b/bmr", kUriBackboneMlr, "BbMlr")                              \
+    _("b/bq", kUriBackboneQuery, "BbQuery")                           \
+    _("c/ab", kUriAnnounceBegin, "AnnounceBegin")                     \
+    _("c/ag", kUriActiveGet, "ActiveGet")                             \
+    _("c/ar", kUriActiveReplace, "ActiveReplace")                     \
+    _("c/as", kUriActiveSet, "ActiveSet")                             \
+    _("c/ca", kUriCommissionerKeepAlive, "CommrKeepAlive")            \
+    _("c/cg", kUriCommissionerGet, "CommrGet")                        \
+    _("c/cp", kUriCommissionerPetition, "CommrPetition")              \
+    _("c/cs", kUriCommissionerSet, "CommrSet")                        \
+    _("c/dc", kUriDatasetChanged, "DatasetChanged")                   \
+    _("c/er", kUriEnergyReport, "EnergyReport")                       \
+    _("c/es", kUriEnergyScan, "EnergyScan")                           \
+    _("c/je", kUriJoinerEntrust, "JoinerEntrust")                     \
+    _("c/jf", kUriJoinerFinalize, "JoinerFinalize")                   \
+    _("c/la", kUriLeaderKeepAlive, "LeaderKeepAlive")                 \
+    _("c/lp", kUriLeaderPetition, "LeaderPetition")                   \
+    _("c/nj", kUriEnrollerJoinerAccept, "EnrollerJoinerAccept")       \
+    _("c/nk", kUriEnrollerKeepAlive, "EnrollerKeepAlive")             \
+    _("c/nl", kUriEnrollerJoinerRelease, "EnrollerJoinerRelease")     \
+    _("c/nr", kUriEnrollerRegister, "EnrollerRegister")               \
+    _("c/ns", kUriEnrollerReportState, "EnrollerReportState")         \
+    _("c/pc", kUriPanIdConflict, "PanIdConflict")                     \
+    _("c/pg", kUriPendingGet, "PendingGet")                           \
+    _("c/pq", kUriPanIdQuery, "PanIdQuery")                           \
+    _("c/ps", kUriPendingSet, "PendingSet")                           \
+    _("c/rx", kUriRelayRx, "RelayRx")                                 \
+    _("c/te", kUriTcatEnable, "TcatEnable")                           \
+    _("c/tx", kUriRelayTx, "RelayTx")                                 \
+    _("c/ur", kUriProxyRx, "ProxyRx")                                 \
+    _("c/ut", kUriProxyTx, "ProxyTx")                                 \
+    _("d/da", kUriDiagnosticGetAnswer, "DiagGetAnswer")               \
+    _("d/dg", kUriDiagnosticGetRequest, "DiagGetRequest")             \
+    _("d/dq", kUriDiagnosticGetQuery, "DiagGetQuery")                 \
+    _("d/dr", kUriDiagnosticReset, "DiagReset")                       \
+    _("h/an", kUriHistoryAnswer, "HistAnswer")                        \
+    _("h/qy", kUriHistoryQuery, "HistQuery")                          \
+    _("n/dn", kUriDuaRegistrationNotify, "DuaRegNotify")              \
+    _("n/dr", kUriDuaRegistrationRequest, "DuaRegRequest")            \
+    _("n/mr", kUriMlr, "Mlr")                                         \
+    _("x/er", kUriExtDiagnosticEndDeviceRequest, "ExtDiagEndRequest") \
+    _("x/eu", kUriExtDiagnosticEndDeviceUpdate, "ExtDiagEndUpdate")   \
+    _("x/sr", kUriExtDiagnosticServerRequest, "ExtDiagServerRequest") \
+    _("x/su", kUriExtDiagnosticServerUpdate, "ExtDiagServerUpdate")
 
 // We use the X-Macro pattern here. The `UriEntryMapList` macro defines the
 // mapping between URI path string, its `kUri*` enum and its name string (for

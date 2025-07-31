@@ -1057,6 +1057,10 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
 
     mNeighborTable.Signal(NeighborTable::kRouterAdded, *router);
 
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+    Get<ExtNetworkDiagnostic::Server>().HandleRouterAdded(*router);
+#endif
+
     mDelayedSender.RemoveScheduledLinkRequest(*router);
 
     if (shouldUpdateRoutes)
@@ -2229,7 +2233,6 @@ void Mle::HandleChildIdRequest(RxInfo &aRxInfo)
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     child->ClearLastRxFragmentTag();
 #endif
-
     child->SetNetworkDataVersion(mLeaderData.GetDataVersion(mode.GetNetworkDataType()));
 
     // We already checked above that `tlvList` will fit in
@@ -2279,6 +2282,11 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
     TlvList                 requestedTlvList;
     ChildUpdateResponseInfo info;
     bool                    childDidChange = false;
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+    ExtNetworkDiagnostic::TlvSet diagTlvs;
+
+    diagTlvs.Set(ExtNetworkDiagnostic::Tlv::kLastHeard);
+#endif
 
     Log(kMessageReceive, kTypeChildUpdateRequestOfChild, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -2344,6 +2352,10 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
     {
     case kErrorNone:
         info.mTlvList.Add(Tlv::kAddressRegistration);
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+        diagTlvs.Set(ExtNetworkDiagnostic::Tlv::kIp6AddressList);
+        diagTlvs.Set(ExtNetworkDiagnostic::Tlv::kAlocList);
+#endif
         break;
     case kErrorNotFound:
         break;
@@ -2369,6 +2381,10 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         {
             child->SetTimeout(timeout);
             childDidChange = true;
+
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+            diagTlvs.Set(ExtNetworkDiagnostic::Tlv::kTimeout);
+#endif
         }
 
         info.mTlvList.Add(Tlv::kTimeout);
@@ -2421,6 +2437,9 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
             child->SetCslTimeout(cslTimeout);
             // MUST include CSL accuracy TLV when request includes CSL timeout
             info.mTlvList.Add(Tlv::kCslClockAccuracy);
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+            diagTlvs.Set(ExtNetworkDiagnostic::Tlv::kCsl);
+#endif
             break;
         case kErrorNotFound:
             break;
@@ -2433,6 +2452,9 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
             // Special value of zero is used to indicate that
             // CSL channel is not specified.
             child->SetCslChannel(static_cast<uint8_t>(cslChannelTlvValue.GetChannel()));
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+            diagTlvs.Set(ExtNetworkDiagnostic::Tlv::kCsl);
+#endif
         }
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -2460,6 +2482,10 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         // are added to the child.
 
         Get<IndirectSender>().HandleChildModeChange(*child, oldMode);
+
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+        diagTlvs.Set(ExtNetworkDiagnostic::Tlv::kMode);
+#endif
     }
 
     if (childDidChange)
@@ -2479,6 +2505,10 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
 #endif
 
     SendChildUpdateResponseToChild(child, info);
+
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+    Get<ExtNetworkDiagnostic::Server>().MarkChildDiagDirty(*child, diagTlvs);
+#endif
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
 
@@ -3267,6 +3297,9 @@ void Mle::RemoveNeighbor(Neighbor &aNeighbor)
         if (aNeighbor.IsStateValidOrRestoring())
         {
             mNeighborTable.Signal(NeighborTable::kChildRemoved, aNeighbor);
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+            Get<ExtNetworkDiagnostic::Server>().HandleChildRemoved(static_cast<Child &>(aNeighbor));
+#endif
         }
 
         Get<IndirectSender>().ClearAllMessagesForSleepyChild(static_cast<Child &>(aNeighbor));
@@ -3413,6 +3446,10 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
 
     SuccessOrExit(Tlv::Find<ThreadRouterMaskTlv>(aMsg->mMessage, routerIdMask));
     VerifyOrExit(routerIdMask.IsValid());
+
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+    Get<ExtNetworkDiagnostic::Server>().HandleDetach();
+#endif
 
     SetAlternateRloc16(GetRloc16());
 
@@ -3909,6 +3946,10 @@ void Mle::SetChildStateToValid(Child &aChild)
 #endif
 
     mNeighborTable.Signal(NeighborTable::kChildAdded, aChild);
+
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+    Get<ExtNetworkDiagnostic::Server>().HandleChildAdded(aChild);
+#endif
 
 exit:
     return;

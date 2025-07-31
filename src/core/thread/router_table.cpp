@@ -112,6 +112,10 @@ void RouterTable::RemoveRouter(Router &aRouter)
     if (aRouter.IsStateValid())
     {
         Get<NeighborTable>().Signal(NeighborTable::kRouterRemoved, aRouter);
+
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+        Get<ExtNetworkDiagnostic::Server>().HandleRouterRemoved(aRouter);
+#endif
     }
 
     mRouterIdMap.Release(aRouter.GetRouterId());
@@ -248,6 +252,10 @@ void RouterTable::RemoveRouterLink(Router &aRouter)
         aRouter.SetLinkQualityOut(kLinkQuality0);
         aRouter.SetLastHeard(TimerMilli::GetNow());
         SignalTableChanged(kEventLinkQualityOutChanged);
+
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+        Get<ExtNetworkDiagnostic::Server>().HandleRouterRemoved(aRouter);
+#endif
     }
 
     for (Router &router : mRouters)

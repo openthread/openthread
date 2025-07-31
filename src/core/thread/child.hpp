@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/bit_set.hpp"
+#include "thread/ext_network_diagnostic.hpp"
 #include "thread/neighbor.hpp"
 
 namespace ot {
@@ -51,6 +52,10 @@ namespace ot {
  * Represents a Thread Child.
  */
 class Child : public CslNeighbor
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+    ,
+              public ExtNetworkDiagnostic::Server::ChildInfo
+#endif
 {
 public:
     static constexpr uint8_t kMaxRequestTlvs = 6;
