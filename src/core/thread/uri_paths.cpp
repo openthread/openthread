@@ -96,6 +96,10 @@ static constexpr Entry kEntries[] = {
     {"n/dn"},  // kUriDuaRegistrationNotify
     {"n/dr"},  // kUriDuaRegistrationRequest
     {"n/mr"},  // kUriMlr
+    {"x/er"},  // kUriExtDiagnosticEndDeviceRequest
+    {"x/eu"},  // kUriExtDiagnosticEndDeviceUpdate
+    {"x/sr"},  // kUriExtDiagnosticServerRequest
+    {"x/su"},  // kUriExtDiagnosticServerUpdate
 };
 
 static_assert(BinarySearch::IsSorted(kEntries), "kEntries is not sorted");
@@ -144,6 +148,10 @@ static_assert(AreConstStringsEqual(kEntries[kUriHistoryQuery].mPath, "h/qy"), "k
 static_assert(AreConstStringsEqual(kEntries[kUriDuaRegistrationNotify].mPath, "n/dn"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriDuaRegistrationRequest].mPath, "n/dr"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriMlr].mPath, "n/mr"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriExtDiagnosticEndDeviceRequest].mPath, "x/er"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriExtDiagnosticEndDeviceUpdate].mPath, "x/eu"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriExtDiagnosticServerRequest].mPath, "x/sr"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriExtDiagnosticServerUpdate].mPath, "x/su"), "kEntries is invalid");
 
 } // namespace UriList
 
@@ -209,5 +217,9 @@ template <> const char *UriToString<kUriHistoryQuery>(void) { return "HistQuery"
 template <> const char *UriToString<kUriDuaRegistrationNotify>(void) { return "DuaRegNotify"; }
 template <> const char *UriToString<kUriDuaRegistrationRequest>(void) { return "DuaRegRequest"; }
 template <> const char *UriToString<kUriMlr>(void) { return "Mlr"; }
+template <> const char *UriToString<kUriExtDiagnosticEndDeviceRequest>(void) { return "ExtDiagEndRequest"; }
+template <> const char *UriToString<kUriExtDiagnosticEndDeviceUpdate>(void) { return "ExtDiagEndUpdate"; }
+template <> const char *UriToString<kUriExtDiagnosticServerRequest>(void) { return "ExtDiagServerRequest"; }
+template <> const char *UriToString<kUriExtDiagnosticServerUpdate>(void) { return "ExtDiagServerUpdate"; }
 
 } // namespace ot

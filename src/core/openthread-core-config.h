@@ -82,6 +82,7 @@
 #include "config/dns_client.h"
 #include "config/dns_dso.h"
 #include "config/dnssd_server.h"
+#include "config/ext_network_diagnostic.h"
 #include "config/history_tracker.h"
 #include "config/ip6.h"
 #include "config/joiner.h"

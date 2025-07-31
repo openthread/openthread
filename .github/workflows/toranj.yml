@@ -228,6 +228,8 @@ jobs:
       run: |
         ./tests/nexus/build.sh
         ninja test
+        ninja nexus_ext_network_diagnostic
+        ./tests/nexus/nexus_ext_network_diagnostic
         git clean -dfx
         ./tests/nexus/build.sh trel
         ./tests/nexus/nexus_trel

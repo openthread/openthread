@@ -522,6 +522,10 @@ Error Mle::BecomeDetached(void)
 
     VerifyOrExit(!IsDisabled(), error = kErrorInvalidState);
 
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+    Get<ExtNetworkDiagnostic::Server>().HandleDetach();
+#endif
+
     if (IsDetached() && mAttacher.WillStartAttachSoon())
     {
         // Already detached and waiting to start an attach attempt, so
