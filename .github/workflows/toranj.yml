@@ -206,6 +206,34 @@ jobs:
       run: |
         ./tests/toranj/build.sh posix-15.4
 
+  nexus:
+    name: nexus
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+    - name: Bootstrap
+      env:
+        PR_BODY: "${{ github.event.pull_request.body }}"
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y ninja-build lcov
+    - name: Build & Run
+      run: |
+        ./tests/nexus/build.sh
+        ninja test
+        ninja nexus_ext_network_diagnostic
+        ./tests/nexus/nexus_ext_network_diagnostic
+        git clean -dfx
+        ./tests/nexus/build.sh trel
+        ./tests/nexus/nexus_trel
+
   upload-coverage:
     needs:
     - toranj-cli
