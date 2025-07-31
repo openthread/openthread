@@ -65,6 +65,7 @@
 #include "cli/cli_config.h"
 #include "cli/cli_dataset.hpp"
 #include "cli/cli_dns.hpp"
+#include "cli/cli_ext_network_diagnostic.hpp"
 #include "cli/cli_history.hpp"
 #include "cli/cli_joiner.hpp"
 #include "cli/cli_link_metrics.hpp"
@@ -424,6 +425,10 @@ private:
     MeshDiag mMeshDiag;
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_CLIENT_ENABLE && OPENTHREAD_FTD
+    ExtNetworkDiagnosticClient mExtNetworkDiagnosticClient;
+#endif
 
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
     bool mLocateInProgress : 1;

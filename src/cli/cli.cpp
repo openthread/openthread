@@ -66,6 +66,9 @@
 #include "common/numeric_limits.hpp"
 #include "common/string.hpp"
 #include "mac/channel_mask.hpp"
+#include "openthread/ext_network_diagnostic.h"
+#include "openthread/platform/toolchain.h"
+#include "thread/ext_network_diagnostic_types.hpp"
 
 namespace ot {
 namespace Cli {
@@ -139,6 +142,9 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #endif
 #if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
     , mMeshDiag(aInstance, *this)
+#endif
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_CLIENT_ENABLE && OPENTHREAD_FTD
+    , mExtNetworkDiagnosticClient(aInstance, *this)
 #endif
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
     , mLocateInProgress(false)
@@ -216,6 +222,13 @@ void Interpreter::HandleDiagOutput(const char *aFormat, va_list aArguments)
     {
         OutputFormatV(aFormat, aArguments);
     }
+}
+#endif
+
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_CLIENT_ENABLE && OPENTHREAD_FTD
+template <> otError Interpreter::Process<Cmd("extnetdiag")>(Arg aArgs[])
+{
+    return mExtNetworkDiagnosticClient.Process(aArgs);
 }
 #endif
 
@@ -8307,6 +8320,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
         CmdEntry("eui64"),
         CmdEntry("extaddr"),
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_CLIENT_ENABLE && OPENTHREAD_FTD
+        CmdEntry("extnetdiag"),
+#endif
         CmdEntry("extpanid"),
         CmdEntry("factoryreset"),
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE

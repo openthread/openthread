@@ -167,6 +167,12 @@ Instance::Instance(void)
     , mNetworkDataPublisher(*this)
 #endif
     , mNetworkDataServiceManager(*this)
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+    , mExtNetworkDiagnosticServer(*this)
+#endif
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_CLIENT_ENABLE
+    , mExtNetworkDiagnosticClient(*this)
+#endif
     , mNetworkDiagnosticServer(*this)
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
     , mNetworkDiagnosticClient(*this)
