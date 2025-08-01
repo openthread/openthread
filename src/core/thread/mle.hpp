@@ -990,7 +990,7 @@ public:
      * @retval TRUE   If the REED is going to become a Router soon.
      * @retval FALSE  If the REED is not going to become a Router soon.
      */
-    bool IsExpectedToBecomeRouterSoon(void) const;
+    bool WillBecomeRouterSoon(void) const;
 
     /**
      * Removes a link to a neighbor.
