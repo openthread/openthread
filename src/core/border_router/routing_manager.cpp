@@ -3707,18 +3707,17 @@ exit:
     return error;
 }
 
-Error RoutingManager::RioAdvertiser::GetNextAdvertisedRio(PrefixTableIterator &aIterator,
+Error RoutingManager::RioAdvertiser::GetNextAdvertisedRio(uint16_t &index,
                                                           Ip6::Prefix         &aPrefix,
                                                           RoutePreference     &aPreference) const
 {
     Error    error = kErrorNone;
-    uint16_t index = static_cast<uint16_t>(aIterator.mData0);
 
     VerifyOrExit(index < mPrefixes.GetLength(), error = kErrorNotFound);
 
     aPrefix     = mPrefixes[index].mPrefix;
     aPreference = mPrefixes[index].mIsDeprecating ? NetworkData::kRoutePreferenceLow : mPreference;
-    aIterator.mData0 = index + 1;
+    index += 1;
 
 exit:
     return error;

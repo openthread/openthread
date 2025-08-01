@@ -825,7 +825,7 @@ uint16_t otBorderRoutingGetAdvertisedRioCount(otInstance *aInstance);
  * Iterates over the Route Information Options (RIO) that will be advertised in Router Advertisement messages.
  *
  * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[in,out] aIterator  A pointer to the iterator.
+ * @param[in,out] aIndex     A pointer to the index of the RIO entry to return. 
  * @param[out]    aPrefix    A pointer to return the RIO prefix.
  * @param[out]    aPreference A pointer to return the RIO preference.
  *
@@ -833,7 +833,7 @@ uint16_t otBorderRoutingGetAdvertisedRioCount(otInstance *aInstance);
  * @retval OT_ERROR_NOT_FOUND   No more RIO entries.
  */
 otError otBorderRoutingGetNextAdvertisedRio(otInstance                         *aInstance,
-                                            otBorderRoutingPrefixTableIterator *aIterator,
+                                            uint16_t                           *aIndex,
                                             otIp6Prefix                        *aPrefix,
                                             otRoutePreference                  *aPreference);
 

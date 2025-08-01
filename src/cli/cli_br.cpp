@@ -1085,21 +1085,13 @@ exit:
 template <> otError Br::Process<Cmd("rio")>(Arg aArgs[])
 {
     otError                            error = OT_ERROR_NONE;
-    otBorderRoutingPrefixTableIterator iterator;
     otIp6Prefix                        prefix;
     otRoutePreference                  preference;
+    uint16_t                           index = 0;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-    // Initialize iterator
-    iterator.mPtr1 = nullptr;
-    iterator.mPtr2 = nullptr;
-    iterator.mData0 = 0;
-    iterator.mData1 = 0;
-    iterator.mData2 = 0;
-    iterator.mData3 = 0;
-
-    while (otBorderRoutingGetNextAdvertisedRio(GetInstancePtr(), &iterator, &prefix, &preference) == OT_ERROR_NONE)
+    while (otBorderRoutingGetNextAdvertisedRio(GetInstancePtr(), &index, &prefix, &preference) == OT_ERROR_NONE)
     {
         OutputIp6Prefix(prefix);
         OutputLine(" prf:%s", PreferenceToString(preference));

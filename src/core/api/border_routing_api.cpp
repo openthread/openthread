@@ -333,17 +333,19 @@ uint16_t otBorderRoutingGetAdvertisedRioCount(otInstance *aInstance)
 }
 
 otError otBorderRoutingGetNextAdvertisedRio(otInstance                         *aInstance,
-                                            otBorderRoutingPrefixTableIterator *aIterator,
+                                            uint16_t                           *aIndex,
                                             otIp6Prefix                        *aPrefix,
                                             otRoutePreference                  *aPreference)
 {
-    AssertPointerIsNotNull(aIterator);
+    otError error;
+    BorderRouter::RoutingManager::RoutePreference preference;
+
+    AssertPointerIsNotNull(aIndex);
     AssertPointerIsNotNull(aPrefix);
     AssertPointerIsNotNull(aPreference);
 
-    BorderRouter::RoutingManager::RoutePreference preference;
-    otError error = AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextAdvertisedRio(
-        *aIterator, AsCoreType(aPrefix), preference);
+    error = (aInstance).Get<BorderRouter::RoutingManager>().GetNextAdvertisedRio(
+        *aIndex, AsCoreType(aPrefix), preference);
     
     if (error == OT_ERROR_NONE)
     {
