@@ -87,14 +87,21 @@ public:
      * An iterator MUST be initialized before it is used. An iterator can be initialized again to start from
      * the beginning of the list.
      */
-    void Init(void) { ResetEntryNumber(), SetInitTime(); }
+    void Init(void) { Init(TimerMilli::GetNow()); }
+
+    /**
+     * Initializes an `Iterator`
+     *
+     * @param[in] aNow  The now time.
+     */
+    void Init(TimeMilli aNow) { ResetEntryNumber(), SetInitTime(aNow); }
 
 private:
     uint16_t  GetEntryNumber(void) const { return mData16; }
     void      ResetEntryNumber(void) { mData16 = 0; }
     void      IncrementEntryNumber(void) { mData16++; }
     TimeMilli GetInitTime(void) const { return TimeMilli(mData32); }
-    void      SetInitTime(void) { mData32 = TimerMilli::GetNow().GetValue(); }
+    void      SetInitTime(TimeMilli aNow) { mData32 = aNow.GetValue(); }
 };
 
 typedef otHistoryTrackerNetworkInfo          NetworkInfo;          ///< Thread network info.

@@ -172,6 +172,13 @@ bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::M
         Case(kUriDiagnosticGetAnswer, NetworkDiagnostic::Client);
 #endif
 
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+        Case(kUriHistoryQuery, HistoryTracker::Server);
+#endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+        Case(kUriHistoryAnswer, HistoryTracker::Client);
+#endif
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
         Case(kUriMlr, BackboneRouter::Manager);
