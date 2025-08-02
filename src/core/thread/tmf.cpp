@@ -181,6 +181,17 @@ bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::M
 #endif
 #endif
 
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_DIAG_SERVER_ENABLE
+        Case(kUriDiagnosticEndDeviceRequest, DiagnosticServer::Server);
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_DIAG_SERVER_ENABLE
+        Case(kUriDiagnosticEndDeviceUpdate, DiagnosticServer::Server);
+        Case(kUriDiagnosticServerRequest, DiagnosticServer::Server);
+#endif
+#if OPENTHREAD_CONFIG_DIAG_CLIENT_ENABLE
+        Case(kUriDiagnosticServerUpdate, DiagnosticServer::Client);
+#endif
+
     default:
         didHandle = false;
         break;

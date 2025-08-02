@@ -992,6 +992,18 @@ public:
     }
 
     /**
+     * Resizes a region of the message moving the bytes after the region appropriately and resizing the message.
+     *
+     * @param[in]  aOffset     Byte offset to the start of the region within the message.
+     * @param[in]  aOldLength  Length of the region in the message in bytes.
+     * @param[in]  aNewLength  Length of the resized region in bytes.
+     *
+     * @retval kErrorNone    Successfully resized the region.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
+     */
+    Error ResizeRegion(uint16_t aOffset, uint16_t aOldLength, uint16_t aNewLength);
+
+    /**
      * Writes bytes to the message.
      *
      * Will not resize the message. The given data to write (with @p aLength bytes) MUST fit within the

@@ -47,6 +47,7 @@ set(COMMON_SOURCES
     api/dataset_api.cpp
     api/dataset_ftd_api.cpp
     api/dataset_updater_api.cpp
+    api/diag_server_api.cpp
     api/diags_api.cpp
     api/dns_api.cpp
     api/dns_server_api.cpp
@@ -215,6 +216,8 @@ set(COMMON_SOURCES
     thread/child_supervision.cpp
     thread/child_table.cpp
     thread/csl_tx_scheduler.cpp
+    thread/diagnostic_server.cpp
+    thread/diagnostic_server_types.cpp
     thread/discover_scanner.cpp
     thread/dua_manager.cpp
     thread/energy_scan_server.cpp
