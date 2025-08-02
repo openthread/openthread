@@ -3933,35 +3933,34 @@ const char *Mle::MessageActionToString(MessageAction aAction)
 const char *Mle::MessageTypeToString(MessageType aType)
 {
     static const char *const kMessageTypeStrings[] = {
-        "Advertisement",         // (0)  kTypeAdvertisement
-        "Announce",              // (1)  kTypeAnnounce
-        "Child ID Request",      // (2)  kTypeChildIdRequest
-        "Child ID Request",      // (3)  kTypeChildIdRequestShort
-        "Child ID Response",     // (4)  kTypeChildIdResponse
-        "Child Update Request",  // (5)  kTypeChildUpdateRequestAsChild
-        "Child Update Response", // (6)  kTypeChildUpdateResponseAsChild
-        "Data Request",          // (7)  kTypeDataRequest
-        "Data Response",         // (8)  kTypeDataResponse
-        "Discovery Request",     // (9)  kTypeDiscoveryRequest
-        "Discovery Response",    // (10) kTypeDiscoveryResponse
-        "delayed message",       // (11) kTypeGenericDelayed
-        "UDP",                   // (12) kTypeGenericUdp
-        "Parent Request",        // (13) kTypeParentRequestToRouters
-        "Parent Request",        // (14) kTypeParentRequestToRoutersReeds
-        "Parent Response",       // (15) kTypeParentResponse
+        "Advertisement",         // kTypeAdvertisement
+        "Announce",              // kTypeAnnounce
+        "Child ID Request",      // kTypeChildIdRequest
+        "Child ID Request",      // kTypeChildIdRequestShort
+        "Child ID Response",     // kTypeChildIdResponse
+        "Child Update Request",  // kTypeChildUpdateRequestAsChild
+        "Child Update Response", // kTypeChildUpdateResponseAsChild
+        "Data Request",          // kTypeDataRequest
+        "Data Response",         // kTypeDataResponse
+        "Discovery Request",     // kTypeDiscoveryRequest
+        "Discovery Response",    // kTypeDiscoveryResponse
+        "delayed message",       // kTypeGenericDelayed
+        "UDP",                   // kTypeGenericUdp
+        "Parent Request",        // kTypeParentRequestToRouters
+        "Parent Request",        // kTypeParentRequestToRoutersReeds
+        "Parent Response",       // kTypeParentResponse
 #if OPENTHREAD_FTD
-        "Address Release",         // (16) kTypeAddressRelease
-        "Address Release Reply",   // (17) kTypeAddressReleaseReply
-        "Address Reply",           // (18) kTypeAddressReply
-        "Address Solicit",         // (19) kTypeAddressSolicit
-        "Child Update Request",    // (20) kTypeChildUpdateRequestOfChild
-        "Child Update Response",   // (21) kTypeChildUpdateResponseOfChild
-        "Child Update Response",   // (22) kTypeChildUpdateResponseOfUnknownChild
-        "Link Accept",             // (23) kTypeLinkAccept
-        "Link Accept and Request", // (24) kTypeLinkAcceptAndRequest
-        "Link Reject",             // (25) kTypeLinkReject
-        "Link Request",            // (26) kTypeLinkRequest
-        "Parent Request",          // (27) kTypeParentRequest
+        "Address Release",         // kTypeAddressRelease
+        "Address Reply",           // kTypeAddressReply
+        "Address Solicit",         // kTypeAddressSolicit
+        "Child Update Request",    // kTypeChildUpdateRequestOfChild
+        "Child Update Response",   // kTypeChildUpdateResponseOfChild
+        "Child Update Response",   // kTypeChildUpdateResponseOfUnknownChild
+        "Link Accept",             // kTypeLinkAccept
+        "Link Accept and Request", // kTypeLinkAcceptAndRequest
+        "Link Reject",             // kTypeLinkReject
+        "Link Request",            // kTypeLinkRequest
+        "Parent Request",          // kTypeParentRequest
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         "Link Metrics Management Request",  // (28) kTypeLinkMetricsManagementRequest
@@ -3994,7 +3993,6 @@ const char *Mle::MessageTypeToString(MessageType aType)
         ValidateNextEnum(kTypeParentResponse);
 #if OPENTHREAD_FTD
         ValidateNextEnum(kTypeAddressRelease);
-        ValidateNextEnum(kTypeAddressReleaseReply);
         ValidateNextEnum(kTypeAddressReply);
         ValidateNextEnum(kTypeAddressSolicit);
         ValidateNextEnum(kTypeChildUpdateRequestOfChild);
