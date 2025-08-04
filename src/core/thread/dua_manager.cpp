@@ -612,7 +612,7 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
 
     if (aMessage.GetCode() >= Coap::kCodeBadRequest)
     {
-        status = ThreadStatusTlv::kDuaGeneralFailure;
+        status = kDuaGeneralFailure;
         target = mRegisteringDua;
     }
     else
@@ -626,29 +626,29 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     if (Get<ThreadNetif>().HasUnicastAddress(target))
     {
-        switch (static_cast<ThreadStatusTlv::DuaStatus>(status))
+        switch (static_cast<DuaStatus>(status))
         {
-        case ThreadStatusTlv::kDuaSuccess:
+        case kDuaSuccess:
             mLastRegistrationTime = TimerMilli::GetNow();
             mDuaState             = kRegistered;
             break;
-        case ThreadStatusTlv::kDuaReRegister:
+        case kDuaReRegister:
             if (Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()))
             {
                 RemoveDomainUnicastAddress();
                 AddDomainUnicastAddress();
             }
             break;
-        case ThreadStatusTlv::kDuaInvalid:
+        case kDuaInvalid:
             // Domain Prefix might be invalid.
             RemoveDomainUnicastAddress();
             break;
-        case ThreadStatusTlv::kDuaDuplicate:
+        case kDuaDuplicate:
             NotifyDuplicateDomainUnicastAddress();
             break;
-        case ThreadStatusTlv::kDuaNoResources:
-        case ThreadStatusTlv::kDuaNotPrimary:
-        case ThreadStatusTlv::kDuaGeneralFailure:
+        case kDuaNoResources:
+        case kDuaNotPrimary:
+        case kDuaGeneralFailure:
             UpdateReregistrationDelay();
             break;
         }
@@ -675,34 +675,34 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
 
         switch (status)
         {
-        case ThreadStatusTlv::kDuaSuccess:
+        case kDuaSuccess:
             // Mark as Registered
             if (mChildDuaMask.Has(childIndex))
             {
                 mChildDuaRegisteredMask.Add(childIndex);
             }
             break;
-        case ThreadStatusTlv::kDuaReRegister:
+        case kDuaReRegister:
             // Parent stops registering for the Child's DUA until next Child Update Request
             mChildDuaMask.Remove(childIndex);
             mChildDuaRegisteredMask.Remove(childIndex);
             break;
-        case ThreadStatusTlv::kDuaInvalid:
-        case ThreadStatusTlv::kDuaDuplicate:
+        case kDuaInvalid:
+        case kDuaDuplicate:
             IgnoreError(child->RemoveIp6Address(target));
             mChildDuaMask.Remove(childIndex);
             mChildDuaRegisteredMask.Remove(childIndex);
             break;
-        case ThreadStatusTlv::kDuaNoResources:
-        case ThreadStatusTlv::kDuaNotPrimary:
-        case ThreadStatusTlv::kDuaGeneralFailure:
+        case kDuaNoResources:
+        case kDuaNotPrimary:
+        case kDuaGeneralFailure:
             UpdateReregistrationDelay();
             break;
         }
 
-        if (status != ThreadStatusTlv::kDuaSuccess)
+        if (status != kDuaSuccess)
         {
-            SendAddressNotification(target, static_cast<ThreadStatusTlv::DuaStatus>(status), *child);
+            SendAddressNotification(target, static_cast<DuaStatus>(status), *child);
         }
     }
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
@@ -713,9 +713,7 @@ exit:
 }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-void DuaManager::SendAddressNotification(Ip6::Address              &aAddress,
-                                         ThreadStatusTlv::DuaStatus aStatus,
-                                         const Child               &aChild)
+void DuaManager::SendAddressNotification(Ip6::Address &aAddress, DuaStatus aStatus, const Child &aChild)
 {
     Coap::Message   *message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());

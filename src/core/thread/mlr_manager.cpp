@@ -444,9 +444,9 @@ void MlrManager::HandleMlrResponse(Coap::Message *aMessage, const Ip6::MessageIn
 
     error = ParseMlrResponse(aResult, aMessage, status, failedAddresses);
 
-    FinishMlr(error == kErrorNone && status == ThreadStatusTlv::kMlrSuccess, failedAddresses);
+    FinishMlr(error == kErrorNone && status == kMlrSuccess, failedAddresses);
 
-    if (error == kErrorNone && status == ThreadStatusTlv::kMlrSuccess)
+    if (error == kErrorNone && status == kMlrSuccess)
     {
         // keep sending until all multicast addresses are registered.
         ScheduleSend(0);
@@ -477,7 +477,7 @@ Error MlrManager::ParseMlrResponse(Error          aResult,
     Error       error;
     OffsetRange offsetRange;
 
-    aStatus = ThreadStatusTlv::kMlrGeneralFailure;
+    aStatus = kMlrGeneralFailure;
 
     VerifyOrExit(aResult == kErrorNone && aMessage != nullptr, error = kErrorParse);
     VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged, error = kErrorParse);
@@ -497,7 +497,7 @@ Error MlrManager::ParseMlrResponse(Error          aResult,
         }
     }
 
-    VerifyOrExit(aFailedAddresses.IsEmpty() || aStatus != ThreadStatusTlv::kMlrSuccess, error = kErrorParse);
+    VerifyOrExit(aFailedAddresses.IsEmpty() || aStatus != kMlrSuccess, error = kErrorParse);
 
 exit:
     LogMlrResponse(aResult, error, aStatus, aFailedAddresses);
@@ -697,7 +697,7 @@ void MlrManager::LogMlrResponse(Error aResult, Error aError, uint8_t aStatus, co
     OT_UNUSED_VARIABLE(aFailedAddresses);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-    if (aResult == kErrorNone && aError == kErrorNone && aStatus == ThreadStatusTlv::kMlrSuccess)
+    if (aResult == kErrorNone && aError == kErrorNone && aStatus == kMlrSuccess)
     {
         LogInfo("Receive MLR.rsp OK");
     }

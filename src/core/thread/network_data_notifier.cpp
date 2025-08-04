@@ -361,7 +361,7 @@ void Notifier::HandleTimeTick(void)
         {
             LogInfo("Requesting router role as BR");
             mDidRequestRouterRoleUpgrade = true;
-            IgnoreError(Get<Mle::Mle>().BecomeRouter(ThreadStatusTlv::kBorderRouterRequest));
+            IgnoreError(Get<Mle::Mle>().BecomeRouter(Mle::kReasonBorderRouterRequest));
         }
     }
 exit:

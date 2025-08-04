@@ -783,13 +783,13 @@ public:
     /**
      * Generates an Address Solicit request for a Router ID.
      *
-     * @param[in]  aStatus  The reason for requesting a Router ID.
+     * @param[in]  aReason  The reason for requesting a Router ID.
      *
      * @retval kErrorNone           Successfully generated an Address Solicit message.
      * @retval kErrorNotCapable     Device is not capable of becoming a router
      * @retval kErrorInvalidState   Thread is not enabled
      */
-    Error BecomeRouter(ThreadStatusTlv::Status aStatus);
+    Error BecomeRouter(RouterUpgradeReason aReason);
 
     /**
      * Specifies the leader weight check behavior used in `BecomeLeader()`.
@@ -1370,6 +1370,13 @@ private:
     {
         kSendChildUpdateToParent,
         kDoNotSendChildUpdateToParent,
+    };
+
+    enum AddrSolicitResponse : uint8_t // Used in `SendAddressSolicitResponse`
+    {
+        kAddrSolicitSuccess            = 0,
+        kAddrSolicitNoAddressAvailable = 1,
+        kAddrSolicitUnrecognizedReason = 6,
     };
 
     enum MessageAction : uint8_t
@@ -2173,9 +2180,9 @@ private:
     Error    ReadAndProcessRouteTlvOnFtdChild(RxInfo &aRxInfo, uint8_t aParentId);
     void     StopAdvertiseTrickleTimer(void);
     uint32_t DetermineAdvertiseIntervalMax(void) const;
-    Error    SendAddressSolicit(ThreadStatusTlv::Status aStatus);
+    Error    SendAddressSolicit(RouterUpgradeReason aReason);
     void     SendAddressSolicitResponse(const Coap::Message    &aRequest,
-                                        ThreadStatusTlv::Status aResponseStatus,
+                                        AddrSolicitResponse     aResponseStatus,
                                         const Router           *aRouter,
                                         const Ip6::MessageInfo &aMessageInfo);
     void     SendAddressRelease(void);
