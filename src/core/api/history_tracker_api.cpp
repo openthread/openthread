@@ -153,6 +153,7 @@ const otHistoryTrackerBorderAgentEpskcEvent *otHistoryTrackerIterateBorderAgentE
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
 const otHistoryTrackerFavoredOmrPrefix *otHistoryTrackerIterateFavoredOmrPrefixHistory(
     otInstance               *aInstance,
     otHistoryTrackerIterator *aIterator,
@@ -163,6 +164,18 @@ const otHistoryTrackerFavoredOmrPrefix *otHistoryTrackerIterateFavoredOmrPrefixH
     return AsCoreType(aInstance).Get<HistoryTracker::Local>().IterateFavoredOmrPrefixHistory(AsCoreType(aIterator),
                                                                                              *aEntryAge);
 }
+
+const otHistoryTrackerFavoredOnLinkPrefix *otHistoryTrackerIterateFavoredOnLinkPrefixHistory(
+    otInstance               *aInstance,
+    otHistoryTrackerIterator *aIterator,
+    uint32_t                 *aEntryAge)
+{
+    AssertPointerIsNotNull(aEntryAge);
+
+    return AsCoreType(aInstance).Get<HistoryTracker::Local>().IterateFavoredOnLinkPrefixHistory(AsCoreType(aIterator),
+                                                                                                *aEntryAge);
+}
+
 #endif
 
 void otHistoryTrackerEntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize)

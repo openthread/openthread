@@ -17,6 +17,7 @@ Usage : `history [command] ...`
 - [neighbor](#neighbor)
 - [netinfo](#netinfo)
 - [omrprefix](#omrprefix)
+- [onlinkprefix](#onlinkprefix)
 - [prefix](#prefix)
 - [route](#route)
 - [router](#router)
@@ -317,13 +318,44 @@ Print the OMR prefix history as a table.
 Done
 ```
 
-Print the OMR prefix history as a list
+Print the OMR prefix history as a list.
 
 ```bash
 > history omrprefix list
 00:03:20.379 -> omr-prefix:fd44:dc78:510b:1::/64 prf:low is-local:yes
 00:09:27.873 -> omr-prefix:2001:1a:12d5:23ae::/64 prf:med is-local:no
 00:16:21.504 -> omr-prefix:fd44:dc78:510b:1::/64 prf:low is-local:yes
+Done
+```
+
+### onlinkprefix
+
+Usage `history onlinkprefix [list] [<num-entries>]`
+
+Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE`.
+
+Print the favored on-link prefix history. Each entry provides:
+
+- The favored on-link prefix (on AIL).
+- IsLocal as boolean `yes`/`no` indicating whether the favored on-link prefix is the same as the local one maintained by this BR.
+
+Print the on-link prefix history as a table.
+
+```bash
+> history onlinkprefix
+| Age                  | On-link Prefix                                   |IsLocal |
++----------------------+--------------------------------------------------+--------+
+|         00:00:50.600 | 2001:efc6:75a8:efee::/64                         | no     |
+|         00:11:04.327 | fd74:fe69:9f21:437::/64                          | yes    |
+Done
+```
+
+Print the on-link prefix history as a list.
+
+```bash
+> history onlinkprefix list
+00:00:50.600 -> on-link-prefix:2001:efc6:75a8:efee::/64 is-local:no
+00:11:04.327 -> on-link-prefix:fd74:fe69:9f21:437::/64 is-local:yes
 Done
 ```
 
