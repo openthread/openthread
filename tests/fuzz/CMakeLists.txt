@@ -47,6 +47,8 @@ set(COMMON_LIBS
     ot-config
 )
 
+target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1")
+
 #----------------------------------------------------------------------------------------------------------------------
 
 macro(ot_nexus_test name)
@@ -83,3 +85,4 @@ ot_nexus_test(icmp6)
 ot_nexus_test(ip6)
 ot_nexus_test(mdns)
 ot_nexus_test(radio-one-node)
+ot_nexus_test(trel)
