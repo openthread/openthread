@@ -344,7 +344,7 @@ otError otBorderRoutingGetNextAdvertisedRio(otInstance                         *
     AssertPointerIsNotNull(aPrefix);
     AssertPointerIsNotNull(aPreference);
 
-    error = (aInstance).Get<BorderRouter::RoutingManager>().GetNextAdvertisedRio(
+    error = AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextAdvertisedRio(
         *aIndex, AsCoreType(aPrefix), preference);
     
     if (error == OT_ERROR_NONE)
