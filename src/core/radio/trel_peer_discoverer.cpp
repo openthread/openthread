@@ -444,27 +444,16 @@ void PeerDiscoverer::HandleTxtResult(otInstance *aInstance, const otPlatDnssdTxt
 
 void PeerDiscoverer::HandleTxtResult(const Dnssd::TxtResult &aResult)
 {
-    Peer *peer;
+    Peer         *peer = nullptr;
+    TxtData       txtData;
+    TxtData::Info txtInfo;
 
     VerifyOrExit(IsRunning());
 
     peer = Get<PeerTable>().FindMatching(Peer::ServiceNameMatcher(aResult.mServiceInstance));
     VerifyOrExit(peer != nullptr);
 
-    ProcessPeerTxtData(aResult, *peer);
-
-    UpdatePeerState(*peer);
-
-exit:
-    return;
-}
-
-void PeerDiscoverer::ProcessPeerTxtData(const Dnssd::TxtResult &aResult, Peer &aPeer)
-{
-    TxtData       txtData;
-    TxtData::Info txtInfo;
-
-    aPeer.mTxtDataValidated = false;
+    peer->mTxtDataValidated = false;
 
     VerifyOrExit(aResult.mTtl != 0);
 
@@ -474,14 +463,15 @@ void PeerDiscoverer::ProcessPeerTxtData(const Dnssd::TxtResult &aResult, Peer &a
 
     if (txtInfo.mExtAddress == Get<Mac::Mac>().GetExtAddress())
     {
-        LogInfo("Peer %s is this device itself", aPeer.mServiceName.AsCString());
-        Get<PeerTable>().RemoveMatching(aPeer);
+        LogInfo("Peer %s is this device itself", peer->mServiceName.AsCString());
+        Get<PeerTable>().RemoveMatching(*peer);
+        peer = nullptr;
         ExitNow();
     }
 
-    aPeer.SetExtPanId(txtInfo.mExtPanId);
+    peer->SetExtPanId(txtInfo.mExtPanId);
 
-    if (aPeer.GetExtAddress() != txtInfo.mExtAddress)
+    if (peer->GetExtAddress() != txtInfo.mExtAddress)
     {
         // Remove any peer that is associated with the same ExtAddress.
         // These are likely stale entries. This ensure we have at most
@@ -489,13 +479,16 @@ void PeerDiscoverer::ProcessPeerTxtData(const Dnssd::TxtResult &aResult, Peer &a
 
         Get<PeerTable>().RemoveAndFreeAllMatching(txtInfo.mExtAddress);
 
-        aPeer.SetExtAddress(txtInfo.mExtAddress);
+        peer->SetExtAddress(txtInfo.mExtAddress);
     }
 
-    aPeer.mTxtDataValidated = true;
+    peer->mTxtDataValidated = true;
 
 exit:
-    return;
+    if (peer != nullptr)
+    {
+        UpdatePeerState(*peer);
+    }
 }
 
 void PeerDiscoverer::StartHostAddressResolver(Peer &aPeer)

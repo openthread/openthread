@@ -252,7 +252,6 @@ private:
     void StopServiceResolvers(Peer &aPeer);
     void HandleSrvResult(const Dnssd::SrvResult &aResult);
     void HandleTxtResult(const Dnssd::TxtResult &aResult);
-    void ProcessPeerTxtData(const Dnssd::TxtResult &aResult, Peer &aPeer);
     void StartHostAddressResolver(Peer &aPeer);
     void StopHostAddressResolver(Peer &aPeer);
     void HandleAddressResult(const Dnssd::AddressResult &aResult);
