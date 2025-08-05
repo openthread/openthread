@@ -1094,7 +1094,7 @@ template <> otError Br::Process<Cmd("rio")>(Arg aArgs[])
     while (otBorderRoutingGetNextAdvertisedRio(GetInstancePtr(), &index, &prefix, &preference) == OT_ERROR_NONE)
     {
         OutputIp6Prefix(prefix);
-        OutputLine(" prf:%s", PreferenceToString(preference));
+        OutputLine(" %s", PreferenceToString(preference));
     }
 
 exit:
