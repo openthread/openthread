@@ -178,6 +178,14 @@ public:
      */
     bool IsAck(void) const { return GetType() == kTypeAck; }
 
+    /**
+     * Returns whether the frame is a MAC Command frame.
+     *
+     * @retval TRUE   If this is a MAC Command frame.
+     * @retval FALSE  If this is not a MAC Command Frame.
+     */
+    bool IsMacCommand(void) const { return GetType() == kTypeMacCmd; }
+
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     /**
      * This method returns whether the frame is an IEEE 802.15.4 Wake-up frame.
