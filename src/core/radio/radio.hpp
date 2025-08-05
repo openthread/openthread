@@ -267,7 +267,8 @@ public:
         void ResetTime(void);
 
     private:
-        enum Status : uint8_t{
+        enum Status : uint8_t
+        {
             kDisabled,
             kSleep,
             kReceive,
@@ -1111,14 +1112,14 @@ inline Error Radio::ReceiveAt(uint8_t, uint32_t, uint32_t) { return kErrorNone; 
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-inline void  Radio::UpdateCslSampleTime(uint32_t) {}
+inline void Radio::UpdateCslSampleTime(uint32_t) {}
 
 inline Error Radio::EnableCsl(uint32_t, Mac::ShortAddress aShortAddr, const Mac::ExtAddress &)
 {
     return kErrorNotImplemented;
 }
 
-inline Error    Radio::ResetCsl(void) { return kErrorNotImplemented; }
+inline Error Radio::ResetCsl(void) { return kErrorNotImplemented; }
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || \
@@ -1160,8 +1161,8 @@ inline uint32_t Radio::GetBusSpeed(void) { return 0; }
 inline uint32_t Radio::GetBusLatency(void) { return 0; }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-inline void     Radio::SetDiagMode(bool) {}
-inline bool     Radio::GetDiagMode(void) { return false; }
+inline void Radio::SetDiagMode(bool) {}
+inline bool Radio::GetDiagMode(void) { return false; }
 #endif
 #endif // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 

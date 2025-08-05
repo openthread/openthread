@@ -233,23 +233,23 @@ private:
 #if OPENTHREAD_MTD
     void SendAnswer(const Ip6::Address &aDestination, const Message &aRequest);
 #elif OPENTHREAD_FTD
-    Error       AllocateAnswer(Coap::Message *&aAnswer, AnswerInfo &aInfo);
-    Error       CheckAnswerLength(Coap::Message *&aAnswer, AnswerInfo &aInfo);
-    bool        IsLastAnswer(const Coap::Message &aAnswer) const;
-    void        FreeAllRelatedAnswers(Coap::Message &aFirstAnswer);
-    void        PrepareAndSendAnswers(const Ip6::Address &aDestination, const Message &aRequest);
-    void        SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestination);
-    Error       AppendChildTable(Message &aMessage);
-    Error       AppendChildTableAsChildTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo);
-    Error       AppendRouterNeighborTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo);
-    Error       AppendChildTableIp6AddressList(Coap::Message *&aAnswer, AnswerInfo &aInfo);
-    Error       AppendChildIp6AddressListTlv(Message &aAnswer, const Child &aChild);
-    Error       AppendEnhancedRoute(Message &aMessage);
+    Error AllocateAnswer(Coap::Message *&aAnswer, AnswerInfo &aInfo);
+    Error CheckAnswerLength(Coap::Message *&aAnswer, AnswerInfo &aInfo);
+    bool  IsLastAnswer(const Coap::Message &aAnswer) const;
+    void  FreeAllRelatedAnswers(Coap::Message &aFirstAnswer);
+    void  PrepareAndSendAnswers(const Ip6::Address &aDestination, const Message &aRequest);
+    void  SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestination);
+    Error AppendChildTable(Message &aMessage);
+    Error AppendChildTableAsChildTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo);
+    Error AppendRouterNeighborTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo);
+    Error AppendChildTableIp6AddressList(Coap::Message *&aAnswer, AnswerInfo &aInfo);
+    Error AppendChildIp6AddressListTlv(Message &aAnswer, const Child &aChild);
+    Error AppendEnhancedRoute(Message &aMessage);
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-    Error       AppendChildTableAsChildTlvs(Message &aMessage);
-    Error       AppendRouterNeighborTlvs(Message &aMessage);
-    Error       AppendChildTableIp6AddressList(Message &aMessage);
+    Error AppendChildTableAsChildTlvs(Message &aMessage);
+    Error AppendRouterNeighborTlvs(Message &aMessage);
+    Error AppendChildTableIp6AddressList(Message &aMessage);
 #endif
 
     static void HandleAnswerResponse(void                *aContext,

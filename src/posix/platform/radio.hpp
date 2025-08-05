@@ -144,7 +144,7 @@ private:
 #if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
     Spinel::VendorRadioSpinel mRadioSpinel;
 #else
-    Spinel::RadioSpinel     mRadioSpinel;
+    Spinel::RadioSpinel mRadioSpinel;
 #endif
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_CAPS_DIAG_ENABLE

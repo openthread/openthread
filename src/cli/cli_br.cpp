@@ -1106,41 +1106,28 @@ exit:
 
 otError Br::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                          \
-    {                                                     \
-        aCommandString, &Br::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &Br::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
         CmdEntry("counters"),
 #endif
-        CmdEntry("disable"),
-        CmdEntry("enable"),
-        CmdEntry("infraif"),
-        CmdEntry("init"),
+        CmdEntry("disable"),     CmdEntry("enable"),    CmdEntry("infraif"),      CmdEntry("init"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
         CmdEntry("multiail"),
 #endif
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         CmdEntry("nat64prefix"),
 #endif
-        CmdEntry("omrconfig"),
-        CmdEntry("omrprefix"),
-        CmdEntry("onlinkprefix"),
+        CmdEntry("omrconfig"),   CmdEntry("omrprefix"), CmdEntry("onlinkprefix"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
         CmdEntry("pd"),
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
         CmdEntry("peers"),
 #endif
-        CmdEntry("prefixtable"),
-        CmdEntry("raoptions"),
-        CmdEntry("rdnsstable"),
-        CmdEntry("rioprf"),
-        CmdEntry("routeprf"),
-        CmdEntry("routers"),
-        CmdEntry("state"),
+        CmdEntry("prefixtable"), CmdEntry("raoptions"), CmdEntry("rdnsstable"),   CmdEntry("rioprf"),
+        CmdEntry("routeprf"),    CmdEntry("routers"),   CmdEntry("state"),
     };
 
 #undef CmdEntry

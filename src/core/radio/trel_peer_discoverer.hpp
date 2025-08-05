@@ -265,7 +265,7 @@ private:
     static void HandleAddressResult(otInstance *aInstance, const otPlatDnssdAddressResult *aResult);
 
 #else
-    void        HandleDiscoveredPeerInfo(const PeerInfo &aInfo);
+    void HandleDiscoveredPeerInfo(const PeerInfo &aInfo);
 #endif
 
     using ServiceTask = TaskletIn<PeerDiscoverer, &PeerDiscoverer::HandleServiceTask>;

@@ -776,10 +776,7 @@ exit:
 
 otError TcpExample::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                                  \
-    {                                                             \
-        aCommandString, &TcpExample::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &TcpExample::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
         CmdEntry("abort"), CmdEntry("benchmark"), CmdEntry("bind"), CmdEntry("connect"), CmdEntry("deinit"),

@@ -1476,17 +1476,17 @@ exit:
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 
 #if defined(__FreeBSD__)
-#define ROUNDUP(a) ((a) > 0 ? (1 + (((a)-1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
+#define ROUNDUP(a) ((a) > 0 ? (1 + (((a) - 1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
 #endif
 
 #if defined(__APPLE__)
-#define ROUNDUP(a) ((a) > 0 ? (1 + (((a)-1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
+#define ROUNDUP(a) ((a) > 0 ? (1 + (((a) - 1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
 #define DARWIN_SA_SIZE(sa) ROUNDUP(sa->sa_len)
 #define SA_SIZE(sa) DARWIN_SA_SIZE(sa)
 #endif
 
 #if defined(__NetBSD__)
-#define RT_ROUNDUP2(a, n) ((a) > 0 ? (1 + (((a)-1U) | ((n)-1))) : (n))
+#define RT_ROUNDUP2(a, n) ((a) > 0 ? (1 + (((a) - 1U) | ((n) - 1))) : (n))
 #define RT_ROUNDUP(a) RT_ROUNDUP2((a), sizeof(uint64_t))
 #define SA_SIZE(sa) RT_ROUNDUP(sa->sa_len)
 #endif

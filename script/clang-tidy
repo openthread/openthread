@@ -27,8 +27,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-CLANG_TIDY_VERSION="LLVM version 16.0"
-CLANG_APPLY_REPLACEMENTS_VERSION="clang-apply-replacements version 16.0"
+LLVM_MAJOR_NUMBER_VERSION="19"
+LLVM_NUMBER_VERSION="19.1.0"
+CLANG_TIDY_VERSION="LLVM version ${LLVM_NUMBER_VERSION}"
+CLANG_APPLY_REPLACEMENTS_VERSION="clang-apply-replacements version ${LLVM_NUMBER_VERSION}"
 
 die()
 {
@@ -36,9 +38,9 @@ die()
     exit 1
 }
 
-# Search for clang-tidy-16
-if command -v clang-tidy-16 >/dev/null; then
-    clang_tidy=$(command -v clang-tidy-16)
+# Search for clang-tidy-"${LLVM_MAJOR_NUMBER_VERSION}"
+if command -v clang-tidy-"${LLVM_MAJOR_NUMBER_VERSION}" >/dev/null; then
+    clang_tidy=$(command -v clang-tidy-"${LLVM_MAJOR_NUMBER_VERSION}")
 elif command -v clang-tidy >/dev/null; then
     clang_tidy=$(command -v clang-tidy)
     case "$($clang_tidy --version)" in
@@ -49,12 +51,12 @@ elif command -v clang-tidy >/dev/null; then
             ;;
     esac
 else
-    die "clang-tidy 16.0 required"
+    die "clang-tidy ${LLVM_NUMBER_VERSION} required"
 fi
 
-# Search for clang-apply-replacements-16
-if command -v clang-apply-replacements-16 >/dev/null; then
-    clang_apply_replacements=$(command -v clang-apply-replacements-16)
+# Search for clang-apply-replacements-"${LLVM_MAJOR_NUMBER_VERSION}"
+if command -v clang-apply-replacements-"${LLVM_MAJOR_NUMBER_VERSION}" >/dev/null; then
+    clang_apply_replacements=$(command -v clang-apply-replacements-"${LLVM_MAJOR_NUMBER_VERSION}")
 elif command -v clang-apply-replacements >/dev/null; then
     clang_apply_replacements=$(command -v clang-apply-replacements)
     case "$($clang_apply_replacements --version)" in
@@ -65,20 +67,20 @@ elif command -v clang-apply-replacements >/dev/null; then
             ;;
     esac
 else
-    die "clang-apply-replacements 16.0 required"
+    die "clang-apply-replacements ${LLVM_NUMBER_VERSION} required"
 fi
 
-# Search for run-clang-tidy-16.py
-if command -v run-clang-tidy-16.py >/dev/null; then
-    run_clang_tidy=$(command -v run-clang-tidy-16.py)
-elif command -v run-clang-tidy-16 >/dev/null; then
-    run_clang_tidy=$(command -v run-clang-tidy-16)
+# Search for run-clang-tidy-"${LLVM_MAJOR_NUMBER_VERSION}".py
+if command -v run-clang-tidy-"${LLVM_MAJOR_NUMBER_VERSION}".py >/dev/null; then
+    run_clang_tidy=$(command -v run-clang-tidy-"${LLVM_MAJOR_NUMBER_VERSION}".py)
+elif command -v run-clang-tidy-"${LLVM_MAJOR_NUMBER_VERSION}" >/dev/null; then
+    run_clang_tidy=$(command -v run-clang-tidy-"${LLVM_MAJOR_NUMBER_VERSION}")
 elif command -v run-clang-tidy.py >/dev/null; then
     run_clang_tidy=$(command -v run-clang-tidy.py)
 elif command -v run-clang-tidy >/dev/null; then
     run_clang_tidy=$(command -v run-clang-tidy)
 else
-    die "run-clang-tidy.py 16.0 required"
+    die "run-clang-tidy.py ${LLVM_NUMBER_VERSION} required"
 fi
 
 $run_clang_tidy -clang-tidy-binary "$clang_tidy" -clang-apply-replacements-binary "$clang_apply_replacements" "$@" || die

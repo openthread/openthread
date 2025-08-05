@@ -79,7 +79,8 @@ private:
     using Command = CommandEntry<Coap>;
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    enum BlockType : uint8_t{
+    enum BlockType : uint8_t
+    {
         kBlockType1,
         kBlockType2,
     };
@@ -97,7 +98,7 @@ private:
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     otError ProcessRequest(Arg aArgs[], otCoapCode aCoapCode, bool aCoapObserve = false);
 #else
-    otError        ProcessRequest(Arg aArgs[], otCoapCode aCoapCode);
+    otError ProcessRequest(Arg aArgs[], otCoapCode aCoapCode);
 #endif
 
     static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);

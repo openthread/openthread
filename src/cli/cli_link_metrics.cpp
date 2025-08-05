@@ -377,10 +377,7 @@ exit:
 
 otError LinkMetrics::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                                   \
-    {                                                              \
-        aCommandString, &LinkMetrics::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &LinkMetrics::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
         CmdEntry("config"), CmdEntry("mgmt"), CmdEntry("probe"), CmdEntry("query"), CmdEntry("request"),

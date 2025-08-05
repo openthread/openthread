@@ -87,7 +87,8 @@ private:
     using Command = CommandEntry<CoapSecure>;
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    enum BlockType : uint8_t{
+    enum BlockType : uint8_t
+    {
         kBlockType1,
         kBlockType2,
     };

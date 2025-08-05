@@ -963,25 +963,20 @@ exit:
 
 otError NetworkData::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                                   \
-    {                                                              \
-        aCommandString, &NetworkData::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &NetworkData::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
         CmdEntry("full"),
 #endif
-        CmdEntry("length"),
-        CmdEntry("maxlength"),
+        CmdEntry("length"),    CmdEntry("maxlength"),
 #if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
         CmdEntry("publish"),
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
         CmdEntry("register"),
 #endif
-        CmdEntry("show"),
-        CmdEntry("steeringdata"),
+        CmdEntry("show"),      CmdEntry("steeringdata"),
 #if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
         CmdEntry("unpublish"),
 #endif

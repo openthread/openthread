@@ -825,10 +825,7 @@ exit:
 
 otError Dns::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                           \
-    {                                                      \
-        aCommandString, &Dns::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &Dns::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
 
@@ -852,8 +849,7 @@ otError Dns::Process(Arg aArgs[])
         CmdEntry("server"),
 #endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE && OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-        CmdEntry("service"),
-        CmdEntry("servicehost"),
+        CmdEntry("service"),     CmdEntry("servicehost"),
 #endif
     };
 

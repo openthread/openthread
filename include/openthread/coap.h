@@ -83,7 +83,7 @@ typedef enum otCoapType
 /**
  * Helper macro to define CoAP Code values.
  */
-#define OT_COAP_CODE(c, d) ((((c)&0x7) << 5) | ((d)&0x1f))
+#define OT_COAP_CODE(c, d) ((((c) & 0x7) << 5) | ((d) & 0x1f))
 
 /**
  * CoAP Code values.
