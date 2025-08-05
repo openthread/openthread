@@ -640,7 +640,9 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
     VerifyOrExit(headerSize >= sizeof(struct tcphdr) && headerSize <= sizeof(header) &&
                      static_cast<uint16_t>(headerSize) <= length,
                  error = kErrorParse);
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     SuccessOrExit(error = Checksum::VerifyMessageChecksum(aMessage, aMessageInfo, kProtoTcp));
+#endif
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), &header[0], headerSize));
 
     ip6Header = reinterpret_cast<struct ip6_hdr *>(&aIp6Header);
