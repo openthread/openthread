@@ -44,6 +44,14 @@ namespace Multicast {
 
 RegisterLogModule("MulticastDns");
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+#define LogVerbose(...)              \
+    if (Get<Core>().mVerboseLogging) \
+    LogAt(kLogLevelNone, __VA_ARGS__)
+#else
+#define LogVerbose(...)
+#endif
+
 //---------------------------------------------------------------------------------------------------------------------
 // otPlatMdns callbacks
 
@@ -94,6 +102,9 @@ Core::Core(Instance &aInstance)
     , mNextQueryTxTime(TimerMilli::GetNow() - 1)
     , mCacheTimer(aInstance)
     , mCacheTask(aInstance)
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+    , mVerboseLogging(kDefaultVerboseLog)
+#endif
 {
 }
 
@@ -527,6 +538,51 @@ bool Core::RrClassIsInternetOrAny(uint16_t aRrClass)
     aRrClass &= kClassMask;
 
     return (aRrClass == ResourceRecord::kClassInternet) || (aRrClass == ResourceRecord::kClassAny);
+}
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+
+void Core::SetVerboseLoggingEnabled(bool aEnable)
+{
+    VerifyOrExit(mVerboseLogging != aEnable);
+
+    if (aEnable)
+    {
+        mVerboseLogging = true;
+        LogVerbose("Verbose logging enabled");
+    }
+    else
+    {
+        LogVerbose("Verbose logging disabled");
+        mVerboseLogging = false;
+    }
+
+exit:
+    return;
+}
+
+void Core::LogMessage(const Message &aMessage)
+{
+    if (mVerboseLogging)
+    {
+        MsgLogger logger(GetInstance(), aMessage);
+
+        logger.Log();
+    }
+}
+
+#endif
+
+//----------------------------------------------------------------------------------------------------------------------
+// Core::AddressInfo
+
+Core::AddressInfo::InfoString Core::AddressInfo::ToString(void) const
+{
+    InfoString string;
+
+    string.Append("[%s]:%u if-index:%lu", GetAddress().ToString().AsCString(), mPort, ToUlong(mInfraIfIndex));
+
+    return string;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -3460,6 +3516,7 @@ Core::TxMessage::TxMessage(Instance &aInstance, Type aType, uint16_t aQueryId)
     : InstanceLocator(aInstance)
 {
     Init(aType, aQueryId);
+    mUnicastDest.Clear();
 }
 
 Core::TxMessage::TxMessage(Instance &aInstance, Type aType, const AddressInfo &aUnicastDest, uint16_t aQueryId)
@@ -3812,6 +3869,15 @@ void Core::TxMessage::Send(void)
 
     Get<Core>().mTxMessageHistory.Add(*mMsgPtr);
 
+    LogVerbose("Sending %s message len:%u", TypeToString(mType), mMsgPtr->GetLength());
+
+    if (!mUnicastDest.GetAddress().IsUnspecified())
+    {
+        LogVerbose("  dst: %s", mUnicastDest.ToString().AsCString());
+    }
+
+    Get<Core>().LogMessage(*mMsgPtr);
+
     // We pass ownership of message to the platform layer.
 
     switch (mType)
@@ -3926,6 +3992,29 @@ bool Core::TxMessage::ShouldClearAppendStateOnReinit(const Entry &aEntry) const
     return shouldClear;
 }
 
+const char *Core::TxMessage::TypeToString(Type aType)
+{
+    static const char *const kTypeStrings[] = {
+        "multicast probe",         // kMulticastProbe
+        "multicast query",         // kMulticastQuery
+        "multicast response",      // kMulticastResponse
+        "unicast response",        // kUnicastResponse
+        "legacy-unicast response", // kLegacyUnicastResponse
+    };
+
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kMulticastProbe);
+        ValidateNextEnum(kMulticastQuery);
+        ValidateNextEnum(kMulticastResponse);
+        ValidateNextEnum(kUnicastResponse);
+        ValidateNextEnum(kLegacyUnicastResponse);
+    };
+
+    return kTypeStrings[aType];
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 // Core::EntryContext
 
@@ -3967,6 +4056,19 @@ Error Core::RxMessage::Init(Instance          &aInstance,
     mRxTime = TimerMilli::GetNow();
 
     VerifyOrExit(!aMessagePtr.IsNull(), error = kErrorInvalidArgs);
+
+    mIsSelfOriginating = Get<Core>().mTxMessageHistory.Contains(*aMessagePtr);
+
+    if (mIsSelfOriginating)
+    {
+        LogVerbose("Received message len:%u (self-originated)", aMessagePtr->GetLength());
+    }
+    else
+    {
+        LogVerbose("Received message len:%u", aMessagePtr->GetLength());
+        LogVerbose("  sender:%s", mSenderAddress.ToString().AsCString());
+        Get<Core>().LogMessage(*aMessagePtr);
+    }
 
     offset = aMessagePtr->GetOffset();
 
@@ -4067,8 +4169,6 @@ Error Core::RxMessage::Init(Instance          &aInstance,
             question.mIsProbe = true;
         }
     }
-
-    mIsSelfOriginating = Get<Core>().mTxMessageHistory.Contains(*aMessagePtr);
 
     mMessagePtr = aMessagePtr.PassOwnership();
 
@@ -7672,6 +7772,233 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
+//---------------------------------------------------------------------------------------------------------------------
+// Core::MsgLogger
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+
+Core::MsgLogger::MsgLogger(Instance &aInstance, const Message &aMessage)
+    : InstanceLocator(aInstance)
+    , mMessage(aMessage)
+{
+}
+
+void Core::MsgLogger::Log(void)
+{
+    Error error = kErrorNone;
+
+    mOffset = mMessage.GetOffset();
+
+    SuccessOrExit(error = mMessage.Read(mOffset, mHeader));
+    mOffset += sizeof(Header);
+
+    LogVerbose("- %s id:%u qt:%u t:%u rcode:%u [q:%u ans:%u auth:%u addn:%u]",
+               mHeader.GetType() == Header::kTypeQuery ? "Query" : "Response", mHeader.GetMessageId(),
+               mHeader.GetQueryType(), mHeader.IsTruncationFlagSet(), mHeader.GetResponseCode(),
+               mHeader.GetQuestionCount(), mHeader.GetAnswerCount(), mHeader.GetAuthorityRecordCount(),
+               mHeader.GetAdditionalRecordCount());
+
+    SuccessOrExit(LogQuestions());
+    SuccessOrExit(error = LogSectionRecords("Answer", mHeader.GetAnswerCount()));
+    SuccessOrExit(error = LogSectionRecords("Authority", mHeader.GetAuthorityRecordCount()));
+    SuccessOrExit(error = LogSectionRecords("Additional", mHeader.GetAdditionalRecordCount()));
+
+exit:
+    if (error != kErrorNone)
+    {
+        LogVerbose("Failed to parse message, error:%s", ErrorToString(error));
+    }
+}
+
+Error Core::MsgLogger::LogQuestions(void)
+{
+    Error    error         = kErrorNone;
+    uint16_t questionCount = mHeader.GetQuestionCount();
+
+    VerifyOrExit(questionCount > 0);
+
+    LogVerbose("- Question");
+
+    for (; questionCount > 0; questionCount--)
+    {
+        Question     question;
+        Name::Buffer name;
+
+        SuccessOrExit(error = Name::ReadName(mMessage, mOffset, name));
+        SuccessOrExit(error = mMessage.Read(mOffset, question));
+        mOffset += sizeof(Question);
+
+        LogVerbose("    %s", name);
+        LogVerbose("      %s %s class:%u", ResourceRecord::TypeToString(question.GetType()).AsCString(),
+                   question.GetClass() & kClassQuestionUnicastFlag ? "QU" : "QM", question.GetClass() & kClassMask);
+    }
+
+exit:
+    return error;
+}
+
+Error Core::MsgLogger::LogSectionRecords(const char *aSectionName, uint16_t aNumRecords)
+
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aNumRecords > 0);
+
+    LogVerbose("- %s", aSectionName);
+
+    for (; aNumRecords > 0; aNumRecords--)
+    {
+        SuccessOrExit(error = LogRecord());
+    }
+
+exit:
+    return error;
+}
+
+Error Core::MsgLogger::LogRecord(void)
+{
+    Error          error = kErrorNone;
+    ResourceRecord record;
+    Name::Buffer   name;
+
+    SuccessOrExit(error = Name::ReadName(mMessage, mOffset, name));
+    SuccessOrExit(error = mMessage.Read(mOffset, record));
+    mOffset += sizeof(ResourceRecord);
+
+    LogVerbose("    %s%s cls:%u ttl:%lu data-len:%u", ResourceRecord::TypeToString(record.GetType()).AsCString(),
+               record.GetClass() & kClassCacheFlushFlag ? " cache-flush" : "", record.GetClass() & kClassMask,
+               ToUlong(record.GetTtl()), record.GetLength());
+    LogVerbose("      %s", name);
+
+    LogRecordData(record);
+
+    mOffset += record.GetLength();
+exit:
+    return error;
+}
+
+void Core::MsgLogger::LogRecordData(const ResourceRecord &aRecord)
+{
+    uint16_t               offset = mOffset;
+    Name::Buffer           name;
+    Ip4::Address           ip4Address;
+    Ip6::Address           ip6Address;
+    SrvRecord              srvRecord;
+    NsecRecord::TypeBitMap bitMap;
+
+    switch (aRecord.GetType())
+    {
+    case ResourceRecord::kTypeA:
+        VerifyOrExit(aRecord.GetLength() >= sizeof(Ip4::Address));
+        SuccessOrExit(mMessage.Read(offset, ip4Address));
+        LogVerbose("      %s", ip4Address.ToString().AsCString());
+        break;
+    case ResourceRecord::kTypeAaaa:
+        VerifyOrExit(aRecord.GetLength() >= sizeof(Ip6::Address));
+        SuccessOrExit(mMessage.Read(offset, ip6Address));
+        LogVerbose("      %s", ip6Address.ToString().AsCString());
+        break;
+
+    case ResourceRecord::kTypePtr:
+        SuccessOrExit(Name::ReadName(mMessage, offset, name));
+        LogVerbose("      %s", name);
+        break;
+
+    case ResourceRecord::kTypeSrv:
+        offset -= sizeof(ResourceRecord);
+        SuccessOrExit(mMessage.Read(offset, srvRecord));
+        offset += sizeof(srvRecord);
+        SuccessOrExit(Name::ReadName(mMessage, offset, name));
+        LogVerbose("      port:%u w:%u prio:%u", srvRecord.GetPort(), srvRecord.GetWeight(), srvRecord.GetPriority());
+        LogVerbose("      host:%s", name);
+        break;
+
+    case ResourceRecord::kTypeNsec:
+        SuccessOrExit(Name::ReadName(mMessage, offset, name));
+        LogVerbose("      domain-name:%s", name);
+        SuccessOrExit(mMessage.Read(offset, &bitMap, NsecRecord::TypeBitMap::kMinSize));
+        VerifyOrExit(bitMap.GetBlockNumber() == 0);
+        VerifyOrExit(bitMap.GetBitmapLength() <= NsecRecord::TypeBitMap::kMaxLength);
+        SuccessOrExit(mMessage.Read(offset, &bitMap, bitMap.GetSize()));
+        LogNsecBitMap(bitMap);
+        break;
+
+    case ResourceRecord::kTypeKey:
+    case ResourceRecord::kTypeTxt:
+    default:
+        LogRawData(aRecord.GetLength());
+        break;
+    }
+
+exit:
+    return;
+}
+
+void Core::MsgLogger::LogRawData(uint16_t aLength)
+{
+    static constexpr uint16_t kStringSize = 200;
+    static constexpr uint16_t kDataSize   = 32;
+
+    uint16_t offset      = mOffset;
+    bool     isFirstLine = true;
+
+    while (aLength > 0)
+    {
+        uint16_t            readLength = Min(aLength, kDataSize);
+        uint8_t             data[kDataSize];
+        String<kStringSize> string;
+
+        if (isFirstLine)
+        {
+            string.Append("[ ");
+            isFirstLine = false;
+        }
+        else
+        {
+            string.Append("  ");
+        }
+
+        SuccessOrExit(mMessage.Read(offset, data, readLength));
+        string.AppendHexBytes(data, readLength);
+
+        offset += readLength;
+        aLength -= readLength;
+
+        if (aLength == 0)
+        {
+            string.Append(" ]");
+        }
+
+        LogVerbose("      %s", string.AsCString());
+    }
+
+exit:
+    return;
+}
+
+void Core::MsgLogger::LogNsecBitMap(const NsecRecord::TypeBitMap &aBitMap)
+{
+    static constexpr uint16_t kStringSize = 200;
+
+    String<kStringSize> string;
+
+    string.Append("[ ");
+
+    for (uint16_t type = 0; type < aBitMap.GetBitmapLength() * kBitsPerByte; type++)
+    {
+        if (aBitMap.ContainsType(type))
+        {
+            string.Append("%s ", ResourceRecord::TypeToString(type).AsCString());
+        }
+    }
+
+    string.Append("]");
+
+    LogVerbose("      %s", string.AsCString());
+}
+
+#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
 
 } // namespace Multicast
 } // namespace Dns
