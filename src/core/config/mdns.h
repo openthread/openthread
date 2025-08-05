@@ -96,6 +96,32 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+ *
+ * Define as 1 to enable the multicast DNS (mDNS) verbose logging feature at build-time.
+ *
+ * When this feature is enabled, verbose logging can be dynamically turned on or off at run-time using
+ * `otMdnsSetVerboseLoggingEnabled()`.
+ *
+ * When disabled, the verbose logging code is not included in the build, which reduces code size.
+ */
+#ifndef OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+#define OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MULTICAST_DEFAULT_DNS_VERBOSE_LOGGING_STATE
+ *
+ * Defines the default run-time state of mDNS verbose logging (turned on/off) on startup.
+ *
+ * This applies only when `OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE` is enabled. Set to 1 to turn on
+ * verbose logging by default on startup, or 0 to turn it off.
+ */
+#ifndef OPENTHREAD_CONFIG_MULTICAST_DEFAULT_DNS_VERBOSE_LOGGING_STATE
+#define OPENTHREAD_CONFIG_MULTICAST_DEFAULT_DNS_VERBOSE_LOGGING_STATE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MULTICAST_DNS_MOCK_PLAT_APIS_ENABLE
  *
  * Define to 1 to add mock (empty) implementation of mDNS platform APIs.

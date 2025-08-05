@@ -1255,6 +1255,13 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+template <> otError Mdns::Process<Cmd("verboselogging")>(Arg aArgs[])
+{
+    return ProcessEnableDisable(aArgs, otMdnsIsVerboseLoggingEnabled, otMdnsSetVerboseLoggingEnabled);
+}
+#endif
+
 otError Mdns::Process(Arg aArgs[])
 {
 #define CmdEntry(aCommandString) {aCommandString, &Mdns::Process<Cmd(aCommandString)>}
@@ -1304,6 +1311,9 @@ otError Mdns::Process(Arg aArgs[])
 #endif
         CmdEntry("unicastquestion"),
         CmdEntry("unregister"),
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+        CmdEntry("verboselogging"),
+#endif
     };
 
 #undef CmdEntry
