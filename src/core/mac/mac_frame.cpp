@@ -1078,7 +1078,7 @@ uint8_t Frame::FindPayloadIndex(void) const
     }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
-    if (!IsVersion2015() && (GetFrameControlField() & kFcfFrameTypeMask) == kTypeMacCmd)
+    if ((GetFrameControlField() & kFcfFrameTypeMask) == kTypeMacCmd)
     {
         index += kCommandIdSize;
     }
