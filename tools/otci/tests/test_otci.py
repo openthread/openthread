@@ -334,7 +334,7 @@ class TestOTCI(unittest.TestCase):
             leader.udp_bind("::", 1234, netif=netif)
             leader.udp_send(leader.get_ipaddr_rloc(), 1234, text='hello')
             leader.udp_send(leader.get_ipaddr_rloc(), 1234, random_bytes=3)
-            leader.udp_send(leader.get_ipaddr_rloc(), 1234, hex='112233')
+            leader.udp_send(leader.get_ipaddr_rloc(), 1234, hex_str='112233')
             leader.wait(1)
             leader.udp_close()
 
