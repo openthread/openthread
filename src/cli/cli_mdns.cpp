@@ -1257,10 +1257,7 @@ exit:
 
 otError Mdns::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                            \
-    {                                                       \
-        aCommandString, &Mdns::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &Mdns::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

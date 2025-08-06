@@ -291,10 +291,7 @@ exit:
 
 otError MeshDiag::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                                \
-    {                                                           \
-        aCommandString, &MeshDiag::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &MeshDiag::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
         CmdEntry("childip6"), CmdEntry("childtable"), CmdEntry("responsetimeout"), CmdEntry("routerneighbortable"),

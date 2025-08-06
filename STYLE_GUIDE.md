@@ -116,7 +116,7 @@
 
 - OpenThread uses `script/make-pretty` to reformat code and enforce code format and style. `script/make-pretty check` build target is included in OpenThread's continuous integration and must pass before a pull request is merged.
 
-- `script/make-pretty` requires [clang-format v16.0.0](https://releases.llvm.org/download.html#16.0.0) for C/C++ and [yapf v0.31.0](https://github.com/google/yapf) for Python.
+- `script/make-pretty` requires [clang-format v19](https://github.com/llvm/llvm-project/releases/tag/llvmorg-19.1.0) for C/C++ and [yapf v0.31.0](https://github.com/google/yapf) for Python.
 
 ### File Names
 

@@ -1556,10 +1556,7 @@ const char *History::DnsSrpAddrTypeToString(otHistoryTrackerDnsSrpAddrType aType
 
 otError History::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                               \
-    {                                                          \
-        aCommandString, &History::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &History::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
         CmdEntry("dnssrpaddr"), CmdEntry("ipaddr"), CmdEntry("ipmaddr"), CmdEntry("neighbor"),

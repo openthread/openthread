@@ -800,10 +800,7 @@ void BorderAgent::EphemeralKeyManager::UpdateCountersAndRecordEvent(Deactivation
         kReason, HistoryTracker::Local::kEvent, &Counters::kCounter, \
     }
 #else
-#define ReasonEntry(kReason, kCounter, kEvent) \
-    {                                          \
-        kReason, 0, &Counters::kCounter        \
-    }
+#define ReasonEntry(kReason, kCounter, kEvent) {kReason, 0, &Counters::kCounter}
 #endif
 
     static const ReasonToCounterEventEntry kReasonToCounterEventEntries[] = {

@@ -177,8 +177,7 @@ void Heap::Free(void *aPointer)
 
             if (right.GetSize() > left->GetSize())
             {
-                for (const uint16_t offset = BlockOffset(right); prev->GetNext() != offset; prev = &BlockNext(*prev))
-                    ;
+                for (const uint16_t offset = BlockOffset(right); prev->GetNext() != offset; prev = &BlockNext(*prev));
             }
             else
             {

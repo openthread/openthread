@@ -794,7 +794,8 @@ public:
     /**
      * Specifies the leader weight check behavior used in `BecomeLeader()`.
      */
-    enum LeaderWeightCheck : uint8_t{
+    enum LeaderWeightCheck : uint8_t
+    {
         kCheckLeaderWeight,  ///< Enforces that the local leader weight is greater than the current leader's weight.
         kIgnoreLeaderWeight, ///< Skips the leader weight check, attempting to become leader regardless.
     };
@@ -1422,7 +1423,8 @@ private:
     };
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    enum WedAttachState : uint8_t{
+    enum WedAttachState : uint8_t
+    {
         kWedDetached,
         kWedAttaching,
         kWedAttached,
@@ -2115,7 +2117,7 @@ private:
                           uint8_t                                  aTlvsLength,
                           const LinkMetrics::Initiator::QueryInfo *aQueryInfo = nullptr);
 #else
-    Error       SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength);
+    Error SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength);
 #endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
