@@ -80,5 +80,6 @@ endmacro()
 #----------------------------------------------------------------------------------------------------------------------
 
 ot_nexus_test(icmp6)
+ot_nexus_test(ip6)
 ot_nexus_test(mdns)
 ot_nexus_test(radio-one-node)
