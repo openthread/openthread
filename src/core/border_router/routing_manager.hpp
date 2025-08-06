@@ -717,6 +717,43 @@ public:
     void SetOnLinkPrefix(const Ip6::Prefix &aPrefix) { mOnLinkPrefixManager.SetLocalPrefix(aPrefix); }
 #endif
 
+    /**
+     * Enables or disables sending Router Advertisement messages.
+     *
+     * @param[in] aEnabled  TRUE to enable RA sending, FALSE to disable.
+     */
+    void SetRouterAdvertisementEnabled(bool aEnabled) { mRouterAdvertisementEnabled = aEnabled; }
+
+    /**
+     * Gets the current state of Router Advertisement sending.
+     *
+     * @retval TRUE   Router Advertisement sending is enabled.
+     * @retval FALSE  Router Advertisement sending is disabled.
+     */
+    bool IsRouterAdvertisementEnabled(void) const { return mRouterAdvertisementEnabled; }
+
+    /**
+     * Gets the number of Route Information Options (RIO) that will be advertised.
+     *
+     * @returns The number of RIO prefixes that will be advertised.
+     */
+    uint16_t GetAdvertisedRioCount(void) const { return mRioAdvertiser.GetAdvertisedRioCount(); }
+
+    /**
+     * Iterates over the Route Information Options (RIO) that will be advertised.
+     *
+     * @param[in,out] aIterator    A reference to the iterator.
+     * @param[out]    aPrefix      A reference to return the RIO prefix.
+     * @param[out]    aPreference  A reference to return the RIO preference.
+     *
+     * @retval kErrorNone        Got the next RIO entry.
+     * @retval kErrorNotFound    No more RIO entries.
+     */
+    Error GetNextAdvertisedRio(uint16_t &aIndex, Ip6::Prefix &aPrefix, RoutePreference &aPreference) const
+    {
+        return mRioAdvertiser.GetNextAdvertisedRio(aIndex, aPrefix, aPreference);
+    }
+
 private:
     //------------------------------------------------------------------------------------------------------------------
     // Constants
@@ -1479,6 +1516,7 @@ private:
         Error           InvalidatPrevRios(RouterAdvert::TxMessage &aRaMessage);
         bool            HasAdvertised(const Ip6::Prefix &aPrefix) const { return mPrefixes.ContainsMatching(aPrefix); }
         uint16_t        GetAdvertisedRioCount(void) const { return mPrefixes.GetLength(); }
+        Error           GetNextAdvertisedRio(uint16_t &aIndex, Ip6::Prefix &aPrefix, RoutePreference &aPreference) const;
         void            HandleTimer(void);
 
     private:
@@ -1806,6 +1844,9 @@ private:
     // Indicates whether the Routing manager is enabled. The Routing
     // Manager will be stopped if we are disabled.
     bool mIsEnabled;
+
+    // Indicates whether Router Advertisement sending is enabled.
+    bool mRouterAdvertisementEnabled;
 
     InfraIf mInfraIf;
 

@@ -792,6 +792,52 @@ void otBorderRoutingDhcp6PdSetRequestCallback(otInstance                        
 void otBorderRoutingSetOnLinkPrefix(otInstance *aInstance, const otIp6Prefix *aPrefix);
 
 /**
+ * Enables or disables sending Router Advertisement messages.
+ *
+ * When disabled, the Border Router will not send Router Advertisement messages on the infrastructure interface.
+ * When enabled (default), normal Router Advertisement functionality is restored.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aEnabled   TRUE to enable RA sending, FALSE to disable.
+ */
+void otBorderRoutingSetRouterAdvertisementEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * Gets the current state of Router Advertisement sending.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   Router Advertisement sending is enabled.
+ * @retval FALSE  Router Advertisement sending is disabled.
+ */
+bool otBorderRoutingIsRouterAdvertisementEnabled(otInstance *aInstance);
+
+/**
+ * Gets the number of Route Information Options (RIO) that will be advertised in Router Advertisement messages.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The number of RIO prefixes that will be advertised.
+ */
+uint16_t otBorderRoutingGetAdvertisedRioCount(otInstance *aInstance);
+
+/**
+ * Iterates over the Route Information Options (RIO) that will be advertised in Router Advertisement messages.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[in,out] aIndex     A pointer to the index of the RIO entry to return. 
+ * @param[out]    aPrefix    A pointer to return the RIO prefix.
+ * @param[out]    aPreference A pointer to return the RIO preference.
+ *
+ * @retval OT_ERROR_NONE        Got the next RIO entry.
+ * @retval OT_ERROR_NOT_FOUND   No more RIO entries.
+ */
+otError otBorderRoutingGetNextAdvertisedRio(otInstance                         *aInstance,
+                                            uint16_t                           *aIndex,
+                                            otIp6Prefix                        *aPrefix,
+                                            otRoutePreference                  *aPreference);
+
+/**
  * @}
  */
 

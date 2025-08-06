@@ -53,6 +53,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mIsRunning(false)
     , mIsEnabled(false)
+    , mRouterAdvertisementEnabled(true)
     , mInfraIf(aInstance)
     , mOmrPrefixManager(aInstance)
     , mRioAdvertiser(aInstance)
@@ -595,6 +596,8 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
     Ip6::Address            destAddress;
     InfraIf::Icmp6Packet    packet;
     LinkLayerAddress        linkAddr;
+
+    VerifyOrExit(mRouterAdvertisementEnabled);
 
     LogInfo("Preparing RA");
 
@@ -3699,6 +3702,22 @@ Error RoutingManager::RioAdvertiser::AppendRio(const Ip6::Prefix       &aPrefix,
 
     SuccessOrExit(error = aRaMessage.AppendRouteInfoOption(aPrefix, aRouteLifetime, aPreference));
     LogRouteInfoOption(aPrefix, aRouteLifetime, aPreference);
+
+exit:
+    return error;
+}
+
+Error RoutingManager::RioAdvertiser::GetNextAdvertisedRio(uint16_t &index,
+                                                          Ip6::Prefix         &aPrefix,
+                                                          RoutePreference     &aPreference) const
+{
+    Error    error = kErrorNone;
+
+    VerifyOrExit(index < mPrefixes.GetLength(), error = kErrorNotFound);
+
+    aPrefix     = mPrefixes[index].mPrefix;
+    aPreference = mPrefixes[index].mIsDeprecating ? NetworkData::kRoutePreferenceLow : mPreference;
+    index += 1;
 
 exit:
     return error;

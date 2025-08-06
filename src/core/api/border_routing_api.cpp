@@ -317,4 +317,42 @@ void otBorderRoutingSetOnLinkPrefix(otInstance *aInstance, const otIp6Prefix *aP
 
 #endif
 
+void otBorderRoutingSetRouterAdvertisementEnabled(otInstance *aInstance, bool aEnabled)
+{
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetRouterAdvertisementEnabled(aEnabled);
+}
+
+bool otBorderRoutingIsRouterAdvertisementEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().IsRouterAdvertisementEnabled();
+}
+
+uint16_t otBorderRoutingGetAdvertisedRioCount(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetAdvertisedRioCount();
+}
+
+otError otBorderRoutingGetNextAdvertisedRio(otInstance                         *aInstance,
+                                            uint16_t                           *aIndex,
+                                            otIp6Prefix                        *aPrefix,
+                                            otRoutePreference                  *aPreference)
+{
+    otError error;
+    BorderRouter::RoutingManager::RoutePreference preference;
+
+    AssertPointerIsNotNull(aIndex);
+    AssertPointerIsNotNull(aPrefix);
+    AssertPointerIsNotNull(aPreference);
+
+    error = AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextAdvertisedRio(
+        *aIndex, AsCoreType(aPrefix), preference);
+    
+    if (error == OT_ERROR_NONE)
+    {
+        *aPreference = static_cast<otRoutePreference>(preference);
+    }
+    
+    return error;
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
