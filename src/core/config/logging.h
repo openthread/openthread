@@ -34,6 +34,8 @@
 #ifndef CONFIG_LOGGING_H_
 #define CONFIG_LOGGING_H_
 
+#include <openthread/platform/logging.h>
+
 /**
  * @addtogroup config-logging
  *

@@ -47,7 +47,7 @@ const otHistoryTrackerNetworkInfo *otHistoryTrackerIterateNetInfoHistory(otInsta
 {
     AssertPointerIsNotNull(aEntryAge);
 
-    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateNetInfoHistory(AsCoreType(aIterator), *aEntryAge);
+    return AsCoreType(aInstance).Get<HistoryTracker::Local>().IterateNetInfoHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
 const otHistoryTrackerUnicastAddressInfo *otHistoryTrackerIterateUnicastAddressHistory(
@@ -57,7 +57,7 @@ const otHistoryTrackerUnicastAddressInfo *otHistoryTrackerIterateUnicastAddressH
 {
     AssertPointerIsNotNull(aEntryAge);
 
-    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateUnicastAddressHistory(AsCoreType(aIterator),
+    return AsCoreType(aInstance).Get<HistoryTracker::Local>().IterateUnicastAddressHistory(AsCoreType(aIterator),
                                                                                            *aEntryAge);
 }
 
@@ -68,7 +68,7 @@ const otHistoryTrackerMulticastAddressInfo *otHistoryTrackerIterateMulticastAddr
 {
     AssertPointerIsNotNull(aEntryAge);
 
-    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateMulticastAddressHistory(AsCoreType(aIterator),
+    return AsCoreType(aInstance).Get<HistoryTracker::Local>().IterateMulticastAddressHistory(AsCoreType(aIterator),
                                                                                              *aEntryAge);
 }
 
@@ -78,7 +78,7 @@ const otHistoryTrackerMessageInfo *otHistoryTrackerIterateRxHistory(otInstance  
 {
     AssertPointerIsNotNull(aEntryAge);
 
-    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateRxHistory(AsCoreType(aIterator), *aEntryAge);
+    return AsCoreType(aInstance).Get<HistoryTracker::Local>().IterateRxHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
 const otHistoryTrackerMessageInfo *otHistoryTrackerIterateTxHistory(otInstance               *aInstance,
@@ -87,7 +87,7 @@ const otHistoryTrackerMessageInfo *otHistoryTrackerIterateTxHistory(otInstance  
 {
     AssertPointerIsNotNull(aEntryAge);
 
-    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateTxHistory(AsCoreType(aIterator), *aEntryAge);
+    return AsCoreType(aInstance).Get<HistoryTracker::Local>().IterateTxHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
 const otHistoryTrackerNeighborInfo *otHistoryTrackerIterateNeighborHistory(otInstance               *aInstance,
@@ -96,7 +96,7 @@ const otHistoryTrackerNeighborInfo *otHistoryTrackerIterateNeighborHistory(otIns
 {
     AssertPointerIsNotNull(aEntryAge);
 
-    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateNeighborHistory(AsCoreType(aIterator), *aEntryAge);
+    return AsCoreType(aInstance).Get<HistoryTracker::Local>().IterateNeighborHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
 const otHistoryTrackerRouterInfo *otHistoryTrackerIterateRouterHistory(otInstance               *aInstance,
@@ -105,7 +105,7 @@ const otHistoryTrackerRouterInfo *otHistoryTrackerIterateRouterHistory(otInstanc
 {
     AssertPointerIsNotNull(aEntryAge);
 
-    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateRouterHistory(AsCoreType(aIterator), *aEntryAge);
+    return AsCoreType(aInstance).Get<HistoryTracker::Local>().IterateRouterHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
 const otHistoryTrackerOnMeshPrefixInfo *otHistoryTrackerIterateOnMeshPrefixHistory(otInstance               *aInstance,
@@ -114,7 +114,7 @@ const otHistoryTrackerOnMeshPrefixInfo *otHistoryTrackerIterateOnMeshPrefixHisto
 {
     AssertPointerIsNotNull(aEntryAge);
 
-    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateOnMeshPrefixHistory(AsCoreType(aIterator),
+    return AsCoreType(aInstance).Get<HistoryTracker::Local>().IterateOnMeshPrefixHistory(AsCoreType(aIterator),
                                                                                          *aEntryAge);
 }
 
@@ -125,8 +125,18 @@ const otHistoryTrackerExternalRouteInfo *otHistoryTrackerIterateExternalRouteHis
 {
     AssertPointerIsNotNull(aEntryAge);
 
-    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateExternalRouteHistory(AsCoreType(aIterator),
+    return AsCoreType(aInstance).Get<HistoryTracker::Local>().IterateExternalRouteHistory(AsCoreType(aIterator),
                                                                                           *aEntryAge);
+}
+
+const otHistoryTrackerDnsSrpAddrInfo *otHistoryTrackerIterateDnsSrpAddrHistory(otInstance               *aInstance,
+                                                                               otHistoryTrackerIterator *aIterator,
+                                                                               uint32_t                 *aEntryAge)
+{
+    AssertPointerIsNotNull(aEntryAge);
+
+    return AsCoreType(aInstance).Get<HistoryTracker::Local>().IterateDnsSrpAddrHistory(AsCoreType(aIterator),
+                                                                                       *aEntryAge);
 }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
@@ -137,14 +147,14 @@ const otHistoryTrackerBorderAgentEpskcEvent *otHistoryTrackerIterateBorderAgentE
 {
     AssertPointerIsNotNull(aEntryAge);
 
-    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateEpskcEventHistory(AsCoreType(aIterator),
+    return AsCoreType(aInstance).Get<HistoryTracker::Local>().IterateEpskcEventHistory(AsCoreType(aIterator),
                                                                                        *aEntryAge);
 }
 #endif
 
 void otHistoryTrackerEntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize)
 {
-    Utils::HistoryTracker::EntryAgeToString(aEntryAge, aBuffer, aSize);
+    HistoryTracker::Local::EntryAgeToString(aEntryAge, aBuffer, aSize);
 }
 
 #endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE

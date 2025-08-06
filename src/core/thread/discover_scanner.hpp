@@ -156,15 +156,16 @@ private:
 
     // Methods used by `MeshForwarder`
     Mac::TxFrame *PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame);
-    void          HandleDiscoveryRequestFrameTxDone(Message &aMessage, Error aError);
     void          Stop(void) { HandleDiscoverComplete(); }
 
     // Methods used from `Mle`
     void HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const;
 
-    void HandleDiscoverComplete(void);
-    void HandleScanDoneTask(void);
-    void HandleTimer(void);
+    void        HandleDiscoverComplete(void);
+    void        HandleScanDoneTask(void);
+    void        HandleTimer(void);
+    void        HandleDiscoveryRequestFrameTxDone(Message &aMessage, Error aError);
+    static void HandleDiscoveryRequestFrameTxDone(const otMessage *aMessage, otError aError, void *aContext);
 
     using ScanTimer    = TimerMilliIn<DiscoverScanner, &DiscoverScanner::HandleTimer>;
     using ScanDoneTask = TaskletIn<DiscoverScanner, &DiscoverScanner::HandleScanDoneTask>;

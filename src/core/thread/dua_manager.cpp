@@ -140,7 +140,7 @@ Error DuaManager::GenerateDomainUnicastAddressIid(void)
         if (dadCounter != mDadCounter)
         {
             mDadCounter = dadCounter;
-            IgnoreError(Store());
+            Store();
         }
 
         LogInfo("Generated DUA: %s", mDomainUnicastAddress.GetAddress().ToString().AsCString());
@@ -208,12 +208,12 @@ exit:
     return;
 }
 
-Error DuaManager::Store(void)
+void DuaManager::Store(void)
 {
     Settings::DadInfo dadInfo;
 
     dadInfo.SetDadCounter(mDadCounter);
-    return Get<Settings>().Save(dadInfo);
+    Get<Settings>().Save(dadInfo);
 }
 
 void DuaManager::AddDomainUnicastAddress(void)
@@ -320,7 +320,7 @@ void DuaManager::HandleNotifierEvents(Events aEvents)
             // Wait for link establishment with neighboring routers.
             UpdateRegistrationDelay(kNewRouterRegistrationDelay);
         }
-        else if (mle.IsExpectedToBecomeRouterSoon())
+        else if (mle.WillBecomeRouterSoon())
         {
             // Will check again in case the device decides to stay REED when jitter timeout expires.
             UpdateRegistrationDelay(mle.GetRouterRoleTransitionTimeout() + kNewRouterRegistrationDelay + 1);
@@ -434,7 +434,7 @@ void DuaManager::PerformNextRegistration(void)
     // Only send DUA.req when necessary
 #if OPENTHREAD_CONFIG_DUA_ENABLE
 #if OPENTHREAD_FTD
-    if (!mle.IsRouterOrLeader() && mle.IsExpectedToBecomeRouterSoon())
+    if (!mle.IsRouterOrLeader() && mle.WillBecomeRouterSoon())
     {
         UpdateRegistrationDelay(mle.GetRouterRoleTransitionTimeout() + kNewRouterRegistrationDelay + 1);
         ExitNow();

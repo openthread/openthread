@@ -235,7 +235,7 @@ void Netif::SignalMulticastAddressChange(AddressEvent aEvent, const MulticastAdd
     Get<Notifier>().Signal(aEvent == kAddressAdded ? kEventIp6MulticastSubscribed : kEventIp6MulticastUnsubscribed);
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Get<Utils::HistoryTracker>().RecordAddressEvent(aEvent, aAddress, aOrigin);
+    Get<HistoryTracker::Local>().RecordAddressEvent(aEvent, aAddress, aOrigin);
 #endif
 
     if ((aOrigin == kOriginThread) && mAddressCallback.IsSet())
@@ -414,7 +414,7 @@ void Netif::SignalUnicastAddressChange(AddressEvent aEvent, const UnicastAddress
 #endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Get<Utils::HistoryTracker>().RecordAddressEvent(aEvent, aAddress);
+    Get<HistoryTracker::Local>().RecordAddressEvent(aEvent, aAddress);
 #endif
 
     if (!IsUnicastAddressExternal(aAddress) && mAddressCallback.IsSet())

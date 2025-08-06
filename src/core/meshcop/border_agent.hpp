@@ -193,11 +193,8 @@ public:
      * Border Router/Agent device.
      *
      * @param[out] aId  Reference to return the Border Agent ID.
-     *
-     * @retval kErrorNone  If successfully retrieved the Border Agent ID.
-     * @retval ...         If failed to retrieve the Border Agent ID.
      */
-    Error GetId(Id &aId);
+    void GetId(Id &aId);
 
     /**
      * Sets the Border Agent ID.
@@ -207,11 +204,8 @@ public:
      * method, a random ID will be generated and returned when `GetId()` is called.
      *
      * @param[in] aId   The Border Agent ID.
-     *
-     * @retval kErrorNone  If successfully set the Border Agent ID.
-     * @retval ...         If failed to set the Border Agent ID.
      */
-    Error SetId(const Id &aId);
+    void SetId(const Id &aId);
 #endif
 
     /**

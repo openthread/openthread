@@ -76,10 +76,8 @@ BorderAgent::BorderAgent(Instance &aInstance)
 }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
-Error BorderAgent::GetId(Id &aId)
+void BorderAgent::GetId(Id &aId)
 {
-    Error error = kErrorNone;
-
     if (mIdInitialized)
     {
         aId = mId;
@@ -89,32 +87,30 @@ Error BorderAgent::GetId(Id &aId)
     if (Get<Settings>().Read<Settings::BorderAgentId>(mId) != kErrorNone)
     {
         mId.GenerateRandom();
-        SuccessOrExit(error = Get<Settings>().Save<Settings::BorderAgentId>(mId));
+        Get<Settings>().Save<Settings::BorderAgentId>(mId);
     }
 
     mIdInitialized = true;
     aId            = mId;
 
 exit:
-    return error;
+    return;
 }
 
-Error BorderAgent::SetId(const Id &aId)
+void BorderAgent::SetId(const Id &aId)
 {
-    Error error = kErrorNone;
-
     if (mIdInitialized)
     {
         VerifyOrExit(aId != mId);
     }
 
-    SuccessOrExit(error = Get<Settings>().Save<Settings::BorderAgentId>(aId));
+    Get<Settings>().Save<Settings::BorderAgentId>(aId);
     mId            = aId;
     mIdInitialized = true;
     PostServiceTask();
 
 exit:
-    return error;
+    return;
 }
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 
@@ -537,10 +533,8 @@ Error BorderAgent::PrepareServiceTxtData(uint8_t *aBuffer, uint16_t aBufferSize,
     {
         Id id;
 
-        if (GetId(id) == kErrorNone)
-        {
-            SuccessOrExit(error = encoder.AppendEntry("id", id));
-        }
+        GetId(id);
+        SuccessOrExit(error = encoder.AppendEntry("id", id));
     }
 #endif
     SuccessOrExit(error = encoder.AppendStringEntry("rv", kTxtDataRecordVersion));
@@ -747,7 +741,7 @@ exit:
     case kErrorNone:
         Get<BorderAgent>().mCounters.mEpskcActivations++;
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        Get<Utils::HistoryTracker>().RecordEpskcEvent(Utils::HistoryTracker::kEpskcActivated);
+        Get<HistoryTracker::Local>().RecordEpskcEvent(HistoryTracker::Local::kEpskcActivated);
 #endif
         break;
     case kErrorInvalidState:
@@ -796,14 +790,14 @@ void BorderAgent::EphemeralKeyManager::UpdateCountersAndRecordEvent(Deactivation
     struct ReasonToCounterEventEntry
     {
         DeactivationReason mReason;
-        uint8_t            mEvent; // Raw values of `Utils::HistoryTracker::Epskc` enum.
+        uint8_t            mEvent; // Raw values of `HistoryTracker::Local::Epskc` enum.
         uint32_t Counters::*mCounterPtr;
     };
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 #define ReasonEntry(kReason, kCounter, kEvent)                       \
     {                                                                \
-        kReason, Utils::HistoryTracker::kEvent, &Counters::kCounter, \
+        kReason, HistoryTracker::Local::kEvent, &Counters::kCounter, \
     }
 #else
 #define ReasonEntry(kReason, kCounter, kEvent) \
@@ -824,7 +818,7 @@ void BorderAgent::EphemeralKeyManager::UpdateCountersAndRecordEvent(Deactivation
 #undef ReasonEntry
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Utils::HistoryTracker::EpskcEvent event = Utils::HistoryTracker::kEpskcDeactivatedUnknown;
+    HistoryTracker::EpskcEvent event = HistoryTracker::Local::kEpskcDeactivatedUnknown;
 #endif
 
     for (const ReasonToCounterEventEntry &entry : kReasonToCounterEventEntries)
@@ -833,14 +827,14 @@ void BorderAgent::EphemeralKeyManager::UpdateCountersAndRecordEvent(Deactivation
         {
             (Get<BorderAgent>().mCounters.*(entry.mCounterPtr))++;
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-            event = static_cast<Utils::HistoryTracker::EpskcEvent>(entry.mEvent);
+            event = static_cast<HistoryTracker::EpskcEvent>(entry.mEvent);
 #endif
             break;
         }
     }
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Get<Utils::HistoryTracker>().RecordEpskcEvent(event);
+    Get<HistoryTracker::Local>().RecordEpskcEvent(event);
 #endif
 }
 
@@ -906,7 +900,7 @@ void BorderAgent::EphemeralKeyManager::HandleSessionConnected(void)
     SetState(kStateConnected);
     Get<BorderAgent>().mCounters.mEpskcSecureSessionSuccesses++;
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Get<Utils::HistoryTracker>().RecordEpskcEvent(Utils::HistoryTracker::kEpskcConnected);
+    Get<HistoryTracker::Local>().RecordEpskcEvent(HistoryTracker::Local::kEpskcConnected);
 #endif
 }
 
@@ -946,7 +940,7 @@ void BorderAgent::EphemeralKeyManager::HandleCommissionerPetitionAccepted(void)
     SetState(kStateAccepted);
     Get<BorderAgent>().mCounters.mEpskcCommissionerPetitions++;
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Get<Utils::HistoryTracker>().RecordEpskcEvent(Utils::HistoryTracker::kEpskcPetitioned);
+    Get<HistoryTracker::Local>().RecordEpskcEvent(HistoryTracker::Local::kEpskcPetitioned);
 #endif
 }
 
@@ -1174,7 +1168,7 @@ void BorderAgent::CoapDtlsSession::HandleTmfCommissionerKeepAlive(Coap::Message 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     if (Get<EphemeralKeyManager>().OwnsSession(*this))
     {
-        Get<Utils::HistoryTracker>().RecordEpskcEvent(Utils::HistoryTracker::kEpskcKeepAlive);
+        Get<HistoryTracker::Local>().RecordEpskcEvent(HistoryTracker::Local::kEpskcKeepAlive);
     }
 #endif
 
@@ -1510,7 +1504,7 @@ void BorderAgent::CoapDtlsSession::HandleTmfDatasetGet(Coap::Message &aMessage, 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
         if (Get<EphemeralKeyManager>().OwnsSession(*this))
         {
-            Get<Utils::HistoryTracker>().RecordEpskcEvent(Utils::HistoryTracker::kEpskcRetrievedActiveDataset);
+            Get<HistoryTracker::Local>().RecordEpskcEvent(HistoryTracker::Local::kEpskcRetrievedActiveDataset);
         }
 #endif
         break;
@@ -1521,7 +1515,7 @@ void BorderAgent::CoapDtlsSession::HandleTmfDatasetGet(Coap::Message &aMessage, 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
         if (Get<EphemeralKeyManager>().OwnsSession(*this))
         {
-            Get<Utils::HistoryTracker>().RecordEpskcEvent(Utils::HistoryTracker::kEpskcRetrievedPendingDataset);
+            Get<HistoryTracker::Local>().RecordEpskcEvent(HistoryTracker::Local::kEpskcRetrievedPendingDataset);
         }
 #endif
         break;

@@ -1246,7 +1246,7 @@ void MeshForwarder::UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDes
 #endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Get<Utils::HistoryTracker>().RecordTxMessage(*mSendMessage, aMacDest);
+    Get<HistoryTracker::Local>().RecordTxMessage(*mSendMessage, aMacDest);
 #endif
 
     LogMessage(kMessageTransmit, *mSendMessage, txError, &aMacDest);
@@ -1276,13 +1276,6 @@ void MeshForwarder::FinalizeMessageDirectTx(Message &aMessage, Error aError)
     }
 
     mCounters.UpdateOnTxDone(aMessage, aMessage.GetTxSuccess());
-
-    if (aMessage.IsMleCommand(Mle::kCommandDiscoveryRequest))
-    {
-        // Note that `HandleDiscoveryRequestFrameTxDone()` may update
-        // `aMessage` and mark it again for direct transmission.
-        Get<Mle::DiscoverScanner>().HandleDiscoveryRequestFrameTxDone(aMessage, aError);
-    }
 
     aMessage.InvokeTxCallback(aError);
 
@@ -1621,7 +1614,7 @@ exit:
 Error MeshForwarder::HandleDatagram(Message &aMessage, const Mac::Address &aMacSource)
 {
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Get<Utils::HistoryTracker>().RecordRxMessage(aMessage, aMacSource);
+    Get<HistoryTracker::Local>().RecordRxMessage(aMessage, aMacSource);
 #endif
 
     LogMessage(kMessageReceive, aMessage, kErrorNone, &aMacSource);

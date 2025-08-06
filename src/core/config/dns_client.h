@@ -134,9 +134,12 @@
  * @def OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT
  *
  * Specifies the default wait time that DNS client waits for a response from server (in milliseconds).
+ *
+ * The default value of 7000 is selected to be longer than the six-second wait time for queries resolved by the
+ * Discovery Proxy (per RFC 8766, Section 5.6, first bullet).
  */
 #ifndef OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT
-#define OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT 6000
+#define OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT 7000
 #endif
 
 /**

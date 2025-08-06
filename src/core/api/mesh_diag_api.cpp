@@ -84,4 +84,14 @@ otError otMeshDiagQueryRouterNeighborTable(otInstance                           
     return AsCoreType(aInstance).Get<Utils::MeshDiag>().QueryRouterNeighborTable(aRloc16, aCallback, aContext);
 }
 
+void otMeshDiagSetResponseTimeout(otInstance *aInstance, uint32_t aTimeout)
+{
+    AsCoreType(aInstance).Get<Utils::MeshDiag>().SetResponseTimeout(aTimeout);
+}
+
+uint32_t otMeshDiagGetResponseTimeout(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Utils::MeshDiag>().GetResponseTimeout();
+}
+
 #endif // OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD

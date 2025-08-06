@@ -1437,6 +1437,123 @@ exit:
     return error;
 }
 
+// clang-format off
+/**
+ * @cli history dnssrpaddr
+ * @code
+ * history dnssrpaddr
+ * | Age                  | Event   | Address                                 | Type      |Port/Seq| Ver | RLOC16 |
+ * +----------------------+---------+-----------------------------------------+-----------+--------+-----+--------+
+ * |         00:00:07.150 | Added   | fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb | uni-local |   1234 |   0 | 0x0000 |
+ * |         00:00:09.351 | Removed | fd00:0:0:0:0:0:0:1234                   | uni-infra |  51525 |   1 | 0x0000 |
+ * |         00:00:28.479 | Added   | fd00:0:0:0:0:0:0:1234                   | uni-infra |  51525 |   1 | 0x0000 |
+ * |         00:00:30.133 | Removed | fd4f:59ae:348a:aa48:0:ff:fe00:fc10      |   anycast |      1 |   2 | 0x0000 |
+ * |         00:01:02.609 | Added   | fd4f:59ae:348a:aa48:0:ff:fe00:fc10      |   anycast |      1 |   2 | 0x0000 |
+ * |         00:01:03.574 | Removed | fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb | uni-local |  50152 |   2 | 0x0000 |
+ * |         00:01:33.631 | Added   | fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb | uni-local |  50152 |   2 | 0x0000 |
+ * Done
+ * @endcode
+ * @code
+ * history dnssrpaddr list
+ * 00:00:19.646 -> event:Added addr:fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb type:uni-local port:1234 ver:0 rloc16:0x0000
+ * 00:00:21.847 -> event:Removed addr:fd00:0:0:0:0:0:0:1234 type:uni-infra port:51525 ver:1 rloc16:0x0000
+ * 00:00:40.975 -> event:Added addr:fd00:0:0:0:0:0:0:1234 type:uni-infra port:51525 ver:1 rloc16:0x0000
+ * 00:00:42.629 -> event:Removed addr:fd4f:59ae:348a:aa48:0:ff:fe00:fc10 type:anycast seqno:1 ver:2 rloc16:0x0000
+ * 00:01:15.105 -> event:Added addr:fd4f:59ae:348a:aa48:0:ff:fe00:fc10 type:anycast seqno:1 ver:2 rloc16:0x0000
+ * 00:01:16.070 -> event:Removed addr:fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb type:uni-local port:50152 ver:2 rloc16:0x0000
+ * 00:01:46.127 -> event:Added addr:fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb type:uni-local port:50152 ver:2 rloc16:0x0000
+ * Done
+ * @endcode
+ * @cparam history dnssrpaddr [@ca{list}] [@ca{num-entries}]
+ * * Use the `list` option to display the output in list format. Otherwise, the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of most-recent entries specified. If this option
+ *   is not used, all stored entries are shown in the output.
+ * @par
+ * Displays the network data DNS/SRP address history in table or list format.
+ * @par
+ * Each table or list entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`:`milliseconds`
+ * * Event: Possible values are `Added` or `Removed`.
+ * * Address of DNS/SRP server.
+ * * Address type: `uni-local` unicast address local (address in server data) or `uni-infra` infrastructure server
+ *   (address in service data), or `anycast`.
+ * * Port or SeqNumber: Port if address is unicast, seq number for anycast address type.
+ * * Version number.
+ * * RLOC16 of the BR adding/removing this entry in Network Data.
+ * @sa otHistoryTrackerIterateDnsSrpAddrHistory
+ */
+// clang-format on
+template <> otError History::Process<Cmd("dnssrpaddr")>(Arg aArgs[])
+{
+    otError                               error;
+    bool                                  isList;
+    uint16_t                              numEntries;
+    otHistoryTrackerIterator              iterator;
+    const otHistoryTrackerDnsSrpAddrInfo *info;
+    uint32_t                              entryAge;
+    char                                  ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                                  addrString[OT_IP6_ADDRESS_STRING_SIZE];
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        static const char *const kTitles[]       = {"Age", "Event", "Address", "Type", "Port/Seq", "Ver", "RLOC16"};
+        static const uint8_t     kColumnWidths[] = {22, 9, 41, 11, 8, 5, 8};
+
+        OutputTableHeader(kTitles, kColumnWidths);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        bool isAnycast;
+
+        info = otHistoryTrackerIterateDnsSrpAddrHistory(GetInstancePtr(), &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+
+        otIp6AddressToString(&info->mAddress, addrString, sizeof(addrString));
+
+        isAnycast = info->mType == OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_ANYCAST;
+
+        if (isList)
+        {
+            OutputLine("%s -> event:%s addr:%s type:%s %s:%u ver:%u rloc16:0x%04x", ageString,
+                       Stringify(info->mEvent, kSimpleEventStrings), addrString, DnsSrpAddrTypeToString(info->mType),
+                       isAnycast ? "seqno" : "port", isAnycast ? info->mSequenceNumber : info->mPort, info->mVersion,
+                       info->mRloc16);
+        }
+        else
+        {
+            OutputLine("| %20s | %-7s | %-39s | %9s | %6u | %3u | 0x%04x |", ageString,
+                       Stringify(info->mEvent, kSimpleEventStrings), addrString, DnsSrpAddrTypeToString(info->mType),
+                       isAnycast ? info->mSequenceNumber : info->mPort, info->mVersion, info->mRloc16);
+        }
+    }
+
+exit:
+    return error;
+}
+
+const char *History::DnsSrpAddrTypeToString(otHistoryTrackerDnsSrpAddrType aType)
+{
+    static const char *const kAddrTypeStrings[] = {
+        "uni-local", // (0) OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_UNICAST_LOCAL
+        "uni-infra", // (1) OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_UNICAST_INFRA
+        "anycast",   // (2) OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_ANYCAST
+    };
+
+    static_assert(0 == OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_UNICAST_LOCAL, "ADDR_TYPE_UNICAST_LOCAL is incorrect");
+    static_assert(1 == OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_UNICAST_INFRA, "ADDR_TYPE_UNICAST_INFRA is incorrect");
+    static_assert(2 == OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_ANYCAST, "ADDR_TYPE_ANYCAST is incorrect");
+
+    return Stringify(aType, kAddrTypeStrings, "--");
+}
+
 otError History::Process(Arg aArgs[])
 {
 #define CmdEntry(aCommandString)                               \
@@ -1445,8 +1562,9 @@ otError History::Process(Arg aArgs[])
     }
 
     static constexpr Command kCommands[] = {
-        CmdEntry("ipaddr"), CmdEntry("ipmaddr"), CmdEntry("neighbor"), CmdEntry("netinfo"), CmdEntry("prefix"),
-        CmdEntry("route"),  CmdEntry("router"),  CmdEntry("rx"),       CmdEntry("rxtx"),    CmdEntry("tx"),
+        CmdEntry("dnssrpaddr"), CmdEntry("ipaddr"), CmdEntry("ipmaddr"), CmdEntry("neighbor"),
+        CmdEntry("netinfo"),    CmdEntry("prefix"), CmdEntry("route"),   CmdEntry("router"),
+        CmdEntry("rx"),         CmdEntry("rxtx"),   CmdEntry("tx"),
     };
 
 #undef CmdEntry

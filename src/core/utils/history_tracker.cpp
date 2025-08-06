@@ -38,12 +38,12 @@
 #include "instance/instance.hpp"
 
 namespace ot {
-namespace Utils {
+namespace HistoryTracker {
 
 //---------------------------------------------------------------------------------------------------------------------
-// HistoryTracker
+// Local
 
-HistoryTracker::HistoryTracker(Instance &aInstance)
+Local::Local(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimer(aInstance)
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
@@ -57,7 +57,7 @@ HistoryTracker::HistoryTracker(Instance &aInstance)
 #endif
 }
 
-void HistoryTracker::RecordNetworkInfo(void)
+void Local::RecordNetworkInfo(void)
 {
     NetworkInfo    *entry = mNetInfoHistory.AddNewEntry();
     Mle::DeviceMode mode;
@@ -74,7 +74,7 @@ exit:
     return;
 }
 
-void HistoryTracker::RecordMessage(const Message &aMessage, const Mac::Address &aMacAddress, MessageType aType)
+void Local::RecordMessage(const Message &aMessage, const Mac::Address &aMacAddress, MessageType aType)
 {
     MessageInfo *entry = nullptr;
     Ip6::Headers headers;
@@ -178,7 +178,7 @@ exit:
     return;
 }
 
-void HistoryTracker::RecordNeighborEvent(NeighborTable::Event aEvent, const NeighborTable::EntryInfo &aInfo)
+void Local::RecordNeighborEvent(NeighborTable::Event aEvent, const NeighborTable::EntryInfo &aInfo)
 {
     NeighborInfo *entry = mNeighborHistory.AddNewEntry();
 
@@ -239,8 +239,7 @@ exit:
     return;
 }
 
-void HistoryTracker::RecordAddressEvent(Ip6::Netif::AddressEvent          aEvent,
-                                        const Ip6::Netif::UnicastAddress &aUnicastAddress)
+void Local::RecordAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::UnicastAddress &aUnicastAddress)
 {
     UnicastAddressInfo *entry = mUnicastAddressHistory.AddNewEntry();
 
@@ -259,9 +258,9 @@ exit:
     return;
 }
 
-void HistoryTracker::RecordAddressEvent(Ip6::Netif::AddressEvent            aEvent,
-                                        const Ip6::Netif::MulticastAddress &aMulticastAddress,
-                                        Ip6::Netif::AddressOrigin           aAddressOrigin)
+void Local::RecordAddressEvent(Ip6::Netif::AddressEvent            aEvent,
+                               const Ip6::Netif::MulticastAddress &aMulticastAddress,
+                               Ip6::Netif::AddressOrigin           aAddressOrigin)
 {
     MulticastAddressInfo *entry = mMulticastAddressHistory.AddNewEntry();
 
@@ -276,7 +275,7 @@ exit:
 }
 
 #if OPENTHREAD_FTD
-void HistoryTracker::RecordRouterTableChange(void)
+void Local::RecordRouterTableChange(void)
 {
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ROUTER_LIST_SIZE > 0
 
@@ -346,11 +345,20 @@ void HistoryTracker::RecordRouterTableChange(void)
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
-void HistoryTracker::RecordNetworkDataChange(void)
+void Local::RecordNetworkDataChange(void)
 {
-    NetworkData::Iterator            iterator;
-    NetworkData::OnMeshPrefixConfig  prefix;
-    NetworkData::ExternalRouteConfig route;
+    static const NetworkData::Service::DnsSrpUnicastType kDnsSrpUnicastTypes[] = {
+        NetworkData::Service::kAddrInServiceData,
+        NetworkData::Service::kAddrInServerData,
+    };
+
+    NetworkData::Iterator                   iterator;
+    NetworkData::OnMeshPrefixConfig         prefix;
+    NetworkData::ExternalRouteConfig        route;
+    NetworkData::Service::DnsSrpUnicastInfo unicastInfo;
+    NetworkData::Service::DnsSrpAnycastInfo anycastInfo;
+    NetworkData::Service::Iterator          newDataIterator(GetInstance(), Get<NetworkData::Leader>());
+    NetworkData::Service::Iterator          prvDataIterator(GetInstance(), mPreviousNetworkData);
 
     // On mesh prefix entries
 
@@ -396,10 +404,55 @@ void HistoryTracker::RecordNetworkDataChange(void)
         }
     }
 
+    // DNS/SRP Unicast/Anycast entries
+
+    for (NetworkData::Service::DnsSrpUnicastType type : kDnsSrpUnicastTypes)
+    {
+        prvDataIterator.Reset();
+
+        while (prvDataIterator.GetNextDnsSrpUnicastInfo(type, unicastInfo) == kErrorNone)
+        {
+            if (!NetDataContainsDnsSrpUnicast(Get<NetworkData::Leader>(), unicastInfo, type))
+            {
+                RecordDnsSrpAddrEvent(kNetDataEntryRemoved, unicastInfo, type);
+            }
+        }
+
+        newDataIterator.Reset();
+
+        while (newDataIterator.GetNextDnsSrpUnicastInfo(type, unicastInfo) == kErrorNone)
+        {
+            if (!NetDataContainsDnsSrpUnicast(mPreviousNetworkData, unicastInfo, type))
+            {
+                RecordDnsSrpAddrEvent(kNetDataEntryAdded, unicastInfo, type);
+            }
+        }
+    }
+
+    prvDataIterator.Reset();
+
+    while (prvDataIterator.GetNextDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
+    {
+        if (!NetDataContainsDnsSrpAnycast(Get<NetworkData::Leader>(), anycastInfo))
+        {
+            RecordDnsSrpAddrEvent(kNetDataEntryRemoved, anycastInfo);
+        }
+    }
+
+    newDataIterator.Reset();
+
+    while (newDataIterator.GetNextDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
+    {
+        if (!NetDataContainsDnsSrpAnycast(mPreviousNetworkData, anycastInfo))
+        {
+            RecordDnsSrpAddrEvent(kNetDataEntryAdded, anycastInfo);
+        }
+    }
+
     SuccessOrAssert(Get<NetworkData::Leader>().CopyNetworkData(NetworkData::kFullSet, mPreviousNetworkData));
 }
 
-void HistoryTracker::RecordOnMeshPrefixEvent(NetDataEvent aEvent, const NetworkData::OnMeshPrefixConfig &aPrefix)
+void Local::RecordOnMeshPrefixEvent(NetDataEvent aEvent, const NetworkData::OnMeshPrefixConfig &aPrefix)
 {
     OnMeshPrefixInfo *entry = mOnMeshPrefixHistory.AddNewEntry();
 
@@ -411,7 +464,7 @@ exit:
     return;
 }
 
-void HistoryTracker::RecordExternalRouteEvent(NetDataEvent aEvent, const NetworkData::ExternalRouteConfig &aRoute)
+void Local::RecordExternalRouteEvent(NetDataEvent aEvent, const NetworkData::ExternalRouteConfig &aRoute)
 {
     ExternalRouteInfo *entry = mExternalRouteHistory.AddNewEntry();
 
@@ -423,10 +476,96 @@ exit:
     return;
 }
 
+void Local::RecordDnsSrpAddrEvent(NetDataEvent                                   aEvent,
+                                  const NetworkData::Service::DnsSrpUnicastInfo &aUnicastInfo,
+                                  NetworkData::Service::DnsSrpUnicastType        aType)
+{
+    DnsSrpAddrInfo *entry = mDnsSrpAddrHistory.AddNewEntry();
+
+    VerifyOrExit(entry != nullptr);
+
+    entry->mAddress        = aUnicastInfo.mSockAddr.mAddress;
+    entry->mRloc16         = aUnicastInfo.mRloc16;
+    entry->mPort           = aUnicastInfo.mSockAddr.mPort;
+    entry->mSequenceNumber = 0;
+    entry->mVersion        = aUnicastInfo.mVersion;
+    entry->mEvent          = aEvent;
+
+    switch (aType)
+    {
+    case NetworkData::Service::kAddrInServerData:
+        entry->mType = kDnsSrpAddrTypeUnicastLocal;
+        break;
+    case NetworkData::Service::kAddrInServiceData:
+        entry->mType = kDnsSrpAddrTypeUnicastInfra;
+        break;
+    }
+
+exit:
+    return;
+}
+
+void Local::RecordDnsSrpAddrEvent(NetDataEvent aEvent, const NetworkData::Service::DnsSrpAnycastInfo &aAnycastInfo)
+{
+    DnsSrpAddrInfo *entry = mDnsSrpAddrHistory.AddNewEntry();
+
+    VerifyOrExit(entry != nullptr);
+
+    entry->mAddress        = aAnycastInfo.mAnycastAddress;
+    entry->mRloc16         = aAnycastInfo.mRloc16;
+    entry->mPort           = kAnycastServerPort;
+    entry->mSequenceNumber = aAnycastInfo.mSequenceNumber;
+    entry->mVersion        = aAnycastInfo.mVersion;
+    entry->mEvent          = aEvent;
+    entry->mType           = kDnsSrpAddrTypeAnycast;
+
+exit:
+    return;
+}
+
+bool Local::NetDataContainsDnsSrpUnicast(const NetworkData::NetworkData                &aNetworkData,
+                                         const NetworkData::Service::DnsSrpUnicastInfo &aUnicastInfo,
+                                         NetworkData::Service::DnsSrpUnicastType        aType) const
+{
+    bool                                    contains = false;
+    NetworkData::Service::Iterator          iterator(GetInstance(), aNetworkData);
+    NetworkData::Service::DnsSrpUnicastInfo unicastInfo;
+
+    while (iterator.GetNextDnsSrpUnicastInfo(aType, unicastInfo) == kErrorNone)
+    {
+        if (unicastInfo == aUnicastInfo)
+        {
+            contains = true;
+            break;
+        }
+    }
+
+    return contains;
+}
+
+bool Local::NetDataContainsDnsSrpAnycast(const NetworkData::NetworkData                &aNetworkData,
+                                         const NetworkData::Service::DnsSrpAnycastInfo &aAnycastInfo) const
+{
+    bool                                    contains = false;
+    NetworkData::Service::Iterator          iterator(GetInstance(), aNetworkData);
+    NetworkData::Service::DnsSrpAnycastInfo anycastInfo;
+
+    while (iterator.GetNextDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
+    {
+        if (anycastInfo == aAnycastInfo)
+        {
+            contains = true;
+            break;
+        }
+    }
+
+    return contains;
+}
+
 #endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-void HistoryTracker::RecordEpskcEvent(EpskcEvent aEvent)
+void Local::RecordEpskcEvent(EpskcEvent aEvent)
 {
     EpskcEvent *entry = mEpskcEventHistory.AddNewEntry();
 
@@ -438,7 +577,7 @@ exit:
 }
 #endif
 
-void HistoryTracker::HandleNotifierEvents(Events aEvents)
+void Local::HandleNotifierEvents(Events aEvents)
 {
     if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadRlocAdded | kEventThreadRlocRemoved |
                             kEventThreadPartitionIdChanged))
@@ -454,7 +593,7 @@ void HistoryTracker::HandleNotifierEvents(Events aEvents)
 #endif
 }
 
-void HistoryTracker::HandleTimer(void)
+void Local::HandleTimer(void)
 {
     mNetInfoHistory.UpdateAgedEntries();
     mUnicastAddressHistory.UpdateAgedEntries();
@@ -464,13 +603,14 @@ void HistoryTracker::HandleTimer(void)
     mNeighborHistory.UpdateAgedEntries();
     mOnMeshPrefixHistory.UpdateAgedEntries();
     mExternalRouteHistory.UpdateAgedEntries();
+    mDnsSrpAddrHistory.UpdateAgedEntries();
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     mEpskcEventHistory.UpdateAgedEntries();
 #endif
     mTimer.Start(kAgeCheckPeriod);
 }
 
-void HistoryTracker::EntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize)
+void Local::EntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize)
 {
     StringWriter writer(aBuffer, aSize);
 
@@ -496,9 +636,9 @@ void HistoryTracker::EntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// HistoryTracker::Timestamp
+// Local::Timestamp
 
-void HistoryTracker::Timestamp::SetToNow(void)
+void Local::Timestamp::SetToNow(void)
 {
     mTime = TimerMilli::GetNow();
 
@@ -511,27 +651,27 @@ void HistoryTracker::Timestamp::SetToNow(void)
     }
 }
 
-uint32_t HistoryTracker::Timestamp::GetDurationTill(TimeMilli aTime) const
+uint32_t Local::Timestamp::GetDurationTill(TimeMilli aTime) const
 {
     return IsDistantPast() ? kMaxAge : Min(aTime - mTime, kMaxAge);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// HistoryTracker::List
+// Local::List
 
-HistoryTracker::List::List(void)
+Local::List::List(void)
     : mStartIndex(0)
     , mSize(0)
 {
 }
 
-void HistoryTracker::List::Clear(void)
+void Local::List::Clear(void)
 {
     mStartIndex = 0;
     mSize       = 0;
 }
 
-uint16_t HistoryTracker::List::Add(uint16_t aMaxSize, Timestamp aTimestamps[])
+uint16_t Local::List::Add(uint16_t aMaxSize, Timestamp aTimestamps[])
 {
     // Add a new entry and return its list index. Overwrites the
     // oldest entry if list is full.
@@ -548,11 +688,11 @@ uint16_t HistoryTracker::List::Add(uint16_t aMaxSize, Timestamp aTimestamps[])
     return mStartIndex;
 }
 
-Error HistoryTracker::List::Iterate(uint16_t        aMaxSize,
-                                    const Timestamp aTimestamps[],
-                                    Iterator       &aIterator,
-                                    uint16_t       &aListIndex,
-                                    uint32_t       &aEntryAge) const
+Error Local::List::Iterate(uint16_t        aMaxSize,
+                           const Timestamp aTimestamps[],
+                           Iterator       &aIterator,
+                           uint16_t       &aListIndex,
+                           uint32_t       &aEntryAge) const
 {
     Error error = kErrorNone;
 
@@ -567,7 +707,7 @@ exit:
     return error;
 }
 
-uint16_t HistoryTracker::List::MapEntryNumberToListIndex(uint16_t aEntryNumber, uint16_t aMaxSize) const
+uint16_t Local::List::MapEntryNumberToListIndex(uint16_t aEntryNumber, uint16_t aMaxSize) const
 {
     // Map the `aEntryNumber` to the list index. `aEntryNumber` value
     // of zero corresponds to the newest (the most recently added)
@@ -585,7 +725,7 @@ uint16_t HistoryTracker::List::MapEntryNumberToListIndex(uint16_t aEntryNumber, 
     return static_cast<uint16_t>(index);
 }
 
-void HistoryTracker::List::UpdateAgedEntries(uint16_t aMaxSize, Timestamp aTimestamps[])
+void Local::List::UpdateAgedEntries(uint16_t aMaxSize, Timestamp aTimestamps[])
 {
     TimeMilli now = TimerMilli::GetNow();
 
@@ -612,7 +752,7 @@ void HistoryTracker::List::UpdateAgedEntries(uint16_t aMaxSize, Timestamp aTimes
     }
 }
 
-} // namespace Utils
+} // namespace HistoryTracker
 } // namespace ot
 
 #endif // #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE

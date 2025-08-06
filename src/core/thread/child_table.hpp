@@ -137,6 +137,13 @@ public:
     Child *GetNewChild(void);
 
     /**
+     * Allocates a new child ID and returns the corresponding RLOC16.
+     *
+     * @returns The allocated child RLOC16.
+     */
+    uint16_t AllocateNewChildRloc16(void);
+
+    /**
      * Searches the child table for a `Child` with a given RLOC16 also matching a given state filter.
      *
      * @param[in]  aRloc16  A RLOC16 address.
@@ -330,6 +337,7 @@ private:
     const Child *FindChild(const Child::AddressMatcher &aMatcher) const;
     void         RefreshStoredChildren(void);
 
+    uint16_t mNextChildId;
     uint16_t mMaxChildrenAllowed;
     Child    mChildren[kMaxChildren];
 };

@@ -55,6 +55,7 @@ public:
      */
     Tcat(otInstance *aInstance, OutputImplementer &aOutputImplementer)
         : Utils(aInstance, aOutputImplementer)
+        , mSelectedCert(0)
     {
     }
 
@@ -77,6 +78,7 @@ private:
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
     otTcatVendorInfo mVendorInfo;
+    uint8_t          mSelectedCert;
 };
 
 } // namespace Cli
