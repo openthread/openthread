@@ -106,7 +106,12 @@ exit:
 void PeerDiscoverer::NotifyPeerSocketAddressDifference(const Ip6::SockAddr &aPeerSockAddr,
                                                        const Ip6::SockAddr &aRxSockAddr)
 {
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+    OT_UNUSED_VARIABLE(aPeerSockAddr);
+    OT_UNUSED_VARIABLE(aRxSockAddr);
+#else
     otPlatTrelNotifyPeerSocketAddressDifference(&GetInstance(), &aPeerSockAddr, &aRxSockAddr);
+#endif
 }
 
 void PeerDiscoverer::PostServiceTask(void)
