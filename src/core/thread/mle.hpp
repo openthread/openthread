@@ -2232,6 +2232,16 @@ private:
                                              otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
                                              otError              aResult);
+
+    static const char *RouterUpgradeReasonToString(uint8_t aReason);
+    static const char *AddrSolicitResponseToString(uint8_t aStatus);
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    static void LogAddrSolicit(MessageAction aAction, const Ip6::Address &aPeerAddr, uint8_t aReason, uint16_t aRloc16);
+#else
+    static void LogAddrSolicit(MessageAction, const Ip6::Address &, uint8_t, uint16_t);
+#endif
+
 #endif // OPENTHREAD_FTD
 
     //------------------------------------------------------------------------------------------------------------------

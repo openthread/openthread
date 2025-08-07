@@ -3256,6 +3256,7 @@ Error Mle::SendAddressSolicit(RouterUpgradeReason aReason)
     Error            error = kErrorNone;
     Tmf::MessageInfo messageInfo(GetInstance());
     Coap::Message   *message = nullptr;
+    uint16_t         rloc16  = kInvalidRloc16;
 
     VerifyOrExit(!mAddressSolicitPending);
 
@@ -3266,7 +3267,8 @@ Error Mle::SendAddressSolicit(RouterUpgradeReason aReason)
 
     if (IsRouterIdValid(mPreviousRouterId))
     {
-        SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, Rloc16FromRouterId(mPreviousRouterId)));
+        rloc16 = Rloc16FromRouterId(mPreviousRouterId);
+        SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, rloc16));
     }
 
     SuccessOrExit(error = Tlv::Append<ThreadStatusTlv>(*message, aReason));
@@ -3280,7 +3282,7 @@ Error Mle::SendAddressSolicit(RouterUpgradeReason aReason)
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, &HandleAddressSolicitResponse, this));
     mAddressSolicitPending = true;
 
-    Log(kMessageSend, kTypeAddressSolicit, messageInfo.GetPeerAddr());
+    LogAddrSolicit(kMessageSend, messageInfo.GetPeerAddr(), aReason, rloc16);
 
 exit:
     FreeMessageOnError(message, error);
@@ -3333,9 +3335,10 @@ void Mle::HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::Messa
 
     VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged);
 
-    Log(kMessageReceive, kTypeAddressReply, aMessageInfo->GetPeerAddr());
-
     SuccessOrExit(Tlv::Find<ThreadStatusTlv>(*aMessage, status));
+
+    LogInfo("Received %s response, status:%s", MessageTypeToString(kTypeAddressSolicit),
+            AddrSolicitResponseToString(status));
 
     if (status != kAddrSolicitSuccess)
     {
@@ -3464,16 +3467,14 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, con
     Router             *router         = nullptr;
     Mac::ExtAddress     extAddress;
     uint16_t            rloc16;
-    uint8_t             status;
+    uint8_t             reason;
 
     VerifyOrExit(mRole == kRoleLeader, error = kErrorInvalidState);
 
     VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = kErrorParse);
 
-    Log(kMessageReceive, kTypeAddressSolicit, aMessageInfo.GetPeerAddr());
-
     SuccessOrExit(error = Tlv::Find<ThreadExtMacAddressTlv>(aMessage, extAddress));
-    SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(aMessage, status));
+    SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(aMessage, reason));
 
     switch (Tlv::Find<ThreadRloc16Tlv>(aMessage, rloc16))
     {
@@ -3495,6 +3496,8 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, con
     }
 #endif
 
+    LogAddrSolicit(kMessageReceive, aMessageInfo.GetPeerAddr(), reason, rloc16);
+
     router = mRouterTable.FindRouter(extAddress);
 
     if (router != nullptr)
@@ -3503,7 +3506,7 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, con
         ExitNow();
     }
 
-    switch (status)
+    switch (reason)
     {
     case kReasonTooFewRouters:
         VerifyOrExit(mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold);
@@ -3532,11 +3535,6 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, con
     if (rloc16 != kInvalidRloc16)
     {
         router = mRouterTable.Allocate(RouterIdFromRloc16(rloc16));
-
-        if (router != nullptr)
-        {
-            LogInfo("Router id %u requested and provided!", RouterIdFromRloc16(rloc16));
-        }
     }
 
     if (router == nullptr)
@@ -3561,6 +3559,7 @@ void Mle::SendAddressSolicitResponse(const Coap::Message    &aRequest,
                                      const Ip6::MessageInfo &aMessageInfo)
 {
     Coap::Message *message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    uint16_t       rloc16  = kInvalidRloc16;
 
     VerifyOrExit(message != nullptr);
 
@@ -3570,7 +3569,8 @@ void Mle::SendAddressSolicitResponse(const Coap::Message    &aRequest,
     {
         ThreadRouterMaskTlv routerMaskTlv;
 
-        SuccessOrExit(Tlv::Append<ThreadRloc16Tlv>(*message, aRouter->GetRloc16()));
+        rloc16 = aRouter->GetRloc16();
+        SuccessOrExit(Tlv::Append<ThreadRloc16Tlv>(*message, rloc16));
 
         routerMaskTlv.Init();
         routerMaskTlv.SetIdSequence(mRouterTable.GetRouterIdSequence());
@@ -3582,7 +3582,8 @@ void Mle::SendAddressSolicitResponse(const Coap::Message    &aRequest,
     SuccessOrExit(Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
     message = nullptr;
 
-    Log(kMessageSend, kTypeAddressReply, aMessageInfo.GetPeerAddr());
+    LogInfo("Send %s response, status:%s, rloc16:0x%04x", MessageTypeToString(kTypeAddressSolicit),
+            AddrSolicitResponseToString(aResponseStatus), rloc16);
 
     // If assigning a new RLOC16 (e.g., on promotion of a child to
     // router role) we clear any address cache entries associated
@@ -3692,6 +3693,26 @@ void Mle::FillConnectivityTlv(ConnectivityTlv &aTlv)
     aTlv.SetIdSequence(mRouterTable.GetRouterIdSequence());
     aTlv.SetSedBufferSize(OPENTHREAD_CONFIG_DEFAULT_SED_BUFFER_SIZE);
     aTlv.SetSedDatagramCount(OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT);
+}
+
+void Mle::LogAddrSolicit(MessageAction aAction, const Ip6::Address &aPeerAddr, uint8_t aReason, uint16_t aRloc16)
+{
+    static constexpr uint16_t kRlocStringSize = 17;
+
+    String<kRlocStringSize> rlocString;
+
+    if (aRloc16 != kInvalidRloc16)
+    {
+        rlocString.Append("0x%04x", aRloc16);
+    }
+    else
+    {
+        rlocString.Append("any");
+    }
+
+    LogInfo("%s %s for %s, reason:%s, %s:%s", MessageActionToString(aAction), MessageTypeToString(kTypeAddressSolicit),
+            rlocString.AsCString(), RouterUpgradeReasonToString(aReason), aAction == kMessageSend ? "to" : "from",
+            aPeerAddr.ToString().AsCString());
 }
 
 bool Mle::ShouldDowngrade(uint8_t aNeighborId, const RouteTlv &aRouteTlv) const
@@ -3900,6 +3921,49 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+const char *Mle::RouterUpgradeReasonToString(uint8_t aReason)
+{
+    const char *str = "UnrecognizedReason";
+
+    switch (aReason)
+    {
+    case kReasonTooFewRouters:
+        str = "TooFewRouters";
+        break;
+    case kReasonHaveChildIdRequest:
+        str = "HaveChildIdRequest";
+        break;
+    case kReasonParentPartitionChange:
+        str = "ParentPartitionChange";
+        break;
+    case kReasonBorderRouterRequest:
+        str = "BorderRouterRequest";
+        break;
+    }
+
+    return str;
+}
+
+const char *Mle::AddrSolicitResponseToString(uint8_t aStatus)
+{
+    const char *str = "UnknownStatus";
+
+    switch (aStatus)
+    {
+    case kAddrSolicitSuccess:
+        str = "Success";
+        break;
+    case kAddrSolicitNoAddressAvailable:
+        str = "NoAddrAvailable";
+        break;
+    case kAddrSolicitUnrecognizedReason:
+        str = "UnrecognizedReason";
+        break;
+    }
+
+    return str;
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 // RouterRoleTransition
