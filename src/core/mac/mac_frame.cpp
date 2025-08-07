@@ -1572,8 +1572,12 @@ Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMate
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
 #else
-    // For fuzz tests, execute AES but do not alter the payload
-    uint8_t fuzz[OT_RADIO_FRAME_MAX_SIZE];
+    // For fuzz tests, execute AES but do not alter the payload. A large
+    // temporary buffer (kFuzzMaxFrameSize = 1280 bytes) is used to
+    // account for TREL frames.
+    uint8_t fuzz[kFuzzMaxFrameSize];
+
+    OT_ASSERT(GetPayloadLength() <= sizeof(fuzz));
     aesCcm.Payload(fuzz, GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
 #endif
     aesCcm.Finalize(tag);
