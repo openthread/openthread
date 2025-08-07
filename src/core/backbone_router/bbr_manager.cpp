@@ -55,10 +55,10 @@ Manager::Manager(Instance &aInstance)
     , mBackboneTmfAgent(aInstance)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    , mDuaResponseStatus(ThreadStatusTlv::kDuaSuccess)
+    , mDuaResponseStatus(kDuaSuccess)
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-    , mMlrResponseStatus(ThreadStatusTlv::kMlrSuccess)
+    , mMlrResponseStatus(kMlrSuccess)
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     , mDuaResponseIsSpecified(false)
@@ -133,10 +133,10 @@ exit:
 
 void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Error                      error     = kErrorNone;
-    bool                       isPrimary = Get<Local>().IsPrimary();
-    ThreadStatusTlv::MlrStatus status    = ThreadStatusTlv::kMlrSuccess;
-    Config                     config;
+    Error     error     = kErrorNone;
+    bool      isPrimary = Get<Local>().IsPrimary();
+    MlrStatus status    = kMlrSuccess;
+    Config    config;
 
     OffsetRange  offsetRange;
     Ip6::Address address;
@@ -160,7 +160,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
     }
 #endif
 
-    VerifyOrExit(isPrimary, status = ThreadStatusTlv::kMlrBbrNotPrimary);
+    VerifyOrExit(isPrimary, status = kMlrBbrNotPrimary);
 
     // TODO: (MLR) send configured MLR response for Reference Device
 
@@ -170,7 +170,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 
         VerifyOrExit((Get<NetworkData::Leader>().FindCommissioningSessionId(localSessionId) == kErrorNone) &&
                          (localSessionId == commissionerSessionId),
-                     status = ThreadStatusTlv::kMlrGeneralFailure);
+                     status = kMlrGeneralFailure);
 
         hasCommissionerSessionIdTlv = true;
     }
@@ -179,9 +179,9 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 
     VerifyOrExit(Tlv::FindTlvValueOffsetRange(aMessage, Ip6AddressesTlv::kIp6Addresses, offsetRange) == kErrorNone,
                  error = kErrorParse);
-    VerifyOrExit(offsetRange.GetLength() % sizeof(Ip6::Address) == 0, status = ThreadStatusTlv::kMlrGeneralFailure);
+    VerifyOrExit(offsetRange.GetLength() % sizeof(Ip6::Address) == 0, status = kMlrGeneralFailure);
     VerifyOrExit(offsetRange.GetLength() / sizeof(Ip6::Address) <= Ip6AddressesTlv::kMaxAddresses,
-                 status = ThreadStatusTlv::kMlrGeneralFailure);
+                 status = kMlrGeneralFailure);
 
     if (!processTimeoutTlv)
     {
@@ -191,7 +191,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
     }
     else
     {
-        VerifyOrExit(timeout < NumericLimits<uint32_t>::kMax, status = ThreadStatusTlv::kMlrNoPersistent);
+        VerifyOrExit(timeout < NumericLimits<uint32_t>::kMax, status = kMlrNoPersistent);
 
         if (timeout != 0)
         {
@@ -230,15 +230,15 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
                 failed = false;
                 break;
             case kErrorInvalidArgs:
-                if (status == ThreadStatusTlv::kMlrSuccess)
+                if (status == kMlrSuccess)
                 {
-                    status = ThreadStatusTlv::kMlrInvalid;
+                    status = kMlrInvalid;
                 }
                 break;
             case kErrorNoBufs:
-                if (status == ThreadStatusTlv::kMlrSuccess)
+                if (status == kMlrSuccess)
                 {
-                    status = ThreadStatusTlv::kMlrNoResources;
+                    status = kMlrNoResources;
                 }
                 break;
             default:
@@ -270,11 +270,11 @@ exit:
     }
 }
 
-void Manager::SendMulticastListenerRegistrationResponse(const Coap::Message       &aMessage,
-                                                        const Ip6::MessageInfo    &aMessageInfo,
-                                                        ThreadStatusTlv::MlrStatus aStatus,
-                                                        Ip6::Address              *aFailedAddresses,
-                                                        uint8_t                    aFailedAddressNum)
+void Manager::SendMulticastListenerRegistrationResponse(const Coap::Message    &aMessage,
+                                                        const Ip6::MessageInfo &aMessageInfo,
+                                                        MlrStatus               aStatus,
+                                                        Ip6::Address           *aFailedAddresses,
+                                                        uint8_t                 aFailedAddressNum)
 {
     Error          error = kErrorNone;
     Coap::Message *message;
@@ -355,13 +355,13 @@ exit:
 
 void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Error                      error     = kErrorNone;
-    ThreadStatusTlv::DuaStatus status    = ThreadStatusTlv::kDuaSuccess;
-    bool                       isPrimary = Get<Local>().IsPrimary();
-    uint32_t                   lastTransactionTime;
-    bool                       hasLastTransactionTime;
-    Ip6::Address               target;
-    Ip6::InterfaceIdentifier   meshLocalIid;
+    Error                    error     = kErrorNone;
+    DuaStatus                status    = kDuaSuccess;
+    bool                     isPrimary = Get<Local>().IsPrimary();
+    uint32_t                 lastTransactionTime;
+    bool                     hasLastTransactionTime;
+    Ip6::Address             target;
+    Ip6::InterfaceIdentifier meshLocalIid;
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     Coap::Code duaRespCoapCode = Coap::kCodeEmpty;
 #endif
@@ -382,15 +382,15 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
         }
         else
         {
-            status = static_cast<ThreadStatusTlv::DuaStatus>(mDuaResponseStatus);
+            status = static_cast<DuaStatus>(mDuaResponseStatus);
         }
         ExitNow();
     }
 #endif
 
-    VerifyOrExit(isPrimary, status = ThreadStatusTlv::kDuaNotPrimary);
-    VerifyOrExit(Get<Leader>().HasDomainPrefix(), status = ThreadStatusTlv::kDuaGeneralFailure);
-    VerifyOrExit(Get<Leader>().IsDomainUnicast(target), status = ThreadStatusTlv::kDuaInvalid);
+    VerifyOrExit(isPrimary, status = kDuaNotPrimary);
+    VerifyOrExit(Get<Leader>().HasDomainPrefix(), status = kDuaGeneralFailure);
+    VerifyOrExit(Get<Leader>().IsDomainUnicast(target), status = kDuaInvalid);
 
     hasLastTransactionTime = (Tlv::Find<ThreadLastTransactionTimeTlv>(aMessage, lastTransactionTime) == kErrorNone);
 
@@ -402,13 +402,13 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
         // DUA.req packet according to Thread Spec. 5.23.3.6.2
         break;
     case kErrorDuplicated:
-        status = ThreadStatusTlv::kDuaDuplicate;
+        status = kDuaDuplicate;
         break;
     case kErrorNoBufs:
-        status = ThreadStatusTlv::kDuaNoResources;
+        status = kDuaNoResources;
         break;
     default:
-        status = ThreadStatusTlv::kDuaGeneralFailure;
+        status = kDuaGeneralFailure;
         break;
     }
 
@@ -430,10 +430,10 @@ exit:
     }
 }
 
-void Manager::SendDuaRegistrationResponse(const Coap::Message       &aMessage,
-                                          const Ip6::MessageInfo    &aMessageInfo,
-                                          const Ip6::Address        &aTarget,
-                                          ThreadStatusTlv::DuaStatus aStatus)
+void Manager::SendDuaRegistrationResponse(const Coap::Message    &aMessage,
+                                          const Ip6::MessageInfo &aMessageInfo,
+                                          const Ip6::Address     &aTarget,
+                                          DuaStatus               aStatus)
 {
     Error          error = kErrorNone;
     Coap::Message *message;
@@ -472,7 +472,7 @@ void Manager::ConfigNextDuaRegistrationResponse(const Ip6::InterfaceIdentifier *
 #endif
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-void Manager::ConfigNextMulticastListenerRegistrationResponse(ThreadStatusTlv::MlrStatus aStatus)
+void Manager::ConfigNextMulticastListenerRegistrationResponse(MlrStatus aStatus)
 {
     mMlrResponseIsSpecified = true;
     mMlrResponseStatus      = aStatus;

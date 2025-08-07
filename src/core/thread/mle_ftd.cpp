@@ -185,7 +185,7 @@ void Mle::SetDeviceProperties(const DeviceProperties &aDeviceProperties)
 }
 #endif
 
-Error Mle::BecomeRouter(ThreadStatusTlv::Status aStatus)
+Error Mle::BecomeRouter(RouterUpgradeReason aReason)
 {
     Error error = kErrorNone;
 
@@ -211,7 +211,7 @@ Error Mle::BecomeRouter(ThreadStatusTlv::Status aStatus)
     Get<MeshForwarder>().SetRxOnWhenIdle(true);
     mRouterRoleTransition.StopTimeout();
 
-    error = SendAddressSolicit(aStatus);
+    error = SendAddressSolicit(aReason);
 
 exit:
     return error;
@@ -321,7 +321,7 @@ void Mle::HandleChildStart(AttachMode aMode)
     case kSamePartition:
         if (HasChildren())
         {
-            IgnoreError(BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest));
+            IgnoreError(BecomeRouter(kReasonHaveChildIdRequest));
         }
 
         break;
@@ -354,7 +354,7 @@ void Mle::HandleChildStart(AttachMode aMode)
     case kBetterPartition:
         if (HasChildren() && mPreviousPartitionIdRouter != mLeaderData.GetPartitionId())
         {
-            IgnoreError(BecomeRouter(ThreadStatusTlv::kParentPartitionChange));
+            IgnoreError(BecomeRouter(kReasonParentPartitionChange));
         }
 
         break;
@@ -1542,7 +1542,7 @@ void Mle::HandleTimeTick(void)
         {
             if (mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold && HasNeighborWithGoodLinkQuality())
             {
-                IgnoreError(BecomeRouter(ThreadStatusTlv::kTooFewRouters));
+                IgnoreError(BecomeRouter(kReasonTooFewRouters));
             }
             else
             {
@@ -2171,7 +2171,7 @@ void Mle::HandleChildIdRequest(RxInfo &aRxInfo)
     {
     case kRoleChild:
         child->SetState(Neighbor::kStateChildIdRequest);
-        IgnoreError(BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest));
+        IgnoreError(BecomeRouter(kReasonHaveChildIdRequest));
         break;
 
     case kRoleRouter:
@@ -3251,7 +3251,7 @@ void Mle::SetRouterId(uint8_t aRouterId)
     mPreviousRouterId = mRouterId;
 }
 
-Error Mle::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
+Error Mle::SendAddressSolicit(RouterUpgradeReason aReason)
 {
     Error            error = kErrorNone;
     Tmf::MessageInfo messageInfo(GetInstance());
@@ -3269,7 +3269,7 @@ Error Mle::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
         SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, Rloc16FromRouterId(mPreviousRouterId)));
     }
 
-    SuccessOrExit(error = Tlv::Append<ThreadStatusTlv>(*message, aStatus));
+    SuccessOrExit(error = Tlv::Append<ThreadStatusTlv>(*message, aReason));
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     SuccessOrExit(error = Tlv::Append<XtalAccuracyTlv>(*message, otPlatTimeGetXtalAccuracy()));
@@ -3337,7 +3337,7 @@ void Mle::HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::Messa
 
     SuccessOrExit(Tlv::Find<ThreadStatusTlv>(*aMessage, status));
 
-    if (status != ThreadStatusTlv::kSuccess)
+    if (status != kAddrSolicitSuccess)
     {
         mAddressSolicitRejected = true;
 
@@ -3459,12 +3459,12 @@ exit:
 
 template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Error                   error          = kErrorNone;
-    ThreadStatusTlv::Status responseStatus = ThreadStatusTlv::kNoAddressAvailable;
-    Router                 *router         = nullptr;
-    Mac::ExtAddress         extAddress;
-    uint16_t                rloc16;
-    uint8_t                 status;
+    Error               error          = kErrorNone;
+    AddrSolicitResponse responseStatus = kAddrSolicitNoAddressAvailable;
+    Router             *router         = nullptr;
+    Mac::ExtAddress     extAddress;
+    uint16_t            rloc16;
+    uint8_t             status;
 
     VerifyOrExit(mRole == kRoleLeader, error = kErrorInvalidState);
 
@@ -3499,21 +3499,21 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, con
 
     if (router != nullptr)
     {
-        responseStatus = ThreadStatusTlv::kSuccess;
+        responseStatus = kAddrSolicitSuccess;
         ExitNow();
     }
 
     switch (status)
     {
-    case ThreadStatusTlv::kTooFewRouters:
+    case kReasonTooFewRouters:
         VerifyOrExit(mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold);
         break;
 
-    case ThreadStatusTlv::kHaveChildIdRequest:
-    case ThreadStatusTlv::kParentPartitionChange:
+    case kReasonHaveChildIdRequest:
+    case kReasonParentPartitionChange:
         break;
 
-    case ThreadStatusTlv::kBorderRouterRequest:
+    case kReasonBorderRouterRequest:
         if ((mRouterTable.GetActiveRouterCount() >= mRouterUpgradeThreshold) &&
             (Get<NetworkData::Leader>().CountBorderRouters(NetworkData::kRouterRoleOnly) >=
              kRouterUpgradeBorderRouterRequestThreshold))
@@ -3525,7 +3525,7 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, con
         break;
 
     default:
-        responseStatus = ThreadStatusTlv::kUnrecognizedStatus;
+        responseStatus = kAddrSolicitUnrecognizedReason;
         ExitNow();
     }
 
@@ -3546,7 +3546,7 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, con
     }
 
     router->SetExtAddress(extAddress);
-    responseStatus = ThreadStatusTlv::kSuccess;
+    responseStatus = kAddrSolicitSuccess;
 
 exit:
     if (error == kErrorNone)
@@ -3556,7 +3556,7 @@ exit:
 }
 
 void Mle::SendAddressSolicitResponse(const Coap::Message    &aRequest,
-                                     ThreadStatusTlv::Status aResponseStatus,
+                                     AddrSolicitResponse     aResponseStatus,
                                      const Router           *aRouter,
                                      const Ip6::MessageInfo &aMessageInfo)
 {
@@ -3591,7 +3591,7 @@ void Mle::SendAddressSolicitResponse(const Coap::Message    &aRequest,
     // association with the promoted router's new RLOC16 upon
     // receiving its Link Advertisement.
 
-    if ((aResponseStatus == ThreadStatusTlv::kSuccess) && (aRouter != nullptr))
+    if ((aResponseStatus == kAddrSolicitSuccess) && (aRouter != nullptr))
     {
         uint16_t oldRloc16;
 

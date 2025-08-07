@@ -155,6 +155,19 @@ enum Command : uint8_t
     kCommandTimeSync                      = 99, ///< Time Sync command
 };
 
+/**
+ * Represents the reason to attempt to upgrade to router role (used in `BecomeRouter()`).
+ *
+ * The enumeration values correspond to the status values in `ThreadStatusTlv` in a TMF Address Solicit Request message.
+ */
+enum RouterUpgradeReason : uint8_t
+{
+    kReasonTooFewRouters         = 2, ///< Too few routers.
+    kReasonHaveChildIdRequest    = 3, ///< Have pending Child ID Request.
+    kReasonParentPartitionChange = 4, ///< Parent Partition change.
+    kReasonBorderRouterRequest   = 5, ///< Device is Border Router.
+};
+
 constexpr uint16_t kAloc16Leader                      = 0xfc00;
 constexpr uint16_t kAloc16DhcpAgentStart              = 0xfc01;
 constexpr uint16_t kAloc16DhcpAgentEnd                = 0xfc0f;

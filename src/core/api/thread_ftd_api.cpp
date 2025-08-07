@@ -176,7 +176,7 @@ exit:
 
 otError otThreadBecomeRouter(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mle::Mle>().BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
+    return AsCoreType(aInstance).Get<Mle::Mle>().BecomeRouter(Mle::kReasonHaveChildIdRequest);
 }
 
 otError otThreadBecomeLeader(otInstance *aInstance)

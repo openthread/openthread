@@ -131,52 +131,10 @@ typedef UintTlvInfo<ThreadTlv::kCommissionerSessionId, uint16_t> ThreadCommissio
 
 /**
  * Defines Status TLV constants and types.
+ *
+ * The definition of Status values in this TLV depends on the TMF message in which it is used.
  */
-class ThreadStatusTlv : public UintTlvInfo<ThreadTlv::kStatus, uint8_t>
-{
-public:
-    /**
-     * Status values.
-     */
-    enum Status : uint8_t
-    {
-        kSuccess               = 0, ///< Success.
-        kNoAddressAvailable    = 1, ///< No address available.
-        kTooFewRouters         = 2, ///< Address Solicit due to too few routers.
-        kHaveChildIdRequest    = 3, ///< Address Solicit due to child ID request.
-        kParentPartitionChange = 4, ///< Address Solicit due to parent partition change
-        kBorderRouterRequest   = 5, ///< Address Solicit from Border Router request.
-        kUnrecognizedStatus    = 6, ///< The requested status is unrecognized or not meaningful in a request.
-    };
-
-    /**
-     * Multicast Listener Registration (MLR) Status values
-     */
-    enum MlrStatus
-    {
-        kMlrSuccess        = 0, ///< Successful (de)registration of all IPv6 addresses.
-        kMlrInvalid        = 2, ///< Invalid IPv6 address(es) in request.
-        kMlrNoPersistent   = 3, ///< This device does not support persistent registrations.
-        kMlrNoResources    = 4, ///< BBR resource shortage.
-        kMlrBbrNotPrimary  = 5, ///< BBR is not Primary at this moment.
-        kMlrGeneralFailure = 6, ///< Reason(s) for failure are not further specified.
-        kMlrStatusMax      = 6, ///< Max MLR status.
-    };
-
-    /**
-     * Domain Unicast Address (DUA) Registration Status values
-     */
-    enum DuaStatus : uint8_t
-    {
-        kDuaSuccess        = 0, ///< Successful registration.
-        kDuaReRegister     = 1, ///< Registration was accepted but immediate reregistration is required to solve.
-        kDuaInvalid        = 2, ///< Registration rejected (Fatal): Target EID is not a valid DUA.
-        kDuaDuplicate      = 3, ///< Registration rejected (Fatal): DUA is already in use by another device.
-        kDuaNoResources    = 4, ///< Registration rejected (Non-fatal): Backbone Router Resource shortage.
-        kDuaNotPrimary     = 5, ///< Registration rejected (Non-fatal): Backbone Router is not primary at this moment.
-        kDuaGeneralFailure = 6, ///< Registration failure (Non-fatal): Reason(s) not further specified.
-    };
-};
+typedef UintTlvInfo<ThreadTlv::kStatus, uint8_t> ThreadStatusTlv;
 
 /**
  * Implements Router Mask TLV generation and parsing.
