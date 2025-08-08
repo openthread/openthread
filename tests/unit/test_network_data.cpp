@@ -1019,11 +1019,9 @@ void TestNetworkDataDsnSrpAnycastSeqNumSelection(void)
     const uint8_t kPreferredSeqNum15 = 3;
     const uint8_t kPreferredVer15    = 0;
 
-#define TEST_CASE(Num)                                                                            \
-    {                                                                                             \
-        kNetworkData##Num, sizeof(kNetworkData##Num), kSeqNumbers##Num, sizeof(kSeqNumbers##Num), \
-            kPreferredSeqNum##Num, kPreferredVer##Num                                             \
-    }
+#define TEST_CASE(Num)                                                      \
+    {kNetworkData##Num,        sizeof(kNetworkData##Num), kSeqNumbers##Num, \
+     sizeof(kSeqNumbers##Num), kPreferredSeqNum##Num,     kPreferredVer##Num}
 
     const TestInfo kTests[] = {
         TEST_CASE(1),  TEST_CASE(2),  TEST_CASE(3),  TEST_CASE(4),  TEST_CASE(5),
