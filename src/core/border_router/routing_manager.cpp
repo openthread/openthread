@@ -220,12 +220,7 @@ Error RoutingManager::GetFavoredOnLinkPrefix(Ip6::Prefix &aPrefix) const
     Error error = kErrorNone;
 
     VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
-    aPrefix = mOnLinkPrefixManager.GetFavoredDiscoveredPrefix();
-
-    if (aPrefix.GetLength() == 0)
-    {
-        aPrefix = mOnLinkPrefixManager.GetLocalPrefix();
-    }
+    aPrefix = mOnLinkPrefixManager.GetFavoredPrefix();
 
 exit:
     return error;
@@ -2939,7 +2934,8 @@ RoutingManager::OnLinkPrefixManager::OnLinkPrefixManager(Instance &aInstance)
     , mTimer(aInstance)
 {
     mLocalPrefix.Clear();
-    mFavoredDiscoveredPrefix.Clear();
+    mAilPrefix.Clear();
+    mFavoredPrefix.Clear();
     mOldLocalPrefixes.Clear();
 }
 
@@ -3063,11 +3059,41 @@ exit:
     return;
 }
 
+void RoutingManager::OnLinkPrefixManager::SetFavoredPrefix(const Ip6::Prefix &aPrefix)
+{
+    VerifyOrExit(mFavoredPrefix != aPrefix);
+
+    LogInfo("Favored on-link prefix: %s -> %s", mFavoredPrefix.ToString().AsCString(), aPrefix.ToString().AsCString());
+
+    mFavoredPrefix = aPrefix;
+
+exit:
+    return;
+}
+
+void RoutingManager::OnLinkPrefixManager::SetAilPrefix(const Ip6::Prefix &aPrefix)
+{
+    VerifyOrExit(mAilPrefix != aPrefix);
+
+    LogInfo("AIL on-link prefix (from processed RAs) changed: %s -> %s", mAilPrefix.ToString().AsCString(),
+            aPrefix.ToString().AsCString());
+
+    mAilPrefix = aPrefix;
+
+exit:
+    return;
+}
+
 void RoutingManager::OnLinkPrefixManager::Start(void) {}
 
 void RoutingManager::OnLinkPrefixManager::Stop(void)
 {
-    mFavoredDiscoveredPrefix.Clear();
+    Ip6::Prefix emptyPrefix;
+
+    emptyPrefix.Clear();
+
+    SetAilPrefix(emptyPrefix);
+    SetFavoredPrefix(emptyPrefix);
 
     switch (GetState())
     {
@@ -3097,21 +3123,22 @@ void RoutingManager::OnLinkPrefixManager::Evaluate(void)
 {
     VerifyOrExit(!Get<RoutingManager>().mRsSender.IsInProgress());
 
-    mFavoredDiscoveredPrefix = Get<RoutingManager>().mRxRaTracker.GetFavoredOnLinkPrefix();
+    SetAilPrefix(Get<RoutingManager>().mRxRaTracker.GetFavoredOnLinkPrefix());
 
-    if ((mFavoredDiscoveredPrefix.GetLength() == 0) || (mFavoredDiscoveredPrefix == mLocalPrefix))
+    if ((mAilPrefix.GetLength() == 0) || (mAilPrefix == mLocalPrefix))
     {
         // We advertise the local on-link prefix if no other prefix is
-        // discovered, or if the favored discovered prefix is the
-        // same as the local prefix (for redundancy). Note that the
-        // local on-link prefix, derived from the extended PAN ID, is
-        // identical for all BRs on the same Thread mesh.
+        // discovered on the AIL, or if the discovered prefix is the
+        // same as the local one (to provide redundancy). The local
+        // on-link prefix is derived from the extended PAN ID and is
+        // identical for all BRs on the same mesh.
 
         PublishAndAdvertise();
-
-        mFavoredDiscoveredPrefix.Clear();
+        SetFavoredPrefix(mLocalPrefix);
+        ExitNow();
     }
-    else if (IsPublishingOrAdvertising())
+
+    if (IsPublishingOrAdvertising())
     {
         // When an application-specific on-link prefix is received and
         // it is larger than the local prefix, we will not remove the
@@ -3120,12 +3147,16 @@ void RoutingManager::OnLinkPrefixManager::Evaluate(void)
         // converge to the same smallest/favored on-link prefix and the
         // application-specific prefix is not used.
 
-        if (!(mLocalPrefix < mFavoredDiscoveredPrefix))
+        if (!(mLocalPrefix < mAilPrefix))
         {
-            LogInfo("Found a favored on-link prefix %s", mFavoredDiscoveredPrefix.ToString().AsCString());
+            SetFavoredPrefix(mAilPrefix);
             Deprecate();
         }
+
+        ExitNow();
     }
+
+    SetFavoredPrefix(mAilPrefix);
 
 exit:
     return;
@@ -3139,7 +3170,7 @@ bool RoutingManager::OnLinkPrefixManager::IsInitalEvaluationDone(void) const
     // another router on infra link) or we are advertising our local
     // on-link prefix.
 
-    return (mFavoredDiscoveredPrefix.GetLength() != 0 || IsPublishingOrAdvertising());
+    return (mAilPrefix.GetLength() != 0 || IsPublishingOrAdvertising());
 }
 
 void RoutingManager::OnLinkPrefixManager::HandleRaPrefixTableChanged(void)
@@ -3149,7 +3180,7 @@ void RoutingManager::OnLinkPrefixManager::HandleRaPrefixTableChanged(void)
     // prefix has changed, we trigger a re-evaluation of the routing
     // policy.
 
-    if (Get<RoutingManager>().mRxRaTracker.GetFavoredOnLinkPrefix() != mFavoredDiscoveredPrefix)
+    if (Get<RoutingManager>().mRxRaTracker.GetFavoredOnLinkPrefix() != mAilPrefix)
     {
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
