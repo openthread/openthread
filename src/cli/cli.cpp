@@ -65,6 +65,9 @@
 #include "common/numeric_limits.hpp"
 #include "common/string.hpp"
 #include "mac/channel_mask.hpp"
+#include "openthread/diag_server.h"
+#include "openthread/platform/toolchain.h"
+#include "thread/diagnostic_server_types.hpp"
 
 namespace ot {
 namespace Cli {
