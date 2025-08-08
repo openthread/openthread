@@ -136,6 +136,9 @@ public:
     /**
      * Processes the payload.
      *
+     * When decrypting (`kDecrypt`), @p aPlainText can be `nullptr` if the decrypted plaintext is not needed.
+     * Similarly, when encrypting (`kEncrypt`), @p aCipherText can be `nullptr` if the ciphertext is not needed.
+     *
      * @param[in,out]  aPlainText   A pointer to the plaintext.
      * @param[in,out]  aCipherText  A pointer to the ciphertext.
      * @param[in]      aLength      Payload length in bytes.

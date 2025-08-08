@@ -1573,12 +1573,7 @@ Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMate
     aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
 #else
     // For fuzz tests, execute AES but do not alter the payload. A large
-    // temporary buffer (kFuzzMaxFrameSize = 1280 bytes) is used to
-    // account for TREL frames.
-    uint8_t fuzz[kFuzzMaxFrameSize];
-
-    OT_ASSERT(GetPayloadLength() <= sizeof(fuzz));
-    aesCcm.Payload(fuzz, GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
+    aesCcm.Payload(nullptr, GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
 #endif
     aesCcm.Finalize(tag);
 

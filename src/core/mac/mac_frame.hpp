@@ -1016,9 +1016,6 @@ public:
      */
     uint8_t ReadTimeSyncSeq(void) const { return GetTimeIe()->GetSequence(); }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-
-private:
-    static constexpr uint16_t kFuzzMaxFrameSize = 1280; // 1280 bytes to account for TREL frame size.
 };
 
 /**
