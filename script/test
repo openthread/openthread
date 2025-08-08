@@ -112,7 +112,7 @@ build_simulation()
         "-DOT_SERVICE=ON"
         "-DOT_SRP_CLIENT=ON"
         "-DOT_SRP_SERVER=ON"
-        "-DOT_SRP_SERVER_FAST_START_MDOE=ON"
+        "-DOT_SRP_SERVER_FAST_START_MODE=ON"
         "-DOT_UPTIME=ON"
         "-DOT_THREAD_VERSION=${version}"
     )
