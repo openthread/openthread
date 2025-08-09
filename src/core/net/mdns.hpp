@@ -150,6 +150,13 @@ public:
     class AddressInfo : public otPlatMdnsAddressInfo, public Clearable<AddressInfo>, public Equatable<AddressInfo>
     {
     public:
+        static constexpr uint16_t kInfoStringSize = 100; ///< Max chars for the info string (`ToString()`).
+
+        /**
+         * Defines the fixed-length `String` object returned from `ToString()`.
+         */
+        typedef String<kInfoStringSize> InfoString;
+
         /**
          * Initializes the `AddressInfo` clearing all the fields.
          */
@@ -161,6 +168,13 @@ public:
          * @returns the IPv6 address.
          */
         const Ip6::Address &GetAddress(void) const { return AsCoreType(&mAddress); }
+
+        /**
+         * Converts the `AddressInfo` to human-readable string.
+         *
+         * @return A string representation of the `AddressInfo`
+         */
+        InfoString ToString(void) const;
     };
 
     /**
@@ -840,6 +854,23 @@ public:
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+    /**
+     * Enables or disables verbose logging.
+     *
+     * @param[in] aEnable  TRUE to enable verbose logging, FALSE to disable.
+     */
+    void SetVerboseLoggingEnabled(bool aEnable);
+
+    /**
+     * Indicates whether verbose logging is enabled.
+     *
+     * @retval TRUE   If verbose logging is enabled.
+     * @retval FALSE  If verbose logging is disabled.
+     */
+    bool IsVerboseLoggingEnabled(void) const { return mVerboseLogging; }
+#endif
+
 private:
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -847,6 +878,7 @@ private:
 
     static constexpr bool kDefaultAutoEnable = OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF;
     static constexpr bool kDefaultQuAllowed  = OPENTHREAD_CONFIG_MULTICAST_DNS_DEFAULT_QUESTION_UNICAST_ALLOWED;
+    static constexpr bool kDefaultVerboseLog = OPENTHREAD_CONFIG_MULTICAST_DEFAULT_DNS_VERBOSE_LOGGING_STATE;
 
     static constexpr uint32_t kMaxMessageSize = 1200;
 
@@ -1479,6 +1511,8 @@ private:
         bool          ShouldClearAppendStateOnReinit(const Entry &aEntry) const;
 
         static void SaveOffset(uint16_t &aCompressOffset, const Message &aMessage, Section aSection);
+
+        static const char *TypeToString(Type aType);
 
         RecordCounts      mRecordCounts;
         OwnedPtr<Message> mMsgPtr;
@@ -2253,6 +2287,29 @@ private:
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+    class MsgLogger : InstanceLocator
+    {
+    public:
+        MsgLogger(Instance &aInstance, const Message &aMessage);
+
+        void Log(void);
+
+    private:
+        Error LogQuestions(void);
+        Error LogSectionRecords(const char *aSectionName, uint16_t aNumRecords);
+        Error LogRecord(void);
+        void  LogRecordData(const ResourceRecord &aRecord);
+        void  LogRawData(uint16_t aLength);
+        void  LogNsecBitMap(const NsecRecord::TypeBitMap &aBitMap);
+
+        const Message &mMessage;
+        uint16_t       mOffset;
+        Header         mHeader;
+    };
+#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     template <typename EntryType> OwningList<EntryType> &GetEntryList(void);
     template <typename EntryType, typename ItemInfo>
@@ -2293,6 +2350,12 @@ private:
     static bool     QuestionMatches(uint16_t aQuestionRrType, uint16_t aRrType);
     static bool     RrClassIsInternetOrAny(uint16_t aRrClass);
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+    void LogMessage(const Message &aMessage);
+#else
+    void LogMessage(const Message &) {}
+#endif
+
     using EntryTimer = TimerMilliIn<Core, &Core::HandleEntryTimer>;
     using CacheTimer = TimerMilliIn<Core, &Core::HandleCacheTimer>;
     using EntryTask  = TaskletIn<Core, &Core::HandleEntryTask>;
@@ -2329,6 +2392,9 @@ private:
     TimeMilli                mNextQueryTxTime;
     CacheTimer               mCacheTimer;
     CacheTask                mCacheTask;
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+    bool mVerboseLogging;
+#endif
 };
 
 // Specializations of `Core::GetEntryList()` for `HostEntry` and `ServiceEntry`:
