@@ -1755,10 +1755,8 @@ private:
         bool  IsRestoringRouterOrLeaderRole(void) const { return mState == kRestoringRouterOrLeaderRole; }
         void  HandleTimer(void);
 
-#if OPENTHREAD_FTD
         void               GenerateRandomChallenge(void) { mChallenge.GenerateRandom(); }
         const TxChallenge &GetChallenge(void) const { return mChallenge; }
-#endif
 
     private:
         static constexpr uint32_t kMaxStartDelay                = 25;
@@ -1782,12 +1780,10 @@ private:
 
         using DelayTimer = TimerMilliIn<Mle, &Mle::HandleRoleRestorerTimer>;
 
-        State      mState;
-        uint8_t    mAttempts;
-        DelayTimer mTimer;
-#if OPENTHREAD_FTD
+        State       mState;
+        uint8_t     mAttempts;
+        DelayTimer  mTimer;
         TxChallenge mChallenge;
-#endif
     };
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

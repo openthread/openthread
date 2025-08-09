@@ -1912,10 +1912,16 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendModeTlv(mDeviceMode));
 
-    if ((aMode == kAppendChallengeTlv) || IsDetached())
+    switch (aMode)
     {
-        mParentRequestChallenge.GenerateRandom();
-        SuccessOrExit(error = message->AppendChallengeTlv(mParentRequestChallenge));
+    case kNormalChildUpdateRequest:
+    case kAppendZeroTimeout:
+        break;
+    case kAppendChallengeTlv:
+    case kToRestoreChildRole:
+        mPrevRoleRestorer.GenerateRandomChallenge();
+        SuccessOrExit(error = message->AppendChallengeTlv(mPrevRoleRestorer.GetChallenge()));
+        break;
     }
 
     switch (mRole)
@@ -3425,7 +3431,8 @@ void Mle::HandleChildUpdateResponseOnChild(RxInfo &aRxInfo)
     switch (mRole)
     {
     case kRoleDetached:
-        VerifyOrExit(response == mParentRequestChallenge, error = kErrorSecurity);
+        VerifyOrExit(mPrevRoleRestorer.IsRestoringChildRole(), error = kErrorSecurity);
+        VerifyOrExit(response == mPrevRoleRestorer.GetChallenge(), error = kErrorSecurity);
         break;
 
     case kRoleChild:
