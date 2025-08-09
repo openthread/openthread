@@ -577,6 +577,26 @@ exit:
 }
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+void Local::RecordFavoredOmrPrefix(const Ip6::Prefix                            &aPrefix,
+                                   BorderRouter::RoutingManager::RoutePreference aPreference,
+                                   bool                                          aIsLocal)
+{
+    FavoredOmrPrefix *entry = mFavoredOmrPrefixHistory.AddNewEntry();
+
+    VerifyOrExit(entry != nullptr);
+
+    entry->mOmrPrefix  = aPrefix;
+    entry->mPreference = NetworkData::RoutePreferenceToValue(aPreference);
+    entry->mIsLocal    = aIsLocal;
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
 void Local::HandleNotifierEvents(Events aEvents)
 {
     if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadRlocAdded | kEventThreadRlocRemoved |
@@ -606,6 +626,9 @@ void Local::HandleTimer(void)
     mDnsSrpAddrHistory.UpdateAgedEntries();
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     mEpskcEventHistory.UpdateAgedEntries();
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    mFavoredOmrPrefixHistory.UpdateAgedEntries();
 #endif
     mTimer.Start(kAgeCheckPeriod);
 }
