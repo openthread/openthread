@@ -3,7 +3,7 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=en_US.UTF-8
-
+ENV INSTALL_FORMAT_TOOLS=0
 # Resolves issue with installing libc-bin
 RUN rm /var/lib/dpkg/info/libc-bin.* \
     && apt-get clean -y \
