@@ -261,7 +261,7 @@ exit:
 /**
  * @cli tcat certid
  * @code
- * tcat devid certid 0
+ * tcat certid 0
  * Done
  * @endcode
  * @cparam tcat certid [@ca{value}]
