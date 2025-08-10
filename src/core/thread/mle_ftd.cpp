@@ -1064,6 +1064,14 @@ Error Mle::ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo)
         error = kErrorNoRoute;
     }
 
+    if (IsChild() && !mRouterTable.IsAllocated(RouterIdFromRloc16(GetRloc16())))
+    {
+        // The router table does not contain an entry for the Router ID of the parent.
+        // Detach immediately to minimize time where routing is broken.
+        IgnoreError(BecomeDetached());
+        error = kErrorNoRoute;
+    }
+
     if (neighborRloc16 != kInvalidRloc16)
     {
         aRxInfo.mNeighbor = Get<NeighborTable>().FindNeighbor(neighborRloc16);
