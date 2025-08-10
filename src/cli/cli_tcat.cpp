@@ -293,11 +293,16 @@ exit:
 /**
  * @cli tcat devid
  * @code
- * tcat devid ianapen f378aabb
+ * tcat devid f378aabb
+ * Done
+ * @endcode
+ * @code
+ * tcat devid
+ * f378aabb
  * Done
  * @endcode
  * @cparam tcat devid [@ca{value}|clear]
- * * The `value` hexstring value of the ID. `clear` is a special value removing previously set ID.
+ * * The `value` hexstring value of the ID. `clear` is a special value to remove the previously set ID.
  * @par
  * Sets/clears vendor specific device ID.
  */
@@ -309,7 +314,6 @@ template <> otError Tcat::Process<Cmd("devid")>(Arg aArgs[])
     {
         if (sGeneralDeviceId.mDeviceIdLen != 0)
         {
-            OutputLine("TCAT DeviceId:");
             OutputBytesLine(sGeneralDeviceId.mDeviceId, sGeneralDeviceId.mDeviceIdLen);
         }
         ExitNow();
