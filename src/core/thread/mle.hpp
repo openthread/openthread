@@ -2178,8 +2178,13 @@ private:
         static constexpr uint16_t kWakeupTxInterval          = OPENTHREAD_CONFIG_WAKEUP_TX_INTERVAL;
         static constexpr uint32_t kEstablishP2pLinkTimeoutUs = 500000;
 
-        enum State : uint8_t{
-            kStateIdle, kStateWakingUp, kStateWaitingLinkAccept, kStateAttachDelay, kStateWaitingLinkAcceptAndRequest,
+        enum State : uint8_t
+        {
+            kStateIdle,
+            kStateWakingUp,
+            kStateWaitingLinkAccept,
+            kStateAttachDelay,
+            kStateWaitingLinkAcceptAndRequest,
         };
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
