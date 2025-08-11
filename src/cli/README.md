@@ -89,6 +89,7 @@ Done
 - [networkname](#networkname)
 - [networktime](#networktime)
 - [nexthop](#nexthop)
+- [p2p](#p2p-link--e-extaddress)
 - [panid](#panid)
 - [parent](#parent)
 - [parentpriority](#parentpriority)
