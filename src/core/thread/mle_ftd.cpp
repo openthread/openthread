@@ -1404,6 +1404,8 @@ void Mle::HandleParentRequest(RxInfo &aRxInfo)
     VerifyOrExit(IsRouterEligible());
     VerifyOrExit(!IsDetached() && !IsAttaching());
 
+    VerifyOrExit(!mDetacher.IsDetaching());
+
     VerifyOrExit(mRouterTable.GetLeaderAge() < mNetworkIdTimeout, error = kErrorDrop);
     VerifyOrExit(mRouterTable.GetPathCostToLeader() < kMaxRouteCost, error = kErrorDrop);
 
@@ -2204,6 +2206,8 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
     bool            childDidChange = false;
 
     Log(kMessageReceive, kTypeChildUpdateRequestOfChild, aRxInfo.mMessageInfo.GetPeerAddr());
+
+    VerifyOrExit(!mDetacher.IsDetaching());
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadModeTlv(mode));
 
