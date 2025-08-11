@@ -63,7 +63,7 @@ void Child::Info::SetFrom(const Child &aChild)
     mFullNetworkData     = (aChild.GetNetworkDataType() == NetworkData::kFullSet);
     mIsStateRestoring    = aChild.IsStateRestoring();
     mSupervisionInterval = aChild.GetSupervisionInterval();
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mIsCslSynced = aChild.IsCslSynchronized();
 #else
     mIsCslSynced = false;
@@ -127,7 +127,7 @@ void Child::ClearIp6Addresses(void)
 {
     mMeshLocalIid.Clear();
     mIp6Addresses.Clear();
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     mMlrToRegisterSet.Clear();
     mMlrRegisteredSet.Clear();
 #endif
@@ -263,7 +263,7 @@ exit:
     return hasAddress;
 }
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 Error Child::GetDomainUnicastAddress(Ip6::Address &aAddress) const
 {
     Error error = kErrorNotFound;

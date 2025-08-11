@@ -231,7 +231,7 @@ public:
      */
     bool HasIp6Address(const Ip6::Address &aAddress) const;
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     /**
      * Retrieves the Domain Unicast Address registered by the child.
      *
