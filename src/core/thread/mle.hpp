@@ -1179,6 +1179,8 @@ private:
     static constexpr uint32_t kMaxLinkAcceptDelay            = 1000; // Max delay to tx Link Accept for multicast Req
     static constexpr uint32_t kChildIdRequestTimeout         = 5000; // Max delay to rx a Child ID Req after Parent Res
     static constexpr uint32_t kLinkRequestTimeout            = 2000; // Max delay to rx a Link Accept
+    static constexpr uint32_t kLinkRequestRetxDelayMin       = 3000 * 9 / 10;
+    static constexpr uint32_t kLinkRequestRetxDelayMax       = 3000 * 11 / 10;
     static constexpr uint32_t kUnicastRetxDelay              = 1000; // Base delay for MLE unicast retx
     static constexpr uint32_t kMulticastRetxDelay            = 5000; // Base delay for MLE multicast retx
     static constexpr uint32_t kMulticastRetxDelayMin         = kMulticastRetxDelay * 9 / 10;  // 0.9 * base delay
@@ -1286,6 +1288,8 @@ private:
     static constexpr int8_t kParentPriorityMedium      = 0;
     static constexpr int8_t kParentPriorityLow         = -1;
     static constexpr int8_t kParentPriorityUnspecified = -2;
+
+    static constexpr uint8_t  kChildResetUpgradeDelay = 120;  // Extra delay to upgrade to router (in sec).
 
 #endif // OPENTHREAD_FTD
 
@@ -1742,7 +1746,7 @@ private:
 
         Error Start(void);
         void  Stop(void);
-        bool  IsRestoringChildRole(void) const { return mState == kRestoringChildRole; }
+        bool  IsRestoringChildRole(void) const { return mState == kRestoringChildFirstTry || mState == kRestoringChildWaitPeriod; }
         bool  IsRestoringRouterOrLeaderRole(void) const { return mState == kRestoringRouterOrLeaderRole; }
         void  HandleTimer(void);
 
@@ -1752,15 +1756,20 @@ private:
 #endif
 
     private:
-        static constexpr uint32_t kMaxStartDelay                = 25;
+        static constexpr uint32_t kRouterMaxStartDelay          = 25;
+        static constexpr uint32_t kChildMaxStartDelay           = 5000;
         static constexpr uint8_t  kMaxChildUpdatesToRestoreRole = kMaxChildKeepAliveAttempts;
         static constexpr uint32_t kChildUpdateRetxDelay         = kUnicastRetxDelay; /// 1000 msec
         static constexpr uint16_t kRetxJitter                   = 5;
+        // Still opportunity for refinement? Along with router & leader delays and reattempts
+        static constexpr uint32_t kChildResetTimeoutMS    = 30000u;
+        static constexpr uint32_t kChildResetTimeoutJitterMS = 7500u;
 
         enum State : uint8_t
         {
             kIdle,
-            kRestoringChildRole,
+            kRestoringChildFirstTry,
+            kRestoringChildWaitPeriod,
             kRestoringRouterOrLeaderRole,
         };
 
@@ -2047,6 +2056,7 @@ private:
     void       HandleChildIdResponse(RxInfo &aRxInfo);
     void       HandleChildUpdateRequest(RxInfo &aRxInfo);
     void       HandleChildUpdateRequestOnChild(RxInfo &aRxInfo);
+    void       HandleChildUpdateRequestOnUnattached(RxInfo &aRxInfo);
     void       HandleChildUpdateResponse(RxInfo &aRxInfo);
     void       HandleChildUpdateResponseOnChild(RxInfo &aRxInfo);
     void       HandleDataResponse(RxInfo &aRxInfo);
@@ -2151,6 +2161,7 @@ private:
 #if OPENTHREAD_FTD
     void     SetAlternateRloc16(uint16_t aRloc16);
     void     ClearAlternateRloc16(void);
+    void     DelayRouterUpgradeTime(void);
     void     HandleDetachStart(void);
     void     HandleChildStart(AttachMode aMode);
     void     HandleSecurityPolicyChanged(void);

@@ -474,6 +474,12 @@ void Mle::Restore(void)
         mParent.SetState(Neighbor::kStateRestored);
 
         mPreviousParentRloc = mParent.GetRloc16();
+
+        #if OPENTHREAD_FTD
+        // Attempting to restore as a child; in order to improve reset speed,
+        // delay longer before upgrading to router.
+        DelayRouterUpgradeTime();
+        #endif
     }
 #if OPENTHREAD_FTD
     else
@@ -1879,6 +1885,8 @@ Error Mle::SendChildUpdateRequestToParent(void) { return SendChildUpdateRequestT
 
 Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
 {
+    static const uint8_t kRestoringChildTlvs[] = {Tlv::kNetworkData};
+
     Error                   error = kErrorNone;
     Ip6::Address            destination;
     TxMessage              *message     = nullptr;
@@ -1947,6 +1955,11 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
     if (!IsFullThreadDevice())
     {
         SuccessOrExit(error = message->AppendAddressRegistrationTlv(addrRegMode));
+    }
+
+    if (aMode == kToRestoreChildRole)
+    {
+        SuccessOrExit(error = message->AppendTlvRequestTlv(kRestoringChildTlvs));
     }
 
     destination.SetToLinkLocalAddress(mParent.GetExtAddress());
@@ -2648,8 +2661,35 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
     Error      error = kErrorNone;
     uint16_t   sourceAddress;
     LeaderData leaderData;
+    Mac::ExtAddress macAddr;
 
-    VerifyOrExit(IsAttached());
+    if (!IsAttached())
+    {
+        if (mPrevRoleRestorer.IsRestoringChildRole())
+        {
+            macAddr.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
+
+            // only worry about this if we are waiting to be restored after a reset
+            // check that the router ID matches, and that the rloc is not that of a child (REED advertising it exists)
+            if ((RouterIdFromRloc16(GetRloc16()) == RouterIdFromRloc16(sourceAddress)) && IsRouterRloc16(sourceAddress))
+            {
+                // Heard from a device with the RLOC of our previous parent, stop restoring either way
+                mPrevRoleRestorer.Stop();
+
+                if (macAddr != mParent.GetExtAddress())
+                {
+                    // the node with the same routerId has a different mac address. skip reset logic
+                    BecomeDetached();
+                    ExitNow();
+                }
+
+                // we found our previous parent, send a child update request
+                SendChildUpdateRequestToParent();
+            }
+        }
+
+        ExitNow();
+    }
 
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
@@ -3258,7 +3298,11 @@ exit:
 
 void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
 {
-    VerifyOrExit(IsAttached());
+    if (!IsAttached())
+    {
+        HandleChildUpdateRequestOnUnattached(aRxInfo);
+        ExitNow();
+    }
 
 #if OPENTHREAD_FTD
     if (IsRouterOrLeader())
@@ -3269,6 +3313,41 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
 #endif
 
     HandleChildUpdateRequestOnChild(aRxInfo);
+
+exit:
+    return;
+}
+
+void Mle::HandleChildUpdateRequestOnUnattached(RxInfo &aRxInfo)
+{
+    uint16_t        sourceAddress;
+    Mac::ExtAddress macAddr;
+
+    SuccessOrExit(Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
+    macAddr.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
+
+    // Wait for an advertisement from our next hop to the leader from before we were reset
+    if (mPrevRoleRestorer.IsRestoringChildRole())
+    {
+        // only worry about this if we are waiting to be restored after a reset
+        // check that the router ID matches, and that the rloc is not that of a child (REED advertising it exists)
+        if ((RouterIdFromRloc16(GetRloc16()) == RouterIdFromRloc16(sourceAddress)) && IsRouterRloc16(sourceAddress))
+        {
+            // Heard from a device with the RLOC of our previous parent, stop restoring either way
+            mPrevRoleRestorer.Stop();
+
+            if (macAddr != mParent.GetExtAddress())
+            {
+                // the node with the same routerId has a different mac address. skip reset logic
+                BecomeDetached();
+                ExitNow();
+            }
+
+            // send a child update request to our parent
+            SendChildUpdateRequestToParent();
+            ExitNow();
+        }
+    }
 
 exit:
     return;
@@ -5332,7 +5411,7 @@ Error Mle::PrevRoleRestorer::Start(void)
         Get<MeshForwarder>().SetRxOnWhenIdle(true);
         SetState(kRestoringRouterOrLeaderRole);
         DetermineMaxLinkRequestAttempts();
-        mTimer.Start(Get<Mle>().GenerateRandomDelay(kMaxStartDelay));
+        mTimer.Start(Get<Mle>().GenerateRandomDelay(kRouterMaxStartDelay));
         error = kErrorNone;
 #endif
         ExitNow();
@@ -5340,9 +5419,9 @@ Error Mle::PrevRoleRestorer::Start(void)
 
     VerifyOrExit(Get<Mle>().mLastSavedRole == kRoleChild);
     VerifyOrExit(Get<Mle>().mParent.IsStateValidOrRestoring());
-    SetState(kRestoringChildRole);
-    mAttempts = kMaxChildUpdatesToRestoreRole;
-    mTimer.Start(Get<Mle>().GenerateRandomDelay(kMaxStartDelay));
+    SetState(kRestoringChildFirstTry);
+    mAttempts = 2;
+    mTimer.Start(Get<Mle>().GenerateRandomDelay(kChildMaxStartDelay));
     error = kErrorNone;
 
 exit:
@@ -5392,8 +5471,17 @@ void Mle::PrevRoleRestorer::HandleTimer(void)
     }
     else
 #endif
+    if (mState == kRestoringChildFirstTry)
     {
         SendChildUpdate();
+    }
+    else if (mState == kRestoringChildWaitPeriod)
+    {
+        // commonize with above
+        LogInfo("Failed to restore prev role");
+        Stop();
+        IgnoreError(Get<Mle>().BecomeDetached());
+        ExitNow();
     }
 
 exit:
@@ -5402,9 +5490,10 @@ exit:
 
 void Mle::PrevRoleRestorer::SendChildUpdate(void)
 {
-    mTimer.Start(Random::NonCrypto::AddJitter(kChildUpdateRetxDelay, kRetxJitter));
+    mTimer.Start(Random::NonCrypto::AddJitter(kChildResetTimeoutMS, kChildResetTimeoutJitterMS));
+    SetState(kRestoringChildWaitPeriod);
 
-    LogDebg("Sending Child Update Request to restore child role, remaining attempts: %u", mAttempts);
+    LogDebg("Sending Child Update Request to restore child role");
     IgnoreError(Get<Mle>().SendChildUpdateRequestToParent(kToRestoreChildRole));
 }
 
@@ -5412,12 +5501,11 @@ void Mle::PrevRoleRestorer::SendChildUpdate(void)
 
 void Mle::PrevRoleRestorer::DetermineMaxLinkRequestAttempts(void)
 {
-    mAttempts = kMaxCriticalTxCount;
+    mAttempts = 4;
 
-    if ((Get<Mle>().mLastSavedRole == kRoleRouter) &&
-        (Get<Mle>().mChildTable.GetNumChildren(Child::kInStateValidOrRestoring) < kMinCriticalChildrenCount))
+    if (Get<Mle>().mLastSavedRole == kRoleLeader)
     {
-        mAttempts = kMaxTxCount;
+        mAttempts = 3;
     }
 }
 
@@ -5426,7 +5514,7 @@ void Mle::PrevRoleRestorer::SendMulticastLinkRequest(void)
     uint32_t delay;
 
     delay = (mAttempts == 0) ? kLinkRequestTimeout
-                             : Random::NonCrypto::GetUint32InRange(kMulticastRetxDelayMin, kMulticastRetxDelayMax);
+                             : Random::NonCrypto::GetUint32InRange(kLinkRequestRetxDelayMin, kLinkRequestRetxDelayMax);
 
     mTimer.Start(delay);
 
