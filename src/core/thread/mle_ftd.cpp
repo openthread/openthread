@@ -1058,16 +1058,11 @@ Error Mle::ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo)
 
     mRouterTable.UpdateRouterIdSet(aRouteTlv.GetRouterIdSequence(), aRouteTlv.GetRouterIdMask());
 
-    if (IsRouter() && !mRouterTable.IsAllocated(mRouterId))
+    if (!mRouterTable.IsAllocated(RouterIdFromRloc16(GetRloc16())))
     {
-        IgnoreError(BecomeDetached());
-        error = kErrorNoRoute;
-    }
-
-    if (IsChild() && !mRouterTable.IsAllocated(RouterIdFromRloc16(GetRloc16())))
-    {
-        // The router table does not contain an entry for the Router ID of the parent.
-        // Detach immediately to minimize time where routing is broken.
+        // Either we're a router and our own router ID has been removed from the router table,
+        // or we're a child and our parent's router ID has been removed from the router table.
+        // Detach immediately to minimize time where we're not connected.
         IgnoreError(BecomeDetached());
         error = kErrorNoRoute;
     }
