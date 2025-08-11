@@ -212,5 +212,6 @@ const char *RoleToString(DeviceRole aRole)
 
     return (aRole < GetArrayLength(kRoleStrings)) ? kRoleStrings[aRole] : "invalid";
 }
+
 } // namespace Mle
 } // namespace ot
