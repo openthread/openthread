@@ -2845,7 +2845,7 @@ public:
          *
          * @returns The Bitmap length
          */
-        uint8_t GetBitmapLength(void) { return mBitmapLength; }
+        uint8_t GetBitmapLength(void) const { return mBitmapLength; }
 
         /**
          * Gets the total size (number of bytes) of the `TypeBitMap` field.
