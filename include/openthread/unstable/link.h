@@ -50,6 +50,11 @@ extern "C" {
  */
 
 /**
+ * Represents the wake-up identifier.
+ */
+typedef uint64_t otWakeupId;
+
+/**
  * Represents the wake-up request type.
  */
 typedef enum otWakeupType
@@ -66,7 +71,7 @@ typedef struct otWakeupRequest
 {
     union
     {
-        uint64_t     mWakeupId;   ///< Wake-up identifier of the Wake-up Listener.
+        otWakeupId   mWakeupId;   ///< Wake-up identifier of the Wake-up Listener.
         otExtAddress mExtAddress; ///< IEEE 802.15.4 Extended Address of the Wake-up Listener.
     } mShared;
 
