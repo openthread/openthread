@@ -599,7 +599,7 @@ void Server::SendAnswer(const Ip6::Address &aDestination, const Message &aReques
 
     SuccessOrExit(error = AppendRequestedTlvs(aRequest, *answer));
 
-    answerTlv.Init(0, /* aIsLast */ true);
+    answerTlv.Init(0, AnswerTlv::kIsLast);
     SuccessOrExit(answer->Append(answerTlv));
 
     PrepareMessageInfoForDest(aDestination, messageInfo);
@@ -721,7 +721,7 @@ void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Messa
         SuccessOrExit(error = CheckAnswerLength(answer, info));
     }
 
-    answerTlv.Init(info.mAnswerIndex, /* aIsLast */ true);
+    answerTlv.Init(info.mAnswerIndex, AnswerTlv::kIsLast);
     SuccessOrExit(error = answer->Append(answerTlv));
 
     SendNextAnswer(*info.mFirstAnswer, aDestination);
@@ -746,7 +746,7 @@ Error Server::CheckAnswerLength(Coap::Message *&aAnswer, AnswerInfo &aInfo)
 
     VerifyOrExit(aAnswer->GetLength() >= kAnswerMessageLengthThreshold);
 
-    answerTlv.Init(aInfo.mAnswerIndex++, /* aIsLast */ false);
+    answerTlv.Init(aInfo.mAnswerIndex++, AnswerTlv::kMoreToFollow);
     SuccessOrExit(error = aAnswer->Append(answerTlv));
 
     error = AllocateAnswer(aAnswer, aInfo);
