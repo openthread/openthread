@@ -116,6 +116,7 @@ mDNS IPv6 address result for test-host
 - [txtresolvers](#txtresolvers)
 - [unicastquestion](#unicastquestion)
 - [unregister](#unregister)
+- [verboselogging](#verboselogging)
 
 ## Command Details
 
@@ -652,5 +653,28 @@ Unregisters a key for host or service instance name.
 Done
 
 > mdns unregister key my-inst _test._udp
+Done
+```
+
+### verboselogging
+
+Usage: `mdns verboselogging [enable|disable]`
+
+Requires `OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE`.
+
+Enables or disables verbose logging for the mDNS module at run-time.
+
+When enabled, the mDNS module emits verbose logs for every sent or received mDNS message, including the header and all question and resource records. These logs are generated regardless of the current log level configured on the device.
+
+This feature can generate a large volume of logs, so its use is recommended only during development, integration, or debugging.
+
+The initial state of verbose logging (enabled or disabled at startup) is determined by the configuration `OPENTHREAD_CONFIG_MULTICAST_DEFAULT_DNS_VERBOSE_LOGGING_STATE`.
+
+```bash
+> mdns verboselogging enable
+Done
+
+> mdns verboselogging
+Enabled
 Done
 ```
