@@ -812,7 +812,7 @@ bool RoutingManager::NetworkDataContainsUlaRoute(void) const
     NetworkData::ExternalRouteConfig routeConfig;
     bool                             contains = false;
 
-    while (Get<NetworkData::Leader>().GetNextExternalRoute(iterator, routeConfig) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, routeConfig) == kErrorNone)
     {
         if (routeConfig.mStable && RoutePublisher::GetUlaPrefix().ContainsPrefix(routeConfig.GetPrefix()))
         {
@@ -840,7 +840,7 @@ void RoutingManager::CheckReachabilityToSendIcmpError(const Message &aMessage, c
     // Validate that source matches a ULA OMR prefix with low preference
     // (indicating it is not infrastructure-derived).
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, prefixConfig) == kErrorNone)
     {
         if (IsValidOmrPrefix(prefixConfig) && prefixConfig.GetPrefix().IsUniqueLocal() &&
             aIp6Header.GetSource().MatchesPrefix(prefixConfig.GetPrefix()))
@@ -1690,7 +1690,7 @@ void RoutingManager::RxRaTracker::HandleNetDataChange(void)
     NetworkData::OnMeshPrefixConfig prefixConfig;
     bool                            didChange = false;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, prefixConfig) == kErrorNone)
     {
         if (!IsValidOmrPrefix(prefixConfig))
         {
@@ -2666,7 +2666,7 @@ void RoutingManager::OmrPrefixManager::DetermineFavoredPrefixInNetData(FavoredOm
 
     aFavoredPrefix.Clear();
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, prefixConfig) == kErrorNone)
     {
         if (!IsValidOmrPrefix(prefixConfig) || !prefixConfig.mPreferred)
         {
@@ -3636,7 +3636,7 @@ Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMess
 
     iterator = NetworkData::kIteratorInit;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, prefixConfig) == kErrorNone)
     {
         // The decision to include the local OMR prefix as a RIO is
         // delegated to `OmrPrefixManager.ShouldAdvertiseLocalAsRio()`
@@ -3662,7 +3662,7 @@ Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMess
 
     iterator = NetworkData::kIteratorInit;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, prefixConfig) == kErrorNone)
     {
         if (prefixConfig.mOnMesh && !prefixConfig.mDp && !IsValidOmrPrefix(prefixConfig))
         {

@@ -75,7 +75,7 @@ otError otServerGetNextService(otInstance *aInstance, otNetworkDataIterator *aIt
 
     VerifyOrExit(aIterator && aConfig, error = kErrorInvalidArgs);
 
-    error = AsCoreType(aInstance).Get<NetworkData::Local>().GetNextService(*aIterator, AsCoreType(aConfig));
+    error = AsCoreType(aInstance).Get<NetworkData::Local>().GetNext(*aIterator, AsCoreType(aConfig));
 
 exit:
     return error;

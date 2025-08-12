@@ -171,7 +171,7 @@ void Slaac::RemoveOrDeprecateAddresses(void)
     for (SlaacAddress &slaacAddr : mSlaacAddresses)
     {
         NetworkData::Iterator           iterator;
-        NetworkData::OnMeshPrefixConfig config;
+        NetworkData::OnMeshPrefixConfig prefixConfig;
         bool                            found = false;
 
         if (!slaacAddr.IsInUse())
@@ -181,9 +181,9 @@ void Slaac::RemoveOrDeprecateAddresses(void)
 
         iterator = NetworkData::kIteratorInit;
 
-        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == kErrorNone)
+        while (Get<NetworkData::Leader>().GetNext(iterator, prefixConfig) == kErrorNone)
         {
-            if (IsSlaac(config) && DoesConfigMatchNetifAddr(config, slaacAddr))
+            if (IsSlaac(prefixConfig) && DoesConfigMatchNetifAddr(prefixConfig, slaacAddr))
             {
                 found = true;
                 break;
@@ -192,7 +192,7 @@ void Slaac::RemoveOrDeprecateAddresses(void)
 
         if (found)
         {
-            if (IsFiltered(config))
+            if (IsFiltered(prefixConfig))
             {
                 RemoveAddress(slaacAddr);
             }
@@ -252,26 +252,26 @@ void Slaac::RemoveAddress(SlaacAddress &aAddress)
 void Slaac::AddAddresses(void)
 {
     NetworkData::Iterator           iterator;
-    NetworkData::OnMeshPrefixConfig config;
+    NetworkData::OnMeshPrefixConfig prefixConfig;
 
     // Generate and add SLAAC addresses for any newly added on-mesh prefixes.
 
     iterator = NetworkData::kIteratorInit;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, prefixConfig) == kErrorNone)
     {
         bool found = false;
 
-        if (!IsSlaac(config) || IsFiltered(config))
+        if (!IsSlaac(prefixConfig) || IsFiltered(prefixConfig))
         {
             continue;
         }
 
         for (SlaacAddress &slaacAddr : mSlaacAddresses)
         {
-            if (slaacAddr.IsInUse() && DoesConfigMatchNetifAddr(config, slaacAddr))
+            if (slaacAddr.IsInUse() && DoesConfigMatchNetifAddr(prefixConfig, slaacAddr))
             {
-                if (slaacAddr.IsDeprecating() && config.mPreferred)
+                if (slaacAddr.IsDeprecating() && prefixConfig.mPreferred)
                 {
                     slaacAddr.MarkAsNotDeprecating();
                     Get<ThreadNetif>().UpdatePreferredFlagOn(slaacAddr, true);
@@ -289,7 +289,7 @@ void Slaac::AddAddresses(void)
 
         for (const Ip6::Netif::UnicastAddress &netifAddr : Get<ThreadNetif>().GetUnicastAddresses())
         {
-            if (DoesConfigMatchNetifAddr(config, netifAddr))
+            if (DoesConfigMatchNetifAddr(prefixConfig, netifAddr))
             {
                 found = true;
                 break;
@@ -298,7 +298,7 @@ void Slaac::AddAddresses(void)
 
         if (!found)
         {
-            AddAddressFor(config);
+            AddAddressFor(prefixConfig);
         }
     }
 }

@@ -64,7 +64,7 @@ void Server::UpdateService(void)
     Error                           error  = kErrorNone;
     uint16_t                        rloc16 = Get<Mle::Mle>().GetRloc16();
     NetworkData::Iterator           iterator;
-    NetworkData::OnMeshPrefixConfig config;
+    NetworkData::OnMeshPrefixConfig prefixConfig;
     Lowpan::Context                 lowpanContext;
 
     // remove dhcp agent aloc and prefix delegation
@@ -79,9 +79,9 @@ void Server::UpdateService(void)
 
         iterator = NetworkData::kIteratorInit;
 
-        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == kErrorNone)
+        while (Get<NetworkData::Leader>().GetNext(iterator, rloc16, prefixConfig) == kErrorNone)
         {
-            if (!(config.mDhcp || config.mConfigure))
+            if (!(prefixConfig.mDhcp || prefixConfig.mConfigure))
             {
                 continue;
             }
@@ -107,18 +107,18 @@ void Server::UpdateService(void)
     // add dhcp agent aloc and prefix delegation
     iterator = NetworkData::kIteratorInit;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, rloc16, prefixConfig) == kErrorNone)
     {
-        if (!(config.mDhcp || config.mConfigure))
+        if (!(prefixConfig.mDhcp || prefixConfig.mConfigure))
         {
             continue;
         }
 
-        error = Get<NetworkData::Leader>().GetContext(AsCoreType(&config.mPrefix.mPrefix), lowpanContext);
+        error = Get<NetworkData::Leader>().GetContext(AsCoreType(&prefixConfig.mPrefix.mPrefix), lowpanContext);
 
         if (error == kErrorNone)
         {
-            AddPrefixAgent(config.GetPrefix(), lowpanContext);
+            AddPrefixAgent(prefixConfig.GetPrefix(), lowpanContext);
         }
     }
 

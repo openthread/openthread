@@ -53,7 +53,7 @@ void Agent::UpdateService(void)
     Error                           error;
     uint16_t                        rloc16 = Get<Mle::Mle>().GetRloc16();
     NetworkData::Iterator           iterator;
-    NetworkData::OnMeshPrefixConfig config;
+    NetworkData::OnMeshPrefixConfig prefixConfig;
     Lowpan::Context                 lowpanContext;
 
     if (IsAlocInUse())
@@ -64,14 +64,14 @@ void Agent::UpdateService(void)
 
         iterator = NetworkData::kIteratorInit;
 
-        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == kErrorNone)
+        while (Get<NetworkData::Leader>().GetNext(iterator, rloc16, prefixConfig) == kErrorNone)
         {
-            if (!config.mNdDns)
+            if (!prefixConfig.mNdDns)
             {
                 continue;
             }
 
-            error = Get<NetworkData::Leader>().GetContext(AsCoreType(&config.mPrefix.mPrefix), lowpanContext);
+            error = Get<NetworkData::Leader>().GetContext(AsCoreType(&prefixConfig.mPrefix.mPrefix), lowpanContext);
 
             if ((error != kErrorNone) || (lowpanContext.mContextId != contextId))
             {
@@ -93,14 +93,14 @@ void Agent::UpdateService(void)
 
     iterator = NetworkData::kIteratorInit;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, rloc16, prefixConfig) == kErrorNone)
     {
-        if (!config.mNdDns)
+        if (!prefixConfig.mNdDns)
         {
             continue;
         }
 
-        error = Get<NetworkData::Leader>().GetContext(AsCoreType(&config.mPrefix.mPrefix), lowpanContext);
+        error = Get<NetworkData::Leader>().GetContext(AsCoreType(&prefixConfig.mPrefix.mPrefix), lowpanContext);
 
         if (error == kErrorNone)
         {
