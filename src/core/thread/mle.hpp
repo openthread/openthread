@@ -1801,6 +1801,7 @@ private:
         void  HandleTimer(void);
         Error HandleChildUpdateResponse(uint32_t aTimeout);
         void  HandleStop(void);
+        bool  IsDetaching(void) const { return mState == kDetaching; }
 
     private:
         static constexpr uint32_t kTimeout = 1000;
