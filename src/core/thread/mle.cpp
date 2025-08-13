@@ -1271,7 +1271,7 @@ void Mle::UpdateServiceAlocs(void)
 
         iterator = NetworkData::kIteratorInit;
 
-        while (Get<NetworkData::Leader>().GetNextService(iterator, GetRloc16(), service) == kErrorNone)
+        while (Get<NetworkData::Leader>().GetNext(iterator, GetRloc16(), service) == kErrorNone)
         {
             if (service.mServiceId == ServiceIdFromAloc(serviceAloc.GetAloc16()))
             {
@@ -1291,7 +1291,7 @@ void Mle::UpdateServiceAlocs(void)
 
     iterator = NetworkData::kIteratorInit;
 
-    while (Get<NetworkData::Leader>().GetNextService(iterator, GetRloc16(), service) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, GetRloc16(), service) == kErrorNone)
     {
         uint16_t aloc16 = ServiceAlocFromId(service.mServiceId);
 

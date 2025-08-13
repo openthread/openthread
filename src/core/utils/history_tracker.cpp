@@ -364,9 +364,9 @@ void Local::RecordNetworkDataChange(void)
 
     iterator = NetworkData::kIteratorInit;
 
-    while (mPreviousNetworkData.GetNextOnMeshPrefix(iterator, prefix) == kErrorNone)
+    while (mPreviousNetworkData.GetNext(iterator, prefix) == kErrorNone)
     {
-        if (!Get<NetworkData::Leader>().ContainsOnMeshPrefix(prefix))
+        if (!Get<NetworkData::Leader>().Contains(prefix))
         {
             RecordOnMeshPrefixEvent(kNetDataEntryRemoved, prefix);
         }
@@ -374,9 +374,9 @@ void Local::RecordNetworkDataChange(void)
 
     iterator = NetworkData::kIteratorInit;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefix) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, prefix) == kErrorNone)
     {
-        if (!mPreviousNetworkData.ContainsOnMeshPrefix(prefix))
+        if (!mPreviousNetworkData.Contains(prefix))
         {
             RecordOnMeshPrefixEvent(kNetDataEntryAdded, prefix);
         }
@@ -386,9 +386,9 @@ void Local::RecordNetworkDataChange(void)
 
     iterator = NetworkData::kIteratorInit;
 
-    while (mPreviousNetworkData.GetNextExternalRoute(iterator, route) == kErrorNone)
+    while (mPreviousNetworkData.GetNext(iterator, route) == kErrorNone)
     {
-        if (!Get<NetworkData::Leader>().ContainsExternalRoute(route))
+        if (!Get<NetworkData::Leader>().Contains(route))
         {
             RecordExternalRouteEvent(kNetDataEntryRemoved, route);
         }
@@ -396,9 +396,9 @@ void Local::RecordNetworkDataChange(void)
 
     iterator = NetworkData::kIteratorInit;
 
-    while (Get<NetworkData::Leader>().GetNextExternalRoute(iterator, route) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, route) == kErrorNone)
     {
-        if (!mPreviousNetworkData.ContainsExternalRoute(route))
+        if (!mPreviousNetworkData.Contains(route))
         {
             RecordExternalRouteEvent(kNetDataEntryAdded, route);
         }

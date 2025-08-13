@@ -179,12 +179,12 @@ void TestNetworkDataIterator(void)
 
         for (const auto &route : routes)
         {
-            SuccessOrQuit(netData.GetNextExternalRoute(iter, rconfig));
+            SuccessOrQuit(netData.GetNext(iter, rconfig));
             PrintExternalRouteConfig(rconfig);
             VerifyOrQuit(CompareExternalRouteConfig(rconfig, route));
         }
 
-        VerifyOrQuit(netData.GetNextExternalRoute(iter, rconfig) == kErrorNotFound);
+        VerifyOrQuit(netData.GetNext(iter, rconfig) == kErrorNotFound);
 
         netData.FindRlocs(kAnyBrOrServer, kAnyRole, rlocs);
         VerifyRlocsArray(rlocs, kRlocs);
@@ -303,7 +303,7 @@ void TestNetworkDataIterator(void)
 
         for (const auto &route : routes)
         {
-            SuccessOrQuit(netData.GetNextExternalRoute(iter, rconfig));
+            SuccessOrQuit(netData.GetNext(iter, rconfig));
             PrintExternalRouteConfig(rconfig);
             VerifyOrQuit(CompareExternalRouteConfig(rconfig, route));
         }
@@ -471,7 +471,7 @@ void TestNetworkDataIterator(void)
 
         for (const auto &route : routes)
         {
-            SuccessOrQuit(netData.GetNextExternalRoute(iter, rconfig));
+            SuccessOrQuit(netData.GetNext(iter, rconfig));
             PrintExternalRouteConfig(rconfig);
             VerifyOrQuit(CompareExternalRouteConfig(rconfig, route));
         }
@@ -480,7 +480,7 @@ void TestNetworkDataIterator(void)
 
         for (const auto &prefix : prefixes)
         {
-            SuccessOrQuit(netData.GetNextOnMeshPrefix(iter, pconfig));
+            SuccessOrQuit(netData.GetNext(iter, pconfig));
             PrintOnMeshPrefixConfig(pconfig);
             VerifyOrQuit(CompareOnMeshPrefixConfig(pconfig, prefix));
         }

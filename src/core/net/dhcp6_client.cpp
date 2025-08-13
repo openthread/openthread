@@ -65,7 +65,7 @@ void Client::UpdateAddresses(void)
     bool                            found          = false;
     bool                            doesAgentExist = false;
     NetworkData::Iterator           iterator;
-    NetworkData::OnMeshPrefixConfig config;
+    NetworkData::OnMeshPrefixConfig prefixConfig;
 
     // remove addresses directly if prefix not valid in network data
     for (IdentityAssociation &idAssociation : mIdentityAssociations)
@@ -78,14 +78,14 @@ void Client::UpdateAddresses(void)
         found    = false;
         iterator = NetworkData::kIteratorInit;
 
-        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == kErrorNone)
+        while (Get<NetworkData::Leader>().GetNext(iterator, prefixConfig) == kErrorNone)
         {
-            if (!config.mDhcp)
+            if (!prefixConfig.mDhcp)
             {
                 continue;
             }
 
-            if (idAssociation.mNetifAddress.HasPrefix(config.GetPrefix()))
+            if (idAssociation.mNetifAddress.HasPrefix(prefixConfig.GetPrefix()))
             {
                 found = true;
                 break;
@@ -102,11 +102,11 @@ void Client::UpdateAddresses(void)
     // add IdentityAssociation for new configured prefix
     iterator = NetworkData::kIteratorInit;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, prefixConfig) == kErrorNone)
     {
         IdentityAssociation *idAssociation = nullptr;
 
-        if (!config.mDhcp)
+        if (!prefixConfig.mDhcp)
         {
             continue;
         }
@@ -124,7 +124,7 @@ void Client::UpdateAddresses(void)
                     idAssociation = &ia;
                 }
             }
-            else if (ia.mNetifAddress.HasPrefix(config.GetPrefix()))
+            else if (ia.mNetifAddress.HasPrefix(prefixConfig.GetPrefix()))
             {
                 found         = true;
                 idAssociation = &ia;
@@ -136,8 +136,8 @@ void Client::UpdateAddresses(void)
         {
             if (idAssociation != nullptr)
             {
-                idAssociation->mNetifAddress.mAddress      = config.mPrefix.mPrefix;
-                idAssociation->mNetifAddress.mPrefixLength = config.mPrefix.mLength;
+                idAssociation->mNetifAddress.mAddress      = prefixConfig.mPrefix.mPrefix;
+                idAssociation->mNetifAddress.mPrefixLength = prefixConfig.mPrefix.mLength;
                 idAssociation->mStatus                     = kIaStatusSolicit;
                 idAssociation->mValidLifetime              = 0;
             }
@@ -148,7 +148,7 @@ void Client::UpdateAddresses(void)
             }
         }
 
-        idAssociation->mPrefixAgentRloc = config.mRloc16;
+        idAssociation->mPrefixAgentRloc = prefixConfig.mRloc16;
     }
 
     if (doesAgentExist)
