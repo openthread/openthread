@@ -581,17 +581,16 @@ bool MutableNetworkData::RemoveTemporaryDataIn(PrefixTlv &aPrefix)
                 BorderRouterTlv *borderRouter = As<BorderRouterTlv>(cur);
                 ContextTlv      *context      = aPrefix.FindSubTlv<ContextTlv>();
 
-                // Replace p_border_router_16
                 for (BorderRouterEntry *entry = borderRouter->GetFirstEntry(); entry <= borderRouter->GetLastEntry();
                      entry                    = entry->GetNext())
                 {
                     if ((entry->IsDhcp() || entry->IsConfigure()) && (context != nullptr))
                     {
-                        entry->SetRloc(0xfc00 | context->GetContextId());
+                        entry->SetRloc(Mle::kAloc16DhcpAgentStart + context->GetContextId() - 1);
                     }
                     else
                     {
-                        entry->SetRloc(0xfffe);
+                        entry->SetRloc(Mle::kInvalidRloc16);
                     }
                 }
 
@@ -602,11 +601,10 @@ bool MutableNetworkData::RemoveTemporaryDataIn(PrefixTlv &aPrefix)
             {
                 HasRouteTlv *hasRoute = As<HasRouteTlv>(cur);
 
-                // Replace r_border_router_16
                 for (HasRouteEntry *entry = hasRoute->GetFirstEntry(); entry <= hasRoute->GetLastEntry();
                      entry                = entry->GetNext())
                 {
-                    entry->SetRloc(0xfffe);
+                    entry->SetRloc(Mle::kInvalidRloc16);
                 }
 
                 break;
@@ -616,13 +614,12 @@ bool MutableNetworkData::RemoveTemporaryDataIn(PrefixTlv &aPrefix)
                 break;
             }
 
-            // keep stable tlv
             cur = cur->GetNext();
         }
         else
         {
-            // remove temporary tlv
             uint8_t subTlvSize = cur->GetSize();
+
             RemoveTlv(cur);
             aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - subTlvSize);
         }
@@ -649,13 +646,12 @@ bool MutableNetworkData::RemoveTemporaryDataIn(ServiceTlv &aService)
                 break;
             }
 
-            // keep stable tlv
             cur = cur->GetNext();
         }
         else
         {
-            // remove temporary tlv
             uint8_t subTlvSize = cur->GetSize();
+
             RemoveTlv(cur);
             aService.SetSubTlvsLength(aService.GetSubTlvsLength() - subTlvSize);
         }
