@@ -223,7 +223,7 @@ Error BleSecure::NotifySendAdvertisements(const bool aSendAdvertisements)
     }
 
 exit:
-    if (error == kErrorInvalidArgs)  // can be returned by #otPlatBleGapAdvStart()
+    if (error == kErrorInvalidArgs) // can be returned by #otPlatBleGapAdvStart()
     {
         error = kErrorFailed;
     }
