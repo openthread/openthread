@@ -1182,10 +1182,6 @@ void Mle::HandleNotifierEvents(Events aEvents)
                 ScheduleChildUpdateRequest();
             }
         }
-
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-        UpdateServiceAlocs();
-#endif
     }
 
     if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadKeySeqCounterChanged))
@@ -1221,96 +1217,6 @@ void Mle::HandleNotifierEvents(Events aEvents)
 exit:
     return;
 }
-
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-
-Mle::ServiceAloc::ServiceAloc(void)
-{
-    InitAsThreadOriginMeshLocal();
-    GetAddress().GetIid().SetToLocator(kNotInUse);
-}
-
-Mle::ServiceAloc *Mle::FindInServiceAlocs(uint16_t aAloc16)
-{
-    // Search in `mServiceAlocs` for an entry matching `aAloc16`.
-    // Can be used with `aAloc16 = ServerAloc::kNotInUse` to find
-    // an unused entry in the array.
-
-    ServiceAloc *match = nullptr;
-
-    for (ServiceAloc &serviceAloc : mServiceAlocs)
-    {
-        if (serviceAloc.GetAloc16() == aAloc16)
-        {
-            match = &serviceAloc;
-            break;
-        }
-    }
-
-    return match;
-}
-
-void Mle::UpdateServiceAlocs(void)
-{
-    NetworkData::Iterator      iterator;
-    NetworkData::ServiceConfig service;
-
-    VerifyOrExit(!IsDisabled());
-
-    // First remove all ALOCs which are no longer in the Network
-    // Data to free up space in `mServiceAlocs` array.
-
-    for (ServiceAloc &serviceAloc : mServiceAlocs)
-    {
-        bool found = false;
-
-        if (!serviceAloc.IsInUse())
-        {
-            continue;
-        }
-
-        iterator = NetworkData::kIteratorInit;
-
-        while (Get<NetworkData::Leader>().GetNext(iterator, GetRloc16(), service) == kErrorNone)
-        {
-            if (service.mServiceId == ServiceIdFromAloc(serviceAloc.GetAloc16()))
-            {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found)
-        {
-            Get<ThreadNetif>().RemoveUnicastAddress(serviceAloc);
-            serviceAloc.MarkAsNotInUse();
-        }
-    }
-
-    // Now add any new ALOCs if there is space in `mServiceAlocs`.
-
-    iterator = NetworkData::kIteratorInit;
-
-    while (Get<NetworkData::Leader>().GetNext(iterator, GetRloc16(), service) == kErrorNone)
-    {
-        uint16_t aloc16 = ServiceAlocFromId(service.mServiceId);
-
-        if (FindInServiceAlocs(aloc16) == nullptr)
-        {
-            // No matching ALOC in `mServiceAlocs`, so we try to add it.
-            ServiceAloc *newServiceAloc = FindInServiceAlocs(ServiceAloc::kNotInUse);
-
-            VerifyOrExit(newServiceAloc != nullptr);
-            newServiceAloc->SetAloc16(aloc16);
-            Get<ThreadNetif>().AddUnicastAddress(*newServiceAloc);
-        }
-    }
-
-exit:
-    return;
-}
-
-#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 Error Mle::DetermineParentRequestType(ParentRequestType &aType) const
 {

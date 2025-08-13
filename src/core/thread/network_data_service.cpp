@@ -240,6 +240,91 @@ Error Manager::RemoveService(const void *aServiceData, uint8_t aServiceDataLengt
     return Get<Local>().RemoveService(kThreadEnterpriseNumber, serviceData);
 }
 
+void Manager::HandleNotifierEvents(Events aEvents)
+{
+    ot::NetworkData::Iterator iterator;
+    ServiceConfig             service;
+    uint16_t                  deviceRloc16;
+
+    VerifyOrExit(aEvents.Contains(kEventThreadNetdataChanged));
+
+    VerifyOrExit(!Get<Mle::Mle>().IsDisabled());
+
+    deviceRloc16 = Get<Mle::Mle>().GetRloc16();
+
+    // First remove all ALOCs which are no longer in the Network
+    // Data to free up space in `mServiceAlocs` array.
+
+    for (ServiceAloc &serviceAloc : mServiceAlocs)
+    {
+        bool found = false;
+
+        if (!serviceAloc.IsInUse())
+        {
+            continue;
+        }
+
+        iterator = kIteratorInit;
+
+        while (Get<Leader>().GetNext(iterator, deviceRloc16, service) == kErrorNone)
+        {
+            if (service.mServiceId == Mle::ServiceIdFromAloc(serviceAloc.GetAloc16()))
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            Get<ThreadNetif>().RemoveUnicastAddress(serviceAloc);
+            serviceAloc.MarkAsNotInUse();
+        }
+    }
+
+    // Now add any new ALOCs if there is space in `mServiceAlocs`.
+
+    iterator = kIteratorInit;
+
+    while (Get<Leader>().GetNext(iterator, deviceRloc16, service) == kErrorNone)
+    {
+        uint16_t aloc16 = Mle::ServiceAlocFromId(service.mServiceId);
+
+        if (FindInServiceAlocs(aloc16) == nullptr)
+        {
+            // No matching ALOC in `mServiceAlocs`, so we try to add it.
+            ServiceAloc *newServiceAloc = FindInServiceAlocs(ServiceAloc::kNotInUse);
+
+            VerifyOrExit(newServiceAloc != nullptr);
+            newServiceAloc->SetAloc16(aloc16);
+            Get<ThreadNetif>().AddUnicastAddress(*newServiceAloc);
+        }
+    }
+
+exit:
+    return;
+}
+
+Manager::ServiceAloc *Manager::FindInServiceAlocs(uint16_t aAloc16)
+{
+    // Search in `mServiceAlocs` for an entry matching `aAloc16`.
+    // Can be used with `aAloc16 = ServiceAloc::kNotInUse` to find
+    // an unused entry in the array.
+
+    ServiceAloc *match = nullptr;
+
+    for (ServiceAloc &serviceAloc : mServiceAlocs)
+    {
+        if (serviceAloc.GetAloc16() == aAloc16)
+        {
+            match = &serviceAloc;
+            break;
+        }
+    }
+
+    return match;
+}
+
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 Error Manager::GetServiceId(uint8_t aServiceNumber, uint8_t &aServiceId) const
@@ -424,6 +509,19 @@ Error Manager::DnsSrpUnicast::AddrData::ParseFrom(const uint8_t *aData, uint8_t 
 exit:
     return error;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+// Manager::ServiceAloc
+
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
+Manager::ServiceAloc::ServiceAloc(void)
+{
+    InitAsThreadOriginMeshLocal();
+    GetAddress().GetIid().SetToLocator(kNotInUse);
+}
+
+#endif
 
 } // namespace Service
 } // namespace NetworkData
