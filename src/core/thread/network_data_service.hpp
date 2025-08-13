@@ -319,6 +319,8 @@ private:
     static constexpr uint8_t kDnsSrpAnycastServiceNumber  = 0x5c;
     static constexpr uint8_t kDnsSrpUnicastServiceNumber  = 0x5d;
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     OT_TOOL_PACKED_BEGIN
     class DnsSrpAnycastServiceData
     {
@@ -337,6 +339,8 @@ private:
         uint8_t mServiceNumber;
         uint8_t mSequenceNumber;
     } OT_TOOL_PACKED_END;
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     class DnsSrpUnicast
     {
@@ -428,6 +432,8 @@ private:
         DnsSrpUnicast(void) = delete;
     };
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     OT_TOOL_PACKED_BEGIN
     class BbrServerData
@@ -452,7 +458,10 @@ private:
     } OT_TOOL_PACKED_END;
 #endif
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
     template <typename ServiceDataType> Error AddService(const ServiceDataType &aServiceData)
     {
         return AddService(&aServiceData, aServiceData.GetLength(), nullptr, 0);
@@ -482,7 +491,8 @@ private:
 
     Error RemoveService(uint8_t aServiceNumber) { return RemoveService(&aServiceNumber, sizeof(uint8_t)); }
     Error RemoveService(const void *aServiceData, uint8_t aServiceDataLength);
-#endif
+
+#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
     Error GetServiceId(uint8_t aServiceNumber, uint8_t &aServiceId) const;
 

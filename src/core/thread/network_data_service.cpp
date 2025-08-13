@@ -39,6 +39,9 @@ namespace ot {
 namespace NetworkData {
 namespace Service {
 
+//----------------------------------------------------------------------------------------------------------------------
+// Iterator
+
 Iterator::Iterator(Instance &aInstance)
     : Iterator(aInstance, aInstance.Get<Leader>())
 {
@@ -57,6 +60,153 @@ void Iterator::Reset(void)
     mServiceTlv   = nullptr;
     mServerSubTlv = nullptr;
 }
+
+Error Iterator::GetNextDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo)
+{
+    Error   error         = kErrorNone;
+    uint8_t serviceNumber = Manager::kDnsSrpAnycastServiceNumber;
+
+    aInfo.Clear();
+
+    do
+    {
+        ServiceData serviceData;
+
+        // Process the next Server sub-TLV in the current Service TLV.
+
+        if (AdvanceToNextServer() == kErrorNone)
+        {
+            uint8_t dataLength = mServiceTlv->GetServiceDataLength();
+
+            if (dataLength >= sizeof(Manager::DnsSrpAnycastServiceData))
+            {
+                const Manager::DnsSrpAnycastServiceData *anycastData =
+                    reinterpret_cast<const Manager::DnsSrpAnycastServiceData *>(mServiceTlv->GetServiceData());
+
+                Get<Mle::Mle>().GetServiceAloc(mServiceTlv->GetServiceId(), aInfo.mAnycastAddress);
+                aInfo.mSequenceNumber = anycastData->GetSequenceNumber();
+                aInfo.mRloc16         = mServerSubTlv->GetServer16();
+                aInfo.mVersion =
+                    (mServerSubTlv->GetServerDataLength() >= sizeof(uint8_t)) ? *mServerSubTlv->GetServerData() : 0;
+                ExitNow();
+            }
+        }
+
+        // Find the next matching Service TLV.
+
+        serviceData.InitFrom(serviceNumber);
+        mServiceTlv   = mNetworkData.FindNextThreadService(mServiceTlv, serviceData, NetworkData::kServicePrefixMatch);
+        mServerSubTlv = nullptr;
+
+        // If we have a valid Service TLV, restart the loop
+        // to process its Server sub-TLVs.
+
+    } while (mServiceTlv != nullptr);
+
+    error = kErrorNotFound;
+
+exit:
+    return error;
+}
+
+Error Iterator::GetNextDnsSrpUnicastInfo(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo)
+{
+    Error   error         = kErrorNone;
+    uint8_t serviceNumber = Manager::kDnsSrpUnicastServiceNumber;
+
+    aInfo.Clear();
+
+    do
+    {
+        ServiceData serviceData;
+
+        // Process Server sub-TLVs in the current Service TLV.
+
+        while (AdvanceToNextServer() == kErrorNone)
+        {
+            aInfo.mRloc16 = mServerSubTlv->GetServer16();
+
+            if (aType == kAddrInServiceData)
+            {
+                if (Manager::DnsSrpUnicast::ServiceData::ParseFrom(*mServiceTlv, aInfo) == kErrorNone)
+                {
+                    ExitNow();
+                }
+
+                // If Service Data does not contain address info, we
+                // break from `while (IterateToNextServer())` loop
+                // to skip over the entire Service TLV and all its
+                // sub-TLVs and go to the next one.
+
+                break;
+            }
+
+            // `aType` is `kAddrInServerData`.
+
+            // Server sub-TLV can contain address and port info
+            // (then we parse and return the info), or it can be
+            // empty (then we skip over it).
+
+            if (Manager::DnsSrpUnicast::ServerData::ParseFrom(*mServerSubTlv, aInfo) == kErrorNone)
+            {
+                ExitNow();
+            }
+
+            if (mServerSubTlv->GetServerDataLength() == sizeof(uint16_t))
+            {
+                // Handle the case where the server TLV data only
+                // contains a port number and use the RLOC as the
+                // IPv6 address.
+
+                aInfo.mSockAddr.GetAddress().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
+                                                                 mServerSubTlv->GetServer16());
+                aInfo.mSockAddr.SetPort(BigEndian::ReadUint16(mServerSubTlv->GetServerData()));
+                aInfo.mVersion = 0;
+                ExitNow();
+            }
+        }
+
+        // Find the next matching Service TLV.
+
+        serviceData.InitFrom(serviceNumber);
+        mServiceTlv   = mNetworkData.FindNextThreadService(mServiceTlv, serviceData, NetworkData::kServicePrefixMatch);
+        mServerSubTlv = nullptr;
+
+        // If we have a valid Service TLV, restart the loop
+        // to process its Server sub-TLVs.
+
+    } while (mServiceTlv != nullptr);
+
+    error = kErrorNotFound;
+
+exit:
+    return error;
+}
+
+Error Iterator::AdvanceToNextServer(void)
+{
+    Error                 error = kErrorNotFound;
+    const NetworkDataTlv *start;
+    const NetworkDataTlv *end;
+
+    VerifyOrExit(mServiceTlv != nullptr);
+
+    start = (mServerSubTlv != nullptr) ? mServerSubTlv->GetNext() : mServiceTlv->GetSubTlvs();
+    end   = mServiceTlv->GetNext();
+
+    mServerSubTlv = NetworkDataTlv::Find<ServerTlv>(start, end);
+
+    if (mServerSubTlv != nullptr)
+    {
+        error = kErrorNone;
+    }
+
+exit:
+    return error;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Manager
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
@@ -176,54 +326,6 @@ exit:
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-Error Iterator::GetNextDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo)
-{
-    Error   error         = kErrorNone;
-    uint8_t serviceNumber = Manager::kDnsSrpAnycastServiceNumber;
-
-    aInfo.Clear();
-
-    do
-    {
-        ServiceData serviceData;
-
-        // Process the next Server sub-TLV in the current Service TLV.
-
-        if (AdvanceToNextServer() == kErrorNone)
-        {
-            uint8_t dataLength = mServiceTlv->GetServiceDataLength();
-
-            if (dataLength >= sizeof(Manager::DnsSrpAnycastServiceData))
-            {
-                const Manager::DnsSrpAnycastServiceData *anycastData =
-                    reinterpret_cast<const Manager::DnsSrpAnycastServiceData *>(mServiceTlv->GetServiceData());
-
-                Get<Mle::Mle>().GetServiceAloc(mServiceTlv->GetServiceId(), aInfo.mAnycastAddress);
-                aInfo.mSequenceNumber = anycastData->GetSequenceNumber();
-                aInfo.mRloc16         = mServerSubTlv->GetServer16();
-                aInfo.mVersion =
-                    (mServerSubTlv->GetServerDataLength() >= sizeof(uint8_t)) ? *mServerSubTlv->GetServerData() : 0;
-                ExitNow();
-            }
-        }
-
-        // Find the next matching Service TLV.
-
-        serviceData.InitFrom(serviceNumber);
-        mServiceTlv   = mNetworkData.FindNextThreadService(mServiceTlv, serviceData, NetworkData::kServicePrefixMatch);
-        mServerSubTlv = nullptr;
-
-        // If we have a valid Service TLV, restart the loop
-        // to process its Server sub-TLVs.
-
-    } while (mServiceTlv != nullptr);
-
-    error = kErrorNotFound;
-
-exit:
-    return error;
-}
-
 Error Manager::FindPreferredDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo) const
 {
     Error             error = kErrorNotFound;
@@ -305,6 +407,9 @@ exit:
     return error;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+// Manager::DnsSrpUnicast::AddrData
+
 Error Manager::DnsSrpUnicast::AddrData::ParseFrom(const uint8_t *aData, uint8_t aLength, DnsSrpUnicastInfo &aInfo)
 {
     Error           error    = kErrorNone;
@@ -315,102 +420,6 @@ Error Manager::DnsSrpUnicast::AddrData::ParseFrom(const uint8_t *aData, uint8_t 
     aInfo.mSockAddr.SetAddress(addrData->GetAddress());
     aInfo.mSockAddr.SetPort(addrData->GetPort());
     aInfo.mVersion = (aLength >= sizeof(AddrData)) ? addrData->GetVersion() : 0;
-
-exit:
-    return error;
-}
-
-Error Iterator::GetNextDnsSrpUnicastInfo(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo)
-{
-    Error   error         = kErrorNone;
-    uint8_t serviceNumber = Manager::kDnsSrpUnicastServiceNumber;
-
-    aInfo.Clear();
-
-    do
-    {
-        ServiceData serviceData;
-
-        // Process Server sub-TLVs in the current Service TLV.
-
-        while (AdvanceToNextServer() == kErrorNone)
-        {
-            aInfo.mRloc16 = mServerSubTlv->GetServer16();
-
-            if (aType == kAddrInServiceData)
-            {
-                if (Manager::DnsSrpUnicast::ServiceData::ParseFrom(*mServiceTlv, aInfo) == kErrorNone)
-                {
-                    ExitNow();
-                }
-
-                // If Service Data does not contain address info, we
-                // break from `while (IterateToNextServer())` loop
-                // to skip over the entire Service TLV and all its
-                // sub-TLVs and go to the next one.
-
-                break;
-            }
-
-            // `aType` is `kAddrInServerData`.
-
-            // Server sub-TLV can contain address and port info
-            // (then we parse and return the info), or it can be
-            // empty (then we skip over it).
-
-            if (Manager::DnsSrpUnicast::ServerData::ParseFrom(*mServerSubTlv, aInfo) == kErrorNone)
-            {
-                ExitNow();
-            }
-
-            if (mServerSubTlv->GetServerDataLength() == sizeof(uint16_t))
-            {
-                // Handle the case where the server TLV data only
-                // contains a port number and use the RLOC as the
-                // IPv6 address.
-
-                aInfo.mSockAddr.GetAddress().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
-                                                                 mServerSubTlv->GetServer16());
-                aInfo.mSockAddr.SetPort(BigEndian::ReadUint16(mServerSubTlv->GetServerData()));
-                aInfo.mVersion = 0;
-                ExitNow();
-            }
-        }
-
-        // Find the next matching Service TLV.
-
-        serviceData.InitFrom(serviceNumber);
-        mServiceTlv   = mNetworkData.FindNextThreadService(mServiceTlv, serviceData, NetworkData::kServicePrefixMatch);
-        mServerSubTlv = nullptr;
-
-        // If we have a valid Service TLV, restart the loop
-        // to process its Server sub-TLVs.
-
-    } while (mServiceTlv != nullptr);
-
-    error = kErrorNotFound;
-
-exit:
-    return error;
-}
-
-Error Iterator::AdvanceToNextServer(void)
-{
-    Error                 error = kErrorNotFound;
-    const NetworkDataTlv *start;
-    const NetworkDataTlv *end;
-
-    VerifyOrExit(mServiceTlv != nullptr);
-
-    start = (mServerSubTlv != nullptr) ? mServerSubTlv->GetNext() : mServiceTlv->GetSubTlvs();
-    end   = mServiceTlv->GetNext();
-
-    mServerSubTlv = NetworkDataTlv::Find<ServerTlv>(start, end);
-
-    if (mServerSubTlv != nullptr)
-    {
-        error = kErrorNone;
-    }
 
 exit:
     return error;
