@@ -1058,7 +1058,7 @@ Error Mle::ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo)
 
     mRouterTable.UpdateRouterIdSet(aRouteTlv.GetRouterIdSequence(), aRouteTlv.GetRouterIdMask());
 
-    if (!mRouterTable.IsAllocated(RouterIdFromRloc16(GetRloc16())))
+    if (IsAttached() && !mRouterTable.IsAllocated(RouterIdFromRloc16(GetRloc16())))
     {
         // Either we're a router and our own router ID has been removed from the router table,
         // or we're a child and our parent's router ID has been removed from the router table.
