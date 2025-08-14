@@ -665,6 +665,8 @@ openthread_core_files = [
   "thread/mesh_forwarder.hpp",
   "thread/mesh_forwarder_ftd.cpp",
   "thread/mesh_forwarder_mtd.cpp",
+  "thread/message_framer.cpp",
+  "thread/message_framer.hpp",
   "thread/mle.cpp",
   "thread/mle.hpp",
   "thread/mle_ftd.cpp",
