@@ -98,6 +98,9 @@ void Notifier::EmitEvents(void)
     // Emit events to core internal modules
 
     Get<Mle::Mle>().HandleNotifierEvents(events);
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    Get<NetworkData::Service::Manager>().HandleNotifierEvents(events);
+#endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     Get<BackboneRouter::Leader>().HandleNotifierEvents(events);
 #endif

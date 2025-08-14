@@ -1218,12 +1218,6 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    static constexpr uint8_t kMaxServiceAlocs = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS + 1;
-#else
-    static constexpr uint8_t kMaxServiceAlocs = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS;
-#endif
-
     static constexpr uint8_t  kMleHopLimit                   = 255;
     static constexpr uint8_t  kMleSecurityTagSize            = 4;
     static constexpr uint32_t kDefaultStoreFrameCounterAhead = OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
@@ -1710,23 +1704,6 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    class ServiceAloc : public Ip6::Netif::UnicastAddress
-    {
-    public:
-        static constexpr uint16_t kNotInUse = kInvalidRloc16;
-
-        ServiceAloc(void);
-
-        bool     IsInUse(void) const { return GetAloc16() != kNotInUse; }
-        void     MarkAsNotInUse(void) { SetAloc16(kNotInUse); }
-        uint16_t GetAloc16(void) const { return GetAddress().GetIid().GetLocator(); }
-        void     SetAloc16(uint16_t aAloc16) { GetAddress().GetIid().SetLocator(aAloc16); }
-    };
-#endif
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
     void HandleRoleRestorerTimer(void) { mPrevRoleRestorer.HandleTimer(); }
 
     class PrevRoleRestorer : public InstanceLocator
@@ -2091,11 +2068,6 @@ private:
 
     void UpdateRoleTimeCounters(DeviceRole aRole);
 
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    ServiceAloc *FindInServiceAlocs(uint16_t aAloc16);
-    void         UpdateServiceAlocs(void);
-#endif
-
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     void CheckTrelPeerAddrOnSecureMleRx(const Message &aMessage);
 #endif
@@ -2284,9 +2256,6 @@ private:
     AnnounceHandler  mAnnounceHandler;
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     ParentSearch mParentSearch;
-#endif
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    ServiceAloc mServiceAlocs[kMaxServiceAlocs];
 #endif
 #if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
     Callback<otThreadParentResponseCallback> mParentResponseCallback;

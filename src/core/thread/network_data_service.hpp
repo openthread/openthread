@@ -44,8 +44,11 @@
 #include "common/equatable.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/notifier.hpp"
 #include "common/serial_number.hpp"
+#include "net/netif.hpp"
 #include "net/socket.hpp"
+#include "thread/mle_types.hpp"
 #include "thread/network_data_tlvs.hpp"
 
 namespace ot {
@@ -155,6 +158,7 @@ private:
 class Manager : public InstanceLocator, private NonCopyable
 {
     friend class Iterator;
+    friend class ot::Notifier;
 
 public:
     /**
@@ -462,6 +466,27 @@ private:
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    static constexpr uint8_t kMaxServiceAlocs = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS + 1;
+#else
+    static constexpr uint8_t kMaxServiceAlocs = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS;
+#endif
+
+    class ServiceAloc : public Ip6::Netif::UnicastAddress
+    {
+    public:
+        static constexpr uint16_t kNotInUse = Mle::kInvalidRloc16;
+
+        ServiceAloc(void);
+
+        bool     IsInUse(void) const { return GetAloc16() != kNotInUse; }
+        void     MarkAsNotInUse(void) { SetAloc16(kNotInUse); }
+        uint16_t GetAloc16(void) const { return GetAddress().GetIid().GetLocator(); }
+        void     SetAloc16(uint16_t aAloc16) { GetAddress().GetIid().SetLocator(aAloc16); }
+    };
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     template <typename ServiceDataType> Error AddService(const ServiceDataType &aServiceData)
     {
         return AddService(&aServiceData, aServiceData.GetLength(), nullptr, 0);
@@ -492,6 +517,9 @@ private:
     Error RemoveService(uint8_t aServiceNumber) { return RemoveService(&aServiceNumber, sizeof(uint8_t)); }
     Error RemoveService(const void *aServiceData, uint8_t aServiceDataLength);
 
+    void         HandleNotifierEvents(Events aEvents);
+    ServiceAloc *FindInServiceAlocs(uint16_t aAloc16);
+
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
     Error GetServiceId(uint8_t aServiceNumber, uint8_t &aServiceId) const;
@@ -501,6 +529,10 @@ private:
                                      const BbrServerData &aServerData,
                                      const ServerTlv     &aOtherServerTlv,
                                      const BbrServerData &aOtherServerData) const;
+#endif
+
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    ServiceAloc mServiceAlocs[kMaxServiceAlocs];
 #endif
 };
 
