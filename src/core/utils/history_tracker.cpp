@@ -595,6 +595,19 @@ exit:
     return;
 }
 
+void Local::RecordFavoredOnLinkPrefix(const Ip6::Prefix &aPrefix, bool aIsLocal)
+{
+    FavoredOnLinkPrefix *entry = mFavoredOnLinkPrefixHistory.AddNewEntry();
+
+    VerifyOrExit(entry != nullptr);
+
+    entry->mOnLinkPrefix = aPrefix;
+    entry->mIsLocal      = aIsLocal;
+
+exit:
+    return;
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 void Local::HandleNotifierEvents(Events aEvents)
@@ -629,6 +642,7 @@ void Local::HandleTimer(void)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     mFavoredOmrPrefixHistory.UpdateAgedEntries();
+    mFavoredOnLinkPrefixHistory.UpdateAgedEntries();
 #endif
     mTimer.Start(kAgeCheckPeriod);
 }

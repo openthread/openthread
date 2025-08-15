@@ -1614,6 +1614,76 @@ exit:
     return error;
 }
 
+/**
+ * @cli history onlinkprefix
+ * @code
+ * history onlinkprefix
+ * | Age                  | On-link Prefix                                   |IsLocal |
+ * +----------------------+--------------------------------------------------+--------+
+ * |         00:00:50.600 | 2001:efc6:75a8:efee::/64                         | no     |
+ * |         00:11:04.327 | fd74:fe69:9f21:437::/64                          | yes    |
+ * Done
+ * @endcode
+ * @code
+ * history onlinkprefix list
+ * 00:00:50.600 -> on-link-prefix:2001:efc6:75a8:efee::/64 is-local:no
+ * 00:11:04.327 -> on-link-prefix:fd74:fe69:9f21:437::/64 is-local:yes
+ * Done
+ * @endcode
+ * @cparam history onlinkprefix [@ca{list}] [@ca{num-entries}]
+ * * Use the `list` option to display the output in list format. Otherwise, the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of most-recent entries specified. If this option
+ *   is not used, all stored entries are shown in the output.
+ * @par
+ * Displays the favored on-link prefix history in table or list format.
+ * @par
+ * Each table or list entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
+ * * On-link Prefix: The favored on-link prefix on AIL.
+ * * IsLocal: Indicates whether the favored on-link prefix is the same as the local one maintained by this BR.
+ * @sa otHistoryTrackerIterateFavoredOnLinkPrefixHistory
+ */
+template <> otError History::Process<Cmd("onlinkprefix")>(Arg aArgs[])
+{
+    otError                                    error;
+    bool                                       isList;
+    uint16_t                                   numEntries;
+    otHistoryTrackerIterator                   iterator;
+    const otHistoryTrackerFavoredOnLinkPrefix *info;
+    uint32_t                                   entryAge;
+    char                                       ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                                       prefixString[OT_IP6_PREFIX_STRING_SIZE];
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        static const char *const kTitles[]       = {"Age", "On-link Prefix", "IsLocal"};
+        static const uint8_t     kColumnWidths[] = {22, 50, 8};
+
+        OutputTableHeader(kTitles, kColumnWidths);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateFavoredOnLinkPrefixHistory(GetInstancePtr(), &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+
+        otIp6PrefixToString(&info->mOnLinkPrefix, prefixString, sizeof(prefixString));
+
+        OutputLine(isList ? "%s -> on-link-prefix:%s is-local:%s" : "| %20s | %-48s | %-6s |", ageString, prefixString,
+                   info->mIsLocal ? "yes" : "no");
+    }
+
+exit:
+    return error;
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 const char *History::DnsSrpAddrTypeToString(otHistoryTrackerDnsSrpAddrType aType)
@@ -1636,12 +1706,13 @@ otError History::Process(Arg aArgs[])
 #define CmdEntry(aCommandString) {aCommandString, &History::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
-        CmdEntry("dnssrpaddr"), CmdEntry("ipaddr"), CmdEntry("ipmaddr"), CmdEntry("neighbor"), CmdEntry("netinfo"),
+        CmdEntry("dnssrpaddr"), CmdEntry("ipaddr"),       CmdEntry("ipmaddr"),
+        CmdEntry("neighbor"),   CmdEntry("netinfo"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-        CmdEntry("omrprefix"),
+        CmdEntry("omrprefix"),  CmdEntry("onlinkprefix"),
 #endif
-        CmdEntry("prefix"),     CmdEntry("route"),  CmdEntry("router"),  CmdEntry("rx"),       CmdEntry("rxtx"),
-        CmdEntry("tx"),
+        CmdEntry("prefix"),     CmdEntry("route"),        CmdEntry("router"),
+        CmdEntry("rx"),         CmdEntry("rxtx"),         CmdEntry("tx"),
     };
 
 #undef CmdEntry

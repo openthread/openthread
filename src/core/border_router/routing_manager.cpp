@@ -3072,6 +3072,10 @@ void RoutingManager::OnLinkPrefixManager::SetFavoredPrefix(const Ip6::Prefix &aP
 
     mFavoredPrefix = aPrefix;
 
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<HistoryTracker::Local>().RecordFavoredOnLinkPrefix(mFavoredPrefix, mFavoredPrefix == mLocalPrefix);
+#endif
+
 exit:
     return;
 }

@@ -111,7 +111,8 @@ typedef otHistoryTrackerDnsSrpAddrInfo       DnsSrpAddrInfo;       ///< Network 
 typedef otHistoryTrackerBorderAgentEpskcEvent EpskcEvent; ///< Border Agent ePSKc Event.
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-typedef otHistoryTrackerFavoredOmrPrefix FavoredOmrPrefix; ///< Favored OMR Prefix
+typedef otHistoryTrackerFavoredOmrPrefix    FavoredOmrPrefix;    ///< Favored OMR Prefix
+typedef otHistoryTrackerFavoredOnLinkPrefix FavoredOnLinkPrefix; ///< Favored On-link Prefix
 #endif
 
 /**
@@ -279,6 +280,11 @@ public:
     {
         return mFavoredOmrPrefixHistory.Iterate(aIterator, aEntryAge);
     }
+
+    const FavoredOnLinkPrefix *IterateFavoredOnLinkPrefixHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mFavoredOnLinkPrefixHistory.Iterate(aIterator, aEntryAge);
+    }
 #endif
 
     /**
@@ -315,6 +321,7 @@ private:
     static constexpr uint16_t kDnsSrpAddrListSize    = OPENTHREAD_CONFIG_HISTORY_TRACKER_DNSSRP_ADDR_LIST_SIZE;
     static constexpr uint16_t kEpskcEventListSize    = OPENTHREAD_CONFIG_HISTORY_TRACKER_EPSKC_EVENT_SIZE;
     static constexpr uint16_t kOmrPrefixListSize     = OPENTHREAD_CONFIG_HISTORY_TRACKER_OMR_PREFIX_LIST_SIZE;
+    static constexpr uint16_t kOnLinkPrefixListSize  = OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_LINK_PREFIX_LIST_SIZE;
 
     typedef otHistoryTrackerAddressEvent AddressEvent;
 
@@ -496,6 +503,7 @@ private:
     void RecordFavoredOmrPrefix(const Ip6::Prefix                            &aPrefix,
                                 BorderRouter::RoutingManager::RoutePreference aPreference,
                                 bool                                          aIsLocal);
+    void RecordFavoredOnLinkPrefix(const Ip6::Prefix &aPrefix, bool aIsLocal);
 #endif
 
     using TrackerTimer = TimerMilliIn<Local, &Local::HandleTimer>;
@@ -514,7 +522,8 @@ private:
     EntryList<EpskcEvent, kEpskcEventListSize> mEpskcEventHistory;
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    EntryList<FavoredOmrPrefix, kOmrPrefixListSize> mFavoredOmrPrefixHistory;
+    EntryList<FavoredOmrPrefix, kOmrPrefixListSize>       mFavoredOmrPrefixHistory;
+    EntryList<FavoredOnLinkPrefix, kOnLinkPrefixListSize> mFavoredOnLinkPrefixHistory;
 #endif
 
     TrackerTimer mTimer;

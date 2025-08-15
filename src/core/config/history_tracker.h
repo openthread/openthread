@@ -194,6 +194,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_LINK_PREFIX_LIST_SIZE
+ *
+ * Specifies the maximum number of entries in On-Link Prefix (on AIL) history.
+ *
+ * Can be set to zero to configure History Tracker module not to collect any on-link prefix info.
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_LINK_PREFIX_LIST_SIZE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_LINK_PREFIX_LIST_SIZE 16
+#endif
+
+/**
  * @}
  */
 
