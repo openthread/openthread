@@ -113,7 +113,7 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Event: Possible values are `Added` or `Removed`.
  * * Address/Prefix Length: Unicast address with its prefix length (in bits).
  * * Origin: Possible value are `thread`, `slaac`, `dhcp6`, or `manual`.
@@ -231,7 +231,7 @@ exit:
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Event: Possible values are `Subscribed` or `Unsubscribed`.
  * * Multicast Address
  * * Origin: Possible values are `Thread` or `Manual`.
@@ -336,7 +336,7 @@ exit:
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Type: `Child` or `Router`.
  * * Event: Possible values are `Added`, `Removed`, or `Changed`.
  * * Extended Address
@@ -488,7 +488,7 @@ exit:
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Event: Possible values are `Added`, `Removed`, `NextHopChanged`, or `CostChanged`.
  * * ID (RLOC16): Router ID and RLOC16 of the router.
  * * Next Hop: Router ID and RLOC16 of the next hop. If there is no next hop,
@@ -626,7 +626,7 @@ exit:
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Role: Device role. Possible values are `router`, `child`, `detached`, or `disabled`.
  * * Mode: MLE link mode. Possible values:
  *     * `-`: no flags set (rx-off-when-idle, minimal Thread device,
@@ -759,7 +759,7 @@ exit:
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Type:
  *     * IPv6 message type, such as `UDP`, `TCP`, `HopOpts`, and `ICMP6` (and its subtype).
  *     * `src`: Source IPv6 address and port number.
@@ -884,7 +884,7 @@ template <> otError History::Process<Cmd("rx")>(Arg aArgs[]) { return ProcessRxT
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Type:
  *     * IPv6 message type, such as `UDP`, `TCP`, `HopOpts`, and `ICMP6` (and its subtype).
  *     * `src`: Source IPv6 address and port number.
@@ -970,7 +970,7 @@ template <> otError History::Process<Cmd("rxtx")>(Arg aArgs[]) { return ProcessR
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Type:
  *     * IPv6 message type, such as `UDP`, `TCP`, `HopOpts`, and `ICMP6` (and its subtype).
  *     * `src`: Source IPv6 address and port number.
@@ -1281,7 +1281,7 @@ void History::OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInf
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Event: Possible values are `Added` or `Removed`.
  * * Prefix
  * * Flags/meaning:
@@ -1377,7 +1377,7 @@ exit:
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Event: Possible values are `Added` or `Removed`.
  * * Route
  * * Flags/meaning:
@@ -1473,7 +1473,7 @@ exit:
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Event: Possible values are `Added` or `Removed`.
  * * Address of DNS/SRP server.
  * * Address type: `uni-local` unicast address local (address in server data) or `uni-infra` infrastructure server
@@ -1568,7 +1568,7 @@ exit:
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * OMR Prefix: The favored OMR prefix.
  * * Preference: The prefix preference associated with the OMR prefix (`low`, `med`, `high`).
  * * IsLocal: Indicates whether the favored OMR prefix is the same as the local one maintained by this BR.
