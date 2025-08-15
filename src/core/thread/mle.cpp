@@ -558,6 +558,10 @@ Error Mle::BecomeDetached(void)
 
     VerifyOrExit(!IsDisabled(), error = kErrorInvalidState);
 
+#if OPENTHREAD_CONFIG_DIAG_SERVER_ENABLE
+    Get<DiagnosticServer::Server>().HandleDetach();
+#endif
+
     if (IsDetached() && (mAttachState == kAttachStateStart))
     {
         // Already detached and waiting to start an attach attempt, so
