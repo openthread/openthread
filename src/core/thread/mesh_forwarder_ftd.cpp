@@ -324,26 +324,6 @@ void MeshForwarder::RemoveDataResponseMessages(void)
     }
 }
 
-void MeshForwarder::SendMesh(Message &aMessage, Mac::TxFrame &aFrame)
-{
-    Mac::TxFrame::Info frameInfo;
-
-    frameInfo.mType          = Mac::Frame::kTypeData;
-    frameInfo.mAddrs         = mMacAddrs;
-    frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
-    frameInfo.mKeyIdMode     = Mac::Frame::kKeyIdMode1;
-    frameInfo.mPanIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
-
-    PrepareMacHeaders(aFrame, frameInfo, &aMessage);
-
-    // write payload
-    OT_ASSERT(aMessage.GetLength() <= aFrame.GetMaxPayloadLength());
-    aMessage.ReadBytes(0, aFrame.GetPayload(), aMessage.GetLength());
-    aFrame.SetPayloadLength(aMessage.GetLength());
-
-    mMessageNextOffset = aMessage.GetLength();
-}
-
 Error MeshForwarder::UpdateMeshRoute(Message &aMessage)
 {
     Error              error = kErrorNone;
