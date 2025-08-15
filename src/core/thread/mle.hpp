@@ -2129,6 +2129,8 @@ private:
 #if OPENTHREAD_FTD
     void     SetAlternateRloc16(uint16_t aRloc16);
     void     ClearAlternateRloc16(void);
+    uint8_t  SelectLeaderId(void) const;
+    uint32_t SelectPartitionId(void) const;
     void     HandleDetachStart(void);
     void     HandleChildStart(AttachMode aMode);
     void     HandleSecurityPolicyChanged(void);
