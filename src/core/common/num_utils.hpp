@@ -159,7 +159,7 @@ template <typename IntType> int8_t ClampToInt8(IntType aValue)
  * @retval TRUE  If @p aValue is within `[aMin, aMax]` (inclusive).
  * @retval FALSE If @p aValue is not within `[aMin, aMax]` (inclusive).
  */
-template <typename Type> Type IsValueInRange(Type aValue, Type aMin, Type aMax)
+template <typename Type> inline constexpr bool IsValueInRange(Type aValue, Type aMin, Type aMax)
 {
     return (aMin <= aValue) && (aValue <= aMax);
 }
