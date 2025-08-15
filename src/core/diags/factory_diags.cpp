@@ -38,6 +38,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+#include <openthread/platform/alarm-micro.h>
+#endif
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
@@ -942,6 +945,13 @@ void Diags::TransmitDone(Error aError)
     }
     else if (mTxPackets > 1)
     {
+#ifdef OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+        // A short delay to give RCP time to process the previous transaction.
+        constexpr uint32_t kInterTransactionDelayUsec = 50;
+        uint32_t start = otPlatAlarmMicroGetNow();
+
+        while ((otPlatAlarmMicroGetNow() - start) < kInterTransactionDelayUsec){};
+#endif
         mTxPackets--;
         IgnoreError(TransmitPacket());
     }
