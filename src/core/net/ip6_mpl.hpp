@@ -171,21 +171,33 @@ public:
     void InitOption(MplOption &aOption, const Address &aAddress);
 
     /**
-     * Processes an MPL option. When the MPL module acts as an MPL Forwarder
-     * it disseminates MPL Data Message using Trickle timer expirations. When acts as an
-     * MPL Seed it allows to send the first MPL Data Message directly, then sets up Trickle
-     * timer expirations for subsequent retransmissions.
+     * Reads and validates an MPL option from a given message.
      *
-     * @param[in]  aMessage      A reference to the message.
-     * @param[in]  aOffsetRange  The offset range in @p aMessage to read the MPL option.
-     * @param[in]  aAddress      A reference to the IPv6 Source Address.
+     * @param[in]  aMessage      The message from which to read the option.
+     * @param[in]  aOffsetRange  The offset range within @p aMessage to read from.
+     * @param[in]  aAddress      A reference to the IPv6 source address.
+     * @param[out] aOption       An `MplOption` object to populate with the read option.
+     *
+     * @retval kErrorNone   Successfully read and validated the MPL option.
+     * @retval kErrorParse  Failed to parse the option. Invalid format.
+     */
+    Error ReadAndValidateOption(Message           &aMessage,
+                                const OffsetRange &aOffsetRange,
+                                const Address     &aAddress,
+                                MplOption         &aOption);
+
+    /**
+     * Processes a previously read and validated MPL option.
+     *
+     * @param[in]  aMessage      The message.
+     * @param[in]  aOption       The MPL option.
      * @param[out] aReceive      Set to FALSE if the MPL message is a duplicate and must not
      *                           go through the receiving process again, untouched otherwise.
      *
      * @retval kErrorNone  Successfully processed the MPL option.
      * @retval kErrorDrop  The MPL message is a duplicate and should be dropped.
      */
-    Error ProcessOption(Message &aMessage, const OffsetRange &aOffsetRange, const Address &aAddress, bool &aReceive);
+    Error ProcessOption(Message &aMessage, const MplOption &aOption, bool &aReceive);
 
 #if OPENTHREAD_FTD
     /**
