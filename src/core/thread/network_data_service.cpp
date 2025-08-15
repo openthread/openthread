@@ -268,7 +268,7 @@ void Manager::HandleNotifierEvents(Events aEvents)
 
         while (Get<Leader>().GetNext(iterator, deviceRloc16, service) == kErrorNone)
         {
-            if (service.mServiceId == Mle::ServiceIdFromAloc(serviceAloc.GetAloc16()))
+            if (service.mServiceId == Mle::Aloc16::ToServiceId(serviceAloc.GetAloc16()))
             {
                 found = true;
                 break;
@@ -288,7 +288,7 @@ void Manager::HandleNotifierEvents(Events aEvents)
 
     while (Get<Leader>().GetNext(iterator, deviceRloc16, service) == kErrorNone)
     {
-        uint16_t aloc16 = Mle::ServiceAlocFromId(service.mServiceId);
+        uint16_t aloc16 = Mle::Aloc16::FromServiceId(service.mServiceId);
 
         if (FindInServiceAlocs(aloc16) == nullptr)
         {

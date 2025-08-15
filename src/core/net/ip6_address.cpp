@@ -285,7 +285,7 @@ bool InterfaceIdentifier::IsAnycastServiceLocator(void) const
 {
     uint16_t locator = GetLocator();
 
-    return (IsLocator() && (locator >= Mle::kAloc16ServiceStart) && (locator <= Mle::kAloc16ServiceEnd));
+    return (IsLocator() && Mle::Aloc16::IsForService(locator));
 }
 
 void InterfaceIdentifier::ApplyPrefix(const Prefix &aPrefix)

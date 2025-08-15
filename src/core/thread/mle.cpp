@@ -1031,16 +1031,19 @@ void Mle::GetLeaderRloc(Ip6::Address &aAddress) const
     aAddress.SetToRoutingLocator(mMeshLocalPrefix, GetLeaderRloc16());
 }
 
-void Mle::GetLeaderAloc(Ip6::Address &aAddress) const { aAddress.SetToAnycastLocator(mMeshLocalPrefix, kAloc16Leader); }
+void Mle::GetLeaderAloc(Ip6::Address &aAddress) const
+{
+    aAddress.SetToAnycastLocator(mMeshLocalPrefix, Aloc16::ForLeader());
+}
 
 void Mle::GetCommissionerAloc(uint16_t aSessionId, Ip6::Address &aAddress) const
 {
-    aAddress.SetToAnycastLocator(mMeshLocalPrefix, CommissionerAloc16FromId(aSessionId));
+    aAddress.SetToAnycastLocator(mMeshLocalPrefix, Aloc16::FromCommissionerSessionId(aSessionId));
 }
 
 void Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
 {
-    aAddress.SetToAnycastLocator(mMeshLocalPrefix, ServiceAlocFromId(aServiceId));
+    aAddress.SetToAnycastLocator(mMeshLocalPrefix, Aloc16::FromServiceId(aServiceId));
 }
 
 const LeaderData &Mle::GetLeaderData(void)

@@ -586,7 +586,7 @@ bool MutableNetworkData::RemoveTemporaryDataIn(PrefixTlv &aPrefix)
                 {
                     if ((entry->IsDhcp() || entry->IsConfigure()) && (context != nullptr))
                     {
-                        entry->SetRloc(Mle::kAloc16DhcpAgentStart + context->GetContextId() - 1);
+                        entry->SetRloc(Mle::Aloc16::FromDhcpAgentContextId(context->GetContextId()));
                     }
                     else
                     {
@@ -639,7 +639,7 @@ bool MutableNetworkData::RemoveTemporaryDataIn(ServiceTlv &aService)
             switch (cur->GetType())
             {
             case NetworkDataTlv::kTypeServer:
-                As<ServerTlv>(cur)->SetServer16(Mle::ServiceAlocFromId(aService.GetServiceId()));
+                As<ServerTlv>(cur)->SetServer16(Mle::Aloc16::FromServiceId(aService.GetServiceId()));
                 break;
 
             default:
