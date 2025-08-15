@@ -219,10 +219,9 @@ exit:
 
 Error Mle::BecomeLeader(LeaderWeightCheck aMode)
 {
-    Error    error = kErrorNone;
-    Router  *router;
-    uint32_t partitionId;
-    uint8_t  leaderId;
+    Error   error = kErrorNone;
+    Router *router;
+    uint8_t leaderId;
 
 #if OPENTHREAD_CONFIG_OPERATIONAL_DATASET_AUTO_INIT
     VerifyOrExit(!Get<MeshCoP::ActiveDatasetManager>().IsPartiallyComplete(), error = kErrorInvalidState);
@@ -240,24 +239,9 @@ Error Mle::BecomeLeader(LeaderWeightCheck aMode)
 
     mRouterTable.Clear();
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    {
-        uint8_t minId;
-        uint8_t maxId;
+    leaderId = SelectLeaderId();
 
-        mRouterTable.GetRouterIdRange(minId, maxId);
-        partitionId = mPreferredLeaderPartitionId ? mPreferredLeaderPartitionId : Random::NonCrypto::GetUint32();
-        leaderId    = (IsRouterIdValid(mPreviousRouterId) && minId <= mPreviousRouterId && mPreviousRouterId <= maxId)
-                          ? mPreviousRouterId
-                          : Random::NonCrypto::GetUint8InRange(minId, maxId + 1);
-    }
-#else
-    partitionId = Random::NonCrypto::GetUint32();
-    leaderId    = IsRouterIdValid(mPreviousRouterId) ? mPreviousRouterId
-                                                     : Random::NonCrypto::GetUint8InRange(0, kMaxRouterId + 1);
-#endif
-
-    SetLeaderData(partitionId, mLeaderWeight, leaderId);
+    SetLeaderData(SelectPartitionId(), mLeaderWeight, leaderId);
 
     router = mRouterTable.Allocate(leaderId);
     OT_ASSERT(router != nullptr);
@@ -272,6 +256,40 @@ Error Mle::BecomeLeader(LeaderWeightCheck aMode)
 
 exit:
     return error;
+}
+
+uint8_t Mle::SelectLeaderId(void) const
+{
+    uint8_t minId;
+    uint8_t maxId;
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    mRouterTable.GetRouterIdRange(minId, maxId);
+#else
+    minId = 0;
+    maxId = kMaxRouterId;
+#endif
+
+    return IsValueInRange(mPreviousRouterId, minId, maxId) ? mPreviousRouterId
+                                                           : Random::NonCrypto::GetUint8InRange(minId, maxId + 1);
+}
+
+uint32_t Mle::SelectPartitionId(void) const
+{
+    uint32_t partitionId;
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (mPreferredLeaderPartitionId != 0)
+    {
+        partitionId = mPreferredLeaderPartitionId;
+    }
+    else
+#endif
+    {
+        partitionId = Random::NonCrypto::GetUint32();
+    }
+
+    return partitionId;
 }
 
 void Mle::StopLeader(void)
