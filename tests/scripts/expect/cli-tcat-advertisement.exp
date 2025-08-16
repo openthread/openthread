@@ -89,4 +89,16 @@ expect_line "Done"
 send "tcat devid\n"
 expect_line "Done"
 
+send "tcat standby\n"
+expect_line "Done"
+
+send "tcat active 1000 3000\n"
+expect_line "Done"
+
+send "tcat active 1200000\n"
+expect_line "Done"
+
+send "tcat active\n"
+expect_line "Done"
+
 dispose_all
