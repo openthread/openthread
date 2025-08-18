@@ -58,8 +58,7 @@ void Agent::UpdateService(void)
 
     if (IsAlocInUse())
     {
-        uint8_t contextId = static_cast<uint8_t>(mAloc.GetAddress().GetIid().GetLocator() -
-                                                 Mle::kAloc16NeighborDiscoveryAgentStart + 1);
+        uint8_t contextId = Mle::Aloc16::ToNdAgentContextId(mAloc.GetAddress().GetIid().GetLocator());
         bool    found     = false;
 
         iterator = NetworkData::kIteratorInit;
@@ -104,7 +103,7 @@ void Agent::UpdateService(void)
 
         if (error == kErrorNone)
         {
-            uint16_t aloc16 = Mle::kAloc16NeighborDiscoveryAgentStart + lowpanContext.mContextId - 1;
+            uint16_t aloc16 = Mle::Aloc16::FromNdAgentContextId(lowpanContext.mContextId);
 
             mAloc.InitAsThreadOrigin();
             mAloc.GetAddress().SetToAnycastLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aloc16);
