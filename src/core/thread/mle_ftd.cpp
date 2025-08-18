@@ -3479,53 +3479,66 @@ exit:
     return willBecomeRouter;
 }
 
-template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+Error Mle::AddrSolicitInfo::ParseFrom(const Coap::Message &aMessage)
 {
-    Error               error          = kErrorNone;
-    AddrSolicitResponse responseStatus = kAddrSolicitNoAddressAvailable;
-    Router             *router         = nullptr;
-    Mac::ExtAddress     extAddress;
-    uint16_t            rloc16;
-    uint8_t             status;
+    // Parses a `kUriAddressSolicit` request message.
 
-    VerifyOrExit(mRole == kRoleLeader, error = kErrorInvalidState);
+    Error error;
 
     VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = kErrorParse);
 
-    Log(kMessageReceive, kTypeAddressSolicit, aMessageInfo.GetPeerAddr());
+    SuccessOrExit(error = Tlv::Find<ThreadExtMacAddressTlv>(aMessage, mExtAddress));
+    SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(aMessage, mReason));
 
-    SuccessOrExit(error = Tlv::Find<ThreadExtMacAddressTlv>(aMessage, extAddress));
-    SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(aMessage, status));
-
-    switch (Tlv::Find<ThreadRloc16Tlv>(aMessage, rloc16))
+    switch (Tlv::Find<ThreadRloc16Tlv>(aMessage, mRequestedRloc16))
     {
     case kErrorNone:
         break;
     case kErrorNotFound:
-        rloc16 = kInvalidRloc16;
+        mRequestedRloc16 = kInvalidRloc16;
         break;
     default:
         ExitNow(error = kErrorParse);
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    switch (Tlv::Find<XtalAccuracyTlv>(aMessage, mXtalAccuracy))
     {
-        uint16_t xtalAccuracy;
-
-        SuccessOrExit(Tlv::Find<XtalAccuracyTlv>(aMessage, xtalAccuracy));
-        VerifyOrExit(xtalAccuracy <= Get<TimeSync>().GetXtalThreshold());
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        mXtalAccuracy = NumericLimits<uint16_t>::kMax;
+        break;
+    default:
+        ExitNow(error = kErrorParse);
     }
 #endif
 
-    router = mRouterTable.FindRouter(extAddress);
+exit:
+    return error;
+}
 
-    if (router != nullptr)
+void Mle::ProcessAddressSolicit(AddrSolicitInfo &aInfo)
+{
+    // Processes a previously parsed Address Solicit request and
+    // determines whether to accept or reject the request.
+
+    aInfo.mResponse = kAddrSolicitNoAddressAvailable;
+    aInfo.mRouter   = nullptr;
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    VerifyOrExit(aInfo.mXtalAccuracy <= Get<TimeSync>().GetXtalThreshold());
+#endif
+
+    aInfo.mRouter = mRouterTable.FindRouter(aInfo.mExtAddress);
+
+    if (aInfo.mRouter != nullptr)
     {
-        responseStatus = kAddrSolicitSuccess;
+        aInfo.mResponse = kAddrSolicitSuccess;
         ExitNow();
     }
 
-    switch (status)
+    switch (aInfo.mReason)
     {
     case kReasonTooFewRouters:
         VerifyOrExit(mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold);
@@ -3540,69 +3553,75 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, con
             (Get<NetworkData::Leader>().CountBorderRouters(NetworkData::kRouterRoleOnly) >=
              kRouterUpgradeBorderRouterRequestThreshold))
         {
-            LogInfo("Rejecting BR %s router role req - have %u BR routers", extAddress.ToString().AsCString(),
+            LogInfo("Rejecting BR %s router role req - have %u BR routers", aInfo.mExtAddress.ToString().AsCString(),
                     kRouterUpgradeBorderRouterRequestThreshold);
             ExitNow();
         }
         break;
 
     default:
-        responseStatus = kAddrSolicitUnrecognizedReason;
+        aInfo.mResponse = kAddrSolicitUnrecognizedReason;
         ExitNow();
     }
 
-    if (rloc16 != kInvalidRloc16)
+    if (aInfo.mRequestedRloc16 != kInvalidRloc16)
     {
-        router = mRouterTable.Allocate(RouterIdFromRloc16(rloc16));
+        aInfo.mRouter = mRouterTable.Allocate(RouterIdFromRloc16(aInfo.mRequestedRloc16));
 
-        if (router != nullptr)
+        if (aInfo.mRouter != nullptr)
         {
-            LogInfo("Router id %u requested and provided!", RouterIdFromRloc16(rloc16));
+            LogInfo("Router id %u requested and provided!", RouterIdFromRloc16(aInfo.mRequestedRloc16));
         }
     }
 
-    if (router == nullptr)
+    if (aInfo.mRouter == nullptr)
     {
-        router = mRouterTable.Allocate();
-        VerifyOrExit(router != nullptr);
+        aInfo.mRouter = mRouterTable.Allocate();
+        VerifyOrExit(aInfo.mRouter != nullptr);
     }
 
-    router->SetExtAddress(extAddress);
-    responseStatus = kAddrSolicitSuccess;
+    aInfo.mRouter->SetExtAddress(aInfo.mExtAddress);
+    aInfo.mResponse = kAddrSolicitSuccess;
 
 exit:
-    if (error == kErrorNone)
-    {
-        SendAddressSolicitResponse(aMessage, responseStatus, router, aMessageInfo);
-    }
+    return;
 }
 
-void Mle::SendAddressSolicitResponse(const Coap::Message    &aRequest,
-                                     AddrSolicitResponse     aResponseStatus,
-                                     const Router           *aRouter,
-                                     const Ip6::MessageInfo &aMessageInfo)
+template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Coap::Message *message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    Coap::Message  *response = nullptr;
+    AddrSolicitInfo info;
 
-    VerifyOrExit(message != nullptr);
+    VerifyOrExit(IsLeader());
 
-    SuccessOrExit(Tlv::Append<ThreadStatusTlv>(*message, aResponseStatus));
+    Log(kMessageReceive, kTypeAddressSolicit, aMessageInfo.GetPeerAddr());
 
-    if (aRouter != nullptr)
+    SuccessOrExit(info.ParseFrom(aMessage));
+
+    ProcessAddressSolicit(info);
+
+    // Prepare and send response
+
+    response = Get<Tmf::Agent>().NewPriorityResponseMessage(aMessage);
+    VerifyOrExit(response != nullptr);
+
+    SuccessOrExit(Tlv::Append<ThreadStatusTlv>(*response, info.mResponse));
+
+    if (info.mRouter != nullptr)
     {
         ThreadRouterMaskTlv routerMaskTlv;
 
-        SuccessOrExit(Tlv::Append<ThreadRloc16Tlv>(*message, aRouter->GetRloc16()));
+        SuccessOrExit(Tlv::Append<ThreadRloc16Tlv>(*response, info.mRouter->GetRloc16()));
 
         routerMaskTlv.Init();
         routerMaskTlv.SetIdSequence(mRouterTable.GetRouterIdSequence());
         mRouterTable.GetRouterIdSet(routerMaskTlv.GetAssignedRouterIdMask());
 
-        SuccessOrExit(routerMaskTlv.AppendTo(*message));
+        SuccessOrExit(routerMaskTlv.AppendTo(*response));
     }
 
-    SuccessOrExit(Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
-    message = nullptr;
+    SuccessOrExit(Get<Tmf::Agent>().SendMessage(*response, aMessageInfo));
+    response = nullptr;
 
     Log(kMessageSend, kTypeAddressReply, aMessageInfo.GetPeerAddr());
 
@@ -3613,20 +3632,20 @@ void Mle::SendAddressSolicitResponse(const Coap::Message    &aRequest,
     // association with the promoted router's new RLOC16 upon
     // receiving its Link Advertisement.
 
-    if ((aResponseStatus == kAddrSolicitSuccess) && (aRouter != nullptr))
+    if ((info.mResponse == kAddrSolicitSuccess) && (info.mRouter != nullptr))
     {
         uint16_t oldRloc16;
 
         VerifyOrExit(IsRoutingLocator(aMessageInfo.GetPeerAddr()));
         oldRloc16 = aMessageInfo.GetPeerAddr().GetIid().GetLocator();
 
-        VerifyOrExit(oldRloc16 != aRouter->GetRloc16());
+        VerifyOrExit(oldRloc16 != info.mRouter->GetRloc16());
         VerifyOrExit(!RouterIdMatch(oldRloc16, GetRloc16()));
         Get<AddressResolver>().RemoveEntriesForRloc16(oldRloc16);
     }
 
 exit:
-    FreeMessage(message);
+    FreeMessage(response);
 }
 
 template <> void Mle::HandleTmf<kUriAddressRelease>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

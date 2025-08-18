@@ -1591,6 +1591,20 @@ private:
 #endif
     };
 
+    struct AddrSolicitInfo
+    {
+        Error ParseFrom(const Coap::Message &aMessage);
+
+        Mac::ExtAddress mExtAddress;
+        uint16_t        mRequestedRloc16;
+        uint8_t         mReason;
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        uint16_t mXtalAccuracy;
+#endif
+        AddrSolicitResponse mResponse;
+        Router             *mRouter;
+    };
+
 #endif // OPENTHREAD_FTD
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2152,10 +2166,7 @@ private:
     void     StopAdvertiseTrickleTimer(void);
     uint32_t DetermineAdvertiseIntervalMax(void) const;
     Error    SendAddressSolicit(RouterUpgradeReason aReason);
-    void     SendAddressSolicitResponse(const Coap::Message    &aRequest,
-                                        AddrSolicitResponse     aResponseStatus,
-                                        const Router           *aRouter,
-                                        const Ip6::MessageInfo &aMessageInfo);
+    void     ProcessAddressSolicit(AddrSolicitInfo &aInfo);
     void     SendAddressRelease(void);
     void     SendMulticastAdvertisement(void);
     void     SendAdvertisement(const Ip6::Address &aDestination);
