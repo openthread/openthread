@@ -293,6 +293,23 @@ extern "C" {
     } while (false) /* fallthrough */
 #endif
 
+// A known false positive warning occurs on some GCC toolchains,
+// resulting in "error: writing x byte into a region of size 0". The following
+// macros are used to suppress this warning/error in specific code blocks.
+
+#if defined(__GNUC__) && (__GNUC__ >= 7)
+
+#define OT_SUPPRESS_GCC_STRING_OP_BEGIN \
+    _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic warning \"-Wstringop-overflow=0\"")
+#define OT_SUPPRESS_GCC_STRING_OP_END _Pragma("GCC diagnostic pop")
+
+#else
+
+#define OT_SUPPRESS_GCC_STRING_OP_BEGIN
+#define OT_SUPPRESS_GCC_STRING_OP_END
+
+#endif
+
 /**
  * @}
  */
