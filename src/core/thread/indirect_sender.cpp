@@ -325,86 +325,60 @@ void IndirectSender::UpdateIndirectMessage(Child &aChild)
 
 Error IndirectSender::PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild)
 {
-    Error    error   = kErrorNone;
-    Message *message = aChild.GetIndirectMessage();
-
-    VerifyOrExit(mEnabled, error = kErrorAbort);
-
-    if (message == nullptr)
-    {
-        PrepareEmptyFrame(aFrame, aChild, /* aAckRequest */ true);
-        aContext.mMessageNextOffset = 0;
-        ExitNow();
-    }
-
-    switch (message->GetType())
-    {
-    case Message::kTypeIp6:
-        aContext.mMessageNextOffset = PrepareDataFrame(aFrame, aChild, *message);
-        break;
-
-    case Message::kTypeSupervision:
-        PrepareEmptyFrame(aFrame, aChild, /* aAckRequest */ true);
-        aContext.mMessageNextOffset = message->GetLength();
-        break;
-
-    default:
-        OT_ASSERT(false);
-    }
-
-exit:
-    return error;
-}
-
-uint16_t IndirectSender::PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, Message &aMessage)
-{
+    Error          error = kErrorNone;
+    Message       *message;
     Ip6::Header    ip6Header;
     Mac::Addresses macAddrs;
     uint16_t       directTxOffset;
-    uint16_t       nextOffset;
+
+    VerifyOrExit(mEnabled, error = kErrorAbort);
+
+    aChild.GetMacAddress(macAddrs.mDestination);
+
+    message = aChild.GetIndirectMessage();
+
+    if ((message == nullptr) || (message->GetType() == Message::kTypeSupervision))
+    {
+        Get<MessageFramer>().PrepareEmptyFrame(aFrame, macAddrs.mDestination, /* aAckRequest */ true);
+        aContext.mMessageNextOffset = (message == nullptr) ? 0 : message->GetLength();
+
+        ExitNow();
+    }
+
+    VerifyOrExit(message->GetType() == Message::kTypeIp6);
 
     // Determine the MAC source and destination addresses.
 
-    IgnoreError(aMessage.Read(0, ip6Header));
+    IgnoreError(message->Read(0, ip6Header));
 
-    Get<MeshForwarder>().GetMacSourceAddress(ip6Header.GetSource(), macAddrs.mSource);
+    Get<MessageFramer>().DetermineMacSourceAddress(ip6Header.GetSource(), macAddrs);
 
     if (ip6Header.GetDestination().IsLinkLocalUnicast())
     {
         macAddrs.mDestination.SetExtendedFromIid(ip6Header.GetDestination().GetIid());
     }
-    else
-    {
-        aChild.GetMacAddress(macAddrs.mDestination);
-    }
 
     // Prepare the data frame from previous child's indirect offset.
 
-    directTxOffset = aMessage.GetOffset();
-    aMessage.SetOffset(aChild.GetIndirectFragmentOffset());
+    directTxOffset = message->GetOffset();
+    message->SetOffset(aChild.GetIndirectFragmentOffset());
 
-    nextOffset = Get<MeshForwarder>().PrepareDataFrameWithNoMeshHeader(aFrame, aMessage, macAddrs);
+    aContext.mMessageNextOffset = Get<MessageFramer>().PrepareFrame(aFrame, *message, macAddrs);
 
-    aMessage.SetOffset(directTxOffset);
+    message->SetOffset(directTxOffset);
 
     // Set `FramePending` if there are more queued messages (excluding
     // the current one being sent out) for the child (note `> 1` check).
     // The case where the current message itself requires fragmentation
-    // is already checked and handled in `PrepareDataFrame()` method.
+    // is already checked and handled in the above `PrepareFrame` call.
 
     if (aChild.GetIndirectMessageCount() > 1)
     {
         aFrame.SetFramePending(true);
     }
 
-    return nextOffset;
-}
-
-void IndirectSender::PrepareEmptyFrame(Mac::TxFrame &aFrame, Child &aChild, bool aAckRequest)
-{
-    Mac::Address macDest;
-    aChild.GetMacAddress(macDest);
-    Get<MeshForwarder>().PrepareEmptyFrame(aFrame, macDest, aAckRequest);
+exit:
+    return error;
 }
 
 void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,

@@ -436,23 +436,11 @@ private:
 #endif
     void     UpdateEidRlocCacheAndStaleChild(RxInfo &aRxInfo);
     Error    FrameToMessage(RxInfo &aRxInfo, uint16_t aDatagramSize, Message *&aMessage);
-    void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *PrepareNextDirectTransmission(void);
     void     HandleMesh(RxInfo &aRxInfo);
     void     ResolveRoutingLoops(uint16_t aSourceRloc16, uint16_t aDestRloc16);
     void     HandleFragment(RxInfo &aRxInfo);
     void     HandleLowpanHc(RxInfo &aRxInfo);
-
-    void     PrepareMacHeaders(Mac::TxFrame &aTxFrame, Mac::TxFrame::Info &aTxFrameInfo, const Message *aMessage);
-    uint16_t PrepareDataFrame(Mac::TxFrame         &aFrame,
-                              Message              &aMessage,
-                              const Mac::Addresses &aMacAddrs,
-                              bool                  aAddMeshHeader,
-                              uint16_t              aMeshSource,
-                              uint16_t              aMeshDest,
-                              bool                  aAddFragHeader);
-    uint16_t PrepareDataFrameWithNoMeshHeader(Mac::TxFrame &aFrame, Message &aMessage, const Mac::Addresses &aMacAddrs);
-    void     PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &aMacDest, bool aAckRequest);
 
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
     Error UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend);
@@ -462,7 +450,6 @@ private:
     bool IsDirectTxQueueOverMaxFrameThreshold(void) const;
     void ApplyDirectTxQueueLimit(Message &aMessage);
 #endif
-    void  SendMesh(Message &aMessage, Mac::TxFrame &aFrame);
     void  SendDestinationUnreachable(uint16_t aMeshSource, const Ip6::Headers &aIp6Headers);
     Error UpdateIp6Route(Message &aMessage);
     Error UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &aMessage);
@@ -566,7 +553,6 @@ private:
 
     PriorityQueue mSendQueue;
     MessageQueue  mReassemblyList;
-    uint16_t      mFragTag;
     uint16_t      mMessageNextOffset;
 
     Message *mSendMessage;
