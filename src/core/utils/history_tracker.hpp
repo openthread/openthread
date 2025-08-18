@@ -113,6 +113,7 @@ typedef otHistoryTrackerBorderAgentEpskcEvent EpskcEvent; ///< Border Agent ePSK
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 typedef otHistoryTrackerFavoredOmrPrefix    FavoredOmrPrefix;    ///< Favored OMR Prefix
 typedef otHistoryTrackerFavoredOnLinkPrefix FavoredOnLinkPrefix; ///< Favored On-link Prefix
+typedef otHistoryTrackerAilRouter           AilRouter;           ///< An AIL router tracked when acting as BR
 #endif
 
 /**
@@ -285,6 +286,11 @@ public:
     {
         return mFavoredOnLinkPrefixHistory.Iterate(aIterator, aEntryAge);
     }
+
+    const AilRouter *IterateAilRoutersHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mAilRoutersHistory.Iterate(aIterator, aEntryAge);
+    }
 #endif
 
     /**
@@ -322,6 +328,7 @@ private:
     static constexpr uint16_t kEpskcEventListSize    = OPENTHREAD_CONFIG_HISTORY_TRACKER_EPSKC_EVENT_SIZE;
     static constexpr uint16_t kOmrPrefixListSize     = OPENTHREAD_CONFIG_HISTORY_TRACKER_OMR_PREFIX_LIST_SIZE;
     static constexpr uint16_t kOnLinkPrefixListSize  = OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_LINK_PREFIX_LIST_SIZE;
+    static constexpr uint16_t kAilRouterListSize     = OPENTHREAD_CONFIG_HISTORY_TRACKER_AIL_ROUTER_LIST_SIZE;
 
     typedef otHistoryTrackerAddressEvent AddressEvent;
 
@@ -356,6 +363,14 @@ private:
     static constexpr DnsSrpAddrType kDnsSrpAddrTypeAnycast      = OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_ANYCAST;
 
     static constexpr uint16_t kAnycastServerPort = 53;
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    typedef otHistoryTrackerAilRouterEvent AilRouterEvent;
+
+    static constexpr AilRouterEvent kAilRouterAdded   = OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_ADDED;
+    static constexpr AilRouterEvent kAilRouterChanged = OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_CHANGED;
+    static constexpr AilRouterEvent kAilRouterRemoved = OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_REMOVED;
+#endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 #define DefineEpskcEvent(aName, aPublicEnumName) \
@@ -500,10 +515,11 @@ private:
     void RecordEpskcEvent(EpskcEvent aEvent);
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    void RecordFavoredOmrPrefix(const Ip6::Prefix                            &aPrefix,
-                                BorderRouter::RoutingManager::RoutePreference aPreference,
-                                bool                                          aIsLocal);
-    void RecordFavoredOnLinkPrefix(const Ip6::Prefix &aPrefix, bool aIsLocal);
+    void       RecordFavoredOmrPrefix(const Ip6::Prefix                            &aPrefix,
+                                      BorderRouter::RoutingManager::RoutePreference aPreference,
+                                      bool                                          aIsLocal);
+    void       RecordFavoredOnLinkPrefix(const Ip6::Prefix &aPrefix, bool aIsLocal);
+    AilRouter *RecordAilRouterEvent(void);
 #endif
 
     using TrackerTimer = TimerMilliIn<Local, &Local::HandleTimer>;
@@ -524,6 +540,7 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     EntryList<FavoredOmrPrefix, kOmrPrefixListSize>       mFavoredOmrPrefixHistory;
     EntryList<FavoredOnLinkPrefix, kOnLinkPrefixListSize> mFavoredOnLinkPrefixHistory;
+    EntryList<AilRouter, kAilRouterListSize>              mAilRoutersHistory;
 #endif
 
     TrackerTimer mTimer;

@@ -11,6 +11,7 @@ The number of entries recorded for each history list is configurable through a s
 Usage : `history [command] ...`
 
 - [help](#help)
+- [ailrouters](#ailrouters)
 - [dnssrpaddr](#dnssrpaddr)
 - [ipaddr](#ipaddr)
 - [ipmaddr](#ipmaddr)
@@ -66,6 +67,55 @@ rxtx
 tx
 Done
 >
+```
+
+### ailrouters
+
+Usage `history ailrouters [list] [<num-entries>]`
+
+Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE`.
+
+Print the AIL routers history. Each entry provides:
+
+- The event, possible values are `Added`, `Changed`, `Removed`.
+- The IPv6 address of the AIL router.
+- Flags
+  - `R`: Indicates whether or not this router is reachable.
+  - `M`: The Managed Address Config flag (from the received Router Advertisement (RA) header).
+  - `O`: The Other Config flag (from the RA header).
+  - `S`: The SNAC Router flag (from the RA header).
+  - `L`: Indicates whether or not this router is the local device (this BR).
+  - `P`: Indicates whether or not this router is a peer BR connected to same Thread mesh.
+  - `D`: Indicates whether or not this router provides a default route.
+- The default route preference (`high`, `med`, `low`) if this router provides a default route. Otherwise `-`.
+- The favored on-link prefix advertised by this router if any. If none, `-` is shown.
+
+```bash
+> history ailrouters
+| Age                  | Event   | IPv6 Address                             |R|M|O|S|L|P|D|RtPrf |
++----------------------+---------+------------------------------------------+-+-+-+-+-+-+-+------+
+|                      | Favored on-link prefix                             | | | | | | | |      |
++----------------------+----------------------------------------------------+-+-+-+-+-+-+-+------+
+|         00:01:35.107 | Changed | fe80:0:0:0:0:0:0:2                       |N|N|N|Y|N|Y|N|      |
+|                      | -                                                  | | | | | | | |      |
+|         00:05:01.115 | Changed | fe80:0:0:0:0:0:0:2                       |Y|N|N|Y|N|Y|N|      |
+|                      | -                                                  | | | | | | | |      |
+|         00:08:01.804 | Added   | fe80:0:0:0:0:0:0:2                       |Y|N|N|Y|N|Y|N|      |
+|                      | fd99:4cdc:3b3d:56ef::/64                           | | | | | | | |      |
+Done
+```
+
+Print the history as a list.
+
+```bash
+>history ailrouters list
+00:01:35.161 -> event:Changed address:fe80:0:0:0:0:0:0:2 reachable:N M:N O:N S:Y local:N peer:Y def-route:N prf:
+   favored-on-link-prefix:-
+00:05:01.169 -> event:Changed address:fe80:0:0:0:0:0:0:2 reachable:Y M:N O:N S:Y local:N peer:Y def-route:N prf:
+   favored-on-link-prefix:-
+00:08:01.858 -> event:Added address:fe80:0:0:0:0:0:0:2 reachable:Y M:N O:N S:Y local:N peer:Y def-route:N prf:
+   favored-on-link-prefix:fd99:4cdc:3b3d:56ef::/64
+Done
 ```
 
 ### dnssrpaddr

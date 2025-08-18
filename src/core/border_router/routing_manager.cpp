@@ -1767,6 +1767,7 @@ void RoutingManager::RxRaTracker::Evaluate(void)
     NextFireTime    entryExpireTime(now);
     NextFireTime    staleTime(now);
     NextFireTime    rdnsssAddrExpireTime(now);
+    RouterList      removedRouters;
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Remove expired entries associated with each router
@@ -1788,7 +1789,16 @@ void RoutingManager::RxRaTracker::Evaluate(void)
     // Remove any router entry that no longer has any valid on-link
     // or route prefixes, RDNSS addresses, or other relevant flags set.
 
-    mRouters.RemoveAndFreeAllMatching(Router::EmptyChecker());
+    mRouters.RemoveAllMatching(removedRouters, Router::EmptyChecker());
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    for (Router &router : removedRouters)
+    {
+        ReportChangesToHistoryTracker(router, /* aRemoved */ true);
+    }
+#endif
+
+    removedRouters.Free();
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Determine decision factors (favored on-link prefix, has any
@@ -1891,6 +1901,17 @@ void RoutingManager::RxRaTracker::Evaluate(void)
     mExpirationTimer.FireAt(entryExpireTime);
     mStaleTimer.FireAt(staleTime);
     mRdnssAddrTimer.FireAt(rdnsssAddrExpireTime);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Report any changes to history tracker.
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    for (Router &router : mRouters)
+    {
+        ReportChangesToHistoryTracker(router, /* aRemoved */ false);
+    }
+
+#endif
 }
 
 void RoutingManager::RxRaTracker::DetermineStaleTimeFor(const OnLinkPrefix &aPrefix, NextFireTime &aStaleTime)
@@ -2202,6 +2223,62 @@ uint16_t RoutingManager::RxRaTracker::CountReachablePeerBrs(void) const
 }
 #endif
 
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+
+void RoutingManager::RxRaTracker::ReportChangesToHistoryTracker(Router &aRouter, bool aRemoved)
+{
+    // Report any changes in the `aRouter` to `HistoryTracker` only if
+    // something has changed since the last recorded event.
+
+    Router::HistoryInfo        oldInfo;
+    HistoryTracker::AilRouter *entry;
+
+    if (aRemoved)
+    {
+        // If we have never recorded this router entry in the
+        // `HistoryTracker`, there is no point in reporting its
+        // removal. This can happen if we receive an RA from a router
+        // with no useful information that we want to track. In this
+        // case, the router entry is removed immediately during
+        // `Evaluate()`.
+
+        VerifyOrExit(aRouter.mHistoryInfo.mHistoryRecorded);
+    }
+    else
+    {
+        oldInfo = aRouter.mHistoryInfo;
+    }
+
+    aRouter.mHistoryInfo.DetermineFrom(aRouter);
+
+    VerifyOrExit(aRemoved || (aRouter.mHistoryInfo != oldInfo));
+
+    // Allocate and populate the new `HistoryTracker::AilRouter` entry.
+
+    entry = Get<HistoryTracker::Local>().RecordAilRouterEvent();
+    VerifyOrExit(entry != nullptr);
+
+    entry->mEvent = aRemoved ? HistoryTracker::Local::kAilRouterRemoved
+                             : (oldInfo.mHistoryRecorded ? HistoryTracker::Local::kAilRouterChanged
+                                                         : HistoryTracker::Local::kAilRouterAdded);
+
+    entry->mAddress                  = aRouter.mAddress;
+    entry->mDefRoutePreference       = static_cast<int8_t>(aRouter.mHistoryInfo.mDefRoutePreference);
+    entry->mFavoredOnLinkPrefix      = aRouter.mHistoryInfo.mFavoredOnLinkPrefix;
+    entry->mProvidesDefaultRoute     = aRouter.mHistoryInfo.mProvidesDefaultRoute;
+    entry->mManagedAddressConfigFlag = aRouter.mHistoryInfo.mManagedAddressConfigFlag;
+    entry->mOtherConfigFlag          = aRouter.mHistoryInfo.mOtherConfigFlag;
+    entry->mSnacRouterFlag           = aRouter.mHistoryInfo.mSnacRouterFlag;
+    entry->mIsLocalDevice            = aRouter.mHistoryInfo.mIsLocalDevice;
+    entry->mIsReachable              = aRouter.mHistoryInfo.mIsReachable;
+    entry->mIsPeerBr                 = aRouter.mHistoryInfo.mIsPeerBr;
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+
 //---------------------------------------------------------------------------------------------------------------------
 // RxRaTracker::Iterator
 
@@ -2429,6 +2506,46 @@ void RoutingManager::RxRaTracker::Router::CopyInfoTo(RouterEntry &aEntry, TimeMi
     aEntry.mIsReachable              = IsReachable();
     aEntry.mIsPeerBr                 = IsPeerBr();
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// RxRaTracker::Router::HistoryInfo
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+
+void RoutingManager::RxRaTracker::Router::HistoryInfo::DetermineFrom(const Router &aRouter)
+{
+    Ip6::Prefix        emptyPrefix;
+    const RoutePrefix *defRoute;
+
+    Clear();
+
+    mHistoryRecorded          = true;
+    mManagedAddressConfigFlag = aRouter.mManagedAddressConfigFlag;
+    mOtherConfigFlag          = aRouter.mOtherConfigFlag;
+    mSnacRouterFlag           = aRouter.mSnacRouterFlag;
+    mIsLocalDevice            = aRouter.mIsLocalDevice;
+    mIsReachable              = aRouter.IsReachable();
+    mIsPeerBr                 = aRouter.IsPeerBr();
+
+    emptyPrefix.Clear();
+    defRoute = aRouter.mRoutePrefixes.FindMatching(emptyPrefix);
+
+    if ((defRoute != nullptr) && (defRoute->GetValidLifetime() > 0))
+    {
+        mProvidesDefaultRoute = true;
+        mDefRoutePreference   = defRoute->GetRoutePreference();
+    }
+
+    for (const OnLinkPrefix &onLinkPrefix : aRouter.mOnLinkPrefixes)
+    {
+        if (onLinkPrefix.IsFavoredOver(mFavoredOnLinkPrefix))
+        {
+            mFavoredOnLinkPrefix = onLinkPrefix.GetPrefix();
+        }
+    }
+}
+
+#endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 // RxRaTracker::DecisionFactors

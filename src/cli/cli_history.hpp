@@ -101,6 +101,7 @@ private:
     static const char *RadioTypeToString(const otHistoryTrackerMessageInfo &aInfo);
     static const char *MessageTypeToString(const otHistoryTrackerMessageInfo &aInfo);
     static const char *DnsSrpAddrTypeToString(otHistoryTrackerDnsSrpAddrType aType);
+    static const char *AilRouterEventToString(otHistoryTrackerAilRouterEvent aEvent);
 };
 
 } // namespace Cli
