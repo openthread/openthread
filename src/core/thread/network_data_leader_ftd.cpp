@@ -835,6 +835,15 @@ exit:
     return error;
 }
 
+// The `AddHasRoute()`, `AddBorderRouter()`, and `AddServer()` methods
+// below shift and update the network data bytes, which may involve
+// inserting or updating a sub-TLV within an existing TLV. This can
+// trigger a known false positive warning on some GCC toolchains. The
+// `OT_SUPPRESS_GCC_STRING_OP_BEGIN`/ `OT_SUPPRESS_GCC_STRING_OP_END`
+// macros are used to silence this check within these methods.
+
+OT_SUPPRESS_GCC_STRING_OP_BEGIN
+
 Error Leader::AddHasRoute(const HasRouteTlv &aHasRoute, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags)
 {
     Error                error       = kErrorNone;
@@ -968,6 +977,8 @@ Error Leader::AddServer(const ServerTlv &aServer, ServiceTlv &aDstService, Chang
 exit:
     return error;
 }
+
+OT_SUPPRESS_GCC_STRING_OP_END
 
 Error Leader::AllocateServiceId(uint8_t &aServiceId) const
 {
