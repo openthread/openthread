@@ -38,9 +38,11 @@
 
 #include <openthread/netdiag.h>
 
+#include "common/bit_set.hpp"
 #include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/numeric_limits.hpp"
 #include "net/udp6.hpp"
 #include "thread/network_diagnostic_tlvs.hpp"
 #include "thread/tmf.hpp"
@@ -195,6 +197,8 @@ public:
 private:
     static constexpr uint16_t kMaxChildEntries              = 398;
     static constexpr uint16_t kAnswerMessageLengthThreshold = 800;
+
+    typedef BitSet<NumericLimits<uint8_t>::kMax + 1> TlvTypeBitSet; // A bitset to store TLV types.
 
 #if OPENTHREAD_FTD
     struct AnswerInfo
