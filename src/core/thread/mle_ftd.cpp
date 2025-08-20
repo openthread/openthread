@@ -305,7 +305,7 @@ void Mle::HandleDetachStart(void)
     Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMle);
 }
 
-void Mle::HandleChildStart(void)
+void Mle::HandleChildStart(AttachMode aMode)
 {
     mAddressSolicitRejected = false;
 
@@ -323,7 +323,7 @@ void Mle::HandleChildStart(void)
 
     VerifyOrExit(IsRouterIdValid(mPreviousRouterId));
 
-    switch (mAttacher.GetAttachMode())
+    switch (aMode)
     {
     case kDowngradeToReed:
         SendAddressRelease();
@@ -411,8 +411,10 @@ void Mle::SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStart
     SetRole(aRole);
 
     mPrevRoleRestorer.Stop();
-    mAttacher.CancelAttachOnRoleChange();
 
+    SetAttachState(kAttachStateIdle);
+    mAttachCounter = 0;
+    mAttachTimer.Stop();
     mRetxTracker.Stop();
     StopAdvertiseTrickleTimer();
     ResetAdvertiseInterval();
@@ -1211,7 +1213,7 @@ Error Mle::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, co
 #endif
         )
         {
-            mAttacher.Attach(kBetterPartition);
+            Attach(kBetterPartition);
         }
 
         ExitNow(error = kErrorDrop);
@@ -1588,13 +1590,13 @@ void Mle::HandleTimeTick(void)
         if ((mRouterTable.GetActiveRouterCount() > 0) && (mRouterTable.GetLeaderAge() >= mNetworkIdTimeout))
         {
             LogInfo("Leader age timeout");
-            mAttacher.Attach(kSamePartition);
+            Attach(kSamePartition);
         }
 
         if (roleTransitionTimeoutExpired && mRouterTable.GetActiveRouterCount() > mRouterDowngradeThreshold)
         {
             LogNote("Downgrade to REED");
-            mAttacher.Attach(kDowngradeToReed);
+            Attach(kDowngradeToReed);
         }
 
         OT_FALL_THROUGH;
@@ -3218,7 +3220,7 @@ void Mle::RemoveNeighbor(Neighbor &aNeighbor)
     }
     else if (&aNeighbor == &GetParentCandidate())
     {
-        mAttacher.ClearParentCandidate();
+        ClearParentCandidate();
     }
     else if (IsChildRloc16(aNeighbor.GetRloc16()))
     {
