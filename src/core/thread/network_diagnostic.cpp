@@ -329,8 +329,11 @@ Error Server::AppendMacCounters(Message &aMessage)
 
 Error Server::AppendRequestedTlvs(const Message &aRequest, Message &aResponse)
 {
-    Error       error;
-    OffsetRange offsetRange;
+    Error         error;
+    OffsetRange   offsetRange;
+    TlvTypeBitSet processedTlvs;
+
+    processedTlvs.Clear();
 
     SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRequest, Tlv::kTypeList, offsetRange));
 
@@ -340,6 +343,14 @@ Error Server::AppendRequestedTlvs(const Message &aRequest, Message &aResponse)
 
         SuccessOrExit(error = aRequest.Read(offsetRange, tlvType));
         offsetRange.AdvanceOffset(sizeof(tlvType));
+
+        if (processedTlvs.Has(tlvType))
+        {
+            continue;
+        }
+
+        processedTlvs.Add(tlvType);
+
         SuccessOrExit(error = AppendDiagTlv(tlvType, aResponse));
     }
 
@@ -350,7 +361,10 @@ exit:
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 Error Server::AppendRequestedTlvsForTcat(const Message &aRequest, Message &aResponse, OffsetRange &aOffsetRange)
 {
-    Error error = kErrorNone;
+    Error         error = kErrorNone;
+    TlvTypeBitSet processedTlvs;
+
+    processedTlvs.Clear();
 
     while (!aOffsetRange.IsEmpty())
     {
@@ -358,6 +372,13 @@ Error Server::AppendRequestedTlvsForTcat(const Message &aRequest, Message &aResp
 
         SuccessOrExit(error = aRequest.Read(aOffsetRange, tlvType));
         aOffsetRange.AdvanceOffset(sizeof(uint8_t));
+
+        if (processedTlvs.Has(tlvType))
+        {
+            continue;
+        }
+
+        processedTlvs.Add(tlvType);
 
 #if OPENTHREAD_FTD
         switch (tlvType)
