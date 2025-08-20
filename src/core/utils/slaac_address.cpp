@@ -365,14 +365,14 @@ bool Slaac::UpdateContextIdFor(SlaacAddress &aSlaacAddress)
 {
     bool            didChange = false;
     Lowpan::Context context;
+    uint8_t         contextId;
 
-    if (Get<NetworkData::Leader>().GetContext(aSlaacAddress.GetAddress(), context) != kErrorNone)
-    {
-        context.mContextId = SlaacAddress::kInvalidContextId;
-    }
+    Get<NetworkData::Leader>().FindContextForAddress(aSlaacAddress.GetAddress(), context);
 
-    VerifyOrExit(context.mContextId != aSlaacAddress.GetContextId());
-    aSlaacAddress.SetContextId(context.mContextId);
+    contextId = context.IsValid() ? context.GetContextId() : SlaacAddress::kInvalidContextId;
+
+    VerifyOrExit(contextId != aSlaacAddress.GetContextId());
+    aSlaacAddress.SetContextId(contextId);
     didChange = true;
 
 exit:

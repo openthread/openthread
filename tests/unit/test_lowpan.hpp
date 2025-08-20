@@ -40,18 +40,14 @@
 
 namespace ot {
 
-class TestIphcVector
+class TestIphcVector : public Clearable<TestIphcVector>
 {
 public:
-    enum
-    {
-        kContextUnused    = 255,
-        kPayloadMaxLength = 512
-    };
-
     struct Payload
     {
-        uint8_t  mData[kPayloadMaxLength];
+        static constexpr uint16_t kMaxLength = 512;
+
+        uint8_t  mData[kMaxLength];
         uint16_t mLength;
     };
 
@@ -60,10 +56,8 @@ public:
      */
     explicit TestIphcVector(const char *aTestName)
     {
-        memset(reinterpret_cast<void *>(this), 0, sizeof(TestIphcVector));
-        mTestName              = aTestName;
-        mSrcContext.mContextId = kContextUnused;
-        mDstContext.mContextId = kContextUnused;
+        Clear();
+        mTestName = aTestName;
     }
 
     /**

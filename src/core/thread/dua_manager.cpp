@@ -294,12 +294,13 @@ void DuaManager::HandleNotifierEvents(Events aEvents)
     Mle::Mle &mle = Get<Mle::Mle>();
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-    if (aEvents.Contains(kEventThreadNetdataChanged))
+    if (aEvents.Contains(kEventThreadNetdataChanged) && Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()))
     {
         Lowpan::Context context;
-        // Remove a stale DUA address if any.
-        if (Get<ThreadNetif>().HasUnicastAddress(Get<DuaManager>().GetDomainUnicastAddress()) &&
-            (Get<NetworkData::Leader>().GetContext(Get<DuaManager>().GetDomainUnicastAddress(), context) != kErrorNone))
+
+        Get<NetworkData::Leader>().FindContextForAddress(GetDomainUnicastAddress(), context);
+
+        if (!context.IsValid())
         {
             RemoveDomainUnicastAddress();
         }

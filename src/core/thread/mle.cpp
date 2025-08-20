@@ -4660,9 +4660,11 @@ Error Mle::TxMessage::AppendAddressRegistrationEntry(const Ip6::Address &aAddres
     {
         Lowpan::Context context;
 
-        if ((Get<NetworkData::Leader>().GetContext(aAddress, context) == kErrorNone) && context.mCompressFlag)
+        Get<NetworkData::Leader>().FindContextForAddress(aAddress, context);
+
+        if (context.IsValid() && context.GetCompressFlag())
         {
-            ctlByte = AddressRegistrationTlv::ControlByteFor(context.mContextId);
+            ctlByte = AddressRegistrationTlv::ControlByteFor(context.GetContextId());
         }
     }
 

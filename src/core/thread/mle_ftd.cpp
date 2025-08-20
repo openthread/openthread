@@ -1910,14 +1910,16 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
             IgnoreError(aRxInfo.mMessage.Read(offsetRange, address.GetIid()));
             offsetRange.AdvanceOffset(sizeof(Ip6::InterfaceIdentifier));
 
-            if (Get<NetworkData::Leader>().GetContext(contextId, context) != kErrorNone)
+            Get<NetworkData::Leader>().FindContextForId(contextId, context);
+
+            if (!context.IsValid())
             {
                 LogWarn("Failed to get context %u for compressed address from child 0x%04x", contextId,
                         aChild.GetRloc16());
                 continue;
             }
 
-            address.SetPrefix(context.mPrefix);
+            address.SetPrefix(context.GetPrefix());
         }
         else
         {

@@ -50,7 +50,6 @@ void Agent::HandleNotifierEvents(Events aEvents)
 
 void Agent::UpdateService(void)
 {
-    Error                           error;
     uint16_t                        rloc16 = Get<Mle::Mle>().GetRloc16();
     NetworkData::Iterator           iterator;
     NetworkData::OnMeshPrefixConfig prefixConfig;
@@ -70,15 +69,13 @@ void Agent::UpdateService(void)
                 continue;
             }
 
-            error = Get<NetworkData::Leader>().GetContext(AsCoreType(&prefixConfig.mPrefix.mPrefix), lowpanContext);
+            Get<NetworkData::Leader>().FindContextForAddress(AsCoreType(&prefixConfig.mPrefix.mPrefix), lowpanContext);
 
-            if ((error != kErrorNone) || (lowpanContext.mContextId != contextId))
+            if (lowpanContext.MatchesContextId(contextId))
             {
-                continue;
+                found = true;
+                break;
             }
-
-            found = true;
-            break;
         }
 
         if (!found)
@@ -99,11 +96,11 @@ void Agent::UpdateService(void)
             continue;
         }
 
-        error = Get<NetworkData::Leader>().GetContext(AsCoreType(&prefixConfig.mPrefix.mPrefix), lowpanContext);
+        Get<NetworkData::Leader>().FindContextForAddress(AsCoreType(&prefixConfig.mPrefix.mPrefix), lowpanContext);
 
-        if (error == kErrorNone)
+        if (lowpanContext.IsValid())
         {
-            uint16_t aloc16 = Mle::Aloc16::FromNdAgentContextId(lowpanContext.mContextId);
+            uint16_t aloc16 = Mle::Aloc16::FromNdAgentContextId(lowpanContext.GetContextId());
 
             mAloc.InitAsThreadOrigin();
             mAloc.GetAddress().SetToAnycastLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aloc16);
