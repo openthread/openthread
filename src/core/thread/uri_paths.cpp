@@ -90,9 +90,13 @@ static constexpr Entry kEntries[] = {
     {"d/dg"},  // (34) kUriDiagnosticGetRequest
     {"d/dq"},  // (35) kUriDiagnosticGetQuery
     {"d/dr"},  // (36) kUriDiagnosticReset
-    {"n/dn"},  // (37) kUriDuaRegistrationNotify
-    {"n/dr"},  // (38) kUriDuaRegistrationRequest
-    {"n/mr"},  // (39) kUriMlr
+    {"d/er"},  // (37) kUriDiagnosticEndDeviceRequest
+    {"d/eu"},  // (38) kUriDiagnosticEndDeviceUpdate
+    {"d/sr"},  // (39) kUriDiagnosticServerRequest
+    {"d/su"},  // (40) kUriDiagnosticServerUpdate
+    {"n/dn"},  // (41) kUriDuaRegistrationNotify
+    {"n/dr"},  // (42) kUriDuaRegistrationRequest
+    {"n/mr"},  // (43) kUriMlr
 };
 
 static_assert(BinarySearch::IsSorted(kEntries), "kEntries is not sorted");
@@ -137,6 +141,10 @@ struct UriEnumCheck
     ValidateNextEnum(kUriDiagnosticGetRequest);
     ValidateNextEnum(kUriDiagnosticGetQuery);
     ValidateNextEnum(kUriDiagnosticReset);
+    ValidateNextEnum(kUriDiagnosticEndDeviceRequest);
+    ValidateNextEnum(kUriDiagnosticEndDeviceUpdate);
+    ValidateNextEnum(kUriDiagnosticServerRequest);
+    ValidateNextEnum(kUriDiagnosticServerUpdate);
     ValidateNextEnum(kUriDuaRegistrationNotify);
     ValidateNextEnum(kUriDuaRegistrationRequest);
     ValidateNextEnum(kUriMlr);
@@ -200,6 +208,10 @@ template <> const char *UriToString<kUriDiagnosticGetAnswer>(void) { return "Dia
 template <> const char *UriToString<kUriDiagnosticGetRequest>(void) { return "DiagGetRequest"; }
 template <> const char *UriToString<kUriDiagnosticGetQuery>(void) { return "DiagGetQuery"; }
 template <> const char *UriToString<kUriDiagnosticReset>(void) { return "DiagReset"; }
+template <> const char *UriToString<kUriDiagnosticEndDeviceRequest>(void) { return "DiagEndRequest"; }
+template <> const char *UriToString<kUriDiagnosticEndDeviceUpdate>(void) { return "DiagEndUpdate"; }
+template <> const char *UriToString<kUriDiagnosticServerRequest>(void) { return "DiagServerRequest"; }
+template <> const char *UriToString<kUriDiagnosticServerUpdate>(void) { return "DiagServerUpdate"; }
 template <> const char *UriToString<kUriDuaRegistrationNotify>(void) { return "DuaRegNotify"; }
 template <> const char *UriToString<kUriDuaRegistrationRequest>(void) { return "DuaRegRequest"; }
 template <> const char *UriToString<kUriMlr>(void) { return "Mlr"; }

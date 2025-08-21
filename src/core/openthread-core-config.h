@@ -78,6 +78,7 @@
 #include "config/dhcp6_client.h"
 #include "config/dhcp6_server.h"
 #include "config/diag.h"
+#include "config/diagnostic_server.h"
 #include "config/dns_client.h"
 #include "config/dns_dso.h"
 #include "config/dnssd_server.h"

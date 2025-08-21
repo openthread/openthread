@@ -115,6 +115,7 @@
 #include "thread/announce_sender.hpp"
 #include "thread/anycast_locator.hpp"
 #include "thread/child_supervision.hpp"
+#include "thread/diagnostic_server.hpp"
 #include "thread/discover_scanner.hpp"
 #include "thread/dua_manager.hpp"
 #include "thread/energy_scan_server.hpp"
@@ -576,6 +577,13 @@ private:
 
     NetworkData::Service::Manager mNetworkDataServiceManager;
 
+#if OPENTHREAD_CONFIG_DIAG_SERVER_ENABLE
+    DiagnosticServer::Server mDiagnosticServerServer;
+#endif
+#if OPENTHREAD_CONFIG_DIAG_CLIENT_ENABLE
+    DiagnosticServer::Client mDiagnosticServerClient;
+#endif
+
     NetworkDiagnostic::Server mNetworkDiagnosticServer;
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
     NetworkDiagnostic::Client mNetworkDiagnosticClient;
@@ -942,6 +950,13 @@ template <> inline Dns::Dso &Instance::Get(void) { return mDnsDso; }
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 template <> inline Dns::Multicast::Core &Instance::Get(void) { return mMdnsCore; }
+#endif
+
+#if OPENTHREAD_CONFIG_DIAG_SERVER_ENABLE
+template <> inline DiagnosticServer::Server &Instance::Get(void) { return mDiagnosticServerServer; }
+#endif
+#if OPENTHREAD_CONFIG_DIAG_CLIENT_ENABLE
+template <> inline DiagnosticServer::Client &Instance::Get(void) { return mDiagnosticServerClient; }
 #endif
 
 template <> inline NetworkDiagnostic::Server &Instance::Get(void) { return mNetworkDiagnosticServer; }
