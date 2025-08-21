@@ -233,7 +233,7 @@ public:
      * @retval TRUE   Device is currently trying to attach.
      * @retval FALSE  Device is not in middle of attach process.
      */
-    bool IsAttaching(void) const { return (mAttachState != kAttachStateIdle); }
+    bool IsAttaching(void) const { return mAttacher.IsAttaching(); }
 
     /**
      * Returns the current Thread device role.
@@ -432,7 +432,7 @@ public:
      *
      * The parent candidate is valid when attempting to attach to a new parent.
      */
-    Parent &GetParentCandidate(void) { return mParentCandidate; }
+    Parent &GetParentCandidate(void) { return mAttacher.GetParentCandidate(); }
 
     /**
      * Starts the process for child to search for a better parent while staying attached to its current
@@ -628,7 +628,7 @@ public:
      */
     void RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCallback, void *aContext)
     {
-        mParentResponseCallback.Set(aCallback, aContext);
+        mAttacher.mParentResponseCallback.Set(aCallback, aContext);
     }
 #endif
 
@@ -1779,6 +1779,90 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    void HandleAttacherTimer(void) { mAttacher.HandleTimer(); }
+
+    class Attacher : public InstanceLocator
+    {
+    public:
+        explicit Attacher(Instance &aInstance);
+
+        bool             IsAttaching(void) const { return mState != kStateIdle; }
+        bool             WillStartAttachSoon(void) const { return mState == kStateStart; }
+        bool             IsReattachWithDatasetDone(void) const { return mReattachMode == kReattachModeStop; }
+        void             Start(StartMode aMode);
+        void             Attach(AttachMode aMode);
+        void             CancelAttachOnRoleChange(void);
+        void             ResetAttachCounter(void) { mAttachCounter = 0; }
+        AttachMode       GetAttachMode(void) const { return mMode; }
+        ParentCandidate &GetParentCandidate(void) { return mParentCandidate; }
+        void             ClearParentCandidate(void) { mParentCandidate.Clear(); }
+        void             HandleParentResponse(RxInfo &aRxInfo);
+        void             HandleChildIdResponse(RxInfo &aRxInfo);
+        void             HandleTimer(void);
+
+#if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
+        Callback<otThreadParentResponseCallback> mParentResponseCallback;
+#endif
+    private:
+        enum State : uint8_t
+        {
+            kStateIdle,           // Not currently searching for a parent.
+            kStateStart,          // Starting to look for a parent.
+            kStateParentRequest,  // Send Parent Request (current number tracked by `mParentRequestCounter`).
+            kStateAnnounce,       // Send Announce messages
+            kStateChildIdRequest, // Sending a Child ID Request message.
+        };
+
+        enum ReattachMode : uint8_t
+        {
+            kReattachModeStop,    // Reattach process is disabled or finished
+            kReattachModeActive,  // Reattach using stored Active Dataset
+            kReattachModePending, // Reattach using stored Pending Dataset
+        };
+
+        void     SetState(State aState);
+        uint32_t GetStartDelay(void) const;
+        bool     HasAcceptableParentCandidate(void) const;
+        uint32_t Reattach(void);
+
+        Error DetermineParentRequestType(ParentRequestType &aType) const;
+        Error GetNextAnnounceChannel(uint8_t &aChannel) const;
+        bool  HasMoreChannelsToAnnounce(void) const;
+        void  SendParentRequest(ParentRequestType aType);
+        Error SendChildIdRequest(void);
+        void  HandleChildIdRequestTxDone(const Message &aMessage);
+        bool  PrepareAnnounceState(void);
+        bool  IsBetterParent(uint16_t                aRloc16,
+                             uint8_t                 aTwoWayLinkMargin,
+                             const ConnectivityTlv  &aConnectivityTlv,
+                             uint16_t                aVersion,
+                             const Mac::CslAccuracy &aCslAccuracy);
+
+        static void HandleChildIdRequestTxDone(const otMessage *aMessage, otError aError, void *aContext);
+
+        static const char *StateToString(State aState);
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
+        static const char *AttachModeToString(AttachMode aMode);
+        static const char *ReattachModeToString(ReattachMode aMode);
+#endif
+        using AttachTimer = TimerMilliIn<Mle, &Mle::HandleAttacherTimer>;
+
+        bool                    mReceivedResponseFromParent : 1;
+        State                   mState;
+        AttachMode              mMode;
+        ReattachMode            mReattachMode;
+        AddressRegistrationMode mAddressRegistrationMode;
+        uint8_t                 mParentRequestCounter;
+        uint8_t                 mAnnounceChannel;
+        uint16_t                mAttachCounter;
+        uint16_t                mAnnounceDelay;
+        TxChallenge             mParentRequestChallenge;
+        ParentCandidate         mParentCandidate;
+        AttachTimer             mTimer;
+    };
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     void HandleDetacherTimer(void) { mDetacher.HandleTimer(); }
 
     class Detacher : public InstanceLocator
@@ -2016,10 +2100,7 @@ private:
     Error      RestorePrevRole(void);
     TxMessage *NewMleMessage(Command aCommand);
     void       SetRole(DeviceRole aRole);
-    void       Attach(AttachMode aMode);
-    void       SetAttachState(AttachState aState);
     void       InitNeighbor(Neighbor &aNeighbor, const RxInfo &aRxInfo);
-    void       ClearParentCandidate(void) { mParentCandidate.Clear(); }
     Error      SendDataRequestToParent(void);
     Error      SendDataRequest(const Ip6::Address &aDestination);
     void       HandleNotifierEvents(Events aEvents);
@@ -2038,43 +2119,24 @@ private:
     uint32_t   GenerateRandomDelay(uint32_t aMaxDelay) const;
     void       InformPreviousChannel(void);
     void       ScheduleMessageTransmissionTimer(void);
-    void       HandleAttachTimer(void);
     void       ProcessKeySequence(RxInfo &aRxInfo);
     void       HandleAdvertisement(RxInfo &aRxInfo);
-    void       HandleChildIdResponse(RxInfo &aRxInfo);
     void       HandleChildUpdateRequest(RxInfo &aRxInfo);
     void       HandleChildUpdateRequestOnChild(RxInfo &aRxInfo);
     void       HandleChildUpdateResponse(RxInfo &aRxInfo);
     void       HandleChildUpdateResponseOnChild(RxInfo &aRxInfo);
     void       HandleDataResponse(RxInfo &aRxInfo);
-    void       HandleParentResponse(RxInfo &aRxInfo);
     Error      HandleLeaderData(RxInfo &aRxInfo);
     bool       HasUnregisteredAddress(void);
     uint32_t   GetAttachStartDelay(void) const;
-    void       SendParentRequest(ParentRequestType aType);
-    Error      SendChildIdRequest(void);
-    void       HandleChildIdRequestTxDone(const Message &aMessage);
-    Error      GetNextAnnounceChannel(uint8_t &aChannel) const;
-    bool       HasMoreChannelsToAnnounce(void) const;
-    bool       PrepareAnnounceState(void);
     void       SendAnnounce(uint8_t aChannel, AnnounceMode aMode);
     void       SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, AnnounceMode aMode = kNormalAnnounce);
-    uint32_t   Reattach(void);
-    bool       HasAcceptableParentCandidate(void) const;
-    Error      DetermineParentRequestType(ParentRequestType &aType) const;
-    bool       IsBetterParent(uint16_t                aRloc16,
-                              uint8_t                 aTwoWayLinkMargin,
-                              const ConnectivityTlv  &aConnectivityTlv,
-                              uint16_t                aVersion,
-                              const Mac::CslAccuracy &aCslAccuracy);
     bool       IsNetworkDataNewer(const LeaderData &aLeaderData);
     Error      ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,
                                       Message                &aMessage,
                                       const Ip6::MessageInfo &aMessageInfo,
                                       uint16_t                aCmdOffset,
                                       const SecurityHeader   &aHeader);
-
-    static void HandleChildIdRequestTxDone(const otMessage *aMessage, otError aError, void *aContext);
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     void InformPreviousParent(void);
@@ -2122,12 +2184,6 @@ private:
     void HandleWedAttachTimer(void);
 #endif
 
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
-    static const char *AttachModeToString(AttachMode aMode);
-    static const char *AttachStateToString(AttachState aState);
-    static const char *ReattachStateToString(ReattachState aState);
-#endif
-
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
     static void        LogError(MessageAction aAction, MessageType aType, Error aError);
     static const char *MessageActionToString(MessageAction aAction);
@@ -2146,7 +2202,7 @@ private:
     uint8_t  SelectLeaderId(void) const;
     uint32_t SelectPartitionId(void) const;
     void     HandleDetachStart(void);
-    void     HandleChildStart(AttachMode aMode);
+    void     HandleChildStart(void);
     void     HandleSecurityPolicyChanged(void);
     void     HandleLinkRequest(RxInfo &aRxInfo);
     void     HandleLinkAccept(RxInfo &aRxInfo);
@@ -2219,61 +2275,43 @@ private:
     //------------------------------------------------------------------------------------------------------------------
     // Variables
 
-    using AttachTimer = TimerMilliIn<Mle, &Mle::HandleAttachTimer>;
-    using MleSocket   = Ip6::Udp::SocketIn<Mle, &Mle::HandleUdpReceive>;
+    using MleSocket = Ip6::Udp::SocketIn<Mle, &Mle::HandleUdpReceive>;
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
     using WedAttachTimer = TimerMicroIn<Mle, &Mle::HandleWedAttachTimer>;
 #endif
 
     static const otMeshLocalPrefix kMeshLocalPrefixInit;
 
-    bool mRetrieveNewNetworkData : 1;
-    bool mRequestRouteTlv : 1;
-    bool mHasRestored : 1;
-    bool mReceivedResponseFromParent : 1;
-    bool mInitiallyAttachedAsSleepy : 1;
-
-    DeviceRole              mRole;
-    DeviceRole              mLastSavedRole;
-    DeviceMode              mDeviceMode;
-    AttachState             mAttachState;
-    ReattachState           mReattachState;
-    AttachMode              mAttachMode;
-    AddressRegistrationMode mAddressRegistrationMode;
-
-    uint8_t  mParentRequestCounter;
-    uint8_t  mAnnounceChannel;
-    uint16_t mRloc16;
-    uint16_t mPreviousParentRloc;
-    uint16_t mAttachCounter;
-    uint16_t mAnnounceDelay;
-    uint32_t mStoreFrameCounterAhead;
-    uint32_t mTimeout;
+    bool       mRetrieveNewNetworkData : 1;
+    bool       mRequestRouteTlv : 1;
+    bool       mHasRestored : 1;
+    bool       mInitiallyAttachedAsSleepy : 1;
+    DeviceRole mRole;
+    DeviceRole mLastSavedRole;
+    DeviceMode mDeviceMode;
+    uint16_t   mRloc16;
+    uint16_t   mPreviousParentRloc;
+    uint32_t   mStoreFrameCounterAhead;
+    uint32_t   mTimeout;
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     uint32_t mCslTimeout;
 #endif
-    uint32_t mLastAttachTime;
-    uint64_t mLastUpdatedTimestamp;
-
+    uint32_t         mLastAttachTime;
+    uint64_t         mLastUpdatedTimestamp;
     LeaderData       mLeaderData;
     Parent           mParent;
     NeighborTable    mNeighborTable;
     DelayedSender    mDelayedSender;
-    TxChallenge      mParentRequestChallenge;
-    ParentCandidate  mParentCandidate;
     MleSocket        mSocket;
     Counters         mCounters;
     PrevRoleRestorer mPrevRoleRestorer;
+    Attacher         mAttacher;
     Detacher         mDetacher;
     RetxTracker      mRetxTracker;
     AnnounceHandler  mAnnounceHandler;
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     ParentSearch mParentSearch;
 #endif
-#if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
-    Callback<otThreadParentResponseCallback> mParentResponseCallback;
-#endif
-    AttachTimer                  mAttachTimer;
     Ip6::NetworkPrefix           mMeshLocalPrefix;
     Ip6::Netif::UnicastAddress   mLinkLocalAddress;
     Ip6::Netif::UnicastAddress   mMeshLocalEid;
@@ -2297,7 +2335,6 @@ private:
     bool mCcmEnabled : 1;
     bool mThreadVersionCheckEnabled : 1;
 #endif
-
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;
     uint8_t mNetworkIdTimeout;
@@ -2317,7 +2354,6 @@ private:
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     uint32_t mPreferredLeaderPartitionId;
 #endif
-
     TrickleTimer               mAdvertiseTrickleTimer;
     ChildTable                 mChildTable;
     RouterTable                mRouterTable;
