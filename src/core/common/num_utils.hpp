@@ -146,6 +146,26 @@ template <typename IntType> int8_t ClampToInt8(IntType aValue)
 }
 
 /**
+ * Indicates whether or not the addition of two unsigned integers will result in an overflow.
+ *
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
+ *
+ * @param[in] aFirstValue   The first operand in the addition.
+ * @param[in] aSecondValue  The second operand in the addition.
+ *
+ * @retval TRUE   If the addition can be performed safely and does not cause an overflow.
+ * @retval FALSE  If the addition will result in an overflow.
+ */
+template <typename UintType> bool CanAddSafely(UintType aFirstValue, UintType aSecondValue)
+{
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
+
+    UintType sum = static_cast<UintType>(aFirstValue + aSecondValue);
+
+    return (sum >= aFirstValue);
+}
+
+/**
  * This template function checks whether a given value is in a given closed range [min, max].
  *
  * Uses `operator<=` to compare the values. The behavior is undefined if the value of @p aMin is greater than @p aMax.

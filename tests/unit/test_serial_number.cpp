@@ -110,6 +110,31 @@ void TestNumUtils(void)
     u32 = 0xfff0000;
     VerifyOrQuit(ClampToUint16(u32) == 0xffff);
 
+    VerifyOrQuit(CanAddSafely<uint8_t>(0, 0));
+    VerifyOrQuit(CanAddSafely<uint8_t>(100, 0));
+    VerifyOrQuit(CanAddSafely<uint8_t>(0, 100));
+    VerifyOrQuit(CanAddSafely<uint8_t>(200, 55));
+    VerifyOrQuit(CanAddSafely<uint8_t>(56, 199));
+    VerifyOrQuit(CanAddSafely<uint8_t>(127, 127));
+
+    VerifyOrQuit(!CanAddSafely<uint8_t>(200, 56));
+    VerifyOrQuit(!CanAddSafely<uint8_t>(100, 156));
+    VerifyOrQuit(!CanAddSafely<uint8_t>(1, 255));
+    VerifyOrQuit(!CanAddSafely<uint8_t>(255, 1));
+    VerifyOrQuit(!CanAddSafely<uint8_t>(255, 255));
+    VerifyOrQuit(!CanAddSafely<uint8_t>(128, 128));
+
+    VerifyOrQuit(CanAddSafely<uint16_t>(0, 0));
+    VerifyOrQuit(CanAddSafely<uint16_t>(0xffff, 0));
+    VerifyOrQuit(CanAddSafely<uint16_t>(0, 0xffff));
+    VerifyOrQuit(CanAddSafely<uint16_t>(0xff00, 0xff));
+    VerifyOrQuit(CanAddSafely<uint16_t>(0xfff, 0xf000));
+
+    VerifyOrQuit(!CanAddSafely<uint16_t>(0xffff, 1));
+    VerifyOrQuit(!CanAddSafely<uint16_t>(1, 0xffff));
+    VerifyOrQuit(!CanAddSafely<uint16_t>(65000, 65000));
+    VerifyOrQuit(!CanAddSafely<uint16_t>(32768, 32768));
+
     VerifyOrQuit(IsValueInRange<uint8_t>(5, 5, 10));
     VerifyOrQuit(IsValueInRange<uint8_t>(7, 5, 10));
     VerifyOrQuit(IsValueInRange<uint8_t>(10, 5, 10));
