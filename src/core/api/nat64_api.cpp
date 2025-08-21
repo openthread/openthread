@@ -154,7 +154,8 @@ otError otNat64SynthesizeIp6Address(otInstance *aInstance, const otIp4Address *a
     otError                          err = OT_ERROR_NONE;
     NetworkData::ExternalRouteConfig nat64Prefix;
 
-    VerifyOrExit(AsCoreType(aInstance).Get<NetworkData::Leader>().GetPreferredNat64Prefix(nat64Prefix) == OT_ERROR_NONE,
+    VerifyOrExit(AsCoreType(aInstance).Get<NetworkData::Leader>().FindPreferredNat64Prefix(nat64Prefix) ==
+                     OT_ERROR_NONE,
                  err = OT_ERROR_INVALID_STATE);
     AsCoreType(aIp6Address).SynthesizeFromIp4Address(nat64Prefix.GetPrefix(), AsCoreType(aIp4Address));
 

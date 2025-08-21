@@ -491,7 +491,7 @@ Error Client::AddressResponse::GetAddress(uint16_t aIndex, Ip6::Address &aAddres
         ARecord                          aRecord;
         NetworkData::ExternalRouteConfig nat64Prefix;
 
-        VerifyOrExit(mInstance->Get<NetworkData::Leader>().GetPreferredNat64Prefix(nat64Prefix) == kErrorNone,
+        VerifyOrExit(mInstance->Get<NetworkData::Leader>().FindPreferredNat64Prefix(nat64Prefix) == kErrorNone,
                      error = kErrorInvalidState);
 
         section = (info.mQueryType == kIp4AddressQuery) ? kAnswerSection : kAdditionalDataSection;
@@ -1039,7 +1039,7 @@ Error Client::StartQuery(QueryInfo &aInfo, const char *aLabel, const char *aName
         NetworkData::ExternalRouteConfig nat64Prefix;
 
         VerifyOrExit(aInfo.mConfig.GetNat64Mode() == QueryConfig::kNat64Allow, error = kErrorInvalidArgs);
-        VerifyOrExit(Get<NetworkData::Leader>().GetPreferredNat64Prefix(nat64Prefix) == kErrorNone,
+        VerifyOrExit(Get<NetworkData::Leader>().FindPreferredNat64Prefix(nat64Prefix) == kErrorNone,
                      error = kErrorInvalidState);
     }
 #endif

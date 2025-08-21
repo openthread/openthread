@@ -93,7 +93,7 @@ exit:
     return error;
 }
 
-Error Leader::GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const
+Error Leader::FindPreferredNat64Prefix(ExternalRouteConfig &aConfig) const
 {
     Error               error    = kErrorNotFound;
     Iterator            iterator = kIteratorInit;

@@ -4109,7 +4109,7 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
 
     prefix = GetFavoredPrefix(preference);
 
-    error = Get<NetworkData::Leader>().GetPreferredNat64Prefix(netdataPrefixConfig);
+    error = Get<NetworkData::Leader>().FindPreferredNat64Prefix(netdataPrefixConfig);
 
     // NAT64 prefix is expected to be published from this BR
     // when one of the following is true:
