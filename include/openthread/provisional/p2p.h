@@ -29,25 +29,25 @@
 /**
  * @file
  * @brief
- *  This file defines the OpenThread unstable P2P (peer-to-peer) API.
+ *  This file defines the OpenThread provisional P2P (peer-to-peer) API.
  */
 
-#ifndef OPENTHREAD_UNSTABLE_P2P_H_
-#define OPENTHREAD_UNSTABLE_P2P_H_
+#ifndef OPENTHREAD_PROVISIONAL_P2P_H_
+#define OPENTHREAD_PROVISIONAL_P2P_H_
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/platform/radio.h>
-#include <openthread/unstable/link.h>
+#include <openthread/provisional/link.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 /**
- * @addtogroup unstable-api-p2p
+ * @addtogroup api-p2p
  *
  * @brief
- *   This module includes unstable functions for the Thread P2P link.
+ *   This module includes provisional functions for the Thread P2P link.
  *
  * @note
  *   The functions in this module require `OPENTHREAD_CONFIG_P2P_ENABLE=1`.
@@ -128,4 +128,4 @@ void otP2pSetEventCallback(otInstance *aInstance, otP2pEventCallback aCallback, 
 } // extern "C"
 #endif
 
-#endif // OPENTHREAD_UNSTABLE_P2P_H_
+#endif // OPENTHREAD_PROVISIONAL_P2P_H_

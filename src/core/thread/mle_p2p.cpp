@@ -62,7 +62,7 @@ Mle::P2p::P2p(Instance &aInstance)
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 Error Mle::P2p::WakeupAndLink(const P2pRequest &aP2pRequest, P2pLinkDoneCallback aCallback, void *aContext)
 {
-    Error error;
+    Error error = kErrorNone;
 
     VerifyOrExit(!Get<Radio>().GetPromiscuous(), error = kErrorInvalidState);
     VerifyOrExit(Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
@@ -86,7 +86,7 @@ exit:
 
 void Mle::P2p::HandleP2pLinkRequest(RxInfo &aRxInfo)
 {
-    Error          error;
+    Error          error = kErrorNone;
     LinkAcceptInfo info;
     DeviceMode     mode;
     Peer          *peer;
@@ -167,7 +167,7 @@ exit:
 
 void Mle::P2p::SendP2pLinkRequest(Peer *aPeer)
 {
-    Error        error;
+    Error        error   = kErrorNone;
     TxMessage   *message = nullptr;
     Ip6::Address destination;
 

@@ -29,10 +29,10 @@
 /**
  * @file
  * @brief
- *  This file defines the OpenThread unstable IEEE 802.15.4 Link Layer API.
+ *  This file defines the OpenThread provisional IEEE 802.15.4 Link Layer API.
  */
-#ifndef OPENTHREAD_UNSTABLE_LINK_H_
-#define OPENTHREAD_UNSTABLE_LINK_H_
+#ifndef OPENTHREAD_PROVISIONAL_LINK_H_
+#define OPENTHREAD_PROVISIONAL_LINK_H_
 
 #include <openthread/link.h>
 #include <openthread/platform/radio.h>
@@ -41,10 +41,10 @@
 extern "C" {
 #endif
 /**
- * @addtogroup unstable-api-link
+ * @addtogroup api-link
  *
  * @brief
- *   This module includes unstable functions that control link-layer configuration.
+ *   This module includes provisional functions that control link-layer configuration.
  *
  * @{
  */
@@ -61,7 +61,7 @@ typedef enum otWakeupType
 {
     OT_WAKEUP_TYPE_EXT_ADDRESS      = 0, ///< Wake up the peer by the extended address.
     OT_WAKEUP_TYPE_IDENTIFIER       = 1, ///< Wake up the peer by the wake-up identifier.
-    OT_WAKEUP_TYPE_GROUP_IDENTIFIER = 2, ///< Wake up peers by the group wake-up identifier..
+    OT_WAKEUP_TYPE_GROUP_IDENTIFIER = 2, ///< Wake up peers by the group wake-up identifier.
 } otWakeupType;
 
 /**
@@ -86,4 +86,4 @@ typedef struct otWakeupRequest
 } // extern "C"
 #endif
 
-#endif // OPENTHREAD_UNSTABLE_LINK_H_
+#endif // OPENTHREAD_PROVISIONAL_LINK_H_

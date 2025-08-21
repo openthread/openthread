@@ -4148,7 +4148,7 @@ Error Mle::Wakeup(const Mac::ExtAddress &aWedAddress,
                   WakeupCallback         aCallback,
                   void                  *aCallbackContext)
 {
-    Error              error;
+    Error              error = kErrorNone;
     Mac::WakeupRequest wakeupRequest;
 
     VerifyOrExit((aIntervalUs > 0) && (aDurationMs > 0), error = kErrorInvalidArgs);
