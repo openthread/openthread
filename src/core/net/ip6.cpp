@@ -187,9 +187,8 @@ exit:
 
 Error Ip6::PrepareMulticastToLargerThanRealmLocal(Message &aMessage, const Header &aHeader)
 {
-    Error          error = kErrorNone;
-    Header         tunnelHeader;
-    const Address *source;
+    Error  error = kErrorNone;
+    Header tunnelHeader;
 
 #if OPENTHREAD_FTD
     if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal() &&
@@ -212,13 +211,9 @@ Error Ip6::PrepareMulticastToLargerThanRealmLocal(Message &aMessage, const Heade
     tunnelHeader.InitVersionTrafficClassFlow();
     tunnelHeader.SetHopLimit(kDefaultHopLimit);
     tunnelHeader.SetPayloadLength(aHeader.GetPayloadLength() + sizeof(tunnelHeader));
+    tunnelHeader.SetSource(Get<Mle::Mle>().GetMeshLocalRloc());
     tunnelHeader.GetDestination().SetToRealmLocalAllMplForwarders();
     tunnelHeader.SetNextHeader(kProtoIp6);
-
-    source = SelectSourceAddress(tunnelHeader.GetDestination());
-    VerifyOrExit(source != nullptr, error = kErrorInvalidSourceAddress);
-
-    tunnelHeader.SetSource(*source);
 
     SuccessOrExit(error = AddMplOption(aMessage, tunnelHeader));
     SuccessOrExit(error = aMessage.Prepend(tunnelHeader));
