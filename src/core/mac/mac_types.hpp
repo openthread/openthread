@@ -41,7 +41,7 @@
 
 #include <openthread/link.h>
 #include <openthread/thread.h>
-#include <openthread/unstable/link.h>
+#include <openthread/provisional/link.h>
 
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
@@ -1014,21 +1014,24 @@ public:
     /**
      * Indicates whether wake up the peer by the extended address.
      *
-     * @returns  TRUE if wake up the peer by the extended address, FALSE if not.
+     * @retval TRUE   If the peer is woken up by the extended address.
+     * @retval FALSE  If the peer is not woken up by the extended address.
      */
     bool IsWakeupByExtAddress(void) const;
 
     /**
      * Indicates whether wake up the peer by the wake-up identifier.
      *
-     * @returns  TRUE if wake up the peer by the wake-up identifier, FALSE if not.
+     * @retval TRUE   If the peer is woken up by the wake-up identifier.
+     * @retval FALSE  If the peer is not woken up by the wake-up identifier.
      */
     bool IsWakeupById(void) const;
 
     /**
      * Indicates whether wake up peers by the group wake-up identifier.
      *
-     * @returns  TRUE if wake up peers by the group wake-up identifier, FALSE if not.
+     * @retval TRUE   If the peer is woken up by the group wake-up identifier.
+     * @retval FALSE  If the peer is not woken up by the group wake-up identifier.
      */
     bool IsWakeupByGroupId(void) const;
 };

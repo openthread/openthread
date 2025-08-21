@@ -37,7 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <openthread/thread_ftd.h>
-#include <openthread/unstable/p2p.h>
+#include <openthread/provisional/p2p.h>
 
 #include "coap/coap_message.hpp"
 #include "common/as_core_type.hpp"

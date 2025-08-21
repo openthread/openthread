@@ -111,6 +111,8 @@ source_set("openthread") {
     "platform/toolchain.h",
     "platform/trel.h",
     "platform/udp.h",
+    "provisional/link.h",
+    "provisional/p2p.h",
     "radio_stats.h",
     "random_crypto.h",
     "random_noncrypto.h",
@@ -127,8 +129,6 @@ source_set("openthread") {
     "thread_ftd.h",
     "trel.h",
     "udp.h",
-    "unstable/link.h",
-    "unstable/p2p.h",
     "verhoeff_checksum.h",
   ]
 
