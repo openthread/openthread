@@ -300,7 +300,7 @@ public:
                        uint8_t           &aServiceId) const;
 
     /**
-     * Gets the preferred NAT64 prefix from network data.
+     * Finds the preferred NAT64 prefix from network data.
      *
      * The returned prefix is the highest preference external route entry in Network Data with NAT64 flag set. If there
      * are multiple such entries the first one is returned.
@@ -310,7 +310,7 @@ public:
      * @retval kErrorNone       Found the NAT64 prefix and updated @p aConfig.
      * @retval kErrorNotFound   Could not find any NAT64 entry.
      */
-    Error GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const;
+    Error FindPreferredNat64Prefix(ExternalRouteConfig &aConfig) const;
 
     /**
      * Indicates whether or not the given IPv6 address matches any NAT64 prefixes.
