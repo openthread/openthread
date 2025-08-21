@@ -1357,6 +1357,9 @@ exit:
 }
 #endif
 
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Log methods
+
 // LCOV_EXCL_START
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
@@ -1414,6 +1417,7 @@ const char *MeshForwarder::MessagePriorityToString(const Message &aMessage)
 }
 
 #if OPENTHREAD_CONFIG_LOG_SRC_DST_IP_ADDRESSES
+
 void MeshForwarder::LogIp6SourceDestAddresses(const Ip6::Headers &aHeaders, LogLevel aLogLevel)
 {
     LogIp6AddressAndPort("src", aHeaders.GetSourceAddress(), aHeaders.GetSourcePort(), aLogLevel);
@@ -1438,8 +1442,10 @@ void MeshForwarder::LogIp6AddressAndPort(const char         *aLabel,
 }
 
 #else
+
 void MeshForwarder::LogIp6SourceDestAddresses(const Ip6::Headers &, LogLevel) {}
-#endif
+
+#endif // #if OPENTHREAD_CONFIG_LOG_SRC_DST_IP_ADDRESSES
 
 void MeshForwarder::LogIp6Message(MessageAction       aAction,
                                   const Message      &aMessage,
@@ -1579,6 +1585,18 @@ exit:
     return;
 }
 
+#else // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
+
+void MeshForwarder::LogMessage(MessageAction, const Message &) {}
+
+void MeshForwarder::LogMessage(MessageAction, const Message &, Error) {}
+
+void MeshForwarder::LogMessage(MessageAction, const Message &, Error, const Mac::Address *) {}
+
+#endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+
 void MeshForwarder::LogFrame(const char *aActionText, const Mac::Frame &aFrame, Error aError)
 {
     if (aError != kErrorNone)
@@ -1615,13 +1633,7 @@ MeshForwarder::RxInfo::InfoString MeshForwarder::RxInfo::ToString(void) const
     return string;
 }
 
-#else // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_NOTE)
-
-void MeshForwarder::LogMessage(MessageAction, const Message &) {}
-
-void MeshForwarder::LogMessage(MessageAction, const Message &, Error) {}
-
-void MeshForwarder::LogMessage(MessageAction, const Message &, Error, const Mac::Address *) {}
+#else // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void MeshForwarder::LogFrame(const char *, const Mac::Frame &, Error) {}
 
@@ -1629,7 +1641,7 @@ void MeshForwarder::LogFragmentFrameDrop(Error, const RxInfo &, const Lowpan::Fr
 
 void MeshForwarder::LogLowpanHcFrameDrop(Error, const RxInfo &) {}
 
-#endif // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_NOTE)
+#endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 // LCOV_EXCL_STOP
 
