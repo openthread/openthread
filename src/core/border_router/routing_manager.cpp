@@ -4055,12 +4055,7 @@ void RoutingManager::Nat64PrefixManager::Stop(void)
 {
     LogInfo("Stopping Nat64PrefixManager");
 
-    if (mPublishedPrefix.IsValidNat64())
-    {
-        IgnoreError(Get<NetworkData::Publisher>().UnpublishPrefix(mPublishedPrefix));
-    }
-
-    mPublishedPrefix.Clear();
+    Unpublish();
     mInfraIfPrefix.Clear();
     mTimer.Stop();
 
@@ -4129,17 +4124,13 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
         ((error == kErrorNotFound) || (netdataPrefixConfig.mPreference < preference) ||
          (netdataPrefixConfig.GetPrefix() == mPublishedPrefix) || (netdataPrefixConfig.GetPrefix() == mInfraIfPrefix));
 
-    if (mPublishedPrefix.IsValidNat64() && (!shouldPublish || (prefix != mPublishedPrefix)))
+    if (shouldPublish)
     {
-        IgnoreError(Get<NetworkData::Publisher>().UnpublishPrefix(mPublishedPrefix));
-        mPublishedPrefix.Clear();
+        Publish(prefix, preference);
     }
-
-    if (shouldPublish && ((prefix != mPublishedPrefix) || (preference != mPublishedPreference)))
+    else
     {
-        mPublishedPrefix     = prefix;
-        mPublishedPreference = preference;
-        Publish();
+        Unpublish();
     }
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
@@ -4162,9 +4153,24 @@ exit:
     return;
 }
 
-void RoutingManager::Nat64PrefixManager::Publish(void)
+void RoutingManager::Nat64PrefixManager::Publish(const Ip6::Prefix &aPrefix, RoutePreference aPreference)
 {
+    // Publishes the given prefix and preference in the Network Data
+    // if they differ from the currently published ones. This method
+    // updates `mPublishedPrefix` and `mPublishedPreference` to track
+    // the new values.
+    //
+    // If there is any change, this method ensures that the previous
+    // prefix is unpublished before the new one is published.
+
     NetworkData::ExternalRouteConfig routeConfig;
+
+    VerifyOrExit((aPrefix != mPublishedPrefix) || (aPreference != mPublishedPreference));
+
+    Unpublish();
+
+    mPublishedPrefix     = aPrefix;
+    mPublishedPreference = aPreference;
 
     routeConfig.Clear();
     routeConfig.SetPrefix(mPublishedPrefix);
@@ -4174,6 +4180,23 @@ void RoutingManager::Nat64PrefixManager::Publish(void)
 
     SuccessOrAssert(
         Get<NetworkData::Publisher>().PublishExternalRoute(routeConfig, NetworkData::Publisher::kFromRoutingManager));
+
+exit:
+    return;
+}
+
+void RoutingManager::Nat64PrefixManager::Unpublish(void)
+{
+    // Unpublishes the previously published prefix (if any) and clears
+    // the `mPublishedPrefix`.
+
+    VerifyOrExit(mPublishedPrefix.IsValidNat64());
+
+    IgnoreError(Get<NetworkData::Publisher>().UnpublishPrefix(mPublishedPrefix));
+    mPublishedPrefix.Clear();
+
+exit:
+    return;
 }
 
 void RoutingManager::Nat64PrefixManager::HandleTimer(void)
