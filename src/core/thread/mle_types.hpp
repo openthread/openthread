@@ -40,7 +40,7 @@
 #include <string.h>
 
 #if OPENTHREAD_CONFIG_P2P_ENABLE
-#include <openthread/unstable/p2p.h>
+#include <openthread/provisional/p2p.h>
 #endif
 #include <openthread/thread.h>
 #if OPENTHREAD_FTD
