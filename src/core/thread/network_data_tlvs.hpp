@@ -42,6 +42,7 @@
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
+#include "common/num_utils.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/network_data_types.hpp"
@@ -130,8 +131,8 @@ public:
      */
     void Init(void)
     {
-        mType   = 0;
-        mLength = 0;
+        mTypeAndStableFlag = 0;
+        mLength            = 0;
     }
 
     /**
@@ -139,14 +140,14 @@ public:
      *
      * @returns The Type value.
      */
-    Type GetType(void) const { return static_cast<Type>(mType >> kTypeOffset); }
+    Type GetType(void) const { return static_cast<Type>(ReadBits<uint8_t, kTypeMask>(mTypeAndStableFlag)); }
 
     /**
      * Sets the Type value.
      *
      * @param[in]  aType  The Type value.
      */
-    void SetType(Type aType) { mType = (mType & ~kTypeMask) | ((aType << kTypeOffset) & kTypeMask); }
+    void SetType(Type aType) { WriteBits<uint8_t, kTypeMask>(mTypeAndStableFlag, aType); }
 
     /**
      * Returns the Length value.
@@ -221,7 +222,7 @@ public:
     /**
      * Clears the Stable bit.
      */
-    void ClearStable(void) { mType &= ~kStableMask; }
+    void ClearStable(void) { ClearBit<uint8_t>(mTypeAndStableFlag, kStableFlagOffset); }
 
     /**
      * Indicates whether or not the Stable bit is set.
@@ -229,12 +230,12 @@ public:
      * @retval TRUE   If the Stable bit is set.
      * @retval FALSE  If the Stable bit is not set.
      */
-    bool IsStable(void) const { return (mType & kStableMask); }
+    bool IsStable(void) const { return GetBit<uint8_t>(mTypeAndStableFlag, kStableFlagOffset); }
 
     /**
      * Sets the Stable bit.
      */
-    void SetStable(void) { mType |= kStableMask; }
+    void SetStable(void) { SetBit<uint8_t>(mTypeAndStableFlag, kStableFlagOffset); }
 
     /**
      * Searches in a given sequence of TLVs to find the first TLV with a given type.
@@ -359,13 +360,13 @@ public:
     }
 
 private:
-    static constexpr uint8_t kTypeOffset = 1;
-    static constexpr uint8_t kTypeMask   = 0x7f << kTypeOffset;
-    static constexpr uint8_t kStableMask = 1 << 0;
+    static constexpr uint8_t kStableFlagOffset = 0;
+    static constexpr uint8_t kTypeOffset       = 1;
+    static constexpr uint8_t kTypeMask         = 0x7f << kTypeOffset;
 
     static bool IsTlvValid(const NetworkDataTlv *aTlv);
 
-    uint8_t mType;
+    uint8_t mTypeAndStableFlag;
     uint8_t mLength;
 } OT_TOOL_PACKED_END;
 

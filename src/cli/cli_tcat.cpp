@@ -409,10 +409,7 @@ template <> otError Tcat::Process<Cmd("stop")>(Arg aArgs[])
 
 otError Tcat::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                            \
-    {                                                       \
-        aCommandString, &Tcat::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &Tcat::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {CmdEntry("advid"), CmdEntry("devid"), CmdEntry("start"), CmdEntry("stop")};
 

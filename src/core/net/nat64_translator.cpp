@@ -146,7 +146,7 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
     srcPortOrId = mapping->mTranslatedPortOrId;
 #else
-    srcPortOrId           = ip6Headers.IsIcmp6() ? ip6Headers.GetIcmpHeader().GetId() : ip6Headers.GetSourcePort();
+    srcPortOrId = ip6Headers.IsIcmp6() ? ip6Headers.GetIcmpHeader().GetId() : ip6Headers.GetSourcePort();
 #endif
 
     aMessage.RemoveHeader(sizeof(Ip6::Header));
@@ -252,7 +252,7 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
     dstPortOrId = mapping->mSrcPortOrId;
 #else
-    dstPortOrId           = ip4Headers.IsIcmp4() ? ip4Headers.GetIcmpHeader().GetId() : ip4Headers.GetDestinationPort();
+    dstPortOrId = ip4Headers.IsIcmp4() ? ip4Headers.GetIcmpHeader().GetId() : ip4Headers.GetDestinationPort();
 #endif
 
     aMessage.RemoveHeader(sizeof(Ip4::Header));
@@ -442,7 +442,7 @@ Translator::AddressMapping *Translator::AllocateMapping(const Ip6::Headers &aIp6
     // Allocate a unique source port or ICMP Id
     mapping->mTranslatedPortOrId = AllocateSourcePort(mapping->mSrcPortOrId);
 #else
-    mapping->mSrcPortOrId = 0;
+    mapping->mSrcPortOrId        = 0;
     mapping->mTranslatedPortOrId = 0;
 #endif
     mapping->Touch(TimerMilli::GetNow(), aIp6Headers.GetIpProto());
@@ -458,7 +458,7 @@ Translator::AddressMapping *Translator::FindOrAllocateMapping(const Ip6::Headers
     uint16_t srcPortOrId    = aIp6Headers.IsIcmp6() ? aIp6Headers.GetIcmpHeader().GetId() : aIp6Headers.GetSourcePort();
     AddressMapping *mapping = mActiveAddressMappings.FindMatching(aIp6Headers.GetSourceAddress(), srcPortOrId);
 #else
-    AddressMapping *mapping      = mActiveAddressMappings.FindMatching(aIp6Headers.GetSourceAddress());
+    AddressMapping *mapping = mActiveAddressMappings.FindMatching(aIp6Headers.GetSourceAddress());
 #endif
 
     // Exit if we found a valid mapping.
@@ -478,7 +478,7 @@ Translator::AddressMapping *Translator::FindMapping(const Ip4::Headers &aIp4Head
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
     AddressMapping *mapping = mActiveAddressMappings.FindMatching(aIp4Headers.GetDestinationAddress(), dstPortOrId);
 #else
-    AddressMapping *mapping      = mActiveAddressMappings.FindMatching(aIp4Headers.GetDestinationAddress());
+    AddressMapping *mapping = mActiveAddressMappings.FindMatching(aIp4Headers.GetDestinationAddress());
     OT_UNUSED_VARIABLE(dstPortOrId);
 #endif
 

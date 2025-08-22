@@ -601,7 +601,7 @@ void KeyManager::GetPskc(Pskc &aPskc) const
         aPskc.Clear();
     }
 #else
-    aPskc       = mPskc;
+    aPskc = mPskc;
 #endif
 }
 

@@ -1403,7 +1403,7 @@ private:
         void               Stop(void);
         void               Evaluate(void);
         const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
-        const Ip6::Prefix &GetFavoredDiscoveredPrefix(void) const { return mFavoredDiscoveredPrefix; }
+        const Ip6::Prefix &GetFavoredPrefix(void) const { return mFavoredPrefix; }
         bool               AddressMatchesLocalPrefix(const Ip6::Address &aAddress) const;
         bool               IsInitalEvaluationDone(void) const;
         void               HandleRaPrefixTableChanged(void);
@@ -1435,6 +1435,8 @@ private:
 
         State GetState(void) const { return mState; }
         void  SetState(State aState);
+        void  SetAilPrefix(const Ip6::Prefix &aPrefix);
+        void  SetFavoredPrefix(const Ip6::Prefix &aPrefix);
         bool  IsPublishingOrAdvertising(void) const;
         void  GenerateLocalPrefix(void);
         void  PublishAndAdvertise(void);
@@ -1449,10 +1451,11 @@ private:
 
         using ExpireTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleOnLinkPrefixManagerTimer>;
 
-        Ip6::Prefix                       mLocalPrefix;
         State                             mState;
         TimeMilli                         mExpireTime;
-        Ip6::Prefix                       mFavoredDiscoveredPrefix;
+        Ip6::Prefix                       mLocalPrefix;
+        Ip6::Prefix                       mAilPrefix;
+        Ip6::Prefix                       mFavoredPrefix;
         Array<OldPrefix, kMaxOldPrefixes> mOldLocalPrefixes;
         ExpireTimer                       mTimer;
     };
@@ -1553,12 +1556,12 @@ private:
 
     private:
         void Discover(void);
-        void Publish(void);
+        void Publish(const Ip6::Prefix &aPrefix, RoutePreference aPreference);
+        void Unpublish(void);
 
         using Nat64Timer = TimerMilliIn<RoutingManager, &RoutingManager::HandleNat64PrefixManagerTimer>;
 
-        bool mEnabled;
-
+        bool            mEnabled;
         Ip6::Prefix     mInfraIfPrefix;       // The latest NAT64 prefix discovered on the infrastructure interface.
         Ip6::Prefix     mLocalPrefix;         // The local prefix (from BR ULA prefix).
         Ip6::Prefix     mPublishedPrefix;     // The prefix to publish in Net Data (empty or local or from infra-if).

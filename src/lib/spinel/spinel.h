@@ -470,7 +470,7 @@
 #define SPINEL_FRAME_BUFFER_SIZE (SPINEL_FRAME_MAX_SIZE + SPINEL_ENCRYPTER_EXTRA_DATA_SIZE)
 
 /// Macro for generating bit masks using bit index from the spec
-#define SPINEL_BIT_MASK(bit_index, field_bit_count) ((1 << ((field_bit_count)-1)) >> (bit_index))
+#define SPINEL_BIT_MASK(bit_index, field_bit_count) ((1 << ((field_bit_count) - 1)) >> (bit_index))
 
 #define SPINEL_BITS_PER_BYTE 8 // Number of bits in a byte
 
@@ -5028,7 +5028,7 @@ typedef uint32_t spinel_prop_key_t;
 #define SPINEL_HEADER_FLAG 0x80
 #define SPINEL_HEADER_FLAGS_SHIFT 6
 #define SPINEL_HEADER_FLAGS_MASK (3 << SPINEL_HEADER_FLAGS_SHIFT)
-#define SPINEL_HEADER_GET_FLAG(x) (((x)&SPINEL_HEADER_FLAGS_MASK) >> SPINEL_HEADER_FLAGS_SHIFT)
+#define SPINEL_HEADER_GET_FLAG(x) (((x) & SPINEL_HEADER_FLAGS_MASK) >> SPINEL_HEADER_FLAGS_SHIFT)
 
 #define SPINEL_HEADER_TID_SHIFT 0
 #define SPINEL_HEADER_TID_MASK (15 << SPINEL_HEADER_TID_SHIFT)
@@ -5045,8 +5045,8 @@ typedef uint32_t spinel_prop_key_t;
 
 #define SPINEL_HEADER_INVALID_IID 0xFF
 
-#define SPINEL_HEADER_GET_IID(x) (((x)&SPINEL_HEADER_IID_MASK) >> SPINEL_HEADER_IID_SHIFT)
-#define SPINEL_HEADER_GET_TID(x) (spinel_tid_t)(((x)&SPINEL_HEADER_TID_MASK) >> SPINEL_HEADER_TID_SHIFT)
+#define SPINEL_HEADER_GET_IID(x) (((x) & SPINEL_HEADER_IID_MASK) >> SPINEL_HEADER_IID_SHIFT)
+#define SPINEL_HEADER_GET_TID(x) (spinel_tid_t)(((x) & SPINEL_HEADER_TID_MASK) >> SPINEL_HEADER_TID_SHIFT)
 
 #define SPINEL_GET_NEXT_TID(x) (spinel_tid_t)((x) >= 0xF ? 1 : (x) + 1)
 

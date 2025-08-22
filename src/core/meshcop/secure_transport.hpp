@@ -238,7 +238,7 @@ private:
 #if !OPENTHREAD_CONFIG_TLS_API_ENABLE
     static constexpr uint16_t kApplicationDataMaxLength = 1152;
 #else
-    static constexpr uint16_t         kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH;
+    static constexpr uint16_t kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH;
 #endif
 
     enum State : uint8_t
@@ -775,17 +775,17 @@ private:
 
 #else
 
-    static int       HandleMbedtlsExportKeys(void                *aContext,
-                                             const unsigned char *aMasterSecret,
-                                             const unsigned char *aKeyBlock,
-                                             size_t               aMacLength,
-                                             size_t               aKeyLength,
-                                             size_t               aIvLength);
-    int              HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
-                                             const unsigned char *aKeyBlock,
-                                             size_t               aMacLength,
-                                             size_t               aKeyLength,
-                                             size_t               aIvLength);
+    static int HandleMbedtlsExportKeys(void                *aContext,
+                                       const unsigned char *aMasterSecret,
+                                       const unsigned char *aKeyBlock,
+                                       size_t               aMacLength,
+                                       size_t               aKeyLength,
+                                       size_t               aIvLength);
+    int        HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
+                                       const unsigned char *aKeyBlock,
+                                       size_t               aMacLength,
+                                       size_t               aKeyLength,
+                                       size_t               aIvLength);
 
 #endif // (MBEDTLS_VERSION_NUMBER >= 0x03000000)
 #endif // MBEDTLS_SSL_EXPORT_KEYS

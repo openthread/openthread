@@ -2578,8 +2578,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TEST_ASSERT>(vo
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TEST_WATCHDOG>(void)
 {
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    while (true)
-        ;
+    while (true);
 #endif
 
     OT_UNREACHABLE_CODE(return OT_ERROR_NONE;)

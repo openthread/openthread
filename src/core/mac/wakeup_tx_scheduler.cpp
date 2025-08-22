@@ -110,7 +110,8 @@ Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
     // the "free space" between the "n+1"-th and "n+2"-th wake-up frame.
     rendezvousTimeUs = mIntervalUs;
     rendezvousTimeUs += (mIntervalUs - (kWakeupFrameLength + kParentRequestLength) * kOctetDuration) / 2;
-    frame->GetRendezvousTimeIe()->SetRendezvousTime(rendezvousTimeUs / kUsPerTenSymbols);
+
+    frame->GetRendezvousTimeIe()->SetRendezvousTime(ClampToUint16(rendezvousTimeUs / kUsPerTenSymbols));
 
     connectionIe = frame->GetConnectionIe();
     connectionIe->SetRetryInterval(kConnectionRetryInterval);

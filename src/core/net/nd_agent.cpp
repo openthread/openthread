@@ -53,25 +53,24 @@ void Agent::UpdateService(void)
     Error                           error;
     uint16_t                        rloc16 = Get<Mle::Mle>().GetRloc16();
     NetworkData::Iterator           iterator;
-    NetworkData::OnMeshPrefixConfig config;
+    NetworkData::OnMeshPrefixConfig prefixConfig;
     Lowpan::Context                 lowpanContext;
 
     if (IsAlocInUse())
     {
-        uint8_t contextId = static_cast<uint8_t>(mAloc.GetAddress().GetIid().GetLocator() -
-                                                 Mle::kAloc16NeighborDiscoveryAgentStart + 1);
+        uint8_t contextId = Mle::Aloc16::ToNdAgentContextId(mAloc.GetAddress().GetIid().GetLocator());
         bool    found     = false;
 
         iterator = NetworkData::kIteratorInit;
 
-        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == kErrorNone)
+        while (Get<NetworkData::Leader>().GetNext(iterator, rloc16, prefixConfig) == kErrorNone)
         {
-            if (!config.mNdDns)
+            if (!prefixConfig.mNdDns)
             {
                 continue;
             }
 
-            error = Get<NetworkData::Leader>().GetContext(AsCoreType(&config.mPrefix.mPrefix), lowpanContext);
+            error = Get<NetworkData::Leader>().GetContext(AsCoreType(&prefixConfig.mPrefix.mPrefix), lowpanContext);
 
             if ((error != kErrorNone) || (lowpanContext.mContextId != contextId))
             {
@@ -93,18 +92,18 @@ void Agent::UpdateService(void)
 
     iterator = NetworkData::kIteratorInit;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, rloc16, prefixConfig) == kErrorNone)
     {
-        if (!config.mNdDns)
+        if (!prefixConfig.mNdDns)
         {
             continue;
         }
 
-        error = Get<NetworkData::Leader>().GetContext(AsCoreType(&config.mPrefix.mPrefix), lowpanContext);
+        error = Get<NetworkData::Leader>().GetContext(AsCoreType(&prefixConfig.mPrefix.mPrefix), lowpanContext);
 
         if (error == kErrorNone)
         {
-            uint16_t aloc16 = Mle::kAloc16NeighborDiscoveryAgentStart + lowpanContext.mContextId - 1;
+            uint16_t aloc16 = Mle::Aloc16::FromNdAgentContextId(lowpanContext.mContextId);
 
             mAloc.InitAsThreadOrigin();
             mAloc.GetAddress().SetToAnycastLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aloc16);

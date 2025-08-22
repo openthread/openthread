@@ -1053,6 +1053,38 @@ otError otMdnsGetNextRecordQuerier(otInstance          *aInstance,
                                    otMdnsCacheInfo     *aInfo);
 
 /**
+ * Enables or disables verbose logging for the mDNS module at run-time.
+ *
+ * Requires `OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE`.
+ *
+ * The initial state of verbose logging (enabled or disabled at startup) is determined by the configuration
+ * `OPENTHREAD_CONFIG_MULTICAST_DEFAULT_DNS_VERBOSE_LOGGING_STATE`.
+ *
+ * When enabled, the mDNS module emits verbose logs for every sent or received mDNS message, including the header and
+ * all question and resource records. These logs are generated regardless of the current log level configured on the
+ * device.
+ *
+ * This feature can generate a large volume of logs, so its use is recommended only during development, integration,
+ * or debugging.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aEnable    TRUE to enable verbose logging, FALSE to disable.
+ */
+void otMdnsSetVerboseLoggingEnabled(otInstance *aInstance, bool aEnable);
+
+/**
+ * Indicates whether verbose logging is enabled for the mDNS module.
+ *
+ * Requires `OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE`.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   If verbose logging is enabled.
+ * @retval FALSE  If verbose logging is disabled.
+ */
+bool otMdnsIsVerboseLoggingEnabled(otInstance *aInstance);
+
+/**
  * @}
  */
 

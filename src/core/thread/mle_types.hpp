@@ -50,6 +50,7 @@
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
+#include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/offset_range.hpp"
 #include "common/string.hpp"
@@ -155,19 +156,18 @@ enum Command : uint8_t
     kCommandTimeSync                      = 99, ///< Time Sync command
 };
 
-constexpr uint16_t kAloc16Leader                      = 0xfc00;
-constexpr uint16_t kAloc16DhcpAgentStart              = 0xfc01;
-constexpr uint16_t kAloc16DhcpAgentEnd                = 0xfc0f;
-constexpr uint16_t kAloc16ServiceStart                = 0xfc10;
-constexpr uint16_t kAloc16ServiceEnd                  = 0xfc1f;
-constexpr uint16_t kAloc16ReservedStart               = 0xfc20;
-constexpr uint16_t kAloc16ReservedEnd                 = 0xfc2f;
-constexpr uint16_t kAloc16CommissionerStart           = 0xfc30;
-constexpr uint16_t kAloc16CommissionerEnd             = 0xfc37;
-constexpr uint16_t kAloc16BackboneRouterPrimary       = 0xfc38;
-constexpr uint16_t kAloc16CommissionerMask            = 0x0007;
-constexpr uint16_t kAloc16NeighborDiscoveryAgentStart = 0xfc40;
-constexpr uint16_t kAloc16NeighborDiscoveryAgentEnd   = 0xfc4e;
+/**
+ * Represents the reason to attempt to upgrade to router role (used in `BecomeRouter()`).
+ *
+ * The enumeration values correspond to the status values in `ThreadStatusTlv` in a TMF Address Solicit Request message.
+ */
+enum RouterUpgradeReason : uint8_t
+{
+    kReasonTooFewRouters         = 2, ///< Too few routers.
+    kReasonHaveChildIdRequest    = 3, ///< Have pending Child ID Request.
+    kReasonParentPartitionChange = 4, ///< Parent Partition change.
+    kReasonBorderRouterRequest   = 5, ///< Device is Border Router.
+};
 
 /**
  * Specifies the leader role start mode.
@@ -178,6 +178,174 @@ enum LeaderStartMode : uint8_t
 {
     kStartingAsLeader,              ///< Starting as leader normally.
     kRestoringLeaderRoleAfterReset, ///< Restoring leader role after reset.
+};
+
+/**
+ * Provides ALOC16 helper methods.
+ */
+class Aloc16
+{
+public:
+    /**
+     * Indicates whether or not a given ALOC16 is the leader ALOC16.
+     *
+     * @param[in] aAloc16   The ALOC16 to check.
+     *
+     * @retval TRUE    The @p aAloc16 is the leader ALOC16.
+     * @retval FALSE   The @p aAloc16 is not the leader ALOC16.
+     */
+    static bool IsForLeader(uint16_t aAloc16) { return aAloc16 == kLeader; }
+
+    /**
+     * Returns the leader ALOC16.
+     *
+     * @returns The leader ALOC16.
+     */
+    static uint16_t ForLeader(void) { return kLeader; }
+
+    /**
+     * Indicates whether or not a given ALOC16 is for a DHCP agent.
+     *
+     * @param[in] aAloc16   The ALOC16 to check.
+     *
+     * @retval TRUE    The @p aAloc16 is for a DHCP agent.
+     * @retval FALSE   The @p aAloc16 is not for a DHCP agent.
+     */
+    static bool IsForDhcp6Agent(uint16_t aAloc16) { return IsValueInRange(aAloc16, kDhcpAgentStart, kDhcpAgentEnd); }
+
+    /**
+     * Determines the Context ID associated with a DHCP agent ALOC16
+     *
+     * @param[in]  aAloc16  The DHCP agent ALOC16.
+     *
+     * @returns The Context ID corresponding to @p aAloc16.
+     */
+    static uint8_t ToDhcpAgentContextId(uint16_t aAloc16)
+    {
+        return static_cast<uint8_t>(aAloc16 - kDhcpAgentStart + 1);
+    }
+
+    /**
+     * Determines the DHCP agent ALOC16 for a given Context ID.
+     *
+     * @param[in]  aContextId  The Context ID.
+     *
+     * @returns The DHCP agent ALOC16 corresponding @p aContextId.
+     */
+    static uint16_t FromDhcpAgentContextId(uint8_t aContextId) { return (kDhcpAgentStart + aContextId - 1); }
+
+    /**
+     * Indicates whether or not a given ALOC16 is for a Network Data service.
+     *
+     * @param[in] aAloc16   The ALOC16 to check.
+     *
+     * @retval TRUE    The @p aAloc16 is for a Network Data service.
+     * @retval FALSE   The @p aAloc16 is not for a Network Data service.
+     */
+    static bool IsForService(uint16_t aAloc16) { return IsValueInRange(aAloc16, kServiceStart, kServiceEnd); }
+
+    /**
+     * Determines the Service ID associated with a Service ALOC16.
+     *
+     * @param[in]  aAloc16  The Service ALOC16.
+     *
+     * @returns The Service ID corresponding to @p aAloc16.
+     */
+    static uint8_t ToServiceId(uint16_t aAloc16) { return static_cast<uint8_t>(aAloc16 - kServiceStart); }
+
+    /**
+     * Determines the Service ALOC16 for a given Service ID.
+     *
+     * @param[in]  aServiceId  The Service ID.
+     *
+     * @returns The Service ALOC16 corresponding @p aServiceId.
+     */
+    static uint16_t FromServiceId(uint8_t aServiceId) { return static_cast<uint16_t>(kServiceStart + aServiceId); }
+
+    /**
+     * Indicates whether or not a given ALOC16 is for a Commissioner.
+     *
+     * @param[in] aAloc16   The ALOC16 to check.
+     *
+     * @retval TRUE    The @p aAloc16 is for a Commissioner.
+     * @retval FALSE   The @p aAloc16 is not for a Commissioner.
+     */
+    static bool IsForCommissioner(uint16_t aAloc16)
+    {
+        return IsValueInRange(aAloc16, kCommissionerStart, kCommissionerEnd);
+    }
+
+    /**
+     * Determines the Commissioner ALOC16 corresponding to a given Commissioner Session ID.
+     *
+     * @param[in]  aSessionId   The Commissioner Session ID.
+     *
+     * @returns The Commissioner ALOC16 corresponding to @p aSessionId.
+     */
+    static uint16_t FromCommissionerSessionId(uint16_t aSessionId)
+    {
+        return static_cast<uint16_t>((aSessionId & kCommissionerMask) + kCommissionerStart);
+    }
+
+    /**
+     * Indicates whether or not a given ALOC16 is for the primary backbone router.
+     *
+     * @param[in] aAloc16   The ALOC16 to check.
+     *
+     * @retval TRUE    The @p aAloc16 is for the primary backbone router.
+     * @retval FALSE   The @p aAloc16 is not for the primary backbone router.
+     */
+    static bool IsForPrimaryBackboneRouter(uint16_t aAloc16) { return aAloc16 == kPrimaryBackboneRouter; }
+
+    /**
+     * Returns the primary backbone router ALOC16.
+     *
+     * @returns The primary backbone router ALOC16.
+     */
+    static uint16_t ForPrimaryBackboneRouter(void) { return kPrimaryBackboneRouter; }
+
+    /**
+     * Indicates whether or not a given ALOC16 is for a Neighbor Discovery agent.
+     *
+     * @param[in] aAloc16   The ALOC16 to check.
+     *
+     * @retval TRUE    The @p aAloc16 is for a Neighbor Discovery agent.
+     * @retval FALSE   The @p aAloc16 is not for a Neighbor Discovery agent.
+     */
+    static bool IsForNdAgent(uint16_t aAloc16) { return IsValueInRange(aAloc16, kNdAgentStart, kNdAgentEnd); }
+
+    /**
+     * Determines the Context ID associated with a Neighbor Discovery agent ALOC16
+     *
+     * @param[in]  aAloc16  The Neighbor Discovery agent ALOC16.
+     *
+     * @returns The Context ID corresponding to @p aAloc16.
+     */
+    static uint8_t ToNdAgentContextId(uint16_t aAloc16) { return static_cast<uint8_t>(aAloc16 - kNdAgentStart + 1); }
+
+    /**
+     * Determines the Neighbor Discovery agent ALOC16 for a given Context ID.
+     *
+     * @param[in]  aContextId  The Context ID.
+     *
+     * @returns The Neighbor Discovery agent ALOC16 corresponding @p aContextId.
+     */
+    static uint16_t FromNdAgentContextId(uint8_t aContextId) { return kNdAgentStart + aContextId - 1; }
+
+private:
+    // The range [0xfc20, 0xfc2f] is reserved for future use.
+    static constexpr uint16_t kLeader                = 0xfc00;
+    static constexpr uint16_t kDhcpAgentStart        = 0xfc01;
+    static constexpr uint16_t kDhcpAgentEnd          = 0xfc0f;
+    static constexpr uint16_t kServiceStart          = 0xfc10;
+    static constexpr uint16_t kServiceEnd            = 0xfc1f;
+    static constexpr uint16_t kCommissionerStart     = 0xfc30;
+    static constexpr uint16_t kCommissionerEnd       = 0xfc37;
+    static constexpr uint16_t kPrimaryBackboneRouter = 0xfc38;
+    static constexpr uint16_t kNdAgentStart          = 0xfc40;
+    static constexpr uint16_t kNdAgentEnd            = 0xfc4e;
+
+    static constexpr uint16_t kCommissionerMask = 0x0007;
 };
 
 /**
@@ -478,7 +646,7 @@ public:
 private:
     static uint8_t MaskFor(uint8_t aRouterId) { return (0x80 >> (aRouterId % 8)); }
 
-    uint8_t mRouterIdSet[BytesForBitSize(Mle::kMaxRouterId + 1)];
+    uint8_t mRouterIdSet[BytesForBitSize(kMaxRouterId + 1)];
 } OT_TOOL_PACKED_END;
 
 class TxChallenge;
@@ -619,39 +787,6 @@ inline bool IsRouterIdValid(uint8_t aRouterId) { return aRouterId <= kMaxRouterI
 inline bool RouterIdMatch(uint16_t aRloc16A, uint16_t aRloc16B)
 {
     return RouterIdFromRloc16(aRloc16A) == RouterIdFromRloc16(aRloc16B);
-}
-
-/**
- * Returns the Service ID corresponding to a Service ALOC16.
- *
- * @param[in]  aAloc16  The Service ALOC16 value.
- *
- * @returns The Service ID corresponding to given ALOC16.
- */
-inline uint8_t ServiceIdFromAloc(uint16_t aAloc16) { return static_cast<uint8_t>(aAloc16 - kAloc16ServiceStart); }
-
-/**
- * Returns the Service ALOC16 corresponding to a Service ID.
- *
- * @param[in]  aServiceId  The Service ID value.
- *
- * @returns The Service ALOC16 corresponding to given ID.
- */
-inline uint16_t ServiceAlocFromId(uint8_t aServiceId)
-{
-    return static_cast<uint16_t>(aServiceId + kAloc16ServiceStart);
-}
-
-/**
- * Returns the Commissioner Aloc corresponding to a Commissioner Session ID.
- *
- * @param[in]  aSessionId   The Commissioner Session ID value.
- *
- * @returns The Commissioner ALOC16 corresponding to given ID.
- */
-inline uint16_t CommissionerAloc16FromId(uint16_t aSessionId)
-{
-    return static_cast<uint16_t>((aSessionId & kAloc16CommissionerMask) + kAloc16CommissionerStart);
 }
 
 /**

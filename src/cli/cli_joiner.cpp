@@ -216,10 +216,7 @@ template <> otError Joiner::Process<Cmd("state")>(Arg aArgs[])
 
 otError Joiner::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                              \
-    {                                                         \
-        aCommandString, &Joiner::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &Joiner::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
         CmdEntry("discerner"), CmdEntry("id"), CmdEntry("start"), CmdEntry("state"), CmdEntry("stop"),

@@ -77,7 +77,7 @@ Error Leader::GetServiceId(uint32_t           aEnterpriseNumber,
     ServiceConfig serviceConfig;
     ServiceData   serviceData;
 
-    while (GetNextService(iterator, serviceConfig) == kErrorNone)
+    while (GetNext(iterator, serviceConfig) == kErrorNone)
     {
         serviceConfig.GetServiceData(serviceData);
 
@@ -93,23 +93,23 @@ exit:
     return error;
 }
 
-Error Leader::GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const
+Error Leader::FindPreferredNat64Prefix(ExternalRouteConfig &aConfig) const
 {
     Error               error    = kErrorNotFound;
     Iterator            iterator = kIteratorInit;
-    ExternalRouteConfig config;
+    ExternalRouteConfig routeConfig;
 
-    while (GetNextExternalRoute(iterator, config) == kErrorNone)
+    while (GetNext(iterator, routeConfig) == kErrorNone)
     {
-        if (!config.mNat64 || !config.GetPrefix().IsValidNat64())
+        if (!routeConfig.mNat64 || !routeConfig.GetPrefix().IsValidNat64())
         {
             continue;
         }
 
-        if ((error == kErrorNotFound) || (config.mPreference > aConfig.mPreference) ||
-            (config.mPreference == aConfig.mPreference && config.GetPrefix() < aConfig.GetPrefix()))
+        if ((error == kErrorNotFound) || (routeConfig.mPreference > aConfig.mPreference) ||
+            (routeConfig.mPreference == aConfig.mPreference && routeConfig.GetPrefix() < aConfig.GetPrefix()))
         {
-            aConfig = config;
+            aConfig = routeConfig;
             error   = kErrorNone;
         }
     }
@@ -121,11 +121,12 @@ bool Leader::IsNat64(const Ip6::Address &aAddress) const
 {
     bool                isNat64  = false;
     Iterator            iterator = kIteratorInit;
-    ExternalRouteConfig config;
+    ExternalRouteConfig routeConfig;
 
-    while (GetNextExternalRoute(iterator, config) == kErrorNone)
+    while (GetNext(iterator, routeConfig) == kErrorNone)
     {
-        if (config.mNat64 && config.GetPrefix().IsValidNat64() && aAddress.MatchesPrefix(config.GetPrefix()))
+        if (routeConfig.mNat64 && routeConfig.GetPrefix().IsValidNat64() &&
+            aAddress.MatchesPrefix(routeConfig.GetPrefix()))
         {
             isNat64 = true;
             break;

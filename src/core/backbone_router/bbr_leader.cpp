@@ -226,13 +226,13 @@ void Leader::UpdateBackboneRouterPrimary(void)
 void Leader::UpdateDomainPrefixConfig(void)
 {
     NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
-    NetworkData::OnMeshPrefixConfig config;
+    NetworkData::OnMeshPrefixConfig prefixConfig;
     DomainPrefixEvent               event;
     bool                            found = false;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, prefixConfig) == kErrorNone)
     {
-        if (config.mDp)
+        if (prefixConfig.mDp)
         {
             found = true;
             break;
@@ -247,14 +247,14 @@ void Leader::UpdateDomainPrefixConfig(void)
         mDomainPrefix.Clear();
         event = kDomainPrefixRemoved;
     }
-    else if (config.GetPrefix() == mDomainPrefix)
+    else if (prefixConfig.GetPrefix() == mDomainPrefix)
     {
         event = kDomainPrefixUnchanged;
     }
     else
     {
         event         = HasDomainPrefix() ? kDomainPrefixRefreshed : kDomainPrefixAdded;
-        mDomainPrefix = config.GetPrefix();
+        mDomainPrefix = prefixConfig.GetPrefix();
     }
 
     LogInfo("%s domain Prefix: %s", DomainPrefixEventToString(event), mDomainPrefix.ToString().AsCString());

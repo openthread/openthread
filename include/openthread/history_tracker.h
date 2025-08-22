@@ -290,6 +290,31 @@ typedef enum
 } otHistoryTrackerBorderAgentEpskcEvent;
 
 /**
+ * Represents a favored OMR prefix tracked by a device acting as a Border Router (BR).
+ *
+ * The `mIsLocal` field indicates whether the favored OMR prefix is the same as the local one maintained by this BR.
+ * The local OMR prefix can be either based on (random) ULA or a prefix delegated via DHCPv6-PD.
+ */
+typedef struct otHistoryTrackerFavoredOmrPrefix
+{
+    otIp6Prefix mOmrPrefix;      ///< The OMR prefix.
+    signed int  mPreference : 2; ///< The 2-bit signed preference (`OT_ROUTE_PREFERENCE_*` values).
+    bool        mIsLocal : 1;    ///< `true` if the prefix is the local OMR prefix; `false` otherwise.
+} otHistoryTrackerFavoredOmrPrefix;
+
+/**
+ * Represents a favored on-link prefix on AIL tracked by a device acting as a Border Router (BR).
+ *
+ * The `mIsLocal` field indicates whether the favored on-link prefix is the same as the local one maintained by this
+ * BR.
+ */
+typedef struct otHistoryTrackerFavoredOnLinkPrefix
+{
+    otIp6Prefix mOnLinkPrefix; ///< The on-link prefix.
+    bool        mIsLocal : 1;  ///< `true` if the prefix is the local on-link prefix; `false` otherwise.
+} otHistoryTrackerFavoredOnLinkPrefix;
+
+/**
  * Initializes an `otHistoryTrackerIterator`.
  *
  * An iterator MUST be initialized before it is used.
@@ -480,6 +505,44 @@ const otHistoryTrackerDnsSrpAddrInfo *otHistoryTrackerIterateDnsSrpAddrHistory(o
  * @returns The `otHistoryTrackerBorderAgentEpskcEvent` entry or `NULL` if no more entries in the list.
  */
 const otHistoryTrackerBorderAgentEpskcEvent *otHistoryTrackerIterateBorderAgentEpskcEventHistory(
+    otInstance               *aInstance,
+    otHistoryTrackerIterator *aIterator,
+    uint32_t                 *aEntryAge);
+
+/**
+ * Iterates over the entries in the favored OMR prefix history list.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` (device acting as Border Router).
+ *
+ * @param[in]     aInstance  A pointer to the OpenThread instance.
+ * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
+ * @param[out]    aEntryAge  A pointer to a variable to output the entry's age. MUST NOT be NULL.
+ *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+ *                           @p aIterator initialization time. It is set to `OT_HISTORY_TRACKER_MAX_AGE` for entries
+ *                           older than max age.
+ *
+ * @returns The `otHistoryTrackerFavoredOmrPrefix` entry or `NULL` if no more entries in the list.
+ */
+const otHistoryTrackerFavoredOmrPrefix *otHistoryTrackerIterateFavoredOmrPrefixHistory(
+    otInstance               *aInstance,
+    otHistoryTrackerIterator *aIterator,
+    uint32_t                 *aEntryAge);
+
+/**
+ * Iterates over the entries in the favored on-link prefix history list.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` (device acting as Border Router).
+ *
+ * @param[in]     aInstance  A pointer to the OpenThread instance.
+ * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
+ * @param[out]    aEntryAge  A pointer to a variable to output the entry's age. MUST NOT be NULL.
+ *                           Age is provided as the duration (in milliseconds) from when the entry was recorded to
+ *                           @p aIterator initialization time. It is set to `OT_HISTORY_TRACKER_MAX_AGE` for entries
+ *                           older than the max age.
+ *
+ * @returns The `otHistoryTrackerFavoredOnLinkPrefix` entry or `NULL` if no more entries in the list.
+ */
+const otHistoryTrackerFavoredOnLinkPrefix *otHistoryTrackerIterateFavoredOnLinkPrefixHistory(
     otInstance               *aInstance,
     otHistoryTrackerIterator *aIterator,
     uint32_t                 *aEntryAge);

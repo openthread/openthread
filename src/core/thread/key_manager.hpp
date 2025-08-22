@@ -629,7 +629,7 @@ private:
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     PskcRef mPskcRef;
 #else
-    Pskc       mPskc;
+    Pskc mPskc;
 #endif
 
     KekKeyMaterial mKek;

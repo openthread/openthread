@@ -119,7 +119,7 @@ private:
     Mac::ExtAddress mWedAddress;
     TimeMicro       mTxTimeUs;             // Point in time when the next TX occurs.
     TimeMicro       mTxEndTimeUs;          // Point in time when the wake-up sequence is over.
-    uint16_t        mTxRequestAheadTimeUs; // How much ahead the TX MAC operation needs to be requested.
+    uint32_t        mTxRequestAheadTimeUs; // How much ahead the TX MAC operation needs to be requested.
     uint16_t        mIntervalUs;           // Interval between consecutive wake-up frames.
     WakeupTimer     mTimer;
     bool            mIsRunning;

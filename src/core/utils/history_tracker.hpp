@@ -41,6 +41,7 @@
 #include <openthread/history_tracker.h>
 #include <openthread/platform/radio.h>
 
+#include "border_router/routing_manager.hpp"
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
@@ -109,6 +110,10 @@ typedef otHistoryTrackerDnsSrpAddrInfo       DnsSrpAddrInfo;       ///< Network 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 typedef otHistoryTrackerBorderAgentEpskcEvent EpskcEvent; ///< Border Agent ePSKc Event.
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+typedef otHistoryTrackerFavoredOmrPrefix    FavoredOmrPrefix;    ///< Favored OMR Prefix
+typedef otHistoryTrackerFavoredOnLinkPrefix FavoredOnLinkPrefix; ///< Favored On-link Prefix
+#endif
 
 /**
  * This constant specifies the maximum age of entries which is 49 days (value in msec).
@@ -145,6 +150,9 @@ class Local : public InstanceLocator, private NonCopyable
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     friend class ot::MeshCoP::BorderAgent;
     friend class ot::MeshCoP::BorderAgent::EphemeralKeyManager;
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    friend class ot::BorderRouter::RoutingManager;
 #endif
 
 public:
@@ -267,6 +275,18 @@ public:
     }
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    const FavoredOmrPrefix *IterateFavoredOmrPrefixHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mFavoredOmrPrefixHistory.Iterate(aIterator, aEntryAge);
+    }
+
+    const FavoredOnLinkPrefix *IterateFavoredOnLinkPrefixHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mFavoredOnLinkPrefixHistory.Iterate(aIterator, aEntryAge);
+    }
+#endif
+
     /**
      * Converts a given entry age to a human-readable string.
      *
@@ -300,6 +320,8 @@ private:
     static constexpr uint16_t kExternalRouteListSize = OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE;
     static constexpr uint16_t kDnsSrpAddrListSize    = OPENTHREAD_CONFIG_HISTORY_TRACKER_DNSSRP_ADDR_LIST_SIZE;
     static constexpr uint16_t kEpskcEventListSize    = OPENTHREAD_CONFIG_HISTORY_TRACKER_EPSKC_EVENT_SIZE;
+    static constexpr uint16_t kOmrPrefixListSize     = OPENTHREAD_CONFIG_HISTORY_TRACKER_OMR_PREFIX_LIST_SIZE;
+    static constexpr uint16_t kOnLinkPrefixListSize  = OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_LINK_PREFIX_LIST_SIZE;
 
     typedef otHistoryTrackerAddressEvent AddressEvent;
 
@@ -477,6 +499,12 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     void RecordEpskcEvent(EpskcEvent aEvent);
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    void RecordFavoredOmrPrefix(const Ip6::Prefix                            &aPrefix,
+                                BorderRouter::RoutingManager::RoutePreference aPreference,
+                                bool                                          aIsLocal);
+    void RecordFavoredOnLinkPrefix(const Ip6::Prefix &aPrefix, bool aIsLocal);
+#endif
 
     using TrackerTimer = TimerMilliIn<Local, &Local::HandleTimer>;
 
@@ -492,6 +520,10 @@ private:
     EntryList<DnsSrpAddrInfo, kDnsSrpAddrListSize>          mDnsSrpAddrHistory;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     EntryList<EpskcEvent, kEpskcEventListSize> mEpskcEventHistory;
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    EntryList<FavoredOmrPrefix, kOmrPrefixListSize>       mFavoredOmrPrefixHistory;
+    EntryList<FavoredOnLinkPrefix, kOnLinkPrefixListSize> mFavoredOnLinkPrefixHistory;
 #endif
 
     TrackerTimer mTimer;

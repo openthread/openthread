@@ -73,6 +73,7 @@ Done
 - [log](#log-filename-filename)
 - [mac](#mac-altshortaddr)
 - [macfilter](#macfilter)
+- [mdns](README_MDNS.md)
 - [meshdiag](#meshdiag-topology-ip6-addrs-children)
 - [mliid](#mliid-iid)
 - [mlr](#mlr-reg-ipaddr--timeout)

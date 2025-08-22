@@ -83,25 +83,27 @@ void Mpl::InitOption(MplOption &aOption, const Address &aAddress)
     aOption.SetSequence(mSequence++);
 }
 
-Error Mpl::ProcessOption(Message &aMessage, const OffsetRange &aOffsetRange, const Address &aAddress, bool &aReceive)
+Error Mpl::ReadAndValidateOption(Message           &aMessage,
+                                 const OffsetRange &aOffsetRange,
+                                 const Address     &aAddress,
+                                 MplOption         &aOption)
 {
-    Error     error;
-    MplOption option;
+    Error error;
 
     // Read the min size bytes first, then check the expected
     // `SeedIdLength` and read the full `MplOption` if needed.
-    SuccessOrExit(error = aMessage.Read(aOffsetRange, &option, MplOption::kMinSize));
+    SuccessOrExit(error = aMessage.Read(aOffsetRange, &aOption, MplOption::kMinSize));
 
-    switch (option.GetSeedIdLength())
+    switch (aOption.GetSeedIdLength())
     {
     case MplOption::kSeedIdLength0:
         // Retrieve Seed ID from the IPv6 Source Address RLOC.
-        VerifyOrExit(aAddress.GetIid().IsLocator(), error = kErrorDrop);
-        option.SetSeedId(aAddress.GetIid().GetLocator());
+        VerifyOrExit(aAddress.GetIid().IsLocator(), error = kErrorParse);
+        aOption.SetSeedId(aAddress.GetIid().GetLocator());
         break;
 
     case MplOption::kSeedIdLength2:
-        SuccessOrExit(error = aMessage.Read(aOffsetRange, option));
+        SuccessOrExit(error = aMessage.Read(aOffsetRange, aOption));
         break;
 
     case MplOption::kSeedIdLength8:
@@ -109,13 +111,21 @@ Error Mpl::ProcessOption(Message &aMessage, const OffsetRange &aOffsetRange, con
         ExitNow(error = kErrorParse);
     }
 
+exit:
+    return error;
+}
+
+Error Mpl::ProcessOption(Message &aMessage, const MplOption &aOption, bool &aReceive)
+{
+    Error error;
+
     // Check if the MPL Data Message is new.
-    error = UpdateSeedSet(option.GetSeedId(), option.GetSequence());
+    error = UpdateSeedSet(aOption.GetSeedId(), aOption.GetSequence());
 
     if (error == kErrorNone)
     {
 #if OPENTHREAD_FTD
-        AddBufferedMessage(aMessage, option.GetSeedId(), option.GetSequence());
+        AddBufferedMessage(aMessage, aOption.GetSeedId(), aOption.GetSequence());
 #endif
     }
     else if (!aMessage.IsOriginThreadNetif())
@@ -123,10 +133,9 @@ Error Mpl::ProcessOption(Message &aMessage, const OffsetRange &aOffsetRange, con
         aReceive = false;
         // In case MPL Data Message is generated locally, ignore potential error of the MPL Seed Set
         // to allow subsequent retransmissions with the same sequence number.
-        ExitNow(error = kErrorNone);
+        error = kErrorNone;
     }
 
-exit:
     return error;
 }
 
