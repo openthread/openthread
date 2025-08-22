@@ -216,11 +216,26 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader)
 
     if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal())
     {
-        error = PrepareMulticastToLargerThanRealmLocal(aMessage, aHeader);
-        ExitNow();
-    }
+#if OPENTHREAD_FTD
+        if (Get<ChildTable>().HasSleepyChildWithAddress(aHeader.GetDestination()))
+        {
+            Message *messageCopy = aMessage.Clone<kSameReservedHeader>();
 
-    VerifyOrExit(aHeader.GetDestination().IsRealmLocalMulticast());
+            if (messageCopy != nullptr)
+            {
+                EnqueueDatagram(*messageCopy);
+            }
+            else
+            {
+                LogWarn("Failed to clone mcast message for indirect tx to sleepy children");
+            }
+        }
+#endif
+    }
+    else
+    {
+        VerifyOrExit(aHeader.GetDestination().IsRealmLocalMulticast());
+    }
 
     aMessage.RemoveHeader(sizeof(aHeader));
 
@@ -430,7 +445,8 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
 
     header.SetDestination(aMessageInfo.GetPeerAddr());
 
-    if (aMessageInfo.GetPeerAddr().IsRealmLocalMulticast())
+    if (aMessageInfo.GetPeerAddr().IsRealmLocalMulticast() ||
+        aMessageInfo.GetPeerAddr().IsMulticastLargerThanRealmLocal())
     {
         SuccessOrExit(error = AddMplOption(aMessage, header));
     }
@@ -438,11 +454,6 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
     SuccessOrExit(error = aMessage.Prepend(header));
 
     Checksum::UpdateMessageChecksum(aMessage, header.GetSource(), header.GetDestination(), aIpProto);
-
-    if (aMessageInfo.GetPeerAddr().IsMulticastLargerThanRealmLocal())
-    {
-        SuccessOrExit(error = PrepareMulticastToLargerThanRealmLocal(aMessage, header));
-    }
 
     aMessage.SetMulticastLoop(aMessageInfo.GetMulticastLoop());
 
@@ -1144,36 +1155,14 @@ void Ip6::DetermineAction(const Message &aMessage,
     {
         // Destination is multicast
 
-        if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal())
-        {
-            // Multicast messages with scope larger than realm-local
-            // use IP-in-IP encapsulation destined to the "All MPL
-            // Forwarders" multicast address. Both the encapsulated
-            // (outer) and embedded (inner) messages are processed.
-            //
-            // For the inner message, we set `aForwardThread` if the
-            // device has a sleepy child that is subscribed to the
-            // destination address. `MeshForwarder::SendMessage()` on
-            // an FTD will then check for this and schedules the
-            // indirect tx to such children. This is skipped on an MTD
-            // (`aForwardThread` remains `false`) since an MTD cannot
-            // have children.
+        // Forward multicast message to thread unless we received it
+        // on Thread netif.
 
-#if OPENTHREAD_FTD
-            aForwardThread = Get<ChildTable>().HasSleepyChildWithAddress(aHeader.GetDestination());
-#endif
-        }
-        else
-        {
-            // For all other multicast messages, we forward to the
-            // Thread network unless the message was received on the
-            // Thread netif.
+        aForwardThread = !aMessage.IsOriginThreadNetif();
 
-            aForwardThread = !aMessage.IsOriginThreadNetif();
-        }
-
-        // Always forward multicast packets to host network stack
-        aForwardHost = true;
+        // Forward multicast packets to host network stack if received
+        // on Thread netif.
+        aForwardHost = aMessage.IsOriginThreadNetif();
 
         // Determine `aReceive` for a multicast message destined for
         // an address to which this device is subscribed.
