@@ -2663,37 +2663,17 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
     LeaderData leaderData;
     Mac::ExtAddress macAddr;
 
-    if (!IsAttached())
-    {
-        if (mPrevRoleRestorer.IsRestoringChildRole())
-        {
-            macAddr.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
-
-            // only worry about this if we are waiting to be restored after a reset
-            // check that the router ID matches, and that the rloc is not that of a child (REED advertising it exists)
-            if ((RouterIdFromRloc16(GetRloc16()) == RouterIdFromRloc16(sourceAddress)) && IsRouterRloc16(sourceAddress))
-            {
-                // Heard from a device with the RLOC of our previous parent, stop restoring either way
-                mPrevRoleRestorer.Stop();
-
-                if (macAddr != mParent.GetExtAddress())
-                {
-                    // the node with the same routerId has a different mac address. skip reset logic
-                    BecomeDetached();
-                    ExitNow();
-                }
-
-                // we found our previous parent, send a child update request
-                SendChildUpdateRequestToParent();
-            }
-        }
-
-        ExitNow();
-    }
-
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
     Log(kMessageReceive, kTypeAdvertisement, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
+
+    macAddr.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
+
+    if (!IsAttached())
+    {
+        HandleReattachingDevice(macAddr, sourceAddress);
+        ExitNow();
+    }
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
 
@@ -2936,6 +2916,32 @@ exit:
     }
 
     return error;
+}
+
+void Mle::HandleReattachingDevice(Mac::ExtAddress &aMacAddr, uint16_t aSourceAddress)
+{
+    if (mPrevRoleRestorer.IsRestoringChildRole())
+    {
+        // Only worry about this if we are waiting to be restored after a reset.
+        // Check that the router ID matches, and that the rloc is not that of a child.
+        if ((RouterIdFromRloc16(GetRloc16()) == RouterIdFromRloc16(aSourceAddress)) && IsRouterRloc16(aSourceAddress))
+        {
+            if (aMacAddr != mParent.GetExtAddress())
+            {
+                // The node with the same routerId has a different mac address, abort role restoration.
+                mPrevRoleRestorer.Stop();
+                BecomeDetached();
+                ExitNow();
+            }
+
+            // We found our previous parent, send a child update request
+            LogDebg("Attempt to restore child role with previous parent");
+            SendChildUpdateRequestToParent(kToRestoreChildRole);
+        }
+    }
+
+exit:
+    return;
 }
 
 bool Mle::IsBetterParent(uint16_t                aRloc16,
@@ -3324,30 +3330,12 @@ void Mle::HandleChildUpdateRequestOnUnattached(RxInfo &aRxInfo)
     Mac::ExtAddress macAddr;
 
     SuccessOrExit(Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
+
+    Log(kMessageReceive, kTypeChildUpdateRequestWhileUnattached, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
+
     macAddr.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
 
-    // Wait for an advertisement from our next hop to the leader from before we were reset
-    if (mPrevRoleRestorer.IsRestoringChildRole())
-    {
-        // only worry about this if we are waiting to be restored after a reset
-        // check that the router ID matches, and that the rloc is not that of a child (REED advertising it exists)
-        if ((RouterIdFromRloc16(GetRloc16()) == RouterIdFromRloc16(sourceAddress)) && IsRouterRloc16(sourceAddress))
-        {
-            // Heard from a device with the RLOC of our previous parent, stop restoring either way
-            mPrevRoleRestorer.Stop();
-
-            if (macAddr != mParent.GetExtAddress())
-            {
-                // the node with the same routerId has a different mac address. skip reset logic
-                BecomeDetached();
-                ExitNow();
-            }
-
-            // send a child update request to our parent
-            SendChildUpdateRequestToParent();
-            ExitNow();
-        }
-    }
+    HandleReattachingDevice(macAddr, sourceAddress);
 
 exit:
     return;
@@ -4050,6 +4038,7 @@ const char *Mle::MessageTypeToString(MessageType aType)
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         "Time Sync", // (31) kTypeTimeSync
 #endif
+        "Child Update Request While Unattached", // (32) kTypeChildUpdateRequestWhileUnattached
     };
 
     struct EnumCheck
@@ -4093,6 +4082,7 @@ const char *Mle::MessageTypeToString(MessageType aType)
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         ValidateNextEnum(kTypeTimeSync);
 #endif
+        ValidateNextEnum(kTypeChildUpdateRequestWhileUnattached);
     };
 
     return kMessageTypeStrings[aType];

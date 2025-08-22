@@ -1423,6 +1423,7 @@ private:
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         kTypeTimeSync,
 #endif
+        kTypeChildUpdateRequestWhileUnattached,
     };
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
@@ -2062,6 +2063,7 @@ private:
     void       HandleDataResponse(RxInfo &aRxInfo);
     void       HandleParentResponse(RxInfo &aRxInfo);
     Error      HandleLeaderData(RxInfo &aRxInfo);
+    void       HandleReattachingDevice(Mac::ExtAddress &aMacAddr, uint16_t aSourceAddress);
     bool       HasUnregisteredAddress(void);
     uint32_t   GetAttachStartDelay(void) const;
     void       SendParentRequest(ParentRequestType aType);
