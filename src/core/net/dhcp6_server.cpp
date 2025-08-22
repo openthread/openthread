@@ -61,7 +61,6 @@ void Server::HandleNotifierEvents(Events aEvents)
 
 void Server::UpdateService(void)
 {
-    Error                           error  = kErrorNone;
     uint16_t                        rloc16 = Get<Mle::Mle>().GetRloc16();
     NetworkData::Iterator           iterator;
     NetworkData::OnMeshPrefixConfig prefixConfig;
@@ -86,9 +85,9 @@ void Server::UpdateService(void)
                 continue;
             }
 
-            error = Get<NetworkData::Leader>().GetContext(prefixAgent.GetPrefixAsAddress(), lowpanContext);
+            Get<NetworkData::Leader>().FindContextForAddress(prefixAgent.GetPrefixAsAddress(), lowpanContext);
 
-            if ((error == kErrorNone) && (prefixAgent.GetContextId() == lowpanContext.mContextId))
+            if (lowpanContext.MatchesContextId(prefixAgent.GetContextId()))
             {
                 // still in network data
                 found = true;
@@ -114,11 +113,11 @@ void Server::UpdateService(void)
             continue;
         }
 
-        error = Get<NetworkData::Leader>().GetContext(AsCoreType(&prefixConfig.mPrefix.mPrefix), lowpanContext);
+        Get<NetworkData::Leader>().FindContextForAddress(AsCoreType(&prefixConfig.mPrefix.mPrefix), lowpanContext);
 
-        if (error == kErrorNone)
+        if (lowpanContext.IsValid())
         {
-            AddPrefixAgent(prefixConfig.GetPrefix(), lowpanContext);
+            AddPrefixAgent(prefixConfig.GetPrefix(), lowpanContext.GetContextId());
         }
     }
 
@@ -145,7 +144,7 @@ exit:
 
 void Server::Stop(void) { IgnoreError(mSocket.Close()); }
 
-void Server::AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context &aContext)
+void Server::AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, uint8_t aContextId)
 {
     Error        error    = kErrorNone;
     PrefixAgent *newEntry = nullptr;
@@ -165,7 +164,7 @@ void Server::AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context
 
     VerifyOrExit(newEntry != nullptr, error = kErrorNoBufs);
 
-    newEntry->Set(aIp6Prefix, Get<Mle::Mle>().GetMeshLocalPrefix(), aContext.mContextId);
+    newEntry->Set(aIp6Prefix, Get<Mle::Mle>().GetMeshLocalPrefix(), aContextId);
     Get<ThreadNetif>().AddUnicastAddress(newEntry->GetAloc());
     mPrefixAgentsCount++;
 
