@@ -768,6 +768,24 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+
+const char *Br::Dhcp6PdStateToString(otBorderRoutingDhcp6PdState aState)
+{
+    static const char *const kDhcpv6PdStateStrings[] = {
+        "disabled", // (0) OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED
+        "stopped",  // (1) OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED
+        "running",  // (2) OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING
+        "idle",     // (3) OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE
+    };
+
+    static_assert(0 == OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED, "DHCP6_PD_STATE_DISABLED value is incorrect");
+    static_assert(1 == OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED, "DHCP6_PD_STATE_STOPPED value is incorrect");
+    static_assert(2 == OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING, "DHCP6_PD_STATE_RUNNING value is incorrect");
+    static_assert(3 == OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE, "DHCP6_PD_STATE_IDLE value is incorrect");
+
+    return Stringify(aState, kDhcpv6PdStateStrings);
+}
+
 template <> otError Br::Process<Cmd("pd")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -801,23 +819,7 @@ template <> otError Br::Process<Cmd("pd")>(Arg aArgs[])
      */
     else if (aArgs[0] == "state")
     {
-        static const char *const kDhcpv6PdStateStrings[] = {
-            "disabled", // (0) OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED
-            "stopped",  // (1) OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED
-            "running",  // (2) OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING
-            "idle",     // (3) OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE
-        };
-
-        static_assert(0 == OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED,
-                      "OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED value is not expected!");
-        static_assert(1 == OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED,
-                      "OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED value is not expected!");
-        static_assert(2 == OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING,
-                      "OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING value is not expected!");
-        static_assert(3 == OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE,
-                      "OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE value is not expected!");
-
-        OutputLine("%s", Stringify(otBorderRoutingDhcp6PdGetState(GetInstancePtr()), kDhcpv6PdStateStrings));
+        OutputLine("%s", Dhcp6PdStateToString(otBorderRoutingDhcp6PdGetState(GetInstancePtr())));
     }
     /**
      * @cli br pd omrprefix

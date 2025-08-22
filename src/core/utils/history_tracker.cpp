@@ -610,6 +610,21 @@ exit:
 
 AilRouter *Local::RecordAilRouterEvent(void) { return mAilRoutersHistory.AddNewEntry(); }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+void Local::RecordDhcp6Pd(BorderRouter::RoutingManager::Dhcp6PdState aState, const Ip6::Prefix &aPrefix)
+{
+    Dhcp6PdInfo *entry = mDhcp6PdHistory.AddNewEntry();
+
+    VerifyOrExit(entry != nullptr);
+
+    entry->mState  = MapEnum(aState);
+    entry->mPrefix = aPrefix;
+
+exit:
+    return;
+}
+#endif
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 void Local::HandleNotifierEvents(Events aEvents)
@@ -646,6 +661,9 @@ void Local::HandleTimer(void)
     mFavoredOmrPrefixHistory.UpdateAgedEntries();
     mFavoredOnLinkPrefixHistory.UpdateAgedEntries();
     mAilRoutersHistory.UpdateAgedEntries();
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+    mDhcp6PdHistory.UpdateAgedEntries();
+#endif
 #endif
     mTimer.Start(kAgeCheckPeriod);
 }
