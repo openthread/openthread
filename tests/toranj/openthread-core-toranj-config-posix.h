@@ -70,6 +70,8 @@
 
 #define OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE 1
 
+#define OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE 1
+
 // The following two features (`USE_HEAP`) are set explicitly on posix `toranj`
 // to validate the build with these config. The `toranj` build under simulation
 // platform covers the opposite configs (allows `USE_HEAP`).
