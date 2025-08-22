@@ -152,6 +152,7 @@ jobs:
       run: |
         ./tests/toranj/build.sh all
         ninja test
+        #- - - - - - - - - - - - - - - - - - - - - - - - - - -
         # Validate posix builds with different radio configs
         git clean -dfx
         ./tests/toranj/build.sh ncp-15.4
@@ -165,6 +166,21 @@ jobs:
         ./tests/toranj/build.sh posix-15.4+trel
         git clean -dfx
         ./tests/toranj/build.sh posix-trel
+        #- - - - - - - - - - - - - - - - - - - - - - - - - - -
+        # Log levels
+        git clean -dfx
+        ./tests/toranj/build.sh --log-level DEBG all
+        git clean -dfx
+        ./tests/toranj/build.sh --log-level INFO all
+        git clean -dfx
+        ./tests/toranj/build.sh --log-level NOTE all
+        git clean -dfx
+        ./tests/toranj/build.sh --log-level WARN all
+        git clean -dfx
+        ./tests/toranj/build.sh --log-level CRIT all
+        git clean -dfx
+        ./tests/toranj/build.sh --log-level NONE all
+        #- - - - - - - - - - - - - - - - - - - - - - - - - - -
         git clean -dfx
         ./tests/toranj/build.sh --enable-plat-key-ref all
 
