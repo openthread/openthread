@@ -72,32 +72,18 @@ const char *StateToString(State aState);
 class Translator : public InstanceLocator, private NonCopyable
 {
 public:
-    static constexpr uint32_t kAddressMappingIdleTimeoutMsec =
-        OPENTHREAD_CONFIG_NAT64_IDLE_TIMEOUT_SECONDS * Time::kOneSecondInMsec;
-    // ICMP mappings can expire fast since the identifier field will usually be the same only for
-    // a ping sessing that can have multiple ping requests. Once a new session is started the
-    // identifier will change.
-    static constexpr uint32_t kAddressMappingIcmpIdleTimeoutMsec =
-        OPENTHREAD_CONFIG_NAT64_ICMP_IDLE_TIMEOUT_SECONDS * Time::kOneSecondInMsec;
-    static constexpr uint32_t kAddressMappingPoolSize    = OPENTHREAD_CONFIG_NAT64_MAX_MAPPINGS;
-    static constexpr uint16_t kTranslationPortRangeStart = 49152;
-    static constexpr uint16_t kTranslationPortRangeEnd   = 65535;
-    // The maximum value the CIDR len can have in order to have a big enough pool to support a
-    // minimal number of devices
-    static constexpr uint8_t kMaxCidrLenForValidAddrPool = 28;
-
+    typedef otNat64AddressMapping         AddressMapping;         ///< Address mapping.
     typedef otNat64AddressMappingIterator AddressMappingIterator; ///< Address mapping Iterator.
+    typedef otNat64DropReason             DropReason;             ///< Drop reason.
 
     /**
      * The possible results of NAT64 translation.
      */
     enum Result : uint8_t
     {
-        kNotTranslated, ///< The message is not translated, it might be sending to an non-nat64 prefix (for outgoing
-                        ///< datagrams), or it is already an IPv6 message (for incoming datagrams).
-        kForward,       ///< Message is successfully translated, the caller should continue forwarding the translated
-                        ///< datagram.
-        kDrop,          ///< The caller should drop the datagram silently.
+        kNotTranslated, ///< Not translated (e.g., Outgoing msg using a non-NAT64 prefix, or incoming is already IPv6).
+        kForward,       ///< Successfully translated and the translated message should be forwarded.
+        kDrop,          ///< Silently drop the message.
     };
 
     /**
@@ -105,21 +91,10 @@ public:
      */
     class ProtocolCounters : public otNat64ProtocolCounters, public Clearable<ProtocolCounters>
     {
-    public:
-        /**
-         * Adds the packet to the counter for the given IPv6 protocol.
-         *
-         * @param[in] aProtocol    The protocol of the packet.
-         * @param[in] aPacketSize  The size of the packet.
-         */
-        void Count6To4Packet(uint8_t aProtocol, uint64_t aPacketSize);
+        friend class Translator;
 
-        /**
-         * Adds the packet to the counter for the given IPv4 protocol.
-         *
-         * @param[in] aProtocol    The protocol of the packet.
-         * @param[in] aPacketSize  The size of the packet.
-         */
+    private:
+        void Count6To4Packet(uint8_t aProtocol, uint64_t aPacketSize);
         void Count4To6Packet(uint8_t aProtocol, uint64_t aPacketSize);
     };
 
@@ -128,32 +103,17 @@ public:
      */
     class ErrorCounters : public otNat64ErrorCounters, public Clearable<otNat64ErrorCounters>
     {
+        friend class Translator;
+
     public:
-        enum Reason : uint8_t
-        {
-            kUnknown          = OT_NAT64_DROP_REASON_UNKNOWN,
-            kIllegalPacket    = OT_NAT64_DROP_REASON_ILLEGAL_PACKET,
-            kUnsupportedProto = OT_NAT64_DROP_REASON_UNSUPPORTED_PROTO,
-            kNoMapping        = OT_NAT64_DROP_REASON_NO_MAPPING,
-        };
-
-        /**
-         * Adds the counter for the given reason when translating an IPv4 datagram.
-         *
-         * @param[in] aReason    The reason of packet drop.
-         */
-        void Count4To6(Reason aReason) { mCount4To6[aReason]++; }
-
-        /**
-         * Adds the counter for the given reason when translating an IPv6 datagram.
-         *
-         * @param[in] aReason    The reason of packet drop.
-         */
-        void Count6To4(Reason aReason) { mCount6To4[aReason]++; }
+        void Count4To6(DropReason aReason) { mCount4To6[aReason]++; }
+        void Count6To4(DropReason aReason) { mCount6To4[aReason]++; }
     };
 
     /**
      * Initializes the NAT64 translator.
+     *
+     * @param[in] aInstance  The OpenThread instance.
      */
     explicit Translator(Instance &aInstance);
 
@@ -266,7 +226,7 @@ public:
     void ClearNat64Prefix(void);
 
     /**
-     * Initializes an `otNat64AddressMappingIterator`.
+     * Initializes an `AddressMappingIterator`.
      *
      * An iterator MUST be initialized before it is used.
      *
@@ -279,17 +239,14 @@ public:
     /**
      * Gets the next AddressMapping info (using an iterator).
      *
-     * @param[in,out]  aIterator      The iterator. On success the iterator will be updated to point to next NAT64
-     *                                address mapping record. To get the first entry the iterator should be set to
-     *                                OT_NAT64_ADDRESS_MAPPING_ITERATOR_INIT.
-     * @param[out]     aMapping       An `otNat64AddressMapping` where information of next NAT64 address mapping record
-     *                                is placed (on success).
+     * @param[in,out]  aIterator      The iterator.
+     * @param[out]     aMapping       An `AddressMapping` to output to next NAT64 address mapping.
      *
-     * @retval kErrorNone      Successfully found the next NAT64 address mapping info (@p aMapping was successfully
-     *                         updated).
+     * @retval kErrorNone      Successfully found the next NAT64 address mapping info (@p aMapping and @p aIterator
+     *                         are updated.
      * @retval kErrorNotFound  No subsequent NAT64 address mapping info was found.
      */
-    Error GetNextAddressMapping(AddressMappingIterator &aIterator, otNat64AddressMapping &aMapping);
+    Error GetNextAddressMapping(AddressMappingIterator &aIterator, AddressMapping &aMapping);
 
     /**
      * Gets the NAT64 translator counters.
@@ -317,7 +274,7 @@ public:
      * @retval kErrorNone       @p aCidr is set to the configured CIDR.
      * @retval kErrorNotFound   The translator is not configured with an IPv4 CIDR.
      */
-    Error GetIp4Cidr(Ip4::Cidr &aCidr);
+    Error GetIp4Cidr(Ip4::Cidr &aCidr) const;
 
     /**
      * Gets the configured IPv6 prefix in the NAT64 translator.
@@ -327,83 +284,79 @@ public:
      * @retval kErrorNone       @p aPrefix is set to the configured prefix.
      * @retval kErrorNotFound   The translator is not configured with an IPv6 prefix.
      */
-    Error GetIp6Prefix(Ip6::Prefix &aPrefix);
+    Error GetIp6Prefix(Ip6::Prefix &aPrefix) const;
 
 private:
-    class AddressMapping : public LinkedListEntry<AddressMapping>
-    {
-    public:
-        friend class LinkedListEntry<AddressMapping>;
-        friend class LinkedList<AddressMapping>;
+    // Timeouts are in milliseconds
+    static constexpr uint32_t kIdleTimeout = OPENTHREAD_CONFIG_NAT64_IDLE_TIMEOUT_SECONDS * Time::kOneSecondInMsec;
+    static constexpr uint32_t kIcmpTimeout = OPENTHREAD_CONFIG_NAT64_ICMP_IDLE_TIMEOUT_SECONDS * Time::kOneSecondInMsec;
 
-        typedef String<Ip6::Address::kInfoStringSize + Ip4::Address::kAddressStringSize + 4> InfoString;
+    static constexpr uint32_t kPoolSize           = OPENTHREAD_CONFIG_NAT64_MAX_MAPPINGS;
+    static constexpr uint16_t kMinTranslationPort = 49152;
+    static constexpr uint16_t kMaxTranslationPort = 65535;
+
+    // The maximum value the CIDR len can have in order to have a big
+    // enough pool to support a minimal number of devices
+    static constexpr uint8_t kMaxCidrLenForValidAddrPool = 28;
+
+    static constexpr DropReason kReasonUnknown          = OT_NAT64_DROP_REASON_UNKNOWN;
+    static constexpr DropReason kReasonIllegalPacket    = OT_NAT64_DROP_REASON_ILLEGAL_PACKET;
+    static constexpr DropReason kReasonUnsupportedProto = OT_NAT64_DROP_REASON_UNSUPPORTED_PROTO;
+    static constexpr DropReason kReasonNoMapping        = OT_NAT64_DROP_REASON_NO_MAPPING;
+
+    struct Mapping : public LinkedListEntry<Mapping>
+    {
+        static constexpr uint16_t kInfoStringSize = 70;
+
+        typedef String<kInfoStringSize> InfoString;
 
         void       Touch(TimeMilli aNow, uint8_t aProtocol);
         InfoString ToString(void) const;
-        void       CopyTo(otNat64AddressMapping &aMapping, TimeMilli aNow) const;
+        void       CopyTo(AddressMapping &aMapping, TimeMilli aNow) const;
+        bool       Matches(const Ip4::Address &aIp4Address) const { return mIp4Address == aIp4Address; }
+        bool       Matches(const Ip6::Address &aIp6Address) const { return mIp6Address == aIp6Address; }
+        bool       Matches(const uint16_t aPort) const { return mTranslatedPortOrId == aPort; }
+        bool       Matches(const TimeMilli aNow) const { return mExpiry < aNow; }
+        bool       Matches(const Ip6::Address &aIp6Address, const uint16_t aPort) const;
+        bool       Matches(const Ip4::Address &aIp4Address, const uint16_t aPort) const;
 
-        uint64_t mId; // The unique id for a mapping session.
-
-        Ip4::Address mIp4;
-        Ip6::Address mIp6;
-        uint16_t     mSrcPortOrId;
-        uint16_t     mTranslatedPortOrId;
-        TimeMilli    mExpiry; // The timestamp when this mapping expires, in milliseconds.
-
+        Mapping         *mNext;
+        uint64_t         mId;
+        Ip4::Address     mIp4Address;
+        Ip6::Address     mIp6Address;
+        uint16_t         mSrcPortOrId;
+        uint16_t         mTranslatedPortOrId;
+        TimeMilli        mExpiry;
         ProtocolCounters mCounters;
-
-    private:
-        bool Matches(const Ip4::Address &aIp4) const { return mIp4 == aIp4; }
-        bool Matches(const Ip6::Address &aIp6) const { return mIp6 == aIp6; }
-        bool Matches(const uint16_t aPort) const { return mTranslatedPortOrId == aPort; }
-        bool Matches(const TimeMilli aNow) const { return mExpiry < aNow; }
-
-        bool Matches(const Ip6::Address &aIp6, const uint16_t aPort) const
-        {
-            return ((mIp6 == aIp6) && (mSrcPortOrId == aPort));
-        }
-        bool Matches(const Ip4::Address &aIp4, const uint16_t aPort) const
-        {
-            return ((mIp4 == aIp4) && (mTranslatedPortOrId == aPort));
-        }
-
-        AddressMapping *mNext;
     };
 
-    Error TranslateIcmp4(Message &aMessage, uint16_t aOriginalId);
-    Error TranslateIcmp6(Message &aMessage, uint16_t aTranslatedId);
-
+    Error    TranslateIcmp4(Message &aMessage, uint16_t aOriginalId);
+    Error    TranslateIcmp6(Message &aMessage, uint16_t aTranslatedId);
+    uint16_t ReleaseMappings(LinkedList<Mapping> &aMappings);
+    void     ReleaseMapping(Mapping &aMapping);
+    uint16_t ReleaseExpiredMappings(void);
+    Mapping *AllocateMapping(const Ip6::Headers &aIp6Headers);
+    Mapping *FindOrAllocateMapping(const Ip6::Headers &aIp6Headers);
+    Mapping *FindMapping(const Ip4::Headers &aIp4Headers);
+    void     HandleTimer(void);
+    void     UpdateState(void);
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
     uint16_t AllocateSourcePort(uint16_t aSrcPort);
 #endif
-    uint16_t        ReleaseMappings(LinkedList<AddressMapping> &aMappings);
-    void            ReleaseMapping(AddressMapping &aMapping);
-    uint16_t        ReleaseExpiredMappings(void);
-    AddressMapping *AllocateMapping(const Ip6::Headers &aIp6Headers);
-    AddressMapping *FindOrAllocateMapping(const Ip6::Headers &aIp6Headers);
-    AddressMapping *FindMapping(const Ip4::Headers &aIp4Headers);
-    void            HandleMappingExpirerTimer(void);
 
-    using MappingTimer = TimerMilliIn<Translator, &Translator::HandleMappingExpirerTimer>;
+    using TranslatorTimer = TimerMilliIn<Translator, &Translator::HandleTimer>;
 
-    void UpdateState(void);
-
-    bool  mEnabled;
-    State mState;
-
-    uint64_t mNextMappingId;
-
-    Array<Ip4::Address, kAddressMappingPoolSize>  mIp4AddressPool;
-    Pool<AddressMapping, kAddressMappingPoolSize> mAddressMappingPool;
-    LinkedList<AddressMapping>                    mActiveAddressMappings;
-
-    Ip6::Prefix mNat64Prefix;
-    Ip4::Cidr   mIp4Cidr;
-
-    MappingTimer mMappingExpirerTimer;
-
-    ProtocolCounters mCounters;
-    ErrorCounters    mErrorCounters;
+    bool                           mEnabled;
+    State                          mState;
+    uint64_t                       mNextMappingId;
+    Array<Ip4::Address, kPoolSize> mIp4AddressPool;
+    Pool<Mapping, kPoolSize>       mMappingPool;
+    LinkedList<Mapping>            mActiveMappings;
+    Ip6::Prefix                    mNat64Prefix;
+    Ip4::Cidr                      mIp4Cidr;
+    TranslatorTimer                mTimer;
+    ProtocolCounters               mCounters;
+    ErrorCounters                  mErrorCounters;
 };
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
