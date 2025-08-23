@@ -205,6 +205,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_AIL_ROUTER_LIST_SIZE
+ *
+ * Specifies the maximum number of entries in BR AIL Router history.
+ *
+ * Can be set to zero to configure History Tracker module not to collect any BR AIL Router info.
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_AIL_ROUTER_LIST_SIZE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_AIL_ROUTER_LIST_SIZE 32
+#endif
+
+/**
  * @}
  */
 

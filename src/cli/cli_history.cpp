@@ -1684,6 +1684,126 @@ exit:
     return error;
 }
 
+/**
+ * @cli history ailrouters
+ * @code
+ * history ailrouters
+ * | Age                  | Event   | IPv6 Address                             |R|M|O|S|L|P|D|RtPrf |
+ * +----------------------+---------+------------------------------------------+-+-+-+-+-+-+-+------+
+ * |                      | Favored on-link prefix                             | | | | | | | |      |
+ * +----------------------+----------------------------------------------------+-+-+-+-+-+-+-+------+
+ * |         00:01:35.107 | Changed | fe80:0:0:0:0:0:0:2                       |N|N|N|Y|N|Y|N|      |
+ * |                      | -                                                  | | | | | | | |      |
+ * |         00:05:01.115 | Changed | fe80:0:0:0:0:0:0:2                       |Y|N|N|Y|N|Y|N|      |
+ * |                      | -                                                  | | | | | | | |      |
+ * |         00:08:01.804 | Added   | fe80:0:0:0:0:0:0:2                       |Y|N|N|Y|N|Y|N|      |
+ * |                      | fd99:4cdc:3b3d:56ef::/64                           | | | | | | | |      |
+ * Done
+ * @endcode
+ * @code
+ * history ailrouters list
+ * 00:01:35.161 -> event:Changed address:fe80:0:0:0:0:0:0:2 reachable:N M:N O:N S:Y local:N peer:Y def-route:N prf:
+ *    favored-on-link-prefix:-
+ * 00:05:01.169 -> event:Changed address:fe80:0:0:0:0:0:0:2 reachable:Y M:N O:N S:Y local:N peer:Y def-route:N prf:
+ *    favored-on-link-prefix:-
+ * 00:08:01.858 -> event:Added address:fe80:0:0:0:0:0:0:2 reachable:Y M:N O:N S:Y local:N peer:Y def-route:N prf:
+ *    favored-on-link-prefix:fd99:4cdc:3b3d:56ef::/64
+ * Done
+ * @endcode
+ * @cparam history ailrouters [@ca{list}] [@ca{num-entries}]
+ * * Use the `list` option to display the output in list format. Otherwise, the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of most-recent entries specified. If this option
+ *   is not used, all stored entries are shown in the output.
+ * @par
+ * Displays the AIL routers history in table or list format.
+ * @par
+ * Each table or list entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
+ * * The event, possible values are `Added`, `Changed`, `Removed`.
+ * * The IPv6 address of the AIL router.
+ * * Flags
+ *   * `R`: Indicates whether or not this router is reachable.
+ *   * `M`: The Managed Address Config flag (from the Router Advertisement (RA) header).
+ *   * `O`: The Other Config flag (from the RA header).
+ *   * `S`: The SNAC Router flag (from the RA header).
+ *   * `L`: Indicates whether or not this router is the local device (this BR).
+ *   * `P`: Indicates whether or not this router is a peer BR connected to same Thread mesh.
+ *   * `D`: Indicates whether or not this router provides a default route.
+ * * The default route preference (`high`, `med`, `low`) if this router provides a default route, otherwise `-`.
+ * * The favored on-link prefix advertised by this router if any. If none, `-` is shown.
+ * @sa otHistoryTrackerIterateAilRoutersHistory
+ */
+template <> otError History::Process<Cmd("ailrouters")>(Arg aArgs[])
+{
+    otError                          error;
+    bool                             isList;
+    uint16_t                         numEntries;
+    otHistoryTrackerIterator         iterator;
+    const otHistoryTrackerAilRouter *info;
+    uint32_t                         entryAge;
+    char                             ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                             addrString[OT_IP6_ADDRESS_STRING_SIZE];
+    char                             prefixString[OT_IP6_PREFIX_STRING_SIZE];
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        static const char *const kTitles1[]    = {"Age", "Event", "IPv6 Address", "R", "M", "O", "S", "L",
+                                                  "P",   "D",     "RtPrf"};
+        static const uint8_t     kColWidths1[] = {22, 9, 42, 1, 1, 1, 1, 1, 1, 1, 6};
+
+        static const char *const kTitles2[]    = {"", "Favored on-link prefix", "", "", "", "", "", "", "", ""};
+        static const uint8_t     kColWidths2[] = {22, 52, 1, 1, 1, 1, 1, 1, 1, 6};
+
+        OutputTableHeader(kTitles1, kColWidths1);
+        OutputTableHeader(kTitles2, kColWidths2);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateAilRoutersHistory(GetInstancePtr(), &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+
+        otIp6AddressToString(&info->mAddress, addrString, sizeof(addrString));
+        otIp6PrefixToString(&info->mFavoredOnLinkPrefix, prefixString, sizeof(prefixString));
+
+        OutputLine(isList ? "%s -> event:%s address:%s reachable:%c M:%c O:%c S:%c local:%c peer:%c def-route:%c prf:%s"
+                          : "| %20s | %-7s | %-40s |%c|%c|%c|%c|%c|%c|%c| %4s |",
+                   ageString, AilRouterEventToString(info->mEvent), addrString, info->mIsReachable ? 'Y' : 'N',
+                   info->mManagedAddressConfigFlag ? 'Y' : 'N', info->mOtherConfigFlag ? 'Y' : 'N',
+                   info->mSnacRouterFlag ? 'Y' : 'N', info->mIsLocalDevice ? 'Y' : 'N', info->mIsPeerBr ? 'Y' : 'N',
+                   info->mProvidesDefaultRoute ? 'Y' : 'N',
+                   info->mProvidesDefaultRoute ? PreferenceToString(info->mDefRoutePreference) : "-");
+
+        OutputLine(isList ? "   %sfavored-on-link-prefix:%s" : "| %20s | %-50s | | | | | | | |      |", "",
+                   info->mFavoredOnLinkPrefix.mLength == 0 ? "-" : prefixString);
+    }
+
+exit:
+    return error;
+}
+
+const char *History::AilRouterEventToString(otHistoryTrackerAilRouterEvent aEvent)
+{
+    static const char *const kAilRouterEventStrings[] = {
+        "Added",   /* (0) OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_ADDED */
+        "Changed", /* (1) OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_CHANGED */
+        "Removed", /* (2) OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_REMOVED */
+    };
+
+    static_assert(OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_ADDED == 0, "AIL_ROUTER_EVENT_ADDED is incorrect");
+    static_assert(OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_CHANGED == 1, "AIL_ROUTER_EVENT_CHANGED is incorrect");
+    static_assert(OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_REMOVED == 2, "AIL_ROUTER_EVENT_REMOVED is incorrect");
+
+    return Stringify(aEvent, kAilRouterEventStrings, "--");
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 const char *History::DnsSrpAddrTypeToString(otHistoryTrackerDnsSrpAddrType aType)
@@ -1706,6 +1826,9 @@ otError History::Process(Arg aArgs[])
 #define CmdEntry(aCommandString) {aCommandString, &History::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        CmdEntry("ailrouters"),
+#endif
         CmdEntry("dnssrpaddr"), CmdEntry("ipaddr"),       CmdEntry("ipmaddr"),
         CmdEntry("neighbor"),   CmdEntry("netinfo"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

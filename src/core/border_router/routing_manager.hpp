@@ -1123,6 +1123,24 @@ private:
             {
             };
 
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+            struct HistoryInfo : public Equatable<HistoryInfo>, public Clearable<HistoryInfo>
+            {
+                void DetermineFrom(const Router &aRouter);
+
+                bool            mHistoryRecorded : 1;
+                bool            mManagedAddressConfigFlag : 1;
+                bool            mOtherConfigFlag : 1;
+                bool            mSnacRouterFlag : 1;
+                bool            mIsLocalDevice : 1;
+                bool            mIsReachable : 1;
+                bool            mIsPeerBr : 1;
+                bool            mProvidesDefaultRoute : 1;
+                RoutePreference mDefRoutePreference;
+                Ip6::Prefix     mFavoredOnLinkPrefix;
+            };
+#endif
+
             bool IsReachable(void) const { return mNsProbeCount <= kMaxNsProbes; }
             bool ShouldCheckReachability(void) const;
             void ResetReachabilityState(void);
@@ -1159,6 +1177,9 @@ private:
             bool             mSnacRouterFlag : 1;
             bool             mIsLocalDevice : 1;
             bool             mAllEntriesDisregarded : 1;
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+            HistoryInfo mHistoryInfo;
+#endif
         };
 
         //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
@@ -1270,6 +1291,10 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
         uint16_t CountReachablePeerBrs(void) const;
 #endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        void ReportChangesToHistoryTracker(Router &aRouter, bool aRemoved);
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
         template <class Type> Entry<Type> *AllocateEntry(void) { return Entry<Type>::Allocate(); }
 #else

@@ -176,7 +176,17 @@ const otHistoryTrackerFavoredOnLinkPrefix *otHistoryTrackerIterateFavoredOnLinkP
                                                                                                 *aEntryAge);
 }
 
-#endif
+const otHistoryTrackerAilRouter *otHistoryTrackerIterateAilRoutersHistory(otInstance               *aInstance,
+                                                                          otHistoryTrackerIterator *aIterator,
+                                                                          uint32_t                 *aEntryAge)
+{
+    AssertPointerIsNotNull(aEntryAge);
+
+    return AsCoreType(aInstance).Get<HistoryTracker::Local>().IterateAilRoutersHistory(AsCoreType(aIterator),
+                                                                                       *aEntryAge);
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 void otHistoryTrackerEntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize)
 {

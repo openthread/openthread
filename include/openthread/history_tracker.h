@@ -315,6 +315,49 @@ typedef struct otHistoryTrackerFavoredOnLinkPrefix
 } otHistoryTrackerFavoredOnLinkPrefix;
 
 /**
+ * Defines events for discovered routers on an Adjacent Infrastructure Link (AIL).
+ *
+ * This applies when a device is acting as a Border Router, processing received Router Advertisements and tracking
+ * AIL routers.
+ *
+ * `OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_CHANGED` is used if any of the properties in the `otHistoryTrackerAilRouter`
+ * structure associated with a specific router changes.
+ */
+typedef enum
+{
+    OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_ADDED   = 0, ///< A new AIL router is discovered.
+    OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_CHANGED = 1, ///< A property in the router's information has changed.
+    OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_REMOVED = 2, ///< The AIL router is removed and no longer tracked.
+} otHistoryTrackerAilRouterEvent;
+
+/**
+ * Represents information about a discovered router on an Adjacent Infrastructure Link (AIL).
+ *
+ * This applies when a device is acting as a Border Router, processing received Router Advertisements and tracking
+ * information about discovered AIL routers.
+ *
+ * `mProvidesDefaultRoute` indicates whether the router provides a default route. If it does, `mDefRoutePreference`
+ * specifies the route preference.
+ *
+ * `mFavoredOnLinkPrefix` indicates the favored on-link prefix advertised by the router. If there is no on-link prefix,
+ * this will be an empty prefix (i.e., its length will be zero).
+ */
+typedef struct otHistoryTrackerAilRouter
+{
+    otHistoryTrackerAilRouterEvent mEvent;                        ///< The event type (e.g., added, changed, removed).
+    int8_t                         mDefRoutePreference;           ///< Def route preference.
+    otIp6Address                   mAddress;                      ///< The IPv6 address of the AIL router.
+    otIp6Prefix                    mFavoredOnLinkPrefix;          ///< The favored on-link prefix, if any.
+    bool                           mProvidesDefaultRoute : 1;     ///< Whether the router provides a default route.
+    bool                           mManagedAddressConfigFlag : 1; ///< The Managed Address Config flag (`M` flag).
+    bool                           mOtherConfigFlag : 1;          ///< The Other Config flag (`O` flag).
+    bool                           mSnacRouterFlag : 1;           ///< The SNAC Router flag (`S` flag).
+    bool                           mIsLocalDevice : 1;            ///< This router is the local device (this BR).
+    bool                           mIsReachable : 1;              ///< This router is reachable.
+    bool                           mIsPeerBr : 1;                 ///< This router is (likely) a peer BR.
+} otHistoryTrackerAilRouter;
+
+/**
  * Initializes an `otHistoryTrackerIterator`.
  *
  * An iterator MUST be initialized before it is used.
@@ -546,6 +589,24 @@ const otHistoryTrackerFavoredOnLinkPrefix *otHistoryTrackerIterateFavoredOnLinkP
     otInstance               *aInstance,
     otHistoryTrackerIterator *aIterator,
     uint32_t                 *aEntryAge);
+
+/**
+ * Iterates over the entries in the BR AIL routers history list.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` (device acting as Border Router).
+ *
+ * @param[in]     aInstance  A pointer to the OpenThread instance.
+ * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
+ * @param[out]    aEntryAge  A pointer to a variable to output the entry's age. MUST NOT be NULL.
+ *                           Age is provided as the duration (in milliseconds) from when the entry was recorded to
+ *                           @p aIterator initialization time. It is set to `OT_HISTORY_TRACKER_MAX_AGE` for entries
+ *                           older than the max age.
+ *
+ * @returns The `otHistoryTrackerAilRouter` entry or `NULL` if no more entries in the list.
+ */
+const otHistoryTrackerAilRouter *otHistoryTrackerIterateAilRoutersHistory(otInstance               *aInstance,
+                                                                          otHistoryTrackerIterator *aIterator,
+                                                                          uint32_t                 *aEntryAge);
 
 /**
  * Converts a given entry age to a human-readable string.

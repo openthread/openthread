@@ -608,6 +608,8 @@ exit:
     return;
 }
 
+AilRouter *Local::RecordAilRouterEvent(void) { return mAilRoutersHistory.AddNewEntry(); }
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 void Local::HandleNotifierEvents(Events aEvents)
@@ -643,6 +645,7 @@ void Local::HandleTimer(void)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     mFavoredOmrPrefixHistory.UpdateAgedEntries();
     mFavoredOnLinkPrefixHistory.UpdateAgedEntries();
+    mAilRoutersHistory.UpdateAgedEntries();
 #endif
     mTimer.Start(kAgeCheckPeriod);
 }
