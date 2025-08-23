@@ -39,6 +39,7 @@
 #include <openthread/border_routing.h>
 
 #include "cli/cli_config.h"
+#include "cli/cli_history.hpp"
 #include "cli/cli_utils.hpp"
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -51,6 +52,10 @@ namespace Cli {
  */
 class Br : private Utils
 {
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    friend class History;
+#endif
+
 public:
     /**
      * Constructor
@@ -93,6 +98,10 @@ private:
 
     otError ParsePrefixTypeArgs(Arg aArgs[], PrefixType &aFlags);
     void    OutputRouterInfo(const otBorderRoutingRouterEntry &aEntry, RouterOutputMode aMode);
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+    static const char *Dhcp6PdStateToString(otBorderRoutingDhcp6PdState aState);
+#endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
     static void HandleMultiAilDetected(bool aDetected, void *aContext);

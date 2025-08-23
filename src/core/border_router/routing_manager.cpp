@@ -4539,6 +4539,9 @@ RoutingManager::PdPrefixManager::PdPrefixManager(Instance &aInstance)
     , mNumPlatformRaReceived(0)
     , mLastPlatformRaTime(0)
     , mTimer(aInstance)
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    , mRecordHistoryTask(aInstance)
+#endif
 {
 }
 
@@ -4618,6 +4621,10 @@ void RoutingManager::PdPrefixManager::SetState(State aState)
         break;
     }
 
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    mRecordHistoryTask.Post();
+#endif
+
     mStateCallback.InvokeIfSet(MapEnum(mState));
 
 exit:
@@ -4663,6 +4670,10 @@ void RoutingManager::PdPrefixManager::WithdrawPrefix(void)
     mTimer.Stop();
 
     Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    mRecordHistoryTask.Post();
+#endif
 
 exit:
     return;
@@ -4749,6 +4760,10 @@ void RoutingManager::PdPrefixManager::ApplyFavoredPrefix(const PdPrefix &aFavore
         mPrefix = aFavoredPrefix;
         LogInfo("DHCPv6 PD prefix set to %s", mPrefix.GetPrefix().ToString().AsCString());
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        mRecordHistoryTask.Post();
+#endif
     }
 
     if (HasPrefix())
@@ -4798,6 +4813,15 @@ void RoutingManager::PdPrefixManager::EvaluateCandidatePrefix(PdPrefix &aPrefix,
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+
+void RoutingManager::PdPrefixManager::HandleRecordHistoryTask(void)
+{
+    Get<HistoryTracker::Local>().RecordDhcp6Pd(mState, mPrefix.GetPrefix());
+}
+
+#endif
 
 bool RoutingManager::PdPrefixManager::PdPrefix::IsValidPdPrefix(void) const
 {

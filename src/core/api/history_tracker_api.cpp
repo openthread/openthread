@@ -186,6 +186,17 @@ const otHistoryTrackerAilRouter *otHistoryTrackerIterateAilRoutersHistory(otInst
                                                                                        *aEntryAge);
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+const otHistoryTrackerDhcp6PdInfo *otHistoryTrackerIterateDhcp6PdHistory(otInstance               *aInstance,
+                                                                         otHistoryTrackerIterator *aIterator,
+                                                                         uint32_t                 *aEntryAge)
+{
+    AssertPointerIsNotNull(aEntryAge);
+
+    return AsCoreType(aInstance).Get<HistoryTracker::Local>().IterateDhcp6PdHistory(AsCoreType(aIterator), *aEntryAge);
+}
+#endif
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 void otHistoryTrackerEntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize)

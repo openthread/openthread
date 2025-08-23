@@ -12,6 +12,7 @@ Usage : `history [command] ...`
 
 - [help](#help)
 - [ailrouters](#ailrouters)
+- [dhcp6pd](#dhcp6pd)
 - [dnssrpaddr](#dnssrpaddr)
 - [ipaddr](#ipaddr)
 - [ipmaddr](#ipmaddr)
@@ -115,6 +116,40 @@ Print the history as a list.
    favored-on-link-prefix:-
 00:08:01.858 -> event:Added address:fe80:0:0:0:0:0:0:2 reachable:Y M:N O:N S:Y local:N peer:Y def-route:N prf:
    favored-on-link-prefix:fd99:4cdc:3b3d:56ef::/64
+Done
+```
+
+### dhcp6pd
+
+Usage `history dhcp6pd [list] [<num-entries>]`
+
+Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` and `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE`.
+
+Print the DHCPv6-PD history. Each entry provides:
+
+- State: Possible states are `disabled`, `stopped`, `running`, `idle`.
+- Prefix: The delegated prefix if any. If none `-` is printed.
+
+Print the DHCPv6-PD history as a table.
+
+```bash
+> history dhcp6pd
+| Age                  | State    | Prefix                                        |
++----------------------+----------+-----------------------------------------------+
+|         00:03:20.128 | running  | 2001:dc78:510b:1::/64                         |
+|         00:03:30.152 | running  | -                                             |
+|         00:03:47.038 | disabled | -                                             |
+Done
+```
+
+Print the DHCPv6-PD history as a list.
+
+```bash
+> history dhcp6pd list
+00:03:38.172 -> state:running prefix:2001:dc78:510b:1::/64
+00:03:48.191 -> state:running prefix:-
+00:04:05.077 -> state:disabled prefix:-
+00:05:02.857 -> state:running prefix:-
 Done
 ```
 

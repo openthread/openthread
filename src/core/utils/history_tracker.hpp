@@ -114,6 +114,7 @@ typedef otHistoryTrackerBorderAgentEpskcEvent EpskcEvent; ///< Border Agent ePSK
 typedef otHistoryTrackerFavoredOmrPrefix    FavoredOmrPrefix;    ///< Favored OMR Prefix
 typedef otHistoryTrackerFavoredOnLinkPrefix FavoredOnLinkPrefix; ///< Favored On-link Prefix
 typedef otHistoryTrackerAilRouter           AilRouter;           ///< An AIL router tracked when acting as BR
+typedef otHistoryTrackerDhcp6PdInfo         Dhcp6PdInfo;         ///< DHPCv6-PD info.
 #endif
 
 /**
@@ -277,6 +278,7 @@ public:
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
     const FavoredOmrPrefix *IterateFavoredOmrPrefixHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
         return mFavoredOmrPrefixHistory.Iterate(aIterator, aEntryAge);
@@ -291,7 +293,15 @@ public:
     {
         return mAilRoutersHistory.Iterate(aIterator, aEntryAge);
     }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+    const Dhcp6PdInfo *IterateDhcp6PdHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mDhcp6PdHistory.Iterate(aIterator, aEntryAge);
+    }
 #endif
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
     /**
      * Converts a given entry age to a human-readable string.
@@ -329,6 +339,7 @@ private:
     static constexpr uint16_t kOmrPrefixListSize     = OPENTHREAD_CONFIG_HISTORY_TRACKER_OMR_PREFIX_LIST_SIZE;
     static constexpr uint16_t kOnLinkPrefixListSize  = OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_LINK_PREFIX_LIST_SIZE;
     static constexpr uint16_t kAilRouterListSize     = OPENTHREAD_CONFIG_HISTORY_TRACKER_AIL_ROUTER_LIST_SIZE;
+    static constexpr uint16_t kDhcp6PdListSize       = OPENTHREAD_CONFIG_HISTORY_TRACKER_DHCP6_PD_LIST_SIZE;
 
     typedef otHistoryTrackerAddressEvent AddressEvent;
 
@@ -520,6 +531,9 @@ private:
                                       bool                                          aIsLocal);
     void       RecordFavoredOnLinkPrefix(const Ip6::Prefix &aPrefix, bool aIsLocal);
     AilRouter *RecordAilRouterEvent(void);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+    void RecordDhcp6Pd(BorderRouter::RoutingManager::Dhcp6PdState aState, const Ip6::Prefix &aPrefix);
+#endif
 #endif
 
     using TrackerTimer = TimerMilliIn<Local, &Local::HandleTimer>;
@@ -541,6 +555,9 @@ private:
     EntryList<FavoredOmrPrefix, kOmrPrefixListSize>       mFavoredOmrPrefixHistory;
     EntryList<FavoredOnLinkPrefix, kOnLinkPrefixListSize> mFavoredOnLinkPrefixHistory;
     EntryList<AilRouter, kAilRouterListSize>              mAilRoutersHistory;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+    EntryList<Dhcp6PdInfo, kDhcp6PdListSize> mDhcp6PdHistory;
+#endif
 #endif
 
     TrackerTimer mTimer;

@@ -38,6 +38,7 @@
 #include <string.h>
 
 #include "cli/cli.hpp"
+#include "cli/cli_br.hpp"
 
 namespace ot {
 namespace Cli {
@@ -1541,6 +1542,83 @@ exit:
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+
+/**
+ * @cli history dhcp6pd
+ * @code
+ * history dhcp6pd
+ * | Age                  | State    | Prefix                                        |
+ * +----------------------+----------+-----------------------------------------------+
+ * |         00:03:20.128 | running  | 2001:dc78:510b:1::/64                         |
+ * |         00:03:30.152 | running  | -                                             |
+ * |         00:03:47.038 | disabled | -                                             |
+ * Done
+ * @endcode
+ * @code
+ * history dhcp6pd list
+ * 00:03:38.172 -> state:running prefix:2001:dc78:510b:1::/64
+ * 00:03:48.191 -> state:running prefix:-
+ * 00:04:05.077 -> state:disabled prefix:-
+ * 00:05:02.857 -> state:running prefix:-
+ * Done
+ * @endcode
+ * @cparam history dhcp6pd [@ca{list}] [@ca{num-entries}]
+ * * Use the `list` option to display the output in list format. Otherwise, the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of most-recent entries specified. If this option
+ *   is not used, all stored entries are shown in the output.
+ * @par
+ * Displays the DHCPv6-PD history in table or list format.
+ * @par
+ * Each table or list entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
+ * * State: Possible states are `disabled`, `stopped`, `running`, `idle`.
+ * * Prefix: The delegated prefix if any. If none `-` is outputted.
+ * @sa otHistoryTrackerIterateDhcp6PdHistory
+ */
+template <> otError History::Process<Cmd("dhcp6pd")>(Arg aArgs[])
+{
+    otError                            error;
+    bool                               isList;
+    uint16_t                           numEntries;
+    otHistoryTrackerIterator           iterator;
+    const otHistoryTrackerDhcp6PdInfo *info;
+    uint32_t                           entryAge;
+    char                               ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                               prefixString[OT_IP6_PREFIX_STRING_SIZE];
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        static const char *const kTitles[]       = {"Age", "State", "Prefix"};
+        static const uint8_t     kColumnWidths[] = {22, 10, 47};
+
+        OutputTableHeader(kTitles, kColumnWidths);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateDhcp6PdHistory(GetInstancePtr(), &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+
+        otIp6PrefixToString(&info->mPrefix, prefixString, sizeof(prefixString));
+
+        OutputLine(isList ? "%s -> state:%s prefix:%s" : "| %20s | %-8s | %-45s |", ageString,
+                   Br::Dhcp6PdStateToString(info->mState), (info->mPrefix.mLength != 0) ? prefixString : "-");
+    }
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+
 /**
  * @cli history omrprefix
  * @code
@@ -1828,6 +1906,9 @@ otError History::Process(Arg aArgs[])
     static constexpr Command kCommands[] = {
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
         CmdEntry("ailrouters"),
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+        CmdEntry("dhcp6pd"),
+#endif
 #endif
         CmdEntry("dnssrpaddr"), CmdEntry("ipaddr"),       CmdEntry("ipmaddr"),
         CmdEntry("neighbor"),   CmdEntry("netinfo"),

@@ -75,6 +75,7 @@
 #include "common/owning_list.hpp"
 #include "common/pool.hpp"
 #include "common/string.hpp"
+#include "common/tasklet.hpp"
 #include "common/timer.hpp"
 #include "crypto/sha256.hpp"
 #include "net/ip6.hpp"
@@ -1724,6 +1725,9 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
     void HandlePdPrefixManagerTimer(void) { mPdPrefixManager.HandleTimer(); }
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    void HandlePdPrefixManagerTask(void) { mPdPrefixManager.HandleRecordHistoryTask(); }
+#endif
 
     class PdPrefixManager : public InstanceLocator
     {
@@ -1752,6 +1756,9 @@ private:
         void  HandleTimer(void) { WithdrawPrefix(); }
         void  SetStateCallback(Dhcp6PdCallback aCallback, void *aContext) { mStateCallback.Set(aCallback, aContext); }
         void  Evaluate(void);
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        void HandleRecordHistoryTask(void);
+#endif
 
     private:
         class PdPrefix : public OnLinkPrefix
@@ -1773,6 +1780,9 @@ private:
 
         using PrefixTimer   = TimerMilliIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerTimer>;
         using StateCallback = Callback<Dhcp6PdCallback>;
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        using RecordHistoryTask = TaskletIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerTask>;
+#endif
 
         State         mState;
         uint32_t      mNumPlatformPioProcessed;
@@ -1781,6 +1791,9 @@ private:
         StateCallback mStateCallback;
         PrefixTimer   mTimer;
         PdPrefix      mPrefix;
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        RecordHistoryTask mRecordHistoryTask;
+#endif
     };
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
