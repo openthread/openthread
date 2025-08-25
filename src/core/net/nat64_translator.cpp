@@ -730,21 +730,20 @@ void Translator::HandleTimer(void)
     OT_UNUSED_VARIABLE(numReleased);
 }
 
-void Translator::InitAddressMappingIterator(AddressMappingIterator &aIterator)
+void Translator::AddressMappingIterator::Init(Instance &aInstance)
 {
-    aIterator.mPtr = mActiveMappings.GetHead();
+    SetMapping(aInstance.Get<Translator>().mActiveMappings.GetHead());
+    SetInitTime(TimerMilli::GetNow());
 }
 
-Error Translator::GetNextAddressMapping(AddressMappingIterator &aIterator, AddressMapping &aMapping)
+Error Translator::AddressMappingIterator::GetNext(AddressMapping &aMapping)
 {
-    Error    error   = kErrorNotFound;
-    Mapping *mapping = static_cast<Mapping *>(aIterator.mPtr);
+    Error error = kErrorNone;
 
-    VerifyOrExit(mapping != nullptr);
+    VerifyOrExit(GetMapping() != nullptr, error = kErrorNotFound);
 
-    mapping->CopyTo(aMapping, TimerMilli::GetNow());
-    aIterator.mPtr = mapping->GetNext();
-    error          = kErrorNone;
+    GetMapping()->CopyTo(aMapping, GetInitTime());
+    SetMapping(GetMapping()->GetNext());
 
 exit:
     return error;

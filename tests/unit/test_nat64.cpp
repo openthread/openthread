@@ -360,8 +360,9 @@ void TestPacketCounter(void)
         otNat64AddressMapping                     mapping;
         size_t                                    totalMappingCount = 0;
 
-        sInstance->Get<Nat64::Translator>().InitAddressMappingIterator(iter);
-        while (sInstance->Get<Nat64::Translator>().GetNextAddressMapping(iter, mapping) == kErrorNone)
+        iter.Init(*sInstance);
+
+        while (iter.GetNext(mapping) == kErrorNone)
         {
             totalMappingCount++;
             VerifyCounters(otNat64ProtocolCounters{.mTotal =
@@ -432,8 +433,9 @@ void TestPacketCounter(void)
         otNat64AddressMapping                     mapping;
         size_t                                    totalMappingCount = 0;
 
-        sInstance->Get<Nat64::Translator>().InitAddressMappingIterator(iter);
-        while (sInstance->Get<Nat64::Translator>().GetNextAddressMapping(iter, mapping) == kErrorNone)
+        iter.Init(*sInstance);
+
+        while (iter.GetNext(mapping) == kErrorNone)
         {
             totalMappingCount++;
             VerifyCounters(otNat64ProtocolCounters{.mTotal =

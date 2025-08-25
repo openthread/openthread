@@ -71,11 +71,12 @@ const char *StateToString(State aState);
  */
 class Translator : public InstanceLocator, private NonCopyable
 {
+    struct Mapping;
+
 public:
-    typedef otNat64AddressMapping         AddressMapping;         ///< Address mapping.
-    typedef otNat64AddressMappingIterator AddressMappingIterator; ///< Address mapping Iterator.
-    typedef otNat64DropReason             DropReason;             ///< Drop reason.
-    typedef otNat64ErrorCounters          ErrorCounters;          ///< Error counters.
+    typedef otNat64AddressMapping AddressMapping; ///< Address mapping.
+    typedef otNat64DropReason     DropReason;     ///< Drop reason.
+    typedef otNat64ErrorCounters  ErrorCounters;  ///< Error counters.
 
     /**
      * The possible results of NAT64 translation.
@@ -85,6 +86,39 @@ public:
         kNotTranslated, ///< Not translated (e.g., Outgoing msg using a non-NAT64 prefix, or incoming is already IPv6).
         kForward,       ///< Successfully translated and the translated message should be forwarded.
         kDrop,          ///< Silently drop the message.
+    };
+
+    /**
+     * An iterator to iterate over `AddressMapping` entries.
+     */
+    class AddressMappingIterator : public otNat64AddressMappingIterator
+    {
+    public:
+        /**
+         * Initializes an `AddressMappingIterator`.
+         *
+         * An iterator MUST be initialized before it is used. An iterator can be initialized again to start from the
+         * beginning of the mapping info list.
+         *
+         * @param[in] aInstance  The OpenThread instance.
+         */
+        void Init(Instance &aInstance);
+
+        /**
+         * Gets the next `AddressMapping` info using the iterator.
+         *
+         * @param[out] aMapping    An `AddressMapping` to output to next NAT64 address mapping.
+         *
+         * @retval kErrorNone      Successfully found the next NAT64 address mapping info.
+         * @retval kErrorNotFound  No subsequent NAT64 address mapping info was found.
+         */
+        Error GetNext(AddressMapping &aMapping);
+
+    private:
+        void           SetMapping(const Mapping *aMapping) { mPtr = aMapping; }
+        const Mapping *GetMapping(void) const { return static_cast<const Mapping *>(mPtr); }
+        void           SetInitTime(TimeMilli aNow) { mData32 = aNow.GetValue(); }
+        TimeMilli      GetInitTime(void) const { return TimeMilli(mData32); }
     };
 
     /**
@@ -220,29 +254,6 @@ public:
     void ClearNat64Prefix(void);
 
     /**
-     * Initializes an `AddressMappingIterator`.
-     *
-     * An iterator MUST be initialized before it is used.
-     *
-     * An iterator can be initialized again to restart from the beginning of the mapping info.
-     *
-     * @param[out] aIterator  An iterator to initialize.
-     */
-    void InitAddressMappingIterator(AddressMappingIterator &aIterator);
-
-    /**
-     * Gets the next AddressMapping info (using an iterator).
-     *
-     * @param[in,out]  aIterator      The iterator.
-     * @param[out]     aMapping       An `AddressMapping` to output to next NAT64 address mapping.
-     *
-     * @retval kErrorNone      Successfully found the next NAT64 address mapping info (@p aMapping and @p aIterator
-     *                         are updated.
-     * @retval kErrorNotFound  No subsequent NAT64 address mapping info was found.
-     */
-    Error GetNextAddressMapping(AddressMappingIterator &aIterator, AddressMapping &aMapping);
-
-    /**
      * Gets the NAT64 translator counters.
      *
      * The counters are initialized to zero when the OpenThread instance is initialized.
@@ -359,6 +370,7 @@ private:
 
 DefineMapEnum(otNat64State, Nat64::State);
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+DefineCoreType(otNat64AddressMappingIterator, Nat64::Translator::AddressMappingIterator);
 DefineCoreType(otNat64ProtocolCounters, Nat64::Translator::ProtocolCounters);
 #endif
 
