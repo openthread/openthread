@@ -1180,8 +1180,6 @@ private:
     static constexpr uint32_t kMaxLinkAcceptDelay            = 1000; // Max delay to tx Link Accept for multicast Req
     static constexpr uint32_t kChildIdRequestTimeout         = 5000; // Max delay to rx a Child ID Req after Parent Res
     static constexpr uint32_t kLinkRequestTimeout            = 2000; // Max delay to rx a Link Accept
-    static constexpr uint32_t kLinkRequestRetxDelayMin       = 3000 * 9 / 10;
-    static constexpr uint32_t kLinkRequestRetxDelayMax       = 3000 * 11 / 10;
     static constexpr uint32_t kUnicastRetxDelay              = 1000; // Base delay for MLE unicast retx
     static constexpr uint32_t kMulticastRetxDelay            = 5000; // Base delay for MLE multicast retx
     static constexpr uint32_t kMulticastRetxDelayMin         = kMulticastRetxDelay * 9 / 10;  // 0.9 * base delay
@@ -1747,6 +1745,7 @@ private:
 
         Error Start(void);
         void  Stop(void);
+        void  HandleChildRestored(void);
         bool  IsRestoringChildRole(void) const { return mState == kRestoringChildFirstTry || mState == kRestoringChildWaitPeriod; }
         bool  IsRestoringRouterOrLeaderRole(void) const { return mState == kRestoringRouterOrLeaderRole; }
         void  HandleTimer(void);
@@ -1755,7 +1754,7 @@ private:
         const TxChallenge &GetChallenge(void) const { return mChallenge; }
 
     private:
-        static constexpr uint32_t kRouterMaxStartDelay          = 25;
+        static constexpr uint32_t kRouterMaxStartDelay          = 1000;
         static constexpr uint32_t kChildMaxStartDelay           = 5000;
         static constexpr uint8_t  kMaxChildUpdatesToRestoreRole = kMaxChildKeepAliveAttempts;
         static constexpr uint32_t kChildUpdateRetxDelay         = kUnicastRetxDelay; /// 1000 msec
@@ -1770,6 +1769,7 @@ private:
             kRestoringChildFirstTry,
             kRestoringChildWaitPeriod,
             kRestoringRouterOrLeaderRole,
+            kChildRestored,
         };
 
         void SetState(State aState);

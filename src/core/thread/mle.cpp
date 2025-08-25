@@ -3396,6 +3396,8 @@ void Mle::HandleChildUpdateResponseOnChild(RxInfo &aRxInfo)
         mParent.SetState(Neighbor::kStateValid);
         SetStateChild(GetRloc16());
 
+        mPrevRoleRestorer.HandleChildRestored();
+
         mRetrieveNewNetworkData = true;
 
 #if OPENTHREAD_FTD
@@ -5296,6 +5298,19 @@ void Mle::PrevRoleRestorer::Stop(void)
     mTimer.Stop();
 }
 
+void  Mle::PrevRoleRestorer::HandleChildRestored(void)
+{
+    if (IsRestoringChildRole())
+    {
+        mState = kChildRestored;
+        mTimer.Stop();
+        mTimer.Start(60000);
+        #if OPENTRHEAD_FTD
+        Get<Mle>().SetRouterEligible(false);
+        #endif
+    }
+}
+
 void Mle::PrevRoleRestorer::SetState(State aState)
 {
     mState = aState;
@@ -5309,6 +5324,15 @@ void Mle::PrevRoleRestorer::SetState(State aState)
 void Mle::PrevRoleRestorer::HandleTimer(void)
 {
     VerifyOrExit(mState != kIdle);
+
+    if (mState == kChildRestored)
+    {
+        #if OPENTRHEAD_FTD
+        Get<Mle>().SetRouterEligible(true);
+        #endif
+        Stop();
+        ExitNow();
+    }
 
     if (!Get<Mle>().IsDetached())
     {
@@ -5376,7 +5400,7 @@ void Mle::PrevRoleRestorer::SendMulticastLinkRequest(void)
     uint32_t delay;
 
     delay = (mAttempts == 0) ? kLinkRequestTimeout
-                             : Random::NonCrypto::GetUint32InRange(kLinkRequestRetxDelayMin, kLinkRequestRetxDelayMax);
+                             : Random::NonCrypto::GetUint32InRange(kMulticastRetxDelayMin, kMulticastRetxDelayMax);
 
     mTimer.Start(delay);
 
