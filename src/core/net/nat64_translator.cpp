@@ -495,12 +495,7 @@ exit:
 
 Translator::Mapping *Translator::FindOrAllocateMapping(const Ip6::Headers &aIp6Headers)
 {
-#if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
-    uint16_t srcPortOrId = GetSourcePortOrIcmp6Id(aIp6Headers);
-    Mapping *mapping     = mActiveMappings.FindMatching(aIp6Headers.GetSourceAddress(), srcPortOrId);
-#else
-    Mapping *mapping = mActiveMappings.FindMatching(aIp6Headers.GetSourceAddress());
-#endif
+    Mapping *mapping = mActiveMappings.FindMatching(aIp6Headers);
 
     // Exit if we found a valid mapping.
     VerifyOrExit(mapping == nullptr);
@@ -513,17 +508,13 @@ exit:
 
 Translator::Mapping *Translator::FindMapping(const Ip4::Headers &aIp4Headers)
 {
-#if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
-    uint16_t dstPortOrId = GetDestinationPortOrIcmp4Id(aIp4Headers);
-    Mapping *mapping     = mActiveMappings.FindMatching(aIp4Headers.GetDestinationAddress(), dstPortOrId);
-#else
-    Mapping *mapping = mActiveMappings.FindMatching(aIp4Headers.GetDestinationAddress());
-#endif
+    Mapping *mapping = mActiveMappings.FindMatching(aIp4Headers);
 
     if (mapping != nullptr)
     {
         mapping->Touch(TimerMilli::GetNow(), aIp4Headers.GetIpProto());
     }
+
     return mapping;
 }
 
@@ -539,14 +530,34 @@ void Translator::Mapping::Touch(TimeMilli aNow, uint8_t aProtocol)
     }
 }
 
-bool Translator::Mapping::Matches(const Ip6::Address &aIp6Address, const uint16_t aPort) const
+bool Translator::Mapping::Matches(const Ip6::Headers &aIp6Headers) const
 {
-    return ((mIp6Address == aIp6Address) && (mSrcPortOrId == aPort));
+    bool matches = false;
+
+#if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
+    VerifyOrExit(mSrcPortOrId == GetSourcePortOrIcmp6Id(aIp6Headers));
+#endif
+    VerifyOrExit(mIp6Address == aIp6Headers.GetSourceAddress());
+
+    matches = true;
+
+exit:
+    return matches;
 }
 
-bool Translator::Mapping::Matches(const Ip4::Address &aIp4Address, const uint16_t aPort) const
+bool Translator::Mapping::Matches(const Ip4::Headers &aIp4Headers) const
 {
-    return ((mIp4Address == aIp4Address) && (mTranslatedPortOrId == aPort));
+    bool matches = false;
+
+#if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
+    VerifyOrExit(mTranslatedPortOrId == GetDestinationPortOrIcmp4Id(aIp4Headers));
+#endif
+    VerifyOrExit(mIp4Address == aIp4Headers.GetDestinationAddress());
+
+    matches = true;
+
+exit:
+    return matches;
 }
 
 Error Translator::TranslateIcmp4(Message &aMessage, uint16_t aOriginalId)
