@@ -435,6 +435,23 @@ typedef enum otRadioState
  * During the IEEE 802.15.4 data request command the transition Sleep->Receive->Transmit
  * can be shortened to direct transition from Sleep to Transmit if the platform supports
  * the OT_RADIO_CAPS_SLEEP_TO_TX capability.
+ *
+ * If the platform supports `OT_RADIO_CAPS_RX_ON_WHEN_IDLE`, the Sleep state is actually a Sleepy state, a state that
+ * allows the radio to sleep. Accordingly, the Receive() is actually putting the device into the state that it would
+ * keep its receiver on the specified channel if no other radio operation is ongoing. And Sleep() is actually putting
+ * the device into the state that it would turn its receiver off when no other radio operation is ongoing.
+ *
+ *
+ *  +----------+  Enable()  +----------+  Receive() +---------+   Transmit()  +----------+
+ *  |          |----------->|          |----------->|         |-------------->|          |
+ *  | Disabled |            | Sleep(y) |            | Receive |               | Transmit |
+ *  |          |<-----------|          |<-----------|         |<--------------|          |
+ *  +----------+  Disable() +----------+   Sleep()  +---------+   Receive()   +---+-+----+
+ *                             ^ ^                        ^                       | |
+ *                             | | Tx Done                | Tx Done               | | Sleep()
+ *                             | | (RxOnWhenIdle = false) | (RxOnWhenIdle = true) | |
+ *                             | +------------------------+-----------------------+ |
+ *                             +----------------------------------------------------+
  */
 
 /**
@@ -843,7 +860,10 @@ otError otPlatRadioDisable(otInstance *aInstance);
 bool otPlatRadioIsEnabled(otInstance *aInstance);
 
 /**
- * Transition the radio from Receive to Sleep (turn off the radio).
+ * Transition the radio from Receive to Sleep.
+ *
+ * If the platform supports `OT_RADIO_CAPS_RX_ON_WHEN_IDLE`, this is equivalent to call SetRxOnWhenIdle(FALSE).
+ * Otherwise, this call simply turn off the radio.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
@@ -855,6 +875,8 @@ otError otPlatRadioSleep(otInstance *aInstance);
 
 /**
  * Transition the radio from Sleep to Receive (turn on the radio).
+ *
+ * If the platform supports `OT_RADIO_CAPS_RX_ON_WHEN_IDLE`, this also updates the RxOnWhenIdle flag to TRUE.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  * @param[in]  aChannel   The channel to use for receiving.
