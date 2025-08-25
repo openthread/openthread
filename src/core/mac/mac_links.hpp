@@ -408,19 +408,6 @@ public:
     }
 
     /**
-     * Indicates whether radio should stay in Receive or Sleep during idle periods.
-     *
-     * @param[in]  aRxOnWhenIdle  TRUE to keep radio in Receive, FALSE to put to Sleep during idle periods.
-     */
-    void SetRxOnWhenIdle(bool aRxOnWhenIdle)
-    {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-        mSubMac.SetRxOnWhenIdle(aRxOnWhenIdle);
-#endif
-        OT_UNUSED_VARIABLE(aRxOnWhenIdle);
-    }
-
-    /**
      * Enables all radio links.
      */
     void Enable(void)
@@ -447,7 +434,7 @@ public:
     }
 
     /**
-     * Transitions all radio links to Sleep.
+     * Transitions all radio links to Sleep, a.k.a. rx-off-when-idle mode.
      */
     void Sleep(void)
     {
@@ -502,7 +489,7 @@ public:
 #endif
 
     /**
-     * Transitions all radio links to Receive.
+     * Transitions all radio links to Receive, a.k.a. rx-on-when-idle mode.
      *
      * @param[in]  aChannel   The channel to use for receiving.
      */

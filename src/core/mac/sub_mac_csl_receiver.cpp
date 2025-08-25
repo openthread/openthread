@@ -197,7 +197,7 @@ void SubMac::HandleCslReceiveOrSleep(uint32_t aTimeAhead, uint32_t aTimeAfter)
     {
         mIsCslSampling = false;
         mCslTimer.FireAt(mCslSampleTimeLocal - aTimeAhead);
-        if (mState == kStateRadioSample)
+        if (mState == kStateIdle)
         {
             LogDebg("CSL sleep %lu", ToUlong(mCslTimer.GetNow().GetValue()));
         }
@@ -292,7 +292,7 @@ void SubMac::LogReceived(RxFrame *aFrame)
             mIsCslSampling ? "CslSample" : "CslSleep",
             ToUlong(static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp)));
 
-    VerifyOrExit(mState == kStateRadioSample);
+    VerifyOrExit(mState == kStateIdle);
 
     GetCslWindowEdges(ahead, after);
     ahead -= kMinReceiveOnAhead + kCslReceiveTimeAhead;

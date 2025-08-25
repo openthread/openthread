@@ -209,7 +209,7 @@ Error SubMac::Enable(void)
     SuccessOrExit(error = Get<Radio>().Enable());
     SuccessOrExit(error = Get<Radio>().Sleep());
 
-    SetState(kStateSleep);
+    SetState(kStateIdle);
 
 exit:
     SuccessOrAssert(error);
@@ -240,6 +240,8 @@ Error SubMac::Sleep(void)
 {
     Error error = kErrorNone;
 
+    mRxOnWhenIdle = false;
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     if (IsRadioSampleEnabled())
     {
@@ -269,7 +271,7 @@ exit:
     }
     else
     {
-        SetState(kStateSleep);
+        SetState(kStateIdle);
     }
 
     return error;
@@ -297,6 +299,7 @@ Error SubMac::Receive(uint8_t aChannel)
     }
 
     SetState(kStateReceive);
+    mRxOnWhenIdle = true;
 
 exit:
     return error;
@@ -341,11 +344,8 @@ Error SubMac::Send(void)
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     case kStateDelayBeforeRetx:
 #endif
-    case kStateSleep:
+    case kStateIdle:
     case kStateReceive:
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    case kStateRadioSample:
-#endif
         break;
 
     case kStateEnergyScan:
@@ -720,10 +720,7 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
         ExitNow(error = kErrorInvalidState);
 
     case kStateReceive:
-    case kStateSleep:
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    case kStateRadioSample:
-#endif
+    case kStateIdle:
         break;
     }
 
@@ -1032,11 +1029,11 @@ void SubMac::StartTimerAt(Time aStartTime, uint32_t aDelayUs)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 void SubMac::RadioSample(void)
 {
+    SetState(kStateIdle);
+
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     VerifyOrExit(!mRadioFilterEnabled, IgnoreError(Get<Radio>().Sleep()));
 #endif
-
-    SetState(kStateRadioSample);
 
     if (!RadioSupportsReceiveTiming())
     {
@@ -1095,7 +1092,7 @@ bool SubMac::IsRadioSampleEnabled(void) const
  */
 void SubMac::UpdateRadioSampleState(void)
 {
-    VerifyOrExit(mState == kStateRadioSample);
+    VerifyOrExit(mState == kStateIdle);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (mIsCslSampling)
@@ -1139,9 +1136,6 @@ const char *SubMac::StateToString(State aState)
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         "CslTransmit", // (7) kStateCslTransmit
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-        "RadioSample", // (8) kStateRadioSample
-#endif
     };
 
     struct StateValueChecker
@@ -1149,7 +1143,7 @@ const char *SubMac::StateToString(State aState)
         InitEnumValidatorCounter();
 
         ValidateNextEnum(kStateDisabled);
-        ValidateNextEnum(kStateSleep);
+        ValidateNextEnum(kStateIdle);
         ValidateNextEnum(kStateReceive);
         ValidateNextEnum(kStateCsmaBackoff);
         ValidateNextEnum(kStateTransmit);
@@ -1159,9 +1153,6 @@ const char *SubMac::StateToString(State aState)
 #endif
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         ValidateNextEnum(kStateCslTransmit);
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-        ValidateNextEnum(kStateRadioSample);
 #endif
     };
 
