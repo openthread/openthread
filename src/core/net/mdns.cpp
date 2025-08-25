@@ -4859,16 +4859,22 @@ exit:
 
 void Core::MultiPacketRxMessages::AddNew(OwnedPtr<RxMessage> &aRxMessagePtr)
 {
-    RxMsgEntry *newEntry = RxMsgEntry::Allocate(GetInstance());
+    RxMsgEntry *newEntry;
 
-    OT_ASSERT(newEntry != nullptr);
-    newEntry->Add(aRxMessagePtr);
-
-    // First remove an existing entries matching same sender
+    // First remove existing entries matching same sender
     // before adding the new entry to the list.
 
     mRxMsgEntries.RemoveMatching(aRxMessagePtr->GetSenderAddress());
+
+    newEntry = RxMsgEntry::Allocate(GetInstance());
+    VerifyOrExit(newEntry != nullptr);
+
+    newEntry->Add(aRxMessagePtr);
+
     mRxMsgEntries.Push(*newEntry);
+
+exit:
+    return;
 }
 
 void Core::MultiPacketRxMessages::HandleTimer(void)
