@@ -85,12 +85,16 @@ otError otNat64GetNextAddressMapping(otInstance                    *aInstance,
 
 void otNat64GetCounters(otInstance *aInstance, otNat64ProtocolCounters *aCounters)
 {
-    AsCoreType(aInstance).Get<Nat64::Translator>().GetCounters(AsCoreType(aCounters));
+    AssertPointerIsNotNull(aCounters);
+
+    *aCounters = AsCoreType(aInstance).Get<Nat64::Translator>().GetCounters();
 }
 
 void otNat64GetErrorCounters(otInstance *aInstance, otNat64ErrorCounters *aCounters)
 {
-    AsCoreType(aInstance).Get<Nat64::Translator>().GetErrorCounters(AsCoreType(aCounters));
+    AssertPointerIsNotNull(aCounters);
+
+    *aCounters = AsCoreType(aInstance).Get<Nat64::Translator>().GetErrorCounters();
 }
 
 otError otNat64GetCidr(otInstance *aInstance, otIp4Cidr *aCidr)

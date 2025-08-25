@@ -75,6 +75,7 @@ public:
     typedef otNat64AddressMapping         AddressMapping;         ///< Address mapping.
     typedef otNat64AddressMappingIterator AddressMappingIterator; ///< Address mapping Iterator.
     typedef otNat64DropReason             DropReason;             ///< Drop reason.
+    typedef otNat64ErrorCounters          ErrorCounters;          ///< Error counters.
 
     /**
      * The possible results of NAT64 translation.
@@ -94,20 +95,13 @@ public:
         friend class Translator;
 
     private:
-        void Count6To4Packet(uint8_t aProtocol, uint64_t aPacketSize);
-        void Count4To6Packet(uint8_t aProtocol, uint64_t aPacketSize);
-    };
+        typedef otNat64Counters Counters;
 
-    /**
-     * Represents the counters of dropped packets due to errors when handling NAT64 packets.
-     */
-    class ErrorCounters : public otNat64ErrorCounters, public Clearable<otNat64ErrorCounters>
-    {
-        friend class Translator;
+        void Count6To4Packet(const Ip6::Headers &aIp6Headers);
+        void Count4To6Packet(const Ip4::Headers &aIp4Headers);
 
-    public:
-        void Count4To6(DropReason aReason) { mCount4To6[aReason]++; }
-        void Count6To4(DropReason aReason) { mCount6To4[aReason]++; }
+        static void Update6To4(Counters &aCounters, uint16_t aSize);
+        static void Update4To6(Counters &aCounters, uint16_t aSize);
     };
 
     /**
@@ -253,18 +247,18 @@ public:
      *
      * The counters are initialized to zero when the OpenThread instance is initialized.
      *
-     * @param[out] aCounters A `ProtocolCounters` where the counters of NAT64 translator will be placed.
+     * @returns The protocol counters.
      */
-    void GetCounters(ProtocolCounters &aCounters) const { aCounters = mCounters; }
+    const ProtocolCounters &GetCounters(void) const { return mCounters; }
 
     /**
      * Gets the NAT64 translator error counters.
      *
      * The counters are initialized to zero when the OpenThread instance is initialized.
      *
-     * @param[out] aCounters  An `ErrorCounters` where the counters of NAT64 translator will be placed.
+     * @returns The error counters.
      */
-    void GetErrorCounters(ErrorCounters &aCounters) const { aCounters = mErrorCounters; }
+    const ErrorCounters &GetErrorCounters(void) const { return mErrorCounters; }
 
     /**
      * Gets the configured CIDR in the NAT64 translator.
@@ -368,7 +362,6 @@ private:
 DefineMapEnum(otNat64State, Nat64::State);
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 DefineCoreType(otNat64ProtocolCounters, Nat64::Translator::ProtocolCounters);
-DefineCoreType(otNat64ErrorCounters, Nat64::Translator::ErrorCounters);
 #endif
 
 } // namespace ot
