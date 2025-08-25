@@ -107,6 +107,16 @@ exit:
     return error;
 }
 
+uint16_t Translator::GetSourcePortOrIcmp6Id(const Ip6::Headers &aIp6Headers)
+{
+    return aIp6Headers.IsIcmp6() ? aIp6Headers.GetIcmpHeader().GetId() : aIp6Headers.GetSourcePort();
+}
+
+uint16_t Translator::GetDestinationPortOrIcmp4Id(const Ip4::Headers &aIp4Headers)
+{
+    return aIp4Headers.IsIcmp4() ? aIp4Headers.GetIcmpHeader().GetId() : aIp4Headers.GetDestinationPort();
+}
+
 Translator::Result Translator::TranslateFromIp6(Message &aMessage)
 {
     Result       result     = kDrop;
@@ -148,7 +158,7 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
     srcPortOrId = mapping->mTranslatedPortOrId;
 #else
-    srcPortOrId = ip6Headers.IsIcmp6() ? ip6Headers.GetIcmpHeader().GetId() : ip6Headers.GetSourcePort();
+    srcPortOrId = GetSourcePortOrIcmp6Id(ip6Headers);
 #endif
 
     aMessage.RemoveHeader(sizeof(Ip6::Header));
@@ -260,7 +270,7 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
     dstPortOrId = mapping->mSrcPortOrId;
 #else
-    dstPortOrId = ip4Headers.IsIcmp4() ? ip4Headers.GetIcmpHeader().GetId() : ip4Headers.GetDestinationPort();
+    dstPortOrId = GetDestinationPortOrIcmp4Id(ip4Headers);
 #endif
 
     aMessage.RemoveHeader(sizeof(Ip4::Header));
@@ -466,7 +476,7 @@ Translator::Mapping *Translator::AllocateMapping(const Ip6::Headers &aIp6Headers
     mapping->mIp6Address = aIp6Headers.GetSourceAddress();
     mapping->mIp4Address = ip4Addr;
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
-    mapping->mSrcPortOrId = aIp6Headers.IsIcmp6() ? aIp6Headers.GetIcmpHeader().GetId() : aIp6Headers.GetSourcePort();
+    mapping->mSrcPortOrId        = GetSourcePortOrIcmp6Id(aIp6Headers);
     mapping->mTranslatedPortOrId = AllocateSourcePort(mapping->mSrcPortOrId);
 #else
     mapping->mSrcPortOrId        = 0;
@@ -483,7 +493,7 @@ exit:
 Translator::Mapping *Translator::FindOrAllocateMapping(const Ip6::Headers &aIp6Headers)
 {
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
-    uint16_t srcPortOrId = aIp6Headers.IsIcmp6() ? aIp6Headers.GetIcmpHeader().GetId() : aIp6Headers.GetSourcePort();
+    uint16_t srcPortOrId = GetSourcePortOrIcmp6Id(aIp6Headers);
     Mapping *mapping     = mActiveMappings.FindMatching(aIp6Headers.GetSourceAddress(), srcPortOrId);
 #else
     Mapping *mapping = mActiveMappings.FindMatching(aIp6Headers.GetSourceAddress());
@@ -500,14 +510,11 @@ exit:
 
 Translator::Mapping *Translator::FindMapping(const Ip4::Headers &aIp4Headers)
 {
-    uint16_t dstPortOrId =
-        aIp4Headers.IsIcmp4() ? aIp4Headers.GetIcmpHeader().GetId() : aIp4Headers.GetDestinationPort();
-
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
-    Mapping *mapping = mActiveMappings.FindMatching(aIp4Headers.GetDestinationAddress(), dstPortOrId);
+    uint16_t dstPortOrId = GetDestinationPortOrIcmp4Id(aIp4Headers);
+    Mapping *mapping     = mActiveMappings.FindMatching(aIp4Headers.GetDestinationAddress(), dstPortOrId);
 #else
     Mapping *mapping = mActiveMappings.FindMatching(aIp4Headers.GetDestinationAddress());
-    OT_UNUSED_VARIABLE(dstPortOrId);
 #endif
 
     if (mapping != nullptr)

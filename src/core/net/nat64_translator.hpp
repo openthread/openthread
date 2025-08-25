@@ -344,6 +344,9 @@ private:
     uint16_t AllocateSourcePort(uint16_t aSrcPort);
 #endif
 
+    static uint16_t GetSourcePortOrIcmp6Id(const Ip6::Headers &aIp6Headers);
+    static uint16_t GetDestinationPortOrIcmp4Id(const Ip4::Headers &aIp4Headers);
+
     using TranslatorTimer = TimerMilliIn<Translator, &Translator::HandleTimer>;
 
     bool                           mEnabled;
