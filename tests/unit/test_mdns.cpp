@@ -4813,6 +4813,29 @@ void TestMultiPacket(void)
     AdvanceTime(5000);
     VerifyOrQuit(sDnsMessages.IsEmpty());
 
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send the same truncated query multiple times to validate msg eviction");
+
+    AdvanceTime(2000);
+
+    sDnsMessages.Clear();
+    SendQuery("_services._dns-sd._udp.local.", ResourceRecord::kTypePtr, ResourceRecord::kClassInternet,
+              /* aTruncated */ true);
+
+    AdvanceTime(20);
+
+    SendQuery("_services._dns-sd._udp.local.", ResourceRecord::kTypePtr, ResourceRecord::kClassInternet,
+              /* aTruncated */ true);
+
+    knownAnswers[1].mPtrAnswer = "_tst._udp.local.";
+    knownAnswers[1].mTtl       = 4500;
+
+    SendEmtryPtrQueryWithKnownAnswers("_services._dns-sd._udp.local.", knownAnswers, 2);
+
+    Log("We expect no response since the followed-up message contains a matching known-answer");
+    AdvanceTime(5000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
     SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
     VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
 
