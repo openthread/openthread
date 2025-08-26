@@ -307,12 +307,10 @@ private:
         void       Touch(TimeMilli aNow, uint8_t aProtocol);
         InfoString ToString(void) const;
         void       CopyTo(AddressMapping &aMapping, TimeMilli aNow) const;
-        bool       Matches(const Ip4::Address &aIp4Address) const { return mIp4Address == aIp4Address; }
-        bool       Matches(const Ip6::Address &aIp6Address) const { return mIp6Address == aIp6Address; }
-        bool       Matches(const uint16_t aPort) const { return mTranslatedPortOrId == aPort; }
+        bool       Matches(const Ip6::Headers &aIp6Headers) const;
+        bool       Matches(const Ip4::Headers &aIp4Headers) const;
         bool       Matches(const TimeMilli aNow) const { return mExpiry < aNow; }
-        bool       Matches(const Ip6::Address &aIp6Address, const uint16_t aPort) const;
-        bool       Matches(const Ip4::Address &aIp4Address, const uint16_t aPort) const;
+        bool       Matches(const uint16_t aPort) const { return mTranslatedPortOrId == aPort; }
 
         Mapping         *mNext;
         uint64_t         mId;
