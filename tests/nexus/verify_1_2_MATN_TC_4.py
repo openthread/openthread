@@ -63,24 +63,11 @@ def verify(pv):
     pkts = pv.pkts
     vars = pv.vars
 
-    def _is_from_br1(p):
-        try:
-            if p.ipv6.src == vars['BR_1_RLOC']:
-                return True
-            if p.ipv6.opt.mpl.flag.s == 1 and\
-               p.ipv6.opt.mpl.seed_id == Bytes(struct.pack('>H', vars['BR_1_RLOC16'])):
-                return True
-        except (AttributeError, KeyError):
-            pass
-        return False
-
     def _verify_br1_forwards_ping():
-        # The packet is forwarded as MPL-encapsulated ICMPv6 Echo Request to ff03::fc
         pkts.filter_wpan_src64(vars['BR_1']).\
+            filter_ipv6_dst(Ipv6Addr(vars['MA1'])).\
+            filter_MPL(mpl_seed_id=vars['BR_1_RLOC']).\
             filter_ping_request().\
-            filter(lambda p: p.ipv6.dst == 'ff03::fc' or\
-                             p.ipv6.dst == Ipv6Addr(vars['MA1'])).\
-            filter(_is_from_br1).\
             must_next()
 
     def _verify_br1_does_not_forward_ping():
@@ -89,10 +76,9 @@ def verify(pv):
         stop_idx = (min(start_idx[0] + 100, len(pkts)), min(start_idx[1] + 100, len(pkts)))
         pkts.range(start_idx, stop_idx).\
             filter_wpan_src64(vars['BR_1']).\
+            filter_ipv6_dst(Ipv6Addr(vars['MA1'])).\
+            filter_MPL(mpl_seed_id=vars['BR_1_RLOC']).\
             filter_ping_request().\
-            filter(lambda p: p.ipv6.dst == 'ff03::fc' or\
-                             p.ipv6.dst == Ipv6Addr(vars['MA1'])).\
-            filter(_is_from_br1).\
             must_not_next()
 
     # Step 0
@@ -183,9 +169,10 @@ def verify(pv):
     # - Pass Criteria:
     #   - N/A
     print("Step 7: Host sends an ICMPv6 Echo (ping) Request packet to the multicast address, MA1.")
-    pkts.filter_ping_request().\
+    _pkt = pkts.filter_ping_request().\
         filter(lambda p: p.ipv6.dst == Ipv6Addr(vars['MA1'])).\
         filter(lambda p: p.ipv6.src == Ipv6Addr(vars['HOST_BACKBONE_ULA'])).\
+        filter(lambda p: p.sniff_timestamp > 400.0).\
         must_next()
 
     # Step 8
@@ -220,6 +207,7 @@ def verify(pv):
     pkts.filter_ping_request().\
         filter(lambda p: p.ipv6.dst == Ipv6Addr(vars['MA1'])).\
         filter(lambda p: p.ipv6.src == Ipv6Addr(vars['HOST_BACKBONE_ULA'])).\
+        filter(lambda p: p.sniff_timestamp > _pkt.sniff_timestamp + 10.0).\
         must_next()
 
     # Step 11

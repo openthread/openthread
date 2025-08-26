@@ -208,7 +208,7 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
             # 6. BR_1 forwards the ping packet of the previous step to its
             # Thread Network encapsulated in an MPL packet.
             pkts.copy().filter_wpan_src64(vars['BR_1']) \
-                .filter_AMPLFMA(mpl_seed_id=vars['BR_1_RLOC']) \
+                .filter_MPL(mpl_seed_id=vars['BR_1_RLOC']) \
                 .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
                 .must_next()
 
@@ -220,7 +220,7 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
 
         # 8. BR_1 does not forward the packet to its Thread Network.
         pkts.filter_wpan_src64(vars['BR_1']) \
-            .filter_AMPLFMA() \
+            .filter_MPL() \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
             .must_not_next()
 

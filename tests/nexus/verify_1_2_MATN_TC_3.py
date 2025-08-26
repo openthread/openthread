@@ -127,7 +127,7 @@ def verify(pv):
     print("Step 5: BR_1 forwards the ping request packet to its Thread Network.")
     pkts.filter_wpan_src64(vars['BR_1']).\
         filter_ping_request().\
-        filter(lambda p: p.ipv6.dst == 'ff03::fc').\
+        filter(lambda p: p.ipv6.dst == Ipv6Addr(vars['MA1'])).\
         must_next()
 
     # Step 6

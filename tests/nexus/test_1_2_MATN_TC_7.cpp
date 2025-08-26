@@ -67,7 +67,7 @@ static constexpr uint32_t kInfraIfIndex = 1;
 /**
  * Multicast address MA5 (realm-local).
  */
-static const char kMA5[] = "ff03::1234:777a:1";
+static const char kMA5[] = "ff03::1234:777a:5";
 
 /**
  * Multicast address (admin-local).

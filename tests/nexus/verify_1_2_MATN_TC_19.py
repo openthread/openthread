@@ -198,13 +198,13 @@ def verify(pv):
 
     # Step 8
     # - Device: BR_1
-    # - Description: Automatically forwards the ping request packet to its Thread Network encapsulated in an MPL packet.
+    # - Description: Automatically forwards the ping request packet to its Thread Network.
     # - Pass Criteria:
     #   - N/A
     print("Step 8: BR_1 Automatically forwards the ping request packet to its Thread Network.")
     pkts.filter_wpan_src64(BR_1).\
         filter_ping_request().\
-        filter(lambda p: p.ipv6.dst == 'ff03::fc').\
+        filter(lambda p: p.ipv6.dst == v_MA3).\
         must_next()
 
     # Step 8a

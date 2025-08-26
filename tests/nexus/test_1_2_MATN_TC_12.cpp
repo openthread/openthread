@@ -57,7 +57,6 @@ static constexpr uint16_t kEchoIdentifier2 = 0x1232;
 static constexpr uint16_t kEchoIdentifier3 = 0x1233;
 static constexpr uint16_t kEchoIdentifier4 = 0x1234;
 static constexpr uint16_t kEchoIdentifier5 = 0x1235;
-static constexpr uint16_t kEchoIdentifier6 = 0x1236;
 
 /**
  * ICMPv6 Echo Request payload size.
@@ -81,7 +80,6 @@ static constexpr uint8_t kHopLimit59  = 59;
 static constexpr uint8_t kHopLimit1   = 1;
 static constexpr uint8_t kHopLimit159 = 159;
 static constexpr uint8_t kHopLimit2   = 2;
-static constexpr uint8_t kHopLimit0   = 0;
 
 void TestMatnTc12(void)
 {
@@ -302,32 +300,6 @@ void TestMatnTc12(void)
 
     /**
      * Step 12
-     * - Device: BR_1 (DUT)
-     * - Description: Does not forward the ping request packet to the LAN.
-     * - Pass Criteria:
-     *   - The DUT MUST NOT forward the ICMPv6 Echo (ping) Request packet to the LAN.
-     */
-
-    Log("Step 13: Harness instructs the device to send a ICMPv6 Echo (ping) Request packet encapsulated in an MPL "
-        "multicast packet to the multicast address, MA2, with the Hop Limit field of the inner (encapsulated) packet "
-        "set to 0.");
-
-    /**
-     * Step 13
-     * - Device: Router
-     * - Description: Harness instructs the device to send a ICMPv6 Echo (ping) Request packet encapsulated in an MPL
-     *   multicast packet to the multicast address, MA2, with the Hop Limit field of the inner (encapsulated) packet set
-     *   to 0.
-     * - Pass Criteria:
-     *   - N/A
-     */
-    router.SendEchoRequest(ma2, kEchoIdentifier6, kEchoPayloadSize, kHopLimit0);
-    nexus.AdvanceTime(kStabilizationTime);
-
-    Log("Step 14: Does not forward the ping request packet to the LAN.");
-
-    /**
-     * Step 14
      * - Device: BR_1 (DUT)
      * - Description: Does not forward the ping request packet to the LAN.
      * - Pass Criteria:

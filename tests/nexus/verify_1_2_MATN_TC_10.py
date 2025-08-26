@@ -131,8 +131,9 @@ def verify(pv):
     #   - N/A
     print("Step 6: BR_1 automatically forwards the ping request packet to its Thread Network.")
     pkts.filter_wpan_src64(vars['BR_1']).\
+        filter_ipv6_dst(MA1).\
+        filter_MPL(mpl_seed_id=vars['BR_1_RLOC']).\
         filter_ping_request(identifier=ECHO_ID1).\
-        filter_AMPLFMA().\
         must_next()
 
     # Step 7
