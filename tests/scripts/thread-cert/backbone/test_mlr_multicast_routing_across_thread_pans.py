@@ -203,7 +203,7 @@ class TestMlr(thread_cert.TestCase):
         #
 
         # ROUTER1 should send the multicast ping request
-        ping_ma2 = pkts.filter_wpan_src64(ROUTER1).filter_AMPLFMA(
+        ping_ma2 = pkts.filter_wpan_src64(ROUTER1).filter_MPL(
             mpl_seed_id=ROUTER1_RLOC).filter_ping_request().must_next()
 
         # PBBR1 should forward the multicast ping request to the Backbone link
@@ -216,7 +216,7 @@ class TestMlr(thread_cert.TestCase):
                 identifier=ping_ma2.icmpv6.echo.identifier).must_next()
 
         # PBBR2 should forward the multicast ping request to Thread network at CH2
-        pkts.filter_wpan_src64(PBBR2).filter_AMPLFMA().filter_ping_request(
+        pkts.filter_wpan_src64(PBBR2).filter_MPL().filter_ping_request(
             identifier=ping_ma2.icmpv6.echo.identifier).must_next()
 
         # ROUTER2 should send ping reply back to ROUTER1
@@ -228,7 +228,7 @@ class TestMlr(thread_cert.TestCase):
         #
 
         # ROUTER1 should send the multicast ping request
-        ping_ma2_2 = pkts.filter_wpan_src64(ROUTER1).filter_AMPLFMA(mpl_seed_id=ROUTER1_RLOC).filter_ping_request(
+        ping_ma2_2 = pkts.filter_wpan_src64(ROUTER1).filter_MPL(mpl_seed_id=ROUTER1_RLOC).filter_ping_request(
             identifier=ping_ma2.icmpv6.echo.identifier + 1).must_next()
 
         # PBBR1 shouldn't forward the multicast ping request to the Backbone link
@@ -239,7 +239,7 @@ class TestMlr(thread_cert.TestCase):
         #
 
         # ROUTER1 should send the multicast ping request
-        ping_ma2_3 = pkts.filter_wpan_src64(ROUTER1).filter_AMPLFMA(mpl_seed_id=ROUTER1_RLOC).filter_ping_request(
+        ping_ma2_3 = pkts.filter_wpan_src64(ROUTER1).filter_MPL(mpl_seed_id=ROUTER1_RLOC).filter_ping_request(
             identifier=ping_ma2.icmpv6.echo.identifier + 1).must_next()
 
         # PBBR1 shouldn't forward the multicast ping request to the Backbone link

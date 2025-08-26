@@ -277,25 +277,25 @@ class Firewall(thread_cert.TestCase):
         # 9. Host pings MA1 from host's ULA address.
         _pkt = pkts.filter_eth_src(vars['Host_ETH']).filter_ipv6_dst(MA1).filter_ping_request().must_next()
         pkts.filter_wpan_src64(
-            vars['BR_1']).filter_AMPLFMA().filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_next()
+            vars['BR_1']).filter_MPL().filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_next()
 
         # 10. Host pings MA1 from router1's RLOC.
         _pkt = pkts.filter_eth_src(vars['Host_ETH']).filter_ipv6_src_dst(vars['Router_1_RLOC'],
                                                                          MA1).filter_ping_request().must_next()
         pkts.filter_wpan_src64(
-            vars['BR_1']).filter_AMPLFMA().filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_not_next()
+            vars['BR_1']).filter_MPL().filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_not_next()
 
         # 11. Host pings MA1 from router1's OMR.
         _pkt = pkts.filter_eth_src(vars['Host_ETH']).filter_ipv6_src_dst(vars['Router_1_OMR'][0],
                                                                          MA1).filter_ping_request().must_next()
         pkts.filter_wpan_src64(
-            vars['BR_1']).filter_AMPLFMA().filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_not_next()
+            vars['BR_1']).filter_MPL().filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_not_next()
 
         # 12. Host pings MA1 from router1's ML-EID.
         _pkt = pkts.filter_eth_src(vars['Host_ETH']).filter_ipv6_src_dst(vars['Router_1_MLEID'],
                                                                          MA1).filter_ping_request().must_next()
         pkts.filter_wpan_src64(
-            vars['BR_1']).filter_AMPLFMA().filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_not_next()
+            vars['BR_1']).filter_MPL().filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_not_next()
 
         # 13. Router1 pings Host from router1's ML-EID.
         pkts.filter_eth_src(vars['BR_1_ETH']).filter_ipv6_src_dst(

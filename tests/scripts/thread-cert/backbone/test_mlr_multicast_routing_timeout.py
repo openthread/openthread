@@ -154,7 +154,7 @@ class TestMlrTimeout(thread_cert.TestCase):
         # Host pings Router after MLR.req
         ping = pkts.filter_eth_src(HOST_ETH).filter_ipv6_dst(MA1).filter_ping_request().must_next()
         # PBBR should forward this ping request to Thread network
-        pkts.filter_wpan_src64(PBBR).filter_AMPLFMA().filter_ping_request(
+        pkts.filter_wpan_src64(PBBR).filter_MPL().filter_ping_request(
             identifier=ping.icmpv6.echo.identifier).must_next()
         # Router should reply
         pkts.filter_wpan_src64(ROUTER).filter_ipv6_dst(HOST_BGUA).filter_ping_reply(
@@ -163,7 +163,7 @@ class TestMlrTimeout(thread_cert.TestCase):
         # Host pings Router after Router unsubscribed MA
         ping = pkts.filter_eth_src(HOST_ETH).filter_ipv6_dst(MA1).filter_ping_request().must_next()
         # PBBR should forward this ping request to Thread network because MA doesn't expire yet
-        pkts.filter_wpan_src64(PBBR).filter_AMPLFMA().filter_ping_request(
+        pkts.filter_wpan_src64(PBBR).filter_MPL().filter_ping_request(
             identifier=ping.icmpv6.echo.identifier).must_next()
         # Router should NOT reply because it has unsubscribed the multicast address
         pkts.filter_wpan_src64(ROUTER).filter_ipv6_dst(HOST_BGUA).filter_ping_reply(
@@ -172,7 +172,7 @@ class TestMlrTimeout(thread_cert.TestCase):
         # Host pings Router after MLR timeout
         ping = pkts.filter_eth_src(HOST_ETH).filter_ipv6_dst(MA1).filter_ping_request().must_next()
         # PBBR should NOT forward this ping request to Thread network because MLR has timeout
-        pkts.filter_wpan_src64(PBBR).filter_AMPLFMA().filter_ping_request(
+        pkts.filter_wpan_src64(PBBR).filter_MPL().filter_ping_request(
             identifier=ping.icmpv6.echo.identifier).must_not_next()
 
 
