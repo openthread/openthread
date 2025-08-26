@@ -205,6 +205,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_DHCP6_PD_LIST_SIZE
+ *
+ * Specifies the maximum number of entries in DHCPv6-PD history.
+ *
+ * Can be set to zero to configure History Tracker module not to collect any DHCPv6-PD info.
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_DHCP6_PD_LIST_SIZE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_DHCP6_PD_LIST_SIZE 16
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_AIL_ROUTER_LIST_SIZE
  *
  * Specifies the maximum number of entries in BR AIL Router history.

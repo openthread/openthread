@@ -30,6 +30,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <openthread/border_routing.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/message.h>
@@ -315,6 +316,15 @@ typedef struct otHistoryTrackerFavoredOnLinkPrefix
 } otHistoryTrackerFavoredOnLinkPrefix;
 
 /**
+ * Represents the DHCPv6-PD state and delegated prefix (if any) by a device acting as Border Router (BR).
+ */
+typedef struct otHistoryTrackerDhcp6PdInfo
+{
+    otIp6Prefix                 mPrefix; ///< The delegated prefix if any. If none, it is set to `::/0`.
+    otBorderRoutingDhcp6PdState mState;  ///< The DHCPv6 state.
+} otHistoryTrackerDhcp6PdInfo;
+
+/**
  * Defines events for discovered routers on an Adjacent Infrastructure Link (AIL).
  *
  * This applies when a device is acting as a Border Router, processing received Router Advertisements and tracking
@@ -589,6 +599,24 @@ const otHistoryTrackerFavoredOnLinkPrefix *otHistoryTrackerIterateFavoredOnLinkP
     otInstance               *aInstance,
     otHistoryTrackerIterator *aIterator,
     uint32_t                 *aEntryAge);
+
+/**
+ * Iterates over the entries in the DHCPv6-PD history list.
+ *
+ * Requires both `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` and `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE`.
+ *
+ * @param[in]     aInstance  A pointer to the OpenThread instance.
+ * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
+ * @param[out]    aEntryAge  A pointer to a variable to output the entry's age. MUST NOT be NULL.
+ *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+ *                           @p aIterator initialization time. It is set to `OT_HISTORY_TRACKER_MAX_AGE` for entries
+ *                           older than max age.
+ *
+ * @returns The `otHistoryTrackerDhcp6PdInfo` entry or `NULL` if no more entries in the list.
+ */
+const otHistoryTrackerDhcp6PdInfo *otHistoryTrackerIterateDhcp6PdHistory(otInstance               *aInstance,
+                                                                         otHistoryTrackerIterator *aIterator,
+                                                                         uint32_t                 *aEntryAge);
 
 /**
  * Iterates over the entries in the BR AIL routers history list.
