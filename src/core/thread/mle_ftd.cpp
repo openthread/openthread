@@ -206,7 +206,7 @@ Error Mle::BecomeRouter(RouterUpgradeReason aReason)
 
     VerifyOrExit(IsRouterEligible(), error = kErrorNotCapable);
 
-    LogInfo("Attempt to become router");
+    LogInfo("Attempt to become router, reason:%s", RouterUpgradeReasonToString(aReason));
 
     Get<MeshForwarder>().SetRxOnWhenIdle(true);
     mRouterRoleTransition.StopTimeout();
@@ -3529,6 +3529,13 @@ void Mle::ProcessAddressSolicit(AddrSolicitInfo &aInfo)
     aInfo.mResponse = kAddrSolicitNoAddressAvailable;
     aInfo.mRouter   = nullptr;
 
+    LogInfo("AddrSolicit Reason: %s", RouterUpgradeReasonToString(aInfo.mReason));
+
+    if (aInfo.mRequestedRloc16 != kInvalidRloc16)
+    {
+        LogInfo("AddrSolicit Requested ID: %u", RouterIdFromRloc16(aInfo.mRequestedRloc16));
+    }
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     VerifyOrExit(aInfo.mXtalAccuracy <= Get<TimeSync>().GetXtalThreshold());
 #endif
@@ -3556,8 +3563,6 @@ void Mle::ProcessAddressSolicit(AddrSolicitInfo &aInfo)
             (Get<NetworkData::Leader>().CountBorderRouters(NetworkData::kRouterRoleOnly) >=
              kRouterUpgradeBorderRouterRequestThreshold))
         {
-            LogInfo("Rejecting BR %s router role req - have %u BR routers", aInfo.mExtAddress.ToString().AsCString(),
-                    kRouterUpgradeBorderRouterRequestThreshold);
             ExitNow();
         }
         break;
@@ -3570,11 +3575,6 @@ void Mle::ProcessAddressSolicit(AddrSolicitInfo &aInfo)
     if (aInfo.mRequestedRloc16 != kInvalidRloc16)
     {
         aInfo.mRouter = mRouterTable.Allocate(RouterIdFromRloc16(aInfo.mRequestedRloc16));
-
-        if (aInfo.mRouter != nullptr)
-        {
-            LogInfo("Router id %u requested and provided!", RouterIdFromRloc16(aInfo.mRequestedRloc16));
-        }
     }
 
     if (aInfo.mRouter == nullptr)
@@ -3944,6 +3944,33 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+
+const char *Mle::RouterUpgradeReasonToString(uint8_t aReason)
+{
+    const char *str = "Unknown";
+
+    switch (aReason)
+    {
+    case kReasonTooFewRouters:
+        str = "TooFewRouters";
+        break;
+    case kReasonHaveChildIdRequest:
+        str = "HaveChildIdRequest";
+        break;
+    case kReasonParentPartitionChange:
+        str = "ParentPartitionChange";
+        break;
+    case kReasonBorderRouterRequest:
+        str = "BorderRouterRequest";
+        break;
+    }
+
+    return str;
+}
+
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 //----------------------------------------------------------------------------------------------------------------------
 // RouterRoleTransition
