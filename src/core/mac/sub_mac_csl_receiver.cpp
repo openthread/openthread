@@ -158,8 +158,9 @@ void SubMac::HandleCslReceiveAt(uint32_t aTimeAhead, uint32_t aTimeAfter)
     uint32_t periodUs = mCslPeriod * kUsPerTenSymbols;
     uint32_t winStart;
     uint32_t winDuration;
+    uint32_t nextWinAccuracyDrift = static_cast<uint32_t>(static_cast<uint64_t>(periodUs) * (Get<Radio>().GetCslAccuracy() + mCslParentAccuracy.GetClockAccuracy()) / 1000000);
 
-    mCslTimer.FireAt(mCslSampleTimeLocal - aTimeAhead + periodUs);
+    mCslTimer.FireAt(mCslSampleTimeLocal + periodUs - aTimeAhead - nextWinAccuracyDrift);
     aTimeAhead -= kCslReceiveTimeAhead;
     winStart    = mCslSampleTimeRadio - aTimeAhead;
     winDuration = aTimeAhead + aTimeAfter;
@@ -192,11 +193,14 @@ void SubMac::HandleCslReceiveOrSleep(uint32_t aTimeAhead, uint32_t aTimeAfter)
      *       |------------|---------------------------------------|------------|---------------------------------------|
      *          sample                   sleep                        sample                    sleep
      */
+    uint32_t periodUs = mCslPeriod * kUsPerTenSymbols;
 
     if (mIsCslSampling)
     {
+        uint32_t nextWinAccuracyDrift = static_cast<uint32_t>(static_cast<uint64_t>(periodUs) * (Get<Radio>().GetCslAccuracy() + mCslParentAccuracy.GetClockAccuracy()) / 1000000);
+        
         mIsCslSampling = false;
-        mCslTimer.FireAt(mCslSampleTimeLocal - aTimeAhead);
+        mCslTimer.FireAt(mCslSampleTimeLocal - aTimeAhead - nextWinAccuracyDrift);
         if (mState == kStateRadioSample)
         {
             LogDebg("CSL sleep %lu", ToUlong(mCslTimer.GetNow().GetValue()));
@@ -204,7 +208,6 @@ void SubMac::HandleCslReceiveOrSleep(uint32_t aTimeAhead, uint32_t aTimeAfter)
     }
     else
     {
-        uint32_t periodUs = mCslPeriod * kUsPerTenSymbols;
         uint32_t winStart;
         uint32_t winDuration;
 
