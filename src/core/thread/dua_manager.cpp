@@ -291,8 +291,6 @@ void DuaManager::UpdateCheckDelay(uint8_t aDelay)
 
 void DuaManager::HandleNotifierEvents(Events aEvents)
 {
-    Mle::Mle &mle = Get<Mle::Mle>();
-
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     if (aEvents.Contains(kEventThreadNetdataChanged) && Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()))
     {
@@ -307,24 +305,24 @@ void DuaManager::HandleNotifierEvents(Events aEvents)
     }
 #endif
 
-    VerifyOrExit(mle.IsAttached(), mDelay.mValue = 0);
+    VerifyOrExit(Get<Mle::Mle>().IsAttached(), mDelay.mValue = 0);
 
     if (aEvents.Contains(kEventThreadRoleChanged))
     {
-        if (mle.HasRestored())
+        if (Get<Mle::Mle>().HasRestored())
         {
             UpdateReregistrationDelay();
         }
 #if OPENTHREAD_CONFIG_DUA_ENABLE && OPENTHREAD_FTD
-        else if (mle.IsRouter())
+        else if (Get<Mle::Mle>().IsRouter())
         {
             // Wait for link establishment with neighboring routers.
             UpdateRegistrationDelay(kNewRouterRegistrationDelay);
         }
-        else if (mle.WillBecomeRouterSoon())
+        else if (Get<Mle::Mle>().WillBecomeRouterSoon())
         {
             // Will check again in case the device decides to stay REED when jitter timeout expires.
-            UpdateRegistrationDelay(mle.GetRouterRoleTransitionTimeout() + kNewRouterRegistrationDelay + 1);
+            UpdateRegistrationDelay(Get<Mle::Mle>().GetRouterRoleTransitionTimeout() + kNewRouterRegistrationDelay + 1);
         }
 #endif
     }
@@ -421,12 +419,11 @@ void DuaManager::UpdateTimeTickerRegistration(void)
 void DuaManager::PerformNextRegistration(void)
 {
     Error            error   = kErrorNone;
-    Mle::Mle        &mle     = Get<Mle::Mle>();
     Coap::Message   *message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
     Ip6::Address     dua;
 
-    VerifyOrExit(mle.IsAttached());
+    VerifyOrExit(Get<Mle::Mle>().IsAttached());
     VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary());
 
     // Only allow one outgoing DUA.req
@@ -435,13 +432,13 @@ void DuaManager::PerformNextRegistration(void)
     // Only send DUA.req when necessary
 #if OPENTHREAD_CONFIG_DUA_ENABLE
 #if OPENTHREAD_FTD
-    if (!mle.IsRouterOrLeader() && mle.WillBecomeRouterSoon())
+    if (!Get<Mle::Mle>().IsRouterOrLeader() && Get<Mle::Mle>().WillBecomeRouterSoon())
     {
-        UpdateRegistrationDelay(mle.GetRouterRoleTransitionTimeout() + kNewRouterRegistrationDelay + 1);
+        UpdateRegistrationDelay(Get<Mle::Mle>().GetRouterRoleTransitionTimeout() + kNewRouterRegistrationDelay + 1);
         ExitNow();
     }
 #endif
-    VerifyOrExit(mle.IsFullThreadDevice() || mle.GetParent().IsThreadVersion1p1());
+    VerifyOrExit(Get<Mle::Mle>().IsFullThreadDevice() || Get<Mle::Mle>().GetParent().IsThreadVersion1p1());
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
     {
@@ -466,7 +463,7 @@ void DuaManager::PerformNextRegistration(void)
     {
         dua = GetDomainUnicastAddress();
         SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, dua));
-        SuccessOrExit(error = Tlv::Append<ThreadMeshLocalEidTlv>(*message, mle.GetMeshLocalEid().GetIid()));
+        SuccessOrExit(error = Tlv::Append<ThreadMeshLocalEidTlv>(*message, Get<Mle::Mle>().GetMeshLocalEid().GetIid()));
         mDuaState             = kRegistering;
         mLastRegistrationTime = TimerMilli::GetNow();
     }
@@ -501,16 +498,16 @@ void DuaManager::PerformNextRegistration(void)
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     }
 
-    if (!mle.IsFullThreadDevice() && mle.GetParent().IsThreadVersion1p1())
+    if (!Get<Mle::Mle>().IsFullThreadDevice() && Get<Mle::Mle>().GetParent().IsThreadVersion1p1())
     {
         uint8_t pbbrServiceId;
 
         SuccessOrExit(error = Get<BackboneRouter::Leader>().GetServiceId(pbbrServiceId));
-        mle.GetServiceAloc(pbbrServiceId, messageInfo.GetPeerAddr());
+        Get<Mle::Mle>().GetServiceAloc(pbbrServiceId, messageInfo.GetPeerAddr());
     }
     else
     {
-        messageInfo.GetPeerAddr().SetToRoutingLocator(mle.GetMeshLocalPrefix(),
+        messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
                                                       Get<BackboneRouter::Leader>().GetServer16());
     }
 
