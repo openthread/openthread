@@ -543,7 +543,7 @@ private:
     enum State : uint8_t
     {
         kStateDisabled,    // Radio is disabled.
-        kStateSleep,       // Radio is in sleep.
+        kStateIdle,        // Radio is idle.
         kStateReceive,     // Radio in in receive.
         kStateCsmaBackoff, // CSMA backoff before transmission.
         kStateTransmit,    // Radio is transmitting.
@@ -553,10 +553,6 @@ private:
 #endif
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kStateCslTransmit, // CSL transmission.
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-        kStateRadioSample, // Mac layer has requested the SubMac to enter sleep state, but the SubMac is in the periodic
-                           // sample state.
 #endif
     };
 
@@ -607,7 +603,6 @@ private:
     bool ShouldHandleRetries(void) const;
     bool ShouldHandleEnergyScan(void) const;
     bool ShouldHandleTransmitTargetTime(void) const;
-    bool ShouldHandleTransitionToSleep(void) const;
 
     void ProcessTransmitSecurity(void);
     void SignalFrameCounterUsed(uint32_t aFrameCounter, uint8_t aKeyId);
