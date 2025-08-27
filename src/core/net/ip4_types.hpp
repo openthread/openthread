@@ -91,14 +91,16 @@ class Cidr;
 OT_TOOL_PACKED_BEGIN
 class Address : public otIp4Address, public Equatable<Address>, public Clearable<Address>
 {
+    friend class Cidr;
+
 public:
-    static constexpr uint16_t kSize              = 4;  ///< Size of an IPv4 Address (in bytes).
-    static constexpr uint16_t kAddressStringSize = 17; ///< String size used by `ToString()`.
+    static constexpr uint16_t kSize           = OT_IP4_ADDRESS_SIZE;        ///< Size of an IPv4 Address (in bytes).
+    static constexpr uint16_t kInfoStringSize = OT_IP4_ADDRESS_STRING_SIZE; ///< String size used by `ToString()`.
 
     /**
      * Defines the fixed-length `String` object returned from `ToString()`.
      */
-    typedef String<kAddressStringSize> InfoString;
+    typedef String<kInfoStringSize> InfoString;
 
     /**
      * Gets the IPv4 address as a pointer to a byte array.
@@ -192,12 +194,12 @@ class Cidr : public otIp4Cidr, public Unequatable<Cidr>, public Clearable<Addres
     friend class Address;
 
 public:
-    static constexpr uint16_t kCidrSuffixSize = 3; ///< Suffix to represent CIDR (/dd).
+    static constexpr uint16_t kInfoStringSize = OT_IP4_CIDR_STRING_SIZE; ///< String size used by `ToString()`.
 
     /**
      * Defines the fixed-length `String` object returned from `ToString()`.
      */
-    typedef String<Address::kAddressStringSize + kCidrSuffixSize> InfoString;
+    typedef String<kInfoStringSize> InfoString;
 
     /**
      * Converts the IPv4 CIDR string to binary.
@@ -281,17 +283,6 @@ OT_TOOL_PACKED_BEGIN
 class Header : public Clearable<Header>
 {
 public:
-    static constexpr uint8_t kVersionIhlOffset         = 0;
-    static constexpr uint8_t kTrafficClassOffset       = 1;
-    static constexpr uint8_t kTotalLengthOffset        = 2;
-    static constexpr uint8_t kIdentificationOffset     = 4;
-    static constexpr uint8_t kFlagsFragmentOffset      = 6;
-    static constexpr uint8_t kTtlOffset                = 8;
-    static constexpr uint8_t kProtocolOffset           = 9;
-    static constexpr uint8_t kHeaderChecksumOffset     = 10;
-    static constexpr uint8_t kSourceAddressOffset      = 12;
-    static constexpr uint8_t kDestinationAddressOffset = 16;
-
     /**
      * Indicates whether or not the header appears to be well-formed.
      *

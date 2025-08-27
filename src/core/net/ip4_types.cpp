@@ -125,7 +125,7 @@ void Address::SynthesizeFromCidrAndHost(const Cidr &aCidr, const uint32_t aHost)
 
 void Address::ToString(StringWriter &aWriter) const
 {
-    aWriter.Append("%d.%d.%d.%d", mFields.m8[0], mFields.m8[1], mFields.m8[2], mFields.m8[3]);
+    aWriter.Append("%u.%u.%u.%u", mFields.m8[0], mFields.m8[1], mFields.m8[2], mFields.m8[3]);
 }
 
 void Address::ToString(char *aBuffer, uint16_t aSize) const
@@ -169,7 +169,8 @@ exit:
 
 void Cidr::ToString(StringWriter &aWriter) const
 {
-    aWriter.Append("%s/%d", AsCoreType(&mAddress).ToString().AsCString(), mLength);
+    AsCoreType(&mAddress).ToString(aWriter);
+    aWriter.Append("/%u", mLength);
 }
 
 void Cidr::ToString(char *aBuffer, uint16_t aSize) const
