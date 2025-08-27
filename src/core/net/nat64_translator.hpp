@@ -310,16 +310,20 @@ private:
         bool       Matches(const Ip6::Headers &aIp6Headers) const;
         bool       Matches(const Ip4::Headers &aIp4Headers) const;
         bool       Matches(const TimeMilli aNow) const { return mExpiry < aNow; }
-        bool       Matches(const uint16_t aPort) const { return mTranslatedPortOrId == aPort; }
+#if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
+        bool Matches(const uint16_t aPort) const { return mTranslatedPortOrId == aPort; }
+#endif
 
         Mapping         *mNext;
         uint64_t         mId;
         Ip4::Address     mIp4Address;
         Ip6::Address     mIp6Address;
-        uint16_t         mSrcPortOrId;
-        uint16_t         mTranslatedPortOrId;
         TimeMilli        mExpiry;
         ProtocolCounters mCounters;
+#if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
+        uint16_t mSrcPortOrId;
+        uint16_t mTranslatedPortOrId;
+#endif
     };
 
     Error    TranslateIcmp4(Message &aMessage, uint16_t aOriginalId);

@@ -361,12 +361,16 @@ Translator::Mapping::InfoString Translator::Mapping::ToString(void) const
 
 void Translator::Mapping::CopyTo(AddressMapping &aMapping, TimeMilli aNow) const
 {
-    aMapping.mId                 = mId;
-    aMapping.mIp4                = mIp4Address;
-    aMapping.mIp6                = mIp6Address;
+    ClearAllBytes(aMapping);
+
+    aMapping.mId       = mId;
+    aMapping.mIp4      = mIp4Address;
+    aMapping.mIp6      = mIp6Address;
+    aMapping.mCounters = mCounters;
+#if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
     aMapping.mSrcPortOrId        = mSrcPortOrId;
     aMapping.mTranslatedPortOrId = mTranslatedPortOrId;
-    aMapping.mCounters           = mCounters;
+#endif
 
     // We are removing expired mappings lazily, and an expired mapping
     // might become active again before actually removed. Report the
@@ -488,9 +492,6 @@ Translator::Mapping *Translator::AllocateMapping(const Ip6::Headers &aIp6Headers
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
     mapping->mSrcPortOrId        = GetSourcePortOrIcmp6Id(aIp6Headers);
     mapping->mTranslatedPortOrId = AllocateSourcePort(mapping->mSrcPortOrId);
-#else
-    mapping->mSrcPortOrId        = 0;
-    mapping->mTranslatedPortOrId = 0;
 #endif
     mapping->Touch(aIp6Headers.GetIpProto());
 
