@@ -27,7 +27,7 @@
 
 declare_args() {
   # Configuration file for MbedTLS.
-  mbedtls_config_file = "mbedtls-config.h"
+  mbedtls_config_file = "../../src/third_party_config/mbedtls/mbedtls-config.h"
 
   # Extra dependencies for MbedTLS
   mbedtls_deps = [ "../../src/core:libopenthread_core_config" ]
