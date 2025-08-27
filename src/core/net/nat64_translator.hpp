@@ -304,7 +304,7 @@ private:
 
         typedef String<kInfoStringSize> InfoString;
 
-        void       Touch(TimeMilli aNow, uint8_t aProtocol);
+        void       Touch(uint8_t aProtocol);
         InfoString ToString(void) const;
         void       CopyTo(AddressMapping &aMapping, TimeMilli aNow) const;
         bool       Matches(const Ip6::Headers &aIp6Headers) const;
@@ -328,8 +328,6 @@ private:
     void     ReleaseMapping(Mapping &aMapping);
     uint16_t ReleaseExpiredMappings(void);
     Mapping *AllocateMapping(const Ip6::Headers &aIp6Headers);
-    Mapping *FindOrAllocateMapping(const Ip6::Headers &aIp6Headers);
-    Mapping *FindMapping(const Ip4::Headers &aIp4Headers);
     void     HandleTimer(void);
     void     UpdateState(void);
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE

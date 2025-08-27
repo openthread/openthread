@@ -148,7 +148,12 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
         ExitNow(result = kNotTranslated);
     }
 
-    mapping = FindOrAllocateMapping(ip6Headers);
+    mapping = mActiveMappings.FindMatching(ip6Headers);
+
+    if (mapping == nullptr)
+    {
+        mapping = AllocateMapping(ip6Headers);
+    }
 
     if (mapping == nullptr)
     {
@@ -261,7 +266,7 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
         ExitNow(result = kDrop);
     }
 
-    mapping = FindMapping(ip4Headers);
+    mapping = mActiveMappings.FindMatching(ip4Headers);
 
     if (mapping == nullptr)
     {
@@ -269,6 +274,8 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
         dropReason = kReasonNoMapping;
         ExitNow(result = kDrop);
     }
+
+    mapping->Touch(ip4Headers.GetIpProto());
 
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
     dstPortOrId = mapping->mSrcPortOrId;
@@ -485,7 +492,7 @@ Translator::Mapping *Translator::AllocateMapping(const Ip6::Headers &aIp6Headers
     mapping->mSrcPortOrId        = 0;
     mapping->mTranslatedPortOrId = 0;
 #endif
-    mapping->Touch(TimerMilli::GetNow(), aIp6Headers.GetIpProto());
+    mapping->Touch(aIp6Headers.GetIpProto());
 
     LogInfo("Mapping created: %s", mapping->ToString().AsCString());
 
@@ -493,41 +500,20 @@ exit:
     return mapping;
 }
 
-Translator::Mapping *Translator::FindOrAllocateMapping(const Ip6::Headers &aIp6Headers)
+void Translator::Mapping::Touch(uint8_t aProtocol)
 {
-    Mapping *mapping = mActiveMappings.FindMatching(aIp6Headers);
+    uint32_t timeout;
 
-    // Exit if we found a valid mapping.
-    VerifyOrExit(mapping == nullptr);
-
-    mapping = AllocateMapping(aIp6Headers);
-
-exit:
-    return mapping;
-}
-
-Translator::Mapping *Translator::FindMapping(const Ip4::Headers &aIp4Headers)
-{
-    Mapping *mapping = mActiveMappings.FindMatching(aIp4Headers);
-
-    if (mapping != nullptr)
-    {
-        mapping->Touch(TimerMilli::GetNow(), aIp4Headers.GetIpProto());
-    }
-
-    return mapping;
-}
-
-void Translator::Mapping::Touch(TimeMilli aNow, uint8_t aProtocol)
-{
     if ((aProtocol == Ip6::kProtoIcmp6) || (aProtocol == Ip4::kProtoIcmp))
     {
-        mExpiry = aNow + kIcmpTimeout;
+        timeout = kIcmpTimeout;
     }
     else
     {
-        mExpiry = aNow + kIdleTimeout;
+        timeout = kIdleTimeout;
     }
+
+    mExpiry = TimerMilli::GetNow() + timeout;
 }
 
 bool Translator::Mapping::Matches(const Ip6::Headers &aIp6Headers) const
