@@ -1001,23 +1001,10 @@ void Mle::HandleNotifierEvents(Events aEvents)
         ScheduleChildUpdateRequestIfMtdChild();
     }
 
-    if (aEvents.ContainsAny(kEventIp6MulticastSubscribed | kEventIp6MulticastUnsubscribed))
+    if (aEvents.ContainsAny(kEventIp6MulticastSubscribed | kEventIp6MulticastUnsubscribed) &&
+        ShouldRegisterMulticastAddrsWithParent())
     {
-        // When multicast subscription changes, SED always notifies
-        // its parent as it depends on its parent for indirect
-        // transmission. Since Thread 1.2, MED MAY also notify its
-        // parent of 1.2 or higher version as it could depend on its
-        // parent to perform Multicast Listener Report.
-
-        if (!IsRxOnWhenIdle()
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-            || !GetParent().IsThreadVersion1p1()
-#endif
-        )
-
-        {
-            ScheduleChildUpdateRequestIfMtdChild();
-        }
+        ScheduleChildUpdateRequestIfMtdChild();
     }
 
     if (aEvents.Contains(kEventThreadNetdataChanged))
@@ -1069,6 +1056,23 @@ void Mle::HandleNotifierEvents(Events aEvents)
 
 exit:
     return;
+}
+
+bool Mle::ShouldRegisterMulticastAddrsWithParent(void) const
+{
+    // When multicast subscription changes, SED always notifies
+    // its parent as it depends on its parent for indirect
+    // transmission. Since Thread 1.2, MED MAY also notify its
+    // parent of 1.2 or higher version as it could depend on its
+    // parent to perform Multicast Listener Report.
+
+    bool shouldRegister = !IsRxOnWhenIdle();
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    shouldRegister |= !IsFullThreadDevice() && GetParent().IsThreadVersion1p2OrHigher();
+#endif
+
+    return shouldRegister;
 }
 
 Error Mle::SendDataRequestToParent(void)
@@ -3564,11 +3568,8 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
     // indirect transmission. Since Thread 1.2, non-sleepy MED should
     // also register external multicast addresses of scope larger than
     // realm with a 1.2 or higher parent.
-    if (!Get<Mle>().IsRxOnWhenIdle()
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-        || !Get<Mle>().GetParent().IsThreadVersion1p1()
-#endif
-    )
+
+    if (Get<Mle>().ShouldRegisterMulticastAddrsWithParent())
     {
         for (const Ip6::Netif::MulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
         {
