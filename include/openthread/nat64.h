@@ -177,9 +177,16 @@ typedef struct otNat64AddressMapping
      *  OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE is true.
      */
     uint16_t mTranslatedPortOrId;
-    uint32_t mRemainingTimeMs; ///< Remaining time before expiry in milliseconds.
 
-    otNat64ProtocolCounters mCounters;
+    /**
+     * Remaining time in milliseconds before the entry expires.
+     *
+     * The remaining time is relative to the initialization of the `otNat64AddressMappingIterator`, i.e., when
+     * `otNat64InitAddressMappingIterator()` was called.
+     */
+    uint32_t mRemainingTimeMs;
+
+    otNat64ProtocolCounters mCounters; ///< Counters.
 } otNat64AddressMapping;
 
 /**
@@ -188,21 +195,30 @@ typedef struct otNat64AddressMapping
  * The fields in this type are opaque (intended for use by OpenThread core only) and therefore should not be
  * accessed or used by caller.
  *
- * Before using an iterator, it MUST be initialized using `otNat64AddressMappingIteratorInit()`.
+ * Before using an iterator, it MUST be initialized using `otNat64InitAddressMappingIterator()`.
+ *
+ * The member fields in this struct are for internal OpenThread stack use and should not be accessed directly.
  */
 typedef struct otNat64AddressMappingIterator
 {
-    void *mPtr;
+    const void *mPtr;
+    uint32_t    mData32;
 } otNat64AddressMappingIterator;
 
 /**
  * Initializes an `otNat64AddressMappingIterator`.
  *
- * An iterator MUST be initialized before it is used.
+ * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
- * An iterator can be initialized again to restart from the beginning of the mapping info.
+ * An iterator MUST be initialized before it is used. An iterator can be initialized again to restart from the
+ * beginning of the mapping info list.
  *
- * @param[in]  aInstance  The OpenThread instance.
+ * The iterator initialization time is used to report the `mRemainingTimeMs` in the `otNat64AddressMapping` retrieved
+ * when calling `otNat64GetNextAddressMapping()` to iterate over the list. This ensures that all entry
+ * `mRemainingTimeMs` values are consistent and are from the same time origin, regardless of how or when
+ * `otNat64GetNextAddressMapping()` is called.
+ *
+ * @param[in]  aInstance  A pointer to the OpenThread instance.
  * @param[out] aIterator  A pointer to the iterator to initialize.
  */
 void otNat64InitAddressMappingIterator(otInstance *aInstance, otNat64AddressMappingIterator *aIterator);
@@ -214,8 +230,7 @@ void otNat64InitAddressMappingIterator(otInstance *aInstance, otNat64AddressMapp
  *
  * @param[in]      aInstance      A pointer to an OpenThread instance.
  * @param[in,out]  aIterator      A pointer to the iterator. On success the iterator will be updated to point to next
- *                                NAT64 address mapping record. To get the first entry the iterator should be set to
- *                                OT_NAT64_ADDRESS_MAPPING_ITERATOR_INIT.
+ *                                NAT64 address mapping record.
  * @param[out]     aMapping       A pointer to an `otNat64AddressMapping` where information of next NAT64 address
  *                                mapping record is placed (on success).
  *
