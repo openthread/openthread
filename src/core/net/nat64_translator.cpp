@@ -163,6 +163,8 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
         ExitNow(result = kDrop);
     }
 
+    mapping->Touch(ip6Headers.GetIpProto());
+
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
     srcPortOrId = mapping->mTranslatedPortOrId;
 #else
@@ -502,7 +504,6 @@ Translator::Mapping *Translator::AllocateMapping(const Ip6::Headers &aIp6Headers
     mapping->mSrcPortOrId        = GetSourcePortOrIcmp6Id(aIp6Headers);
     mapping->mTranslatedPortOrId = AllocateSourcePort(mapping->mSrcPortOrId);
 #endif
-    mapping->Touch(aIp6Headers.GetIpProto());
 
     LogInfo("Mapping created: %s", mapping->ToString().AsCString());
 
