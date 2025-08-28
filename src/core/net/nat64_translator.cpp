@@ -381,12 +381,17 @@ void Translator::Mapping::CopyTo(AddressMapping &aMapping, TimeMilli aNow) const
 
 void Translator::ReleaseMapping(Mapping &aMapping)
 {
-    if (mIp4Cidr.mLength <= kMaxCidrLenForValidAddrPool)
+#if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
+    if (mIp4Cidr.mLength > kAddressMappingCidrLimit)
     {
+        // If `CONFIG_NAT64_PORT_TRANSLATION_ENABLE` is enabled
         // IPv4 addresses are allocated from the pool only when the
         // pool size is above a minimum value. Otherwise use just the
-        // first address from the list and we are not removing it
-        // from the array.
+        // first address from the pool.
+    }
+    else
+#endif
+    {
         IgnoreError(mIp4AddressPool.PushBack(aMapping.mIp4Address));
     }
 
@@ -450,7 +455,9 @@ Translator::Mapping *Translator::AllocateMapping(const Ip6::Headers &aIp6Headers
     Mapping     *mapping = nullptr;
     Ip4::Address ip4Addr;
 
-    // The NAT64 translator can work in 2 ways, either with a single
+#if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
+    // When port translation (`NAT64_PORT_TRANSLATION`) is enabled
+    // the NAT64 translator can work in 2 ways, either with a single
     // IPv4 address or a larger pool of addresses. There is also the
     // corner case where the address pool is generated from a big
     // CIDR length and the number of available IPv4 addresses is not
@@ -461,12 +468,13 @@ Translator::Mapping *Translator::AllocateMapping(const Ip6::Headers &aIp6Headers
     // larger pool is available each active mapping will use a
     // separate IPv4 address.
 
-    if (mIp4Cidr.mLength > kMaxCidrLenForValidAddrPool)
+    if (mIp4Cidr.mLength > kAddressMappingCidrLimit)
     {
         // TODO: add logic to cycle between available IPv4 addresses
         ip4Addr = *mIp4AddressPool.At(0);
     }
     else
+#endif
     {
         if (mIp4AddressPool.IsEmpty())
         {
@@ -475,6 +483,7 @@ Translator::Mapping *Translator::AllocateMapping(const Ip6::Headers &aIp6Headers
 
             VerifyOrExit(ReleaseExpiredMappings() > 0);
         }
+
         ip4Addr = *mIp4AddressPool.PopBack();
     }
 

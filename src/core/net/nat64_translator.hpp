@@ -296,13 +296,26 @@ private:
     static constexpr uint32_t kIdleTimeout = OPENTHREAD_CONFIG_NAT64_IDLE_TIMEOUT_SECONDS * Time::kOneSecondInMsec;
     static constexpr uint32_t kIcmpTimeout = OPENTHREAD_CONFIG_NAT64_ICMP_IDLE_TIMEOUT_SECONDS * Time::kOneSecondInMsec;
 
-    static constexpr uint32_t kPoolSize           = OPENTHREAD_CONFIG_NAT64_MAX_MAPPINGS;
+    static constexpr uint32_t kPoolSize = OPENTHREAD_CONFIG_NAT64_MAX_MAPPINGS;
+
+#if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
+    // Under `PORT_TRANSLATION_ENABLE`, the translator can operate in
+    // two modes: 1-to-1 address mapping where each IPv6 address gets
+    // a unique IPv4 address from a pool, or having the mappings
+    // share one (or a few) IPv4 addresses and are distinguished by
+    // the translated port numbers.
+    //
+    // This constant defines the maximum allowed CIDR prefix length
+    // for the IPv4 address pool to be considered large enough to use
+    // 1-to-1 address mapping. If the configured prefix length is
+    // greater than this value (e.g., /29, /30), the address pool is
+    // too small, and the translator will fall back to using port
+    // translation.
+    static constexpr uint8_t kAddressMappingCidrLimit = 28;
+
     static constexpr uint16_t kMinTranslationPort = 49152;
     static constexpr uint16_t kMaxTranslationPort = 65535;
-
-    // The maximum value the CIDR len can have in order to have a big
-    // enough pool to support a minimal number of devices
-    static constexpr uint8_t kMaxCidrLenForValidAddrPool = 28;
+#endif
 
     static constexpr DropReason kReasonUnknown          = OT_NAT64_DROP_REASON_UNKNOWN;
     static constexpr DropReason kReasonIllegalPacket    = OT_NAT64_DROP_REASON_ILLEGAL_PACKET;
