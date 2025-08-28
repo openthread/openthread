@@ -2270,6 +2270,11 @@ private:
                                              otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
                                              otError              aResult);
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    const char *RouterUpgradeReasonToString(uint8_t aReason);
+#endif
+
 #endif // OPENTHREAD_FTD
 
     //------------------------------------------------------------------------------------------------------------------
