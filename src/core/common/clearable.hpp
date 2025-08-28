@@ -66,8 +66,13 @@ template <typename ObjectType> void ClearAllBytes(ObjectType &aObject)
  */
 template <typename Type> class Clearable
 {
+    friend Type;
+
 public:
     void Clear(void) { ClearAllBytes<Type>(*static_cast<Type *>(this)); }
+
+private:
+    Clearable(void) = default;
 };
 
 } // namespace ot
