@@ -58,7 +58,7 @@ otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSett
 
 otError otNat64Send(otInstance *aInstance, otMessage *aMessage)
 {
-    return AsCoreType(aInstance).Get<Nat64::Translator>().SendMessage(AsCoreType(aMessage));
+    return AsCoreType(aInstance).Get<Nat64::Translator>().SendMessage(OwnedPtr<Message>(AsCoreTypePtr(aMessage)));
 }
 
 void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callback aCallback, void *aContext)
