@@ -369,7 +369,6 @@ exit:
 
 Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &aMessage)
 {
-    Mle::Mle &mle   = Get<Mle::Mle>();
     Error     error = kErrorNone;
     Neighbor *neighbor;
 
@@ -379,14 +378,14 @@ Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &a
     {
         mMeshDest = aMessage.GetMeshDest();
     }
-    else if (mle.IsRoutingLocator(aIp6Header.GetDestination()))
+    else if (Get<Mle::Mle>().IsRoutingLocator(aIp6Header.GetDestination()))
     {
         uint16_t rloc16 = aIp6Header.GetDestination().GetIid().GetLocator();
 
         VerifyOrExit(Mle::IsRouterIdValid(Mle::RouterIdFromRloc16(rloc16)), error = kErrorDrop);
         mMeshDest = rloc16;
     }
-    else if (mle.IsAnycastLocator(aIp6Header.GetDestination()))
+    else if (Get<Mle::Mle>().IsAnycastLocator(aIp6Header.GetDestination()))
     {
         uint16_t aloc16 = aIp6Header.GetDestination().GetIid().GetLocator();
 
@@ -396,7 +395,8 @@ Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &a
         // child of this device, prepare the message for indirect tx
         // to the sleepy child and un-mark message for direct tx.
 
-        if (mle.IsRouterOrLeader() && Mle::IsChildRloc16(mMeshDest) && mle.HasMatchingRouterIdWith(mMeshDest))
+        if (Get<Mle::Mle>().IsRouterOrLeader() && Mle::IsChildRloc16(mMeshDest) &&
+            Get<Mle::Mle>().HasMatchingRouterIdWith(mMeshDest))
         {
             Child *child = Get<ChildTable>().FindChild(mMeshDest, Child::kInStateValid);
 

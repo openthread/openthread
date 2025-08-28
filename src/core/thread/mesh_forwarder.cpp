@@ -564,7 +564,6 @@ exit:
 
 Error MeshForwarder::UpdateIp6Route(Message &aMessage)
 {
-    Mle::Mle   &mle   = Get<Mle::Mle>();
     Error       error = kErrorNone;
     Ip6::Header ip6Header;
 
@@ -576,7 +575,7 @@ Error MeshForwarder::UpdateIp6Route(Message &aMessage)
 
     Get<MessageFramer>().DetermineMacSourceAddress(ip6Header.GetSource(), mMacAddrs);
 
-    if (mle.IsDisabled() || mle.IsDetached())
+    if (Get<Mle::Mle>().IsDisabled() || Get<Mle::Mle>().IsDetached())
     {
         if (ip6Header.GetDestination().IsLinkLocalMulticast())
         {
@@ -600,9 +599,9 @@ Error MeshForwarder::UpdateIp6Route(Message &aMessage)
         // with link security disabled, an End Device transmits
         // multicasts, as IEEE 802.15.4 unicasts to its parent.
 
-        if (mle.IsChild() && aMessage.IsLinkSecurityEnabled() && !aMessage.IsSubTypeMle())
+        if (Get<Mle::Mle>().IsChild() && aMessage.IsLinkSecurityEnabled() && !aMessage.IsSubTypeMle())
         {
-            mMacAddrs.mDestination.SetShort(mle.GetParentRloc16());
+            mMacAddrs.mDestination.SetShort(Get<Mle::Mle>().GetParentRloc16());
         }
         else
         {
@@ -613,9 +612,9 @@ Error MeshForwarder::UpdateIp6Route(Message &aMessage)
     {
         mMacAddrs.mDestination.SetExtendedFromIid(ip6Header.GetDestination().GetIid());
     }
-    else if (mle.IsMinimalEndDevice())
+    else if (Get<Mle::Mle>().IsMinimalEndDevice())
     {
-        mMacAddrs.mDestination.SetShort(mle.GetParentRloc16());
+        mMacAddrs.mDestination.SetShort(Get<Mle::Mle>().GetParentRloc16());
     }
     else
     {

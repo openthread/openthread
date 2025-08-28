@@ -46,15 +46,14 @@ NeighborTable::NeighborTable(Instance &aInstance)
 Neighbor *NeighborTable::FindParent(const Neighbor::AddressMatcher &aMatcher)
 {
     Neighbor *neighbor = nullptr;
-    Mle::Mle &mle      = Get<Mle::Mle>();
 
-    if (mle.GetParent().Matches(aMatcher))
+    if (Get<Mle::Mle>().GetParent().Matches(aMatcher))
     {
-        neighbor = &mle.GetParent();
+        neighbor = &Get<Mle::Mle>().GetParent();
     }
-    else if (mle.GetParentCandidate().Matches(aMatcher))
+    else if (Get<Mle::Mle>().GetParentCandidate().Matches(aMatcher))
     {
-        neighbor = &mle.GetParentCandidate();
+        neighbor = &Get<Mle::Mle>().GetParentCandidate();
     }
 
     return neighbor;
