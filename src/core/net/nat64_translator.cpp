@@ -66,6 +66,7 @@ const char *StateToString(State aState)
 Translator::Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(State::kStateDisabled)
+    , mMappingPool(aInstance)
     , mTimer(aInstance)
 {
     Random::NonCrypto::Fill(mNextMappingId);
@@ -372,10 +373,12 @@ void Translator::Mapping::CopyTo(AddressMapping &aMapping, TimeMilli aNow) const
     aMapping.mRemainingTimeMs = (mExpiry < aNow) ? 0 : mExpiry - aNow;
 }
 
-void Translator::ReleaseMapping(Mapping &aMapping)
+void Translator::Mapping::Free(void)
 {
+    LogInfo("Mapping removed: %s", ToString().AsCString());
+
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
-    if (mIp4Cidr.mLength > kAddressMappingCidrLimit)
+    if (Get<Translator>().mIp4Cidr.mLength > kAddressMappingCidrLimit)
     {
         // If `CONFIG_NAT64_PORT_TRANSLATION_ENABLE` is enabled
         // IPv4 addresses are allocated from the pool only when the
@@ -385,35 +388,12 @@ void Translator::ReleaseMapping(Mapping &aMapping)
     else
 #endif
     {
-        IgnoreError(mIp4AddressPool.PushBack(aMapping.mIp4Address));
+        IgnoreError(Get<Translator>().mIp4AddressPool.PushBack(mIp4Address));
     }
 
-    mMappingPool.Free(aMapping);
-
-    LogInfo("Mapping removed: %s", aMapping.ToString().AsCString());
+    Get<Translator>().mMappingPool.Free(*this);
 }
 
-uint16_t Translator::ReleaseMappings(LinkedList<Mapping> &aMappings)
-{
-    uint16_t numRemoved = 0;
-
-    for (Mapping *mapping = aMappings.Pop(); mapping != nullptr; mapping = aMappings.Pop())
-    {
-        numRemoved++;
-        ReleaseMapping(*mapping);
-    }
-
-    return numRemoved;
-}
-
-uint16_t Translator::ReleaseExpiredMappings(void)
-{
-    LinkedList<Mapping> idleMappings;
-
-    mActiveMappings.RemoveAllMatching(idleMappings, TimerMilli::GetNow());
-
-    return ReleaseMappings(idleMappings);
-}
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
 uint16_t Translator::AllocateSourcePort(uint16_t aSrcPort)
 {
@@ -471,12 +451,10 @@ Translator::Mapping *Translator::AllocateMapping(const Ip6::Headers &aIp6Headers
     {
         if (mIp4AddressPool.IsEmpty())
         {
-            // `ReleaseExpiredMappings()` returns the number of
-            // mappings removed.
-
-            VerifyOrExit(ReleaseExpiredMappings() > 0);
+            mActiveMappings.RemoveAndFreeAllMatching(TimerMilli::GetNow());
         }
 
+        VerifyOrExit(!mIp4AddressPool.IsEmpty());
         ip4Addr = *mIp4AddressPool.PopBack();
     }
 
@@ -646,8 +624,7 @@ Error Translator::SetIp4Cidr(const Ip4::Cidr &aCidr)
 
     numberOfHosts = OT_MIN(numberOfHosts, kPoolSize);
 
-    mMappingPool.FreeAll();
-    mActiveMappings.Clear();
+    mActiveMappings.Free();
     mIp4AddressPool.Clear();
 
     for (uint32_t i = 0; i < numberOfHosts; i++)
@@ -675,8 +652,7 @@ exit:
 void Translator::ClearIp4Cidr(void)
 {
     mIp4Cidr.Clear();
-    mMappingPool.FreeAll();
-    mActiveMappings.Clear();
+    mActiveMappings.Free();
     mIp4AddressPool.Clear();
 
     UpdateState();
@@ -709,13 +685,8 @@ exit:
 
 void Translator::HandleTimer(void)
 {
-    uint16_t numReleased = ReleaseExpiredMappings();
-
-    LogInfo("Released %u expired mappings", numReleased);
-
+    mActiveMappings.RemoveAndFreeAllMatching(TimerMilli::GetNow());
     mTimer.Start(Min(kIcmpTimeout, kIdleTimeout));
-
-    OT_UNUSED_VARIABLE(numReleased);
 }
 
 void Translator::AddressMappingIterator::Init(Instance &aInstance)
@@ -845,7 +816,7 @@ void Translator::SetEnabled(bool aEnabled)
 
     if (!aEnabled)
     {
-        ReleaseMappings(mActiveMappings);
+        mActiveMappings.Free();
     }
 
     UpdateState();
