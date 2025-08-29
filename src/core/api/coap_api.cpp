@@ -287,6 +287,11 @@ void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandle
     AsCoreType(aInstance).Get<Coap::ApplicationCoap>().SetDefaultHandler(aHandler, aContext);
 }
 
+void otCoapSetResponseFallback(otInstance *aInstance, otCoapResponseFallback aHandler, void *aContext)
+{
+    AsCoreType(aInstance).Get<Coap::ApplicationCoap>().SetResponseFallback(aHandler, aContext);
+}
+
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 otError otCoapSendResponseBlockWiseWithParameters(otInstance                 *aInstance,
                                                   otMessage                  *aMessage,

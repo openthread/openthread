@@ -735,6 +735,17 @@ public:
     bool IsNonConfirmablePostRequest(void) const;
 
     /**
+     * Checks if the message requires an reset response if an error during low level CoAP processing occurred.
+     *
+     * A reset message is expected to be sent for NON and CON messages if the message can not be processed or a
+     * duplicated message has been received.
+     *
+     * @retval  TRUE   Expect to respond with CoAP reset message on error.
+     * @retval  FALSE  No CoAP reset message should be sent on error.
+     */
+    bool RequireResetOnError(void) { return IsConfirmable() || IsNonConfirmable(); }
+
+    /**
      * Creates a copy of this CoAP message.
      *
      * It allocates the new message from the same message pool as the original one and copies @p aLength octets

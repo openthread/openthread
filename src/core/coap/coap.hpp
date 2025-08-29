@@ -78,6 +78,13 @@ typedef otCoapResponseHandler ResponseHandler;
 typedef otCoapRequestHandler RequestHandler;
 
 /**
+ * Represents a function pointer which is called when a CoAP response is not associated with a sent request.
+ *
+ * Please see otCoapResponseFallback for details.
+ */
+typedef otCoapResponseFallback ResponseFallback;
+
+/**
  * Represents the CoAP transmission parameters.
  */
 class TxParameters : public otCoapTxParameters
@@ -400,12 +407,22 @@ public:
      */
     void RemoveResource(Resource &aResource);
 
-    /* Sets the default handler for unhandled CoAP requests.
+    /**
+     * Sets the default handler for unhandled CoAP requests.
      *
      * @param[in]  aHandler   A function pointer that shall be called when an unhandled request arrives.
      * @param[in]  aContext   A pointer to arbitrary context information. May be `nullptr` if not used.
      */
     void SetDefaultHandler(RequestHandler aHandler, void *aContext) { mDefaultHandler.Set(aHandler, aContext); }
+
+    /**
+     * Sets a fallback handler for CoAP responses not matching any active/pending request.
+     *
+     * @param[in]  aHandler   A function pointer that shall be called as a fallback for responses that do not match any
+     *                        pending request.
+     * @param[in]  aContext   A pointer to arbitrary context information. May be `nullptr` if not used.
+     */
+    void SetResponseFallback(ResponseFallback aHandler, void *aContext) { mResponseFallback.Set(aHandler, aContext); }
 
     /**
      * Allocates a new message with a CoAP header.
@@ -831,6 +848,15 @@ private:
                                      const Ip6::MessageInfo *aMessageInfo,
                                      Error                   aResult);
 
+    inline bool InvokeResponseFallback(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+    {
+        if (mResponseFallback.IsSet())
+        {
+            return mResponseFallback.Invoke(&aMessage, &aMessageInfo);
+        }
+        return false;
+    }
+
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     void  FreeLastBlockResponse(void);
     Error CacheLastBlockResponse(Message *aResponse);
@@ -877,7 +903,8 @@ private:
     Callback<Interceptor> mInterceptor;
     ResponsesQueue        mResponsesQueue;
 
-    Callback<RequestHandler> mDefaultHandler;
+    Callback<RequestHandler>   mDefaultHandler;
+    Callback<ResponseFallback> mResponseFallback;
 
     ResourceHandler mResourceHandler;
 
