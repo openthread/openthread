@@ -57,7 +57,7 @@ class BleStream:
             await self.client.disconnect()
 
     def __handle_rx(self, _: BleakGATTCharacteristic, data: bytearray):
-        logger.debug(f'received {len(data)} bytes')
+        logger.debug(f'rx {len(data)} bytes')
         self.__receive_buffer += data
         self.__last_recv_time = time.time()
 
@@ -74,7 +74,7 @@ class BleStream:
         return self
 
     async def send(self, data):
-        logger.debug(f'sending {data}')
+        logger.debug(f'tx {len(data)} bytes')
         services = self.client.services.get_service(self.service_uuid)
         rx_char = services.get_characteristic(self.rx_char_uuid)
         for s in BleStream.__sliced(data, rx_char.max_write_without_response_size):
@@ -88,10 +88,10 @@ class BleStream:
         while time.time() - self.__last_recv_time <= recv_timeout:
             await sleep(0.1)
 
-        message = self.__receive_buffer[:bufsize]
+        data = self.__receive_buffer[:bufsize]
         self.__receive_buffer = self.__receive_buffer[bufsize:]
-        logger.debug(f'retrieved {message}')
-        return message
+        logger.debug(f'rx {len(data)} bytes')
+        return data
 
     async def disconnect(self):
         if self.client.is_connected:

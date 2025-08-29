@@ -45,14 +45,14 @@ class UdpStream:
         self.address = (address, self.BASE_PORT + node_id)
 
     async def send(self, data):
-        logger.debug(f'sending {len(data)} bytes: {data}')
+        logger.debug(f'tx {len(data)} bytes')
         return self.socket.sendto(data, self.address)
 
     async def recv(self, bufsize):
         ready = select.select([self.socket], [], [], self.MAX_SERVER_TIMEOUT_SEC)
         if ready[0]:
             data = self.socket.recv(bufsize)
-            logger.debug(f'received {len(data)} bytes: {data}')
+            logger.debug(f'rx {len(data)} bytes')
             return data
         else:
             raise Exception('simulation UdpStream recv timeout - likely, TCAT is stopped on TCAT Device')
