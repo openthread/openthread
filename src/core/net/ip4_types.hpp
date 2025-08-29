@@ -189,7 +189,7 @@ private:
 /**
  * Represents an IPv4 CIDR block.
  */
-class Cidr : public otIp4Cidr, public Unequatable<Cidr>, public Clearable<Address>
+class Cidr : public otIp4Cidr, public Unequatable<Cidr>, public Clearable<Cidr>
 {
     friend class Address;
 
