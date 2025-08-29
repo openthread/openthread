@@ -38,6 +38,7 @@
 
 #include <stddef.h>
 
+#include "common/bit_utils.hpp"
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"

@@ -33,6 +33,7 @@
 
 #include "timestamp.hpp"
 
+#include "common/bit_utils.hpp"
 #include "common/code_utils.hpp"
 #include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"

@@ -38,6 +38,7 @@
 
 #include <openthread/netdata.h>
 
+#include "common/bit_utils.hpp"
 #include "common/const_cast.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"

@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/as_core_type.hpp"
+#include "common/bit_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/numeric_limits.hpp"
 #include "mac/mac_types.hpp"

@@ -41,6 +41,7 @@
 
 #include "common/appender.hpp"
 #include "common/as_core_type.hpp"
+#include "common/bit_utils.hpp"
 #include "common/clearable.hpp"
 #include "common/data.hpp"
 #include "common/encoding.hpp"
