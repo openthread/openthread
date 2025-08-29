@@ -114,6 +114,7 @@ class BleStreamSecure:
         return True
 
     async def send(self, bytes):
+        logger.debug(f"tx {len(bytes)} bytes\n" + utils.hexdump_ot("Tx", bytes))
         self.ssl_object.write(bytes)
         encode = self.outgoing.read(4096)
         await self.stream.send(encode)
@@ -140,6 +141,8 @@ class BleStreamSecure:
                     await asyncio.sleep(0.1)
                     more = await self.stream.recv(buffersize)
                 self.incoming.write(more)
+
+        logger.debug(f"rx {len(decode)} bytes\n" + utils.hexdump_ot("Rx", decode))
         return decode
 
     async def send_with_resp(self, bytes):
