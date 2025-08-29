@@ -347,7 +347,12 @@ Translator::Mapping::InfoString Translator::Mapping::ToString(void) const
 {
     InfoString string;
 
+#if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
+    string.Append("%s,%u -> %s,%u", mIp6Address.ToString().AsCString(), mSrcPortOrId,
+                  mIp4Address.ToString().AsCString(), mTranslatedPortOrId);
+#else
     string.Append("%s -> %s", mIp6Address.ToString().AsCString(), mIp4Address.ToString().AsCString());
+#endif
 
     return string;
 }
