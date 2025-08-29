@@ -90,23 +90,14 @@ Message *Translator::NewIp4Message(const Message::Settings &aSettings)
     return message;
 }
 
-Error Translator::SendMessage(Message &aMessage)
+Error Translator::SendMessage(OwnedPtr<Message> aMessagePtr)
 {
-    bool   freed  = false;
-    Error  error  = kErrorDrop;
-    Result result = TranslateToIp6(aMessage);
+    Error error;
 
-    VerifyOrExit(result == kForward);
-
-    error = Get<Ip6::Ip6>().SendRaw(OwnedPtr<Message>(&aMessage).PassOwnership());
-    freed = true;
+    VerifyOrExit(TranslateToIp6(*aMessagePtr) == kForward, error = kErrorDrop);
+    error = Get<Ip6::Ip6>().SendRaw(aMessagePtr.PassOwnership());
 
 exit:
-    if (!freed)
-    {
-        aMessage.Free();
-    }
-
     return error;
 }
 

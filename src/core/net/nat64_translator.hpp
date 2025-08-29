@@ -168,10 +168,7 @@ public:
     /**
      * Translates an IPv4 datagram to an IPv6 datagram and sends it via Thread interface.
      *
-     * The caller transfers ownership of @p aMessage when making this call. OpenThread will free @p aMessage when
-     * processing is complete, including when a value other than `kErrorNone` is returned.
-     *
-     * @param[in]  aMessage          A reference to the message.
+     * @param[in] aMessagePtr   An owned pointer to a message (ownership is transferred to the method).
      *
      * @retval kErrorNone     Successfully processed the message.
      * @retval kErrorDrop     Message was well-formed but not fully processed due to datagram processing rules.
@@ -179,7 +176,7 @@ public:
      * @retval kErrorNoRoute  No route to host.
      * @retval kErrorParse    Encountered a malformed header when processing the message.
      */
-    Error SendMessage(Message &aMessage);
+    Error SendMessage(OwnedPtr<Message> aMessagePtr);
 
     /**
      * Allocate a new message buffer for sending an IPv4 message (which will be translated into an IPv6 datagram by
