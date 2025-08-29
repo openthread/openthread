@@ -963,17 +963,6 @@ private:
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    struct ExpireChecker
-    {
-        // Used in `Matches()` to find expired entries in a list.
-
-        explicit ExpireChecker(TimeMilli aNow) { mNow = aNow; }
-
-        TimeMilli mNow;
-    };
-
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
     class Callback : public Clearable<Callback>
     {
     public:
@@ -1658,7 +1647,7 @@ private:
             explicit RxMsgEntry(Instance &aInstance);
 
             bool Matches(const AddressInfo &aAddress) const;
-            bool Matches(const ExpireChecker &aExpireChecker) const;
+            bool Matches(const ExpirationChecker &aChecker) const { return aChecker.IsExpired(mProcessTime); }
             void Add(OwnedPtr<RxMessage> &aRxMessagePtr);
 
             OwningList<RxMessage> mRxMessages;
@@ -1703,7 +1692,7 @@ private:
         struct MsgEntry : public LinkedListEntry<MsgEntry>, public Heap::Allocatable<MsgEntry>
         {
             bool Matches(const MsgInfo &aInfo) const { return mInfo == aInfo; }
-            bool Matches(const ExpireChecker &aExpireChecker) const { return mExpireTime <= aExpireChecker.mNow; }
+            bool Matches(const ExpirationChecker &aChecker) const { return aChecker.IsExpired(mExpireTime); }
 
             MsgEntry *mNext;
             MsgInfo   mInfo;
@@ -1897,7 +1886,7 @@ private:
         bool  Matches(const Name &aFullName) const;
         bool  Matches(const char *aServiceType, const char *aSubTypeLabel) const;
         bool  Matches(const Browser &aBrowser) const;
-        bool  Matches(const ExpireChecker &aExpireChecker) const;
+        bool  Matches(const ExpirationChecker &aChecker) const;
         Error Add(const Browser &aBrowser);
         void  Remove(const Browser &aBrowser);
         void  ProcessResponseRecord(const Message &aMessage, uint16_t aRecordOffset);
@@ -1910,7 +1899,7 @@ private:
         {
             Error Init(const char *aServiceInstance);
             bool  Matches(const char *aServiceInstance) const { return NameMatch(mServiceInstance, aServiceInstance); }
-            bool  Matches(const ExpireChecker &aExpireChecker) const;
+            bool  Matches(const ExpirationChecker &aChecker) const;
             void  ConvertTo(BrowseResult &aResult, const BrowseCache &aBrowseCache) const;
 
             PtrEntry       *mNext;
@@ -2000,7 +1989,7 @@ private:
         bool  Matches(const Name &aFullName) const;
         bool  Matches(const SrvResolver &aResolver) const;
         bool  Matches(const ServiceName &aServiceName) const;
-        bool  Matches(const ExpireChecker &aExpireChecker) const;
+        bool  Matches(const ExpirationChecker &aChecker) const;
         Error Add(const SrvResolver &aResolver);
         void  Remove(const SrvResolver &aResolver);
         void  ProcessResponseRecord(const Message &aMessage, uint16_t aRecordOffset);
@@ -2038,7 +2027,7 @@ private:
         bool  Matches(const Name &aFullName) const;
         bool  Matches(const TxtResolver &aResolver) const;
         bool  Matches(const ServiceName &aServiceName) const;
-        bool  Matches(const ExpireChecker &aExpireChecker) const;
+        bool  Matches(const ExpirationChecker &aChecker) const;
         Error Add(const TxtResolver &aResolver);
         void  Remove(const TxtResolver &aResolver);
         void  ProcessResponseRecord(const Message &aMessage, uint16_t aRecordOffset);
@@ -2073,7 +2062,7 @@ private:
         bool  Matches(const Name &aFullName) const;
         bool  Matches(const char *aName) const;
         bool  Matches(const AddressResolver &aResolver) const;
-        bool  Matches(const ExpireChecker &aExpireChecker) const;
+        bool  Matches(const ExpirationChecker &aChecker) const;
         Error Add(const AddressResolver &aResolver);
         void  Remove(const AddressResolver &aResolver);
         void  CommitNewResponseEntries(void);
@@ -2086,7 +2075,7 @@ private:
         {
             explicit AddrEntry(const Ip6::Address &aAddress);
             bool     Matches(const Ip6::Address &aAddress) const { return (mAddress == aAddress); }
-            bool     Matches(const ExpireChecker &aExpireChecker) const;
+            bool     Matches(const ExpirationChecker &aChecker) const;
             bool     Matches(EmptyChecker aChecker) const;
             uint32_t GetTtl(void) const { return mRecord.GetTtl(); }
 
@@ -2161,7 +2150,7 @@ private:
     public:
         bool  Matches(const Name &aFullName, uint16_t aRecordType) const;
         bool  Matches(const RecordQuerier &aQuerier) const;
-        bool  Matches(const ExpireChecker &aExpireChecker) const;
+        bool  Matches(const ExpirationChecker &aChecker) const;
         Error Add(const RecordQuerier &aQuerier);
         void  Remove(const RecordQuerier &aQuerier);
         void  ProcessResponseRecord(const Message &aMessage, const ResourceRecord &aRecord, uint16_t aRecordOffset);
@@ -2191,7 +2180,7 @@ private:
 
             bool     Matches(uint16_t aType) const;
             bool     Matches(uint16_t aType, const Heap::Data &aData) const;
-            bool     Matches(const ExpireChecker &aExpireChecker) const;
+            bool     Matches(const ExpirationChecker &aChecker) const;
             bool     Matches(EmptyChecker aChecker) const;
             uint32_t GetTtl(void) const { return mRecord.GetTtl(); }
 
