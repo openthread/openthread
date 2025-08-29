@@ -173,7 +173,7 @@ void CorruptMessage(Message &aMessage)
 void TestUdpMessageChecksum(void)
 {
     constexpr uint16_t kMinSize = sizeof(Ip6::Udp::Header);
-    constexpr uint16_t kMaxSize = kBufferSize * 3 + 24;
+    constexpr uint16_t kMaxSize = Buffer::kSize * 3 + 24;
 
     const char *kSourceAddress = "fd00:1122:3344:5566:7788:99aa:bbcc:ddee";
     const char *kDestAddress   = "fd01:2345:6789:abcd:ef01:2345:6789:abcd";
@@ -241,7 +241,7 @@ void TestUdpMessageChecksum(void)
 void TestIcmp6MessageChecksum(void)
 {
     constexpr uint16_t kMinSize = sizeof(Ip6::Icmp::Header);
-    constexpr uint16_t kMaxSize = kBufferSize * 3 + 24;
+    constexpr uint16_t kMaxSize = Buffer::kSize * 3 + 24;
 
     const char *kSourceAddress = "fd00:feef:dccd:baab:9889:7667:5444:3223";
     const char *kDestAddress   = "fd01:abab:beef:cafe:1234:5678:9abc:0";
@@ -310,7 +310,7 @@ void TestIcmp6MessageChecksum(void)
 void TestTcp4MessageChecksum(void)
 {
     constexpr size_t kMinSize = sizeof(Ip4::Tcp::Header);
-    constexpr size_t kMaxSize = kBufferSize * 3 + 24;
+    constexpr size_t kMaxSize = Buffer::kSize * 3 + 24;
 
     const char *kSourceAddress = "12.34.56.78";
     const char *kDestAddress   = "87.65.43.21";
@@ -365,7 +365,7 @@ void TestTcp4MessageChecksum(void)
 void TestUdp4MessageChecksum(void)
 {
     constexpr uint16_t kMinSize = sizeof(Ip4::Udp::Header);
-    constexpr uint16_t kMaxSize = kBufferSize * 3 + 24;
+    constexpr uint16_t kMaxSize = Buffer::kSize * 3 + 24;
 
     const char *kSourceAddress = "12.34.56.78";
     const char *kDestAddress   = "87.65.43.21";

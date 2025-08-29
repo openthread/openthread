@@ -408,7 +408,7 @@ private:
     static constexpr uint16_t kTcatMaxDeviceIdSize       = OT_TCAT_MAX_DEVICEID_SIZE;
     static constexpr uint16_t kInstallCodeMaxSize        = 255;
     static constexpr uint16_t kCommissionerCertMaxLength = 1024;
-    static constexpr uint16_t kBufferReserve             = 2048 / (kBufferSize - sizeof(otMessageBuffer)) + 1;
+    static constexpr uint16_t kBufferReserve             = 2048 / (Buffer::kSize - sizeof(otMessageBuffer)) + 1;
     static constexpr uint8_t  kServiceNameMaxLength      = OT_TCAT_SERVICE_NAME_MAX_LENGTH;
     static constexpr uint8_t  kApplicationLayerMaxCount  = OT_TCAT_APPLICATION_LAYER_MAX_COUNT;
 
