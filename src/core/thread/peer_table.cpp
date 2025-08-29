@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for Thread Peer table.
+ *   This file includes definitions for the Thread Peer table.
  */
 
 #include "peer_table.hpp"

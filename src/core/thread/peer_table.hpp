@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for Thread Peer table.
+ *   This file includes definitions for the Thread Peer table.
  */
 
 #ifndef PEER_TABLE_HPP_
@@ -67,7 +67,7 @@ public:
         /**
          * Initializes an `Iterator` instance.
          *
-         * @param[in] aInstance  A reference to the OpenThread instance.
+         * @param[in] aInstance  The OpenThread instance.
          * @param[in] aFilter    A peer state filter.
          */
         Iterator(Instance &aInstance, Peer::StateFilter aFilter);

@@ -1171,9 +1171,9 @@ public:
      * If the @p aP2pRequest indicates a group identifier, this method establishes multiple P2P links with peers.
      * Otherwise, it establishes at most one P2P link.
      *
-     * @param[in] aP2pRequest  A constant reference to P2P request.
-     * @param[in] aCallback    A pointer to function that is called when the P2P link succeeds or fails.
-     * @param[in] aContext     A pointer to callback application-specific context.
+     * @param[in] aP2pRequest  A constant reference to the P2P request.
+     * @param[in] aCallback    A pointer to the function that is called when the P2P link succeeds or fails.
+     * @param[in] aContext     A pointer to the callback application-specific context.
      *
      * @retval kErrorNone          Successfully started to establish P2P links.
      * @retval kErrorBusy          Establishing a P2P link in progress.
@@ -1192,7 +1192,7 @@ public:
      * A subsequent call to this function will replace any previously set callback.
      *
      * @param[in] aCallback  The callback function pointer.
-     * @param[in] aContext   A pointer to callback application-specific context.
+     * @param[in] aContext   A pointer to the callback application-specific context.
      */
     void P2pSetEventCallback(P2pEventCallback aCallback, void *aContext) { mP2p.SetEventCallback(aCallback, aContext); }
 #endif // OPENTHREAD_CONFIG_P2P_ENABLE

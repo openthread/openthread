@@ -51,7 +51,7 @@ public:
     /**
      * Initializes the `Peer` object.
      *
-     * @param[in] aInstance  A reference to OpenThread instance.
+     * @param[in] aInstance  The OpenThread instance.
      */
     void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
 

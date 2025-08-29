@@ -8098,19 +8098,19 @@ template <> otError Interpreter::Process<Cmd("p2p")>(Arg aArgs[])
         otP2pRequest p2pRequest;
 
         /**
-         * @cli link -e dead00beef00cafe
+         * @cli link
          * @code
-         * link -e dead00beef00cafe
+         * link extaddr dead00beef00cafe
          * Done
          * @endcode
-         * @cparam link -e @ca{extended-address}
+         * @cparam link extaddr @ca{extended-address}
          * @par
          * `OPENTHREAD_CONFIG_P2P_ENABLE` and `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` are required.
          * @par
          * Wakes up the Wake-up Listener identified by the extended address and establishes a peer-to-peer link with the
          * peer.
          */
-        if (aArgs[1] == "-e")
+        if (aArgs[1] == "extaddr")
         {
             SuccessOrExit(error = aArgs[2].ParseAsHexString(p2pRequest.mWakeupRequest.mShared.mExtAddress.m8));
             p2pRequest.mWakeupRequest.mType = OT_WAKEUP_TYPE_EXT_ADDRESS;
