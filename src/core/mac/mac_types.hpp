@@ -980,7 +980,7 @@ public:
     /**
      * Sets the wake-up request with an Extended Address.
      *
-     * The type is also updated to indicate that the wake-up request type is kTypeExtAddress.
+     * The type is also updated to indicate that the wake-up request type is `kTypeExtAddress`.
      *
      * @param[in]  aExtAddress  An Extended Address.
      */
@@ -989,7 +989,7 @@ public:
     /**
      * Gets the Extended Address of the wake-up request.
      *
-     * MUST be used only if the wake-up request type is kTypeExtAddress.
+     * MUST be used only if the wake-up request type is `kTypeExtAddress`.
      *
      * @returns A constant reference to the Extended Address.
      */
@@ -998,7 +998,7 @@ public:
     /**
      * Gets the Extended Address of the wake-up request.
      *
-     * MUST be used only if the wake-up request type is kTypeExtAddress.
+     * MUST be used only if the wake-up request type is `kTypeExtAddress`.
      *
      * @returns A reference to the Extended Address.
      */
@@ -1012,26 +1012,26 @@ public:
     void SetType(Type aType);
 
     /**
-     * Indicates whether wake up the peer by the extended address.
+     * Indicates whether the peer is set to be woken up by the extended address.
      *
-     * @retval TRUE   If the peer is woken up by the extended address.
-     * @retval FALSE  If the peer is not woken up by the extended address.
+     * @retval TRUE   If the peer is set to be woken up by the extended address.
+     * @retval FALSE  If the peer is not not set to be woken up by the extended address.
      */
     bool IsWakeupByExtAddress(void) const;
 
     /**
-     * Indicates whether wake up the peer by the wake-up identifier.
+     * Indicates whether the peer is set to be woken up by the wake-up identifier.
      *
-     * @retval TRUE   If the peer is woken up by the wake-up identifier.
-     * @retval FALSE  If the peer is not woken up by the wake-up identifier.
+     * @retval TRUE   If the peer is set to be woken up by the wake-up identifier.
+     * @retval FALSE  If the peer is not set to be woken up by the wake-up identifier.
      */
     bool IsWakeupById(void) const;
 
     /**
-     * Indicates whether wake up peers by the group wake-up identifier.
+     * Indicates whether the peer is set to be woken up by the group wake-up identifier.
      *
-     * @retval TRUE   If the peer is woken up by the group wake-up identifier.
-     * @retval FALSE  If the peer is not woken up by the group wake-up identifier.
+     * @retval TRUE   If the peer is set to be woken up by the group wake-up identifier.
+     * @retval FALSE  If the peer is not set to be woken up by the group wake-up identifier.
      */
     bool IsWakeupByGroupId(void) const;
 };

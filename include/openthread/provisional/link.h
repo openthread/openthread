@@ -41,7 +41,7 @@
 extern "C" {
 #endif
 /**
- * @addtogroup api-link
+ * @addtogroup api-provisional-link
  *
  * @brief
  *   This module includes provisional functions that control link-layer configuration.

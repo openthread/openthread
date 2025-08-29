@@ -151,7 +151,7 @@ set wc2_link_local_addr [get_ipaddr linklocal]
 
 send_user "\n\n>>> WC1 establishes a P2P link with WL1\n"
 switch_node $WC1
-send "p2p link -e $WL1_EXT_ADDRESS\n"
+send "p2p link extaddr $WL1_EXT_ADDRESS\n"
 expect_line "Done"
 
 send_user "\n\n>>> WC1 pings WL1\n"
@@ -164,7 +164,7 @@ sleep 1
 
 
 send_user "\n\n>>> WC1 establishes a P2P link with WL2\n"
-send "p2p link -e $WL2_EXT_ADDRESS\n"
+send "p2p link extaddr $WL2_EXT_ADDRESS\n"
 expect_line "Done"
 
 sleep 1
@@ -178,7 +178,7 @@ for {set i 6} {$i <= 10} {incr i} {
 
 send_user "\n\n>>> WC2 establishes a P2P link with WL1\n"
 switch_node $WC2
-send "p2p link -e $WL1_EXT_ADDRESS\n"
+send "p2p link extaddr $WL1_EXT_ADDRESS\n"
 expect_line "Done"
 
 sleep 1

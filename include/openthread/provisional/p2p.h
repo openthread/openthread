@@ -44,7 +44,7 @@
 extern "C" {
 #endif
 /**
- * @addtogroup api-p2p
+ * @addtogroup api-provisional-p2p
  *
  * @brief
  *   This module includes provisional functions for the Thread P2P link.
@@ -66,7 +66,7 @@ typedef struct otP2pRequest
 /**
  * Notifies the caller that the P2P link establishment process has ended.
  *
- * @param[in] aContext A pointer to application-specific context.
+ * @param[in] aContext A pointer to the application-specific context.
  */
 typedef void (*otP2pLinkDoneCallback)(void *aContext);
 
@@ -76,10 +76,10 @@ typedef void (*otP2pLinkDoneCallback)(void *aContext);
  * If the @p aP2pRequest indicates a group wake-up, this method establishes multiple P2P links with peers.
  * Otherwise, it establishes at most one P2P link.
  *
- * @param[in] aInstance    A pointer to an OpenThread instance.
+ * @param[in] aInstance    The OpenThread instance.
  * @param[in] aP2pRequest  A pointer to P2P request.
- * @param[in] aCallback    A pointer to function that is called when the P2P link establishment process ends .
- * @param[in] aContext     A pointer to callback application-specific context.
+ * @param[in] aCallback    A pointer to the function that is called when the P2P link establishment process ends .
+ * @param[in] aContext     A pointer to the callback application-specific context.
  *
  * @retval OT_ERROR_NONE           Successfully started to establish P2P links.
  * @retval OT_ERROR_BUSY           Establishing a P2P link was in progress.
@@ -105,7 +105,7 @@ typedef enum otP2pEvent
  *
  * @param[in] aEvent       The P2P link event.
  * @param[in] aExtAddress  A pointer to the peer's Extended Address of the P2P link.
- * @param[in] aContext     A pointer to application-specific context.
+ * @param[in] aContext     A pointer to the application-specific context.
  */
 typedef void (*otP2pEventCallback)(otP2pEvent aEvent, const otExtAddress *aExtAddress, void *aContext);
 
@@ -116,7 +116,7 @@ typedef void (*otP2pEventCallback)(otP2pEvent aEvent, const otExtAddress *aExtAd
  *
  * @param[in] aInstance  The OpenThread instance.
  * @param[in] aCallback  The callback function pointer.
- * @param[in] aContext   A pointer to callback application-specific context.
+ * @param[in] aContext   A pointer to the callback application-specific context.
  */
 void otP2pSetEventCallback(otInstance *aInstance, otP2pEventCallback aCallback, void *aContext);
 
