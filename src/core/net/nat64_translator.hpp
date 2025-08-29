@@ -124,7 +124,9 @@ public:
     /**
      * Represents the counters for the protocols supported by NAT64.
      */
-    class ProtocolCounters : public otNat64ProtocolCounters, public Clearable<ProtocolCounters>
+    class ProtocolCounters : public otNat64ProtocolCounters,
+                             public Clearable<ProtocolCounters>,
+                             public Equatable<ProtocolCounters>
     {
         friend class Translator;
 
