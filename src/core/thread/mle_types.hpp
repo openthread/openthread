@@ -39,6 +39,9 @@
 #include <stdint.h>
 #include <string.h>
 
+#if OPENTHREAD_CONFIG_P2P_ENABLE
+#include <openthread/provisional/p2p.h>
+#endif
 #include <openthread/thread.h>
 #if OPENTHREAD_FTD
 #include <openthread/thread_ftd.h>
@@ -132,28 +135,31 @@ enum DeviceRole : uint8_t
  */
 enum Command : uint8_t
 {
-    kCommandLinkRequest                   = 0,  ///< Link Request command
-    kCommandLinkAccept                    = 1,  ///< Link Accept command
-    kCommandLinkAcceptAndRequest          = 2,  ///< Link Accept And Request command
-    kCommandLinkReject                    = 3,  ///< Link Reject command
-    kCommandAdvertisement                 = 4,  ///< Advertisement command
-    kCommandUpdate                        = 5,  ///< Update command
-    kCommandUpdateRequest                 = 6,  ///< Update Request command
-    kCommandDataRequest                   = 7,  ///< Data Request command
-    kCommandDataResponse                  = 8,  ///< Data Response command
-    kCommandParentRequest                 = 9,  ///< Parent Request command
-    kCommandParentResponse                = 10, ///< Parent Response command
-    kCommandChildIdRequest                = 11, ///< Child ID Request command
-    kCommandChildIdResponse               = 12, ///< Child ID Response command
-    kCommandChildUpdateRequest            = 13, ///< Child Update Request command
-    kCommandChildUpdateResponse           = 14, ///< Child Update Response command
-    kCommandAnnounce                      = 15, ///< Announce command
-    kCommandDiscoveryRequest              = 16, ///< Discovery Request command
-    kCommandDiscoveryResponse             = 17, ///< Discovery Response command
-    kCommandLinkMetricsManagementRequest  = 18, ///< Link Metrics Management Request command
-    kCommandLinkMetricsManagementResponse = 19, ///< Link Metrics Management Response command
-    kCommandLinkProbe                     = 20, ///< Link Probe command
-    kCommandTimeSync                      = 99, ///< Time Sync command
+    kCommandLinkRequest                   = 0,   ///< Link Request command
+    kCommandLinkAccept                    = 1,   ///< Link Accept command
+    kCommandLinkAcceptAndRequest          = 2,   ///< Link Accept And Request command
+    kCommandLinkReject                    = 3,   ///< Link Reject command
+    kCommandAdvertisement                 = 4,   ///< Advertisement command
+    kCommandUpdate                        = 5,   ///< Update command
+    kCommandUpdateRequest                 = 6,   ///< Update Request command
+    kCommandDataRequest                   = 7,   ///< Data Request command
+    kCommandDataResponse                  = 8,   ///< Data Response command
+    kCommandParentRequest                 = 9,   ///< Parent Request command
+    kCommandParentResponse                = 10,  ///< Parent Response command
+    kCommandChildIdRequest                = 11,  ///< Child ID Request command
+    kCommandChildIdResponse               = 12,  ///< Child ID Response command
+    kCommandChildUpdateRequest            = 13,  ///< Child Update Request command
+    kCommandChildUpdateResponse           = 14,  ///< Child Update Response command
+    kCommandAnnounce                      = 15,  ///< Announce command
+    kCommandDiscoveryRequest              = 16,  ///< Discovery Request command
+    kCommandDiscoveryResponse             = 17,  ///< Discovery Response command
+    kCommandLinkMetricsManagementRequest  = 18,  ///< Link Metrics Management Request command
+    kCommandLinkMetricsManagementResponse = 19,  ///< Link Metrics Management Response command
+    kCommandLinkProbe                     = 20,  ///< Link Probe command
+    kCommandTimeSync                      = 99,  ///< Time Sync command
+    kCommandP2pLinkRequest                = 100, ///< P2P Link Request command
+    kCommandP2pLinkAccept                 = 101, ///< P2P Link Accept command
+    kCommandP2pLinkAcceptAndRequest       = 102, ///< P2P Link Accept And Request command
 };
 
 /**
@@ -838,6 +844,22 @@ inline bool IsChildRloc16(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) 
  */
 const char *RoleToString(DeviceRole aRole);
 
+#if OPENTHREAD_CONFIG_P2P_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+/**
+ * Represents a P2P request.
+ */
+class P2pRequest : public otP2pRequest
+{
+public:
+    /**
+     * Gets the wake-up request.
+     *
+     * @returns The wake-up request.
+     */
+    const Mac::WakeupRequest &GetWakeupRequest(void) const { return AsCoreType(&mWakeupRequest); }
+};
+#endif // OPENTHREAD_CONFIG_P2P_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+
 /**
  * @}
  */
@@ -849,6 +871,9 @@ DefineMapEnum(otDeviceRole, Mle::DeviceRole);
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 DefineCoreType(otDeviceProperties, Mle::DeviceProperties);
 DefineMapEnum(otPowerSupply, Mle::DeviceProperties::PowerSupply);
+#endif
+#if OPENTHREAD_CONFIG_P2P_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+DefineCoreType(otP2pRequest, Mle::P2pRequest);
 #endif
 
 } // namespace ot

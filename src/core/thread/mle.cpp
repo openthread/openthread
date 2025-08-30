@@ -107,6 +107,9 @@ Mle::Mle(Instance &aInstance)
     , mChildTable(aInstance)
     , mRouterTable(aInstance)
 #endif // OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_P2P_ENABLE
+    , mP2p(aInstance)
+#endif
 {
     mParent.Init(aInstance);
 
@@ -1761,6 +1764,24 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         break;
 #endif
 
+#if OPENTHREAD_CONFIG_P2P_ENABLE
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    case kCommandP2pLinkRequest:
+        mP2p.HandleP2pLinkRequest(rxInfo);
+        break;
+
+    case kCommandP2pLinkAccept:
+        mP2p.HandleP2pLinkAccept(rxInfo);
+        break;
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    case kCommandP2pLinkAcceptAndRequest:
+        mP2p.HandleP2pLinkAcceptAndRequest(rxInfo);
+        break;
+#endif
+#endif // OPENTHREAD_CONFIG_P2P_ENABLE
+
     default:
         ExitNow(error = kErrorDrop);
     }
@@ -2870,6 +2891,11 @@ const char *Mle::MessageTypeToString(MessageType aType)
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         "Time Sync", // (31) kTypeTimeSync
 #endif
+#if OPENTHREAD_CONFIG_P2P_ENABLE
+        "P2P Link Request",            // (32) kTypeP2pLinkRequest
+        "P2P Link Accept and Request", // (33) kTypeP2pLinkAcceptAndRequest
+        "P2P Link Accept",             // (34) kTypeP2pLinkAccept
+#endif
     };
 
     struct EnumCheck
@@ -2912,6 +2938,11 @@ const char *Mle::MessageTypeToString(MessageType aType)
 #endif
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         ValidateNextEnum(kTypeTimeSync);
+#endif
+#if OPENTHREAD_CONFIG_P2P_ENABLE
+        ValidateNextEnum(kTypeP2pLinkRequest);
+        ValidateNextEnum(kTypeP2pLinkAcceptAndRequest);
+        ValidateNextEnum(kTypeP2pLinkAccept);
 #endif
     };
 
@@ -3025,13 +3056,15 @@ Error Mle::Wakeup(const Mac::ExtAddress &aWedAddress,
                   WakeupCallback         aCallback,
                   void                  *aCallbackContext)
 {
-    Error error;
+    Error              error = kErrorNone;
+    Mac::WakeupRequest wakeupRequest;
 
     VerifyOrExit((aIntervalUs > 0) && (aDurationMs > 0), error = kErrorInvalidArgs);
     VerifyOrExit(aIntervalUs < aDurationMs * Time::kOneMsecInUsec, error = kErrorInvalidArgs);
     VerifyOrExit(mWedAttachState == kWedDetached, error = kErrorInvalidState);
 
-    SuccessOrExit(error = mWakeupTxScheduler.WakeUp(aWedAddress, aIntervalUs, aDurationMs));
+    wakeupRequest.SetExtAddress(aWedAddress);
+    SuccessOrExit(error = mWakeupTxScheduler.WakeUp(wakeupRequest, aIntervalUs, aDurationMs));
 
     mWedAttachState = kWedAttaching;
     mWakeupCallback.Set(aCallback, aCallbackContext);
@@ -3044,6 +3077,17 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+void Mle::HandleWakeupFrame(const Mac::WakeupInfo &aWakeupInfo)
+{
+    OT_UNUSED_VARIABLE(aWakeupInfo);
+
+#if OPENTHREAD_CONFIG_P2P_ENABLE
+    mP2p.HandleP2pWakeup(aWakeupInfo);
+#endif
+}
+#endif
 
 //---------------------------------------------------------------------------------------------------------------------
 // TlvList

@@ -60,14 +60,14 @@ public:
     /**
      * Initiates the wake-up sequence to a Wake-up End Device.
      *
-     * @param[in] aWedAddress The extended address of the Wake-up End Device.
-     * @param[in] aIntervalUs An interval between consecutive wake-up frames (in microseconds).
-     * @param[in] aDurationMs Duration of the wake-up sequence (in milliseconds).
+     * @param[in] aWakeupRequest  The wake-up request.
+     * @param[in] aIntervalUs     An interval between consecutive wake-up frames (in microseconds).
+     * @param[in] aDurationMs     Duration of the wake-up sequence (in milliseconds).
      *
      * @retval kErrorNone         Successfully started the wake-up sequence.
      * @retval kErrorInvalidState This or another device is currently being woken-up.
      */
-    Error WakeUp(const Mac::ExtAddress &aWedAddress, uint16_t aIntervalUs, uint16_t aDurationMs);
+    Error WakeUp(const Mac::WakeupRequest &aWakeupRequest, uint16_t aIntervalUs, uint16_t aDurationMs);
 
     /**
      * Returns the connection window used by this device.
@@ -99,6 +99,11 @@ public:
      */
     void UpdateFrameRequestAhead(void);
 
+    /**
+     * Returns the wake-up request.
+     */
+    const Mac::WakeupRequest &GetWakeupRequest(void) const { return mWakeupRequest; }
+
 private:
     constexpr static uint8_t  kConnectionRetryInterval = OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_CONNECTION_RETRY_INTERVAL;
     constexpr static uint8_t  kConnectionRetryCount    = OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_CONNECTION_RETRY_COUNT;
@@ -116,13 +121,13 @@ private:
 
     using WakeupTimer = TimerMicroIn<WakeupTxScheduler, &WakeupTxScheduler::RequestWakeupFrameTransmission>;
 
-    Mac::ExtAddress mWedAddress;
-    TimeMicro       mTxTimeUs;             // Point in time when the next TX occurs.
-    TimeMicro       mTxEndTimeUs;          // Point in time when the wake-up sequence is over.
-    uint32_t        mTxRequestAheadTimeUs; // How much ahead the TX MAC operation needs to be requested.
-    uint16_t        mIntervalUs;           // Interval between consecutive wake-up frames.
-    WakeupTimer     mTimer;
-    bool            mIsRunning;
+    Mac::WakeupRequest mWakeupRequest;
+    TimeMicro          mTxTimeUs;             // Point in time when the next TX occurs.
+    TimeMicro          mTxEndTimeUs;          // Point in time when the wake-up sequence is over.
+    uint32_t           mTxRequestAheadTimeUs; // How much ahead the TX MAC operation needs to be requested.
+    uint16_t           mIntervalUs;           // Interval between consecutive wake-up frames.
+    WakeupTimer        mTimer;
+    bool               mIsRunning;
 };
 
 } // namespace ot
