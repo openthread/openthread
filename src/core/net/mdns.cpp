@@ -4882,7 +4882,7 @@ void Core::MultiPacketRxMessages::HandleTimer(void)
     NextFireTime           nextTime;
     OwningList<RxMsgEntry> expiredEntries;
 
-    mRxMsgEntries.RemoveAllMatching(expiredEntries, ExpireChecker(nextTime.GetNow()));
+    mRxMsgEntries.RemoveAllMatching(expiredEntries, ExpirationChecker(nextTime.GetNow()));
 
     for (RxMsgEntry &expiredEntry : expiredEntries)
     {
@@ -4921,11 +4921,6 @@ bool Core::MultiPacketRxMessages::RxMsgEntry::Matches(const AddressInfo &aAddres
 
 exit:
     return matches;
-}
-
-bool Core::MultiPacketRxMessages::RxMsgEntry::Matches(const ExpireChecker &aExpireChecker) const
-{
-    return (mProcessTime <= aExpireChecker.mNow);
 }
 
 void Core::MultiPacketRxMessages::RxMsgEntry::Add(OwnedPtr<RxMessage> &aRxMessagePtr)
@@ -5024,7 +5019,7 @@ void Core::TxMessageHistory::HandleTimer(void)
 {
     NextFireTime nextTime;
 
-    mMsgEntries.RemoveAndFreeAllMatching(ExpireChecker(nextTime.GetNow()));
+    mMsgEntries.RemoveAndFreeAllMatching(ExpirationChecker(nextTime.GetNow()));
 
     for (const MsgEntry &entry : mMsgEntries)
     {
@@ -5170,17 +5165,17 @@ void Core::AddPassiveIp6AddrCache(const char *aHostName)
 
 void Core::HandleCacheTimer(void)
 {
-    CacheContext  context(GetInstance());
-    ExpireChecker expireChecker(context.GetNow());
+    CacheContext      context(GetInstance());
+    ExpirationChecker expirationChecker(context.GetNow());
 
     // First remove all expired entries.
 
-    mBrowseCacheList.RemoveAndFreeAllMatching(expireChecker);
-    mSrvCacheList.RemoveAndFreeAllMatching(expireChecker);
-    mTxtCacheList.RemoveAndFreeAllMatching(expireChecker);
-    mIp6AddrCacheList.RemoveAndFreeAllMatching(expireChecker);
-    mIp4AddrCacheList.RemoveAndFreeAllMatching(expireChecker);
-    mRecordCacheList.RemoveAndFreeAllMatching(expireChecker);
+    mBrowseCacheList.RemoveAndFreeAllMatching(expirationChecker);
+    mSrvCacheList.RemoveAndFreeAllMatching(expirationChecker);
+    mTxtCacheList.RemoveAndFreeAllMatching(expirationChecker);
+    mIp6AddrCacheList.RemoveAndFreeAllMatching(expirationChecker);
+    mIp4AddrCacheList.RemoveAndFreeAllMatching(expirationChecker);
+    mRecordCacheList.RemoveAndFreeAllMatching(expirationChecker);
 
     // Process cache types in a specific order to optimize name
     // compression when constructing query messages.
@@ -5941,7 +5936,7 @@ bool Core::BrowseCache::Matches(const Browser &aBrowser) const
     return Matches(aBrowser.mServiceType, aBrowser.mSubTypeLabel);
 }
 
-bool Core::BrowseCache::Matches(const ExpireChecker &aExpireChecker) const { return ShouldDelete(aExpireChecker.mNow); }
+bool Core::BrowseCache::Matches(const ExpirationChecker &aChecker) const { return ShouldDelete(aChecker.GetNow()); }
 
 Error Core::BrowseCache::Add(const Browser &aBrowser) { return CacheEntry::Add(ResultCallback(aBrowser.mCallback)); }
 
@@ -6134,7 +6129,7 @@ void Core::BrowseCache::ProcessExpiredRecords(TimeMilli aNow)
 {
     OwningList<PtrEntry> expiredEntries;
 
-    mPtrEntries.RemoveAllMatching(expiredEntries, ExpireChecker(aNow));
+    mPtrEntries.RemoveAllMatching(expiredEntries, ExpirationChecker(aNow));
 
     for (PtrEntry &exiredEntry : expiredEntries)
     {
@@ -6185,9 +6180,9 @@ Error Core::BrowseCache::PtrEntry::Init(const char *aServiceInstance)
     return mServiceInstance.Set(aServiceInstance);
 }
 
-bool Core::BrowseCache::PtrEntry::Matches(const ExpireChecker &aExpireChecker) const
+bool Core::BrowseCache::PtrEntry::Matches(const ExpirationChecker &aChecker) const
 {
-    return mRecord.ShouldExpire(aExpireChecker.mNow);
+    return mRecord.ShouldExpire(aChecker.GetNow());
 }
 
 void Core::BrowseCache::PtrEntry::ConvertTo(BrowseResult &aResult, const BrowseCache &aBrowseCache) const
@@ -6311,7 +6306,7 @@ bool Core::SrvCache::Matches(const SrvResolver &aResolver) const
     return ServiceCache::Matches(aResolver.mServiceInstance, aResolver.mServiceType);
 }
 
-bool Core::SrvCache::Matches(const ExpireChecker &aExpireChecker) const { return ShouldDelete(aExpireChecker.mNow); }
+bool Core::SrvCache::Matches(const ExpirationChecker &aChecker) const { return ShouldDelete(aChecker.GetNow()); }
 
 Error Core::SrvCache::Add(const SrvResolver &aResolver) { return CacheEntry::Add(ResultCallback(aResolver.mCallback)); }
 
@@ -6509,7 +6504,7 @@ bool Core::TxtCache::Matches(const TxtResolver &aResolver) const
     return ServiceCache::Matches(aResolver.mServiceInstance, aResolver.mServiceType);
 }
 
-bool Core::TxtCache::Matches(const ExpireChecker &aExpireChecker) const { return ShouldDelete(aExpireChecker.mNow); }
+bool Core::TxtCache::Matches(const ExpirationChecker &aChecker) const { return ShouldDelete(aChecker.GetNow()); }
 
 Error Core::TxtCache::Add(const TxtResolver &aResolver) { return CacheEntry::Add(ResultCallback(aResolver.mCallback)); }
 
@@ -6689,7 +6684,7 @@ bool Core::AddrCache::Matches(const char *aName) const { return NameMatch(mName,
 
 bool Core::AddrCache::Matches(const AddressResolver &aResolver) const { return Matches(aResolver.mHostName); }
 
-bool Core::AddrCache::Matches(const ExpireChecker &aExpireChecker) const { return ShouldDelete(aExpireChecker.mNow); }
+bool Core::AddrCache::Matches(const ExpirationChecker &aChecker) const { return ShouldDelete(aChecker.GetNow()); }
 
 Error Core::AddrCache::Add(const AddressResolver &aResolver)
 {
@@ -6751,7 +6746,7 @@ void Core::AddrCache::ProcessExpiredRecords(TimeMilli aNow)
     AddressResult              result;
     bool                       didRemoveAny;
 
-    didRemoveAny = mCommittedEntries.RemoveAndFreeAllMatching(ExpireChecker(aNow));
+    didRemoveAny = mCommittedEntries.RemoveAndFreeAllMatching(ExpirationChecker(aNow));
 
     VerifyOrExit(didRemoveAny);
 
@@ -7010,9 +7005,9 @@ Core::AddrCache::AddrEntry::AddrEntry(const Ip6::Address &aAddress)
 {
 }
 
-bool Core::AddrCache::AddrEntry::Matches(const ExpireChecker &aExpireChecker) const
+bool Core::AddrCache::AddrEntry::Matches(const ExpirationChecker &aChecker) const
 {
-    return mRecord.ShouldExpire(aExpireChecker.mNow);
+    return mRecord.ShouldExpire(aChecker.GetNow());
 }
 
 bool Core::AddrCache::AddrEntry::Matches(EmptyChecker aChecker) const
@@ -7135,7 +7130,7 @@ exit:
     return matches;
 }
 
-bool Core::RecordCache::Matches(const ExpireChecker &aExpireChecker) const { return ShouldDelete(aExpireChecker.mNow); }
+bool Core::RecordCache::Matches(const ExpirationChecker &aChecker) const { return ShouldDelete(aChecker.GetNow()); }
 
 Error Core::RecordCache::Add(const RecordQuerier &aQuerier)
 {
@@ -7379,7 +7374,7 @@ void Core::RecordCache::ProcessExpiredRecords(TimeMilli aNow)
 {
     OwningList<RecordEntry> expiredEntries;
 
-    mCommittedEntries.RemoveAllMatching(expiredEntries, ExpireChecker(aNow));
+    mCommittedEntries.RemoveAllMatching(expiredEntries, ExpirationChecker(aNow));
 
     for (RecordEntry &entry : expiredEntries)
     {
@@ -7484,9 +7479,9 @@ bool Core::RecordCache::RecordEntry::Matches(uint16_t aType, const Heap::Data &a
     return (mType == aType) && (mData == aData);
 }
 
-bool Core::RecordCache::RecordEntry::Matches(const ExpireChecker &aExpireChecker) const
+bool Core::RecordCache::RecordEntry::Matches(const ExpirationChecker &aChecker) const
 {
-    return mRecord.ShouldExpire(aExpireChecker.mNow);
+    return mRecord.ShouldExpire(aChecker.GetNow());
 }
 
 bool Core::RecordCache::RecordEntry::Matches(EmptyChecker aChecker) const

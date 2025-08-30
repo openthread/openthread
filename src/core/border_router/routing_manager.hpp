@@ -812,12 +812,6 @@ private:
     //------------------------------------------------------------------------------------------------------------------
     // Nested types
 
-    struct ExpirationChecker
-    {
-        explicit ExpirationChecker(TimeMilli aNow) { mNow = aNow; }
-        TimeMilli mNow;
-    };
-
     class LifetimedPrefix
     {
         // Represents an IPv6 prefix with its valid lifetime. Used as
@@ -831,7 +825,7 @@ private:
         TimeMilli          GetExpireTime(void) const { return CalculateExpirationTime(mValidLifetime); }
 
         bool Matches(const Ip6::Prefix &aPrefix) const { return (mPrefix == aPrefix); }
-        bool Matches(const ExpirationChecker &aChecker) const { return (GetExpireTime() <= aChecker.mNow); }
+        bool Matches(const ExpirationChecker &aChecker) const { return aChecker.IsExpired(GetExpireTime()); }
 
         void SetStaleTimeCalculated(bool aFlag) { mStaleTimeCalculated = aFlag; }
         bool IsStaleTimeCalculated(void) const { return mStaleTimeCalculated; }
@@ -903,7 +897,7 @@ private:
         void                CopyInfoTo(RdnssAddrEntry &aEntry, TimeMilli aNow) const;
 
         bool Matches(const Ip6::Address &aAddress) const { return (mAddress == aAddress); }
-        bool Matches(const ExpirationChecker &aChecker) const { return (GetExpireTime() <= aChecker.mNow); }
+        bool Matches(const ExpirationChecker &aChecker) const { return aChecker.IsExpired(GetExpireTime()); }
 
     private:
         Ip6::Address mAddress;

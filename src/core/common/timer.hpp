@@ -61,6 +61,48 @@ namespace ot {
  */
 
 /**
+ * Represents an Expiration Checker to determine if a given time has expired relative to a fixed "current time".
+ *
+ * This type is typically used as a "matcher", e.g., as an input to the `Matches(const ExpirationChecker &aChecker)`
+ * method on various `Entry` object types (which can be stored in collections like `LinkedList`, `Array`, etc.).
+ * The `Matches()` method checks whether a given entry has expired. This is then used with methods like
+ * `FindMatching()`, `RemoveMatching()`, `RemoveAndFreeAllMatching()` to efficiently find and remove expired entries
+ * from a collection.
+ */
+class ExpirationChecker
+{
+public:
+    /**
+     * Initializes the `ExpirationChecker` with a given current time.
+     *
+     * @param[in] aNow    The current time.
+     */
+    explicit ExpirationChecker(Time aNow) { mNow = aNow; }
+
+    /**
+     * Gets the current time (now) tracked by the `ExpirationChecker`.
+     *
+     * @returns The current time.
+     */
+    Time GetNow(void) const { return mNow; }
+
+    /**
+     * Indicates whether or not a given time is considered expired.
+     *
+     * A time is considered expired if it is before (or same) as the current time tracked by `ExpirationChecker`.
+     *
+     * @param[in] aTime  The time to check against the checker's reference current time.
+     *
+     * @retval TRUE   If @p aTime is expired (is in the past or now).
+     * @retval FALSE  If @p aTime is not expired (is in the future).
+     */
+    bool IsExpired(Time aTime) const { return aTime <= mNow; }
+
+private:
+    Time mNow;
+};
+
+/**
  * Represents an object tracking the next fire time along with the current time (now).
  */
 class NextFireTime
@@ -69,7 +111,7 @@ public:
     /**
      * Initializes the `NextFireTime` with a given current time.
      *
-     * @pram[in] aNow    The current time.
+     * @param[in] aNow    The current time.
      */
     explicit NextFireTime(Time aNow);
 

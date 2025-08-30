@@ -223,21 +223,11 @@ private:
             // completed (successfully or failed).
         };
 
-        struct ExpirationChecker
-        {
-            explicit ExpirationChecker(TimeMilli aNow)
-                : mNow(aNow)
-            {
-            }
-
-            TimeMilli mNow;
-        };
-
         AdvInfo(Host &aHost, const Server::MessageMetadata &aMetadata, uint32_t aTimeout);
         void      SignalServerToCommit(void);
         bool      IsCompleted(void) const;
         bool      Matches(const CompletionChecker &) const { return IsCompleted(); }
-        bool      Matches(const ExpirationChecker &aChecker) const { return (mExpireTime <= aChecker.mNow); }
+        bool      Matches(const ExpirationChecker &aChecker) const { return aChecker.IsExpired(mExpireTime); }
         Instance &GetInstance(void) const { return mHost.GetInstance(); }
 
         AdvInfo                *mNext;
