@@ -334,7 +334,7 @@ void LogCertMessage(const char *aText, const Coap::Message &aMessage)
 {
     OT_UNUSED_VARIABLE(aText);
 
-    uint8_t  buf[kBufferSize];
+    uint8_t  buf[Buffer::kSize];
     uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
 
     VerifyOrExit(length <= sizeof(buf));
