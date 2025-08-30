@@ -163,7 +163,7 @@ class MATN_04_MulticastListenerTimeout(thread_cert.TestCase):
         # 2. BR_1 forwards the ping packet with multicast address, MA1, to its
         # Thread Network encapsulated in an MPL packet.
         pkts.filter_wpan_src64(vars['BR_1']) \
-            .filter_AMPLFMA(vars['BR_1_RLOC']) \
+            .filter_MPL(vars['BR_1_RLOC']) \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
             .must_next()
 
@@ -189,7 +189,7 @@ class MATN_04_MulticastListenerTimeout(thread_cert.TestCase):
         # 6. BR_1 does not forward the ping packet with multicast address, MA1,
         # to its Thread Network.
         pkts.filter_wpan_src64(vars['BR_1']) \
-            .filter_AMPLFMA(vars['BR_1_RLOC']) \
+            .filter_MPL(vars['BR_1_RLOC']) \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
             .must_not_next()
 
@@ -202,7 +202,7 @@ class MATN_04_MulticastListenerTimeout(thread_cert.TestCase):
         # 8. BR_1 forwards the ping packet with multicast address, MA1, to its
         # Thread Network encapsulated in an MPL packet.
         pkts.filter_wpan_src64(vars['BR_1']) \
-            .filter_AMPLFMA(vars['BR_1_RLOC']) \
+            .filter_MPL(vars['BR_1_RLOC']) \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
             .must_next()
 
