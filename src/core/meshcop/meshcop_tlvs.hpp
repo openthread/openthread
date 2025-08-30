@@ -40,6 +40,7 @@
 #include <openthread/dataset.h>
 #include <openthread/platform/radio.h>
 
+#include "common/bit_utils.hpp"
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"

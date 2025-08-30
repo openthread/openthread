@@ -31,6 +31,7 @@
 #include <openthread/config.h>
 
 #include "test_util.h"
+#include "common/bit_utils.hpp"
 #include "common/code_utils.hpp"
 #include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"

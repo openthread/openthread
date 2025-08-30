@@ -38,6 +38,7 @@
 
 #include <openthread/platform/radio.h>
 
+#include "common/bit_utils.hpp"
 #include "common/equatable.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/string.hpp"

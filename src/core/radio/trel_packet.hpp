@@ -38,6 +38,7 @@
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
+#include "common/bit_utils.hpp"
 #include "common/data.hpp"
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
