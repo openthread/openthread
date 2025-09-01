@@ -65,6 +65,7 @@ FakePlatform::FakePlatform()
     assert(sPlatform == nullptr);
     sPlatform = this;
 
+    fprintf(stderr, "fake platform start\r\n");
     mTransmitFrame.mPsdu = mTransmitBuffer;
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE

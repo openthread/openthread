@@ -58,7 +58,7 @@ bool Udp::SocketHandle::Matches(const MessageInfo &aMessageInfo) const
 
     VerifyOrExit(GetSockName().mPort == aMessageInfo.GetSockPort());
 
-    VerifyOrExit(aMessageInfo.GetSockAddr().IsMulticast() || GetSockName().GetAddress().IsUnspecified() ||
+    VerifyOrExit(GetSockName().GetAddress().IsUnspecified() ||
                  GetSockName().GetAddress() == aMessageInfo.GetSockAddr());
 
     // Verify source if connected socket
@@ -254,7 +254,8 @@ Error Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr)
     SuccessOrExit(error = Plat::BindToNetif(aSocket));
 #endif
 
-    VerifyOrExit(aSockAddr.GetAddress().IsUnspecified() || Get<ThreadNetif>().HasUnicastAddress(aSockAddr.GetAddress()),
+    VerifyOrExit(aSockAddr.GetAddress().IsUnspecified() || aSockAddr.GetAddress().IsMulticast() ||
+                     Get<ThreadNetif>().HasUnicastAddress(aSockAddr.GetAddress()),
                  error = kErrorInvalidArgs);
 
     aSocket.mSockName = aSockAddr;
