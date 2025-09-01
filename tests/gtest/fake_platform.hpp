@@ -150,8 +150,8 @@ protected:
 
     template <uint64_t FakePlatform::*T> void HandleSchedule();
 
-    otRadioFrame mTransmitFrame;
-    uint8_t      mTransmitBuffer[OT_RADIO_FRAME_MAX_SIZE];
+    otRadioFrame mTransmitFrame{};
+    uint8_t      mTransmitBuffer[OT_RADIO_FRAME_MAX_SIZE]{};
     uint8_t      mChannel          = 0;
     uint8_t      mReceiveAtChannel = 0;
 

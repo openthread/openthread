@@ -52,6 +52,7 @@ target_link_libraries(ot-fake-ftd INTERFACE
 
 add_executable(ot-ftd-gtest
     dataset_test.cpp
+    udp_test.cpp
 )
 target_link_libraries(ot-ftd-gtest
     ot-fake-ftd
