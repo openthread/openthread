@@ -2725,7 +2725,7 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
     /**
      * @cli csl timeout
      * @code
-     * cls timeout 10
+     * csl timeout 10
      * Done
      * @endcode
      * @cparam csl timeout @ca{timeout}
