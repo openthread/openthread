@@ -249,6 +249,16 @@ void otBorderRoutingSetRdnssAddrCallback(otInstance                      *aInsta
     AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetRdnssAddrCallback(aCallback, aContext);
 }
 
+otError otBorderRoutingGetNextIfAddrEntry(otInstance                         *aInstance,
+                                          otBorderRoutingPrefixTableIterator *aIterator,
+                                          otBorderRoutingIfAddrEntry         *aEntry)
+{
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aEntry);
+
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextIfAddrEntry(*aIterator, *aEntry);
+}
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 
 otError otBorderRoutingGetNextPeerBrEntry(otInstance                           *aInstance,
