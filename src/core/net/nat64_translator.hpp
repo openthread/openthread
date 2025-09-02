@@ -323,7 +323,7 @@ private:
 
     struct Mapping : public InstanceLocatorInit, public LinkedListEntry<Mapping>
     {
-        static constexpr uint16_t kInfoStringSize = 70;
+        static constexpr uint16_t kInfoStringSize = 80;
 
         typedef String<kInfoStringSize> InfoString;
 
