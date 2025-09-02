@@ -65,6 +65,24 @@ template <typename UintType> uint8_t CountBitsInMask(UintType aMask)
 }
 
 /**
+ * Counts the number of consecutive matching bits between two byte arrays.
+ *
+ * This function compares two byte arrays bit-by-bit, starting from the most significant bit (MSB) of the first byte
+ * in each array. The comparison proceeds until a mismatch is found or until a maximum of @p aMaxBitLength bits have
+ * been successfully compared.
+ *
+ * It is the caller's responsibility to ensure that both @p aFirst and @p aSecond point to buffers large enough to
+ * contain at least @p aMaxBitLength bits.
+ *
+ * @param[in] aFirst         A pointer to the first byte array to compare.
+ * @param[in] aSecond        A pointer to the second byte array to compare.
+ * @param[in] aMaxBitLength  The maximum number of bits to compare from the start of the arrays.
+ *
+ * @return The number of consecutive matching bits.
+ */
+uint16_t CountMatchingBits(const uint8_t *aFirst, const uint8_t *aSecond, uint16_t aMaxBitLength);
+
+/**
  * Sets the specified bit in a given integer to 1.
  *
  * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
