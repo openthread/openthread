@@ -89,6 +89,7 @@ Done
 - [networkname](#networkname)
 - [networktime](#networktime)
 - [nexthop](#nexthop)
+- [p2p](#p2p-link-extaddr-extaddr)
 - [panid](#panid)
 - [parent](#parent)
 - [parentpriority](#parentpriority)
@@ -3110,6 +3111,17 @@ Done
 
 nexthop 0x8001
 0x2000 cost:3
+Done
+```
+
+### p2p link extaddr \<extaddr\>
+
+Wakes up the peer identified by the extended address and establishes a peer-to-peer link with the peer.
+
+`OPENTHREAD_CONFIG_P2P_ENABLE` and `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` are required.
+
+```bash
+> p2p link extaddr dead00beef00cafe
 Done
 ```
 

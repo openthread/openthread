@@ -2699,18 +2699,22 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
 {
     Error               error = kErrorNone;
     const ConnectionIe *connectionIe;
+    Address             srcAddress;
+    WakeupInfo          wakeupInfo;
     uint32_t            rvTimeUs;
     uint64_t            rvTimestampUs;
-    uint32_t            attachDelayMs;
     uint64_t            radioNowUs;
-    uint8_t             retryInterval;
-    uint8_t             retryCount;
 
     VerifyOrExit(mWakeupListenEnabled && aFrame.IsWakeupFrame());
-    connectionIe  = aFrame.GetConnectionIe();
-    retryInterval = connectionIe->GetRetryInterval();
-    retryCount    = connectionIe->GetRetryCount();
-    VerifyOrExit(retryInterval > 0 && retryCount > 0, error = kErrorInvalidArgs);
+
+    SuccessOrExit(error = aFrame.GetSrcAddr(srcAddress));
+    VerifyOrExit(srcAddress.IsExtended(), error = kErrorDrop);
+
+    wakeupInfo.mExtAddress    = srcAddress.GetExtended();
+    connectionIe              = aFrame.GetConnectionIe();
+    wakeupInfo.mRetryInterval = connectionIe->GetRetryInterval();
+    wakeupInfo.mRetryCount    = connectionIe->GetRetryCount();
+    VerifyOrExit(wakeupInfo.mRetryInterval > 0 && wakeupInfo.mRetryCount > 0, error = kErrorInvalidArgs);
 
     radioNowUs    = otPlatRadioGetNow(&GetInstance());
     rvTimeUs      = aFrame.GetRendezvousTimeIe()->GetRendezvousTime() * kUsPerTenSymbols;
@@ -2718,12 +2722,12 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
 
     if (rvTimestampUs > radioNowUs + kCslRequestAhead)
     {
-        attachDelayMs = static_cast<uint32_t>(rvTimestampUs - radioNowUs - kCslRequestAhead);
-        attachDelayMs = attachDelayMs / 1000;
+        wakeupInfo.mAttachDelayMs = static_cast<uint32_t>(rvTimestampUs - radioNowUs - kCslRequestAhead);
+        wakeupInfo.mAttachDelayMs = wakeupInfo.mAttachDelayMs / Time::kOneMsecInUsec;
     }
     else
     {
-        attachDelayMs = 0;
+        wakeupInfo.mAttachDelayMs = 0;
     }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -2732,15 +2736,14 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
 
         IgnoreError(aFrame.GetFrameCounter(frameCounter));
         LogInfo("Received wake-up frame, fc:%lu, rendezvous:%luus, retries:%u/%u", ToUlong(frameCounter),
-                ToUlong(rvTimeUs), retryCount, retryInterval);
+                ToUlong(rvTimeUs), wakeupInfo.mRetryCount, wakeupInfo.mRetryInterval);
     }
 #endif
 
     // Stop receiving more wake up frames
     IgnoreError(SetWakeupListenEnabled(false));
 
-    // TODO: start MLE attach process with the WC
-    OT_UNUSED_VARIABLE(attachDelayMs);
+    Get<Mle::Mle>().HandleWakeupFrame(wakeupInfo);
 
 exit:
     return error;
