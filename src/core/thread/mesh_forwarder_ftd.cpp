@@ -61,11 +61,10 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
 
         if (destination.IsMulticast())
         {
-            // For traffic destined to multicast address larger than realm local, generally it uses IP-in-IP
-            // encapsulation (RFC2473), with outer destination as ALL_MPL_FORWARDERS. So here if the destination
-            // is multicast address larger than realm local, it should be for indirection transmission for the
-            // device's sleepy child, thus there should be no direct transmission.
-            if (!destination.IsMulticastLargerThanRealmLocal())
+            // A non-link-local multicast message that does not
+            // contain an MPL Option should only be forwarded to
+            // children using indirect transmissions.
+            if (destination.IsLinkLocalMulticast() || ip6Header.GetNextHeader() == Ip6::kProtoHopOpts)
             {
                 message.SetDirectTransmission();
             }
