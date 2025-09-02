@@ -34,6 +34,7 @@
 #include "mle_types.hpp"
 
 #include "common/array.hpp"
+#include "common/bit_utils.hpp"
 #include "common/code_utils.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
