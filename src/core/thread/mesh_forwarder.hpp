@@ -63,10 +63,6 @@ namespace Mle {
 class DiscoverScanner;
 }
 
-namespace Utils {
-class HistoryTracker;
-}
-
 /**
  * @addtogroup core-mesh-forwarding
  *

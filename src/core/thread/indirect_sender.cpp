@@ -500,6 +500,14 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
 
         message->InvokeTxCallback(txError);
 
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        if (aFrame.IsEmpty())
+        {
+            aChild.GetMacAddress(macDest);
+        }
+
+        Get<HistoryTracker::Local>().RecordTxMessage(*message, macDest, txError == kErrorNone);
+#endif
         Get<MeshForwarder>().RemoveMessageIfNoPendingTx(*message);
     }
 
