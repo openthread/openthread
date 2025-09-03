@@ -134,13 +134,14 @@ otError otBleSecureSetTcatVendorInfo(otInstance *aInstance, const otTcatVendorIn
  * Enables the TCAT protocol over BLE Secure.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aHandler          A pointer to a function that is called when a TCAT Commissioner connects.
+ * @param[in]  aJoinHandler      A pointer to a function that is called when a network join operation
+ *                               under guidance of the TCAT Commissioner completes.
  *
  * @retval OT_ERROR_NONE           Successfully started TCAT over BLE Secure.
  * @retval OT_ERROR_INVALID_ARGS   Vendor info is invalid, see #otBleSecureSetTcatVendorInfo.
  * @retval OT_ERROR_INVALID_STATE  The BLE function is not started yet or TLV mode is not selected.
  */
-otError otBleSecureTcatStart(otInstance *aInstance, otHandleTcatJoin aHandler);
+otError otBleSecureTcatStart(otInstance *aInstance, otHandleTcatJoin aJoinHandler);
 
 /**
  * Stops the BLE Secure server.

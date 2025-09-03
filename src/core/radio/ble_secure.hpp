@@ -119,13 +119,15 @@ public:
     /**
      * Enables the TCAT protocol over BLE Secure.
      *
-     * @param[in]  aHandler        Callback to a function that is called when a TCAT Commissioner connects.
+     * @param[in]  aJoinHandler   Callback to a function that is called when a network join operation
+     *                            completes, under guidance of a TCAT Commissioner. This handler uses
+     *                            the context (aContext) parameter already set with #Start().
      *
      * @retval kErrorNone          Successfully started TCAT over BLE Secure.
      * @retval kErrorInvalidArgs   Vendor info is invalid, see #TcatSetVendorInfo.
      * @retval kErrorInvalidState  The BLE function is not started yet or TLV mode is not selected.
      */
-    Error TcatStart(MeshCoP::TcatAgent::JoinCallback aHandler);
+    Error TcatStart(MeshCoP::TcatAgent::JoinCallback aJoinHandler);
 
     /**
      * Stops the secure BLE agent.
@@ -318,23 +320,21 @@ public:
 
     /**
      * @brief Notifies the BLE layer whether it should be sending BLE advertisements.
+     * Based on its current state, the BLE layer will make platform calls to start or stop
+     * BLE advertising. In case of errors, the error is written to log and state is not
+     * updated.
      *
-     * @param[in] aSendAdvertisements  If TRUE, BLE is expected to send advertisements.
-     *                                 If FALSE, BLE is expected to not send advertisements.
-     *
-     * @retval kErrorNone         Successfully started or stopped advertisements, per the request.
-     * @retval kErrorInvalidState BLE is not in the right state to comply to the request.
-     * @return kErrorFailed       Could not start BLE advertisements due to an error in timing
-     *                            parameters made by this component.
+     * @param[in] aSendAdvertisements  If TRUE, BLE is requested to send advertisements.
+     *                                 If FALSE, BLE is requested to not send advertisements.
      */
-    Error NotifySendAdvertisements(bool aSendAdvertisements);
+    void NotifySendAdvertisements(bool aSendAdvertisements);
 
 private:
     enum BleState : uint8_t
     {
-        kStopped        = 0, // Ble secure not started.
+        kStopped        = 0, // Ble secure not started (so not advertising).
         kAdvertising    = 1, // Ble secure is advertising.
-        kConnected      = 2, // Ble secure is connected.
+        kConnected      = 2, // Ble secure is connected (so not advertising).
         kNotAdvertising = 3, // Ble secure is started but not advertising.
     };
 
@@ -355,6 +355,8 @@ private:
     static Error HandleTransport(void *aContext, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     Error        HandleTransport(ot::Message &aMessage);
 
+    Error SetRequestedBleAdvertisementsState(void);
+
     using TxTask = TaskletIn<BleSecure, &BleSecure::HandleTransmit>;
 
     MeshCoP::Tls              mTls;
@@ -367,6 +369,7 @@ private:
     TxTask                    mTransmitTask;
     uint8_t                   mPacketBuffer[kPacketBufferSize];
     BleState                  mBleState;
+    BleState                  mBleAdvRequestedState;
     uint16_t                  mMtuSize;
 };
 
