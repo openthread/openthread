@@ -48,6 +48,17 @@ Error NetworkPrefix::GenerateRandomUla(void)
     return Random::Crypto::FillBuffer(&m8[1], kSize - 1);
 }
 
+Error NetworkPrefix::SetFrom(const Prefix &aPrefix)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aPrefix.GetLength() == kLength, error = kErrorInvalidArgs);
+    memcpy(m8, aPrefix.GetBytes(), kSize);
+
+exit:
+    return error;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // Prefix methods
 

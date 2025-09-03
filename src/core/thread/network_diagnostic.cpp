@@ -327,6 +327,82 @@ Error Server::AppendMacCounters(Message &aMessage)
     return tlv.AppendTo(aMessage);
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+Error Server::AppendBorderRouterIfAddrs(Message &aMessage)
+{
+    Error                             error;
+    Tlv                               tlv;
+    uint16_t                          offset;
+    uint16_t                          length = 0;
+    BorderRouter::PrefixTableIterator iterator;
+    BorderRouter::IfAddrEntry         ifAddr;
+
+    tlv.SetType(Tlv::kBrIfAddrs);
+
+    offset = aMessage.GetLength();
+    SuccessOrExit(error = aMessage.Append(tlv));
+
+    Get<BorderRouter::RoutingManager>().InitPrefixTableIterator(iterator);
+
+    while (Get<BorderRouter::RoutingManager>().GetNextIfAddrEntry(iterator, ifAddr) == kErrorNone)
+    {
+        if (length + sizeof(Ip6::Address) > Tlv::kBaseTlvMaxLength)
+        {
+            break;
+        }
+
+        SuccessOrExit(error = aMessage.Append(ifAddr.mAddress));
+        length += sizeof(Ip6::Address);
+    }
+
+    tlv.SetLength(ClampToUint8(length));
+    aMessage.Write(offset, tlv);
+
+exit:
+    return error;
+}
+
+Error Server::AppendBrPrefixTlv(uint8_t aTlvType, Message &aMessage)
+{
+    Ip6::Prefix        prefix;
+    Ip6::NetworkPrefix netPrefix;
+
+    netPrefix.Clear();
+
+    switch (aTlvType)
+    {
+    case Tlv::kBrLocalOmrPrefix:
+        SuccessOrExit(Get<BorderRouter::RoutingManager>().GetOmrPrefix(prefix));
+        break;
+    case Tlv::kBrLocalOnlinkPrefix:
+        SuccessOrExit(Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(prefix));
+        break;
+    case Tlv::kBrFavoredOnLinkPrefix:
+        SuccessOrExit(Get<BorderRouter::RoutingManager>().GetFavoredOnLinkPrefix(prefix));
+        break;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+    case Tlv::kBrDhcp6PdOmrPrefix:
+    {
+        BorderRouter::Dhcp6PdPrefix pdPrefix;
+
+        SuccessOrExit(Get<BorderRouter::RoutingManager>().GetDhcp6PdOmrPrefix(pdPrefix));
+        prefix = AsCoreType(&pdPrefix.mPrefix);
+        break;
+    }
+#endif
+    default:
+        ExitNow();
+    }
+
+    IgnoreError(netPrefix.SetFrom(prefix));
+
+exit:
+    return Tlv::AppendTlv(aMessage, aTlvType, &netPrefix, sizeof(netPrefix));
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
 Error Server::AppendRequestedTlvs(const Message &aRequest, Message &aResponse)
 {
     Error         error;
@@ -565,6 +641,25 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
     }
 
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+    case Tlv::kBrState:
+        error = Tlv::Append<BrStateTlv>(aMessage, Get<BorderRouter::RoutingManager>().GetState());
+        break;
+
+    case Tlv::kBrIfAddrs:
+        error = AppendBorderRouterIfAddrs(aMessage);
+        break;
+
+    case Tlv::kBrLocalOmrPrefix:
+    case Tlv::kBrDhcp6PdOmrPrefix:
+    case Tlv::kBrLocalOnlinkPrefix:
+    case Tlv::kBrFavoredOnLinkPrefix:
+        error = AppendBrPrefixTlv(aTlvType, aMessage);
+        break;
+
+#endif
 
     default:
         break;
@@ -1232,7 +1327,7 @@ exit:
     return error;
 }
 
-static inline void ParseMacCounters(const MacCountersTlv &aMacCountersTlv, otNetworkDiagMacCounters &aMacCounters)
+void Client::ParseMacCounters(const MacCountersTlv &aMacCountersTlv, otNetworkDiagMacCounters &aMacCounters)
 {
     aMacCounters.mIfInUnknownProtos  = aMacCountersTlv.GetIfInUnknownProtos();
     aMacCounters.mIfInErrors         = aMacCountersTlv.GetIfInErrors();
@@ -1243,6 +1338,19 @@ static inline void ParseMacCounters(const MacCountersTlv &aMacCountersTlv, otNet
     aMacCounters.mIfOutUcastPkts     = aMacCountersTlv.GetIfOutUcastPkts();
     aMacCounters.mIfOutBroadcastPkts = aMacCountersTlv.GetIfOutBroadcastPkts();
     aMacCounters.mIfOutDiscards      = aMacCountersTlv.GetIfOutDiscards();
+}
+
+void Client::ParseIp6AddrList(Ip6AddrList &aIp6Addrs, const Message &aMessage, OffsetRange aOffsetRange)
+{
+    aIp6Addrs.mCount = 0;
+
+    while (aOffsetRange.Contains(sizeof(Ip6::Address)) && (aIp6Addrs.mCount < GetArrayLength(aIp6Addrs.mList)))
+    {
+        IgnoreError(aMessage.Read(aOffsetRange, aIp6Addrs.mList[aIp6Addrs.mCount]));
+        aOffsetRange.AdvanceOffset(sizeof(Ip6::Address));
+
+        aIp6Addrs.mCount++;
+    }
 }
 
 Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, TlvInfo &aTlvInfo)
@@ -1346,29 +1454,8 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             break;
 
         case Tlv::kIp6AddressList:
-        {
-            uint16_t      addrListLength = GetArrayLength(aTlvInfo.mData.mIp6AddrList.mList);
-            Ip6::Address *addrEntry      = AsCoreTypePtr(&aTlvInfo.mData.mIp6AddrList.mList[0]);
-            uint8_t      &addrCount      = aTlvInfo.mData.mIp6AddrList.mCount;
-
-            VerifyOrExit((valueOffsetRange.GetLength() % Ip6::Address::kSize) == 0, error = kErrorParse);
-
-            // `TlvInfo` has a fixed array for IPv6 addresses. If there
-            // are more addresses in the message, we read and return as
-            // many as can fit in array and ignore the rest.
-
-            addrCount = 0;
-
-            while (!valueOffsetRange.IsEmpty() && (addrCount < addrListLength))
-            {
-                SuccessOrExit(error = aMessage.Read(valueOffsetRange, *addrEntry));
-                addrCount++;
-                addrEntry++;
-                valueOffsetRange.AdvanceOffset(Ip6::Address::kSize);
-            }
-
+            ParseIp6AddrList(aTlvInfo.mData.mIp6AddrList, aMessage, valueOffsetRange);
             break;
-        }
 
         case Tlv::kMacCounters:
         {
@@ -1474,6 +1561,26 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
         case Tlv::kNonPreferredChannels:
             SuccessOrExit(error = MeshCoP::ChannelMaskTlv::ParseValue(aMessage, valueOffsetRange,
                                                                       aTlvInfo.mData.mNonPreferredChannels));
+            break;
+
+        case Tlv::kBrState:
+        {
+            uint8_t state;
+
+            SuccessOrExit(error = Tlv::Read<BrStateTlv>(aMessage, offset, state));
+            aTlvInfo.mData.mBrState = static_cast<BrState>(state);
+            break;
+        }
+
+        case Tlv::kBrIfAddrs:
+            ParseIp6AddrList(aTlvInfo.mData.mBrIfAddrList, aMessage, valueOffsetRange);
+            break;
+
+        case Tlv::kBrLocalOmrPrefix:
+        case Tlv::kBrLocalOnlinkPrefix:
+        case Tlv::kBrFavoredOnLinkPrefix:
+        case Tlv::kBrDhcp6PdOmrPrefix:
+            SuccessOrExit(error = aMessage.Read(valueOffsetRange, aTlvInfo.mData.mBrPrefix));
             break;
 
         default:

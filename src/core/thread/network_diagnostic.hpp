@@ -265,6 +265,10 @@ private:
                                      const Ip6::MessageInfo *aMessageInfo,
                                      Error                   aResult);
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    Error AppendBorderRouterIfAddrs(Message &aMessage);
+    Error AppendBrPrefixTlv(uint8_t aTlvType, Message &aMessage);
+#endif
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -357,6 +361,9 @@ public:
     uint16_t GetLastQueryId(void) const { return mQueryId; }
 
 private:
+    typedef otNetworkDiagIp6AddrList Ip6AddrList;
+    typedef otNetworkDiagMacCounters MacCounters;
+
     Error SendCommand(Uri                   aUri,
                       Message::Priority     aPriority,
                       const Ip6::Address   &aDestination,
@@ -372,6 +379,9 @@ private:
     void        HandleGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    static void ParseIp6AddrList(Ip6AddrList &aIp6Addrs, const Message &aMessage, OffsetRange aOffsetRange);
+    static void ParseMacCounters(const MacCountersTlv &aMacCountersTlv, MacCounters &aMacCounters);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *UriToString(Uri aUri);

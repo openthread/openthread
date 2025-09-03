@@ -7864,6 +7864,13 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      * - `34`: MLE Counters TLV
      * - `35`: Vendor App URL TLV
      * - `37`: Enhanced Route TLV
+     * - `38`: Border Router State TLV
+     * - `39`: Border Router Infra Interface Addresses TLV
+     * - `40`: Border Router Local OMR Prefix TLV
+     * - `41`: Border Router DHCPv6-PD OMR Prefix TLV
+     * - `42`: Border Router Local On-link Prefix TLV
+     * - `43`: Border Router Favored On-link Prefix TLV
+     *
      * @par
      * Sends a network diagnostic request to retrieve specified Type Length Values (TLVs)
      * for the specified addresses(es).
@@ -7986,11 +7993,7 @@ void Interpreter::HandleDiagnosticGetResponse(otError                 aError,
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST:
             OutputLine("IP6 Address List:");
-            for (uint16_t i = 0; i < diagTlv.mData.mIp6AddrList.mCount; ++i)
-            {
-                OutputFormat(kIndentSize, "- ");
-                OutputIp6AddressLine(diagTlv.mData.mIp6AddrList.mList[i]);
-            }
+            OutputIp6AddrList(kIndentSize, diagTlv.mData.mIp6AddrList);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS:
             OutputLine("MAC Counters:");
@@ -8043,6 +8046,29 @@ void Interpreter::HandleDiagnosticGetResponse(otError                 aError,
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_NON_PREFERRED_CHANNELS:
             OutputLine("Non-preferred Channels Mask: 0x%lx", ToUlong(diagTlv.mData.mNonPreferredChannels));
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_BR_STATE:
+            OutputLine("BR State: %s", BorderRoutingStateToString(diagTlv.mData.mBrState));
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_BR_IF_ADDRS:
+            OutputLine("BR Infra-if IP6 Address List:");
+            OutputIp6AddrList(kIndentSize, diagTlv.mData.mBrIfAddrList);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OMR_PREFIX:
+            OutputFormat("BR Local OMR Prefix: ");
+            OutputIp6PrefixLine(diagTlv.mData.mBrPrefix);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_BR_DHCP6_PD_OMR_PREFIX:
+            OutputFormat("BR DHCPv6-PD OMR Prefix: ");
+            OutputIp6PrefixLine(diagTlv.mData.mBrPrefix);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OL_PREFIX:
+            OutputFormat("BR Local On-link Prefix: ");
+            OutputIp6PrefixLine(diagTlv.mData.mBrPrefix);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_BR_FAVORED_OL_PREFIX:
+            OutputFormat("BR Favored On-link Prefix: ");
+            OutputIp6PrefixLine(diagTlv.mData.mBrPrefix);
             break;
         default:
             break;
@@ -8132,6 +8158,15 @@ void Interpreter::OutputLeaderData(uint8_t aIndentSize, const otLeaderData &aLea
     OutputLine(aIndentSize, "DataVersion: %u", aLeaderData.mDataVersion);
     OutputLine(aIndentSize, "StableDataVersion: %u", aLeaderData.mStableDataVersion);
     OutputLine(aIndentSize, "LeaderRouterId: 0x%02x", aLeaderData.mLeaderRouterId);
+}
+
+void Interpreter::OutputIp6AddrList(uint8_t aIndentSize, const otNetworkDiagIp6AddrList &aIp6Addrs)
+{
+    for (uint8_t i = 0; i < aIp6Addrs.mCount; ++i)
+    {
+        OutputFormat(aIndentSize, "- ");
+        OutputIp6AddressLine(aIp6Addrs.mList[i]);
+    }
 }
 
 void Interpreter::OutputNetworkDiagMacCounters(uint8_t aIndentSize, const otNetworkDiagMacCounters &aMacCounters)

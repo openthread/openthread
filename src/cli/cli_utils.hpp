@@ -718,6 +718,15 @@ public:
      */
     static const char *AddressOriginToString(uint8_t aOrigin);
 
+    /**
+     * Converts a given `otBorderRoutingState` value (`OT_BORDER_ROUTING_STATE_*`) to human-readable string.
+     *
+     * @param[in] aState   The BR state to convert.
+     *
+     * @returns A human-readable string representation of @p aState.
+     */
+    static const char *BorderRoutingStateToString(otBorderRoutingState aState);
+
 protected:
     void OutputFormatV(const char *aFormat, va_list aArguments);
 
