@@ -83,7 +83,7 @@ jobs:
     - name: Test Simulation
       run: cd build/simulation && ninja test
     - name: Build Multipan Simulation
-      run: ./script/cmake-build simulation -DOT_BUILD_GTEST=ON -DOT_MULTIPAN_TEST=ON
+      run: ./script/cmake-build simulation -DOT_BUILD_GTEST=ON -DOT_MULTIPAN_RCP=ON -DOT_FTD=OFF -DOT_MTD=OFF
     - name: Test Multipan Simulation
       run: cd build/simulation && ninja test
     - name: Build NCP Simulation
