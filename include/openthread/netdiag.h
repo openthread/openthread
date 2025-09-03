@@ -99,6 +99,24 @@ extern "C" {
 typedef uint16_t otNetworkDiagIterator; ///< Used to iterate through Network Diagnostic TLV.
 
 /**
+ * Represents a Network Diagnostics IPv6 Address List TLV value.
+ */
+typedef struct otNetworkDiagIp6AddrList
+{
+    uint8_t      mCount;                                                       ///< Number of IPv6 addresses.
+    otIp6Address mList[OT_NETWORK_BASE_TLV_MAX_LENGTH / sizeof(otIp6Address)]; ///< Array of IPv6 addresses.
+} otNetworkDiagIp6AddrList;
+
+/**
+ * Represents a Network Diagnostic TLV Data.
+ */
+typedef struct otNetworkDiagData
+{
+    uint8_t mCount;                             ///< Number of bytes in the data.
+    uint8_t m8[OT_NETWORK_BASE_TLV_MAX_LENGTH]; ///< Array containing the data bytes.
+} otNetworkDiagData;
+
+/**
  * Represents a Network Diagnostic Connectivity value.
  */
 typedef struct otNetworkDiagConnectivity
@@ -235,6 +253,15 @@ typedef struct otNetworkDiagChildEntry
 } otNetworkDiagChildEntry;
 
 /**
+ * Represents a Network Diagnostic Child Table TLV value.
+ */
+typedef struct otNetworkDiagChildTable
+{
+    uint8_t                 mCount; ///< Number of child entries in the table.
+    otNetworkDiagChildEntry mTable[OT_NETWORK_BASE_TLV_MAX_LENGTH / sizeof(otNetworkDiagChildEntry)]; ///< Child table.
+} otNetworkDiagChildTable;
+
+/**
  * Represents a Network Diagnostic TLV.
  */
 typedef struct otNetworkDiagTlv
@@ -252,6 +279,8 @@ typedef struct otNetworkDiagTlv
         otNetworkDiagRoute        mRoute;
         otNetworkDiagEnhRoute     mEnhRoute;
         otLeaderData              mLeaderData;
+        otNetworkDiagData         mNetworkData;
+        otNetworkDiagIp6AddrList  mIp6AddrList;
         otNetworkDiagMacCounters  mMacCounters;
         otNetworkDiagMleCounters  mMleCounters;
         uint8_t                   mBatteryLevel;
@@ -264,26 +293,8 @@ typedef struct otNetworkDiagTlv
         char                      mThreadStackVersion[OT_NETWORK_DIAGNOSTIC_MAX_THREAD_STACK_VERSION_TLV_LENGTH + 1];
         char                      mVendorAppUrl[OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_APP_URL_TLV_LENGTH + 1];
         otChannelMask             mNonPreferredChannels;
-        struct
-        {
-            uint8_t mCount;
-            uint8_t m8[OT_NETWORK_BASE_TLV_MAX_LENGTH];
-        } mNetworkData;
-        struct
-        {
-            uint8_t      mCount;
-            otIp6Address mList[OT_NETWORK_BASE_TLV_MAX_LENGTH / sizeof(otIp6Address)];
-        } mIp6AddrList;
-        struct
-        {
-            uint8_t                 mCount;
-            otNetworkDiagChildEntry mTable[OT_NETWORK_BASE_TLV_MAX_LENGTH / sizeof(otNetworkDiagChildEntry)];
-        } mChildTable;
-        struct
-        {
-            uint8_t mCount;
-            uint8_t m8[OT_NETWORK_BASE_TLV_MAX_LENGTH];
-        } mChannelPages;
+        otNetworkDiagData         mChannelPages;
+        otNetworkDiagChildTable   mChildTable;
     } mData;
 } otNetworkDiagTlv;
 
