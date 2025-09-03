@@ -767,6 +767,43 @@ exit:
     return error;
 }
 
+/**
+ * @cli br ifaddrs
+ * @code
+ * br ifaddrs
+ * fe80::896:228b:4ae0:8609, sec-since-use:15
+ * Done
+ * @endcode
+ * @par
+ * Get the infrastructure interface addresses. These are addresses used by the BR itself, for example, when sending
+ * Router Advertisements.
+ * Info per entry:
+ * - IPv6 address
+ * - Seconds since the last RA was sent from this BR using this address.
+ * @sa otBorderRoutingGetNextIfAddrEntry
+ */
+template <> otError Br::Process<Cmd("ifaddrs")>(Arg aArgs[])
+{
+    otError                            error = OT_ERROR_NONE;
+    otBorderRoutingPrefixTableIterator iterator;
+    otBorderRoutingIfAddrEntry         entry;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    otBorderRoutingPrefixTableInitIterator(GetInstancePtr(), &iterator);
+
+    while (otBorderRoutingGetNextIfAddrEntry(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
+    {
+        char string[OT_IP6_ADDRESS_STRING_SIZE];
+
+        otIp6AddressToString(&entry.mAddress, string, sizeof(string));
+        OutputLine("%s, sec-since-use:%lu", string, ToUlong(entry.mSecSinceLastUse));
+    }
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
 const char *Br::Dhcp6PdStateToString(otBorderRoutingDhcp6PdState aState)
@@ -1114,7 +1151,8 @@ otError Br::Process(Arg aArgs[])
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
         CmdEntry("counters"),
 #endif
-        CmdEntry("disable"),     CmdEntry("enable"),    CmdEntry("infraif"),      CmdEntry("init"),
+        CmdEntry("disable"),     CmdEntry("enable"),    CmdEntry("ifaddrs"),      CmdEntry("infraif"),
+        CmdEntry("init"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
         CmdEntry("multiail"),
 #endif

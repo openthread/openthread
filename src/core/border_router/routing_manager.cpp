@@ -1093,6 +1093,26 @@ void RoutingManager::RdnssAddress::CopyInfoTo(RdnssAddrEntry &aEntry, TimeMilli 
 }
 
 //---------------------------------------------------------------------------------------------------------------------
+// IfAddress
+
+void RoutingManager::IfAddress::SetFrom(const Ip6::Address &aAddress, uint32_t aUptimeNow)
+{
+    mAddress       = aAddress;
+    mLastUseUptime = aUptimeNow;
+}
+
+bool RoutingManager::IfAddress::Matches(const InvalidChecker &aChecker) const
+{
+    return !aChecker.Get<InfraIf>().HasAddress(mAddress);
+}
+
+void RoutingManager::IfAddress::CopyInfoTo(IfAddrEntry &aEntry, uint32_t aUptimeNow) const
+{
+    aEntry.mAddress         = mAddress;
+    aEntry.mSecSinceLastUse = aUptimeNow - mLastUseUptime;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 // NetDataPeerBrTracker
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
@@ -1284,6 +1304,7 @@ void RoutingManager::RxRaTracker::Start(void) { HandleNetDataChange(); }
 void RoutingManager::RxRaTracker::Stop(void)
 {
     mRouters.Free();
+    mIfAddresses.Free();
     mLocalRaHeader.Clear();
     mDecisionFactors.Clear();
 
@@ -1300,6 +1321,16 @@ void RoutingManager::RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert:
     // Process a received RA message and update the prefix table.
 
     Router *router;
+
+    switch (aRaOrigin)
+    {
+    case kThisBrOtherEntity:
+    case kThisBrRoutingManager:
+        UpdateIfAddresses(aSrcAddress);
+        break;
+    case kAnotherRouter:
+        break;
+    }
 
     VerifyOrExit(aRaOrigin != kThisBrRoutingManager);
 
@@ -1600,6 +1631,27 @@ exit:
     }
 }
 
+void RoutingManager::RxRaTracker::UpdateIfAddresses(const Ip6::Address &aAddress)
+{
+    Entry<IfAddress> *entry;
+
+    mIfAddresses.RemoveAndFreeAllMatching(IfAddress::InvalidChecker(GetInstance()));
+
+    entry = mIfAddresses.FindMatching(aAddress);
+
+    if (entry == nullptr)
+    {
+        entry = AllocateEntry<IfAddress>();
+        VerifyOrExit(entry != nullptr);
+        mIfAddresses.Push(*entry);
+    }
+
+    entry->SetFrom(aAddress, Get<Uptime>().GetUptimeInSeconds());
+
+exit:
+    return;
+}
+
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
 
 template <>
@@ -1618,8 +1670,8 @@ exit:
 template <class Type> RoutingManager::RxRaTracker::Entry<Type> *RoutingManager::RxRaTracker::AllocateEntry(void)
 {
     static_assert(TypeTraits::IsSame<Type, OnLinkPrefix>::kValue || TypeTraits::IsSame<Type, RoutePrefix>::kValue ||
-                      TypeTraits::IsSame<Type, RdnssAddress>::kValue,
-                  "Type MSUT be either RoutePrefix, OnLinkPrefix, or RdnssAddress");
+                      TypeTraits::IsSame<Type, RdnssAddress>::kValue || TypeTraits::IsSame<Type, IfAddress>::kValue,
+                  "Type MUST be RoutePrefix, OnLinkPrefix, RdnssAddress, or IfAddress");
 
     Entry<Type> *entry       = nullptr;
     SharedEntry *sharedEntry = mEntryPool.Allocate();
@@ -1643,8 +1695,8 @@ template <> void RoutingManager::RxRaTracker::Entry<RoutingManager::RxRaTracker:
 template <class Type> void RoutingManager::RxRaTracker::Entry<Type>::Free(void)
 {
     static_assert(TypeTraits::IsSame<Type, OnLinkPrefix>::kValue || TypeTraits::IsSame<Type, RoutePrefix>::kValue ||
-                      TypeTraits::IsSame<Type, RdnssAddress>::kValue,
-                  "Type MSUT be either RoutePrefix, OnLinkPrefix, or RdnssAddress");
+                      TypeTraits::IsSame<Type, RdnssAddress>::kValue || TypeTraits::IsSame<Type, IfAddress>::kValue,
+                  "Type MUST be RoutePrefix, OnLinkPrefix, RdnssAddress, or IfAddress");
 
     Get<RoutingManager>().mRxRaTracker.mEntryPool.Free(*reinterpret_cast<SharedEntry *>(this));
 }
@@ -2206,6 +2258,21 @@ exit:
     return error;
 }
 
+Error RoutingManager::RxRaTracker::GetNextIfAddr(PrefixTableIterator &aIterator, IfAddrEntry &aEntry) const
+{
+    Error     error    = kErrorNone;
+    Iterator &iterator = static_cast<Iterator &>(aIterator);
+
+    ClearAllBytes(aEntry);
+
+    SuccessOrExit(error = iterator.AdvanceToNextIfAddrEntry(mIfAddresses.GetHead()));
+
+    iterator.GetEntry<IfAddress>()->CopyInfoTo(aEntry, iterator.GetInitUptime());
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
 uint16_t RoutingManager::RxRaTracker::CountReachablePeerBrs(void) const
 {
@@ -2390,6 +2457,28 @@ Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextRdnssAddrEntry(void)
         SuccessOrExit(error = AdvanceToNextRouter(kRdnssAddrIterator));
         SetEntry(GetRouter()->mRdnssAddresses.GetHead());
     }
+
+exit:
+    return error;
+}
+
+Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextIfAddrEntry(const Entry<IfAddress> *aListHead)
+{
+    Error error = kErrorNone;
+
+    if (GetType() == kUnspecified)
+    {
+        SetType(kIfAddrIterator);
+        SetEntry(aListHead);
+    }
+    else
+    {
+        VerifyOrExit(GetType() == kIfAddrIterator, error = kErrorInvalidArgs);
+        VerifyOrExit(HasEntry(), error = kErrorNotFound);
+        SetEntry(GetEntry<IfAddress>()->GetNext());
+    }
+
+    VerifyOrExit(HasEntry(), error = kErrorNotFound);
 
 exit:
     return error;

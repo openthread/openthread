@@ -104,6 +104,7 @@ public:
     typedef otBorderRoutingRouterEntry            RouterEntry;         ///< Router Entry.
     typedef otBorderRoutingRdnssAddrEntry         RdnssAddrEntry;      ///< RDNSS Address Entry.
     typedef otBorderRoutingRdnssAddrCallback      RdnssAddrCallback;   ///< RDNS Address changed callback.
+    typedef otBorderRoutingIfAddrEntry            IfAddrEntry;         ///< Infra-if IPv6 Address Entry.
     typedef otBorderRoutingPeerBorderRouterEntry  PeerBrEntry;         ///< Peer Border Router Entry.
     typedef otBorderRoutingPrefixTableEntry       Dhcp6PdPrefix;       ///< DHCPv6 PD prefix.
     typedef otPdProcessedRaInfo                   Dhcp6PdCounters;     ///< DHCPv6 PD counters.
@@ -552,6 +553,23 @@ public:
         mRxRaTracker.SetRdnssCallback(aCallback, aContext);
     }
 
+    /**
+     * Iterates over the infrastructure interface address entries.
+     *
+     * These are addresses used by the BR itself, for example, when sending Router Advertisements.
+     *
+     * @param[in,out] aIterator    An iterator.
+     * @param[out]    aEntry       A reference to the entry to populate.
+     *
+     * @retval kErrorNone         Iterated to the next address entry, @p aEntry and @p aIterator are updated.
+     * @retval kErrorNotFound     No more entries in the table.
+     * @retval kErrorInvalidArgs  The @p aIterator is not valid (e.g. used to iterate over other entry types).
+     */
+    Error GetNextIfAddrEntry(PrefixTableIterator &aIterator, IfAddrEntry &aEntry)
+    {
+        return mRxRaTracker.GetNextIfAddr(aIterator, aEntry);
+    }
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 
     /**
@@ -907,6 +925,31 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    class IfAddress // An if-address used by this BR itself (e.g., sending RA).
+    {
+    public:
+        struct InvalidChecker : public InstanceLocator
+        {
+            // Used in `Matches()` to check if address is invalid `!Get<InfraIf>().HasAddress(mAddress)`.
+
+            explicit InvalidChecker(Instance &aInstance)
+                : InstanceLocator(aInstance)
+            {
+            }
+        };
+
+        void SetFrom(const Ip6::Address &aAddress, uint32_t aUptimeNow);
+        bool Matches(const Ip6::Address &aAddress) const { return (mAddress == aAddress); }
+        bool Matches(const InvalidChecker &aChecker) const;
+        void CopyInfoTo(IfAddrEntry &aEntry, uint32_t aUptimeNow) const;
+
+    private:
+        Ip6::Address mAddress;
+        uint32_t     mLastUseUptime;
+    };
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 
     class RxRaTracker;
@@ -1059,6 +1102,7 @@ private:
         Error GetNextEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const;
         Error GetNextRouter(PrefixTableIterator &aIterator, RouterEntry &aEntry) const;
         Error GetNextRdnssAddr(PrefixTableIterator &aIterator, RdnssAddrEntry &aEntry) const;
+        Error GetNextIfAddr(PrefixTableIterator &aIterator, IfAddrEntry &aEntry) const;
 
         // Callbacks notifying of changes
         void RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold);
@@ -1188,6 +1232,7 @@ private:
                 kRouterIterator,
                 kPrefixIterator,
                 kRdnssAddrIterator,
+                kIfAddrIterator,
                 kPeerBrIterator,
             };
 
@@ -1201,6 +1246,7 @@ private:
             Error                AdvanceToNextRouter(Type aType);
             Error                AdvanceToNextEntry(void);
             Error                AdvanceToNextRdnssAddrEntry(void);
+            Error                AdvanceToNextIfAddrEntry(const Entry<IfAddress> *aListHead);
             uint32_t             GetInitUptime(void) const { return mData0; }
             TimeMilli            GetInitTime(void) const { return TimeMilli(mData1); }
             Type                 GetType(void) const { return static_cast<Type>(mData2); }
@@ -1248,6 +1294,7 @@ private:
             Entry<OnLinkPrefix> mOnLinkEntry;
             Entry<RoutePrefix>  mRouteEntry;
             Entry<RdnssAddress> mRdnssAddrEntry;
+            Entry<IfAddress>    mIfAddrEntry;
         };
 #endif
 
@@ -1279,6 +1326,7 @@ private:
         void ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
         void ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
         void ProcessRecursiveDnsServerOption(const RecursiveDnsServerOption &aRdnss, Router &aRouter);
+        void UpdateIfAddresses(const Ip6::Address &aAddress);
         void Evaluate(void);
         void DetermineStaleTimeFor(const OnLinkPrefix &aPrefix, NextFireTime &aStaleTime);
         void DetermineStaleTimeFor(const RoutePrefix &aPrefix, NextFireTime &aStaleTime);
@@ -1303,10 +1351,12 @@ private:
         using RouterTimer     = TimerMilliIn<RoutingManager, &RoutingManager::HandleRxRaTrackerRouterTimer>;
         using RdnssAddrTimer  = TimerMilliIn<RoutingManager, &RoutingManager::HandleRxRaTrackerRdnssAddrTimer>;
         using RouterList      = OwningList<Entry<Router>>;
+        using IfAddressList   = OwningList<Entry<IfAddress>>;
         using RdnssCallback   = Callback<RdnssAddrCallback>;
 
         DecisionFactors      mDecisionFactors;
         RouterList           mRouters;
+        IfAddressList        mIfAddresses;
         ExpirationTimer      mExpirationTimer;
         StaleTimer           mStaleTimer;
         RouterTimer          mRouterTimer;
@@ -1907,6 +1957,13 @@ inline RoutingManager::RxRaTracker::Entry<RoutingManager::RdnssAddress> &Routing
     GetEntry(void)
 {
     return mRdnssAddrEntry;
+}
+
+template <>
+inline RoutingManager::RxRaTracker::Entry<RoutingManager::IfAddress> &RoutingManager::RxRaTracker::SharedEntry::
+    GetEntry(void)
+{
+    return mIfAddrEntry;
 }
 
 // Declare template (full) specializations for `Router` type.
