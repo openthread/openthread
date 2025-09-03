@@ -180,6 +180,9 @@ bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::M
         Case(kUriDuaRegistrationRequest, BackboneRouter::Manager);
 #endif
 #endif
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+        Case(kUriTcatEnable, MeshCoP::TcatAgent);
+#endif
 
     default:
         didHandle = false;
