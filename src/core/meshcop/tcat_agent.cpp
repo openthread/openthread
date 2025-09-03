@@ -60,6 +60,7 @@ TcatAgent::TcatAgent(Instance &aInstance)
     , mVendorInfo(nullptr)
     , mState(kStateDisabled)
     , mNextState(kStateDisabled)
+    , mTimerSetsToActive(false)
     , mActiveOrStandbyTimer(aInstance)
     , mTcatActiveDurationMs(0)
 {
@@ -95,7 +96,6 @@ Error TcatAgent::Start(AppDataReceiveCallback aAppDataReceiveCallback, JoinCallb
     mState                = kStateActive;
     mNextState            = kStateActive;
     mTcatActiveDurationMs = 0;
-    mActiveOrStandbyTimer.Stop();
     LogInfo("Start");
 
 exit:
@@ -109,6 +109,7 @@ void TcatAgent::Stop(void)
     mAppDataReceiveCallback.Clear();
     mJoinCallback.Clear();
     mState = kStateDisabled;
+    mActiveOrStandbyTimer.Stop();
     ClearCommissionerState();
     LogInfo("Stop");
 }
@@ -122,7 +123,7 @@ Error TcatAgent::Standby(void)
     mTcatActiveDurationMs = 0;
     mActiveOrStandbyTimer.Stop();
     mNextState = kStateStandby;
-    if (!IsConnected())
+    if (!IsConnected() && mState != kStateStandby)
     {
         // if already TLS-connected, only move to 'standby' once the connection is done.
         // if not yet fully connected, go to 'standby' immediately (ignoring a TLS handshake that may be ongoing)
@@ -141,14 +142,17 @@ Error TcatAgent::Activate(const uint32_t aDelayMs, const uint32_t aDurationMs)
     Error error = kErrorNone;
 
     VerifyOrExit(IsStarted(), error = kErrorInvalidState);
+    VerifyOrExit(mState != kStateActive);
 
     mTcatActiveDurationMs = aDurationMs;
+    mTimerSetsToActive    = true;
     if (aDelayMs > 0)
     {
         mActiveOrStandbyTimer.Start(aDelayMs);
     }
     else
     {
+        mActiveOrStandbyTimer.Stop();
         HandleTimer();
     }
 
@@ -219,8 +223,7 @@ Error TcatAgent::Connected(MeshCoP::Tls::Extension &aTls)
     }
 
     // A temporary enablement stops after disconnect: to standby.
-    // For others, return to prior state, upon disconnect.
-    mNextState = (mState == kStateActiveTemporary) ? kStateStandby : mState;
+    mNextState = (mState == kStateActiveTemporary) ? kStateStandby : kStateActive;
     mState     = kStateConnected;
     NotifyStateChange();
     LogInfo("Connected");
@@ -237,8 +240,8 @@ void TcatAgent::Disconnected(void)
     if (mState != kStateDisabled)
     {
         mState = mNextState;
-        NotifyStateChange();
         LogInfo("Disconnected");
+        NotifyStateChange();
         ClearCommissionerState();
     }
 }
@@ -1071,28 +1074,30 @@ void TcatAgent::HandleTimer(void)
     {
     case kStateStandby:
     case kStateStandbyTemporary:
-        if (mTcatActiveDurationMs > 0)
+    case kStateActiveTemporary:
+        if (mTimerSetsToActive)
         {
-            mActiveOrStandbyTimer.Start(mTcatActiveDurationMs);
-            mState = kStateActiveTemporary;
+            mTimerSetsToActive = false;
+            if (mTcatActiveDurationMs > 0)
+            {
+                mState = kStateActiveTemporary;
+                mActiveOrStandbyTimer.Start(mTcatActiveDurationMs);
+            }
+            else
+            {
+                mState = kStateActive;
+            }
+            NotifyStateChange();
+            LogInfo("Active");
         }
         else
         {
-            mState = kStateActive;
+            IgnoreError(Standby());
         }
-        NotifyStateChange();
-        LogInfo("Active");
-        break;
-
-    case kStateActiveTemporary:
-        IgnoreError(Standby());
-        break;
-
-    case kStateConnected:
-        mNextState = (mTcatActiveDurationMs > 0) ? kStateStandby : kStateActive;
         break;
 
     // kStateActive: will not go to standby, based on timer. Application has forced it to 'active'.
+    // kStateConnected: no change here, mNextState already set.
     default:
         break;
     }
@@ -1103,6 +1108,80 @@ void TcatAgent::NotifyStateChange(void)
 {
     Get<Ble::BleSecure>().NotifySendAdvertisements(mState == kStateActive || mState == kStateActiveTemporary ||
                                                    mState == kStateConnected);
+}
+
+template <> void TcatAgent::HandleTmf<kUriTcatEnable>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    Error          error        = kErrorNone;
+    Coap::Message *message      = nullptr;
+    uint32_t       delayTimerMs = 0;
+    uint16_t       durationSec  = 0;
+    uint32_t       durationMs;
+
+    VerifyOrExit(aMessage.IsConfirmablePostRequest());
+    LogInfo("Received %s from %s", UriToString<kUriTcatEnable>(), aMessageInfo.GetPeerAddr().ToString().AsCString());
+    message = Get<Tmf::Agent>().NewResponseMessage(aMessage);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+
+    SuccessOrExit(error = Tlv::Find<DelayTimerTlv>(aMessage, delayTimerMs));
+    switch (Tlv::Find<DurationTlv>(aMessage, durationSec))
+    {
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        durationSec = kTcatTmfEnableDefaultSec; // If Duration TLV absent: use default duration
+        break;
+    default:
+        ExitNow(error = kErrorParse);
+    }
+    durationMs = Time::SecToMsec(durationSec);
+
+    // if an existing activation is ongoing, adapt the requested one to be compatible.
+    AdaptToExistingActivePeriod(delayTimerMs, durationMs);
+
+    error = Activate(delayTimerMs, durationMs);
+
+exit:
+    if (message != nullptr)
+    {
+        error =
+            Tlv::Append<StateTlv>(*message, error == kErrorNone ? StateTlv::State::kAccept : StateTlv::State::kReject);
+        if (error == kErrorNone)
+        {
+            error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo);
+        }
+        FreeMessageOnError(message, error);
+    }
+    LogWarnOnError(error, "send TCAT_ENABLE.rsp");
+}
+
+// Adapts delay/duration parameters of the given TCAT temporary activation period to the
+// already-ongoing temporary TCAT activation (if any). The goals of the adaptation are:
+// - not shorten the duration of an existing (scheduled/ongoing) activation
+// - not set the start of activation later than the existing scheduled activation time
+void TcatAgent::AdaptToExistingActivePeriod(uint32_t &aPeriodDelayMs, uint32_t &aPeriodDurationMs)
+{
+    VerifyOrExit(mState != kStateActive);
+
+    if (mActiveOrStandbyTimer.IsRunning())
+    {
+        TimeMilli now = TimerMilli::GetNow();
+        uint32_t  remainingMs;
+        remainingMs = (mActiveOrStandbyTimer.GetFireTime() > now) ? mActiveOrStandbyTimer.GetFireTime() - now : 0;
+        if (mTimerSetsToActive)
+        {
+            aPeriodDelayMs    = Min(aPeriodDelayMs, remainingMs);
+            aPeriodDurationMs = Max(aPeriodDurationMs, remainingMs + mTcatActiveDurationMs - aPeriodDelayMs);
+        }
+        else
+        {
+            aPeriodDelayMs    = 0;
+            aPeriodDurationMs = Max(aPeriodDurationMs, remainingMs);
+        }
+    }
+
+exit:
+    return;
 }
 
 void SerializeTcatAdvertisementTlv(uint8_t                 *aBuffer,
