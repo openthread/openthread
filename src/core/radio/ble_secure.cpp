@@ -56,6 +56,7 @@ BleSecure::BleSecure(Instance &aInstance)
     , mSendMessage(nullptr)
     , mTransmitTask(aInstance)
     , mBleState(kStopped)
+    , mBleAdvRequestedState(kAdvertising)
     , mMtuSize(kInitialMtuSize)
 {
 }
@@ -79,17 +80,22 @@ Error BleSecure::Start(ConnectCallback aConnectHandler, ReceiveCallback aReceive
     SuccessOrExit(error = Get<MeshCoP::TcatAgent>().GetAdvertisementData(advertisementLen, advertisementData));
     VerifyOrExit(advertisementData != nullptr, error = kErrorFailed);
     SuccessOrExit(error = otPlatBleGapAdvSetData(&GetInstance(), advertisementData, advertisementLen));
-    SuccessOrExit(error = otPlatBleGapAdvStart(&GetInstance(), OT_BLE_ADV_INTERVAL_DEFAULT));
 
     SuccessOrExit(error = mTls.Open());
     mTls.SetReceiveCallback(HandleTlsReceive, this);
     mTls.SetConnectCallback(HandleTlsConnectEvent, this);
     SuccessOrExit(error = mTls.Bind(HandleTransport, this));
 
+    // attempt to start BLE advertising only if everything else succeeded.
+    mBleState             = kNotAdvertising;
+    mBleAdvRequestedState = kAdvertising;
+    error                 = SetRequestedBleAdvertisementsState();
+
 exit:
-    if (error == kErrorNone)
+    if (error != kErrorNone && error != kErrorAlready)
     {
-        mBleState = kAdvertising;
+        mTls.Close();
+        mBleState = kStopped;
     }
     return error;
 }
@@ -98,7 +104,7 @@ Error BleSecure::TcatStart(const MeshCoP::TcatAgent::JoinCallback aHandler)
 {
     Error error;
 
-    VerifyOrExit(mBleState != kStopped, error = kErrorInvalidState);
+    VerifyOrExit(mBleState != kStopped && mTlvMode, error = kErrorInvalidState);
 
     error = Get<MeshCoP::TcatAgent>().Start(mReceiveCallback.GetHandler(), aHandler, mReceiveCallback.GetContext());
 
@@ -110,11 +116,12 @@ void BleSecure::Stop(void)
 {
     VerifyOrExit(mBleState != kStopped);
 
-    // Even if stop advertisements or disable BLE would fail, we continue closing TLS and stopping TCAT agent.
+    // Even if stop-advertisements or disable BLE would fail, we continue closing TLS and stopping TCAT agent.
     IgnoreError(otPlatBleGapAdvStop(&GetInstance()));
     IgnoreError(otPlatBleDisable(&GetInstance()));
-    mBleState = kStopped;
-    mMtuSize  = kInitialMtuSize;
+    mBleState             = kStopped;
+    mBleAdvRequestedState = kStopped;
+    mMtuSize              = kInitialMtuSize;
 
     mTls.Close();
     Get<MeshCoP::TcatAgent>().Stop();
@@ -174,18 +181,14 @@ void BleSecure::Disconnect(void)
 
     if (mBleState == kConnected)
     {
+        // request platform to close BLE. Once this closing is done, #HandleBleDisconnected will
+        // be called by the platform, which will call BleSecure::Disconnect again.
         IgnoreError(otPlatBleGapDisconnect(&GetInstance()));
-
-        if (!Get<MeshCoP::TcatAgent>().IsStarted())
-        {
-            mBleState = kAdvertising;
-        }
     }
 
-    // Update advertisement
-    IgnoreError(NotifyAdvertisementChanged());
-
     mConnectCallback.InvokeIfSet(&GetInstance(), false, false);
+    // Update advertisement data
+    IgnoreError(NotifyAdvertisementChanged());
 }
 
 Error BleSecure::NotifyAdvertisementChanged(void)
@@ -203,29 +206,32 @@ exit:
     return error;
 }
 
-Error BleSecure::NotifySendAdvertisements(const bool aSendAdvertisements)
+void BleSecure::NotifySendAdvertisements(const bool aSendAdvertisements)
+{
+    mBleAdvRequestedState = aSendAdvertisements ? kAdvertising : kNotAdvertising;
+    IgnoreError(SetRequestedBleAdvertisementsState());
+}
+
+// performs platform calls to start or stop BLE advertisements as requested, and if successful
+// update mBleState to reflect actual state of kAdvertising / kNotAdvertising.
+Error BleSecure::SetRequestedBleAdvertisementsState(void)
 {
     Error error = kErrorNone;
 
-    if (aSendAdvertisements && mBleState == kNotAdvertising)
+    // Must not make GapAdv platform calls when kStopped, or kConnected.
+    if (mBleAdvRequestedState == kAdvertising && mBleState == kNotAdvertising)
     {
         SuccessOrExit(error = otPlatBleGapAdvStart(&GetInstance(), OT_BLE_ADV_INTERVAL_DEFAULT));
         mBleState = kAdvertising;
     }
-    else if (!aSendAdvertisements && (mBleState == kAdvertising || mBleState == kConnected))
+    else if (mBleAdvRequestedState == kNotAdvertising && mBleState == kAdvertising)
     {
         SuccessOrExit(error = otPlatBleGapAdvStop(&GetInstance()));
-        if (mBleState == kAdvertising)
-        {
-            mBleState = kNotAdvertising;
-        }
+        mBleState = kNotAdvertising;
     }
 
 exit:
-    if (error == kErrorInvalidArgs) // can be returned by #otPlatBleGapAdvStart()
-    {
-        error = kErrorFailed;
-    }
+    LogWarnOnError(error, "start/stop advertisements");
     return error;
 }
 
@@ -392,10 +398,15 @@ void BleSecure::HandleBleDisconnected(uint16_t aConnectionId)
 {
     OT_UNUSED_VARIABLE(aConnectionId);
 
+    // kAdvertising is the state that the BLE stack will automatically assume, after a BLE client disconnects.
     mBleState = kAdvertising;
     mMtuSize  = kInitialMtuSize;
 
     Disconnect(); // Stop TLS connection
+
+    // if a different BLE advertising state was requested earlier while a BLE client was connected,
+    // then now's the time to fulfill the request.
+    IgnoreError(SetRequestedBleAdvertisementsState());
 }
 
 Error BleSecure::HandleBleMtuUpdate(uint16_t aMtu)
