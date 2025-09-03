@@ -349,7 +349,6 @@ void TestNat64Mapping(void)
     Nat64::Translator::AddressMappingIterator iterator;
     Nat64::Translator::AddressMapping         mapping;
     OwnedPtr<Message>                         message;
-    Nat64::Translator::Result                 result;
     Ip6::Address                              ip6Addr;
     Ip6::Address                              ip6Addr2;
     Ip4::Address                              ip4Addr;
@@ -390,8 +389,7 @@ void TestNat64Mapping(void)
 
     message.Reset(PrepareMessage(node, ip6Addr, ip4Addr, kSrcPort, kDstPort, kPayloadLength));
 
-    result = node.Get<Nat64::Translator>().TranslateFromIp6(*message);
-    VerifyOrQuit(result == Nat64::Translator::kForward);
+    SuccessOrQuit(node.Get<Nat64::Translator>().TranslateIp6ToIp4(*message));
 
     SuccessOrQuit(ip4Headers.ParseFrom(*message));
     VerifyOrQuit(ip4Headers.GetDestinationAddress() == ip4Addr);
@@ -420,8 +418,7 @@ void TestNat64Mapping(void)
 
     message.Reset(PrepareMessage(node, ip6Addr, ip4Addr, kSrcPort, kDstPort, kPayloadLength * 2));
 
-    result = node.Get<Nat64::Translator>().TranslateFromIp6(*message);
-    VerifyOrQuit(result == Nat64::Translator::kForward);
+    SuccessOrQuit(node.Get<Nat64::Translator>().TranslateIp6ToIp4(*message));
 
     SuccessOrQuit(ip4Headers.ParseFrom(*message));
     VerifyOrQuit(ip4Headers.GetDestinationAddress() == ip4Addr);
@@ -452,8 +449,7 @@ void TestNat64Mapping(void)
 
     message.Reset(PrepareMessage(node, ip6Addr2, ip4Addr, kSrcPort, kDstPort, kPayloadLength));
 
-    result = node.Get<Nat64::Translator>().TranslateFromIp6(*message);
-    VerifyOrQuit(result == Nat64::Translator::kForward);
+    SuccessOrQuit(node.Get<Nat64::Translator>().TranslateIp6ToIp4(*message));
 
     SuccessOrQuit(ip4Headers.ParseFrom(*message));
     VerifyOrQuit(ip4Headers.GetDestinationAddress() == ip4Addr);
@@ -490,8 +486,7 @@ void TestNat64Mapping(void)
 
     message.Reset(PrepareMessage(node, ip6Addr, ip4Addr, kSrcPort, kDstPort, kPayloadLength));
 
-    result = node.Get<Nat64::Translator>().TranslateFromIp6(*message);
-    VerifyOrQuit(result == Nat64::Translator::kForward);
+    SuccessOrQuit(node.Get<Nat64::Translator>().TranslateIp6ToIp4(*message));
 
     SuccessOrQuit(ip4Headers.ParseFrom(*message));
     VerifyOrQuit(ip4Headers.GetDestinationAddress() == ip4Addr);
@@ -525,8 +520,7 @@ void TestNat64Mapping(void)
 
     message.Reset(PrepareMessage(node, ip6Addr2, ip4Addr, kSrcPort, kDstPort, kPayloadLength));
 
-    result = node.Get<Nat64::Translator>().TranslateFromIp6(*message);
-    VerifyOrQuit(result == Nat64::Translator::kForward);
+    SuccessOrQuit(node.Get<Nat64::Translator>().TranslateIp6ToIp4(*message));
 
     SuccessOrQuit(ip4Headers.ParseFrom(*message));
     VerifyOrQuit(ip4Headers.GetDestinationAddress() == ip4Addr);
@@ -566,8 +560,7 @@ void TestNat64Mapping(void)
 
     message.Reset(PrepareMessage(node, ip6Addr, ip4Addr, kSrcPort, kDstPort, kPayloadLength));
 
-    result = node.Get<Nat64::Translator>().TranslateFromIp6(*message);
-    VerifyOrQuit(result == Nat64::Translator::kForward);
+    SuccessOrQuit(node.Get<Nat64::Translator>().TranslateIp6ToIp4(*message));
 
     SuccessOrQuit(ip4Headers.ParseFrom(*message));
     VerifyOrQuit(ip4Headers.GetDestinationAddress() == ip4Addr);

@@ -110,35 +110,15 @@ void VerifyMessage(const Message &aMessage, const uint8_t *aExpectedContent, uin
     VerifyOrQuit(aMessage.CompareBytes(0, aExpectedContent, aExpectedLength));
 }
 
-const char *ResultToString(Translator::Result aResult)
+void Verify6To4(const char    *aTestName,
+                const uint8_t *aIp6Message,
+                const uint16_t aIp6Length,
+                const uint8_t *aIp4Message,
+                uint16_t       aIp4Length,
+                Error          aError)
 {
-    const char *string = "Invalid";
-
-    switch (aResult)
-    {
-    case Translator::kNotTranslated:
-        string = "NotTranslated";
-        break;
-    case Translator::kForward:
-        string = "Forward";
-        break;
-    case Translator::kDrop:
-        string = "Drop";
-        break;
-    }
-
-    return string;
-}
-
-void Verify6To4(const char        *aTestName,
-                const uint8_t     *aIp6Message,
-                const uint16_t     aIp6Length,
-                const uint8_t     *aIp4Message,
-                uint16_t           aIp4Length,
-                Translator::Result aResult)
-{
-    Message           *message = sInstance->Get<Ip6::Ip6>().NewMessage(0);
-    Translator::Result result;
+    Message *message = sInstance->Get<Ip6::Ip6>().NewMessage(0);
+    Error    error;
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Translate IPv6 to IPv4: %s", aTestName);
@@ -148,9 +128,9 @@ void Verify6To4(const char        *aTestName,
 
     DumpIp6Message("IPv6 message", *message);
 
-    result = sInstance->Get<Translator>().TranslateFromIp6(*message);
-    Log("Result: %s (expecting:%s)", ResultToString(result), ResultToString(aResult));
-    VerifyOrQuit(result == aResult);
+    error = sInstance->Get<Translator>().TranslateIp6ToIp4(*message);
+    Log("Error: %s (expecting:%s)", ErrorToString(error), ErrorToString(aError));
+    VerifyOrQuit(error == aError);
 
     if (aIp4Message != nullptr)
     {
@@ -163,26 +143,26 @@ template <uint16_t kIp6Length, uint16_t kIp4Length>
 void Verify6To4(const char *aTestName,
                 const uint8_t (&aIp6Message)[kIp6Length],
                 const uint8_t (&aIp4Message)[kIp4Length],
-                Translator::Result aResult)
+                Error aError)
 {
-    Verify6To4(aTestName, aIp6Message, kIp6Length, aIp4Message, kIp4Length, aResult);
+    Verify6To4(aTestName, aIp6Message, kIp6Length, aIp4Message, kIp4Length, aError);
 }
 
 template <uint16_t kIp6Length>
-void Verify6To4(const char *aTestName, const uint8_t (&aIp6Message)[kIp6Length], Translator::Result aResult)
+void Verify6To4(const char *aTestName, const uint8_t (&aIp6Message)[kIp6Length], Error aError)
 {
-    Verify6To4(aTestName, aIp6Message, kIp6Length, nullptr, 0, aResult);
+    Verify6To4(aTestName, aIp6Message, kIp6Length, nullptr, 0, aError);
 }
 
-void Verify4To6(const char        *aTestName,
-                const uint8_t     *aIp4Message,
-                uint16_t           aIp4Length,
-                const uint8_t     *aIp6Message,
-                uint16_t           aIp6Length,
-                Translator::Result aResult)
+void Verify4To6(const char    *aTestName,
+                const uint8_t *aIp4Message,
+                uint16_t       aIp4Length,
+                const uint8_t *aIp6Message,
+                uint16_t       aIp6Length,
+                Error          aError)
 {
-    Message           *message = sInstance->Get<Ip6::Ip6>().NewMessage(0);
-    Translator::Result result;
+    Message *message = sInstance->Get<Ip6::Ip6>().NewMessage(0);
+    Error    error;
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Translate IPv4 to IPv6: %s", aTestName);
@@ -192,9 +172,9 @@ void Verify4To6(const char        *aTestName,
 
     DumpIp4Message("IPv4 message", *message);
 
-    result = sInstance->Get<Translator>().TranslateToIp6(*message);
-    Log("Result: %s (expecting:%s)", ResultToString(result), ResultToString(aResult));
-    VerifyOrQuit(result == aResult);
+    error = sInstance->Get<Translator>().TranslateIp4ToIp6(*message);
+    Log("Error: %s (expecting:%s)", ErrorToString(error), ErrorToString(aError));
+    VerifyOrQuit(error == aError);
 
     if (aIp6Message != nullptr)
     {
@@ -207,15 +187,15 @@ template <uint16_t kIp4Length, uint16_t kIp6Length>
 void Verify4To6(const char *aTestName,
                 const uint8_t (&aIp4Message)[kIp4Length],
                 const uint8_t (&aIp6Message)[kIp6Length],
-                Translator::Result aResult)
+                Error aError)
 {
-    Verify4To6(aTestName, aIp4Message, kIp4Length, aIp6Message, kIp6Length, aResult);
+    Verify4To6(aTestName, aIp4Message, kIp4Length, aIp6Message, kIp6Length, aError);
 }
 
 template <uint16_t kIp4Length>
-void Verify4To6(const char *aTestName, const uint8_t (&aIp4Message)[kIp4Length], Translator::Result aResult)
+void Verify4To6(const char *aTestName, const uint8_t (&aIp4Message)[kIp4Length], Error aError)
 {
-    Verify4To6(aTestName, aIp4Message, kIp4Length, nullptr, 0, aResult);
+    Verify4To6(aTestName, aIp4Message, kIp4Length, nullptr, 0, aError);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -250,7 +230,7 @@ void TestNat64Translation(void)
                                       0x4d, 192,  168,  123,  1,    172,  16,   243,  197,  0xab, 0xcd,
                                       0x12, 0x34, 0x00, 0x0c, 0xa1, 0x8d, 0x61, 0x62, 0x63, 0x64};
 
-        Verify6To4("Valid v6 UDP", kIp6Packet, kIp4Packet, Translator::kForward);
+        Verify6To4("Valid v6 UDP", kIp6Packet, kIp4Packet, kErrorNone);
     }
 
     {
@@ -265,7 +245,7 @@ void TestNat64Translation(void)
             0x00, 0x00, 0x00, 0x01, 0xab, 0xcd, 0x12, 0x34, 0x00, 0x0c, 0xe3, 0x31, 0x61, 0x62, 0x63, 0x64,
         };
 
-        Verify4To6("Valid v4 UDP", kIp4Packet, kIp6Packet, Translator::kForward);
+        Verify4To6("Valid v4 UDP", kIp4Packet, kIp6Packet, kErrorNone);
     }
 
     {
@@ -282,7 +262,7 @@ void TestNat64Translation(void)
                                       0x12, 0x34, 0x87, 0x65, 0x43, 0x21, 0x12, 0x34, 0x56, 0x78, 0x50,
                                       0x10, 0x00, 0x01, 0x1e, 0x54, 0x00, 0x00, 0x61, 0x62, 0x63, 0x64};
 
-        Verify6To4("Valid v6 TCP", kIp6Packet, kIp4Packet, Translator::kForward);
+        Verify6To4("Valid v6 TCP", kIp6Packet, kIp4Packet, kErrorNone);
     }
 
     {
@@ -299,7 +279,7 @@ void TestNat64Translation(void)
             0x12, 0x34, 0x56, 0x78, 0x50, 0x10, 0x00, 0x01, 0x5f, 0xf8, 0x00, 0x00, 0x61, 0x62, 0x63, 0x64,
         };
 
-        Verify4To6("Valid v4 TCP", kIp4Packet, kIp6Packet, Translator::kForward);
+        Verify4To6("Valid v4 TCP", kIp4Packet, kIp6Packet, kErrorNone);
     }
 
     {
@@ -314,7 +294,7 @@ void TestNat64Translation(void)
                                       0x5d, 192,  168,  123,  1,    172,  16,   243,  197,  0x08, 0x00,
                                       0x88, 0x7c, 0xaa, 0xbb, 0x00, 0x01, 0x61, 0x62, 0x63, 0x64};
 
-        Verify6To4("Valid v6 ICMP ping", kIp6Packet, kIp4Packet, Translator::kForward);
+        Verify6To4("Valid v6 ICMP ping", kIp6Packet, kIp4Packet, kErrorNone);
     }
 
     {
@@ -329,7 +309,7 @@ void TestNat64Translation(void)
             0x00, 0x00, 0x00, 0x01, 0x81, 0x00, 0x75, 0x59, 0xaa, 0xbb, 0x00, 0x01, 0x61, 0x62, 0x63, 0x64,
         };
 
-        Verify4To6("Valid v4 ICMP ping", kIp4Packet, kIp6Packet, Translator::kForward);
+        Verify4To6("Valid v4 ICMP ping", kIp4Packet, kIp6Packet, kErrorNone);
     }
 
     {
@@ -338,7 +318,7 @@ void TestNat64Translation(void)
                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xfd, 0x01,
                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 172,  16,   243};
 
-        Verify6To4("Invalid v6", kIp6Packet, Translator::kDrop);
+        Verify6To4("Invalid v6", kIp6Packet, kErrorDrop);
     }
 
     {
@@ -346,7 +326,7 @@ void TestNat64Translation(void)
         const uint8_t kIp4Packet[] = {0x45, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x3f, 0x11,
                                       0xa0, 0x4c, 172,  16,   243,  197,  192,  168,  123};
 
-        Verify4To6("Invalid v4", kIp4Packet, Translator::kDrop);
+        Verify4To6("Invalid v4", kIp4Packet, kErrorDrop);
     }
 
     {
@@ -355,7 +335,7 @@ void TestNat64Translation(void)
                                       0x4c, 172,  16,   243,  197,  192,  168,  123,  2,    0xab, 0xcd,
                                       0x12, 0x34, 0x00, 0x0c, 0xa1, 0x8c, 0x61, 0x62, 0x63, 0x64};
 
-        Verify4To6("No v4 mapping", kIp4Packet, Translator::kDrop);
+        Verify4To6("No v4 mapping", kIp4Packet, kErrorDrop);
     }
 
     Log("End of TestNat64Translation");
@@ -382,6 +362,7 @@ void TestNat64Counters(void)
 
     SuccessOrQuit(sInstance->Get<Translator>().SetIp4Cidr(cidr));
     sInstance->Get<Translator>().SetNat64Prefix(prefix);
+    sInstance->Get<Translator>().SetEnabled(true);
 
     // Step 1: Make the mapping table dirty.
     {
@@ -396,7 +377,7 @@ void TestNat64Counters(void)
                                       0x4d, 192,  168,  123,  1,    172,  16,   243,  197,  0xab, 0xcd,
                                       0x12, 0x34, 0x00, 0x0c, 0xa1, 0x8d, 0x61, 0x62, 0x63, 0x64};
 
-        Verify6To4("First translation", kIp6Packet, kIp4Packet, Translator::kForward);
+        Verify6To4("First translation", kIp6Packet, kIp4Packet, kErrorNone);
     }
 
     iter.Init(*sInstance);
@@ -435,7 +416,7 @@ void TestNat64Counters(void)
                                       0x4d, 192,  168,  124,  1,    172,  16,   243,  197,  0xab, 0xcd,
                                       0x12, 0x34, 0x00, 0x0c, 0xa0, 0x8d, 0x61, 0x62, 0x63, 0x64};
 
-        Verify6To4("Translation with new mapping", kIp6Packet, kIp4Packet, Translator::kForward);
+        Verify6To4("Translation with new mapping", kIp6Packet, kIp4Packet, kErrorNone);
     }
 
     iter.Init(*sInstance);
