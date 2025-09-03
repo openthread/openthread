@@ -83,7 +83,7 @@ void TcatAgent::ClearCommissionerState(void)
     mApplicationResponsePending    = false;
 }
 
-Error TcatAgent::Start(AppDataReceiveCallback aAppDataReceiveCallback, JoinCallback aHandler, void *aContext)
+Error TcatAgent::Start(AppDataReceiveCallback aAppDataReceiveCallback, JoinCallback aJoinHandler, void *aContext)
 {
     Error error = kErrorNone;
 
@@ -91,7 +91,7 @@ Error TcatAgent::Start(AppDataReceiveCallback aAppDataReceiveCallback, JoinCallb
     VerifyOrExit(mVendorInfo != nullptr, error = kErrorFailed);
 
     mAppDataReceiveCallback.Set(aAppDataReceiveCallback, aContext);
-    mJoinCallback.Set(aHandler, aContext);
+    mJoinCallback.Set(aJoinHandler, aContext);
     mState                = kStateActive;
     mTcatActiveDurationMs = 0;
     mActiveOrStandbyTimer.Stop();
@@ -120,15 +120,13 @@ Error TcatAgent::Standby(void)
 
     mTcatActiveDurationMs = 0;
     mActiveOrStandbyTimer.Stop();
-    if (IsConnected())
+    mNextState = kStateStandby;
+    if (!IsConnected())
     {
-        // if already connected, only move to 'standby' once the connection is done.
-        mNextState = kStateStandby;
-    }
-    else
-    {
+        // if already TLS-connected, only move to 'standby' once the connection is done.
+        // if not yet fully connected, go to 'standby' immediately (ignoring a TLS handshake that may be ongoing)
         mState = kStateStandby;
-        IgnoreError(Get<Ble::BleSecure>().NotifySendAdvertisements(NeedsToAdvertise()));
+        NotifyStateChange();
         LogInfo("Standby");
     }
 
@@ -223,13 +221,11 @@ Error TcatAgent::Connected(MeshCoP::Tls::Extension &aTls)
     // For others, return to prior state, upon disconnect.
     mNextState = (mState == kStateActiveTemporary) ? kStateStandby : mState;
     mState     = kStateConnected;
+    NotifyStateChange();
+    LogInfo("Connected");
 
     // This specifically stores the state IsCommissioned at _start_ of session:
     mIsCommissioned = Get<ActiveDatasetManager>().IsCommissioned();
-
-    IgnoreError(Get<Ble::BleSecure>().NotifySendAdvertisements(NeedsToAdvertise()));
-
-    LogInfo("Connected");
 
 exit:
     return error;
@@ -240,12 +236,10 @@ void TcatAgent::Disconnected(void)
     if (mState != kStateDisabled)
     {
         mState = mNextState;
+        NotifyStateChange();
+        LogInfo("Disconnected");
+        ClearCommissionerState();
     }
-
-    IgnoreError(Get<Ble::BleSecure>().NotifySendAdvertisements(NeedsToAdvertise()));
-    ClearCommissionerState();
-
-    LogInfo("Disconnected");
 }
 
 uint8_t TcatAgent::CheckAuthorizationRequirements(CommandClassFlags aFlagsRequired, Dataset::Info *aDatasetInfo) const
@@ -1048,6 +1042,11 @@ Error TcatAgent::HandleStartThreadInterface(void)
     error = Get<Mle::Mle>().Start();
 
 exit:
+    // error values for callback MUST be limited to allowed set, see #JoinCallback
+    if (error != kErrorRejected)
+    {
+        mJoinCallback.InvokeIfSet(error);
+    }
     return error;
 }
 
@@ -1079,6 +1078,7 @@ void TcatAgent::HandleTimer(void)
         {
             mState = kStateActive;
         }
+        NotifyStateChange();
         LogInfo("Active");
         break;
 
@@ -1094,8 +1094,12 @@ void TcatAgent::HandleTimer(void)
     default:
         break;
     }
+}
 
-    IgnoreError(Get<Ble::BleSecure>().NotifySendAdvertisements(NeedsToAdvertise()));
+// internally called when TcatAgent state changes: perform any required actions.
+void TcatAgent::NotifyStateChange(void)
+{
+    Get<Ble::BleSecure>().NotifySendAdvertisements(mState == kStateActive || mState == kStateActiveTemporary);
 }
 
 void SerializeTcatAdvertisementTlv(uint8_t                 *aBuffer,

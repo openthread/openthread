@@ -74,7 +74,8 @@ public:
     typedef otHandleTcatApplicationDataReceive AppDataReceiveCallback;
 
     /**
-     * Pointer to call to notify the completion of a join operation of a TCAT Commissioner.
+     * Pointer to call to notify the completion of a Thread Network join operation under
+     * guidance of a TCAT Commissioner.
      *
      * Please see #otHandleTcatJoin for details.
      */
@@ -290,14 +291,15 @@ public:
      * After Start(), optionally #Standby() can be used to immediately set the agent to standby mode.
      *
      * @param[in] aAppDataReceiveCallback   A pointer to a function that is called when the user data is received.
-     * @param[in] aHandler                  A pointer to a function that is called when the join operation completes.
+     * @param[in] aJoinHandler              A pointer to a function that is called when a network join operation
+     *                                      completes, under guidance of the TCAT Commissioner.
      * @param[in] aContext                  A context pointer.
      *
      * @retval kErrorNone        Successfully started the TCAT agent.
      * @retval kErrorFailed      Failed to start due to missing vendor info. This info must be set with
      *                           #SetTcatVendorInfo().
      */
-    Error Start(AppDataReceiveCallback aAppDataReceiveCallback, JoinCallback aHandler, void *aContext);
+    Error Start(AppDataReceiveCallback aAppDataReceiveCallback, JoinCallback aJoinHandler, void *aContext);
 
     /**
      * Stops the TCAT agent.
@@ -413,10 +415,10 @@ public:
 
 private:
     void  NotifyApplicationResponseSent(void) { mApplicationResponsePending = false; }
+    void  NotifyStateChange(void);
     void  ClearCommissionerState();
     Error Connected(MeshCoP::Tls::Extension &aTls);
     void  Disconnected(void);
-    bool  NeedsToAdvertise(void) const { return mState == kStateActive || mState == kStateActiveTemporary; }
 
     Error HandleSingleTlv(const Message &aIncomingMessage, Message &aOutgoingMessage);
     Error HandleSetActiveOperationalDataset(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength);

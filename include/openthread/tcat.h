@@ -200,10 +200,13 @@ typedef void (*otHandleTcatApplicationDataReceive)(otInstance               *aIn
                                                    void                     *aContext);
 
 /**
- * Pointer to call to notify the completion of a join operation of a TCAT Commissioner.
+ * Pointer to call to notify the completion of a network join operation performed under
+ * guidance of a TCAT Commissioner.
  *
- * @param[in]  aError           OT_ERROR_NONE if the join process succeeded.
- *                              OT_ERROR_SECURITY if the join process failed due to security credentials.
+ * @param[in]  aError           OT_ERROR_NONE if the network join process succeeded.
+ *                              OT_ERROR_INVALID_STATE if network join was requested but network credentials
+ *                                                     were missing or incomplete.
+ *                              OT_ERROR_SECURITY if the network join process failed due to security credentials.
  * @param[in]  aContext         A pointer to arbitrary context information.
  */
 typedef void (*otHandleTcatJoin)(otError aError, void *aContext);
