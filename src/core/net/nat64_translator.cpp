@@ -121,10 +121,7 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
     uint16_t     srcPortOrId = 0;
     Mapping     *mapping     = nullptr;
 
-    if (mIp4Cidr.mLength == 0 || !mNat64Prefix.IsValidNat64())
-    {
-        ExitNow(result = kNotTranslated);
-    }
+    VerifyOrExit(mState == kStateActive, result = kNotTranslated);
 
     // `ParseFrom()` will do basic checks for the message, including
     // the message length and IP protocol version.
@@ -241,21 +238,10 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
     // datagram, forward it directly.
     VerifyOrExit(ip6Header.ParseFrom(aMessage) != kErrorNone, result = kNotTranslated);
 
-    if (mIp4Cidr.mLength == 0)
-    {
-        LogWarn("Incoming message is an IPv4 datagram but no IPv4 CIDR for NAT64 configured, drop");
-        ExitNow(result = kForward);
-    }
-
-    if (!mNat64Prefix.IsValidNat64())
-    {
-        LogWarn("Incoming message is an IPv4 datagram but no NAT64 prefix configured, drop");
-        ExitNow(result = kDrop);
-    }
+    VerifyOrExit(mState == kStateActive, result = kDrop);
 
     if (ip4Headers.ParseFrom(aMessage) != kErrorNone)
     {
-        LogWarn("Incoming message is neither IPv4 nor an IPv6 datagram, drop");
         dropReason = kReasonIllegalPacket;
         ExitNow(result = kDrop);
     }
