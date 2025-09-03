@@ -74,7 +74,7 @@ exit:
     return;
 }
 
-void Local::RecordMessage(const Message &aMessage, const Mac::Address &aMacAddress, MessageType aType)
+void Local::RecordMessage(const Message &aMessage, const Mac::Address &aMacAddress, MessageType aType, bool isTxSuccess)
 {
     MessageInfo *entry = nullptr;
     Ip6::Headers headers;
@@ -127,7 +127,7 @@ void Local::RecordMessage(const Message &aMessage, const Mac::Address &aMacAddre
     entry->mIcmp6Type            = headers.IsIcmp6() ? headers.GetIcmpHeader().GetType() : 0;
     entry->mAveRxRss             = (aType == kRxMessage) ? aMessage.GetRssAverager().GetAverage() : Radio::kInvalidRssi;
     entry->mLinkSecurity         = aMessage.IsLinkSecurityEnabled();
-    entry->mTxSuccess            = (aType == kTxMessage) ? aMessage.GetTxSuccess() : true;
+    entry->mTxSuccess            = (aType == kTxMessage) ? isTxSuccess : true;
     entry->mPriority             = aMessage.GetPriority();
 
     if (aMacAddress.IsExtended())
