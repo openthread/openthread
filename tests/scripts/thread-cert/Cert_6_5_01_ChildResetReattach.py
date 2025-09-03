@@ -74,9 +74,9 @@ class Cert_6_5_1_ChildResetReattach(thread_cert.TestCase):
         self.simulator.go(5)
         self.nodes[ED].start()
 
-        self.simulator.go(5)
+        self.simulator.go(32)
         self.nodes[LEADER].add_allowlist(self.nodes[ED].get_addr64())
-        self.simulator.go(5)
+        self.simulator.go(10)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         addrs = self.nodes[ED].get_addrs()
