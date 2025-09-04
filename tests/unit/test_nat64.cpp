@@ -236,6 +236,7 @@ void TestNat64Translation(void)
 
     SuccessOrQuit(sInstance->Get<Translator>().SetIp4Cidr(cidr));
     sInstance->Get<Translator>().SetNat64Prefix(prefix);
+    sInstance->Get<Translator>().SetEnabled(true);
 
     {
         // fd02::1               fd01::ac10:f3c5       UDP      52     43981 → 4660 Len=4
