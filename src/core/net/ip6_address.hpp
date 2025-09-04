@@ -259,17 +259,6 @@ public:
     static uint8_t SizeForLength(uint8_t aLength) { return BytesForBitSize(aLength); }
 
     /**
-     * Returns the number of IPv6 prefix bits that match.
-     *
-     * @param[in]  aPrefixA     A pointer to a byte array containing a first prefix.
-     * @param[in]  aPrefixB     A pointer to a byte array containing a second prefix.
-     * @param[in]  aMaxSize     Number of bytes of the two prefixes.
-     *
-     * @returns The number of prefix bits that match.
-     */
-    static uint8_t MatchLength(const uint8_t *aPrefixA, const uint8_t *aPrefixB, uint8_t aMaxSize);
-
-    /**
      * Indicates whether or not a given prefix length is valid for use as a NAT64 prefix.
      *
      * A NAT64 prefix must have one of the following lengths: 32, 40, 48, 56, 64, or 96 (per RFC 6052).

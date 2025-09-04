@@ -191,8 +191,7 @@ Cidr::InfoString Cidr::ToString(void) const
 
 bool Cidr::operator==(const Cidr &aOther) const
 {
-    return (mLength == aOther.mLength) &&
-           (Ip6::Prefix::MatchLength(GetBytes(), aOther.GetBytes(), Ip4::Address::kSize) >= mLength);
+    return (mLength == aOther.mLength) && (CountMatchingBits(GetBytes(), aOther.GetBytes(), mLength) >= mLength);
 }
 
 void Cidr::Set(const uint8_t *aAddress, uint8_t aLength)

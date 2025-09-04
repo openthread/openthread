@@ -103,6 +103,7 @@ set(COMMON_SOURCES
     coap/coap_secure.cpp
     common/appender.cpp
     common/binary_search.cpp
+    common/bit_utils.cpp
     common/crc.cpp
     common/data.cpp
     common/error.cpp
