@@ -75,7 +75,7 @@ void TestNat64StateChanges(void)
     VerifyOrQuit(node.Get<Nat64::Translator>().GetState() == Nat64::kStateDisabled);
 
     VerifyOrQuit(node.Get<Nat64::Translator>().GetIp4Cidr(cidr) == kErrorNotFound);
-    VerifyOrQuit(node.Get<Nat64::Translator>().GetIp6Prefix(prefix) == kErrorNotFound);
+    VerifyOrQuit(node.Get<Nat64::Translator>().GetNat64Prefix(prefix) == kErrorNotFound);
 
     iterator.Init(node.GetInstance());
     VerifyOrQuit(iterator.GetNext(mapping) == kErrorNotFound);
@@ -88,7 +88,7 @@ void TestNat64StateChanges(void)
     VerifyOrQuit(node.Get<Nat64::Translator>().GetState() == Nat64::kStateNotRunning);
 
     VerifyOrQuit(node.Get<Nat64::Translator>().GetIp4Cidr(cidr) == kErrorNotFound);
-    VerifyOrQuit(node.Get<Nat64::Translator>().GetIp6Prefix(prefix) == kErrorNotFound);
+    VerifyOrQuit(node.Get<Nat64::Translator>().GetNat64Prefix(prefix) == kErrorNotFound);
 
     iterator.Init(node.GetInstance());
     VerifyOrQuit(iterator.GetNext(mapping) == kErrorNotFound);
@@ -102,7 +102,7 @@ void TestNat64StateChanges(void)
     VerifyOrQuit(node.Get<Nat64::Translator>().GetState() == Nat64::kStateNotRunning);
 
     VerifyOrQuit(node.Get<Nat64::Translator>().GetIp4Cidr(cidr) == kErrorNotFound);
-    VerifyOrQuit(node.Get<Nat64::Translator>().GetIp6Prefix(prefix) == kErrorNotFound);
+    VerifyOrQuit(node.Get<Nat64::Translator>().GetNat64Prefix(prefix) == kErrorNotFound);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Set a valid CIDR");
@@ -112,7 +112,7 @@ void TestNat64StateChanges(void)
 
     VerifyOrQuit(node.Get<Nat64::Translator>().GetState() == Nat64::kStateNotRunning);
 
-    VerifyOrQuit(node.Get<Nat64::Translator>().GetIp6Prefix(prefix) == kErrorNotFound);
+    VerifyOrQuit(node.Get<Nat64::Translator>().GetNat64Prefix(prefix) == kErrorNotFound);
 
     SuccessOrQuit(node.Get<Nat64::Translator>().GetIp4Cidr(cidr));
     VerifyOrQuit(cidr == testCidr);
@@ -123,7 +123,7 @@ void TestNat64StateChanges(void)
     SuccessOrQuit(testPrefix.FromString("fd01::/96"));
     node.Get<Nat64::Translator>().SetNat64Prefix(testPrefix);
 
-    SuccessOrQuit(node.Get<Nat64::Translator>().GetIp6Prefix(prefix));
+    SuccessOrQuit(node.Get<Nat64::Translator>().GetNat64Prefix(prefix));
     VerifyOrQuit(prefix == testPrefix);
 
     SuccessOrQuit(node.Get<Nat64::Translator>().GetIp4Cidr(cidr));
@@ -139,7 +139,7 @@ void TestNat64StateChanges(void)
     VerifyOrQuit(sNotifierCallbackInvoked);
     VerifyOrQuit(sNotifierEvents & kEventNat64TranslatorStateChanged);
 
-    SuccessOrQuit(node.Get<Nat64::Translator>().GetIp6Prefix(prefix));
+    SuccessOrQuit(node.Get<Nat64::Translator>().GetNat64Prefix(prefix));
     VerifyOrQuit(prefix == testPrefix);
 
     SuccessOrQuit(node.Get<Nat64::Translator>().GetIp4Cidr(cidr));
@@ -160,7 +160,7 @@ void TestNat64StateChanges(void)
 
     VerifyOrQuit(node.Get<Nat64::Translator>().GetState() == Nat64::kStateDisabled);
 
-    SuccessOrQuit(node.Get<Nat64::Translator>().GetIp6Prefix(prefix));
+    SuccessOrQuit(node.Get<Nat64::Translator>().GetNat64Prefix(prefix));
     VerifyOrQuit(prefix == testPrefix);
 
     SuccessOrQuit(node.Get<Nat64::Translator>().GetIp4Cidr(cidr));
@@ -183,7 +183,7 @@ void TestNat64StateChanges(void)
     VerifyOrQuit(sNotifierCallbackInvoked);
     VerifyOrQuit(sNotifierEvents & kEventNat64TranslatorStateChanged);
 
-    SuccessOrQuit(node.Get<Nat64::Translator>().GetIp6Prefix(prefix));
+    SuccessOrQuit(node.Get<Nat64::Translator>().GetNat64Prefix(prefix));
     VerifyOrQuit(prefix == testPrefix);
 
     SuccessOrQuit(node.Get<Nat64::Translator>().GetIp4Cidr(cidr));
@@ -198,7 +198,7 @@ void TestNat64StateChanges(void)
 
     VerifyOrQuit(node.Get<Nat64::Translator>().GetState() == Nat64::kStateActive);
 
-    SuccessOrQuit(node.Get<Nat64::Translator>().GetIp6Prefix(prefix));
+    SuccessOrQuit(node.Get<Nat64::Translator>().GetNat64Prefix(prefix));
     VerifyOrQuit(prefix == testPrefix);
 
     SuccessOrQuit(node.Get<Nat64::Translator>().GetIp4Cidr(cidr));
@@ -215,7 +215,7 @@ void TestNat64StateChanges(void)
     nexus.AdvanceTime(1);
     VerifyOrQuit(node.Get<Nat64::Translator>().GetState() == Nat64::kStateNotRunning);
 
-    VerifyOrQuit(node.Get<Nat64::Translator>().GetIp6Prefix(prefix) == kErrorNotFound);
+    VerifyOrQuit(node.Get<Nat64::Translator>().GetNat64Prefix(prefix) == kErrorNotFound);
 
     SuccessOrQuit(node.Get<Nat64::Translator>().GetIp4Cidr(cidr));
     VerifyOrQuit(cidr == testCidr);
@@ -234,7 +234,7 @@ void TestNat64StateChanges(void)
     nexus.AdvanceTime(1);
     VerifyOrQuit(node.Get<Nat64::Translator>().GetState() == Nat64::kStateActive);
 
-    SuccessOrQuit(node.Get<Nat64::Translator>().GetIp6Prefix(prefix));
+    SuccessOrQuit(node.Get<Nat64::Translator>().GetNat64Prefix(prefix));
     VerifyOrQuit(prefix == testPrefix);
 
     SuccessOrQuit(node.Get<Nat64::Translator>().GetIp4Cidr(cidr));
@@ -254,7 +254,7 @@ void TestNat64StateChanges(void)
     nexus.AdvanceTime(1);
     VerifyOrQuit(node.Get<Nat64::Translator>().GetState() == Nat64::kStateNotRunning);
 
-    SuccessOrQuit(node.Get<Nat64::Translator>().GetIp6Prefix(prefix));
+    SuccessOrQuit(node.Get<Nat64::Translator>().GetNat64Prefix(prefix));
     VerifyOrQuit(prefix == testPrefix);
 
     VerifyOrQuit(node.Get<Nat64::Translator>().GetIp4Cidr(cidr) == kErrorNotFound);
@@ -273,7 +273,7 @@ void TestNat64StateChanges(void)
     nexus.AdvanceTime(1);
     VerifyOrQuit(node.Get<Nat64::Translator>().GetState() == Nat64::kStateActive);
 
-    SuccessOrQuit(node.Get<Nat64::Translator>().GetIp6Prefix(prefix));
+    SuccessOrQuit(node.Get<Nat64::Translator>().GetNat64Prefix(prefix));
     VerifyOrQuit(prefix == testPrefix);
 
     SuccessOrQuit(node.Get<Nat64::Translator>().GetIp4Cidr(cidr));
@@ -305,7 +305,7 @@ Message *PrepareMessage(Node               &aNode,
 
     ip6Header.SetSource(aSrcIp6Address);
 
-    SuccessOrQuit(aNode.Get<Nat64::Translator>().GetIp6Prefix(nat64Prefix));
+    SuccessOrQuit(aNode.Get<Nat64::Translator>().GetNat64Prefix(nat64Prefix));
     ip6Header.GetDestination().SynthesizeFromIp4Address(nat64Prefix, aDstIp4Address);
 
     ip6Header.SetNextHeader(Ip6::kProtoUdp);

@@ -663,6 +663,17 @@ void Translator::ClearIp4Cidr(void)
     UpdateState();
 }
 
+Error Translator::GetIp4Cidr(Ip4::Cidr &aCidr) const
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mIp4Cidr.mLength > 0, error = kErrorNotFound);
+    aCidr = mIp4Cidr;
+
+exit:
+    return error;
+}
+
 void Translator::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
 {
     if (aNat64Prefix.GetLength() == 0)
@@ -688,6 +699,17 @@ exit:
     return;
 }
 
+Error Translator::GetNat64Prefix(Ip6::Prefix &aPrefix) const
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mNat64Prefix.mLength > 0, error = kErrorNotFound);
+    aPrefix = mNat64Prefix;
+
+exit:
+    return error;
+}
+
 void Translator::HandleTimer(void)
 {
     mActiveMappings.RemoveAndFreeAllMatching(TimerMilli::GetNow());
@@ -708,28 +730,6 @@ Error Translator::AddressMappingIterator::GetNext(AddressMapping &aMapping)
 
     GetMapping()->CopyTo(aMapping, GetInitTime());
     SetMapping(GetMapping()->GetNext());
-
-exit:
-    return error;
-}
-
-Error Translator::GetIp4Cidr(Ip4::Cidr &aCidr) const
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(mIp4Cidr.mLength > 0, error = kErrorNotFound);
-    aCidr = mIp4Cidr;
-
-exit:
-    return error;
-}
-
-Error Translator::GetIp6Prefix(Ip6::Prefix &aPrefix) const
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(mNat64Prefix.mLength > 0, error = kErrorNotFound);
-    aPrefix = mNat64Prefix;
 
 exit:
     return error;

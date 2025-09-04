@@ -239,6 +239,16 @@ public:
     void ClearIp4Cidr(void);
 
     /**
+     * Gets the configured CIDR in the NAT64 translator.
+     *
+     * @param[out] aCidr        The `Ip4::Cidr` Where the configured CIDR will be placed.
+     *
+     * @retval kErrorNone       @p aCidr is set to the configured CIDR.
+     * @retval kErrorNotFound   The translator is not configured with an IPv4 CIDR.
+     */
+    Error GetIp4Cidr(Ip4::Cidr &aCidr) const;
+
+    /**
      * Sets the prefix of NAT64-mapped addresses in the thread network. The address mapping table will not be cleared.
      * Equals to `ClearNat64Prefix` when an empty prefix is provided.
      *
@@ -251,6 +261,16 @@ public:
      * The translator will return kNotTranslated for all IPv6 datagrams and kDrop for all IPv4 datagrams.
      */
     void ClearNat64Prefix(void);
+
+    /**
+     * Gets the configured IPv6 prefix in the NAT64 translator.
+     *
+     * @param[out] aPrefix      The `Ip6::Prefix` where the configured NAT64 prefix will be placed.
+     *
+     * @retval kErrorNone       @p aPrefix is set to the configured prefix.
+     * @retval kErrorNotFound   The translator is not configured with an IPv6 prefix.
+     */
+    Error GetNat64Prefix(Ip6::Prefix &aPrefix) const;
 
     /**
      * Gets the NAT64 translator counters.
@@ -269,26 +289,6 @@ public:
      * @returns The error counters.
      */
     const ErrorCounters &GetErrorCounters(void) const { return mErrorCounters; }
-
-    /**
-     * Gets the configured CIDR in the NAT64 translator.
-     *
-     * @param[out] aCidr        The `Ip4::Cidr` Where the configured CIDR will be placed.
-     *
-     * @retval kErrorNone       @p aCidr is set to the configured CIDR.
-     * @retval kErrorNotFound   The translator is not configured with an IPv4 CIDR.
-     */
-    Error GetIp4Cidr(Ip4::Cidr &aCidr) const;
-
-    /**
-     * Gets the configured IPv6 prefix in the NAT64 translator.
-     *
-     * @param[out] aPrefix      The `Ip6::Prefix` where the configured NAT64 prefix will be placed.
-     *
-     * @retval kErrorNone       @p aPrefix is set to the configured prefix.
-     * @retval kErrorNotFound   The translator is not configured with an IPv6 prefix.
-     */
-    Error GetIp6Prefix(Ip6::Prefix &aPrefix) const;
 
 private:
     // Timeouts are in milliseconds
