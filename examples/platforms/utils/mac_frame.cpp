@@ -404,7 +404,7 @@ exit:
 otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioContext *aRadioContext)
 {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (aRadioContext->mCslPeriod > 0) // CSL IE should be filled for every transmit attempt
+    if (aRadioContext->mCslPresent) // CSL IE should be filled for every transmit attempt
     {
         otMacFrameSetCslIe(aFrame, aRadioContext->mCslPeriod, ComputeCslPhase(aRadioTime, aRadioContext));
     }
@@ -414,4 +414,32 @@ otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadi
 #endif
     aFrame->mInfo.mTxInfo.mTimestamp = aRadioTime;
     return otMacFrameProcessTransmitSecurity(aFrame, aRadioContext);
+}
+
+bool otMacFrameSrcAddrMatchCslReceiverPeer(const otRadioFrame *aFrame, const otRadioContext *aRadioContext)
+{
+    const Mac::Frame &frame = *static_cast<const Mac::Frame *>(aFrame);
+    bool              rval  = true;
+    Mac::Address      src;
+
+    VerifyOrExit(frame.GetSrcAddr(src) == kErrorNone, rval = false);
+
+    switch (src.GetType())
+    {
+    case Mac::Address::kTypeShort:
+        VerifyOrExit(src.GetShort() == aRadioContext->mCslShortAddress, rval = false);
+        break;
+
+    case Mac::Address::kTypeExtended:
+        VerifyOrExit(src.GetExtended() == *static_cast<const Mac::ExtAddress *>(&aRadioContext->mCslExtAddress),
+                     rval = false);
+        break;
+
+    case Mac::Address::kTypeNone:
+        rval = false;
+        break;
+    }
+
+exit:
+    return rval;
 }
