@@ -142,7 +142,7 @@ class MATN_09_FailureOfPrimaryBBROutboundMulticast(thread_cert.TestCase):
         # 1. Router_1 sends a ping packet to the multicast address, MA1,
         # encapsulated in an MPL packet.
         _pkt = pkts.filter_wpan_src64(vars['Router_1']) \
-            .filter_AMPLFMA(mpl_seed_id=vars['Router_1_RLOC']) \
+            .filter_MPL(mpl_seed_id=vars['Router_1_RLOC']) \
             .filter_ping_request() \
             .must_next()
 
@@ -174,7 +174,7 @@ class MATN_09_FailureOfPrimaryBBROutboundMulticast(thread_cert.TestCase):
         # 5.Router_1 sends a ping packet to the multicast address, MA1,
         # encapsulated in an MPL packet.
         _pkt = pkts.filter_wpan_src64(vars['Router_1']) \
-            .filter_AMPLFMA(mpl_seed_id=vars['Router_1_RLOC']) \
+            .filter_MPL(mpl_seed_id=vars['Router_1_RLOC']) \
             .filter_ping_request() \
             .filter(lambda p: p.icmpv6.echo.identifier != initial_identifier) \
             .must_next()
