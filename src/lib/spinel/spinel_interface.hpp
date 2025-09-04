@@ -46,10 +46,7 @@ namespace Spinel {
 class SpinelInterface
 {
 public:
-    enum
-    {
-        kMaxFrameSize = OPENTHREAD_LIB_SPINEL_RX_FRAME_BUFFER_SIZE, ///< Maximum buffer size.
-    };
+    static constexpr uint16_t kMaxFrameSize = OPENTHREAD_LIB_SPINEL_RX_FRAME_BUFFER_SIZE; ///< Maximum buffer size.
 
     /**
      * Defines a receive frame buffer to store received spinel frame(s).

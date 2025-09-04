@@ -50,10 +50,7 @@ namespace Spinel {
 class Decoder
 {
 public:
-    enum
-    {
-        kMaxNestedStructs = 4, ///< Maximum number of nested structs.
-    };
+    static constexpr uint8_t kMaxNestedStructs = 4; ///< Maximum number of nested structs.
 
     /**
      * Initializes a `Decoder` object.
