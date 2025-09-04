@@ -557,6 +557,16 @@ const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntrie
 bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond);
 
 /**
+ * Test whether or not the IPv6 address is a Link-Local unicast address.
+ *
+ * @param[in]  aAddress   A pointer to the IPv6 address to test.
+ *
+ * @retval TRUE   If the IPv6 address is a Link-Local unicast address.
+ * @retval FALSE  If the IPv6 address is not a Link-Local unicast address.
+ */
+bool otIp6IsLinkLocalUnicast(const otIp6Address *aAddress);
+
+/**
  * Test if two IPv6 prefixes are the same.
  *
  * @param[in]  aFirst   A pointer to the first IPv6 prefix to compare.
