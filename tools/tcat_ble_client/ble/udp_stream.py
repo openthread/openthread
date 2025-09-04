@@ -44,6 +44,9 @@ class UdpStream:
         self.socket.setblocking(False)
         self.address = (address, self.BASE_PORT + node_id)
 
+    def __str__(self):
+        return f"UdpStream[{self.address[0]}:{self.address[1]}]"
+
     async def send(self, data):
         logger.debug(f'tx {len(data)} bytes')
         return self.socket.sendto(data, self.address)

@@ -65,7 +65,7 @@ class BleStreamSecure:
         if cafile:
             self.ssl_context.load_verify_locations(cafile=cafile)
 
-    async def do_handshake(self, timeout=30.0):
+    async def do_handshake(self, timeout=30.0) -> bool:
         is_debug = logger.getEffectiveLevel() <= logging.DEBUG
         self.ssl_object = self.ssl_context.wrap_bio(
             incoming=self.incoming,
@@ -103,9 +103,22 @@ class BleStreamSecure:
                 if output:
                     self.incoming.write(output)
                 await asyncio.sleep(0.02)
+
+            except ssl.SSLCertVerificationError as err:
+                print('')
+                logger.error(f"SSLCertVerificationError reason={err.reason} verify_code={err.verify_code} verify_msg={err.verify_message}")
+                return False
+
+            except ssl.SSLError as err:
+                print('')
+                logger.error(f"SSLError reason={err.reason}")
+                return False
+
         else:
-            print('TLS Connection timed out.')
+            print('')
+            logger.error(f'TLS Connection timed out (timeout={timeout}s).')
             return False
+
         print('')
         cert = self.ssl_object.getpeercert(True)
         cert_obj = load_der_x509_certificate(cert)
