@@ -1,12 +1,31 @@
 # OpenThread CLI - TCAT Example
 
+The OpenThread BLE-Secure/TCAT APIs may be invoked via the OpenThread CLI for testing purposes.
+
+> Note: in the present example, only TCAT over BLE is implemented.
+
 ## Command List
 
-- advid [#advid]
-- devid [#devid]
-- help [#help]
-- start [#start]
-- stop [#stop]
+- [active](#active)
+- [advid](#advid)
+- [devid](#devid)
+- [help](#help)
+- [standby](#standby)
+- [start](#start)
+- [stop](#stop)
+
+### active
+
+Activates TCAT functions, leaving standby mode in case the TCAT agent was in standby. The first optional parameter specifies delay in milliseconds before activating TCAT functions. The second optional parameter specifies the duration of activation in milliseconds. If `0` or not provided, the duration is indefinite.
+
+```bash
+tcat active 5000
+Done
+tcat active 0 120000
+Done
+tcat active
+Done
+```
 
 ### advid
 
@@ -124,9 +143,13 @@ stop
 Done
 ```
 
+### standby
+
+Sets TCAT functions to standby, ready to be activated again via the CLI, by an application, or by a TMF message. The TCAT agent is not stopped.
+
 ### start
 
-Start tcat server and ble advertisement.
+Start TCAT agent, activate TCAT functions and start sending TCAT advertisements. After starting, optionally standby mode can be set using [standby](#standby).
 
 ```bash
 tcat start
@@ -135,7 +158,7 @@ Done
 
 ### stop
 
-Stop tcat server and ble advertisement.
+Stop TCAT agent, which stops any ongoing connection and stops sending TCAT advertisements.
 
 ```bash
 tcat stop
