@@ -27,7 +27,7 @@
 """
 import readline
 import shlex
-from argparse import ArgumentParser
+from argparse import Namespace
 from ble.ble_stream_secure import BleStreamSecure
 from cli.base_commands import (DisconnectCommand, HelpCommand, HelloCommand, CommissionCommand, DecommissionCommand,
                                ExtractDatasetCommand, GetCommissionerCertificate, GetDeviceIdCommand, GetPskdHash,
@@ -45,7 +45,7 @@ class CLI:
 
     def __init__(self,
                  dataset: ThreadDataset,
-                 cmd_args: Optional[ArgumentParser] = None,
+                 cmd_args: Optional[Namespace] = None,
                  ble_sstream: Optional[BleStreamSecure] = None):
         self._commands = {
             'help': HelpCommand(),
