@@ -86,12 +86,17 @@ async def main():
         logger.info(f"Certificates and key loaded from '{args.cert_path}'")
 
         print('Setting up secure TLS channel..', end='')
+        ok = False
         try:
-            await ble_sstream.do_handshake()
-            print('Done')
+            ok = await ble_sstream.do_handshake()
         except Exception as e:
-            print('Failed')
+            print('')
             logger.error(e)
+
+        if ok:
+            print('Done')
+        else:
+            print('Failed')
             quit_with_reason('TLS handshake failure')
 
     ds = ThreadDataset()
