@@ -67,6 +67,9 @@ Translator::Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kStateDisabled)
     , mMappingPool(aInstance)
+    , mMinHostId(0)
+    , mMaxHostId(0)
+    , mNextHostId(0)
     , mTimer(aInstance)
 {
     Random::NonCrypto::Fill(mNextMappingId);
@@ -355,20 +358,6 @@ void Translator::Mapping::Free(void)
 {
     LogInfo("Mapping removed: %s", ToString().AsCString());
 
-#if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
-    if (Get<Translator>().mIp4Cidr.mLength > kAddressMappingCidrLimit)
-    {
-        // If `CONFIG_NAT64_PORT_TRANSLATION_ENABLE` is enabled
-        // IPv4 addresses are allocated from the pool only when the
-        // pool size is above a minimum value. Otherwise use just the
-        // first address from the pool.
-    }
-    else
-#endif
-    {
-        IgnoreError(Get<Translator>().mIp4AddressPool.PushBack(mIp4Address));
-    }
-
     Get<Translator>().mMappingPool.Free(*this);
 }
 
@@ -401,45 +390,70 @@ uint16_t Translator::AllocateSourcePort(uint16_t aSrcPort)
 }
 #endif
 
+void Translator::GetNextIp4Address(Ip4::Address &aIp4Address)
+{
+    aIp4Address.SynthesizeFromCidrAndHost(mIp4Cidr, mNextHostId);
+
+    mNextHostId++;
+
+    if (mNextHostId > mMaxHostId)
+    {
+        mNextHostId = mMinHostId;
+    }
+}
+
+#if !OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
+
+Error Translator::AllocateIp4Address(Ip4::Address &aIp4Address)
+{
+    // Allocate a currently unused IPv4 address from the CIDR range.
+    // If all addresses are allocated, try to free expired mappings.
+
+    Error    error = kErrorNone;
+    uint32_t numberOfHosts;
+
+    numberOfHosts = mMaxHostId - mMinHostId + 1;
+
+    if (mActiveMappings.CountAllEntries() >= numberOfHosts)
+    {
+        mActiveMappings.RemoveAndFreeAllMatching(TimerMilli::GetNow());
+
+        VerifyOrExit(mActiveMappings.CountAllEntries() < numberOfHosts, error = kErrorFailed);
+    }
+
+    do
+    {
+        GetNextIp4Address(aIp4Address);
+    } while (mActiveMappings.ContainsMatching(aIp4Address));
+
+exit:
+    return error;
+}
+
+#endif
+
 Translator::Mapping *Translator::AllocateMapping(const Ip6::Headers &aIp6Headers)
 {
     Mapping     *mapping = nullptr;
     Ip4::Address ip4Addr;
 
+    // When `PORT_TRANSLATION_ENABLE` is enabled, the translator uses
+    // IPv4 addresses from the provided CIDR range sequentially. In
+    // this case, mappings can share an IPv4 address because they are
+    // distinguished by their translated port numbers.
+    //
+    // Otherwise, a 1-to-1 address mapping is used, where each IPv6
+    // address is mapped to a unique IPv4 address from the available
+    // range.
+
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
-    // When port translation (`NAT64_PORT_TRANSLATION`) is enabled
-    // the NAT64 translator can work in 2 ways, either with a single
-    // IPv4 address or a larger pool of addresses. There is also the
-    // corner case where the address pool is generated from a big
-    // CIDR length and the number of available IPv4 addresses is not
-    // big enough to apply a 1 to 1 translation from IPv6 to IPv4
-    // address. When operating in the first case, there is no need to
-    // manage the address pool and all active mappings will use 1
-    // single address (or the limited number alternatively). If a
-    // larger pool is available each active mapping will use a
-    // separate IPv4 address.
-
-    if (mIp4Cidr.mLength > kAddressMappingCidrLimit)
-    {
-        // TODO: add logic to cycle between available IPv4 addresses
-        ip4Addr = *mIp4AddressPool.At(0);
-    }
-    else
+    GetNextIp4Address(ip4Addr);
+#else
+    SuccessOrExit(AllocateIp4Address(ip4Addr));
 #endif
-    {
-        if (mIp4AddressPool.IsEmpty())
-        {
-            mActiveMappings.RemoveAndFreeAllMatching(TimerMilli::GetNow());
-        }
-
-        VerifyOrExit(!mIp4AddressPool.IsEmpty());
-        ip4Addr = *mIp4AddressPool.PopBack();
-    }
 
     mapping = mMappingPool.Allocate();
 
-    // We should get a valid item, there is enough space in the
-    // mapping pool. Otherwise return null and fail the translation.
     VerifyOrExit(mapping != nullptr);
 
     mActiveMappings.Push(*mapping);
@@ -572,50 +586,33 @@ exit:
 
 Error Translator::SetIp4Cidr(const Ip4::Cidr &aCidr)
 {
-    Error error = kErrorNone;
+    Error   error = kErrorNone;
+    uint8_t len   = aCidr.GetLength();
 
-    uint32_t numberOfHosts;
-    uint32_t hostIdBegin;
-
-    VerifyOrExit(aCidr.mLength > 0 && aCidr.mLength <= 32, error = kErrorInvalidArgs);
+    VerifyOrExit(IsValueInRange<uint8_t>(len, 1, BitSizeOf(Ip4::Address)), error = kErrorInvalidArgs);
 
     VerifyOrExit(mIp4Cidr != aCidr);
 
-    // Avoid using the 0s and 1s in the host id of an address, but
-    // what if the user provides us with /32 or /31 addresses?
+    // Determine the usable host ID range based on the CIDR prefix
+    // length. For prefixes /1 through /30, the all-zeros and
+    // all-ones host IDs are excluded. For /31 and /32 prefixes,
+    // all host IDs are used.
 
-    if (aCidr.mLength == 32)
+    mMinHostId = 0;
+    mMaxHostId = (1 << (BitSizeOf(Ip4::Address) - len)) - 1;
+
+    if (len < BitSizeOf(Ip4::Address) - 1)
     {
-        hostIdBegin   = 0;
-        numberOfHosts = 1;
-    }
-    else if (aCidr.mLength == 31)
-    {
-        hostIdBegin   = 0;
-        numberOfHosts = 2;
-    }
-    else
-    {
-        hostIdBegin   = 1;
-        numberOfHosts = static_cast<uint32_t>((1 << (Ip4::Address::kSize * 8 - aCidr.mLength)) - 2);
+        mMinHostId++;
+        mMaxHostId--;
     }
 
-    numberOfHosts = OT_MIN(numberOfHosts, kPoolSize);
+    mNextHostId = mMinHostId;
 
     mActiveMappings.Free();
-    mIp4AddressPool.Clear();
 
-    for (uint32_t i = 0; i < numberOfHosts; i++)
-    {
-        Ip4::Address addr;
-
-        addr.SynthesizeFromCidrAndHost(aCidr, i + hostIdBegin);
-        IgnoreError(mIp4AddressPool.PushBack(addr));
-    }
-
-    LogInfo("IPv4 CIDR for NAT64: %s (actual address pool: %s - %s, %lu addresses)", aCidr.ToString().AsCString(),
-            mIp4AddressPool.Front()->ToString().AsCString(), mIp4AddressPool.Back()->ToString().AsCString(),
-            ToUlong(numberOfHosts));
+    LogInfo("IPv4 CIDR for NAT64: %s (%lu addresses)", aCidr.ToString().AsCString(),
+            ToUlong(mMaxHostId - mMinHostId + 1));
 
     mIp4Cidr = aCidr;
 
@@ -635,7 +632,6 @@ void Translator::ClearIp4Cidr(void)
 
     mIp4Cidr.Clear();
     mActiveMappings.Free();
-    mIp4AddressPool.Clear();
 
     UpdateState();
 

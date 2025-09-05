@@ -239,6 +239,13 @@ public:
     InfoString ToString(void) const;
 
     /**
+     * Gets the CIDR length (in bits).
+     *
+     * @returns The CIDR length.
+     */
+    uint8_t GetLength(void) const { return mLength; }
+
+    /**
      * Gets the prefix as a pointer to a byte array.
      *
      * @returns A pointer to a byte array containing the Prefix.

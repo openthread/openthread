@@ -546,6 +546,23 @@ public:
      */
     Type *GetTail(void) { return AsNonConst(AsConst(this)->GetTail()); }
 
+    /**
+     * Counts and returns the number of entries in the linked list.
+     *
+     * @returns The number of entries in the linked list.
+     */
+    uint32_t CountAllEntries(void) const
+    {
+        uint32_t count = 0;
+
+        for (const Type *entry = mHead; entry != nullptr; entry = entry->GetNext())
+        {
+            count++;
+        }
+
+        return count;
+    }
+
     // The following methods are intended to support range-based `for`
     // loop iteration over the linked-list entries and should not be
     // used directly.

@@ -36,7 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include "common/array.hpp"
 #include "common/locator.hpp"
 #include "common/owning_list.hpp"
 #include "common/pool.hpp"
@@ -284,20 +283,6 @@ private:
     static constexpr uint32_t kPoolSize = OPENTHREAD_CONFIG_NAT64_MAX_MAPPINGS;
 
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
-    // Under `PORT_TRANSLATION_ENABLE`, the translator can operate in
-    // two modes: 1-to-1 address mapping where each IPv6 address gets
-    // a unique IPv4 address from a pool, or having the mappings
-    // share one (or a few) IPv4 addresses and are distinguished by
-    // the translated port numbers.
-    //
-    // This constant defines the maximum allowed CIDR prefix length
-    // for the IPv4 address pool to be considered large enough to use
-    // 1-to-1 address mapping. If the configured prefix length is
-    // greater than this value (e.g., /29, /30), the address pool is
-    // too small, and the translator will fall back to using port
-    // translation.
-    static constexpr uint8_t kAddressMappingCidrLimit = 28;
-
     static constexpr uint16_t kMinTranslationPort = 49152;
     static constexpr uint16_t kMaxTranslationPort = 65535;
 #endif
@@ -323,6 +308,8 @@ private:
         bool       Matches(const TimeMilli aNow) const { return mExpiry < aNow; }
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
         bool Matches(const uint16_t aPort) const { return mTranslatedPortOrId == aPort; }
+#else
+        bool Matches(const Ip4::Address &aIp4Address) const { return mIp4Address == aIp4Address; }
 #endif
 
         Mapping         *mNext;
@@ -343,6 +330,8 @@ private:
     void     UpdateState(void);
     Error    TranslateIcmp4(Message &aMessage, uint16_t aOriginalId);
     Error    TranslateIcmp6(Message &aMessage, uint16_t aTranslatedId);
+    void     GetNextIp4Address(Ip4::Address &aIp4Address);
+    Error    AllocateIp4Address(Ip4::Address &aIp4Address);
     Mapping *AllocateMapping(const Ip6::Headers &aIp6Headers);
     void     HandleTimer(void);
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
@@ -354,16 +343,18 @@ private:
 
     using TranslatorTimer = TimerMilliIn<Translator, &Translator::HandleTimer>;
 
-    State                          mState;
-    uint64_t                       mNextMappingId;
-    Array<Ip4::Address, kPoolSize> mIp4AddressPool;
-    Pool<Mapping, kPoolSize>       mMappingPool;
-    OwningList<Mapping>            mActiveMappings;
-    Ip6::Prefix                    mNat64Prefix;
-    Ip4::Cidr                      mIp4Cidr;
-    TranslatorTimer                mTimer;
-    ProtocolCounters               mCounters;
-    ErrorCounters                  mErrorCounters;
+    State                    mState;
+    uint64_t                 mNextMappingId;
+    Pool<Mapping, kPoolSize> mMappingPool;
+    OwningList<Mapping>      mActiveMappings;
+    Ip6::Prefix              mNat64Prefix;
+    Ip4::Cidr                mIp4Cidr;
+    uint32_t                 mMinHostId;
+    uint32_t                 mMaxHostId;
+    uint32_t                 mNextHostId;
+    TranslatorTimer          mTimer;
+    ProtocolCounters         mCounters;
+    ErrorCounters            mErrorCounters;
 };
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
