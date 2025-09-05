@@ -52,18 +52,15 @@ public:
     explicit NcpSpi(Instance *aInstance);
 
 private:
-    enum
-    {
-        /**
-         * SPI tx and rx buffer size (should fit a max length frame + SPI header).
-         */
-        kSpiBufferSize = OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE,
+    /**
+     * SPI tx and rx buffer size (should fit a max length frame + SPI header).
+     */
+    static constexpr uint16_t kSpiBufferSize = OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE;
 
-        /**
-         * Size of the SPI header (in bytes).
-         */
-        kSpiHeaderSize = Spinel::SpiFrame::kHeaderSize,
-    };
+    /**
+     * Size of the SPI header (in bytes).
+     */
+    static constexpr uint16_t kSpiHeaderSize = Spinel::SpiFrame::kHeaderSize;
 
     enum TxState
     {

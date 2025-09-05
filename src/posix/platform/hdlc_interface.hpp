@@ -230,14 +230,10 @@ private:
     static int ForkPty(const Url::Url &aRadioUrl);
 #endif
 
-    enum
-    {
-        kMaxWaitTime   = 2000, ///< Maximum wait time in Milliseconds for socket to become writable (see `SendFrame`).
-        kResetTimeout  = 5000, ///< Maximum wait time in Milliseconds for file to become ready (see `ResetConnection`).
-        kOpenFileDelay = 50,   ///< Delay between open file calls, in Milliseconds (see `ResetConnection`).
-        kRemoveRcpDelay =
-            2000, ///< Delay for removing RCP device from host OS after hard reset (see `ResetConnection`).
-    };
+    static constexpr uint16_t kMaxWaitTime    = 2000; ///< Max wait time in msec for socket to become writable.
+    static constexpr uint16_t kResetTimeout   = 5000; ///< Max wait time in msec for file to become ready.
+    static constexpr uint16_t kOpenFileDelay  = 50;   ///< Delay between open file calls, in msec.
+    static constexpr uint16_t kRemoveRcpDelay = 2000; ///< Delay for removing RCP device from host OS after hard reset.
 
     ReceiveFrameCallback mReceiveFrameCallback;
     void                *mReceiveFrameContext;

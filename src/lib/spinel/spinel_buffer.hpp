@@ -535,21 +535,18 @@ private:
      *                             Current InFrame (being written)
      */
 
-    enum
-    {
-        kReadByteAfterFrameHasEnded = 0,      // Value returned by ReadByte() when frame has ended.
-        kMessageReadBufferSize      = 16,     // Size of message buffer array `mMessageBuffer`.
-        kUnknownFrameLength         = 0xffff, // Value used when frame length is unknown.
-        kSegmentHeaderSize          = 2,      // Length of the segment header.
-        kSegmentHeaderLengthMask    = 0x3fff, // Bit mask to get the length from the segment header
-        kMaxSegments                = 10,     // Max number of segments allowed in a frame
+    static constexpr uint8_t  kReadByteAfterFrameHasEnded = 0;      // Returned by ReadByte() when frame has ended.
+    static constexpr uint8_t  kMessageReadBufferSize      = 16;     // Size of message buffer array `mMessageBuffer`.
+    static constexpr uint16_t kUnknownFrameLength         = 0xffff; // Value used when frame length is unknown.
+    static constexpr uint16_t kSegmentHeaderSize          = 2;      // Length of the segment header.
+    static constexpr uint16_t kSegmentHeaderLengthMask    = 0x3fff; // Bit mask to get the len from the segment header.
+    static constexpr uint8_t  kMaxSegments                = 10;     // Max number of segments allowed in a frame.
 
-        kSegmentHeaderNoFlag               = 0,         // No flags are set.
-        kSegmentHeaderNewFrameFlag         = (1 << 15), // Indicates that this segment starts a new frame.
-        kSegmentHeaderMessageIndicatorFlag = (1 << 14), // Indicates this segment ends with a Message.
+    static constexpr uint16_t kSegmentHeaderNoFlag               = 0;         // No flags are set.
+    static constexpr uint16_t kSegmentHeaderNewFrameFlag         = (1 << 15); // This segment starts a new frame.
+    static constexpr uint16_t kSegmentHeaderMessageIndicatorFlag = (1 << 14); // This segment ends with a Message.
 
-        kNumPrios = (kPriorityHigh + 1), // Number of priorities.
-    };
+    static constexpr uint8_t kNumPrios = (kPriorityHigh + 1); // Number of priorities.
 
     enum ReadState
     {
