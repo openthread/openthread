@@ -27,6 +27,7 @@
 """
 
 import base64
+
 from tlv import advertised_tlv
 
 
@@ -74,3 +75,71 @@ def base64_string(bindata):
 def load_cert_pem(fn):
     with open(fn, 'r') as file:
         return file.read()
+
+
+def hexdump_ot(text: str, data: bytes, line_prefix: str = "") -> str:
+    """
+    Formats a byte string into a hex dump format similar to OpenThread logs.
+
+    Args:
+        text: String that is printed in the header.
+        data: The byte array to format.
+        line_prefix: A string to prepend to each line of the output, such as a log timestamp.
+
+    Returns:
+        A multi-line string containing the formatted hex dump.
+    """
+    lines = []
+    data_len = len(data)
+
+    # 1. Header
+    header = superimpose_centered_string("=" * 72, f"[{text} len={data_len:03d}]")
+    lines.append(line_prefix + header)
+
+    # 2. Process data in 16-byte chunks
+    chunk_size = 16
+    for i in range(0, data_len, chunk_size):
+        chunk = data[i:i + chunk_size]
+
+        # Split into two 8-byte hex groups
+        hex_part1 = ' '.join(f'{b:02X}' for b in chunk[0:8])
+        hex_part2 = ' '.join(f'{b:02X}' for b in chunk[8:16])
+
+        # Create the ASCII representation (replace non-printables with '.')
+        ascii_part = ''.join(chr(b) if 32 <= b <= 126 else '.' for b in chunk)
+
+        # Format the complete line with fixed-width padding
+        # Width of each hex half: 8 bytes * 2 chars/byte + 7 spaces = 23 characters
+        line = f"| {hex_part1:<23} | {hex_part2:<23} | {ascii_part:<16} |"
+        lines.append(line_prefix + line)
+
+    # 3. Create the footer line
+    footer = "-" * 72
+    lines.append(line_prefix + footer)
+
+    return "\n".join(lines)
+
+
+def superimpose_centered_string(background: str, foreground: str) -> str:
+    """
+    Superimposes a foreground string onto the center of a background string.
+
+    Args:
+        background: The string to use as the background.
+        foreground: The string to place on top of the background.
+
+    Returns:
+        A new string with the foreground centered within the background.
+        If the foreground is longer than or equal to the background's length,
+        the foreground string is returned on its own.
+    """
+    len_bg = len(background)
+    len_fg = len(foreground)
+
+    if len_fg >= len_bg:
+        return foreground
+
+    start_index = (len_bg - len_fg) // 2
+    end_index = start_index + len_fg
+
+    return background[:start_index] + foreground + background[end_index:]

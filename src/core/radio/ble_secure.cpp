@@ -420,6 +420,7 @@ void BleSecure::HandleTlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength
 void BleSecure::HandleTlsReceive(uint8_t *aBuf, uint16_t aLength)
 {
     VerifyOrExit(mReceivedMessage != nullptr);
+    DumpDebg("Rx", aBuf, aLength);
 
     if (!mTlvMode)
     {
@@ -527,6 +528,11 @@ void BleSecure::HandleTransmit(void)
     Error        error   = kErrorNone;
     ot::Message *message = mTransmitQueue.GetHead();
 
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
+    uint16_t len;
+    uint8_t  buf[kTlsDataMaxSize];
+#endif
+
     VerifyOrExit(message != nullptr);
     mTransmitQueue.Dequeue(*message);
 
@@ -536,7 +542,11 @@ void BleSecure::HandleTransmit(void)
     }
 
     SuccessOrExit(error = mTls.Send(*message));
-    LogDebg("Transmit");
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
+    len = message->ReadBytes(message->GetOffset(), buf, sizeof(buf));
+    DumpDebg("Tx", buf, len);
+#endif
 
 exit:
     FreeMessageOnError(message, error);
