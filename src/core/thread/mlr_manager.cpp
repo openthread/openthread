@@ -212,12 +212,12 @@ void MlrManager::UpdateTimeTickerRegistration(void)
 void MlrManager::SendMlr(void)
 {
     Error        error;
-    Mle::Mle    &mle = Get<Mle::Mle>();
     AddressArray addresses;
 
     VerifyOrExit(!mMlrPending, error = kErrorBusy);
-    VerifyOrExit(mle.IsAttached(), error = kErrorInvalidState);
-    VerifyOrExit(mle.IsFullThreadDevice() || mle.GetParent().IsThreadVersion1p1(), error = kErrorInvalidState);
+    VerifyOrExit(Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
+    VerifyOrExit(Get<Mle::Mle>().IsFullThreadDevice() || Get<Mle::Mle>().GetParent().IsThreadVersion1p1(),
+                 error = kErrorInvalidState);
     VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = kErrorInvalidState);
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
@@ -370,7 +370,6 @@ Error MlrManager::SendMlrMessage(const Ip6::Address   *aAddresses,
     OT_UNUSED_VARIABLE(aTimeout);
 
     Error            error   = kErrorNone;
-    Mle::Mle        &mle     = Get<Mle::Mle>();
     Coap::Message   *message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
     Ip6AddressesTlv  addressesTlv;
@@ -400,16 +399,16 @@ Error MlrManager::SendMlrMessage(const Ip6::Address   *aAddresses,
     OT_ASSERT(aTimeout == nullptr);
 #endif
 
-    if (!mle.IsFullThreadDevice() && mle.GetParent().IsThreadVersion1p1())
+    if (!Get<Mle::Mle>().IsFullThreadDevice() && Get<Mle::Mle>().GetParent().IsThreadVersion1p1())
     {
         uint8_t pbbrServiceId;
 
         SuccessOrExit(error = Get<BackboneRouter::Leader>().GetServiceId(pbbrServiceId));
-        mle.GetServiceAloc(pbbrServiceId, messageInfo.GetPeerAddr());
+        Get<Mle::Mle>().GetServiceAloc(pbbrServiceId, messageInfo.GetPeerAddr());
     }
     else
     {
-        messageInfo.GetPeerAddr().SetToRoutingLocator(mle.GetMeshLocalPrefix(),
+        messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
                                                       Get<BackboneRouter::Leader>().GetServer16());
     }
 
@@ -444,9 +443,9 @@ void MlrManager::HandleMlrResponse(Coap::Message *aMessage, const Ip6::MessageIn
 
     error = ParseMlrResponse(aResult, aMessage, status, failedAddresses);
 
-    FinishMlr(error == kErrorNone && status == ThreadStatusTlv::kMlrSuccess, failedAddresses);
+    FinishMlr(error == kErrorNone && status == kMlrSuccess, failedAddresses);
 
-    if (error == kErrorNone && status == ThreadStatusTlv::kMlrSuccess)
+    if (error == kErrorNone && status == kMlrSuccess)
     {
         // keep sending until all multicast addresses are registered.
         ScheduleSend(0);
@@ -477,7 +476,7 @@ Error MlrManager::ParseMlrResponse(Error          aResult,
     Error       error;
     OffsetRange offsetRange;
 
-    aStatus = ThreadStatusTlv::kMlrGeneralFailure;
+    aStatus = kMlrGeneralFailure;
 
     VerifyOrExit(aResult == kErrorNone && aMessage != nullptr, error = kErrorParse);
     VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged, error = kErrorParse);
@@ -497,7 +496,7 @@ Error MlrManager::ParseMlrResponse(Error          aResult,
         }
     }
 
-    VerifyOrExit(aFailedAddresses.IsEmpty() || aStatus != ThreadStatusTlv::kMlrSuccess, error = kErrorParse);
+    VerifyOrExit(aFailedAddresses.IsEmpty() || aStatus != kMlrSuccess, error = kErrorParse);
 
 exit:
     LogMlrResponse(aResult, error, aStatus, aFailedAddresses);
@@ -607,9 +606,7 @@ void MlrManager::Reregister(void)
 
 void MlrManager::UpdateReregistrationDelay(bool aRereg)
 {
-    Mle::Mle &mle = Get<Mle::Mle>();
-
-    bool needSendMlr = (mle.IsFullThreadDevice() || mle.GetParent().IsThreadVersion1p1()) &&
+    bool needSendMlr = (Get<Mle::Mle>().IsFullThreadDevice() || Get<Mle::Mle>().GetParent().IsThreadVersion1p1()) &&
                        Get<BackboneRouter::Leader>().HasPrimary();
 
     if (!needSendMlr)
@@ -697,7 +694,7 @@ void MlrManager::LogMlrResponse(Error aResult, Error aError, uint8_t aStatus, co
     OT_UNUSED_VARIABLE(aFailedAddresses);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-    if (aResult == kErrorNone && aError == kErrorNone && aStatus == ThreadStatusTlv::kMlrSuccess)
+    if (aResult == kErrorNone && aError == kErrorNone && aStatus == kMlrSuccess)
     {
         LogInfo("Receive MLR.rsp OK");
     }

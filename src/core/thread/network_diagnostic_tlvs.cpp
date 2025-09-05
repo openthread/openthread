@@ -124,12 +124,12 @@ void RouterNeighborTlv::InitFrom(const Router &aRouter)
 
 #endif // OPENTHREAD_FTD
 
-void AnswerTlv::Init(uint16_t aIndex, bool aIsLast)
+void AnswerTlv::Init(uint16_t aIndex, IsLastFlag aIsLastFlag)
 {
     SetType(kAnswer);
     SetLength(sizeof(*this) - sizeof(Tlv));
 
-    SetFlagsIndex((aIndex & kIndexMask) | (aIsLast ? kIsLastFlag : 0));
+    SetFlagsIndex((aIndex & kIndexMask) | (aIsLastFlag == kIsLast ? kIsLastFlag : 0));
 }
 
 void MleCountersTlv::Init(const Mle::Counters &aMleCounters)

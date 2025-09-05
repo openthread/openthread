@@ -48,8 +48,23 @@ template <> otError Mdns::Process<Cmd("enable")>(Arg aArgs[])
     otError  error;
     uint32_t infraIfIndex;
 
-    SuccessOrExit(error = aArgs[0].ParseAsUint32(infraIfIndex));
-    VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    if (aArgs[0].IsEmpty())
+    {
+        bool isRunning;
+
+        // If no if-index is provided, we use the Border Router's
+        // infrastructure if-index (if any).
+
+        SuccessOrExit(error = otBorderRoutingGetInfraIfInfo(GetInstancePtr(), &infraIfIndex, &isRunning));
+        VerifyOrExit(isRunning, error = OT_ERROR_INVALID_STATE);
+    }
+    else
+#endif
+    {
+        SuccessOrExit(error = aArgs[0].ParseAsUint32(infraIfIndex));
+        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    }
 
     SuccessOrExit(error = otMdnsSetEnabled(GetInstancePtr(), true, infraIfIndex));
 
@@ -80,6 +95,13 @@ template <> otError Mdns::Process<Cmd("state")>(Arg aArgs[])
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+template <> otError Mdns::Process<Cmd("auto")>(Arg aArgs[])
+{
+    return ProcessEnableDisable(aArgs, otMdnsGetAutoEnableMode, otMdnsSetAutoEnableMode);
+}
+#endif
 
 template <> otError Mdns::Process<Cmd("unicastquestion")>(Arg aArgs[])
 {
@@ -1233,14 +1255,21 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+template <> otError Mdns::Process<Cmd("verboselogging")>(Arg aArgs[])
+{
+    return ProcessEnableDisable(aArgs, otMdnsIsVerboseLoggingEnabled, otMdnsSetVerboseLoggingEnabled);
+}
+#endif
+
 otError Mdns::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                            \
-    {                                                       \
-        aCommandString, &Mdns::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &Mdns::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        CmdEntry("auto"),
+#endif
         CmdEntry("browser"),
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
         CmdEntry("browsers"),
@@ -1282,6 +1311,9 @@ otError Mdns::Process(Arg aArgs[])
 #endif
         CmdEntry("unicastquestion"),
         CmdEntry("unregister"),
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+        CmdEntry("verboselogging"),
+#endif
     };
 
 #undef CmdEntry

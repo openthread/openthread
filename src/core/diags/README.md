@@ -365,6 +365,20 @@ Clear statistics during diagnostics mode.
 Done
 ```
 
+### diag sweep [async] \<length\>
+
+Transmit a single radio frame of a given length for every supported channel.
+
+- async: Use the non-blocking mode.
+- length: The length of packet. The valid range is [3, 127].
+
+```bash
+> diag sweep 100
+Done
+> diag send async 100
+Done
+```
+
 ### diag gpio get \<gpio\>
 
 Get the gpio value.

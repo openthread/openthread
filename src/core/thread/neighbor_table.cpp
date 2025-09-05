@@ -46,15 +46,14 @@ NeighborTable::NeighborTable(Instance &aInstance)
 Neighbor *NeighborTable::FindParent(const Neighbor::AddressMatcher &aMatcher)
 {
     Neighbor *neighbor = nullptr;
-    Mle::Mle &mle      = Get<Mle::Mle>();
 
-    if (mle.GetParent().Matches(aMatcher))
+    if (Get<Mle::Mle>().GetParent().Matches(aMatcher))
     {
-        neighbor = &mle.GetParent();
+        neighbor = &Get<Mle::Mle>().GetParent();
     }
-    else if (mle.GetParentCandidate().Matches(aMatcher))
+    else if (Get<Mle::Mle>().GetParentCandidate().Matches(aMatcher))
     {
-        neighbor = &mle.GetParentCandidate();
+        neighbor = &Get<Mle::Mle>().GetParentCandidate();
     }
 
     return neighbor;
@@ -91,6 +90,13 @@ Neighbor *NeighborTable::FindNeighbor(const Neighbor::AddressMatcher &aMatcher)
         neighbor = FindParent(aMatcher);
     }
 
+#if OPENTHREAD_CONFIG_P2P_ENABLE
+    if (neighbor == nullptr)
+    {
+        neighbor = FindPeer(aMatcher);
+    }
+#endif
+
     return neighbor;
 }
 
@@ -114,6 +120,13 @@ Neighbor *NeighborTable::FindNeighbor(const Mac::Address &aMacAddress, Neighbor:
 {
     return FindNeighbor(Neighbor::AddressMatcher(aMacAddress, aFilter));
 }
+
+#if OPENTHREAD_CONFIG_P2P_ENABLE
+Neighbor *NeighborTable::FindPeer(const Neighbor::AddressMatcher &aMatcher)
+{
+    return Get<PeerTable>().FindPeer(aMatcher);
+}
+#endif
 
 #if OPENTHREAD_FTD
 
@@ -289,7 +302,7 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
         }
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        Get<Utils::HistoryTracker>().RecordNeighborEvent(aEvent, info);
+        Get<HistoryTracker::Local>().RecordNeighborEvent(aEvent, info);
 
         if (mCallback != nullptr)
 #endif

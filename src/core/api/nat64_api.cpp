@@ -58,7 +58,7 @@ otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSett
 
 otError otNat64Send(otInstance *aInstance, otMessage *aMessage)
 {
-    return AsCoreType(aInstance).Get<Nat64::Translator>().SendMessage(AsCoreType(aMessage));
+    return AsCoreType(aInstance).Get<Nat64::Translator>().SendMessage(OwnedPtr<Message>(AsCoreTypePtr(aMessage)));
 }
 
 void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callback aCallback, void *aContext)
@@ -68,29 +68,31 @@ void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callba
 
 void otNat64InitAddressMappingIterator(otInstance *aInstance, otNat64AddressMappingIterator *aIterator)
 {
-    AssertPointerIsNotNull(aIterator);
-
-    AsCoreType(aInstance).Get<Nat64::Translator>().InitAddressMappingIterator(*aIterator);
+    AsCoreType(aIterator).Init(AsCoreType(aInstance));
 }
 
 otError otNat64GetNextAddressMapping(otInstance                    *aInstance,
                                      otNat64AddressMappingIterator *aIterator,
                                      otNat64AddressMapping         *aMapping)
 {
-    AssertPointerIsNotNull(aIterator);
+    OT_UNUSED_VARIABLE(aInstance);
     AssertPointerIsNotNull(aMapping);
 
-    return AsCoreType(aInstance).Get<Nat64::Translator>().GetNextAddressMapping(*aIterator, *aMapping);
+    return AsCoreType(aIterator).GetNext(*aMapping);
 }
 
 void otNat64GetCounters(otInstance *aInstance, otNat64ProtocolCounters *aCounters)
 {
-    AsCoreType(aInstance).Get<Nat64::Translator>().GetCounters(AsCoreType(aCounters));
+    AssertPointerIsNotNull(aCounters);
+
+    *aCounters = AsCoreType(aInstance).Get<Nat64::Translator>().GetCounters();
 }
 
 void otNat64GetErrorCounters(otInstance *aInstance, otNat64ErrorCounters *aCounters)
 {
-    AsCoreType(aInstance).Get<Nat64::Translator>().GetErrorCounters(AsCoreType(aCounters));
+    AssertPointerIsNotNull(aCounters);
+
+    *aCounters = AsCoreType(aInstance).Get<Nat64::Translator>().GetErrorCounters();
 }
 
 otError otNat64GetCidr(otInstance *aInstance, otIp4Cidr *aCidr)
@@ -154,7 +156,8 @@ otError otNat64SynthesizeIp6Address(otInstance *aInstance, const otIp4Address *a
     otError                          err = OT_ERROR_NONE;
     NetworkData::ExternalRouteConfig nat64Prefix;
 
-    VerifyOrExit(AsCoreType(aInstance).Get<NetworkData::Leader>().GetPreferredNat64Prefix(nat64Prefix) == OT_ERROR_NONE,
+    VerifyOrExit(AsCoreType(aInstance).Get<NetworkData::Leader>().FindPreferredNat64Prefix(nat64Prefix) ==
+                     OT_ERROR_NONE,
                  err = OT_ERROR_INVALID_STATE);
     AsCoreType(aIp6Address).SynthesizeFromIp4Address(nat64Prefix.GetPrefix(), AsCoreType(aIp4Address));
 

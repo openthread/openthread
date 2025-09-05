@@ -32,7 +32,7 @@ set -euo pipefail
 OT_TMP_DIR=/tmp/ot-size-report
 readonly OT_TMP_DIR
 
-OT_SHA_NEW=${GITHUB_SHA:-$(git rev-parse HEAD)}
+OT_SHA_NEW="$(git rev-parse HEAD)"
 readonly OT_SHA_NEW
 
 OT_SHA_OLD="${OT_SHA_OLD:-$(git cat-file -p "${OT_SHA_NEW}" | grep 'parent ' | head -n1 | cut -d' ' -f2)}"
@@ -44,8 +44,7 @@ readonly OT_REPORT_FILE_TABLE
 OT_REPORT_FILE_PR="${OT_TMP_DIR}/report_pr"
 readonly OT_REPORT_FILE_TABLE
 
-OT_REPORTER="${OT_SIZE_REPORTER-}"
-readonly OT_REPORTER
+PR_NUMBER="${PR_NUMBER:-}"
 
 setup_arm_gcc_7()
 {
@@ -170,8 +169,10 @@ generate_table_header()
     } >>"${OT_REPORT_FILE_TABLE}"
 
     {
-        printf "# Size Report of **OpenThread**\n"
-        printf "Merging PR into main\n\n"
+        printf "<!-- Size Report of **OpenThread** -->\n"
+        if [[ -n $PR_NUMBER ]]; then
+            printf "> Merging #%s into %s\n\n" "${PR_NUMBER}" "${GITHUB_BASE_REF}"
+        fi
         printf "|  name  |  branch  |  text  | data  | bss  | total |\n"
         printf "| :----: | :------: | -----: | ----: | ---: | ----: |\n"
     } >>"${OT_REPORT_FILE_PR}"
@@ -181,11 +182,6 @@ generate_table_header()
         printf "|  name  |  branch  |  text  | data  | bss  | total |\n"
         printf "| :----: | :------: | -----: | ----: | ---: | ----: |\n"
     } >>"${OT_REPORT_FILE_PR}_libs"
-
-    if [ -n "${OT_REPORTER}" ]; then
-        "${OT_REPORTER}" init OpenThread
-    fi
-
 }
 
 generate_size_diff()
@@ -255,10 +251,6 @@ generate_size_diff()
         printf "| %+d | %+d | %+d | %+d |" "${size_diff[0]}" "${size_diff[1]}" "${size_diff[2]}" "${size_diff[3]}"
         printf "\n"
     } >>"${pr_report_file}"
-
-    if [ -n "${OT_REPORTER}" ]; then
-        "${OT_REPORTER}" size "${old_file}" "${new_file}"
-    fi
 }
 
 generate_report()
@@ -295,10 +287,6 @@ finalize_report()
 
     printf "</details>" >>${OT_REPORT_FILE_PR}_libs
     cat "${OT_REPORT_FILE_PR}_libs" >>${OT_REPORT_FILE_PR}
-
-    if [ -n "${OT_REPORTER}" ]; then
-        "${OT_REPORTER}" post
-    fi
 }
 
 size_nrf52840()

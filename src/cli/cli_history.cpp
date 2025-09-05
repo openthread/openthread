@@ -38,6 +38,7 @@
 #include <string.h>
 
 #include "cli/cli.hpp"
+#include "cli/cli_br.hpp"
 
 namespace ot {
 namespace Cli {
@@ -113,7 +114,7 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Event: Possible values are `Added` or `Removed`.
  * * Address/Prefix Length: Unicast address with its prefix length (in bits).
  * * Origin: Possible value are `thread`, `slaac`, `dhcp6`, or `manual`.
@@ -231,7 +232,7 @@ exit:
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Event: Possible values are `Subscribed` or `Unsubscribed`.
  * * Multicast Address
  * * Origin: Possible values are `Thread` or `Manual`.
@@ -336,7 +337,7 @@ exit:
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Type: `Child` or `Router`.
  * * Event: Possible values are `Added`, `Removed`, or `Changed`.
  * * Extended Address
@@ -488,7 +489,7 @@ exit:
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Event: Possible values are `Added`, `Removed`, `NextHopChanged`, or `CostChanged`.
  * * ID (RLOC16): Router ID and RLOC16 of the router.
  * * Next Hop: Router ID and RLOC16 of the next hop. If there is no next hop,
@@ -626,7 +627,7 @@ exit:
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Role: Device role. Possible values are `router`, `child`, `detached`, or `disabled`.
  * * Mode: MLE link mode. Possible values:
  *     * `-`: no flags set (rx-off-when-idle, minimal Thread device,
@@ -759,7 +760,7 @@ exit:
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Type:
  *     * IPv6 message type, such as `UDP`, `TCP`, `HopOpts`, and `ICMP6` (and its subtype).
  *     * `src`: Source IPv6 address and port number.
@@ -884,7 +885,7 @@ template <> otError History::Process<Cmd("rx")>(Arg aArgs[]) { return ProcessRxT
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Type:
  *     * IPv6 message type, such as `UDP`, `TCP`, `HopOpts`, and `ICMP6` (and its subtype).
  *     * `src`: Source IPv6 address and port number.
@@ -970,7 +971,7 @@ template <> otError History::Process<Cmd("rxtx")>(Arg aArgs[]) { return ProcessR
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Type:
  *     * IPv6 message type, such as `UDP`, `TCP`, `HopOpts`, and `ICMP6` (and its subtype).
  *     * `src`: Source IPv6 address and port number.
@@ -1281,7 +1282,7 @@ void History::OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInf
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Event: Possible values are `Added` or `Removed`.
  * * Prefix
  * * Flags/meaning:
@@ -1377,7 +1378,7 @@ exit:
  * @par
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        `hours`:`minutes`:`seconds`:`milliseconds`
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
  * * Event: Possible values are `Added` or `Removed`.
  * * Route
  * * Flags/meaning:
@@ -1437,16 +1438,485 @@ exit:
     return error;
 }
 
-otError History::Process(Arg aArgs[])
+// clang-format off
+/**
+ * @cli history dnssrpaddr
+ * @code
+ * history dnssrpaddr
+ * | Age                  | Event   | Address                                 | Type      |Port/Seq| Ver | RLOC16 |
+ * +----------------------+---------+-----------------------------------------+-----------+--------+-----+--------+
+ * |         00:00:07.150 | Added   | fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb | uni-local |   1234 |   0 | 0x0000 |
+ * |         00:00:09.351 | Removed | fd00:0:0:0:0:0:0:1234                   | uni-infra |  51525 |   1 | 0x0000 |
+ * |         00:00:28.479 | Added   | fd00:0:0:0:0:0:0:1234                   | uni-infra |  51525 |   1 | 0x0000 |
+ * |         00:00:30.133 | Removed | fd4f:59ae:348a:aa48:0:ff:fe00:fc10      |   anycast |      1 |   2 | 0x0000 |
+ * |         00:01:02.609 | Added   | fd4f:59ae:348a:aa48:0:ff:fe00:fc10      |   anycast |      1 |   2 | 0x0000 |
+ * |         00:01:03.574 | Removed | fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb | uni-local |  50152 |   2 | 0x0000 |
+ * |         00:01:33.631 | Added   | fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb | uni-local |  50152 |   2 | 0x0000 |
+ * Done
+ * @endcode
+ * @code
+ * history dnssrpaddr list
+ * 00:00:19.646 -> event:Added addr:fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb type:uni-local port:1234 ver:0 rloc16:0x0000
+ * 00:00:21.847 -> event:Removed addr:fd00:0:0:0:0:0:0:1234 type:uni-infra port:51525 ver:1 rloc16:0x0000
+ * 00:00:40.975 -> event:Added addr:fd00:0:0:0:0:0:0:1234 type:uni-infra port:51525 ver:1 rloc16:0x0000
+ * 00:00:42.629 -> event:Removed addr:fd4f:59ae:348a:aa48:0:ff:fe00:fc10 type:anycast seqno:1 ver:2 rloc16:0x0000
+ * 00:01:15.105 -> event:Added addr:fd4f:59ae:348a:aa48:0:ff:fe00:fc10 type:anycast seqno:1 ver:2 rloc16:0x0000
+ * 00:01:16.070 -> event:Removed addr:fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb type:uni-local port:50152 ver:2 rloc16:0x0000
+ * 00:01:46.127 -> event:Added addr:fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb type:uni-local port:50152 ver:2 rloc16:0x0000
+ * Done
+ * @endcode
+ * @cparam history dnssrpaddr [@ca{list}] [@ca{num-entries}]
+ * * Use the `list` option to display the output in list format. Otherwise, the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of most-recent entries specified. If this option
+ *   is not used, all stored entries are shown in the output.
+ * @par
+ * Displays the network data DNS/SRP address history in table or list format.
+ * @par
+ * Each table or list entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
+ * * Event: Possible values are `Added` or `Removed`.
+ * * Address of DNS/SRP server.
+ * * Address type: `uni-local` unicast address local (address in server data) or `uni-infra` infrastructure server
+ *   (address in service data), or `anycast`.
+ * * Port or SeqNumber: Port if address is unicast, seq number for anycast address type.
+ * * Version number.
+ * * RLOC16 of the BR adding/removing this entry in Network Data.
+ * @sa otHistoryTrackerIterateDnsSrpAddrHistory
+ */
+// clang-format on
+template <> otError History::Process<Cmd("dnssrpaddr")>(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                               \
-    {                                                          \
-        aCommandString, &History::Process<Cmd(aCommandString)> \
+    otError                               error;
+    bool                                  isList;
+    uint16_t                              numEntries;
+    otHistoryTrackerIterator              iterator;
+    const otHistoryTrackerDnsSrpAddrInfo *info;
+    uint32_t                              entryAge;
+    char                                  ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                                  addrString[OT_IP6_ADDRESS_STRING_SIZE];
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        static const char *const kTitles[]       = {"Age", "Event", "Address", "Type", "Port/Seq", "Ver", "RLOC16"};
+        static const uint8_t     kColumnWidths[] = {22, 9, 41, 11, 8, 5, 8};
+
+        OutputTableHeader(kTitles, kColumnWidths);
     }
 
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        bool isAnycast;
+
+        info = otHistoryTrackerIterateDnsSrpAddrHistory(GetInstancePtr(), &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+
+        otIp6AddressToString(&info->mAddress, addrString, sizeof(addrString));
+
+        isAnycast = info->mType == OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_ANYCAST;
+
+        if (isList)
+        {
+            OutputLine("%s -> event:%s addr:%s type:%s %s:%u ver:%u rloc16:0x%04x", ageString,
+                       Stringify(info->mEvent, kSimpleEventStrings), addrString, DnsSrpAddrTypeToString(info->mType),
+                       isAnycast ? "seqno" : "port", isAnycast ? info->mSequenceNumber : info->mPort, info->mVersion,
+                       info->mRloc16);
+        }
+        else
+        {
+            OutputLine("| %20s | %-7s | %-39s | %9s | %6u | %3u | 0x%04x |", ageString,
+                       Stringify(info->mEvent, kSimpleEventStrings), addrString, DnsSrpAddrTypeToString(info->mType),
+                       isAnycast ? info->mSequenceNumber : info->mPort, info->mVersion, info->mRloc16);
+        }
+    }
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+
+/**
+ * @cli history dhcp6pd
+ * @code
+ * history dhcp6pd
+ * | Age                  | State    | Prefix                                        |
+ * +----------------------+----------+-----------------------------------------------+
+ * |         00:03:20.128 | running  | 2001:dc78:510b:1::/64                         |
+ * |         00:03:30.152 | running  | -                                             |
+ * |         00:03:47.038 | disabled | -                                             |
+ * Done
+ * @endcode
+ * @code
+ * history dhcp6pd list
+ * 00:03:38.172 -> state:running prefix:2001:dc78:510b:1::/64
+ * 00:03:48.191 -> state:running prefix:-
+ * 00:04:05.077 -> state:disabled prefix:-
+ * 00:05:02.857 -> state:running prefix:-
+ * Done
+ * @endcode
+ * @cparam history dhcp6pd [@ca{list}] [@ca{num-entries}]
+ * * Use the `list` option to display the output in list format. Otherwise, the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of most-recent entries specified. If this option
+ *   is not used, all stored entries are shown in the output.
+ * @par
+ * Displays the DHCPv6-PD history in table or list format.
+ * @par
+ * Each table or list entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
+ * * State: Possible states are `disabled`, `stopped`, `running`, `idle`.
+ * * Prefix: The delegated prefix if any. If none `-` is outputted.
+ * @sa otHistoryTrackerIterateDhcp6PdHistory
+ */
+template <> otError History::Process<Cmd("dhcp6pd")>(Arg aArgs[])
+{
+    otError                            error;
+    bool                               isList;
+    uint16_t                           numEntries;
+    otHistoryTrackerIterator           iterator;
+    const otHistoryTrackerDhcp6PdInfo *info;
+    uint32_t                           entryAge;
+    char                               ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                               prefixString[OT_IP6_PREFIX_STRING_SIZE];
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        static const char *const kTitles[]       = {"Age", "State", "Prefix"};
+        static const uint8_t     kColumnWidths[] = {22, 10, 47};
+
+        OutputTableHeader(kTitles, kColumnWidths);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateDhcp6PdHistory(GetInstancePtr(), &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+
+        otIp6PrefixToString(&info->mPrefix, prefixString, sizeof(prefixString));
+
+        OutputLine(isList ? "%s -> state:%s prefix:%s" : "| %20s | %-8s | %-45s |", ageString,
+                   Br::Dhcp6PdStateToString(info->mState), (info->mPrefix.mLength != 0) ? prefixString : "-");
+    }
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+
+/**
+ * @cli history omrprefix
+ * @code
+ * history omrprefix
+ * | Age                  | OMR Prefix                                       | Pref   |IsLocal |
+ * +----------------------+--------------------------------------------------+--------+--------+
+ * |         00:00:10.110 | fd44:dc78:510b:1::/64                            | low    | yes    |
+ * |         00:06:17.604 | 2001:1a:12d5:23ae::/64                           | med    | no     |
+ * |         00:13:11.235 | fd44:dc78:510b:1::/64                            | low    | yes    |
+ * Done
+ * @endcode
+ * @code
+ * history omrprefix list
+ * 00:03:20.379 -> omr-prefix:fd44:dc78:510b:1::/64 prf:low is-local:yes
+ * 00:09:27.873 -> omr-prefix:2001:1a:12d5:23ae::/64 prf:med is-local:no
+ * 00:16:21.504 -> omr-prefix:fd44:dc78:510b:1::/64 prf:low is-local:yes
+ * Done
+ * @endcode
+ * @cparam history omrprefix [@ca{list}] [@ca{num-entries}]
+ * * Use the `list` option to display the output in list format. Otherwise, the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of most-recent entries specified. If this option
+ *   is not used, all stored entries are shown in the output.
+ * @par
+ * Displays the favored OMR prefix history in table or list format.
+ * @par
+ * Each table or list entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
+ * * OMR Prefix: The favored OMR prefix.
+ * * Preference: The prefix preference associated with the OMR prefix (`low`, `med`, `high`).
+ * * IsLocal: Indicates whether the favored OMR prefix is the same as the local one maintained by this BR.
+ * @sa otHistoryTrackerIterateFavoredOmrPrefixHistory
+ */
+template <> otError History::Process<Cmd("omrprefix")>(Arg aArgs[])
+{
+    otError                                 error;
+    bool                                    isList;
+    uint16_t                                numEntries;
+    otHistoryTrackerIterator                iterator;
+    const otHistoryTrackerFavoredOmrPrefix *info;
+    uint32_t                                entryAge;
+    char                                    ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                                    prefixString[OT_IP6_PREFIX_STRING_SIZE];
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        static const char *const kTitles[]       = {"Age", "OMR Prefix", "Pref", "IsLocal"};
+        static const uint8_t     kColumnWidths[] = {22, 50, 8, 8};
+
+        OutputTableHeader(kTitles, kColumnWidths);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateFavoredOmrPrefixHistory(GetInstancePtr(), &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+
+        otIp6PrefixToString(&info->mOmrPrefix, prefixString, sizeof(prefixString));
+
+        OutputLine(isList ? "%s -> omr-prefix:%s prf:%s is-local:%s" : "| %20s | %-48s | %-6s | %-6s |", ageString,
+                   prefixString, PreferenceToString(info->mPreference), info->mIsLocal ? "yes" : "no");
+    }
+
+exit:
+    return error;
+}
+
+/**
+ * @cli history onlinkprefix
+ * @code
+ * history onlinkprefix
+ * | Age                  | On-link Prefix                                   |IsLocal |
+ * +----------------------+--------------------------------------------------+--------+
+ * |         00:00:50.600 | 2001:efc6:75a8:efee::/64                         | no     |
+ * |         00:11:04.327 | fd74:fe69:9f21:437::/64                          | yes    |
+ * Done
+ * @endcode
+ * @code
+ * history onlinkprefix list
+ * 00:00:50.600 -> on-link-prefix:2001:efc6:75a8:efee::/64 is-local:no
+ * 00:11:04.327 -> on-link-prefix:fd74:fe69:9f21:437::/64 is-local:yes
+ * Done
+ * @endcode
+ * @cparam history onlinkprefix [@ca{list}] [@ca{num-entries}]
+ * * Use the `list` option to display the output in list format. Otherwise, the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of most-recent entries specified. If this option
+ *   is not used, all stored entries are shown in the output.
+ * @par
+ * Displays the favored on-link prefix history in table or list format.
+ * @par
+ * Each table or list entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
+ * * On-link Prefix: The favored on-link prefix on AIL.
+ * * IsLocal: Indicates whether the favored on-link prefix is the same as the local one maintained by this BR.
+ * @sa otHistoryTrackerIterateFavoredOnLinkPrefixHistory
+ */
+template <> otError History::Process<Cmd("onlinkprefix")>(Arg aArgs[])
+{
+    otError                                    error;
+    bool                                       isList;
+    uint16_t                                   numEntries;
+    otHistoryTrackerIterator                   iterator;
+    const otHistoryTrackerFavoredOnLinkPrefix *info;
+    uint32_t                                   entryAge;
+    char                                       ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                                       prefixString[OT_IP6_PREFIX_STRING_SIZE];
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        static const char *const kTitles[]       = {"Age", "On-link Prefix", "IsLocal"};
+        static const uint8_t     kColumnWidths[] = {22, 50, 8};
+
+        OutputTableHeader(kTitles, kColumnWidths);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateFavoredOnLinkPrefixHistory(GetInstancePtr(), &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+
+        otIp6PrefixToString(&info->mOnLinkPrefix, prefixString, sizeof(prefixString));
+
+        OutputLine(isList ? "%s -> on-link-prefix:%s is-local:%s" : "| %20s | %-48s | %-6s |", ageString, prefixString,
+                   info->mIsLocal ? "yes" : "no");
+    }
+
+exit:
+    return error;
+}
+
+/**
+ * @cli history ailrouters
+ * @code
+ * history ailrouters
+ * | Age                  | Event   | IPv6 Address                             |R|M|O|S|L|P|D|RtPrf |
+ * +----------------------+---------+------------------------------------------+-+-+-+-+-+-+-+------+
+ * |                      | Favored on-link prefix                             | | | | | | | |      |
+ * +----------------------+----------------------------------------------------+-+-+-+-+-+-+-+------+
+ * |         00:01:35.107 | Changed | fe80:0:0:0:0:0:0:2                       |N|N|N|Y|N|Y|N|      |
+ * |                      | -                                                  | | | | | | | |      |
+ * |         00:05:01.115 | Changed | fe80:0:0:0:0:0:0:2                       |Y|N|N|Y|N|Y|N|      |
+ * |                      | -                                                  | | | | | | | |      |
+ * |         00:08:01.804 | Added   | fe80:0:0:0:0:0:0:2                       |Y|N|N|Y|N|Y|N|      |
+ * |                      | fd99:4cdc:3b3d:56ef::/64                           | | | | | | | |      |
+ * Done
+ * @endcode
+ * @code
+ * history ailrouters list
+ * 00:01:35.161 -> event:Changed address:fe80:0:0:0:0:0:0:2 reachable:N M:N O:N S:Y local:N peer:Y def-route:N prf:
+ *    favored-on-link-prefix:-
+ * 00:05:01.169 -> event:Changed address:fe80:0:0:0:0:0:0:2 reachable:Y M:N O:N S:Y local:N peer:Y def-route:N prf:
+ *    favored-on-link-prefix:-
+ * 00:08:01.858 -> event:Added address:fe80:0:0:0:0:0:0:2 reachable:Y M:N O:N S:Y local:N peer:Y def-route:N prf:
+ *    favored-on-link-prefix:fd99:4cdc:3b3d:56ef::/64
+ * Done
+ * @endcode
+ * @cparam history ailrouters [@ca{list}] [@ca{num-entries}]
+ * * Use the `list` option to display the output in list format. Otherwise, the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of most-recent entries specified. If this option
+ *   is not used, all stored entries are shown in the output.
+ * @par
+ * Displays the AIL routers history in table or list format.
+ * @par
+ * Each table or list entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`.`milliseconds`
+ * * The event, possible values are `Added`, `Changed`, `Removed`.
+ * * The IPv6 address of the AIL router.
+ * * Flags
+ *   * `R`: Indicates whether or not this router is reachable.
+ *   * `M`: The Managed Address Config flag (from the Router Advertisement (RA) header).
+ *   * `O`: The Other Config flag (from the RA header).
+ *   * `S`: The SNAC Router flag (from the RA header).
+ *   * `L`: Indicates whether or not this router is the local device (this BR).
+ *   * `P`: Indicates whether or not this router is a peer BR connected to same Thread mesh.
+ *   * `D`: Indicates whether or not this router provides a default route.
+ * * The default route preference (`high`, `med`, `low`) if this router provides a default route, otherwise `-`.
+ * * The favored on-link prefix advertised by this router if any. If none, `-` is shown.
+ * @sa otHistoryTrackerIterateAilRoutersHistory
+ */
+template <> otError History::Process<Cmd("ailrouters")>(Arg aArgs[])
+{
+    otError                          error;
+    bool                             isList;
+    uint16_t                         numEntries;
+    otHistoryTrackerIterator         iterator;
+    const otHistoryTrackerAilRouter *info;
+    uint32_t                         entryAge;
+    char                             ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                             addrString[OT_IP6_ADDRESS_STRING_SIZE];
+    char                             prefixString[OT_IP6_PREFIX_STRING_SIZE];
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        static const char *const kTitles1[]    = {"Age", "Event", "IPv6 Address", "R", "M", "O", "S", "L",
+                                                  "P",   "D",     "RtPrf"};
+        static const uint8_t     kColWidths1[] = {22, 9, 42, 1, 1, 1, 1, 1, 1, 1, 6};
+
+        static const char *const kTitles2[]    = {"", "Favored on-link prefix", "", "", "", "", "", "", "", ""};
+        static const uint8_t     kColWidths2[] = {22, 52, 1, 1, 1, 1, 1, 1, 1, 6};
+
+        OutputTableHeader(kTitles1, kColWidths1);
+        OutputTableHeader(kTitles2, kColWidths2);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateAilRoutersHistory(GetInstancePtr(), &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+
+        otIp6AddressToString(&info->mAddress, addrString, sizeof(addrString));
+        otIp6PrefixToString(&info->mFavoredOnLinkPrefix, prefixString, sizeof(prefixString));
+
+        OutputLine(isList ? "%s -> event:%s address:%s reachable:%c M:%c O:%c S:%c local:%c peer:%c def-route:%c prf:%s"
+                          : "| %20s | %-7s | %-40s |%c|%c|%c|%c|%c|%c|%c| %4s |",
+                   ageString, AilRouterEventToString(info->mEvent), addrString, info->mIsReachable ? 'Y' : 'N',
+                   info->mManagedAddressConfigFlag ? 'Y' : 'N', info->mOtherConfigFlag ? 'Y' : 'N',
+                   info->mSnacRouterFlag ? 'Y' : 'N', info->mIsLocalDevice ? 'Y' : 'N', info->mIsPeerBr ? 'Y' : 'N',
+                   info->mProvidesDefaultRoute ? 'Y' : 'N',
+                   info->mProvidesDefaultRoute ? PreferenceToString(info->mDefRoutePreference) : "-");
+
+        OutputLine(isList ? "   %sfavored-on-link-prefix:%s" : "| %20s | %-50s | | | | | | | |      |", "",
+                   info->mFavoredOnLinkPrefix.mLength == 0 ? "-" : prefixString);
+    }
+
+exit:
+    return error;
+}
+
+const char *History::AilRouterEventToString(otHistoryTrackerAilRouterEvent aEvent)
+{
+    static const char *const kAilRouterEventStrings[] = {
+        "Added",   /* (0) OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_ADDED */
+        "Changed", /* (1) OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_CHANGED */
+        "Removed", /* (2) OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_REMOVED */
+    };
+
+    static_assert(OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_ADDED == 0, "AIL_ROUTER_EVENT_ADDED is incorrect");
+    static_assert(OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_CHANGED == 1, "AIL_ROUTER_EVENT_CHANGED is incorrect");
+    static_assert(OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_REMOVED == 2, "AIL_ROUTER_EVENT_REMOVED is incorrect");
+
+    return Stringify(aEvent, kAilRouterEventStrings, "--");
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+const char *History::DnsSrpAddrTypeToString(otHistoryTrackerDnsSrpAddrType aType)
+{
+    static const char *const kAddrTypeStrings[] = {
+        "uni-local", // (0) OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_UNICAST_LOCAL
+        "uni-infra", // (1) OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_UNICAST_INFRA
+        "anycast",   // (2) OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_ANYCAST
+    };
+
+    static_assert(0 == OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_UNICAST_LOCAL, "ADDR_TYPE_UNICAST_LOCAL is incorrect");
+    static_assert(1 == OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_UNICAST_INFRA, "ADDR_TYPE_UNICAST_INFRA is incorrect");
+    static_assert(2 == OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_ANYCAST, "ADDR_TYPE_ANYCAST is incorrect");
+
+    return Stringify(aType, kAddrTypeStrings, "--");
+}
+
+otError History::Process(Arg aArgs[])
+{
+#define CmdEntry(aCommandString) {aCommandString, &History::Process<Cmd(aCommandString)>}
+
     static constexpr Command kCommands[] = {
-        CmdEntry("ipaddr"), CmdEntry("ipmaddr"), CmdEntry("neighbor"), CmdEntry("netinfo"), CmdEntry("prefix"),
-        CmdEntry("route"),  CmdEntry("router"),  CmdEntry("rx"),       CmdEntry("rxtx"),    CmdEntry("tx"),
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        CmdEntry("ailrouters"),
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+        CmdEntry("dhcp6pd"),
+#endif
+#endif
+        CmdEntry("dnssrpaddr"), CmdEntry("ipaddr"),       CmdEntry("ipmaddr"),
+        CmdEntry("neighbor"),   CmdEntry("netinfo"),
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        CmdEntry("omrprefix"),  CmdEntry("onlinkprefix"),
+#endif
+        CmdEntry("prefix"),     CmdEntry("route"),        CmdEntry("router"),
+        CmdEntry("rx"),         CmdEntry("rxtx"),         CmdEntry("tx"),
     };
 
 #undef CmdEntry

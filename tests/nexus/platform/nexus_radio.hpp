@@ -58,6 +58,8 @@ struct Radio
         uint8_t mPsduBuffer[kMaxFrameSize];
     };
 
+    Radio(void);
+    void Reset(void);
     bool CanReceiveOnChannel(uint8_t aChannel) const;
     bool Matches(const Mac::Address &aAddress, Mac::PanId aPanId) const;
     bool HasFramePendingFor(const Mac::Address &aAddress) const;

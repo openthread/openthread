@@ -263,12 +263,14 @@ void Message::Free(void)
 
 Error Message::SetLength(uint16_t aLength)
 {
-    Error    error              = kErrorNone;
-    uint16_t totalLengthRequest = GetReserved() + aLength;
+    Error    error;
+    uint16_t size;
 
-    VerifyOrExit(totalLengthRequest >= GetReserved(), error = kErrorInvalidArgs);
+    VerifyOrExit(CanAddSafely<uint16_t>(GetReserved(), aLength), error = kErrorNoBufs);
 
-    SuccessOrExit(error = ResizeMessage(totalLengthRequest));
+    size = GetReserved() + aLength;
+    SuccessOrExit(error = ResizeMessage(size));
+
     GetMetadata().mLength = aLength;
 
     // Correct the offset in case shorter length is set.
@@ -368,10 +370,12 @@ void Message::InvokeTxCallback(Error aError)
 
 Error Message::AppendBytes(const void *aBuf, uint16_t aLength)
 {
-    Error    error     = kErrorNone;
+    Error    error;
     uint16_t oldLength = GetLength();
 
-    SuccessOrExit(error = SetLength(GetLength() + aLength));
+    VerifyOrExit(CanAddSafely<uint16_t>(oldLength, aLength), error = kErrorNoBufs);
+
+    SuccessOrExit(error = SetLength(oldLength + aLength));
     WriteBytes(oldLength, aBuf, aLength);
 
 exit:
@@ -389,7 +393,11 @@ Error Message::AppendBytesFromMessage(const Message &aMessage, uint16_t aOffset,
     uint16_t writeOffset = GetLength();
     Chunk    chunk;
 
+    VerifyOrExit(CanAddSafely<uint16_t>(aOffset, aLength), error = kErrorInvalidArgs);
+
     VerifyOrExit(aMessage.GetLength() >= aOffset + aLength, error = kErrorParse);
+
+    VerifyOrExit(CanAddSafely<uint16_t>(GetLength(), aLength), error = kErrorNoBufs);
     SuccessOrExit(error = SetLength(GetLength() + aLength));
 
     aMessage.GetFirstChunk(aOffset, aLength, chunk);
@@ -531,7 +539,7 @@ void Message::GetFirstChunk(uint16_t aOffset, uint16_t &aLength, Chunk &aChunk) 
 
     VerifyOrExit(aOffset < GetLength(), aChunk.SetLength(0));
 
-    if (aOffset + aLength >= GetLength())
+    if (!CanAddSafely<uint16_t>(aOffset, aLength) || (aOffset + aLength >= GetLength()))
     {
         aLength = GetLength() - aOffset;
     }
@@ -700,6 +708,7 @@ void Message::WriteBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength)
     const uint8_t *bufPtr = reinterpret_cast<const uint8_t *>(aBuf);
     MutableChunk   chunk;
 
+    OT_ASSERT(CanAddSafely<uint16_t>(aOffset, aLength));
     OT_ASSERT(aOffset + aLength <= GetLength());
 
     GetFirstChunk(aOffset, aLength, chunk);

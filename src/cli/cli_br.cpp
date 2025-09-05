@@ -69,6 +69,30 @@ exit:
 }
 
 /**
+ * @cli br infraif
+ * @code
+ * br infraif
+ * if-index:2, is-running:yes
+ * Done
+ * @endcode
+ * @par
+ * Gets the interface index and running state of the configured infrastructure interface.
+ */
+template <> otError Br::Process<Cmd("infraif")>(Arg aArgs[])
+{
+    otError  error = OT_ERROR_NONE;
+    uint32_t ifIndex;
+    bool     isRunning;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    SuccessOrExit(error = otBorderRoutingGetInfraIfInfo(GetInstancePtr(), &ifIndex, &isRunning));
+    OutputLine("if-index:%lu, is-running:%s", ToUlong(ifIndex), isRunning ? "yes" : "no");
+
+exit:
+    return error;
+}
+
+/**
  * @cli br enable
  * @code
  * br enable
@@ -743,7 +767,62 @@ exit:
     return error;
 }
 
+/**
+ * @cli br ifaddrs
+ * @code
+ * br ifaddrs
+ * fe80::896:228b:4ae0:8609, sec-since-use:15
+ * Done
+ * @endcode
+ * @par
+ * Get the infrastructure interface addresses. These are addresses used by the BR itself, for example, when sending
+ * Router Advertisements.
+ * Info per entry:
+ * - IPv6 address
+ * - Seconds since the last RA was sent from this BR using this address.
+ * @sa otBorderRoutingGetNextIfAddrEntry
+ */
+template <> otError Br::Process<Cmd("ifaddrs")>(Arg aArgs[])
+{
+    otError                            error = OT_ERROR_NONE;
+    otBorderRoutingPrefixTableIterator iterator;
+    otBorderRoutingIfAddrEntry         entry;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    otBorderRoutingPrefixTableInitIterator(GetInstancePtr(), &iterator);
+
+    while (otBorderRoutingGetNextIfAddrEntry(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
+    {
+        char string[OT_IP6_ADDRESS_STRING_SIZE];
+
+        otIp6AddressToString(&entry.mAddress, string, sizeof(string));
+        OutputLine("%s, sec-since-use:%lu", string, ToUlong(entry.mSecSinceLastUse));
+    }
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+
+const char *Br::Dhcp6PdStateToString(otBorderRoutingDhcp6PdState aState)
+{
+    static const char *const kDhcpv6PdStateStrings[] = {
+        "disabled", // (0) OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED
+        "stopped",  // (1) OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED
+        "running",  // (2) OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING
+        "idle",     // (3) OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE
+    };
+
+    static_assert(0 == OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED, "DHCP6_PD_STATE_DISABLED value is incorrect");
+    static_assert(1 == OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED, "DHCP6_PD_STATE_STOPPED value is incorrect");
+    static_assert(2 == OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING, "DHCP6_PD_STATE_RUNNING value is incorrect");
+    static_assert(3 == OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE, "DHCP6_PD_STATE_IDLE value is incorrect");
+
+    return Stringify(aState, kDhcpv6PdStateStrings);
+}
+
 template <> otError Br::Process<Cmd("pd")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -777,23 +856,7 @@ template <> otError Br::Process<Cmd("pd")>(Arg aArgs[])
      */
     else if (aArgs[0] == "state")
     {
-        static const char *const kDhcpv6PdStateStrings[] = {
-            "disabled", // (0) OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED
-            "stopped",  // (1) OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED
-            "running",  // (2) OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING
-            "idle",     // (3) OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE
-        };
-
-        static_assert(0 == OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED,
-                      "OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED value is not expected!");
-        static_assert(1 == OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED,
-                      "OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED value is not expected!");
-        static_assert(2 == OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING,
-                      "OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING value is not expected!");
-        static_assert(3 == OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE,
-                      "OT_BORDER_ROUTING_DHCP6_PD_STATE_IDLE value is not expected!");
-
-        OutputLine("%s", Stringify(otBorderRoutingDhcp6PdGetState(GetInstancePtr()), kDhcpv6PdStateStrings));
+        OutputLine("%s", Dhcp6PdStateToString(otBorderRoutingDhcp6PdGetState(GetInstancePtr())));
     }
     /**
      * @cli br pd omrprefix
@@ -1082,17 +1145,13 @@ exit:
 
 otError Br::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                          \
-    {                                                     \
-        aCommandString, &Br::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &Br::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
         CmdEntry("counters"),
 #endif
-        CmdEntry("disable"),
-        CmdEntry("enable"),
+        CmdEntry("disable"),     CmdEntry("enable"),    CmdEntry("ifaddrs"),      CmdEntry("infraif"),
         CmdEntry("init"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
         CmdEntry("multiail"),
@@ -1100,22 +1159,15 @@ otError Br::Process(Arg aArgs[])
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         CmdEntry("nat64prefix"),
 #endif
-        CmdEntry("omrconfig"),
-        CmdEntry("omrprefix"),
-        CmdEntry("onlinkprefix"),
+        CmdEntry("omrconfig"),   CmdEntry("omrprefix"), CmdEntry("onlinkprefix"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
         CmdEntry("pd"),
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
         CmdEntry("peers"),
 #endif
-        CmdEntry("prefixtable"),
-        CmdEntry("raoptions"),
-        CmdEntry("rdnsstable"),
-        CmdEntry("rioprf"),
-        CmdEntry("routeprf"),
-        CmdEntry("routers"),
-        CmdEntry("state"),
+        CmdEntry("prefixtable"), CmdEntry("raoptions"), CmdEntry("rdnsstable"),   CmdEntry("rioprf"),
+        CmdEntry("routeprf"),    CmdEntry("routers"),   CmdEntry("state"),
     };
 
 #undef CmdEntry

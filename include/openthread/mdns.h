@@ -170,7 +170,7 @@ typedef struct otMdnsLocalHostAddress
  * @param[in] aInfraIfIndex  The network interface index for mDNS operation. Value is ignored when disabling
  *
  * @retval OT_ERROR_NONE     Enabled or disabled the mDNS module successfully.
- * @retval OT_ERROR_ALREADY  mDNS is already enabled on an enable request or is already disabled on a disable request.
+ * @retval OT_ERROR_FAILED   Failed to enable/disable mDNS.
  */
 otError otMdnsSetEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex);
 
@@ -183,6 +183,39 @@ otError otMdnsSetEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfI
  * @retval FALSE   The mDNS module is disabled.
  */
 bool otMdnsIsEnabled(otInstance *aInstance);
+
+/**
+ * Enables or disables the mDNS auto-enable mode.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE`.
+ *
+ * When this mode is enabled, the mDNS module uses the same infrastructure network interface as the Border Routing
+ * manager. The mDNS module is then automatically enabled or disabled based on the operational state of that interface
+ * (see `otBorderRoutingInit()` and `otPlatInfraIfStateChanged()`).
+ *
+ * It is recommended to use the auto-enable mode on Border Routers. The default state of this mode at initialization
+ * is controlled by the `OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF` configuration.
+ *
+ * The auto-enable mode can be disabled by a call to `otMdnsSetAutoEnableMode(false)` or by an explicit call to
+ * `otMdnsSetEnabled()`. Deactivating the auto-enable mode with `otMdnsSetAutoEnableMode(false)` will not change the
+ * current operational state of the mDNS module (e.g., if it is currently enabled, it remains enabled).
+ *
+ * @param[in] aInstance   The OpenThread instance.
+ * @param[in] aEnable     A boolean to enable or disable the auto-enable mode.
+ */
+void otMdnsSetAutoEnableMode(otInstance *aInstance, bool aEnable);
+
+/**
+ * Indicates whether the auto-enable mode is enabled or disabled.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE`.
+ *
+ * @param[in] aInstance   The OpenThread instance.
+ *
+ * @retval TRUE   The auto-enable mode is enabled.
+ * @retval FALSE  The auto-enable mode is disabled.
+ */
+bool otMdnsGetAutoEnableMode(otInstance *aInstance);
 
 /**
  * Sets whether the mDNS module is allowed to send questions requesting unicast responses referred to as "QU" questions.
@@ -1018,6 +1051,38 @@ otError otMdnsGetNextRecordQuerier(otInstance          *aInstance,
                                    otMdnsIterator      *aIterator,
                                    otMdnsRecordQuerier *aQuerier,
                                    otMdnsCacheInfo     *aInfo);
+
+/**
+ * Enables or disables verbose logging for the mDNS module at run-time.
+ *
+ * Requires `OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE`.
+ *
+ * The initial state of verbose logging (enabled or disabled at startup) is determined by the configuration
+ * `OPENTHREAD_CONFIG_MULTICAST_DEFAULT_DNS_VERBOSE_LOGGING_STATE`.
+ *
+ * When enabled, the mDNS module emits verbose logs for every sent or received mDNS message, including the header and
+ * all question and resource records. These logs are generated regardless of the current log level configured on the
+ * device.
+ *
+ * This feature can generate a large volume of logs, so its use is recommended only during development, integration,
+ * or debugging.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aEnable    TRUE to enable verbose logging, FALSE to disable.
+ */
+void otMdnsSetVerboseLoggingEnabled(otInstance *aInstance, bool aEnable);
+
+/**
+ * Indicates whether verbose logging is enabled for the mDNS module.
+ *
+ * Requires `OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE`.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   If verbose logging is enabled.
+ * @retval FALSE  If verbose logging is disabled.
+ */
+bool otMdnsIsVerboseLoggingEnabled(otInstance *aInstance);
 
 /**
  * @}

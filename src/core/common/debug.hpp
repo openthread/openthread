@@ -55,7 +55,10 @@
 #define OT_ASSERT(cond)                            \
     do                                             \
     {                                              \
-        if (!(cond))                               \
+        if (cond)                                  \
+        {                                          \
+        }                                          \
+        else                                       \
         {                                          \
             otPlatAssertFail(FILE_NAME, __LINE__); \
             while (1)                              \
@@ -75,7 +78,10 @@
 #define OT_ASSERT(cond) \
     do                  \
     {                   \
-        if (!(cond))    \
+        if (cond)       \
+        {               \
+        }               \
+        else            \
         {               \
             while (1)   \
             {           \

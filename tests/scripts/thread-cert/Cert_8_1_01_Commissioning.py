@@ -65,12 +65,12 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
     TOPOLOGY = {
         COMMISSIONER: {
             'name': 'COMMISSIONER',
-            'networkkey': '00112233445566778899aabbccddeeff',
+            'network_key': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
         JOINER: {
             'name': 'JOINER',
-            'networkkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
+            'network_key': 'deadbeefdeadbeefdeadbeefdeadbeef',
             'mode': 'rdn',
         },
     }

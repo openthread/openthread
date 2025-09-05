@@ -274,6 +274,22 @@ Error Frame::ValidatePsdu(void) const
     uint8_t index = FindPayloadIndex();
 
     VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
+
+    if (IsMacCommand() && IsVersion2015())
+    {
+        // The treatment of the Command ID field in a MAC command frame
+        // is version-dependent. In the 2015 spec, it is part of the
+        // encrypted payload, while in earlier versions, it is part of
+        // the MAC header.
+        //
+        // `FindPayloadIndex()` accounts for this difference and returns
+        // the starting index of the payload. To correctly validate a
+        // 2015 frame, we must ensure it is long enough to contain the
+        // Command ID, so we include its size in the length check.
+
+        index += kCommandIdSize;
+    }
+
     VerifyOrExit((index + GetFooterLength()) <= mLength, error = kErrorParse);
 
 exit:
@@ -826,7 +842,18 @@ Error Frame::GetCommandId(uint8_t &aCommandId) const
 
     VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
-    aCommandId = mPsdu[IsVersion2015() ? index : (index - 1)];
+    // The treatment of the Command ID field in a MAC command frame
+    // is version-dependent. In the 2015 spec, it is part of the
+    // encrypted payload, while in earlier versions, it is part of
+    // the MAC header. `FindPayloadIndex() accounts for both cases.
+
+    if (!IsVersion2015())
+    {
+        index -= kCommandIdSize;
+    }
+
+    VerifyOrExit(index + kCommandIdSize + GetFooterLength() <= mLength, error = kErrorParse);
+    aCommandId = mPsdu[index];
 
 exit:
     return error;
@@ -837,7 +864,7 @@ bool Frame::IsDataRequestCommand(void) const
     bool    isDataRequest = false;
     uint8_t commandId;
 
-    VerifyOrExit(GetType() == kTypeMacCmd);
+    VerifyOrExit(IsMacCommand());
     SuccessOrExit(GetCommandId(commandId));
     isDataRequest = (commandId == kMacCmdDataRequest);
 
@@ -1078,8 +1105,17 @@ uint8_t Frame::FindPayloadIndex(void) const
     }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
-    if (!IsVersion2015() && (GetFrameControlField() & kFcfFrameTypeMask) == kTypeMacCmd)
+    if (IsMacCommand() && !IsVersion2015())
     {
+        // The treatment of the Command ID field in a MAC command frame
+        // is version-dependent. In IEEE 802.15.4-2015, it is part of
+        // the payload and therefore encrypted. In earlier versions, it
+        // is part of the MAC header and not encrypted.
+        //
+        // This adjusts the index to point to the start of the payload
+        // for pre-2015 frames. The `GetCommandId()` method also
+        // accounts for this version-specific difference.
+
         index += kCommandIdSize;
     }
 
@@ -1536,9 +1572,8 @@ Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMate
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
 #else
-    // For fuzz tests, execute AES but do not alter the payload
-    uint8_t fuzz[OT_RADIO_FRAME_MAX_SIZE];
-    aesCcm.Payload(fuzz, GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
+    // For fuzz tests, execute AES but do not alter the payload. A large
+    aesCcm.Payload(nullptr, GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
 #endif
     aesCcm.Finalize(tag);
 

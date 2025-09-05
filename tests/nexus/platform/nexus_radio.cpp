@@ -249,6 +249,22 @@ otError otPlatRadioAddCalibratedPower(otInstance *, uint8_t, int16_t, const uint
 //---------------------------------------------------------------------------------------------------------------------
 // Radio
 
+Radio::Radio(void)
+    : mState(kStateDisabled)
+    , mPromiscuous(false)
+    , mSrcMatchEnabled(false)
+{
+}
+
+void Radio::Reset(void)
+{
+    mState           = kStateDisabled;
+    mPromiscuous     = false;
+    mSrcMatchEnabled = false;
+    mSrcMatchShortEntries.Clear();
+    mSrcMatchExtEntries.Clear();
+}
+
 bool Radio::CanReceiveOnChannel(uint8_t aChannel) const
 {
     bool canRx = false;

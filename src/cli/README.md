@@ -73,6 +73,7 @@ Done
 - [log](#log-filename-filename)
 - [mac](#mac-altshortaddr)
 - [macfilter](#macfilter)
+- [mdns](README_MDNS.md)
 - [meshdiag](#meshdiag-topology-ip6-addrs-children)
 - [mliid](#mliid-iid)
 - [mlr](#mlr-reg-ipaddr--timeout)
@@ -88,6 +89,7 @@ Done
 - [networkname](#networkname)
 - [networktime](#networktime)
 - [nexthop](#nexthop)
+- [p2p](#p2p-link-extaddr-extaddr)
 - [panid](#panid)
 - [parent](#parent)
 - [parentpriority](#parentpriority)
@@ -2594,6 +2596,27 @@ rloc16:0x7c00 ext-addr:4ed24fceec9bf6d3 ver:4
 Done
 ```
 
+### meshdiag responsetimeout [\<timeout-msec\>]
+
+Get or set the response timeout value (in milliseconds).
+
+The default response timeout value is specified by `OPENTHREAD_CONFIG_MESH_DIAG_RESPONSE_TIMEOUT` configuration.
+
+Changing the response timeout does not impact any ongoing query. The given timeout value will be clamped to stay between 50 milliseconds and 10 minutes.
+
+```bash
+> responsetimeout
+5000
+Done
+
+> responsetimeout 7000
+Done
+
+> responsetimeout
+7000
+Done
+```
+
 ### mliid \<iid\>
 
 Set the Mesh Local IID.
@@ -3088,6 +3111,17 @@ Done
 
 nexthop 0x8001
 0x2000 cost:3
+Done
+```
+
+### p2p link extaddr \<extaddr\>
+
+Wakes up the peer identified by the extended address and establishes a peer-to-peer link with the peer.
+
+`OPENTHREAD_CONFIG_P2P_ENABLE` and `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` are required.
+
+```bash
+> p2p link extaddr dead00beef00cafe
 Done
 ```
 

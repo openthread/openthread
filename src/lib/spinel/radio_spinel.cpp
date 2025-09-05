@@ -179,10 +179,6 @@ exit:
 
 void RadioSpinel::SetCallbacks(const struct RadioSpinelCallbacks &aCallbacks)
 {
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-    assert(aCallbacks.mDiagReceiveDone != nullptr);
-    assert(aCallbacks.mDiagTransmitDone != nullptr);
-#endif
     assert(aCallbacks.mEnergyScanDone != nullptr);
     assert(aCallbacks.mReceiveDone != nullptr);
     assert(aCallbacks.mTransmitDone != nullptr);
@@ -756,32 +752,14 @@ void RadioSpinel::RadioReceive(void)
         }
     }
 
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-    if (otPlatDiagModeGet())
-    {
-        mCallbacks.mDiagReceiveDone(mInstance, &mRxRadioFrame, OT_ERROR_NONE);
-    }
-    else
-#endif
-    {
-        mCallbacks.mReceiveDone(mInstance, &mRxRadioFrame, OT_ERROR_NONE);
-    }
+    mCallbacks.mReceiveDone(mInstance, &mRxRadioFrame, OT_ERROR_NONE);
 exit:
     return;
 }
 
 void RadioSpinel::TransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
 {
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-    if (otPlatDiagModeGet())
-    {
-        mCallbacks.mDiagTransmitDone(mInstance, aFrame, aError);
-    }
-    else
-#endif
-    {
-        mCallbacks.mTransmitDone(mInstance, aFrame, aAckFrame, aError);
-    }
+    mCallbacks.mTransmitDone(mInstance, aFrame, aAckFrame, aError);
 }
 
 void RadioSpinel::ProcessRadioStateMachine(void)
@@ -1988,7 +1966,7 @@ exit:
     LogIfFail("Error calculating RCP time offset: %s", error);
 }
 
-uint64_t RadioSpinel::GetNow(void) { return (mIsTimeSynced) ? (otPlatTimeGet() + mRadioTimeOffset) : UINT64_MAX; }
+uint64_t RadioSpinel::GetNow(void) const { return (mIsTimeSynced) ? (otPlatTimeGet() + mRadioTimeOffset) : UINT64_MAX; }
 
 uint32_t RadioSpinel::GetBusSpeed(void) const { return GetSpinelDriver().GetSpinelInterface()->GetBusSpeed(); }
 

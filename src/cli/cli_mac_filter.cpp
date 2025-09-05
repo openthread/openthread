@@ -445,10 +445,7 @@ exit:
 
 otError MacFilter::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                                 \
-    {                                                            \
-        aCommandString, &MacFilter::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &MacFilter::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
         CmdEntry("addr"),

@@ -68,7 +68,7 @@
  * @returns The aligned pointer.
  */
 #define OT_ALIGN(aPointer, aAlignment) \
-    ((void *)(((uintptr_t)(aPointer) + (aAlignment)-1UL) & ~((uintptr_t)(aAlignment)-1UL)))
+    ((void *)(((uintptr_t)(aPointer) + (aAlignment) - 1UL) & ~((uintptr_t)(aAlignment) - 1UL)))
 
 // Calculates the aligned variable size.
 #define OT_ALIGNED_VAR_SIZE(size, align_type) (((size) + (sizeof(align_type) - 1)) / sizeof(align_type))

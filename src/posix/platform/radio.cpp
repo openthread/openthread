@@ -92,10 +92,6 @@ void Radio::Init(const char *aUrl)
     VerifyOrDie(mRadioUrl.GetPath() != nullptr, OT_EXIT_INVALID_ARGUMENTS);
 
     memset(&callbacks, 0, sizeof(callbacks));
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-    callbacks.mDiagReceiveDone  = otPlatDiagRadioReceiveDone;
-    callbacks.mDiagTransmitDone = otPlatDiagRadioTransmitDone;
-#endif // OPENTHREAD_CONFIG_DIAG_ENABLE
     callbacks.mEnergyScanDone    = otPlatRadioEnergyScanDone;
     callbacks.mBusLatencyChanged = otPlatRadioBusLatencyChanged;
     callbacks.mReceiveDone       = otPlatRadioReceiveDone;

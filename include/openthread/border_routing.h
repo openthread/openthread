@@ -155,6 +155,15 @@ typedef struct otBorderRoutingPeerBorderRouterEntry
 } otBorderRoutingPeerBorderRouterEntry;
 
 /**
+ * Represents an infra-if IPv6 address entry (an address used by this BR itself on the AIL).
+ */
+typedef struct otBorderRoutingIfAddrEntry
+{
+    otIp6Address mAddress;         ///< The IPv6 address.
+    uint32_t     mSecSinceLastUse; ///< Seconds since the last RA was sent from this BR using this address.
+} otBorderRoutingIfAddrEntry;
+
+/**
  * Represents a group of data of platform-generated RA messages processed.
  */
 typedef struct otPdProcessedRaInfo
@@ -220,6 +229,25 @@ typedef enum
  * @sa otBorderRoutingSetEnabled.
  */
 otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool aInfraIfIsRunning);
+
+/**
+ * Gets the interface index and running state of the configured infrastructure interface.
+ *
+ * @note The running state in @p aInfraIfIsRunning reflects the Border Routing Manager's perspective. This state is set
+ * when `otBorderRoutingInit()` is called and is subsequently updated by the platform signaling changes via
+ * `otPlatInfraIfStateChanged()`.
+ *
+ * @param[in]  aInstance          A pointer to an OpenThread instance.
+ * @param[out] aInfraIfIndex      A pointer to output the interface index. MUST NOT be NULL.
+ * @param[out] aInfraIfIsRunning  A pointer to output whether the interface is running. Can be NULL if not needed.
+ *
+ * @retval OT_ERROR_NONE           Successfully retrieved the interface information.
+ * @retval OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized.
+ *
+ * @sa otBorderRoutingInit
+ * @sa otPlatInfraIfStateChanged
+ */
+otError otBorderRoutingGetInfraIfInfo(otInstance *aInstance, uint32_t *aInfraIfIndex, bool *aInfraIfIsRunning);
 
 /**
  * Enables or disables the Border Routing Manager.
@@ -677,7 +705,7 @@ void otBorderRoutingSetMultiAilCallback(otInstance                     *aInstanc
  *
  * @retval OT_ERROR_NONE          Iterated to the next address entry, @p aEntry and @p aIterator are updated.
  * @retval OT_ERROR_NOT_FOUND     No more entries in the table.
- * @retval OT_ERROR_INVALID_ARSG  The iterator is invalid (used to iterate over other entry types, e.g. prefix).
+ * @retval OT_ERROR_INVALID_ARGS  The iterator is invalid (used to iterate over other entry types, e.g. prefix).
  */
 otError otBorderRoutingGetNextRdnssAddrEntry(otInstance                         *aInstance,
                                              otBorderRoutingPrefixTableIterator *aIterator,
@@ -717,6 +745,23 @@ typedef void (*otBorderRoutingRdnssAddrCallback)(void *aContext);
 void otBorderRoutingSetRdnssAddrCallback(otInstance                      *aInstance,
                                          otBorderRoutingRdnssAddrCallback aCallback,
                                          void                            *aContext);
+
+/**
+ * Iterates over the infrastructure interface address entries.
+ *
+ * These are addresses used by the BR itself, for example, when sending Router Advertisements.
+ *
+ * @param[in]     aInstance    The OpenThread instance.
+ * @param[in,out] aIterator    A pointer to the iterator.
+ * @param[out]    aEntry       A pointer to the entry to populate.
+ *
+ * @retval OT_ERROR_NONE          Iterated to the next address entry, @p aEntry and @p aIterator are updated.
+ * @retval OT_ERROR_NOT_FOUND     No more entries in the table.
+ * @retval OT_ERROR_INVALID_ARGS  The iterator is invalid (used to iterate over other entry types, e.g., prefix).
+ */
+otError otBorderRoutingGetNextIfAddrEntry(otInstance                         *aInstance,
+                                          otBorderRoutingPrefixTableIterator *aIterator,
+                                          otBorderRoutingIfAddrEntry         *aEntry);
 
 /**
  * Enables / Disables DHCPv6 Prefix Delegation.

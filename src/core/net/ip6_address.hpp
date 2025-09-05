@@ -39,11 +39,10 @@
 #include <openthread/ip6.h>
 
 #include "common/as_core_type.hpp"
+#include "common/bit_utils.hpp"
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
-#include "common/num_utils.hpp"
-#include "common/numeric_limits.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
 
@@ -258,17 +257,6 @@ public:
      * @returns The size (in bytes) of the prefix.
      */
     static uint8_t SizeForLength(uint8_t aLength) { return BytesForBitSize(aLength); }
-
-    /**
-     * Returns the number of IPv6 prefix bits that match.
-     *
-     * @param[in]  aPrefixA     A pointer to a byte array containing a first prefix.
-     * @param[in]  aPrefixB     A pointer to a byte array containing a second prefix.
-     * @param[in]  aMaxSize     Number of bytes of the two prefixes.
-     *
-     * @returns The number of prefix bits that match.
-     */
-    static uint8_t MatchLength(const uint8_t *aPrefixA, const uint8_t *aPrefixB, uint8_t aMaxSize);
 
     /**
      * Indicates whether or not a given prefix length is valid for use as a NAT64 prefix.

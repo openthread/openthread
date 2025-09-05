@@ -61,11 +61,10 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
 
         if (destination.IsMulticast())
         {
-            // For traffic destined to multicast address larger than realm local, generally it uses IP-in-IP
-            // encapsulation (RFC2473), with outer destination as ALL_MPL_FORWARDERS. So here if the destination
-            // is multicast address larger than realm local, it should be for indirection transmission for the
-            // device's sleepy child, thus there should be no direct transmission.
-            if (!destination.IsMulticastLargerThanRealmLocal())
+            // A non-link-local multicast message that does not
+            // contain an MPL Option should only be forwarded to
+            // children using indirect transmissions.
+            if (destination.IsLinkLocalMulticast() || ip6Header.GetNextHeader() == Ip6::kProtoHopOpts)
             {
                 message.SetDirectTransmission();
             }
@@ -324,26 +323,6 @@ void MeshForwarder::RemoveDataResponseMessages(void)
     }
 }
 
-void MeshForwarder::SendMesh(Message &aMessage, Mac::TxFrame &aFrame)
-{
-    Mac::TxFrame::Info frameInfo;
-
-    frameInfo.mType          = Mac::Frame::kTypeData;
-    frameInfo.mAddrs         = mMacAddrs;
-    frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
-    frameInfo.mKeyIdMode     = Mac::Frame::kKeyIdMode1;
-    frameInfo.mPanIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
-
-    PrepareMacHeaders(aFrame, frameInfo, &aMessage);
-
-    // write payload
-    OT_ASSERT(aMessage.GetLength() <= aFrame.GetMaxPayloadLength());
-    aMessage.ReadBytes(0, aFrame.GetPayload(), aMessage.GetLength());
-    aFrame.SetPayloadLength(aMessage.GetLength());
-
-    mMessageNextOffset = aMessage.GetLength();
-}
-
 Error MeshForwarder::UpdateMeshRoute(Message &aMessage)
 {
     Error              error = kErrorNone;
@@ -389,7 +368,6 @@ exit:
 
 Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &aMessage)
 {
-    Mle::Mle &mle   = Get<Mle::Mle>();
     Error     error = kErrorNone;
     Neighbor *neighbor;
 
@@ -399,14 +377,14 @@ Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &a
     {
         mMeshDest = aMessage.GetMeshDest();
     }
-    else if (mle.IsRoutingLocator(aIp6Header.GetDestination()))
+    else if (Get<Mle::Mle>().IsRoutingLocator(aIp6Header.GetDestination()))
     {
         uint16_t rloc16 = aIp6Header.GetDestination().GetIid().GetLocator();
 
         VerifyOrExit(Mle::IsRouterIdValid(Mle::RouterIdFromRloc16(rloc16)), error = kErrorDrop);
         mMeshDest = rloc16;
     }
-    else if (mle.IsAnycastLocator(aIp6Header.GetDestination()))
+    else if (Get<Mle::Mle>().IsAnycastLocator(aIp6Header.GetDestination()))
     {
         uint16_t aloc16 = aIp6Header.GetDestination().GetIid().GetLocator();
 
@@ -416,7 +394,8 @@ Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &a
         // child of this device, prepare the message for indirect tx
         // to the sleepy child and un-mark message for direct tx.
 
-        if (mle.IsRouterOrLeader() && Mle::IsChildRloc16(mMeshDest) && mle.HasMatchingRouterIdWith(mMeshDest))
+        if (Get<Mle::Mle>().IsRouterOrLeader() && Mle::IsChildRloc16(mMeshDest) &&
+            Get<Mle::Mle>().HasMatchingRouterIdWith(mMeshDest))
         {
             Child *child = Get<ChildTable>().FindChild(mMeshDest, Child::kInStateValid);
 

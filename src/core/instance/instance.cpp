@@ -145,6 +145,7 @@ Instance::Instance(void)
     , mKeyManager(*this)
     , mLowpan(*this)
     , mMac(*this)
+    , mMessageFramer(*this)
     , mMeshForwarder(*this)
     , mMle(*this)
     , mDiscoverScanner(*this)
@@ -247,7 +248,7 @@ Instance::Instance(void)
     , mMeshDiag(*this)
 #endif
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    , mHistoryTracker(*this)
+    , mHistoryTrackerLocal(*this)
 #endif
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
     , mLinkMetricsManager(*this)
@@ -430,10 +431,9 @@ void Instance::Finalize(void)
     mIsInitialized = false;
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    IgnoreError(otThreadSetEnabled(this, false));
-    IgnoreError(otIp6SetEnabled(this, false));
-    IgnoreError(otLinkSetEnabled(this, false));
-
+    Get<Mle::Mle>().Stop();
+    Get<ThreadNetif>().Down();
+    Get<Mac::Mac>().SetEnabled(false);
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     Get<KeyManager>().DestroyTemporaryKeys();
 #endif

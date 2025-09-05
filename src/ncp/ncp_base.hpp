@@ -84,16 +84,13 @@ namespace Ncp {
 class NcpBase
 {
 public:
-    enum
-    {
-        kSpinelCmdHeaderSize = 2, ///< Size of spinel command header (in bytes).
-        kSpinelPropIdSize    = 3, ///< Size of spinel property identifier (in bytes).
+    static constexpr uint8_t kSpinelCmdHeaderSize = 2; ///< Size of spinel command header (in bytes).
+    static constexpr uint8_t kSpinelPropIdSize    = 3; ///< Size of spinel property identifier (in bytes).
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_RADIO
-        kSpinelInterfaceCount = SPINEL_HEADER_IID_MAX + 1, // Number of supported spinel interfaces
+    static constexpr uint8_t kSpinelInterfaceCount = SPINEL_HEADER_IID_MAX + 1; // Number of supported spinel interfaces
 #else
-        kSpinelInterfaceCount = 1, // Only one interface supported in single instance configuration
+    static constexpr uint8_t kSpinelInterfaceCount = 1; // Only one interface supported in single instance configuration
 #endif
-    };
 
     /**
      * Creates and initializes an NcpBase instance.
@@ -734,12 +731,9 @@ protected:
     static spinel_status_t ThreadErrorToSpinelStatus(otError aError);
     static uint8_t         LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aDeviceType, bool aNetworkData);
 
-    enum
-    {
-        kTxBufferSize       = OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE, // Tx Buffer size (used by mTxFrameBuffer).
-        kResponseQueueSize  = OPENTHREAD_CONFIG_NCP_SPINEL_RESPONSE_QUEUE_SIZE,
-        kInvalidScanChannel = -1, // Invalid scan channel.
-    };
+    static constexpr uint16_t kTxBufferSize       = OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE;
+    static constexpr uint16_t kResponseQueueSize  = OPENTHREAD_CONFIG_NCP_SPINEL_RESPONSE_QUEUE_SIZE;
+    static constexpr int8_t   kInvalidScanChannel = -1; // Invalid scan channel.
 
     Instance *mInstance;
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_RADIO

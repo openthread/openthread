@@ -47,8 +47,13 @@
 #include "net/ip6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_types.hpp"
+#include "thread/network_data_tlvs.hpp"
 
 namespace ot {
+
+namespace NetworkData {
+class Leader;
+}
 
 /**
  * @addtogroup core-6lowpan
@@ -68,14 +73,63 @@ namespace ot {
 namespace Lowpan {
 
 /**
- * Represents a LOWPAN_IPHC Context.
+ * Represents a 6LoWPAN IPHC Context.
  */
-struct Context : public Clearable<Context>
+class Context : public Clearable<Context>
 {
-    Ip6::Prefix mPrefix;       ///< The Prefix
-    uint8_t     mContextId;    ///< The Context ID.
-    bool        mCompressFlag; ///< The Context compression flag.
-    bool        mIsValid;      ///< Indicates whether the context is valid.
+    friend class ot::NetworkData::Leader;
+
+public:
+    /**
+     * Indicates whether the context entry is valid.
+     *
+     * @retval TRUE   The context is valid and can be used.
+     * @retval FALSE  The context is not valid.
+     */
+    bool IsValid(void) const { return mIsValid; }
+
+    /**
+     * Gets the IPv6 prefix associated with this context.
+     *
+     * @returns The IPv6 prefix.
+     */
+    const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+
+    /**
+     * Gets the Context ID.
+     *
+     * @returns The Context ID.
+     */
+    uint8_t GetContextId(void) const { return mContextId; }
+
+    /**
+     * Gets the context compression flag.
+     *
+     * This flag indicates whether this context can be used for 6LoWPAN IPHC compression.
+     *
+     * @retval TRUE   Context compression is enabled.
+     * @retval FALSE  Context compression is disabled.
+     */
+    bool GetCompressFlag(void) const { return mCompressFlag; }
+
+    /**
+     * Checks whether this context is valid and matches a given Context ID.
+     *
+     * @param[in] aContextId  The Context ID to match.
+     *
+     * @retval TRUE   This context is valid and its ID matches @p aContextId.
+     * @retval FALSE  This context is not valid or its ID does not match.
+     */
+    bool MatchesContextId(uint8_t aContextId) const { return mIsValid && (mContextId == aContextId); }
+
+private:
+    void InitForMeshLocalPrefix(Instance &aInstance);
+    void InitFrom(const NetworkData::PrefixTlv &aPrefixTlv, const NetworkData::ContextTlv &aContextTlv);
+
+    Ip6::Prefix mPrefix;
+    uint8_t     mContextId;
+    bool        mCompressFlag : 1;
+    bool        mIsValid : 1;
 };
 
 /**

@@ -77,7 +77,7 @@ Error Leader::GetServiceId(uint32_t           aEnterpriseNumber,
     ServiceConfig serviceConfig;
     ServiceData   serviceData;
 
-    while (GetNextService(iterator, serviceConfig) == kErrorNone)
+    while (GetNext(iterator, serviceConfig) == kErrorNone)
     {
         serviceConfig.GetServiceData(serviceData);
 
@@ -93,23 +93,23 @@ exit:
     return error;
 }
 
-Error Leader::GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const
+Error Leader::FindPreferredNat64Prefix(ExternalRouteConfig &aConfig) const
 {
     Error               error    = kErrorNotFound;
     Iterator            iterator = kIteratorInit;
-    ExternalRouteConfig config;
+    ExternalRouteConfig routeConfig;
 
-    while (GetNextExternalRoute(iterator, config) == kErrorNone)
+    while (GetNext(iterator, routeConfig) == kErrorNone)
     {
-        if (!config.mNat64 || !config.GetPrefix().IsValidNat64())
+        if (!routeConfig.mNat64 || !routeConfig.GetPrefix().IsValidNat64())
         {
             continue;
         }
 
-        if ((error == kErrorNotFound) || (config.mPreference > aConfig.mPreference) ||
-            (config.mPreference == aConfig.mPreference && config.GetPrefix() < aConfig.GetPrefix()))
+        if ((error == kErrorNotFound) || (routeConfig.mPreference > aConfig.mPreference) ||
+            (routeConfig.mPreference == aConfig.mPreference && routeConfig.GetPrefix() < aConfig.GetPrefix()))
         {
-            aConfig = config;
+            aConfig = routeConfig;
             error   = kErrorNone;
         }
     }
@@ -121,11 +121,12 @@ bool Leader::IsNat64(const Ip6::Address &aAddress) const
 {
     bool                isNat64  = false;
     Iterator            iterator = kIteratorInit;
-    ExternalRouteConfig config;
+    ExternalRouteConfig routeConfig;
 
-    while (GetNextExternalRoute(iterator, config) == kErrorNone)
+    while (GetNext(iterator, routeConfig) == kErrorNone)
     {
-        if (config.mNat64 && config.GetPrefix().IsValidNat64() && aAddress.MatchesPrefix(config.GetPrefix()))
+        if (routeConfig.mNat64 && routeConfig.GetPrefix().IsValidNat64() &&
+            aAddress.MatchesPrefix(routeConfig.GetPrefix()))
         {
             isNat64 = true;
             break;
@@ -157,16 +158,16 @@ const PrefixTlv *Leader::FindNextMatchingPrefixTlv(const Ip6::Address &aAddress,
     return prefixTlv;
 }
 
-Error Leader::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext) const
+void Leader::FindContextForAddress(const Ip6::Address &aAddress, Lowpan::Context &aContext) const
 {
     const PrefixTlv  *prefixTlv = nullptr;
     const ContextTlv *contextTlv;
 
-    aContext.mPrefix.SetLength(0);
+    aContext.Clear();
 
     if (Get<Mle::Mle>().IsMeshLocalAddress(aAddress))
     {
-        GetContextForMeshLocalPrefix(aContext);
+        aContext.InitForMeshLocalPrefix(GetInstance());
     }
 
     while ((prefixTlv = FindNextMatchingPrefixTlv(aAddress, prefixTlv)) != nullptr)
@@ -180,14 +181,9 @@ Error Leader::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext
 
         if (prefixTlv->GetPrefixLength() > aContext.mPrefix.GetLength())
         {
-            prefixTlv->CopyPrefixTo(aContext.mPrefix);
-            aContext.mContextId    = contextTlv->GetContextId();
-            aContext.mCompressFlag = contextTlv->IsCompress();
-            aContext.mIsValid      = true;
+            aContext.InitFrom(*prefixTlv, *contextTlv);
         }
     }
-
-    return (aContext.mPrefix.GetLength() > 0) ? kErrorNone : kErrorNotFound;
 }
 
 const PrefixTlv *Leader::FindPrefixTlvForContextId(uint8_t aContextId, const ContextTlv *&aContextTlv) const
@@ -209,37 +205,26 @@ const PrefixTlv *Leader::FindPrefixTlvForContextId(uint8_t aContextId, const Con
     return prefixTlv;
 }
 
-Error Leader::GetContext(uint8_t aContextId, Lowpan::Context &aContext) const
+void Leader::FindContextForId(uint8_t aContextId, Lowpan::Context &aContext) const
 {
-    Error             error = kErrorNone;
-    TlvIterator       tlvIterator(GetTlvsStart(), GetTlvsEnd());
     const PrefixTlv  *prefixTlv;
     const ContextTlv *contextTlv;
 
+    aContext.Clear();
+
     if (aContextId == Mle::kMeshLocalPrefixContextId)
     {
-        GetContextForMeshLocalPrefix(aContext);
+        aContext.InitForMeshLocalPrefix(GetInstance());
         ExitNow();
     }
 
     prefixTlv = FindPrefixTlvForContextId(aContextId, contextTlv);
-    VerifyOrExit(prefixTlv != nullptr, error = kErrorNotFound);
+    VerifyOrExit(prefixTlv != nullptr);
 
-    prefixTlv->CopyPrefixTo(aContext.mPrefix);
-    aContext.mContextId    = contextTlv->GetContextId();
-    aContext.mCompressFlag = contextTlv->IsCompress();
-    aContext.mIsValid      = true;
+    aContext.InitFrom(*prefixTlv, *contextTlv);
 
 exit:
-    return error;
-}
-
-void Leader::GetContextForMeshLocalPrefix(Lowpan::Context &aContext) const
-{
-    aContext.mPrefix.Set(Get<Mle::Mle>().GetMeshLocalPrefix());
-    aContext.mContextId    = Mle::kMeshLocalPrefixContextId;
-    aContext.mCompressFlag = true;
-    aContext.mIsValid      = true;
+    return;
 }
 
 bool Leader::IsOnMesh(const Ip6::Address &aAddress) const

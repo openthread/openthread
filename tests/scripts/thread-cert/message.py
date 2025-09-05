@@ -38,6 +38,12 @@ import ipv6
 import mac802154
 import mle
 
+from net_crypto import (
+    CryptoEngine,
+    MacCryptoMaterialCreator,
+    MleCryptoMaterialCreator,
+)
+
 from enum import IntEnum
 
 
@@ -554,10 +560,22 @@ class MessagesSet(object):
         return str(self.messages)
 
 
+class KeyManager:
+
+    def __init__(self):
+        self.mac_crypto_engines = set()
+        self.mle_crypto_engines = set()
+
+    def add_key(self, key):
+        self.mac_crypto_engines.add(CryptoEngine(MacCryptoMaterialCreator(key)))
+        self.mle_crypto_engines.add(CryptoEngine(MleCryptoMaterialCreator(key)))
+
+
 class MessageFactory:
 
-    def __init__(self, lowpan_parser):
+    def __init__(self, lowpan_parser, key_manager):
         self._lowpan_parser = lowpan_parser
+        self.key_manager = key_manager
 
     def _add_device_descriptors(self, message):
         for tlv in message.mle.command.tlvs:
@@ -570,7 +588,7 @@ class MessageFactory:
 
     def _parse_mac_frame(self, data):
         mac_frame = mac802154.MacFrame()
-        mac_frame.parse(data)
+        mac_frame.parse(data, self.key_manager.mac_crypto_engines)
         return mac_frame
 
     def set_lowpan_context(self, cid, prefix):

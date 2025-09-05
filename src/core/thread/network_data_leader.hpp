@@ -107,26 +107,28 @@ public:
     uint8_t GetVersion(Type aType) const { return (aType == kFullSet) ? mVersion : mStableVersion; }
 
     /**
-     * Retrieves the 6LoWPAN Context information based on a given IPv6 address.
+     * Retrieves the 6LoWPAN Context information for a given IPv6 address.
      *
-     * @param[in]   aAddress  A reference to an IPv6 address.
-     * @param[out]  aContext  A reference to 6LoWPAN Context information.
+     * If there multiple matching prefixes in the Network Data, the longest one is used.
      *
-     * @retval kErrorNone       Successfully retrieved 6LoWPAN Context information.
-     * @retval kErrorNotFound   Could not find the 6LoWPAN Context information.
+     * If no matching context is found, the @p aContext structure is marked as invalid (i.e., `aContext.mIsValid` will
+     * be false).
+     *
+     * @param[in]   aAddress  The IPv6 address.
+     * @param[out]  aContext  A 6LoWPAN Context information to output the information.
      */
-    Error GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext) const;
+    void FindContextForAddress(const Ip6::Address &aAddress, Lowpan::Context &aContext) const;
 
     /**
      * Retrieves the 6LoWPAN Context information based on a given Context ID.
      *
-     * @param[in]   aContextId  The Context ID value.
-     * @param[out]  aContext    A reference to the 6LoWPAN Context information.
+     * If no context matching @p aContextId is found, the @p aContext structure is marked as invalid (i.e.,
+     * `aContext.mIsValid` will be false).
      *
-     * @retval kErrorNone       Successfully retrieved 6LoWPAN Context information.
-     * @retval kErrorNotFound   Could not find the 6LoWPAN Context information.
+     * @param[in]   aContextId  The Context ID.
+     * @param[out]  aContext    A `Lowpan::Context` structure to output the information.
      */
-    Error GetContext(uint8_t aContextId, Lowpan::Context &aContext) const;
+    void FindContextForId(uint8_t aContextId, Lowpan::Context &aContext) const;
 
     /**
      * Indicates whether or not the given IPv6 address is on-mesh.
@@ -300,7 +302,7 @@ public:
                        uint8_t           &aServiceId) const;
 
     /**
-     * Gets the preferred NAT64 prefix from network data.
+     * Finds the preferred NAT64 prefix from network data.
      *
      * The returned prefix is the highest preference external route entry in Network Data with NAT64 flag set. If there
      * are multiple such entries the first one is returned.
@@ -310,7 +312,7 @@ public:
      * @retval kErrorNone       Found the NAT64 prefix and updated @p aConfig.
      * @retval kErrorNotFound   Could not find any NAT64 entry.
      */
-    Error GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const;
+    Error FindPreferredNat64Prefix(ExternalRouteConfig &aConfig) const;
 
     /**
      * Indicates whether or not the given IPv6 address matches any NAT64 prefixes.
@@ -447,7 +449,6 @@ private:
     Error DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t &aRloc16) const;
     Error LookupRouteIn(const PrefixTlv &aPrefixTlv, EntryChecker aEntryChecker, uint16_t &aRloc16) const;
     Error SteeringDataCheck(const FilterIndexes &aFilterIndexes) const;
-    void  GetContextForMeshLocalPrefix(Lowpan::Context &aContext) const;
     Error ReadCommissioningDataUint16SubTlv(MeshCoP::Tlv::Type aType, uint16_t &aValue) const;
     void  SignalNetDataChanged(void);
     const CommissioningDataTlv *FindCommissioningData(void) const;

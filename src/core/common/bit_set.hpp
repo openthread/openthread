@@ -36,9 +36,9 @@
 
 #include "openthread-core-config.h"
 
+#include "common/bit_utils.hpp"
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
-#include "common/numeric_limits.hpp"
 
 namespace ot {
 

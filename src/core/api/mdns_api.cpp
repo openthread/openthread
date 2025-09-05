@@ -46,6 +46,18 @@ otError otMdnsSetEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfI
 
 bool otMdnsIsEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<Dns::Multicast::Core>().IsEnabled(); }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+void otMdnsSetAutoEnableMode(otInstance *aInstance, bool aEnable)
+{
+    AsCoreType(aInstance).Get<Dns::Multicast::Core>().SetAutoEnableMode(aEnable);
+}
+
+bool otMdnsGetAutoEnableMode(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().GetAutoEnableMode();
+}
+#endif
+
 void otMdnsSetQuestionUnicastAllowed(otInstance *aInstance, bool aAllow)
 {
     AsCoreType(aInstance).Get<Dns::Multicast::Core>().SetQuestionUnicastAllowed(aAllow);
@@ -338,5 +350,19 @@ otError otMdnsGetNextRecordQuerier(otInstance          *aInstance,
 }
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+
+void otMdnsSetVerboseLoggingEnabled(otInstance *aInstance, bool aEnable)
+{
+    AsCoreType(aInstance).Get<Dns::Multicast::Core>().SetVerboseLoggingEnabled(aEnable);
+}
+
+bool otMdnsIsVerboseLoggingEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().IsVerboseLoggingEnabled();
+}
+
+#endif
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE

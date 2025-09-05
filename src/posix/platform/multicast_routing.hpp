@@ -64,18 +64,15 @@ public:
     bool IsEnabled(void) const { return mMulticastRouterSock >= 0; }
     void SetUp(void);
     void TearDown(void);
-    void Update(otSysMainloopContext &aContext) override;
-    void Process(const otSysMainloopContext &aContext) override;
+    void Update(Mainloop::Context &aContext) override;
+    void Process(const Mainloop::Context &aContext) override;
     void HandleStateChange(otInstance *aInstance, otChangedFlags aFlags);
 
 private:
-    enum
-    {
-        kMulticastForwardingCacheExpireTimeout    = 300, //< Expire timeout of Multicast Forwarding Cache (in seconds)
-        kMulticastForwardingCacheExpiringInterval = 60,  //< Expire interval of Multicast Forwarding Cache (in seconds)
-        kMulticastForwardingCacheTableSize =
-            OPENTHREAD_POSIX_CONFIG_MAX_MULTICAST_FORWARDING_CACHE_TABLE, //< The max size of MFC table.
-    };
+    static constexpr uint16_t kMulticastForwardingCacheExpireTimeout    = 300; //< Expire timeout (in seconds)
+    static constexpr uint16_t kMulticastForwardingCacheExpiringInterval = 60;  //< Expire interval (in seconds)
+    static constexpr uint16_t kMulticastForwardingCacheTableSize =
+        OPENTHREAD_POSIX_CONFIG_MAX_MULTICAST_FORWARDING_CACHE_TABLE;
 
     enum MifIndex : uint8_t
     {

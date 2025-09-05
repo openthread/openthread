@@ -141,9 +141,6 @@ class HmacSha256;
         }                                                        \
     } while (false)
 
-constexpr uint16_t kNumBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
-constexpr uint16_t kBufferSize = OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE;
-
 class Message;
 class MessagePool;
 class MessageQueue;
@@ -166,6 +163,8 @@ class Buffer : public otMessageBuffer, public LinkedListEntry<Buffer>
     friend class Message;
 
 public:
+    static constexpr uint16_t kSize = OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE; ///< Size of buffer in bytes.
+
     typedef otMessageTxCallback TxCallback; ///< Message TX callback.
 
     /**
@@ -244,9 +243,9 @@ protected:
 #endif
     };
 
-    static_assert(kBufferSize > sizeof(Metadata) + sizeof(otMessageBuffer), "Metadata does not fit in a single buffer");
+    static_assert(kSize > sizeof(Metadata) + sizeof(otMessageBuffer), "Metadata does not fit in a single buffer");
 
-    static constexpr uint16_t kBufferDataSize     = kBufferSize - sizeof(otMessageBuffer);
+    static constexpr uint16_t kBufferDataSize     = kSize - sizeof(otMessageBuffer);
     static constexpr uint16_t kHeadBufferDataSize = kBufferDataSize - sizeof(Metadata);
 
     Metadata       &GetMetadata(void) { return mBuffer.mHead.mMetadata; }
@@ -270,7 +269,7 @@ private:
     } mBuffer;
 };
 
-static_assert(sizeof(Buffer) >= kBufferSize,
+static_assert(sizeof(Buffer) >= Buffer::kSize,
               "Buffer size is not valid. Increase OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE.");
 
 /**
@@ -325,25 +324,6 @@ public:
     };
 
     static constexpr uint8_t kNumPriorities = 4; ///< Number of priority levels.
-
-    /**
-     * Represents the message ownership model when a `Message` instance is passed to a method/function.
-     */
-    enum Ownership : uint8_t
-    {
-        /**
-         * This value indicates that the method/function receiving a `Message` instance should take custody of the
-         * message (e.g., the method should `Free()` the message if no longer needed).
-         */
-        kTakeCustody,
-
-        /**
-         * This value indicates that the method/function receiving a `Message` instance does not own the message (e.g.,
-         * it should not `Free()` or `Enqueue()` it in a queue). The receiving method/function should create a
-         * copy/clone of the message to keep (if/when needed).
-         */
-        kCopyToUse,
-    };
 
     /**
      * Represents an IPv6 message origin.
@@ -1936,6 +1916,8 @@ public:
     void ResetMaxUsedBufferCount(void) { mMaxAllocated = mNumAllocated; }
 
 private:
+    static constexpr uint16_t kNumBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
+
     Buffer *NewBuffer(Message::Priority aPriority);
     void    FreeBuffers(Buffer *aBuffer);
     Error   ReclaimBuffers(Message::Priority aPriority);

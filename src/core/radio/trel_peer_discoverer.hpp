@@ -119,8 +119,6 @@ public:
 #endif
 
 private:
-    static constexpr uint32_t kRemoveDelay = 7 * Time::kOneSecondInMsec;
-
     enum State : uint8_t
     {
         kStateStopped,      // Stopped.
@@ -254,7 +252,6 @@ private:
     void StopServiceResolvers(Peer &aPeer);
     void HandleSrvResult(const Dnssd::SrvResult &aResult);
     void HandleTxtResult(const Dnssd::TxtResult &aResult);
-    void ProcessPeerTxtData(const Dnssd::TxtResult &aResult, Peer &aPeer);
     void StartHostAddressResolver(Peer &aPeer);
     void StopHostAddressResolver(Peer &aPeer);
     void HandleAddressResult(const Dnssd::AddressResult &aResult);
@@ -268,7 +265,7 @@ private:
     static void HandleAddressResult(otInstance *aInstance, const otPlatDnssdAddressResult *aResult);
 
 #else
-    void        HandleDiscoveredPeerInfo(const PeerInfo &aInfo);
+    void HandleDiscoveredPeerInfo(const PeerInfo &aInfo);
 #endif
 
     using ServiceTask = TaskletIn<PeerDiscoverer, &PeerDiscoverer::HandleServiceTask>;

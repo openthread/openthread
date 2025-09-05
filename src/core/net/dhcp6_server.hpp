@@ -167,7 +167,7 @@ private:
     void  UpdateService(void);
     void  Start(void);
     void  Stop(void);
-    void  AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context &aContext);
+    void  AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, uint8_t aContextId);
     Error AppendHeader(Message &aMessage, const TransactionId &aTransactionId);
     Error AppendClientIdOption(Message &aMessage, const Mac::ExtAddress &aClientAddress);
     Error AppendServerIdOption(Message &aMessage);

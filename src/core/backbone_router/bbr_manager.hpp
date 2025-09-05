@@ -48,6 +48,7 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "net/netif.hpp"
+#include "thread/dua_manager.hpp"
 #include "thread/network_data.hpp"
 #include "thread/tmf.hpp"
 
@@ -103,7 +104,7 @@ public:
      *
      * @param[in] aStatus  The status to respond.
      */
-    void ConfigNextMulticastListenerRegistrationResponse(ThreadStatusTlv::MlrStatus aStatus);
+    void ConfigNextMulticastListenerRegistrationResponse(MlrStatus aStatus);
 #endif
 #endif
 
@@ -170,11 +171,11 @@ private:
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     void HandleMulticastListenerRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void SendMulticastListenerRegistrationResponse(const Coap::Message       &aMessage,
-                                                   const Ip6::MessageInfo    &aMessageInfo,
-                                                   ThreadStatusTlv::MlrStatus aStatus,
-                                                   Ip6::Address              *aFailedAddresses,
-                                                   uint8_t                    aFailedAddressNum);
+    void SendMulticastListenerRegistrationResponse(const Coap::Message    &aMessage,
+                                                   const Ip6::MessageInfo &aMessageInfo,
+                                                   MlrStatus               aStatus,
+                                                   Ip6::Address           *aFailedAddresses,
+                                                   uint8_t                 aFailedAddressNum);
     void SendBackboneMulticastListenerRegistration(const Ip6::Address *aAddresses,
                                                    uint8_t             aAddressNum,
                                                    uint32_t            aTimeout);
@@ -199,10 +200,10 @@ private:
     void  HandleProactiveBackboneNotification(const Ip6::Address             &aDua,
                                               const Ip6::InterfaceIdentifier &aMeshLocalIid,
                                               uint32_t                        aTimeSinceLastTransaction);
-    void  SendDuaRegistrationResponse(const Coap::Message       &aMessage,
-                                      const Ip6::MessageInfo    &aMessageInfo,
-                                      const Ip6::Address        &aTarget,
-                                      ThreadStatusTlv::DuaStatus aStatus);
+    void  SendDuaRegistrationResponse(const Coap::Message    &aMessage,
+                                      const Ip6::MessageInfo &aMessageInfo,
+                                      const Ip6::Address     &aTarget,
+                                      DuaStatus               aStatus);
 #endif
     void HandleNotifierEvents(Events aEvents);
 
@@ -229,7 +230,7 @@ private:
     uint8_t                  mDuaResponseStatus;
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-    ThreadStatusTlv::MlrStatus mMlrResponseStatus;
+    MlrStatus mMlrResponseStatus;
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     bool mDuaResponseIsSpecified : 1;

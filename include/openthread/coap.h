@@ -83,7 +83,7 @@ typedef enum otCoapType
 /**
  * Helper macro to define CoAP Code values.
  */
-#define OT_COAP_CODE(c, d) ((((c)&0x7) << 5) | ((d)&0x1f))
+#define OT_COAP_CODE(c, d) ((((c) & 0x7) << 5) | ((d) & 0x1f))
 
 /**
  * CoAP Code values.
@@ -351,6 +351,18 @@ typedef void (*otCoapResponseHandler)(void                *aContext,
  * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage.
  */
 typedef void (*otCoapRequestHandler)(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
+/**
+ * Pointer is called as a fallback if a response did not match a stored CoAP request.
+ *
+ * @param[in]  aContext      A pointer to arbitrary context information.
+ * @param[in]  aMessage      A pointer to the message.
+ * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage.
+ *
+ * @retval  TRUE   The fallback handled the response.
+ * @retval  FALSE  OpenThread takes default actions for response.
+ */
+typedef bool (*otCoapResponseFallback)(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
  * Pointer is called when a CoAP message with a block-wise transfer option is received.
@@ -1011,6 +1023,16 @@ void otCoapRemoveBlockWiseResource(otInstance *aInstance, otCoapBlockwiseResourc
  * @param[in]  aContext   A pointer to arbitrary context information. May be NULL if not used.
  */
 void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext);
+
+/**
+ * Sets a fallback handler for CoAP responses not matching any active/pending request.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aHandler   A function pointer that shall be called as a fallback for responses without matching
+ *                       active/pending CoAP requests.
+ * @param[in] aContext   A pointer to arbitrary context information. May be NULL if not used.
+ */
+void otCoapSetResponseFallback(otInstance *aInstance, otCoapResponseFallback aHandler, void *aContext);
 
 /**
  * Sends a CoAP response from the server with custom transmission parameters.

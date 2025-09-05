@@ -39,6 +39,7 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
+#include "common/owned_ptr.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "net/ip6_address.hpp"
@@ -79,15 +80,15 @@ private:
 
     using ScanTimer = TimerMilliIn<EnergyScanServer, &EnergyScanServer::HandleTimer>;
 
-    Ip6::Address   mCommissioner;
-    uint32_t       mChannelMask;
-    uint32_t       mChannelMaskCurrent;
-    uint16_t       mPeriod;
-    uint16_t       mScanDuration;
-    uint8_t        mCount;
-    uint8_t        mNumScanResults;
-    Coap::Message *mReportMessage;
-    ScanTimer      mTimer;
+    Ip6::Address            mCommissioner;
+    uint32_t                mChannelMask;
+    uint32_t                mChannelMaskCurrent;
+    uint16_t                mPeriod;
+    uint16_t                mScanDuration;
+    uint8_t                 mCount;
+    uint8_t                 mNumScanResults;
+    OwnedPtr<Coap::Message> mReportMessage;
+    ScanTimer               mTimer;
 };
 
 DeclareTmfHandler(EnergyScanServer, kUriEnergyScan);

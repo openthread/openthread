@@ -333,30 +333,30 @@ void TestLinkQualityCalculations(void)
 {
     const int8_t      rssList1[] = {-81, -80, -79, -78, -76, -80, -77, -75, -77, -76, -77, -74};
     const RssTestData rssData1   = {
-          rssList1,         // mRssList
-          sizeof(rssList1), // mRssListSize
-          3                 // mExpectedLinkQuality
+        rssList1,         // mRssList
+        sizeof(rssList1), // mRssListSize
+        3                 // mExpectedLinkQuality
     };
 
     const int8_t      rssList2[] = {-90, -80, -85};
     const RssTestData rssData2   = {
-          rssList2,         // mRssList
-          sizeof(rssList2), // mRssListSize
-          2                 // mExpectedLinkQuality
+        rssList2,         // mRssList
+        sizeof(rssList2), // mRssListSize
+        2                 // mExpectedLinkQuality
     };
 
     const int8_t      rssList3[] = {-95, -96, -98, -99, -100, -100, -98, -99, -100, -100, -100, -100, -100};
     const RssTestData rssData3   = {
-          rssList3,         // mRssList
-          sizeof(rssList3), // mRssListSize
-          0                 // mExpectedLinkQuality
+        rssList3,         // mRssList
+        sizeof(rssList3), // mRssListSize
+        0                 // mExpectedLinkQuality
     };
 
     const int8_t      rssList4[] = {-75, -100, -100, -100, -100, -100, -95, -92, -93, -94, -93, -93};
     const RssTestData rssData4   = {
-          rssList4,         // mRssList
-          sizeof(rssList4), // mRssListSize
-          1                 // mExpectedLinkQuality
+        rssList4,         // mRssList
+        sizeof(rssList4), // mRssListSize
+        1                 // mExpectedLinkQuality
     };
 
     TestLinkQualityData(rssData1);

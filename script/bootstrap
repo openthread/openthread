@@ -33,12 +33,17 @@
 
 set -euxo pipefail
 
+INSTALL_FORMAT_TOOLS="${INSTALL_FORMAT_TOOLS:-1}"
+
+LLVM_MAJOR_VERSION="19"
+
 install_packages_pretty_format()
 {
     echo 'Installing pretty tools useful for code contributions...'
 
     # add clang-format and clang-tidy for pretty
-    sudo apt-get --no-install-recommends install -y clang-format-14 clang-tidy-14 || echo 'WARNING: could not install clang-format-14 and clang-tidy-14, which is useful if you plan to contribute C/C++ code to the OpenThread project.'
+    # To standardize the llvm version, we don't use apt to install
+    sudo bash "$(dirname "$0")/install-llvm.sh"
 
     # add yapf for pretty
     python3 -m pip install yapf==0.31.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
@@ -76,7 +81,7 @@ install_packages_apt()
             && sudo ln -s -f /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/* /usr/local/bin/.)
     fi
 
-    if [ "$PLATFORM" != "Raspbian" ]; then
+    if [ "$PLATFORM" != "Raspbian" ] && [ "${INSTALL_FORMAT_TOOLS}" = "1" ]; then
         install_packages_pretty_format
     fi
 }
@@ -110,20 +115,22 @@ install_packages_brew()
         echo 'warning: please install Command Line Tools from https://developer.apple.com/download/more/'
     fi
 
-    echo 'Installing pretty tools useful for code contributions...'
+    if [ "$INSTALL_FORMAT_TOOLS" = "1" ]; then
+        echo 'Installing pretty tools useful for code contributions...'
 
-    # add clang-format for pretty
-    CLANG_FORMAT_VERSION="clang-format version 14"
-    command -v clang-format-14 || (command -v clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
-        brew install llvm@14
-        sudo ln -s "$(brew --prefix llvm@14)/bin/clang-format" /usr/local/bin/clang-format-14
-        sudo ln -s "$(brew --prefix llvm@14)/bin/clang-tidy" /usr/local/bin/clang-tidy-14
-        sudo ln -s "$(brew --prefix llvm@14)/bin/clang-apply-replacements" /usr/local/bin/clang-apply-replacements-14
-        sudo ln -s "$(brew --prefix llvm@14)/bin/run-clang-tidy" /usr/local/bin/run-clang-tidy-14
-    } || echo 'WARNING: could not install llvm@14, which is useful if you plan to contribute C/C++ code to the OpenThread project.'
+        # add clang-format for pretty
+        CLANG_FORMAT_VERSION="clang-format version ${LLVM_MAJOR_VERSION}"
+        command -v clang-format-"${LLVM_MAJOR_VERSION}" || (command -v clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
+            brew install llvm@"${LLVM_MAJOR_VERSION}"
+            sudo ln -s "$(brew --prefix llvm@${LLVM_MAJOR_VERSION})/bin/clang-format" /usr/local/bin/clang-format-"${LLVM_MAJOR_VERSION}"
+            sudo ln -s "$(brew --prefix llvm@${LLVM_MAJOR_VERSION})/bin/clang-tidy" /usr/local/bin/clang-tidy-"${LLVM_MAJOR_VERSION}"
+            sudo ln -s "$(brew --prefix llvm@${LLVM_MAJOR_VERSION})/bin/clang-apply-replacements" /usr/local/bin/clang-apply-replacements-"${LLVM_MAJOR_VERSION}"
+            sudo ln -s "$(brew --prefix llvm@${LLVM_MAJOR_VERSION})/bin/run-clang-tidy" /usr/local/bin/run-clang-tidy-"${LLVM_MAJOR_VERSION}"
+        } || echo "WARNING: could not install llvm@${LLVM_MAJOR_VERSION}, which is useful if you plan to contribute C/C++ code to the OpenThread project."
 
-    # add yapf for pretty
-    python3 -m pip install yapf || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
+        # add yapf for pretty
+        python3 -m pip install yapf || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
+    fi
 
     brew install include-what-you-use || echo 'WARNING: iwyu, which is useful to ensure applying the IWYU rules.'
 }

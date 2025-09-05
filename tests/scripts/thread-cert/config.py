@@ -85,24 +85,7 @@ ONLINK_GUA_PREFIX = '2021::/64'
 # Any address starts with 'fd' are considered on-link address.
 ONLINK_PREFIX_REGEX_PATTERN = '^fd'
 
-DEFAULT_NETWORK_KEY = bytearray([
-    0x00,
-    0x11,
-    0x22,
-    0x33,
-    0x44,
-    0x55,
-    0x66,
-    0x77,
-    0x88,
-    0x99,
-    0xaa,
-    0xbb,
-    0xcc,
-    0xdd,
-    0xee,
-    0xff,
-])
+DEFAULT_NETWORK_KEY = '00112233445566778899aabbccddeeff'
 
 
 class ADDRESS_TYPE(Enum):
@@ -309,15 +292,13 @@ def create_default_mle_tlvs_factories():
     }
 
 
-def create_default_mle_crypto_engine(network_key):
-    return net_crypto.CryptoEngine(crypto_material_creator=net_crypto.MleCryptoMaterialCreator(network_key))
-
-
-def create_default_mle_message_factory(network_key):
+def create_default_mle_message_factory(key_manager=None):
+    key_manager = key_manager or create_default_thread_key_manager()
+    key_manager.add_key(bytes.fromhex(DEFAULT_NETWORK_KEY))
     return mle.MleMessageFactory(
         aux_sec_hdr_factory=net_crypto.AuxiliarySecurityHeaderFactory(),
         mle_command_factory=mle.MleCommandFactory(tlvs_factories=create_default_mle_tlvs_factories()),
-        crypto_engine=create_default_mle_crypto_engine(network_key),
+        crypto_engines=key_manager.mle_crypto_engines,
     )
 
 
@@ -469,8 +450,8 @@ def create_default_ipv6_hop_by_hop_options_factory():
     return ipv6.HopByHopOptionsFactory(options_factories=create_default_ipv6_hop_by_hop_options_factories())
 
 
-def create_default_based_on_src_dst_ports_udp_payload_factory(network_key):
-    mle_message_factory = create_default_mle_message_factory(network_key)
+def create_default_based_on_src_dst_ports_udp_payload_factory(key_manager):
+    mle_message_factory = create_default_mle_message_factory(key_manager)
     coap_message_factory = create_default_coap_message_factory()
     dtls_message_factory = create_default_dtls_message_factory()
 
@@ -497,12 +478,12 @@ def create_default_ipv6_icmp_body_factories():
     }
 
 
-def create_default_ipv6_upper_layer_factories(network_key):
+def create_default_ipv6_upper_layer_factories(key_manager):
     return {
         ipv6.IPV6_NEXT_HEADER_UDP:
             ipv6.UDPDatagramFactory(
                 udp_header_factory=ipv6.UDPHeaderFactory(),
-                udp_payload_factory=create_default_based_on_src_dst_ports_udp_payload_factory(network_key),
+                udp_payload_factory=create_default_based_on_src_dst_ports_udp_payload_factory(key_manager),
             ),
         ipv6.IPV6_NEXT_HEADER_ICMP:
             ipv6.ICMPv6Factory(body_factories=create_default_ipv6_icmp_body_factories()),
@@ -523,10 +504,10 @@ def create_default_ipv6_extension_headers_factories():
     }
 
 
-def create_default_ipv6_packet_factory(network_key):
+def create_default_ipv6_packet_factory(key_manager):
     return ipv6.IPv6PacketFactory(
         ehf=create_default_ipv6_extension_headers_factories(),
-        ulpf=create_default_ipv6_upper_layer_factories(network_key),
+        ulpf=create_default_ipv6_upper_layer_factories(key_manager),
     )
 
 
@@ -546,27 +527,31 @@ def create_default_thread_context_manager():
     return context_manager
 
 
-def create_default_lowpan_parser(context_manager, network_key=DEFAULT_NETWORK_KEY):
+def create_default_lowpan_parser(context_manager, key_manager):
     return lowpan.LowpanParser(
         lowpan_mesh_header_factory=lowpan.LowpanMeshHeaderFactory(),
         lowpan_decompressor=create_default_lowpan_decompressor(context_manager),
         lowpan_fragements_buffers_manager=lowpan.LowpanFragmentsBuffersManager(),
-        ipv6_packet_factory=create_default_ipv6_packet_factory(network_key),
+        ipv6_packet_factory=create_default_ipv6_packet_factory(key_manager),
     )
 
 
-def create_default_thread_message_factory(network_key=DEFAULT_NETWORK_KEY):
+def create_default_thread_key_manager():
+    return message.KeyManager()
+
+
+def create_default_thread_message_factory(key_manager):
     context_manager = create_default_thread_context_manager()
-    lowpan_parser = create_default_lowpan_parser(context_manager, network_key)
+    lowpan_parser = create_default_lowpan_parser(context_manager, key_manager)
 
-    return message.MessageFactory(lowpan_parser=lowpan_parser)
-
-
-def create_default_thread_sniffer(use_message_factory=True):
-    return sniffer.Sniffer(create_default_thread_message_factory() if use_message_factory else None)
+    return message.MessageFactory(lowpan_parser, key_manager)
 
 
-def create_default_simulator(use_message_factory=True):
+def create_default_thread_sniffer(message_factory=None):
+    return sniffer.Sniffer(message_factory)
+
+
+def create_default_simulator(message_factory=None):
     if VIRTUAL_TIME:
-        return simulator.VirtualTime(use_message_factory=use_message_factory)
-    return simulator.RealTime(use_message_factory=use_message_factory)
+        return simulator.VirtualTime(message_factory)
+    return simulator.RealTime(message_factory)

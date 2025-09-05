@@ -51,6 +51,7 @@ public:
     };
 
     Mdns(void);
+    void  Reset(void);
     Error SetListeningEnabled(Instance &aInstance, bool aEnable, uint32_t aInfraIfIndex);
     void  SendMulticast(Message &aMessage, uint32_t aInfraIfIndex);
     void  SendUnicast(Message &aMessage, const AddressInfo &aAddress);

@@ -78,8 +78,9 @@ namespace ot {
 namespace NetworkData {
 
 namespace Service {
+class Iterator;
 class Manager;
-}
+} // namespace Service
 
 /**
  * @addtogroup core-netdata-core
@@ -95,7 +96,7 @@ class Publisher;
 class MutableNetworkData;
 
 /**
- * Represents a Iterator used to iterate through Network Data info (e.g., see `GetNextOnMeshPrefix()`)
+ * Represents a Iterator used to iterate through Network Data info (e.g., see `GetNext<EntryType>()`)
  */
 typedef otNetworkDataIterator Iterator;
 
@@ -109,6 +110,7 @@ class NetworkData : public InstanceLocator
     friend class Leader;
     friend class Publisher;
     friend class MutableNetworkData;
+    friend class Service::Iterator;
     friend class Service::Manager;
 
 public:
@@ -182,114 +184,51 @@ public:
     Error CopyNetworkData(Type aType, MutableNetworkData &aNetworkData) const;
 
     /**
-     * Provides the next On Mesh prefix in the Thread Network Data.
+     * Gets the next Network Data entry of a specific type (e.g., on-mesh prefix, external route, service).
      *
-     * @param[in,out]  aIterator  A reference to the Network Data iterator.
-     * @param[out]     aConfig    A reference to a config variable where the On Mesh Prefix information will be placed.
+     * @tparam EntryType  The type of Network Data entry to find. It MUST be `OnMeshPrefixConfig`,
+     *                    `ExternalRouteConfig`, `ServiceConfig`, or `LowpanContextInfo`.
      *
-     * @retval kErrorNone       Successfully found the next On Mesh prefix.
-     * @retval kErrorNotFound   No subsequent On Mesh prefix exists in the Thread Network Data.
+     * To start iterating from the first entry, `aIterator` must be set to `kIteratorInit` before the first call.
+     *
+     * @param[in,out] aIterator  A reference to an iterator to track the current position in the Network Data.
+     * @param[out]    aEntry     A reference to an object to populate with the retrieved entry's information.
+     *
+     * @retval kErrorNone      Successfully found the next entry and populated @p aEntry.
+     * @retval kErrorNotFound  No subsequent entry of the requested type exists in the Thread Network Data.
      */
-    Error GetNextOnMeshPrefix(Iterator &aIterator, OnMeshPrefixConfig &aConfig) const;
+    template <typename EntryType> Error GetNext(Iterator &aIterator, EntryType &aEntry) const;
 
     /**
-     * Provides the next On Mesh prefix in the Thread Network Data for a given RLOC16.
+     * Gets the next Network Data entry of a specific type (e.g., on-mesh prefix, external route, service) associated
+     * with a given RLOC16.
      *
-     * @param[in,out]  aIterator  A reference to the Network Data iterator.
-     * @param[in]      aRloc16    The RLOC16 value.
-     * @param[out]     aConfig    A reference to a config variable where the On Mesh Prefix information will be placed.
+     * @tparam EntryType  The type of Network Data entry to find. It MUST be `OnMeshPrefixConfig`,
+     *                    `ExternalRouteConfig`, `ServiceConfig`, or `LowpanContextInfo`.
      *
-     * @retval kErrorNone       Successfully found the next On Mesh prefix.
-     * @retval kErrorNotFound   No subsequent On Mesh prefix exists in the Thread Network Data.
+     * To start iterating from the first entry, `aIterator` must be set to `kIteratorInit` before the first call.
+     *
+     * @param[in,out] aIterator  An iterator to track the current position in the Network Data.
+     * @param[in]     aRloc16    The RLOC16 to filter entries by.
+     * @param[out]    aEntry     An object to populate with the retrieved entry's information.
+     *
+     * @retval kErrorNone      Successfully found the next entry and populated @p aEntry.
+     * @retval kErrorNotFound  No subsequent entry of the requested type exists in the Thread Network Data.
      */
-    Error GetNextOnMeshPrefix(Iterator &aIterator, uint16_t aRloc16, OnMeshPrefixConfig &aConfig) const;
+    template <typename EntryType> Error GetNext(Iterator &aIterator, uint16_t aRloc16, EntryType &aEntry) const;
 
     /**
-     * Provides the next external route in the Thread Network Data.
+     * Indicates whether or not the Network Data contains a given entry of specific type.
      *
-     * @param[in,out]  aIterator  A reference to the Network Data iterator.
-     * @param[out]     aConfig    A reference to a config variable where the external route information will be placed.
+     * @tparam EntryType  The type of Network Data entry to find. It MUST be `OnMeshPrefixConfig`,
+     *                    `ExternalRouteConfig`, or `ServiceConfig`.
      *
-     * @retval kErrorNone       Successfully found the next external route.
-     * @retval kErrorNotFound   No subsequent external route exists in the Thread Network Data.
+     * @param[in]  aEntry   The entry to check
+     *
+     * @retval TRUE  if Network Data contains an entry matching @p aEntry.
+     * @retval FALSE if Network Data does not contain any entry matching @p aEntry.
      */
-    Error GetNextExternalRoute(Iterator &aIterator, ExternalRouteConfig &aConfig) const;
-
-    /**
-     * Provides the next external route in the Thread Network Data for a given RLOC16.
-     *
-     * @param[in,out]  aIterator  A reference to the Network Data iterator.
-     * @param[in]      aRloc16    The RLOC16 value.
-     * @param[out]     aConfig    A reference to a config variable where the external route information will be placed.
-     *
-     * @retval kErrorNone       Successfully found the next external route.
-     * @retval kErrorNotFound   No subsequent external route exists in the Thread Network Data.
-     */
-    Error GetNextExternalRoute(Iterator &aIterator, uint16_t aRloc16, ExternalRouteConfig &aConfig) const;
-
-    /**
-     * Provides the next service in the Thread Network Data.
-     *
-     * @param[in,out]  aIterator  A reference to the Network Data iterator.
-     * @param[out]     aConfig    A reference to a config variable where the service information will be placed.
-     *
-     * @retval kErrorNone       Successfully found the next service.
-     * @retval kErrorNotFound   No subsequent service exists in the Thread Network Data.
-     */
-    Error GetNextService(Iterator &aIterator, ServiceConfig &aConfig) const;
-
-    /**
-     * Provides the next service in the Thread Network Data for a given RLOC16.
-     *
-     * @param[in,out]  aIterator  A reference to the Network Data iterator.
-     * @param[in]      aRloc16    The RLOC16 value.
-     * @param[out]     aConfig    A reference to a config variable where the service information will be placed.
-     *
-     * @retval kErrorNone       Successfully found the next service.
-     * @retval kErrorNotFound   No subsequent service exists in the Thread Network Data.
-     */
-    Error GetNextService(Iterator &aIterator, uint16_t aRloc16, ServiceConfig &aConfig) const;
-
-    /**
-     * Gets the next 6LoWPAN Context ID info in the Thread Network Data.
-     *
-     * @param[in,out]  aIterator     A reference to the Network Data iterator.
-     * @param[out]     aContextInfo  A reference to where the retrieved 6LoWPAN Context ID information will be placed.
-     *
-     * @retval kErrorNone      Successfully found the next 6LoWPAN Context ID info.
-     * @retval kErrorNotFound  No subsequent 6LoWPAN Context info exists in the partition's Network Data.
-     */
-    Error GetNextLowpanContextInfo(Iterator &aIterator, LowpanContextInfo &aContextInfo) const;
-
-    /**
-     * Indicates whether or not the Thread Network Data contains a given on mesh prefix entry.
-     *
-     * @param[in]  aPrefix   The on mesh prefix config to check.
-     *
-     * @retval TRUE  if Network Data contains an on mesh prefix matching @p aPrefix.
-     * @retval FALSE if Network Data does not contain an on mesh prefix matching @p aPrefix.
-     */
-    bool ContainsOnMeshPrefix(const OnMeshPrefixConfig &aPrefix) const;
-
-    /**
-     * Indicates whether or not the Thread Network Data contains a given external route entry.
-     *
-     * @param[in]  aRoute   The external route config to check.
-     *
-     * @retval TRUE  if Network Data contains an external route matching @p aRoute.
-     * @retval FALSE if Network Data does not contain an external route matching @p aRoute.
-     */
-    bool ContainsExternalRoute(const ExternalRouteConfig &aRoute) const;
-
-    /**
-     * Indicates whether or not the Thread Network Data contains a given service entry.
-     *
-     * @param[in]  aService   The service config to check.
-     *
-     * @retval TRUE  if Network Data contains a service matching @p aService.
-     * @retval FALSE if Network Data does not contain a service matching @p aService.
-     */
-    bool ContainsService(const ServiceConfig &aService) const;
+    template <typename EntryType> bool Contains(const EntryType &aEntry) const;
 
     /**
      * Indicates whether or not the Thread Network Data contains all the on mesh prefixes, external
@@ -531,8 +470,13 @@ private:
         uint8_t *mIteratorBuffer;
     };
 
-    struct Config
+    struct Config : Clearable<Config>
     {
+        void Set(OnMeshPrefixConfig &aConfig) { mOnMeshPrefix = &aConfig; }
+        void Set(ExternalRouteConfig &aConfig) { mExternalRoute = &aConfig; }
+        void Set(ServiceConfig &aConfig) { mService = &aConfig; }
+        void Set(LowpanContextInfo &aInfo) { mLowpanContext = &aInfo; }
+
         OnMeshPrefixConfig  *mOnMeshPrefix;
         ExternalRouteConfig *mExternalRoute;
         ServiceConfig       *mService;
@@ -551,6 +495,19 @@ private:
     const uint8_t *mTlvs;
     uint8_t        mLength;
 };
+
+// Explicit instantiation declarations
+extern template Error NetworkData::GetNext<OnMeshPrefixConfig>(Iterator &, OnMeshPrefixConfig &) const;
+extern template Error NetworkData::GetNext<ExternalRouteConfig>(Iterator &, ExternalRouteConfig &) const;
+extern template Error NetworkData::GetNext<ServiceConfig>(Iterator &, ServiceConfig &) const;
+extern template Error NetworkData::GetNext<LowpanContextInfo>(Iterator &, LowpanContextInfo &) const;
+extern template Error NetworkData::GetNext<OnMeshPrefixConfig>(Iterator &, uint16_t, OnMeshPrefixConfig &) const;
+extern template Error NetworkData::GetNext<ExternalRouteConfig>(Iterator &, uint16_t, ExternalRouteConfig &) const;
+extern template Error NetworkData::GetNext<ServiceConfig>(Iterator &, uint16_t, ServiceConfig &) const;
+extern template Error NetworkData::GetNext<LowpanContextInfo>(Iterator &, uint16_t, LowpanContextInfo &) const;
+extern template bool  NetworkData::Contains<OnMeshPrefixConfig>(const OnMeshPrefixConfig &) const;
+extern template bool  NetworkData::Contains<ExternalRouteConfig>(const ExternalRouteConfig &) const;
+extern template bool  NetworkData::Contains<ServiceConfig>(const ServiceConfig &) const;
 
 /**
  * Represents mutable Network Data.

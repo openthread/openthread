@@ -108,6 +108,7 @@ public:
         kInStateAnyExceptInvalid,          ///< Accept neighbor in any state except `kStateInvalid`.
         kInStateAnyExceptValidOrRestoring, ///< Accept neighbor in any state except `IsStateValidOrRestoring()`.
         kInStateAny,                       ///< Accept neighbor in any state.
+        kInStateLinkRequest,               ///< Accept neighbor only in `State::kStateLinkRequest`.
     };
 
     /**

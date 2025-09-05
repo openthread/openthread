@@ -286,7 +286,7 @@ public:
      */
     void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
 #else
-    void    RecordFrameTransmitStatus(const TxFrame &, Error, uint8_t, bool) {}
+    void RecordFrameTransmitStatus(const TxFrame &, Error, uint8_t, bool) {}
 #endif
 
 private:

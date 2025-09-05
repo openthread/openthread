@@ -1252,7 +1252,7 @@ void AdvertisingProxy::HandleTimer(void)
 
     VerifyOrExit(mState == kStateRunning);
 
-    mAdvInfoList.RemoveAllMatching(expiredList, AdvInfo::ExpirationChecker(nextTime.GetNow()));
+    mAdvInfoList.RemoveAllMatching(expiredList, ExpirationChecker(nextTime.GetNow()));
 
     for (AdvInfo &adv : mAdvInfoList)
     {

@@ -154,15 +154,13 @@ extern int
 
 #include "ip6_utils.hpp"
 #include "logger.hpp"
+#include "mainloop.hpp"
 #include "resolver.hpp"
 #include "utils.hpp"
 #include "common/code_utils.hpp"
 
 unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-static otIp4Cidr sActiveNat64Cidr;
-#endif
 
 const char *otSysGetThreadNetifName(void) { return gNetifName; }
 
@@ -211,10 +209,6 @@ static constexpr uint32_t kExternalRoutePriority  = OPENTHREAD_POSIX_CONFIG_EXTE
 static constexpr uint8_t  kMaxExternalRoutesNum   = OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM;
 static uint8_t            sAddedExternalRoutesNum = 0;
 static otIp6Prefix        sAddedExternalRoutes[kMaxExternalRoutesNum];
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-static constexpr uint32_t kNat64RoutePriority = 100; ///< Priority for route to NAT64 CIDR, 100 means a high priority.
 #endif
 
 #if defined(RTM_NEWMADDR) || defined(__NetBSD__)
@@ -975,6 +969,11 @@ static void processAddressChange(const otIp6AddressInfo *aAddressInfo, bool aIsA
 }
 
 #if defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+
+static otIp4Cidr sActiveNat64Cidr;
+
+static constexpr uint32_t kNat64RoutePriority = 100; // Priority for route to NAT64 CIDR, 100 means a high priority.
+
 static bool isSameIp4Cidr(const otIp4Cidr &aCidr1, const otIp4Cidr &aCidr2)
 {
     bool res = true;
@@ -1108,8 +1107,9 @@ exit:
     }
 }
 
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || \
-    (OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE)
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE ||                                                    \
+    (OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && \
+     !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE)
 static constexpr uint8_t kIpVersion4 = 4;
 static constexpr uint8_t kIpVersion6 = 6;
 
@@ -1125,7 +1125,8 @@ static uint8_t getIpVersion(const uint8_t *data)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && \
+    !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 
 /**
  * Returns nullptr if data does not point to a valid ICMPv6 RA message.
@@ -1170,7 +1171,7 @@ static otError tryProcessIcmp6RaMessage(otInstance *aInstance, const uint8_t *da
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && ...
 
 #ifdef __linux__
 /**
@@ -1236,7 +1237,8 @@ static void processTransmit(otInstance *aInstance)
     }
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && \
+    !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
     if (tryProcessIcmp6RaMessage(aInstance, reinterpret_cast<uint8_t *>(&packet[offset]), rval) == OT_ERROR_NONE)
     {
         ExitNow();
@@ -1472,17 +1474,17 @@ exit:
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 
 #if defined(__FreeBSD__)
-#define ROUNDUP(a) ((a) > 0 ? (1 + (((a)-1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
+#define ROUNDUP(a) ((a) > 0 ? (1 + (((a) - 1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
 #endif
 
 #if defined(__APPLE__)
-#define ROUNDUP(a) ((a) > 0 ? (1 + (((a)-1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
+#define ROUNDUP(a) ((a) > 0 ? (1 + (((a) - 1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
 #define DARWIN_SA_SIZE(sa) ROUNDUP(sa->sa_len)
 #define SA_SIZE(sa) DARWIN_SA_SIZE(sa)
 #endif
 
 #if defined(__NetBSD__)
-#define RT_ROUNDUP2(a, n) ((a) > 0 ? (1 + (((a)-1U) | ((n)-1))) : (n))
+#define RT_ROUNDUP2(a, n) ((a) > 0 ? (1 + (((a) - 1U) | ((n) - 1))) : (n))
 #define RT_ROUNDUP(a) RT_ROUNDUP2((a), sizeof(uint64_t))
 #define SA_SIZE(sa) RT_ROUNDUP(sa->sa_len)
 #endif
@@ -2331,7 +2333,7 @@ void platformNetifDeinit(void)
     gNetifIndex = 0;
 }
 
-void platformNetifUpdateFdSet(otSysMainloopContext *aContext)
+void platformNetifUpdateFdSet(ot::Posix::Mainloop::Context *aContext)
 {
     VerifyOrExit(gNetifIndex > 0);
 
@@ -2340,72 +2342,56 @@ void platformNetifUpdateFdSet(otSysMainloopContext *aContext)
     assert(sNetlinkFd >= 0);
     assert(sIpFd >= 0);
 
-    FD_SET(sTunFd, &aContext->mReadFdSet);
-    FD_SET(sTunFd, &aContext->mErrorFdSet);
-    FD_SET(sNetlinkFd, &aContext->mReadFdSet);
-    FD_SET(sNetlinkFd, &aContext->mErrorFdSet);
+    ot::Posix::Mainloop::AddToReadFdSet(sTunFd, *aContext);
+    ot::Posix::Mainloop::AddToErrorFdSet(sTunFd, *aContext);
+    ot::Posix::Mainloop::AddToReadFdSet(sNetlinkFd, *aContext);
+    ot::Posix::Mainloop::AddToErrorFdSet(sNetlinkFd, *aContext);
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    FD_SET(sMLDMonitorFd, &aContext->mReadFdSet);
-    FD_SET(sMLDMonitorFd, &aContext->mErrorFdSet);
+    ot::Posix::Mainloop::AddToReadFdSet(sMLDMonitorFd, *aContext);
+    ot::Posix::Mainloop::AddToErrorFdSet(sMLDMonitorFd, *aContext);
 #endif
 
-    if (sTunFd > aContext->mMaxFd)
-    {
-        aContext->mMaxFd = sTunFd;
-    }
-
-    if (sNetlinkFd > aContext->mMaxFd)
-    {
-        aContext->mMaxFd = sNetlinkFd;
-    }
-
-#if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    if (sMLDMonitorFd > aContext->mMaxFd)
-    {
-        aContext->mMaxFd = sMLDMonitorFd;
-    }
-#endif
 exit:
     return;
 }
 
-void platformNetifProcess(const otSysMainloopContext *aContext)
+void platformNetifProcess(const ot::Posix::Mainloop::Context *aContext)
 {
     assert(aContext != nullptr);
     VerifyOrExit(gNetifIndex > 0);
 
-    if (FD_ISSET(sTunFd, &aContext->mErrorFdSet))
+    if (ot::Posix::Mainloop::HasFdErrored(sTunFd, *aContext))
     {
         close(sTunFd);
         DieNow(OT_EXIT_FAILURE);
     }
 
-    if (FD_ISSET(sNetlinkFd, &aContext->mErrorFdSet))
+    if (ot::Posix::Mainloop::HasFdErrored(sNetlinkFd, *aContext))
     {
         close(sNetlinkFd);
         DieNow(OT_EXIT_FAILURE);
     }
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    if (FD_ISSET(sMLDMonitorFd, &aContext->mErrorFdSet))
+    if (ot::Posix::Mainloop::HasFdErrored(sMLDMonitorFd, *aContext))
     {
         close(sMLDMonitorFd);
         DieNow(OT_EXIT_FAILURE);
     }
 #endif
 
-    if (FD_ISSET(sTunFd, &aContext->mReadFdSet))
+    if (ot::Posix::Mainloop::IsFdReadable(sTunFd, *aContext))
     {
         processTransmit(gInstance);
     }
 
-    if (FD_ISSET(sNetlinkFd, &aContext->mReadFdSet))
+    if (ot::Posix::Mainloop::IsFdReadable(sNetlinkFd, *aContext))
     {
         processNetlinkEvent(gInstance);
     }
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    if (FD_ISSET(sMLDMonitorFd, &aContext->mReadFdSet))
+    if (ot::Posix::Mainloop::IsFdReadable(sMLDMonitorFd, *aContext))
     {
         processMLDEvent(gInstance);
     }

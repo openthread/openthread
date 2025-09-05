@@ -887,7 +887,7 @@ void RouterTable::HandleTableChanged(void)
 #endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Get<Utils::HistoryTracker>().RecordRouterTableChange();
+    Get<HistoryTracker::Local>().RecordRouterTableChange();
 #endif
 
     Get<Mle::Mle>().UpdateAdvertiseInterval();

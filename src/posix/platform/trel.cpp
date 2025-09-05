@@ -47,6 +47,7 @@
 #include <openthread/platform/trel.h>
 
 #include "logger.hpp"
+#include "mainloop.hpp"
 #include "radio_url.hpp"
 #include "system.hpp"
 #include "utils.hpp"
@@ -666,22 +667,17 @@ exit:
     return;
 }
 
-void platformTrelUpdateFdSet(otSysMainloopContext *aContext)
+void platformTrelUpdateFdSet(ot::Posix::Mainloop::Context *aContext)
 {
     assert(aContext != nullptr);
 
     VerifyOrExit(sEnabled);
 
-    FD_SET(sSocket, &aContext->mReadFdSet);
+    ot::Posix::Mainloop::AddToReadFdSet(sSocket, *aContext);
 
     if (sTxPacketQueueTail != nullptr)
     {
-        FD_SET(sSocket, &aContext->mWriteFdSet);
-    }
-
-    if (aContext->mMaxFd < sSocket)
-    {
-        aContext->mMaxFd = sSocket;
+        ot::Posix::Mainloop::AddToWriteFdSet(sSocket, *aContext);
     }
 
     trelDnssdUpdateFdSet(aContext);
@@ -690,16 +686,16 @@ exit:
     return;
 }
 
-void platformTrelProcess(otInstance *aInstance, const otSysMainloopContext *aContext)
+void platformTrelProcess(otInstance *aInstance, const ot::Posix::Mainloop::Context *aContext)
 {
     VerifyOrExit(sEnabled);
 
-    if (FD_ISSET(sSocket, &aContext->mWriteFdSet))
+    if (ot::Posix::Mainloop::IsFdWritable(sSocket, *aContext))
     {
         SendQueuedPackets();
     }
 
-    if (FD_ISSET(sSocket, &aContext->mReadFdSet))
+    if (ot::Posix::Mainloop::IsFdReadable(sSocket, *aContext))
     {
         ReceivePacket(sSocket, aInstance);
     }

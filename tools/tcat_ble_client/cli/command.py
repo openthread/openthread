@@ -90,10 +90,7 @@ class CommandResultTLV(CommandResult):
         else:
             print(f'\tTYPE:\tunknown: {hex(tlv.type)} ({tlv.type})')
         print(f'\tLEN:\t{len(tlv.value)}')
-        if tlv_type == TcatTLVType.APPLICATION:
-            print(f'\tVALUE:\t{tlv.value.decode("ascii")}')
-        else:
-            print(f'\tVALUE:\t0x{tlv.value.hex()}')
+        print(f'\tVALUE:\t0x{tlv.value.hex()}')
 
 
 class CommandResultNone(CommandResult):

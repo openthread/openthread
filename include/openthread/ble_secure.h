@@ -85,6 +85,10 @@ typedef void (*otHandleBleSecureConnect)(otInstance *aInstance,
 
 /**
  * Pointer to call when data was received over a BLE Secure TLS connection.
+ *
+ * When TCAT has been started, the TCAT agent automatically responds with status OT_TCAT_STATUS_UNSUPPORTED
+ * if no response has been generated or no handler is defined. The application may generate a response to
+ * incoming TCAT application data or vendor-specific data by calling `otBleSecureSendApplicationTlv`.
  */
 typedef otHandleTcatApplicationDataReceive otHandleBleSecureReceive;
 
@@ -409,17 +413,30 @@ otError otBleSecureSendMessage(otInstance *aInstance, otMessage *aMessage);
 otError otBleSecureSend(otInstance *aInstance, uint8_t *aBuf, uint16_t aLength);
 
 /**
- * Sends a secure BLE data packet containing a TCAT Send Application Data TLV.
+ * Sends a secure BLE data packet containing application data directed to the application layer @p  aApplicationProtocol
+ * or a response to the latest received application data packet.
  *
- * @param[in]  aInstance       A pointer to an OpenThread instance.
- * @param[in]  aBuf            A pointer to the data to send as the Value of the TCAT Send Application Data TLV.
- * @param[in]  aLength         A number indicating the length of the data buffer.
+ * Only a single response can be sent while executing the `otHandleBleSecureReceive` handler. If no (further) response
+ * is expected `OT_ERROR_REJECTED` is returned.
  *
- * @retval OT_ERROR_NONE           Successfully sent data.
- * @retval OT_ERROR_NO_BUFS        Failed to allocate buffer memory.
- * @retval OT_ERROR_INVALID_STATE  TLS connection was not initialized.
+ * For responses with a payload @p aApplicationProtocol shall be set to `OT_TCAT_APPLICATION_PROTOCOL_PAYLOAD`.
+ * For responses with a status @p aApplicationProtocol shall be `OT_TCAT_APPLICATION_PROTOCOL_STATUS` and @ aBuf shall
+ * contain a single byte `otTcatStatusCode` value.
+ *
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aApplicationProtocol  An application protocol the data is directed to.
+ * @param[in]  aBuf                  A pointer to the data to send as the Value of the TCAT Send Application Data TLV.
+ * @param[in]  aLength               A number indicating the length of the data buffer.
+ *
+ * @retval OT_ERROR_NONE             Successfully sent data.
+ * @retval OT_ERROR_NO_BUFS          Failed to allocate buffer memory.
+ * @retval OT_ERROR_INVALID_STATE    TLS connection was not initialized.
+ * @retval OT_ERROR_REJECTED         Application protocol is response with data or status but no response is pending.
  */
-otError otBleSecureSendApplicationTlv(otInstance *aInstance, uint8_t *aBuf, uint16_t aLength);
+otError otBleSecureSendApplicationTlv(otInstance               *aInstance,
+                                      otTcatApplicationProtocol aApplicationProtocol,
+                                      uint8_t                  *aBuf,
+                                      uint16_t                  aLength);
 
 /**
  * Flushes the send buffer.

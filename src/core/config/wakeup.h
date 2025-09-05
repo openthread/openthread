@@ -90,6 +90,24 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_WAKEUP_TX_INTERVAL
+ *
+ * The default time interval between (start of) wake-up frame transmissions in microseconds.
+ */
+#ifndef OPENTHREAD_CONFIG_WAKEUP_TX_INTERVAL
+#define OPENTHREAD_CONFIG_WAKEUP_TX_INTERVAL 7500
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_WAKEUP_MAX_DURATION
+ *
+ * The default duration of time that wake-up frames are periodically transmitted in milliseconds.
+ */
+#ifndef OPENTHREAD_CONFIG_WAKEUP_MAX_DURATION
+#define OPENTHREAD_CONFIG_WAKEUP_MAX_DURATION 1090
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_WED_LISTEN_INTERVAL
  *
  * The default wake-up listen interval in microseconds.

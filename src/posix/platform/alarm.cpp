@@ -38,6 +38,7 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 
+#include "mainloop.hpp"
 #include "common/code_utils.hpp"
 
 static bool     sIsMsRunning = false;
@@ -172,7 +173,7 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
     sUsAlarm     = aT0 + aDt;
     sIsUsRunning = true;
 
-#ifdef __linux__
+#if defined(__linux__) && !OPENTHREAD_POSIX_VIRTUAL_TIME
     if (sRealTimeSignal != 0)
     {
         struct itimerspec its;
@@ -189,7 +190,7 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
             otLogWarnPlat("Failed to update microsecond timer: %s", strerror(errno));
         }
     }
-#endif // __linux__
+#endif // defined( __linux__) && !OPENTHREAD_POSIX_VIRTUAL_TIME
 }
 
 void otPlatAlarmMicroStop(otInstance *aInstance)
@@ -198,7 +199,7 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
 
     sIsUsRunning = false;
 
-#ifdef __linux__
+#if defined(__linux__) && !OPENTHREAD_POSIX_VIRTUAL_TIME
     if (sRealTimeSignal != 0)
     {
         struct itimerspec its = {{0, 0}, {0, 0}};
@@ -208,7 +209,7 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
             otLogWarnPlat("Failed to stop microsecond timer: %s", strerror(errno));
         }
     }
-#endif // __linux__
+#endif // defined( __linux__) && !OPENTHREAD_POSIX_VIRTUAL_TIME
 }
 #endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 

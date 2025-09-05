@@ -690,10 +690,10 @@ void Publisher::DnsSrpServiceEntry::CountAnycastEntries(uint8_t &aNumEntries, ui
     //  (routers are preferred over end-devices. If same type, then
     //  the smaller RLOC16 value is preferred).
 
-    Service::Manager::Iterator iterator;
+    Service::Iterator          iterator(GetInstance());
     Service::DnsSrpAnycastInfo anycastInfo;
 
-    while (Get<Service::Manager>().GetNextDnsSrpAnycastInfo(iterator, anycastInfo) == kErrorNone)
+    while (iterator.GetNextDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
     {
         if (anycastInfo.mSequenceNumber == mInfo.GetSequenceNumber() && (anycastInfo.mVersion >= mInfo.GetVersion()))
         {
@@ -709,10 +709,10 @@ void Publisher::DnsSrpServiceEntry::CountAnycastEntries(uint8_t &aNumEntries, ui
 
 bool Publisher::DnsSrpServiceEntry::HasAnyAnycastEntry(void) const
 {
-    Service::Manager::Iterator iterator;
+    Service::Iterator          iterator(GetInstance());
     Service::DnsSrpAnycastInfo anycastInfo;
 
-    return (Get<Service::Manager>().GetNextDnsSrpAnycastInfo(iterator, anycastInfo) == kErrorNone);
+    return (iterator.GetNextDnsSrpAnycastInfo(anycastInfo) == kErrorNone);
 }
 
 void Publisher::DnsSrpServiceEntry::CountUnicastEntries(Service::DnsSrpUnicastType aType,
@@ -726,10 +726,10 @@ void Publisher::DnsSrpServiceEntry::CountUnicastEntries(Service::DnsSrpUnicastTy
     // over end-devices. If same type, then the smaller RLOC16 value is
     // preferred).
 
-    Service::Manager::Iterator iterator;
+    Service::Iterator          iterator(GetInstance());
     Service::DnsSrpUnicastInfo unicastInfo;
 
-    while (Get<Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, aType, unicastInfo) == kErrorNone)
+    while (iterator.GetNextDnsSrpUnicastInfo(aType, unicastInfo) == kErrorNone)
     {
         if (unicastInfo.mVersion >= mInfo.GetVersion())
         {
@@ -745,11 +745,11 @@ void Publisher::DnsSrpServiceEntry::CountUnicastEntries(Service::DnsSrpUnicastTy
 
 bool Publisher::DnsSrpServiceEntry::HasAnyServiceDataUnicastEntry(void) const
 {
-    Service::Manager::Iterator iterator;
+    Service::Iterator          iterator(GetInstance());
     Service::DnsSrpUnicastInfo unicastInfo;
     Service::DnsSrpUnicastType type = Service::kAddrInServiceData;
 
-    return (Get<Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, type, unicastInfo) == kErrorNone);
+    return (iterator.GetNextDnsSrpUnicastInfo(type, unicastInfo) == kErrorNone);
 }
 
 //---------------------------------------------------------------------------------------------------------------------

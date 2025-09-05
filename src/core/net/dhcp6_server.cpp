@@ -61,10 +61,9 @@ void Server::HandleNotifierEvents(Events aEvents)
 
 void Server::UpdateService(void)
 {
-    Error                           error  = kErrorNone;
     uint16_t                        rloc16 = Get<Mle::Mle>().GetRloc16();
     NetworkData::Iterator           iterator;
-    NetworkData::OnMeshPrefixConfig config;
+    NetworkData::OnMeshPrefixConfig prefixConfig;
     Lowpan::Context                 lowpanContext;
 
     // remove dhcp agent aloc and prefix delegation
@@ -79,16 +78,16 @@ void Server::UpdateService(void)
 
         iterator = NetworkData::kIteratorInit;
 
-        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == kErrorNone)
+        while (Get<NetworkData::Leader>().GetNext(iterator, rloc16, prefixConfig) == kErrorNone)
         {
-            if (!(config.mDhcp || config.mConfigure))
+            if (!(prefixConfig.mDhcp || prefixConfig.mConfigure))
             {
                 continue;
             }
 
-            error = Get<NetworkData::Leader>().GetContext(prefixAgent.GetPrefixAsAddress(), lowpanContext);
+            Get<NetworkData::Leader>().FindContextForAddress(prefixAgent.GetPrefixAsAddress(), lowpanContext);
 
-            if ((error == kErrorNone) && (prefixAgent.GetContextId() == lowpanContext.mContextId))
+            if (lowpanContext.MatchesContextId(prefixAgent.GetContextId()))
             {
                 // still in network data
                 found = true;
@@ -107,18 +106,18 @@ void Server::UpdateService(void)
     // add dhcp agent aloc and prefix delegation
     iterator = NetworkData::kIteratorInit;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, rloc16, prefixConfig) == kErrorNone)
     {
-        if (!(config.mDhcp || config.mConfigure))
+        if (!(prefixConfig.mDhcp || prefixConfig.mConfigure))
         {
             continue;
         }
 
-        error = Get<NetworkData::Leader>().GetContext(AsCoreType(&config.mPrefix.mPrefix), lowpanContext);
+        Get<NetworkData::Leader>().FindContextForAddress(AsCoreType(&prefixConfig.mPrefix.mPrefix), lowpanContext);
 
-        if (error == kErrorNone)
+        if (lowpanContext.IsValid())
         {
-            AddPrefixAgent(config.GetPrefix(), lowpanContext);
+            AddPrefixAgent(prefixConfig.GetPrefix(), lowpanContext.GetContextId());
         }
     }
 
@@ -145,7 +144,7 @@ exit:
 
 void Server::Stop(void) { IgnoreError(mSocket.Close()); }
 
-void Server::AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context &aContext)
+void Server::AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, uint8_t aContextId)
 {
     Error        error    = kErrorNone;
     PrefixAgent *newEntry = nullptr;
@@ -165,7 +164,7 @@ void Server::AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context
 
     VerifyOrExit(newEntry != nullptr, error = kErrorNoBufs);
 
-    newEntry->Set(aIp6Prefix, Get<Mle::Mle>().GetMeshLocalPrefix(), aContext.mContextId);
+    newEntry->Set(aIp6Prefix, Get<Mle::Mle>().GetMeshLocalPrefix(), aContextId);
     Get<ThreadNetif>().AddUnicastAddress(newEntry->GetAloc());
     mPrefixAgentsCount++;
 

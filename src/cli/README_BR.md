@@ -8,6 +8,7 @@ Usage : `br [command] ...`
 - [disable](#disable)
 - [enable](#enable)
 - [help](#help)
+- [ifaddrs](#ifaddrs)
 - [init](#init)
 - [nat64prefix](#nat64prefix)
 - [omrprefix](#omrprefix)
@@ -57,6 +58,34 @@ Initializes the Border Routing Manager on given infrastructure interface.
 
 ```bash
 > br init 2 1
+Done
+```
+
+### ifaddrs
+
+Usage: `br ifaddrs`
+
+Get the infrastructure interface addresses. These are addresses used by the BR itself, for example, when sending Router Advertisements.
+
+Info per entry:
+
+- IPv6 address.
+- Seconds since the last RA was sent from this BR using this address.
+
+```bash
+> br ifaddrs
+fe80::896:228b:4ae0:8609, sec-since-use:15
+```
+
+### infraif
+
+Usage: `br infraif`
+
+Get the interface index and running state of the configured infrastructure interface.
+
+```bash
+> br infraif
+if-index:2, is-running:yes
 Done
 ```
 

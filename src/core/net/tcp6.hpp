@@ -641,11 +641,8 @@ public:
     bool IsInitialized(const Listener &aListener) const { return mListeners.Contains(aListener); }
 
 private:
-    enum
-    {
-        kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry
-        kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
-    };
+    static constexpr uint16_t kDynamicPortMin = 49152;
+    static constexpr uint16_t kDynamicPortMax = 65535;
 
     static constexpr uint8_t kEstablishedCallbackFlag      = (1 << 0);
     static constexpr uint8_t kSendDoneCallbackFlag         = (1 << 1);

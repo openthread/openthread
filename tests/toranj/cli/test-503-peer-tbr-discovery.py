@@ -119,6 +119,9 @@ for br in all_brs:
     for other_br in other_brs:
         rloc16 = other_br.get_rloc16()
         verify(any([rloc16 in peer for peer in peers]))
+    ifaddrs = br.br_get_ifaddrs()
+    verify(len(ifaddrs) == 1)
+    verify(ifaddrs[0].startswith('fe80:'))
 
 # Disable BR3 and validate that BR1 and BR2 detect this.
 # BR3 itself should continue to detect BR1 and BR2

@@ -30,6 +30,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <openthread/border_routing.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/message.h>
@@ -241,6 +242,35 @@ typedef struct otHistoryTrackerExternalRouteInfo
 } otHistoryTrackerExternalRouteInfo;
 
 /**
+ * Represents the DNS/SRP server address type parsed from Network Data service entries.
+ */
+typedef enum
+{
+    OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_UNICAST_LOCAL, ///< Unicast address type local (in server data).
+    OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_UNICAST_INFRA, ///< Unicast address type infrastructure (in service data).
+    OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_ANYCAST,       ///< Anycast address type.
+} otHistoryTrackerDnsSrpAddrType;
+
+/**
+ * Represents DNS/SRP server address information parsed from a Network Data service entry.
+ *
+ * The `mType` field specifies the entry type. Some fields are only applicable to specific types.
+ * - The `mPort` field is only applicable for `OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_UNICAST_*` types.
+ * - The `mSequenceNumber` field is only applicable for the `OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_ANYCAST` type.
+ * - Other fields are common and used for all address types.
+ */
+typedef struct otHistoryTrackerDnsSrpAddrInfo
+{
+    otIp6Address                   mAddress;        ///< The server address.
+    uint16_t                       mRloc16;         ///< The RLOC16 of the Border Router adding/removing the entry.
+    uint16_t                       mPort;           ///< Port number.
+    uint8_t                        mSequenceNumber; ///< Anycast sequence number.
+    uint8_t                        mVersion;        ///< Version number.
+    otHistoryTrackerDnsSrpAddrType mType;           ///< Address type.
+    otHistoryTrackerNetDataEvent   mEvent;          ///< Indicates the event (added/removed).
+} otHistoryTrackerDnsSrpAddrInfo;
+
+/**
  * Represents events during the Border Agent's ePSKc journey.
  */
 typedef enum
@@ -259,6 +289,83 @@ typedef enum
     OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_EPSKC_TIMEOUT,   ///< ePSKc mode timed out.
     OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_DEACTIVATED_UNKNOWN,         ///< Deactivated for an unknown reason.
 } otHistoryTrackerBorderAgentEpskcEvent;
+
+/**
+ * Represents a favored OMR prefix tracked by a device acting as a Border Router (BR).
+ *
+ * The `mIsLocal` field indicates whether the favored OMR prefix is the same as the local one maintained by this BR.
+ * The local OMR prefix can be either based on (random) ULA or a prefix delegated via DHCPv6-PD.
+ */
+typedef struct otHistoryTrackerFavoredOmrPrefix
+{
+    otIp6Prefix mOmrPrefix;      ///< The OMR prefix.
+    signed int  mPreference : 2; ///< The 2-bit signed preference (`OT_ROUTE_PREFERENCE_*` values).
+    bool        mIsLocal : 1;    ///< `true` if the prefix is the local OMR prefix; `false` otherwise.
+} otHistoryTrackerFavoredOmrPrefix;
+
+/**
+ * Represents a favored on-link prefix on AIL tracked by a device acting as a Border Router (BR).
+ *
+ * The `mIsLocal` field indicates whether the favored on-link prefix is the same as the local one maintained by this
+ * BR.
+ */
+typedef struct otHistoryTrackerFavoredOnLinkPrefix
+{
+    otIp6Prefix mOnLinkPrefix; ///< The on-link prefix.
+    bool        mIsLocal : 1;  ///< `true` if the prefix is the local on-link prefix; `false` otherwise.
+} otHistoryTrackerFavoredOnLinkPrefix;
+
+/**
+ * Represents the DHCPv6-PD state and delegated prefix (if any) by a device acting as Border Router (BR).
+ */
+typedef struct otHistoryTrackerDhcp6PdInfo
+{
+    otIp6Prefix                 mPrefix; ///< The delegated prefix if any. If none, it is set to `::/0`.
+    otBorderRoutingDhcp6PdState mState;  ///< The DHCPv6 state.
+} otHistoryTrackerDhcp6PdInfo;
+
+/**
+ * Defines events for discovered routers on an Adjacent Infrastructure Link (AIL).
+ *
+ * This applies when a device is acting as a Border Router, processing received Router Advertisements and tracking
+ * AIL routers.
+ *
+ * `OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_CHANGED` is used if any of the properties in the `otHistoryTrackerAilRouter`
+ * structure associated with a specific router changes.
+ */
+typedef enum
+{
+    OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_ADDED   = 0, ///< A new AIL router is discovered.
+    OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_CHANGED = 1, ///< A property in the router's information has changed.
+    OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_REMOVED = 2, ///< The AIL router is removed and no longer tracked.
+} otHistoryTrackerAilRouterEvent;
+
+/**
+ * Represents information about a discovered router on an Adjacent Infrastructure Link (AIL).
+ *
+ * This applies when a device is acting as a Border Router, processing received Router Advertisements and tracking
+ * information about discovered AIL routers.
+ *
+ * `mProvidesDefaultRoute` indicates whether the router provides a default route. If it does, `mDefRoutePreference`
+ * specifies the route preference.
+ *
+ * `mFavoredOnLinkPrefix` indicates the favored on-link prefix advertised by the router. If there is no on-link prefix,
+ * this will be an empty prefix (i.e., its length will be zero).
+ */
+typedef struct otHistoryTrackerAilRouter
+{
+    otHistoryTrackerAilRouterEvent mEvent;                        ///< The event type (e.g., added, changed, removed).
+    int8_t                         mDefRoutePreference;           ///< Def route preference.
+    otIp6Address                   mAddress;                      ///< The IPv6 address of the AIL router.
+    otIp6Prefix                    mFavoredOnLinkPrefix;          ///< The favored on-link prefix, if any.
+    bool                           mProvidesDefaultRoute : 1;     ///< Whether the router provides a default route.
+    bool                           mManagedAddressConfigFlag : 1; ///< The Managed Address Config flag (`M` flag).
+    bool                           mOtherConfigFlag : 1;          ///< The Other Config flag (`O` flag).
+    bool                           mSnacRouterFlag : 1;           ///< The SNAC Router flag (`S` flag).
+    bool                           mIsLocalDevice : 1;            ///< This router is the local device (this BR).
+    bool                           mIsReachable : 1;              ///< This router is reachable.
+    bool                           mIsPeerBr : 1;                 ///< This router is (likely) a peer BR.
+} otHistoryTrackerAilRouter;
 
 /**
  * Initializes an `otHistoryTrackerIterator`.
@@ -423,6 +530,22 @@ const otHistoryTrackerExternalRouteInfo *otHistoryTrackerIterateExternalRouteHis
     uint32_t                 *aEntryAge);
 
 /**
+ * Iterates over the entries in the Network Data SRP/DNS address history list.
+ *
+ * @param[in]     aInstance  A pointer to the OpenThread instance.
+ * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
+ * @param[out]    aEntryAge  A pointer to a variable to output the entry's age. MUST NOT be NULL.
+ *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+ *                           @p aIterator initialization time. It is set to `OT_HISTORY_TRACKER_MAX_AGE` for entries
+ *                           older than max age.
+ *
+ * @returns The `otHistoryTrackerDnsSrpAddrInfo` entry or `NULL` if no more entries in the list.
+ */
+const otHistoryTrackerDnsSrpAddrInfo *otHistoryTrackerIterateDnsSrpAddrHistory(otInstance               *aInstance,
+                                                                               otHistoryTrackerIterator *aIterator,
+                                                                               uint32_t                 *aEntryAge);
+
+/**
  * Iterates over the entries in the Border Agent ePSKc history list.
  *
  * @param[in]     aInstance  A pointer to the OpenThread instance.
@@ -438,6 +561,80 @@ const otHistoryTrackerBorderAgentEpskcEvent *otHistoryTrackerIterateBorderAgentE
     otInstance               *aInstance,
     otHistoryTrackerIterator *aIterator,
     uint32_t                 *aEntryAge);
+
+/**
+ * Iterates over the entries in the favored OMR prefix history list.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` (device acting as Border Router).
+ *
+ * @param[in]     aInstance  A pointer to the OpenThread instance.
+ * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
+ * @param[out]    aEntryAge  A pointer to a variable to output the entry's age. MUST NOT be NULL.
+ *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+ *                           @p aIterator initialization time. It is set to `OT_HISTORY_TRACKER_MAX_AGE` for entries
+ *                           older than max age.
+ *
+ * @returns The `otHistoryTrackerFavoredOmrPrefix` entry or `NULL` if no more entries in the list.
+ */
+const otHistoryTrackerFavoredOmrPrefix *otHistoryTrackerIterateFavoredOmrPrefixHistory(
+    otInstance               *aInstance,
+    otHistoryTrackerIterator *aIterator,
+    uint32_t                 *aEntryAge);
+
+/**
+ * Iterates over the entries in the favored on-link prefix history list.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` (device acting as Border Router).
+ *
+ * @param[in]     aInstance  A pointer to the OpenThread instance.
+ * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
+ * @param[out]    aEntryAge  A pointer to a variable to output the entry's age. MUST NOT be NULL.
+ *                           Age is provided as the duration (in milliseconds) from when the entry was recorded to
+ *                           @p aIterator initialization time. It is set to `OT_HISTORY_TRACKER_MAX_AGE` for entries
+ *                           older than the max age.
+ *
+ * @returns The `otHistoryTrackerFavoredOnLinkPrefix` entry or `NULL` if no more entries in the list.
+ */
+const otHistoryTrackerFavoredOnLinkPrefix *otHistoryTrackerIterateFavoredOnLinkPrefixHistory(
+    otInstance               *aInstance,
+    otHistoryTrackerIterator *aIterator,
+    uint32_t                 *aEntryAge);
+
+/**
+ * Iterates over the entries in the DHCPv6-PD history list.
+ *
+ * Requires both `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` and `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE`.
+ *
+ * @param[in]     aInstance  A pointer to the OpenThread instance.
+ * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
+ * @param[out]    aEntryAge  A pointer to a variable to output the entry's age. MUST NOT be NULL.
+ *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+ *                           @p aIterator initialization time. It is set to `OT_HISTORY_TRACKER_MAX_AGE` for entries
+ *                           older than max age.
+ *
+ * @returns The `otHistoryTrackerDhcp6PdInfo` entry or `NULL` if no more entries in the list.
+ */
+const otHistoryTrackerDhcp6PdInfo *otHistoryTrackerIterateDhcp6PdHistory(otInstance               *aInstance,
+                                                                         otHistoryTrackerIterator *aIterator,
+                                                                         uint32_t                 *aEntryAge);
+
+/**
+ * Iterates over the entries in the BR AIL routers history list.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` (device acting as Border Router).
+ *
+ * @param[in]     aInstance  A pointer to the OpenThread instance.
+ * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
+ * @param[out]    aEntryAge  A pointer to a variable to output the entry's age. MUST NOT be NULL.
+ *                           Age is provided as the duration (in milliseconds) from when the entry was recorded to
+ *                           @p aIterator initialization time. It is set to `OT_HISTORY_TRACKER_MAX_AGE` for entries
+ *                           older than the max age.
+ *
+ * @returns The `otHistoryTrackerAilRouter` entry or `NULL` if no more entries in the list.
+ */
+const otHistoryTrackerAilRouter *otHistoryTrackerIterateAilRoutersHistory(otInstance               *aInstance,
+                                                                          otHistoryTrackerIterator *aIterator,
+                                                                          uint32_t                 *aEntryAge);
 
 /**
  * Converts a given entry age to a human-readable string.

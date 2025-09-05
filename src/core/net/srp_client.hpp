@@ -941,7 +941,8 @@ private:
     class AutoStart : public Clearable<AutoStart>
     {
     public:
-        enum State : uint8_t{
+        enum State : uint8_t
+        {
             kDisabled,                 // Disabled.
             kFirstTimeSelecting,       // Trying to select a server for the first time since AutoStart was enabled.
             kReselecting,              // Trying to select a server again (previously selected server was removed).
@@ -1058,7 +1059,7 @@ private:
     static const char *StateToString(State aState);
     void               LogRetryWaitInterval(void) const;
 #else
-    void                                 LogRetryWaitInterval(void) const {}
+    void LogRetryWaitInterval(void) const {}
 #endif
 
     static const char kDefaultDomainName[];

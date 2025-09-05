@@ -581,29 +581,19 @@ template <> otError SrpServer::Process<Cmd("seqnum")>(Arg aArgs[])
 
 otError SrpServer::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                                 \
-    {                                                            \
-        aCommandString, &SrpServer::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &SrpServer::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
         CmdEntry("addrmode"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
         CmdEntry("auto"),
 #endif
-        CmdEntry("disable"),
-        CmdEntry("domain"),
-        CmdEntry("enable"),
+        CmdEntry("disable"),   CmdEntry("domain"), CmdEntry("enable"),
 #if OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
         CmdEntry("faststart"),
 #endif
-        CmdEntry("host"),
-        CmdEntry("lease"),
-        CmdEntry("port"),
-        CmdEntry("seqnum"),
-        CmdEntry("service"),
-        CmdEntry("state"),
-        CmdEntry("ttl"),
+        CmdEntry("host"),      CmdEntry("lease"),  CmdEntry("port"),   CmdEntry("seqnum"),
+        CmdEntry("service"),   CmdEntry("state"),  CmdEntry("ttl"),
     };
 
     static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");

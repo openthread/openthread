@@ -36,9 +36,9 @@
 
 #include "openthread-core-config.h"
 
+#include "common/bit_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
-#include "common/numeric_limits.hpp"
 #include "common/time.hpp"
 #include "common/timer.hpp"
 

@@ -41,6 +41,7 @@
 
 #include "common/appender.hpp"
 #include "common/as_core_type.hpp"
+#include "common/bit_utils.hpp"
 #include "common/clearable.hpp"
 #include "common/data.hpp"
 #include "common/encoding.hpp"
@@ -1304,7 +1305,7 @@ public:
      * @retval kErrorNone    Successfully appended the TXT entry.
      * @retval kErrorNoBufs  Insufficient available buffers to append the entry.
      */
-    Error AppendBytesEntry(const char *aKey, const void *aBuffer, uint16_t aLength);
+    Error AppendBytesEntry(const char *aKey, const void *aBuffer, uint8_t aLength);
 
     /**
      * Appends a TXT entry for a given key and a given object as the entry's value.
@@ -2845,7 +2846,7 @@ public:
          *
          * @returns The Bitmap length
          */
-        uint8_t GetBitmapLength(void) { return mBitmapLength; }
+        uint8_t GetBitmapLength(void) const { return mBitmapLength; }
 
         /**
          * Gets the total size (number of bytes) of the `TypeBitMap` field.

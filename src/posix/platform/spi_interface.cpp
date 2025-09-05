@@ -325,8 +325,7 @@ uint8_t *SpiInterface::GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t a
     uint8_t       *start = aSpiRxFrameBuffer;
     const uint8_t *end   = aSpiRxFrameBuffer + aAlignAllowance;
 
-    for (; start != end && ((start[0] == 0xff) || (start[0] == 0x00)); start++)
-        ;
+    for (; start != end && ((start[0] == 0xff) || (start[0] == 0x00)); start++);
 
     aSkipLength = static_cast<uint16_t>(start - aSpiRxFrameBuffer);
 

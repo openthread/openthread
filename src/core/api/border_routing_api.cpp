@@ -44,6 +44,20 @@ otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool 
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().Init(aInfraIfIndex, aInfraIfIsRunning);
 }
 
+otError otBorderRoutingGetInfraIfInfo(otInstance *aInstance, uint32_t *aInfraIfIndex, bool *aInfraIfIsRunning)
+{
+    bool isRunning;
+
+    AssertPointerIsNotNull(aInfraIfIndex);
+
+    if (aInfraIfIsRunning == nullptr)
+    {
+        aInfraIfIsRunning = &isRunning;
+    }
+
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetInfraIfInfo(*aInfraIfIndex, *aInfraIfIsRunning);
+}
+
 otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled)
 {
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetEnabled(aEnabled);
@@ -233,6 +247,16 @@ void otBorderRoutingSetRdnssAddrCallback(otInstance                      *aInsta
                                          void                            *aContext)
 {
     AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetRdnssAddrCallback(aCallback, aContext);
+}
+
+otError otBorderRoutingGetNextIfAddrEntry(otInstance                         *aInstance,
+                                          otBorderRoutingPrefixTableIterator *aIterator,
+                                          otBorderRoutingIfAddrEntry         *aEntry)
+{
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aEntry);
+
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextIfAddrEntry(*aIterator, *aEntry);
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE

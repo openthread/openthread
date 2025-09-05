@@ -39,7 +39,6 @@ namespace Nexus {
 using ActiveDatasetManager = MeshCoP::ActiveDatasetManager;
 using BorderAgent          = MeshCoP::BorderAgent;
 using EphemeralKeyManager  = MeshCoP::BorderAgent::EphemeralKeyManager;
-using HistoryTracker       = Utils::HistoryTracker;
 using EpskcEvent           = HistoryTracker::EpskcEvent;
 using Iterator             = HistoryTracker::Iterator;
 using ExtendedPanIdManager = MeshCoP::ExtendedPanIdManager;
@@ -764,7 +763,7 @@ EpskcEvent GetNewestEpskcEvent(Node &aNode)
     uint32_t          age;
     iter.Init();
 
-    epskcEvent = aNode.Get<HistoryTracker>().IterateEpskcEventHistory(iter, age);
+    epskcEvent = aNode.Get<HistoryTracker::Local>().IterateEpskcEventHistory(iter, age);
 
     VerifyOrQuit(epskcEvent != nullptr);
     return *epskcEvent;
@@ -1249,7 +1248,7 @@ void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode)
     aTxtData.ValidateFormat();
     aTxtData.LogAllTxtEntries();
 
-    SuccessOrQuit(aNode.Get<BorderAgent>().GetId(id));
+    aNode.Get<BorderAgent>().GetId(id);
     aTxtData.ValidateKey("id", id);
     aTxtData.ValidateKey("rv", "1");
     aTxtData.ValidateKey("nn", aNode.Get<NetworkNameManager>().GetNetworkName().GetAsCString());
@@ -1375,7 +1374,7 @@ void TestBorderAgentTxtDataCallback(void)
     newId.GenerateRandom();
 
     callbackInvoked = false;
-    SuccessOrQuit(node0.Get<BorderAgent>().SetId(newId));
+    node0.Get<BorderAgent>().SetId(newId);
 
     nexus.AdvanceTime(1);
     ReadAndValidateMeshCoPTxtData(node0);
@@ -1384,7 +1383,7 @@ void TestBorderAgentTxtDataCallback(void)
     // correctly detected and does not trigger the callback.
 
     callbackInvoked = false;
-    SuccessOrQuit(node0.Get<BorderAgent>().SetId(newId));
+    node0.Get<BorderAgent>().SetId(newId);
     nexus.AdvanceTime(1);
     VerifyOrQuit(!callbackInvoked);
 

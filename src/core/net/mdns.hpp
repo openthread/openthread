@@ -69,6 +69,11 @@ struct otMdnsIterator
 };
 
 namespace ot {
+
+namespace BorderRouter {
+class InfraIf;
+}
+
 namespace Dns {
 namespace Multicast {
 
@@ -90,6 +95,7 @@ extern "C" void otPlatMdnsHandleHostAddressRemoveAll(otInstance *aInstance, uint
 class Core : public InstanceLocator, private NonCopyable
 {
     friend class ot::Instance;
+    friend class ot::BorderRouter::InfraIf;
 
     friend void otPlatMdnsHandleReceive(otInstance                  *aInstance,
                                         otMessage                   *aMessage,
@@ -144,6 +150,13 @@ public:
     class AddressInfo : public otPlatMdnsAddressInfo, public Clearable<AddressInfo>, public Equatable<AddressInfo>
     {
     public:
+        static constexpr uint16_t kInfoStringSize = 100; ///< Max chars for the info string (`ToString()`).
+
+        /**
+         * Defines the fixed-length `String` object returned from `ToString()`.
+         */
+        typedef String<kInfoStringSize> InfoString;
+
         /**
          * Initializes the `AddressInfo` clearing all the fields.
          */
@@ -155,6 +168,13 @@ public:
          * @returns the IPv6 address.
          */
         const Ip6::Address &GetAddress(void) const { return AsCoreType(&mAddress); }
+
+        /**
+         * Converts the `AddressInfo` to human-readable string.
+         *
+         * @return A string representation of the `AddressInfo`
+         */
+        InfoString ToString(void) const;
     };
 
     /**
@@ -169,10 +189,12 @@ public:
      * @param[in] aInfraIfIndex The network interface index for mDNS operation. Value is ignored when disabling.
      *
      * @retval kErrorNone     Enabled or disabled the mDNS module successfully.
-     * @retval kErrorAlready  mDNS is already enabled on an enable request, or is already disabled on a disable request.
      * @retval kErrorFailed   Failed to enable/disable mDNS.
      */
-    Error SetEnabled(bool aEnable, uint32_t aInfraIfIndex);
+    Error SetEnabled(bool aEnable, uint32_t aInfraIfIndex)
+    {
+        return SetEnabled(aEnable, aInfraIfIndex, kRequesterUser);
+    }
 
     /**
      * Indicates whether or not mDNS module is enabled.
@@ -181,6 +203,35 @@ public:
      * @retval FALSE  The mDNS module is disabled.
      */
     bool IsEnabled(void) const { return mIsEnabled; }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    /**
+     * Enables or disables the mDNS auto-enable mode.
+     *
+     * When this mode is enabled, the mDNS module uses the same infrastructure network interface as the Border Routing
+     * manager. The mDNS module is then automatically enabled or disabled based on the operational state of that
+     * interface.
+     *
+     * It is recommended to use the auto-enable mode on Border Routers. The default state of this mode at
+     * initialization is controlled by the `OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF` configuration.
+     *
+     * The auto-enable mode can be disabled by a call to `SetAutoEnableMode(false)` or by an explicit call to
+     * `SetEnabled()`. Deactivating the auto-enable mode with `SetAutoEnableMode(false)` will not change the current
+     * operational state of the mDNS module (e.g., if it is currently enabled, it remains enabled).
+     *
+     * @param[in] aEnable    A boolean to enable or disable the auto-enable mode.
+     */
+    void SetAutoEnableMode(bool aEnable);
+
+    /**
+     * Indicates whether the auto-enable mode is enabled or disabled.
+     *
+     * @retval TRUE   The auto-enable mode is enabled.
+     * @retval FALSE  The auto-enable mode is disabled.
+     */
+    bool GetAutoEnableMode(void) const { return mAutoEnable; }
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
     /**
      * Gets the local host name.
@@ -201,13 +252,6 @@ public:
      * @retval kErrorInvalidState   mDNS module is already enabled.
      */
     Error SetLocalHostName(const char *aName) { return mLocalHost.SetName(aName); }
-
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
-    /**
-     * Notifies `AdvertisingProxy` that `InfraIf` state changed.
-     */
-    void HandleInfraIfStateChanged(void);
-#endif
 
     /**
      * Sets whether mDNS module is allowed to send questions requesting unicast responses referred to as "QU" questions.
@@ -810,12 +854,31 @@ public:
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+    /**
+     * Enables or disables verbose logging.
+     *
+     * @param[in] aEnable  TRUE to enable verbose logging, FALSE to disable.
+     */
+    void SetVerboseLoggingEnabled(bool aEnable);
+
+    /**
+     * Indicates whether verbose logging is enabled.
+     *
+     * @retval TRUE   If verbose logging is enabled.
+     * @retval FALSE  If verbose logging is disabled.
+     */
+    bool IsVerboseLoggingEnabled(void) const { return mVerboseLogging; }
+#endif
+
 private:
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     static constexpr uint16_t kUdpPort = 5353;
 
-    static constexpr bool kDefaultQuAllowed = OPENTHREAD_CONFIG_MULTICAST_DNS_DEFAULT_QUESTION_UNICAST_ALLOWED;
+    static constexpr bool kDefaultAutoEnable = OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF;
+    static constexpr bool kDefaultQuAllowed  = OPENTHREAD_CONFIG_MULTICAST_DNS_DEFAULT_QUESTION_UNICAST_ALLOWED;
+    static constexpr bool kDefaultVerboseLog = OPENTHREAD_CONFIG_MULTICAST_DEFAULT_DNS_VERBOSE_LOGGING_STATE;
 
     static constexpr uint32_t kMaxMessageSize = 1200;
 
@@ -834,8 +897,8 @@ private:
     static constexpr uint32_t kMaxInitialQueryDelay     = 120; // msec
     static constexpr uint32_t kRandomDelayReuseInterval = 2;   // msec
 
-    static constexpr uint32_t kMinResponseDelay            = 20;  // msec
-    static constexpr uint32_t kMaxResponseDelay            = 120; // msec
+    static constexpr uint16_t kMinResponseDelay            = 20;  // msec
+    static constexpr uint16_t kMaxResponseDelay            = 120; // msec
     static constexpr uint32_t kResponseAggregationMaxDelay = 500; // msec
 
     static constexpr uint32_t kUnspecifiedTtl       = 0;
@@ -854,6 +917,12 @@ private:
     static constexpr uint8_t kNumSections = 4;
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    enum Requester : uint8_t // Used by `SetEnabled()`.
+    {
+        kRequesterUser,
+        kRequesterAuto,
+    };
 
     enum Section : uint8_t
     {
@@ -890,17 +959,6 @@ private:
     struct EmptyChecker
     {
         // Used in `Matches()` to find empty entries (with no record) to remove and free.
-    };
-
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    struct ExpireChecker
-    {
-        // Used in `Matches()` to find expired entries in a list.
-
-        explicit ExpireChecker(TimeMilli aNow) { mNow = aNow; }
-
-        TimeMilli mNow;
     };
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -943,7 +1001,7 @@ private:
         TimeMilli GetAnswerTime(void) const { return (mQueryRxTime + mAnswerDelay); }
 
         uint16_t  mQuestionRrType;
-        uint16_t  mAnswerDelay;
+        uint32_t  mAnswerDelay;
         TimeMilli mQueryRxTime;
         bool      mIsProbe;
         bool      mUnicastResponse;
@@ -1048,7 +1106,7 @@ private:
         uint8_t     mAnnounceCounter;
         AppendState mAppendState;
         Section     mAppendSection;
-        uint16_t    mAnswerDelay;
+        uint32_t    mAnswerDelay;
         uint32_t    mTtl;
         TimeMilli   mAnnounceTime;
         TimeMilli   mQueryRxTime;
@@ -1142,7 +1200,7 @@ private:
         bool       mUnicastNsecPending : 1;
         bool       mAppendedNsec : 1;
         bool       mBypassCallbackStateCheck : 1;
-        uint16_t   mNsecAnswerDelay;
+        uint32_t   mNsecAnswerDelay;
         TimeMilli  mNsecQueryRxTime;
         Heap::Data mKeyData;
         Callback   mCallback;
@@ -1181,6 +1239,8 @@ private:
             Ip6::Address mAddress;
             bool         mAdded;
         };
+
+        void LogAddressChange(bool aAdded, AddrType aAddrType, const Ip6::Address &aAddress) const;
 
         using EventTimer = TimerMilliIn<Core, &Core::HandleLocalHostEventTimer>;
 
@@ -1441,6 +1501,8 @@ private:
 
         static void SaveOffset(uint16_t &aCompressOffset, const Message &aMessage, Section aSection);
 
+        static const char *TypeToString(Type aType);
+
         RecordCounts      mRecordCounts;
         OwnedPtr<Message> mMsgPtr;
         OwnedPtr<Message> mExtraMsgPtr;
@@ -1585,7 +1647,7 @@ private:
             explicit RxMsgEntry(Instance &aInstance);
 
             bool Matches(const AddressInfo &aAddress) const;
-            bool Matches(const ExpireChecker &aExpireChecker) const;
+            bool Matches(const ExpirationChecker &aChecker) const { return aChecker.IsExpired(mProcessTime); }
             void Add(OwnedPtr<RxMessage> &aRxMessagePtr);
 
             OwningList<RxMessage> mRxMessages;
@@ -1630,7 +1692,7 @@ private:
         struct MsgEntry : public LinkedListEntry<MsgEntry>, public Heap::Allocatable<MsgEntry>
         {
             bool Matches(const MsgInfo &aInfo) const { return mInfo == aInfo; }
-            bool Matches(const ExpireChecker &aExpireChecker) const { return mExpireTime <= aExpireChecker.mNow; }
+            bool Matches(const ExpirationChecker &aChecker) const { return aChecker.IsExpired(mExpireTime); }
 
             MsgEntry *mNext;
             MsgInfo   mInfo;
@@ -1824,7 +1886,7 @@ private:
         bool  Matches(const Name &aFullName) const;
         bool  Matches(const char *aServiceType, const char *aSubTypeLabel) const;
         bool  Matches(const Browser &aBrowser) const;
-        bool  Matches(const ExpireChecker &aExpireChecker) const;
+        bool  Matches(const ExpirationChecker &aChecker) const;
         Error Add(const Browser &aBrowser);
         void  Remove(const Browser &aBrowser);
         void  ProcessResponseRecord(const Message &aMessage, uint16_t aRecordOffset);
@@ -1837,7 +1899,7 @@ private:
         {
             Error Init(const char *aServiceInstance);
             bool  Matches(const char *aServiceInstance) const { return NameMatch(mServiceInstance, aServiceInstance); }
-            bool  Matches(const ExpireChecker &aExpireChecker) const;
+            bool  Matches(const ExpirationChecker &aChecker) const;
             void  ConvertTo(BrowseResult &aResult, const BrowseCache &aBrowseCache) const;
 
             PtrEntry       *mNext;
@@ -1927,7 +1989,7 @@ private:
         bool  Matches(const Name &aFullName) const;
         bool  Matches(const SrvResolver &aResolver) const;
         bool  Matches(const ServiceName &aServiceName) const;
-        bool  Matches(const ExpireChecker &aExpireChecker) const;
+        bool  Matches(const ExpirationChecker &aChecker) const;
         Error Add(const SrvResolver &aResolver);
         void  Remove(const SrvResolver &aResolver);
         void  ProcessResponseRecord(const Message &aMessage, uint16_t aRecordOffset);
@@ -1965,7 +2027,7 @@ private:
         bool  Matches(const Name &aFullName) const;
         bool  Matches(const TxtResolver &aResolver) const;
         bool  Matches(const ServiceName &aServiceName) const;
-        bool  Matches(const ExpireChecker &aExpireChecker) const;
+        bool  Matches(const ExpirationChecker &aChecker) const;
         Error Add(const TxtResolver &aResolver);
         void  Remove(const TxtResolver &aResolver);
         void  ProcessResponseRecord(const Message &aMessage, uint16_t aRecordOffset);
@@ -2000,7 +2062,7 @@ private:
         bool  Matches(const Name &aFullName) const;
         bool  Matches(const char *aName) const;
         bool  Matches(const AddressResolver &aResolver) const;
-        bool  Matches(const ExpireChecker &aExpireChecker) const;
+        bool  Matches(const ExpirationChecker &aChecker) const;
         Error Add(const AddressResolver &aResolver);
         void  Remove(const AddressResolver &aResolver);
         void  CommitNewResponseEntries(void);
@@ -2013,7 +2075,7 @@ private:
         {
             explicit AddrEntry(const Ip6::Address &aAddress);
             bool     Matches(const Ip6::Address &aAddress) const { return (mAddress == aAddress); }
-            bool     Matches(const ExpireChecker &aExpireChecker) const;
+            bool     Matches(const ExpirationChecker &aChecker) const;
             bool     Matches(EmptyChecker aChecker) const;
             uint32_t GetTtl(void) const { return mRecord.GetTtl(); }
 
@@ -2088,7 +2150,7 @@ private:
     public:
         bool  Matches(const Name &aFullName, uint16_t aRecordType) const;
         bool  Matches(const RecordQuerier &aQuerier) const;
-        bool  Matches(const ExpireChecker &aExpireChecker) const;
+        bool  Matches(const ExpirationChecker &aChecker) const;
         Error Add(const RecordQuerier &aQuerier);
         void  Remove(const RecordQuerier &aQuerier);
         void  ProcessResponseRecord(const Message &aMessage, const ResourceRecord &aRecord, uint16_t aRecordOffset);
@@ -2118,7 +2180,7 @@ private:
 
             bool     Matches(uint16_t aType) const;
             bool     Matches(uint16_t aType, const Heap::Data &aData) const;
-            bool     Matches(const ExpireChecker &aExpireChecker) const;
+            bool     Matches(const ExpirationChecker &aChecker) const;
             bool     Matches(EmptyChecker aChecker) const;
             uint32_t GetTtl(void) const { return mRecord.GetTtl(); }
 
@@ -2214,6 +2276,29 @@ private:
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+    class MsgLogger : InstanceLocator
+    {
+    public:
+        MsgLogger(Instance &aInstance, const Message &aMessage);
+
+        void Log(void);
+
+    private:
+        Error LogQuestions(void);
+        Error LogSectionRecords(const char *aSectionName, uint16_t aNumRecords);
+        Error LogRecord(void);
+        void  LogRecordData(const ResourceRecord &aRecord);
+        void  LogRawData(uint16_t aLength);
+        void  LogNsecBitMap(const NsecRecord::TypeBitMap &aBitMap);
+
+        const Message &mMessage;
+        uint16_t       mOffset;
+        Header         mHeader;
+    };
+#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     template <typename EntryType> OwningList<EntryType> &GetEntryList(void);
     template <typename EntryType, typename ItemInfo>
@@ -2227,6 +2312,8 @@ private:
     Error Stop(const BrowserResolverType &aBrowserOrResolver);
 
     void      AfterInstanceInit(void);
+    Error     SetEnabled(bool aEnable, uint32_t aInfraIfIndex, Requester aRequester);
+    void      HandleInfraIfStateChanged(void);
     void      HandleHostAddressEvent(const Ip6::Address &aAddress, bool aAdded, uint32_t aInfraIfIndex);
     void      HandleHostAddressRemoveAll(uint32_t aInfraIfIndex);
     void      InvokeConflictCallback(const char *aName, const char *aServiceType);
@@ -2252,6 +2339,12 @@ private:
     static bool     QuestionMatches(uint16_t aQuestionRrType, uint16_t aRrType);
     static bool     RrClassIsInternetOrAny(uint16_t aRrClass);
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+    void LogMessage(const Message &aMessage);
+#else
+    void LogMessage(const Message &) {}
+#endif
+
     using EntryTimer = TimerMilliIn<Core, &Core::HandleEntryTimer>;
     using CacheTimer = TimerMilliIn<Core, &Core::HandleCacheTimer>;
     using EntryTask  = TaskletIn<Core, &Core::HandleEntryTask>;
@@ -2264,6 +2357,7 @@ private:
     static const char kServicesDnssdLabels[]; // "_services._dns-sd._udp"
 
     bool                     mIsEnabled;
+    bool                     mAutoEnable;
     bool                     mIsQuestionUnicastAllowed;
     uint16_t                 mMaxMessageSize;
     uint32_t                 mInfraIfIndex;
@@ -2287,6 +2381,9 @@ private:
     TimeMilli                mNextQueryTxTime;
     CacheTimer               mCacheTimer;
     CacheTask                mCacheTask;
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
+    bool mVerboseLogging;
+#endif
 };
 
 // Specializations of `Core::GetEntryList()` for `HostEntry` and `ServiceEntry`:

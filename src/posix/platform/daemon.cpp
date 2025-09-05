@@ -197,7 +197,7 @@ void Daemon::createListenSocketOrDie(void)
 void Daemon::createListenSocketOrDie(void)
 {
     struct sockaddr_un sockname;
-    int ret;
+    int                ret;
 
     class AllowAllGuard
     {
@@ -205,7 +205,7 @@ void Daemon::createListenSocketOrDie(void)
         AllowAllGuard(void)
         {
             const char *allowAll = getenv("OT_DAEMON_ALLOW_ALL");
-            mAllowAll = (allowAll != nullptr && strcmp("1", allowAll) == 0);
+            mAllowAll            = (allowAll != nullptr && strcmp("1", allowAll) == 0);
 
             if (mAllowAll)
             {
@@ -221,8 +221,8 @@ void Daemon::createListenSocketOrDie(void)
         }
 
     private:
-        bool mAllowAll = false;
-        mode_t mMode = 0;
+        bool   mAllowAll = false;
+        mode_t mMode     = 0;
     };
 
     mListenSocket = SocketWithCloseExec(AF_UNIX, SOCK_STREAM, 0, kSocketNonBlock);
@@ -334,56 +334,38 @@ void Daemon::TearDown(void)
 #endif
 }
 
-void Daemon::Update(otSysMainloopContext &aContext)
+void Daemon::Update(Mainloop::Context &aContext)
 {
-    if (mListenSocket != -1)
-    {
-        FD_SET(mListenSocket, &aContext.mReadFdSet);
-        FD_SET(mListenSocket, &aContext.mErrorFdSet);
+    Mainloop::AddToReadFdSet(mListenSocket, aContext);
+    Mainloop::AddToErrorFdSet(mListenSocket, aContext);
 
-        if (aContext.mMaxFd < mListenSocket)
-        {
-            aContext.mMaxFd = mListenSocket;
-        }
-    }
-
-    if (mSessionSocket != -1)
-    {
-        FD_SET(mSessionSocket, &aContext.mReadFdSet);
-        FD_SET(mSessionSocket, &aContext.mErrorFdSet);
-
-        if (aContext.mMaxFd < mSessionSocket)
-        {
-            aContext.mMaxFd = mSessionSocket;
-        }
-    }
-
-    return;
+    Mainloop::AddToReadFdSet(mSessionSocket, aContext);
+    Mainloop::AddToErrorFdSet(mSessionSocket, aContext);
 }
 
-void Daemon::Process(const otSysMainloopContext &aContext)
+void Daemon::Process(const Mainloop::Context &aContext)
 {
     ssize_t rval;
 
     VerifyOrExit(mListenSocket != -1);
 
-    if (FD_ISSET(mListenSocket, &aContext.mErrorFdSet))
+    if (Mainloop::HasFdErrored(mListenSocket, aContext))
     {
         DieNowWithMessage("daemon socket error", OT_EXIT_FAILURE);
     }
-    else if (FD_ISSET(mListenSocket, &aContext.mReadFdSet))
+    else if (Mainloop::IsFdReadable(mListenSocket, aContext))
     {
         InitializeSessionSocket();
     }
 
     VerifyOrExit(mSessionSocket != -1);
 
-    if (FD_ISSET(mSessionSocket, &aContext.mErrorFdSet))
+    if (Mainloop::HasFdErrored(mSessionSocket, aContext))
     {
         close(mSessionSocket);
         mSessionSocket = -1;
     }
-    else if (FD_ISSET(mSessionSocket, &aContext.mReadFdSet))
+    else if (Mainloop::IsFdReadable(mSessionSocket, aContext))
     {
         uint8_t buffer[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH];
 

@@ -76,6 +76,20 @@ namespace ot {
  */
 
 /**
+ * Domain Unicast Address (DUA) Registration Status values
+ */
+enum DuaStatus : uint8_t
+{
+    kDuaSuccess        = 0, ///< Successful registration.
+    kDuaReRegister     = 1, ///< Registration was accepted but immediate reregistration is required to solve.
+    kDuaInvalid        = 2, ///< Registration rejected (Fatal): Target EID is not a valid DUA.
+    kDuaDuplicate      = 3, ///< Registration rejected (Fatal): DUA is already in use by another device.
+    kDuaNoResources    = 4, ///< Registration rejected (Non-fatal): Backbone Router Resource shortage.
+    kDuaNotPrimary     = 5, ///< Registration rejected (Non-fatal): Backbone Router is not primary at this moment.
+    kDuaGeneralFailure = 6, ///< Registration failure (Non-fatal): Reason(s) not further specified.
+};
+
+/**
  * Implements managing DUA.
  */
 class DuaManager : public InstanceLocator, private NonCopyable
@@ -188,7 +202,7 @@ private:
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     Error GenerateDomainUnicastAddressIid(void);
-    Error Store(void);
+    void  Store(void);
 
     void AddDomainUnicastAddress(void);
     void RemoveDomainUnicastAddress(void);
@@ -196,7 +210,7 @@ private:
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    void SendAddressNotification(Ip6::Address &aAddress, ThreadStatusTlv::DuaStatus aStatus, const Child &aChild);
+    void SendAddressNotification(Ip6::Address &aAddress, DuaStatus aStatus, const Child &aChild);
 #endif
 
     void HandleNotifierEvents(Events aEvents);

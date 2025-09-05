@@ -73,68 +73,30 @@ exit:
     return error;
 }
 
-Error NetworkData::GetNextOnMeshPrefix(Iterator &aIterator, OnMeshPrefixConfig &aConfig) const
+template <typename EntryType> Error NetworkData::GetNext(Iterator &aIterator, EntryType &aEntry) const
 {
-    return GetNextOnMeshPrefix(aIterator, Mac::kShortAddrBroadcast, aConfig);
+    return GetNext<EntryType>(aIterator, Mac::kShortAddrBroadcast, aEntry);
 }
 
-Error NetworkData::GetNextOnMeshPrefix(Iterator &aIterator, uint16_t aRloc16, OnMeshPrefixConfig &aConfig) const
+template <typename EntryType> Error NetworkData::GetNext(Iterator &aIterator, uint16_t aRloc16, EntryType &aEntry) const
 {
     Config config;
 
-    config.mOnMeshPrefix  = &aConfig;
-    config.mExternalRoute = nullptr;
-    config.mService       = nullptr;
-    config.mLowpanContext = nullptr;
+    config.Clear();
+    config.Set(aEntry);
 
     return Iterate(aIterator, aRloc16, config);
 }
 
-Error NetworkData::GetNextExternalRoute(Iterator &aIterator, ExternalRouteConfig &aConfig) const
-{
-    return GetNextExternalRoute(aIterator, Mac::kShortAddrBroadcast, aConfig);
-}
-
-Error NetworkData::GetNextExternalRoute(Iterator &aIterator, uint16_t aRloc16, ExternalRouteConfig &aConfig) const
-{
-    Config config;
-
-    config.mOnMeshPrefix  = nullptr;
-    config.mExternalRoute = &aConfig;
-    config.mService       = nullptr;
-    config.mLowpanContext = nullptr;
-
-    return Iterate(aIterator, aRloc16, config);
-}
-
-Error NetworkData::GetNextService(Iterator &aIterator, ServiceConfig &aConfig) const
-{
-    return GetNextService(aIterator, Mac::kShortAddrBroadcast, aConfig);
-}
-
-Error NetworkData::GetNextService(Iterator &aIterator, uint16_t aRloc16, ServiceConfig &aConfig) const
-{
-    Config config;
-
-    config.mOnMeshPrefix  = nullptr;
-    config.mExternalRoute = nullptr;
-    config.mService       = &aConfig;
-    config.mLowpanContext = nullptr;
-
-    return Iterate(aIterator, aRloc16, config);
-}
-
-Error NetworkData::GetNextLowpanContextInfo(Iterator &aIterator, LowpanContextInfo &aContextInfo) const
-{
-    Config config;
-
-    config.mOnMeshPrefix  = nullptr;
-    config.mExternalRoute = nullptr;
-    config.mService       = nullptr;
-    config.mLowpanContext = &aContextInfo;
-
-    return Iterate(aIterator, Mac::kShortAddrBroadcast, config);
-}
+// Explicit template instantiations
+template Error NetworkData::GetNext<OnMeshPrefixConfig>(Iterator &, OnMeshPrefixConfig &) const;
+template Error NetworkData::GetNext<ExternalRouteConfig>(Iterator &, ExternalRouteConfig &) const;
+template Error NetworkData::GetNext<ServiceConfig>(Iterator &, ServiceConfig &) const;
+template Error NetworkData::GetNext<LowpanContextInfo>(Iterator &, LowpanContextInfo &) const;
+template Error NetworkData::GetNext<OnMeshPrefixConfig>(Iterator &, uint16_t, OnMeshPrefixConfig &) const;
+template Error NetworkData::GetNext<ExternalRouteConfig>(Iterator &, uint16_t, ExternalRouteConfig &) const;
+template Error NetworkData::GetNext<ServiceConfig>(Iterator &, uint16_t, ServiceConfig &) const;
+template Error NetworkData::GetNext<LowpanContextInfo>(Iterator &, uint16_t, LowpanContextInfo &) const;
 
 Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfig) const
 {
@@ -313,15 +275,15 @@ exit:
     return error;
 }
 
-bool NetworkData::ContainsOnMeshPrefix(const OnMeshPrefixConfig &aPrefix) const
+template <typename EntryType> bool NetworkData::Contains(const EntryType &aEntry) const
 {
-    bool               contains = false;
-    Iterator           iterator = kIteratorInit;
-    OnMeshPrefixConfig prefix;
+    bool      contains = false;
+    Iterator  iterator = kIteratorInit;
+    EntryType entry;
 
-    while (GetNextOnMeshPrefix(iterator, aPrefix.mRloc16, prefix) == kErrorNone)
+    while (GetNext(iterator, aEntry.GetRloc16(), entry) == kErrorNone)
     {
-        if (prefix == aPrefix)
+        if (entry == aEntry)
         {
             contains = true;
             break;
@@ -331,41 +293,10 @@ bool NetworkData::ContainsOnMeshPrefix(const OnMeshPrefixConfig &aPrefix) const
     return contains;
 }
 
-bool NetworkData::ContainsExternalRoute(const ExternalRouteConfig &aRoute) const
-{
-    bool                contains = false;
-    Iterator            iterator = kIteratorInit;
-    ExternalRouteConfig route;
-
-    while (GetNextExternalRoute(iterator, aRoute.mRloc16, route) == kErrorNone)
-    {
-        if (route == aRoute)
-        {
-            contains = true;
-            break;
-        }
-    }
-
-    return contains;
-}
-
-bool NetworkData::ContainsService(const ServiceConfig &aService) const
-{
-    bool          contains = false;
-    Iterator      iterator = kIteratorInit;
-    ServiceConfig service;
-
-    while (GetNextService(iterator, aService.GetServerConfig().mRloc16, service) == kErrorNone)
-    {
-        if (service == aService)
-        {
-            contains = true;
-            break;
-        }
-    }
-
-    return contains;
-}
+// Explicit template instantiations
+template bool NetworkData::Contains<OnMeshPrefixConfig>(const OnMeshPrefixConfig &) const;
+template bool NetworkData::Contains<ExternalRouteConfig>(const ExternalRouteConfig &) const;
+template bool NetworkData::Contains<ServiceConfig>(const ServiceConfig &) const;
 
 bool NetworkData::ContainsEntriesFrom(const NetworkData &aCompare, uint16_t aRloc16) const
 {
@@ -386,9 +317,9 @@ bool NetworkData::ContainsEntriesFrom(const NetworkData &aCompare, uint16_t aRlo
 
         SuccessOrExit(aCompare.Iterate(iterator, aRloc16, config));
 
-        if (((config.mOnMeshPrefix != nullptr) && !ContainsOnMeshPrefix(*config.mOnMeshPrefix)) ||
-            ((config.mExternalRoute != nullptr) && !ContainsExternalRoute(*config.mExternalRoute)) ||
-            ((config.mService != nullptr) && !ContainsService(*config.mService)))
+        if (((config.mOnMeshPrefix != nullptr) && !Contains(*config.mOnMeshPrefix)) ||
+            ((config.mExternalRoute != nullptr) && !Contains(*config.mExternalRoute)) ||
+            ((config.mService != nullptr) && !Contains(*config.mService)))
         {
             ExitNow(contains = false);
         }
@@ -650,17 +581,16 @@ bool MutableNetworkData::RemoveTemporaryDataIn(PrefixTlv &aPrefix)
                 BorderRouterTlv *borderRouter = As<BorderRouterTlv>(cur);
                 ContextTlv      *context      = aPrefix.FindSubTlv<ContextTlv>();
 
-                // Replace p_border_router_16
                 for (BorderRouterEntry *entry = borderRouter->GetFirstEntry(); entry <= borderRouter->GetLastEntry();
                      entry                    = entry->GetNext())
                 {
                     if ((entry->IsDhcp() || entry->IsConfigure()) && (context != nullptr))
                     {
-                        entry->SetRloc(0xfc00 | context->GetContextId());
+                        entry->SetRloc(Mle::Aloc16::FromDhcpAgentContextId(context->GetContextId()));
                     }
                     else
                     {
-                        entry->SetRloc(0xfffe);
+                        entry->SetRloc(Mle::kInvalidRloc16);
                     }
                 }
 
@@ -671,11 +601,10 @@ bool MutableNetworkData::RemoveTemporaryDataIn(PrefixTlv &aPrefix)
             {
                 HasRouteTlv *hasRoute = As<HasRouteTlv>(cur);
 
-                // Replace r_border_router_16
                 for (HasRouteEntry *entry = hasRoute->GetFirstEntry(); entry <= hasRoute->GetLastEntry();
                      entry                = entry->GetNext())
                 {
-                    entry->SetRloc(0xfffe);
+                    entry->SetRloc(Mle::kInvalidRloc16);
                 }
 
                 break;
@@ -685,13 +614,12 @@ bool MutableNetworkData::RemoveTemporaryDataIn(PrefixTlv &aPrefix)
                 break;
             }
 
-            // keep stable tlv
             cur = cur->GetNext();
         }
         else
         {
-            // remove temporary tlv
             uint8_t subTlvSize = cur->GetSize();
+
             RemoveTlv(cur);
             aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - subTlvSize);
         }
@@ -711,20 +639,19 @@ bool MutableNetworkData::RemoveTemporaryDataIn(ServiceTlv &aService)
             switch (cur->GetType())
             {
             case NetworkDataTlv::kTypeServer:
-                As<ServerTlv>(cur)->SetServer16(Mle::ServiceAlocFromId(aService.GetServiceId()));
+                As<ServerTlv>(cur)->SetServer16(Mle::Aloc16::FromServiceId(aService.GetServiceId()));
                 break;
 
             default:
                 break;
             }
 
-            // keep stable tlv
             cur = cur->GetNext();
         }
         else
         {
-            // remove temporary tlv
             uint8_t subTlvSize = cur->GetSize();
+
             RemoveTlv(cur);
             aService.SetSubTlvsLength(aService.GetSubTlvsLength() - subTlvSize);
         }

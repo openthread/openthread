@@ -33,9 +33,11 @@
 
 #include "openthread-core-config.h"
 
-#include "instance/instance.hpp"
-
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+
+#include <openthread/platform/dns.h>
+
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -44,4 +46,5 @@ void otPlatDnsUpstreamQueryDone(otInstance *aInstance, otPlatDnsUpstreamQuery *a
     return AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().OnUpstreamQueryDone(AsCoreType(aTxn),
                                                                                           AsCoreTypePtr(aResponse));
 }
+
 #endif

@@ -122,6 +122,7 @@
 #include "thread/link_metrics.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mesh_forwarder.hpp"
+#include "thread/message_framer.hpp"
 #include "thread/mle.hpp"
 #include "thread/mlr_manager.hpp"
 #include "thread/network_data_local.hpp"
@@ -549,6 +550,7 @@ private:
     KeyManager                     mKeyManager;
     Lowpan::Lowpan                 mLowpan;
     Mac::Mac                       mMac;
+    MessageFramer                  mMessageFramer;
     MeshForwarder                  mMeshForwarder;
     Mle::Mle                       mMle;
     Mle::DiscoverScanner           mDiscoverScanner;
@@ -682,7 +684,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Utils::HistoryTracker mHistoryTracker;
+    HistoryTracker::Local mHistoryTrackerLocal;
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
@@ -762,6 +764,8 @@ template <> inline Settings &Instance::Get(void) { return mSettings; }
 
 template <> inline SettingsDriver &Instance::Get(void) { return mSettingsDriver; }
 
+template <> inline MessageFramer &Instance::Get(void) { return mMessageFramer; }
+
 template <> inline MeshForwarder &Instance::Get(void) { return mMeshForwarder; }
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
@@ -782,6 +786,10 @@ template <> inline NeighborTable &Instance::Get(void) { return mMle.mNeighborTab
 template <> inline ChildTable &Instance::Get(void) { return mMle.mChildTable; }
 
 template <> inline RouterTable &Instance::Get(void) { return mMle.mRouterTable; }
+#endif
+
+#if OPENTHREAD_CONFIG_P2P_ENABLE
+template <> inline PeerTable &Instance::Get(void) { return mMle.mP2p.mPeerTable; }
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
@@ -993,7 +1001,7 @@ template <> inline Utils::MeshDiag &Instance::Get(void) { return mMeshDiag; }
 #endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-template <> inline Utils::HistoryTracker &Instance::Get(void) { return mHistoryTracker; }
+template <> inline HistoryTracker::Local &Instance::Get(void) { return mHistoryTrackerLocal; }
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE

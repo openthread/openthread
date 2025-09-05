@@ -177,9 +177,15 @@ class OtbrDocker:
         self.bash('service otbr-agent stop')
 
     def stop_mdns_service(self):
+        self.send_command('mdns disable')
+        # OT build may not include mdns, so ignore `InvalidCommand` errors.
+        self._expect(r'Done|Error 35: InvalidCommand')
         self.bash('service avahi-daemon stop; service mdns stop; !(cat /proc/net/udp | grep -i :14E9)')
 
     def start_mdns_service(self):
+        self.send_command('mdns enable')
+        # OT build may not include mdns, so ignore `InvalidCommand` errors.
+        self._expect(r'Done|Error 35: InvalidCommand')
         self.bash('service avahi-daemon start; service mdns start; cat /proc/net/udp | grep -i :14E9')
 
     def start_ot_ctl(self):
@@ -1447,6 +1453,14 @@ class NodeImpl:
         self.send_command(cmd)
         return int(self._expect_command_output()[0])
 
+    def enable_border_agent(self):
+        self.send_command('ba enable')
+        self._expect_done()
+
+    def disable_border_agent(self):
+        self.send_command('ba disable')
+        self._expect_done()
+
     def get_border_agent_counters(self):
         cmd = 'ba counters'
         self.send_command(cmd)
@@ -1737,6 +1751,7 @@ class NodeImpl:
         cmd = 'networkkey %s' % networkkey
         self.send_command(cmd)
         self._expect_done()
+        self.simulator.add_network_key(network_key)
 
     def get_key_sequence_counter(self):
         self.send_command('keysequence counter')
@@ -2728,6 +2743,7 @@ class NodeImpl:
             cmd = 'dataset networkkey %s' % network_key
             self.send_command(cmd, go=False)
             self._expect_done()
+            self.simulator.add_network_key(network_key)
 
         if network_name is not None:
             cmd = 'dataset networkname %s' % network_name
@@ -2863,6 +2879,7 @@ class NodeImpl:
 
         if network_key is not None:
             cmd += 'networkkey %s ' % network_key
+            self.simulator.add_network_key(network_key)
 
         if mesh_local is not None:
             cmd += 'localprefix %s ' % mesh_local
@@ -2940,6 +2957,7 @@ class NodeImpl:
 
         if network_key is not None:
             cmd += 'networkkey %s ' % network_key
+            self.simulator.add_network_key(network_key)
 
         if mesh_local is not None:
             cmd += 'localprefix %s ' % mesh_local

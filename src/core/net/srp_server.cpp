@@ -303,7 +303,7 @@ bool Server::NetDataContainsOtherSrpServers(void) const
     bool                                    contains = false;
     NetworkData::Service::DnsSrpAnycastInfo anycastInfo;
     NetworkData::Service::DnsSrpUnicastInfo unicastInfo;
-    NetworkData::Service::Manager::Iterator iterator;
+    NetworkData::Service::Iterator          iterator(GetInstance());
 
     if (Get<NetworkData::Service::Manager>().FindPreferredDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
     {
@@ -313,8 +313,7 @@ bool Server::NetDataContainsOtherSrpServers(void) const
 
     iterator.Reset();
 
-    if (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(
-            iterator, NetworkData::Service::kAddrInServiceData, unicastInfo) == kErrorNone)
+    if (iterator.GetNextDnsSrpUnicastInfo(NetworkData::Service::kAddrInServiceData, unicastInfo) == kErrorNone)
     {
         contains = true;
         ExitNow();
@@ -322,8 +321,7 @@ bool Server::NetDataContainsOtherSrpServers(void) const
 
     iterator.Reset();
 
-    while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(
-               iterator, NetworkData::Service::kAddrInServerData, unicastInfo) == kErrorNone)
+    while (iterator.GetNextDnsSrpUnicastInfo(NetworkData::Service::kAddrInServerData, unicastInfo) == kErrorNone)
     {
         if (!Get<Mle::Mle>().HasRloc16(unicastInfo.mRloc16) &&
             Get<Mle::Mle>().GetMeshLocalEid() != unicastInfo.mSockAddr.GetAddress())
@@ -509,15 +507,17 @@ bool Server::HasNameConflictsWith(Host &aHost) const
         ExitNow(hasConflicts = true);
     }
 
-    for (const Service &service : aHost.mServices)
+    for (const Host &host : mHosts)
     {
-        // Check on all hosts for a matching service with the same
-        // instance name and if found, verify that it has the same
-        // key.
-
-        for (const Host &host : mHosts)
+        if (aHost.mKey == host.mKey)
         {
-            if (host.HasService(service.GetInstanceName()) && (aHost.mKey != host.mKey))
+            continue;
+        }
+
+        // Verify that no allocated services have the same instance name.
+        for (const Service &service : aHost.mServices)
+        {
+            if (host.HasService(service.GetInstanceName()))
             {
                 LogWarn("Name conflict: service name %s has already been allocated", service.GetInstanceName());
                 ExitNow(hasConflicts = true);
@@ -711,7 +711,7 @@ void Server::CommitSrpUpdate(Error                    aError,
 
         mHasRegisteredAnyService = true;
         info.SetPort(GetSocket().mSockName.mPort);
-        IgnoreError(Get<Settings>().Save(info));
+        Get<Settings>().Save(info);
     }
 #endif
 
@@ -723,7 +723,7 @@ void Server::CommitSrpUpdate(Error                    aError,
 exit:
     if (aMessageInfo != nullptr)
     {
-        if (aError == kErrorNone && !(grantedLease == hostLease && grantedKeyLease == hostKeyLease))
+        if (aError == kErrorNone && (grantedLease != hostLease || grantedKeyLease != hostKeyLease))
         {
             SendResponse(aDnsHeader, grantedLease, grantedKeyLease, useShortLease, *aMessageInfo);
         }

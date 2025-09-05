@@ -495,7 +495,10 @@ public:
      *
      * @returns The Timeout value.
      */
-    uint8_t GetTimeout(void) const { return ReadBits<uint16_t, kTimeoutMask>(GetTimeoutChildId()); }
+    uint8_t GetTimeout(void) const
+    {
+        return static_cast<uint8_t>(ReadBits<uint16_t, kTimeoutMask>(GetTimeoutChildId()));
+    }
 
     /**
      * Sets the Timeout value.
@@ -1016,18 +1019,24 @@ OT_TOOL_PACKED_BEGIN
 class AnswerTlv : public Tlv, public TlvInfo<Tlv::kAnswer>
 {
 public:
+    enum IsLastFlag : uint8_t
+    {
+        kMoreToFollow, ///< More answer messages to follow.
+        kIsLast,       ///< This is the last answer for this query.
+    };
+
     /**
      * Initializes the TLV.
      *
-     * @param[in] aIndex   The index value.
-     * @param[in] aIsLast  The "IsLast" flag value.
+     * @param[in] aIndex       The index value.
+     * @param[in] aIsLastFlag  Indicates the `IsLastFlag` value.
      */
-    void Init(uint16_t aIndex, bool aIsLast);
+    void Init(uint16_t aIndex, IsLastFlag aIsLastFlag);
 
     /**
      * Indicates whether or not the "IsLast" flag is set
      *
-     * @retval TRUE   "IsLast" flag si set (this is the last answer for this query).
+     * @retval TRUE   "IsLast" flag is set (this is the last answer for this query).
      * @retval FALSE  "IsLast" flag is not set (more answer messages are expected for this query).
      */
     bool IsLast(void) const { return GetFlagsIndex() & kIsLastFlag; }
@@ -1041,7 +1050,7 @@ public:
 
 private:
     static constexpr uint16_t kIsLastFlag = 1 << 15;
-    static constexpr uint16_t kIndexMask  = 0x7f;
+    static constexpr uint16_t kIndexMask  = 0x7fff;
 
     uint16_t GetFlagsIndex(void) const { return BigEndian::HostSwap16(mFlagsIndex); }
     void     SetFlagsIndex(uint16_t aFlagsIndex) { mFlagsIndex = BigEndian::HostSwap16(aFlagsIndex); }
