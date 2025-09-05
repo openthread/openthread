@@ -65,6 +65,7 @@ const char *StateToString(State aState)
 
 Translator::Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mEnabled(false)
     , mState(State::kStateDisabled)
     , mMappingPool(aInstance)
     , mTimer(aInstance)
@@ -93,9 +94,9 @@ Message *Translator::NewIp4Message(const Message::Settings &aSettings)
 
 Error Translator::SendMessage(OwnedPtr<Message> aMessagePtr)
 {
-    Error error;
+    Error error = kErrorDrop;
 
-    VerifyOrExit(TranslateToIp6(*aMessagePtr) == kForward, error = kErrorDrop);
+    SuccessOrExit(TranslateIp4ToIp6(*aMessagePtr));
     error = Get<Ip6::Ip6>().SendRaw(aMessagePtr.PassOwnership());
 
 exit:
@@ -112,16 +113,16 @@ uint16_t Translator::GetDestinationPortOrIcmp4Id(const Ip4::Headers &aIp4Headers
     return aIp4Headers.IsIcmp4() ? aIp4Headers.GetIcmpHeader().GetId() : aIp4Headers.GetDestinationPort();
 }
 
-Translator::Result Translator::TranslateFromIp6(Message &aMessage)
+Error Translator::TranslateIp6ToIp4(Message &aMessage)
 {
-    Result       result     = kDrop;
+    Error        error      = kErrorNone;
     DropReason   dropReason = kReasonUnknown;
     Ip6::Headers ip6Headers;
     Ip4::Header  ip4Header;
     uint16_t     srcPortOrId = 0;
     Mapping     *mapping     = nullptr;
 
-    VerifyOrExit(mState == kStateActive, result = kNotTranslated);
+    VerifyOrExit(mState == kStateActive, error = kErrorAbort);
 
     // `ParseFrom()` will do basic checks for the message, including
     // the message length and IP protocol version.
@@ -129,12 +130,12 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
     {
         LogWarn("Outgoing datagram is not a valid IPv6 datagram, drop");
         dropReason = kReasonIllegalPacket;
-        ExitNow(result = kDrop);
+        ExitNow(error = kErrorDrop);
     }
 
     if (!ip6Headers.GetDestinationAddress().MatchesPrefix(mNat64Prefix))
     {
-        ExitNow(result = kNotTranslated);
+        ExitNow(error = kErrorAbort);
     }
 
     mapping = mActiveMappings.FindMatching(ip6Headers);
@@ -149,7 +150,7 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
         LogWarn("Failed to get a mapping for %s (mapping pool full?)",
                 ip6Headers.GetSourceAddress().ToString().AsCString());
         dropReason = kReasonNoMapping;
-        ExitNow(result = kDrop);
+        ExitNow(error = kErrorDrop);
     }
 
     mapping->Touch(ip6Headers.GetIpProto());
@@ -176,25 +177,21 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
         ip4Header.SetProtocol(Ip4::kProtoUdp);
         ip6Headers.SetSourcePort(srcPortOrId);
         aMessage.Write(0, ip6Headers.GetUdpHeader());
-        result = kForward;
         break;
     case Ip6::kProtoTcp:
         ip4Header.SetProtocol(Ip4::kProtoTcp);
         ip6Headers.SetSourcePort(srcPortOrId);
         aMessage.Write(0, ip6Headers.GetTcpHeader());
-        result = kForward;
         break;
     case Ip6::kProtoIcmp6:
         ip4Header.SetProtocol(Ip4::kProtoIcmp);
         SuccessOrExit(TranslateIcmp6(aMessage, srcPortOrId));
-        result = kForward;
         break;
     default:
         dropReason = kReasonUnsupportedProto;
-        ExitNow(result = kDrop);
+        ExitNow(error = kErrorDrop);
     }
 
-    // `result` here must be kForward based on the switch above.
     // TODO: Implement the logic for replying ICMP messages.
     ip4Header.SetTotalLength(sizeof(Ip4::Header) + aMessage.GetLength() - aMessage.GetOffset());
 
@@ -207,7 +204,7 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
         // This should never happen since the IPv4 header is shorter
         // than the IPv6 header.
         LogCrit("failed to prepend IPv4 head to translated message");
-        ExitNow(result = kDrop);
+        ExitNow(error = kErrorDrop);
     }
 
     aMessage.SetType(Message::kTypeIp4);
@@ -216,34 +213,29 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
     mapping->mCounters.Count6To4Packet(ip6Headers);
 
 exit:
-    if (result == kDrop)
+    if (error == kErrorDrop)
     {
         mErrorCounters.mCount6To4[dropReason]++;
     }
 
-    return result;
+    return error;
 }
 
-Translator::Result Translator::TranslateToIp6(Message &aMessage)
+Error Translator::TranslateIp4ToIp6(Message &aMessage)
 {
-    Result       result     = kDrop;
+    Error        error      = kErrorNone;
     DropReason   dropReason = kReasonUnknown;
     Ip6::Header  ip6Header;
     Ip4::Headers ip4Headers;
     uint16_t     dstPortOrId = 0;
     Mapping     *mapping     = nullptr;
 
-    // `ParseFrom()` may return an error value when the incoming
-    // message is an IPv4 datagram. If the message is already an IPv6
-    // datagram, forward it directly.
-    VerifyOrExit(ip6Header.ParseFrom(aMessage) != kErrorNone, result = kNotTranslated);
-
-    VerifyOrExit(mState == kStateActive, result = kDrop);
+    VerifyOrExit(mState == kStateActive, error = kErrorDrop);
 
     if (ip4Headers.ParseFrom(aMessage) != kErrorNone)
     {
         dropReason = kReasonIllegalPacket;
-        ExitNow(result = kDrop);
+        ExitNow(error = kErrorDrop);
     }
 
     mapping = mActiveMappings.FindMatching(ip4Headers);
@@ -252,7 +244,7 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
     {
         LogWarn("No mapping found for the IPv4 address");
         dropReason = kReasonNoMapping;
-        ExitNow(result = kDrop);
+        ExitNow(error = kErrorDrop);
     }
 
     mapping->Touch(ip4Headers.GetIpProto());
@@ -283,25 +275,21 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
         ip6Header.SetNextHeader(Ip6::kProtoUdp);
         ip4Headers.SetDestinationPort(dstPortOrId);
         aMessage.Write(0, ip4Headers.GetUdpHeader());
-        result = kForward;
         break;
     case Ip4::kProtoTcp:
         ip6Header.SetNextHeader(Ip6::kProtoTcp);
         ip4Headers.SetDestinationPort(dstPortOrId);
         aMessage.Write(0, ip4Headers.GetTcpHeader());
-        result = kForward;
         break;
     case Ip4::kProtoIcmp:
         ip6Header.SetNextHeader(Ip6::kProtoIcmp6);
         SuccessOrExit(TranslateIcmp4(aMessage, dstPortOrId));
-        result = kForward;
         break;
     default:
         dropReason = kReasonUnsupportedProto;
-        ExitNow(result = kDrop);
+        ExitNow(error = kErrorDrop);
     }
 
-    // result here must be kForward based on the switch above.
     // TODO: Implement the logic for replying ICMP datagrams.
     ip6Header.SetPayloadLength(aMessage.GetLength() - aMessage.GetOffset());
 
@@ -313,7 +301,7 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
         // This might happen when the platform failed to reserve
         // enough space before the original IPv4 datagram.
         LogWarn("Failed to prepend IPv6 head to translated message");
-        ExitNow(result = kDrop);
+        ExitNow(error = kErrorDrop);
     }
 
     aMessage.SetType(Message::kTypeIp6);
@@ -322,12 +310,12 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
     mapping->mCounters.Count4To6Packet(ip4Headers);
 
 exit:
-    if (result == kDrop)
+    if (error == kErrorDrop)
     {
         mErrorCounters.mCount4To6[dropReason]++;
     }
 
-    return result;
+    return error;
 }
 
 Translator::Mapping::InfoString Translator::Mapping::ToString(void) const

@@ -79,16 +79,6 @@ public:
     typedef otNat64ErrorCounters  ErrorCounters;  ///< Error counters.
 
     /**
-     * The possible results of NAT64 translation.
-     */
-    enum Result : uint8_t
-    {
-        kNotTranslated, ///< Not translated (e.g., Outgoing msg using a non-NAT64 prefix, or incoming is already IPv6).
-        kForward,       ///< Successfully translated and the translated message should be forwarded.
-        kDrop,          ///< Silently drop the message.
-    };
-
-    /**
      * An iterator to iterate over `AddressMapping` entries.
      */
     class AddressMappingIterator : public otNat64AddressMappingIterator
@@ -190,30 +180,26 @@ public:
     Message *NewIp4Message(const Message::Settings &aSettings);
 
     /**
-     * Translates an IPv4 datagram to IPv6 datagram. Note the datagram and datagramLength might be adjusted.
-     * Note the message can have 20 bytes reserved before the message to avoid potential copy operations. If the message
-     * is already an IPv6 datagram, `Result::kNotTranslated` will be returned and @p aMessage won't be modified.
+     * Translates an IPv4 message to an IPv6 message.
      *
-     * @param[in,out] aMessage the message to be processed.
+     * @param[in,out] aMessage    The message to be processed.
      *
-     * @retval kNotTranslated The message is already an IPv6 datagram. @p aMessage is not updated.
-     * @retval kForward       The caller should continue forwarding the datagram.
-     * @retval kDrop          The caller should drop the datagram silently.
+     * @retval kErrorNone    The message was successfully translated from IPv4 to IPv6.
+     * @retval kErrorDrop    The message should be dropped, e.g., it is malformed or translation failed.
      */
-    Result TranslateToIp6(Message &message);
+    Error TranslateIp4ToIp6(Message &aMessage);
 
     /**
-     * Translates an IPv6 datagram to IPv4 datagram. Note the datagram and datagramLength might be adjusted.
-     * If the message is not targeted to NAT64-mapped address, `Result::kNotTranslated` will be returned and @p aMessage
-     * won't be modified.
+     * Translates an IPv6 message to an IPv4 message.
      *
-     * @param[in,out] aMessage the message to be processed.
+     * @param[in,out] aMessage    The message to be processed.
      *
-     * @retval kNotTranslated The datagram is not sending to the configured NAT64 prefix.
-     * @retval kForward       The caller should continue forwarding the datagram.
-     * @retval kDrop          The caller should drop the datagram silently.
+     * @retval kErrorNone    The message was successfully translated from IPv6 to IPv4.
+     * @retval kErrorDrop    The message should be dropped, e.g., it is malformed or translation failed.
+     * @retval kErrorAbort   No translation was performed or required (e.g., NAT64 is disabled, the message is not
+     *                       destined for a NAT64-mapped address). In this case, the message is not modified.
      */
-    Result TranslateFromIp6(Message &aMessage);
+    Error TranslateIp6ToIp4(Message &aMessage);
 
     /**
      * Sets the CIDR used when setting the source address of the outgoing translated IPv4 datagrams. A valid CIDR must
