@@ -337,11 +337,14 @@ private:
 #endif
     };
 
+    bool     IsEnabled(void) const { return mState != kStateDisabled; }
+    bool     HasValidPrefixAndCidr(void) const;
+    void     SetState(State aState);
+    void     UpdateState(void);
     Error    TranslateIcmp4(Message &aMessage, uint16_t aOriginalId);
     Error    TranslateIcmp6(Message &aMessage, uint16_t aTranslatedId);
     Mapping *AllocateMapping(const Ip6::Headers &aIp6Headers);
     void     HandleTimer(void);
-    void     UpdateState(void);
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
     uint16_t AllocateSourcePort(uint16_t aSrcPort);
 #endif
@@ -351,7 +354,6 @@ private:
 
     using TranslatorTimer = TimerMilliIn<Translator, &Translator::HandleTimer>;
 
-    bool                           mEnabled;
     State                          mState;
     uint64_t                       mNextMappingId;
     Array<Ip4::Address, kPoolSize> mIp4AddressPool;
