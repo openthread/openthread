@@ -141,6 +141,7 @@ static constexpr uint8_t kNoNextHop = OT_HISTORY_TRACKER_NO_NEXT_HOP;
  */
 class Local : public InstanceLocator, private NonCopyable
 {
+    friend class ot::IndirectSender;
     friend class ot::MeshForwarder;
     friend class ot::Notifier;
     friend class ot::Mle::Mle;
@@ -491,13 +492,13 @@ private:
         RecordMessage(aMessage, aMacSource, kRxMessage);
     }
 
-    void RecordTxMessage(const Message &aMessage, const Mac::Address &aMacDest)
+    void RecordTxMessage(const Message &aMessage, const Mac::Address &aMacDest, bool isTxSuccess)
     {
-        RecordMessage(aMessage, aMacDest, kTxMessage);
+        RecordMessage(aMessage, aMacDest, kTxMessage, isTxSuccess);
     }
 
     void RecordNetworkInfo(void);
-    void RecordMessage(const Message &aMessage, const Mac::Address &aMacAddress, MessageType aType);
+    void RecordMessage(const Message &aMessage, const Mac::Address &aMacAddress, MessageType aType, bool isTxSuccess = true);
     void RecordNeighborEvent(NeighborTable::Event aEvent, const NeighborTable::EntryInfo &aInfo);
     void RecordAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::UnicastAddress &aUnicastAddress);
     void RecordAddressEvent(Ip6::Netif::AddressEvent            aEvent,
