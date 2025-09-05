@@ -93,6 +93,7 @@ void VerifyLinkedListContent(const LinkedList<Entry> *aList, ...)
     Entry       *argPrev = nullptr;
     const Entry *prev;
     uint16_t     unusedId = 100;
+    uint16_t     count    = 0;
 
     va_start(args, aList);
 
@@ -117,6 +118,7 @@ void VerifyLinkedListContent(const LinkedList<Entry> *aList, ...)
         VerifyOrQuit(!argEntry->WasFreed());
 
         argPrev = argEntry;
+        count++;
     }
 
     argEntry = va_arg(args, Entry *);
@@ -129,6 +131,8 @@ void VerifyLinkedListContent(const LinkedList<Entry> *aList, ...)
 
     VerifyOrQuit(aList->FindMatching("none") == nullptr, "succeeded for a missing entry");
     VerifyOrQuit(aList->FindMatching(unusedId) == nullptr, "succeeded for a missing entry");
+
+    VerifyOrQuit(aList->CountAllEntries() == count);
 }
 
 void TestLinkedList(void)
