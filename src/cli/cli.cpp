@@ -8088,22 +8088,43 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
 
-#if OPENTHREAD_CONFIG_P2P_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_P2P_ENABLE
 template <> otError Interpreter::Process<Cmd("p2p")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
-    if (aArgs[0] == "link")
+    if (aArgs[0] == "unlink")
+    {
+        otExtAddress extAddress;
+
+        /**
+         * @cli p2p unlink
+         * @code
+         * p2p unlink dead00beef00cafe
+         * Done
+         * @endcode
+         * @cparam p2p unlink @ca{extended-address}
+         * @par
+         * `OPENTHREAD_CONFIG_P2P_ENABLE` is required.
+         * @par
+         * Tears down the P2P link identified by the extended address.
+         */
+        SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddress.m8));
+        SuccessOrExit(error = otP2pUnlink(GetInstancePtr(), &extAddress, HandleP2pUnlinkDone, this));
+        error = OT_ERROR_PENDING;
+    }
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    else if (aArgs[0] == "link")
     {
         otP2pRequest p2pRequest;
 
         /**
-         * @cli link
+         * @cli p2p link
          * @code
-         * link extaddr dead00beef00cafe
+         * p2p link extaddr dead00beef00cafe
          * Done
          * @endcode
-         * @cparam link extaddr @ca{extended-address}
+         * @cparam p2p link extaddr @ca{extended-address}
          * @par
          * `OPENTHREAD_CONFIG_P2P_ENABLE` and `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` are required.
          * @par
@@ -8120,9 +8141,10 @@ template <> otError Interpreter::Process<Cmd("p2p")>(Arg aArgs[])
             ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
 
-        SuccessOrExit(error = otP2pWakeupAndLink(GetInstancePtr(), &p2pRequest, HandleP2pLinkedResult, this));
+        SuccessOrExit(error = otP2pWakeupAndLink(GetInstancePtr(), &p2pRequest, HandleP2pLinkDone, this));
         error = OT_ERROR_PENDING;
     }
+#endif
     else
     {
         error = OT_ERROR_INVALID_ARGS;
@@ -8132,13 +8154,16 @@ exit:
     return error;
 }
 
-void Interpreter::HandleP2pLinkedResult(void *aContext)
-{
-    static_cast<Interpreter *>(aContext)->HandleP2pLinkedResult();
-}
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+void Interpreter::HandleP2pLinkDone(void *aContext) { static_cast<Interpreter *>(aContext)->HandleP2pLinkDone(); }
 
-void Interpreter::HandleP2pLinkedResult(void) { OutputResult(OT_ERROR_NONE); }
-#endif //  OPENTHREAD_CONFIG_P2P_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+void Interpreter::HandleP2pLinkDone(void) { OutputResult(OT_ERROR_NONE); }
+#endif
+
+void Interpreter::HandleP2pUnlinkDone(void *aContext) { static_cast<Interpreter *>(aContext)->HandleP2pUnlinkDone(); }
+
+void Interpreter::HandleP2pUnlinkDone(void) { OutputResult(OT_ERROR_NONE); }
+#endif //  OPENTHREAD_CONFIG_P2P_ENABLE
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])

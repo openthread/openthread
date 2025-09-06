@@ -214,4 +214,24 @@ for {set i 1} {$i <= 5} {incr i} {
     expect "28 bytes from $wc1_link_local_addr: icmp_seq=$i"
 }
 
+
+send_user "\n\n>>> WC1 tears down the P2P link with WL1\n"
+switch_node $WC1
+send "p2p unlink $WL1_EXT_ADDRESS\n"
+expect_line "Done"
+
+
+send_user "\n\n>>> WC2 tears down the P2P link with WL1\n"
+switch_node $WC2
+send "p2p unlink $WL1_EXT_ADDRESS\n"
+expect_line "Done"
+
+
+send_user "\n\n>>> WL2 tears down the P2P link with WC1\n"
+switch_node $WL2
+send "p2p unlink $WC1_EXT_ADDRESS\n"
+expect_line "Done"
+
+sleep 1
+
 dispose_all

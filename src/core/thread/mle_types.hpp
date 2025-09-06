@@ -160,6 +160,7 @@ enum Command : uint8_t
     kCommandP2pLinkRequest                = 100, ///< P2P Link Request command
     kCommandP2pLinkAccept                 = 101, ///< P2P Link Accept command
     kCommandP2pLinkAcceptAndRequest       = 102, ///< P2P Link Accept And Request command
+    kCommandP2pLinkTearDown               = 103, ///< P2P Link Tear Down command
 };
 
 /**

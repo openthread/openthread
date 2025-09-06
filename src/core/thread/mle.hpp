@@ -135,8 +135,10 @@ class Mle : public InstanceLocator, private NonCopyable
 public:
     typedef otDetachGracefullyCallback DetachCallback; ///< Callback to signal end of graceful detach.
     typedef otP2pLinkDoneCallback P2pLinkDoneCallback; ///< Callback to inform the result of establishing P2P links.
-    typedef otP2pEventCallback    P2pEventCallback;    ///< Callback to signal events of the P2P link.
-    typedef otWakeupCallback      WakeupCallback; ///< Callback to communicate the result of waking a Wake-up End Device
+    typedef otP2pUnlinkDoneCallback
+                               P2pUnlinkDoneCallback; ///< Callback to inform the result of tearing down the P2P link.
+    typedef otP2pEventCallback P2pEventCallback;      ///< Callback to signal events of the P2P link.
+    typedef otWakeupCallback   WakeupCallback; ///< Callback to communicate the result of waking a Wake-up End Device
 
     /**
      * Initializes the MLE object.
@@ -1187,6 +1189,22 @@ public:
 #endif
 
     /**
+     * Tears down the P2P link specified by the Extended Address.
+     *
+     * @param[in] aExtAddress  A constant reference to the P2P peer's Extended Address.
+     * @param[in] aCallback    A pointer to function that is called when the P2P link tear down process has ended.
+     * @param[in] aContext     A pointer to callback application-specific context.
+     *
+     * @retval OT_ERROR_NONE       Successfully started to tear down the P2P link.
+     * @retval OT_ERROR_BUSY       Tearing down or establishing a P2P link process is in progress.
+     * @retval OT_ERROR_NOT_FOUND  The P2P link identified by the @p aExtAddress was not found.
+     */
+    Error P2pUnlink(const Mac::ExtAddress &aExtAddress, P2pUnlinkDoneCallback aCallback, void *aContext)
+    {
+        return mP2p.Unlink(aExtAddress, aCallback, aContext);
+    }
+
+    /**
      * Sets the callback function to notify event changes of P2P links.
      *
      * A subsequent call to this function will replace any previously set callback.
@@ -1473,6 +1491,7 @@ private:
         kTypeP2pLinkRequest,
         kTypeP2pLinkAcceptAndRequest,
         kTypeP2pLinkAccept,
+        kTypeP2pLinkTearDown,
 #endif
     };
 
@@ -2170,8 +2189,10 @@ private:
         void HandleP2pLinkAcceptAndRequest(RxInfo &aRxInfo);
 #endif
 
-        void SetEventCallback(P2pEventCallback aCallback, void *aContext);
-        void HandleLinkTimer(void);
+        Error Unlink(const Mac::ExtAddress &aExtAddress, P2pUnlinkDoneCallback aCallback, void *aContext);
+        void  HandleP2pLinkTearDown(RxInfo &aRxInfo);
+        void  SetEventCallback(P2pEventCallback aCallback, void *aContext);
+        void  HandleLinkTimer(void);
 
     private:
         static constexpr uint16_t kWakeupMaxDuration         = OPENTHREAD_CONFIG_WAKEUP_MAX_DURATION;
@@ -2185,6 +2206,7 @@ private:
             kStateWaitingLinkAccept,
             kStateAttachDelay,
             kStateWaitingLinkAcceptAndRequest,
+            kStateTearingDown,
         };
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
@@ -2196,19 +2218,25 @@ private:
         Error SendP2pLinkAcceptAndRequest(const LinkAcceptInfo &aInfo);
 #endif
 
+        static void HandleLinkTearDownTxDone(const otMessage *aMessage, otError aError, void *aContext);
+        void        HandleLinkTearDownTxDone(const Message &aMessage);
+
         Error SendP2pLinkAcceptVariant(const LinkAcceptInfo &aInfo, bool aIsLinkAcceptorRequest);
         void  HandleP2pLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType);
         void  SetWakeupListenerEnabled(void);
         void  ClearPeersInLinkRequestState(void);
+        Error SendLinkTearDown(Peer &aPeer);
+        void  PeerUnlinked(Peer &aPeer);
 
         using P2pLinkTimer = TimerMicroIn<Mle, &Mle::HandleP2pLinkTimer>;
 
-        State                         mState;
-        PeerTable                     mPeerTable;
-        P2pLinkTimer                  mTimer;
-        Callback<P2pLinkDoneCallback> mLinkedCallback;
-        Callback<P2pEventCallback>    mEventCallback;
-        Peer                         *mPeer;
+        State                           mState;
+        PeerTable                       mPeerTable;
+        P2pLinkTimer                    mTimer;
+        Callback<P2pLinkDoneCallback>   mLinkDoneCallback;
+        Callback<P2pUnlinkDoneCallback> mUnlinkDoneCallback;
+        Callback<P2pEventCallback>      mEventCallback;
+        Peer                           *mPeer;
     };
 #endif
 

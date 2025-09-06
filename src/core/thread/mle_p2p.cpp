@@ -53,7 +53,8 @@ Mle::P2p::P2p(Instance &aInstance)
     , mState(kStateIdle)
     , mPeerTable(aInstance)
     , mTimer(aInstance)
-    , mLinkedCallback()
+    , mLinkDoneCallback()
+    , mUnlinkDoneCallback()
     , mEventCallback()
     , mPeer(nullptr)
 {
@@ -77,7 +78,7 @@ Error Mle::P2p::WakeupAndLink(const P2pRequest &aP2pRequest, P2pLinkDoneCallback
         error = Get<WakeupTxScheduler>().WakeUp(aP2pRequest.GetWakeupRequest(), kWakeupTxInterval, kWakeupMaxDuration));
 
     mState = kStateWakingUp;
-    mLinkedCallback.Set(aCallback, aContext);
+    mLinkDoneCallback.Set(aCallback, aContext);
     mTimer.FireAt(Get<WakeupTxScheduler>().GetTxEndTime() + Get<WakeupTxScheduler>().GetConnectionWindowUs());
 
 exit:
@@ -333,12 +334,117 @@ void Mle::P2p::HandleP2pLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageT
             // All P2P links have been established.
             mState = kStateIdle;
             mTimer.Stop();
-            mLinkedCallback.InvokeAndClearIfSet();
+            mLinkDoneCallback.InvokeAndClearIfSet();
         }
     }
 
 exit:
     LogProcessError(aMessageType, error);
+}
+
+Error Mle::P2p::Unlink(const Mac::ExtAddress &aExtAddress, P2pUnlinkDoneCallback aCallback, void *aContext)
+{
+    Error error = kErrorNone;
+    Peer *peer;
+
+    VerifyOrExit(mState == kStateIdle, error = kErrorBusy);
+    VerifyOrExit((peer = mPeerTable.FindPeer(aExtAddress, Peer::kInStateValid)) != nullptr, error = kErrorNotFound);
+    SuccessOrExit(error = SendLinkTearDown(*peer));
+
+    mState = kStateTearingDown;
+    mUnlinkDoneCallback.Set(aCallback, aContext);
+
+exit:
+    return error;
+}
+
+Error Mle::P2p::SendLinkTearDown(Peer &aPeer)
+{
+    Error        error = kErrorNone;
+    TxMessage   *message;
+    Ip6::Address destination;
+
+    aPeer.GetLinkLocalIp6Address(destination);
+    VerifyOrExit((message = Get<Mle>().NewMleMessage(kCommandP2pLinkTearDown)) != nullptr, error = kErrorNoBufs);
+    message->RegisterTxCallback(HandleLinkTearDownTxDone, this);
+    SuccessOrExit(error = message->SendTo(destination));
+
+    Log(kMessageSend, kTypeP2pLinkTearDown, destination);
+
+exit:
+    FreeMessageOnError(message, error);
+    return error;
+}
+
+void Mle::P2p::HandleLinkTearDownTxDone(const otMessage *aMessage, otError aError, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aError);
+    static_cast<Mle::P2p *>(aContext)->HandleLinkTearDownTxDone(AsCoreType(aMessage));
+}
+
+void Mle::P2p::HandleLinkTearDownTxDone(const Message &aMessage)
+{
+    Ip6::Header     ip6Header;
+    Mac::ExtAddress extAddress;
+    Peer           *peer;
+
+    SuccessOrExit(aMessage.Read(0, ip6Header));
+    VerifyOrExit(ip6Header.GetDestination().IsLinkLocalUnicast());
+    extAddress.SetFromIid(ip6Header.GetDestination().GetIid());
+
+    peer = mPeerTable.FindPeer(extAddress, Peer::kInStateValid);
+    if (peer == nullptr)
+    {
+        // Peer may have been removed if we received a tear down from it. In this case, we can consider the unlink done.
+        mState = kStateIdle;
+        mUnlinkDoneCallback.InvokeAndClearIfSet();
+        ExitNow();
+    }
+
+    if (!aMessage.GetTxSuccess() && (peer->GetTearDownCount() < Peer::kMaxRetransmitLinkTearDowns))
+    {
+        peer->IncrementTearDownCount();
+
+        if (SendLinkTearDown(*peer) == kErrorNone)
+        {
+            ExitNow();
+        }
+    }
+
+    PeerUnlinked(*peer);
+    mUnlinkDoneCallback.InvokeAndClearIfSet();
+
+exit:
+    return;
+}
+
+void Mle::P2p::PeerUnlinked(Peer &aPeer)
+{
+    aPeer.SetState(Neighbor::kStateInvalid);
+
+    if (mState == kStateTearingDown)
+    {
+        mState = kStateIdle;
+    }
+
+    mEventCallback.InvokeIfSet(OT_P2P_EVENT_UNLINKED, &aPeer.GetExtAddress());
+}
+
+void Mle::P2p::HandleP2pLinkTearDown(RxInfo &aRxInfo)
+{
+    Peer           *peer;
+    Mac::ExtAddress extAddress;
+
+    Log(kMessageReceive, kTypeP2pLinkTearDown, aRxInfo.mMessageInfo.GetPeerAddr());
+    VerifyOrExit(aRxInfo.mMessageInfo.GetPeerAddr().IsLinkLocalUnicast());
+    extAddress.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
+    VerifyOrExit((peer = mPeerTable.FindPeer(extAddress, Peer::kInStateValid)) != nullptr);
+
+    Get<Mle>().ProcessKeySequence(aRxInfo);
+    PeerUnlinked(*peer);
+
+exit:
+    return;
 }
 
 void Mle::P2p::HandleLinkTimer(void)
@@ -356,7 +462,7 @@ void Mle::P2p::HandleLinkTimer(void)
 
         mState = kStateIdle;
         ClearPeersInLinkRequestState();
-        mLinkedCallback.InvokeAndClearIfSet();
+        mLinkDoneCallback.InvokeAndClearIfSet();
     }
     break;
 #endif
