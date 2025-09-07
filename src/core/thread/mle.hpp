@@ -138,7 +138,7 @@ public:
     typedef otP2pUnlinkDoneCallback
                                P2pUnlinkDoneCallback; ///< Callback to inform the result of tearing down the P2P link.
     typedef otP2pEventCallback P2pEventCallback;      ///< Callback to signal events of the P2P link.
-    typedef otWakeupCallback   WakeupCallback; ///< Callback to communicate the result of waking a Wake-up End Device
+    typedef otWakeupCallback   WakeupCallback; ///< Callback to communicate the result of waking a Wake-up End Device.
 
     /**
      * Initializes the MLE object.

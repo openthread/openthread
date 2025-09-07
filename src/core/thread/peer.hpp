@@ -49,7 +49,7 @@ class Peer : public CslNeighbor
 {
 public:
     /**
-     * Max number of re-transmit the P2P Link Tear Down messages.
+     * Max number of re-transmitted the P2P link tear down messages.
      */
     static constexpr uint8_t kMaxRetransmitLinkTearDowns = 4;
 
