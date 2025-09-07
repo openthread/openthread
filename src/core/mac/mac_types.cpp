@@ -445,5 +445,10 @@ bool WakeupRequest::IsWakeupById(void) const { return MapEnum(mType) == kTypeWak
 
 bool WakeupRequest::IsWakeupByGroupId(void) const { return MapEnum(mType) == kTypeGroupWakeupId; }
 #endif
+
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+SlotEntry::Type SlotEntry::GetSlotType(void) const { return MapEnum(mSlotType); }
+#endif
+
 } // namespace Mac
 } // namespace ot

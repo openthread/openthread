@@ -274,6 +274,16 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+void LinkRaw::InvokeRadioAvailMapUpdated(uint64_t aTimestamp, const SlotEntry *aSlotEntries, uint8_t aNumEntries)
+{
+    if (IsEnabled() && mRadioAvailMapUpdatedCallback != nullptr)
+    {
+        mRadioAvailMapUpdatedCallback(&GetInstance(), aTimestamp, aSlotEntries, aNumEntries);
+    }
+}
+#endif
+
 // LCOV_EXCL_START
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

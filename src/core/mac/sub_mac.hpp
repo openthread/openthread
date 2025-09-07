@@ -188,6 +188,19 @@ public:
          * @param[in]  aFrameCounter  The MAC frame counter value which was used.
          */
         void FrameCounterUsed(uint32_t aFrameCounter);
+
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+        /**
+         * Notifies user of `SubMac` that the radio availability map has updated.
+         *
+         * @param[in]  aTimestamp    The time of the local radio clock in microseconds when the radio availability map
+         *                           starts.
+         * @param[in]  aSlotEntries  A pointer to radio slot entries.
+         * @param[in]  aNumEntries   The number of entries pointed by the @p aSlotEntries. Value 0 indicates that the
+         *                           radio is always available for Thread.
+         */
+        void HandleRadioAvailMapUpdated(uint64_t aTimestamp, const SlotEntry *aSlotEntries, uint8_t aNumEntries);
+#endif
     };
 
     /**
@@ -635,6 +648,9 @@ private:
     bool IsRadioSampleEnabled(void) const;
     void UpdateRadioSampleState(void);
     void RadioSample(void);
+#endif
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+    void HandleRadioAvailMapUpdated(uint64_t aTimestamp, const SlotEntry *aEntryEntries, uint8_t aNumEntries);
 #endif
 
     using SubMacTimer =

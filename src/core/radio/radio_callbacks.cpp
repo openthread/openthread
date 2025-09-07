@@ -90,4 +90,12 @@ void Radio::Callbacks::HandleDiagsTransmitDone(Mac::TxFrame &aFrame, Error aErro
 }
 #endif // OPENTHREAD_CONFIG_DIAG_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+void Radio::Callbacks::HandleRadioAvailMapUpdated(uint64_t              aTimestamp,
+                                                  const Mac::SlotEntry *aSlotEntries,
+                                                  uint8_t               aNumEntries)
+{
+    Get<Mac::SubMac>().HandleRadioAvailMapUpdated(aTimestamp, aSlotEntries, aNumEntries);
+}
+#endif
 } // namespace ot

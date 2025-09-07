@@ -131,6 +131,7 @@ build_simulation()
     fi
 
     if [[ ${version} != "1.1" ]]; then
+        options+=("-DOT_COEX=ON")
         options+=("-DOT_CSL_RECEIVER=ON")
         options+=("-DOT_LINK_METRICS_INITIATOR=ON")
         options+=("-DOT_LINK_METRICS_SUBJECT=ON")
@@ -190,6 +191,7 @@ build_posix()
     )
 
     if [[ ${version} != "1.1" ]]; then
+        options+=("-DOT_COEX=ON")
         options+=("-DOT_DUA=ON")
         options+=("-DOT_MLR=ON")
         options+=("-DOT_LINK_METRICS_INITIATOR=ON")

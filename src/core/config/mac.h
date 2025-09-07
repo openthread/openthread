@@ -559,6 +559,15 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+ *
+ * Define as 1 to enable coexistence constrained feature.
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+#define OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE 0
+#endif
+
+/**
  * @}
  */
 

@@ -41,6 +41,7 @@
 
 #include <openthread/link.h>
 #include <openthread/thread.h>
+#include <openthread/platform/provisional/radio.h>
 #include <openthread/provisional/link.h>
 
 #include "common/as_core_type.hpp"
@@ -1090,6 +1091,41 @@ struct WakeupInfo
 };
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+/**
+ * Represents an radio slot entry.
+ */
+OT_TOOL_PACKED_BEGIN
+class SlotEntry : public otSlotEntry, public Equatable<otSlotEntry>, public Clearable<SlotEntry>
+{
+public:
+    /**
+     * Represents the radio slot type.
+     */
+    enum Type : uint8_t
+    {
+        kTypeNotAllowed       = OT_SLOT_TYPE_NOT_ALLOWED,
+        kTypeMostlyNotAllowed = OT_SLOT_TYPE_MOSTLY_NOT_ALLOWED,
+        kTypeMaybeAllowed     = OT_SLOT_TYPE_MAYBE_ALLOWED,
+        kTypeAllowed          = OT_SLOT_TYPE_ALLOWED,
+    };
+
+    /**
+     * Gets the radio slot type.
+     *
+     * @returns The radio slot type.
+     */
+    Type GetSlotType(void) const;
+
+    /**
+     * Gets the number of the radio slot.
+     *
+     * @returns The number of radio slot.
+     */
+    uint8_t GetNumSlots(void) const { return mNumSlots; }
+};
+#endif // OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+
 /**
  * @}
  */
@@ -1101,6 +1137,10 @@ DefineCoreType(otMacKey, Mac::Key);
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 DefineCoreType(otWakeupRequest, Mac::WakeupRequest);
 DefineMapEnum(otWakeupType, Mac::WakeupRequest::Type);
+#endif
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+DefineCoreType(otSlotEntry, Mac::SlotEntry);
+DefineMapEnum(otSlotType, Mac::SlotEntry::Type);
 #endif
 
 } // namespace ot
