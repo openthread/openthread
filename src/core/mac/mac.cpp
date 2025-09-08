@@ -2776,7 +2776,7 @@ void Mac::RadioAvailMapUpdated(uint64_t aTimestamp, const SlotEntry *aSlotEntrie
         char         buf[kBufSize];
         StringWriter writer(buf, sizeof(buf));
 
-        writer.Append("RAM: timestamp:%lu, ", aTimestamp);
+        writer.Append("RAM: timestamp:%lu, ", ToUlong(aTimestamp));
 
         for (uint8_t i = 0; i < aNumEntries; i++)
         {
