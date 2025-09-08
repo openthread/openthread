@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024, The OpenThread Authors.
+ *  Copyright (c) 2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,19 +26,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <openthread/border_agent.h>
-#include <openthread/dataset.h>
-#include <openthread/dataset_ftd.h>
 #include <openthread/instance.h>
-#include <openthread/ip6.h>
 #include <openthread/link_raw.h>
-#include <openthread/thread.h>
 #include <openthread/platform/provisional/radio.h>
-#include <openthread/platform/time.h>
-#include "gmock/gmock.h"
 
 #include "fake_platform.hpp"
 

@@ -35,7 +35,10 @@
 #ifndef OPENTHREAD_PLATFORM_PROVISIONAL_RADIO_H_
 #define OPENTHREAD_PLATFORM_PROVISIONAL_RADIO_H_
 
+#include <stdint.h>
+
 #include <openthread/instance.h>
+#include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
