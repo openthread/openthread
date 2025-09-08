@@ -83,7 +83,7 @@ struct otSlotEntry
 /**
  * Represents the radio slot entry.
  */
-typedef otSlotEntry otSlotEntry;
+typedef struct otSlotEntry otSlotEntry;
 
 /**
  * Notifies the OpenThread that the radio availability map has updated.

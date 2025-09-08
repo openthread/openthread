@@ -650,7 +650,7 @@ private:
     void RadioSample(void);
 #endif
 #if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
-    void HandleRadioAvailMapUpdated(uint64_t aTimestamp, const SlotEntry *aEntryEntries, uint8_t aNumEntries);
+    void HandleRadioAvailMapUpdated(uint64_t aTimestamp, const SlotEntry *aSlotEntries, uint8_t aNumEntries);
 #endif
 
     using SubMacTimer =
