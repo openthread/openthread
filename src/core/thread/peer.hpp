@@ -49,11 +49,20 @@ class Peer : public CslNeighbor
 {
 public:
     /**
+     * Max number of re-transmitted the P2P link tear down messages.
+     */
+    static constexpr uint8_t kMaxRetransmitLinkTearDowns = 4;
+
+    /**
      * Initializes the `Peer` object.
      *
      * @param[in] aInstance  The OpenThread instance.
      */
-    void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
+    void Init(Instance &aInstance)
+    {
+        Neighbor::Init(aInstance);
+        mTearDownCount = 0;
+    }
 
     /**
      * Clears the peer entry.
@@ -86,8 +95,25 @@ public:
      */
     const Mle::TxChallenge &GetChallenge(void) const { return mAttachChallenge; }
 
+    /**
+     * Increments the count of re-transmitted link tear down messages.
+     */
+    void IncrementTearDownCount(void) { mTearDownCount++; }
+
+    /**
+     * Resets the count of re-transmitted link tear down messages to zero.
+     */
+    void ResetTearDownCount(void) { mTearDownCount = 0; }
+
+    /**
+     * Returns the count of re-transmitted link tear down messages.
+     */
+    uint8_t GetTearDownCount(void) const { return mTearDownCount; }
+
 private:
     Mle::TxChallenge mAttachChallenge;
+
+    uint8_t mTearDownCount : 3; // The count of re-transmitted link tear down messages.
 };
 
 } // namespace ot

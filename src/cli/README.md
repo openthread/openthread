@@ -3125,6 +3125,17 @@ Wakes up the peer identified by the extended address and establishes a peer-to-p
 Done
 ```
 
+### p2p unlink \<extaddress\>
+
+Tears down the P2P link identified by the extended address.
+
+`OPENTHREAD_CONFIG_P2P_ENABLE` is required.
+
+```bash
+> p2p unlink dead00beef00cafe
+Done
+```
+
 ### panid
 
 Get the IEEE 802.15.4 PAN ID value.

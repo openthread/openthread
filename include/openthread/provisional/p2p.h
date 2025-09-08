@@ -92,6 +92,30 @@ otError otP2pWakeupAndLink(otInstance           *aInstance,
                            void                 *aContext);
 
 /**
+ * Notifies the caller that the P2P link tear down process has ended.
+ *
+ * @param[in] aContext A pointer to application-specific context.
+ */
+typedef void (*otP2pUnlinkDoneCallback)(void *aContext);
+
+/**
+ * Tears down the P2P link specified by the Extended Address.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aExtAddress  A pointer to the P2P peer's Extended Address.
+ * @param[in] aCallback    A pointer to function that is called when the P2P link tear down process has ended.
+ * @param[in] aContext     A pointer to callback application-specific context.
+ *
+ * @retval OT_ERROR_NONE       Successfully started to tear down the P2P link.
+ * @retval OT_ERROR_BUSY       Tearing down or establishing a P2P link process is in progress.
+ * @retval OT_ERROR_NOT_FOUND  The P2P link identified by the @p aExtAddress was not found.
+ */
+otError otP2pUnlink(otInstance             *aInstance,
+                    const otExtAddress     *aExtAddress,
+                    otP2pUnlinkDoneCallback aCallback,
+                    void                   *aContext);
+
+/**
  * Defines events of the P2P link.
  */
 typedef enum otP2pEvent
