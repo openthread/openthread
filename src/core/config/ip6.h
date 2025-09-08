@@ -61,7 +61,11 @@
  * The maximum number of supported IPv6 multicast addresses allows to be externally added.
  */
 #ifndef OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#define OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS 8
+#else
 #define OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS 2
+#endif
 #endif
 
 /**
