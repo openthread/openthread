@@ -40,6 +40,7 @@
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/platform/provisional/radio.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus

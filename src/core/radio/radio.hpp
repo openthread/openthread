@@ -132,7 +132,7 @@ public:
 
     static constexpr int8_t kInvalidPower = OT_RADIO_POWER_INVALID;
 
-    static constexpr uint16_t kSlotTime = OT_RADIO_SLOT_TIME;
+    static constexpr uint16_t kSlotTimeUs = OT_RADIO_SLOT_TIME_US;
 
     static_assert((OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT || OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT ||
                    OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT),
