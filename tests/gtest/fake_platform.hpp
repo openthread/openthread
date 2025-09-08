@@ -41,6 +41,7 @@
 #include <openthread/instance.h>
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/provisional/radio.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
@@ -69,6 +70,11 @@ public:
     void GoInUs(uint64_t aTimeoutInUs = 0);
 
     void GoInMs(uint32_t aTimeoutInMs = 0) { GoInUs(aTimeoutInMs * OT_US_PER_MS); }
+
+    void UpdateRadioAvailMap(uint64_t aTimestamp, const otSlotEntry *aSlotEntries, uint8_t aNumEntries)
+    {
+        otPlatRadioAvailMapUpdated(mInstance, aTimestamp, aSlotEntries, aNumEntries);
+    }
 
     virtual uint64_t GetNow() const { return mNow; }
 

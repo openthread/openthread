@@ -52,7 +52,7 @@ extern "C" {
 
 enum
 {
-    OT_RADIO_SLOT_TIME = 1250, ///< Radio slot duration time in unit of microseconds.
+    OT_RADIO_SLOT_TIME_US = 1250, ///< Radio slot duration time in unit of microseconds.
 };
 
 /**
