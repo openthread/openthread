@@ -74,7 +74,7 @@ public:
     typedef otHandleTcatApplicationDataReceive AppDataReceiveCallback;
 
     /**
-     * Pointer to call to notify the completion of a Thread Network join operation under
+     * Pointer to call to notify the completion of a Thread Network join/leave operation under
      * guidance of a TCAT Commissioner.
      *
      * Please see #otHandleTcatJoin for details.
@@ -291,7 +291,7 @@ public:
      * After Start(), optionally #Standby() can be used to immediately set the agent to standby mode.
      *
      * @param[in] aAppDataReceiveCallback   A pointer to a function that is called when the user data is received.
-     * @param[in] aJoinHandler              A pointer to a function that is called when a network join operation
+     * @param[in] aJoinHandler              A pointer to a function that is called when a network join/leave operation
      *                                      completes, under guidance of the TCAT Commissioner.
      * @param[in] aContext                  A context pointer.
      *

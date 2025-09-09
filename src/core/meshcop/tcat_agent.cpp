@@ -1044,6 +1044,7 @@ Error TcatAgent::HandleStartThreadInterface(void)
 
 exit:
     // error values for callback MUST be limited to allowed set, see #JoinCallback
+    // rejected authorization is not notified to the application.
     if (error != kErrorRejected)
     {
         mJoinCallback.InvokeIfSet(error);
@@ -1060,6 +1061,11 @@ Error TcatAgent::HandleStopThreadInterface(void)
     error = otThreadSetEnabled(&GetInstance(), false);
 
 exit:
+    if (error == kErrorNone)
+    {
+        // for stop, only invoked when successful
+        mJoinCallback.InvokeIfSet(kErrorAbort);
+    }
     return error;
 }
 
