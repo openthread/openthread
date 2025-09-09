@@ -874,6 +874,7 @@ Error TcatAgent::VerifyHash(const Message &aIncomingMessage,
     VerifyOrExit(mRandomChallenge != 0, error = kErrorSecurity);
 
     CalculateHash(mRandomChallenge, reinterpret_cast<const char *>(aBuf), aBufLen, hash);
+    DumpDebg("Hash", &hash, sizeof(hash));
 
     VerifyOrExit(aIncomingMessage.Compare(aOffset, hash), error = kErrorSecurity);
 
