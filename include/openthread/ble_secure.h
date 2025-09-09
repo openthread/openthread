@@ -95,8 +95,8 @@ typedef otHandleTcatApplicationDataReceive otHandleBleSecureReceive;
 /**
  * Starts the BLE Secure service.
  *
- * When TLV mode is active, the function @p aReceiveHandler will be called once a complete TLV was received and the
- * message offset points to the TLV value.
+ * When TLV mode is active, the function @p aReceiveHandler will be called once a complete TLV or line
+ * was received and the message offset points to the TLV value.
  *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  * @param[in]  aConnectHandler  A pointer to a function that will be called when the connection
@@ -107,8 +107,13 @@ typedef otHandleTcatApplicationDataReceive otHandleBleSecureReceive;
  *                              line mode (FALSE).
  * @param[in]  aContext         A pointer to arbitrary context information. May be NULL if not used.
  *
- * @retval OT_ERROR_NONE        Successfully started the BLE Secure server.
- * @retval OT_ERROR_ALREADY     The service was started already.
+ * @retval OT_ERROR_NONE           Successfully started the BLE Secure server.
+ * @retval OT_ERROR_FAILED         The BLE radio could not be enabled, or BLE advertisement data unavailable, or
+ *                                 a socket could not be opened.
+ * @retval OT_ERROR_NO_BUFS        No bufferspace available.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid arguments or vendor BLE advertisement data unavailable.
+ * @retval OT_ERROR_INVALID_STATE  BLE Device or socket is in invalid state.
+ * @retval OT_ERROR_ALREADY        The service was started already.
  */
 otError otBleSecureStart(otInstance              *aInstance,
                          otHandleBleSecureConnect aConnectHandler,
@@ -134,12 +139,13 @@ otError otBleSecureSetTcatVendorInfo(otInstance *aInstance, const otTcatVendorIn
  * Enables the TCAT protocol over BLE Secure.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aJoinHandler      A pointer to a function that is called when a network join operation
- *                               under guidance of the TCAT Commissioner completes.
+ * @param[in]  aJoinHandler      A pointer to a function that is called when a network join or leave
+ *                               operation is requested under guidance of the TCAT Commissioner.
  *
  * @retval OT_ERROR_NONE           Successfully started TCAT over BLE Secure.
- * @retval OT_ERROR_INVALID_ARGS   Vendor info is invalid, see #otBleSecureSetTcatVendorInfo.
- * @retval OT_ERROR_INVALID_STATE  The BLE function is not started yet or TLV mode is not selected.
+ * @retval OT_ERROR_ALREADY        TCAT is already started.
+ * @retval OT_ERROR_FAILED         TCAT vendor info could not be initialized.
+ * @retval OT_ERROR_INVALID_STATE  The BLE Secure function is not started yet or TLV mode is not selected.
  */
 otError otBleSecureTcatStart(otInstance *aInstance, otHandleTcatJoin aJoinHandler);
 
