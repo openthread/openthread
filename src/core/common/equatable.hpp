@@ -66,7 +66,7 @@ public:
     bool operator!=(const Type &aOther) const { return !(*static_cast<const Type *>(this) == aOther); }
 
 private:
-    Unequatable(void) = default;
+    ~Unequatable(void) = default;
 };
 
 /**
@@ -106,7 +106,7 @@ public:
     bool operator!=(const Type &aOther) const { return !(*static_cast<const Type *>(this) == aOther); }
 
 private:
-    Equatable(void) = default;
+    ~Equatable(void) = default;
 };
 
 } // namespace ot

@@ -72,7 +72,7 @@ public:
     void Clear(void) { ClearAllBytes<Type>(*static_cast<Type *>(this)); }
 
 private:
-    Clearable(void) = default;
+    ~Clearable(void) = default;
 };
 
 } // namespace ot
