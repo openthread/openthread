@@ -71,7 +71,7 @@ otError otUdpBind(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr 
     {
         socketHandle.SetNetifId(MapEnum(aNetif));
 
-        error = AsCoreType(aInstance).Get<Ip6::Udp>().Bind(socketHandle, AsCoreType(aSockName));
+        error = AsCoreType(aInstance).Get<Ip6::Udp>().Bind(socketHandle, AsCoreType(aSockName), 0);
     }
     else
     {

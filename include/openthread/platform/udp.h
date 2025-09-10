@@ -54,6 +54,20 @@ extern "C" {
  */
 otError otPlatUdpSocket(otUdpSocket *aUdpSocket);
 
+#define OT_PLATFORM_UDP_REUSEADDR 1 ///< Allows binding to socket addresses not bound by any active socket.
+#define OT_PLATFORM_UDP_REUSEPORT 2 ///< Allows binding to socket addresses already bound by other sockets.
+
+/**
+ * Sets the UDP socket flags by platform.
+ *
+ * @param[in]   aUdpSocket  A pointer to the UDP socket.
+ * @param[in]   aFlags      Bitwise OR of the flags to set.
+ *
+ * @retval  OT_ERROR_NONE   Successfully initialized UDP socket by platform.
+ * @retval  OT_ERROR_FAILED Failed to initialize UDP Socket.
+ */
+otError otPlatUdpSetFlags(otUdpSocket *aUdpSocket, int aFlags);
+
 /**
  * Closes the UDP socket by platform.
  *

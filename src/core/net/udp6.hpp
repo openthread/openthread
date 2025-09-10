@@ -182,6 +182,12 @@ public:
         friend class Udp;
 
     public:
+        enum Flags : int
+        {
+            kReuseAddr = OT_PLATFORM_UDP_REUSEADDR,
+            kReusePort = OT_PLATFORM_UDP_REUSEPORT,
+        };
+
         /**
          * Initializes the object.
          *
@@ -235,12 +241,13 @@ public:
          * Binds the UDP socket.
          *
          * @param[in]  aSockAddr         A reference to the socket address.
+         * @param[in]  aFlags    The bitwise OR of flags to set.
          *
          * @retval kErrorNone            Successfully bound the socket.
          * @retval kErrorInvalidArgs     Unable to bind to Thread network interface with the given address.
          * @retval kErrorFailed          Failed to bind UDP Socket.
          */
-        Error Bind(const SockAddr &aSockAddr);
+        Error Bind(const SockAddr &aSockAddr, int aFlags = 0);
 
         /**
          * Binds the UDP socket.
@@ -521,7 +528,7 @@ public:
      * @retval kErrorInvalidArgs     Unable to bind to Thread network interface with the given address.
      * @retval kErrorFailed          Failed to bind UDP Socket.
      */
-    Error Bind(SocketHandle &aSocket, const SockAddr &aSockAddr);
+    Error Bind(SocketHandle &aSocket, const SockAddr &aSockAddr, int aFlags);
 
     /**
      * Connects a UDP socket.
@@ -659,7 +666,7 @@ private:
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     struct Plat
     {
-        static Error Open(SocketHandle &aSocket);
+        static Error Open(SocketHandle &aSocket, int aFlags);
         static Error Close(SocketHandle &aSocket);
         static Error Bind(SocketHandle &aSocket);
         static Error BindToNetif(SocketHandle &aSocket);
