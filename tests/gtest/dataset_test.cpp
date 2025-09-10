@@ -39,21 +39,12 @@
 #include "gmock/gmock.h"
 
 #include "fake_platform.hpp"
+#include "mock_callback.hpp"
 
 using namespace ot;
 using ::testing::AnyNumber;
 using ::testing::AtLeast;
-using ::testing::MockFunction;
 using ::testing::Truly;
-
-template <typename R, typename... A> class MockCallback : public testing::MockFunction<R(A...)>
-{
-public:
-    static R CallWithContext(A... aArgs, void *aContext)
-    {
-        return static_cast<MockCallback *>(aContext)->Call(aArgs...);
-    };
-};
 
 TEST(otDatasetSetActiveTlvs, shouldTriggerStateCallbackOnSuccess)
 {
