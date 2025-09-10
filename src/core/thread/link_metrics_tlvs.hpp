@@ -153,7 +153,7 @@ public:
 
 private:
     uint8_t mMetricsTypeId;
-    union
+    union OT_TOOL_PACKED_FIELD
     {
         uint8_t  m8;
         uint32_t m32;
