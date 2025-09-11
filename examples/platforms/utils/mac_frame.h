@@ -345,8 +345,11 @@ typedef struct otRadioContext
     otExtAddress     mExtAddress; ///< In little-endian byte order.
     uint32_t         mMacFrameCounter;
     uint32_t         mPrevMacFrameCounter;
-    uint32_t         mCslSampleTime; ///< The sample time based on the microsecond timer.
-    uint16_t         mCslPeriod;     ///< In unit of 10 symbols.
+    uint32_t         mCslSampleTime;   ///< The sample time based on the microsecond timer.
+    uint16_t         mCslPeriod;       ///< In unit of 10 symbols.
+    otShortAddress   mCslShortAddress; ///< The short address of CSL the receiver's peer.
+    otExtAddress     mCslExtAddress;   ///< The extended address of CSL the receiver's peer.
+    bool             mCslPresent : 1;  ///< Indicates whether the CSL header IE is present.
     otShortAddress   mShortAddress;
     otShortAddress   mAlternateShortAddress;
     otRadioKeyType   mKeyType;
@@ -385,6 +388,18 @@ otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadi
  * @retval OT_ERROR_SECURITY Failed to processed security for missing key.
  */
 otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *aRadioContext);
+
+/**
+ * Indicates whether the 15.4 frame's source address matches the short or extended address of the CSL receiver's peer.
+ *
+ * @param[in]   aFrame          The target 15.4 frame. MUST NOT be `NULL`.
+ * @param[in]   aRadioContext   The radio context accessible in ISR.
+ *
+ * @retval  true    The source address of the frame matches the short or extended address of the CSL receiver's peer.
+ * @retval  false   The source address of the frame does not match the short or extended address of the CSL receiver's
+ *                  peer.
+ */
+bool otMacFrameSrcAddrMatchCslReceiverPeer(const otRadioFrame *aFrame, const otRadioContext *aRadioContext);
 
 #ifdef __cplusplus
 } // extern "C"
