@@ -95,6 +95,8 @@ OT_TOOL_PACKED_BEGIN
 class ExtAddress : public otExtAddress, public Equatable<ExtAddress>, public Clearable<ExtAddress>
 {
 public:
+    ExtAddress() = default;
+
     static constexpr uint16_t kInfoStringSize = 17; ///< Max chars for the info string (`ToString()`).
 
     /**

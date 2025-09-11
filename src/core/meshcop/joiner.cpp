@@ -573,6 +573,7 @@ void Joiner::HandleTimer(void)
         break;
 
     case kStateJoined:
+    {
         Mac::ExtAddress extAddress;
 
         extAddress.GenerateRandom();
@@ -581,6 +582,7 @@ void Joiner::HandleTimer(void)
 
         error = kErrorNone;
         break;
+    }
 
     case kStateIdle:
     case kStateDiscover:
