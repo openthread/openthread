@@ -84,3 +84,15 @@ target_link_libraries(ot-radio-spinel-rcp-gtest
 )
 
 gtest_discover_tests(ot-radio-spinel-rcp-gtest)
+
+add_executable(ot-link-raw-gtest
+    link_raw_test.cpp
+)
+target_link_libraries(ot-link-raw-gtest
+    ot-fake-ftd
+    GTest::gtest
+    GTest::gmock
+    GTest::gtest_main
+)
+
+gtest_discover_tests(ot-link-raw-gtest)

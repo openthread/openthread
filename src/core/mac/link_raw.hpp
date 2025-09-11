@@ -289,12 +289,35 @@ public:
     void RecordFrameTransmitStatus(const TxFrame &, Error, uint8_t, bool) {}
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+    /**
+     * Sets the `otLinkRawRadioAvailMapUpdated` callback.
+     *
+     * @param[in]  aCallback  A pointer to a function called when the radio availability map is updated.
+     */
+    void SetRadioAvailMapUpdated(otLinkRawRadioAvailMapUpdated aCallback) { mRadioAvailMapUpdatedCallback = aCallback; }
+
+    /**
+     * Invokes the `mRadioAvailMapUpdatedCallback`, if set.
+     *
+     * @param[in]  aTimestamp    The time of the local radio clock in microseconds when the radio availability map
+     *                           starts.
+     * @param[in]  aSlotEntries  A pointer to radio slot entries.
+     * @param[in]  aNumEntries   The number of entries pointed by the @p aSlotEntries. Value 0 indicates that the
+     *                           radio is always available for Thread.
+     */
+    void InvokeRadioAvailMapUpdated(uint64_t aTimestamp, const SlotEntry *aSlotEntries, uint8_t aNumEntries);
+#endif
+
 private:
     uint8_t                 mReceiveChannel;
     PanId                   mPanId;
     otLinkRawReceiveDone    mReceiveDoneCallback;
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+    otLinkRawRadioAvailMapUpdated mRadioAvailMapUpdatedCallback;
+#endif
 
 #if OPENTHREAD_RADIO
     SubMac mSubMac;

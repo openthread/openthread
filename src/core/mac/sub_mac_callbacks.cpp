@@ -105,6 +105,23 @@ void SubMac::Callbacks::FrameCounterUsed(uint32_t aFrameCounter)
     Get<KeyManager>().MacFrameCounterUsed(aFrameCounter);
 }
 
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+void SubMac::Callbacks::HandleRadioAvailMapUpdated(uint64_t         aTimestamp,
+                                                   const SlotEntry *aSlotEntries,
+                                                   uint8_t          aNumEntries)
+{
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    if (Get<LinkRaw>().IsEnabled())
+    {
+        Get<LinkRaw>().InvokeRadioAvailMapUpdated(aTimestamp, aSlotEntries, aNumEntries);
+    }
+    else
+#endif
+    {
+        Get<Mac>().RadioAvailMapUpdated(aTimestamp, aSlotEntries, aNumEntries);
+    }
+}
+#endif
 #elif OPENTHREAD_RADIO
 
 void SubMac::Callbacks::ReceiveDone(RxFrame *aFrame, Error aError) { Get<LinkRaw>().InvokeReceiveDone(aFrame, aError); }
@@ -128,6 +145,14 @@ void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi) { Get<LinkRaw>().InvokeE
 
 void SubMac::Callbacks::FrameCounterUsed(uint32_t aFrameCounter) { OT_UNUSED_VARIABLE(aFrameCounter); }
 
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+void SubMac::Callbacks::HandleRadioAvailMapUpdated(uint64_t         aTimestamp,
+                                                   const SlotEntry *aSlotEntries,
+                                                   uint8_t          aNumEntries)
+{
+    Get<LinkRaw>().InvokeRadioAvailMapUpdated(aTimestamp, aSlotEntries, aNumEntries);
+}
+#endif
 #endif // OPENTHREAD_RADIO
 
 } // namespace Mac

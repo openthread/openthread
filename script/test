@@ -98,6 +98,7 @@ build_simulation()
     local options=(
         "-DBUILD_TESTING=ON"
         "-DOT_ANYCAST_LOCATOR=ON"
+        "-DOT_COEX=ON"
         "-DOT_DNS_CLIENT=ON"
         "-DOT_DNS_DSO=ON"
         "-DOT_DNSSD_SERVER=ON"
