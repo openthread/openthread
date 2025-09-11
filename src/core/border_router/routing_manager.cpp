@@ -687,22 +687,6 @@ bool RoutingManager::IsValidOmrPrefix(const Ip6::Prefix &aPrefix)
     return (aPrefix.GetLength() == kOmrPrefixLength) && !aPrefix.IsLinkLocal() && !aPrefix.IsMulticast();
 }
 
-bool RoutingManager::IsValidOnLinkPrefix(const PrefixInfoOption &aPio)
-{
-    Ip6::Prefix prefix;
-
-    aPio.GetPrefix(prefix);
-
-    return IsValidOnLinkPrefix(prefix) && aPio.IsOnLinkFlagSet() &&
-           (aPio.IsAutoAddrConfigFlagSet() || aPio.IsDhcp6PdPreferredFlagSet());
-}
-
-bool RoutingManager::IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix)
-{
-    return (aOnLinkPrefix.GetLength() == kOnLinkPrefixLength) && !aOnLinkPrefix.IsLinkLocal() &&
-           !aOnLinkPrefix.IsMulticast();
-}
-
 void RoutingManager::HandleRsSenderFinished(TimeMilli aStartTime)
 {
     // This is a callback from `RsSender` and is invoked when it
@@ -889,12 +873,15 @@ void RoutingManager::LogRaHeader(const RouterAdvert::Header &aRaHeader)
     LogInfo("- RA Header - default route - lifetime:%u", aRaHeader.GetRouterLifetime());
 }
 
-void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix &aPrefix,
-                                         uint32_t           aValidLifetime,
-                                         uint32_t           aPreferredLifetime)
+void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix      &aPrefix,
+                                         uint32_t                aValidLifetime,
+                                         uint32_t                aPreferredLifetime,
+                                         PrefixInfoOption::Flags aFlags)
 {
-    LogInfo("- PIO %s (valid:%lu, preferred:%lu)", aPrefix.ToString().AsCString(), ToUlong(aValidLifetime),
-            ToUlong(aPreferredLifetime));
+    LogInfo("- PIO %s (valid:%lu, preferred:%lu, flags - L:%u A:%u P:%u)", aPrefix.ToString().AsCString(),
+            ToUlong(aValidLifetime), ToUlong(aPreferredLifetime), (aFlags & PrefixInfoOption::kOnLinkFlag) ? 1 : 0,
+            (aFlags & PrefixInfoOption::kAutoConfigFlag) ? 1 : 0,
+            (aFlags & PrefixInfoOption::kDhcp6PdPreferredFlag) ? 1 : 0);
 }
 
 void RoutingManager::LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime, RoutePreference aPreference)
@@ -930,7 +917,7 @@ const char *RoutingManager::RouterAdvOriginToString(RouterAdvOrigin aRaOrigin)
 #else
 
 void RoutingManager::LogRaHeader(const RouterAdvert::Header &) {}
-void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix &, uint32_t, uint32_t) {}
+void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix &, uint32_t, uint32_t, PrefixInfoOption::Flags) {}
 void RoutingManager::LogRouteInfoOption(const Ip6::Prefix &, uint32_t, RoutePreference) {}
 void RoutingManager::LogRecursiveDnsServerOption(const Ip6::Address &, uint32_t) {}
 
@@ -953,9 +940,11 @@ TimeMilli RoutingManager::LifetimedPrefix::CalculateExpirationTime(uint32_t aLif
 void RoutingManager::OnLinkPrefix::SetFrom(const PrefixInfoOption &aPio)
 {
     aPio.GetPrefix(mPrefix);
-    mValidLifetime     = aPio.GetValidLifetime();
-    mPreferredLifetime = aPio.GetPreferredLifetime();
-    mLastUpdateTime    = TimerMilli::GetNow();
+    mValidLifetime        = aPio.GetValidLifetime();
+    mPreferredLifetime    = aPio.GetPreferredLifetime();
+    mAutoAddrConfigFlag   = aPio.IsAutoAddrConfigFlagSet();
+    mDhcp6PdPreferredFlag = aPio.IsDhcp6PdPreferredFlagSet();
+    mLastUpdateTime       = TimerMilli::GetNow();
 }
 
 void RoutingManager::OnLinkPrefix::SetFrom(const PrefixTableEntry &aPrefixTableEntry)
@@ -978,7 +967,7 @@ TimeMilli RoutingManager::OnLinkPrefix::GetStaleTime(void) const
     return CalculateExpirationTime(Min(kStaleTime, mPreferredLifetime));
 }
 
-void RoutingManager::OnLinkPrefix::AdoptValidAndPreferredLifetimesFrom(const OnLinkPrefix &aPrefix)
+void RoutingManager::OnLinkPrefix::AdoptFlagsAndValidAndPreferredLifetimesFrom(const OnLinkPrefix &aPrefix)
 {
     constexpr uint32_t kTwoHoursInSeconds = 2 * 3600;
 
@@ -1002,8 +991,10 @@ void RoutingManager::OnLinkPrefix::AdoptValidAndPreferredLifetimesFrom(const OnL
         mValidLifetime = kTwoHoursInSeconds;
     }
 
-    mPreferredLifetime = aPrefix.GetPreferredLifetime();
-    mLastUpdateTime    = aPrefix.GetLastUpdateTime();
+    mPreferredLifetime    = aPrefix.GetPreferredLifetime();
+    mAutoAddrConfigFlag   = aPrefix.mAutoAddrConfigFlag;
+    mDhcp6PdPreferredFlag = aPrefix.mDhcp6PdPreferredFlag;
+    mLastUpdateTime       = aPrefix.GetLastUpdateTime();
 }
 
 void RoutingManager::OnLinkPrefix::CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli aNow) const
@@ -1019,10 +1010,15 @@ bool RoutingManager::OnLinkPrefix::IsFavoredOver(const Ip6::Prefix &aPrefix) con
 {
     bool isFavored = false;
 
-    // Validate that the `OnLinkPrefix` is eligible to be considered a
-    // favored on-link prefix. It must not be deprecated and have a
-    // preferred lifetime exceeding a minimum (1800 seconds).
+    // Validate that the `OnLinkPrefix` is eligible to be a favored
+    // on-link prefix. It must have a valid length and either the
+    // AutoAddrConfig (`A`) or Dhcp6PdPreferred (`P`) flag.
+    // Additionally, it must not be deprecated and its preferred
+    // lifetime must be at least `kFavoredMinPreferredLifetime`
+    // (1800) seconds.
 
+    VerifyOrExit(mPrefix.GetLength() == kOnLinkPrefixLength);
+    VerifyOrExit(mAutoAddrConfigFlag || mDhcp6PdPreferredFlag);
     VerifyOrExit(!IsDeprecated());
     VerifyOrExit(GetPreferredLifetime() >= kFavoredMinPreferredLifetime);
 
@@ -1468,12 +1464,24 @@ void RoutingManager::RxRaTracker::ProcessPrefixInfoOption(const PrefixInfoOption
     Entry<OnLinkPrefix> *entry;
     bool                 disregard;
 
+    // We track all valid PIO prefixes with the on-link (`L`) flag. The
+    // `OnLinkPrefix` entries store other PIO flags and are used by
+    // `DecisionFactors` to determine if a ULA or non-ULA on-link
+    // prefix has been observed. This decision then guides
+    // `RoutePublisher` on which route to publish. For determining the
+    // favored on-link prefix, only eligible `OnLinkPrefix` entries are
+    // considered. These entries must meet specific conditions, such as
+    // having a valid 64-bit length and either the AutoAddrConfig
+    // (`A`) and/or Dhcp6PdPreferred (`P`) flag set. The full set of
+    // conditions is covered in `OnLinkPrefix::IsFavoredOver()`.
+
     VerifyOrExit(aPio.IsValid());
     aPio.GetPrefix(prefix);
+    VerifyOrExit(!prefix.IsLinkLocal() && !prefix.IsMulticast());
 
-    if (!IsValidOnLinkPrefix(aPio))
+    if (!aPio.IsOnLinkFlagSet())
     {
-        LogInfo("- PIO %s - ignore since not a valid on-link prefix", prefix.ToString().AsCString());
+        aRouter.mOnLinkPrefixes.RemoveMatching(prefix);
         ExitNow();
     }
 
@@ -1487,7 +1495,7 @@ void RoutingManager::RxRaTracker::ProcessPrefixInfoOption(const PrefixInfoOption
     VerifyOrExit(!disregard);
 #endif
 
-    LogPrefixInfoOption(prefix, aPio.GetValidLifetime(), aPio.GetPreferredLifetime());
+    LogPrefixInfoOption(prefix, aPio.GetValidLifetime(), aPio.GetPreferredLifetime(), aPio.GetFlags());
 
     entry = aRouter.mOnLinkPrefixes.FindMatching(prefix);
 
@@ -1511,7 +1519,7 @@ void RoutingManager::RxRaTracker::ProcessPrefixInfoOption(const PrefixInfoOption
         OnLinkPrefix newPrefix;
 
         newPrefix.SetFrom(aPio);
-        entry->AdoptValidAndPreferredLifetimesFrom(newPrefix);
+        entry->AdoptFlagsAndValidAndPreferredLifetimesFrom(newPrefix);
     }
 
     entry->SetDisregardFlag(disregard);
@@ -3500,10 +3508,11 @@ Error RoutingManager::OnLinkPrefixManager::AppendCurPrefix(RouterAdvert::TxMessa
     // If in `kDeprecating` state, we include it as PIO with zero
     // preferred lifetime and the remaining valid lifetime.
 
-    Error     error             = kErrorNone;
-    uint32_t  validLifetime     = kDefaultOnLinkPrefixLifetime;
-    uint32_t  preferredLifetime = kDefaultOnLinkPrefixLifetime;
-    TimeMilli now               = TimerMilli::GetNow();
+    Error                   error             = kErrorNone;
+    uint32_t                validLifetime     = kDefaultOnLinkPrefixLifetime;
+    uint32_t                preferredLifetime = kDefaultOnLinkPrefixLifetime;
+    TimeMilli               now               = TimerMilli::GetNow();
+    PrefixInfoOption::Flags flags;
 
     switch (GetState())
     {
@@ -3522,9 +3531,11 @@ Error RoutingManager::OnLinkPrefixManager::AppendCurPrefix(RouterAdvert::TxMessa
         ExitNow();
     }
 
-    SuccessOrExit(error = aRaMessage.AppendPrefixInfoOption(mLocalPrefix, validLifetime, preferredLifetime));
+    flags = PrefixInfoOption::kOnLinkFlag | PrefixInfoOption::kAutoConfigFlag;
 
-    LogPrefixInfoOption(mLocalPrefix, validLifetime, preferredLifetime);
+    SuccessOrExit(error = aRaMessage.AppendPrefixInfoOption(mLocalPrefix, validLifetime, preferredLifetime, flags));
+
+    LogPrefixInfoOption(mLocalPrefix, validLifetime, preferredLifetime, flags);
 
 exit:
     return error;
@@ -3532,9 +3543,10 @@ exit:
 
 Error RoutingManager::OnLinkPrefixManager::AppendOldPrefixes(RouterAdvert::TxMessage &aRaMessage)
 {
-    Error     error = kErrorNone;
-    TimeMilli now   = TimerMilli::GetNow();
-    uint32_t  validLifetime;
+    Error                   error = kErrorNone;
+    TimeMilli               now   = TimerMilli::GetNow();
+    uint32_t                validLifetime;
+    PrefixInfoOption::Flags flags;
 
     for (const OldPrefix &oldPrefix : mOldLocalPrefixes)
     {
@@ -3544,9 +3556,12 @@ Error RoutingManager::OnLinkPrefixManager::AppendOldPrefixes(RouterAdvert::TxMes
         }
 
         validLifetime = TimeMilli::MsecToSec(oldPrefix.mExpireTime - now);
-        SuccessOrExit(error = aRaMessage.AppendPrefixInfoOption(oldPrefix.mPrefix, validLifetime, 0));
 
-        LogPrefixInfoOption(oldPrefix.mPrefix, validLifetime, 0);
+        flags = PrefixInfoOption::kOnLinkFlag | PrefixInfoOption::kAutoConfigFlag;
+
+        SuccessOrExit(error = aRaMessage.AppendPrefixInfoOption(oldPrefix.mPrefix, validLifetime, 0, flags));
+
+        LogPrefixInfoOption(oldPrefix.mPrefix, validLifetime, 0, flags);
     }
 
 exit:
