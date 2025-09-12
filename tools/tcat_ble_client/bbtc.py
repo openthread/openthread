@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024, The OpenThread Authors.
+  Copyright (c) 2024-2025, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,7 @@ from ble import ble_scanner
 from cli.cli import CLI
 from dataset.dataset import ThreadDataset
 from cli.command import CommandResult
-from utils import select_device_by_user_input, quit_with_reason
+from utils import hexdump_ot, select_device_by_user_input, quit_with_reason
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +105,11 @@ async def main():
     ds = ThreadDataset()
     cli = CLI(ds, args, ble_sstream)
     loop = asyncio.get_running_loop()
+
+    # Task 1: run a receiver that gets unsolicited event data or TLS Alerts from TLS server.
+    receiver_task = asyncio.create_task(receive_loop(ble_sstream))
+
+    # Task 2: run the CLI
     print('Enter \'help\' to see available commands or \'exit\' to exit the application.')
     while True:
         user_input = await loop.run_in_executor(None, lambda: input('> '))
@@ -117,9 +122,28 @@ async def main():
         except Exception as e:
             logger.error(e)
 
-    print('Disconnecting...')
-    if ble_sstream is not None:
+    receiver_task.cancel()
+    try:
+        await receiver_task
+    except asyncio.CancelledError:
+        pass
+
+    if ble_sstream is not None and ble_sstream.is_connected:
+        print('Disconnecting...')
         await ble_sstream.close()
+
+
+async def receive_loop(sstream):
+    if sstream is not None:
+        try:
+            while True:
+                data = await sstream.recv_events()
+                if data:
+                    logger.info('Received event data from TCAT Device:\n' + hexdump_ot("Event", data))
+                else:
+                    await asyncio.sleep(0.1)
+        except asyncio.CancelledError:
+            pass
 
 
 async def get_device_by_args(args):
