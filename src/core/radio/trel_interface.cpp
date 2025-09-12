@@ -45,6 +45,8 @@ Interface::Interface(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mInitialized(false)
     , mEnabled(false)
+    , mAutoEnablingMode(true)
+    , mAutoEnabledTarget(false)
     , mFiltered(false)
 {
 }
@@ -69,6 +71,41 @@ void Interface::SetEnabled(bool aEnable)
         Enable();
     }
     else
+    {
+        Disable();
+    }
+}
+
+void Interface::SetAutoEnabling(bool aAutoEnabling)
+{
+    mAutoEnablingMode = aAutoEnabling;
+
+    if (mAutoEnablingMode)
+    {
+        if (mAutoEnabledTarget)
+        {
+            Enable();
+        }
+        else
+        {
+            Disable();
+        }
+    }
+}
+
+void Interface::RequestEnable(void)
+{
+    mAutoEnabledTarget = true;
+    if (mAutoEnablingMode)
+    {
+        Enable();
+    }
+}
+
+void Interface::RequestDisable(void)
+{
+    mAutoEnabledTarget = false;
+    if (mAutoEnablingMode)
     {
         Disable();
     }

@@ -72,7 +72,7 @@ void Link::AfterInit(void) { mInterface.Init(); }
 
 void Link::Enable(void)
 {
-    mInterface.Enable();
+    mInterface.RequestEnable();
 
     if (mState == kStateDisabled)
     {
@@ -82,7 +82,7 @@ void Link::Enable(void)
 
 void Link::Disable(void)
 {
-    mInterface.Disable();
+    mInterface.RequestDisable();
 
     if (mState != kStateDisabled)
     {

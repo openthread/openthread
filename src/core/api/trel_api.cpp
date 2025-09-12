@@ -46,6 +46,11 @@ void otTrelSetEnabled(otInstance *aInstance, bool aEnable)
     AsCoreType(aInstance).Get<Trel::Interface>().SetEnabled(aEnable);
 }
 
+void otTrelSetAutoEnabling(otInstance *aInstance, bool aAutoEnablingMode)
+{
+    AsCoreType(aInstance).Get<Trel::Interface>().SetAutoEnabling(aAutoEnablingMode);
+}
+
 bool otTrelIsEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<Trel::Interface>().IsEnabled(); }
 
 void otTrelInitPeerIterator(otInstance *aInstance, otTrelPeerIterator *aIterator)

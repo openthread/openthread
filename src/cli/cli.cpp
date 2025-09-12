@@ -7235,8 +7235,9 @@ template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
      * @par
      * Enables or disables the TREL radio operation.
      * @sa otTrelSetEnabled
+     * @sa otTrelSetAutoEnabling
      */
-    if (ProcessEnableDisable(aArgs, otTrelIsEnabled, otTrelSetEnabled) == OT_ERROR_NONE)
+    if (ProcessEnableDisable(aArgs, otTrelIsEnabled, HandleTrelSetEnable) == OT_ERROR_NONE)
     {
     }
     /**
@@ -7415,6 +7416,16 @@ void Interpreter::OutputTrelCounters(const otTrelCounters &aCounters)
     OutputLine("Failures %s", Uint64ToString(aCounters.mTxFailure, u64StringBuffer));
 }
 
+void Interpreter::HandleTrelSetEnable(otInstance *aInstance, bool aEnable)
+{
+    otTrelSetAutoEnabling(aInstance, aEnable);
+    // If TREL is enabled by CLI, we rely on the TREL auto-enabling function to further enable/disable TREL.
+    // If TREL is disabled by CLI, it's disabled immediately.
+    if (!aEnable)
+    {
+        otTrelSetEnabled(aInstance, false);
+    }
+}
 #endif
 
 template <> otError Interpreter::Process<Cmd("vendor")>(Arg aArgs[])

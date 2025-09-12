@@ -4123,9 +4123,11 @@ Done
 
 ### trel
 
-Indicate whether TREL radio operation is enabled or not.
+Indicate whether TREL radio operation is currently enabled or not.
 
 `OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE` is required for all `trel` sub-commands.
+
+Note that TREL is enabled by default if `OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE` is enabled.
 
 ```bash
 > trel
@@ -4135,7 +4137,7 @@ Done
 
 ### trel enable
 
-Enable TREL operation.
+Enable TREL radio operation. TREL radio enabled/disabled state will now be automatically controlled by OpenThread. For this reason, the TREL radio's state may still be 'disabled' if the stack requires this.
 
 ```bash
 > trel enable
@@ -4144,7 +4146,7 @@ Done
 
 ### trel disable
 
-Disable TREL operation.
+Disable TREL radio operation. It will not be enabled again until either the "[trel enable](#trel-enable)" command is given, or the device is restarted.
 
 ```bash
 > trel disable

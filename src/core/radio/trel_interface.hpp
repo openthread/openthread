@@ -75,8 +75,43 @@ public:
      * Enables or disables the TREL interface.
      *
      * @param[in] aEnable A boolean to enable/disable the TREL interface.
+     *
+     * @warning This call interferes with the auto-enabling function of the TREL interface. In most cases,
+     *          #RequestEnable() or #RequestDisable() should be used instead.
      */
     void SetEnabled(bool aEnable);
+
+    /**
+     * Sets the auto-enabling function for the TREL interface on or off.
+     *
+     * @param[in] aAutoEnabling If TRUE, enables the TREL interface to activate and deactivate automatically as
+     *                          required by the OpenThread stack. This is the default behavior.
+     *                          If FALSE, the auto-enabling function is deactivated and remains so until it is
+     *                          enabled again via this call, or via a device reset.
+     */
+    void SetAutoEnabling(bool aAutoEnabling);
+
+    /**
+     * Requests the TREL interface auto-enabling function to enable the TREL interface.
+     *
+     * This call is a safe version of #Enable(). If the auto-enabling function is active, the TREL interface is
+     * enabled immediately. If the auto-enabling function is inactive, the request will be remembered for the
+     * next time the auto-enabling function becomes active. This call is typically used by other modules to control
+     * TREL interface operation, while respecting explicit enable/disable overrides that were made via the TREL
+     * API.
+     */
+    void RequestEnable(void);
+
+    /**
+     * Requests the TREL interface auto-enabling function to disable the TREL interface.
+     *
+     * This call is a safe version of #Disable(). If the auto-enabling function is active, the TREL interface is
+     * disabled immediately. If the auto-enabling function is inactive, the request will be remembered for the
+     * next time the auto-enabling function becomes active. This call is typically used by other modules to control
+     * TREL interface operation, while respecting explicit enable/disable overrides that were made via the TREL
+     * API.
+     */
+    void RequestDisable(void);
 
     /**
      * Enables the TREL interface.
@@ -85,6 +120,9 @@ public:
      * to discover other devices supporting TREL. Device also registers a new service to be advertised using DNS-SD,
      * with the service name is "_trel._udp" indicating its support for TREL. Device is ready to receive TREL messages
      * from peers.
+     *
+     * @warning This call interferes with the auto-enabling function of the TREL interface. In most cases,
+     *          #RequestEnable() should be used instead.
      */
     void Enable(void);
 
@@ -93,11 +131,14 @@ public:
      *
      * This call stops the DNS-SD browse on the service name "_trel._udp", stops advertising TREL DNS-SD service, and
      * clears the TREL peer table.
+     *
+     * @warning This call interferes with the auto-enabling function of the TREL interface. In most cases,
+     *          #RequestDisable() should be used instead.
      */
     void Disable(void);
 
     /**
-     * Indicates whether the TREL interface is enabled.
+     * Indicates whether the TREL interface is currently enabled.
      *
      * @retval TRUE if the TREL interface is enabled.
      * @retval FALSE if the TREL interface is disabled.
@@ -156,6 +197,8 @@ private:
 
     bool     mInitialized : 1;
     bool     mEnabled : 1;
+    bool     mAutoEnablingMode : 1;
+    bool     mAutoEnabledTarget : 1;
     bool     mFiltered : 1;
     uint16_t mUdpPort;
     Packet   mRxPacket;

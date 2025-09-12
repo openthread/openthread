@@ -85,12 +85,34 @@ typedef const void *otTrelPeerIterator;
  * When @p aEnable is false, this function stops the DNS-SD browse on the service name "_trel._udp", stops advertising
  * TREL DNS-SD service, and clears the TREL peer table.
  *
+ * @warning This call interferes with the intended state of TREL operation which is managed by the auto-enabling
+ *          function. If TREL auto-enabling mode (@sa #otTrelSetAutoEnabling()) is active, TREL interface
+ *          operation should in most cases not be controlled directly via this call.
+ *
  * @note By default the OpenThread stack enables the TREL operation on start.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aEnable    A boolean to enable/disable the TREL operation.
  */
 void otTrelSetEnabled(otInstance *aInstance, bool aEnable);
+
+/**
+ * Enables or disables TREL auto-enabling mode.
+ *
+ * When @p aAutoEnablingMode is TRUE, the state of the TREL interface is automatically controlled by the
+ * OpenThread stack. If auto-enabling mode was previously disabled, and then enabled, this may lead
+ * to TREL operation being enabled immediately, or at a later time, under control of the stack.
+ *
+ * When @p aAutoEnablingMode is FALSE, the TREL interface state is not automatically managed anymore. If TREL was
+ * disabled, it remains disabled. If TREL was enabled, it will remain enabled until either explicitly disabled via
+ * #otTrelSetEnabled() or until the auto-enabling mode is turned on once again.
+ *
+ * @note By default the OpenThread stack enables the TREL auto-enabling mode on start.
+ *
+ * @param[in]  aInstance           A pointer to an OpenThread instance.
+ * @param[in]  aAutoEnablingMode   A boolean to enable/disable the TREL auto-enabling mode as defined above.
+ */
+void otTrelSetAutoEnabling(otInstance *aInstance, bool aAutoEnablingMode);
 
 /**
  * Indicates whether the TREL operation is enabled.
