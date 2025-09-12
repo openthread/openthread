@@ -247,7 +247,7 @@ Error SecureSession::Setup(void)
 #endif
     }
 
-#if (MBEDTLS_VERSION_NUMBER < 0x03000000)
+#if defined(MBEDTLS_SSL_EXPORT_KEYS) && (MBEDTLS_VERSION_NUMBER < 0x03000000)
     mbedtls_ssl_conf_export_keys_cb(&mConf, SecureTransport::HandleMbedtlsExportKeys, &mTransport);
 #endif
 
@@ -301,7 +301,7 @@ Error SecureSession::Setup(void)
         mbedtls_ssl_set_timer_cb(&mSsl, this, HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
     }
 
-#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+#if defined(MBEDTLS_SSL_EXPORT_KEYS) && (MBEDTLS_VERSION_NUMBER >= 0x03000000)
     mbedtls_ssl_set_export_keys_cb(&mSsl, SecureTransport::HandleMbedtlsExportKeys, &mTransport);
 #endif
 
@@ -898,6 +898,7 @@ exit:
     return rval;
 }
 
+#ifdef MBEDTLS_SSL_EXPORT_KEYS
 #if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
 
 void SecureTransport::HandleMbedtlsExportKeys(void                       *aContext,
@@ -981,6 +982,7 @@ exit:
 }
 
 #endif // (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+#endif // MBEDTLS_SSL_EXPORT_KEYS
 
 void SecureTransport::HandleUpdateTask(Tasklet &aTasklet)
 {
