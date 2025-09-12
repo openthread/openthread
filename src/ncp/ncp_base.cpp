@@ -375,6 +375,9 @@ NcpBase::NcpBase(Instance *aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     otBorderAgentSetMeshCoPServiceChangedCallback(mInstance, HandleBorderAgentMeshCoPServiceChanged, this);
 #endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    otBorderAgentEphemeralKeySetCallback(mInstance, HandleBorderAgentEphemeralKeyStateChanged, this);
+#endif
 #endif // OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     otSrpClientSetCallback(mInstance, HandleSrpClientCallback, this);

@@ -270,6 +270,7 @@ ot_unit_ncp_test(cli)
 ot_unit_ncp_test(dnssd)
 ot_unit_ncp_test(infra_if)
 ot_unit_ncp_test(srp_server)
+ot_unit_ncp_test(ephemeral_key)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

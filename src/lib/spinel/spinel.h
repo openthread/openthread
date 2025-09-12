@@ -4911,6 +4911,43 @@ enum
      */
     SPINEL_PROP_BORDER_AGENT_MESHCOP_SERVICE_STATE = SPINEL_PROP_BORDER_AGENT__BEGIN + 1,
 
+    /// Border Agent Ephemeral Key State.
+    /**
+     * Format: `C` - Get and Unsolicited notifications.
+     *
+     * `C`: The Ephemeral Key state. The value corresponds to `otBorderAgentEphemeralKeyState`.
+     */
+    SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_STATE = SPINEL_PROP_BORDER_AGENT__BEGIN + 2,
+
+    /// Enablement/Disablement of the Ephemeral Key feature.
+    /**
+     * Format: `b` - Write-Only
+     *
+     * `b`: true to enable the Ephemeral Key feature and false to disable the feature.
+     *
+     * Note that enabling the Ephemeral Key feature doesn't mean activating Ephemeral Key mode. If the feature
+     * is enabled, the corresponding bit in state bitmap in the meshcop service will be set.
+     */
+    SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_ENABLE = SPINEL_PROP_BORDER_AGENT__BEGIN + 3,
+
+    /// Activation of the Ephemeral Key mode.
+    /**
+     * Format: `ULS` - Write-Only
+     *
+     * `U`: The ephemeral key to use.
+     * `L`: The timeout duration, in milliseconds, to use the ephemeral key.
+     * `S`: The UDP port for the MeshCop-e service. An ephemeral port will be used if this is 0.
+     */
+    SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_ACTIVATE = SPINEL_PROP_BORDER_AGENT__BEGIN + 4,
+
+    /// Deactivation of the Ephemeral Key mode.
+    /**
+     * Format: `b` - Write-Only
+     *
+     * `b`: true to retain the current session if existed. false to force the disconnection for existing session.
+     */
+    SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_DEACTIVATE = SPINEL_PROP_BORDER_AGENT__BEGIN + 5,
+
     SPINEL_PROP_BORDER_AGENT__END = 0x970,
 
     SPINEL_PROP_BACKBONE_ROUTER__BEGIN = 0x970,

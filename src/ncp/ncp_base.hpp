@@ -886,6 +886,11 @@ protected:
                                                            const otIp6Address                    *aAddress);
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    static void HandleBorderAgentEphemeralKeyStateChanged(void *aContext);
+    void        HandleBorderAgentEphemeralKeyStateChanged(void);
+#endif
+
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
