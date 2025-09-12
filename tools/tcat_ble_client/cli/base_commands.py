@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024, The OpenThread Authors.
+  Copyright (c) 2024-2025, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -76,7 +76,7 @@ class BleCommand(Command):
         pass
 
     async def execute_default(self, args, context):
-        if 'ble_sstream' not in context or context['ble_sstream'] is None:
+        if 'ble_sstream' not in context or context['ble_sstream'] is None or not context['ble_sstream'].is_connected:
             print("TCAT Device not connected.")
             return CommandResultNone()
         bless: BleStreamSecure = context['ble_sstream']
@@ -237,7 +237,7 @@ class DisconnectCommand(Command):
         return 'Disconnect client from TCAT device'
 
     async def execute_default(self, args, context):
-        if 'ble_sstream' not in context or context['ble_sstream'] is None:
+        if 'ble_sstream' not in context or context['ble_sstream'] is None or not context['ble_sstream'].is_connected:
             print("TCAT Device not connected.")
             return CommandResultNone()
         await context['ble_sstream'].close()
@@ -383,6 +383,9 @@ class PingCommand(Command):
 
     async def execute_default(self, args, context):
         bless: BleStreamSecure = context['ble_sstream']
+        if bless is None or not bless.is_connected:
+            print("TCAT Device not connected.")
+            return CommandResultNone()
         payload_size = 10
         max_payload = 512
         if len(args) > 0:
