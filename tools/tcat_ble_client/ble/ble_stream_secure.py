@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024, The OpenThread Authors.
+  Copyright (c) 2024-2026, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -30,11 +30,11 @@ import _ssl
 import asyncio
 import logging
 import ssl
-from time import time
 from typing import Optional, Callable
 
 from cryptography.x509 import load_der_x509_certificate
 from cryptography.hazmat.primitives.serialization import (Encoding, PublicFormat)
+
 from tlv.tlv import TLV
 from tlv.tcat_tlv import TcatTLVType
 import utils
@@ -53,6 +53,10 @@ class BleStreamSecure:
         self.cert = ''
         self.peer_challenge = None
         self._peer_public_key = None
+        self._recv_lock = asyncio.Lock()
+        self._close_notify_sent = False
+        self._close_notify_received = False
+        self._async_events_queue = asyncio.Queue()
 
     def load_cert(self, certfile='', keyfile='', cafile=''):
         if certfile and keyfile:
@@ -65,7 +69,10 @@ class BleStreamSecure:
         if cafile:
             self.ssl_context.load_verify_locations(cafile=cafile)
 
-    async def do_handshake(self, timeout=30.0, progress_callback: Optional[Callable[[bool], None]] = None) -> bool:
+    async def do_handshake(self,
+                           buffersize: int = 4096,
+                           timeout: float = 30.0,
+                           progress_callback: Optional[Callable[[bool], None]] = None) -> bool:
         """
         Performs a TLS handshake with a TCAT Device, reporting progress via an optional callback.
 
@@ -79,6 +86,9 @@ class BleStreamSecure:
         Returns:
             True if the TLS handshake was successful, False otherwise.
         """
+        self._close_notify_sent = False
+        self._close_notify_received = False
+        self._peer_public_key = None
         self.ssl_object = self.ssl_context.wrap_bio(
             incoming=self.incoming,
             outgoing=self.outgoing,
@@ -87,8 +97,8 @@ class BleStreamSecure:
         )
 
         try:
-            start = time()
-            while (time() - start) < timeout:
+            start = asyncio.get_running_loop().time()
+            while (asyncio.get_running_loop().time() - start) < timeout:
                 try:
                     if progress_callback:
                         progress_callback(False)
@@ -96,26 +106,26 @@ class BleStreamSecure:
                     break
 
                 # SSLWantWrite means ssl wants to send data over the link,
-                # but might need a receive first
+                # but might need to receive first
                 except ssl.SSLWantWriteError:
-                    output = await self.stream.recv(4096)
-                    if output:
-                        self.incoming.write(output)
-                    data = self.outgoing.read()
-                    if data:
-                        await self.stream.send(data)
-                    await asyncio.sleep(0.02)
+                    recv_data = await self.stream.recv(buffersize)
+                    if recv_data:
+                        self.incoming.write(recv_data)
+                    send_data = self.outgoing.read()
+                    if send_data:
+                        await self.stream.send(send_data)
+                    await asyncio.sleep(0.020)
 
                 # SSLWantRead means ssl wants to receive data from the link,
                 # but might need to send first
                 except ssl.SSLWantReadError:
-                    data = self.outgoing.read()
-                    if data:
-                        await self.stream.send(data)
-                    output = await self.stream.recv(4096)
-                    if output:
-                        self.incoming.write(output)
-                    await asyncio.sleep(0.02)
+                    send_data = self.outgoing.read()
+                    if send_data:
+                        await self.stream.send(send_data)
+                    recv_data = await self.stream.recv(buffersize)
+                    if recv_data:
+                        self.incoming.write(recv_data)
+                    await asyncio.sleep(0.020)
 
                 except ssl.SSLCertVerificationError as err:
                     if progress_callback:
@@ -151,50 +161,184 @@ class BleStreamSecure:
         self.log_cert_identities()
         return True
 
-    async def send(self, bytes):
-        logger.debug(f"tx {len(bytes)} bytes\n" + utils.hexdump_ot("Tx", bytes))
-        self.ssl_object.write(bytes)
-        encode = self.outgoing.read(4096)
-        await self.stream.send(encode)
+    # Precondition: caller must handle all exceptions raised
+    async def _send(self, data: bytes, buffersize: int = 4096) -> None:
+        hexdump_str = utils.hexdump_ot("Tx", data) if len(data) > 0 else ''
+        logger.debug(f"tx {len(data)} bytes\n{hexdump_str}")
+        self.ssl_object.write(data)
+        while self.outgoing.pending > 0:
+            encrypted_chunk = self.outgoing.read(buffersize)
+            await self.stream.send(encrypted_chunk)
 
-    async def recv(self, buffersize, timeout=1):
-        end_time = asyncio.get_event_loop().time() + timeout
+    # Precondition: must only be called by _recv()
+    async def _on_alert_from_peer(self):
+        self._close_notify_received = True
+        if not self._close_notify_sent:
+            logger.warning('TLS connection closed by peer.')
+        else:
+            logger.debug('TLS connection closed by local, close-notify alert received from peer.')
+
+        await self._close_tls_gracefully()
+
+    # Precondition: caller must acquire _recv_lock before calling this method
+    # Precondition: caller must handle all exceptions raised
+    async def _recv(self, buffersize: int = 4096, timeout: float = 0.0) -> bytes:
+        if self._close_notify_received and self._close_notify_sent:
+            return b''
+
+        slp_time = 0.020
+        end_time = asyncio.get_running_loop().time() + timeout
         data = await self.stream.recv(buffersize)
-        while not data and asyncio.get_event_loop().time() < end_time:
-            await asyncio.sleep(0.1)
+        while not data and asyncio.get_running_loop().time() < end_time:
+            await asyncio.sleep(slp_time)
             data = await self.stream.recv(buffersize)
         if not data:
-            logger.warning('No response when response expected.')
             return b''
 
         self.incoming.write(data)
         while True:
             try:
-                decode = self.ssl_object.read(4096)
+                decode = self.ssl_object.read(buffersize)
                 break
-            # if recv called before entire message was received from the link
+            # if _recv called before entire message was received from the link
             except ssl.SSLWantReadError:
                 more = await self.stream.recv(buffersize)
                 while not more:
-                    await asyncio.sleep(0.1)
+                    await asyncio.sleep(slp_time)
                     more = await self.stream.recv(buffersize)
                 self.incoming.write(more)
 
-        logger.debug(f"rx {len(decode)} bytes\n" + utils.hexdump_ot("Rx", decode))
+        hexdump_str = utils.hexdump_ot("Rx", decode) if len(decode) > 0 else ''
+        logger.debug(f"rx {len(decode)} bytes\n{hexdump_str}")
+
+        # ssl_object.read returns 0 bytes when peer side sent TLS Alert close/notify.
+        if len(decode) == 0:
+            await self._on_alert_from_peer()
+
         return decode
 
-    async def send_with_resp(self, bytes):
-        await self.send(bytes)
-        res = await self.recv(buffersize=4096, timeout=5)
-        return res
+    async def send_with_resp(self, data: bytes, timeout: float = 5.0) -> bytes:
+        """
+        Send data to the server over the secure TLS connection and wait for response data.
 
-    async def close(self):
-        if self.ssl_object.session is not None:
-            logger.debug('sending Disconnect command TLV')
-            data = TLV(TcatTLVType.DISCONNECT.value, bytes()).to_bytes()
-            self.peer_challenge = None
+        Args:
+            data: The data to send to the server.
+            timeout: The maximum time in seconds to wait for the response data. Defaults to 5.0 seconds.
+
+        Returns:
+            bytes: The received response data as bytes, or empty b'' if no data TLV/line was received
+                   within the timeout.
+        """
+        async with self._recv_lock:
+            # first receive any pending unsolicited events and store in FIFO queue
+            while True:
+                pend_data = await self._recv(timeout=0.0)
+                if len(pend_data) == 0:
+                    break
+                await self._async_events_queue.put(pend_data)
+
+            # then send the data (command) and wait for the response (1 TLV or line)
+            await self._send(data)
+            res = await self._recv(timeout=timeout)
+            if len(res) == 0:
+                logger.error(f'No response when response TLV/line expected (timeout={timeout}s).')
+            return res
+
+    async def recv_unsolicited_event(self) -> bytes:
+        """
+        Receive unsolicited event data, if any, from the server over the secure TLS connection.
+
+        This method is non-blocking and returns immediately if no unsolicited event data is available.
+        Events are returned in FIFO order of reception. To receive multiple events, call this method
+        repeatedly until no more data is available.
+
+        Returns:
+            bytes: The received event data as bytes, or empty b'' if no data is available.
+        """
+
+        # dequeue the next event, if any
+        try:
+            data = self._async_events_queue.get_nowait()
+            return data
+        except asyncio.QueueEmpty:
+            pass
+
+        # when connected, receive any pending unsolicited events incoming from the peer (and queue these)
+        while self.is_connected:
+            async with self._recv_lock:
+                data = await self._recv(timeout=0.0)
+            if len(data) == 0:
+                break
+            await self._async_events_queue.put(data)
+
+        # dequeue the next event, if any
+        try:
+            data = self._async_events_queue.get_nowait()
+            return data
+        except asyncio.QueueEmpty:
+            return b''
+
+    async def close(self, timeout: float = 5.0):
+        try:
+            if self.is_connected:
+                logger.debug('sending Disconnect command TLV')
+                data = TLV(TcatTLVType.DISCONNECT.value, bytes()).to_bytes()
+                try:
+                    await self._send(data)
+                except asyncio.CancelledError:
+                    raise
+                except Exception as err:
+                    logger.warning(f'Failed to send Disconnect command TLV: {err}')
+                    logger.debug(err, exc_info=True)
+
+            async with self._recv_lock:
+                await self._close_tls_gracefully(timeout=timeout)  # send out Alert after the command.
+
+        finally:
             self._peer_public_key = None
-            await self.send(data)
+            self.peer_challenge = None
+            self.ssl_object = None
+
+    # Closes the TLS connection by repeated calls to unwrap() until it succeeds or times out.
+    # Precondition: must only be called by close() with _recv_lock acquired, or by _closed_by_peer()
+    async def _close_tls_gracefully(self, timeout: float = 5.0, buffersize: int = 4096):
+        try:
+            async with asyncio.timeout(timeout):
+                while True:
+                    try:
+                        self.ssl_object.unwrap()
+                        send_data = self.outgoing.read()  # send final Alert (if any)
+                        if send_data:
+                            await self.stream.send(send_data)
+                        self._close_notify_sent = True
+                        self._close_notify_received = True
+                        break
+
+                    except ssl.SSLWantReadError:
+                        recv_data = await self.stream.recv(buffersize)
+                        if recv_data:
+                            self.incoming.write(recv_data)
+                        else:
+                            await asyncio.sleep(0.020)  # small pause to allow asyncio.timeout to occur
+                    except ssl.SSLWantWriteError:
+                        send_data = self.outgoing.read()
+                        if send_data:
+                            await self.stream.send(send_data)
+
+        except asyncio.TimeoutError:
+            logger.warning(f'TLS closing procedure timed out (timeout={timeout} s).')
+
+        except Exception as err:
+            logger.warning(f'TLS closing procedure incomplete: {err}')
+            logger.debug(err, exc_info=True)
+
+        finally:
+            self.ssl_object = None
+
+    @property
+    def is_connected(self):
+        return not self._close_notify_sent and not self._close_notify_received and \
+            self._peer_public_key is not None and self.ssl_object is not None
 
     @property
     def peer_public_key(self):
@@ -215,7 +359,7 @@ class BleStreamSecure:
         try:
             cc = self.ssl_object._sslobj.get_unverified_chain()
             if cc is None:
-                logger.info('No TCAT Device cert chain was received (yet).')
+                logger.warning('No TCAT Device cert chain was received (yet).')
                 return
             logger.info(f'TCAT Device cert chain: {len(cc)} certificates received.')
             for cert in cc:
@@ -224,5 +368,7 @@ class BleStreamSecure:
                 logger.info(f'  base64: (paste in https://lapo.it/asn1js/ to decode)\n{peer_cert_der_hex}')
             logger.info(f'TCAT Commissioner cert, PEM:\n{self.cert}')
 
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             logger.warning('Could not display TCAT client cert info (check Python version is >= 3.10?)')
