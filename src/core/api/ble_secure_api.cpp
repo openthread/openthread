@@ -57,7 +57,7 @@ otError otBleSecureStart(otInstance              *aInstance,
 
 otError otBleSecureSetTcatVendorInfo(otInstance *aInstance, const otTcatVendorInfo *aVendorInfo)
 {
-    return AsCoreType(aInstance).Get<Ble::BleSecure>().TcatSetVendorInfo(AsCoreType(aVendorInfo));
+    return AsCoreType(aInstance).Get<Ble::BleSecure>().SetTcatVendorInfo(AsCoreType(aVendorInfo));
 }
 
 otError otBleSecureTcatStart(otInstance *aInstance, otHandleTcatJoin aHandler)
@@ -66,6 +66,11 @@ otError otBleSecureTcatStart(otInstance *aInstance, otHandleTcatJoin aHandler)
 }
 
 void otBleSecureStop(otInstance *aInstance) { AsCoreType(aInstance).Get<Ble::BleSecure>().Stop(); }
+
+otError otBleSecureSetTcatAgentState(otInstance *aInstance, bool aActive, uint32_t aDelayMs, uint32_t aDurationMs)
+{
+    return AsCoreType(aInstance).Get<Ble::BleSecure>().TcatActive(aActive, aDelayMs, aDurationMs);
+}
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 void otBleSecureSetPsk(otInstance    *aInstance,
@@ -174,9 +179,9 @@ bool otBleSecureIsConnectionActive(otInstance *aInstance)
 
 bool otBleSecureIsConnected(otInstance *aInstance) { return AsCoreType(aInstance).Get<Ble::BleSecure>().IsConnected(); }
 
-bool otBleSecureIsTcatEnabled(otInstance *aInstance)
+bool otBleSecureIsTcatAgentStarted(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Ble::BleSecure>().IsTcatEnabled();
+    return AsCoreType(aInstance).Get<Ble::BleSecure>().IsTcatAgentStarted();
 }
 
 bool otBleSecureIsCommandClassAuthorized(otInstance *aInstance, otTcatCommandClass aCommandClass)
