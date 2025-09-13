@@ -292,9 +292,10 @@ exit:
 //----------------------------------------------------------------------------------------------------------------------
 // RouterAdver::TxMessage
 
-Error RouterAdvert::TxMessage::AppendPrefixInfoOption(const Prefix &aPrefix,
-                                                      uint32_t      aValidLifetime,
-                                                      uint32_t      aPreferredLifetime)
+Error RouterAdvert::TxMessage::AppendPrefixInfoOption(const Prefix           &aPrefix,
+                                                      uint32_t                aValidLifetime,
+                                                      uint32_t                aPreferredLifetime,
+                                                      PrefixInfoOption::Flags aFlags)
 {
     Error             error = kErrorNone;
     PrefixInfoOption *pio;
@@ -303,8 +304,7 @@ Error RouterAdvert::TxMessage::AppendPrefixInfoOption(const Prefix &aPrefix,
     VerifyOrExit(pio != nullptr, error = kErrorNoBufs);
 
     pio->Init();
-    pio->SetOnLinkFlag();
-    pio->SetAutoAddrConfigFlag();
+    pio->SetFlags(aFlags);
     pio->SetValidLifetime(aValidLifetime);
     pio->SetPreferredLifetime(aPreferredLifetime);
     pio->SetPrefix(aPrefix);
