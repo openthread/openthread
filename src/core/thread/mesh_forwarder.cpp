@@ -612,17 +612,15 @@ Error MeshForwarder::UpdateIp6Route(Message &aMessage)
     {
         mMacAddrs.mDestination.SetExtendedFromIid(ip6Header.GetDestination().GetIid());
     }
-    else if (Get<Mle::Mle>().IsMinimalEndDevice())
+#if OPENTHREAD_FTD
+    else if (Get<Mle::Mle>().IsFullThreadDevice())
     {
-        mMacAddrs.mDestination.SetShort(Get<Mle::Mle>().GetParentRloc16());
+        error = UpdateIp6RouteFtd(ip6Header, aMessage);
     }
+#endif
     else
     {
-#if OPENTHREAD_FTD
-        error = UpdateIp6RouteFtd(ip6Header, aMessage);
-#else
-        OT_ASSERT(false);
-#endif
+        mMacAddrs.mDestination.SetShort(Get<Mle::Mle>().GetParentRloc16());
     }
 
 exit:
