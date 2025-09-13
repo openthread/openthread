@@ -591,6 +591,175 @@ void TestNat64Mapping(void)
     VerifyOrQuit(iterator.GetNext(mapping) == kErrorNotFound);
 }
 
+void TestNat64CidrAddressReuse(const char *aCidr)
+{
+    static constexpr uint32_t kExpireTimeout = 120 * Time::kOneSecondInMsec;
+
+    static constexpr uint16_t kSrcPort       = 55387;
+    static constexpr uint16_t kDstPort       = 55388;
+    static constexpr uint16_t kPayloadLength = 32;
+
+    Core                                      nexus;
+    Node                                     &node = nexus.CreateNode();
+    Ip6::Prefix                               prefix;
+    Ip4::Cidr                                 cidr;
+    uint16_t                                  numIp4Addrs;
+    Nat64::Translator::AddressMappingIterator iterator;
+    Nat64::Translator::AddressMapping         mapping;
+    OwnedPtr<Message>                         message;
+    Ip6::Address                              ip6Addr;
+    Ip4::Address                              ip4Addr;
+    Ip4::Headers                              ip4Headers;
+    uint16_t                                  count;
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("TestNat64CidrAddressReuse(%s)", aCidr);
+
+    nexus.AdvanceTime(0);
+
+    node.Form();
+    nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node.Get<Mle::Mle>().IsLeader());
+
+    node.Get<Instance>().SetLogLevel(kLogLevelInfo);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Enable NAT64 translator");
+
+    SuccessOrQuit(prefix.FromString("fd01::/96"));
+    SuccessOrQuit(cidr.FromString(aCidr));
+
+    node.Get<Nat64::Translator>().SetNat64Prefix(prefix);
+    SuccessOrQuit(node.Get<Nat64::Translator>().SetIp4Cidr(cidr));
+
+    node.Get<Nat64::Translator>().SetEnabled(true);
+    VerifyOrQuit(node.Get<Nat64::Translator>().GetState() == Nat64::kStateActive);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Determine number of available IPv4 addresses");
+
+    switch (cidr.GetLength())
+    {
+    case 32:
+        numIp4Addrs = 1;
+        break;
+    case 31:
+        numIp4Addrs = 2;
+        break;
+    default:
+        numIp4Addrs = (1 << (32 - cidr.GetLength())) - 2;
+        break;
+    }
+
+    Log("Number of available IPv4 addresses: %u", numIp4Addrs);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Translate IPv6 messages to use all IPv4 addresses");
+
+    for (uint16_t i = 0; i < numIp4Addrs; i++)
+    {
+        SuccessOrQuit(ip6Addr.FromString("fd02::0"));
+        SuccessOrQuit(ip4Addr.FromString("200.100.1.1"));
+
+        ip6Addr.mFields.m8[15] = i;
+
+        message.Reset(PrepareMessage(node, ip6Addr, ip4Addr, kSrcPort, kDstPort, kPayloadLength));
+
+        SuccessOrQuit(node.Get<Nat64::Translator>().TranslateIp6ToIp4(*message));
+
+        SuccessOrQuit(ip4Headers.ParseFrom(*message));
+        VerifyOrQuit(ip4Headers.GetDestinationAddress() == ip4Addr);
+        VerifyOrQuit(ip4Headers.IsUdp());
+        VerifyOrQuit(ip4Headers.GetSourcePort() == kSrcPort);
+        VerifyOrQuit(ip4Headers.GetDestinationPort() == kDstPort);
+        VerifyOrQuit(ip4Headers.GetUdpHeader().GetLength() == kPayloadLength);
+
+        nexus.AdvanceTime(1000);
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Check the Address Mappings");
+
+    iterator.Init(node.GetInstance());
+
+    for (count = 0; iterator.GetNext(mapping) == kErrorNone; count++)
+    {
+        LogAddressMapping(mapping);
+        VerifyOrQuit(mapping.mRemainingTimeMs > 0);
+    }
+
+    VerifyOrQuit(count == numIp4Addrs);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Validate that next translation fails since all IPv4 addresses are in use");
+
+    SuccessOrQuit(ip6Addr.FromString("fd02::100"));
+
+    message.Reset(PrepareMessage(node, ip6Addr, ip4Addr, kSrcPort, kDstPort, kPayloadLength));
+
+    VerifyOrQuit(node.Get<Nat64::Translator>().TranslateIp6ToIp4(*message) == kErrorDrop);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Wait for mapping entries to expire");
+
+    nexus.AdvanceTime(kExpireTimeout);
+
+    iterator.Init(node.GetInstance());
+
+    for (count = 0; iterator.GetNext(mapping) == kErrorNone; count++)
+    {
+        LogAddressMapping(mapping);
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Translate IPv6 messages again and check that IPv4 addresses are now reused");
+
+    for (uint16_t i = 0; i < numIp4Addrs; i++)
+    {
+        SuccessOrQuit(ip6Addr.FromString("fd02::200:0"));
+        SuccessOrQuit(ip4Addr.FromString("200.100.3.3"));
+
+        ip6Addr.mFields.m8[15] = i + 100;
+
+        message.Reset(PrepareMessage(node, ip6Addr, ip4Addr, kSrcPort, kDstPort, kPayloadLength));
+
+        SuccessOrQuit(node.Get<Nat64::Translator>().TranslateIp6ToIp4(*message));
+
+        SuccessOrQuit(ip4Headers.ParseFrom(*message));
+        VerifyOrQuit(ip4Headers.GetDestinationAddress() == ip4Addr);
+        VerifyOrQuit(ip4Headers.IsUdp());
+        VerifyOrQuit(ip4Headers.GetSourcePort() == kSrcPort);
+        VerifyOrQuit(ip4Headers.GetDestinationPort() == kDstPort);
+        VerifyOrQuit(ip4Headers.GetUdpHeader().GetLength() == kPayloadLength);
+
+        nexus.AdvanceTime(1000);
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Check the Address Mappings");
+
+    iterator.Init(node.GetInstance());
+
+    for (count = 0; iterator.GetNext(mapping) == kErrorNone; count++)
+    {
+        LogAddressMapping(mapping);
+        VerifyOrQuit(mapping.mRemainingTimeMs > 0);
+    }
+
+    VerifyOrQuit(count == numIp4Addrs);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Validate that next translation fails since all IPv4 addresses are in use");
+
+    SuccessOrQuit(ip6Addr.FromString("fd02::200:100"));
+
+    message.Reset(PrepareMessage(node, ip6Addr, ip4Addr, kSrcPort, kDstPort, kPayloadLength));
+
+    VerifyOrQuit(node.Get<Nat64::Translator>().TranslateIp6ToIp4(*message) == kErrorDrop);
+
+    Log("End of TestNat64CidrAddressReuse(%s)", aCidr);
+}
+
 } // namespace Nexus
 } // namespace ot
 
@@ -598,6 +767,10 @@ int main(void)
 {
     ot::Nexus::TestNat64StateChanges();
     ot::Nexus::TestNat64Mapping();
+    ot::Nexus::TestNat64CidrAddressReuse("192.168.101.133/32");
+    ot::Nexus::TestNat64CidrAddressReuse("192.168.102.178/31");
+    ot::Nexus::TestNat64CidrAddressReuse("192.168.103.0/30");
+    ot::Nexus::TestNat64CidrAddressReuse("192.168.104.0/27");
 
     printf("All tests passed\n");
     return 0;
