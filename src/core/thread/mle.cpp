@@ -4285,10 +4285,9 @@ void Mle::PrevRoleRestorer::SendChildUpdate(void)
 
 void Mle::PrevRoleRestorer::DetermineMaxLinkRequestAttempts(void)
 {
-    mAttempts = kMaxCriticalTxCount;
+    mAttempts = kMaxTxCount + 1;
 
-    if ((Get<Mle>().mLastSavedRole == kRoleRouter) &&
-        (Get<Mle>().mChildTable.GetNumChildren(Child::kInStateValidOrRestoring) < kMinCriticalChildrenCount))
+    if (Get<Mle>().mLastSavedRole == kRoleLeader)
     {
         mAttempts = kMaxTxCount;
     }
