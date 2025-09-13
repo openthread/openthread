@@ -171,6 +171,8 @@ bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond
     return AsCoreType(aFirst) == AsCoreType(aSecond);
 }
 
+bool otIp6IsLinkLocalUnicast(const otIp6Address *aAddress) { return AsCoreType(aAddress).IsLinkLocalUnicast(); }
+
 bool otIp6ArePrefixesEqual(const otIp6Prefix *aFirst, const otIp6Prefix *aSecond)
 {
     return AsCoreType(aFirst) == AsCoreType(aSecond);
