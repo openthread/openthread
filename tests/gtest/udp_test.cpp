@@ -28,23 +28,26 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <signal.h>
 
 #include <openthread/border_agent.h>
 #include <openthread/dataset.h>
 #include <openthread/dataset_ftd.h>
+#include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/message.h>
 #include <openthread/thread.h>
+#include <openthread/udp.h>
 #include <openthread/platform/time.h>
-#include "net/socket.hpp"
-#include "openthread/error.h"
-#include "openthread/message.h"
-#include "openthread/udp.h"
+
+#include "core/common/as_core_type.hpp"
+#include "core/net/ip6_address.hpp"
+#include "core/net/socket.hpp"
+#include "core/net/udp6.hpp"
 
 #include "fake_platform.hpp"
 #include "mock_callback.hpp"
-
-#include "core/net/ip6_address.hpp"
 
 using namespace ot;
 
@@ -191,4 +194,22 @@ TEST_F(UdpTest, shouldSuccessWhenBindingMulticastAddressAndNoReceiveIfNotSubscri
 
     ASSERT_EQ(OT_ERROR_NONE, otUdpClose(FakePlatform::CurrentInstance(), &sender));
     ASSERT_EQ(OT_ERROR_NONE, otUdpClose(FakePlatform::CurrentInstance(), &receiver));
+}
+
+TEST_F(UdpTest, shouldAbortOnBindingToNetworkInterfaceOnBoundSocket)
+{
+    otUdpSocket         sock;
+    MockReceiveCallback receiverCallback;
+    ASSERT_EQ(OT_ERROR_NONE, otUdpOpen(FakePlatform::CurrentInstance(), &sock,
+                                       &MockReceiveCallback::CallWithContextAhead, &receiverCallback));
+
+    Ip6::SockAddr listenAddr{};
+
+    listenAddr.SetPort(2121);
+
+    ASSERT_EQ(OT_ERROR_NONE, otUdpBind(FakePlatform::CurrentInstance(), &sock, &listenAddr, OT_NETIF_UNSPECIFIED));
+
+    EXPECT_EXIT(AsCoreType(&sock).SetNetifId(Ip6::kNetifThreadInternal), ::testing::KilledBySignal(SIGABRT),
+                "Fake platform assertion failure");
+    ASSERT_EQ(OT_ERROR_NONE, otUdpClose(FakePlatform::CurrentInstance(), &sock));
 }

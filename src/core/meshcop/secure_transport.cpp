@@ -676,11 +676,11 @@ SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwo
 
 Error SecureTransport::Open(Ip6::NetifIdentifier aNetifIdentifier)
 {
-    Error error;
+    Error error = kErrorNone;
 
     VerifyOrExit(!mIsOpen, error = kErrorAlready);
 
-    SuccessOrExit(error = mSocket.Open(aNetifIdentifier));
+    mSocket.Open(aNetifIdentifier);
     mIsOpen                      = true;
     mRemainingConnectionAttempts = mMaxConnectionAttempts;
 
