@@ -65,7 +65,6 @@ FakePlatform::FakePlatform()
     assert(sPlatform == nullptr);
     sPlatform = this;
 
-    fprintf(stderr, "fake platform start\r\n");
     mTransmitFrame.mPsdu = mTransmitBuffer;
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
@@ -615,5 +614,9 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket *, otNetifIdentifier, const otI
 void otPlatOtnsStatus(const char *aStatus) { OT_UNUSED_VARIABLE(aStatus); }
 #endif
 
-void otPlatAssertFail(const char *, int) {}
+void otPlatAssertFail(const char *aFileName, int aLineNumber)
+{
+    fprintf(stderr, "Fake platform assertion failure at %s:%d\r\n", aFileName, aLineNumber);
+    abort();
+}
 } // extern "C"

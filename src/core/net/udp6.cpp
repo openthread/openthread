@@ -96,7 +96,7 @@ Message *Udp::Socket::NewMessage(uint16_t aReserved, const Message::Settings &aS
     return Get<Udp>().NewMessage(aReserved, aSettings);
 }
 
-Error Udp::Socket::Open(NetifIdentifier aNetifId) { return Get<Udp>().Open(*this, aNetifId, mHandler, mContext); }
+void Udp::Socket::Open(NetifIdentifier aNetifId) { Get<Udp>().Open(*this, aNetifId, mHandler, mContext); }
 
 bool Udp::Socket::IsOpen(void) const { return Get<Udp>().IsOpen(*this); }
 
@@ -224,10 +224,8 @@ exit:
     return error;
 }
 
-Error Udp::Open(SocketHandle &aSocket, NetifIdentifier aNetifId, ReceiveHandler aHandler, void *aContext)
+void Udp::Open(SocketHandle &aSocket, NetifIdentifier aNetifId, ReceiveHandler aHandler, void *aContext)
 {
-    Error error = kErrorNone;
-
     OT_ASSERT(!IsOpen(aSocket));
 
     aSocket.Clear();
@@ -235,15 +233,7 @@ Error Udp::Open(SocketHandle &aSocket, NetifIdentifier aNetifId, ReceiveHandler 
     aSocket.mHandler = aHandler;
     aSocket.mContext = aContext;
 
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    error = Plat::Open(aSocket);
-#endif
-    SuccessOrExit(error);
-
     AddSocket(aSocket);
-
-exit:
-    return error;
 }
 
 Error Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr)
@@ -251,6 +241,7 @@ Error Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr)
     Error error = kErrorNone;
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    SuccessOrExit(error = Plat::Open(aSocket));
     SuccessOrExit(error = Plat::BindToNetif(aSocket));
 #endif
 
