@@ -48,6 +48,9 @@ const uint8_t Radio::kSupportedChannelPages[kNumChannelPages] = {
 void Radio::Init(void)
 {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    Mac::ExtAddress  allZeroExtAddress;
+    Mac::KeyMaterial emptyKeyMaterial;
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     SuccessOrAssert(ResetCsl());
 #endif
@@ -63,9 +66,11 @@ void Radio::Init(void)
     }
 
     SetPanId(Mac::kPanIdBroadcast);
-    SetExtendedAddress(Mac::ExtAddress{});
+    allZeroExtAddress.Clear();
+    SetExtendedAddress(allZeroExtAddress);
     SetShortAddress(Mac::kShortAddrInvalid);
-    SetMacKey(0, 0, Mac::KeyMaterial{}, Mac::KeyMaterial{}, Mac::KeyMaterial{});
+    emptyKeyMaterial.Clear();
+    SetMacKey(0, 0, emptyKeyMaterial, emptyKeyMaterial, emptyKeyMaterial);
     SetMacFrameCounter(0);
 
     SetPromiscuous(false);
