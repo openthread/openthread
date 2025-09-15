@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2025, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,25 +26,29 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-option(OT_BUILD_GTEST "enable gtest")
+file(GLOB TEST_SCRIPTS "${CMAKE_CURRENT_SOURCE_DIR}/cli/test-*.py")
 
-if(OT_FTD AND BUILD_TESTING AND (NOT OT_PLATFORM STREQUAL "nexus"))
-    add_subdirectory(unit)
-    if(OT_BUILD_GTEST)
-        add_subdirectory(gtest)
+foreach(SCRIPT ${TEST_SCRIPTS})
+    # Extract the base name of the script for the test name
+    get_filename_component(TEST_NAME "${SCRIPT}" NAME_WE)
+
+    if(TEST_NAME MATCHES "-multi-radio-")
+        message(STATUS "skipping non multi radio test ${TEST_NAME}")
+        continue()
     endif()
-endif()
 
-option(OT_FUZZ_TARGETS "enable fuzz targets" OFF)
+    add_test(
+        NAME "${TEST_NAME}"
+        COMMAND "${SCRIPT}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-if(OT_FUZZ_TARGETS)
-    add_subdirectory(fuzz)
-endif()
-
-if(OT_PLATFORM STREQUAL "nexus")
-    add_subdirectory(nexus)
-endif()
-
-if(OT_TORANJ_CLI)
-    add_subdirectory(toranj)
-endif()
+    if(OT_LOG_OUTPUT STREQUAL "PLATFORM_DEFINED")
+        set(TORANJ_SAVE_LOGS "1")
+    else()
+        set(TORANJ_SAVE_LOGS "0")
+    endif()
+    set_property(TEST "${TEST_NAME}" PROPERTY ENVIRONMENT
+        top_builddir="${PROJECT_BINARY_DIR}"
+        TORANJ_VERBOSE=1
+        TORANJ_SAVE_LOGS="${TORANJ_SAVE_LOGS}")
+endforeach()
