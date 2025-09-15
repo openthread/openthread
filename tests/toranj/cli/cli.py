@@ -162,7 +162,7 @@ class Node(object):
             _log(f'$ Node{self._index}.cli(\'{cmd}\')', new_line=False)
 
         self._cli_process.send(cmd + '\n')
-        index = self._cli_process.expect(['(.*)Done\r\n', '.*Error (\d+):(.*)\r\n'])
+        index = self._cli_process.expect([r'(.*)Done\r\n', r'.*Error (\d+):(.*)\r\n'])
 
         if index == 0:
             result = [
