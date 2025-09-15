@@ -1930,6 +1930,8 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
     uint16_t   sourceAddress;
     LeaderData leaderData;
 
+    mPrevRoleRestorer.HandleAdvertisement(aRxInfo);
+
     VerifyOrExit(IsAttached());
 
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
@@ -2181,6 +2183,8 @@ exit:
 
 void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
 {
+    mPrevRoleRestorer.HandleChildUpdateRequest(aRxInfo);
+
     VerifyOrExit(IsAttached());
 
 #if OPENTHREAD_FTD
@@ -4174,6 +4178,8 @@ Mle::PrevRoleRestorer::PrevRoleRestorer(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kIdle)
     , mAttempts(0)
+    , mUseIncreasingTimeout(false)
+    , mCurTimeout(0)
     , mTimer(aInstance)
 {
 }
@@ -4213,8 +4219,50 @@ Error Mle::PrevRoleRestorer::Start(void)
 
     VerifyOrExit(Get<Mle>().mLastSavedRole == kRoleChild);
     VerifyOrExit(Get<Mle>().mParent.IsStateValidOrRestoring());
+
+    // We send up to four (`kMaxChildUpdatesToRestoreRole`) Child
+    // Update Request messages to our former parent to restore our
+    // previous child role.
+    //
+    // The first message is sent quickly after a short initial delay
+    // (`kMaxStartDelay` of 25 msec).
+    //
+    // If the device is sleepy, retransmissions are sent quickly, with
+    // a one-second timeout (`kChildUpdateMinTimeout`) between each
+    // attempt.
+    //
+    // On a non-sleepy child, we use an increasing timeout, starting
+    // from four seconds (`kChildUpdateStartTimeout`) and doubling
+    // the timeout for each failed attempt. The last attempt always
+    // uses a one-second timeout.
+    //
+    // In case of no response, it will take 4 + 8 + 16 + 1 = 29
+    // seconds before the device gives up on role restoration. This
+    // delay handles the case where our parent is also restarting and
+    // restoring its own role. (e.g., after a network-wide reboot due
+    // to a power outage)
+    //
+    // During this process, if we receive a valid MLE Advertisement or
+    // Child Update Request from our former parent, it indicates that
+    // the parent is up and functional. We then speed up our "Child
+    // Update" attempts by reverting to the shorter one-second wait
+    // time (`kChildUpdateMinTimeout`).
+
     SetState(kRestoringChildRole);
+
     mAttempts = kMaxChildUpdatesToRestoreRole;
+
+    if (!Get<Mle>().IsRxOnWhenIdle())
+    {
+        mUseIncreasingTimeout = false;
+        mCurTimeout           = kChildUpdateMinTimeout;
+    }
+    else
+    {
+        mUseIncreasingTimeout = true;
+        mCurTimeout           = kChildUpdateStartTimeout;
+    }
+
     mTimer.Start(Get<Mle>().GenerateRandomDelay(kMaxStartDelay));
     error = kErrorNone;
 
@@ -4275,10 +4323,40 @@ exit:
 
 void Mle::PrevRoleRestorer::SendChildUpdate(void)
 {
-    mTimer.Start(Random::NonCrypto::AddJitter(kChildUpdateRetxDelay, kRetxJitter));
+    if (mAttempts == 0)
+    {
+        mTimer.Start(kChildUpdateMinTimeout);
+    }
+    else
+    {
+        mTimer.Start(Random::NonCrypto::AddJitter(mCurTimeout, kChildUpdateRetxJitter));
+
+        if (mUseIncreasingTimeout)
+        {
+            mCurTimeout += mCurTimeout;
+        }
+    }
 
     LogDebg("Sending Child Update Request to restore child role, remaining attempts: %u", mAttempts);
     IgnoreError(Get<Mle>().SendChildUpdateRequestToParent(kToRestoreChildRole));
+}
+
+void Mle::PrevRoleRestorer::CheckIfMessageIsFromParent(RxInfo &aRxInfo)
+{
+    VerifyOrExit(IsRestoringChildRole());
+    VerifyOrExit(aRxInfo.mNeighbor == &Get<Mle>().GetParent());
+
+    VerifyOrExit(mUseIncreasingTimeout);
+
+    LogInfo("Received msg from former parent, speeding up child role restoration");
+
+    mUseIncreasingTimeout = false;
+    mCurTimeout           = kChildUpdateMinTimeout;
+
+    mTimer.FireAtIfEarlier(TimerMilli::GetNow() + Random::NonCrypto::AddJitter(mCurTimeout, kChildUpdateRetxJitter));
+
+exit:
+    return;
 }
 
 #if OPENTHREAD_FTD
