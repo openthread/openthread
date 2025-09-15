@@ -41,6 +41,7 @@
 #include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/message.h>
+#include <openthread/platform/radio.h>
 #include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
@@ -565,6 +566,14 @@ bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond
  * @retval FALSE  If the IPv6 address is not a link-local unicast address.
  */
 bool otIp6IsLinkLocalUnicast(const otIp6Address *aAddress);
+
+/**
+ * Extracts the MAC Extended Address from the Interface Identifier of the given IPv6 address.
+ *
+ * @param[in]  aAddress     A pointer to the IPv6 address.
+ * @param[out] aExtAddress  A pointer to output the MAC Extended Address (generated from the IID).
+ */
+void otIp6ExtractExtAddressFromIp6AddressIid(const otIp6Address *aAddress, otExtAddress *aExtAddress);
 
 /**
  * Test if two IPv6 prefixes are the same.
