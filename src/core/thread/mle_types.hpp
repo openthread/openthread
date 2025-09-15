@@ -452,15 +452,12 @@ public:
     }
 
     /**
-     * Indicates whether or not the device is a Minimal End Device.
+     * Indicates whether or not the device is a Minimal End Device (MED), i.e., an MTD which is rx-on-when-idle.
      *
      * @retval TRUE   If the device is a Minimal End Device.
      * @retval FALSE  If the device is not a Minimal End Device.
      */
-    bool IsMinimalEndDevice(void) const
-    {
-        return (mMode & (kModeFullThreadDevice | kModeRxOnWhenIdle)) != (kModeFullThreadDevice | kModeRxOnWhenIdle);
-    }
+    bool IsMinimalEndDevice(void) const { return !IsFullThreadDevice() && IsRxOnWhenIdle(); }
 
     /**
      * Indicates whether or not the device mode flags are valid.

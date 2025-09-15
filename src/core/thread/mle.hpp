@@ -329,7 +329,7 @@ public:
     bool IsFullThreadDevice(void) const { return mDeviceMode.IsFullThreadDevice(); }
 
     /**
-     * Indicates whether or not the device is a Minimal End Device.
+     * Indicates whether or not the device is a Minimal End Device (MED), i.e., an MTD which is rx-on-when-idle.
      *
      * @returns TRUE if the device is a Minimal End Device, FALSE otherwise.
      */
