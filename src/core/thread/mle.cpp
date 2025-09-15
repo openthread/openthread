@@ -5775,7 +5775,16 @@ void Mle::AnnounceHandler::Stop(void)
 
 void Mle::AnnounceHandler::HandleAnnounce(RxInfo &aRxInfo)
 {
-    Error              error = kErrorNone;
+    enum Action : uint8_t
+    {
+        kIgnore,
+        kSendAnnouceBack,
+        kAnnounceAttachAfterDelay,
+        kSignalAnnounceSender,
+    };
+
+    Error              error  = kErrorNone;
+    Action             action = kIgnore;
     ChannelTlvValue    channelTlvValue;
     MeshCoP::Timestamp timestamp;
     MeshCoP::Timestamp pendingActiveTimestamp;
@@ -5799,21 +5808,59 @@ void Mle::AnnounceHandler::HandleAnnounce(RxInfo &aRxInfo)
     timestampCompare     = MeshCoP::Timestamp::Compare(timestamp, Get<MeshCoP::ActiveDatasetManager>().GetTimestamp());
     channelAndPanIdMatch = (channel == Get<Mac::Mac>().GetPanChannel()) && (panId == Get<Mac::Mac>().GetPanId());
 
-    if (isFromOrphan || (timestampCompare < 0))
+    // Determine the action to perform.
+
+    if (isFromOrphan)
     {
-        if (isFromOrphan)
+        VerifyOrExit(!channelAndPanIdMatch);
+        action = kSendAnnouceBack;
+    }
+    else if (timestampCompare < 0)
+    {
+        // On an FTD which can become a router, we send an Announce
+        // back to help the sender learn and migrate to the newer
+        // Dataset. On a detached MTD, we process the Announce (wait
+        // for a short delay before trying to attach to the older
+        // Dataset). This is useful when an MTD child device has a
+        // newer Dataset but the routers it can hear are still on a
+        // previous, older Dataset. On an attached MTD, we ignore the
+        // stale Announce, since we cannot become a router to help the
+        // older device join the new Dataset, so sending an Announce
+        // back would be pointless.
+
+#if OPENTHREAD_FTD
+        if (Get<Mle>().IsFullThreadDevice() && Get<Mle>().IsRouterEligible())
         {
-            VerifyOrExit(!channelAndPanIdMatch);
+            action = kSendAnnouceBack;
         }
-
-        Get<Mle>().SendAnnounce(channel);
-
-#if OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE
-        Get<Mle>().SendAnnounce(channel, aRxInfo.mMessageInfo.GetPeerAddr());
+        else
 #endif
+        {
+            action = Get<Mle>().IsDetached() ? kAnnounceAttachAfterDelay : kIgnore;
+        }
     }
     else if (timestampCompare > 0)
     {
+        action = kAnnounceAttachAfterDelay;
+    }
+    else // timestampCompare is zero
+    {
+        action = kSignalAnnounceSender;
+    }
+
+    switch (action)
+    {
+    case kIgnore:
+        break;
+
+    case kSendAnnouceBack:
+        Get<Mle>().SendAnnounce(channel);
+#if OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE
+        Get<Mle>().SendAnnounce(channel, aRxInfo.mMessageInfo.GetPeerAddr());
+#endif
+        break;
+
+    case kAnnounceAttachAfterDelay:
         // No action is required if device is detached, and current
         // channel and pan-id match the values from the received MLE
         // Announce message.
@@ -5853,17 +5900,16 @@ void Mle::AnnounceHandler::HandleAnnounce(RxInfo &aRxInfo)
         mTimer.Start(kAnnounceProcessTimeout);
 
         LogNote("Delay processing Announce - channel %d, panid 0x%02x", channel, panId);
-    }
-    else
-    {
-        // Timestamps are equal.
+        break;
 
+    case kSignalAnnounceSender:
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
         // Notify `AnnounceSender` of the received Announce
         // message so it can update its state to determine
         // whether to send Announce or not.
         Get<AnnounceSender>().UpdateOnReceivedAnnounce();
 #endif
+        break;
     }
 
 exit:
