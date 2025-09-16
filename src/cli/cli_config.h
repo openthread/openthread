@@ -53,7 +53,11 @@
  * The maximum size of the CLI line in bytes including the null terminator.
  */
 #ifndef OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#define OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH 640
+#else
 #define OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH 384
+#endif
 #endif
 
 /**
