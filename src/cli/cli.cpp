@@ -4528,8 +4528,7 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
         if (isTable)
         {
             static const char *const kNeighborTableTitles[] = {
-                "Role", "RLOC16", "Age", "Avg RSSI", "Last RSSI", "LQ In", "R", "D", "N", "Extended MAC", "Version"
-            };
+                "Role", "RLOC16", "Age", "Avg RSSI", "Last RSSI", "LQ In", "R", "D", "N", "Extended MAC", "Version"};
 
             static const uint8_t kNeighborTableColumnWidths[] = {
                 6, 8, 5, 10, 11, 7, 1, 1, 1, 18, 9,
