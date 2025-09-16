@@ -2381,6 +2381,8 @@ void Mle::HandleChildUpdateResponseOnChild(RxInfo &aRxInfo)
         mParent.SetState(Neighbor::kStateValid);
         SetStateChild(GetRloc16());
 
+        mPrevRoleRestorer.HandleChildRestored();
+
         mRetrieveNewNetworkData = true;
 
 #if OPENTHREAD_FTD
@@ -4240,6 +4242,13 @@ void Mle::PrevRoleRestorer::SetState(State aState)
 
 void Mle::PrevRoleRestorer::HandleTimer(void)
 {
+    if (mState == kIdle && mAttempts == 0)
+    {
+#if OPENTHREAD_FTD
+        Get<Mle>().SetRouterEligible(true);
+#endif
+    }
+
     VerifyOrExit(mState != kIdle);
 
     if (!Get<Mle>().IsDetached())
@@ -4279,6 +4288,21 @@ void Mle::PrevRoleRestorer::SendChildUpdate(void)
 
     LogDebg("Sending Child Update Request to restore child role, remaining attempts: %u", mAttempts);
     IgnoreError(Get<Mle>().SendChildUpdateRequestToParent(kToRestoreChildRole));
+}
+
+void Mle::PrevRoleRestorer::HandleChildRestored(void)
+{
+    if (IsRestoringChildRole())
+    {
+        mState = kIdle;
+        mAttempts = 0;
+        mTimer.Stop();
+        mTimer.Start(90000);
+#if OPENTRHEAD_FTD
+        Get<Mle>().SetRouterEligible(false);
+        // Also, consider preventing "attachBetter" for the same period.
+#endif
+    }
 }
 
 #if OPENTHREAD_FTD
