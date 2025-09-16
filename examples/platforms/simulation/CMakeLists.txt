@@ -92,6 +92,7 @@ add_library(openthread-simulation
     system.c
     trel.c
     uart.c
+    udp.c
     virtual_time/alarm-sim.c
     virtual_time/platform-sim.c
     $<TARGET_OBJECTS:openthread-platform-utils>
