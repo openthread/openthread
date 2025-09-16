@@ -55,6 +55,8 @@ RADIO_15_4_TREL = "-15.4-trel"
 
 # ----------------------------------------------------------------------------------------------------------------------
 
+DEFAULT_NETWORK_KEY = os.getenv('TORANJ_NETWORK_KEY', None)
+
 
 def _log(text, new_line=True, flush=True):
     sys.stdout.write(text)
@@ -879,7 +881,7 @@ class Node(object):
     # ------------------------------------------------------------------------------------------------------------------
     # Helper methods
 
-    def form(self, network_name=None, network_key=None, channel=None, panid=0x1234, xpanid=None):
+    def form(self, network_name=None, network_key=DEFAULT_NETWORK_KEY, channel=None, panid=0x1234, xpanid=None):
         self._cli_no_output('dataset init new')
         self._cli_no_output('dataset panid', panid)
         if network_name is not None:
