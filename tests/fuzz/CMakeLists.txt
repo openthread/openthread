@@ -40,6 +40,7 @@ set(COMMON_COMPILE_OPTIONS
 )
 
 set(COMMON_LIBS
+    openthread-cli-ftd
     openthread-ftd
     ot-nexus-platform
     ${OT_MBEDTLS}
@@ -81,6 +82,7 @@ endmacro()
 
 #----------------------------------------------------------------------------------------------------------------------
 
+ot_nexus_test(cli)
 ot_nexus_test(icmp6)
 ot_nexus_test(ip6)
 ot_nexus_test(mdns)
