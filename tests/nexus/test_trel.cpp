@@ -167,6 +167,70 @@ void TestTrelBasic(void)
     }
 }
 
+void TestTrelUserDisableReenable(void)
+{
+    // Validates user disabling of TREL interface persists after
+    // OpenThread state changes such as Thread netif down and up.
+
+    Core  nexus;
+    Node &node = nexus.CreateNode();
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("TestTrelUserDisableReenable()");
+
+    nexus.AdvanceTime(0);
+
+    node.GetInstance().SetLogLevel(kLogLevelWarn);
+    SuccessOrQuit(node.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Form network");
+
+    node.Form();
+    nexus.AdvanceTime(13 * 1000);
+    VerifyOrQuit(node.Get<Mle::Mle>().IsLeader());
+
+    VerifyOrQuit(node.Get<ot::Trel::Interface>().IsEnabled());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Disable TREL interface by `kRequesterUser`");
+
+    node.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
+    VerifyOrQuit(!node.Get<ot::Trel::Interface>().IsEnabled());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Bring down Thread netif and stop MAC and all radio links");
+
+    node.Get<ThreadNetif>().Down();
+    node.Get<Mac::Mac>().SetEnabled(false);
+
+    VerifyOrQuit(node.Get<Mle::Mle>().IsDisabled());
+    VerifyOrQuit(!node.Get<ot::Trel::Interface>().IsEnabled());
+
+    nexus.AdvanceTime(1000);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Bring up the Thread netif down and restart MLE and Thread operation");
+
+    node.Get<ThreadNetif>().Up();
+    SuccessOrQuit(node.Get<Mle::Mle>().Start());
+
+    nexus.AdvanceTime(60 * 1000);
+    VerifyOrQuit(node.Get<Mle::Mle>().IsLeader());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Ensure TREL interface remains disabled since it was explicitly disabled by `kRequesterUser`");
+
+    VerifyOrQuit(!node.Get<ot::Trel::Interface>().IsEnabled());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Enable TREL interface by `kRequesterUser` ");
+
+    node.Get<ot::Trel::Interface>().SetEnabled(true, ot::Trel::Interface::kRequesterUser);
+
+    VerifyOrQuit(node.Get<ot::Trel::Interface>().IsEnabled());
+}
+
 void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
 {
     Core                  nexus;
@@ -252,7 +316,7 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Disable TREL Interface (and `PeerDiscoverer`) on `node2`");
 
-    node2.Get<ot::Trel::Interface>().Disable();
+    node2.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
     nexus.AdvanceTime(2 * 1000);
 
     VerifyOrQuit(node2.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 0);
@@ -275,7 +339,7 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Re-enable TREL Interface (and `PeerDiscoverer`) on `node2`");
 
-    node2.Get<ot::Trel::Interface>().Enable();
+    node2.Get<ot::Trel::Interface>().SetEnabled(true, ot::Trel::Interface::kRequesterUser);
     nexus.AdvanceTime(15 * 1000);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -329,7 +393,7 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Disable TREL Interface (and `PeerDiscoverer`) on `node2` again and signal its removal on mDNS");
 
-    node2.Get<ot::Trel::Interface>().Disable();
+    node2.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
     VerifyOrQuit(node2.Get<ot::Trel::PeerTable>().IsEmpty());
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -388,7 +452,7 @@ void TestServiceNameConflict(void)
 
     Log("Disable TREL interface but enable mDNS on `conflictNode`");
 
-    conflictNode.Get<ot::Trel::Interface>().Disable();
+    conflictNode.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
     SuccessOrQuit(conflictNode.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
 
     Log("Register a service on `conflictNode` with same name that `node1` would use");
@@ -472,7 +536,7 @@ void TestHostAddressChange(void)
 
     Log("Disable TREL interface but enable mDNS on `node2`");
 
-    node2.Get<ot::Trel::Interface>().Disable();
+    node2.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
     SuccessOrQuit(node2.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
 
     Log("Manually register a TREL service on `node2` with proper TXT data");
@@ -609,7 +673,7 @@ void TestMultiServiceSameHost(void)
 
     Log("Disable TREL interface but enable mDNS on `multiServiceNode`");
 
-    multiServiceNode.Get<ot::Trel::Interface>().Disable();
+    multiServiceNode.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
     SuccessOrQuit(multiServiceNode.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
 
     Log("Manually register three TREL services on the `multiServiceNode`");
@@ -800,6 +864,7 @@ int main(void)
 {
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     ot::Nexus::TestTrelBasic();
+    ot::Nexus::TestTrelUserDisableReenable();
     ot::Nexus::TestTrelDelayedMdnsStartAndPeerRemovalDelay();
     ot::Nexus::TestServiceNameConflict();
     ot::Nexus::TestHostAddressChange();
