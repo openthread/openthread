@@ -875,7 +875,7 @@ private:
         bool      IsDeprecated(void) const;
         TimeMilli GetDeprecationTime(void) const;
         TimeMilli GetStaleTime(void) const;
-        void      AdoptValidAndPreferredLifetimesFrom(const OnLinkPrefix &aPrefix);
+        void      AdoptFlagsAndValidAndPreferredLifetimesFrom(const OnLinkPrefix &aPrefix);
         void      CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli aNow) const;
         bool      IsFavoredOver(const Ip6::Prefix &aPrefix) const;
 
@@ -883,6 +883,8 @@ private:
         static constexpr uint32_t kFavoredMinPreferredLifetime = 1800; // In sec.
 
         uint32_t mPreferredLifetime;
+        bool     mAutoAddrConfigFlag : 1;
+        bool     mDhcp6PdPreferredFlag : 1;
     };
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1870,11 +1872,12 @@ private:
     static TimeMilli CalculateExpirationTime(TimeMilli aUpdateTime, uint32_t aLifetime);
 
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
-    static bool IsValidOnLinkPrefix(const PrefixInfoOption &aPio);
-    static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
 
     static void LogRaHeader(const RouterAdvert::Header &aRaHeader);
-    static void LogPrefixInfoOption(const Ip6::Prefix &aPrefix, uint32_t aValidLifetime, uint32_t aPreferredLifetime);
+    static void LogPrefixInfoOption(const Ip6::Prefix      &aPrefix,
+                                    uint32_t                aValidLifetime,
+                                    uint32_t                aPreferredLifetime,
+                                    PrefixInfoOption::Flags aFlags);
     static void LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime, RoutePreference aPreference);
     static void LogRecursiveDnsServerOption(const Ip6::Address &aAddress, uint32_t aLifetime);
 

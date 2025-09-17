@@ -178,10 +178,30 @@ class PrefixInfoOption : public Option, private Clearable<PrefixInfoOption>
 public:
     static constexpr Type kType = kTypePrefixInfo; ///< Prefix Information Option Type.
 
+    static constexpr uint8_t kOnLinkFlag           = 0x80; ///< On-link - L flag.
+    static constexpr uint8_t kAutoConfigFlag       = 0x40; ///< Autonomous address-configuration - A flag.
+    static constexpr uint8_t kDhcp6PdPreferredFlag = 0x10; ///< DHCPv6-PD preferred - P flag.
+
+    typedef uint8_t Flags; ///< Represents the flags as a bitmap.
+
     /**
      * Initializes the Prefix Info option with proper type and length and sets all other fields to zero.
      */
     void Init(void);
+
+    /**
+     * Gets the raw flag bitmap.
+     *
+     * @return The flags bitmap.
+     */
+    Flags GetFlags(void) const { return mFlags; }
+
+    /**
+     * Sets the raw flag bitmap.
+     *
+     * @param[in] aFlags  The flags bitmap.
+     */
+    void SetFlags(Flags aFlags) { mFlags = aFlags; }
 
     /**
      * Indicates whether or not the on-link flag is set.
@@ -189,17 +209,17 @@ public:
      * @retval TRUE  The on-link flag is set.
      * @retval FALSE The on-link flag is not set.
      */
-    bool IsOnLinkFlagSet(void) const { return (mFlags & kOnLinkFlagMask) != 0; }
+    bool IsOnLinkFlagSet(void) const { return (mFlags & kOnLinkFlag) != 0; }
 
     /**
      * Sets the on-link (L) flag.
      */
-    void SetOnLinkFlag(void) { mFlags |= kOnLinkFlagMask; }
+    void SetOnLinkFlag(void) { mFlags |= kOnLinkFlag; }
 
     /**
      * Clears the on-link (L) flag.
      */
-    void ClearOnLinkFlag(void) { mFlags &= ~kOnLinkFlagMask; }
+    void ClearOnLinkFlag(void) { mFlags &= ~kOnLinkFlag; }
 
     /**
      * Indicates whether or not the autonomous address-configuration (A) flag is set.
@@ -207,17 +227,17 @@ public:
      * @retval TRUE  The auto address-config flag is set.
      * @retval FALSE The auto address-config flag is not set.
      */
-    bool IsAutoAddrConfigFlagSet(void) const { return (mFlags & kAutoConfigFlagMask) != 0; }
+    bool IsAutoAddrConfigFlagSet(void) const { return (mFlags & kAutoConfigFlag) != 0; }
 
     /**
      * Sets the autonomous address-configuration (A) flag.
      */
-    void SetAutoAddrConfigFlag(void) { mFlags |= kAutoConfigFlagMask; }
+    void SetAutoAddrConfigFlag(void) { mFlags |= kAutoConfigFlag; }
 
     /**
      * Clears the autonomous address-configuration (A) flag.
      */
-    void ClearAutoAddrConfigFlag(void) { mFlags &= ~kAutoConfigFlagMask; }
+    void ClearAutoAddrConfigFlag(void) { mFlags &= ~kAutoConfigFlag; }
 
     /**
      * Indicates whether or not the DhCPv6-PD Preferred (P) flag is set.
@@ -225,7 +245,7 @@ public:
      * @retval TRUE  The DHCPv6-PD Preferred (P) flag is set.
      * @retval FALSE The DHCPv6-PD Preferred (P) flag is not set.
      */
-    bool IsDhcp6PdPreferredFlagSet(void) const { return (mFlags & kDhcp6PdPreferredFlagMask) != 0; }
+    bool IsDhcp6PdPreferredFlagSet(void) const { return (mFlags & kDhcp6PdPreferredFlag) != 0; }
 
     /**
      * Sets the valid lifetime of the prefix in seconds.
@@ -307,10 +327,6 @@ private:
     //
     //  Reference for P Flag (DHCPv6-PD preferred flag):
     //  https://bib.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-6man-pio-pflag.xml
-
-    static constexpr uint8_t kOnLinkFlagMask           = 0x80; // On-link - L flag.
-    static constexpr uint8_t kAutoConfigFlagMask       = 0x40; // Autonomous address-configuration - A flag.
-    static constexpr uint8_t kDhcp6PdPreferredFlagMask = 0x10; // DHCPv6-PD preferred - P flag.
 
     uint8_t  mPrefixLength;      // The prefix length in bits.
     uint8_t  mFlags;             // The flags field.
@@ -898,17 +914,18 @@ public:
         /**
          * Appends a Prefix Info Option to the RA message.
          *
-         * The appended Prefix Info Option will have both on-link (L) and autonomous address-configuration (A) flags
-         * set.
-         *
          * @param[in] aPrefix             The prefix.
          * @param[in] aValidLifetime      The valid lifetime in seconds.
          * @param[in] aPreferredLifetime  The preferred lifetime in seconds.
+         * @param[in] aFlags              The PIO flags to use.
          *
          * @retval kErrorNone    Option is appended successfully.
          * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
          */
-        Error AppendPrefixInfoOption(const Prefix &aPrefix, uint32_t aValidLifetime, uint32_t aPreferredLifetime);
+        Error AppendPrefixInfoOption(const Prefix           &aPrefix,
+                                     uint32_t                aValidLifetime,
+                                     uint32_t                aPreferredLifetime,
+                                     PrefixInfoOption::Flags aFlags);
 
         /**
          * Appends a Route Info Option to the RA message.
