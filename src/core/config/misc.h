@@ -618,6 +618,15 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_USE_STD_NEW
+ *
+ * Define 1 to enable using std <new>.
+ */
+#ifndef OPENTHREAD_CONFIG_USE_STD_NEW
+#define OPENTHREAD_CONFIG_USE_STD_NEW 0
+#endif
+
+/**
  * @}
  */
 
