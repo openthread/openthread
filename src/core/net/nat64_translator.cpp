@@ -76,7 +76,7 @@ Translator::Translator(Instance &aInstance)
 
     mNat64Prefix.Clear();
     mIp4Cidr.Clear();
-    mTimer.Start(kIdleTimeout);
+    mTimer.Start(Min(kIdleTimeout, kIcmpTimeout));
 
     mCounters.Clear();
     ClearAllBytes(mErrorCounters);
@@ -351,7 +351,7 @@ void Translator::Mapping::CopyTo(AddressMapping &aMapping, TimeMilli aNow) const
     // might become active again before actually removed. Report the
     // mapping to be "just expired" to avoid confusion.
 
-    aMapping.mRemainingTimeMs = (mExpiry < aNow) ? 0 : mExpiry - aNow;
+    aMapping.mRemainingTimeMs = (mExpirationTime < aNow) ? 0 : mExpirationTime - aNow;
 }
 
 void Translator::Mapping::Free(void)
@@ -416,8 +416,7 @@ Error Translator::AllocateIp4Address(Ip4::Address &aIp4Address)
 
     if (mActiveMappings.CountAllEntries() >= numberOfHosts)
     {
-        mActiveMappings.RemoveAndFreeAllMatching(TimerMilli::GetNow());
-
+        EvictStaleMapping();
         VerifyOrExit(mActiveMappings.CountAllEntries() < numberOfHosts, error = kErrorFailed);
     }
 
@@ -454,6 +453,12 @@ Translator::Mapping *Translator::AllocateMapping(const Ip6::Headers &aIp6Headers
 
     mapping = mMappingPool.Allocate();
 
+    if (mapping == nullptr)
+    {
+        EvictStaleMapping();
+        mapping = mMappingPool.Allocate();
+    }
+
     VerifyOrExit(mapping != nullptr);
 
     mActiveMappings.Push(*mapping);
@@ -472,6 +477,110 @@ exit:
     return mapping;
 }
 
+Translator::Mapping::ProtoCategory Translator::Mapping::DetermineProtocolCategory(void) const
+{
+    ProtoCategory category;
+
+    if (!IsCounterZero(mCounters.mTcp))
+    {
+        category = kTcpAndMaybeOthers;
+    }
+    else if (!IsCounterZero(mCounters.mUdp))
+    {
+        category = kUdpAndMaybeIcmp;
+    }
+    else
+    {
+        category = kIcmpOnly;
+    }
+
+    return category;
+}
+
+bool Translator::Mapping::IsCounterZero(const ProtocolCounters::Counters &aCounters)
+{
+    return (aCounters.m6To4Packets == 0) && (aCounters.m4To6Packets == 0);
+}
+
+bool Translator::Mapping::IsEligibleForEviction(TimeMilli aNow) const
+{
+    return DetermineDurationSinceUse(aNow) >= kMinEvictTimeout;
+}
+
+bool Translator::Mapping::IsBetterEvictionCandidateOver(const Mapping &aOther, TimeMilli aNow) const
+{
+    // Determines whether this mapping is a better candidate for
+    // eviction compared to `aOther`. This method assumes both
+    // mappings are already eligible for eviction.
+    //
+    // The eviction preference, from most to least preferred to be
+    // evicted, is:
+    //
+    //   1) ICMP-only mappings.
+    //   2) UDP mappings (maybe used with ICMP as well).
+    //   3) TCP mappings (maybe used with UDP or ICMP).
+    //
+    // If both mappings are in the same protocol category, the one
+    // that hasn't been used for the longest time is preferred.
+
+    bool isBetter = false;
+    int  compare;
+
+    // Smaller value for `DetermineProtocolCategory` is preferred.
+    // (kIcmpOnly -> kUdpAndMaybeIcmp, -> kTcpAndMaybeOthers).
+
+    static_assert(kIcmpOnly < kUdpAndMaybeIcmp, "ProtoCategory enum constants are invalid");
+    static_assert(kUdpAndMaybeIcmp < kTcpAndMaybeOthers, "ProtoCategory enum constants are invalid");
+
+    compare = ThreeWayCompare<uint8_t>(DetermineProtocolCategory(), aOther.DetermineProtocolCategory());
+
+    if (compare < 0)
+    {
+        isBetter = true;
+    }
+    else if (compare == 0)
+    {
+        isBetter = (DetermineDurationSinceUse(aNow) > aOther.DetermineDurationSinceUse(aNow));
+    }
+
+    return isBetter;
+}
+
+void Translator::EvictStaleMapping(void)
+{
+    // First tries to remove expired mappings, if there is no expired
+    // mapping, it will then try to evict a stale mapping.
+
+    TimeMilli      now            = TimerMilli::GetNow();
+    const Mapping *evictCandidate = nullptr;
+    bool           didRemoveAny;
+
+    didRemoveAny = mActiveMappings.RemoveAndFreeAllMatching(ExpirationChecker(now));
+
+    VerifyOrExit(!didRemoveAny);
+
+    for (const Mapping &mapping : mActiveMappings)
+    {
+        if (!mapping.IsEligibleForEviction(now))
+        {
+            continue;
+        }
+
+        if ((evictCandidate == nullptr) || mapping.IsBetterEvictionCandidateOver(*evictCandidate, now))
+        {
+            evictCandidate = &mapping;
+        }
+    }
+
+    if (evictCandidate != nullptr)
+    {
+        mActiveMappings.RemoveMatching(*evictCandidate);
+    }
+
+exit:
+    return;
+}
+
 void Translator::Mapping::Touch(uint8_t aProtocol)
 {
     uint32_t timeout;
@@ -485,7 +594,8 @@ void Translator::Mapping::Touch(uint8_t aProtocol)
         timeout = kIdleTimeout;
     }
 
-    mExpiry = TimerMilli::GetNow() + timeout;
+    mLastUseTime    = TimerMilli::GetNow();
+    mExpirationTime = mLastUseTime + timeout;
 }
 
 bool Translator::Mapping::Matches(const Ip6::Headers &aIp6Headers) const
@@ -683,7 +793,7 @@ exit:
 
 void Translator::HandleTimer(void)
 {
-    mActiveMappings.RemoveAndFreeAllMatching(TimerMilli::GetNow());
+    mActiveMappings.RemoveAndFreeAllMatching(ExpirationChecker(TimerMilli::GetNow()));
     mTimer.Start(Min(kIcmpTimeout, kIdleTimeout));
 }
 
