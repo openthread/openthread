@@ -1155,6 +1155,8 @@ Error Mle::SendChildUpdateRequestToParent(void) { return SendChildUpdateRequestT
 
 Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
 {
+    static const uint8_t kRestoringChildTlvs[] = {Tlv::kNetworkData};
+
     Error                   error = kErrorNone;
     Ip6::Address            destination;
     TxMessage              *message     = nullptr;
@@ -1197,6 +1199,7 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
     case kToRestoreChildRole:
         mPrevRoleRestorer.GenerateRandomChallenge();
         SuccessOrExit(error = message->AppendChallengeTlv(mPrevRoleRestorer.GetChallenge()));
+        SuccessOrExit(error = message->AppendTlvRequestTlv(kRestoringChildTlvs));
         break;
     }
 
