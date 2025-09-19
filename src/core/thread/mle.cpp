@@ -5085,6 +5085,8 @@ void Mle::Attacher::HandleParentResponse(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeParentResponse, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
+    VerifyOrExit(mState != kStateChildIdRequest, error = kErrorInvalidState);
+
     SuccessOrExit(error = aRxInfo.mMessage.ReadVersionTlv(version));
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadAndMatchResponseTlvWith(mParentRequestChallenge));
