@@ -2888,11 +2888,10 @@ Print table of neighbors.
 
 ```bash
 > neighbor table
-| Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|D|N| Extended MAC     |
-+------+--------+-----+----------+-----------+-+-+-+------------------+
-|   C  | 0xcc01 |  96 |      -46 |       -46 |1|1|1| 1eb9ba8a6522636b |
-|   R  | 0xc800 |   2 |      -29 |       -29 |1|1|1| 9a91556102c39ddb |
-|   R  | 0xf000 |   3 |      -28 |       -28 |1|1|1| 0ad7ed6beaa6016d |
+| Role | RLOC16 | Age | Avg RSSI | Last RSSI | LQ In |R|D|N| Extended MAC     | Version |
++------+--------+-----+----------+-----------+-------+-+-+-+------------------+---------+
+|   R  | 0x2000 |   4 |      -68 |       -68 |     3 |1|1|1| fa97259e4eb574e4 |       5 |
+|   R  | 0xf000 |   0 |      -96 |       -97 |     1 |1|1|1| ba9fd148fba30fbd |       5 |
 Done
 ```
 
