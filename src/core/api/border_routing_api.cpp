@@ -268,15 +268,15 @@ otError otBorderRoutingGetNextPeerBrEntry(otInstance                           *
     AssertPointerIsNotNull(aIterator);
     AssertPointerIsNotNull(aEntry);
 
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextPeerBrEntry(*aIterator, *aEntry);
+    return AsCoreType(aInstance).Get<BorderRouter::NetDataPeerBrTracker>().GetNext(*aIterator, *aEntry);
 }
 
 uint16_t otBorderRoutingCountPeerBrs(otInstance *aInstance, uint32_t *aMinAge)
 {
     uint32_t minAge;
 
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().CountPeerBrs((aMinAge != nullptr) ? *aMinAge
-                                                                                                       : minAge);
+    return AsCoreType(aInstance).Get<BorderRouter::NetDataPeerBrTracker>().CountPeerBrs((aMinAge != nullptr) ? *aMinAge
+                                                                                                             : minAge);
 }
 
 #endif
