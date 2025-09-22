@@ -146,7 +146,7 @@ void Notifier::EmitEvents(void)
     Get<TimeSync>().HandleNotifierEvents(events);
 #endif
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
-    Get<Utils::Slaac>().HandleNotifierEvents(events);
+    Get<Ip6::Slaac>().HandleNotifierEvents(events);
 #endif
 #if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
     Get<Utils::JamDetector>().HandleNotifierEvents(events);

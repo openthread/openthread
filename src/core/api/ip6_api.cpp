@@ -241,7 +241,7 @@ otError otIp6RegisterMulticastListeners(otInstance                             *
 
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
-bool otIp6IsSlaacEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<Utils::Slaac>().IsEnabled(); }
+bool otIp6IsSlaacEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<Ip6::Slaac>().IsEnabled(); }
 
 void otIp6SetSlaacEnabled(otInstance *aInstance, bool aEnabled)
 {
@@ -249,17 +249,17 @@ void otIp6SetSlaacEnabled(otInstance *aInstance, bool aEnabled)
 
     if (aEnabled)
     {
-        instance.Get<Utils::Slaac>().Enable();
+        instance.Get<Ip6::Slaac>().Enable();
     }
     else
     {
-        instance.Get<Utils::Slaac>().Disable();
+        instance.Get<Ip6::Slaac>().Disable();
     }
 }
 
 void otIp6SetSlaacPrefixFilter(otInstance *aInstance, otIp6SlaacPrefixFilter aFilter)
 {
-    AsCoreType(aInstance).Get<Utils::Slaac>().SetFilter(aFilter);
+    AsCoreType(aInstance).Get<Ip6::Slaac>().SetFilter(aFilter);
 }
 
 #endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
