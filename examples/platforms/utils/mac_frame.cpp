@@ -418,28 +418,29 @@ otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadi
 
 bool otMacFrameSrcAddrMatchCslReceiverPeer(const otRadioFrame *aFrame, const otRadioContext *aRadioContext)
 {
-    const Mac::Frame &frame = *static_cast<const Mac::Frame *>(aFrame);
-    bool              rval  = true;
+    const Mac::Frame &frame   = *static_cast<const Mac::Frame *>(aFrame);
+    bool              matches = false;
     Mac::Address      src;
 
-    VerifyOrExit(frame.GetSrcAddr(src) == kErrorNone, rval = false);
+    VerifyOrExit(frame.GetSrcAddr(src) == kErrorNone);
 
     switch (src.GetType())
     {
     case Mac::Address::kTypeShort:
-        VerifyOrExit(src.GetShort() == aRadioContext->mCslShortAddress, rval = false);
+        VerifyOrExit(src.GetShort() == aRadioContext->mCslShortAddress);
+        matches = true;
         break;
 
     case Mac::Address::kTypeExtended:
-        VerifyOrExit(src.GetExtended() == *static_cast<const Mac::ExtAddress *>(&aRadioContext->mCslExtAddress),
-                     rval = false);
+        VerifyOrExit(src.GetExtended() == *static_cast<const Mac::ExtAddress *>(&aRadioContext->mCslExtAddress));
+        matches = true;
         break;
 
     case Mac::Address::kTypeNone:
-        rval = false;
+        matches = false;
         break;
     }
 
 exit:
-    return rval;
+    return matches;
 }
