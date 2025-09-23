@@ -69,13 +69,29 @@ Error NetDataPeerBrTracker::GetNext(TableIterator &aIterator, PeerBrEntry &aEntr
 {
     using Iterator = RoutingManager::RxRaTracker::Iterator;
 
-    Iterator &iterator = static_cast<Iterator &>(aIterator);
-    Error     error;
+    Iterator     &iterator = static_cast<Iterator &>(aIterator);
+    Error         error    = kErrorNone;
+    const PeerBr *entry;
 
-    SuccessOrExit(error = iterator.AdvanceToNextPeerBr(mPeerBrs.GetHead()));
+    if (iterator.GetType() == Iterator::kUnspecified)
+    {
+        iterator.SetType(Iterator::kNetDataBrIterator);
+        entry = mPeerBrs.GetHead();
+    }
+    else
+    {
+        VerifyOrExit(iterator.GetType() == Iterator::kNetDataBrIterator, error = kErrorInvalidArgs);
+        entry = static_cast<const PeerBr *>(iterator.GetEntry());
+        VerifyOrExit(entry != nullptr, error = kErrorNotFound);
+        entry = entry->GetNext();
+    }
 
-    aEntry.mRloc16 = iterator.GetPeerBrEntry()->mRloc16;
-    aEntry.mAge    = iterator.GetPeerBrEntry()->GetAge(iterator.GetInitUptime());
+    VerifyOrExit(entry != nullptr, error = kErrorNotFound);
+
+    iterator.SetEntry(entry);
+
+    aEntry.mRloc16 = entry->mRloc16;
+    aEntry.mAge    = entry->GetAge(iterator.GetInitUptime());
 
 exit:
     return error;

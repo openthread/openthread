@@ -54,7 +54,6 @@ class RoutingManager;
  */
 class NetDataPeerBrTracker : public InstanceLocator
 {
-    friend class RoutingManager;
     friend class ot::Notifier;
 
 public:

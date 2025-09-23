@@ -2122,11 +2122,11 @@ Error RoutingManager::RxRaTracker::GetNextEntry(PrefixTableIterator &aIterator, 
 
     ClearAllBytes(aEntry);
 
-    SuccessOrExit(error = iterator.AdvanceToNextEntry());
+    SuccessOrExit(error = iterator.AdvanceToNextPrefixEntry());
 
     iterator.GetRouter()->CopyInfoTo(aEntry.mRouter, iterator.GetInitTime(), iterator.GetInitUptime());
 
-    switch (iterator.GetEntryType())
+    switch (iterator.GetPrefixType())
     {
     case Iterator::kOnLinkPrefix:
         iterator.GetEntry<OnLinkPrefix>()->CopyInfoTo(aEntry, iterator.GetInitTime());
@@ -2268,7 +2268,7 @@ void RoutingManager::RxRaTracker::Iterator::Init(const Entry<Router> *aRoutersHe
     SetType(kUnspecified);
     SetRouter(aRoutersHead);
     SetEntry(nullptr);
-    SetEntryType(kRoutePrefix);
+    SetPrefixType(kRoutePrefix);
 }
 
 Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextRouter(Type aType)
@@ -2300,7 +2300,7 @@ exit:
     return error;
 }
 
-Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextEntry(void)
+Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextPrefixEntry(void)
 {
     Error error = kErrorNone;
 
@@ -2308,7 +2308,7 @@ Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextEntry(void)
 
     if (HasEntry())
     {
-        switch (GetEntryType())
+        switch (GetPrefixType())
         {
         case kOnLinkPrefix:
             SetEntry(GetEntry<OnLinkPrefix>()->GetNext());
@@ -2321,7 +2321,7 @@ Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextEntry(void)
 
     while (!HasEntry())
     {
-        switch (GetEntryType())
+        switch (GetPrefixType())
         {
         case kOnLinkPrefix:
 
@@ -2329,7 +2329,7 @@ Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextEntry(void)
             // the current router.
 
             SetEntry(GetRouter()->mRoutePrefixes.GetHead());
-            SetEntryType(kRoutePrefix);
+            SetPrefixType(kRoutePrefix);
             break;
 
         case kRoutePrefix:
@@ -2343,7 +2343,7 @@ Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextEntry(void)
 
             SuccessOrExit(error = AdvanceToNextRouter(kPrefixIterator));
             SetEntry(GetRouter()->mOnLinkPrefixes.GetHead());
-            SetEntryType(kOnLinkPrefix);
+            SetPrefixType(kOnLinkPrefix);
             break;
         }
     }
@@ -2395,32 +2395,6 @@ Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextIfAddrEntry(const Entr
 exit:
     return error;
 }
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-
-Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextPeerBr(const PeerBr *aPeerBrsHead)
-{
-    Error error = kErrorNone;
-
-    if (GetType() == kUnspecified)
-    {
-        SetType(kPeerBrIterator);
-        SetEntry(aPeerBrsHead);
-    }
-    else
-    {
-        VerifyOrExit(GetType() == kPeerBrIterator, error = kErrorInvalidArgs);
-        VerifyOrExit(GetPeerBrEntry() != nullptr, error = kErrorNotFound);
-        SetEntry(GetPeerBrEntry()->GetNext());
-    }
-
-    VerifyOrExit(GetPeerBrEntry() != nullptr, error = kErrorNotFound);
-
-exit:
-    return error;
-}
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 // RxRaTracker::Router
