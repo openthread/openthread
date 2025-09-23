@@ -265,7 +265,7 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     , mRoutingManager(*this)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-    , mNetDataPeerBrTracker(*this)
+    , mNetDataBrTracker(*this)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
     , mDhcp6PdClient(*this)
