@@ -105,6 +105,7 @@
 #include "net/nat64_translator.hpp"
 #include "net/nd_agent.hpp"
 #include "net/netif.hpp"
+#include "net/slaac_address.hpp"
 #include "net/sntp_client.hpp"
 #include "net/srp_advertising_proxy.hpp"
 #include "net/srp_client.hpp"
@@ -143,7 +144,6 @@
 #include "utils/link_metrics_manager.hpp"
 #include "utils/mesh_diag.hpp"
 #include "utils/ping_sender.hpp"
-#include "utils/slaac_address.hpp"
 #include "utils/srp_client_buffers.hpp"
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
@@ -511,7 +511,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
-    Utils::Slaac mSlaac;
+    Ip6::Slaac mSlaac;
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
@@ -967,7 +967,7 @@ template <> inline NeighborDiscovery::Agent &Instance::Get(void) { return mNeigh
 #endif
 
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
-template <> inline Utils::Slaac &Instance::Get(void) { return mSlaac; }
+template <> inline Ip6::Slaac &Instance::Get(void) { return mSlaac; }
 #endif
 
 #if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE

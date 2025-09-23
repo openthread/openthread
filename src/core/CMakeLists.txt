@@ -192,6 +192,7 @@ set(COMMON_SOURCES
     net/nd6.cpp
     net/nd_agent.cpp
     net/netif.cpp
+    net/slaac_address.cpp
     net/sntp_client.cpp
     net/socket.cpp
     net/srp_advertising_proxy.cpp
@@ -274,7 +275,6 @@ set(COMMON_SOURCES
     utils/parse_cmdline.cpp
     utils/ping_sender.cpp
     utils/power_calibration.cpp
-    utils/slaac_address.cpp
     utils/srp_client_buffers.cpp
     utils/verhoeff_checksum.cpp
 )
