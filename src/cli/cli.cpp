@@ -1334,7 +1334,8 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
 template <> otError Interpreter::Process<Cmd("ccm")>(Arg aArgs[])
 {
     return ProcessEnableDisable(aArgs, otThreadSetCcmEnabled);
@@ -1396,7 +1397,8 @@ template <> otError Interpreter::Process<Cmd("tvcheck")>(Arg aArgs[])
 {
     return ProcessEnableDisable(aArgs, otThreadSetThreadVersionCheckEnabled);
 }
-#endif
+
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
 /**
  * @cli channel (get,set)
@@ -8371,7 +8373,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
         CmdEntry("bufferinfo"),
         CmdEntry("ccathreshold"),
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         CmdEntry("ccm"),
 #endif
         CmdEntry("channel"),
@@ -8588,7 +8590,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
         CmdEntry("tcp"),
 #endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         CmdEntry("test"),
 #endif
         CmdEntry("thread"),
@@ -8598,7 +8600,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
         CmdEntry("trel"),
 #endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         CmdEntry("tvcheck"),
 #endif
         CmdEntry("txpower"),
