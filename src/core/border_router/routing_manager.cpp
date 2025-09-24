@@ -1378,6 +1378,11 @@ void RoutingManager::RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert:
             ProcessRecursiveDnsServerOption(static_cast<const RecursiveDnsServerOption &>(option), *router);
             break;
 
+        case Option::kTypeNat64PrefixInfo:
+            ProcessNat64PrefixInfoOption(static_cast<const Nat64PrefixInfoOption &>(option));
+            mSignalTask.Post();
+            break;
+
         default:
             break;
         }
@@ -1629,6 +1634,16 @@ exit:
     {
         mRdnssAddrTask.Post();
     }
+}
+
+void RoutingManager::RxRaTracker::ProcessNat64PrefixInfoOption(const Nat64PrefixInfoOption &aNat64PrefixInfoOption)
+{
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    if (aNat64PrefixInfoOption.IsValid())
+    {
+        Get<RoutingManager>().mNat64PrefixManager.HandleNat64PrefixInfoOption(aNat64PrefixInfoOption);
+    }
+#endif
 }
 
 void RoutingManager::RxRaTracker::UpdateIfAddresses(const Ip6::Address &aAddress)
@@ -4221,6 +4236,7 @@ RoutingManager::Nat64PrefixManager::Nat64PrefixManager(Instance &aInstance)
     , mEnabled(false)
     , mTimer(aInstance)
 {
+    mDiscoveredPrefix.Clear();
     mInfraIfPrefix.Clear();
     mLocalPrefix.Clear();
     mPublishedPrefix.Clear();
@@ -4263,6 +4279,7 @@ void RoutingManager::Nat64PrefixManager::Stop(void)
 
     Unpublish();
     mInfraIfPrefix.Clear();
+    mDiscoveredPrefix.Clear();
     mTimer.Stop();
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
@@ -4282,14 +4299,20 @@ void RoutingManager::Nat64PrefixManager::GenerateLocalPrefix(const Ip6::Prefix &
 
 const Ip6::Prefix &RoutingManager::Nat64PrefixManager::GetFavoredPrefix(RoutePreference &aPreference) const
 {
-    const Ip6::Prefix *favoredPrefix = &mLocalPrefix;
+    const Ip6::Prefix *favoredPrefix    = &mLocalPrefix;
 
     aPreference = NetworkData::kRoutePreferenceLow;
 
-    if (mInfraIfPrefix.IsValidNat64() &&
+    if (mInfraIfPrefixIsValidNat64() &&
         Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix().IsInfrastructureDerived())
     {
         favoredPrefix = &mInfraIfPrefix;
+        aPreference   = NetworkData::kRoutePreferenceMedium;
+    }
+
+    if (!mDiscoveredPrefix.IsEmpty() && mDiscoveredPrefix.GetExpireTime() > TimerMilli::GetNow())
+    {
+        discoveredPrefix = &mDiscoveredPrefix.mPrefix;
         aPreference   = NetworkData::kRoutePreferenceMedium;
     }
 
@@ -4300,6 +4323,7 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
 {
     Error                            error;
     Ip6::Prefix                      prefix;
+    Ip6::Prefix                      oldPublishedPrefix = mPublishedPrefix;
     RoutePreference                  preference;
     NetworkData::ExternalRouteConfig netdataPrefixConfig;
     bool                             shouldPublish;
@@ -4307,6 +4331,11 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
     VerifyOrExit(mEnabled);
 
     LogInfo("Evaluating NAT64 prefix");
+
+    if (!mDiscoveredPrefix.IsEmpty() && mDiscoveredPrefix.GetExpireTime() <= TimerMilli::GetNow())
+    {
+        mDiscoveredPrefix.Clear();
+    }
 
     prefix = GetFavoredPrefix(preference);
 
@@ -4341,17 +4370,22 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
-    // If a prefix other than `mLocalPrefix` is present, an external
-    // translator is available. To bypass the NAT64 translator, we
-    // clear its NAT64 prefix.
+    // If the favored prefix is our local one, we set it on the
+    // translator. Otherwise, we clear it to disable translation.
 
-    if (mPublishedPrefix == mLocalPrefix)
+    if (prefix == mLocalPrefix)
     {
         Get<Nat64::Translator>().SetNat64Prefix(mLocalPrefix);
     }
     else
     {
         Get<Nat64::Translator>().ClearNat64Prefix();
+    }
+
+    if (oldPublishedPrefix != mPublishedPrefix)
+    {
+        LogInfo("NAT64 prefix changed: %s -> %s", oldPublishedPrefix.ToString().AsCString(),
+                mPublishedPrefix.ToString().AsCString());
     }
 #endif
 
@@ -4436,6 +4470,23 @@ void RoutingManager::Nat64PrefixManager::HandleDiscoverDone(const Ip6::Prefix &a
 
     LogInfo("Infraif NAT64 prefix: %s", mInfraIfPrefix.IsValidNat64() ? mInfraIfPrefix.ToString().AsCString() : "none");
     Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
+}
+
+void RoutingManager::Nat64PrefixManager::HandleNat64PrefixInfoOption(const Nat64PrefixInfoOption &aNat64Pio)
+{
+    Ip6::Prefix prefix;
+    uint32_t    lifetime = aNat64Pio.GetLifetime();
+
+    aNat64Pio.GetPrefix(prefix);
+
+    LogInfo("Received NAT64 PIO: %s, lifetime:%lu", prefix.ToString().AsCString(), ToUlong(lifetime));
+
+    if (lifetime > 0)
+    {
+        mDiscoveredPrefix.mPrefix     = prefix;
+        mDiscoveredPrefix.mExpireTime = TimerMilli::GetNow() + Time::SecToMsec(lifetime);
+        mTimer.FireAtIfEarlier(mDiscoveredPrefix.GetExpireTime());
+    }
 }
 
 Nat64::State RoutingManager::Nat64PrefixManager::GetState(void) const

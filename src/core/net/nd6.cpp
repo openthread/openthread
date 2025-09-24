@@ -183,6 +183,76 @@ void RaFlagsExtOption::Init(void)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+// Nat64PrefixInfoOption
+
+void Nat64PrefixInfoOption::Init(void)
+{
+    Clear();
+    SetType(kTypeNat64PrefixInfo);
+    SetSize(sizeof(Nat64PrefixInfoOption));
+    // Per RFC8781, the length of PREF64 option is in units of 8 octets and MUST be 2.
+    SetLength(2);
+}
+
+const Nat64PrefixInfoOption::PrefixLengthMap Nat64PrefixInfoOption::kCodeToLengthMap[] = {
+    {0, 96}, {1, 64}, {2, 56}, {3, 48}, {4, 40}, {5, 32},
+};
+
+void Nat64PrefixInfoOption::SetLifetime(uint16_t aLifetime)
+{
+    uint32_t scaledLifetime = DivideAndRoundUp(aLifetime, kLifetimeScalingUnit);
+
+    mPrefixAttr = BigEndian::HostSwap16((BigEndian::HostSwap16(mPrefixAttr) & kPrefixLengthCodeMask) |
+                                        ClampToUint16(scaledLifetime << kScaledLifetimeOffset));
+}
+
+void Nat64PrefixInfoOption::SetPrefixLengthCode(const uint8_t aPrefixLengthCode)
+{
+    mPrefixAttr =
+        BigEndian::HostSwap16((BigEndian::HostSwap16(mPrefixAttr) & ~kPrefixLengthCodeMask) |
+                              (aPrefixLengthCode & kPrefixLengthCodeMask));
+}
+
+Error Nat64PrefixInfoOption::SetPrefix(const Prefix &aPrefix)
+{
+    Error error = kErrorNone;
+    bool  found = false;
+
+    memcpy(mPrefixMsb, aPrefix.GetBytes(), 12);
+
+    for (const PrefixLengthMap &map : kCodeToLengthMap)
+    {
+        if (map.mLength == aPrefix.mLength)
+        {
+            SetPrefixLengthCode(map.mCode);
+            found = true;
+            break;
+        }
+    }
+
+    VerifyOrExit(found, error = kErrorInvalidArgs);
+
+exit:
+    return error;
+}
+
+void Nat64PrefixInfoOption::GetPrefix(Prefix &aPrefix) const
+{
+    uint8_t prefixLength = 96; // Default to 96 for code 0 or any other value.
+
+    for (const PrefixLengthMap &map : kCodeToLengthMap)
+    {
+        if (map.mCode == GetPrefixLengthCode())
+        {
+            prefixLength = map.mLength;
+            break;
+        }
+    }
+
+    aPrefix.Set(mPrefixMsb, prefixLength);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 // RecursiveDnsServerOption
 
 void RecursiveDnsServerOption::Init(void)
@@ -199,95 +269,6 @@ uint8_t RecursiveDnsServerOption::OptionLengthFor(uint8_t aNumAddresses)
 
     return ClampToUint8(DivideAndRoundUp(size, kLengthUnit));
 }
-
-//----------------------------------------------------------------------------------------------------------------------
-// Nat64PrefixInfoOption
-
-void Nat64PrefixInfoOption::Init(void)
-{
-    Clear();
-    SetType(kTypeNat64PrefixInfo);
-    SetSize(sizeof(Nat64PrefixInfoOption));
-    // Per RFC8781, the length of PREF64 option is in units of 8 octets and MUST be 2.
-    SetLength(2);
-}
-
-void Nat64PrefixInfoOption::SetLifetime(uint16_t aLifetime)
-{
-    uint32_t scaledLifetime = DivideAndRoundUp(aLifetime, kLifetimeScalingUnit);
-
-    mPrefixAttr &= ~kScaledLifetimeMask;
-    mPrefixAttr |= ClampToUint16(scaledLifetime << kScaledLifetimeOffset);
-}
-
-void Nat64PrefixInfoOption::SetPrefixLengthCode(const uint8_t aPrefixLengthCode)
-{
-    mPrefixAttr &= ~kPrefixLengthCodeMask;
-    mPrefixAttr |= (aPrefixLengthCode & kPrefixLengthCodeMask);
-}
-
-Error Nat64PrefixInfoOption::SetPrefix(const Prefix &aPrefix)
-{
-    Error error = kErrorNone;
-
-    memcpy(mPrefixMsb, aPrefix.GetBytes(), 12);
-
-    switch (aPrefix.mLength)
-    {
-    case 96:
-        SetPrefixLengthCode(0);
-        break;
-    case 64:
-        SetPrefixLengthCode(1);
-        break;
-    case 56:
-        SetPrefixLengthCode(2);
-        break;
-    case 48:
-        SetPrefixLengthCode(3);
-        break;
-    case 40:
-        SetPrefixLengthCode(4);
-        break;
-    case 32:
-        SetPrefixLengthCode(5);
-        break;
-    default:
-        error = kErrorInvalidArgs;
-    }
-
-    return error;
-}
-
-void Nat64PrefixInfoOption::GetPrefix(Prefix &aPrefix) const
-{
-    uint16_t prefixLength;
-
-    switch (GetPrefixLengthCode())
-    {
-    case 1:
-        prefixLength = 64;
-        break;
-    case 2:
-        prefixLength = 56;
-        break;
-    case 3:
-        prefixLength = 48;
-        break;
-    case 4:
-        prefixLength = 40;
-        break;
-    case 5:
-        prefixLength = 32;
-        break;
-    default:
-        prefixLength = 96;
-    }
-
-    aPrefix.Set(mPrefixMsb, prefixLength);
-}
-
-bool Nat64PrefixInfoOption::IsValid(void) const { return (GetLength() == 2); }
 
 //----------------------------------------------------------------------------------------------------------------------
 // RouterAdver::Header

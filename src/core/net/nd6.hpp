@@ -491,6 +491,123 @@ private:
 static_assert(sizeof(RaFlagsExtOption) == 8, "invalid RaFlagsExtOption structure");
 
 /**
+ * Represents the NAT64 Prefix Information Option.
+ *
+ * See section 4 of RFC 8781 for definition of this option [https://tools.ietf.org/html/rfc8781#section-4]
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class Nat64PrefixInfoOption : public Option, private Clearable<Nat64PrefixInfoOption>
+{
+    friend class Clearable<Nat64PrefixInfoOption>;
+
+public:
+    static constexpr Type kType = kTypeNat64PrefixInfo; ///< NAT64 Prefix Information Option Type.
+
+    /**
+     * Initializes the Nat64 Prefix Info option with proper type and length and sets all other fields to zero.
+     */
+    void Init(void);
+
+    /**
+     * Returns the NAT64 prefix lifetime in seconds.
+     *
+     * The NAT64 prefix lifetime is encoded by scaled lifetime in units of 8 seconds.
+     *
+     * @returns The prefix lifetime in seconds.
+     *
+     */
+    uint32_t GetLifetime(void) const
+    {
+        return (BigEndian::HostSwap16(mPrefixAttr) >> kScaledLifetimeOffset) * kLifetimeScalingUnit;
+    }
+
+    /**
+     * Sets the NAT64 prefix lifetime.
+     *
+     * @param[in] aLifetime   The prefix lifetime in seconds.
+     *
+     */
+    void SetLifetime(uint16_t aLifetime);
+
+    /**
+     * Returns the NAT64 prefix length code.
+     *
+     * The prefix length code values 0, 1, 2, 3, 4, and 5 indicate the NAT64 prefix length of 96, 64, 56, 48, 40, and 32
+     * bits, respectively.
+     *
+     * @returns The prefix code.
+     *
+     */
+    uint8_t GetPrefixLengthCode(void) const { return mPrefixAttr & kPrefixLengthCodeMask; }
+
+    /**
+     * Sets the NAT64 prefix length code.
+     *
+     * @param[in] aPrefixLengthCode   The prefix length code.
+     *
+     */
+    void SetPrefixLengthCode(const uint8_t aPrefixLengthCode);
+
+    /**
+     * Sets the prefix.
+     *
+     * @param[in]  aPrefix  The prefix contained in this option.
+     */
+    Error SetPrefix(const Prefix &aPrefix);
+
+    /**
+     * Gets the prefix in this option.
+     *
+     * @param[out] aPrefix   Reference to a `Prefix` to return the prefix.
+     */
+    void GetPrefix(Prefix &aPrefix) const;
+
+    /**
+     * Indicates whether or not the option is valid.
+     *
+     * @retval TRUE  The option is valid
+     * @retval FALSE The option is not valid.
+     */
+    bool IsValid(void) const { return (GetLength() == 2); };
+
+    Nat64PrefixInfoOption(void) = delete;
+
+private:
+    // NAT64 Prefix Information Option
+    //
+    //  0                   1                   2                   3
+    //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |     Type      |    Length     |     Scaled Lifetime     | PLC |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |                                                               |
+    //  +                                                               +
+    //  |              Highest 96 bits of the Prefix                    |
+    //  +                                                               +
+    //  |                                                               |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+    static constexpr uint16_t kLifetimeScalingUnit  = 8;    // Lifetime is scaled in units of 8 seconds
+    static constexpr uint16_t kScaledLifetimeOffset = 3;    // Scaled Lifetime offset in `mPrefixAttr`.
+    static constexpr uint16_t kPrefixLengthCodeMask = 0x07; // Prefix Length Code mask in `mPrefixAttr`.
+
+    struct PrefixLengthMap
+    {
+        uint8_t mCode;
+        uint8_t mLength;
+    };
+
+    static const PrefixLengthMap kCodeToLengthMap[]; // Map from prefix length code to prefix length in bits.
+
+    uint16_t mPrefixAttr; // The prefix attributes (Scaled Lifetime and Prefix Length Code).
+    uint8_t  mPrefixMsb[12];
+
+} OT_TOOL_PACKED_END;
+
+static_assert(sizeof(Nat64PrefixInfoOption) == 16, "invalid Nat64PrefixInfoOption structure");
+
+/**
  * Represents the Recursive DNS Server (RDNSS) Option.
  *
  * See section 5.1 of RFC 8106 [https://datatracker.ietf.org/doc/html/rfc8106#section-5.1].
@@ -599,113 +716,6 @@ private:
 } OT_TOOL_PACKED_END;
 
 static_assert(sizeof(RecursiveDnsServerOption) == 8, "invalid RecursiveDnsServerOption structure");
-
-/**
- * Represents the NAT64 Prefix Information Option.
- *
- * See section 4 of RFC 8781 for definition of this option [https://tools.ietf.org/html/rfc8781#section-4]
- *
- */
-OT_TOOL_PACKED_BEGIN
-class Nat64PrefixInfoOption : public Option, private Clearable<Nat64PrefixInfoOption>
-{
-    friend class Clearable<Nat64PrefixInfoOption>;
-
-public:
-    static constexpr Type kType = kTypeNat64PrefixInfo; ///< NAT64 Prefix Information Option Type.
-
-    /**
-     * Initializes the Nat64 Prefix Info option with proper type and length and sets all other fields to zero.
-     */
-    void Init(void);
-
-    /**
-     * Returns the NAT64 prefix lifetime in seconds.
-     *
-     * The NAT64 prefix lifetime is encoded by scaled lifetime in units of 8 seconds.
-     *
-     * @returns The prefix lifetime in seconds.
-     *
-     */
-    uint32_t GetLifetime(void) const { return (mPrefixAttr >> kScaledLifetimeOffset) * kLifetimeScalingUnit; };
-
-    /**
-     * Sets the NAT64 prefix lifetime.
-     *
-     * @param[in] aLifetime   The prefix lifetime in seconds.
-     *
-     */
-    void SetLifetime(uint16_t aLifetime);
-
-    /**
-     * Returns the NAT64 prefix length code.
-     *
-     * The prefix length code values 0, 1, 2, 3, 4, and 5 indicate the NAT64 prefix length of 96, 64, 56, 48, 40, and 32
-     * bits, respectively.
-     *
-     * @returns The prefix code.
-     *
-     */
-    uint8_t GetPrefixLengthCode(void) const { return mPrefixAttr & kPrefixLengthCodeMask; }
-
-    /**
-     * Sets the NAT64 prefix length code.
-     *
-     * @param[in] aPrefixLengthCode   The prefix length code.
-     *
-     */
-    void SetPrefixLengthCode(const uint8_t aPrefixLengthCode);
-
-    /**
-     * Sets the prefix.
-     *
-     * @param[in]  aPrefix  The prefix contained in this option.
-     */
-    Error SetPrefix(const Prefix &aPrefix);
-
-    /**
-     * Gets the prefix in this option.
-     *
-     * @param[out] aPrefix   Reference to a `Prefix` to return the prefix.
-     */
-    void GetPrefix(Prefix &aPrefix) const;
-
-    /**
-     * Indicates whether or not the option is valid.
-     *
-     * @retval TRUE  The option is valid
-     * @retval FALSE The option is not valid.
-     */
-    bool IsValid(void) const;
-
-    Nat64PrefixInfoOption(void) = delete;
-
-private:
-    // NAT64 Prefix Information Option
-    //
-    //  0                   1                   2                   3
-    //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    //  |     Type      |    Length     |     Scaled Lifetime     | PLC |
-    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    //  |                                                               |
-    //  +                                                               +
-    //  |              Highest 96 bits of the Prefix                    |
-    //  +                                                               +
-    //  |                                                               |
-    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-    static constexpr uint16_t kLifetimeScalingUnit  = 8; // Lifetime is scaled in units of 8 seconds
-    static constexpr uint16_t kScaledLifetimeOffset = 3;
-    static constexpr uint16_t kPrefixLengthCodeMask = 7;
-    static constexpr uint16_t kScaledLifetimeMask   = ~kPrefixLengthCodeMask;
-
-    uint16_t mPrefixAttr;    // The prefix attributes
-    uint8_t  mPrefixMsb[12]; // The Most Significant 96 Bits of prefix
-
-} OT_TOOL_PACKED_END;
-
-static_assert(sizeof(Nat64PrefixInfoOption) == 16, "invalid Nat64PrefixInfoOption structure");
 
 /**
  * Defines the ND6 Tx Message.
