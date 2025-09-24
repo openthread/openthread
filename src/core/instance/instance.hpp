@@ -84,6 +84,7 @@
 #include "mac/mac.hpp"
 #include "mac/wakeup_tx_scheduler.hpp"
 #include "meshcop/border_agent.hpp"
+#include "meshcop/border_agent_tracker.hpp"
 #include "meshcop/commissioner.hpp"
 #include "meshcop/dataset_manager.hpp"
 #include "meshcop/dataset_updater.hpp"
@@ -589,6 +590,10 @@ private:
     MeshCoP::BorderAgent mBorderAgent;
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
+    MeshCoP::BorderAgentTracker mBorderAgentTracker;
+#endif
+
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     MeshCoP::Commissioner mCommissioner;
 #endif
@@ -1022,6 +1027,10 @@ template <> inline MeshCoP::DatasetUpdater &Instance::Get(void) { return mDatase
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 template <> inline MeshCoP::BorderAgent &Instance::Get(void) { return mBorderAgent; }
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
+template <> inline MeshCoP::BorderAgentTracker &Instance::Get(void) { return mBorderAgentTracker; }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE

@@ -403,10 +403,23 @@ public:
     /**
      * Outputs DNS TXT data to the CLI console.
      *
+     * All key-value pairs are output on a single line in the format: "[key1=value1, key2=value2, ...]".
+     *
      * @param[in] aTxtData        A pointer to a buffer containing the DNS TXT data.
      * @param[in] aTxtDataLength  The length of @p aTxtData (in bytes).
      */
     void OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength);
+
+    /**
+     * Outputs DNS TXT data to the CLI console, one key per line and applying an indentation.
+     *
+     * Each key-value pair is output on its own line, preceded by the specified indentation.
+     *
+     * @param[in] aIndentSize     The number of space characters to prepend as indentation to each output line.
+     * @param[in] aTxtData        A pointer to a buffer containing the DNS TXT data.
+     * @param[in] aTxtDataLength  The length of @p aTxtData (in bytes).
+     */
+    void OutputDnsTxtData(uint8_t aIndentSize, const uint8_t *aTxtData, uint16_t aTxtDataLength);
 
     /**
      * Represents a buffer which is used when converting an encoded rate value to percentage string.
@@ -719,6 +732,9 @@ private:
 
     void OutputTableHeader(uint8_t aNumColumns, const char *const aTitles[], const uint8_t aWidths[]);
     void OutputTableSeparator(uint8_t aNumColumns, const uint8_t aWidths[]);
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    void OutputDnsTxtData(bool aKeyValuePerLine, uint8_t aIndentSize, const uint8_t *aTxtData, uint16_t aTxtDataLength);
+#endif
 
     otInstance        *mInstance;
     OutputImplementer &mImplementer;

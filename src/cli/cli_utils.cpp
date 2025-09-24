@@ -219,17 +219,37 @@ void Utils::OutputSockAddrLine(const otSockAddr &aSockAddr)
 
 void Utils::OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)
 {
+    OutputDnsTxtData(/* aKeyValuePerLine */ false, 0, aTxtData, aTxtDataLength);
+}
+
+void Utils::OutputDnsTxtData(uint8_t aIndentSize, const uint8_t *aTxtData, uint16_t aTxtDataLength)
+{
+    OutputDnsTxtData(/* aKeyValuePerLine */ true, aIndentSize, aTxtData, aTxtDataLength);
+}
+
+void Utils::OutputDnsTxtData(bool           aKeyValuePerLine,
+                             uint8_t        aIndentSize,
+                             const uint8_t *aTxtData,
+                             uint16_t       aTxtDataLength)
+{
     otDnsTxtEntry         entry;
     otDnsTxtEntryIterator iterator;
     bool                  isFirst = true;
 
     otDnsInitTxtEntryIterator(&iterator, aTxtData, aTxtDataLength);
 
-    OutputFormat("[");
+    if (!aKeyValuePerLine)
+    {
+        OutputFormat("[");
+    }
 
     while (otDnsGetNextTxtEntry(&iterator, &entry) == OT_ERROR_NONE)
     {
-        if (!isFirst)
+        if (aKeyValuePerLine)
+        {
+            OutputSpaces(aIndentSize);
+        }
+        else if (!isFirst)
         {
             OutputFormat(", ");
         }
@@ -257,9 +277,17 @@ void Utils::OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)
         }
 
         isFirst = false;
+
+        if (aKeyValuePerLine)
+        {
+            OutputNewLine();
+        }
     }
 
-    OutputFormat("]");
+    if (!aKeyValuePerLine)
+    {
+        OutputFormat("]");
+    }
 }
 
 const char *Utils::PercentageToString(uint16_t aValue, PercentageStringBuffer &aBuffer)

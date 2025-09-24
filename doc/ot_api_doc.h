@@ -104,6 +104,7 @@
  *
  * @defgroup api-backbone-router      Backbone Router
  * @defgroup api-border-agent         Border Agent
+ * @defgroup api-border-agent-tracker Border Agent Tracker
  * @defgroup api-border-router        Border Router
  * @defgroup api-border-routing       Border Routing Manager
  * @defgroup api-commissioner         Commissioner
