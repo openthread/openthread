@@ -395,8 +395,8 @@ otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *
  * @param[in]   aFrame          The target 15.4 frame. MUST NOT be `NULL`.
  * @param[in]   aRadioContext   The radio context accessible in ISR.
  *
- * @retval  true    The source address of the frame matches the short or extended address of the CSL receiver's peer.
- * @retval  false   The source address of the frame does not match the short or extended address of the CSL receiver's
+ * @retval  TRUE    The source address of the frame matches the short or extended address of the CSL receiver's peer.
+ * @retval  FALSE   The source address of the frame does not match the short or extended address of the CSL receiver's
  *                  peer.
  */
 bool otMacFrameSrcAddrMatchCslReceiverPeer(const otRadioFrame *aFrame, const otRadioContext *aRadioContext);
