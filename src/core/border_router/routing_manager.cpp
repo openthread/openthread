@@ -57,9 +57,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mOmrPrefixManager(aInstance)
     , mRioAdvertiser(aInstance)
     , mOnLinkPrefixManager(aInstance)
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-    , mNetDataPeerBrTracker(aInstance)
-#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
     , mMultiAilDetector(aInstance)
 #endif
@@ -438,10 +436,6 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
     }
 
     mRoutePublisher.HandleNotifierEvents(aEvents);
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-    mNetDataPeerBrTracker.HandleNotifierEvents(aEvents);
-#endif
 
     VerifyOrExit(IsInitialized() && IsEnabled());
 
@@ -1109,96 +1103,6 @@ void RoutingManager::IfAddress::CopyInfoTo(IfAddrEntry &aEntry, uint32_t aUptime
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// NetDataPeerBrTracker
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-
-RoutingManager::NetDataPeerBrTracker::NetDataPeerBrTracker(Instance &aInstance)
-    : InstanceLocator(aInstance)
-{
-}
-
-uint16_t RoutingManager::NetDataPeerBrTracker::CountPeerBrs(uint32_t &aMinAge) const
-{
-    uint32_t uptime = Get<Uptime>().GetUptimeInSeconds();
-    uint16_t count  = 0;
-
-    aMinAge = NumericLimits<uint16_t>::kMax;
-
-    for (const PeerBr &peerBr : mPeerBrs)
-    {
-        count++;
-        aMinAge = Min(aMinAge, peerBr.GetAge(uptime));
-    }
-
-    if (count == 0)
-    {
-        aMinAge = 0;
-    }
-
-    return count;
-}
-
-Error RoutingManager::NetDataPeerBrTracker::GetNext(PrefixTableIterator &aIterator, PeerBrEntry &aEntry) const
-{
-    using Iterator = RxRaTracker::Iterator;
-
-    Iterator &iterator = static_cast<Iterator &>(aIterator);
-    Error     error;
-
-    SuccessOrExit(error = iterator.AdvanceToNextPeerBr(mPeerBrs.GetHead()));
-
-    aEntry.mRloc16 = iterator.GetPeerBrEntry()->mRloc16;
-    aEntry.mAge    = iterator.GetPeerBrEntry()->GetAge(iterator.GetInitUptime());
-
-exit:
-    return error;
-}
-
-void RoutingManager::NetDataPeerBrTracker::HandleNotifierEvents(Events aEvents)
-{
-    NetworkData::Rlocs rlocs;
-
-    VerifyOrExit(aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadRoleChanged));
-
-    Get<NetworkData::Leader>().FindRlocs(NetworkData::kBrProvidingExternalIpConn, NetworkData::kAnyRole, rlocs);
-
-    // Remove `PeerBr` entries no longer found in Network Data,
-    // or they match the device RLOC16. Then allocate and add
-    // entries for newly discovered peers.
-
-    mPeerBrs.RemoveAndFreeAllMatching(PeerBr::Filter(rlocs));
-    mPeerBrs.RemoveAndFreeAllMatching(Get<Mle::Mle>().GetRloc16());
-
-    for (uint16_t rloc16 : rlocs)
-    {
-        PeerBr *newEntry;
-
-        if (Get<Mle::Mle>().HasRloc16(rloc16) || mPeerBrs.ContainsMatching(rloc16))
-        {
-            continue;
-        }
-
-        newEntry = PeerBr::Allocate();
-        VerifyOrExit(newEntry != nullptr, LogWarn("Failed to allocate `PeerBr` entry"));
-
-        newEntry->mRloc16       = rloc16;
-        newEntry->mDiscoverTime = Get<Uptime>().GetUptimeInSeconds();
-
-        mPeerBrs.Push(*newEntry);
-    }
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    Get<RoutingManager>().mMultiAilDetector.Evaluate();
-#endif
-
-exit:
-    return;
-}
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-
-//---------------------------------------------------------------------------------------------------------------------
 // MultiAilDetector
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
@@ -1228,7 +1132,7 @@ void RoutingManager::MultiAilDetector::Evaluate(void)
 
     VerifyOrExit(Get<RoutingManager>().IsRunning());
 
-    count = Get<RoutingManager>().mNetDataPeerBrTracker.CountPeerBrs(minAge);
+    count = Get<NetDataPeerBrTracker>().CountPeerBrs(minAge);
 
     if (count != mNetDataPeerBrCount)
     {

@@ -60,6 +60,7 @@
 #include <openthread/netdata.h>
 #include <openthread/platform/border_routing.h>
 
+#include "border_router/br_tracker.hpp"
 #include "border_router/infra_if.hpp"
 #include "common/array.hpp"
 #include "common/callback.hpp"
@@ -96,6 +97,7 @@ class RoutingManager : public InstanceLocator
 {
     friend class ot::Notifier;
     friend class ot::Instance;
+    friend class NetDataPeerBrTracker;
 
 public:
     typedef NetworkData::RoutePreference          RoutePreference;     ///< Route preference (high, medium, low).
@@ -570,36 +572,6 @@ public:
         return mRxRaTracker.GetNextIfAddr(aIterator, aEntry);
     }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-
-    /**
-     * Iterates over the peer BRs found in the Network Data.
-     *
-     * @param[in,out] aIterator  An iterator.
-     * @param[out]    aEntry     A reference to the entry to populate.
-     *
-     * @retval kErrorNone        Got the next peer BR info, @p aEntry is updated and @p aIterator is advanced.
-     * @retval kErrorNotFound    No more PR beers in the list.
-     */
-    Error GetNextPeerBrEntry(PrefixTableIterator &aIterator, PeerBrEntry &aEntry) const
-    {
-        return mNetDataPeerBrTracker.GetNext(aIterator, aEntry);
-    }
-
-    /**
-     * Returns the number of peer BRs found in the Network Data.
-     *
-     * The count does not include this device itself (when it itself is acting as a BR).
-     *
-     * @param[out] aMinAge   Reference to an `uint32_t` to return the minimum age among all peer BRs.
-     *                       Age is represented as seconds since appearance of the BR entry in the Network Data.
-     *
-     * @returns The number of peer BRs.
-     */
-    uint16_t CountPeerBrs(uint32_t &aMinAge) const { return mNetDataPeerBrTracker.CountPeerBrs(aMinAge); }
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
 
     /**
@@ -951,49 +923,6 @@ private:
     };
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-
-    class RxRaTracker;
-
-    class NetDataPeerBrTracker : public InstanceLocator
-    {
-        friend class RxRaTracker;
-
-    public:
-        explicit NetDataPeerBrTracker(Instance &aInstance);
-
-        uint16_t CountPeerBrs(uint32_t &aMinAge) const;
-        Error    GetNext(PrefixTableIterator &aIterator, PeerBrEntry &aEntry) const;
-
-        void HandleNotifierEvents(Events aEvents);
-
-    private:
-        struct PeerBr : LinkedListEntry<PeerBr>, Heap::Allocatable<PeerBr>
-        {
-            struct Filter
-            {
-                Filter(const NetworkData::Rlocs &aRlocs)
-                    : mExcludeRlocs(aRlocs)
-                {
-                }
-
-                const NetworkData::Rlocs &mExcludeRlocs;
-            };
-
-            uint32_t GetAge(uint32_t aUptime) const { return aUptime - mDiscoverTime; }
-            bool     Matches(uint16_t aRloc16) const { return mRloc16 == aRloc16; }
-            bool     Matches(const Filter &aFilter) const { return !aFilter.mExcludeRlocs.Contains(mRloc16); }
-
-            PeerBr  *mNext;
-            uint16_t mRloc16;
-            uint32_t mDiscoverTime;
-        };
-
-        OwningList<PeerBr> mPeerBrs;
-    };
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1908,10 +1837,6 @@ private:
     bool            mUserSetRioPreference;
 
     OnLinkPrefixManager mOnLinkPrefixManager;
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-    NetDataPeerBrTracker mNetDataPeerBrTracker;
-#endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
     MultiAilDetector mMultiAilDetector;

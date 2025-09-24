@@ -162,6 +162,9 @@ void Notifier::EmitEvents(void)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     Get<BorderRouter::RoutingManager>().HandleNotifierEvents(events);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+    Get<BorderRouter::NetDataPeerBrTracker>().HandleNotifierEvents(events);
+#endif
 #endif
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     Get<Srp::Client>().HandleNotifierEvents(events);
