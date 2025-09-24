@@ -171,6 +171,9 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     , mBorderAgent(*this)
 #endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
+    , mBorderAgentTracker(*this)
+#endif
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     , mCommissioner(*this)
 #endif
