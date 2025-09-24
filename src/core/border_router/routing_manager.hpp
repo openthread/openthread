@@ -1154,9 +1154,8 @@ private:
 
         //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-        class Iterator : public PrefixTableIterator
+        struct Iterator : public PrefixTableIterator
         {
-        public:
             enum Type : uint8_t
             {
                 kUnspecified,
@@ -1164,10 +1163,10 @@ private:
                 kPrefixIterator,
                 kRdnssAddrIterator,
                 kIfAddrIterator,
-                kPeerBrIterator,
+                kNetDataBrIterator, // Used by `NetDataPeerBrTracker`
             };
 
-            enum EntryType : uint8_t
+            enum PrefixType : uint8_t
             {
                 kOnLinkPrefix,
                 kRoutePrefix,
@@ -1175,35 +1174,27 @@ private:
 
             void                 Init(const Entry<Router> *aRoutersHead, uint32_t aUptime);
             Error                AdvanceToNextRouter(Type aType);
-            Error                AdvanceToNextEntry(void);
+            Error                AdvanceToNextPrefixEntry(void);
             Error                AdvanceToNextRdnssAddrEntry(void);
             Error                AdvanceToNextIfAddrEntry(const Entry<IfAddress> *aListHead);
             uint32_t             GetInitUptime(void) const { return mData0; }
+            void                 SetInitUptime(uint32_t aUptime) { mData0 = aUptime; }
             TimeMilli            GetInitTime(void) const { return TimeMilli(mData1); }
-            Type                 GetType(void) const { return static_cast<Type>(mData2); }
+            void                 SetInitTime(void) { mData1 = TimerMilli::GetNow().GetValue(); }
             const Entry<Router> *GetRouter(void) const { return static_cast<const Entry<Router> *>(mPtr1); }
-            EntryType            GetEntryType(void) const { return static_cast<EntryType>(mData3); }
+            void                 SetRouter(const Entry<Router> *aRouter) { mPtr1 = aRouter; }
+            Type                 GetType(void) const { return static_cast<Type>(mData2); }
+            void                 SetType(Type aType) { mData2 = aType; }
+            const void          *GetEntry(void) const { return mPtr2; }
+            void                 SetEntry(const void *aEntry) { mPtr2 = aEntry; }
+            bool                 HasEntry(void) const { return mPtr2 != nullptr; }
+            PrefixType           GetPrefixType(void) const { return static_cast<PrefixType>(mData3); }
+            void                 SetPrefixType(PrefixType aType) { mData3 = aType; }
 
             template <typename ObjectType> const Entry<ObjectType> *GetEntry(void) const
             {
                 return static_cast<const Entry<ObjectType> *>(mPtr2);
             }
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-            using PeerBr = NetDataPeerBrTracker::PeerBr;
-
-            Error         AdvanceToNextPeerBr(const PeerBr *aPeerBrsHead);
-            const PeerBr *GetPeerBrEntry(void) const { return static_cast<const PeerBr *>(mPtr2); }
-#endif
-
-        private:
-            void SetRouter(const Entry<Router> *aRouter) { mPtr1 = aRouter; }
-            void SetInitUptime(uint32_t aUptime) { mData0 = aUptime; }
-            void SetInitTime(void) { mData1 = TimerMilli::GetNow().GetValue(); }
-            void SetEntry(const void *aEntry) { mPtr2 = aEntry; }
-            bool HasEntry(void) const { return mPtr2 != nullptr; }
-            void SetEntryType(EntryType aType) { mData3 = aType; }
-            void SetType(Type aType) { mData2 = aType; }
         };
 
         //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
