@@ -43,6 +43,8 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
+#include <openthread/platform/udp.h>
+#include "openthread/udp.h"
 
 bool operator<(const otExtAddress &aLeft, const otExtAddress &aRight);
 
@@ -126,6 +128,16 @@ public:
     virtual size_t SrcMatchCountShortEntries(void) const { return mSrcMatchShortAddrs.size(); }
     virtual void   SrcMatchClearExtEntries(void) { mSrcMatchExtAddrs.clear(); }
     virtual size_t SrcMatchCountExtEntries(void) const { return mSrcMatchExtAddrs.size(); }
+
+    virtual otError UdpSocketSetFlags(otUdpSocket &, int) { return OT_ERROR_NOT_IMPLEMENTED; }
+    virtual otError UdpSocketOpen(otUdpSocket &) { return OT_ERROR_NOT_IMPLEMENTED; }
+    virtual otError UdpSocketClose(otUdpSocket &) { return OT_ERROR_NOT_IMPLEMENTED; }
+    virtual otError UdpSocketSend(otUdpSocket &, otMessage &aMessage, const otMessageInfo &aMessageInfo)
+    {
+        return OT_ERROR_NOT_IMPLEMENTED;
+    }
+    virtual otError UdpSocketBind(otUdpSocket &) { return OT_ERROR_NOT_IMPLEMENTED; }
+    virtual otError UdpSocketBindToNetif(otUdpSocket &, otNetifIdentifier) { return OT_ERROR_NOT_IMPLEMENTED; }
 
 protected:
     void ProcessSchedules(uint64_t &aTimeout);

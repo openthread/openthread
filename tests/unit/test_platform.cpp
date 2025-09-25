@@ -720,6 +720,12 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket        *aUdpSocket,
     OT_UNUSED_VARIABLE(aAddress);
     return OT_ERROR_NONE;
 }
+otError otPlatUdpSetFlags(otUdpSocket *aUdpSocket, int aFlags)
+{
+    OT_UNUSED_VARIABLE(aUdpSocket);
+    OT_UNUSED_VARIABLE(aFlags);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
 #endif // OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
