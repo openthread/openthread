@@ -1091,7 +1091,7 @@ otError otPlatRadioEnableCsl(otInstance         *aInstance,
     otError error = OT_ERROR_NONE;
 
     assert(aCslPeriod < UINT16_MAX);
-    otEXPECT_ACTION((otShortAddress != OT_RADIO_BROADCAST_SHORT_ADDR) && (aShortAddr != OT_RADIO_INVALID_SHORT_ADDR),
+    otEXPECT_ACTION((aShortAddr != OT_RADIO_BROADCAST_SHORT_ADDR) && (aShortAddr != OT_RADIO_INVALID_SHORT_ADDR),
                     error = OT_ERROR_FAILED);
     otEXPECT_ACTION(aExtAddr != NULL, error = OT_ERROR_FAILED);
 
