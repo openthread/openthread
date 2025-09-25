@@ -427,11 +427,14 @@ bool otMacFrameSrcAddrMatchCslReceiverPeer(const otRadioFrame *aFrame, const otR
     switch (src.GetType())
     {
     case Mac::Address::kTypeShort:
+        VerifyOrExit(aRadioContext->mCslShortAddress != Mac::kShortAddrBroadcast &&
+                     aRadioContext->mCslShortAddress != Mac::kShortAddrInvalid);
         VerifyOrExit(src.GetShort() == aRadioContext->mCslShortAddress);
         matches = true;
         break;
 
     case Mac::Address::kTypeExtended:
+        VerifyOrExit(*reinterpret_cast<const uint64_t *>(aRadioContext->mCslExtAddress.m8) != 0);
         VerifyOrExit(src.GetExtended() == *static_cast<const Mac::ExtAddress *>(&aRadioContext->mCslExtAddress));
         matches = true;
         break;
