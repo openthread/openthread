@@ -163,7 +163,7 @@ uint16_t MessagePool::GetFreeBufferCount(void) const
 #if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     rval = static_cast<uint16_t>(Instance::GetHeap().GetFreeSize() / sizeof(Buffer));
 #else
-    rval = NumericLimits<uint16_t>::kMax;
+    SetToUintMax(rval);
 #endif
 #elif OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     rval = otPlatMessagePoolNumFreeBuffers(&GetInstance());
@@ -182,7 +182,7 @@ uint16_t MessagePool::GetTotalBufferCount(void) const
 #if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     rval = static_cast<uint16_t>(Instance::GetHeap().GetCapacity() / sizeof(Buffer));
 #else
-    rval = NumericLimits<uint16_t>::kMax;
+    SetToUintMax(rval);
 #endif
 #else
     rval = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
