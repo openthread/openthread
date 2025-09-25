@@ -1132,7 +1132,7 @@ void RoutingManager::MultiAilDetector::Evaluate(void)
 
     VerifyOrExit(Get<RoutingManager>().IsRunning());
 
-    count = Get<NetDataPeerBrTracker>().CountPeerBrs(minAge);
+    count = Get<NetDataBrTracker>().CountBrs(NetDataBrTracker::kExcludeThisDevice, minAge);
 
     if (count != mNetDataPeerBrCount)
     {

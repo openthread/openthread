@@ -706,7 +706,7 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     BorderRouter::RoutingManager mRoutingManager;
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-    BorderRouter::NetDataPeerBrTracker mNetDataPeerBrTracker;
+    BorderRouter::NetDataBrTracker mNetDataBrTracker;
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
     BorderRouter::Dhcp6PdClient mDhcp6PdClient;
@@ -1086,7 +1086,7 @@ template <> inline Utils::Otns &Instance::Get(void) { return mOtns; }
 template <> inline BorderRouter::RoutingManager &Instance::Get(void) { return mRoutingManager; }
 template <> inline BorderRouter::InfraIf        &Instance::Get(void) { return mRoutingManager.mInfraIf; }
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-template <> inline BorderRouter::NetDataPeerBrTracker &Instance::Get(void) { return mNetDataPeerBrTracker; }
+template <> inline BorderRouter::NetDataBrTracker &Instance::Get(void) { return mNetDataBrTracker; }
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 template <> inline BorderRouter::Dhcp6PdClient &Instance::Get(void) { return mDhcp6PdClient; }
