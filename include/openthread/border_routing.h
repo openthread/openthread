@@ -191,10 +191,10 @@ typedef enum
  */
 typedef enum
 {
-    OT_BORDER_ROUTING_STATE_UNINITIALIZED, ///< Routing Manager is uninitialized.
-    OT_BORDER_ROUTING_STATE_DISABLED,      ///< Routing Manager is initialized but disabled.
-    OT_BORDER_ROUTING_STATE_STOPPED,       ///< Routing Manager in initialized and enabled but currently stopped.
-    OT_BORDER_ROUTING_STATE_RUNNING,       ///< Routing Manager is initialized, enabled, and running.
+    OT_BORDER_ROUTING_STATE_UNINITIALIZED = 0, ///< Routing Manager is uninitialized.
+    OT_BORDER_ROUTING_STATE_DISABLED      = 1, ///< Routing Manager is initialized but disabled.
+    OT_BORDER_ROUTING_STATE_STOPPED       = 2, ///< Routing Manager in initialized and enabled but currently stopped.
+    OT_BORDER_ROUTING_STATE_RUNNING       = 3, ///< Routing Manager is initialized, enabled, and running.
 } otBorderRoutingState;
 
 /**
