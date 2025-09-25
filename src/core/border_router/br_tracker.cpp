@@ -49,7 +49,7 @@ uint16_t NetDataPeerBrTracker::CountPeerBrs(uint32_t &aMinAge) const
     uint32_t uptime = Get<Uptime>().GetUptimeInSeconds();
     uint16_t count  = 0;
 
-    aMinAge = NumericLimits<uint32_t>::kMax;
+    SetToUintMax(aMinAge);
 
     for (const PeerBr &peerBr : mPeerBrs)
     {

@@ -1051,7 +1051,9 @@ exit:
 
 uint32_t Core::RecordInfo::GetDurationSinceLastMulticast(TimeMilli aTime) const
 {
-    uint32_t duration = NumericLimits<uint32_t>::kMax;
+    uint32_t duration;
+
+    SetToUintMax(duration);
 
     VerifyOrExit(mIsPresent && mIsLastMulticastValid);
     VerifyOrExit(aTime > mLastMulticastTime, duration = 0);
