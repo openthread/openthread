@@ -66,7 +66,6 @@ void Otns::EmitStatus(const char *aFmt, ...) const
 
 void Otns::EmitStatus(const StatusString &aString) const { otPlatOtnsStatus(aString.AsCString()); }
 
-
 void Otns::EmitTransmit(const Mac::TxFrame &aFrame) const
 {
     StatusString string;
@@ -219,7 +218,7 @@ void Otns::EmitCoapStatus(const char             *aAction,
 exit:
     LogWarnOnError(error, "EmitCoapStatus");
 }
-#endif  //  OPENTHREAD_FTD || OPENTHREAD_MTD
+#endif //  OPENTHREAD_FTD || OPENTHREAD_MTD
 
 } // namespace Utils
 } // namespace ot
