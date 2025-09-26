@@ -1727,7 +1727,7 @@ void Core::LocalHost::HandleEventTimer(void)
         AddressArray &addresses = (addrType == kIp4AddrType) ? mIp4Addresses : mIp6Addresses;
         AddressArray  oldAddresses;
 
-        oldAddresses.TakeFrom(static_cast<AddressArray &&>(addresses));
+        oldAddresses.TakeFrom(addresses.Move());
         addresses.Clear();
 
         // First, add existing addresses (from old list) that did not
@@ -7450,7 +7450,7 @@ Core::RecordCache::NewRecordEntry::NewRecordEntry(const ResourceRecord &aRecord,
     , mCacheFlush(aRecord.GetClass() & kClassCacheFlushFlag)
     , mType(aRecord.GetType())
     , mTtl(aRecord.GetTtl())
-    , mData(static_cast<Heap::Data &&>(aData))
+    , mData(aData.Move())
 {
 }
 
@@ -7467,7 +7467,7 @@ bool Core::RecordCache::NewRecordEntry::Matches(uint16_t aType, const Heap::Data
 Core::RecordCache::RecordEntry::RecordEntry(NewRecordEntry &aNewEntry)
     : mNext(nullptr)
     , mType(aNewEntry.mType)
-    , mData(static_cast<Heap::Data &&>(aNewEntry.mData))
+    , mData(aNewEntry.mData.Move())
 {
     mRecord.RefreshTtl(aNewEntry.mTtl);
 }

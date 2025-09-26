@@ -115,14 +115,24 @@ public:
     Error Set(const String &aString) { return Set(aString.AsCString()); }
 
     /**
-     * Sets the string from another `String`.
+     * Sets the string by taking ownership of the buffer from another `String`.
      *
-     * @param[in] aString     The other `String` to set from (rvalue reference using move semantics).
+     * This method uses move semantics. After the call, `aString` will be null and this `String` will hold the
+     * buffer previously held by `aString`.
      *
-     * @retval kErrorNone     Successfully set the string.
-     * @retval kErrorNoBufs   Failed to allocate buffer for string.
+     * @param[in] aString     An rvalue reference to another `String` to take from.
      */
-    Error Set(String &&aString);
+    void TakeFrom(String &&aString);
+
+    /**
+     * Casts the `String` to an rvalue reference.
+     *
+     * This method is intended to be used with `TakeFrom()` to explicitly indicate a move operation and transfer of
+     * the underlying buffer.
+     *
+     * @returns An rvalue reference to this `String`.
+     */
+    String &&Move(void) { return static_cast<String &&>(*this); }
 
     /**
      * Frees any buffer allocated by the `String`.

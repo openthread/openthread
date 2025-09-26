@@ -140,6 +140,27 @@ void TestHeapString(void)
     VerifyString("str1", str1, "name");
 
     printf("------------------------------------------------------------------------------------\n");
+    printf("TakeFrom() and Move()\n\n");
+
+    SuccessOrQuit(str1.Set("string to be moved"));
+    str2.Free();
+    VerifyString("str1", str1, "string to be moved");
+    VerifyString("str2", str2, nullptr);
+
+    str2.TakeFrom(str1.Move());
+    VerifyString("str1", str1, nullptr);
+    VerifyString("str2", str2, "string to be moved");
+
+    // Test moving from self
+    str2.TakeFrom(str2.Move());
+    VerifyString("str2", str2, "string to be moved");
+
+    // Test moving a null string
+    str2.TakeFrom(str1.Move());
+    VerifyString("str1", str1, nullptr);
+    VerifyString("str2", str2, nullptr);
+
+    printf("------------------------------------------------------------------------------------\n");
     printf("operator==() with two null string\n\n");
     str1.Free();
     str2.Free();
@@ -208,6 +229,7 @@ void TestHeapData(void)
     MessagePool   *messagePool;
     Message       *message;
     Heap::Data     data;
+    Heap::Data     data2;
     uint16_t       offset;
     const uint8_t *oldBuffer;
 
@@ -314,8 +336,28 @@ void TestHeapData(void)
 
     printf("------------------------------------------------------------------------------------\n");
     printf("SetFrom() move semantics\n\n");
-    data.SetFrom(GetData());
+    data.TakeFrom(GetData().Move());
     VerifyData(data, &kTestValue, sizeof(kTestValue));
+
+    printf("------------------------------------------------------------------------------------\n");
+    printf("TakeFrom() and Move()\n\n");
+
+    SuccessOrQuit(data.SetFrom(kData1, sizeof(kData1)));
+    VerifyData(data, kData1);
+    VerifyData(data2, nullptr, 0);
+
+    data2.TakeFrom(data.Move());
+    VerifyData(data, nullptr, 0);
+    VerifyData(data2, kData1);
+
+    // Test moving from self
+    data2.TakeFrom(data2.Move());
+    VerifyData(data2, kData1);
+
+    // Test moving a null data
+    data2.TakeFrom(data.Move());
+    VerifyData(data, nullptr, 0);
+    VerifyData(data2, nullptr, 0);
 
     printf("\n -- PASS\n");
 }

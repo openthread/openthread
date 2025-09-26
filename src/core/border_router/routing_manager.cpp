@@ -3708,7 +3708,7 @@ Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMess
     const OmrPrefixManager         &omrPrefixManager = Get<RoutingManager>().mOmrPrefixManager;
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
-    oldPrefixes.TakeFrom(static_cast<RioPrefixArray &&>(mPrefixes));
+    oldPrefixes.TakeFrom(mPrefixes.Move());
 #else
     oldPrefixes = mPrefixes;
 #endif
