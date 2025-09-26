@@ -1080,7 +1080,6 @@ template <> inline LinkMetrics::Subject &Instance::Get(void) { return mSubject; 
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 template <> inline BorderRouter::RoutingManager &Instance::Get(void) { return mRoutingManager; }
 template <> inline BorderRouter::InfraIf        &Instance::Get(void) { return mRoutingManager.mInfraIf; }
