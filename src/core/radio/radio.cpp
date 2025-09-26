@@ -88,7 +88,7 @@ void Radio::SetExtendedAddress(const Mac::ExtAddress &aExtAddress)
     address.Set(aExtAddress.m8, Mac::ExtAddress::kReverseByteOrder);
     otPlatRadioSetExtendedAddress(GetInstancePtr(), &address);
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().EmitExtendedAddress(address);
 #endif
 }
@@ -97,7 +97,7 @@ void Radio::SetShortAddress(Mac::ShortAddress aShortAddress)
 {
     otPlatRadioSetShortAddress(GetInstancePtr(), aShortAddress);
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().EmitShortAddress(aShortAddress);
 #endif
 }
@@ -120,7 +120,7 @@ Error Radio::ClearSrcMatchExtEntry(const Mac::ExtAddress &aExtAddress)
 
 Error Radio::Transmit(Mac::TxFrame &aFrame)
 {
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().EmitTransmit(aFrame);
 #endif
 
