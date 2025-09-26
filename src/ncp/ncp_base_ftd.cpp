@@ -1748,7 +1748,13 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_STATE>(void)
 {
-    return mEncoder.WriteUint8(static_cast<uint8_t>(otBorderAgentEphemeralKeyGetState(mInstance)));
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mEncoder.WriteUint8(static_cast<uint8_t>(otBorderAgentEphemeralKeyGetState(mInstance))));
+    SuccessOrExit(error = mEncoder.WriteUint16(otBorderAgentEphemeralKeyGetUdpPort(mInstance)));
+
+exit:
+    return error;
 }
 
 #endif
