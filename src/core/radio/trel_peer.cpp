@@ -222,11 +222,24 @@ exit:
     return;
 }
 
-bool Peer::Matches(const ServiceNameMatcher &aMatcher) const { return NameMatch(mServiceName, aMatcher.mServiceName); }
-
-bool Peer::Matches(const HostNameMatcher &aMatcher) const
+bool Peer::Matches(NameMatchType aType, const char *aName) const
 {
-    return mResolvingHost && NameMatch(mHostName, aMatcher.mHostName);
+    bool matches = false;
+
+    switch (aType)
+    {
+    case kMatchServiceName:
+        matches = NameMatch(mServiceName, aName);
+        break;
+
+    case kMatchHostName:
+        VerifyOrExit(mResolvingHost);
+        matches = NameMatch(mHostName, aName);
+        break;
+    }
+
+exit:
+    return matches;
 }
 
 bool Peer::NameMatch(const Heap::String &aHeapString, const char *aName)
