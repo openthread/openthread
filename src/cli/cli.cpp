@@ -4528,11 +4528,10 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
         if (isTable)
         {
             static const char *const kNeighborTableTitles[] = {
-                "Role", "RLOC16", "Age", "Avg RSSI", "Last RSSI", "R", "D", "N", "Extended MAC", "Version",
-            };
+                "Role", "RLOC16", "Age", "Avg RSSI", "Last RSSI", "LQ In", "R", "D", "N", "Extended MAC", "Version"};
 
             static const uint8_t kNeighborTableColumnWidths[] = {
-                6, 8, 5, 10, 11, 1, 1, 1, 18, 9,
+                6, 8, 5, 10, 11, 7, 1, 1, 1, 18, 9,
             };
 
             OutputTableHeader(kNeighborTableTitles, kNeighborTableColumnWidths);
@@ -4570,6 +4569,7 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
                 OutputFormat("| %3lu ", ToUlong(neighborInfo.mAge));
                 OutputFormat("| %8d ", neighborInfo.mAverageRssi);
                 OutputFormat("| %9d ", neighborInfo.mLastRssi);
+                OutputFormat("| %5u ", neighborInfo.mLinkQualityIn);
                 OutputFormat("|%1d", neighborInfo.mRxOnWhenIdle);
                 OutputFormat("|%1d", neighborInfo.mFullThreadDevice);
                 OutputFormat("|%1d", neighborInfo.mFullNetworkData);

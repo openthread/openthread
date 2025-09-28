@@ -34,10 +34,16 @@
 #ifndef OT_INCLUDE_COMMON_NEW_HPP_
 #define OT_INCLUDE_COMMON_NEW_HPP_
 
+#include <openthread/config.h>
+
+#if defined(OPENTHREAD_CONFIG_USE_STD_NEW) && OPENTHREAD_CONFIG_USE_STD_NEW
+#include <new> // IWYU pragma: keep
+#else
 #include <stddef.h>
 
 #include <openthread/platform/toolchain.h>
 
 inline void *operator new(size_t, void *p) throw() { return p; }
+#endif
 
 #endif // OT_INCLUDE_COMMON_NEW_HPP_

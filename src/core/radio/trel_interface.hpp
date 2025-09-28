@@ -72,37 +72,42 @@ class Interface : public InstanceLocator
 
 public:
     /**
-     * Enables or disables the TREL interface.
-     *
-     * @param[in] aEnable A boolean to enable/disable the TREL interface.
+     * Represents an entity requesting to enable or disable the TREL interface (via `SetEnabled()`).
      */
-    void SetEnabled(bool aEnable);
+    enum Requester : uint8_t
+    {
+        kRequesterUser,  ///< Requested by user (public OT API).
+        kRequesterStack, ///< Requested by stack itself (`Link`).
+    };
 
     /**
-     * Enables the TREL interface.
+     * Enables or disables the TREL interface by a `Requester`.
      *
-     * This call initiates an ongoing DNS-SD browse on the service name "_trel._udp" within the local browsing domain
-     * to discover other devices supporting TREL. Device also registers a new service to be advertised using DNS-SD,
-     * with the service name is "_trel._udp" indicating its support for TREL. Device is ready to receive TREL messages
-     * from peers.
-     */
-    void Enable(void);
-
-    /**
-     * Disables the TREL interface.
+     * The interface is enabled only when it is enabled by both `kRequesterUser` and `kRequesterStack`. Otherwise, it
+     * is disabled.
      *
-     * This call stops the DNS-SD browse on the service name "_trel._udp", stops advertising TREL DNS-SD service, and
-     * clears the TREL peer table.
+     * Upon OpenThread initialization, the interface state relative to `kRequesterUser` is considered enabled, i.e.,
+     * the stack itself will directly control when to enable/disable the TREL interface (when radio link state changes).
+     *
+     * However, the user can explicitly disable the TREL interface, which can only be re-enabled by the user. This
+     * ensures that if the user disables the TREL interface, it stays disabled regardless of other OpenThread stack
+     * state changes which may trigger disabling/enabling of all radio links, including the TREL link and its interface.
+     *
+     * @param[in] aEnable     A boolean to enable/disable the TREL interface.
+     * @param[in] aRequester  The requester (user or stack).
      */
-    void Disable(void);
+    void SetEnabled(bool aEnable, Requester aRequester);
 
     /**
      * Indicates whether the TREL interface is enabled.
      *
+     * The interface is enabled only when it is enabled by both `kRequesterUser` and `kRequesterStack`. Otherwise, it
+     * is disabled.
+     *
      * @retval TRUE if the TREL interface is enabled.
      * @retval FALSE if the TREL interface is disabled.
      */
-    bool IsEnabled(void) const { return mEnabled; }
+    bool IsEnabled(void) const { return mState == kStateEnabled; }
 
     /**
      * Sets the filter mode (enables/disables filtering).
@@ -145,7 +150,16 @@ public:
     uint16_t GetUdpPort(void) const { return mUdpPort; }
 
 private:
+    enum State : uint8_t
+    {
+        kStateUninitialized,
+        kStateDisabled,
+        kStateEnabled,
+    };
+
     explicit Interface(Instance &aInstance);
+
+    void UpdateState(void);
 
     // Methods used by `Trel::Link`.
     void  Init(void);
@@ -154,9 +168,10 @@ private:
     // Callbacks from `otPlatTrel`.
     void HandleReceived(uint8_t *aBuffer, uint16_t aLength, const Ip6::SockAddr &aSenderAddr);
 
-    bool     mInitialized : 1;
-    bool     mEnabled : 1;
+    bool     mUserEnabled : 1;
+    bool     mStackEnabled : 1;
     bool     mFiltered : 1;
+    State    mState;
     uint16_t mUdpPort;
     Packet   mRxPacket;
 };

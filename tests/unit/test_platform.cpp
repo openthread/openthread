@@ -26,8 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Disable OpenThread's own new implementation to avoid duplicate definition
-#define OT_INCLUDE_COMMON_NEW_HPP_
 #include "test_platform.h"
 
 #include <map>

@@ -2888,11 +2888,10 @@ Print table of neighbors.
 
 ```bash
 > neighbor table
-| Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|D|N| Extended MAC     |
-+------+--------+-----+----------+-----------+-+-+-+------------------+
-|   C  | 0xcc01 |  96 |      -46 |       -46 |1|1|1| 1eb9ba8a6522636b |
-|   R  | 0xc800 |   2 |      -29 |       -29 |1|1|1| 9a91556102c39ddb |
-|   R  | 0xf000 |   3 |      -28 |       -28 |1|1|1| 0ad7ed6beaa6016d |
+| Role | RLOC16 | Age | Avg RSSI | Last RSSI | LQ In |R|D|N| Extended MAC     | Version |
++------+--------+-----+----------+-----------+-------+-+-+-+------------------+---------+
+|   R  | 0x2000 |   4 |      -68 |       -68 |     3 |1|1|1| fa97259e4eb574e4 |       5 |
+|   R  | 0xf000 |   0 |      -96 |       -97 |     1 |1|1|1| ba9fd148fba30fbd |       5 |
 Done
 ```
 
@@ -4127,6 +4126,8 @@ Indicate whether TREL radio operation is enabled or not.
 
 `OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE` is required for all `trel` sub-commands.
 
+The TREL operation is enabled if and only if it is enabled by both the user (see `trel enable`) and the OpenThread stack.
+
 ```bash
 > trel
 Enabled
@@ -4136,6 +4137,12 @@ Done
 ### trel enable
 
 Enable TREL operation.
+
+The TREL interface's operational state is determined by two factors: the user's preference (set by this command) and the OpenThread stack's internal state. The TREL interface is enabled only when both the user and the OpenThread stack have it enabled. Otherwise, it is disabled.
+
+Upon OpenThread stack initialization, the user's preference is set to enabled by default. This allows the stack to control the TREL interface state automatically (e.g., enabling it when radio links are enabled and disabling it when radio links are disabled).
+
+If the user explicitly disables the TREL operation using `trel disable`, it will remain disabled until the user explicitly re-enables it using `trel enable`. This ensures the user's 'disable' request persists across other OpenThread stack state changes (which may trigger disabling/enabling of all radio links, including the TREL link).
 
 ```bash
 > trel enable

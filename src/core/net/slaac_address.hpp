@@ -45,10 +45,10 @@
 #include "thread/network_data.hpp"
 
 namespace ot {
-namespace Utils {
+namespace Ip6 {
 
 /**
- * @addtogroup core-slaac-address
+ * @addtogroup core-ip6-slaac
  *
  * @brief
  *   This module includes definitions for Thread global IPv6 address configuration with SLAAC.
@@ -132,7 +132,7 @@ public:
      * @retval kErrorNone    If successfully generated the IID.
      * @retval kErrorFailed  If no valid IID was generated.
      */
-    Error GenerateIid(Ip6::Netif::UnicastAddress &aAddress, uint8_t &aDadCounter) const;
+    Error GenerateIid(Netif::UnicastAddress &aAddress, uint8_t &aDadCounter) const;
 
     /**
      * Searches in the list of deprecating SLAAC prefixes for a match to a given address and if found, returns the
@@ -148,7 +148,7 @@ public:
      * @retval kErrorNone       Found a match for @p aAddress and updated @p aDomainId.
      * @retval kErrorNotFound   Could not find a match for @p aAddress in deprecating SLAAC prefixes.
      */
-    Error FindDomainIdFor(const Ip6::Address &aAddress, uint8_t &aDomainId) const;
+    Error FindDomainIdFor(const Address &aAddress, uint8_t &aDomainId) const;
 
 private:
     static constexpr uint16_t kNumSlaacAddresses = OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES;
@@ -165,7 +165,7 @@ private:
         kDeprecating,
     };
 
-    class SlaacAddress : public Ip6::Netif::UnicastAddress
+    class SlaacAddress : public Netif::UnicastAddress
     {
     public:
         static constexpr uint8_t kInvalidContextId = 0;
@@ -211,7 +211,7 @@ private:
     void        HandleNotifierEvents(Events aEvents);
     void        LogAddress(Action aAction, const SlaacAddress &aAddress);
     static bool DoesConfigMatchNetifAddr(const NetworkData::OnMeshPrefixConfig &aConfig,
-                                         const Ip6::Netif::UnicastAddress      &aAddr);
+                                         const Netif::UnicastAddress           &aAddr);
 
     using ExpireTimer = TimerMilliIn<Slaac, &Slaac::HandleTimer>;
 
@@ -225,7 +225,7 @@ private:
  * @}
  */
 
-} // namespace Utils
+} // namespace Ip6
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE

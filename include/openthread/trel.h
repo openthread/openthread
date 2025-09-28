@@ -75,17 +75,20 @@ typedef struct otTrelPeer
 typedef const void *otTrelPeerIterator;
 
 /**
- * Enables or disables TREL operation.
+ * Sets the user's preference to enable or disable the TREL operation.
  *
- * When @p aEnable is true, this function initiates an ongoing DNS-SD browse on the service name "_trel._udp" within the
- * local browsing domain to discover other devices supporting TREL. Device also registers a new service to be advertised
- * using DNS-SD, with the service name is "_trel._udp" indicating its support for TREL. Device is then ready to receive
- * TREL messages from peers.
+ * The TREL interface's operational state is determined by two factors: the user's preference (set by this function)
+ * and the OpenThread stack's internal state. The TREL interface is enabled only when both the user and the OpenThread
+ * stack have it enabled. Otherwise, it is disabled.
  *
- * When @p aEnable is false, this function stops the DNS-SD browse on the service name "_trel._udp", stops advertising
- * TREL DNS-SD service, and clears the TREL peer table.
+ * Upon OpenThread initialization, the user's preference is set to enabled by default. This allows the stack to
+ * control the TREL interface state automatically (e.g., enabling it when radio links are enabled and disabling
+ * it when radio links are disabled).
  *
- * @note By default the OpenThread stack enables the TREL operation on start.
+ * If the user explicitly disables the TREL operation by calling this function with @p aEnable as `false`, it will
+ * remain disabled until the user explicitly re-enables it by calling this function with @p aEnable as `true`. This
+ * ensures the user's 'disable' request persists across other OpenThread stack state changes (which may trigger
+ * disabling/enabling of all radio links, including the TREL link).
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aEnable    A boolean to enable/disable the TREL operation.
@@ -94,6 +97,9 @@ void otTrelSetEnabled(otInstance *aInstance, bool aEnable);
 
 /**
  * Indicates whether the TREL operation is enabled.
+ *
+ * The TREL operation is enabled if and only if it is enabled by both the user (see `otTrelSetEnabled()`) and the
+ * OpenThread stack.
  *
  * @param[in] aInstance   The OpenThread instance.
  *

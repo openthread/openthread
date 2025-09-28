@@ -280,6 +280,11 @@ private:
     static constexpr uint32_t kIdleTimeout = OPENTHREAD_CONFIG_NAT64_IDLE_TIMEOUT_SECONDS * Time::kOneSecondInMsec;
     static constexpr uint32_t kIcmpTimeout = OPENTHREAD_CONFIG_NAT64_ICMP_IDLE_TIMEOUT_SECONDS * Time::kOneSecondInMsec;
 
+    static constexpr uint32_t kMinUdpTimeout   = 2 * Time::kOneMinuteInMsec; //  UDP_MIN in RFC 6146 (2 min)
+    static constexpr uint32_t kMinEvictTimeout = kMinUdpTimeout;
+
+    static_assert(kIdleTimeout >= kMinUdpTimeout, "OPENTHREAD_CONFIG_NAT64_IDLE_TIMEOUT_SECONDS is too short");
+
     static constexpr uint32_t kPoolSize = OPENTHREAD_CONFIG_NAT64_MAX_MAPPINGS;
 
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
@@ -298,25 +303,40 @@ private:
 
         typedef String<kInfoStringSize> InfoString;
 
-        void       Init(Instance &aInstance) { InstanceLocatorInit::Init(aInstance); }
-        void       Free(void);
-        void       Touch(uint8_t aProtocol);
-        InfoString ToString(void) const;
-        void       CopyTo(AddressMapping &aMapping, TimeMilli aNow) const;
-        bool       Matches(const Ip6::Headers &aIp6Headers) const;
-        bool       Matches(const Ip4::Headers &aIp4Headers) const;
-        bool       Matches(const TimeMilli aNow) const { return mExpiry < aNow; }
+        enum ProtoCategory : uint8_t
+        {
+            kIcmpOnly,
+            kUdpAndMaybeIcmp,
+            kTcpAndMaybeOthers,
+        };
+
+        void          Init(Instance &aInstance) { InstanceLocatorInit::Init(aInstance); }
+        void          Free(void);
+        void          Touch(uint8_t aProtocol);
+        InfoString    ToString(void) const;
+        void          CopyTo(AddressMapping &aMapping, TimeMilli aNow) const;
+        uint32_t      DetermineDurationSinceUse(TimeMilli aNow) const { return aNow - mLastUseTime; }
+        ProtoCategory DetermineProtocolCategory(void) const;
+        bool          IsEligibleForEviction(TimeMilli aNow) const;
+        bool          IsBetterEvictionCandidateOver(const Mapping &aOther, TimeMilli aNow) const;
+        bool          Matches(const Ip6::Headers &aIp6Headers) const;
+        bool          Matches(const Ip4::Headers &aIp4Headers) const;
+        bool          Matches(const ExpirationChecker &aChecker) const { return aChecker.IsExpired(mExpirationTime); }
+        bool          Matches(const Mapping &aMapping) const { return this == &aMapping; }
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
         bool Matches(const uint16_t aPort) const { return mTranslatedPortOrId == aPort; }
 #else
         bool Matches(const Ip4::Address &aIp4Address) const { return mIp4Address == aIp4Address; }
 #endif
 
+        static bool IsCounterZero(const ProtocolCounters::Counters &aCounters);
+
         Mapping         *mNext;
         uint64_t         mId;
+        TimeMilli        mLastUseTime;
+        TimeMilli        mExpirationTime;
         Ip4::Address     mIp4Address;
         Ip6::Address     mIp6Address;
-        TimeMilli        mExpiry;
         ProtocolCounters mCounters;
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
         uint16_t mSrcPortOrId;
@@ -333,6 +353,7 @@ private:
     void     GetNextIp4Address(Ip4::Address &aIp4Address);
     Error    AllocateIp4Address(Ip4::Address &aIp4Address);
     Mapping *AllocateMapping(const Ip6::Headers &aIp6Headers);
+    void     EvictStaleMapping(void);
     void     HandleTimer(void);
 #if OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
     uint16_t AllocateSourcePort(uint16_t aSrcPort);

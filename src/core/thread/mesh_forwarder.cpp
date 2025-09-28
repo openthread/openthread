@@ -919,7 +919,7 @@ void MeshForwarder::UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDes
 #endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Get<HistoryTracker::Local>().RecordTxMessage(*mSendMessage, aMacDest);
+    Get<HistoryTracker::Local>().RecordTxMessage(*mSendMessage, aMacDest, mSendMessage->GetTxSuccess());
 #endif
 
     LogMessage(kMessageTransmit, *mSendMessage, txError, &aMacDest);
