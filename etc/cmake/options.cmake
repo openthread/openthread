@@ -349,6 +349,7 @@ ot_int_option(OT_MAC_CSL_REQUEST_AHEAD_US OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEA
 ot_int_option(OT_MLE_MAX_CHILDREN OPENTHREAD_CONFIG_MLE_MAX_CHILDREN "set maximum number of children")
 ot_int_option(OT_RCP_RESTORATION_MAX_COUNT OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT "set max RCP restoration count")
 ot_int_option(OT_RCP_TX_WAIT_TIME_SECS OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS "set RCP TX wait TIME in seconds")
+ot_int_option(OT_RCP_TIME_SYNC_INTERVAL OPENTHREAD_SPINEL_CONFIG_RCP_TIME_SYNC_INTERVAL "set time interval (in units of microseconds) for host-rcp time sync")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
