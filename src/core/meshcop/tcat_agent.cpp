@@ -709,6 +709,8 @@ Error TcatAgent::HandleDecommission(void)
     }
 #endif
 
+    mIsCommissioned = false; // enable repeated commissioning/decommissioning in a session
+
 exit:
     return error;
 }
