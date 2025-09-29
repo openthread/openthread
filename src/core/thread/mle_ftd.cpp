@@ -3529,6 +3529,11 @@ void Mle::ProcessAddressSolicit(AddrSolicitInfo &aInfo)
     aInfo.mResponse = kAddrSolicitNoAddressAvailable;
     aInfo.mRouter   = nullptr;
 
+    // The leader may have chosen to begin the attachment process assuming it's own partition
+    // was a singleton. Don't allow any devices to upgrade while it is in the attaching
+    // process because it could change the preconditions for the decision to reattach.
+    VerifyOrExit(!IsAttaching());
+
     LogInfo("AddrSolicit Reason: %s", RouterUpgradeReasonToString(aInfo.mReason));
 
     if (aInfo.mRequestedRloc16 != kInvalidRloc16)
