@@ -3532,7 +3532,11 @@ void Mle::ProcessAddressSolicit(AddrSolicitInfo &aInfo)
     // The leader may have chosen to begin the attachment process assuming it's own partition
     // was a singleton. Don't allow any devices to upgrade while it is in the attaching
     // process because it could change the preconditions for the decision to reattach.
-    VerifyOrExit(!IsAttaching());
+    if (IsAttaching())
+    {
+        LogInfo("Rejecting AddrSolicit from %s while attaching", aInfo.mExtAddress.ToString().AsCString());
+        ExitNow();
+    }
 
     LogInfo("AddrSolicit Reason: %s", RouterUpgradeReasonToString(aInfo.mReason));
 
