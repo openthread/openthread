@@ -1820,6 +1820,7 @@ private:
         void  Stop(void);
         bool  IsRestoringChildRole(void) const { return mState == kRestoringChildRole; }
         bool  IsRestoringRouterOrLeaderRole(void) const { return mState == kRestoringRouterOrLeaderRole; }
+        void  HandleChildRestored(void);
         void  HandleTimer(void);
 
         void               GenerateRandomChallenge(void) { mChallenge.GenerateRandom(); }
