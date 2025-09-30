@@ -169,6 +169,12 @@ typedef struct otBorderAgentMeshCoPServiceTxtData
  *   test steps. For example, tests validating mDNS or DNS-SD functionality may disable the Border Agent to prevent its
  *   registration of the MeshCoP service.
  *
+ * When `OPENTHREAD_CONFIG_BORDER_AGENT_DEFER_INITIAL_SERVICE_ADV` is used, the OpenThread Border Agent module
+ * registers the mDNS `_meshcop._udp` service on the infrastructure link. It delays the initial registration of the
+ * service until the Border Agent starts for the first time (i.e., when the device attaches to a Thread network). The
+ * user can override this delay by disabling the Border Agent by calling `otBorderAgentSetEnabled(false)` and then
+ * re-enabling it by calling `otBorderAgentSetEnabled(true)`.
+ *
  * @param[in] aInstance  The OpenThread instance.
  * @param[in] aEnabled   A boolean to indicate whether to to enable (TRUE), or disable (FALSE).
  */

@@ -1893,6 +1893,193 @@ void TestBorderAgentServiceRegistration(void)
     node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
 }
 
+void TestBorderAgentDeferringServiceRegistration(void)
+{
+    Core                             nexus;
+    Node                            &node = nexus.CreateNode();
+    Dns::Multicast::Core::Iterator  *iterator;
+    Dns::Multicast::Core::Service    service;
+    Dns::Multicast::Core::EntryState entryState;
+    MeshCoP::Dataset::Info           datasetInfo;
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("TestBorderAgentDeferringServiceRegistration");
+
+    nexus.AdvanceTime(0);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Enable mDNS
+    SuccessOrQuit(node.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    VerifyOrQuit(node.Get<Dns::Multicast::Core>().IsEnabled());
+
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Check that device is still disabled");
+    VerifyOrQuit(node.Get<Mle::Mle>().IsDisabled());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Check that Border Agent is enabled");
+    VerifyOrQuit(node.Get<MeshCoP::BorderAgent>().IsEnabled());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Validate that `_meshcop._udp` service registration is correctly deferred");
+
+    iterator = node.Get<Dns::Multicast::Core>().AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+    VerifyOrQuit(node.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
+    node.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Generate a random Active Dataset and save it");
+
+    SuccessOrQuit(datasetInfo.GenerateRandom(node.GetInstance()));
+    node.Get<MeshCoP::ActiveDatasetManager>().SaveLocal(datasetInfo);
+
+    nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Validate that BA service registration is still deferred");
+
+    iterator = node.Get<Dns::Multicast::Core>().AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+    VerifyOrQuit(node.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
+    node.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Set the BA service name");
+
+    SuccessOrQuit(node.Get<MeshCoP::BorderAgent>().SetServiceBaseName("OpenThreadAgent"));
+
+    nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Validate that BA service registration is still deferred");
+
+    iterator = node.Get<Dns::Multicast::Core>().AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+    VerifyOrQuit(node.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
+    node.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Start MLE operation");
+
+    node.Form();
+
+    nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node.Get<Mle::Mle>().IsLeader());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Validate the registered mDNS MeshCop service by Border Agent");
+
+    iterator = node.Get<Dns::Multicast::Core>().AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+
+    SuccessOrQuit(node.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState));
+
+    Log("  HostName: %s", service.mHostName);
+    Log("  ServiceInstance: %s", service.mServiceInstance);
+    Log("  ServiceType: %s", service.mServiceType);
+    Log("  Port: %u", service.mPort);
+    Log("  TTL: %lu", ToUlong(service.mTtl));
+
+    VerifyOrQuit(StringMatch(service.mServiceType, "_meshcop._udp"));
+    VerifyOrQuit(StringStartsWith(service.mServiceInstance, "OpenThreadAgent"));
+    VerifyOrQuit(StringStartsWith(service.mHostName, "ot"));
+    VerifyOrQuit(service.mPort == node.Get<MeshCoP::BorderAgent>().GetUdpPort());
+    VerifyOrQuit(service.mSubTypeLabelsLength == 0);
+    VerifyOrQuit(service.mTtl > 0);
+    VerifyOrQuit(service.mInfraIfIndex == kInfraIfIndex);
+    VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
+    ValidateRegisteredServiceData(service, node);
+
+    // Check that there is no more registered mDNS service
+    VerifyOrQuit(node.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
+
+    node.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+}
+
+void TestBorderAgentDeferralOverride(void)
+{
+    Core                             nexus;
+    Node                            &node = nexus.CreateNode();
+    Dns::Multicast::Core::Iterator  *iterator;
+    Dns::Multicast::Core::Service    service;
+    Dns::Multicast::Core::EntryState entryState;
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("TestBorderAgentDeferralOverride");
+
+    nexus.AdvanceTime(0);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Enable mDNS
+    SuccessOrQuit(node.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    VerifyOrQuit(node.Get<Dns::Multicast::Core>().IsEnabled());
+
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Check that device is still disabled");
+    VerifyOrQuit(node.Get<Mle::Mle>().IsDisabled());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Check that Border Agent is enabled by default");
+    VerifyOrQuit(node.Get<MeshCoP::BorderAgent>().IsEnabled());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Validate that `_meshcop._udp` service registration is correctly deferred");
+
+    iterator = node.Get<Dns::Multicast::Core>().AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+    VerifyOrQuit(node.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
+    node.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Disable the Border Agent");
+    node.Get<MeshCoP::BorderAgent>().SetEnabled(false);
+    VerifyOrQuit(!node.Get<MeshCoP::BorderAgent>().IsEnabled());
+
+    nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Re-enable the Border Agent to override deferral");
+    node.Get<MeshCoP::BorderAgent>().SetEnabled(true);
+    VerifyOrQuit(node.Get<MeshCoP::BorderAgent>().IsEnabled());
+
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
+
+    VerifyOrQuit(!node.Get<MeshCoP::BorderAgent>().IsRunning());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Validate that `_meshcop._udp` service is now registered");
+
+    iterator = node.Get<Dns::Multicast::Core>().AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+
+    SuccessOrQuit(node.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState));
+
+    Log("  HostName: %s", service.mHostName);
+    Log("  ServiceInstance: %s", service.mServiceInstance);
+    Log("  ServiceType: %s", service.mServiceType);
+    Log("  Port: %u", service.mPort);
+    Log("  TTL: %lu", ToUlong(service.mTtl));
+
+    VerifyOrQuit(StringMatch(service.mServiceType, "_meshcop._udp"));
+    VerifyOrQuit(StringStartsWith(service.mServiceInstance, OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME));
+    VerifyOrQuit(StringStartsWith(service.mHostName, "ot"));
+    VerifyOrQuit(service.mSubTypeLabelsLength == 0);
+    VerifyOrQuit(service.mTtl > 0);
+    VerifyOrQuit(service.mInfraIfIndex == kInfraIfIndex);
+    VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
+    ValidateRegisteredServiceData(service, node);
+
+    // Check that there is no more registered mDNS service
+    VerifyOrQuit(node.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
+
+    node.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+}
+
 } // namespace Nexus
 } // namespace ot
 
@@ -1903,6 +2090,8 @@ int main(void)
     ot::Nexus::TestHistoryTrackerBorderAgentEpskcEvent();
     ot::Nexus::TestBorderAgentTxtDataCallback();
     ot::Nexus::TestBorderAgentServiceRegistration();
+    ot::Nexus::TestBorderAgentDeferringServiceRegistration();
+    ot::Nexus::TestBorderAgentDeferralOverride();
     printf("All tests passed\n");
     return 0;
 }

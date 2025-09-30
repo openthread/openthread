@@ -63,6 +63,9 @@ BorderAgent::BorderAgent(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     , mEphemeralKeyManager(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_DEFER_INITIAL_SERVICE_ADV
+    , mShouldDeferServiceReg(true)
+#endif
 {
     ClearAllBytes(mCounters);
 
@@ -126,6 +129,16 @@ void BorderAgent::SetEnabled(bool aEnabled)
     {
         UnregisterService();
     }
+#if OPENTHREAD_CONFIG_BORDER_AGENT_DEFER_INITIAL_SERVICE_ADV
+    else
+    {
+        // If the user explicitly enables the BA, we do not delay
+        // MeshCop service registration, as the user indicates a
+        // desire for Border Agent functionality to be advertised.
+        mShouldDeferServiceReg = false;
+        PostServiceTask();
+    }
+#endif
 #endif
 
 exit:
@@ -160,6 +173,10 @@ void BorderAgent::Start(void)
     Get<KeyManager>().GetPskc(pskc);
     SuccessOrExit(error = mDtlsTransport.SetPsk(pskc.m8, Pskc::kSize));
     pskc.Clear();
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_DEFER_INITIAL_SERVICE_ADV
+    mShouldDeferServiceReg = false;
+#endif
 
     mIsRunning = true;
     PostServiceTask();
@@ -403,6 +420,7 @@ void BorderAgent::HandleServiceTask(void)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     RegisterService();
 #endif
+
     mServiceChangedCallback.InvokeIfSet();
 
 exit:
@@ -465,6 +483,10 @@ void BorderAgent::RegisterService(void)
     uint8_t       *txtDataBuffer;
     uint16_t       txtDataBufferSize;
     uint16_t       txtDataLength;
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_DEFER_INITIAL_SERVICE_ADV
+    VerifyOrExit(!mShouldDeferServiceReg);
+#endif
 
     VerifyOrExit(Get<Dnssd>().IsReady());
 

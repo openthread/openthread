@@ -104,6 +104,26 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_DEFER_INITIAL_SERVICE_ADV
+ *
+ * Applicable when the `OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE` feature is enabled.
+ *
+ * When defined as 1, the Border Agent will delay the initial registration and advertisement of the mDNS MeshCoP
+ * service until after the Border Agent has started for the first time (i.e., when the device attaches to a Thread
+ * network).
+ *
+ * This prevents the Border Agent from advertising the `_meshcop._udp` mDNS service prematurely during its boot-up and
+ * initialization, which could result in advertising invalid TXT data info (e.g., a default/stale XPANID, Network Name,
+ * or Dataset Timestamp).
+ *
+ * The next-layer user can override this delay by disabling (`otBorderAgentSetEnabled(false)`) and then re-enabling
+ * the Border Agent by calling `otBorderAgentSetEnabled(true)`.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_DEFER_INITIAL_SERVICE_ADV
+#define OPENTHREAD_CONFIG_BORDER_AGENT_DEFER_INITIAL_SERVICE_ADV 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME
  *
  * Specifies the base name to construct the service instance name used when advertising the mDNS `_meshcop._udp`

@@ -638,6 +638,9 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     Dns::Name::LabelBuffer mServiceName;
     Heap::Data             mVendorTxtData;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_DEFER_INITIAL_SERVICE_ADV
+    bool mShouldDeferServiceReg;
+#endif
 #endif
     Counters mCounters;
 };
