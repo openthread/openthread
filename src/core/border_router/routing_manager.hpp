@@ -536,7 +536,7 @@ public:
      * @retval kErrorNotFound     No more entries in the table.
      * @retval kErrorInvalidArgs  The @p aIterator is not valid (e.g. used to iterate over other entry types).
      */
-    Error GetNextRdnssAddrEntry(PrefixTableIterator &aIterator, RdnssAddrEntry &aEntry)
+    Error GetNextRdnssAddrEntry(PrefixTableIterator &aIterator, RdnssAddrEntry &aEntry) const
     {
         return mRxRaTracker.GetNextRdnssAddr(aIterator, aEntry);
     }
@@ -567,7 +567,7 @@ public:
      * @retval kErrorNotFound     No more entries in the table.
      * @retval kErrorInvalidArgs  The @p aIterator is not valid (e.g. used to iterate over other entry types).
      */
-    Error GetNextIfAddrEntry(PrefixTableIterator &aIterator, IfAddrEntry &aEntry)
+    Error GetNextIfAddrEntry(PrefixTableIterator &aIterator, IfAddrEntry &aEntry) const
     {
         return mRxRaTracker.GetNextIfAddr(aIterator, aEntry);
     }
