@@ -52,7 +52,7 @@ class RoutingManager;
 /**
  * Represents a Network Data BR tracker which discovers and tracks BRs in the Thread Network Data.
  */
-class NetDataPeerBrTracker : public InstanceLocator
+class NetDataBrTracker : public InstanceLocator
 {
     friend class ot::Notifier;
 
@@ -63,46 +63,58 @@ public:
     using TableIterator = otBorderRoutingPrefixTableIterator;
 
     /**
-     * Represents information about a peer Border Router found in the Network Data.
+     * Represents information about a Border Router found in the Network Data.
      */
-    using PeerBrEntry = otBorderRoutingPeerBorderRouterEntry;
+    using BorderRouterEntry = otBorderRoutingPeerBorderRouterEntry;
 
     /**
-     * Initializes a `NetDataPeerBrTracker`.
+     * Specified the filter to apply when counting or retrieving the tracked Border Routers.
+     */
+    enum Filter : uint8_t
+    {
+        kAllBorderRouters,  ///< Include all Border Routers.
+        kExcludeThisDevice, ///< Exclude this device itself if acting as BR.
+    };
+
+    /**
+     * Initializes a `NetDataBrTracker`.
      *
      * @param[in] aInstance  The OpenThread instance.
      */
-    explicit NetDataPeerBrTracker(Instance &aInstance);
+    explicit NetDataBrTracker(Instance &aInstance);
 
     /**
-     * Counts the number of peer BRs found in the Network Data.
+     * Counts the number of tracked Border Routers.
      *
-     * The count does not include this device itself (when it itself is acting as a BR).
+     * The @p aFilter specifies which BRs to include in the count, e.g., if `kExcludeThisDevice` is used then the
+     * count does not include this device itself (when it itself is acting as a BR).
      *
+     * @param[in]  aFilter   The filter to use when counting BRs.
      * @param[out] aMinAge   Reference to an `uint32_t` to return the minimum age among all peer BRs.
      *                       Age is represented as seconds since appearance of the BR entry in the Network Data.
      *
-     * @returns The number of peer BRs.
+     * @returns The number of BRs.
      */
-    uint16_t CountPeerBrs(uint32_t &aMinAge) const;
+    uint16_t CountBrs(Filter aFilter, uint32_t &aMinAge) const;
 
     /**
-     * Iterates over the peer BRs found in the Network Data.
+     * Iterates over the tracked Border Routers.
      *
+     * @param[in]     aFilter    Specifies the filter to apply when retrieving the tracked BRs.
      * @param[in,out] aIterator  An iterator.
      * @param[out]    aEntry     A reference to the entry to populate.
      *
-     * @retval kErrorNone        Got the next peer BR info, @p aEntry is updated and @p aIterator is advanced.
-     * @retval kErrorNotFound    No more peer BRs in the list.
+     * @retval kErrorNone        Got the next BR info, @p aEntry is updated and @p aIterator is advanced.
+     * @retval kErrorNotFound    No more BRs in the list.
      */
-    Error GetNext(TableIterator &aIterator, PeerBrEntry &aEntry) const;
+    Error GetNext(Filter aFilter, TableIterator &aIterator, BorderRouterEntry &aEntry) const;
 
 private:
-    struct PeerBr : LinkedListEntry<PeerBr>, Heap::Allocatable<PeerBr>
+    struct BorderRouter : LinkedListEntry<BorderRouter>, Heap::Allocatable<BorderRouter>
     {
-        struct Filter
+        struct RlocFilter
         {
-            Filter(const NetworkData::Rlocs &aRlocs)
+            RlocFilter(const NetworkData::Rlocs &aRlocs)
                 : mExcludeRlocs(aRlocs)
             {
             }
@@ -112,16 +124,17 @@ private:
 
         uint32_t GetAge(uint32_t aUptime) const { return aUptime - mDiscoverTime; }
         bool     Matches(uint16_t aRloc16) const { return mRloc16 == aRloc16; }
-        bool     Matches(const Filter &aFilter) const { return !aFilter.mExcludeRlocs.Contains(mRloc16); }
+        bool     Matches(const RlocFilter &aFilter) const { return !aFilter.mExcludeRlocs.Contains(mRloc16); }
 
-        PeerBr  *mNext;
-        uint16_t mRloc16;
-        uint32_t mDiscoverTime;
+        BorderRouter *mNext;
+        uint32_t      mDiscoverTime;
+        uint16_t      mRloc16;
     };
 
+    bool BrMatchesFilter(const BorderRouter &aEntry, Filter aFilter) const;
     void HandleNotifierEvents(Events aEvents);
 
-    OwningList<PeerBr> mPeerBrs;
+    OwningList<BorderRouter> mBorderRouters;
 };
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE

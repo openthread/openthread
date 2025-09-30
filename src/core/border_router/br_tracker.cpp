@@ -35,26 +35,47 @@
 namespace ot {
 namespace BorderRouter {
 
-RegisterLogModule("BorderRouting");
+RegisterLogModule("BrTracker");
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 
-NetDataPeerBrTracker::NetDataPeerBrTracker(Instance &aInstance)
+NetDataBrTracker::NetDataBrTracker(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
 }
 
-uint16_t NetDataPeerBrTracker::CountPeerBrs(uint32_t &aMinAge) const
+bool NetDataBrTracker::BrMatchesFilter(const BorderRouter &aEntry, Filter aFilter) const
+{
+    bool matches = true;
+
+    switch (aFilter)
+    {
+    case kAllBorderRouters:
+        break;
+    case kExcludeThisDevice:
+        matches = !Get<Mle::Mle>().HasRloc16(aEntry.mRloc16);
+        break;
+    }
+
+    return matches;
+}
+
+uint16_t NetDataBrTracker::CountBrs(Filter aFilter, uint32_t &aMinAge) const
 {
     uint32_t uptime = Get<Uptime>().GetUptimeInSeconds();
     uint16_t count  = 0;
 
     aMinAge = NumericLimits<uint32_t>::kMax;
 
-    for (const PeerBr &peerBr : mPeerBrs)
+    for (const BorderRouter &entry : mBorderRouters)
     {
+        if (!BrMatchesFilter(entry, aFilter))
+        {
+            continue;
+        }
+
         count++;
-        aMinAge = Min(aMinAge, peerBr.GetAge(uptime));
+        aMinAge = Min(aMinAge, entry.GetAge(uptime));
     }
 
     if (count == 0)
@@ -65,30 +86,34 @@ uint16_t NetDataPeerBrTracker::CountPeerBrs(uint32_t &aMinAge) const
     return count;
 }
 
-Error NetDataPeerBrTracker::GetNext(TableIterator &aIterator, PeerBrEntry &aEntry) const
+Error NetDataBrTracker::GetNext(Filter aFilter, TableIterator &aIterator, BorderRouterEntry &aEntry) const
 {
     using Iterator = RoutingManager::RxRaTracker::Iterator;
 
-    Iterator     &iterator = static_cast<Iterator &>(aIterator);
-    Error         error    = kErrorNone;
-    const PeerBr *entry;
+    Iterator           &iterator = static_cast<Iterator &>(aIterator);
+    Error               error    = kErrorNone;
+    const BorderRouter *entry;
 
-    if (iterator.GetType() == Iterator::kUnspecified)
+    do
     {
-        iterator.SetType(Iterator::kNetDataBrIterator);
-        entry = mPeerBrs.GetHead();
-    }
-    else
-    {
-        VerifyOrExit(iterator.GetType() == Iterator::kNetDataBrIterator, error = kErrorInvalidArgs);
-        entry = static_cast<const PeerBr *>(iterator.GetEntry());
+        if (iterator.GetType() == Iterator::kUnspecified)
+        {
+            iterator.SetType(Iterator::kNetDataBrIterator);
+            entry = mBorderRouters.GetHead();
+        }
+        else
+        {
+            VerifyOrExit(iterator.GetType() == Iterator::kNetDataBrIterator, error = kErrorInvalidArgs);
+            entry = static_cast<const BorderRouter *>(iterator.GetEntry());
+            VerifyOrExit(entry != nullptr, error = kErrorNotFound);
+            entry = entry->GetNext();
+        }
+
         VerifyOrExit(entry != nullptr, error = kErrorNotFound);
-        entry = entry->GetNext();
-    }
 
-    VerifyOrExit(entry != nullptr, error = kErrorNotFound);
+        iterator.SetEntry(entry);
 
-    iterator.SetEntry(entry);
+    } while (!BrMatchesFilter(*entry, aFilter));
 
     aEntry.mRloc16 = entry->mRloc16;
     aEntry.mAge    = entry->GetAge(iterator.GetInitUptime());
@@ -97,7 +122,7 @@ exit:
     return error;
 }
 
-void NetDataPeerBrTracker::HandleNotifierEvents(Events aEvents)
+void NetDataBrTracker::HandleNotifierEvents(Events aEvents)
 {
     NetworkData::Rlocs rlocs;
 
@@ -105,29 +130,27 @@ void NetDataPeerBrTracker::HandleNotifierEvents(Events aEvents)
 
     Get<NetworkData::Leader>().FindRlocs(NetworkData::kBrProvidingExternalIpConn, NetworkData::kAnyRole, rlocs);
 
-    // Remove `PeerBr` entries no longer found in Network Data,
-    // or they match the device RLOC16. Then allocate and add
-    // entries for newly discovered peers.
+    // Remove `BorderRouter` entries no longer found in Network Data
+    // Then allocate and add entries for newly discovered BRs.
 
-    mPeerBrs.RemoveAndFreeAllMatching(PeerBr::Filter(rlocs));
-    mPeerBrs.RemoveAndFreeAllMatching(Get<Mle::Mle>().GetRloc16());
+    mBorderRouters.RemoveAndFreeAllMatching(BorderRouter::RlocFilter(rlocs));
 
     for (uint16_t rloc16 : rlocs)
     {
-        PeerBr *newEntry;
+        BorderRouter *newEntry;
 
-        if (Get<Mle::Mle>().HasRloc16(rloc16) || mPeerBrs.ContainsMatching(rloc16))
+        if (mBorderRouters.ContainsMatching(rloc16))
         {
             continue;
         }
 
-        newEntry = PeerBr::Allocate();
-        VerifyOrExit(newEntry != nullptr, LogWarn("Failed to allocate `PeerBr` entry"));
+        newEntry = BorderRouter::Allocate();
+        VerifyOrExit(newEntry != nullptr, LogWarn("Failed to allocate `BorderRouter` entry"));
 
         newEntry->mRloc16       = rloc16;
         newEntry->mDiscoverTime = Get<Uptime>().GetUptimeInSeconds();
 
-        mPeerBrs.Push(*newEntry);
+        mBorderRouters.Push(*newEntry);
     }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE

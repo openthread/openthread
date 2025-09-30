@@ -97,7 +97,7 @@ class RoutingManager : public InstanceLocator
 {
     friend class ot::Notifier;
     friend class ot::Instance;
-    friend class NetDataPeerBrTracker;
+    friend class NetDataBrTracker;
 
 public:
     typedef NetworkData::RoutePreference          RoutePreference;     ///< Route preference (high, medium, low).
@@ -997,7 +997,7 @@ private:
         // the same flow of execution, the callback is invoked after all the
         // changes are processed.
 
-        friend class NetDataPeerBrTracker;
+        friend class NetDataBrTracker;
 
     public:
         explicit RxRaTracker(Instance &aInstance);
