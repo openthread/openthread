@@ -3510,7 +3510,7 @@ Error Mle::AddrSolicitInfo::ParseFrom(const Coap::Message &aMessage)
     case kErrorNone:
         break;
     case kErrorNotFound:
-        mXtalAccuracy = NumericLimits<uint16_t>::kMax;
+        SetToUintMax(mXtalAccuracy);
         break;
     default:
         ExitNow(error = kErrorParse);

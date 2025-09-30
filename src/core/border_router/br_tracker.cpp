@@ -65,7 +65,7 @@ uint16_t NetDataBrTracker::CountBrs(Filter aFilter, uint32_t &aMinAge) const
     uint32_t uptime = Get<Uptime>().GetUptimeInSeconds();
     uint16_t count  = 0;
 
-    aMinAge = NumericLimits<uint32_t>::kMax;
+    SetToUintMax(aMinAge);
 
     for (const BorderRouter &entry : mBorderRouters)
     {

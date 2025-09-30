@@ -1337,7 +1337,7 @@ uint16_t Dhcp6PdClient::RetxTracker::DetermineElapsedTime(void)
 
     if (mLongElapsedTime)
     {
-        elapsed = NumericLimits<uint16_t>::kMax;
+        SetToUintMax(elapsed);
         ExitNow();
     }
 

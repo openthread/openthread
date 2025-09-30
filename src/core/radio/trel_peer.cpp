@@ -134,8 +134,10 @@ uint32_t Peer::DetermineExpirationDelay(uint32_t aUptimeNow) const
     // `uint32_t` max value, indicating that the peer is not
     // considered as expired.
 
-    uint32_t delay = NumericLimits<uint32_t>::kMax;
+    uint32_t delay;
     uint32_t expireTime;
+
+    SetToUintMax(delay);
 
     VerifyOrExit(mDnssdState == kDnssdRemoved);
 
@@ -462,7 +464,9 @@ exit:
 void PeerTable::HandleTimer(void)
 {
     uint32_t uptimeNow = Get<Uptime>().GetUptimeInSeconds();
-    uint32_t delay     = NumericLimits<uint32_t>::kMax;
+    uint32_t delay;
+
+    SetToUintMax(delay);
 
     RemoveAndFreeAllMatching(Peer::ExpireChecker(uptimeNow));
 
