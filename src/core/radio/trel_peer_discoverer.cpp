@@ -340,7 +340,7 @@ void PeerDiscoverer::HandleBrowseResult(const Dnssd::BrowseResult &aResult)
 
     VerifyOrExit(IsRunning());
 
-    peer = Get<PeerTable>().FindMatching(Peer::ServiceNameMatcher(aResult.mServiceInstance));
+    peer = Get<PeerTable>().FindMatching(Peer::kMatchServiceName, aResult.mServiceInstance);
 
     if (aResult.mTtl == 0)
     {
@@ -416,7 +416,7 @@ void PeerDiscoverer::HandleSrvResult(const Dnssd::SrvResult &aResult)
 
     VerifyOrExit(IsRunning());
 
-    peer = Get<PeerTable>().FindMatching(Peer::ServiceNameMatcher(aResult.mServiceInstance));
+    peer = Get<PeerTable>().FindMatching(Peer::kMatchServiceName, aResult.mServiceInstance);
     VerifyOrExit(peer != nullptr);
 
     if (aResult.mTtl == 0)
@@ -455,7 +455,7 @@ void PeerDiscoverer::HandleTxtResult(const Dnssd::TxtResult &aResult)
 
     VerifyOrExit(IsRunning());
 
-    peer = Get<PeerTable>().FindMatching(Peer::ServiceNameMatcher(aResult.mServiceInstance));
+    peer = Get<PeerTable>().FindMatching(Peer::kMatchServiceName, aResult.mServiceInstance);
     VerifyOrExit(peer != nullptr);
 
     peer->mTxtDataValidated = false;
@@ -502,7 +502,7 @@ void PeerDiscoverer::StartHostAddressResolver(Peer &aPeer)
 
     VerifyOrExit(!aPeer.mResolvingHost);
 
-    sameHostPeer = Get<PeerTable>().FindMatching(Peer::HostNameMatcher(aPeer.mHostName.AsCString()));
+    sameHostPeer = Get<PeerTable>().FindMatching(Peer::kMatchHostName, aPeer.mHostName.AsCString());
 
     aPeer.mResolvingHost = true;
 
@@ -530,7 +530,7 @@ void PeerDiscoverer::StopHostAddressResolver(Peer &aPeer)
     aPeer.mResolvingHost = false;
     aPeer.mHostAddresses.Free();
 
-    VerifyOrExit(!Get<PeerTable>().ContainsMatching(Peer::HostNameMatcher(aPeer.mHostName.AsCString())));
+    VerifyOrExit(!Get<PeerTable>().ContainsMatching(Peer::kMatchHostName, aPeer.mHostName.AsCString()));
 
     Get<Dnssd>().StopIp6AddressResolver(AddressResolver(aPeer));
 
@@ -613,7 +613,7 @@ void PeerDiscoverer::HandleAddressResult(const Dnssd::AddressResult &aResult)
             continue;
         }
 
-        if (peer.Matches(Peer::HostNameMatcher(aResult.mHostName)))
+        if (peer.Matches(Peer::kMatchHostName, aResult.mHostName))
         {
             UpdatePeerAddresses(peer, sortedAddresses);
             UpdatePeerState(peer);
