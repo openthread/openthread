@@ -112,6 +112,23 @@ jobs:
       run: |
         script/code-spell check
 
+  cmake-presets:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y build-essential ninja-build libreadline-dev libncurses-dev
+    - name: Build
+      run: |
+        cmake --preset simulation
+        cmake --build --preset simulation
+        ctest --preset simulation
+
   cmake-version:
     runs-on: ubuntu-24.04
     steps:
