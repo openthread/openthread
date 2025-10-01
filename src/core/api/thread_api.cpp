@@ -51,6 +51,7 @@ const otExtendedPanId *otThreadGetExtendedPanId(otInstance *aInstance)
     return &AsCoreType(aInstance).Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId();
 }
 
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
 otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *aExtendedPanId)
 {
     Error                         error    = kErrorNone;
@@ -67,6 +68,7 @@ otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *a
 exit:
     return error;
 }
+#endif
 
 otError otThreadGetLeaderRloc(otInstance *aInstance, otIp6Address *aLeaderRloc)
 {
@@ -105,6 +107,8 @@ otNetworkKeyRef otThreadGetNetworkKeyRef(otInstance *aInstance)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
+
 otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey)
 {
     Error     error    = kErrorNone;
@@ -140,6 +144,8 @@ exit:
 }
 #endif
 
+#endif // OPENTHREAD_CONFIG_LEGACY_API_ENABLE
+
 const otIp6Address *otThreadGetRloc(otInstance *aInstance)
 {
     return &AsCoreType(aInstance).Get<Mle::Mle>().GetMeshLocalRloc();
@@ -155,6 +161,7 @@ const otMeshLocalPrefix *otThreadGetMeshLocalPrefix(otInstance *aInstance)
     return &AsCoreType(aInstance).Get<Mle::Mle>().GetMeshLocalPrefix();
 }
 
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
 otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const otMeshLocalPrefix *aMeshLocalPrefix)
 {
     Error error = kErrorNone;
@@ -168,6 +175,7 @@ otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const otMeshLocalPrefi
 exit:
     return error;
 }
+#endif
 
 const otIp6Address *otThreadGetLinkLocalIp6Address(otInstance *aInstance)
 {
@@ -200,6 +208,8 @@ const char *otThreadGetNetworkName(otInstance *aInstance)
     return AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsCString();
 }
 
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
+
 otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
 {
     Error error = kErrorNone;
@@ -219,6 +229,8 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
 exit:
     return error;
 }
+
+#endif // OPENTHREAD_CONFIG_LEGACY_API_ENABLE
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 const char *otThreadGetDomainName(otInstance *aInstance)

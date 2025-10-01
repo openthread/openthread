@@ -629,8 +629,6 @@ otError otThreadGetNextCacheEntry(otInstance *aInstance, otCacheEntryInfo *aEntr
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  * @param[out]  aPskc       A pointer to an `otPskc` to return the retrieved Thread PSKc.
- *
- * @sa otThreadSetPskc
  */
 void otThreadGetPskc(otInstance *aInstance, otPskc *aPskc);
 
@@ -642,13 +640,15 @@ void otThreadGetPskc(otInstance *aInstance, otPskc *aPskc);
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  *
  * @returns Key Reference to PSKc
- *
- * @sa otThreadSetPskcRef
  */
 otPskcRef otThreadGetPskcRef(otInstance *aInstance);
 
 /**
  * Set the Thread PSKc
+ *
+ * Requires `OPENTHREAD_CONFIG_LEGACY_API_ENABLE`.
+ *
+ * Use of this API is discouraged. The recommended approach is to use the `otDataset` APIs.
  *
  * Will only succeed when Thread protocols are disabled.  A successful
  * call to this function will also invalidate the Active and Pending Operational Datasets in
@@ -659,15 +659,15 @@ otPskcRef otThreadGetPskcRef(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE           Successfully set the Thread PSKc.
  * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
- *
- * @sa otThreadGetPskc
  */
 otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc);
 
 /**
  * Set the Key Reference to the Thread PSKc
  *
- * Requires the build-time feature `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` to be enabled.
+ * Requires `OPENTHREAD_CONFIG_LEGACY_API_ENABLE` and `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE.
+ *
+ * Use of this API is discouraged. The recommended approach is to use the `otDataset` APIs.
  *
  * Will only succeed when Thread protocols are disabled.  Upon success,
  * this will also invalidate the Active and Pending Operational Datasets in
@@ -678,8 +678,6 @@ otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc);
  *
  * @retval OT_ERROR_NONE           Successfully set the Thread PSKc.
  * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
- *
- * @sa otThreadGetPskcRef
  */
 otError otThreadSetPskcRef(otInstance *aInstance, otPskcRef aKeyRef);
 

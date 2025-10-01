@@ -598,6 +598,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_NETWORK_NAME>(voi
     return mEncoder.WriteUtf8(otThreadGetNetworkName(mInstance));
 }
 
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_NETWORK_NAME>(void)
 {
     const char *string = nullptr;
@@ -610,11 +611,14 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_NETWORK_NAME>(voi
 exit:
     return error;
 }
+#endif
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_XPANID>(void)
 {
     return mEncoder.WriteData(otThreadGetExtendedPanId(mInstance)->m8, sizeof(spinel_net_xpanid_t));
 }
+
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_XPANID>(void)
 {
@@ -632,6 +636,8 @@ exit:
     return error;
 }
 
+#endif // OPENTHREAD_CONFIG_LEGACY_API_ENABLE
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_NETWORK_KEY>(void)
 {
     otNetworkKey networkKey;
@@ -641,6 +647,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_NETWORK_KEY>(void
     return mEncoder.WriteData(networkKey.m8, OT_NETWORK_KEY_SIZE);
 }
 
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_NETWORK_KEY>(void)
 {
     const uint8_t *ptr = nullptr;
@@ -656,6 +663,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_NETWORK_KEY>(void
 exit:
     return error;
 }
+#endif
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER>(void)
 {
@@ -1969,6 +1977,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_IPV6_ML_PREFIX>(void)
 {
     otError             error = OT_ERROR_NONE;
@@ -1984,6 +1993,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_IPV6_ML_PREFIX>(void)
 exit:
     return error;
 }
+#endif
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_ML_ADDR>(void)
 {

@@ -604,6 +604,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_PSKC>(void)
     return mEncoder.WriteData(pskc.m8, sizeof(spinel_net_pskc_t));
 }
 
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>(void)
 {
     const uint8_t *ptr = nullptr;
@@ -619,6 +620,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>(void)
 exit:
     return error;
 }
+#endif
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PARTITION_ID>(void)

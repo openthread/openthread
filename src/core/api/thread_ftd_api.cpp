@@ -273,6 +273,8 @@ void otThreadGetPskc(otInstance *aInstance, otPskc *aPskc)
 otPskcRef otThreadGetPskcRef(otInstance *aInstance) { return AsCoreType(aInstance).Get<KeyManager>().GetPskcRef(); }
 #endif
 
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
+
 otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc)
 {
     Error error = kErrorNone;
@@ -304,6 +306,8 @@ exit:
     return error;
 }
 #endif
+
+#endif // OPENTHREAD_CONFIG_LEGACY_API_ENABLE
 
 int8_t otThreadGetParentPriority(otInstance *aInstance)
 {

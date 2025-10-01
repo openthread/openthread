@@ -582,6 +582,23 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LEGACY_API_ENABLE
+ *
+ * Define as 1 to enable legacy APIs for Thread network configuration.
+ *
+ * When enabled, this provides access to legacy APIs that allow setting Operational Dataset properties individually,
+ * such as `otThreadSetNetworkKey()` and `otThreadSetExtendedPanId()`.
+ *
+ * Use of these APIs is discouraged. The recommended approach is to use the `otDataset*` APIs to configure the
+ * Operational Dataset as a whole, which ensures atomicity and consistency of the network parameters.
+ *
+ * This configuration should only be enabled for backward compatibility with older applications or tests.
+ */
+#ifndef OPENTHREAD_CONFIG_LEGACY_API_ENABLE
+#define OPENTHREAD_CONFIG_LEGACY_API_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
  *
  * Define to 1 to enable TCAT over BLE support.
