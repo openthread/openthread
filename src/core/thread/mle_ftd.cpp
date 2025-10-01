@@ -3529,15 +3529,6 @@ void Mle::ProcessAddressSolicit(AddrSolicitInfo &aInfo)
     aInfo.mResponse = kAddrSolicitNoAddressAvailable;
     aInfo.mRouter   = nullptr;
 
-    // The leader may have chosen to begin the attachment process assuming it's own partition
-    // was a singleton. Don't allow any devices to upgrade while it is in the attaching
-    // process because it could change the preconditions for the decision to reattach.
-    if (IsAttaching())
-    {
-        LogInfo("Rejecting AddrSolicit from %s while attaching", aInfo.mExtAddress.ToString().AsCString());
-        ExitNow();
-    }
-
     LogInfo("AddrSolicit Reason: %s", RouterUpgradeReasonToString(aInfo.mReason));
 
     if (aInfo.mRequestedRloc16 != kInvalidRloc16)
@@ -3604,7 +3595,7 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, con
     Coap::Message  *response = nullptr;
     AddrSolicitInfo info;
 
-    VerifyOrExit(IsLeader());
+    VerifyOrExit(IsLeader() && !IsAttaching());
 
     Log(kMessageReceive, kTypeAddressSolicit, aMessageInfo.GetPeerAddr());
 
