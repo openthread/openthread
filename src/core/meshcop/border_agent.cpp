@@ -583,8 +583,8 @@ Error BorderAgent::PrepareServiceTxtData(uint8_t *aBuffer, uint16_t aBufferSize,
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     {
-        Ip6::Prefix                                   prefix;
-        BorderRouter::RoutingManager::RoutePreference preference;
+        Ip6::Prefix                   prefix;
+        BorderRouter::RoutePreference preference;
 
         if (Get<BorderRouter::RoutingManager>().GetFavoredOmrPrefix(prefix, preference) == kErrorNone &&
             prefix.GetLength() > 0)
