@@ -39,6 +39,7 @@
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #include "border_router/br_types.hpp"
+#include "common/log.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
@@ -85,10 +86,10 @@ void LogRecursiveDnsServerOption(const Ip6::Address &aAddress, uint32_t aLifetim
 
 #else
 
-void LogRaHeader(const RouterAdvert::Header &) {}
-void LogPrefixInfoOption(const Ip6::Prefix &, uint32_t, uint32_t, PrefixInfoOption::Flags) {}
-void LogRouteInfoOption(const Ip6::Prefix &, uint32_t, RoutePreference) {}
-void LogRecursiveDnsServerOption(const Ip6::Address &, uint32_t) {}
+inline void LogRaHeader(const RouterAdvert::Header &) {}
+inline void LogPrefixInfoOption(const Ip6::Prefix &, uint32_t, uint32_t, PrefixInfoOption::Flags) {}
+inline void LogRouteInfoOption(const Ip6::Prefix &, uint32_t, RoutePreference) {}
+inline void LogRecursiveDnsServerOption(const Ip6::Address &, uint32_t) {}
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 

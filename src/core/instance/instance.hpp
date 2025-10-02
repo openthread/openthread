@@ -75,6 +75,7 @@
 #include "backbone_router/bbr_manager.hpp"
 #include "border_router/dhcp6_pd_client.hpp"
 #include "border_router/routing_manager.hpp"
+#include "border_router/rx_ra_tracker.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/code_utils.hpp"
 #include "common/notifier.hpp"
@@ -710,6 +711,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    BorderRouter::RxRaTracker    mRxRaTracker;
     BorderRouter::RoutingManager mRoutingManager;
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
     BorderRouter::NetDataBrTracker mNetDataBrTracker;
@@ -1093,6 +1095,7 @@ template <> inline LinkMetrics::Subject &Instance::Get(void) { return mSubject; 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+template <> inline BorderRouter::RxRaTracker    &Instance::Get(void) { return mRxRaTracker; }
 template <> inline BorderRouter::RoutingManager &Instance::Get(void) { return mRoutingManager; }
 template <> inline BorderRouter::InfraIf        &Instance::Get(void) { return mRoutingManager.mInfraIf; }
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE

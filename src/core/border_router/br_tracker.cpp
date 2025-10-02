@@ -88,7 +88,7 @@ uint16_t NetDataBrTracker::CountBrs(Filter aFilter, uint32_t &aMinAge) const
 
 Error NetDataBrTracker::GetNext(Filter aFilter, TableIterator &aIterator, BorderRouterEntry &aEntry) const
 {
-    using Iterator = RoutingManager::RxRaTracker::Iterator;
+    using Iterator = RxRaTracker::Iterator;
 
     Iterator           &iterator = static_cast<Iterator &>(aIterator);
     Error               error    = kErrorNone;

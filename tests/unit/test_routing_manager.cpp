@@ -1080,9 +1080,9 @@ void VerifyPrefixTable(const OnLinkPrefix *aOnLinkPrefixes,
 
     Log("VerifyPrefixTable()");
 
-    sInstance->Get<BorderRouter::RoutingManager>().InitPrefixTableIterator(iter);
+    sInstance->Get<BorderRouter::RxRaTracker>().InitIterator(iter);
 
-    while (sInstance->Get<BorderRouter::RoutingManager>().GetNextPrefixTableEntry(iter, entry) == kErrorNone)
+    while (sInstance->Get<BorderRouter::RxRaTracker>().GetNextPrefixTableEntry(iter, entry) == kErrorNone)
     {
         bool didFind = false;
 
@@ -1168,9 +1168,9 @@ void VerifyRdnssAddressTable(const RdnssAddress *aRdnssAddresses, uint16_t aNumA
 
     Log("VerifyRdnssAddressTable()");
 
-    sInstance->Get<BorderRouter::RoutingManager>().InitPrefixTableIterator(iter);
+    sInstance->Get<BorderRouter::RxRaTracker>().InitIterator(iter);
 
-    while (sInstance->Get<BorderRouter::RoutingManager>().GetNextRdnssAddrEntry(iter, entry) == kErrorNone)
+    while (sInstance->Get<BorderRouter::RxRaTracker>().GetNextRdnssAddrEntry(iter, entry) == kErrorNone)
     {
         bool didFind = false;
 
@@ -1235,9 +1235,9 @@ void VerifyDiscoveredRouters(const InfraRouter *aRouters, uint16_t aNumRouters)
 
     Log("VerifyDiscoveredRouters()");
 
-    sInstance->Get<BorderRouter::RoutingManager>().InitPrefixTableIterator(iter);
+    sInstance->Get<BorderRouter::RxRaTracker>().InitIterator(iter);
 
-    while (sInstance->Get<BorderRouter::RoutingManager>().GetNextRouterEntry(iter, entry) == kErrorNone)
+    while (sInstance->Get<BorderRouter::RxRaTracker>().GetNextRouterEntry(iter, entry) == kErrorNone)
     {
         bool didFind = false;
 
@@ -4977,7 +4977,7 @@ void TestRdnss(void)
     // Set the RDNSS callback on Routing Manager
 
     rdnssCallbackCalled = false;
-    sInstance->Get<BorderRouter::RoutingManager>().SetRdnssAddrCallback(HandleRdnssChanged, &rdnssCallbackCalled);
+    sInstance->Get<BorderRouter::RxRaTracker>().SetRdnssAddrCallback(HandleRdnssChanged, &rdnssCallbackCalled);
 
     VerifyOrQuit(!rdnssCallbackCalled);
 
