@@ -474,6 +474,7 @@ private:
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     Utils::Otns mOtns;
 #endif
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // Notifier, TimeTicker, Settings, and MessagePool are initialized
     // before other member variables since other classes/objects from
