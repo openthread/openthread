@@ -785,6 +785,7 @@ void TestMacFrameAckGeneration(void)
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 constexpr uint16_t kMpFcfLongFrame           = 1 << 3;
 constexpr uint16_t kMpFcfDstAddrShift        = 4;
+constexpr uint16_t kMpFcfDstAddrNone         = 0 << kMpFcfDstAddrShift;
 constexpr uint16_t kMpFcfDstAddrExt          = 3 << kMpFcfDstAddrShift;
 constexpr uint16_t kMpFcfSrcAddrShift        = 6;
 constexpr uint16_t kMpFcfSrcAddrShort        = 2 << kMpFcfSrcAddrShift;
@@ -797,9 +798,10 @@ constexpr uint16_t kMpFcfIePresent           = 1 << 15;
 
 void TestMacWakeupFrameGeneration(void)
 {
-    constexpr static uint8_t kSrcExtaddr[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-    constexpr static uint8_t kDstExtaddr[] = {0xf0, 0xe1, 0xd2, 0xc3, 0xb4, 0xa5, 0x96, 0x87};
-    constexpr static uint8_t kKeySource[]  = {0, 0, 0, 0x1c};
+    constexpr static Mac::WakeupId kWakeupId     = 0x1020;
+    constexpr static uint8_t       kSrcExtaddr[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+    constexpr static uint8_t       kDstExtaddr[] = {0xf0, 0xe1, 0xd2, 0xc3, 0xb4, 0xa5, 0x96, 0x87};
+    constexpr static uint8_t       kKeySource[]  = {0, 0, 0, 0x1c};
 
     constexpr static uint8_t kWakeupPsdu[] = {
         // Frame Control
@@ -818,10 +820,28 @@ void TestMacWakeupFrameGeneration(void)
         // Connection IE
         0x05, 0x00, 0x9b, 0xb8, 0xea, 0x01, 0x1c};
 
+    constexpr static uint8_t kWakeupPsdu2[] = {
+        // Frame Control
+        Mac::Frame::kTypeMultipurpose | kMpFcfLongFrame | kMpFcfDstAddrNone | kMpFcfSrcAddrExt,
+        (kMpFcfPanidPresent | kMpFcfSecurityEnabled | kMpFcfSequenceSuppression | kMpFcfIePresent) >> 8,
+        // PAN ID
+        0xce, 0xfa,
+        // No Destination Address
+        // Source Address
+        0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01,
+        // Security Header
+        Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecurityEncMic32, 0xfc, 0xfc, 0xfc, 0xfc, 0x00, 0x00, 0x00, 0x1c, 0x1d,
+        // Rendezvous Time IE
+        0x82, 0x0e, 0xcd, 0xab,
+        // Connection IE
+        0x07, 0x00, 0x9b, 0xb8, 0xea, 0x01, 0x1c, 0x20, 0x10};
+
     uint8_t            psdu[OT_RADIO_FRAME_MAX_SIZE];
     Mac::Address       src;
     Mac::Address       dst;
     Mac::Address       addr;
+    Mac::WakeupId      wakeupId;
+    Mac::WakeupRequest wakeupRequest;
     Mac::TxFrame       txFrame;
     Mac::Frame         rxFrame;
     Mac::ConnectionIe *connectionIe;
@@ -830,11 +850,12 @@ void TestMacWakeupFrameGeneration(void)
 
     src.SetExtended(kSrcExtaddr);
     dst.SetExtended(kDstExtaddr);
+    wakeupRequest.SetExtAddress(dst.GetExtended());
     txFrame.mPsdu      = psdu;
     txFrame.mLength    = 0;
     txFrame.mRadioType = 0;
 
-    SuccessOrQuit(txFrame.GenerateWakeupFrame(0xface, dst, src));
+    SuccessOrQuit(txFrame.GenerateWakeupFrame(0xface, wakeupRequest, src));
 
     // Validate that the frame satisfies the wake-up frame definition
     VerifyOrQuit(txFrame.GetType() == Mac::Frame::kTypeMultipurpose);
@@ -855,12 +876,60 @@ void TestMacWakeupFrameGeneration(void)
     connectionIe = txFrame.GetConnectionIe();
     connectionIe->SetRetryInterval(1);
     connectionIe->SetRetryCount(12);
+    VerifyOrQuit(connectionIe->SetWakeupId(kWakeupId) == kErrorParse);
 
     VerifyOrQuit(txFrame.GetRendezvousTimeIe()->GetRendezvousTime() == 0xabcd);
     VerifyOrQuit(connectionIe->GetRetryInterval() == 1);
     VerifyOrQuit(connectionIe->GetRetryCount() == 12);
+    VerifyOrQuit(connectionIe->GetWakeupId(wakeupId) == kErrorParse);
     VerifyOrQuit(txFrame.GetLength() == sizeof(kWakeupPsdu) + txFrame.GetFooterLength());
     VerifyOrQuit(memcmp(psdu, kWakeupPsdu, sizeof(kWakeupPsdu)) == 0);
+
+    // Initialize RX Frame with the same PSDU and check if it's recognized as wake-up frame
+    rxFrame.mPsdu      = psdu;
+    rxFrame.mLength    = txFrame.GetLength();
+    rxFrame.mRadioType = 0;
+
+    SuccessOrQuit(rxFrame.ValidatePsdu());
+    VerifyOrQuit(rxFrame.IsWakeupFrame());
+
+    // Validate the wake-up frame using the wake-up identifier.
+    src.SetExtended(kSrcExtaddr);
+    wakeupRequest.SetWakeupId(kWakeupId);
+    txFrame.mPsdu      = psdu;
+    txFrame.mLength    = 0;
+    txFrame.mRadioType = 0;
+
+    SuccessOrQuit(txFrame.GenerateWakeupFrame(0xface, wakeupRequest, src));
+
+    // Validate that the frame satisfies the wake-up frame definition
+    VerifyOrQuit(txFrame.GetType() == Mac::Frame::kTypeMultipurpose);
+    VerifyOrQuit(!txFrame.GetAckRequest());
+    VerifyOrQuit(txFrame.GetRendezvousTimeIe() != nullptr);
+    VerifyOrQuit(txFrame.GetConnectionIe() != nullptr);
+    VerifyOrQuit(txFrame.GetPayloadLength() == 0);
+    SuccessOrQuit(txFrame.GetSrcAddr(addr));
+    VerifyOrQuit(CompareAddresses(src, addr));
+    SuccessOrQuit(txFrame.GetDstAddr(addr));
+    VerifyOrQuit(addr.IsNone());
+
+    // Initialize remaining fields and check if the frame has the expected contents
+    txFrame.SetFrameCounter(0xfcfcfcfc);
+    txFrame.SetKeySource(kKeySource);
+    txFrame.SetKeyId(0x1d);
+    txFrame.GetRendezvousTimeIe()->SetRendezvousTime(0xabcd);
+    connectionIe = txFrame.GetConnectionIe();
+    connectionIe->SetRetryInterval(1);
+    connectionIe->SetRetryCount(12);
+    SuccessOrQuit(connectionIe->SetWakeupId(kWakeupId));
+
+    VerifyOrQuit(txFrame.GetRendezvousTimeIe()->GetRendezvousTime() == 0xabcd);
+    VerifyOrQuit(connectionIe->GetRetryInterval() == 1);
+    VerifyOrQuit(connectionIe->GetRetryCount() == 12);
+    SuccessOrQuit(connectionIe->GetWakeupId(wakeupId));
+    VerifyOrQuit(wakeupRequest.GetWakeupId() == wakeupId);
+    VerifyOrQuit(txFrame.GetLength() == sizeof(kWakeupPsdu2) + txFrame.GetFooterLength());
+    VerifyOrQuit(memcmp(psdu, kWakeupPsdu2, sizeof(kWakeupPsdu2)) == 0);
 
     // Initialize RX Frame with the same PSDU and check if it's recognized as wake-up frame
     rxFrame.mPsdu      = psdu;
