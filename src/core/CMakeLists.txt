@@ -96,6 +96,7 @@ set(COMMON_SOURCES
     backbone_router/multicast_listeners_table.cpp
     backbone_router/ndproxy_table.cpp
     border_router/br_tracker.cpp
+    border_router/br_types.cpp
     border_router/dhcp6_pd_client.cpp
     border_router/infra_if.cpp
     border_router/routing_manager.cpp

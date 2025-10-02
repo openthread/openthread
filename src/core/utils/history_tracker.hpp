@@ -532,10 +532,8 @@ private:
     void RecordEpskcEvent(EpskcEvent aEvent);
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    void       RecordFavoredOmrPrefix(const Ip6::Prefix                            &aPrefix,
-                                      BorderRouter::RoutingManager::RoutePreference aPreference,
-                                      bool                                          aIsLocal);
-    void       RecordFavoredOnLinkPrefix(const Ip6::Prefix &aPrefix, bool aIsLocal);
+    void RecordFavoredOmrPrefix(const Ip6::Prefix &aPrefix, BorderRouter::RoutePreference aPreference, bool aIsLocal);
+    void RecordFavoredOnLinkPrefix(const Ip6::Prefix &aPrefix, bool aIsLocal);
     AilRouter *RecordAilRouterEvent(void);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
     void RecordDhcp6Pd(BorderRouter::RoutingManager::Dhcp6PdState aState, const Ip6::Prefix &aPrefix);
