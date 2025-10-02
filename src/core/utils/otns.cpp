@@ -218,7 +218,7 @@ void Otns::EmitCoapStatus(const char             *aAction,
 exit:
     LogWarnOnError(error, "EmitCoapStatus");
 }
-#endif //  OPENTHREAD_FTD || OPENTHREAD_MTD
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 } // namespace Utils
 } // namespace ot
