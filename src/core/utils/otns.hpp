@@ -53,7 +53,7 @@
 #include "net/ip6_address.hpp"
 #include "thread/neighbor.hpp"
 #include "thread/neighbor_table.hpp"
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+#endif
 
 namespace ot {
 namespace Utils {
@@ -181,7 +181,7 @@ private:
                         const Ip6::MessageInfo &aMessageInfo,
                         Error                  *aError = nullptr) const;
     void HandleNotifierEvents(Events aEvents) const;
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+#endif
 };
 
 } // namespace Utils
