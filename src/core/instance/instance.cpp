@@ -84,6 +84,9 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
     , mUptime(*this)
 #endif
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    , mOtns(*this)
+#endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     , mNotifier(*this)
     , mTimeTicker(*this)
@@ -258,9 +261,6 @@ Instance::Instance(void)
 #endif
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
     , mAnnounceSender(*this)
-#endif
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-    , mOtns(*this)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     , mRoutingManager(*this)

@@ -315,6 +315,7 @@ set(RADIO_COMMON_SOURCES
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp
     thread/link_quality.cpp
+    utils/otns.cpp
     utils/parse_cmdline.cpp
     utils/power_calibration.cpp
 )
