@@ -2263,12 +2263,12 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
     }
 
     // Ignore "Child Update Request" from a child that is present in the
-    // child table but it is not yet in valid state. For example, a
-    // child which is being restored (due to parent reset) or is in the
-    // middle of the attach process (in `kStateParentRequest` or
-    // `kStateChildIdRequest`).
+    // child table but it is not yet in valid state, or restoring and included
+    // a challenge. For example, a child which is being restored (due to parent
+    // reset) or is in the middle of the attach process (in `kStateParentRequest`
+    // or `kStateChildIdRequest`).
 
-    VerifyOrExit(child->IsStateValid());
+    VerifyOrExit(child->IsStateValid() || (child->IsStateRestoring() && !challenge.IsEmpty()));
 
     oldMode = child->GetDeviceMode();
     child->SetDeviceMode(mode);
@@ -2407,9 +2407,18 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         Get<IndirectSender>().HandleChildModeChange(*child, oldMode);
     }
 
-    if (childDidChange)
+    // For reset, handling for children that are restoring
+    if (child->IsStateRestoring())
     {
-        IgnoreError(mChildTable.StoreChild(*child));
+        SetChildStateToValid(*child);
+        child->SetKeySequence(aRxInfo.mKeySequence);
+    }
+    else if (child->IsStateValid())
+    {
+        if (childDidChange)
+        {
+            IgnoreError(mChildTable.StoreChild(*child));
+        }
     }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
