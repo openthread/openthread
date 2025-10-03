@@ -682,7 +682,7 @@ bool Leader::ContainsOmrPrefix(const Ip6::Prefix &aPrefix) const
     const PrefixTlv       *prefixTlv;
     const BorderRouterTlv *brSubTlv;
 
-    VerifyOrExit(BorderRouter::RoutingManager::IsValidOmrPrefix(aPrefix));
+    VerifyOrExit(BorderRouter::IsValidOmrPrefix(aPrefix));
 
     prefixTlv = FindPrefix(aPrefix);
     VerifyOrExit(prefixTlv != nullptr);
@@ -697,7 +697,7 @@ bool Leader::ContainsOmrPrefix(const Ip6::Prefix &aPrefix) const
 
         config.SetFrom(*prefixTlv, *brSubTlv, *entry);
 
-        if (BorderRouter::RoutingManager::IsValidOmrPrefix(config))
+        if (BorderRouter::IsValidOmrPrefix(config))
         {
             ExitNow(contains = true);
         }

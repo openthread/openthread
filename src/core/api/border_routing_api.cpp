@@ -74,16 +74,15 @@ otError otBorderRoutingSetOmrConfig(otInstance              *aInstance,
                                     otRoutePreference        aPreference)
 {
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetOmrConfig(
-        MapEnum(aConfig), AsCoreTypePtr(aOmrPrefix),
-        static_cast<BorderRouter::RoutingManager::RoutePreference>(aPreference));
+        MapEnum(aConfig), AsCoreTypePtr(aOmrPrefix), static_cast<BorderRouter::RoutePreference>(aPreference));
 }
 
 otBorderRoutingOmrConfig otBorderRoutingGetOmrConfig(otInstance        *aInstance,
                                                      otIp6Prefix       *aOmrPrefix,
                                                      otRoutePreference *aPreference)
 {
-    BorderRouter::RoutingManager::RoutePreference preference;
-    BorderRouter::RoutingManager::OmrConfig       omrConfig;
+    BorderRouter::RoutePreference           preference;
+    BorderRouter::RoutingManager::OmrConfig omrConfig;
 
     omrConfig =
         AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOmrConfig(AsCoreTypePtr(aOmrPrefix), &preference);
@@ -158,8 +157,8 @@ otError otBorderRoutingGetPdProcessedRaInfo(otInstance *aInstance, otPdProcessed
 
 otError otBorderRoutingGetFavoredOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix, otRoutePreference *aPreference)
 {
-    otError                                       error;
-    BorderRouter::RoutingManager::RoutePreference preference;
+    otError                       error;
+    BorderRouter::RoutePreference preference;
 
     AssertPointerIsNotNull(aPreference);
 
@@ -191,8 +190,8 @@ otError otBorderRoutingGetFavoredNat64Prefix(otInstance        *aInstance,
                                              otIp6Prefix       *aPrefix,
                                              otRoutePreference *aPreference)
 {
-    otError                                       error;
-    BorderRouter::RoutingManager::RoutePreference preference;
+    otError                       error;
+    BorderRouter::RoutePreference preference;
 
     AssertPointerIsNotNull(aPreference);
 
