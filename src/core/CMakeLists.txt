@@ -315,9 +315,9 @@ set(RADIO_COMMON_SOURCES
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp
     thread/link_quality.cpp
+    utils/otns.cpp
     utils/parse_cmdline.cpp
     utils/power_calibration.cpp
-    utils/otns.cpp
 )
 
 set(OT_VENDOR_EXTENSION "" CACHE STRING "specify a C++ source file built as part of OpenThread core library")
