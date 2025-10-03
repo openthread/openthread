@@ -57,9 +57,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mOmrPrefixManager(aInstance)
     , mRioAdvertiser(aInstance)
     , mOnLinkPrefixManager(aInstance)
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-    , mNetDataPeerBrTracker(aInstance)
-#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
     , mMultiAilDetector(aInstance)
 #endif
@@ -438,10 +436,6 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
     }
 
     mRoutePublisher.HandleNotifierEvents(aEvents);
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-    mNetDataPeerBrTracker.HandleNotifierEvents(aEvents);
-#endif
 
     VerifyOrExit(IsInitialized() && IsEnabled());
 
@@ -1109,96 +1103,6 @@ void RoutingManager::IfAddress::CopyInfoTo(IfAddrEntry &aEntry, uint32_t aUptime
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// NetDataPeerBrTracker
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-
-RoutingManager::NetDataPeerBrTracker::NetDataPeerBrTracker(Instance &aInstance)
-    : InstanceLocator(aInstance)
-{
-}
-
-uint16_t RoutingManager::NetDataPeerBrTracker::CountPeerBrs(uint32_t &aMinAge) const
-{
-    uint32_t uptime = Get<Uptime>().GetUptimeInSeconds();
-    uint16_t count  = 0;
-
-    aMinAge = NumericLimits<uint16_t>::kMax;
-
-    for (const PeerBr &peerBr : mPeerBrs)
-    {
-        count++;
-        aMinAge = Min(aMinAge, peerBr.GetAge(uptime));
-    }
-
-    if (count == 0)
-    {
-        aMinAge = 0;
-    }
-
-    return count;
-}
-
-Error RoutingManager::NetDataPeerBrTracker::GetNext(PrefixTableIterator &aIterator, PeerBrEntry &aEntry) const
-{
-    using Iterator = RxRaTracker::Iterator;
-
-    Iterator &iterator = static_cast<Iterator &>(aIterator);
-    Error     error;
-
-    SuccessOrExit(error = iterator.AdvanceToNextPeerBr(mPeerBrs.GetHead()));
-
-    aEntry.mRloc16 = iterator.GetPeerBrEntry()->mRloc16;
-    aEntry.mAge    = iterator.GetPeerBrEntry()->GetAge(iterator.GetInitUptime());
-
-exit:
-    return error;
-}
-
-void RoutingManager::NetDataPeerBrTracker::HandleNotifierEvents(Events aEvents)
-{
-    NetworkData::Rlocs rlocs;
-
-    VerifyOrExit(aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadRoleChanged));
-
-    Get<NetworkData::Leader>().FindRlocs(NetworkData::kBrProvidingExternalIpConn, NetworkData::kAnyRole, rlocs);
-
-    // Remove `PeerBr` entries no longer found in Network Data,
-    // or they match the device RLOC16. Then allocate and add
-    // entries for newly discovered peers.
-
-    mPeerBrs.RemoveAndFreeAllMatching(PeerBr::Filter(rlocs));
-    mPeerBrs.RemoveAndFreeAllMatching(Get<Mle::Mle>().GetRloc16());
-
-    for (uint16_t rloc16 : rlocs)
-    {
-        PeerBr *newEntry;
-
-        if (Get<Mle::Mle>().HasRloc16(rloc16) || mPeerBrs.ContainsMatching(rloc16))
-        {
-            continue;
-        }
-
-        newEntry = PeerBr::Allocate();
-        VerifyOrExit(newEntry != nullptr, LogWarn("Failed to allocate `PeerBr` entry"));
-
-        newEntry->mRloc16       = rloc16;
-        newEntry->mDiscoverTime = Get<Uptime>().GetUptimeInSeconds();
-
-        mPeerBrs.Push(*newEntry);
-    }
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    Get<RoutingManager>().mMultiAilDetector.Evaluate();
-#endif
-
-exit:
-    return;
-}
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-
-//---------------------------------------------------------------------------------------------------------------------
 // MultiAilDetector
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
@@ -1228,7 +1132,7 @@ void RoutingManager::MultiAilDetector::Evaluate(void)
 
     VerifyOrExit(Get<RoutingManager>().IsRunning());
 
-    count = Get<RoutingManager>().mNetDataPeerBrTracker.CountPeerBrs(minAge);
+    count = Get<NetDataBrTracker>().CountBrs(NetDataBrTracker::kExcludeThisDevice, minAge);
 
     if (count != mNetDataPeerBrCount)
     {
@@ -2218,11 +2122,11 @@ Error RoutingManager::RxRaTracker::GetNextEntry(PrefixTableIterator &aIterator, 
 
     ClearAllBytes(aEntry);
 
-    SuccessOrExit(error = iterator.AdvanceToNextEntry());
+    SuccessOrExit(error = iterator.AdvanceToNextPrefixEntry());
 
     iterator.GetRouter()->CopyInfoTo(aEntry.mRouter, iterator.GetInitTime(), iterator.GetInitUptime());
 
-    switch (iterator.GetEntryType())
+    switch (iterator.GetPrefixType())
     {
     case Iterator::kOnLinkPrefix:
         iterator.GetEntry<OnLinkPrefix>()->CopyInfoTo(aEntry, iterator.GetInitTime());
@@ -2364,7 +2268,7 @@ void RoutingManager::RxRaTracker::Iterator::Init(const Entry<Router> *aRoutersHe
     SetType(kUnspecified);
     SetRouter(aRoutersHead);
     SetEntry(nullptr);
-    SetEntryType(kRoutePrefix);
+    SetPrefixType(kRoutePrefix);
 }
 
 Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextRouter(Type aType)
@@ -2396,7 +2300,7 @@ exit:
     return error;
 }
 
-Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextEntry(void)
+Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextPrefixEntry(void)
 {
     Error error = kErrorNone;
 
@@ -2404,7 +2308,7 @@ Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextEntry(void)
 
     if (HasEntry())
     {
-        switch (GetEntryType())
+        switch (GetPrefixType())
         {
         case kOnLinkPrefix:
             SetEntry(GetEntry<OnLinkPrefix>()->GetNext());
@@ -2417,7 +2321,7 @@ Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextEntry(void)
 
     while (!HasEntry())
     {
-        switch (GetEntryType())
+        switch (GetPrefixType())
         {
         case kOnLinkPrefix:
 
@@ -2425,7 +2329,7 @@ Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextEntry(void)
             // the current router.
 
             SetEntry(GetRouter()->mRoutePrefixes.GetHead());
-            SetEntryType(kRoutePrefix);
+            SetPrefixType(kRoutePrefix);
             break;
 
         case kRoutePrefix:
@@ -2439,7 +2343,7 @@ Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextEntry(void)
 
             SuccessOrExit(error = AdvanceToNextRouter(kPrefixIterator));
             SetEntry(GetRouter()->mOnLinkPrefixes.GetHead());
-            SetEntryType(kOnLinkPrefix);
+            SetPrefixType(kOnLinkPrefix);
             break;
         }
     }
@@ -2491,32 +2395,6 @@ Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextIfAddrEntry(const Entr
 exit:
     return error;
 }
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-
-Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextPeerBr(const PeerBr *aPeerBrsHead)
-{
-    Error error = kErrorNone;
-
-    if (GetType() == kUnspecified)
-    {
-        SetType(kPeerBrIterator);
-        SetEntry(aPeerBrsHead);
-    }
-    else
-    {
-        VerifyOrExit(GetType() == kPeerBrIterator, error = kErrorInvalidArgs);
-        VerifyOrExit(GetPeerBrEntry() != nullptr, error = kErrorNotFound);
-        SetEntry(GetPeerBrEntry()->GetNext());
-    }
-
-    VerifyOrExit(GetPeerBrEntry() != nullptr, error = kErrorNotFound);
-
-exit:
-    return error;
-}
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 // RxRaTracker::Router
@@ -3830,7 +3708,7 @@ Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMess
     const OmrPrefixManager         &omrPrefixManager = Get<RoutingManager>().mOmrPrefixManager;
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
-    oldPrefixes.TakeFrom(static_cast<RioPrefixArray &&>(mPrefixes));
+    oldPrefixes.TakeFrom(mPrefixes.Move());
 #else
     oldPrefixes = mPrefixes;
 #endif
@@ -4440,7 +4318,10 @@ void RoutingManager::Nat64PrefixManager::Discover(void)
     }
     else
     {
-        LogWarn("Failed to discover infraif NAT64 prefix: %s", ErrorToString(error));
+        if (error != kErrorNotImplemented)
+        {
+            LogWarn("Failed to discover infraif NAT64 prefix: %s", ErrorToString(error));
+        }
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
 }

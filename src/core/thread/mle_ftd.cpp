@@ -3510,7 +3510,7 @@ Error Mle::AddrSolicitInfo::ParseFrom(const Coap::Message &aMessage)
     case kErrorNone:
         break;
     case kErrorNotFound:
-        mXtalAccuracy = NumericLimits<uint16_t>::kMax;
+        SetToUintMax(mXtalAccuracy);
         break;
     default:
         ExitNow(error = kErrorParse);
@@ -3595,7 +3595,7 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, con
     Coap::Message  *response = nullptr;
     AddrSolicitInfo info;
 
-    VerifyOrExit(IsLeader());
+    VerifyOrExit(IsLeader() && !IsAttaching());
 
     Log(kMessageReceive, kTypeAddressSolicit, aMessageInfo.GetPeerAddr());
 

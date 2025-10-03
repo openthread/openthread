@@ -39,7 +39,7 @@
 #include "instance/instance.hpp"
 
 namespace ot {
-namespace Utils {
+namespace Ip6 {
 
 RegisterLogModule("Slaac");
 
@@ -94,7 +94,7 @@ exit:
     return;
 }
 
-Error Slaac::FindDomainIdFor(const Ip6::Address &aAddress, uint8_t &aDomainId) const
+Error Slaac::FindDomainIdFor(const Address &aAddress, uint8_t &aDomainId) const
 {
     Error error = kErrorNotFound;
 
@@ -105,7 +105,7 @@ Error Slaac::FindDomainIdFor(const Ip6::Address &aAddress, uint8_t &aDomainId) c
             continue;
         }
 
-        if (aAddress.PrefixMatch(slaacAddr.GetAddress()) >= Ip6::NetworkPrefix::kLength)
+        if (aAddress.PrefixMatch(slaacAddr.GetAddress()) >= NetworkPrefix::kLength)
         {
             aDomainId = slaacAddr.GetDomainId();
             error     = kErrorNone;
@@ -118,7 +118,7 @@ Error Slaac::FindDomainIdFor(const Ip6::Address &aAddress, uint8_t &aDomainId) c
 
 bool Slaac::IsSlaac(const NetworkData::OnMeshPrefixConfig &aConfig) const
 {
-    return aConfig.mSlaac && !aConfig.mDp && (aConfig.GetPrefix().GetLength() == Ip6::NetworkPrefix::kLength);
+    return aConfig.mSlaac && !aConfig.mDp && (aConfig.GetPrefix().GetLength() == NetworkPrefix::kLength);
 }
 
 bool Slaac::IsFiltered(const NetworkData::OnMeshPrefixConfig &aConfig) const
@@ -155,8 +155,7 @@ exit:
     return;
 }
 
-bool Slaac::DoesConfigMatchNetifAddr(const NetworkData::OnMeshPrefixConfig &aConfig,
-                                     const Ip6::Netif::UnicastAddress      &aAddr)
+bool Slaac::DoesConfigMatchNetifAddr(const NetworkData::OnMeshPrefixConfig &aConfig, const Netif::UnicastAddress &aAddr)
 {
     return (((aConfig.mOnMesh && (aAddr.mPrefixLength == aConfig.mPrefix.mLength)) ||
              (!aConfig.mOnMesh && (aAddr.mPrefixLength == 128))) &&
@@ -287,7 +286,7 @@ void Slaac::AddAddresses(void)
             continue;
         }
 
-        for (const Ip6::Netif::UnicastAddress &netifAddr : Get<ThreadNetif>().GetUnicastAddresses())
+        for (const Netif::UnicastAddress &netifAddr : Get<ThreadNetif>().GetUnicastAddresses())
         {
             if (DoesConfigMatchNetifAddr(prefixConfig, netifAddr))
             {
@@ -403,7 +402,7 @@ void Slaac::HandleTimer(void)
     mTimer.FireAtIfEarlier(nextTime);
 }
 
-Error Slaac::GenerateIid(Ip6::Netif::UnicastAddress &aAddress, uint8_t &aDadCounter) const
+Error Slaac::GenerateIid(Netif::UnicastAddress &aAddress, uint8_t &aDadCounter) const
 {
     /*
      *  This method generates a semantically opaque IID per RFC 7217.
@@ -425,7 +424,7 @@ Error Slaac::GenerateIid(Ip6::Netif::UnicastAddress &aAddress, uint8_t &aDadCoun
     Crypto::Sha256       sha256;
     Crypto::Sha256::Hash hash;
 
-    static_assert(sizeof(hash) >= Ip6::InterfaceIdentifier::kSize,
+    static_assert(sizeof(hash) >= InterfaceIdentifier::kSize,
                   "SHA-256 hash size is too small to use as IPv6 address IID");
 
     GetIidSecretKey(secretKey);
@@ -506,7 +505,7 @@ exit:
     return;
 }
 
-} // namespace Utils
+} // namespace Ip6
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE

@@ -4913,9 +4913,11 @@ enum
 
     /// Border Agent Ephemeral Key State.
     /**
-     * Format: `C` - Get and Unsolicited notifications.
+     * Format: `CS` - Get and Unsolicited notifications.
      *
      * `C`: The Ephemeral Key state. The value corresponds to `otBorderAgentEphemeralKeyState`.
+     * `S`: The UDP port that is being used by the ephemeral key. If the state is 'Disabled' or 'Stopped' , the port
+     * MUST be 0.
      */
     SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_STATE = SPINEL_PROP_BORDER_AGENT__BEGIN + 2,
 

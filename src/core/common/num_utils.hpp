@@ -145,6 +145,20 @@ template <typename IntType> int8_t ClampToInt8(IntType aValue)
 }
 
 /**
+ * Sets a given unsigned integer variable to its maximum possible value.
+ *
+ * @tparam UintType   The unsigned integer type.
+ *
+ * @param[out] aVariable  A reference to the variable to set to its max possible value.
+ */
+template <typename UintType> void SetToUintMax(UintType &aVariable)
+{
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
+
+    aVariable = NumericLimits<UintType>::kMax;
+}
+
+/**
  * Indicates whether or not the addition of two unsigned integers will result in an overflow.
  *
  * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).

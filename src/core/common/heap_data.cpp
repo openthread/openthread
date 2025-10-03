@@ -72,10 +72,14 @@ exit:
     return error;
 }
 
-void Data::SetFrom(Data &&aData)
+void Data::TakeFrom(Data &&aData)
 {
-    Free();
-    TakeFrom(aData);
+    if (&aData != this)
+    {
+        Free();
+        mData.Init(aData.mData.GetBytes(), aData.GetLength());
+        aData.mData.Init(nullptr, 0);
+    }
 }
 
 bool Data::Matches(const uint8_t *aBuffer, uint16_t aLength) const
@@ -125,12 +129,6 @@ Error Data::UpdateBuffer(uint16_t aNewLength)
 
 exit:
     return error;
-}
-
-void Data::TakeFrom(Data &aData)
-{
-    mData.Init(aData.mData.GetBytes(), aData.GetLength());
-    aData.mData.Init(nullptr, 0);
 }
 
 } // namespace Heap

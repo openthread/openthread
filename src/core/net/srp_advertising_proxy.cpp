@@ -1006,7 +1006,7 @@ void AdvertisingProxy::RegisterService(Service &aService)
 
         IgnoreError(Server::Service::ParseSubTypeServiceName(subTypeName.AsCString(), label, sizeof(label)));
         SuccessOrExit(error = labelString.Set(label));
-        IgnoreError(subTypeHeapStrings.PushBack(static_cast<Heap::String &&>(labelString)));
+        IgnoreError(subTypeHeapStrings.PushBack(labelString.Move()));
         IgnoreError(subTypeLabels.PushBack(subTypeHeapStrings.Back()->AsCString()));
     }
 

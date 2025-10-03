@@ -85,6 +85,7 @@ namespace Ip6 {
  * @defgroup core-ip6-ip6 IPv6
  * @defgroup core-ip6-mpl MPL
  * @defgroup core-ip6-netif Network Interfaces
+ * @defgroup core-ip6-slaac SLAAC
  *
  * @}
  */

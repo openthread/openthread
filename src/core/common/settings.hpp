@@ -50,9 +50,9 @@
 #include "meshcop/border_agent.hpp"
 #include "meshcop/dataset.hpp"
 #include "net/ip6_address.hpp"
+#include "net/slaac_address.hpp"
 #include "thread/version.hpp"
 #include "utils/flash.hpp"
-#include "utils/slaac_address.hpp"
 
 namespace ot {
 
@@ -479,7 +479,7 @@ public:
     public:
         static constexpr Key kKey = kKeySlaacIidSecretKey; ///< The associated key.
 
-        typedef Utils::Slaac::IidSecretKey ValueType; ///< The associated value type.
+        typedef Ip6::Slaac::IidSecretKey ValueType; ///< The associated value type.
 
     private:
         SlaacIidSecretKey(void) = default;

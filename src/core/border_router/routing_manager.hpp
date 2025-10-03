@@ -60,6 +60,7 @@
 #include <openthread/netdata.h>
 #include <openthread/platform/border_routing.h>
 
+#include "border_router/br_tracker.hpp"
 #include "border_router/infra_if.hpp"
 #include "common/array.hpp"
 #include "common/callback.hpp"
@@ -96,6 +97,7 @@ class RoutingManager : public InstanceLocator
 {
     friend class ot::Notifier;
     friend class ot::Instance;
+    friend class NetDataBrTracker;
 
 public:
     typedef NetworkData::RoutePreference          RoutePreference;     ///< Route preference (high, medium, low).
@@ -534,7 +536,7 @@ public:
      * @retval kErrorNotFound     No more entries in the table.
      * @retval kErrorInvalidArgs  The @p aIterator is not valid (e.g. used to iterate over other entry types).
      */
-    Error GetNextRdnssAddrEntry(PrefixTableIterator &aIterator, RdnssAddrEntry &aEntry)
+    Error GetNextRdnssAddrEntry(PrefixTableIterator &aIterator, RdnssAddrEntry &aEntry) const
     {
         return mRxRaTracker.GetNextRdnssAddr(aIterator, aEntry);
     }
@@ -565,40 +567,10 @@ public:
      * @retval kErrorNotFound     No more entries in the table.
      * @retval kErrorInvalidArgs  The @p aIterator is not valid (e.g. used to iterate over other entry types).
      */
-    Error GetNextIfAddrEntry(PrefixTableIterator &aIterator, IfAddrEntry &aEntry)
+    Error GetNextIfAddrEntry(PrefixTableIterator &aIterator, IfAddrEntry &aEntry) const
     {
         return mRxRaTracker.GetNextIfAddr(aIterator, aEntry);
     }
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-
-    /**
-     * Iterates over the peer BRs found in the Network Data.
-     *
-     * @param[in,out] aIterator  An iterator.
-     * @param[out]    aEntry     A reference to the entry to populate.
-     *
-     * @retval kErrorNone        Got the next peer BR info, @p aEntry is updated and @p aIterator is advanced.
-     * @retval kErrorNotFound    No more PR beers in the list.
-     */
-    Error GetNextPeerBrEntry(PrefixTableIterator &aIterator, PeerBrEntry &aEntry) const
-    {
-        return mNetDataPeerBrTracker.GetNext(aIterator, aEntry);
-    }
-
-    /**
-     * Returns the number of peer BRs found in the Network Data.
-     *
-     * The count does not include this device itself (when it itself is acting as a BR).
-     *
-     * @param[out] aMinAge   Reference to an `uint32_t` to return the minimum age among all peer BRs.
-     *                       Age is represented as seconds since appearance of the BR entry in the Network Data.
-     *
-     * @returns The number of peer BRs.
-     */
-    uint16_t CountPeerBrs(uint32_t &aMinAge) const { return mNetDataPeerBrTracker.CountPeerBrs(aMinAge); }
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
 
@@ -952,49 +924,6 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-
-    class RxRaTracker;
-
-    class NetDataPeerBrTracker : public InstanceLocator
-    {
-        friend class RxRaTracker;
-
-    public:
-        explicit NetDataPeerBrTracker(Instance &aInstance);
-
-        uint16_t CountPeerBrs(uint32_t &aMinAge) const;
-        Error    GetNext(PrefixTableIterator &aIterator, PeerBrEntry &aEntry) const;
-
-        void HandleNotifierEvents(Events aEvents);
-
-    private:
-        struct PeerBr : LinkedListEntry<PeerBr>, Heap::Allocatable<PeerBr>
-        {
-            struct Filter
-            {
-                Filter(const NetworkData::Rlocs &aRlocs)
-                    : mExcludeRlocs(aRlocs)
-                {
-                }
-
-                const NetworkData::Rlocs &mExcludeRlocs;
-            };
-
-            uint32_t GetAge(uint32_t aUptime) const { return aUptime - mDiscoverTime; }
-            bool     Matches(uint16_t aRloc16) const { return mRloc16 == aRloc16; }
-            bool     Matches(const Filter &aFilter) const { return !aFilter.mExcludeRlocs.Contains(mRloc16); }
-
-            PeerBr  *mNext;
-            uint16_t mRloc16;
-            uint32_t mDiscoverTime;
-        };
-
-        OwningList<PeerBr> mPeerBrs;
-    };
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
@@ -1068,7 +997,7 @@ private:
         // the same flow of execution, the callback is invoked after all the
         // changes are processed.
 
-        friend class NetDataPeerBrTracker;
+        friend class NetDataBrTracker;
 
     public:
         explicit RxRaTracker(Instance &aInstance);
@@ -1225,9 +1154,8 @@ private:
 
         //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-        class Iterator : public PrefixTableIterator
+        struct Iterator : public PrefixTableIterator
         {
-        public:
             enum Type : uint8_t
             {
                 kUnspecified,
@@ -1235,10 +1163,10 @@ private:
                 kPrefixIterator,
                 kRdnssAddrIterator,
                 kIfAddrIterator,
-                kPeerBrIterator,
+                kNetDataBrIterator, // Used by `NetDataPeerBrTracker`
             };
 
-            enum EntryType : uint8_t
+            enum PrefixType : uint8_t
             {
                 kOnLinkPrefix,
                 kRoutePrefix,
@@ -1246,35 +1174,27 @@ private:
 
             void                 Init(const Entry<Router> *aRoutersHead, uint32_t aUptime);
             Error                AdvanceToNextRouter(Type aType);
-            Error                AdvanceToNextEntry(void);
+            Error                AdvanceToNextPrefixEntry(void);
             Error                AdvanceToNextRdnssAddrEntry(void);
             Error                AdvanceToNextIfAddrEntry(const Entry<IfAddress> *aListHead);
             uint32_t             GetInitUptime(void) const { return mData0; }
+            void                 SetInitUptime(uint32_t aUptime) { mData0 = aUptime; }
             TimeMilli            GetInitTime(void) const { return TimeMilli(mData1); }
-            Type                 GetType(void) const { return static_cast<Type>(mData2); }
+            void                 SetInitTime(void) { mData1 = TimerMilli::GetNow().GetValue(); }
             const Entry<Router> *GetRouter(void) const { return static_cast<const Entry<Router> *>(mPtr1); }
-            EntryType            GetEntryType(void) const { return static_cast<EntryType>(mData3); }
+            void                 SetRouter(const Entry<Router> *aRouter) { mPtr1 = aRouter; }
+            Type                 GetType(void) const { return static_cast<Type>(mData2); }
+            void                 SetType(Type aType) { mData2 = aType; }
+            const void          *GetEntry(void) const { return mPtr2; }
+            void                 SetEntry(const void *aEntry) { mPtr2 = aEntry; }
+            bool                 HasEntry(void) const { return mPtr2 != nullptr; }
+            PrefixType           GetPrefixType(void) const { return static_cast<PrefixType>(mData3); }
+            void                 SetPrefixType(PrefixType aType) { mData3 = aType; }
 
             template <typename ObjectType> const Entry<ObjectType> *GetEntry(void) const
             {
                 return static_cast<const Entry<ObjectType> *>(mPtr2);
             }
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-            using PeerBr = NetDataPeerBrTracker::PeerBr;
-
-            Error         AdvanceToNextPeerBr(const PeerBr *aPeerBrsHead);
-            const PeerBr *GetPeerBrEntry(void) const { return static_cast<const PeerBr *>(mPtr2); }
-#endif
-
-        private:
-            void SetRouter(const Entry<Router> *aRouter) { mPtr1 = aRouter; }
-            void SetInitUptime(uint32_t aUptime) { mData0 = aUptime; }
-            void SetInitTime(void) { mData1 = TimerMilli::GetNow().GetValue(); }
-            void SetEntry(const void *aEntry) { mPtr2 = aEntry; }
-            bool HasEntry(void) const { return mPtr2 != nullptr; }
-            void SetEntryType(EntryType aType) { mData3 = aType; }
-            void SetType(Type aType) { mData2 = aType; }
         };
 
         //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
@@ -1908,10 +1828,6 @@ private:
     bool            mUserSetRioPreference;
 
     OnLinkPrefixManager mOnLinkPrefixManager;
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-    NetDataPeerBrTracker mNetDataPeerBrTracker;
-#endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
     MultiAilDetector mMultiAilDetector;

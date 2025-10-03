@@ -288,7 +288,7 @@ Error Leader::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDest
 
         uint8_t domainId;
 
-        if (Get<Utils::Slaac>().FindDomainIdFor(aSource, domainId) == kErrorNone)
+        if (Get<Ip6::Slaac>().FindDomainIdFor(aSource, domainId) == kErrorNone)
         {
             error = ExternalRouteLookup(domainId, aDestination, aRloc16);
         }

@@ -62,7 +62,7 @@ public:
      *
      * @param[in] aData   An rvalue reference to another `Heap::Data` to move from.
      */
-    Data(Data &&aData) { TakeFrom(aData); }
+    Data(Data &&aData) { TakeFrom(aData.Move()); }
 
     /**
      * This is the destructor for `Heap::Data` object.
@@ -131,11 +131,24 @@ public:
     Error SetFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
     /**
-     * Sets the `Heap::Data` from another one (move semantics).
+     * Sets the `Heap::Data` by taking ownership of the buffer from another `Heap::Data`.
      *
-     * @param[in] aData   The other `Heap::Data` to set from (rvalue reference).
+     * This method uses move semantics. After the call, `aData` will be null and this `Data` will hold the buffer
+     * previously held by `aData`.
+     *
+     * @param[in] aData     An rvalue reference to another `Heap::Data` to take from.
      */
-    void SetFrom(Data &&aData);
+    void TakeFrom(Data &&aData);
+
+    /**
+     * Casts the `Heap::Data` to an rvalue reference.
+     *
+     * This method is intended to be used with `TakeFrom()` to explicitly indicate a move operation and transfer of
+     * the underlying buffer.
+     *
+     * @returns An rvalue reference to this `Heap::Data`.
+     */
+    Data &&Move(void) { return static_cast<Data &&>(*this); }
 
     /**
      * Appends the bytes from `Heap::Data` to a given message.
