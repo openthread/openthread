@@ -768,6 +768,7 @@ private:
     using RouteInfoOption          = Ip6::Nd::RouteInfoOption;
     using RaFlagsExtOption         = Ip6::Nd::RaFlagsExtOption;
     using RecursiveDnsServerOption = Ip6::Nd::RecursiveDnsServerOption;
+    using Nat64PrefixInfoOption    = Ip6::Nd::Nat64PrefixInfoOption;
     using RouterAdvert             = Ip6::Nd::RouterAdvert;
     using NeighborAdvertMessage    = Ip6::Nd::NeighborAdvertMessage;
     using TxMessage                = Ip6::Nd::TxMessage;
@@ -1248,6 +1249,7 @@ private:
         void ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
         void ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
         void ProcessRecursiveDnsServerOption(const RecursiveDnsServerOption &aRdnss, Router &aRouter);
+        void ProcessNat64PrefixInfoOption(const Nat64PrefixInfoOption &aNat64PrefixInfoOption);
         void UpdateIfAddresses(const Ip6::Address &aAddress);
         void Evaluate(void);
         void DetermineStaleTimeFor(const OnLinkPrefix &aPrefix, NextFireTime &aStaleTime);
@@ -1544,14 +1546,26 @@ private:
         const Ip6::Prefix &GetFavoredPrefix(RoutePreference &aPreference) const;
         void               Evaluate(void);
         void               HandleDiscoverDone(const Ip6::Prefix &aPrefix);
+        void               HandleNat64PrefixInfoOption(const Nat64PrefixInfoOption &aNat64Pio);
         void               HandleTimer(void);
 
     private:
+        struct DiscoveredPrefix
+        {
+            void      Clear(void) { mPrefix.Clear(); }
+            bool      IsEmpty(void) const { return mPrefix.GetLength() == 0; }
+            TimeMilli GetExpireTime(void) const { return mExpireTime; }
+
+            Ip6::Prefix mPrefix;
+            TimeMilli   mExpireTime;
+        };
+
         void Discover(void);
         void Publish(const Ip6::Prefix &aPrefix, RoutePreference aPreference);
         void Unpublish(void);
 
         using Nat64Timer = TimerMilliIn<RoutingManager, &RoutingManager::HandleNat64PrefixManagerTimer>;
+        using ExpirationChecker = TimeMilli::ExpirationChecker;
 
         bool            mEnabled;
         Ip6::Prefix     mInfraIfPrefix;       // The latest NAT64 prefix discovered on the infrastructure interface.
@@ -1559,6 +1573,7 @@ private:
         Ip6::Prefix     mPublishedPrefix;     // The prefix to publish in Net Data (empty or local or from infra-if).
         RoutePreference mPublishedPreference; // The published prefix preference.
         Nat64Timer      mTimer;
+        DiscoveredPrefix mDiscoveredPrefix;
     };
 
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
