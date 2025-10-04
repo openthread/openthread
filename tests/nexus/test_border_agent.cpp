@@ -1787,6 +1787,26 @@ void TestBorderAgentServiceRegistration(void)
     sBrowseOutcomes.Clear();
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Change the base service name while agent is disabled and validate no service is registered");
+
+    SuccessOrQuit(node0.Get<MeshCoP::BorderAgent>().SetServiceBaseName("NewName"));
+
+    VerifyOrQuit(!node0.Get<MeshCoP::BorderAgent>().IsEnabled());
+
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
+
+    iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+
+    VerifyOrQuit(node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
+
+    node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+
+    VerifyOrQuit(sBrowseOutcomes.IsEmpty());
+
+    SuccessOrQuit(node0.Get<MeshCoP::BorderAgent>().SetServiceBaseName("OpenThreadAgent"));
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Re-enable Border Agent and validate that service is registered again");
 
     node0.Get<MeshCoP::BorderAgent>().SetEnabled(true);

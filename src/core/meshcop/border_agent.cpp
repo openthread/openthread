@@ -466,6 +466,7 @@ void BorderAgent::RegisterService(void)
     uint16_t       txtDataBufferSize;
     uint16_t       txtDataLength;
 
+    VerifyOrExit(IsEnabled());
     VerifyOrExit(Get<Dnssd>().IsReady());
 
     // Allocate a large enough buffer to fit both the TXT data
