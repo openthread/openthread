@@ -33,7 +33,6 @@
 #include "cli/cli_tcat.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/error.hpp"
 #include "common/string.hpp"
 
 #include <openthread/ble_secure.h>
@@ -261,7 +260,7 @@ exit:
 /**
  * @cli tcat certid
  * @code
- * tcat devid certid 0
+ * tcat certid 0
  * Done
  * @endcode
  * @cparam tcat certid [@ca{value}]
@@ -271,7 +270,7 @@ exit:
  */
 template <> otError Tcat::Process<Cmd("certid")>(Arg aArgs[])
 {
-    Error   error         = kErrorNone;
+    otError error         = OT_ERROR_NONE;
     uint8_t certCandidate = 0;
 
     if (aArgs[0].IsEmpty())
@@ -282,7 +281,7 @@ template <> otError Tcat::Process<Cmd("certid")>(Arg aArgs[])
 
     SuccessOrExit(error = aArgs[0].ParseAsUint8(certCandidate));
 
-    VerifyOrExit(certCandidate < CERT_SET_COUNT, error = kErrorInvalidArgs);
+    VerifyOrExit(certCandidate < CERT_SET_COUNT, error = OT_ERROR_INVALID_ARGS);
 
     mSelectedCert = certCandidate;
 
@@ -293,11 +292,16 @@ exit:
 /**
  * @cli tcat devid
  * @code
- * tcat devid ianapen f378aabb
+ * tcat devid f378aabb
+ * Done
+ * @endcode
+ * @code
+ * tcat devid
+ * f378aabb
  * Done
  * @endcode
  * @cparam tcat devid [@ca{value}|clear]
- * * The `value` hexstring value of the ID. `clear` is a special value removing previously set ID.
+ * * The `value` hexstring value of the ID. `clear` is a special value to remove the previously set ID.
  * @par
  * Sets/clears vendor specific device ID.
  */
@@ -309,7 +313,6 @@ template <> otError Tcat::Process<Cmd("devid")>(Arg aArgs[])
     {
         if (sGeneralDeviceId.mDeviceIdLen != 0)
         {
-            OutputLine("TCAT DeviceId:");
             OutputBytesLine(sGeneralDeviceId.mDeviceId, sGeneralDeviceId.mDeviceIdLen);
         }
         ExitNow();
@@ -337,7 +340,7 @@ exit:
  * Done
  * @endcode
  * @par
- * Starts TCAT operation.
+ * Starts TCAT agent and enables TCAT operation.
  * @sa otBleSecureSetCertificate
  * @sa otBleSecureSetCaCertificateChain
  * @sa otBleSecureSetSslAuthMode
@@ -347,9 +350,9 @@ exit:
  */
 template <> otError Tcat::Process<Cmd("start")>(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgs);
-
     otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
     ClearAllBytes(mVendorInfo);
     mVendorInfo.mPskdString                 = kPskdVendor;
@@ -395,35 +398,104 @@ exit:
  * Done
  * @endcode
  * @par
- * Stops TCAT operation.
+ * Stops TCAT agent and stops TCAT operation.
  * @sa otBleSecureStop
  */
 template <> otError Tcat::Process<Cmd("stop")>(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgs);
+    otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
     otBleSecureStop(GetInstancePtr());
 
-    return OT_ERROR_NONE;
+exit:
+    return error;
+}
+
+/**
+ * @cli tcat standby
+ * @code
+ * tcat standby
+ * Done
+ * @endcode
+ * @par
+ * Sets TCAT operation to standby, keeping the agent enabled.
+ * @sa otBleSecureSetTcatAgentState
+ */
+template <> otError Tcat::Process<Cmd("standby")>(Arg aArgs[])
+{
+    otError error;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    error = otBleSecureSetTcatAgentState(GetInstancePtr(), false, 0, 0);
+
+exit:
+    return error;
+}
+
+/**
+ * @cli tcat active
+ * @code
+ * tcat active
+ * Done
+ * @endcode
+ * @code
+ * tcat active 5000
+ * Done
+ * @endcode
+ * @code
+ * tcat active 5000 10000
+ * Done
+ * @endcode
+ * @cparam tcat active [@ca{delay}] [@ca{duration}]
+ * *   The optional `delay` argument specifies the delay in milliseconds before activation.
+ * *   The optional `duration` argument specifies the duration in milliseconds to remain active.
+ *     A duration of 0 (default) means the TCAT agent remains active indefinitely.
+ * @par
+ * Sets TCAT operation to active.
+ * @sa otBleSecureSetTcatAgentState
+ */
+template <> otError Tcat::Process<Cmd("active")>(Arg aArgs[])
+{
+    otError  error;
+    uint32_t delay    = 0;
+    uint32_t duration = 0;
+
+    if (!aArgs[0].IsEmpty())
+    {
+        SuccessOrExit(error = aArgs[0].ParseAsUint32(delay));
+        if (!aArgs[1].IsEmpty())
+        {
+            SuccessOrExit(error = aArgs[1].ParseAsUint32(duration));
+            VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+
+    error = otBleSecureSetTcatAgentState(GetInstancePtr(), true, delay, duration);
+
+exit:
+    return error;
 }
 
 otError Tcat::Process(Arg aArgs[])
 {
 #define CmdEntry(aCommandString) {aCommandString, &Tcat::Process<Cmd(aCommandString)>}
 
-    static constexpr Command kCommands[] = {CmdEntry("advid"), CmdEntry("devid"), CmdEntry("start"), CmdEntry("stop")};
+    static constexpr Command kCommands[] = {CmdEntry("active"), CmdEntry("advid"),   CmdEntry("certid"),
+                                            CmdEntry("devid"),  CmdEntry("standby"), CmdEntry("start"),
+                                            CmdEntry("stop")};
 
     static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");
 
 #undef CmdEntry
 
-    otError        error = OT_ERROR_NONE;
+    otError        error = OT_ERROR_INVALID_COMMAND;
     const Command *command;
 
     if (aArgs[0].IsEmpty() || (aArgs[0] == "help"))
     {
         OutputCommandTable(kCommands);
-        ExitNow(error = aArgs[0].IsEmpty() ? error : OT_ERROR_NONE);
+        ExitNow(error = OT_ERROR_NONE);
     }
 
     command = BinarySearch::Find(aArgs[0].GetCString(), kCommands);
