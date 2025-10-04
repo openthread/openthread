@@ -1,22 +1,30 @@
-# BBTC Client
+# TCAT Commissioner (BBTC) Client
 
 ## Overview
 
-This is a Python implementation of Bluetooth-Based Thread Commissioning (BBTC) client, based on Thread's TCAT (Thread Commissioning over Authenticated TLS) functionality.
+This is a Python implementation of a Bluetooth-Based Thread Commissioning (BBTC) client, based on Thread's TCAT (Thread Commissioning over Authenticated TLS) functionality.
 
 ## Installation
 
-If you don't have the poetry module installed (check with `poetry --version`), install it first using:
+If you don't have the poetry module installed (check with `poetry --version`), install it first following the [official installation instructions](https://python-poetry.org/docs/#installation).
+
+For example, if pipx is available:
 
 ```bash
-python3 -m pip install poetry
+pipx install poetry
 ```
 
+If pipx is not available, it can be installed for Linux/Windows/MacOS following the [pipx installation instructions](https://pipx.pypa.io/stable/installation/).
+
+Then, install this project using Poetry:
+
 ```
-poetry install
+poetry install --no-root
 ```
 
 This will install all the required modules to a virtual environment, which can be used by calling `poetry run <COMMAND>` from the project directory.
+
+Note: Installation on Windows requires that [Build Tools for Visual Studio C/C++](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022) be installed first.
 
 ## Usage
 
@@ -26,7 +34,7 @@ To see the supported commandline arguments of BBTC client, use:
 poetry run python3 bbtc.py --help
 ```
 
-In order to connect to a TCAT device, enter the project directory and run:
+In order to connect to a TCAT device, run:
 
 ```bash
 poetry run python3 bbtc.py {<device specifier> | --scan}
@@ -55,7 +63,7 @@ The TCAT Commissioner's certificate specifies what permissions it has obtained f
 poetry run python3 bbtc.py --cert_path <certs-path> {<device specifier> | --scan}
 ```
 
-where `<certs-path>` is the directory where the private key, certificate, and CA certificate of the TCAT Commissioner are stored.
+where `<certs-path>` is the directory where the private key, certificate, and CA certificate(s) of the TCAT Commissioner are stored.
 
 For example to use a pre-configured identity `CommCert2` (related to Thread certification tests):
 
