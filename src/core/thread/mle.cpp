@@ -2051,7 +2051,7 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
     if ((leaderData.GetPartitionId() != mLeaderData.GetPartitionId()) ||
         (leaderData.GetWeighting() != mLeaderData.GetWeighting()) || (leaderData.GetLeaderRouterId() != GetLeaderId()))
     {
-        if (IsChild())
+        if (IsChild() || mPrevRoleRestorer.IsRestoringChildRole())
         {
             SetLeaderData(leaderData);
             mRetrieveNewNetworkData = true;
@@ -2184,7 +2184,7 @@ exit:
 
 void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
 {
-    VerifyOrExit(IsAttached());
+    VerifyOrExit(IsAttached() || mPrevRoleRestorer.IsRestoringChildRole());
 
 #if OPENTHREAD_FTD
     if (IsRouterOrLeader())
