@@ -1576,14 +1576,6 @@ private:
 
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
 
-    static void LogRaHeader(const RouterAdvert::Header &aRaHeader);
-    static void LogPrefixInfoOption(const Ip6::Prefix      &aPrefix,
-                                    uint32_t                aValidLifetime,
-                                    uint32_t                aPreferredLifetime,
-                                    PrefixInfoOption::Flags aFlags);
-    static void LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime, RoutePreference aPreference);
-    static void LogRecursiveDnsServerOption(const Ip6::Address &aAddress, uint32_t aLifetime);
-
     static const char *RouterAdvOriginToString(RouterAdvOrigin aRaOrigin);
 
     //------------------------------------------------------------------------------------------------------------------
