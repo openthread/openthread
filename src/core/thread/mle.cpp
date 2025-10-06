@@ -3175,6 +3175,11 @@ void Mle::DelayedSender::ScheduleParentResponse(const ParentResponseInfo &aInfo,
     AddSchedule(kTypeParentResponse, destination, aDelay, &aInfo, sizeof(aInfo));
 }
 
+void Mle::DelayedSender::RemoveScheduledParentResponses(void)
+{
+    RemoveMatchingSchedules(kTypeParentResponse);
+}
+
 void Mle::DelayedSender::ScheduleAdvertisement(const Ip6::Address &aDestination, uint32_t aDelay)
 {
     VerifyOrExit(!HasMatchingSchedule(kTypeAdvertisement, aDestination));
@@ -3393,6 +3398,17 @@ bool Mle::DelayedSender::Match(const Schedule &aSchedule, MessageType aMessageTy
     return (header.mMessageType == aMessageType) && (header.mDestination == aDestination);
 }
 
+bool Mle::DelayedSender::MatchAndGetIp(const Schedule &aSchedule, MessageType aMessageType, Ip6::Address &aDestination)
+{
+    Header header;
+
+    header.ReadFrom(aSchedule);
+
+    aDestination = header.mDestination;
+
+    return (header.mMessageType == aMessageType);
+}
+
 bool Mle::DelayedSender::HasMatchingSchedule(MessageType aMessageType, const Ip6::Address &aDestination) const
 {
     bool hasMatching = false;
@@ -3407,6 +3423,20 @@ bool Mle::DelayedSender::HasMatchingSchedule(MessageType aMessageType, const Ip6
     }
 
     return hasMatching;
+}
+
+void Mle::DelayedSender::RemoveMatchingSchedules(MessageType aMessageType)
+{
+    Ip6::Address destination;
+
+    for (Schedule &schedule : mSchedules)
+    {
+        if (MatchAndGetIp(schedule, aMessageType, destination))
+        {
+            mSchedules.DequeueAndFree(schedule);
+            Log(kMessageRemoveDelayed, aMessageType, destination);
+        }
+    }
 }
 
 void Mle::DelayedSender::RemoveMatchingSchedules(MessageType aMessageType, const Ip6::Address &aDestination)
@@ -4398,6 +4428,10 @@ void Mle::Attacher::Attach(AttachMode aMode)
     VerifyOrExit(!Get<Mle>().IsDisabled());
 
     VerifyOrExit(!IsAttaching());
+
+#if OPENTHREAD_FTD
+    Get<Mle>().RemoveScheduledParentResponses();
+#endif    
 
     if (!Get<Mle>().IsDetached())
     {
