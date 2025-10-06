@@ -3178,10 +3178,10 @@ void Mle::DelayedSender::ScheduleParentResponse(const ParentResponseInfo &aInfo,
 void Mle::DelayedSender::RemoveScheduledParentResponses(void)
 {
     Ip6::Address destination;
-    
+
     // The unspecified address will clear all parent responses to any destination
     destination.Clear();
-    
+
     RemoveMatchingSchedules(kTypeParentResponse, destination);
 }
 
