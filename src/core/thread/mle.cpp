@@ -3175,7 +3175,15 @@ void Mle::DelayedSender::ScheduleParentResponse(const ParentResponseInfo &aInfo,
     AddSchedule(kTypeParentResponse, destination, aDelay, &aInfo, sizeof(aInfo));
 }
 
-void Mle::DelayedSender::RemoveScheduledParentResponses(void) { RemoveMatchingSchedules(kTypeParentResponse); }
+void Mle::DelayedSender::RemoveScheduledParentResponses(void)
+{
+    Ip6::Address destination;
+    
+    // The unspecified address will clear all parent responses to any destination
+    destination.Clear();
+    
+    RemoveMatchingSchedules(kTypeParentResponse, destination);
+}
 
 void Mle::DelayedSender::ScheduleAdvertisement(const Ip6::Address &aDestination, uint32_t aDelay)
 {
@@ -3410,17 +3418,6 @@ exit:
     return matches;
 }
 
-bool Mle::DelayedSender::MatchAndGetIp(const Schedule &aSchedule, MessageType aMessageType, Ip6::Address &aDestination)
-{
-    Header header;
-
-    header.ReadFrom(aSchedule);
-
-    aDestination = header.mDestination;
-
-    return (header.mMessageType == aMessageType);
-}
-
 bool Mle::DelayedSender::HasMatchingSchedule(MessageType aMessageType, const Ip6::Address &aDestination) const
 {
     bool hasMatching = false;
@@ -3435,20 +3432,6 @@ bool Mle::DelayedSender::HasMatchingSchedule(MessageType aMessageType, const Ip6
     }
 
     return hasMatching;
-}
-
-void Mle::DelayedSender::RemoveMatchingSchedules(MessageType aMessageType)
-{
-    Ip6::Address destination;
-
-    for (Schedule &schedule : mSchedules)
-    {
-        if (MatchAndGetIp(schedule, aMessageType, destination))
-        {
-            mSchedules.DequeueAndFree(schedule);
-            Log(kMessageRemoveDelayed, aMessageType, destination);
-        }
-    }
 }
 
 void Mle::DelayedSender::RemoveMatchingSchedules(MessageType aMessageType, const Ip6::Address &aDestination)
