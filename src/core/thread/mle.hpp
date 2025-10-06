@@ -1741,6 +1741,7 @@ private:
         bool HasMatchingSchedule(MessageType aMessageType, const Ip6::Address &aDestination) const;
         void RemoveMatchingSchedules(MessageType aMessageType);
         void RemoveMatchingSchedules(MessageType aMessageType, const Ip6::Address &aDestination);
+        void LogRemove(const Schedule &aSchedule);
 
         static bool Match(const Schedule &aSchedule, MessageType aMessageType, const Ip6::Address &aDestination);
         static bool MatchAndGetIp(const Schedule &aSchedule, MessageType aMessageType, Ip6::Address &aDestination);
