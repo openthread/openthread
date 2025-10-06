@@ -1046,6 +1046,12 @@ public:
      */
     void ScheduleUnicastAdvertisementTo(const Router &aRouter);
 
+    /**
+     * Remove all parent responses that have been scheduled to be sent at a later time. Used when a precondition
+     * of the parent responses has changed.
+     */
+    void RemoveScheduledParentResponses(void) { mDelayedSender.RemoveScheduledParentResponses(); }
+
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     /**
      * Sets steering data out of band
@@ -1698,6 +1704,7 @@ private:
         void ScheduleChildUpdateRequestToParent(uint32_t aDelay);
 #if OPENTHREAD_FTD
         void ScheduleParentResponse(const ParentResponseInfo &aInfo, uint32_t aDelay);
+        void RemoveScheduledParentResponses(void);
         void ScheduleAdvertisement(const Ip6::Address &aDestination, uint32_t aDelay);
         void ScheduleMulticastDataResponse(uint32_t aDelay);
         void ScheduleLinkRequest(const Router &aRouter, uint32_t aDelay);

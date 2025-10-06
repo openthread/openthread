@@ -3175,6 +3175,16 @@ void Mle::DelayedSender::ScheduleParentResponse(const ParentResponseInfo &aInfo,
     AddSchedule(kTypeParentResponse, destination, aDelay, &aInfo, sizeof(aInfo));
 }
 
+void Mle::DelayedSender::RemoveScheduledParentResponses(void)
+{
+    Ip6::Address destination;
+
+    // The unspecified address will clear all parent responses to any destination
+    destination.Clear();
+
+    RemoveMatchingSchedules(kTypeParentResponse, destination);
+}
+
 void Mle::DelayedSender::ScheduleAdvertisement(const Ip6::Address &aDestination, uint32_t aDelay)
 {
     VerifyOrExit(!HasMatchingSchedule(kTypeAdvertisement, aDestination));
@@ -4425,6 +4435,10 @@ void Mle::Attacher::Attach(AttachMode aMode)
     VerifyOrExit(!Get<Mle>().IsDisabled());
 
     VerifyOrExit(!IsAttaching());
+
+#if OPENTHREAD_FTD
+    Get<Mle>().RemoveScheduledParentResponses();
+#endif
 
     if (!Get<Mle>().IsDetached())
     {
