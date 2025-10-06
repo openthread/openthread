@@ -3386,11 +3386,26 @@ void Mle::DelayedSender::Execute(const Schedule &aSchedule)
 
 bool Mle::DelayedSender::Match(const Schedule &aSchedule, MessageType aMessageType, const Ip6::Address &aDestination)
 {
+    // If `aDestination` is `::` (the unspecified address), the
+    // address check is skipped, effectively accepting any
+    // destination address.
+
+    bool   matches = false;
     Header header;
 
     header.ReadFrom(aSchedule);
 
-    return (header.mMessageType == aMessageType) && (header.mDestination == aDestination);
+    VerifyOrExit(header.mMessageType == aMessageType);
+
+    if (!aDestination.IsUnspecified())
+    {
+        VerifyOrExit(header.mDestination == aDestination);
+    }
+
+    matches = true;
+
+exit:
+    return matches;
 }
 
 bool Mle::DelayedSender::HasMatchingSchedule(MessageType aMessageType, const Ip6::Address &aDestination) const
@@ -3415,11 +3430,23 @@ void Mle::DelayedSender::RemoveMatchingSchedules(MessageType aMessageType, const
     {
         if (Match(schedule, aMessageType, aDestination))
         {
+            LogRemove(schedule);
             mSchedules.DequeueAndFree(schedule);
-            Log(kMessageRemoveDelayed, aMessageType, aDestination);
         }
     }
 }
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+void Mle::DelayedSender::LogRemove(const Schedule &aSchedule)
+{
+    Header header;
+
+    header.ReadFrom(aSchedule);
+    Log(kMessageRemoveDelayed, header.mMessageType, header.mDestination);
+}
+#else
+void Mle::DelayedSender::LogRemove(const Schedule &) {}
+#endif
 
 //---------------------------------------------------------------------------------------------------------------------
 // TxMessage

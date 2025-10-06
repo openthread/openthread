@@ -1733,6 +1733,7 @@ private:
         void Execute(const Schedule &aSchedule);
         bool HasMatchingSchedule(MessageType aMessageType, const Ip6::Address &aDestination) const;
         void RemoveMatchingSchedules(MessageType aMessageType, const Ip6::Address &aDestination);
+        void LogRemove(const Schedule &aSchedule);
 
         static bool Match(const Schedule &aSchedule, MessageType aMessageType, const Ip6::Address &aDestination);
 
