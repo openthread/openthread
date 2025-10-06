@@ -471,6 +471,10 @@ private:
     Uptime mUptime;
 #endif
 
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    Utils::Otns mOtns;
+#endif
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // Notifier, TimeTicker, Settings, and MessagePool are initialized
     // before other member variables since other classes/objects from
@@ -663,7 +667,8 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-    Ble::BleSecure mApplicationBleSecure;
+    Ble::BleSecure     mBleSecure;
+    MeshCoP::TcatAgent mTcatAgent;
 #endif
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
@@ -699,14 +704,10 @@ private:
     AnnounceSender mAnnounceSender;
 #endif
 
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-    Utils::Otns mOtns;
-#endif
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     BorderRouter::RoutingManager mRoutingManager;
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-    BorderRouter::NetDataPeerBrTracker mNetDataPeerBrTracker;
+    BorderRouter::NetDataBrTracker mNetDataBrTracker;
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
     BorderRouter::Dhcp6PdClient mDhcp6PdClient;
@@ -756,6 +757,10 @@ template <> inline Radio::Statistics &Instance::Get(void) { return mRadio.mStati
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
 template <> inline Uptime &Instance::Get(void) { return mUptime; }
+#endif
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+template <> inline Utils::Otns &Instance::Get(void) { return mOtns; }
 #endif
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -1078,15 +1083,11 @@ template <> inline LinkMetrics::Subject &Instance::Get(void) { return mSubject; 
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-template <> inline Utils::Otns &Instance::Get(void) { return mOtns; }
-#endif
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 template <> inline BorderRouter::RoutingManager &Instance::Get(void) { return mRoutingManager; }
 template <> inline BorderRouter::InfraIf        &Instance::Get(void) { return mRoutingManager.mInfraIf; }
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-template <> inline BorderRouter::NetDataPeerBrTracker &Instance::Get(void) { return mNetDataPeerBrTracker; }
+template <> inline BorderRouter::NetDataBrTracker &Instance::Get(void) { return mNetDataBrTracker; }
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 template <> inline BorderRouter::Dhcp6PdClient &Instance::Get(void) { return mDhcp6PdClient; }
@@ -1113,7 +1114,8 @@ template <> inline Coap::ApplicationCoapSecure &Instance::Get(void) { return mAp
 #endif
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-template <> inline Ble::BleSecure &Instance::Get(void) { return mApplicationBleSecure; }
+template <> inline Ble::BleSecure     &Instance::Get(void) { return mBleSecure; }
+template <> inline MeshCoP::TcatAgent &Instance::Get(void) { return mTcatAgent; }
 #endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD

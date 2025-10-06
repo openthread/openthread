@@ -97,7 +97,7 @@ class RoutingManager : public InstanceLocator
 {
     friend class ot::Notifier;
     friend class ot::Instance;
-    friend class NetDataPeerBrTracker;
+    friend class NetDataBrTracker;
 
 public:
     typedef NetworkData::RoutePreference          RoutePreference;     ///< Route preference (high, medium, low).
@@ -536,7 +536,7 @@ public:
      * @retval kErrorNotFound     No more entries in the table.
      * @retval kErrorInvalidArgs  The @p aIterator is not valid (e.g. used to iterate over other entry types).
      */
-    Error GetNextRdnssAddrEntry(PrefixTableIterator &aIterator, RdnssAddrEntry &aEntry)
+    Error GetNextRdnssAddrEntry(PrefixTableIterator &aIterator, RdnssAddrEntry &aEntry) const
     {
         return mRxRaTracker.GetNextRdnssAddr(aIterator, aEntry);
     }
@@ -567,7 +567,7 @@ public:
      * @retval kErrorNotFound     No more entries in the table.
      * @retval kErrorInvalidArgs  The @p aIterator is not valid (e.g. used to iterate over other entry types).
      */
-    Error GetNextIfAddrEntry(PrefixTableIterator &aIterator, IfAddrEntry &aEntry)
+    Error GetNextIfAddrEntry(PrefixTableIterator &aIterator, IfAddrEntry &aEntry) const
     {
         return mRxRaTracker.GetNextIfAddr(aIterator, aEntry);
     }
@@ -997,7 +997,7 @@ private:
         // the same flow of execution, the callback is invoked after all the
         // changes are processed.
 
-        friend class NetDataPeerBrTracker;
+        friend class NetDataBrTracker;
 
     public:
         explicit RxRaTracker(Instance &aInstance);

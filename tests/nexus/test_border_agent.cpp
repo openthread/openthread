@@ -1251,10 +1251,14 @@ void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode)
     aNode.Get<BorderAgent>().GetId(id);
     aTxtData.ValidateKey("id", id);
     aTxtData.ValidateKey("rv", "1");
-    aTxtData.ValidateKey("nn", aNode.Get<NetworkNameManager>().GetNetworkName().GetAsCString());
-    aTxtData.ValidateKey("xp", aNode.Get<ExtendedPanIdManager>().GetExtPanId());
     aTxtData.ValidateKey("tv", kThreadVersionString);
     aTxtData.ValidateKey("xa", aNode.Get<Mac::Mac>().GetExtAddress());
+
+    if (aNode.Get<MeshCoP::ActiveDatasetManager>().IsComplete())
+    {
+        aTxtData.ValidateKey("nn", aNode.Get<NetworkNameManager>().GetNetworkName().GetAsCString());
+        aTxtData.ValidateKey("xp", aNode.Get<ExtendedPanIdManager>().GetExtPanId());
+    }
 
     if (aNode.Get<Mle::Mle>().IsAttached())
     {

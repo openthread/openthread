@@ -1132,7 +1132,7 @@ void RoutingManager::MultiAilDetector::Evaluate(void)
 
     VerifyOrExit(Get<RoutingManager>().IsRunning());
 
-    count = Get<NetDataPeerBrTracker>().CountPeerBrs(minAge);
+    count = Get<NetDataBrTracker>().CountBrs(NetDataBrTracker::kExcludeThisDevice, minAge);
 
     if (count != mNetDataPeerBrCount)
     {
@@ -3708,7 +3708,7 @@ Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMess
     const OmrPrefixManager         &omrPrefixManager = Get<RoutingManager>().mOmrPrefixManager;
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
-    oldPrefixes.TakeFrom(static_cast<RioPrefixArray &&>(mPrefixes));
+    oldPrefixes.TakeFrom(mPrefixes.Move());
 #else
     oldPrefixes = mPrefixes;
 #endif
@@ -4318,7 +4318,10 @@ void RoutingManager::Nat64PrefixManager::Discover(void)
     }
     else
     {
-        LogWarn("Failed to discover infraif NAT64 prefix: %s", ErrorToString(error));
+        if (error != kErrorNotImplemented)
+        {
+            LogWarn("Failed to discover infraif NAT64 prefix: %s", ErrorToString(error));
+        }
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
 }

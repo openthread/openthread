@@ -65,6 +65,12 @@ otInstance *otInstanceInitMultiple(uint8_t aIdx)
 
     return instance;
 }
+
+otInstance *otInstanceGetInstance(uint8_t aIdx)
+{
+    return (aIdx >= OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM) ? nullptr : &Instance::Get(aIdx);
+}
+
 uint8_t otInstanceGetIndex(otInstance *aInstance) { return Instance::GetIdx(AsCoreTypePtr(aInstance)); }
 #endif // OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
 otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
@@ -77,6 +83,7 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
 }
 #else
 otInstance *otInstanceInitSingle(void) { return &Instance::InitSingle(); }
+otInstance *otInstanceGetSingle(void) { return &Instance::Get(); }
 #endif // #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 uint32_t otInstanceGetId(otInstance *aInstance) { return AsCoreType(aInstance).GetId(); }

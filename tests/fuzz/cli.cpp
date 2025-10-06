@@ -83,7 +83,7 @@ static int CliOutput(void *aContext, const char *aFormat, va_list aArguments)
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    const uint16_t kMaxCommandSize = 65536;
+    const uint16_t kMaxCommandSize = 4096;
 
     FuzzDataProvider fdp(data, size);
 

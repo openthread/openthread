@@ -226,24 +226,10 @@ private:
     };
 
 #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
-    struct ServiceNameMatcher
+    enum NameMatchType : uint8_t
     {
-        explicit ServiceNameMatcher(const char *SrerviceName)
-            : mServiceName(SrerviceName)
-        {
-        }
-
-        const char *mServiceName;
-    };
-
-    struct HostNameMatcher
-    {
-        explicit HostNameMatcher(const char *aHostName)
-            : mHostName(aHostName)
-        {
-        }
-
-        const char *mHostName;
+        kMatchServiceName,
+        kMatchHostName,
     };
 
     class AddressArray : public Heap::Array<Ip6::Address>
@@ -271,8 +257,7 @@ private:
 
 #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
     void SetPort(uint16_t aPort);
-    bool Matches(const ServiceNameMatcher &aMatcher) const;
-    bool Matches(const HostNameMatcher &aMatcher) const;
+    bool Matches(NameMatchType aType, const char *aName) const;
     void SignalPeerRemoval(void);
 
     static bool NameMatch(const Heap::String &aHeapString, const char *aName);

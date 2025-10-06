@@ -526,8 +526,9 @@ Error BorderAgent::PrepareServiceTxtData(ServiceTxtData &aTxtData)
 
 Error BorderAgent::PrepareServiceTxtData(uint8_t *aBuffer, uint16_t aBufferSize, uint16_t &aLength)
 {
-    Error               error = kErrorNone;
-    Dns::TxtDataEncoder encoder(aBuffer, aBufferSize);
+    Error                  error = kErrorNone;
+    Dns::TxtDataEncoder    encoder(aBuffer, aBufferSize);
+    MeshCoP::Dataset::Info datasetInfo;
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     {
@@ -538,11 +539,23 @@ Error BorderAgent::PrepareServiceTxtData(uint8_t *aBuffer, uint16_t aBufferSize,
     }
 #endif
     SuccessOrExit(error = encoder.AppendStringEntry("rv", kTxtDataRecordVersion));
-    SuccessOrExit(error = encoder.AppendNameEntry("nn", Get<NetworkNameManager>().GetNetworkName().GetAsData()));
-    SuccessOrExit(error = encoder.AppendEntry("xp", Get<ExtendedPanIdManager>().GetExtPanId()));
+    SuccessOrExit(error = encoder.AppendBigEndianUintEntry("sb", DetermineStateBitmap()));
     SuccessOrExit(error = encoder.AppendStringEntry("tv", kThreadVersionString));
     SuccessOrExit(error = encoder.AppendEntry("xa", Get<Mac::Mac>().GetExtAddress()));
-    SuccessOrExit(error = encoder.AppendBigEndianUintEntry("sb", DetermineStateBitmap()));
+
+    if (Get<MeshCoP::ActiveDatasetManager>().IsComplete() &&
+        (Get<MeshCoP::ActiveDatasetManager>().Read(datasetInfo) == kErrorNone))
+    {
+        if (datasetInfo.IsPresent<Dataset::kExtendedPanId>())
+        {
+            SuccessOrExit(error = encoder.AppendEntry("xp", datasetInfo.Get<Dataset::kExtendedPanId>()));
+        }
+
+        if (datasetInfo.IsPresent<Dataset::kNetworkName>())
+        {
+            SuccessOrExit(error = encoder.AppendNameEntry("nn", datasetInfo.Get<Dataset::kNetworkName>().GetAsData()));
+        }
+    }
 
     if (Get<Mle::Mle>().IsAttached())
     {

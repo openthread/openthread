@@ -6797,20 +6797,22 @@ exit:
  * The generated output encompasses the following information:
  * - Version
  * - Current state
- * - RLOC16, extended MAC address
- * - Unicast and multicast IPv6 address list
+ * - Uptime and attach time
  * - Channel
- * - PAN ID and extended PAN ID
+ * - PAN IDs, extended MAC address, and RLOC16
+ * - Unicast and multicast IPv6 address list
  * - Network Data
  * - Partition ID
  * - Leader Data
+ * - Buffer info
+ * - Network statistics
+ * - IP, MAC, and MLE counters
  * @par
  * If the device is operating as FTD:
- * - Child and neighbor table
- * - Router table and next hop info
- * - Address cache table
- * - Registered MTD child IPv6 address
- * - Device properties
+ * - Child table, child IP addresses
+ * - Neighbor table (including connection time)
+ * - Router table
+ * - EID cache
  * @par
  * If the device supports and acts as an SRP client:
  * - SRP client state
@@ -6820,48 +6822,97 @@ exit:
  * - SRP server state and address mode
  * - SRP server registered hosts and services
  * @par
- * If the device supports TREL:
- * - TREL status and peer table
- * @par
  * If the device supports and acts as a border router:
  * - BR state
- * - BR prefixes (OMR, on-link, NAT64)
- * - Discovered prefix table
+ * - OMR prefixes
+ * - On-link prefixes
+ * - RDNSS table
+ * - Discovered routers, and peer BRs
+ * - DHCPv6 PD state and OMR prefix
+ * - BR counters
+ * @par
+ * If the device supports TREL:
+ * - TREL status, peer table, and counters
+ * @par
+ * If the device supports NAT64:
+ * - NAT64 state, mappings, and counters
+ * @par
+ * If the device supports History Tracker:
+ * - Network info, neighbor, router, prefix, and route history
  */
 template <> otError Interpreter::Process<Cmd("debug")>(Arg aArgs[])
 {
-    static constexpr uint16_t kMaxDebugCommandSize = 30;
+    static constexpr uint16_t kMaxDebugCommandSize = 50;
 
     static const char *const kDebugCommands[] = {
+        // General device and network state
         "version",
         "state",
-        "rloc16",
-        "extaddr",
-        "ipaddr",
-        "ipmaddr",
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+        "uptime",
+#endif
+        "attachtime",
         "channel",
         "panid",
         "extpanid",
+        "ipaddr -v",
+        "ipmaddr",
         "netdata show",
         "netdata show -x",
         "partitionid",
         "leaderdata",
+        "bufferinfo",
+        "netstat",
+
+        // Thread stack info
+        "extaddr",
+        "rloc16",
 #if OPENTHREAD_FTD
         "child table",
         "childip",
-        "neighbor table",
-        "router table",
-        "nexthop",
-        "eidcache",
 #if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
         "deviceprops",
 #endif
-#endif // OPENTHREAD_FTD
+        "eidcache",
+        "neighbor table",
+        "neighbor conntime",
+        "nexthop",
+        "router table",
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        // Border Router info
+        "br state",
+        "br omrprefix",
+        "br onlinkprefix",
+        "br prefixtable",
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+        "br multiail",
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+        "br peers",
+#endif
+        "br routers",
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+        "br pd state",
+        "br pd omrprefix",
+#endif
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        // Service info
+        "br rdnsstable",
+#endif
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+        "nat64 state",
+        "nat64 mappings",
+        "nat64 counters",
+#endif
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
         "srp client state",
+        "srp client server",
         "srp client host",
         "srp client service",
-        "srp client server",
 #endif
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
         "srp server state",
@@ -6869,26 +6920,45 @@ template <> otError Interpreter::Process<Cmd("debug")>(Arg aArgs[])
         "srp server host",
         "srp server service",
 #endif
+
+        // Radio & Link info
+        "ccathreshold",
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        "csl",
+        "csl accuracy",
+        "csl uncertainty",
+#endif
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+        "coex metrics",
+#endif
+#if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
+        "linkmetricsmgr show",
+#endif
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        "multiradio",
+        "multiradio neighbor list",
+#endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
         "trel",
         "trel peers",
+        "trel counters",
 #endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-        "br state",
-        "br omrprefix",
-        "br onlinkprefix",
-        "br prefixtable",
-#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-        "br nat64prefix",
-#endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-        "br pd state",
-        "br pd omrprefix",
-#endif
-#endif
-        "bufferinfo",
-    };
 
+        // Counters & History
+        "counters ip",
+        "counters mac",
+        "counters mle",
+#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+        "counters br",
+#endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        "history netinfo",
+        "history neighbor",
+        "history router",
+        "history prefix",
+        "history route",
+#endif
+    };
     char commandString[kMaxDebugCommandSize];
 
     OT_UNUSED_VARIABLE(aArgs);

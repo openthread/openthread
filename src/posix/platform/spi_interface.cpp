@@ -155,7 +155,10 @@ otError SpiInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContex
     }
     else
     {
-        LogNote("gpio-reset-device is not given.");
+        // For some products, gpio-reset-device is not needed in the radio URL as
+        // the reset may be managed by another component in the system (e.g., by the BT stack).
+        // In this case, gpio-reset-device in the radio URL should not be given, and this is expected.
+        LogInfo("gpio-reset-device is not given.");
     }
 
     InitSpiDev(mRadioUrl.GetPath(), spiMode, spiSpeed);

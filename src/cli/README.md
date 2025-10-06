@@ -1314,21 +1314,23 @@ The generated output encompasses the following information:
 
 - Version
 - Current state
-- RLOC16, extended MAC address
-- Unicast and multicast IPv6 address list
+- Uptime and attach time
 - Channel
-- PAN ID and extended PAN ID
+- PAN IDs, extended MAC address, and RLOC16
+- Unicast and multicast IPv6 address list
 - Network Data
 - Partition ID
 - Leader Data
+- Buffer info
+- Network statistics
+- IP, MAC, and MLE counters
 
 If the device is operating as FTD:
 
-- Child and neighbor table
-- Router table and next hop Info
-- Address cache table
-- Registered MTD child IPv6 address
-- Device properties
+- Child table, child IP addresses
+- Neighbor table (including connection time)
+- Router table
+- EID cache
 
 If the device supports and acts as an SRP client:
 
@@ -1340,15 +1342,27 @@ If the device supports and acts as an SRP sever:
 - SRP server state and address mode
 - SRP server registered hosts and services
 
-If the device supports TREL:
-
-- TREL status and peer table
-
 If the device supports and acts as a border router:
 
 - BR state
-- BR prefixes (OMR, on-link, NAT64)
-- Discovered prefix table
+- OMR prefixes
+- On-link prefixes
+- RDNSS table
+- Discovered routers, and peer BRs
+- DHCPv6 PD state and OMR prefix
+- BR counters
+
+If the device supports TREL:
+
+- TREL status, peer table, and counters
+
+If the device supports NAT64:
+
+- NAT64 state, mappings, and counters
+
+If the device supports History Tracker:
+
+- Network info, neighbor, router, prefix, and route history
 
 ### delaytimermin
 
