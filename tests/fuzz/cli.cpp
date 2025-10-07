@@ -133,7 +133,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     otCliInputLine(reinterpret_cast<char *>(buffer));
 
-    nexus.AdvanceTime(10 * 1000);
+    nexus.AdvanceTime(60 * 1000);
 
     free(buffer);
 
