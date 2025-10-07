@@ -41,13 +41,14 @@
 #include <openthread/platform/border_routing.h>
 #include <openthread/platform/infra_if.h>
 
+#include "border_router/br_log.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
 
 namespace BorderRouter {
 
-RegisterLogModule("RoutingManager");
+RegisterLogModule("BorderRouting");
 
 RoutingManager::RoutingManager(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -836,35 +837,6 @@ exit:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-void RoutingManager::LogRaHeader(const RouterAdvert::Header &aRaHeader)
-{
-    LogInfo("- RA Header - flags - M:%u O:%u S:%u", aRaHeader.IsManagedAddressConfigFlagSet(),
-            aRaHeader.IsOtherConfigFlagSet(), aRaHeader.IsSnacRouterFlagSet());
-    LogInfo("- RA Header - default route - lifetime:%u", aRaHeader.GetRouterLifetime());
-}
-
-void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix      &aPrefix,
-                                         uint32_t                aValidLifetime,
-                                         uint32_t                aPreferredLifetime,
-                                         PrefixInfoOption::Flags aFlags)
-{
-    LogInfo("- PIO %s (valid:%lu, preferred:%lu, flags - L:%u A:%u P:%u)", aPrefix.ToString().AsCString(),
-            ToUlong(aValidLifetime), ToUlong(aPreferredLifetime), (aFlags & PrefixInfoOption::kOnLinkFlag) ? 1 : 0,
-            (aFlags & PrefixInfoOption::kAutoConfigFlag) ? 1 : 0,
-            (aFlags & PrefixInfoOption::kDhcp6PdPreferredFlag) ? 1 : 0);
-}
-
-void RoutingManager::LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime, RoutePreference aPreference)
-{
-    LogInfo("- RIO %s (lifetime:%lu, prf:%s)", aPrefix.ToString().AsCString(), ToUlong(aLifetime),
-            RoutePreferenceToString(aPreference));
-}
-
-void RoutingManager::LogRecursiveDnsServerOption(const Ip6::Address &aAddress, uint32_t aLifetime)
-{
-    LogInfo("- RDNSS %s (lifetime:%lu)", aAddress.ToString().AsCString(), ToUlong(aLifetime));
-}
-
 const char *RoutingManager::RouterAdvOriginToString(RouterAdvOrigin aRaOrigin)
 {
     static const char *const kOriginStrings[] = {
@@ -883,13 +855,6 @@ const char *RoutingManager::RouterAdvOriginToString(RouterAdvOrigin aRaOrigin)
 
     return kOriginStrings[aRaOrigin];
 }
-
-#else
-
-void RoutingManager::LogRaHeader(const RouterAdvert::Header &) {}
-void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix &, uint32_t, uint32_t, PrefixInfoOption::Flags) {}
-void RoutingManager::LogRouteInfoOption(const Ip6::Prefix &, uint32_t, RoutePreference) {}
-void RoutingManager::LogRecursiveDnsServerOption(const Ip6::Address &, uint32_t) {}
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
