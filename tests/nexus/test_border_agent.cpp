@@ -1242,61 +1242,114 @@ void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode)
     static constexpr uint32_t kFlagEpskcSupported           = 1 << 11;
 
     MeshCoP::BorderAgent::Id id;
+    BaTxtData::Info          info;
+    const Mac::ExtAddress   &extAddress = aNode.Get<Mac::Mac>().GetExtAddress();
     uint32_t                 stateBitmap;
     uint32_t                 threadIfStatus;
     uint32_t                 threadRole;
+    bool                     baIsRunning;
 
     aTxtData.ValidateFormat();
     aTxtData.LogAllTxtEntries();
 
+    SuccessOrQuit(info.ParseFrom(aTxtData.mData, aTxtData.mLength));
+
     aNode.Get<Manager>().GetId(id);
     aTxtData.ValidateKey("id", id);
+    VerifyOrQuit(info.mHasAgentId);
+    VerifyOrQuit(id == AsCoreType(&info.mAgentId));
+
     aTxtData.ValidateKey("rv", "1");
+    VerifyOrQuit(info.mHasRecordVersion);
+    VerifyOrQuit(StringMatch(info.mRecordVersion, "1"));
+
     aTxtData.ValidateKey("tv", kThreadVersionString);
-    aTxtData.ValidateKey("xa", aNode.Get<Mac::Mac>().GetExtAddress());
+    VerifyOrQuit(info.mHasThreadVersion);
+    VerifyOrQuit(StringMatch(info.mThreadVersion, kThreadVersionString));
+
+    aTxtData.ValidateKey("xa", extAddress);
+    VerifyOrQuit(info.mHasExtAddress);
+    VerifyOrQuit(AsCoreType(&info.mExtAddress) == extAddress);
 
     if (aNode.Get<MeshCoP::ActiveDatasetManager>().IsComplete())
     {
-        aTxtData.ValidateKey("nn", aNode.Get<NetworkNameManager>().GetNetworkName().GetAsCString());
-        aTxtData.ValidateKey("xp", aNode.Get<ExtendedPanIdManager>().GetExtPanId());
+        const char                   *networkName = aNode.Get<NetworkNameManager>().GetNetworkName().GetAsCString();
+        const MeshCoP::ExtendedPanId &extPanId    = aNode.Get<ExtendedPanIdManager>().GetExtPanId();
+
+        aTxtData.ValidateKey("nn", networkName);
+        VerifyOrQuit(info.mHasNetworkName);
+        VerifyOrQuit(StringMatch(info.mNetworkName.m8, networkName));
+
+        aTxtData.ValidateKey("xp", extPanId);
+        VerifyOrQuit(info.mHasExtendedPanId);
+        VerifyOrQuit(AsCoreType(&info.mExtendedPanId) == extPanId);
     }
 
     if (aNode.Get<Mle::Mle>().IsAttached())
     {
-        aTxtData.ValidateKey("pt", BigEndian::HostSwap32(aNode.Get<Mle::Mle>().GetLeaderData().GetPartitionId()));
-        aTxtData.ValidateKey("at", aNode.Get<ActiveDatasetManager>().GetTimestamp());
+        uint32_t                  partitionId = aNode.Get<Mle::Mle>().GetLeaderData().GetPartitionId();
+        const MeshCoP::Timestamp &timestamp   = aNode.Get<ActiveDatasetManager>().GetTimestamp();
+        MeshCoP::Timestamp::Info  timestampInfo;
+
+        aTxtData.ValidateKey("pt", BigEndian::HostSwap32(partitionId));
+        VerifyOrQuit(info.mHasPartitionId);
+        VerifyOrQuit(info.mPartitionId == partitionId);
+
+        aTxtData.ValidateKey("at", timestamp);
+        timestamp.ConvertTo(timestampInfo);
+        VerifyOrQuit(info.mHasActiveTimestamp);
+        VerifyOrQuit(info.mActiveTimestamp.mSeconds == timestampInfo.mSeconds);
+        VerifyOrQuit(info.mActiveTimestamp.mTicks == timestampInfo.mTicks);
+        VerifyOrQuit(info.mActiveTimestamp.mAuthoritative == timestampInfo.mAuthoritative);
     }
     else
     {
         VerifyOrQuit(!aTxtData.ContainsKey("pt"));
+        VerifyOrQuit(!info.mHasPartitionId);
+
         VerifyOrQuit(!aTxtData.ContainsKey("at"));
+        VerifyOrQuit(!info.mHasActiveTimestamp);
     }
 
     stateBitmap = aTxtData.ReadUint32Key("sb");
+    VerifyOrQuit(info.mHasStateBitmap);
 
-    VerifyOrQuit((stateBitmap & kMaskConnectionMode) == aNode.Get<Manager>().IsRunning() ? kConnectionModePskc
-                                                                                         : kConnectionModeDisabled);
+    baIsRunning = aNode.Get<Manager>().IsRunning();
+    VerifyOrQuit((stateBitmap & kMaskConnectionMode) == (baIsRunning ? kConnectionModePskc : kConnectionModeDisabled));
+    VerifyOrQuit(info.mStateBitmap.mConnMode ==
+                 (baIsRunning ? BaTxtData::kConnModePskc : BaTxtData::kConnModeDisabled));
+
     switch (aNode.Get<Mle::Mle>().GetRole())
     {
     case Mle::DeviceRole::kRoleDisabled:
         threadIfStatus = kThreadIfStatusNotInitialized;
         threadRole     = kThreadRoleDisabledOrDetached;
+        VerifyOrQuit(info.mStateBitmap.mThreadIfState == BaTxtData::kThreadIfNotInit);
+        VerifyOrQuit(info.mStateBitmap.mThreadRole == BaTxtData::kRoleDisabledDetached);
         break;
     case Mle::DeviceRole::kRoleDetached:
         threadIfStatus = kThreadIfStatusInitialized;
         threadRole     = kThreadRoleDisabledOrDetached;
+        VerifyOrQuit(info.mStateBitmap.mThreadIfState == BaTxtData::kThreadIfInit);
+        VerifyOrQuit(info.mStateBitmap.mThreadRole == BaTxtData::kRoleDisabledDetached);
         break;
     case Mle::DeviceRole::kRoleChild:
         threadIfStatus = kThreadIfStatusActive;
         threadRole     = kThreadRoleChild;
+        VerifyOrQuit(info.mStateBitmap.mThreadIfState == BaTxtData::kThreadIfActive);
+        VerifyOrQuit(info.mStateBitmap.mThreadRole == BaTxtData::kRoleChild);
         break;
     case Mle::DeviceRole::kRoleRouter:
         threadIfStatus = kThreadIfStatusActive;
         threadRole     = kThreadRoleRouter;
+        VerifyOrQuit(info.mStateBitmap.mThreadIfState == BaTxtData::kThreadIfActive);
+        VerifyOrQuit(info.mStateBitmap.mThreadRole == BaTxtData::kRoleRouter);
         break;
     case Mle::DeviceRole::kRoleLeader:
         threadIfStatus = kThreadIfStatusActive;
         threadRole     = kThreadRoleLeader;
+        VerifyOrQuit(info.mStateBitmap.mThreadIfState == BaTxtData::kThreadIfActive);
+        VerifyOrQuit(info.mStateBitmap.mThreadRole == BaTxtData::kRoleLeader);
         break;
     }
 
@@ -1306,10 +1359,12 @@ void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode)
     if (aNode.Get<EphemeralKeyManager>().GetState() != EphemeralKeyManager::kStateDisabled)
     {
         VerifyOrQuit(stateBitmap & kFlagEpskcSupported);
+        VerifyOrQuit(info.mStateBitmap.mEpskcSupported);
     }
     else
     {
         VerifyOrQuit(!(stateBitmap & kFlagEpskcSupported));
+        VerifyOrQuit(!info.mStateBitmap.mEpskcSupported);
     }
 }
 
