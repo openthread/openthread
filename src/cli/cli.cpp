@@ -41,6 +41,7 @@
 
 #include <openthread/backbone_router.h>
 #include <openthread/backbone_router_ftd.h>
+#include <openthread/border_agent_tracker.h>
 #include <openthread/border_router.h>
 #include <openthread/channel_manager.h>
 #include <openthread/channel_monitor.h>
@@ -806,6 +807,139 @@ void Interpreter::HandleBorderAgentEphemeralKeyStateChange(void)
 #endif
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
+
+template <> otError Interpreter::Process<Cmd("batracker")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli batracker (enable, disable)
+     * @code
+     * batracker enable
+     * Done
+     * @endcode
+     * @code
+     * batracker disable
+     * Done
+     * @endcode
+     * @cparam batracker  @ca{enable|disable}
+     * @par api_copy
+     * #otBorderAgentTrackerSetEnabled
+     */
+    if (ProcessEnableDisable(aArgs, otBorderAgentTrackerSetEnabled) == OT_ERROR_NONE)
+    {
+    }
+    /**
+     * @cli batracker state
+     * @code
+     * batracker state
+     * running
+     * Done
+     * @endcode
+     * @par
+     * Shows the state of Border Agent Tracker, `running` or `inactive`.
+     *
+     * The tracker can be enabled by the user (e.g., via `batracker enable`) or by the OpenThread stack itself. The
+     * tracker is considered running if it is enabled by either entity and the underlying DNS-SD (mDNS) is ready.
+     */
+    else if (aArgs[0] == "state")
+    {
+        OutputLine("%s", otBorderAgentTrackerIsRunning(GetInstancePtr()) ? "running" : "inactive");
+    }
+    /**
+     * @cli batracker agents
+     * @code
+     * batracker agents
+     * ServiceName: OTBR-by-Google-be345eefb12f7f9c
+     *     Port: 49152
+     *     Host: otbe345eefb12f7f9c
+     *     TxtData:
+     *         id=4b21d3f4a431725048380698f3073a4b
+     *         rv=31
+     *         nn=4f70656e546872656164
+     *         xp=dead00beef00cafe
+     *         tv=312e342e30
+     *         xa=be345eefb12f7f9c
+     *         sb=00000820
+     *         dn=44656661756c74446f6d61696e
+     *     Address(es):
+     *         fe80:0:0:0:108f:3188:ff96:8e9f
+     *         fd7c:af54:fada:564d:7:fd6e:744c:e300
+     *         fd7c:af54:fada:564d:d9:899d:1217:9e2
+     *     MilliSecondsSinceDiscovered: 5237
+     *     MilliSecondsSinceLastChange: 5237
+     * Done
+     * @endcode
+     * @par
+     * Outputs the list of discovered border agents. Information per agent:
+     * - Service name
+     * - Port number
+     * - Host name
+     * - TXT data (key/value pairs per line)
+     * - Host addresses
+     * - Milliseconds since agent was first discovered
+     * - Milliseconds since the last change to agent info (port, addresses, TXT data)
+     */
+    else if (aArgs[0] == "agents")
+    {
+        otBorderAgentTrackerIterator  iterator;
+        otBorderAgentTrackerAgentInfo agent;
+
+        otBorderAgentTrackerInitIterator(GetInstancePtr(), &iterator);
+
+        while (otBorderAgentTrackerGetNextAgent(GetInstancePtr(), &iterator, &agent) == OT_ERROR_NONE)
+        {
+            OutputLine("ServiceName: %s", agent.mServiceName);
+            OutputLine(kIndentSize, "Port: %u", agent.mPort);
+            OutputLine(kIndentSize, "Host: %s", agent.mHostName != nullptr ? agent.mHostName : "(null)");
+
+            OutputFormat(kIndentSize, "TxtData:");
+
+            if (agent.mTxtData != nullptr)
+            {
+                OutputNewLine();
+                OutputDnsTxtData(kIndentSize * 2, agent.mTxtData, agent.mTxtDataLength);
+            }
+            else
+            {
+                OutputLine(" (null)");
+            }
+
+            OutputFormat(kIndentSize, "Address(es):");
+
+            if (agent.mAddresses != nullptr)
+            {
+                OutputNewLine();
+
+                for (uint16_t i = 0; i < agent.mNumAddresses; i++)
+                {
+                    OutputSpaces(kIndentSize * 2);
+                    OutputIp6AddressLine(agent.mAddresses[i]);
+                }
+            }
+            else
+            {
+                OutputLine(" (null)");
+            }
+
+            OutputFormat(kIndentSize, "MilliSecondsSinceDiscovered: ");
+            OutputUint64Line(agent.mMsecSinceDiscovered);
+
+            OutputFormat(kIndentSize, "MilliSecondsSinceLastChange: ");
+            OutputUint64Line(agent.mMsecSinceLastChange);
+        }
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[]) { return mBr.Process(aArgs); }
@@ -8432,6 +8566,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("attachtime"),
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
         CmdEntry("ba"),
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
+        CmdEntry("batracker"),
 #endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
         CmdEntry("bbr"),

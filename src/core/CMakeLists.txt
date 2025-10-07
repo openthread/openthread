@@ -35,6 +35,7 @@ set(COMMON_SOURCES
     api/backbone_router_ftd_api.cpp
     api/ble_secure_api.cpp
     api/border_agent_api.cpp
+    api/border_agent_tracker_api.cpp
     api/border_router_api.cpp
     api/border_routing_api.cpp
     api/channel_manager_api.cpp
@@ -156,6 +157,7 @@ set(COMMON_SOURCES
     mac/wakeup_tx_scheduler.cpp
     meshcop/announce_begin_client.cpp
     meshcop/border_agent.cpp
+    meshcop/border_agent_tracker.cpp
     meshcop/commissioner.cpp
     meshcop/dataset.cpp
     meshcop/dataset_manager.cpp

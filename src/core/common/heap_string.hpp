@@ -172,6 +172,16 @@ public:
      */
     bool operator==(const String &aString) const { return (*this == aString.AsCString()); }
 
+    /**
+     * Overloads operator `!=` to evaluate whether or not two `String` are not equal.
+     *
+     * @param[in]  aString  The other string to compare with.
+     *
+     * @retval TRUE   If the two strings are not equal.
+     * @retval FALSE  If the two strings are equal.
+     */
+    bool operator!=(const String &aString) const { return (*this != aString.AsCString()); }
+
     String(const String &)            = delete;
     String &operator=(const String &) = delete;
 
