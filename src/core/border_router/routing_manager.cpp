@@ -578,12 +578,12 @@ exit:
 
 void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
 {
-    Error                   error = kErrorNone;
-    RouterAdvert::TxMessage raMsg;
-    RouterAdvert::Header    header;
-    Ip6::Address            destAddress;
-    InfraIf::Icmp6Packet    packet;
-    LinkLayerAddress        linkAddr;
+    Error                     error = kErrorNone;
+    RouterAdvert::TxMessage   raMsg;
+    RouterAdvert::Header      header;
+    Ip6::Address              destAddress;
+    InfraIf::Icmp6Packet      packet;
+    InfraIf::LinkLayerAddress linkAddr;
 
     LogInfo("Preparing RA");
 
@@ -652,33 +652,9 @@ exit:
     }
 }
 
-TimeMilli RoutingManager::CalculateExpirationTime(TimeMilli aUpdateTime, uint32_t aLifetime)
-{
-    // `aLifetime` is in unit of seconds. We clamp the lifetime to max
-    // interval supported by `Timer` (`2^31` msec or ~24.8 days).
-    // This ensures that the time calculation fits within `TimeMilli`
-    // range.
-
-    static constexpr uint32_t kMaxLifetime = Time::MsecToSec(Timer::kMaxDelay);
-
-    return aUpdateTime + Time::SecToMsec(Min(aLifetime, kMaxLifetime));
-}
-
 bool RoutingManager::IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix)
 {
     return aBrUlaPrefix.mLength == kBrUlaPrefixLength && aBrUlaPrefix.mPrefix.mFields.m8[0] == 0xfd;
-}
-
-bool RoutingManager::IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig)
-{
-    return IsValidOmrPrefix(aOnMeshPrefixConfig.GetPrefix()) && aOnMeshPrefixConfig.mOnMesh &&
-           aOnMeshPrefixConfig.mSlaac && aOnMeshPrefixConfig.mStable;
-}
-
-bool RoutingManager::IsValidOmrPrefix(const Ip6::Prefix &aPrefix)
-{
-    // Accept ULA/GUA prefixes with 64-bit length.
-    return (aPrefix.GetLength() == kOmrPrefixLength) && !aPrefix.IsLinkLocal() && !aPrefix.IsMulticast();
 }
 
 void RoutingManager::HandleRsSenderFinished(TimeMilli aStartTime)
@@ -916,191 +892,6 @@ void RoutingManager::LogRouteInfoOption(const Ip6::Prefix &, uint32_t, RoutePref
 void RoutingManager::LogRecursiveDnsServerOption(const Ip6::Address &, uint32_t) {}
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-
-//---------------------------------------------------------------------------------------------------------------------
-// LifetimedPrefix
-
-TimeMilli RoutingManager::LifetimedPrefix::CalculateExpirationTime(uint32_t aLifetime) const
-{
-    // `aLifetime` is in unit of seconds. This method ensures
-    // that the time calculation fits with `TimeMilli` range.
-
-    return RoutingManager::CalculateExpirationTime(mLastUpdateTime, aLifetime);
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-// OnLinkPrefix
-
-void RoutingManager::OnLinkPrefix::SetFrom(const PrefixInfoOption &aPio)
-{
-    aPio.GetPrefix(mPrefix);
-    mValidLifetime        = aPio.GetValidLifetime();
-    mPreferredLifetime    = aPio.GetPreferredLifetime();
-    mAutoAddrConfigFlag   = aPio.IsAutoAddrConfigFlagSet();
-    mDhcp6PdPreferredFlag = aPio.IsDhcp6PdPreferredFlagSet();
-    mLastUpdateTime       = TimerMilli::GetNow();
-}
-
-void RoutingManager::OnLinkPrefix::SetFrom(const PrefixTableEntry &aPrefixTableEntry)
-{
-    mPrefix            = AsCoreType(&aPrefixTableEntry.mPrefix);
-    mValidLifetime     = aPrefixTableEntry.mValidLifetime;
-    mPreferredLifetime = aPrefixTableEntry.mPreferredLifetime;
-    mLastUpdateTime    = TimerMilli::GetNow();
-}
-
-bool RoutingManager::OnLinkPrefix::IsDeprecated(void) const { return GetDeprecationTime() <= TimerMilli::GetNow(); }
-
-TimeMilli RoutingManager::OnLinkPrefix::GetDeprecationTime(void) const
-{
-    return CalculateExpirationTime(mPreferredLifetime);
-}
-
-TimeMilli RoutingManager::OnLinkPrefix::GetStaleTime(void) const
-{
-    return CalculateExpirationTime(Min(kStaleTime, mPreferredLifetime));
-}
-
-void RoutingManager::OnLinkPrefix::AdoptFlagsAndValidAndPreferredLifetimesFrom(const OnLinkPrefix &aPrefix)
-{
-    constexpr uint32_t kTwoHoursInSeconds = 2 * 3600;
-
-    // Per RFC 4862 section 5.5.3.e:
-    //
-    // 1.  If the received Valid Lifetime is greater than 2 hours or
-    //     greater than RemainingLifetime, set the valid lifetime of the
-    //     corresponding address to the advertised Valid Lifetime.
-    // 2.  If RemainingLifetime is less than or equal to 2 hours, ignore
-    //     the Prefix Information option with regards to the valid
-    //     lifetime, unless ...
-    // 3.  Otherwise, reset the valid lifetime of the corresponding
-    //     address to 2 hours.
-
-    if (aPrefix.mValidLifetime > kTwoHoursInSeconds || aPrefix.GetExpireTime() > GetExpireTime())
-    {
-        mValidLifetime = aPrefix.mValidLifetime;
-    }
-    else if (GetExpireTime() > TimerMilli::GetNow() + TimeMilli::SecToMsec(kTwoHoursInSeconds))
-    {
-        mValidLifetime = kTwoHoursInSeconds;
-    }
-
-    mPreferredLifetime    = aPrefix.GetPreferredLifetime();
-    mAutoAddrConfigFlag   = aPrefix.mAutoAddrConfigFlag;
-    mDhcp6PdPreferredFlag = aPrefix.mDhcp6PdPreferredFlag;
-    mLastUpdateTime       = aPrefix.GetLastUpdateTime();
-}
-
-void RoutingManager::OnLinkPrefix::CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli aNow) const
-{
-    aEntry.mPrefix              = GetPrefix();
-    aEntry.mIsOnLink            = true;
-    aEntry.mMsecSinceLastUpdate = aNow - GetLastUpdateTime();
-    aEntry.mValidLifetime       = GetValidLifetime();
-    aEntry.mPreferredLifetime   = GetPreferredLifetime();
-}
-
-bool RoutingManager::OnLinkPrefix::IsFavoredOver(const Ip6::Prefix &aPrefix) const
-{
-    bool isFavored = false;
-
-    // Validate that the `OnLinkPrefix` is eligible to be a favored
-    // on-link prefix. It must have a valid length and either the
-    // AutoAddrConfig (`A`) or Dhcp6PdPreferred (`P`) flag.
-    // Additionally, it must not be deprecated and its preferred
-    // lifetime must be at least `kFavoredMinPreferredLifetime`
-    // (1800) seconds.
-
-    VerifyOrExit(mPrefix.GetLength() == kOnLinkPrefixLength);
-    VerifyOrExit(mAutoAddrConfigFlag || mDhcp6PdPreferredFlag);
-    VerifyOrExit(!IsDeprecated());
-    VerifyOrExit(GetPreferredLifetime() >= kFavoredMinPreferredLifetime);
-
-    // Numerically smaller prefix is favored (unless `aPrefix` is empty).
-
-    VerifyOrExit(aPrefix.GetLength() != 0, isFavored = true);
-
-    isFavored = GetPrefix() < aPrefix;
-
-exit:
-    return isFavored;
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-// RoutePrefix
-
-void RoutingManager::RoutePrefix::SetFrom(const RouteInfoOption &aRio)
-{
-    aRio.GetPrefix(mPrefix);
-    mValidLifetime   = aRio.GetRouteLifetime();
-    mRoutePreference = aRio.GetPreference();
-    mLastUpdateTime  = TimerMilli::GetNow();
-}
-
-void RoutingManager::RoutePrefix::SetFrom(const RouterAdvert::Header &aRaHeader)
-{
-    mPrefix.Clear();
-    mValidLifetime   = aRaHeader.GetRouterLifetime();
-    mRoutePreference = aRaHeader.GetDefaultRouterPreference();
-    mLastUpdateTime  = TimerMilli::GetNow();
-}
-
-TimeMilli RoutingManager::RoutePrefix::GetStaleTime(void) const
-{
-    return CalculateExpirationTime(Min(kStaleTime, mValidLifetime));
-}
-
-void RoutingManager::RoutePrefix::CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli aNow) const
-{
-    aEntry.mPrefix              = GetPrefix();
-    aEntry.mIsOnLink            = false;
-    aEntry.mMsecSinceLastUpdate = aNow - GetLastUpdateTime();
-    aEntry.mValidLifetime       = GetValidLifetime();
-    aEntry.mPreferredLifetime   = 0;
-    aEntry.mRoutePreference     = static_cast<otRoutePreference>(GetRoutePreference());
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-// RdnssAddress
-
-void RoutingManager::RdnssAddress::SetFrom(const RecursiveDnsServerOption &aRdnss, uint16_t aAddressIndex)
-{
-    mAddress        = aRdnss.GetAddressAt(aAddressIndex);
-    mLifetime       = aRdnss.GetLifetime();
-    mLastUpdateTime = TimerMilli::GetNow();
-}
-
-TimeMilli RoutingManager::RdnssAddress::GetExpireTime(void) const
-{
-    return RoutingManager::CalculateExpirationTime(mLastUpdateTime, mLifetime);
-}
-
-void RoutingManager::RdnssAddress::CopyInfoTo(RdnssAddrEntry &aEntry, TimeMilli aNow) const
-{
-    aEntry.mAddress             = GetAddress();
-    aEntry.mMsecSinceLastUpdate = aNow - GetLastUpdateTime();
-    aEntry.mLifetime            = GetLifetime();
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-// IfAddress
-
-void RoutingManager::IfAddress::SetFrom(const Ip6::Address &aAddress, uint32_t aUptimeNow)
-{
-    mAddress       = aAddress;
-    mLastUseUptime = aUptimeNow;
-}
-
-bool RoutingManager::IfAddress::Matches(const InvalidChecker &aChecker) const
-{
-    return !aChecker.Get<InfraIf>().HasAddress(mAddress);
-}
-
-void RoutingManager::IfAddress::CopyInfoTo(IfAddrEntry &aEntry, uint32_t aUptimeNow) const
-{
-    aEntry.mAddress         = mAddress;
-    aEntry.mSecSinceLastUse = aUptimeNow - mLastUseUptime;
-}
 
 //---------------------------------------------------------------------------------------------------------------------
 // MultiAilDetector
@@ -1858,7 +1649,7 @@ void RoutingManager::RxRaTracker::Evaluate(void)
             interval = Min(interval, mLocalRaHeader.GetRouterLifetime());
         }
 
-        staleTime.UpdateIfEarlier(CalculateExpirationTime(mLocalRaHeaderUpdateTime, interval));
+        staleTime.UpdateIfEarlier(CalculateClampedExpirationTime(mLocalRaHeaderUpdateTime, interval));
     }
 
     mRouterTimer.FireAt(routerTimeoutTime);
@@ -2027,10 +1818,10 @@ void RoutingManager::RxRaTracker::HandleRdnssAddrTimer(void) { Evaluate(); }
 
 void RoutingManager::RxRaTracker::SendNeighborSolicitToRouter(const Router &aRouter)
 {
-    InfraIf::Icmp6Packet  packet;
-    NeighborSolicitHeader nsHdr;
-    TxMessage             nsMsg;
-    LinkLayerAddress      linkAddr;
+    InfraIf::Icmp6Packet      packet;
+    NeighborSolicitHeader     nsHdr;
+    TxMessage                 nsMsg;
+    InfraIf::LinkLayerAddress linkAddr;
 
     VerifyOrExit(!Get<RoutingManager>().mRsSender.IsInProgress());
 
@@ -2587,51 +2378,6 @@ exit:
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// FavoredOmrPrefix
-
-bool RoutingManager::FavoredOmrPrefix::IsInfrastructureDerived(void) const
-{
-    // Indicate whether the OMR prefix is infrastructure-derived which
-    // can be identified as a valid OMR prefix with preference of
-    // medium or higher.
-
-    return !IsEmpty() && (mPreference >= NetworkData::kRoutePreferenceMedium);
-}
-
-void RoutingManager::FavoredOmrPrefix::SetFrom(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig)
-{
-    mPrefix         = aOnMeshPrefixConfig.GetPrefix();
-    mPreference     = aOnMeshPrefixConfig.GetPreference();
-    mIsDomainPrefix = aOnMeshPrefixConfig.mDp;
-}
-
-void RoutingManager::FavoredOmrPrefix::SetFrom(const OmrPrefix &aOmrPrefix)
-{
-    mPrefix         = aOmrPrefix.GetPrefix();
-    mPreference     = aOmrPrefix.GetPreference();
-    mIsDomainPrefix = aOmrPrefix.IsDomainPrefix();
-}
-
-bool RoutingManager::FavoredOmrPrefix::IsFavoredOver(const NetworkData::OnMeshPrefixConfig &aOmrPrefixConfig) const
-{
-    // This method determines whether this OMR prefix is favored
-    // over another prefix. A prefix with higher preference is
-    // favored. If the preference is the same, then the smaller
-    // prefix (in the sense defined by `Ip6::Prefix`) is favored.
-
-    bool isFavored = (mPreference > aOmrPrefixConfig.GetPreference());
-
-    OT_ASSERT(IsValidOmrPrefix(aOmrPrefixConfig));
-
-    if (mPreference == aOmrPrefixConfig.GetPreference())
-    {
-        isFavored = (mPrefix < aOmrPrefixConfig.GetPrefix());
-    }
-
-    return isFavored;
-}
-
-//---------------------------------------------------------------------------------------------------------------------
 // OmrPrefixManager
 
 RoutingManager::OmrPrefixManager::OmrPrefixManager(Instance &aInstance)
@@ -2705,8 +2451,7 @@ Error RoutingManager::OmrPrefixManager::SetConfig(OmrConfig          aConfig,
     {
         VerifyOrExit((aPrefix != nullptr) && IsValidOmrPrefix(*aPrefix), error = kErrorInvalidArgs);
 
-        customPrefix.mPrefix     = *aPrefix;
-        customPrefix.mPreference = aPreference;
+        customPrefix.SetPrefix(*aPrefix, aPreference);
     }
 
     VerifyOrExit((aConfig != mConfig) || (customPrefix != mCustomPrefix));
@@ -2786,9 +2531,8 @@ void RoutingManager::OmrPrefixManager::UpdateLocalPrefix(void)
             if (mLocalPrefix.GetPrefix() != Get<RoutingManager>().mPdPrefixManager.GetPrefix())
             {
                 RemoveLocalFromNetData();
-                mLocalPrefix.mPrefix         = Get<RoutingManager>().mPdPrefixManager.GetPrefix();
-                mLocalPrefix.mPreference     = PdPrefixManager::kPdRoutePreference;
-                mLocalPrefix.mIsDomainPrefix = false;
+                mLocalPrefix.SetPrefix(Get<RoutingManager>().mPdPrefixManager.GetPrefix(),
+                                       PdPrefixManager::kPdRoutePreference);
                 LogInfo("Setting local OMR prefix to PD prefix: %s", mLocalPrefix.GetPrefix().ToString().AsCString());
             }
         }
@@ -2797,9 +2541,7 @@ void RoutingManager::OmrPrefixManager::UpdateLocalPrefix(void)
             if (mLocalPrefix.GetPrefix() != mGeneratedPrefix)
         {
             RemoveLocalFromNetData();
-            mLocalPrefix.mPrefix         = mGeneratedPrefix;
-            mLocalPrefix.mPreference     = RoutePreference::kRoutePreferenceLow;
-            mLocalPrefix.mIsDomainPrefix = false;
+            mLocalPrefix.SetPrefix(mGeneratedPrefix, RoutePreference::kRoutePreferenceLow);
             LogInfo("Setting local OMR prefix to generated prefix: %s",
                     mLocalPrefix.GetPrefix().ToString().AsCString());
         }
@@ -4446,12 +4188,12 @@ void RoutingManager::RsSender::Stop(void) { mTimer.Stop(); }
 
 Error RoutingManager::RsSender::SendRs(void)
 {
-    Ip6::Address         destAddress;
-    RouterSolicitHeader  rsHdr;
-    TxMessage            rsMsg;
-    LinkLayerAddress     linkAddr;
-    InfraIf::Icmp6Packet packet;
-    Error                error;
+    Ip6::Address              destAddress;
+    RouterSolicitHeader       rsHdr;
+    TxMessage                 rsMsg;
+    InfraIf::LinkLayerAddress linkAddr;
+    InfraIf::Icmp6Packet      packet;
+    Error                     error;
 
     SuccessOrExit(error = rsMsg.Append(rsHdr));
 

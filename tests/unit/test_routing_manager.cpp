@@ -1073,10 +1073,10 @@ void VerifyPrefixTable(const OnLinkPrefix *aOnLinkPrefixes,
                        const RoutePrefix  *aRoutePrefixes,
                        uint16_t            aNumRoutePrefixes)
 {
-    BorderRouter::RoutingManager::PrefixTableIterator iter;
-    BorderRouter::RoutingManager::PrefixTableEntry    entry;
-    uint16_t                                          onLinkPrefixCount = 0;
-    uint16_t                                          routePrefixCount  = 0;
+    BorderRouter::PrefixTableIterator iter;
+    BorderRouter::PrefixTableEntry    entry;
+    uint16_t                          onLinkPrefixCount = 0;
+    uint16_t                          routePrefixCount  = 0;
 
     Log("VerifyPrefixTable()");
 
@@ -1162,9 +1162,9 @@ template <uint16_t kNumAddrs> void VerifyRdnssAddressTable(const RdnssAddress (&
 
 void VerifyRdnssAddressTable(const RdnssAddress *aRdnssAddresses, uint16_t aNumAddrs)
 {
-    BorderRouter::RoutingManager::PrefixTableIterator iter;
-    BorderRouter::RoutingManager::RdnssAddrEntry      entry;
-    uint16_t                                          count = 0;
+    BorderRouter::PrefixTableIterator iter;
+    BorderRouter::RdnssAddrEntry      entry;
+    uint16_t                          count = 0;
 
     Log("VerifyRdnssAddressTable()");
 
@@ -1229,9 +1229,9 @@ template <uint16_t kNumRouters> void VerifyDiscoveredRouters(const InfraRouter (
 
 void VerifyDiscoveredRouters(const InfraRouter *aRouters, uint16_t aNumRouters)
 {
-    BorderRouter::RoutingManager::PrefixTableIterator iter;
-    BorderRouter::RoutingManager::RouterEntry         entry;
-    uint16_t                                          count = 0;
+    BorderRouter::PrefixTableIterator iter;
+    BorderRouter::RouterEntry         entry;
+    uint16_t                          count = 0;
 
     Log("VerifyDiscoveredRouters()");
 
@@ -4595,7 +4595,7 @@ void TestNat64PrefixSelection(void)
 
 void VerifyPdOmrPrefix(const Ip6::Prefix &aPrefix)
 {
-    BorderRouter::RoutingManager::Dhcp6PdPrefix pdPrefix;
+    BorderRouter::Dhcp6PdPrefix pdPrefix;
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetDhcp6PdOmrPrefix(pdPrefix));
     VerifyOrQuit(AsCoreType(&pdPrefix.mPrefix) == aPrefix);
@@ -4603,7 +4603,7 @@ void VerifyPdOmrPrefix(const Ip6::Prefix &aPrefix)
 
 void VerifyNoPdOmrPrefix(void)
 {
-    BorderRouter::RoutingManager::Dhcp6PdPrefix pdPrefix;
+    BorderRouter::Dhcp6PdPrefix pdPrefix;
 
     VerifyOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetDhcp6PdOmrPrefix(pdPrefix) == kErrorNotFound);
 }
