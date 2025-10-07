@@ -36,6 +36,7 @@
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 #include "instance/instance.hpp"
+#include "meshcop/border_agent_txt_data.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -46,7 +47,6 @@ RegisterLogModule("BorderAgent");
 //----------------------------------------------------------------------------------------------------------------------
 // `Manager`
 
-const char Manager::kTxtDataRecordVersion[] = "1";
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
 const char Manager::kServiceType[]            = "_meshcop._udp";
 const char Manager::kDefaultBaseServiceName[] = OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME;
@@ -476,7 +476,7 @@ void Manager::RegisterService(void)
     txtDataBuffer     = reinterpret_cast<uint8_t *>(Heap::CAlloc(txtDataBufferSize, sizeof(uint8_t)));
     OT_ASSERT(txtDataBuffer != nullptr);
 
-    SuccessOrAssert(PrepareServiceTxtData(txtDataBuffer, txtDataBufferSize, txtDataLength));
+    SuccessOrAssert(Get<TxtData>().Prepare(txtDataBuffer, txtDataBufferSize, txtDataLength));
 
     if (mVendorTxtData.GetLength() != 0)
     {
@@ -517,136 +517,6 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
-
-Error Manager::PrepareServiceTxtData(ServiceTxtData &aTxtData)
-{
-    return PrepareServiceTxtData(aTxtData.mData, sizeof(aTxtData.mData), aTxtData.mLength);
-}
-
-Error Manager::PrepareServiceTxtData(uint8_t *aBuffer, uint16_t aBufferSize, uint16_t &aLength)
-{
-    Error                  error = kErrorNone;
-    Dns::TxtDataEncoder    encoder(aBuffer, aBufferSize);
-    MeshCoP::Dataset::Info datasetInfo;
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
-    {
-        Id id;
-
-        GetId(id);
-        SuccessOrExit(error = encoder.AppendEntry("id", id));
-    }
-#endif
-    SuccessOrExit(error = encoder.AppendStringEntry("rv", kTxtDataRecordVersion));
-    SuccessOrExit(error = encoder.AppendBigEndianUintEntry("sb", DetermineStateBitmap()));
-    SuccessOrExit(error = encoder.AppendStringEntry("tv", kThreadVersionString));
-    SuccessOrExit(error = encoder.AppendEntry("xa", Get<Mac::Mac>().GetExtAddress()));
-
-    if (Get<MeshCoP::ActiveDatasetManager>().IsComplete() &&
-        (Get<MeshCoP::ActiveDatasetManager>().Read(datasetInfo) == kErrorNone))
-    {
-        if (datasetInfo.IsPresent<Dataset::kExtendedPanId>())
-        {
-            SuccessOrExit(error = encoder.AppendEntry("xp", datasetInfo.Get<Dataset::kExtendedPanId>()));
-        }
-
-        if (datasetInfo.IsPresent<Dataset::kNetworkName>())
-        {
-            SuccessOrExit(error = encoder.AppendNameEntry("nn", datasetInfo.Get<Dataset::kNetworkName>().GetAsData()));
-        }
-    }
-
-    if (Get<Mle::Mle>().IsAttached())
-    {
-        SuccessOrExit(error = encoder.AppendBigEndianUintEntry("pt", Get<Mle::Mle>().GetLeaderData().GetPartitionId()));
-
-        if (Get<MeshCoP::ActiveDatasetManager>().GetTimestamp().IsValid())
-        {
-            SuccessOrExit(error = encoder.AppendEntry("at", Get<MeshCoP::ActiveDatasetManager>().GetTimestamp()));
-        }
-    }
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    if (Get<Mle::Mle>().IsAttached() && Get<BackboneRouter::Local>().IsEnabled())
-    {
-        BackboneRouter::Config bbrConfig;
-
-        Get<BackboneRouter::Local>().GetConfig(bbrConfig);
-        SuccessOrExit(error = encoder.AppendEntry("sq", bbrConfig.mSequenceNumber));
-        SuccessOrExit(error = encoder.AppendBigEndianUintEntry("bb", BackboneRouter::kBackboneUdpPort));
-    }
-
-    SuccessOrExit(error =
-                      encoder.AppendNameEntry("dn", Get<MeshCoP::NetworkNameManager>().GetDomainName().GetAsData()));
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    {
-        Ip6::Prefix                   prefix;
-        BorderRouter::RoutePreference preference;
-
-        if (Get<BorderRouter::RoutingManager>().GetFavoredOmrPrefix(prefix, preference) == kErrorNone &&
-            prefix.GetLength() > 0)
-        {
-            uint8_t omrData[Ip6::NetworkPrefix::kSize + 1];
-
-            omrData[0] = prefix.GetLength();
-            memcpy(omrData + 1, prefix.GetBytes(), prefix.GetBytesSize());
-
-            SuccessOrExit(error = encoder.AppendEntry("omr", omrData));
-        }
-    }
-#endif
-
-    aLength = encoder.GetLength();
-
-exit:
-    return error;
-}
-
-uint32_t Manager::DetermineStateBitmap(void) const
-{
-    uint32_t bitmap = 0;
-
-    bitmap |= (IsRunning() ? StateBitmap::kConnectionModePskc : StateBitmap::kConnectionModeDisabled);
-    bitmap |= StateBitmap::kAvailabilityHigh;
-
-    switch (Get<Mle::Mle>().GetRole())
-    {
-    case Mle::DeviceRole::kRoleDisabled:
-        bitmap |= (StateBitmap::kThreadIfStatusNotInitialized | StateBitmap::kThreadRoleDisabledOrDetached);
-        break;
-    case Mle::DeviceRole::kRoleDetached:
-        bitmap |= (StateBitmap::kThreadIfStatusInitialized | StateBitmap::kThreadRoleDisabledOrDetached);
-        break;
-    case Mle::DeviceRole::kRoleChild:
-        bitmap |= (StateBitmap::kThreadIfStatusActive | StateBitmap::kThreadRoleChild);
-        break;
-    case Mle::DeviceRole::kRoleRouter:
-        bitmap |= (StateBitmap::kThreadIfStatusActive | StateBitmap::kThreadRoleRouter);
-        break;
-    case Mle::DeviceRole::kRoleLeader:
-        bitmap |= (StateBitmap::kThreadIfStatusActive | StateBitmap::kThreadRoleLeader);
-        break;
-    }
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    if (Get<Mle::Mle>().IsAttached())
-    {
-        bitmap |= (Get<BackboneRouter::Local>().IsEnabled() ? StateBitmap::kFlagBbrIsActive : 0);
-        bitmap |= (Get<BackboneRouter::Local>().IsPrimary() ? StateBitmap::kFlagBbrIsPrimary : 0);
-    }
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    if (Get<EphemeralKeyManager>().GetState() != EphemeralKeyManager::kStateDisabled)
-    {
-        bitmap |= StateBitmap::kFlagEpskcSupported;
-    }
-#endif
-
-    return bitmap;
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 // Manager::SessionIterator

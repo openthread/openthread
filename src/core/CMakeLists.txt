@@ -159,6 +159,7 @@ set(COMMON_SOURCES
     meshcop/announce_begin_client.cpp
     meshcop/border_agent.cpp
     meshcop/border_agent_tracker.cpp
+    meshcop/border_agent_txt_data.cpp
     meshcop/commissioner.cpp
     meshcop/dataset.cpp
     meshcop/dataset_manager.cpp
