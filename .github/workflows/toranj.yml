@@ -65,5 +65,6 @@ jobs:
         sudo apt-get --no-install-recommends install -y ninja-build lcov
     - name: Build & Run
       run: |
+        cat ./tests/nexus/test_border_agent.cpp
         ./tests/nexus/build.sh
 
