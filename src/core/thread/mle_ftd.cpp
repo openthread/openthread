@@ -2817,8 +2817,8 @@ Error Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, const Discove
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     if (Get<KeyManager>().GetSecurityPolicy().mNativeCommissioningEnabled)
     {
-        SuccessOrExit(
-            error = Tlv::Append<MeshCoP::CommissionerUdpPortTlv>(*message, Get<MeshCoP::BorderAgent>().GetUdpPort()));
+        SuccessOrExit(error = Tlv::Append<MeshCoP::CommissionerUdpPortTlv>(
+                          *message, Get<MeshCoP::BorderAgent::Manager>().GetUdpPort()));
 
         discoveryResponseTlv.SetNativeCommissioner(true);
     }

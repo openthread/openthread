@@ -588,11 +588,15 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    MeshCoP::BorderAgent mBorderAgent;
+    MeshCoP::BorderAgent::Manager mBorderAgentManager;
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    MeshCoP::BorderAgent::EphemeralKeyManager mBorderAgentEphemeralKeyManager;
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
-    MeshCoP::BorderAgentTracker mBorderAgentTracker;
+    MeshCoP::BorderAgent::Tracker mBorderAgentTracker;
 #endif
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
@@ -1028,18 +1032,18 @@ template <> inline MeshCoP::DatasetUpdater &Instance::Get(void) { return mDatase
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-template <> inline MeshCoP::BorderAgent &Instance::Get(void) { return mBorderAgent; }
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
-template <> inline MeshCoP::BorderAgentTracker &Instance::Get(void) { return mBorderAgentTracker; }
+template <> inline MeshCoP::BorderAgent::Manager &Instance::Get(void) { return mBorderAgentManager; }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 template <> inline MeshCoP::BorderAgent::EphemeralKeyManager &Instance::Get(void)
 {
-    return mBorderAgent.GetEphemeralKeyManager();
+    return mBorderAgentEphemeralKeyManager;
 }
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
+template <> inline MeshCoP::BorderAgent::Tracker &Instance::Get(void) { return mBorderAgentTracker; }
 #endif
 
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
