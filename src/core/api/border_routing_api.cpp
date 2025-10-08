@@ -208,7 +208,7 @@ void otBorderRoutingPrefixTableInitIterator(otInstance *aInstance, otBorderRouti
 {
     AssertPointerIsNotNull(aIterator);
 
-    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().InitPrefixTableIterator(*aIterator);
+    AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().InitIterator(*aIterator);
 }
 
 otError otBorderRoutingGetNextPrefixTableEntry(otInstance                         *aInstance,
@@ -218,7 +218,7 @@ otError otBorderRoutingGetNextPrefixTableEntry(otInstance                       
     AssertPointerIsNotNull(aIterator);
     AssertPointerIsNotNull(aEntry);
 
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextPrefixTableEntry(*aIterator, *aEntry);
+    return AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().GetNextPrefixTableEntry(*aIterator, *aEntry);
 }
 
 otError otBorderRoutingGetNextRouterEntry(otInstance                         *aInstance,
@@ -228,7 +228,7 @@ otError otBorderRoutingGetNextRouterEntry(otInstance                         *aI
     AssertPointerIsNotNull(aIterator);
     AssertPointerIsNotNull(aEntry);
 
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextRouterEntry(*aIterator, *aEntry);
+    return AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().GetNextRouterEntry(*aIterator, *aEntry);
 }
 
 otError otBorderRoutingGetNextRdnssAddrEntry(otInstance                         *aInstance,
@@ -238,14 +238,14 @@ otError otBorderRoutingGetNextRdnssAddrEntry(otInstance                         
     AssertPointerIsNotNull(aIterator);
     AssertPointerIsNotNull(aEntry);
 
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextRdnssAddrEntry(*aIterator, *aEntry);
+    return AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().GetNextRdnssAddrEntry(*aIterator, *aEntry);
 }
 
 void otBorderRoutingSetRdnssAddrCallback(otInstance                      *aInstance,
                                          otBorderRoutingRdnssAddrCallback aCallback,
                                          void                            *aContext)
 {
-    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetRdnssAddrCallback(aCallback, aContext);
+    AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().SetRdnssAddrCallback(aCallback, aContext);
 }
 
 otError otBorderRoutingGetNextIfAddrEntry(otInstance                         *aInstance,
@@ -255,7 +255,7 @@ otError otBorderRoutingGetNextIfAddrEntry(otInstance                         *aI
     AssertPointerIsNotNull(aIterator);
     AssertPointerIsNotNull(aEntry);
 
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextIfAddrEntry(*aIterator, *aEntry);
+    return AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().GetNextIfAddrEntry(*aIterator, *aEntry);
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE

@@ -102,6 +102,7 @@ set(COMMON_SOURCES
     border_router/dhcp6_pd_client.cpp
     border_router/infra_if.cpp
     border_router/routing_manager.cpp
+    border_router/rx_ra_tracker.cpp
     coap/coap.cpp
     coap/coap_message.cpp
     coap/coap_secure.cpp

@@ -388,6 +388,8 @@ openthread_core_files = [
   "border_router/infra_if.hpp",
   "border_router/routing_manager.cpp",
   "border_router/routing_manager.hpp",
+  "border_router/rx_ra_tracker.cpp",
+  "border_router/rx_ra_tracker.hpp",
   "coap/coap.cpp",
   "coap/coap.hpp",
   "coap/coap_message.cpp",
