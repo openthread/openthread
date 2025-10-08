@@ -39,13 +39,13 @@ using namespace ot;
 
 void otBorderAgentTrackerSetEnabled(otInstance *aInstance, bool aEnable)
 {
-    AsCoreType(aInstance).Get<MeshCoP::BorderAgentTracker>().SetEnabled(aEnable,
-                                                                        MeshCoP::BorderAgentTracker::kRequesterUser);
+    AsCoreType(aInstance).Get<MeshCoP::BorderAgent::Tracker>().SetEnabled(
+        aEnable, MeshCoP::BorderAgent::Tracker::kRequesterUser);
 }
 
 bool otBorderAgentTrackerIsRunning(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::BorderAgentTracker>().IsRunning();
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent::Tracker>().IsRunning();
 }
 
 void otBorderAgentTrackerInitIterator(otInstance *aInstance, otBorderAgentTrackerIterator *aIterator)
