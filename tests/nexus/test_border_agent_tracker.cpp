@@ -40,16 +40,16 @@ void TestBorderAgentTracker(void)
 {
     static constexpr uint32_t kInfraIfIndex = 1;
 
-    Core                                   nexus;
-    Node                                  &node0 = nexus.CreateNode();
-    Node                                  &node1 = nexus.CreateNode();
-    Node                                  &node2 = nexus.CreateNode();
-    Node                                  &node3 = nexus.CreateNode();
-    MeshCoP::BorderAgentTracker::Iterator  iterator;
-    MeshCoP::BorderAgentTracker::AgentInfo agent;
-    Dns::Multicast::Core::Service          service;
-    uint16_t                               count;
-    bool                                   found;
+    Core                                     nexus;
+    Node                                    &node0 = nexus.CreateNode();
+    Node                                    &node1 = nexus.CreateNode();
+    Node                                    &node2 = nexus.CreateNode();
+    Node                                    &node3 = nexus.CreateNode();
+    MeshCoP::BorderAgent::Tracker::Iterator  iterator;
+    MeshCoP::BorderAgent::Tracker::AgentInfo agent;
+    Dns::Multicast::Core::Service            service;
+    uint16_t                                 count;
+    bool                                     found;
 
     Log("------------------------------------------------------------------------------------------------------");
     Log("TestBorderAgentTracker");
@@ -75,15 +75,15 @@ void TestBorderAgentTracker(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Check Border Agent Tracker's initial state");
 
-    VerifyOrQuit(!node0.Get<MeshCoP::BorderAgentTracker>().IsRunning());
+    VerifyOrQuit(!node0.Get<MeshCoP::BorderAgent::Tracker>().IsRunning());
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Enable Border Agent Tracker");
 
-    node0.Get<MeshCoP::BorderAgentTracker>().SetEnabled(true, MeshCoP::BorderAgentTracker::kRequesterUser);
+    node0.Get<MeshCoP::BorderAgent::Tracker>().SetEnabled(true, MeshCoP::BorderAgent::Tracker::kRequesterUser);
     nexus.AdvanceTime(10);
 
-    VerifyOrQuit(node0.Get<MeshCoP::BorderAgentTracker>().IsRunning());
+    VerifyOrQuit(node0.Get<MeshCoP::BorderAgent::Tracker>().IsRunning());
 
     nexus.AdvanceTime(5000);
 
@@ -109,7 +109,7 @@ void TestBorderAgentTracker(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Disable BA function on node0, ensure that it is removed from the `BorderAgentTracker` list");
 
-    node0.Get<MeshCoP::BorderAgent>().SetEnabled(false);
+    node0.Get<MeshCoP::BorderAgent::Manager>().SetEnabled(false);
     nexus.AdvanceTime(5000);
 
     iterator.Init(node0.GetInstance());
@@ -131,7 +131,7 @@ void TestBorderAgentTracker(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Re-enable BA function on node0, ensure that it is added again in the `BorderAgentTracker` list");
 
-    node0.Get<MeshCoP::BorderAgent>().SetEnabled(true);
+    node0.Get<MeshCoP::BorderAgent::Manager>().SetEnabled(true);
     nexus.AdvanceTime(5000);
 
     iterator.Init(node0.GetInstance());
@@ -153,10 +153,10 @@ void TestBorderAgentTracker(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Disable Border Agent Tracker");
 
-    node0.Get<MeshCoP::BorderAgentTracker>().SetEnabled(false, MeshCoP::BorderAgentTracker::kRequesterUser);
+    node0.Get<MeshCoP::BorderAgent::Tracker>().SetEnabled(false, MeshCoP::BorderAgent::Tracker::kRequesterUser);
     nexus.AdvanceTime(10);
 
-    VerifyOrQuit(!node0.Get<MeshCoP::BorderAgentTracker>().IsRunning());
+    VerifyOrQuit(!node0.Get<MeshCoP::BorderAgent::Tracker>().IsRunning());
 
     iterator.Init(node0.GetInstance());
     VerifyOrQuit(iterator.GetNextAgentInfo(agent) == kErrorNotFound);
@@ -164,10 +164,10 @@ void TestBorderAgentTracker(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Re-enable BA tracker and ensure all agents are discovered again");
 
-    node0.Get<MeshCoP::BorderAgentTracker>().SetEnabled(true, MeshCoP::BorderAgentTracker::kRequesterUser);
+    node0.Get<MeshCoP::BorderAgent::Tracker>().SetEnabled(true, MeshCoP::BorderAgent::Tracker::kRequesterUser);
     nexus.AdvanceTime(10);
 
-    VerifyOrQuit(node0.Get<MeshCoP::BorderAgentTracker>().IsRunning());
+    VerifyOrQuit(node0.Get<MeshCoP::BorderAgent::Tracker>().IsRunning());
 
     nexus.AdvanceTime(5000);
 

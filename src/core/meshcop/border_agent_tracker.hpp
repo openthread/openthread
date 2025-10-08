@@ -57,11 +57,12 @@
 
 namespace ot {
 namespace MeshCoP {
+namespace BorderAgent {
 
 /**
  * Implements the Border Agent Tracker.
  */
-class BorderAgentTracker : public InstanceLocator
+class Tracker : public InstanceLocator
 {
     friend class ot::Dnssd;
 
@@ -113,7 +114,7 @@ public:
      *
      * @param[in]  aInstance  The OpenThread instance.
      */
-    explicit BorderAgentTracker(Instance &aInstance);
+    explicit Tracker(Instance &aInstance);
 
     /**
      * Enables or disables the Border Agent Tracker.
@@ -234,9 +235,10 @@ private:
     OwningList<Agent> mAgents;
 };
 
+} // namespace BorderAgent
 } // namespace MeshCoP
 
-DefineCoreType(otBorderAgentTrackerIterator, MeshCoP::BorderAgentTracker::Iterator);
+DefineCoreType(otBorderAgentTrackerIterator, MeshCoP::BorderAgent::Tracker::Iterator);
 
 } // namespace ot
 

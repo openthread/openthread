@@ -1854,7 +1854,7 @@ Core *InitTest(void)
     // register the `_meshcop._udp` service from
     // interfering with this test.
 
-    sInstance->Get<MeshCoP::BorderAgent>().SetEnabled(false);
+    sInstance->Get<MeshCoP::BorderAgent::Manager>().SetEnabled(false);
 #endif
 
     return &sInstance->Get<Core>();

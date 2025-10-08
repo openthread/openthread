@@ -39,15 +39,16 @@
 
 namespace ot {
 namespace MeshCoP {
+namespace BorderAgent {
 
 RegisterLogModule("BaTracker");
 
 //---------------------------------------------------------------------------------------------------------------------
-// BorderAgentTracker
+// Tracker
 
-const char BorderAgentTracker::kServiceType[] = "_meshcop._udp";
+const char Tracker::kServiceType[] = "_meshcop._udp";
 
-BorderAgentTracker::BorderAgentTracker(Instance &aInstance)
+Tracker::Tracker(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kStateStopped)
     , mUserEnabled(false)
@@ -55,7 +56,7 @@ BorderAgentTracker::BorderAgentTracker(Instance &aInstance)
 {
 }
 
-void BorderAgentTracker::SetEnabled(bool aEnable, Requester aRequester)
+void Tracker::SetEnabled(bool aEnable, Requester aRequester)
 {
     switch (aRequester)
     {
@@ -70,9 +71,9 @@ void BorderAgentTracker::SetEnabled(bool aEnable, Requester aRequester)
     UpdateState();
 }
 
-void BorderAgentTracker::HandleDnssdPlatformStateChange(void) { UpdateState(); }
+void Tracker::HandleDnssdPlatformStateChange(void) { UpdateState(); }
 
-void BorderAgentTracker::UpdateState(void)
+void Tracker::UpdateState(void)
 {
     State newState;
 
@@ -110,12 +111,12 @@ exit:
     return;
 }
 
-void BorderAgentTracker::HandleBrowseResult(otInstance *aInstance, const otPlatDnssdBrowseResult *aResult)
+void Tracker::HandleBrowseResult(otInstance *aInstance, const otPlatDnssdBrowseResult *aResult)
 {
-    AsCoreType(aInstance).Get<BorderAgentTracker>().HandleBrowseResult(*aResult);
+    AsCoreType(aInstance).Get<Tracker>().HandleBrowseResult(*aResult);
 }
 
-void BorderAgentTracker::HandleBrowseResult(const Dnssd::BrowseResult &aResult)
+void Tracker::HandleBrowseResult(const Dnssd::BrowseResult &aResult)
 {
     Error  error = kErrorNone;
     Agent *newAgent;
@@ -158,12 +159,12 @@ exit:
     LogOnError(error, "add new agent", aResult.mServiceInstance);
 }
 
-void BorderAgentTracker::HandleSrvResult(otInstance *aInstance, const otPlatDnssdSrvResult *aResult)
+void Tracker::HandleSrvResult(otInstance *aInstance, const otPlatDnssdSrvResult *aResult)
 {
-    AsCoreType(aInstance).Get<BorderAgentTracker>().HandleSrvResult(*aResult);
+    AsCoreType(aInstance).Get<Tracker>().HandleSrvResult(*aResult);
 }
 
-void BorderAgentTracker::HandleSrvResult(const Dnssd::SrvResult &aResult)
+void Tracker::HandleSrvResult(const Dnssd::SrvResult &aResult)
 {
     Agent *agent;
 
@@ -188,12 +189,12 @@ exit:
     return;
 }
 
-void BorderAgentTracker::HandleTxtResult(otInstance *aInstance, const otPlatDnssdTxtResult *aResult)
+void Tracker::HandleTxtResult(otInstance *aInstance, const otPlatDnssdTxtResult *aResult)
 {
-    AsCoreType(aInstance).Get<BorderAgentTracker>().HandleTxtResult(*aResult);
+    AsCoreType(aInstance).Get<Tracker>().HandleTxtResult(*aResult);
 }
 
-void BorderAgentTracker::HandleTxtResult(const Dnssd::TxtResult &aResult)
+void Tracker::HandleTxtResult(const Dnssd::TxtResult &aResult)
 {
     Agent *agent;
 
@@ -215,12 +216,12 @@ exit:
     return;
 }
 
-void BorderAgentTracker::HandleAddressResult(otInstance *aInstance, const otPlatDnssdAddressResult *aResult)
+void Tracker::HandleAddressResult(otInstance *aInstance, const otPlatDnssdAddressResult *aResult)
 {
-    AsCoreType(aInstance).Get<BorderAgentTracker>().HandleAddressResult(*aResult);
+    AsCoreType(aInstance).Get<Tracker>().HandleAddressResult(*aResult);
 }
 
-void BorderAgentTracker::HandleAddressResult(const Dnssd::AddressResult &aResult)
+void Tracker::HandleAddressResult(const Dnssd::AddressResult &aResult)
 {
     Agent *agent;
 
@@ -235,14 +236,14 @@ exit:
     return;
 }
 
-bool BorderAgentTracker::NameMatch(const Heap::String &aHeapString, const char *aName)
+bool Tracker::NameMatch(const Heap::String &aHeapString, const char *aName)
 {
     return !aHeapString.IsNull() && StringMatch(aHeapString.AsCString(), aName, kStringCaseInsensitiveMatch);
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 
-void BorderAgentTracker::LogOnError(Error aError, const char *aText, const char *aName)
+void Tracker::LogOnError(Error aError, const char *aText, const char *aName)
 {
     if (aError != kErrorNone)
     {
@@ -252,11 +253,11 @@ void BorderAgentTracker::LogOnError(Error aError, const char *aText, const char 
 
 #else
 
-void BorderAgentTracker::LogOnError(Error, const char *, const char *) {}
+void Tracker::LogOnError(Error, const char *, const char *) {}
 
 #endif
 
-const char *BorderAgentTracker::StateToString(State aState)
+const char *Tracker::StateToString(State aState)
 {
     static const char *const kStateStrings[] = {
         "Stopped",
@@ -276,15 +277,15 @@ const char *BorderAgentTracker::StateToString(State aState)
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// BorderAgentTracker::Iterator
+// Tracker::Iterator
 
-void BorderAgentTracker::Iterator::Init(Instance &aInstance)
+void Tracker::Iterator::Init(Instance &aInstance)
 {
-    SetAgentEntry(aInstance.Get<BorderAgentTracker>().mAgents.GetHead());
+    SetAgentEntry(aInstance.Get<Tracker>().mAgents.GetHead());
     SetInitUptime(aInstance.Get<Uptime>().GetUptime());
 }
 
-Error BorderAgentTracker::Iterator::GetNextAgentInfo(AgentInfo &aInfo)
+Error Tracker::Iterator::GetNextAgentInfo(AgentInfo &aInfo)
 {
     Error        error = kErrorNone;
     const Agent *agent = GetAgentEntry();
@@ -298,14 +299,14 @@ exit:
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// BorderAgentTracker::Host
+// Tracker::Host
 
-BorderAgentTracker::Host::Host(Instance &aInstance)
+Tracker::Host::Host(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
 }
 
-BorderAgentTracker::Host::~Host(void)
+Tracker::Host::~Host(void)
 {
     VerifyOrExit(mName != nullptr);
     Get<Dnssd>().StopIp6AddressResolver(AddressResolver(mName.AsCString()));
@@ -314,7 +315,7 @@ exit:
     return;
 }
 
-Error BorderAgentTracker::Host::SetNameAndStartAddrResolver(const char *aHostName)
+Error Tracker::Host::SetNameAndStartAddrResolver(const char *aHostName)
 {
     Error error;
 
@@ -326,7 +327,7 @@ exit:
     return error;
 }
 
-void BorderAgentTracker::Host::SetAddresses(const Dnssd::AddressResult &aResult)
+void Tracker::Host::SetAddresses(const Dnssd::AddressResult &aResult)
 {
     Error                       error = kErrorNone;
     uint16_t                    length;
@@ -358,9 +359,9 @@ exit:
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// BorderAgentTracker::Agent
+// Tracker::Agent
 
-BorderAgentTracker::Agent::Agent(Instance &aInstance)
+Tracker::Agent::Agent(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mNext(nullptr)
     , mDiscoverUptime(aInstance.Get<Uptime>().GetUptime())
@@ -369,7 +370,7 @@ BorderAgentTracker::Agent::Agent(Instance &aInstance)
 {
 }
 
-BorderAgentTracker::Agent::~Agent(void)
+Tracker::Agent::~Agent(void)
 {
     VerifyOrExit(mServiceName != nullptr);
     Get<Dnssd>().StopSrvResolver(SrvResolver(mServiceName.AsCString()));
@@ -379,7 +380,7 @@ exit:
     return;
 }
 
-Error BorderAgentTracker::Agent::SetServiceNameAndStartSrvTxtResolvers(const char *aServiceName)
+Error Tracker::Agent::SetServiceNameAndStartSrvTxtResolvers(const char *aServiceName)
 {
     Error error;
 
@@ -394,7 +395,7 @@ exit:
     return error;
 }
 
-void BorderAgentTracker::Agent::SetHost(const char *aHostName)
+void Tracker::Agent::SetHost(const char *aHostName)
 {
     Agent *matchingHostAgent;
 
@@ -413,7 +414,7 @@ void BorderAgentTracker::Agent::SetHost(const char *aHostName)
     // `Host` entry. Otherwise, we allocate a new one. Note that
     // `mHost` is defined as `RetainPtr` which does ref-counting.
 
-    matchingHostAgent = Get<BorderAgentTracker>().mAgents.FindMatching(kMatchHostName, aHostName);
+    matchingHostAgent = Get<Tracker>().mAgents.FindMatching(kMatchHostName, aHostName);
 
     if (matchingHostAgent != nullptr)
     {
@@ -434,7 +435,7 @@ exit:
     return;
 }
 
-void BorderAgentTracker::Agent::ClearHost(void)
+void Tracker::Agent::ClearHost(void)
 {
     VerifyOrExit(mHost != nullptr);
 
@@ -445,7 +446,7 @@ exit:
     return;
 }
 
-void BorderAgentTracker::Agent::SetPort(uint16_t aPort)
+void Tracker::Agent::SetPort(uint16_t aPort)
 {
     VerifyOrExit(mPort != aPort);
 
@@ -456,7 +457,7 @@ exit:
     return;
 }
 
-void BorderAgentTracker::Agent::SetTxtData(const uint8_t *aData, uint16_t aDataLength)
+void Tracker::Agent::SetTxtData(const uint8_t *aData, uint16_t aDataLength)
 {
     Error error = kErrorNone;
 
@@ -469,7 +470,7 @@ exit:
     LogOnError(error, "set TXT data", mServiceName.AsCString());
 }
 
-void BorderAgentTracker::Agent::ClearTxtData(void)
+void Tracker::Agent::ClearTxtData(void)
 {
     VerifyOrExit(!mTxtData.IsNull());
 
@@ -480,9 +481,9 @@ exit:
     return;
 }
 
-void BorderAgentTracker::Agent::SetUpdateTimeToNow(void) { mLastUpdateUptime = Get<Uptime>().GetUptime(); }
+void Tracker::Agent::SetUpdateTimeToNow(void) { mLastUpdateUptime = Get<Uptime>().GetUptime(); }
 
-bool BorderAgentTracker::Agent::Matches(MatchType aType, const char *aName) const
+bool Tracker::Agent::Matches(MatchType aType, const char *aName) const
 {
     bool matches = false;
 
@@ -502,7 +503,7 @@ exit:
     return matches;
 }
 
-void BorderAgentTracker::Agent::CopyInfoTo(AgentInfo &aInfo, uint64_t aUptimeNow) const
+void Tracker::Agent::CopyInfoTo(AgentInfo &aInfo, uint64_t aUptimeNow) const
 {
     ClearAllBytes(aInfo);
 
@@ -522,47 +523,48 @@ void BorderAgentTracker::Agent::CopyInfoTo(AgentInfo &aInfo, uint64_t aUptimeNow
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// BorderAgentTracker::Browser
+// Tracker::Browser
 
-BorderAgentTracker::Browser::Browser(void)
+Tracker::Browser::Browser(void)
 {
     Clear();
     mServiceType = kServiceType;
-    mCallback    = BorderAgentTracker::HandleBrowseResult;
+    mCallback    = Tracker::HandleBrowseResult;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// BorderAgentTracker::SrvResolver
+// Tracker::SrvResolver
 
-BorderAgentTracker::SrvResolver::SrvResolver(const char *aServiceName)
+Tracker::SrvResolver::SrvResolver(const char *aServiceName)
 {
     Clear();
     mServiceInstance = aServiceName;
     mServiceType     = kServiceType;
-    mCallback        = BorderAgentTracker::HandleSrvResult;
+    mCallback        = Tracker::HandleSrvResult;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// BorderAgentTracker::TxtResolver
+// Tracker::TxtResolver
 
-BorderAgentTracker::TxtResolver::TxtResolver(const char *aServiceName)
+Tracker::TxtResolver::TxtResolver(const char *aServiceName)
 {
     Clear();
     mServiceInstance = aServiceName;
     mServiceType     = kServiceType;
-    mCallback        = BorderAgentTracker::HandleTxtResult;
+    mCallback        = Tracker::HandleTxtResult;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// BorderAgentTracker::AddressResolver
+// Tracker::AddressResolver
 
-BorderAgentTracker::AddressResolver::AddressResolver(const char *aHostName)
+Tracker::AddressResolver::AddressResolver(const char *aHostName)
 {
     Clear();
     mHostName = aHostName;
-    mCallback = BorderAgentTracker::HandleAddressResult;
+    mCallback = Tracker::HandleAddressResult;
 }
 
+} // namespace BorderAgent
 } // namespace MeshCoP
 } // namespace ot
 
