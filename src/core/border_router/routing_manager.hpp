@@ -1021,44 +1021,6 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    void HandleRsSenderTimer(void) { mRsSender.HandleTimer(); }
-
-    class RsSender : public InstanceLocator
-    {
-    public:
-        // This class implements tx of Router Solicitation (RS)
-        // messages to discover other routers. `Start()` schedules
-        // a cycle of RS transmissions of `kMaxTxCount` separated
-        // by `kTxInterval`. At the end of cycle the callback
-        // `HandleRsSenderFinished()` is invoked to inform end of
-        // the cycle to `RoutingManager`.
-
-        explicit RsSender(Instance &aInstance);
-
-        bool IsInProgress(void) const { return mTimer.IsRunning(); }
-        void Start(void);
-        void Stop(void);
-        void HandleTimer(void);
-
-    private:
-        // All time intervals are in msec.
-        static constexpr uint32_t kMaxStartDelay     = 1000;        // Max random delay to send the first RS.
-        static constexpr uint32_t kTxInterval        = 4000;        // Interval between RS tx.
-        static constexpr uint32_t kRetryDelay        = kTxInterval; // Interval to wait to retry a failed RS tx.
-        static constexpr uint32_t kWaitOnLastAttempt = 1000;        // Wait interval after last RS tx.
-        static constexpr uint8_t  kMaxTxCount        = 3;           // Number of RS tx in one cycle.
-
-        Error SendRs(void);
-
-        using RsTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleRsSenderTimer>;
-
-        uint8_t   mTxCount;
-        RsTimer   mTimer;
-        TimeMilli mStartTime;
-    };
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
     void HandlePdPrefixManagerTimer(void) { mPdPrefixManager.HandleTimer(); }
@@ -1149,7 +1111,6 @@ private:
     void EvaluateRoutingPolicy(void);
     bool IsInitialPolicyEvaluationDone(void) const;
     void ScheduleRoutingPolicyEvaluation(ScheduleMode aMode);
-    void HandleRsSenderFinished(TimeMilli aStartTime);
     void SendRouterAdvertisement(RouterAdvTxMode aRaTxMode);
 
     void HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
@@ -1205,7 +1166,6 @@ private:
 #endif
 
     TxRaInfo   mTxRaInfo;
-    RsSender   mRsSender;
     Heap::Data mExtraRaOptions;
 
     RoutingPolicyTimer mRoutingPolicyTimer;

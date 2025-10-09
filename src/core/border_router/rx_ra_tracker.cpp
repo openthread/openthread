@@ -48,6 +48,7 @@ RegisterLogModule("BorderRouting");
 
 RxRaTracker::RxRaTracker(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mRsSender(aInstance)
     , mExpirationTimer(aInstance)
     , mStaleTimer(aInstance)
     , mRouterTimer(aInstance)
@@ -58,7 +59,11 @@ RxRaTracker::RxRaTracker(Instance &aInstance)
     mLocalRaHeader.Clear();
 }
 
-void RxRaTracker::Start(void) { HandleNetDataChange(); }
+void RxRaTracker::Start(void)
+{
+    mRsSender.Start();
+    HandleNetDataChange();
+}
 
 void RxRaTracker::Stop(void)
 {
@@ -71,6 +76,23 @@ void RxRaTracker::Stop(void)
     mStaleTimer.Stop();
     mRouterTimer.Stop();
     mRdnssAddrTimer.Stop();
+
+    mRsSender.Stop();
+}
+
+void RxRaTracker::HandleRsSenderFinished(TimeMilli aStartTime)
+{
+    // This is a callback from `RsSender` and is invoked when it
+    // finishes a cycle of sending Router Solicitations. `aStartTime`
+    // specifies the start time of the RS transmission cycle.
+    //
+    // We remove or deprecate old entries in discovered table that are
+    // not refreshed during Router Solicitation. We also invalidate
+    // the learned RA header if it is not refreshed during Router
+    // Solicitation.
+
+    RemoveOrDeprecateOldEntries(aStartTime);
+    Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(RoutingManager::kImmediately);
 }
 
 void RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaMessage,
@@ -796,7 +818,7 @@ void RxRaTracker::HandleStaleTimer(void)
     VerifyOrExit(Get<RoutingManager>().IsRunning());
 
     LogInfo("Stale timer expired");
-    Get<RoutingManager>().mRsSender.Start();
+    mRsSender.Start();
 
 exit:
     return;
@@ -886,7 +908,7 @@ void RxRaTracker::SendNeighborSolicitToRouter(const Router &aRouter)
     TxMessage                 nsMsg;
     InfraIf::LinkLayerAddress linkAddr;
 
-    VerifyOrExit(!Get<RoutingManager>().mRsSender.IsInProgress());
+    VerifyOrExit(!mRsSender.IsInProgress());
 
     nsHdr.SetTargetAddress(aRouter.mAddress);
     SuccessOrExit(nsMsg.Append(nsHdr));
@@ -1435,6 +1457,104 @@ void RxRaTracker::DecisionFactors::UpdateFrom(const RoutePrefix &aRoutePrefix)
     {
         mHasNonUlaRoute = !aRoutePrefix.GetPrefix().IsUniqueLocal();
     }
+
+exit:
+    return;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// RxRaTracker::RsSender
+
+RxRaTracker::RsSender::RsSender(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mTxCount(0)
+    , mTimer(aInstance)
+{
+}
+
+void RxRaTracker::RsSender::Start(void)
+{
+    uint32_t delay;
+
+    VerifyOrExit(!IsInProgress());
+
+    delay = Random::NonCrypto::GetUint32InRange(0, kMaxStartDelay);
+
+    LogInfo("RsSender: Starting - will send first RS in %lu msec", ToUlong(delay));
+
+    mTxCount   = 0;
+    mStartTime = TimerMilli::GetNow();
+    mTimer.Start(delay);
+
+exit:
+    return;
+}
+
+void RxRaTracker::RsSender::Stop(void) { mTimer.Stop(); }
+
+Error RxRaTracker::RsSender::SendRs(void)
+{
+    Ip6::Address              destAddress;
+    RouterSolicitHeader       rsHdr;
+    TxMessage                 rsMsg;
+    InfraIf::LinkLayerAddress linkAddr;
+    InfraIf::Icmp6Packet      packet;
+    Error                     error;
+
+    SuccessOrExit(error = rsMsg.Append(rsHdr));
+
+    if (Get<InfraIf>().GetLinkLayerAddress(linkAddr) == kErrorNone)
+    {
+        SuccessOrExit(error = rsMsg.AppendLinkLayerOption(linkAddr, Option::kSourceLinkLayerAddr));
+    }
+
+    rsMsg.GetAsPacket(packet);
+    destAddress.SetToLinkLocalAllRoutersMulticast();
+
+    error = Get<RoutingManager>().mInfraIf.Send(packet, destAddress);
+
+    if (error == kErrorNone)
+    {
+        Get<Ip6::Ip6>().GetBorderRoutingCounters().mRsTxSuccess++;
+    }
+    else
+    {
+        Get<Ip6::Ip6>().GetBorderRoutingCounters().mRsTxFailure++;
+    }
+exit:
+    return error;
+}
+
+void RxRaTracker::RsSender::HandleTimer(void)
+{
+    Error    error;
+    uint32_t delay;
+
+    if (mTxCount >= kMaxTxCount)
+    {
+        LogInfo("RsSender: Finished sending RS msgs and waiting for RAs");
+        Get<RxRaTracker>().HandleRsSenderFinished(mStartTime);
+        ExitNow();
+    }
+
+    error = SendRs();
+
+    if (error == kErrorNone)
+    {
+        mTxCount++;
+        delay = (mTxCount == kMaxTxCount) ? kWaitOnLastAttempt : kTxInterval;
+        LogInfo("RsSender: Sent RS %u/%u", mTxCount, kMaxTxCount);
+    }
+    else
+    {
+        LogCrit("RsSender: Failed to send RS %u/%u: %s", mTxCount + 1, kMaxTxCount, ErrorToString(error));
+
+        // Note that `mTxCount` is intentionally not incremented
+        // if the tx fails.
+        delay = kRetryDelay;
+    }
+
+    mTimer.Start(delay);
 
 exit:
     return;

@@ -103,6 +103,20 @@ public:
     void Stop(void);
 
     /**
+     * Indicates whether the Router Solicitation (RS) transmission process is in progress.
+     *
+     * Upon `Start()`, the device performs the RS transmission process to discover routers on the infrastructure
+     * interface. The device sends three Router Solicitation (RS) messages every four seconds, starting with a random
+     * delay of up to one second for the first RS transmission. After sending the final RS message, the device waits
+     * one second before concluding the RS transmission process, at which point `IsRsTxInProgress()` returns `FALSE`.
+     * The RS transmission process is also performed if the stale timer for any discovered prefix expires.
+     *
+     * @retval TRUE   If the Router Solicitation transmission process is in progress.
+     * @retval FALSE  If the Router Solicitation transmission process is not in progress.
+     */
+    bool IsRsTxInProgress(void) const { return mRsSender.IsInProgress(); }
+
+    /**
      * Processes a received Router Advertisement (RA) message.
      *
      * @param[in] aRaMessage    The received RA message.
@@ -277,7 +291,6 @@ public:
     bool IsAddressReachableThroughExplicitRoute(const Ip6::Address &aAddress) const;
 
     // Callbacks notifying of changes
-    void RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold);
     void HandleLocalOnLinkPrefixChanged(void);
     void HandleNetDataChange(void);
 
@@ -482,11 +495,51 @@ private:
 
     //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
+    void HandleRsSenderTimer(void) { mRsSender.HandleTimer(); }
+
+    class RsSender : public InstanceLocator
+    {
+    public:
+        // This class implements tx of Router Solicitation (RS)
+        // messages to discover other routers. `Start()` schedules
+        // a cycle of RS transmissions of `kMaxTxCount` separated
+        // by `kTxInterval`. At the end of cycle the callback
+        // `HandleRsSenderFinished()` is invoked to inform end of
+        // the cycle to `RxRaTracker`.
+
+        explicit RsSender(Instance &aInstance);
+
+        bool IsInProgress(void) const { return mTimer.IsRunning(); }
+        void Start(void);
+        void Stop(void);
+        void HandleTimer(void);
+
+    private:
+        // All time intervals are in msec.
+        static constexpr uint32_t kMaxStartDelay     = 1000;        // Max random delay to send the first RS.
+        static constexpr uint32_t kTxInterval        = 4000;        // Interval between RS tx.
+        static constexpr uint32_t kRetryDelay        = kTxInterval; // Interval to wait to retry a failed RS tx.
+        static constexpr uint32_t kWaitOnLastAttempt = 1000;        // Wait interval after last RS tx.
+        static constexpr uint8_t  kMaxTxCount        = 3;           // Number of RS tx in one cycle.
+
+        Error SendRs(void);
+
+        using RsTimer = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleRsSenderTimer>;
+
+        uint8_t   mTxCount;
+        RsTimer   mTimer;
+        TimeMilli mStartTime;
+    };
+
+    //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    void HandleRsSenderFinished(TimeMilli aStartTime);
     void ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter, RouterAdvOrigin aRaOrigin);
     void ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
     void ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
     void ProcessRecursiveDnsServerOption(const RecursiveDnsServerOption &aRdnss, Router &aRouter);
     void UpdateIfAddresses(const Ip6::Address &aAddress);
+    void RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold);
     void Evaluate(void);
     void DetermineStaleTimeFor(const OnLinkPrefix &aPrefix, NextFireTime &aStaleTime);
     void DetermineStaleTimeFor(const RoutePrefix &aPrefix, NextFireTime &aStaleTime);
@@ -521,6 +574,7 @@ private:
     using IfAddressList   = OwningList<Entry<IfAddress>>;
     using RdnssCallback   = Callback<RdnssAddrCallback>;
 
+    RsSender             mRsSender;
     DecisionFactors      mDecisionFactors;
     RouterList           mRouters;
     IfAddressList        mIfAddresses;
