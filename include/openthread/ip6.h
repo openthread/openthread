@@ -568,13 +568,12 @@ bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond
 bool otIp6IsLinkLocalUnicast(const otIp6Address *aAddress);
 
 /**
- * Sets the IPv6 address to a link-local unicast address with Interface Identifier generated from a given
- * MAC Extended Address.
+ * Forms a link-local unicast IPv6 address from a given MAC Extended Address.
  *
  * @param[in]  aExtAddress  A pointer to the MAC Extended Address (used to generate the IID).
  * @param[out] aAddress     A pointer to output the IPv6 link-local unicast address.
  */
-void otIp6SetExtAddressToLinkLocalUnicast(const otExtAddress *aExtAddress, otIp6Address *aAddress);
+void otIp6FormLinkLocalAddressFromExtAddress(const otExtAddress *aExtAddress, otIp6Address *aAddress);
 
 /**
  * Test if two IPv6 prefixes are the same.
