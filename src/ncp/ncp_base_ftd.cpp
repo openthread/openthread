@@ -1418,7 +1418,12 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CHANNEL_MANAGER_CHANN
     otError error            = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadBool(skipQualityCheck));
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     error = otChannelManagerRequestChannelSelect(mInstance, skipQualityCheck);
+#else
+    OT_UNUSED_VARIABLE(skipQualityCheck);
+    error = OT_ERROR_NOT_CAPABLE;
+#endif
 
 exit:
     return error;
