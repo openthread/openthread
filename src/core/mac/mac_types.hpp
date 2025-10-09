@@ -82,6 +82,11 @@ constexpr ShortAddress kShortAddrBroadcast = OT_RADIO_BROADCAST_SHORT_ADDR; ///<
 constexpr ShortAddress kShortAddrInvalid   = OT_RADIO_INVALID_SHORT_ADDR;   ///< Invalid Short Address.
 
 /**
+ * Represents the wake-up identifier.
+ */
+typedef otWakeupId WakeupId;
+
+/**
  * Generates a random IEEE 802.15.4 PAN ID.
  *
  * @returns A randomly generated IEEE 802.15.4 PAN ID (excluding `kPanIdBroadcast`).
@@ -960,6 +965,19 @@ private:
     uint8_t mUncertainty;
 };
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+/**
+ * Gets the length of the wake-up identifier.
+ *
+ * The length is the number of bytes remaining after removing the most significant zero bytes.
+ *
+ * @param[in]  aWakeupId  The wake-up identifier.
+ *
+ * @returns The length of the @p aWakeupId.
+ */
+uint8_t GetWakeupIdLength(WakeupId aWakeupId);
+#endif
+
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 /**
  * Represents a wake-up request.
@@ -1003,6 +1021,28 @@ public:
      * @returns A reference to the Extended Address.
      */
     ExtAddress &GetExtAddress(void);
+
+    /**
+     * Gets the Wake-up Identifier of the wake-up request.
+     *
+     * MUST be used only if the wake-up request type is `kTypeWakeupId` or `kTypeGroupWakeupId`.
+     *
+     * @returns The Wake-up Identifier.
+     */
+    WakeupId GetWakeupId(void) const { return mShared.mWakeupId; }
+
+    /**
+     * Sets the wake-up request with the Wake-up Identifier.
+     *
+     * The type is also updated to indicate that the wake-up request type is `kTypeWakeupId`.
+     *
+     * @param[in]  aWakeupId  A Wake-up Identifier.
+     */
+    void SetWakeupId(WakeupId aWakeupId)
+    {
+        SetType(kTypeWakeupId);
+        mShared.mWakeupId = aWakeupId;
+    }
 
     /**
      * Sets the wake-up request type.
