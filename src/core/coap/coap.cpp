@@ -1374,7 +1374,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
         SuccessOrExit(error = iterator.Advance());
     }
 
-    curUriPath[0] = '\0';
+    curUriPath[0] = kNullChar;
 
     for (const ResourceBlockWise &resource : mBlockWiseResources)
     {

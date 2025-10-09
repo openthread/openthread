@@ -63,10 +63,10 @@ Error ParseCmd(char *aCommandString, Arg aArgs[], uint8_t aArgsMaxLength)
         }
         else if (IsSeparator(*cmd))
         {
-            *cmd = '\0';
+            *cmd = kNullChar;
         }
 
-        if ((*cmd != '\0') && ((index == 0) || (*(cmd - 1) == '\0')))
+        if ((*cmd != kNullChar) && ((index == 0) || (*(cmd - 1) == kNullChar)))
         {
             if (index == aArgsMaxLength - 1)
             {
@@ -136,7 +136,7 @@ Error ParseAsUint64(const char *aString, uint64_t &aUint64)
         VerifyOrExit(newValue >= value, error = kErrorInvalidArgs);
         value = newValue;
         cur++;
-    } while (*cur != '\0');
+    } while (*cur != kNullChar);
 
     aUint64 = value;
 
