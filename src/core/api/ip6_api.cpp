@@ -173,7 +173,7 @@ bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond
 
 bool otIp6IsLinkLocalUnicast(const otIp6Address *aAddress) { return AsCoreType(aAddress).IsLinkLocalUnicast(); }
 
-void otIp6SetExtAddressToLinkLocalUnicast(const otExtAddress *aExtAddress, otIp6Address *aAddress)
+void otIp6FormLinkLocalAddressFromExtAddress(const otExtAddress *aExtAddress, otIp6Address *aAddress)
 {
     AsCoreType(aAddress).SetToLinkLocalAddress(AsCoreType(aExtAddress));
 }
