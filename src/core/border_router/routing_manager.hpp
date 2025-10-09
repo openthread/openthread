@@ -767,7 +767,7 @@ private:
         const Ip6::Prefix &GetFavoredPrefix(void) const { return mFavoredPrefix; }
         bool               AddressMatchesLocalPrefix(const Ip6::Address &aAddress) const;
         bool               IsInitalEvaluationDone(void) const;
-        void               HandleRaPrefixTableChanged(void);
+        void               HandleRxRaTrackerChanged(void);
         bool               ShouldPublishUlaRoute(void) const;
         Error              AppendAsPiosTo(RouterAdvert::TxMessage &aRaMessage);
         void               HandleNetDataChange(void);
@@ -1157,7 +1157,7 @@ private:
     void HandleNeighborAdvertisement(const InfraIf::Icmp6Packet &aPacket);
     bool NetworkDataContainsUlaRoute(void) const;
 
-    void HandleRaPrefixTableChanged(void);
+    void HandleRxRaTrackerDecisionFactorChanged(void);
     void HandleLocalOnLinkPrefixChanged(void);
 
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
