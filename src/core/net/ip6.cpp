@@ -228,11 +228,26 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader)
 
     if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal())
     {
-        error = PrepareMulticastToLargerThanRealmLocal(aMessage, aHeader);
-        ExitNow();
-    }
+#if OPENTHREAD_FTD
+        if (Get<ChildTable>().HasSleepyChildWithAddress(aHeader.GetDestination()))
+        {
+            Message *messageCopy = aMessage.Clone();
 
-    VerifyOrExit(aHeader.GetDestination().IsRealmLocalMulticast());
+            if (messageCopy != nullptr)
+            {
+                EnqueueDatagram(*messageCopy);
+            }
+            else
+            {
+                LogWarn("Failed to clone mcast message for indirect tx to sleepy children");
+            }
+        }
+#endif
+    }
+    else
+    {
+        VerifyOrExit(aHeader.GetDestination().IsRealmLocalMulticast());
+    }
 
     aMessage.RemoveHeader(sizeof(aHeader));
 
@@ -443,7 +458,8 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
 
     header.SetDestination(aMessageInfo.GetPeerAddr());
 
-    if (aMessageInfo.GetPeerAddr().IsRealmLocalMulticast())
+    if (aMessageInfo.GetPeerAddr().IsRealmLocalMulticast() ||
+        aMessageInfo.GetPeerAddr().IsMulticastLargerThanRealmLocal())
     {
         SuccessOrExit(error = AddMplOption(aMessage, header));
     }
@@ -451,11 +467,6 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
     SuccessOrExit(error = aMessage.Prepend(header));
 
     Checksum::UpdateMessageChecksum(aMessage, header.GetSource(), header.GetDestination(), aIpProto);
-
-    if (aMessageInfo.GetPeerAddr().IsMulticastLargerThanRealmLocal())
-    {
-        SuccessOrExit(error = PrepareMulticastToLargerThanRealmLocal(aMessage, header));
-    }
 
     aMessage.SetMulticastLoop(aMessageInfo.GetMulticastLoop());
 
@@ -1114,8 +1125,9 @@ void Ip6::DetermineAction(const Message &aMessage,
         }
 #endif
 
-        // Always forward multicast packets to host network stack
-        aForwardHost = true;
+        // Forward multicast packets to host network stack if received
+        // on Thread netif.
+        aForwardHost = aMessage.IsOriginThreadNetif();
 
         // If subscribed to the multicast address, receive if it is from the
         // Thread netif or if multicast loop is allowed.
