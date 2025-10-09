@@ -343,9 +343,9 @@ Error Server::AppendBorderRouterIfAddrs(Message &aMessage)
     offset = aMessage.GetLength();
     SuccessOrExit(error = aMessage.Append(tlv));
 
-    Get<BorderRouter::RoutingManager>().InitPrefixTableIterator(iterator);
+    Get<BorderRouter::RxRaTracker>().InitIterator(iterator);
 
-    while (Get<BorderRouter::RoutingManager>().GetNextIfAddrEntry(iterator, ifAddr) == kErrorNone)
+    while (Get<BorderRouter::RxRaTracker>().GetNextIfAddrEntry(iterator, ifAddr) == kErrorNone)
     {
         if (length + sizeof(Ip6::Address) > Tlv::kBaseTlvMaxLength)
         {
