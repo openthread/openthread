@@ -1839,7 +1839,7 @@ private:
         static constexpr uint8_t  kMaxChildUpdatesToRestoreRole     = kMaxChildKeepAliveAttempts;
         static constexpr uint32_t kChildUpdateRetxDelay             = kUnicastRetxDelay; /// 1000 msec
         static constexpr uint16_t kRetxJitter                       = 5;
-        static constexpr uint16_t kChildRestoredRouterEligibleDelay = 90000; // in ms
+        static constexpr uint32_t kChildRestoredRouterEligibleDelay = 90000; // in ms
 
         enum State : uint8_t
         {

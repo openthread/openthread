@@ -4281,7 +4281,7 @@ void Mle::PrevRoleRestorer::HandleTimer(void)
 {
     VerifyOrExit(mState != kIdle);
 
-#if OPENTRHEAD_FTD
+#if OPENTHREAD_FTD
     if (mState == kChildRestoredRouterDelay)
     {
         Get<Mle>().SetRouterEligible(true);
@@ -4331,7 +4331,7 @@ void Mle::PrevRoleRestorer::SendChildUpdate(void)
 
 void  Mle::PrevRoleRestorer::HandleChildRestored(void)
 {
-#if OPENTRHEAD_FTD
+#if OPENTHREAD_FTD
     if (IsRestoringChildRole())
     {
         mState = kChildRestoredRouterDelay;
