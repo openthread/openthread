@@ -111,7 +111,7 @@ public:
     /**
      * Initializes the Network Name as an empty string.
      */
-    NetworkName(void) { m8[0] = '\0'; }
+    NetworkName(void) { m8[0] = kNullChar; }
 
     /**
      * Gets the Network Name as a null terminated C string.

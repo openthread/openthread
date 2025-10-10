@@ -256,7 +256,7 @@ void Client::Response::InitServiceInfo(ServiceInfo &aServiceInfo) const
 
     if ((aServiceInfo.mHostNameBuffer != nullptr) && (aServiceInfo.mHostNameBufferSize > 0))
     {
-        aServiceInfo.mHostNameBuffer[0] = '\0';
+        aServiceInfo.mHostNameBuffer[0] = kNullChar;
     }
 }
 

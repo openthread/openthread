@@ -55,6 +55,7 @@
 #include "common/non_copyable.hpp"
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
+#include "common/string.hpp"
 #include "common/tasklet.hpp"
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
