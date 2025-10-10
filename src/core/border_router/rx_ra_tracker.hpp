@@ -73,6 +73,7 @@ class NetDataBrTracker;
 class RxRaTracker : public InstanceLocator
 {
     friend class NetDataBrTracker;
+    friend class ot::Notifier;
 
 public:
     /**
@@ -279,7 +280,6 @@ public:
     // Callbacks notifying of changes
     void RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold);
     void HandleLocalOnLinkPrefixChanged(void);
-    void HandleNetDataChange(void);
 
 private:
     static constexpr uint32_t kStaleTime = 600; // 10 minutes.
@@ -497,6 +497,9 @@ private:
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     void ReportChangesToHistoryTracker(Router &aRouter, bool aRemoved);
 #endif
+    void HandleNotifierEvents(Events aEvents);
+    void HandleNetDataChange(void);
+
     // Tasklet or timer callbacks
     void HandleSignalTask(void);
     void HandleRdnssAddrTask(void);

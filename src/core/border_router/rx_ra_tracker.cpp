@@ -502,6 +502,14 @@ exit:
     return;
 }
 
+void RxRaTracker::HandleNotifierEvents(Events aEvents)
+{
+    if (aEvents.Contains(kEventThreadNetdataChanged))
+    {
+        HandleNetDataChange();
+    }
+}
+
 void RxRaTracker::HandleNetDataChange(void)
 {
     NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
