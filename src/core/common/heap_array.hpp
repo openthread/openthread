@@ -153,20 +153,36 @@ public:
     Error ReserveCapacity(IndexType aCapacity) { return Allocate(aCapacity); }
 
     /**
-     * Sets the array by taking the buffer from another given array (using move semantics).
+     * Sets the array by taking ownership of the buffer from another `Array`.
      *
-     * @param[in] aOther    The other `Heap::Array` to take from (rvalue reference).
+     * This method uses move semantics. After the call, `aOther` will be empty and this `Array` will hold the
+     * buffer previously held by `aOther`.
+     *
+     * @param[in] aOther     An rvalue reference to another `Array` to take from.
      */
     void TakeFrom(Array &&aOther)
     {
-        Free();
-        mArray           = aOther.mArray;
-        mLength          = aOther.mLength;
-        mCapacity        = aOther.mCapacity;
-        aOther.mArray    = nullptr;
-        aOther.mLength   = 0;
-        aOther.mCapacity = 0;
+        if (&aOther != this)
+        {
+            Free();
+            mArray           = aOther.mArray;
+            mLength          = aOther.mLength;
+            mCapacity        = aOther.mCapacity;
+            aOther.mArray    = nullptr;
+            aOther.mLength   = 0;
+            aOther.mCapacity = 0;
+        }
     }
+
+    /**
+     * Casts the `Array` to an rvalue reference.
+     *
+     * This method is intended to be used with `TakeFrom()` to explicitly indicate a move operation and transfer of
+     * the underlying buffer.
+     *
+     * @returns An rvalue reference to this `Array`.
+     */
+    Array &&Move(void) { return static_cast<Array &&>(*this); }
 
     /**
      * Overloads the `[]` operator to get the element at a given index.

@@ -146,7 +146,7 @@ void Notifier::EmitEvents(void)
     Get<TimeSync>().HandleNotifierEvents(events);
 #endif
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
-    Get<Utils::Slaac>().HandleNotifierEvents(events);
+    Get<Ip6::Slaac>().HandleNotifierEvents(events);
 #endif
 #if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
     Get<Utils::JamDetector>().HandleNotifierEvents(events);
@@ -162,6 +162,9 @@ void Notifier::EmitEvents(void)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     Get<BorderRouter::RoutingManager>().HandleNotifierEvents(events);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+    Get<BorderRouter::NetDataBrTracker>().HandleNotifierEvents(events);
+#endif
 #endif
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     Get<Srp::Client>().HandleNotifierEvents(events);

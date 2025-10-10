@@ -52,7 +52,7 @@ extern "C" {
  *
  * @note This number versions both OpenThread platform and user APIs.
  */
-#define OPENTHREAD_API_VERSION (536)
+#define OPENTHREAD_API_VERSION (539)
 
 /**
  * @addtogroup api-instance
@@ -99,6 +99,15 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize);
 otInstance *otInstanceInitSingle(void);
 
 /**
+ * Gets the pointer to the single OpenThread instance when multiple instances are not in use.
+ *
+ * Is available and can only be used when support for multiple OpenThread instances is disabled.
+ *
+ * @returns A pointer to the single OpenThread instance.
+ */
+otInstance *otInstanceGetSingle(void);
+
+/**
  * Initializes the OpenThread instance.
  *
  * This function initializes OpenThread and prepares it for subsequent OpenThread API calls. This function must be
@@ -113,6 +122,18 @@ otInstance *otInstanceInitSingle(void);
  * @returns  A pointer to the new OpenThread instance.
  */
 otInstance *otInstanceInitMultiple(uint8_t aIdx);
+
+/**
+ * Gets the pointer to an OpenThread instance with the provided index when multiple instances are in use.
+ *
+ * This function is available when both `OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE` and
+ * `OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE` are enabled.
+ *
+ * @param[in] aIdx The index of the OpenThread instance.
+ *
+ * @returns A pointer to the corresponding OpenThread instance, or `NULL` if @p aIdx is out of bounds.
+ */
+otInstance *otInstanceGetInstance(uint8_t aIdx);
 
 /**
  * Gets the index of the OpenThread instance when multiple instance is in use.

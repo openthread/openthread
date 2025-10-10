@@ -84,6 +84,9 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
     , mUptime(*this)
 #endif
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    , mOtns(*this)
+#endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     , mNotifier(*this)
     , mTimeTicker(*this)
@@ -232,7 +235,8 @@ Instance::Instance(void)
     , mApplicationCoapSecure(*this, kWithLinkSecurity)
 #endif
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-    , mApplicationBleSecure(*this)
+    , mBleSecure(*this)
+    , mTcatAgent(*this)
 #endif
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     , mPingSender(*this)
@@ -259,11 +263,11 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
     , mAnnounceSender(*this)
 #endif
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-    , mOtns(*this)
-#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     , mRoutingManager(*this)
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+    , mNetDataBrTracker(*this)
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
     , mDhcp6PdClient(*this)
 #endif

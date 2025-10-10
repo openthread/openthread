@@ -335,7 +335,11 @@
  * Define as 1 to enable assert function `OT_ASSERT()` within OpenThread code and its libraries.
  */
 #ifndef OPENTHREAD_CONFIG_ASSERT_ENABLE
+#ifndef NDEBUG
 #define OPENTHREAD_CONFIG_ASSERT_ENABLE 1
+#else
+#define OPENTHREAD_CONFIG_ASSERT_ENABLE 0
+#endif
 #endif
 
 /**
@@ -615,6 +619,15 @@
  */
 #ifndef OPENTHREAD_EXAMPLES_SIMULATION
 #define OPENTHREAD_EXAMPLES_SIMULATION 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_USE_STD_NEW
+ *
+ * Define 1 to enable using std <new>.
+ */
+#ifndef OPENTHREAD_CONFIG_USE_STD_NEW
+#define OPENTHREAD_CONFIG_USE_STD_NEW 0
 #endif
 
 /**

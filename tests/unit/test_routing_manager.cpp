@@ -816,16 +816,27 @@ void VerifyNat64PrefixInNetData(const Ip6::Prefix &aNat64Prefix)
 
 struct Pio
 {
-    Pio(const Ip6::Prefix &aPrefix, uint32_t aValidLifetime, uint32_t aPreferredLifetime)
+    using Flags = Ip6::Nd::PrefixInfoOption::Flags;
+
+    static constexpr Flags kOnLinkFlag     = Ip6::Nd::PrefixInfoOption::kOnLinkFlag;
+    static constexpr Flags kAutoConfigFlag = Ip6::Nd::PrefixInfoOption::kAutoConfigFlag;
+    static constexpr Flags kDhcp6Flag      = Ip6::Nd::PrefixInfoOption::kDhcp6PdPreferredFlag;
+
+    Pio(const Ip6::Prefix &aPrefix,
+        uint32_t           aValidLifetime,
+        uint32_t           aPreferredLifetime,
+        Flags              aFlags = kOnLinkFlag | kAutoConfigFlag)
         : mPrefix(aPrefix)
         , mValidLifetime(aValidLifetime)
         , mPreferredLifetime(aPreferredLifetime)
+        , mFlags(aFlags)
     {
     }
 
     const Ip6::Prefix &mPrefix;
     uint32_t           mValidLifetime;
     uint32_t           mPreferredLifetime;
+    Flags              mFlags;
 };
 
 struct Rio
@@ -921,7 +932,8 @@ void BuildRouterAdvert(Ip6::Nd::RouterAdvert::TxMessage &aRaMsg,
 
     for (; aNumPios > 0; aPios++, aNumPios--)
     {
-        SuccessOrQuit(aRaMsg.AppendPrefixInfoOption(aPios->mPrefix, aPios->mValidLifetime, aPios->mPreferredLifetime));
+        SuccessOrQuit(aRaMsg.AppendPrefixInfoOption(aPios->mPrefix, aPios->mValidLifetime, aPios->mPreferredLifetime,
+                                                    aPios->mFlags));
     }
 
     for (; aNumRios > 0; aRios++, aNumRios--)
@@ -1460,6 +1472,8 @@ void TestSamePrefixesFromMultipleRouters(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
     Log("End of TestSamePrefixesFromMultipleRouters");
@@ -1610,6 +1624,8 @@ void TestOmrSelection(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
     Log("End of TestOmrSelection");
@@ -1878,6 +1894,8 @@ void TestOmrConfig(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
     Log("End of TestOmrConfig");
@@ -2043,9 +2061,131 @@ void TestDefaultRoute(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
+    // Remove the manually added on-mesh prefix with a default route.
+    // This ensures the device is no longer considered a BR, so its heap
+    // allocation in `NetDataBrTracker` is released. Otherwise, the
+    // `heapAllocations` check would fail.
+
+    SuccessOrQuit(otBorderRouterRemoveOnMeshPrefix(sInstance, &prefixConfig.mPrefix));
+    SuccessOrQuit(otBorderRouterRegister(sInstance));
+    AdvanceTime(3000);
+
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
     Log("End of TestDefaultRoute");
+
+    FinalizeTest();
+}
+
+void TestNonUlaPioWithOnlyOnLinkFlag(void)
+{
+    static constexpr uint32_t kMaxRaTxInterval = 196; // In seconds
+
+    Ip6::Prefix  localOnLink;
+    Ip6::Prefix  localOmr;
+    Ip6::Prefix  onLinkPrefix   = PrefixFromString("2000:abba:baba::", 64);
+    Ip6::Address routerAddressA = AddressFromString("fd00::aaaa");
+    uint16_t     heapAllocations;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestNonUlaPioWithOnlyOnLinkFlag");
+
+    InitTest();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start Routing Manager. Check emitted RS and RA messages.
+
+    sRsEmitted   = false;
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+
+    Log("Local on-link prefix is %s", localOnLink.ToString().AsCString());
+    Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
+
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(30000);
+
+    VerifyOrQuit(sRsEmitted);
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    Log("Received RA was validated");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check the Network Data to include the local OMR and on-link prefix.
+
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send an RA from router A with a new on-link (PIO) with
+    // only on-link (L) flag (no A or P).
+
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefix, kValidLitime, kPreferredLifetime, Pio::kOnLinkFlag)});
+
+    sRaValidated = false;
+
+    AdvanceTime(10000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check the discovered prefix table and ensure info from router A
+    // is present in the table.
+
+    VerifyPrefixTable({OnLinkPrefix(onLinkPrefix, kValidLitime, kPreferredLifetime, routerAddressA)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check the Network Data. Now that we have observed a non-ULA
+    // on-link prefix (even with only on-link `L` flag), a default
+    // route should be published.
+
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check that BR is still advertising its local on-link prefix.
+
+    AdvanceTime(kMaxRaTxInterval * 1000);
+
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Disallow responding to NS messages. This should cause
+    // the router A to be deemed unreachable and its prefix
+    // entries aged out and then removed.
+
+    sRespondToNs = false;
+
+    AdvanceTime(kValidLitime * 1000 + 1000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check that the discovered prefix table is now empty.
+
+    VerifyPrefixTableIsEmpty();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate that the BR is no longer publishing a default route.
+
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    Log("End of TestNonUlaPioWithOnlyOnLinkFlag");
 
     FinalizeTest();
 }
@@ -2209,6 +2349,17 @@ void TestAdvNonUlaRoute(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
+    // Remove the manually added on-mesh prefix with a default route.
+    // This ensures the device is no longer considered a BR, so its
+    // heap allocation in `NetDataBrTracker` is released. Otherwise,
+    // the `heapAllocations` check would fail.
+
+    SuccessOrQuit(otBorderRouterRemoveOnMeshPrefix(sInstance, &prefixConfig.mPrefix));
+    SuccessOrQuit(otBorderRouterRegister(sInstance));
+    AdvanceTime(3000);
+
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
     Log("End of TestAdvNonUlaRoute");
@@ -2328,6 +2479,8 @@ void TestFavoredOnLinkPrefix(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
     Log("End of TestFavoredOnLinkPrefix");
@@ -2466,6 +2619,8 @@ void TestLocalOnLinkPrefixDeprecation(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
     Log("End of TestLocalOnLinkPrefixDeprecation");
@@ -2622,6 +2777,8 @@ void TestDomainPrefixAsOmr(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
     Log("End of TestDomainPrefixAsOmr");
@@ -3131,6 +3288,8 @@ void TestExtPanIdChange(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
     Log("End of TestExtPanIdChange");
@@ -3269,6 +3428,8 @@ void TestPrefixStaleTime(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
     Log("End of TestPrefixStaleTime");
@@ -3422,6 +3583,8 @@ void TestRouterNsProbe(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
     Log("End of TestRouterNsProbe");
@@ -3593,6 +3756,7 @@ void TestLearningAndCopyingOfFlags(void)
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
     VerifyDiscoveredRoutersIsEmpty();
+    AdvanceTime(3000);
 
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
@@ -3681,6 +3845,7 @@ void TestLearnRaHeader(void)
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
     VerifyDiscoveredRoutersIsEmpty();
+    AdvanceTime(3000);
 
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
@@ -3901,6 +4066,8 @@ void TestConflictingPrefix(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
     Log("End of TestConflictingPrefix");
@@ -4415,6 +4582,8 @@ void TestNat64PrefixSelection(void)
     VerifyNat64PrefixInNetData(localNat64);
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
     VerifyOrQuit(sHeapAllocatedPtrs.GetLength() == heapAllocations);
 
     Log("End of TestNat64PrefixSelection");
@@ -4741,6 +4910,8 @@ void TestDhcp6Pd(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
     VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
 
     Log("End of TestDhcp6Pd");
@@ -4980,8 +5151,8 @@ void TestRdnss(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
-
     VerifyRdnssAddressTableIsEmpty();
+    AdvanceTime(3000);
 
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
@@ -5001,6 +5172,7 @@ int main(void)
     ot::TestOmrSelection();
     ot::TestOmrConfig();
     ot::TestDefaultRoute();
+    ot::TestNonUlaPioWithOnlyOnLinkFlag();
     ot::TestAdvNonUlaRoute();
     ot::TestFavoredOnLinkPrefix();
     ot::TestLocalOnLinkPrefixDeprecation();

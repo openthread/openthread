@@ -3175,6 +3175,16 @@ void Mle::DelayedSender::ScheduleParentResponse(const ParentResponseInfo &aInfo,
     AddSchedule(kTypeParentResponse, destination, aDelay, &aInfo, sizeof(aInfo));
 }
 
+void Mle::DelayedSender::RemoveScheduledParentResponses(void)
+{
+    Ip6::Address destination;
+
+    // The unspecified address will clear all parent responses to any destination
+    destination.Clear();
+
+    RemoveMatchingSchedules(kTypeParentResponse, destination);
+}
+
 void Mle::DelayedSender::ScheduleAdvertisement(const Ip6::Address &aDestination, uint32_t aDelay)
 {
     VerifyOrExit(!HasMatchingSchedule(kTypeAdvertisement, aDestination));
@@ -3386,11 +3396,26 @@ void Mle::DelayedSender::Execute(const Schedule &aSchedule)
 
 bool Mle::DelayedSender::Match(const Schedule &aSchedule, MessageType aMessageType, const Ip6::Address &aDestination)
 {
+    // If `aDestination` is `::` (the unspecified address), the
+    // address check is skipped, effectively accepting any
+    // destination address.
+
+    bool   matches = false;
     Header header;
 
     header.ReadFrom(aSchedule);
 
-    return (header.mMessageType == aMessageType) && (header.mDestination == aDestination);
+    VerifyOrExit(header.mMessageType == aMessageType);
+
+    if (!aDestination.IsUnspecified())
+    {
+        VerifyOrExit(header.mDestination == aDestination);
+    }
+
+    matches = true;
+
+exit:
+    return matches;
 }
 
 bool Mle::DelayedSender::HasMatchingSchedule(MessageType aMessageType, const Ip6::Address &aDestination) const
@@ -3415,11 +3440,23 @@ void Mle::DelayedSender::RemoveMatchingSchedules(MessageType aMessageType, const
     {
         if (Match(schedule, aMessageType, aDestination))
         {
+            LogRemove(schedule);
             mSchedules.DequeueAndFree(schedule);
-            Log(kMessageRemoveDelayed, aMessageType, aDestination);
         }
     }
 }
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+void Mle::DelayedSender::LogRemove(const Schedule &aSchedule)
+{
+    Header header;
+
+    header.ReadFrom(aSchedule);
+    Log(kMessageRemoveDelayed, header.mMessageType, header.mDestination);
+}
+#else
+void Mle::DelayedSender::LogRemove(const Schedule &) {}
+#endif
 
 //---------------------------------------------------------------------------------------------------------------------
 // TxMessage
@@ -4398,6 +4435,10 @@ void Mle::Attacher::Attach(AttachMode aMode)
 
     VerifyOrExit(!IsAttaching());
 
+#if OPENTHREAD_FTD
+    Get<Mle>().RemoveScheduledParentResponses();
+#endif
+
     if (!Get<Mle>().IsDetached())
     {
         mAttachCounter = 0;
@@ -5083,6 +5124,8 @@ void Mle::Attacher::HandleParentResponse(RxInfo &aRxInfo)
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
     Log(kMessageReceive, kTypeParentResponse, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
+
+    VerifyOrExit(mState != kStateChildIdRequest, error = kErrorInvalidState);
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadVersionTlv(version));
 
@@ -5774,7 +5817,16 @@ void Mle::AnnounceHandler::Stop(void)
 
 void Mle::AnnounceHandler::HandleAnnounce(RxInfo &aRxInfo)
 {
-    Error              error = kErrorNone;
+    enum Action : uint8_t
+    {
+        kIgnore,
+        kSendAnnouceBack,
+        kAnnounceAttachAfterDelay,
+        kSignalAnnounceSender,
+    };
+
+    Error              error  = kErrorNone;
+    Action             action = kIgnore;
     ChannelTlvValue    channelTlvValue;
     MeshCoP::Timestamp timestamp;
     MeshCoP::Timestamp pendingActiveTimestamp;
@@ -5798,21 +5850,59 @@ void Mle::AnnounceHandler::HandleAnnounce(RxInfo &aRxInfo)
     timestampCompare     = MeshCoP::Timestamp::Compare(timestamp, Get<MeshCoP::ActiveDatasetManager>().GetTimestamp());
     channelAndPanIdMatch = (channel == Get<Mac::Mac>().GetPanChannel()) && (panId == Get<Mac::Mac>().GetPanId());
 
-    if (isFromOrphan || (timestampCompare < 0))
+    // Determine the action to perform.
+
+    if (isFromOrphan)
     {
-        if (isFromOrphan)
+        VerifyOrExit(!channelAndPanIdMatch);
+        action = kSendAnnouceBack;
+    }
+    else if (timestampCompare < 0)
+    {
+        // On an FTD which can become a router, we send an Announce
+        // back to help the sender learn and migrate to the newer
+        // Dataset. On a detached MTD, we process the Announce (wait
+        // for a short delay before trying to attach to the older
+        // Dataset). This is useful when an MTD child device has a
+        // newer Dataset but the routers it can hear are still on a
+        // previous, older Dataset. On an attached MTD, we ignore the
+        // stale Announce, since we cannot become a router to help the
+        // older device join the new Dataset, so sending an Announce
+        // back would be pointless.
+
+#if OPENTHREAD_FTD
+        if (Get<Mle>().IsFullThreadDevice() && Get<Mle>().IsRouterEligible())
         {
-            VerifyOrExit(!channelAndPanIdMatch);
+            action = kSendAnnouceBack;
         }
-
-        Get<Mle>().SendAnnounce(channel);
-
-#if OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE
-        Get<Mle>().SendAnnounce(channel, aRxInfo.mMessageInfo.GetPeerAddr());
+        else
 #endif
+        {
+            action = Get<Mle>().IsDetached() ? kAnnounceAttachAfterDelay : kIgnore;
+        }
     }
     else if (timestampCompare > 0)
     {
+        action = kAnnounceAttachAfterDelay;
+    }
+    else // timestampCompare is zero
+    {
+        action = kSignalAnnounceSender;
+    }
+
+    switch (action)
+    {
+    case kIgnore:
+        break;
+
+    case kSendAnnouceBack:
+        Get<Mle>().SendAnnounce(channel);
+#if OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE
+        Get<Mle>().SendAnnounce(channel, aRxInfo.mMessageInfo.GetPeerAddr());
+#endif
+        break;
+
+    case kAnnounceAttachAfterDelay:
         // No action is required if device is detached, and current
         // channel and pan-id match the values from the received MLE
         // Announce message.
@@ -5852,17 +5942,16 @@ void Mle::AnnounceHandler::HandleAnnounce(RxInfo &aRxInfo)
         mTimer.Start(kAnnounceProcessTimeout);
 
         LogNote("Delay processing Announce - channel %d, panid 0x%02x", channel, panId);
-    }
-    else
-    {
-        // Timestamps are equal.
+        break;
 
+    case kSignalAnnounceSender:
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
         // Notify `AnnounceSender` of the received Announce
         // message so it can update its state to determine
         // whether to send Announce or not.
         Get<AnnounceSender>().UpdateOnReceivedAnnounce();
 #endif
+        break;
     }
 
 exit:

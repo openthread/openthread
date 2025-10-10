@@ -71,6 +71,7 @@ async def main():
         logging.getLogger('ble.ble_stream_secure').setLevel(logging.INFO)
         logging.getLogger('ble.udp_stream').setLevel(logging.INFO)
 
+    is_debug = logger.getEffectiveLevel() <= logging.DEBUG
     device = await get_device_by_args(args)
 
     ble_sstream = None
@@ -86,12 +87,19 @@ async def main():
         logger.info(f"Certificates and key loaded from '{args.cert_path}'")
 
         print('Setting up secure TLS channel..', end='')
+        ok = False
         try:
-            await ble_sstream.do_handshake()
-            print('Done')
+            cb = None
+            if not is_debug:
+                cb = handshake_progress_bar
+            ok = await ble_sstream.do_handshake(progress_callback=cb)
         except Exception as e:
-            print('Failed')
             logger.error(e)
+
+        if ok:
+            print('Done')
+        else:
+            print('Failed')
             quit_with_reason('TLS handshake failure')
 
     ds = ThreadDataset()
@@ -131,6 +139,13 @@ async def get_device_by_args(args):
         device = UdpStream("127.0.0.1", int(args.simulation))
 
     return device
+
+
+def handshake_progress_bar(is_concluded: bool):
+    if is_concluded:
+        print('')
+    else:
+        print('.', end='', flush=True)
 
 
 if __name__ == '__main__':

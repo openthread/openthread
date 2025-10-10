@@ -1597,6 +1597,18 @@ void TestDnsClient(void)
     srpServer->SetEnabled(false);
     AdvanceTime(100);
 
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Remove the route prefix (with NAT64 flag) from network data");
+
+    // This ensures the device is no longer tracked as a BR. This is
+    // required to release the associated heap allocation in
+    // `NetDataBrTracker`, which would otherwise cause the
+    // `heapAllocations` check to fail.
+
+    SuccessOrQuit(otBorderRouterRemoveRoute(sInstance, &routeConfig.mPrefix));
+    SuccessOrQuit(otBorderRouterRegister(sInstance));
+    AdvanceTime(1000);
+
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
