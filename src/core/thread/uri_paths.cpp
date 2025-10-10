@@ -83,16 +83,17 @@ static constexpr Entry kEntries[] = {
     {"c/pq"},  // (27) kUriPanIdQuery
     {"c/ps"},  // (28) kUriPendingSet
     {"c/rx"},  // (29) kUriRelayRx
-    {"c/tx"},  // (30) kUriRelayTx
-    {"c/ur"},  // (31) kUriProxyRx
-    {"c/ut"},  // (32) kUriProxyTx
-    {"d/da"},  // (33) kUriDiagnosticGetAnswer
-    {"d/dg"},  // (34) kUriDiagnosticGetRequest
-    {"d/dq"},  // (35) kUriDiagnosticGetQuery
-    {"d/dr"},  // (36) kUriDiagnosticReset
-    {"n/dn"},  // (37) kUriDuaRegistrationNotify
-    {"n/dr"},  // (38) kUriDuaRegistrationRequest
-    {"n/mr"},  // (39) kUriMlr
+    {"c/te"},  // (30) kUriTcatEnable
+    {"c/tx"},  // (31) kUriRelayTx
+    {"c/ur"},  // (32) kUriProxyRx
+    {"c/ut"},  // (33) kUriProxyTx
+    {"d/da"},  // (34) kUriDiagnosticGetAnswer
+    {"d/dg"},  // (35) kUriDiagnosticGetRequest
+    {"d/dq"},  // (36) kUriDiagnosticGetQuery
+    {"d/dr"},  // (37) kUriDiagnosticReset
+    {"n/dn"},  // (38) kUriDuaRegistrationNotify
+    {"n/dr"},  // (39) kUriDuaRegistrationRequest
+    {"n/mr"},  // (40) kUriMlr
 };
 
 static_assert(BinarySearch::IsSorted(kEntries), "kEntries is not sorted");
@@ -130,6 +131,7 @@ struct UriEnumCheck
     ValidateNextEnum(kUriPanIdQuery);
     ValidateNextEnum(kUriPendingSet);
     ValidateNextEnum(kUriRelayRx);
+    ValidateNextEnum(kUriTcatEnable);
     ValidateNextEnum(kUriRelayTx);
     ValidateNextEnum(kUriProxyRx);
     ValidateNextEnum(kUriProxyTx);
@@ -193,6 +195,7 @@ template <> const char *UriToString<kUriPendingGet>(void) { return "PendingGet";
 template <> const char *UriToString<kUriPanIdQuery>(void) { return "PanIdQuery"; }
 template <> const char *UriToString<kUriPendingSet>(void) { return "PendingSet"; }
 template <> const char *UriToString<kUriRelayRx>(void) { return "RelayRx"; }
+template <> const char *UriToString<kUriTcatEnable>(void) { return "TcatEnable"; }
 template <> const char *UriToString<kUriRelayTx>(void) { return "RelayTx"; }
 template <> const char *UriToString<kUriProxyRx>(void) { return "ProxyRx"; }
 template <> const char *UriToString<kUriProxyTx>(void) { return "ProxyTx"; }
