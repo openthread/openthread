@@ -2181,30 +2181,39 @@ exit:
 
 void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
 {
-    VerifyOrExit(IsAttached());
-
 #if OPENTHREAD_FTD
     if (IsRouterOrLeader())
     {
         HandleChildUpdateRequestOnParent(aRxInfo);
-        ExitNow();
     }
+    else
 #endif
-
-    HandleChildUpdateRequestOnChild(aRxInfo);
-
-exit:
-    return;
+    {
+        HandleChildUpdateRequestOnChild(aRxInfo);
+    }
 }
 
 void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
 {
-    Error       error = kErrorNone;
+    Error       error           = kErrorNone;
+    bool        canTrustMessage = aRxInfo.IsNeighborStateValid();
     uint16_t    sourceAddress;
     RxChallenge challenge;
     TlvList     requestedTlvList;
     TlvList     tlvList;
     uint8_t     linkMarginOut;
+
+    if (!IsAttached())
+    {
+        // If detached and trying to restore our role as a child, we
+        // allow processing of a received "Child Update Request"
+        // and send a response. But since we have not yet established
+        // trust with any device (including our former parent),
+        // we will not save any of the content (TLVs) from the
+        // message (`canTrustMessage` will be `false`).
+
+        VerifyOrExit(mPrevRoleRestorer.IsRestoringChildRole());
+    }
 
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
@@ -2245,17 +2254,20 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
             ExitNow();
         }
 
-        SuccessOrExit(error = HandleLeaderData(aRxInfo));
-
-        switch (Tlv::Find<LinkMarginTlv>(aRxInfo.mMessage, linkMarginOut))
+        if (canTrustMessage)
         {
-        case kErrorNone:
-            mParent.SetLinkQualityOut(LinkQualityForLinkMargin(linkMarginOut));
-            break;
-        case kErrorNotFound:
-            break;
-        default:
-            ExitNow(error = kErrorParse);
+            SuccessOrExit(error = HandleLeaderData(aRxInfo));
+
+            switch (Tlv::Find<LinkMarginTlv>(aRxInfo.mMessage, linkMarginOut))
+            {
+            case kErrorNone:
+                mParent.SetLinkQualityOut(LinkQualityForLinkMargin(linkMarginOut));
+                break;
+            case kErrorNotFound:
+                break;
+            default:
+                ExitNow(error = kErrorParse);
+            }
         }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
