@@ -528,6 +528,8 @@ openthread_core_files = [
   "meshcop/border_agent.hpp",
   "meshcop/border_agent_tracker.cpp",
   "meshcop/border_agent_tracker.hpp",
+  "meshcop/border_agent_txt_data.cpp",
+  "meshcop/border_agent_txt_data.hpp",
   "meshcop/commissioner.cpp",
   "meshcop/commissioner.hpp",
   "meshcop/dataset.cpp",
