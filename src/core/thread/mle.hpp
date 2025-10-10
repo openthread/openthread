@@ -1829,21 +1829,24 @@ private:
         bool  IsRestoringChildRole(void) const { return mState == kRestoringChildRole; }
         bool  IsRestoringRouterOrLeaderRole(void) const { return mState == kRestoringRouterOrLeaderRole; }
         void  HandleTimer(void);
+        void  HandleChildRestored(void);
 
         void               GenerateRandomChallenge(void) { mChallenge.GenerateRandom(); }
         const TxChallenge &GetChallenge(void) const { return mChallenge; }
 
     private:
-        static constexpr uint32_t kMaxStartDelay                = 25;
-        static constexpr uint8_t  kMaxChildUpdatesToRestoreRole = kMaxChildKeepAliveAttempts;
-        static constexpr uint32_t kChildUpdateRetxDelay         = kUnicastRetxDelay; /// 1000 msec
-        static constexpr uint16_t kRetxJitter                   = 5;
+        static constexpr uint32_t kMaxStartDelay                    = 25;
+        static constexpr uint8_t  kMaxChildUpdatesToRestoreRole     = kMaxChildKeepAliveAttempts;
+        static constexpr uint32_t kChildUpdateRetxDelay             = kUnicastRetxDelay; /// 1000 msec
+        static constexpr uint16_t kRetxJitter                       = 5;
+        static constexpr uint16_t kChildRestoredRouterEligibleDelay = 90000; // in ms
 
         enum State : uint8_t
         {
             kIdle,
             kRestoringChildRole,
             kRestoringRouterOrLeaderRole,
+            kChildRestoredRouterDelay,
         };
 
         void SetState(State aState);

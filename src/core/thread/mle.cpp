@@ -2381,6 +2381,8 @@ void Mle::HandleChildUpdateResponseOnChild(RxInfo &aRxInfo)
         mParent.SetState(Neighbor::kStateValid);
         SetStateChild(GetRloc16());
 
+        mPrevRoleRestorer.HandleChildRestored();
+
         mRetrieveNewNetworkData = true;
 
 #if OPENTHREAD_FTD
@@ -4279,6 +4281,15 @@ void Mle::PrevRoleRestorer::HandleTimer(void)
 {
     VerifyOrExit(mState != kIdle);
 
+#if OPENTRHEAD_FTD
+    if (mState == kChildRestoredRouterDelay)
+    {
+        Get<Mle>().SetRouterEligible(true);
+        Stop();
+        ExitNow();
+    }
+#endif
+
     if (!Get<Mle>().IsDetached())
     {
         Stop();
@@ -4316,6 +4327,18 @@ void Mle::PrevRoleRestorer::SendChildUpdate(void)
 
     LogDebg("Sending Child Update Request to restore child role, remaining attempts: %u", mAttempts);
     IgnoreError(Get<Mle>().SendChildUpdateRequestToParent(kToRestoreChildRole));
+}
+
+void  Mle::PrevRoleRestorer::HandleChildRestored(void)
+{
+#if OPENTRHEAD_FTD
+    if (IsRestoringChildRole())
+    {
+        mState = kChildRestoredRouterDelay;
+        mTimer.Start(kChildRestoredRouterEligibleDelay);
+        Get<Mle>().SetRouterEligible(false);
+    }
+#endif
 }
 
 #if OPENTHREAD_FTD
