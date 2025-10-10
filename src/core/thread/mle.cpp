@@ -4618,7 +4618,7 @@ bool Mle::Attacher::HasAcceptableParentCandidate(void) const
         }
 
         break;
-    
+
     case kStateChildIdRequest:
         VerifyOrExit(mParentCandidate.IsStateValid());
         VerifyOrExit(mChildIdRequestsRemaining > 0);
