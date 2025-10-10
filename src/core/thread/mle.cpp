@@ -1155,6 +1155,8 @@ Error Mle::SendChildUpdateRequestToParent(void) { return SendChildUpdateRequestT
 
 Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
 {
+    static const uint8_t kRestoringChildTlvs[] = {Tlv::kNetworkData};
+
     Error                   error = kErrorNone;
     Ip6::Address            destination;
     TxMessage              *message     = nullptr;
@@ -1197,6 +1199,7 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
     case kToRestoreChildRole:
         mPrevRoleRestorer.GenerateRandomChallenge();
         SuccessOrExit(error = message->AppendChallengeTlv(mPrevRoleRestorer.GetChallenge()));
+        SuccessOrExit(error = message->AppendTlvRequestTlv(kRestoringChildTlvs));
         break;
     }
 
@@ -2048,7 +2051,7 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
     if ((leaderData.GetPartitionId() != mLeaderData.GetPartitionId()) ||
         (leaderData.GetWeighting() != mLeaderData.GetWeighting()) || (leaderData.GetLeaderRouterId() != GetLeaderId()))
     {
-        if (IsChild())
+        if (IsChild() || mPrevRoleRestorer.IsRestoringChildRole())
         {
             SetLeaderData(leaderData);
             mRetrieveNewNetworkData = true;
@@ -2181,7 +2184,7 @@ exit:
 
 void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
 {
-    VerifyOrExit(IsAttached());
+    VerifyOrExit(IsAttached() || mPrevRoleRestorer.IsRestoringChildRole());
 
 #if OPENTHREAD_FTD
     if (IsRouterOrLeader())
