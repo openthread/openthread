@@ -723,14 +723,15 @@ exit:
     return;
 }
 
-void RoutingManager::HandleRaPrefixTableChanged(void)
+void RoutingManager::HandleRxRaTrackerDecisionFactorChanged(void)
 {
     // This is a callback from `RxRaTracker` indicating that
-    // there has been a change in the table.
+    // there has been a change impacting one of the decision
+    // factors.
 
     VerifyOrExit(mIsRunning);
 
-    mOnLinkPrefixManager.HandleRaPrefixTableChanged();
+    mOnLinkPrefixManager.HandleRxRaTrackerChanged();
     mRoutePublisher.Evaluate();
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
     mMultiAilDetector.Evaluate();
@@ -1578,7 +1579,7 @@ bool RoutingManager::OnLinkPrefixManager::IsInitalEvaluationDone(void) const
     return (mAilPrefix.GetLength() != 0 || IsPublishingOrAdvertising());
 }
 
-void RoutingManager::OnLinkPrefixManager::HandleRaPrefixTableChanged(void)
+void RoutingManager::OnLinkPrefixManager::HandleRxRaTrackerChanged(void)
 {
     // This is a callback from `RxRaTracker` indicating that
     // there has been a change in the table. If the favored on-link

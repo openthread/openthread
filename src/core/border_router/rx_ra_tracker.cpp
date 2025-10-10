@@ -812,7 +812,7 @@ exit:
 
 void RxRaTracker::HandleExpirationTimer(void) { Evaluate(); }
 
-void RxRaTracker::HandleSignalTask(void) { Get<RoutingManager>().HandleRaPrefixTableChanged(); }
+void RxRaTracker::HandleSignalTask(void) { Get<RoutingManager>().HandleRxRaTrackerDecisionFactorChanged(); }
 
 void RxRaTracker::HandleRdnssAddrTask(void) { mRdnssCallback.InvokeIfSet(); }
 
