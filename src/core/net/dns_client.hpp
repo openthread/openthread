@@ -675,6 +675,11 @@ public:
     explicit Client(Instance &aInstance);
 
     /**
+     * Destructor of `Client`
+     */
+    ~Client(void) { Stop(); }
+
+    /**
      * Starts the DNS client.
      *
      * @retval kErrorNone     Successfully started the DNS client.
