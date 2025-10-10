@@ -198,7 +198,7 @@ const Nat64PrefixInfoOption::PrefixLengthMap Nat64PrefixInfoOption::kCodeToLengt
     {0, 96}, {1, 64}, {2, 56}, {3, 48}, {4, 40}, {5, 32},
 };
 
-void Nat64PrefixInfoOption::SetLifetime(uint16_t aLifetime)
+void Nat64PrefixInfoOption::SetLifetime(uint32_t aLifetime)
 {
     uint32_t scaledLifetime = DivideAndRoundUp(aLifetime, kLifetimeScalingUnit);
 
@@ -401,7 +401,7 @@ exit:
     return error;
 }
 
-Error RouterAdvert::TxMessage::AppendNat64PrefixInfoOption(const Prefix &aPrefix, uint32_t aLifetime)
+Error RouterAdvert::TxMessage::AppendNat64PrefixInfoOption(const Prefix &aPrefix, uint16_t aLifetime)
 {
     Error                  error = kErrorNone;
     Nat64PrefixInfoOption *pref64;
@@ -410,7 +410,7 @@ Error RouterAdvert::TxMessage::AppendNat64PrefixInfoOption(const Prefix &aPrefix
     VerifyOrExit(pref64 != nullptr, error = kErrorNoBufs);
 
     pref64->Init();
-    pref64->SetLifetime(ClampToUint16(aLifetime));
+    pref64->SetLifetime(aLifetime);
 
     error = pref64->SetPrefix(aPrefix);
 
