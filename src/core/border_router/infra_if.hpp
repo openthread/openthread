@@ -50,11 +50,40 @@
 namespace ot {
 namespace BorderRouter {
 
+extern "C" void    otPlatInfraIfRecvIcmp6Nd(otInstance         *aInstance,
+                                            uint32_t            aInfraIfIndex,
+                                            const otIp6Address *aSrcAddress,
+                                            const uint8_t      *aBuffer,
+                                            uint16_t            aBufferLength);
+extern "C" otError otPlatInfraIfStateChanged(otInstance *aInstance, uint32_t aInfraIfIndex, bool aIsRunning);
+extern "C" void    otPlatInfraIfDiscoverNat64PrefixDone(otInstance        *aInstance,
+                                                        uint32_t           aInfraIfIndex,
+                                                        const otIp6Prefix *aIp6Prefix);
+extern "C" void    otPlatInfraIfDhcp6PdClientHandleReceived(otInstance *aInstance,
+                                                            otMessage  *aMessage,
+                                                            uint32_t    aInfraIfIndex);
+
+class RoutingManager;
+
 /**
  * Represents the infrastructure network interface on a border router.
  */
 class InfraIf : public InstanceLocator
 {
+    friend class RoutingManager;
+    friend void    otPlatInfraIfRecvIcmp6Nd(otInstance         *aInstance,
+                                            uint32_t            aInfraIfIndex,
+                                            const otIp6Address *aSrcAddress,
+                                            const uint8_t      *aBuffer,
+                                            uint16_t            aBufferLength);
+    friend otError otPlatInfraIfStateChanged(otInstance *aInstance, uint32_t aInfraIfIndex, bool aIsRunning);
+    friend void    otPlatInfraIfDiscoverNat64PrefixDone(otInstance        *aInstance,
+                                                        uint32_t           aInfraIfIndex,
+                                                        const otIp6Prefix *aIp6Prefix);
+    friend void    otPlatInfraIfDhcp6PdClientHandleReceived(otInstance *aInstance,
+                                                            otMessage  *aMessage,
+                                                            uint32_t    aInfraIfIndex);
+
 public:
     static constexpr uint16_t kInfoStringSize = 20; ///< Max chars for the info string (`ToString()`).
 
@@ -116,18 +145,6 @@ public:
     void SetIfIndex(uint32_t aIfIndex) { mIfIndex = aIfIndex; }
 
     /**
-     * Handles infrastructure interface state changes.
-     *
-     * @param[in]  aIfIndex         The infrastructure interface index.
-     * @param[in]  aIsRunning       A boolean that indicates whether the infrastructure interface is running.
-     *
-     * @retval  kErrorNone          Successfully updated the infra interface status.
-     * @retval  kErrorInvalidState  The `InfraIf` is not initialized.
-     * @retval  kErrorInvalidArgs   The @p IfIndex does not match the interface index of `InfraIf`.
-     */
-    Error HandleStateChanged(uint32_t aIfIndex, bool aIsRunning);
-
-    /**
      * Gets the infrastructure interface link-layer address.
      *
      * @param[out]  aLinkLayerAddress     A reference to return the interface link-layer address.
@@ -162,15 +179,6 @@ public:
      */
     Error Send(const Icmp6Packet &aPacket, const Ip6::Address &aDestination) const;
 
-    /**
-     * Processes a received ICMPv6 Neighbor Discovery packet from an infrastructure interface.
-     *
-     * @param[in]  aIfIndex       The infrastructure interface index on which the ICMPv6 message is received.
-     * @param[in]  aSource        The IPv6 source address.
-     * @param[in]  aPacket        The ICMPv6 packet.
-     */
-    void HandledReceived(uint32_t aIfIndex, const Ip6::Address &aSource, const Icmp6Packet &aPacket);
-
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     /**
      * Sends a request to discover the NAT64 prefix on the infrastructure interface.
@@ -181,14 +189,6 @@ public:
      * @retval  kErrorFailed  Failed to request NAT64 prefix discovery.
      */
     Error DiscoverNat64Prefix(void) const;
-
-    /**
-     * Processes the discovered NAT64 prefix.
-     *
-     * @param[in]  aIfIndex    The infrastructure interface index on which the host address is received.
-     * @param[in]  aPrefix     The NAT64 prefix on the infrastructure link.
-     */
-    void DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPrefix);
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
@@ -210,14 +210,6 @@ public:
      */
     void SendDhcp6(Message &aMessage, Ip6::Address &aDestAddress);
 
-    /**
-     * Handle a received DHCPv6 message (on port 546).
-     *
-     * @param[in] aMessage       The received `Message` containing DHCPv6 payload. Ownership is transferred.
-     * @param[in] aInfraIfIndex  The index of the infrastructure interface from which the message is received.
-     */
-    void HandleDhcp6Received(Message &aMessage, uint32_t aInfraIfIndex);
-
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 
     /**
@@ -228,6 +220,16 @@ public:
     InfoString ToString(void) const;
 
 private:
+    // Callbacks from platform
+    void  HandledReceived(uint32_t aIfIndex, const Ip6::Address &aSource, const Icmp6Packet &aPacket);
+    Error HandleStateChanged(uint32_t aIfIndex, bool aIsRunning);
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    void DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPrefix);
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+    void HandleDhcp6Received(Message &aMessage, uint32_t aInfraIfIndex);
+#endif
+
     bool     mInitialized : 1;
     bool     mIsRunning : 1;
     uint32_t mIfIndex;
