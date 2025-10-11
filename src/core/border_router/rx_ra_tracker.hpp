@@ -527,10 +527,12 @@ private:
 #endif
     // Tasklet or timer callbacks
     void HandleSignalTask(void);
+    void HandleNat64PrefixTask(void);
     void HandleRdnssAddrTask(void);
     void HandleExpirationTimer(void);
     void HandleStaleTimer(void);
     void HandleRouterTimer(void);
+    void HandleNat64PrefixTimer(void);
     void HandleRdnssAddrTimer(void);
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
@@ -539,15 +541,17 @@ private:
     template <class Type> Entry<Type> *AllocateEntry(void);
 #endif
 
-    using SignalTask      = TaskletIn<RxRaTracker, &RxRaTracker::HandleSignalTask>;
-    using RdnssAddrTask   = TaskletIn<RxRaTracker, &RxRaTracker::HandleRdnssAddrTask>;
-    using ExpirationTimer = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleExpirationTimer>;
-    using StaleTimer      = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleStaleTimer>;
-    using RouterTimer     = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleRouterTimer>;
-    using RdnssAddrTimer  = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleRdnssAddrTimer>;
-    using RouterList      = OwningList<Entry<Router>>;
-    using IfAddressList   = OwningList<Entry<IfAddress>>;
-    using RdnssCallback   = Callback<RdnssAddrCallback>;
+    using SignalTask       = TaskletIn<RxRaTracker, &RxRaTracker::HandleSignalTask>;
+    using Nat64PrefixTask  = TaskletIn<RxRaTracker, &RxRaTracker::HandleNat64PrefixTask>;
+    using RdnssAddrTask    = TaskletIn<RxRaTracker, &RxRaTracker::HandleRdnssAddrTask>;
+    using ExpirationTimer  = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleExpirationTimer>;
+    using StaleTimer       = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleStaleTimer>;
+    using RouterTimer      = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleRouterTimer>;
+    using Nat64PrefixTimer = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleNat64PrefixTimer>;
+    using RdnssAddrTimer   = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleRdnssAddrTimer>;
+    using RouterList       = OwningList<Entry<Router>>;
+    using IfAddressList    = OwningList<Entry<IfAddress>>;
+    using RdnssCallback    = Callback<RdnssAddrCallback>;
 
     DecisionFactors      mDecisionFactors;
     RouterList           mRouters;
@@ -555,8 +559,10 @@ private:
     ExpirationTimer      mExpirationTimer;
     StaleTimer           mStaleTimer;
     RouterTimer          mRouterTimer;
+    Nat64PrefixTimer     mNat64PrefixTimer;
     RdnssAddrTimer       mRdnssAddrTimer;
     SignalTask           mSignalTask;
+    Nat64PrefixTask      mNat64PrefixTask;
     RdnssAddrTask        mRdnssAddrTask;
     RdnssCallback        mRdnssCallback;
     RouterAdvert::Header mLocalRaHeader;
