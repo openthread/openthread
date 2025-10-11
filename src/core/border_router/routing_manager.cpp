@@ -2501,9 +2501,6 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
     //   by this BR.
     // - The preferred NAT64 prefix in Network Data is same as the
     //   discovered infrastructure prefix.
-    //
-    // TODO: change to check RLOC16 to determine if the NAT64 prefix
-    // was published by this BR.
 
     shouldPublish =
         ((error == kErrorNotFound) || (netdataPrefixConfig.mPreference < preference) ||
