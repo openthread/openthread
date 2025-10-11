@@ -58,6 +58,7 @@ typedef NetworkData::RoutePreference          RoutePreference;     ///< Route pr
 typedef otBorderRoutingPrefixTableIterator    PrefixTableIterator; ///< Prefix Table Iterator.
 typedef otBorderRoutingPrefixTableEntry       PrefixTableEntry;    ///< Prefix Table Entry.
 typedef otBorderRoutingRouterEntry            RouterEntry;         ///< Router Entry.
+typedef otBorderRoutingNat64PrefixEntry       Nat64PrefixEntry;    ///< NAT64 Prefix.
 typedef otBorderRoutingRdnssAddrEntry         RdnssAddrEntry;      ///< RDNSS Address Entry.
 typedef otBorderRoutingRdnssAddrCallback      RdnssAddrCallback;   ///< RDNS Address changed callback.
 typedef otBorderRoutingIfAddrEntry            IfAddrEntry;         ///< Infra-if IPv6 Address Entry.
@@ -71,6 +72,7 @@ typedef otBorderRoutingMultiAilCallback       MultiAilCallback;    ///< Multi AI
 typedef Ip6::Nd::PrefixInfoOption         PrefixInfoOption;         ///< Prefix Info Option (PIO).
 typedef Ip6::Nd::RouteInfoOption          RouteInfoOption;          ///< Route Info Option (RIO).
 typedef Ip6::Nd::RaFlagsExtOption         RaFlagsExtOption;         ///< RA Flags Extension Option.
+typedef Ip6::Nd::Nat64PrefixInfoOption    Nat64PrefixInfoOption;    ///< NAT64 Prefix Information Option.
 typedef Ip6::Nd::RecursiveDnsServerOption RecursiveDnsServerOption; ///< Recursive DNS Server (RDNSS) Option.
 typedef Ip6::Nd::RouterAdvert             RouterAdvert;             ///< Router Advertisement (RA).
 typedef Ip6::Nd::NeighborAdvertMessage    NeighborAdvertMessage;    ///< Neighbor Advertisement message.
@@ -337,6 +339,40 @@ public:
 private:
     RoutePreference mRoutePreference;
 };
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+/**
+ * Represents an Nat64 Prefix.
+ */
+class Nat64Prefix : public LifetimedPrefix, public Clearable<Nat64Prefix>
+{
+public:
+    /**
+     * Sets the NAT64 prefix information from a `Nat64PrefixInfoOption`.
+     *
+     * @param[in] aNat64Pio  The `Nat64PrefixInfoOption` to set from.
+     */
+    void SetFrom(const Nat64PrefixInfoOption &aNat64Pio);
+
+    /**
+     * Clears (sets to zero) the valid lifetime of the route prefix.
+     */
+    void ClearValidLifetime(void) { mValidLifetime = 0; }
+
+    /**
+     * Copies the NAT64 prefix information to a `Nat64PrefixEntry`.
+     *
+     * @param[out] aEntry  The `Nat64PrefixEntry` to copy information to.
+     * @param[in]  aNow    The current time.
+     */
+    void CopyInfoTo(Nat64PrefixEntry &aEntry, TimeMilli aNow) const;
+
+private:
+    static constexpr uint32_t kFavoredMinLifetime = 1800; // In sec.
+};
+#endif
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
