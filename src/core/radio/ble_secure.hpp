@@ -278,7 +278,7 @@ public:
      * @param[in]  aBuf            A pointer to the data received.
      * @param[in]  aLength         A number indicating the length of the data buffer.
      */
-    Error HandleBleReceive(uint8_t *aBuf, uint16_t aLength);
+    void HandleBleReceive(uint8_t *aBuf, uint16_t aLength);
 
     /**
      * Used to notify the secure BLE server that a BLE Device has been connected.
@@ -297,9 +297,10 @@ public:
     /**
      * Used to notify the secure BLE server that the BLE Device has updated ATT_MTU size.
      *
-     * @param[in]  aMtu             The updated ATT_MTU value.
+     * @param[in]  aMtu             The updated ATT_MTU value. Note that values above OT_BLE_ATT_MTU_MAX
+     *                              will be clamped to OT_BLE_ATT_MTU_MAX.
      */
-    Error HandleBleMtuUpdate(uint16_t aMtu);
+    void HandleBleMtuUpdate(uint16_t aMtu);
 
     /**
      * @brief Gets the Install Code Verify Status during the current session.
@@ -338,8 +339,10 @@ private:
         kNotAdvertising = 3, // Ble secure is started but not advertising.
     };
 
-    static constexpr uint8_t  kInitialMtuSize   = 23; // ATT_MTU
-    static constexpr uint8_t  kGattOverhead     = 3;  // BLE GATT payload fits MTU size - 3 bytes
+    static constexpr uint8_t  kInitialMtuSize   = OT_BLE_ATT_MTU_DEFAULT;
+    static constexpr uint8_t  kMinMtuSize       = OT_BLE_ATT_MTU_MIN;
+    static constexpr uint8_t  kMaxMtuSize       = OT_BLE_ATT_MTU_MAX;
+    static constexpr uint8_t  kGattOverhead     = 3; // BLE GATT payload fits (MTU size - 3 bytes)
     static constexpr uint8_t  kPacketBufferSize = OT_BLE_ATT_MTU_MAX - kGattOverhead;
     static constexpr uint16_t kTxBleHandle      = 0;   // Characteristics Handle for TX (not used)
     static constexpr uint16_t kTlsDataMaxSize   = 800; // Maximum size of data chunks sent with mTls.Send(..)
