@@ -2498,16 +2498,13 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
     // - The preferred NAT64 prefix in Network Data has lower
     //   preference than this BR's prefix.
     // - The preferred NAT64 prefix in Network Data was published
-    //   by this BR.
+    //   by this BR (determined by checking its RLOC16).
     // - The preferred NAT64 prefix in Network Data is same as the
     //   discovered infrastructure prefix.
-    //
-    // TODO: change to check RLOC16 to determine if the NAT64 prefix
-    // was published by this BR.
 
-    shouldPublish =
-        ((error == kErrorNotFound) || (netdataPrefixConfig.mPreference < preference) ||
-         (netdataPrefixConfig.GetPrefix() == mPublishedPrefix) || (netdataPrefixConfig.GetPrefix() == mInfraIfPrefix));
+    shouldPublish = ((error == kErrorNotFound) || (netdataPrefixConfig.mPreference < preference) ||
+                     (netdataPrefixConfig.mRloc16 == Get<Mle::Mle>().GetRloc16()) ||
+                     (netdataPrefixConfig.GetPrefix() == mInfraIfPrefix));
 
     if (shouldPublish)
     {
