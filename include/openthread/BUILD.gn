@@ -44,6 +44,7 @@ source_set("openthread") {
     "ble_secure.h",
     "border_agent.h",
     "border_agent_tracker.h",
+    "border_agent_txt_data.h",
     "border_router.h",
     "border_routing.h",
     "channel_manager.h",
