@@ -1104,7 +1104,7 @@ private:
     void  Start(void);
     void  Stop(void);
     void  HandleNotifierEvents(Events aEvents);
-    bool  IsInitialized(void) const { return mInfraIf.IsInitialized(); }
+    bool  IsInitialized(void) const;
     bool  IsEnabled(void) const { return mIsEnabled; }
     Error LoadOrGenerateRandomBrUlaPrefix(void);
 
@@ -1136,8 +1136,6 @@ private:
     // Indicates whether the Routing manager is enabled. The Routing
     // Manager will be stopped if we are disabled.
     bool mIsEnabled;
-
-    InfraIf mInfraIf;
 
     // The /48 BR ULA prefix loaded from local persistent storage or
     // randomly generated if none is found in persistent storage.

@@ -271,6 +271,7 @@ Instance::Instance(void)
     , mAnnounceSender(*this)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    , mInfraIf(*this)
     , mRxRaTracker(*this)
     , mRoutingManager(*this)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
