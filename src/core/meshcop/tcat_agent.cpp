@@ -196,7 +196,7 @@ Error TcatAgent::Connected(MeshCoP::Tls::Extension &aTls)
     if (aTls.GetThreadAttributeFromPeerCertificate(
             kCertificateDomainName, reinterpret_cast<uint8_t *>(&mCommissionerDomainName), &len) == kErrorNone)
     {
-        mCommissionerDomainName.m8[len] = '\0';
+        mCommissionerDomainName.m8[len] = kNullChar;
         mCommissionerHasDomainName      = true;
     }
 
@@ -204,7 +204,7 @@ Error TcatAgent::Connected(MeshCoP::Tls::Extension &aTls)
     if (aTls.GetThreadAttributeFromPeerCertificate(
             kCertificateNetworkName, reinterpret_cast<uint8_t *>(&mCommissionerNetworkName), &len) == kErrorNone)
     {
-        mCommissionerNetworkName.m8[len] = '\0';
+        mCommissionerNetworkName.m8[len] = kNullChar;
         mCommissionerHasNetworkName      = true;
     }
 

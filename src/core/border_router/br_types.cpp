@@ -200,6 +200,7 @@ bool Nat64Prefix::IsFavoredOver(const Ip6::Prefix &aPrefix) const
     bool isFavored = false;
 
     VerifyOrExit(mPrefix.GetLength() != 0);
+    VerifyOrExit(GetValidLifetime() >= kFavoredMinLifetime);
 
     if (aPrefix.GetLength() == 0)
     {

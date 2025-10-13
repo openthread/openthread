@@ -38,6 +38,7 @@ namespace Nexus {
 
 using ActiveDatasetManager = MeshCoP::ActiveDatasetManager;
 using Manager              = MeshCoP::BorderAgent::Manager;
+using BaTxtData            = MeshCoP::BorderAgent::TxtData;
 using EphemeralKeyManager  = MeshCoP::BorderAgent::EphemeralKeyManager;
 using EpskcEvent           = HistoryTracker::EpskcEvent;
 using Iterator             = HistoryTracker::Iterator;
@@ -1323,10 +1324,10 @@ void HandleServiceChanged(void *aContext) // Callback used in `TestBorderAgentTx
 
 void ReadAndValidateMeshCoPTxtData(Node &aNode)
 {
-    Manager::ServiceTxtData serviceTxtData;
-    TxtData                 txtData;
+    BaTxtData::ServiceTxtData serviceTxtData;
+    TxtData                   txtData;
 
-    SuccessOrQuit(aNode.Get<Manager>().PrepareServiceTxtData(serviceTxtData));
+    SuccessOrQuit(aNode.Get<BaTxtData>().Prepare(serviceTxtData));
     txtData.Init(serviceTxtData.mData, serviceTxtData.mLength);
 
     ValidateMeshCoPTxtData(txtData, aNode);

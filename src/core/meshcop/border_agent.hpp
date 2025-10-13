@@ -120,7 +120,6 @@ public:
     typedef otBorderAgentCounters                      Counters;               ///< Border Agent Counters.
     typedef otBorderAgentSessionInfo                   SessionInfo;            ///< A session info.
     typedef otBorderAgentMeshCoPServiceChangedCallback ServiceChangedCallback; ///< Service changed callback.
-    typedef otBorderAgentMeshCoPServiceTxtData         ServiceTxtData;         ///< Service TXT data.
 
     /**
      * Represents an iterator for secure sessions.
@@ -238,16 +237,6 @@ public:
      * @param[in] aContext   A pointer to application-specific context.
      */
     void SetServiceChangedCallback(ServiceChangedCallback aCallback, void *aContext);
-
-    /**
-     * Prepares the MeshCoP service TXT data.
-     *
-     * @param[out] aTxtData   A reference to a MeshCoP Service TXT data struct to get the data.
-     *
-     * @retval kErrorNone     If successfully retrieved the Border Agent MeshCoP Service TXT data.
-     * @retval kErrorNoBufs   If the buffer in @p aTxtData doesn't have enough size.
-     */
-    Error PrepareServiceTxtData(ServiceTxtData &aTxtData);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     /**
@@ -368,51 +357,6 @@ private:
         uint64_t                   mAllocationTime;
     };
 
-    struct StateBitmap
-    {
-        // --- State Bitmap ConnectionMode ---
-        static constexpr uint8_t  kOffsetConnectionMode   = 0;
-        static constexpr uint32_t kMaskConnectionMode     = 7 << kOffsetConnectionMode;
-        static constexpr uint32_t kConnectionModeDisabled = 0 << kOffsetConnectionMode;
-        static constexpr uint32_t kConnectionModePskc     = 1 << kOffsetConnectionMode;
-        static constexpr uint32_t kConnectionModePskd     = 2 << kOffsetConnectionMode;
-        static constexpr uint32_t kConnectionModeVendor   = 3 << kOffsetConnectionMode;
-        static constexpr uint32_t kConnectionModeX509     = 4 << kOffsetConnectionMode;
-
-        // --- State Bitmap ThreadIfStatus ---
-        static constexpr uint8_t  kOffsetThreadIfStatus         = 3;
-        static constexpr uint32_t kMaskThreadIfStatus           = 3 << kOffsetThreadIfStatus;
-        static constexpr uint32_t kThreadIfStatusNotInitialized = 0 << kOffsetThreadIfStatus;
-        static constexpr uint32_t kThreadIfStatusInitialized    = 1 << kOffsetThreadIfStatus;
-        static constexpr uint32_t kThreadIfStatusActive         = 2 << kOffsetThreadIfStatus;
-
-        // --- State Bitmap Availability ---
-        static constexpr uint8_t  kOffsetAvailability     = 5;
-        static constexpr uint32_t kMaskAvailability       = 3 << kOffsetAvailability;
-        static constexpr uint32_t kAvailabilityInfrequent = 0 << kOffsetAvailability;
-        static constexpr uint32_t kAvailabilityHigh       = 1 << kOffsetAvailability;
-
-        // --- State Bitmap BbrIsActive ---
-        static constexpr uint8_t  kOffsetBbrIsActive = 7;
-        static constexpr uint32_t kFlagBbrIsActive   = 1 << kOffsetBbrIsActive;
-
-        // --- State Bitmap BbrIsPrimary ---
-        static constexpr uint8_t  kOffsetBbrIsPrimary = 8;
-        static constexpr uint32_t kFlagBbrIsPrimary   = 1 << kOffsetBbrIsPrimary;
-
-        // --- State Bitmap ThreadRole ---
-        static constexpr uint8_t  kOffsetThreadRole             = 9;
-        static constexpr uint32_t kMaskThreadRole               = 3 << kOffsetThreadRole;
-        static constexpr uint32_t kThreadRoleDisabledOrDetached = 0 << kOffsetThreadRole;
-        static constexpr uint32_t kThreadRoleChild              = 1 << kOffsetThreadRole;
-        static constexpr uint32_t kThreadRoleRouter             = 2 << kOffsetThreadRole;
-        static constexpr uint32_t kThreadRoleLeader             = 3 << kOffsetThreadRole;
-
-        // --- State Bitmap EpskcSupported ---
-        static constexpr uint8_t  kOffsetEpskcSupported = 11;
-        static constexpr uint32_t kFlagEpskcSupported   = 1 << kOffsetEpskcSupported;
-    };
-
     void UpdateState(void);
     void Start(void);
     void Stop(void);
@@ -432,9 +376,6 @@ private:
 
     static Coap::Message::Code CoapCodeFromError(Error aError);
 
-    Error    PrepareServiceTxtData(uint8_t *aBuffer, uint16_t aBufferSize, uint16_t &aLength);
-    uint32_t DetermineStateBitmap(void) const;
-
     void PostServiceTask(void);
     void HandleServiceTask(void);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -453,7 +394,6 @@ private:
 
     using ServiceTask = TaskletIn<Manager, &Manager::HandleServiceTask>;
 
-    static const char kTxtDataRecordVersion[];
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     static const char kServiceType[];
     static const char kDefaultBaseServiceName[];

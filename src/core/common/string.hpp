@@ -375,7 +375,7 @@ inline constexpr bool AreStringsInOrder(const char *aFirst, const char *aSecond)
 {
     return (*aFirst < *aSecond)
                ? true
-               : ((*aFirst > *aSecond) || (*aFirst == '\0') ? false : AreStringsInOrder(aFirst + 1, aSecond + 1));
+               : ((*aFirst > *aSecond) || (*aFirst == kNullChar) ? false : AreStringsInOrder(aFirst + 1, aSecond + 1));
 }
 
 /**

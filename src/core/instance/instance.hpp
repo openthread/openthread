@@ -55,6 +55,7 @@
 #include "common/non_copyable.hpp"
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
+#include "common/string.hpp"
 #include "common/tasklet.hpp"
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
@@ -86,6 +87,7 @@
 #include "mac/wakeup_tx_scheduler.hpp"
 #include "meshcop/border_agent.hpp"
 #include "meshcop/border_agent_tracker.hpp"
+#include "meshcop/border_agent_txt_data.hpp"
 #include "meshcop/commissioner.hpp"
 #include "meshcop/dataset_manager.hpp"
 #include "meshcop/dataset_updater.hpp"
@@ -589,6 +591,7 @@ private:
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     MeshCoP::BorderAgent::Manager mBorderAgentManager;
+    MeshCoP::BorderAgent::TxtData mBorderAgentTxtData;
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
@@ -1033,6 +1036,7 @@ template <> inline MeshCoP::DatasetUpdater &Instance::Get(void) { return mDatase
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 template <> inline MeshCoP::BorderAgent::Manager &Instance::Get(void) { return mBorderAgentManager; }
+template <> inline MeshCoP::BorderAgent::TxtData &Instance::Get(void) { return mBorderAgentTxtData; }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE

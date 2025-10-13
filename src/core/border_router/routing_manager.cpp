@@ -69,7 +69,6 @@ RoutingManager::RoutingManager(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
     , mPdPrefixManager(aInstance)
 #endif
-    , mRsSender(aInstance)
     , mRoutingPolicyTimer(aInstance)
 {
     mBrUlaPrefix.Clear();
@@ -310,7 +309,6 @@ void RoutingManager::Start(void)
         mOnLinkPrefixManager.Start();
         mOmrPrefixManager.Start();
         mRoutePublisher.Start();
-        mRsSender.Start();
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
         mPdPrefixManager.Start();
 #endif
@@ -344,8 +342,6 @@ void RoutingManager::Stop(void)
     Get<RxRaTracker>().Stop();
 
     mTxRaInfo.mTxCount = 0;
-
-    mRsSender.Stop();
 
     mRoutingPolicyTimer.Stop();
 
@@ -446,7 +442,6 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
 
     if (mIsRunning && aEvents.Contains(kEventThreadNetdataChanged))
     {
-        Get<RxRaTracker>().HandleNetDataChange();
         mOnLinkPrefixManager.HandleNetDataChange();
         ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
@@ -657,21 +652,6 @@ bool RoutingManager::IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix)
     return aBrUlaPrefix.mLength == kBrUlaPrefixLength && aBrUlaPrefix.mPrefix.mFields.m8[0] == 0xfd;
 }
 
-void RoutingManager::HandleRsSenderFinished(TimeMilli aStartTime)
-{
-    // This is a callback from `RsSender` and is invoked when it
-    // finishes a cycle of sending Router Solicitations. `aStartTime`
-    // specifies the start time of the RS transmission cycle.
-    //
-    // We remove or deprecate old entries in discovered table that are
-    // not refreshed during Router Solicitation. We also invalidate
-    // the learned RA header if it is not refreshed during Router
-    // Solicitation.
-
-    Get<RxRaTracker>().RemoveOrDeprecateOldEntries(aStartTime);
-    ScheduleRoutingPolicyEvaluation(kImmediately);
-}
-
 void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
 {
     OT_UNUSED_VARIABLE(aPacket);
@@ -724,14 +704,15 @@ exit:
     return;
 }
 
-void RoutingManager::HandleRaPrefixTableChanged(void)
+void RoutingManager::HandleRxRaTrackerDecisionFactorChanged(void)
 {
     // This is a callback from `RxRaTracker` indicating that
-    // there has been a change in the table.
+    // there has been a change impacting one of the decision
+    // factors.
 
     VerifyOrExit(mIsRunning);
 
-    mOnLinkPrefixManager.HandleRaPrefixTableChanged();
+    mOnLinkPrefixManager.HandleRxRaTrackerChanged();
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     mNat64PrefixManager.HandleRaDiscoverChanged();
 #endif
@@ -1530,7 +1511,7 @@ exit:
 
 void RoutingManager::OnLinkPrefixManager::Evaluate(void)
 {
-    VerifyOrExit(!Get<RoutingManager>().mRsSender.IsInProgress());
+    VerifyOrExit(!Get<RxRaTracker>().IsRsTxInProgress());
 
     SetAilPrefix(Get<RxRaTracker>().GetFavoredOnLinkPrefix());
 
@@ -1582,7 +1563,7 @@ bool RoutingManager::OnLinkPrefixManager::IsInitalEvaluationDone(void) const
     return (mAilPrefix.GetLength() != 0 || IsPublishingOrAdvertising());
 }
 
-void RoutingManager::OnLinkPrefixManager::HandleRaPrefixTableChanged(void)
+void RoutingManager::OnLinkPrefixManager::HandleRxRaTrackerChanged(void)
 {
     // This is a callback from `RxRaTracker` indicating that
     // there has been a change in the table. If the favored on-link
@@ -2490,6 +2471,7 @@ const Ip6::Prefix &RoutingManager::Nat64PrefixManager::GetFavoredPrefix(RoutePre
 
     if (mAilPrefix.IsValidNat64())
     {
+        // Per RFC 8781 section 5, discovered NAT64 prefixes from RAs should be favored.
         favoredPrefix = &mAilPrefix;
     }
     else if (mInfraIfPrefix.IsValidNat64() &&
@@ -2531,13 +2513,16 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
     // - The preferred NAT64 prefix in Network Data has lower
     //   preference than this BR's prefix.
     // - The preferred NAT64 prefix in Network Data was published
-    //   by this BR (determined by checking its RLOC16).
+    //   by this BR.
     // - The preferred NAT64 prefix in Network Data is same as the
     //   discovered infrastructure prefix.
+    //
+    // TODO: change to check RLOC16 to determine if the NAT64 prefix
+    // was published by this BR.
 
-    shouldPublish = ((error == kErrorNotFound) || (netdataPrefixConfig.mPreference < preference) ||
-                     (netdataPrefixConfig.mRloc16 == Get<Mle::Mle>().GetRloc16()) ||
-                     (netdataPrefixConfig.GetPrefix() == mInfraIfPrefix));
+    shouldPublish =
+        ((error == kErrorNotFound) || (netdataPrefixConfig.mPreference < preference) ||
+         (netdataPrefixConfig.GetPrefix() == mPublishedPrefix) || (netdataPrefixConfig.GetPrefix() == mInfraIfPrefix));
 
     if (shouldPublish)
     {
@@ -2654,7 +2639,7 @@ void RoutingManager::Nat64PrefixManager::HandleRaDiscoverChanged(void)
 {
     mAilPrefix = Get<RxRaTracker>().GetFavoredNat64Prefix();
 
-    LogInfo("RA discovered NAT64 prefix: %s", mRaPrefix.IsValidNat64() ? mRaPrefix.ToString().AsCString() : "none");
+    LogInfo("RA discovered NAT64 prefix: %s", mAilPrefix.IsValidNat64() ? mAilPrefix.ToString().AsCString() : "none");
     Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
 }
 
@@ -2736,104 +2721,6 @@ void RoutingManager::TxRaInfo::CalculateHash(const RouterAdvert::RxMessage &aRaM
     sha256.Update(header);
     sha256.Update(aRaMessage.GetOptionStart(), aRaMessage.GetOptionLength());
     sha256.Finish(aHash);
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-// RsSender
-
-RoutingManager::RsSender::RsSender(Instance &aInstance)
-    : InstanceLocator(aInstance)
-    , mTxCount(0)
-    , mTimer(aInstance)
-{
-}
-
-void RoutingManager::RsSender::Start(void)
-{
-    uint32_t delay;
-
-    VerifyOrExit(!IsInProgress());
-
-    delay = Random::NonCrypto::GetUint32InRange(0, kMaxStartDelay);
-
-    LogInfo("RsSender: Starting - will send first RS in %lu msec", ToUlong(delay));
-
-    mTxCount   = 0;
-    mStartTime = TimerMilli::GetNow();
-    mTimer.Start(delay);
-
-exit:
-    return;
-}
-
-void RoutingManager::RsSender::Stop(void) { mTimer.Stop(); }
-
-Error RoutingManager::RsSender::SendRs(void)
-{
-    Ip6::Address              destAddress;
-    RouterSolicitHeader       rsHdr;
-    TxMessage                 rsMsg;
-    InfraIf::LinkLayerAddress linkAddr;
-    InfraIf::Icmp6Packet      packet;
-    Error                     error;
-
-    SuccessOrExit(error = rsMsg.Append(rsHdr));
-
-    if (Get<InfraIf>().GetLinkLayerAddress(linkAddr) == kErrorNone)
-    {
-        SuccessOrExit(error = rsMsg.AppendLinkLayerOption(linkAddr, Option::kSourceLinkLayerAddr));
-    }
-
-    rsMsg.GetAsPacket(packet);
-    destAddress.SetToLinkLocalAllRoutersMulticast();
-
-    error = Get<RoutingManager>().mInfraIf.Send(packet, destAddress);
-
-    if (error == kErrorNone)
-    {
-        Get<Ip6::Ip6>().GetBorderRoutingCounters().mRsTxSuccess++;
-    }
-    else
-    {
-        Get<Ip6::Ip6>().GetBorderRoutingCounters().mRsTxFailure++;
-    }
-exit:
-    return error;
-}
-
-void RoutingManager::RsSender::HandleTimer(void)
-{
-    Error    error;
-    uint32_t delay;
-
-    if (mTxCount >= kMaxTxCount)
-    {
-        LogInfo("RsSender: Finished sending RS msgs and waiting for RAs");
-        Get<RoutingManager>().HandleRsSenderFinished(mStartTime);
-        ExitNow();
-    }
-
-    error = SendRs();
-
-    if (error == kErrorNone)
-    {
-        mTxCount++;
-        delay = (mTxCount == kMaxTxCount) ? kWaitOnLastAttempt : kTxInterval;
-        LogInfo("RsSender: Sent RS %u/%u", mTxCount, kMaxTxCount);
-    }
-    else
-    {
-        LogCrit("RsSender: Failed to send RS %u/%u: %s", mTxCount + 1, kMaxTxCount, ErrorToString(error));
-
-        // Note that `mTxCount` is intentionally not incremented
-        // if the tx fails.
-        delay = kRetryDelay;
-    }
-
-    mTimer.Start(delay);
-
-exit:
-    return;
 }
 
 //---------------------------------------------------------------------------------------------------------------------

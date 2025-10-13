@@ -111,7 +111,7 @@ void otBorderAgentSetMeshCoPServiceChangedCallback(otInstance                   
 
 otError otBorderAgentGetMeshCoPServiceTxtData(otInstance *aInstance, otBorderAgentMeshCoPServiceTxtData *aTxtData)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent::Manager>().PrepareServiceTxtData(*aTxtData);
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent::TxtData>().Prepare(*aTxtData);
 }
 
 const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance)
