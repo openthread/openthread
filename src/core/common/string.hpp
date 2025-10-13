@@ -379,6 +379,24 @@ inline constexpr bool AreStringsInOrder(const char *aFirst, const char *aSecond)
 }
 
 /**
+ * This `constexpr` function checks whether two given C strings are equal.
+ *
+ * This is intended for use from `static_assert`, e.g., checking if a lookup table entries are correct. It is not
+ * recommended to use this function in other situations as it uses recursion so that it can be `constexpr`.
+ *
+ * @param[in] aFirst    The first string.
+ * @param[in] aSecond   The second string.
+ *
+ * @retval TRUE  If @p aFirst is equal to @p aSecond.
+ * @retval FALSE If @p aFirst is not equal to @p aSecond.
+ */
+inline constexpr bool AreConstStringsEqual(const char *aFirst, const char *aSecond)
+{
+    return (*aFirst == *aSecond) ? (*aFirst == kNullChar ? true : AreConstStringsEqual(aFirst + 1, aSecond + 1))
+                                 : false;
+}
+
+/**
  * Implements writing to a string buffer.
  */
 class StringWriter
