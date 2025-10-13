@@ -171,6 +171,7 @@ public:
      */
     void HandledReceived(uint32_t aIfIndex, const Ip6::Address &aSource, const Icmp6Packet &aPacket);
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     /**
      * Sends a request to discover the NAT64 prefix on the infrastructure interface.
      *
@@ -188,6 +189,7 @@ public:
      * @param[in]  aPrefix     The NAT64 prefix on the infrastructure link.
      */
     void DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPrefix);
+#endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 
