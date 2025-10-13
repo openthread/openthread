@@ -36,6 +36,9 @@
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
 #include "instance/instance.hpp"
+#include "common/random.hpp"
+#include "utils/verhoeff_checksum.hpp"
+
 
 namespace ot {
 namespace MeshCoP {
@@ -395,6 +398,36 @@ const char *EphemeralKeyManager::StateToString(State aState)
     };
 
     return kStateStrings[aState];
+}
+
+Error EphemeralKeyManager::GenerateTapAndKeyStart(char *aTap, uint32_t aTimeout, uint16_t aUdpPort)
+{
+    Error    error = kErrorNone;
+    uint32_t randomResult;
+    char     verhoeffChecksum;
+    int  length = 0;
+
+    VerifyOrExit(aTap != nullptr, error = kErrorInvalidArgs);
+
+    // Generate 8-digit random number
+    VerifyOrExit(Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&randomResult),
+                 sizeof(randomResult)) == kErrorNone, error = kErrorFailed);
+    randomResult %= 100000000; // Ensure 8 digits max
+
+    // Format as 8-digit string with leading zeros
+    length = snprintf(aTap, 9, "%08u", static_cast<unsigned int>(randomResult));
+    VerifyOrExit(length == 8, error = kErrorFailed);
+
+    // Calculate and append Verhoeff checksum
+    VerifyOrExit(Utils::VerhoeffChecksum::Calculate(aTap, verhoeffChecksum) == kErrorNone, error = kErrorFailed);
+    aTap[8] = verhoeffChecksum;
+    aTap[9] = '\0';
+
+    // Start ephemeral key with generated TAP
+    error = Start(aTap, aTimeout, aUdpPort);
+
+exit:
+    return error;
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

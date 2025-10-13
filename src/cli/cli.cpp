@@ -657,6 +657,39 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
             error = otBorderAgentEphemeralKeyStart(GetInstancePtr(), aArgs[2].GetCString(), timeout, port);
         }
         /**
+         * @cli ba ephemeralkey tap-start [timeout-in-msec] [port]
+         * @code
+         * ba ephemeralkey tap-start 5000 1234
+         * 156429873
+         * Done
+         * @endcode
+         * @cparam ba ephemeralkey tap-start [@ca{timeout-in-msec}] [@ca{port}]
+         * @par api_copy
+         * #otBorderAgentGenerateTapAndKeyStart
+         */
+        else if (aArgs[1] == "tap-start")
+        {
+            char     tap[OT_BORDER_AGENT_EPHEMERAL_TAP_STR_LENGTH]; // 9 digits + null terminator
+            uint32_t timeout = 0;
+            uint16_t port    = 0;
+
+
+            if (!aArgs[2].IsEmpty())
+            {
+                SuccessOrExit(error = aArgs[2].ParseAsUint32(timeout));
+            }
+
+            if (!aArgs[3].IsEmpty())
+            {
+                SuccessOrExit(error = aArgs[3].ParseAsUint16(port));
+            }
+
+            SuccessOrExit(error = otBorderAgentGenerateTapAndKeyStart(GetInstancePtr(), tap, timeout, port));
+
+            // Output the generated TAP
+            OutputLine("%s", tap);
+        }
+        /**
          * @cli ba ephemeralkey stop
          * @code
          * ba ephemeralkey stop

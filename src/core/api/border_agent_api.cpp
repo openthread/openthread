@@ -165,6 +165,11 @@ const char *otBorderAgentEphemeralKeyStateToString(otBorderAgentEphemeralKeyStat
     return MeshCoP::BorderAgent::EphemeralKeyManager::StateToString(MapEnum(aState));
 }
 
+otError otBorderAgentGenerateTapAndKeyStart(otInstance *aInstance, char *aTap, uint32_t aTimeout, uint16_t aUdpPort)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent::EphemeralKeyManager>().GenerateTapAndKeyStart(aTap, aTimeout, aUdpPort);
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
