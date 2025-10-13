@@ -51,10 +51,8 @@ RxRaTracker::RxRaTracker(Instance &aInstance)
     , mExpirationTimer(aInstance)
     , mStaleTimer(aInstance)
     , mRouterTimer(aInstance)
-    , mNat64PrefixTimer(aInstance)
     , mRdnssAddrTimer(aInstance)
     , mSignalTask(aInstance)
-    , mNat64PrefixTask(aInstance)
     , mRdnssAddrTask(aInstance)
 {
     mLocalRaHeader.Clear();
@@ -361,7 +359,6 @@ void RxRaTracker::ProcessNat64PrefixInfoOption(const Nat64PrefixInfoOption &aNat
 {
     Ip6::Prefix         prefix;
     uint32_t            lifetime;
-    bool                didChange = false;
     Entry<Nat64Prefix> *entry;
 
     VerifyOrExit(aNat64Pio.IsValid());
@@ -375,7 +372,7 @@ void RxRaTracker::ProcessNat64PrefixInfoOption(const Nat64PrefixInfoOption &aNat
 
     if (lifetime == 0)
     {
-        didChange |= aRouter.mNat64Prefixes.RemoveAndFreeAllMatching(prefix);
+        aRouter.mNat64Prefixes.RemoveAndFreeAllMatching(prefix);
     }
     else
     {
@@ -384,7 +381,6 @@ void RxRaTracker::ProcessNat64PrefixInfoOption(const Nat64PrefixInfoOption &aNat
         if (entry != nullptr)
         {
             entry->SetFrom(aNat64Pio);
-            didChange = true;
         }
         else
         {
@@ -398,15 +394,11 @@ void RxRaTracker::ProcessNat64PrefixInfoOption(const Nat64PrefixInfoOption &aNat
 
             entry->SetFrom(aNat64Pio);
             aRouter.mNat64Prefixes.Push(*entry);
-            didChange = true;
         }
     }
 
 exit:
-    if (didChange)
-    {
-        mNat64PrefixTask.Post();
-    }
+    return;
 }
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
@@ -679,10 +671,7 @@ void RxRaTracker::Evaluate(void)
         router.mOnLinkPrefixes.RemoveAndFreeAllMatching(expirationChecker);
         router.mRoutePrefixes.RemoveAndFreeAllMatching(expirationChecker);
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-        if (router.mNat64Prefixes.RemoveAndFreeAllMatching(expirationChecker))
-        {
-            mNat64PrefixTask.Post();
-        }
+        router.mNat64Prefixes.RemoveAndFreeAllMatching(expirationChecker);
 #endif
 
         if (router.mRdnssAddresses.RemoveAndFreeAllMatching(expirationChecker))
@@ -733,6 +722,13 @@ void RxRaTracker::Evaluate(void)
 
             router.mAllEntriesDisregarded &= entry.ShouldDisregard();
         }
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        for (Nat64Prefix &entry : router.mNat64Prefixes)
+        {
+            mDecisionFactors.UpdateFrom(entry);
+        }
+#endif
     }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
@@ -813,7 +809,6 @@ void RxRaTracker::Evaluate(void)
     mRouterTimer.FireAt(routerTimeoutTime);
     mExpirationTimer.FireAt(entryExpireTime);
     mStaleTimer.FireAt(staleTime);
-    mNat64PrefixTimer.FireAt(nat64PrefixExpireTime);
     mRdnssAddrTimer.FireAt(rdnsssAddrExpireTime);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -904,8 +899,6 @@ void RxRaTracker::HandleSignalTask(void) { Get<RoutingManager>().HandleRaPrefixT
 
 void RxRaTracker::HandleRdnssAddrTask(void) { mRdnssCallback.InvokeIfSet(); }
 
-void RxRaTracker::HandleNat64PrefixTask(void) { Get<RoutingManager>().HandleRaNat64PrefixChanged(); }
-
 void RxRaTracker::ProcessNeighborAdvertMessage(const NeighborAdvertMessage &aNaMessage)
 {
     Router *router;
@@ -981,8 +974,6 @@ void RxRaTracker::HandleRouterTimer(void)
 
     Evaluate();
 }
-
-void RxRaTracker::HandleNat64PrefixTimer(void) { Evaluate(); }
 
 void RxRaTracker::HandleRdnssAddrTimer(void) { Evaluate(); }
 
@@ -1591,6 +1582,16 @@ void RxRaTracker::DecisionFactors::UpdateFrom(const RoutePrefix &aRoutePrefix)
 
 exit:
     return;
+}
+
+void RxRaTracker::DecisionFactors::UpdateFrom(const Nat64Prefix &aNat64Prefix)
+{
+    mHasNat64Prefix = true;
+
+    if (aNat64Prefix.IsFavoredOver(mFavoredNat64Prefix))
+    {
+        mFavoredNat64Prefix = aNat64Prefix.GetPrefix();
+    }
 }
 
 } // namespace BorderRouter

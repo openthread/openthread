@@ -369,6 +369,16 @@ public:
      */
     void CopyInfoTo(Nat64PrefixEntry &aEntry, TimeMilli aNow) const;
 
+    /**
+     * Indicates whether this NAT64 prefix is favored over another NAT64 prefix.
+     *
+     * @param[in] aPrefix  The IPv6 prefix to compare against.
+     *
+     * @retval TRUE   If this prefix is favored over @p aPrefix.
+     * @retval FALSE  If this prefix is not favored over @p aPrefix.
+     */
+    bool IsFavoredOver(const Ip6::Prefix &aPrefix) const;
+
 private:
     static constexpr uint32_t kFavoredMinLifetime = 1800; // In sec.
 };

@@ -194,6 +194,24 @@ void Nat64Prefix::CopyInfoTo(Nat64PrefixEntry &aEntry, TimeMilli aNow) const
     aEntry.mMsecSinceLastUpdate = aNow - GetLastUpdateTime();
     aEntry.mLifetime            = GetValidLifetime();
 }
+
+bool Nat64Prefix::IsFavoredOver(const Ip6::Prefix &aPrefix) const
+{
+    bool isFavored = false;
+
+    VerifyOrExit(mPrefix.GetLength() != 0);
+
+    if (aPrefix.GetLength() == 0)
+    {
+        isFavored = true;
+        ExitNow();
+    }
+
+    isFavored = GetPrefix() < aPrefix;
+
+exit:
+    return isFavored;
+}
 #endif
 
 //---------------------------------------------------------------------------------------------------------------------

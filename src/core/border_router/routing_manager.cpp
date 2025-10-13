@@ -732,23 +732,13 @@ void RoutingManager::HandleRaPrefixTableChanged(void)
     VerifyOrExit(mIsRunning);
 
     mOnLinkPrefixManager.HandleRaPrefixTableChanged();
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    mNat64PrefixManager.HandleRaDiscoverChanged();
+#endif
     mRoutePublisher.Evaluate();
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
     mMultiAilDetector.Evaluate();
 #endif
-
-exit:
-    return;
-}
-
-void RoutingManager::HandleRaNat64PrefixChanged(void)
-{
-    // This is a callback from `RxRaTracker` indicating that
-    // there has been a change in the discovered NAT64 prefixes.
-
-    VerifyOrExit(mIsRunning);
-
-    ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
 
 exit:
     return;
@@ -2432,7 +2422,7 @@ RoutingManager::Nat64PrefixManager::Nat64PrefixManager(Instance &aInstance)
     , mEnabled(false)
     , mTimer(aInstance)
 {
-    mRaDiscoveredPrefix.Clear();
+    mAilPrefix.Clear();
     mInfraIfPrefix.Clear();
     mLocalPrefix.Clear();
     mPublishedPrefix.Clear();
@@ -2495,25 +2485,19 @@ void RoutingManager::Nat64PrefixManager::GenerateLocalPrefix(const Ip6::Prefix &
 const Ip6::Prefix &RoutingManager::Nat64PrefixManager::GetFavoredPrefix(RoutePreference &aPreference) const
 {
     const Ip6::Prefix *favoredPrefix;
-    Ip6::Prefix        infraPrefix;
 
     aPreference = NetworkData::kRoutePreferenceLow;
 
-    if (mRaDiscoveredPrefix.IsValidNat64())
+    if (mAilPrefix.IsValidNat64())
     {
-        infraPrefix = mRaDiscoveredPrefix;
+        favoredPrefix = &mAilPrefix;
     }
-    else
-    {
-        infraPrefix = mInfraIfPrefix;
-    }
-
-    if (infraPrefix.IsValidNat64() &&
-        Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix().IsInfrastructureDerived())
+    else if (mInfraIfPrefix.IsValidNat64() &&
+             Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix().IsInfrastructureDerived())
     {
         // We have a valid NAT64 prefix from infrastructure and the network
         // is aligned with an infrastructure-provided OMR prefix.
-        favoredPrefix = &infraPrefix;
+        favoredPrefix = &mInfraIfPrefix;
         aPreference   = NetworkData::kRoutePreferenceMedium;
     }
     else
@@ -2535,8 +2519,6 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
     VerifyOrExit(mEnabled);
 
     LogInfo("Evaluating NAT64 prefix");
-
-    // TODO: get best RA discovered prefix mRaDiscoveredPrefix from RaRxTracker
 
     prefix = GetFavoredPrefix(preference);
 
@@ -2665,6 +2647,14 @@ void RoutingManager::Nat64PrefixManager::HandleDiscoverDone(const Ip6::Prefix &a
     mInfraIfPrefix = aPrefix;
 
     LogInfo("Infraif NAT64 prefix: %s", mInfraIfPrefix.IsValidNat64() ? mInfraIfPrefix.ToString().AsCString() : "none");
+    Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
+}
+
+void RoutingManager::Nat64PrefixManager::HandleRaDiscoverChanged(void)
+{
+    mAilPrefix = Get<RxRaTracker>().GetFavoredNat64Prefix();
+
+    LogInfo("RA discovered NAT64 prefix: %s", mRaPrefix.IsValidNat64() ? mRaPrefix.ToString().AsCString() : "none");
     Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
 }
 

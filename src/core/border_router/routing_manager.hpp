@@ -915,6 +915,7 @@ private:
         const Ip6::Prefix &GetFavoredPrefix(RoutePreference &aPreference) const;
         void               Evaluate(void);
         void               HandleDiscoverDone(const Ip6::Prefix &aPrefix);
+        void               HandleRaDiscoverChanged(void);
         void               HandleTimer(void);
 
     private:
@@ -925,7 +926,7 @@ private:
         using Nat64Timer = TimerMilliIn<RoutingManager, &RoutingManager::HandleNat64PrefixManagerTimer>;
 
         bool            mEnabled;
-        Ip6::Prefix     mRaDiscoveredPrefix;  // The best NAT64 prefix discovered from RAs.
+        Ip6::Prefix     mAilPrefix;           // The best NAT64 prefix discovered from RAs.
         Ip6::Prefix     mInfraIfPrefix;       // The latest NAT64 prefix discovered on the infrastructure interface.
         Ip6::Prefix     mLocalPrefix;         // The local prefix (from BR ULA prefix).
         Ip6::Prefix     mPublishedPrefix;     // The prefix to publish in Net Data (empty or local or from infra-if).
@@ -1159,7 +1160,6 @@ private:
     bool NetworkDataContainsUlaRoute(void) const;
 
     void HandleRaPrefixTableChanged(void);
-    void HandleRaNat64PrefixChanged(void);
     void HandleLocalOnLinkPrefixChanged(void);
 
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);

@@ -248,6 +248,15 @@ public:
     const Ip6::Prefix &GetFavoredOnLinkPrefix(void) const { return mDecisionFactors.mFavoredOnLinkPrefix; }
 
     /**
+     * Gets the favored NAT64 prefix among all discovered NAT64 prefixes.
+     *
+     * @returns The favored NAT64 prefix.
+     */
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    const Ip6::Prefix &GetFavoredNat64Prefix(void) const { return mDecisionFactors.mFavoredNat64Prefix; }
+#endif
+
+    /**
      * Sets the Managed Address Configuration (M) and Other Configuration (O) flags on a Router Advertisement header.
      *
      * The flags are set based on the currently discovered information from other routers on the infrastructure link.
@@ -493,13 +502,23 @@ private:
         void UpdateFlagsFrom(const Router &aRouter);
         void UpdateFrom(const OnLinkPrefix &aOnLinkPrefix);
         void UpdateFrom(const RoutePrefix &aRoutePrefix);
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        void UpdateFrom(const Nat64Prefix &aNat64Prefix);
+#endif
 
         Ip6::Prefix mFavoredOnLinkPrefix;
-        bool        mHasNonUlaRoute : 1;
-        bool        mHasNonUlaOnLink : 1;
-        bool        mHasUlaOnLink : 1;
-        bool        mHeaderManagedAddressConfigFlag : 1;
-        bool        mHeaderOtherConfigFlag : 1;
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        Ip6::Prefix mFavoredNat64Prefix;
+#endif
+        bool mHasNonUlaRoute : 1;
+        bool mHasNonUlaOnLink : 1;
+        bool mHasUlaOnLink : 1;
+        bool mHeaderManagedAddressConfigFlag : 1;
+        bool mHeaderOtherConfigFlag : 1;
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        bool mHasNat64Prefix : 1;
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
         uint16_t mReachablePeerBrCount;
 #endif
@@ -527,12 +546,10 @@ private:
 #endif
     // Tasklet or timer callbacks
     void HandleSignalTask(void);
-    void HandleNat64PrefixTask(void);
     void HandleRdnssAddrTask(void);
     void HandleExpirationTimer(void);
     void HandleStaleTimer(void);
     void HandleRouterTimer(void);
-    void HandleNat64PrefixTimer(void);
     void HandleRdnssAddrTimer(void);
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
@@ -541,17 +558,15 @@ private:
     template <class Type> Entry<Type> *AllocateEntry(void);
 #endif
 
-    using SignalTask       = TaskletIn<RxRaTracker, &RxRaTracker::HandleSignalTask>;
-    using Nat64PrefixTask  = TaskletIn<RxRaTracker, &RxRaTracker::HandleNat64PrefixTask>;
-    using RdnssAddrTask    = TaskletIn<RxRaTracker, &RxRaTracker::HandleRdnssAddrTask>;
-    using ExpirationTimer  = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleExpirationTimer>;
-    using StaleTimer       = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleStaleTimer>;
-    using RouterTimer      = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleRouterTimer>;
-    using Nat64PrefixTimer = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleNat64PrefixTimer>;
-    using RdnssAddrTimer   = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleRdnssAddrTimer>;
-    using RouterList       = OwningList<Entry<Router>>;
-    using IfAddressList    = OwningList<Entry<IfAddress>>;
-    using RdnssCallback    = Callback<RdnssAddrCallback>;
+    using SignalTask      = TaskletIn<RxRaTracker, &RxRaTracker::HandleSignalTask>;
+    using RdnssAddrTask   = TaskletIn<RxRaTracker, &RxRaTracker::HandleRdnssAddrTask>;
+    using ExpirationTimer = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleExpirationTimer>;
+    using StaleTimer      = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleStaleTimer>;
+    using RouterTimer     = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleRouterTimer>;
+    using RdnssAddrTimer  = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleRdnssAddrTimer>;
+    using RouterList      = OwningList<Entry<Router>>;
+    using IfAddressList   = OwningList<Entry<IfAddress>>;
+    using RdnssCallback   = Callback<RdnssAddrCallback>;
 
     DecisionFactors      mDecisionFactors;
     RouterList           mRouters;
@@ -559,10 +574,8 @@ private:
     ExpirationTimer      mExpirationTimer;
     StaleTimer           mStaleTimer;
     RouterTimer          mRouterTimer;
-    Nat64PrefixTimer     mNat64PrefixTimer;
     RdnssAddrTimer       mRdnssAddrTimer;
     SignalTask           mSignalTask;
-    Nat64PrefixTask      mNat64PrefixTask;
     RdnssAddrTask        mRdnssAddrTask;
     RdnssCallback        mRdnssCallback;
     RouterAdvert::Header mLocalRaHeader;
