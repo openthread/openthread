@@ -90,6 +90,7 @@ Done
 - [networkname](#networkname)
 - [networktime](#networktime)
 - [nexthop](#nexthop)
+- [otpc](#otpc)
 - [p2p](#p2p-link-extaddr-extaddr)
 - [panid](#panid)
 - [parent](#parent)
@@ -3224,7 +3225,15 @@ Tears down the P2P link identified by the extended address.
 > p2p unlink dead00beef00cafe
 Done
 ```
+### otpc
 
+Generate 9 digit one time passcode.
+
+```bash
+> otpc
+223676057
+Done
+```
 ### panid
 
 Get the IEEE 802.15.4 PAN ID value.
