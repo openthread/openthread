@@ -65,7 +65,6 @@ FakePlatform::FakePlatform()
     assert(sPlatform == nullptr);
     sPlatform = this;
 
-    fprintf(stderr, "fake platform start\r\n");
     mTransmitFrame.mPsdu = mTransmitBuffer;
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
@@ -596,12 +595,22 @@ void otPlatTrelSend(otInstance *, const uint8_t *, uint16_t, const otSockAddr *)
 const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *) { return nullptr; }
 void                      otPlatTrelResetCounters(otInstance *) {}
 
-otError otPlatUdpSocket(otUdpSocket *) { return OT_ERROR_NOT_IMPLEMENTED; }
-otError otPlatUdpClose(otUdpSocket *) { return OT_ERROR_NOT_IMPLEMENTED; }
-otError otPlatUdpBind(otUdpSocket *) { return OT_ERROR_NOT_IMPLEMENTED; }
-otError otPlatUdpBindToNetif(otUdpSocket *, otNetifIdentifier) { return OT_ERROR_NOT_IMPLEMENTED; }
+otError otPlatUdpSocket(otUdpSocket *aUdpSocket) { return FakePlatform::CurrentPlatform().UdpSocketOpen(*aUdpSocket); }
+otError otPlatUdpClose(otUdpSocket *aUdpSocket) { return FakePlatform::CurrentPlatform().UdpSocketClose(*aUdpSocket); }
+otError otPlatUdpBind(otUdpSocket *aUdpSocket) { return FakePlatform::CurrentPlatform().UdpSocketBind(*aUdpSocket); }
+otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId)
+{
+    return FakePlatform::CurrentPlatform().UdpSocketBindToNetif(*aUdpSocket, aNetifId);
+}
 otError otPlatUdpConnect(otUdpSocket *) { return OT_ERROR_NOT_IMPLEMENTED; }
-otError otPlatUdpSend(otUdpSocket *, otMessage *, const otMessageInfo *) { return OT_ERROR_NOT_IMPLEMENTED; }
+otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+    return FakePlatform::CurrentPlatform().UdpSocketSend(*aUdpSocket, *aMessage, *aMessageInfo);
+}
+otError otPlatUdpSetFlags(otUdpSocket *aUdpSocket, int aFlags)
+{
+    return FakePlatform::CurrentPlatform().UdpSocketSetFlags(*aUdpSocket, aFlags);
+}
 otError otPlatUdpJoinMulticastGroup(otUdpSocket *, otNetifIdentifier, const otIp6Address *)
 {
     return OT_ERROR_NOT_IMPLEMENTED;
@@ -615,5 +624,9 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket *, otNetifIdentifier, const otI
 void otPlatOtnsStatus(const char *aStatus) { OT_UNUSED_VARIABLE(aStatus); }
 #endif
 
-void otPlatAssertFail(const char *, int) {}
+void otPlatAssertFail(const char *aFileName, int aLineNumber)
+{
+    fprintf(stderr, "Fake platform assertion failure at %s:%d\r\n", aFileName, aLineNumber);
+    abort();
+}
 } // extern "C"

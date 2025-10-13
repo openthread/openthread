@@ -245,6 +245,26 @@ exit:
     return error;
 }
 
+otError otPlatUdpSetFlags(otUdpSocket *aUdpSocket, int aFlags)
+{
+    otError error = OT_ERROR_NONE;
+    int     fd;
+    int     optval;
+
+    fd = FdFromHandle(aUdpSocket->mHandle);
+
+    optval = static_cast<bool>(aFlags & OT_PLATFORM_UDP_REUSEADDR);
+
+    VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == 0, error = OT_ERROR_FAILED);
+
+    optval = static_cast<bool>(aFlags & OT_PLATFORM_UDP_REUSEPORT);
+
+    VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval)) == 0, error = OT_ERROR_FAILED);
+
+exit:
+    return error;
+}
+
 otError otPlatUdpClose(otUdpSocket *aUdpSocket)
 {
     otError error = OT_ERROR_NONE;

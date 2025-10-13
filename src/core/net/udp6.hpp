@@ -141,7 +141,11 @@ public:
          *
          * @param[in] aNetifId   The network interface identifier.
          */
-        void SetNetifId(NetifIdentifier aNetifId) { mNetifId = static_cast<otNetifIdentifier>(aNetifId); }
+        void SetNetifId(NetifIdentifier aNetifId)
+        {
+            OT_ASSERT(!IsBound());
+            mNetifId = static_cast<otNetifIdentifier>(aNetifId);
+        }
 
         /**
          * Indicates whether or not the socket can use platform UDP.
@@ -178,6 +182,12 @@ public:
         friend class Udp;
 
     public:
+        enum Flags : int
+        {
+            kReuseAddr = OT_PLATFORM_UDP_REUSEADDR,
+            kReusePort = OT_PLATFORM_UDP_REUSEPORT,
+        };
+
         /**
          * Initializes the object.
          *
@@ -217,11 +227,8 @@ public:
          * Opens the UDP socket.
          *
          * @param[in]  aNetifId   The network interface identifier.
-         *
-         * @retval kErrorNone     Successfully opened the socket.
-         * @retval kErrorFailed   Failed to open the socket.
          */
-        Error Open(NetifIdentifier aNetifId);
+        void Open(NetifIdentifier aNetifId);
 
         /**
          * Returns if the UDP socket is open.
@@ -234,12 +241,13 @@ public:
          * Binds the UDP socket.
          *
          * @param[in]  aSockAddr         A reference to the socket address.
+         * @param[in]  aFlags    The bitwise OR of flags to set.
          *
          * @retval kErrorNone            Successfully bound the socket.
          * @retval kErrorInvalidArgs     Unable to bind to Thread network interface with the given address.
          * @retval kErrorFailed          Failed to bind UDP Socket.
          */
-        Error Bind(const SockAddr &aSockAddr);
+        Error Bind(const SockAddr &aSockAddr, int aFlags = 0);
 
         /**
          * Binds the UDP socket.
@@ -498,11 +506,8 @@ public:
      * @param[in]  aNetifId  A network interface identifier.
      * @param[in]  aHandler  A pointer to a function that is called when receiving UDP messages.
      * @param[in]  aContext  A pointer to arbitrary context information.
-     *
-     * @retval kErrorNone     Successfully opened the socket.
-     * @retval kErrorFailed   Failed to open the socket.
      */
-    Error Open(SocketHandle &aSocket, NetifIdentifier aNetifId, ReceiveHandler aHandler, void *aContext);
+    void Open(SocketHandle &aSocket, NetifIdentifier aNetifId, ReceiveHandler aHandler, void *aContext);
 
     /**
      * Returns if a UDP socket is open.
@@ -523,7 +528,7 @@ public:
      * @retval kErrorInvalidArgs     Unable to bind to Thread network interface with the given address.
      * @retval kErrorFailed          Failed to bind UDP Socket.
      */
-    Error Bind(SocketHandle &aSocket, const SockAddr &aSockAddr);
+    Error Bind(SocketHandle &aSocket, const SockAddr &aSockAddr, int aFlags);
 
     /**
      * Connects a UDP socket.
@@ -661,7 +666,7 @@ private:
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     struct Plat
     {
-        static Error Open(SocketHandle &aSocket);
+        static Error Open(SocketHandle &aSocket, int aFlags);
         static Error Close(SocketHandle &aSocket);
         static Error Bind(SocketHandle &aSocket);
         static Error BindToNetif(SocketHandle &aSocket);

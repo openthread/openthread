@@ -1082,7 +1082,7 @@ void TestSrpClientDelayedResponse(void)
 
         sServerRxCount = 0;
 
-        SuccessOrQuit(udpSocket.Open(Ip6::kNetifThreadInternal));
+        udpSocket.Open(Ip6::kNetifThreadInternal);
         SuccessOrQuit(udpSocket.Bind(kServerPort));
 
         serverSockAddr.SetAddress(sInstance->Get<Mle::Mle>().GetMeshLocalRloc());
@@ -1233,7 +1233,7 @@ void TestSrpClientSingleServiceMode(void)
 
         sServerRxCount = 0;
 
-        SuccessOrQuit(udpSocket.Open(Ip6::kNetifThreadInternal));
+        udpSocket.Open(Ip6::kNetifThreadInternal);
         SuccessOrQuit(udpSocket.Bind(kServerPort));
 
         serverSockAddr.SetAddress(sInstance->Get<Mle::Mle>().GetMeshLocalRloc());
