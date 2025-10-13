@@ -2612,11 +2612,12 @@ void RoutingManager::Nat64PrefixManager::Discover(void)
     }
 }
 
-void RoutingManager::Nat64PrefixManager::HandleDiscoverDone(const Ip6::Prefix &aPrefix)
+void RoutingManager::Nat64PrefixManager::HandleInfraIfDiscoverDone(const Ip6::Prefix &aPrefix)
 {
     mInfraIfPrefix = aPrefix;
 
-    LogInfo("Infraif NAT64 prefix: %s", mInfraIfPrefix.IsValidNat64() ? mInfraIfPrefix.ToString().AsCString() : "none");
+    LogInfo("InfraIf Discovered NAT64 prefix: %s",
+            mInfraIfPrefix.IsValidNat64() ? mInfraIfPrefix.ToString().AsCString() : "none");
     Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
 }
 
