@@ -54,7 +54,6 @@ RoutingManager::RoutingManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mIsRunning(false)
     , mIsEnabled(false)
-    , mInfraIf(aInstance)
     , mOmrPrefixManager(aInstance)
     , mRioAdvertiser(aInstance)
     , mOnLinkPrefixManager(aInstance)
@@ -80,10 +79,10 @@ Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 
     VerifyOrExit(GetState() == kStateUninitialized || GetState() == kStateDisabled, error = kErrorInvalidState);
 
-    if (!mInfraIf.IsInitialized())
+    if (!Get<InfraIf>().IsInitialized())
     {
         LogInfo("Initializing - InfraIfIndex:%lu", ToUlong(aInfraIfIndex));
-        SuccessOrExit(error = mInfraIf.Init(aInfraIfIndex));
+        SuccessOrExit(error = Get<InfraIf>().Init(aInfraIfIndex));
         SuccessOrExit(error = LoadOrGenerateRandomBrUlaPrefix());
         mOmrPrefixManager.Init(mBrUlaPrefix);
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
@@ -91,35 +90,38 @@ Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 #endif
         mOnLinkPrefixManager.Init();
     }
-    else if (aInfraIfIndex != mInfraIf.GetIfIndex())
+    else if (aInfraIfIndex != Get<InfraIf>().GetIfIndex())
     {
-        LogInfo("Reinitializing - InfraIfIndex:%lu -> %lu", ToUlong(mInfraIf.GetIfIndex()), ToUlong(aInfraIfIndex));
+        LogInfo("Reinitializing - InfraIfIndex:%lu -> %lu", ToUlong(Get<InfraIf>().GetIfIndex()),
+                ToUlong(aInfraIfIndex));
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
-        IgnoreError(Get<Dns::Multicast::Core>().SetEnabled(false, mInfraIf.GetIfIndex()));
+        IgnoreError(Get<Dns::Multicast::Core>().SetEnabled(false, Get<InfraIf>().GetIfIndex()));
 #endif
 
-        mInfraIf.SetIfIndex(aInfraIfIndex);
+        Get<InfraIf>().SetIfIndex(aInfraIfIndex);
     }
 
-    error = mInfraIf.HandleStateChanged(mInfraIf.GetIfIndex(), aInfraIfIsRunning);
+    error = Get<InfraIf>().HandleStateChanged(Get<InfraIf>().GetIfIndex(), aInfraIfIsRunning);
 
 exit:
     if (error != kErrorNone)
     {
-        mInfraIf.Deinit();
+        Get<InfraIf>().Deinit();
     }
 
     return error;
 }
+
+bool RoutingManager::IsInitialized(void) const { return Get<InfraIf>().IsInitialized(); }
 
 Error RoutingManager::GetInfraIfInfo(uint32_t &aInfraIfIndex, bool &aInfraIfIsRunning) const
 {
     Error error = kErrorNone;
 
     VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
-    aInfraIfIndex     = mInfraIf.GetIfIndex();
-    aInfraIfIsRunning = mInfraIf.IsRunning();
+    aInfraIfIndex     = Get<InfraIf>().GetIfIndex();
+    aInfraIfIsRunning = Get<InfraIf>().IsRunning();
 
 exit:
     return error;
@@ -288,7 +290,7 @@ exit:
 
 void RoutingManager::EvaluateState(void)
 {
-    if (mIsEnabled && Get<Mle::Mle>().IsAttached() && mInfraIf.IsRunning())
+    if (mIsEnabled && Get<Mle::Mle>().IsAttached() && Get<InfraIf>().IsRunning())
     {
         Start();
     }
@@ -632,18 +634,18 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
 
     mTxRaInfo.IncrementTxCountAndSaveHash(packet);
 
-    SuccessOrExit(error = mInfraIf.Send(packet, destAddress));
+    SuccessOrExit(error = Get<InfraIf>().Send(packet, destAddress));
 
     mTxRaInfo.mLastTxTime = TimerMilli::GetNow();
     Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaTxSuccess++;
-    LogInfo("Sent RA on %s", mInfraIf.ToString().AsCString());
+    LogInfo("Sent RA on %s", Get<InfraIf>().ToString().AsCString());
     DumpDebg("[BR-CERT] direction=send | type=RA |", packet.GetBytes(), packet.GetLength());
 
 exit:
     if (error != kErrorNone)
     {
         Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaTxFailure++;
-        LogWarn("Failed to send RA on %s: %s", mInfraIf.ToString().AsCString(), ErrorToString(error));
+        LogWarn("Failed to send RA on %s: %s", Get<InfraIf>().ToString().AsCString(), ErrorToString(error));
     }
 }
 
@@ -658,7 +660,7 @@ void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, co
     OT_UNUSED_VARIABLE(aSrcAddress);
 
     Get<Ip6::Ip6>().GetBorderRoutingCounters().mRsRx++;
-    LogInfo("Received RS from %s on %s", aSrcAddress.ToString().AsCString(), mInfraIf.ToString().AsCString());
+    LogInfo("Received RS from %s on %s", aSrcAddress.ToString().AsCString(), Get<InfraIf>().ToString().AsCString());
 
     ScheduleRoutingPolicyEvaluation(kToReplyToRs);
 }
@@ -687,13 +689,13 @@ void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPack
 
     Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaRx++;
 
-    if (mInfraIf.HasAddress(aSrcAddress))
+    if (Get<InfraIf>().HasAddress(aSrcAddress))
     {
         raOrigin =
             mTxRaInfo.IsRaFromManager(raMsg) ? RxRaTracker::kThisBrRoutingManager : RxRaTracker::kThisBrOtherEntity;
     }
 
-    LogInfo("Received RA from %s on %s %s", aSrcAddress.ToString().AsCString(), mInfraIf.ToString().AsCString(),
+    LogInfo("Received RA from %s on %s %s", aSrcAddress.ToString().AsCString(), Get<InfraIf>().ToString().AsCString(),
             RouterAdvOriginToString(raOrigin));
 
     DumpDebg("[BR-CERT] direction=recv | type=RA |", aPacket.GetBytes(), aPacket.GetLength());
@@ -2518,9 +2520,6 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
     //   by this BR.
     // - The preferred NAT64 prefix in Network Data is same as the
     //   discovered infrastructure prefix.
-    //
-    // TODO: change to check RLOC16 to determine if the NAT64 prefix
-    // was published by this BR.
 
     shouldPublish =
         ((error == kErrorNotFound) || (netdataPrefixConfig.mPreference < preference) ||
@@ -2613,7 +2612,7 @@ void RoutingManager::Nat64PrefixManager::HandleTimer(void)
 
 void RoutingManager::Nat64PrefixManager::Discover(void)
 {
-    Error error = Get<RoutingManager>().mInfraIf.DiscoverNat64Prefix();
+    Error error = Get<InfraIf>().DiscoverNat64Prefix();
 
     if (error == kErrorNone)
     {
@@ -2629,11 +2628,12 @@ void RoutingManager::Nat64PrefixManager::Discover(void)
     }
 }
 
-void RoutingManager::Nat64PrefixManager::HandleDiscoverDone(const Ip6::Prefix &aPrefix)
+void RoutingManager::Nat64PrefixManager::HandleInfraIfDiscoverDone(const Ip6::Prefix &aPrefix)
 {
     mInfraIfPrefix = aPrefix;
 
-    LogInfo("Infraif NAT64 prefix: %s", mInfraIfPrefix.IsValidNat64() ? mInfraIfPrefix.ToString().AsCString() : "none");
+    LogInfo("InfraIf Discovered NAT64 prefix: %s",
+            mInfraIfPrefix.IsValidNat64() ? mInfraIfPrefix.ToString().AsCString() : "none");
     Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
 }
 

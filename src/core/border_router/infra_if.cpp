@@ -106,29 +106,23 @@ exit:
     }
 }
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
 Error InfraIf::DiscoverNat64Prefix(void) const
 {
     OT_ASSERT(mInitialized);
 
-#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     return otPlatInfraIfDiscoverNat64Prefix(mIfIndex);
-#else
-    return kErrorNotImplemented;
-#endif
 }
 
 void InfraIf::DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPrefix)
 {
     Error error = kErrorNone;
 
-    OT_UNUSED_VARIABLE(aPrefix);
-
     VerifyOrExit(mInitialized && mIsRunning, error = kErrorInvalidState);
     VerifyOrExit(aIfIndex == mIfIndex, error = kErrorInvalidArgs);
 
-#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    Get<RoutingManager>().HandleDiscoverNat64PrefixDone(aPrefix);
-#endif
+    Get<RoutingManager>().HandleInfraIfDiscoverNat64PrefixDone(aPrefix);
 
 exit:
     if (error != kErrorNone)
@@ -136,6 +130,8 @@ exit:
         LogDebg("Failed to handle discovered NAT64 synthetic addresses: %s", ErrorToString(error));
     }
 }
+
+#endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
 Error InfraIf::GetLinkLayerAddress(LinkLayerAddress &aLinkLayerAddress)
 {
@@ -233,7 +229,13 @@ extern "C" void otPlatInfraIfDiscoverNat64PrefixDone(otInstance        *aInstanc
                                                      uint32_t           aInfraIfIndex,
                                                      const otIp6Prefix *aIp6Prefix)
 {
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     AsCoreType(aInstance).Get<InfraIf>().DiscoverNat64PrefixDone(aInfraIfIndex, AsCoreType(aIp6Prefix));
+#else
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+    OT_UNUSED_VARIABLE(aIp6Prefix);
+#endif
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE

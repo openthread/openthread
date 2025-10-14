@@ -1022,7 +1022,7 @@ void RxRaTracker::SendNeighborSolicitToRouter(const Router &aRouter)
 
     nsMsg.GetAsPacket(packet);
 
-    IgnoreError(Get<RoutingManager>().mInfraIf.Send(packet, aRouter.mAddress));
+    IgnoreError(Get<InfraIf>().Send(packet, aRouter.mAddress));
 
     LogInfo("Sent Neighbor Solicitation to %s - attempt:%u/%u", aRouter.mAddress.ToString().AsCString(),
             aRouter.mNsProbeCount, Router::kMaxNsProbes);
@@ -1669,7 +1669,7 @@ Error RxRaTracker::RsSender::SendRs(void)
     rsMsg.GetAsPacket(packet);
     destAddress.SetToLinkLocalAllRoutersMulticast();
 
-    error = Get<RoutingManager>().mInfraIf.Send(packet, destAddress);
+    error = Get<InfraIf>().Send(packet, destAddress);
 
     if (error == kErrorNone)
     {
