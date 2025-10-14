@@ -1001,6 +1001,37 @@ public:
     }
 
     /**
+     * Validates a DNS label.
+     *
+     * A label must be between 1 and 63 (`kMaxLabelLength`) characters long.
+     *
+     * @param[in] aLabel   The string containing the label.
+     *
+     * @retval kErrorNone         The label is valid.
+     * @retval kErrorInvalidArgs  The label is not valid (e.g., is `nullptr`, empty, or too long).
+     */
+    static Error ValidateLabel(const char *aLabel);
+
+    /**
+     * Validates a DNS name.
+     *
+     * A DNS name is a sequence of labels separated by dots.
+     *
+     * This method validates the following rules:
+     * - The name string is not `nullptr`.
+     * - The total length of the name is between 1 and 254 (`kMaxNameLength`) characters.
+     * - Each label is at most 63 (`kMaxLabelLength`) characters long.
+     * - Empty labels (e.g., consecutive dots `..`) are disallowed, except for a single trailing dot `.` at the end of
+     *   the name, or if the name is just ".".
+     *
+     * @param[in] aName           The string containing the name.
+     *
+     * @retval kErrorNone         The name is valid.
+     * @retval kErrorInvalidArgs  The name is not valid.
+     */
+    static Error ValidateName(const char *aName);
+
+    /**
      * Tests if a DNS name is a sub-domain of a given domain.
      *
      * Both @p aName and @p aDomain can end without dot ('.').
