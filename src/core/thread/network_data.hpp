@@ -160,6 +160,18 @@ public:
     const uint8_t *GetBytes(void) const { return mTlvs; }
 
     /**
+     * Parses and validates all TLVs contained within the Network Data.
+     *
+     * Performs the following checks on all TLVs in the Network Data.
+     *  - Ensures correct TLV format and expected minimum length for known TLV types that can appear in Network Data.
+     *  - Validates sub-TLVs included in the known TLVs.
+     *
+     * @retval kErrorNone   Successfully validated all the TLVs in the Network Data.
+     * @retval kErrorParse  Network Data TLVs are not well-formed.
+     */
+    Error ValidateTlvs(void) const;
+
+    /**
      * Provides full or stable copy of the Thread Network Data.
      *
      * @param[in]     aType        The Network Data type to copy, the full set or stable subset.

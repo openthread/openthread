@@ -453,13 +453,30 @@ Error Leader::SetNetworkData(uint8_t            aVersion,
                              const Message     &aMessage,
                              const OffsetRange &aOffsetRange)
 {
-    Error    error  = kErrorNone;
-    uint16_t length = aOffsetRange.GetLength();
+    Error   error = kErrorNone;
+    uint8_t oldData[kMaxSize];
+    uint8_t oldLength;
 
-    VerifyOrExit(length <= kMaxSize, error = kErrorParse);
-    SuccessOrExit(error = aMessage.Read(aOffsetRange.GetOffset(), GetBytes(), length));
+    VerifyOrExit(aOffsetRange.GetLength() <= kMaxSize, error = kErrorParse);
+    VerifyOrExit(aOffsetRange.GetEndOffset() <= aMessage.GetLength(), error = kErrorParse);
 
-    SetLength(static_cast<uint8_t>(length));
+    oldLength = sizeof(oldData);
+    IgnoreError(CopyNetworkData(kFullSet, oldData, oldLength));
+
+    aMessage.ReadBytes(aOffsetRange, GetBytes());
+    SetLength(static_cast<uint8_t>(aOffsetRange.GetLength()));
+
+    error = ValidateTlvs();
+
+    if (error != kErrorNone)
+    {
+        // Restores the old data back
+
+        memcpy(GetBytes(), oldData, oldLength);
+        SetLength(oldLength);
+        ExitNow();
+    }
+
     mVersion       = aVersion;
     mStableVersion = aStableVersion;
 
