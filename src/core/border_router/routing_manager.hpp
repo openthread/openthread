@@ -437,7 +437,10 @@ public:
      *
      * @param[in]  aPrefix  The discovered NAT64 prefix on `InfraIf`.
      */
-    void HandleDiscoverNat64PrefixDone(const Ip6::Prefix &aPrefix) { mNat64PrefixManager.HandleDiscoverDone(aPrefix); }
+    void HandleInfraIfDiscoverNat64PrefixDone(const Ip6::Prefix &aPrefix)
+    {
+        mNat64PrefixManager.HandleInfraIfDiscoverDone(aPrefix);
+    }
 
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
@@ -914,7 +917,7 @@ private:
         const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
         const Ip6::Prefix &GetFavoredPrefix(RoutePreference &aPreference) const;
         void               Evaluate(void);
-        void               HandleDiscoverDone(const Ip6::Prefix &aPrefix);
+        void               HandleInfraIfDiscoverDone(const Ip6::Prefix &aPrefix);
         void               HandleTimer(void);
 
     private:
