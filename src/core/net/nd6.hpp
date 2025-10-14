@@ -510,7 +510,6 @@ static_assert(sizeof(RaFlagsExtOption) == 8, "invalid RaFlagsExtOption structure
  * Represents the NAT64 Prefix Information Option.
  *
  * See section 4 of RFC 8781 for definition of this option [https://tools.ietf.org/html/rfc8781#section-4]
- *
  */
 OT_TOOL_PACKED_BEGIN
 class Nat64PrefixInfoOption : public Option, private Clearable<Nat64PrefixInfoOption>
@@ -547,6 +546,54 @@ public:
     void SetLifetime(uint32_t aLifetime);
 
     /**
+     * Sets the prefix.
+     *
+     * @param[in]  aPrefix  The prefix contained in this option.
+     */
+    Error SetPrefix(const Prefix &aPrefix);
+
+    /**
+     * Gets the prefix in this option.
+     *
+     * @param[out] aPrefix   Reference to a `Prefix` to return the prefix.
+     *
+     * @retval kErrorNone   Successfully retrieved the prefix.
+     * @retval kErrorParse  The Prefix Length Code is not valid.
+     */
+    Error GetPrefix(Prefix &aPrefix) const;
+
+    /**
+     * Indicates whether or not the option is valid.
+     *
+     * @retval TRUE  The option is valid
+     * @retval FALSE The option is not valid.
+     */
+    bool IsValid(void) const;
+
+    Nat64PrefixInfoOption(void) = delete;
+
+private:
+    // NAT64 Prefix Information Option
+    //
+    //   0                   1                   2                   3
+    //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |     Type      |    Length     |     Scaled Lifetime     | PLC |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |                                                               |
+    //  +                                                               +
+    //  |              Highest 96 bits of the Prefix                    |
+    //  +                                                               +
+    //  |                                                               |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+    static constexpr uint32_t kLifetimeScalingUnit  = 8;    // Lifetime is scaled in units of 8 seconds
+    static constexpr uint16_t kScaledLifetimeOffset = 3;    // Scaled Lifetime offset in `mPrefixAttr`.
+    static constexpr uint16_t kPrefixLengthCodeMask = 0x07; // Prefix Length Code mask in `mPrefixAttr`.
+
+    static const uint8_t kPrefixLengths[]; // Map from prefix length code to prefix length in bits.
+
+    /**
      * Returns the NAT64 prefix length code.
      *
      * The prefix length code values 0, 1, 2, 3, 4, and 5 indicate the NAT64 prefix length of 96, 64, 56, 48, 40, and 32
@@ -564,57 +611,6 @@ public:
      *
      */
     void SetPrefixLengthCode(const uint8_t aPrefixLengthCode);
-
-    /**
-     * Sets the prefix.
-     *
-     * @param[in]  aPrefix  The prefix contained in this option.
-     */
-    Error SetPrefix(const Prefix &aPrefix);
-
-    /**
-     * Gets the prefix in this option.
-     *
-     * @param[out] aPrefix   Reference to a `Prefix` to return the prefix.
-     */
-    void GetPrefix(Prefix &aPrefix) const;
-
-    /**
-     * Indicates whether or not the option is valid.
-     *
-     * @retval TRUE  The option is valid
-     * @retval FALSE The option is not valid.
-     */
-    bool IsValid(void) const { return (GetLength() == 2); };
-
-    Nat64PrefixInfoOption(void) = delete;
-
-private:
-    // NAT64 Prefix Information Option
-    //
-    //  0                   1                   2                   3
-    //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    //  |     Type      |    Length     |     Scaled Lifetime     | PLC |
-    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    //  |                                                               |
-    //  +                                                               +
-    //  |              Highest 96 bits of the Prefix                    |
-    //  +                                                               +
-    //  |                                                               |
-    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-    static constexpr uint32_t kLifetimeScalingUnit  = 8;    // Lifetime is scaled in units of 8 seconds
-    static constexpr uint16_t kScaledLifetimeOffset = 3;    // Scaled Lifetime offset in `mPrefixAttr`.
-    static constexpr uint16_t kPrefixLengthCodeMask = 0x07; // Prefix Length Code mask in `mPrefixAttr`.
-
-    struct PrefixLengthMap
-    {
-        uint8_t mCode;
-        uint8_t mLength;
-    };
-
-    static const PrefixLengthMap kCodeToLengthMap[]; // Map from prefix length code to prefix length in bits.
 
     uint16_t mPrefixAttr; // The prefix attributes (Scaled Lifetime and Prefix Length Code).
     uint8_t  mPrefixMsb[12];
@@ -1060,14 +1056,14 @@ public:
         /**
          * Appends a NAT64 Prefix Info Option to the RA message.
          *
-         * @param[in] aPrefix             The prefix.
-         * @param[in] aLifetime      The lifetime in seconds.
+         * @param[in] aPrefix         The prefix.
+         * @param[in] aLifetime       The lifetime in seconds.
          *
          * @retval kErrorNone         Option is appended successfully.
          * @retval kErrorInvalidArgs  Unsupported length for NAT64 prefix.
          * @retval kErrorNoBufs       Insufficient available buffers to grow the message.
          */
-        Error AppendNat64PrefixInfoOption(const Prefix &aPrefix, uint16_t aLifetime);
+        Error AppendNat64PrefixInfoOption(const Prefix &aPrefix, uint32_t aLifetime);
 
         /**
          * Append a Recursive DNS Server Option to the RA message.

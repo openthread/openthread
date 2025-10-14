@@ -262,12 +262,12 @@ public:
      */
     const Ip6::Prefix &GetFavoredOnLinkPrefix(void) const { return mDecisionFactors.mFavoredOnLinkPrefix; }
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     /**
      * Gets the favored NAT64 prefix among all discovered NAT64 prefixes.
      *
      * @returns The favored NAT64 prefix.
      */
-#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     const Ip6::Prefix &GetFavoredNat64Prefix(void) const { return mDecisionFactors.mFavoredNat64Prefix; }
 #endif
 
@@ -499,7 +499,9 @@ private:
         SharedEntry        *mNext;
         Entry<OnLinkPrefix> mOnLinkEntry;
         Entry<RoutePrefix>  mRouteEntry;
-        Entry<Nat64Prefix>  mNat64PrefixEntry;
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        Entry<Nat64Prefix> mNat64PrefixEntry;
+#endif
         Entry<RdnssAddress> mRdnssAddrEntry;
         Entry<IfAddress>    mIfAddrEntry;
     };
@@ -528,9 +530,6 @@ private:
         bool mHasUlaOnLink : 1;
         bool mHeaderManagedAddressConfigFlag : 1;
         bool mHeaderOtherConfigFlag : 1;
-#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-        bool mHasNat64Prefix : 1;
-#endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
         uint16_t mReachablePeerBrCount;

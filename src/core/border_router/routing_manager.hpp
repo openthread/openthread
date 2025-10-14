@@ -926,7 +926,7 @@ private:
         using Nat64Timer = TimerMilliIn<RoutingManager, &RoutingManager::HandleNat64PrefixManagerTimer>;
 
         bool            mEnabled;
-        Ip6::Prefix     mAilPrefix;           // The best NAT64 prefix discovered from RAs.
+        Ip6::Prefix     mRaTrackerPrefix;     // The best NAT64 prefix discovered from RAs.
         Ip6::Prefix     mInfraIfPrefix;       // The latest NAT64 prefix discovered on the infrastructure interface.
         Ip6::Prefix     mLocalPrefix;         // The local prefix (from BR ULA prefix).
         Ip6::Prefix     mPublishedPrefix;     // The prefix to publish in Net Data (empty or local or from infra-if).

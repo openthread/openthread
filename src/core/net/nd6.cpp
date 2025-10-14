@@ -190,13 +190,9 @@ void Nat64PrefixInfoOption::Init(void)
     Clear();
     SetType(kTypeNat64PrefixInfo);
     SetSize(sizeof(Nat64PrefixInfoOption));
-    // Per RFC8781, the length of PREF64 option is in units of 8 octets and MUST be 2.
-    SetLength(2);
 }
 
-const Nat64PrefixInfoOption::PrefixLengthMap Nat64PrefixInfoOption::kCodeToLengthMap[] = {
-    {0, 96}, {1, 64}, {2, 56}, {3, 48}, {4, 40}, {5, 32},
-};
+const uint8_t Nat64PrefixInfoOption::kPrefixLengths[] = {96, 64, 56, 48, 40, 32};
 
 void Nat64PrefixInfoOption::SetLifetime(uint32_t aLifetime)
 {
@@ -214,41 +210,39 @@ void Nat64PrefixInfoOption::SetPrefixLengthCode(const uint8_t aPrefixLengthCode)
 
 Error Nat64PrefixInfoOption::SetPrefix(const Prefix &aPrefix)
 {
-    Error error = kErrorNone;
-    bool  found = false;
+    Error error = kErrorInvalidArgs;
 
-    memcpy(mPrefixMsb, aPrefix.GetBytes(), 12);
+    memcpy(mPrefixMsb, aPrefix.GetBytes(), sizeof(mPrefixMsb));
 
-    for (const PrefixLengthMap &map : kCodeToLengthMap)
+    for (uint8_t code = 0; code < ClampToUint8(GetArrayLength(kPrefixLengths)); code++)
     {
-        if (map.mLength == aPrefix.mLength)
+        if (kPrefixLengths[code] == aPrefix.mLength)
         {
-            SetPrefixLengthCode(map.mCode);
-            found = true;
+            SetPrefixLengthCode(code);
+            error = kErrorNone;
             break;
         }
     }
 
-    VerifyOrExit(found, error = kErrorInvalidArgs);
+    return error;
+}
+
+Error Nat64PrefixInfoOption::GetPrefix(Prefix &aPrefix) const
+{
+    Error   error            = kErrorNone;
+    uint8_t prefixLengthCode = GetPrefixLengthCode();
+
+    VerifyOrExit(prefixLengthCode < GetArrayLength(kPrefixLengths), error = kErrorParse);
+
+    aPrefix.Set(mPrefixMsb, kPrefixLengths[prefixLengthCode]);
 
 exit:
     return error;
 }
 
-void Nat64PrefixInfoOption::GetPrefix(Prefix &aPrefix) const
+bool Nat64PrefixInfoOption::IsValid(void) const
 {
-    uint8_t prefixLength = 96; // Default to 96 for code 0 or any other value.
-
-    for (const PrefixLengthMap &map : kCodeToLengthMap)
-    {
-        if (map.mCode == GetPrefixLengthCode())
-        {
-            prefixLength = map.mLength;
-            break;
-        }
-    }
-
-    aPrefix.Set(mPrefixMsb, prefixLength);
+    return (GetLength() >= 2) && (GetPrefixLengthCode() < GetArrayLength(kPrefixLengths));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -401,10 +395,12 @@ exit:
     return error;
 }
 
-Error RouterAdvert::TxMessage::AppendNat64PrefixInfoOption(const Prefix &aPrefix, uint16_t aLifetime)
+Error RouterAdvert::TxMessage::AppendNat64PrefixInfoOption(const Prefix &aPrefix, uint32_t aLifetime)
 {
     Error                  error = kErrorNone;
     Nat64PrefixInfoOption *pref64;
+
+    VerifyOrExit(aPrefix.IsValidNat64(), error = kErrorInvalidArgs);
 
     pref64 = static_cast<Nat64PrefixInfoOption *>(AppendOption(sizeof(Nat64PrefixInfoOption)));
     VerifyOrExit(pref64 != nullptr, error = kErrorNoBufs);
@@ -412,7 +408,9 @@ Error RouterAdvert::TxMessage::AppendNat64PrefixInfoOption(const Prefix &aPrefix
     pref64->Init();
     pref64->SetLifetime(aLifetime);
 
-    error = pref64->SetPrefix(aPrefix);
+    // `SetPrefix()` can fail if `aPrefix` has an unsupported length.
+    // `IsValidNat64()` check above ensures this will not happen.
+    IgnoreError(pref64->SetPrefix(aPrefix));
 
 exit:
     return error;

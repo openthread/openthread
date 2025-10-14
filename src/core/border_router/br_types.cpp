@@ -183,7 +183,7 @@ void RoutePrefix::CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli aNow) const
 
 void Nat64Prefix::SetFrom(const Nat64PrefixInfoOption &aNat64Pio)
 {
-    aNat64Pio.GetPrefix(mPrefix);
+    IgnoreError(aNat64Pio.GetPrefix(mPrefix));
     mValidLifetime  = aNat64Pio.GetLifetime();
     mLastUpdateTime = TimerMilli::GetNow();
 }
@@ -200,7 +200,6 @@ bool Nat64Prefix::IsFavoredOver(const Ip6::Prefix &aPrefix) const
     bool isFavored = false;
 
     VerifyOrExit(mPrefix.GetLength() != 0);
-    VerifyOrExit(GetValidLifetime() >= kFavoredMinLifetime);
 
     if (aPrefix.GetLength() == 0)
     {

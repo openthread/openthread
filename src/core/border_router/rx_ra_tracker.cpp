@@ -384,11 +384,11 @@ void RxRaTracker::ProcessNat64PrefixInfoOption(const Nat64PrefixInfoOption &aNat
     Entry<Nat64Prefix> *entry;
 
     VerifyOrExit(aNat64Pio.IsValid());
-
-    aNat64Pio.GetPrefix(prefix);
-    LogNat64PrefixOption(prefix, aNat64Pio.GetLifetime());
+    SuccessOrExit(aNat64Pio.GetPrefix(prefix));
 
     lifetime = aNat64Pio.GetLifetime();
+
+    LogNat64PrefixOption(prefix, lifetime);
 
     if (lifetime == 0)
     {
@@ -405,7 +405,6 @@ void RxRaTracker::ProcessNat64PrefixInfoOption(const Nat64PrefixInfoOption &aNat
         else
         {
             entry = AllocateEntry<Nat64Prefix>();
-
             if (entry == nullptr)
             {
                 LogWarn("Discovered too many entries, ignore Nat64 prefix %s", prefix.ToString().AsCString());
@@ -1614,8 +1613,6 @@ exit:
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 void RxRaTracker::DecisionFactors::UpdateFrom(const Nat64Prefix &aNat64Prefix)
 {
-    mHasNat64Prefix = true;
-
     if (aNat64Prefix.IsFavoredOver(mFavoredNat64Prefix))
     {
         mFavoredNat64Prefix = aNat64Prefix.GetPrefix();

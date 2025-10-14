@@ -378,11 +378,8 @@ public:
      * @retval FALSE  If this prefix is not favored over @p aPrefix.
      */
     bool IsFavoredOver(const Ip6::Prefix &aPrefix) const;
-
-private:
-    static constexpr uint32_t kFavoredMinLifetime = 1800; // In sec.
 };
-#endif
+#endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
