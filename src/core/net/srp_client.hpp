@@ -845,6 +845,7 @@ private:
 
     static constexpr uint16_t kTxFailureRetryJitter = 10;                                                      // in ms
     static constexpr uint16_t kRetryIntervalJitter  = OPENTHREAD_CONFIG_SRP_CLIENT_RETRY_WAIT_INTERVAL_JITTER; // in ms
+    static constexpr uint32_t kRetryJitterDivisor   = 5; // divisor for proportional jitter (1/N of retry interval)
 
     static_assert(kDefaultLease <= static_cast<uint32_t>(kMaxLease), "kDefaultLease is larger than max");
     static_assert(kDefaultKeyLease <= static_cast<uint32_t>(kMaxLease), "kDefaultKeyLease is larger than max");
