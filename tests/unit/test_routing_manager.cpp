@@ -879,6 +879,18 @@ struct RaFlags : public Clearable<RaFlags>
     bool mSnacRouterFlag;
 };
 
+struct Nat64Prefix
+{
+    Nat64Prefix(const Ip6::Prefix &aPrefix, uint32_t aLifetime)
+        : mPrefix(aPrefix)
+        , mLifetime(aLifetime)
+    {
+    }
+
+    const Ip6::Prefix &mPrefix;
+    uint32_t           mLifetime;
+};
+
 struct Rdnss
 {
     template <uint16_t kNumAddrs> static Rdnss Create(uint32_t aLifetime, const Ip6::Address (&aAddresses)[kNumAddrs])
@@ -905,6 +917,8 @@ void BuildRouterAdvert(Ip6::Nd::RouterAdvert::TxMessage &aRaMsg,
                        uint16_t                          aNumRios,
                        const Rdnss                      *aRdnsses,
                        uint16_t                          aNumRdnsses,
+                       const Nat64Prefix                *aNat64Prefixes,
+                       uint16_t                          aNumNat64Prefixes,
                        const DefaultRoute               &aDefaultRoute,
                        const RaFlags                    &aRaFlags)
 {
@@ -955,13 +969,16 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
                       uint16_t            aNumRios,
                       const Rdnss        *aRdnsses,
                       uint16_t            aNumRdnsses,
+                      const Nat64Prefix  *aNat64Prefixes,
+                      uint16_t            aNumNat64Prefixes,
                       const DefaultRoute &aDefaultRoute,
                       const RaFlags      &aRaFlags)
 {
     Ip6::Nd::RouterAdvert::TxMessage raMsg;
     Icmp6Packet                      packet;
 
-    BuildRouterAdvert(raMsg, aPios, aNumPios, aRios, aNumRios, aRdnsses, aNumRdnsses, aDefaultRoute, aRaFlags);
+    BuildRouterAdvert(raMsg, aPios, aNumPios, aRios, aNumRios, aRdnsses, aNumRdnsses, aNat64Prefixes, aNumNat64Prefixes,
+                      aDefaultRoute, aRaFlags);
     raMsg.GetAsPacket(packet);
 
     SendRouterAdvert(aRouterAddress, packet);
@@ -976,7 +993,7 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
                       const DefaultRoute &aDefaultRoute = DefaultRoute(0, NetworkData::kRoutePreferenceMedium),
                       const RaFlags      &aRaFlags      = RaFlags())
 {
-    SendRouterAdvert(aRouterAddress, aPios, kNumPios, aRios, kNumRios, nullptr, 0, aDefaultRoute, aRaFlags);
+    SendRouterAdvert(aRouterAddress, aPios, kNumPios, aRios, kNumRios, nullptr, 0, nullptr, 0, aDefaultRoute, aRaFlags);
 }
 
 template <uint16_t kNumPios>
@@ -985,7 +1002,7 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
                       const DefaultRoute &aDefaultRoute = DefaultRoute(0, NetworkData::kRoutePreferenceMedium),
                       const RaFlags      &aRaFlags      = RaFlags())
 {
-    SendRouterAdvert(aRouterAddress, aPios, kNumPios, nullptr, 0, nullptr, 0, aDefaultRoute, aRaFlags);
+    SendRouterAdvert(aRouterAddress, aPios, kNumPios, nullptr, 0, nullptr, 0, nullptr, 0, aDefaultRoute, aRaFlags);
 }
 
 template <uint16_t kNumRios>
@@ -994,19 +1011,19 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
                       const DefaultRoute &aDefaultRoute = DefaultRoute(0, NetworkData::kRoutePreferenceMedium),
                       const RaFlags      &aRaFlags      = RaFlags())
 {
-    SendRouterAdvert(aRouterAddress, nullptr, 0, aRios, kNumRios, nullptr, 0, aDefaultRoute, aRaFlags);
+    SendRouterAdvert(aRouterAddress, nullptr, 0, aRios, kNumRios, nullptr, 0, nullptr, 0, aDefaultRoute, aRaFlags);
 }
 
 void SendRouterAdvert(const Ip6::Address &aRouterAddress, const Rdnss &aRdnss)
 {
-    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, &aRdnss, 1,
+    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, &aRdnss, 1, nullptr, 0,
                      DefaultRoute(0, NetworkData::kRoutePreferenceMedium), RaFlags());
 }
 
 template <uint16_t kNumRdnsses>
 void SendRouterAdvert(const Ip6::Address &aRouterAddress, const Rdnss (&aRdnsses)[kNumRdnsses])
 {
-    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, aRdnsses, kNumRdnsses,
+    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, aRdnsses, kNumRdnsses, nullptr, 0,
                      DefaultRoute(0, NetworkData::kRoutePreferenceMedium), RaFlags());
 }
 
@@ -1014,13 +1031,19 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
                       const DefaultRoute &aDefaultRoute,
                       const RaFlags      &aRaFlags = RaFlags())
 {
-    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, nullptr, 0, aDefaultRoute, aRaFlags);
+    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, nullptr, 0, nullptr, 0, aDefaultRoute, aRaFlags);
 }
 
 void SendRouterAdvert(const Ip6::Address &aRouterAddress, const RaFlags &aRaFlags)
 {
-    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, nullptr, 0,
+    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, nullptr, 0, nullptr, 0,
                      DefaultRoute(0, NetworkData::kRoutePreferenceMedium), aRaFlags);
+}
+
+void SendRouterAdvert(const Ip6::Address &aRouterAddress, const Nat64Prefix &aNat64Pio)
+{
+    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, nullptr, 0, &aNat64Pio, 1,
+                     DefaultRoute(0, NetworkData::kRoutePreferenceMedium), RaFlags());
 }
 
 struct OnLinkPrefix : public Pio
@@ -4506,9 +4529,11 @@ void TestAutoEnableOfSrpServer(void)
 void TestNat64PrefixSelection(void)
 {
     Ip6::Prefix                     localNat64;
-    Ip6::Prefix                     ailNat64 = PrefixFromString("2000:0:0:1:0:0::", 96);
+    Ip6::Prefix                     infraIfNat64Prefix   = PrefixFromString("2000:0:0:1:0:0::", 96);
+    Ip6::Prefix                     raTrackerNat64Prefix = PrefixFromString("2000:0:0:2:0:0::", 96);
     Ip6::Prefix                     localOmr;
-    Ip6::Prefix                     omrPrefix = PrefixFromString("2000:0000:1111:4444::", 64);
+    Ip6::Prefix                     omrPrefix      = PrefixFromString("2000:0000:1111:4444::", 64);
+    Ip6::Address                    routerAddressA = AddressFromString("fd00::aaaa");
     NetworkData::OnMeshPrefixConfig prefixConfig;
     uint16_t                        heapAllocations;
 
@@ -4539,10 +4564,10 @@ void TestNat64PrefixSelection(void)
     VerifyNat64PrefixInNetData(localNat64);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // AIL NAT64 prefix discovered. No infra-derived OMR prefix in Network Data.
+    // InfraIf NAT64 prefix discovered. No infra-derived OMR prefix in Network Data.
     // Check local NAT64 prefix in Network Data.
 
-    DiscoverNat64Prefix(ailNat64);
+    DiscoverNat64Prefix(infraIfNat64Prefix);
 
     AdvanceTime(20000);
 
@@ -4550,7 +4575,7 @@ void TestNat64PrefixSelection(void)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Add a medium preference OMR prefix into Network Data.
-    // Check AIL NAT64 prefix published in Network Data.
+    // Check InfraIf NAT64 prefix published in Network Data.
 
     prefixConfig.Clear();
     prefixConfig.mPrefix       = omrPrefix;
@@ -4567,14 +4592,36 @@ void TestNat64PrefixSelection(void)
     AdvanceTime(20000);
 
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
-    VerifyNat64PrefixInNetData(ailNat64);
+    VerifyNat64PrefixInNetData(infraIfNat64Prefix);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // AIL NAT64 prefix removed.
+    // Send an RA from a router advertising a NAT64 prefix.
+    // Check that the RA-discovered NAT64 prefix is now favored and published.
+
+    SendRouterAdvert(routerAddressA, Nat64Prefix(raTrackerNat64Prefix, kValidLitime));
+
+    AdvanceTime(20000);
+
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
+    VerifyNat64PrefixInNetData(raTrackerNat64Prefix);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove the RA-discovered NAT64 prefix.
+    // Check that the infra-if NAT64 prefix is published again.
+
+    SendRouterAdvert(routerAddressA, Nat64Prefix(raTrackerNat64Prefix, 0));
+
+    AdvanceTime(20000);
+
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
+    VerifyNat64PrefixInNetData(infraIfNat64Prefix);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // InfraIf NAT64 prefix removed.
     // Check local NAT64 prefix in Network Data.
 
-    ailNat64.Clear();
-    DiscoverNat64Prefix(ailNat64);
+    infraIfNat64Prefix.Clear();
+    DiscoverNat64Prefix(infraIfNat64Prefix);
 
     AdvanceTime(20000);
 
@@ -4613,7 +4660,7 @@ template <uint16_t kNumPios> void ReportPdPrefixesAsRa(const Pio (&aPios)[kNumPi
     Ip6::Nd::RouterAdvert::TxMessage raMsg;
     Icmp6Packet                      packet;
 
-    BuildRouterAdvert(raMsg, aPios, kNumPios, nullptr, 0, nullptr, 0,
+    BuildRouterAdvert(raMsg, aPios, kNumPios, nullptr, 0, nullptr, 0, nullptr, 0,
                       DefaultRoute(0, NetworkData::kRoutePreferenceMedium), RaFlags());
     raMsg.GetAsPacket(packet);
 

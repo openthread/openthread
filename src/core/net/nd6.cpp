@@ -212,7 +212,7 @@ Error Nat64PrefixOption::SetPrefix(const Prefix &aPrefix)
 {
     Error error = kErrorInvalidArgs;
 
-    VerifyOrExit(aPrefix.IsValidNat64());
+    memcpy(mPrefixMsb, aPrefix.GetBytes(), sizeof(mPrefixMsb));
 
     for (uint8_t code = 0; code < ClampToUint8(GetArrayLength(kPrefixLengths)); code++)
     {
@@ -220,12 +220,10 @@ Error Nat64PrefixOption::SetPrefix(const Prefix &aPrefix)
         {
             SetPrefixLengthCode(code);
             error = kErrorNone;
-            memcpy(mPrefixMsb, aPrefix.GetBytes(), sizeof(mPrefixMsb));
             break;
         }
     }
 
-exit:
     return error;
 }
 
@@ -240,6 +238,11 @@ Error Nat64PrefixOption::GetPrefix(Prefix &aPrefix) const
 
 exit:
     return error;
+}
+
+bool Nat64PrefixOption::IsValid(void) const
+{
+    return (GetLength() >= 2) && (GetPrefixLengthCode() < GetArrayLength(kPrefixLengths));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
