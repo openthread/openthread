@@ -581,7 +581,7 @@ private:
     void ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
     void ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    void ProcessNat64PrefixInfoOption(const Nat64PrefixInfoOption &aNat64Pio, Router &aRouter);
+    void ProcessNat64PrefixOption(const Nat64PrefixOption &aNat64Prefix, Router &aRouter);
 #endif
     void ProcessRecursiveDnsServerOption(const RecursiveDnsServerOption &aRdnss, Router &aRouter);
     void UpdateIfAddresses(const Ip6::Address &aAddress);

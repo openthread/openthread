@@ -72,7 +72,7 @@ typedef otBorderRoutingMultiAilCallback       MultiAilCallback;    ///< Multi AI
 typedef Ip6::Nd::PrefixInfoOption         PrefixInfoOption;         ///< Prefix Info Option (PIO).
 typedef Ip6::Nd::RouteInfoOption          RouteInfoOption;          ///< Route Info Option (RIO).
 typedef Ip6::Nd::RaFlagsExtOption         RaFlagsExtOption;         ///< RA Flags Extension Option.
-typedef Ip6::Nd::Nat64PrefixInfoOption    Nat64PrefixInfoOption;    ///< NAT64 Prefix Information Option.
+typedef Ip6::Nd::Nat64PrefixOption        Nat64PrefixOption;        ///< NAT64 Prefix Information Option.
 typedef Ip6::Nd::RecursiveDnsServerOption RecursiveDnsServerOption; ///< Recursive DNS Server (RDNSS) Option.
 typedef Ip6::Nd::RouterAdvert             RouterAdvert;             ///< Router Advertisement (RA).
 typedef Ip6::Nd::NeighborAdvertMessage    NeighborAdvertMessage;    ///< Neighbor Advertisement message.
@@ -350,11 +350,11 @@ class Nat64Prefix : public LifetimedPrefix, public Clearable<Nat64Prefix>
 {
 public:
     /**
-     * Sets the NAT64 prefix information from a `Nat64PrefixInfoOption`.
+     * Sets the NAT64 prefix information from a `Nat64PrefixOption`.
      *
-     * @param[in] aNat64Pio  The `Nat64PrefixInfoOption` to set from.
+     * @param[in] aNat64Prefix  The `Nat64PrefixOption` to set from.
      */
-    void SetFrom(const Nat64PrefixInfoOption &aNat64Pio);
+    void SetFrom(const Nat64PrefixOption &aNat64Prefix);
 
     /**
      * Clears (sets to zero) the valid lifetime of the route prefix.

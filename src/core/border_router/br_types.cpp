@@ -181,10 +181,10 @@ void RoutePrefix::CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli aNow) const
 //---------------------------------------------------------------------------------------------------------------------
 // Nat64Prefix
 
-void Nat64Prefix::SetFrom(const Nat64PrefixInfoOption &aNat64Pio)
+void Nat64Prefix::SetFrom(const Nat64PrefixOption &aNat64Prefix)
 {
-    IgnoreError(aNat64Pio.GetPrefix(mPrefix));
-    mValidLifetime  = aNat64Pio.GetLifetime();
+    IgnoreError(aNat64Prefix.GetPrefix(mPrefix));
+    mValidLifetime  = aNat64Prefix.GetLifetime();
     mLastUpdateTime = TimerMilli::GetNow();
 }
 

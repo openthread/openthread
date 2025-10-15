@@ -183,18 +183,18 @@ void RaFlagsExtOption::Init(void)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// Nat64PrefixInfoOption
+// aNat64PrefixOption
 
-void Nat64PrefixInfoOption::Init(void)
+void Nat64PrefixOption::Init(void)
 {
     Clear();
     SetType(kTypeNat64PrefixInfo);
-    SetSize(sizeof(Nat64PrefixInfoOption));
+    SetSize(sizeof(Nat64PrefixOption));
 }
 
-const uint8_t Nat64PrefixInfoOption::kPrefixLengths[] = {96, 64, 56, 48, 40, 32};
+const uint8_t Nat64PrefixOption::kPrefixLengths[] = {96, 64, 56, 48, 40, 32};
 
-void Nat64PrefixInfoOption::SetLifetime(uint32_t aLifetime)
+void Nat64PrefixOption::SetLifetime(uint32_t aLifetime)
 {
     uint32_t scaledLifetime = DivideAndRoundUp(aLifetime, kLifetimeScalingUnit);
 
@@ -202,17 +202,17 @@ void Nat64PrefixInfoOption::SetLifetime(uint32_t aLifetime)
                                         ClampToUint16(scaledLifetime << kScaledLifetimeOffset));
 }
 
-void Nat64PrefixInfoOption::SetPrefixLengthCode(const uint8_t aPrefixLengthCode)
+void Nat64PrefixOption::SetPrefixLengthCode(const uint8_t aPrefixLengthCode)
 {
     mPrefixAttr = BigEndian::HostSwap16((BigEndian::HostSwap16(mPrefixAttr) & ~kPrefixLengthCodeMask) |
                                         (aPrefixLengthCode & kPrefixLengthCodeMask));
 }
 
-Error Nat64PrefixInfoOption::SetPrefix(const Prefix &aPrefix)
+Error Nat64PrefixOption::SetPrefix(const Prefix &aPrefix)
 {
     Error error = kErrorInvalidArgs;
 
-    memcpy(mPrefixMsb, aPrefix.GetBytes(), sizeof(mPrefixMsb));
+    VerifyOrExit(aPrefix.IsValidNat64());
 
     for (uint8_t code = 0; code < ClampToUint8(GetArrayLength(kPrefixLengths)); code++)
     {
@@ -220,14 +220,16 @@ Error Nat64PrefixInfoOption::SetPrefix(const Prefix &aPrefix)
         {
             SetPrefixLengthCode(code);
             error = kErrorNone;
+            memcpy(mPrefixMsb, aPrefix.GetBytes(), sizeof(mPrefixMsb));
             break;
         }
     }
 
+exit:
     return error;
 }
 
-Error Nat64PrefixInfoOption::GetPrefix(Prefix &aPrefix) const
+Error Nat64PrefixOption::GetPrefix(Prefix &aPrefix) const
 {
     Error   error            = kErrorNone;
     uint8_t prefixLengthCode = GetPrefixLengthCode();
@@ -238,11 +240,6 @@ Error Nat64PrefixInfoOption::GetPrefix(Prefix &aPrefix) const
 
 exit:
     return error;
-}
-
-bool Nat64PrefixInfoOption::IsValid(void) const
-{
-    return (GetLength() >= 2) && (GetPrefixLengthCode() < GetArrayLength(kPrefixLengths));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -395,14 +392,14 @@ exit:
     return error;
 }
 
-Error RouterAdvert::TxMessage::AppendNat64PrefixInfoOption(const Prefix &aPrefix, uint32_t aLifetime)
+Error RouterAdvert::TxMessage::AppendNat64PrefixOption(const Prefix &aPrefix, uint32_t aLifetime)
 {
-    Error                  error = kErrorNone;
-    Nat64PrefixInfoOption *pref64;
+    Error              error = kErrorNone;
+    Nat64PrefixOption *pref64;
 
     VerifyOrExit(aPrefix.IsValidNat64(), error = kErrorInvalidArgs);
 
-    pref64 = static_cast<Nat64PrefixInfoOption *>(AppendOption(sizeof(Nat64PrefixInfoOption)));
+    pref64 = static_cast<Nat64PrefixOption *>(AppendOption(sizeof(Nat64PrefixOption)));
     VerifyOrExit(pref64 != nullptr, error = kErrorNoBufs);
 
     pref64->Init();

@@ -507,14 +507,14 @@ private:
 static_assert(sizeof(RaFlagsExtOption) == 8, "invalid RaFlagsExtOption structure");
 
 /**
- * Represents the NAT64 Prefix Information Option.
+ * Represents the NAT64 Prefix Option.
  *
  * See section 4 of RFC 8781 for definition of this option [https://tools.ietf.org/html/rfc8781#section-4]
  */
 OT_TOOL_PACKED_BEGIN
-class Nat64PrefixInfoOption : public Option, private Clearable<Nat64PrefixInfoOption>
+class Nat64PrefixOption : public Option, private Clearable<Nat64PrefixOption>
 {
-    friend class Clearable<Nat64PrefixInfoOption>;
+    friend class Clearable<Nat64PrefixOption>;
 
 public:
     static constexpr Type kType = kTypeNat64PrefixInfo; ///< NAT64 Prefix Information Option Type.
@@ -570,7 +570,7 @@ public:
      */
     bool IsValid(void) const;
 
-    Nat64PrefixInfoOption(void) = delete;
+    Nat64PrefixOption(void) = delete;
 
 private:
     // NAT64 Prefix Information Option
@@ -617,7 +617,7 @@ private:
 
 } OT_TOOL_PACKED_END;
 
-static_assert(sizeof(Nat64PrefixInfoOption) == 16, "invalid Nat64PrefixInfoOption structure");
+static_assert(sizeof(Nat64PrefixOption) == 16, "invalid Nat64PrefixOption structure");
 
 /**
  * Represents the Recursive DNS Server (RDNSS) Option.
@@ -1063,7 +1063,7 @@ public:
          * @retval kErrorInvalidArgs  Unsupported length for NAT64 prefix.
          * @retval kErrorNoBufs       Insufficient available buffers to grow the message.
          */
-        Error AppendNat64PrefixInfoOption(const Prefix &aPrefix, uint32_t aLifetime);
+        Error AppendNat64PrefixOption(const Prefix &aPrefix, uint32_t aLifetime);
 
         /**
          * Append a Recursive DNS Server Option to the RA message.

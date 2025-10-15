@@ -157,7 +157,7 @@ void RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaM
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         case Option::kTypeNat64PrefixInfo:
-            ProcessNat64PrefixInfoOption(static_cast<const Nat64PrefixInfoOption &>(option), *router);
+            ProcessNat64PrefixOption(static_cast<const Nat64PrefixOption &>(option), *router);
             break;
 #endif
 
@@ -377,16 +377,16 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-void RxRaTracker::ProcessNat64PrefixInfoOption(const Nat64PrefixInfoOption &aNat64Pio, Router &aRouter)
+void RxRaTracker::ProcessNat64PrefixOption(const Nat64PrefixOption &aNat64Prefix, Router &aRouter)
 {
     Ip6::Prefix         prefix;
     uint32_t            lifetime;
     Entry<Nat64Prefix> *entry;
 
-    VerifyOrExit(aNat64Pio.IsValid());
-    SuccessOrExit(aNat64Pio.GetPrefix(prefix));
+    VerifyOrExit(aNat64Prefix.IsValid());
+    SuccessOrExit(aNat64Prefix.GetPrefix(prefix));
 
-    lifetime = aNat64Pio.GetLifetime();
+    lifetime = aNat64Prefix.GetLifetime();
 
     LogNat64PrefixOption(prefix, lifetime);
 
@@ -400,7 +400,7 @@ void RxRaTracker::ProcessNat64PrefixInfoOption(const Nat64PrefixInfoOption &aNat
 
         if (entry != nullptr)
         {
-            entry->SetFrom(aNat64Pio);
+            entry->SetFrom(aNat64Prefix);
         }
         else
         {
@@ -411,7 +411,7 @@ void RxRaTracker::ProcessNat64PrefixInfoOption(const Nat64PrefixInfoOption &aNat
                 ExitNow();
             }
 
-            entry->SetFrom(aNat64Pio);
+            entry->SetFrom(aNat64Prefix);
             aRouter.mNat64Prefixes.Push(*entry);
         }
     }
@@ -708,7 +708,7 @@ void RxRaTracker::Evaluate(void)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Remove any router entry that no longer has any valid on-link
-    // or route prefixes, Nat64 Prefix, RDNSS addresses, or other relevant flags set.
+    // or route prefixes, NAT64 Prefix, RDNSS addresses, or other relevant flags set.
 
     mRouters.RemoveAllMatching(removedRouters, Router::EmptyChecker());
 
