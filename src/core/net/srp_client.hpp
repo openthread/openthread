@@ -736,7 +736,8 @@ public:
 
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
-private:
+    // private:
+
     // Number of fast data polls after SRP Update tx (11x 188ms = ~2 seconds)
     static constexpr uint8_t kFastPollsAfterUpdateTx = 11;
 
@@ -927,7 +928,7 @@ private:
         void     Request(Reason aReason);
         uint32_t DetermineDelay(void);
 
-    private:
+        // private:
         static const uint32_t kMaxJitters[];
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
         static const char *ReasonToString(Reason aReason);
@@ -935,6 +936,11 @@ private:
 
         uint32_t  mRequestedMax;
         TimeMilli mRequestTime;
+
+        // More fields
+        Reason   mLastReason;
+        uint32_t mLastMaxJitter;
+        uint32_t mLastDelay;
     };
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
